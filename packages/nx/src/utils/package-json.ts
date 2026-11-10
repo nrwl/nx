@@ -857,6 +857,16 @@ function getDependencyVersionFromPackageJsonFromFileSystem(
   return version;
 }
 
+const TARBALL_PATH = /\.(?:tgz|tar\.gz|tar)$/i;
+
+/**
+ * Whether a local dependency path names a tarball rather than a directory, by
+ * the rule npm and Bun share: a `.tgz`, `.tar.gz` or `.tar` suffix in any case.
+ */
+export function isTarballPath(path: string): boolean {
+  return TARBALL_PATH.test(path);
+}
+
 /**
  * Generates necessary files needed for the package manager to work
  * and for the node_modules to be accessible.

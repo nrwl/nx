@@ -9,6 +9,7 @@ import {
 } from '../../../config/project-graph';
 import {
   getDependencyVersionFromPackageJson,
+  isTarballPath,
   PackageJson,
   readModulePackageJson,
 } from '../../../utils/package-json';
@@ -17,7 +18,6 @@ import { workspaceRoot } from '../../../utils/workspace-root';
 import { readNxJson } from '../../../config/configuration';
 import { readFileMapCache } from '../../../project-graph/nx-deps-cache';
 import { isAbsolute, join, posix } from 'path';
-import { valid } from 'semver';
 import {
   filterUsingGlobPatterns,
   getTargetInputs,
@@ -134,8 +134,13 @@ export function createPackageJson(
     }
 
     // A local package's graph version, or the version its `npm:` alias names,
-    // is a path, never a semver version
-    if (!valid(getAliasedVersion(version))) {
+    // is a `file:`/`link:` version or a Bun tarball's path, which can parse as
+    // semver (`1.0.0-rc.tgz`)
+    const recordedVersion = getAliasedVersion(version);
+    if (
+      isLocalPathSpecifier(recordedVersion) ||
+      isTarballPath(recordedVersion)
+    ) {
       const localPathSpec = getInheritedLocalPathSpec(
         packageName,
         version,

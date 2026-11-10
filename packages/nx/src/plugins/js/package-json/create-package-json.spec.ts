@@ -1738,6 +1738,7 @@ describe('createPackageJson', () => {
     it.each([
       [
         'bun',
+        'file:../../vendor/ltar-1.0.0.tgz',
         '../../vendor/ltar-1.0.0.tgz',
         {
           abs: 'file:/opt/abs',
@@ -1748,7 +1749,20 @@ describe('createPackageJson', () => {
         },
       ],
       [
+        'bun',
+        'file:1.0.0-rc.tgz',
+        '1.0.0-rc.tgz',
+        {
+          abs: 'file:/opt/abs',
+          libvend: 'file:../../vendor/libvend',
+          ltar: 'file:../../libs/lib1/1.0.0-rc.tgz',
+          ms: '2.1.3',
+          rootvend: 'file:../../vendor/rootvend',
+        },
+      ],
+      [
         'pnpm',
+        'file:../../vendor/ltar-1.0.0.tgz',
         'file:vendor/ltar-1.0.0.tgz',
         {
           abs: 'file:/opt/abs',
@@ -1760,6 +1774,7 @@ describe('createPackageJson', () => {
       ],
       [
         'npm',
+        'file:../../vendor/ltar-1.0.0.tgz',
         '../../vendor/ltar-1.0.0.tgz',
         {
           abs: 'file:/opt/abs',
@@ -1770,8 +1785,8 @@ describe('createPackageJson', () => {
         },
       ],
     ] as const)(
-      'should declare an inherited local-path dependency relative to the project on %s',
-      (packageManager, tarballVersion, expected) => {
+      'should declare an inherited local-path dependency relative to the project on %s with %s',
+      (packageManager, tarballSpec, tarballVersion, expected) => {
         vi.spyOn(configModule, 'readNxJson').mockReturnValue({
           cli: { packageManager },
         });
@@ -1785,7 +1800,7 @@ describe('createPackageJson', () => {
                 dependencies: {
                   abs: 'file:/opt/abs',
                   libvend: 'file:../../vendor/libvend/',
-                  ltar: 'file:../../vendor/ltar-1.0.0.tgz',
+                  ltar: tarballSpec,
                   ms: '^2.1.0',
                 },
               }

@@ -112,7 +112,16 @@ describe('explicit package json dependencies', () => {
           'is-odd': 'file:../../vendor/is-odd',
           'is-even': 'file:../../vendor/is-even-1.0.0.tgz',
           'is-number': 'link:../../vendor/is-number',
+          tailwindcss: 'file:0.0.0-insiders.ffb1d72',
         },
+      }),
+      './node_modules/tailwindcss/package.json': JSON.stringify({
+        name: 'tailwindcss',
+        version: '0.0.0-insiders.ffb1d72',
+      }),
+      './libs/proj7/node_modules/tailwindcss/package.json': JSON.stringify({
+        name: 'tailwindcss',
+        version: '9.9.9',
       }),
     });
 
@@ -271,6 +280,18 @@ describe('explicit package json dependencies', () => {
         data: { version, packageName },
       });
     }
+    // A local directory whose path spells the registry version beside it, as
+    // a yarn 1.22.22 lockfile names both
+    for (const [name, version] of [
+      ['npm:tailwindcss', '0.0.0-insiders.ffb1d72'],
+      ['npm:tailwindcss@9.9.9', '9.9.9'],
+    ]) {
+      builder.addExternalNode({
+        type: 'npm',
+        name: name as `npm:${string}`,
+        data: { version, packageName: 'tailwindcss' },
+      });
+    }
 
     ctx = {
       fileMap: fileMap,
@@ -328,6 +349,7 @@ describe('explicit package json dependencies', () => {
         "proj4__libs/proj" => "npm:proj4",
         "lodash__libs/proj" => "npm:lodash",
         "lodash__libs/proj3" => "npm:lodash@3.0.0",
+        "tailwindcss__libs/proj7" => "npm:tailwindcss@9.9.9",
       }
     `);
   });
@@ -441,6 +463,7 @@ describe('explicit package json dependencies', () => {
       'npm:is-even@../../vendor/is-even-1.0.0.tgz',
       'npm:is-number@link:./vendor/is-number',
       'npm:is-odd@file:vendor/is-odd',
+      'npm:tailwindcss@9.9.9',
     ]);
   });
 

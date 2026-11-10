@@ -14,6 +14,7 @@ import { isRelativePath, readJsonFile } from '../../../../utils/fileutils';
 import { getPackageNameFromImportPath } from '../../../../utils/get-package-name-from-import-path';
 import {
   getDependencyVersionFromPackageJson,
+  isTarballPath,
   type PackageJson,
 } from '../../../../utils/package-json';
 import { isContainedRelativePath, normalizePath } from '../../../../utils/path';
@@ -345,7 +346,7 @@ export class TargetProjectLocator {
     const candidates = [
       `npm:${packageName}@file:${target}`,
       `npm:${packageName}@link:./${target}`,
-      `npm:${packageName}@${specPath}`,
+      ...(isTarballPath(specPath) ? [`npm:${packageName}@${specPath}`] : []),
     ];
     for (const candidate of candidates) {
       const node = this.npmProjects[candidate];
