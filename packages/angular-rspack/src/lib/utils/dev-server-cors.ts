@@ -1,15 +1,16 @@
 import type { Compiler } from '@rspack/core';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 
-// The origins `ng serve` allows: http(s) on localhost, its subdomains,
-// 127.0.0.1 and [::1], with any port
+// Vite's default `server.cors` origins, used by `ng serve` from Angular 22:
+// http(s) on localhost, its subdomains, 127.0.0.1 and [::1], with any port
 const LOCALHOST_ORIGIN =
   /^https?:\/\/(?:(?:[^:]+\.)?localhost|127\.0\.0\.1|\[::1\])(?::\d+)?$/;
 
 /**
  * Lets pages on localhost origins read dev server responses, as `ng serve`
- * does. Runs before the dev server's middlewares, so `headers`, proxied
- * responses and later middlewares win, and passes preflights on to the proxy.
+ * does from Angular 22. Runs before the dev server's middlewares, so `headers`,
+ * proxied responses and later middlewares win, and passes preflights on to the
+ * proxy.
  * Applied after the config merge: webpack-merge would join a config
  * `setupMiddlewares` with an override's into one that returns the list twice.
  */
