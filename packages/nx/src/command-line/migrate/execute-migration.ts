@@ -337,9 +337,7 @@ export class ChangedDepInstaller {
   }
 
   /**
-   * Whether an install actually ran. Distinct from `!skippedInstall`, which is
-   * only about the skip-install flag: dependencies that never changed leave
-   * both false.
+   * Whether an install completed successfully during this installer's lifetime.
    */
   public get installed(): boolean {
     return this._installed;

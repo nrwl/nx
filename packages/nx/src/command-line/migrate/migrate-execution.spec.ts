@@ -1246,15 +1246,33 @@ describe('executeMigrations', () => {
     });
 
     it('installs right after a migration that requested it and changed no files, when commits are on', async () => {
+      // The next migration records whether the install had finished.
+      writeImplFile(
+        pkgDir,
+        'mig-b.js',
+        `module.exports.default = async function (tree) {
+          const installed = require('fs').existsSync(
+            require('path').join(tree.root, 'installed')
+          );
+          tree.write('mig-b.txt', String(installed));
+        };`
+      );
+      mockCommitMigrationIfRequested.mockResolvedValue({
+        status: 'committed',
+        sha: 'sha',
+      });
       const child = new FakeChildProcess();
       mockSpawn.mockImplementation(() => {
-        setImmediate(() => child.emit('close', 0));
+        setImmediate(() => {
+          writeFileSync(join(tmpRoot, 'installed'), '');
+          child.emit('close', 0);
+        });
         return child;
       });
 
       await executeMigrations(
         tmpRoot,
-        [migration('mig-a', '1.0.0')],
+        [migration('mig-a', '1.0.0'), migration('mig-b', '2.0.0')],
         false,
         /* shouldCreateCommits: */ true,
         'chore(repo): ',
@@ -1263,6 +1281,7 @@ describe('executeMigrations', () => {
 
       expect(mockSpawn).toHaveBeenCalledTimes(1);
       expect(mockSpawn.mock.calls[0][0]).toContain('install');
+      expect(readFileSync(join(tmpRoot, 'mig-b.txt'), 'utf-8')).toBe('true');
     });
 
     it('tells the user to install when the requested install was skipped', async () => {
