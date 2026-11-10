@@ -137,8 +137,8 @@ describe('convert-to-flat-config migration', () => {
   );
 
   it('should route a JavaScript root config the generator does not read to the prompt', async () => {
-    // The generator converts `.eslintrc.base.json` here and never opens the
-    // JavaScript root config beside it.
+    // The generator would convert only `.eslintrc.base.json` and never open the
+    // JavaScript root config beside it, so the migration does not run it.
     tree.write('.eslintrc.base.json', JSON.stringify({ rules: {} }));
     tree.write('.eslintrc.js', 'module.exports = { root: true };');
 

@@ -321,7 +321,17 @@ function planProjectConversion(
     };
   }
 
-  const config = readEslintrcConfig(tree, projectConfig.root, eslintFile);
+  let config: ESLint.ConfigData | null;
+  try {
+    config = readEslintrcConfig(tree, projectConfig.root, eslintFile);
+  } catch (e) {
+    return {
+      kind: 'skip',
+      reason: `Skipping "${projectConfig.root}/${eslintFile}": it could not be parsed: ${
+        e instanceof Error ? e.message : e
+      }. Fix it and convert it to flat config manually.`,
+    };
+  }
   if (!config) {
     // An empty or comment-only file parses to nothing. It carries no rules, so
     // there is nothing to convert, but leaving it behind silently would hide it.
@@ -478,8 +488,8 @@ function getPluginScopedTargetDefaults(
   return Array.isArray(value) ? value.filter(isPluginScopedTargetDefault) : [];
 }
 
-// The legacy eslintrc and ignore file names a file still uses after the conversion.
-// Only an `includeIgnored` fileset hashes ignored files, and it keeps its legacy name.
+// Basenames of the legacy eslintrc and ignore files still in the workspace. Git-ignored
+// files are skipped: only an `includeIgnored` fileset hashes them, and it keeps the legacy name.
 function findRemainingLegacyFileNames(tree: Tree): Set<string> {
   const names = new Set<string>();
   visitNotIgnoredFiles(tree, '', (path) => {
@@ -492,8 +502,8 @@ function findRemainingLegacyFileNames(tree: Tree): Set<string> {
 }
 
 // Rewrites input entries that reference legacy eslintrc / `.eslintignore`
-// files to their flat-config counterparts, then dedupes so the rewrite doesn't produce
-// duplicates of entries that already pointed at the flat config. Leaves non-string /
+// files to their flat-config counterparts, keeping the legacy name too where
+// `rewriteLegacyPattern` says so, and dedupes string entries. Leaves non-string /
 // non-fileset inputs (runtime/env/dependentTasksOutputFiles/etc.) untouched.
 function rewriteLegacyInputs(
   inputs: Array<string | InputDefinition>,
@@ -698,7 +708,8 @@ function readEslintrcConfig(
   root: string,
   source: string
 ): ESLint.ConfigData | null {
-  // `.eslintrc` (no extension) is JSON by convention.
+  // `.eslintrc` (no extension) is read as JSON. ESLint parses it as YAML, which
+  // accepts JSON.
   if (source.endsWith('.json') || basename(source) === '.eslintrc') {
     return readJson(tree, `${root}/${source}`);
   }
