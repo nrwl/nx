@@ -8,7 +8,11 @@ import { ensureTypescript } from '@nx/js/internal';
 import { dirname } from 'path';
 import { coerce } from 'semver';
 import type * as ts from 'typescript';
-import { getPropertyName, parseFlatConfig } from './flat-config-source';
+import {
+  getLoadedModuleSpecifier,
+  getPropertyName,
+  parseFlatConfig,
+} from './flat-config-source';
 
 // The plugins eslint-config-next registers. ESLint fails when two configs
 // register different copies of one plugin.
@@ -102,36 +106,6 @@ function getLocalModuleSpecifiers(source: ts.SourceFile): string[] {
   };
   visit(source);
   return specifiers;
-}
-
-// The specifier of an import, re-export, `require`, `import x = require()` or
-// `import()` that loads a module at runtime. Type-only imports and exports are
-// erased before it runs.
-function getLoadedModuleSpecifier(node: ts.Node): string | undefined {
-  let specifier: ts.Expression | undefined;
-  if (tsModule.isImportDeclaration(node)) {
-    specifier = node.importClause?.isTypeOnly
-      ? undefined
-      : node.moduleSpecifier;
-  } else if (tsModule.isExportDeclaration(node)) {
-    specifier = node.isTypeOnly ? undefined : node.moduleSpecifier;
-  } else if (
-    tsModule.isImportEqualsDeclaration(node) &&
-    tsModule.isExternalModuleReference(node.moduleReference)
-  ) {
-    specifier = node.isTypeOnly ? undefined : node.moduleReference.expression;
-  } else if (
-    tsModule.isCallExpression(node) &&
-    node.arguments.length === 1 &&
-    ((tsModule.isIdentifier(node.expression) &&
-      node.expression.text === 'require') ||
-      node.expression.kind === tsModule.SyntaxKind.ImportKeyword)
-  ) {
-    specifier = node.arguments[0];
-  }
-  return specifier && tsModule.isStringLiteralLike(specifier)
-    ? specifier.text
-    : undefined;
 }
 
 // Matches subpaths too: `eslint-plugin-react/configs/recommended.js` registers `react`.

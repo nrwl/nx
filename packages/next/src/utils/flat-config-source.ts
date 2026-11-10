@@ -91,3 +91,115 @@ export function getPropertyName(name: ts.PropertyName): string | undefined {
     ? name.text
     : undefined;
 }
+
+// The specifier of an import, re-export, `require`, `import x = require()` or
+// `import()` that loads a module at runtime. Type-only imports and exports are
+// erased before it runs.
+export function getLoadedModuleSpecifier(node: ts.Node): string | undefined {
+  let specifier: ts.Expression | undefined;
+  if (tsModule.isImportDeclaration(node)) {
+    specifier = node.importClause?.isTypeOnly
+      ? undefined
+      : node.moduleSpecifier;
+  } else if (tsModule.isExportDeclaration(node)) {
+    specifier = node.isTypeOnly ? undefined : node.moduleSpecifier;
+  } else if (
+    tsModule.isImportEqualsDeclaration(node) &&
+    tsModule.isExternalModuleReference(node.moduleReference)
+  ) {
+    specifier = node.isTypeOnly ? undefined : node.moduleReference.expression;
+  } else if (
+    tsModule.isCallExpression(node) &&
+    node.arguments.length === 1 &&
+    ((tsModule.isIdentifier(node.expression) &&
+      node.expression.text === 'require') ||
+      node.expression.kind === tsModule.SyntaxKind.ImportKeyword)
+  ) {
+    specifier = node.arguments[0];
+  }
+  return specifier && tsModule.isStringLiteralLike(specifier)
+    ? specifier.text
+    : undefined;
+}
+
+export interface EslintConfigNextUsage {
+  /** Loads `eslint-config-next` or one of its flat configs. */
+  importsEslintConfigNext: boolean;
+  /** Registers the `@next/next` plugin, as Nx generated for Next.js 16 apps. */
+  registersNextPlugin: boolean;
+  /** Extends `next` or a `next/*` config through FlatCompat, as Nx generated for earlier Next.js versions. */
+  extendsNextThroughCompat: boolean;
+}
+
+export function getEslintConfigNextUsage(
+  source: ts.SourceFile
+): EslintConfigNextUsage {
+  const usage: EslintConfigNextUsage = {
+    importsEslintConfigNext: false,
+    registersNextPlugin: false,
+    extendsNextThroughCompat: false,
+  };
+  const visit = (node: ts.Node) => {
+    const specifier = getLoadedModuleSpecifier(node);
+    if (
+      specifier === 'eslint-config-next' ||
+      specifier?.startsWith('eslint-config-next/')
+    ) {
+      usage.importsEslintConfigNext = true;
+    } else if (isPluginsObjectWithKey(node, '@next/next')) {
+      usage.registersNextPlugin = true;
+    } else if (isCompatCallExtendingNext(node)) {
+      usage.extendsNextThroughCompat = true;
+    }
+    tsModule.forEachChild(node, visit);
+  };
+  visit(source);
+  return usage;
+}
+
+function isPluginsObjectWithKey(node: ts.Node, key: string): boolean {
+  return (
+    tsModule.isPropertyAssignment(node) &&
+    getPropertyName(node.name) === 'plugins' &&
+    tsModule.isObjectLiteralExpression(node.initializer) &&
+    node.initializer.properties.some(
+      (property) => property.name && getPropertyName(property.name) === key
+    )
+  );
+}
+
+// Matches `compat.extends('next', ...)` and `compat.config({ extends: ['next'] })`.
+function isCompatCallExtendingNext(node: ts.Node): boolean {
+  if (
+    !tsModule.isCallExpression(node) ||
+    !tsModule.isPropertyAccessExpression(node.expression)
+  ) {
+    return false;
+  }
+  switch (node.expression.name.text) {
+    case 'extends':
+      return node.arguments.some(isNextConfigName);
+    case 'config':
+      return node.arguments.some(
+        (argument) =>
+          tsModule.isObjectLiteralExpression(argument) &&
+          argument.properties.some(
+            (property) =>
+              tsModule.isPropertyAssignment(property) &&
+              getPropertyName(property.name) === 'extends' &&
+              (isNextConfigName(property.initializer) ||
+                (tsModule.isArrayLiteralExpression(property.initializer) &&
+                  property.initializer.elements.some(isNextConfigName)))
+          )
+      );
+    default:
+      return false;
+  }
+}
+
+function isNextConfigName(node: ts.Node): boolean {
+  return (
+    tsModule.isStringLiteralLike(node) &&
+    (node.text === 'next' || node.text.startsWith('next/'))
+  );
+}

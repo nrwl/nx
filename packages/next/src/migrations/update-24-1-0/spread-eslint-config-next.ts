@@ -7,11 +7,7 @@ import {
   type StringChange,
   type Tree,
 } from '@nx/devkit';
-import {
-  addImportToFlatConfig,
-  getEslintConfigNextUsage,
-  isFlatConfig,
-} from '@nx/eslint/internal';
+import { addImportToFlatConfig, isFlatConfig } from '@nx/eslint/internal';
 import { ensureTypescript } from '@nx/js/internal';
 import type * as ts from 'typescript';
 import {
@@ -20,6 +16,7 @@ import {
   getEslintMajorVersion,
 } from '../../utils/eslint-config-next-conflicts';
 import {
+  getEslintConfigNextUsage,
   getImports,
   getModuleBindings,
   getPropertyName,
@@ -63,13 +60,12 @@ export default async function update(
     if (!isFlatConfig(path)) {
       return;
     }
-    const content = tree.read(path, 'utf-8');
-    const usage = getEslintConfigNextUsage(content);
+    const source = parseFlatConfig(tree.read(path, 'utf-8'));
+    const usage = getEslintConfigNextUsage(source);
     if (!usage.registersNextPlugin && !usage.extendsNextThroughCompat) {
       return;
     }
 
-    const source = parseFlatConfig(content);
     let reason: string;
     let suggestNextPluginConfig = false;
     if (usage.importsEslintConfigNext) {
@@ -164,7 +160,6 @@ function findGeneratedNextEntries(
   return undefined;
 }
 
-// Puts `text` in place of the first generated entry and removes the others.
 function replaceGeneratedNextEntries(
   source: ts.SourceFile,
   { elements, generated }: GeneratedNextEntries,
@@ -229,7 +224,7 @@ function addNextPluginConfig(source: ts.SourceFile): string | undefined {
 }
 
 function hasNextEntries(content: string): boolean {
-  const usage = getEslintConfigNextUsage(content);
+  const usage = getEslintConfigNextUsage(parseFlatConfig(content));
   return usage.registersNextPlugin || usage.extendsNextThroughCompat;
 }
 
