@@ -10,7 +10,7 @@ import {
   visitNotIgnoredFiles,
   type Tree,
 } from '@nx/devkit';
-import { basename, dirname } from 'node:path/posix';
+import { basename } from 'node:path/posix';
 import {
   acknowledgeBuildScripts,
   readModulePackageJson,
@@ -31,15 +31,16 @@ import {
   ESLINT_FLAT_CONFIG_FILENAMES,
   ESLINT_OLD_CONFIG_FILENAMES,
   isEslintConfigFile,
-  isFlatConfig,
 } from '../../utils/config-file';
-import { getEslintConfigNextUsage } from '../../utils/eslint-config-next';
 import { convertToFlatConfigGenerator } from '../../generators/convert-to-flat-config/generator';
 import {
   JS_ESLINTRC_FILENAMES,
   readStaticJsEslintrcFromTree,
 } from '../../generators/convert-to-flat-config/converters/static-js-config';
-import { findEslintrcOnlyTargetOptions } from '../../generators/convert-to-flat-config/eslintrc-only-target-options';
+import {
+  ESLINTRC_ONLY_OPTIONS_FIXES,
+  findEslintrcOnlyTargetOptions,
+} from '../../generators/convert-to-flat-config/eslintrc-only-target-options';
 import { findEslintFile } from '../../generators/utils/eslint-file';
 
 // ESLint plugins with no v10 release. `eslint-plugin-import` has a maintained
@@ -52,14 +53,7 @@ export const V9_ONLY_PLUGINS = [
   'eslint-plugin-jsx-a11y',
   'eslint-plugin-react',
 ] as const;
-
-// eslint-config-next registers these itself, so their rules keep resolving in
-// the configs that pull it in.
-const ESLINT_CONFIG_NEXT_PLUGINS = new Set<string>([
-  'eslint-plugin-import',
-  'eslint-plugin-jsx-a11y',
-  'eslint-plugin-react',
-]);
+type V9OnlyPlugin = (typeof V9_ONLY_PLUGINS)[number];
 
 // Versions `@nx/react` installs for the ESLint v10 stack
 // (`packages/react/src/utils/versions.ts`).
@@ -110,10 +104,18 @@ export default async function update(tree: Tree): Promise<{
   const agentContext: string[] = [];
   const nextSteps: string[] = [];
 
+  // The conversion deletes the eslintrc files it converts.
+  const hadEslintrcConfig = hasEslintrcConfig(tree);
   await convertRemainingEslintrcConfigs(tree, agentContext, nextSteps);
   reportEslintrcOnlyTargetOptions(tree, agentContext, nextSteps);
   const removedPlugins = replaceV9OnlyPlugins(tree, agentContext, nextSteps);
-  reportRemainingFileReferences(tree, removedPlugins, agentContext, nextSteps);
+  updateRemainingFileReferences(
+    tree,
+    removedPlugins,
+    hadEslintrcConfig,
+    agentContext,
+    nextSteps
+  );
   reportPluginsWithoutV10Support(tree, agentContext, nextSteps);
   reportNodeVersionRequirement(tree, nextSteps);
 
@@ -210,17 +212,29 @@ async function convertRemainingEslintrcConfigs(
   // FlatCompat, so a listed file can still be in effect.
   const loadedThroughFlatCompat =
     'A file a flat config loads through FlatCompat, with `compat.extends` or the `extends` of a file loaded that way, still applies and can stay. To fold one in anyway, also remove the `compat.extends` entry that loads it.';
-  // A flat config at the root already won over every eslintrc below it on
-  // ESLint v9, so the files no flat config loaded through FlatCompat were dead
-  // before this migration ran. Folding them in turns their rules back on, which
-  // is a different decision from restoring enforcement this run just dropped.
   if (rootState.kind === 'flat') {
+    // Folding in a file the root eslint.config shadowed turns its rules back on,
+    // which differs from restoring enforcement this run just dropped.
+    if (ESLINT_FLAT_CONFIG_FILENAMES.some((file) => tree.exists(file))) {
+      agentContext.push(
+        `These eslintrc files are still in the workspace: ${list}. Unless lint ran with ESLINT_USE_FLAT_CONFIG=false, ESLint v9 resolved the eslint.config file at the workspace root instead of them, so the rules of a listed file that no flat config loads through FlatCompat were not applied before this run. ` +
+          `Fold each of those into the flat config that covers the same files, then delete it, and expect new lint errors from rules that were off. ${loadedThroughFlatCompat}`
+      );
+      nextSteps.push(
+        `Unless lint ran with ESLINT_USE_FLAT_CONFIG=false, ESLint v9 resolved the root eslint.config file instead of these eslintrc files, so the rules of the ones no flat config loads through FlatCompat were not applied. Fold them into flat config and delete them, except any a flat config loads that way: ${list}. Folding one in can surface new lint errors.`
+      );
+      return;
+    }
+    const baseConfig = BASE_ESLINT_CONFIG_FILENAMES.find((file) =>
+      tree.exists(file)
+    );
     agentContext.push(
-      `These eslintrc files are still in the workspace: ${list}. The workspace already had a flat config at its root, so ESLint resolved that one instead, and the rules of a listed file that no flat config loads through FlatCompat have not been applied for a while. ` +
-        `Fold each of those into the flat config that covers the same files, then delete it, and expect new lint errors from rules that were effectively off. ${loadedThroughFlatCompat}`
+      `These eslintrc files are still in the workspace: ${list}. The workspace root has ${baseConfig} but no eslint.config file, so this migration did not convert them. ` +
+        'On ESLint v9, the inferred lint target of a project whose config is an eslintrc file ran ESLint with ESLINT_USE_FLAT_CONFIG=false, which applied that config. ' +
+        `ESLint v10 does not read eslintrc files, so the rules of a listed file that no flat config loads through FlatCompat are silently not applied. Convert each of those to a flat config next to it, then delete it. ${loadedThroughFlatCompat}`
     );
     nextSteps.push(
-      `The root flat config was already shadowing these eslintrc files, unless a flat config loads them through FlatCompat. Fold them into flat config and delete them, except any a flat config loads that way: ${list}. The rules of a file no flat config loads are not in effect today, so folding it in can surface new lint errors.`
+      `ESLint v10 does not read these eslintrc files, which this migration did not convert because the workspace root has ${baseConfig} but no eslint.config file. Convert each to a flat config next to it and delete it, except any a flat config loads through FlatCompat: ${list}.`
     );
     return;
   }
@@ -234,8 +248,7 @@ async function convertRemainingEslintrcConfigs(
   );
 }
 
-// The conversion moves `ignore-path` into flat config and drops `no-eslintrc`;
-// what it cannot translate stays on the target.
+// The conversion drops `no-eslintrc`; the other options stay on the target.
 function reportEslintrcOnlyTargetOptions(
   tree: Tree,
   agentContext: string[],
@@ -252,8 +265,7 @@ function reportEslintrcOnlyTargetOptions(
       'Follow the section on eslintrc-only lint target options.'
   );
   nextSteps.push(
-    `Replace the eslintrc-only ESLint options these lint targets still carry, since ESLint v10 does not support them: ${list}. ` +
-      'Move the patterns of an "ignore-path" file into the flat config\'s "ignores" only when no configuration, project or narrower "targetDefaults" entry replaces that "ignore-path". Otherwise pass them as "--ignore-pattern" flags in the "args" of the runs that used the file, because flat config "ignores" apply to every run.'
+    `Replace the eslintrc-only ESLint options these lint targets still carry, since ESLint v10 does not support them: ${list}. ${ESLINTRC_ONLY_OPTIONS_FIXES}`
   );
 }
 
@@ -335,16 +347,42 @@ function findRemainingEslintrcConfigs(
 ): string[] {
   const remaining: string[] = [];
   visitNotIgnoredFiles(tree, '', (path) => {
-    const filename = basename(path);
-    if (
-      (ESLINT_OLD_CONFIG_FILENAMES.includes(filename) ||
-        BASE_ESLINTRC_FILENAMES.includes(filename)) &&
-      !alreadyReported.has(path)
-    ) {
+    if (isEslintrcFile(path) && !alreadyReported.has(path)) {
       remaining.push(path);
     }
   });
   return remaining;
+}
+
+function isEslintrcFile(path: string): boolean {
+  const filename = basename(path);
+  return (
+    ESLINT_OLD_CONFIG_FILENAMES.includes(filename) ||
+    BASE_ESLINTRC_FILENAMES.includes(filename)
+  );
+}
+
+// Whether ESLint could have applied an /* eslint-env */ comment: only the
+// eslintrc format reads them, from an eslintrc file or package.json's
+// `eslintConfig`.
+function hasEslintrcConfig(tree: Tree): boolean {
+  let found = false;
+  visitNotIgnoredFiles(tree, '', (path) => {
+    if (found) {
+      return;
+    }
+    if (isEslintrcFile(path)) {
+      found = true;
+    } else if (basename(path) === 'package.json') {
+      try {
+        found = readJson(tree, path).eslintConfig !== undefined;
+      } catch {
+        // A manifest that does not parse might carry one.
+        found = true;
+      }
+    }
+  });
+  return found;
 }
 
 // Returns the plugins it removed, so the file scan knows which references are
@@ -353,7 +391,7 @@ function replaceV9OnlyPlugins(
   tree: Tree,
   agentContext: string[],
   nextSteps: string[]
-): string[] {
+): V9OnlyPlugin[] {
   const declared = V9_ONLY_PLUGINS.filter(
     (plugin) => getDependencyVersionFromPackageJson(tree, plugin) !== null
   );
@@ -483,50 +521,115 @@ function isBelowV10Support(
 }
 
 // What the dependency changes left behind in the workspace's own files, plus the
-// one source-level break ESLint v10 introduces on its own.
-function reportRemainingFileReferences(
+// /* eslint-env */ comments ESLint v10 rejects. Edits the comments it can fix
+// exactly and reports the rest.
+function updateRemainingFileReferences(
   tree: Tree,
-  removedPlugins: string[],
+  removedPlugins: V9OnlyPlugin[],
+  hadEslintrcConfig: boolean,
   agentContext: string[],
   nextSteps: string[]
 ): void {
-  const { references, directives, eslintEnv } = findRemovedPluginUsages(
-    tree,
-    removedPlugins
-  );
-  if (references.length > 0) {
+  const {
+    imports,
+    mentions,
+    cleanedDirectives,
+    directives,
+    deletedEslintEnv,
+    eslintEnv,
+    keptComments,
+    declaresEslintConfigNext,
+  } = fixAndCollectFileReferences(tree, removedPlugins, hadEslintrcConfig);
+
+  if (imports.length > 0 || mentions.length > 0) {
+    const found: string[] = [];
+    if (imports.length > 0) {
+      found.push(
+        `These files import plugins this migration removed because they have no ESLint v10 release: ${formatUsages(imports)}.`
+      );
+    }
+    if (mentions.length > 0) {
+      found.push(
+        `These eslintrc files name plugins this migration removed: ${formatUsages(mentions)}.`
+      );
+    }
     agentContext.push(
-      `These files reference plugins that were removed because they have no ESLint v10 release: ${formatUsages(
-        references
-      )}. Any ESLint config that reaches one of them fails to load as it is. ` +
-        'Rewrite each eslint-plugin-import usage to eslint-plugin-import-x (the plugin key and its rule prefix both become "import-x"), ' +
-        'and delete the eslint-plugin-react and eslint-plugin-jsx-a11y plugin registrations along with the rules that use their prefixes. ' +
+      `${found.join(' ')} ` +
+        'Rewrite each eslint-plugin-import usage to eslint-plugin-import-x: the plugin key, its rule prefix and its "import/" settings keys all become "import-x". ' +
+        'Delete the eslint-plugin-react and eslint-plugin-jsx-a11y plugin registrations along with the rules that use their prefixes. ' +
         'Those two have no ESLint v10 substitute, so their rules cannot be preserved.'
     );
     nextSteps.push(
-      `These files still reference the removed plugins and must be updated before ESLint can load the config: ${references
+      `Update these files, which import or name a plugin this migration removed: ${[
+        ...imports,
+        ...mentions,
+      ]
         .map(({ path }) => path)
         .join(', ')}.`
     );
   }
+  if (cleanedDirectives.length > 0) {
+    nextSteps.push(
+      `Removed the rules of the plugins this migration removed from the ESLint directive comments in these files, and deleted the comments left with no rule: ${formatUsages(
+        cleanedDirectives
+      )}.`
+    );
+  }
   if (directives.length > 0) {
     agentContext.push(
-      `These source files carry ESLint directive comments naming rules the workspace can no longer resolve: ${formatUsages(
+      `These source files carry ESLint directive comments naming rules from plugins this migration removed: ${formatUsages(
         directives
-      )}. A directive for an unknown rule is itself a lint error, so lint fails until each one is handled. ` +
-        'Rewrite an "import/" prefix to "import-x/", and delete the directives naming a "react/" or "jsx-a11y/" rule along with any inline configuration of them.'
+      )}. A directive naming a rule no config defines is itself a lint error. ` +
+        'Rewrite an "import/" prefix to "import-x/", and delete the inline configuration of a "react/" or "jsx-a11y/" rule.'
     );
     nextSteps.push(
-      `These source files disable or configure rules from the removed plugins, which now fails lint: ${directives
+      `These source files have ESLint directive comments naming rules from the removed plugins: ${directives
         .map(({ path }) => path)
         .join(', ')}.`
+    );
+  }
+  if (removedPlugins.length > 0 && declaresEslintConfigNext) {
+    agentContext.push(
+      'eslint-config-next is declared, and it registers eslint-plugin-react, eslint-plugin-jsx-a11y and eslint-plugin-import itself, so the ESLint directive comments naming their rules were not checked. ' +
+        `Fix the ones lint reports as "Definition for rule '...' was not found", and leave the rest.`
+    );
+  }
+  if (removedPlugins.length > 0) {
+    nextSteps.push(
+      `${
+        declaresEslintConfigNext
+          ? 'eslint-config-next is declared and registers the removed plugins itself, so the ESLint directive comments naming their rules were left as they are. '
+          : ''
+      }Run lint to find the directive comments that still name a rule from a removed plugin. For files no lint target covers, search for "react/", "jsx-a11y/" and "import/" in directive comments, and confirm each hit with "npx eslint <file>" before editing it.`
+    );
+  }
+  if (deletedEslintEnv.length > 0) {
+    nextSteps.push(
+      `Deleted the /* eslint-env */ comments, which ESLint v10 reports as errors, from these files. The workspace had no eslintrc config, so ESLint never applied their globals: ${deletedEslintEnv.join(
+        ', '
+      )}.`
+    );
+  }
+  if (keptComments.length > 0) {
+    agentContext.push(
+      `These source files carry /* eslint-env */ comments, or directive comments naming only rules of the plugins this migration removed, that ESLint v10 reports as errors: ${keptComments.join(
+        ', '
+      )}. The migration left them because a comment ends on the nearest non-blank line above each one. ` +
+        'Removing or blanking such a line puts the code below under an eslint-disable-next-line or @ts-ignore comment there, since @ts-ignore skips blank lines. ' +
+        'Delete each one, then decide whether that comment should apply to the code below. ' +
+        'Delete a left /* eslint-env */ comment without adding /* global */ comments, because this migration leaves one only when no eslintrc config applied its globals.'
+    );
+    nextSteps.push(
+      `Left /* eslint-env */ comments and directive comments naming only the removed plugins' rules in these files, because a comment ends on the line above each one: ${keptComments.join(
+        ', '
+      )}. ESLint v10 reports them as errors. Delete each one by hand, and check what an eslint-disable-next-line or @ts-ignore comment above it applies to afterwards.`
     );
   }
   if (eslintEnv.length > 0) {
     agentContext.push(
       `These source files carry /* eslint-env */ comments: ${eslintEnv.join(
         ', '
-      )}. ESLint v9 only warned that flat config ignores them; v10 reports each one as an error ("/* eslint-env */ comments are no longer supported"), so lint fails while they are there. ` +
+      )}. ESLint v9 only warned that flat config ignores them; v10 reports each one as an error ("/* eslint-env */ comments are no longer supported"). ` +
         "Replace each with an equivalent /* global */ comment, or move the globals it declared into the covering flat config's languageOptions.globals, then delete the comment. " +
         'Deleting one without replacing what it declared turns its globals into no-undef errors.'
     );
@@ -546,20 +649,33 @@ function formatUsages(usages: PluginUsage[]): string {
     .join('; ');
 }
 
+// What happens to a removed plugin's rule in a disable or enable directive.
+// Nothing replaces eslint-plugin-react or eslint-plugin-jsx-a11y, so their rules
+// are dropped. An `import/` rule is reported: whether it moves to
+// eslint-plugin-import-x depends on the rule and on the key a config registers
+// the fork under.
+const DIRECTIVE_RULE_HANDLING: Record<V9OnlyPlugin, 'remove' | 'report'> = {
+  'eslint-plugin-import': 'report',
+  'eslint-plugin-jsx-a11y': 'remove',
+  'eslint-plugin-react': 'remove',
+};
+
 // One walk for everything ESLint v10 can no longer resolve, including the
 // /* eslint-env */ comments it turned from a warning into an error.
-function findRemovedPluginUsages(
+function fixAndCollectFileReferences(
   tree: Tree,
-  plugins: readonly string[]
+  plugins: readonly V9OnlyPlugin[],
+  hadEslintrcConfig: boolean
 ): {
-  references: PluginUsage[];
+  imports: PluginUsage[];
+  mentions: PluginUsage[];
+  cleanedDirectives: PluginUsage[];
   directives: PluginUsage[];
+  deletedEslintEnv: string[];
   eslintEnv: string[];
+  keptComments: string[];
+  declaresEslintConfigNext: boolean;
 } {
-  const references: PluginUsage[] = [];
-  const directives: PluginUsage[] = [];
-  const eslintEnv: string[] = [];
-
   const matchers = plugins.map((plugin) => {
     // A rule id drops the `eslint-plugin-` prefix, so `eslint-plugin-jsx-a11y`
     // owns the `jsx-a11y/` rules.
@@ -567,82 +683,66 @@ function findRemovedPluginUsages(
     return {
       plugin,
       prefix,
+      handling: DIRECTIVE_RULE_HANDLING[plugin],
       // `eslint-plugin-import` must not match `eslint-plugin-import-x`.
       packageName: new RegExp(`${escapeRegExp(plugin)}(?![\\w-])`),
       // Anchored, so a relative import of a local file that happens to be named
       // after the plugin is not read as the package. Subpaths still match.
       moduleSpecifier: new RegExp(`^${escapeRegExp(plugin)}(?![\\w-])`),
-      // A rule id (`'jsx-a11y/alt-text'`) or a config pulled in through
-      // `extends` (`'plugin:jsx-a11y/recommended'`).
-      prefixed: new RegExp(`['"\`](?:plugin:)?${escapeRegExp(prefix)}/`),
+      // A rule id (`"jsx-a11y/alt-text"`) or a config pulled in through
+      // `extends` (`"plugin:jsx-a11y/recommended"`).
+      jsonPrefixed: new RegExp(`['"](?:plugin:)?${escapeRegExp(prefix)}/`),
       // YAML leaves both unquoted, as a list item, a mapping key or a flow entry.
       yamlPrefixed: new RegExp(
         `[\\s\\[{,'"](?:plugin:)?${escapeRegExp(prefix)}/`
       ),
-      pluginConfig: new RegExp(`['"\`]plugin:${escapeRegExp(prefix)}/`),
-      // A rule id in a directive comment. `@eslint-react/` must not match `react/`.
-      directiveRuleId: new RegExp(`(?<![\\w@/.-])${escapeRegExp(prefix)}/`),
-      registeredByEslintConfigNext: ESLINT_CONFIG_NEXT_PLUGINS.has(plugin),
+      // A rule id in an inline `eslint` config. `@eslint-react/` must not match
+      // `react/`.
+      inlineRuleId: new RegExp(`(?<![\\w@/.-])${escapeRegExp(prefix)}/`),
     };
   });
 
-  const pullsInEslintConfigNext = new Map<string, boolean>();
-  const isNextConfig = (configPath: string): boolean => {
-    if (!pullsInEslintConfigNext.has(configPath)) {
-      const usage = getEslintConfigNextUsage(tree.read(configPath, 'utf-8'));
-      pullsInEslintConfigNext.set(
-        configPath,
-        usage.importsEslintConfigNext ||
-          usage.registersNextPlugin ||
-          usage.extendsNextThroughCompat
-      );
-    }
-    return pullsInEslintConfigNext.get(configPath);
-  };
-
+  const mentions: PluginUsage[] = [];
+  const sourceFiles: string[] = [];
+  let declaresEslintConfigNext = false;
   visitNotIgnoredFiles(tree, '', (path) => {
-    const isConfig = isEslintConfigFile(path);
-    if (
-      !isConfig &&
-      !SOURCE_FILE_EXTENSIONS.some((ext) => path.endsWith(ext))
-    ) {
-      return;
-    }
-    const content = tree.read(path, 'utf-8');
-    if (!content) {
-      return;
-    }
-
-    if (isConfig) {
-      // A config is hand-written and small, so any mention of a plugin's package
-      // counts as a reference, comments included. A quoted rule id counts only in
-      // a config, because in source `'react/jsx-runtime'` is an import path that
-      // reads exactly like one. ESLint parses a bare `.eslintrc` as YAML too.
+    if (SOURCE_FILE_EXTENSIONS.some((ext) => path.endsWith(ext))) {
+      sourceFiles.push(path);
+    } else if (basename(path) === 'package.json') {
+      declaresEslintConfigNext ||= declaresEslintConfigNextIn(tree, path);
+    } else if (isEslintConfigFile(path)) {
+      // A JSON or YAML eslintrc that stays, so any mention of a plugin's package
+      // or a quoted rule id counts. ESLint parses a bare `.eslintrc` as YAML too.
+      const content = tree.read(path, 'utf-8');
       const isYaml = /\.ya?ml$/.test(path) || basename(path) === '.eslintrc';
-      const nextConfig = isFlatConfig(path) && isNextConfig(path);
-      const matchedPlugins = matchers
-        .filter((matcher) => {
-          if (matcher.packageName.test(content)) {
-            return true;
-          }
-          if (nextConfig && matcher.registeredByEslintConfigNext) {
-            return matcher.pluginConfig.test(content);
-          }
-          return (isYaml ? matcher.yamlPrefixed : matcher.prefixed).test(
-            content
-          );
-        })
+      const matched = matchers
+        .filter(
+          (matcher) =>
+            matcher.packageName.test(content) ||
+            (isYaml ? matcher.yamlPrefixed : matcher.jsonPrefixed).test(content)
+        )
         .map(({ plugin }) => plugin);
-      if (matchedPlugins.length > 0) {
-        references.push({ path, matched: matchedPlugins });
+      if (matched.length > 0) {
+        mentions.push({ path, matched });
       }
-      return;
     }
+  });
 
+  // eslint-config-next registers all three plugins itself, so their rules still
+  // resolve in the files a config that spreads it lints.
+  const checkDirectives = matchers.length > 0 && !declaresEslintConfigNext;
+  const imports: PluginUsage[] = [];
+  const cleanedDirectives: PluginUsage[] = [];
+  const directives: PluginUsage[] = [];
+  const deletedEslintEnv: string[] = [];
+  const eslintEnv: string[] = [];
+  const keptComments: string[] = [];
+  for (const path of sourceFiles) {
+    const content = tree.read(path, 'utf-8');
     // Every form this scan looks for spells out `eslint`, so nothing else is
     // worth parsing.
-    if (!content.includes('eslint')) {
-      return;
+    if (!content?.includes('eslint')) {
+      continue;
     }
     const sourceFile = ts.createSourceFile(
       path,
@@ -655,92 +755,320 @@ function findRemovedPluginUsages(
     // breaks on a specifier it resolves, not on a string that spells the
     // package out.
     const specifiers = collectModuleSpecifiers(sourceFile);
-    const matchedPlugins = matchers
+    const imported = matchers
       .filter(({ moduleSpecifier }) =>
         specifiers.some((specifier) => moduleSpecifier.test(specifier))
       )
       .map(({ plugin }) => plugin);
-    if (matchedPlugins.length > 0) {
-      references.push({ path, matched: matchedPlugins });
+    if (imported.length > 0) {
+      imports.push({ path, matched: imported });
     }
 
-    const directiveComments = parseDirectiveComments(
-      blankOutLiterals(sourceFile, content)
-    );
-    const matchedPrefixes = matchers
-      .filter(({ directiveRuleId }) =>
-        directiveComments.some(
-          ({ label, value }) =>
-            RULE_DIRECTIVES.has(label) && directiveRuleId.test(value)
-        )
-      )
-      .filter(
-        ({ registeredByEslintConfigNext }) =>
-          !registeredByEslintConfigNext ||
-          !isLintedWithNextConfig(tree, path, isNextConfig)
-      )
-      .map(({ prefix }) => prefix);
-    if (matchedPrefixes.length > 0) {
-      directives.push({ path, matched: matchedPrefixes });
+    const edits: { start: number; end: number; text: string }[] = [];
+    const cleaned = new Set<string>();
+    const reported = new Set<string>();
+    let reportsEslintEnv = false;
+    let deletesEslintEnv = false;
+    let keepsComment = false;
+    const comments = collectComments(sourceFile);
+    const code = blankComments(content, comments);
+    // A comment this scan deletes no longer sits above the next one.
+    const remaining = new Set(comments);
+    for (const comment of comments) {
+      const directive = readDirective(content, comment);
+      if (!directive) {
+        continue;
+      }
+      if (directive.label === 'eslint-env') {
+        // Only the eslintrc format applies the globals one declares.
+        if (hadEslintrcConfig) {
+          reportsEslintEnv = true;
+          continue;
+        }
+        const edit = deleteComment(content, code, comment, remaining);
+        if (edit) {
+          edits.push(edit);
+          remaining.delete(comment);
+          deletesEslintEnv = true;
+        } else {
+          keepsComment = true;
+        }
+        continue;
+      }
+      if (!checkDirectives) {
+        continue;
+      }
+      if (directive.label === 'eslint') {
+        for (const { prefix, inlineRuleId } of matchers) {
+          if (inlineRuleId.test(directive.value)) {
+            reported.add(prefix);
+          }
+        }
+        continue;
+      }
+      if (!LIST_DIRECTIVES.has(directive.label)) {
+        continue;
+      }
+      const kept: string[] = [];
+      const removed: string[] = [];
+      for (const entry of directive.value.split(',').map((e) => e.trim())) {
+        // ESLint's `parseListConfig` strips the quotes around a rule id.
+        const ruleId = entry.replace(/^(['"]?)(.*)\1$/s, '$2');
+        const matcher = matchers.find(({ prefix }) =>
+          ruleId.startsWith(`${prefix}/`)
+        );
+        if (matcher?.handling === 'remove') {
+          removed.push(matcher.prefix);
+          continue;
+        }
+        if (matcher?.handling === 'report') {
+          reported.add(matcher.prefix);
+        }
+        if (entry) {
+          kept.push(entry);
+        }
+      }
+      if (removed.length === 0) {
+        continue;
+      }
+      if (kept.length > 0) {
+        edits.push({
+          start: comment.pos,
+          end: comment.end,
+          text: formatListDirective(
+            directive,
+            kept,
+            content.slice(comment.pos, comment.end)
+          ),
+        });
+      } else {
+        const edit = deleteComment(content, code, comment, remaining);
+        if (!edit) {
+          keepsComment = true;
+          continue;
+        }
+        edits.push(edit);
+        remaining.delete(comment);
+      }
+      removed.forEach((prefix) => cleaned.add(prefix));
     }
-    if (directiveComments.some(({ label }) => label === 'eslint-env')) {
+
+    if (edits.length > 0) {
+      let updated = content;
+      for (const { start, end, text } of edits.sort(
+        (a, b) => b.start - a.start
+      )) {
+        updated = updated.slice(0, start) + text + updated.slice(end);
+      }
+      tree.write(path, updated);
+    }
+    if (cleaned.size > 0) {
+      cleanedDirectives.push({ path, matched: [...cleaned] });
+    }
+    if (reported.size > 0) {
+      directives.push({ path, matched: [...reported] });
+    }
+    if (reportsEslintEnv) {
       eslintEnv.push(path);
     }
-  });
-
-  return { references, directives, eslintEnv };
-}
-
-// ESLint v10 lints a file with the flat config nearest to it.
-function isLintedWithNextConfig(
-  tree: Tree,
-  path: string,
-  isNextConfig: (configPath: string) => boolean
-): boolean {
-  for (let dir = dirname(path); ; dir = dirname(dir)) {
-    const config = ESLINT_FLAT_CONFIG_FILENAMES.map((file) =>
-      joinPathFragments(dir, file)
-    ).find((file) => tree.exists(file));
-    if (config) {
-      return isNextConfig(config);
+    if (deletesEslintEnv) {
+      deletedEslintEnv.push(path);
     }
-    if (dir === '.') {
-      return false;
+    if (keepsComment) {
+      keptComments.push(path);
     }
   }
+
+  return {
+    imports,
+    mentions,
+    cleanedDirectives,
+    directives,
+    deletedEslintEnv,
+    eslintEnv,
+    keptComments,
+    declaresEslintConfigNext,
+  };
 }
 
-// One alternation, so the first delimiter wins: `// see /* eslint-env */` is a
-// single line comment.
-const COMMENT = /\/\/(.*)|\/\*([\s\S]*?)\*\//g;
-// ESLint's directive grammar: the label is the first word of the text before
-// a ` -- ` description.
-const DIRECTIVE_DESCRIPTION = /\s-{2,}\s/;
+// A manifest that does not parse might declare it.
+function declaresEslintConfigNextIn(tree: Tree, path: string): boolean {
+  let manifest: Record<string, Record<string, string> | undefined>;
+  try {
+    manifest = readJson(tree, path);
+  } catch {
+    return true;
+  }
+  return [
+    'dependencies',
+    'devDependencies',
+    'peerDependencies',
+    'optionalDependencies',
+  ].some((section) => manifest[section]?.['eslint-config-next'] !== undefined);
+}
+
+// Every comment in the file, read from the trivia before each token the parser
+// produced, so the text of a string, template or JSX element never reads as one.
+function collectComments(sourceFile: ts.SourceFile): ts.CommentRange[] {
+  const comments = new Map<number, ts.CommentRange>();
+  const visit = (node: ts.Node): void => {
+    // JSDoc nodes sit inside the comment that holds them, and JSX text has no
+    // trivia.
+    if (
+      node.kind === ts.SyntaxKind.JsxText ||
+      (node.kind >= ts.SyntaxKind.FirstJSDocNode &&
+        node.kind <= ts.SyntaxKind.LastJSDocNode)
+    ) {
+      return;
+    }
+    const children = node.getChildren(sourceFile);
+    if (children.length > 0) {
+      children.forEach(visit);
+      return;
+    }
+    // TypeScript calls the comments before the first line break "trailing" and
+    // the rest "leading", so a token's trivia needs both.
+    for (const comment of [
+      ...(ts.getTrailingCommentRanges(sourceFile.text, node.pos) ?? []),
+      ...(ts.getLeadingCommentRanges(sourceFile.text, node.pos) ?? []),
+    ]) {
+      comments.set(comment.pos, comment);
+    }
+  };
+  visit(sourceFile);
+
+  return [...comments.values()];
+}
+
+function blankComments(content: string, comments: ts.CommentRange[]): string {
+  const chars = content.split('');
+  for (const { pos, end } of comments) {
+    chars.fill(' ', pos, end);
+  }
+  return chars.join('');
+}
+
+// ESLint's directive grammar (`parseDirective` in @eslint/plugin-kit): the label
+// is the first word of the text before a ` -- ` justification.
+const DIRECTIVE_JUSTIFICATION = /\s-{2,}\s/;
 const DIRECTIVE_LABEL = /^([a-z]+(?:-[a-z]+)*)(?:\s|$)/;
-// The directives that name rules. The last one is the inline
-// `eslint <rule>: <severity>`.
-const RULE_DIRECTIVES = new Set([
+// The directives that take a list of rule ids.
+const LIST_DIRECTIVES = new Set([
   'eslint-disable',
   'eslint-disable-line',
   'eslint-disable-next-line',
   'eslint-enable',
-  'eslint',
 ]);
 // ESLint reads any other line comment, `// eslint-env node` included, as prose.
 const LINE_COMMENT_DIRECTIVES = new Set([
   'eslint-disable-line',
   'eslint-disable-next-line',
 ]);
-// Literal kinds whose own text can spell out a directive comment.
-const LITERAL_KINDS = new Set([
-  ts.SyntaxKind.StringLiteral,
-  ts.SyntaxKind.NoSubstitutionTemplateLiteral,
-  ts.SyntaxKind.TemplateHead,
-  ts.SyntaxKind.TemplateMiddle,
-  ts.SyntaxKind.TemplateTail,
-  ts.SyntaxKind.RegularExpressionLiteral,
-  ts.SyntaxKind.JsxText,
-]);
+
+type Directive = {
+  isLine: boolean;
+  label: string;
+  value: string;
+  // With its leading whitespace, so it can be written back as it was.
+  justification: string;
+};
+
+function readDirective(
+  content: string,
+  { kind, pos, end }: ts.CommentRange
+): Directive | undefined {
+  const isLine = kind === ts.SyntaxKind.SingleLineCommentTrivia;
+  // An unterminated block comment is a syntax error ESLint never gets past.
+  if (!isLine && !content.startsWith('*/', end - 2)) {
+    return undefined;
+  }
+  const body = content.slice(pos + 2, isLine ? end : end - 2);
+  const justification = DIRECTIVE_JUSTIFICATION.exec(body);
+  const directive = (
+    justification ? body.slice(0, justification.index) : body
+  ).trim();
+  const label = DIRECTIVE_LABEL.exec(directive)?.[1];
+  if (!label || (isLine && !LINE_COMMENT_DIRECTIVES.has(label))) {
+    return undefined;
+  }
+
+  return {
+    isLine,
+    label,
+    value: directive.slice(label.length).trim(),
+    justification: justification
+      ? body.slice(justification.index).trimEnd()
+      : '',
+  };
+}
+
+// ASI treats a comment holding a line break as one, so a rewritten block comment
+// keeps the break the original had.
+function formatListDirective(
+  directive: Directive,
+  ruleIds: string[],
+  original: string
+): string {
+  const text = `${directive.label} ${ruleIds.join(', ')}${directive.justification}`;
+  if (directive.isLine) {
+    return `// ${text}`;
+  }
+  return LINE_TERMINATOR.test(original) ? `/* ${text}\n*/` : `/* ${text} */`;
+}
+
+const LINE_TERMINATOR = /[\n\r\u2028\u2029]/;
+
+// Takes the whole line when the comment is alone on it, and the whitespace before
+// it when it ends a line of code. Makes no edit on a line holding only comments
+// right under another comment. `code` is `content` with its comments blanked.
+function deleteComment(
+  content: string,
+  code: string,
+  { pos, end }: ts.CommentRange,
+  remaining: Set<ts.CommentRange>
+): { start: number; end: number; text: string } | undefined {
+  const lineStart = content.lastIndexOf('\n', pos - 1) + 1;
+  const newline = content.indexOf('\n', end);
+  const lineEnd = newline === -1 ? content.length : newline;
+  const before = content.slice(lineStart, pos);
+  const after = content.slice(end, lineEnd);
+  const breaksLine = LINE_TERMINATOR.test(content.slice(pos, end));
+  if (
+    code.slice(lineStart, pos).trim() === '' &&
+    (code.slice(end, lineEnd).trim() === '' || breaksLine)
+  ) {
+    // Only comments share this line, and the scan may delete them all. Emptying
+    // or removing it would put the code below under a next-line directive above,
+    // such as eslint-disable-next-line or @ts-ignore, which skips blank lines.
+    const lastAbove = content.slice(0, lineStart).trimEnd().length;
+    const aboveStart = content.lastIndexOf('\n', lastAbove - 1) + 1;
+    if (
+      [...remaining].some(
+        (other) => other.end > aboveStart && other.end <= lineStart
+      )
+    ) {
+      return undefined;
+    }
+  }
+  if (after.trim() !== '') {
+    // ASI treats a comment holding a line break as one, and a comment between
+    // two tokens keeps them apart.
+    const text = breaksLine
+      ? '\n'
+      : /\S$/.test(before) && /^\S/.test(after)
+        ? ' '
+        : '';
+    return { start: pos, end, text };
+  }
+  if (before.trim() !== '') {
+    return { start: lineStart + before.trimEnd().length, end, text: '' };
+  }
+  return {
+    start: lineStart,
+    end: newline === -1 ? lineEnd : newline + 1,
+    text: '',
+  };
+}
 
 // Every specifier that stops resolving once the package is gone. `require.resolve`
 // counts: it never loads the module, but it throws MODULE_NOT_FOUND all the same.
@@ -786,56 +1114,6 @@ function collectModuleSpecifiers(sourceFile: ts.SourceFile): string[] {
   sourceFile.forEachChild(collect);
 
   return specifiers;
-}
-
-// Blanks out every literal so the comment scan cannot mistake a quoted
-// directive for a real one.
-function blankOutLiterals(sourceFile: ts.SourceFile, content: string): string {
-  const literals: [start: number, end: number][] = [];
-  const collectLiterals = (node: ts.Node): void => {
-    if (LITERAL_KINDS.has(node.kind)) {
-      literals.push([node.getStart(sourceFile), node.end]);
-      return;
-    }
-    node.forEachChild(collectLiterals);
-  };
-  sourceFile.forEachChild(collectLiterals);
-
-  let code = '';
-  let cursor = 0;
-  for (const [start, end] of literals) {
-    // Newlines are kept so a line comment still ends where it did.
-    code +=
-      content.slice(cursor, start) +
-      content.slice(start, end).replace(/[^\n]/g, ' ');
-    cursor = end;
-  }
-
-  return code + content.slice(cursor);
-}
-
-// The directive comments ESLint reads, each split into its label and the text
-// that follows it, without the description.
-function parseDirectiveComments(
-  code: string
-): { label: string; value: string }[] {
-  const directives: { label: string; value: string }[] = [];
-  for (const [, lineBody, blockBody] of code.matchAll(COMMENT)) {
-    const body = lineBody ?? blockBody;
-    const description = DIRECTIVE_DESCRIPTION.exec(body);
-    const directive = (
-      description ? body.slice(0, description.index) : body
-    ).trim();
-    const label = DIRECTIVE_LABEL.exec(directive)?.[1];
-    if (
-      label &&
-      (lineBody === undefined || LINE_COMMENT_DIRECTIVES.has(label))
-    ) {
-      directives.push({ label, value: directive.slice(label.length) });
-    }
-  }
-
-  return directives;
 }
 
 function escapeRegExp(value: string): string {
@@ -935,9 +1213,9 @@ function reportPluginsWithoutV10Support(
       'This check only sees the packages whose peer range rules ESLint v10 out; one with an open range or no ESLint peer at all can still fail, so treat a clean run of lint as the real answer.'
   );
   nextSteps.push(
-    `These packages declare no support for ESLint ${
+    `These packages declare an ESLint peer range that excludes ESLint ${
       eslintVersion.version
-    } and need updating or replacing: ${incompatible
+    }, so update or replace them: ${incompatible
       .map(({ name }) => name)
       .join(', ')}.`
   );
