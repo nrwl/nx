@@ -1,3 +1,4 @@
+use crate::native::tui::terminal_parser::TerminalParser;
 use anyhow::anyhow;
 use crossbeam_channel::{Receiver, Sender, bounded, unbounded};
 use crossterm::{
@@ -22,7 +23,6 @@ use std::{
 };
 use tracing::debug;
 use tracing::log::trace;
-use vt100_ctt::Parser;
 
 use super::os;
 use crate::native::pseudo_terminal::{child_process::ChildProcess, process_killer::ProcessKiller};
@@ -58,7 +58,7 @@ impl Default for PseudoTerminalOptions {
     }
 }
 
-pub type ParserArc = Arc<RwLock<Parser>>;
+pub type ParserArc = Arc<RwLock<TerminalParser>>;
 pub type WriterArc = Arc<Mutex<Box<dyn Write + Send>>>;
 /// The control end of the pty. Resizing it issues the TIOCSWINSZ ioctl, which
 /// updates the winsize the kernel reports to the child and raises SIGWINCH so
@@ -132,7 +132,7 @@ impl PseudoTerminal {
         // causing the TUI to hang progressively worse as output accumulates.
         const MAX_RAW_OUTPUT_BYTES: usize = 5 * 1024 * 1024; // 5 MB
 
-        let parser = Arc::new(RwLock::new(Parser::new(h, w, SCROLLBACK_SIZE)));
+        let parser = Arc::new(RwLock::new(TerminalParser::new(h, w, SCROLLBACK_SIZE)));
         let parser_clone = parser.clone();
         let stdout_tx_clone = stdout_tx.clone();
         std::thread::spawn(move || {
@@ -201,7 +201,8 @@ impl PseudoTerminal {
                                 let (rows, cols) = screen.size();
                                 let formatted = screen.all_contents_formatted();
                                 let scrollback = screen.scrollback();
-                                let mut compacted = Parser::new(rows, cols, SCROLLBACK_SIZE);
+                                let mut compacted =
+                                    TerminalParser::new(rows, cols, SCROLLBACK_SIZE);
                                 compacted.process(&formatted);
                                 compacted.screen_mut().set_scrollback(scrollback);
                                 *parser = compacted;

@@ -53,11 +53,15 @@ describe('DbCache remote results', () => {
   });
 
   it('returns a remote hit once its outputs are applied', async () => {
-    nativeCache.applyRemoteCacheResults.mockReturnValue(true);
+    nativeCache.applyRemoteCacheResults.mockReturnValue('stored output');
 
     const res = await cacheWithRemote().get(task('a'));
 
-    expect(res).toMatchObject({ remote: true, code: 0 });
+    expect(res).toMatchObject({
+      remote: true,
+      code: 0,
+      terminalOutput: 'stored output',
+    });
     expect(nativeCache.applyRemoteCacheResults).toHaveBeenCalledWith(
       'hash-a',
       remoteResult('hash-a'),
@@ -67,7 +71,7 @@ describe('DbCache remote results', () => {
   });
 
   it('treats a discarded remote result as a miss', async () => {
-    nativeCache.applyRemoteCacheResults.mockReturnValue(false);
+    nativeCache.applyRemoteCacheResults.mockReturnValue(null);
 
     expect(await cacheWithRemote().get(task('a'))).toBeNull();
     expect(warn).toHaveBeenCalledWith(
@@ -76,8 +80,8 @@ describe('DbCache remote results', () => {
   });
 
   it('leaves discarded remote results out of a batch', async () => {
-    nativeCache.applyRemoteCacheResults.mockImplementation(
-      (hash: string) => hash !== 'hash-b'
+    nativeCache.applyRemoteCacheResults.mockImplementation((hash: string) =>
+      hash === 'hash-b' ? null : 'stored output'
     );
 
     const results = await cacheWithRemote().getBatch([task('a'), task('b')]);
