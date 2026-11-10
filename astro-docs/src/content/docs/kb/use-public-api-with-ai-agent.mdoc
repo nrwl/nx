@@ -24,12 +24,39 @@ The command configures the Nx skills and agent integration for your workspace.
 It supports Claude Code, Codex, Cursor, GitHub Copilot, Gemini, and OpenCode.
 Review the generated configuration before you commit it.
 
+The command installs the Nx Cloud skills for all of these assistants in Nx 22.6 and later.
+If your workspace uses an older version,
+[update Nx](/docs/features/automate-updating-dependencies) first.
+
 See [Nx AI integration](/docs/getting-started/ai-setup) for other installation options.
 
-The skills support API data lookup, CI failure reviews, and specific cache investigations.
+The command installs these Nx Cloud skills:
+
+- `nx-cloud-api` reads workspace data from the Public API, such as pipelines, runs, tasks, and
+  flaky tasks.
+- `nx-cloud-ci-failure-review` reviews failed CI pipeline executions and groups recurring failures.
+- `nx-cloud-cache-investigator` investigates a specific cache miss, artifact restore failure, or
+  unexpected cache hit.
+- `monitor-ci` watches the CI pipeline for your current branch and handles self-healing CI fixes.
+
 Your agent selects the relevant skill from your request.
 You don't need to name a skill or its underlying API client in your prompt.
 Start a new agent session if the installed skills aren't available in the current session.
+
+The skills are maintained in
+[`plugins/nx-cloud/skills`](https://github.com/nrwl/nx-ai-agents-config/tree/main/plugins/nx-cloud/skills).
+Each run of `configure-ai-agents` copies the latest version into your workspace, so run it again
+to update them.
+Claude Code loads the skills from the `nx` Claude Code plugin instead.
+Update that plugin with `claude plugin update nx@nx-claude-plugins`.
+If you received the skills as a zip file or from another link, replace that copy with the
+installed skills.
+
+The same skills also ship in the `nx-cloud` plugin for Claude Code, Codex, and Cursor, together
+with the Nx Cloud Model Context Protocol (MCP) server.
+That plugin is in preview, and `configure-ai-agents` doesn't install it yet.
+To try it, follow the
+[preview setup instructions](https://github.com/nrwl/nx-ai-agents-config#preview-the-nx-and-nx-cloud-plugins).
 
 ## Authenticate your agent
 

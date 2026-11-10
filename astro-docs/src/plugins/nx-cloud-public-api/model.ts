@@ -573,7 +573,7 @@ export function buildOpenApiReference(
     title: document.info.title,
     version: document.info.version,
     introduction: prose(
-      `This is an API reference of the Nx Cloud Public API.\n[View OpenAPI specification](${NX_CLOUD_PUBLIC_API_SPEC_URL})`
+      `This is an API reference of the Nx Cloud Public API.\n[View OpenAPI specification](${NX_CLOUD_PUBLIC_API_SPEC_URL})\n\nTo query the API from an artificial intelligence (AI) agent, install the Nx Cloud skills with \`nx configure-ai-agents\`.\nFor the list of skills, where they live, and how to update them, see [Use the Nx Cloud Public API with an AI agent](/docs/kb/use-public-api-with-ai-agent).`
     ),
     description: prose(lead),
     overview,
