@@ -49,6 +49,7 @@ type TsconfigInfoCaches = {
   composite: Map<string, boolean>;
   content: Map<string, string>;
   exists: Map<string, boolean>;
+  extendedConfigs: Map<string, ts.ExtendedConfigCacheEntry>;
   ignore?: ReturnType<typeof ignore>;
 };
 type ChangedFileDetails = {
@@ -68,6 +69,7 @@ export async function syncGenerator(tree: Tree): Promise<SyncGeneratorResult> {
     composite: new Map(),
     content: new Map(),
     exists: new Map(),
+    extendedConfigs: new Map(),
   };
   // Root tsconfig containing project references for the whole workspace
   const rootTsconfigPath = 'tsconfig.json';
@@ -277,7 +279,8 @@ export async function syncGenerator(tree: Tree): Promise<SyncGeneratorResult> {
     if (foundRuntimeTsConfig) {
       const sourceProjectTsconfig = parseTsconfig(
         sourceProjectTsconfigPath,
-        tsSysFromTree
+        tsSysFromTree,
+        tsconfigInfoCaches
       );
       keepReferencesInTsconfigJson = sourceProjectTsconfig.fileNames.length > 0;
     }
@@ -350,12 +353,18 @@ function readRawTsconfigContents(
 
 function parseTsconfig(
   tsconfigPath: string,
-  sys: ts.System
+  sys: ts.System,
+  tsconfigInfoCaches: TsconfigInfoCaches
 ): ts.ParsedCommandLine {
   return ts.parseJsonConfigFileContent(
     ts.readConfigFile(tsconfigPath, sys.readFile).config,
     sys,
-    dirname(tsconfigPath)
+    dirname(tsconfigPath),
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    tsconfigInfoCaches.extendedConfigs
   );
 }
 
@@ -741,10 +750,11 @@ function hasCompositeEnabled(
   tsconfigPath: string
 ): boolean {
   if (!tsconfigInfoCaches.composite.has(tsconfigPath)) {
-    const parsed = parseTsconfig(tsconfigPath, {
-      ...tsSysFromTree,
-      readDirectory: () => [],
-    });
+    const parsed = parseTsconfig(
+      tsconfigPath,
+      { ...tsSysFromTree, readDirectory: () => [] },
+      tsconfigInfoCaches
+    );
     tsconfigInfoCaches.composite.set(
       tsconfigPath,
       parsed.options.composite === true
