@@ -95,8 +95,9 @@ export async function addLinting(
           }
           logger.warn(
             `The ESLint config of the "${options.projectName}" project uses the "core-web-vitals" config of @next/eslint-plugin-next instead of eslint-config-next. ` +
-              `The root config ${rootConfigWithConflictingPlugin} registers react, react-hooks, import or jsx-a11y, and ESLint rejects a second copy of a plugin. ` +
-              `Files that ${rootConfigWithConflictingPlugin} does not lint with those plugins get no React, React Hooks, jsx-a11y or import rules.`
+              `The root config ${rootConfigWithConflictingPlugin} registers react, react-hooks, import or jsx-a11y, which eslint-config-next also registers, and ESLint fails when two configs register different copies of one plugin. ` +
+              'The two may be the same copy, which ESLint accepts. To check, spread eslint-config-next/core-web-vitals in place of the "core-web-vitals" config and run lint. Keep the spread if lint reports no "Cannot redefine plugin" error. ' +
+              `Otherwise, files that ${rootConfigWithConflictingPlugin} does not lint with those plugins get no React, React Hooks, jsx-a11y or import rules.`
           );
         } else {
           // Generators keep a declared version, which can predate v16.

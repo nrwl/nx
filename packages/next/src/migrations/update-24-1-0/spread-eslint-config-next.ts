@@ -379,7 +379,8 @@ function getNextPluginConfigNote(
 ): string {
   return [
     `${path} now uses the "core-web-vitals" config of "${NEXT_PLUGIN_IMPORT}" instead of eslint-config-next, because ${getConflictingPluginsReason(conflictingConfig)}.`,
-    `Files that ${conflictingConfig} does not lint with those plugins get no React, React Hooks, jsx-a11y or import rules.`,
+    `The two may be the same copy, which ESLint accepts. To check, spread eslint-config-next/core-web-vitals in place of the "core-web-vitals" config in ${path} and run lint. Keep the spread if lint reports no "Cannot redefine plugin" error.`,
+    `Otherwise, files that ${conflictingConfig} does not lint with those plugins get no React, React Hooks, jsx-a11y or import rules.`,
     `Rules and eslint-disable comments that name a react/, jsx-a11y/ or import/ rule, in ${path} or in the files it lints, make lint fail unless another config registers that plugin. Delete or rewrite them.`,
   ].join(' ');
 }
