@@ -258,14 +258,14 @@ export default [...baseConfig, nextEslintPluginNext.configs['core-web-vitals']];
 
 The project then gets React, jsx-a11y, and import rules only from the config that registers those
 plugins.
-The `@nx/next:application` generator picks that config when it finds one of these in the root
-config, the app's config, or a local module one of them loads by a relative path that names the file:
+The `@nx/next:application` generator picks that config when it finds one of these in a root config,
+or in a local module a root config loads by a relative path that names the file:
 
 - an `import` or `require` of the package of one of those plugins, or of a file inside it
 - the name of a config that registers one of them, such as `flat/react`
 - a `plugins` object with one of their names
 
-The `@nx/next` migration to `eslint-config-next` 16.4 runs the same check.
+The `@nx/next` migration to `eslint-config-next` 16.4 runs the same check on the app's config too.
 When it finds one, it replaces the `@next/next` plugin registration that Nx generated for Next.js
 16 apps with that config.
 It lists any other Next.js config in that case for you to change by hand.
