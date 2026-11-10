@@ -1,6 +1,7 @@
 import type { DevServer } from '@rspack/core';
 import assert from 'node:assert';
 import { existsSync, promises as fsPromises } from 'node:fs';
+import type { IncomingMessage, ServerResponse } from 'node:http';
 import { extname, posix, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import type { NormalizedAngularRspackPluginOptions } from '../../models';
@@ -21,10 +22,14 @@ export async function getDevServerConfig(
   return {
     host: options.devServer.host,
     port: options.devServer.port,
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-      ...options.devServer.headers,
-    },
+    // With SSR, only the files the dev middleware serves get the default, so
+    // other websites can't read pages or proxied responses.
+    headers: servesSsr
+      ? options.devServer.headers
+      : {
+          'Access-Control-Allow-Origin': '*',
+          ...options.devServer.headers,
+        },
     historyApiFallback: servesSsr
       ? false
       : {
@@ -47,7 +52,7 @@ export async function getDevServerConfig(
     ),
     devMiddleware: {
       publicPath: servePath,
-      ...(servesSsr ? { index: false } : {}),
+      ...(servesSsr ? { index: false, headers: allowAnyOriginUnlessSet } : {}),
       writeToDisk:
         platform === 'browser' && options.hasServer
           ? (file) => !file.includes('.hot-update.')
@@ -77,6 +82,17 @@ export async function getDevServerConfig(
           }
         : undefined,
   };
+}
+
+// The dev middleware applies these after the configured headers and any
+// earlier middleware, so an origin either of them set must win.
+function allowAnyOriginUnlessSet(
+  _req: IncomingMessage,
+  res: ServerResponse
+): Record<string, string> | undefined {
+  return res.hasHeader('Access-Control-Allow-Origin')
+    ? undefined
+    : { 'Access-Control-Allow-Origin': '*' };
 }
 
 /**

@@ -3,6 +3,7 @@ import {
   sources,
   type Compiler,
   type Configuration,
+  type DevServer,
   type DevServerMiddleware,
   type DevServerMiddlewareHandler,
   type MultiCompiler,
@@ -18,6 +19,8 @@ import type { AddressInfo } from 'node:net';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { merge } from 'webpack-merge';
+import { getDevServerConfig } from '../config/config-utils/dev-server-config-utils';
 import type { NormalizedAngularRspackPluginOptions } from '../models';
 import { AngularSsrDevServer } from './angular-ssr-dev-server';
 import { DevServerReloads } from './dev-server-reloads';
@@ -50,9 +53,12 @@ interface Harness {
   ssrDevServer: AngularSsrDevServer | undefined;
   sendMessage: ReturnType<typeof vi.fn>;
   httpServer: Server;
-  get(
-    path: string
-  ): Promise<{ status: number; body: string; location: string | null }>;
+  get(path: string): Promise<{
+    status: number;
+    body: string;
+    location: string | null;
+    allowOrigin: string | null;
+  }>;
   /** Writes a source file and waits for the round it starts to end. */
   edit(file: string, content: string, onInvalid?: () => void): Promise<void>;
   /** Holds the next server build when it reaches emit, until `release`. */
@@ -76,6 +82,8 @@ async function startHarness({
   liveReload,
   lazyCompilation = false,
   proxy = false,
+  headers,
+  devServerOverrides = {},
 }: {
   server?: string;
   ssr?: boolean;
@@ -84,6 +92,8 @@ async function startHarness({
   liveReload?: boolean;
   lazyCompilation?: boolean;
   proxy?: boolean;
+  headers?: Record<string, string>;
+  devServerOverrides?: DevServer;
 }): Promise<Harness> {
   const dir = await mkdtemp(join(tmpdir(), 'ngrs-ssr-dev-server-'));
   const browserOutput = join(dir, 'dist', 'browser');
@@ -105,8 +115,11 @@ async function startHarness({
       server: serverOutput,
     },
     index: { input: 'document.html', output: 'index.html' },
-    devServer: {},
+    hasServer: ssr,
+    ssr: ssr && { entry: './server.ts' },
+    devServer: { headers },
   } as NormalizedAngularRspackPluginOptions;
+  const generated = await getDevServerConfig(options, 'browser');
   // Loading a bundle turns on Node source maps for the process.
   const sourceMaps = process.sourceMapsEnabled;
   const reloads = new DevServerReloads();
@@ -122,7 +135,19 @@ async function startHarness({
     target: 'web',
     entry: './browser.js',
     output: { path: browserOutput },
-    devServer: { devMiddleware: { publicPath: servePath }, hot, liveReload },
+    // createConfig merges rspackConfigOverrides the same way.
+    devServer: merge(
+      {
+        headers: generated.headers,
+        devMiddleware: {
+          publicPath: servePath,
+          headers: generated.devMiddleware?.headers,
+        },
+        hot,
+        liveReload,
+      },
+      devServerOverrides
+    ),
     ...(lazyCompilation ? { lazyCompilation: true } : {}),
     watchOptions: { aggregateTimeout: 5 },
     plugins: [
@@ -223,8 +248,18 @@ async function startHarness({
   // Answers the browser document, and the files of both compilations as
   // rspack 1.x's dev middleware does.
   const devMiddleware: DevServerMiddlewareHandler = async (req, res, next) => {
+    // Both dev middlewares add their headers once they have found the file.
+    const send = (content: string) => {
+      const headers = (browser.options.devServer || {}).devMiddleware?.headers;
+      const resolved: Record<string, string> | undefined =
+        typeof headers === 'function' ? headers(req, res, undefined) : headers;
+      for (const [name, value] of Object.entries(resolved ?? {})) {
+        res.setHeader(name, value);
+      }
+      res.end(content);
+    };
     if (req.url === `${base}/index.html`) {
-      res.end('client document');
+      send('client document');
       return;
     }
     const name = req.url?.startsWith(`${base}/`)
@@ -234,7 +269,7 @@ async function startHarness({
       const content =
         name && (await readFile(join(output, name), 'utf-8').catch(() => ''));
       if (content) {
-        res.end(content);
+        send(content);
         return;
       }
     }
@@ -248,10 +283,24 @@ async function startHarness({
       name: '@rspack/dev-middleware',
       middleware: undefined,
     }) as unknown as DevServerMiddleware;
+  // Both dev servers apply the configured headers first.
+  const setHeaders: DevServerMiddleware = {
+    name: 'set-headers',
+    middleware: (_req, res, next) => {
+      const headers = (browser.options.devServer || {}).headers as
+        | Record<string, string>
+        | undefined;
+      for (const [name, value] of Object.entries(headers ?? {})) {
+        res.setHeader(name, value);
+      }
+      next();
+    },
+  };
   const middlewares =
     (browser.options.devServer || {}).setupMiddlewares?.(
       proxy
         ? [
+            setHeaders,
             devMiddlewareEntry(),
             {
               name: 'http-proxy-middleware',
@@ -259,7 +308,7 @@ async function startHarness({
             },
             devMiddlewareEntry(),
           ]
-        : [devMiddlewareEntry()],
+        : [setHeaders, devMiddlewareEntry()],
       { webSocketServer: { clients: [{}] }, sendMessage }
     ) ?? [];
   for (const entry of middlewares) {
@@ -298,6 +347,7 @@ async function startHarness({
         status: response.status,
         body: await response.text(),
         location: response.headers.get('location'),
+        allowOrigin: response.headers.get('access-control-allow-origin'),
       };
     },
     edit(file, content, onInvalid) {
@@ -396,6 +446,57 @@ ${nodeHandler(`'v1 ' + /PAGE-v\\d/.exec(main)[0]`)}`;
     },
     20_000
   );
+
+  const settingAllowOrigin = (origin: string): DevServer => ({
+    setupMiddlewares: (middlewares) => [
+      ...middlewares,
+      {
+        name: 'cors',
+        middleware: (_req, res, next) => {
+          res.setHeader('Access-Control-Allow-Origin', origin);
+          next();
+        },
+      },
+    ],
+  });
+
+  it.each([
+    ['gives pages no Access-Control-Allow-Origin by default', {}, null, '*'],
+    [
+      'applies an Access-Control-Allow-Origin set in devServer.headers',
+      { headers: { 'access-control-allow-origin': '*' } },
+      '*',
+      '*',
+    ],
+    [
+      'applies an Access-Control-Allow-Origin set in the devServer overrides',
+      {
+        devServerOverrides: {
+          headers: { 'Access-Control-Allow-Origin': 'https://allowed.example' },
+        },
+      },
+      'https://allowed.example',
+      'https://allowed.example',
+    ],
+    [
+      'keeps an origin that a middleware sets',
+      { devServerOverrides: settingAllowOrigin('https://consumer.example') },
+      'https://consumer.example',
+      '*',
+    ],
+    [
+      'keeps a wildcard that a middleware sets',
+      { devServerOverrides: settingAllowOrigin('*') },
+      '*',
+      '*',
+    ],
+  ])('%s', async (_, setup, page, asset) => {
+    const harness = await startHarness(setup);
+    await harness.ssrDevServer?.firstLoad;
+
+    expect((await harness.get('/')).allowOrigin).toBe(page);
+    expect((await harness.get('/main.js')).allowOrigin).toBe(asset);
+  });
 
   it('answers 500 while the server bundle fails to load and serves the next good build', async () => {
     const error = vi.spyOn(console, 'error').mockImplementation(() => {});
