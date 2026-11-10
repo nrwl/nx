@@ -5,7 +5,10 @@ vi.mock('../logger', () => ({
   serverLogger: { log: vi.fn() },
 }));
 vi.mock('../../utils/provenance', () => ({
-  ensurePackageHasProvenance: vi.fn().mockResolvedValue(undefined),
+  resolveVersionWithProvenance: vi.fn().mockResolvedValue('0.0.0'),
+}));
+vi.mock('./project-graph-incremental-recomputation', () => ({
+  invalidateGraphCache: vi.fn(),
 }));
 vi.mock('../../utils/package-manager', () => ({
   detectPackageManager: vi.fn().mockReturnValue('npm'),
