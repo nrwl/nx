@@ -1471,4 +1471,18 @@ describe('isBuiltinModuleImport()', () => {
       expect(isBuiltinModuleImport(builtinModule)).toBe(true);
     }
   );
+
+  it.each(['bun', 'bun:test', 'bun:sqlite'])(
+    `should return true for %s bun builtin module`,
+    (builtinModule) => {
+      expect(isBuiltinModuleImport(builtinModule)).toBe(true);
+    }
+  );
+
+  it.each(['bunyan', 'bun-types'])(
+    `should return false for %s package that only starts with bun`,
+    (importExpr) => {
+      expect(isBuiltinModuleImport(importExpr)).toBe(false);
+    }
+  );
 });
