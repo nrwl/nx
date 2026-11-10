@@ -131,7 +131,8 @@ A task that depends on a dev server target starts once the server task has start
 To make it wait until the server accepts connections, set `waitFor` to `ready` on its `dependsOn` entry.
 It then waits for the target's `readyWhen` check, which depends on how the target runs the server:
 
-- `angular.json` targets that use a dev server or SSR dev server builder get a check from `@nx/angular/plugin`.
+- `angular.json` targets that use a dev server or server-side rendering (SSR) dev server builder
+  get a check from `@nx/angular/plugin`.
   It runs when the task runs, reads the target from `angular.json`, and waits for the port.
   The port comes from the `--port` flag, then the target's `port` option, which a configuration can override, then 4200.
   For `@angular/build:dev-server` 22 or later, a set `PORT` environment variable replaces it, as it does in the builder.

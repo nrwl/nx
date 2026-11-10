@@ -108,10 +108,8 @@ Angular Rspack configs made with `createConfig` from `@nx/angular-rspack` load `
 In other configs, add `new NxReadySignalPlugin()` from `@nx/rspack/ready-signal` to `plugins` instead.
 The report carries the port the server actually uses, so the check is right however the port was chosen.
 
-In an Angular server-side rendering (SSR) app, the dev server reports once it listens, without waiting for the build.
-It holds requests until the build finishes.
-The SSR server starts only after the build, on `PORT` or the port its server file sets, 4000 in generated apps.
-A task that tests SSR on that port has to wait for it itself.
+In an Angular server-side rendering (SSR) app, the dev server renders the pages at its own address.
+It reports that address once the server bundle has loaded.
 
 Without any of these plugins, the check reads the Rspack config when the task runs instead, in the task's environment and with its options.
 That covers `.env` files and `--port` or `--host` flags.

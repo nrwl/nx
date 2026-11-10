@@ -288,6 +288,13 @@ Controls whether to create a separate bundle containing shared code between mult
 `DevServerOptions`
 Configuration options for the development server including port, SSL settings, and proxy configuration.
 
+The development server adds `Access-Control-Allow-Origin: *` to its responses.
+With SSR, it adds the header only to the files the build outputs.
+Rendered pages, `server.ts` routes, proxied requests, and responses from your own middleware
+don't get it.
+To let another origin read them, set the header in `devServer.headers`, `server.ts`, your
+middleware, or your backend.
+
 ### extractLicenses
 
 `boolean` `default: false`
