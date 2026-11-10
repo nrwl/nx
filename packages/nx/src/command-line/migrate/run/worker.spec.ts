@@ -7,6 +7,10 @@ const mockChangedDepInstallerCtor = vi.fn();
 const mockStringifiedDeps = vi.fn();
 const mockRunInstall = vi.fn();
 const mockInstallDepsIfChanged = vi.fn();
+type ChangedDepInstallerClass =
+  typeof import('../execute-migration').ChangedDepInstaller;
+// Set by a test that drives the real installer; beforeEach clears it.
+let mockRealInstaller: ChangedDepInstallerClass | undefined;
 let mockSkippedInstall: string | undefined;
 let mockInstalled = false;
 vi.mock('../execute-migration', async () => ({
@@ -19,6 +23,11 @@ vi.mock('../execute-migration', async () => ({
     ...args: unknown[]
   ) {
     mockChangedDepInstallerCtor(...args);
+    if (mockRealInstaller) {
+      return new mockRealInstaller(
+        ...(args as ConstructorParameters<ChangedDepInstallerClass>)
+      );
+    }
     return {
       installDepsIfChanged: (...called: unknown[]) =>
         mockInstallDepsIfChanged(...called),
@@ -140,6 +149,14 @@ vi.mock('../../../utils/package-manager', () => ({
 
 vi.mock('fs', async () => ({ ...require('fs') }));
 
+// The real installer spawns the package manager.
+const mockSpawn = vi.fn();
+vi.mock('child_process', async () => ({
+  ...require('child_process'),
+  spawn: (...args: unknown[]) => mockSpawn(...args),
+}));
+
+import { EventEmitter } from 'events';
 import * as fs from 'fs';
 import {
   existsSync,
@@ -281,6 +298,8 @@ describe('runSingleMigrationWorker', () => {
     mockStringifiedDeps.mockReset().mockReturnValue('{"deps":1}');
     mockRunInstall.mockReset().mockResolvedValue(undefined);
     mockInstallDepsIfChanged.mockReset().mockResolvedValue(undefined);
+    mockSpawn.mockReset();
+    mockRealInstaller = undefined;
     mockSkippedInstall = undefined;
     mockInstalled = false;
   });
@@ -2417,6 +2436,66 @@ describe('runSingleMigrationWorker', () => {
 
       expect(mockRunMigration).not.toHaveBeenCalled();
       expect(mockRunInstall).toHaveBeenCalledTimes(1);
+      expect(readRunState(dir).steps[0].installRequested).toBeUndefined();
+    });
+
+    it.each([
+      [
+        'installs the request an earlier attempt stored when a clean retry reruns the generator',
+        true,
+        false,
+        1,
+      ],
+      ['installs the request the generator returns', false, true, 1],
+      [
+        'installs nothing when neither the step nor the generator asks for one',
+        false,
+        false,
+        0,
+      ],
+    ])('%s', async (_label, stored, returned, installs) => {
+      mockRealInstaller = (
+        await vi.importActual<typeof import('../execute-migration')>(
+          '../execute-migration'
+        )
+      ).ChangedDepInstaller;
+      mockSpawn.mockImplementation(() => {
+        const child = new EventEmitter();
+        setImmediate(() => child.emit('close', 0));
+        return child;
+      });
+      // Declarations the run leaves unchanged, so only a request installs.
+      writeFileSync(
+        join(root, 'package.json'),
+        JSON.stringify({ dependencies: { foo: '1.0.0' } })
+      );
+      mockRunMigration.mockResolvedValue({
+        changes: [],
+        nextSteps: [],
+        agentContext: [],
+        logs: '',
+        madeChanges: false,
+        installDependencies: returned,
+      });
+      const dir = setupRun('run-1', {
+        steps: [
+          {
+            ...migStep('step-1', '@nx/js:gen', 'dispensed'),
+            depsHashAtDispense: depsHash(root),
+            ...(stored ? { installRequested: true } : {}),
+          },
+        ],
+        migrations: [genMig('@nx/js', 'gen')],
+        createCommits: false,
+      });
+
+      await runSingleMigrationWorker({
+        ...recordedInput('@nx/js:gen', 'run-1'),
+        skipInstall: false,
+      });
+
+      expect(mockRunMigration).toHaveBeenCalledTimes(1);
+      expect(mockSpawn).toHaveBeenCalledTimes(installs);
       expect(readRunState(dir).steps[0].installRequested).toBeUndefined();
     });
 

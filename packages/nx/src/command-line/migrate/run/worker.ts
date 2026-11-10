@@ -845,7 +845,11 @@ async function runRecorded(
           madeChanges,
           installRequested: installDependencies,
         });
-        if (installDependencies) {
+        // Read from the step, not the return value: after a clean retry's reset,
+        // an earlier attempt's request still stands, as node_modules is untouched.
+        if (
+          state.steps.find((s) => s.id === step.id)?.installRequested === true
+        ) {
           installer.requestInstall();
         }
 
