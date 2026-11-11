@@ -49,7 +49,7 @@
       "documentation": "./dist/src/migrations/update-24-0-0/replace-set-parser-options-project.md"
     },
     "update-24-1-0-add-directive-checks-rule": {
-      "version": "24.1.0-beta.0",
+      "version": "24.1.0-beta.1",
       "description": "Adds the `@nx/directive-checks` rule to the root ESLint config that project configs extend, in workspaces whose files use the `@nx-depends-on` or `@nx-ignore-server-inputs` directives.",
       "implementation": "./dist/src/migrations/update-24-1-0/add-directive-checks-rule",
       "documentation": "./dist/src/migrations/update-24-1-0/add-directive-checks-rule.md"
