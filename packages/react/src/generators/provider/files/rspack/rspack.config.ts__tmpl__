@@ -13,6 +13,9 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const PORT = <%= port %>;
 const NAME = '<%= federationName %>';
+// localhost (and its subdomains), 127.0.0.1 or [::1], on any port.
+const LOCAL_ORIGIN =
+  /^https?:\/\/(?:(?:[^:]+\.)?localhost|127\.0\.0\.1|\[::1\])(?::\d+)?$/;
 
 // Read mode from the rspack CLI arg (`--mode=development|production`) so the
 // config works the same on Windows + POSIX without depending on a shell
@@ -32,7 +35,13 @@ export default defineConfig((_env, argv) => {
       port: PORT,
       historyApiFallback: true,
       hot: true,
-      headers: { 'Access-Control-Allow-Origin': '*' },
+      // Lets consumers on local origins fetch the manifest and hot updates.
+      headers: (req): Record<string, string> => {
+        const origin = req.headers.origin;
+        return origin && LOCAL_ORIGIN.test(origin)
+          ? { 'Access-Control-Allow-Origin': origin, Vary: 'Origin' }
+          : { Vary: 'Origin' };
+      },
     },
     resolve: { extensions: ['...', '.ts', '.tsx', '.jsx'] },
     module: {

@@ -9,8 +9,11 @@ const NAME = '<%= federationName %>';
 export default defineConfig({
   server: {
     port: PORT,
-    // Allow cross-origin fetches from a consumer on a different port.
-    headers: { 'Access-Control-Allow-Origin': '*' },
+    // Local origins only. Without an explicit origin, the federation plugin
+    // sends `Access-Control-Allow-Origin: *`.
+    cors: {
+      origin: /^https?:\/\/(?:(?:[^:]+\.)?localhost|127\.0\.0\.1|\[::1\])(?::\d+)?$/,
+    },
   },
   // assetPrefix:true tells rsbuild to emit chunks with the dev-server URL as
   // their public path. Without it a consumer on a different port asks its
