@@ -1,7 +1,6 @@
-// Installs Playwright browsers and system packages before the e2e suites run,
-// holding the lock e2e/utils/ensure-browser-installation.ts takes. Two versions
-// are installed: the root one, which some suites launch in-process, and the one
-// the @nx/playwright generator's range resolves to, which generated workspaces use.
+// Installs browsers and system packages for the Playwright version generated
+// workspaces get (the @nx/playwright generator's range), before the e2e suites
+// run. Holds the lock e2e/utils/ensure-browser-installation.ts takes.
 import { execSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
@@ -46,7 +45,9 @@ if (process.env.NX_E2E_RUN_E2E !== 'true') {
     throw new Error(`No published Playwright version satisfies ${range}.`);
   }
 
-  const installArgs = process.env.PLAYWRIGHT_INSTALL_ARGS || '--with-deps';
+  // Generated configs run Chromium headless, which only needs the headless shell.
+  const installArgs =
+    process.env.PLAYWRIGHT_INSTALL_ARGS || '--with-deps --only-shell';
   const lock = new FileLock(
     join(tmpdir(), 'nx-e2e-locks', 'playwright-install.lock')
   );
@@ -55,7 +56,6 @@ if (process.env.NX_E2E_RUN_E2E !== 'true') {
     lock.lock();
   }
   try {
-    execSync(`npx playwright install ${installArgs}`, { stdio: 'inherit' });
     console.log(
       `Installing Playwright ${workspaceVersion} for generated workspaces.`
     );
