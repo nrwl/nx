@@ -261,12 +261,9 @@ function parseResolvedSpec(resolvedSpec: string): {
   version: string;
 } {
   // Handle different resolution formats:
-  // - "package-name@npm:1.0.0"
-  // - "@scope/package-name@npm:1.0.0"
   // - "package-name@github:user/repo#commit"
   // - "package-name@file:./path"
   // - "package-name@https://example.com/package.tgz"
-  // - "alias-name@npm:actual-package@version" (ALIAS FORMAT)
 
   // Handle scoped packages properly - they have an extra @ at the beginning
   // Format: @scope/package@protocol:spec
