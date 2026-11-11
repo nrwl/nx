@@ -1654,9 +1654,10 @@ interface PrunedPackage {
  * Workspace modules become `file:./workspace_modules/<name>` dependencies.
  * `projectRoot` is where the manifest's local-path specs resolve from, and it
  * locates the project's own workspace entry, whose resolutions are kept for
- * the specs it declares even outside their range. `onPinnedSpec` receives the
- * locked version the output declares for such a dependency. Returns an empty
- * string for a manifest without dependencies, which gets no lockfile.
+ * the specs it declares even where an override replaced them. `onPinnedSpec`
+ * receives the locked version the output declares for such a dependency.
+ * Returns an empty string for a manifest without dependencies, which gets no
+ * lockfile.
  */
 export function stringifyBunLockfile(
   graph: ProjectGraph,
@@ -1940,9 +1941,15 @@ export function stringifyBunLockfile(
       }
       const resolvedSpec = resolveCatalog(name, spec);
       const appSpec = appWorkspace?.[depType]?.[name];
+      const appResolvedSpec =
+        appSpec !== undefined
+          ? resolveLockfileCatalog(rootLockFile, name, appSpec)
+          : undefined;
+      // The manifest's local-path specs arrive relocated.
       const declaredByApp =
-        appSpec !== undefined &&
-        resolveLockfileCatalog(rootLockFile, name, appSpec) === resolvedSpec;
+        appResolvedSpec !== undefined &&
+        (relocatePrunedLocalPathSpec(appResolvedSpec, projectRoot, '')?.spec ??
+          appResolvedSpec) === resolvedSpec;
       const key = findManifestDependencyKey(
         rootPackages,
         localSources,
@@ -1953,10 +1960,13 @@ export function stringifyBunLockfile(
       );
       if (key) {
         place([], name, createPackage(key, resolvedSpec));
-        const pinnedSpec =
-          declaredByApp && depType !== 'optionalDependencies'
-            ? getOverriddenVersionSpec(rootPackages[key], resolvedSpec)
-            : undefined;
+        const pinnedSpec = declaredByApp
+          ? getOverriddenVersionSpec(
+              rootPackages[key],
+              resolvedSpec,
+              depType === 'optionalDependencies'
+            )
+          : undefined;
         if (pinnedSpec) {
           rootWorkspace[depType][name] = pinnedSpec;
           onPinnedSpec?.({ depType, name, spec: pinnedSpec });
@@ -2260,17 +2270,22 @@ function resolveLockfileCatalog(
 
 /**
  * The spec a pruned output declares for a dependency that an override or
- * resolution installed outside its declared range. The output ships no
- * overrides, and Bun 1.4.4 re-resolves a required dependency of the root
- * manifest whose locked registry version is outside its range (1.4.3 keeps
- * it). Bun checks no other resolution against the range, so it keeps the
- * declared spec.
+ * resolution installed outside its declared range, or in place of its local
+ * path. The output ships no overrides, and Bun 1.4.4 re-resolves a required
+ * dependency of the root manifest whose locked registry version is outside its
+ * range (1.4.3 keeps it). Bun checks no other resolution against the range, so
+ * an optional one keeps the declared spec, unless that spec is a local path
+ * the output ships no copy of.
  */
 function getOverriddenVersionSpec(
   tuple: unknown[],
-  spec: string
+  spec: string,
+  isOptional: boolean
 ): string | undefined {
-  if (resolvesToSpec(tuple, spec)) {
+  if (
+    !getLocalSpecSource(spec) &&
+    (isOptional || resolvesToSpec(tuple, spec))
+  ) {
     return undefined;
   }
   const { name, version, protocol } = getCachedSpecInfo(tuple[0] as string);

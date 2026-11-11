@@ -578,8 +578,8 @@ function buildLockFile(
  *
  * Mutates `packageJson` (the pnpm and Bun specifier relocation, the config
  * strip, and for Bun the `overrides`/`resolutions` strip and the locked version
- * of each dependency an override installed outside its range), so write or
- * emit the manifest after calling this.
+ * of each dependency an override installed outside its range or in place of
+ * its local path), so write or emit the manifest after calling this.
  */
 function createPrunedLockfile(
   packageJson: PackageJson,
