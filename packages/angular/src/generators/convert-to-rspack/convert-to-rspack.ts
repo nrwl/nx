@@ -405,6 +405,7 @@ export async function convertToRspack(
         target.options.main,
         project.root
       );
+      createConfigOptions.ssr.serveFromDevServer = true;
       createConfigOptions.server = './src/main.server.ts';
       serverTsConfigPath = target.options?.tsConfig
         ? // each target can spell the same path differently

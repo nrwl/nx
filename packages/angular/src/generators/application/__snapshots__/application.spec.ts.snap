@@ -26,7 +26,8 @@ exports[`app > --minimal > should generate a correct setup when --bundler=rspack
   ],
   "devServer": {},
   "ssr": {
-    "entry": "./src/server.ts"
+    "entry": "./src/server.ts",
+    "serveFromDevServer": true
   },
   "server": "./src/main.server.ts",
   "prerender": {

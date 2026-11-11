@@ -233,6 +233,7 @@ describe('convert-to-rspack', () => {
           scripts: [],
           ssr: {
             entry: './src/server.ts',
+            serveFromDevServer: true,
           },
           server: './src/main.server.ts',
         },
