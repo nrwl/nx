@@ -13,8 +13,11 @@ import {
 
 import { builtinModules } from 'node:module';
 
+const mockedWorkspaceRoot = vi.hoisted(() => ({ path: '/root' }));
 vi.mock('nx/src/utils/workspace-root', () => ({
-  workspaceRoot: '/root',
+  get workspaceRoot() {
+    return mockedWorkspaceRoot.path;
+  },
 }));
 
 vi.mock('nx/src/plugins/js/utils/resolve-relative-to-dir', () => ({
@@ -1171,6 +1174,10 @@ describe('TargetProjectLocator', () => {
   });
 
   describe('findNpmProjectFromImport', () => {
+    afterEach(() => {
+      mockedWorkspaceRoot.path = '/root';
+    });
+
     it('should resolve external node when the version does not match its own package.json (i.e. git remote) ', () => {
       const projects = {
         proj: {
@@ -1247,6 +1254,90 @@ describe('TargetProjectLocator', () => {
 
       expect(result).toEqual('npm:foo@0.0.1');
     });
+
+    // lib installs its own vendored `x` 2.0.0. The root installs a vendored
+    // copy, which Bun names by path and then bare, or the registry package of
+    // the same version.
+    const rootVendoredX = {
+      rootCopy: 'a vendored copy',
+      rootVersion: '1.0.0',
+      rootNodes: [
+        ['npm:x@file:vendor/x', 'file:vendor/x'],
+        ['npm:x', 'file:vendor/x'],
+      ],
+      rootInstalled: { '.': { x: 'npm:x@file:vendor/x' } },
+      appNode: 'npm:x@file:vendor/x',
+    };
+    it.each([
+      { workspaceRoot: '/root', ...rootVendoredX },
+      { workspaceRoot: '/root/', ...rootVendoredX },
+      {
+        workspaceRoot: '/root',
+        rootCopy: 'the registry package of the same version',
+        rootVersion: '2.0.0',
+        rootNodes: [['npm:x', '2.0.0']],
+        rootInstalled: {},
+        appNode: 'npm:x',
+      },
+    ])(
+      'should resolve a local package to the copy the nearest importer installs when the workspace root is $workspaceRoot and the root installs $rootCopy',
+      ({ workspaceRoot, rootVersion, rootNodes, rootInstalled, appNode }) => {
+        mockedWorkspaceRoot.path = workspaceRoot;
+        vol.fromJSON(
+          {
+            'node_modules/x/package.json': JSON.stringify({
+              name: 'x',
+              version: rootVersion,
+            }),
+            'libs/lib/node_modules/x/package.json': JSON.stringify({
+              name: 'x',
+              version: '2.0.0',
+            }),
+            // Declares lib's copy, but the lockfile records no such importer
+            'apps/app/fixtures/package.json': JSON.stringify({
+              dependencies: { x: 'file:../../../libs/vendor/x' },
+            }),
+          },
+          '/root'
+        );
+        const externalNodes = Object.fromEntries(
+          [
+            ...rootNodes,
+            ['npm:x@file:libs/vendor/x', 'file:libs/vendor/x'],
+          ].map(([name, version]) => [
+            name,
+            {
+              name,
+              type: 'npm' as const,
+              data: { version, packageName: 'x' },
+            },
+          ])
+        );
+        const targetProjectLocator = new TargetProjectLocator(
+          {},
+          externalNodes,
+          new Map(),
+          new Map(),
+          {
+            ...rootInstalled,
+            'libs/lib': { x: 'npm:x@file:libs/vendor/x' },
+          }
+        );
+
+        expect(
+          targetProjectLocator.findNpmProjectFromImport(
+            'x',
+            'libs/lib/src/index.ts'
+          )
+        ).toEqual('npm:x@file:libs/vendor/x');
+        expect(
+          targetProjectLocator.findNpmProjectFromImport(
+            'x',
+            'apps/app/fixtures/index.ts'
+          )
+        ).toEqual(appNode);
+      }
+    );
   });
 
   describe('findDependencyInWorkspaceProjects', () => {

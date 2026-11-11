@@ -79,6 +79,7 @@ export function getNpmLockfileNodes(
 ): {
   nodes: Record<string, ProjectGraphExternalNode>;
   keyMap: Map<string, ProjectGraphExternalNode>;
+  installedLocalPathNodes: Record<string, Record<string, string>>;
 } {
   const data = parsePackageLockFile(
     lockFileContent,
@@ -105,9 +106,11 @@ export function getNpmLockfileDependencies(
 function getNodes(data: NpmLockFile): {
   nodes: Record<string, ProjectGraphExternalNode>;
   keyMap: Map<string, ProjectGraphExternalNode>;
+  installedLocalPathNodes: Record<string, Record<string, string>>;
 } {
   const keyMap = new Map<string, ProjectGraphExternalNode>();
   const nodes: Map<string, Map<string, ProjectGraphExternalNode>> = new Map();
+  const localPathPackageNames = new Set<string>();
 
   if (data.lockfileVersion > 1) {
     Object.entries(data.packages).forEach(([path, snapshot]) => {
@@ -126,6 +129,9 @@ function getNodes(data: NpmLockFile): {
       // symlinked packages in workspaces do not have versions
       if (version) {
         createNode(packageName, version, path, nodes, keyMap, snapshot);
+        if (snapshot.resolved?.startsWith('file:')) {
+          localPathPackageNames.add(packageName);
+        }
       }
     });
   } else {
@@ -171,7 +177,75 @@ function getNodes(data: NpmLockFile): {
       results[node.name] = node;
     });
   }
-  return { nodes: results, keyMap };
+
+  return {
+    nodes: results,
+    keyMap,
+    installedLocalPathNodes: localPathPackageNames.size
+      ? getInstalledLocalPathNodes(data, keyMap, localPathPackageNames)
+      : {},
+  };
+}
+
+function getInstalledLocalPathNodes(
+  data: NpmLockFile,
+  keyMap: Map<string, ProjectGraphExternalNode>,
+  localPathPackageNames: Set<string>
+): Record<string, Record<string, string>> {
+  const installed: Record<string, Record<string, string>> = {};
+  for (const importerPath in data.packages) {
+    if (importerPath !== '' && importerPath.includes('node_modules')) {
+      continue;
+    }
+    const importer = data.packages[importerPath];
+    for (const deps of [
+      importer.dependencies,
+      importer.devDependencies,
+      importer.optionalDependencies,
+      importer.peerDependencies,
+    ]) {
+      for (const depName of Object.keys(deps ?? {})) {
+        if (!localPathPackageNames.has(depName)) {
+          continue;
+        }
+        // Node loads the nearest copy, so a registry copy there wins
+        const key = findNearestNpmPackageKey(data, importerPath, depName);
+        const snapshot = key && data.packages[key];
+        if (
+          !snapshot ||
+          snapshot.link ||
+          !snapshot.resolved?.startsWith('file:') ||
+          (snapshot.name && snapshot.name !== depName)
+        ) {
+          continue;
+        }
+        const node = keyMap.get(key);
+        if (node) {
+          (installed[importerPath || '.'] ??= {})[depName] = node.name;
+        }
+      }
+    }
+  }
+  return installed;
+}
+
+function findNearestNpmPackageKey(
+  data: NpmLockFile,
+  importerPath: string,
+  packageName: string
+): string | undefined {
+  let dir = importerPath;
+  while (true) {
+    const key = `${dir ? `${dir}/` : ''}node_modules/${packageName}`;
+    if (data.packages[key]) {
+      return key;
+    }
+    if (!dir) {
+      return undefined;
+    }
+    const slash = dir.lastIndexOf('/');
+    dir = slash === -1 ? '' : dir.slice(0, slash);
+  }
 }
 
 function addV1Node(
