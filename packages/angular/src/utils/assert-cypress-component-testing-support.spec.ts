@@ -158,13 +158,12 @@ describe('assertCypressComponentTestingSupport', () => {
         version: installed,
       });
 
-      const assertion = expect(() =>
-        assertCypressComponentTestingSupport(tree)
-      );
       if (throws) {
-        assertion.toThrow(/requires Cypress 15\.20\.1 or higher/);
+        expect(() => assertCypressComponentTestingSupport(tree)).toThrow(
+          /requires Cypress 15\.20\.1 or higher/
+        );
       } else {
-        assertion.not.toThrow();
+        expect(() => assertCypressComponentTestingSupport(tree)).not.toThrow();
       }
     }
   );

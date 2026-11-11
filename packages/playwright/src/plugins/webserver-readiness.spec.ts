@@ -966,13 +966,10 @@ process.send({ type: 'webserver-config-result', webServers: [{ command: 'x', url
         writeWorker('hang.js', `setInterval(() => {}, 1000);`)
       );
       const evaluation = resolveWebServersUnderEnv('config.ts', fixtureDir, {});
-      // Attach the rejection expectation before firing the timer so the
-      // rejection is never unhandled.
-      const assertion = expect(evaluation).rejects.toThrow(
+      vi.advanceTimersByTime(30_000);
+      await expect(evaluation).rejects.toThrow(
         'Timed out evaluating the Playwright config'
       );
-      vi.advanceTimersByTime(30_000);
-      await assertion;
     } finally {
       vi.useRealTimers();
     }

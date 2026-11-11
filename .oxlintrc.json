@@ -151,6 +151,36 @@
           }
         ]
       }
+    },
+    {
+      "files": ["**/*.spec.*", "**/*.test.*"],
+      // The jest plugin brings its rules from every category enabled here or in a
+      // nested config. Only valid-expect is wanted, so the others are turned off.
+      "plugins": ["jest"],
+      "rules": {
+        "no-restricted-globals": [
+          "error",
+          {
+            "name": "fail",
+            "message": "Jest 30 and Vitest have no global fail(). Assert with expect(() => ...).toThrow() or await expect(...).rejects.toThrow() instead."
+          }
+        ],
+        // Vitest's expect takes a failure message as a second argument; Jest 30
+        // throws on one.
+        "jest/valid-expect": ["error", { "maxArgs": 2 }],
+        "jest/expect-expect": "off",
+        "jest/no-commented-out-tests": "off",
+        "jest/no-conditional-expect": "off",
+        "jest/no-disabled-tests": "off",
+        "jest/no-export": "off",
+        "jest/no-focused-tests": "off",
+        "jest/no-standalone-expect": "off",
+        "jest/prefer-snapshot-hint": "off",
+        "jest/require-to-throw-message": "off",
+        "jest/valid-describe-callback": "off",
+        "jest/valid-expect-in-promise": "off",
+        "jest/valid-title": "off"
+      }
     }
   ]
 }

@@ -59,7 +59,7 @@ describe('cache', () => {
     });
 
     it('should error if multiple decimal points', () => {
-      expect(() => parseMaxCacheSize('1.5.5KB')).toThrow;
+      expect(() => parseMaxCacheSize('1.5.5KB')).toThrow();
     });
   });
 

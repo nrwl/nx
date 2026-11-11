@@ -45,15 +45,9 @@ describe('assertWorkspaceValidity', () => {
   it('should throw for an invalid project-level implicit dependency with glob', () => {
     mockProjects.app2.implicitDependencies = ['invalid*'];
 
-    try {
-      assertWorkspaceValidity(mockProjects, {});
-      fail('should not reach');
-    } catch (e) {
-      expect(e.message).toContain(
-        'The following implicitDependencies point to non-existent project(s)'
-      );
-      expect(e.message).toContain('invalid*');
-      expect(e.message).toContain('invalid*');
-    }
+    expect(() => assertWorkspaceValidity(mockProjects, {})).toThrow(
+      'The following implicitDependencies point to non-existent project(s)'
+    );
+    expect(() => assertWorkspaceValidity(mockProjects, {})).toThrow('invalid*');
   });
 });
