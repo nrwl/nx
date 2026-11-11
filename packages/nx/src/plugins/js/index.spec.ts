@@ -333,7 +333,7 @@ describe('nx/js/dependencies-and-lockfile', () => {
       JSON.stringify({
         name: 'rvws',
         workspaces: ['libs/*'],
-        dependencies: { x: 'file:vendor/x.tgz' },
+        dependencies: { x: 'file:vendor/x-1.0.0.tgz' },
       })
     );
     write(
@@ -348,7 +348,10 @@ describe('nx/js/dependencies-and-lockfile', () => {
     );
     write(
       'libs/a/package.json',
-      JSON.stringify({ name: '@rv/a', dependencies: { x: 'file:x-a.tgz' } })
+      JSON.stringify({
+        name: '@rv/a',
+        dependencies: { x: 'file:x-a-1.0.0.tgz' },
+      })
     );
     write('libs/a/src/index.ts', `import x from 'x';`);
     write(
@@ -372,8 +375,8 @@ describe('nx/js/dependencies-and-lockfile', () => {
         .map(({ sourceFile, target }) => [sourceFile, target])
         .sort()
     ).toEqual([
-      ['libs/a/package.json', 'npm:x@file:libs/a/x-a.tgz'],
-      ['libs/a/src/index.ts', 'npm:x@file:libs/a/x-a.tgz'],
+      ['libs/a/package.json', 'npm:x@file:libs/a/x-a-1.0.0.tgz'],
+      ['libs/a/src/index.ts', 'npm:x@file:libs/a/x-a-1.0.0.tgz'],
     ]);
   });
 
