@@ -2,20 +2,6 @@ import { join } from 'path';
 import { major } from 'semver';
 import { readJsonFile } from '../utils/fileutils';
 import { NX_TMP_DIR_POSIX } from '../utils/nx-tmp-dir';
-import {
-  getAgentRules,
-  AgentRulesOptions,
-} from './set-up-ai-agents/get-agent-rules';
-
-export type { AgentRulesOptions };
-
-export function agentsMdPath(root: string): string {
-  return join(root, 'AGENTS.md');
-}
-
-export function geminiMdPath(root: string): string {
-  return join(root, 'GEMINI.md');
-}
 
 export function parseGeminiSettings(root: string): any | undefined {
   const settingsPath = geminiSettingsPath(root);
@@ -30,10 +16,6 @@ export function geminiSettingsPath(root: string): string {
   return join(root, '.gemini', 'settings.json');
 }
 
-export function claudeMdPath(root: string): string {
-  return join(root, 'CLAUDE.md');
-}
-
 export function claudeMcpJsonPath(root: string): string {
   return join(root, '.mcp.json');
 }
@@ -45,25 +27,6 @@ export function opencodeMcpPath(root: string): string {
 export function codexConfigTomlPath(root: string): string {
   return join(root, '.codex', 'config.toml');
 }
-
-export const nxRulesMarkerCommentStart = `<!-- nx configuration start-->`;
-export const nxRulesMarkerCommentDescription = `<!-- Leave the start & end comments to automatically receive updates. -->`;
-export const nxRulesMarkerCommentEnd = `<!-- nx configuration end-->`;
-export const rulesRegex = new RegExp(
-  `${nxRulesMarkerCommentStart}[\\s\\S]*?${nxRulesMarkerCommentEnd}`,
-  'm'
-);
-
-export interface AgentRulesWrappedOptions {
-  writeNxCloudRules: boolean;
-  useH1?: boolean;
-}
-
-export const getAgentRulesWrapped = (options: AgentRulesWrappedOptions) => {
-  const { writeNxCloudRules, useH1 = true } = options;
-  const agentRulesString = getAgentRules({ nxCloud: writeNxCloudRules, useH1 });
-  return `${nxRulesMarkerCommentStart}\n${nxRulesMarkerCommentDescription}\n\n${agentRulesString}\n\n${nxRulesMarkerCommentEnd}`;
-};
 
 /**
  * Hostname Nx analytics events are sent to (GA4 Measurement Protocol).

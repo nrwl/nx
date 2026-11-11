@@ -5,7 +5,7 @@ import { Tree } from '../../generators/tree';
 import { setupAiAgentsGenerator } from './set-up-ai-agents';
 import { SetupAiAgentsGeneratorSchema } from './schema';
 import { readJson, updateJson } from '../../generators/utils/json';
-import { getAgentRulesWrapped, NX_ALLOWLIST_ROOTS } from '../constants';
+import { NX_ALLOWLIST_ROOTS } from '../constants';
 import * as installedNxVersionUtils from '../../utils/installed-nx-version';
 import * as cloneModule from '../clone-ai-config-repo';
 import { logger } from '../../utils/logger';
@@ -58,19 +58,6 @@ describe('setup-ai-agents generator', () => {
     }
   });
 
-  it('should respect writeNxCloudRules option', async () => {
-    const options: SetupAiAgentsGeneratorSchema = {
-      directory: '.',
-      writeNxCloudRules: true,
-    };
-
-    await setupAiAgentsGenerator(tree, options);
-
-    const claudeContent = tree.read('CLAUDE.md')?.toString();
-    // The template should include Nx guidelines
-    expect(claudeContent).toContain('# General Guidelines for working with Nx');
-  });
-
   it('should use specified directory', async () => {
     const options: SetupAiAgentsGeneratorSchema = {
       directory: 'custom-dir',
@@ -78,8 +65,6 @@ describe('setup-ai-agents generator', () => {
 
     await setupAiAgentsGenerator(tree, options);
 
-    expect(tree.exists('custom-dir/CLAUDE.md')).toBe(true);
-    expect(tree.exists('custom-dir/AGENTS.md')).toBe(true);
     expect(tree.exists('custom-dir/.claude/settings.json')).toBe(true);
     expect(tree.exists('custom-dir/.gemini/settings.json')).toBe(true);
   });
@@ -106,280 +91,51 @@ describe('setup-ai-agents generator', () => {
     }
   });
 
-  describe('outdated rules update', () => {
-    it('should append to existing AGENTS.md when no nx rules exist', async () => {
-      const options: SetupAiAgentsGeneratorSchema = {
-        directory: '.',
-        writeNxCloudRules: true,
-        agents: ['codex'],
-      };
+  describe('rules files', () => {
+    const rulesFiles = ['AGENTS.md', 'CLAUDE.md', 'GEMINI.md'];
 
-      const existing = '# existing agents content';
+    it('should not create rules files', async () => {
+      await setupAiAgentsGenerator(tree, { directory: '.' });
 
-      tree.write('AGENTS.md', existing);
+      for (const file of rulesFiles) {
+        expect(tree.exists(file)).toBe(false);
+      }
+    });
 
-      await setupAiAgentsGenerator(tree, options);
+    it('should leave rules files without an Nx block untouched', async () => {
+      const existing = '# My Project\n\nSome content\n';
+      for (const file of rulesFiles) {
+        tree.write(file, existing);
+      }
 
-      const content = tree.read('AGENTS.md')?.toString();
-      // When appending to existing content with an h1 header, use h2 header
-      expect(content).toEqual(
-        existing +
-          '\n\n' +
-          getAgentRulesWrapped({ writeNxCloudRules: true, useH1: false })
+      await setupAiAgentsGenerator(tree, { directory: '.' });
+
+      for (const file of rulesFiles) {
+        expect(tree.read(file, 'utf-8')).toEqual(existing);
+      }
+    });
+
+    it('should remove the Nx block older versions wrote', async () => {
+      const nxBlock =
+        '<!-- nx configuration start-->\nOutdated\n<!-- nx configuration end-->';
+      tree.write('custom-dir/AGENTS.md', `# My Project\n\n${nxBlock}\n`);
+      tree.write('custom-dir/CLAUDE.md', `${nxBlock}\n`);
+
+      await setupAiAgentsGenerator(tree, {
+        directory: 'custom-dir',
+        agents: ['claude'],
+      });
+
+      expect(tree.read('custom-dir/AGENTS.md', 'utf-8')).toEqual(
+        '# My Project\n'
       );
-    });
-
-    it('should use h1 when appending to AGENTS.md without existing h1 header', async () => {
-      const options: SetupAiAgentsGeneratorSchema = {
-        directory: '.',
-        writeNxCloudRules: true,
-        agents: ['codex'],
-      };
-
-      // Content without an h1 header (just plain text)
-      const existing = 'Some existing content without a header';
-
-      tree.write('AGENTS.md', existing);
-
-      await setupAiAgentsGenerator(tree, options);
-
-      const content = tree.read('AGENTS.md')?.toString();
-      // When appending to existing content without an h1, use h1 header
-      expect(content).toEqual(
-        existing +
-          '\n\n' +
-          getAgentRulesWrapped({ writeNxCloudRules: true, useH1: true })
-      );
-    });
-
-    it('should NOT modify AGENTS.md when up-to-date nx rules exist', async () => {
-      const options: SetupAiAgentsGeneratorSchema = {
-        directory: '.',
-        writeNxCloudRules: true,
-        agents: ['codex'],
-      };
-
-      const existing = getAgentRulesWrapped({
-        writeNxCloudRules: true,
-        useH1: true,
-      });
-
-      tree.write('AGENTS.md', existing);
-
-      await setupAiAgentsGenerator(tree, options);
-
-      const content = tree.read('AGENTS.md')?.toString();
-      expect(content).toEqual(existing);
-    });
-
-    it('should NOT modify AGENTS.md when up-to-date h2 nx rules exist alongside an external h1', async () => {
-      const options: SetupAiAgentsGeneratorSchema = {
-        directory: '.',
-        writeNxCloudRules: true,
-        agents: ['codex'],
-      };
-
-      // h2 nx rules make sense when there's already an h1 in the document
-      const nxBlock = getAgentRulesWrapped({
-        writeNxCloudRules: true,
-        useH1: false,
-      });
-      const existing = '# My Project\n\nSome content\n\n' + nxBlock;
-
-      tree.write('AGENTS.md', existing);
-
-      await setupAiAgentsGenerator(tree, options);
-
-      const content = tree.read('AGENTS.md')?.toString();
-      expect(content).toEqual(existing);
-    });
-
-    it('should switch h1 to h2 when user adds their own h1 header', async () => {
-      const options: SetupAiAgentsGeneratorSchema = {
-        directory: '.',
-        writeNxCloudRules: true,
-        agents: ['codex'],
-      };
-
-      // Simulate: nx block was initially created with h1, then user added their own h1
-      const nxBlock = getAgentRulesWrapped({
-        writeNxCloudRules: true,
-        useH1: true,
-      });
-      const existing = '# My Project\n\nSome content\n\n' + nxBlock;
-
-      tree.write('AGENTS.md', existing);
-
-      await setupAiAgentsGenerator(tree, options);
-
-      const content = tree.read('AGENTS.md')?.toString();
-      // Should have switched the nx block to h2
-      const expectedNxBlock = getAgentRulesWrapped({
-        writeNxCloudRules: true,
-        useH1: false,
-      });
-      expect(content).toEqual(
-        '# My Project\n\nSome content\n\n' + expectedNxBlock
-      );
-    });
-
-    it('should produce no changes when run twice on a fresh file', async () => {
-      const options: SetupAiAgentsGeneratorSchema = {
-        directory: '.',
-        writeNxCloudRules: true,
-        agents: ['codex'],
-      };
-
-      await setupAiAgentsGenerator(tree, options);
-      const firstContent = tree.read('AGENTS.md')?.toString();
-
-      await setupAiAgentsGenerator(tree, options);
-      const secondContent = tree.read('AGENTS.md')?.toString();
-
-      expect(secondContent).toEqual(firstContent);
-    });
-
-    it('should produce no changes when run twice on a file with existing h1 header', async () => {
-      const options: SetupAiAgentsGeneratorSchema = {
-        directory: '.',
-        writeNxCloudRules: true,
-        agents: ['codex'],
-      };
-
-      const existing = '# My Project Rules\n\nSome existing content';
-      tree.write('AGENTS.md', existing);
-
-      await setupAiAgentsGenerator(tree, options);
-      const firstContent = tree.read('AGENTS.md')?.toString();
-
-      await setupAiAgentsGenerator(tree, options);
-      const secondContent = tree.read('AGENTS.md')?.toString();
-
-      expect(secondContent).toEqual(firstContent);
-    });
-
-    it('should produce no changes when run twice on a file without h1 header', async () => {
-      const options: SetupAiAgentsGeneratorSchema = {
-        directory: '.',
-        writeNxCloudRules: true,
-        agents: ['codex'],
-      };
-
-      const existing = 'Some existing content without a header';
-      tree.write('AGENTS.md', existing);
-
-      await setupAiAgentsGenerator(tree, options);
-      const firstContent = tree.read('AGENTS.md')?.toString();
-
-      await setupAiAgentsGenerator(tree, options);
-      const secondContent = tree.read('AGENTS.md')?.toString();
-
-      expect(secondContent).toEqual(firstContent);
-    });
-
-    it('should update existing AGENTS.md when outdated nx rules exist', async () => {
-      const options: SetupAiAgentsGeneratorSchema = {
-        directory: '.',
-        writeNxCloudRules: true,
-        agents: ['codex'],
-      };
-
-      const expected = getAgentRulesWrapped({
-        writeNxCloudRules: true,
-        useH1: true,
-      });
-      const existing = expected.replace(
-        'nx_workspace',
-        'nx_workspace_outdated'
-      );
-
-      tree.write('AGENTS.md', existing);
-
-      await setupAiAgentsGenerator(tree, options);
-      const content = tree.read('AGENTS.md')?.toString();
-      expect(content).toEqual(expected);
-    });
-
-    it('should NOT update existing AGENTS.md when they only diverge in whitespace', async () => {
-      const options: SetupAiAgentsGeneratorSchema = {
-        directory: '.',
-        writeNxCloudRules: true,
-        agents: ['codex'],
-      };
-
-      const expected = getAgentRulesWrapped({
-        writeNxCloudRules: true,
-        useH1: true,
-      });
-      const existing = expected.replace('#', '\n#');
-      tree.write('AGENTS.md', existing);
-
-      await setupAiAgentsGenerator(tree, options);
-      const content = tree.read('AGENTS.md')?.toString();
-      expect(content).toEqual(existing);
+      expect(tree.exists('custom-dir/CLAUDE.md')).toBe(false);
     });
   });
 
   describe('agent-specific file generation', () => {
-    describe('copilot / cursor / codex', () => {
-      it('should generate AGENTS.md when it does not exist', async () => {
-        const options: SetupAiAgentsGeneratorSchema = {
-          directory: '.',
-        };
-
-        await setupAiAgentsGenerator(tree, options);
-
-        expect(tree.exists('AGENTS.md')).toBe(true);
-        const content = tree.read('AGENTS.md')?.toString();
-        expect(content).toContain('# General Guidelines for working with Nx');
-      });
-
-      it('should NOT overwrite AGENTS.md if it already exists', async () => {
-        const options: SetupAiAgentsGeneratorSchema = {
-          directory: '.',
-        };
-
-        // Create existing file
-        tree.write('AGENTS.md', 'Existing agents content');
-
-        await setupAiAgentsGenerator(tree, options);
-
-        const content = tree.read('AGENTS.md')?.toString();
-        // The new implementation appends to existing content
-        expect(content).toContain('Existing agents content');
-      });
-    });
     describe('claude', () => {
-      it('should generate CLAUDE.md when it does not exist', async () => {
-        const options: SetupAiAgentsGeneratorSchema = {
-          directory: '.',
-          agents: ['claude'],
-        };
-
-        await setupAiAgentsGenerator(tree, options);
-
-        expect(tree.exists('CLAUDE.md')).toBe(true);
-        const content = tree.read('CLAUDE.md')?.toString();
-        expect(content).toContain('# General Guidelines for working with Nx');
-      });
-
-      it('should NOT overwrite CLAUDE.md if it already exists', async () => {
-        const options: SetupAiAgentsGeneratorSchema = {
-          directory: '.',
-          agents: ['claude'],
-        };
-
-        // Create existing file
-        tree.write('CLAUDE.md', 'Existing content');
-
-        await setupAiAgentsGenerator(tree, options);
-
-        const content = tree.read('CLAUDE.md')?.toString();
-        // The new implementation appends to existing content
-        expect(content).toContain('Existing content');
-      });
-
-      it('should NOT generate CLAUDE.md when claude is not in agents array', async () => {
+      it('should NOT generate claude files when claude is not in agents array', async () => {
         const options: SetupAiAgentsGeneratorSchema = {
           directory: '.',
           agents: ['gemini'],
@@ -387,33 +143,7 @@ describe('setup-ai-agents generator', () => {
 
         await setupAiAgentsGenerator(tree, options);
 
-        expect(tree.exists('CLAUDE.md')).toBe(false);
         expect(tree.exists('.claude/settings.json')).toBe(false);
-      });
-
-      it('should keep a CLAUDE.md nx block that imports AGENTS.md and update AGENTS.md instead', async () => {
-        const claudeMd = `<!-- nx configuration start-->
-<!-- Leave the start & end comments to automatically receive updates. -->
-
-@AGENTS.md
-
-<!-- nx configuration end-->
-`;
-        tree.write('CLAUDE.md', claudeMd);
-        tree.write(
-          'AGENTS.md',
-          '<!-- nx configuration start-->\nOutdated\n<!-- nx configuration end-->'
-        );
-
-        await setupAiAgentsGenerator(tree, {
-          directory: '.',
-          agents: ['claude'],
-        });
-
-        expect(tree.read('CLAUDE.md', 'utf-8')).toEqual(claudeMd);
-        expect(tree.read('AGENTS.md', 'utf-8')).toEqual(
-          getAgentRulesWrapped({ writeNxCloudRules: false, useH1: true })
-        );
       });
 
       it('should create .claude/settings.json with plugin configuration when file does not exist', async () => {
@@ -815,10 +545,8 @@ describe('setup-ai-agents generator', () => {
         await setupAiAgentsGenerator(tree, options);
 
         expect(tree.exists('.gemini/settings.json')).toBe(true);
-        // Should also generate AGENTS.md by default
-        expect(tree.exists('AGENTS.md')).toBe(true);
         // Should NOT generate claude files when only gemini is specified
-        expect(tree.exists('CLAUDE.md')).toBe(false);
+        expect(tree.exists('.claude/settings.json')).toBe(false);
         expect(tree.exists('.mcp.json')).toBe(false);
       });
 
@@ -889,7 +617,7 @@ describe('setup-ai-agents generator', () => {
         });
       });
 
-      it('should NOT set contextFileName to AGENTS.md when GEMINI.md already exists', async () => {
+      it('should preserve an existing contextFileName', async () => {
         const options: SetupAiAgentsGeneratorSchema = {
           directory: '.',
         };
@@ -931,7 +659,7 @@ describe('setup-ai-agents generator', () => {
         });
       });
 
-      it('should set contextFileName to AGENTS.md when GEMINI.md does NOT exist', async () => {
+      it('should not set contextFileName', async () => {
         const options: SetupAiAgentsGeneratorSchema = {
           directory: '.',
         };
@@ -941,37 +669,12 @@ describe('setup-ai-agents generator', () => {
         const config = JSON.parse(
           tree.read('.gemini/settings.json')?.toString() ?? '{}'
         );
-        // Should set contextFileName to AGENTS.md when GEMINI.md doesn't exist
-        expect(config.contextFileName).toBe('AGENTS.md');
+        expect(config.contextFileName).toBeUndefined();
         expect(config.mcpServers['nx-mcp']).toEqual({
           type: 'stdio',
           command: 'npx',
           args: ['nx', 'mcp'],
         });
-      });
-
-      it('should respect existing contextFileName for rule generation', async () => {
-        const options: SetupAiAgentsGeneratorSchema = {
-          directory: '.',
-          agents: ['gemini'],
-        };
-
-        tree.write('CUSTOM-GEMINI.md', '# Custom Gemini configuration');
-        tree.write(
-          '.gemini/settings.json',
-          JSON.stringify({
-            contextFileName: 'CUSTOM-GEMINI.md',
-          })
-        );
-
-        await setupAiAgentsGenerator(tree, options);
-
-        const configAfter = readJson(tree, '.gemini/settings.json');
-
-        expect(configAfter.contextFileName).toBe('CUSTOM-GEMINI.md');
-        const content = tree.read('CUSTOM-GEMINI.md')?.toString();
-        expect(content).toContain('Custom Gemini configuration');
-        expect(content).toContain('Nx');
       });
 
       it('should delete .gemini/skills that also exist in .agents/skills', async () => {
@@ -1066,10 +769,8 @@ describe('setup-ai-agents generator', () => {
 
         await setupAiAgentsGenerator(tree, options);
 
-        expect(tree.exists('CLAUDE.md')).toBe(true);
         expect(tree.exists('.claude/settings.json')).toBe(true);
         expect(tree.exists('.gemini/settings.json')).toBe(true);
-        expect(tree.exists('AGENTS.md')).toBe(true);
         // .mcp.json should NOT be created - Claude uses plugin, Gemini uses .gemini/settings.json
         expect(tree.exists('.mcp.json')).toBe(false);
       });
