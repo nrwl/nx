@@ -70,6 +70,18 @@
       "description": "Enables JWT API tokens in Verdaccio config files used by `@nx/js:verdaccio` targets, so Verdaccio 7+ accepts the placeholder npm auth token that Nx sets for the local registry.",
       "implementation": "./dist/src/migrations/update-24-1-0/add-verdaccio-jwt-security",
       "documentation": "./dist/src/migrations/update-24-1-0/add-verdaccio-jwt-security.md"
+    },
+    "update-24-1-0-add-bun-prune-lockfile-cache-config": {
+      "version": "24.1.0-beta.1",
+      "description": "Add the patches and local_path_modules paths to the outputs of @nx/js:prune-lockfile targets that declare a bun.lock output, and the workspace root package.json to their inputs, so a cache replay restores the bun patch files and vendored local-path dependencies the executor now emits, and a change to the root trustedDependencies does not replay a stale output.",
+      "implementation": "./dist/src/migrations/update-24-1-0/add-bun-prune-lockfile-cache-config",
+      "documentation": "./dist/src/migrations/update-24-1-0/add-bun-prune-lockfile-cache-config.md"
+    },
+    "update-24-1-0-add-bun-deploy-output-cache-inputs": {
+      "version": "24.1.0-beta.1",
+      "description": "Add the trustedDependencies and patchedDependencies fields of the root package.json to the inputs of build targets that emit the pruned Bun deploy output (esbuild with generatePackageJson, tsc and swc with generateLockfile, and project or targetDefaults entries replacing the inputs of inferred webpack and rspack builds) in workspaces on the text bun.lock, so removing a package from trustedDependencies does not replay a cached output that still trusts it.",
+      "implementation": "./dist/src/migrations/update-24-1-0/add-bun-deploy-output-cache-inputs",
+      "documentation": "./dist/src/migrations/update-24-1-0/add-bun-deploy-output-cache-inputs.md"
     }
   },
   "packageJsonUpdates": {

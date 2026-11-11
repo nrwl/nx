@@ -1,6 +1,7 @@
 import type { Mock } from 'vitest';
 import { type CreateNodesContext } from '@nx/devkit';
 import {
+  BUN_INSTALL_SETTINGS_INPUTS,
   isUsingTsSolutionSetup,
   PNPM_INSTALL_SETTINGS_INPUTS,
   PNPM_MAJOR_RUNTIME_INPUT,
@@ -285,6 +286,29 @@ export default createConfig({
       expect.arrayContaining(PNPM_INSTALL_SETTINGS_INPUTS)
     );
   });
+
+  it.each([
+    ['bun.lock', true],
+    ['bun.lockb', false],
+  ])(
+    'adds the Bun install settings inputs only on the text lockfile (%s)',
+    async (lockFile, included) => {
+      tempFs.removeFileSync('package-lock.json');
+      tempFs.createFileSync(lockFile, '');
+
+      const nodes = await createNodesFunction(
+        ['my-app/rspack.config.ts'],
+        {},
+        context
+      );
+
+      expect(nodes[0][1].projects['my-app'].targets.build.inputs).toEqual(
+        included
+          ? expect.arrayContaining(BUN_INSTALL_SETTINGS_INPUTS)
+          : expect.not.arrayContaining(BUN_INSTALL_SETTINGS_INPUTS)
+      );
+    }
+  );
 
   it('omits the pnpm major runtime probe when the root package.json pins a pnpm version', async () => {
     tempFs.removeFileSync('package-lock.json');

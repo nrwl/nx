@@ -11,6 +11,7 @@ import {
 } from '@nx/devkit';
 import {
   addDeployOutputCacheInputs,
+  BUN_INSTALL_SETTINGS_INPUTS,
   PNPM_INSTALL_SETTINGS_INPUTS,
   TS_SOLUTION_SETUP_TSCONFIG_INPUT,
   type DeployOutputSettingsInput,
@@ -37,14 +38,17 @@ export function addProject(
     tags: options.parsedTags,
   };
 
-  // The generated build target emits the pruned pnpm deploy output when
-  // generatePackageJson is on; the install settings it carries are hashed by
-  // no default input (see PNPM_INSTALL_SETTINGS_INPUTS).
+  // The generated build target emits the pruned deploy output when
+  // generatePackageJson is on; the pnpm or Bun install settings it carries are
+  // hashed by no default input (see PNPM_INSTALL_SETTINGS_INPUTS and
+  // BUN_INSTALL_SETTINGS_INPUTS).
   const deployInputs: readonly DeployOutputSettingsInput[] = tree.exists(
     'pnpm-lock.yaml'
   )
     ? PNPM_INSTALL_SETTINGS_INPUTS
-    : [];
+    : tree.exists('bun.lock')
+      ? BUN_INSTALL_SETTINGS_INPUTS
+      : [];
   if (options.bundler === 'esbuild') {
     addBuildTargetDefaults(tree, '@nx/esbuild:esbuild', 'build', [
       TS_SOLUTION_SETUP_TSCONFIG_INPUT,

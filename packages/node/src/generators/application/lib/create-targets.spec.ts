@@ -86,6 +86,24 @@ describe('getPruneTargets', () => {
     ]);
   });
 
+  it('declares the patches and local_path_modules outputs and hashes the root package.json on Bun', () => {
+    (detectPackageManager as Mock).mockReturnValue('bun');
+
+    const targets = getPruneTargets('build', 'dist/my-app');
+
+    expect(targets['prune-lockfile'].outputs).toEqual([
+      '{workspaceRoot}/dist/my-app/package.json',
+      '{workspaceRoot}/dist/my-app/bun.lock',
+      '{workspaceRoot}/dist/my-app/patches',
+      '{workspaceRoot}/dist/my-app/local_path_modules',
+    ]);
+    expect(targets['prune-lockfile'].inputs).toEqual([
+      'default',
+      '^default',
+      '{workspaceRoot}/package.json',
+    ]);
+  });
+
   it('declares only package.json and the lockfile on npm', () => {
     (detectPackageManager as Mock).mockReturnValue('npm');
 
