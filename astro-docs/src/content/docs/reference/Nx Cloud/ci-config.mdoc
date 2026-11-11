@@ -351,7 +351,7 @@ The main-job worker starts after the init steps and before the `steps`:
 - It keeps the environment it starts with. Set task variables in the `env` of the file, job, or [launch template](#launch-templates), not of a step.
 - It sees files that steps write to the checkout.
 
-Set `workers: false` on jobs that don't run Nx tasks, such as a deploy job, and on jobs that run `nx-cloud start-ci-run` themselves.
+Set `workers: false` on jobs that don't run Nx tasks, such as a deploy job.
 
 ### `jobs.<job>.steps`
 
