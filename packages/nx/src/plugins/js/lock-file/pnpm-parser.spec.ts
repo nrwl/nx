@@ -4572,6 +4572,49 @@ snapshots:
       expect(result).not.toMatch(/vendored-lib@/);
     });
 
+    // A deploy output passes the relocated spec, createLockFile the declared one
+    it.each(['link:local_path_modules/vendor/x', 'link:../../vendor/x'])(
+      'emits a link: dependency the graph has a node for as a direct importer entry (%s)',
+      (spec) => {
+        // pnpm 12.8.1 lockfile of an app declaring `x: link:../../vendor/x`
+        const lockFile = `lockfileVersion: '9.0'
+
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
+
+importers:
+
+  .: {}
+
+  apps/app:
+    dependencies:
+      x:
+        specifier: link:../../vendor/x
+        version: link:../../vendor/x
+`;
+        const { nodes } = getPnpmLockfileNodes(lockFile, 'link-node');
+        expect(nodes['npm:x']).toBeDefined();
+
+        const result = stringifyPnpmLockfile(
+          makeGraph([], {}, nodes),
+          lockFile,
+          { name: 'app', version: '0.0.0', dependencies: { x: spec } },
+          '/root'
+        );
+
+        expect(result).toContain(
+          [
+            '    dependencies:',
+            '      x:',
+            `        specifier: ${spec}`,
+            `        version: ${spec}`,
+          ].join('\n')
+        );
+        expect(result).not.toMatch(/x@/);
+      }
+    );
+
     it('rewrites a copied module link: snapshot ref relative to the lockfile dir', () => {
       // A copied workspace module (@myorg/lib-a) links a vendored package. The
       // source ref is importer-relative, but pnpm reads a snapshot link: ref
@@ -5143,8 +5186,9 @@ importers:
   });
 
   describe('linked dependencies', () => {
-    // Out-of-workspace `link:` targets mint external nodes; links inside the
-    // workspace are workspace projects and must not.
+    // `link:` targets mint external nodes, except links to workspace packages
+    // (importers), which are workspace projects. A target inside the workspace
+    // is also a local path source.
     const lockFile = `lockfileVersion: '9.0'
 
 settings:
@@ -5244,6 +5288,40 @@ snapshots:
       );
     });
 
+    it('should hash every copy the importers link under the same name', () => {
+      // pnpm 12.8.1 install of a root and a library that link their own `x`
+      const linkedCopiesLockFile = `lockfileVersion: '9.0'
+
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
+
+importers:
+
+  .:
+    dependencies:
+      x:
+        specifier: link:vendor/x
+        version: link:vendor/x
+
+  apps/app: {}
+
+  libs/lib:
+    dependencies:
+      x:
+        specifier: link:../vendor/x
+        version: link:../vendor/x
+`;
+
+      const { nodes, localPathSources } = getPnpmLockfileNodes(
+        linkedCopiesLockFile,
+        '__linked_copies__'
+      );
+
+      expect(nodes['npm:x'].data.version).toBe('link:vendor/x');
+      expect(localPathSources['npm:x']).toEqual(['libs/vendor/x', 'vendor/x']);
+    });
+
     it('should resolve absolute link targets against the workspace root', () => {
       const { nodes } = getPnpmLockfileNodes(lockFile, '__linked_abs__');
 
@@ -5260,9 +5338,14 @@ snapshots:
     });
 
     it('should not treat a dot-prefixed directory name as an escape', () => {
-      const { nodes } = getPnpmLockfileNodes(lockFile, '__linked_dotname__');
+      const { nodes, localPathSources } = getPnpmLockfileNodes(
+        lockFile,
+        '__linked_dotname__'
+      );
 
-      expect(nodes['npm:dot-named']).toBeUndefined();
+      expect(nodes['npm:dot-named']).toBeDefined();
+      expect(localPathSources['npm:dot-named']).toEqual(['..cache/plugin']);
+      expect(localPathSources['npm:@scoped/linked-out']).toBeUndefined();
     });
 
     it('should not shadow a hoisted registry package with a link from a nested importer', () => {
