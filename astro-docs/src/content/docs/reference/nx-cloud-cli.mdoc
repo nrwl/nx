@@ -382,40 +382,74 @@ npx nx-cloud onboard workspace create --org=org_123 --template=tmpl_react --name
 ### `nx-cloud start-workers`
 
 Invoke `npx nx-cloud start-workers` at the beginning of your main job to provision the [Workers](/docs/features/ci-features/distribute-task-execution) that run your distributed tasks.
+`start-nx-agents` is a deprecated alias of this command.
 
-Nx Cloud reads your CI configuration from a [`.nx/ci-config.yaml`](/docs/reference/nx-cloud/ci-config) file. Every Nx Cloud command reads that file, so your configuration applies to the run whichever command starts it. `start-workers` takes no configuration flags.
+Nx Cloud reads your CI configuration from a [`.nx/pipelines/ci.yaml`](/docs/reference/nx-cloud/ci-config) file, and this command starts one of its `worker-templates` entries. Nx Cloud reads the file from your repository at the commit of the run.
+
+While `.nx/ci-config.yaml` exists, `start-workers` without `--workers` or `--config` keeps reading it, even if `ci.yaml` is there too.
+With neither file, the command fails.
 
 **Usage:**
 
 ```shell
-npx nx-cloud start-workers
+npx nx-cloud start-workers [--workers <name>] [--config <path>] [--forward-secrets <names>] [--forward-vars <names>]
 ```
 
 ```yaml
-# .nx/ci-config.yaml
-dte:
-  distribute-on: 5 linux-large
-lifecycle:
-  stop-after:
-    - build
-    - test
-    - e2e
+# .nx/pipelines/ci.yaml
+worker-templates:
+  default:
+    workers: 5 linux-large-js
+    stop-after:
+      - build
+      - test
+      - e2e
 ```
 
-{% aside type="caution" title="start-workers and start-ci-run cannot be combined" %}
-`start-ci-run` does not read `.nx/ci-config.yaml`. If a config file is present, `start-ci-run` exits with an error and points you to `start-workers`.
-Pick one path for your workspace: the config file with `start-workers`, or CLI flags with `start-ci-run`.
+#### Options
+
+| Option              | Type   | Description                                                                                                                               | Default                                                               |
+| ------------------- | ------ | ----------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| `--workers`         | string | Entry in `worker-templates` to start. Required when the file has several entries.                                                         | The only entry                                                        |
+| `--config`          | string | CI configuration file to read.                                                                                                            | `.nx/pipelines/ci.yaml`, or `.nx/workflows/ci.yaml` if that's missing |
+| `--forward-secrets` | string | Comma-separated names of main-job environment variables to send to workers as `${{ secrets.NAME }}`, masked in logs. Only with `ci.yaml`. | None                                                                  |
+| `--forward-vars`    | string | Comma-separated names of main-job environment variables to send to workers as `${{ vars.NAME }}`. Only with `ci.yaml`.                    | None                                                                  |
+
+| `--workers` | Entries in `worker-templates` | Result                              |
+| ----------- | ----------------------------- | ----------------------------------- |
+| Given       | Includes the name             | Starts that entry.                  |
+| Given       | Doesn't include the name      | An error that lists the entries.    |
+| Not given   | Exactly one                   | Starts that entry.                  |
+| Not given   | Several                       | An error that asks for `--workers`. |
+| Not given   | None                          | An error.                           |
+
+An invalid file fails the command with an error naming the file, the import, and the key.
+
+Workers read forwarded values in the `env` of their [launch template](/docs/kb/launch-templates), such as `NPM_TOKEN: ${{ secrets.NPM_TOKEN }}`.
+
+- A forwarded value replaces an Environment variables entry with the same name for that run.
+- A listed name that isn't set in the main job fails the command and names it.
+- Names match `[A-Za-z_][A-Za-z0-9_]*` and can't be in both flags. A run takes at most 100 names, 48 KiB per value, and 256 KiB in total.
+- Values aren't stored. They're sent again with each distributed command, so workers that start later get them too.
+- With `.nx/ci-config.yaml`, either flag fails the command. Use `workers.with-env-vars` in that file instead.
+- On a pull request from a fork, the flags forward whatever the main job has, so your CI provider's settings decide whether forks get secrets. See [keep secrets safe](/docs/reference/nx-cloud/ci-config#keep-secrets-safe).
+
+{% aside type="caution" title="start-workers and start-ci-run are separate paths" %}
+`start-ci-run` takes its configuration from CLI flags and doesn't read `.nx/pipelines/ci.yaml`.
+Pick one path for each pipeline: the file with `start-workers`, or CLI flags with `start-ci-run`.
 {% /aside %}
 
 {% aside type="note" title="Runs without distribution use start-ci-run" %}
 If you don't want distribution, use `npx nx-cloud start-ci-run --no-distribution` instead.
 {% /aside %}
 
-To move an existing `start-ci-run` setup to the config file, see [Migrate from start-ci-run to start-workers](/docs/kb/migrate-to-ci-config), which maps each flag to its `.nx/ci-config.yaml` counterpart.
+On [Nx Cloud CI](/docs/features/ci-features#run-ci-on-nx-cloud), set `workers` on a job instead of running this command.
+
+To move from `.nx/ci-config.yaml` or from `start-ci-run` flags, see [migrate to `ci.yaml`](/docs/kb/migrate-from-ci-config), which maps each key and flag.
 
 ### `nx-cloud start-ci-run`
 
-`start-ci-run` configures a CI run through CLI flags. If you prefer to keep your configuration in a versioned file, use [`start-workers`](#nx-cloud-start-workers) with a [`.nx/ci-config.yaml`](/docs/reference/nx-cloud/ci-config) file instead.
+`start-ci-run` configures a CI run through CLI flags. To keep your configuration in a versioned file, use [`start-workers`](#nx-cloud-start-workers) with a [`.nx/pipelines/ci.yaml`](/docs/reference/nx-cloud/ci-config) file instead.
 
 At the beginning of your main job, invoke `npx nx-cloud start-ci-run`. This tells Nx Cloud that the following series of command correspond to the same CI run.
 
@@ -670,7 +704,7 @@ nx affected -t build --no-dte
 
 ### `nx-cloud start-worker`
 
-Starts a worker process when you [bring your own compute](/docs/kb/bring-your-own-compute). The worker waits for Nx Cloud to assign tasks that the main CI job distributed, either through `start-workers` with `dte.distribute-on: manual` in `.nx/ci-config.yaml`, or through `start-ci-run --distribute-on=manual`. To have Nx Cloud provision and manage the workers for you, see [Workers](/docs/features/ci-features/distribute-task-execution).
+Starts a worker process when you [bring your own compute](/docs/kb/bring-your-own-compute). The worker waits for Nx Cloud to assign tasks that the main CI job distributed, through `start-ci-run --distribute-on=manual`. To have Nx Cloud provision and manage the workers for you, see [Workers](/docs/features/ci-features/distribute-task-execution).
 
 **Usage:**
 
@@ -717,7 +751,7 @@ npx nx-cloud stop-all-workers
 
 ### `nx-cloud complete-ci-run`
 
-Explicitly complete a CI run when automatic completion monitoring is turned off, either with `lifecycle.heartbeat: false` in `.nx/ci-config.yaml`, or with `--require-explicit-completion` on `start-ci-run`.
+Explicitly complete a CI run when automatic completion monitoring is turned off with `--require-explicit-completion` on `start-ci-run`.
 
 **Usage:**
 
@@ -749,7 +783,7 @@ This command is the same as running `nx fix-ci`. It is not supported on Windows.
 npx nx-cloud fix-ci
 ```
 
-Configure which tasks are eligible and which fixes apply automatically through `start-ci-run --fix-tasks` and `--auto-apply-fixes`, or through the Nx Cloud UI. See [self-healing CI](/docs/features/ci-features/self-healing-ci) for the full configuration.
+Configure which tasks are eligible and which fixes apply automatically through the `self-healing` section of [`ci.yaml`](/docs/reference/nx-cloud/ci-config#self-healing), `start-ci-run --fix-tasks` and `--auto-apply-fixes`, or the Nx Cloud UI. See [self-healing CI](/docs/features/ci-features/self-healing-ci) for the full configuration.
 
 ### `nx-cloud apply-locally`
 
@@ -875,8 +909,8 @@ npx nx-cloud validate --workflow-file=<file>
 #### Examples
 
 ```shell
-npx nx-cloud validate --workflow-file=./.nx/workflows/agents.yaml
-npx nx-cloud validate --workflow-file=./.nx/workflows/custom-steps.yaml --step-file
+npx nx-cloud validate --workflow-file=./.nx/pipelines/launch-templates.yaml
+npx nx-cloud validate --workflow-file=./.nx/pipelines/custom-steps.yaml --step-file
 ```
 
 See [validating launch templates](/docs/kb/launch-templates#validating-launch-templates).

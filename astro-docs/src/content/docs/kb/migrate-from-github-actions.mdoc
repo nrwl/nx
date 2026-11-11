@@ -1,0 +1,118 @@
+---
+title: 'Move a GitHub Actions workflow to Nx Cloud CI'
+description: 'Convert a GitHub Actions workflow to .nx/pipelines/ci.yaml for Nx Cloud CI, and look up what each GitHub Actions key and variable becomes.'
+sidebar:
+  label: Move from GitHub Actions
+filter: 'type:Guides'
+topics:
+  - 'Continuous integration'
+  - 'Nx Cloud'
+---
+
+[Nx Cloud CI](/docs/features/ci-features#run-ci-on-nx-cloud) reads a `.nx/pipelines/ci.yaml` file that looks like a GitHub Actions workflow, and most step-level syntax carries over.
+
+## Convert a workflow
+
+This workflow:
+
+```yaml
+# .github/workflows/ci.yml
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  main:
+    runs-on: ubuntu-latest
+    env:
+      NX_CLOUD_ACCESS_TOKEN: ${{ secrets.NX_CLOUD_ACCESS_TOKEN }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - uses: nrwl/nx-set-shas@v5
+      - run: npx nx-cloud start-workers
+      - run: npx nx affected -t lint test build
+      - run: npx nx fix-ci
+        if: always()
+```
+
+Becomes this file:
+
+```yaml
+# .nx/pipelines/ci.yaml
+name: CI
+
+on:
+  main-pushes:
+    event: PUSH
+    branches: [main]
+  pull-requests:
+    event: PR
+    branches: [main]
+
+jobs:
+  main:
+    runs-on: linux-medium-js
+    workers: 3 linux-large-js
+    steps:
+      - run: npx nx affected -t lint test build
+```
+
+Drop `NX_CLOUD_ACCESS_TOKEN` from `env`.
+Nx Cloud CI sets it for you, and a value from a GitHub secret overrides the token of the run, usually with an empty value.
+
+Required status checks need updating, because the check name changes to `Nx Cloud: <name>`.
+With **Show check runs for individual Nx Cloud CI jobs** on in the VCS integration settings of your workspace, each job also gets a check named `<name> / <job>`.
+
+## How keys map
+
+| GitHub Actions                                                   | Nx Cloud CI                                                        |
+| ---------------------------------------------------------------- | ------------------------------------------------------------------ |
+| `on: push` and `on: pull_request`                                | Named triggers with `event: PUSH` or `event: PR`                   |
+| `runs-on: ubuntu-latest`                                         | A [launch template](/docs/kb/launch-templates)                     |
+| `actions/checkout`, `actions/setup-node`, `npm ci`               | `init-steps` of the launch template                                |
+| `nrwl/nx-set-shas`                                               | Automatic                                                          |
+| `start-workers`                                                  | `workers` on the job                                               |
+| `nx fix-ci`                                                      | Automatic                                                          |
+| `uses: owner/repo@ref`                                           | `uses` with a [step template](/docs/kb/custom-steps)               |
+| `needs`, `if`, `env`, `timeout-minutes`                          | Same keys                                                          |
+| `${{ secrets.X }}`, `${{ vars.X }}`, `${{ needs.<job>.result }}` | Same [expressions](/docs/reference/nx-cloud/ci-config#expressions) |
+| `github.event_name` in a condition                               | Works as written. `nxcloud.event_name` is the Nx Cloud name        |
+
+## GitHub Actions names that keep working
+
+Steps copied from a GitHub Actions workflow don't need renaming.
+New files can use the Nx Cloud names:
+
+| Nx Cloud                                                                          | Also works as                                                             |
+| --------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| `nxcloud.*`                                                                       | `github.*`                                                                |
+| `secrets.NX_CLOUD_VCS_TOKEN`                                                      | `secrets.GITHUB_TOKEN`                                                    |
+| `$NX_CLOUD_OUTPUT`, `$NX_CLOUD_PATH`, `$NX_CLOUD_STATE`, `$NX_CLOUD_STEP_SUMMARY` | `$GITHUB_OUTPUT`, `$GITHUB_PATH`, `$GITHUB_STATE`, `$GITHUB_STEP_SUMMARY` |
+| `$NX_CLOUD_ENV`                                                                   | `$GITHUB_ENV`, which also takes multi-line values (`NAME<<EOF`)           |
+| `$NX_CLOUD_SHA`, `$NX_CLOUD_REF`, `$NX_CLOUD_RUNNER_OS`, and the rest             | `$GITHUB_SHA`, `$GITHUB_REF`, `$RUNNER_OS`, and the rest                  |
+
+For every variable and file, see [variables and files in each step](/docs/reference/nx-cloud/ci-config#variables-and-files-in-each-step).
+`GITHUB_ACTIONS` and `GITHUB_RUN_ID` aren't set, so tools don't detect the job as running in GitHub Actions.
+Check `NX_CLOUD_CI` instead.
+
+## Pull requests and secrets
+
+There are no `pull_request_target` rules to port.
+Pull requests from forks run without your stored secrets, and branches in your repository run with them.
+See [keep secrets safe](/docs/reference/nx-cloud/ci-config#keep-secrets-safe).
+
+## What doesn't carry over
+
+Scheduled runs, `strategy.matrix`, GitHub Marketplace actions, and macOS and Windows machines aren't supported yet.
+For the full list, see [Nx Cloud CI limits](/docs/reference/nx-cloud/ci-config#nx-cloud-ci-limits).

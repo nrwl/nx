@@ -11,38 +11,40 @@ Nx Cloud provides several pre-built launch templates for common use-cases. You c
 
 {% github_repository url="https://github.com/nrwl/nx-cloud-workflows/tree/main/launch-templates" title="Pre-Built Launch Templates" /%}
 
+{% aside type="note" title="Using .nx/ci-config.yaml?" %}
+We've added support for `.nx/pipelines/ci.yaml`. See the [migration guide](/docs/kb/migrate-from-ci-config).
+{% /aside %}
+
 ## Getting started with custom launch templates
 
-The easiest way to create a new custom launch template is to modify one of the pre-built ones. To do that, create a file in the
-`.nx/workflows` folder and copy one of the [pre-built templates](https://github.com/nrwl/nx-cloud-workflows/blob/main/launch-templates/linux.yaml). You can name the file any way you want (e.g., `agents.yaml`) and customize the steps as needed.
+To create a custom launch template, copy one of the [pre-built templates](https://github.com/nrwl/nx-cloud-workflows/blob/main/launch-templates/linux.yaml) under the [`launch-templates`](/docs/reference/nx-cloud/ci-config#launch-templates) key of `.nx/pipelines/ci.yaml` and customize the steps as needed.
+Templates can also live in another file that `ci.yaml` [imports](/docs/reference/nx-cloud/ci-config#import-a-section-from-another-file), with `launch-templates: .nx/pipelines/launch-templates.yaml`.
+`nx-cloud start-ci-run` reads templates only from `.nx/workflows`.
 
 ## Launch template structure
 
 ### `launch-templates`
 
-A `map` of launch template configurations. This value is required.
+A `map` of launch template configurations.
 
 ```yaml
-// .nx/workflows/agents.yaml
+// .nx/pipelines/ci.yaml
 launch-templates:
 ```
 
 ### `launch-templates.<template-name>`
 
-The name of your custom launch template. This name is used via [`dte.distribute-on`](/docs/reference/nx-cloud/ci-config#dtedistribute-on) in your `.nx/ci-config.yaml` file, in the form `<# of agents> <template-name>`. Supports one to many uniquely named launch templates.
+The name of your custom launch template. This name is used in a [`worker-templates`](/docs/reference/nx-cloud/ci-config#worker-templates) count, in the form `<# of agents> <template-name>`. Supports one to many uniquely named launch templates.
 Multiple launch templates can be useful for setting up different toolchains (rust, java, node versions) or resources classes for your workspace needs.
 
 ```yaml
-// .nx/workflows/agents.yaml
+// .nx/pipelines/ci.yaml
 launch-templates:
   template-one:
   template-two:
-```
 
-```yaml
-# .nx/ci-config.yaml
-dte:
-  distribute-on: 3 template-one
+worker-templates:
+  default: 3 template-one
 ```
 
 ### `launch-templates.<template-name>.resource-class`
@@ -50,7 +52,7 @@ dte:
 A launch template's `resource-class` defines the memory and vCPUs available to each agent machine.
 
 ```yaml
-// .nx/workflows/agents.yaml
+// .nx/pipelines/ci.yaml
 launch-templates:
   template-one:
     resource-class: 'docker_linux_amd64/medium'
@@ -85,7 +87,7 @@ their dedicated deployment.
 {% /aside %}
 
 ```yaml
-// .nx/workflows/agents.yaml
+// .nx/pipelines/ci.yaml
 launch-templates:
   template-one:
     image: 'ubuntu22.04-node24.14-v1'
@@ -125,7 +127,7 @@ Enterprise accounts [can use custom images](/docs/kb/custom-images).
 A launch template's `env` defines a `map` of environment variable names and values to be available within **all** steps of the specific launch template.
 
 ```yaml
-// .nx/workflows/agents.yaml
+// .nx/pipelines/ci.yaml
 launch-templates:
   template-one:
     env:
@@ -139,7 +141,7 @@ A launch template's `no-output-timeout` defines how long a step can run without 
 The value is a duration string (e.g., `10m`, `30m`, `1h`). Set to `"0"` to disable the timeout entirely. If not specified, the default is **10 minutes**.
 
 ```yaml
-// .nx/workflows/agents.yaml
+// .nx/pipelines/ci.yaml
 launch-templates:
   template-one:
     no-output-timeout: '30m'
@@ -148,7 +150,7 @@ launch-templates:
 You can also override this value at runtime via the `NX_NO_OUTPUT_TIMEOUT` environment variable (set on the template or on an individual step). The environment variable takes precedence over the `no-output-timeout` template field.
 
 ```yaml
-// .nx/workflows/agents.yaml
+// .nx/pipelines/ci.yaml
 launch-templates:
   template-one:
     no-output-timeout: '30m'
@@ -167,7 +169,7 @@ A launch template's `init-steps` defines the series of steps to perform before a
 Typical `init-steps` perform actions such as checking out your workspace source code and installing any necessary dependencies. Any extra setup your workspace needs to run should be defined as an `init-step`. Once all steps run successfully, the agent machine will inform Nx Cloud that it is ready to accept tasks.
 
 ```yaml
-// .nx/workflows/agents.yaml
+// .nx/pipelines/ci.yaml
 launch-templates:
   template-one:
     init-steps:
@@ -178,7 +180,7 @@ launch-templates:
 An init-step's `name` is the label that will be reflected in the Nx Cloud UI. `name` can be used in conjunction with [`uses`](#launch-templatestemplate-nameinit-stepsuses) and [`script`](#launch-templatestemplate-nameinit-stepsscript)
 
 ```yaml
-// .nx/workflows/agents.yaml
+// .nx/pipelines/ci.yaml
 launch-templates:
   template-one:
     init-steps:
@@ -193,7 +195,7 @@ You can find the [list of Nx Cloud reusable steps here](https://github.com/nrwl/
 Besides the GitHub shorthand, `uses` accepts workspace-local `file://` paths and full HTTPS URLs from any host serving the raw YAML, not only GitHub. Both are described in [step reference forms](/docs/kb/custom-steps#step-reference-forms).
 
 ```yaml
-// .nx/workflows/agents.yaml
+// .nx/pipelines/ci.yaml
 launch-templates:
   template-one:
     init-steps:
@@ -204,7 +206,7 @@ launch-templates:
         uses: 'https://raw.githubusercontent.com/nrwl/nx-cloud-workflows/v6/workflow-steps/install-node-modules/main.yaml'
       # workspace-local file, resolved from the workspace root
       - name: 'Custom Step'
-        uses: 'file:///.nx/workflows/custom-step.yaml'
+        uses: 'file:///.nx/pipelines/custom-step.yaml'
 ```
 
 ### `launch-templates.<template-name>.init-steps[*].script`
@@ -212,7 +214,7 @@ launch-templates:
 When defined, allows an inline script to be run. **Cannot be used when `uses` is also defined**
 
 ```yaml
-// .nx/workflows/agents.yaml
+// .nx/pipelines/ci.yaml
 launch-templates:
   template-one:
     init-steps:
@@ -227,7 +229,7 @@ launch-templates:
 An init-step's `env` is similar to the [`launch-template.<template-name>.env`](#launch-templatestemplate-nameenv), except the environment variable `map` is **scoped for the current step only**.
 
 ```yaml
-// .nx/workflows/agents.yaml
+// .nx/pipelines/ci.yaml
 launch-templates:
   template-one:
     init-steps:
@@ -245,7 +247,7 @@ An init-step's `inputs` is defined by the step file in the [`launch-template.<te
 [Validation](#validating-launch-templates) can also be done to validate the step against the step file's defined inputs
 
 ```yaml
-// .nx/workflows/agents.yaml
+// .nx/pipelines/ci.yaml
 launch-templates:
   template-one:
     init-steps:
@@ -277,7 +279,7 @@ Running them in parallel can reduce agent startup time by up to 2 minutes, which
   - below, we only update the PATH variable once at the end `echo "PATH=$CARGO_PATH:$POETRY_PATH:$PATH" >> $NX_CLOUD_ENV`
 
 ```yaml
-// .nx/workflows/agents.yaml
+// .nx/pipelines/ci.yaml
 launch-templates:
   template-one:
     init-steps:
@@ -327,7 +329,7 @@ This can be useful if we have a set of quick enough steps, such as restoring fro
 grouped together logically. The below cache steps will also be collapsed together in the Agents UI, making the config look cleaner:
 
 ```yaml
-// ./nx/workflows/agents.yaml
+// .nx/pipelines/ci.yaml
 - group-name: Restore Cache
   steps:
     - name: Restore Node Modules Cache
@@ -358,10 +360,12 @@ Before Nx Cloud can validate your custom templates, you must first commit any ch
 After creating your custom launch template, it's recommended to validate it. This ensures that all necessary fields
 within the launch template and all respective inputs within each step are appropriately defined.
 
-To do this, run the `nx-cloud validate` command, with the path to the launch template:
+To do this, run the `nx-cloud validate` command, with the path to the launch template.
+The command checks a launch templates file, not a full `ci.yaml`, so keep templates you validate in their own file and import it.
+Keep the top-level `launch-templates:` key in that file, because `validate` only reads templates under it:
 
 ```shell
-nx-cloud validate --workflow-file=./.nx/workflows/agents.yaml
+nx-cloud validate --workflow-file=./.nx/pipelines/launch-templates.yaml
 ```
 
 For examples of common configurations such as private registries, custom node versions, AWS CLI setup, and more, see the [launch template examples](/docs/kb/launch-template-examples).
