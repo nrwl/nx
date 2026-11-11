@@ -204,6 +204,12 @@
       "description": "Renames the ultracache target options \"ignoredReads\" and \"ignoredWrites\" to \"ignoreReads\" and \"ignoreWrites\", and renames .nx/workflows/sandboxing-config.yaml to ultracache-config.yaml with its \"exclude-reads\" and \"exclude-writes\" keys renamed to \"ignore-reads\" and \"ignore-writes\".",
       "implementation": "./dist/src/migrations/update-24-0-0/rename-ultracache-ignore-options",
       "documentation": "./dist/src/migrations/update-24-0-0/rename-ultracache-ignore-options.md"
+    },
+    "24-1-0-remove-nx-rules-from-agent-files": {
+      "version": "24.1.0-beta.1",
+      "description": "Removes the Nx guidelines block that earlier versions of nx configure-ai-agents wrote into AGENTS.md, CLAUDE.md and GEMINI.md. The command no longer writes these guidelines.",
+      "implementation": "./dist/src/migrations/update-24-1-0/remove-nx-rules-from-agent-files",
+      "documentation": "./dist/src/migrations/update-24-1-0/remove-nx-rules-from-agent-files.md"
     }
   }
 }
