@@ -128,7 +128,7 @@ function startVerdaccio(
         }
         const address = getVerdaccioAddress(options);
         const url = address ? getVerdaccioListeningUrl(address) : undefined;
-        // Settle the token before readiness, so dependent tasks never send a rejected one
+        // Dependent tasks start on readiness, so drop a rejected token first
         if (npmAuthTokenSet && url) {
           await removeRejectedNpmAuthToken(options, url);
         }
