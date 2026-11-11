@@ -58,6 +58,24 @@ export async function cloneFromUpstream(
   return new GitRepository(destination);
 }
 
+/**
+ * Whether `directory` is itself a repository `git clone` accepts: a working
+ * tree root or a bare repository, but not a directory nested inside one.
+ */
+export async function isCloneableGitRepository(
+  directory: string
+): Promise<boolean> {
+  for (const gitDir of [join(directory, '.git'), directory]) {
+    try {
+      await execFileAsync('git', ['rev-parse', '--resolve-git-dir', gitDir], {
+        windowsHide: true,
+      });
+      return true;
+    } catch {}
+  }
+  return false;
+}
+
 export class GitRepository {
   public root = this.getGitRootPath(this.directory);
   constructor(private directory: string) {}
@@ -633,6 +651,7 @@ export function getGitRootPath(cwd?: string): string {
   return execFileSync('git', ['rev-parse', '--show-toplevel'], {
     cwd,
     windowsHide: true,
+    stdio: ['ignore', 'pipe', 'pipe'],
   })
     .toString()
     .trim();

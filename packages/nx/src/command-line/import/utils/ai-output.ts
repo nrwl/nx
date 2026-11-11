@@ -32,6 +32,7 @@ export type ImportProgressStage =
 // Import-specific error codes
 export type NxImportErrorCode =
   | 'UNCOMMITTED_CHANGES'
+  | 'NOT_A_GIT_REPOSITORY'
   | 'CLONE_FAILED'
   | 'SOURCE_NOT_FOUND'
   | 'DESTINATION_NOT_EMPTY'
@@ -266,6 +267,11 @@ export function getImportErrorHints(errorCode: NxImportErrorCode): string[] {
         'Commit or stash your changes before running nx import',
         'Run "git status" to see uncommitted changes',
       ];
+    case 'NOT_A_GIT_REPOSITORY':
+      return [
+        'nx import needs both the source and this workspace to be git repositories',
+        'Run "git init" in the directory that is not a repository and commit its files',
+      ];
     case 'CLONE_FAILED':
       return [
         'Check the repository URL is correct and accessible',
@@ -327,6 +333,7 @@ export function determineImportErrorCode(
   const lower = message.toLowerCase();
 
   if (lower.includes('uncommitted')) return 'UNCOMMITTED_CHANGES';
+  if (lower.includes('is not a git repository')) return 'NOT_A_GIT_REPOSITORY';
   if (lower.includes('failed to clone')) return 'CLONE_FAILED';
   if (lower.includes('does not exist in')) return 'SOURCE_NOT_FOUND';
   if (lower.includes('is not empty') || lower.includes('destination directory'))

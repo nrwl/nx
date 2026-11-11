@@ -1,7 +1,14 @@
 import { isAbsolute, join, relative, resolve } from 'path';
 import { existsSync } from 'node:fs';
 import * as pc from 'picocolors';
-import { cloneFromUpstream, GitRepository } from '../../utils/git-utils';
+import {
+  cloneFromUpstream,
+  getGitRootPath,
+  getGitRootRelativePath,
+  GitRepository,
+  isCloneableGitRepository,
+  isGitRepository,
+} from '../../utils/git-utils';
 import { mkdtemp, stat, rm } from 'node:fs/promises';
 import { tmpdir } from 'tmp';
 import { selectPrompt, textPrompt } from '../../utils/prompt-helpers';
@@ -82,6 +89,25 @@ export interface ImportOptions {
   plugins?: string; // 'skip' | 'all' | comma-separated list
 }
 
+function createDestinationGitClient(): GitRepository {
+  const cwd = process.cwd();
+  if (!isGitRepository(cwd)) {
+    throw new Error(
+      `${cwd} is not a git repository. Nx imports code by merging its git history, so run "git init", commit your files and try again.`
+    );
+  }
+  return new GitRepository(cwd);
+}
+
+function getSourceNotAGitRepositoryMessage(sourceDirectory: string): string {
+  const message = `${sourceDirectory} is not a git repository. Nx imports code along with its git history, so the source must be a git repository.`;
+  const pathInEnclosingRepo = getGitRootRelativePath(sourceDirectory);
+  if (pathInEnclosingRepo) {
+    return `${message}\nIt is a directory inside the git repository at ${getGitRootPath(sourceDirectory)}. Import from that repository and pass "--source=${pathInEnclosingRepo}" instead.`;
+  }
+  return `${message}\nRun "git init" in ${sourceDirectory}, commit the files and try again.`;
+}
+
 export async function importHandler(options: ImportOptions) {
   process.env.NX_RUNNING_NX_IMPORT = 'true';
   let { sourceRepository, ref, source, destination, verbose } = options;
@@ -109,7 +135,7 @@ export async function importHandler(options: ImportOptions) {
     // Check if this is a plugin-only call (second step of two-step flow)
     if (destination && options.plugins) {
       const absDestAi = join(process.cwd(), destination);
-      const destGitClient = new GitRepository(process.cwd());
+      const destGitClient = createDestinationGitClient();
       const destFiles = await destGitClient.getGitFiles(absDestAi);
       if (destFiles.length > 0) {
         // Destination not empty + --plugins provided + AI mode = plugin-only mode
@@ -117,7 +143,7 @@ export async function importHandler(options: ImportOptions) {
       }
     }
   }
-  const destinationGitClient = new GitRepository(process.cwd());
+  const destinationGitClient = createDestinationGitClient();
 
   if (await destinationGitClient.hasUncommittedChanges()) {
     throw new Error(
@@ -148,10 +174,12 @@ export async function importHandler(options: ImportOptions) {
     });
   }
 
+  let sourceIsLocalDirectory = false;
   try {
     const maybeLocalDirectory = await stat(sourceRepository);
     if (maybeLocalDirectory.isDirectory()) {
       sourceRepository = resolve(sourceRepository);
+      sourceIsLocalDirectory = true;
     }
   } catch (e) {
     // It's a remote url
@@ -186,6 +214,12 @@ export async function importHandler(options: ImportOptions) {
       spinner.fail(
         `Failed to clone ${displayRepository} into ${sourceTempRepoPath}`
       );
+    }
+    if (
+      sourceIsLocalDirectory &&
+      !(await isCloneableGitRepository(sourceRepository))
+    ) {
+      throw new Error(getSourceNotAGitRepositoryMessage(sourceRepository));
     }
     throw new Error(
       `Failed to clone ${displayRepository} into ${sourceTempRepoPath}. Please double check the remote and try again.\n${redactUrlCredentials(e.message)}`

@@ -119,6 +119,11 @@ describe('import ai-output', () => {
       expect(
         determineImportErrorCode(new Error('You have uncommitted changes'))
       ).toBe('UNCOMMITTED_CHANGES');
+      expect(
+        determineImportErrorCode(
+          new Error('/tmp/source is not a git repository.')
+        )
+      ).toBe('NOT_A_GIT_REPOSITORY');
       expect(determineImportErrorCode(new Error('Failed to clone repo'))).toBe(
         'CLONE_FAILED'
       );
@@ -142,6 +147,7 @@ describe('import ai-output', () => {
     it('should return hints for each error code', () => {
       const codes = [
         'UNCOMMITTED_CHANGES',
+        'NOT_A_GIT_REPOSITORY',
         'CLONE_FAILED',
         'SOURCE_NOT_FOUND',
         'DESTINATION_NOT_EMPTY',

@@ -167,6 +167,64 @@ describe('importHandler', () => {
     }
   });
 
+  it('explains that a local source directory is not a git repository', async () => {
+    createWorkspace();
+    const source = join(root, 'source');
+    mkdirSync(source);
+    writeFileSync(join(source, 'index.ts'), 'export {};\n');
+
+    await expect(
+      importHandler({
+        sourceRepository: source,
+        ref: 'main',
+        source: '.',
+        destination: 'libs/source',
+        depth: 0,
+        verbose: false,
+        interactive: false,
+      })
+    ).rejects.toThrow(`${source} is not a git repository`);
+  });
+
+  it('points at the enclosing repository when the source is a directory inside one', async () => {
+    const repo = join(root, 'source');
+    mkdirSync(join(repo, 'packages', 'lib'), { recursive: true });
+    git(repo, 'init', '-q', '-b', 'main');
+    createWorkspace();
+
+    await expect(
+      importHandler({
+        sourceRepository: join(repo, 'packages', 'lib'),
+        ref: 'main',
+        source: '.',
+        destination: 'libs/lib',
+        depth: 0,
+        verbose: false,
+        interactive: false,
+      })
+    ).rejects.toThrow(
+      `inside the git repository at ${repo}. Import from that repository and pass "--source=packages/lib"`
+    );
+  });
+
+  it('explains that the workspace is not a git repository', async () => {
+    const workspace = join(root, 'workspace');
+    mkdirSync(workspace);
+    process.chdir(workspace);
+
+    await expect(
+      importHandler({
+        sourceRepository: 'https://example.com/source.git',
+        ref: 'main',
+        source: '.',
+        destination: 'libs/source',
+        depth: 0,
+        verbose: false,
+        interactive: false,
+      })
+    ).rejects.toThrow(`${workspace} is not a git repository`);
+  });
+
   it('keeps credentials in the source URL out of the merge commit and output', async () => {
     state.aiAgent = true;
     const source = join(root, 'source');
