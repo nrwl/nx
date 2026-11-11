@@ -47,31 +47,16 @@ export async function ensureCypressInstallation() {
   // for the same reason Playwright installs are serialized below.
   withInstallLock(CYPRESS_LOCK_FILE, 'Cypress', () => {
     try {
-      let cypressVerified = true;
-      try {
-        const r = execSync('npx cypress verify', {
-          stdio: isVerbose() ? 'inherit' : 'pipe',
-          encoding: 'utf-8',
-          cwd: tmpProjPath(),
-        });
-        if (r.indexOf('Verified Cypress!') === -1) {
-          cypressVerified = false;
-        }
-      } catch {
-        cypressVerified = false;
-      }
-
-      if (!cypressVerified) {
-        e2eConsoleLogger('Cypress was not verified. Installing Cypress now.');
-        execSync('npx cypress install', {
-          stdio: isVerbose() ? 'inherit' : 'pipe',
-          encoding: 'utf-8',
-          cwd: tmpProjPath(),
-          // The binary is skipped while workspaces are installed, so this call
-          // has to be allowed to fetch it.
-          env: { ...process.env, CYPRESS_INSTALL_BINARY: undefined },
-        });
-      }
+      // No-op when the binary is installed. `cypress run` smoke-tests it on first
+      // use, so this skips `cypress verify`, which always reruns that test.
+      execSync('npx cypress install', {
+        stdio: isVerbose() ? 'inherit' : 'pipe',
+        encoding: 'utf-8',
+        cwd: tmpProjPath(),
+        // The binary is skipped while workspaces are installed, so this call
+        // has to be allowed to fetch it.
+        env: { ...process.env, CYPRESS_INSTALL_BINARY: undefined },
+      });
     } catch (error) {
       e2eConsoleLogger('Failed to install Cypress:', error);
       throw error;
