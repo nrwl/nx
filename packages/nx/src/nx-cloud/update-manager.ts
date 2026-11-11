@@ -93,6 +93,7 @@ export interface NxCloudClient {
 export async function verifyOrUpdateNxCloudClient(options?: {
   url?: string;
   customProxyConfigPath?: string;
+  useSystemCa?: boolean;
 }): Promise<{ nxCloudClient: NxCloudClient; version: string } | null> {
   debugLog('Verifying current cloud bundle');
   const currentBundle = getLatestInstalledRunnerBundle();
