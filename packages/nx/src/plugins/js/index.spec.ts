@@ -9,6 +9,8 @@ import {
 import { dirname, join } from 'node:path';
 import type { ProjectGraphExternalNode } from '../../config/project-graph';
 import { linkedProjectBunLock } from './lock-file/__fixtures__/bun/linked-project.bun.lock';
+import linkedProjectPnpmLock from './lock-file/__fixtures__/linked-project/pnpm-lock.yaml';
+import localPathPackagesPnpmLock from './lock-file/__fixtures__/local-path-packages/pnpm-lock.yaml';
 import overriddenLocalPathPnpmLock from './lock-file/__fixtures__/overridden-local-path/pnpm-lock.yaml';
 
 const { root, workspaceDataDirectory } = vi.hoisted(() => {
@@ -273,6 +275,73 @@ describe('nx/js/dependencies-and-lockfile', () => {
     ]);
   });
 
+  it.each([['pnpm-lock.yaml', localPathPackagesPnpmLock]])(
+    'should hash the contents of local path packages in %s',
+    async (lockFile, lockFileContent) => {
+      write(
+        'package.json',
+        JSON.stringify({
+          name: 'root',
+          dependencies: {
+            vend: 'file:./vendor/vend',
+            ignored: 'file:./vendor/ignored',
+            vtar: 'file:./vendor/vtar-1.0.0.tgz',
+            lnk: 'link:vendor/lnk',
+            alias: 'file:./vendor/real',
+          },
+        })
+      );
+      write('.gitignore', 'vendor/ignored\nvendor/vend/dist\n');
+      write(lockFile, lockFileContent);
+      // `vend` declares the `ttar` tarball. Its ignored dist ships with it.
+      const sources = [
+        ['vend', 'vendor/vend/index.js'],
+        ['vend', 'vendor/vend/dist/index.js'],
+        ['ignored', 'vendor/ignored/index.js'],
+        ['vtar', 'vendor/vtar-1.0.0.tgz'],
+        ['lnk', 'vendor/lnk/index.js'],
+        ['ttar', 'vendor/ttar-1.0.0.tgz'],
+        ['alias', 'vendor/real/index.js'],
+      ];
+      const names = [...new Set(sources.map(([name]) => name))];
+      for (const [, source] of sources) {
+        write(source, 'V1');
+      }
+      // Every node of a package, so a package that also has a bare node
+      // changes only when all of them do.
+      const hashes = async () => {
+        const plugin = await loadPluginInNewProcess();
+        const nodes = await createExternalNodes(plugin, lockFile);
+        return Object.fromEntries(
+          names.map((name) => [
+            name,
+            Object.values(nodes)
+              .filter((node) => node.data.packageName === name)
+              .map((node) => node.data.hash),
+          ])
+        );
+      };
+      const before = await hashes();
+
+      for (const [name, source] of sources) {
+        write(source, 'V2');
+        const after = await hashes();
+        write(source, 'V1');
+
+        expect(before[name].length).toBeGreaterThan(0);
+        for (const [otherName, otherHashes] of Object.entries(before)) {
+          if (otherName === name) {
+            for (const [i, hash] of after[name].entries()) {
+              expect(hash).not.toBe(otherHashes[i]);
+            }
+          } else {
+            expect(after[otherName]).toEqual(otherHashes);
+          }
+        }
+      }
+    }
+  );
+
   // lib and control declare the vendored `ms`, and an override installs the
   // registry `ms` of the same version for lib.
   it.each([['pnpm-lock.yaml', overriddenLocalPathPnpmLock, 'npm:ms']])(
@@ -332,7 +401,10 @@ describe('nx/js/dependencies-and-lockfile', () => {
   // apps/a links x to libs/x/dist inside the project libs/x, and apps/b to the
   // plain directory vendor/x. Neither target is in the package manager's
   // workspaces.
-  it.each([['bun.lock', linkedProjectBunLock, 'npm:x', 'npm:x']])(
+  it.each([
+    ['pnpm-lock.yaml', linkedProjectPnpmLock, 'npm:x', 'npm:x'],
+    ['bun.lock', linkedProjectBunLock, 'npm:x', 'npm:x'],
+  ])(
     'should depend on the project a link points to and on the link in %s',
     async (lockFile, lockFileContent, projectLinkNode, vendoredNode) => {
       write(
