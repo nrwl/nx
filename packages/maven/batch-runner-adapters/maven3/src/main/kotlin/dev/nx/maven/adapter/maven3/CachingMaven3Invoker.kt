@@ -50,7 +50,12 @@ class CachingMaven3Invoker(
 
         System.setProperty("maven.multiModuleProjectDirectory", workspaceRoot.absolutePath)
 
-        val coreRealm = classWorld.getRealm("plexus.core") as ClassRealm
+        val coreRealm = try {
+            classWorld.getRealm("plexus.core") as ClassRealm
+        } catch (_: Exception) {
+            // Fallback for testing where plexus.core realm might not exist
+            classWorld.newRealm("plexus.core", javaClass.classLoader)
+        }
 
         container = DefaultPlexusContainer(
             DefaultContainerConfiguration()
@@ -90,7 +95,8 @@ class CachingMaven3Invoker(
         stdout: OutputStream,
         stderr: OutputStream
     ): Int {
-        log.debug("invoke() with args: ${args.joinToString(" ")}")
+        val mergedArgs = mergeMavenConfig(args, workingDir)
+        log.debug("invoke() with args: ${mergedArgs.joinToString(" ")}")
 
         val originalOut = System.out
         val originalErr = System.err
@@ -100,7 +106,7 @@ class CachingMaven3Invoker(
         System.setErr(printStreamErr)
 
         return try {
-            val request = createRequest(args, workingDir)
+            val request = createRequest(mergedArgs, workingDir)
 
             if (!graphSetup) {
                 nxMaven!!.setupGraphCache(request)
@@ -125,6 +131,25 @@ class CachingMaven3Invoker(
         } finally {
             System.setOut(originalOut)
             System.setErr(originalErr)
+        }
+    }
+
+    private fun mergeMavenConfig(args: List<String>, workingDir: File): List<String> {
+        val mavenConfig = File(workingDir, ".mvn/maven.config")
+        if (!mavenConfig.exists()) {
+            return args
+        }
+
+        return try {
+            val configArgs = mavenConfig.readText()
+                .split(Regex("\\s+"))
+                .filter { it.isNotBlank() }
+
+            log.debug("Found .mvn/maven.config with args: ${configArgs.joinToString(" ")}")
+            configArgs + args
+        } catch (e: Exception) {
+            log.warn("Failed to read .mvn/maven.config: ${e.message}")
+            args
         }
     }
 
