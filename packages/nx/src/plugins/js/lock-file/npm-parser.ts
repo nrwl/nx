@@ -197,7 +197,7 @@ function getInstalledLocalPathNodes(
   keyMap: Map<string, ProjectGraphExternalNode>,
   localPathPackageNames: Set<string>
 ): Record<string, Record<string, string>> {
-  const installed: Record<string, Record<string, string>> = {};
+  const installed: Record<string, Record<string, string>> = Object.create(null);
   for (const importerPath in data.packages) {
     if (importerPath !== '' && importerPath.includes('node_modules')) {
       continue;
@@ -226,7 +226,8 @@ function getInstalledLocalPathNodes(
         }
         const node = keyMap.get(key);
         if (node) {
-          (installed[importerPath || '.'] ??= {})[depName] = node.name;
+          (installed[importerPath || '.'] ??= Object.create(null))[depName] =
+            node.name;
         }
       }
     }

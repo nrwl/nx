@@ -581,7 +581,10 @@ function getNodes(
 
   // An override can install a registry copy for a `file:` spec, so the
   // version each importer records decides
-  const installedLocalPathNodes: Record<string, Record<string, string>> = {};
+  const installedLocalPathNodes: Record<
+    string,
+    Record<string, string>
+  > = Object.create(null);
   for (const importerPath of importerPaths) {
     const importer = data.importers[importerPath];
     for (const depType of [
@@ -596,7 +599,9 @@ function getNodes(
         }
         for (const node of keyMap.get(`${depName}@${depVersion}`) ?? []) {
           if (node.data.packageName === depName) {
-            (installedLocalPathNodes[importerPath] ??= {})[depName] = node.name;
+            (installedLocalPathNodes[importerPath] ??= Object.create(null))[
+              depName
+            ] = node.name;
             break;
           }
         }
