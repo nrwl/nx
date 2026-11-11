@@ -73,11 +73,6 @@ const bannerId = bannerConfig ? `${bannerConfig.title}-${bannerConfig.activeUnti
       min-height: 100vh;
     }
 
-    /* One 18px line plus 8px padding on each side and a 1px border. */
-    .page.has-top-banner {
-      --top-banner-h: 35px;
-    }
-
     .header {
       z-index: var(--sl-z-index-navbar);
       position: fixed;
@@ -200,5 +195,15 @@ const bannerId = bannerConfig ? `${bannerConfig.title}-${bannerConfig.activeUnti
     :global([data-has-sidebar] footer) {
       padding-inline-start: var(--sl-content-inline-start);
     }
+  }
+
+  /* Unlayered so it overrides Starlight's layered scroll-padding-top. */
+  :global(html:has(.page.has-top-banner)) {
+    /* One 18px line plus 8px padding on each side and a 1px border. */
+    --top-banner-h: 35px;
+    scroll-padding-top: calc(
+      1.5rem + var(--sl-nav-height) + var(--sl-mobile-toc-height) +
+        var(--top-banner-h)
+    );
   }
 </style>
