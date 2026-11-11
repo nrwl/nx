@@ -47,12 +47,23 @@ describe('startLocalRegistry', () => {
     await new Promise((resolve) => registry.close(resolve));
   });
 
-  it.each([
-    ['skips', 'rejects', true, undefined],
-    ['sets', 'accepts', false, 'secretVerdaccioToken'],
-  ])(
-    '%s the placeholder token when the registry %s it',
-    async (_, __, rejectsPlaceholder, token) => {
+  it.for([
+    ['skips', '127.0.0.1', 'rejects', true, undefined, '127.0.0.1'],
+    [
+      'sets',
+      '127.0.0.1',
+      'accepts',
+      false,
+      'secretVerdaccioToken',
+      '127.0.0.1',
+    ],
+    ['sets', '[::1]', 'accepts', false, 'secretVerdaccioToken', '::1'],
+  ] as const)(
+    '%s the placeholder token when the registry on %s %s it',
+    async (
+      [, listenAddress, , rejectsPlaceholder, token, bindAddress],
+      { skip }
+    ) => {
       // Stands in for Verdaccio 7, which rejects the placeholder unless its config enables jwt tokens
       registry = createServer((req, res) => {
         res.statusCode =
@@ -62,12 +73,18 @@ describe('startLocalRegistry', () => {
             : 200;
         res.end();
       });
-      await new Promise<void>((resolve) =>
-        registry.listen(0, '127.0.0.1', resolve)
-      );
+      try {
+        await new Promise<void>((resolve, reject) =>
+          registry.once('error', reject).listen(0, bindAddress, resolve)
+        );
+      } catch (e) {
+        // Some CI kernels have no IPv6 loopback
+        if (e.code === 'EADDRNOTAVAIL') return skip();
+        throw e;
+      }
       const { port } = registry.address() as { port: number };
-      const registryUrl = `http://127.0.0.1:${port}`;
-      const tokenKey = `//127.0.0.1:${port}/:_authToken`;
+      const registryUrl = `http://${listenAddress}:${port}`;
+      const tokenKey = `//${listenAddress}:${port}/:_authToken`;
       for (const key of [
         'npm_config_registry',
         'pnpm_config_registry',
@@ -83,7 +100,7 @@ describe('startLocalRegistry', () => {
 
       const started = startLocalRegistry({
         localRegistryTarget: 'workspace:local-registry',
-        listenAddress: '127.0.0.1',
+        listenAddress,
       });
       registryProcess.child.stdout.emit(
         'data',

@@ -48,11 +48,13 @@ export function startLocalRegistry({
         process.stdout.write(data);
         console.log('Waiting for local registry to start...');
       }
-      if (data.toString().includes(`http://${listenAddress}:`)) {
+      const output = data.toString();
+      const addressPrefix = `http://${listenAddress}:`;
+      const addressIndex = output.indexOf(addressPrefix);
+      if (addressIndex !== -1) {
         childProcess?.stdout?.off('data', listener);
         const port = parseInt(
-          data.toString().match(new RegExp(`${listenAddress}:(?<port>\\d+)`))
-            ?.groups?.port
+          output.slice(addressIndex + addressPrefix.length)
         );
 
         const registry = `http://${listenAddress}:${port}`;
