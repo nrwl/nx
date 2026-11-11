@@ -19,6 +19,8 @@ import type { SharedLicenseInputs } from '../plugins/extract-licenses-plugin';
 import type { SharedServerRenderingInputs } from '../plugins/index-html-plugin';
 import { AngularRspackPlugin } from '../plugins/angular-rspack-plugin';
 import { SsrReloadServer } from '../plugins/server/ssr-reload-server';
+import { servesSsrFromForkedServer } from '../plugins/angular-ssr-dev-server';
+import { DevServerReloads } from '../plugins/dev-server-reloads';
 
 export async function createConfig(
   defaultOptions: {
@@ -96,12 +98,16 @@ export async function _createConfig(
   const serverRenderingInputs: SharedServerRenderingInputs | undefined =
     normalizedOptions.hasServer ? {} : undefined;
 
-  const ssrReloadServer =
-    isServeMode() &&
-    normalizedOptions.hasServer &&
-    typeof normalizedOptions.ssr === 'object' &&
-    normalizedOptions.ssr.entry !== undefined
-      ? new SsrReloadServer()
+  const servesFromForkedServer =
+    isServeMode() && servesSsrFromForkedServer(normalizedOptions);
+  const ssrReloadServer = servesFromForkedServer
+    ? new SsrReloadServer()
+    : undefined;
+  // The separate server restarts after each server build, so a reload sent
+  // when the browser build ends can reach it while it restarts.
+  const devServerReloads =
+    isServeMode() && !servesFromForkedServer
+      ? new DevServerReloads()
       : undefined;
 
   const configs: Configuration[] = [];
@@ -132,7 +138,8 @@ export async function _createConfig(
     sharedLicenseInputs,
     sharedAngularPlugin,
     serverRenderingInputs,
-    ssrReloadServer
+    ssrReloadServer,
+    devServerReloads
   );
   const mergedConfig = rspackMerge(browserConfig, rspackConfigOverrides ?? {});
   configs.unshift(mergedConfig);

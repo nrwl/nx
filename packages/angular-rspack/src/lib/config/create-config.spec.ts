@@ -515,6 +515,29 @@ describe('createConfig', () => {
     }
   }, 10000);
 
+  it('should reload on source changes only for SSR apps served by a separate server', async () => {
+    const root = await createSsrProjectRoot();
+    vi.stubEnv('WEBPACK_SERVE', 'true');
+    try {
+      const [forkedSsrConfig] = await _createConfig({
+        ...configBase,
+        root,
+        server: './src/main.server.ts',
+        ssr: { entry: './src/server.ts' },
+      });
+      expect((forkedSsrConfig.devServer || {}).watchFiles).toEqual([
+        './src/**/*.*',
+        './public/**/*.*',
+      ]);
+
+      const [browserOnlyConfig] = await _createConfig({ ...configBase, root });
+      expect(browserOnlyConfig.devServer).not.toHaveProperty('watchFiles');
+    } finally {
+      vi.unstubAllEnvs();
+      await rm(root, { recursive: true, force: true });
+    }
+  }, 10000);
+
   it('should allow the dev-server hosts in the engine manifest while serving', async () => {
     const root = await createSsrProjectRoot();
     vi.stubEnv('WEBPACK_SERVE', 'true');

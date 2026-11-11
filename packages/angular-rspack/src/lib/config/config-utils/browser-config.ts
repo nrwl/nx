@@ -12,6 +12,7 @@ import type { AngularRspackPlugin } from '../../plugins/angular-rspack-plugin';
 import type { SharedLicenseInputs } from '../../plugins/extract-licenses-plugin';
 import type { SharedServerRenderingInputs } from '../../plugins/index-html-plugin';
 import type { SsrReloadServer } from '../../plugins/server/ssr-reload-server';
+import type { DevServerReloads } from '../../plugins/dev-server-reloads';
 import { getDevClientGuardRule } from '../../plugins/loaders/dev-client-guard.loader';
 import { getDevServerConfig } from './dev-server-config-utils';
 import { getPolyfillsEntry, toRspackEntries } from './entry-points';
@@ -29,7 +30,8 @@ export async function getBrowserConfig(
   sharedLicenseInputs?: SharedLicenseInputs,
   sharedAngularPlugin?: AngularRspackPlugin,
   serverRenderingInputs?: SharedServerRenderingInputs,
-  ssrReloadServer?: SsrReloadServer
+  ssrReloadServer?: SsrReloadServer,
+  devServerReloads?: DevServerReloads
 ): Promise<Configuration> {
   const isDevServer = isServeMode();
   const isProduction = process.env['NODE_ENV'] === 'production';
@@ -114,6 +116,7 @@ export async function getBrowserConfig(
         sharedAngularPlugin,
         ssrReloadServer,
         serverRenderingInputs,
+        devServerReloads,
       }),
     ],
   };

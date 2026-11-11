@@ -7,6 +7,16 @@ import type { SsrReloadServer } from './server/ssr-reload-server';
 
 const PLUGIN_NAME = 'AngularSsrDevServer';
 
+export function servesSsrFromForkedServer(
+  options: NormalizedAngularRspackPluginOptions
+): boolean {
+  return (
+    options.hasServer &&
+    typeof options.ssr === 'object' &&
+    options.ssr.entry !== undefined
+  );
+}
+
 export class AngularSsrDevServer implements RspackPluginInstance {
   #devServerProcess: ChildProcess | undefined;
   constructor(

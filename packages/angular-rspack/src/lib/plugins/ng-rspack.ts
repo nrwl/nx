@@ -22,13 +22,16 @@ import {
   ssrServerEmitsReadySignal,
   READY_SIGNAL_PLUGIN,
 } from '../utils/dev-server-ready-signal';
-import { loadEsmModule } from '../utils/misc-helpers';
 import { isServeMode } from '../utils/rspack-serve-env';
 import { addBodyScript } from '../utils/index-file/add-body-script';
 import { AngularRspackPlugin } from './angular-rspack-plugin';
-import { AngularSsrDevServer } from './angular-ssr-dev-server';
+import {
+  AngularSsrDevServer,
+  servesSsrFromForkedServer,
+} from './angular-ssr-dev-server';
 import { connectSsrReload } from './client/ssr-reload-client';
 import type { SsrReloadServer } from './server/ssr-reload-server';
+import type { DevServerReloads } from './dev-server-reloads';
 import {
   ExtractLicensesPlugin,
   type SharedLicenseInputs,
@@ -51,6 +54,7 @@ export class NgRspackPlugin implements RspackPluginInstance {
     | SharedServerRenderingInputs
     | undefined;
   private readonly ssrReloadServer: SsrReloadServer | undefined;
+  private readonly devServerReloads: DevServerReloads | undefined;
   readonly [READY_SIGNAL_PLUGIN] = true;
 
   constructor(
@@ -78,6 +82,8 @@ export class NgRspackPlugin implements RspackPluginInstance {
        */
       serverRenderingInputs?: SharedServerRenderingInputs;
       ssrReloadServer?: SsrReloadServer;
+      /** Reloads the dev server's pages for changes it misses (serve mode). */
+      devServerReloads?: DevServerReloads;
     }
   ) {
     this.pluginOptions = pluginOptions;
@@ -87,6 +93,7 @@ export class NgRspackPlugin implements RspackPluginInstance {
     this.sharedAngularPlugin = extraOptions.sharedAngularPlugin;
     this.serverRenderingInputs = extraOptions.serverRenderingInputs;
     this.ssrReloadServer = extraOptions.ssrReloadServer;
+    this.devServerReloads = extraOptions.devServerReloads;
   }
 
   apply(compiler: Compiler) {
@@ -131,16 +138,17 @@ export class NgRspackPlugin implements RspackPluginInstance {
       }
     }
 
-    if (this.isPlatformServer && isDevServer) {
-      if (
-        this.pluginOptions.ssr &&
-        typeof this.pluginOptions.ssr === 'object' &&
-        this.pluginOptions.ssr.entry !== undefined
-      ) {
-        new AngularSsrDevServer(this.pluginOptions, ssrReloadServer).apply(
-          compiler
-        );
-      }
+    if (
+      this.isPlatformServer &&
+      isDevServer &&
+      servesSsrFromForkedServer(this.pluginOptions)
+    ) {
+      new AngularSsrDevServer(this.pluginOptions, ssrReloadServer).apply(
+        compiler
+      );
+    }
+    if (!this.isPlatformServer) {
+      this.devServerReloads?.apply(compiler);
     }
     if (this.isPlatformServer) {
       // The server bundle is CommonJS; the marker keeps Node loading it as
@@ -313,43 +321,6 @@ export class NgRspackPlugin implements RspackPluginInstance {
           : undefined,
         serverRenderingInputs: this.serverRenderingInputs,
       }).apply(compiler);
-    }
-    if (
-      this.pluginOptions.devServer.open &&
-      isDevServer &&
-      !this.isPlatformServer
-    ) {
-      compiler.hooks.afterEmit.tapAsync(
-        'AngularRspackPlugin',
-        async (_, callback) => {
-          const protocol = this.pluginOptions.devServer.ssl ? 'https' : 'http';
-          const hostname =
-            this.pluginOptions.devServer.host === '0.0.0.0'
-              ? 'localhost'
-              : this.pluginOptions.devServer.host;
-          const port = this.pluginOptions.devServer.port;
-          const devServerOpts = compiler.options.devServer;
-          const publicPath =
-            typeof devServerOpts === 'object'
-              ? devServerOpts.devMiddleware?.publicPath
-              : undefined;
-          const pathname =
-            typeof publicPath === 'string' ? publicPath : undefined;
-
-          const serverAddress = new URL(`${protocol}://${hostname}:${port}`);
-          if (pathname) {
-            // Ensure pathname starts with a slash
-            serverAddress.pathname = pathname.startsWith('/')
-              ? pathname
-              : `/${pathname}`;
-          }
-
-          const open = (await loadEsmModule<typeof import('open')>('open'))
-            .default;
-          await open(serverAddress.toString());
-          callback();
-        }
-      );
     }
   }
 }
