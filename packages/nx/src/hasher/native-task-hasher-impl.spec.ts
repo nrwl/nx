@@ -2356,13 +2356,16 @@ describe('native task hasher', () => {
       workspaceFiles.rustReferences,
       { selectivelyHashTsConfig: false }
     );
-    for (let i = 0; i < 2; i++) {
+    const expectUpfrontToMatchDisk = async () => {
       const upfront = (await impl.hashTasksUpfront(tasks, taskGraph, envs))[
         'gen:compile'
       ].value;
       const [fromDisk] = await impl.hashTasks(tasks, taskGraph, envs);
       expect(upfront).toEqual(fromDisk.value);
-    }
+    };
+    await expectUpfrontToMatchDisk();
+    // Answered from the first pass's listing, which now holds the sibling.
+    await expectUpfrontToMatchDisk();
   });
 
   it('hashes both disk-backed groups when a large group lists the same first globs as another', async () => {
