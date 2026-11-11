@@ -9,10 +9,10 @@ import {
 /**
  * This function is used to start a local registry for testing purposes.
  * @param localRegistryTarget the target to run to start the local registry e.g. workspace:local-registry
- * @param storage the storage location for the local registry
- * @param verbose whether to log verbose output
- * @param clearStorage whether to clear the verdaccio storage before running the registry
- * @param listenAddress the address that verdaccio should listen to (default to `localhost`)
+ * @param storage the storage location for the local registry, passed to the target as `--storage`
+ * @param verbose whether to print the target's stdout until the registry address appears (stderr is always printed)
+ * @param clearStorage whether to ask the target to clear the registry storage before starting, passed to the target as `--clear` (default `true`)
+ * @param listenAddress the address the target listens on (default `localhost`). It is not passed to the target; the helper waits for `http://<listenAddress>:<port>` in the target's stdout and uses it as the registry URL.
  */
 export function startLocalRegistry({
   localRegistryTarget,
