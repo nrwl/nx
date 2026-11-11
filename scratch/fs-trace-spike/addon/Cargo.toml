@@ -1,0 +1,15 @@
+[package]
+name = "fstrace-addon"
+version = "0.0.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+libc = "0.2"
+napi = { version = "3.8.3", default-features = false, features = ["napi4"] }
+napi-derive = "3.5.2"
+
+[build-dependencies]
+napi-build = "2.3.1"
