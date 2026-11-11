@@ -9,6 +9,7 @@ import {
 } from '../../../config/project-graph';
 import {
   getDependencyVersionFromPackageJson,
+  isTarballPath,
   PackageJson,
   type PackageJsonDependencySection,
   readModulePackageJson,
@@ -132,7 +133,13 @@ export function createPackageJson(
       return projectVersion;
     }
 
-    if (isLocalPathSpecifier(getAliasedVersion(version))) {
+    // A Bun tarball's graph version is its path, which can parse as semver
+    // (`1.0.0-rc.tgz`)
+    const recordedVersion = getAliasedVersion(version);
+    if (
+      isLocalPathSpecifier(recordedVersion) ||
+      isTarballPath(recordedVersion)
+    ) {
       const localPathSpec = getInheritedLocalPathSpec(
         packageName,
         version,
@@ -346,13 +353,14 @@ const LOCAL_PATH_SPEC_SECTIONS: PackageJsonDependencySection[] = [
 
 /**
  * A local-path spec for a dependency the project inherits, rebased from its
- * declarer to the project root, where the pnpm deploy output relocates
+ * declarer to the project root, where the pnpm and Bun deploy outputs relocate
  * local-path specs from. Declarers are searched in the order the import
- * resolves: from the importing project through the projects enclosing it to
- * the root. A declarer counts only when its spec resolves to the path the graph
- * version records. Nx's pnpm graph takes a shared `link:` node's version from
- * the first importer, so a `link:` on the chain also counts when its
- * node_modules links that target.
+ * resolves: for pnpm from the importing project through the projects enclosing
+ * it to the root, and for Bun from the root, whose copy of a tarball Bun
+ * installs for every workspace declaring the same spec. A declarer counts only
+ * when its spec resolves to the path the graph version records. Nx's pnpm graph
+ * takes a shared `link:` node's version from the first importer, so a `link:`
+ * on the chain also counts when its node_modules links that target.
  */
 function createInheritedLocalPathSpecResolver(
   projectNode: ProjectGraphProjectNode,
@@ -382,31 +390,42 @@ function createInheritedLocalPathSpecResolver(
     string,
     { ordered: LocalPathSpecDeclarer[]; onChain: Set<LocalPathSpecDeclarer> }
   >();
-  let reachableProjects: string[] | null | undefined;
+  let lookup:
+    | { packageManager: 'pnpm' | 'bun'; reachableProjects: string[] }
+    | null
+    | undefined;
   return (packageName, version, importingProject) => {
-    if (reachableProjects === undefined) {
-      reachableProjects =
-        detectPackageManager(root) === 'pnpm'
-          ? getReachableProjects(projectNode, graph)
+    if (lookup === undefined) {
+      const packageManager = detectPackageManager(root);
+      lookup =
+        packageManager === 'pnpm' || packageManager === 'bun'
+          ? {
+              packageManager,
+              reachableProjects: getReachableProjects(projectNode, graph),
+            }
           : null;
     }
-    if (reachableProjects === null) {
+    if (lookup === null) {
       return undefined;
     }
     if (!declarersByImporter.has(importingProject)) {
       const chain = getImportResolutionChain(graph, importingProject);
-      const others = reachableProjects.filter(
+      const others = lookup.reachableProjects.filter(
         (projectName) => !chain.includes(projectName)
       );
       const chainDeclarers = chain.map(getProjectDeclarer).filter(Boolean);
       const otherDeclarers = others.map(getProjectDeclarer).filter(Boolean);
       declarersByImporter.set(importingProject, {
-        ordered: [...chainDeclarers, rootDeclarer, ...otherDeclarers],
+        ordered:
+          lookup.packageManager === 'bun'
+            ? [rootDeclarer, ...chainDeclarers, ...otherDeclarers]
+            : [...chainDeclarers, rootDeclarer, ...otherDeclarers],
         onChain: new Set(chainDeclarers),
       });
     }
     const { ordered, onChain } = declarersByImporter.get(importingProject);
-    const isLink = version.startsWith('link:');
+    const isPnpmLink =
+      lookup.packageManager === 'pnpm' && version.startsWith('link:');
     for (const declarer of ordered) {
       // The helper detects the package manager on every call, and most
       // manifests don't list the package
@@ -432,13 +451,18 @@ function createInheritedLocalPathSpecResolver(
         isAbsolute(path) ? path : posix.join(declarer.root, path)
       );
       const isChainLink =
-        isLink &&
+        isPnpmLink &&
         protocol === 'link:' &&
         onChain.has(declarer) &&
         isInstalledLinkTarget(root, declarer.root, packageName, target);
       if (
         !isChainLink &&
-        getRecordedLocalPath(version, protocol, declarer.root) !== target
+        getRecordedLocalPath(
+          version,
+          protocol,
+          declarer.root,
+          lookup.packageManager
+        ) !== target
       ) {
         continue;
       }
@@ -452,26 +476,37 @@ function createInheritedLocalPathSpecResolver(
 }
 
 /**
- * The path a graph version names, read the way pnpm records a `protocol` spec
- * of the manifest at `declarerRoot`: a `file:` path from the workspace root and
- * a `link:` path from the importer. pnpm records a dependency named differently
- * from its package as an `npm:<package>@<version>` alias.
+ * The path a graph version names, read the way the lockfile records a
+ * `protocol` spec of the manifest at `declarerRoot`. pnpm records a `file:`
+ * path from the workspace root and a `link:` path from the importer. Bun
+ * records directories and `link:` paths from the workspace root, and a tarball
+ * from its declarer without the `file:` protocol. Both record a dependency
+ * named differently from its package as an `npm:<package>@<version>` alias.
  */
 function getRecordedLocalPath(
   graphVersion: string,
   protocol: 'file:' | 'link:',
-  declarerRoot: string
+  declarerRoot: string,
+  packageManager: 'pnpm' | 'bun'
 ): string | undefined {
   const version = getAliasedVersion(graphVersion);
-  if (!version.startsWith(protocol)) {
+  const isBunTarball =
+    packageManager === 'bun' &&
+    protocol === 'file:' &&
+    !isLocalPathSpecifier(version);
+  if (!isBunTarball && !version.startsWith(protocol)) {
     return undefined;
   }
-  const path = normalizePath(version.slice(protocol.length));
+  const path = normalizePath(
+    isBunTarball ? version : version.slice(protocol.length)
+  );
   if (isAbsolute(path)) {
     return withoutTrailingSlash(path);
   }
+  const isDeclarerRelative =
+    isBunTarball || (protocol === 'link:' && packageManager === 'pnpm');
   return withoutTrailingSlash(
-    posix.join(protocol === 'link:' ? declarerRoot : '', path)
+    posix.join(isDeclarerRelative ? declarerRoot : '', path)
   );
 }
 

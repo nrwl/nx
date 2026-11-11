@@ -29,6 +29,7 @@ export type NormalizedPackageJson = Pick<
   | 'resolutions'
   | 'overrides'
   | 'pnpm'
+  | 'trustedDependencies'
 >;
 
 /**
@@ -50,6 +51,7 @@ export function normalizePackageJson(
     resolutions,
     overrides,
     pnpm,
+    trustedDependencies,
   } = packageJson;
 
   return {
@@ -65,5 +67,6 @@ export function normalizePackageJson(
     resolutions,
     overrides,
     pnpm,
+    trustedDependencies,
   };
 }

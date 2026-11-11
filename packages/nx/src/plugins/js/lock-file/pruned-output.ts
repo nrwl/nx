@@ -481,7 +481,7 @@ export function normalizePrunedPatchPath(patchPath: string): string {
   return `patches/${segments.join('/')}`;
 }
 
-function normalizePrunedPatchedDependencies(
+export function normalizePrunedPatchedDependencies(
   patchedDependencies: Record<string, string>
 ): Record<string, string> {
   const normalized: Record<string, string> = {};
@@ -732,6 +732,29 @@ export function getPrunedPnpmPatchArtifacts(
   if (Object.keys(patchedDependencies).length === 0) {
     return { patchFiles: [], packageJsonPatchedDependencies: null };
   }
+  const patchFiles = getPrunedPatchFiles(
+    workspaceRootPath,
+    patchedDependencies
+  );
+  const pnpmMajor = resolvePnpmMajor(precomputed, workspaceRootPath);
+  return {
+    patchFiles,
+    packageJsonPatchedDependencies:
+      pnpmMajor !== null && pnpmMajor < 11
+        ? normalizePrunedPatchedDependencies(patchedDependencies)
+        : null,
+  };
+}
+
+/**
+ * The `.patch` files a pruned output ships for `patchedDependencies` (package
+ * key -> patch file path), each at the `normalizePrunedPatchPath` path the
+ * output declares it under.
+ */
+export function getPrunedPatchFiles(
+  workspaceRootPath: string,
+  patchedDependencies: Record<string, string>
+): Array<{ path: string; content: string }> {
   const patchFiles: Array<{ path: string; content: string }> = [];
   // normalizePrunedPatchPath collapses the path, so two distinct sources can
   // normalize to one shipped path, which would ship a single file for both
@@ -749,7 +772,7 @@ export function getPrunedPnpmPatchArtifacts(
     const existingSource = shippedFrom.get(destination);
     if (existingSource !== undefined && existingSource !== source) {
       throw new Error(
-        `Cannot prune pnpm patches: "${existingSource}" and "${source}" both ship to "${destination}" in the standalone output. Rename one so the patches do not collide.`
+        `Cannot prune patches: "${existingSource}" and "${source}" both ship to "${destination}" in the standalone output. Rename one so the patches do not collide.`
       );
     }
     shippedFrom.set(destination, source);
@@ -773,14 +796,7 @@ export function getPrunedPnpmPatchArtifacts(
       );
     }
   }
-  const pnpmMajor = resolvePnpmMajor(precomputed, workspaceRootPath);
-  return {
-    patchFiles,
-    packageJsonPatchedDependencies:
-      pnpmMajor !== null && pnpmMajor < 11
-        ? normalizePrunedPatchedDependencies(patchedDependencies)
-        : null,
-  };
+  return patchFiles;
 }
 
 const WORKSPACE_MODULES_DIR = 'workspace_modules';
@@ -1106,7 +1122,7 @@ function localPathEscapesOutput(wsRelativePath: string): boolean {
 }
 
 /** True when a resolution `directory` points at a copied workspace module. */
-function isUnderWorkspaceModules(directory: string): boolean {
+export function isUnderWorkspaceModules(directory: string): boolean {
   return (
     directory === WORKSPACE_MODULES_DIR ||
     directory.startsWith(`${WORKSPACE_MODULES_DIR}/`) ||
@@ -1209,13 +1225,8 @@ function collectPrunedLinkTargetDirs(
  * Three shapes ship: a `file:` tarball (the `.tgz`), a `file:` directory not
  * under `workspace_modules/` (copied workspace modules ship via
  * copy-workspace-modules and are skipped here), and a `link:` target directory
- * (a root importer `link:` version, or a package `link:` snapshot ref).
- * `node_modules` is filtered from every directory copy; a symlink inside a
- * shipped tree is skipped with a warning while a symlinked root ships when it
- * resolves under the workspace root; entries are deduped by destination; a
- * source missing on disk or resolving outside the workspace root is skipped
- * with a warning (not reproducibly deployable). Source paths rather than bytes
- * so the file-writing prune paths can copy without buffering whole trees.
+ * (a root importer `link:` version, or a package `link:` snapshot ref). See
+ * `getLocalPathArtifacts` for how each ships.
  */
 export function getPrunedPnpmLocalPathArtifacts(
   workspaceRootPath: string = workspaceRoot,
@@ -1229,6 +1240,56 @@ export function getPrunedPnpmLocalPathArtifacts(
     return [];
   }
 
+  const targets: LocalPathArtifactTarget[] = [];
+  // file: tarball + file: directory resolutions (resolutions live in `packages`).
+  for (const snapshot of Object.values(parsed.packages ?? {})) {
+    const tarball = snapshot?.resolution?.tarball;
+    if (tarball?.startsWith('file:')) {
+      targets.push({
+        kind: 'file',
+        shippedPath: tarball.slice('file:'.length),
+        origin: tarball,
+      });
+      continue;
+    }
+    const directory = snapshot?.resolution?.directory;
+    if (directory && !isUnderWorkspaceModules(directory)) {
+      targets.push({
+        kind: 'directory',
+        shippedPath: normalizePath(directory),
+        origin: `file:${directory}`,
+      });
+    }
+  }
+  // link: targets (root importer versions + directory-package snapshot refs).
+  for (const { target, ref } of collectPrunedLinkTargetDirs(parsed)) {
+    targets.push({ kind: 'directory', shippedPath: target, origin: ref });
+  }
+  return getLocalPathArtifacts(workspaceRootPath, targets);
+}
+
+export type LocalPathArtifactTarget = {
+  kind: 'file' | 'directory';
+  // Where the pruned output ships it, as its lockfile records it.
+  shippedPath: string;
+  // The lockfile ref the warnings name.
+  origin: string;
+};
+
+/**
+ * The files a pruned output ships for its local-path `targets`, each read from
+ * the workspace location `uncontainLocalPath` recovers from its shipped path.
+ * `node_modules` is filtered from every directory copy; a symlink inside a
+ * shipped tree is skipped with a warning while a symlinked root ships when it
+ * resolves under the workspace root; entries are deduped by destination; a
+ * source missing on disk or resolving outside the workspace root is skipped
+ * with a warning (not reproducibly deployable). Source paths rather than bytes
+ * so the file-writing prune paths can copy without buffering whole trees.
+ */
+export function getLocalPathArtifacts(
+  workspaceRootPath: string,
+  targets: Iterable<LocalPathArtifactTarget>
+): Array<{ path: string; sourcePath: string }> {
   const artifacts: Array<{ path: string; sourcePath: string }> = [];
   const shippedRoots = new Set<string>();
   const seenDestinations = new Set<string>();
@@ -1274,9 +1335,8 @@ export function getPrunedPnpmLocalPathArtifacts(
     return null;
   };
 
-  // Callers pass the shipped path (relocated under LOCAL_PATH_MODULES_DIR, as the
-  // pruned lockfile records it); it is the artifact destination, while the source
-  // is read from the original workspace location.
+  // The shipped path is the artifact destination, while the source is read
+  // from the original workspace location.
   const shipFile = (shippedPath: string, origin: string): void => {
     if (shippedRoots.has(shippedPath)) {
       return;
@@ -1329,24 +1389,13 @@ export function getPrunedPnpmLocalPathArtifacts(
     }
   };
 
-  // file: tarball + file: directory resolutions (resolutions live in `packages`).
-  for (const snapshot of Object.values(parsed.packages ?? {})) {
-    const tarball = snapshot?.resolution?.tarball;
-    if (tarball?.startsWith('file:')) {
-      shipFile(tarball.slice('file:'.length), tarball);
-      continue;
-    }
-    const directory = snapshot?.resolution?.directory;
-    if (directory && !isUnderWorkspaceModules(directory)) {
-      shipDirectory(normalizePath(directory), `file:${directory}`);
+  for (const { kind, shippedPath, origin } of targets) {
+    if (kind === 'file') {
+      shipFile(shippedPath, origin);
+    } else {
+      shipDirectory(shippedPath, origin);
     }
   }
-
-  // link: targets (root importer versions + directory-package snapshot refs).
-  for (const { target, ref } of collectPrunedLinkTargetDirs(parsed)) {
-    shipDirectory(target, ref);
-  }
-
   return artifacts;
 }
 
@@ -1442,6 +1491,21 @@ export function validatePrunedLocalPathClosure(
       targets.set(source, 'link');
     }
   }
+  validateLocalPathClosures(packageJson, workspaceRootPath, targets);
+}
+
+/**
+ * Fails the pruned build when a shipped local-path target, keyed by its
+ * workspace source path, has a required dependency the app does not install
+ * (see `validatePrunedLocalPathClosure` for the rules). A `link:` target is a
+ * symlink, so no package manager installs its dependencies; a `directory` one
+ * is a `file:` package installed without them.
+ */
+export function validateLocalPathClosures(
+  packageJson: PackageJson,
+  workspaceRootPath: string,
+  targets: ReadonlyMap<string, 'link' | 'directory'>
+): void {
   if (targets.size === 0) {
     return;
   }
@@ -1744,26 +1808,26 @@ export function dropEmptyPeerDependencySections(
 /**
  * Rewrites a standalone pruned manifest's non-workspace local-path specifiers
  * (`file:` tarball/dir, `link:` dir) to their shipped location under
- * `LOCAL_PATH_MODULES_DIR`, so a non-frozen `pnpm install` of the deploy
- * output resolves them from where the shipped source sits (see
- * `getPrunedPnpmLocalPathArtifacts`). Mutates `packageJson` in place.
- * pnpm-only; call sites gate on the package manager.
+ * `LOCAL_PATH_MODULES_DIR`, so an install of the deploy output resolves them
+ * from where the shipped source sits (see `getLocalPathArtifacts`). Mutates
+ * `packageJson` in place.
  *
  * Per specifier, in order: resolve a `catalog:` reference first (the bundler's
  * `createPackageJson` does not), skip a workspace package (copied to
  * `workspace_modules/`), then relocate from `projectRoot`-relative to the
- * shipped location. A `file:`/`link:` peer dependency is moved into
+ * shipped location. For pnpm, a `file:`/`link:` peer dependency is moved into
  * `dependencies` with its `peerDependenciesMeta` entry dropped even when the
  * target cannot ship (pnpm rejects such a spec under peerDependencies
  * outright, so leaving it would fail the whole install), mirroring the
- * workspace-module handling. An unshippable target otherwise keeps its
- * specifier, with a warning.
+ * workspace-module handling. Bun installs such a peer where it is. An
+ * unshippable target otherwise keeps its specifier, with a warning.
  */
 export function rewritePrunedLocalPathSpecifiers(
   packageJson: PackageJson,
   projectRoot: string,
   workspaceRootPath: string,
-  workspacePackages: Map<string, ProjectGraphProjectNode>
+  workspacePackages: Map<string, ProjectGraphProjectNode>,
+  packageManager: 'pnpm' | 'bun' = 'pnpm'
 ): void {
   const catalogManager = getCatalogManager(workspaceRootPath);
   const sections: PackageJsonDependencySection[] = [
@@ -1811,7 +1875,7 @@ export function rewritePrunedLocalPathSpecifiers(
           relocation.reason
         );
       }
-      if (section === 'peerDependencies') {
+      if (section === 'peerDependencies' && packageManager === 'pnpm') {
         // Moved even when the target cannot ship: pnpm rejects the spec here
         // either way, so leaving it would fail the whole install.
         movePeerDependencyToDependencies(packageJson, name, relocation.spec);
