@@ -412,8 +412,6 @@ Other keys, such as `runs-on` and `workers`, take their value as written.
 | `vars`    | The other stored variables.                                                                                                                                                      |
 | `inputs`  | The inputs of a step template, inside that template.                                                                                                                             |
 
-`matrix`, `strategy`, and `jobs` aren't available, and reading them is an error.
-
 The functions are `contains`, `startsWith`, `endsWith`, `format`, `join`, `toJSON`, `fromJSON`, `hashFiles`, and the status functions `success()`, `failure()`, and `always()`.
 `cancelled()` isn't supported.
 An `if` without a status function runs only when the earlier steps succeeded, as if it started with `success() &&`.
