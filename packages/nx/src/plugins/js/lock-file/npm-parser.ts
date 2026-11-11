@@ -493,6 +493,9 @@ function findTarget(
         return child;
       }
     } else if (
+      // A `file:` copy named by its path matches no range. Node loads the
+      // nearest copy, so it wins unless a nearer copy is already the fallback.
+      (!fallback && child.data.version.startsWith('file:')) ||
       child.data.version === versionRange ||
       cachedSatisfies(child.data.version, versionRange)
     ) {
