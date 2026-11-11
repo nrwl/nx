@@ -271,6 +271,11 @@
     },
     "copy-docs": {
       "cache": true
+    },
+    "mvn:test-ci": {
+      "options": {
+        "goals": ["surefire:test@default-test"]
+      }
     }
   },
   "plugins": [

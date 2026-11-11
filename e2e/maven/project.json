@@ -11,7 +11,7 @@
         "@nx/nx-source:populate-local-registry-storage",
         "@nx/nx-source:populate-e2e-base-workspace",
         "@nx/nx-source:local-registry-e2e",
-        "dev.nx.maven:nx-maven-plugin:mvn:install"
+        "dev.nx.maven:nx-maven-plugin:mvn:install-ci"
       ]
     },
     "e2e-ci--**/**": {
@@ -19,7 +19,7 @@
         "@nx/nx-source:populate-local-registry-storage",
         "@nx/nx-source:populate-e2e-base-workspace",
         "@nx/nx-source:local-registry-e2e",
-        "dev.nx.maven:nx-maven-plugin:mvn:install"
+        "dev.nx.maven:nx-maven-plugin:mvn:install-ci"
       ]
     }
   }
