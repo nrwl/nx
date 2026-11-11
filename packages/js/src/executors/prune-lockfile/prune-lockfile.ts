@@ -189,7 +189,7 @@ function declareTransitiveFolderDependencies(
           delete packageJson.devDependencies;
         }
       }
-      (packageJson[section] ??= {})[name] = `file:./workspace_modules/${name}`;
+      (packageJson[section] ??= {})[name] = 'workspace:*';
     }
     const manifest: PackageJson = readJsonFile(
       join(workspaceRoot, project.data.root, 'package.json')
