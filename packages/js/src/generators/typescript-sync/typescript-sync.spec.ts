@@ -794,6 +794,39 @@ describe('syncGenerator()', () => {
       `);
     });
 
+    it('should read `composite` through `extends` separately for each dependency tsconfig', async () => {
+      writeJson(tree, 'tsconfig.base.json', {
+        compilerOptions: { composite: true },
+      });
+      addProject(
+        'consumer',
+        ['inherits', 'overrides', 'inherits-after-override'],
+        ['tsconfig.lib.json']
+      );
+      addProject('inherits', [], ['tsconfig.lib.json']);
+      addProject('overrides', [], ['tsconfig.lib.json']);
+      addProject('inherits-after-override', [], ['tsconfig.lib.json']);
+      writeJson(tree, 'packages/inherits/tsconfig.lib.json', {
+        extends: '../../tsconfig.base.json',
+      });
+      writeJson(tree, 'packages/overrides/tsconfig.lib.json', {
+        extends: '../../tsconfig.base.json',
+        compilerOptions: { composite: false },
+      });
+      writeJson(tree, 'packages/inherits-after-override/tsconfig.lib.json', {
+        extends: '../../tsconfig.base.json',
+      });
+
+      await syncGenerator(tree);
+
+      expect(
+        readJson(tree, 'packages/consumer/tsconfig.lib.json').references
+      ).toStrictEqual([
+        { path: '../inherits-after-override/tsconfig.lib.json' },
+        { path: '../inherits/tsconfig.lib.json' },
+      ]);
+    });
+
     it('should not add a reference if dependent project is an implicit dependency', async () => {
       addProject('implicit-dep');
       addProjectWithImplicitDependencies('foo', ['implicit-dep']);
