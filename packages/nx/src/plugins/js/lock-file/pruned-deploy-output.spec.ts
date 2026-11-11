@@ -650,7 +650,7 @@ describe('generatePrunedDeployOutput for bun', () => {
         name: '@demo/api',
         version: '1.0.0',
         dependencies: {
-          '@demo/lib': 'file:./workspace_modules/@demo/lib',
+          '@demo/lib': 'workspace:*',
           util: 'file:../../vendor/util',
         },
       };
@@ -674,7 +674,7 @@ describe('generatePrunedDeployOutput for bun', () => {
 
       expect(written).toBe(vendoredWorkspaceNamePrunedBunLock);
       expect(manifest.dependencies).toEqual({
-        '@demo/lib': 'file:./workspace_modules/@demo/lib',
+        '@demo/lib': 'workspace:*',
         util: 'file:local_path_modules/vendor/util',
       });
     });
