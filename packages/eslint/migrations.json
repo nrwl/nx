@@ -55,7 +55,7 @@
       "documentation": "./dist/src/migrations/update-24-1-0/add-directive-checks-rule.md"
     },
     "update-24-1-0-migrate-to-eslint-v10": {
-      "version": "24.1.0-beta.0",
+      "version": "24.1.0-beta.1",
       "requires": {
         "eslint": ">=10.0.0"
       },
@@ -307,7 +307,7 @@
       }
     },
     "24.1.0": {
-      "version": "24.1.0-beta.0",
+      "version": "24.1.0-beta.1",
       "requires": {
         "eslint": ">=9.0.0 <10.0.0"
       },

@@ -2434,7 +2434,7 @@
       }
     },
     "24.1.0-angular-eslint": {
-      "version": "24.1.0-beta.0",
+      "version": "24.1.0-beta.1",
       "requires": {
         "@angular/core": ">= 21.0.0 < 22.0.0",
         "angular-eslint": ">= 21.0.0 < 21.3.0"
@@ -2479,7 +2479,7 @@
       }
     },
     "24.1.0-@angular-eslint": {
-      "version": "24.1.0-beta.0",
+      "version": "24.1.0-beta.1",
       "requires": {
         "@angular/core": ">= 21.0.0 < 22.0.0",
         "@angular-eslint/eslint-plugin": ">= 21.0.0 < 21.3.0"

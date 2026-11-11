@@ -1,7 +1,7 @@
 {
   "generators": {
     "update-24-1-0-rename-vue3-eslint-configs": {
-      "version": "24.1.0-beta.0",
+      "version": "24.1.0-beta.1",
       "requires": {
         "eslint-plugin-vue": ">=10.0.0"
       },
@@ -24,7 +24,7 @@
       }
     },
     "24.1.0-eslint-plugin-vue": {
-      "version": "24.1.0-beta.0",
+      "version": "24.1.0-beta.1",
       "requires": {
         "eslint-plugin-vue": ">=9.0.0 <10.8.0"
       },
@@ -40,7 +40,7 @@
       }
     },
     "24.1.0-vue-eslint-config-typescript": {
-      "version": "24.1.0-beta.0",
+      "version": "24.1.0-beta.1",
       "requires": {
         "@vue/eslint-config-typescript": ">=14.0.0 <14.7.0"
       },
