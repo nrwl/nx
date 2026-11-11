@@ -22,6 +22,7 @@ import update, { V9_ONLY_PLUGINS } from './migrate-to-eslint-v10';
 
 describe('migrate-to-eslint-v10 migration', () => {
   let tree: Tree;
+  const scanResults = expect.stringMatching(/^Pre-pass scan results: /);
 
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace();
@@ -99,7 +100,51 @@ describe('migrate-to-eslint-v10 migration', () => {
     expect(tree.read('eslint.config.mjs', 'utf-8').trim()).toBe(
       'export default [];'
     );
-    expect(result).toEqual({ nextSteps: [], agentContext: [] });
+    expect(result).toEqual({
+      nextSteps: [],
+      agentContext: [
+        "Pre-pass scan results: eslintrc configs left: none; eslintrc-only lint target options: none; plugins removed: none; imports and eslintrc mentions of a removed plugin: not run, this run removed no plugin; directive comments naming a removed plugin's rules: not run, this run removed no plugin; /* eslint-env */ comments: none; root dependencies whose ESLint peer range excludes the installed ESLint: none; root engines.node: not declared.",
+      ],
+    });
+  });
+
+  it('should give the result of every scan in the first agentContext entry', async () => {
+    tree.write(
+      'eslint.config.mjs',
+      "import react from 'eslint-plugin-react';\nexport default [];\n"
+    );
+    registerEslintPlugin();
+    addProjectConfiguration(tree, 'app1', {
+      root: 'apps/app1',
+      targets: { lint: { options: { rulesdir: ['tools/eslint-rules'] } } },
+    });
+    tree.write('apps/app1/.eslintrc.json', JSON.stringify({ rules: {} }));
+    tree.write(
+      'apps/app1/src/page.tsx',
+      '// eslint-disable-next-line react/no-danger\nexport const Page = () => null;\n'
+    );
+    tree.write(
+      'apps/app1/src/server.js',
+      '/* eslint-env node */\nmodule.exports = {};\n'
+    );
+    setDevDependencies({
+      'eslint-plugin-react': '^7.35.0',
+      'eslint-plugin-jest': '^28.11.0',
+    });
+    updateJson(tree, 'package.json', (json) => {
+      json.engines = { node: '>=18.0.0' };
+      return json;
+    });
+    mockEslintPeerRanges(
+      { 'eslint-plugin-jest': '^9.0.0' },
+      /* installedEslintVersion */ '10.0.0'
+    );
+
+    const result = await update(tree);
+
+    expect(result.agentContext[0]).toBe(
+      'Pre-pass scan results: eslintrc configs left: reported below; eslintrc-only lint target options: reported below; plugins removed: eslint-plugin-react; imports and eslintrc mentions of a removed plugin: reported below; directive comments naming a removed plugin\'s rules: reported below; /* eslint-env */ comments: reported below; root dependencies whose ESLint peer range excludes the installed ESLint: reported below; root engines.node: ">=18.0.0", which allows Node.js versions ESLint v10 rejects.'
+    );
   });
 
   it('should convert a JSON eslintrc workspace', async () => {
@@ -112,7 +157,7 @@ describe('migrate-to-eslint-v10 migration', () => {
 
     expect(tree.exists('eslint.config.mjs')).toBe(true);
     expect(tree.exists('.eslintrc.json')).toBe(false);
-    expect(result.agentContext).toEqual([]);
+    expect(result.agentContext).toEqual([scanResults]);
   });
 
   it('should convert a JavaScript-based eslintrc built from literals', async () => {
@@ -130,7 +175,7 @@ describe('migrate-to-eslint-v10 migration', () => {
     expect(tree.read('eslint.config.mjs', 'utf-8')).toContain(
       "'no-console': 'error'"
     );
-    expect(result.agentContext).toEqual([]);
+    expect(result.agentContext).toEqual([scanResults]);
   });
 
   it('should convert a project JavaScript-based eslintrc that extends the root', async () => {
@@ -319,11 +364,13 @@ describe('migrate-to-eslint-v10 migration', () => {
     expect(devDependencies['eslint-plugin-react-hooks']).toBe('7.1.1');
     // Nothing referenced the removed plugins, so the react-hooks preset getting
     // wider is the only thing left to hand over.
-    expect(result.agentContext).toHaveLength(1);
-    expect(result.agentContext[0]).toContain(
+    expect(result.agentContext).toEqual([
+      scanResults,
+      expect.stringContaining('React Compiler'),
+    ]);
+    expect(result.agentContext[1]).toContain(
       'its "recommended" preset grew from 2 rules to 16'
     );
-    expect(result.agentContext[0]).toContain('React Compiler');
     expect(result.nextSteps.join('\n')).toContain(
       'Updated the ESLint plugins for v10'
     );
@@ -367,7 +414,7 @@ describe('migrate-to-eslint-v10 migration', () => {
         [name]: to,
       });
       // A 7.0 install already has the React Compiler rules in its preset.
-      expect(result.agentContext).toEqual([]);
+      expect(result.agentContext).toEqual([scanResults]);
     }
   );
 
@@ -715,6 +762,9 @@ export const Page = () => null;
       expect(result.agentContext.join('\n')).toContain(
         'eslint-config-next is declared, and it registers eslint-plugin-react, eslint-plugin-jsx-a11y and eslint-plugin-import itself, so the ESLint directive comments naming their rules were not checked.'
       );
+      expect(result.agentContext[0]).toContain(
+        "directive comments naming a removed plugin's rules: not run, eslint-config-next is declared;"
+      );
       expect(
         [...result.agentContext, ...result.nextSteps].join('\n')
       ).not.toContain('page.tsx');
@@ -736,7 +786,7 @@ export const deps = [];
     const result = await update(tree);
 
     expect(tree.read('apps/app1/src/deps.ts', 'utf-8')).toBe(deps);
-    expect(result.agentContext).toEqual([]);
+    expect(result.agentContext).toEqual([scanResults]);
   });
 
   it('should report /* eslint-env */ comments and leave them', async () => {
@@ -922,6 +972,9 @@ export const quoted = '/* eslint-disable jsx-a11y/alt-text */';
     expect(result.nextSteps.join('\n')).toContain(
       'because eslint does not resolve from the workspace root'
     );
+    expect(result.agentContext[0]).toContain(
+      'excludes the installed ESLint: not run, eslint does not resolve from the workspace root;'
+    );
   });
 
   it('should say the peer scan did not run when the install has not caught up', async () => {
@@ -945,6 +998,9 @@ export const quoted = '/* eslint-disable jsx-a11y/alt-text */';
     expect(result.agentContext.join('\n')).not.toContain('eslint-plugin-jest');
     expect(result.nextSteps.join('\n')).toContain(
       'because node_modules still holds ESLint 9.39.4'
+    );
+    expect(result.agentContext[0]).toContain(
+      'excludes the installed ESLint: not run, node_modules still holds ESLint 9.39.4;'
     );
   });
 
@@ -1077,7 +1133,7 @@ export const quoted = '/* eslint-disable jsx-a11y/alt-text */';
 
     expect(tree.read('eslint.config.mjs', 'utf-8')).toBe(afterFirstRun.config);
     expect(tree.read('package.json', 'utf-8')).toBe(afterFirstRun.packageJson);
-    expect(result.agentContext).toEqual([]);
+    expect(result.agentContext).toEqual([scanResults]);
   });
 
   // The plugin list is a frozen copy of `@nx/react`'s ESLint <10 stack; `@nx/eslint`

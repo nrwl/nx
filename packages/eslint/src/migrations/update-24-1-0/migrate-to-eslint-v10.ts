@@ -81,13 +81,18 @@ type RootConfigState =
   | { kind: 'flat' | 'convertible' | 'none' }
   | { kind: 'unconvertible'; file: string; reason: string };
 
+// The prompt skips the search behind a scan that found nothing, so a scan that
+// did not run must say so rather than report `none`.
+type ScanResult = 'none' | 'reported below' | `not run, ${string}`;
+
 /**
  * Hybrid migration paired with `finish-eslint-v10-migration.md`. The
  * deterministic half converts the workspace's eslintrc configs to flat config
  * (ESLint v10 removed the eslintrc format outright) and replaces the ESLint
  * plugins that have no v10 release. Everything it cannot do safely, such
  * as an eslintrc config whose values are computed at runtime or a config that
- * imports a dropped plugin, is returned as `agentContext` for the paired prompt.
+ * imports a dropped plugin, is returned as `agentContext` for the paired prompt,
+ * after a first entry that gives the result of every scan.
  *
  * The pass never runs lint, so it cannot tell whether the workspace is done. It
  * always hands off to the prompt, which validates.
@@ -99,12 +104,40 @@ export default async function update(tree: Tree): Promise<{
   const agentContext: string[] = [];
   const nextSteps: string[] = [];
 
-  await convertRemainingEslintrcConfigs(tree, agentContext, nextSteps);
-  reportEslintrcOnlyTargetOptions(tree, agentContext, nextSteps);
+  const eslintrcConfigs = await convertRemainingEslintrcConfigs(
+    tree,
+    agentContext,
+    nextSteps
+  );
+  const targetOptions = reportEslintrcOnlyTargetOptions(
+    tree,
+    agentContext,
+    nextSteps
+  );
   const removedPlugins = replaceV9OnlyPlugins(tree, agentContext, nextSteps);
-  updateRemainingFileReferences(tree, removedPlugins, agentContext, nextSteps);
-  reportPluginsWithoutV10Support(tree, agentContext, nextSteps);
-  reportNodeVersionRequirement(tree, nextSteps);
+  const fileReferences = updateRemainingFileReferences(
+    tree,
+    removedPlugins,
+    agentContext,
+    nextSteps
+  );
+  const peerRanges = reportPluginsWithoutV10Support(
+    tree,
+    agentContext,
+    nextSteps
+  );
+  const nodeRange = reportNodeVersionRequirement(tree, nextSteps);
+
+  agentContext.unshift(
+    `Pre-pass scan results: eslintrc configs left: ${eslintrcConfigs}; ` +
+      `eslintrc-only lint target options: ${targetOptions}; ` +
+      `plugins removed: ${removedPlugins.join(', ') || 'none'}; ` +
+      `imports and eslintrc mentions of a removed plugin: ${fileReferences.references}; ` +
+      `directive comments naming a removed plugin's rules: ${fileReferences.directives}; ` +
+      `/* eslint-env */ comments: ${fileReferences.eslintEnv}; ` +
+      `root dependencies whose ESLint peer range excludes the installed ESLint: ${peerRanges}; ` +
+      `root engines.node: ${nodeRange}.`
+  );
 
   await formatFiles(tree);
 
@@ -115,12 +148,13 @@ async function convertRemainingEslintrcConfigs(
   tree: Tree,
   agentContext: string[],
   nextSteps: string[]
-): Promise<void> {
+): Promise<ScanResult> {
   // The generator deletes the files it converts, so capture the ones it will
   // skip before running it.
   const unconvertibleProjectConfigs = findUnconvertibleProjectConfigs(tree);
   const rootState = detectRootConfigState(tree);
 
+  let result: ScanResult = 'none';
   if (rootState.kind === 'convertible') {
     const hadEslintJs =
       getDependencyVersionFromPackageJson(tree, '@eslint/js') !== null;
@@ -145,6 +179,7 @@ async function convertRemainingEslintrcConfigs(
       nextSteps.push(
         'Converting the ESLint configs to flat config failed partway, so the workspace may be half-converted; the eslintrc files that are still there need to be converted manually.'
       );
+      result = 'reported below';
     }
     if (converted) {
       reportNewEslintJsRecommendedRules(
@@ -182,6 +217,7 @@ async function convertRemainingEslintrcConfigs(
         .map(({ path }) => path)
         .join(', ')}.`
     );
+    result = 'reported below';
   }
 
   // ESLint v10 no longer reads eslintrc files itself, so one left behind stops
@@ -191,7 +227,7 @@ async function convertRemainingEslintrcConfigs(
     new Set(unconvertibleProjectConfigs.map(({ path }) => path))
   );
   if (remaining.length === 0) {
-    return;
+    return result;
   }
 
   const list = remaining.join(', ');
@@ -214,6 +250,7 @@ async function convertRemainingEslintrcConfigs(
   nextSteps.push(
     `ESLint v10 no longer reads eslintrc files unless a flat config loads them through FlatCompat.${notConverted} Convert these to flat config and delete them, except any a flat config loads that way: ${list}. Converting one whose rules were already off can surface new lint errors.`
   );
+  return 'reported below';
 }
 
 // The conversion drops `no-eslintrc` from inferred-target overrides and the
@@ -222,10 +259,10 @@ function reportEslintrcOnlyTargetOptions(
   tree: Tree,
   agentContext: string[],
   nextSteps: string[]
-): void {
+): ScanResult {
   const leftover = findEslintrcOnlyTargetOptions(tree);
   if (leftover.length === 0) {
-    return;
+    return 'none';
   }
   const list = leftover.join('; ');
   agentContext.push(
@@ -236,6 +273,7 @@ function reportEslintrcOnlyTargetOptions(
   nextSteps.push(
     `Replace the eslintrc-only ESLint options these lint targets still carry, since ESLint v10 does not support them: ${list}. ${ESLINTRC_ONLY_OPTIONS_FIXES}`
   );
+  return 'reported below';
 }
 
 // The flat-config conversion pulls `eslint:recommended` from `@eslint/js`, whose
@@ -527,7 +565,7 @@ function updateRemainingFileReferences(
   removedPlugins: V9OnlyPlugin[],
   agentContext: string[],
   nextSteps: string[]
-): void {
+): { references: ScanResult; directives: ScanResult; eslintEnv: ScanResult } {
   const {
     imports,
     mentions,
@@ -614,6 +652,28 @@ function updateRemainingFileReferences(
       )}.`
     );
   }
+
+  const eslintEnvResult: ScanResult =
+    eslintEnv.length > 0 ? 'reported below' : 'none';
+  // These scans only look for this run's removals, so a plugin an earlier run
+  // or the user removed can still be referenced.
+  if (removedPlugins.length === 0) {
+    return {
+      references: 'not run, this run removed no plugin',
+      directives: 'not run, this run removed no plugin',
+      eslintEnv: eslintEnvResult,
+    };
+  }
+  return {
+    references:
+      imports.length > 0 || mentions.length > 0 ? 'reported below' : 'none',
+    directives: declaresEslintConfigNext
+      ? 'not run, eslint-config-next is declared'
+      : directives.length > 0
+        ? 'reported below'
+        : 'none',
+    eslintEnv: eslintEnvResult,
+  };
 }
 
 type PluginUsage = { path: string; matched: string[] };
@@ -926,9 +986,9 @@ function reportPluginsWithoutV10Support(
   tree: Tree,
   agentContext: string[],
   nextSteps: string[]
-): void {
+): ScanResult {
   if (!tree.exists('package.json')) {
-    return;
+    return 'not run, the workspace root has no package.json';
   }
 
   const eslintVersion = readInstalledVersion('eslint');
@@ -942,7 +1002,7 @@ function reportPluginsWithoutV10Support(
     nextSteps.push(
       'Skipped the check for ESLint plugins that declare no v10 support, because eslint does not resolve from the workspace root. Install the updated dependencies, then run lint.'
     );
-    return;
+    return 'not run, eslint does not resolve from the workspace root';
   }
   // Every peer range read below comes from node_modules, so the scan only answers
   // for a tree the install has already updated. When package.json is ahead of
@@ -956,7 +1016,7 @@ function reportPluginsWithoutV10Support(
     nextSteps.push(
       `Skipped the check for ESLint plugins that declare no v10 support, because node_modules still holds ESLint ${eslintVersion.version}. Install the updated dependencies, then run lint.`
     );
-    return;
+    return `not run, node_modules still holds ESLint ${eslintVersion.version}`;
   }
 
   const { dependencies = {}, devDependencies = {} } = readJson(
@@ -990,7 +1050,7 @@ function reportPluginsWithoutV10Support(
   }
 
   if (incompatible.length === 0) {
-    return;
+    return 'none';
   }
 
   agentContext.push(
@@ -1010,6 +1070,7 @@ function reportPluginsWithoutV10Support(
       .map(({ name }) => name)
       .join(', ')}.`
   );
+  return 'reported below';
 }
 
 // A specifier that is not a range, such as `workspace:*`, says nothing about
@@ -1047,7 +1108,7 @@ function readInstalledEslintPeerRange(name: string): string | null {
 // ESLint v10 raised its Node floor. Point it out when the workspace declares a
 // range that allows an unsupported Node or, when it declares none, when the
 // Node running the migration is too old.
-function reportNodeVersionRequirement(tree: Tree, nextSteps: string[]): void {
+function reportNodeVersionRequirement(tree: Tree, nextSteps: string[]): string {
   const declaredRange = tree.exists('package.json')
     ? readJson(tree, 'package.json').engines?.node
     : undefined;
@@ -1064,6 +1125,13 @@ function reportNodeVersionRequirement(tree: Tree, nextSteps: string[]): void {
       }. Update the Node.js version used to lint.`
     );
   }
+
+  if (!declaredRange) {
+    return 'not declared';
+  }
+  return isSupported
+    ? `"${declaredRange}", which ESLint v10 supports`
+    : `"${declaredRange}", which allows Node.js versions ESLint v10 rejects`;
 }
 
 function isSubsetOfSupportedNodeRange(range: string): boolean {
