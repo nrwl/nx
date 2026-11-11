@@ -63,7 +63,8 @@ When the target is more than one major version ahead of your installed version, 
 - `--multi-major-mode=gradual` migrates to the smallest recommended step (typically the latest in your current major), then tells you to re-run to continue.
 - `--multi-major-mode=direct` migrates straight to the target.
 
-The `NX_MULTI_MAJOR_MODE` environment variable is equivalent and takes precedence over a `multiMajorMode` value set in `nx.json`. In non-interactive environments there is no prompt - Nx warns that updating one major at a time is recommended and proceeds directly to the target.
+The `NX_MULTI_MAJOR_MODE` environment variable is equivalent and takes precedence over a `multiMajorMode` value set in `nx.json`. In non-interactive environments there is no prompt.
+Nx warns that updating one major at a time is recommended and proceeds directly to the target.
 
 ## Choosing which packages to migrate
 
@@ -240,7 +241,7 @@ nx migrate --run-migrations --start-fresh --run-id=<run-id>
 
 ## Workspace-wide migrate defaults
 
-To avoid passing the same flags on every run, set defaults in the [`migrate` section of `nx.json`](/docs/reference/nx-json#migrate) - `createCommits`, `commitPrefix`, `include`, `multiMajorMode`, `agentic`, `validate`, and `finalValidation`. A command-line flag always overrides the `nx.json` value, which in turn overrides the built-in Nx defaults.
+To avoid passing the same flags on every run, set defaults in the [`migrate` section of `nx.json`](/docs/reference/nx-json#migrate): `createCommits`, `commitPrefix`, `include`, `multiMajorMode`, `agentic`, `validate`, and `finalValidation`. A command-line flag always overrides the `nx.json` value, which in turn overrides the built-in Nx defaults.
 
 ## Other advanced capabilities
 
