@@ -36,7 +36,6 @@ interface NpmDeps {
   readonly dependencies: Record<string, string>;
   readonly peerDependencies: Record<string, string>;
   readonly peerDependenciesMeta: Record<string, { optional: boolean }>;
-  // The project whose files import each dependency, by package name
   readonly importingProjects: Record<string, string>;
 }
 
@@ -133,8 +132,6 @@ export function createPackageJson(
       return projectVersion;
     }
 
-    // A local package's graph version, or the version its `npm:` alias names,
-    // is a `file:`/`link:` version
     if (isLocalPathSpecifier(getAliasedVersion(version))) {
       const localPathSpec = getInheritedLocalPathSpec(
         packageName,
@@ -353,8 +350,9 @@ const LOCAL_PATH_SPEC_SECTIONS: PackageJsonDependencySection[] = [
  * local-path specs from. Declarers are searched in the order the import
  * resolves: from the importing project through the projects enclosing it to
  * the root. A declarer counts only when its spec resolves to the path the graph
- * version records. pnpm keeps only the first importer's link per name, so a
- * `link:` on the chain also counts when its node_modules links that target.
+ * version records. Nx's pnpm graph takes a shared `link:` node's version from
+ * the first importer, so a `link:` on the chain also counts when its
+ * node_modules links that target.
  */
 function createInheritedLocalPathSpecResolver(
   projectNode: ProjectGraphProjectNode,
