@@ -10,6 +10,11 @@
       "options": {
         "goals": ["jar:jar@default-jar", "shade:shade@default"]
       }
+    },
+    "mvn:test-ci": {
+      "options": {
+        "args": ["-DfailIfNoTests=true"]
+      }
     }
   }
 }

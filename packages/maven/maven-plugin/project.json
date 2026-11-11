@@ -3,5 +3,11 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/maven/maven-plugin",
   "projectType": "library",
-  "targets": {}
+  "targets": {
+    "mvn:test-ci": {
+      "options": {
+        "args": ["-DfailIfNoTests=true"]
+      }
+    }
+  }
 }
