@@ -422,13 +422,12 @@ export interface TargetConfiguration<T = any> {
   syncGenerators?: string[];
 
   /**
-   * Spread token used when merging target configurations. When set to `true`,
-   * base (inferred) values take priority over this target's values for any
-   * shared keys — effectively "only add new keys without overwriting inferred
-   * values". Keys that do not exist in the base target are still added.
-   *
-   * The position of `'...'` in the object's key order follows standard
-   * last-write-wins semantics with {@link https://nx.dev/reference/project-configuration#spread-token}.
+   * Spread token used when merging with a compatible base (inferred) target.
+   * Keys before it defer to the base value; keys after it win. In project
+   * configuration, a target with a different executor, command or script
+   * replaces the base regardless. `options`, `configurations`, `ultracache`
+   * and `metadata` merge by their own rules wherever the token sits.
+   * See {@link https://nx.dev/reference/project-configuration#spread-token}.
    */
   '...'?: true;
 }
