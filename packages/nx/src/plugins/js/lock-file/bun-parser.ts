@@ -347,8 +347,6 @@ function calculatePackageHash(packageData: PackageTuple): string {
   return hashArray(hashData);
 }
 
-// A patched package installs its tarball plus the patch, as the pnpm parser
-// also hashes it.
 function withPatchHash(hash: string, patchHash: string | undefined): string {
   return patchHash === undefined ? hash : hashArray([hash, patchHash]);
 }
