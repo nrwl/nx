@@ -342,15 +342,14 @@ To convert a GitHub Actions workflow, see [move a GitHub Actions workflow to Nx 
 | No `workers`                                 | Only the main-job worker.                                              |
 | `workers: false`                             | No distribution. Each Nx command runs its tasks on the job's machine.  |
 
-Unless `workers` is `false`, the job also runs a [main-job worker](#main-job-worker) on its own machine.
+Unless `workers` is `false`, the job also distributes tasks to its own [main-job worker](#main-job-worker).
 Workers get the `env` of the file and the job.
 
-The main-job worker starts after the init steps of the job and before its `steps`:
+The main-job worker starts after the init steps and before the `steps`:
 
-- The init steps must install Node.js and the workspace dependencies. If they don't, or the workspace's Nx version is too old to distribute, the job fails with a message that says so.
-- The worker keeps the environment it starts with. A step's `env` and the variables a step exports don't reach it, so put what your tasks need in the `env` of the file, the job, or the [launch template](#launch-templates).
-- The worker reads the same checkout as the steps, including files they write.
-- The worker counts toward your [concurrent worker limit](/docs/kb/concurrent-workers) while the run is active.
+- Init steps must install Node.js and the workspace dependencies. Otherwise, or with an Nx version too old to distribute, the job fails with a message.
+- It keeps the environment it starts with. Set task variables in the `env` of the file, job, or [launch template](#launch-templates), not of a step.
+- It sees files that steps write to the checkout.
 
 Set `workers: false` on jobs that don't run Nx tasks, such as a deploy job, and on jobs that run `nx-cloud start-ci-run` themselves.
 

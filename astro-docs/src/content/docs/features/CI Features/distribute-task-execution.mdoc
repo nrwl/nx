@@ -302,7 +302,7 @@ jobs:
 ```
 
 Every Nx command in the job then runs its tasks across the three workers.
-On [Nx Cloud CI](/docs/features/ci-features#run-ci-on-nx-cloud), a job distributes its tasks on a worker on its own machine.
+On [Nx Cloud CI](/docs/features/ci-features#run-ci-on-nx-cloud), a job distributes tasks to its own [main-job worker](/docs/reference/nx-cloud/ci-config#main-job-worker).
 To add three more workers, add `workers: 3 linux-large-js` to the job instead of running `start-workers`.
 For the full pipeline, see [setting up CI](/docs/getting-started/setup-ci).
 For workflows on other CI providers, see [CI workflow examples](/docs/kb/ci-workflow-examples).

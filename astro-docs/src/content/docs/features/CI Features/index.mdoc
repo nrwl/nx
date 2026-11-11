@@ -89,7 +89,7 @@ A newer push to a pull request cancels the older run of the same file.
 
 ### Distribute tasks with workers
 
-A job distributes its tasks by default, on a worker that runs on the job's own machine.
+A job distributes tasks to its own [main-job worker](/docs/reference/nx-cloud/ci-config#main-job-worker) by default.
 Add `workers` to the job to run its tasks across more machines:
 
 ```yaml
