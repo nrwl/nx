@@ -385,7 +385,9 @@ export function createLockFile(
  * sense for an actually pruned lockfile (e.g. link-closure validation and
  * local-path artifact shipping). Every root-relative read resolves from
  * `options.workspaceRootPath`, so a caller passing one cannot end up with the
- * lockfile read from one root and the catalogs resolved from another.
+ * lockfile read from one root and the catalogs resolved from another. Without
+ * `options.projectRoot`, a manifest dependency named like a workspace package
+ * is taken to be that package.
  */
 function buildLockFile(
   packageJson: PackageJson,
@@ -394,6 +396,7 @@ function buildLockFile(
   options?: {
     onPruneFallback?: (error: Error) => void;
     workspaceRootPath?: string;
+    projectRoot?: string;
   }
 ): string {
   const workspaceRootPath = options?.workspaceRootPath ?? workspaceRoot;
@@ -425,7 +428,8 @@ function buildLockFile(
         prunedGraph,
         content,
         normalizedPackageJson,
-        workspaceRootPath
+        workspaceRootPath,
+        options?.projectRoot
       );
     }
     if (packageManager === 'npm') {
@@ -495,7 +499,7 @@ function createPrunedLockfile(
       packageJson,
       projectRoot,
       workspaceRootPath,
-      new Set(getWorkspacePackagesFromGraph(graph).keys())
+      getWorkspacePackagesFromGraph(graph)
     );
   }
   let pruneError: Error | undefined;
@@ -504,6 +508,7 @@ function createPrunedLockfile(
       pruneError = error;
     },
     workspaceRootPath,
+    projectRoot,
   });
   const pruned = pruneError === undefined;
   if (pruned) {

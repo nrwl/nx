@@ -316,6 +316,7 @@ export {
   dropEmptyPeerDependencySections,
   movePeerDependencyToDependencies,
   relocatePrunedLocalPathSpec,
+  resolveWorkspaceModuleDependency,
   warnUnshippableLocalPathSpec,
 } from './plugins/js/lock-file/pruned-output';
 export type { PackageManagerCommands } from './utils/package-manager';
