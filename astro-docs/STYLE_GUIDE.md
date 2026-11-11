@@ -48,8 +48,8 @@ belongs in the corresponding Knowledge Base guide.
 - When a flag presents a real choice, explain it briefly on the feature page (for example, why
   pick `--include=required` over `all`) and link the Knowledge Base guide for constraints and
   edge cases.
-- Remove deprecated options entirely when a replacement exists - no deprecation asides. The same
-  applies to workflows a new flag has superseded.
+- Remove deprecated options entirely when a replacement exists, with no deprecation aside. The
+  same applies to workflows a new flag has superseded.
 - When two sections converge on the same flag or topic after a rewrite, merge them into one.
 
 ### 6. One page per feature (the "don't make me hunt" rule)
@@ -349,7 +349,9 @@ Don't contract proper nouns: "the Vite plugin is..." not "Vite's a plugin..."
 
 ### Capitalization
 
-Use sentence case for headings. Capitalize proper nouns only.
+Use sentence case for headings, page titles (frontmatter `title`), and sidebar labels.
+Capitalize proper nouns only.
+When you name a UI element, match the casing the UI shows.
 
 - `# Use remote caching to speed up CI`
 - `## Configure the Vite plugin`
@@ -402,7 +404,8 @@ Don't use possessives on product names. "the Docker CLI", not "Docker's CLI." "t
 - Use serial (Oxford) commas: "React, Angular, and Vue."
 - Use one space between sentences.
 - Don't use semicolons. Use two sentences instead.
-- Don't use em dashes or en dashes. Use commas or separate sentences.
+- Don't use em dashes, en dashes, or a spaced hyphen as a dash ("cached - even on CI"). Use
+  commas, parentheses, or separate sentences.
 
 ### Placeholder text
 
@@ -587,11 +590,11 @@ You can also install directly via `brew install vale` (macOS) or `apt-get instal
 
 ### Rule tiers
 
-| Tier           | Severity     | Rules                                                                                                            |
-| -------------- | ------------ | ---------------------------------------------------------------------------------------------------------------- |
-| 1 - Mechanical | `error`      | Banned phrases, product capitalization                                                                           |
-| 2 - Structural | `warning`    | Heading case, terminology, product possessives, self-referential writing, sentence patterns, restatement closers |
-| 3 - Voice      | `suggestion` | Trust-undermining words, marketing language, passive voice, serial commas                                        |
+| Tier           | Severity     | Rules                                                                                                                            |
+| -------------- | ------------ | -------------------------------------------------------------------------------------------------------------------------------- |
+| 1 - Mechanical | `error`      | Banned phrases, product capitalization                                                                                           |
+| 2 - Structural | `warning`    | Heading case, terminology, product possessives, self-referential writing, sentence patterns, restatement closers, spaced hyphens |
+| 3 - Voice      | `suggestion` | Trust-undermining words, marketing language, passive voice, serial commas                                                        |
 
 ### Adding new rules
 

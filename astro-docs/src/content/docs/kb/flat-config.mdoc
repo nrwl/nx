@@ -29,7 +29,8 @@ upgrading.
 ## What is ESLint flat config?
 
 Flat config is a JavaScript-first configuration system that lives in `eslint.config.mjs` (or
-`.js`/`.cjs`) files - in a monorepo, typically one per project plus a shared base config.
+`.js`/`.cjs`) files.
+A monorepo typically has one per project plus a shared base config.
 It makes three changes to the legacy format:
 
 - One file format replaces the JSON, YAML, and JS `.eslintrc` variants.
@@ -57,7 +58,8 @@ extra configuration.
 The generator aims to produce a flat config that behaves exactly like your original JSON
 config, so depending on the complexity of the original it may wrap parts in `FlatCompat`.
 Review the converted configs before deleting anything: check that each override kept its
-`parser` - a dropped parser surfaces as `Parsing error: Unexpected token` on TypeScript files.
+`parser`.
+A dropped parser surfaces as `Parsing error: Unexpected token` on TypeScript files.
 You can convert those sections to native flat config afterwards, by hand or with AI assistance
 (recommended): convert when the plugin documents a flat preset (typescript-eslint,
 `eslint-plugin-react`), and keep the shim for shared configs that don't ship one.
@@ -128,7 +130,8 @@ every legacy option to its flat config equivalent.
    On older versions, derive the directory with `path.dirname(fileURLToPath(import.meta.url))`.
 
 Delete the `.eslintrc.*` files once `npx eslint .` runs clean in each project with the new config.
-Move `.eslintignore` patterns into an `ignores` entry - flat config doesn't read
+Move `.eslintignore` patterns into an `ignores` entry.
+Flat config doesn't read
 `.eslintignore`, and ESLint 10 removed support for it entirely.
 
 ## Handle rules removed in typescript-eslint v8
@@ -136,8 +139,8 @@ Move `.eslintignore` patterns into an `ignores` entry - flat config doesn't read
 typescript-eslint v8 removed several rules, and a flat config that references a removed rule
 fails to load.
 Before editing, confirm your workspace is on typescript-eslint v8 or later (check
-`typescript-eslint` or `@typescript-eslint/eslint-plugin` in `package.json`) - on v7 the rules
-still exist.
+`typescript-eslint` or `@typescript-eslint/eslint-plugin` in `package.json`).
+On v7 the rules still exist.
 
 - **Formatting rules are gone** - `@typescript-eslint/indent`, `quotes`, `semi`, `brace-style`,
   `comma-dangle`, `comma-spacing`, `key-spacing`, `keyword-spacing`, `member-delimiter-style`,
