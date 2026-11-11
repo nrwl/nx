@@ -23,7 +23,10 @@ import {
   AngularSsrDevServer,
   servesSsrFromDevServer,
 } from '../plugins/angular-ssr-dev-server';
-import { servesSsrFromForkedServer } from '../plugins/angular-ssr-forked-server';
+import {
+  servesSsrFromForkedServer,
+  warnForkedServerDeprecation,
+} from '../plugins/angular-ssr-forked-server';
 import { DevServerReloads } from '../plugins/dev-server-reloads';
 
 export async function createConfig(
@@ -104,6 +107,9 @@ export async function _createConfig(
 
   const servesFromForkedServer =
     isServeMode() && servesSsrFromForkedServer(normalizedOptions);
+  if (servesFromForkedServer && !normalizedOptions.projectGraphCreation) {
+    warnForkedServerDeprecation();
+  }
   const ssrReloadServer = servesFromForkedServer
     ? new SsrReloadServer()
     : undefined;

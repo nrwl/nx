@@ -6,7 +6,21 @@ import type { NormalizedAngularRspackPluginOptions } from '../models';
 import { servesSsrFromDevServer } from './angular-ssr-dev-server';
 import type { SsrReloadServer } from './server/ssr-reload-server';
 
+// TODO(v25): remove the forked SSR server and the `ssr.serveFromDevServer` option.
+
 const PLUGIN_NAME = 'AngularSsrForkedServer';
+
+let deprecationWarned = false;
+
+export function warnForkedServerDeprecation(): void {
+  if (deprecationWarned) {
+    return;
+  }
+  deprecationWarned = true;
+  console.warn(
+    'WARNING: Serving SSR from a separate server on PORT is deprecated and will be removed in Nx 25. Set "ssr.serveFromDevServer: true" in the createConfig options to serve SSR from the dev server.'
+  );
+}
 
 export function servesSsrFromForkedServer(
   options: NormalizedAngularRspackPluginOptions

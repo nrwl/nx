@@ -39,6 +39,7 @@ export function applyDevServerReadySignal(
   };
 }
 
+// TODO(v25): remove with the forked SSR server.
 /**
  * Whether the SSR server entry, or the file that replaces it, mentions
  * `emitReadySignal`, taken to mean it reports readiness itself. The forked SSR
