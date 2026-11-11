@@ -6,6 +6,7 @@ use std::rc::Rc;
 use std::time::{Duration, Instant, SystemTime};
 use tracing::{debug, trace};
 
+use anyhow::Context;
 use fs_extra::remove_items;
 use rayon::prelude::*;
 use regex::Regex;
@@ -651,17 +652,26 @@ impl NxCache {
                     Ok((hash, size))
                 })?;
                 for row in rows {
-                    if let Ok((hash, size)) = row {
-                        cache_size -= size;
-                        db.execute("DELETE FROM cache_outputs WHERE hash = ?1", params![hash])?;
-                        // Both paths, matching remove_old_cache_records. Dropping
-                        // the row without the terminal output file would strand
-                        // that file with nothing left to point the GC at it.
-                        remove_items(&[
-                            self.cache_path.join(&hash),
-                            self.get_task_outputs_path_internal(&hash),
-                        ])?;
-                    }
+                    let (hash, size) = match row {
+                        // Ends this pass; the next one queries again.
+                        Err(rusqlite::Error::SqliteFailure(e, _))
+                            if e.code == rusqlite::ErrorCode::DatabaseBusy =>
+                        {
+                            break;
+                        }
+                        // Skipping a row it cannot read would select it again
+                        // without lowering `cache_size`.
+                        row => row.context("Could not read a cache entry to evict")?,
+                    };
+                    cache_size -= size;
+                    db.execute("DELETE FROM cache_outputs WHERE hash = ?1", params![hash])?;
+                    // Both paths, matching remove_old_cache_records. Dropping
+                    // the row without the terminal output file would strand
+                    // that file with nothing left to point the GC at it.
+                    remove_items(&[
+                        self.cache_path.join(&hash),
+                        self.get_task_outputs_path_internal(&hash),
+                    ])?;
                     // We've deleted enough cache entries to be under the
                     // target cache size, stop looking for more.
                     if cache_size < target_cache_size {
@@ -1346,6 +1356,50 @@ mod test {
 
         assert!(cache.get("1".to_string()).unwrap().is_some());
         assert!(cache.get_batch(vec!["1".to_string()]).unwrap()[0].is_some());
+    }
+
+    #[test]
+    fn eviction_fails_on_a_row_it_cannot_read() {
+        let temp = TempDir::new().unwrap();
+        let mut cache = cache_in(&temp);
+        cache.max_cache_size = 1_000;
+        // TEXT affinity keeps a BLOB as it is, so reading `hash` as a String
+        // fails. Nx itself never writes one.
+        {
+            let db = cache.db.lock().unwrap();
+            db.execute(
+                "INSERT INTO task_details (hash, project, target) VALUES (X'00', 'app', 'build')",
+                params![],
+            )
+            .unwrap();
+            db.execute(
+                "INSERT INTO cache_outputs (hash, code, size, accessed_at)
+                 VALUES (X'00', 0, 2000, datetime('now', '-1 day'))",
+                params![],
+            )
+            .unwrap();
+        }
+        record_task(&cache, "1");
+
+        // On a thread, so an eviction that spins fails the test instead of
+        // hanging it.
+        let (sender, receiver) = std::sync::mpsc::channel();
+        std::thread::spawn(move || {
+            let put = cache.put("1".to_string(), "log".to_string(), vec![], 0);
+            sender.send(put.map(|_| ())).unwrap();
+        });
+        let error = receiver
+            .recv_timeout(Duration::from_secs(10))
+            .expect("eviction did not return")
+            .expect_err("eviction skipped the row it could not read");
+        assert!(
+            matches!(
+                error.downcast_ref::<rusqlite::Error>(),
+                Some(rusqlite::Error::InvalidColumnType(0, name, rusqlite::types::Type::Blob))
+                    if name == "hash"
+            ),
+            "{error:?}"
+        );
     }
 
     /// `get` and `get_batch` both check the directory in `build_cached_result`
