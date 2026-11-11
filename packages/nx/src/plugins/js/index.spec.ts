@@ -3,10 +3,12 @@ import {
   readdirSync,
   readFileSync,
   rmSync,
+  symlinkSync,
   writeFileSync,
 } from 'node:fs';
 import { dirname, join } from 'node:path';
 import type { ProjectGraphExternalNode } from '../../config/project-graph';
+import { linkedProjectBunLock } from './lock-file/__fixtures__/bun/linked-project.bun.lock';
 import overriddenLocalPathPnpmLock from './lock-file/__fixtures__/overridden-local-path/pnpm-lock.yaml';
 
 const { root, workspaceDataDirectory } = vi.hoisted(() => {
@@ -323,6 +325,61 @@ describe('nx/js/dependencies-and-lockfile', () => {
         ['libs/control/src/index.ts', 'npm:ms@file:vendor/ms'],
         ['libs/lib/package.json', registryNode],
         ['libs/lib/src/index.ts', registryNode],
+      ]);
+    }
+  );
+
+  // apps/a links x to libs/x/dist inside the project libs/x, and apps/b to the
+  // plain directory vendor/x. Neither target is in the package manager's
+  // workspaces.
+  it.each([['bun.lock', linkedProjectBunLock, 'npm:x', 'npm:x']])(
+    'should depend on the project a link points to and on the link in %s',
+    async (lockFile, lockFileContent, projectLinkNode, vendoredNode) => {
+      write(
+        'package.json',
+        JSON.stringify({ name: 'rvws', workspaces: ['apps/*'] })
+      );
+      write(lockFile, lockFileContent);
+      const projectFiles: Record<string, string[]> = {
+        'libs/x': ['libs/x/dist/package.json'],
+      };
+      for (const [app, target] of [
+        ['apps/a', 'libs/x/dist'],
+        ['apps/b', 'vendor/x'],
+      ]) {
+        write(
+          `${target}/package.json`,
+          JSON.stringify({ name: 'x', version: '1.0.0' })
+        );
+        write(
+          `${app}/package.json`,
+          JSON.stringify({ dependencies: { x: `link:../../${target}` } })
+        );
+        write(`${app}/src/index.ts`, `import x from 'x';`);
+        mkdirSync(join(root, app, 'node_modules'));
+        symlinkSync(`../../../${target}`, join(root, app, 'node_modules/x'));
+        projectFiles[app] = [`${app}/package.json`, `${app}/src/index.ts`];
+      }
+      const plugin = await loadPluginInNewProcess();
+
+      const dependencies = await createDependencies(
+        plugin,
+        await createExternalNodes(plugin, lockFile),
+        projectFiles
+      );
+
+      expect(
+        dependencies
+          .filter(({ source }) => source.startsWith('apps/'))
+          .map(({ sourceFile, target }) => [sourceFile, target])
+          .sort()
+      ).toEqual([
+        ['apps/a/package.json', 'libs/x'],
+        ['apps/a/package.json', projectLinkNode],
+        ['apps/a/src/index.ts', 'libs/x'],
+        ['apps/a/src/index.ts', projectLinkNode],
+        ['apps/b/package.json', vendoredNode],
+        ['apps/b/src/index.ts', vendoredNode],
       ]);
     }
   );

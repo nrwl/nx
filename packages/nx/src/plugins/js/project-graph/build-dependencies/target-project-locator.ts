@@ -1,4 +1,4 @@
-import { existsSync } from 'node:fs';
+import { existsSync, realpathSync } from 'node:fs';
 import { isBuiltin } from 'node:module';
 import { dirname, join, posix, relative, isAbsolute } from 'node:path';
 import { clean, satisfies } from 'semver';
@@ -42,6 +42,16 @@ type ParsedPatterns = {
   matchableStrings: Set<string> | undefined;
   patterns: PathPattern[] | undefined;
 };
+type LinkedProjectTarget = {
+  project: string;
+  externalNode: string;
+};
+
+function isLinkedProjectTarget(
+  target: string | LinkedProjectTarget
+): target is LinkedProjectTarget {
+  return typeof target === 'object' && target !== null;
+}
 
 /**
  * Use a shared cache to avoid repeated npm package resolution work within the TargetProjectLocator.
@@ -116,6 +126,7 @@ export class TargetProjectLocator {
   private paths = this.tsConfig.config?.compilerOptions?.paths;
   private parsedPathPatterns: ParsedPatterns | undefined;
   private typescriptResolutionCache = new Map<string, string | null>();
+  private linkedProjectCache = new Map<string, string | null>();
   private packagesMetadata: {
     entryPointsToProjectMap: Record<string, ProjectGraphProjectNode>;
     wildcardEntryPointsToProjectMap: Record<string, ProjectGraphProjectNode>;
@@ -190,6 +201,30 @@ export class TargetProjectLocator {
    * @param filePath
    */
   findProjectFromImport(importExpr: string, filePath: string): string {
+    const target = this.resolveImportTarget(importExpr, filePath);
+    return isLinkedProjectTarget(target) ? target.project : target;
+  }
+
+  /**
+   * The targets of an import's dependencies: the one `findProjectFromImport`
+   * returns, plus the external node of the `link:` package that resolved the
+   * import to that project.
+   */
+  findDependencyTargetsFromImport(
+    importExpr: string,
+    filePath: string
+  ): string[] {
+    const target = this.resolveImportTarget(importExpr, filePath);
+    if (isLinkedProjectTarget(target)) {
+      return [target.project, target.externalNode];
+    }
+    return target ? [target] : [];
+  }
+
+  private resolveImportTarget(
+    importExpr: string,
+    filePath: string
+  ): string | LinkedProjectTarget {
     if (isRelativePath(importExpr)) {
       const resolvedModule = posix.join(dirname(filePath), importExpr);
       return this.findProjectOfResolvedModule(resolvedModule);
@@ -225,7 +260,14 @@ export class TargetProjectLocator {
     // try to find npm package before using expensive typescript resolution
     const externalProject = this.findNpmProjectFromImport(importExpr, filePath);
     if (externalProject) {
-      return externalProject;
+      const project = this.findLinkedProject(
+        externalProject,
+        importExpr,
+        filePath
+      );
+      return project
+        ? { project, externalNode: externalProject }
+        : externalProject;
     }
 
     if (this.tsConfig.config) {
@@ -409,6 +451,65 @@ export class TargetProjectLocator {
         !relativeDir ||
         existsSync(join(dir, 'node_modules', packageName, 'package.json'))
       ) {
+        return null;
+      }
+    }
+  }
+
+  /**
+   * The project that holds the target of the importer's installed `link:`
+   * package.
+   * Bun gives such a link an external node, which would otherwise shadow
+   * the project. Importers can share that node with different targets, so the
+   * link the importer installs decides.
+   */
+  findLinkedProject(
+    externalNodeName: string,
+    importExpr: string,
+    fromFilePath: string
+  ): string | null {
+    const version = this.npmProjects[externalNodeName]?.data.version;
+    if (typeof version !== 'string' || !version.startsWith('link:')) {
+      return null;
+    }
+    const packageName = getPackageNameFromImportPath(importExpr);
+    const fullDirPath = dirname(
+      fromFilePath.startsWith(workspaceRoot)
+        ? fromFilePath
+        : join(workspaceRoot, fromFilePath)
+    );
+    const cacheKey = `${packageName}__${fullDirPath}`;
+    if (!this.linkedProjectCache.has(cacheKey)) {
+      this.linkedProjectCache.set(
+        cacheKey,
+        this.findLinkedProjectFromDir(packageName, fullDirPath)
+      );
+    }
+    return this.linkedProjectCache.get(cacheKey);
+  }
+
+  // Node loads the nearest node_modules copy, so that one decides
+  private findLinkedProjectFromDir(
+    packageName: string,
+    fromDirPath: string
+  ): string | null {
+    for (let dir = fromDirPath; ; dir = dirname(dir)) {
+      const relativeDir = relative(workspaceRoot, dir);
+      if (relativeDir && !isContainedRelativePath(relativeDir)) {
+        return null;
+      }
+      const installedPath = join(dir, 'node_modules', packageName);
+      if (existsSync(installedPath)) {
+        const target = normalizePath(
+          relative(workspaceRoot, realpathSync(installedPath))
+        );
+        const project = findProjectForPath(target, this.projectRootMappings);
+        // A root project holds every path, so it doesn't claim a link
+        return project && this.nodes[project].data.root !== '.'
+          ? project
+          : null;
+      }
+      if (!relativeDir) {
         return null;
       }
     }
