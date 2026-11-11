@@ -58,43 +58,64 @@ common-init-steps: &common-init-steps
       echo "dotnet: $(dotnet --version)"
       echo "java:   $(javac --version)"
 
-  - name: Install system deps
-    script: |
-      # apt mirror+file failover: tab-separated; printf preserves \t (YAML heredocs don't).
-      printf 'https://archive.ubuntu.com/ubuntu/\tpriority:1\n'       | sudo tee /etc/apt/apt-mirrors.txt > /dev/null
-      printf 'https://security.ubuntu.com/ubuntu/\tpriority:2\n'      | sudo tee -a /etc/apt/apt-mirrors.txt > /dev/null
-      printf 'http://azure.archive.ubuntu.com/ubuntu/\tpriority:3\n'  | sudo tee -a /etc/apt/apt-mirrors.txt > /dev/null
-      # Retries=0: mirror+file already retries via failover; apt-level retries multiply stall on a dead mirror.
-      sudo tee /etc/apt/apt.conf.d/80-nx-mirror-failover > /dev/null <<'EOF'
-      Acquire::http::Timeout "5";
-      Acquire::https::Timeout "5";
-      Acquire::Retries "0";
-      EOF
-      sudo sed -i 's|http://archive.ubuntu.com/ubuntu|mirror+file:/etc/apt/apt-mirrors.txt|g; s|http://security.ubuntu.com/ubuntu|mirror+file:/etc/apt/apt-mirrors.txt|g' /etc/apt/sources.list
-      sudo apt-get update
-      sudo apt-get install -y ca-certificates lsof libvips-dev libglib2.0-dev libgirepository1.0-dev zip unzip
+  # The steps in this group write to separate locations, so they run in parallel.
+  - group-name: Install dependencies
+    parallel: true
+    steps:
+      - name: Install system deps
+        script: |
+          # apt mirror+file failover: tab-separated; printf preserves \t (YAML heredocs don't).
+          printf 'https://archive.ubuntu.com/ubuntu/\tpriority:1\n'       | sudo tee /etc/apt/apt-mirrors.txt > /dev/null
+          printf 'https://security.ubuntu.com/ubuntu/\tpriority:2\n'      | sudo tee -a /etc/apt/apt-mirrors.txt > /dev/null
+          printf 'http://azure.archive.ubuntu.com/ubuntu/\tpriority:3\n'  | sudo tee -a /etc/apt/apt-mirrors.txt > /dev/null
+          # Retries=0: mirror+file already retries via failover; apt-level retries multiply stall on a dead mirror.
+          sudo tee /etc/apt/apt.conf.d/80-nx-mirror-failover > /dev/null <<'EOF'
+          Acquire::http::Timeout "5";
+          Acquire::https::Timeout "5";
+          Acquire::Retries "0";
+          EOF
+          sudo sed -i 's|http://archive.ubuntu.com/ubuntu|mirror+file:/etc/apt/apt-mirrors.txt|g; s|http://security.ubuntu.com/ubuntu|mirror+file:/etc/apt/apt-mirrors.txt|g' /etc/apt/sources.list
+          sudo apt-get update
+          sudo apt-get install -y ca-certificates lsof libvips-dev libglib2.0-dev libgirepository1.0-dev zip unzip
 
-  - name: Pnpm Install from lockfile
-    script: |
-      pnpm install --frozen-lockfile
+      - name: Pnpm install and Playwright browsers
+        script: |
+          set -e
+          pnpm install --frozen-lockfile
+          pnpm exec playwright install
 
-  - name: Install browsers
-    script: |
-      pnpm exec cypress install
-      pnpm exec playwright install --with-deps
+      - name: Install rust deps
+        script: |
+          cargo fetch
 
-  - name: Install rust deps
-    script: |
-      cargo fetch
+      # Static musl build; update the version and sha256 together.
+      - name: Install hyperfine
+        script: |
+          set -e
+          tmp="$(mktemp -d)"
+          curl -fsSL --retry 3 -o "$tmp/hyperfine.tar.gz" https://github.com/sharkdp/hyperfine/releases/download/v2.0.0/hyperfine-v2.0.0-x86_64-unknown-linux-musl.tar.gz
+          echo "38e59087bd65520930a13cf513d8a493b7043741e8ad62349a8a9929eb61bc5c  $tmp/hyperfine.tar.gz" | sha256sum -c -
+          tar -xzf "$tmp/hyperfine.tar.gz" -C "$tmp"
+          install -m 0755 "$tmp/hyperfine-v2.0.0-x86_64-unknown-linux-musl/hyperfine" "$HOME/.local/bin/hyperfine"
+          hyperfine --version
 
-  - name: Install hyperfine
-    script: |
-      cargo install hyperfine --locked
+      - name: Setup gradle
+        script: |
+          ./gradlew wrapper
+          ./gradlew --version
 
-  - name: Setup gradle
-    script: |
-      ./gradlew wrapper
-      ./gradlew --version
+  # Both need "Install system deps" done: Playwright's apt-get can't run while it holds the dpkg lock,
+  # and Cypress unzips with the unzip it installs (otherwise it falls back to a slower Node unzip).
+  - group-name: Install browser dependencies
+    parallel: true
+    steps:
+      - name: Install Playwright system deps
+        script: |
+          pnpm exec playwright install-deps
+
+      - name: Install Cypress
+        script: |
+          pnpm exec cypress install
 
   - name: Restore .NET analyzer projects
     script: |
