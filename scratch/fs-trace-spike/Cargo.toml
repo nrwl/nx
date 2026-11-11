@@ -1,0 +1,7 @@
+# Standalone workspace so this spike is not pulled into the repo's root workspace.
+[workspace]
+resolver = "2"
+members = ["shim", "addon"]
+
+[profile.release]
+opt-level = 3
