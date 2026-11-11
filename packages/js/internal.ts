@@ -35,7 +35,10 @@ export {
   pnpmInstallSettingsInputsForInferredTarget,
   shouldIncludePnpmMajorRuntimeInput,
 } from './src/utils/pnpm-install-settings-inputs';
-export { addPnpmDeployOutputCacheInputs } from './src/utils/pnpm-deploy-output-cache-inputs';
+export {
+  addDeployOutputCacheInputs,
+  type DeployOutputSettingsInput,
+} from './src/utils/deploy-output-cache-inputs';
 export { readRuntimeDependencies } from './src/utils/package-json/runtime-dependencies';
 export type { MatchedTargetRef } from './src/utils/target-defaults-matching';
 
