@@ -340,12 +340,12 @@ To convert a GitHub Actions workflow, see [move a GitHub Actions workflow to Nx 
 | `workers: { small: 3, medium: 6, large: 8 }` | [Sized by the work](#small-medium-and-large).                          |
 | `workers: <name>`                            | An entry from `worker-templates`.                                      |
 | No `workers`                                 | Only the main-job worker.                                              |
-| `workers: false`                             | No distribution. Tasks run in the job's Nx commands.                   |
+| `workers: false`                             | No distribution. Each Nx command runs its tasks on the job's machine.  |
 
 Unless `workers` is `false`, the job also runs a [main-job worker](#main-job-worker) on its own machine.
 Workers get the `env` of the file and the job.
 
-Nx Cloud starts the main-job worker before the `steps` of the job:
+The main-job worker starts after the init steps of the job and before its `steps`:
 
 - The init steps must install Node.js and the workspace dependencies. If they don't, or the workspace's Nx version is too old to distribute, the job fails with a message that says so.
 - The worker keeps the environment it starts with. A step's `env` and the variables a step exports don't reach it, so put what your tasks need in the `env` of the file, the job, or the [launch template](#launch-templates).
