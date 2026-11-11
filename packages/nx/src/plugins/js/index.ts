@@ -48,6 +48,9 @@ let cachedLockFile:
     }
   | undefined;
 let cachedKeyMap: Map<string, any> | undefined;
+let cachedInstalledLocalPathNodes:
+  | Record<string, Record<string, string>>
+  | undefined;
 
 export const createNodes: CreateNodes = [
   combineGlobPatterns(LOCKFILES),
@@ -55,6 +58,7 @@ export const createNodes: CreateNodes = [
     // A long-lived process must not reuse a lockfile this computation skipped.
     cachedLockFile = undefined;
     cachedKeyMap = undefined;
+    cachedInstalledLocalPathNodes = undefined;
     return createNodesFromFiles(internalCreateNodes, files, _, context);
   },
 ];
@@ -84,15 +88,21 @@ function internalCreateNodes(lockFile: string, _, context: CreateNodesContext) {
     externalNodesCache,
     lockFileHash
   );
-  if (cached) {
+  // An older build of the same version writes no record, so its entry misses
+  if (cached?.installedLocalPathNodes) {
     cachedKeyMap = deserializeKeyMap(cached.keyMap, cached.nodes);
+    cachedInstalledLocalPathNodes = cached.installedLocalPathNodes;
 
     return {
       externalNodes: cached.nodes,
     };
   }
 
-  const { nodes: externalNodes, keyMap } = getLockFileNodes(
+  const {
+    nodes: externalNodes,
+    keyMap,
+    installedLocalPathNodes,
+  } = getLockFileNodes(
     packageManager,
     lockFile,
     lockFileContents,
@@ -100,10 +110,12 @@ function internalCreateNodes(lockFile: string, _, context: CreateNodesContext) {
     context
   );
   cachedKeyMap = keyMap;
+  cachedInstalledLocalPathNodes = installedLocalPathNodes;
 
   writeCache(externalNodesCache, lockFileHash, {
     nodes: externalNodes,
     keyMap: serializeKeyMap(keyMap),
+    installedLocalPathNodes,
   });
 
   return {
@@ -156,7 +168,8 @@ export const createDependencies: CreateDependencies = (
   performance.mark('build typescript dependencies - start');
   const explicitProjectDependencies = buildExplicitDependencies(
     pluginConfig,
-    ctx
+    ctx,
+    cachedInstalledLocalPathNodes
   );
   performance.mark('build typescript dependencies - end');
   performance.measure(
@@ -217,6 +230,7 @@ function deserializeKeyMap(
 interface ExternalNodesCache {
   nodes: ProjectGraph['externalNodes'];
   keyMap: Record<string, any>;
+  installedLocalPathNodes: Record<string, Record<string, string>>;
 }
 
 function readCache<T>(path: string, key: string): T | undefined {
