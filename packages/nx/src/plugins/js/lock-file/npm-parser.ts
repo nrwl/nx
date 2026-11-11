@@ -113,19 +113,24 @@ function getNodes(data: NpmLockFile): {
   const localPathPackageNames = new Set<string>();
 
   if (data.lockfileVersion > 1) {
+    let versionsWithSeveralResolutions: Set<string> | undefined;
     Object.entries(data.packages).forEach(([path, snapshot]) => {
-      // skip workspaces and snapshots bundled into their parent package
-      if (
-        path === '' ||
-        !path.includes('node_modules') ||
-        snapshot.link ||
-        snapshot.inBundle
-      ) {
+      if (!isPackageSnapshot(path, snapshot)) {
         return;
       }
 
       const packageName = path.split('node_modules/').pop();
-      const version = findV3Version(snapshot, packageName);
+      let version = findV3Version(snapshot, packageName);
+      // Only a `file:` copy that shares its name and version with another
+      // resolution is named by its path: alias keys, peer ranges and the
+      // lockfile writer match the semver version.
+      if (snapshot.resolved?.startsWith('file:')) {
+        versionsWithSeveralResolutions ??=
+          findVersionsWithSeveralResolutions(data);
+        if (versionsWithSeveralResolutions.has(`${packageName}@${version}`)) {
+          version = findV3Version(snapshot, packageName, true);
+        }
+      }
       // symlinked packages in workspaces do not have versions
       if (version) {
         createNode(packageName, version, path, nodes, keyMap, snapshot);
@@ -311,12 +316,62 @@ function createNode(
   }
 }
 
-function findV3Version(snapshot: NpmDependencyV3, packageName: string): string {
+// skip workspaces and snapshots bundled into their parent package
+function isPackageSnapshot(path: string, snapshot: NpmDependencyV3): boolean {
+  return (
+    path !== '' &&
+    path.includes('node_modules') &&
+    !snapshot.link &&
+    !snapshot.inBundle
+  );
+}
+
+function findVersionsWithSeveralResolutions(data: NpmLockFile): Set<string> {
+  const localPathPackageNames = new Set<string>();
+  for (const [path, snapshot] of Object.entries(data.packages)) {
+    if (
+      snapshot.resolved?.startsWith('file:') &&
+      isPackageSnapshot(path, snapshot)
+    ) {
+      localPathPackageNames.add(path.split('node_modules/').pop());
+    }
+  }
+  const resolutions = new Map<string, Set<string | undefined>>();
+  for (const [path, snapshot] of Object.entries(data.packages)) {
+    if (!isPackageSnapshot(path, snapshot)) {
+      continue;
+    }
+    const packageName = path.split('node_modules/').pop();
+    if (!localPathPackageNames.has(packageName)) {
+      continue;
+    }
+    const key = `${packageName}@${findV3Version(snapshot, packageName)}`;
+    const resolved = resolutions.get(key) ?? new Set();
+    resolved.add(snapshot.resolved);
+    resolutions.set(key, resolved);
+  }
+  const versions = new Set<string>();
+  for (const [key, resolved] of resolutions) {
+    if (resolved.size > 1) {
+      versions.add(key);
+    }
+  }
+  return versions;
+}
+
+function findV3Version(
+  snapshot: NpmDependencyV3,
+  packageName: string,
+  byResolvedPath = false
+): string {
   let version = snapshot.version;
 
   const resolved = snapshot.resolved;
   // for tarball packages version might not exist or be useless
-  if (!version || (resolved && !resolved.includes(version))) {
+  if (
+    !version ||
+    (resolved && (byResolvedPath || !resolved.includes(version)))
+  ) {
     version = resolved;
   }
   // for alias packages name is set
