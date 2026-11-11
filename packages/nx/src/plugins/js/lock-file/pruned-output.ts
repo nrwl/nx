@@ -1520,10 +1520,9 @@ export function validatePrunedLocalPathClosure(
 /**
  * The workspace package a dependency of the manifest at `dependentRoot`
  * resolves to. A `file:`/`link:` spec resolves by path, so a vendored package
- * named like a workspace package is not that package, while the package's
- * `workspace_modules/` copy is. Any other spec resolves by name, and so does
- * every spec when `dependentRoot` is undefined (the manifest's location is
- * unknown).
+ * named like a workspace package is not that package. Any other spec resolves
+ * by name, and so does every spec when `dependentRoot` is undefined (the
+ * manifest's location is unknown).
  */
 export function resolveWorkspaceModuleDependency(
   workspacePackages: Map<string, ProjectGraphProjectNode>,
@@ -1556,10 +1555,7 @@ export function resolveWorkspaceModuleDependency(
   const target = toWorkspacePath(
     isAbsolute(path) ? path : posix.join(root, path)
   );
-  return target === toWorkspacePath(project.data.root) ||
-    target === posix.join(root, WORKSPACE_MODULES_DIR, name)
-    ? project
-    : undefined;
+  return target === toWorkspacePath(project.data.root) ? project : undefined;
 }
 
 /**
