@@ -401,15 +401,15 @@ jobs:
       - run: npx nx affected -t lint test build
 ```
 
-The generator also creates a [`.nx/ci-config.yaml`](/docs/reference/nx-cloud/ci-config) file. It holds the settings that `start-workers` reads, so you tune task distribution there rather than in the workflow:
+The generator also creates a [`.nx/pipelines/ci.yaml`](/docs/reference/nx-cloud/ci-config) file. It holds the settings that `start-workers` reads, so you tune task distribution there rather than in the workflow:
 
 ```yml
-// .nx/ci-config.yaml
-dte:
-  distribute-on: 3 linux-medium-js
-lifecycle:
-  stop-after:
-    - build
+// .nx/pipelines/ci.yaml
+worker-templates:
+  default:
+    workers: 3 linux-medium-js
+    stop-after:
+      - build
 ```
 
 ### Open a pull request
