@@ -89,7 +89,8 @@ A newer push to a pull request cancels the older run of the same file.
 
 ### Distribute tasks with workers
 
-Add `workers` to a job to run its tasks across several machines:
+A job distributes its tasks by default, on a worker that runs on the job's own machine.
+Add `workers` to the job to run its tasks across more machines:
 
 ```yaml
 # .nx/pipelines/ci.yaml
@@ -105,6 +106,7 @@ Workers start with the job, so they install dependencies in parallel with it.
 To scale workers with the size of each run, see [scale workers with PR size](/docs/features/ci-features/distribute-task-execution#scale-workers-with-pr-size).
 
 For setups shared across jobs and for task rules such as `stop-after`, see [`worker-templates`](/docs/reference/nx-cloud/ci-config#worker-templates).
+To turn distribution off for a job that doesn't run Nx tasks, such as a deploy job, set `workers: false`. See [`jobs.<job>.workers`](/docs/reference/nx-cloud/ci-config#jobsjobworkers).
 
 ### Secrets and environment variables
 

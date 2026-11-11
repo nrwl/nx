@@ -200,7 +200,9 @@ Type: `integer`, minimum `0`. Default: `1`.
 
 ### `main-job-worker`
 
-Runs distributed tasks on a background worker on the machine of the main job, using the CPU and memory you allow it.
+Runs distributed tasks on a background worker on the machine of the main job.
+On Nx Cloud CI, it's on by default and uses the CPU and memory it detects on the machine.
+Set `cpu` and `memory` to limit what it uses, or set `main-job-worker: false` to run tasks only on the other workers.
 External CI doesn't start this worker from `ci.yaml`.
 To send tasks to it, use `agent: main` in [`assignment-rules`](#assignment-rules).
 The name `main` is reserved, so a launch template can't use it.
@@ -320,7 +322,7 @@ To convert a GitHub Actions workflow, see [move a GitHub Actions workflow to Nx 
 | `image`           | Container image. Use with `resource-class` and `init-steps` instead of `runs-on`.   |
 | `init-steps`      | Steps run once when the machine starts, such as checkout and install.               |
 | `steps`           | Steps the job runs in order.                                                        |
-| `workers`         | Workers that run the tasks of the job. Without it, the job uses its one machine.    |
+| `workers`         | Workers that run the tasks of the job. `false` turns distribution off.              |
 | `needs`           | Job or jobs that must finish before this job starts.                                |
 | `if`              | Condition that must hold for the job to run. See [expressions](#expressions).       |
 | `env`             | Environment variables for every step of the job. Takes [expressions](#expressions). |
@@ -337,9 +339,20 @@ To convert a GitHub Actions workflow, see [move a GitHub Actions workflow to Nx 
 | `workers: 10 linux-large-js`                 | A fixed count of a launch template, started with the job.              |
 | `workers: { small: 3, medium: 6, large: 8 }` | [Sized by the work](#small-medium-and-large).                          |
 | `workers: <name>`                            | An entry from `worker-templates`.                                      |
-| No `workers`                                 | One machine, no workers.                                               |
+| No `workers`                                 | Only the main-job worker.                                              |
+| `workers: false`                             | No distribution. Tasks run in the job's Nx commands.                   |
 
+Unless `workers` is `false`, the job also runs a [main-job worker](#main-job-worker) on its own machine.
 Workers get the `env` of the file and the job.
+
+Nx Cloud starts the main-job worker before the `steps` of the job:
+
+- The init steps must install Node.js and the workspace dependencies. If they don't, or the workspace's Nx version is too old to distribute, the job fails with a message that says so.
+- The worker keeps the environment it starts with. A step's `env` and the variables a step exports don't reach it, so put what your tasks need in the `env` of the file, the job, or the [launch template](#launch-templates).
+- The worker shares the checkout, so it sees files that earlier steps write.
+- The worker counts toward your [concurrent worker limit](/docs/kb/concurrent-workers) while the run is active.
+
+Set `workers: false` on jobs that don't run Nx tasks, such as a deploy job, and on jobs that run `nx-cloud start-ci-run` themselves.
 
 ### `jobs.<job>.steps`
 
