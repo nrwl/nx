@@ -19,9 +19,6 @@ It takes an optional `Configuration` object as an argument, which allows for cus
 On Rspack 2, `createConfig` turns lazy compilation off for the browser build by default.
 To turn it on, set `rspackConfigOverrides.lazyCompilation` to `true`.
 The override doesn't affect the server build.
-With server-side rendering (SSR), pages from the SSR server's port (`PORT`, 4000 by default)
-can't load lazily compiled code, because only the dev server compiles it.
-Use the dev-server URL, or keep lazy compilation off when you need server-rendered pages.
 
 ```ts
 async function createConfig(
@@ -291,6 +288,13 @@ Controls whether to create a separate bundle containing shared code between mult
 `DevServerOptions`
 Configuration options for the development server including port, SSL settings, and proxy configuration.
 
+The development server adds `Access-Control-Allow-Origin: *` to its responses.
+With SSR, it adds the header only to the files the build outputs.
+Rendered pages, `server.ts` routes, proxied requests, and responses from your own middleware
+don't get it.
+To let another origin read them, set the header in `devServer.headers`, `server.ts`, your
+middleware, or your backend.
+
 ### extractLicenses
 
 `boolean` `default: false`
@@ -374,7 +378,7 @@ When true, skips TypeScript type checking during the build process.
 
 ### sourceMap
 
-`boolean | Partial<SourceMap>` `default: true`
+`boolean | Partial<SourceMap>` `default: false`
 Controls generation of source maps for debugging. Can be boolean or detailed configuration object.
 
 ### ssr

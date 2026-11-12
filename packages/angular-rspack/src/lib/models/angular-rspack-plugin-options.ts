@@ -29,8 +29,9 @@ export interface DevServerOptions {
    */
   host?: string;
   /**
-   * @deprecated This is a no-op and can be safely removed.
-   * The `inspect` option is no longer supported.
+   * Opens the Node.js debugging inspector in the dev-server process of an SSR
+   * app and waits for a debugger to attach. `true` uses the default host and
+   * port; a string sets them as `[[host:]port]`.
    */
   inspect?: string | boolean;
   /**

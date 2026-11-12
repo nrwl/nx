@@ -1,9 +1,11 @@
 import type { DevServer } from '@rspack/core';
 import assert from 'node:assert';
 import { existsSync, promises as fsPromises } from 'node:fs';
+import type { IncomingMessage, ServerResponse } from 'node:http';
 import { extname, posix, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import type { NormalizedAngularRspackPluginOptions } from '../../models';
+import { servesSsrFromDevServer } from '../../plugins/angular-ssr-dev-server';
 import { getIndexOutputFile } from '../../utils/index-file/get-index-output-file';
 import { loadEsmModule } from '../../utils/misc-helpers';
 
@@ -14,25 +16,33 @@ export async function getDevServerConfig(
   const { root } = options;
 
   const servePath = buildServePath(options);
+  // The SSR middleware answers documents, as with `ng serve`.
+  const servesSsr = servesSsrFromDevServer(options);
 
   return {
     host: options.devServer.host,
     port: options.devServer.port,
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-      ...options.devServer.headers,
-    },
-    historyApiFallback: {
-      index: posix.join(servePath, getIndexOutputFile(options.index)),
-      disableDotRule: true,
-      htmlAcceptHeaders: ['text/html', 'application/xhtml+xml'],
-      rewrites: [
-        {
-          from: new RegExp(`^(?!${servePath})/.*`),
-          to: (context) => context.parsedUrl.href,
+    // With SSR, only the files the dev middleware serves get the default, so
+    // other websites can't read pages or proxied responses.
+    headers: servesSsr
+      ? options.devServer.headers
+      : {
+          'Access-Control-Allow-Origin': '*',
+          ...options.devServer.headers,
         },
-      ],
-    },
+    historyApiFallback: servesSsr
+      ? false
+      : {
+          index: posix.join(servePath, getIndexOutputFile(options.index)),
+          disableDotRule: true,
+          htmlAcceptHeaders: ['text/html', 'application/xhtml+xml'],
+          rewrites: [
+            {
+              from: new RegExp(`^(?!${servePath})/.*`),
+              to: (context) => context.parsedUrl.href,
+            },
+          ],
+        },
     compress: false,
     static: false,
     server: getServerConfig(options),
@@ -42,11 +52,15 @@ export async function getDevServerConfig(
     ),
     devMiddleware: {
       publicPath: servePath,
+      ...(servesSsr ? { index: false, headers: allowAnyOriginUnlessSet } : {}),
       writeToDisk:
         platform === 'browser' && options.hasServer
           ? (file) => !file.includes('.hot-update.')
           : undefined,
     },
+    open: options.devServer.open
+      ? `${servePath === '/' ? '' : servePath}/`
+      : false,
     liveReload: options.devServer.liveReload,
     hot:
       options.devServer.hmr && !options.devServer.liveReload
@@ -54,7 +68,6 @@ export async function getDevServerConfig(
         : options.devServer.hmr,
     proxy: await getProxyConfig(root, options.devServer.proxyConfig),
     ...getWebSocketSettings(options, servePath),
-    watchFiles: ['./src/**/*.*', './public/**/*.*'],
     onListening:
       platform === 'browser'
         ? (devServer) => {
@@ -69,6 +82,17 @@ export async function getDevServerConfig(
           }
         : undefined,
   };
+}
+
+// The dev middleware applies these after the configured headers and any
+// earlier middleware, so an origin either of them set must win.
+function allowAnyOriginUnlessSet(
+  _req: IncomingMessage,
+  res: ServerResponse
+): Record<string, string> | undefined {
+  return res.hasHeader('Access-Control-Allow-Origin')
+    ? undefined
+    : { 'Access-Control-Allow-Origin': '*' };
 }
 
 /**

@@ -507,6 +507,81 @@ describe('createConfig', () => {
     }
   }, 10000);
 
+  it('should leave documents to the SSR middleware and keep dev clients out of the server bundle while serving', async () => {
+    const root = await createSsrProjectRoot();
+    vi.stubEnv('WEBPACK_SERVE', 'true');
+    try {
+      const options: AngularRspackPluginOptions = {
+        ...configBase,
+        root,
+        server: './src/main.server.ts',
+        ssr: { entry: './src/server.ts' },
+      };
+      const [browserConfig, serverConfig] = await _createConfig(options);
+
+      expect(browserConfig.devServer).toMatchObject({
+        historyApiFallback: false,
+        devMiddleware: { index: false },
+      });
+      expect(serverConfig.devServer).toBe(false);
+
+      const [overriddenBrowserConfig, overriddenServerConfig] =
+        await _createConfig(options, {
+          devServer: { headers: { 'x-override': '1' } },
+        });
+      expect(overriddenBrowserConfig.devServer).toMatchObject({
+        headers: { 'x-override': '1' },
+      });
+      expect(overriddenServerConfig.devServer).toBe(false);
+
+      const [browserOnlyConfig] = await _createConfig({ ...configBase, root });
+      expect(browserOnlyConfig.devServer).toMatchObject({
+        historyApiFallback: expect.objectContaining({
+          index: '/index.html',
+        }),
+      });
+      expect(
+        (browserOnlyConfig.devServer || {}).devMiddleware
+      ).not.toHaveProperty('index');
+    } finally {
+      vi.unstubAllEnvs();
+      await rm(root, { recursive: true, force: true });
+    }
+  }, 10000);
+
+  it.each([
+    ['prerender', { prerender: { discoverRoutes: true } }],
+    ['appShell', { appShell: true }],
+  ])(
+    'should prerender with %s only outside the dev server',
+    async (_option, prerenderOptions) => {
+      const root = await createSsrProjectRoot();
+      const hasPrerenderPlugin = (config: Configuration) =>
+        config.plugins?.some(
+          (plugin) => plugin?.constructor.name === 'PrerenderPlugin'
+        );
+      const options: AngularRspackPluginOptions = {
+        ...configBase,
+        root,
+        server: './src/main.server.ts',
+        ssr: { entry: './src/server.ts' },
+        ...prerenderOptions,
+      };
+      try {
+        const [, buildServerConfig] = await _createConfig(options);
+        expect(hasPrerenderPlugin(buildServerConfig)).toBe(true);
+
+        vi.stubEnv('WEBPACK_SERVE', 'true');
+        const [, serveServerConfig] = await _createConfig(options);
+        expect(hasPrerenderPlugin(serveServerConfig)).toBe(false);
+      } finally {
+        vi.unstubAllEnvs();
+        await rm(root, { recursive: true, force: true });
+      }
+    },
+    10000
+  );
+
   it('should allow the dev-server hosts in the engine manifest while serving', async () => {
     const root = await createSsrProjectRoot();
     vi.stubEnv('WEBPACK_SERVE', 'true');
