@@ -8,8 +8,10 @@ dte:
   # Started separately in ci.yml, after dependency install.
   main-job-worker: false
   # Only agents install hyperfine (see agents.yaml), so benchmarks can't run on the main job.
+  # Maven phases failed on the main-job worker when two commands built the same project
+  # ("You have to use a classifier to attach supplemental artifacts").
   assignment-rules:
-    - targets: ['bench*']
+    - targets: ['bench*', 'mvn:*']
       run-on:
         - agent: linux-large
         - agent: linux-extra-large
