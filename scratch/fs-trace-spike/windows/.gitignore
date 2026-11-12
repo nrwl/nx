@@ -4,5 +4,6 @@
 *.exp
 *.dll
 *.log
+obj-*/
 data/
 src/
