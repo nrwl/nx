@@ -3,21 +3,28 @@ import { spawnSync } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 const here = path.dirname(fileURLToPath(import.meta.url));
+// Built by scripts/build-fstrace-shim.mjs. Point FSTRACE_BIN at a copy when running
+// from outside the repo.
+const tracer = path.join(
+  process.env.FSTRACE_BIN ??
+    path.resolve(here, '../../../packages/nx/src/native'),
+  `fstrace-${process.arch}.exe`
+);
 const RUNS = Number(process.env.RUNS ?? 7);
 const node = `"${process.execPath}"`;
 const log = path.join(here, 'bench.log');
 const workloads = {
-  '200k CreateFile+CloseHandle': `openloop.exe ${path.join(here, 'fstrace.h')} 200000`,
+  '200k CreateFile+CloseHandle': `openloop-arm64.exe ${path.join(here, 'bench-windows.mjs')} 200000`,
   'node readFileSync packages/nx/src': `${node} readall.js ${path.join(here, 'src')}`,
   'node startup (empty script)': `${node} -e 0`,
-  '50 short-lived processes (cmd loop)': `cmd /c "for /l %i in (1,1,50) do @openloop.exe fstrace.h 1"`,
+  '50 short-lived processes (cmd loop)': `cmd /c "for /l %i in (1,1,50) do @openloop-arm64.exe bench-windows.mjs 1"`,
 };
 function time(mode, cmdline) {
   const s = [];
   let events = 0;
   for (let i = 0; i < RUNS; i++) {
     const t = process.hrtime.bigint();
-    const r = spawnSync(path.join(here, 'fstrace.exe'), [mode, log, cmdline], {
+    const r = spawnSync(tracer, [mode, log, cmdline], {
       cwd: here,
       stdio: 'ignore',
     });

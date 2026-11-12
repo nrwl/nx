@@ -1,17 +1,32 @@
-// fstrace.exe <none|trace> <log> <command line>
-// Runs the command in a job object and waits for the whole process tree to exit.
+// fstrace-<arch>.exe <none|trace> <log> <command line>
+//   Runs the command in a job object and waits for the whole process tree to exit.
+// fstrace-<arch>.exe inject <pid> <tid>
+//   Loads fstrace-<arch>.dll into a suspended process of this architecture. The DLL runs
+//   this when a traced process starts a child of another architecture.
 #include "fstrace.h"
 #include <stdio.h>
+#include <stdlib.h>
+
+static int inject(DWORD pid, DWORD tid) {
+  HANDLE process = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION | PROCESS_VM_OPERATION | PROCESS_VM_WRITE, FALSE, pid);
+  HANDLE thread = OpenThread(THREAD_SET_CONTEXT, FALSE, tid);
+  WCHAR self[MAX_PATH];
+  GetModuleFileNameW(NULL, self, MAX_PATH);
+  BOOL ok = process && thread && fstrace_inject(process, thread, self, CreateProcessW);
+  if (thread) CloseHandle(thread);
+  if (process) CloseHandle(process);
+  return ok ? 0 : 1;
+}
 
 int wmain(int argc, wchar_t **argv) {
+  if (argc == 4 && wcscmp(argv[1], L"inject") == 0) return inject(wcstoul(argv[2], NULL, 10), wcstoul(argv[3], NULL, 10));
   if (argc != 4) {
     fwprintf(stderr, L"usage: fstrace.exe <none|trace> <log> <command line>\n");
     return 2;
   }
   BOOL trace = wcscmp(argv[1], L"trace") == 0;
-  WCHAR dll[MAX_PATH];
-  GetModuleFileNameW(NULL, dll, MAX_PATH);
-  wcscpy_s(wcsrchr(dll, L'\\') + 1, MAX_PATH - (wcsrchr(dll, L'\\') + 1 - dll), L"fstrace.dll");
+  WCHAR self[MAX_PATH];
+  GetModuleFileNameW(NULL, self, MAX_PATH);
   if (trace) {
     CloseHandle(CreateFileW(argv[2], GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, CREATE_ALWAYS, 0, NULL));
     SetEnvironmentVariableW(L"FSTRACE_OUT", argv[2]);
@@ -33,7 +48,7 @@ int wmain(int argc, wchar_t **argv) {
     return 127;
   }
   AssignProcessToJobObject(job, pi.hProcess);
-  if (trace && !fstrace_inject(pi.hProcess, pi.hThread, dll)) fwprintf(stderr, L"fstrace: inject skipped\n");
+  if (trace && !fstrace_inject(pi.hProcess, pi.hThread, self, CreateProcessW)) fwprintf(stderr, L"fstrace: inject failed\n");
   ResumeThread(pi.hThread);
 
   DWORD msg;

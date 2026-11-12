@@ -14,8 +14,6 @@ typedef NTSTATUS(NTAPI *PFN_NtCreateFile)(PHANDLE, ACCESS_MASK, POBJECT_ATTRIBUT
                                           PLARGE_INTEGER, ULONG, ULONG, ULONG, ULONG, PVOID, ULONG);
 typedef NTSTATUS(NTAPI *PFN_NtOpenFile)(PHANDLE, ACCESS_MASK, POBJECT_ATTRIBUTES, PIO_STATUS_BLOCK, ULONG, ULONG);
 typedef NTSTATUS(NTAPI *PFN_LdrLoadDll)(PWSTR, PULONG, PUNICODE_STRING, PVOID *);
-typedef BOOL(WINAPI *PFN_CreateProcessW)(LPCWSTR, LPWSTR, LPSECURITY_ATTRIBUTES, LPSECURITY_ATTRIBUTES, BOOL,
-                                         DWORD, LPVOID, LPCWSTR, LPSTARTUPINFOW, LPPROCESS_INFORMATION);
 
 static PFN_NtCreateFile Real_NtCreateFile;
 static PFN_NtOpenFile Real_NtOpenFile;
@@ -56,6 +54,20 @@ static void record(HANDLE h, POBJECT_ATTRIBUTES oa) {
   WriteFile(g_log, out, len, &written, NULL);
 }
 
+// Marks a child whose subtree is not traced, so a consumer can distrust the read list.
+static void record_untraced(LPCWSTR app, LPWSTR cmd) {
+  if (g_log == INVALID_HANDLE_VALUE) return;
+  const WCHAR *what = app ? app : cmd ? cmd : L"?";
+  char out[4100];
+  int len = WideCharToMultiByte(CP_UTF8, 0, what, -1, out + 10, sizeof out - 12, NULL, NULL);
+  if (len <= 1) return;
+  memcpy(out, "!untraced ", 10);
+  len += 9;
+  out[len++] = '\n';
+  DWORD written;
+  WriteFile(g_log, out, len, &written, NULL);
+}
+
 static void maybe_record(NTSTATUS s, HANDLE *h, ACCESS_MASK access, POBJECT_ATTRIBUTES oa, ULONG opts) {
   if (!NT_SUCCESS(s) || !(access & READS) || (opts & FILE_DIRECTORY_FILE) || g_log == INVALID_HANDLE_VALUE || t_busy)
     return;
@@ -85,7 +97,7 @@ static BOOL WINAPI My_CreateProcessW(LPCWSTR app, LPWSTR cmd, LPSECURITY_ATTRIBU
                                      BOOL inherit, DWORD flags, LPVOID env, LPCWSTR cwd, LPSTARTUPINFOW si,
                                      LPPROCESS_INFORMATION pi) {
   if (!Real_CreateProcessW(app, cmd, pa, ta, inherit, flags | CREATE_SUSPENDED, env, cwd, si, pi)) return FALSE;
-  fstrace_inject(pi->hProcess, pi->hThread, g_dll);
+  if (!fstrace_inject(pi->hProcess, pi->hThread, g_dll, Real_CreateProcessW)) record_untraced(app, cmd);
   if (!(flags & CREATE_SUSPENDED)) ResumeThread(pi->hThread);
   return TRUE;
 }
