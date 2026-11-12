@@ -7,6 +7,12 @@ dte:
     extra-large-changeset: 5 linux-large, 5 linux-extra-large
   # Started separately in ci.yml, after dependency install.
   main-job-worker: false
+  # Only agents install hyperfine (see agents.yaml), so benchmarks can't run on the main job.
+  assignment-rules:
+    - targets: ['bench*']
+      run-on:
+        - agent: linux-large
+        - agent: linux-extra-large
   scheduling-constraints:
     - projects: ['nx', 'workspace', 'remix', 'nx-maven-plugin']
       targets: ['install', 'test']
