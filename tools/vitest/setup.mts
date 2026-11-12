@@ -346,6 +346,9 @@ vi.doMock(workspaceContextPath, async () => {
       'multiGlobWithWorkspaceContext',
       () => Promise.resolve([])
     ),
+    getShebangFilesInContext: guarded('getShebangFilesInContext', () =>
+      Promise.resolve([])
+    ),
     hashWithWorkspaceContext: guarded('hashWithWorkspaceContext', () =>
       Promise.resolve('0')
     ),

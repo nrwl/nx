@@ -34,3 +34,21 @@ export function isHandleMultiGlobMessage(
     message['type'] === MULTI_GLOB
   );
 }
+
+export const SHEBANG_FILES = 'SHEBANG_FILES' as const;
+export type HandleShebangFilesMessage = {
+  type: typeof SHEBANG_FILES;
+  globs: string[];
+  exclude?: string[];
+};
+
+export function isHandleShebangFilesMessage(
+  message: unknown
+): message is HandleShebangFilesMessage {
+  return (
+    typeof message === 'object' &&
+    message !== null &&
+    'type' in message &&
+    message['type'] === SHEBANG_FILES
+  );
+}

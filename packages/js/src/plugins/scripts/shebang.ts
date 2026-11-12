@@ -9,7 +9,7 @@ export interface Shebang {
   args: string[];
 }
 
-/** The shebang line of a header from `readShebangHeaders`, without `#!`. */
+/** The shebang line of a header from the workspace context, without `#!`. */
 export function getShebangLine(header: string): string {
   const end = header.search(/\r?\n/);
   return (end === -1 ? header : header.slice(0, end)).slice(2).trim();

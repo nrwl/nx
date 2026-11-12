@@ -1,7 +1,9 @@
 const mockGlob = vi.fn();
 const mockMultiGlob = vi.fn();
+const mockShebangFiles = vi.fn();
 const mockDaemonGlob = vi.fn();
 const mockDaemonMultiGlob = vi.fn();
+const mockDaemonShebangFiles = vi.fn();
 const mockEnabled = vi.fn();
 const mockIsOnDaemon = vi.fn();
 const mockReady = vi.fn();
@@ -17,6 +19,7 @@ cjsNative.WorkspaceContext = vi.fn().mockImplementation(function (
   return {
     glob: mockGlob,
     multiGlob: mockMultiGlob,
+    shebangFiles: mockShebangFiles,
     ready: mockReady,
     refresh: mockRefresh,
     workspaceRoot: root,
@@ -33,6 +36,7 @@ vi.mock('../daemon/client/client', () => ({
     enabled: () => mockEnabled(),
     glob: (...args: unknown[]) => mockDaemonGlob(...args),
     multiGlob: (...args: unknown[]) => mockDaemonMultiGlob(...args),
+    shebangFiles: (...args: unknown[]) => mockDaemonShebangFiles(...args),
   },
 }));
 
@@ -41,6 +45,7 @@ vi.mock('../daemon/is-on-daemon', () => ({
 }));
 
 import {
+  getShebangFilesInContext,
   globWithWorkspaceContext,
   multiGlobWithWorkspaceContext,
   refreshWorkspaceContext,
@@ -57,6 +62,17 @@ describe('workspace-context /virtual short-circuit', () => {
     mockIsOnDaemon.mockReturnValue(false);
     mockGlob.mockReturnValue(['virtual-glob-result']);
     mockMultiGlob.mockReturnValue([['virtual-multiglob-result']]);
+    mockShebangFiles.mockReturnValue([
+      { file: 'run.js', header: '#!/usr/bin/env node' },
+    ]);
+  });
+
+  it('getShebangFilesInContext bypasses the daemon when workspaceRoot is /virtual', async () => {
+    const result = await getShebangFilesInContext('/virtual', ['**/*.js']);
+
+    expect(mockDaemonShebangFiles).not.toHaveBeenCalled();
+    expect(mockShebangFiles).toHaveBeenCalledWith(['**/*.js'], undefined);
+    expect(result).toEqual([{ file: 'run.js', header: '#!/usr/bin/env node' }]);
   });
 
   it('globWithWorkspaceContext bypasses the daemon when workspaceRoot is /virtual', async () => {
