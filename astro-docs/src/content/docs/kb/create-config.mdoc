@@ -291,6 +291,11 @@ Controls whether to create a separate bundle containing shared code between mult
 `DevServerOptions`
 Configuration options for the development server including port, SSL settings, and proxy configuration.
 
+Pages on these origins can read the development server responses: `localhost`, its subdomains,
+`127.0.0.1`, and `[::1]`, over `http` or `https` on any port.
+For another origin, such as a local network address or a custom hostname, set
+`Access-Control-Allow-Origin` in `devServer.headers`.
+
 ### extractLicenses
 
 `boolean` `default: false`
