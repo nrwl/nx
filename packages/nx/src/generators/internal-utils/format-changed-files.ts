@@ -10,6 +10,12 @@ import {
   formatFilesWithOxfmt,
   oxfmtConfigFiles,
 } from '../../utils/formatters/oxfmt';
+import {
+  createOxfmtIgnoreChecker,
+  createPrettierIgnoreChecker,
+  type TreeIgnoreChecker,
+} from '../../utils/ignore';
+import { existsSync } from 'fs';
 import type { Tree } from '../tree';
 import { getNxRequirePaths } from '../../utils/installation-directory';
 import { output } from '../../utils/output';
@@ -62,9 +68,22 @@ export async function formatChangedFiles(
     return;
   }
 
+  // Each formatter gets the ignore rules its own CLI applies, mirroring
+  // devkit's `formatFiles`: `getFileInfo` without an `ignorePath` only
+  // covers prettier's built-in `node_modules` skip, so without this filter
+  // `.prettierignore` (and `.gitignore`) never applied here and files the
+  // workspace excludes were rewritten anyway.
+  const ignoreChecker: TreeIgnoreChecker =
+    formatterType === 'prettier'
+      ? createPrettierIgnoreChecker(tree)
+      : createOxfmtIgnoreChecker(tree);
+  const filesToFormat = Array.from(files).filter(
+    (file) => !ignoreChecker.isIgnoredFile(file.path)
+  );
+
   const results = await formatDetectedFiles(
     formatterType,
-    Array.from(files),
+    filesToFormat,
     tree.root,
     options,
     // The post-flush root, which disk cannot see: a config staged here is not
@@ -99,7 +118,19 @@ export async function formatFileContents(
     return new Map<string, string>();
   }
 
-  return formatDetectedFiles(formatterType, files, root, options);
+  // No tree to run an ignore checker against, so hand prettier the
+  // workspace's `.prettierignore` directly. Guarded: prettier errors on an
+  // `ignorePath` that does not exist in some versions.
+  const prettierIgnorePath = path.join(root, '.prettierignore');
+  return formatDetectedFiles(
+    formatterType,
+    files,
+    root,
+    options,
+    undefined,
+    undefined,
+    existsSync(prettierIgnorePath) ? prettierIgnorePath : undefined
+  );
 }
 
 function formatDetectedFiles(
@@ -108,11 +139,12 @@ function formatDetectedFiles(
   root: string,
   options?: { silent?: boolean },
   rootConfigNames?: readonly string[],
-  read?: (relativePath: string) => string | null
+  read?: (relativePath: string) => string | null,
+  ignorePath?: string
 ): Promise<Map<string, string>> {
   switch (formatterType) {
     case 'prettier':
-      return formatFilesWithPrettier(files, root, options);
+      return formatFilesWithPrettier(files, root, options, ignorePath);
     case 'oxfmt':
       return runOxfmtBatch(files, root, options, rootConfigNames, read);
     default: {
@@ -127,7 +159,8 @@ function formatDetectedFiles(
 async function formatFilesWithPrettier(
   files: { path: string; content: string | Buffer }[],
   root: string,
-  options?: { silent?: boolean }
+  options?: { silent?: boolean },
+  ignorePath?: string
 ): Promise<Map<string, string>> {
   const results = new Map<string, string>();
 
@@ -174,7 +207,10 @@ async function formatFilesWithPrettier(
           ...config,
         };
 
-        const support = await prettier.getFileInfo(systemPath, resolvedOptions);
+        const support = await prettier.getFileInfo(systemPath, {
+          ...resolvedOptions,
+          ignorePath,
+        });
         if (support.ignored || !support.inferredParser) {
           return;
         }
