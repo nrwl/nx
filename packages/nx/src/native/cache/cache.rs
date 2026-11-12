@@ -193,6 +193,8 @@ pub struct CachedResult {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum Miss {
     NoArtifacts,
+    /// Demoted without a second look: a log that reads by then may be one
+    /// that a rerun that was not stored has just written.
     UnreadableTerminalOutput,
 }
 
@@ -241,12 +243,11 @@ impl NxCache {
     }
 
     fn setup(&self) -> anyhow::Result<()> {
-        // `is_cache_entry` distinguishes a real cache entry, which owns a
-        // `<cacheDir>/<hash>` directory, from a row that exists only so the
-        // terminal output of an uncacheable run is reachable by the GC. Only
-        // the former may be served as a cache hit, and only while that directory
-        // and its terminal output exist — see `get`/`fetch_cache_rows` and
-        // `build_cached_result`.
+        // `is_cache_entry` distinguishes a cache entry, served as a hit while
+        // its `<cacheDir>/<hash>` directory and terminal output exist, from a
+        // row kept only so the GC can reach its files: the terminal output of
+        // an uncacheable run, or an entry `demote_stale_cache_records` demoted.
+        // See `get`/`fetch_cache_rows` and `build_cached_result`.
         let query = if self.link_task_details {
             "CREATE TABLE IF NOT EXISTS cache_outputs (
                 hash    TEXT PRIMARY KEY NOT NULL,
@@ -789,19 +790,14 @@ impl NxCache {
     /// cache entry: `is_cache_entry` becomes FALSE and `size` the bytes of the
     /// terminal output it still owns, which `remove_old_cache_records` collects
     /// as for any output-only row. Nothing is deleted. A row whose terminal
-    /// output could not be read is demoted too, keeping the `size` of the
-    /// artifacts still on disk, so a rerun that is not stored cannot revive it
-    /// by writing its own log there.
+    /// output could not be read is demoted too, with its `size` kept: its
+    /// artifacts are still on disk.
     ///
     /// A missing directory is checked again inside an immediate transaction:
     /// `put` writes it before `record_to_cache` writes the row, and that write
     /// waits for the lock, so a directory still missing here is not one a
-    /// concurrent `put` has just finished. An unreadable terminal output is not
-    /// checked again, because a log that reads now may be one that such a
-    /// rerun has just written. A `put` that lands between that lookup and this
-    /// transaction is demoted with it, which costs one more run, never a wrong
-    /// hit. Errors are logged, not returned; the lookup has already reported
-    /// the miss.
+    /// concurrent `put` has just finished. Errors are logged, not returned;
+    /// the lookup has already reported the miss.
     fn demote_stale_cache_records(&self, misses: &[(String, Miss)]) {
         trace!(
             "Demoting {} cache records without artifacts or terminal output",
