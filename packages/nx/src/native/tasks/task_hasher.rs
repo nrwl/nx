@@ -590,6 +590,13 @@ impl TaskHasher {
         let cwd_path = std::path::Path::new(&cwd);
 
         let pool = &hash_plans.pool;
+        // Catching up locks the files and may hash on the rayon pool, so it
+        // runs once here: a pool job doing it could end up waiting on itself.
+        if (0..pool.len() as u32)
+            .any(|id| matches!(pool.get(id).value(), HashInstruction::IgnoredFileSet { .. }))
+        {
+            self.ignored_index.catch_up();
+        }
         // Id-indexed snapshots so the hot loop reads a plain Vec instead of
         // taking a DashMap shard lock per (task, instruction) entry. Every
         // instruction except Environment and Runtime (whose values depend on
@@ -822,7 +829,7 @@ impl TaskHasher {
                 // nothing has run, like the file map; afterwards it reads the
                 // disk for us.
                 let list_directory = |dir: &str, accept: PathPredicate, skip: &[String]| {
-                    self.ignored_index.files_under(
+                    self.ignored_index.index().files_under(
                         workspace_root,
                         dir,
                         run_stage.nothing_ran(),
@@ -1071,8 +1078,97 @@ struct HashInstructionArgs<'a> {
 #[cfg(test)]
 mod tests {
     use std::collections::BTreeMap;
+    use std::sync::atomic::{AtomicUsize, Ordering};
 
     use super::*;
+    use crate::native::workspace::ignored_index::IgnoredIndex;
+
+    fn hasher(workspace_root: &Path, ignored_index: IgnoredIndexReader) -> TaskHasher {
+        let all_workspace_files: Arc<Vec<FileData>> = Arc::new(Vec::new());
+        TaskHasher {
+            ignored_index: Arc::new(ignored_index),
+            workspace_root: workspace_root.to_string_lossy().to_string(),
+            project_graph: Arc::new(ProjectGraph {
+                nodes: HashMap::new(),
+                dependencies: HashMap::new(),
+                external_nodes: HashMap::new(),
+            }),
+            project_file_map: Arc::new(HashMap::new()),
+            all_workspace_files: Arc::clone(&all_workspace_files),
+            ts_config: Vec::new(),
+            ts_config_paths: HashMap::new(),
+            root_tsconfig_path: None,
+            options: None,
+            external_cache: Arc::new(DashMap::new()),
+            workspace_file_set_cache: WorkspaceFileSetCache::new(),
+            project_file_set_cache: ProjectFileSetCache::new(),
+            workspace_file_indices_cache: WorkspaceFileIndicesCache::new(),
+            project_file_indices_cache: ProjectFileIndicesCache::new(),
+            all_externals_hash: OnceCell::new(),
+            workspace_file_index: WorkspaceFileIndex::new(all_workspace_files),
+        }
+    }
+
+    /// Hashes 64 tasks with one instruction each and returns how many times
+    /// the index was caught up, and how many of those ran on a pool thread.
+    fn catch_ups(instruction: impl Fn(usize) -> HashInstruction) -> (usize, usize) {
+        let temp = assert_fs::TempDir::new().unwrap();
+        for dir in 0..8 {
+            std::fs::create_dir_all(temp.path().join(format!("dist/t{dir}"))).unwrap();
+            std::fs::write(temp.path().join(format!("dist/t{dir}/a.js")), "a").unwrap();
+        }
+        let calls = Arc::new(AtomicUsize::new(0));
+        let from_pool = Arc::new(AtomicUsize::new(0));
+        let reader = IgnoredIndexReader::new(Arc::new(IgnoredIndex::new(None)), {
+            let (calls, from_pool) = (Arc::clone(&calls), Arc::clone(&from_pool));
+            Arc::new(move || {
+                calls.fetch_add(1, Ordering::SeqCst);
+                if rayon::current_thread_index().is_some() {
+                    from_pool.fetch_add(1, Ordering::SeqCst);
+                }
+            })
+        });
+        let hasher = hasher(temp.path(), reader);
+        let entries: Vec<(String, Vec<HashInstruction>)> = (0..64)
+            .map(|task| (format!("p{task}:build"), vec![instruction(task)]))
+            .collect();
+        let entries: Vec<(&str, Vec<HashInstruction>)> = entries
+            .iter()
+            .map(|(task, instructions)| (task.as_str(), instructions.clone()))
+            .collect();
+        let plans = crate::native::test_utils::hash_plans(&entries);
+        let env = HashMap::new();
+
+        let hashes = hasher
+            .hash_plans_impl(
+                &plans,
+                temp.path().to_string_lossy().to_string(),
+                None,
+                RunStage::ATaskMayHaveWritten,
+                |_| &env,
+            )
+            .unwrap();
+
+        assert_eq!(hashes.0.len(), 64);
+        (
+            calls.load(Ordering::SeqCst),
+            from_pool.load(Ordering::SeqCst),
+        )
+    }
+
+    #[test]
+    fn the_index_is_caught_up_once_outside_the_pool_only_when_a_plan_reads_it() {
+        // A distinct fileset per task, so each one is listed.
+        let fileset = |task: usize| {
+            let dir = format!("dist/t{}", task % 8);
+            HashInstruction::ignored_files(vec![format!("{dir}/**"), format!("!{dir}/x{task}.js")])
+        };
+        assert_eq!(catch_ups(fileset), (1, 0));
+        assert_eq!(
+            catch_ups(|_| HashInstruction::Environment("NX_TEST".to_string())),
+            (0, 0)
+        );
+    }
 
     #[test]
     fn ranked_assembly_hashes_values_in_key_order_and_folds_shared_keys() {

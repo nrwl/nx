@@ -2808,7 +2808,7 @@ mod tests {
 
     #[test]
     #[cfg(not(target_arch = "wasm32"))]
-    fn a_listing_sees_a_write_nobody_settled() {
+    fn a_catch_up_sees_a_write_nobody_settled() {
         let temp = workspace_with(&["a.ts"]);
         temp.child(".gitignore").write_str("dist/\n").unwrap();
         let cache = TempDir::new().unwrap();
@@ -2818,11 +2818,13 @@ mod tests {
         let reader = ctx.reader();
         assert!(reader.track(&root, "dist"));
 
-        // No settle: a listing applies what the watch has delivered itself,
+        // No settle: a catch-up applies what the watch has delivered itself,
         // so the write shows up within the kernel's hop, not the idle flush.
         temp.child("dist/out.js").write_str("x").unwrap();
-        wait_until("a listing never saw the write", || {
+        wait_until("a catch-up never saw the write", || {
+            reader.catch_up();
             reader
+                .index()
                 .files_under(&root, "dist", true, &|_| true, &[])
                 .unwrap()
                 == vec!["dist/out.js"]
@@ -2831,7 +2833,7 @@ mod tests {
 
     #[test]
     #[cfg(not(target_arch = "wasm32"))]
-    fn a_listing_waits_for_a_walk_in_progress_to_relist() {
+    fn a_catch_up_waits_for_a_walk_in_progress_to_relist() {
         let temp = workspace_with(&["a.ts"]);
         temp.child("dist/a.js").write_str("a").unwrap();
         let cache = TempDir::new().unwrap();
@@ -2855,8 +2857,10 @@ mod tests {
 
         let (tx, rx) = std::sync::mpsc::channel();
         let listing = std::thread::spawn(move || {
+            reader.catch_up();
             tx.send(
                 reader
+                    .index()
                     .files_under(&root, "dist", true, &|_| true, &[])
                     .unwrap(),
             )
@@ -2891,8 +2895,10 @@ mod tests {
         let root = dunce::canonicalize(temp.path()).unwrap();
         let reader = ctx.reader();
         assert!(reader.track(&root, "dist"));
+        reader.catch_up();
         assert_eq!(
             reader
+                .index()
                 .files_under(&root, "dist", true, &|_| true, &[])
                 .unwrap(),
             vec!["dist/gen/x.js"]
