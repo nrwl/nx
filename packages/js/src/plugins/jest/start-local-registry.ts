@@ -1,13 +1,18 @@
 import { signalToCode } from '@nx/devkit/internal';
 import { execSync, fork } from 'child_process';
+import {
+  isPlaceholderAuthTokenRejected,
+  PLACEHOLDER_AUTH_TOKEN,
+  warnPlaceholderAuthTokenRejected,
+} from '../../executors/verdaccio/placeholder-auth-token';
 
 /**
  * This function is used to start a local registry for testing purposes.
  * @param localRegistryTarget the target to run to start the local registry e.g. workspace:local-registry
- * @param storage the storage location for the local registry
- * @param verbose whether to log verbose output
- * @param clearStorage whether to clear the verdaccio storage before running the registry
- * @param listenAddress the address that verdaccio should listen to (default to `localhost`)
+ * @param storage the storage location for the local registry, passed to the target as `--storage`
+ * @param verbose whether to print the target's stdout until the registry address appears (stderr is always printed)
+ * @param clearStorage whether to ask the target to clear the registry storage before starting, passed to the target as `--clear` (default `true`)
+ * @param listenAddress the address the target listens on (default `localhost`). It is not passed to the target; the helper waits for `http://<listenAddress>:<port>` in the target's stdout and uses it as the registry URL.
  */
 export function startLocalRegistry({
   localRegistryTarget,
@@ -43,54 +48,62 @@ export function startLocalRegistry({
         process.stdout.write(data);
         console.log('Waiting for local registry to start...');
       }
-      if (data.toString().includes(`http://${listenAddress}:`)) {
+      const output = data.toString();
+      const addressPrefix = `http://${listenAddress}:`;
+      const addressIndex = output.indexOf(addressPrefix);
+      if (addressIndex !== -1) {
+        childProcess?.stdout?.off('data', listener);
         const port = parseInt(
-          data.toString().match(new RegExp(`${listenAddress}:(?<port>\\d+)`))
-            ?.groups?.port
+          output.slice(addressIndex + addressPrefix.length)
         );
 
         const registry = `http://${listenAddress}:${port}`;
-        const authToken = 'secretVerdaccioToken';
+        const authTokenKey = `//${listenAddress}:${port}/:_authToken`;
 
         console.log(`Local registry started on ${registry}`);
 
-        process.env.npm_config_registry = registry;
-        execSync(
-          `npm config set //${listenAddress}:${port}/:_authToken "${authToken}" --ws=false`,
-          {
-            windowsHide: true,
-          }
-        );
-
-        // pnpm 11 reads pnpm_config_* env vars instead of npm_config_*, and
-        // they take precedence over any registry configured in ~/.npmrc
-        process.env.pnpm_config_registry = registry;
-        process.env[`pnpm_config_//${listenAddress}:${port}/:_authToken`] =
-          authToken;
-
-        // bun
-        process.env.BUN_CONFIG_REGISTRY = registry;
-        process.env.BUN_CONFIG_TOKEN = authToken;
-        // yarnv1
-        process.env.YARN_REGISTRY = registry;
-        // yarnv2
-        process.env.YARN_NPM_REGISTRY_SERVER = registry;
-        process.env.YARN_UNSAFE_HTTP_WHITELIST = listenAddress;
-
-        console.log(
-          'Set npm, pnpm, bun, and yarn config registry to ' + registry
-        );
-
-        resolve(() => {
-          childProcess.kill();
-          execSync(
-            `npm config delete //${listenAddress}:${port}/:_authToken --ws=false`,
-            {
-              windowsHide: true,
+        isPlaceholderAuthTokenRejected(registry)
+          .then((authTokenRejected) => {
+            if (authTokenRejected) {
+              warnPlaceholderAuthTokenRejected(registry);
+            } else {
+              execSync(
+                `npm config set ${authTokenKey} "${PLACEHOLDER_AUTH_TOKEN}" --ws=false`,
+                {
+                  windowsHide: true,
+                }
+              );
+              process.env[`pnpm_config_${authTokenKey}`] =
+                PLACEHOLDER_AUTH_TOKEN;
+              process.env.BUN_CONFIG_TOKEN = PLACEHOLDER_AUTH_TOKEN;
             }
-          );
-        });
-        childProcess?.stdout?.off('data', listener);
+
+            process.env.npm_config_registry = registry;
+            // pnpm 11 reads pnpm_config_* env vars instead of npm_config_*, and
+            // they take precedence over any registry configured in ~/.npmrc
+            process.env.pnpm_config_registry = registry;
+            // bun
+            process.env.BUN_CONFIG_REGISTRY = registry;
+            // yarnv1
+            process.env.YARN_REGISTRY = registry;
+            // yarnv2
+            process.env.YARN_NPM_REGISTRY_SERVER = registry;
+            process.env.YARN_UNSAFE_HTTP_WHITELIST = listenAddress;
+
+            console.log(
+              'Set npm, pnpm, bun, and yarn config registry to ' + registry
+            );
+
+            resolve(() => {
+              childProcess.kill();
+              if (!authTokenRejected) {
+                execSync(`npm config delete ${authTokenKey} --ws=false`, {
+                  windowsHide: true,
+                });
+              }
+            });
+          })
+          .catch(reject);
       }
     };
     childProcess?.stdout?.on('data', listener);
