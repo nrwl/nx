@@ -39,6 +39,9 @@ jobs:
       NX_NATIVE_LOGGING: 'false'
       NX_E2E_RUN_E2E: 'true'
       NX_CI_EXECUTION_ENV: 'linux'
+      # The default id, made explicit: the main-job worker otherwise reports its run group
+      # as the execution id and opens a second CIPE.
+      NX_CI_EXECUTION_ID: ${{ github.run_id }}-${{ github.run_attempt }}
       NX_CLOUD_NO_TIMEOUTS: 'true'
       NX_ALLOW_NON_CACHEABLE_DTE: 'true'
       NX_CLOUD_EXPERIMENTAL_POLLING: 'true'
