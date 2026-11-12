@@ -119,29 +119,29 @@ New Nx Cloud workspaces start with Ultracache on.
 For an existing workspace, open the workspace's [**Settings**](https://cloud.nx.app/go/workspace/settings) page in Nx Cloud and set **Ultracache** to **On**.
 
 Ultracache requires Nx 24.0.0 or later, which uses it in CI by default.
-For Nx 23 and runs outside CI, see [Ultracache and Nx versions](/docs/kb/ultracache-nx-versions).
+Earlier Nx versions don't support it, so [update your workspace](/docs/features/automate-updating-dependencies) first.
+If Nx can't read the recordings from Nx Cloud, the run doesn't fail and Nx hashes its tasks from their declared `inputs`.
+For details, see [Ultracache and Nx versions](/docs/kb/ultracache-nx-versions).
 
-To skip Ultracache for a single run, set [`NX_CLOUD_USE_ULTRACACHE`](/docs/reference/environment-variables) to `false`.
+To skip Ultracache for a single pipeline, set `NX_CLOUD_ULTRACACHE_MODE` to `off`, as the next section describes.
 
 #### Try Ultracache on one branch or workflow
 
 To trial Ultracache before turning it on for the whole workspace, set `NX_CLOUD_ULTRACACHE_MODE` for a single CI pipeline.
-It overrides the workspace setting for that pipeline only and doesn't need an Nx 24 upgrade.
+It overrides the workspace setting for that pipeline only.
 The value is case-insensitive and maps to the [`ultracache.mode`](/docs/reference/project-configuration#ultracache) modes:
 
-| Value   | Effect                                                                     |
-| ------- | -------------------------------------------------------------------------- |
-| `ON`    | Turns Ultracache on. Targets keep their own `mode`, and the rest use `on`. |
-| `WARN`  | Applies `warn` to every task, overriding each target's `mode`.             |
-| `ERROR` | Applies `error` to every task, overriding each target's `mode`.            |
-| `OFF`   | Turns Ultracache off for every task.                                       |
-| Unset   | Uses the workspace setting.                                                |
+| Value   | Effect                                                                                  |
+| ------- | --------------------------------------------------------------------------------------- |
+| `on`    | Turns Ultracache on. Targets keep their own `mode`, and the rest use `on`.              |
+| `warn`  | Applies `warn` to every task, overriding each target's `mode`.                          |
+| `error` | Applies `error` to every task, overriding each target's `mode`.                         |
+| `off`   | Turns Ultracache off for every task, so Nx hashes each task from its declared `inputs`. |
+| Unset   | Uses the workspace setting and each target's `mode`.                                    |
 
-`NX_CLOUD_ULTRACACHE_MODE` takes precedence over [`NX_CLOUD_USE_ULTRACACHE`](/docs/reference/environment-variables): with `OFF`, `WARN`, or `ERROR`, the run doesn't use recorded inputs even if `NX_CLOUD_USE_ULTRACACHE` is `true`.
-Don't combine `ON` with `NX_CLOUD_USE_ULTRACACHE=false`, because Nx 24 and later still skip Ultracache for that run.
-Any other value fails the run with an error.
+Any other value fails the run with `NX_CLOUD_ULTRACACHE_MODE must be on, warn, error, or off.`
 
-Set it at the job or workflow level so both `nx-cloud start-workers` and your Nx commands see it.
+Set it at the job or workflow level so both the command that starts the CI run (`nx-cloud start-workers` or `nx-cloud start-ci-run`) and your Nx commands see it.
 Nx Cloud Workers pick it up automatically:
 
 ```yaml
@@ -151,7 +151,7 @@ on:
     branches: [try-ultracache]
 
 env:
-  NX_CLOUD_ULTRACACHE_MODE: 'ON'
+  NX_CLOUD_ULTRACACHE_MODE: 'on'
 
 jobs:
   main:
