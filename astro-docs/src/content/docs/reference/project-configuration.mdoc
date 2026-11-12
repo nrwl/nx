@@ -843,7 +843,7 @@ Set `mode` to choose how a target participates:
 | `error` | yes        | fails the CI run          | no                    |
 | `off`   | no         | no                        | no                    |
 
-The modes apply when your workspace has Ultracache turned on in Nx Cloud.
+The modes apply when your workspace has Ultracache turned on in Nx Cloud, or when a CI pipeline turns it on with [`NX_CLOUD_ULTRACACHE_MODE=on`](/docs/features/ci-features/remote-cache#try-ultracache-on-one-branch-or-workflow).
 
 `on` is the default.
 Use `warn` on a target whose inputs depend on dynamic behavior or external state: Nx keeps watching it and tells you what it touched, but hashes it from what it declared.
