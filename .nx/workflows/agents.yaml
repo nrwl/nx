@@ -30,16 +30,35 @@ common-init-steps: &common-init-steps
   - name: Checkout
     uses: 'nrwl/nx-cloud-workflows/v6/workflow-steps/checkout/main.yaml'
 
-  - name: Cache restore
-    uses: 'nrwl/nx-cloud-workflows/v6/workflow-steps/cache/main.yaml'
-    inputs:
-      key: 'pnpm-lock.yaml'
-      paths: ~/.local/share/pnpm/store
-      base-branch: 'master'
+  - group-name: Restore caches and toolchains
+    parallel: true
+    steps:
+      - name: Cache restore
+        uses: 'nrwl/nx-cloud-workflows/v6/workflow-steps/cache/main.yaml'
+        inputs:
+          key: 'pnpm-lock.yaml'
+          paths: ~/.local/share/pnpm/store
+          base-branch: 'master'
 
-  # reads mise.toml and installs toolchains needed for repo
-  - name: Setup toolchains
-    uses: 'nrwl/nx-cloud-workflows/v6/workflow-steps/install-mise/main.yaml'
+      # reads mise.toml and installs toolchains needed for repo
+      - name: Setup toolchains
+        uses: 'nrwl/nx-cloud-workflows/v6/workflow-steps/install-mise/main.yaml'
+
+      - name: Install system deps
+        script: |
+          # apt mirror+file failover: tab-separated; printf preserves \t (YAML heredocs don't).
+          printf 'https://archive.ubuntu.com/ubuntu/\tpriority:1\n'       | sudo tee /etc/apt/apt-mirrors.txt > /dev/null
+          printf 'https://security.ubuntu.com/ubuntu/\tpriority:2\n'      | sudo tee -a /etc/apt/apt-mirrors.txt > /dev/null
+          printf 'http://azure.archive.ubuntu.com/ubuntu/\tpriority:3\n'  | sudo tee -a /etc/apt/apt-mirrors.txt > /dev/null
+          # Retries=0: mirror+file already retries via failover; apt-level retries multiply stall on a dead mirror.
+          sudo tee /etc/apt/apt.conf.d/80-nx-mirror-failover > /dev/null <<'EOF'
+          Acquire::http::Timeout "5";
+          Acquire::https::Timeout "5";
+          Acquire::Retries "0";
+          EOF
+          sudo sed -i 's|http://archive.ubuntu.com/ubuntu|mirror+file:/etc/apt/apt-mirrors.txt|g; s|http://security.ubuntu.com/ubuntu|mirror+file:/etc/apt/apt-mirrors.txt|g' /etc/apt/sources.list
+          sudo apt-get update
+          sudo apt-get install -y ca-certificates lsof libvips-dev libglib2.0-dev libgirepository1.0-dev zip unzip
 
   # Make the repo's pinned pnpm corepack's default so e2e temp dirs (no
   # packageManager field) resolve it too, instead of corepack's bundled
@@ -60,52 +79,34 @@ common-init-steps: &common-init-steps
       echo "dotnet: $(dotnet --version)"
       echo "java:   $(javac --version)"
 
-  - name: Install system deps
-    script: |
-      # apt mirror+file failover: tab-separated; printf preserves \t (YAML heredocs don't).
-      printf 'https://archive.ubuntu.com/ubuntu/\tpriority:1\n'       | sudo tee /etc/apt/apt-mirrors.txt > /dev/null
-      printf 'https://security.ubuntu.com/ubuntu/\tpriority:2\n'      | sudo tee -a /etc/apt/apt-mirrors.txt > /dev/null
-      printf 'http://azure.archive.ubuntu.com/ubuntu/\tpriority:3\n'  | sudo tee -a /etc/apt/apt-mirrors.txt > /dev/null
-      # Retries=0: mirror+file already retries via failover; apt-level retries multiply stall on a dead mirror.
-      sudo tee /etc/apt/apt.conf.d/80-nx-mirror-failover > /dev/null <<'EOF'
-      Acquire::http::Timeout "5";
-      Acquire::https::Timeout "5";
-      Acquire::Retries "0";
-      EOF
-      sudo sed -i 's|http://archive.ubuntu.com/ubuntu|mirror+file:/etc/apt/apt-mirrors.txt|g; s|http://security.ubuntu.com/ubuntu|mirror+file:/etc/apt/apt-mirrors.txt|g' /etc/apt/sources.list
-      sudo apt-get update
-      sudo apt-get install -y ca-certificates lsof libvips-dev libglib2.0-dev libgirepository1.0-dev zip unzip
+  # playwright --with-deps runs apt, so it must not share a group with "Install system deps".
+  - group-name: Install dependencies
+    parallel: true
+    steps:
+      - name: Pnpm install and browsers
+        script: |
+          pnpm install --frozen-lockfile
+          pnpm exec cypress install
+          pnpm exec playwright install --with-deps
 
-  - name: Pnpm Install from lockfile
-    script: |
-      pnpm install --frozen-lockfile
+      - name: Install rust deps and hyperfine
+        script: |
+          cargo fetch
+          cargo install hyperfine --locked
 
-  - name: Install browsers
-    script: |
-      pnpm exec cypress install
-      pnpm exec playwright install --with-deps
+      - name: Setup gradle
+        script: |
+          ./gradlew wrapper
+          ./gradlew --version
 
-  - name: Install rust deps
-    script: |
-      cargo fetch
+      - name: Restore .NET analyzer projects
+        script: |
+          dotnet restore nx.sln
 
-  - name: Install hyperfine
-    script: |
-      cargo install hyperfine --locked
-
-  - name: Setup gradle
-    script: |
-      ./gradlew wrapper
-      ./gradlew --version
-
-  - name: Restore .NET analyzer projects
-    script: |
-      dotnet restore nx.sln
-
-  - name: Configure git metadata (needed for lerna smoke tests)
-    script: |
-      git config --global user.email test@users.noreply.github.com
-      git config --global user.name "Test Test"
+      - name: Configure git metadata (needed for lerna smoke tests)
+        script: |
+          git config --global user.email test@users.noreply.github.com
+          git config --global user.name "Test Test"
 
 launch-templates:
   linux-large:
