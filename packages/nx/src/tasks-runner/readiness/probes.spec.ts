@@ -491,6 +491,72 @@ describe('waitForReadiness', () => {
       await new Promise((r) => setTimeout(r, 500));
       expect(existsSync(join(dir, 'marker'))).toBe(false);
     });
+
+    it('kills what the command keeps spawning when it times out', async () => {
+      const ready = waitForReadiness(
+        normalizeReadyWhen(
+          {
+            command:
+              'while :; do sh -c "sleep 0.3; touch marker" & sleep 0.01; done',
+            timeout: 100,
+          },
+          'db:up',
+          data
+        ),
+        { taskId: 'db:up', runningTask, cwd: dir, signal: controller.signal }
+      );
+      await expect(ready).rejects.toThrow('did not become ready within 100ms');
+      await new Promise((r) => setTimeout(r, 500));
+      expect(existsSync(join(dir, 'marker'))).toBe(false);
+    });
+
+    it('kills a process the command started in another process group when cancelled', async () => {
+      // No exit timer: one that fires during a stall would hide a missed kill
+      writeFileSync(
+        join(dir, 'stray.js'),
+        `const fs = require('node:fs');
+fs.writeFileSync('started', '');
+setInterval(() => {
+  try {
+    process.kill(${process.pid}, 0);
+  } catch {
+    process.exit();
+  }
+  if (!fs.existsSync('started')) process.exit();
+  if (fs.existsSync('go')) {
+    fs.writeFileSync('marker', '');
+    process.exit();
+  }
+}, 20);
+`
+      );
+      writeFileSync(
+        join(dir, 'detach.js'),
+        `require('node:child_process').spawn(process.execPath, ['stray.js'], {
+  detached: true,
+  stdio: 'ignore',
+});
+setTimeout(() => {}, 30_000);
+`
+      );
+      const ready = waitForReadiness(
+        normalizeReadyWhen(
+          { command: `"${process.execPath}" detach.js`, timeout: 30_000 },
+          'db:up',
+          data
+        ),
+        { taskId: 'db:up', runningTask, cwd: dir, signal: controller.signal }
+      );
+      await vi.waitFor(
+        () => expect(existsSync(join(dir, 'started'))).toBe(true),
+        { timeout: 5_000 }
+      );
+      controller.abort();
+      await expect(ready).rejects.toThrow('exited before it became ready');
+      writeFileSync(join(dir, 'go'), '');
+      await new Promise((r) => setTimeout(r, 500));
+      expect(existsSync(join(dir, 'marker'))).toBe(false);
+    });
   });
 
   it.each([
