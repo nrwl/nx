@@ -94,7 +94,7 @@ common-init-steps: &common-init-steps
         script: |
           export CARGO_NET_GIT_FETCH_WITH_CLI=true
           for attempt in 1 2 3; do
-            if timeout 300 cargo fetch; then
+            if timeout 180 cargo fetch; then
               break
             fi
             test "$attempt" -lt 3 || exit 1
