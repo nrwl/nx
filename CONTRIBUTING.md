@@ -235,7 +235,7 @@ Keep servers and clients on the same reserved address:
   Leave the Cypress runner port unset so Cypress can choose it separately.
 - Keep fixed-port and fallback assertions when they are the behavior under test.
   For tasks that share a fixed port, add matching `scheduling-constraints` and `cannot-run-with`
-  selectors in [.nx/workflows/dynamic-changesets.yaml](.nx/workflows/dynamic-changesets.yaml),
+  selectors in [.nx/ci-config.yaml](.nx/ci-config.yaml),
   following the module-federation rule.
   These constraints exclude matching tasks from running together on one agent.
   Other tasks can still share the agent, and conflicting cases within one task must run sequentially.

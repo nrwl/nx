@@ -69,9 +69,6 @@ jobs:
         with:
           main-branch-name: 'master'
 
-      - name: Start CI Run
-        run: npx nx-cloud@next start-ci-run --distribute-on="./.nx/workflows/dynamic-changesets.yaml" --stop-agents-after="e2e"
-
       - name: Setup dev tools with mise
         uses: jdx/mise-action@146a28175021df8ca24f8ee1828cc2a60f980bd5 # v3
 
@@ -100,6 +97,11 @@ jobs:
 
       - name: Restore .NET analyzer projects
         run: dotnet restore nx.sln
+
+      # Must follow dependency install: the main-job worker loads Nx from node_modules
+      # and keeps the environment it starts with.
+      - name: Start CI Run
+        run: npx nx-cloud@next start-workers
 
       - name: Nx Report
         run:
@@ -132,6 +134,9 @@ jobs:
             wait "$pid"
           done
         timeout-minutes: 100
+      - name: Upload main-job worker metrics
+        run: npx nx-cloud@next upload-worker-metrics
+        if: always()
       - name: Fix CI
         run: pnpm nx fix-ci
         if: failure()
