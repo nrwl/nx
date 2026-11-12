@@ -4,31 +4,29 @@ import MobileMenuToggle from '@astrojs/starlight/components/MobileMenuToggle.ast
 import { GitHubStarWidget } from '@nx/nx-dev-ui-common/src/lib/github-star-widget';
 import { WebinarNotifier } from '@nx/nx-dev-ui-common/src/lib/webinar-notifier';
 import { getCollection } from 'astro:content';
-import ConfBanner from './ConfBanner.astro';
 import SiteFooter from './site-nav/SiteFooter.astro';
 import SiteNavLinks from './site-nav/SiteNavLinks.astro';
-import { isConfBannerActive } from './conf-banner';
+import TopBanner from './TopBanner.astro';
+import { isBannerActive, withUtmSource } from './top-banner';
 
 const { hasSidebar } = Astro.locals.starlightRoute;
 const githubStarsCount = Astro.locals.githubStarsCount ?? 0;
-const showConfBanner = isConfBannerActive();
 
-// Get banner from collection
 const bannerCollection = await getCollection('banner');
 const bannerConfig = bannerCollection[0]?.data;
-
-// Check if banner is active based on activeUntil date
-function isBannerActive(config: typeof bannerConfig): boolean {
-  if (!config?.activeUntil) return false;
-  return new Date() < new Date(config.activeUntil);
-}
-
-const showBanner = isBannerActive(bannerConfig);
+const showBanner = isBannerActive(bannerConfig?.activeUntil);
 const bannerId = bannerConfig ? `${bannerConfig.title}-${bannerConfig.activeUntil || 'no-expiry'}` : '';
 ---
 
-<div class:list={['page', 'sl-flex', { 'has-conf-banner': showConfBanner }]}>
-  <ConfBanner />
+<div class:list={['page', 'sl-flex', { 'has-top-banner': showBanner }]}>
+  {showBanner && bannerConfig && (
+    <TopBanner
+      title={bannerConfig.title}
+      description={bannerConfig.description}
+      ctaText={bannerConfig.primaryCtaText}
+      url={withUtmSource(bannerConfig.primaryCtaUrl, 'nx-docs')}
+    />
+  )}
   <header class="header"><slot name="header" /></header>
   {
     hasSidebar && (
@@ -75,11 +73,6 @@ const bannerId = bannerConfig ? `${bannerConfig.title}-${bannerConfig.activeUnti
       min-height: 100vh;
     }
 
-    /* Height of the conference promo strip; reused to offset everything below it. */
-    .page.has-conf-banner {
-      --conf-banner-h: 2.5rem;
-    }
-
     .header {
       z-index: var(--sl-z-index-navbar);
       position: fixed;
@@ -106,8 +99,8 @@ const bannerId = bannerConfig ? `${bannerConfig.title}-${bannerConfig.activeUnti
     }
 
     /* Push the fixed header below the banner. */
-    .page.has-conf-banner .header {
-      inset-block-start: var(--conf-banner-h);
+    .page.has-top-banner .header {
+      inset-block-start: var(--top-banner-h);
     }
 
     :global([data-has-sidebar]) .header {
@@ -133,8 +126,8 @@ const bannerId = bannerConfig ? `${bannerConfig.title}-${bannerConfig.activeUnti
       scrollbar-gutter: stable;
     }
 
-    .page.has-conf-banner .sidebar-pane {
-      inset-block-start: calc(var(--sl-nav-height) + var(--conf-banner-h));
+    .page.has-top-banner .sidebar-pane {
+      inset-block-start: calc(var(--sl-nav-height) + var(--top-banner-h));
     }
 
     .sidebar-content {
@@ -165,24 +158,24 @@ const bannerId = bannerConfig ? `${bannerConfig.title}-${bannerConfig.activeUnti
       padding-inline-start: var(--sl-content-inline-start);
     }
 
-    .page.has-conf-banner .main-frame {
+    .page.has-top-banner .main-frame {
       padding-top: calc(
         var(--sl-nav-height) + var(--sl-mobile-toc-height) +
-          var(--conf-banner-h)
+          var(--top-banner-h)
       );
     }
 
     /* Starlight's mobile on-this-page bar is fixed at the nav height; shift it too. */
-    .page.has-conf-banner :global(mobile-starlight-toc > nav) {
-      top: calc(var(--sl-nav-height) + var(--conf-banner-h));
+    .page.has-top-banner :global(mobile-starlight-toc > nav) {
+      top: calc(var(--sl-nav-height) + var(--top-banner-h));
     }
 
     /* The fixed mobile menu (hamburger) toggle is positioned from the viewport
-       top, so it hides under the conf banner unless we clear it too. */
-    .page.has-conf-banner :global(.sl-menu-button) {
+       top, so it hides under the top banner unless we clear it too. */
+    .page.has-top-banner :global(.sl-menu-button) {
       top: calc(
         (var(--sl-nav-height) - var(--sl-menu-button-size)) / 2 +
-          var(--conf-banner-h)
+          var(--top-banner-h)
       );
     }
 
@@ -202,5 +195,15 @@ const bannerId = bannerConfig ? `${bannerConfig.title}-${bannerConfig.activeUnti
     :global([data-has-sidebar] footer) {
       padding-inline-start: var(--sl-content-inline-start);
     }
+  }
+
+  /* Unlayered so it overrides Starlight's layered scroll-padding-top. */
+  :global(html:has(.page.has-top-banner)) {
+    /* One 18px line plus 8px padding on each side and a 1px border. */
+    --top-banner-h: 35px;
+    scroll-padding-top: calc(
+      1.5rem + var(--sl-nav-height) + var(--sl-mobile-toc-height) +
+        var(--top-banner-h)
+    );
   }
 </style>

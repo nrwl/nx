@@ -350,8 +350,8 @@ describe('Run Commands', () => {
   describe('readyWhen', () => {
     describe('single string', () => {
       it('should error when parallel = false', async () => {
-        try {
-          await runCommands(
+        await expect(
+          runCommands(
             {
               commands: [{ command: 'echo foo' }, { command: 'echo bar' }],
               parallel: false,
@@ -359,13 +359,12 @@ describe('Run Commands', () => {
               __unparsed__: [],
             },
             context
-          );
-          fail('should throw');
-        } catch (e) {
-          expect(e.message).toEqual(
+          )
+        ).rejects.toThrow(
+          new Error(
             `ERROR: Bad executor config for run-commands - "readyWhen" can only be used when "parallel=true".`
-          );
-        }
+          )
+        );
       });
 
       it('should return success true when the string specified as ready condition is found', async () => {
@@ -612,17 +611,16 @@ describe('Run Commands', () => {
   it('should stop execution and fail when a command fails', async () => {
     const f = fileSync().name;
 
-    try {
-      await runCommands(
-        {
-          commands: [`echo 1 >> ${f} && exit 1`, `echo 2 >> ${f}`],
-          parallel: false,
-          __unparsed__: [],
-        },
-        context
-      );
-      fail('should fail when a command fails');
-    } catch (e) {}
+    const result = await runCommands(
+      {
+        commands: [`echo 1 >> ${f} && exit 1`, `echo 2 >> ${f}`],
+        parallel: false,
+        __unparsed__: [],
+      },
+      context
+    );
+
+    expect(result.success).toBe(false);
     expect(readFile(f)).toEqual('1');
   });
 
@@ -1353,8 +1351,8 @@ describe('Run Commands', () => {
     });
 
     it('should error if the specified .env file does not exist', async () => {
-      try {
-        await runCommands(
+      await expect(
+        runCommands(
           {
             commands: [
               {
@@ -1366,13 +1364,8 @@ describe('Run Commands', () => {
           },
 
           context
-        );
-        fail('should not reach');
-      } catch (e) {
-        expect(e.message).toContain(
-          `no such file or directory, open '/somePath/.fakeEnv'`
-        );
-      }
+        )
+      ).rejects.toThrow(`no such file or directory, open '/somePath/.fakeEnv'`);
     });
 
     it.each([

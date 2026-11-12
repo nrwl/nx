@@ -11,6 +11,7 @@ import type {
   I18nOptions,
   NormalizedAngularRspackPluginOptions,
 } from '../models';
+import { applyDevServerCors } from '../utils/dev-server-cors';
 import {
   applyDevServerReadySignal,
   ssrServerEmitsReadySignal,
@@ -87,6 +88,8 @@ export class NgRspackPlugin implements RspackPluginInstance {
     const root = this.pluginOptions.root;
     const isDevServer = isServeMode();
     const ssrReloadServer = this.ssrReloadServer;
+
+    applyDevServerCors(compiler);
 
     if (
       !isDevServer ||

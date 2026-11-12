@@ -114,23 +114,17 @@ describe('component', () => {
   });
 
   describe('--directory', () => {
-    it('should create component under the directory', async () => {
+    it('should name the file after the path and the component after the name option', async () => {
       await expoComponentGenerator(appTree, {
         ...defaultSchema,
-        path: 'my-lib/src/components/hello',
-      });
-
-      expect(appTree.exists('my-lib/src/components/hello/hello.tsx'));
-    });
-
-    it('should create with nested directories', async () => {
-      await expoComponentGenerator(appTree, {
-        ...defaultSchema,
-        name: 'helloWorld',
+        name: 'greeting',
         path: 'my-lib/src/lib/foo/hello-world',
       });
 
-      expect(appTree.exists('my-lib/src/lib/foo/hello-world/hello-world.tsx'));
+      expect(appTree.exists('my-lib/src/lib/foo/hello-world.tsx')).toBeTruthy();
+      expect(
+        appTree.read('my-lib/src/lib/foo/hello-world.tsx', 'utf-8')
+      ).toContain('export function Greeting(');
     });
   });
 });

@@ -436,7 +436,7 @@ module.exports = [
       }
     });
 
-    it('should add package.json and .babelrc', async () => {
+    it('should add package.json', async () => {
       await libraryGenerator(tree, {
         ...defaultSchema,
         publishable: true,
@@ -445,7 +445,6 @@ module.exports = [
 
       const packageJson = readJson(tree, '/my-lib/package.json');
       expect(packageJson.name).toEqual('@proj/my-lib');
-      expect(tree.exists('/my-lib/.babelrc'));
     });
   });
 

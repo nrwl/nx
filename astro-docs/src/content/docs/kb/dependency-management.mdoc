@@ -13,7 +13,7 @@ The core decision comes down to:
 1. Independently maintained dependencies in individual projects
 2. A "single version policy", where dependencies are defined once at the root for your entire monorepo
 
-**Nx fully supports both strategies - it's your choice and you can change your approach as your needs evolve, you are never locked in**. You can even mix these strategies, using a single version policy for most dependencies while allowing specific projects to maintain their own versions when necessary. Thanks to its smart dependency graph analysis, Nx can trace dependencies used by different projects and can therefore avoid unnecessary cache misses even when a root level lockfile changes, so that is not a concern.
+**Nx fully supports both strategies. It's your choice and you can change your approach as your needs evolve, you are never locked in**. You can even mix these strategies, using a single version policy for most dependencies while allowing specific projects to maintain their own versions when necessary. Thanks to its smart dependency graph analysis, Nx can trace dependencies used by different projects and can therefore avoid unnecessary cache misses even when a root level lockfile changes, so that is not a concern.
 
 Let's examine the trade-offs of each approach, using JavaScript/TypeScript as our primary example (though these principles apply to other languages as well):
 
@@ -45,7 +45,7 @@ This strategy centralizes all dependency definitions in the root `package.json` 
 
 For building and deployment, you'll need to ensure each project only includes its relevant dependencies. Nx helps manage this through its workspace dependency graph and the `@nx/dependency-checks` ESLint rule, which can automatically detect and fix dependency mismatches between project and root configurations.
 
-The main challenge with this approach is coordinating dependency updates across independent teams. When multiple teams work on different, or even the same, applications within the same repo, they need to align on dependency upgrades. While this requires more coordination, it often results in less total work - upgrading a dependency once across all projects is typically more efficient than managing multiple separate upgrades over time.
+The main challenge with this approach is coordinating dependency updates across independent teams. When multiple teams work on different, or even the same, applications within the same repo, they need to align on dependency upgrades. While this requires more coordination, it often results in less total work. Upgrading a dependency once across all projects is typically more efficient than managing multiple separate upgrades over time.
 
 {% aside type="tip" title="Dependency Catalog Support" %}
 

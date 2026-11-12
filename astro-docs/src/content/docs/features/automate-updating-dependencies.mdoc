@@ -55,7 +55,8 @@ Nx also asks which package versions to migrate. The answer maps to the `--includ
 
 When unsure, choose `required`. Updating only Nx and its plugins keeps the PR scope small and has less chance of introducing issues, which matters most in large workspaces. Follow up with `nx migrate --include=optional` to catch up on the rest. If you're okay with doing everything in one PR, use `--include=all`.
 
-In some cases you can scope the optional catch-up to a single plugin's dependencies, such as `nx migrate @nx/vite --include=optional` - see [choosing which packages to migrate](/docs/guides/tips-n-tricks/advanced-update#choosing-which-packages-to-migrate) for the caveat.
+In some cases you can scope the optional catch-up to a single plugin's dependencies, such as `nx migrate @nx/vite --include=optional`.
+See [choosing which packages to migrate](/docs/guides/tips-n-tricks/advanced-update#choosing-which-packages-to-migrate) for the caveat.
 
 This results in:
 

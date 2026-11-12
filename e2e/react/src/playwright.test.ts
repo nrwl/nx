@@ -1,6 +1,6 @@
 import {
+  configureTargetOptions,
   fileExists,
-  killPorts,
   readFile,
   reservePort,
   runCLI,
@@ -70,6 +70,9 @@ describe('React Playwright e2e tests', () => {
       );
     });
 
+    const restoreServerOptions = configureTargetOptions([localServerTarget], {
+      strictPort: true,
+    });
     try {
       // runCLI sets CI, and an undefined value drops it from the child env.
       // Without CI and a TTY, an out-of-sync workspace fails the run.
@@ -86,7 +89,7 @@ describe('React Playwright e2e tests', () => {
     } finally {
       updateFile(configPath, originalConfig);
       updateFile(viteConfigPath, originalViteConfig);
-      await killPorts(port);
+      restoreServerOptions();
     }
   });
 
@@ -125,7 +128,7 @@ describe('React Playwright e2e tests', () => {
         ? ((json.nx ??= {}).targets ??= {})
         : (json.targets ??= {});
       targets[serveTarget] = {
-        command: `node -e "setTimeout(() => {}, 5000)" && vite preview --port ${port}`,
+        command: `node -e "setTimeout(() => {}, 5000)" && vite preview --port ${port} --strictPort`,
         options: { cwd: appName },
         continuous: true,
         readyWhen: { port },

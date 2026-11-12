@@ -1,6 +1,8 @@
 import {
   addReadyUrlCheck,
   cleanupProject,
+  configureTargetOptions,
+  createRsbuildPortConfig,
   expectServedOn,
   newProject,
   reservePort,
@@ -49,11 +51,18 @@ describe('React app dev-server readiness', () => {
     );
     addReadyUrlCheck(`apps/${app}`, 'dev');
 
-    const output = runCLI(`run ${app}:check`);
-    expectServedOn(output, port);
-    expect(output).toContain(
-      `Successfully ran target check for project ${app}`
-    );
+    const restoreServerOptions = configureTargetOptions(['dev'], {
+      strictPort: true,
+    });
+    try {
+      const output = runCLI(`run ${app}:check`);
+      expectServedOn(output, port);
+      expect(output).toContain(
+        `Successfully ran target check for project ${app}`
+      );
+    } finally {
+      restoreServerOptions();
+    }
   }, 300_000);
   it('should run a task that waits for the rspack dev server once it listens', async () => {
     const app = uniq('rspack-app');
@@ -78,10 +87,18 @@ describe('React app dev-server readiness', () => {
     );
     addReadyUrlCheck(`apps/${app}`, 'dev');
 
-    const output = runCLI(`run ${app}:check`);
-    expectServedOn(output, port);
-    expect(output).toContain(
-      `Successfully ran target check for project ${app}`
-    );
+    const config = createRsbuildPortConfig(`apps/${app}/rsbuild.config.ts`);
+    const restoreServerOptions = configureTargetOptions(['dev'], {
+      config,
+    });
+    try {
+      const output = runCLI(`run ${app}:check`);
+      expectServedOn(output, port);
+      expect(output).toContain(
+        `Successfully ran target check for project ${app}`
+      );
+    } finally {
+      restoreServerOptions();
+    }
   }, 300_000);
 });

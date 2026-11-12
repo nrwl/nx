@@ -1,5 +1,6 @@
 import {
   checkFilesExist,
+  configureCypressComponentTesting,
   cleanupProject,
   createFile,
   ensureCypressInstallation,
@@ -152,9 +153,12 @@ export default Input;
       `generate @nx/react:cypress-component-configuration --project=${appName} --generate-tests`
     );
     if (await shouldRunCypressTests()) {
-      expect(runCLI(`component-test ${appName}`)).toContain(
-        'All specs passed!'
+      const componentTestArgs = await configureCypressComponentTesting(
+        `apps/${appName}/cypress.config.ts`
       );
+      expect(
+        runCLI(`component-test ${appName} ${componentTestArgs}`)
+      ).toContain('All specs passed!');
     }
   }, 300_000);
 
@@ -163,9 +167,12 @@ export default Input;
       `generate @nx/react:cypress-component-configuration --project=${usedInAppLibName} --generate-tests`
     );
     if (await shouldRunCypressTests()) {
-      expect(runCLI(`component-test ${usedInAppLibName}`)).toContain(
-        'All specs passed!'
+      const componentTestArgs = await configureCypressComponentTesting(
+        `libs/${usedInAppLibName}/cypress.config.ts`
       );
+      expect(
+        runCLI(`component-test ${usedInAppLibName} ${componentTestArgs}`)
+      ).toContain('All specs passed!');
     }
   }, 300_000);
 
@@ -181,9 +188,12 @@ export default Input;
       );
     });
     if (await shouldRunCypressTests()) {
-      expect(runCLI(`component-test ${usedInAppLibName}`)).toContain(
-        'All specs passed!'
+      const componentTestArgs = await configureCypressComponentTesting(
+        `libs/${usedInAppLibName}/cypress.config.ts`
       );
+      expect(
+        runCLI(`component-test ${usedInAppLibName} ${componentTestArgs}`)
+      ).toContain('All specs passed!');
     }
   }, 300_000);
 
@@ -213,9 +223,12 @@ describe(Input.name, () => {
     );
 
     if (await shouldRunCypressTests()) {
-      expect(runCLI(`component-test ${buildableLibName}`)).toContain(
-        'All specs passed!'
+      const componentTestArgs = await configureCypressComponentTesting(
+        `libs/${buildableLibName}/cypress.config.ts`
       );
+      expect(
+        runCLI(`component-test ${buildableLibName} ${componentTestArgs}`)
+      ).toContain('All specs passed!');
     }
   }, 300_000);
 
@@ -250,7 +263,10 @@ describe(Input.name, () => {
       `
     );
     if (await shouldRunCypressTests()) {
-      const results = runCLI(`component-test ${appName}`);
+      const componentTestArgs = await configureCypressComponentTesting(
+        `apps/${appName}/cypress.config.ts`
+      );
+      const results = runCLI(`component-test ${appName} ${componentTestArgs}`);
       expect(results).toContain('I am from the custom async Webpack config');
       expect(results).toContain('All specs passed!');
     }

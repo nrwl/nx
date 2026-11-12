@@ -3,11 +3,18 @@ import {
   mkdtempSync,
   realpathSync,
   rmSync,
+  symlinkSync,
   writeFileSync,
 } from 'fs';
 import { tmpdir } from 'os';
-import { join } from 'path';
-import { resolveFromWorkspace } from './installation-directory';
+import { dirname, join, resolve, sep } from 'path';
+import {
+  installationRootsOf,
+  resolveFromWorkspace,
+  resolveInstalledPackage,
+  resolveNxBinFrom,
+} from './installation-directory';
+import * as ownedPrivateDir from './owned-private-dir';
 
 describe('resolveFromWorkspace', () => {
   let root: string;
@@ -50,5 +57,239 @@ describe('resolveFromWorkspace', () => {
     expect(resolveFromWorkspace('semver', root)).toBe(
       require.resolve('semver')
     );
+  });
+});
+
+describe('installationRootsOf', () => {
+  it('keeps the filesystem root when node_modules sits directly under it', () => {
+    expect(
+      installationRootsOf([join(sep, 'node_modules', 'nx', 'src', 'utils')])
+    ).toEqual([resolve(sep)]);
+  });
+
+  it('takes the directory above the outermost node_modules', () => {
+    expect(
+      installationRootsOf([
+        join(sep, 'app', 'node_modules', '.pnpm', 'node_modules', 'yargs'),
+        join(sep, 'app', 'src'),
+      ])
+    ).toEqual([resolve(sep, 'app')]);
+  });
+});
+
+describe('resolveInstalledPackage', () => {
+  let shared: string;
+  let root: string;
+
+  beforeEach(() => {
+    shared = realpathSync(mkdtempSync(join(tmpdir(), 'nx-resolve-shared-')));
+    root = join(shared, 'workspace');
+    mkdirSync(root);
+  });
+
+  afterEach(() => {
+    rmSync(shared, { recursive: true, force: true });
+  });
+
+  function install(dir: string, name: string, file = 'index.js') {
+    const directory = join(dir, 'node_modules', name);
+    mkdirSync(join(directory, 'lib'), { recursive: true });
+    writeFileSync(join(directory, 'package.json'), JSON.stringify({ name }));
+    writeFileSync(join(directory, file), 'module.exports = {};\n');
+    return join(directory, file);
+  }
+
+  const notFound = expect.objectContaining({ code: 'MODULE_NOT_FOUND' });
+
+  it('resolves a package and its subpaths installed in the workspace', () => {
+    const main = install(root, 'optional-package');
+    const sub = install(root, 'optional-package', 'lib/init.js');
+
+    expect(resolveInstalledPackage('optional-package', [root], root)).toBe(
+      main
+    );
+    expect(
+      resolveInstalledPackage('optional-package/lib/init.js', [root], root)
+    ).toBe(sub);
+  });
+
+  it('follows a package linked into the workspace', () => {
+    const linked = join(root, 'packages', 'linked');
+    mkdirSync(linked, { recursive: true });
+    writeFileSync(join(linked, 'package.json'), '{}');
+    writeFileSync(join(linked, 'index.js'), '');
+    mkdirSync(join(root, 'node_modules', '@scope'), { recursive: true });
+    symlinkSync(linked, join(root, 'node_modules', '@scope', 'linked'));
+
+    expect(resolveInstalledPackage('@scope/linked', [root], root)).toBe(
+      join(linked, 'index.js')
+    );
+  });
+
+  it('ignores a package in node_modules above the workspace', () => {
+    install(shared, 'optional-package');
+    install(shared, '@scope/optional-package');
+
+    expect(() =>
+      resolveInstalledPackage('optional-package', [root], root)
+    ).toThrow(notFound);
+    expect(() =>
+      resolveInstalledPackage('@scope/optional-package', [root], root)
+    ).toThrow(notFound);
+    expect(() => resolveFromWorkspace('optional-package', root)).toThrow(
+      notFound
+    );
+  });
+
+  it('does not fall through to a package above the workspace from an incomplete one inside it', () => {
+    install(shared, 'optional-package', 'lib/init.js');
+    install(root, 'optional-package');
+
+    expect(() =>
+      resolveInstalledPackage('optional-package/lib/init.js', [root], root)
+    ).toThrow(notFound);
+  });
+
+  it('prefers the copy inside the workspace over one above it', () => {
+    install(shared, 'optional-package');
+    const main = install(root, 'optional-package');
+
+    expect(resolveInstalledPackage('optional-package', [root], root)).toBe(
+      main
+    );
+  });
+});
+
+describe('resolveNxBinFrom', () => {
+  let shared: string;
+  let nxBin: string;
+  let ws: string;
+
+  beforeEach(() => {
+    shared = realpathSync(mkdtempSync(join(tmpdir(), 'nx-resolve-nx-bin-')));
+    const nxDir = join(shared, 'node_modules', 'nx');
+    mkdirSync(join(nxDir, 'bin'), { recursive: true });
+    writeFileSync(
+      join(nxDir, 'package.json'),
+      JSON.stringify({ name: 'nx', version: '1.0.0' })
+    );
+    nxBin = join(nxDir, 'bin', 'nx.js');
+    writeFileSync(nxBin, '');
+    // A fresh clone: nx.json, no node_modules of its own.
+    ws = join(shared, 'ws');
+    mkdirSync(ws);
+    writeFileSync(join(ws, 'nx.json'), '{}');
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    rmSync(shared, { recursive: true, force: true });
+  });
+
+  it('resolves nx from an ancestor install we trust', () => {
+    expect(resolveNxBinFrom(ws)).toBe(nxBin);
+  });
+
+  it('refuses nx from an ancestor install another user planted', () => {
+    const trusted = vi
+      .spyOn(ownedPrivateDir, 'isTrustedAncestorEntry')
+      .mockImplementation((dir) => dir !== shared);
+
+    expect(() => resolveNxBinFrom(ws)).toThrow(/Refusing the nx installed in/);
+    expect(trusted).toHaveBeenCalledWith(shared, 'node_modules');
+  });
+
+  it('refuses an untrusted install whose bin/nx.js links outside it', () => {
+    const elsewhere = join(shared, 'elsewhere.js');
+    writeFileSync(elsewhere, '');
+    rmSync(nxBin);
+    symlinkSync(elsewhere, nxBin);
+    vi.spyOn(ownedPrivateDir, 'isTrustedAncestorEntry').mockImplementation(
+      (dir) => dir !== shared
+    );
+
+    expect(() => resolveNxBinFrom(ws)).toThrow(/Refusing the nx installed in/);
+  });
+
+  it('judges the install nx resolves from, past a local one without bin/nx.js', () => {
+    const localNx = join(ws, 'node_modules', 'nx');
+    mkdirSync(localNx, { recursive: true });
+    writeFileSync(
+      join(localNx, 'package.json'),
+      JSON.stringify({ name: 'nx', version: '1.0.0' })
+    );
+    vi.spyOn(ownedPrivateDir, 'isTrustedAncestorEntry').mockImplementation(
+      (dir) => dir !== shared
+    );
+
+    expect(() => resolveNxBinFrom(ws)).toThrow(/Refusing the nx installed in/);
+  });
+
+  it('ignores an ancestor package.json that names itself nx', () => {
+    writeFileSync(join(shared, 'evil.js'), '');
+    writeFileSync(
+      join(shared, 'package.json'),
+      JSON.stringify({ name: 'nx', exports: { './bin/nx.js': './evil.js' } })
+    );
+    const localBin = join(ws, 'node_modules', 'nx', 'bin', 'nx.js');
+    mkdirSync(dirname(localBin), { recursive: true });
+    writeFileSync(localBin, '');
+
+    expect(resolveNxBinFrom(ws)).toBe(localBin);
+  });
+
+  it('judges every directory between the workspace root and its .nx/installation', () => {
+    const installation = join(shared, '.nx', 'installation');
+    const installedBin = join(
+      installation,
+      'node_modules',
+      'nx',
+      'bin',
+      'nx.js'
+    );
+    mkdirSync(dirname(installedBin), { recursive: true });
+    writeFileSync(installedBin, '');
+    vi.spyOn(ownedPrivateDir, 'isTrustedAncestorEntry').mockImplementation(
+      (dir, name) => !(dir === shared && name === '.nx')
+    );
+
+    expect(() => resolveNxBinFrom(installation, shared)).toThrow(
+      /Refusing the nx installed in/
+    );
+  });
+
+  it('does not judge the directories above the workspace root', () => {
+    vi.spyOn(ownedPrivateDir, 'isTrustedAncestorEntry').mockImplementation(
+      (dir) => dir !== dirname(shared)
+    );
+
+    expect(resolveNxBinFrom(shared)).toBe(nxBin);
+  });
+
+  it('throws MODULE_NOT_FOUND when no install holds nx', () => {
+    rmSync(join(shared, 'node_modules'), { recursive: true });
+
+    expect(() => resolveNxBinFrom(ws)).toThrow(
+      expect.objectContaining({ code: 'MODULE_NOT_FOUND' })
+    );
+  });
+
+  it('trusts the Yarn PnP resolution', () => {
+    vi.spyOn(ownedPrivateDir, 'isTrustedAncestorEntry').mockReturnValue(false);
+    process.versions.pnp = '3';
+    try {
+      expect(resolveNxBinFrom(ws)).toBe(nxBin);
+    } finally {
+      delete process.versions.pnp;
+    }
+  });
+
+  it('judges the install nx resolves from, past an incomplete local one', () => {
+    mkdirSync(join(ws, 'node_modules', 'nx'), { recursive: true });
+    vi.spyOn(ownedPrivateDir, 'isTrustedAncestorEntry').mockImplementation(
+      (dir) => dir !== shared
+    );
+
+    expect(() => resolveNxBinFrom(ws)).toThrow(/Refusing the nx installed in/);
   });
 });

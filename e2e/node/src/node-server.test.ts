@@ -2,6 +2,7 @@ import {
   checkFilesDoNotExist,
   checkFilesExist,
   cleanupProject,
+  configureTargetOptions,
   getSelectedPackageManager,
   killPort,
   killProcessAndPorts,
@@ -19,6 +20,7 @@ import { stripVTControlCharacters } from 'node:util';
 
 describe('Node Applications + webpack', () => {
   let proj: string;
+  let restoreServerPort: (() => void) | undefined;
   const selectedPm = getSelectedPackageManager();
 
   // TODO(nicholas): Look into how this can work with npm instead of forcing pnpm.
@@ -31,9 +33,13 @@ describe('Node Applications + webpack', () => {
       // Solution is to use pnpm or run fix it via npm ex.(npm dedupe --force)
       packageManager: selectedPm === 'npm' ? 'pnpm' : selectedPm,
     });
+    restoreServerPort = configureTargetOptions(['@nx/js:node'], { port: 0 });
   });
 
-  afterAll(() => cleanupProject());
+  afterAll(() => {
+    restoreServerPort?.();
+    cleanupProject();
+  });
 
   function addLibImport(appName: string, libName: string, importPath?: string) {
     const mainFile = `apps/${appName}/src/main.ts`;
@@ -192,7 +198,7 @@ describe('Node Applications + webpack', () => {
     });
 
     const p = await runCommandUntil(
-      `serve ${nodeApp1} `,
+      `serve ${nodeApp1}`,
       (output) => output.includes('Hello World'),
       { timeout: 120_000 }
     );

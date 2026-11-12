@@ -175,7 +175,10 @@ describe('waitForWebpackDevServer', () => {
   const close = (server: Server) => new Promise((r) => server.close(r));
 
   async function getFreePort(): Promise<number> {
-    const v4 = await listen(0);
+    const requestedPort = process.env.NX_E2E_PORT_POOL
+      ? await (await import('@nx/devkit/internal-testing-utils')).reservePort()
+      : 0;
+    const v4 = await listen(requestedPort);
     const { port } = v4.address() as AddressInfo;
     // The wait also probes ::1, where a port free on 127.0.0.1 can be taken
     const v6 = await listen(port, '::1').catch((e: NodeJS.ErrnoException) => e);
