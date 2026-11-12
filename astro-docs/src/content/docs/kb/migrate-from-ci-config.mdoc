@@ -174,7 +174,7 @@ The flags only work with `ci.yaml`. With `.nx/ci-config.yaml`, keep using `worke
 
 ## If you move to Nx Cloud CI
 
-- `main-job-worker` on a `worker-templates` entry works, with `cpu` and `memory`.
+- The [main-job worker](/docs/reference/nx-cloud/ci-config#main-job-worker) is on by default. `main-job-worker` on a `worker-templates` entry limits its `cpu` and `memory`, or turns it off with `false`.
 - There's no heartbeat to configure: the run ends when the main job does.
 - Workers get the `env` of the file and the job, so `with-env-vars` and the forwarding flags aren't needed.
 - Delete `.nx/ci-config.yaml` and the `start-workers` step from your old workflow.
