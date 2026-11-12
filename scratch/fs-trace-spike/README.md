@@ -279,6 +279,50 @@ build and shim in an aarch64 Debian container on rustc 1.99, `--target` forwardi
 fake artifacts tree. `publish.yml` itself has not run. FreeBSD gets no tracer yet, and
 nothing looks the files up at runtime.
 
+## In use: the createNodes evaluation cache
+
+With plugin isolation on, nx traces every plugin worker and reuses a plugin's last
+`createNodes` results while nothing they depended on has changed, without calling the
+plugin or starting its worker. `isolation/read-tracing.ts` wraps the worker spawn, and
+`isolation/evaluation-cache.ts` stores and checks entries in
+`.nx/workspace-data/plugin-evaluations`. `NX_PLUGIN_READ_TRACING=false` turns it off, and so
+does `NX_CACHE_PROJECT_GRAPH=false`.
+
+An entry is reused only if all of these are unchanged:
+
+- the plugin, its options, `nx.json`, the nx version and the `NX_*` environment;
+- the exact config files the plugin's pattern matched;
+- the names of the files under each config file's directory and each project root the
+  plugin produced, which covers test discovery and existence checks there;
+- the fingerprint (inode, size, mtime, ctime) of every file the worker and its children
+  opened for reading, from loading the plugin through the end of the call.
+
+The worker writes `!begin`/`!end` markers around each call into its read log, so a
+long-lived worker's calls are told apart. Traced workers run with
+`NX_CACHE_PROJECT_GRAPH=false`, so plugins evaluate fully on a miss and read everything
+their results came from, and they put their tracing variables back after the daemon
+replaces their environment.
+
+A result is not stored when the trace cannot be trusted: the worker script was never seen
+(tracing did not start), a child ran untraced, the call never finished, a read file
+changed during the call, or the plugin read anything under the workspace data directory,
+which means it consulted a cache of its own (gradle and maven do). nx's own temp root and
+`~/.nx` are left out, since everything there is derived from inputs already recorded.
+
+Measured with `@nx/js/typescript` on this repo (183 config files, 109 projects, 1,269
+recorded inputs, a 485 KB entry):
+
+| Step                                   | time                                     |
+| -------------------------------------- | ---------------------------------------- |
+| unchanged, or a later process          | 9-21 ms                                  |
+| edit a source file in `packages/react` | 10 ms                                    |
+| edit `packages/nx/tsconfig.lib.json`   | 1.4-1.6 s (plugin runs, worker restarts) |
+
+Not covered: a file probed for existence (`existsSync`, `stat`) outside the listed
+directories and created later, and an `fs` glob outside them. Directory listings are not
+traced. Without the daemon, a worker that queries the workspace context reads its index
+under the workspace data directory, so its results are not cached.
+
 ## What real plugins spawn
 
 Node-only plugin workers are traced on every platform. The plugins whose inputs are hardest to

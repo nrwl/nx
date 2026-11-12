@@ -64,6 +64,8 @@ type PluginMessageDefs = DefineMessages<{
     payload: {
       configFiles: string[];
       context: CreateNodesContext;
+      /** Marks this call's reads in the worker's read log, when it is traced. */
+      traceId?: string;
     };
     result:
       | {
