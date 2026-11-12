@@ -49,7 +49,7 @@ The directives require Nx 24 or later. Check the workspace's `nx` version first.
 
 Notes:
 
-- Without a recorded Ultracache run (local machines, the first CI run, or `NX_CLOUD_USE_ULTRACACHE=false`), a task with `@nx-ignore-server-inputs` hashes its declared inputs minus the server task's inputs.
+- Without a recorded Ultracache run (local machines, the first CI run, or `NX_CLOUD_ULTRACACHE_MODE=off`), a task with `@nx-ignore-server-inputs` hashes its declared inputs minus the server task's inputs.
 - Without Ultracache, every split task hashes the whole e2e project, so an edit to any test file reruns all of them.
 - Ultracache records reads as folder patterns per kind of file (JavaScript and TypeScript together, other files by extension). A new file under a folder the test read from changes the hash. Existing files the test didn't read don't.
 - `nx affected -t e2e-ci` still selects `e2e-ci` by its unscoped inputs. Each split task whose hash didn't change replays from the cache.
@@ -248,7 +248,7 @@ For a feature that doesn't load, import the TypeScript modules it uses, or scope
 ### Without a recorded run
 
 With Ultracache enabled, Nx 24 and later automatically use recorded file inputs in CI when a recording is available for the task.
-Set `NX_CLOUD_USE_ULTRACACHE=false` to use declared inputs instead. See [Ultracache and Nx versions](/docs/kb/ultracache-nx-versions).
+Set `NX_CLOUD_ULTRACACHE_MODE=off` to use declared inputs instead. See [Ultracache and Nx versions](/docs/kb/ultracache-nx-versions).
 
 Without a recorded run, such as on your machine, a task with `@nx-ignore-server-inputs` hashes its declared inputs without the server task's inputs.
 Each split task's declared inputs cover the whole e2e project, so an edit to any test file reruns every test file.
