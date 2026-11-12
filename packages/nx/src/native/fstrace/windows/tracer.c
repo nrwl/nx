@@ -40,10 +40,17 @@ int wmain(int argc, wchar_t **argv) {
   limits.BasicLimitInformation.LimitFlags = JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE;
   SetInformationJobObject(job, JobObjectExtendedLimitInformation, &limits, sizeof limits);
 
+  // The command gets this process's standard handles, which nx passes as pipes. A
+  // launcher started detached has no console, and the command must not open one.
   STARTUPINFOW si = {sizeof si};
+  si.dwFlags = STARTF_USESTDHANDLES;
+  si.hStdInput = GetStdHandle(STD_INPUT_HANDLE);
+  si.hStdOutput = GetStdHandle(STD_OUTPUT_HANDLE);
+  si.hStdError = GetStdHandle(STD_ERROR_HANDLE);
+  DWORD flags = CREATE_SUSPENDED | (GetConsoleWindow() ? 0 : CREATE_NO_WINDOW);
   PROCESS_INFORMATION pi;
   wchar_t *cmd = _wcsdup(argv[3]);
-  if (!CreateProcessW(NULL, cmd, NULL, NULL, TRUE, CREATE_SUSPENDED, NULL, NULL, &si, &pi)) {
+  if (!CreateProcessW(NULL, cmd, NULL, NULL, TRUE, flags, NULL, NULL, &si, &pi)) {
     fwprintf(stderr, L"spawn failed: %lu\n", GetLastError());
     return 127;
   }

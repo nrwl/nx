@@ -15,7 +15,7 @@ import type { LoadedNxPlugin } from '../loaded-nx-plugin';
 import { consumeMessage, isPluginWorkerMessage } from './messaging';
 import { setPluginWorkerHostSocket } from './worker-streaming';
 
-import { unlinkSync } from 'fs';
+import { appendFileSync, unlinkSync } from 'fs';
 import { createServer } from 'net';
 import { startAnalytics } from '../../../analytics';
 import { applyDaemonEnvFromClient } from '../../../daemon/client/daemon-environment';
@@ -44,6 +44,30 @@ performance.measure(
 global.NX_GRAPH_CREATION = true;
 global.NX_PLUGIN_WORKER = true;
 let plugin: LoadedNxPlugin;
+
+// The host attributes the reads between a call's markers to that call. Opened
+// write-only, so the tracer does not record the marker writes themselves.
+// Set by the host when it traces this worker. An env update from the daemon
+// replaces the whole environment, so they are put back after one.
+const traceEnv = process.env.FSTRACE_OUT
+  ? Object.fromEntries(
+      [
+        'FSTRACE_OUT',
+        'FSTRACE_SIP_DIR',
+        'LD_PRELOAD',
+        'DYLD_INSERT_LIBRARIES',
+        'NX_CACHE_PROJECT_GRAPH',
+      ]
+        .filter((key) => process.env[key] !== undefined)
+        .map((key) => [key, process.env[key]])
+    )
+  : {};
+
+function markTrace(kind: 'begin' | 'end', traceId: string | undefined) {
+  if (traceId && process.env.FSTRACE_OUT) {
+    appendFileSync(process.env.FSTRACE_OUT, `!${kind} ${traceId}\n`);
+  }
+}
 
 const socketPath = process.argv[2];
 const expectedPluginName = process.argv[3];
@@ -172,10 +196,18 @@ const server = createServer((socket) => {
               };
             });
           },
-          createNodes: async ({ configFiles, context }) =>
+          createNodes: async ({ configFiles, context, traceId }) =>
             withErrorHandling(async () => {
-              const result = await plugin.createNodes[1](configFiles, context);
-              return { result, success: true as const };
+              markTrace('begin', traceId);
+              try {
+                const result = await plugin.createNodes[1](
+                  configFiles,
+                  context
+                );
+                return { result, success: true as const };
+              } finally {
+                markTrace('end', traceId);
+              }
             }),
           createDependencies: async ({ context }) =>
             withErrorHandling(async () => {
@@ -197,6 +229,7 @@ const server = createServer((socket) => {
           setWorkerEnv: (env) =>
             withErrorHandling(() => {
               applyDaemonEnvFromClient(env);
+              Object.assign(process.env, traceEnv);
             }),
         });
       },
