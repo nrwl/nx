@@ -1,3 +1,4 @@
 target/
 bin/
 *.node
+fixtures/data/sip/
