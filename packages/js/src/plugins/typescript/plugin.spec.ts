@@ -2,6 +2,7 @@ import { detectPackageManager, type CreateNodesContext } from '@nx/devkit';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
 import picomatch = require('picomatch');
 import { existsSync, mkdirSync, readdirSync, rmSync } from 'node:fs';
+import Module = require('node:module');
 import { join } from 'node:path';
 import { getLockFileName, setupWorkspaceContext } from '@nx/devkit/internal';
 import type { Mock } from 'vitest';
@@ -2089,6 +2090,51 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
             },
           }
         `);
+      });
+
+      it('should not add extended config files resolved to windows-style node_modules paths as inputs', async () => {
+        configFiles = await applyFilesToTempFsAndContext(tempFs, {
+          'libs/my-lib/tsconfig.json': JSON.stringify({
+            extends: '@tsconfig/strictest/tsconfig.json',
+            include: ['src/**/*.ts'],
+          }),
+          'libs/my-lib/package.json': `{}`,
+        });
+        const originalResolveFilename = (Module as any)._resolveFilename;
+        const resolveSpy = vi
+          .spyOn(Module as any, '_resolveFilename')
+          .mockImplementation(function (request: string, ...args: unknown[]) {
+            if (request === '@tsconfig/strictest/tsconfig.json') {
+              return 'C:\\store\\node_modules\\@tsconfig\\strictest\\tsconfig.json';
+            }
+            return originalResolveFilename.call(this, request, ...args);
+          });
+
+        try {
+          const result = await invokeCreateNodesOnMatchingFiles(
+            configFiles,
+            context,
+            {}
+          );
+
+          expect(
+            result.projects['libs/my-lib'].targets.typecheck.inputs
+          ).toEqual([
+            '{projectRoot}/package.json',
+            '{projectRoot}/tsconfig.json',
+            '{projectRoot}/src/**/*.ts',
+            {
+              dependentTasksOutputFiles: '**/*.{d.ts,d.cts,d.mts,tsbuildinfo}',
+              transitive: true,
+            },
+            {
+              dependencies: true,
+              fileset: '{projectRoot}/**/*.{d.ts,d.cts,d.mts}',
+            },
+          ]);
+        } finally {
+          resolveSpy.mockRestore();
+        }
       });
 
       it('should add files from internal project references', async () => {
