@@ -10,8 +10,10 @@ dte:
   # Only agents install hyperfine (see agents.yaml), so benchmarks can't run on the main job.
   # Maven phases failed on the main-job worker when two commands built the same project
   # ("You have to use a classifier to attach supplemental artifacts").
+  # build-native ran on both the main-job worker and an agent in one CIPE, and agent tests
+  # then loaded a stale native binding.
   assignment-rules:
-    - targets: ['bench*', 'mvn:*']
+    - targets: ['bench*', 'mvn:*', 'build-native*']
       run-on:
         - agent: linux-large
         - agent: linux-extra-large
