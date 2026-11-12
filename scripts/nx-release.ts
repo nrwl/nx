@@ -40,10 +40,12 @@ const VALID_AUTHORS_FOR_LATEST = [
 
   // Expected to run as part of the Github `publish` workflow
   if (!options.local && process.env.GITHUB_ACTIONS) {
-    // Delete all .node and .dylib files that were built during the previous steps
+    // Delete the native bindings and file-read tracers built during the previous steps, so
+    // only the platform packages ship them. Tracers are matched by name: dist holds other
+    // .dll files, such as the dotnet analyzer's.
     // Always run before the artifacts step because we still need the .node files for native-packages
     execSync(
-      'find ./dist ./packages/nx/dist \\( -name "*.node" -o -name "*.dylib" \\) -delete',
+      'find ./dist ./packages/nx/dist \\( -name "*.node" -o -name "fstrace.darwin.dylib" -o -name "fstrace.linux.so" -o -name "fstrace-*.dll" -o -name "fstrace-*.exe" \\) -delete',
       {
         stdio: [0, 1, 2],
         maxBuffer: LARGE_BUFFER,

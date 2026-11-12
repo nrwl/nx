@@ -10,21 +10,23 @@ library per OS behind a common napi-rs API, plus an optional kernel-level backst
 
 ## What is here
 
-| Path                                                        | What                                                                                                                                                                                                                                               |
-| ----------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `shim/`                                                     | Rust `cdylib` injected into the child tree. Wraps `open`/`openat`/`fopen` (+ glibc `64`/`_2` variants) and appends one line per successful read-open to `$FSTRACE_OUT`. Linux via `LD_PRELOAD`; macOS via `DYLD_INSERT_LIBRARIES` + `__interpose`. |
-| `addon/`                                                    | napi-rs addon: `traceSpawn(cmd, args, { backend, shimPath, cwd }) → Promise<{ exitCode, reads, events }>`.                                                                                                                                         |
-| `addon/src/seccomp.rs`                                      | Linux-only backend using seccomp user notification.                                                                                                                                                                                                |
-| `demo.mjs`                                                  | Coverage matrix: which backend sees which kind of reader.                                                                                                                                                                                          |
-| `bench.mjs`                                                 | Overhead per backend (`strace` included as a ptrace yardstick).                                                                                                                                                                                    |
-| `demo-macos.mjs`, `bench-macos.mjs`                         | The same checks for the preload backend on macOS.                                                                                                                                                                                                  |
-| `sip/`, `demo-sip.ts`, `bench-sip.ts`, `check-restricted.c` | Checks for the macOS C shim, which lives at `packages/nx/src/native/fstrace/macos.c`, and the copy-directory helper. See "macOS: tracing past SIP".                                                                                                |
-| `windows/`                                                  | C tracer for Windows: `fstrace.exe` launcher, `fstrace.dll` injected library, coverage and overhead scripts.                                                                                                                                       |
+| Path                                                        | What                                                                                                                                                                                                                                                                                                                                                                      |
+| ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `packages/nx/src/native/fstrace/`                           | The shipped tracers. `linux/`: Rust `cdylib` loaded through `LD_PRELOAD`, wrapping `open`/`openat`/`fopen` (+ glibc `64`/`_2` variants). `macos.c`: C dylib loaded through `DYLD_INSERT_LIBRARIES`, with the SIP exec rewrite. `windows/`: C launcher and DLL. All append one line per successful read-open to `$FSTRACE_OUT`. Built by `scripts/build-fstrace-shim.mjs`. |
+| `addon/`                                                    | napi-rs addon: `traceSpawn(cmd, args, { backend, shimPath, cwd }) → Promise<{ exitCode, reads, events }>`.                                                                                                                                                                                                                                                                |
+| `addon/src/seccomp.rs`                                      | Linux-only backend using seccomp user notification.                                                                                                                                                                                                                                                                                                                       |
+| `demo.mjs`                                                  | Coverage matrix: which backend sees which kind of reader.                                                                                                                                                                                                                                                                                                                 |
+| `bench.mjs`                                                 | Overhead per backend (`strace` included as a ptrace yardstick).                                                                                                                                                                                                                                                                                                           |
+| `demo-macos.mjs`, `bench-macos.mjs`                         | The same checks for the preload backend on macOS.                                                                                                                                                                                                                                                                                                                         |
+| `sip/`, `demo-sip.ts`, `bench-sip.ts`, `check-restricted.c` | Checks for the macOS C shim, which lives at `packages/nx/src/native/fstrace/macos.c`, and the copy-directory helper. See "macOS: tracing past SIP".                                                                                                                                                                                                                       |
+| `windows/`                                                  | Windows coverage and overhead scripts, and `build.cmd` for their test programs.                                                                                                                                                                                                                                                                                           |
 
 Run on Linux: `./build.sh && node demo.mjs && node bench.mjs` (needs cargo, gcc, go, strace).
-On macOS: `cargo build --release --target-dir target`, copy `target/release/libfstrace_addon.dylib`
-to `fstrace.node`, build `bin/openloop` with clang and `bin/readfile-go` with go, then
-`node demo-macos.mjs && node bench-macos.mjs`. Windows instructions are in its section below.
+On macOS: `node ../../scripts/build-fstrace-shim.mjs`, then `cargo build --release
+--target-dir target` and copy `target/release/libfstrace_addon.dylib` to `fstrace.node`.
+Build `bin/openloop` with clang and `bin/readfile-go` with go, then
+`node demo-macos.mjs && node bench-macos.mjs`, and `tsx demo-sip.ts` for the SIP rewrite.
+Windows instructions are in its section below.
 
 ## Backends
 
@@ -95,8 +97,8 @@ Linux
 
 macOS (run on an M-series Mac, macOS 26, Node 22.15; `demo-macos.mjs`, `bench-macos.mjs`)
 
-- The Rust shim works as written. The arm64 variadic `open` trick holds, and Go binaries
-  are seen even with `CGO_ENABLED=0`, because Go on darwin calls through libSystem.
+- First measured with the Rust shim, since replaced by `macos.c`. Go binaries are seen
+  even with `CGO_ENABLED=0`, because Go on darwin calls through libSystem.
 - Official Node binaries carry `allow-dyld-environment-variables` and
   `disable-library-validation`, so node, and node spawning node directly, are fully traced.
 - SIP is transitive. A tree loses tracing at the first platform binary (`/bin/sh`,
@@ -107,7 +109,8 @@ macOS (run on an M-series Mac, macOS 26, Node 22.15; `demo-macos.mjs`, `bench-ma
   paths for cached re-signed copies would close the gap. Two catches: the copies are
   `arm64e`, so the shim needs an `arm64e` slice (C, or nightly Rust), and an unsigned copy
   is SIGKILLed at launch. A C interposer built `-arch arm64 -arch arm64e` proved the idea.
-- Overhead: about 1.9 µs per traced open, about 2 ms to load the shim per process.
+- Overhead: about 1.9 µs per traced open. Loading the shim costs 0 to 2.5 ms per
+  process, depending on the program; see "Load cost" below.
 
   | Workload                                 | untraced | preload |
   | ---------------------------------------- | -------- | ------- |
@@ -115,32 +118,34 @@ macOS (run on an M-series Mac, macOS 26, Node 22.15; `demo-macos.mjs`, `bench-ma
   | Node `readFileSync` of `packages/nx/src` | 60 ms    | +14%    |
   | Node startup                             | 21.5 ms  | +9%     |
 
-Windows (`windows/`, run in a Windows 11 ARM64 VM, Node 22.16 arm64)
+Windows (run in a Windows 11 ARM64 VM, Node 22.16 arm64)
 
-- Written in C with no dependencies. `fstrace.exe` starts the command suspended in a job
-  object and loads `fstrace.dll` through an early APC (`LoadLibraryW`). The DLL rebinds
-  import-table entries for `ntdll!NtCreateFile`/`NtOpenFile`, `LdrLoadDll` (to patch DLLs
-  loaded later) and `CreateProcessW` (to inject into children). Every Win32 open ends in
-  kernelbase's import of `NtCreateFile`, so one patched table covers the CRT, libuv and Go.
+- Written in C with no dependencies, in `packages/nx/src/native/fstrace/windows/`.
+  `fstrace-<arch>.exe` starts the command suspended in a job object and loads
+  `fstrace-<arch>.dll` through an early APC (`LoadLibraryW`). The DLL rebinds import-table
+  entries for `ntdll!NtCreateFile`/`NtOpenFile`, `LdrLoadDll` (to patch DLLs loaded later)
+  and `CreateProcessW` (to inject into children). Every Win32 open ends in kernelbase's
+  import of `NtCreateFile`, so one patched table covers the CRT, libuv and Go.
+- Children of another architecture are injected by that architecture's build:
+  `fstrace-<arch>.exe inject <pid> <tid>`, because only a process of the child's
+  architecture knows where its `LoadLibraryW` is. Each Windows package ships arm64, x64
+  and x86 builds. A child that still cannot be injected is logged as `!untraced`.
 - Coverage (`node demo-windows.mjs`). There is no SIP equivalent, so shells are not a gap.
 
-  | Reader                                            | traced |
-  | ------------------------------------------------- | ------ |
-  | C, static CRT (arm64)                             | yes    |
-  | Go binary                                         | yes    |
-  | Node sync + async fs                              | yes    |
-  | node -> node (no shell)                           | yes    |
-  | node -> `cmd.exe` -> node (`execSync`)            | yes    |
-  | `cmd /c type`, `cmd -> cmd -> type`               | yes    |
-  | PowerShell `Get-Content`                          | yes    |
-  | x64 program under emulation, direct or as a child | **no** |
-  | Git for Windows (x64 build on this VM)            | **no** |
-  | write-only open reported                          | no     |
+  | Reader                                 | traced |
+  | -------------------------------------- | ------ |
+  | C, static CRT (arm64)                  | yes    |
+  | C x64 under emulation, root or child   | yes    |
+  | C x86 under WOW64, root or child       | yes    |
+  | Go binary                              | yes    |
+  | Node sync + async fs                   | yes    |
+  | node -> node (no shell)                | yes    |
+  | node -> `cmd.exe` -> node (`execSync`) | yes    |
+  | `cmd -> cmd -> type`                   | yes    |
+  | PowerShell `Get-Content`               | yes    |
+  | Git for Windows (x64 build on this VM) | yes    |
+  | write-only open reported               | no     |
 
-- Missed: x64 processes under emulation on ARM64 (including Git for Windows here), because
-  the tracer only injects same-architecture children. On x64 Windows the same gap applies to
-  32-bit children. Fixing it needs a DLL per architecture and the target's own
-  `LoadLibraryW` address.
 - Not covered: the loader's own DLL opens (ntdll calls itself, not through an import table)
   and code that calls `NtCreateFile` from inside ntdll. Inline hooks would close both.
 - Overhead: about 4.8 µs per traced open. Node startup costs about 20 ms extra, which is
@@ -154,13 +159,14 @@ Windows (`windows/`, run in a Windows 11 ARM64 VM, Node 22.16 arm64)
   | Node startup                             | 62 ms    | +32%   |
   | 50 short processes via `cmd` loop        | 360 ms   | +15%   |
 
-  Build in a VS developer prompt with `windows\build.cmd`, then `node demo-windows.mjs` and
-  `node bench-windows.mjs` (the bench expects `readall.js` and a copy of `packages/nx/src`
-  under `windows\src`).
+  Build the tracer with `node scripts/build-fstrace-shim.mjs`, and the test programs with
+  `windows\build.cmd`. Then run `node demo-windows.mjs` and `node bench-windows.mjs`, with
+  `FSTRACE_BIN` pointing at the built tracer when running outside the repo. The bench also
+  expects `readall.js` and a copy of `packages/nx/src` under `windows\src`.
 
 ## macOS: tracing past SIP
 
-`packages/nx/src/native/fstrace/macos.c` is a C port of the shim that also hooks `execve`, `posix_spawn` and
+`packages/nx/src/native/fstrace/macos.c` is the macOS shim. Besides opens, it hooks `execve`, `posix_spawn` and
 `posix_spawnp`. When a traced process starts a binary dyld would strip
 `DYLD_INSERT_LIBRARIES` for, the hook starts an ad-hoc re-signed copy instead, and the copy
 keeps the variable. C, because the copies are `arm64e` and stable Rust cannot build that
@@ -204,54 +210,74 @@ Coverage (`tsx demo-sip.ts`, every case started from node, as a plugin worker wo
 | node -> `/usr/bin/python3` (xcrun shim) | missed          | seen                      |
 | node -> sh -> `sudo`                    | missed          | missed, reported untraced |
 
+The root of a traced tree is covered too. The shim exports `fstrace_spawn`, the same
+rewrite for a launcher that is not itself traced, and the spike addon starts the root
+through it, so `traceSpawn('/bin/sh', ...)` or a `gradlew` root is traced (`root:` rows in
+`demo-sip.ts`).
+
 Cost (`tsx bench-sip.ts`, node running `/bin/sh -c true` 200 times):
 
-| Run                                            | per exec                                            |
-| ---------------------------------------------- | --------------------------------------------------- |
-| untraced                                       | 2.9 ms                                              |
-| traced, no rewrite (the shells are not traced) | 3.1 ms                                              |
-| traced, rewrite, copies already made           | 8.5 ms                                              |
-| first run, empty copy directory                | 10.4 ms (2 s total, one-time `codesign` per binary) |
+| Run                                            | per exec                                             |
+| ---------------------------------------------- | ---------------------------------------------------- |
+| untraced                                       | 2.7 ms                                               |
+| traced, no rewrite (the shells are not traced) | 2.8 ms                                               |
+| traced, rewrite, copies already made           | 4.6 ms                                               |
+| first run, empty copy directory                | 6.5 ms (1.3 s total, one-time `codesign` per binary) |
 
-The extra 5.4 ms is mostly loading the shim, about 2 to 3 ms per process, now paid by the
-shells as well, and macOS's `/bin/sh` starts `/bin/bash`, so each shell exec is two
-injected processes. A copy on its own costs about 0.7 ms more to start than the original,
-because it is not in the dyld shared cache.
+`/bin/sh` only starts the shell `/private/var/select/sh` names, so the hook copies that
+shell directly and keeps `argv[0]` as `sh`, which keeps it in POSIX mode. That saves one
+traced process per shell, and took the rewrite from 8.5 to 4.6 ms per exec.
 
-Not done here:
+Load cost (50 launches each, median):
 
-- The root of the traced tree is started by the addon in Rust, without the hook, so a
-  restricted binary started directly by `traceSpawn` is not rewritten. Plugin workers are
-  node, so this does not matter for them, but the launcher should apply the same rewrite.
-- Swap `/bin/sh` straight for a copy of the shell `/private/var/select/sh` names, run as
-  `sh`, to save one exec per shell.
-- Find what makes the shim cost 2 to 3 ms to load (signature validation of the inserted
-  dylib is the first suspect).
-- A binary that needs private entitlements breaks as a copy instead of going untraced.
-  None of the cases here did, but the hook cannot tell in advance.
+| Program               | not injected | empty dylib inserted | shim    |
+| --------------------- | ------------ | -------------------- | ------- |
+| tiny C program        | 1.23 ms      | 1.21 ms              | 1.24 ms |
+| node                  | 17.6 ms      | 19.5 ms              | 20.2 ms |
+| re-signed `bash` copy | 2.17 ms      | 3.65 ms              | 4.49 ms |
+
+Most of the cost is dyld's, not the shim's: inserting even an empty library costs node
+1.9 ms, and scales with the program, because dyld cannot use its prebuilt launch data once
+a library is inserted. The shim's own share is 0.6 to 0.8 ms, the same with logging off,
+which points at its six interposed symbols. A copy also starts about 0.8 ms slower than the
+original, because it is not in the dyld shared cache.
+
+A binary that needs private entitlements breaks as a copy instead of going untraced. None
+of the cases here did, but the hook cannot tell in advance.
 
 ### Build and release
 
 `nx:build-fstrace-shim` runs `scripts/build-fstrace-shim.mjs`, and `nx:build-native`
-depends on it, so the existing macOS jobs in `publish.yml` build the shim with no new
-matrix entries. On macOS it builds `packages/nx/src/native/fstrace.darwin.dylib` with
-`arm64`, `arm64e` and `x86_64` slices and `-mmacosx-version-min=11.0`. A slice or OS
-version dyld cannot load is a crash, not a fallback: the first build defaulted to
-`minos 26.0`. Other platforms print a skip for now. The process platform is a cache input,
-so a Linux cache entry with no dylib is never replayed on a Mac.
+depends on it with `params: forward`, so every existing job in `publish.yml` builds the
+tracer for its own target with no new matrix entries. The process platform and
+`Cargo.lock` are cache inputs, and the forwarded `--target` is part of the task hash.
 
-- `publish.yml` uploads `*.dylib` with the bindings artifact.
+| Platform | Built                                                              | How                                                                                                                                              |
+| -------- | ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| macOS    | `fstrace.darwin.dylib`, `arm64` + `arm64e` + `x86_64`, macOS 11.0+ | clang through `xcrun`, honoring the workflow's `CC` and SDK path                                                                                 |
+| Linux    | `fstrace.linux.so` for the job's `--target`                        | `cargo build -p nx-fstrace-shim`, a root workspace member, so the docker jobs' cross linkers and `.cargo/config.toml` (musl `-crt-static`) apply |
+| Windows  | `fstrace-{arm64,x64,x86}.{dll,exe}`                                | `cl` per architecture through `vcvarsall`, found with `vswhere`                                                                                  |
+
+A slice or OS version dyld cannot load is a crash, not a fallback: the first macOS build
+defaulted to `minos 26.0`. Newer rustc denies the Linux shim's fixed-signature `open`
+(`invalid_runtime_symbol_definitions`), which is allowed with the ABI reasoning beside it.
+
+- `publish.yml` uploads the tracer files with each job's bindings artifact.
 - The `artifacts` target runs `scripts/copy-native-extras.mjs` after `napi artifacts`,
-  which moves only `.node` files. It copies the dylib into both darwin packages, because
-  an x64 node under Rosetta can start arm64 children and the reverse, and fails if one is
-  missing.
-- `@nx/nx-darwin-arm64` and `@nx/nx-darwin-x64` list `fstrace.darwin.dylib` in `files`.
-- `nx-release.ts` deletes `*.dylib` from `dist` along with `*.node`, so the main `nx`
-  package does not ship it. Local builds copy it next to the `.node` through
-  `assets.json`.
+  which moves only `.node` files. It copies each job's tracer files into its platform
+  package, and fails if one is missing. Both darwin packages get the universal dylib and
+  both Windows packages get all three architectures, because an emulated nx can start
+  native children and the reverse.
+- Every platform package lists its tracer files in `files`.
+- `nx-release.ts` deletes the tracer files from `dist` by name, along with `*.node`, so the
+  main `nx` package does not ship them. `dist` also holds unrelated `.dll` files, such as
+  the dotnet analyzer's. Local builds copy them next to the `.node` through `assets.json`.
 
-Not wired yet: the Linux shim (Rust, `shim/`) and the Windows DLL, and the runtime lookup
-of the dylib from the platform package.
+Verified locally: the macOS and Windows builds (the Windows one in the ARM64 VM), the Linux
+build and shim in an aarch64 Debian container on rustc 1.99, `--target` forwarding through
+`run-many --target=build-native -- --target=...`, and the copy and delete steps against a
+fake artifacts tree. `publish.yml` itself has not run. FreeBSD gets no tracer yet, and
+nothing looks the files up at runtime.
 
 ## What real plugins spawn
 
@@ -281,8 +307,7 @@ declare are the ones that delegate to another toolchain, and those hit the gaps:
 ## Suggested next steps
 
 1. Decide whether failed opens and `stat` calls count as inputs.
-2. Cut the macOS shim's per-process load cost, and the double exec through `/bin/sh`.
-3. Inject across architectures on Windows (a DLL per architecture).
-4. Find the 20 ms Node startup cost on Windows.
-5. Replace the append-per-event log file with a shared-memory ring and trim the shim
-   (`no_std`) to cut the per-process load cost.
+2. Find the 20 ms Node startup cost on Windows.
+3. Look up the tracer files from the platform package at runtime.
+4. Run `publish.yml` as a dry run to exercise the release wiring.
+5. Replace the append-per-event log file with a shared-memory ring.

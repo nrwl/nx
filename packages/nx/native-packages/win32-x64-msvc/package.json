@@ -15,7 +15,13 @@
   ],
   "main": "nx.win32-x64-msvc.node",
   "files": [
-    "nx.win32-x64-msvc.node"
+    "nx.win32-x64-msvc.node",
+    "fstrace-arm64.dll",
+    "fstrace-arm64.exe",
+    "fstrace-x64.dll",
+    "fstrace-x64.exe",
+    "fstrace-x86.dll",
+    "fstrace-x86.exe"
   ],
   "publishConfig": {
     "access": "public"

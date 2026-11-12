@@ -2530,6 +2530,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "nx-fstrace-shim"
+version = "0.0.0"
+dependencies = [
+ "libc",
+]
+
+[[package]]
 name = "objc2"
 version = "0.6.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
