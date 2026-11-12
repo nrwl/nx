@@ -172,13 +172,7 @@ export function traceWorkerCommand(
   // The tracers append to the log and never create it.
   writeFileSync(logPath, '');
 
-  // A traced run must evaluate everything it reports, so plugins skip their
-  // own result caches and read every input.
-  const env: NodeJS.ProcessEnv = {
-    ...worker.env,
-    FSTRACE_OUT: logPath,
-    NX_CACHE_PROJECT_GRAPH: 'false',
-  };
+  const env: NodeJS.ProcessEnv = { ...worker.env, FSTRACE_OUT: logPath };
 
   switch (process.platform) {
     case 'linux':

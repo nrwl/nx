@@ -6,7 +6,7 @@ import {
   statSync,
 } from 'node:fs';
 import { homedir } from 'node:os';
-import { dirname, join, resolve, sep } from 'node:path';
+import { basename, dirname, join, resolve, sep } from 'node:path';
 import type { PluginConfiguration } from '../../../config/nx-json';
 import { hashArray, hashObject } from '../../../hasher/file-hasher';
 import { workspaceDataDirectory } from '../../../utils/cache-directory';
@@ -30,6 +30,12 @@ import type { CreateNodesContext, CreateNodesResult } from '../public-api';
  *   checks;
  * - every file the worker and its children opened for reading while loading
  *   the plugin and during the call, by fingerprint.
+ *
+ * A plugin's own result cache answers unchanged projects without reading
+ * their inputs, so one call's reads cover only what it re-evaluated. Inputs
+ * therefore carry forward from the previous entry, and the first entry comes
+ * from a call made with plugin caches off. Their cache files are rewritten on
+ * every run, so they are not inputs themselves.
  */
 
 type CreateNodesResults = Array<
@@ -81,6 +87,14 @@ const derivedDirs = [NX_TMP_DIR, join(homedir(), '.nx')].flatMap((dir) => [
   dir,
   canonicalDir(dir),
 ]);
+
+/** The workspace context's file index, which nx keeps, not the plugin. */
+function isWorkspaceIndex(path: string): boolean {
+  return (
+    isUnder(path, workspaceDataDirectory) &&
+    basename(path).startsWith('nx_files')
+  );
+}
 
 /** Files that change for reasons unrelated to what a plugin computes. */
 function isNoise(path: string): boolean {
@@ -197,17 +211,26 @@ export class EvaluationCache {
     return hashArray([...files].sort());
   }
 
+  private readEntry(): (EvaluationEntry & { key: string }) | null {
+    if (!existsSync(this.cachePath)) return null;
+    try {
+      return readJsonFile(this.cachePath);
+    } catch {
+      return null;
+    }
+  }
+
+  /** Whether there are inputs to carry forward, or the next call must build them. */
+  hasEntry(): boolean {
+    return this.readEntry() !== null;
+  }
+
   async lookup(
     configFiles: readonly string[],
     context: CreateNodesContext
   ): Promise<CreateNodesResults | null> {
-    if (!existsSync(this.cachePath)) return null;
-    let entry: EvaluationEntry & { key: string };
-    try {
-      entry = readJsonFile(this.cachePath);
-    } catch {
-      return null;
-    }
+    const entry = this.readEntry();
+    if (!entry) return null;
     const files = [...configFiles].sort();
     if (
       entry.key !== this.key(context) ||
@@ -235,19 +258,34 @@ export class EvaluationCache {
     context: CreateNodesContext,
     results: CreateNodesResults,
     reads: string[],
-    callStartedMs: number
+    callStartedMs: number,
+    bypassedPluginCaches: boolean
   ): Promise<void> {
+    const previous = bypassedPluginCaches ? null : this.readEntry();
+    if (!bypassedPluginCaches && !previous) {
+      // Nothing to carry forward, and plugin caches may have skipped reads.
+      return;
+    }
+    const paths = new Set<string>();
+    for (const path of reads) {
+      if (isUnder(path, workspaceDataDirectory) && !isWorkspaceIndex(path)) {
+        if (bypassedPluginCaches) {
+          // Read with plugin caches off: a cache that ignores the switch, such
+          // as gradle's or maven's, so this plugin's reads are never complete.
+          logger.verbose(
+            `[plugin-evaluation-cache] not caching: the plugin read ${path} with plugin caches off`
+          );
+          return;
+        }
+        continue;
+      }
+      paths.add(path);
+    }
+    for (const [path] of previous?.inputs ?? []) paths.add(path);
+
     const startedNs = BigInt(Math.floor(callStartedMs * 1_000_000));
     const inputs: EvaluationEntry['inputs'] = [];
-    for (const path of reads.sort()) {
-      // A plugin that reads its own cache can return results without reading
-      // what they came from, so its trace does not cover them.
-      if (isUnder(path, workspaceDataDirectory)) {
-        logger.verbose(
-          `[plugin-evaluation-cache] not caching: the plugin read ${path}`
-        );
-        return;
-      }
+    for (const path of [...paths].sort()) {
       let fp = '-';
       try {
         const s = statSync(path, { bigint: true });
@@ -258,7 +296,7 @@ export class EvaluationCache {
         if (s.mtimeNs >= startedNs || s.ctimeNs >= startedNs) return;
         fp = describe(s);
       } catch {
-        // Read during the call and gone now: recorded as absent.
+        // Gone now: recorded as absent, so it reappearing re-runs the plugin.
       }
       inputs.push([path, fp]);
     }

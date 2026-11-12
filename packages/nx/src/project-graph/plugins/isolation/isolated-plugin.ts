@@ -456,10 +456,17 @@ export class IsolatedPlugin implements LoadedNxPlugin {
             // nanoseconds: a config saved just before the call must not look
             // like it was written during it.
             const startedMs = performance.timeOrigin + performance.now();
+            // The first entry has no inputs to carry forward, so it needs a
+            // run that reads everything.
+            const bypassPluginCaches =
+              !!readTrace &&
+              !!this.evaluationCache &&
+              !this.evaluationCache.hasEntry();
             const result = await this.sendRequest('createNodes', {
               configFiles,
               context: ctx,
               traceId,
+              bypassPluginCaches,
             });
             if (result.success === false) {
               throw result.error;
@@ -471,7 +478,8 @@ export class IsolatedPlugin implements LoadedNxPlugin {
                 result.result,
                 readTrace,
                 traceId,
-                startedMs
+                startedMs,
+                bypassPluginCaches
               );
             }
             return result.result;
@@ -555,7 +563,8 @@ export class IsolatedPlugin implements LoadedNxPlugin {
     results: Awaited<ReturnType<IsolatedPlugin['createNodes'][1]>>,
     readTrace: TraceMarkers,
     traceId: string,
-    startedMs: number
+    startedMs: number,
+    bypassPluginCaches: boolean
   ): Promise<void> {
     try {
       const reads = readCallTrace(readTrace, traceId);
@@ -570,7 +579,8 @@ export class IsolatedPlugin implements LoadedNxPlugin {
         ctx,
         results,
         reads,
-        startedMs
+        startedMs,
+        bypassPluginCaches
       );
     } catch (e) {
       logger.verbose(

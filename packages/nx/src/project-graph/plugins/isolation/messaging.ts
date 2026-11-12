@@ -66,6 +66,8 @@ type PluginMessageDefs = DefineMessages<{
       context: CreateNodesContext;
       /** Marks this call's reads in the worker's read log, when it is traced. */
       traceId?: string;
+      /** Runs the call with plugin result caches off, so it reads every input. */
+      bypassPluginCaches?: boolean;
     };
     result:
       | {

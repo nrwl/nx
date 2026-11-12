@@ -298,16 +298,27 @@ An entry is reused only if all of these are unchanged:
   opened for reading, from loading the plugin through the end of the call.
 
 The worker writes `!begin`/`!end` markers around each call into its read log, so a
-long-lived worker's calls are told apart. Traced workers run with
-`NX_CACHE_PROJECT_GRAPH=false`, so plugins evaluate fully on a miss and read everything
-their results came from, and they put their tracing variables back after the daemon
-replaces their environment.
+long-lived worker's calls are told apart, and puts its tracing variables back after the
+daemon replaces its environment.
+
+Plugins keep their own result caches. A plugin's cache answers unchanged projects without
+reading their inputs, so one call's trace covers only what it re-evaluated. Inputs
+therefore carry forward: a new entry's inputs are this call's reads plus the previous
+entry's, re-fingerprinted. Editing one project's config re-runs the plugin, which
+re-evaluates that project and answers the rest from its own cache, and the other projects'
+inputs stay in the entry. The plugin cache files are rewritten on every run, so they are
+not inputs.
+
+That needs one complete starting point. When a plugin has no entry yet, the call runs with
+`NX_CACHE_PROJECT_GRAPH=false` for its duration, which `PluginCache` and the TypeScript
+plugin honor, so it reads everything. A plugin that still reads its own cache during that
+call has one that ignores the switch (gradle and maven), and is never cached. A run made
+with plugin caches on is only stored on top of an existing entry.
 
 A result is not stored when the trace cannot be trusted: the worker script was never seen
-(tracing did not start), a child ran untraced, the call never finished, a read file
-changed during the call, or the plugin read anything under the workspace data directory,
-which means it consulted a cache of its own (gradle and maven do). nx's own temp root and
-`~/.nx` are left out, since everything there is derived from inputs already recorded.
+(tracing did not start), a child ran untraced, the call never finished, or an input changed
+during the call. nx's own temp root and `~/.nx` are left out, since everything there is
+derived from inputs already recorded.
 
 Measured with `@nx/js/typescript` on this repo (183 config files, 109 projects, 1,269
 recorded inputs, a 485 KB entry):
@@ -320,8 +331,10 @@ recorded inputs, a 485 KB entry):
 
 Not covered: a file probed for existence (`existsSync`, `stat`) outside the listed
 directories and created later, and an `fs` glob outside them. Directory listings are not
-traced. Without the daemon, a worker that queries the workspace context reads its index
-under the workspace data directory, so its results are not cached.
+traced. Carried-forward inputs only grow: a file a deleted project read stays an input
+until `nx reset`, which can cost an extra run but never a stale result. Without the daemon,
+a worker that queries the workspace context hashes files itself, so its inputs cover much
+of the workspace and most edits re-run the plugin.
 
 ## What real plugins spawn
 
