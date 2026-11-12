@@ -79,6 +79,9 @@ export async function getBrowserConfig(
       isDevServer || isRspackV2()
         ? {}
         : ({ outputModule: true } as unknown as Configuration['experiments']),
+    // rspack-cli 2 turns lazy compilation on when this is unset. 1.x never
+    // does, and 1.x before 1.5 rejects the top-level key.
+    ...(isRspackV2() ? { lazyCompilation: false } : {}),
     resolve: {
       ...defaultConfig.resolve,
       mainFields: ['es2020', 'es2015', 'browser', 'module', 'main'],
