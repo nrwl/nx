@@ -564,8 +564,6 @@ impl IgnoredIndex {
 /// owns the watch.
 pub(crate) type CatchUp = Arc<dyn Fn() + Send + Sync>;
 
-/// The hasher's handle on an index and on the catch-up with the watch behind
-/// it.
 #[napi]
 pub struct IgnoredIndexReader {
     index: Arc<IgnoredIndex>,

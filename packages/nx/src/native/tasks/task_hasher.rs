@@ -592,8 +592,14 @@ impl TaskHasher {
         let pool = &hash_plans.pool;
         // Catching up locks the files and may hash on the rayon pool, so it
         // runs once here: a pool job doing it could end up waiting on itself.
-        if (0..pool.len() as u32)
-            .any(|id| matches!(pool.get(id).value(), HashInstruction::IgnoredFileSet { .. }))
+        let reads_index: Vec<bool> = (0..pool.len() as u32)
+            .map(|id| matches!(pool.get(id).value(), HashInstruction::IgnoredFileSet { .. }))
+            .collect();
+        if hash_plans
+            .plans
+            .values()
+            .flatten()
+            .any(|&id| reads_index[id as usize])
         {
             self.ignored_index.catch_up();
         }
@@ -1109,8 +1115,9 @@ mod tests {
         }
     }
 
-    /// Hashes 64 tasks with one instruction each and returns how many times
-    /// the index was caught up, and how many of those ran on a pool thread.
+    /// Hashes 64 tasks with one instruction each, over a pool that also holds
+    /// a fileset no plan reads, and returns how many times the index was
+    /// caught up, and how many of those ran on a pool thread.
     fn catch_ups(instruction: impl Fn(usize) -> HashInstruction) -> (usize, usize) {
         let temp = assert_fs::TempDir::new().unwrap();
         for dir in 0..8 {
@@ -1137,6 +1144,9 @@ mod tests {
             .map(|(task, instructions)| (task.as_str(), instructions.clone()))
             .collect();
         let plans = crate::native::test_utils::hash_plans(&entries);
+        plans.pool.intern(HashInstruction::ignored_files(vec![
+            "dist/unread/**".to_string(),
+        ]));
         let env = HashMap::new();
 
         let hashes = hasher

@@ -2811,23 +2811,29 @@ mod tests {
     fn a_catch_up_sees_a_write_nobody_settled() {
         let temp = workspace_with(&["a.ts"]);
         temp.child(".gitignore").write_str("dist/\n").unwrap();
+        std::fs::create_dir_all(temp.path().join("dist")).unwrap();
         let cache = TempDir::new().unwrap();
         let ctx = watching_context(&temp, &cache);
         ctx.all_file_data();
         let root = dunce::canonicalize(temp.path()).unwrap();
         let reader = ctx.reader();
         assert!(reader.track(&root, "dist"));
-
-        // No settle: a catch-up applies what the watch has delivered itself,
-        // so the write shows up within the kernel's hop, not the idle flush.
-        temp.child("dist/out.js").write_str("x").unwrap();
-        wait_until("a catch-up never saw the write", || {
+        let list = || {
             reader.catch_up();
             reader
                 .index()
                 .files_under(&root, "dist", true, &|_| true, &[])
                 .unwrap()
-                == vec!["dist/out.js"]
+        };
+        // Listed before the write: a first listing walks the disk, so it
+        // would see the file without a catch-up.
+        assert!(list().is_empty());
+
+        // No settle: a catch-up applies what the watch has delivered itself,
+        // so the write shows up within the kernel's hop, not the idle flush.
+        temp.child("dist/out.js").write_str("x").unwrap();
+        wait_until("a catch-up never saw the write", || {
+            list() == vec!["dist/out.js"]
         });
     }
 
