@@ -699,14 +699,24 @@ class CLIOutput {
     this.addNewline();
   }
 
+  /**
+   * Waits until everything written to stdout and stderr so far has reached the
+   * pipe. Writes to a pipe are asynchronous and `process.exit` does not wait
+   * for them.
+   */
   drain(): Promise<void> {
-    return new Promise((resolve) => {
-      if (process.stdout.writableNeedDrain) {
-        process.stdout.once('drain', resolve);
-      } else {
-        resolve();
-      }
-    });
+    const flush = (stream: NodeJS.WriteStream) =>
+      new Promise<void>((resolve) => {
+        if (stream.writableLength === 0) {
+          resolve();
+        } else {
+          // The callback runs once every write queued before it is flushed.
+          stream.write('', () => resolve());
+        }
+      });
+    return Promise.all([flush(process.stdout), flush(process.stderr)]).then(
+      () => undefined
+    );
   }
 }
 
