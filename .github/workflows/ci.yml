@@ -47,7 +47,6 @@ jobs:
       NX_FIX_CI_STABLE_OUTPUT_SCHEMA: 'true'
       NX_CLOUD_VERBOSE_LOGGING: 'true'
       NX_CLOUD_DISABLE_BUFFER_TASK_COMPLETIONS: 'true'
-      NX_CLOUD_TASK_CLUSTERING: 'true'
 
     steps:
       - name: Checkout
