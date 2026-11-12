@@ -1,12 +1,17 @@
 ---
 title: 'Task Sandboxing'
-description: 'Confine each task to its declared inputs and outputs to catch undeclared dependencies and keep caching correct.'
+description: 'Task sandboxing is part of Ultracache, which requires Nx 24 or later. It confines each task to its declared inputs and outputs to catch undeclared dependencies.'
 keywords: [sandboxing, CI, hermeticity, inputs, outputs, caching]
 filter: 'type:Guides'
 topics:
   - 'Continuous integration'
   - 'Nx Cloud'
 ---
+
+{% aside type="note" title="Part of Ultracache" %}
+Task sandboxing is part of [Ultracache](/docs/features/ci-features/remote-cache#ultracache), so use Nx 24 or later.
+For version requirements, see [Ultracache and Nx versions](/docs/kb/ultracache-nx-versions).
+{% /aside %}
 
 Task sandboxing confines each task to the files it declares as `inputs` and `outputs` in your
 [project configuration](/docs/reference/project-configuration)
@@ -23,8 +28,8 @@ Sandboxing is an Nx Cloud add-on that runs on a
 cluster, then enable sandboxing under [**Settings > Add-ons**](https://cloud.nx.app/go/organization/add-ons).
 {% /aside %}
 
-{% aside type="caution" title="Nx 22.6+ Required" %}
-Task sandboxing requires Nx 22.6 or later.
+{% aside type="caution" title="Nx 24+ Required" %}
+Task sandboxing requires Nx 24 or later, like the rest of Ultracache.
 {% /aside %}
 
 ## Why hermeticity matters
