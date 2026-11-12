@@ -13,6 +13,7 @@ import {
   PluginCache,
   getFilesInDirectoryUsingContext,
   applyTestFileDirectives,
+  quoteShellArg,
 } from '@nx/devkit/internal';
 import {
   AggregateCreateNodesError,
@@ -596,11 +597,10 @@ async function buildPlaywrightTargets(
           projectRoot,
           outputSubfolder
         ),
-        command: `${
-          baseTargetConfig.command
-        } ${relativeSpecFilePath} --output=${joinPathFragments(
-          testOutput,
-          outputSubfolder
+        command: `${baseTargetConfig.command} ${quoteShellArg(
+          relativeSpecFilePath
+        )} --output=${quoteShellArg(
+          joinPathFragments(testOutput, outputSubfolder)
         )}`,
         metadata: {
           technologies: ['playwright'],

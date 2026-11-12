@@ -110,7 +110,7 @@ No separate `setup-node` or `setup-bun` action is needed.
 
 The `nx-cloud start-workers` command runs before dependencies are installed,
 so it uses `npx` instead of `bunx`.
-All of its configuration comes from `.nx/ci-config.yaml`, which you create in
+All of its configuration comes from `.nx/pipelines/ci.yaml`, which you create in
 [Configure Workers](#configure-workers).
 
 ## Configure Workers
@@ -126,10 +126,10 @@ workflow step, which doesn't support `bun.lock`.
 Create a **[custom launch template](/docs/kb/launch-templates)**
 that installs bun via mise and runs `bun install` directly.
 
-Add `.nx/workflows/agents.yaml` to your workspace:
+Add `.nx/pipelines/ci.yaml` to your workspace:
 
 ```yaml
-// .nx/workflows/agents.yaml
+// .nx/pipelines/ci.yaml
 common-init-steps: &common-init-steps
   - name: Checkout
     uses: 'nrwl/nx-cloud-workflows/v6/workflow-steps/checkout/main.yaml'
@@ -152,15 +152,15 @@ The [`install-mise`](https://github.com/nrwl/nx-cloud-workflows/tree/main/workfl
 workflow step reads your `mise.toml` and installs the specified toolchains on the agent.
 All environments (local, CI, and agents) stay in sync through a single config file.
 
-Reference the template name in [`.nx/ci-config.yaml`](/docs/reference/nx-cloud/ci-config):
+Reference the template name in a [`worker-templates`](/docs/reference/nx-cloud/ci-config#worker-templates) entry in the same file:
 
 ```yaml
-// .nx/ci-config.yaml
-dte:
-  distribute-on: 5 linux-large
-lifecycle:
-  stop-after:
-    - e2e
+// .nx/pipelines/ci.yaml
+worker-templates:
+  default:
+    workers: 5 linux-large
+    stop-after:
+      - e2e
 ```
 
 You can define multiple templates with different resource classes for different workloads.

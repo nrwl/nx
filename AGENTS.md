@@ -104,6 +104,9 @@ This builds the package and copies it into the target repo's `node_modules`. It 
 
 ### Testing Changes
 
+Before adding or changing tests that start servers or allocate ports, read and follow
+[Test server ports](CONTRIBUTING.md#test-server-ports).
+
 After code changes are made, first test the specific project where the changes were made:
 
 ```bash

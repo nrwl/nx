@@ -428,9 +428,11 @@ describe('migrate commit broker', () => {
             : installStepTree(dir, step(), 'install', vi.fn(), {});
         await sleep(20);
         await broker.service();
-        await (typeof expected === 'string'
-          ? expect(pending).rejects.toThrow(expected)
-          : expect(pending).rejects.toBeInstanceOf(expected));
+        if (typeof expected === 'string') {
+          await expect(pending).rejects.toThrow(expected);
+        } else {
+          await expect(pending).rejects.toBeInstanceOf(expected);
+        }
         broker.close();
 
         expect(stdout).toBe(raw);

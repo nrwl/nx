@@ -135,6 +135,25 @@ fn under(path: &str, dir: &str) -> bool {
         || (path.len() > dir.len() && path.starts_with(dir) && path.as_bytes()[dir.len()] == b'/')
 }
 
+/// The members that are `dir` or sit under it, sorted. A sibling like
+/// `dir-e2e` sorts between `dir` and `dir/`, so the range starts at `dir/`.
+fn members_under(members: &BTreeSet<String>, dir: &str) -> Vec<String> {
+    if dir.is_empty() {
+        return members.iter().cloned().collect();
+    }
+    let prefix = format!("{dir}/");
+    members
+        .get(dir)
+        .into_iter()
+        .chain(
+            members
+                .range(prefix.clone()..)
+                .take_while(|path| path.starts_with(&prefix)),
+        )
+        .cloned()
+        .collect()
+}
+
 /// Whether `set` holds `path` or one of its ancestors: one lookup per level.
 /// `Path::ancestors` ends a relative path at `""`, which is the workspace
 /// root and an ancestor of everything, so the root needs no case of its own.
@@ -291,14 +310,7 @@ impl IgnoredIndex {
         {
             return None;
         }
-        let members = self.members.read();
-        Some(
-            members
-                .range(dir.to_string()..)
-                .take_while(|path| under(path, dir))
-                .cloned()
-                .collect(),
-        )
+        Some(members_under(&self.members.read(), dir))
     }
 
     /// The files under `dir` that `accept` admits, workspace-relative and in
@@ -442,11 +454,7 @@ impl IgnoredIndex {
     /// a kept but unlisted directory.
     fn remove(&self, path: &str) -> bool {
         let mut members = self.members.write();
-        let gone: Vec<String> = members
-            .range(path.to_string()..)
-            .take_while(|p| under(p, path))
-            .cloned()
-            .collect();
+        let gone = members_under(&members, path);
         for p in &gone {
             members.remove(p);
             self.contents.remove(p);
@@ -459,11 +467,7 @@ impl IgnoredIndex {
     /// what is no longer there. A file the seed saw again is left as it
     /// was: its stamp still decides whether the hash stands.
     fn replace_under(&self, members: &mut BTreeSet<String>, dir: &str, seeded: Vec<String>) {
-        let before: Vec<String> = members
-            .range(dir.to_string()..)
-            .take_while(|p| under(p, dir))
-            .cloned()
-            .collect();
+        let before = members_under(members, dir);
         let fresh: BTreeSet<String> = seeded.into_iter().collect();
         for path in &before {
             if !fresh.contains(path) {
@@ -679,6 +683,68 @@ mod tests {
             index.list(temp.path(), "dist").unwrap(),
             vec!["dist/gen/a.js", "dist/gen/nested/b.js", "dist/other/c.js"]
         );
+    }
+
+    #[test]
+    fn a_sibling_whose_name_extends_a_directory_does_not_hide_it() {
+        let temp = workspace();
+        for file in ["dist/gen+1/z.js", "dist/gen-e2e/x.js", "dist/gen.old/y.js"] {
+            temp.child(file).write_str(file).unwrap();
+        }
+        let index = watched();
+        assert!(index.track(temp.path(), "dist"));
+        index.list(temp.path(), "dist").unwrap();
+        assert_eq!(
+            index.list(temp.path(), "dist/gen").unwrap(),
+            vec!["dist/gen/a.js", "dist/gen/nested/b.js"]
+        );
+        let files = |cached| {
+            let mut found = index
+                .files_under(temp.path(), "dist/gen", cached, &|_| true, &[])
+                .unwrap();
+            found.sort();
+            found
+        };
+        assert_eq!(files(true), files(false));
+
+        std::fs::remove_file(temp.path().join("dist/gen/nested/b.js")).unwrap();
+        index.note_written(temp.path(), "dist/gen");
+        assert_eq!(
+            index.list(temp.path(), "dist/gen").unwrap(),
+            vec!["dist/gen/a.js"]
+        );
+
+        std::fs::remove_dir_all(temp.path().join("dist/gen")).unwrap();
+        index.note_deleted_all(&["dist/gen"]);
+        assert_eq!(
+            index.list(temp.path(), "dist").unwrap(),
+            vec![
+                "dist/gen+1/z.js",
+                "dist/gen-e2e/x.js",
+                "dist/gen.old/y.js",
+                "dist/other/c.js"
+            ]
+        );
+    }
+
+    #[test]
+    fn an_unwatched_sibling_whose_name_extends_a_directory_does_not_hide_it() {
+        let temp = workspace();
+        temp.child("dist/gen-e2e/x.js").write_str("x").unwrap();
+        let index = IgnoredIndex::new(None);
+        assert!(index.track(temp.path(), "dist"));
+        index
+            .files_under(temp.path(), "dist", true, &|_| true, &[])
+            .unwrap();
+        let files = |cached| {
+            let mut found = index
+                .files_under(temp.path(), "dist/gen", cached, &|_| true, &[])
+                .unwrap();
+            found.sort();
+            found
+        };
+        assert_eq!(files(true), files(false));
+        assert_eq!(files(true), vec!["dist/gen/a.js", "dist/gen/nested/b.js"]);
     }
 
     #[test]

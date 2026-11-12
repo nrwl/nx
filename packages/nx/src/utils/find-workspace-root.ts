@@ -1,4 +1,5 @@
 import { workspaceRootInner } from './workspace-root';
+import { resolveInstalledPackage } from './installation-directory';
 
 /**
  * Recursive function that walks back up the directory
@@ -25,10 +26,7 @@ export interface WorkspaceTypeAndRoot {
 
 function isAngularCliInstalled(root: string): boolean {
   try {
-    // nx-ignore-next-line
-    require.resolve('@angular/cli', {
-      paths: [root],
-    });
+    resolveInstalledPackage('@angular/cli', [root], root);
     return true;
   } catch {
     return false;

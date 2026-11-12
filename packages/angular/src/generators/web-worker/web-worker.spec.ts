@@ -27,8 +27,10 @@ describe('webWorker generator', () => {
       skipFormat: true,
     });
 
-    expect(tree.exists(`${appName}/tsconfig.worker.json`));
-    expect(tree.exists(`${appName}/src/app/test-worker.worker.ts`));
+    expect(tree.exists(`${appName}/tsconfig.worker.json`)).toBeTruthy();
+    expect(
+      tree.exists(`${appName}/src/app/test-worker.worker.ts`)
+    ).toBeTruthy();
   });
 
   it('should extend from tsconfig.base.json', async () => {
