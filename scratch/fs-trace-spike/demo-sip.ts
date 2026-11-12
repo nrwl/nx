@@ -99,6 +99,24 @@ const cases: Record<string, Case> = {
     ['-c', `open(${JSON.stringify(d('py'))}).read()`],
     has(d('py'))
   ),
+  // Restricted roots, started by the addon itself.
+  'root: /bin/sh -> cat': [
+    '/bin/sh',
+    ['-c', `cat ${d('root-sh')} >/dev/null`],
+    has(d('root-sh')),
+  ],
+  // cmp prints nothing for identical files, so no write hits the harness's stdout.
+  'root: /usr/bin/cmp': [
+    '/usr/bin/cmp',
+    [d('root-cmp'), d('root-cmp')],
+    has(d('root-cmp')),
+  ],
+  'root: #!/bin/sh script (gradlew)': [gradlewLike, [], has(d('shebang-sh'))],
+  'root: mise shim -> dotnet': [
+    dotnetShim,
+    ['--version'],
+    (r) => r.some((p) => p.includes('/mise/installs/dotnet/')),
+  ],
   'node -> sh -> sudo (setuid)': viaNode(
     '/bin/sh',
     ['-c', 'sudo -n true 2>/dev/null; true'],

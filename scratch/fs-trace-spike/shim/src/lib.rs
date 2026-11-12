@@ -45,9 +45,18 @@ unsafe fn log_fd() -> c_int {
 #[cfg(target_os = "linux")]
 unsafe fn dir_of_fd(fd: c_int, buf: &mut [u8]) -> usize {
     let mut link = [0u8; 40];
-    libc::snprintf(link.as_mut_ptr().cast(), link.len(), c"/proc/self/fd/%d".as_ptr(), fd);
+    libc::snprintf(
+        link.as_mut_ptr().cast(),
+        link.len(),
+        c"/proc/self/fd/%d".as_ptr(),
+        fd,
+    );
     let n = libc::readlink(link.as_ptr().cast(), buf.as_mut_ptr().cast(), 4096);
-    if n > 0 { n as usize } else { 0 }
+    if n > 0 {
+        n as usize
+    } else {
+        0
+    }
 }
 
 #[cfg(target_os = "macos")]
@@ -183,7 +192,12 @@ unsafe fn traced_open(path: *const c_char, flags: c_int, mode: libc::c_uint) -> 
     fd
 }
 
-unsafe fn traced_openat(dirfd: c_int, path: *const c_char, flags: c_int, mode: libc::c_uint) -> c_int {
+unsafe fn traced_openat(
+    dirfd: c_int,
+    path: *const c_char,
+    flags: c_int,
+    mode: libc::c_uint,
+) -> c_int {
     let fd = real::openat(dirfd, path, flags, mode);
     if fd >= 0 && reads(flags) {
         record(dirfd, path);
@@ -223,11 +237,21 @@ mod exports {
         traced_open(path, flags, 0)
     }
     #[no_mangle]
-    pub unsafe extern "C" fn openat(d: c_int, path: *const c_char, flags: c_int, mode: c_uint) -> c_int {
+    pub unsafe extern "C" fn openat(
+        d: c_int,
+        path: *const c_char,
+        flags: c_int,
+        mode: c_uint,
+    ) -> c_int {
         traced_openat(d, path, flags, mode)
     }
     #[no_mangle]
-    pub unsafe extern "C" fn openat64(d: c_int, path: *const c_char, flags: c_int, mode: c_uint) -> c_int {
+    pub unsafe extern "C" fn openat64(
+        d: c_int,
+        path: *const c_char,
+        flags: c_int,
+        mode: c_uint,
+    ) -> c_int {
         traced_openat(d, path, flags, mode)
     }
     #[no_mangle]
@@ -258,26 +282,52 @@ mod exports {
     // `mode` is read from the first stack slot, where the caller's variadic arg lives.
     #[cfg(target_arch = "aarch64")]
     unsafe extern "C" fn hook_open(
-        path: *const c_char, flags: c_int,
-        _2: usize, _3: usize, _4: usize, _5: usize, _6: usize, _7: usize,
+        path: *const c_char,
+        flags: c_int,
+        _2: usize,
+        _3: usize,
+        _4: usize,
+        _5: usize,
+        _6: usize,
+        _7: usize,
         mode: c_uint,
     ) -> c_int {
-        traced_open(path, flags, if flags & libc::O_CREAT != 0 { mode } else { 0 })
+        traced_open(
+            path,
+            flags,
+            if flags & libc::O_CREAT != 0 { mode } else { 0 },
+        )
     }
     #[cfg(target_arch = "aarch64")]
     unsafe extern "C" fn hook_openat(
-        d: c_int, path: *const c_char, flags: c_int,
-        _3: usize, _4: usize, _5: usize, _6: usize, _7: usize,
+        d: c_int,
+        path: *const c_char,
+        flags: c_int,
+        _3: usize,
+        _4: usize,
+        _5: usize,
+        _6: usize,
+        _7: usize,
         mode: c_uint,
     ) -> c_int {
-        traced_openat(d, path, flags, if flags & libc::O_CREAT != 0 { mode } else { 0 })
+        traced_openat(
+            d,
+            path,
+            flags,
+            if flags & libc::O_CREAT != 0 { mode } else { 0 },
+        )
     }
     #[cfg(target_arch = "x86_64")]
     unsafe extern "C" fn hook_open(path: *const c_char, flags: c_int, mode: c_uint) -> c_int {
         traced_open(path, flags, mode)
     }
     #[cfg(target_arch = "x86_64")]
-    unsafe extern "C" fn hook_openat(d: c_int, path: *const c_char, flags: c_int, mode: c_uint) -> c_int {
+    unsafe extern "C" fn hook_openat(
+        d: c_int,
+        path: *const c_char,
+        flags: c_int,
+        mode: c_uint,
+    ) -> c_int {
         traced_openat(d, path, flags, mode)
     }
     unsafe extern "C" fn hook_fopen(path: *const c_char, mode: *const c_char) -> *mut libc::FILE {
@@ -294,8 +344,17 @@ mod exports {
     #[used]
     #[link_section = "__DATA,__interpose"]
     static INTERPOSE: [Interpose; 3] = [
-        Interpose { replacement: hook_open as *const (), original: libc::open as *const () },
-        Interpose { replacement: hook_openat as *const (), original: libc::openat as *const () },
-        Interpose { replacement: hook_fopen as *const (), original: libc::fopen as *const () },
+        Interpose {
+            replacement: hook_open as *const (),
+            original: libc::open as *const (),
+        },
+        Interpose {
+            replacement: hook_openat as *const (),
+            original: libc::openat as *const (),
+        },
+        Interpose {
+            replacement: hook_fopen as *const (),
+            original: libc::fopen as *const (),
+        },
     ];
 }

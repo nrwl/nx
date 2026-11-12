@@ -3,6 +3,8 @@ use napi_derive::napi;
 use std::collections::BTreeSet;
 use std::process::Command;
 
+#[cfg(target_os = "macos")]
+mod macos;
 #[cfg(target_os = "linux")]
 mod seccomp;
 
@@ -58,10 +60,17 @@ impl TraceTask {
         let log = std::env::temp_dir().join(format!(
             "fstrace-{}-{:x}.log",
             std::process::id(),
-            std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos()
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
         ));
         std::fs::File::create(&log).map_err(io_err)?;
-        let var = if cfg!(target_os = "macos") { "DYLD_INSERT_LIBRARIES" } else { "LD_PRELOAD" };
+        let var = if cfg!(target_os = "macos") {
+            "DYLD_INSERT_LIBRARIES"
+        } else {
+            "LD_PRELOAD"
+        };
         let sep = if cfg!(target_os = "macos") { ":" } else { " " };
         let preload = match std::env::var(var) {
             Ok(existing) if !existing.is_empty() => format!("{shim}{sep}{existing}"),
@@ -72,7 +81,11 @@ impl TraceTask {
     }
 }
 
-fn collect_log(log: &std::path::Path, events: &mut u32, reads: &mut BTreeSet<String>) -> Result<()> {
+fn collect_log(
+    log: &std::path::Path,
+    events: &mut u32,
+    reads: &mut BTreeSet<String>,
+) -> Result<()> {
     let raw = std::fs::read(log).map_err(io_err)?;
     let _ = std::fs::remove_file(log);
     for line in String::from_utf8_lossy(&raw).lines() {
@@ -95,26 +108,53 @@ impl Task for TraceTask {
         match self.options.backend.as_str() {
             "none" => {
                 let status = command.status().map_err(io_err)?;
-                Ok(TraceResult { exit_code: status.code().unwrap_or(-1), reads: vec![], events: 0 })
+                Ok(TraceResult {
+                    exit_code: status.code().unwrap_or(-1),
+                    reads: vec![],
+                    events: 0,
+                })
             }
             "preload" => {
                 let log = self.with_preload(&mut command)?;
+                // The shim spawns the root itself, so a restricted root is rewritten too.
+                #[cfg(target_os = "macos")]
+                let status = macos::spawn(
+                    self.options.shim_path.as_deref().unwrap_or_default(),
+                    &command,
+                )
+                .map_err(io_err)?;
+                #[cfg(not(target_os = "macos"))]
                 let status = command.status().map_err(io_err)?;
                 let (mut events, mut reads) = (0, BTreeSet::new());
                 collect_log(&log, &mut events, &mut reads)?;
-                Ok(TraceResult { exit_code: status.code().unwrap_or(-1), reads: reads.into_iter().collect(), events })
+                Ok(TraceResult {
+                    exit_code: status.code().unwrap_or(-1),
+                    reads: reads.into_iter().collect(),
+                    events,
+                })
             }
             #[cfg(target_os = "linux")]
             backend @ ("seccomp" | "hybrid") => {
-                let log = if backend == "hybrid" { Some(self.with_preload(&mut command)?) } else { None };
-                let (code, mut events, raw) = seccomp::run(command, log.is_some()).map_err(io_err)?;
+                let log = if backend == "hybrid" {
+                    Some(self.with_preload(&mut command)?)
+                } else {
+                    None
+                };
+                let (code, mut events, raw) =
+                    seccomp::run(command, log.is_some()).map_err(io_err)?;
                 let mut reads: BTreeSet<String> = raw.iter().map(|p| normalize(p)).collect();
                 if let Some(log) = log {
                     collect_log(&log, &mut events, &mut reads)?;
                 }
-                Ok(TraceResult { exit_code: code, reads: reads.into_iter().collect(), events })
+                Ok(TraceResult {
+                    exit_code: code,
+                    reads: reads.into_iter().collect(),
+                    events,
+                })
             }
-            other => Err(Error::from_reason(format!("unsupported backend on this platform: {other}"))),
+            other => Err(Error::from_reason(format!(
+                "unsupported backend on this platform: {other}"
+            ))),
         }
     }
 

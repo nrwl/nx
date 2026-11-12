@@ -1,9 +1,11 @@
-// Injected through DYLD_INSERT_LIBRARIES. Records successful read-opens to $FSTRACE_OUT,
-// and keeps tracing alive across binaries dyld would strip the variable from: those are
-// started as ad-hoc re-signed copies kept in $FSTRACE_SIP_DIR.
+// Injected through DYLD_INSERT_LIBRARIES. Records successful read-opens to $FSTRACE_OUT.
+// Binaries dyld would strip the variable from are started as ad-hoc re-signed copies kept
+// in $FSTRACE_SIP_DIR, so tracing continues below them.
 //
-// Built in C rather than with the Rust shim because Apple's binaries, and so their copies,
-// are arm64e, which stable Rust cannot target.
+// This is C, not Rust, for two reasons. The copies of Apple's binaries are arm64e, and
+// dyld will not load an arm64 library into them, but Rust's arm64e-apple-darwin target is
+// tier 3 and builds only on nightly with -Zbuild-std. Hooking open and openat also means
+// defining C-variadic functions, which stable Rust cannot do.
 
 #include <errno.h>
 #include <fcntl.h>
@@ -12,6 +14,7 @@
 #include <mach-o/dyld.h>
 #include <mach-o/fat.h>
 #include <mach-o/loader.h>
+#include <pthread.h>
 #include <spawn.h>
 #include <stdarg.h>
 #include <stdint.h>
@@ -264,6 +267,16 @@ static size_t argc_of(char *const argv[]) {
   return n;
 }
 
+// /bin/sh only starts the shell /private/var/select/sh names, so copying that shell instead
+// saves a traced process per shell. argv[0] stays `sh`, which is what puts it in sh mode.
+static const char *exec_source(const char *path, char *buf, size_t n) {
+  if (strcmp(path, "/bin/sh") != 0) return path;
+  ssize_t len = readlink("/private/var/select/sh", buf, n - 1);
+  if (len <= 0 || buf[0] != '/') return path;
+  buf[len] = 0;
+  return buf;
+}
+
 typedef struct {
   char target[PATH_MAX];
   char interp[PATH_MAX];
@@ -280,7 +293,8 @@ static int plan_exec(const char *path, char *const argv[], exec_plan *plan) {
   if (read_shebang(path, interp, sizeof plan->interp, arg, sizeof plan->arg)) {
     record(AT_FDCWD, path);
     if (!is_restricted(interp)) return 0;
-    if (sip_copy(interp, target, tn) != 0) {
+    char shell[PATH_MAX];
+    if (sip_copy(exec_source(interp, shell, sizeof shell), target, tn) != 0) {
       record_untraced(interp);
       return 0;
     }
@@ -299,7 +313,9 @@ static int plan_exec(const char *path, char *const argv[], exec_plan *plan) {
   if (!is_restricted(path)) return 0;
   struct stat st;
   // A copy drops setuid, which would change what the program does, so it runs untraced.
-  if (stat(path, &st) != 0 || (st.st_mode & (S_ISUID | S_ISGID)) || sip_copy(path, target, tn) != 0) {
+  char shell[PATH_MAX];
+  if (stat(path, &st) != 0 || (st.st_mode & (S_ISUID | S_ISGID)) ||
+      sip_copy(exec_source(path, shell, sizeof shell), target, tn) != 0) {
     record_untraced(path);
     return 0;
   }
@@ -377,6 +393,49 @@ static int my_posix_spawnp(pid_t *pid, const char *file, const posix_spawn_file_
     return r;
   }
   return spawn_resolved(pid, path, fa, attr, argv, envp);
+}
+
+static const char *env_value(char *const envp[], const char *name) {
+  size_t len = strlen(name);
+  for (size_t i = 0; envp && envp[i]; i++)
+    if (strncmp(envp[i], name, len) == 0 && envp[i][len] == '=') return envp[i] + len + 1;
+  return NULL;
+}
+
+static const char *validated_sip_dir(const char *dir);
+
+// For a launcher that is not traced itself, such as the addon starting the root of a
+// tree: starts `file` as a traced process would, with the shim's settings taken from
+// `envp`. Serialised, because it borrows the shim's process-wide settings.
+__attribute__((visibility("default"))) int fstrace_spawn(pid_t *pid, const char *file, const char *cwd,
+                                                         char *const argv[], char *const envp[]) {
+  static pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
+  pthread_mutex_lock(&lock);
+  char *saved_carried[NCARRIED];
+  memcpy(saved_carried, g_carried, sizeof g_carried);
+  int saved_log = g_log;
+  const char *saved_sip_dir = g_sip_dir;
+
+  for (size_t v = 0; v < NCARRIED; v++) {
+    const char *val = env_value(envp, CARRIED_VARS[v]);
+    g_carried[v] = val ? (char *)val - strlen(CARRIED_VARS[v]) - 1 : NULL;
+  }
+  const char *out = env_value(envp, "FSTRACE_OUT");
+  g_log = out ? open(out, O_WRONLY | O_APPEND | O_CLOEXEC) : -1;
+  g_sip_dir = validated_sip_dir(env_value(envp, "FSTRACE_SIP_DIR"));
+
+  posix_spawn_file_actions_t fa;
+  posix_spawn_file_actions_init(&fa);
+  if (cwd) posix_spawn_file_actions_addchdir_np(&fa, cwd);
+  int r = my_posix_spawnp(pid, file, &fa, NULL, argv, envp);
+  posix_spawn_file_actions_destroy(&fa);
+
+  if (g_log >= 0) close(g_log);
+  memcpy(g_carried, saved_carried, sizeof g_carried);
+  g_log = saved_log;
+  g_sip_dir = saved_sip_dir;
+  pthread_mutex_unlock(&lock);
+  return r;
 }
 
 // ---------------------------------------------------------------------------------------
