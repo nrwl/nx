@@ -1,8 +1,9 @@
 #!/bin/sh
-# Builds the shim + addon and the test fixtures. Linux only for now.
+# Builds the Linux shim, the spike addon and the test fixtures.
 set -e
 cd "$(dirname "$0")"
 # The repo's .cargo/config.toml redirects target-dir; keep this spike self-contained.
+node ../../scripts/build-fstrace-shim.mjs
 cargo build --release --target-dir target
 cp target/release/libfstrace_addon.so fstrace.node
 mkdir -p bin

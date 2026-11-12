@@ -4,7 +4,10 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 const here = path.dirname(fileURLToPath(import.meta.url));
 const { traceSpawn } = createRequire(import.meta.url)('./fstrace.node');
-const shimPath = path.join(here, 'target/release/libfstrace_shim.dylib');
+const shimPath = path.join(
+  here,
+  '../../packages/nx/src/native/fstrace.darwin.dylib'
+);
 const src = path.resolve(here, '../../packages/nx/src');
 const RUNS = Number(process.env.RUNS ?? 7);
 const workloads = {

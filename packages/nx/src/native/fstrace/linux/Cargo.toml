@@ -1,9 +1,11 @@
 [package]
-name = "fstrace-shim"
+name = "nx-fstrace-shim"
 version = "0.0.0"
 edition = "2021"
+publish = false
 
 [lib]
+name = "fstrace"
 crate-type = ["cdylib"]
 
 [dependencies]

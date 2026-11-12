@@ -4,7 +4,10 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 const here = path.dirname(fileURLToPath(import.meta.url));
 const { traceSpawn } = createRequire(import.meta.url)('./fstrace.node');
-const shimPath = path.join(here, 'target/release/libfstrace_shim.so');
+const shimPath = path.join(
+  here,
+  '../../packages/nx/src/native/fstrace.linux.so'
+);
 const d = (n) => path.join(here, 'fixtures/data', `${n}.txt`);
 
 const script = `

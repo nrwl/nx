@@ -16,7 +16,11 @@
     { "glob": "src/native/nx.wasi.cjs" },
     { "glob": "src/native/wasi-worker-browser.mjs" },
     { "glob": "src/native/wasi-worker.mjs" },
-    { "glob": "src/native/*.{node,wasm,dylib}", "includeIgnoredFiles": true },
+    { "glob": "src/native/*.{node,wasm}", "includeIgnoredFiles": true },
+    {
+      "glob": "src/native/{fstrace.darwin.dylib,fstrace.linux.so,fstrace-*.dll,fstrace-*.exe}",
+      "includeIgnoredFiles": true
+    },
     { "glob": "native-packages/*/package.json" },
     {
       "glob": "index.d.ts",
