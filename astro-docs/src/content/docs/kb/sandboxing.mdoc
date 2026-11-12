@@ -8,6 +8,12 @@ topics:
   - 'Nx Cloud'
 ---
 
+{% aside type="caution" title="Legacy feature" %}
+Task sandboxing is a legacy feature.
+We recommend upgrading to Nx 24 or later and using [Ultracache](/docs/features/ci-features/remote-cache#ultracache) instead.
+For version requirements, see [Ultracache and Nx versions](/docs/kb/ultracache-nx-versions).
+{% /aside %}
+
 Task sandboxing confines each task to the files it declares as `inputs` and `outputs` in your
 [project configuration](/docs/reference/project-configuration)
 (whether explicit or [inferred](/docs/features/run-tasks#inferred-tasks)).
