@@ -1,4 +1,5 @@
 import {
+  output,
   printsFullTaskOutput,
   isStaticOutputStyle,
   printsTaskOutput,
@@ -124,4 +125,45 @@ describe('the specified/resolved split', () => {
       );
     }
   );
+});
+
+describe('output.drain', () => {
+  const streams = ['stdout', 'stderr'] as const;
+
+  afterEach(() => {
+    for (const name of streams) {
+      delete (process[name] as any).writableLength;
+    }
+    vi.restoreAllMocks();
+  });
+
+  it('waits for pending stderr writes as well as stdout', async () => {
+    const pending: Record<string, () => void> = {};
+    for (const name of streams) {
+      Object.defineProperty(process[name], 'writableLength', {
+        configurable: true,
+        get: () => 1024,
+      });
+      vi.spyOn(process[name], 'write').mockImplementation(((
+        _chunk: unknown,
+        callback: () => void
+      ) => {
+        pending[name] = callback;
+        return true;
+      }) as any);
+    }
+
+    let drained = false;
+    const result = output.drain().then(() => {
+      drained = true;
+    });
+
+    pending.stdout();
+    await new Promise((resolve) => setImmediate(resolve));
+    expect(drained).toBe(false);
+
+    pending.stderr();
+    await result;
+    expect(drained).toBe(true);
+  });
 });
