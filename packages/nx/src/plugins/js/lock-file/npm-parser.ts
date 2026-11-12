@@ -121,10 +121,13 @@ function getNodes(data: NpmLockFile): {
 
       const packageName = path.split('node_modules/').pop();
       let version = findV3Version(snapshot, packageName);
-      // Only a `file:` copy that shares its name and version with another
-      // resolution is named by its path: alias keys, peer ranges and the
-      // lockfile writer match the semver version.
-      if (snapshot.resolved?.startsWith('file:')) {
+      // Only a non-aliased `file:` copy that shares its name and version with
+      // another resolution is named by its path: alias keys, peer ranges and
+      // the lockfile writer match the semver version.
+      if (
+        snapshot.resolved?.startsWith('file:') &&
+        (!snapshot.name || snapshot.name === packageName)
+      ) {
         versionsWithSeveralResolutions ??=
           findVersionsWithSeveralResolutions(data);
         if (versionsWithSeveralResolutions.has(`${packageName}@${version}`)) {

@@ -380,6 +380,70 @@ describe('nx/js/dependencies-and-lockfile', () => {
     ]);
   });
 
+  it('should depend on the aliased local copy npm nests under a project', async () => {
+    write(
+      'package.json',
+      JSON.stringify({
+        name: 'aws',
+        private: true,
+        workspaces: ['libs/*'],
+        dependencies: { alias: 'npm:is-number@7.0.0' },
+      })
+    );
+    write(
+      'package-lock.json',
+      readFileSync(
+        join(
+          __dirname,
+          'lock-file/__fixtures__/nested-local-alias/package-lock.json.fixture'
+        ),
+        'utf-8'
+      )
+    );
+    write(
+      'libs/a/package.json',
+      JSON.stringify({
+        name: '@aw/a',
+        version: '1.0.0',
+        dependencies: { alias: 'file:is-number-7.0.0.tgz' },
+      })
+    );
+    write('libs/a/src/index.ts', `import isNumber from 'alias';`);
+    write(
+      'libs/a/node_modules/alias/package.json',
+      JSON.stringify({ name: 'is-number', version: '7.0.0' })
+    );
+    const projectFiles = {
+      'libs/a': ['libs/a/package.json', 'libs/a/src/index.ts'],
+    };
+    const plugin = await loadPluginInNewProcess();
+    const externalNodes = await createExternalNodes(
+      plugin,
+      'package-lock.json'
+    );
+
+    const dependencies = await createDependencies(
+      plugin,
+      externalNodes,
+      projectFiles
+    );
+
+    const vendoredIntegrity =
+      'sha512-EwZL1uBWsPaaiFhPuuZHQz/0Ku53KxCBAHP534l2JLP/gIEcGUXoVothWMzVd56ApBnGUm8kyU7fLE3Q0iuZaw==';
+    expect(
+      dependencies
+        .filter(({ source }) => source === 'libs/a')
+        .map(({ sourceFile, target }) => [
+          sourceFile,
+          externalNodes[target].data.hash,
+        ])
+        .sort()
+    ).toEqual([
+      ['libs/a/package.json', vendoredIntegrity],
+      ['libs/a/src/index.ts', vendoredIntegrity],
+    ]);
+  });
+
   it('should not create dependencies from a lockfile that createNodes skipped', async () => {
     write('package.json', JSON.stringify({ devDependencies: { a: '1.0.0' } }));
     write('yarn.lock', yarnLockFile);
