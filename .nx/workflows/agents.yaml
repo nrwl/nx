@@ -89,11 +89,12 @@ common-init-steps: &common-init-steps
           cargo fetch
 
       # Static musl build; update the version and sha256 together.
+      # --retry-all-errors also retries resets and truncated downloads.
       - name: Install hyperfine
         script: |
           set -e
           tmp="$(mktemp -d)"
-          curl -fsSL --retry 3 -o "$tmp/hyperfine.tar.gz" https://github.com/sharkdp/hyperfine/releases/download/v2.0.0/hyperfine-v2.0.0-x86_64-unknown-linux-musl.tar.gz
+          curl -fsSL --retry 5 --retry-all-errors --retry-max-time 300 --connect-timeout 30 --speed-limit 10 --speed-time 30 -o "$tmp/hyperfine.tar.gz" https://github.com/sharkdp/hyperfine/releases/download/v2.0.0/hyperfine-v2.0.0-x86_64-unknown-linux-musl.tar.gz
           echo "38e59087bd65520930a13cf513d8a493b7043741e8ad62349a8a9929eb61bc5c  $tmp/hyperfine.tar.gz" | sha256sum -c -
           tar -xzf "$tmp/hyperfine.tar.gz" -C "$tmp"
           install -m 0755 "$tmp/hyperfine-v2.0.0-x86_64-unknown-linux-musl/hyperfine" "$HOME/.local/bin/hyperfine"
