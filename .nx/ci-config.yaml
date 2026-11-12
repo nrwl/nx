@@ -12,8 +12,16 @@ dte:
   # ("You have to use a classifier to attach supplemental artifacts").
   # build-native ran on both the main-job worker and an agent in one CIPE, and agent tests
   # then loaded a stale native binding.
+  # Only agents install the Cypress and Playwright browsers.
   assignment-rules:
-    - targets: ['bench*', 'mvn:*', 'build-native*']
+    - targets:
+        - 'bench*'
+        - 'mvn:*'
+        - 'build-native*'
+        - 'validate-example'
+        - 'e2e'
+        - 'e2e-ci**'
+        - 'pw-e2e**'
       run-on:
         - agent: linux-large
         - agent: linux-extra-large
