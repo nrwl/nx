@@ -35,12 +35,14 @@ vi.mock('../../utils/perf-logging', () => ({}));
 
 describe('invalidateGraphCache', () => {
   let fs: TempFs;
+  let cleanupPlugins: (() => void) | undefined;
 
   beforeEach(() => {
     fs = new TempFs('pgir-invalidate');
   });
 
   afterEach(() => {
+    cleanupPlugins?.();
     fs.cleanup();
   });
 
@@ -105,6 +107,69 @@ describe('invalidateGraphCache', () => {
     // The successor's retrieval, proving the parked compute discarded its
     // own result and chained instead of committing.
     expect(retrieveCallCount).toBeGreaterThanOrEqual(2);
+  });
+
+  it('settles a request when the cache is cleared while a stale plugin set loads', async (ctx) => {
+    fs.createFilesSync({
+      'nx.json': JSON.stringify({}),
+      'package.json': JSON.stringify({ name: 'root' }),
+      'libs/foo/project.json': JSON.stringify({
+        name: 'foo',
+        root: 'libs/foo',
+      }),
+      'noop-plugin.cjs': `
+        exports.name = 'noop';
+        exports.createNodes = ['**/never.json', () => []];
+      `,
+    });
+
+    vi.resetModules();
+    vi.doUnmock('../../project-graph/utils/retrieve-workspace-files');
+    const { setWorkspaceRoot } = await import('../../utils/workspace-root');
+    setWorkspaceRoot(fs.tempDir);
+
+    let releasePlugins: () => void;
+    const pluginsGate = new Promise<void>((resolve) => {
+      releasePlugins = resolve;
+    });
+    let pluginsCallCount = 0;
+    vi.doMock('../../project-graph/plugins/get-plugins', async () => {
+      const actual = (await vi.importActual(
+        '../../project-graph/plugins/get-plugins'
+      )) as any;
+      return {
+        ...actual,
+        getPluginsSeparated: async (...args: unknown[]) => {
+          if (++pluginsCallCount === 1) {
+            await pluginsGate;
+          }
+          return actual.getPluginsSeparated(...args);
+        },
+      };
+    });
+
+    ({ cleanupPlugins } =
+      await import('../../project-graph/plugins/get-plugins'));
+    const { getCachedSerializedProjectGraphPromise, invalidateGraphCache } =
+      await import('./project-graph-incremental-recomputation');
+
+    const waitFor = waitForIn(ctx);
+
+    const request = getCachedSerializedProjectGraphPromise();
+    await waitFor(() => pluginsCallCount === 1, 'the plugin load');
+
+    // The parked computation's plugin set is stale once it resumes, and no
+    // newer computation holds the cache.
+    writeFileSync(
+      join(fs.tempDir, 'nx.json'),
+      JSON.stringify({ plugins: [join(fs.tempDir, 'noop-plugin.cjs')] })
+    );
+    invalidateGraphCache();
+    releasePlugins!();
+
+    const result = await request;
+    expect(result.error).toBeNull();
+    expect(result.projectGraph.nodes.foo).toBeDefined();
   });
 });
 
@@ -1821,9 +1886,13 @@ describe('pending dotenv replay before serving a graph', () => {
     // A plain factory: the module sits in a require cycle, so resolving
     // the actual inside the factory recurses. getPluginsSeparated resolves
     // it lazily at call time instead (project discovery needs the real
-    // default plugins); the faked getPlugins only skips dependency hooks
-    // these assertions never read.
+    // default plugins), once, so overlapping computations finish loading
+    // plugins in kickoff order. The faked getPlugins only skips dependency
+    // hooks these assertions never read.
     let pluginsCallCount = 0;
+    let actualGetPlugins:
+      | Promise<typeof import('../../project-graph/plugins/get-plugins')>
+      | undefined;
     vi.doMock('../../project-graph/plugins/get-plugins', async () => ({
       __esModule: true,
       getPlugins: async () => {
@@ -1836,9 +1905,9 @@ describe('pending dotenv replay before serving a graph', () => {
       },
       getPluginsSeparated: async (...args: unknown[]) =>
         (
-          await vi.importActual<
+          await (actualGetPlugins ??= vi.importActual<
             typeof import('../../project-graph/plugins/get-plugins')
-          >('../../project-graph/plugins/get-plugins')
+          >('../../project-graph/plugins/get-plugins'))
         ).getPluginsSeparated(...args),
     }));
 
@@ -2115,5 +2184,117 @@ describe('pending dotenv replay before serving a graph', () => {
     const fourth = await getCachedSerializedProjectGraphPromise();
     expect(fourth.projectGraph.nodes.bar.data.tags).toEqual(['env:PORT=7777']);
     expect(retrieveCallCount).toBe(2);
+  });
+});
+
+describe('computations claiming out of kickoff order', () => {
+  let fs: TempFs;
+
+  beforeEach(() => {
+    fs = new TempFs('pgir-claim-order');
+  });
+
+  afterEach(() => {
+    fs.cleanup();
+  });
+
+  // The cached promise belongs to the last kickoff, which can claim its
+  // generation before an earlier one. Once stale, it must not chain to itself.
+  it('settles a request whose computation was kicked last but claimed its generation first', async (ctx) => {
+    fs.createFilesSync({
+      'nx.json': JSON.stringify({}),
+      'package.json': JSON.stringify({ name: 'root' }),
+      'libs/foo/project.json': JSON.stringify({
+        name: 'foo',
+        root: 'libs/foo',
+      }),
+    });
+
+    vi.resetModules();
+    const { setWorkspaceRoot } = await import('../../utils/workspace-root');
+    setWorkspaceRoot(fs.tempDir);
+
+    const makeGate = () => {
+      let release: () => void;
+      const promise = new Promise<void>((resolve) => {
+        release = resolve;
+      });
+      return { promise, release: () => release(), reached: false };
+    };
+    // Park compute B (kicked by the file-change stream) while it loads
+    // plugins, before its generation claim, and compute C (kicked by the
+    // request) inside its read, after its claim.
+    const bPlugins = makeGate();
+    const cRead = makeGate();
+    let pluginsCallCount = 0;
+    vi.doMock('../../project-graph/plugins/get-plugins', async () => {
+      const actual = (await vi.importActual(
+        '../../project-graph/plugins/get-plugins'
+      )) as any;
+      return {
+        ...actual,
+        getPluginsSeparated: async (...args: unknown[]) => {
+          if (++pluginsCallCount === 2) {
+            bPlugins.reached = true;
+            await bPlugins.promise;
+          }
+          return actual.getPluginsSeparated(...args);
+        },
+      };
+    });
+    let retrieveCallCount = 0;
+    vi.doMock(
+      '../../project-graph/utils/retrieve-workspace-files',
+      async () => {
+        const actual = (await vi.importActual(
+          '../../project-graph/utils/retrieve-workspace-files'
+        )) as any;
+        return {
+          ...actual,
+          retrieveProjectConfigurations: async (...args: unknown[]) => {
+            if (++retrieveCallCount === 2) {
+              cRead.reached = true;
+              await cRead.promise;
+            }
+            return actual.retrieveProjectConfigurations(...args);
+          },
+        };
+      }
+    );
+
+    const {
+      getCachedSerializedProjectGraphPromise,
+      scheduleProjectGraphRecomputation,
+    } = await import('./project-graph-incremental-recomputation');
+
+    const waitFor = waitForIn(ctx);
+
+    await getCachedSerializedProjectGraphPromise();
+
+    mkdirSync(join(fs.tempDir, 'libs/bar'), { recursive: true });
+    writeFileSync(
+      join(fs.tempDir, 'libs/bar/project.json'),
+      JSON.stringify({ name: 'bar', root: 'libs/bar' })
+    );
+    scheduleProjectGraphRecomputation(['libs/bar/project.json'], [], []);
+    await waitFor(() => bPlugins.reached, 'compute B to load plugins');
+
+    // The queued file makes the request kick C, which claims first.
+    const second = getCachedSerializedProjectGraphPromise();
+    let settled = false;
+    void second.then(() => {
+      settled = true;
+    });
+    await waitFor(() => cRead.reached, 'compute C to read');
+
+    // B claims a newer generation, so C is stale once its read returns.
+    bPlugins.release();
+    await waitFor(() => retrieveCallCount === 3, 'compute B to read');
+    cRead.release();
+
+    await waitFor(() => settled, 'the request to settle');
+    const result = await second;
+    expect(result.error).toBeNull();
+    expect(result.projectGraph.nodes.bar).toBeDefined();
   });
 });

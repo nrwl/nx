@@ -64,6 +64,12 @@
       "description": "Replaces the removed `classProperties.loose` option with `loose` for the `@nx/js/babel`, `@nx/react/babel` and `@nx/web/babel` presets in JSON babel config files.",
       "implementation": "./dist/src/migrations/update-24-1-0/replace-babel-class-properties-loose",
       "documentation": "./dist/src/migrations/update-24-1-0/replace-babel-class-properties-loose.md"
+    },
+    "update-24-1-0-add-verdaccio-jwt-security": {
+      "version": "24.1.0-beta.1",
+      "description": "Enables JWT API tokens in Verdaccio config files used by `@nx/js:verdaccio` targets, so Verdaccio 7+ accepts the placeholder npm auth token that Nx sets for the local registry.",
+      "implementation": "./dist/src/migrations/update-24-1-0/add-verdaccio-jwt-security",
+      "documentation": "./dist/src/migrations/update-24-1-0/add-verdaccio-jwt-security.md"
     }
   },
   "packageJsonUpdates": {

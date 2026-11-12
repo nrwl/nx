@@ -151,8 +151,10 @@ function kickOffRecompute() {
       // Plugin set we just loaded may already be stale vs disk.
       if (isStale(myPluginsHash)) return chainToSuccessor(myPromise);
 
-      const result =
-        await processFilesAndCreateAndSerializeProjectGraph(plugins);
+      const result = await processFilesAndCreateAndSerializeProjectGraph(
+        plugins,
+        myPromise
+      );
 
       // Compute may have run against plugins that are now stale.
       if (isStale(myPluginsHash)) return chainToSuccessor(myPromise);
@@ -189,19 +191,26 @@ function isStale(expectedHash: string): boolean {
   return readNxJsonPluginsHash() !== expectedHash;
 }
 
-/**
- * Starts a successor recompute only when this IIFE is still the cached one.
- * If a newer recompute already replaced the cached pointer, that newer
- * recompute will produce the fresh result and we just need to return the
- * pointer so awaiters chain onto it.
- */
 function chainToSuccessor(
   myPromise: Promise<SerializedProjectGraph>
 ): Promise<SerializedProjectGraph> {
   serverLogger.log(
     'Discarding stale recompute result (nx.json plugins changed mid-compute).'
   );
-  if (cachedSerializedProjectGraphPromise === myPromise) kickOffRecompute();
+  return successorOf(myPromise);
+}
+
+// Kicks a successor unless a newer computation holds the cache: a cleared
+// cache leaves nothing to chain to, and our own promise would await itself.
+function successorOf(
+  myPromise: Promise<SerializedProjectGraph>
+): Promise<SerializedProjectGraph> {
+  if (
+    !cachedSerializedProjectGraphPromise ||
+    cachedSerializedProjectGraphPromise === myPromise
+  ) {
+    kickOffRecompute();
+  }
   return cachedSerializedProjectGraphPromise;
 }
 
@@ -574,7 +583,8 @@ export function getRecomputationGeneration(): number {
 }
 
 async function processFilesAndCreateAndSerializeProjectGraph(
-  separatedPlugins: SeparatedPlugins
+  separatedPlugins: SeparatedPlugins,
+  myPromise: Promise<SerializedProjectGraph>
 ): Promise<SerializedProjectGraph> {
   const plugins = [
     ...separatedPlugins.specifiedPlugins,
@@ -590,21 +600,13 @@ async function processFilesAndCreateAndSerializeProjectGraph(
   // its stamp then marks this computation stale at the drain.
   clearDotEnvFileHashes();
 
-  // A newer kickOffRecompute has already replaced
-  // cachedSerializedProjectGraphPromise. Returning it lets the async
-  // unwrap chain our caller onto the newer compute's result; pass
+  // The generation moved past ours. Returning the cached promise lets the
+  // async unwrap chain our caller onto a newer compute's result; pass
   // notifyAbort=true when the graph-phase counters still need balancing.
   const chainToLatest = (notifyAbort: boolean) => {
     if (myGeneration === recomputationGeneration) return null;
     if (notifyAbort) notifyPluginsGraphAborted(plugins);
-    // Defensive: if the cache was cleared (e.g. resetInternalState ran)
-    // there is nothing to chain to. Returning undefined lets `if (stale)
-    // return stale` fall through and the compute commits stale data.
-    // Kick off a successor so we always have a real promise to chain to.
-    if (!cachedSerializedProjectGraphPromise) {
-      kickOffRecompute();
-    }
-    return cachedSerializedProjectGraphPromise;
+    return successorOf(myPromise);
   };
 
   try {

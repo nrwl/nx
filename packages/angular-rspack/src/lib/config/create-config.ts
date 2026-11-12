@@ -119,7 +119,10 @@ export async function _createConfig(
       serverRenderingInputs,
       ssrReloadServer
     );
-    const mergedConfig = rspackMerge(serverConfig, rspackConfigOverrides ?? {});
+    const mergedConfig = rspackMerge(
+      serverConfig,
+      withoutLazyCompilation(rspackConfigOverrides ?? {})
+    );
     configs.push(mergedConfig);
   }
 
@@ -137,4 +140,21 @@ export async function _createConfig(
   const mergedConfig = rspackMerge(browserConfig, rspackConfigOverrides ?? {});
   configs.unshift(mergedConfig);
   return configs;
+}
+
+// rspack's node lazy-compilation client throws in the server bundle, so an
+// override turns lazy compilation on for the browser compiler only.
+function withoutLazyCompilation(
+  overrides: Partial<Configuration>
+): Partial<Configuration> {
+  const { lazyCompilation: _lazyCompilation, ...serverOverrides } = overrides;
+  if (!serverOverrides.experiments) {
+    return serverOverrides;
+  }
+  // rspack 1.x also reads it from experiments.
+  const { lazyCompilation: _experimentsLazyCompilation, ...experiments } =
+    serverOverrides.experiments as Configuration['experiments'] & {
+      lazyCompilation?: unknown;
+    };
+  return { ...serverOverrides, experiments };
 }

@@ -304,3 +304,5 @@ pub async fn kill_process_tree_graceful(
 mod platform;
 
 pub use platform::ProcessKiller;
+#[cfg(not(windows))]
+pub(crate) use platform::kill_process_group_and_strays;

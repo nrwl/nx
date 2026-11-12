@@ -171,6 +171,9 @@ jobs:
 {% /tabitem %}
 {% tabitem label="Nx Cloud CI" %}
 
+The job distributes tasks to its own [main-job worker](/docs/reference/nx-cloud/ci-config#main-job-worker).
+To run them across more machines, add `workers` to the job:
+
 ```yaml {% meta="{5}" %}
 # .nx/pipelines/ci.yaml
 jobs:
