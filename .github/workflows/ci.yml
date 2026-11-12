@@ -69,6 +69,9 @@ jobs:
         with:
           main-branch-name: 'master'
 
+      - name: Start CI Run
+        run: npx nx-cloud@next start-workers
+
       - name: Setup dev tools with mise
         uses: jdx/mise-action@146a28175021df8ca24f8ee1828cc2a60f980bd5 # v3
 
@@ -98,10 +101,11 @@ jobs:
       - name: Restore .NET analyzer projects
         run: dotnet restore nx.sln
 
-      # Must follow dependency install: the main-job worker loads Nx from node_modules
-      # and keeps the environment it starts with.
-      - name: Start CI Run
-        run: npx nx-cloud@next start-workers
+      # Must follow dependency install: the worker loads Nx from node_modules and keeps
+      # the environment it starts with. ubuntu-latest has 4 vCPUs and 16 GB; the rest is
+      # left for this job's own commands.
+      - name: Start main-job worker
+        run: npx nx-cloud@next start-worker --background --cpu=2 --memory=8GiB
 
       - name: Nx Report
         run:

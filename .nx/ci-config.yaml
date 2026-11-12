@@ -5,11 +5,8 @@ dte:
     medium-changeset: 4 linux-large, 3 linux-extra-large
     large-changeset: 4 linux-large, 4 linux-extra-large
     extra-large-changeset: 5 linux-large, 5 linux-extra-large
-  # ubuntu-latest has 4 vCPUs and 16 GB; the rest is left for the main job's
-  # own commands (format, conformance, the Nx daemon and distributed command).
-  main-job-worker:
-    cpu: 2
-    memory: 8GiB
+  # Started separately in ci.yml, after dependency install.
+  main-job-worker: false
   scheduling-constraints:
     - projects: ['nx', 'workspace', 'remix', 'nx-maven-plugin']
       targets: ['install', 'test']
