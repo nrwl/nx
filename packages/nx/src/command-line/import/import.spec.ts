@@ -203,7 +203,7 @@ describe('importHandler', () => {
         interactive: false,
       })
     ).rejects.toThrow(
-      `inside the git repository at ${repo}. Import from that repository and pass "--source=packages/lib"`
+      `inside the git repository at ${repo}. Import that repository instead and select the directory packages/lib with the --source option.`
     );
   });
 
@@ -223,6 +223,23 @@ describe('importHandler', () => {
         interactive: false,
       })
     ).rejects.toThrow(`${workspace} is not a git repository`);
+  });
+
+  it('keeps the git error when the workspace repository is broken', async () => {
+    const workspace = createWorkspace();
+    writeFileSync(join(workspace, '.git', 'config'), '[broken\n');
+
+    await expect(
+      importHandler({
+        sourceRepository: 'https://example.com/source.git',
+        ref: 'main',
+        source: '.',
+        destination: 'libs/source',
+        depth: 0,
+        verbose: false,
+        interactive: false,
+      })
+    ).rejects.toThrow('bad config');
   });
 
   it('keeps credentials in the source URL out of the merge commit and output', async () => {

@@ -43,6 +43,20 @@ export type NxImportErrorCode =
   | 'PLUGIN_INIT_ERROR'
   | 'UNKNOWN';
 
+/**
+ * An import failure that states its own error code, for messages that embed
+ * user paths and so cannot be classified by their text.
+ */
+export class NxImportError extends Error {
+  constructor(
+    message: string,
+    public readonly errorCode: NxImportErrorCode
+  ) {
+    super(message);
+    this.name = 'NxImportError';
+  }
+}
+
 interface ImportOptionInfo {
   description: string;
   flag: string;
@@ -329,11 +343,12 @@ export function getImportErrorHints(errorCode: NxImportErrorCode): string[] {
 export function determineImportErrorCode(
   error: Error | unknown
 ): NxImportErrorCode {
+  if (error instanceof NxImportError) return error.errorCode;
+
   const message = error instanceof Error ? error.message : String(error);
   const lower = message.toLowerCase();
 
   if (lower.includes('uncommitted')) return 'UNCOMMITTED_CHANGES';
-  if (lower.includes('is not a git repository')) return 'NOT_A_GIT_REPOSITORY';
   if (lower.includes('failed to clone')) return 'CLONE_FAILED';
   if (lower.includes('does not exist in')) return 'SOURCE_NOT_FOUND';
   if (lower.includes('is not empty') || lower.includes('destination directory'))

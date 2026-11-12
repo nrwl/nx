@@ -6,8 +6,8 @@ import {
   getGitRootPath,
   getGitRootRelativePath,
   GitRepository,
+  getGitRepositoryStatus,
   isCloneableGitRepository,
-  isGitRepository,
 } from '../../utils/git-utils';
 import { mkdtemp, stat, rm } from 'node:fs/promises';
 import { tmpdir } from 'tmp';
@@ -57,6 +57,7 @@ import {
   buildImportNeedsOptionsResult,
   buildImportNeedsPluginSelectionResult,
   buildImportSuccessResult,
+  NxImportError,
   type ImportWarning,
 } from './utils/ai-output';
 
@@ -91,9 +92,10 @@ export interface ImportOptions {
 
 function createDestinationGitClient(): GitRepository {
   const cwd = process.cwd();
-  if (!isGitRepository(cwd)) {
-    throw new Error(
-      `${cwd} is not a git repository. Nx imports code by merging its git history, so run "git init", commit your files and try again.`
+  if (getGitRepositoryStatus(cwd) === 'not-git') {
+    throw new NxImportError(
+      `${cwd} is not a git repository. Nx imports code by merging its git history, so run "git init", commit your files and try again.`,
+      'NOT_A_GIT_REPOSITORY'
     );
   }
   return new GitRepository(cwd);
@@ -103,7 +105,7 @@ function getSourceNotAGitRepositoryMessage(sourceDirectory: string): string {
   const message = `${sourceDirectory} is not a git repository. Nx imports code along with its git history, so the source must be a git repository.`;
   const pathInEnclosingRepo = getGitRootRelativePath(sourceDirectory);
   if (pathInEnclosingRepo) {
-    return `${message}\nIt is a directory inside the git repository at ${getGitRootPath(sourceDirectory)}. Import from that repository and pass "--source=${pathInEnclosingRepo}" instead.`;
+    return `${message}\nIt is a directory inside the git repository at ${getGitRootPath(sourceDirectory)}. Import that repository instead and select the directory ${pathInEnclosingRepo} with the --source option.`;
   }
   return `${message}\nRun "git init" in ${sourceDirectory}, commit the files and try again.`;
 }
@@ -219,7 +221,10 @@ export async function importHandler(options: ImportOptions) {
       sourceIsLocalDirectory &&
       !(await isCloneableGitRepository(sourceRepository))
     ) {
-      throw new Error(getSourceNotAGitRepositoryMessage(sourceRepository));
+      throw new NxImportError(
+        getSourceNotAGitRepositoryMessage(sourceRepository),
+        'NOT_A_GIT_REPOSITORY'
+      );
     }
     throw new Error(
       `Failed to clone ${displayRepository} into ${sourceTempRepoPath}. Please double check the remote and try again.\n${redactUrlCredentials(e.message)}`

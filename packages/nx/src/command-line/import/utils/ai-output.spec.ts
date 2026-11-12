@@ -5,6 +5,7 @@ import {
   buildImportErrorResult,
   determineImportErrorCode,
   getImportErrorHints,
+  NxImportError,
 } from './ai-output';
 
 describe('import ai-output', () => {
@@ -119,11 +120,6 @@ describe('import ai-output', () => {
       expect(
         determineImportErrorCode(new Error('You have uncommitted changes'))
       ).toBe('UNCOMMITTED_CHANGES');
-      expect(
-        determineImportErrorCode(
-          new Error('/tmp/source is not a git repository.')
-        )
-      ).toBe('NOT_A_GIT_REPOSITORY');
       expect(determineImportErrorCode(new Error('Failed to clone repo'))).toBe(
         'CLONE_FAILED'
       );
@@ -140,6 +136,17 @@ describe('import ai-output', () => {
       expect(determineImportErrorCode(new Error('Something unexpected'))).toBe(
         'UNKNOWN'
       );
+    });
+
+    it('should use the code an import error states over words in its message', () => {
+      expect(
+        determineImportErrorCode(
+          new NxImportError(
+            '/tmp/uncommitted-source is not a git repository.',
+            'NOT_A_GIT_REPOSITORY'
+          )
+        )
+      ).toBe('NOT_A_GIT_REPOSITORY');
     });
   });
 
