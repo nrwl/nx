@@ -5,7 +5,10 @@ import path from 'node:path';
 import { ensureSipCopyDir } from './sip/sip-copy-dir';
 
 const { traceSpawn } = require('./fstrace.node');
-const shimPath = path.join(__dirname, 'target/libfstrace_macos.dylib');
+const shimPath = path.join(
+  __dirname,
+  '../../packages/nx/src/native/fstrace.darwin.dylib'
+);
 const N = 200;
 const loop = [
   process.execPath,

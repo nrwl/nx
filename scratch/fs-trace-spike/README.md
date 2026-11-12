@@ -10,16 +10,16 @@ library per OS behind a common napi-rs API, plus an optional kernel-level backst
 
 ## What is here
 
-| Path | What |
-| --- | --- |
-| `shim/` | Rust `cdylib` injected into the child tree. Wraps `open`/`openat`/`fopen` (+ glibc `64`/`_2` variants) and appends one line per successful read-open to `$FSTRACE_OUT`. Linux via `LD_PRELOAD`; macOS via `DYLD_INSERT_LIBRARIES` + `__interpose`. |
-| `addon/` | napi-rs addon: `traceSpawn(cmd, args, { backend, shimPath, cwd }) → Promise<{ exitCode, reads, events }>`. |
-| `addon/src/seccomp.rs` | Linux-only backend using seccomp user notification. |
-| `demo.mjs` | Coverage matrix: which backend sees which kind of reader. |
-| `bench.mjs` | Overhead per backend (`strace` included as a ptrace yardstick). |
-| `demo-macos.mjs`, `bench-macos.mjs` | The same checks for the preload backend on macOS. |
-| `shim-macos/`, `sip/`, `demo-sip.ts`, `bench-sip.ts` | macOS C shim with the SIP exec rewrite, the copy-directory helper, and its checks. See "macOS: tracing past SIP". |
-| `windows/` | C tracer for Windows: `fstrace.exe` launcher, `fstrace.dll` injected library, coverage and overhead scripts. |
+| Path                                                        | What                                                                                                                                                                                                                                               |
+| ----------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `shim/`                                                     | Rust `cdylib` injected into the child tree. Wraps `open`/`openat`/`fopen` (+ glibc `64`/`_2` variants) and appends one line per successful read-open to `$FSTRACE_OUT`. Linux via `LD_PRELOAD`; macOS via `DYLD_INSERT_LIBRARIES` + `__interpose`. |
+| `addon/`                                                    | napi-rs addon: `traceSpawn(cmd, args, { backend, shimPath, cwd }) → Promise<{ exitCode, reads, events }>`.                                                                                                                                         |
+| `addon/src/seccomp.rs`                                      | Linux-only backend using seccomp user notification.                                                                                                                                                                                                |
+| `demo.mjs`                                                  | Coverage matrix: which backend sees which kind of reader.                                                                                                                                                                                          |
+| `bench.mjs`                                                 | Overhead per backend (`strace` included as a ptrace yardstick).                                                                                                                                                                                    |
+| `demo-macos.mjs`, `bench-macos.mjs`                         | The same checks for the preload backend on macOS.                                                                                                                                                                                                  |
+| `sip/`, `demo-sip.ts`, `bench-sip.ts`, `check-restricted.c` | Checks for the macOS C shim, which lives at `packages/nx/src/native/fstrace/macos.c`, and the copy-directory helper. See "macOS: tracing past SIP".                                                                                                |
+| `windows/`                                                  | C tracer for Windows: `fstrace.exe` launcher, `fstrace.dll` injected library, coverage and overhead scripts.                                                                                                                                       |
 
 Run on Linux: `./build.sh && node demo.mjs && node bench.mjs` (needs cargo, gcc, go, strace).
 On macOS: `cargo build --release --target-dir target`, copy `target/release/libfstrace_addon.dylib`
@@ -45,24 +45,24 @@ to `fstrace.node`, build `bin/openloop` with clang and `bin/readfile-go` with go
 
 Coverage (`node demo.mjs`):
 
-| Reader | preload | seccomp | hybrid |
-| --- | --- | --- | --- |
-| dynamically linked C | yes | yes | yes |
-| statically linked C | **no** | yes | yes |
-| Go binary | **no** | yes | yes |
-| Node sync + async fs | yes | yes | yes |
-| shell / cat / grandchildren / python | yes | yes | yes |
-| write-only open reported | no | no | no |
+| Reader                               | preload | seccomp | hybrid |
+| ------------------------------------ | ------- | ------- | ------ |
+| dynamically linked C                 | yes     | yes     | yes    |
+| statically linked C                  | **no**  | yes     | yes    |
+| Go binary                            | **no**  | yes     | yes    |
+| Node sync + async fs                 | yes     | yes     | yes    |
+| shell / cat / grandchildren / python | yes     | yes     | yes    |
+| write-only open reported             | no      | no      | no     |
 
 Overhead (`node bench.mjs`), wall clock relative to untraced:
 
-| Workload | untraced | preload | seccomp | hybrid | strace |
-| --- | --- | --- | --- | --- | --- |
-| 200k `open`+`close` loop (worst case) | 177 ms | +73% | +3300% | +85% | +13000% |
-| `grep -r` over `packages/nx/src` (1.6k files) | 17 ms | +49% | +445% | +66% | +4560% |
-| Node `readFileSync` of the same tree | 83 ms | ~0% | +75% | +2% | +600% |
-| 500 short-lived processes | 595 ms | +22% | +18% | +57% | +206% |
-| `go build -a` (static toolchain, 2.7k events) | 4028 ms | n/a (sees nothing) | +9% | +7% | +76% |
+| Workload                                      | untraced | preload            | seccomp | hybrid | strace  |
+| --------------------------------------------- | -------- | ------------------ | ------- | ------ | ------- |
+| 200k `open`+`close` loop (worst case)         | 177 ms   | +73%               | +3300%  | +85%   | +13000% |
+| `grep -r` over `packages/nx/src` (1.6k files) | 17 ms    | +49%               | +445%   | +66%   | +4560%  |
+| Node `readFileSync` of the same tree          | 83 ms    | ~0%                | +75%    | +2%    | +600%   |
+| 500 short-lived processes                     | 595 ms   | +22%               | +18%    | +57%   | +206%   |
+| `go build -a` (static toolchain, 2.7k events) | 4028 ms  | n/a (sees nothing) | +9%     | +7%    | +76%    |
 
 Per-event cost in this VM: shim ≈ 0.6 µs per open; seccomp ≈ 30 µs per notified open;
 loading the shim ≈ 0.25 ms per process. Numbers are from a shared VM and noisy at the
@@ -73,6 +73,7 @@ bare metal; that is unmeasured.
 ## Known gaps and risks
 
 Linux
+
 - seccomp requires `no_new_privs`, so setuid binaries (`sudo`) inside the task stop
   elevating. The kernel allows one notification listener per filter chain, so a tool
   inside the task that wants its own (some container runtimes) gets `EBUSY`. Untested.
@@ -81,7 +82,7 @@ Linux
 - The supervisor thread must outlive the direct child while any descendant is alive,
   otherwise their opens fail with `ENOSYS`. The spike detaches it; real code needs a
   deliberate lifetime story for daemonised children.
-- seccomp reports *attempted* opens (it cannot see the result), the shim reports only
+- seccomp reports _attempted_ opens (it cannot see the result), the shim reports only
   successful ones. Failed lookups matter for cache correctness, so pick one on purpose.
 - Not covered: `io_uring` opens (the filter makes `io_uring_setup` return `ENOSYS` so
   callers fall back), 32-bit/x32 syscalls on x86_64, `name_to_handle_at`, files that
@@ -93,12 +94,13 @@ Linux
 - `stat`/`access`/`readlink`/`readdir` are deliberately not tracked (reads only).
 
 macOS (run on an M-series Mac, macOS 26, Node 22.15; `demo-macos.mjs`, `bench-macos.mjs`)
+
 - The Rust shim works as written. The arm64 variadic `open` trick holds, and Go binaries
   are seen even with `CGO_ENABLED=0`, because Go on darwin calls through libSystem.
 - Official Node binaries carry `allow-dyld-environment-variables` and
   `disable-library-validation`, so node, and node spawning node directly, are fully traced.
 - SIP is transitive. A tree loses tracing at the first platform binary (`/bin/sh`,
-  `/bin/cat`, `/usr/bin/python3`) *and for everything below it*, so
+  `/bin/cat`, `/usr/bin/python3`) _and for everything below it_, so
   `execSync('node ...')` hides the grandchild node because it runs through `/bin/sh`.
 - A copy of a platform binary, ad-hoc re-signed (`codesign -s - -f`), accepts injection and
   keeps the variable for its children. So an `execve`/`posix_spawn` hook that swaps SIP
@@ -107,13 +109,14 @@ macOS (run on an M-series Mac, macOS 26, Node 22.15; `demo-macos.mjs`, `bench-ma
   is SIGKILLed at launch. A C interposer built `-arch arm64 -arch arm64e` proved the idea.
 - Overhead: about 1.9 µs per traced open, about 2 ms to load the shim per process.
 
-  | Workload | untraced | preload |
-  | --- | --- | --- |
-  | 200k `open`+`close` | 1413 ms | +27% |
-  | Node `readFileSync` of `packages/nx/src` | 60 ms | +14% |
-  | Node startup | 21.5 ms | +9% |
+  | Workload                                 | untraced | preload |
+  | ---------------------------------------- | -------- | ------- |
+  | 200k `open`+`close`                      | 1413 ms  | +27%    |
+  | Node `readFileSync` of `packages/nx/src` | 60 ms    | +14%    |
+  | Node startup                             | 21.5 ms  | +9%     |
 
 Windows (`windows/`, run in a Windows 11 ARM64 VM, Node 22.16 arm64)
+
 - Written in C with no dependencies. `fstrace.exe` starts the command suspended in a job
   object and loads `fstrace.dll` through an early APC (`LoadLibraryW`). The DLL rebinds
   import-table entries for `ntdll!NtCreateFile`/`NtOpenFile`, `LdrLoadDll` (to patch DLLs
@@ -121,18 +124,18 @@ Windows (`windows/`, run in a Windows 11 ARM64 VM, Node 22.16 arm64)
   kernelbase's import of `NtCreateFile`, so one patched table covers the CRT, libuv and Go.
 - Coverage (`node demo-windows.mjs`). There is no SIP equivalent, so shells are not a gap.
 
-  | Reader | traced |
-  | --- | --- |
-  | C, static CRT (arm64) | yes |
-  | Go binary | yes |
-  | Node sync + async fs | yes |
-  | node -> node (no shell) | yes |
-  | node -> `cmd.exe` -> node (`execSync`) | yes |
-  | `cmd /c type`, `cmd -> cmd -> type` | yes |
-  | PowerShell `Get-Content` | yes |
+  | Reader                                            | traced |
+  | ------------------------------------------------- | ------ |
+  | C, static CRT (arm64)                             | yes    |
+  | Go binary                                         | yes    |
+  | Node sync + async fs                              | yes    |
+  | node -> node (no shell)                           | yes    |
+  | node -> `cmd.exe` -> node (`execSync`)            | yes    |
+  | `cmd /c type`, `cmd -> cmd -> type`               | yes    |
+  | PowerShell `Get-Content`                          | yes    |
   | x64 program under emulation, direct or as a child | **no** |
-  | Git for Windows (x64 build on this VM) | **no** |
-  | write-only open reported | no |
+  | Git for Windows (x64 build on this VM)            | **no** |
+  | write-only open reported                          | no     |
 
 - Missed: x64 processes under emulation on ARM64 (including Git for Windows here), because
   the tracer only injects same-architecture children. On x64 Windows the same gap applies to
@@ -144,12 +147,12 @@ Windows (`windows/`, run in a Windows 11 ARM64 VM, Node 22.16 arm64)
   unexplained so far (candidates are patching every loaded module and Defender scanning
   the DLL).
 
-  | Workload | untraced | traced |
-  | --- | --- | --- |
-  | 200k `CreateFile`+`CloseHandle` | 2445 ms | +39% |
-  | Node `readFileSync` of `packages/nx/src` | 775 ms | ~0% |
-  | Node startup | 62 ms | +32% |
-  | 50 short processes via `cmd` loop | 360 ms | +15% |
+  | Workload                                 | untraced | traced |
+  | ---------------------------------------- | -------- | ------ |
+  | 200k `CreateFile`+`CloseHandle`          | 2445 ms  | +39%   |
+  | Node `readFileSync` of `packages/nx/src` | 775 ms   | ~0%    |
+  | Node startup                             | 62 ms    | +32%   |
+  | 50 short processes via `cmd` loop        | 360 ms   | +15%   |
 
   Build in a VS developer prompt with `windows\build.cmd`, then `node demo-windows.mjs` and
   `node bench-windows.mjs` (the bench expects `readall.js` and a copy of `packages/nx/src`
@@ -157,16 +160,19 @@ Windows (`windows/`, run in a Windows 11 ARM64 VM, Node 22.16 arm64)
 
 ## macOS: tracing past SIP
 
-`shim-macos/fstrace.c` is a C port of the shim that also hooks `execve`, `posix_spawn` and
+`packages/nx/src/native/fstrace/macos.c` is a C port of the shim that also hooks `execve`, `posix_spawn` and
 `posix_spawnp`. When a traced process starts a binary dyld would strip
 `DYLD_INSERT_LIBRARIES` for, the hook starts an ad-hoc re-signed copy instead, and the copy
 keeps the variable. C, because the copies are `arm64e` and stable Rust cannot build that
 slice; the dylib is built `arm64`, `arm64e` and `x86_64`.
 
-- **Detection reads the code signature**, not the path: a platform binary, `CS_RESTRICT`,
-  or the hardened runtime without `allow-dyld-environment-variables`. Setuid and setgid
-  binaries count too. Verdicts match `codesign` for `/bin/*`, `/usr/bin/*`, mise, node,
-  dotnet, Temurin java and cargo (`target/check-restricted`).
+- **Detection reads the code signature**, not the path: a platform binary, `CS_RESTRICT`
+  or `CS_REQUIRE_LV`, or the hardened runtime without both
+  `allow-dyld-environment-variables` and `disable-library-validation`. The second
+  entitlement matters because library validation rejects the ad-hoc signed shim, and dyld
+  kills a process whose inserted library it cannot load. Setuid and setgid binaries count
+  too. Verdicts match `codesign` for `/bin/*`, `/usr/bin/*`, mise, node, dotnet, Temurin
+  java and cargo (`cc check-restricted.c && ./a.out <paths>`).
 - **Shebang scripts** are handled in the hook. The kernel would start the interpreter
   itself, so the hook reads `#!`, swaps the interpreter for its copy and passes the script.
   That covers `gradlew`, `mvn` and `#!/usr/bin/env node`.
@@ -185,27 +191,27 @@ slice; the dylib is built `arm64`, `arm64e` and `x86_64`.
 
 Coverage (`tsx demo-sip.ts`, every case started from node, as a plugin worker would):
 
-| Case | without rewrite | with rewrite |
-| --- | --- | --- |
-| node -> `/bin/sh` -> cat | missed | seen |
-| node -> `/bin/sh` -> sh -> cat | missed | seen |
-| node -> `execSync` node (via `/bin/sh`) | missed | seen |
-| node -> `/bin/cat` | missed | seen |
-| node -> `#!/bin/sh` script (gradlew) | missed | seen |
-| node -> `#!/usr/bin/env node` script | missed | seen |
-| node -> node with `env: {}` | seen | seen |
-| node -> mise shim -> dotnet | missed | seen |
-| node -> `/usr/bin/python3` (xcrun shim) | missed | seen |
-| node -> sh -> `sudo` | missed | missed, reported untraced |
+| Case                                    | without rewrite | with rewrite              |
+| --------------------------------------- | --------------- | ------------------------- |
+| node -> `/bin/sh` -> cat                | missed          | seen                      |
+| node -> `/bin/sh` -> sh -> cat          | missed          | seen                      |
+| node -> `execSync` node (via `/bin/sh`) | missed          | seen                      |
+| node -> `/bin/cat`                      | missed          | seen                      |
+| node -> `#!/bin/sh` script (gradlew)    | missed          | seen                      |
+| node -> `#!/usr/bin/env node` script    | missed          | seen                      |
+| node -> node with `env: {}`             | seen            | seen                      |
+| node -> mise shim -> dotnet             | missed          | seen                      |
+| node -> `/usr/bin/python3` (xcrun shim) | missed          | seen                      |
+| node -> sh -> `sudo`                    | missed          | missed, reported untraced |
 
 Cost (`tsx bench-sip.ts`, node running `/bin/sh -c true` 200 times):
 
-| Run | per exec |
-| --- | --- |
-| untraced | 2.9 ms |
-| traced, no rewrite (the shells are not traced) | 3.1 ms |
-| traced, rewrite, copies already made | 8.5 ms |
-| first run, empty copy directory | 10.4 ms (2 s total, one-time `codesign` per binary) |
+| Run                                            | per exec                                            |
+| ---------------------------------------------- | --------------------------------------------------- |
+| untraced                                       | 2.9 ms                                              |
+| traced, no rewrite (the shells are not traced) | 3.1 ms                                              |
+| traced, rewrite, copies already made           | 8.5 ms                                              |
+| first run, empty copy directory                | 10.4 ms (2 s total, one-time `codesign` per binary) |
 
 The extra 5.4 ms is mostly loading the shim, about 2 to 3 ms per process, now paid by the
 shells as well, and macOS's `/bin/sh` starts `/bin/bash`, so each shell exec is two
@@ -213,6 +219,7 @@ injected processes. A copy on its own costs about 0.7 ms more to start than the 
 because it is not in the dyld shared cache.
 
 Not done here:
+
 - The root of the traced tree is started by the addon in Rust, without the hook, so a
   restricted binary started directly by `traceSpawn` is not rewritten. Plugin workers are
   node, so this does not matter for them, but the launcher should apply the same rewrite.
@@ -223,17 +230,40 @@ Not done here:
 - A binary that needs private entitlements breaks as a copy instead of going untraced.
   None of the cases here did, but the hook cannot tell in advance.
 
+### Build and release
+
+`nx:build-fstrace-shim` runs `scripts/build-fstrace-shim.mjs`, and `nx:build-native`
+depends on it, so the existing macOS jobs in `publish.yml` build the shim with no new
+matrix entries. On macOS it builds `packages/nx/src/native/fstrace.darwin.dylib` with
+`arm64`, `arm64e` and `x86_64` slices and `-mmacosx-version-min=11.0`. A slice or OS
+version dyld cannot load is a crash, not a fallback: the first build defaulted to
+`minos 26.0`. Other platforms print a skip for now. The process platform is a cache input,
+so a Linux cache entry with no dylib is never replayed on a Mac.
+
+- `publish.yml` uploads `*.dylib` with the bindings artifact.
+- The `artifacts` target runs `scripts/copy-native-extras.mjs` after `napi artifacts`,
+  which moves only `.node` files. It copies the dylib into both darwin packages, because
+  an x64 node under Rosetta can start arm64 children and the reverse, and fails if one is
+  missing.
+- `@nx/nx-darwin-arm64` and `@nx/nx-darwin-x64` list `fstrace.darwin.dylib` in `files`.
+- `nx-release.ts` deletes `*.dylib` from `dist` along with `*.node`, so the main `nx`
+  package does not ship it. Local builds copy it next to the `.node` through
+  `assets.json`.
+
+Not wired yet: the Linux shim (Rust, `shim/`) and the Windows DLL, and the runtime lookup
+of the dylib from the platform package.
+
 ## What real plugins spawn
 
 Node-only plugin workers are traced on every platform. The plugins whose inputs are hardest to
 declare are the ones that delegate to another toolchain, and those hit the gaps:
 
-| Plugin | Spawns | macOS | Daemon |
-| --- | --- | --- | --- |
-| `@nx/gradle` | `./gradlew` (`#!/bin/sh`), then java | lost at `/bin/sh` without the rewrite | Gradle daemon, on by default |
-| `@nx/maven` | `mvnd`, else `mvnw`/`mvn` (`#!/bin/sh`), then java | lost at `/bin/sh` without the rewrite | `mvnd` when present |
-| `@nx/dotnet` | `dotnet` (MSBuild in-process) | fine, unless reached through a version-manager shim | none |
-| community rust | `cargo metadata` | fine (ad-hoc signed) | none |
+| Plugin         | Spawns                                             | macOS                                               | Daemon                       |
+| -------------- | -------------------------------------------------- | --------------------------------------------------- | ---------------------------- |
+| `@nx/gradle`   | `./gradlew` (`#!/bin/sh`), then java               | lost at `/bin/sh` without the rewrite               | Gradle daemon, on by default |
+| `@nx/maven`    | `mvnd`, else `mvnw`/`mvn` (`#!/bin/sh`), then java | lost at `/bin/sh` without the rewrite               | `mvnd` when present          |
+| `@nx/dotnet`   | `dotnet` (MSBuild in-process)                      | fine, unless reached through a version-manager shim | none                         |
+| community rust | `cargo metadata`                                   | fine (ad-hoc signed)                                | none                         |
 
 - The real toolchain binaries accept injection: Temurin `java` and `dotnet` carry
   `allow-dyld-environment-variables`, and `cargo` is ad-hoc signed. Their launchers are

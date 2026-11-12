@@ -7,7 +7,10 @@ import { ensureSipCopyDir } from './sip/sip-copy-dir';
 
 const here = __dirname;
 const { traceSpawn } = require('./fstrace.node');
-const shimPath = path.join(here, 'target/libfstrace_macos.dylib');
+const shimPath = path.join(
+  here,
+  '../../packages/nx/src/native/fstrace.darwin.dylib'
+);
 const data = path.join(here, 'fixtures/data/sip');
 mkdirSync(data, { recursive: true });
 const d = (n: string) => {

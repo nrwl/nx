@@ -25,11 +25,13 @@
 extern char **environ;
 
 #define CS_RESTRICT 0x800
+#define CS_REQUIRE_LV 0x2000
 #define CS_RUNTIME 0x10000
 #define CSMAGIC_EMBEDDED_SIGNATURE 0xfade0cc0
 #define CSMAGIC_CODEDIRECTORY 0xfade0c02
 #define CSMAGIC_EMBEDDED_ENTITLEMENTS 0xfade7171
 #define DYLD_ENTITLEMENT "com.apple.security.cs.allow-dyld-environment-variables"
+#define DLV_ENTITLEMENT "com.apple.security.cs.disable-library-validation"
 
 static const char *const CARRIED_VARS[] = {"DYLD_INSERT_LIBRARIES", "FSTRACE_OUT", "FSTRACE_SIP_DIR"};
 #define NCARRIED (sizeof CARRIED_VARS / sizeof CARRIED_VARS[0])
@@ -116,8 +118,10 @@ static int has_bytes(const uint8_t *hay, size_t n, const char *needle) {
   return 0;
 }
 
-// 1 when dyld would strip DYLD_* for `path`: setuid/setgid, an Apple platform binary, a
-// CS_RESTRICT binary, or the hardened runtime without the dyld-environment entitlement.
+// 1 when this shim cannot load into `path`. dyld strips DYLD_* for setuid/setgid, Apple
+// platform and CS_RESTRICT binaries, and for the hardened runtime without the
+// dyld-environment entitlement. The hardened runtime also enforces library validation
+// unless disabled, and an inserted library it rejects kills the process at launch.
 // Only the signature's index, CodeDirectory header and entitlements are read.
 static int is_restricted(const char *path) {
   struct stat st;
@@ -145,7 +149,7 @@ static int is_restricted(const char *path) {
   uint8_t head[12];
   if (!read_at(fd, head, sizeof head, sb) || OSReadBigInt32(head, 0) != CSMAGIC_EMBEDDED_SIGNATURE) goto done;
   uint32_t count = OSReadBigInt32(head, 8), flags = 0;
-  int platform = 0, dyld_entitled = 0;
+  int platform = 0, dyld_entitled = 0, lv_disabled = 0;
   for (uint32_t i = 0; i < count && i < 32; i++) {
     uint8_t idx[8], blob[40];
     if (!read_at(fd, idx, sizeof idx, sb + 12 + i * 8)) goto done;
@@ -158,11 +162,12 @@ static int is_restricted(const char *path) {
     } else if (magic == CSMAGIC_EMBEDDED_ENTITLEMENTS && len <= (1 << 20) && (ents = malloc(len)) &&
                read_at(fd, ents, len, sb + off)) {
       dyld_entitled = has_bytes(ents, len, DYLD_ENTITLEMENT);
+      lv_disabled = has_bytes(ents, len, DLV_ENTITLEMENT);
     }
     free(ents);
     ents = NULL;
   }
-  restricted = platform || (flags & CS_RESTRICT) || ((flags & CS_RUNTIME) && !dyld_entitled);
+  restricted = platform || (flags & (CS_RESTRICT | CS_REQUIRE_LV)) || ((flags & CS_RUNTIME) && !(dyld_entitled && lv_disabled));
 done:
   free(cmds);
   close(fd);

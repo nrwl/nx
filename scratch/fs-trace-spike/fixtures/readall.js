@@ -6,7 +6,10 @@ let n = 0;
   for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
     const p = path.join(dir, e.name);
     if (e.isDirectory()) walk(p);
-    else if (e.isFile()) { fs.readFileSync(p); n++; }
+    else if (e.isFile()) {
+      fs.readFileSync(p);
+      n++;
+    }
   }
 })(process.argv[2]);
 console.error(`read ${n} files`);

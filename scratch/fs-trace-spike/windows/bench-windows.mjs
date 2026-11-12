@@ -17,11 +17,21 @@ function time(mode, cmdline) {
   let events = 0;
   for (let i = 0; i < RUNS; i++) {
     const t = process.hrtime.bigint();
-    const r = spawnSync(path.join(here, 'fstrace.exe'), [mode, log, cmdline], { cwd: here, stdio: 'ignore' });
+    const r = spawnSync(path.join(here, 'fstrace.exe'), [mode, log, cmdline], {
+      cwd: here,
+      stdio: 'ignore',
+    });
     s.push(Number(process.hrtime.bigint() - t) / 1e6);
-    if (r.status !== 0) throw new Error(`${cmdline} [${mode}] exited ${r.status}`);
+    if (r.status !== 0)
+      throw new Error(`${cmdline} [${mode}] exited ${r.status}`);
   }
-  if (mode === 'trace') events = spawnSync('cmd', ['/c', 'find', '/c', '/v', '""', log], { encoding: 'utf8' }).stdout.trim().split(' ').pop();
+  if (mode === 'trace')
+    events = spawnSync('cmd', ['/c', 'find', '/c', '/v', '""', log], {
+      encoding: 'utf8',
+    })
+      .stdout.trim()
+      .split(' ')
+      .pop();
   s.sort((a, b) => a - b);
   return { ms: s[RUNS >> 1], events };
 }
@@ -29,6 +39,11 @@ const rows = {};
 for (const [name, cmd] of Object.entries(workloads)) {
   const base = time('none', cmd);
   const tr = time('trace', cmd);
-  rows[name] = { none: `${base.ms.toFixed(1)} ms`, trace: `${tr.ms.toFixed(1)} ms`, overhead: `${((tr.ms / base.ms - 1) * 100).toFixed(0)}%`, events: tr.events };
+  rows[name] = {
+    none: `${base.ms.toFixed(1)} ms`,
+    trace: `${tr.ms.toFixed(1)} ms`,
+    overhead: `${((tr.ms / base.ms - 1) * 100).toFixed(0)}%`,
+    events: tr.events,
+  };
 }
 console.table(rows);
