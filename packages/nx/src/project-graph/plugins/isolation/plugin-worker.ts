@@ -51,13 +51,7 @@ let plugin: LoadedNxPlugin;
 // replaces the whole environment, so they are put back after one.
 const traceEnv = process.env.FSTRACE_OUT
   ? Object.fromEntries(
-      [
-        'FSTRACE_OUT',
-        'FSTRACE_SIP_DIR',
-        'LD_PRELOAD',
-        'DYLD_INSERT_LIBRARIES',
-        'NX_CACHE_PROJECT_GRAPH',
-      ]
+      ['FSTRACE_OUT', 'FSTRACE_SIP_DIR', 'LD_PRELOAD', 'DYLD_INSERT_LIBRARIES']
         .filter((key) => process.env[key] !== undefined)
         .map((key) => [key, process.env[key]])
     )
@@ -196,8 +190,17 @@ const server = createServer((socket) => {
               };
             });
           },
-          createNodes: async ({ configFiles, context, traceId }) =>
+          createNodes: async ({
+            configFiles,
+            context,
+            traceId,
+            bypassPluginCaches,
+          }) =>
             withErrorHandling(async () => {
+              const pluginCaches = process.env.NX_CACHE_PROJECT_GRAPH;
+              if (bypassPluginCaches) {
+                process.env.NX_CACHE_PROJECT_GRAPH = 'false';
+              }
               markTrace('begin', traceId);
               try {
                 const result = await plugin.createNodes[1](
@@ -207,6 +210,13 @@ const server = createServer((socket) => {
                 return { result, success: true as const };
               } finally {
                 markTrace('end', traceId);
+                if (bypassPluginCaches) {
+                  if (pluginCaches === undefined) {
+                    delete process.env.NX_CACHE_PROJECT_GRAPH;
+                  } else {
+                    process.env.NX_CACHE_PROJECT_GRAPH = pluginCaches;
+                  }
+                }
               }
             }),
           createDependencies: async ({ context }) =>
