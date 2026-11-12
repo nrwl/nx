@@ -27,8 +27,8 @@ When your organization is at the limit, new runs wait in a queue until enough wo
 | Team, CI team | 25, or with a worker pack 50 ($75 a month), 75 ($150), or 100 ($225) |
 | Enterprise    | Set by your contract                                                 |
 
-The pool counts every worker Nx Cloud runs for your organization, and on Nx Cloud CI the main job itself when [`dte.main-job-worker`](/docs/reference/nx-cloud/ci-config#dtemain-job-worker) is on.
-A main-job worker on your own CI runner doesn't count, and neither do machines you run yourself through [bring your own compute](/docs/kb/bring-your-own-compute).
+The pool counts every worker Nx Cloud runs for your organization.
+A [main-job worker](/docs/reference/nx-cloud/ci-config#main-job-worker) doesn't count, and neither do machines you run yourself through [bring your own compute](/docs/kb/bring-your-own-compute).
 
 A run gets all of its workers at once: one that asks for 20 waits until 20 are free. A run that asks for more than the limit gets the limit.
 
