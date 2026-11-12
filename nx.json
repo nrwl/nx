@@ -590,6 +590,5 @@
       }
     ]
   },
-  "analytics": true,
-  "bustCache": 33
+  "analytics": true
 }
