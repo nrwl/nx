@@ -104,7 +104,10 @@ fn filter(shim_bypass: bool) -> Vec<libc::sock_filter> {
     open_like(libc::SYS_open, 1, false);
     open_like(libc::SYS_openat, 2, shim_bypass);
     for nr in [libc::SYS_openat2, libc::SYS_execve, libc::SYS_execveat] {
-        f.extend([insn(JEQ, 0, 1, nr as u32), insn(RET, 0, 0, SECCOMP_RET_USER_NOTIF)]);
+        f.extend([
+            insn(JEQ, 0, 1, nr as u32),
+            insn(RET, 0, 0, SECCOMP_RET_USER_NOTIF),
+        ]);
     }
     // io_uring can open files without a syscall we would see; make callers fall back.
     f.extend([
@@ -116,12 +119,19 @@ fn filter(shim_bypass: bool) -> Vec<libc::sock_filter> {
 }
 
 fn cvt(r: c_long) -> io::Result<c_long> {
-    if r < 0 { Err(io::Error::last_os_error()) } else { Ok(r) }
+    if r < 0 {
+        Err(io::Error::last_os_error())
+    } else {
+        Ok(r)
+    }
 }
 
 unsafe fn send_fd(sock: c_int, fd: c_int) -> io::Result<()> {
     let mut byte = 0u8;
-    let mut iov = libc::iovec { iov_base: (&mut byte as *mut u8).cast(), iov_len: 1 };
+    let mut iov = libc::iovec {
+        iov_base: (&mut byte as *mut u8).cast(),
+        iov_len: 1,
+    };
     let mut cbuf = [0u8; 32];
     let mut msg: libc::msghdr = std::mem::zeroed();
     msg.msg_iov = &mut iov;
@@ -138,7 +148,10 @@ unsafe fn send_fd(sock: c_int, fd: c_int) -> io::Result<()> {
 
 unsafe fn recv_fd(sock: c_int) -> Option<c_int> {
     let mut byte = 0u8;
-    let mut iov = libc::iovec { iov_base: (&mut byte as *mut u8).cast(), iov_len: 1 };
+    let mut iov = libc::iovec {
+        iov_base: (&mut byte as *mut u8).cast(),
+        iov_len: 1,
+    };
     let mut cbuf = [0u8; 32];
     let mut msg: libc::msghdr = std::mem::zeroed();
     msg.msg_iov = &mut iov;
@@ -167,8 +180,14 @@ unsafe fn read_cstr(pid: u32, addr: u64) -> Option<String> {
         if want == 0 {
             break;
         }
-        let local = libc::iovec { iov_base: buf.as_mut_ptr().add(got).cast(), iov_len: want };
-        let remote = libc::iovec { iov_base: (addr as usize + got) as *mut c_void, iov_len: want };
+        let local = libc::iovec {
+            iov_base: buf.as_mut_ptr().add(got).cast(),
+            iov_len: want,
+        };
+        let remote = libc::iovec {
+            iov_base: (addr as usize + got) as *mut c_void,
+            iov_len: want,
+        };
         let n = libc::process_vm_readv(pid as i32, &local, 1, &remote, 1, 0);
         if n <= 0 {
             break;
@@ -204,7 +223,11 @@ fn supervise(sock: c_int, seen: Arc<Mutex<(u32, HashSet<String>)>>) {
     };
     unsafe { libc::close(sock) };
     loop {
-        let mut pfd = libc::pollfd { fd: listener, events: libc::POLLIN, revents: 0 };
+        let mut pfd = libc::pollfd {
+            fd: listener,
+            events: libc::POLLIN,
+            revents: 0,
+        };
         if unsafe { libc::poll(&mut pfd, 1, -1) } < 0 {
             continue;
         }
@@ -224,7 +247,12 @@ fn supervise(sock: c_int, seen: Arc<Mutex<(u32, HashSet<String>)>>) {
         };
         // The tracee's memory and /proc entries are only stable while it is parked.
         let resolved = unsafe { read_cstr(req.pid, ptr) }.map(|p| resolve(req.pid, dirfd, p));
-        let resp = SeccompNotifResp { id: req.id, val: 0, error: 0, flags: SECCOMP_USER_NOTIF_FLAG_CONTINUE };
+        let resp = SeccompNotifResp {
+            id: req.id,
+            val: 0,
+            error: 0,
+            flags: SECCOMP_USER_NOTIF_FLAG_CONTINUE,
+        };
         unsafe { libc::ioctl(listener, SECCOMP_IOCTL_NOTIF_SEND, &resp) };
         if let Some(p) = resolved {
             let mut guard = seen.lock().unwrap();
@@ -244,7 +272,14 @@ fn is_plain_open(_nr: c_long) -> bool {
 
 pub fn run(mut command: Command, shim_bypass: bool) -> io::Result<(i32, u32, Vec<String>)> {
     let mut socks = [0 as c_int; 2];
-    cvt(unsafe { libc::socketpair(libc::AF_UNIX, libc::SOCK_STREAM | libc::SOCK_CLOEXEC, 0, socks.as_mut_ptr()) } as c_long)?;
+    cvt(unsafe {
+        libc::socketpair(
+            libc::AF_UNIX,
+            libc::SOCK_STREAM | libc::SOCK_CLOEXEC,
+            0,
+            socks.as_mut_ptr(),
+        )
+    } as c_long)?;
     let [parent_sock, child_sock] = socks;
 
     let seen = Arc::new(Mutex::new((0u32, HashSet::new())));
@@ -257,7 +292,10 @@ pub fn run(mut command: Command, shim_bypass: bool) -> io::Result<(i32, u32, Vec
     let prog = filter(shim_bypass);
     unsafe {
         command.pre_exec(move || {
-            let fprog = libc::sock_fprog { len: prog.len() as u16, filter: prog.as_ptr() as *mut _ };
+            let fprog = libc::sock_fprog {
+                len: prog.len() as u16,
+                filter: prog.as_ptr() as *mut _,
+            };
             cvt(libc::prctl(libc::PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0) as c_long)?;
             let listener = cvt(libc::syscall(
                 libc::SYS_seccomp,
@@ -274,5 +312,9 @@ pub fn run(mut command: Command, shim_bypass: bool) -> io::Result<(i32, u32, Vec
     unsafe { libc::close(child_sock) };
     let status = spawned?.wait()?;
     let guard = seen.lock().unwrap();
-    Ok((status.code().unwrap_or(-1), guard.0, guard.1.iter().cloned().collect()))
+    Ok((
+        status.code().unwrap_or(-1),
+        guard.0,
+        guard.1.iter().cloned().collect(),
+    ))
 }
