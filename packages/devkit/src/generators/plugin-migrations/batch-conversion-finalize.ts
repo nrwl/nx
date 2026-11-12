@@ -36,7 +36,6 @@ import {
   packageJsonAuthorsTargetIdentity,
   removeDeadExecutorTargetDefault,
   removeHoistedTargetDefault,
-  stableStringify,
   subtractCommon,
   type HarvestedConfigurationError,
   type ResidualEntry,
@@ -48,9 +47,16 @@ import {
   type MissingPair,
   retainedResidualsWarning,
   revertedTargetsWarning,
+  unexpressibleTargetDefaultsWarning,
   unverifiedPairsWarning,
   verificationErrorsWarning,
 } from './conversion-warnings';
+import { stableStringify } from './plugin-migration-utils';
+import {
+  correctTargetDefaultsShift,
+  withCorrection,
+  type ShiftPair,
+} from './target-defaults-shift';
 
 type Logger = typeof devkitLogger;
 
@@ -277,6 +283,10 @@ async function runFinalize(
   }
 
   planDeadExecutorCleanup(tree, records, plans, planStates, proposedNxJson);
+
+  for (const state of planStates) {
+    keepTargetDefaultsStable(state, proposedNxJson, deviationsByProject);
+  }
 
   applyWriteSet(tree, proposedNxJson, deviationsByProject);
 }
@@ -814,6 +824,77 @@ function planDeadExecutorCleanup(
     if (removalSafe && !liveExecutors.has(executor)) {
       removeDeadExecutorTargetDefault(proposedNxJson, executor);
     }
+  }
+}
+
+/**
+ * Batch counterpart of the inline targetDefaults correction, against the
+ * proposed nx.json once nothing else will change it. A correction that has to
+ * live in the project config joins the write-set.
+ */
+function keepTargetDefaultsStable(
+  state: PlanState,
+  proposedNxJson: NxJsonConfiguration,
+  deviationsByProject: Map<
+    string,
+    { root: string; targets: Map<string, TargetConfiguration> }
+  >
+): void {
+  const { plan } = state;
+  const restored = new Set(
+    state.restoredPairs.map(
+      ({ projectName, targetName }) => `${projectName}\t${targetName}`
+    )
+  );
+  const written = (
+    projectName: string,
+    targetName: string,
+    entry: ResidualEntry
+  ) =>
+    deviationsByProject.get(projectName)?.targets.get(targetName) ??
+    entry.residual;
+
+  const pairs: ShiftPair[] = [];
+  for (const [projectName, targetMap] of plan.residualByProject) {
+    for (const [targetName, entry] of targetMap) {
+      if (
+        entry.keptPreMigration ||
+        restored.has(`${projectName}\t${targetName}`)
+      ) {
+        continue;
+      }
+      pairs.push({
+        projectName,
+        targetName,
+        projectNode: plan.graphNodeByProject.get(projectName),
+        inputs: entry.targetDefaultsShift,
+        written: written(projectName, targetName, entry),
+      });
+    }
+  }
+
+  const { projectCorrections, unexpressible } = correctTargetDefaultsShift(
+    proposedNxJson,
+    plan.pluginPath,
+    pairs
+  );
+  for (const { projectName, targetName, correction } of projectCorrections) {
+    const entry = plan.residualByProject.get(projectName).get(targetName);
+    if (!deviationsByProject.has(projectName)) {
+      deviationsByProject.set(projectName, {
+        root: plan.rootByProject.get(projectName),
+        targets: new Map(),
+      });
+    }
+    deviationsByProject
+      .get(projectName)
+      .targets.set(
+        targetName,
+        withCorrection(written(projectName, targetName, entry), correction)
+      );
+  }
+  if (unexpressible.size > 0) {
+    state.log.warn(unexpressibleTargetDefaultsWarning(unexpressible));
   }
 }
 
