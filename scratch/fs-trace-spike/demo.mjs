@@ -19,14 +19,30 @@ const script = `
   python3 -c "open('fixtures/data/py.txt').read()"
   echo written > /tmp/fstrace-write-only.txt
 `;
-const cases = ['dyn', 'static', 'go', 'node-sync', 'node-async', 'sh-cat', 'child-of-child', 'py'];
+const cases = [
+  'dyn',
+  'static',
+  'go',
+  'node-sync',
+  'node-async',
+  'sh-cat',
+  'child-of-child',
+  'py',
+];
 const rows = {};
 for (const backend of ['preload', 'seccomp', 'hybrid']) {
-  const r = await traceSpawn('/bin/sh', ['-c', script], { backend, shimPath, cwd: here });
+  const r = await traceSpawn('/bin/sh', ['-c', script], {
+    backend,
+    shimPath,
+    cwd: here,
+  });
   if (r.exitCode !== 0) throw new Error(`${backend} exited ${r.exitCode}`);
   const set = new Set(r.reads);
   for (const c of cases) (rows[c] ??= {})[backend] = set.has(d(c));
-  (rows['(write-only file reported?)'] ??= {})[backend] = set.has('/tmp/fstrace-write-only.txt');
-  (rows['(events / unique paths)'] ??= {})[backend] = `${r.events} / ${r.reads.length}`;
+  (rows['(write-only file reported?)'] ??= {})[backend] = set.has(
+    '/tmp/fstrace-write-only.txt'
+  );
+  (rows['(events / unique paths)'] ??= {})[backend] =
+    `${r.events} / ${r.reads.length}`;
 }
 console.table(rows);

@@ -449,6 +449,7 @@ jobs:
           path: |
             packages/nx/src/native/*.node
             packages/nx/src/native/*.wasm
+            packages/nx/src/native/*.dylib
           if-no-files-found: error
 
   build-freebsd:
