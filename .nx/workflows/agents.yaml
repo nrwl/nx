@@ -89,9 +89,17 @@ common-init-steps: &common-init-steps
           pnpm exec cypress install
           pnpm exec playwright install --with-deps
 
+      # cargo's built-in git client has no stall timeout and has hung cloning git dependencies.
       - name: Install rust deps and hyperfine
         script: |
-          cargo fetch
+          export CARGO_NET_GIT_FETCH_WITH_CLI=true
+          for attempt in 1 2 3; do
+            if timeout 300 cargo fetch; then
+              break
+            fi
+            test "$attempt" -lt 3 || exit 1
+            echo "cargo fetch failed or stalled; retrying ($attempt/3)."
+          done
           cargo install hyperfine --locked
 
       - name: Setup gradle
