@@ -105,7 +105,7 @@ jobs:
       # the environment it starts with. ubuntu-latest has 4 vCPUs and 16 GB; the rest is
       # left for this job's own commands.
       - name: Start main-job worker
-        run: npx nx-cloud@next start-worker --background --cpu=2 --memory=8GiB
+        run: pnpm exec nx-cloud start-worker --background --cpu=2 --memory=8GiB
 
       - name: Nx Report
         run:
@@ -139,7 +139,7 @@ jobs:
           done
         timeout-minutes: 100
       - name: Upload main-job worker metrics
-        run: npx nx-cloud@next upload-worker-metrics
+        run: pnpm exec nx-cloud upload-worker-metrics
         if: always()
       - name: Fix CI
         run: pnpm nx fix-ci
