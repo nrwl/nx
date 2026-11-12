@@ -3,8 +3,8 @@
 Question: can we see which files a process we spawn (and its children) reads, on every
 platform, cheaply, without elevated permissions?
 
-Short answer: **yes on Linux (proven here), very likely on macOS and Windows with caveats
-(not run here)**. There is no single cross-platform mechanism; it is one small injected
+Short answer: **yes on Linux (proven here), also run on macOS and Windows, each with one real gap (SIP on macOS,
+cross-architecture children on Windows)**. There is no single cross-platform mechanism; it is one small injected
 library per OS behind a common napi-rs API, plus an optional kernel-level backstop on Linux.
 
 ## What is here
@@ -85,25 +85,56 @@ Linux
   would receive our log lines. Needs an fstat guard or a different channel.
 - `stat`/`access`/`readlink`/`readdir` are deliberately not tracked (reads only).
 
-macOS (code written, type-checks for both darwin targets, **never executed**)
-- `DYLD_INSERT_LIBRARIES` is stripped by SIP for platform binaries (`/bin/sh`,
-  `/usr/bin/env`, `/usr/bin/git`, system `python3`…) and for hardened-runtime binaries
-  without the right entitlement. A tree that passes through `/bin/sh` loses tracing for
-  that process, and because dyld also removes the variable, for its children too unless
-  something re-adds it. This is the biggest open question of the whole idea.
-- There is no unprivileged kernel backstop: Endpoint Security needs an entitlement and
-  root, `dtrace`/`fs_usage` need root. So static/Go binaries are invisible on macOS
-  (Go on macOS does call libSystem, which helps).
-- The arm64 variadic `open` hook relies on a stack-layout trick that needs verifying.
+macOS (run on an M-series Mac, macOS 26, Node 22.15; `demo-macos.mjs`, `bench-macos.mjs`)
+- The Rust shim works as written. The arm64 variadic `open` trick holds, and Go binaries
+  are seen even with `CGO_ENABLED=0`, because Go on darwin calls through libSystem.
+- Official Node binaries carry `allow-dyld-environment-variables` and
+  `disable-library-validation`, so node, and node spawning node directly, are fully traced.
+- SIP is transitive. A tree loses tracing at the first platform binary (`/bin/sh`,
+  `/bin/cat`, `/usr/bin/python3`) *and for everything below it*, so
+  `execSync('node ...')` hides the grandchild node because it runs through `/bin/sh`.
+- A copy of a platform binary, ad-hoc re-signed (`codesign -s - -f`), accepts injection and
+  keeps the variable for its children. So an `execve`/`posix_spawn` hook that swaps SIP
+  paths for cached re-signed copies would close the gap. Two catches: the copies are
+  `arm64e`, so the shim needs an `arm64e` slice (C, or nightly Rust), and an unsigned copy
+  is SIGKILLed at launch. A C interposer built `-arch arm64 -arch arm64e` proved the idea.
+- Overhead: about 1.9 µs per traced open, about 2 ms to load the shim per process.
 
-Windows (design only, no code)
-- Start the child suspended, inject a DLL (`CreateRemoteThread` + `LoadLibrary`, or
-  Detours' `DetourCreateProcessWithDlls`), hook `NtCreateFile`/`NtOpenFile` in `ntdll`,
-  and hook `CreateProcessInternalW` to re-inject into children. No elevation required;
-  this is what BuildXL and `fsatrace` do. Hooking at `ntdll` covers Go and static CRT
-  binaries, so coverage should be better than macOS.
-- Costs: needs both x86 and x64 DLLs, antivirus/EDR may flag injection, and protected
-  processes cannot be injected. ETW would be cleaner but needs admin.
+  | Workload | untraced | preload |
+  | --- | --- | --- |
+  | 200k `open`+`close` | 1413 ms | +27% |
+  | Node `readFileSync` of `packages/nx/src` | 60 ms | +14% |
+  | Node startup | 21.5 ms | +9% |
+
+Windows (`windows/`, run in a Windows 11 ARM64 VM, Node 22.16 arm64)
+- Written in C with no dependencies. `fstrace.exe` starts the command suspended in a job
+  object and loads `fstrace.dll` through an early APC (`LoadLibraryW`). The DLL rebinds
+  import-table entries for `ntdll!NtCreateFile`/`NtOpenFile`, `LdrLoadDll` (to patch DLLs
+  loaded later) and `CreateProcessW` (to inject into children). Every Win32 open ends in
+  kernelbase's import of `NtCreateFile`, so one patched table covers the CRT, libuv and Go.
+- Seen: C with static CRT, Go, Node sync/async, node -> node, node -> `cmd.exe` -> node,
+  `cmd -> cmd -> type`, PowerShell. Write-only opens are not reported. There is no SIP
+  equivalent, so shells are not a gap.
+- Missed: x64 processes under emulation on ARM64 (including Git for Windows here), because
+  the tracer only injects same-architecture children. On x64 Windows the same gap applies to
+  32-bit children. Fixing it needs a DLL per architecture and the target's own
+  `LoadLibraryW` address.
+- Not covered: the loader's own DLL opens (ntdll calls itself, not through an import table)
+  and code that calls `NtCreateFile` from inside ntdll. Inline hooks would close both.
+- Overhead: about 4.8 µs per traced open. Node startup costs about 20 ms extra, which is
+  unexplained so far (candidates are patching every loaded module and Defender scanning
+  the DLL).
+
+  | Workload | untraced | traced |
+  | --- | --- | --- |
+  | 200k `CreateFile`+`CloseHandle` | 2445 ms | +39% |
+  | Node `readFileSync` of `packages/nx/src` | 775 ms | ~0% |
+  | Node startup | 62 ms | +32% |
+  | 50 short processes via `cmd` loop | 360 ms | +15% |
+
+  Build in a VS developer prompt with `windows\build.cmd`, then `node demo-windows.mjs` and
+  `node bench-windows.mjs` (the bench expects `readall.js` and a copy of `packages/nx/src`
+  under `windows\src`).
 
 ## Suggested next steps
 
