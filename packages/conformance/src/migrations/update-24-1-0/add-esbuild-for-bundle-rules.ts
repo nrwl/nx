@@ -12,7 +12,11 @@ import { esbuildVersion } from '../../utils/versions';
 const BUNDLE_RULES_EXECUTOR = '@nx/conformance:bundle-rules';
 
 export default async function update(tree: Tree) {
-  if (!usesBundleRules(tree) || declaresEsbuild(tree)) {
+  if (
+    !tree.exists('package.json') ||
+    !usesBundleRules(tree) ||
+    declaresEsbuild(tree)
+  ) {
     return;
   }
 

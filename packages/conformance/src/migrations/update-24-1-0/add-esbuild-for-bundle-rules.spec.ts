@@ -72,4 +72,13 @@ describe('add-esbuild-for-bundle-rules migration', () => {
       readJson(tree, 'package.json').devDependencies?.esbuild
     ).toBeUndefined();
   });
+
+  it('should do nothing when the workspace has no root package.json', async () => {
+    addRulesProject({ executor: '@nx/conformance:bundle-rules' });
+    tree.delete('package.json');
+
+    await update(tree);
+
+    expect(tree.exists('package.json')).toBe(false);
+  });
 });

@@ -27,6 +27,7 @@ const SPECIFIER = /(["'`])@nx\/powerpack-conformance([:/][^"'`]*)?\1/g;
 
 export default async function replacePowerpackConformance(tree: Tree) {
   if (
+    !tree.exists('package.json') ||
     !declaresDependency(readJson(tree, 'package.json'), POWERPACK_CONFORMANCE)
   ) {
     return { skipAgentic: true };

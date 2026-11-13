@@ -154,4 +154,12 @@ describe('replace-powerpack-conformance', () => {
 
     expect(tree.read('nx.json', 'utf-8')).toBe(before);
   });
+
+  it('does nothing when the workspace has no root package.json', async () => {
+    const tree = createTreeWithEmptyWorkspace();
+    tree.delete('package.json');
+
+    await expect(update(tree)).resolves.toEqual({ skipAgentic: true });
+    expect(tree.exists('package.json')).toBe(false);
+  });
 });
