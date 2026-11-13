@@ -62,6 +62,7 @@ export function installPluginPackages(
  * @param pmc package manager commands
  * @param updatePackageScripts whether to update package scripts
  * @param verbose whether to run in verbose mode
+ * @param extraArgs additional arguments forwarded to the init generator
  * @returns void
  */
 export async function runPluginInitGenerator(
@@ -69,7 +70,8 @@ export async function runPluginInitGenerator(
   repoRoot: string = workspaceRoot,
   updatePackageScripts: boolean = false,
   verbose: boolean = false,
-  pmc: PackageManagerCommands = getPackageManagerCommand()
+  pmc: PackageManagerCommands = getPackageManagerCommand(),
+  extraArgs: string[] = []
 ): Promise<void> {
   let command = `g ${plugin}:init ${verbose ? '--verbose' : ''}`;
 
@@ -95,6 +97,9 @@ export async function runPluginInitGenerator(
       });
     }
     return;
+  }
+  if (extraArgs.length) {
+    command += ` ${extraArgs.join(' ')}`;
   }
   runNxSync(command, {
     stdio: [0, 1, 2],
