@@ -18,7 +18,7 @@ Out of scope: changing what rules the workspace enforces beyond what the removed
 The pre-pass changed, mechanically:
 
 - When the workspace root had no flat config yet, converted the remaining eslintrc configs to flat config through the `@nx/eslint:convert-to-flat-config` generator. JavaScript-based configs (`.eslintrc.js`, `.eslintrc.cjs`) are read statically, so the ones built from literal values were converted too.
-- In that conversion, removed `no-eslintrc` from the project configuration of inferred lint targets, except in projects whose config it skipped, and from the nx.json `targetDefaults` entries for `@nx/eslint/plugin`. It left every `ignore-path` option, and every file one names, in place.
+- In that conversion, removed `no-eslintrc` from the project configuration of inferred lint targets, except in projects whose config it skipped, and from the nx.json `targetDefaults` entries for `@nx/eslint/plugin`. It left every `ignore-path` option, every file one names, and every flag in `args` in place.
 - Removed `eslint-plugin-import`, `eslint-plugin-jsx-a11y` and `eslint-plugin-react` from `package.json` and installed `eslint-plugin-import-x` in place of `eslint-plugin-import`. Updated a declared `eslint-plugin-import-x` below 4.16.2 and `eslint-plugin-react-hooks` below 7.1.0, the first releases that support ESLint v10. An `eslint-plugin-react-hooks` that moved from v6 or older to v7 also enables the React Compiler rules in its `recommended` preset.
 - Deleted the `/* eslint-disable jsx-a11y/accessible-emoji */` line Nx generated at the top of the Expo and React Native welcome page, when it removed `eslint-plugin-jsx-a11y` and no `package.json` declares `eslint-config-next`. It edited no other comment.
 
@@ -31,7 +31,7 @@ The pre-pass also detected and reported, without changing anything:
 - An `eslint-plugin-import-x` or `eslint-plugin-react-hooks` declaration it could not rewrite, such as `workspace:*` or a dist tag.
 - Installed dependencies whose `peerDependencies.eslint` rules out the ESLint the workspace now runs.
 - A newly added `@eslint/js`, whose recommended set is wider than the one the eslintrc config applied.
-- Lint targets that still carry an eslintrc-only ESLint option: `ignore-path`, `rulesdir`, `resolve-plugins-relative-to`, or a `no-eslintrc` it did not remove.
+- Lint targets that still carry an eslintrc-only ESLint option, as an option or as a flag in `args`: `ignore-path`, `rulesdir`, `resolve-plugins-relative-to`, or a `no-eslintrc` it did not remove.
 
 The pre-pass does NOT:
 
@@ -261,11 +261,11 @@ ESLint v10 requires Node.js `^20.19.0 || ^22.13.0 || >=24`.
 
 ## 6. Remove the eslintrc-only options from lint targets
 
-**Search pattern**: `ignore-path`, `rulesdir`, `resolve-plugins-relative-to` and `no-eslintrc` in the `options` and `configurations` of lint targets in `project.json`, and in the nx.json `targetDefaults` entries filtered to `@nx/eslint/plugin`. The pre-pass report names each one the pre-pass left.
+**Search pattern**: `ignore-path`, `rulesdir`, `resolve-plugins-relative-to` and `no-eslintrc` in the `options` and `configurations` of lint targets in `project.json`, and in the nx.json `targetDefaults` entries filtered to `@nx/eslint/plugin`, both as keys and as flags in their `args`. The pre-pass report names each one the pre-pass left.
 
-**What changed**: these options only exist for eslintrc. When Nx 24 converted `@nx/eslint:lint` targets to inferred tasks, they stayed on the target. The task passes `ignore-path`, `no-eslintrc` and `resolve-plugins-relative-to` to ESLint as CLI flags, and ESLint v10 rejects each one as an invalid option. `rulesdir` holds a list, which the task never passes on, so the rules in that directory are not loaded at all.
+**What changed**: these options only exist for eslintrc. When Nx 24 converted `@nx/eslint:lint` targets to inferred tasks, they stayed on the target. The task passes `ignore-path`, `no-eslintrc`, `resolve-plugins-relative-to` and a `rulesdir` given as one path to ESLint as CLI flags, and passes the flags in `args` as written. ESLint v10 rejects each one as an invalid option. A `rulesdir` list is never passed on, so the rules in that directory are not loaded at all.
 
-When it ran the conversion, the pre-pass removed `no-eslintrc` from the inferred lint targets of every project whose config it did not skip. It left every `ignore-path`. It left `no-eslintrc` on `eslint` command and executor targets and on projects whose config it skipped. A relative path in what is left may be relative to the workspace root, where the removed executor ran ESLint, or to the project root, where the inferred target runs it. Use whichever exists.
+When it ran the conversion, the pre-pass removed `no-eslintrc` from the inferred lint targets of every project whose config it did not skip. It left every `ignore-path`. It left `no-eslintrc` on `eslint` command and executor targets and on projects whose config it skipped. It removed nothing from `args`: a flag there, such as `--ignore-path=.lintignore`, gets the same treatment as the option in the items below, and the flag is what you delete. A relative path in what is left may be relative to the workspace root, where the removed executor ran ESLint, or to the project root, where the inferred target runs it. Use whichever exists.
 
 **Action items**:
 
@@ -292,7 +292,7 @@ When it ran the conversion, the pre-pass removed `no-eslintrc` from the inferred
 
 2. Fix the failures this migration caused and re-run until green. Do not disable a rule the user configured, and do not edit source files beyond the cases sections 2, 3 and 6 authorize.
 
-   Expect failures from four places, all of them addressed above. Three are not rule violations at all: a directive comment naming a rule that no longer exists (section 2) and an `/* eslint-env */` comment (section 3), each reported against the comment itself, and a lint target option section 6 covers, which fails as an `Invalid option` error or, for `rulesdir`, as a rule ESLint cannot find.
+   Expect failures from four places, all of them addressed above. Three are not rule violations at all: a directive comment naming a rule that no longer exists (section 2) and an `/* eslint-env */` comment (section 3), each reported against the comment itself, and a lint target option section 6 covers, which fails as an `Invalid option` error or, for a `rulesdir` list, as a rule ESLint cannot find.
 
    The fourth is a rule-set change, and ESLint v10 is not its source: v10 enforces the same rules as v9, so anything newly enabled comes from a package the pre-pass added or moved. Two can do that, and the pre-pass report says which of them applied. A config that extends `eslint:recommended` and was converted here, or that a converted config loads through `FlatCompat`, picks up `no-unassigned-vars`, `no-useless-assignment` and `preserve-caught-error` from `@eslint/js` when the workspace had no such dependency before. A config that pulls `eslint-plugin-react-hooks`'s own `recommended` preset picks up the React Compiler rules, which v7 added to that preset with 12 of them at error severity. A config that reaches react-hooks through `@nx/eslint-plugin`'s `flat/react` or `flat/react-jsx` does not: those pin `rules-of-hooks` and `exhaustive-deps` on ESLint v10. Both came from a changed preset default, not from the user, so turn the rules off in the flat config with a short comment rather than editing source, and never weaken `rules-of-hooks` or `exhaustive-deps`.
 

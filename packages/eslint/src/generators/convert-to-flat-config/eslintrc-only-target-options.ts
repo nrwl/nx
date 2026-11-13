@@ -98,9 +98,14 @@ export function findEslintrcOnlyTargetOptions(tree: Tree): string[] {
       ),
     ];
     for (const [scope, options] of scopes) {
-      const present = ESLINTRC_ONLY_CLI_OPTIONS.filter(
-        (option) => options?.[option] !== undefined
-      );
+      const present = [
+        ...ESLINTRC_ONLY_CLI_OPTIONS.filter(
+          (option) => options?.[option] !== undefined
+        ),
+        ...findEslintrcOnlyArgs(options?.args).map(
+          (option) => `${option} (in "args")`
+        ),
+      ];
       if (present.length > 0) {
         found.push(`${scope}: ${present.join(', ')}`);
       }
@@ -132,4 +137,16 @@ export function findEslintrcOnlyTargetOptions(tree: Tree): string[] {
     }
   }
   return found;
+}
+
+// The task passes `args` to ESLint as written, so a flag there fails the same way.
+function findEslintrcOnlyArgs(args: unknown): string[] {
+  const flags = Array.isArray(args)
+    ? args.join(' ')
+    : typeof args === 'string'
+      ? args
+      : '';
+  return ESLINTRC_ONLY_CLI_OPTIONS.filter((option) =>
+    new RegExp(`(^|\\s)--${option}(?=[\\s=]|$)`).test(flags)
+  );
 }

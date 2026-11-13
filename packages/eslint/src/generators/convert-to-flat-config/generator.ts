@@ -186,7 +186,7 @@ export async function convertToFlatConfigGenerator(
   if (leftover.length > 0) {
     logger.warn(
       `These lint targets still carry ESLint options that flat config does not support: ${leftover.join('; ')}. ` +
-        'ESLint rejects "ignore-path", "no-eslintrc" and "resolve-plugins-relative-to" as invalid options. "rulesdir" never reaches ESLint, because the task does not pass a list option on, so the rules in that directory are not loaded. ' +
+        'ESLint rejects "ignore-path", "no-eslintrc", "resolve-plugins-relative-to" and a "rulesdir" given as one path or in "args" as invalid options. A "rulesdir" list never reaches ESLint, because the task does not pass a list option on, so the rules in that directory are not loaded. ' +
         ESLINTRC_ONLY_OPTIONS_FIXES
     );
   }

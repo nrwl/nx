@@ -2207,6 +2207,38 @@ describe('convert-to-flat-config generator', () => {
       warnSpy.mockRestore();
     });
 
+    it('should report eslintrc-only flags passed in args and leave the args as they are', async () => {
+      const args = [
+        '--rulesdir=tools/eslint-rules',
+        '--ignore-pattern',
+        'dist',
+      ];
+      setTestLibTargets({
+        lint: {
+          options: { args },
+          configurations: {
+            ci: { args: '--no-eslintrc --resolve-plugins-relative-to tools' },
+          },
+        },
+      });
+      const warnSpy = vi.spyOn(logger, 'warn');
+
+      await convertToFlatConfigGenerator(tree, options);
+
+      expect(readProjectConfiguration(tree, 'test-lib').targets.lint).toEqual({
+        options: { args },
+        configurations: {
+          ci: { args: '--no-eslintrc --resolve-plugins-relative-to tools' },
+        },
+      });
+      expect(warnSpy).toHaveBeenCalledWith(
+        expect.stringContaining(
+          'project "test-lib" target "lint": rulesdir (in "args"); project "test-lib" target "lint" (configuration "ci"): no-eslintrc (in "args"), resolve-plugins-relative-to (in "args")'
+        )
+      );
+      warnSpy.mockRestore();
+    });
+
     it('should remove no-eslintrc from @nx/eslint/plugin targetDefaults entries and leave their ignore-path', async () => {
       tree.write('.gitignore', 'generated/**');
       updateJson(tree, 'nx.json', (json: NxJsonConfiguration) => {
