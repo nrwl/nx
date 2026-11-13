@@ -112,10 +112,10 @@ jobs:
           pnpm nx record -- nx format:check &
           pids+=($!)
 
-          pnpm nx record -- nx sync:check
+          pnpm nx record -- nx sync:check &
           pids+=($!)
 
-          pnpm nx build workspace-plugin && pnpm nx record -- pnpm nx-cloud conformance:check
+          pnpm nx build workspace-plugin && pnpm nx record -- pnpm nx-cloud conformance:check &
           pids+=($!)
 
           pnpm nx run-many -t check-imports check-lock-files check-codeowners --parallel=1 --no-dte &
