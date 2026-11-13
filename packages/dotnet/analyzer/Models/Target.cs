@@ -5,6 +5,12 @@ namespace MsbuildAnalyzer.Models;
 /// </summary>
 public record Target
 {
+    public string? Executor { get; init; }
+
+    public string? DefaultConfiguration { get; init; }
+
+    public bool? Parallelism { get; init; }
+
     /// <summary>
     /// The command to execute (e.g., "dotnet build").
     /// </summary>
