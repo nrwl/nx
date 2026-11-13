@@ -28,7 +28,7 @@ if (files.length > 0) {
   for (const chunk of chunkify(files)) {
     const result = spawnSync(
       process.execPath,
-      [oxlintBin, '--no-error-on-unmatched-pattern', ...chunk],
+      [oxlintBin, '--no-error-on-unmatched-pattern', '--', ...chunk],
       { stdio: 'inherit' }
     );
     if (result.error) {
