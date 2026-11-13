@@ -1195,7 +1195,7 @@ describe('Eslint - Convert Executors To Plugin', () => {
       ${'outputFile'}               | ${'{projectRoot}/../report.json'} | ${{ 'output-file': '../report.json' }}
       ${'outputFile'}               | ${'/abs/x.json'}                  | ${{ 'output-file': '../../abs/x.json' }}
       ${'outputFile'}               | ${'../reports/x.json'}            | ${{ 'output-file': '../../../reports/x.json' }}
-      ${'outputFile'}               | ${''}                             | ${undefined}
+      ${'outputFile'}               | ${''}                             | ${{ 'output-file': null }}
       ${'ignorePath'}               | ${'.eslintignore'}                | ${{ 'ignore-path': '../../.eslintignore' }}
       ${'ignorePath'}               | ${'/abs/.eslintignore'}           | ${{ 'ignore-path': '/abs/.eslintignore' }}
       ${'resolvePluginsRelativeTo'} | ${'tools'}                        | ${{ 'resolve-plugins-relative-to': '../../tools' }}
@@ -1229,12 +1229,12 @@ describe('Eslint - Convert Executors To Plugin', () => {
       ${'maxWarnings'}   | ${0}          | ${{ 'max-warnings': 0 }}
       ${'maxWarnings'}   | ${-1}         | ${{ 'max-warnings': -1 }}
       ${'fix'}           | ${true}       | ${{ fix: true }}
-      ${'fix'}           | ${false}      | ${undefined}
-      ${'cache'}         | ${false}      | ${undefined}
-      ${'quiet'}         | ${false}      | ${undefined}
-      ${'noEslintrc'}    | ${false}      | ${undefined}
-      ${'cacheLocation'} | ${''}         | ${undefined}
-      ${'cacheStrategy'} | ${''}         | ${undefined}
+      ${'fix'}           | ${false}      | ${{ fix: null }}
+      ${'cache'}         | ${false}      | ${{ cache: null }}
+      ${'quiet'}         | ${false}      | ${{ quiet: null }}
+      ${'noEslintrc'}    | ${false}      | ${{ 'no-eslintrc': null }}
+      ${'cacheLocation'} | ${''}         | ${{ 'cache-location': null }}
+      ${'cacheStrategy'} | ${''}         | ${{ 'cache-strategy': null }}
       ${'cacheStrategy'} | ${'metadata'} | ${{ 'cache-strategy': 'metadata' }}
     `(
       'should convert $option: $value to its ESLint CLI flag',
@@ -1281,6 +1281,35 @@ describe('Eslint - Convert Executors To Plugin', () => {
           cache: null,
           'cache-location': null,
         },
+      });
+    });
+
+    it('should keep a project opting out of options a target default enables', async () => {
+      const project = createTestProject(tree, {
+        appName: 'core',
+        appRoot: 'libs/core',
+      });
+      project.targets.lint.options.fix = false;
+      project.targets.lint.options.cache = false;
+      project.targets.lint.options.quiet = false;
+      updateProjectConfiguration(tree, project.name, project);
+      const nxJson = readNxJson(tree);
+      nxJson.targetDefaults ??= {};
+      nxJson.targetDefaults.lint = {
+        options: { fix: true, cache: true, quiet: true },
+      };
+      updateNxJson(tree, nxJson);
+
+      await convertToInferred(tree, { skipFormat: true });
+
+      const defaultOptions = (readNxJson(tree).targetDefaults.lint as any)
+        .options;
+      const projectOptions = readProjectConfiguration(tree, project.name)
+        .targets?.lint?.options;
+      expect({ ...defaultOptions, ...projectOptions }).toMatchObject({
+        fix: null,
+        cache: null,
+        quiet: null,
       });
     });
 
