@@ -271,14 +271,22 @@ function getRootTsConfigPath(tree: Tree): string | null {
   return null;
 }
 
+const jsonPrettierConfigFiles = ['.prettierrc', '.prettierrc.json'];
+
 function getChangedPrettierConfigInTree(tree: Tree): Prettier.Options | null {
-  if (tree.listChanges().find((file) => file.path === '.prettierrc')) {
-    try {
-      return readJson(tree, '.prettierrc');
-    } catch {
-      return null;
+  const changedPaths = new Set(tree.listChanges().map((file) => file.path));
+
+  for (const configPath of jsonPrettierConfigFiles) {
+    if (!changedPaths.has(configPath)) {
+      continue;
     }
-  } else {
-    return null;
+    try {
+      const options = readJson(tree, configPath);
+      if (options && typeof options === 'object' && !Array.isArray(options)) {
+        return options;
+      }
+    } catch {}
   }
+
+  return null;
 }
