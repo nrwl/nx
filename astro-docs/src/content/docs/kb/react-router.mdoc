@@ -89,7 +89,10 @@ Configure the plugin in `nx.json`:
 | `buildDepsTargetName` | string | none    | Name of an optional dependency build task.      |
 | `watchDepsTargetName` | string | none    | Name of an optional dependency watch task.      |
 
-With `@nx/vite` installed at the workspace root, the `dev` task infers `"readyWhen": { "signal": true }` when its Vite config loads `nxReadySignal()`.
+With `@nx/vite` installed at the workspace root, the `dev` task infers
+`"readyWhen": { "signal": true }` when its Vite config includes `nxReadySignal()`
+with no `apply` condition or with `apply: 'serve'`.
+Nx doesn't evaluate function-valued `apply` conditions during inference.
 Generated application configs include this plugin from `@nx/vite/plugins/nx-ready-signal.plugin`.
 The server reports its address once it listens, so this check doesn't resolve the Vite config again.
 If you use `--config` or `--mode`, keep `nxReadySignal()` enabled in the selected configuration, or override `readyWhen` on the task.
