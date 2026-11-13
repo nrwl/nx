@@ -56,12 +56,6 @@
       "implementation": "./dist/src/migrations/update-24-0-1/add-highlight-ids",
       "prompt": "./dist/src/migrations/update-24-0-1/adapt-highlight-usage.md",
       "documentation": "./dist/src/migrations/update-24-0-1/add-highlight-ids.md"
-    },
-    "update-24-1-0-add-nx-cypress-dependency": {
-      "version": "24.1.0-beta.1",
-      "description": "Add `@nx/cypress` to the root `devDependencies` when the workspace uses it without declaring it, since `@nx/storybook` no longer installs it.",
-      "implementation": "./dist/src/migrations/update-24-1-0/add-nx-cypress-dependency",
-      "documentation": "./dist/src/migrations/update-24-1-0/add-nx-cypress-dependency.md"
     }
   },
   "packageJsonUpdates": {
