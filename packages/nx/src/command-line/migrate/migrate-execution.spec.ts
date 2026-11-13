@@ -1083,69 +1083,6 @@ describe('executeMigrations', () => {
     expect(mockCommitMigrationIfRequested.mock.calls[2][5]).toEqual([]);
   });
 
-  it('installs what a run-first migration declared before later migrations run', async () => {
-    writeFileSync(
-      join(tmpRoot, 'package.json'),
-      JSON.stringify({ name: 'workspace', version: '0.0.0' })
-    );
-    const storybookDir = installMigrationPackage(tmpRoot, '@nx/storybook', {
-      generators: {
-        'update-24-1-0-add-nx-cypress-dependency': {
-          version: '24.1.0-beta.0',
-          implementation: './backfill.js',
-        },
-      },
-    });
-    writeImplFile(
-      storybookDir,
-      'backfill.js',
-      `module.exports.default = async function (tree) {
-        const json = JSON.parse(tree.read('package.json', 'utf-8'));
-        json.devDependencies = { '@nx/cypress': '24.1.0' };
-        tree.write('package.json', JSON.stringify(json));
-      };`
-    );
-    const installedMarker = join(tmpRoot, 'installed');
-    writeImplFile(
-      pkgDir,
-      'mig-a.js',
-      `module.exports.default = async function () {
-        if (!require('fs').existsSync(${JSON.stringify(installedMarker)})) {
-          throw new Error('needs @nx/cypress installed');
-        }
-      };`
-    );
-    mockCommitMigrationIfRequested.mockResolvedValue({ status: 'disabled' });
-    mockSpawn.mockImplementation(() => {
-      const child = new FakeChildProcess();
-      // The install finishes only after spawn returns, as a real one does.
-      process.nextTick(() => {
-        writeFileSync(installedMarker, '');
-        child.emit('close', 0);
-      });
-      return child;
-    });
-
-    await executeMigrations(
-      tmpRoot,
-      [
-        migration('mig-a', '1.0.0'),
-        {
-          package: '@nx/storybook',
-          name: 'update-24-1-0-add-nx-cypress-dependency',
-          version: '24.1.0-beta.0',
-        },
-      ],
-      false,
-      false,
-      '',
-      false
-    );
-
-    expect(mockSpawn).toHaveBeenCalledTimes(1);
-    expect(mockSpawn.mock.calls[0][0]).toContain('install');
-  });
-
   describe('skipAgentic', () => {
     let infoSpy: MockInstance;
 

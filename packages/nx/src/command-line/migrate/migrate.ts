@@ -192,7 +192,7 @@ import {
   runNxOrAngularMigration,
 } from './execute-migration';
 import { isStepAction, STEP_ACTIONS, type StepAction } from './step-actions';
-import { isRunFirstMigration, sortMigrations } from './sort-migrations';
+import { sortMigrations } from './sort-migrations';
 import { singleLine } from './text';
 import { isInsideAgent } from './agentic/inception';
 import {
@@ -3116,10 +3116,6 @@ export async function executeMigrations(
         }
         commit = await commitOrRecordNoChanges(m, madeChanges);
         outcome = madeChanges ? 'applied' : 'no-changes';
-      }
-      // Later migrations can load a package this one declared.
-      if (isRunFirstMigration(m)) {
-        await installDepsIfChanged();
       }
       outcomes.push({
         migration: { package: m.package, name: m.name },
