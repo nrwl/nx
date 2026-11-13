@@ -9,7 +9,7 @@
       "outputs": ["{projectRoot}/README.md"]
     },
     "copy-assets": {
-      "dependsOn": ["^mvn:package"]
+      "dependsOn": ["^mvn:package-ci"]
     },
     "test": {
       "inputs": [
