@@ -44,8 +44,10 @@ function updateJsonValue(
         changed = true;
       }
     } else if (Array.isArray(value)) {
-      value.forEach((x, idx) => recur(value, idx, x));
-    } else if (typeof value === 'object') {
+      value.forEach((x, idx) => {
+        changed = recur(value, idx, x) || changed;
+      });
+    } else if (value && typeof value === 'object') {
       Object.entries(value).forEach(([k, v]) => {
         changed = recur(value, k, v) || changed;
       });
