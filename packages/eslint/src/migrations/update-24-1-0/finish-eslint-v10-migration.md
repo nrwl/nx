@@ -136,7 +136,7 @@ export default eslintConfig;
 **Action items**:
 
 - [ ] Convert each reported config to `eslint.config.mjs`, preserving its rules, plugins, parser options and overrides.
-- [ ] Translate eslintrc keys to their flat-config equivalents: `env` to `languageOptions.globals`, `parser` / `parserOptions` to `languageOptions`, `ignorePatterns` to `ignores`, `overrides` entries to separate config objects with a `files` key. An `env` takes its globals from the `globals` package, so add `globals` to the root `package.json` when no `package.json` declares it.
+- [ ] Translate eslintrc keys to their flat-config equivalents: `env` to `languageOptions.globals`, `parser` / `parserOptions` to `languageOptions`, `ignorePatterns` to `ignores`, `overrides` entries to separate config objects with a `files` key. An `env` takes its globals from the `globals` package, so add `globals` to the root `package.json` when no `package.json` declares it. A plugin environment, written `<plugin>/<name>` such as `jest/globals`, comes from the plugin instead. Import the plugin and spread its `environments.<name>.globals`.
 - [ ] Widen the eslintrc glob semantics: `*.ts` in eslintrc matches at any depth, so it becomes `**/*.ts` in flat config.
 - [ ] Delete the original eslintrc file once the flat config replaces it.
 - [ ] Update any `nx.json` or `project.json` input that referenced the old file name. The pre-pass keeps a legacy input, such as `!{projectRoot}/.eslintrc.json`, while a file it can match is left. Once you delete the last such file, remove the legacy input and keep its flat-config counterpart.
@@ -223,7 +223,7 @@ export default [
 
 **Action items**:
 
-- [ ] For each reported file, move the globals the comment declared into the `languageOptions.globals` of the flat config that covers it, then delete the comment. The `globals` package exports each environment by name, so `eslint-env node` becomes `...globals.node`.
+- [ ] For each reported file, move the globals the comment declared into the `languageOptions.globals` of the flat config that covers it, then delete the comment. The `globals` package exports each environment by name, so `eslint-env node` becomes `...globals.node`. A plugin environment such as `eslint-env jest/globals` comes from the plugin's `environments.globals.globals` instead.
 - [ ] Use a `/* global ... */` comment instead when a single file needs globals the rest of the project does not.
 - [ ] Never delete one without replacing what it declared. Where a config applied its globals, they turn into `no-undef` errors.
 - [ ] Before deleting a comment that is alone on its line, check the lines above it, as in section 2.

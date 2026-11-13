@@ -893,5 +893,60 @@ describe('convertEslintJsonToFlatConfig', () => {
         "
       `);
     });
+
+    it('should load plugin environment globals from the plugin', () => {
+      const { content } = convertEslintJsonToFlatConfig(
+        tree,
+        '',
+        {
+          plugins: ['jest'],
+          env: { 'jest/globals': true, 'cypress/globals': true },
+          overrides: [
+            {
+              files: ['*.cy.js'],
+              env: { 'jest/globals': true, 'cypress/globals': true },
+              globals: { page: 'readonly' },
+            },
+          ],
+        },
+        [],
+        'cjs',
+        new Set()
+      );
+
+      const compatConfigs: unknown[] = [];
+      const modules: Record<string, unknown> = {
+        '@eslint/eslintrc': {
+          FlatCompat: class {
+            config(config: unknown) {
+              compatConfigs.push(config);
+              return [];
+            }
+          },
+        },
+        '@eslint/js': { configs: { recommended: {} } },
+        'eslint-plugin-jest': {
+          environments: { globals: { globals: { describe: 'readonly' } } },
+        },
+        // eslint-plugin-cypress 5 and later export no eslintrc environments.
+        'eslint-plugin-cypress': { configs: {} },
+      };
+      const module = { exports: [] as unknown[] };
+      new Function('require', 'module', '__dirname', content)(
+        (id: string) => modules[id] ?? {},
+        module,
+        '/'
+      );
+
+      expect(module.exports).toContainEqual({
+        languageOptions: { globals: { describe: 'readonly' } },
+      });
+      expect(compatConfigs).toEqual([
+        {
+          env: { 'jest/globals': true, 'cypress/globals': true },
+          globals: { describe: 'readonly', page: 'readonly' },
+        },
+      ]);
+    });
   });
 });
