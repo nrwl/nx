@@ -1,30 +1,9 @@
-import { fork } from 'child_process';
+import { ChildProcess, fork } from 'child_process';
 import { join } from 'path';
 
 describe('file-lock', () => {
   it('should block the second call until the first one is done', async () => {
     let combinedOutputs = [];
-    let a = fork(join(__dirname, './__fixtures__/file-lock.fixture.js'), {
-      env: {
-        LABEL: 'a',
-        NX_NATIVE_LOGGING: 'trace',
-      },
-      stdio: 'pipe',
-      execArgv: ['--require', 'ts-node/register'],
-    });
-
-    // Gives a bit of time to make the outputs of the tests more predictable...
-    // if both start at the same time, its hard to guarantee that a will get the lock before b.
-    await new Promise((r) => setTimeout(r, 500));
-
-    let b = fork(join(__dirname, './__fixtures__/file-lock.fixture.js'), {
-      env: {
-        LABEL: 'b',
-        NX_NATIVE_LOGGING: 'trace',
-      },
-      stdio: 'pipe',
-      execArgv: ['--require', 'ts-node/register'],
-    });
 
     // Native trace logging shares stdout, and chunks can coalesce under load.
     const collect = (label: string) => (data: Buffer) => {
@@ -34,22 +13,56 @@ describe('file-lock', () => {
         }
       }
     };
-    a.stdout.on('data', collect('A'));
-    b.stdout.on('data', collect('B'));
+    const printed = (child: ChildProcess, label: string, lines: string[]) =>
+      new Promise<void>((resolve, reject) => {
+        child.stdout.on('data', () => {
+          if (
+            lines.some((line) => combinedOutputs.includes(`${label}: ${line}`))
+          ) {
+            resolve();
+          }
+        });
+        child.once('exit', () =>
+          reject(new Error(`${label} exited before printing ${lines}`))
+        );
+      });
 
+    let a = fork(join(__dirname, './__fixtures__/file-lock.fixture.js'), {
+      env: {
+        LABEL: 'a',
+        NX_NATIVE_LOGGING: 'trace',
+        HOLD_UNTIL_RELEASED: 'true',
+      },
+      stdio: 'pipe',
+      execArgv: ['--require', 'ts-node/register'],
+    });
+    a.stdout.on('data', collect('A'));
     a.stderr.pipe(process.stderr);
+
+    // b checks the lock only while a holds it, and a holds it until b has checked
+    await printed(a, 'A', ['holding lock']);
+
+    let b = fork(join(__dirname, './__fixtures__/file-lock.fixture.js'), {
+      env: {
+        LABEL: 'b',
+        NX_NATIVE_LOGGING: 'trace',
+      },
+      stdio: 'pipe',
+      execArgv: ['--require', 'ts-node/register'],
+    });
+    b.stdout.on('data', collect('B'));
     b.stderr.pipe(process.stderr);
 
-    await Promise.all([a, b].map((p) => new Promise((r) => p.once('exit', r))));
+    await printed(b, 'B', ['found lock held', 'found lock free']);
+    const exited = [a, b].map((p) => new Promise((r) => p.once('exit', r)));
+    a.send('release');
+    await Promise.all(exited);
 
-    // Startup time decides which process takes the lock first, so assert
-    // that one holder ran and the other waited rather than which was which.
     const ran = combinedOutputs.filter((o) => o.endsWith(': ran with lock'));
     const waited = combinedOutputs.filter((o) =>
       o.endsWith(': waited for lock')
     );
-    expect(ran).toHaveLength(1);
-    expect(waited).toHaveLength(1);
-    expect(ran[0][0]).not.toBe(waited[0][0]);
+    expect(ran).toEqual(['A: ran with lock']);
+    expect(waited).toEqual(['B: waited for lock']);
   });
 });

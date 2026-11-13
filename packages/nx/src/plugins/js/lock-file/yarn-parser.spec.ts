@@ -3307,6 +3307,8 @@ __metadata:
   });
 });
 
+// The parser reuses its last parse when the hash matches, so a hash must not repeat
+let uniqCount = 0;
 function uniq(str: string) {
-  return `${str}-${(Math.random() * 10000).toFixed(0)}`;
+  return `${str}-${++uniqCount}`;
 }

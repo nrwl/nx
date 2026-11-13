@@ -309,27 +309,36 @@ mod tests {
 
         // Create diamond pattern repeated at each level
         for level in 0..depth {
-            let left = format!("left{}", level);
-            let right = format!("right{}", level);
-            let bottom = format!("bottom{}", level);
+            let left = format!("left{}:build", level);
+            let right = format!("right{}:build", level);
+            let bottom = format!("bottom{}:build", level);
 
             tasks.insert(
                 left.clone(),
-                tests::create_test_task(&left, vec![format!("dist/left{}", level)]),
+                tests::create_test_task(
+                    &format!("left{}", level),
+                    vec![format!("dist/left{}", level)],
+                ),
             );
             tasks.insert(
                 right.clone(),
-                tests::create_test_task(&right, vec![format!("dist/right{}", level)]),
+                tests::create_test_task(
+                    &format!("right{}", level),
+                    vec![format!("dist/right{}", level)],
+                ),
             );
             tasks.insert(
                 bottom.clone(),
-                tests::create_test_task(&bottom, vec![format!("dist/bottom{}", level)]),
+                tests::create_test_task(
+                    &format!("bottom{}", level),
+                    vec![format!("dist/bottom{}", level)],
+                ),
             );
 
             if level == 0 {
                 dependencies.insert("root:build".to_string(), edges_to(&[&left, &right]));
             } else {
-                let prev_bottom = format!("bottom{}", level - 1);
+                let prev_bottom = format!("bottom{}:build", level - 1);
                 dependencies.insert(prev_bottom, edges_to(&[&left, &right]));
             }
 
@@ -347,24 +356,25 @@ mod tests {
 
     #[test]
     fn test_performance_large_graph() {
-        // This test verifies that deduplication works and the function is fast
-        // on a large diamond graph (depth 30 = 90 tasks with many duplicate paths)
-        let graph = create_diamond_graph(30);
+        // Each diamond doubles the paths below it. At this depth a walk that revisits
+        // shared dependencies still finishes (about 1s in a debug build) and fails.
+        let graph = create_diamond_graph(18);
         let root_task = &graph.tasks["root:build"];
 
-        let start = std::time::Instant::now();
-        let result = get_dep_output(root_task, &graph, "**/*.js", true).unwrap();
-        let elapsed = start.elapsed();
+        // Keep the fastest run, since a pause or preemption only adds to a run's time
+        let mut fastest = std::time::Duration::MAX;
+        let mut result = vec![];
+        for _ in 0..10 {
+            let start = std::time::Instant::now();
+            result = get_dep_output(root_task, &graph, "**/*.js", true).unwrap();
+            fastest = fastest.min(start.elapsed());
+        }
 
-        // Verify we got results
-        assert!(!result.is_empty());
-
-        // Without deduplication, this would take exponential time
-        // With deduplication and parallelization, should be very fast
+        assert_eq!(result.len(), 3 * 18);
         assert!(
-            elapsed.as_millis() < 10,
+            fastest.as_millis() < 10,
             "Performance regression: expected <10ms, got {:?}",
-            elapsed
+            fastest
         );
     }
 }
