@@ -1,11 +1,8 @@
 import * as pc from 'picocolors';
-import yargs = require('yargs');
+import type { Argv } from 'yargs';
 import { examples } from '../examples';
 
-export function linkToNxDevAndExamples<T>(
-  yargs: yargs.Argv<T>,
-  command: string
-) {
+export function linkToNxDevAndExamples<T>(yargs: Argv<T>, command: string) {
   (examples[command] || []).forEach((t) => {
     yargs = yargs.example(t.command, t.description);
   });

@@ -1,4 +1,4 @@
-const createSpinner = require('ora');
+import { Spinner } from '../../../utils/spinner';
 import { join, relative } from 'path';
 import { GitRepository } from '../../../utils/git-utils';
 
@@ -10,7 +10,7 @@ export async function prepareSourceRepo(
   tempImportBranch: string,
   sourceRemoteUrl: string
 ) {
-  const spinner = createSpinner().start(
+  const spinner = new Spinner().start(
     `Fetching ${ref} from ${sourceRemoteUrl}`
   );
   const relativeSourceDir = relative(

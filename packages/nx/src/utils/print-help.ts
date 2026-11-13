@@ -1,15 +1,18 @@
 import * as pc from 'picocolors';
-import stringWidth from 'string-width';
 import { logger } from './logger';
 import { output } from './output';
 import { Schema } from './params';
 import { nxVersion } from './versions';
 import { readModulePackageJson } from './package-json';
 
-// cliui is the CLI layout engine developed by, and used within, yargs
-// the typings for cliui do not play nice with our tsconfig, it either
-// works in build or in test but not both.
-const cliui = require('cliui') as (typeof import('cliui'))['default'];
+// cliui and string-width are ESM-only; a top-level require would reach every jest run that imports @nx/devkit.
+function cliui(opts: null) {
+  return require('cliui')(opts);
+}
+
+function stringWidth(text: string): number {
+  return require('string-width').default(text);
+}
 
 export function printHelp(
   header: string,

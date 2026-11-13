@@ -13,7 +13,7 @@ import { mkdtemp, stat, rm } from 'node:fs/promises';
 import { tmpdir } from 'tmp';
 import { selectPrompt, textPrompt } from '../../utils/prompt-helpers';
 import { output } from '../../utils/output';
-const createSpinner = require('ora');
+import { Spinner } from '../../utils/spinner';
 import { detectPlugins, getPluginReason } from '../init/init-v2';
 import { readNxJson } from '../../config/nx-json';
 import { readJsonFile } from '../../utils/fileutils';
@@ -193,14 +193,14 @@ export async function importHandler(options: ImportOptions) {
 
   const tempImportDirectory = await mkdtemp(join(tmpdir, 'nx-import-'));
   const sourceTempRepoPath = join(tempImportDirectory, 'repo');
-  let spinner: any;
+  let spinner: Spinner;
   if (aiMode) {
     logProgress(
       'cloning',
       `Cloning ${displayRepository} into ${sourceTempRepoPath}...`
     );
   } else {
-    spinner = createSpinner(
+    spinner = new Spinner(
       `Cloning ${displayRepository} into a temporary directory: ${sourceTempRepoPath} (Use --depth to limit commit history and speed up clone times)`
     ).start();
   }
