@@ -92,8 +92,8 @@ describe('@nx/rollup/plugin', () => {
 
     afterEach(() => {
       vi.resetModules();
-      tempFs.cleanup();
       process.chdir(cwd);
+      tempFs.cleanup();
     });
 
     it('should create nodes', async () => {
@@ -169,8 +169,8 @@ describe('@nx/rollup/plugin', () => {
 
     afterEach(() => {
       vi.resetModules();
-      tempFs.cleanup();
       process.chdir(cwd);
+      tempFs.cleanup();
     });
 
     it('should create nodes', async () => {
