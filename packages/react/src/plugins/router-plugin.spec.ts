@@ -9,6 +9,7 @@ import {
 } from '@nx/devkit/internal-testing-utils';
 import { isUsingTsSolutionSetup } from '@nx/js/internal';
 import { join } from 'path';
+import { symlinkSync } from 'fs';
 import { fileURLToPath } from 'node:url';
 
 vi.mock('nx/src/utils/cache-directory', async () => ({
@@ -39,6 +40,11 @@ describe('@nx/react/react-router-plugin', () => {
   describe('React Router', () => {
     beforeEach(async () => {
       tempFs = new TempFs('test');
+      symlinkSync(
+        fileURLToPath(new URL('../../../../node_modules', import.meta.url)),
+        join(tempFs.tempDir, 'node_modules'),
+        'junction'
+      );
       cwd = process.cwd();
       process.chdir(tempFs.tempDir);
 
@@ -162,17 +168,27 @@ describe('@nx/react/react-router-plugin', () => {
 
     it('keeps command readiness when Vite cannot resolve', async () => {
       mockConfig('acme/react-router.config.js', {}, context);
+      const pluginPath = fileURLToPath(
+        new URL(
+          '../../../vite/plugins/nx-ready-signal.plugin.ts',
+          import.meta.url
+        )
+      );
+      await tempFs.createFiles({
+        'acme/vite.config.js': `
+          import { nxReadySignal } from ${JSON.stringify(pluginPath)};
+          export default { plugins: [nxReadySignal()] };
+        `,
+      });
       const module = require('node:module');
-      const resolveFilename = module._resolveFilename;
+      const findPath = module._findPath;
       const resolverSpy = vi
-        .spyOn(module, '_resolveFilename')
+        .spyOn(module, '_findPath')
         .mockImplementation(function (request, ...args) {
           if (request === 'vite' || request === 'vite/package.json') {
-            throw Object.assign(new Error('Vite is unavailable'), {
-              code: 'MODULE_NOT_FOUND',
-            });
+            return false;
           }
-          return resolveFilename.call(this, request, ...args);
+          return findPath.call(this, request, ...args);
         });
 
       try {
