@@ -101,13 +101,17 @@ async function addDocker(tree: Tree, options: SetUpDockerOptions) {
 
 export function updateProjectConfig(tree: Tree, options: SetUpDockerOptions) {
   let projectConfig = readProjectConfiguration(tree, options.project);
+  const dependsOn = [
+    `${options.buildTarget}`,
+    ...(projectConfig.targets.prune ? ['prune'] : []),
+  ];
 
   if (options.skipDockerPlugin) {
     // Use sanitized project name for Docker image tag
     const sanitizedProjectName = sanitizeProjectName(options.project);
 
     projectConfig.targets[`${options.targetName}`] = {
-      dependsOn: [`${options.buildTarget}`, 'prune'],
+      dependsOn,
       command: `docker build . -t ${sanitizedProjectName}`,
       options: {
         cwd: projectConfig.root,
@@ -115,7 +119,7 @@ export function updateProjectConfig(tree: Tree, options: SetUpDockerOptions) {
     };
   } else {
     projectConfig.targets[`${options.targetName}`] = {
-      dependsOn: [`${options.buildTarget}`, 'prune'],
+      dependsOn,
     };
   }
 

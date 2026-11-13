@@ -152,6 +152,8 @@ Instead of running `build`, use the `prune` target to prepare your application f
 nx prune my-app
 ```
 
+Outside a TS Solution Setup, esbuild and webpack applications get no `prune` target, because their `build` writes the `package.json` with `generatePackageJson`.
+
 For the full setup, see [pruning projects for deployment](/docs/kb/deploying-node-projects).
 
 This creates a deployment-ready structure:
@@ -281,11 +283,11 @@ This ensures your library correctly declares its dependencies regardless of whet
 
 ## Quick reference
 
-| Scenario                                | Tool    | Key Settings                                                 |
-| --------------------------------------- | ------- | ------------------------------------------------------------ |
-| Bundled Node app                        | Webpack | `generatePackageJson: false`, `externalDependencies: 'none'` |
-| Bundled Node app                        | esbuild | `bundle: true`, `generatePackageJson: false`                 |
-| Bundled Node app                        | Vite    | `external: []` in `rollupOptions`                            |
-| Non-bundled Node app                    | Any     | Run `prune` target, deploy with `node_modules`               |
-| Publishable lib (bundle workspace deps) | esbuild | `bundle: true`, `external: ["^[^./].*$", "!@org/lib"]`       |
-| Publishable lib (bundle workspace deps) | Vite    | Custom `external` function in `rollupOptions`                |
+| Scenario                                | Tool    | Key Settings                                                                           |
+| --------------------------------------- | ------- | -------------------------------------------------------------------------------------- |
+| Bundled Node app                        | Webpack | `generatePackageJson: false`, `externalDependencies: 'none'`                           |
+| Bundled Node app                        | esbuild | `bundle: true`, `generatePackageJson: false`                                           |
+| Bundled Node app                        | Vite    | `external: []` in `rollupOptions`                                                      |
+| Non-bundled Node app                    | Any     | Run `prune` target (or `build` with `generatePackageJson`), deploy with `node_modules` |
+| Publishable lib (bundle workspace deps) | esbuild | `bundle: true`, `external: ["^[^./].*$", "!@org/lib"]`                                 |
+| Publishable lib (bundle workspace deps) | Vite    | Custom `external` function in `rollupOptions`                                          |
