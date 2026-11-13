@@ -1472,6 +1472,15 @@ describe('convert-to-flat-config generator', () => {
           '{workspaceRoot}/**/*eslint.config.*',
         ],
       ],
+      [
+        'a {workspaceRoot} path to a file that remains',
+        '',
+        '{workspaceRoot}/tools/.eslintrc.json',
+        [
+          '{workspaceRoot}/tools/.eslintrc.json',
+          '{workspaceRoot}/tools/eslint.config.*',
+        ],
+      ],
     ])(
       'should keep the legacy name of %s, so it still covers a config loaded through FlatCompat',
       async (_, gitignore, input, rewritten) => {
@@ -1594,11 +1603,11 @@ describe('convert-to-flat-config generator', () => {
 
       expect(tree.exists('libs/other-lib/.eslintrc.json')).toBe(true);
       const nxJson = readJson(tree, 'nx.json');
-      // other-lib keeps a .eslintrc.json, so that name stays next to the flat
-      // config glob. No .eslintignore remains, so that name is replaced.
+      // other-lib keeps a .eslintrc.json, so the `{projectRoot}` names stay next
+      // to the flat config glob. The root .eslintrc.json and every .eslintignore
+      // are gone, so those inputs are replaced.
       expect(nxJson.targetDefaults.lint.inputs).toEqual([
         'default',
-        '{workspaceRoot}/.eslintrc.json',
         '{workspaceRoot}/eslint.config.*',
       ]);
       expect(nxJson.targetDefaults.build.inputs).toEqual([

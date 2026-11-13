@@ -139,7 +139,7 @@ export default eslintConfig;
 - [ ] Translate eslintrc keys to their flat-config equivalents: `env` to `languageOptions.globals`, `parser` / `parserOptions` to `languageOptions`, `ignorePatterns` to `ignores`, `overrides` entries to separate config objects with a `files` key.
 - [ ] Widen the eslintrc glob semantics: `*.ts` in eslintrc matches at any depth, so it becomes `**/*.ts` in flat config.
 - [ ] Delete the original eslintrc file once the flat config replaces it.
-- [ ] Update any `nx.json` or `project.json` input that referenced the old file name.
+- [ ] Update any `nx.json` or `project.json` input that referenced the old file name. The pre-pass keeps a legacy input, such as `!{projectRoot}/.eslintrc.json`, while a file it can match is left. Once you delete the last such file, remove the legacy input and keep its flat-config counterpart.
 
 ## 2. Rewrite references to the removed plugins
 
@@ -273,6 +273,7 @@ When it ran the conversion, the pre-pass removed `no-eslintrc` from the inferred
   - Pass the file's patterns as `--ignore-pattern` flags in the `args` next to its `ignore-path`. An override with its own `ignore-path` gets only its own patterns. An override that sets `args` but no `ignore-path` inherited the file, so add that file's patterns to its `args`. Every `args` you write keeps the flags its runs already passed, since an override's `args` replaces the inherited one.
   - Rewrite each line of the file for the flag. ESLint resolves both from the directory it runs in, the target's `cwd`, but the file uses gitignore syntax: a pattern with no slash, or only a trailing one, matches at any depth, and any other slash anchors it. So `dist` becomes `**/dist`, and `/dist` becomes `dist`.
   - Quote each pattern inside its `args` entry. Nx passes `args` to the shell unquoted, so an unquoted glob is expanded before ESLint sees it. An array set as an `ignore-pattern` option is dropped, so use `args`.
+  - Delete the ignore file once no `ignore-path` names it and nothing else in the workspace references it. Never delete `.gitignore` or a file another tool reads.
 - [ ] `rulesdir`: flat config has no rules directory. Register the directory's rules as a local plugin in the flat config, for example `plugins: { local: { rules } }`, rename each reference to those rules, in configs and in directive comments, to `local/<rule>`, then delete the option.
 - [ ] `resolve-plugins-relative-to`: flat config loads each plugin from the config module that imports it. If the config loads eslintrc-style configs through `FlatCompat`, pass the directory to it as `resolvePluginsRelativeTo`. Otherwise check that every plugin the config imports resolves from the config file. Then delete the option.
 - [ ] `no-eslintrc`: delete the option. Flat config never merges configs from parent directories, so it has no equivalent.
