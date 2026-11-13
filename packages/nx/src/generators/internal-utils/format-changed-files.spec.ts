@@ -2,10 +2,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import type { Tree } from '../tree';
-import {
-  formatChangedFiles,
-  formatFileContents,
-} from './format-changed-files';
+import { formatChangedFiles, formatFileContents } from './format-changed-files';
 
 describe('formatChangedFiles', () => {
   let originalSkipFormat: string | undefined;
