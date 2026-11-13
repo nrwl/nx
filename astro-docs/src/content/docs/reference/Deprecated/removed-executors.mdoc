@@ -76,6 +76,10 @@ The migration runs `convert-to-inferred` for every project that uses a removed e
 
 Some options have no equivalent outside the executor. The migration reports those rather than dropping them silently, so read its output before committing.
 
+The migration converts only targets written in project configuration files such as `project.json` and `package.json`.
+A target that a `createNodes` plugin emits, whether a local plugin or a third-party one, isn't in those files, so the migration can't convert it.
+Update the plugin that emits the target to emit the inferred equivalent instead, or to stop emitting it and let the first-party plugin infer it.
+
 ## Migrate a single plugin
 
 To convert one plugin ahead of the upgrade, run its generator directly:
