@@ -1109,7 +1109,7 @@ function addBlockToFlatConfigExportCJS(
       {
         type: ChangeType.Insert,
         index,
-        text: `,\n${insert}`,
+        text: exportsArray.length > 0 ? `,\n${insert}` : `\n${insert}`,
       },
     ]);
   } else {
