@@ -1,3 +1,4 @@
+import { dirname } from 'node:path/posix';
 import { DependencyType } from '../../../../config/project-graph';
 import { defaultFileRead } from '../../../../project-graph/file-utils';
 import type { CreateDependenciesContext } from '../../../../project-graph/plugins';
@@ -73,10 +74,15 @@ function processPackageJson(
         return;
       }
 
-      const externalNodeName = targetProjectLocator.findNpmProjectFromImport(
-        packageName,
-        packageJsonPath
-      );
+      const externalNodeName =
+        targetProjectLocator.findInstalledLocalPathNpmProject(
+          packageName,
+          dirname(packageJsonPath)
+        ) ??
+        targetProjectLocator.findNpmProjectFromImport(
+          packageName,
+          packageJsonPath
+        );
       if (!externalNodeName) {
         return;
       }
