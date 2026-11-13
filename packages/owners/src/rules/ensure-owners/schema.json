@@ -1,0 +1,8 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "$id": "EnsureOwners",
+  "title": "Ensure Owners Rule Configuration",
+  "type": "object",
+  "properties": {},
+  "additionalProperties": false
+}

@@ -8,6 +8,9 @@
       "path": "./packages/angular"
     },
     {
+      "path": "./packages/conformance"
+    },
+    {
       "path": "./packages/create-nx-plugin"
     },
     {
@@ -341,7 +344,16 @@
       "path": "./packages/oxlint"
     },
     {
+      "path": "./packages/owners"
+    },
+    {
       "path": "./e2e/oxlint"
+    },
+    {
+      "path": "./e2e/conformance"
+    },
+    {
+      "path": "./e2e/owners"
     }
   ],
   "extends": "./tsconfig.base.json",
