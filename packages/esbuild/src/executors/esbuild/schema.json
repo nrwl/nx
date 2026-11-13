@@ -8,7 +8,7 @@
   "properties": {
     "main": {
       "type": "string",
-      "description": "The path to the entry file, relative to project.",
+      "description": "The path to the entry file, relative to the workspace root.",
       "alias": "entryFile",
       "x-completion-type": "file",
       "x-completion-glob": "**/*@(.js|.ts)",
@@ -46,7 +46,7 @@
     },
     "format": {
       "type": "array",
-      "description": "List of module formats to output. Defaults to matching format from tsconfig (e.g. CJS for CommonJS, and ESM otherwise).",
+      "description": "List of module formats to output. Defaults to ESM.",
       "alias": "f",
       "items": {
         "type": "string",
