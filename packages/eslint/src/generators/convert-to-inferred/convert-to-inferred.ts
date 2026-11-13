@@ -195,7 +195,7 @@ function postTargetTransformer(
   const reportPaths: string[] = [];
 
   if (target.options) {
-    handlePropertiesInOptions(target.options, projectDetails, cwd, false);
+    handlePropertiesInOptions(target.options, projectDetails, cwd);
     if (target.options['output-file']) {
       reportPaths.push(joinPathFragments(cwd, target.options['output-file']));
     }
@@ -211,20 +211,14 @@ function postTargetTransformer(
       tree.root
     );
     const configuration = target.configurations?.[configurationName] ?? {};
-    handlePropertiesInOptions(
-      configuration,
-      projectDetails,
-      configurationCwd,
-      true
-    );
+    handlePropertiesInOptions(configuration, projectDetails, configurationCwd);
     // the base options were rebased onto the base cwd
     if (configurationCwd !== cwd) {
       const inheritedOptions = structuredClone(baseOptions);
       handlePropertiesInOptions(
         inheritedOptions,
         projectDetails,
-        configurationCwd,
-        false
+        configurationCwd
       );
       for (const [option, value] of Object.entries(inheritedOptions)) {
         // only `convertedTarget` has the target defaults, but it keeps the
@@ -314,8 +308,7 @@ const reportOutputToken = '{options.outputFile}';
 function handlePropertiesInOptions(
   options: Record<string, any>,
   projectDetails: { projectName: string; root: string },
-  cwd: string,
-  isConfiguration: boolean
+  cwd: string
 ) {
   // inferred targets are only identified after known files that ESLint would
   // pick up, so we can remove the eslintConfig option
@@ -345,22 +338,23 @@ function handlePropertiesInOptions(
     'ignorePath',
     'resolvePluginsRelativeTo',
     'printConfig',
+    'cacheLocation',
   ]) {
     if (!(option in options)) {
       continue;
     }
     // The executor treated an empty value as unset. ESLint rejects an empty
-    // path, and run-commands skips `null`, which still overrides the base.
+    // path, and run-commands skips `null`, which still overrides an inherited
+    // value.
     if (!options[option]) {
-      if (isConfiguration) {
-        options[option] = null;
-      } else {
-        delete options[option];
-      }
+      options[option] = null;
       continue;
     }
     options[option] = toCwdRelativePath(
-      options[option],
+      // The executor kept one cache per project under cacheLocation.
+      option === 'cacheLocation'
+        ? joinPathFragments(options[option], projectDetails.projectName)
+        : options[option],
       option,
       projectDetails,
       cwd
@@ -395,11 +389,15 @@ function handlePropertiesInOptions(
   }
 
   for (const key in targetOptionsToCliMap) {
-    if (options[key] || options[key] === null) {
-      const prevValue = options[key];
-      delete options[key];
-      options[targetOptionsToCliMap[key]] = prevValue;
+    if (!(key in options)) {
+      continue;
     }
+    const value = options[key];
+    delete options[key];
+    // The executor treated `false` and `''` as unset. run-commands skips
+    // `null`, which still overrides an inherited value.
+    options[targetOptionsToCliMap[key]] =
+      value === false || value === '' ? null : value;
   }
 
   if ('lintFilePatterns' in options) {
