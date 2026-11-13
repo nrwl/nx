@@ -87,14 +87,23 @@ function processPackageJson(
         return;
       }
 
-      const dependency: RawProjectGraphDependency = {
-        source: sourceProject,
-        target: externalNodeName,
-        sourceFile: packageJsonPath,
-        type: DependencyType.static,
-      };
-      validateDependency(dependency, ctx);
-      collectedDeps.push(dependency);
+      const linkedProject = targetProjectLocator.findLinkedProject(
+        externalNodeName,
+        packageName,
+        packageJsonPath
+      );
+      for (const target of linkedProject
+        ? [linkedProject, externalNodeName]
+        : [externalNodeName]) {
+        const dependency: RawProjectGraphDependency = {
+          source: sourceProject,
+          target,
+          sourceFile: packageJsonPath,
+          type: DependencyType.static,
+        };
+        validateDependency(dependency, ctx);
+        collectedDeps.push(dependency);
+      }
     });
   } catch (e) {
     if (process.env.NX_VERBOSE_LOGGING === 'true') {
