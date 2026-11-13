@@ -10,6 +10,7 @@
     "check-commit": "node ./scripts/commit-lint.js",
     "check-format": "nx format:check --all",
     "check-format:quick": "nx format:check",
+    "check-oxlint:quick": "node ./scripts/oxlint-changed-files.js",
     "check-imports": "node ./scripts/check-imports.js",
     "check-lock-files": "node ./scripts/check-lock-files.js",
     "check-codeowners": "tsx ./scripts/check-codeowners.ts",
@@ -290,6 +291,7 @@
       "check-commit",
       "check-format",
       "check-format:quick",
+      "check-oxlint:quick",
       "check-imports",
       "check-lock-files",
       "check-codeowners"
