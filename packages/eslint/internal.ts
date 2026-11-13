@@ -14,6 +14,7 @@ export {
   addSpreadConfigToFlatLintConfig,
   addTypedLintingToFlatConfig,
   findEslintFile,
+  findFlatConfigFile,
   inspectTypedLinting,
   isEslintConfigSupported,
   isTypedLintingEnabled,

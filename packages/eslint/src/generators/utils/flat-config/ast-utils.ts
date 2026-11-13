@@ -924,6 +924,54 @@ export function isEsmExport(source: ts.SourceFile): boolean {
 }
 
 /**
+ * Whether the flat config exports an array literal, the only export
+ * `addBlockToFlatConfigExport` adds to.
+ */
+export function exportsFlatConfigArray(content: string): boolean {
+  const source = ts.createSourceFile(
+    '',
+    content,
+    ts.ScriptTarget.Latest,
+    true,
+    ts.ScriptKind.JS
+  );
+  return isEsmExport(source)
+    ? findExportedArray(source) !== undefined
+    : findModuleExports(source) !== undefined;
+}
+
+export function flatConfigUsesVariable(content: string, name: string): boolean {
+  const source = ts.createSourceFile(
+    '',
+    content,
+    ts.ScriptTarget.Latest,
+    true,
+    ts.ScriptKind.JS
+  );
+  const visit = (node: ts.Node): boolean =>
+    (ts.isIdentifier(node) &&
+      node.text === name &&
+      !isPropertyKeyOrMemberName(node)) ||
+    ts.forEachChild(node, visit) === true;
+  return visit(source);
+}
+
+// These names neither declare nor reference a variable.
+function isPropertyKeyOrMemberName(node: ts.Identifier): boolean {
+  const { parent } = node;
+  return (
+    ((ts.isPropertyAssignment(parent) ||
+      ts.isMethodDeclaration(parent) ||
+      ts.isGetAccessorDeclaration(parent) ||
+      ts.isSetAccessorDeclaration(parent) ||
+      ts.isPropertyDeclaration(parent) ||
+      ts.isPropertyAccessExpression(parent)) &&
+      parent.name === node) ||
+    (ts.isBindingElement(parent) && parent.propertyName === node)
+  );
+}
+
+/**
  * Injects new ts.expression to the end of the module.exports or export default array.
  */
 export function addBlockToFlatConfigExport(
