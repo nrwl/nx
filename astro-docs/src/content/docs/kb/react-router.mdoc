@@ -89,8 +89,11 @@ Configure the plugin in `nx.json`:
 | `buildDepsTargetName` | string | none    | Name of an optional dependency build task.      |
 | `watchDepsTargetName` | string | none    | Name of an optional dependency watch task.      |
 
-The `dev` task gets the `@nx/vite` check when `@nx/vite` is installed at the workspace root.
-That check resolves the Vite config when the task runs, with the task's environment and options, and waits for the dev server's port.
+With `@nx/vite` installed at the workspace root, the `dev` task infers `"readyWhen": { "signal": true }` when its Vite config loads `nxReadySignal()`.
+Generated application configs include this plugin from `@nx/vite/plugins/nx-ready-signal.plugin`.
+The server reports its address once it listens, so this check doesn't resolve the Vite config again.
+If you use `--config` or `--mode`, keep `nxReadySignal()` enabled in the selected configuration, or override `readyWhen` on the task.
+If signal support isn't detected, the inferred `command` check resolves the Vite config when the task runs, with the task's environment and options, and waits for the dev server's port.
 Without `@nx/vite`, the `dev` task has no readiness check.
 The `start` task waits for the port `react-router-serve` listens on, from the `PORT` environment variable or 3000.
 When `HOST` is set, it connects to that host.
