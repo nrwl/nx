@@ -2,7 +2,6 @@ import { type Configuration } from '@rspack/core';
 import { merge as rspackMerge } from 'webpack-merge';
 import { type AngularRspackPluginOptions } from '../models';
 import {
-  deleteOutputDir,
   getOutputHashFormat,
   normalizeOptionWithI18n,
 } from './config-utils/helpers';
@@ -52,18 +51,16 @@ export async function _createConfig(
   options: AngularRspackPluginOptions,
   rspackConfigOverrides?: Partial<Configuration>
 ): Promise<Configuration[]> {
-  assertSupportedRspackCoreVersion();
-
-  const { i18n, i18nHash, normalizedOptions } =
-    await normalizeOptionWithI18n(options);
-  const hashFormat = getOutputHashFormat(normalizedOptions.outputHashing);
-
-  if (normalizedOptions.deleteOutputPath) {
-    await deleteOutputDir(
-      normalizedOptions.root,
-      normalizedOptions.outputPath.base
-    );
+  const projectGraphCreation = !!global.NX_GRAPH_CREATION;
+  if (!projectGraphCreation) {
+    assertSupportedRspackCoreVersion();
   }
+
+  const { i18n, i18nHash, normalizedOptions } = await normalizeOptionWithI18n(
+    options,
+    projectGraphCreation
+  );
+  const hashFormat = getOutputHashFormat(normalizedOptions.outputHashing);
 
   const defaultConfig = await getCommonConfig(
     normalizedOptions,

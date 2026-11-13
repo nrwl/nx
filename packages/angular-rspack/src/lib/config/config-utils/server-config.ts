@@ -47,7 +47,11 @@ export async function getServerConfig(
   const { root } = normalizedOptions;
 
   const angularSSRInstalled = isPackageInstalled(root, '@angular/ssr');
-  if (normalizedOptions.outputMode && !angularSSRInstalled) {
+  if (
+    !normalizedOptions.projectGraphCreation &&
+    normalizedOptions.outputMode &&
+    !angularSSRInstalled
+  ) {
     throw new Error(
       'The "outputMode" option requires the "@angular/ssr" package to be installed.'
     );

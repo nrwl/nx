@@ -84,7 +84,8 @@ export async function getStylesConfig(
   } else {
     const tailwindConfig = await getTailwindConfig(
       searchDirectories,
-      workspaceRoot
+      workspaceRoot,
+      buildOptions.projectGraphCreation
     );
     if (tailwindConfig) {
       const tailwind = await import(tailwindConfig.package);
@@ -138,16 +139,20 @@ export async function getStylesConfig(
     if (buildOptions.optimization.styles.minify) {
       // Never use component css sourcemap when style optimizations are on.
       // It will just increase bundle size without offering good debug experience.
-      console.warn(
-        'Components styles sourcemaps are not generated when styles optimization is enabled.'
-      );
+      if (!buildOptions.projectGraphCreation) {
+        console.warn(
+          'Components styles sourcemaps are not generated when styles optimization is enabled.'
+        );
+      }
       componentsSourceMap = false;
     } else if (buildOptions.sourceMap.hidden) {
       // Inline all sourcemap types except hidden ones, which are the same as no sourcemaps
       // for component css.
-      console.warn(
-        'Components styles sourcemaps are not generated when sourcemaps are hidden.'
-      );
+      if (!buildOptions.projectGraphCreation) {
+        console.warn(
+          'Components styles sourcemaps are not generated when sourcemaps are hidden.'
+        );
+      }
       componentsSourceMap = false;
     }
   }
@@ -454,7 +459,8 @@ async function tryResolve(
 
 async function getTailwindConfig(
   searchDirectories: SearchDirectory[],
-  workspaceRoot: string
+  workspaceRoot: string,
+  projectGraphCreation: boolean
 ): Promise<{ file: string; package: string } | undefined> {
   const tailwindConfigurationPath =
     findTailwindConfiguration(searchDirectories);
@@ -471,15 +477,17 @@ async function getTailwindConfig(
       package: resolver.resolve('tailwindcss'),
     };
   } catch {
-    const relativeTailwindConfigPath = relative(
-      workspaceRoot,
-      tailwindConfigurationPath
-    );
-    console.warn(
-      `Tailwind CSS configuration file found (${relativeTailwindConfigPath})` +
-        ` but the 'tailwindcss' package is not installed.` +
-        ` To enable Tailwind CSS, please install the 'tailwindcss' package.`
-    );
+    if (!projectGraphCreation) {
+      const relativeTailwindConfigPath = relative(
+        workspaceRoot,
+        tailwindConfigurationPath
+      );
+      console.warn(
+        `Tailwind CSS configuration file found (${relativeTailwindConfigPath})` +
+          ` but the 'tailwindcss' package is not installed.` +
+          ` To enable Tailwind CSS, please install the 'tailwindcss' package.`
+      );
+    }
   }
 
   return undefined;

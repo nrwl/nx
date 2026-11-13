@@ -1,6 +1,12 @@
 import { emitReadySignal } from '@nx/devkit';
 import { getListeningUrl } from '@nx/devkit/internal';
-import { type Configuration, type DevServer, rspack } from '@rspack/core';
+import {
+  type Configuration,
+  type DevServer,
+  rspack,
+  ValidationError,
+} from '@rspack/core';
+import { existsSync } from 'node:fs';
 import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import {
   createServer,
@@ -416,5 +422,144 @@ describe('NgRspackPlugin', () => {
       },
       10000
     );
+  });
+
+  async function createDeleteProjectRoot(): Promise<string> {
+    const root = await mkdtemp(join(tmpdir(), 'ng-rspack-delete-'));
+    await mkdir(join(root, 'src'), { recursive: true });
+    await writeFile(join(root, 'src', 'main.server.ts'), '');
+    await writeFile(join(root, 'src', 'server.ts'), '');
+    return root;
+  }
+
+  const deleteOptions = {
+    browser: './src/main.ts',
+    index: './src/index.html',
+    tsConfig: './tsconfig.base.json',
+    outputPath: './dist',
+    progress: false,
+  };
+  const ssrOptions = {
+    server: './src/main.server.ts',
+    ssr: { entry: './src/server.ts' },
+  };
+
+  it.each<[string, boolean, boolean, boolean | undefined, boolean, boolean]>([
+    [
+      'deletes the output path when a build compiler is created',
+      false,
+      false,
+      undefined,
+      true,
+      true,
+    ],
+    [
+      'deletes the output path when an SSR dev server compiler is created',
+      true,
+      true,
+      undefined,
+      true,
+      true,
+    ],
+    [
+      'keeps the output path for a browser-only dev server',
+      true,
+      false,
+      undefined,
+      true,
+      false,
+    ],
+    [
+      'deletes the output path for a browser-only dev server with writeToDisk',
+      true,
+      false,
+      true,
+      true,
+      true,
+    ],
+    [
+      'keeps the output path when "deleteOutputPath" is disabled',
+      false,
+      false,
+      undefined,
+      false,
+      false,
+    ],
+  ])(
+    '%s, and never when the config loads',
+    async (_, serve, hasServer, writeToDisk, deleteOutputPath, deletes) => {
+      if (serve) {
+        vi.stubEnv('RSPACK_SERVE', 'true');
+      }
+      const root = await createDeleteProjectRoot();
+      const sentinel = join(root, 'dist', 'SENTINEL');
+      try {
+        await mkdir(join(root, 'dist'), { recursive: true });
+        await writeFile(sentinel, '');
+
+        const configs = await _createConfig(
+          {
+            ...deleteOptions,
+            deleteOutputPath,
+            root,
+            ...(hasServer ? ssrOptions : {}),
+          },
+          writeToDisk === undefined
+            ? undefined
+            : { devServer: { devMiddleware: { writeToDisk } } }
+        );
+        expect(existsSync(sentinel)).toBe(true);
+
+        const multiCompiler = rspack(configs);
+        try {
+          expect(existsSync(sentinel)).toBe(!deletes);
+        } finally {
+          await new Promise((resolve) => multiCompiler.close(resolve));
+        }
+      } finally {
+        await rm(root, { recursive: true, force: true });
+      }
+    },
+    10000
+  );
+
+  it('fails creating the compiler when the output path cannot be deleted', async () => {
+    const root = await createDeleteProjectRoot();
+    try {
+      // A file where the output directory should be can't be emptied.
+      await writeFile(join(root, 'dist'), '');
+      const configs = await _createConfig({
+        ...deleteOptions,
+        deleteOutputPath: true,
+        root,
+      });
+
+      expect(() => rspack(configs)).toThrow(ValidationError);
+      expect(() => rspack(configs)).toThrow('ENOTDIR');
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  });
+
+  it('refuses to delete an output path at the project root when the compiler is created', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'ng-rspack-delete-'));
+    try {
+      const configs = await _createConfig({
+        browser: './src/main.ts',
+        index: './src/index.html',
+        tsConfig: './tsconfig.base.json',
+        outputPath: { base: '.', browser: 'browser' },
+        deleteOutputPath: true,
+        progress: false,
+        root,
+      });
+
+      expect(() => rspack(configs)).toThrow(ValidationError);
+      expect(() => rspack(configs)).toThrow(
+        'Output path MUST not be project root directory!'
+      );
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
   });
 });
