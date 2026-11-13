@@ -140,7 +140,7 @@ function resolveTypescriptPath(
   return resolvedTypescriptPaths[projectRoot];
 }
 
-const TSCONFIG_CACHE_VERSION = 3;
+const TSCONFIG_CACHE_VERSION = 4;
 const TS_CONFIG_CACHE_PATH = join(
   workspaceDataDirectory,
   'tsconfig-files.hash'
@@ -1903,7 +1903,7 @@ function resolveExtendedTsConfigPath(
 
     if (
       tsConfigPath.startsWith('.') ||
-      !resolvedPath.includes('/node_modules/')
+      !normalizePath(resolvedPath).includes('/node_modules/')
     ) {
       return { filePath: resolvedPath };
     }
