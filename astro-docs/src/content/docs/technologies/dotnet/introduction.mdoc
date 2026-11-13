@@ -212,6 +212,74 @@ The value is relative to the project directory, the same way `dotnet test` reads
 
 To view inferred tasks for a project, open the [project details view](/docs/features/explore-graph#explore-projects-in-your-workspace) in Nx Console or run `nx show project my-project` in the command line.
 
+## Structured .NET project metadata
+
+Read evaluated MSBuild facts under `metadata.dotnet` in the project details view
+or through the [project graph API](/docs/reference/core-api/devkit/documents/ProjectGraph).
+Each target framework has its own facts and capabilities, including conditional MSBuild properties
+and package references.
+Import `DotnetProjectMetadata`, `DotnetTargetFrameworkMetadata`, and `DotnetCapabilities` from
+`@nx/dotnet` for typed consumption.
+
+```json
+{
+  "dotnet": {
+    "packageId": "MyCompany.MyLibrary",
+    "targetFrameworks": [
+      {
+        "packageId": "MyCompany.MyLibrary",
+        "targetFramework": "net9.0",
+        "targetFrameworkIdentifier": ".NETCoreApp",
+        "targetFrameworkVersion": "v9.0",
+        "runtimeIdentifiers": [],
+        "capabilities": {
+          "test": false,
+          "executable": false,
+          "packable": true,
+          "publishable": false,
+          "tool": false
+        }
+      },
+      {
+        "packageId": "MyCompany.MyLibrary",
+        "targetFramework": "net9.0-ios",
+        "targetFrameworkIdentifier": ".NETCoreApp",
+        "targetFrameworkVersion": "v9.0",
+        "targetPlatformIdentifier": "ios",
+        "targetPlatformVersion": "17.0",
+        "runtimeIdentifiers": ["ios-arm64"],
+        "capabilities": {
+          "test": false,
+          "executable": false,
+          "packable": true,
+          "publishable": false,
+          "tool": false
+        }
+      }
+    ]
+  }
+}
+```
+
+`packageId` is the evaluated NuGet package identity, falling back to `AssemblyName` when unset.
+The project-level value is present only when the target frameworks that evaluate an identity agree.
+If conditional identities disagree, read `packageId` from each entry in `targetFrameworks`.
+
+`targetFrameworks` contains one entry per evaluated target framework in declared order.
+Each entry includes framework and platform identifiers, `RuntimeIdentifier`, the `RuntimeIdentifiers`
+list, and these capabilities:
+
+- `test` uses the same detection as target inference, including `IsTestProject`,
+  `IsTestingPlatformApplication`, and test SDK package references.
+  An explicit `IsTestProject=false` suppresses the package-reference fallback.
+- `executable` is `true` when `OutputType` is `Exe`.
+- `packable` reads `IsPackable`, defaulting to `true` when unset.
+- `publishable` reads `IsPublishable`, falling back to `executable` when unset.
+- `tool` reads `PackAsTool`.
+
+Capabilities belong only to each target framework.
+They don't infer a project `type`, apply tags, or generate additional targets.
+
 ## @nx/dotnet configuration
 
 The `@nx/dotnet` is configured in the `plugins` array in `nx.json`.
