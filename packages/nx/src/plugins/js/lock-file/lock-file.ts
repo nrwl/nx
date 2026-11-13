@@ -41,11 +41,16 @@ import {
 import { workspaceRoot } from '../../../utils/workspace-root';
 import { getWorkspacePackagesFromGraph } from '../utils/get-workspace-packages-from-graph';
 import {
-  BUN_LOCK_FILE,
-  BUN_TEXT_LOCK_FILE,
   getBunTextLockfileDependencies,
   getBunTextLockfileNodes,
 } from './bun-parser';
+import {
+  BUN_LOCK_FILE,
+  BUN_TEXT_LOCK_FILE,
+  NPM_LOCK_FILE,
+  PNPM_LOCK_FILE,
+  YARN_LOCK_FILE,
+} from './lock-file-names';
 import {
   getNpmLockfileDependencies,
   getNpmLockfileNodes,
@@ -64,18 +69,9 @@ import {
   stringifyYarnLockfile,
 } from './yarn-parser';
 
-const YARN_LOCK_FILE = 'yarn.lock';
-const NPM_LOCK_FILE = 'package-lock.json';
-const PNPM_LOCK_FILE = 'pnpm-lock.yaml';
-const PNPM_LOCK_FILE_LEGACY = 'pnpm-lock.yml';
+export { LOCKFILES } from './lock-file-names';
 
-export const LOCKFILES = [
-  YARN_LOCK_FILE,
-  NPM_LOCK_FILE,
-  PNPM_LOCK_FILE,
-  BUN_LOCK_FILE,
-  BUN_TEXT_LOCK_FILE,
-];
+const PNPM_LOCK_FILE_LEGACY = 'pnpm-lock.yml';
 
 export const AUTO_AFFECTED_LOCK_FILES = [
   YARN_LOCK_FILE,
