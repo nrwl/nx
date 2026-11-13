@@ -1,15 +1,19 @@
 const invoke = vi.fn();
+const getCloudClient = vi.fn();
 const rmSync = vi.fn();
 
 vi.mock('node:fs', () => ({ rmSync: (...args: unknown[]) => rmSync(...args) }));
 vi.mock('../../nx-cloud/utilities/client', () => ({
-  getCloudClient: vi.fn(async () => ({ invoke })),
+  getCloudClient: (...args: unknown[]) => getCloudClient(...args),
 }));
 vi.mock('../../nx-cloud/utilities/get-cloud-options', () => ({
   getCloudOptions: () => ({}),
 }));
 vi.mock('../../nx-cloud/update-manager', () => ({
   getBundleInstallDefaultLocation: () => '/cache/cloud',
+  // vi.mock is hoisted over the file's own declarations, so a class declared
+  // up there is still uninitialized when this factory runs.
+  NxCloudClientUnavailableError: class NxCloudClientUnavailableError extends Error {},
 }));
 vi.mock('../../utils/nx-cloud-utils', () => ({ isNxCloudUsed: () => true }));
 vi.mock('../../config/configuration', () => ({ readNxJson: () => ({}) }));
@@ -35,6 +39,7 @@ vi.mock('../../utils/cache-directory', () => ({
 
 import { output } from '../../utils/output';
 import { globalSpinner } from '../../utils/spinner';
+import { NxCloudClientUnavailableError } from '../../nx-cloud/update-manager';
 import { resetHandler } from './reset';
 
 describe('nx reset', () => {
@@ -47,6 +52,11 @@ describe('nx reset', () => {
   beforeEach(() => {
     invoke.mockReset();
     rmSync.mockReset();
+    getCloudClient.mockReset();
+    getCloudClient.mockResolvedValue({
+      invoke,
+      availableCommands: ['cleanup'],
+    });
     exit = vi.spyOn(process, 'exit').mockImplementation((() => {
       throw new Error('exited');
     }) as never);
@@ -123,6 +133,45 @@ describe('nx reset', () => {
       'Removed the installed Nx Cloud client'
     );
     expect(success).not.toHaveBeenCalled();
+    expect(exit).toHaveBeenCalledWith(1);
+  });
+
+  it('resets successfully when no Nx Cloud client can be loaded', async () => {
+    // A damaged bundle with no network to replace it from. Removing the
+    // install is the step that matters, so reset should not exit 1 here.
+    getCloudClient.mockRejectedValue(new NxCloudClientUnavailableError());
+
+    await resetHandler({});
+
+    expect(invoke).not.toHaveBeenCalled();
+    expect(rmSync).toHaveBeenCalledWith('/cache/cloud', {
+      recursive: true,
+      force: true,
+    });
+    expect(stepFailed).not.toHaveBeenCalled();
+    expect(exit).not.toHaveBeenCalled();
+  });
+
+  it('skips the cleanup command on a client that does not export it', async () => {
+    getCloudClient.mockResolvedValue({ invoke, availableCommands: ['start'] });
+
+    await resetHandler({});
+
+    expect(invoke).not.toHaveBeenCalled();
+    expect(stepSucceeded).toHaveBeenCalledWith(
+      'Cleaned up the Nx Cloud client'
+    );
+    expect(exit).not.toHaveBeenCalled();
+  });
+
+  it('still fails the reset when loading the client fails for another reason', async () => {
+    getCloudClient.mockRejectedValue(new Error('workspace is not configured'));
+
+    await expect(resetHandler({})).rejects.toThrow('exited');
+
+    expect(stepFailed).toHaveBeenCalledWith(
+      'Failed to clean up the Nx Cloud client.'
+    );
     expect(exit).toHaveBeenCalledWith(1);
   });
 });

@@ -18,7 +18,10 @@ import { getCloudOptions } from '../../nx-cloud/utilities/get-cloud-options';
 import { isNxCloudUsed } from '../../utils/nx-cloud-utils';
 import { readNxJson } from '../../config/configuration';
 import { removeDbConnections } from '../../utils/db-connection';
-import { getBundleInstallDefaultLocation as getCloudClientLocation } from '../../nx-cloud/update-manager';
+import {
+  getBundleInstallDefaultLocation as getCloudClientLocation,
+  NxCloudClientUnavailableError,
+} from '../../nx-cloud/update-manager';
 import { removeStaleTempInstallDirectories } from '../../utils/package-manager';
 
 // Wait at max 5 seconds before giving up on a failing operation.
@@ -152,8 +155,26 @@ function cleanupDaemonWorkspaceData() {
 async function resetCloudClient() {
   // Remove nx cloud marker files. This helps if the use happens to run `nx-cloud start-ci-run` or
   // similar commands on their local machine.
+  let client: Awaited<ReturnType<typeof getCloudClient>>;
+  try {
+    client = await getCloudClient(getCloudOptions());
+  } catch (e) {
+    // Nothing to invoke, and removeInstalledNxCloudClient deletes the install
+    // next, so reset has still done its job.
+    if (e instanceof NxCloudClientUnavailableError) {
+      return;
+    }
+    throw e;
+  }
+
+  // Bundles older than the command export no `cleanup`, and invoking it would
+  // throw UnknownCommandError.
+  if (!client.availableCommands.includes('cleanup')) {
+    return;
+  }
+
   // `exit` would end the process here, before reset reports its result.
-  await (await getCloudClient(getCloudOptions())).invoke('cleanup', false);
+  await client.invoke('cleanup', false);
 }
 
 function removeInstalledNxCloudClient() {

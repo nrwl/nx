@@ -73,6 +73,14 @@ export class NxCloudClientUnavailableError extends Error {
   }
 }
 
+// Raised where an unloadable install can still be replaced by a download, and
+// caught only in verifyOrUpdateNxCloudClient. Never escapes this module.
+class UnloadableClientBundleError extends Error {
+  constructor(fullPath: string) {
+    super(`Installed Nx Cloud client bundle could not be loaded: ${fullPath}`);
+  }
+}
+
 export interface NxCloudClient {
   configureLightClientRequire: () => (paths: string[]) => void;
   commands: Record<string, () => Promise<void>>;
@@ -95,7 +103,31 @@ export async function verifyOrUpdateNxCloudClient(options?: {
   customProxyConfigPath?: string;
 }): Promise<{ nxCloudClient: NxCloudClient; version: string } | null> {
   debugLog('Verifying current cloud bundle');
-  const currentBundle = getLatestInstalledRunnerBundle();
+
+  try {
+    return await loadOrUpdateNxCloudClient(
+      getLatestInstalledRunnerBundle(),
+      options
+    );
+  } catch (e) {
+    if (!(e instanceof UnloadableClientBundleError)) {
+      throw e;
+    }
+    // Nothing can repair the directory on disk, so this attempt runs as if
+    // nothing were installed and downloads a fresh bundle. Passing null keeps
+    // it off both paths that raise this error, so it cannot land back here.
+    debugLog(e.message, ' - downloading a fresh bundle');
+    return await loadOrUpdateNxCloudClient(null, options);
+  }
+}
+
+async function loadOrUpdateNxCloudClient(
+  currentBundle: CloudBundleInstall | null,
+  options?: {
+    url?: string;
+    customProxyConfigPath?: string;
+  }
+): Promise<{ nxCloudClient: NxCloudClient; version: string }> {
   const apiUrl =
     process.env.NX_CLOUD_API || options?.url || 'https://cloud.nx.app';
 
@@ -128,7 +160,12 @@ export async function verifyOrUpdateNxCloudClient(options?: {
         throw new NxCloudEnterpriseOutdatedError(apiUrl);
       }
 
-      const nxCloudClient = require(currentBundle.fullPath);
+      const nxCloudClient = loadInstalledBundle(currentBundle);
+      if (nxCloudClient === null) {
+        // The server is unreachable and the installed copy does not load, so
+        // there is neither a client to run nor a url to download one from.
+        throw new NxCloudClientUnavailableError();
+      }
       if (nxCloudClient.commands === undefined) {
         throw new NxCloudEnterpriseOutdatedError(apiUrl);
       }
@@ -141,10 +178,21 @@ export async function verifyOrUpdateNxCloudClient(options?: {
 
     if (verifyBundleResponse.data.valid) {
       debugLog('Currently installed bundle is valid');
+      if (currentBundle === null) {
+        // Valid with nothing installed leaves nothing to load.
+        throw new NxCloudClientUnavailableError();
+      }
+      const nxCloudClient = loadInstalledBundle(currentBundle);
+      if (nxCloudClient === null) {
+        throw new UnloadableClientBundleError(currentBundle.fullPath);
+      }
+      // Written after the load, so the lock always stands for a bundle that
+      // ran. Writing it first would park a damaged one behind the 30 minute
+      // verification skip.
       writeBundleVerificationLock();
       return {
         version: currentBundle.version,
-        nxCloudClient: require(currentBundle.fullPath),
+        nxCloudClient,
       };
     }
 
@@ -168,7 +216,9 @@ export async function verifyOrUpdateNxCloudClient(options?: {
 
     debugLog('Done: ', installedBundle.fullPath);
 
-    const nxCloudClient = require(installedBundle.fullPath);
+    // Deliberately unguarded. Another download would fetch the same bundle, so
+    // a failure loading a fresh extract is reported rather than retried.
+    const nxCloudClient: NxCloudClient = require(installedBundle.fullPath);
 
     if (nxCloudClient.commands === undefined) {
       throw new NxCloudEnterpriseOutdatedError(apiUrl);
@@ -180,12 +230,35 @@ export async function verifyOrUpdateNxCloudClient(options?: {
     throw new NxCloudClientUnavailableError();
   }
 
+  const nxCloudClient = loadInstalledBundle(currentBundle);
+  if (nxCloudClient === null) {
+    // This path never asks the server about the bundle, so a damaged one is
+    // never replaced on its own.
+    throw new UnloadableClientBundleError(currentBundle.fullPath);
+  }
+
   debugLog('Done: ', currentBundle.fullPath);
 
   return {
     version: currentBundle.version,
-    nxCloudClient: require(currentBundle.fullPath),
+    nxCloudClient,
   };
+}
+
+/**
+ * The installed bundle's exports, or null when the directory does not load.
+ * Any failure counts, not just MODULE_NOT_FOUND, since a truncated file is a
+ * SyntaxError. Being that broad costs nothing, because the retry's own
+ * `require` is unguarded and a failure that was never the disk's fault still
+ * surfaces from there.
+ */
+function loadInstalledBundle(bundle: CloudBundleInstall): NxCloudClient | null {
+  try {
+    return require(bundle.fullPath);
+  } catch (e) {
+    debugLog('Could not load installed cloud bundle: ', bundle.fullPath, e);
+    return null;
+  }
 }
 
 /**
