@@ -13,7 +13,9 @@ import {
   filterDummyTasks,
   getNonDummyDeps,
   filterTaskGraphToSelection,
+  ProcessTasks,
 } from './create-task-graph';
+import { findCycle } from './task-graph-utils';
 import { pruneToSelectedTasks } from './utils';
 
 describe('createTaskGraph', () => {
@@ -3531,6 +3533,228 @@ describe('createTaskGraph', () => {
 
     // Both task graphs should be identical
     expect(taskGraph1).toEqual(taskGraph2);
+  });
+
+  it('should create one dummy task per project without the target, however many ^target entries reach it', () => {
+    // app -> mid0 -> mid1 -> mid2 -> leaf, where only leaf has the targets app depends on. Each `^codegen-*`
+    // entry used to get its own dummy task at every mid project, and each of those dummies re-expanded every
+    // entry, so the work at each mid project grew with the square of the number of entries.
+    const codegenTargets = ['codegen-a', 'codegen-b', 'codegen-c', 'codegen-d'];
+    const mids = ['mid0', 'mid1', 'mid2'];
+    const builder = new GraphBuilder()
+      .addProjectConfiguration({
+        name: 'app',
+        targets: {
+          build: {
+            executor: 'nx:run-commands',
+            dependsOn: codegenTargets.map((target) => `^${target}`),
+          },
+        },
+      })
+      .addProjectConfiguration({
+        name: 'leaf',
+        targets: Object.fromEntries(
+          codegenTargets.map((target) => [
+            target,
+            { executor: 'nx:run-commands' },
+          ])
+        ),
+      })
+      .addDependencies({
+        app: ['mid0'],
+        mid0: ['mid1'],
+        mid1: ['mid2'],
+        mid2: ['leaf'],
+      });
+    for (const name of mids) {
+      builder.addProjectConfiguration({ name, targets: {} });
+    }
+    const processTask = vi.spyOn(ProcessTasks.prototype, 'processTask');
+
+    const taskGraph = createTaskGraph(
+      builder.build(),
+      {},
+      ['app'],
+      ['build'],
+      undefined,
+      {}
+    );
+
+    const dummyTasks = new Set(
+      processTask.mock.calls
+        .map(([task]) => task.id)
+        .filter((id) => id.endsWith('__nx_dummy_task__'))
+    );
+    processTask.mockRestore();
+    expect(
+      [...dummyTasks].map((id) => id.slice(0, id.indexOf(':'))).sort()
+    ).toEqual(mids);
+    expect(taskGraph.dependencies['app:build']).toEqual(
+      codegenTargets.map((target) => ({ id: `leaf:${target}` }))
+    );
+  });
+
+  it('should share dummy tasks between tasks with the same ^target entries', () => {
+    // app0..app3 -> mid0 -> mid1 -> leaf. Every app task has the same `^` entries, so what is behind mid0 and
+    // mid1 is the same for all of them and is walked once, not once per app task. `own` only differs in an entry
+    // without `^`, which a dummy task does not need. `other` has different `^` entries and gets its own dummies.
+    const apps = ['app0', 'app1', 'app2', 'app3'];
+    const mids = ['mid0', 'mid1'];
+    const builder = new GraphBuilder()
+      .addProjectConfiguration({
+        name: 'leaf',
+        targets: {
+          'codegen-a': { executor: 'nx:run-commands' },
+          'codegen-b': { executor: 'nx:run-commands' },
+        },
+      })
+      .addProjectConfiguration({
+        name: 'own',
+        targets: {
+          prepare: { executor: 'nx:run-commands' },
+          build: {
+            executor: 'nx:run-commands',
+            dependsOn: ['prepare', '^codegen-a', '^codegen-b'],
+          },
+        },
+      })
+      .addProjectConfiguration({
+        name: 'other',
+        targets: {
+          build: { executor: 'nx:run-commands', dependsOn: ['^codegen-b'] },
+        },
+      })
+      .addDependencies({
+        own: ['mid0'],
+        other: ['mid0'],
+        mid0: ['mid1'],
+        mid1: ['leaf'],
+      });
+    for (const name of apps) {
+      builder
+        .addProjectConfiguration({
+          name,
+          targets: {
+            build: {
+              executor: 'nx:run-commands',
+              dependsOn: ['^codegen-a', '^codegen-b'],
+            },
+          },
+        })
+        .addDependencies({ [name]: ['mid0'] });
+    }
+    for (const name of mids) {
+      builder.addProjectConfiguration({ name, targets: {} });
+    }
+    const processTask = vi.spyOn(ProcessTasks.prototype, 'processTask');
+
+    const taskGraph = createTaskGraph(
+      builder.build(),
+      {},
+      [...apps, 'own', 'other'],
+      ['build'],
+      undefined,
+      {}
+    );
+
+    const dummyTasks = new Set(
+      processTask.mock.calls
+        .map(([task]) => task.id)
+        .filter((id) => id.endsWith('__nx_dummy_task__'))
+    );
+    processTask.mockRestore();
+    // One dummy per mid project for the apps and `own`, one more per mid project for `other`.
+    expect(dummyTasks.size).toEqual(mids.length * 2);
+    const both = [{ id: 'leaf:codegen-a' }, { id: 'leaf:codegen-b' }];
+    for (const app of apps) {
+      expect(taskGraph.dependencies[`${app}:build`]).toEqual(both);
+    }
+    expect(taskGraph.dependencies['own:build']).toEqual([
+      { id: 'own:prepare' },
+      ...both,
+    ]);
+    expect(taskGraph.dependencies['other:build']).toEqual([
+      { id: 'leaf:codegen-b' },
+    ]);
+    expect(Object.keys(taskGraph.tasks).sort()).toEqual(
+      [
+        ...apps.map((app) => `${app}:build`),
+        'leaf:codegen-a',
+        'leaf:codegen-b',
+        'other:build',
+        'own:build',
+        'own:prepare',
+      ].sort()
+    );
+  });
+
+  it('should keep the dependencies behind a project dependency cycle', () => {
+    // mid -> app closes a project cycle, so the dummies at mid and app point at each other.
+    const taskGraph = createTaskGraph(
+      new GraphBuilder()
+        .addProjectConfiguration({
+          name: 'app',
+          targets: {
+            build: { executor: 'nx:run-commands' },
+            lint: {
+              executor: 'nx:run-commands',
+              dependsOn: ['^build', '^codegen-a'],
+            },
+          },
+        })
+        .addProjectConfiguration({ name: 'mid', targets: {} })
+        .addProjectConfiguration({
+          name: 'gen',
+          targets: { 'codegen-a': { executor: 'nx:run-commands' } },
+        })
+        .addDependencies({ app: ['mid'], mid: ['gen', 'app'] })
+        .build(),
+      {},
+      ['app'],
+      ['lint'],
+      undefined,
+      {}
+    );
+
+    expect(taskGraph.dependencies['app:lint']).toEqual([
+      { id: 'app:build' },
+      { id: 'gen:codegen-a' },
+    ]);
+  });
+
+  it('should keep a task cycle that passes through a dummy task', () => {
+    // app:build -> (mid has no codegen target) -> leaf:codegen-a -> app:build
+    const taskGraph = createTaskGraph(
+      new GraphBuilder()
+        .addProjectConfiguration({
+          name: 'app',
+          targets: {
+            build: {
+              executor: 'nx:run-commands',
+              dependsOn: ['^codegen-a', '^codegen-b'],
+            },
+          },
+        })
+        .addProjectConfiguration({ name: 'mid', targets: {} })
+        .addProjectConfiguration({
+          name: 'leaf',
+          targets: {
+            'codegen-a': {
+              executor: 'nx:run-commands',
+              dependsOn: [{ target: 'build', projects: ['app'] }],
+            },
+          },
+        })
+        .addDependencies({ app: ['mid'], mid: ['leaf'] })
+        .build(),
+      {},
+      ['app'],
+      ['build'],
+      undefined,
+      {}
+    );
+
+    expect(findCycle(taskGraph)).not.toBeNull();
   });
 
   it('should exclude task dependencies', () => {

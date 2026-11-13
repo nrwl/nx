@@ -3,8 +3,13 @@ import {
   READY_SIGNAL_TASK_ENV,
   READY_URL_ENV,
 } from './readiness/ready-signal';
-import { config as loadDotEnvFile } from 'dotenv';
-import { expand } from 'dotenv-expand';
+import { config as loadDotEnvFile, parse as parseDotEnvFile } from 'dotenv';
+import {
+  expand,
+  type DotenvExpandOptions,
+  type DotenvExpandOutput,
+} from 'dotenv-expand';
+import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { ProjectGraph } from '../config/project-graph';
 import { Task } from '../config/task-graph';
@@ -286,10 +291,60 @@ export function loadAndExpandDotEnvFile(
     processEnv: environmentVariables,
     override,
   });
-  return expand({
+  return expandDotEnvVariables({
     ...myEnv,
     processEnv: environmentVariables,
   });
+}
+
+/**
+ * Same result as dotenv-expand's `expand`, which copies the whole env for
+ * every value it expands, including values with nothing to expand. Building
+ * one task's env expands each root dotenv file and each of the task's dotenv
+ * files against an env of hundreds of variables, so a run of a few thousand
+ * tasks spent most of its upfront hashing in those copies.
+ *
+ * Only the values that contain a `$`, in the file or in the env, go through
+ * `expand`. For any other value it would return the value itself, unless the
+ * env already holds a different non-empty value, which wins: that is what is
+ * applied here.
+ *
+ * Leaving a variable out of `expand` leaves it out of the progressive state
+ * `expand` keeps, which it uses in two ways. It reads other file variables
+ * from it, but dotenv's `config` has already put every file variable in the
+ * env, and the env wins over that state. It also stops expanding a value once
+ * the value equals a variable in that state, which only matters while the
+ * value still holds a `$`: so a variable whose value holds one stays in.
+ */
+function expandDotEnvVariables(
+  options: DotenvExpandOptions
+): DotenvExpandOutput {
+  const { parsed, processEnv } = options;
+  if (!parsed || !processEnv) {
+    return expand(options);
+  }
+
+  const withReferences: Record<string, string> = {};
+  for (const [key, value] of Object.entries(parsed)) {
+    if (value.includes('$') || processEnv[key]?.includes('$')) {
+      withReferences[key] = value;
+    }
+  }
+  const result = expand({ ...options, parsed: withReferences });
+
+  // `expand` assigns the env after expanding every value, so the values
+  // without references are assigned after the ones it expanded.
+  for (const [key, value] of Object.entries(parsed)) {
+    if (key in withReferences) {
+      parsed[key] = withReferences[key];
+      continue;
+    }
+    const envValue = processEnv[key] || value;
+    processEnv[key] = envValue;
+    parsed[key] = envValue;
+  }
+
+  return { ...result, parsed };
 }
 
 /**
@@ -299,16 +354,51 @@ export function loadAndExpandDotEnvFile(
  */
 export function unloadDotEnvFile(
   filename: string,
-  environmentVariables: NodeJS.ProcessEnv,
-  override = false
+  environmentVariables: NodeJS.ProcessEnv
 ) {
-  const parsedDotEnvFile: NodeJS.ProcessEnv = {};
-  loadAndExpandDotEnvFile(filename, parsedDotEnvFile, override);
+  const parsedDotEnvFile = readDotEnvFileVariables(filename);
   Object.keys(parsedDotEnvFile).forEach((envVarKey) => {
     if (environmentVariables[envVarKey] === parsedDotEnvFile[envVarKey]) {
       delete environmentVariables[envVarKey];
     }
   });
+}
+
+/**
+ * The variables of each dotenv file `unloadDotEnvFile` has read, with the
+ * contents they were read from. Building every task's env unloads the root
+ * dotenv files, so a run reads the same files once per task. A file whose
+ * contents are unchanged is not parsed and expanded again; the long-lived
+ * daemon still sees an edited file.
+ */
+const dotEnvFileVariablesCache = new Map<
+  string,
+  { contents: string; variables: NodeJS.ProcessEnv }
+>();
+
+/**
+ * The variables a dotenv file sets when loaded into an empty env.
+ */
+function readDotEnvFileVariables(filename: string): NodeJS.ProcessEnv {
+  let contents: string;
+  try {
+    contents = readFileSync(filename, 'utf8');
+  } catch {
+    // dotenv sets nothing for a file it cannot read.
+    return {};
+  }
+
+  const cached = dotEnvFileVariablesCache.get(filename);
+  if (cached?.contents === contents) {
+    return cached.variables;
+  }
+
+  // What dotenv's `config` does with the file and an empty env, from the
+  // contents read above so the cache entry matches them.
+  const variables: NodeJS.ProcessEnv = { ...parseDotEnvFile(contents) };
+  expandDotEnvVariables({ parsed: { ...variables }, processEnv: variables });
+  dotEnvFileVariablesCache.set(filename, { contents, variables });
+  return variables;
 }
 
 function getOwnerTargetForTask(
