@@ -30,16 +30,21 @@ pub fn hash_external(
     Ok(hash)
 }
 
-pub fn hash_all_externals<S: AsRef<str>>(
-    sorted_externals: &[S],
+/// Hashes every external node. The node hashes are sorted before they are
+/// combined, so the result does not depend on node names. A lock file parser
+/// can give a package a different name on each platform: the hoisted
+/// `npm:fsevents` on macOS is `npm:fsevents@2.3.3` on Linux, where the package
+/// is not installed. The hash must stay the same on both.
+pub fn hash_all_externals(
     externals: &HashMap<String, ExternalNode>,
     cache: Arc<DashMap<String, String>>,
 ) -> Result<String> {
-    let hashes = sorted_externals
-        .iter()
-        .map(|name| hash_external(name.as_ref(), externals, Arc::clone(&cache)).map(Some))
-        .collect::<Result<Vec<Option<String>>>>()?;
-    Ok(hash_array(hashes))
+    let mut hashes = externals
+        .keys()
+        .map(|name| hash_external(name, externals, Arc::clone(&cache)))
+        .collect::<Result<Vec<String>>>()?;
+    hashes.sort_unstable();
+    Ok(hash_array(hashes.into_iter().map(Some).collect()))
 }
 
 #[cfg(test)]
@@ -88,11 +93,42 @@ mod test {
     fn test_hash_all_externals() {
         let external_nodes = get_external_nodes_map();
         let cache: Arc<DashMap<String, String>> = Arc::new(DashMap::new());
-        let all_externals = hash_all_externals(
-            &["my_external", "my_external_with_hash"],
-            &external_nodes,
-            Arc::clone(&cache),
-        );
+        let all_externals = hash_all_externals(&external_nodes, Arc::clone(&cache));
         assert_eq!(all_externals.unwrap(), "9354284926255893100");
+    }
+
+    #[test]
+    fn test_hash_all_externals_ignores_node_names() {
+        let node = |version: &str, hash: &str| ExternalNode {
+            r#type: Some("npm".into()),
+            package_name: Some("fsevents".into()),
+            version: version.into(),
+            hash: Some(hash.into()),
+        };
+        // The same lock file entries, named as the pnpm parser names them on
+        // macOS (2.3.3 is installed and hoisted) and on Linux (nothing is
+        // installed, so no version is hoisted).
+        let darwin = HashMap::from([
+            ("npm:fsevents".to_string(), node("2.3.3", "hash-2.3.3")),
+            (
+                "npm:fsevents@2.3.2".to_string(),
+                node("2.3.2", "hash-2.3.2"),
+            ),
+        ]);
+        let linux = HashMap::from([
+            (
+                "npm:fsevents@2.3.2".to_string(),
+                node("2.3.2", "hash-2.3.2"),
+            ),
+            (
+                "npm:fsevents@2.3.3".to_string(),
+                node("2.3.3", "hash-2.3.3"),
+            ),
+        ]);
+
+        assert_eq!(
+            hash_all_externals(&darwin, Arc::new(DashMap::new())).unwrap(),
+            hash_all_externals(&linux, Arc::new(DashMap::new())).unwrap()
+        );
     }
 }
