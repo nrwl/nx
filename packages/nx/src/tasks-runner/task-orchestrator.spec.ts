@@ -3517,6 +3517,7 @@ describe('TaskOrchestrator', () => {
       orchestrator.cacheMissedHashes = new Set();
       orchestrator.processedTasks = new Map();
       orchestrator.pendingDiscreteWorkers = new Set();
+      orchestrator.discreteWorkerWeight = 0;
       orchestrator.waitingForTasks = [];
       orchestrator.groups = [];
       orchestrator.bailed = false;
@@ -3661,6 +3662,7 @@ describe('TaskOrchestrator', () => {
       orchestrator.completedTasks = new Map();
       orchestrator.processedTasks = new Map();
       orchestrator.pendingDiscreteWorkers = new Set();
+      orchestrator.discreteWorkerWeight = 0;
       orchestrator.waitingForTasks = [];
       orchestrator.groups = [];
       orchestrator.bailed = false;
@@ -3818,6 +3820,7 @@ describe('TaskOrchestrator', () => {
       orchestrator.runningRunCommandsTasks = new Map();
       orchestrator.discreteTaskExitHandled = new Map();
       orchestrator.pendingDiscreteWorkers = new Set();
+      orchestrator.discreteWorkerWeight = 0;
       orchestrator.groups = [];
       orchestrator.waitingForTasks = [];
       orchestrator.options = {
@@ -3894,7 +3897,7 @@ describe('TaskOrchestrator', () => {
         });
         await setup(orchestrator);
 
-        orchestrator.dispatchDiscreteWorker(true, task, 0);
+        orchestrator.dispatchDiscreteWorker(true, task, 0, 1);
         await Promise.all(orchestrator.pendingDiscreteWorkers);
 
         expect(orchestrator.postRunSteps).toHaveBeenCalledWith(
@@ -3961,12 +3964,210 @@ describe('TaskOrchestrator', () => {
         throw new Error('cache write failed');
       });
 
-      orchestrator.dispatchDiscreteWorker(true, task, 0);
+      orchestrator.dispatchDiscreteWorker(true, task, 0, 1);
       await Promise.allSettled(orchestrator.pendingDiscreteWorkers);
 
       expect(
         orchestrator.options.lifeCycle.printTaskTerminalOutput.mock.calls
       ).toEqual([[task, 'failure', 'cache write failed']]);
+    });
+  });
+
+  describe('weighted dispatch', () => {
+    function createTask(id: string, weight?: number): Task {
+      const [project, target] = id.split(':');
+      return {
+        id,
+        target: { project, target },
+        overrides: {},
+        outputs: [],
+        projectRoot: project,
+        cache: false,
+        parallelism: true,
+        continuous: false,
+        hash: `${id}-hash`,
+        ...(weight !== undefined ? { weight } : {}),
+      } as Task;
+    }
+
+    // Drives executeCoordinatorLoop against a fixed-order queue; each task
+    // runs until the test calls finish(id) or fail(id).
+    function createOrchestrator(tasks: Task[], parallel: number) {
+      const byId = Object.fromEntries(tasks.map((t) => [t.id, t]));
+      const queue = tasks.map((t) => t.id);
+      const started: string[] = [];
+      const running = new Map<
+        string,
+        { resolve: () => void; reject: (e: Error) => void }
+      >();
+
+      const orchestrator: any = Object.create(TaskOrchestrator.prototype);
+      orchestrator.bailed = false;
+      orchestrator.stopRequested = false;
+      orchestrator.groups = [];
+      orchestrator.waitingForTasks = [];
+      orchestrator.pendingDiscreteWorkers = new Set();
+      orchestrator.discreteWorkerWeight = 0;
+      orchestrator.completedTasks = new Map();
+      orchestrator.options = { parallel };
+      orchestrator.taskGraph = {
+        roots: [...queue],
+        tasks: byId,
+        dependencies: Object.fromEntries(queue.map((id) => [id, []])),
+        continuousDependencies: Object.fromEntries(queue.map((id) => [id, []])),
+      };
+      orchestrator.processAllScheduledTasks = vi.fn();
+      orchestrator.handleDiscreteWorkerFailure = vi.fn();
+      orchestrator.tasksSchedule = {
+        getAllScheduledTasks: () => ({
+          scheduledTasks: queue,
+          scheduledBatches: [],
+        }),
+        nextBatch: () => null,
+        hasTasks: () => queue.length > 0,
+        nextTask: (filter: (t: Task) => boolean) => {
+          const idx = queue.findIndex((id) => filter(byId[id]));
+          return idx === -1 ? null : byId[queue.splice(idx, 1)[0]];
+        },
+      };
+      orchestrator.runTaskDirectly = vi.fn(
+        (_doNotSkipCache: boolean, task: Task) =>
+          new Promise<void>((resolve, reject) => {
+            started.push(task.id);
+            running.set(task.id, { resolve, reject });
+          })
+      );
+
+      const settle = () => new Promise((r) => setImmediate(r));
+      const loop: Promise<void> = orchestrator.executeCoordinatorLoop(
+        false,
+        parallel
+      );
+
+      return {
+        orchestrator,
+        loop,
+        started,
+        running: () => [...running.keys()],
+        settle,
+        finish: async (id: string) => {
+          running.get(id).resolve();
+          running.delete(id);
+          await settle();
+        },
+        fail: async (id: string) => {
+          running.get(id).reject(new Error(`${id} failed`));
+          running.delete(id);
+          await settle();
+        },
+      };
+    }
+
+    it('should dispatch tasks while their combined weight fits --parallel', async () => {
+      const run = createOrchestrator(
+        [
+          createTask('heavy:test', 3),
+          createTask('a:lint'),
+          createTask('b:lint'),
+          createTask('c:lint'),
+        ],
+        4
+      );
+      await run.settle();
+      expect(run.running()).toEqual(['heavy:test', 'a:lint']);
+      expect(run.orchestrator.discreteWorkerWeight).toBe(4);
+
+      await run.finish('a:lint');
+      expect(run.running()).toEqual(['heavy:test', 'b:lint']);
+
+      await run.finish('heavy:test');
+      expect(run.running()).toEqual(['b:lint', 'c:lint']);
+      expect(run.orchestrator.discreteWorkerWeight).toBe(2);
+
+      await run.finish('b:lint');
+      await run.finish('c:lint');
+      await run.loop;
+      expect(run.started).toEqual(['heavy:test', 'a:lint', 'b:lint', 'c:lint']);
+      expect(run.orchestrator.discreteWorkerWeight).toBe(0);
+    });
+
+    it('should start a lighter task when the next task does not fit', async () => {
+      const run = createOrchestrator(
+        [
+          createTask('a:test', 2),
+          createTask('b:test', 3),
+          createTask('c:lint'),
+        ],
+        4
+      );
+      await run.settle();
+      expect(run.running()).toEqual(['a:test', 'c:lint']);
+
+      await run.finish('a:test');
+      expect(run.running()).toEqual(['c:lint', 'b:test']);
+
+      await run.finish('c:lint');
+      await run.finish('b:test');
+      await run.loop;
+    });
+
+    it('should run a task heavier than --parallel only once nothing else runs', async () => {
+      const run = createOrchestrator(
+        [
+          createTask('a:lint'),
+          createTask('heavy:test', 5),
+          createTask('b:lint'),
+        ],
+        2
+      );
+      await run.settle();
+      expect(run.running()).toEqual(['a:lint', 'b:lint']);
+
+      await run.finish('a:lint');
+      expect(run.running()).toEqual(['b:lint']);
+
+      await run.finish('b:lint');
+      expect(run.running()).toEqual(['heavy:test']);
+      expect(run.orchestrator.discreteWorkerWeight).toBe(2);
+
+      await run.finish('heavy:test');
+      await run.loop;
+    });
+
+    it('should dispatch up to --parallel tasks when no weights are set', async () => {
+      const run = createOrchestrator(
+        [createTask('a:test'), createTask('b:test'), createTask('c:test')],
+        2
+      );
+      await run.settle();
+      expect(run.running()).toEqual(['a:test', 'b:test']);
+
+      await run.finish('b:test');
+      expect(run.running()).toEqual(['a:test', 'c:test']);
+
+      await run.finish('a:test');
+      await run.finish('c:test');
+      await run.loop;
+    });
+
+    it('should release the weight of a failed task', async () => {
+      const run = createOrchestrator(
+        [createTask('heavy:test', 3), createTask('other:test', 3)],
+        4
+      );
+      await run.settle();
+      expect(run.running()).toEqual(['heavy:test']);
+
+      await run.fail('heavy:test');
+      expect(
+        run.orchestrator.handleDiscreteWorkerFailure
+      ).toHaveBeenCalledTimes(1);
+      expect(run.running()).toEqual(['other:test']);
+      expect(run.orchestrator.discreteWorkerWeight).toBe(3);
+
+      await run.finish('other:test');
+      await run.loop;
+      expect(run.orchestrator.discreteWorkerWeight).toBe(0);
     });
   });
 });

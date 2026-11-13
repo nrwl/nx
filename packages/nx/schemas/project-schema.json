@@ -209,6 +209,12 @@
             "default": true,
             "description": "Whether this target can be run in parallel with other tasks"
           },
+          "weight": {
+            "type": "integer",
+            "minimum": 1,
+            "default": 1,
+            "description": "How many of the --parallel slots this target occupies while running. Use for targets that start their own worker pool."
+          },
           "metadata": {
             "type": "object",
             "description": "Metadata about the target",

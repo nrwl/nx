@@ -36,6 +36,8 @@ pub struct Task {
     pub cache: bool,
     /// Determines if a given task should be parallelizable.
     pub parallelism: Option<bool>,
+    /// How many of the `--parallel` slots this task occupies while running.
+    pub weight: Option<u32>,
     /// This denotes if the task runs continuously
     pub continuous: Option<bool>,
     /// The target's Ultracache settings, if declared

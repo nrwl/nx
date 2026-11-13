@@ -1051,6 +1051,9 @@
         "parallelism": {
           "$ref": "#/definitions/targetDefaultsConfig/properties/parallelism"
         },
+        "weight": {
+          "$ref": "#/definitions/targetDefaultsConfig/properties/weight"
+        },
         "inputs": {
           "$ref": "#/definitions/inputs"
         },
@@ -1123,6 +1126,12 @@
           "type": "boolean",
           "default": true,
           "description": "Whether this target can be run in parallel with other tasks"
+        },
+        "weight": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1,
+          "description": "How many of the --parallel slots this target occupies while running. Use for targets that start their own worker pool."
         },
         "inputs": {
           "$ref": "#/definitions/inputs"
