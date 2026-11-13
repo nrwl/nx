@@ -49,6 +49,11 @@ jobs:
       GIT_AUTHOR_NAME: Test
       GIT_COMMITTER_EMAIL: test@users.noreply.github.com
       GIT_COMMITTER_NAME: Test
+      # Match the agents (.nx/workflows/agents.yaml) for tasks the main-job worker runs.
+      NEXT_PUBLIC_ASTRO_URL: 'https://master--nx-docs.netlify.app'
+      NX_DEV_URL: 'https://canary.nx.dev'
+      CARGO_INCREMENTAL: '0'
+      GRADLE_OPTS: '-Dorg.gradle.workers.max=2'
       NX_CLOUD_NO_TIMEOUTS: 'true'
       NX_ALLOW_NON_CACHEABLE_DTE: 'true'
       NX_CLOUD_EXPERIMENTAL_POLLING: 'true'
@@ -114,8 +119,16 @@ jobs:
       # Must follow dependency install: the worker loads Nx from node_modules and keeps
       # the environment it starts with. ubuntu-latest has 4 vCPUs and 16 GB; the rest is
       # left for this job's own commands.
+      # Backgrounded so the Rust prep doesn't delay the DTE start below; agents take tasks
+      # until the worker joins. The runner's rustup uses the minimal profile, which leaves
+      # out clippy and rustfmt, and lint-native's `cargo clippy --frozen` can't download crates.
       - name: Start main-job worker
-        run: pnpm exec nx-cloud start-worker --background --cpu=2 --memory=8GiB
+        run: |
+          (
+            rustup component add clippy rustfmt &&
+            cargo fetch &&
+            pnpm exec nx-cloud start-worker --background --cpu=2 --memory=8GiB
+          ) > "$RUNNER_TEMP/main-job-worker-setup.log" 2>&1 &
 
       - name: Nx Report
         run:
@@ -149,7 +162,9 @@ jobs:
           done
         timeout-minutes: 100
       - name: Upload main-job worker metrics
-        run: pnpm exec nx-cloud upload-worker-metrics
+        run: |
+          cat "$RUNNER_TEMP/main-job-worker-setup.log" || true
+          pnpm exec nx-cloud upload-worker-metrics
         if: always()
       - name: Fix CI
         run: pnpm nx fix-ci
