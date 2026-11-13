@@ -90,9 +90,6 @@ jobs:
       - name: Install pnpm packages
         run: pnpm install --frozen-lockfile
 
-      - name: Install Playwright
-        run: pnpm playwright install --with-deps
-
       - name: Restore .NET packages
         run: dotnet restore nx.sln
 
@@ -181,9 +178,6 @@ jobs:
 
       - name: Install pnpm packages
         run: pnpm install --frozen-lockfile
-
-      - name: Install Playwright
-        run: pnpm playwright install --with-deps
 
       - name: Restore .NET packages
         run: dotnet restore nx.sln

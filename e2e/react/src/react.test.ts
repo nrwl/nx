@@ -4,7 +4,6 @@ import {
   cleanupProject,
   configureTargetOptions,
   createFile,
-  ensureCypressInstallation,
   killPorts,
   listFiles,
   newProject,
@@ -22,7 +21,7 @@ import { join } from 'path';
 describe('React Applications', () => {
   let proj: string;
   describe('Crystal Supported Tests', () => {
-    beforeAll(async () => {
+    beforeAll(() => {
       proj = newProject({
         keepBackup: true,
         packages: [
@@ -35,7 +34,6 @@ describe('React Applications', () => {
           '@nx/eslint',
         ],
       });
-      await ensureCypressInstallation();
     });
 
     afterAll(() => cleanupProject());
@@ -277,7 +275,7 @@ describe('React Applications', () => {
   });
 
   describe('Webpack apps', () => {
-    beforeAll(async () => {
+    beforeAll(() => {
       proj = newProject({
         keepBackup: true,
         packages: [
@@ -288,7 +286,6 @@ describe('React Applications', () => {
           '@nx/eslint',
         ],
       });
-      await ensureCypressInstallation();
     });
 
     afterAll(() => {
