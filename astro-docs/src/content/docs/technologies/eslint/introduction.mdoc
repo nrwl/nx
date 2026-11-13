@@ -87,6 +87,12 @@ The `@nx/eslint/plugin` is configured in the `plugins` array in `nx.json`.
 | `extensions` | string[] | `ts, cts, mts, tsx, js, cjs, mjs, jsx, html, vue` | File extensions Nx checks before adding a task. |
 
 The lint task runs ESLint from the project root and is cached, with inputs based on your ESLint configuration.
+Nx passes the task's ESLint options and command-line flags to the
+[ESLint CLI](https://eslint.org/docs/latest/use/command-line-interface), so use its kebab-case names,
+such as `--max-warnings`, `--output-file`, and `--format`.
+ESLint rejects the camelCase names that the removed `@nx/eslint:lint` executor accepted, such as
+`--maxWarnings`.
+
 When you set `output-file`, Nx also caches the report and restores it on a cache hit.
 A relative `output-file` resolves from the effective working directory of the lint task,
 which defaults to the project root.
