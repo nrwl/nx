@@ -1107,9 +1107,8 @@ mod tests {
         }
     }
 
-    /// Hashes 64 tasks with one instruction each, over a pool that also holds
-    /// a fileset no plan reads, and returns how many times the index was
-    /// caught up, and how many of those ran on a pool thread.
+    /// Returns how many times hashing caught the index up, and how many of
+    /// those ran on a pool thread. The pool also holds a fileset no plan reads.
     fn catch_ups(instruction: impl Fn(usize) -> HashInstruction) -> (usize, usize) {
         let temp = assert_fs::TempDir::new().unwrap();
         for dir in 0..8 {
