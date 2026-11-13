@@ -27,6 +27,13 @@ import {
   isUsingTsSolutionSetup as _isUsingTsSolutionSetup,
 } from '@nx/js/internal';
 import { canResolve } from './router-plugin-utils';
+import { createRequire } from 'node:module';
+
+// Node passes a stand-in require, without a cache, require.extensions or
+// Module._load, when an ESM loader hook supplies this module's source, as
+// Yarn PnP does.
+if (!require.cache) require = createRequire(__filename);
+
 export interface ReactRouterPluginOptions {
   buildTargetName?: string;
   devTargetName?: string;

@@ -1,4 +1,10 @@
 import { extname, resolve } from 'path';
+import { createRequire } from 'node:module';
+
+// Node passes a stand-in require, without a cache, require.extensions or
+// Module._load, when an ESM loader hook supplies this module's source, as
+// Yarn PnP does.
+if (!require.cache) require = createRequire(__filename);
 
 const STRIP_TYPES_DOCS_URL =
   'https://nx.dev/docs/reference/environment-variables#nx-prefer-node-strip-types';

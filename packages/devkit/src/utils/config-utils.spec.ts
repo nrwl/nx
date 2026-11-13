@@ -1,4 +1,8 @@
+import { runWithHookSuppliedSource } from 'nx/src/internal-testing-utils/hook-supplied-source';
+import { mkdtempSync, realpathSync, rmSync, writeFileSync } from 'fs';
+import { tmpdir } from 'os';
 import { join } from 'path';
+import { pathToFileURL } from 'url';
 import {
   clearConfigFromRequireCache,
   isTranspilerRecoverableError,
@@ -231,5 +235,27 @@ describe('unwrapCjsInterop', () => {
     };
 
     expect(unwrapCjsInterop(path, module, cache)).toBe(module);
+  });
+});
+
+describe('loadConfigFile', () => {
+  it('reloads an edited config when a loader hook supplies its CommonJS source', () => {
+    const dir = realpathSync(mkdtempSync(join(tmpdir(), 'config-utils-')));
+    const configPath = join(dir, 'config.cjs');
+    writeFileSync(configPath, 'module.exports = { version: 1 };');
+    const configUtils = pathToFileURL(join(__dirname, 'config-utils.ts')).href;
+
+    const result = runWithHookSuppliedSource(`
+      import { writeFileSync } from 'node:fs';
+      const { loadConfigFile } = await import(${JSON.stringify(configUtils)});
+      const first = await loadConfigFile(${JSON.stringify(configPath)});
+      writeFileSync(${JSON.stringify(configPath)}, 'module.exports = { version: 2 };');
+      const second = await loadConfigFile(${JSON.stringify(configPath)});
+      console.log(first.version, second.version);
+    `);
+    rmSync(dir, { recursive: true, force: true });
+
+    expect(result.stderr).not.toContain('Error');
+    expect(result.stdout.trim()).toBe('1 2');
   });
 });
