@@ -7,6 +7,7 @@ import {
   loadConfigFile,
   PluginCache,
   hashObject,
+  hashFile,
   workspaceDataDirectory,
 } from '@nx/devkit/internal';
 import {
@@ -21,8 +22,8 @@ import {
   type ProjectConfiguration,
 } from '@nx/devkit';
 
-import { dirname, join } from 'path';
-import { existsSync, readdirSync } from 'fs';
+import { dirname, join, resolve } from 'path';
+import { existsSync, readdirSync, statSync } from 'fs';
 import { pathToFileURL } from 'node:url';
 import { getLockFileName } from '@nx/js';
 import {
@@ -43,6 +44,10 @@ type ReactRouterTargets = Pick<
   'targets' | 'metadata' | 'projectType'
 >;
 
+type CachedReactRouterTargets = ReactRouterTargets & {
+  configDependencyHashes: Record<string, string>;
+};
+
 const reactRouterConfigBlob = '**/react-router.config.{ts,js,cjs,cts,mjs,mts}';
 
 export const createNodes: CreateNodes<ReactRouterPluginOptions> = [
@@ -54,7 +59,7 @@ export const createNodes: CreateNodes<ReactRouterPluginOptions> = [
       workspaceDataDirectory,
       `react-router-${optionsHash}.hash`
     );
-    const targetsCache = new PluginCache<ReactRouterTargets>(cachePath);
+    const targetsCache = new PluginCache<CachedReactRouterTargets>(cachePath);
 
     const isUsingTsSolutionSetup = _isUsingTsSolutionSetup();
 
@@ -87,15 +92,57 @@ export const createNodes: CreateNodes<ReactRouterPluginOptions> = [
       projectRoots.map((_) => [lockfile])
     );
 
+    const configFileHashes = new Map<string, string | null>();
+    const getConfigFileHash = (file: string) => {
+      if (!configFileHashes.has(file)) {
+        configFileHashes.set(file, hashFile(file) ?? null);
+      }
+      return configFileHashes.get(file) ?? null;
+    };
+
+    const getConfigDependencyHashes = (
+      dependencies: string[],
+      configLoadStartedAt: number
+    ): Record<string, string> | undefined => {
+      const hashes: Record<string, string> = {};
+      try {
+        for (const file of dependencies) {
+          const hash = getConfigFileHash(file);
+          if (hash === null) return undefined;
+          const { mtimeMs, ctimeMs } = statSync(file);
+          // Do not associate an earlier config result with newer file contents.
+          if (
+            mtimeMs >= configLoadStartedAt ||
+            ctimeMs >= configLoadStartedAt
+          ) {
+            return undefined;
+          }
+          hashes[file] = hash;
+        }
+      } catch {
+        return undefined;
+      }
+      return hashes;
+    };
+
     try {
       return await createNodesFromFiles(
         async (configFile, _, context, idx) => {
           const projectRoot = dirname(configFile);
 
           const hash = hashes[idx] + configFile;
-          if (!targetsCache.has(hash)) {
-            targetsCache.set(
-              hash,
+          const cachedTargets = targetsCache.get(hash);
+          let result: ReactRouterTargets;
+          if (
+            cachedTargets?.configDependencyHashes &&
+            Object.entries(cachedTargets.configDependencyHashes).every(
+              ([file, previousHash]) => getConfigFileHash(file) === previousHash
+            )
+          ) {
+            result = cachedTargets;
+          } else {
+            const configLoadStartedAt = Date.now();
+            const { configDependencies, ...inferredTargets } =
               await buildReactRouterTargets(
                 configFile,
                 projectRoot,
@@ -103,10 +150,19 @@ export const createNodes: CreateNodes<ReactRouterPluginOptions> = [
                 context,
                 isUsingTsSolutionSetup,
                 pmCommand
-              )
-            );
+              );
+            result = inferredTargets;
+            const configDependencyHashes =
+              configDependencies &&
+              getConfigDependencyHashes(
+                configDependencies,
+                configLoadStartedAt
+              );
+            if (configDependencyHashes) {
+              targetsCache.set(hash, { ...result, configDependencyHashes });
+            }
           }
-          const { projectType, metadata, targets } = targetsCache.get(hash);
+          const { projectType, metadata, targets } = result;
 
           const project: ProjectConfiguration = {
             root: projectRoot,
@@ -146,7 +202,7 @@ async function buildReactRouterTargets(
   context: CreateNodesContext,
   isUsingTsSolutionSetup: boolean,
   pmCommand: ReturnType<typeof getPackageManagerCommand>
-): Promise<ReactRouterTargets> {
+): Promise<ReactRouterTargets & { configDependencies?: string[] }> {
   const namedInputs = getNamedInputs(projectRoot, context);
   const configPath = join(context.workspaceRoot, configFilePath);
 
@@ -171,14 +227,15 @@ async function buildReactRouterTargets(
     isUsingTsSolutionSetup
   );
 
+  const { readyWhen, configDependencies } = await getDevReadyWhen(
+    context.workspaceRoot,
+    join(context.workspaceRoot, projectRoot)
+  );
   targets[options.devTargetName] = await devTarget(
     projectRoot,
     namedInputs,
     isUsingTsSolutionSetup,
-    await getDevReadyWhen(
-      context.workspaceRoot,
-      join(context.workspaceRoot, projectRoot)
-    )
+    readyWhen
   );
 
   if (serverBuildPath) {
@@ -203,6 +260,7 @@ async function buildReactRouterTargets(
     targets,
     metadata,
     projectType: isLibMode ? 'library' : 'application',
+    configDependencies,
   };
 }
 
@@ -301,13 +359,16 @@ const viteConfigFiles = [
 async function getDevReadyWhen(
   workspaceRoot: string,
   absoluteProjectRoot: string
-): Promise<TargetConfiguration['readyWhen']> {
+): Promise<{
+  readyWhen: TargetConfiguration['readyWhen'];
+  configDependencies?: string[];
+}> {
   // `react-router dev` serves with the default Vite config of its cwd.
   const configFile = viteConfigFiles.find((file) =>
     existsSync(join(absoluteProjectRoot, file))
   );
   if (!configFile) {
-    return undefined;
+    return { readyWhen: undefined, configDependencies: [] };
   }
   // The command check runs from the workspace root and must resolve its helper there.
   const viteReadyCheck = resolveOptionalModule(
@@ -315,8 +376,13 @@ async function getDevReadyWhen(
     workspaceRoot
   );
   if (!viteReadyCheck) {
-    return undefined;
+    return { readyWhen: undefined, configDependencies: [] };
   }
+  const commandReadyWhen = getReadyCheckReadyWhen(
+    '@nx/vite/ready-check',
+    configFile,
+    'react-router-dev'
+  );
   try {
     const vitePackageJsonPath = require.resolve('vite/package.json', {
       paths: [absoluteProjectRoot, dirname(viteReadyCheck)],
@@ -334,6 +400,7 @@ async function getDevReadyWhen(
     // the config avoids a second generator deleting files the server is writing.
     const viteConfig = await retryOnRequireEsmRace<{
       config: { plugins?: unknown };
+      dependencies: string[];
     } | null>(() =>
       loadConfigFromFile(
         {
@@ -347,26 +414,26 @@ async function getDevReadyWhen(
         'silent'
       )
     );
-    if (await loadsReadySignalPlugin(viteConfig?.config.plugins)) {
-      return { signal: true };
-    }
+    return {
+      readyWhen: (await loadsReadySignalPlugin(viteConfig?.config.plugins))
+        ? { signal: true }
+        : commandReadyWhen,
+      configDependencies: viteConfig
+        ? [...new Set(viteConfig.dependencies.map((file) => resolve(file)))]
+        : undefined,
+    };
   } catch {
     // Optional readiness detection must not prevent graph creation.
   }
-  return getReadyCheckReadyWhen(
-    '@nx/vite/ready-check',
-    configFile,
-    'react-router-dev'
-  );
+  return { readyWhen: commandReadyWhen };
 }
 
 async function loadsReadySignalPlugin(plugins: unknown): Promise<boolean> {
   const plugin = await plugins;
   if (Array.isArray(plugin)) {
-    for (const entry of plugin) {
-      if (await loadsReadySignalPlugin(entry)) return true;
-    }
-    return false;
+    return (await Promise.all(plugin.map(loadsReadySignalPlugin))).some(
+      Boolean
+    );
   }
   const candidate = plugin as { name?: unknown; apply?: unknown } | null;
   // Function predicates may depend on the task environment.
