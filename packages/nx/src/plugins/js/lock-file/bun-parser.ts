@@ -1,17 +1,20 @@
 import { execSync } from 'node:child_process';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
+import { isAbsolute, join, posix } from 'node:path';
 import { satisfies } from 'semver';
 import {
   DependencyType,
   type ProjectGraphExternalNode,
 } from '../../../config/project-graph';
-import { hashArray } from '../../../hasher/file-hasher';
+import { hashArray, hashFile } from '../../../hasher/file-hasher';
 import type { CreateDependenciesContext } from '../../../project-graph/plugins';
 import {
   type RawProjectGraphDependency,
   validateDependency,
 } from '../../../project-graph/project-graph-builder';
+import { fileExists, readJsonFile } from '../../../utils/fileutils';
 import { parseJson } from '../../../utils/json';
+import type { PackageJson } from '../../../utils/package-json';
 
 // Highest bun.lock version this parser has been verified against:
 // - 1: workspace packages are no longer listed with their dependencies
@@ -58,23 +61,8 @@ interface BunLockFile {
    */
   packages: Record<string, PackageTuple>;
 
-  /**
-   * Patched dependencies configuration
-   * Maps package names to patch file information
-   */
-  patches?: Record<string, PatchedDependency>;
-
-  /**
-   * Registry manifests cache
-   * Stores resolved package metadata from registries
-   */
-  manifests?: Record<string, RegistryManifest>;
-
-  /**
-   * Workspace package metadata
-   * Information about local workspace packages
-   */
-  workspacePackages?: Record<string, WorkspacePackageInfo>;
+  /** Maps a patched package's resolution (`name@version`) to its patch file */
+  patchedDependencies?: Record<string, string>;
 }
 
 interface Workspace {
@@ -102,7 +90,7 @@ type WorkspacePackageTuple = [string];
 // File/Link package: ["name@file:path", metadata]
 type FilePackageTuple = [string, PackageDependencies];
 
-// Git package: ["name@git:repo", metadata, tag]
+// Git package: ["name@git+<url>#commit", metadata, commit]
 type GitPackageTuple = [string, PackageDependencies, string];
 
 // NPM package: ["name@version", tarballUrl, metadata, hash]
@@ -115,33 +103,6 @@ interface PackageDependencies {
   peerDependencies?: Record<string, string>;
 }
 
-interface PatchedDependency {
-  /** Path to the patch file (e.g., "patches/package-name@1.0.0.patch") */
-  path: string;
-}
-
-interface RegistryManifest {
-  /** Package version */
-  version: string;
-
-  /** Distribution information */
-  dist: {
-    /** SHA hash for integrity */
-    shasum: string;
-  };
-}
-
-interface WorkspacePackageInfo {
-  /** Package name */
-  name: string;
-
-  /** Package version */
-  version: string;
-
-  /** Relative path from workspace root */
-  path: string;
-}
-
 /**
  * Pre-computed index for O(1) lookups instead of O(n) scans
  */
@@ -151,14 +112,19 @@ interface PackageIndex {
     string,
     Array<{ version: string; packageKey: string; hash: string }>
   >;
-  // Set of all workspace package names (from workspacePackages + workspace: deps)
+  // Set of all workspace package names (from workspace: deps)
   workspaceNames: Set<string>;
   // Set of all workspace paths
   workspacePaths: Set<string>;
   // Set of packages that have workspace-specific variants
   packagesWithWorkspaceVariants: Set<string>;
-  // Set of patched package names
-  patchedPackages: Set<string>;
+  localPathSources: Map<string, BunLocalPathSource>;
+}
+
+interface BunLocalPathSource {
+  kind: 'directory' | 'link' | 'tarball';
+  // Relative to the lockfile's directory.
+  path: string;
 }
 
 export const BUN_LOCK_FILE = 'bun.lockb';
@@ -295,12 +261,9 @@ function parseResolvedSpec(resolvedSpec: string): {
   version: string;
 } {
   // Handle different resolution formats:
-  // - "package-name@npm:1.0.0"
-  // - "@scope/package-name@npm:1.0.0"
   // - "package-name@github:user/repo#commit"
   // - "package-name@file:./path"
   // - "package-name@https://example.com/package.tgz"
-  // - "alias-name@npm:actual-package@version" (ALIAS FORMAT)
 
   // Handle scoped packages properly - they have an extra @ at the beginning
   // Format: @scope/package@protocol:spec
@@ -328,7 +291,8 @@ function parseResolvedSpec(resolvedSpec: string): {
   // Parse protocol and spec
   const colonIndex = protocolAndSpec.indexOf(':');
 
-  // Handle specs without protocol prefix (e.g., "package@1.0.0" instead of "package@npm:1.0.0")
+  // Handle specs without protocol prefix (e.g., "package@1.0.0"), which is how
+  // Bun records every registry package, aliases included
   if (colonIndex === -1) {
     // No protocol specified, treat as npm package with direct version
     return { name, version: protocolAndSpec };
@@ -337,35 +301,13 @@ function parseResolvedSpec(resolvedSpec: string): {
   const protocol = protocolAndSpec.substring(0, colonIndex);
   const spec = protocolAndSpec.substring(colonIndex + 1);
 
-  if (protocol === 'npm') {
-    // For npm protocol, spec should always be in format: package@version
-    // Examples:
-    // - Regular: "package@npm:package@1.0.0" -> version: "1.0.0"
-    // - Alias: "alias@npm:real-package@1.0.0" -> version: "npm:real-package@1.0.0"
-
-    // Extract the package name and version from the spec
-    const atIndex = spec.lastIndexOf('@');
-    if (atIndex === -1) {
-      // Malformed spec, return as-is
-      return { name, version: spec };
-    }
-
-    const specPackageName = spec.substring(0, atIndex);
-    const specVersion = spec.substring(atIndex + 1);
-
-    if (specPackageName === name) {
-      // Regular npm package: "package@npm:package@1.0.0" -> version: "1.0.0"
-      return { name, version: specVersion };
-    } else {
-      // Alias package: "alias@npm:real-package@1.0.0" -> version: "npm:real-package@1.0.0"
-      return { name, version: `npm:${spec}` };
-    }
-  } else if (protocol === 'workspace') {
+  if (protocol === 'workspace') {
     // Workspace dependencies use the workspace path as version
     return { name, version: `workspace:${spec}` };
-  } else if (protocol === 'github' || protocol === 'git') {
+  } else if (protocol === 'github' || protocol.startsWith('git+')) {
     // Extract commit hash from GitHub/Git reference
-    // Format: user/repo#commit-hash or repo-url#commit-hash
+    // Format: user/repo#commit-hash (github:) or repo-url#commit-hash
+    // (git+https:, git+ssh:, git+file:)
     const gitMatch = spec.match(/^(.+?)#(.+)$/);
     if (gitMatch) {
       const [, repo, commit] = gitMatch;
@@ -385,23 +327,11 @@ function parseResolvedSpec(resolvedSpec: string): {
   }
 }
 
-function calculatePackageHash(
-  packageData: PackageTuple,
-  lockFile: BunLockFile,
-  name: string,
-  version: string
-): string {
+function calculatePackageHash(packageData: PackageTuple): string {
   const [resolvedSpec, tarballUrl, metadata, hash] = packageData;
 
   // For NPM packages (4 elements), use the integrity hash
   if (packageData.length === 4 && hash && typeof hash === 'string') {
-    // Use better hash from manifests if available
-    if (lockFile.manifests && lockFile.manifests[`${name}@${version}`]) {
-      const manifest = lockFile.manifests[`${name}@${version}`];
-      if (manifest.dist && manifest.dist.shasum) {
-        return manifest.dist.shasum;
-      }
-    }
     return hash;
   }
 
@@ -412,6 +342,10 @@ function calculatePackageHash(
   if (hash && typeof hash === 'string') hashData.push(hash);
 
   return hashArray(hashData);
+}
+
+function withPatchHash(hash: string, patchHash: string | undefined): string {
+  return patchHash === undefined ? hash : hashArray([hash, patchHash]);
 }
 
 /**
@@ -438,7 +372,6 @@ function buildPackageIndex(lockFile: BunLockFile): PackageIndex {
   const workspaceNames = new Set<string>();
   const workspacePaths = new Set<string>();
   const packagesWithWorkspaceVariants = new Set<string>();
-  const patchedPackages = new Set<string>();
 
   // Collect workspace paths
   if (lockFile.workspaces) {
@@ -449,21 +382,9 @@ function buildPackageIndex(lockFile: BunLockFile): PackageIndex {
     }
   }
 
-  // Collect workspace package names from workspacePackages field
-  if (lockFile.workspacePackages) {
-    for (const packageInfo of Object.values(lockFile.workspacePackages)) {
-      workspaceNames.add(packageInfo.name);
-    }
-  }
-
-  // Collect patched package names
-  if (lockFile.patches) {
-    for (const packageName of Object.keys(lockFile.patches)) {
-      patchedPackages.add(packageName);
-    }
-  }
-
-  // Collect workspace package names from workspace dependencies
+  // Collect workspace package names from workspace dependencies. A `file:`
+  // spec can name a vendored package, and a workspace it names is recorded as
+  // a `workspace:` package, which the pass below picks up.
   if (lockFile.workspaces) {
     for (const workspace of Object.values(lockFile.workspaces)) {
       const allDeps = {
@@ -473,10 +394,7 @@ function buildPackageIndex(lockFile: BunLockFile): PackageIndex {
         ...workspace.peerDependencies,
       };
       for (const [depName, depVersion] of Object.entries(allDeps)) {
-        if (
-          depVersion.startsWith('workspace:') ||
-          depVersion.startsWith('file:')
-        ) {
+        if (depVersion.startsWith('workspace:')) {
           workspaceNames.add(depName);
         }
       }
@@ -501,7 +419,7 @@ function buildPackageIndex(lockFile: BunLockFile): PackageIndex {
       }
 
       // Track workspace packages from packages section
-      if (protocol === 'workspace' || protocol === 'file') {
+      if (protocol === 'workspace') {
         workspaceNames.add(name);
       }
 
@@ -533,12 +451,7 @@ function buildPackageIndex(lockFile: BunLockFile): PackageIndex {
       }
 
       // Calculate hash once
-      const hash = calculatePackageHash(
-        packageData as PackageTuple,
-        lockFile,
-        name,
-        version
-      );
+      const hash = calculatePackageHash(packageData as PackageTuple);
 
       entries.push({ version, packageKey, hash });
     }
@@ -549,8 +462,118 @@ function buildPackageIndex(lockFile: BunLockFile): PackageIndex {
     workspaceNames,
     workspacePaths,
     packagesWithWorkspaceVariants,
-    patchedPackages,
+    localPathSources: getBunLocalPathSources(lockFile),
   };
+}
+
+function normalizeBunLocalPath(path: string): string {
+  return posix.normalize(path.replace(/\\/g, '/')).replace(/(.)\/+$/, '$1');
+}
+
+/**
+ * The packages a bun.lock installs from the local file tree, keyed by package
+ * key. A directory or link entry records its path relative to the lockfile. A
+ * tarball entry records it relative to the dependent that declares it: the
+ * workspace or local directory whose lookup reaches the entry for a `file:`
+ * spec of that path. A tarball no declarer reaches is left out.
+ */
+function getBunLocalPathSources(
+  lockFile: Pick<BunLockFile, 'packages' | 'workspaces'>
+): Map<string, BunLocalPathSource> {
+  const sources = new Map<string, BunLocalPathSource>();
+  const packages = lockFile.packages ?? {};
+  const workspaces = lockFile.workspaces ?? {};
+  const tarballPaths = new Map<string, string>();
+  for (const [key, tuple] of Object.entries(packages)) {
+    if (!Array.isArray(tuple) || typeof tuple[0] !== 'string') {
+      continue;
+    }
+    const { version, protocol } = getCachedSpecInfo(tuple[0]);
+    if (protocol === 'file' || protocol === 'link') {
+      const path = normalizeBunLocalPath(version.slice(protocol.length + 1));
+      if (
+        protocol === 'file' &&
+        Object.prototype.hasOwnProperty.call(workspaces, path)
+      ) {
+        continue;
+      }
+      sources.set(key, {
+        kind: protocol === 'file' ? 'directory' : 'link',
+        path,
+      });
+    } else if (
+      protocol === 'npm' &&
+      tuple[1] !== null &&
+      typeof tuple[1] === 'object'
+    ) {
+      // A registry entry records its registry URL there instead.
+      tarballPaths.set(key, normalizeBunLocalPath(version));
+    }
+  }
+  if (!tarballPaths.size) {
+    return sources;
+  }
+
+  const hasKey = (key: string) =>
+    Object.prototype.hasOwnProperty.call(packages, key);
+  const declarers: Array<{
+    scope: string[];
+    dir: string;
+    dependencies: PackageDependencies | undefined;
+  }> = [];
+  for (const [path, workspace] of Object.entries(workspaces)) {
+    if (path === '' || workspace.name) {
+      declarers.push({
+        scope: path === '' ? [] : [workspace.name],
+        dir: path,
+        dependencies: workspace,
+      });
+    }
+  }
+  for (const [key, source] of sources) {
+    if (source.kind === 'directory') {
+      declarers.push({
+        scope: splitBunPackageKey(key),
+        dir: source.path,
+        dependencies: extractPackageDependencies(packages[key] as unknown[]),
+      });
+    }
+  }
+  for (const { scope, dir, dependencies } of declarers) {
+    for (const depType of DEPENDENCY_TYPES) {
+      for (const [name, spec] of Object.entries(
+        dependencies?.[depType] ?? {}
+      )) {
+        if (typeof spec !== 'string' || !spec.startsWith('file:')) {
+          continue;
+        }
+        const key = findNearestBunPackageKey(scope, name, hasKey);
+        const recordedPath =
+          key === undefined ? undefined : tarballPaths.get(key);
+        if (
+          recordedPath === undefined ||
+          sources.has(key) ||
+          recordedPath !== normalizeBunLocalPath(spec.slice(5))
+        ) {
+          continue;
+        }
+        sources.set(key, {
+          kind: 'tarball',
+          path: posix.isAbsolute(recordedPath)
+            ? recordedPath
+            : normalizeBunLocalPath(posix.join(dir, recordedPath)),
+        });
+      }
+    }
+  }
+  return sources;
+}
+
+function parseBunLockFile(lockFileContent: string): BunLockFile {
+  return parseJson<BunLockFile>(lockFileContent, {
+    allowTrailingComma: true,
+    expectComments: true,
+  });
 }
 
 function parseLockFile(
@@ -568,10 +591,7 @@ function parseLockFile(
   clearCache();
 
   try {
-    const result = parseJson<BunLockFile>(lockFileContent, {
-      allowTrailingComma: true,
-      expectComments: true,
-    });
+    const result = parseBunLockFile(lockFileContent);
 
     // Validate basic structure
     if (!result || typeof result !== 'object') {
@@ -610,61 +630,6 @@ function parseLockFile(
       throw new Error('Lockfile workspaces section must be an object');
     }
 
-    // Validate optional sections
-    if (result.patches && typeof result.patches !== 'object') {
-      throw new Error('Lockfile patches section must be an object');
-    }
-
-    if (result.manifests && typeof result.manifests !== 'object') {
-      throw new Error('Lockfile manifests section must be an object');
-    }
-
-    if (
-      result.workspacePackages &&
-      typeof result.workspacePackages !== 'object'
-    ) {
-      throw new Error('Lockfile workspacePackages section must be an object');
-    }
-
-    // Validate structure of patches entries
-    if (result.patches) {
-      for (const [packageName, patchInfo] of Object.entries(result.patches)) {
-        if (!patchInfo || typeof patchInfo !== 'object') {
-          throw new Error(
-            `Invalid patch entry for package "${packageName}": must be an object`
-          );
-        }
-        if (!patchInfo.path || typeof patchInfo.path !== 'string') {
-          throw new Error(
-            `Invalid patch entry for package "${packageName}": path must be a string`
-          );
-        }
-      }
-    }
-
-    // Validate structure of workspace packages entries
-    if (result.workspacePackages) {
-      for (const [packageName, packageInfo] of Object.entries(
-        result.workspacePackages
-      )) {
-        if (!packageInfo || typeof packageInfo !== 'object') {
-          throw new Error(
-            `Invalid workspace package entry for "${packageName}": must be an object`
-          );
-        }
-        if (!packageInfo.name || typeof packageInfo.name !== 'string') {
-          throw new Error(
-            `Invalid workspace package entry for "${packageName}": name must be a string`
-          );
-        }
-        if (!packageInfo.version || typeof packageInfo.version !== 'string') {
-          throw new Error(
-            `Invalid workspace package entry for "${packageName}": version must be a string`
-          );
-        }
-      }
-    }
-
     cachedParsedLockFile = result;
     currentLockFileHash = lockFileHash;
 
@@ -699,9 +664,15 @@ function parseLockFile(
 
 // ===== MAIN EXPORT FUNCTIONS =====
 
+/**
+ * @param patchFileHashes the {@link getBunPatchFileHashes} that `lockFileHash`
+ * covers, folded into the hashes of the packages they patch. Omitted, patched
+ * packages hash like unpatched ones.
+ */
 export function getBunTextLockfileNodes(
   lockFileContent: string,
-  lockFileHash: string
+  lockFileHash: string,
+  patchFileHashes?: Map<string, string>
 ): Record<string, ProjectGraphExternalNode> {
   try {
     const { lockFile, index } = parseLockFile(lockFileContent, lockFileHash);
@@ -711,6 +682,16 @@ export function getBunTextLockfileNodes(
 
     if (!lockFile.packages || Object.keys(lockFile.packages).length === 0) {
       return nodes;
+    }
+
+    const patchHashes = new Map<string, string>();
+    for (const [resolution, patchPath] of Object.entries(
+      lockFile.patchedDependencies ?? {}
+    )) {
+      const patchHash = patchFileHashes?.get(patchPath);
+      if (patchHash !== undefined) {
+        patchHashes.set(resolution, patchHash);
+      }
     }
 
     const packageEntries = Object.entries(lockFile.packages);
@@ -723,7 +704,8 @@ export function getBunTextLockfileNodes(
         index,
         keyMap,
         nodes,
-        localPackageVersions
+        localPackageVersions,
+        patchHashes
       );
       if (result.shouldContinue) {
         continue;
@@ -741,6 +723,86 @@ export function getBunTextLockfileNodes(
   }
 }
 
+/**
+ * The workspace-relative sources of the `nodes` that install from the local
+ * file tree, keyed by node name. The lockfile records only their paths, so the
+ * contents of these sources are what change when the packages do.
+ */
+export function getBunLocalPathNodeSources(
+  lockFileContent: string,
+  lockFileHash: string,
+  nodes: Record<string, ProjectGraphExternalNode>
+): Record<string, string[]> {
+  const { lockFile, index } = parseLockFile(lockFileContent, lockFileHash);
+  const sourcesByResolution = new Map<string, Set<string>>();
+  for (const [key, source] of index.localPathSources) {
+    const { name, version } = getCachedSpecInfo(
+      lockFile.packages[key][0] as string
+    );
+    const resolution = `${name}@${version}`;
+    if (!sourcesByResolution.has(resolution)) {
+      sourcesByResolution.set(resolution, new Set());
+    }
+    sourcesByResolution.get(resolution).add(source.path);
+  }
+  const nodeSources: Record<string, string[]> = {};
+  if (!sourcesByResolution.size) {
+    return nodeSources;
+  }
+  for (const node of Object.values(nodes)) {
+    const aliasTarget = resolveAliasTarget(node.data.version);
+    const sources = sourcesByResolution.get(
+      aliasTarget
+        ? `${aliasTarget.packageName}@${aliasTarget.version}`
+        : `${node.data.packageName}@${node.data.version}`
+    );
+    if (sources) {
+      nodeSources[node.name] = [...sources].sort();
+    }
+  }
+  return nodeSources;
+}
+
+/**
+ * The local-path node each workspace installs per dependency name, keyed by
+ * its path ('.' for the root). Aliases are left out.
+ */
+export function getBunInstalledLocalPathNodes(
+  lockFileContent: string,
+  lockFileHash: string,
+  nodes: Record<string, ProjectGraphExternalNode>
+): Record<string, Record<string, string>> {
+  const { lockFile, index } = parseLockFile(lockFileContent, lockFileHash);
+  const installed: Record<string, Record<string, string>> = {};
+  if (!index.localPathSources.size) {
+    return installed;
+  }
+  const packages = lockFile.packages ?? {};
+  const hasKey = (key: string) =>
+    Object.prototype.hasOwnProperty.call(packages, key);
+  for (const [path, workspace] of Object.entries(lockFile.workspaces ?? {})) {
+    // Bun keys a workspace's nested packages by its name
+    if (path !== '' && !workspace.name) {
+      continue;
+    }
+    const scope = path === '' ? [] : [workspace.name];
+    for (const depType of DEPENDENCY_TYPES) {
+      for (const depName of Object.keys(workspace[depType] ?? {})) {
+        const key = findNearestBunPackageKey(scope, depName, hasKey);
+        if (key === undefined || !index.localPathSources.has(key)) {
+          continue;
+        }
+        const { name, version } = getCachedSpecInfo(packages[key][0] as string);
+        const node = nodes[`npm:${name}@${version}`];
+        if (name === depName && node) {
+          (installed[path || '.'] ??= {})[depName] = node.name;
+        }
+      }
+    }
+  }
+  return installed;
+}
+
 interface PackageProcessingResult {
   shouldContinue: boolean;
 }
@@ -752,7 +814,8 @@ function processPackageEntry(
   index: PackageIndex,
   keyMap: Map<string, ProjectGraphExternalNode>,
   nodes: Record<string, ProjectGraphExternalNode>,
-  packageVersions: Map<string, Set<string>>
+  packageVersions: Map<string, Set<string>>,
+  patchHashes: Map<string, string>
 ): PackageProcessingResult {
   try {
     if (
@@ -786,12 +849,12 @@ function processPackageEntry(
       return { shouldContinue: true };
     }
 
-    // O(1) lookups using index
-    if (index.workspaceNames.has(name)) {
-      return { shouldContinue: true };
-    }
-
-    if (index.patchedPackages.has(name)) {
+    // O(1) lookups using index. A local package can share a workspace
+    // package's name, and only its path tells whether it installs that one.
+    if (
+      index.workspaceNames.has(name) &&
+      !isNonWorkspaceLocalPackage(packageKey, index)
+    ) {
       return { shouldContinue: true };
     }
 
@@ -805,6 +868,10 @@ function processPackageEntry(
       const aliasName = packageKey;
       const actualPackageName = name;
       const actualVersion = version;
+      const hash = withPatchHash(
+        calculatePackageHash(packageData as PackageTuple),
+        patchHashes.get(`${actualPackageName}@${actualVersion}`)
+      );
 
       const aliasNodeKey = `npm:${aliasName}`;
       if (!keyMap.has(aliasNodeKey)) {
@@ -814,12 +881,7 @@ function processPackageEntry(
           data: {
             version: `npm:${actualPackageName}@${actualVersion}`,
             packageName: aliasName,
-            hash: calculatePackageHash(
-              packageData as PackageTuple,
-              lockFile,
-              aliasName,
-              `npm:${actualPackageName}@${actualVersion}`
-            ),
+            hash,
           },
         };
         keyMap.set(aliasNodeKey, aliasNode);
@@ -834,12 +896,7 @@ function processPackageEntry(
           data: {
             version: actualVersion,
             packageName: actualPackageName,
-            hash: calculatePackageHash(
-              packageData as PackageTuple,
-              lockFile,
-              actualPackageName,
-              actualVersion
-            ),
+            hash,
           },
         };
         keyMap.set(targetNodeKey, targetNode);
@@ -870,11 +927,9 @@ function processPackageEntry(
         return { shouldContinue: false };
       }
 
-      const nodeHash = calculatePackageHash(
-        packageData as PackageTuple,
-        lockFile,
-        name,
-        version
+      const nodeHash = withPatchHash(
+        calculatePackageHash(packageData as PackageTuple),
+        patchHashes.get(`${name}@${version}`)
       );
 
       const node: ProjectGraphExternalNode = {
@@ -900,15 +955,21 @@ function processPackageEntry(
   }
 }
 
-function isWorkspaceOrPatchedPackage(
+function isNonWorkspaceLocalPackage(
+  packageKey: string,
+  index: PackageIndex
+): boolean {
+  const source = index.localPathSources.get(packageKey);
+  return source !== undefined && !index.workspacePaths.has(source.path);
+}
+
+function isWorkspacePackage(
   packageName: string,
   index: PackageIndex,
   workspacePackages: Set<string>
 ): boolean {
   return (
-    workspacePackages.has(packageName) ||
-    index.workspaceNames.has(packageName) ||
-    index.patchedPackages.has(packageName)
+    workspacePackages.has(packageName) || index.workspaceNames.has(packageName)
   );
 }
 
@@ -965,10 +1026,12 @@ function processPackageForDependencies(
   ctx: CreateDependenciesContext,
   workspacePackages: Set<string>
 ): RawProjectGraphDependency[] {
-  // O(1) checks using index
+  // A local package is nested under the workspace that declares it, and is
+  // still its own node.
+  const isLocalPackage = index.localPathSources.has(packageKey);
   if (
     index.workspaceNames.has(packageKey) ||
-    isNestedPackageKey(packageKey, index)
+    (isNestedPackageKey(packageKey, index) && !isLocalPackage)
   ) {
     return [];
   }
@@ -985,10 +1048,6 @@ function processPackageForDependencies(
   const { name: sourcePackageName, version: sourceVersion } =
     getCachedSpecInfo(resolvedSpec);
   if (!sourcePackageName || !sourceVersion) {
-    return [];
-  }
-
-  if (index.patchedPackages.has(sourcePackageName)) {
     return [];
   }
 
@@ -1017,6 +1076,19 @@ function processPackageForDependencies(
       workspacePackages
     );
     dependencies.push(...depDependencies);
+  }
+
+  // An import resolves a local package to its bare node, since the installed
+  // manifest's version is not the lockfile path, so that node carries the
+  // same edges.
+  const bareNodeName = `npm:${sourcePackageName}`;
+  if (
+    isLocalPackage &&
+    ctx.externalNodes[bareNodeName]?.data.version === sourceVersion
+  ) {
+    for (const dependency of [...dependencies]) {
+      dependencies.push({ ...dependency, source: bareNodeName });
+    }
   }
 
   return dependencies;
@@ -1094,8 +1166,12 @@ function processSingleDependency(
     return null;
   }
 
-  // O(1) check using index
-  if (isWorkspaceOrPatchedPackage(packageName, index, workspacePackages)) {
+  // A local package can share a workspace package's name, and only the path
+  // this parent resolved it to tells whether it installs that one.
+  if (
+    isWorkspacePackage(packageName, index, workspacePackages) &&
+    !isNonWorkspaceLocalPackage(`${sourcePackageKey}/${packageName}`, index)
+  ) {
     return null;
   }
 
@@ -1126,8 +1202,7 @@ function processSingleDependency(
     const resolvedVersion = findResolvedVersion(
       packageName,
       versionSpec,
-      index,
-      lockFile.manifests
+      index
     );
 
     if (!resolvedVersion) {
@@ -1209,6 +1284,10 @@ function createHoistedNodes(
   nodes: Record<string, ProjectGraphExternalNode>
 ): void {
   for (const [packageName, versions] of packageVersions.entries()) {
+    // The workspace package of that name is the one installed at the root
+    if (index.workspaceNames.has(packageName)) {
+      continue;
+    }
     const hoistedNodeKey = `npm:${packageName}`;
 
     if (shouldCreateHoistedNode(packageName, lockFile, index)) {
@@ -1365,23 +1444,17 @@ function getHoistedVersion(
 function findResolvedVersion(
   packageName: string,
   versionSpec: string,
-  index: PackageIndex,
-  manifests?: BunLockFile['manifests']
+  index: PackageIndex
 ): string | null {
   // Resolution depends only on (packageName, versionSpec) for a given lockfile
-  // (index and manifests are constant per parse), so memoize across edges.
+  // (the index is constant per parse), so memoize across edges.
   const cacheKey = `${packageName}\n${versionSpec}`;
   const cached = resolvedVersionCache.get(cacheKey);
   if (cached !== undefined) {
     return cached;
   }
 
-  const resolved = computeResolvedVersion(
-    packageName,
-    versionSpec,
-    index,
-    manifests
-  );
+  const resolved = computeResolvedVersion(packageName, versionSpec, index);
   resolvedVersionCache.set(cacheKey, resolved);
   return resolved;
 }
@@ -1389,29 +1462,11 @@ function findResolvedVersion(
 function computeResolvedVersion(
   packageName: string,
   versionSpec: string,
-  index: PackageIndex,
-  manifests?: BunLockFile['manifests']
+  index: PackageIndex
 ): string | null {
   // O(1) lookup
   const candidates = index.byName.get(packageName);
   if (!candidates || candidates.length === 0) {
-    // Try to find in manifests as fallback
-    if (manifests) {
-      const exactManifestKey = `${packageName}@${versionSpec}`;
-      if (manifests[exactManifestKey]) {
-        return versionSpec;
-      }
-
-      const manifestKey = Object.keys(manifests).find((key) =>
-        key.startsWith(`${packageName}@`)
-      );
-      if (manifestKey) {
-        const manifest = manifests[manifestKey];
-        if (manifest.version) {
-          return manifest.version;
-        }
-      }
-    }
     return null;
   }
 
@@ -1522,4 +1577,67 @@ function findBestVersionMatch(
   }
 
   return best.version;
+}
+
+// A scoped name (`@scope/name`) is one segment.
+function splitBunPackageKey(key: string): string[] {
+  const parts = key.split('/');
+  const segments: string[] = [];
+  for (let i = 0; i < parts.length; i++) {
+    segments.push(
+      parts[i].startsWith('@') && i + 1 < parts.length
+        ? `${parts[i]}/${parts[++i]}`
+        : parts[i]
+    );
+  }
+  return segments;
+}
+
+// A bun.lock key is the package's path in the hoisted tree (`a/b` is `b` nested
+// under `a`), and a dependency resolves to the nearest key on its dependent's
+// path. A workspace's scope is its name, so `<workspace name>/<name>` comes first.
+function findNearestBunPackageKey(
+  scope: string[],
+  name: string,
+  hasKey: (key: string) => boolean
+): string | undefined {
+  for (let depth = scope.length; depth >= 0; depth--) {
+    const key = [...scope.slice(0, depth), name].join('/');
+    if (hasKey(key)) {
+      return key;
+    }
+  }
+}
+
+/**
+ * Hashes the patch files the root package.json declares, keyed by the declared
+ * path. bun.lock records only the path, so these hashes are what change when a
+ * patch file does. A missing file gets its own hash, apart from an unpatched
+ * package's.
+ */
+export function getBunPatchFileHashes(
+  workspaceRootPath: string
+): Map<string, string> {
+  const hashes = new Map<string, string>();
+  const rootPackageJsonPath = join(workspaceRootPath, 'package.json');
+  if (!existsSync(rootPackageJsonPath)) {
+    return hashes;
+  }
+  const { patchedDependencies } =
+    readJsonFile<PackageJson>(rootPackageJsonPath);
+  for (const patchPath of Object.values(patchedDependencies ?? {})) {
+    if (typeof patchPath !== 'string' || hashes.has(patchPath)) {
+      continue;
+    }
+    const source = isAbsolute(patchPath)
+      ? patchPath
+      : join(workspaceRootPath, patchPath);
+    hashes.set(
+      patchPath,
+      fileExists(source)
+        ? hashFile(source)
+        : hashArray([`missing patch ${patchPath}`])
+    );
+  }
+  return hashes;
 }

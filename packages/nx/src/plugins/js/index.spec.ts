@@ -8,7 +8,16 @@ import {
 } from 'node:fs';
 import { dirname, join } from 'node:path';
 import type { ProjectGraphExternalNode } from '../../config/project-graph';
+import {
+  localPathPackagesBunLock,
+  workspaceNameLocalPathBunLock,
+} from './lock-file/__fixtures__/bun/local-path-packages.bun.lock';
 import { linkedProjectBunLock } from './lock-file/__fixtures__/bun/linked-project.bun.lock';
+import { overriddenLocalPathBunLock } from './lock-file/__fixtures__/bun/overridden-local-path.bun.lock';
+import {
+  patchedPackagesBunLock,
+  unpatchedPackagesBunLock,
+} from './lock-file/__fixtures__/bun/patched-packages.bun.lock';
 import linkedProjectPnpmLock from './lock-file/__fixtures__/linked-project/pnpm-lock.yaml';
 import localPathPackagesPnpmLock from './lock-file/__fixtures__/local-path-packages/pnpm-lock.yaml';
 import overriddenLocalPathPnpmLock from './lock-file/__fixtures__/overridden-local-path/pnpm-lock.yaml';
@@ -275,7 +284,71 @@ describe('nx/js/dependencies-and-lockfile', () => {
     ]);
   });
 
-  it.each([['pnpm-lock.yaml', localPathPackagesPnpmLock]])(
+  it('should hash the patch files of patched Bun packages', async () => {
+    const dependencies = {
+      'is-odd': '1.0.0',
+      'odd-alias': 'npm:is-odd@2.0.0',
+      'left-pad': '1.1.0',
+    };
+    const writeBunWorkspace = (
+      patchedDependencies: Record<string, string> | undefined
+    ) => {
+      write(
+        'package.json',
+        JSON.stringify({ name: 'root', dependencies, patchedDependencies })
+      );
+      write(
+        'bun.lock',
+        patchedDependencies ? patchedPackagesBunLock : unpatchedPackagesBunLock
+      );
+    };
+    const hashes = async () => {
+      const nodes = await createExternalNodes(
+        await loadPluginInNewProcess(),
+        'bun.lock'
+      );
+      return Object.fromEntries(
+        ['npm:is-odd@1.0.0', 'npm:odd-alias', 'npm:is-odd@2.0.0'].map(
+          (name) => [name, nodes[name].data.hash]
+        )
+      );
+    };
+    writeBunWorkspace(undefined);
+    const unpatched = await hashes();
+
+    write('patches/is-odd@1.0.0.patch', 'P1');
+    write('custom/is-odd@2.0.0.patch', 'A1');
+    writeBunWorkspace({
+      'is-odd@1.0.0': 'patches/is-odd@1.0.0.patch',
+      'is-odd@2.0.0': 'custom/is-odd@2.0.0.patch',
+    });
+    const patched = await hashes();
+    // bun.lock records only the path, so an edit leaves the lockfile as is.
+    write('patches/is-odd@1.0.0.patch', 'P2');
+    const edited = await hashes();
+    rmSync(join(root, 'patches/is-odd@1.0.0.patch'));
+    const missing = await hashes();
+
+    for (const name of Object.keys(unpatched)) {
+      expect(patched[name]).not.toBe(unpatched[name]);
+    }
+    expect(edited['npm:is-odd@1.0.0']).not.toBe(patched['npm:is-odd@1.0.0']);
+    expect(edited['npm:odd-alias']).toBe(patched['npm:odd-alias']);
+    expect(missing['npm:is-odd@1.0.0']).not.toBe(unpatched['npm:is-odd@1.0.0']);
+    expect(missing['npm:is-odd@1.0.0']).not.toBe(edited['npm:is-odd@1.0.0']);
+    expect(
+      (await createExternalNodes(await loadPluginInNewProcess(), 'bun.lock'))[
+        'npm:left-pad@1.1.0'
+      ].data.hash
+    ).toBe(
+      'sha512-C8cw/7VpfXLj8Yjlmux8lqb3mfIe3vEXTdik/cXTuzZ8FXJnu45UAWp94XlWWmcW7Yxl74wvHw8w10wIHNGHRQ=='
+    );
+  });
+
+  it.each([
+    ['bun.lock', localPathPackagesBunLock],
+    ['pnpm-lock.yaml', localPathPackagesPnpmLock],
+  ])(
     'should hash the contents of local path packages in %s',
     async (lockFile, lockFileContent) => {
       write(
@@ -342,9 +415,33 @@ describe('nx/js/dependencies-and-lockfile', () => {
     }
   );
 
+  // apps/api vendors its own `util`, and apps/web links the workspace `util`.
+  it('should hash a vendored package named like a workspace package in bun.lock', async () => {
+    write('package.json', JSON.stringify({ name: 'root' }));
+    write('bun.lock', workspaceNameLocalPathBunLock);
+    write('vendor/util/index.js', 'V1');
+    const before = await createExternalNodes(
+      await loadPluginInNewProcess(),
+      'bun.lock'
+    );
+    write('vendor/util/index.js', 'V2');
+    const after = await createExternalNodes(
+      await loadPluginInNewProcess(),
+      'bun.lock'
+    );
+
+    expect(Object.keys(before)).toEqual(['npm:util@file:vendor/util']);
+    expect(after['npm:util@file:vendor/util'].data.hash).not.toBe(
+      before['npm:util@file:vendor/util'].data.hash
+    );
+  });
+
   // lib and control declare the vendored `ms`, and an override installs the
   // registry `ms` of the same version for lib.
-  it.each([['pnpm-lock.yaml', overriddenLocalPathPnpmLock, 'npm:ms']])(
+  it.each([
+    ['pnpm-lock.yaml', overriddenLocalPathPnpmLock, 'npm:ms'],
+    ['bun.lock', overriddenLocalPathBunLock, 'npm:ms@2.1.3'],
+  ])(
     'should depend on the copy each project installs when an override replaces a local package in %s',
     async (lockFile, lockFileContent, registryNode) => {
       write(
@@ -403,7 +500,12 @@ describe('nx/js/dependencies-and-lockfile', () => {
   // workspaces.
   it.each([
     ['pnpm-lock.yaml', linkedProjectPnpmLock, 'npm:x', 'npm:x'],
-    ['bun.lock', linkedProjectBunLock, 'npm:x', 'npm:x'],
+    [
+      'bun.lock',
+      linkedProjectBunLock,
+      'npm:x@link:./libs/x/dist',
+      'npm:x@link:./vendor/x',
+    ],
   ])(
     'should depend on the project a link points to and on the link in %s',
     async (lockFile, lockFileContent, projectLinkNode, vendoredNode) => {
