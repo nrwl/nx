@@ -20,5 +20,5 @@ export interface ApplicationGeneratorOptions {
 
 interface NormalizedOptions extends ApplicationGeneratorOptions {
   appProjectName: string;
-  appProjectRoot: Path;
+  appProjectRoot: string;
 }

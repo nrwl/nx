@@ -39,5 +39,5 @@ export interface NormalizedOptions extends LibraryGeneratorOptions {
   parsedTags: string[];
   prefix: string;
   projectName: string;
-  projectRoot: Path;
+  projectRoot: string;
 }
