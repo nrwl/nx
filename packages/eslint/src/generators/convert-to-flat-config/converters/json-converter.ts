@@ -17,18 +17,22 @@ import { mapFilePath } from '../../utils/flat-config/path-utils';
 // Rewrites legacy `.eslintrc[.base][.json]`, `.eslintrc.{yaml,yml,js,cjs}` / `.eslintignore`
 // filenames to their flat-config counterparts. Used for `extends` local paths, rule option
 // values that embed these filenames, and, with `*` as the format, nx.json / project.json
-// inputs that referenced them. Also accepts extensionless `.eslintrc`.
+// inputs that referenced them. Also accepts extensionless `.eslintrc`. A name that only ends in
+// one, such as `shared.eslintrc.json`, is a file ESLint never loads by itself, so it keeps its name.
 export function renameLegacyEslintrcFile(
   path: string,
   format: 'mjs' | 'cjs' | '*'
 ): string {
   return path
     .replace(
-      /(^|.*?)\.eslintrc(\.base)?(\.json)?$/,
+      /(^|.*[^\w-])\.eslintrc(\.base)?(\.json)?$/,
       `$1eslint$2.config.${format}`
     )
-    .replace(/(^|.*?)\.eslintrc\.(ya?ml|c?js)$/, `$1eslint.config.${format}`)
-    .replace(/(^|.*?)\.eslintignore$/, `$1eslint.config.${format}`);
+    .replace(
+      /(^|.*[^\w-])\.eslintrc\.(ya?ml|c?js)$/,
+      `$1eslint.config.${format}`
+    )
+    .replace(/(^|.*[^\w-])\.eslintignore$/, `$1eslint.config.${format}`);
 }
 
 // In flat config, `@nx/workspace/<rule>` is parsed as plugin `@nx/workspace`, rule `<rule>`.
