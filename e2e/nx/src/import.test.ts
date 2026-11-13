@@ -88,6 +88,8 @@ describe('Nx Import', () => {
       `import ${remote} ${directory} --ref ${ref} --source ${source} --no-interactive`,
       {
         verbose: true,
+        // nx import reports a failed install on stderr and still exits 0.
+        redirectStderr: true,
         // The imported app's installs can take longer than 300 s on crowded CI agents.
         timeout: 10 * 60 * 1000,
       }
