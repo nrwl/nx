@@ -5218,6 +5218,84 @@ describe('targets another source already provides', () => {
     expect(resolved['libs/proto'].build.options.command).toBe('acme-build');
   });
 
+  it('keeps a project converted in an earlier run reachable when a later run fences its parent', async () => {
+    ctx = setupFixture('collision-earlier-run-under-fence');
+    addExecutorProject(ctx, {
+      name: 'libs',
+      root: 'libs',
+      target: uniformExecutorTarget(),
+    });
+    addGradleProject('proto', 'libs/proto');
+    addExecutorProject(ctx, {
+      name: 'sub',
+      root: 'libs/proto/sub',
+      target: uniformExecutorTarget(),
+    });
+    registerGradlePlugin();
+
+    await migrate(vi.fn(), 'sub');
+    const { plugin, warn } = await migrate();
+
+    expect(syntheticRegistrations()[0].exclude).toEqual([
+      'libs/proto/**/*',
+      '!libs/proto/sub/**/*',
+    ]);
+    expect(warnings(warn)).toContainEqual(
+      expect.stringContaining(
+        'did not apply @acme/tool/plugin to project "proto" (libs/proto)'
+      )
+    );
+    const resolved = await resolve(plugin);
+    expect(resolved['libs/proto/sub'].build.options.command).toBe('acme-build');
+    expect(resolved['libs/proto'].build.options.command).toBe(
+      './gradlew build'
+    );
+    expect(resolved['libs'].build.options.command).toBe('acme-build');
+  });
+
+  it('does not re-admit a project an existing exclude keeps out when a later run fences its parent', async () => {
+    ctx = setupFixture('collision-excluded-under-new-fence');
+    addExecutorProject(ctx, {
+      name: 'libs',
+      root: 'libs',
+      target: uniformExecutorTarget(),
+    });
+    addGradleProject('proto', 'libs/proto');
+    addExecutorProject(ctx, {
+      name: 'sub',
+      root: 'libs/proto/sub',
+      targetName: 'unrelated',
+      executor: '@other/tool:noop',
+    });
+    // keeps the include scoped
+    addExecutorProject(ctx, {
+      name: 'other',
+      root: 'other',
+      targetName: 'unrelated',
+      executor: '@other/tool:noop',
+    });
+    const nxJson = readNxJson(ctx.tree);
+    nxJson.plugins = [
+      GRADLE_PLUGIN_PATH,
+      {
+        plugin: SYNTHETIC_PLUGIN_PATH,
+        options: { targetName: 'build' },
+        include: ['libs/proto/sub/**/*'],
+        exclude: ['libs/proto/sub/**/*'],
+      },
+    ];
+    updateNxJson(ctx.tree, nxJson);
+
+    const { plugin } = await migrate();
+
+    expect(syntheticRegistrations()[0].exclude).toEqual([
+      'libs/proto/sub/**/*',
+      'libs/proto/**/*',
+    ]);
+    const resolved = await resolve(plugin);
+    expect(resolved['libs/proto/sub']?.build).toBeUndefined();
+  });
+
   it.each([
     ['unscoped', undefined],
     ['scoped', ['libs/**/*']],

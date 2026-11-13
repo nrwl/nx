@@ -2665,7 +2665,8 @@ function addPluginRegistrations<T>(
   /**
    * Rewrites `registration.exclude` so it fences off the non-migrated projects
    * whose targets the widened registration would take over, and admits every
-   * project this run migrates. Returns the fenced roots.
+   * project this run migrates or `before` already reached. Returns the fenced
+   * roots.
    */
   const fenceRegistration = (
     registration: ExpandedPluginConfiguration,
@@ -2700,11 +2701,27 @@ function addPluginRegistrations<T>(
       glob: rootIncludeGlob(root),
     }));
     const withFences = [...kept, ...added.map(({ glob }) => glob)];
-    for (const root of roots) {
-      const ownFiles = configFilesByOwner.get(root) ?? [];
+    const mustStayReached = new Map(
+      roots.map((root) => [root, configFilesByOwner.get(root) ?? []])
+    );
+    if (before) {
+      for (const [root, ownFiles] of configFilesByOwner) {
+        if (!mustStayReached.has(root)) {
+          mustStayReached.set(
+            root,
+            findMatchingConfigFiles(
+              ownFiles,
+              before.include ?? [],
+              before.exclude ?? []
+            )
+          );
+        }
+      }
+    }
+    for (const [root, reachedFiles] of mustStayReached) {
       if (
-        findMatchingConfigFiles(ownFiles, [], withFences).length <
-        ownFiles.length
+        findMatchingConfigFiles(reachedFiles, [], withFences).length <
+        reachedFiles.length
       ) {
         added.push({ root, glob: `!${rootIncludeGlob(root)}` });
       }
