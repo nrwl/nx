@@ -7,6 +7,8 @@ const {
   parseFiles,
   splitArgsIntoNxArgsAndOverrides,
 } = require('nx/src/utils/command-line-utils');
+const { readFileIfExisting } = require('nx/src/utils/fileutils');
+const { getIgnoreObject } = require('nx/src/utils/ignore');
 const { output } = require('nx/src/utils/output');
 
 // The files `nx format:check` checks: changes since the merge-base with the
@@ -19,8 +21,11 @@ const { nxArgs } = splitArgsIntoNxArgsAndOverrides(
   readNxJson()
 );
 let chunks;
+let ignoreArgs = [];
 try {
-  const files = parseFiles(nxArgs).files.filter((file) => existsSync(file));
+  const files = getIgnoreObject().filter(
+    parseFiles(nxArgs).files.filter((file) => existsSync(file))
+  );
   chunks = files.length > 0 ? chunkify(files) : [];
 } catch (err) {
   output.error({
@@ -29,6 +34,11 @@ try {
       'Something went wrong when resolving the list of files for oxlint',
     bodyLines: ['Linting all files'],
   });
+  // Oxlint's own walk reads .gitignore but not .nxignore.
+  ignoreArgs = readFileIfExisting('.nxignore')
+    .split(/\r?\n/)
+    .filter((line) => line.trim() && !line.startsWith('#'))
+    .map((pattern) => `--ignore-pattern=${pattern}`);
   chunks = [[]];
 }
 
@@ -41,7 +51,13 @@ let failed = false;
 for (const chunk of chunks) {
   const result = spawnSync(
     process.execPath,
-    [oxlintBin, '--no-error-on-unmatched-pattern', '--', ...chunk],
+    [
+      oxlintBin,
+      '--no-error-on-unmatched-pattern',
+      ...ignoreArgs,
+      '--',
+      ...chunk,
+    ],
     { stdio: 'inherit' }
   );
   if (result.error) {
