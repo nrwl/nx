@@ -13,6 +13,7 @@
     <a href="https://www.npmjs.com/package/nx"><img src="https://img.shields.io/npm/v/nx.svg?style=for-the-badge" alt="NPM Version"></a>
     <a href="https://github.com/nrwl/nx"><img src="https://img.shields.io/github/stars/nrwl/nx?style=for-the-badge&logo=github" alt="GitHub Stars"></a>
     <a href=""><img src="https://img.shields.io/npm/l/nx.svg?style=for-the-badge" alt="License"></a>
+    <a href="https://score.getplumber.io/github.com/nrwl/nx"><img src="https://img.shields.io/endpoint?url=https%3A%2F%2Fscore.getplumber.io%2Fgithub.com%2Fnrwl%2Fnx.json&style=for-the-badge" alt="Plumber Score"></a>
     <a href="https://go.nx.dev/community"><img src="https://img.shields.io/discord/1143497901675401286?label=discord&style=for-the-badge" alt="Discord"></a>
     <a href="https://x.com/nxdevtools"><img src="https://img.shields.io/badge/@nxdevtools-555?style=for-the-badge&logo=x" alt="X (Twitter)"></a>
     <a href="https://nx.dev/nx-cloud"><img src="https://img.shields.io/endpoint?url=https%3A%2F%2Fstaging.nx.app%2Fnx-cloud%2Fbadge%2F62d013ea0852fe0a2df74438%2Fhours-saved.json&style=for-the-badge" alt="Hours saved"></a>
