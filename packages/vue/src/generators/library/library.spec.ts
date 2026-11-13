@@ -78,10 +78,6 @@ describe('library', () => {
   });
 
   it('should add vue and vitest to package.json when non-buildable', async () => {
-    // Force the v9 flat-config lane. Jest's pnpm hoisting can resolve
-    // `require('eslint')` to a v8 copy in the workspace store, which would
-    // otherwise make `useFlatConfig` route the fresh-install lane through
-    // the v8/v7 stack and not match the v9/v8 snapshot.
     const original = process.env.ESLINT_USE_FLAT_CONFIG;
     process.env.ESLINT_USE_FLAT_CONFIG = 'true';
     try {
@@ -527,6 +523,30 @@ module.exports = [
       ]);
       expect(eslintConfig.overrides[0].files).toContain('*.vue');
     });
+  });
+
+  describe('eslintrc', () => {
+    it.each([
+      [undefined, 'plugin:vue/essential'],
+      ['^9.33.0', 'plugin:vue/vue3-essential'],
+    ])(
+      'extends the Vue 3 essential config when eslint-plugin-vue is %s',
+      async (declared, expected) => {
+        process.env.ESLINT_USE_FLAT_CONFIG = 'false';
+        if (declared) {
+          updateJson(tree, 'package.json', (json) => {
+            json.devDependencies['eslint-plugin-vue'] = declared;
+            return json;
+          });
+        }
+
+        await libraryGenerator(tree, defaultSchema);
+
+        expect(readJson(tree, 'my-lib/.eslintrc.json').extends).toContain(
+          expected
+        );
+      }
+    );
   });
 
   describe('TS solution setup', () => {

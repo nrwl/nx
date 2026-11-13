@@ -225,6 +225,60 @@ export default [
     expect(content).toContain('js.configs.recommended');
   });
 
+  it('drops the path and url imports that only built the FlatCompat baseDirectory', async () => {
+    setAngularEslintVersion('^22.0.0');
+    tree.write(
+      'apps/app/eslint.config.mjs',
+      `import { FlatCompat } from '@eslint/eslintrc';
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
+import js from '@eslint/js';
+
+const compat = new FlatCompat({
+  baseDirectory: dirname(fileURLToPath(import.meta.url)),
+  recommendedConfig: js.configs.recommended,
+});
+
+export default [...compat.extends('plugin:@angular-eslint/recommended')];
+`
+    );
+
+    await migrateAngularEslintV22FlatConfig(tree);
+
+    const content = tree.read('apps/app/eslint.config.mjs', 'utf-8');
+    expect(content).not.toContain('new FlatCompat');
+    expect(content).not.toContain(`from 'path'`);
+    expect(content).not.toContain(`from 'url'`);
+  });
+
+  it('keeps a path or url import that binds another name or is still referenced', async () => {
+    setAngularEslintVersion('^22.0.0');
+    tree.write(
+      'apps/app/eslint.config.mjs',
+      `import { FlatCompat } from '@eslint/eslintrc';
+import { dirname, join } from 'path';
+import { fileURLToPath } from 'url';
+
+const here = fileURLToPath(import.meta.url);
+const compat = new FlatCompat({
+  baseDirectory: dirname(here),
+});
+
+export default [
+  ...compat.extends('plugin:@angular-eslint/recommended'),
+  { ignores: [join(here, 'dist')] },
+];
+`
+    );
+
+    await migrateAngularEslintV22FlatConfig(tree);
+
+    const content = tree.read('apps/app/eslint.config.mjs', 'utf-8');
+    expect(content).not.toContain('new FlatCompat');
+    expect(content).toContain(`import { dirname, join } from 'path';`);
+    expect(content).toContain(`import { fileURLToPath } from 'url';`);
+  });
+
   it('does not delete a trailing comment on the preceding rule', async () => {
     setAngularEslintVersion('^22.0.0');
     tree.write(

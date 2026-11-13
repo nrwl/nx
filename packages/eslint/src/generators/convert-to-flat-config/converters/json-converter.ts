@@ -1,4 +1,4 @@
-import { Tree, names } from '@nx/devkit';
+import { joinPathFragments, logger, Tree, names } from '@nx/devkit';
 import { ESLint } from 'eslint';
 import * as ts from 'typescript';
 import {
@@ -14,20 +14,25 @@ import {
 import { getPluginImport } from '../../utils/eslint-file';
 import { mapFilePath } from '../../utils/flat-config/path-utils';
 
-// Rewrites legacy `.eslintrc[.base][.json]` / `.eslintignore` filenames to their flat-config
-// counterparts. Used for `extends` local paths, rule option values that embed these filenames,
-// and nx.json / project.json input globs that referenced the deleted files. Accepts
-// extensionless `.eslintrc` since ESLint treats that as JSON by convention.
+// Rewrites legacy `.eslintrc[.base][.json]`, `.eslintrc.{yaml,yml,js,cjs}` / `.eslintignore`
+// filenames to their flat-config counterparts. Used for `extends` local paths, rule option
+// values that embed these filenames, and, with `*` as the format, nx.json / project.json
+// inputs that referenced them. Also accepts extensionless `.eslintrc`. A name that only ends in
+// one, such as `shared.eslintrc.json`, is a file ESLint never loads by itself, so it keeps its name.
 export function renameLegacyEslintrcFile(
   path: string,
-  format: 'mjs' | 'cjs'
+  format: 'mjs' | 'cjs' | '*'
 ): string {
   return path
     .replace(
-      /(^|.*?)\.eslintrc(\.base)?(\.json)?$/,
+      /(^|.*[^\w-])\.eslintrc(\.base)?(\.json)?$/,
       `$1eslint$2.config.${format}`
     )
-    .replace(/(^|.*?)\.eslintignore$/, `$1eslint.config.${format}`);
+    .replace(
+      /(^|.*[^\w-])\.eslintrc\.(ya?ml|c?js)$/,
+      `$1eslint.config.${format}`
+    )
+    .replace(/(^|.*[^\w-])\.eslintignore$/, `$1eslint.config.${format}`);
 }
 
 // In flat config, `@nx/workspace/<rule>` is parsed as plugin `@nx/workspace`, rule `<rule>`.
@@ -46,7 +51,7 @@ function renameLegacyWorkspaceRules(
   return renamed;
 }
 
-// Rewrites references to the legacy `.eslintrc[.base].json` / `.eslintignore` that may appear
+// Rewrites references to the legacy eslintrc / `.eslintignore` files that may appear
 // inside rule option values (e.g. `@nx/dependency-checks`'s `ignoredFiles`) to point at the
 // generated flat-config files instead. Without this, rule options keep pointing at files that
 // no longer exist after the conversion.
@@ -88,15 +93,23 @@ function preprocessRules(
 
 /**
  * Converts an ESLint JSON config to a flat config.
- * Deletes the original file along with .eslintignore if it exists.
+ *
+ * `convertedEslintrcFiles` holds the workspace-relative eslintrc files the same
+ * run converts. A local extends becomes an import only when it resolves to one of them.
  */
 export function convertEslintJsonToFlatConfig(
   tree: Tree,
   root: string,
   config: ESLint.ConfigData,
   ignorePaths: string[],
-  format: 'cjs' | 'mjs'
-): { content: string; addESLintRC: boolean; addESLintJS: boolean } {
+  format: 'cjs' | 'mjs',
+  convertedEslintrcFiles: ReadonlySet<string>
+): {
+  content: string;
+  addESLintRC: boolean;
+  addESLintJS: boolean;
+  addGlobals: boolean;
+} {
   const importsMap = new Map<string, string>();
   const exportElements: ts.Expression[] = [];
   let isFlatCompatNeeded = false;
@@ -126,10 +139,13 @@ export function convertEslintJsonToFlatConfig(
 
   if (config.extends) {
     const extendsResult = addExtends(
+      tree,
+      root,
       importsMap,
       exportElements,
       config,
-      format
+      format,
+      convertedEslintrcFiles
     );
     isFlatCompatNeeded = extendsResult.isFlatCompatNeeded;
     isESLintJSNeeded = extendsResult.isESLintJSNeeded;
@@ -161,8 +177,21 @@ export function convertEslintJsonToFlatConfig(
     );
   }
 
-  if (config.globals || config.env) {
-    if (config.env) {
+  // Like FlatCompat, add only enabled environments. Setting a disabled one's globals
+  // to "off" would also turn off the ones that other enabled environments define.
+  const envs = Object.keys(config.env ?? {});
+  const enabledEnvs = envs.filter((env) => config.env[env]);
+  for (const env of envs.filter((env) => !config.env[env])) {
+    logger.warn(
+      `The ESLint config in "${root || '.'}" disables the "${env}" environment. ` +
+        `The flat config does not add its globals, but keeps the ones that extended configs define. ` +
+        `Set those globals to "off" in "languageOptions.globals" if the project must not use them.`
+    );
+  }
+
+  if (config.globals || enabledEnvs.length) {
+    const builtInEnvs = enabledEnvs.filter((env) => !isPluginEnvironment(env));
+    if (builtInEnvs.length) {
       importsMap.set('globals', 'globals');
     }
 
@@ -170,13 +199,13 @@ export function convertEslintJsonToFlatConfig(
       ts.factory.createPropertyAssignment(
         'globals',
         ts.factory.createObjectLiteralExpression([
-          ...Object.keys(config.env || {}).map((env) =>
+          ...builtInEnvs.map((env) =>
             ts.factory.createSpreadAssignment(
-              ts.factory.createPropertyAccessExpression(
-                ts.factory.createIdentifier('globals'),
-                ts.factory.createIdentifier(env)
-              )
+              accessProperty(ts.factory.createIdentifier('globals'), env)
             )
+          ),
+          ...getPluginEnvironmentGlobals(config.env, importsMap).map((env) =>
+            ts.factory.createSpreadAssignment(env)
           ),
           ...Object.keys(config.globals || {}).map((key) =>
             ts.factory.createPropertyAssignment(
@@ -287,7 +316,12 @@ export function convertEslintJsonToFlatConfig(
               isFlatCompatNeeded = true;
             }
             exportElements.push(
-              generateFlatOverride(remainingOverride, format, importsMap)
+              generateFlatOverride(
+                remainingOverride,
+                format,
+                importsMap,
+                getPluginEnvironmentGlobals(remainingOverride.env, importsMap)
+              )
             );
           }
           return;
@@ -297,7 +331,14 @@ export function convertEslintJsonToFlatConfig(
       if (override.env || override.extends || override.plugins) {
         isFlatCompatNeeded = true;
       }
-      exportElements.push(generateFlatOverride(override, format, importsMap));
+      exportElements.push(
+        generateFlatOverride(
+          override,
+          format,
+          importsMap,
+          getPluginEnvironmentGlobals(override.env, importsMap)
+        )
+      );
     });
   }
 
@@ -348,15 +389,39 @@ export function convertEslintJsonToFlatConfig(
     content,
     addESLintRC: isFlatCompatNeeded,
     addESLintJS: isESLintJSNeeded,
+    addGlobals: importsMap.has('globals'),
   };
+}
+
+// Returns the extends path with the suffix Node resolves it to (`.eslintrc` -> `.eslintrc.json`)
+// when the run converts that file. Converted root configs are already deleted from the tree.
+function resolveConvertedExtends(
+  tree: Tree,
+  root: string,
+  extendsPath: string,
+  convertedEslintrcFiles: ReadonlySet<string>
+): string | undefined {
+  for (const suffix of ['', '.js', '.json']) {
+    const candidate = joinPathFragments(root, extendsPath + suffix);
+    if (convertedEslintrcFiles.has(candidate)) {
+      return extendsPath + suffix;
+    }
+    if (tree.isFile(candidate)) {
+      return undefined;
+    }
+  }
+  return undefined;
 }
 
 // add parsed extends to export blocks and add import statements
 function addExtends(
+  tree: Tree,
+  root: string,
   importsMap: Map<string, string | string[]>,
   configBlocks: ts.Expression[],
   config: ESLint.ConfigData,
-  format: 'mjs' | 'cjs'
+  format: 'mjs' | 'cjs',
+  convertedEslintrcFiles: ReadonlySet<string>
 ): { isFlatCompatNeeded: boolean; isESLintJSNeeded: boolean } {
   let isFlatCompatNeeded = false;
   let isESLintJSNeeded = false;
@@ -370,10 +435,20 @@ function addExtends(
   extendsConfig
     .filter((imp) => imp.match(/^\.?(\.\/)/))
     .forEach((imp, index) => {
-      if (imp.match(/\.eslintrc(\.base)?(\.json)?$/)) {
+      // Any other local file stays in place, so it keeps loading through FlatCompat.
+      const convertedFile = resolveConvertedExtends(
+        tree,
+        root,
+        imp,
+        convertedEslintrcFiles
+      );
+      if (convertedFile) {
         const localName = index ? `baseConfig${index}` : 'baseConfig';
         configBlocks.push(generateSpreadElement(localName));
-        importsMap.set(renameLegacyEslintrcFile(imp, format), localName);
+        importsMap.set(
+          renameLegacyEslintrcFile(convertedFile, format),
+          localName
+        );
       } else {
         eslintrcConfigs.push(imp);
       }
@@ -481,6 +556,66 @@ function addPlugins(
     false
   );
   configBlocks.push(pluginsAst);
+}
+
+// Built-in environments have no slash. eslintrc names a plugin's as `<plugin>/<name>`.
+function isPluginEnvironment(env: string): boolean {
+  return env.includes('/');
+}
+
+// Flat config has no environments. eslintrc reads `<plugin>/<name>` from the
+// plugin's `environments[name]`, so spread that environment's globals from the plugin.
+// A plugin release without that export, such as eslint-plugin-cypress 5, then adds
+// no globals instead of failing the config at load.
+function getPluginEnvironmentGlobals(
+  env: ESLint.ConfigData['env'],
+  importsMap: Map<string, string | string[]>
+): ts.Expression[] {
+  return Object.keys(env ?? {})
+    .filter((name) => env[name] && isPluginEnvironment(name))
+    .map((name) => {
+      const separator = name.lastIndexOf('/');
+      const imp = getPluginImport(name.slice(0, separator));
+      const varName =
+        (importsMap.get(imp) as string) ?? names(imp).propertyName;
+      importsMap.set(imp, varName);
+      return ts.factory.createPropertyAccessChain(
+        accessProperty(
+          ts.factory.createPropertyAccessExpression(
+            ts.factory.createIdentifier(varName),
+            'environments'
+          ),
+          name.slice(separator + 1),
+          ts.factory.createToken(ts.SyntaxKind.QuestionDotToken)
+        ),
+        ts.factory.createToken(ts.SyntaxKind.QuestionDotToken),
+        'globals'
+      );
+    });
+}
+
+// `globals.shared-node-browser` would read as a subtraction.
+function accessProperty(
+  object: ts.Expression,
+  name: string,
+  questionDotToken?: ts.QuestionDotToken
+): ts.Expression {
+  const isIdentifier = /^[A-Za-z_$][\w$]*$/.test(name);
+  if (questionDotToken) {
+    return isIdentifier
+      ? ts.factory.createPropertyAccessChain(object, questionDotToken, name)
+      : ts.factory.createElementAccessChain(
+          object,
+          questionDotToken,
+          ts.factory.createStringLiteral(name)
+        );
+  }
+  return isIdentifier
+    ? ts.factory.createPropertyAccessExpression(object, name)
+    : ts.factory.createElementAccessExpression(
+        object,
+        ts.factory.createStringLiteral(name)
+      );
 }
 
 const nxPluginToFlatConfigMap: Record<string, string> = {

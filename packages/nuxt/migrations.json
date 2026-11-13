@@ -40,6 +40,18 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "24.1.0-nuxt-eslint-config": {
+      "version": "24.1.0-beta.1",
+      "requires": {
+        "@nuxt/eslint-config": ">=1.0.0 <1.15.0"
+      },
+      "packages": {
+        "@nuxt/eslint-config": {
+          "version": "^1.16.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }

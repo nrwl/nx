@@ -329,7 +329,7 @@ describe('@nx/vite:configuration', () => {
         .toMatchInlineSnapshot(`
         "import baseConfig from '../eslint.config.mjs';
 
-        export default [
+        const eslintConfig = [
           ...baseConfig,
           {
             files: ['**/*.json'],
@@ -349,6 +349,8 @@ describe('@nx/vite:configuration', () => {
             },
           },
         ];
+
+        export default eslintConfig;
         "
       `);
     });
