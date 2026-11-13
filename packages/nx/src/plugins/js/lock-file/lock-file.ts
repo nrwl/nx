@@ -94,6 +94,8 @@ const BUN_TEXT_LOCK_PATH = join(workspaceRoot, BUN_TEXT_LOCK_FILE);
 
 /**
  * Parses the lockfile into external nodes, plus the keyMap that getLockFileDependencies reads.
+ * `localPathSources` lists the workspace-relative sources of the nodes installed
+ * from the local file tree, whose contents the node hashes do not cover.
  * `installedLocalPathNodes` names the local-path node each importer installs
  * per dependency name, keyed by the importer's path ('.' for the root).
  */
@@ -106,6 +108,7 @@ export function getLockFileNodes(
 ): {
   nodes: Record<string, ProjectGraphExternalNode>;
   keyMap: Map<string, any>;
+  localPathSources?: Record<string, string[]>;
   installedLocalPathNodes: Record<string, Record<string, string>>;
 } {
   try {
@@ -140,6 +143,7 @@ export function getLockFileNodesForName(
 ): {
   nodes: Record<string, ProjectGraphExternalNode>;
   keyMap: Map<string, any>;
+  localPathSources?: Record<string, string[]>;
   installedLocalPathNodes: Record<string, Record<string, string>>;
 } {
   if (lockFile === YARN_LOCK_FILE || lockFile === BUN_LOCK_FILE) {

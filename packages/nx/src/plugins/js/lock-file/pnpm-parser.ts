@@ -78,6 +78,8 @@ export function getPnpmLockfileNodes(
 ): {
   nodes: Record<string, ProjectGraphExternalNode>;
   keyMap: Map<string, Set<ProjectGraphExternalNode>>;
+  /** Workspace-relative local path sources per node name. */
+  localPathSources: Record<string, string[]>;
   /** The `file:` node each importer installs, per importer path and name. */
   installedLocalPathNodes: Record<string, Record<string, string>>;
 } {
@@ -246,21 +248,25 @@ function findPatchHash(
   return nameOnlyMatch?.hash;
 }
 
-// Segment-aware: `..` and `../x` escape, a directory literally named `..cache`
-// does not. Absolute targets are resolved against the workspace root.
-function linkTargetEscapesWorkspace(
+// The workspace-relative target of a `link:` version, or undefined when it
+// escapes the workspace. Segment-aware: `..` and `../x` escape, a directory
+// literally named `..cache` does not. Absolute targets are resolved against
+// the workspace root.
+function getLinkTargetInWorkspace(
   importerPath: string,
   depVersion: string
-): boolean {
+): string | undefined {
   const rawTarget = depVersion.slice('link:'.length);
   if (posix.isAbsolute(rawTarget) || isAbsolute(rawTarget)) {
     const rel = relative(workspaceRoot, rawTarget);
-    return rel === '..' || rel.startsWith(`..${sep}`) || isAbsolute(rel);
+    return rel === '..' || rel.startsWith(`..${sep}`) || isAbsolute(rel)
+      ? undefined
+      : posix.normalize(rel.split(sep).join('/'));
   }
   const combined = posix.normalize(
     posix.join(importerPath === '.' ? '' : importerPath, rawTarget)
   );
-  return combined === '..' || combined.startsWith('../');
+  return combined === '..' || combined.startsWith('../') ? undefined : combined;
 }
 
 function getNodes(
@@ -269,6 +275,7 @@ function getNodes(
 ): {
   nodes: Record<string, ProjectGraphExternalNode>;
   keyMap: Map<string, Set<ProjectGraphExternalNode>>;
+  localPathSources: Record<string, string[]>;
   installedLocalPathNodes: Record<string, Record<string, string>>;
 } {
   cachedInvertedRecords.clear();
@@ -528,22 +535,44 @@ function getNodes(
     });
   }
 
-  // `link:` dependencies pointing outside the workspace never appear in the
-  // packages section, so nothing above minted a node for them — and a task
-  // input naming one via `externalDependencies` fails hashing with "could not
-  // be found". Mint a node under the bare `npm:<name>`, hashed on the link
-  // path: the hash changes only when the path does, not when the linked
-  // content does, which is how linked dependencies behave everywhere else in
-  // Nx. Links that resolve inside the workspace are workspace projects, not
-  // externals, and are skipped.
-  //
-  // One node per package name, chosen deterministically by visiting importers
-  // root-first, then lexicographically. An `externalDependencies` input names
-  // a package, not a link target, so it could not distinguish two linked
-  // targets anyway.
+  // The sources of the packages installed from the local file tree, whose
+  // contents the lockfile does not record.
+  const localPathSources: Record<string, string[]> = {};
+  const addLocalPathSource = (nodeName: string, source: string) => {
+    const sources = (localPathSources[nodeName] ??= []);
+    if (!sources.includes(source)) {
+      sources.push(source);
+      sources.sort();
+    }
+  };
+  for (const [key, snapshot] of Object.entries(data.packages ?? {})) {
+    const resolution = snapshot.resolution as
+      | { directory?: string; tarball?: string }
+      | undefined;
+    const source =
+      resolution?.directory ??
+      (resolution?.tarball?.startsWith('file:')
+        ? resolution.tarball.slice('file:'.length)
+        : undefined);
+    if (typeof source !== 'string') {
+      continue;
+    }
+    for (const node of keyMap.get(key) ?? []) {
+      addLocalPathSource(node.name, posix.normalize(source));
+    }
+  }
+
+  // `link:` dependencies have no packages entry, so an `externalDependencies`
+  // input naming one fails hashing with "could not be found". Mint one node per
+  // name under the bare `npm:<name>`, hashed on the link path, visiting
+  // importers root-first, then lexicographically. The input names a package,
+  // not a target, so one node per name loses nothing. Each importer loads its
+  // own link, so the node's sources cover every target inside the workspace.
+  // Links to importers are workspace projects and are skipped.
   const importerPaths = Object.keys(data.importers ?? {}).sort((a, b) =>
     a === '.' ? -1 : b === '.' ? 1 : a.localeCompare(b)
   );
+  const importerPathSet = new Set(importerPaths);
   for (const importerPath of importerPaths) {
     const importer = data.importers[importerPath];
     for (const depType of [
@@ -559,22 +588,27 @@ function getNodes(
         if (typeof depVersion !== 'string' || !depVersion.startsWith('link:')) {
           continue;
         }
-        if (!linkTargetEscapesWorkspace(importerPath, depVersion)) {
-          continue; // inside the workspace -> a workspace project
+        const target = getLinkTargetInWorkspace(importerPath, depVersion);
+        if (target !== undefined && importerPathSet.has(target)) {
+          continue;
         }
         const bareName = `npm:${depName}`;
-        if (results[bareName]) {
-          continue; // a hoisted registry version or an earlier link wins
+        if (!results[bareName]) {
+          results[bareName] = {
+            type: 'npm',
+            name: bareName,
+            data: {
+              version: depVersion,
+              packageName: depName,
+              hash: hashArray([depName, depVersion]),
+            },
+          };
+        } else if (!results[bareName].data.version.startsWith('link:')) {
+          continue; // a hoisted registry version wins
         }
-        results[bareName] = {
-          type: 'npm',
-          name: bareName,
-          data: {
-            version: depVersion,
-            packageName: depName,
-            hash: hashArray([depName, depVersion]),
-          },
-        };
+        if (target !== undefined) {
+          addLocalPathSource(bareName, target);
+        }
       }
     }
   }
@@ -609,7 +643,7 @@ function getNodes(
     }
   }
 
-  return { nodes: results, keyMap, installedLocalPathNodes };
+  return { nodes: results, keyMap, localPathSources, installedLocalPathNodes };
 }
 
 // The version that gets the bare `npm:<name>` node when a package has several
@@ -1333,31 +1367,30 @@ function mapRootSnapshot(
               `file:workspace_modules/${packageName}`;
           }
         } else {
+          // peer dependencies are mapped to dependencies
+          const section =
+            depType === 'peerDependencies' ? 'dependencies' : depType;
+          if (version.startsWith('link:')) {
+            // A link: has no packages: entry, even when the graph has a node
+            // for it, so the importer records the manifest value as is.
+            snapshot.specifiers[packageName] = version;
+            snapshot[section] = snapshot[section] || {};
+            snapshot[section][packageName] = version;
+            return;
+          }
           let node =
             graph.externalNodes[`npm:${packageName}@${version}`] ||
             (graph.externalNodes[`npm:${packageName}`] &&
             graph.externalNodes[`npm:${packageName}`].data.version === version
               ? graph.externalNodes[`npm:${packageName}`]
               : findNodeMatchingVersion(graph, packageName, version));
-          // A file:/link: local-path dependency records a path where a version
-          // would go, so the lookups above never match it; findLocalPathNode
-          // matches it on that path instead.
+          // A file: local-path dependency records a path where a version would
+          // go, so the lookups above never match it; findLocalPathNode matches
+          // it on that path instead.
           if (!node && isLocalPathSpecifier(version)) {
             node = findLocalPathNode(graph, packageName, version);
           }
-          // peer dependencies are mapped to dependencies
-          const section =
-            depType === 'peerDependencies' ? 'dependencies' : depType;
           if (!node) {
-            if (version.startsWith('link:')) {
-              // A link: needs no packages: entry; emit the manifest value
-              // (relocated to its shipped location by the pre-lockfile rewrite)
-              // directly.
-              snapshot.specifiers[packageName] = version;
-              snapshot[section] = snapshot[section] || {};
-              snapshot[section][packageName] = version;
-              return;
-            }
             throw new Error(
               `Could not find external node for package ${packageName}@${version}.`
             );
