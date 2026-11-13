@@ -2,6 +2,7 @@ import { withPnpm } from '@nx/devkit/internal-testing-utils';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import {
   getProjects,
+  logger,
   readJson,
   readNxJson,
   readProjectConfiguration,
@@ -888,6 +889,154 @@ describe('app', () => {
         `);
         process.env['ESLINT_USE_FLAT_CONFIG'] =
           prevEslintUseFlatConfigEnvVarValue;
+      });
+
+      describe('with an existing root config', () => {
+        // The generator writes its Next.js rule only into a block whose files cover these extensions.
+        const rulesBlock = `{ files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'], rules: {} }`;
+        let warnSpy: ReturnType<typeof vi.spyOn>;
+
+        beforeEach(() => {
+          warnSpy = vi.spyOn(logger, 'warn');
+        });
+
+        afterEach(() => {
+          warnSpy.mockRestore();
+        });
+
+        it.each([
+          [
+            'imports eslint-config-next',
+            `import vitals from 'eslint-config-next/core-web-vitals';\nimport coreWebVitals from 'eslint-config-next/core-web-vitals';\n\nexport default [...coreWebVitals, ${rulesBlock}];\n`,
+          ],
+          [
+            'loads @next/eslint-plugin-next',
+            `import nextPlugin from '@next/eslint-plugin-next';\n\nexport default [nextPlugin.configs.recommended, ${rulesBlock}];\n`,
+          ],
+          [
+            'registers the @next/next plugin',
+            `import { next } from './eslint.shared.mjs';\n\nexport default [{ plugins: { '@next/next': next } }, ${rulesBlock}];\n`,
+          ],
+          [
+            'sets a @next/next rule',
+            `export default [{ rules: { '@next/next/no-img-element': 'off' } }, ${rulesBlock}];\n`,
+          ],
+          [
+            'extends next through FlatCompat',
+            `import { FlatCompat } from '@eslint/eslintrc';\n\nconst compat = new FlatCompat({ baseDirectory: import.meta.dirname });\n\nexport default [...compat.extends('next'), ${rulesBlock}];\n`,
+          ],
+          [
+            'extends next/core-web-vitals through FlatCompat',
+            `import { FlatCompat } from '@eslint/eslintrc';\n\nconst compat = new FlatCompat({ baseDirectory: import.meta.dirname });\n\nexport default [...compat.extends('next/core-web-vitals'), ${rulesBlock}];\n`,
+          ],
+        ])(
+          'should not add the Next.js lint config when the root config %s',
+          async (_, config) => {
+            tree.write('eslint.config.mjs', config);
+
+            await applicationGenerator(tree, {
+              name: uniq(),
+              directory: '.',
+              style: 'css',
+              linter: 'eslint',
+              appDir: true,
+            });
+
+            const eslintContents = tree.read('eslint.config.mjs', 'utf-8');
+            expect(eslintContents).not.toContain('nextVitals');
+            expect(eslintContents).not.toContain('no-html-link-for-pages');
+            expect(warnSpy).toHaveBeenCalledWith(
+              expect.stringContaining(
+                'eslint.config.mjs already sets up Next.js linting'
+              )
+            );
+          }
+        );
+
+        it.each([
+          [
+            'uses the name nextVitals',
+            `const nextVitals = { rules: {} };\n\nexport default [nextVitals, ${rulesBlock}];\n`,
+          ],
+          [
+            'references nextVitals in a shorthand property',
+            `export default [{ settings: { nextVitals } }, ${rulesBlock}];\n`,
+          ],
+          [
+            'references nextVitals in a computed key',
+            `export default [{ settings: { [nextVitals]: true } }, ${rulesBlock}];\n`,
+          ],
+          [
+            'does not export an array literal',
+            `import { defineConfig } from 'eslint/config';\n\nexport default defineConfig([]);\n`,
+          ],
+        ])(
+          'should warn and leave the root config without the Next.js lint config when it %s',
+          async (_, config) => {
+            tree.write('eslint.config.mjs', config);
+
+            await applicationGenerator(tree, {
+              name: uniq(),
+              directory: '.',
+              style: 'css',
+              linter: 'eslint',
+              appDir: true,
+            });
+
+            const eslintContents = tree.read('eslint.config.mjs', 'utf-8');
+            expect(eslintContents).not.toContain('eslint-config-next');
+            expect(eslintContents).not.toContain('no-html-link-for-pages');
+            expect(warnSpy).toHaveBeenCalledWith(
+              expect.stringContaining(
+                'The Next.js lint config was not added to eslint.config.mjs'
+              )
+            );
+          }
+        );
+
+        it.each([
+          [
+            'nextVitals as a property key',
+            `const options = { nextVitals: true };\n\nexport default [];\n`,
+          ],
+          [
+            'nextVitals as a member name',
+            `import shared from './shared.mjs';\n\nexport default [{ settings: shared.nextVitals }];\n`,
+          ],
+          [
+            'the eslint-config-next TypeScript preset',
+            `import nextTs from 'eslint-config-next/typescript';\n\nexport default [...nextTs];\n`,
+          ],
+          [
+            'the eslint-config-next parser',
+            `import parser from 'eslint-config-next/parser.js';\n\nexport default [{ languageOptions: { parser } }];\n`,
+          ],
+          [
+            'a FlatCompat extend of next/typescript',
+            `import { FlatCompat } from '@eslint/eslintrc';\n\nconst compat = new FlatCompat({ baseDirectory: import.meta.dirname });\n\nexport default [...compat.extends('next/typescript')];\n`,
+          ],
+          [
+            'a FlatCompat config extending next/typescript.js',
+            `import { FlatCompat } from '@eslint/eslintrc';\n\nconst compat = new FlatCompat({ baseDirectory: import.meta.dirname });\n\nexport default [...compat.config({ extends: ['next/typescript.js'] })];\n`,
+          ],
+        ])(
+          'should add the Next.js lint config when the root config only has %s',
+          async (_, config) => {
+            tree.write('eslint.config.mjs', config);
+
+            await applicationGenerator(tree, {
+              name: uniq(),
+              directory: '.',
+              style: 'css',
+              linter: 'eslint',
+              appDir: true,
+            });
+
+            expect(tree.read('eslint.config.mjs', 'utf-8')).toContain(
+              '...nextVitals'
+            );
+          }
+        );
       });
 
       it('should scope tsconfig to the src/ project directory', async () => {

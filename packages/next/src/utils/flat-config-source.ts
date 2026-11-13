@@ -140,11 +140,7 @@ export function getEslintConfigNextUsage(
     extendsNextThroughCompat: false,
   };
   const visit = (node: ts.Node) => {
-    const specifier = getLoadedModuleSpecifier(node);
-    if (
-      specifier === 'eslint-config-next' ||
-      specifier?.startsWith('eslint-config-next/')
-    ) {
+    if (isEslintConfigNextSpecifier(getLoadedModuleSpecifier(node))) {
       usage.importsEslintConfigNext = true;
     } else if (isPluginsObjectWithKey(node, '@next/next')) {
       usage.registersNextPlugin = true;
@@ -155,6 +151,46 @@ export function getEslintConfigNextUsage(
   };
   visit(source);
   return usage;
+}
+
+// eslint-config-next entries without Next.js rules, with v15's file spellings.
+const ESLINT_CONFIG_NEXT_ENTRIES_WITHOUT_NEXT_RULES = new Set([
+  'eslint-config-next/typescript',
+  'eslint-config-next/typescript.js',
+  'eslint-config-next/parser',
+  'eslint-config-next/parser.js',
+]);
+
+/**
+ * Whether a flat config sets up Next.js linting in any form: a load of an
+ * eslint-config-next entry with Next.js rules or of `@next/eslint-plugin-next`,
+ * a `@next/next` plugin registration, a FlatCompat extend of such a `next`
+ * config, or a string starting with `@next/next/`, such as a rule name.
+ */
+export function configuresNextLint(source: ts.SourceFile): boolean {
+  let found = false;
+  const visit = (node: ts.Node) => {
+    if (found) {
+      return;
+    }
+    const specifier = getLoadedModuleSpecifier(node);
+    if (
+      (isEslintConfigNextSpecifier(specifier) &&
+        !ESLINT_CONFIG_NEXT_ENTRIES_WITHOUT_NEXT_RULES.has(specifier)) ||
+      specifier === '@next/eslint-plugin-next' ||
+      specifier?.startsWith('@next/eslint-plugin-next/') ||
+      isPluginsObjectWithKey(node, '@next/next') ||
+      isCompatCallExtendingNext(node, isNextConfigNameWithNextRules) ||
+      (tsModule.isStringLiteralLike(node) &&
+        node.text.startsWith('@next/next/'))
+    ) {
+      found = true;
+      return;
+    }
+    tsModule.forEachChild(node, visit);
+  };
+  visit(source);
+  return found;
 }
 
 function isPluginsObjectWithKey(node: ts.Node, key: string): boolean {
@@ -169,7 +205,10 @@ function isPluginsObjectWithKey(node: ts.Node, key: string): boolean {
 }
 
 // Matches `compat.extends('next', ...)` and `compat.config({ extends: ['next'] })`.
-function isCompatCallExtendingNext(node: ts.Node): boolean {
+function isCompatCallExtendingNext(
+  node: ts.Node,
+  isConfigName: (node: ts.Node) => boolean = isNextConfigName
+): boolean {
   if (
     !tsModule.isCallExpression(node) ||
     !tsModule.isPropertyAccessExpression(node.expression)
@@ -178,7 +217,7 @@ function isCompatCallExtendingNext(node: ts.Node): boolean {
   }
   switch (node.expression.name.text) {
     case 'extends':
-      return node.arguments.some(isNextConfigName);
+      return node.arguments.some(isConfigName);
     case 'config':
       return node.arguments.some(
         (argument) =>
@@ -187,9 +226,9 @@ function isCompatCallExtendingNext(node: ts.Node): boolean {
             (property) =>
               tsModule.isPropertyAssignment(property) &&
               getPropertyName(property.name) === 'extends' &&
-              (isNextConfigName(property.initializer) ||
+              (isConfigName(property.initializer) ||
                 (tsModule.isArrayLiteralExpression(property.initializer) &&
-                  property.initializer.elements.some(isNextConfigName)))
+                  property.initializer.elements.some(isConfigName)))
           )
       );
     default:
@@ -197,9 +236,28 @@ function isCompatCallExtendingNext(node: ts.Node): boolean {
   }
 }
 
-function isNextConfigName(node: ts.Node): boolean {
+function isEslintConfigNextSpecifier(
+  specifier: string | undefined
+): specifier is string {
+  return (
+    specifier === 'eslint-config-next' ||
+    !!specifier?.startsWith('eslint-config-next/')
+  );
+}
+
+function isNextConfigName(node: ts.Node): node is ts.StringLiteralLike {
   return (
     tsModule.isStringLiteralLike(node) &&
     (node.text === 'next' || node.text.startsWith('next/'))
+  );
+}
+
+// ESLint resolves an eslintrc `next/<name>` to `eslint-config-next/<name>`.
+function isNextConfigNameWithNextRules(node: ts.Node): boolean {
+  return (
+    isNextConfigName(node) &&
+    !ESLINT_CONFIG_NEXT_ENTRIES_WITHOUT_NEXT_RULES.has(
+      node.text.replace(/^next\//, 'eslint-config-next/')
+    )
   );
 }
