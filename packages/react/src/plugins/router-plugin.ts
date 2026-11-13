@@ -4,6 +4,7 @@ import {
   clearRequireCache,
   getReadyCheckReadyWhen,
   retryOnRequireEsmRace,
+  resolveInstalledPackage,
   loadConfigFile,
   PluginCache,
   hashObject,
@@ -384,9 +385,26 @@ async function getDevReadyWhen(
     'react-router-dev'
   );
   try {
-    const vitePackageJsonPath = require.resolve('vite/package.json', {
-      paths: [absoluteProjectRoot, dirname(viteReadyCheck)],
-    });
+    let vitePackageJsonPath: string;
+    try {
+      vitePackageJsonPath = resolveInstalledPackage(
+        'vite/package.json',
+        [absoluteProjectRoot, dirname(viteReadyCheck)],
+        workspaceRoot
+      );
+    } catch {
+      // A linked @nx/vite may keep Vite in its own package directory.
+      const nxVitePackageJsonPath = resolveInstalledPackage(
+        '@nx/vite/package.json',
+        [workspaceRoot],
+        workspaceRoot
+      );
+      vitePackageJsonPath = resolveInstalledPackage(
+        'vite/package.json',
+        [dirname(viteReadyCheck)],
+        dirname(nxVitePackageJsonPath)
+      );
+    }
     const viteExport = readJsonFile(vitePackageJsonPath).exports['.'];
     // Vite 5/6 expose a deprecated CJS shim under the require condition.
     const esmEntry =

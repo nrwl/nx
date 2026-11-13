@@ -297,7 +297,10 @@ export {
 } from './utils/fileutils';
 export { getLatestCommitSha } from './utils/git-utils';
 export { combineGlobPatterns, isGlobPattern } from './utils/globs';
-export { getNxRequirePaths } from './utils/installation-directory';
+export {
+  getNxRequirePaths,
+  resolveInstalledPackage,
+} from './utils/installation-directory';
 export { NX_PREFIX } from './utils/logger';
 export type {
   CLIErrorMessageConfig,
