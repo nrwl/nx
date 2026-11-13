@@ -198,6 +198,9 @@ describe(loadAndExpandDotEnvFile.name, () => {
         'FROM_ENV=$SET_IN_ENV/$EMPTY_IN_ENV',
         'ESCAPED=\\$PLAIN',
         'SELF=$SELF-suffix',
+        // The env value holds a `$` that is not expanded, here or in a value that refers to it
+        'DOLLAR_IN_ENV=from-file',
+        'USES_DOLLAR_IN_ENV=$DOLLAR_IN_ENV',
         '',
       ].join('\n')
     );
@@ -205,6 +208,7 @@ describe(loadAndExpandDotEnvFile.name, () => {
       EMPTY_IN_ENV: '',
       SET_IN_ENV: 'from-env',
       SAME_IN_ENV: 'same',
+      DOLLAR_IN_ENV: 'abc$PLAIN',
     });
 
     const expected = env();
@@ -217,6 +221,7 @@ describe(loadAndExpandDotEnvFile.name, () => {
 
     expect(actual).toEqual(expected);
     expect(actualResult.parsed).toEqual(expectedResult.parsed);
+    expect(actual.USES_DOLLAR_IN_ENV).toEqual('abc$PLAIN');
   });
 });
 

@@ -304,12 +304,17 @@ export function loadAndExpandDotEnvFile(
  * files against an env of hundreds of variables, so a run of a few thousand
  * tasks spent most of its upfront hashing in those copies.
  *
- * Only the values that contain a `$` go through `expand`. For any other value
- * it would return the value itself, unless the env already holds a different
- * non-empty value, which wins: that is what is applied here. Expanding a value
- * never reads another file variable through the progressive state `expand`
- * keeps, because dotenv's `config` has already put every file variable in the
- * env, and the env wins over that state.
+ * Only the values that contain a `$`, in the file or in the env, go through
+ * `expand`. For any other value it would return the value itself, unless the
+ * env already holds a different non-empty value, which wins: that is what is
+ * applied here.
+ *
+ * Leaving a variable out of `expand` leaves it out of the progressive state
+ * `expand` keeps, which it uses in two ways. It reads other file variables
+ * from it, but dotenv's `config` has already put every file variable in the
+ * env, and the env wins over that state. It also stops expanding a value once
+ * the value equals a variable in that state, which only matters while the
+ * value still holds a `$`: so a variable whose value holds one stays in.
  */
 function expandDotEnvVariables(
   options: DotenvExpandOptions
@@ -321,7 +326,7 @@ function expandDotEnvVariables(
 
   const withReferences: Record<string, string> = {};
   for (const [key, value] of Object.entries(parsed)) {
-    if (value.includes('$')) {
+    if (value.includes('$') || processEnv[key]?.includes('$')) {
       withReferences[key] = value;
     }
   }
