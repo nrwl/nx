@@ -15,6 +15,7 @@ import {
   filterTaskGraphToSelection,
   ProcessTasks,
 } from './create-task-graph';
+import { findCycle } from './task-graph-utils';
 import { pruneToSelectedTasks } from './utils';
 
 describe('createTaskGraph', () => {
@@ -3685,6 +3686,75 @@ describe('createTaskGraph', () => {
         'own:prepare',
       ].sort()
     );
+  });
+
+  it('should keep the dependencies behind a project dependency cycle', () => {
+    // mid -> app closes a project cycle, so the dummies at mid and app point at each other.
+    const taskGraph = createTaskGraph(
+      new GraphBuilder()
+        .addProjectConfiguration({
+          name: 'app',
+          targets: {
+            build: { executor: 'nx:run-commands' },
+            lint: {
+              executor: 'nx:run-commands',
+              dependsOn: ['^build', '^codegen-a'],
+            },
+          },
+        })
+        .addProjectConfiguration({ name: 'mid', targets: {} })
+        .addProjectConfiguration({
+          name: 'gen',
+          targets: { 'codegen-a': { executor: 'nx:run-commands' } },
+        })
+        .addDependencies({ app: ['mid'], mid: ['gen', 'app'] })
+        .build(),
+      {},
+      ['app'],
+      ['lint'],
+      undefined,
+      {}
+    );
+
+    expect(taskGraph.dependencies['app:lint']).toEqual([
+      { id: 'app:build' },
+      { id: 'gen:codegen-a' },
+    ]);
+  });
+
+  it('should keep a task cycle that passes through a dummy task', () => {
+    // app:build -> (mid has no codegen target) -> leaf:codegen-a -> app:build
+    const taskGraph = createTaskGraph(
+      new GraphBuilder()
+        .addProjectConfiguration({
+          name: 'app',
+          targets: {
+            build: {
+              executor: 'nx:run-commands',
+              dependsOn: ['^codegen-a', '^codegen-b'],
+            },
+          },
+        })
+        .addProjectConfiguration({ name: 'mid', targets: {} })
+        .addProjectConfiguration({
+          name: 'leaf',
+          targets: {
+            'codegen-a': {
+              executor: 'nx:run-commands',
+              dependsOn: [{ target: 'build', projects: ['app'] }],
+            },
+          },
+        })
+        .addDependencies({ app: ['mid'], mid: ['leaf'] })
+        .build(),
+      {},
+      ['app'],
+      ['build'],
+      undefined,
+      {}
+    );
+
+    expect(findCycle(taskGraph)).not.toBeNull();
   });
 
   it('should exclude task dependencies', () => {

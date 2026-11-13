@@ -42,11 +42,23 @@ export class ProcessTasks {
   >();
   private readonly sharedDummyKeys = new Map<string, string>();
   private readonly sharedDummySignatures = new Map<string, number>();
+  /**
+   * Whether dummy tasks are keyed by the `^` entries they follow, which lets tasks share them. Dummies in a
+   * cycle are dropped by `filterDummyTasks`, and which ones `findCycles` reports depends on their ids, so
+   * sharing only gives the same graph when no dummy can be part of a cycle.
+   */
+  readonly shareDummies: boolean;
+  /**
+   * Set when the graph built with shared dummies has a cycle, or would have one with a dummy per task and
+   * entry. `buildTaskGraph` then builds it again without sharing.
+   */
+  sharedDummiesUnsafe = false;
 
   constructor(
     private readonly extraTargetDependencies: TargetDependencies,
     private readonly projectGraph: ProjectGraph,
-    private readonly recordDependencyOverrides = false
+    private readonly recordDependencyOverrides = false,
+    shareDummies = true
   ) {
     const allTargetNames = new Set<string>();
     for (const projectName in projectGraph.nodes) {
@@ -56,6 +68,7 @@ export class ProcessTasks {
       }
     }
     this.allTargetNames = Array.from(allTargetNames);
+    this.shareDummies = shareDummies && !hasProjectCycle(projectGraph);
   }
 
   processTasks(
@@ -117,8 +130,19 @@ export class ProcessTasks {
       }
     }
 
-    filterDummyTasks(this.dependencies);
-    filterDummyTasks(this.continuousDependencies);
+    if (
+      this.shareDummies &&
+      (this.sharedDummiesUnsafe ||
+        findCycles({ dependencies: this.dependencies }) ||
+        findCycles({ dependencies: this.continuousDependencies }))
+    ) {
+      // `buildTaskGraph` builds the graph again without sharing dummies.
+      this.sharedDummiesUnsafe = true;
+      return [];
+    }
+
+    filterDummyTasks(this.dependencies, this.shareDummies);
+    filterDummyTasks(this.continuousDependencies, this.shareDummies);
 
     return Object.keys(this.tasks).filter(
       (d) =>
@@ -143,13 +167,21 @@ export class ProcessTasks {
       task.target.project,
       task.target.target
     );
+    const isSharedDummy =
+      this.shareDummies && task.id.endsWith(DUMMY_TASK_TARGET);
     // A dummy task keeps its creator's target, so its entries without `dependencies` resolve to the tasks the
-    // creator already depends on directly. Skipping them leaves the graph unchanged and makes a dummy's edges
-    // depend only on the `^` entries, which is what lets tasks share dummies (see getSharedDummyKey). Kept as-is
-    // when dependency overrides are recorded, since those are recorded per edge.
-    const onlyDependencies =
-      !this.recordDependencyOverrides && task.id.endsWith(DUMMY_TASK_TARGET);
+    // creator already depends on directly. Skipping them makes a dummy's edges depend only on the `^` entries,
+    // which is what lets tasks share dummies (see getSharedDummyKey). Kept when dependency overrides are
+    // recorded, since those are recorded per edge.
+    const onlyDependencies = isSharedDummy && !this.recordDependencyOverrides;
     for (const dependencyConfig of dependencyConfigs) {
+      if (
+        isSharedDummy &&
+        !dependencyConfig.dependencies &&
+        this.leadsBackToCreator(task, dependencyConfig, configuration)
+      ) {
+        this.sharedDummiesUnsafe = true;
+      }
       if (onlyDependencies && !dependencyConfig.dependencies) {
         continue;
       }
@@ -209,6 +241,33 @@ export class ProcessTasks {
       this.dependencyConfigsCache.set(key, dependencyConfigs);
     }
     return dependencyConfigs;
+  }
+
+  /**
+   * Whether an entry without `dependencies` resolves to the task a dummy stands in for. That edge puts the
+   * dummy in a cycle with its creator.
+   */
+  private leadsBackToCreator(
+    dummy: Task,
+    dependencyConfig: TargetDependencyConfig,
+    configuration: string
+  ): boolean {
+    const { project, target } = dummy.target;
+    if (
+      dependencyConfig.target !== target ||
+      (dependencyConfig.projects &&
+        !dependencyConfig.projects.includes(project))
+    ) {
+      return false;
+    }
+    const projectNode = this.projectGraph.nodes[project];
+    return (
+      createTaskId(
+        project,
+        target,
+        this.resolveConfiguration(projectNode, target, configuration)
+      ) === createTaskId(project, target, dummy.target.configuration)
+    );
   }
 
   /**
@@ -409,13 +468,18 @@ export class ProcessTasks {
         }
       } else {
         // Create a dummy task for task.target.project... which simulates if depProject had dependencyConfig.target.
-        // The dummy expands every `^` entry of the task it stands in for, whichever entry reached it, so one dummy
-        // per project covers them all, for every task with the same `^` entries (see getSharedDummyKey). Keying the
-        // dummy by the entry as well created one dummy per `^target` entry, each re-expanding every entry: K
-        // entries walked depProject's dependencies K * K times, once more for every task that reached it.
+        // A shared dummy expands every `^` entry of the task it stands in for, whichever entry reached it, so one
+        // dummy per project covers them all, for every task with the same `^` entries (see getSharedDummyKey).
+        // Otherwise there is one dummy per task and entry, each re-expanding every entry.
+        const dummyKey = this.shareDummies
+          ? this.getSharedDummyKey(task)
+          : task.target.project +
+            task.target.target +
+            '__' +
+            dependencyConfig.target;
         const dummyId = createTaskId(
           depProject.name,
-          this.getSharedDummyKey(task) + DUMMY_TASK_TARGET,
+          dummyKey + DUMMY_TASK_TARGET,
           undefined
         );
         this.dependencies[task.id].push({ id: dummyId });
@@ -540,13 +604,19 @@ export function createTaskGraph(
   excludeTaskDependencies: boolean = false
 ): TaskGraph {
   return buildTaskGraph(
-    new ProcessTasks(extraTargetDependencies, projectGraph),
+    (shareDummies) =>
+      new ProcessTasks(
+        extraTargetDependencies,
+        projectGraph,
+        false,
+        shareDummies
+      ),
     projectNames,
     targets,
     configuration,
     overrides,
     excludeTaskDependencies
-  );
+  ).taskGraph;
 }
 
 /** `createTaskGraph`, plus the overrides each dependency edge would give. */
@@ -559,9 +629,14 @@ export function createTaskGraphWithDependencyOverrides(
   overrides: Record<string, unknown>,
   excludeTaskDependencies: boolean = false
 ): { taskGraph: TaskGraph; dependencyOverrides: DependencyOverrides } {
-  const p = new ProcessTasks(extraTargetDependencies, projectGraph, true);
-  const taskGraph = buildTaskGraph(
-    p,
+  const { taskGraph, p } = buildTaskGraph(
+    (shareDummies) =>
+      new ProcessTasks(
+        extraTargetDependencies,
+        projectGraph,
+        true,
+        shareDummies
+      ),
     projectNames,
     targets,
     configuration,
@@ -617,27 +692,79 @@ export function filterTaskGraphToSelection(
 }
 
 function buildTaskGraph(
-  p: ProcessTasks,
+  createProcessTasks: (shareDummies: boolean) => ProcessTasks,
   projectNames: string[],
   targets: string[],
   configuration: string | undefined,
   overrides: Record<string, unknown>,
   excludeTaskDependencies: boolean
-): TaskGraph {
-  const roots = p.processTasks(
+): { taskGraph: TaskGraph; p: ProcessTasks } {
+  let p = createProcessTasks(true);
+  let roots = p.processTasks(
     projectNames,
     targets,
     configuration,
     overrides,
     excludeTaskDependencies
   );
+  if (p.sharedDummiesUnsafe) {
+    p = createProcessTasks(false);
+    roots = p.processTasks(
+      projectNames,
+      targets,
+      configuration,
+      overrides,
+      excludeTaskDependencies
+    );
+  }
 
   return {
-    roots,
-    tasks: p.tasks,
-    dependencies: p.dependencies,
-    continuousDependencies: p.continuousDependencies,
+    taskGraph: {
+      roots,
+      tasks: p.tasks,
+      dependencies: p.dependencies,
+      continuousDependencies: p.continuousDependencies,
+    },
+    p,
   };
+}
+
+/**
+ * Whether the project graph has a cycle, counting only dependencies between projects.
+ */
+function hasProjectCycle(projectGraph: ProjectGraph): boolean {
+  const state = new Map<string, 'active' | 'done'>();
+  for (const root of Object.keys(projectGraph.nodes)) {
+    if (state.has(root)) {
+      continue;
+    }
+    state.set(root, 'active');
+    const stack: Array<{ project: string; next: number }> = [
+      { project: root, next: 0 },
+    ];
+    while (stack.length) {
+      const frame = stack[stack.length - 1];
+      const deps = projectGraph.dependencies[frame.project] ?? [];
+      if (frame.next === deps.length) {
+        state.set(frame.project, 'done');
+        stack.pop();
+        continue;
+      }
+      const dep = deps[frame.next++].target;
+      if (!projectGraph.nodes[dep]) {
+        continue;
+      }
+      const depState = state.get(dep);
+      if (depState === 'active') {
+        return true;
+      }
+      if (!depState) {
+        state.set(dep, 'active');
+        stack.push({ project: dep, next: 0 });
+      }
+    }
+  }
+  return false;
 }
 
 function interpolateOverrides<T = any>(
@@ -700,9 +827,12 @@ function mergeEdges(edges: TaskGraphEdge[]): TaskGraphEdge[] {
  * This function is used to filter out the dummy tasks from the dependencies
  * It will manipulate the dependencies object in place
  */
-export function filterDummyTasks(dependencies: {
-  [k: string]: TaskGraphEdge[];
-}) {
+export function filterDummyTasks(
+  dependencies: {
+    [k: string]: TaskGraphEdge[];
+  },
+  memoize = true
+) {
   const cycles = findCycles({ dependencies });
   // The edges behind a dummy are the same for every task that reaches it, so they are collected once per dummy
   // instead of once per task and path. A dummy in a cycle contributes nothing. If the dummies still form a cycle
@@ -710,7 +840,7 @@ export function filterDummyTasks(dependencies: {
   // own.
   const flattened = new Map<string, TaskGraphEdge[]>();
   const inProgress = new Set<string>();
-  let memoizable = true;
+  let memoizable = memoize;
   const flatten = (dummy: string): TaskGraphEdge[] => {
     const known = flattened.get(dummy);
     if (known) {
