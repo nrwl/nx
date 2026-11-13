@@ -1825,7 +1825,8 @@ export function generateFlatOverride(
     ignores?: Linter.FlatConfig['ignores'];
   },
   format: 'mjs' | 'cjs',
-  importsMap?: Map<string, string>
+  importsMap?: Map<string, string>,
+  pluginEnvironmentGlobals: ts.Expression[] = []
 ): ts.ObjectLiteralExpression | ts.SpreadElement {
   const override = mapFilePaths(_override);
 
@@ -1986,7 +1987,12 @@ export function generateFlatOverride(
             ts.factory.createIdentifier('config')
           ),
           undefined,
-          [generateAst(rest)]
+          [
+            addSpreadGlobals(
+              generateAst<ts.ObjectLiteralExpression>(rest),
+              pluginEnvironmentGlobals
+            ),
+          ]
         ),
         ts.factory.createIdentifier('map')
       ),
@@ -2014,6 +2020,40 @@ export function generateFlatOverride(
       ]
     )
   );
+}
+
+// FlatCompat drops a `<plugin>/<name>` environment unless the override itself loads the plugin.
+// It turns `globals` into `languageOptions.globals` for the override's files.
+function addSpreadGlobals(
+  config: ts.ObjectLiteralExpression,
+  spreads: ts.Expression[]
+): ts.ObjectLiteralExpression {
+  if (spreads.length === 0) {
+    return config;
+  }
+  const globals = config.properties.find(
+    (property): property is ts.PropertyAssignment =>
+      ts.isPropertyAssignment(property) &&
+      ts.isIdentifier(property.name) &&
+      property.name.text === 'globals'
+  );
+  const declared =
+    globals && ts.isObjectLiteralExpression(globals.initializer)
+      ? globals.initializer.properties
+      : [];
+  return ts.factory.updateObjectLiteralExpression(config, [
+    ...config.properties.filter((property) => property !== globals),
+    ts.factory.createPropertyAssignment(
+      'globals',
+      ts.factory.createObjectLiteralExpression(
+        [
+          ...spreads.map((spread) => ts.factory.createSpreadAssignment(spread)),
+          ...declared,
+        ],
+        true
+      )
+    ),
+  ]);
 }
 
 function generateESMParserImport(

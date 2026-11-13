@@ -190,7 +190,8 @@ export function convertEslintJsonToFlatConfig(
   }
 
   if (config.globals || enabledEnvs.length) {
-    if (enabledEnvs.length) {
+    const builtInEnvs = enabledEnvs.filter((env) => !isPluginEnvironment(env));
+    if (builtInEnvs.length) {
       importsMap.set('globals', 'globals');
     }
 
@@ -198,20 +199,13 @@ export function convertEslintJsonToFlatConfig(
       ts.factory.createPropertyAssignment(
         'globals',
         ts.factory.createObjectLiteralExpression([
-          ...enabledEnvs.map((env) =>
+          ...builtInEnvs.map((env) =>
             ts.factory.createSpreadAssignment(
-              // `globals.shared-node-browser` reads as a subtraction. A `plugin/env` name keeps
-              // the dot, since a string key can turn its load error into missing globals.
-              /^[A-Za-z_$][\w$]*$/.test(env) || env.includes('/')
-                ? ts.factory.createPropertyAccessExpression(
-                    ts.factory.createIdentifier('globals'),
-                    ts.factory.createIdentifier(env)
-                  )
-                : ts.factory.createElementAccessExpression(
-                    ts.factory.createIdentifier('globals'),
-                    ts.factory.createStringLiteral(env)
-                  )
+              accessProperty(ts.factory.createIdentifier('globals'), env)
             )
+          ),
+          ...getPluginEnvironmentGlobals(config.env, importsMap).map((env) =>
+            ts.factory.createSpreadAssignment(env)
           ),
           ...Object.keys(config.globals || {}).map((key) =>
             ts.factory.createPropertyAssignment(
@@ -322,7 +316,12 @@ export function convertEslintJsonToFlatConfig(
               isFlatCompatNeeded = true;
             }
             exportElements.push(
-              generateFlatOverride(remainingOverride, format, importsMap)
+              generateFlatOverride(
+                remainingOverride,
+                format,
+                importsMap,
+                getPluginEnvironmentGlobals(remainingOverride.env, importsMap)
+              )
             );
           }
           return;
@@ -332,7 +331,14 @@ export function convertEslintJsonToFlatConfig(
       if (override.env || override.extends || override.plugins) {
         isFlatCompatNeeded = true;
       }
-      exportElements.push(generateFlatOverride(override, format, importsMap));
+      exportElements.push(
+        generateFlatOverride(
+          override,
+          format,
+          importsMap,
+          getPluginEnvironmentGlobals(override.env, importsMap)
+        )
+      );
     });
   }
 
@@ -550,6 +556,66 @@ function addPlugins(
     false
   );
   configBlocks.push(pluginsAst);
+}
+
+// Built-in environments have no slash. eslintrc names a plugin's as `<plugin>/<name>`.
+function isPluginEnvironment(env: string): boolean {
+  return env.includes('/');
+}
+
+// Flat config has no environments. eslintrc reads `<plugin>/<name>` from the
+// plugin's `environments[name]`, so spread that environment's globals from the plugin.
+// A plugin release without that export, such as eslint-plugin-cypress 5, then adds
+// no globals instead of failing the config at load.
+function getPluginEnvironmentGlobals(
+  env: ESLint.ConfigData['env'],
+  importsMap: Map<string, string | string[]>
+): ts.Expression[] {
+  return Object.keys(env ?? {})
+    .filter((name) => env[name] && isPluginEnvironment(name))
+    .map((name) => {
+      const separator = name.lastIndexOf('/');
+      const imp = getPluginImport(name.slice(0, separator));
+      const varName =
+        (importsMap.get(imp) as string) ?? names(imp).propertyName;
+      importsMap.set(imp, varName);
+      return ts.factory.createPropertyAccessChain(
+        accessProperty(
+          ts.factory.createPropertyAccessExpression(
+            ts.factory.createIdentifier(varName),
+            'environments'
+          ),
+          name.slice(separator + 1),
+          ts.factory.createToken(ts.SyntaxKind.QuestionDotToken)
+        ),
+        ts.factory.createToken(ts.SyntaxKind.QuestionDotToken),
+        'globals'
+      );
+    });
+}
+
+// `globals.shared-node-browser` would read as a subtraction.
+function accessProperty(
+  object: ts.Expression,
+  name: string,
+  questionDotToken?: ts.QuestionDotToken
+): ts.Expression {
+  const isIdentifier = /^[A-Za-z_$][\w$]*$/.test(name);
+  if (questionDotToken) {
+    return isIdentifier
+      ? ts.factory.createPropertyAccessChain(object, questionDotToken, name)
+      : ts.factory.createElementAccessChain(
+          object,
+          questionDotToken,
+          ts.factory.createStringLiteral(name)
+        );
+  }
+  return isIdentifier
+    ? ts.factory.createPropertyAccessExpression(object, name)
+    : ts.factory.createElementAccessExpression(
+        object,
+        ts.factory.createStringLiteral(name)
+      );
 }
 
 const nxPluginToFlatConfigMap: Record<string, string> = {
