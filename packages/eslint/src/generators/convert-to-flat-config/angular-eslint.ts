@@ -493,9 +493,10 @@ function consumeTrailingComma(content: string, end: number): number {
 }
 
 // After the shims are rewritten, the `const compat = new FlatCompat(...)`
-// declaration, its `@eslint/eslintrc` import, and the `@eslint/js` import that
-// fed its `recommendedConfig` may be left unused. Drop each once nothing else
-// references it, so the config carries no dead FlatCompat scaffolding.
+// declaration, its `@eslint/eslintrc` import, the `@eslint/js` import that fed
+// its `recommendedConfig`, and the `dirname`/`fileURLToPath` imports that built
+// its `baseDirectory` may be left unused. Drop each once nothing else references
+// it, so the config carries no dead FlatCompat scaffolding.
 function removeOrphanedFlatCompat(content: string): string {
   if (!content.includes('new FlatCompat')) {
     return content;
@@ -539,7 +540,53 @@ function removeOrphanedFlatCompat(content: string): string {
     updated = removeImportFromFlatConfig(updated, 'js', '@eslint/js');
   }
 
+  // removeImportFromFlatConfig deletes the whole statement, and this runs on
+  // hand-written configs too, so an import that binds anything else stays.
+  for (const [name, module] of [
+    ['dirname', 'path'],
+    ['fileURLToPath', 'url'],
+  ]) {
+    if (
+      countIdentifier(updated, name) <= 1 &&
+      isSoleNamedImport(updated, name, module)
+    ) {
+      updated = removeImportFromFlatConfig(updated, name, module);
+    }
+  }
+
   return updated;
+}
+
+function isSoleNamedImport(
+  content: string,
+  name: string,
+  module: string
+): boolean {
+  const source = ts.createSourceFile(
+    '',
+    content,
+    ts.ScriptTarget.Latest,
+    true,
+    ts.ScriptKind.JS
+  );
+  return source.statements.some((node) => {
+    if (
+      !ts.isImportDeclaration(node) ||
+      !ts.isStringLiteral(node.moduleSpecifier) ||
+      node.moduleSpecifier.text !== module
+    ) {
+      return false;
+    }
+    const clause = node.importClause;
+    return (
+      !!clause &&
+      !clause.name &&
+      !!clause.namedBindings &&
+      ts.isNamedImports(clause.namedBindings) &&
+      clause.namedBindings.elements.length === 1 &&
+      clause.namedBindings.elements[0].name.text === name
+    );
+  });
 }
 
 // Counts identifiers with the given name (declarations, bindings, and
