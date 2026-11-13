@@ -13,6 +13,7 @@ import {
   createProjectGraphAsync,
   formatFiles,
   joinPathFragments,
+  logger,
   normalizePath,
   readNxJson,
   type NxJsonConfiguration,
@@ -32,7 +33,10 @@ import {
 } from '../../plugins/plugin';
 import { assertSupportedEslintVersion } from '../../utils/assert-supported-eslint-version';
 import { ESLINT_CONFIG_FILENAMES } from '../../utils/config-file';
-import { targetOptionsToCliMap } from './lib/target-options-map';
+import {
+  executorOptions,
+  targetOptionsToCliMap,
+} from './lib/target-options-map';
 
 interface Schema {
   project?: string;
@@ -62,6 +66,11 @@ export async function convertToInferred(tree: Tree, options: Schema) {
             inferredTargetConfiguration
           ) => {
             const projectNode = projectGraph.nodes[projectDetails.projectName];
+            removeUnknownExecutorOptions(
+              target,
+              projectDetails.projectName,
+              inferredTargetConfiguration.name
+            );
             return postTargetTransformer(
               target,
               tree,
@@ -94,6 +103,41 @@ export async function convertToInferred(tree: Tree, options: Schema) {
 
   if (!options.skipFormat) {
     await formatFiles(tree);
+  }
+}
+
+/**
+ * Drops options the executor never defined and therefore ignored. The converted
+ * target forwards its options to run-commands, which reads some of them as its
+ * own, and `command` replaces the lint command outright.
+ */
+function removeUnknownExecutorOptions(
+  target: TargetConfiguration,
+  projectName: string,
+  targetName: string
+): void {
+  const dropped = new Set<string>();
+  const strip = (options: Record<string, any> | undefined) => {
+    for (const option of Object.keys(options ?? {})) {
+      if (!executorOptions.has(option)) {
+        delete options[option];
+        dropped.add(option);
+      }
+    }
+  };
+
+  strip(target.options);
+  for (const configuration of Object.values(target.configurations ?? {})) {
+    strip(configuration);
+  }
+
+  if (dropped.size) {
+    const names = [...dropped].map((option) => `"${option}"`).join(', ');
+    const [subject, object] =
+      dropped.size === 1 ? ['that option', 'it'] : ['those options', 'them'];
+    logger.warn(
+      `Removed ${names} from the "${targetName}" target of project "${projectName}". The "@nx/eslint:lint" executor did not define ${subject}, so keeping ${object} would change what the converted target runs.`
+    );
   }
 }
 
