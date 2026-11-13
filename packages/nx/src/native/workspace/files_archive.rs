@@ -8,14 +8,16 @@ use std::time::{Duration, SystemTime};
 
 use tracing::trace;
 
-// v2 carries `gathered_at`. The filename is the format key: rkyv's layout check
-// does reject a v1 buffer, but relying on that makes the break implicit and
-// leaves "what if it validated anyway?" to be argued rather than answered.
-const NX_FILES_ARCHIVE: &str = "nx_files_v2.nxt";
+// v3 keys each entry on `get_metadata_key` where v2 keyed it on the mtime
+// alone. The filename is the format key, and here it is the only one, because
+// the two entry layouts are identical and rkyv's check cannot separate them.
+const NX_FILES_ARCHIVE: &str = "nx_files_v3.nxt";
 
+/// A file's content hash and the `get_metadata_key` of the file it was read
+/// from. Reusing the hash means finding that same key on disk again.
 #[derive(Archive, Serialize, Deserialize, PartialEq, Debug)]
 #[archive(check_bytes)]
-pub struct NxFileHashed(pub String, pub i64);
+pub struct NxFileHashed(pub String, pub u64);
 
 #[derive(Archive, Deserialize, Serialize, Debug, PartialEq)]
 #[archive(check_bytes)]
@@ -114,8 +116,8 @@ impl FilesArchive {
         self.archived().files.len()
     }
 
-    /// The recorded hash and modification time for a workspace-relative path.
-    pub fn get(&self, path: &str) -> Option<(&str, i64)> {
+    /// The recorded hash and metadata key for a workspace-relative path.
+    pub fn get(&self, path: &str) -> Option<(&str, u64)> {
         self.archived()
             .files
             .get(path)
@@ -128,12 +130,12 @@ impl FilesArchive {
         self.archived().gathered_at
     }
 
-    /// Every entry as (path, hash, modification time).
-    pub fn iter(&self) -> impl Iterator<Item = (&str, &str, i64)> {
+    /// Every entry as (path, hash).
+    pub fn iter(&self) -> impl Iterator<Item = (&str, &str)> {
         self.archived()
             .files
             .iter()
-            .map(|(path, hashed)| (path.as_str(), hashed.0.as_str(), hashed.1))
+            .map(|(path, hashed)| (path.as_str(), hashed.0.as_str()))
     }
 }
 
@@ -249,10 +251,19 @@ mod tests {
     use super::*;
     use rkyv::Archive as RkyvArchive;
 
-    /// The shape `NxFileHashes` had before it carried `gathered_at`.
+    // The shape and name an archive had while entries were keyed on the mtime.
     #[derive(RkyvArchive, Serialize)]
     #[archive(check_bytes)]
-    struct LegacyNxFileHashes(HashMap<String, NxFileHashed>);
+    struct V2NxFileHashed(String, i64);
+
+    #[derive(RkyvArchive, Serialize)]
+    #[archive(check_bytes)]
+    struct V2NxFileHashes {
+        files: HashMap<String, V2NxFileHashed>,
+        gathered_at: i64,
+    }
+
+    const V2_NX_FILES_ARCHIVE: &str = "nx_files_v2.nxt";
 
     use assert_fs::TempDir;
     use assert_fs::prelude::*;
@@ -275,7 +286,7 @@ mod tests {
     #[test]
     fn a_write_sweeps_orphaned_staging_files_and_keeps_live_ones() {
         let cache = TempDir::new().unwrap();
-        let orphan = cache.child("nx_files_v2.nxt.1.deadbeef.tmp");
+        let orphan = cache.child("nx_files_v3.nxt.1.deadbeef.tmp");
         orphan.write_str("x").unwrap();
         std::fs::File::options()
             .write(true)
@@ -283,10 +294,10 @@ mod tests {
             .unwrap()
             .set_modified(SystemTime::now() - STAGING_ORPHAN_AGE * 2)
             .unwrap();
-        let live = cache.child("nx_files_v2.nxt.2.cafebabe.tmp");
+        let live = cache.child("nx_files_v3.nxt.2.cafebabe.tmp");
         live.write_str("x").unwrap();
         // Old neighbours that are not staging files stay, whatever their age.
-        for name in ["other.tmp", "nx_files_v2.nxt.bak"] {
+        for name in ["other.tmp", "nx_files_v3.nxt.bak"] {
             let neighbour = cache.child(name);
             neighbour.write_str("x").unwrap();
             std::fs::File::options()
@@ -302,9 +313,9 @@ mod tests {
         assert_eq!(
             names_in(cache.path()),
             vec![
-                "nx_files_v2.nxt",
-                "nx_files_v2.nxt.2.cafebabe.tmp",
-                "nx_files_v2.nxt.bak",
+                "nx_files_v3.nxt",
+                "nx_files_v3.nxt.2.cafebabe.tmp",
+                "nx_files_v3.nxt.bak",
                 "other.tmp"
             ]
         );
@@ -321,20 +332,20 @@ mod tests {
         .into_iter()
         .collect();
         write_files_archive(cache.path(), &two_files);
-        assert_eq!(names_in(cache.path()), vec!["nx_files_v2.nxt"]);
+        assert_eq!(names_in(cache.path()), vec!["nx_files_v3.nxt"]);
         assert_eq!(read_files_archive(cache.path()).unwrap().len(), 2);
     }
 
     #[test]
     fn staging_paths_differ_between_writes_of_one_process() {
-        let archive = Path::new("/cache/nx_files_v2.nxt");
+        let archive = Path::new("/cache/nx_files_v3.nxt");
         let first = staging_path(archive);
         let second = staging_path(archive);
         assert_ne!(first, second);
         for path in [&first, &second] {
             let name = path.file_name().unwrap().to_string_lossy();
             assert!(
-                name.starts_with("nx_files_v2.nxt.") && name.ends_with(".tmp"),
+                name.starts_with("nx_files_v3.nxt.") && name.ends_with(".tmp"),
                 "{name}"
             );
             assert_eq!(path.parent(), archive.parent());
@@ -345,7 +356,7 @@ mod tests {
     fn a_write_refuses_a_staging_path_something_already_occupies() {
         let cache = TempDir::new().unwrap();
         let archive = archive_path(cache.path());
-        let planted = cache.child("nx_files_v2.nxt.7.0000000000000001.tmp");
+        let planted = cache.child("nx_files_v3.nxt.7.0000000000000001.tmp");
         planted.write_str("planted").unwrap();
 
         let err = write_files_archive_at(&archive, planted.path(), &one_file()).unwrap_err();
@@ -359,23 +370,25 @@ mod tests {
     }
 
     #[test]
-    fn an_archive_in_the_pre_gathered_at_format_is_rejected_not_misread() {
-        // Adding `gathered_at` changed the archived layout. If a stale archive
-        // could be read as the new shape, every hash in it would be trusted
-        // against a garbage timestamp — silently wrong hashes for the whole
-        // workspace. It must fail the check and force a full re-hash instead.
+    fn an_archive_written_before_entries_carried_a_metadata_key_is_not_read() {
+        // What an upgrading workspace has on disk. Its mtimes would be compared
+        // against metadata keys, so it has to drop out and cost a full re-hash.
         let dir = tempfile::tempdir().expect("tempdir");
-        let mut legacy = HashMap::with_hasher(Default::default());
-        legacy.insert(
+        let mut files = HashMap::with_hasher(Default::default());
+        files.insert(
             String::from("a.ts"),
-            NxFileHashed(String::from("hash-a"), 1234),
+            V2NxFileHashed(String::from("hash-a"), 1234),
         );
-        let bytes = rkyv::to_bytes::<_, 2048>(&LegacyNxFileHashes(legacy)).expect("serialize");
-        std::fs::write(dir.path().join(NX_FILES_ARCHIVE), &bytes).expect("write legacy archive");
+        let bytes = rkyv::to_bytes::<_, 2048>(&V2NxFileHashes {
+            files,
+            gathered_at: 1234,
+        })
+        .expect("serialize");
+        std::fs::write(dir.path().join(V2_NX_FILES_ARCHIVE), &bytes).expect("write v2 archive");
 
         assert!(
             read_files_archive(dir.path()).is_none(),
-            "a pre-gathered_at archive must be rejected, not deserialized as the new shape"
+            "an archive keyed on mtimes must not be read as one keyed on metadata keys"
         );
     }
 

@@ -202,7 +202,7 @@ impl From<Files> for GatheredFiles {
 fn archive_to_files(archive: FilesArchive) -> Files {
     let mut files: Vec<(PathBuf, String)> = archive
         .iter()
-        .map(|(path, hash, _)| (PathBuf::from(path), hash.to_owned()))
+        .map(|(path, hash)| (PathBuf::from(path), hash.to_owned()))
         .collect();
     files.par_sort();
     files.into_iter().collect()
@@ -2100,7 +2100,7 @@ mod tests {
             .map(|e| e.unwrap().file_name().to_string_lossy().to_string())
             .collect();
         entries.sort();
-        assert_eq!(entries, vec!["nx_files.lock", "nx_files_v2.nxt"]);
+        assert_eq!(entries, vec!["nx_files.lock", "nx_files_v3.nxt"]);
     }
 
     #[cfg(not(target_arch = "wasm32"))]

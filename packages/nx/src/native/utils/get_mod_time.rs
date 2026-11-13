@@ -27,6 +27,52 @@ pub fn get_mod_time(metadata: &Metadata) -> i64 {
         .unwrap_or(0)
 }
 
+/// What an archived hash is keyed on, read from the stat the walk already did.
+/// `get_mod_time` cannot separate two writes that land in one timestamp tick,
+/// so the fields that move independently of the mtime are folded in with it.
+#[cfg(unix)]
+pub fn get_metadata_key(metadata: &Metadata) -> u64 {
+    use std::os::unix::fs::MetadataExt;
+    hash_fields(&[
+        metadata.size(),
+        metadata.ino(),
+        metadata.mtime() as u64,
+        metadata.mtime_nsec() as u64,
+        metadata.ctime() as u64,
+        metadata.ctime_nsec() as u64,
+    ])
+}
+
+/// Windows adds only size and creation time, because a walk's metadata carries
+/// no change time and `Metadata::change_time` is unstable. A same-size rewrite
+/// inside one last-write tick therefore still reads as unchanged.
+#[cfg(windows)]
+pub fn get_metadata_key(metadata: &Metadata) -> u64 {
+    use std::os::windows::fs::MetadataExt;
+    hash_fields(&[
+        metadata.file_size(),
+        metadata.last_write_time(),
+        metadata.creation_time(),
+    ])
+}
+
+#[cfg(not(any(unix, windows)))]
+pub fn get_metadata_key(metadata: &Metadata) -> u64 {
+    hash_fields(&[metadata.len(), get_mod_time(metadata) as u64])
+}
+
+/// Each field is hashed at its full width, so no two sets of fields can pack
+/// into the same bytes.
+fn hash_fields(fields: &[u64]) -> u64 {
+    const MAX_FIELDS: usize = 6;
+    debug_assert!(fields.len() <= MAX_FIELDS);
+    let mut bytes = [0u8; MAX_FIELDS * 8];
+    for (slot, field) in bytes.chunks_exact_mut(8).zip(fields) {
+        slot.copy_from_slice(&field.to_le_bytes());
+    }
+    xxhash_rust::xxh3::xxh3_64(&bytes[..fields.len() * 8])
+}
+
 /// "Now", in the same units and resolution `get_mod_time` reports on this
 /// platform. Stamped into the files archive so a later selective hash can tell
 /// which entries were read while the workspace could still be changing under it.
