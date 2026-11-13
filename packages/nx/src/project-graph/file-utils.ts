@@ -76,7 +76,7 @@ export function calculateFileChanges(
   readFileAtRevision: {
     (f: string, r: string | void): string;
   } = defaultReadFileAtRevision,
-  ignore = getIgnoreObject() as ReturnType<typeof ignore>
+  ignore: ReturnType<typeof getIgnoreObject> = getIgnoreObject()
 ): FileChange[] {
   files = files.filter((f) => !ignore.ignores(f));
 

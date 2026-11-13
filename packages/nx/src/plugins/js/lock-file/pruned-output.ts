@@ -25,7 +25,6 @@ import { workspaceRoot } from '../../../utils/workspace-root';
 import { extractMainLockfileDocument } from './utils/pnpm-normalizer';
 
 type PnpmManifestConfigField = keyof NonNullable<PackageJson['pnpm']>;
-export type PnpmLockfileConfigField = keyof Lockfile | 'catalogs';
 
 /**
  * The resolution-time pnpm config a pruned standalone output must not carry,
@@ -39,10 +38,7 @@ export type PnpmLockfileConfigField = keyof Lockfile | 'catalogs';
  * `patchedDependencies` is deliberately absent: it is filtered and re-declared
  * against the shipped patch files rather than dropped.
  */
-const PNPM_RESOLUTION_CONFIG: readonly {
-  manifest: PnpmManifestConfigField | null;
-  lockfile: PnpmLockfileConfigField;
-}[] = [
+const PNPM_RESOLUTION_CONFIG = [
   { manifest: 'overrides', lockfile: 'overrides' },
   {
     manifest: 'ignoredOptionalDependencies',
@@ -52,7 +48,18 @@ const PNPM_RESOLUTION_CONFIG: readonly {
   { manifest: null, lockfile: 'pnpmfileChecksum' },
   { manifest: null, lockfile: 'settings' },
   { manifest: null, lockfile: 'catalogs' },
-];
+] as const satisfies readonly {
+  manifest: PnpmManifestConfigField | null;
+  lockfile: keyof Lockfile | 'catalogs';
+}[];
+
+/**
+ * The table's own names rather than `keyof Lockfile`, because nx's published
+ * declarations must not import `@pnpm/lockfile-types` - consumers do not
+ * install it. The `satisfies` above still checks each name against pnpm's type.
+ */
+export type PnpmLockfileConfigField =
+  (typeof PNPM_RESOLUTION_CONFIG)[number]['lockfile'];
 
 const PNPM_MANIFEST_RESOLUTION_CONFIG_FIELDS = PNPM_RESOLUTION_CONFIG.flatMap(
   (field) => (field.manifest === null ? [] : [field.manifest])
@@ -988,14 +995,17 @@ export function assertNoWorkspaceModulePathCollision(
  * are left untouched. Mutates `lockfile` in place; the key rename and every ref
  * use the same `file:` path, so they stay in sync.
  *
- * Takes the normalized document rather than a looser shape: dependency refs are
- * rewritten only where they are plain strings, which is what normalization
- * guarantees. A raw v9 file records an importer ref as `{ specifier, version }`
- * and would have its package key renamed while that ref kept pointing at the
- * old path.
+ * Callers must pass the normalized document, not a looser shape: dependency
+ * refs are rewritten only where they are plain strings, which is what
+ * normalization guarantees. A raw v9 file records an importer ref as
+ * `{ specifier, version }` and would have its package key renamed while that
+ * ref kept pointing at the old path.
  */
 export function containShippedLocalFilePaths(
-  lockfile: Partial<Pick<Lockfile, 'importers' | 'packages'>>,
+  lockfile: {
+    importers?: Record<string, unknown>;
+    packages?: Record<string, unknown>;
+  },
   synthesizedModulePaths: ReadonlySet<string> = new Set()
 ): void {
   const synthesized = synthesizedModulePaths;
@@ -1035,7 +1045,7 @@ export function containShippedLocalFilePaths(
   };
 
   if (lockfile.packages) {
-    const contained: Lockfile['packages'] = {};
+    const contained: Record<string, unknown> = {};
     for (const [key, snapshot] of Object.entries(lockfile.packages)) {
       containSnapshot(snapshot);
       contained[containFileToken(key, synthesized)] = snapshot;
