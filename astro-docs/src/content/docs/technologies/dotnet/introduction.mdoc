@@ -152,6 +152,88 @@ To have Nx wrap it anyway, opt the target in:
 }
 ```
 
+### Build individual target frameworks
+
+For projects declaring multiple target framework monikers (TFMs) in `TargetFrameworks`, run
+`nx build <project-name>` to schedule one build task per framework.
+The `build` target is an uncached aggregate of `build:<tfm>` targets.
+Single-framework projects keep their existing targets.
+
+```shell
+nx run <project-name>:build:net10.0
+nx run <project-name>:build:net10.0:release
+```
+
+Use the `release` configuration to build every framework in Release:
+
+```shell
+nx run <project-name>:build --configuration=release
+```
+
+Each leaf caches the output and intermediate paths MSBuild evaluated for its framework and
+Debug or Release configuration.
+Referenced projects build through MSBuild, which selects compatible frameworks rather than
+requiring matching framework names.
+Their evaluated output closure is included in the cache entry.
+These self-contained tasks run serially on each agent to avoid concurrent writes to shared references.
+The aggregate contains no runtime-identifier targets.
+The plugin doesn't filter frameworks by host compatibility.
+A framework requiring an unavailable SDK or workload fails when you run it.
+For consistent graphs across agents, your MSBuild conditions must declare the same frameworks on each host.
+
+{% aside type="caution" title="Legacy Release dependencies" %}
+The existing `build:release` target remains an uncached, all-framework command.
+Nx can't express a dependency on a fixed aggregate configuration, so legacy `^build:release`
+dependencies don't fan out into framework tasks.
+Use `build --configuration=release` for framework scheduling.
+The plugin warns when it retains this compatibility target.
+{% /aside %}
+
+Inputs start with your `production` named input, or `default` if `production` isn't defined.
+Files evaluated as `Compile`, `EmbeddedResource`, `Content`, or `AdditionalFiles` only for another
+framework are excluded from that leaf.
+`None` items marked for copying to build or publish outputs are also tracked.
+Shared sources, project files, workspace imports, and linked resources remain inputs.
+Dependency sources are hashed conservatively across frameworks.
+Files read only by custom build tasks, outside those evaluated items, still need explicit inputs
+if they're outside the project directory.
+
+Set `tfmVariants` to `false` to keep all-framework build commands, including when you need
+custom MSBuild configurations or a replacement build command:
+
+```json
+// nx.json
+{
+  "plugins": [
+    {
+      "plugin": "@nx/dotnet",
+      "options": {
+        "tfmVariants": false
+      }
+    }
+  ]
+}
+```
+
+Build target renaming applies to the aggregate and its leaves.
+Disabling `build` suppresses both.
+Additional `build.options.args` support only logging switches: `--verbosity` or `-v` with a
+verbosity level, and `--nologo`.
+They are appended without replacing the required framework and configuration arguments.
+Other switches, MSBuild properties, and target-specific `env` or `envFile` settings can change
+evaluated items or paths and are rejected rather than guessed.
+Use `tfmVariants: false` for those customizations.
+Select `debug` or `release` through Nx rather than passing `--configuration` in those arguments.
+Source items outside the workspace or overlapping framework outputs disable leaf caching with a warning.
+The base multi-targeted `publish` command is also uncached because its selected framework isn't
+known during inference.
+It still requires a framework argument, as `dotnet publish` does.
+`pack` keeps configuration-specific caching and defaults to Release.
+
+The plugin emits `metadata.variantOf` and target groups, but shared `.env.build` ownership still
+requires support for `variantOf` in Nx core.
+Target grouping alone doesn't provide that environment inheritance.
+
 ### Test project detection
 
 A project gets a `test` target, and loses its `pack` target, when either MSBuild property is `true`:
@@ -234,8 +316,8 @@ For example:
         "build": {
           "targetName": "compile",
           "configurations": {
-            "production": {
-              "optimization": true
+            "release": {
+              "args": ["--nologo"]
             }
           }
         },

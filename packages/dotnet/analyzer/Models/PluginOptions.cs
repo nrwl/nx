@@ -5,6 +5,8 @@ namespace MsbuildAnalyzer.Models;
 /// </summary>
 public class PluginOptions
 {
+    public bool TfmVariants { get; set; } = true;
+
     /// <summary>
     /// The name of the build target. Defaults to "build".
     /// </summary>
