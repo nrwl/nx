@@ -1,4 +1,4 @@
-import { minimatch } from 'minimatch';
+import { Minimatch } from 'minimatch';
 import { Tree } from '../tree';
 import { combineGlobPatterns } from '../../utils/globs';
 import {
@@ -52,14 +52,14 @@ function combineGlobResultsWithTree(
   const matches = new Set(results);
 
   const combinedGlob = combineGlobPatterns(patterns);
-  const matcher = minimatch.makeRe(combinedGlob);
+  const matcher = new Minimatch(combinedGlob);
 
-  if (!matcher) {
+  if (matcher.set.length === 0) {
     throw new Error('Invalid glob pattern: ' + combinedGlob);
   }
 
   for (const change of tree.listChanges()) {
-    if (change.type !== 'UPDATE' && matcher.test(change.path)) {
+    if (change.type !== 'UPDATE' && matcher.match(change.path)) {
       if (change.type === 'CREATE') {
         matches.add(change.path);
       } else if (change.type === 'DELETE') {
