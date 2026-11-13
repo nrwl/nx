@@ -56,6 +56,7 @@ expect.addSnapshotSerializer({
           'Skipped lock file update because {package-manager-specific reason}.'
         )
         .replaceAll(getSelectedPackageManager(), '{package-manager}')
+        .replaceAll(`${e2eRegistryUrl}/`, '{registryUrl}')
         .replaceAll(e2eRegistryUrl, '{registryUrl}')
         // We trim each line to reduce the chances of snapshot flakiness
         .split('\n')

@@ -65,6 +65,7 @@ expect.addSnapshotSerializer({
         )
         .replaceAll('pnpm install --lockfile-only', '{lock-file-command}')
         .replaceAll(getSelectedPackageManager(), '{package-manager}')
+        .replaceAll(`${e2eRegistryUrl}/`, '{registryUrl}')
         .replaceAll(e2eRegistryUrl, '{registryUrl}')
         // Filter out plugin worker verbose logs
         .replaceAll(/\[(isolated-plugin|plugin-worker)\].*\n/g, '')
