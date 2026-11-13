@@ -7,6 +7,7 @@ import { env } from 'npm-run-path';
 import { relative } from 'path';
 import { dirSync, fileSync } from 'tmp';
 import { PseudoTerminal } from '../../tasks-runner/pseudo-terminal';
+import { logger } from '../../utils/logger';
 import runCommands, {
   interpolateArgsIntoCommand,
   runCommands as startRunCommands,
@@ -213,6 +214,87 @@ describe('Run Commands', () => {
     );
     expect(result.terminalOutput).toContain('1 --key=123');
     expect(result.terminalOutput).not.toContain('2 --key=123');
+  });
+
+  describe('unknown options with object values', () => {
+    const lintContext = { projectName: 'proj', targetName: 'lint' } as any;
+    let warn: ReturnType<typeof vi.spyOn>;
+
+    beforeEach(() => {
+      warn = vi.spyOn(logger, 'warn').mockImplementation(() => {});
+    });
+
+    afterEach(() => {
+      warn.mockRestore();
+    });
+
+    it('should warn once per dropped option, naming it and the target', async () => {
+      const result = await runCommands(
+        {
+          commands: ['echo 1', 'echo 2 {args}'],
+          lintFilePatterns: ['a.ts'],
+          fix: true,
+          __unparsed__: [],
+        },
+        lintContext
+      );
+      expect(result.terminalOutput).toContain('1 --fix=true');
+      expect(result.terminalOutput).not.toContain('a.ts');
+      expect(warn).toHaveBeenCalledTimes(1);
+      expect(warn.mock.calls[0][0]).toContain('"lintFilePatterns"');
+      expect(warn.mock.calls[0][0]).toContain('proj:lint');
+      expect(warn.mock.calls[0][0]).toContain('"args"');
+    });
+
+    it('should not warn for string, number, boolean or null options', async () => {
+      await runCommands(
+        {
+          command: 'echo',
+          str: 'a',
+          num: 1,
+          bool: true,
+          nothing: null,
+          __unparsed__: [],
+        },
+        lintContext
+      );
+      expect(warn).not.toHaveBeenCalled();
+    });
+
+    it('should not warn for an object option built from a forwarded dotted flag', async () => {
+      const result = await runCommands(
+        {
+          command: 'echo vitest',
+          coverage: { enabled: true },
+          __unparsed__: ['--coverage.enabled=true'],
+        },
+        lintContext
+      );
+      expect(result.terminalOutput).toContain('vitest --coverage.enabled=true');
+      expect(warn).not.toHaveBeenCalled();
+    });
+
+    it('should not warn when unknown options are not forwarded', async () => {
+      await runCommands(
+        {
+          command: 'echo',
+          lintFilePatterns: ['a.ts'],
+          forwardAllArgs: false,
+          __unparsed__: [],
+        },
+        lintContext
+      );
+      await runCommands(
+        {
+          command: 'echo {args.fix}',
+          lintFilePatterns: ['a.ts'],
+          fix: true,
+          __unparsed__: [],
+        },
+        lintContext
+      );
+      expect(warn).not.toHaveBeenCalled();
+    });
   });
 
   it('should interpolate all unknown args as if they were --args', async () => {
