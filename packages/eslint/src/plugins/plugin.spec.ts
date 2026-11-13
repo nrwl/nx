@@ -791,8 +791,8 @@ describe('@nx/eslint/plugin', () => {
         targetName: 'lint',
       });
       // configFiles is built from Object.keys(fileSys) in this test harness,
-      // so the input order seen by the plugin is c-lib, a-lib, b-lib. With
-      // the fix, that is the exact order the plugin emits.
+      // so the input order seen by the plugin is c-lib, a-lib, b-lib. The
+      // plugin must emit the projects in that order.
       expect(Object.keys(result.projects)).toEqual([
         'libs/c-lib',
         'libs/a-lib',
