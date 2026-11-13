@@ -37,10 +37,36 @@ pub fn hash_file_path<P: AsRef<Path>>(path: P) -> Option<String> {
         return None;
     };
     trace!("Hashing {:?}", path);
-    let hash = hash(&content);
+    let hash = hash_file_contents(path, &content);
     trace!("Hashed file {:?} - {:?}", path, hash);
 
     Some(hash)
+}
+
+fn hash_file_contents(path: &Path, content: &[u8]) -> String {
+    if is_executable(path) {
+        // `chmod` does not change the bytes. The extra byte keeps an
+        // executable file from sharing the content-only hash.
+        let mut hasher = xxh3::Xxh3::new();
+        hasher.update(content);
+        hasher.update(&[1]);
+        return hasher.digest().to_string();
+    }
+    hash(content)
+}
+
+/// Any execute bit, the same test git uses for `100755`. Always false off unix.
+fn is_executable(path: &Path) -> bool {
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        std::fs::metadata(path).is_ok_and(|meta| meta.permissions().mode() & 0o111 != 0)
+    }
+    #[cfg(not(unix))]
+    {
+        let _ = path;
+        false
+    }
 }
 
 #[cfg(test)]
@@ -80,6 +106,35 @@ mod tests {
         let content = hash_file(test_file_path);
 
         assert_eq!(content.unwrap(), "6193209363630369380");
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn the_executable_bit_changes_the_file_hash() {
+        use std::os::unix::fs::PermissionsExt;
+
+        use crate::native::hasher::hash;
+
+        let temp = TempDir::new().unwrap();
+        let file = temp.child("tool.sh");
+        let bytes = "#!/bin/sh\n";
+        file.write_str(bytes).unwrap();
+        let path = file.path();
+
+        let mut perms = std::fs::metadata(path).unwrap().permissions();
+        perms.set_mode(perms.mode() & !0o111);
+        std::fs::set_permissions(path, perms.clone()).unwrap();
+        let plain = hash_file(path.display().to_string()).unwrap();
+        assert_eq!(plain, hash(bytes.as_bytes()));
+
+        perms.set_mode(perms.mode() | 0o111);
+        std::fs::set_permissions(path, perms.clone()).unwrap();
+        let executable = hash_file(path.display().to_string()).unwrap();
+        assert_ne!(plain, executable);
+
+        perms.set_mode(perms.mode() & !0o111);
+        std::fs::set_permissions(path, perms).unwrap();
+        assert_eq!(hash_file(path.display().to_string()).unwrap(), plain);
     }
 
     #[test]
