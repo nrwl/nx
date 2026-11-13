@@ -179,24 +179,38 @@ describe('addLinting generator', () => {
     expect(devDependencies['@typescript-eslint/utils']).toBe('^8.58.0');
   });
 
-  it('should pin ESLint v9 when the workspace uses Angular 20', async () => {
-    updateJson(tree, 'package.json', (json) => ({
-      ...json,
-      dependencies: { ...json.dependencies, '@angular/core': '~20.3.0' },
-    }));
+  // A range spanning 20 and 21 with 21 installed still gets angular-eslint 20,
+  // so ESLint must stay on v9 with it.
+  it.each([
+    ['~20.3.0', undefined],
+    ['>=20.0.0 <22.0.0', '21.2.0'],
+  ])(
+    'should pin ESLint v9 when the workspace declares Angular %s (installed: %s)',
+    async (declared, installed) => {
+      updateJson(tree, 'package.json', (json) => ({
+        ...json,
+        dependencies: { ...json.dependencies, '@angular/core': declared },
+      }));
+      if (installed) {
+        tree.write(
+          'node_modules/@angular/core/package.json',
+          JSON.stringify({ name: '@angular/core', version: installed })
+        );
+      }
 
-    await addLintingGenerator(tree, {
-      linter: 'eslint',
-      prefix: 'myOrg',
-      projectName: appProjectName,
-      projectRoot: appProjectRoot,
-      skipFormat: true,
-    });
+      await addLintingGenerator(tree, {
+        linter: 'eslint',
+        prefix: 'myOrg',
+        projectName: appProjectName,
+        projectRoot: appProjectRoot,
+        skipFormat: true,
+      });
 
-    const { devDependencies } = readJson(tree, 'package.json');
-    expect(devDependencies['eslint']).toBe('^9.8.0');
-    expect(devDependencies['angular-eslint']).toBe('^20.3.0');
-  });
+      const { devDependencies } = readJson(tree, 'package.json');
+      expect(devDependencies['eslint']).toBe('^9.8.0');
+      expect(devDependencies['angular-eslint']).toBe('^20.3.0');
+    }
+  );
 
   it('should install ESLint v10 when the workspace uses the latest Angular version', async () => {
     await addLintingGenerator(tree, {
