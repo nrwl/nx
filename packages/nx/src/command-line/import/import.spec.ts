@@ -2,6 +2,7 @@ import { execFileSync } from 'node:child_process';
 import {
   mkdirSync,
   mkdtempSync,
+  realpathSync,
   rmSync,
   statSync,
   symlinkSync,
@@ -203,7 +204,30 @@ describe('importHandler', () => {
         interactive: false,
       })
     ).rejects.toThrow(
-      `inside the git repository at ${repo}. Import that repository instead and select the directory packages/lib with the --source option.`
+      `inside the git repository at ${realpathSync(repo)}. Import that repository instead and select the directory packages/lib with the --source option.`
+    );
+  });
+
+  it('points at the real repository and directory when the source is a symlink into one', async () => {
+    const repo = join(root, 'source');
+    mkdirSync(join(repo, 'packages', 'lib'), { recursive: true });
+    git(repo, 'init', '-q', '-b', 'main');
+    const alias = join(root, 'alias');
+    symlinkSync(join(repo, 'packages', 'lib'), alias);
+    createWorkspace();
+
+    await expect(
+      importHandler({
+        sourceRepository: alias,
+        ref: 'main',
+        source: '.',
+        destination: 'libs/lib',
+        depth: 0,
+        verbose: false,
+        interactive: false,
+      })
+    ).rejects.toThrow(
+      `inside the git repository at ${realpathSync(repo)}. Import that repository instead and select the directory packages/lib with the --source option.`
     );
   });
 

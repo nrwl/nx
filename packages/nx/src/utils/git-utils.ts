@@ -747,7 +747,11 @@ export function getGitRepositoryStatus(
   } catch (err) {
     const stderr =
       (err as { stderr?: Buffer | string })?.stderr?.toString() ?? '';
-    return /not a git repository/i.test(stderr) ? 'not-git' : 'unknown';
+    // Anchored to git's own message so a path quoted in another error, such
+    // as a broken included config file, cannot match.
+    return /^fatal: not a git repository/im.test(stderr)
+      ? 'not-git'
+      : 'unknown';
   }
 }
 

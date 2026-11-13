@@ -1,5 +1,5 @@
 import { isAbsolute, join, relative, resolve } from 'path';
-import { existsSync } from 'node:fs';
+import { existsSync, realpathSync } from 'node:fs';
 import * as pc from 'picocolors';
 import {
   cloneFromUpstream,
@@ -103,9 +103,12 @@ function createDestinationGitClient(): GitRepository {
 
 function getSourceNotAGitRepositoryMessage(sourceDirectory: string): string {
   const message = `${sourceDirectory} is not a git repository. Nx imports code along with its git history, so the source must be a git repository.`;
-  const pathInEnclosingRepo = getGitRootRelativePath(sourceDirectory);
+  // git reports the repository by its real path, so the directory is resolved
+  // too; otherwise a symlinked source yields a path that is not inside it.
+  const realSourceDirectory = realpathSync(sourceDirectory);
+  const pathInEnclosingRepo = getGitRootRelativePath(realSourceDirectory);
   if (pathInEnclosingRepo) {
-    return `${message}\nIt is a directory inside the git repository at ${getGitRootPath(sourceDirectory)}. Import that repository instead and select the directory ${pathInEnclosingRepo} with the --source option.`;
+    return `${message}\nIt is a directory inside the git repository at ${getGitRootPath(realSourceDirectory)}. Import that repository instead and select the directory ${pathInEnclosingRepo} with the --source option.`;
   }
   return `${message}\nRun "git init" in ${sourceDirectory}, commit the files and try again.`;
 }
