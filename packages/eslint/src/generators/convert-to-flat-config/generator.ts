@@ -173,9 +173,9 @@ export async function convertToFlatConfigGenerator(
   }
 
   // replace references in nx.json and project.json files
-  const remainingLegacyNames = findRemainingLegacyFileNames(tree);
-  updateNxJsonConfig(tree, remainingLegacyNames);
-  updateProjectConfigsInputs(tree, remainingLegacyNames);
+  const remainingLegacyFiles = findRemainingLegacyFiles(tree);
+  updateNxJsonConfig(tree, remainingLegacyFiles);
+  updateProjectConfigsInputs(tree, remainingLegacyFiles);
 
   // The converter carries angular-eslint's removed eslintrc configs over as
   // FlatCompat shims; on v22 those no longer resolve, so reconcile them to the
@@ -488,17 +488,17 @@ function getPluginScopedTargetDefaults(
   return Array.isArray(value) ? value.filter(isPluginScopedTargetDefault) : [];
 }
 
-// Basenames of the legacy eslintrc and ignore files still in the workspace. Git-ignored
+// Paths of the legacy eslintrc and ignore files still in the workspace. Git-ignored
 // files are skipped: only an `includeIgnored` fileset hashes them, and it keeps the legacy name.
-function findRemainingLegacyFileNames(tree: Tree): Set<string> {
-  const names = new Set<string>();
+function findRemainingLegacyFiles(tree: Tree): Set<string> {
+  const files = new Set<string>();
   visitNotIgnoredFiles(tree, '', (path) => {
     const name = basename(path);
     if (renameLegacyEslintrcFile(name, '*') !== name) {
-      names.add(name);
+      files.add(path);
     }
   });
-  return names;
+  return files;
 }
 
 // Rewrites input entries that reference legacy eslintrc / `.eslintignore`
@@ -507,7 +507,7 @@ function findRemainingLegacyFileNames(tree: Tree): Set<string> {
 // non-fileset inputs (runtime/env/dependentTasksOutputFiles/etc.) untouched.
 function rewriteLegacyInputs(
   inputs: Array<string | InputDefinition>,
-  remainingLegacyNames: ReadonlySet<string>
+  remainingLegacyFiles: ReadonlySet<string>
 ): Array<string | InputDefinition> {
   const seenStrings = new Set<string>();
   const result: Array<string | InputDefinition> = [];
@@ -515,7 +515,7 @@ function rewriteLegacyInputs(
     if (typeof entry === 'string') {
       for (const rewritten of rewriteLegacyPattern(
         entry,
-        remainingLegacyNames
+        remainingLegacyFiles
       )) {
         if (seenStrings.has(rewritten)) continue;
         seenStrings.add(rewritten);
@@ -524,7 +524,7 @@ function rewriteLegacyInputs(
     } else if ('fileset' in entry) {
       for (const rewritten of rewriteLegacyPattern(
         entry.fileset,
-        remainingLegacyNames,
+        remainingLegacyFiles,
         entry.includeIgnored === true
       )) {
         // Preserve the original reference when nothing changed so downstream identity
@@ -540,13 +540,17 @@ function rewriteLegacyInputs(
   return result;
 }
 
-// A pattern keeps its legacy name while a file of that name remains, so task hashes
-// keep covering it. A file name with glob syntax can match a remaining file of any
-// name, so it keeps its legacy name too. The flat-config glob matches a config of
-// any extension, including one an earlier conversion wrote in another format.
+const GLOB_SYNTAX = /[*?[\]{}()|]/;
+
+// A pattern keeps its legacy name while a file it names remains, so task hashes
+// keep covering it: that file for a `{workspaceRoot}` path, and a file of that name
+// anywhere for other patterns, such as a `{projectRoot}` one that each project
+// resolves. A file name with glob syntax can match a remaining file of any name, so
+// it keeps its legacy name too. The flat-config glob matches a config of any
+// extension, including one an earlier conversion wrote in another format.
 function rewriteLegacyPattern(
   pattern: string,
-  remainingLegacyNames: ReadonlySet<string>,
+  remainingLegacyFiles: ReadonlySet<string>,
   includeIgnored = false
 ): string[] {
   const renamed = renameLegacyEslintrcFile(pattern, '*');
@@ -554,9 +558,12 @@ function rewriteLegacyPattern(
     return [pattern];
   }
   const name = basename(pattern);
-  return includeIgnored ||
-    /[*?[\]{}()|]/.test(name) ||
-    remainingLegacyNames.has(name)
+  const workspacePath = /^!?\{workspaceRoot\}\/(.+)$/.exec(pattern)?.[1];
+  const remains =
+    workspacePath !== undefined && !GLOB_SYNTAX.test(workspacePath)
+      ? remainingLegacyFiles.has(joinPathFragments(workspacePath))
+      : [...remainingLegacyFiles].some((file) => basename(file) === name);
+  return includeIgnored || GLOB_SYNTAX.test(name) || remains
     ? [pattern, renamed]
     : [renamed];
 }
@@ -565,9 +572,9 @@ function rewriteLegacyPattern(
 function ensureInputPresent(
   inputs: Array<string | InputDefinition>,
   value: string,
-  remainingLegacyNames: ReadonlySet<string>
+  remainingLegacyFiles: ReadonlySet<string>
 ): Array<string | InputDefinition> {
-  const rewritten = rewriteLegacyInputs(inputs, remainingLegacyNames);
+  const rewritten = rewriteLegacyInputs(inputs, remainingLegacyFiles);
   if (!rewritten.some((entry) => entry === value)) {
     rewritten.push(value);
   }
@@ -580,7 +587,7 @@ function ensureInputPresent(
 // of `targetDefaults`.
 function updateNxJsonConfig(
   tree: Tree,
-  remainingLegacyNames: ReadonlySet<string>
+  remainingLegacyFiles: ReadonlySet<string>
 ) {
   if (!tree.exists('nx.json')) {
     return;
@@ -595,9 +602,9 @@ function updateNxJsonConfig(
         ? ensureInputPresent(
             target.inputs,
             '{workspaceRoot}/eslint.config.*',
-            remainingLegacyNames
+            remainingLegacyFiles
           )
-        : rewriteLegacyInputs(target.inputs, remainingLegacyNames);
+        : rewriteLegacyInputs(target.inputs, remainingLegacyFiles);
     };
     if (json.targetDefaults) {
       for (const [name, value] of Object.entries(json.targetDefaults)) {
@@ -620,9 +627,9 @@ function updateNxJsonConfig(
             ? ensureInputPresent(
                 inputs,
                 '!{projectRoot}/eslint.config.*',
-                remainingLegacyNames
+                remainingLegacyFiles
               )
-            : rewriteLegacyInputs(inputs, remainingLegacyNames);
+            : rewriteLegacyInputs(inputs, remainingLegacyFiles);
       }
     }
     return json;
@@ -632,7 +639,7 @@ function updateNxJsonConfig(
 // Walks every project's `targets.*.inputs` and `namedInputs.*`, rewriting stale references.
 function updateProjectConfigsInputs(
   tree: Tree,
-  remainingLegacyNames: ReadonlySet<string>
+  remainingLegacyFiles: ReadonlySet<string>
 ) {
   for (const [project, projectConfig] of getProjects(tree)) {
     let changed = false;
@@ -641,7 +648,7 @@ function updateProjectConfigsInputs(
         if (!target.inputs) continue;
         const rewritten = rewriteLegacyInputs(
           target.inputs,
-          remainingLegacyNames
+          remainingLegacyFiles
         );
         if (!inputsEqual(target.inputs, rewritten)) {
           target.inputs = rewritten;
@@ -651,7 +658,7 @@ function updateProjectConfigsInputs(
     }
     if (projectConfig.namedInputs) {
       for (const [name, inputs] of Object.entries(projectConfig.namedInputs)) {
-        const rewritten = rewriteLegacyInputs(inputs, remainingLegacyNames);
+        const rewritten = rewriteLegacyInputs(inputs, remainingLegacyFiles);
         if (!inputsEqual(inputs, rewritten)) {
           projectConfig.namedInputs[name] = rewritten;
           changed = true;
