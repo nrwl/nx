@@ -309,27 +309,36 @@ mod tests {
 
         // Create diamond pattern repeated at each level
         for level in 0..depth {
-            let left = format!("left{}", level);
-            let right = format!("right{}", level);
-            let bottom = format!("bottom{}", level);
+            let left = format!("left{}:build", level);
+            let right = format!("right{}:build", level);
+            let bottom = format!("bottom{}:build", level);
 
             tasks.insert(
                 left.clone(),
-                tests::create_test_task(&left, vec![format!("dist/left{}", level)]),
+                tests::create_test_task(
+                    &format!("left{}", level),
+                    vec![format!("dist/left{}", level)],
+                ),
             );
             tasks.insert(
                 right.clone(),
-                tests::create_test_task(&right, vec![format!("dist/right{}", level)]),
+                tests::create_test_task(
+                    &format!("right{}", level),
+                    vec![format!("dist/right{}", level)],
+                ),
             );
             tasks.insert(
                 bottom.clone(),
-                tests::create_test_task(&bottom, vec![format!("dist/bottom{}", level)]),
+                tests::create_test_task(
+                    &format!("bottom{}", level),
+                    vec![format!("dist/bottom{}", level)],
+                ),
             );
 
             if level == 0 {
                 dependencies.insert("root:build".to_string(), edges_to(&[&left, &right]));
             } else {
-                let prev_bottom = format!("bottom{}", level - 1);
+                let prev_bottom = format!("bottom{}:build", level - 1);
                 dependencies.insert(prev_bottom, edges_to(&[&left, &right]));
             }
 
@@ -361,7 +370,7 @@ mod tests {
             fastest = fastest.min(start.elapsed());
         }
 
-        assert!(!result.is_empty());
+        assert_eq!(result.len(), 3 * 18);
         assert!(
             fastest.as_millis() < 10,
             "Performance regression: expected <10ms, got {:?}",
