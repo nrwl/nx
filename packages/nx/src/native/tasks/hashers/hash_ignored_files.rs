@@ -8,7 +8,7 @@
 //! `WorkspaceFileIndex` is here because the index over the file map was, and
 //! is about the workspace rather than about ignored files; see NXC-5006.
 
-use std::collections::{BTreeSet, HashMap};
+use std::collections::BTreeSet;
 use std::path::Path;
 use std::sync::{Arc, OnceLock};
 
@@ -16,7 +16,9 @@ use anyhow::Result;
 use rayon::prelude::*;
 use xxhash_rust::xxh3;
 
-use super::disk_expansion::{FilesExpansion, Source, expand_globs, parse_group, scope_roots};
+use super::disk_expansion::{
+    FilesExpansion, PathIndex, Source, expand_globs, parse_group, scope_roots,
+};
 use crate::native::types::FileData;
 use crate::native::workspace::ignored_index::{IgnoredIndex, RunStage};
 
@@ -50,11 +52,11 @@ pub(crate) fn hash_files(
 }
 
 /// The workspace file map indexed by path, built on first use and shared by
-/// everyone who asks a plan what the workspace already tracks. Holding the
-/// index rather than a set of names means a hash costs no second lookup.
+/// everyone who asks a plan about the workspace's tracked files: workspace
+/// filesets, and what a disk-backed fileset may take on trust.
 pub(crate) struct WorkspaceFileIndex {
     files: Arc<Vec<FileData>>,
-    by_path: OnceLock<HashMap<String, u32>>,
+    by_path: OnceLock<PathIndex>,
 }
 
 impl WorkspaceFileIndex {
@@ -65,26 +67,24 @@ impl WorkspaceFileIndex {
         }
     }
 
-    fn by_path(&self) -> &HashMap<String, u32> {
-        self.by_path.get_or_init(|| {
-            self.files
-                .iter()
-                .enumerate()
-                .map(|(i, f)| (f.file.clone(), i as u32))
-                .collect()
-        })
+    pub(crate) fn files(&self) -> &[FileData] {
+        &self.files
+    }
+
+    pub(crate) fn by_path(&self) -> &PathIndex {
+        self.by_path.get_or_init(|| PathIndex::new(&self.files))
     }
 
     /// Whether the file map holds this exact path, so it needs no stat.
     pub(crate) fn tracks(&self, path: &str) -> bool {
-        self.by_path().contains_key(path)
+        self.by_path().find(&self.files, path).is_some()
     }
 
     /// The hash the file map already holds for `path`.
     pub(crate) fn hash_of(&self, path: &str) -> Option<String> {
         self.by_path()
-            .get(path)
-            .map(|&i| self.files[i as usize].hash.clone())
+            .find(&self.files, path)
+            .map(|i| self.files[i as usize].hash.clone())
     }
 }
 
@@ -92,12 +92,11 @@ impl WorkspaceFileIndex {
 /// same order hashing folds them. `source` says what may be leaned on instead
 /// of the disk; see `Source`.
 pub(crate) fn collect_ignored_file_paths(
-    workspace_root: &Path,
     globs: &[String],
     project_roots: &[String],
     source: &Source,
 ) -> Result<Vec<String>> {
-    Ok(expand_globs(workspace_root, globs, project_roots, source)?.files)
+    Ok(expand_globs(globs, project_roots, source)?.files)
 }
 
 #[napi]
@@ -121,12 +120,7 @@ pub fn expand_files_input(
         }
         None => Vec::new(),
     };
-    collect_ignored_file_paths(
-        workspace_root,
-        &globs,
-        &roots,
-        &Source::fileset_from_disk(workspace_root),
-    )
+    collect_ignored_file_paths(&globs, &roots, &Source::fileset_from_disk(workspace_root))
 }
 
 #[cfg(test)]

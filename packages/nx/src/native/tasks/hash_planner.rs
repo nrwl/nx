@@ -2037,8 +2037,8 @@ fn find_external_dependency_node_names<'a>(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::native::glob::{build_glob_set, fileset_patterns};
     use crate::native::project_graph::types::{ExternalNode, Project, Target};
+    use crate::native::tasks::hashers::FileSet;
     use crate::native::test_utils::edges_to;
 
     fn mixed_cycle_planner(with_outputs: bool) -> HashPlanner {
@@ -2400,14 +2400,14 @@ mod tests {
 
     #[test]
     fn a_project_root_with_glob_characters_matches_only_itself() {
-        let globs = fileset_patterns(&[resolve_tokens(
+        let fileset = FileSet::parse(&[resolve_tokens(
             "{projectRoot}/**/*",
             "packages/(group)/lib-a",
             "lib-a",
-        )]);
-        let glob_set = build_glob_set(&globs).unwrap();
-        assert!(glob_set.is_match("packages/(group)/lib-a/src/index.ts"));
-        assert!(!glob_set.is_match("packages/group/lib-a/src/index.ts"));
+        )])
+        .unwrap();
+        assert!(fileset.matches("packages/(group)/lib-a/src/index.ts"));
+        assert!(!fileset.matches("packages/group/lib-a/src/index.ts"));
     }
 
     #[test]
@@ -3971,7 +3971,6 @@ mod nested_project_tests {
                     ultracache,
                 } => Some(
                     expand_globs_with_exclusions(
-                        temp.path(),
                         globs,
                         project_roots,
                         &Source::fileset_from_disk(temp.path()),
