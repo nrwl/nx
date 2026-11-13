@@ -368,7 +368,12 @@ async function loadsReadySignalPlugin(plugins: unknown): Promise<boolean> {
     }
     return false;
   }
-  return (plugin as { name?: unknown } | null)?.name === 'nx-ready-signal';
+  const candidate = plugin as { name?: unknown; apply?: unknown } | null;
+  // Function predicates may depend on the task environment.
+  return (
+    candidate?.name === 'nx-ready-signal' &&
+    (!candidate.apply || candidate.apply === 'serve')
+  );
 }
 
 async function startTarget(
