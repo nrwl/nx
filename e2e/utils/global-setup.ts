@@ -99,6 +99,9 @@ export default async function (globalConfig: Config.ConfigGlobals) {
     // pnpm resolves an exact version from its own metadata cache without asking
     // the registry; `pnpm_config_` is the prefix it honours for cache-dir.
     process.env.pnpm_config_cache_dir = join(e2eCacheDir, 'pnpm');
+    // pnpm 12 serializes store writes per process only, so suites sharing an agent's
+    // store can delete each other's half-written files ("failed to import …").
+    process.env.pnpm_config_store_dir = join(e2eCacheDir, 'pnpm-store');
     // yarnv1
     process.env.YARN_CACHE_FOLDER = join(e2eCacheDir, 'yarn');
     // yarnv2
