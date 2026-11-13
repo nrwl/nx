@@ -101,6 +101,29 @@ describe('getForwardedArgs', () => {
   });
 });
 
+describe.skipIf(process.platform === 'win32')(
+  'getForwardedArgs with quoted shell fallbacks',
+  () => {
+    afterEach(() => vi.unstubAllEnvs());
+
+    it('keeps a quoted config fallback as the single argument the server receives', () => {
+      vi.stubEnv('NX_TEST_CONFIG', undefined);
+      expect(
+        getForwardedArgs({
+          args: '--config ${NX_TEST_CONFIG:-"my config.mjs"}',
+        })
+      ).toEqual(['--config', 'my config.mjs']);
+    });
+
+    it('does not include fallback quotes in a port override', () => {
+      vi.stubEnv('NX_TEST_PORT', undefined);
+      expect(
+        getForwardedArgs({ args: '--port ${NX_TEST_PORT:-"4300"}' })
+      ).toEqual(['--port', '4300']);
+    });
+  }
+);
+
 describe('getReadyCheckReadyWhen', () => {
   it('passes the config file name to the check', () => {
     expect(
