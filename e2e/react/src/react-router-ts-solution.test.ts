@@ -88,6 +88,7 @@ describe('React Router Applications - TS Solution', () => {
     }
   });
 
+  // Covers a cold Cypress binary install, which can wait on another suite's.
   it('should execute e2e tests using cypress', async () => {
     const cypressAppName = uniq('cypress-app');
     const cypressAppPort = await reservePort();
@@ -102,5 +103,5 @@ describe('React Router Applications - TS Solution', () => {
       );
       expect(await killPorts(cypressAppPort)).toBeTruthy();
     }
-  });
+  }, 300_000);
 });
