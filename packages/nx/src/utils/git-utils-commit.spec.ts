@@ -207,4 +207,13 @@ describe('getGitRepositoryStatus (real git)', () => {
       'unknown'
     );
   });
+
+  it('does not read a broken config file named like the git message as a missing repository', () => {
+    initRepo(root);
+    const included = join(root, 'not a git repository.cfg');
+    writeFileSync(included, '[broken\n');
+    execSync(`git config include.path "${included}"`, { cwd: root });
+
+    expect(getGitRepositoryStatus(root)).toBe('unknown');
+  });
 });
