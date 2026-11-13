@@ -13,6 +13,7 @@ import {
   filterDummyTasks,
   getNonDummyDeps,
   filterTaskGraphToSelection,
+  ProcessTasks,
 } from './create-task-graph';
 import { pruneToSelectedTasks } from './utils';
 
@@ -3531,6 +3532,65 @@ describe('createTaskGraph', () => {
 
     // Both task graphs should be identical
     expect(taskGraph1).toEqual(taskGraph2);
+  });
+
+  it('should create one dummy task per project without the target, however many ^target entries reach it', () => {
+    // app -> mid0 -> mid1 -> mid2 -> leaf, where only leaf has the targets app depends on. Each `^codegen-*`
+    // entry used to get its own dummy task at every mid project, and each of those dummies re-expanded every
+    // entry, so the work at each mid project grew with the square of the number of entries.
+    const codegenTargets = ['codegen-a', 'codegen-b', 'codegen-c', 'codegen-d'];
+    const mids = ['mid0', 'mid1', 'mid2'];
+    const builder = new GraphBuilder()
+      .addProjectConfiguration({
+        name: 'app',
+        targets: {
+          build: {
+            executor: 'nx:run-commands',
+            dependsOn: codegenTargets.map((target) => `^${target}`),
+          },
+        },
+      })
+      .addProjectConfiguration({
+        name: 'leaf',
+        targets: Object.fromEntries(
+          codegenTargets.map((target) => [
+            target,
+            { executor: 'nx:run-commands' },
+          ])
+        ),
+      })
+      .addDependencies({
+        app: ['mid0'],
+        mid0: ['mid1'],
+        mid1: ['mid2'],
+        mid2: ['leaf'],
+      });
+    for (const name of mids) {
+      builder.addProjectConfiguration({ name, targets: {} });
+    }
+    const processTask = vi.spyOn(ProcessTasks.prototype, 'processTask');
+
+    const taskGraph = createTaskGraph(
+      builder.build(),
+      {},
+      ['app'],
+      ['build'],
+      undefined,
+      {}
+    );
+
+    const dummyTasks = new Set(
+      processTask.mock.calls
+        .map(([task]) => task.id)
+        .filter((id) => id.endsWith('__nx_dummy_task__'))
+    );
+    processTask.mockRestore();
+    expect(dummyTasks).toEqual(
+      new Set(mids.map((mid) => `${mid}:appbuild__nx_dummy_task__`))
+    );
+    expect(taskGraph.dependencies['app:build']).toEqual(
+      codegenTargets.map((target) => ({ id: `leaf:${target}` }))
+    );
   });
 
   it('should exclude task dependencies', () => {

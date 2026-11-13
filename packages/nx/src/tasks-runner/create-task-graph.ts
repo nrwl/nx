@@ -332,14 +332,13 @@ export class ProcessTasks {
           );
         }
       } else {
-        // Create a dummy task for task.target.project... which simulates if depProject had dependencyConfig.target
+        // Create a dummy task for task.target.project... which simulates if depProject had dependencyConfig.target.
+        // The dummy expands every `dependsOn` entry of the task it stands in for, whichever entry reached it, so one
+        // dummy per (depProject, task) covers them all. Keying the dummy by the entry as well created one dummy per
+        // `^target` entry, each re-expanding every entry: K entries walked depProject's dependencies K * K times.
         const dummyId = createTaskId(
           depProject.name,
-          task.target.project +
-            task.target.target +
-            '__' +
-            dependencyConfig.target +
-            DUMMY_TASK_TARGET,
+          task.target.project + task.target.target + DUMMY_TASK_TARGET,
           undefined
         );
         this.dependencies[task.id].push({ id: dummyId });
