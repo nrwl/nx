@@ -59,9 +59,11 @@ if (process.env.NX_E2E_RUN_E2E !== 'true') {
     console.log(
       `Installing Playwright ${workspaceVersion} for generated workspaces.`
     );
+    // Before fetching, npx reads every package installed in the project it runs
+    // in, which takes tens of seconds at the repo root.
     execSync(
       `npx --registry=${registry} -y playwright@${workspaceVersion} install ${installArgs}`,
-      { stdio: 'inherit' }
+      { stdio: 'inherit', cwd: tmpdir() }
     );
   } finally {
     lock.unlock();
