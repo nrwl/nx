@@ -1773,6 +1773,8 @@ export class TaskOrchestrator {
           streamOutput: streamOutput && !shouldPrefix,
         };
 
+        // The TUI discards stderr, so run-commands warnings go to the task output
+        const warnings: string[] = [];
         // As in a forked run, run-commands builds its env on the task env
         const runningTask = await runCommands(
           runCommandsOptions,
@@ -1780,7 +1782,8 @@ export class TaskOrchestrator {
             root: workspaceRoot, // only root is needed in runCommands
           } as any,
           task,
-          env
+          env,
+          this.tuiEnabled ? (message) => warnings.push(message) : undefined
         );
 
         this.runningRunCommandsTasks.set(task.id, runningTask);
@@ -1809,6 +1812,13 @@ export class TaskOrchestrator {
             runningTask.onOutput((output) => {
               this.options.lifeCycle.appendTaskOutput(task.id, output, false);
             });
+          }
+          for (const warning of warnings) {
+            this.options.lifeCycle.appendTaskOutput(
+              task.id,
+              `${pc.yellow(warning)}\r\n`,
+              false
+            );
           }
         }
 
