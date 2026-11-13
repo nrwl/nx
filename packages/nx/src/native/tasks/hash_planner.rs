@@ -32,8 +32,8 @@ use crate::native::tasks::ultracache_eligibility::{
 };
 use crate::native::tasks::utils;
 use crate::native::ultracache::UltracacheConfigurations;
-use crate::native::utils::find_matching_projects;
 use crate::native::utils::path::parent_dirs;
+use crate::native::utils::{find_matching_projects, find_unmatched_patterns};
 use std::sync::{Arc, OnceLock};
 
 /// Ids a plan keeps even when a configuration replaces its declared files: those of
@@ -1523,7 +1523,7 @@ impl HashPlanner {
                 continue;
             };
             if *always_input {
-                self.ensure_every_pattern_matches(input, projects)?;
+                self.ensure_every_pattern_matches(&task.id, input, projects)?;
             }
             let projects = find_matching_projects(projects, &self.project_graph)?;
             for project in projects {
@@ -1574,13 +1574,18 @@ impl HashPlanner {
 
     /// An `always` input is kept on purpose, so a pattern that selects nothing
     /// is a mistake (a typo, a renamed project) rather than an empty selection.
-    fn ensure_every_pattern_matches(&self, input: &str, patterns: &[&str]) -> anyhow::Result<()> {
-        for pattern in patterns.iter().filter(|p| !p.starts_with('!')) {
-            if find_matching_projects(&[pattern], &self.project_graph)?.is_empty() {
-                anyhow::bail!(
-                    "The input {{ \"input\": \"{input}\", \"projects\" }} with \"always\": true selects \"{pattern}\", which matches no project."
-                );
-            }
+    /// napi hands JavaScript only an `anyhow` error's outermost context, so the
+    /// task id goes in the message itself.
+    fn ensure_every_pattern_matches(
+        &self,
+        task_id: &str,
+        input: &str,
+        patterns: &[&str],
+    ) -> anyhow::Result<()> {
+        if let Some(pattern) = find_unmatched_patterns(patterns, &self.project_graph)?.first() {
+            anyhow::bail!(
+                "Task \"{task_id}\": the input {{ \"input\": \"{input}\", \"projects\" }} with \"always\": true selects \"{pattern}\", which matches no project."
+            );
         }
         Ok(())
     }
@@ -3677,6 +3682,7 @@ mod always_tests {
         };
         assert!(plan(false).is_ok());
         let error = plan(true).unwrap_err().to_string();
+        assert!(error.starts_with("Task \"e2e:e2e\":"), "{error}");
         assert!(error.contains("\"featrue\""), "{error}");
     }
 

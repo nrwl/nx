@@ -70,9 +70,10 @@ export function findEslintFile(
 
 export function isEslintConfigSupported(tree: Tree, projectRoot = ''): boolean {
   const eslintFile = findEslintFile(tree, projectRoot);
-  if (!eslintFile) {
-    return false;
-  }
+  return !!eslintFile && isEslintConfigFileSupported(eslintFile);
+}
+
+export function isEslintConfigFileSupported(eslintFile: string): boolean {
   return (
     eslintFile.endsWith('.json') ||
     eslintFile.endsWith('.config.js') ||

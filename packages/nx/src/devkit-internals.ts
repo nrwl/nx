@@ -188,7 +188,9 @@ export {
   isAiAgent,
   killProcessTreeGraceful,
   readShebangHeaders,
+  unmatchedProjectPatterns,
 } from './native';
+export { transformProjectGraphForProjectMatching } from './native/transform-objects';
 export { killChildOnHostExit } from './utils/kill-child-on-host-exit';
 export { connectToNxCloud } from './nx-cloud/generators/connect-to-nx-cloud/connect-to-nx-cloud';
 export type { NxCloudOnBoardingStatus } from './nx-cloud/models/onboarding-status';
@@ -237,6 +239,7 @@ export {
 } from './project-graph/file-utils';
 export type { FileMapCache } from './project-graph/nx-deps-cache';
 export { readFileMapCache } from './project-graph/nx-deps-cache';
+export { findClosestMatches } from './utils/string-similarity';
 export { isNpmProject } from './project-graph/operators';
 export {
   buildProjectGraphAndSourceMapsWithoutDaemon,
