@@ -253,8 +253,9 @@ async function convertRemainingEslintrcConfigs(
   return 'reported below';
 }
 
-// The conversion drops `no-eslintrc` from inferred-target overrides and the
-// `@nx/eslint/plugin` targetDefaults; every other eslintrc-only option stays.
+// The conversion drops the `no-eslintrc` key from inferred-target overrides and
+// the `@nx/eslint/plugin` targetDefaults; every other eslintrc-only option, and
+// every flag in `args`, stays.
 function reportEslintrcOnlyTargetOptions(
   tree: Tree,
   agentContext: string[],
@@ -266,8 +267,8 @@ function reportEslintrcOnlyTargetOptions(
   }
   const list = leftover.join('; ');
   agentContext.push(
-    `These lint targets still carry ESLint CLI options that only exist for eslintrc: ${list}. ESLint v10 rejects "ignore-path", "no-eslintrc" and "resolve-plugins-relative-to" as invalid options, so those targets fail until the options are gone. ` +
-      '"rulesdir" never reaches ESLint, because the task does not pass a list option on, so the rules in that directory are not loaded. ' +
+    `These lint targets still carry ESLint CLI options that only exist for eslintrc: ${list}. ESLint v10 rejects "ignore-path", "no-eslintrc", "resolve-plugins-relative-to" and a "rulesdir" given as one path or in "args" as invalid options, so those targets fail until the options are gone. ` +
+      'A "rulesdir" list never reaches ESLint, because the task does not pass a list option on, so the rules in that directory are not loaded. ' +
       'Follow the section on eslintrc-only lint target options.'
   );
   nextSteps.push(
