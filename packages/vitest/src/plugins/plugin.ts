@@ -8,6 +8,9 @@ import {
   globWithWorkspaceContext,
   quoteShellArg,
   retryOnRequireEsmRace,
+  readConfigToTargetName,
+  assertUniqueConfigTargetNames,
+  type ConfigFileTargets,
 } from '@nx/devkit/internal';
 import {
   CreateNodesContext,
@@ -28,6 +31,7 @@ import {
 import { existsSync, readdirSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import { dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
+import * as posix from 'node:path/posix';
 import type { ResolvedConfig } from 'vite';
 import type { InlineConfig } from 'vitest/node';
 import {
@@ -38,6 +42,7 @@ import {
   collectSetupFileInputs,
   resolveSetupFileCandidates,
 } from './setup-file-inputs';
+import { vitestConfigFileNamePatterns } from '../utils/config-file-names';
 
 export interface VitestPluginOptions {
   testTargetName?: string;
@@ -76,13 +81,19 @@ export interface VitestPluginOptions {
    * @default 'glob'
    */
   discoverTestFiles?: 'glob' | 'vitest';
+  /**
+   * Maps a config file name in a project root to the name of the target that
+   * runs it, e.g. `{ "vitest.config.e2e.mts": "e2e" }`. Names must match
+   * `{vite,vitest}.config*.{js,ts,mjs,mts,cjs,cts}`.
+   */
+  configToTargetName?: Record<string, string>;
 }
 
 type VitestTargets = Pick<ProjectConfiguration, 'targets' | 'metadata'> & {
   setupFileCandidates: string[];
 };
 
-const vitestConfigGlob = '**/{vite,vitest}.config.{js,ts,mjs,mts,cjs,cts}';
+const vitestConfigGlob = '**/{vite,vitest}.config*.{js,ts,mjs,mts,cjs,cts}';
 
 export const createNodes: CreateNodes<VitestPluginOptions> = [
   vitestConfigGlob,
@@ -92,30 +103,44 @@ export const createNodes: CreateNodes<VitestPluginOptions> = [
     );
     const optionsHash = hashObject(options);
     const normalizedOptions = normalizeOptions(options);
+    const configTargetNames = readConfigToTargetName(
+      '@nx/vitest',
+      normalizedOptions.configToTargetName,
+      vitestConfigFileNamePatterns
+    );
     const cachePath = join(
       workspaceDataDirectory,
       `vitest-${optionsHash}.hash`
     );
     const targetsCache = new PluginCache<VitestTargets | null>(cachePath);
 
-    const { roots: projectRoots, configFiles: validConfigFiles } =
-      configFilePaths.reduce(
-        (acc, configFile) => {
-          const potentialRoot = dirname(configFile);
-          if (checkIfConfigFileShouldBeProject(potentialRoot, context)) {
-            acc.roots.push(potentialRoot);
-            acc.configFiles.push(configFile);
-          }
-          return acc;
-        },
-        {
-          roots: [],
-          configFiles: [],
-        } as {
-          roots: string[];
-          configFiles: string[];
-        }
+    const projectRoots: string[] = [];
+    const validConfigFiles: string[] = [];
+    const configFileOptions: VitestConfigFileOptions[] = [];
+    const configFileIndexesByRoot = new Map<string, number[]>();
+    for (const configFile of configFilePaths) {
+      const fileOptions = getConfigFileOptions(
+        configFile,
+        normalizedOptions,
+        configTargetNames
       );
+      const potentialRoot = dirname(configFile);
+      if (
+        !fileOptions ||
+        !checkIfConfigFileShouldBeProject(potentialRoot, context)
+      ) {
+        continue;
+      }
+      projectRoots.push(potentialRoot);
+      validConfigFiles.push(configFile);
+      configFileOptions.push(fileOptions);
+      if (!configFileIndexesByRoot.has(potentialRoot)) {
+        configFileIndexesByRoot.set(potentialRoot, []);
+      }
+      configFileIndexesByRoot
+        .get(potentialRoot)
+        .push(validConfigFiles.length - 1);
+    }
 
     const lockfile = getLockFileName(
       detectPackageManager(context.workspaceRoot)
@@ -136,35 +161,69 @@ export const createNodes: CreateNodes<VitestPluginOptions> = [
 
     const setupTsconfigJsonCache: RawTsconfigJsonCache = new Map();
 
+    const builtTargets = new Map<number, Promise<VitestTargets | null>>();
+    const getTargets = (idx: number): Promise<VitestTargets | null> => {
+      if (!builtTargets.has(idx)) {
+        builtTargets.set(idx, buildOrReadCachedTargets(idx));
+      }
+      return builtTargets.get(idx);
+    };
+    const buildOrReadCachedTargets = async (
+      idx: number
+    ): Promise<VitestTargets | null> => {
+      const configFile = validConfigFiles[idx];
+      const projectRoot = projectRoots[idx];
+      // results from vitest.config.js will be different from results of vite.config.js
+      // but the hash will be the same because it is based on the files under the project root.
+      // Adding the config file path to the hash ensures that the final hash value is different
+      // for different config files.
+      const hash = hashes[idx] + configFile;
+      const cachedTargets = targetsCache.get(hash);
+      // Older cache entries predate `setupFileCandidates`.
+      if (
+        cachedTargets === undefined ||
+        (cachedTargets && !cachedTargets.setupFileCandidates)
+      ) {
+        const result = await buildVitestTargets(
+          configFile,
+          projectRoot,
+          configFileOptions[idx].options,
+          configFileOptions[idx].mapped,
+          context,
+          pmc,
+          tsconfigChainsByProjectRoot.get(projectRoot) ?? []
+        );
+        // Cache the result even when it's null (a root orchestrator config)
+        // so the config isn't re-resolved on every project-graph build.
+        targetsCache.set(hash, result);
+      }
+      return targetsCache.get(hash);
+    };
+    // A failed sibling reports its own error, so it infers nothing here.
+    const getInferredTargets = async (
+      idx: number
+    ): Promise<ConfigFileTargets> => ({
+      configFile: validConfigFiles[idx],
+      isDefault: !configFileOptions[idx].mapped,
+      targetNames: Object.keys(
+        (await getTargets(idx).catch(() => null))?.targets ?? {}
+      ),
+    });
+
     try {
       return await createNodesFromFiles(
         async (configFile, _, context, idx) => {
           const projectRoot = dirname(configFile);
-
-          // results from vitest.config.js will be different from results of vite.config.js
-          // but the hash will be the same because it is based on the files under the project root.
-          // Adding the config file path to the hash ensures that the final hash value is different
-          // for different config files.
-          const hash = hashes[idx] + configFile;
-          const cachedTargets = targetsCache.get(hash);
-          // Older cache entries predate `setupFileCandidates`.
-          if (
-            cachedTargets === undefined ||
-            (cachedTargets && !cachedTargets.setupFileCandidates)
-          ) {
-            const result = await buildVitestTargets(
-              configFile,
-              projectRoot,
-              normalizedOptions,
-              context,
-              pmc,
-              tsconfigChainsByProjectRoot.get(projectRoot) ?? []
-            );
-            // Cache the result even when it's null (a root orchestrator config)
-            // so the config isn't re-resolved on every project-graph build.
-            targetsCache.set(hash, result);
-          }
-          const cached = targetsCache.get(hash);
+          const fileOptions = configFileOptions[idx];
+          const cached = await getTargets(idx);
+          assertUniqueConfigTargetNames(
+            '@nx/vitest',
+            projectRoot,
+            await getInferredTargets(idx),
+            await Promise.all(
+              configFileIndexesByRoot.get(projectRoot).map(getInferredTargets)
+            )
+          );
           // `buildVitestTargets` returns null for a root orchestrator config
           // that must not become a project; register no node for it.
           if (!cached) {
@@ -178,7 +237,7 @@ export const createNodes: CreateNodes<VitestPluginOptions> = [
             // or their tsconfigs.
             targets: withSetupFileInputs(
               targets,
-              normalizedOptions.testTargetName,
+              fileOptions.options.testTargetName,
               setupFileCandidates,
               projectRoot,
               context.workspaceRoot,
@@ -205,10 +264,44 @@ export const createNodes: CreateNodes<VitestPluginOptions> = [
 
 export const createNodesV2 = createNodes;
 
+interface VitestConfigFileOptions {
+  options: VitestPluginOptions;
+  mapped: boolean;
+}
+
+/** The options a config file infers targets with, or undefined when it infers none. */
+function getConfigFileOptions(
+  configFile: string,
+  options: VitestPluginOptions,
+  configTargetNames: Map<string, string>
+): VitestConfigFileOptions | undefined {
+  const fileName = posix.basename(configFile);
+  if (vitestConfigFileNamePatterns.defaultName.test(fileName)) {
+    return { options, mapped: false };
+  }
+  const testTargetName = configTargetNames.get(fileName);
+  if (!testTargetName) {
+    return undefined;
+  }
+  const ciTargetName = options.ciTargetName
+    ? `${testTargetName}-ci`
+    : undefined;
+  return {
+    options: {
+      ...options,
+      testTargetName,
+      ciTargetName,
+      ciGroupName: undefined,
+    },
+    mapped: true,
+  };
+}
+
 async function buildVitestTargets(
   configFilePath: string,
   projectRoot: string,
   options: VitestPluginOptions,
+  mapped: boolean,
   context: CreateNodesContext,
   pmc: ReturnType<typeof getPackageManagerCommand>,
   tsconfigInputs: string[]
@@ -291,7 +384,12 @@ async function buildVitestTargets(
   let setupFileCandidates: string[] = [];
 
   // if file is vitest.config or vite.config has definition for test, create targets for test and/or atomized tests
-  if (configFilePath.includes('vitest.config') || hasTest) {
+  // Vitest finds only the default config names on its own
+  const configArg = mapped
+    ? ` --config ${quoteShellArg(posix.basename(configFilePath))}`
+    : '';
+
+  if (mapped || configFilePath.includes('vitest.config') || hasTest) {
     const isTypecheckEnabled = !!viteBuildConfig.test?.typecheck?.enabled;
     setupFileCandidates = resolveSetupFileCandidates(
       viteBuildConfig,
@@ -304,6 +402,7 @@ async function buildVitestTargets(
       testOutputs,
       projectRoot,
       options.testMode,
+      configArg,
       pmc,
       isTypecheckEnabled,
       tsconfigInputs
@@ -373,7 +472,8 @@ async function buildVitestTargets(
           // Only the glob path reads this config; the opt-out path forces the
           // runtime by receiving no config, and takes `test.dir` separately.
           useGlobDiscovery ? viteServeConfig : undefined,
-          viteServeConfig.test?.dir
+          viteServeConfig.test?.dir,
+          mapped ? absoluteConfigFilePath : undefined
         );
 
       // Each atom writes coverage to its own directory or the reports would
@@ -444,7 +544,7 @@ async function buildVitestTargets(
         dependsOn.push(targetName);
         targets[targetName] = {
           // It does not make sense to run atomized tests in watch mode as they are intended to be run in CI
-          command: `vitest run ${quoteShellArg(relativePath)}${
+          command: `vitest run${configArg} ${quoteShellArg(relativePath)}${
             vitestRejectsReportsDirectory
               ? ''
               : ` --coverage.reportsDirectory=${quoteShellArg(
@@ -557,11 +657,12 @@ async function testTarget(
   outputs: string[],
   projectRoot: string,
   testMode: 'watch' | 'run' = 'watch',
+  configArg: string,
   pmc: ReturnType<typeof getPackageManagerCommand>,
   isTypecheckEnabled: boolean,
   tsconfigInputs: string[]
 ) {
-  const command = testMode === 'run' ? 'vitest run' : 'vitest';
+  const command = `${testMode === 'run' ? 'vitest run' : 'vitest'}${configArg}`;
   const depOutputsGlob = isTypecheckEnabled ? '**/*.{js,d.ts}' : '**/*.js';
   return {
     command,
@@ -864,7 +965,9 @@ async function getTestPathsRelativeToProjectRoot(
   viteConfig: ResolvedConfig | undefined,
   // Serve-resolved `test.dir` (the command Vitest runs under). Only used on the
   // opt-out path below, which receives no `viteConfig` to read it from.
-  optOutTestDir: string | undefined
+  optOutTestDir: string | undefined,
+  // Set for a mapped config, which Vitest would not find on its own
+  configFile: string | undefined
 ): Promise<string[]> {
   const fullProjectRoot = join(workspaceRoot, projectRoot);
 
@@ -881,13 +984,19 @@ async function getTestPathsRelativeToProjectRoot(
       );
     }
 
-    return getTestPathsViaVitestRuntime(fullProjectRoot, projectRoot, test.dir);
+    return getTestPathsViaVitestRuntime(
+      fullProjectRoot,
+      projectRoot,
+      test.dir,
+      configFile
+    );
   }
 
   return getTestPathsViaVitestRuntime(
     fullProjectRoot,
     projectRoot,
-    optOutTestDir
+    optOutTestDir,
+    configFile
   );
 }
 
@@ -1112,11 +1221,13 @@ function configRequiresVitestRuntime(
 async function getTestPathsViaVitestRuntime(
   fullProjectRoot: string,
   projectRoot: string,
-  testDir?: string
+  testDir: string | undefined,
+  configFile: string | undefined
 ): Promise<string[]> {
   const { createVitest } = await import('vitest/node');
   const vitest = await createVitest('test', {
     root: fullProjectRoot,
+    ...(configFile ? { config: configFile } : {}),
     // `dir` defaults to `root`, and a relative `test.dir` would resolve against
     // the working directory, which during graph creation is the workspace root
     // rather than the project root.

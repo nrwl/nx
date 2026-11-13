@@ -189,13 +189,14 @@ Configure the plugin in `nx.json`:
 }
 ```
 
-| Option              | Type               | Default                     | Description                                                                                                                                                                                               |
-| ------------------- | ------------------ | --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `testTargetName`    | string             | `test`                      | Name of the test task.                                                                                                                                                                                    |
-| `ciTargetName`      | string             | none                        | Creates a CI-only task used for atomized runs.                                                                                                                                                            |
-| `ciGroupName`       | string             | derived from `ciTargetName` | Display name for the atomized CI group.                                                                                                                                                                   |
-| `testMode`          | `watch` or `run`   | `watch`                     | Determines whether Nx runs `vitest` (watch) or `vitest run` (single run).                                                                                                                                 |
-| `discoverTestFiles` | `glob` or `vitest` | `glob`                      | How atomized test files are discovered. `glob` mirrors Vitest's resolution without booting Vitest per project, which is faster during graph creation. Set to `vitest` to always enumerate through Vitest. |
+| Option               | Type               | Default                     | Description                                                                                                                                                                                               |
+| -------------------- | ------------------ | --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `testTargetName`     | string             | `test`                      | Name of the test task.                                                                                                                                                                                    |
+| `ciTargetName`       | string             | none                        | Creates a CI-only task used for atomized runs.                                                                                                                                                            |
+| `ciGroupName`        | string             | derived from `ciTargetName` | Display name for the atomized CI group.                                                                                                                                                                   |
+| `testMode`           | `watch` or `run`   | `watch`                     | Determines whether Nx runs `vitest` (watch) or `vitest run` (single run).                                                                                                                                 |
+| `discoverTestFiles`  | `glob` or `vitest` | `glob`                      | How atomized test files are discovered. `glob` mirrors Vitest's resolution without booting Vitest per project, which is faster during graph creation. Set to `vitest` to always enumerate through Vitest. |
+| `configToTargetName` | object             | none                        | Maps a config file name in a project root to a task name, such as `{ "vitest.config.e2e.mts": "e2e" }`. See [other configuration files](#other-configuration-files).                                      |
 
 When `discoverTestFiles` is `glob`, configs that a glob cannot reproduce faithfully still boot Vitest automatically: `test.projects` or `test.workspace` (inline or an auto-loaded `vitest.workspace.*` or `vitest.projects.*` file), plugins with a `configureVitest` hook, `test.changed` or `test.related`, and enabled browser `instances` that set their own `include`, `exclude`, `includeSource`, or `dir`. Patterns the glob reads differently than Vitest trigger the same fallback: an absolute path, a trailing `/`, or an `!(...)` extglob, each optionally negated, in `include`, `exclude`, `includeSource`, or `typecheck`'s include or exclude.
 
@@ -219,6 +220,33 @@ Nx caches only outputs inside the workspace, so atomized tasks and their CI pare
 when `reportsDirectory` resolves outside it.
 
 A [target defaults](/docs/reference/nx-json#target-defaults) `plugin` filter for these tasks must use the exact identifier `@nx/vitest`.
+
+### Other configuration files
+
+A project can keep more than one Vitest configuration, such as `vitest.config.e2e.mts` next to `vite.config.ts`. Map each extra file name to a task name with `configToTargetName`:
+
+```json
+// nx.json
+{
+  "plugins": [
+    {
+      "plugin": "@nx/vitest",
+      "options": {
+        "testTargetName": "test",
+        "configToTargetName": {
+          "vitest.config.e2e.mts": "e2e"
+        }
+      }
+    }
+  ]
+}
+```
+
+Every project with `vitest.config.e2e.mts` in its root gets an `e2e` task that runs `vitest --config vitest.config.e2e.mts`, or `vitest run --config vitest.config.e2e.mts` when `testMode` is `run`. It's cached and gets its inputs and outputs the same way the `test` task does, even from a `vite.config.*` file without `test` settings. With `ciTargetName` set, the plugin also splits it into an `e2e-ci` task, grouped as `E2E (CI)`.
+
+- Keys are file names, not paths, and must match `{vite,vitest}.config*.{js,ts,mjs,mts,cjs,cts}`. The plugin warns about any other key and ignores it.
+- The directory needs a `package.json` or `project.json`, as it does for the default config files.
+- Two config files in one project root can't infer the same task name. The plugin reports an error for each mapped file whose task another config file in that root also infers, and infers no tasks from it. A default config file keeps its tasks. A `vite.config.*` file without `test` settings infers no `test` task, so a mapped file can take that name.
 
 ### Configure unit and e2e separately
 
