@@ -91,27 +91,29 @@ describe('NxTaskHistory', () => {
   });
 
   it('should get estimated task timings', () => {
+    const end = Date.now();
+    const start = end - 1000 * 60 * 60;
     taskHistory.recordTaskRuns([
       {
         hash: '123',
         code: 1,
         status: 'failure',
-        start: Date.now() - 1000 * 60 * 60,
-        end: Date.now(),
+        start,
+        end,
       },
       {
         hash: '123',
         code: 0,
         status: 'success',
-        start: Date.now() - 1000 * 60 * 60,
-        end: Date.now(),
+        start,
+        end,
       },
       {
         hash: '234',
         code: 0,
         status: 'success',
-        start: Date.now() - 1000 * 60 * 60,
-        end: Date.now(),
+        start,
+        end,
       },
     ]);
     const r = taskHistory.getEstimatedTaskTimings([
