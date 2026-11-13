@@ -7,6 +7,7 @@ import {
 } from 'node:fs';
 import { dirname, join } from 'node:path';
 import type { ProjectGraphExternalNode } from '../../config/project-graph';
+import overriddenLocalPathPnpmLock from './lock-file/__fixtures__/overridden-local-path/pnpm-lock.yaml';
 
 const { root, workspaceDataDirectory } = vi.hoisted(() => {
   const { mkdtempSync, realpathSync } = require('node:fs');
@@ -112,15 +113,30 @@ async function createExternalNodes(
 
 async function createDependencies(
   plugin: Awaited<ReturnType<typeof loadPluginInNewProcess>>,
-  externalNodes: Record<string, ProjectGraphExternalNode>
+  externalNodes: Record<string, ProjectGraphExternalNode>,
+  // Files per project root, which also names the project
+  projectFiles: Record<string, string[]> = {}
 ) {
+  const projectFileMap = Object.fromEntries(
+    Object.entries(projectFiles).map(([projectRoot, files]) => [
+      projectRoot,
+      files.map((file) => ({ file, hash: file })),
+    ])
+  );
   return await plugin.createDependencies(undefined, {
-    nxJsonConfiguration: {},
+    nxJsonConfiguration: {
+      pluginsConfig: { '@nx/js': { analyzeSourceFiles: true } },
+    },
     workspaceRoot: root,
     externalNodes,
-    projects: {},
-    fileMap: { projectFileMap: {}, nonProjectFiles: [] },
-    filesToProcess: { projectFileMap: {}, nonProjectFiles: [] },
+    projects: Object.fromEntries(
+      Object.keys(projectFiles).map((projectRoot) => [
+        projectRoot,
+        { root: projectRoot },
+      ])
+    ),
+    fileMap: { projectFileMap, nonProjectFiles: [] },
+    filesToProcess: { projectFileMap, nonProjectFiles: [] },
   });
 }
 
@@ -252,6 +268,112 @@ describe('nx/js/dependencies-and-lockfile', () => {
 
     expect(await createDependencies(plugin, nodes)).toEqual([
       { source: 'npm:a', target: 'npm:x', type: 'static' },
+    ]);
+  });
+
+  // lib and control declare the vendored `ms`, and an override installs the
+  // registry `ms` of the same version for lib.
+  it.each([['pnpm-lock.yaml', overriddenLocalPathPnpmLock, 'npm:ms']])(
+    'should depend on the copy each project installs when an override replaces a local package in %s',
+    async (lockFile, lockFileContent, registryNode) => {
+      write(
+        'package.json',
+        JSON.stringify({
+          name: 'ovr-root',
+          workspaces: ['libs/*'],
+          dependencies: { ms: '2.1.3' },
+        })
+      );
+      write(lockFile, lockFileContent);
+      write(
+        'vendor/ms/package.json',
+        JSON.stringify({ name: 'ms', version: '2.1.3' })
+      );
+      const projectFiles: Record<string, string[]> = {};
+      for (const project of ['libs/lib', 'libs/control']) {
+        write(
+          `${project}/package.json`,
+          JSON.stringify({ dependencies: { ms: 'file:../../vendor/ms' } })
+        );
+        write(`${project}/src/index.ts`, `import ms from 'ms';`);
+        write(
+          `${project}/node_modules/ms/package.json`,
+          JSON.stringify({ name: 'ms', version: '2.1.3' })
+        );
+        projectFiles[project] = [
+          `${project}/package.json`,
+          `${project}/src/index.ts`,
+        ];
+      }
+      const plugin = await loadPluginInNewProcess();
+
+      const dependencies = await createDependencies(
+        plugin,
+        await createExternalNodes(plugin, lockFile),
+        projectFiles
+      );
+
+      expect(
+        dependencies
+          .filter(({ source }) => source in projectFiles)
+          .map(({ sourceFile, target }) => [sourceFile, target])
+          .sort()
+      ).toEqual([
+        ['libs/control/package.json', 'npm:ms@file:vendor/ms'],
+        ['libs/control/src/index.ts', 'npm:ms@file:vendor/ms'],
+        ['libs/lib/package.json', registryNode],
+        ['libs/lib/src/index.ts', registryNode],
+      ]);
+    }
+  );
+
+  it('should depend on the local copy npm nests under a project', async () => {
+    write(
+      'package.json',
+      JSON.stringify({
+        name: 'rvws',
+        workspaces: ['libs/*'],
+        dependencies: { x: 'file:vendor/x.tgz' },
+      })
+    );
+    write(
+      'package-lock.json',
+      readFileSync(
+        join(
+          __dirname,
+          'lock-file/__fixtures__/nested-local-path/package-lock.json.fixture'
+        ),
+        'utf-8'
+      )
+    );
+    write(
+      'libs/a/package.json',
+      JSON.stringify({ name: '@rv/a', dependencies: { x: 'file:x-a.tgz' } })
+    );
+    write('libs/a/src/index.ts', `import x from 'x';`);
+    write(
+      'libs/a/node_modules/x/package.json',
+      JSON.stringify({ name: 'x', version: '1.0.0' })
+    );
+    const projectFiles = {
+      'libs/a': ['libs/a/package.json', 'libs/a/src/index.ts'],
+    };
+    const plugin = await loadPluginInNewProcess();
+
+    const dependencies = await createDependencies(
+      plugin,
+      await createExternalNodes(plugin, 'package-lock.json'),
+      projectFiles
+    );
+
+    expect(
+      dependencies
+        .filter(({ source }) => source === 'libs/a')
+        .map(({ sourceFile, target }) => [sourceFile, target])
+        .sort()
+    ).toEqual([
+      ['libs/a/package.json', 'npm:x@file:libs/a/x-a.tgz'],
+      ['libs/a/src/index.ts', 'npm:x@file:libs/a/x-a.tgz'],
     ]);
   });
 
