@@ -1541,6 +1541,29 @@ describe('convert-to-flat-config generator', () => {
       }
     );
 
+    it('should leave an input for a file that only ends in .eslintrc.json, which ESLint never loads by itself', async () => {
+      writeJson(tree, '.eslintrc.json', { root: true });
+      updateJson(tree, 'nx.json', (json: NxJsonConfiguration) => {
+        json.targetDefaults = {
+          lint: {
+            inputs: ['default', '{workspaceRoot}/tools/shared.eslintrc.json'],
+          },
+        };
+        return json;
+      });
+
+      await convertToFlatConfigGenerator(tree, {
+        skipFormat: true,
+        eslintConfigFormat: 'mjs',
+      });
+
+      expect(readJson(tree, 'nx.json').targetDefaults.lint.inputs).toEqual([
+        'default',
+        '{workspaceRoot}/tools/shared.eslintrc.json',
+        '{workspaceRoot}/eslint.config.*',
+      ]);
+    });
+
     it('should rewrite eslintrc/eslintignore references in nx.json and project.json inputs, keeping a legacy name while a file of that name remains', async () => {
       await lintProjectGenerator(tree, {
         skipFormat: false,
