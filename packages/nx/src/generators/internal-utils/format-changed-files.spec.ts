@@ -129,8 +129,7 @@ describe('formatChangedFiles', () => {
       exists: (path: string) => path === 'package.json',
       read: (path: string) => {
         if (path === 'package.json') return Buffer.from(packageJson);
-        if (path === '.prettierignore')
-          return Buffer.from('packages/my-lib/package.json\n');
+        if (path === '.prettierignore') return 'packages/my-lib/package.json\n';
         return null;
       },
       listChanges: vi.fn(() => [
@@ -173,6 +172,6 @@ describe('formatChangedFiles', () => {
     );
 
     expect(Array.from(results.keys())).toEqual(['kept.json']);
-    expect(results.get('kept.json')).toEqual('{\n  "b": 2\n}}\n');
+    expect(results.get('kept.json')).toEqual('{ "b": 2 }\n');
   });
 });
