@@ -32,16 +32,32 @@ export async function normalizeOptions(
   const isUsingTsSolutionConfig = isUsingTsSolutionSetup(host);
   // Legacy workspaces resolve imports through tsconfig paths, which tsc does not
   // rewrite in emitted JS; rolldown bundles them instead. Fastify autoloads
-  // plugins/ and routes/ from disk, so it needs unbundled output.
-  options.bundler ??= isUsingTsSolutionConfig
-    ? 'tsc'
-    : options.framework === 'fastify'
-      ? 'esbuild'
-      : 'rolldown';
+  // plugins/ and routes/ from disk, so it needs unbundled output. Nest stays on
+  // webpack unless asked.
+  options.bundler ??=
+    options.framework === 'nest'
+      ? 'webpack'
+      : isUsingTsSolutionConfig
+        ? 'tsc'
+        : options.framework === 'fastify'
+          ? 'esbuild'
+          : 'rolldown';
   if (options.bundler === 'tsc' && !isUsingTsSolutionConfig) {
     throw new Error(
       `The "tsc" bundler requires a TypeScript solution workspace (project references). This workspace uses tsconfig path aliases, which tsc does not rewrite in emitted JavaScript. Use "--bundler=rolldown" or "--bundler=esbuild" instead.`
     );
+  }
+  if (
+    options.framework === 'nest' &&
+    options.bundler !== 'webpack' &&
+    options.bundler !== 'rolldown'
+  ) {
+    // esbuild does not emit the `design:paramtypes` that Nest injection reads,
+    // and tsc is not verified with Nest. Falling back keeps existing commands working.
+    logger.warn(
+      `The "${options.bundler}" bundler does not support the "nest" framework. Using "webpack" instead.`
+    );
+    options.bundler = 'webpack';
   }
   if (options.bundler === 'rolldown' && options.framework === 'fastify') {
     // The fastify template autoloads plugins/ and routes/ from disk at runtime,
