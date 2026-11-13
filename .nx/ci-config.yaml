@@ -43,6 +43,14 @@ dte:
       cannot-run-with:
         - targets: ['bench*']
 
+    # Two JVM builds on one agent, next to the JS e2e load, starve each other past
+    # the e2e command timeouts.
+    - projects: ['e2e-gradle', 'e2e-maven']
+      targets: ['e2e-ci--src/**']
+      cannot-run-with:
+        - projects: ['e2e-gradle', 'e2e-maven']
+          targets: ['e2e-ci--src/**']
+
 lifecycle:
   stop-after:
     - e2e
