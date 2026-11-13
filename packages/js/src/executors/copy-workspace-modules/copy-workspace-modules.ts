@@ -4,6 +4,7 @@ import {
   logger,
   parseTargetString,
   type ProjectGraph,
+  type ProjectGraphProjectNode,
   readJsonFile,
   workspaceRoot,
 } from '@nx/devkit';
@@ -14,6 +15,7 @@ import {
   interpolate,
   movePeerDependencyToDependencies,
   relocatePrunedLocalPathSpec,
+  resolveWorkspaceModuleDependency,
   warnUnshippableLocalPathSpec,
 } from '@nx/devkit/internal';
 import { type CopyWorkspaceModulesOptions } from './schema';
@@ -98,8 +100,14 @@ export default async function copyWorkspaceModules(
   logger.log('Copying Workspace Modules to Build Directory...');
   const outputDirectory = getOutputDir(schema, context);
   const packageJson = getPackageJson(schema, context);
+  const { project } = parseTargetString(schema.buildTarget, context);
   createWorkspaceModules(outputDirectory);
-  handleWorkspaceModules(outputDirectory, packageJson, context.projectGraph);
+  handleWorkspaceModules(
+    outputDirectory,
+    packageJson,
+    context.projectGraph,
+    context.projectGraph.nodes[project].data.root
+  );
   logger.log('Success!');
   return { success: true };
 }
@@ -112,7 +120,8 @@ function handleWorkspaceModules(
     devDependencies?: Record<string, string>;
     peerDependencies?: Record<string, string>;
   },
-  projectGraph: ProjectGraph
+  projectGraph: ProjectGraph,
+  projectRoot: string
 ) {
   if (
     !WORKSPACE_MODULE_INSTALL_SECTIONS.some((section) => packageJson[section])
@@ -122,9 +131,20 @@ function handleWorkspaceModules(
 
   const workspaceModules = getWorkspacePackagesFromGraph(projectGraph);
   const catalogManager = getCatalogManager(workspaceRoot);
-  // Only the pnpm prune path ships non-workspace local-path targets, so only
+  // Only the pnpm prune path tells a vendored package from a workspace package
+  // of the same name. It also ships non-workspace local-path targets, so only
   // pnpm manifests get their file:/link: specs relocated.
   const isPnpmWorkspace = detectPackageManager(workspaceRoot) === 'pnpm';
+  const resolveModule = (name: string, spec: string, dependentRoot: string) =>
+    isPnpmWorkspace
+      ? resolveWorkspaceModuleDependency(
+          workspaceModules,
+          name,
+          spec,
+          dependentRoot,
+          workspaceRoot
+        )
+      : workspaceModules.get(name);
   const processedModules = new Set<string>();
   const workspaceModulesDir = join(outputDirectory, 'workspace_modules');
 
@@ -140,13 +160,12 @@ function handleWorkspaceModules(
     return relativePath.split(sep).join('/');
   }
 
-  function processModule(pkgName: string): void {
+  function processModule(
+    pkgName: string,
+    workspaceModuleProject: ProjectGraphProjectNode
+  ): void {
     if (processedModules.has(pkgName)) {
       logger.verbose(`Skipping ${pkgName} (already processed).`);
-      return;
-    }
-
-    if (!workspaceModules.has(pkgName)) {
       return;
     }
 
@@ -154,7 +173,6 @@ function handleWorkspaceModules(
 
     logger.verbose(`Copying ${pkgName}.`);
 
-    const workspaceModuleProject = workspaceModules.get(pkgName);
     const workspaceModuleRoot = workspaceModuleProject.data.root;
     // data.root is workspace-root-relative in the graph, but may arrive
     // absolute; normalize so the local-path relocation math is in
@@ -202,7 +220,12 @@ function handleWorkspaceModules(
         continue;
       }
       for (const depName of Object.keys(deps)) {
-        if (workspaceModules.has(depName)) {
+        const depModule = resolveModule(
+          depName,
+          deps[depName],
+          moduleWsRelativeRoot
+        );
+        if (depModule) {
           const fileSpec = `file:${calculateRelativePath(pkgName, depName)}`;
           if (section === 'peerDependencies') {
             movePeerDependencyToDependencies(
@@ -214,7 +237,7 @@ function handleWorkspaceModules(
             deps[depName] = fileSpec;
           }
           packageJsonModified = true;
-          processModule(depName);
+          processModule(depName, depModule);
           continue;
         }
         // A non-workspace file:/link: dep must keep resolving after the module
@@ -274,8 +297,11 @@ function handleWorkspaceModules(
     if (!deps) {
       continue;
     }
-    for (const pkgName of Object.keys(deps)) {
-      processModule(pkgName);
+    for (const [pkgName, spec] of Object.entries(deps)) {
+      const workspaceModule = resolveModule(pkgName, spec, projectRoot);
+      if (workspaceModule) {
+        processModule(pkgName, workspaceModule);
+      }
     }
   }
 }

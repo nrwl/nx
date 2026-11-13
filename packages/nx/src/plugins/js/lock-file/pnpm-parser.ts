@@ -34,6 +34,7 @@ import {
   PNPM_LOCKFILE_RESOLUTION_CONFIG_FIELDS,
   type PnpmLockfileConfigField,
   relocatePrunedLocalPathSpec,
+  resolveWorkspaceModuleDependency,
   uncontainLocalPath,
 } from './pruned-output';
 import {
@@ -727,7 +728,8 @@ export function stringifyPnpmLockfile(
   graph: ProjectGraph,
   rootLockFileContent: string,
   packageJson: NormalizedPackageJson,
-  workspaceRoot: string
+  workspaceRoot: string,
+  projectRoot?: string
 ): string {
   const data = parseAndNormalizePnpmLockfile(rootLockFileContent);
   const { lockfileVersion, importers } = data;
@@ -737,6 +739,18 @@ export function stringifyPnpmLockfile(
   const packageIndex = indexPackagesByName(packages, +lockfileVersion);
 
   const workspaceModules = getWorkspacePackagesFromGraph(graph);
+  const isImporterWorkspaceModule = (
+    importerPath: string,
+    importer: ProjectSnapshot,
+    depName: string
+  ) =>
+    !!resolveWorkspaceModuleDependency(
+      workspaceModules,
+      depName,
+      importer.specifiers?.[depName] ?? '',
+      importerPath,
+      workspaceRoot
+    );
 
   // A peer another workspace module declares is not recorded under the
   // depending importer when pnpm's `autoInstallPeers` is off, so the lockfile
@@ -764,7 +778,15 @@ export function stringifyPnpmLockfile(
         for (const [name, spec] of Object.entries(
           manifest.peerDependencies ?? {}
         )) {
-          if (workspaceModules.has(name)) {
+          if (
+            resolveWorkspaceModuleDependency(
+              workspaceModules,
+              name,
+              String(spec),
+              importerPath,
+              workspaceRoot
+            )
+          ) {
             peers.workspaceSiblings.push(name);
           } else if (typeof spec === 'string' && isLocalPathSpecifier(spec)) {
             peers.localPathPeers.push([name, spec]);
@@ -790,7 +812,8 @@ export function stringifyPnpmLockfile(
       graph,
       workspaceModules,
       +lockfileVersion,
-      workspaceRoot
+      workspaceRoot,
+      projectRoot
     );
   const snapshots = mapSnapshots(
     packages,
@@ -805,7 +828,7 @@ export function stringifyPnpmLockfile(
   const allRequiredImporters: Record<string, string> = { ...requiredImporters };
   const queue = Object.keys(requiredImporters);
   const enqueueWorkspaceModule = (depName: string) => {
-    if (workspaceModules.has(depName) && !(depName in allRequiredImporters)) {
+    if (!(depName in allRequiredImporters)) {
       allRequiredImporters[depName] = workspaceModules.get(depName)!.data.root;
       queue.push(depName);
     }
@@ -819,7 +842,9 @@ export function stringifyPnpmLockfile(
         const deps = importer[depType];
         if (!deps) continue;
         for (const depName of Object.keys(deps)) {
-          enqueueWorkspaceModule(depName);
+          if (isImporterWorkspaceModule(importerPath, importer, depName)) {
+            enqueueWorkspaceModule(depName);
+          }
         }
       }
     }
@@ -871,7 +896,7 @@ export function stringifyPnpmLockfile(
       for (const [depName, ref] of Object.entries(deps)) {
         // Sibling workspace modules resolve to their own directory package; npm
         // deps (resolved peers included) keep the ref from the source importer.
-        if (workspaceModules.has(depName)) {
+        if (isImporterWorkspaceModule(importerPath, baseImporter, depName)) {
           resolved[depName] = `file:workspace_modules/${depName}`;
         } else if (ref.startsWith('link:')) {
           // pnpm reads a snapshot link: ref relative to the lockfile dir, so
@@ -1290,7 +1315,8 @@ function mapRootSnapshot(
   graph: ProjectGraph,
   workspaceModules: ReturnType<typeof getWorkspacePackagesFromGraph>,
   lockfileVersion: number,
-  workspaceRoot: string
+  workspaceRoot: string,
+  projectRoot: string | undefined
 ) {
   const catalogManager = getCatalogManager(workspaceRoot);
   const snapshot: ProjectSnapshot = { specifiers: {} };
@@ -1318,7 +1344,15 @@ function mapRootSnapshot(
           version = resolved;
         }
 
-        if (workspaceModules.has(packageName)) {
+        if (
+          resolveWorkspaceModuleDependency(
+            workspaceModules,
+            packageName,
+            version,
+            projectRoot,
+            workspaceRoot
+          )
+        ) {
           // The app may declare the module under dependencies,
           // optionalDependencies, devDependencies, or peerDependencies. Route
           // the lockfile entry into the matching section; peerDependencies

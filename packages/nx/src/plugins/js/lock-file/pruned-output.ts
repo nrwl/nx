@@ -1,5 +1,6 @@
 import { existsSync, readFileSync, realpathSync, statSync } from 'fs';
 import { isAbsolute, join, posix, relative, sep } from 'path';
+import type { ProjectGraphProjectNode } from '../../../config/project-graph';
 import { getCatalogManager } from '../../../utils/catalog';
 import {
   fileExists,
@@ -1517,6 +1518,47 @@ export function validatePrunedLocalPathClosure(
 }
 
 /**
+ * The workspace package a dependency of the manifest at `dependentRoot`
+ * resolves to. A `file:`/`link:` spec resolves by path, so a vendored package
+ * named like a workspace package is not that package. Any other spec resolves
+ * by name, and so does every spec when `dependentRoot` is undefined (the
+ * manifest's location is unknown).
+ */
+export function resolveWorkspaceModuleDependency(
+  workspacePackages: Map<string, ProjectGraphProjectNode>,
+  name: string,
+  spec: string,
+  dependentRoot: string | undefined,
+  workspaceRootPath: string
+): ProjectGraphProjectNode | undefined {
+  const project = workspacePackages.get(name);
+  const protocol = spec.startsWith('link:')
+    ? 'link:'
+    : spec.startsWith('file:')
+      ? 'file:'
+      : null;
+  if (!project || !protocol || dependentRoot === undefined) {
+    return project;
+  }
+  const toWorkspacePath = (path: string) => {
+    const normalized = normalizePath(path);
+    return posix
+      .normalize(
+        isAbsolute(normalized)
+          ? normalizePath(relative(workspaceRootPath, normalized))
+          : normalized
+      )
+      .replace(/(?<=.)\/$/, '');
+  };
+  const root = toWorkspacePath(dependentRoot);
+  const path = normalizePath(spec.slice(protocol.length));
+  const target = toWorkspacePath(
+    isAbsolute(path) ? path : posix.join(root, path)
+  );
+  return target === toWorkspacePath(project.data.root) ? project : undefined;
+}
+
+/**
  * Relocates a `file:`/`link:` specifier recorded relative to `sourceDir` so it
  * resolves from `destDir` (both workspace-root-relative posix paths, '' meaning
  * the workspace root itself) to the target's shipped location under
@@ -1721,7 +1763,7 @@ export function rewritePrunedLocalPathSpecifiers(
   packageJson: PackageJson,
   projectRoot: string,
   workspaceRootPath: string,
-  workspacePackageNames: Set<string>
+  workspacePackages: Map<string, ProjectGraphProjectNode>
 ): void {
   const catalogManager = getCatalogManager(workspaceRootPath);
   const sections: PackageJsonDependencySection[] = [
@@ -1748,7 +1790,15 @@ export function rewritePrunedLocalPathSpecifiers(
           deps[name] = resolvedCatalog;
         }
       }
-      if (workspacePackageNames.has(name)) {
+      if (
+        resolveWorkspaceModuleDependency(
+          workspacePackages,
+          name,
+          resolved,
+          projectRoot,
+          workspaceRootPath
+        )
+      ) {
         continue;
       }
       const relocation = relocatePrunedLocalPathSpec(resolved, projectRoot, '');

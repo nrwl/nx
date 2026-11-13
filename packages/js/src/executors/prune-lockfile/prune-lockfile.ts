@@ -18,6 +18,7 @@ import {
   movePeerDependencyToDependencies,
   type PackageJson,
   type PackageJsonDependencySection,
+  resolveWorkspaceModuleDependency,
 } from '@nx/devkit/internal';
 import { type PruneLockfileOptions } from './schema';
 import { stripGlobToBaseDir } from '../../utils/strip-glob-to-base-dir';
@@ -40,7 +41,12 @@ export default async function pruneLockfileExecutor(
     packageManager,
     workspaceRoot,
   });
-  rewriteWorkspaceModuleSpecifiers(packageJson, context.projectGraph);
+  rewriteWorkspaceModuleSpecifiers(
+    packageJson,
+    context.projectGraph,
+    projectRoot,
+    packageManager
+  );
   writeFileSync(
     join(outputDirectory, 'package.json'),
     JSON.stringify(packageJson, null, 2)
@@ -56,13 +62,14 @@ export default async function pruneLockfileExecutor(
 // standalone output installs them as pnpm `file:` directory dependencies.
 // pnpm rejects a `file:` spec under peerDependencies, so a peer-declared
 // workspace module is moved into dependencies instead (an optional peer
-// becomes required, which is moot since the module is always copied in). Gate
-// strictly on graph membership: a `file:`/`link:` spec to a non-workspace
-// local path (e.g. a vendored tarball) is left alone, since
-// copy-workspace-modules only ever copies actual workspace projects.
+// becomes required, which is moot since the module is always copied in). For
+// pnpm, as in copy-workspace-modules, a `file:`/`link:` spec to another
+// directory is a vendored package even when a workspace package has its name.
 function rewriteWorkspaceModuleSpecifiers(
   packageJson: PackageJson,
-  graph: ProjectGraph
+  graph: ProjectGraph,
+  projectRoot: string,
+  packageManager: ReturnType<typeof detectPackageManager>
 ) {
   const workspacePackages = getWorkspacePackagesFromGraph(graph);
 
@@ -71,8 +78,18 @@ function rewriteWorkspaceModuleSpecifiers(
     if (!deps) {
       continue;
     }
-    for (const pkgName of Object.keys(deps)) {
-      if (!workspacePackages.has(pkgName)) {
+    for (const [pkgName, spec] of Object.entries(deps)) {
+      const isWorkspaceModule =
+        packageManager === 'pnpm'
+          ? resolveWorkspaceModuleDependency(
+              workspacePackages,
+              pkgName,
+              spec,
+              projectRoot,
+              workspaceRoot
+            )
+          : workspacePackages.has(pkgName);
+      if (!isWorkspaceModule) {
         continue;
       }
       const fileSpec = `file:./workspace_modules/${pkgName}`;

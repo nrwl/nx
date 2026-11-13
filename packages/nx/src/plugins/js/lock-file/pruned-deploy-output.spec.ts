@@ -99,7 +99,8 @@ describe('generatePrunedDeployOutput sinks', () => {
       expect.anything(),
       FIXTURE_ROOT_LOCKFILE,
       expect.anything(),
-      tempDir
+      tempDir,
+      'apps/app'
     );
   });
 
