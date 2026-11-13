@@ -3,6 +3,7 @@ import {
   calculateHashesForCreateNodes,
   clearRequireCache,
   getReadyCheckReadyWhen,
+  retryOnRequireEsmRace,
   loadConfigFile,
   PluginCache,
   hashObject,
@@ -16,17 +17,19 @@ import {
   createNodesFromFiles,
   getPackageManagerCommand,
   joinPathFragments,
+  readJsonFile,
   type ProjectConfiguration,
 } from '@nx/devkit';
 
 import { dirname, join } from 'path';
 import { existsSync, readdirSync } from 'fs';
+import { pathToFileURL } from 'node:url';
 import { getLockFileName } from '@nx/js';
 import {
   addBuildAndWatchDepsTargets,
   isUsingTsSolutionSetup as _isUsingTsSolutionSetup,
 } from '@nx/js/internal';
-import { canResolve } from './router-plugin-utils';
+import { resolveOptionalModule } from './router-plugin-utils';
 export interface ReactRouterPluginOptions {
   buildTargetName?: string;
   devTargetName?: string;
@@ -172,7 +175,7 @@ async function buildReactRouterTargets(
     projectRoot,
     namedInputs,
     isUsingTsSolutionSetup,
-    getDevReadyWhen(
+    await getDevReadyWhen(
       context.workspaceRoot,
       join(context.workspaceRoot, projectRoot)
     )
@@ -295,12 +298,10 @@ const viteConfigFiles = [
   'vite.config.cts',
 ];
 
-// The Vite check resolves the config when the task runs, with the task's env
-// and options, and waits for the server's port.
-function getDevReadyWhen(
+async function getDevReadyWhen(
   workspaceRoot: string,
   absoluteProjectRoot: string
-): TargetConfiguration['readyWhen'] {
+): Promise<TargetConfiguration['readyWhen']> {
   // `react-router dev` serves with the default Vite config of its cwd.
   const configFile = viteConfigFiles.find((file) =>
     existsSync(join(absoluteProjectRoot, file))
@@ -308,15 +309,66 @@ function getDevReadyWhen(
   if (!configFile) {
     return undefined;
   }
-  // Nx runs the check from the workspace root, where @nx/vite may be missing
-  if (!canResolve('@nx/vite/ready-check', workspaceRoot)) {
+  // The command check runs from the workspace root and must resolve its helper there.
+  const viteReadyCheck = resolveOptionalModule(
+    '@nx/vite/ready-check',
+    workspaceRoot
+  );
+  if (!viteReadyCheck) {
     return undefined;
+  }
+  try {
+    const vitePackageJsonPath = require.resolve('vite/package.json', {
+      paths: [absoluteProjectRoot, dirname(viteReadyCheck)],
+    });
+    const viteExport = readJsonFile(vitePackageJsonPath).exports['.'];
+    // Vite 5/6 expose a deprecated CJS shim under the require condition.
+    const esmEntry =
+      typeof viteExport === 'string'
+        ? viteExport
+        : (viteExport.import?.default ?? viteExport.import);
+    const { loadConfigFromFile } = await import(
+      pathToFileURL(join(dirname(vitePackageJsonPath), esmEntry)).href
+    );
+    // Resolving serve plugins starts React Router's type generator. Loading only
+    // the config avoids a second generator deleting files the server is writing.
+    const viteConfig = await retryOnRequireEsmRace<{
+      config: { plugins?: unknown };
+    } | null>(() =>
+      loadConfigFromFile(
+        {
+          command: 'serve',
+          mode: 'development',
+          isSsrBuild: false,
+          isPreview: false,
+        },
+        join(absoluteProjectRoot, configFile),
+        absoluteProjectRoot,
+        'silent'
+      )
+    );
+    if (await loadsReadySignalPlugin(viteConfig?.config.plugins)) {
+      return { signal: true };
+    }
+  } catch {
+    // Optional readiness detection must not prevent graph creation.
   }
   return getReadyCheckReadyWhen(
     '@nx/vite/ready-check',
     configFile,
     'react-router-dev'
   );
+}
+
+async function loadsReadySignalPlugin(plugins: unknown): Promise<boolean> {
+  const plugin = await plugins;
+  if (Array.isArray(plugin)) {
+    for (const entry of plugin) {
+      if (await loadsReadySignalPlugin(entry)) return true;
+    }
+    return false;
+  }
+  return (plugin as { name?: unknown } | null)?.name === 'nx-ready-signal';
 }
 
 async function startTarget(

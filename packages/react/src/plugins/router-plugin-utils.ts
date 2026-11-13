@@ -1,11 +1,10 @@
-/**
- * Whether `request` resolves from `directory`, without loading it.
- */
-export function canResolve(request: string, directory: string): boolean {
+export function resolveOptionalModule(
+  request: string,
+  directory: string
+): string | null {
   try {
-    require.resolve(request, { paths: [directory] });
-    return true;
+    return require.resolve(request, { paths: [directory] });
   } catch {
-    return false;
+    return null;
   }
 }

@@ -202,8 +202,8 @@ export function getViteServerAddress(
 }
 
 /**
- * The readyWhen of the inferred serve and preview targets whose config doesn't
- * load the signal plugin, and of the React Router dev target. Runs in the env
+ * The task-time port check for inferred Vite serve and preview targets and
+ * React Router dev targets that do not use signal readiness. Runs in the env
  * and with the options of the task, resolves the config the way `vite` does,
  * and waits for the server's port.
  */
