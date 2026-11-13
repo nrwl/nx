@@ -1,4 +1,11 @@
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
+import {
+  lstatSync,
+  mkdirSync,
+  mkdtempSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import type { ProjectGraph } from '../../config/project-graph';
@@ -230,6 +237,47 @@ describe('classifyDotEnvChanges', () => {
       )
     ).toEqual({ invalidating: ['.env'], unclassified: [] });
   });
+
+  it.each(['.nxignore', '.gitignore'])(
+    'does not invalidate a dotenv file listed in %s',
+    (ignoreFile) => {
+      // The raw watch stream delivers these paths. They must be dropped
+      // outright, not hashed and not queued as unclassified.
+      write(ignoreFile, '.env\n');
+      write('.env', 'FOO=1\n');
+      write('apps/app1/.env', 'FOO=1\n');
+      expect(
+        classifyDotEnvChanges(
+          [{ path: '.env', type: EventType.update }],
+          undefined
+        )
+      ).toEqual({ invalidating: [], unclassified: [] });
+      // A project-root path the graph does not know yet would be queued.
+      // Ignored paths are dropped instead, so the replay cannot invalidate.
+      expect(
+        classifyDotEnvChanges(
+          [{ path: 'apps/app1/.env', type: EventType.update }],
+          undefined
+        )
+      ).toEqual({ invalidating: [], unclassified: [] });
+    }
+  );
+
+  // mkfifo is POSIX-only. hashFile reads the path; a FIFO with no writer
+  // blocks that read, so a regression hangs this test instead of failing it.
+  (process.platform === 'win32' ? it.skip : it)(
+    'does not invalidate a non-regular dotenv file',
+    () => {
+      execFileSync('mkfifo', [join(tempDir, '.env')]);
+      expect(lstatSync(join(tempDir, '.env')).isFIFO()).toBe(true);
+      expect(
+        classifyDotEnvChanges(
+          [{ path: '.env', type: EventType.update }],
+          undefined
+        )
+      ).toEqual({ invalidating: [], unclassified: [] });
+    }
+  );
 });
 
 describe('pending dotenv event queue', () => {
