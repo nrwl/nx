@@ -45,6 +45,7 @@ import {
 import type { NxCypressE2EPresetOptions } from '../../../plugins/cypress-preset';
 import {
   getInstalledCypressMajorVersion,
+  nxVersion,
   versions,
 } from '../../utils/versions';
 import { addBaseCypressSetup } from '../base-setup/base-setup';
@@ -176,6 +177,7 @@ function ensureDependencies(tree: Tree, options: NormalizedSchema) {
   const pkgVersions = versions(tree);
 
   const devDependencies: Record<string, string> = {
+    '@nx/cypress': nxVersion,
     '@types/node': pkgVersions.typesNodeVersion,
   };
 

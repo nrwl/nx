@@ -24,6 +24,7 @@ import {
   componentTestingVersions,
   getInstalledCypressMajorVersion,
   getInstalledCypressVersion,
+  nxVersion,
 } from '../../utils/versions';
 import { addBaseCypressSetup } from '../base-setup/base-setup';
 import init, { addPlugin } from '../init/init';
@@ -95,6 +96,7 @@ function updateDeps(tree: Tree, opts: NormalizeCTOptions) {
   const pkgVersions = componentTestingVersions(tree, opts.bundler);
 
   const devDeps = {
+    '@nx/cypress': nxVersion,
     cypress: pkgVersions.cypressVersion,
   };
   if (!getInstalledCypressVersion(tree)) {
