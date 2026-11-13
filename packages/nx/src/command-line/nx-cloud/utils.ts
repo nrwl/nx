@@ -17,6 +17,7 @@ export function warnNotConnectedToCloud(): void {
 function tryGetCloudOptions(): {
   url?: string;
   customProxyConfigPath?: string;
+  useSystemCa?: boolean;
 } {
   try {
     return getCloudOptions();

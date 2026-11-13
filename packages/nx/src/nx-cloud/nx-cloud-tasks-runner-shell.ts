@@ -19,6 +19,7 @@ export interface CloudTaskRunnerOptions extends DefaultTasksRunnerOptions {
   maskedProperties?: string[];
   showUsageWarnings?: boolean;
   customProxyConfigPath?: string;
+  useSystemCa?: boolean;
   useLatestApi?: boolean;
   url?: string;
   useLightClient?: boolean;

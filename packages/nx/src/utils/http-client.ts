@@ -9,6 +9,12 @@ export interface HttpRequestConfig {
   timeout?: number;
   responseType?: 'json' | 'stream';
   signal?: AbortSignal;
+  /**
+   * Trust the operating system's CA certificates for this request, in addition
+   * to Node's default ones (including NODE_EXTRA_CA_CERTS). Requires
+   * `tls.getCACertificates()` (Node.js 22.15.0+ or 23.10.0+).
+   */
+  useSystemCa?: boolean;
 }
 
 export interface HttpResponse<T = any> {
@@ -66,7 +72,7 @@ export async function httpRequest<T = any>(
   config: HttpRequestConfig = {}
 ): Promise<HttpResponse<T>> {
   const fullUrl = buildFullUrl(url, config);
-  const { fetchImpl, dispatcher } = resolveFetch();
+  const { fetchImpl, dispatcher } = resolveFetch(config.useSystemCa);
 
   // Lowercase keys so differently-cased duplicates override instead of
   // sending both values
@@ -231,9 +237,48 @@ function guardStreamStall(source: Readable, timeout?: number): Readable {
   return out;
 }
 
-let envProxyAgent: any;
+type GetCACertificates = (type: 'default' | 'system') => string[];
 
-function resolveFetch(): { fetchImpl: typeof fetch; dispatcher?: any } {
+function getCACertificatesApi(): GetCACertificates | undefined {
+  const api = require('tls').getCACertificates;
+  return typeof api === 'function' ? api : undefined;
+}
+
+export function isSystemCaSupported(): boolean {
+  return getCACertificatesApi() !== undefined;
+}
+
+export function getSystemCaUnsupportedMessage(): string {
+  return `Trusting system CA certificates requires Node.js 22.15.0+ or 23.10.0+ (current: ${process.version}). Upgrade Node.js, or start Nx with NODE_EXTRA_CA_CERTS pointing to a PEM file containing the required CA certificates.`;
+}
+
+let defaultAndSystemCa: string[] | undefined;
+
+function getDefaultAndSystemCa(): string[] {
+  if (!defaultAndSystemCa) {
+    const getCACertificates = getCACertificatesApi();
+    if (!getCACertificates) {
+      throw new Error(getSystemCaUnsupportedMessage());
+    }
+    // A custom `ca` replaces Node's defaults rather than extending them
+    defaultAndSystemCa = [
+      ...new Set([
+        ...getCACertificates('default'),
+        ...getCACertificates('system'),
+      ]),
+    ];
+  }
+  return defaultAndSystemCa;
+}
+
+let envProxyAgent: any;
+let systemCaAgent: any;
+let systemCaEnvProxyAgent: any;
+
+function resolveFetch(useSystemCa = false): {
+  fetchImpl: typeof fetch;
+  dispatcher?: any;
+} {
   // Native fetch ignores HTTP(S)_PROXY env vars, which axios honored; route
   // through undici's EnvHttpProxyAgent (also handles NO_PROXY) when they are set
   const allProxy = process.env.all_proxy || process.env.ALL_PROXY;
@@ -241,10 +286,30 @@ function resolveFetch(): { fetchImpl: typeof fetch; dispatcher?: any } {
     process.env.http_proxy || process.env.HTTP_PROXY || allProxy;
   const httpsProxy =
     process.env.https_proxy || process.env.HTTPS_PROXY || allProxy;
-  if (httpProxy || httpsProxy) {
-    const undici = require('undici');
+  const useProxy = !!(httpProxy || httpsProxy);
+  if (!useProxy && !useSystemCa) {
+    return { fetchImpl: fetch };
+  }
+  // System CAs are scoped to dedicated dispatchers rather than set globally,
+  // so requests without the option keep using default trust
+  const tls = useSystemCa ? { ca: getDefaultAndSystemCa() } : undefined;
+  const undici = require('undici');
+  if (!useProxy) {
+    systemCaAgent ??= new undici.Agent({ connect: tls });
+    return { fetchImpl: undici.fetch, dispatcher: systemCaAgent };
+  }
+  if (!useSystemCa) {
     envProxyAgent ??= new undici.EnvHttpProxyAgent({ httpProxy, httpsProxy });
     return { fetchImpl: undici.fetch, dispatcher: envProxyAgent };
   }
-  return { fetchImpl: fetch };
+  // `connect` covers NO_PROXY hosts, `requestTls` origins tunneled through the
+  // proxy and `proxyTls` an HTTPS proxy itself
+  systemCaEnvProxyAgent ??= new undici.EnvHttpProxyAgent({
+    httpProxy,
+    httpsProxy,
+    connect: tls,
+    requestTls: tls,
+    proxyTls: tls,
+  });
+  return { fetchImpl: undici.fetch, dispatcher: systemCaEnvProxyAgent };
 }

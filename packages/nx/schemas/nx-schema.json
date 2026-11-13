@@ -986,6 +986,11 @@
             "encryptionKey": {
               "type": "string",
               "description": "Defines an encryption key to support end-to-end encryption of your cloud cache. You may also provide an environment variable with the key NX_CLOUD_ENCRYPTION_KEY that contains an encryption key as its value. The Nx Cloud task runner normalizes the key length, so any length of key is acceptable."
+            },
+            "useSystemCa": {
+              "type": "boolean",
+              "description": "Trust the operating system's CA certificates, in addition to Node's default ones and NODE_EXTRA_CA_CERTS, when downloading the Nx Cloud client. Requires Node.js 22.15.0+ or 23.10.0+.",
+              "default": false
             }
           }
         }

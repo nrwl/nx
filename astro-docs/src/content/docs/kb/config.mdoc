@@ -90,6 +90,25 @@ By default, Nx Cloud requests will time out after 10 seconds. `NX_CLOUD_NO_TIMEO
 NX_CLOUD_NO_TIMEOUTS=true nx run-many -t build
 ```
 
+## Trust the operating system's certificate authorities
+
+Set `useSystemCa` to `true` to make Nx trust your operating system's CA certificates when it checks for and downloads the Nx Cloud client. Use it when your Nx Cloud endpoint or HTTPS proxy presents a certificate your operating system trusts but Node doesn't. Nx adds these certificates to Node's default ones and any in `NODE_EXTRA_CA_CERTS`, and TLS verification stays on. The default is `false`.
+
+```json
+// nx.json
+{
+  "tasksRunnerOptions": {
+    "default": {
+      "options": {
+        "useSystemCa": true
+      }
+    }
+  }
+}
+```
+
+This requires Node.js 22.15.0+ or 23.10.0+. On older versions, Nx warns and keeps using Node's default certificates and `NODE_EXTRA_CA_CERTS`. To trust your CA there, set `NODE_EXTRA_CA_CERTS` to a PEM file containing it before starting Nx.
+
 ## Logging
 
 Setting `NX_VERBOSE_LOGGING=true` when running a command will emit a large amount of metadata It will print information about what artifacts are being downloaded and uploaded, as well as information about the hashes of every computation.

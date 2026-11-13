@@ -1,6 +1,10 @@
 import { createServer, Server } from 'http';
 import { AddressInfo, connect, Socket } from 'net';
+import { createRequire } from 'module';
 import { createHttpClient, HttpError, httpRequest } from './http-client';
+
+// The CommonJS exports that http-client and undici read at call time
+const tls: typeof import('tls') = createRequire(__filename)('tls');
 
 describe('httpRequest', () => {
   let server: Server;
@@ -190,6 +194,8 @@ describe('httpRequest', () => {
 
     afterEach(async () => {
       vi.unstubAllEnvs();
+      vi.restoreAllMocks();
+      restoreCaApi();
       for (const socket of sockets) socket.destroy();
       await new Promise<void>((resolve) => proxy.close(() => resolve()));
       vi.resetModules();
@@ -225,6 +231,116 @@ describe('httpRequest', () => {
         ]);
       }
     );
+
+    it('trusts system CAs for HTTPS origins tunneled through the proxy when useSystemCa is set', async () => {
+      const { tlsConnect } = stubCaCertificates();
+      vi.stubEnv('HTTPS_PROXY', proxyUrl);
+      const { httpRequest: request } = await import('./http-client');
+      const port = (server.address() as AddressInfo).port;
+
+      // The tunnel reaches the plain HTTP server, so the handshake fails
+      // after the TLS options have been applied
+      await expect(
+        request(`https://proxy-test.invalid:${port}/text`, {
+          timeout: 2000,
+          useSystemCa: true,
+        })
+      ).rejects.toThrow();
+
+      expect(destinations).toEqual([`proxy-test.invalid:${port}`]);
+      expect(tlsConnect).toHaveBeenCalledWith(
+        expect.objectContaining({ ca: ['default-ca', 'system-ca'] })
+      );
+    });
+
+    it('does not reuse the default proxy dispatcher for useSystemCa requests', async () => {
+      const { tlsConnect } = stubCaCertificates();
+      vi.stubEnv('HTTPS_PROXY', proxyUrl);
+      const { httpRequest: request } = await import('./http-client');
+      const url = `https://proxy-test.invalid:${(server.address() as AddressInfo).port}/text`;
+
+      await expect(request(url, { timeout: 2000 })).rejects.toThrow();
+      expect(tlsConnect).toHaveBeenLastCalledWith(
+        expect.not.objectContaining({ ca: expect.anything() })
+      );
+
+      await expect(
+        request(url, { timeout: 2000, useSystemCa: true })
+      ).rejects.toThrow();
+      expect(tlsConnect).toHaveBeenLastCalledWith(
+        expect.objectContaining({ ca: ['default-ca', 'system-ca'] })
+      );
+    });
+  });
+
+  describe('useSystemCa', () => {
+    let tlsServer: Server;
+    let tlsUrl: string;
+
+    beforeEach(async () => {
+      vi.resetModules();
+      for (const variable of [
+        'HTTP_PROXY',
+        'http_proxy',
+        'HTTPS_PROXY',
+        'https_proxy',
+        'ALL_PROXY',
+        'all_proxy',
+      ])
+        vi.stubEnv(variable, '');
+      // A plain HTTP server: requests to it over https fail the handshake
+      tlsServer = createServer();
+      await new Promise<void>((resolve) =>
+        tlsServer.listen(0, '127.0.0.1', resolve)
+      );
+      tlsUrl = `https://127.0.0.1:${(tlsServer.address() as AddressInfo).port}/`;
+    });
+
+    afterEach(async () => {
+      vi.unstubAllEnvs();
+      vi.restoreAllMocks();
+      restoreCaApi();
+      tlsServer.closeAllConnections();
+      await new Promise((resolve) => tlsServer.close(resolve));
+      vi.resetModules();
+    });
+
+    it('adds system CAs to the default ones for direct requests', async () => {
+      const { getCACertificates, tlsConnect } = stubCaCertificates();
+      const { httpRequest: request } = await import('./http-client');
+
+      await expect(
+        request(tlsUrl, { timeout: 2000, useSystemCa: true })
+      ).rejects.toThrow();
+
+      expect(getCACertificates).toHaveBeenCalledWith('default');
+      expect(getCACertificates).toHaveBeenCalledWith('system');
+      expect(tlsConnect).toHaveBeenCalledWith(
+        expect.objectContaining({ ca: ['default-ca', 'system-ca'] })
+      );
+    });
+
+    it('does not read CA certificates when useSystemCa is not set', async () => {
+      const { getCACertificates } = stubCaCertificates();
+      const { httpRequest: request } = await import('./http-client');
+
+      await expect(request(tlsUrl, { timeout: 2000 })).rejects.toThrow();
+
+      expect(getCACertificates).not.toHaveBeenCalled();
+    });
+
+    it('throws an actionable error when Node cannot provide system CAs', async () => {
+      delete (tls as any).getCACertificates;
+      const { httpRequest: request, isSystemCaSupported } =
+        await import('./http-client');
+
+      expect(isSystemCaSupported()).toBe(false);
+      await expect(
+        request(tlsUrl, { timeout: 2000, useSystemCa: true })
+      ).rejects.toThrow(
+        /requires Node\.js 22\.15\.0\+ or 23\.10\.0\+.*NODE_EXTRA_CA_CERTS/
+      );
+    });
   });
 
   describe('createHttpClient', () => {
@@ -261,3 +377,36 @@ describe('httpRequest', () => {
     });
   });
 });
+
+// tls.getCACertificates is missing on Node < 22.15, so it is replaced
+// directly rather than spied on, and its original descriptor restored after
+const caApiDescriptor = Object.getOwnPropertyDescriptor(
+  tls,
+  'getCACertificates'
+);
+
+function setCaApi(value: unknown) {
+  Object.defineProperty(tls, 'getCACertificates', {
+    value,
+    configurable: true,
+    enumerable: true,
+    writable: true,
+  });
+}
+
+function restoreCaApi() {
+  if (caApiDescriptor) {
+    Object.defineProperty(tls, 'getCACertificates', caApiDescriptor);
+  } else {
+    delete (tls as any).getCACertificates;
+  }
+}
+
+function stubCaCertificates() {
+  const getCACertificates = vi.fn((type: string) =>
+    type === 'system' ? ['system-ca', 'default-ca'] : ['default-ca']
+  );
+  setCaApi(getCACertificates);
+  const tlsConnect = vi.spyOn(tls, 'connect');
+  return { getCACertificates, tlsConnect };
+}
