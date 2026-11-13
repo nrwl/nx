@@ -308,4 +308,34 @@ public static class ProjectUtilities
             p.Include.Equals(TestSdkPackage, StringComparison.OrdinalIgnoreCase) ||
             p.Include.StartsWith(TestingPlatformPackagePrefix, StringComparison.OrdinalIgnoreCase));
     }
+
+    public static string? InferProjectType(
+        IEnumerable<EvaluatedProperties> evaluatedProperties,
+        bool isTestProject)
+    {
+        string? inferredType = null;
+        foreach (var properties in evaluatedProperties)
+        {
+            var currentType = properties.IsExecutable
+                ? "application"
+                : string.Equals(properties.OutputType, "Library", StringComparison.OrdinalIgnoreCase)
+                    ? "library"
+                    : null;
+
+            if (currentType is null
+                || (currentType == "application"
+                    && (isTestProject || IsTestProject(properties, Array.Empty<PackageReference>()))))
+            {
+                return null;
+            }
+
+            if (inferredType is not null && inferredType != currentType)
+            {
+                return null;
+            }
+            inferredType = currentType;
+        }
+
+        return inferredType;
+    }
 }
