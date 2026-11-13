@@ -24,12 +24,12 @@ dte:
       cannot-run-with:
         - targets: ['bench*']
 
-    # Maven and Gradle e2e builds sharing an agent slowed each other past their
-    # command timeouts (maven.test.ts timed out alongside gradle.test.ts).
-    - projects: ['e2e-maven']
+    # The JVM-heavy e2e suites use the most CPU, much of it in Gradle/Kotlin daemons
+    # their task profiles don't count, so agents get overpacked with them. One per agent.
+    - projects: ['e2e-gradle', 'e2e-maven', 'e2e-nx-build']
       targets: ['e2e-ci--src/**']
       cannot-run-with:
-        - projects: ['e2e-gradle']
+        - projects: ['e2e-gradle', 'e2e-maven', 'e2e-nx-build']
           targets: ['e2e-ci--src/**']
 
 lifecycle:
