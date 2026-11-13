@@ -2,7 +2,6 @@ import type { TSESLint } from '@typescript-eslint/utils';
 import { ESLintUtils } from '@typescript-eslint/utils';
 import type { AST } from 'jsonc-eslint-parser';
 import { readFileSync } from 'fs';
-import { query } from '@phenomnomnominal/tsquery';
 
 import {
   ProjectConfiguration,
@@ -20,6 +19,7 @@ import {
 } from '@nx/devkit/internal';
 import * as path from 'path';
 import { valid } from 'semver';
+import { loadTsQuery, loadTypescript } from '../utils/optional-typescript';
 import { readProjectGraph } from '../utils/project-graph-utils';
 import {
   findProject,
@@ -655,12 +655,13 @@ export function checkIfIdentifierIsFunction(
   identifier: string
 ): boolean {
   try {
-    const ts = require('typescript');
+    const tsModule = loadTypescript();
+    const query = loadTsQuery();
     const sourceCode = readFileSync(filePath, 'utf-8');
-    const sourceFile = ts.createSourceFile(
+    const sourceFile = tsModule.createSourceFile(
       filePath,
       sourceCode,
-      ts.ScriptTarget.Latest,
+      tsModule.ScriptTarget.Latest,
       true
     );
 

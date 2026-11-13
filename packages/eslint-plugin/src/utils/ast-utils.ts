@@ -6,10 +6,10 @@ import {
 } from '@nx/devkit';
 import { findNodes } from '@nx/js';
 import { getProjectSourceRoot } from '@nx/js/internal';
-import { getModifiers } from '@typescript-eslint/type-utils';
 import { existsSync, lstatSync, readdirSync, readFileSync } from 'fs';
 import { dirname, join } from 'path';
-import ts = require('typescript');
+import type * as ts from 'typescript';
+import { loadGetModifiers, loadTypescript } from './optional-typescript';
 
 function tryReadBaseJson() {
   try {
@@ -93,19 +93,20 @@ export function getBarrelEntryPointProjectNode(
 }
 
 function hasMemberExport(exportedMember, filePath) {
+  const tsModule = loadTypescript();
   const fileContent = readFileSync(filePath, 'utf8');
 
   // use the TypeScript AST to find the path to the file where exportedMember is defined
-  const sourceFile = ts.createSourceFile(
+  const sourceFile = tsModule.createSourceFile(
     filePath,
     fileContent,
-    ts.ScriptTarget.Latest,
+    tsModule.ScriptTarget.Latest,
     true
   );
 
   // search whether there is already an export with our node
   return (
-    findNodes(sourceFile, ts.SyntaxKind.Identifier).filter(
+    findNodes(sourceFile, tsModule.SyntaxKind.Identifier).filter(
       (identifier: any) => identifier.text === exportedMember
     ).length > 0
   );
@@ -136,20 +137,23 @@ export function getRelativeImportPath(exportedMember, filePath) {
     }
   }
 
+  const tsModule = loadTypescript();
+  const getModifiers = loadGetModifiers();
   const fileContent = readFileSync(filePath, 'utf8');
 
   // use the TypeScript AST to find the path to the file where exportedMember is defined
-  const sourceFile = ts.createSourceFile(
+  const sourceFile = tsModule.createSourceFile(
     filePath,
     fileContent,
-    ts.ScriptTarget.Latest,
+    tsModule.ScriptTarget.Latest,
     true
   );
 
   // Search in the current file whether there's an export already!
-  const memberNodes = findNodes(sourceFile, ts.SyntaxKind.Identifier).filter(
-    (identifier: any) => identifier.text === exportedMember
-  );
+  const memberNodes = findNodes(
+    sourceFile,
+    tsModule.SyntaxKind.Identifier
+  ).filter((identifier: any) => identifier.text === exportedMember);
 
   let hasExport = false;
   for (const memberNode of memberNodes || []) {
@@ -162,11 +166,11 @@ export function getRelativeImportPath(exportedMember, filePath) {
           // if we are inside a parameter list or decorator or param assignment
           // then this is not what we're searching for, so break :)
           if (
-            parent.kind === ts.SyntaxKind.Parameter ||
-            parent.kind === ts.SyntaxKind.PropertyAccessExpression ||
-            parent.kind === ts.SyntaxKind.TypeReference ||
-            parent.kind === ts.SyntaxKind.HeritageClause ||
-            parent.kind === ts.SyntaxKind.Decorator
+            parent.kind === tsModule.SyntaxKind.Parameter ||
+            parent.kind === tsModule.SyntaxKind.PropertyAccessExpression ||
+            parent.kind === tsModule.SyntaxKind.TypeReference ||
+            parent.kind === tsModule.SyntaxKind.HeritageClause ||
+            parent.kind === tsModule.SyntaxKind.Decorator
           ) {
             hasExport = false;
             break;
@@ -175,7 +179,7 @@ export function getRelativeImportPath(exportedMember, filePath) {
           // if our identifier is within an ExportDeclaration but is not just
           // a re-export of some other module, we're good
           if (
-            parent.kind === ts.SyntaxKind.ExportDeclaration &&
+            parent.kind === tsModule.SyntaxKind.ExportDeclaration &&
             !(parent as any).moduleSpecifier
           ) {
             hasExport = true;
@@ -184,7 +188,7 @@ export function getRelativeImportPath(exportedMember, filePath) {
 
           if (
             getModifiers(parent)?.find(
-              (modifier) => modifier.kind === ts.SyntaxKind.ExportKeyword
+              (modifier) => modifier.kind === tsModule.SyntaxKind.ExportKeyword
             )
           ) {
             /**
@@ -206,7 +210,7 @@ export function getRelativeImportPath(exportedMember, filePath) {
              * We want to avoid accidentally picking the someFunction export since we're searching upwards
              * starting from `SOME_CONSTANT` identifier usages.
              */
-            if (parent.kind === ts.SyntaxKind.FunctionDeclaration) {
+            if (parent.kind === tsModule.SyntaxKind.FunctionDeclaration) {
               const parentName = (parent as any).name?.text;
               if (parentName === exportedMember) {
                 hasExport = true;
@@ -236,7 +240,7 @@ export function getRelativeImportPath(exportedMember, filePath) {
   // exports the node we're searching for
   const exportDeclarations = findNodes(
     sourceFile,
-    ts.SyntaxKind.ExportDeclaration
+    tsModule.SyntaxKind.ExportDeclaration
   ) as ts.ExportDeclaration[];
   for (const exportDeclaration of exportDeclarations) {
     if ((exportDeclaration as any).moduleSpecifier) {
@@ -245,7 +249,7 @@ export function getRelativeImportPath(exportedMember, filePath) {
       // part of the exports
       if (
         exportDeclaration.exportClause &&
-        findNodes(exportDeclaration, ts.SyntaxKind.Identifier).filter(
+        findNodes(exportDeclaration, tsModule.SyntaxKind.Identifier).filter(
           (identifier: any) => identifier.text === exportedMember
         ).length === 0
       ) {
