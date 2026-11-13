@@ -39,21 +39,6 @@ jobs:
       NX_NATIVE_LOGGING: 'false'
       NX_E2E_RUN_E2E: 'true'
       NX_CI_EXECUTION_ENV: 'linux'
-      # The default id, made explicit: the main-job worker otherwise reports its run group
-      # as the execution id and opens a second CIPE.
-      NX_CI_EXECUTION_ID: ${{ github.run_id }}-${{ github.run_attempt }}
-      # GitHub runners have no git identity, so commits made by tasks on the main-job worker fail.
-      # create-nx-workspace only logs that, so populate-e2e-base-workspace caches commitless
-      # templates and e2e specs fail on HEAD. Matches the identity in .nx/workflows/agents.yaml.
-      GIT_AUTHOR_EMAIL: test@users.noreply.github.com
-      GIT_AUTHOR_NAME: Test
-      GIT_COMMITTER_EMAIL: test@users.noreply.github.com
-      GIT_COMMITTER_NAME: Test
-      # Match the agents (.nx/workflows/agents.yaml) for tasks the main-job worker runs.
-      NEXT_PUBLIC_ASTRO_URL: 'https://master--nx-docs.netlify.app'
-      NX_DEV_URL: 'https://canary.nx.dev'
-      CARGO_INCREMENTAL: '0'
-      GRADLE_OPTS: '-Dorg.gradle.workers.max=2'
       NX_CLOUD_NO_TIMEOUTS: 'true'
       NX_ALLOW_NON_CACHEABLE_DTE: 'true'
       NX_CLOUD_EXPERIMENTAL_POLLING: 'true'
@@ -116,20 +101,6 @@ jobs:
       - name: Restore .NET analyzer projects
         run: dotnet restore nx.sln
 
-      # Must follow dependency install: the worker loads Nx from node_modules and keeps
-      # the environment it starts with. ubuntu-latest has 4 vCPUs and 16 GB; the rest is
-      # left for this job's own commands.
-      # Backgrounded so the Rust prep doesn't delay the DTE start below; agents take tasks
-      # until the worker joins. The runner's rustup uses the minimal profile, which leaves
-      # out clippy and rustfmt, and lint-native's `cargo clippy --frozen` can't download crates.
-      - name: Start main-job worker
-        run: |
-          (
-            rustup component add clippy rustfmt &&
-            cargo fetch &&
-            pnpm exec nx-cloud start-worker --background --cpu=2 --memory=8GiB
-          ) > "$RUNNER_TEMP/main-job-worker-setup.log" 2>&1 &
-
       - name: Nx Report
         run:
           pnpm nx report
@@ -161,11 +132,6 @@ jobs:
             wait "$pid"
           done
         timeout-minutes: 100
-      - name: Upload main-job worker metrics
-        run: |
-          cat "$RUNNER_TEMP/main-job-worker-setup.log" || true
-          pnpm exec nx-cloud upload-worker-metrics
-        if: always()
       - name: Fix CI
         run: pnpm nx fix-ci
         if: failure()

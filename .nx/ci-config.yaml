@@ -5,26 +5,7 @@ dte:
     medium-changeset: 4 linux-large, 3 linux-extra-large
     large-changeset: 4 linux-large, 4 linux-extra-large
     extra-large-changeset: 5 linux-large, 5 linux-extra-large
-  # Started separately in ci.yml, after dependency install.
   main-job-worker: false
-  # Only agents install hyperfine (see agents.yaml), so benchmarks can't run on the main job.
-  # Maven phases failed on the main-job worker when two commands built the same project
-  # ("You have to use a classifier to attach supplemental artifacts").
-  # build-native ran on both the main-job worker and an agent in one CIPE, and agent tests
-  # then loaded a stale native binding.
-  # Only agents install the Cypress and Playwright browsers.
-  assignment-rules:
-    - targets:
-        - 'bench*'
-        - 'mvn:*'
-        - 'build-native*'
-        - 'validate-example'
-        - 'e2e'
-        - 'e2e-ci**'
-        - 'pw-e2e**'
-      run-on:
-        - agent: linux-large
-        - agent: linux-extra-large
   scheduling-constraints:
     - projects: ['nx', 'workspace', 'remix', 'nx-maven-plugin']
       targets: ['install', 'test']
@@ -42,14 +23,6 @@ dte:
     - targets: ['bench*']
       cannot-run-with:
         - targets: ['bench*']
-
-    # Two JVM builds on one agent, next to the JS e2e load, starve each other past
-    # the e2e command timeouts.
-    - projects: ['e2e-gradle', 'e2e-maven']
-      targets: ['e2e-ci--src/**']
-      cannot-run-with:
-        - projects: ['e2e-gradle', 'e2e-maven']
-          targets: ['e2e-ci--src/**']
 
 lifecycle:
   stop-after:
