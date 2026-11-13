@@ -32,6 +32,7 @@ export type ImportProgressStage =
 // Import-specific error codes
 export type NxImportErrorCode =
   | 'UNCOMMITTED_CHANGES'
+  | 'NOT_A_GIT_REPOSITORY'
   | 'CLONE_FAILED'
   | 'SOURCE_NOT_FOUND'
   | 'DESTINATION_NOT_EMPTY'
@@ -41,6 +42,20 @@ export type NxImportErrorCode =
   | 'PACKAGE_INSTALL_ERROR'
   | 'PLUGIN_INIT_ERROR'
   | 'UNKNOWN';
+
+/**
+ * An import failure that states its own error code, for messages that embed
+ * user paths and so cannot be classified by their text.
+ */
+export class NxImportError extends Error {
+  constructor(
+    message: string,
+    public readonly errorCode: NxImportErrorCode
+  ) {
+    super(message);
+    this.name = 'NxImportError';
+  }
+}
 
 interface ImportOptionInfo {
   description: string;
@@ -266,6 +281,11 @@ export function getImportErrorHints(errorCode: NxImportErrorCode): string[] {
         'Commit or stash your changes before running nx import',
         'Run "git status" to see uncommitted changes',
       ];
+    case 'NOT_A_GIT_REPOSITORY':
+      return [
+        'nx import needs both the source and this workspace to be git repositories',
+        'Run "git init" in the directory that is not a repository and commit its files',
+      ];
     case 'CLONE_FAILED':
       return [
         'Check the repository URL is correct and accessible',
@@ -323,6 +343,8 @@ export function getImportErrorHints(errorCode: NxImportErrorCode): string[] {
 export function determineImportErrorCode(
   error: Error | unknown
 ): NxImportErrorCode {
+  if (error instanceof NxImportError) return error.errorCode;
+
   const message = error instanceof Error ? error.message : String(error);
   const lower = message.toLowerCase();
 

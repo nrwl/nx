@@ -5,6 +5,7 @@ import {
   buildImportErrorResult,
   determineImportErrorCode,
   getImportErrorHints,
+  NxImportError,
 } from './ai-output';
 
 describe('import ai-output', () => {
@@ -136,12 +137,24 @@ describe('import ai-output', () => {
         'UNKNOWN'
       );
     });
+
+    it('should use the code an import error states over words in its message', () => {
+      expect(
+        determineImportErrorCode(
+          new NxImportError(
+            '/tmp/uncommitted-source is not a git repository.',
+            'NOT_A_GIT_REPOSITORY'
+          )
+        )
+      ).toBe('NOT_A_GIT_REPOSITORY');
+    });
   });
 
   describe('getImportErrorHints', () => {
     it('should return hints for each error code', () => {
       const codes = [
         'UNCOMMITTED_CHANGES',
+        'NOT_A_GIT_REPOSITORY',
         'CLONE_FAILED',
         'SOURCE_NOT_FOUND',
         'DESTINATION_NOT_EMPTY',
