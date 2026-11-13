@@ -1,10 +1,4 @@
-import {
-  existsSync,
-  readdirSync,
-  readFileSync,
-  realpathSync,
-  statSync,
-} from 'fs';
+import { existsSync, readFileSync, realpathSync, statSync } from 'fs';
 import { isAbsolute, join, posix, relative, sep } from 'path';
 import { getCatalogManager } from '../../../utils/catalog';
 import {
@@ -22,6 +16,7 @@ import type {
 import { getPackageManagerVersion } from '../../../utils/package-manager';
 import { normalizePath } from '../../../utils/path';
 import { workspaceRoot } from '../../../utils/workspace-root';
+import { listLocalPathFiles } from './utils/local-path-hashes';
 import { extractMainLockfileDocument } from './utils/pnpm-normalizer';
 
 type PnpmManifestConfigField = keyof NonNullable<PackageJson['pnpm']>;
@@ -1315,32 +1310,22 @@ export function getPrunedPnpmLocalPathArtifacts(
       );
       return;
     }
-    // Walk the tree, skipping node_modules, deduping by destination.
-    const walk = (absoluteDir: string, destinationDir: string): void => {
-      for (const entry of readdirSync(absoluteDir, { withFileTypes: true })) {
-        if (entry.name === 'node_modules') {
-          continue;
-        }
-        const absoluteEntry = join(absoluteDir, entry.name);
-        const destinationEntry = `${destinationDir}/${entry.name}`;
-        if (entry.isDirectory()) {
-          walk(absoluteEntry, destinationEntry);
-        } else if (entry.isFile()) {
-          if (seenDestinations.has(destinationEntry)) {
-            continue;
-          }
-          seenDestinations.add(destinationEntry);
-          artifacts.push({ path: destinationEntry, sourcePath: absoluteEntry });
-        } else if (entry.isSymbolicLink()) {
-          // Following links risks cycles and machine-specific targets, so they
-          // are not shipped; surface the gap instead of silently dropping it.
-          logger.warn(
-            `Local-path dependency "${origin}" contains a symbolic link at ${absoluteEntry}, which is not shipped into the pruned output.`
-          );
-        }
+    // Following links risks cycles and machine-specific targets, so they are
+    // not shipped; surface the gap instead of silently dropping it.
+    const files = listLocalPathFiles(source, {
+      onSymbolicLink: (link) =>
+        logger.warn(
+          `Local-path dependency "${origin}" contains a symbolic link at ${link}, which is not shipped into the pruned output.`
+        ),
+    });
+    for (const { relativePath, absolutePath } of files) {
+      const destination = `${shippedPath}/${relativePath}`;
+      if (seenDestinations.has(destination)) {
+        continue;
       }
-    };
-    walk(source, shippedPath);
+      seenDestinations.add(destination);
+      artifacts.push({ path: destination, sourcePath: absolutePath });
+    }
   };
 
   // file: tarball + file: directory resolutions (resolutions live in `packages`).

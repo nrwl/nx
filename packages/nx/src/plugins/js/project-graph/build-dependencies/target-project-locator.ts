@@ -459,9 +459,9 @@ export class TargetProjectLocator {
   /**
    * The project that holds the target of the importer's installed `link:`
    * package.
-   * Bun gives such a link an external node, which would otherwise shadow
-   * the project. Importers can share that node with different targets, so the
-   * link the importer installs decides.
+   * pnpm and Bun give such a link an external node, which would otherwise
+   * shadow the project. Importers can share that node with different targets,
+   * so the link the importer installs decides.
    */
   findLinkedProject(
     externalNodeName: string,
