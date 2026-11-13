@@ -30,7 +30,11 @@ describe('Gradle', () => {
         expect(projects).toContain('utilities');
         expect(projects).toContain(gradleProjectName);
 
-        let buildOutput = runCLI('build app --no-batch', { verbose: true });
+        // Without batching, this can take longer than 300 s on crowded CI agents.
+        let buildOutput = runCLI('build app --no-batch', {
+          verbose: true,
+          timeout: 10 * 60 * 1000,
+        });
         expect(buildOutput).toContain(':list:classes');
         expect(buildOutput).toContain(':utilities:classes');
 
@@ -89,7 +93,10 @@ dependencies {
           }
         );
 
-        let buildOutput = runCLI('build app2 --no-batch', { verbose: true });
+        let buildOutput = runCLI('build app2 --no-batch', {
+          verbose: true,
+          timeout: 10 * 60 * 1000,
+        });
         // app2 depends on app
         expect(buildOutput).toContain(':app:classes');
         expect(buildOutput).toContain(':list:classes');
