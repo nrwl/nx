@@ -56,8 +56,8 @@ export function detectMavenExecutable(workspaceRoot: string): string {
   if (process.platform === 'win32') {
     const wrapperPath = join(workspaceRoot, 'mvnw.cmd');
     if (existsSync(wrapperPath)) {
-      logger.verbose(`[Maven] Found Maven wrapper, using: mvnw.cmd`);
-      return 'mvnw.cmd';
+      logger.verbose(`[Maven] Found Maven wrapper, using: .\\mvnw.cmd`);
+      return '.\\mvnw.cmd';
     }
   } else {
     const wrapperPath = join(workspaceRoot, 'mvnw');
