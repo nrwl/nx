@@ -613,12 +613,15 @@ describe('migrate-to-eslint-v10 migration', () => {
   it('should report the directive comments that name rules of the removed plugins and leave them', async () => {
     tree.write('eslint.config.mjs', 'export default [];');
     const deps = `/* eslint-disable import/no-cycle, "react/no-danger" */
-/* eslint react/no-danger: "error" */
 // eslint-disable-next-line jsx-a11y/alt-text -- legacy markup
 export const deps = []; // eslint-disable-line react/no-danger
 /* eslint-enable jsx-a11y/alt-text */
 `;
     tree.write('apps/app1/src/deps.tsx', deps);
+    const inline = `/* eslint react/no-danger: "error" */
+export const inline = [];
+`;
+    tree.write('apps/app1/src/inline.tsx', inline);
     setDevDependencies({
       'eslint-plugin-import': '2.31.0',
       'eslint-plugin-jsx-a11y': '6.10.1',
@@ -628,11 +631,12 @@ export const deps = []; // eslint-disable-line react/no-danger
     const result = await update(tree);
 
     expect(tree.read('apps/app1/src/deps.tsx', 'utf-8')).toBe(deps);
+    expect(tree.read('apps/app1/src/inline.tsx', 'utf-8')).toBe(inline);
     expect(result.agentContext.join('\n')).toContain(
-      'These source files carry ESLint directive comments naming rules from plugins this migration removed: apps/app1/src/deps.tsx (import, react, jsx-a11y).'
+      'These source files carry ESLint directive comments naming rules from plugins this migration removed: apps/app1/src/deps.tsx (import, react, jsx-a11y); apps/app1/src/inline.tsx (react).'
     );
     expect(result.nextSteps.join('\n')).toContain(
-      'These source files have ESLint directive comments naming rules from the removed plugins: apps/app1/src/deps.tsx.'
+      'These source files have ESLint directive comments naming rules from the removed plugins: apps/app1/src/deps.tsx, apps/app1/src/inline.tsx.'
     );
   });
 
