@@ -1,6 +1,4 @@
-use std::fs::{
-    create_dir_all, metadata, read_dir, read_to_string, remove_file, symlink_metadata, write,
-};
+use std::fs::{create_dir_all, metadata, read, read_dir, remove_file, symlink_metadata, write};
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
 use std::time::{Duration, Instant, SystemTime};
@@ -191,6 +189,15 @@ pub struct CachedResult {
     pub size: Option<i64>,
 }
 
+/// Why a cache row could not be served, which decides how it is demoted.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum Miss {
+    NoArtifacts,
+    /// Demoted without a second look: a log that reads by then may be one
+    /// that a rerun that was not stored has just written.
+    UnreadableTerminalOutput,
+}
+
 #[napi]
 pub struct NxCache {
     pub cache_directory: String,
@@ -236,11 +243,11 @@ impl NxCache {
     }
 
     fn setup(&self) -> anyhow::Result<()> {
-        // `is_cache_entry` distinguishes a real cache entry, which owns a
-        // `<cacheDir>/<hash>` directory, from a row that exists only so the
-        // terminal output of an uncacheable run is reachable by the GC. Only
-        // the former may be served as a cache hit, and only while that directory
-        // exists — see `get`/`fetch_cache_rows` and `build_cached_result`.
+        // `is_cache_entry` distinguishes a cache entry, served as a hit while
+        // its `<cacheDir>/<hash>` directory and terminal output exist, from a
+        // row kept only so the GC can reach its files: the terminal output of
+        // an uncacheable run, or an entry `demote_stale_cache_records` demoted.
+        // See `get`/`fetch_cache_rows` and `build_cached_result`.
         let query = if self.link_task_details {
             "CREATE TABLE IF NOT EXISTS cache_outputs (
                 hash    TEXT PRIMARY KEY NOT NULL,
@@ -294,10 +301,15 @@ impl NxCache {
             .map_err(|e| anyhow::anyhow!("Unable to get {}: {:?}", &hash, e))?;
 
         // Terminal output file read happens AFTER the lock is released.
-        let result = row_data.and_then(|(code, size)| self.build_cached_result(&hash, code, size));
-        if row_data.is_some() && result.is_none() {
-            self.demote_stale_cache_records(std::slice::from_ref(&hash));
-        }
+        let result = match row_data.map(|(code, size)| self.build_cached_result(&hash, code, size))
+        {
+            Some(Ok(result)) => Some(result),
+            Some(Err(miss)) => {
+                self.demote_stale_cache_records(&[(hash.clone(), miss)]);
+                None
+            }
+            None => None,
+        };
 
         trace!("GET {} {:?}", &hash, start.elapsed());
         Ok(result)
@@ -317,28 +329,33 @@ impl NxCache {
 
         // 2. For each requested hash, read its terminal output file in
         //    parallel. Misses stay as None so callers can correlate by index.
-        let results: Vec<Option<CachedResult>> = hashes
+        let lookups: Vec<Option<Result<CachedResult, Miss>>> = hashes
             .par_iter()
             .map(|hash| {
                 rows.get(hash)
-                    .and_then(|&(code, size)| self.build_cached_result(hash, code, size))
+                    .map(|&(code, size)| self.build_cached_result(hash, code, size))
             })
             .collect();
 
-        // 3. A row whose artifacts are gone is a miss above; demote those rows
-        //    in one transaction rather than from inside the parallel map.
-        let stale: Vec<String> = hashes
+        // 3. Demote the rows that missed above in one transaction rather than
+        //    from inside the parallel map.
+        let stale: Vec<(String, Miss)> = hashes
             .iter()
-            .zip(&results)
-            .filter(|(hash, result)| result.is_none() && rows.contains_key(*hash))
-            .map(|(hash, _)| hash.clone())
+            .zip(&lookups)
+            .filter_map(|(hash, lookup)| match lookup {
+                Some(Err(miss)) => Some((hash.clone(), *miss)),
+                _ => None,
+            })
             .collect();
         if !stale.is_empty() {
             self.demote_stale_cache_records(&stale);
         }
 
         trace!("GET_BATCH {} hashes {:?}", hashes.len(), start.elapsed());
-        Ok(results)
+        Ok(lookups
+            .into_iter()
+            .map(|lookup| lookup.and_then(Result::ok))
+            .collect())
     }
 
     /// Runs one `UPDATE ... RETURNING` across every requested hash and
@@ -385,20 +402,31 @@ impl NxCache {
         Ok(rows)
     }
 
-    /// A cache row can outlive its artifact directory. Serving it as a hit
-    /// would skip the task without restoring its outputs.
-    fn build_cached_result(&self, hash: &str, code: i16, size: i64) -> Option<CachedResult> {
+    /// A cache row can outlive its artifact directory or its terminal output,
+    /// which every entry is stored with, an empty one included. Serving it as
+    /// a hit would skip the task without its outputs or the log it printed.
+    fn build_cached_result(&self, hash: &str, code: i16, size: i64) -> Result<CachedResult, Miss> {
         let outputs_path = self.cache_path.join(hash);
         if !outputs_path.is_dir() {
             debug!(
                 "Cache record {} has no artifacts at {:?}, treating as a miss",
                 hash, &outputs_path
             );
-            return None;
+            return Err(Miss::NoArtifacts);
         }
-        let terminal_output =
-            read_to_string(self.get_task_outputs_path_internal(hash)).unwrap_or_default();
-        Some(CachedResult {
+        let terminal_output_path = self.get_task_outputs_path_internal(hash);
+        let terminal_output = match read(&terminal_output_path) {
+            Ok(bytes) => String::from_utf8(bytes)
+                .unwrap_or_else(|e| String::from_utf8_lossy(e.as_bytes()).into_owned()),
+            Err(e) => {
+                debug!(
+                    "Cache record {} has no readable terminal output at {:?} ({}), treating as a miss",
+                    hash, &terminal_output_path, e
+                );
+                return Err(Miss::UnreadableTerminalOutput);
+            }
+        };
+        Ok(CachedResult {
             code,
             terminal_output: Some(terminal_output),
             outputs_path: outputs_path.to_normalized_string(),
@@ -540,7 +568,8 @@ impl NxCache {
     /// a longer log stops undercounting against `maxCacheSize`. `is_cache_entry`
     /// is never touched, and a row that already has artifacts keeps the size
     /// `put` recorded, so a rewrite can neither demote a real entry nor replace
-    /// its whole-entry size with the terminal output's.
+    /// its whole-entry size with the terminal output's. That includes a row
+    /// demoted with its `<cacheDir>/<hash>` directory still on disk.
     #[napi]
     pub fn record_terminal_outputs(
         &mut self,
@@ -550,11 +579,15 @@ impl NxCache {
             return Ok(());
         }
         trace!("RECORD_TERMINAL_OUTPUTS {}", records.len());
+        let has_artifacts: Vec<bool> = records
+            .iter()
+            .map(|record| self.cache_path.join(&record.hash).is_dir())
+            .collect();
 
         {
             let mut db = self.db.lock().unwrap();
             db.transaction(|conn| {
-                for record in records.iter() {
+                for (record, has_artifacts) in records.iter().zip(&has_artifacts) {
                     // `code` is meaningless for a row that can't be replayed;
                     // the reads all filter it out before it could be read.
                     conn.execute(
@@ -567,8 +600,8 @@ impl NxCache {
                          VALUES (?1, 0, ?2, FALSE)
                          ON CONFLICT(hash) DO UPDATE SET
                              accessed_at = CURRENT_TIMESTAMP,
-                             size = CASE WHEN NOT is_cache_entry THEN excluded.size ELSE size END",
-                        params![record.hash, record.size],
+                             size = CASE WHEN is_cache_entry OR ?3 THEN size ELSE excluded.size END",
+                        params![record.hash, record.size, has_artifacts],
                     )?;
                 }
                 Ok(())
@@ -756,18 +789,31 @@ impl NxCache {
     /// Stop counting a row whose `<cacheDir>/<hash>` directory is gone as a
     /// cache entry: `is_cache_entry` becomes FALSE and `size` the bytes of the
     /// terminal output it still owns, which `remove_old_cache_records` collects
-    /// as for any output-only row. Nothing is deleted.
+    /// as for any output-only row. Nothing is deleted. A row whose terminal
+    /// output could not be read is demoted too, with its `size` kept: its
+    /// artifacts are still on disk.
     ///
-    /// The directory is checked again inside an immediate transaction: `put`
-    /// creates it before `record_to_cache` writes the row, and that write
+    /// A missing directory is checked again inside an immediate transaction:
+    /// `put` writes it before `record_to_cache` writes the row, and that write
     /// waits for the lock, so a directory still missing here is not one a
     /// concurrent `put` has just finished. Errors are logged, not returned;
     /// the lookup has already reported the miss.
-    fn demote_stale_cache_records(&self, hashes: &[String]) {
-        trace!("Demoting {} cache records without artifacts", hashes.len());
+    fn demote_stale_cache_records(&self, misses: &[(String, Miss)]) {
+        trace!(
+            "Demoting {} cache records without artifacts or terminal output",
+            misses.len()
+        );
         let mut db = self.db.lock().unwrap();
         let outcome = db.transaction_immediate(|conn| {
-            for hash in hashes {
+            for (hash, miss) in misses {
+                if *miss == Miss::UnreadableTerminalOutput {
+                    conn.execute(
+                        "UPDATE cache_outputs SET is_cache_entry = FALSE
+                         WHERE hash = ?1 AND is_cache_entry",
+                        params![hash],
+                    )?;
+                    continue;
+                }
                 if self.cache_path.join(hash).is_dir() {
                     continue;
                 }
@@ -783,7 +829,7 @@ impl NxCache {
             Ok(())
         });
         if let Err(e) = outcome {
-            debug!("Unable to demote cache records without artifacts: {e:?}");
+            debug!("Unable to demote cache records without artifacts or terminal output: {e:?}");
         }
     }
 
@@ -1348,14 +1394,166 @@ mod test {
         assert!(cache.get_batch(vec!["1".to_string()]).unwrap()[0].is_some());
     }
 
+    #[test]
+    fn get_is_a_miss_once_the_terminal_output_is_gone() {
+        let temp = TempDir::new().unwrap();
+        let mut cache = cache_in(&temp);
+        put_output(&mut cache, "1");
+        let stored = record_for(&cache, "1").unwrap();
+
+        // The artifacts and the row are intact; only the log is gone.
+        std::fs::remove_file(cache.get_task_outputs_path_internal("1")).unwrap();
+
+        assert!(cache.get("1".to_string()).unwrap().is_none());
+        // The row is no longer an entry, but still counts the artifacts that
+        // are on disk.
+        assert!(cache.cache_path.join("1").is_dir());
+        assert_eq!(record_for(&cache, "1"), Some((false, stored.1)));
+        assert!(cache.get("1".to_string()).unwrap().is_none());
+
+        // The task reruns and its next put is a hit again.
+        put_output(&mut cache, "1");
+        let hit = cache.get("1".to_string()).unwrap().unwrap();
+        assert_eq!(hit.terminal_output.as_deref(), Some("log"));
+        assert_eq!(record_for(&cache, "1"), Some(stored));
+    }
+
+    #[test]
+    fn a_rerun_that_is_not_stored_does_not_revive_the_entry() {
+        let temp = TempDir::new().unwrap();
+        let mut cache = cache_in(&temp);
+        put_output(&mut cache, "1");
+        let stored = record_for(&cache, "1").unwrap();
+        let log = cache.get_task_outputs_path_internal("1");
+        std::fs::remove_file(&log).unwrap();
+        assert!(cache.get("1".to_string()).unwrap().is_none());
+
+        rerun_without_storing(&mut cache, "1");
+
+        assert!(cache.get("1".to_string()).unwrap().is_none());
+        assert!(cache.get_batch(vec!["1".to_string()]).unwrap()[0].is_none());
+        // The artifacts are still on disk, so their size still counts.
+        assert_eq!(record_for(&cache, "1"), Some((false, stored.1)));
+    }
+
+    /// A rerun that fails is not cached; its log is still written and
+    /// recorded, as for any uncacheable run.
+    fn rerun_without_storing(cache: &mut NxCache, hash: &str) {
+        std::fs::write(cache.get_task_outputs_path_internal(hash), "failed").unwrap();
+        cache
+            .record_terminal_outputs(vec![TerminalOutputRecord {
+                hash: hash.to_string(),
+                size: "failed".len() as i64,
+            }])
+            .unwrap();
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn a_terminal_output_that_fails_to_read_is_demoted_before_a_rerun_can_replace_it() {
+        use std::os::unix::fs::PermissionsExt;
+        let temp = TempDir::new().unwrap();
+        let mut cache = cache_in(&temp);
+        put_output(&mut cache, "1");
+        let stored = record_for(&cache, "1").unwrap();
+        // A regular file that can't be read for now, as with `EMFILE`.
+        let log = cache.get_task_outputs_path_internal("1");
+        std::fs::set_permissions(&log, std::fs::Permissions::from_mode(0o000)).unwrap();
+        if std::fs::read(&log).is_ok() {
+            // Running as root, which reads it anyway.
+            return;
+        }
+
+        assert!(cache.get_batch(vec!["1".to_string()]).unwrap()[0].is_none());
+        assert_eq!(record_for(&cache, "1"), Some((false, stored.1)));
+
+        std::fs::set_permissions(&log, std::fs::Permissions::from_mode(0o644)).unwrap();
+        rerun_without_storing(&mut cache, "1");
+        assert!(cache.get("1".to_string()).unwrap().is_none());
+    }
+
+    #[test]
+    fn get_batch_misses_only_the_records_whose_terminal_output_is_gone() {
+        let temp = TempDir::new().unwrap();
+        let mut cache = cache_in(&temp);
+        put_output(&mut cache, "1");
+        put_output(&mut cache, "2");
+        let stored = record_for(&cache, "2").unwrap();
+        std::fs::remove_file(cache.get_task_outputs_path_internal("2")).unwrap();
+
+        let results = cache
+            .get_batch(vec!["1".to_string(), "2".to_string(), "3".to_string()])
+            .unwrap();
+
+        assert_eq!(
+            results[0].as_ref().unwrap().terminal_output.as_deref(),
+            Some("log")
+        );
+        assert!(results[1].is_none());
+        assert!(results[2].is_none());
+        assert_eq!(record_for(&cache, "1"), Some(stored));
+        assert_eq!(record_for(&cache, "2"), Some((false, stored.1)));
+    }
+
+    #[test]
+    fn an_empty_terminal_output_still_hits() {
+        let temp = TempDir::new().unwrap();
+        let mut cache = cache_in(&temp);
+        // A task that printed nothing, with outputs and without.
+        put_output(&mut cache, "1");
+        std::fs::write(cache.get_task_outputs_path_internal("1"), "").unwrap();
+        record_task(&cache, "2");
+        cache
+            .put("2".to_string(), String::new(), vec![], 0)
+            .unwrap();
+
+        for hash in ["1", "2"] {
+            let hit = cache.get(hash.to_string()).unwrap().unwrap();
+            assert_eq!(hit.terminal_output.as_deref(), Some(""));
+        }
+        let results = cache
+            .get_batch(vec!["1".to_string(), "2".to_string()])
+            .unwrap();
+        assert!(
+            results
+                .iter()
+                .all(|r| r.as_ref().unwrap().terminal_output.as_deref() == Some(""))
+        );
+    }
+
+    #[test]
+    fn an_unreadable_terminal_output_is_a_miss_not_an_error() {
+        let temp = TempDir::new().unwrap();
+        let mut cache = cache_in(&temp);
+        put_output(&mut cache, "1");
+        let log = cache.get_task_outputs_path_internal("1");
+        std::fs::remove_file(&log).unwrap();
+        create_dir_all(&log).unwrap();
+
+        assert!(cache.get_batch(vec!["1".to_string()]).unwrap()[0].is_none());
+        assert!(!record_for(&cache, "1").unwrap().0);
+        assert!(cache.get("1".to_string()).unwrap().is_none());
+    }
+
+    #[test]
+    fn a_terminal_output_that_is_not_utf8_is_replayed_lossily() {
+        let temp = TempDir::new().unwrap();
+        let mut cache = cache_in(&temp);
+        put_output(&mut cache, "1");
+        std::fs::write(cache.get_task_outputs_path_internal("1"), b"ok \xff").unwrap();
+
+        let hit = cache.get("1".to_string()).unwrap().unwrap();
+        assert_eq!(hit.terminal_output.as_deref(), Some("ok \u{fffd}"));
+    }
+
     /// `get` and `get_batch` both check the directory in `build_cached_result`
     /// and then call `demote_stale_cache_records`. Runs a `put` from `other`
     /// between the two, as a second Nx process would.
     fn put_between_check_and_cleanup(stale: &mut NxCache, other: &mut NxCache, hash: &str) {
         let (code, size) = stale.fetch_cache_rows(&[hash.to_string()]).unwrap()[hash];
-        assert!(stale.build_cached_result(hash, code, size).is_none());
+        let miss = stale.build_cached_result(hash, code, size).unwrap_err();
         put_output(other, hash);
-        stale.demote_stale_cache_records(&[hash.to_string()]);
+        stale.demote_stale_cache_records(&[(hash.to_string(), miss)]);
     }
 
     #[test]
@@ -1379,6 +1577,30 @@ mod test {
         let hit = b.get("1".to_string()).unwrap().unwrap();
         assert_eq!(hit.terminal_output.as_deref(), Some("log"));
         assert!(a.get("1".to_string()).unwrap().is_some());
+    }
+
+    #[test]
+    fn cleanup_demotes_a_result_stored_meanwhile_after_its_terminal_output_went_missing() {
+        let temp = TempDir::new().unwrap();
+        let workspace = temp.path().join("workspace");
+        let db = temp.path().join("test.db");
+        let cache_dir = temp.path().join("cache");
+        let mut a = cache_with(&workspace, &db, &cache_dir);
+        let mut b = cache_with(&workspace, &db, &cache_dir);
+        put_output(&mut a, "1");
+        let stored = record_for(&a, "1").unwrap();
+        std::fs::remove_file(a.get_task_outputs_path_internal("1")).unwrap();
+
+        // The log that is back could also be one that a rerun that was not
+        // stored has written, so the row is demoted: one more run, not a
+        // wrong hit.
+        put_between_check_and_cleanup(&mut a, &mut b, "1");
+
+        assert_eq!(record_for(&a, "1"), Some((false, stored.1)));
+        assert!(a.get("1".to_string()).unwrap().is_none());
+        put_output(&mut a, "1");
+        let hit = a.get("1".to_string()).unwrap().unwrap();
+        assert_eq!(hit.terminal_output.as_deref(), Some("log"));
     }
 
     #[test]
