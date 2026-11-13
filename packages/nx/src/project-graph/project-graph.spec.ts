@@ -24,6 +24,7 @@ vi.mock('../utils/workspace-context', () => {
       globalFiles: [],
       externalReferences: {},
     }),
+    hashWithWorkspaceContext: vi.fn().mockResolvedValue('lock-files-hash'),
   } satisfies Partial<typeof workspaceContext>;
 });
 
