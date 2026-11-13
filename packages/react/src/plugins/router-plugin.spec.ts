@@ -1,7 +1,7 @@
 import type { Mock } from 'vitest';
 import { type CreateNodesContext } from '@nx/devkit';
 import { createNodes } from './router-plugin';
-import { canResolve } from './router-plugin-utils';
+import { resolveOptionalModule } from './router-plugin-utils';
 import {
   mockCjsModule,
   resetCjsMocks,
@@ -9,15 +9,17 @@ import {
 } from '@nx/devkit/internal-testing-utils';
 import { isUsingTsSolutionSetup } from '@nx/js/internal';
 import { join } from 'path';
+import { symlinkSync } from 'fs';
+import { fileURLToPath } from 'node:url';
 
 vi.mock('nx/src/utils/cache-directory', async () => ({
   ...(await vi.importActual<any>('nx/src/utils/cache-directory')),
   workspaceDataDirectory: 'tmp/project-graph-cache',
 }));
 
-// In the vm, require.resolve ignores `paths`. By default @nx/vite resolves.
+// Vitest's require.resolve ignores paths; model missing optional modules per test.
 vi.mock('./router-plugin-utils', () => ({
-  canResolve: vi.fn().mockReturnValue(true),
+  resolveOptionalModule: vi.fn((request: string) => require.resolve(request)),
 }));
 
 vi.mock('@nx/js/internal', async () => ({
@@ -38,6 +40,11 @@ describe('@nx/react/react-router-plugin', () => {
   describe('React Router', () => {
     beforeEach(async () => {
       tempFs = new TempFs('test');
+      symlinkSync(
+        fileURLToPath(new URL('../../../../node_modules', import.meta.url)),
+        join(tempFs.tempDir, 'node_modules'),
+        'junction'
+      );
       cwd = process.cwd();
       process.chdir(tempFs.tempDir);
 
@@ -53,7 +60,7 @@ describe('@nx/react/react-router-plugin', () => {
 
       await tempFs.createFiles({
         'acme/react-router.config.js': 'module.exports = {}',
-        'acme/vite.config.js': '',
+        'acme/vite.config.js': 'module.exports = {};',
         'acme/project.json': JSON.stringify({ name: 'acme' }),
         'acme/tsconfig.json': '{}',
       });
@@ -98,9 +105,111 @@ describe('@nx/react/react-router-plugin', () => {
       expect(nodes).toMatchSnapshot();
     });
 
+    it.each([false, true])(
+      'uses signal readiness only when the Vite config loads its plugin (%s)',
+      async (signals) => {
+        mockConfig('acme/react-router.config.js', {}, context);
+        const pluginPath = fileURLToPath(
+          new URL(
+            '../../../vite/plugins/nx-ready-signal.plugin.ts',
+            import.meta.url
+          )
+        );
+        await tempFs.createFiles({
+          'acme/vite.config.js': `
+            import { nxReadySignal } from ${JSON.stringify(pluginPath)};
+            export default async () => ({
+              plugins: [false, Promise.resolve([${signals ? 'nxReadySignal()' : ''}])],
+            });
+          `,
+        });
+
+        const nodes = await createNodesFunction(
+          ['acme/react-router.config.js'],
+          {},
+          context
+        );
+
+        const targets = nodes[0][1].projects['acme'].targets;
+        expect(targets.dev.readyWhen).toEqual(
+          signals
+            ? { signal: true }
+            : expect.objectContaining({
+                command: expect.stringContaining('@nx/vite/ready-check'),
+              })
+        );
+      }
+    );
+
+    it('keeps command readiness when the serve config cannot load', async () => {
+      mockConfig('acme/react-router.config.js', {}, context);
+      await tempFs.createFiles({
+        'acme/vite.config.js': `
+          module.exports = ({ command }) => {
+            if (command === 'serve') {
+              require('node:fs').readFileSync(${JSON.stringify(join(tempFs.tempDir, 'dev-only-cert.pem'))});
+            }
+            return {};
+          };
+        `,
+      });
+
+      const nodes = await createNodesFunction(
+        ['acme/react-router.config.js'],
+        {},
+        context
+      );
+      expect(nodes[0][1].projects['acme'].targets.dev.readyWhen).toEqual(
+        expect.objectContaining({
+          command: `node -e "require('@nx/vite/ready-check').waitForDevServer(process.argv[1], 'react-router-dev')" vite.config.js`,
+        })
+      );
+    });
+
+    it('keeps command readiness when Vite cannot resolve', async () => {
+      mockConfig('acme/react-router.config.js', {}, context);
+      const pluginPath = fileURLToPath(
+        new URL(
+          '../../../vite/plugins/nx-ready-signal.plugin.ts',
+          import.meta.url
+        )
+      );
+      await tempFs.createFiles({
+        'acme/vite.config.js': `
+          import { nxReadySignal } from ${JSON.stringify(pluginPath)};
+          export default { plugins: [nxReadySignal()] };
+        `,
+      });
+      const module = require('node:module');
+      const findPath = module._findPath;
+      const resolverSpy = vi
+        .spyOn(module, '_findPath')
+        .mockImplementation(function (request, ...args) {
+          if (request === 'vite' || request === 'vite/package.json') {
+            return false;
+          }
+          return findPath.call(this, request, ...args);
+        });
+
+      try {
+        const nodes = await createNodesFunction(
+          ['acme/react-router.config.js'],
+          {},
+          context
+        );
+        expect(nodes[0][1].projects['acme'].targets.dev.readyWhen).toEqual(
+          expect.objectContaining({
+            command: `node -e "require('@nx/vite/ready-check').waitForDevServer(process.argv[1], 'react-router-dev')" vite.config.js`,
+          })
+        );
+      } finally {
+        resolverSpy.mockRestore();
+      }
+    });
+
     it('should not make dev wait when the workspace cannot resolve @nx/vite/ready-check', async () => {
       mockConfig('acme/react-router.config.js', {}, context);
-      (canResolve as Mock).mockReturnValueOnce(false);
+      (resolveOptionalModule as Mock).mockReturnValueOnce(null);
 
       const nodes = await createNodesFunction(
         ['acme/react-router.config.js'],

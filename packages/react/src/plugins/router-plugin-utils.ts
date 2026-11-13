@@ -1,11 +1,12 @@
-/**
- * Whether `request` resolves from `directory`, without loading it.
- */
-export function canResolve(request: string, directory: string): boolean {
+import { resolveInstalledPackage } from '@nx/devkit/internal';
+
+export function resolveOptionalModule(
+  request: string,
+  directory: string
+): string | null {
   try {
-    require.resolve(request, { paths: [directory] });
-    return true;
+    return resolveInstalledPackage(request, [directory], directory);
   } catch {
-    return false;
+    return null;
   }
 }
