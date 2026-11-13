@@ -27,6 +27,7 @@ import {
   eslintConfigPrettierVersion,
   eslintrcVersion,
   getConvertToFlatConfigVersions,
+  globalsVersion,
 } from '../../utils/versions';
 import {
   BASE_ESLINT_CONFIG_FILENAMES,
@@ -743,7 +744,13 @@ function processConvertedConfig(
     content,
     addESLintRC,
     addESLintJS,
-  }: { content: string; addESLintRC: boolean; addESLintJS: boolean },
+    addGlobals,
+  }: {
+    content: string;
+    addESLintRC: boolean;
+    addESLintJS: boolean;
+    addGlobals: boolean;
+  },
   keepExistingVersions?: boolean
 ) {
   // remove original config file
@@ -782,6 +789,12 @@ function processConvertedConfig(
 
   if (addESLintJS) {
     devDependencies['@eslint/js'] = eslintVersion;
+  }
+
+  // Unlike the stack above, a declared `globals` is never overwritten: other
+  // configs may read keys of the major the workspace already uses.
+  if (addGlobals && !getDependencyVersionFromPackageJson(tree, 'globals')) {
+    devDependencies['globals'] = globalsVersion;
   }
 
   // The flat/angular presets import the umbrella `angular-eslint` package; add

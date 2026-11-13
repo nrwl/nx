@@ -15,6 +15,8 @@ export const eslintConfigPrettierVersion = '^10.0.0';
 export const eslintrcVersion = '^3.3.0';
 export const jsoncEslintParserVersion = '^2.1.0';
 export const eslintCompat = '^2.0.5';
+// The range @nx/eslint-plugin depends on, so both resolve to one copy.
+export const globalsVersion = '^17.0.0';
 
 export const eslintVersion = '^10.0.0';
 export const eslintV9Version = '^9.8.0';
