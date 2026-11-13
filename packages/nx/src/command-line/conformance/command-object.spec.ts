@@ -2,6 +2,10 @@ import Module = require('module');
 import { output } from '../../utils/output';
 import { resolveConformanceCommandObject } from './command-object';
 
+vi.mock('../../utils/installation-directory', () => ({
+  resolveInstalledPackage: (specifier: string) => specifier,
+}));
+
 describe('resolveConformanceCommandObject', () => {
   const originalLoad = (Module as any)._load;
 

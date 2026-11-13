@@ -1,4 +1,5 @@
 import type { Argv, CommandModule } from 'yargs';
+import { resolveInstalledPackage } from '../../utils/installation-directory';
 import { output } from '../../utils/output';
 import { withVerbose } from '../yargs-utils/shared-options';
 
@@ -9,7 +10,9 @@ export function resolveConformanceCommandObject(
 ): CommandModule {
   let commandObject: CommandModule;
   try {
-    const conformance = require('@nx/conformance');
+    const conformance = require(
+      resolveInstalledPackage('@nx/conformance', [__dirname])
+    );
     commandObject =
       command === 'conformance'
         ? conformance.yargsConformanceCommand
