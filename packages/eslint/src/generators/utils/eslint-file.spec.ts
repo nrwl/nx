@@ -587,7 +587,7 @@ module.exports = [
       addIgnoresToLintConfig(tree, '', ['**/some-dir/**/*']);
 
       expect(tree.read('eslint.config.cjs', 'utf-8')).toMatchInlineSnapshot(`
-        "module.exports = [,
+        "module.exports = [
             {
                 ignores: [
                     "**/some-dir/**/*"
