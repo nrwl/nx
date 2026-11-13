@@ -1005,8 +1005,7 @@ export function containShippedLocalFilePaths(
     }
     const record = snapshot as Record<string, unknown>;
     const resolution = record.resolution as
-      | { directory?: string; tarball?: string }
-      | undefined;
+      { directory?: string; tarball?: string } | undefined;
     if (resolution && typeof resolution === 'object') {
       if (typeof resolution.directory === 'string') {
         // Normalize separators first, matching the artifact shipping side
@@ -1421,6 +1420,25 @@ export function validatePrunedLocalPathClosure(
   if (!parsed) {
     return;
   }
+  const packageKeys = new Set(Object.keys(parsed.packages ?? {}));
+  const snapshotsByPackage = new Map<string, PrunedLockfileSnapshot[]>();
+  for (const [snapshotKey, snapshot] of Object.entries(
+    parsed.snapshots ?? {}
+  )) {
+    let packageKey = snapshotKey;
+    while (!packageKeys.has(packageKey)) {
+      const qualifierStart = packageKey.lastIndexOf('(');
+      if (qualifierStart === -1) {
+        break;
+      }
+      packageKey = packageKey.slice(0, qualifierStart);
+    }
+    if (packageKeys.has(packageKey)) {
+      const snapshots = snapshotsByPackage.get(packageKey) ?? [];
+      snapshots.push(snapshot);
+      snapshotsByPackage.set(packageKey, snapshots);
+    }
+  }
   // Targets are keyed by their original workspace source path (the pruned
   // lockfile records them relocated under LOCAL_PATH_MODULES_DIR; strip it back
   // to read the target's manifest from disk).
@@ -1442,9 +1460,11 @@ export function validatePrunedLocalPathClosure(
     if (source === '' || source === '.' || localPathEscapesOutput(source)) {
       continue;
     }
-    const snapshot = parsed.snapshots?.[key] ?? entry;
-    const hasEdges = LOCKFILE_DEP_SECTIONS.some(
-      (section) => Object.keys(snapshot?.[section] ?? {}).length > 0
+    const snapshots = snapshotsByPackage.get(key) ?? [entry];
+    const hasEdges = snapshots.every((snapshot) =>
+      LOCKFILE_DEP_SECTIONS.some(
+        (section) => Object.keys(snapshot?.[section] ?? {}).length > 0
+      )
     );
     if (!hasEdges) {
       targets.set(source, 'directory');
