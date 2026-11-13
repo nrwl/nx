@@ -1,3 +1,5 @@
+import { config as loadDotEnvFile } from 'dotenv';
+import { expand } from 'dotenv-expand';
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -13,6 +15,7 @@ import {
   getInvocationAncestorPids,
   getInvocationRootPid,
   loadAndExpandDotEnvFile,
+  unloadDotEnvFile,
 } from './task-env';
 
 describe('invocation tracking env vars', () => {
@@ -178,6 +181,76 @@ describe(loadAndExpandDotEnvFile.name, () => {
       API_URL: 'https://nx.dev/api',
       FULL_URL: 'https://nx.dev/api/v1',
     });
+  });
+  it('should load the same env as dotenv and dotenv-expand', () => {
+    tempDir = mkdtempSync(join(tmpdir(), 'nx-task-env-'));
+
+    const file = join(tempDir, '.env');
+    writeFileSync(
+      file,
+      [
+        'PLAIN=plain',
+        'EMPTY_IN_ENV=from-file',
+        'SET_IN_ENV=from-file',
+        'SAME_IN_ENV=same',
+        'HOST=localhost',
+        'URL=http://${HOST}:${PORT:-4200}',
+        'FROM_ENV=$SET_IN_ENV/$EMPTY_IN_ENV',
+        'ESCAPED=\\$PLAIN',
+        'SELF=$SELF-suffix',
+        '',
+      ].join('\n')
+    );
+    const env = (): NodeJS.ProcessEnv => ({
+      EMPTY_IN_ENV: '',
+      SET_IN_ENV: 'from-env',
+      SAME_IN_ENV: 'same',
+    });
+
+    const expected = env();
+    const expectedResult = expand({
+      ...loadDotEnvFile({ path: file, processEnv: expected }),
+      processEnv: expected,
+    });
+    const actual = env();
+    const actualResult = loadAndExpandDotEnvFile(file, actual);
+
+    expect(actual).toEqual(expected);
+    expect(actualResult.parsed).toEqual(expectedResult.parsed);
+  });
+});
+
+describe('unloadDotEnvFile', () => {
+  let tempDir: string;
+
+  afterEach(() => {
+    if (tempDir) {
+      rmSync(tempDir, { recursive: true, force: true });
+    }
+  });
+
+  it('should unload the variables a file sets, as of its current contents', () => {
+    tempDir = mkdtempSync(join(tmpdir(), 'nx-task-env-'));
+    const file = join(tempDir, '.env');
+
+    writeFileSync(file, 'HOST=localhost\nURL=http://$HOST\n');
+    const first: NodeJS.ProcessEnv = {
+      HOST: 'localhost',
+      URL: 'http://localhost',
+      KEPT: 'kept',
+    };
+    unloadDotEnvFile(file, first);
+
+    writeFileSync(file, 'HOST=example.com\nURL=http://$HOST\n');
+    const second: NodeJS.ProcessEnv = {
+      HOST: 'localhost',
+      URL: 'http://example.com',
+      KEPT: 'kept',
+    };
+    unloadDotEnvFile(file, second);
+
+    expect(first).toEqual({ KEPT: 'kept' });
+    expect(second).toEqual({ HOST: 'localhost', KEPT: 'kept' });
   });
 });
 
