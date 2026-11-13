@@ -1382,7 +1382,7 @@ function mapRootSnapshot(
               (importerSnapshot.devDependencies &&
                 importerSnapshot.devDependencies[packageName]);
             if (workspaceDep) {
-              importerKeyForPackage = join(
+              importerKeyForPackage = posix.join(
                 importerPath,
                 workspaceDep.replace('link:', '')
               );
