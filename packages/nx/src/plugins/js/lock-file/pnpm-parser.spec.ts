@@ -3309,6 +3309,101 @@ snapshots:
       );
     });
 
+    // pnpm keys importers with forward slashes on every platform, so the
+    // importer lookup must not depend on the host separator. A win32 `join`
+    // arrives by re-import: a spy on the `path` namespace does not reach the
+    // module's own import binding.
+    it('should emit the directory package of a nested app workspace dep when paths join with Windows separators', async () => {
+      const lockFile = `lockfileVersion: '9.0'
+
+importers:
+
+  .: {}
+
+  apps/app:
+    dependencies:
+      '@myorg/lib-a':
+        specifier: workspace:*
+        version: link:../../libs/lib-a
+
+  libs/lib-a:
+    dependencies:
+      lodash:
+        specifier: ^4.17.21
+        version: 4.17.21
+
+packages:
+
+  lodash@4.17.21:
+    resolution: {integrity: sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==}
+
+snapshots:
+
+  lodash@4.17.21: {}`;
+
+      const packageJson = {
+        name: 'app',
+        version: '1.0.0',
+        dependencies: { '@myorg/lib-a': 'workspace:*' },
+      };
+
+      const graph = makeGraph(
+        [
+          {
+            projectName: '@myorg/lib-a',
+            packageName: '@myorg/lib-a',
+            root: 'libs/lib-a',
+          },
+        ],
+        {},
+        {
+          'npm:lodash': {
+            type: 'npm',
+            name: 'npm:lodash',
+            data: {
+              version: '4.17.21',
+              packageName: 'lodash',
+              hash: 'sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==',
+            },
+          },
+        },
+        {
+          '@myorg/lib-a': ['npm:lodash'],
+        }
+      );
+
+      vi.resetModules();
+      vi.doMock('path', async () => {
+        const actual = await vi.importActual<typeof import('path')>('path');
+        return { ...actual, join: actual.win32.join };
+      });
+
+      try {
+        const { stringifyPnpmLockfile: stringifyWithWin32Join } =
+          await import('./pnpm-parser');
+
+        const result = stringifyWithWin32Join(
+          pruneProjectGraph(graph, packageJson),
+          lockFile,
+          packageJson,
+          '/virtual'
+        );
+
+        expect(result).toMatch(
+          /'@myorg\/lib-a@file:workspace_modules\/@myorg\/lib-a':\s+resolution: \{directory: workspace_modules\/@myorg\/lib-a, type: directory\}/
+        );
+        expect(result).toMatch(
+          /'@myorg\/lib-a':\s+specifier: file:\.\/workspace_modules\/@myorg\/lib-a\s+version: file:workspace_modules\/@myorg\/lib-a\n/
+        );
+        expect(result).toMatch(
+          /snapshots:[\s\S]*'@myorg\/lib-a@file:workspace_modules\/@myorg\/lib-a':\s+dependencies:\s+lodash: 4\.17\.21/
+        );
+      } finally {
+        vi.doUnmock('path');
+        vi.resetModules();
+      }
+    });
+
     it('should not infinite-loop on circular workspace dependencies', () => {
       const lockFile = `lockfileVersion: '9.0'
 
