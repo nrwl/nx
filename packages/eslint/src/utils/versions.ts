@@ -1,5 +1,6 @@
 import { type Tree } from '@nx/devkit';
 import {
+  getDeclaredPackageVersion,
   getInstalledPackageVersion,
   getResolvedPackageVersion,
 } from '@nx/devkit/internal';
@@ -81,10 +82,15 @@ export const ESLINT_V10_FLOORS = {
 };
 
 function declaresPackageWithoutEslintV10Support(tree: Tree): boolean {
-  const angularVersion = getResolvedPackageVersion(tree, '@angular/core');
+  // @nx/angular picks angular-eslint from the declared version, which can be a
+  // lower major than the resolved one (`>=20.0.0 <22.0.0` with 21 installed).
+  const angularVersions = [
+    getResolvedPackageVersion(tree, '@angular/core'),
+    getDeclaredPackageVersion(tree, '@angular/core'),
+  ];
   const nextVersion = getResolvedPackageVersion(tree, 'next');
   return (
-    (!!angularVersion && major(angularVersion) < 21) ||
+    angularVersions.some((version) => !!version && major(version) < 21) ||
     (!!nextVersion && major(nextVersion) < 16) ||
     Object.entries(ESLINT_V10_FLOORS).some(([name, floor]) => {
       const version = getResolvedPackageVersion(tree, name);
