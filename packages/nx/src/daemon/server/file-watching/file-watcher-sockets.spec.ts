@@ -10,13 +10,14 @@ import { handleResult } from '../server';
 import {
   notifyFileWatcherSocketsOfError,
   registeredFileWatcherSockets,
+  registerFileWatcherSocket,
   removeRegisteredFileWatcherSocket,
 } from './file-watcher-sockets';
 
 const handleResultMock = handleResult as jest.Mock;
 
 function registerSocket(socket: Socket) {
-  registeredFileWatcherSockets.push({
+  registerFileWatcherSocket({
     socket,
     config: {
       watchProjects: 'all',
