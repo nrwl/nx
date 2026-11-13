@@ -9,17 +9,16 @@ const VALID_FORMATS_TO_DEFAULT_OUTPUT_PATH = {
   bitbucket: '.bitbucket/CODEOWNERS',
 } as const;
 
-export type OwnershipPattern = NonNullable<
-  NxOwnersConfiguration['patterns']
->[number];
-
 type GitLabSection = NonNullable<NxOwnersConfiguration['sections']>[number];
+
+// Section patterns may omit owners, so this covers top-level patterns too
+export type OwnershipPattern = GitLabSection['patterns'][number];
 
 export interface RootOwnersConfig {
   format: keyof typeof VALID_FORMATS_TO_DEFAULT_OUTPUT_PATH;
   outputPath: string;
   prefix?: string;
-  patterns: OwnershipPattern[];
+  patterns: NonNullable<NxOwnersConfiguration['patterns']>;
   sections?: GitLabSection[];
 }
 
