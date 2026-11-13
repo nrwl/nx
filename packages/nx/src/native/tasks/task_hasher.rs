@@ -592,15 +592,7 @@ impl TaskHasher {
         let pool = &hash_plans.pool;
         // Catching up locks the files and may hash on the rayon pool, so it
         // runs once here: a pool job doing it could end up waiting on itself.
-        let reads_index: Vec<bool> = (0..pool.len() as u32)
-            .map(|id| matches!(pool.get(id).value(), HashInstruction::IgnoredFileSet { .. }))
-            .collect();
-        if hash_plans
-            .plans
-            .values()
-            .flatten()
-            .any(|&id| reads_index[id as usize])
-        {
+        if pool.any_list_ignored_files(hash_plans.plans.values().flatten().copied()) {
             self.ignored_index.catch_up();
         }
         // Id-indexed snapshots so the hot loop reads a plain Vec instead of
