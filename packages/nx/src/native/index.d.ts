@@ -114,10 +114,6 @@ export declare class HttpRemoteCache {
   store(hash: string, cacheDirectory: string, terminalOutput: string, code: number): Promise<boolean>
 }
 
-/**
- * The hasher's handle on an index: lists only after catching up with the
- * watch behind it.
- */
 export declare class IgnoredIndexReader {
 
 }
