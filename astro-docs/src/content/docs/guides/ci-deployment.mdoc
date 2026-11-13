@@ -108,8 +108,8 @@ async function main() {
     isProduction: true, // Used to strip any non-prod dependencies
   });
 
-  // Writes the pruned lock file and, for pnpm, the install-time artifacts it
-  // needs. Mutates "packageJson", so write the manifest after it.
+  // Writes the pruned lock file and any install-time artifacts it needs.
+  // Mutates "packageJson", so write the manifest after it.
   generatePrunedDeployOutput(
     packageJson,
     projectGraph,
@@ -174,8 +174,8 @@ export default async function buildExecutor(
 
   // do any additional manipulations to "package.json" here
 
-  // Writes the pruned lock file and, for pnpm, the install-time artifacts it
-  // needs. Mutates "packageJson", so write the manifest after it.
+  // Writes the pruned lock file and any install-time artifacts it needs.
+  // Mutates "packageJson", so write the manifest after it.
   generatePrunedDeployOutput(
     packageJson,
     context.projectGraph,
@@ -197,7 +197,9 @@ export default async function buildExecutor(
 {% /tabs %}
 
 `generatePrunedDeployOutput` supports npm, yarn, and pnpm.
-Bun has no lock file generation, so the function warns and the output keeps only the `package.json`.
+Since Nx 24.1, it also supports Bun workspaces on the text `bun.lock`.
+Before Nx 24.1, or with the binary `bun.lockb`, the function warns and the output keeps
+only the `package.json`.
 
 `generatePrunedDeployOutput` doesn't rewrite `workspace:` dependencies or copy workspace libraries
 into the output.

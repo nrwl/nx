@@ -9,6 +9,7 @@ import {
   existsSync,
   mkdirSync,
   readFileSync,
+  rmSync,
   writeFileSync,
 } from 'node:fs';
 import { dirname, join } from 'node:path';
@@ -27,6 +28,7 @@ import { output } from '../../../utils/output';
 import { PackageJson } from '../../../utils/package-json';
 import {
   dropInheritedPnpmPatchedDependencies,
+  getLocalPathArtifacts,
   getPrunedPnpmInstallArtifacts,
   type PrunedDeployArtifact,
   rewritePrunedLocalPathSpecifiers,
@@ -45,9 +47,15 @@ import {
   BUN_TEXT_LOCK_FILE,
   getBunInstalledLocalPathNodes,
   getBunLocalPathNodeSources,
+  getBunLockfilePatchKeys,
   getBunTextLockfileDependencies,
   getBunTextLockfileNodes,
+  getPrunedBunLocalPathTargets,
+  getPrunedBunPatchArtifacts,
+  stringifyBunLockfile,
+  validatePrunedBunLocalPathClosure,
 } from './bun-parser';
+import type { PinnedManifestSpec } from './bun-parser';
 import {
   getNpmLockfileDependencies,
   getNpmLockfileNodes,
@@ -336,6 +344,53 @@ export function getLockFilePath(packageManager: PackageManager): string {
   throw new Error(`Unknown package manager: ${packageManager}`);
 }
 
+const BUN_TEXT_LOCKFILE_HINT =
+  'Run `bun install --save-text-lockfile` at the workspace root to switch to bun.lock.';
+
+// Only the text bun.lock can be pruned. Without it, a Bun deploy output ships
+// the manifest alone.
+export function hasTextBunLockfile(workspaceRootPath: string): boolean {
+  return existsSync(join(workspaceRootPath, BUN_TEXT_LOCK_FILE));
+}
+
+// Same precedence as getLockFilePath, against the root the caller prunes from.
+function usesBinaryBunLockfile(workspaceRootPath: string): boolean {
+  return (
+    !hasTextBunLockfile(workspaceRootPath) &&
+    existsSync(join(workspaceRootPath, BUN_LOCK_FILE))
+  );
+}
+
+// A pruned Bun lockfile is always the text bun.lock.
+function getPrunedLockFileName(packageManager: PackageManager): string {
+  return packageManager === 'bun'
+    ? BUN_TEXT_LOCK_FILE
+    : getLockFileName(packageManager);
+}
+
+// Bun trusts the install scripts of the packages the install root lists, and a
+// list replaces Bun's default one, so the output carries the workspace root's.
+function mergeRootTrustedDependencies(
+  packageJson: PackageJson,
+  workspaceRootPath: string
+): void {
+  const rootPackageJsonPath = join(workspaceRootPath, 'package.json');
+  if (!existsSync(rootPackageJsonPath)) {
+    return;
+  }
+  const { trustedDependencies } =
+    readJsonFile<PackageJson>(rootPackageJsonPath);
+  if (!trustedDependencies) {
+    return;
+  }
+  packageJson.trustedDependencies = [
+    ...new Set([
+      ...trustedDependencies,
+      ...(packageJson.trustedDependencies ?? []),
+    ]),
+  ];
+}
+
 /**
  * Create lock file based on the root level lock file and (pruned) package.json
  *
@@ -346,13 +401,14 @@ export function getLockFilePath(packageManager: PackageManager): string {
  * An inherited `pnpm.patchedDependencies` goes with it, since the prune scopes
  * the lockfile's patches to the packages that survive it and rewrites their
  * paths onto the output.
- * The manifest is left alone for npm and yarn, which never read that block.
+ * The manifest is left alone for npm, yarn and bun, which never read that block.
  * Mutating it means callers must write or emit the manifest after this returns.
  *
  * The lockfile alone does not make a complete pnpm output. A workspace
  * declaring build-script approvals, patches or vendored local paths also needs
  * the artifacts `generatePrunedDeployOutput` ships, and this warns when that is
- * the case.
+ * the case. A Bun workspace needs its patch files and vendored local paths the
+ * same way.
  *
  * On a pruning error the root lockfile is returned as a fail-open fallback,
  * with the manifest left as authored.
@@ -375,7 +431,34 @@ export function createLockFile(
     dropInheritedPnpmPatchedDependencies(packageJson);
     warnIncompletePrunedPnpmOutput(lockFileContent);
   }
+  if (pruned && packageManager === 'bun') {
+    warnIncompletePrunedBunOutput(lockFileContent);
+  }
   return lockFileContent;
+}
+
+// The pieces a pruned bun.lock needs beside it, which only
+// `generatePrunedDeployOutput` ships.
+function warnIncompletePrunedBunOutput(lockFileContent: string): void {
+  const missing: string[] = [];
+  if (getBunLockfilePatchKeys(lockFileContent).length) {
+    missing.push('the patch files and the patchedDependencies they need');
+  }
+  if (getPrunedBunLocalPathTargets(lockFileContent).length) {
+    missing.push('the vendored file:/link: dependencies it references');
+  }
+  if (!missing.length) {
+    return;
+  }
+  output.warn({
+    title: 'The pruned bun.lock needs artifacts this call does not return',
+    bodyLines: [
+      `A standalone install of the output will be missing ${missing.join(
+        ', and '
+      )}.`,
+      'Use generatePrunedDeployOutput to ship them.',
+    ],
+  });
 }
 
 /**
@@ -397,22 +480,33 @@ function buildLockFile(
     onPruneFallback?: (error: Error) => void;
     workspaceRootPath?: string;
     projectRoot?: string;
+    onPinnedSpec?: (pin: PinnedManifestSpec) => void;
   }
 ): string {
   const workspaceRootPath = options?.workspaceRootPath ?? workspaceRoot;
+  if (packageManager === 'bun' && usesBinaryBunLockfile(workspaceRootPath)) {
+    output.log({
+      title: 'Unable to create a pruned lockfile from the binary bun.lockb',
+      bodyLines: [BUN_TEXT_LOCKFILE_HINT],
+    });
+    return '';
+  }
   const normalizedPackageJson = normalizePackageJson(packageJson);
   const content = readFileSync(
-    join(workspaceRootPath, getLockFileName(packageManager)),
+    join(workspaceRootPath, getPrunedLockFileName(packageManager)),
     'utf8'
   );
 
   try {
     if (packageManager === 'bun') {
-      output.log({
-        title:
-          "Unable to create bun lock files. Run bun install it's just as quick",
-      });
-      return '';
+      return stringifyBunLockfile(
+        graph,
+        content,
+        normalizedPackageJson,
+        workspaceRootPath,
+        options?.projectRoot,
+        options?.onPinnedSpec
+      );
     }
     const prunedGraph = pruneProjectGraph(
       graph,
@@ -462,12 +556,12 @@ function buildLockFile(
 
 /**
  * Creates the pruned lockfile for a generate-package-json flow, running the
- * steps such a flow needs around `createLockFile`. For pnpm, the manifest's
- * `file:`/`link:` local-path specifiers are relocated to their shipped location
- * first (pnpm re-resolves them on a non-frozen install, and the lockfile copies
- * the manifest's form), and the local-path dependency closure is validated
- * after pruning so a shipped `link:` target that requires an unresolvable
- * dependency fails the build instead of the deploy. After a successful prune,
+ * steps such a flow needs around `createLockFile`. For pnpm and Bun, the
+ * manifest's `file:`/`link:` local-path specifiers are relocated to their
+ * shipped location first (both re-resolve them on a non-frozen install, and the
+ * lockfile copies the manifest's form), and the local-path dependency closure
+ * is validated after pruning so a shipped `link:` target that requires an
+ * unresolvable dependency fails the build instead of the deploy. After a successful prune,
  * the manifest's pnpm config block is stripped for every package manager:
  * re-declaring config a pruned pnpm lockfile bakes into its snapshots trips
  * ERR_PNPM_LOCKFILE_CONFIG_MISMATCH, and npm and yarn never read the block at
@@ -482,9 +576,10 @@ function buildLockFile(
  * the closure validation is skipped, and the remaining install-time pieces must
  * not ship local-path artifacts for it (see `getPrunedPnpmInstallArtifacts`).
  *
- * Mutates `packageJson` (the pnpm-only specifier relocation and the config
- * strip), so write or emit the manifest after calling this. Not for bun, which
- * has no lockfile generation.
+ * Mutates `packageJson` (the pnpm and Bun specifier relocation, the config
+ * strip, and for Bun the `overrides`/`resolutions` strip and the locked version
+ * of each dependency an override installed outside its range or in place of
+ * its local path), so write or emit the manifest after calling this.
  */
 function createPrunedLockfile(
   packageJson: PackageJson,
@@ -494,14 +589,22 @@ function createPrunedLockfile(
   packageManager: PackageManager = detectPackageManager(workspaceRootPath)
 ): { lockFileContent: string; pruned: boolean } {
   const originalPackageJson = structuredClone(packageJson);
-  if (packageManager === 'pnpm') {
+  if (packageManager === 'pnpm' || packageManager === 'bun') {
     rewritePrunedLocalPathSpecifiers(
       packageJson,
       projectRoot,
       workspaceRootPath,
-      getWorkspacePackagesFromGraph(graph)
+      getWorkspacePackagesFromGraph(graph),
+      packageManager
     );
   }
+  if (packageManager === 'bun') {
+    // Bun reads these only from the workspace root, whose effect the pruned
+    // bun.lock already locks, so a project's own block never applied.
+    delete packageJson.overrides;
+    delete packageJson.resolutions;
+  }
+  const pinnedSpecs: PinnedManifestSpec[] = [];
   let pruneError: Error | undefined;
   const lockFileContent = buildLockFile(packageJson, graph, packageManager, {
     onPruneFallback: (error) => {
@@ -509,9 +612,13 @@ function createPrunedLockfile(
     },
     workspaceRootPath,
     projectRoot,
+    onPinnedSpec: (pin) => pinnedSpecs.push(pin),
   });
   const pruned = pruneError === undefined;
   if (pruned) {
+    for (const { depType, name, spec } of pinnedSpecs) {
+      packageJson[depType][name] = spec;
+    }
     stripPrunedLockfilePnpmConfig(packageJson);
     if (packageManager === 'pnpm') {
       validatePrunedLocalPathClosure(
@@ -519,10 +626,17 @@ function createPrunedLockfile(
         workspaceRootPath,
         lockFileContent
       );
+    } else if (packageManager === 'bun') {
+      validatePrunedBunLocalPathClosure(
+        packageJson,
+        workspaceRootPath,
+        lockFileContent
+      );
     }
   } else {
     // The root lockfile matches the manifest as authored, so undo the
-    // specifier relocation and keep the pnpm config it still declares.
+    // specifier relocation and the Bun override strip, and keep the pnpm
+    // config it still declares.
     for (const key of Object.keys(packageJson)) {
       delete (packageJson as unknown as Record<string, unknown>)[key];
     }
@@ -534,6 +648,10 @@ function createPrunedLockfile(
     if (packageManager === 'pnpm') {
       bodyLines.push(
         'The emitted package.json keeps its resolution-time pnpm config (`overrides`, `packageExtensions`), its vendored local-path specifiers point at their original workspace locations, and no local-path artifacts are shipped for it.'
+      );
+    } else if (packageManager === 'bun') {
+      bodyLines.push(
+        'The vendored local-path specifiers of the emitted package.json point at their original workspace locations, and no local-path artifacts are shipped for it.'
       );
     }
     bodyLines.push(
@@ -561,18 +679,23 @@ type PrunedDeploySink =
 
 /**
  * Generates the standalone deploy output a generate-package-json flow ships
- * alongside its manifest: the pruned lockfile and, for pnpm, the install-time
- * artifacts that lockfile needs (the settings-only pnpm-workspace.yaml, the
- * `pnpm patch` files, and the vendored non-workspace local-path dependencies).
+ * alongside its manifest: the pruned lockfile and the install-time artifacts
+ * that lockfile needs. For pnpm those are the settings-only pnpm-workspace.yaml,
+ * the `pnpm patch` files, and the vendored non-workspace local-path
+ * dependencies; for Bun, the `bun patch` files and the vendored local-path
+ * dependencies.
  * `options` carries either an `outputDirectory` to write into or an `emit` sink
  * for a bundler's asset pipeline, never both.
  *
  * Mutates `packageJson` into the form the output must ship (the relocated
- * local-path specifiers, the pnpm config strip, the pnpm <=10 build settings),
- * so write or emit the manifest after this returns.
+ * local-path specifiers, the pnpm config strip, the pnpm <=10 build settings,
+ * the Bun root `trustedDependencies`, pruned `patchedDependencies`, override
+ * strip and pinned versions), so write or emit the manifest after this returns.
  *
- * Bun has no lockfile generation, so it warns and ships nothing, leaving the
- * manifest as authored.
+ * A Bun workspace without the text bun.lock, on the binary bun.lockb or with no
+ * lockfile at all, gets no lockfile: it warns and ships nothing, leaving the
+ * manifest as authored. A Bun manifest without
+ * dependencies also ships no lockfile, as Bun writes none for it.
  */
 export function generatePrunedDeployOutput(
   packageJson: PackageJson,
@@ -585,14 +708,22 @@ export function generatePrunedDeployOutput(
 ): void {
   const workspaceRootPath = options.workspaceRoot ?? workspaceRoot;
   const { packageManager } = options;
-  if (packageManager === 'bun') {
+  if (packageManager === 'bun' && !hasTextBunLockfile(workspaceRootPath)) {
     output.warn({
-      title: 'Bun lockfile generation is not supported',
-      bodyLines: [
-        'Only the package.json is generated. Run `bun install` in the output directory if needed.',
-      ],
+      title: 'Bun lockfile generation requires the text bun.lock',
+      bodyLines: usesBinaryBunLockfile(workspaceRootPath)
+        ? [
+            'The workspace uses the binary bun.lockb, so only the package.json is generated.',
+            BUN_TEXT_LOCKFILE_HINT,
+          ]
+        : [
+            'The workspace has no bun.lock, so only the package.json is generated.',
+          ],
     });
     return;
+  }
+  if (packageManager === 'bun') {
+    mergeRootTrustedDependencies(packageJson, workspaceRootPath);
   }
   const { lockFileContent, pruned } = createPrunedLockfile(
     packageJson,
@@ -601,9 +732,17 @@ export function generatePrunedDeployOutput(
     workspaceRootPath,
     packageManager
   );
-  const artifacts: PrunedDeployArtifact[] = [
-    { path: getLockFileName(packageManager), content: lockFileContent },
-  ];
+  // A pruned bun.lock is empty for a manifest without dependencies, which
+  // ships without one.
+  const shipsLockFile = !(packageManager === 'bun' && lockFileContent === '');
+  const artifacts: PrunedDeployArtifact[] = shipsLockFile
+    ? [
+        {
+          path: getPrunedLockFileName(packageManager),
+          content: lockFileContent,
+        },
+      ]
+    : [];
   if (packageManager === 'pnpm') {
     artifacts.push(
       ...getPrunedPnpmInstallArtifacts(
@@ -614,11 +753,36 @@ export function generatePrunedDeployOutput(
       )
     );
   }
+  if (packageManager === 'bun') {
+    artifacts.push(
+      ...getPrunedBunPatchArtifacts(
+        workspaceRootPath,
+        lockFileContent,
+        packageJson
+      )
+    );
+    // The root-lockfile fallback references the whole workspace.
+    if (pruned) {
+      artifacts.push(
+        ...getLocalPathArtifacts(
+          workspaceRootPath,
+          getPrunedBunLocalPathTargets(lockFileContent)
+        )
+      );
+    }
+  }
 
   // Discriminate on the value, not key presence: options built by spread can
   // carry an explicitly-present `outputDirectory: undefined` beside `emit`.
   if (options.outputDirectory !== undefined) {
     const { outputDirectory } = options;
+    // Bun rejects a frozen install when a lockfile from a prior deploy sits
+    // beside a manifest without dependencies.
+    if (!shipsLockFile) {
+      rmSync(join(outputDirectory, getPrunedLockFileName(packageManager)), {
+        force: true,
+      });
+    }
     // Directory trees flow through here one file at a time, so dedupe the
     // recursive mkdir per destination directory.
     const createdDirs = new Set<string>();
