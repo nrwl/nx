@@ -1,3 +1,32 @@
+// The option surface of the `@nx/eslint:lint` schema. The removed executor no
+// longer ships a schema.json to read it from, and the converter drops anything
+// outside this set rather than forwarding it to run-commands.
+export const executorOptions = new Set([
+  'cache',
+  'cacheLocation',
+  'cacheStrategy',
+  'errorOnUnmatchedPattern',
+  'eslintConfig',
+  'fix',
+  'force',
+  'format',
+  'hasTypeAwareRules',
+  'ignorePath',
+  'lintFilePatterns',
+  'maxWarnings',
+  'noEslintrc',
+  'outputFile',
+  'printConfig',
+  'quiet',
+  'reportUnusedDisableDirectives',
+  'resolvePluginsRelativeTo',
+  'rulesdir',
+  'silent',
+  'suppressAll',
+  'suppressRule',
+  'suppressionsLocation',
+]);
+
 export const targetOptionsToCliMap = {
   fix: 'fix',
   format: 'format',

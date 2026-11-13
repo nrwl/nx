@@ -1,6 +1,7 @@
 import {
   addProjectConfiguration as _addProjectConfiguration,
   joinPathFragments,
+  logger,
   readNxJson,
   readProjectConfiguration,
   updateNxJson,
@@ -1293,5 +1294,61 @@ describe('Eslint - Convert Executors To Plugin', () => {
         });
       }
     });
+
+    it.each`
+      options                                                       | expectedTarget
+      ${{}}                                                         | ${undefined}
+      ${{ command: 'echo not-eslint' }}                             | ${undefined}
+      ${{ cwd: 'tools', args: ['--fix'], env: { CI: '1' } }}        | ${undefined}
+      ${{ cacheLocation: 'cache-dir' }}                             | ${{ options: { 'cache-location': 'cache-dir' } }}
+      ${{ cacheLocation: 'cache-dir', command: 'echo not-eslint' }} | ${{ options: { 'cache-location': 'cache-dir' } }}
+    `(
+      'should keep only the options the executor defined out of $options',
+      async ({ options, expectedTarget }) => {
+        const project = createTestProject(tree);
+        Object.assign(project.targets.lint.options, options);
+        updateProjectConfiguration(tree, project.name, project);
+
+        await convertToInferred(tree, { skipFormat: true });
+
+        const updatedProject = readProjectConfiguration(tree, project.name);
+        expect(updatedProject.targets.lint).toStrictEqual(expectedTarget);
+      }
+    );
+
+    it('should drop options the executor did not define from configurations', async () => {
+      const project = createTestProject(tree);
+      project.targets.lint.configurations = {
+        ci: { command: 'echo not-eslint', maxWarnings: 5 },
+      };
+      updateProjectConfiguration(tree, project.name, project);
+
+      await convertToInferred(tree, { skipFormat: true });
+
+      const updatedProject = readProjectConfiguration(tree, project.name);
+      expect(updatedProject.targets.lint.configurations).toStrictEqual({
+        ci: { 'max-warnings': 5 },
+      });
+    });
+
+    it.each`
+      options                                             | warnings
+      ${{}}                                               | ${[]}
+      ${{ command: 'echo not-eslint' }}                   | ${['Removed "command" from the "lint" target of project "myapp". The "@nx/eslint:lint" executor did not define that option, so keeping it would change what the converted target runs.']}
+      ${{ command: 'echo not-eslint', cwd: 'elsewhere' }} | ${['Removed "command", "cwd" from the "lint" target of project "myapp". The "@nx/eslint:lint" executor did not define those options, so keeping them would change what the converted target runs.']}
+    `(
+      'should warn about the options it dropped from $options',
+      async ({ options, warnings }) => {
+        const project = createTestProject(tree);
+        Object.assign(project.targets.lint.options, options);
+        updateProjectConfiguration(tree, project.name, project);
+        const warn = vi.spyOn(logger, 'warn').mockImplementation(() => {});
+        warn.mockClear();
+
+        await convertToInferred(tree, { skipFormat: true });
+
+        expect(warn.mock.calls.map(([message]) => message)).toEqual(warnings);
+      }
+    );
   });
 });
