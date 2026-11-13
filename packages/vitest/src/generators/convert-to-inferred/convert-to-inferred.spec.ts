@@ -196,6 +196,16 @@ export default defineConfig({
   return project;
 }
 
+function addE2eTarget(tree: Tree, projectName: string) {
+  const project = readProjectConfiguration(tree, projectName);
+  project.targets['e2e-test'] = {
+    executor: '@nx/vitest:test',
+    options: { configFile: `${project.root}/vitest.config.e2e.mts` },
+  };
+  updateProjectConfiguration(tree, projectName, project);
+  fs.createFileSync(`${project.root}/project.json`, JSON.stringify(project));
+}
+
 describe('@nx/vitest:convert-to-inferred', () => {
   let tree: Tree;
 
@@ -217,6 +227,29 @@ describe('@nx/vitest:convert-to-inferred', () => {
   });
 
   describe('--project', () => {
+    it('runs a target on a config file the plugin does not infer only in the named project', async () => {
+      createTestProject(tree);
+      addE2eTarget(tree, 'myapp');
+      createTestProject(tree, { appRoot: 'other', appName: 'other' });
+      addE2eTarget(tree, 'other');
+      const otherTargets = readProjectConfiguration(tree, 'other').targets;
+
+      await convertToInferred(tree, { project: 'myapp', skipFormat: true });
+
+      expect(
+        readProjectConfiguration(tree, 'myapp').targets['e2e-test']
+      ).toEqual({
+        executor: 'nx:run-commands',
+        options: {
+          command: 'vitest run --root myapp --config ./vitest.config.e2e.mts',
+          cwd: '.',
+        },
+      });
+      expect(readProjectConfiguration(tree, 'other').targets).toEqual(
+        otherTargets
+      );
+    });
+
     it('migrates only the requested project and scopes the new plugin entry to it', async () => {
       createTestProject(tree, {
         appRoot: 'other',
@@ -279,6 +312,26 @@ export default defineConfig({ root: __dirname });`;
   });
 
   describe('--all', () => {
+    it('runs a target on a config file the plugin does not infer when it is the only vitest target', async () => {
+      const project = createTestProject(tree);
+      const configured = readProjectConfiguration(tree, project.name);
+      delete configured.targets.test;
+      updateProjectConfiguration(tree, project.name, configured);
+      addE2eTarget(tree, project.name);
+
+      await convertToInferred(tree, { skipFormat: true });
+
+      expect(readProjectConfiguration(tree, project.name).targets).toEqual({
+        'e2e-test': {
+          executor: 'nx:run-commands',
+          options: {
+            command: 'vitest run --root myapp --config ./vitest.config.e2e.mts',
+            cwd: '.',
+          },
+        },
+      });
+    });
+
     it('registers a single @nx/vitest plugin entry when all projects share the same test target name', async () => {
       const project = createTestProject(tree);
 
@@ -302,6 +355,37 @@ export default defineConfig({ root: __dirname });`;
       );
       expect(vitestRegistrations).toHaveLength(1);
       expect(vitestRegistrations[0].options?.testTargetName).toBe('test');
+      expect(vitestRegistrations[0].options?.testMode).toBe('run');
+    });
+
+    it('does not add converted projects to an existing watch-mode registration', async () => {
+      const nxJson = readNxJson(tree);
+      nxJson.plugins = [
+        {
+          plugin: '@nx/vitest',
+          include: ['existing/**/*'],
+          options: { testTargetName: 'test' },
+        },
+      ];
+      updateNxJson(tree, nxJson);
+      createTestProject(tree);
+
+      await convertToInferred(tree, { skipFormat: true });
+
+      const vitestRegistrations = readNxJson(tree).plugins.filter(
+        (p): p is ExpandedPluginConfiguration<VitestPluginOptions> =>
+          typeof p !== 'string' && p.plugin === '@nx/vitest'
+      );
+      expect(vitestRegistrations).toEqual([
+        {
+          plugin: '@nx/vitest',
+          include: ['existing/**/*'],
+          options: { testTargetName: 'test' },
+        },
+        expect.objectContaining({
+          options: { testTargetName: 'test', testMode: 'run' },
+        }),
+      ]);
     });
 
     it('creates separate plugin registrations for projects with different test target names', async () => {
