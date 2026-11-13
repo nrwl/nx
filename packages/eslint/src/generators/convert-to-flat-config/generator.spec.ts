@@ -18,7 +18,7 @@ import {
 import { convertToFlatConfigGenerator } from './generator';
 import { ConvertToFlatConfigGeneratorSchema } from './schema';
 import { lintProjectGenerator } from '../lint-project/lint-project';
-import { eslintrcVersion } from '../../utils/versions';
+import { eslintrcVersion, globalsVersion } from '../../utils/versions';
 import { ESLINT_FLAT_CONFIG_FILENAMES } from '../../utils/config-file';
 import { dump } from '@zkochan/js-yaml';
 
@@ -1167,6 +1167,34 @@ describe('convert-to-flat-config generator', () => {
       await convertToFlatConfigGenerator(tree, options);
 
       expect(tree.read('eslint.config.mjs', 'utf-8')).toMatchSnapshot();
+      expect(readJson(tree, 'package.json').devDependencies.globals).toBe(
+        globalsVersion
+      );
+    });
+
+    it('should keep a declared globals version when adding env configuration', async () => {
+      await lintProjectGenerator(tree, {
+        skipFormat: false,
+        linter: 'eslint',
+        project: 'test-lib',
+        enableTypedLinting: false,
+        eslintConfigFormat: 'mjs',
+      });
+      updateJson(tree, '.eslintrc.json', (json) => {
+        json.env = { node: true };
+        return json;
+      });
+      updateJson(tree, 'package.json', (json) => {
+        json.devDependencies = { ...json.devDependencies, globals: '^15.0.0' };
+        return json;
+      });
+
+      await convertToFlatConfigGenerator(tree, options);
+
+      expect(tree.read('eslint.config.mjs', 'utf-8')).toContain('globals.node');
+      expect(readJson(tree, 'package.json').devDependencies.globals).toBe(
+        '^15.0.0'
+      );
     });
 
     it('should add global configuration', async () => {

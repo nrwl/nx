@@ -100,7 +100,12 @@ export function convertEslintJsonToFlatConfig(
   ignorePaths: string[],
   format: 'cjs' | 'mjs',
   convertedEslintrcFiles: ReadonlySet<string>
-): { content: string; addESLintRC: boolean; addESLintJS: boolean } {
+): {
+  content: string;
+  addESLintRC: boolean;
+  addESLintJS: boolean;
+  addGlobals: boolean;
+} {
   const importsMap = new Map<string, string>();
   const exportElements: ts.Expression[] = [];
   let isFlatCompatNeeded = false;
@@ -374,6 +379,7 @@ export function convertEslintJsonToFlatConfig(
     content,
     addESLintRC: isFlatCompatNeeded,
     addESLintJS: isESLintJSNeeded,
+    addGlobals: importsMap.has('globals'),
   };
 }
 
