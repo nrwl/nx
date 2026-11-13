@@ -838,5 +838,42 @@ describe('Cypress - Convert Executors To Plugin', () => {
         });
       }
     });
+
+    it.each`
+      options                                              | expectedTarget                                                              | warnings
+      ${{}}                                                | ${{ options: { 'config-file': './cypress.config.ts' } }}                    | ${[]}
+      ${{ command: 'echo not-cypress' }}                   | ${{ options: { 'config-file': './cypress.config.ts' } }}                    | ${['Removed "command" from the "e2e" target of project "myapp-e2e". The "@nx/cypress:cypress" executor did not define that option, so keeping it would change what the converted target runs.']}
+      ${{ command: 'echo not-cypress', cwd: 'elsewhere' }} | ${{ options: { 'config-file': './cypress.config.ts' } }}                    | ${['Removed "command", "cwd" from the "e2e" target of project "myapp-e2e". The "@nx/cypress:cypress" executor did not define those options, so keeping them would change what the converted target runs.']}
+      ${{ browser: 'chrome' }}                             | ${{ options: { 'config-file': './cypress.config.ts', browser: 'chrome' } }} | ${[]}
+    `(
+      'should keep only the options the executor defined out of $options',
+      async ({ options, expectedTarget, warnings }) => {
+        const project = createTestProject(tree);
+        Object.assign(project.targets.e2e.options, options);
+        updateProjectConfiguration(tree, project.name, project);
+        const warn = vi.spyOn(logger, 'warn').mockImplementation(() => {});
+        warn.mockClear();
+
+        await convertToInferred(tree, { skipFormat: true });
+
+        const updatedProject = readProjectConfiguration(tree, project.name);
+        expect(updatedProject.targets.e2e).toStrictEqual(expectedTarget);
+        expect(warn.mock.calls.map(([message]) => message)).toEqual(warnings);
+      }
+    );
+
+    it('should drop options the executor did not define from configurations', async () => {
+      const project = createTestProject(tree);
+      project.targets.e2e.configurations.ci.command = 'echo not-cypress';
+      project.targets.e2e.configurations.ci.browser = 'chrome';
+      updateProjectConfiguration(tree, project.name, project);
+
+      await convertToInferred(tree, { skipFormat: true });
+
+      const updatedProject = readProjectConfiguration(tree, project.name);
+      expect(updatedProject.targets.e2e.configurations).toStrictEqual({
+        ci: { browser: 'chrome' },
+      });
+    });
   });
 });

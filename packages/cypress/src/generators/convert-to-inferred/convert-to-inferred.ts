@@ -3,6 +3,7 @@ import {
   NoTargetsToMigrateError,
   processTargetOutputs,
   toProjectRelativePath,
+  type InferredTargetConfiguration,
 } from '@nx/devkit/internal';
 import {
   createProjectGraphAsync,
@@ -16,7 +17,10 @@ import { assertSupportedCypressVersion } from '../../utils/assert-supported-cypr
 import { addBuildTargetToComponentTestingPreset } from './lib/add-build-target-to-ct-preset';
 import { addDevServerTargetToConfig } from './lib/add-dev-server-target-to-config';
 import { addExcludeSpecPattern } from './lib/add-exclude-spec-pattern';
-import { targetOptionsToCliMap } from './lib/target-options-map';
+import {
+  executorOptions,
+  targetOptionsToCliMap,
+} from './lib/target-options-map';
 import { upsertBaseUrl } from './lib/upsert-baseUrl';
 
 interface Schema {
@@ -64,8 +68,14 @@ function postTargetTransformer(
   target: TargetConfiguration,
   tree: Tree,
   projectDetails: { projectName: string; root: string },
-  inferredTargetConfiguration: TargetConfiguration
+  inferredTargetConfiguration: InferredTargetConfiguration
 ): TargetConfiguration {
+  removeUnknownExecutorOptions(
+    target,
+    projectDetails.projectName,
+    inferredTargetConfiguration.name
+  );
+
   if (target.options?.testingType === 'component') {
     moveBuildTargetToComponentTestingPreset(
       tree,
@@ -118,6 +128,41 @@ function postTargetTransformer(
   }
 
   return target;
+}
+
+/**
+ * Drops options the executor never defined and therefore ignored. The converted
+ * target forwards its options to run-commands, which reads some of them as its
+ * own, and `command` replaces the Cypress command outright.
+ */
+function removeUnknownExecutorOptions(
+  target: TargetConfiguration,
+  projectName: string,
+  targetName: string
+): void {
+  const dropped = new Set<string>();
+  const strip = (options: Record<string, any> | undefined) => {
+    for (const option of Object.keys(options ?? {})) {
+      if (!executorOptions.has(option)) {
+        delete options[option];
+        dropped.add(option);
+      }
+    }
+  };
+
+  strip(target.options);
+  for (const configuration of Object.values(target.configurations ?? {})) {
+    strip(configuration);
+  }
+
+  if (dropped.size) {
+    const names = [...dropped].map((option) => `"${option}"`).join(', ');
+    const [subject, object] =
+      dropped.size === 1 ? ['that option', 'it'] : ['those options', 'them'];
+    logger.warn(
+      `Removed ${names} from the "${targetName}" target of project "${projectName}". The "@nx/cypress:cypress" executor did not define ${subject}, so keeping ${object} would change what the converted target runs.`
+    );
+  }
 }
 
 function moveBuildTargetToComponentTestingPreset(
@@ -173,10 +218,6 @@ function handlePropertiesInOptions(
     configFilePath = options.cypressConfig;
     options['config-file'] = toProjectRelativePath(configFilePath, projectRoot);
     delete options.cypressConfig;
-  }
-
-  if ('copyFiles' in options) {
-    delete options.copyFiles;
   }
 
   if ('skipServe' in options) {
