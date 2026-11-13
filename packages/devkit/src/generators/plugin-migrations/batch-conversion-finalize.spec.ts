@@ -442,7 +442,9 @@ describe('batch conversion finalize', () => {
         readJson(ctx.tree, `${name}/project.json`).targets.build
       ).toBeUndefined();
     }
-    expect(warnA).not.toHaveBeenCalled();
+    expect(warnA).toHaveBeenCalledExactlyOnceWith(
+      `convert-to-inferred kept an explicit "include" list on the ${SYNTHETIC_PLUGIN_PATH} registration in nx.json. Without it, the plugin would also apply to:\n  - projects with no target this conversion can migrate: app3, app4. The "include" keeps the plugin from adding targets to them.`
+    );
     expect(warnB).not.toHaveBeenCalled();
 
     // through the REAL pipeline each root resolves its owner's default
