@@ -24,24 +24,18 @@ import { resolveVersionWithProvenance } from '../../utils/provenance';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { getInstalledNxVersion } from '../../utils/installed-nx-version';
 import {
-  agentsMdPath,
   analyticsDomain,
   NX_ALLOWLIST_ROOTS,
   claudeMcpJsonPath,
-  geminiMdPath,
-  getAgentRulesWrapped,
   getNxMcpTomlConfig,
   nxMcpTomlHeader,
-  nxRulesMarkerCommentDescription,
-  nxRulesMarkerCommentEnd,
-  nxRulesMarkerCommentStart,
   opencodeMcpPath,
-  rulesRegex,
 } from '../constants';
 import { getAiConfigRepoPath } from '../clone-ai-config-repo';
 import { logger } from '../../utils/logger';
 import { DirectoryRefusedError } from '../../utils/owned-private-dir';
 import { Agent, supportedAgents } from '../utils';
+import { removeNxRulesBlocks } from './remove-nx-rules-blocks';
 import {
   NormalizedSetupAiAgentsGeneratorSchema,
   SetupAiAgentsGeneratorSchema,
@@ -127,7 +121,6 @@ function normalizeOptions(
 ): NormalizedSetupAiAgentsGeneratorSchema {
   return {
     directory: options.directory,
-    writeNxCloudRules: options.writeNxCloudRules ?? false,
     packageVersion: options.packageVersion ?? 'latest',
     agents: options.agents ?? [...supportedAgents],
   };
@@ -155,26 +148,9 @@ export async function setupAiAgentsGeneratorImpl(
   const analyticsEnabled = isAnalyticsEnabled(readNxJson(tree));
   let addedAnalyticsDomain = false;
 
-  const agentsMd = agentsMdPath(options.directory);
-
-  // write AGENTS.md for most agents
-  if (
-    hasAgent('cursor') ||
-    hasAgent('copilot') ||
-    hasAgent('codex') ||
-    hasAgent('opencode')
-  ) {
-    writeAgentRules(tree, agentsMd, options.writeNxCloudRules);
-  }
+  removeNxRulesBlocks(tree, options.directory);
 
   if (hasAgent('claude')) {
-    const claudePath = join(options.directory, 'CLAUDE.md');
-    writeAgentRules(
-      tree,
-      importsAgentsMd(tree, claudePath) ? agentsMd : claudePath,
-      options.writeNxCloudRules
-    );
-
     // Configure Claude plugin via marketplace (plugin includes MCP server)
     const claudeSettingsPath = join(
       options.directory,
@@ -328,28 +304,6 @@ export async function setupAiAgentsGeneratorImpl(
     updateJson(tree, geminiSettingsPath, (json) =>
       mcpConfigUpdater(json, nxVersion)
     );
-
-    const contextFileName: string | undefined = readJson(
-      tree,
-      geminiSettingsPath
-    ).contextFileName;
-
-    const geminiMd = geminiMdPath(options.directory);
-
-    // Only set contextFileName to AGENTS.md if GEMINI.md doesn't exist already to preserve existing setups
-    if (!contextFileName && !tree.exists(geminiMd)) {
-      writeAgentRules(tree, agentsMd, options.writeNxCloudRules);
-      updateJson(tree, geminiSettingsPath, (json) => ({
-        ...json,
-        contextFileName: 'AGENTS.md',
-      }));
-    } else {
-      writeAgentRules(
-        tree,
-        contextFileName ?? geminiMd,
-        options.writeNxCloudRules
-      );
-    }
   }
 
   // Copy extensibility artifacts (commands, skills, subagents) for non-Claude agents
@@ -514,73 +468,6 @@ function withEntries(
   ...values: readonly string[]
 ): string[] {
   return [...new Set([...(existing ?? []), ...values])];
-}
-
-function importsAgentsMd(tree: Tree, claudePath: string): boolean {
-  if (!tree.exists(claudePath)) {
-    return false;
-  }
-  const nxBlock = tree.read(claudePath, 'utf-8').match(rulesRegex)?.[0];
-  return (
-    nxBlock
-      ?.replace(nxRulesMarkerCommentStart, '')
-      .replace(nxRulesMarkerCommentEnd, '')
-      .replace(nxRulesMarkerCommentDescription, '')
-      .trim() === '@AGENTS.md'
-  );
-}
-
-function writeAgentRules(tree: Tree, path: string, writeNxCloudRules: boolean) {
-  if (!tree.exists(path)) {
-    // File doesn't exist - create with h1 header (standalone content)
-    const expectedRules = getAgentRulesWrapped({
-      writeNxCloudRules,
-      useH1: true,
-    });
-    tree.write(path, expectedRules);
-    return;
-  }
-
-  const existing = tree.read(path, 'utf-8');
-
-  const regex = rulesRegex;
-  const existingNxConfiguration = existing.match(regex);
-
-  if (existingNxConfiguration) {
-    // Check the rest of the file (outside nx block) for an h1 header
-    // to ensure only one h1 exists in the document
-    const contentWithoutNxBlock = existing.replace(regex, '');
-    const hasExternalH1 = /^# /m.test(contentWithoutNxBlock);
-    const expectedRules = getAgentRulesWrapped({
-      writeNxCloudRules,
-      useH1: !hasExternalH1,
-    });
-    const contentOnly = (str: string) =>
-      str
-        .replace(nxRulesMarkerCommentStart, '')
-        .replace(nxRulesMarkerCommentEnd, '')
-        .replace(nxRulesMarkerCommentDescription, '')
-        .replace(/\s/g, '');
-
-    // we don't want to make updates on whitespace-only changes
-    if (
-      contentOnly(existingNxConfiguration[0]) === contentOnly(expectedRules)
-    ) {
-      return;
-    }
-    // otherwise replace the existing configuration
-    const updatedContent = existing.replace(regex, expectedRules);
-    tree.write(path, updatedContent);
-  } else {
-    // Appending to existing content - use h2 only if the file already has an h1 header
-    // This prevents unnecessary changes when users add content without their own h1
-    const hasExistingH1 = /^# /m.test(existing);
-    const expectedRules = getAgentRulesWrapped({
-      writeNxCloudRules,
-      useH1: !hasExistingH1,
-    });
-    tree.write(path, existing + '\n\n' + expectedRules);
-  }
 }
 
 /**

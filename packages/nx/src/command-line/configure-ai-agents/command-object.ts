@@ -48,7 +48,7 @@ function withConfigureAiAgentsOptions(yargs: Argv) {
     .option('check', {
       type: 'string',
       description:
-        'Check agent configurations. Use --check or --check=outdated to check only configured agents, or --check=all to include unconfigured/partial configurations. Does not make any changes.',
+        'Check agent configurations. Use --check or --check=outdated to check only configured agents, or --check=all to include unconfigured agents. Does not make any changes.',
       coerce: (value: string) => {
         // --check (no value)
         if (value === '') return 'outdated';
@@ -75,7 +75,7 @@ function withConfigureAiAgentsOptions(yargs: Argv) {
     )
     .example(
       '$0 configure-ai-agents --check=all',
-      'Checks if any agents are not configured, out of date or partially configured'
+      'Checks if any agents are not configured or out of date'
     )
     .example(
       '$0 configure-ai-agents --agents claude gemini --no-interactive',
