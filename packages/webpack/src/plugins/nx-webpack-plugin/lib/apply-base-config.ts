@@ -287,7 +287,13 @@ function applyNxDependentConfig(
   const nodeExternals =
     require('webpack-node-externals') as typeof import('webpack-node-externals');
 
-  const tsConfig = options.tsConfig ?? getRootTsConfigPath();
+  const tsConfigOption = options.tsConfig ?? getRootTsConfigPath();
+  // Resolve a relative tsConfig against the workspace root once, so every
+  // consumer (type checker, tsconfig paths, package.json generation) reads
+  // the same file regardless of the process working directory.
+  const tsConfig = path.isAbsolute(tsConfigOption)
+    ? tsConfigOption
+    : path.join(options.root, tsConfigOption);
   const plugins: WebpackPluginInstance[] = [];
 
   const executorContext: Partial<ExecutorContext> = {
@@ -335,9 +341,7 @@ function applyNxDependentConfig(
       new ForkTsCheckerWebpackPlugin({
         ...typeCheckOptions,
         typescript: {
-          configFile: path.isAbsolute(tsConfig)
-            ? tsConfig
-            : path.join(options.root, tsConfig),
+          configFile: tsConfig,
           memoryLimit: options.memoryLimit || 2018,
         },
       })
