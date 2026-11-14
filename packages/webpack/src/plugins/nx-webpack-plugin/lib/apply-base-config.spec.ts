@@ -1,5 +1,6 @@
 import { applyBaseConfig } from './apply-base-config';
 import { NormalizedNxAppWebpackPluginOptions } from '../nx-app-webpack-plugin-options';
+import { GeneratePackageJsonPlugin } from '../../generate-package-json-plugin';
 import { Configuration } from 'webpack';
 
 // swc-loader is an optional peer dependency that isn't installed in this
@@ -170,5 +171,57 @@ describe('apply-base-config minimizer', () => {
 
     const terserPlugin = config.optimization.minimizer[0] as any;
     expect(terserPlugin.options.extractComments).toBe(false);
+  });
+});
+
+describe('apply-base-config tsConfig resolution', () => {
+  let options: NormalizedNxAppWebpackPluginOptions;
+  let config: Partial<Configuration>;
+
+  beforeEach(() => {
+    options = {
+      root: '/test',
+      projectRoot: 'apps/api',
+      sourceRoot: 'apps/api/src',
+      target: 'node',
+      generatePackageJson: true,
+    } as NormalizedNxAppWebpackPluginOptions;
+
+    config = {};
+    global.NX_GRAPH_CREATION = false;
+  });
+
+  afterEach(() => {
+    delete global.NX_GRAPH_CREATION;
+  });
+
+  function generatePackageJsonPlugin() {
+    return (config.plugins ?? []).find(
+      (plugin) => plugin instanceof GeneratePackageJsonPlugin
+    ) as any;
+  }
+
+  // GeneratePackageJsonPlugin reads the tsConfig with TypeScript, which
+  // resolves relative paths against process.cwd(). When webpack-cli runs
+  // from the project root, a workspace-root-relative tsConfig is not found
+  // and `importHelpers` (and therefore the tslib dependency) is dropped.
+  it('should resolve a relative tsConfig against the workspace root for GeneratePackageJsonPlugin', () => {
+    options.tsConfig = 'apps/api/tsconfig.app.json';
+
+    applyBaseConfig(options, config);
+
+    expect(generatePackageJsonPlugin()?.options.tsConfig).toBe(
+      '/test/apps/api/tsconfig.app.json'
+    );
+  });
+
+  it('should pass an absolute tsConfig through unchanged', () => {
+    options.tsConfig = '/elsewhere/tsconfig.app.json';
+
+    applyBaseConfig(options, config);
+
+    expect(generatePackageJsonPlugin()?.options.tsConfig).toBe(
+      '/elsewhere/tsconfig.app.json'
+    );
   });
 });
