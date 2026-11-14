@@ -289,6 +289,11 @@ export declare class RustPseudoTerminal {
    * this makes it possible to be backwards compatible with the old implementation
    */
   fork(id: string, forkScript: string, pseudoIpcPath: string, commandDir: string | undefined | null, jsEnv: Record<string, string> | undefined | null, execArgv: Array<string> | undefined | null, quiet: boolean, commandLabel?: string | undefined | null): ChildProcess
+  /**
+   * Release the pty master and slave file descriptors. Idempotent, and a
+   * no-op while a command is still running.
+   */
+  shutdown(): void
 }
 
 export declare class TaskDetails {
