@@ -14,15 +14,18 @@ topics:
 
 Nx Cloud is not aware of any more tasks to distribute. This can occur if Nx Cloud thinks it is done receiving tasks to distribute and all existing tasks have been completed.
 
-If you are receiving this error before your full pipeline has completed, add the last target run in your pipeline to [`lifecycle.stop-after`](/docs/reference/nx-cloud/ci-config#lifecyclestop-after) in `.nx/ci-config.yaml`.
+If you are receiving this error before your full pipeline has completed, add the last target run in your pipeline to [`stop-after`](/docs/reference/nx-cloud/ci-config#stop-after) on your worker entry in `.nx/pipelines/ci.yaml`.
 
 ### The Nx Cloud heartbeat process failed to report its status in time
 
-While running in CI environments, Nx Cloud spawns a background process called the "heartbeat" to help maintain status synchronization between itself and external platforms. When the heartbeat process does not report to Nx Cloud for 30 seconds or longer, Nx Cloud assumes something has gone wrong and terminates the current CI Pipeline Execution.
+On external CI, Nx Cloud spawns a background process called the "heartbeat" to help maintain status synchronization between itself and external platforms. When the heartbeat process does not report to Nx Cloud for 30 seconds or longer, Nx Cloud assumes something has gone wrong and terminates the current CI Pipeline Execution.
 
-This behavior can be disabled by setting [`lifecycle.heartbeat`](/docs/reference/nx-cloud/ci-config#lifecycleheartbeat) to `false` in `.nx/ci-config.yaml`.
+With `.nx/pipelines/ci.yaml`, the heartbeat has no off switch.
+To opt out, start the run with [`nx-cloud start-ci-run --require-explicit-completion`](/docs/reference/nx-cloud-cli#nx-cloud-start-ci-run) instead of `start-workers`.
 Turning the heartbeat off makes you responsible for completing the run, so the pipeline must also run `npx nx complete-ci-run` as its last step, with `if: always()` or the equivalent for your provider.
 Without it the CI Pipeline Execution may never complete. See [heartbeat and manual shutdown handling](/docs/kb/heartbeat-and-manual-shutdown-handling) for the full sequence.
+
+On [Nx Cloud CI](/docs/features/ci-features#run-ci-on-nx-cloud) there is no heartbeat, because the run ends when the main job does.
 
 ### A command was issued to stop all Workers
 
@@ -36,24 +39,57 @@ If this error occurs at the beginning of a CI Pipeline Execution it could be cau
 
 Nx Cloud detected a failed task in the current CI Pipeline Execution and has halted further execution.
 
-This behavior can be disabled by setting [`lifecycle.fail-after`](/docs/reference/nx-cloud/ci-config#lifecyclefail-after) to `0` in `.nx/ci-config.yaml`.
+This behavior can be disabled by setting [`fail-after`](/docs/reference/nx-cloud/ci-config#fail-after) to `0` on your worker entry in `.nx/pipelines/ci.yaml`.
 
 ### A CI configuration file was detected, but start-ci-run does not load it
 
-`start-ci-run` takes its configuration from CLI flags and never reads `.nx/ci-config.yaml`, so the two cannot be combined.
-Once that file exists, replace the `start-ci-run` invocation with `nx-cloud start-workers`.
-See [migrate from start-ci-run to start-workers](/docs/kb/migrate-to-ci-config) for the flag-to-key mapping.
+`start-ci-run` exits with this error while the deprecated `.nx/ci-config.yaml` file exists, unless you pass `--no-distribution`.
+[Migrate the file to `.nx/pipelines/ci.yaml`](/docs/kb/migrate-from-ci-config), which also maps each `start-ci-run` flag to a key.
 
 ### No CI configuration file found
 
-`nx-cloud start-workers` reads all of its configuration from `.nx/ci-config.yaml` (or `.yml`) in the workspace's `.nx` folder, and exits when that file is missing.
-Add the file and commit it. See the [CI configuration file reference](/docs/reference/nx-cloud/ci-config).
+`nx-cloud start-workers` found neither `.nx/pipelines/ci.yaml` nor the deprecated `.nx/ci-config.yaml`, or the file named by `--config` is missing.
+Add `.nx/pipelines/ci.yaml` and commit it. See the [CI configuration file reference](/docs/reference/nx-cloud/ci-config).
+
+### No worker-templates entry to start workers from
+
+`worker-templates` is missing or empty, so `start-workers` has nothing to start.
+Add an [entry](/docs/reference/nx-cloud/ci-config#worker-templates).
+
+### No worker-templates entry 'name'
+
+The name passed to `--workers` isn't in `worker-templates`.
+Pass one of the names the error lists, or add the entry.
+
+### File has several worker-templates entries
+
+`worker-templates` has more than one entry, and `start-workers` ran without `--workers`.
+Pass `--workers <name>` to pick one.
+
+### Entry has no launch template
+
+A count such as `default: 3` doesn't name a launch template.
+External CI has no job to take a machine setup from, so every count needs a template name, such as `default: 3 linux-medium-js`.
+
+### Invalid CI configuration file
+
+`start-workers` couldn't parse `ci.yaml` or an import from it, and the error names the file, the import, and the key.
+Nx Cloud reads the file at the commit of the run, so commit the fix before you rerun.
 
 ## Workers-related
 
 ### Failed to start the Workers workflow
 
-Nx Cloud was unable to start the agents workflow with the configuration in your [`.nx/ci-config.yaml`](/docs/reference/nx-cloud/ci-config) file. View the CI Pipeline Execution in the Nx Cloud UI for additional details.
+Nx Cloud was unable to start the agents workflow with the configuration in your [`.nx/pipelines/ci.yaml`](/docs/reference/nx-cloud/ci-config) file. View the CI Pipeline Execution in the Nx Cloud UI for additional details.
+
+### Timed out after 1 hour waiting for workers
+
+Your organization was at its [concurrent worker limit](/docs/kb/concurrent-workers) for an hour, so the run never got its workers.
+Raise the limit, or give small changes fewer workers with [`distribute-on` changesets](/docs/features/ci-features/distribute-task-execution#scale-workers-with-pr-size).
+
+### Run group ended while waiting for workers
+
+The CI Pipeline Execution ended while its run was still queued for [workers](/docs/kb/concurrent-workers), usually because a new push to the same branch replaced it or the main job finished first. Nothing needs fixing unless the pipeline ended for another reason.
 
 ### Unable to get workflow status from Workers
 

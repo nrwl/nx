@@ -1,0 +1,93 @@
+---
+interface Props {
+  title: string;
+  description?: string;
+  ctaText: string;
+  url: string;
+}
+
+const { title, description, ctaText, url } = Astro.props;
+---
+
+<a class="top-banner" href={url} target="_blank" rel="noopener noreferrer">
+  <span class="top-banner__title">{title}</span>
+  {description && <span class="top-banner__desc">{description}</span>}
+  <span class="top-banner__cta">
+    <span class="top-banner__cta-text">{ctaText}</span>
+    <svg
+      class="top-banner__chevron"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="1.5"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      aria-hidden="true"
+    >
+      <path d="m9 18 6-6-6-6"></path>
+    </svg>
+  </span>
+</a>
+
+<style>
+  /* Mirrors the nx.dev homepage banner, which is dark in both themes. */
+  .top-banner {
+    position: fixed;
+    inset-block-start: 0;
+    inset-inline: 0;
+    z-index: calc(var(--sl-z-index-navbar) + 1);
+    height: var(--top-banner-h);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 8px 24px;
+    overflow: hidden;
+    background-color: #19191a;
+    border-bottom: 1px solid #28282a;
+    font-family: var(--sl-font);
+    font-feature-settings: 'ss05';
+    font-size: 14px;
+    line-height: 18px;
+    white-space: nowrap;
+    text-decoration: none;
+  }
+
+  .top-banner__title {
+    font-weight: 500;
+    color: #fafafa;
+  }
+
+  .top-banner__desc {
+    font-weight: 400;
+    color: #a3a3a8;
+  }
+
+  .top-banner__cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .top-banner__cta-text {
+    font-weight: 500;
+    color: #fafafa;
+    text-decoration: underline;
+  }
+
+  .top-banner__chevron {
+    width: 16px;
+    height: 16px;
+    color: #a3a3a8;
+  }
+
+  @media (max-width: 809.98px) {
+    .top-banner {
+      padding-inline: 16px;
+    }
+
+    .top-banner__desc {
+      display: none;
+    }
+  }
+</style>

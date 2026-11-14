@@ -16,6 +16,13 @@ The `createConfig` function is used to create an Rspack configuration object set
 
 It takes an optional `Configuration` object as an argument, which allows for customization of the Rspack configuration.
 
+On Rspack 2, `createConfig` turns lazy compilation off for the browser build by default.
+To turn it on, set `rspackConfigOverrides.lazyCompilation` to `true`.
+The override doesn't affect the server build.
+With server-side rendering (SSR), pages from the SSR server's port (`PORT`, 4000 by default)
+can't load lazily compiled code, because only the dev server compiles it.
+Use the dev-server URL, or keep lazy compilation off when you need server-rendered pages.
+
 ```ts
 async function createConfig(
   defaultOptions: {
@@ -283,6 +290,11 @@ Controls whether to create a separate bundle containing shared code between mult
 
 `DevServerOptions`
 Configuration options for the development server including port, SSL settings, and proxy configuration.
+
+Pages on these origins can read the development server responses: `localhost`, its subdomains,
+`127.0.0.1`, and `[::1]`, over `http` or `https` on any port.
+For another origin, such as a local network address or a custom hostname, set
+`Access-Control-Allow-Origin` in `devServer.headers`.
 
 ### extractLicenses
 

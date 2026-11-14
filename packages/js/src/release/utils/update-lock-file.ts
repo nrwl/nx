@@ -4,8 +4,11 @@ import {
   getPackageManagerVersion,
   isWorkspacesEnabled,
   output,
+  readJsonFile,
 } from '@nx/devkit';
 import { execSync } from 'child_process';
+import { existsSync } from 'fs';
+import { join } from 'path';
 import { daemonClient, getLockFileName } from '@nx/devkit/internal';
 import { gte } from 'semver';
 
@@ -50,7 +53,10 @@ export async function updateLockFile(
   }
 
   const workspacesEnabled = isWorkspacesEnabled(packageManager, cwd);
-  if (!workspacesEnabled) {
+  if (
+    !workspacesEnabled &&
+    !(packageManager === 'npm' && isNpmLockFileRootVersionStale(cwd))
+  ) {
     if (verbose) {
       console.log(
         `\nSkipped lock file update because ${packageManager} workspaces are not enabled.`
@@ -140,6 +146,24 @@ export async function updateLockFile(
   }
 
   return newlyChanged;
+}
+
+function isNpmLockFileRootVersionStale(cwd: string): boolean {
+  try {
+    const lockFilePath = join(cwd, getLockFileName('npm'));
+    if (!existsSync(lockFilePath)) {
+      return false;
+    }
+    const { version } = readJsonFile(join(cwd, 'package.json'));
+    const lockFile = readJsonFile(lockFilePath);
+    const lockFileRootVersion =
+      lockFile.lockfileVersion === 1
+        ? lockFile.version
+        : lockFile.packages?.['']?.version;
+    return !!version && lockFileRootVersion !== version;
+  } catch {
+    return false;
+  }
 }
 
 /**

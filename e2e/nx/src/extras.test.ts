@@ -312,14 +312,13 @@ describe('Extra Nx Misc Tests', () => {
         return config;
       });
 
-      try {
-        runCLI(`run ${mylib}:error`);
-        fail('Should error if process errors');
-      } catch (e) {
-        expect(e.stderr.toString()).toContain(
-          'command "exit 1" exited with non-zero status code'
-        );
-      }
+      expect(() => runCLI(`run ${mylib}:error`)).toThrow(
+        expect.objectContaining({
+          stderr: expect.stringContaining(
+            'command "exit 1" exited with non-zero status code'
+          ),
+        })
+      );
     });
 
     it('should fail and skip dependents when a command cannot start', () => {

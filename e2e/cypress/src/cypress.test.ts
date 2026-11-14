@@ -1,6 +1,8 @@
 import { join } from 'node:path';
 import {
   checkFilesExist,
+  configureTargetOptions,
+  configureCypressComponentTesting,
   cleanupProject,
   createFile,
   killPort,
@@ -21,6 +23,7 @@ const TEN_MINS_MS = 600_000;
 
 describe('Cypress E2E Test runner', () => {
   const myapp = uniq('myapp');
+  let myappPort: number;
 
   beforeAll(() => {
     newProject({
@@ -38,9 +41,10 @@ describe('Cypress E2E Test runner', () => {
 
   it(
     'should generate an app with the Cypress as e2e test runner',
-    () => {
+    async () => {
+      myappPort = await reservePort();
       runCLI(
-        `generate @nx/react:app apps/${myapp} --e2eTestRunner=cypress --linter=eslint`
+        `generate @nx/react:app apps/${myapp} --e2eTestRunner=cypress --linter=eslint --port=${myappPort}`
       );
 
       // Ensure project typechecks (See: https://github.com/nrwl/nx/issues/32930)
@@ -120,6 +124,9 @@ describe('Cypress E2E Test runner', () => {
         ) ?? [];
       expect(localServerTarget).toBeDefined();
 
+      const restoreServerOptions = configureTargetOptions([localServerTarget], {
+        strictPort: true,
+      });
       try {
         // runCLI sets CI, and an undefined value drops it from the child env.
         // Without CI and a TTY, an out-of-sync workspace fails the run.
@@ -134,6 +141,7 @@ describe('Cypress E2E Test runner', () => {
         );
         expect(result).not.toContain(`nx run ${app}:${ciServerTarget}`);
       } finally {
+        restoreServerOptions();
         await killPorts(port);
       }
     },
@@ -171,18 +179,22 @@ describe('env vars', () => {
       );
 
       if (await shouldRunCypressTests()) {
-        // contains the correct output and works
-        const run1 = runCLI(
-          `e2e ${myapp}-e2e --config \\'{\\"env\\":{\\"cliArg\\":\\"i am from the cli args\\"}}\\'`
+        const restoreServerOptions = configureTargetOptions(
+          ['dev', 'preview', 'serve'],
+          { strictPort: true }
         );
-        expect(run1).toContain('All specs passed!');
-        // tests should not fail because of a config change. The ESM
-        // shape (import / export default) uses `import.meta.url` rather
-        // than `__filename` so it works under both Nx's native TS strip
-        // (ESM) and Cypress's bundled tsx CJS loader.
-        updateFile(
-          `apps/${myapp}-e2e/cypress.config.ts`,
-          `
+        try {
+          const run1 = runCLI(
+            `e2e ${myapp}-e2e --config \\'{\\"env\\":{\\"cliArg\\":\\"i am from the cli args\\"}}\\'`
+          );
+          expect(run1).toContain('All specs passed!');
+          // tests should not fail because of a config change. The ESM
+          // shape (import / export default) uses `import.meta.url` rather
+          // than `__filename` so it works under both Nx's native TS strip
+          // (ESM) and Cypress's bundled tsx CJS loader.
+          updateFile(
+            `apps/${myapp}-e2e/cypress.config.ts`,
+            `
 import { defineConfig } from 'cypress';
 import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
 
@@ -199,24 +211,23 @@ export default defineConfig({
         timeout: 60_000,
       },
     }),
-    baseUrl: 'http://localhost:4200',
+    baseUrl: 'http://localhost:${myappPort}',
   },
   env: {
     fromCyConfig: 'i am from the cypress config file'
   }
 });`
-        );
+          );
 
-        const run2 = runCLI(
-          `e2e ${myapp}-e2e --config \\'{\\"env\\":{\\"cliArg\\":\\"i am from the cli args\\"}}\\'`
-        );
-        expect(run2).toContain('All specs passed!');
+          const run2 = runCLI(
+            `e2e ${myapp}-e2e --config \\'{\\"env\\":{\\"cliArg\\":\\"i am from the cli args\\"}}\\'`
+          );
+          expect(run2).toContain('All specs passed!');
 
-        // make sure project.json env vars also work
-        checkFilesExist(`apps/${myapp}-e2e/src/e2e/env.cy.ts`);
-        updateFile(
-          `apps/${myapp}-e2e/src/e2e/env.cy.ts`,
-          `
+          checkFilesExist(`apps/${myapp}-e2e/src/e2e/env.cy.ts`);
+          updateFile(
+            `apps/${myapp}-e2e/src/e2e/env.cy.ts`,
+            `
         describe('env vars', () => {
           it('should not have cli args', () => {
             cy.env(['cliArg']).then(({ cliArg }) => {
@@ -236,9 +247,12 @@ export default defineConfig({
             });
           });
         });`
-        );
-        const run3 = runCLI(`e2e ${myapp}-e2e`);
-        expect(run3).toContain('All specs passed!');
+          );
+          const run3 = runCLI(`e2e ${myapp}-e2e`);
+          expect(run3).toContain('All specs passed!');
+        } finally {
+          restoreServerOptions();
+        }
       }
     },
     TEN_MINS_MS
@@ -248,6 +262,8 @@ export default defineConfig({
     `should allow CT and e2e in same project for a next project`,
     async () => {
       const appName = uniq('next-cy-app');
+      const port = await reservePort();
+      configureTargetOptions(['dev'], { port });
       runCLI(
         `generate @nx/next:app apps/${appName} --e2eTestRunner=none --no-interactive `
       );
@@ -259,16 +275,18 @@ export default defineConfig({
         `generate @nx/next:cypress-component-configuration --project=${appName} --generate-tests --no-interactive`
       );
       runCLI(
-        `generate @nx/cypress:configuration --project=${appName} --devServerTarget=${appName}:dev --baseUrl=http://localhost:3000 --no-interactive`
+        `generate @nx/cypress:configuration --project=${appName} --devServerTarget=${appName}:dev --baseUrl=http://127.0.0.1:${port} --no-interactive`
       );
 
       if (await shouldRunCypressTests()) {
-        expect(runCLI(`run ${appName}:component-test`)).toContain(
-          'All specs passed!'
+        const componentTestArgs = await configureCypressComponentTesting(
+          `apps/${appName}/cypress.config.ts`
         );
+        expect(
+          runCLI(`run ${appName}:component-test ${componentTestArgs}`)
+        ).toContain('All specs passed!');
         expect(runCLI(`run ${appName}:e2e`)).toContain('All specs passed!');
       }
-      expect(await killPort(4200)).toBeTruthy();
     },
     TEN_MINS_MS
   );

@@ -12,6 +12,7 @@ on:
         default: false
 
 env:
+  NX_E2E_PORT_POOL: '10000-32767'
   CYPRESS_CACHE_FOLDER: ${{ github.workspace }}/.cypress
   # npm 10 crashes resolving Vitest 4's optional peer graph after Vitest 5's release.
   NPM_VERSION: '11.12.0'

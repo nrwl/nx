@@ -112,6 +112,24 @@ describe('updateBuildTargets', () => {
     ).toBe('subfolder-my-destination:build:production');
   });
 
+  it('should update dependsOn entries', async () => {
+    addProjectConfiguration(tree, 'my-dependent', {
+      root: 'libs/my-dependent',
+      targets: {
+        build: {
+          dependsOn: ['^build', 'my-source:build'],
+        },
+      },
+    });
+
+    updateBuildTargets(tree, schema);
+
+    const dependsOn = readProjectConfiguration(tree, 'my-dependent').targets
+      .build.dependsOn;
+    expect(dependsOn[0]).toBe('^build');
+    expect(dependsOn[1]).toBe('subfolder-my-destination:build');
+  });
+
   it('should NOT update storybook target', async () => {
     schema.projectName = 'storybook';
     updateBuildTargets(tree, schema);

@@ -11,6 +11,7 @@ import {
   writeJson,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import { cypressVersion, nxVersion } from '../../utils/versions';
 import cypressE2EConfigurationGenerator from './configuration';
 import { cypressInitGenerator } from '../init/init';
 
@@ -712,6 +713,23 @@ export default defineConfig({
 
     const tsconfig = readJson(tree, 'apps/my-app/tsconfig.json');
     expect(tsconfig.compilerOptions.moduleResolution).toEqual('bundler');
+  });
+
+  it('should add @nx/cypress when cypress is already declared', async () => {
+    updateJson(tree, 'package.json', (json) => {
+      json.devDependencies = {
+        ...json.devDependencies,
+        cypress: cypressVersion,
+      };
+      return json;
+    });
+    addProject(tree, { name: 'my-app', type: 'apps' });
+
+    await cypressE2EConfigurationGenerator(tree, { project: 'my-app' });
+
+    expect(readJson(tree, 'package.json').devDependencies['@nx/cypress']).toBe(
+      nxVersion
+    );
   });
 
   describe('TS Solution Setup', () => {

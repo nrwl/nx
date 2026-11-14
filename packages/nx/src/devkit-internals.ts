@@ -120,6 +120,17 @@ export {
 export { readYamlFile } from './utils/fileutils';
 export { globalSpinner } from './utils/spinner';
 export { signalToCode } from './utils/exit-codes';
+export { handleErrors } from './utils/handle-errors';
+export { computeJsonLineNumbers } from './utils/json';
+export {
+  checkCircularPath,
+  circularPathHasPair,
+  expandIgnoredCircularDependencies,
+  findFilesInCircularPath,
+  findFilesWithDynamicImports,
+  getPath,
+  pathExists,
+} from './project-graph/utils/project-graph-paths';
 export { handleImport } from './utils/handle-import';
 export { PluginCache, safeWriteFileCache } from './utils/plugin-cache-utils';
 export { emitPluginWorkerLog } from './project-graph/plugins/isolation/worker-streaming';
@@ -179,7 +190,7 @@ export {
   interpolateArgsIntoCommand,
   normalizeArgs as normalizeRunCommandsArgs,
 } from './executors/run-commands/run-commands.impl';
-export { FsTree } from './generators/tree';
+export { FsTree, flushChanges } from './generators/tree';
 export { getRelativeProjectJsonSchemaPath } from './generators/utils/project-configuration';
 export { hashFile } from './hasher/file-hasher';
 export { filterUsingGlobPatterns, getTargetInputs } from './hasher/task-hasher';
@@ -188,7 +199,9 @@ export {
   isAiAgent,
   killProcessTreeGraceful,
   readShebangHeaders,
+  unmatchedProjectPatterns,
 } from './native';
+export { transformProjectGraphForProjectMatching } from './native/transform-objects';
 export { killChildOnHostExit } from './utils/kill-child-on-host-exit';
 export { connectToNxCloud } from './nx-cloud/generators/connect-to-nx-cloud/connect-to-nx-cloud';
 export type { NxCloudOnBoardingStatus } from './nx-cloud/models/onboarding-status';
@@ -236,7 +249,11 @@ export {
   readPackageJson,
 } from './project-graph/file-utils';
 export type { FileMapCache } from './project-graph/nx-deps-cache';
-export { readFileMapCache } from './project-graph/nx-deps-cache';
+export {
+  readFileMapCache,
+  readSourceMapsCache,
+} from './project-graph/nx-deps-cache';
+export { findClosestMatches } from './utils/string-similarity';
 export { isNpmProject } from './project-graph/operators';
 export {
   buildProjectGraphAndSourceMapsWithoutDaemon,
@@ -246,6 +263,7 @@ export {
   readCachedProjectConfiguration,
 } from './project-graph/project-graph';
 export type { ProjectRootMappings } from './project-graph/utils/find-project-for-path';
+export { createFileMapUsingProjectGraph } from './project-graph/file-map-utils';
 export type { BatchResults } from './tasks-runner/batch/batch-messages';
 export type { CachedResult, TaskWithCachedResult } from './tasks-runner/cache';
 export { Cache } from './tasks-runner/cache';
@@ -295,7 +313,7 @@ export {
   isRelativePath,
   readFileIfExisting,
 } from './utils/fileutils';
-export { getLatestCommitSha } from './utils/git-utils';
+export { getLatestCommitSha, getVcsRemoteInfo } from './utils/git-utils';
 export { combineGlobPatterns, isGlobPattern } from './utils/globs';
 export { getNxRequirePaths } from './utils/installation-directory';
 export { NX_PREFIX } from './utils/logger';
@@ -341,3 +359,4 @@ export {
 export { setWorkspaceRoot, workspaceRootInner } from './utils/workspace-root';
 export { safeExecFileSync, safeSpawn } from './utils/safe-spawn';
 export { resolveStartupHost } from './tasks-runner/readiness/startup-host';
+export type { ProjectMetadata } from './config/workspace-json-project-json';

@@ -19,6 +19,7 @@ import { isNxCloudUsed } from '../../utils/nx-cloud-utils';
 import { readNxJson } from '../../config/configuration';
 import { removeDbConnections } from '../../utils/db-connection';
 import { getBundleInstallDefaultLocation as getCloudClientLocation } from '../../nx-cloud/update-manager';
+import { removeStaleTempInstallDirectories } from '../../utils/package-manager';
 
 // Wait at max 5 seconds before giving up on a failing operation.
 const INCREMENTAL_BACKOFF_MAX_DURATION = 5000;
@@ -72,6 +73,14 @@ export async function resetHandler(args: ResetCommandOptions) {
         }
         await cleanupWorkspaceData();
       },
+    });
+  }
+  if (all) {
+    await runResetStep(errors, {
+      start: 'Removing stale temporary package installs',
+      success: 'Removed stale temporary package installs',
+      failure: 'Failed to remove stale temporary package installs.',
+      run: async () => removeStaleTempInstallDirectories(),
     });
   }
   if ((cloudEnabled && all) || args.onlyCloud) {
@@ -152,7 +161,10 @@ function removeInstalledNxCloudClient() {
     INCREMENTAL_BACKOFF_FIRST_DELAY,
     INCREMENTAL_BACKOFF_MAX_DURATION,
     () => {
-      rmSync(getCloudClientLocation(), { recursive: true, force: true });
+      const location = getCloudClientLocation();
+      if (location) {
+        rmSync(location, { recursive: true, force: true });
+      }
     }
   );
 }

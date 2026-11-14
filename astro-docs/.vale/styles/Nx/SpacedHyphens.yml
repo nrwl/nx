@@ -1,0 +1,10 @@
+extends: existence
+message: "Don't use a spaced hyphen as a dash. Use a comma, parentheses, or separate sentences."
+level: warning
+scope: paragraph
+nonword: true
+tokens:
+  # Skips Markdoc tag attributes, a `%` inside one included, which TokenIgnores doesn't hide from this rule.
+  # Keep the whitespace after the hyphen, a newline included, in the match.
+  # It catches a wrapped line, and a bare " -" match can make vale misplace and merge alerts.
+  - '(?<!\{%(?:[^%]|%(?!\}))*)(?<=\S) +-[ \n]+(?=\S)'

@@ -16,10 +16,13 @@ use tokio::process::Command;
 use tokio_util::sync::CancellationToken;
 use vte::{Parser, Perform};
 
+#[cfg(unix)]
+use crate::native::pseudo_terminal::process_killer::kill_process_group_and_strays;
+#[cfg(windows)]
 use crate::native::pseudo_terminal::process_killer::kill_process_tree_internal;
 
 const DEFAULT_INTERVAL: Duration = Duration::from_millis(250);
-// A killed shell exits at once; past this the wait would only hang
+// Killed processes exit at once; past this, waiting for them would only hang
 const REAP_MS: u64 = 1000;
 
 /// Exactly one of `url`, `port` or `command` is set.
@@ -462,8 +465,8 @@ fn unbracketed(host: &str) -> &str {
     host.trim_start_matches('[').trim_end_matches(']')
 }
 
-// On overrun or cancel the whole tree is killed: the shell's own kill leaves
-// what it spawned running.
+// On overrun or cancel the command's group is killed, then each process under
+// the shell that left the group. The shell's own kill leaves both running.
 async fn probe_command(
     command: &str,
     cwd: &str,
@@ -483,6 +486,11 @@ async fn probe_command(
     } else {
         let mut cmd = Command::new("sh");
         cmd.args(["-c", command]);
+        // Its own group: a group kill also reaches a child forked mid-kill,
+        // which a walk of the tree misses. A signal sent to nx's group misses it,
+        // so one nx does not handle, such as SIGKILL, leaves the command running
+        #[cfg(unix)]
+        cmd.process_group(0);
         cmd
     };
     if let Some(env) = env {
@@ -505,18 +513,25 @@ async fn probe_command(
         return ready;
     }
     if let Some(pid) = child.id() {
-        // Enumerating processes blocks; keep the shell alive until its tree
-        // has been walked
-        let _ = tokio::task::spawn_blocking(move || {
-            kill_process_tree_internal(pid as i32, Some("SIGKILL"))
-        })
-        .await;
+        // Killing blocks. The shell stays unreaped until the wait below, so its
+        // pid, which is the group's id, cannot be reused before then
+        let _ = tokio::task::spawn_blocking(move || kill_command(pid as i32)).await;
     }
-    // The walk reports nothing when it cannot see the tree; the shell itself
-    // must still die or the wait below never returns
+    // The kill can fail; the shell itself must still die or the wait below
+    // never returns
     let _ = child.start_kill();
     let _ = tokio::time::timeout(Duration::from_millis(REAP_MS), child.wait()).await;
     false
+}
+
+#[cfg(unix)]
+fn kill_command(shell_pid: i32) {
+    kill_process_group_and_strays(shell_pid, Instant::now() + Duration::from_millis(REAP_MS));
+}
+
+#[cfg(windows)]
+fn kill_command(shell_pid: i32) {
+    kill_process_tree_internal(shell_pid, Some("SIGKILL"));
 }
 
 /// Done once every pattern has appeared in the fed output, in any order, even

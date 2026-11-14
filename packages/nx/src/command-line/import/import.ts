@@ -1,7 +1,14 @@
 import { isAbsolute, join, relative, resolve } from 'path';
-import { existsSync } from 'node:fs';
+import { existsSync, realpathSync } from 'node:fs';
 import * as pc from 'picocolors';
-import { cloneFromUpstream, GitRepository } from '../../utils/git-utils';
+import {
+  cloneFromUpstream,
+  getGitRootPath,
+  getGitRootRelativePath,
+  GitRepository,
+  getGitRepositoryStatus,
+  isCloneableGitRepository,
+} from '../../utils/git-utils';
 import { mkdtemp, stat, rm } from 'node:fs/promises';
 import { tmpdir } from 'tmp';
 import { selectPrompt, textPrompt } from '../../utils/prompt-helpers';
@@ -50,6 +57,7 @@ import {
   buildImportNeedsOptionsResult,
   buildImportNeedsPluginSelectionResult,
   buildImportSuccessResult,
+  NxImportError,
   type ImportWarning,
 } from './utils/ai-output';
 
@@ -82,6 +90,29 @@ export interface ImportOptions {
   plugins?: string; // 'skip' | 'all' | comma-separated list
 }
 
+function createDestinationGitClient(): GitRepository {
+  const cwd = process.cwd();
+  if (getGitRepositoryStatus(cwd) === 'not-git') {
+    throw new NxImportError(
+      `${cwd} is not a git repository. Nx imports code by merging its git history, so run "git init", commit your files and try again.`,
+      'NOT_A_GIT_REPOSITORY'
+    );
+  }
+  return new GitRepository(cwd);
+}
+
+function getSourceNotAGitRepositoryMessage(sourceDirectory: string): string {
+  const message = `${sourceDirectory} is not a git repository. Nx imports code along with its git history, so the source must be a git repository.`;
+  // git reports the repository by its real path, so the directory is resolved
+  // too; otherwise a symlinked source yields a path that is not inside it.
+  const realSourceDirectory = realpathSync(sourceDirectory);
+  const pathInEnclosingRepo = getGitRootRelativePath(realSourceDirectory);
+  if (pathInEnclosingRepo) {
+    return `${message}\nIt is a directory inside the git repository at ${getGitRootPath(realSourceDirectory)}. Import that repository instead and select the directory ${pathInEnclosingRepo} with the --source option.`;
+  }
+  return `${message}\nRun "git init" in ${sourceDirectory}, commit the files and try again.`;
+}
+
 export async function importHandler(options: ImportOptions) {
   process.env.NX_RUNNING_NX_IMPORT = 'true';
   let { sourceRepository, ref, source, destination, verbose } = options;
@@ -109,7 +140,7 @@ export async function importHandler(options: ImportOptions) {
     // Check if this is a plugin-only call (second step of two-step flow)
     if (destination && options.plugins) {
       const absDestAi = join(process.cwd(), destination);
-      const destGitClient = new GitRepository(process.cwd());
+      const destGitClient = createDestinationGitClient();
       const destFiles = await destGitClient.getGitFiles(absDestAi);
       if (destFiles.length > 0) {
         // Destination not empty + --plugins provided + AI mode = plugin-only mode
@@ -117,7 +148,7 @@ export async function importHandler(options: ImportOptions) {
       }
     }
   }
-  const destinationGitClient = new GitRepository(process.cwd());
+  const destinationGitClient = createDestinationGitClient();
 
   if (await destinationGitClient.hasUncommittedChanges()) {
     throw new Error(
@@ -148,10 +179,12 @@ export async function importHandler(options: ImportOptions) {
     });
   }
 
+  let sourceIsLocalDirectory = false;
   try {
     const maybeLocalDirectory = await stat(sourceRepository);
     if (maybeLocalDirectory.isDirectory()) {
       sourceRepository = resolve(sourceRepository);
+      sourceIsLocalDirectory = true;
     }
   } catch (e) {
     // It's a remote url
@@ -185,6 +218,15 @@ export async function importHandler(options: ImportOptions) {
     if (!aiMode) {
       spinner.fail(
         `Failed to clone ${displayRepository} into ${sourceTempRepoPath}`
+      );
+    }
+    if (
+      sourceIsLocalDirectory &&
+      !(await isCloneableGitRepository(sourceRepository))
+    ) {
+      throw new NxImportError(
+        getSourceNotAGitRepositoryMessage(sourceRepository),
+        'NOT_A_GIT_REPOSITORY'
       );
     }
     throw new Error(

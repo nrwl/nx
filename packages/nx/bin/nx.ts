@@ -20,9 +20,11 @@ import { output } from '../src/utils/output';
 import {
   getNxInstallationPath,
   getNxRequirePaths,
+  resolveNxBinFrom,
 } from '../src/utils/installation-directory';
 import { major } from 'semver';
 import { stripIndents } from '../src/utils/strip-indents';
+import { loadWorkspaceEnv } from './workspace-env';
 import { execSync } from 'child_process';
 import { createRequire } from 'module';
 import { extname, join } from 'path';
@@ -77,22 +79,7 @@ async function main() {
   // --version doesn't need any env / daemon / analytics state — skip dotenv
   // loading (and the heavy modules it would pull in).
   if (workspace && process.argv[2] !== '--version') {
-    const { workspaceDataDirectoryForWorkspace } =
-      await import('../src/utils/cache-directory.js');
-    process.report.reportOnFatalError = true;
-    process.report.directory = workspaceDataDirectoryForWorkspace(
-      workspace.dir
-    );
-
-    const { loadRootEnvFiles } = await import('../src/utils/dotenv.js');
-    performance.mark('loading dotenv files:start');
-    loadRootEnvFiles(workspace.dir);
-    performance.mark('loading dotenv files:end');
-    performance.measure(
-      'loading dotenv files',
-      'loading dotenv files:start',
-      'loading dotenv files:end'
-    );
+    await loadWorkspaceEnv(workspace.dir);
   }
 
   // new is a special case because there is no local workspace to load
@@ -124,15 +111,10 @@ async function main() {
       (Symbol as any).observable = Symbol('observable polyfill');
 
     // Make sure that a local copy of Nx exists in workspace
-    let localNx: string;
-    try {
-      localNx = workspace && resolveNx(workspace);
-    } catch {
-      localNx = null;
-    }
+    const localNx = workspace && tryResolveNx(workspace);
 
     const isLocalInstall =
-      localNx === resolveNx(null) || localNx === __filename;
+      !!localNx && (localNx === tryResolveNx(null) || localNx === __filename);
     const { LOCAL_NX_VERSION, GLOBAL_NX_VERSION } = determineNxVersions(
       localNx,
       workspace,
@@ -240,20 +222,24 @@ function resolveNx(workspace: WorkspaceTypeAndRoot | null) {
   const globalsRoot = join(__dirname, '../../../../');
   const root = workspace ? workspace.dir : globalsRoot;
 
-  // Use createRequire to resolve from outside the nx package,
-  // avoiding self-referencing caused by the exports field
   // prefer Nx installed in .nx/installation
   try {
     const installPath = getNxInstallationPath(root);
     if (existsSync(installPath)) {
-      const installRequire = createRequire(join(installPath, 'package.json'));
-      return installRequire.resolve('nx/bin/nx.js');
+      return resolveNxBinFrom(installPath, root);
     }
   } catch {}
 
   // check for root install
-  const rootRequire = createRequire(join(root, 'package.json'));
-  return rootRequire.resolve('nx/bin/nx.js');
+  return resolveNxBinFrom(root);
+}
+
+function tryResolveNx(workspace: WorkspaceTypeAndRoot | null): string | null {
+  try {
+    return resolveNx(workspace);
+  } catch {
+    return null;
+  }
 }
 
 function isNxCloudCommand(command: string): boolean {

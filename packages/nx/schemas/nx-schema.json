@@ -92,6 +92,13 @@
         "$ref": "#/definitions/plugins"
       }
     },
+    "pluginsConfig": {
+      "type": "object",
+      "description": "Options for plugins that apply workspace-wide, keyed by plugin package name.",
+      "additionalProperties": {
+        "type": "object"
+      }
+    },
     "tui": {
       "type": "object",
       "description": "Settings for the Nx Terminal User Interface (TUI)",
@@ -125,9 +132,32 @@
       "type": "string",
       "description": "Default project. When project isn't provided, the default project will be used."
     },
+    "installation": {
+      "type": "object",
+      "description": "Configures the Nx installation for a repo. Useful for maintaining a separate set of dependencies for Nx and plugins compared to the root package.json, and for workspaces that don't have a root package.json and node_modules.",
+      "properties": {
+        "version": {
+          "type": "string",
+          "description": "Version of Nx to install."
+        },
+        "plugins": {
+          "type": "object",
+          "description": "Versions of the plugins to install, keyed by plugin package name.",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      },
+      "required": ["version"],
+      "additionalProperties": false
+    },
     "nxCloudAccessToken": {
       "type": "string",
       "description": "The access token to use for nx-cloud. If set, the default tasks runner will be nx-cloud."
+    },
+    "nxCloudId": {
+      "type": "string",
+      "description": "The Nx Cloud ID to connect the workspace with. If set, the default tasks runner will be nx-cloud."
     },
     "nxCloudUrl": {
       "type": "string",
@@ -148,6 +178,10 @@
     "cacheDirectory": {
       "type": "string",
       "description": "Specifies the default location of the cache directory."
+    },
+    "maxCacheSize": {
+      "type": ["string", "number"],
+      "description": "Sets the maximum size of the local cache. Accepts a number followed by an optional unit (B, KB, MB or GB), such as `100MB`. Set it to `0` to remove the limit."
     },
     "useDaemonProcess": {
       "type": "boolean",
@@ -573,11 +607,18 @@
               "type": "string",
               "description": "The path to write the generated owners file to. Defaults based on format (e.g. '.github/CODEOWNERS')."
             },
+            "prefix": {
+              "type": "string",
+              "description": "Prefix applied to owner strings (e.g. '@org')."
+            },
             "patterns": {
               "type": "array",
               "description": "List of ownership patterns to apply.",
               "items": {
-                "$ref": "#/definitions/ownersPattern"
+                "allOf": [
+                  { "$ref": "#/definitions/ownersPattern" },
+                  { "required": ["owners"] }
+                ]
               }
             },
             "sections": {
@@ -607,7 +648,7 @@
                   },
                   "patterns": {
                     "type": "array",
-                    "description": "List of ownership patterns within this section.",
+                    "description": "List of ownership patterns within this section. A pattern without owners uses the section's defaultOwners.",
                     "items": {
                       "$ref": "#/definitions/ownersPattern"
                     }
@@ -710,20 +751,35 @@
         },
         "files": {
           "type": "array",
-          "description": "File glob patterns this ownership pattern applies to (for non-project-based ownership).",
+          "description": "File glob patterns this ownership pattern applies to. With projects, they are relative to each matched project root.",
           "items": {
             "type": "string"
           }
         },
         "owners": {
-          "type": "array",
-          "description": "List of owners (e.g. GitHub usernames or team handles) for the matched projects or files.",
-          "items": {
-            "type": "string"
-          }
+          "description": "List of owners (e.g. GitHub usernames or team handles) for the matched projects or files, or false to mark them as having no owners.",
+          "oneOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "boolean",
+              "enum": [false]
+            }
+          ]
+        },
+        "applyPrefix": {
+          "type": "boolean",
+          "description": "Whether the root owners prefix applies to this pattern. Defaults to true."
+        },
+        "prefix": {
+          "type": "string",
+          "description": "Prefix for this pattern's owners, taking precedence over the root owners prefix."
         }
       },
-      "required": ["owners"],
       "additionalProperties": false
     },
     "inputs": {
@@ -962,6 +1018,11 @@
       "type": "object",
       "description": "A filtered target defaults entry. The optional `filter` narrows where the entry applies; the remaining fields are the configuration applied when it matches. An entry with no `filter` is a catch-all baseline for its target key.",
       "properties": {
+        "...": {
+          "type": "boolean",
+          "const": true,
+          "description": "Controls merge priority against a compatible inherited target: keys before this token defer to the inherited value, and keys after it take precedence. options, configurations, ultracache and metadata merge by their own rules wherever the token sits."
+        },
         "filter": {
           "type": "object",
           "description": "Narrows where this entry applies. When present, every listed criterion must match the target being resolved.",
@@ -1034,6 +1095,11 @@
       "type": "object",
       "description": "Target defaults",
       "properties": {
+        "...": {
+          "type": "boolean",
+          "const": true,
+          "description": "Controls merge priority against a compatible inherited target: keys before this token defer to the inherited value, and keys after it take precedence. options, configurations, ultracache and metadata merge by their own rules wherever the token sits."
+        },
         "executor": {
           "description": "The function that Nx will invoke when you run this target",
           "type": "string"

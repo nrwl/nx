@@ -13,7 +13,10 @@ import {
   readFileMapCache,
 } from '@nx/devkit/internal';
 
-export function ensureGlobalProjectGraph(ruleName: string) {
+export function ensureGlobalProjectGraph(
+  ruleName: string,
+  skipped = 'The rule will be skipped.'
+) {
   /**
    * Only reuse graph when running from terminal
    * Enforce every IDE change to get a fresh nxdeps.json
@@ -46,20 +49,23 @@ export function ensureGlobalProjectGraph(ruleName: string) {
       const WARNING_PREFIX = `${pc.reset(pc.yellow('warning'))}`;
       const RULE_NAME_SUFFIX = `${pc.reset(pc.dim(`@nx/${ruleName}`))}`;
       process.stdout
-        .write(`${WARNING_PREFIX} No cached ProjectGraph is available. The rule will be skipped.
+        .write(`${WARNING_PREFIX} No cached ProjectGraph is available. ${skipped}
           If you encounter this error as part of running standard \`nx\` commands then please open an issue on https://github.com/nrwl/nx
           ${RULE_NAME_SUFFIX}\n`);
     }
   }
 }
 
-export function readProjectGraph(ruleName: string): {
+export function readProjectGraph(
+  ruleName: string,
+  skipped?: string
+): {
   projectGraph: ProjectGraph;
   projectFileMap: ProjectFileMap;
   projectRootMappings: ProjectRootMappings;
   targetProjectLocator: TargetProjectLocator;
 } {
-  ensureGlobalProjectGraph(ruleName);
+  ensureGlobalProjectGraph(ruleName, skipped);
   return {
     projectGraph: globalThis.projectGraph,
     projectFileMap: globalThis.projectFileMap,

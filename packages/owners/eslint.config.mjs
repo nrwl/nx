@@ -1,0 +1,37 @@
+import { baseConfig } from '../../eslint.config.mjs';
+import * as jsoncEslintParser from 'jsonc-eslint-parser';
+
+export default [
+  ...baseConfig,
+  { ignores: ['dist'] },
+  {
+    files: ['./package.json', './generators.json'],
+    rules: {
+      '@nx/nx-plugin-checks': 'error',
+    },
+    languageOptions: {
+      parser: jsoncEslintParser,
+    },
+  },
+  {
+    files: ['./package.json'],
+    rules: {
+      '@nx/dependency-checks': [
+        'error',
+        {
+          buildTargets: ['build-base'],
+          ignoredDependencies: [
+            'nx',
+            'eslint',
+            'typescript',
+            // Type-only import in the ensure-owners rule
+            '@nx/conformance',
+          ],
+        },
+      ],
+    },
+    languageOptions: {
+      parser: jsoncEslintParser,
+    },
+  },
+];

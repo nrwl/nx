@@ -7,6 +7,11 @@ import { dirname, join, resolve } from 'path';
 
 import { VerdaccioExecutorSchema } from './schema';
 import { major } from 'semver';
+import {
+  isPlaceholderAuthTokenRejected,
+  PLACEHOLDER_AUTH_TOKEN,
+  warnPlaceholderAuthTokenRejected,
+} from './placeholder-auth-token';
 
 let childProcess: ChildProcess;
 
@@ -46,8 +51,8 @@ export async function verdaccioExecutor(
     options.port = port;
   }
 
-  const cleanupFunctions =
-    options.location === 'none' ? [] : [setupNpm(options), setupYarn(options)];
+  const npm = options.location === 'none' ? undefined : setupNpm(options);
+  const cleanupFunctions = npm ? [npm.cleanup, setupYarn(options)] : [];
 
   const processExitListener = (signal?: number | NodeJS.Signals) => {
     for (const fn of cleanupFunctions) {
@@ -63,7 +68,7 @@ export async function verdaccioExecutor(
   process.on('SIGHUP', processExitListener);
 
   try {
-    await startVerdaccio(options, context.root);
+    await startVerdaccio(options, context.root, npm?.authTokenSet ?? false);
   } catch (e) {
     logger.error('Failed to start verdaccio: ' + e?.toString());
     return {
@@ -93,7 +98,8 @@ function getVerdaccioBinPath(): string {
  */
 function startVerdaccio(
   options: VerdaccioExecutorSchema,
-  workspaceRoot: string
+  workspaceRoot: string,
+  npmAuthTokenSet: boolean
 ) {
   return new Promise((resolve, reject) => {
     childProcess = fork(
@@ -114,17 +120,31 @@ function startVerdaccio(
     childProcess.on('error', (err) => {
       reject(err);
     });
-    childProcess.on('message', (message: { verdaccio_started?: boolean }) => {
-      if (
-        message?.verdaccio_started === true &&
-        process.env.NX_READY_SIGNAL_SOCKET
-      ) {
-        // Nx versions without signal readiness do not export this API.
-        const { emitReadySignal } =
-          require('@nx/devkit') as typeof import('@nx/devkit');
-        emitReadySignal(getVerdaccioListeningUrl(options));
+    childProcess.on(
+      'message',
+      async (message: { verdaccio_started?: boolean }) => {
+        if (message?.verdaccio_started !== true) {
+          return;
+        }
+        const address = getVerdaccioAddress(options);
+        const url = address ? getVerdaccioListeningUrl(address) : undefined;
+        // Dependent tasks start on readiness, so drop a rejected token first
+        if (npmAuthTokenSet && url) {
+          await removeRejectedNpmAuthToken(options, url);
+        }
+        if (address) {
+          // startLocalRegistry waits for an address on stdout, and Verdaccio 7
+          // logs its own at info level, which the generated config hides
+          logger.info(`Verdaccio is listening on ${address}`);
+        }
+        if (process.env.NX_READY_SIGNAL_SOCKET) {
+          // Nx versions without signal readiness do not export this API.
+          const { emitReadySignal } =
+            require('@nx/devkit') as typeof import('@nx/devkit');
+          emitReadySignal(url);
+        }
       }
-    });
+    );
     childProcess.on('disconnect', (err) => {
       reject(err);
     });
@@ -139,7 +159,9 @@ function startVerdaccio(
   });
 }
 
-function getVerdaccioListeningUrl(options: VerdaccioExecutorSchema) {
+// Keeps wildcard hosts like Verdaccio's own address line, because
+// startLocalRegistry matches the host its caller passes
+function getVerdaccioAddress(options: VerdaccioExecutorSchema) {
   const listenAddress = options.listenAddress
     ? `${options.listenAddress}:${options.port}`
     : String(options.port);
@@ -151,9 +173,11 @@ function getVerdaccioListeningUrl(options: VerdaccioExecutorSchema) {
   if (!address) return undefined;
 
   const endpoint = `${address[1] ?? 'http'}://${address[2] || 'localhost'}:${address[3]}/`;
-  if (!URL.canParse(endpoint)) return undefined;
+  return URL.canParse(endpoint) ? new URL(endpoint).href : undefined;
+}
 
-  const url = new URL(endpoint);
+function getVerdaccioListeningUrl(address: string) {
+  const url = new URL(address);
   if (url.hostname === '0.0.0.0') url.hostname = '127.0.0.1';
   if (url.hostname === '[::]') url.hostname = '[::1]';
   return url.href;
@@ -179,11 +203,36 @@ function createVerdaccioOptions(
   return verdaccioArgs;
 }
 
-function setupNpm(options: VerdaccioExecutorSchema) {
+function getNpmAuthTokenKey(options: VerdaccioExecutorSchema) {
+  return `//${options.listenAddress}:${options.port}/:_authToken`;
+}
+
+async function removeRejectedNpmAuthToken(
+  options: VerdaccioExecutorSchema,
+  registryUrl: string
+) {
+  if (!(await isPlaceholderAuthTokenRejected(registryUrl))) {
+    return;
+  }
+  try {
+    execSync(
+      `npm config delete ${getNpmAuthTokenKey(options)} --location ${options.location}`,
+      { env, windowsHide: true }
+    );
+  } catch (e) {
+    logger.warn(`Failed to remove the npm auth token: ${e.message}`);
+  }
+  warnPlaceholderAuthTokenRejected(registryUrl);
+}
+
+function setupNpm(options: VerdaccioExecutorSchema): {
+  cleanup: () => void;
+  authTokenSet: boolean;
+} {
   try {
     execSync('npm --version', { env, windowsHide: true });
   } catch (e) {
-    return () => {};
+    return { cleanup: () => {}, authTokenSet: false };
   }
 
   let npmRegistryPaths: string[] = [];
@@ -208,7 +257,7 @@ function setupNpm(options: VerdaccioExecutorSchema) {
         );
 
         execSync(
-          `npm config set //${options.listenAddress}:${options.port}/:_authToken="secretVerdaccioToken" --location ${options.location}`,
+          `npm config set ${getNpmAuthTokenKey(options)}="${PLACEHOLDER_AUTH_TOKEN}" --location ${options.location}`,
           { env, windowsHide: true }
         );
 
@@ -222,7 +271,7 @@ function setupNpm(options: VerdaccioExecutorSchema) {
       }
     });
 
-    return () => {
+    const cleanup = () => {
       try {
         const currentNpmRegistryPath = execSync(
           `npm config get registry --location ${options.location}`,
@@ -256,13 +305,14 @@ function setupNpm(options: VerdaccioExecutorSchema) {
           }
         });
         execSync(
-          `npm config delete //${options.listenAddress}:${options.port}/:_authToken  --location ${options.location}`,
+          `npm config delete ${getNpmAuthTokenKey(options)} --location ${options.location}`,
           { env, windowsHide: true }
         );
       } catch (e) {
         throw new Error(`Failed to reset npm registry: ${e.message}`);
       }
     };
+    return { cleanup, authTokenSet: true };
   } catch (e) {
     throw new Error(
       `Failed to set npm registry to http://${options.listenAddress}:${options.port}/: ${e.message}`

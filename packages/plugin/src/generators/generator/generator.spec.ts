@@ -162,7 +162,7 @@ describe('NxPlugin Generator Generator', () => {
       path: 'my-plugin/src/generators/my-generator/generator',
       unitTestRunner: 'jest',
     });
-    expect(
+    await expect(
       generatorGenerator(tree, {
         path: 'my-plugin/src/generators/my-generator/generator',
         name: 'my-generator',

@@ -1,0 +1,10 @@
+{
+  "$schema": "https://json-schema.org/schema",
+  "executors": {
+    "bundle-rules": {
+      "implementation": "./dist/src/executors/bundle-rules/executor",
+      "schema": "./dist/src/executors/bundle-rules/schema.json",
+      "description": "Compile and bundle one or more Nx Conformance Rules."
+    }
+  }
+}

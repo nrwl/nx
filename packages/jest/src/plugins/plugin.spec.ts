@@ -301,6 +301,9 @@ describe.each([true, false])('@nx/jest/plugin', (disableJestRuntime) => {
                       "technologies": [
                         "jest",
                       ],
+                      "testFileDirectives": {
+                        "file": "proj/src/unit.spec.ts",
+                      },
                     },
                     "options": {
                       "cwd": "proj",
@@ -1141,6 +1144,9 @@ describe.each([true, false])('@nx/jest/plugin', (disableJestRuntime) => {
                         "technologies": [
                           "jest",
                         ],
+                        "testFileDirectives": {
+                          "file": "proj/src/unit.spec.ts",
+                        },
                       },
                       "options": {
                         "cwd": "proj",
@@ -1295,6 +1301,9 @@ describe.each([true, false])('@nx/jest/plugin', (disableJestRuntime) => {
                         "technologies": [
                           "jest",
                         ],
+                        "testFileDirectives": {
+                          "file": "proj/src/unit.spec.ts",
+                        },
                       },
                       "options": {
                         "cwd": "proj",
@@ -1449,6 +1458,9 @@ describe.each([true, false])('@nx/jest/plugin', (disableJestRuntime) => {
                         "technologies": [
                           "jest",
                         ],
+                        "testFileDirectives": {
+                          "file": "proj/src/unit.spec.ts",
+                        },
                       },
                       "options": {
                         "cwd": "proj",

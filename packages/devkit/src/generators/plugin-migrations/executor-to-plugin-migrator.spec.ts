@@ -352,16 +352,20 @@ describe('collectMigrationScope (Phase 0)', () => {
       'The skiptest target on project "app1" cannot be migrated. The "targetName" plugin option is already set to "test" by another target of the project, and the plugin can only infer one target per option. The target keeps its current configuration; rerun the migration once the other target is inferred to convert it.'
     );
 
-    expect(() =>
-      collectMigrationScope(
-        ctx.tree,
-        ctx.projectGraph,
-        syntheticMigrations(),
-        { targetName: 'build' },
-        'app1',
-        undefined
-      )
-    ).toThrow('The skiptest target on project "app1" cannot be migrated.');
+    const projectWarn = vi.fn();
+    const projectScope = collectMigrationScope(
+      ctx.tree,
+      ctx.projectGraph,
+      syntheticMigrations(),
+      { targetName: 'build' },
+      'app1',
+      { warn: projectWarn } as any
+    );
+
+    expect(projectScope.executorScopes[0].targetAndProjects).toEqual(
+      new Map([['test', new Set(['app1'])]])
+    );
+    expect(projectWarn.mock.calls).toEqual(warn.mock.calls);
   });
 
   it('lets a second target overwrite a shared plugin option when the migration allows it', () => {
@@ -4687,6 +4691,35 @@ describe('projects the plugin does not infer', () => {
     expect(warn.mock.calls.map(([message]) => message)).toMatchInlineSnapshot(`
       [
         "convert-to-inferred left target "build" in project "app3" on its executor because the plugin failed to infer it: app3/build.config.json: REMIX_SECRET is required. Fix the error, then rerun the migration to convert it.",
+      ]
+    `);
+  });
+
+  it('leaves an uninferred target on its executor when migrating a specific project', async () => {
+    ctx = setupFixture('uninferred-specific-project');
+    addProjects('build.app.config.json');
+    const plugin = createSyntheticPlugin();
+    const warn = vi.fn();
+
+    const migrated = await migrateProjectExecutorsToPlugin(
+      ctx.tree,
+      ctx.projectGraph,
+      plugin.pluginPath,
+      plugin.createNodes,
+      { targetName: 'build' },
+      syntheticMigrations(),
+      'app3',
+      { warn } as any
+    );
+
+    expect(migrated.size).toBe(0);
+    expect(readJson(ctx.tree, 'app3/project.json').targets.build.executor).toBe(
+      SYNTHETIC_EXECUTOR
+    );
+    expect(readNxJson(ctx.tree).plugins ?? []).toEqual([]);
+    expect(warn.mock.calls.map(([message]) => message)).toMatchInlineSnapshot(`
+      [
+        "convert-to-inferred left target "build" in project "app3" on its executor because the plugin found no config file it detects in app3. Rename the config file to one the plugin detects, then rerun the migration to convert it.",
       ]
     `);
   });

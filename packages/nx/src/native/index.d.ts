@@ -149,11 +149,11 @@ export declare class NxCache {
   getBatch(hashes: Array<string>): Array<CachedResult | undefined | null>
   put(hash: string, terminalOutput: string, outputs: Array<string>, code: number): CachedOutputs
   /**
-   * Restores and records a result fetched from a remote cache. Returns
-   * false, discarding the artifact, when it holds a link that leaves the
-   * output it sits in.
+   * Restores and records a result fetched from a remote cache, returning
+   * its terminal output as stored for replay. Returns `None`, discarding
+   * the artifact, when it holds a link that leaves the output it sits in.
    */
-  applyRemoteCacheResults(hash: string, result: CachedResult, outputs?: Array<string> | undefined | null): boolean
+  applyRemoteCacheResults(hash: string, result: CachedResult, outputs?: Array<string> | undefined | null): string | null
   /**
    * Register terminal outputs that were written without a cache entry —
    * uncacheable tasks, and cacheable ones run with `--skip-nx-cache`.
@@ -1614,6 +1614,8 @@ export interface UltracacheReport {
   diagnostics: Array<UltracacheDiagnostic>
   resolution: UltracacheConfigurationResolution
 }
+
+export declare function unmatchedProjectPatterns(projectGraph: ExternalObject<ProjectGraph>, patterns: Array<string>): Array<string>
 
 export interface UpdatedWorkspaceFiles {
   fileMap: FileMap

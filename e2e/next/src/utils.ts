@@ -1,7 +1,6 @@
 import {
   checkFilesExist,
   exists,
-  killPorts,
   readJson,
   runCLI,
   runCLIAsync,
@@ -54,6 +53,5 @@ export async function checkApp(
       `e2e ${appName}-e2e --no-watch --configuration=production`
     );
     expect(e2eResults).toContain('Successfully ran target e2e for project');
-    expect(await killPorts()).toBeTruthy();
   }
 }

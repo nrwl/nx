@@ -1,6 +1,8 @@
 import {
   checkFilesExist,
   cleanupProject,
+  configureTargetOptions,
+  createRsbuildPortConfig,
   reservePort,
   newProject,
   runCLI,
@@ -89,10 +91,20 @@ describe('Build React applications and libraries with Rsbuild', () => {
     checkFilesExist(`apps/${rsbuildApp}/dist/index.html`);
 
     if (await shouldRunPlaywrightTests()) {
-      const result = runCLI(`e2e ${rsbuildApp}-e2e --verbose`);
-      expect(result).toContain(
-        `Successfully ran target e2e for project ${rsbuildApp}-e2e`
+      const config = createRsbuildPortConfig(
+        `apps/${rsbuildApp}/rsbuild.config.ts`
       );
+      const restoreServerOptions = configureTargetOptions(['dev', 'preview'], {
+        config,
+      });
+      try {
+        const result = runCLI(`e2e ${rsbuildApp}-e2e --verbose`);
+        expect(result).toContain(
+          `Successfully ran target e2e for project ${rsbuildApp}-e2e`
+        );
+      } finally {
+        restoreServerOptions();
+      }
     }
   }, 300_000);
 });

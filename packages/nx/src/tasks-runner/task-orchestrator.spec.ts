@@ -2266,6 +2266,7 @@ describe('TaskOrchestrator', () => {
       orchestrator.readiness = new Map();
       orchestrator.readinessFailures = new Map();
       orchestrator.readinessFailureReasons = new Map();
+      orchestrator.readinessProbes = new Set();
       orchestrator.readyUrls = new Map();
       orchestrator.waitingLogged = new Set();
       const outputPath = join(mkdtempSync(join(tmpdir(), 'readiness-')), 'out');
@@ -3055,6 +3056,34 @@ describe('TaskOrchestrator', () => {
       emit('listening');
       await expect(waiting).resolves.toBeUndefined();
     });
+
+    it.skipIf(process.platform === 'win32')(
+      'finishes cleanup only after a running command probe is killed',
+      async () => {
+        const pidFile = join(mkdtempSync(join(tmpdir(), 'readiness-')), 'pid');
+        const { orchestrator, serve, runningTask } = createOrchestrator({
+          readyWhen: { command: `echo $$ > "${pidFile}"; sleep 30` },
+        });
+        orchestrator.startReadinessProbe(
+          serve,
+          orchestrator.getReadyWhen(serve, { PATH: process.env.PATH }),
+          runningTask
+        );
+        let pid = 0;
+        await vi.waitFor(() => {
+          pid = Number(readFileSync(pidFile, 'utf8'));
+          expect(pid).toBeGreaterThan(0);
+        });
+        orchestrator.runningContinuousTasks = new Map();
+        orchestrator.runningDiscreteTasks = new Map();
+        orchestrator.runningRunCommandsTasks = new Map();
+        orchestrator.discreteTaskExitHandled = new Map();
+        orchestrator.forkedProcessTaskRunner = { cleanup: async () => {} };
+
+        await orchestrator.cleanup();
+        expect(() => process.kill(pid, 0)).toThrow('ESRCH');
+      }
+    );
 
     it('skips a task from runTaskDirectly when the row says the producer failed elsewhere', async () => {
       const { orchestrator, e2e } = createOrchestrator({
@@ -3896,6 +3925,32 @@ describe('TaskOrchestrator', () => {
         );
       }
     );
+
+    it('shows a dropped run-commands option in the TUI task output', async () => {
+      const { orchestrator, task } = createOrchestrator();
+      await useRealExecutorSchema();
+      orchestrator.tuiEnabled = true;
+      orchestrator.options.lifeCycle.registerRunningTask = vi.fn();
+      const build = orchestrator.projects.app.targets.build;
+      build.options = { command: 'echo hi', lintFilePatterns: ['a.ts'] };
+
+      const runningTask = await orchestrator.runTask(
+        task,
+        false,
+        process.env,
+        orchestrator.cache.temporaryOutputPath(),
+        false
+      );
+      await runningTask.getResults();
+
+      expect(
+        orchestrator.options.lifeCycle.appendTaskOutput.mock.calls
+      ).toContainEqual([
+        task.id,
+        expect.stringContaining('"lintFilePatterns" was not forwarded'),
+        false,
+      ]);
+    });
 
     it('prints a failure of the post-run steps once', async () => {
       const { orchestrator, task } = createOrchestrator();

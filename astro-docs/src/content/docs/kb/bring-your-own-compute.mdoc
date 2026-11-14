@@ -8,21 +8,18 @@ topics:
 
 [Workers](/docs/features/ci-features/distribute-task-execution) distributes your tasks across multiple machines on every Nx Cloud plan. On the [Nx Enterprise plan](https://nx.dev/enterprise?utm_source=nx.dev&utm_medium=callout&utm_campaign=bring-your-own-compute) you can also bring your own compute, running the agents on your own CI provider instead of Nx Cloud-hosted machines. The recipes below show how to set that up.
 
-Every recipe on this page uses the same [`.nx/ci-config.yaml`](/docs/reference/nx-cloud/ci-config) file.
-Setting `dte.distribute-on` to `manual` tells Nx Cloud to distribute tasks to the agents your own pipeline starts instead of provisioning Workers.
-`lifecycle.stop-after` lists the targets that mark the run complete.
+{% aside type="note" title="Using .nx/ci-config.yaml?" %}
+We've added support for `.nx/pipelines/ci.yaml`. See the [migration guide](/docs/kb/migrate-from-ci-config#bring-your-own-compute).
+{% /aside %}
 
-```yaml
-# .nx/ci-config.yaml
-dte:
-  distribute-on: manual
-lifecycle:
-  stop-after:
-    - e2e-ci
+The main job in each recipe starts the run with the same command, and no configuration file:
+
+```shell
+npx nx-cloud start-ci-run --distribute-on=manual --stop-workers-after=e2e-ci
 ```
 
-The main job in each recipe starts the run with `nx-cloud start-workers`, which reads that file.
-The command takes no configuration flags.
+`--distribute-on=manual` tells Nx Cloud to distribute tasks to the agents your own pipeline starts instead of provisioning Workers.
+`--stop-workers-after` lists the targets that mark the run complete.
 Each recipe also runs `nx fix-ci` in the main job and in every agent job, so [Self-Healing CI](/docs/features/ci-features/self-healing-ci) works the same as on Workers.
 
 {% tabs syncKey="ci-provider" %}
@@ -81,8 +78,8 @@ jobs:
       - name: Derive appropriate SHAs for base and head for `nx affected` commands
         uses: nrwl/nx-set-shas@v5
 
-      - name: Start the Nx Cloud CI run using the settings in .nx/ci-config.yaml
-        run: npx nx-cloud start-workers
+      - name: Start the CI run on Nx Cloud
+        run: npx nx-cloud start-ci-run --distribute-on=manual --stop-workers-after=e2e-ci
 
       - name: Check the formatting
         run: npx nx record -- nx format:check
@@ -162,8 +159,8 @@ jobs:
       - run: npm ci
       - nx/set-shas
 
-      # Start the Nx Cloud CI run using the settings in .nx/ci-config.yaml
-      - run: npx nx-cloud start-workers
+      # Start the CI run on Nx Cloud
+      - run: npx nx-cloud start-ci-run --distribute-on=manual --stop-workers-after=e2e-ci
       # Send logs to Nx Cloud for any CLI command
       - run: npx nx record -- nx format:check
       # Lint, test, build and run e2e on agent jobs for everything affected by a change
@@ -208,7 +205,7 @@ workflows:
       - main
 ```
 
-This configuration is setting up two types of jobs - a main job and three agent jobs.
+This configuration is setting up two types of jobs: a main job and three agent jobs.
 
 The main job tells Nx Cloud to use DTE and then runs normal Nx commands as if this were a single pipeline set up. Once the commands are done, it notifies Nx Cloud to stop the agent jobs.
 
@@ -290,7 +287,7 @@ jobs:
 
       - script: git branch --track main origin/main
       - script: npm ci
-      - script: npx nx-cloud start-workers
+      - script: npx nx-cloud start-ci-run --distribute-on=manual --stop-workers-after=e2e-ci
       - script: npx nx record -- nx format:check --base=$(BASE_SHA) --head=$(HEAD_SHA)
       - script: npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint,test,build,e2e-ci --parallel=2 --configuration=ci
 
@@ -299,7 +296,7 @@ jobs:
         condition: always()
 ```
 
-This configuration is setting up two types of jobs - a main job and three agent jobs.
+This configuration is setting up two types of jobs: a main job and three agent jobs.
 
 The main job tells Nx Cloud to use DTE and then runs normal Nx commands as if this were a single pipeline set up. Once the commands are done, it notifies Nx Cloud to stop the agent jobs.
 
@@ -345,7 +342,7 @@ pipelines:
                 - export NX_BRANCH=$BITBUCKET_PR_ID
 
                 - npm ci
-                - npx nx-cloud start-workers
+                - npx nx-cloud start-ci-run --distribute-on=manual --stop-workers-after=e2e-ci
                 - npx nx record -- nx format:check
                 - npx nx affected --target=lint,test,build,e2e-ci --parallel=2
               after-script:
@@ -356,7 +353,7 @@ pipelines:
           - step: *agent
 ```
 
-This configuration is setting up two types of jobs - a main job and three agent jobs.
+This configuration is setting up two types of jobs: a main job and three agent jobs.
 
 The main job tells Nx Cloud to use DTE and then runs normal Nx commands as if this were a single pipeline set up. Once the commands are done, it notifies Nx Cloud to stop the agent jobs.
 
@@ -419,7 +416,7 @@ nx-dte:
   stage: affected
   extends: .base-pipeline
   script:
-    - yarn nx-cloud start-workers
+    - yarn nx-cloud start-ci-run --distribute-on=manual --stop-workers-after=e2e-ci
     - yarn nx record -- nx format:check --base=$NX_BASE --head=$NX_HEAD
     - yarn nx affected --base=$NX_BASE --head=$NX_HEAD -t lint,test,build,e2e-ci --parallel=2
   # Self-Healing CI: recommend fixes for failures. Learn more: https://nx.dev/ci/features/self-healing-ci
@@ -438,7 +435,7 @@ nx-dte-agent3:
   stage: affected
 ```
 
-This configuration is setting up two types of jobs - a main job and three agent jobs.
+This configuration is setting up two types of jobs: a main job and three agent jobs.
 
 The main job tells Nx Cloud to use DTE and then runs normal Nx commands as if this were a single pipeline set up. Once the commands are done, it notifies Nx Cloud to stop the agent jobs.
 
@@ -467,7 +464,7 @@ pipeline {
                     agent any
                     steps {
                         sh "npm ci"
-                        sh "npx nx-cloud start-workers"
+                        sh "npx nx-cloud start-ci-run --distribute-on=manual --stop-workers-after=e2e-ci"
                         sh "npx nx record -- nx format:check"
                         sh "npx nx affected --base=HEAD~1 -t lint,test,build,e2e-ci --configuration=ci --parallel=2"
                     }
@@ -485,7 +482,7 @@ pipeline {
                     agent any
                     steps {
                         sh "npm ci"
-                        sh "npx nx-cloud start-workers"
+                        sh "npx nx-cloud start-ci-run --distribute-on=manual --stop-workers-after=e2e-ci"
                         sh "npx nx record -- nx format:check"
                         sh "npx nx affected --base origin/${env.CHANGE_TARGET} -t lint,test,build,e2e-ci --parallel=2 --configuration=ci"
                     }
@@ -558,7 +555,7 @@ pipeline {
 }
 ```
 
-This configuration is setting up two types of jobs - a main job and three agent jobs.
+This configuration is setting up two types of jobs: a main job and three agent jobs.
 
 The main job tells Nx Cloud to use DTE and then runs normal Nx commands as if this were a single pipeline set up. Once the commands are done, it notifies Nx Cloud to stop the agent jobs.
 

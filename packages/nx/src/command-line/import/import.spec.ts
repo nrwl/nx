@@ -2,6 +2,7 @@ import { execFileSync } from 'node:child_process';
 import {
   mkdirSync,
   mkdtempSync,
+  realpathSync,
   rmSync,
   statSync,
   symlinkSync,
@@ -165,6 +166,104 @@ describe('importHandler', () => {
       expect(stats.uid).toBe(process.getuid!());
       expect(stats.mode & 0o077).toBe(0);
     }
+  });
+
+  it('explains that a local source directory is not a git repository', async () => {
+    createWorkspace();
+    const source = join(root, 'source');
+    mkdirSync(source);
+    writeFileSync(join(source, 'index.ts'), 'export {};\n');
+
+    await expect(
+      importHandler({
+        sourceRepository: source,
+        ref: 'main',
+        source: '.',
+        destination: 'libs/source',
+        depth: 0,
+        verbose: false,
+        interactive: false,
+      })
+    ).rejects.toThrow(`${source} is not a git repository`);
+  });
+
+  it('points at the enclosing repository when the source is a directory inside one', async () => {
+    const repo = join(root, 'source');
+    mkdirSync(join(repo, 'packages', 'lib'), { recursive: true });
+    git(repo, 'init', '-q', '-b', 'main');
+    createWorkspace();
+
+    await expect(
+      importHandler({
+        sourceRepository: join(repo, 'packages', 'lib'),
+        ref: 'main',
+        source: '.',
+        destination: 'libs/lib',
+        depth: 0,
+        verbose: false,
+        interactive: false,
+      })
+    ).rejects.toThrow(
+      `inside the git repository at ${realpathSync(repo)}. Import that repository instead and select the directory packages/lib with the --source option.`
+    );
+  });
+
+  it('points at the real repository and directory when the source is a symlink into one', async () => {
+    const repo = join(root, 'source');
+    mkdirSync(join(repo, 'packages', 'lib'), { recursive: true });
+    git(repo, 'init', '-q', '-b', 'main');
+    const alias = join(root, 'alias');
+    symlinkSync(join(repo, 'packages', 'lib'), alias);
+    createWorkspace();
+
+    await expect(
+      importHandler({
+        sourceRepository: alias,
+        ref: 'main',
+        source: '.',
+        destination: 'libs/lib',
+        depth: 0,
+        verbose: false,
+        interactive: false,
+      })
+    ).rejects.toThrow(
+      `inside the git repository at ${realpathSync(repo)}. Import that repository instead and select the directory packages/lib with the --source option.`
+    );
+  });
+
+  it('explains that the workspace is not a git repository', async () => {
+    const workspace = join(root, 'workspace');
+    mkdirSync(workspace);
+    process.chdir(workspace);
+
+    await expect(
+      importHandler({
+        sourceRepository: 'https://example.com/source.git',
+        ref: 'main',
+        source: '.',
+        destination: 'libs/source',
+        depth: 0,
+        verbose: false,
+        interactive: false,
+      })
+    ).rejects.toThrow(`${workspace} is not a git repository`);
+  });
+
+  it('keeps the git error when the workspace repository is broken', async () => {
+    const workspace = createWorkspace();
+    writeFileSync(join(workspace, '.git', 'config'), '[broken\n');
+
+    await expect(
+      importHandler({
+        sourceRepository: 'https://example.com/source.git',
+        ref: 'main',
+        source: '.',
+        destination: 'libs/source',
+        depth: 0,
+        verbose: false,
+        interactive: false,
+      })
+    ).rejects.toThrow('bad config');
   });
 
   it('keeps credentials in the source URL out of the merge commit and output', async () => {

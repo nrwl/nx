@@ -22,6 +22,10 @@ import dependencyChecks, {
   RULE_NAME as dependencyChecksRuleName,
 } from './rules/dependency-checks';
 
+import directiveChecks, {
+  RULE_NAME as directiveChecksRuleName,
+} from './rules/directive-checks';
+
 // Resolve any custom rules that might exist in the current workspace
 import { workspaceRules, loadWorkspaceRules } from './resolve-workspace-rules';
 
@@ -70,6 +74,7 @@ const rules: Record<string, TSESLint.RuleModule<string, unknown[]>> = {
   [enforceModuleBoundariesRuleName]: enforceModuleBoundaries,
   [nxPluginChecksRuleName]: nxPluginChecksRule,
   [dependencyChecksRuleName]: dependencyChecks,
+  [directiveChecksRuleName]: directiveChecks,
   ...workspaceRules,
 };
 

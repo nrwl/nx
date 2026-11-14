@@ -72,7 +72,7 @@ describe('setup-build generator', () => {
   });
 
   it('should error when eithe main or tsConfig is not found', async () => {
-    expect(
+    await expect(
       setupBuildGenerator(tree, {
         project: 'mypkg',
         bundler: 'tsc',
@@ -81,14 +81,14 @@ describe('setup-build generator', () => {
 
     tree.write('packages/mypkg/src/main.ts', 'console.log("hello world");');
 
-    expect(
+    await expect(
       setupBuildGenerator(tree, {
         project: 'mypkg',
         bundler: 'tsc',
       })
     ).rejects.toThrow(/Cannot locate a tsConfig file for mypkg/);
 
-    expect(
+    await expect(
       setupBuildGenerator(tree, {
         project: 'mypkg',
         bundler: 'tsc',
@@ -96,7 +96,7 @@ describe('setup-build generator', () => {
       })
     ).rejects.toThrow(/Cannot locate a main file for mypkg/);
 
-    expect(
+    await expect(
       setupBuildGenerator(tree, {
         project: 'mypkg',
         bundler: 'tsc',

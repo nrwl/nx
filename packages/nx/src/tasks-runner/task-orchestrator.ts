@@ -295,6 +295,8 @@ export class TaskOrchestrator {
   // report them again, and the saved log gets the reason after the transcript
   private readinessFailures = new Map<string, Promise<void>>();
   private readinessFailureReasons = new Map<string, string>();
+  // Cleanup awaits these, so an aborted command probe finishes its kill first
+  private readinessProbes = new Set<Promise<void>>();
   private readinessSettled = false;
   private readySignal: ReadySignalServer | undefined;
   // The url each producer reported with its readiness signal
@@ -1771,6 +1773,8 @@ export class TaskOrchestrator {
           streamOutput: streamOutput && !shouldPrefix,
         };
 
+        // The TUI discards stderr, so run-commands warnings go to the task output
+        const warnings: string[] = [];
         // As in a forked run, run-commands builds its env on the task env
         const runningTask = await runCommands(
           runCommandsOptions,
@@ -1778,7 +1782,8 @@ export class TaskOrchestrator {
             root: workspaceRoot, // only root is needed in runCommands
           } as any,
           task,
-          env
+          env,
+          this.tuiEnabled ? (message) => warnings.push(message) : undefined
         );
 
         this.runningRunCommandsTasks.set(task.id, runningTask);
@@ -1807,6 +1812,13 @@ export class TaskOrchestrator {
             runningTask.onOutput((output) => {
               this.options.lifeCycle.appendTaskOutput(task.id, output, false);
             });
+          }
+          for (const warning of warnings) {
+            this.options.lifeCycle.appendTaskOutput(
+              task.id,
+              `${pc.yellow(warning)}\r\n`,
+              false
+            );
           }
         }
 
@@ -2369,7 +2381,7 @@ export class TaskOrchestrator {
   ) {
     const state = this.armReadiness(task.id);
     this.options.lifeCycle.setTaskReadiness?.(task.id, TaskReadiness.Pending);
-    waitForReadiness(readyWhen, {
+    const probe = waitForReadiness(readyWhen, {
       taskId: task.id,
       runningTask,
       cwd: workspaceRoot,
@@ -2388,6 +2400,8 @@ export class TaskOrchestrator {
         this.failReadiness(task, state, e);
       }
     );
+    this.readinessProbes.add(probe);
+    probe.finally(() => this.readinessProbes.delete(probe));
   }
 
   // A verdict against a producer something in this run waits for fails the
@@ -3065,6 +3079,7 @@ export class TaskOrchestrator {
   private async performCleanup() {
     // Waiters must not sit out a probe once the run is stopping
     this.abortAllReadiness();
+    const probesStopped = Promise.allSettled(this.readinessProbes);
     this.readySignal?.close();
 
     // Mark all running tasks for intentional stop
@@ -3105,6 +3120,7 @@ export class TaskOrchestrator {
     const continuousTaskIds = new Set(continuousSnapshot.map(([id]) => id));
     await Promise.all([
       forkedCleanup,
+      probesStopped,
       ...continuousSnapshot.map(async ([taskId, { runningTask }]) => {
         try {
           await runningTask.kill();
