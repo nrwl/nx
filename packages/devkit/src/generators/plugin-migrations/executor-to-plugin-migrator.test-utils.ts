@@ -54,6 +54,7 @@ export const SYNTHETIC_EXECUTOR = '@acme/tool:build';
 export interface SyntheticPluginOptions {
   targetName?: string;
   variant?: string;
+  configToTargetName?: Record<string, string>;
 }
 
 /**
@@ -369,6 +370,7 @@ export function addExecutorProject(
     name: opts.name,
     type: 'app',
     data: {
+      name: opts.name,
       root: opts.root,
       targets: project.targets,
     } as any,

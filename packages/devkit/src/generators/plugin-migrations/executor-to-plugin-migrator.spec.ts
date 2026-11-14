@@ -426,6 +426,294 @@ describe('collectMigrationScope (Phase 0)', () => {
   });
 });
 
+describe('per-project plugin options', () => {
+  let ctx: FixtureContext;
+
+  afterEach(() => {
+    if (ctx) {
+      teardownFixture(ctx.fs);
+      ctx = undefined;
+    }
+  });
+
+  function variantMigrations() {
+    return [
+      {
+        ...syntheticMigrations()[0],
+        targetPluginOptionMapper: (
+          targetName: string,
+          project: { root: string }
+        ): SyntheticPluginOptions =>
+          project.root === 'app3'
+            ? { targetName }
+            : { targetName, variant: 'ws' },
+      },
+    ];
+  }
+
+  function configMigrations(
+    mapper: (
+      targetName: string,
+      project: { name?: string }
+    ) => SyntheticPluginOptions
+  ) {
+    return [
+      {
+        executors: [SYNTHETIC_EXECUTOR],
+        targetPluginOptionMapper: mapper,
+        postTargetTransformer: (t: any) => t,
+      },
+    ];
+  }
+
+  async function migrateWithRegistrations(
+    plugins: ExpandedPluginConfiguration[],
+    migrations: Parameters<typeof migrateProjectExecutorsToPlugin>[5]
+  ) {
+    const nxJson = readNxJson(ctx.tree);
+    nxJson.plugins = plugins;
+    updateNxJson(ctx.tree, nxJson);
+    const plugin = createSyntheticPlugin();
+    await migrateProjectExecutorsToPlugin(
+      ctx.tree,
+      ctx.projectGraph,
+      plugin.pluginPath,
+      plugin.createNodes,
+      { targetName: 'build' },
+      migrations
+    );
+    return readNxJson(ctx.tree).plugins;
+  }
+
+  it('splits one target name into an option set per distinct mapper output', () => {
+    ctx = setupFixture('per-project-options-scope');
+    for (const name of ['app1', 'app2', 'app3']) {
+      addExecutorProject(ctx, { name, root: name, targetName: 'build' });
+    }
+
+    const scope = collectMigrationScope(
+      ctx.tree,
+      ctx.projectGraph,
+      variantMigrations(),
+      { targetName: 'build' },
+      undefined,
+      undefined
+    );
+
+    expect(scope.optionSetGroups.map((group) => group.options)).toEqual([
+      { targetName: 'build', variant: 'ws' },
+      { targetName: 'build' },
+    ]);
+    const optionSetIds =
+      scope.executorScopes[0].inferenceOptionSetIds.get('build');
+    expect(optionSetIds.get('app1')).toBe(optionSetIds.get('app2'));
+    expect(optionSetIds.get('app3')).not.toBe(optionSetIds.get('app1'));
+    expect(scope.pluginOptionsByProject.get('app3')).toEqual({
+      targetName: 'build',
+    });
+  });
+
+  it('passes the project name to the mapper', () => {
+    ctx = setupFixture('per-project-options-name');
+    addExecutorProject(ctx, { name: 'app1', root: 'app1', targetName: 'e2e' });
+    addExecutorProject(ctx, { name: 'app2', root: 'app2', targetName: 'e2e' });
+
+    const scope = collectMigrationScope(
+      ctx.tree,
+      ctx.projectGraph,
+      configMigrations((targetName, project) => ({
+        configToTargetName: { [`${project.name}.cfg`]: targetName },
+      })),
+      {},
+      undefined,
+      undefined
+    );
+
+    const ids = scope.executorScopes[0].inferenceOptionSetIds.get('e2e');
+    expect(scope.optionSetGroups.map((group) => group.options)).toEqual([
+      { configToTargetName: { 'app1.cfg': 'e2e' } },
+      { configToTargetName: { 'app2.cfg': 'e2e' } },
+    ]);
+    expect([ids.get('app1'), ids.get('app2')]).toEqual([0, 1]);
+    expect(scope.pluginOptionsByProject.get('app2')).toEqual({
+      configToTargetName: { 'app2.cfg': 'e2e' },
+    });
+  });
+
+  it("merges object-valued plugin options of a project's targets key by key", () => {
+    ctx = setupFixture('per-project-options-object-merge');
+    addExecutorProject(ctx, { name: 'app1', root: 'app1', targetName: 'test' });
+    addSecondExecutorTarget(ctx, 'app1', 'e2e');
+    const warn = vi.fn();
+
+    const scope = collectMigrationScope(
+      ctx.tree,
+      ctx.projectGraph,
+      configMigrations((targetName) => ({
+        configToTargetName: { [`${targetName}.cfg`]: targetName },
+      })),
+      {},
+      undefined,
+      { warn } as any
+    );
+
+    expect(scope.pluginOptionsByProject.get('app1')).toEqual({
+      configToTargetName: { 'test.cfg': 'test', 'e2e.cfg': 'e2e' },
+    });
+    expect(warn).not.toHaveBeenCalled();
+  });
+
+  it('keeps a second target that maps an object key to another value', () => {
+    ctx = setupFixture('per-project-options-object-conflict');
+    addExecutorProject(ctx, { name: 'app1', root: 'app1', targetName: 'test' });
+    addSecondExecutorTarget(ctx, 'app1', 'e2e');
+    const warn = vi.fn();
+
+    const scope = collectMigrationScope(
+      ctx.tree,
+      ctx.projectGraph,
+      configMigrations((targetName) => ({
+        configToTargetName: { 'shared.cfg': targetName },
+      })),
+      {},
+      undefined,
+      { warn } as any
+    );
+
+    expect(scope.executorScopes[0].targetAndProjects).toEqual(
+      new Map([['test', new Set(['app1'])]])
+    );
+    expect(scope.pluginOptionsByProject.get('app1')).toEqual({
+      configToTargetName: { 'shared.cfg': 'test' },
+    });
+    expect(warn.mock.calls[0][0]).toBe(
+      'The e2e target on project "app1" cannot be migrated. The "configToTargetName" plugin option is already set to {"shared.cfg":"test"} by another target of the project, and the plugin can only infer one target per option. The target keeps its current configuration; rerun the migration once the other target is inferred to convert it.'
+    );
+  });
+
+  it('does not fold a project into a registration that sets an option the project leaves unset', async () => {
+    ctx = setupFixture('per-project-options-registrations');
+    for (const name of ['app1', 'app2', 'app3']) {
+      addExecutorProject(ctx, { name, root: name, targetName: 'build' });
+    }
+
+    const plugins = await migrateWithRegistrations(
+      [
+        {
+          plugin: SYNTHETIC_PLUGIN_PATH,
+          include: ['other/**/*'],
+          options: { targetName: 'build', variant: 'ws' },
+        },
+      ],
+      variantMigrations()
+    );
+
+    expect(plugins).toStrictEqual([
+      {
+        plugin: SYNTHETIC_PLUGIN_PATH,
+        include: ['other/**/*', 'app1/**/*', 'app2/**/*'],
+        options: { targetName: 'build', variant: 'ws' },
+      },
+      {
+        plugin: SYNTHETIC_PLUGIN_PATH,
+        include: ['app3/**/*'],
+        options: { targetName: 'build' },
+      },
+    ]);
+  });
+
+  it('does not fold a project that sets an option into a registration that leaves it unset', async () => {
+    ctx = setupFixture('per-project-options-registrations-reverse');
+    for (const name of ['app1', 'app2', 'app3']) {
+      addExecutorProject(ctx, { name, root: name, targetName: 'build' });
+    }
+
+    const plugins = await migrateWithRegistrations(
+      [
+        {
+          plugin: SYNTHETIC_PLUGIN_PATH,
+          include: ['other/**/*'],
+          options: { targetName: 'build' },
+        },
+      ],
+      variantMigrations()
+    );
+
+    expect(plugins).toStrictEqual([
+      {
+        plugin: SYNTHETIC_PLUGIN_PATH,
+        include: ['other/**/*', 'app3/**/*'],
+        options: { targetName: 'build' },
+      },
+      {
+        plugin: SYNTHETIC_PLUGIN_PATH,
+        include: ['app1/**/*', 'app2/**/*'],
+        options: { targetName: 'build', variant: 'ws' },
+      },
+    ]);
+  });
+
+  it('folds projects into a registration that also sets an option the migration never sets', async () => {
+    ctx = setupFixture('per-project-options-registrations-extra-key');
+    for (const name of ['app1', 'app2']) {
+      addExecutorProject(ctx, { name, root: name, targetName: 'build' });
+    }
+
+    const plugins = await migrateWithRegistrations(
+      [
+        {
+          plugin: SYNTHETIC_PLUGIN_PATH,
+          options: { targetName: 'build', ciTargetName: 'build-ci' },
+        },
+      ],
+      syntheticMigrations()
+    );
+
+    expect(plugins).toStrictEqual([
+      {
+        plugin: SYNTHETIC_PLUGIN_PATH,
+        options: { targetName: 'build', ciTargetName: 'build-ci' },
+      },
+    ]);
+  });
+
+  it('folds a project into a registration with deeply equal object-valued options', async () => {
+    ctx = setupFixture('per-project-options-registrations-object');
+    addExecutorProject(ctx, {
+      name: 'app1',
+      root: 'app1',
+      targetName: 'build',
+    });
+
+    const plugins = await migrateWithRegistrations(
+      [
+        {
+          plugin: SYNTHETIC_PLUGIN_PATH,
+          include: ['other/**/*'],
+          options: {
+            targetName: 'build',
+            configToTargetName: { 'build.cfg': 'build' },
+          },
+        },
+      ],
+      configMigrations((targetName) => ({
+        targetName,
+        configToTargetName: { [`${targetName}.cfg`]: targetName },
+      }))
+    );
+
+    expect(plugins).toStrictEqual([
+      {
+        plugin: SYNTHETIC_PLUGIN_PATH,
+        options: {
+          targetName: 'build',
+          configToTargetName: { 'build.cfg': 'build' },
+        },
+      },
+    ]);
+  });
+});
+
 describe('computeResidualByProject (Phase 2)', () => {
   let ctx: FixtureContext;
 
