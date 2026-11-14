@@ -193,7 +193,9 @@ export const createNodes: CreateNodes<EslintPluginOptions> = [
     const targetsCache = new PluginCache<EslintProjects>(cachePath);
 
     const { eslintConfigFiles, projectRoots, projectRootsByEslintRoots } =
-      splitConfigFiles(configFiles);
+      splitConfigFiles(
+        withAncestorEslintConfigs(configFiles, context.workspaceRoot)
+      );
     const lintableFilesPerProjectRoot = await collectLintableFilesByProjectRoot(
       projectRoots,
       options,
@@ -277,6 +279,43 @@ export const createNodes: CreateNodes<EslintPluginOptions> = [
 ];
 
 export const createNodesV2 = createNodes;
+
+/**
+ * An `include` that scopes the plugin to some projects leaves out the configs
+ * in their parent directories, which those projects lint with.
+ */
+function withAncestorEslintConfigs(
+  configFiles: readonly string[],
+  workspaceRoot: string
+): readonly string[] {
+  const included = new Set(configFiles);
+  const visited = new Set<string>();
+  const ancestorConfigsByDir: string[][] = [];
+  for (const configFile of configFiles) {
+    let dir = dirname(configFile);
+    while (dir !== '.') {
+      dir = dirname(dir);
+      if (visited.has(dir)) {
+        break;
+      }
+      visited.add(dir);
+      const dirConfigs = ESLINT_CONFIG_FILENAMES.map((file) =>
+        join(dir, file)
+      ).filter(
+        (config) =>
+          !included.has(config) && existsSync(join(workspaceRoot, config))
+      );
+      if (dirConfigs.length !== 0) {
+        ancestorConfigsByDir.push(dirConfigs);
+      }
+    }
+  }
+  // parents first; within a directory a flat config follows an eslintrc, so
+  // its result wins as it does for an unscoped registration
+  return ancestorConfigsByDir.length === 0
+    ? configFiles
+    : [...ancestorConfigsByDir.reverse().flat(), ...configFiles];
+}
 
 async function createSharedEslint(
   ESLint: typeof ESLintType,

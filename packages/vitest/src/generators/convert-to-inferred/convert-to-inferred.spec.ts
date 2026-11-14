@@ -383,7 +383,11 @@ export default defineConfig({ root: __dirname });`;
           options: { testTargetName: 'test' },
         },
         expect.objectContaining({
-          options: { testTargetName: 'test', testMode: 'run' },
+          options: {
+            testTargetName: 'test',
+            testMode: 'run',
+            cwd: 'workspaceRoot',
+          },
         }),
       ]);
     });
@@ -413,6 +417,63 @@ export default defineConfig({ root: __dirname });`;
       );
       expect(testReg.include).toEqual([`${project1.root}/**/*`]);
       expect(unitReg.include).toEqual([`${project2.root}/**/*`]);
+    });
+
+    it('registers converted projects to run from the workspace root, apart from an existing registration', async () => {
+      const existing = createTestProject(tree, {
+        appRoot: 'existing',
+        appName: 'existing',
+      });
+      updateProjectConfiguration(tree, existing.name, {
+        ...existing,
+        targets: {},
+      });
+      const nxJson = readNxJson(tree);
+      nxJson.plugins = [
+        {
+          plugin: '@nx/vitest',
+          include: ['existing/**/*'],
+          options: { testTargetName: 'test' },
+        },
+      ];
+      updateNxJson(tree, nxJson);
+      createTestProject(tree);
+      createTestProject(tree, { appRoot: 'second', appName: 'second' });
+
+      await convertToInferred(tree, { skipFormat: true });
+
+      const vitestRegistrations = readNxJson(tree).plugins.filter(
+        (p): p is ExpandedPluginConfiguration<VitestPluginOptions> =>
+          typeof p !== 'string' && p.plugin === '@nx/vitest'
+      );
+      expect(vitestRegistrations).toHaveLength(2);
+      expect(vitestRegistrations[0]).toStrictEqual({
+        plugin: '@nx/vitest',
+        include: ['existing/**/*'],
+        options: { testTargetName: 'test' },
+      });
+      expect(vitestRegistrations[1].options).toMatchObject({
+        testTargetName: 'test',
+        cwd: 'workspaceRoot',
+      });
+      expect(vitestRegistrations[1].include).toEqual([
+        'myapp/**/*',
+        'second/**/*',
+      ]);
+    });
+
+    it('leaves a root project on the default cwd', async () => {
+      createTestProject(tree, { appRoot: '.', appName: 'root' });
+      mockedConfigs['vite.config.ts'] = mockedConfigs['./vite.config.ts'];
+
+      await convertToInferred(tree, { skipFormat: true });
+
+      const vitestRegistrations = readNxJson(tree).plugins.filter(
+        (p): p is ExpandedPluginConfiguration<VitestPluginOptions> =>
+          typeof p !== 'string' && p.plugin === '@nx/vitest'
+      );
+      expect(vitestRegistrations).toHaveLength(1);
+      expect(vitestRegistrations[0].options.cwd).toBeUndefined();
     });
 
     it('keeps non-inferred executor options on the migrated target', async () => {

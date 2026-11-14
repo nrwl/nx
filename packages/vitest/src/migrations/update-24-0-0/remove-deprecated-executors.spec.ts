@@ -237,6 +237,7 @@ describe('remove-deprecated-executors', () => {
     ).toMatchInlineSnapshot(`
       {
         "options": {
+          "cwd": "workspaceRoot",
           "testMode": "run",
           "testTargetName": "test",
         },

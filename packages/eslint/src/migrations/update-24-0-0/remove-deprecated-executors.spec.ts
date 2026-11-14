@@ -293,6 +293,7 @@ describe('remove-deprecated-executors', () => {
     ).toMatchInlineSnapshot(`
       {
         "options": {
+          "cwd": "workspaceRoot",
           "targetName": "lint",
         },
         "plugin": "@nx/eslint/plugin",
