@@ -19,6 +19,7 @@ import { normalizePath } from '../../../utils/path';
 import { workspaceRoot } from '../../../utils/workspace-root';
 import { listLocalPathFiles } from './utils/local-path-hashes';
 import { extractMainLockfileDocument } from './utils/pnpm-normalizer';
+import { isPnpmLockfileV13, normalizePnpmLockfileV13 } from './utils/pnpm-v13';
 
 type PnpmManifestConfigField = keyof NonNullable<PackageJson['pnpm']>;
 export type PnpmLockfileConfigField = keyof Lockfile | 'catalogs';
@@ -393,6 +394,9 @@ function parsePnpmLockfileYaml(content: string): object | null {
     ) {
       warnUnusable('it does not parse to a YAML mapping');
       parsed = null;
+    }
+    if (isPnpmLockfileV13(parsed)) {
+      parsed = normalizePnpmLockfileV13(parsed);
     }
     lastParsedPnpmLockfile = { content, parsed: parsed as object | null };
   }

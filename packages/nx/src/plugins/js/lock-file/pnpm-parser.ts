@@ -48,6 +48,10 @@ import { existsSync, readFileSync, statSync } from 'node:fs';
 import { logger } from '../../../utils/logger';
 import { getWorkspacePackagesFromGraph } from '../utils/get-workspace-packages-from-graph';
 import { satisfies, validRange } from 'semver';
+import {
+  isPnpmLockfileV13,
+  selectPnpmLockfileV13ImporterReferences,
+} from './utils/pnpm-v13';
 
 // The dep types walked when pulling a copied module's own workspace deps into
 // the pruned lockfile: production sections only, since a dependency's
@@ -85,9 +89,9 @@ export function getPnpmLockfileNodes(
   installedLocalPathNodes: Record<string, Record<string, string>>;
 } {
   const data = parsePnpmLockFile(lockFileContent, lockFileHash);
-  if (+data.lockfileVersion.toString() >= 10) {
+  if (+data.lockfileVersion.toString() >= 10 && !isPnpmLockfileV13(data)) {
     console.warn(
-      'Nx was tested only with pnpm lockfile version 5-9. If you encounter any issues, please report them and downgrade to older version of pnpm.'
+      'Nx was tested only with pnpm lockfile versions 5-9 and 13. If you encounter any issues, please report them and downgrade to an older version of pnpm.'
     );
   }
   const isV5 = isV5Syntax(data);
@@ -101,9 +105,9 @@ export function getPnpmLockfileDependencies(
   keyMap: Map<string, Set<ProjectGraphExternalNode>>
 ) {
   const data = parsePnpmLockFile(lockFileContent, lockFileHash);
-  if (+data.lockfileVersion.toString() >= 10) {
+  if (+data.lockfileVersion.toString() >= 10 && !isPnpmLockfileV13(data)) {
     console.warn(
-      'Nx was tested only with pnpm lockfile version 5-9. If you encounter any issues, please report them and downgrade to older version of pnpm.'
+      'Nx was tested only with pnpm lockfile versions 5-9 and 13. If you encounter any issues, please report them and downgrade to an older version of pnpm.'
     );
   }
   const isV5 = isV5Syntax(data);
@@ -820,6 +824,12 @@ export function stringifyPnpmLockfile(
       workspaceRoot,
       projectRoot
     );
+  if (isPnpmLockfileV13(data)) {
+    // The graph coalesces a package's peer variants into one external node.
+    // Keep the variant linked by the source importer when choosing the new
+    // standalone root, rather than the first key in the package index.
+    selectPnpmLockfileV13ImporterReferences(data, rootSnapshot);
+  }
   const snapshots = mapSnapshots(
     packages,
     packageIndex,

@@ -20,6 +20,11 @@ import { existsSync, readFileSync } from 'node:fs';
 import { valid } from 'semver';
 import { workspaceRoot } from '../../../../utils/workspace-root';
 import { hashObject } from '../../../../hasher/file-hasher';
+import {
+  isPnpmLockfileV13,
+  normalizePnpmLockfileV13,
+  stringifyPnpmLockfileV13,
+} from './pnpm-v13';
 
 export function isV5Syntax(data: {
   lockfileVersion: number | string;
@@ -59,7 +64,10 @@ export function assertPnpmModulesManifest() {
  */
 export function parseAndNormalizePnpmLockfile(content: string): Lockfile {
   const { load } = require('@zkochan/js-yaml');
-  return convertToLockfileObject(load(extractMainLockfileDocument(content)));
+  const data = load(extractMainLockfileDocument(content));
+  return isPnpmLockfileV13(data)
+    ? normalizePnpmLockfileV13(data)
+    : convertToLockfileObject(data);
 }
 
 // https://github.com/pnpm/pnpm/blob/main/lockfile/fs/src/yamlDocuments.ts
@@ -137,6 +145,9 @@ const LOCKFILE_YAML_PRE9_FORMAT = {
 export function stringifyToPnpmYaml(lockfile: Lockfile): string {
   const { dump } = require('@zkochan/js-yaml');
   const lockfileVersion = +lockfile.lockfileVersion;
+  if (isPnpmLockfileV13(lockfile)) {
+    return dump(stringifyPnpmLockfileV13(lockfile), LOCKFILE_YAML_FORMAT);
+  }
   if (lockfileVersion >= 9) {
     const adaptedLockfile = convertToLockfileFile(lockfile, {
       forceSharedFormat: true,
