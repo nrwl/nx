@@ -96,7 +96,9 @@ export type TypescriptAst = Pick<
   | 'createSourceFile'
   | 'forEachChild'
   | 'getJSDocTags'
+  | 'getLeadingCommentRanges'
   | 'getModifiers'
+  | 'getTrailingCommentRanges'
   | 'LanguageVariant'
   | 'ScriptKind'
   | 'ScriptTarget'
@@ -623,6 +625,8 @@ function createApiAst(backend: ApiTypescriptBackend): TypescriptAst {
     },
     factory,
     getJSDocTags: ast.getJSDocTags,
+    getLeadingCommentRanges: ast.getLeadingCommentRanges,
+    getTrailingCommentRanges: ast.getTrailingCommentRanges,
     LanguageVariant: ast.LanguageVariant,
     NodeFlags,
     ScriptKind,
