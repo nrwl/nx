@@ -20,6 +20,7 @@ import { daemonClient } from '../daemon/client/client';
 import { RunningTask } from './running-tasks/running-task';
 import { SharedRunningTask } from './running-tasks/shared-running-task';
 import { TaskResultsLifeCycle } from './life-cycles/task-results-life-cycle';
+import { removeTasksFromTaskGraph } from './utils';
 
 async function createOrchestrator(
   tasks: Task[],
@@ -50,23 +51,25 @@ async function createOrchestrator(
 
   const { runnerOptions: options } = getRunner({}, nxJson);
 
-  const dependencies = keepDependencies
-    ? dependenciesBetween(tasks, fullTaskGraph)
-    : Object.fromEntries(tasks.map((task) => [task.id, []]));
-  const taskGraph: TaskGraph = {
-    roots: tasks
-      .filter((task) => dependencies[task.id].length === 0)
-      .map((task) => task.id),
-    tasks: tasks.reduce((acc, task) => {
-      acc[task.id] = task;
-      return acc;
-    }, {} as any),
-    dependencies,
-    continuousDependencies: tasks.reduce((acc, task) => {
-      acc[task.id] = [];
-      return acc;
-    }, {} as any),
-  };
+  const tasksById = Object.fromEntries(tasks.map((task) => [task.id, task]));
+  const withoutDependencies = () =>
+    Object.fromEntries(tasks.map((task) => [task.id, []]));
+  // A dependency outside the call has already completed, so only the edges
+  // between the call's tasks stay. The caller reads hashes off its own tasks.
+  const taskGraph: TaskGraph = keepDependencies
+    ? {
+        ...removeTasksFromTaskGraph(
+          fullTaskGraph,
+          Object.keys(fullTaskGraph.tasks).filter((id) => !(id in tasksById))
+        ),
+        tasks: tasksById,
+      }
+    : {
+        roots: tasks.map((task) => task.id),
+        tasks: tasksById,
+        dependencies: withoutDependencies(),
+        continuousDependencies: withoutDependencies(),
+      };
 
   const hasher = createTaskHasher(
     projectGraph,
@@ -78,7 +81,7 @@ async function createOrchestrator(
   // A task that reads the outputs of a task in the same call hashes after that
   // task has run. Tasks that do not depend on each other hash as before.
   const hashingDeferredTaskIds = tasks.some(
-    (task) => dependencies[task.id].length > 0
+    (task) => taskGraph.dependencies[task.id].length > 0
   )
     ? await hashTasksThatDoNotDependOnOutputsOfOtherTasks(
         hasher,
@@ -115,23 +118,6 @@ async function createOrchestrator(
     nxArgs.resolvedOutputStyle ?? 'static-failures-only',
     fullTaskGraph,
     hashingDeferredTaskIds
-  );
-}
-
-// An edge stays when both of its tasks are in the call. A dependency outside
-// the call has already completed.
-function dependenciesBetween(
-  tasks: Task[],
-  fullTaskGraph: TaskGraph
-): TaskGraph['dependencies'] {
-  const ids = new Set(tasks.map((task) => task.id));
-  return Object.fromEntries(
-    tasks.map((task) => [
-      task.id,
-      (fullTaskGraph.dependencies[task.id] ?? []).filter((edge) =>
-        ids.has(edge.id)
-      ),
-    ])
   );
 }
 
