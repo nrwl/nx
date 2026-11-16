@@ -4,7 +4,7 @@
 import { execSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
-import { tmpdir } from 'node:os';
+import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -50,7 +50,7 @@ if (process.env.NX_E2E_RUN_E2E !== 'true') {
   const installArgs =
     process.env.PLAYWRIGHT_INSTALL_ARGS || '--with-deps --only-shell';
   const lock = new FileLock(
-    join(tmpdir(), 'nx-e2e-locks', 'playwright-install.lock')
+    join(homedir(), '.cache', 'nx-e2e-locks', 'playwright-install.lock')
   );
   if (!lock.tryLock()) {
     console.log('Waiting for another Playwright installation...');

@@ -1,19 +1,20 @@
 import { execSync } from 'node:child_process';
-import { tmpdir } from 'os';
+import { homedir } from 'os';
 import { join } from 'path';
 import { FileLock } from 'nx/src/native';
 import { tmpProjPath } from './create-project-utils';
 import { e2eConsoleLogger } from './log-utils';
 import { isVerbose } from './get-env-info';
 
-// Locks that keep `npx playwright install` runs on the same machine from
-// overlapping. With `--with-deps`, overlapping runs make `apt` fail on Linux.
-const LOCK_DIR = join(tmpdir(), 'nx-e2e-locks');
+// Locks that keep one user's `npx playwright install` runs from overlapping.
+// With `--with-deps`, overlapping runs make `apt` fail on Linux. They live in
+// the home directory so another user can't block or hold them.
+const LOCK_DIR = join(homedir(), '.cache', 'nx-e2e-locks');
 // scripts/playwright-install-e2e.mjs takes the same lock.
 const PLAYWRIGHT_LOCK_FILE = join(LOCK_DIR, 'playwright-install.lock');
-// Cypress needs the same treatment: it unzips into one cache directory shared by
-// everything on the machine, and a second install clears that directory while the
-// first is still unzipping into it.
+// Cypress needs the same treatment: it unzips into one cache directory per user,
+// and a second install clears that directory while the first is still unzipping
+// into it.
 const CYPRESS_LOCK_FILE = join(LOCK_DIR, 'cypress-install.lock');
 
 /**
@@ -43,7 +44,7 @@ export async function ensureCypressInstallation() {
     return;
   }
 
-  // Only one process on the machine may unzip into the Cypress cache at a time,
+  // Only one process may unzip into the user's Cypress cache at a time,
   // for the same reason Playwright installs are serialized below.
   withInstallLock(CYPRESS_LOCK_FILE, 'Cypress', () => {
     try {
