@@ -14,7 +14,7 @@ const REPO_PLAYWRIGHT_IMPORT =
 
 /**
  * Makes each e2e spec that runs Playwright depend on the install for the
- * Playwright version it uses, so no install runs inside a test's timeout.
+ * Playwright version it uses.
  * nx.json's targetDefaults keep these `dependsOn` entries only because their
  * `dependsOn` for these targets starts with `'...'`.
  */
