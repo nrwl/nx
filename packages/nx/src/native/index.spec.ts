@@ -3,6 +3,7 @@ import { createHash } from 'node:crypto';
 import {
   copyFileSync,
   chmodSync,
+  existsSync,
   lstatSync,
   mkdirSync,
   mkdtempSync,
@@ -112,6 +113,7 @@ describe('native loader', () => {
 
   it.each([
     ['remove-cache', 'stat'],
+    ['remove-cache', 'realpath'],
     ['remove-cache', 'dlopen'],
     ['restore-cache', 'dlopen'],
     ['corrupt-cache', 'dlopen'],
@@ -120,6 +122,35 @@ describe('native loader', () => {
     expect(result.status, result.stderr).toBe(0);
     expect(result.stdout.trim()).toBe('loaded');
     expect(result.stderr).toBe('');
+  });
+
+  it.each([
+    ['once', 'remove-cache', /^$/, 1],
+    [
+      'before every copy',
+      'remove-cache-always',
+      /^Warning: Failed to copy native module to cache after 3 attempts \(ENOENT\)\./,
+      0,
+    ],
+  ] as const)(
+    'retries the copy when the cache dir is removed %s',
+    (_, change, warning, cachedFiles) => {
+      const result = loadWithCacheChange('copy', change);
+      expect(result.status, result.stderr).toBe(0);
+      expect(result.stdout.trim()).toBe('loaded');
+      expect(result.stderr).toMatch(warning);
+      expect(
+        existsSync(result.cache) ? readdirSync(result.cache) : []
+      ).toHaveLength(cachedFiles);
+    }
+  );
+
+  it('loads the original binding when the removed cache dir comes back untrusted', () => {
+    const result = loadWithCacheChange('copy', 'plant-cache');
+    expect(result.status, result.stderr).toBe(0);
+    expect(result.stdout.trim()).toBe('loaded');
+    expect(result.stderr).toBe('');
+    expect(readdirSync(result.cache)).toEqual([]);
   });
 
   it.each([
@@ -157,7 +188,19 @@ describe('native loader', () => {
     mkdirSync(cache);
     writeFileSync(
       join(dir, 'native', 'native-file-cache-location.js'),
-      `module.exports = { ensureSecureNativeFileCacheLocation: () => ${JSON.stringify(cache)} };`
+      // Like the real helper, it recreates a removed directory, and refuses one
+      // that someone else recreated first.
+      `const { mkdirSync } = require('node:fs');
+module.exports = {
+  ensureSecureNativeFileCacheLocation: () => {
+    if (globalThis.plantCache) {
+      mkdirSync(${JSON.stringify(cache)});
+      return null;
+    }
+    mkdirSync(${JSON.stringify(cache)}, { recursive: true });
+    return ${JSON.stringify(cache)};
+  },
+};`
     );
     writeFileSync(
       join(dir, 'native', 'native-bindings.js'),
@@ -182,13 +225,15 @@ const phase = ${JSON.stringify(phase)};
 const change = ${JSON.stringify(change)};
 let changed = false;
 const changeCache = (file) => {
-  if (changed || !file.startsWith(cache + sep)) return;
+  if ((changed && change !== 'remove-cache-always') || !file.startsWith(cache + sep)) return;
   changed = true;
   if (change === 'corrupt-cache') {
     fs.writeFileSync(file, 'invalid native binding');
   } else {
     fs.rmSync(cache, { recursive: true });
-    if (change === 'remove-source') {
+    if (change === 'plant-cache') {
+      globalThis.plantCache = true;
+    } else if (change === 'remove-source') {
       fs.unlinkSync(source);
     } else if (change === 'corrupt-source') {
       fs.writeFileSync(source, 'invalid native binding');
@@ -203,6 +248,16 @@ for (const name of ['statSync', 'lstatSync']) {
     return result;
   };
 }
+const realpathSync = fs.realpathSync;
+fs.realpathSync = Object.assign(function(file, ...args) {
+  if (phase === 'realpath') changeCache(String(file));
+  return realpathSync.call(this, file, ...args);
+}, { native: realpathSync.native });
+const copyFileSync = fs.copyFileSync;
+fs.copyFileSync = function(from, to, ...args) {
+  if (phase === 'copy') changeCache(String(to));
+  return copyFileSync.call(this, from, to, ...args);
+};
 const dlopen = process.dlopen;
 process.dlopen = function(module, file, ...args) {
   if (phase === 'dlopen') changeCache(file);
@@ -230,6 +285,7 @@ try {
     return {
       ...spawnSync(process.execPath, [runner], { encoding: 'utf8', env }),
       source,
+      cache,
     };
   }
 });
