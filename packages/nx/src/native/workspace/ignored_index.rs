@@ -564,8 +564,6 @@ impl IgnoredIndex {
 /// owns the watch.
 pub(crate) type CatchUp = Arc<dyn Fn() + Send + Sync>;
 
-/// The hasher's handle on an index: lists only after catching up with the
-/// watch behind it.
 #[napi]
 pub struct IgnoredIndexReader {
     index: Arc<IgnoredIndex>,
@@ -587,31 +585,20 @@ impl IgnoredIndexReader {
         &self.index
     }
 
-    /// Applies what the watch delivered, for a caller about to read `index`
-    /// many times in a row. See `files_under`.
+    /// Applies what the watch delivered, so the reads of `index` that follow
+    /// never predate a reported write. It locks the files and may hash on the
+    /// rayon pool, so call it before a parallel section, never from a pool job.
     pub(crate) fn catch_up(&self) {
+        debug_assert!(
+            rayon::current_thread_index().is_none(),
+            "catching up from a rayon pool job can deadlock"
+        );
         (self.catch_up)();
     }
 
     /// See `IgnoredIndex::track`.
     pub(crate) fn track(&self, workspace_root: &Path, dir: &str) -> bool {
         self.index.track(workspace_root, dir)
-    }
-
-    /// The files under `dir` that `accept` admits, once the index has applied
-    /// what the watch delivered, so an answer never predates a reported write.
-    /// See `IgnoredIndex::files_under`.
-    pub(crate) fn files_under(
-        &self,
-        workspace_root: &Path,
-        dir: &str,
-        cached: bool,
-        accept: PathPredicate,
-        skip: &[String],
-    ) -> Option<Vec<String>> {
-        (self.catch_up)();
-        self.index
-            .files_under(workspace_root, dir, cached, accept, skip)
     }
 }
 
