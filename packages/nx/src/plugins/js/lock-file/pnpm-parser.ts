@@ -1384,9 +1384,8 @@ function mapRootSnapshot(
             graph.externalNodes[`npm:${packageName}`].data.version === version
               ? graph.externalNodes[`npm:${packageName}`]
               : findNodeMatchingVersion(graph, packageName, version));
-          // A file: local-path dependency records a path where a version would
-          // go, so the lookups above never match it; findLocalPathNode matches
-          // it on that path instead.
+          // findLocalPathNode matches a `file:` dependency that the lookups
+          // above miss, such as one relocated into the output
           if (!node && isLocalPathSpecifier(version)) {
             node = findLocalPathNode(graph, packageName, version);
           }

@@ -5249,7 +5249,7 @@ snapshots:
       );
     });
 
-    it('should create a node for an out-of-workspace link but not an in-workspace one', () => {
+    it('should create a node for an out-of-workspace link but not a link to a workspace package', () => {
       const { nodes } = getPnpmLockfileNodes(lockFile, '__linked_deps__');
 
       expect(nodes['npm:@scoped/linked-out']).toEqual({

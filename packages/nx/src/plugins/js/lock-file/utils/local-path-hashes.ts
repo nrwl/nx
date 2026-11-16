@@ -14,9 +14,9 @@ import { isContainedRelativePath, normalizePath } from '../../../../utils/path';
  *
  * A directory in the workspace hashes the files Nx's workspace index lists in
  * it, so files that git or `.nxignore` ignores and symbolic links don't count.
- * A missing source hashes like an empty directory, so a link to output that
- * isn't built yet keeps its hash once it is. A source outside the workspace
- * keeps its lockfile hash, as linked packages do elsewhere in Nx.
+ * A missing source hashes like an empty directory, so a link to ignored output
+ * that isn't built yet keeps its hash once it is. A source outside the
+ * workspace keeps its lockfile hash, as linked packages do elsewhere in Nx.
  */
 export async function foldLocalPathHashes(
   nodes: Record<string, ProjectGraphExternalNode>,
