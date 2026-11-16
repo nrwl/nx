@@ -20,7 +20,6 @@ export class DevServerReloads {
   readonly #emitted = new Set<string>();
   #devServer: DevServerInstance | undefined;
 
-  /** Taps the browser compiler. */
   apply(compiler: Compiler): void {
     const devServer = compiler.options.devServer;
     // The dev server turns both on unless they are set to false.
@@ -44,7 +43,6 @@ export class DevServerReloads {
       this.#emitted.add(file);
     });
     compiler.hooks.done.tap(PLUGIN_NAME, (stats) => {
-      // The hot client applies page changes, or reloads when it can't.
       const reload =
         this.#record(stats.compilation) && !stats.compilation.errors.length;
       const clients = this.#devServer?.webSocketServer?.clients;
