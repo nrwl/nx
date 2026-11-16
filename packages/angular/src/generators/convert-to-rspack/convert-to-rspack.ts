@@ -32,6 +32,7 @@ import { nxVersion } from '../../utils/versions';
 import { acknowledgeAngularBuildScripts } from '../utils/acknowledge-build-scripts';
 import { supportsSsrAllowedHosts, versions } from '../utils/version-utils';
 import { createConfig } from './lib/create-config';
+import { exportsAngularRequestHandler } from './lib/exports-angular-request-handler';
 import { getCustomWebpackConfig } from './lib/get-custom-webpack-config';
 import { mergeServerTsConfig } from './lib/merge-server-tsconfig';
 import { updateTsconfig } from './lib/update-tsconfig';
@@ -405,7 +406,6 @@ export async function convertToRspack(
         target.options.main,
         project.root
       );
-      createConfigOptions.ssr.serveFromDevServer = true;
       createConfigOptions.server = './src/main.server.ts';
       serverTsConfigPath = target.options?.tsConfig
         ? // each target can spell the same path differently
@@ -477,6 +477,18 @@ export async function convertToRspack(
       createConfigOptions.appShell = true;
       targetsToRemove.push(targetName);
     }
+  }
+
+  // The dev server never calls an app() export, so servers without Angular's
+  // reqHandler keep the separate server that runs their routes.
+  if (
+    createConfigOptions.ssr &&
+    exportsAngularRequestHandler(
+      tree,
+      joinPathFragments(project.root, createConfigOptions.ssr.entry)
+    )
+  ) {
+    createConfigOptions.ssr.serveFromDevServer = true;
   }
 
   if (createConfigOptions.ssr && supportsSsrAllowedHosts(tree)) {
