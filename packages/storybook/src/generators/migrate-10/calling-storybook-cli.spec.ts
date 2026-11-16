@@ -49,17 +49,23 @@ describe('callUpgrade', () => {
         storybook: '^9.0.0',
       },
     });
-    vi.mocked(execSync).mockImplementationOnce(() => {
-      writePackageJson({
-        devDependencies: {
-          nx: '22.7.12',
-          '@nx/js': '22.7.12',
-          '@nx/storybook': '^23.2.1',
-          storybook: '^10.0.0',
-        },
+    let declaredAtInstall: string | undefined;
+    vi.mocked(execSync)
+      .mockImplementationOnce(() => {
+        writePackageJson({
+          devDependencies: {
+            nx: '22.7.12',
+            '@nx/js': '22.7.12',
+            '@nx/storybook': '^23.2.1',
+            storybook: '^10.0.0',
+          },
+        });
+        return Buffer.from('');
+      })
+      .mockImplementationOnce(() => {
+        declaredAtInstall = readPackageJson().devDependencies['@nx/storybook'];
+        return Buffer.from('');
       });
-      return Buffer.from('');
-    });
 
     const result = callUpgrade({ autoAcceptAllPrompts: true });
 
@@ -75,6 +81,7 @@ describe('callUpgrade', () => {
       'npm install',
       expect.objectContaining({ cwd: workspace })
     );
+    expect(declaredAtInstall).toBe('22.7.12');
   });
 
   it('restores and reinstalls @nx versions even when the storybook CLI fails', () => {
