@@ -11,8 +11,9 @@ const PLUGIN_NAME = 'DevServerReloads';
 /**
  * Sends the dev server's `static-changed` message, which makes its client
  * reload the page, for the browser outputs its hot client leaves alone:
- * documents, copied files and web workers. Without hot, the client reloads by
- * itself whenever the compilation hash changes, which every output change does.
+ * documents, copied files, web workers and the files that chunks load, such as
+ * images in styles. Without hot, the client reloads by itself whenever the
+ * compilation hash changes, which every output change does.
  */
 export class DevServerReloads {
   #outputs: Map<string, string> | undefined;
@@ -85,9 +86,10 @@ export class DevServerReloads {
 }
 
 /**
- * Splits the files of the page's runtimes into the ones the hot client
+ * Splits the chunk files of the page's runtimes into the ones the hot client
  * updates and the runtime chunks, which change with the compilation hash on
- * every rebuild. Files of other runtimes (web workers) are in neither set.
+ * every rebuild. Files of other runtimes (web workers) and the files that
+ * chunks load (auxiliary files) are in neither set.
  */
 function classifyBrowserFiles(compilation: Compilation): {
   page: Set<string>;
@@ -111,7 +113,6 @@ function classifyBrowserFiles(compilation: Compilation): {
         ? runtime
         : page;
     chunk.files.forEach((file) => files.add(file));
-    chunk.auxiliaryFiles.forEach((file) => files.add(file));
   }
   return { page, runtime };
 }

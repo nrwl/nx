@@ -1,5 +1,12 @@
 import { rspack, sources, type Compiler, type DevServer } from '@rspack/core';
-import { mkdtemp, readFile, rm, utimes, writeFile } from 'node:fs/promises';
+import {
+  mkdtemp,
+  readFile,
+  realpath,
+  rm,
+  utimes,
+  writeFile,
+} from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -13,13 +20,20 @@ afterEach(async () => {
   }
 });
 
+const page = (version: string) =>
+  `console.log('PAGE-${version}', new URL('./image.svg', import.meta.url));\n`;
+
 async function startHarness(devServer: DevServer) {
-  const dir = await mkdtemp(join(tmpdir(), 'ngrs-dev-server-reloads-'));
-  await writeFile(join(dir, 'browser.js'), `console.log('PAGE-v1');\n`);
+  // rspack reports resolved paths, and the temp dir is a symlink on macOS.
+  const dir = await realpath(
+    await mkdtemp(join(tmpdir(), 'ngrs-dev-server-reloads-'))
+  );
+  await writeFile(join(dir, 'browser.js'), page('v1'));
   await writeFile(join(dir, 'document.html'), '<p>v1</p>');
+  await writeFile(join(dir, 'image.svg'), '<svg>v1</svg>');
   // Files newer than the watch start rebuild once more at startup.
   const past = new Date(Date.now() - 60_000);
-  for (const file of ['browser.js', 'document.html']) {
+  for (const file of ['browser.js', 'document.html', 'image.svg']) {
     await utimes(join(dir, file), past, past);
   }
 
@@ -29,7 +43,8 @@ async function startHarness(devServer: DevServer) {
     devtool: false,
     target: 'web',
     entry: './browser.js',
-    output: { path: join(dir, 'dist') },
+    // Unhashed, as Angular names the resources that styles reference.
+    output: { path: join(dir, 'dist'), assetModuleFilename: '[name][ext]' },
     devServer,
     watchOptions: { aggregateTimeout: 5 },
     plugins: [
@@ -112,7 +127,8 @@ async function startHarness(devServer: DevServer) {
 describe('DevServerReloads', () => {
   it.each([
     ['a document edit', 'document.html', '<p>v2</p>', {}, 1],
-    ['a page edit', 'browser.js', `console.log('PAGE-v2');\n`, {}, 0],
+    ['a page edit', 'browser.js', page('v2'), {}, 0],
+    ['an edit to a file the page loads', 'image.svg', '<svg>v2</svg>', {}, 1],
     // The client reloads on the hash change by itself.
     [
       'a document edit with hot off',
