@@ -6,6 +6,7 @@ import {
   symlinkSync,
   writeFileSync,
 } from 'node:fs';
+import Module from 'node:module';
 import { dirname, join } from 'node:path';
 import type { ProjectGraphExternalNode } from '../../config/project-graph';
 import { linkedProjectBunLock } from './lock-file/__fixtures__/bun/linked-project.bun.lock';
@@ -95,9 +96,12 @@ function writeWorkspace(rootDevDependencies: Record<string, string>) {
   }
 }
 
-// A fresh module registry stands in for the next graph computation's process.
+// A fresh module registry and an empty Node resolution cache stand in for the
+// next graph computation's process.
 async function loadPluginInNewProcess() {
   vi.resetModules();
+  // `_pathCache` is an internal Node API not exposed in @types/node.
+  (Module as any)._pathCache = Object.create(null);
   return await import('./index');
 }
 
