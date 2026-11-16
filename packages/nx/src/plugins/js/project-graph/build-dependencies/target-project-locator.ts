@@ -990,6 +990,10 @@ function resolveDanglingLink(path: string): string | undefined {
         if (existsSync(link)) {
           return join(realpathSync(link), relative(link, target));
         }
+        // A missing Windows drive or share is its own parent
+        if (dirname(link) === link) {
+          return undefined;
+        }
         link = dirname(link);
       }
     }
