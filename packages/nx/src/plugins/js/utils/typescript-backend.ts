@@ -1,6 +1,9 @@
 import { dirname } from 'path';
 import type * as ts from 'typescript';
-import { getNxRequirePaths } from '../../../utils/installation-directory';
+import {
+  getNxRequirePaths,
+  resolveInstalledPackage,
+} from '../../../utils/installation-directory';
 import { workspaceRoot } from '../../../utils/workspace-root';
 
 /** @ts-ignore resolves only when `typescript` is >= 7.1 */
@@ -84,6 +87,7 @@ let activeFileSystem: ActiveFileSystem | undefined;
 /**
  * Loads the workspace's `typescript`, searching the Nx installation, the
  * workspace root and this nx installation, in that order.
+ * Only `node_modules` inside the workspace or an nx installation count.
  * TypeScript < 7 loads the classic API, >= 7.1 the `typescript/sync` API, and
  * 7.0, which ships no API, throws a {@link TypescriptSetupError}. A missing
  * install throws the module resolution error.
@@ -93,9 +97,10 @@ export function getTypescriptBackend(): TypescriptBackend {
   const lookupKey = lookupPaths.join('\0');
   let packageJsonPath = packageJsonPathByLookup.get(lookupKey);
   if (!packageJsonPath) {
-    packageJsonPath = require.resolve('typescript/package.json', {
-      paths: lookupPaths,
-    });
+    packageJsonPath = resolveInstalledPackage(
+      'typescript/package.json',
+      lookupPaths
+    );
     packageJsonPathByLookup.set(lookupKey, packageJsonPath);
   }
 
@@ -284,19 +289,19 @@ function loadBackend(
   }
 
   const sync: TypescriptApiModule = require(
-    require.resolve('typescript/sync', { paths: lookupPaths })
+    resolveInstalledPackage('typescript/sync', lookupPaths)
   );
   const fs: TypescriptApiFsModule = require(
-    require.resolve('typescript/fs', { paths: lookupPaths })
+    resolveInstalledPackage('typescript/fs', lookupPaths)
   );
   const ast: TypescriptAstModule = require(
-    require.resolve('typescript/ast', { paths: lookupPaths })
+    resolveInstalledPackage('typescript/ast', lookupPaths)
   );
   const astGuards: TypescriptAstGuardsModule = require(
-    require.resolve('typescript/ast/is', { paths: lookupPaths })
+    resolveInstalledPackage('typescript/ast/is', lookupPaths)
   );
   const factory: TypescriptAstFactoryModule = require(
-    require.resolve('typescript/ast/factory', { paths: lookupPaths })
+    resolveInstalledPackage('typescript/ast/factory', lookupPaths)
   );
   if (
     typeof sync?.API !== 'function' ||
