@@ -33,7 +33,9 @@ export const workspaceNamesakeBunLock = `{
 
     "foo": ["foo@workspace:libs/foo"],
 
-    "foo": ["foo@file:vendor/foo", {}],
+    "foo": ["foo@file:vendor/foo", { "dependencies": { "bar": "file:../bar" } }],
+
+    "foo/bar": ["bar@file:vendor/bar", {}],
   }
 }
 `;

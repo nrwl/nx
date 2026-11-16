@@ -2305,6 +2305,12 @@ describe('Bun Parser', () => {
           'npm:holder@file:vendor/holder -> npm:util@file:vendor/util',
         ],
       },
+      {
+        scenario: 'a root vendored package named like a workspace package',
+        lockFile: workspaceNamesakeBunLock,
+        hash: 'workspace-namesake-hash',
+        expected: ['npm:foo@file:vendor/foo -> npm:bar@file:vendor/bar'],
+      },
     ])(
       'should create dependencies of vendored packages ($scenario)',
       ({ lockFile, hash, expected }) => {

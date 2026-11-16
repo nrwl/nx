@@ -1036,12 +1036,13 @@ function processPackageForDependencies(
   ctx: CreateDependenciesContext,
   workspacePackages: Set<string>
 ): RawProjectGraphDependency[] {
-  // A local package is nested under the workspace that declares it, and is
-  // still its own node.
+  // A local package is its own node, also when Bun keys it by a workspace
+  // package's name or nests it under the workspace that declares it.
   const isLocalPackage = index.localPathSources.has(packageKey);
   if (
-    index.workspaceNames.has(packageKey) ||
-    (isNestedPackageKey(packageKey, index) && !isLocalPackage)
+    (index.workspaceNames.has(packageKey) ||
+      isNestedPackageKey(packageKey, index)) &&
+    !isLocalPackage
   ) {
     return [];
   }
@@ -1294,7 +1295,6 @@ function createHoistedNodes(
   nodes: Record<string, ProjectGraphExternalNode>
 ): void {
   for (const [packageName, versions] of packageVersions.entries()) {
-    // The workspace package of that name is the one installed at the root
     if (index.workspaceNames.has(packageName)) {
       continue;
     }
