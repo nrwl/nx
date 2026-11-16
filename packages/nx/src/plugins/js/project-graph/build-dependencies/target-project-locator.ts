@@ -354,9 +354,20 @@ export class TargetProjectLocator {
       );
       // The external package.json path might be not be resolvable, e.g. if a reference has been added to a project package.json, but the install command has not been run yet.
       if (!externalPackageJson) {
+        // A local package whose target is missing, such as a `link:` to
+        // output that isn't built yet, keeps the node the lockfile records
+        const installedNodeName = this.packageNamesWithLocalPathNodes.has(
+          packageName
+        )
+          ? this.findInstalledLocalPathNpmProjectFromDir(
+              packageName,
+              fullDirPath
+            )
+          : null;
         // Try and fall back to resolving an external node from the graph by name
         const externalNode = this.npmProjects[`npm:${packageName}`];
-        const externalNodeName = externalNode?.name || null;
+        const externalNodeName =
+          installedNodeName ?? (externalNode?.name || null);
         npmResolutionCache.set(npmImportForProject, externalNodeName);
         return externalNodeName;
       }
