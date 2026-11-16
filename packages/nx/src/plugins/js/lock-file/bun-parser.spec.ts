@@ -22,8 +22,10 @@ import {
 } from './__fixtures__/bun/vendored-packages.bun.lock';
 import { versionResolutionLockFile } from './__fixtures__/bun/version-resolution.bun.lock';
 import { workspaceDependenciesBunLock } from './__fixtures__/bun/workspace-dependencies.bun.lock';
+import { workspaceNamesakeBunLock } from './__fixtures__/bun/workspace-namesake.bun.lock';
 import {
   clearCache,
+  getBunInstalledLocalPathNodes,
   getBunTextLockfileDependencies,
   getBunTextLockfileNodes,
 } from './bun-parser';
@@ -574,6 +576,21 @@ describe('Bun Parser', () => {
           (node) => node.data.packageName === '@demo/lib'
         )
       ).toEqual([]);
+    });
+
+    it('should not record the root local copy that shares the key of the package a workspace: dependency installs', () => {
+      const nodes = getBunTextLockfileNodes(
+        workspaceNamesakeBunLock,
+        BASIC_LOCK_FILE_HASH
+      );
+
+      expect(
+        getBunInstalledLocalPathNodes(
+          workspaceNamesakeBunLock,
+          BASIC_LOCK_FILE_HASH,
+          nodes
+        )
+      ).toEqual({ '.': { foo: 'npm:foo@file:vendor/foo' } });
     });
 
     it('should handle tarball dependencies', () => {

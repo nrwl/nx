@@ -792,6 +792,16 @@ export function getBunInstalledLocalPathNodes(
         if (key === undefined || !index.localPathSources.has(key)) {
           continue;
         }
+        // Bun 1.3 can write the root's local copy under the key of the
+        // workspace package a `workspace:` spec installs. An override of that
+        // spec gets a key in the workspace's own scope.
+        if (
+          scope.length &&
+          key === depName &&
+          workspace[depType][depName].startsWith('workspace:')
+        ) {
+          continue;
+        }
         const { name, version } = getCachedSpecInfo(packages[key][0] as string);
         const node = nodes[`npm:${name}@${version}`];
         if (name === depName && node) {
