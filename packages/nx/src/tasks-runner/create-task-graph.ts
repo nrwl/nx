@@ -504,6 +504,19 @@ export class ProcessTasks {
     }
   }
 
+  /** For each task in the graph, the CLI overrides it reached but its executor does not accept. */
+  unsentOverrides(): Record<string, string[]> {
+    const unsent: Record<string, string[]> = {};
+    for (const [name, recipients] of this.overrideRecipients) {
+      for (const { taskId, accepted } of recipients) {
+        if (!accepted && this.tasks[taskId]) {
+          (unsent[taskId] ??= []).push(name);
+        }
+      }
+    }
+    return unsent;
+  }
+
   private assertEveryOverrideAccepted() {
     const rejected: string[] = [];
     for (const [name, recipients] of this.overrideRecipients) {
@@ -618,6 +631,28 @@ export function createTaskGraphWithDependencyOverrides(
     excludeTaskDependencies
   );
   return { taskGraph, dependencyOverrides: p.dependencyOverrides };
+}
+
+/** `createTaskGraph`, plus the overrides each task did not get. */
+export function createTaskGraphWithUnsentOverrides(
+  projectGraph: ProjectGraph,
+  extraTargetDependencies: TargetDependencies,
+  projectNames: string[],
+  targets: string[],
+  configuration: string | undefined,
+  overrides: Record<string, unknown>,
+  excludeTaskDependencies: boolean = false
+): { taskGraph: TaskGraph; unsentOverrides: Record<string, string[]> } {
+  const p = new ProcessTasks(extraTargetDependencies, projectGraph);
+  const taskGraph = buildTaskGraph(
+    p,
+    projectNames,
+    targets,
+    configuration,
+    overrides,
+    excludeTaskDependencies
+  );
+  return { taskGraph, unsentOverrides: p.unsentOverrides() };
 }
 
 /**

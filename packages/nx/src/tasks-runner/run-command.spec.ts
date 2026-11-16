@@ -1,5 +1,6 @@
 import {
   getRunner,
+  reportUnsentOverrides,
   selectTasksForProjects,
   setEnvVarsBasedOnArgs,
 } from './run-command';
@@ -11,6 +12,7 @@ const {
 } = require('../nx-cloud/nx-cloud-tasks-runner-shell');
 import { withEnvironmentVariables } from '../internal-testing-utils/with-environment';
 import { resolveInstalledPackage } from '../utils/installation-directory';
+import { output } from '../utils/output';
 
 vi.mock('../utils/installation-directory', async (importActual) => {
   const actual =
@@ -256,5 +258,48 @@ describe('selectTasksForProjects', () => {
       'app:test',
     ]);
     expect(selection.taskIds).toBeUndefined();
+  });
+});
+
+describe('reportUnsentOverrides', () => {
+  const taskGraph = {
+    tasks: { 'app:lint': {}, 'app:check': {} },
+  } as any;
+  const unsent = { 'app:check': ['fix', 'baseHref'], 'gone:check': ['fix'] };
+
+  let log: ReturnType<typeof vi.spyOn>;
+  beforeEach(() => {
+    log = vi.spyOn(output, 'logRawLine').mockImplementation(() => {});
+  });
+  afterEach(() => log.mockRestore());
+
+  it('prints one line per task in the graph with --verbose', () => {
+    withEnvironmentVariables({ NX_VERBOSE_LOGGING: undefined }, () =>
+      reportUnsentOverrides(unsent, taskGraph, { verbose: true } as NxArgs)
+    );
+    expect(log.mock.calls).toEqual([
+      ['--fix, --baseHref not sent to app:check (not in executor schema)'],
+    ]);
+  });
+
+  it('prints with NX_VERBOSE_LOGGING', () => {
+    withEnvironmentVariables({ NX_VERBOSE_LOGGING: 'true' }, () =>
+      reportUnsentOverrides(unsent, taskGraph, {} as NxArgs)
+    );
+    expect(log).toHaveBeenCalledTimes(1);
+  });
+
+  it('prints nothing without verbose', () => {
+    withEnvironmentVariables({ NX_VERBOSE_LOGGING: undefined }, () =>
+      reportUnsentOverrides(unsent, taskGraph, {} as NxArgs)
+    );
+    expect(log).not.toHaveBeenCalled();
+  });
+
+  it('prints nothing when every task got every override', () => {
+    withEnvironmentVariables({ NX_VERBOSE_LOGGING: undefined }, () =>
+      reportUnsentOverrides({}, taskGraph, { verbose: true } as NxArgs)
+    );
+    expect(log).not.toHaveBeenCalled();
   });
 });

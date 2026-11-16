@@ -10,6 +10,7 @@ import {
 import {
   createTaskGraph,
   createTaskGraphWithDependencyOverrides,
+  createTaskGraphWithUnsentOverrides,
   filterDummyTasks,
   getNonDummyDeps,
   filterTaskGraphToSelection,
@@ -5208,6 +5209,24 @@ describe('override routing', () => {
 
   const app = () =>
     graph({ app: { lint: tsk('test:fixer'), check: tsk('test:check') } });
+
+  it('lists, per task, the overrides its executor does not accept', () => {
+    const { unsentOverrides } = createTaskGraphWithUnsentOverrides(
+      graph({
+        app: {
+          lint: tsk('test:fixer'),
+          check: tsk('test:check'),
+          open: tsk('test:open'),
+        },
+      }),
+      {},
+      ['app'],
+      ['lint', 'check', 'open'],
+      undefined,
+      { fix: true, __overrides_unparsed__: ['--fix'] }
+    );
+    expect(unsentOverrides).toEqual({ 'app:check': ['fix'] });
+  });
 
   it('gives each task only the overrides its executor accepts', () => {
     const taskGraph = createTaskGraph(
