@@ -117,4 +117,28 @@ describe('hashTasksThatDoNotDependOnOutputsOfOtherTasks', () => {
       'app:build',
     ]);
   });
+
+  it('hashes and defers only the tasks it is given, read from the whole task graph', async () => {
+    const { projectGraph, taskGraph } = graph();
+    const hashTasksUpfront = vi.fn(async (tasks: { id: string }[]) => ({
+      'app:build': hashOf('app:build'),
+    }));
+    const deferred = await hashTasksThatDoNotDependOnOutputsOfOtherTasks(
+      { hashTasksUpfront } as unknown as TaskHasher,
+      projectGraph,
+      taskGraph,
+      nxJson,
+      null,
+      undefined,
+      [taskGraph.tasks['app:build'], taskGraph.tasks['app:e2e']]
+    );
+
+    expect(hashTasksUpfront.mock.calls[0][0].map((t) => t.id)).toEqual([
+      'app:build',
+    ]);
+    expect(hashTasksUpfront.mock.calls[0][1]).toBe(taskGraph);
+    expect(taskGraph.tasks['app:build'].hash).toBe('hash-app:build');
+    // app:test and app:custom are not this caller's to hash or defer
+    expect([...deferred]).toEqual(['app:e2e']);
+  });
 });

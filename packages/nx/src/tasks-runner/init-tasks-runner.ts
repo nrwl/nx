@@ -10,6 +10,10 @@ import { loadRootEnvFiles } from '../utils/dotenv';
 import { CompositeLifeCycle, LifeCycle, TaskResult } from './life-cycle';
 import { TaskOrchestrator } from './task-orchestrator';
 import { createTaskHasher } from '../hasher/create-task-hasher';
+import {
+  getTaskDetails,
+  hashTasksThatDoNotDependOnOutputsOfOtherTasks,
+} from '../hasher/hash-task';
 import type { UltracacheConfigurations } from '../native';
 import type { ProjectGraph } from '../config/project-graph';
 import { daemonClient } from '../daemon/client/client';
@@ -17,13 +21,15 @@ import { RunningTask } from './running-tasks/running-task';
 import { SharedRunningTask } from './running-tasks/shared-running-task';
 import { TaskResultsLifeCycle } from './life-cycles/task-results-life-cycle';
 
-function createOrchestrator(
+async function createOrchestrator(
   tasks: Task[],
   projectGraph: ProjectGraph,
   fullTaskGraph: TaskGraph,
   nxJson: NxJsonConfiguration,
   lifeCycle: LifeCycle,
-  ultracacheConfigurations: UltracacheConfigurations | undefined
+  ultracacheConfigurations: UltracacheConfigurations | undefined,
+  /** Keep the dependencies between `tasks`, so a batch runs and hashes them in order. */
+  keepDependencies = false
 ) {
   loadRootEnvFiles();
   fullTaskGraph = withEdgeObjects(fullTaskGraph);
@@ -44,16 +50,18 @@ function createOrchestrator(
 
   const { runnerOptions: options } = getRunner({}, nxJson);
 
+  const dependencies = keepDependencies
+    ? dependenciesBetween(tasks, fullTaskGraph)
+    : Object.fromEntries(tasks.map((task) => [task.id, []]));
   const taskGraph: TaskGraph = {
-    roots: tasks.map((task) => task.id),
+    roots: tasks
+      .filter((task) => dependencies[task.id].length === 0)
+      .map((task) => task.id),
     tasks: tasks.reduce((acc, task) => {
       acc[task.id] = task;
       return acc;
     }, {} as any),
-    dependencies: tasks.reduce((acc, task) => {
-      acc[task.id] = [];
-      return acc;
-    }, {} as any),
+    dependencies,
     continuousDependencies: tasks.reduce((acc, task) => {
       acc[task.id] = [];
       return acc;
@@ -66,6 +74,22 @@ function createOrchestrator(
     options,
     ultracacheConfigurations
   );
+
+  // A task that reads the outputs of a task in the same call hashes after that
+  // task has run. Tasks that do not depend on each other hash as before.
+  const hashingDeferredTaskIds = tasks.some(
+    (task) => dependencies[task.id].length > 0
+  )
+    ? await hashTasksThatDoNotDependOnOutputsOfOtherTasks(
+        hasher,
+        projectGraph,
+        fullTaskGraph,
+        nxJson,
+        getTaskDetails(),
+        ultracacheConfigurations,
+        tasks
+      )
+    : undefined;
 
   const nxArgs = {
     ...options,
@@ -89,7 +113,25 @@ function createOrchestrator(
     // `outputStyle` does not reach them; it merges under its own name.
     nxArgs.specifiedOutputStyle,
     nxArgs.resolvedOutputStyle ?? 'static-failures-only',
-    fullTaskGraph
+    fullTaskGraph,
+    hashingDeferredTaskIds
+  );
+}
+
+// An edge stays when both of its tasks are in the call. A dependency outside
+// the call has already completed.
+function dependenciesBetween(
+  tasks: Task[],
+  fullTaskGraph: TaskGraph
+): TaskGraph['dependencies'] {
+  const ids = new Set(tasks.map((task) => task.id));
+  return Object.fromEntries(
+    tasks.map((task) => [
+      task.id,
+      (fullTaskGraph.dependencies[task.id] ?? []).filter((edge) =>
+        ids.has(edge.id)
+      ),
+    ])
   );
 }
 
@@ -144,13 +186,16 @@ export async function runDiscreteTasks(
   /** The set to hash from, e.g. from `importUltracacheConfigurations`; omitted hashes natively. */
   ultracacheConfigurations?: UltracacheConfigurations
 ): Promise<Array<Promise<TaskResult[]>>> {
-  const orchestrator = createOrchestrator(
+  // Only a batch runs its tasks in dependency order. A task outside a batch
+  // starts now, so callers pass dependent tasks only when they batch together.
+  const orchestrator = await createOrchestrator(
     tasks,
     projectGraph,
     fullTaskGraph,
     nxJson,
     lifeCycle,
-    ultracacheConfigurations
+    ultracacheConfigurations,
+    true
   );
   const releaseProcessListeners = reserveProcessListeners(tasks);
   const batchResults: Array<Promise<TaskResult[]>> = [];
@@ -228,7 +273,7 @@ export async function runContinuousTasks(
   /** The set to hash from, e.g. from `importUltracacheConfigurations`; omitted hashes natively. */
   ultracacheConfigurations?: UltracacheConfigurations
 ) {
-  const orchestrator = createOrchestrator(
+  const orchestrator = await createOrchestrator(
     tasks,
     projectGraph,
     fullTaskGraph,
