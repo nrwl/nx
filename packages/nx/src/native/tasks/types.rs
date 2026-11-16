@@ -8,6 +8,7 @@ use napi::{
     bindgen_prelude::{ToNapiValue, check_status},
     sys,
 };
+use parking_lot::RwLock;
 
 /// A representation of the invocation of an Executor
 #[napi(object)]
@@ -263,6 +264,9 @@ pub struct InstructionPool {
     /// `HashInstruction::label` per id, rendered once like `keys`.
     labels: DashMap<u32, Arc<str>>,
     next_id: AtomicU32,
+    // Id-indexed `HashInstruction::lists_ignored_files`. Grows only when such an
+    // instruction is interned, so an id past the end does not list them.
+    lists_ignored_files: RwLock<Vec<bool>>,
 }
 
 impl InstructionPool {
@@ -284,6 +288,14 @@ impl InstructionPool {
                 self.items.insert(id, vacant.key().clone());
                 self.keys.insert(id, Arc::from(vacant.key().to_string()));
                 self.labels.insert(id, Arc::from(vacant.key().label()));
+                if vacant.key().lists_ignored_files() {
+                    // Before the id is published below, so whoever holds it sees the mark.
+                    let mut marks = self.lists_ignored_files.write();
+                    if marks.len() <= id as usize {
+                        marks.resize(id as usize + 1, false);
+                    }
+                    marks[id as usize] = true;
+                }
                 vacant.insert(id);
                 id
             }
@@ -337,6 +349,11 @@ impl InstructionPool {
     pub fn len(&self) -> usize {
         self.items.len()
     }
+
+    pub fn any_list_ignored_files(&self, mut ids: impl Iterator<Item = u32>) -> bool {
+        let marks = self.lists_ignored_files.read();
+        !marks.is_empty() && ids.any(|id| marks.get(id as usize).is_some_and(|&lists| lists))
+    }
 }
 
 /// Hash plans as pool-interned instruction ids, plus the pool that resolves
@@ -361,6 +378,26 @@ impl HashInstruction {
             globs,
             project_roots: Vec::new(),
             ultracache: false,
+        }
+    }
+
+    /// Whether hashing it lists directories through the ignored-file index,
+    /// which then has to catch up before the parallel section.
+    pub fn lists_ignored_files(&self) -> bool {
+        match self {
+            HashInstruction::IgnoredFileSet { .. } => true,
+            HashInstruction::WorkspaceFileSet(_)
+            | HashInstruction::Runtime(_)
+            | HashInstruction::Environment(_)
+            | HashInstruction::Cwd(_)
+            | HashInstruction::ProjectFileSet(_, _)
+            | HashInstruction::ProjectConfiguration(_)
+            | HashInstruction::TsConfiguration(_)
+            | HashInstruction::TaskOutput(_, _)
+            | HashInstruction::External(_)
+            | HashInstruction::AllExternalDependencies
+            | HashInstruction::JsonFileSet(_)
+            | HashInstruction::UltracacheConfiguration(_) => false,
         }
     }
 
