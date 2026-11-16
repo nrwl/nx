@@ -792,8 +792,8 @@ describe('generatePrunedDeployOutput for bun', () => {
         'utf-8'
       )
     ).toBe('IS_ODD_PATCH');
-    expect(existsSync(join(tempDir, 'dist/patches/kind-of@6.0.3.patch'))).toBe(
-      false
-    );
+    expect(
+      existsSync(join(tempDir, 'dist/patches/patches/kind-of@6.0.3.patch'))
+    ).toBe(false);
   });
 });
