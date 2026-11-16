@@ -237,6 +237,34 @@ describe('getTypescriptBackend', () => {
     fs.cleanup();
   });
 
+  // typescript-backend.ts caches lookups per module and reads the workspace root.
+  async function importBackendFor(workspaceRoot: string) {
+    vi.resetModules();
+    (await import('../../../utils/workspace-root')).setWorkspaceRoot(
+      workspaceRoot
+    );
+    return import('./typescript-backend');
+  }
+
+  it('should ignore a typescript installed above the workspace', async () => {
+    await fs.createFiles({
+      'workspace/nx.json': '{}',
+      'node_modules/typescript/package.json': JSON.stringify({
+        name: 'typescript',
+        version: '5.9.3',
+      }),
+      'node_modules/typescript/index.js':
+        'module.exports = { createSourceFile() {} };',
+    });
+    const { getTypescriptBackend } = await importBackendFor(
+      join(fs.tempDir, 'workspace')
+    );
+
+    expect(getTypescriptBackend().packageJsonPath).toBe(
+      require.resolve('typescript/package.json')
+    );
+  });
+
   it.each([
     ['7.0.2', 'api-unavailable'],
     ['next', 'unrecognized'],
@@ -255,7 +283,7 @@ describe('getTypescriptBackend', () => {
         'node_modules/typescript/lib/version.cjs': `module.exports = { version: '${version}' };`,
       });
       const { getTypescriptBackend, TypescriptSetupError } =
-        await import('./typescript-backend');
+        await importBackendFor(fs.tempDir);
 
       let error: unknown;
       try {
