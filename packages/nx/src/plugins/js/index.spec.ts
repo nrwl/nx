@@ -398,6 +398,50 @@ describe('nx/js/dependencies-and-lockfile', () => {
     }
   );
 
+  // apps/a reaches libs/x/dist through out, a link to libs/x that dangles
+  // until the build creates libs/x.
+  it('should depend on the project a link points to through another link, built or not', async () => {
+    write(
+      'package.json',
+      JSON.stringify({ name: 'rvws', workspaces: ['apps/*'] })
+    );
+    write('bun.lock', linkedProjectBunLock);
+    write(
+      'apps/a/package.json',
+      JSON.stringify({ dependencies: { x: 'link:../../libs/x/dist' } })
+    );
+    write('apps/a/src/index.ts', `import x from 'x';`);
+    mkdirSync(join(root, 'apps/a/node_modules'));
+    symlinkSync('../../../out/dist', join(root, 'apps/a/node_modules/x'));
+    symlinkSync('libs/x', join(root, 'out'));
+
+    for (const built of [false, true]) {
+      if (built) {
+        write(
+          'libs/x/dist/package.json',
+          JSON.stringify({ name: 'x', version: '1.0.0' })
+        );
+      }
+      const plugin = await loadPluginInNewProcess();
+
+      const dependencies = await createDependencies(
+        plugin,
+        await createExternalNodes(plugin, 'bun.lock'),
+        {
+          'apps/a': ['apps/a/package.json', 'apps/a/src/index.ts'],
+          'libs/x': built ? ['libs/x/dist/package.json'] : [],
+        }
+      );
+
+      expect(
+        dependencies
+          .filter(({ target }) => target === 'libs/x')
+          .map(({ sourceFile }) => sourceFile)
+          .sort()
+      ).toEqual(['apps/a/package.json', 'apps/a/src/index.ts']);
+    }
+  });
+
   it('should depend on the local copy npm nests under a project', async () => {
     write(
       'package.json',

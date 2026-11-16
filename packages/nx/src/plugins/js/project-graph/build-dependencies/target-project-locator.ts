@@ -974,19 +974,24 @@ export class TargetProjectLocator {
 // canonical form `realpathSync` gives once it does
 function resolveDanglingLink(path: string): string | undefined {
   try {
+    if (!lstatSync(path, { throwIfNoEntry: false })?.isSymbolicLink()) {
+      return undefined;
+    }
+    let link = path;
     let target = path;
     for (let hops = 0; hops < 40; hops++) {
-      if (!lstatSync(target, { throwIfNoEntry: false })?.isSymbolicLink()) {
-        if (target === path) {
-          return undefined;
+      target = join(
+        resolve(realpathSync(dirname(link)), readlinkSync(link)),
+        relative(link, target)
+      );
+      // The target can be missing because a link above it dangles
+      link = target;
+      while (!lstatSync(link, { throwIfNoEntry: false })?.isSymbolicLink()) {
+        if (existsSync(link)) {
+          return join(realpathSync(link), relative(link, target));
         }
-        let existing = target;
-        while (!existsSync(existing)) {
-          existing = dirname(existing);
-        }
-        return join(realpathSync(existing), relative(existing, target));
+        link = dirname(link);
       }
-      target = resolve(realpathSync(dirname(target)), readlinkSync(target));
     }
   } catch {}
   return undefined;
