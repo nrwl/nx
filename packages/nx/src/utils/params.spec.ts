@@ -2456,16 +2456,23 @@ describe('params', () => {
       ).toBe(true);
     });
 
-    it('accepts names that an anyOf or oneOf branch accepts', () => {
+    it('rejects inherited object properties', () => {
+      expect(schemaAcceptsOption('constructor', strict)).toBe(false);
+      expect(schemaAcceptsOption('to-string', strict)).toBe(false);
+    });
+
+    it('rejects names listed only in an anyOf or oneOf branch, as validation does', () => {
       const schema: Schema = {
         additionalProperties: false,
         properties: {},
         anyOf: [{ properties: { a: { type: 'string' } } }],
         oneOf: [{ properties: { b: { type: 'string' } } }],
       };
-      expect(schemaAcceptsOption('a', schema)).toBe(true);
-      expect(schemaAcceptsOption('b', schema)).toBe(true);
-      expect(schemaAcceptsOption('c', schema)).toBe(false);
+      expect(schemaAcceptsOption('a', schema)).toBe(false);
+      expect(schemaAcceptsOption('b', schema)).toBe(false);
+      expect(() => validateOptsAgainstSchema({ a: 'x' }, schema)).toThrow(
+        "'a' is not found in schema"
+      );
     });
   });
 });
