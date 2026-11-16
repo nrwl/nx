@@ -140,21 +140,23 @@ describe('@nx/react:provider', () => {
     expect(project.targets?.serve?.dependsOn).toBeUndefined();
   });
 
-  // Providers must serve cross-origin so a consumer on a
-  // different port can fetch mf-manifest.json + chunks without a CORS error.
-  it.each<[SupportedBundler, string, RegExp]>([
-    ['vite', 'vite.config.mts', /cors:\s*true/],
-    ['rsbuild', 'rsbuild.config.ts', /'Access-Control-Allow-Origin':\s*'\*'/],
-    ['rspack', 'rspack.config.ts', /'Access-Control-Allow-Origin':\s*'\*'/],
+  // A wildcard origin lets any website open in the browser read the
+  // provider's bundles and source maps while it serves.
+  it.each<[SupportedBundler, string]>([
+    ['vite', 'vite.config.mts'],
+    ['rsbuild', 'rsbuild.config.ts'],
+    ['rspack', 'rspack.config.ts'],
   ])(
-    'emits cross-origin headers for the %s provider',
-    async (bundler, configFile, pattern) => {
+    'does not write a wildcard CORS origin into the %s provider config',
+    async (bundler, configFile) => {
       await providerGenerator(tree, {
         directory: 'apps/shop',
         bundler,
       });
-      const config = tree.read(`apps/shop/${configFile}`, 'utf-8') ?? '';
-      expect(config).toMatch(pattern);
+      const config = tree.read(`apps/shop/${configFile}`, 'utf-8');
+      expect(config).not.toMatch(
+        /cors:\s*true|'Access-Control-Allow-Origin':\s*'\*'/
+      );
     }
   );
 
