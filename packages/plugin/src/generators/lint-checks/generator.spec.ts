@@ -1,4 +1,4 @@
-import 'nx/src/internal-testing-utils/mock-project-graph';
+import '@nx/devkit/internal-testing-utils/mock-project-graph';
 
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import {
@@ -16,8 +16,8 @@ import generator from './generator';
 import pluginGenerator from '../plugin/plugin';
 import generatorGenerator from '../generator/generator';
 import executorGenerator from '../executor/executor';
-
-import { PackageJson } from 'nx/src/utils/package-json';
+import { migrationGenerator } from '../migration/migration';
+import { PackageJson } from '@nx/devkit/internal';
 
 describe('lint-checks generator', () => {
   let tree: Tree;
@@ -207,5 +207,22 @@ describe('lint-checks generator', () => {
       'utf-8'
     );
     expect(eslintConfigContent).toContain('@nx/nx-plugin-checks');
+  });
+
+  it('should lint migrations.json when the lint target is inferred', async () => {
+    await setupTree(true);
+    expect(
+      readProjectConfiguration(tree, 'plugin').targets?.lint
+    ).toBeUndefined();
+    await generator(tree, { projectName: 'plugin' });
+
+    await migrationGenerator(tree, {
+      path: 'plugin/src/migrations/update-1.0.0/update-1.0.0',
+      packageVersion: '1.0.0',
+    });
+
+    expect(tree.read('plugin/eslint.config.mjs', 'utf-8')).toContain(
+      '**/migrations.json'
+    );
   });
 });

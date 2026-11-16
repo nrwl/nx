@@ -16,15 +16,16 @@ import {
   workspaceRoot,
   writeJson,
 } from '@nx/devkit';
-import type { LinterType } from '@nx/eslint';
 import { join, relative } from 'path';
 import {
   dedupe,
   findStorybookAndBuildTargetsAndCompiler,
+  storybookFilePatterns,
   storybookMajorVersion as getStorybookMajorVersion,
   TsConfig,
 } from '../../../utils/utilities';
 import { StorybookConfigureSchema } from '../schema';
+import { getStartStorybookReadyWhen } from '../../../utils/dev-server-ready-check';
 import { UiFramework } from '../../../utils/models';
 import { nxVersion } from '../../../utils/versions';
 import { findEslintFile, useFlatConfig } from '@nx/eslint/internal';
@@ -35,52 +36,6 @@ import {
 } from '@nx/js/internal';
 
 const DEFAULT_PORT = 4400;
-
-export function addStorybookTarget(
-  tree: Tree,
-  projectName: string,
-  uiFramework: UiFramework,
-  interactionTests: boolean
-) {
-  const projectConfig = readProjectConfiguration(tree, projectName);
-  projectConfig.targets['storybook'] = {
-    executor: '@nx/storybook:storybook',
-    options: {
-      port: DEFAULT_PORT,
-      configDir: `${projectConfig.root}/.storybook`,
-    },
-    configurations: {
-      ci: {
-        quiet: true,
-      },
-    },
-  };
-
-  projectConfig.targets['build-storybook'] = {
-    executor: '@nx/storybook:build',
-    outputs: ['{options.outputDir}'],
-    options: {
-      outputDir: joinPathFragments('dist/storybook', projectName),
-      configDir: `${projectConfig.root}/.storybook`,
-    },
-    configurations: {
-      ci: {
-        quiet: true,
-      },
-    },
-  };
-
-  if (interactionTests === true) {
-    projectConfig.targets['test-storybook'] = {
-      executor: 'nx:run-commands',
-      options: {
-        command: `test-storybook -c ${projectConfig.root}/.storybook --url=http://localhost:${DEFAULT_PORT}`,
-      },
-    };
-  }
-
-  updateProjectConfiguration(tree, projectName, projectConfig);
-}
 
 export function addAngularStorybookTarget(
   tree: Tree,
@@ -93,12 +48,12 @@ export function addAngularStorybookTarget(
   );
   projectConfig.targets['storybook'] = {
     executor: '@storybook/angular:start-storybook',
+    continuous: true,
+    readyWhen: getStartStorybookReadyWhen(),
     options: {
       port: 4400,
       configDir: `${projectConfig.root}/.storybook`,
-      browserTarget: `${projectName}:${
-        ngBuildTarget ? 'build' : 'build-storybook'
-      }`,
+      browserTarget: `${projectName}:${ngBuildTarget ?? 'build-storybook'}`,
       compodoc: false,
     },
     configurations: {
@@ -114,9 +69,7 @@ export function addAngularStorybookTarget(
     options: {
       outputDir: joinPathFragments('dist/storybook', projectName),
       configDir: `${projectConfig.root}/.storybook`,
-      browserTarget: `${projectName}:${
-        ngBuildTarget ? 'build' : 'build-storybook'
-      }`,
+      browserTarget: `${projectName}:${ngBuildTarget ?? 'build-storybook'}`,
       compodoc: false,
     },
     configurations: {
@@ -470,7 +423,6 @@ export function normalizeSchema(
 ): StorybookConfigureSchema {
   const defaults = {
     configureCypress: true,
-    linter: 'eslint' as LinterType,
     js: false,
   };
   return {
@@ -479,90 +431,35 @@ export function normalizeSchema(
   };
 }
 
-export function addStorybookToNamedInputs(tree: Tree) {
+export function addStorybookToNamedInputs(
+  tree: Tree,
+  schema: StorybookConfigureSchema
+) {
   const nxJson = readNxJson(tree);
 
   if (nxJson.namedInputs) {
     const hasProductionFileset = !!nxJson.namedInputs?.production;
     if (hasProductionFileset) {
-      if (
-        !nxJson.namedInputs.production.includes(
-          '!{projectRoot}/**/*.stories.@(js|jsx|ts|tsx|mdx)'
-        )
-      ) {
-        nxJson.namedInputs.production.push(
-          '!{projectRoot}/**/*.stories.@(js|jsx|ts|tsx|mdx)'
-        );
+      const storiesExclusion = `!{projectRoot}/${storybookFilePatterns.stories}`;
+      if (!nxJson.namedInputs.production.includes(storiesExclusion)) {
+        nxJson.namedInputs.production.push(storiesExclusion);
       }
-      if (
-        !nxJson.namedInputs.production.includes(
-          '!{projectRoot}/.storybook/**/*'
-        )
-      ) {
-        nxJson.namedInputs.production.push('!{projectRoot}/.storybook/**/*');
+      const configExclusion = `!{projectRoot}/${storybookFilePatterns.config}`;
+      if (!nxJson.namedInputs.production.includes(configExclusion)) {
+        nxJson.namedInputs.production.push(configExclusion);
       }
 
+      const tsconfigExclusion = `!{projectRoot}/${storybookFilePatterns.tsconfig}`;
       if (
-        !nxJson.namedInputs.production.includes(
-          '!{projectRoot}/tsconfig.storybook.json'
-        )
+        schema.uiFramework !== '@storybook/angular' &&
+        !nxJson.namedInputs.production.includes(tsconfigExclusion)
       ) {
-        nxJson.namedInputs.production.push(
-          '!{projectRoot}/tsconfig.storybook.json'
-        );
+        nxJson.namedInputs.production.push(tsconfigExclusion);
       }
     }
 
     updateNxJson(tree, nxJson);
   }
-}
-
-export function addStorybookToTargetDefaults(tree: Tree, setCache = true) {
-  const nxJson = readNxJson(tree);
-
-  nxJson.targetDefaults ??= {};
-  nxJson.targetDefaults['build-storybook'] ??= {};
-  if (setCache) {
-    nxJson.targetDefaults['build-storybook'].cache ??= true;
-  }
-  nxJson.targetDefaults['build-storybook'].inputs ??= [
-    'default',
-    nxJson.namedInputs && 'production' in nxJson.namedInputs
-      ? '^production'
-      : '^default',
-  ];
-
-  if (
-    !nxJson.targetDefaults['build-storybook'].inputs.includes(
-      '{projectRoot}/.storybook/**/*'
-    )
-  ) {
-    nxJson.targetDefaults['build-storybook'].inputs.push(
-      '{projectRoot}/.storybook/**/*'
-    );
-  }
-
-  // Delete the !{projectRoot}/.storybook/**/* glob from build-storybook
-  // because we want to rebuild Storybook if the .storybook folder changes
-  const index = nxJson.targetDefaults['build-storybook'].inputs.indexOf(
-    '!{projectRoot}/.storybook/**/*'
-  );
-
-  if (index !== -1) {
-    nxJson.targetDefaults['build-storybook'].inputs.splice(index, 1);
-  }
-
-  if (
-    !nxJson.targetDefaults['build-storybook'].inputs.includes(
-      '{projectRoot}/tsconfig.storybook.json'
-    )
-  ) {
-    nxJson.targetDefaults['build-storybook'].inputs.push(
-      '{projectRoot}/tsconfig.storybook.json'
-    );
-  }
-
-  updateNxJson(tree, nxJson);
 }
 
 export function createProjectStorybookDir(
@@ -580,9 +477,9 @@ export function createProjectStorybookDir(
   usesSwc?: boolean,
   usesVite?: boolean,
   viteConfigFilePath?: string,
-  hasPlugin?: boolean,
   viteConfigFileName?: string,
-  usesReactNative?: boolean
+  usesReactNative?: boolean,
+  useNativeTsconfigPaths = true
 ) {
   let projectDirectory =
     getProjectType(tree, root, projectType as 'application' | 'library') ===
@@ -631,9 +528,9 @@ export function createProjectStorybookDir(
     usesVite,
     isRootProject: projectIsRootProjectInStandaloneWorkspace,
     viteConfigFilePath,
-    hasPlugin,
     viteConfigFileName,
     usesReactNative,
+    useNativeTsconfigPaths,
   });
 
   if (js) {

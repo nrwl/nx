@@ -33,6 +33,9 @@ describe('Static serve configuration generator', () => {
           "buildTarget": "react-app:build",
           "spa": true,
         },
+        "readyWhen": {
+          "signal": true,
+        },
       }
     `);
     await webStaticServeGenerator(tree, {
@@ -51,6 +54,9 @@ describe('Static serve configuration generator', () => {
           "buildTarget": "angular-app:build",
           "spa": true,
         },
+        "readyWhen": {
+          "signal": true,
+        },
       }
     `);
 
@@ -68,6 +74,9 @@ describe('Static serve configuration generator', () => {
           "buildTarget": "storybook:build-storybook",
           "spa": true,
           "staticFilePath": "dist/storybook/storybook",
+        },
+        "readyWhen": {
+          "signal": true,
         },
       }
     `);
@@ -91,6 +100,9 @@ describe('Static serve configuration generator', () => {
         "options": {
           "buildTarget": "react-app:build",
           "spa": true,
+        },
+        "readyWhen": {
+          "signal": true,
         },
       }
     `);
@@ -122,6 +134,9 @@ describe('Static serve configuration generator', () => {
           "spa": true,
           "staticFilePath": "dist/angular-app",
         },
+        "readyWhen": {
+          "signal": true,
+        },
       }
     `);
   });
@@ -136,14 +151,14 @@ describe('Static serve configuration generator', () => {
 
     updateProjectConfiguration(tree, 'storybook', pc);
 
-    expect(() => {
+    await expect(() => {
       return webStaticServeGenerator(tree, {
         buildTarget: 'storybook:build-storybook',
       });
     }).rejects.toThrowErrorMatchingInlineSnapshot(`
-      "Project storybook already has a 'serve-static' target configured.
+      [Error: Project storybook already has a 'serve-static' target configured.
       Either rename or remove the existing 'serve-static' target and try again.
-      Optionally, you can provide a different name with the --target-name option other than 'serve-static'"
+      Optionally, you can provide a different name with the --target-name option other than 'serve-static']
     `);
   });
 });

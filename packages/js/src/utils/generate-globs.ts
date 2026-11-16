@@ -1,14 +1,18 @@
-import { joinPathFragments, logger, normalizePath } from '@nx/devkit';
-import { workspaceRoot } from 'nx/src/utils/workspace-root';
+import {
+  joinPathFragments,
+  logger,
+  normalizePath,
+  workspaceRoot,
+  readCachedProjectGraph,
+} from '@nx/devkit';
 import { dirname, join, relative, resolve } from 'path';
-import { readCachedProjectGraph } from 'nx/src/project-graph/project-graph';
-import { getSourceDirOfDependentProjects } from 'nx/src/utils/project-graph-utils';
 import { existsSync, lstatSync, readdirSync, readFileSync } from 'fs';
 import ignore from 'ignore';
 import {
+  getSourceDirOfDependentProjects,
   createProjectRootMappings,
   findProjectForPath,
-} from 'nx/src/project-graph/utils/find-project-for-path';
+} from '@nx/devkit/internal';
 
 function configureIgnore() {
   let ig: ReturnType<typeof ignore>;
@@ -95,9 +99,17 @@ due to missing "sourceRoot" in the dependencies' project configuration
       `);
     }
 
-    return dirsToUse.map((sourceDir) =>
-      resolve(workspaceRoot, joinPathFragments(sourceDir, fileGlobPattern))
-    );
+    // A dependency whose sourceRoot is its project root would otherwise scan its
+    // node_modules, where pnpm workspace symlinks fan out across the repo.
+    return [
+      ...dirsToUse.map((sourceDir) =>
+        resolve(workspaceRoot, joinPathFragments(sourceDir, fileGlobPattern))
+      ),
+      ...dirsToUse.map(
+        (sourceDir) =>
+          `!${resolve(workspaceRoot, joinPathFragments(sourceDir, '**/node_modules/**'))}`
+      ),
+    ];
   } catch (e) {
     throw new Error(
       `createGlobPatternsForDependencies: Error when generating globs.\n${e?.message}`

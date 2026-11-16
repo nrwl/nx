@@ -1,4 +1,4 @@
-import type { Linter, LinterType } from '@nx/eslint';
+import type { LinterType } from '@nx/js';
 
 export interface ConfigurationGeneratorSchema {
   project: string;
@@ -10,8 +10,8 @@ export interface ConfigurationGeneratorSchema {
   skipFormat?: boolean;
   skipPackageJson?: boolean;
   skipInstall?: boolean;
-  linter?: Linter | LinterType;
-  setParserOptionsProject?: boolean; // default is false
+  linter?: LinterType;
+  enableTypedLinting?: boolean; // default is false
   /**
    * command to give playwright to run the web server
    * @example: "npx nx serve my-fe-app"
@@ -22,13 +22,20 @@ export interface ConfigurationGeneratorSchema {
    * @example: "http://localhost:4200"
    **/
   webServerAddress?: string;
+  /**
+   * command to run the web server when `CI` is set; defaults to `webServerCommand`
+   * @example: "npx nx serve-static my-fe-app"
+   **/
+  ciWebServerCommand?: string;
+  /**
+   * address of the web server when `CI` is set; defaults to `webServerAddress`
+   * @example: "http://localhost:4300"
+   **/
+  ciWebServerAddress?: string;
   rootProject?: boolean;
-  addPlugin?: boolean;
 }
 
-export interface NormalizedGeneratorOptions
-  extends ConfigurationGeneratorSchema {
-  addPlugin: boolean;
+export interface NormalizedGeneratorOptions extends ConfigurationGeneratorSchema {
   directory: string;
-  linter: Linter | LinterType;
+  linter: LinterType;
 }

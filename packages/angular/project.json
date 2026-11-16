@@ -7,6 +7,7 @@
     "build-ng": {
       "dependsOn": ["build-base", "typecheck"],
       "executor": "@nx/angular:package",
+      "inputs": ["production", "^production"],
       "options": {
         "project": "packages/angular/ng-package.json",
         "tsConfig": "packages/angular/tsconfig.lib.runtime.json"
@@ -18,6 +19,13 @@
       "outputs": ["{projectRoot}/README.md"],
       "command": "node ./scripts/copy-readme.js angular packages/angular/readme-template.md packages/angular/README.md",
       "inputs": ["copyReadme"]
+    },
+    "test": {
+      "inputs": [
+        "...",
+        "{workspaceRoot}/tools/vitest/**/*",
+        "{workspaceRoot}/scripts/jest-mocks/clack-prompts.js"
+      ]
     }
   },
   "implicitDependencies": ["vite", "storybook", "playwright", "jest"]

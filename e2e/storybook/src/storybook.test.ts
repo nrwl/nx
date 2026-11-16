@@ -1,7 +1,6 @@
 import {
   checkFilesExist,
   cleanupProject,
-  killPorts,
   listFiles,
   newProject,
   readFile,
@@ -35,8 +34,6 @@ describe('Storybook generators and executors for monorepos', () => {
 
   // TODO: enable this when Storybook webpack server becomes a bit faster
   xdescribe('serve storybook', () => {
-    afterEach(() => killPorts());
-
     it('should serve a React based Storybook setup that uses webpack', async () => {
       const p = await runCommandUntil(
         `run ${reactStorybookApp}:storybook`,
@@ -49,16 +46,14 @@ describe('Storybook generators and executors for monorepos', () => {
   });
 
   describe('build storybook', () => {
-    // TODO(jack): re-enable when lodash@4.18.0 assignWith bug is resolved
-    it.skip('should build a React based storybook setup that uses webpack', () => {
+    it('should build a React based storybook setup that uses webpack', () => {
       // build
       runCLI(`run ${reactStorybookApp}:build-storybook --verbose`);
       checkFilesExist(`${reactStorybookApp}/storybook-static/index.html`);
     }, 300_000);
 
     // This test makes sure path resolution works
-    // TODO(jack): re-enable when lodash@4.18.0 assignWith bug is resolved
-    it.skip('should build a React based storybook that references another lib and uses rollup', () => {
+    it('should build a React based storybook that references another lib and uses rollup', () => {
       runCLI(
         `generate @nx/react:lib my-lib --bundler=rollup --unitTestRunner=none --no-interactive`
       );
@@ -111,8 +106,7 @@ describe('Storybook generators and executors for monorepos', () => {
       checkFilesExist(`${reactStorybookApp}/storybook-static/index.html`);
     }, 300_000);
 
-    // TODO(jack): re-enable when lodash@4.18.0 assignWith bug is resolved
-    it.skip('should not bundle in sensitive NX_ environment variables', () => {
+    it('should not bundle in sensitive NX_ environment variables', () => {
       updateFile(
         `${reactStorybookApp}/.storybook/main.ts`,
         (content) => `
@@ -120,12 +114,19 @@ describe('Storybook generators and executors for monorepos', () => {
       console.log(process.env);
       `
       );
-      runCLI(`run ${reactStorybookApp}:build-storybook --verbose`, {
-        env: {
-          NX_SOME_SECRET: 'MY SECRET',
-          NX_SOME_TOKEN: 'MY SECRET',
-        },
-      });
+      const output = runCLI(
+        `run ${reactStorybookApp}:build-storybook --verbose`,
+        {
+          env: {
+            NX_SOME_SECRET: 'MY SECRET',
+            NX_SOME_TOKEN: 'MY SECRET',
+          },
+        }
+      );
+      // A cache replay would leave the checks below reading the previous build.
+      expect(output).not.toMatch(
+        /\[(local cache|remote cache|existing outputs match)/
+      );
 
       // Check all output chunks for bundled environment variables
       const outDir = `${reactStorybookApp}/storybook-static`;

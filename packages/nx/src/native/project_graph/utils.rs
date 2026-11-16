@@ -5,12 +5,14 @@ mod find_project_for_path;
 pub use find_project_for_path::*;
 
 pub type ProjectRootMappings = HashMap<String, String>;
+
+/// Normalized project root -> project name, as `createProjectRootMappings` in
+/// `project-graph/utils/find-project-for-path.ts` builds it.
 pub fn create_project_root_mappings(nodes: &HashMap<String, Project>) -> ProjectRootMappings {
-    let mut project_root_mappings = HashMap::new();
-    for (project_name, node) in nodes {
-        project_root_mappings.insert(node.root.clone(), normalize_project_root(project_name));
-    }
-    project_root_mappings
+    nodes
+        .iter()
+        .map(|(project_name, node)| (normalize_project_root(&node.root), project_name.clone()))
+        .collect()
 }
 
 pub fn normalize_project_root(root: &str) -> String {

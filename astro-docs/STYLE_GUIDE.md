@@ -5,7 +5,9 @@ These rules apply to all content under `astro-docs/src/content/docs/`.
 
 ## Information architecture
 
-When creating or reorganizing documentation, follow these five principles to determine where content belongs.
+When creating or reorganizing documentation, follow these six principles to determine where content belongs.
+
+These principles say where content goes. The personas say who it's for: [Bob](./personas/bob-beginner.md) (new to Nx), [Casey](./personas/casey-cloud-curious.md) (new to Nx Cloud), [Priya](./personas/priya-platform.md) (runs Nx at scale) and [Dana](./personas/dana-decision-maker.md) (decides whether the team uses Nx). Use them when writing and reviewing docs.
 
 ### 1. Progressive disclosure (the "journey" rule)
 
@@ -25,25 +27,16 @@ Separate learning (narrative/guides) from looking up (reference/API).
 
 **The test:** Is the user here to learn a workflow (guide) or look up a flag syntax (reference)?
 
-### 4. The pen and paper test (the "theory" rule)
+### 4. Universal vs. specific (the "placement" rule)
 
-Distinguish architecture from features to keep "core concepts" pure.
-
-**The test:** Can I explain this using only a pen and paper?
-
-- Yes: It goes in **How Nx Works** (architecture).
-- No (I need a terminal): It goes in **Platform Features** (feature).
-
-### 5. Universal vs. specific (the "placement" rule)
-
-Distinguish platform features from ecosystem tools to prevent "Features" from becoming a junk drawer.
+Distinguish core features from ecosystem tools to prevent "Features" from becoming a junk drawer.
 
 **The test:** Does this feature apply to every user (e.g., caching, Nx Agents)?
 
-- Yes: **Platform Features**.
+- Yes: **Core features**, or **CI features** when it only applies in CI.
 - No (only React users): **Technologies**.
 
-### 6. The golden path (the "one way" rule)
+### 5. The golden path (the "one way" rule)
 
 Feature pages teach the default workflow. Limit flags and variants to the ones a reader needs
 to make a decision.
@@ -55,15 +48,32 @@ belongs in the corresponding Knowledge Base guide.
 - When a flag presents a real choice, explain it briefly on the feature page (for example, why
   pick `--include=required` over `all`) and link the Knowledge Base guide for constraints and
   edge cases.
-- Remove deprecated options entirely when a replacement exists - no deprecation asides. The same
-  applies to workflows a new flag has superseded.
+- Remove deprecated options entirely when a replacement exists, with no deprecation aside. The
+  same applies to workflows a new flag has superseded.
 - When two sections converge on the same flag or topic after a rewrite, merge them into one.
+
+### 6. One page per feature (the "don't make me hunt" rule)
+
+A feature page answers most of what a new reader arrives with, on the page. Specifics fan out
+to Knowledge Base guides. The questions themselves stay.
+
+**The test:** List the questions a new reader, or an AI answering on their behalf, would ask
+about this feature. If an answer lives only on another page, the feature page is incomplete.
+
+For Nx Cloud that set is what it is, whether it's free, what it adds over Nx Core, how to
+connect, and when Enterprise or self-hosted applies. Spread across three or five pages, a reader
+has to find and visit each one before they can form a view, and a model answering the question
+cites none of them.
+
+Rule 5 trims variants and edge cases off the page. This one keeps every question a reader has to
+answer before they can choose or start. Both push detail to the Knowledge Base. Neither pushes
+the decision there.
 
 ### Sidebar structure
 
 The sidebar has four top-level sections that follow the user journey:
 
-1. **Getting Started** - Essential setup, tutorials, and core concepts (How Nx Works, Platform Features)
+1. **Getting Started** - Essential setup, tutorials, Core features, and CI features
 2. **Technologies** - Framework and tool-specific guides (React, Angular, Node, build tools, test tools)
 3. **Knowledge Base** - Recipes, troubleshooting, and topic-specific guides
 4. **Reference** - Exhaustive facts, no narrative (CLI commands, configuration, API docs)
@@ -76,10 +86,66 @@ Sentence-level edits don't fix AI voice in longform pieces. The structural tells
 
 Each substantive point lives in exactly one section. Other sections link or reference it in one phrase. They don't re-explain.
 
+### No rhetorical-question setups
+
+Asking the reader a question you then answer yourself is a framing device, not information.
+It delays the point by a sentence and is one of the clearest generated-text tells.
+
+- Don't: "A monorepo pipeline starts with a question a single-project pipeline never has to ask. Given this commit, what actually needs to run?"
+- Do: "A monorepo CI pipeline that runs everything on every commit gets slower with every project you add."
+
+**The test:** Grep for `?`. Outside an FAQ heading, rewrite each one as the claim it was setting up.
+
 ### No drama-beat echoes
 
-A short sentence (under ~10 words) immediately after a long one, restating the long one for emphasis, is an AI tic.
+Two adjacent sentences covering the same content, one short and one longer, read as generated in either order.
+
+A short sentence (under ~10 words) immediately after a long one, restating the long one for emphasis, is the classic form.
 Cover the short sentence with your thumb. If nothing is lost, cut it.
+
+The reverse is just as common in AI drafts: a short claim followed by a longer sentence that re-explains it.
+
+- Don't: "That is one service. Each additional service needs its own workflow with its own path list."
+- Do: "That is one service, and each additional one needs its own workflow with its own path list."
+
+**The test:** If two adjacent sentences share a subject and the second adds no new fact, merge them.
+
+### Cut signpost openers
+
+A short sentence that announces what a paragraph is about, before the paragraph says it, is a
+label rather than a claim. This one survives the drama-beat test, because the sentences after it
+do add facts, so sweep for it separately.
+
+- Don't: "CI is the other gap. Turborepo scales past one machine through manual binning, while Nx Agents distributes at the task level."
+- Do: "Turborepo scales past one machine through manual binning, while Nx Agents distributes at the task level."
+
+Naming a count is the same move ("Two smaller differences.", "Three things to know."). Either
+fold the label into the sentence that follows or delete it. A real list gets bullets and an
+introductory line instead.
+
+**The test:** Delete the first sentence of each paragraph. If the paragraph still says everything
+it said before, leave it deleted.
+
+### Cut significance clauses
+
+Naming a property and then explaining why the reader should care about it is a generated shape.
+"X is quiet, which is what makes it expensive." "X is silent, and that's the problem."
+Make the claim directly instead.
+
+- Don't: "The failure is quiet, which is what makes it expensive:"
+- Do: "Maintaining path-based filters is expensive:"
+
+**The test:** Grep for "which is what makes", "and that's why", "which is the problem". Each one is a sentence that hasn't decided what it's claiming.
+
+### Don't invent specifics the reader's context decides
+
+Numbers that sound concrete but are the writer guessing read as filler, and they age badly.
+Branch lifetimes, team sizes, review counts, and repository sizes belong to the reader.
+
+- Don't: "feature branches that live hours or days instead of weeks"
+- Do: "short-lived feature branches"
+
+**The test:** For each number, ask whether it came from evidence or from imagination. This is the specificity half of "Match claims to evidence."
 
 ### No restatement closers
 
@@ -97,15 +163,53 @@ Two failure modes:
 
 Ask of each strong claim: "what in this doc supports the strength of this word?" If nothing, weaken or cite.
 
+### Vary sentence rhythm
+
+Uniform, medium-length sentences in a confident register are the strongest
+statistical AI signature. Human writing is bursty: short fragments next to
+long chains.
+
+**The test:** Read a paragraph aloud. If every sentence takes the same
+breath, split one and merge two others.
+
+### Ration colon-expansion sentences
+
+"Claim: elaboration, elaboration, elaboration" is fine once per section.
+Repeated, it's a fingerprint.
+
+When the text after the colon is a list of items, make it a real bulleted list
+rather than a run-on sentence.
+
+**The test:** Grep for mid-sentence colons. More than one or two per screen
+of prose, rewrite the extras as plain sentences or as bullets.
+
+### Vary bullet structure
+
+A bolded lead-in label is fine, and often the clearest way to write a short
+reference list. What reads as AI is a run of bullets in lockstep: same
+opening grammar, same claim-then-elaborate shape, same length, every time.
+
+**The test:** In longform prose, if three or more adjacent bullets march in
+lockstep, break the pattern. Vary the lengths, drop the label from one, or
+fold a bullet into the surrounding paragraph.
+
+### Ration balanced-contrast constructions
+
+"Neither X nor Y", "not just X but Y", "X, not Y" are rhetorically tidy and
+AI drafts overuse them.
+
+**The test:** One per section. If a paragraph contains two, keep the one
+that carries a real distinction and flatten the other into a plain claim.
+
 ### Pre-publish pass order
 
 Run passes in this order. Structural first, vocabulary last.
 
 1. Canonical-home audit: where does each substantive point live?
 2. Repetition count: grep your two or three core findings. If a finding appears more than twice in prose, the third is probably redundant.
-3. Drama-beat sweep.
+3. Drama-beat sweep, both orders. Read the first sentence of each paragraph on its own and cut the ones that only label it. Also grep for `?` and for significance clauses ("which is what makes", "and that's why").
 4. Closer pass.
-5. Claim audit: for each absolute and each counterfactual, check what evidence in the doc supports that strength. Weaken or cite.
+5. Claim audit: for each absolute and each counterfactual, check what evidence in the doc supports that strength. Weaken or cite. Check invented numbers the same way.
 6. End-to-end consistency read.
 7. Vocabulary grep (cheapest, lowest value).
 
@@ -174,6 +278,7 @@ Edit AI-assisted drafts so they don't read like AI wrote them. Phrase-level pass
 - Excessive use of "robust", "leverage", "utilize", "facilitate", "comprehensive", "aforementioned."
 - TED-talk verbs: "delve", "underscore" (as verb), "foster", "empower", "embark", "unlock", "harness". Replace with the concrete action.
 - Filler adjectives: "meticulous", "crucial", "pivotal", "paramount", "intricate", "multifaceted".
+- Inflated nouns for ordinary things: a "fleet" of CI machines, an "arsenal" of tools, a "suite" of capabilities. Name the thing.
 - Lists where every item starts with the same grammatical structure repeated 5+ times with slight variation. Vary your phrasing.
 
 ### Self-referential writing
@@ -197,7 +302,7 @@ Get right to the point. The reader already knows they're on a page.
 Don't use filler words that undermine the reader's trust.
 
 - Don't use "easily", "simply", "just", or "straightforward". If something were truly simple, you wouldn't need to document it. These words also make readers feel bad when they struggle.
-- Don't use marketing language: "This feature will save you hours" or "Nx makes CI effortless."
+- Don't use marketing language: "This feature will save you hours" or "Nx makes CI effortless." The intro page and the CI overview page may cite benchmarks and measured results for [decision makers](./personas/dana-decision-maker.md), as long as each number has a source.
 - Be specific instead: "Remote caching can reduce CI times from 45 minutes to under 5 minutes for cache-hit builds."
 
 ### Customer perspective
@@ -244,7 +349,9 @@ Don't contract proper nouns: "the Vite plugin is..." not "Vite's a plugin..."
 
 ### Capitalization
 
-Use sentence case for headings. Capitalize proper nouns only.
+Use sentence case for headings, page titles (frontmatter `title`), and sidebar labels.
+Capitalize proper nouns only.
+When you name a UI element, match the casing the UI shows.
 
 - `# Use remote caching to speed up CI`
 - `## Configure the Vite plugin`
@@ -282,6 +389,9 @@ Don't use possessives on product names. "the Docker CLI", not "Docker's CLI." "t
 - Don't use code in headings unless it's essential (like a CLI command).
 - Don't use bold text in headings.
 - Keep headings short and scannable. Lead with keywords.
+- Don't put headings inside `{% tabs %}`. Tab content is hidden until its tab is active, so the heading
+  still lands in the table of contents but nothing scrolls to it. Inline the section above the tabs, or
+  drop the heading. The `headings-in-tabs` conformance rule enforces this.
 
 ### Line length
 
@@ -294,7 +404,8 @@ Don't use possessives on product names. "the Docker CLI", not "Docker's CLI." "t
 - Use serial (Oxford) commas: "React, Angular, and Vue."
 - Use one space between sentences.
 - Don't use semicolons. Use two sentences instead.
-- Don't use em dashes or en dashes. Use commas or separate sentences.
+- Don't use em dashes, en dashes, or a spaced hyphen as a dash ("cached - even on CI"). Use
+  commas, parentheses, or separate sentences.
 
 ### Placeholder text
 
@@ -396,7 +507,9 @@ Minimize external links. They break over time and are hard to maintain. When you
 - Use unordered lists when order doesn't matter.
 - Use dashes (`-`) for unordered lists.
 - Start ordered list items with `1.` (Markdown auto-increments).
-- Make list items parallel in structure.
+- Make list items parallel in structure for short reference lists
+  (option names, file types, steps). For prose bullets in longform pieces,
+  vary structure instead. See "Vary bullet structure."
 - Add a colon after the introductory phrase.
 - Don't use list items to complete an introductory sentence.
 
@@ -430,25 +543,28 @@ Use tables for structured data that benefits from a matrix layout. For simple li
 
 Use these terms consistently. When writing about Nx concepts, use the exact term from this list.
 
-| Term           | Usage notes                                                                                |
-| -------------- | ------------------------------------------------------------------------------------------ |
-| workspace      | The root directory managed by Nx. Not "repo" or "monorepo" when referring to Nx's context. |
-| project        | An app or library within the workspace.                                                    |
-| target         | A task that can be run for a project (e.g., `build`, `test`, `lint`).                      |
-| executor       | The implementation behind a target. Not "builder."                                         |
-| generator      | Code scaffolding tool. Not "schematic."                                                    |
-| plugin         | An Nx plugin that provides executors, generators, or graph inference.                      |
-| task           | A specific invocation of a target for a project (e.g., `myapp:build`).                     |
-| project graph  | The dependency graph between projects.                                                     |
-| affected       | Projects impacted by a code change.                                                        |
-| cache / cached | Not "memoized" or "stored results."                                                        |
-| remote caching | Sharing cached results across machines. Specific product: "Nx Replay."                     |
-| Nx Cloud       | The hosted CI/CD product. Always capitalized.                                              |
-| Nx Console     | The IDE extension. Always capitalized.                                                     |
-| Nx Agents      | Distributed task execution product. Always capitalized.                                    |
-| Nx Replay      | Remote caching product. Always capitalized.                                                |
-| `nx.json`      | Always in code style.                                                                      |
-| `project.json` | Always in code style.                                                                      |
+| Term                 | Usage notes                                                                                               |
+| -------------------- | --------------------------------------------------------------------------------------------------------- |
+| workspace            | The root directory managed by Nx. Not "repo" or "monorepo" when referring to Nx's context.                |
+| project              | An app or library within the workspace.                                                                   |
+| target               | A task that can be run for a project (e.g., `build`, `test`, `lint`).                                     |
+| executor             | The implementation behind a target. Not "builder."                                                        |
+| generator            | Code scaffolding tool. Not "schematic."                                                                   |
+| plugin               | An Nx plugin that provides executors, generators, or graph inference.                                     |
+| task                 | A specific invocation of a target for a project (e.g., `myapp:build`).                                    |
+| project graph        | The dependency graph between projects.                                                                    |
+| affected             | Projects impacted by a code change.                                                                       |
+| cache / cached       | Not "memoized" or "stored results."                                                                       |
+| remote caching       | Sharing cached results across machines. Specific product: "Nx Replay."                                    |
+| Nx Cloud             | The hosted CI/CD product. Always capitalized.                                                             |
+| Nx Console           | The IDE extension. Always capitalized.                                                                    |
+| Nx Agents            | Distributed task execution product. Always capitalized.                                                   |
+| Nx Replay            | Remote caching product. Always capitalized.                                                               |
+| dynamic task packing | How Nx Agents fill each agent by CPU and memory use. Lowercase. Italicize the first mention on a page.    |
+| Ultracache           | Nx Cloud recording of each task's real inputs. Product name, one word. Not "UltraCache" or "Ultra Cache". |
+| pnpm                 | The package manager. Always lowercase, even at the start of a sentence. Not "PNPM" or "Pnpm".             |
+| `nx.json`            | Always in code style.                                                                                     |
+| `project.json`       | Always in code style.                                                                                     |
 
 ## Vale configuration
 
@@ -474,11 +590,11 @@ You can also install directly via `brew install vale` (macOS) or `apt-get instal
 
 ### Rule tiers
 
-| Tier           | Severity     | Rules                                                                                                            |
-| -------------- | ------------ | ---------------------------------------------------------------------------------------------------------------- |
-| 1 - Mechanical | `error`      | Banned phrases, product capitalization                                                                           |
-| 2 - Structural | `warning`    | Heading case, terminology, product possessives, self-referential writing, sentence patterns, restatement closers |
-| 3 - Voice      | `suggestion` | Trust-undermining words, marketing language, passive voice, serial commas                                        |
+| Tier           | Severity     | Rules                                                                                                                            |
+| -------------- | ------------ | -------------------------------------------------------------------------------------------------------------------------------- |
+| 1 - Mechanical | `error`      | Banned phrases, product capitalization                                                                                           |
+| 2 - Structural | `warning`    | Heading case, terminology, product possessives, self-referential writing, sentence patterns, restatement closers, spaced hyphens |
+| 3 - Voice      | `suggestion` | Trust-undermining words, marketing language, passive voice, serial commas                                                        |
 
 ### Adding new rules
 

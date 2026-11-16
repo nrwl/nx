@@ -4,18 +4,23 @@ import {
   fileExists,
   getStrippedEnvironmentVariables,
   isWindows,
+  killProcessAndPorts,
   newProject,
+  readFile,
   readJson,
   removeFile,
+  reservePort,
   runCLI,
   runCLIAsync,
   runCommand,
+  runCommandUntil,
   tmpProjPath,
   uniq,
   updateFile,
   updateJson,
 } from '@nx/e2e-utils';
 import { execSync } from 'child_process';
+import { stripVTControlCharacters } from 'util';
 import { PackageJson } from 'nx/src/utils/package-json';
 import * as path from 'path';
 
@@ -24,6 +29,7 @@ describe('Nx Running Tests', () => {
   beforeAll(
     () =>
       (proj = newProject({
+        keepBackup: true,
         packages: [
           '@nx/js',
           '@nx/node',
@@ -206,11 +212,19 @@ describe('Nx Running Tests', () => {
         expect(stdout).toMatch(/ECHOED positional --a=123 --no-b/);
       }
 
-      expect(
-        runCLI(`echo:fail ${mylib}`, {
-          silenceError: true,
-        })
-      ).toContain(`Cannot find configuration for task ${mylib}:echo:fail`);
+      const echoFailOutput = runCLI(`echo:fail ${mylib}`, {
+        silenceError: true,
+      });
+      // The target does not exist, so run-one reports the available targets
+      // (the only included script) instead of a cryptic task graph error.
+      // "echo:dev" is too far from "echo:fail" to be offered as a "did you
+      // mean", so it can only reach the output via the available-targets list.
+      expect(echoFailOutput).toContain(
+        `Cannot find target "echo:fail" for project "${mylib}"`
+      );
+      expect(echoFailOutput).toContain(`Available targets:`);
+      expect(echoFailOutput).toContain(`- echo:dev`);
+      expect(echoFailOutput).not.toContain(`Did you mean`);
 
       updateJson(`libs/${mylib}/project.json`, (c) => original);
     }, 1000000);
@@ -534,7 +548,7 @@ describe('Nx Running Tests', () => {
 
         updateJson('nx.json', (nxJson) => {
           nxJson.targetDefaults ??= {};
-          nxJson.targetDefaults[`nx:run-commands`] = {
+          nxJson.targetDefaults['nx:run-commands'] = {
             options: {
               command: `echo Hello from ${target}`,
             },
@@ -557,6 +571,210 @@ describe('Nx Running Tests', () => {
         expect(runCLI(`${target} ${lib} --verbose`)).toContain(
           `Hello from ${target}`
         );
+      });
+    });
+
+    describe('target defaults filtering by projects and plugin', () => {
+      it('scopes a target-default to a single project name via the `projects` filter', () => {
+        const target = uniq('target');
+        const libA = uniq('liba');
+        const libB = uniq('libb');
+
+        updateJson('nx.json', (nxJson) => {
+          nxJson.targetDefaults ??= {};
+          nxJson.targetDefaults[target] = [
+            {
+              filter: { projects: [libA] },
+              executor: 'nx:run-commands',
+              options: { command: `echo SCOPED-TO-${libA}` },
+            },
+          ];
+          return nxJson;
+        });
+
+        updateFile(
+          `libs/${libA}/project.json`,
+          JSON.stringify({ name: libA, targets: { [target]: {} } })
+        );
+        updateFile(
+          `libs/${libB}/project.json`,
+          JSON.stringify({ name: libB, targets: { [target]: {} } })
+        );
+
+        // libA matches the `projects` filter — the executor and options inject.
+        expect(runCLI(`${target} ${libA} --verbose`)).toContain(
+          `SCOPED-TO-${libA}`
+        );
+
+        // libB doesn't match — no other default applies, so the bare target has
+        // no executor and the run fails. We only assert the SCOPED text isn't
+        // there; the exact "no executor" wording is engine-version-sensitive.
+        const result = runCLI(`${target} ${libB} --verbose`, {
+          silenceError: true,
+        });
+        expect(result).not.toContain(`SCOPED-TO-${libA}`);
+      });
+
+      it('scopes a target-default by tag via the `projects` filter', () => {
+        const target = uniq('target');
+        const tag = uniq('tag').toLowerCase();
+        const libTagged = uniq('libtagged');
+        const libUntagged = uniq('libuntagged');
+
+        updateJson('nx.json', (nxJson) => {
+          nxJson.targetDefaults ??= {};
+          nxJson.targetDefaults[target] = [
+            {
+              filter: { projects: [`tag:${tag}`] },
+              executor: 'nx:run-commands',
+              options: { command: `echo TAGGED-${tag}` },
+            },
+          ];
+          return nxJson;
+        });
+
+        updateFile(
+          `libs/${libTagged}/project.json`,
+          JSON.stringify({
+            name: libTagged,
+            tags: [tag],
+            targets: { [target]: {} },
+          })
+        );
+        updateFile(
+          `libs/${libUntagged}/project.json`,
+          JSON.stringify({ name: libUntagged, targets: { [target]: {} } })
+        );
+
+        expect(runCLI(`${target} ${libTagged} --verbose`)).toContain(
+          `TAGGED-${tag}`
+        );
+
+        const result = runCLI(`${target} ${libUntagged} --verbose`, {
+          silenceError: true,
+        });
+        expect(result).not.toContain(`TAGGED-${tag}`);
+      });
+
+      it('falls back to a less-specific target-default when the more-specific `projects` filter does not match', () => {
+        const target = uniq('target');
+        const libA = uniq('liba');
+        const libB = uniq('libb');
+
+        updateJson('nx.json', (nxJson) => {
+          nxJson.targetDefaults ??= {};
+          // Entries apply in document order, last match winning. The catch-all
+          // baseline comes first; the filtered entry overrides it for libA.
+          nxJson.targetDefaults[target] = [
+            // No-filter catch-all — covers everyone else.
+            {
+              executor: 'nx:run-commands',
+              options: { command: `echo GENERIC-${target}` },
+            },
+            // Filtered entry — overrides for libA (applied after the catch-all).
+            {
+              filter: { projects: [libA] },
+              executor: 'nx:run-commands',
+              options: { command: `echo SPECIFIC-${libA}` },
+            },
+          ];
+          return nxJson;
+        });
+
+        updateFile(
+          `libs/${libA}/project.json`,
+          JSON.stringify({ name: libA, targets: { [target]: {} } })
+        );
+        updateFile(
+          `libs/${libB}/project.json`,
+          JSON.stringify({ name: libB, targets: { [target]: {} } })
+        );
+
+        // libA matches the filtered entry, which applies after the catch-all
+        // and overrides it.
+        const aOut = runCLI(`${target} ${libA} --verbose`);
+        expect(aOut).toContain(`SPECIFIC-${libA}`);
+        expect(aOut).not.toContain(`GENERIC-${target}`);
+
+        // libB doesn't match the filter, so only the catch-all default applies.
+        const bOut = runCLI(`${target} ${libB} --verbose`);
+        expect(bOut).toContain(`GENERIC-${target}`);
+        expect(bOut).not.toContain(`SPECIFIC-${libA}`);
+      });
+
+      it('scopes a target-default by `source` to plugin-inferred targets only', () => {
+        const target = uniq('target');
+        const inferredLib = uniq('inferred');
+        const manualLib = uniq('manual');
+        const pluginPath = './tools/echo-source-plugin.cjs';
+
+        // Inline plugin: infers `<target>` for any project containing
+        // `marker.json`. Targets it creates carry source attribution
+        // pointing at this plugin's path.
+        updateFile(
+          'tools/echo-source-plugin.cjs',
+          `
+            const { dirname, basename } = require('path');
+            module.exports = {
+              createNodes: ['**/marker.json', (files) => {
+                return files.map((file) => {
+                  const root = dirname(file);
+                  return [file, {
+                    projects: {
+                      [root]: {
+                        name: basename(root),
+                        targets: {
+                          '${target}': { command: 'echo INFERRED-COMMAND' },
+                        },
+                      },
+                    },
+                  }];
+                });
+              }],
+            };
+          `
+        );
+
+        updateJson('nx.json', (nxJson) => {
+          nxJson.plugins = [...(nxJson.plugins ?? []), pluginPath];
+          nxJson.targetDefaults ??= {};
+          nxJson.targetDefaults[target] = [
+            {
+              filter: { plugin: pluginPath },
+              outputs: ['{workspaceRoot}/source-filter-marker'],
+            },
+          ];
+          return nxJson;
+        });
+
+        // Inferred via the plugin (has marker.json).
+        updateFile(`libs/${inferredLib}/marker.json`, '{}');
+
+        // Manually defined — same target name, but its source attribution is
+        // project.json (not the plugin path).
+        updateFile(
+          `libs/${manualLib}/project.json`,
+          JSON.stringify({
+            name: manualLib,
+            targets: {
+              [target]: { command: 'echo MANUAL-COMMAND' },
+            },
+          })
+        );
+
+        const inferredCfg = JSON.parse(
+          runCLI(`show target ${inferredLib}:${target} --json`)
+        );
+        const manualCfg = JSON.parse(
+          runCLI(`show target ${manualLib}:${target} --json`)
+        );
+
+        // The default's `outputs` only attaches to the inferred target —
+        // its source matches the plugin path the filter names.
+        expect(inferredCfg.outputs).toEqual([
+          '{workspaceRoot}/source-filter-marker',
+        ]);
+        expect(manualCfg.outputs).toBeUndefined();
       });
     });
 
@@ -642,6 +860,337 @@ describe('Nx Running Tests', () => {
 
         checkFilesExist(`one.txt`);
       }, 10000);
+
+      function continuousServe(
+        file: string,
+        readyWhen: object,
+        options: object = {}
+      ) {
+        return {
+          command: `node ${file}`,
+          options: { cwd: `libs/${mylib1}`, ...options },
+          continuous: true,
+          readyWhen,
+        };
+      }
+
+      function readyMarkerCheck(
+        dependsOn: unknown[] = [{ target: 'serve', waitFor: 'ready' }]
+      ) {
+        return {
+          command:
+            "node -e \"process.exit(require('fs').existsSync('ready.txt') ? 0 : 1)\"",
+          options: { cwd: `libs/${mylib1}` },
+          dependsOn,
+        };
+      }
+
+      it('should wait for a continuous dependency to be ready when the edge asks for it', async () => {
+        // A server that never becomes ready: with the default edge the check
+        // runs right away and fails, whatever the machine's speed.
+        updateFile(`libs/${mylib1}/serve.js`, 'setInterval(() => {}, 1000);');
+        updateJson(`libs/${mylib1}/project.json`, (config) => {
+          config.targets.serve = continuousServe('serve.js', {
+            logMatches: 'server listening',
+          });
+          config.targets.check = readyMarkerCheck(['serve']);
+          return config;
+        });
+
+        expect(
+          runCLI(`check ${mylib1} --skip-nx-cache`, { silenceError: true })
+        ).toContain(`Failed tasks:`);
+
+        // The marker is written before the ready line, so a check released by
+        // that line finds it.
+        updateFile(
+          `libs/${mylib1}/serve.js`,
+          `
+          const { writeFileSync } = require('fs');
+          setTimeout(() => {
+            writeFileSync('ready.txt', '');
+            console.log('server listening');
+          }, 2000);
+          setInterval(() => {}, 1000);
+        `
+        );
+        updateJson(`libs/${mylib1}/project.json`, (config) => {
+          config.targets.check = readyMarkerCheck();
+          return config;
+        });
+
+        const output = runCLI(`check ${mylib1} --skip-nx-cache`);
+        expect(output).toContain(
+          `Waiting for "${mylib1}:serve" to be ready...`
+        );
+        expect(output).toContain(
+          `Successfully ran target check for project ${mylib1}`
+        );
+      }, 60000);
+
+      it('should see a log marker the server prints as soon as it starts', () => {
+        // Nothing replays earlier output, so a marker printed before the
+        // matcher subscribes would be missed and the wait would time out.
+        updateFile(
+          `libs/${mylib1}/serve.js`,
+          `
+          console.log('server listening');
+          setInterval(() => {}, 1000);
+        `
+        );
+        updateJson(`libs/${mylib1}/project.json`, (config) => {
+          config.targets.serve = continuousServe('serve.js', {
+            logMatches: 'server listening',
+            timeout: 5000,
+          });
+          config.targets.check = {
+            command: 'echo checked',
+            dependsOn: [{ target: 'serve', waitFor: 'ready' }],
+          };
+          return config;
+        });
+
+        const output = runCLI(`check ${mylib1} --skip-nx-cache`);
+        expect(output).toContain(
+          `Successfully ran target check for project ${mylib1}`
+        );
+      }, 60000);
+
+      it('should wait for a serve that another Nx process started', async () => {
+        removeFile(`libs/${mylib1}/ready.txt`);
+        updateFile(`libs/${mylib1}/starts.txt`, '');
+        updateFile(
+          `libs/${mylib1}/serve.js`,
+          `
+          const { appendFileSync, existsSync, writeFileSync } = require('fs');
+          appendFileSync('starts.txt', 'x');
+          console.log('server starting');
+          const poll = setInterval(() => {
+            if (!existsSync('go.txt')) return;
+            clearInterval(poll);
+            writeFileSync('ready.txt', '');
+            console.log('server listening');
+          }, 100);
+          setInterval(() => {}, 1000);
+        `
+        );
+        updateJson(`libs/${mylib1}/project.json`, (config) => {
+          config.targets.serve = continuousServe('serve.js', {
+            logMatches: 'server listening',
+          });
+          config.targets.check = readyMarkerCheck();
+          return config;
+        });
+
+        const serve = await runCommandUntil(
+          `serve ${mylib1} --skip-nx-cache`,
+          (output) => output.includes('server starting')
+        );
+        try {
+          const check = await runCommandUntil(
+            `check ${mylib1} --skip-nx-cache`,
+            (output) =>
+              output.includes(`Waiting for "${mylib1}:serve" to be ready...`)
+          );
+          expect(fileExists(`libs/${mylib1}/ready.txt`)).toBe(false);
+          const done = new Promise<string>((resolve) => {
+            let output = '';
+            check.stdout.on('data', (chunk) => (output += chunk));
+            check.on('close', () => resolve(stripVTControlCharacters(output)));
+          });
+          updateFile(`libs/${mylib1}/go.txt`, '');
+          expect(await done).toContain(
+            `Successfully ran target check for project ${mylib1}`
+          );
+          expect(readFile(`libs/${mylib1}/starts.txt`)).toBe('x');
+        } finally {
+          await killProcessAndPorts(serve.pid);
+        }
+      }, 60000);
+
+      describe('readyWhen probes', () => {
+        let port: number;
+
+        beforeAll(() => {
+          updateFile(`libs/${mylib1}/idle.js`, 'setInterval(() => {}, 1000);');
+        });
+
+        // A port per case: the previous case's server is being torn down
+        beforeEach(async () => {
+          port = await reservePort();
+          // The marker exists only once the server listens, so the check
+          // passes only if Nx waited for the probe. A `port` target option
+          // reaches the server as `--port=<n>`.
+          updateFile(
+            `libs/${mylib1}/server.js`,
+            `
+            const { createServer } = require('http');
+            const { writeFileSync } = require('fs');
+            const port = Number(process.argv.find((a) => a.startsWith('--port='))?.slice(7) ?? ${port});
+            setTimeout(() => {
+              createServer((req, res) => res.end('ok')).listen(port, '127.0.0.1');
+              writeFileSync('ready.txt', '');
+            }, 2000);
+          `
+          );
+        });
+
+        it.each([
+          [
+            'url',
+            () => ({ url: 'http://localhost:{options.port}' }),
+            () => ({ port }),
+          ],
+          ['port', () => ({ port })],
+          [
+            'command',
+            () => ({
+              command: `node -e "process.exit(require('fs').existsSync('libs/${mylib1}/ready.txt') ? 0 : 1)"`,
+            }),
+          ],
+        ])(
+          'should wait for the %s probe',
+          (_, readyWhen, options?: () => object) => {
+            removeFile(`libs/${mylib1}/ready.txt`);
+            updateJson(`libs/${mylib1}/project.json`, (config) => {
+              config.targets.serve = continuousServe(
+                'server.js',
+                readyWhen(),
+                options?.()
+              );
+              config.targets.check = readyMarkerCheck();
+              return config;
+            });
+
+            const output = runCLI(`check ${mylib1} --skip-nx-cache`);
+            expect(output).toContain(
+              `Waiting for "${mylib1}:serve" to be ready...`
+            );
+            expect(output).toContain(
+              `Successfully ran target check for project ${mylib1}`
+            );
+          },
+          60000
+        );
+
+        it('should fail the continuous task and skip the waiting task when the probe times out', () => {
+          removeFile(`libs/${mylib1}/ready.txt`);
+          updateJson(`libs/${mylib1}/project.json`, (config) => {
+            // idle.js never listens, so the url probe cannot pass
+            config.targets.serve = continuousServe('idle.js', {
+              url: `http://localhost:${port}`,
+              timeout: 2000,
+            });
+            config.targets.check = readyMarkerCheck();
+            return config;
+          });
+
+          const output = runCLI(`check ${mylib1} --skip-nx-cache`, {
+            silenceError: true,
+          });
+          expect(output).toContain(
+            `Task "${mylib1}:serve" did not become ready within 2.0s (readyWhen: url http://localhost:${port}).`
+          );
+          expect(output).toMatch(
+            new RegExp(`Failed tasks:\\s+- ${mylib1}:serve`)
+          );
+          expect(output).toMatch(
+            new RegExp(
+              `Tasks not run because their dependencies failed, --nx-bail=true, or their batch ended before reaching them:\\s+- ${mylib1}:check`
+            )
+          );
+        }, 60000);
+
+        it('should run a command check with the env and options of its task', () => {
+          updateJson(`libs/${mylib1}/project.json`, (config) => {
+            // idle.js never listens: only the env the check runs with can pass it
+            config.targets.serve = continuousServe(
+              'idle.js',
+              {
+                command: `node -e "const o = JSON.parse(process.env.NX_TASK_OPTIONS); process.exit(o.port === ${port} && process.env.FROM_TASK_ENV === 'yes' ? 0 : 1)"`,
+                timeout: 10000,
+              },
+              { port, env: { FROM_TASK_ENV: 'yes' } }
+            );
+            config.targets.check = {
+              command: 'echo COMMAND_CHECK_PASSED',
+              dependsOn: [{ target: 'serve', waitFor: 'ready' }],
+            };
+            return config;
+          });
+
+          const output = runCLI(`check ${mylib1} --skip-nx-cache`);
+          expect(output).toContain('COMMAND_CHECK_PASSED');
+          expect(output).toContain(
+            `Successfully ran target check for project ${mylib1}`
+          );
+        }, 60000);
+
+        it('should release the waiting task on the signal and pass on its url', () => {
+          updateFile(
+            `libs/${mylib1}/signal.js`,
+            `
+            // The workspace itself does not depend on @nx/devkit: pnpm exposes it only
+            // next to the packages that do
+            const { createRequire } = require('module');
+            const { emitReadySignal } = createRequire(require.resolve('@nx/js'))('@nx/devkit');
+            setTimeout(() => {
+              console.log('SIGNALLED=' + emitReadySignal('http://localhost:${port}/'));
+            }, 1500);
+            setInterval(() => {}, 1000);
+          `
+          );
+          updateJson(`libs/${mylib1}/project.json`, (config) => {
+            config.targets.serve = continuousServe('signal.js', {
+              signal: true,
+              timeout: 15000,
+            });
+            config.targets.check = {
+              command:
+                'node -e "console.log(\'READY_URL=\' + process.env.NX_READY_URL)"',
+              dependsOn: [{ target: 'serve', waitFor: 'ready' }],
+            };
+            return config;
+          });
+
+          const output = runCLI(`check ${mylib1} --skip-nx-cache`);
+          expect(output).toContain('SIGNALLED=true');
+          expect(output).toContain(`READY_URL=http://localhost:${port}/`);
+          expect(output).toContain(
+            `Successfully ran target check for project ${mylib1}`
+          );
+        }, 60000);
+
+        it('should fail the continuous task when no signal arrives within the timeout', () => {
+          updateJson(`libs/${mylib1}/project.json`, (config) => {
+            // idle.js never signals, and there is no fallback
+            config.targets.serve = continuousServe('idle.js', {
+              signal: true,
+              timeout: 2000,
+            });
+            config.targets.check = {
+              command: 'echo checked',
+              dependsOn: [{ target: 'serve', waitFor: 'ready' }],
+            };
+            return config;
+          });
+
+          const output = runCLI(`check ${mylib1} --skip-nx-cache`, {
+            silenceError: true,
+          });
+          expect(output).toContain(
+            `Task "${mylib1}:serve" did not become ready within 2.0s (readyWhen: signal).`
+          );
+          expect(output).toMatch(
+            new RegExp(`Failed tasks:\\s+- ${mylib1}:serve`)
+          );
+          expect(output).toMatch(
+            new RegExp(
+              `Tasks not run because their dependencies failed, --nx-bail=true, or their batch ended before reaching them:\\s+- ${mylib1}:check`
+            )
+          );
+        }, 60000);
+      });
     });
   });
 
@@ -649,6 +1198,7 @@ describe('Nx Running Tests', () => {
     it('should build specific and all projects', () => {
       // This is required to ensure the numbers used in the assertions make sense for this test
       const proj = newProject({
+        keepBackup: true,
         packages: [
           '@nx/js',
           '@nx/node',
@@ -1074,8 +1624,8 @@ describe('Nx Running Tests', () => {
       console.log(`[sigint-test] sending SIGINT`);
       childProcess.kill('SIGINT');
 
-      // Nx should exit promptly. Without the fix, cleanup hangs
-      // waiting for unkilled discrete tasks.
+      // Nx should exit promptly. Cleanup hangs if discrete tasks are
+      // not killed.
       const exitTimeout = setTimeout(() => {
         console.log(`[sigint-test] TIMEOUT — sending SIGKILL`);
         childProcess.kill('SIGKILL');

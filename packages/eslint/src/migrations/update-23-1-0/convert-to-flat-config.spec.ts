@@ -1,9 +1,10 @@
-import 'nx/src/internal-testing-utils/mock-project-graph';
+import '@nx/devkit/internal-testing-utils/mock-project-graph';
 
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import {
   addProjectConfiguration,
   type NxJsonConfiguration,
+  readJson,
   type Tree,
   updateJson,
 } from '@nx/devkit';
@@ -121,9 +122,41 @@ describe('convert-to-flat-config migration', () => {
   });
 
   it.each(['.eslintrc.js', '.eslintrc.cjs'])(
-    'should route a %s root config to the prompt without converting',
+    'should convert a %s root config built from literals',
     async (jsConfig) => {
       tree.write(jsConfig, 'module.exports = { root: true };');
+
+      const result = await update(tree);
+
+      expect(tree.exists('eslint.config.mjs')).toBe(true);
+      expect(tree.exists(jsConfig)).toBe(false);
+      expect(result!.agentContext.join('\n')).not.toContain(
+        'root ESLint config is JavaScript-based'
+      );
+    }
+  );
+
+  it('should route a JavaScript root config the generator does not read to the prompt', async () => {
+    // The generator would convert only `.eslintrc.base.json` and never open the
+    // JavaScript root config beside it, so the migration does not run it.
+    tree.write('.eslintrc.base.json', JSON.stringify({ rules: {} }));
+    tree.write('.eslintrc.js', 'module.exports = { root: true };');
+
+    const result = await update(tree);
+
+    expect(tree.exists('.eslintrc.js')).toBe(true);
+    expect(result!.agentContext.join('\n')).toContain(
+      'root ESLint config is JavaScript-based'
+    );
+  });
+
+  it.each(['.eslintrc.js', '.eslintrc.cjs'])(
+    'should route a %s root config that computes its values to the prompt without converting',
+    async (jsConfig) => {
+      tree.write(
+        jsConfig,
+        "module.exports = { root: true, rules: require('./rules.js') };"
+      );
 
       const result = await update(tree);
 
@@ -162,6 +195,165 @@ describe('convert-to-flat-config migration', () => {
     ).toBe(false);
   });
 
+  it('reconciles angular-eslint v22 removed refs in an already-flat config', async () => {
+    updateJson(tree, 'package.json', (json) => {
+      json.devDependencies = {
+        ...json.devDependencies,
+        '@angular-eslint/eslint-plugin': '^22.0.0',
+      };
+      return json;
+    });
+    tree.write(
+      'eslint.config.mjs',
+      `import nx from '@nx/eslint-plugin';
+import { FlatCompat } from '@eslint/eslintrc';
+import js from '@eslint/js';
+
+const compat = new FlatCompat({
+  baseDirectory: __dirname,
+  recommendedConfig: js.configs.recommended,
+});
+
+export default [
+  ...nx.configs['flat/angular'],
+  ...compat.extends('plugin:@angular-eslint/template/process-inline-templates'),
+  {
+    files: ['**/*.ts'],
+    rules: { '@angular-eslint/no-conflicting-lifecycle': 'error' },
+  },
+];
+`
+    );
+
+    await update(tree);
+
+    const content = tree.read('eslint.config.mjs', 'utf-8');
+    expect(content).not.toContain('no-conflicting-lifecycle');
+    expect(content).not.toContain('process-inline-templates');
+    expect(content).not.toContain('FlatCompat');
+    expect(content).toContain("import angular from 'angular-eslint'");
+    expect(content).toContain('processor: angular.processInlineTemplates');
+  });
+
+  it('reconciles angular-eslint v22 exactly once when converting an eslintrc root', async () => {
+    updateJson(tree, 'package.json', (json) => {
+      json.devDependencies = {
+        ...json.devDependencies,
+        '@angular-eslint/eslint-plugin': '^22.0.0',
+      };
+      return json;
+    });
+    tree.write(
+      '.eslintrc.json',
+      JSON.stringify({
+        root: true,
+        extends: ['plugin:@angular-eslint/recommended'],
+      })
+    );
+
+    await update(tree);
+
+    // The generator converts the root and reconciles the shim during conversion,
+    // so the migration's explicit second pass is a no-op: the import is injected
+    // once and the dependency added once, not duplicated.
+    const content = tree.read('eslint.config.mjs', 'utf-8');
+    expect(content).toContain('...angular.configs.tsRecommended');
+    expect(content).not.toContain('FlatCompat');
+    expect(
+      content.match(/import angular from ['"]angular-eslint['"]/g)
+    ).toHaveLength(1);
+    const { devDependencies } = readJson(tree, 'package.json');
+    expect(devDependencies['angular-eslint']).toMatch(/^\^22\./);
+  });
+
+  it('leaves angular-eslint refs intact before v22 (rule is still valid)', async () => {
+    updateJson(tree, 'package.json', (json) => {
+      json.devDependencies = {
+        ...json.devDependencies,
+        '@angular-eslint/eslint-plugin': '^21.0.0',
+      };
+      return json;
+    });
+    tree.write(
+      'eslint.config.mjs',
+      `export default [
+  {
+    files: ['**/*.ts'],
+    rules: { '@angular-eslint/no-conflicting-lifecycle': 'error' },
+  },
+];
+`
+    );
+
+    await update(tree);
+
+    expect(tree.read('eslint.config.mjs', 'utf-8')).toContain(
+      'no-conflicting-lifecycle'
+    );
+  });
+
+  it('reconciles project flat configs even when the root config is JavaScript-based', async () => {
+    updateJson(tree, 'package.json', (json) => {
+      json.devDependencies = {
+        ...json.devDependencies,
+        '@angular-eslint/eslint-plugin': '^22.0.0',
+      };
+      return json;
+    });
+    // A JavaScript-based root config it cannot read makes rootState 'js', so the
+    // generator does not run; a project already on flat config must still be
+    // reconciled.
+    tree.write(
+      '.eslintrc.js',
+      "module.exports = { root: true, rules: require('./rules.js') };"
+    );
+    tree.write(
+      'apps/app/eslint.config.mjs',
+      `export default [
+  {
+    files: ['**/*.ts'],
+    rules: { '@angular-eslint/no-conflicting-lifecycle': 'error' },
+  },
+];
+`
+    );
+
+    await update(tree);
+
+    expect(tree.read('apps/app/eslint.config.mjs', 'utf-8')).not.toContain(
+      'no-conflicting-lifecycle'
+    );
+  });
+
+  it('reconciles project flat configs even when there is no root config', async () => {
+    updateJson(tree, 'package.json', (json) => {
+      json.devDependencies = {
+        ...json.devDependencies,
+        '@angular-eslint/eslint-plugin': '^22.0.0',
+      };
+      return json;
+    });
+    // No root ESLint config of any shape makes rootState 'none'; a project
+    // already on flat config must still be reconciled, not skipped by the
+    // no-root-config early return.
+    tree.write(
+      'apps/app/eslint.config.mjs',
+      `export default [
+  {
+    files: ['**/*.ts'],
+    rules: { '@angular-eslint/no-conflicting-lifecycle': 'error' },
+  },
+];
+`
+    );
+
+    await update(tree);
+
+    expect(tree.read('apps/app/eslint.config.mjs', 'utf-8')).not.toContain(
+      'no-conflicting-lifecycle'
+    );
+  });
+
   it.each(['.eslintrc.js', '.eslintrc.cjs'])(
     'should surface project configs that are JavaScript-based (%s) and were skipped',
     async (jsConfig) => {
@@ -187,6 +379,63 @@ describe('convert-to-flat-config migration', () => {
       ).toBe(true);
     }
   );
+
+  it('should not surface a project config the generator was able to convert', async () => {
+    tree.write('.eslintrc.json', JSON.stringify({ root: true }));
+    addProjectConfiguration(tree, 'js-lib', {
+      root: 'libs/js-lib',
+      targets: {
+        lint: {
+          executor: '@nx/eslint:lint',
+          options: { lintFilePatterns: ['libs/js-lib'] },
+        },
+      },
+    });
+    tree.write(
+      'libs/js-lib/.eslintrc.js',
+      `module.exports = { rules: { 'no-console': 'error' } };`
+    );
+
+    const result = await update(tree);
+
+    expect(tree.exists('libs/js-lib/.eslintrc.js')).toBe(false);
+    expect(tree.exists('libs/js-lib/eslint.config.mjs')).toBe(true);
+    expect(result).toBeDefined();
+    expect(
+      [...result!.agentContext, ...result!.nextSteps].some((entry) =>
+        entry.includes('libs/js-lib/.eslintrc.js')
+      )
+    ).toBe(false);
+  });
+
+  it('should collect explicit rules from a JavaScript-based config the generator converts', async () => {
+    tree.write('.eslintrc.json', JSON.stringify({ root: true }));
+    addProjectConfiguration(tree, 'js-lib', {
+      root: 'libs/js-lib',
+      targets: {
+        lint: {
+          executor: '@nx/eslint:lint',
+          options: { lintFilePatterns: ['libs/js-lib'] },
+        },
+      },
+    });
+    tree.write(
+      'libs/js-lib/.eslintrc.js',
+      `module.exports = {
+        rules: { 'no-console': 'error' },
+        overrides: [{ files: ['*.ts'], rules: { 'no-debugger': 'warn' } }],
+      };`
+    );
+
+    const result = await update(tree);
+
+    expect(result).toBeDefined();
+    const baseline = result!.agentContext.find((entry) =>
+      entry.includes('Passing-state requirement')
+    );
+    expect(baseline).toContain('no-console');
+    expect(baseline).toContain('no-debugger');
+  });
 
   it('should collect explicit rules from YAML configs and overrides for the passing baseline', async () => {
     tree.write(

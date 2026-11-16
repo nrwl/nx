@@ -1781,10 +1781,9 @@ describe('ProjectNameInNodePropsManager', () => {
       // Reproduces the real-world bug: devkit has a target literally named
       // "nx:echo" and a "parent" target with dependsOn: ["nx:echo"]. A
       // different project at root "." is transiently named "nx" by an early
-      // plugin, then renamed to "@nx/nx-source". Without the fix, the
-      // substitution manager incorrectly rewrites "nx:echo" →
-      // "@nx/nx-source:echo" because it parses "nx:echo" as project "nx"
-      // target "echo" and a dirty entry exists for the name "nx".
+      // plugin, then renamed to "@nx/nx-source". Parsing "nx:echo" as project
+      // "nx" target "echo" would match the dirty entry for the name "nx" and
+      // rewrite it to "@nx/nx-source:echo".
       const manager = createManager();
 
       // Project at root that transiently has name "nx", then renamed
@@ -2186,6 +2185,85 @@ describe('ProjectNameInNodePropsManager', () => {
       expect(mergedDependsOn[1]).toBe('renamed-b:build');
       expect(typeof mergedDependsOn[0]).toBe('string');
       expect(typeof mergedDependsOn[1]).toBe('string');
+    });
+
+    // Regression: applying a pattern target (e.g. `e2e-ci--**/**`) copies
+    // its dependsOn entries by reference into a fresh array on every
+    // matching target, and those arrays are never re-registered. Write-back
+    // through the sentinel's original array left the copies holding raw
+    // sentinel objects, which later crashed task graph creation
+    // ("pattern is not iterable").
+    it('should resolve sentinels copied into arrays that are never re-registered', () => {
+      const manager = createManager();
+
+      const projectA = createProject('project-a', 'libs/a', {
+        targets: {
+          'e2e-ci--**/**': {
+            dependsOn: ['project-b:build'],
+          },
+        },
+      });
+      const projectB = createProject('project-b', 'libs/b');
+      const baseResult = createPluginResult([projectA, projectB]);
+      identifyProjects(manager, baseResult);
+      manager.registerNameRefs(baseResult);
+
+      // Simulate pattern-target application: the matching atomized target
+      // gets a fresh dependsOn array holding the same sentinel reference.
+      // Nothing re-registers this array.
+      const templateDependsOn = projectA.targets['e2e-ci--**/**']
+        .dependsOn as unknown[];
+      const atomizedDependsOn: unknown[] = [templateDependsOn[0]];
+      projectA.targets['e2e-ci--src/a.test.ts'] = {
+        dependsOn: atomizedDependsOn,
+      };
+
+      const rootMap = createRootMap([
+        {
+          name: 'project-a',
+          root: 'libs/a',
+          targets: projectA.targets,
+        },
+        { name: 'project-b', root: 'libs/b' },
+      ]);
+
+      manager.applySubstitutions(rootMap);
+
+      expect(atomizedDependsOn[0]).toBe('project-b:build');
+      expect(templateDependsOn[0]).toBe('project-b:build');
+    });
+  });
+
+  describe('refs registered after a rename (name history)', () => {
+    // Refs register after a whole batch merges, so a reference to `b-old`
+    // can be registered when the same batch already renamed the project to
+    // `b-new`. The name history maps the stale name back to its root so the
+    // ref binds and resolves to the current name.
+    it('should bind a ref to a stale name via the name history and resolve it to the current name', () => {
+      const manager = createManager();
+
+      const projectB = createProject('b-old', 'libs/b', {
+        targets: { build: {} },
+      });
+      identifyProjects(manager, createPluginResult([projectB]));
+
+      // The rename lands before project A's refs are registered.
+      renameProject(manager, 'libs/b', 'b-new');
+
+      const projectA = createProject('project-a', 'libs/a', {
+        targets: { test: { dependsOn: ['b-old:build'] } },
+      });
+      identifyProjects(manager, createPluginResult([projectA]));
+      manager.registerNameRefs(createPluginResult([projectA]));
+
+      const rootMap = createRootMap([
+        { name: 'project-a', root: 'libs/a', targets: projectA.targets },
+        { name: 'b-new', root: 'libs/b', targets: projectB.targets },
+      ]);
+
+      manager.applySubstitutions(rootMap);
+
+      expect(projectA.targets.test.dependsOn).toEqual(['b-new:build']);
     });
   });
 });

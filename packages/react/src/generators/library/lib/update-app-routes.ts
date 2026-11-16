@@ -12,8 +12,8 @@ import {
   addBrowserRouter,
   addRoute,
   findComponentImportPath,
+  addInitialRoutes,
 } from '../../../utils/ast-utils';
-import { addInitialRoutes } from '../../../utils/ast-utils';
 import { maybeJs } from '../../../utils/maybe-js';
 import { reactRouterDomVersion } from '../../../utils/versions';
 import { ensureTypescript } from '@nx/js/internal';

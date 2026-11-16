@@ -9,9 +9,9 @@ import {
   readJson,
   detectPackageManager,
 } from '@nx/devkit';
-import { fileExists } from 'nx/src/utils/fileutils';
 import { readFileSync } from 'fs';
 import { dirname, join } from 'path';
+import { fileExists } from '@nx/devkit/internal';
 
 export function onlyShowGuide(storybookProjects: {
   [key: string]: {

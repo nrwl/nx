@@ -5,8 +5,8 @@
     <parent>
         <groupId>dev.nx.maven</groupId>
         <artifactId>nx-maven-parent</artifactId>
-        <version>0.0.17</version>
-        <relativePath>../pom.xml</relativePath>
+        <version>0.0.19</version>
+        <relativePath>../parent-pom/pom.xml</relativePath>
     </parent>
 
     <artifactId>nx-maven-shared</artifactId>

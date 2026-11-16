@@ -28,22 +28,23 @@ async function runMigrationProcess() {
   };
 
   try {
-    const gitRefBefore = execSync('git rev-parse HEAD', {
+    // Validate HEAD before the migration can change the working tree.
+    execSync('git rev-parse HEAD', {
       cwd: workspacePath,
       encoding: 'utf-8',
       windowsHide: true,
-    }).trim();
+    });
 
     // Snapshot package.json deps now so we can detect post-migration drift
     // and run a single install, whether commits are on or off.
     const installer = new ChangedDepInstaller(workspacePath);
     const installDepsIfChanged = () => installer.installDepsIfChanged();
 
-    const { changes: fileChanges, nextSteps } = await runNxOrAngularMigration(
-      workspacePath,
-      migration,
-      false
-    );
+    const {
+      changes: fileChanges,
+      nextSteps,
+      skipAgentic,
+    } = await runNxOrAngularMigration(workspacePath, migration, false);
 
     if (configuration.createCommits) {
       const commitResult = await commitMigrationIfRequested(
@@ -81,6 +82,7 @@ async function runMigrationProcess() {
         })),
         gitRefAfter,
         nextSteps,
+        skipAgentic,
       })
     );
 

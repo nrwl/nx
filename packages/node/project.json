@@ -22,7 +22,9 @@
             "module-federation",
             "playwright",
             "webpack",
+            "rolldown",
             "jest",
+            "vitest",
             "eslint",
             "docker"
           ],
@@ -34,6 +36,13 @@
     },
     "nx-release-publish": {
       "dependsOn": []
+    },
+    "test": {
+      "inputs": [
+        "...",
+        "{workspaceRoot}/tools/vitest/**/*",
+        "{workspaceRoot}/scripts/jest-mocks/clack-prompts.js"
+      ]
     }
   },
   "implicitDependencies": ["angular", "nest", "webpack"]

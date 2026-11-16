@@ -1,9 +1,12 @@
 use std::collections::HashMap;
 
+use crate::native::tasks::running_tasks_service::TaskReadiness;
 use crate::native::tasks::types::TaskGraph;
 use crate::native::tui::action::Action;
+use crate::native::tui::components::nx_paragraph::NxParagraph;
 use crate::native::tui::components::tasks_list::TaskStatus;
 use crate::native::tui::graph_utils::{get_dependency_chain_failures, is_task_continuous};
+use crate::native::tui::scroll_momentum::ScrollDirection;
 use crate::native::tui::status_icons;
 use crate::native::tui::theme::THEME;
 use ratatui::{
@@ -12,8 +15,8 @@ use ratatui::{
     style::{Modifier, Style},
     text::{Line, Span},
     widgets::{
-        Block, BorderType, Borders, Padding, Paragraph, Scrollbar, ScrollbarOrientation,
-        ScrollbarState, StatefulWidget, Widget,
+        Block, BorderType, Borders, Padding, Scrollbar, ScrollbarOrientation, ScrollbarState,
+        StatefulWidget, Widget,
     },
 };
 
@@ -27,6 +30,14 @@ pub struct DependencyViewState {
     pub scroll_offset: usize,
     pub scrollbar_state: ScrollbarState,
     pub pane_area: ratatui::layout::Rect,
+    /// Clickable dependency rows captured during the last render: screen `y` →
+    /// task name. Lets a mouse click navigate to the dependency under the cursor.
+    pub dep_row_hits: Vec<(u16, String)>,
+    /// Horizontal extent `[x0, x1)` of the dependency rows, for click hit-testing.
+    pub dep_row_x_range: (u16, u16),
+    /// Inner text region from the last render, used to bound a drag-based text
+    /// selection over the dependency view (mirrors the task list).
+    pub selection_area: Option<ratatui::layout::Rect>,
 }
 
 impl DependencyViewState {
@@ -65,7 +76,23 @@ impl DependencyViewState {
             scroll_offset: 0,
             scrollbar_state: ScrollbarState::default(),
             pane_area,
+            dep_row_hits: Vec::new(),
+            dep_row_x_range: (0, 0),
+            selection_area: None,
         }
+    }
+
+    /// Resolve a click at terminal cell `(col, row)` to the dependency task under
+    /// it, if any, using the row hit-map captured during the last render.
+    pub fn handle_click(&self, col: u16, row: u16) -> Option<String> {
+        let (x0, x1) = self.dep_row_x_range;
+        if col < x0 || col >= x1 {
+            return None;
+        }
+        self.dep_row_hits
+            .iter()
+            .find(|(y, _)| *y == row)
+            .map(|(_, task)| task.clone())
     }
 
     pub fn scroll_up(&mut self) {
@@ -77,6 +104,19 @@ impl DependencyViewState {
         let max_scroll = content_height.saturating_sub(viewport_height);
         if self.scroll_offset < max_scroll {
             self.scroll_offset += 1;
+        }
+    }
+
+    /// Scroll one row in `direction`, deriving the viewport from the stored pane
+    /// area. Used by the mouse wheel so it scrolls the dependency view itself
+    /// (mirroring the keyboard path) rather than the hidden terminal buffer.
+    pub fn scroll(&mut self, direction: ScrollDirection) {
+        match direction {
+            ScrollDirection::Up => self.scroll_up(),
+            ScrollDirection::Down => {
+                let viewport_height = Self::calculate_viewport_height(self.pane_area);
+                self.scroll_down(viewport_height);
+            }
         }
     }
 
@@ -185,34 +225,198 @@ impl DependencyViewState {
     }
 }
 
-pub struct DependencyView<'a> {
-    status_map: &'a HashMap<String, TaskStatus>,
-    task_graph: &'a TaskGraph,
+/// The readiness word shown after a task name. One vocabulary for the task
+/// list, the pane title and the dependency view rows.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ReadinessLabel {
+    NotReady,
+    Ready,
+    Failed,
+    Waiting,
 }
 
-impl<'a> DependencyView<'a> {
-    pub fn new(status_map: &'a HashMap<String, TaskStatus>, task_graph: &'a TaskGraph) -> Self {
-        Self {
-            status_map,
-            task_graph,
+impl ReadinessLabel {
+    /// A producer's own verdict. `None` for a task without a probe.
+    pub fn for_producer(status: TaskStatus, readiness: Option<TaskReadiness>) -> Option<Self> {
+        let readiness = readiness?;
+        match status {
+            TaskStatus::InProgress | TaskStatus::Shared => Some(match readiness {
+                TaskReadiness::Pending => Self::NotReady,
+                TaskReadiness::Ready => Self::Ready,
+                TaskReadiness::Failed => Self::Failed,
+            }),
+            // A stopped server keeps the verdict that failed its waiters
+            TaskStatus::Stopped => (readiness == TaskReadiness::Failed).then_some(Self::Failed),
+            TaskStatus::NotStarted
+            | TaskStatus::Success
+            | TaskStatus::Failure
+            | TaskStatus::Skipped
+            | TaskStatus::LocalCacheKeptExisting
+            | TaskStatus::LocalCache
+            | TaskStatus::RemoteCache => None,
         }
     }
 
+    pub fn text(self) -> &'static str {
+        match self {
+            Self::NotReady => "(not ready)",
+            Self::Ready => "(ready)",
+            Self::Failed => "(readiness failed)",
+            Self::Waiting => "(waiting)",
+        }
+    }
+
+    pub fn short_text(self) -> &'static str {
+        match self {
+            Self::Failed => "(failed)",
+            Self::NotReady | Self::Ready | Self::Waiting => self.text(),
+        }
+    }
+
+    pub fn style(self) -> Style {
+        match self {
+            Self::Failed => Style::default().fg(THEME.error),
+            Self::NotReady | Self::Ready | Self::Waiting => Style::default().fg(THEME.secondary_fg),
+        }
+    }
+}
+
+/// How many of a task's incomplete dependencies are readiness waits.
+pub struct ReadinessWait<'b> {
+    pub incomplete: usize,
+    pub awaiting: usize,
+    pub awaited: Option<&'b str>,
+}
+
+impl ReadinessWait<'_> {
+    /// Every incomplete dependency is a probe still running
+    pub fn is_held(&self) -> bool {
+        self.incomplete > 0 && self.awaiting == self.incomplete
+    }
+}
+
+pub struct DependencyView<'a> {
+    status_map: &'a HashMap<String, TaskStatus>,
+    task_graph: &'a TaskGraph,
+    readiness_map: &'a HashMap<String, TaskReadiness>,
+    ready_dependencies: &'a HashMap<String, Vec<String>>,
+}
+
+impl<'a> DependencyView<'a> {
+    pub fn new(
+        status_map: &'a HashMap<String, TaskStatus>,
+        task_graph: &'a TaskGraph,
+        readiness_map: &'a HashMap<String, TaskReadiness>,
+        ready_dependencies: &'a HashMap<String, Vec<String>>,
+    ) -> Self {
+        Self {
+            status_map,
+            task_graph,
+            readiness_map,
+            ready_dependencies,
+        }
+    }
+
+    fn is_ready_dependency(&self, task: &str, dep: &str) -> bool {
+        self.ready_dependencies
+            .get(task)
+            .is_some_and(|deps| deps.iter().any(|d| d == dep))
+    }
+
+    fn readiness_of(&self, dep: &str) -> TaskReadiness {
+        self.readiness_map
+            .get(dep)
+            .copied()
+            .unwrap_or(TaskReadiness::Pending)
+    }
+
     /// Helper function to check if a task is considered incomplete
-    fn is_task_incomplete(&self, dep: &str) -> bool {
+    fn is_task_incomplete(&self, task: &str, dep: &str) -> bool {
         let status = self.status_map.get(dep).unwrap_or(&TaskStatus::NotStarted);
         let is_continuous = is_task_continuous(self.task_graph, dep);
 
-        // For continuous tasks, InProgress and Stopped are considered complete
-        // For regular tasks, only traditional completion statuses count
-        !matches!(
+        if matches!(
             status,
             TaskStatus::Success
                 | TaskStatus::LocalCacheKeptExisting
                 | TaskStatus::LocalCache
                 | TaskStatus::RemoteCache
                 | TaskStatus::Skipped
-        ) && !(is_continuous && matches!(status, TaskStatus::InProgress | TaskStatus::Stopped))
+        ) {
+            return false;
+        }
+        if !is_continuous {
+            return true;
+        }
+        // A continuous task over a ready edge is done once its probe passes,
+        // over a plain edge once it has started (or was stopped after that)
+        if self.is_ready_dependency(task, dep) {
+            self.readiness_of(dep) != TaskReadiness::Ready
+        } else {
+            !matches!(
+                status,
+                TaskStatus::InProgress | TaskStatus::Shared | TaskStatus::Stopped
+            )
+        }
+    }
+
+    fn is_awaiting_readiness(&self, task: &str, dep: &str) -> bool {
+        let status = self.status_map.get(dep).unwrap_or(&TaskStatus::NotStarted);
+        matches!(status, TaskStatus::InProgress | TaskStatus::Shared)
+            && self.is_ready_dependency(task, dep)
+            && self.readiness_of(dep) == TaskReadiness::Pending
+    }
+
+    fn readiness_suffix(&self, task: &str, dep: &str) -> Option<ReadinessLabel> {
+        if self.is_awaiting_readiness(task, dep) {
+            Some(ReadinessLabel::NotReady)
+        } else if self.is_ready_dependency(task, dep)
+            && self.readiness_of(dep) == TaskReadiness::Failed
+        {
+            Some(ReadinessLabel::Failed)
+        } else {
+            None
+        }
+    }
+
+    pub fn readiness_wait<'b>(
+        &self,
+        task: &str,
+        dependencies: impl IntoIterator<Item = &'b String>,
+    ) -> ReadinessWait<'b> {
+        let mut wait = ReadinessWait {
+            incomplete: 0,
+            awaiting: 0,
+            awaited: None,
+        };
+        for dep in dependencies {
+            if !self.is_task_incomplete(task, dep) {
+                continue;
+            }
+            wait.incomplete += 1;
+            if self.is_awaiting_readiness(task, dep) {
+                wait.awaiting += 1;
+                wait.awaited = Some(dep);
+            }
+        }
+        wait
+    }
+
+    /// A not-started task whose direct dependencies are all probes still running
+    pub fn is_held_by_readiness(&self, task: &str) -> bool {
+        let status = self.status_map.get(task).unwrap_or(&TaskStatus::NotStarted);
+        if *status != TaskStatus::NotStarted {
+            return false;
+        }
+        let direct = self
+            .task_graph
+            .dependencies
+            .get(task)
+            .into_iter()
+            .chain(self.task_graph.continuous_dependencies.get(task))
+            .flatten()
+            .map(|edge| &edge.id);
+        self.readiness_wait(task, direct).is_held()
     }
 
     /// Apply focus styling to a base style - dims the style when not focused
@@ -274,10 +478,13 @@ impl<'a> DependencyView<'a> {
         };
 
         if Self::fits_in_buffer(&top_area, buf) {
-            Paragraph::new(padding_text.clone())
-                .alignment(Alignment::Right)
-                .style(style)
-                .render(top_area, buf);
+            Widget::render(
+                NxParagraph::new(padding_text.clone())
+                    .alignment(Alignment::Right)
+                    .style(style),
+                top_area,
+                buf,
+            );
         }
 
         // Render bottom padding
@@ -289,24 +496,27 @@ impl<'a> DependencyView<'a> {
         };
 
         if Self::fits_in_buffer(&bottom_area, buf) {
-            Paragraph::new(padding_text)
-                .alignment(Alignment::Right)
-                .style(style)
-                .render(bottom_area, buf);
+            Widget::render(
+                NxParagraph::new(padding_text)
+                    .alignment(Alignment::Right)
+                    .style(style),
+                bottom_area,
+                buf,
+            );
         }
     }
 
     /// Render the no dependencies message
     fn render_no_dependencies(&self, state: &DependencyViewState, area: Rect, buf: &mut Buffer) {
-        let base_style = Style::default().fg(THEME.success);
-        let no_deps_style = Self::apply_focus_styling(base_style, state.is_focused);
+        let (message, color) = match state.task_status {
+            TaskStatus::Skipped => ("Skipped.", THEME.warning),
+            _ => ("Waiting for available thread...", THEME.success),
+        };
+        let no_deps_style = Self::apply_focus_styling(Style::default().fg(color), state.is_focused);
 
-        let no_deps_message = vec![Line::from(vec![Span::styled(
-            "Waiting for available thread...",
-            no_deps_style,
-        )])];
+        let no_deps_message = vec![Line::from(vec![Span::styled(message, no_deps_style)])];
 
-        let paragraph = Paragraph::new(no_deps_message)
+        let paragraph = NxParagraph::new(no_deps_message)
             .alignment(Alignment::Center)
             .style(Style::default());
 
@@ -318,18 +528,20 @@ impl<'a> DependencyView<'a> {
         match state.task_status {
             TaskStatus::NotStarted => {
                 let total_count = state.dependencies.len();
-                let incomplete_count = state
-                    .dependencies
-                    .iter()
-                    .filter(|dep| self.is_task_incomplete(dep))
-                    .count();
+                let wait = self.readiness_wait(&state.current_task, &state.dependencies);
 
-                if incomplete_count == 0 && total_count > 0 {
+                if wait.incomplete == 0 && total_count > 0 {
                     "All dependencies satisfied, waiting for an available thread...".to_string()
+                } else if wait.is_held() {
+                    if let (1, Some(dep)) = (wait.incomplete, wait.awaited) {
+                        format!("Waiting for {} to be ready...", dep)
+                    } else {
+                        format!("Waiting for {} tasks to be ready...", wait.incomplete)
+                    }
                 } else {
                     format!(
                         "Not started yet, waiting for {} / {} tasks to complete...",
-                        incomplete_count, total_count
+                        wait.incomplete, total_count
                     )
                 }
             }
@@ -343,7 +555,8 @@ impl<'a> DependencyView<'a> {
                 if let Some((root_task, _)) = root_causes.first() {
                     format!("Skipped because {} failed.", root_task)
                 } else {
-                    "Skipped due to dependency failures.".to_string()
+                    // --nx-bail and a batch that ends early skip tasks with no failed dependency
+                    "Skipped.".to_string()
                 }
             }
             _ => "Dependencies:".to_string(),
@@ -358,7 +571,7 @@ impl<'a> DependencyView<'a> {
                 let incomplete_count = state
                     .dependencies
                     .iter()
-                    .filter(|dep| self.is_task_incomplete(dep))
+                    .filter(|dep| self.is_task_incomplete(&state.current_task, dep))
                     .count();
 
                 Style::default()
@@ -387,6 +600,11 @@ impl<'a> DependencyView<'a> {
         outer_area: Rect,
         buf: &mut Buffer,
     ) {
+        // Rebuilt below for the rows actually drawn; clear up front so the
+        // early-return paths (no deps / invalid area) leave no stale click map.
+        state.dep_row_hits.clear();
+        state.dep_row_x_range = (0, 0);
+
         if state.dependencies.is_empty() {
             self.render_no_dependencies(state, inner_area, buf);
             return;
@@ -409,8 +627,16 @@ impl<'a> DependencyView<'a> {
             let dep_base_style = Style::default().fg(THEME.primary_fg);
             let dep_style = Self::apply_focus_styling(dep_base_style, state.is_focused);
 
-            let line = Line::from(vec![status_icon, Span::styled(dep.clone(), dep_style)]);
-            lines.push(line);
+            let mut spans = Vec::with_capacity(3);
+            spans.push(status_icon);
+            spans.push(Span::styled(dep.clone(), dep_style));
+            if let Some(label) = self.readiness_suffix(&state.current_task, dep) {
+                spans.push(Span::styled(
+                    format!(" {}", label.text()),
+                    Self::apply_focus_styling(label.style(), state.is_focused),
+                ));
+            }
+            lines.push(Line::from(spans));
         }
 
         // Calculate scrolling parameters
@@ -430,22 +656,6 @@ impl<'a> DependencyView<'a> {
             ScrollbarState::default()
         };
 
-        // Apply scroll offset to lines
-        let visible_lines: Vec<Line> =
-            if state.scroll_offset > 0 && content_height > viewport_height {
-                let start = state
-                    .scroll_offset
-                    .min(content_height.saturating_sub(viewport_height));
-                let end = (start + viewport_height).min(content_height);
-                lines[start..end].to_vec()
-            } else {
-                lines
-            };
-
-        let paragraph = Paragraph::new(visible_lines)
-            .alignment(Alignment::Left)
-            .style(Style::default());
-
         // Apply safety bounds to content area
         let content_area = Rect {
             x: inner_area.x,
@@ -462,6 +672,39 @@ impl<'a> DependencyView<'a> {
         if content_area.width == 0 || content_area.height == 0 {
             return; // Don't render if the area is invalid
         }
+
+        // First visible global line index after scrolling. Global indices 0 and 1
+        // are the header and the spacing line; dependencies begin at index 2.
+        let start = if state.scroll_offset > 0 && content_height > viewport_height {
+            state
+                .scroll_offset
+                .min(content_height.saturating_sub(viewport_height))
+        } else {
+            0
+        };
+        let end = (start + viewport_height).min(content_height);
+
+        // Capture the clickable dependency rows that are actually drawn so a mouse
+        // click can navigate to the task under the cursor.
+        let mut dep_row_hits = Vec::new();
+        for global in start..end {
+            let row_offset = (global - start) as u16;
+            if row_offset >= content_area.height {
+                break;
+            }
+            if let Some(dep_idx) = global.checked_sub(2)
+                && let Some(dep) = state.dependencies.get(dep_idx)
+            {
+                dep_row_hits.push((content_area.y + row_offset, dep.clone()));
+            }
+        }
+        state.dep_row_hits = dep_row_hits;
+        state.dep_row_x_range = (content_area.x, content_area.x + content_area.width);
+
+        let visible_lines: Vec<Line> = lines[start..end].to_vec();
+        let paragraph = NxParagraph::new(visible_lines)
+            .alignment(Alignment::Left)
+            .style(Style::default());
 
         Widget::render(paragraph, content_area, buf);
 
@@ -543,6 +786,9 @@ impl<'a> StatefulWidget for DependencyView<'a> {
             .padding(Padding::new(2, 2, 1, 1));
 
         let inner_area = block.inner(area);
+        // Record the inner text region so the App can bound a drag-based text
+        // selection over the dependency view.
+        state.selection_area = Some(inner_area);
         block.render(area, buf);
 
         // Show different content based on task status
@@ -565,7 +811,7 @@ impl<'a> StatefulWidget for DependencyView<'a> {
                 Style::default().fg(THEME.secondary_fg),
             )])];
 
-            let paragraph = Paragraph::new(message_line)
+            let paragraph = NxParagraph::new(message_line)
                 .alignment(Alignment::Center)
                 .style(Style::default());
 
@@ -577,7 +823,128 @@ impl<'a> StatefulWidget for DependencyView<'a> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ratatui::buffer::Buffer;
+    use crate::native::tasks::types::TaskGraph;
+    use crate::native::test_utils::edges_to;
+    use ratatui::buffer::{Buffer, Cell};
+    use std::collections::HashMap;
+
+    fn empty_task_graph() -> TaskGraph {
+        TaskGraph {
+            tasks: HashMap::new(),
+            dependencies: HashMap::new(),
+            continuous_dependencies: HashMap::new(),
+            roots: vec![],
+        }
+    }
+
+    #[test]
+    fn test_handle_click_maps_rows_to_dependencies() {
+        let task_graph = empty_task_graph();
+        let status_map: HashMap<String, TaskStatus> = HashMap::new();
+
+        let area = Rect {
+            x: 0,
+            y: 0,
+            width: 60,
+            height: 20,
+        };
+        let mut buf = Buffer::empty(area);
+
+        let mut state = DependencyViewState {
+            current_task: "app:build".to_string(),
+            task_status: TaskStatus::NotStarted,
+            dependencies: vec![
+                "lib-a:build".to_string(),
+                "lib-b:build".to_string(),
+                "lib-c:build".to_string(),
+            ],
+            dependency_levels: HashMap::new(),
+            is_focused: true,
+            throbber_counter: 0,
+            scroll_offset: 0,
+            scrollbar_state: ScrollbarState::default(),
+            pane_area: area,
+            dep_row_hits: Vec::new(),
+            dep_row_x_range: (0, 0),
+            selection_area: None,
+        };
+
+        let readiness_map = HashMap::new();
+        let ready_dependencies = HashMap::new();
+        let view = DependencyView::new(
+            &status_map,
+            &task_graph,
+            &readiness_map,
+            &ready_dependencies,
+        );
+        StatefulWidget::render(view, area, &mut buf, &mut state);
+
+        // Inner content begins at y=2 (border + top padding). Lines are laid out as
+        // header (y=2), spacing (y=3), then one dependency per row from y=4.
+        assert_eq!(state.handle_click(5, 4).as_deref(), Some("lib-a:build"));
+        assert_eq!(state.handle_click(5, 5).as_deref(), Some("lib-b:build"));
+        assert_eq!(state.handle_click(5, 6).as_deref(), Some("lib-c:build"));
+
+        // Header and spacing rows are not clickable.
+        assert_eq!(state.handle_click(5, 2), None);
+        assert_eq!(state.handle_click(5, 3), None);
+        // A row with no dependency under it is not clickable.
+        assert_eq!(state.handle_click(5, 7), None);
+        // Clicks outside the dependency rows' x-range miss.
+        assert_eq!(state.handle_click(200, 4), None);
+
+        // The inner text region is recorded for drag-based selection and spans
+        // the rendered dependency rows.
+        let sel = state.selection_area.expect("selection area recorded");
+        assert!(sel.y <= 4 && sel.y + sel.height > 6);
+    }
+
+    #[test]
+    fn test_handle_click_respects_scroll_offset() {
+        let task_graph = empty_task_graph();
+        let status_map: HashMap<String, TaskStatus> = HashMap::new();
+
+        // Short viewport so the list scrolls: header + spacing + 8 deps = 10 lines.
+        let area = Rect {
+            x: 0,
+            y: 0,
+            width: 60,
+            height: 8, // inner height 4 → only a few rows visible at once
+        };
+        let mut buf = Buffer::empty(area);
+
+        let deps: Vec<String> = (0..8).map(|i| format!("lib-{i}:build")).collect();
+        let mut state = DependencyViewState {
+            current_task: "app:build".to_string(),
+            task_status: TaskStatus::NotStarted,
+            dependencies: deps,
+            dependency_levels: HashMap::new(),
+            is_focused: true,
+            throbber_counter: 0,
+            scroll_offset: 3,
+            scrollbar_state: ScrollbarState::default(),
+            pane_area: area,
+            dep_row_hits: Vec::new(),
+            dep_row_x_range: (0, 0),
+            selection_area: None,
+        };
+
+        let readiness_map = HashMap::new();
+        let ready_dependencies = HashMap::new();
+        let view = DependencyView::new(
+            &status_map,
+            &task_graph,
+            &readiness_map,
+            &ready_dependencies,
+        );
+        StatefulWidget::render(view, area, &mut buf, &mut state);
+
+        // With scroll_offset 3, global line 3 (the first dependency, lib-0 is global
+        // index 2) is scrolled past, so the top visible row maps to lib-1.
+        let top = state.dep_row_hits.first().expect("a row should be visible");
+        assert_eq!(top.1, "lib-1:build");
+        assert_eq!(state.handle_click(5, top.0).as_deref(), Some("lib-1:build"));
+    }
 
     #[test]
     fn test_render_scrollbar_padding_normal_case() {
@@ -605,7 +972,7 @@ mod tests {
         let mut buf = Buffer::empty(outer_area);
         let style = Style::default();
 
-        // This was a problematic case that caused panics before the fix
+        // Should not panic
         DependencyView::render_scrollbar_padding(outer_area, &mut buf, style);
     }
 
@@ -815,6 +1182,287 @@ mod tests {
             assert!(safe_scrollbar_area.y + safe_scrollbar_area.height <= height);
             assert!(safe_scrollbar_area.width > 0);
             assert!(safe_scrollbar_area.height > 0);
+        }
+    }
+
+    fn readiness_task_graph() -> TaskGraph {
+        let serve = crate::native::tasks::types::Task::new("srv", "serve").with_continuous(true);
+        let api = crate::native::tasks::types::Task::new("api", "serve").with_continuous(true);
+        let build = crate::native::tasks::types::Task::new("lib", "build");
+        TaskGraph {
+            tasks: HashMap::from([
+                ("srv:serve".to_string(), serve),
+                ("api:serve".to_string(), api),
+                ("lib:build".to_string(), build),
+            ]),
+            dependencies: HashMap::new(),
+            continuous_dependencies: HashMap::new(),
+            roots: vec![],
+        }
+    }
+
+    fn readiness_state(dependencies: &[&str]) -> DependencyViewState {
+        DependencyViewState {
+            current_task: "app:e2e".to_string(),
+            task_status: TaskStatus::NotStarted,
+            dependencies: dependencies.iter().map(|d| d.to_string()).collect(),
+            dependency_levels: HashMap::new(),
+            is_focused: true,
+            throbber_counter: 0,
+            scroll_offset: 0,
+            scrollbar_state: ScrollbarState::default(),
+            pane_area: Rect::default(),
+            dep_row_hits: Vec::new(),
+            dep_row_x_range: (0, 0),
+            selection_area: None,
+        }
+    }
+
+    fn render_view(
+        task_graph: &TaskGraph,
+        state: &mut DependencyViewState,
+        status_map: &HashMap<String, TaskStatus>,
+        readiness_map: &HashMap<String, TaskReadiness>,
+        ready_dependencies: &HashMap<String, Vec<String>>,
+    ) -> Buffer {
+        let area = Rect {
+            x: 0,
+            y: 0,
+            width: 80,
+            height: 12,
+        };
+        let mut buf = Buffer::empty(area);
+        let view = DependencyView::new(status_map, task_graph, readiness_map, ready_dependencies);
+        StatefulWidget::render(view, area, &mut buf, state);
+        buf
+    }
+
+    fn rows_of(buf: &Buffer) -> Vec<String> {
+        let area = buf.area();
+        (0..area.height)
+            .map(|y| {
+                (1..area.width - 1)
+                    .map(|x| buf[(x, y)].symbol())
+                    .collect::<String>()
+                    .trim()
+                    .to_string()
+            })
+            .collect()
+    }
+
+    fn first_text_cell(buf: &Buffer, y: u16) -> &Cell {
+        let x = (1..buf.area().width - 1)
+            .find(|&x| buf[(x, y)].symbol() != " ")
+            .expect("row has text");
+        &buf[(x, y)]
+    }
+
+    fn render_rows(
+        state: &mut DependencyViewState,
+        status_map: &HashMap<String, TaskStatus>,
+        readiness_map: &HashMap<String, TaskReadiness>,
+        ready_dependencies: &HashMap<String, Vec<String>>,
+    ) -> Vec<String> {
+        rows_of(&render_view(
+            &readiness_task_graph(),
+            state,
+            status_map,
+            readiness_map,
+            ready_dependencies,
+        ))
+    }
+
+    fn ready_edges(edges: &[&str]) -> HashMap<String, Vec<String>> {
+        HashMap::from([(
+            "app:e2e".to_string(),
+            edges.iter().map(|d| d.to_string()).collect(),
+        )])
+    }
+
+    #[test]
+    fn test_ready_edge_waits_for_the_probe_verdict() {
+        let mut state = readiness_state(&["srv:serve"]);
+        let status_map = HashMap::from([("srv:serve".to_string(), TaskStatus::InProgress)]);
+        let ready_dependencies = ready_edges(&["srv:serve"]);
+
+        // Started but no verdict yet: the hold is the only thing outstanding
+        let rows = render_rows(
+            &mut state,
+            &status_map,
+            &HashMap::new(),
+            &ready_dependencies,
+        );
+        assert_eq!(rows[2], "Waiting for srv:serve to be ready...");
+        assert!(rows[4].ends_with("srv:serve (not ready)"), "{}", rows[4]);
+
+        let readiness_map = HashMap::from([("srv:serve".to_string(), TaskReadiness::Ready)]);
+        let rows = render_rows(&mut state, &status_map, &readiness_map, &ready_dependencies);
+        assert_eq!(
+            rows[2],
+            "All dependencies satisfied, waiting for an available thread..."
+        );
+        assert!(rows[4].ends_with("srv:serve"), "{}", rows[4]);
+
+        let readiness_map = HashMap::from([("srv:serve".to_string(), TaskReadiness::Failed)]);
+        let rows = render_rows(&mut state, &status_map, &readiness_map, &ready_dependencies);
+        assert_eq!(
+            rows[2],
+            "Not started yet, waiting for 1 / 1 tasks to complete..."
+        );
+        assert!(
+            rows[4].ends_with("srv:serve (readiness failed)"),
+            "{}",
+            rows[4]
+        );
+    }
+
+    #[test]
+    fn test_plain_edge_is_satisfied_once_the_producer_starts() {
+        let mut state = readiness_state(&["srv:serve"]);
+        let status_map = HashMap::from([("srv:serve".to_string(), TaskStatus::InProgress)]);
+
+        let rows = render_rows(&mut state, &status_map, &HashMap::new(), &HashMap::new());
+        assert_eq!(
+            rows[2],
+            "All dependencies satisfied, waiting for an available thread..."
+        );
+        assert!(rows[4].ends_with("srv:serve"), "{}", rows[4]);
+    }
+
+    #[test]
+    fn test_plain_edge_is_satisfied_by_a_producer_started_elsewhere() {
+        let mut state = readiness_state(&["srv:serve"]);
+        let status_map = HashMap::from([("srv:serve".to_string(), TaskStatus::Shared)]);
+
+        let rows = render_rows(&mut state, &status_map, &HashMap::new(), &HashMap::new());
+        assert_eq!(
+            rows[2],
+            "All dependencies satisfied, waiting for an available thread..."
+        );
+        assert!(rows[4].ends_with("srv:serve"), "{}", rows[4]);
+    }
+
+    #[test]
+    fn test_ready_edge_is_not_the_only_hold_before_the_producer_starts() {
+        let mut state = readiness_state(&["srv:serve"]);
+        let status_map = HashMap::from([("srv:serve".to_string(), TaskStatus::NotStarted)]);
+        let ready_dependencies = ready_edges(&["srv:serve"]);
+
+        let rows = render_rows(
+            &mut state,
+            &status_map,
+            &HashMap::new(),
+            &ready_dependencies,
+        );
+        assert_eq!(
+            rows[2],
+            "Not started yet, waiting for 1 / 1 tasks to complete..."
+        );
+        assert!(rows[4].ends_with("srv:serve"), "{}", rows[4]);
+    }
+
+    #[test]
+    fn test_readiness_hold_counts_with_other_pending_dependencies() {
+        let mut state = readiness_state(&["lib:build", "srv:serve"]);
+        let status_map = HashMap::from([
+            ("lib:build".to_string(), TaskStatus::NotStarted),
+            ("srv:serve".to_string(), TaskStatus::InProgress),
+        ]);
+        let ready_dependencies = ready_edges(&["srv:serve"]);
+
+        let rows = render_rows(
+            &mut state,
+            &status_map,
+            &HashMap::new(),
+            &ready_dependencies,
+        );
+        assert_eq!(
+            rows[2],
+            "Not started yet, waiting for 2 / 2 tasks to complete..."
+        );
+        assert!(rows[5].ends_with("srv:serve (not ready)"), "{}", rows[5]);
+    }
+
+    #[test]
+    fn test_several_readiness_holds_are_counted() {
+        let mut state = readiness_state(&["api:serve", "srv:serve"]);
+        let status_map = HashMap::from([
+            ("api:serve".to_string(), TaskStatus::Shared),
+            ("srv:serve".to_string(), TaskStatus::InProgress),
+        ]);
+        let ready_dependencies = ready_edges(&["api:serve", "srv:serve"]);
+        let readiness_map = HashMap::from([("srv:serve".to_string(), TaskReadiness::Pending)]);
+
+        let rows = render_rows(&mut state, &status_map, &readiness_map, &ready_dependencies);
+        assert_eq!(rows[2], "Waiting for 2 tasks to be ready...");
+        assert!(rows[4].ends_with("api:serve (not ready)"), "{}", rows[4]);
+        assert!(rows[5].ends_with("srv:serve (not ready)"), "{}", rows[5]);
+    }
+
+    #[test]
+    fn a_stopped_producer_keeps_only_a_failed_verdict() {
+        assert_eq!(
+            ReadinessLabel::for_producer(TaskStatus::Stopped, Some(TaskReadiness::Failed)),
+            Some(ReadinessLabel::Failed)
+        );
+        assert_eq!(
+            ReadinessLabel::for_producer(TaskStatus::Stopped, Some(TaskReadiness::Ready)),
+            None
+        );
+        assert_eq!(
+            ReadinessLabel::for_producer(TaskStatus::InProgress, None),
+            None
+        );
+    }
+
+    #[test]
+    fn test_skipped_header_names_a_failed_dependency_only() {
+        let task_graph = TaskGraph {
+            dependencies: HashMap::from([("app:e2e".to_string(), edges_to(&["lib:build"]))]),
+            ..empty_task_graph()
+        };
+        for (dependency_status, header) in [
+            (TaskStatus::Failure, "Skipped because lib:build failed."),
+            (TaskStatus::Success, "Skipped."),
+        ] {
+            let mut state = readiness_state(&["lib:build"]);
+            state.task_status = TaskStatus::Skipped;
+            let status_map = HashMap::from([("lib:build".to_string(), dependency_status)]);
+
+            let buf = render_view(
+                &task_graph,
+                &mut state,
+                &status_map,
+                &HashMap::new(),
+                &HashMap::new(),
+            );
+            assert_eq!(rows_of(&buf)[2], header);
+            assert_eq!(first_text_cell(&buf, 2).fg, THEME.warning, "{header}");
+        }
+    }
+
+    #[test]
+    fn test_task_without_dependencies_shows_its_status() {
+        for (status, message, color) in [
+            (TaskStatus::Skipped, "Skipped.", THEME.warning),
+            (
+                TaskStatus::NotStarted,
+                "Waiting for available thread...",
+                THEME.success,
+            ),
+        ] {
+            let mut state = readiness_state(&[]);
+            state.task_status = status;
+
+            let buf = render_view(
+                &empty_task_graph(),
+                &mut state,
+                &HashMap::new(),
+                &HashMap::new(),
+                &HashMap::new(),
+            );
+            assert_eq!(rows_of(&buf)[2], message);
+            assert_eq!(first_text_cell(&buf, 2).fg, color, "{message}");
         }
     }
 }

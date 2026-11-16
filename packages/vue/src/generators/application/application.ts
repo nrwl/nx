@@ -1,10 +1,9 @@
-import { logShowProjectCommand } from '@nx/devkit/internal';
+import { logShowProjectCommand, type PackageJson } from '@nx/devkit/internal';
 import {
   addProjectConfiguration,
   formatFiles,
   GeneratorCallback,
   joinPathFragments,
-  readNxJson,
   runTasksInSerial,
   toJS,
   Tree,
@@ -28,11 +27,9 @@ import {
   updateTsconfigFiles,
   sortPackageJsonFields,
 } from '@nx/js/internal';
-import type { PackageJson } from 'nx/src/utils/package-json';
 
 export function applicationGenerator(tree: Tree, options: Schema) {
   return applicationGeneratorInternal(tree, {
-    addPlugin: false,
     useProjectJson: true,
     ...options,
   });
@@ -47,7 +44,6 @@ export async function applicationGeneratorInternal(
   const tasks: GeneratorCallback[] = [];
   const addTsPlugin = shouldConfigureTsSolutionSetup(
     tree,
-    _options.addPlugin,
     _options.useTsSolution
   );
   tasks.push(
@@ -58,7 +54,6 @@ export async function applicationGeneratorInternal(
         : 'tsconfig.base.json',
       skipFormat: true,
       addTsPlugin,
-      formatter: _options.formatter,
       platform: 'web',
     })
   );
@@ -70,12 +65,6 @@ export async function applicationGeneratorInternal(
   if (options.isUsingTsSolutionConfig) {
     await addProjectToTsSolutionWorkspace(tree, options.appProjectRoot);
   }
-
-  const nxJson = readNxJson(tree);
-
-  options.addPlugin ??=
-    process.env.NX_ADD_PLUGINS !== 'false' &&
-    nxJson.useInferencePlugins !== false;
 
   const packageJson: PackageJson = {
     name: options.importPath,
@@ -131,12 +120,11 @@ export async function applicationGeneratorInternal(
       {
         name: options.projectName,
         projectRoot: options.appProjectRoot,
-        linter: options.linter ?? 'eslint',
+        linter: options.linter,
         unitTestRunner: options.unitTestRunner,
         skipPackageJson: options.skipPackageJson,
-        setParserOptionsProject: options.setParserOptionsProject,
+        enableTypedLinting: options.enableTypedLinting,
         rootProject: options.rootProject,
-        addPlugin: options.addPlugin,
         projectName: options.projectName,
       },
       'app'

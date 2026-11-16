@@ -1,5 +1,5 @@
 import type { GeneratorCallback, Tree } from '@nx/devkit';
-import { E2EWebServerDetails } from '@nx/devkit/internal';
+import { E2EWebServerDetails, type PackageJson } from '@nx/devkit/internal';
 import {
   addProjectConfiguration,
   ensurePackage,
@@ -12,7 +12,6 @@ import { webStaticServeGenerator } from '@nx/web';
 import { nxVersion } from '../../../utils/versions';
 import { hasRsbuildPlugin } from '../../../utils/has-rsbuild-plugin';
 import { NormalizedSchema } from '../schema';
-import type { PackageJson } from 'nx/src/utils/package-json';
 
 export async function addE2e(
   tree: Tree,
@@ -39,7 +38,6 @@ export async function addE2e(
         options.appProjectRoot,
         `vite.config.${options.js ? 'js' : 'ts'}`
       ),
-      options.addPlugin,
       options.devServerPort ?? 4200
     );
   } else if (options.bundler === 'rsbuild') {
@@ -56,7 +54,6 @@ export async function addE2e(
         options.appProjectRoot,
         `rsbuild.config.${options.js ? 'js' : 'ts'}`
       ),
-      options.addPlugin,
       options.devServerPort ?? 4200
     );
   }
@@ -164,9 +161,10 @@ export async function addE2e(
         directory: 'src',
         js: false,
         linter: options.linter,
-        setParserOptionsProject: options.setParserOptionsProject,
-        webServerCommand: e2eWebServerInfo.e2eCiWebServerCommand,
-        webServerAddress: e2eWebServerInfo.e2eCiBaseUrl,
+        webServerCommand: e2eWebServerInfo.e2eWebServerCommand,
+        webServerAddress: e2eWebServerInfo.e2eWebServerAddress,
+        ciWebServerCommand: e2eWebServerInfo.e2eCiWebServerCommand,
+        ciWebServerAddress: e2eWebServerInfo.e2eCiBaseUrl,
       });
 
       return e2eTask;

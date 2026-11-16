@@ -1,7 +1,13 @@
-import { logShowProjectCommand } from '@nx/devkit/internal';
+import {
+  logShowProjectCommand,
+  getNxCloudAppOnBoardingUrl,
+  createNxCloudOnboardingURLForWelcomeApp,
+  type PackageJson,
+} from '@nx/devkit/internal';
 import {
   addDependenciesToPackageJson,
   addProjectConfiguration,
+  detectPackageManager,
   formatFiles,
   generateFiles,
   GeneratorCallback,
@@ -10,6 +16,7 @@ import {
   runTasksInSerial,
   toJS,
   Tree,
+  workspaceRoot,
   writeJson,
 } from '@nx/devkit';
 import { Schema } from './schema';
@@ -27,19 +34,14 @@ import { addVitest } from './lib/add-vitest';
 import { vueTestUtilsVersion, vitePluginVueVersion } from '@nx/vue';
 import { ensureDependencies } from './lib/ensure-dependencies';
 import { assertSupportedNuxtVersion } from '../../utils/assert-supported-nuxt-version';
-import { execSync } from 'node:child_process';
+import { prepareProject } from './lib/prepare-project';
 import { join } from 'node:path';
-import {
-  getNxCloudAppOnBoardingUrl,
-  createNxCloudOnboardingURLForWelcomeApp,
-} from 'nx/src/nx-cloud/utilities/onboarding';
 import {
   addProjectToTsSolutionWorkspace,
   shouldConfigureTsSolutionSetup,
   updateTsconfigFiles,
   sortPackageJsonFields,
 } from '@nx/js/internal';
-import type { PackageJson } from 'nx/src/utils/package-json';
 
 export async function applicationGenerator(tree: Tree, schema: Schema) {
   return await applicationGeneratorInternal(tree, {
@@ -55,7 +57,6 @@ export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
 
   const addTsPlugin = shouldConfigureTsSolutionSetup(
     tree,
-    true, // nuxt always adds plugins
     schema.useTsSolution
   );
   const jsInitTask = await jsInitGenerator(tree, {
@@ -187,9 +188,10 @@ export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
     await addLinting(tree, {
       projectName: options.projectName,
       projectRoot: options.appProjectRoot,
-      linter: options.linter ?? 'eslint',
+      linter: options.linter,
       unitTestRunner: options.unitTestRunner,
       rootProject: options.rootProject,
+      enableTypedLinting: options.enableTypedLinting,
     })
   );
 
@@ -243,12 +245,10 @@ export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
   if (!options.skipFormat) await formatFiles(tree);
 
   tasks.push(() => {
+    const packageManager = detectPackageManager(workspaceRoot);
+    const appRoot = join(workspaceRoot, options.appProjectRoot);
     try {
-      execSync(`npx -y nuxi prepare`, {
-        cwd: options.appProjectRoot,
-
-        windowsHide: true,
-      });
+      prepareProject(appRoot, workspaceRoot, packageManager);
     } catch (e) {
       console.error(
         `Failed to run \`nuxi prepare\` in "${options.appProjectRoot}". Please run the command manually.`

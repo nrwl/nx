@@ -2,10 +2,11 @@ import {
   checkFilesDoNotExist,
   checkFilesExist,
   cleanupProject,
+  configureTargetOptions,
   getSelectedPackageManager,
   killPort,
+  killProcessAndPorts,
   newProject,
-  promisifiedTreeKill,
   readFile,
   reservePort,
   runCLI,
@@ -15,46 +16,44 @@ import {
   updateJson,
 } from '@nx/e2e-utils';
 import { join } from 'path';
+import { stripVTControlCharacters } from 'node:util';
 
 describe('Node Applications + webpack', () => {
   let proj: string;
+  let restoreServerPort: (() => void) | undefined;
   const selectedPm = getSelectedPackageManager();
 
   // TODO(nicholas): Look into how this can work with npm instead of forcing pnpm.
   beforeAll(() => {
     proj = newProject({
-      packages: ['@nx/node', '@nx/nest', '@nx/webpack'],
+      packages: ['@nx/node', '@nx/nest', '@nx/webpack', '@nx/vitest'],
       // npm has resolution for ajv some packages require ajv6 and some require ajv8 and npm resolves it to ajv6 (Error: Cannot find module 'ajv/dist/compile/codegen')
       // - ajv@6 (fork-ts-checker-webpack-plugin, terser-webpack-plugin, webpack)
       // - ajv@8 (babel-loader)
       // Solution is to use pnpm or run fix it via npm ex.(npm dedupe --force)
       packageManager: selectedPm === 'npm' ? 'pnpm' : selectedPm,
     });
+    restoreServerPort = configureTargetOptions(['@nx/js:node'], { port: 0 });
   });
 
-  afterAll(() => cleanupProject());
+  afterAll(() => {
+    restoreServerPort?.();
+    cleanupProject();
+  });
 
   function addLibImport(appName: string, libName: string, importPath?: string) {
-    const content = readFile(`apps/${appName}/src/main.ts`);
-    if (importPath) {
-      updateFile(
-        `apps/${appName}/src/main.ts`,
-        `
-      import { ${libName} } from '${importPath}';
-      ${content}
+    const mainFile = `apps/${appName}/src/main.ts`;
+    const content = readFile(mainFile);
+    // Keep the shebang first so the inferred serve target still resolves.
+    const header = content.match(/^#!.*\n(?:\/\/.*\n)*/)?.[0] ?? '';
+    updateFile(
+      mainFile,
+      `${header}
+      import { ${libName} } from '${importPath ?? `@${proj}/${libName}`}';
+      ${content.slice(header.length)}
       console.log(${libName}());
       `
-      );
-    } else {
-      updateFile(
-        `apps/${appName}/src/main.ts`,
-        `
-      import { ${libName} } from '@${proj}/${libName}';
-      ${content}
-      console.log(${libName}());
-      `
-      );
-    }
+    );
   }
 
   async function runE2eTests(appName: string, port: number) {
@@ -95,13 +94,13 @@ describe('Node Applications + webpack', () => {
         `generate @nx/node:app apps/${expressApp} --framework=express --port=${expressPort} --no-interactive --linter=eslint --unitTestRunner=jest --e2eTestRunner=jest`
       );
       runCLI(
-        `generate @nx/node:app apps/${fastifyApp} --framework=fastify --port=${fastifyPort} --no-interactive --linter=eslint --unitTestRunner=jest --e2eTestRunner=jest`
+        `generate @nx/node:app apps/${fastifyApp} --framework=fastify --port=${fastifyPort} --no-interactive --linter=eslint --unitTestRunner=vitest --e2eTestRunner=jest`
       );
       runCLI(
         `generate @nx/node:app apps/${koaApp} --framework=koa --port=${koaPort} --no-interactive --linter=eslint --unitTestRunner=jest --e2eTestRunner=jest`
       );
       runCLI(
-        `generate @nx/node:app apps/${nestApp} --framework=nest --port=${nestPort} --bundler=webpack --no-interactive --linter=eslint --unitTestRunner=jest --e2eTestRunner=jest --verbose`
+        `generate @nx/node:app apps/${nestApp} --framework=nest --port=${nestPort} --bundler=webpack --no-interactive --linter=eslint --unitTestRunner=vitest --e2eTestRunner=jest --verbose`
       );
 
       addLibImport(expressApp, testLib1);
@@ -188,21 +187,88 @@ describe('Node Applications + webpack', () => {
 
     // Set ports to avoid conflicts with other tests that might run in parallel
     runCLI(
-      `generate @nx/node:app apps/${nodeApp1} --framework=none --no-interactive --port=${nodeApp1Port} --linter=eslint --unitTestRunner=jest`
+      `generate @nx/node:app apps/${nodeApp1} --framework=none --bundler=webpack --no-interactive --port=${nodeApp1Port} --linter=eslint --unitTestRunner=jest`
     );
     runCLI(
-      `generate @nx/node:app apps/${nodeApp2} --framework=none --no-interactive --port=${nodeApp2Port} --linter=eslint --unitTestRunner=jest`
+      `generate @nx/node:app apps/${nodeApp2} --framework=none --bundler=webpack --no-interactive --port=${nodeApp2Port} --linter=eslint --unitTestRunner=jest`
     );
     updateJson(join('apps', nodeApp1, 'project.json'), (config) => {
       config.targets.serve.options.waitUntilTargets = [`${nodeApp2}:build`];
       return config;
     });
 
-    await runCommandUntil(`serve ${nodeApp1} `, (output) =>
-      output.includes('Hello World')
+    const p = await runCommandUntil(
+      `serve ${nodeApp1}`,
+      (output) => output.includes('Hello World'),
+      { timeout: 120_000 }
     );
 
-    checkFilesExist(`dist/apps/${nodeApp1}/main.js`);
-    checkFilesExist(`dist/apps/${nodeApp2}/main.js`);
+    try {
+      checkFilesExist(`dist/apps/${nodeApp1}/main.js`);
+      checkFilesExist(`dist/apps/${nodeApp2}/main.js`);
+    } finally {
+      await killProcessAndPorts(p.pid);
+    }
+  }, 300_000);
+
+  it('should wait for the previous process to exit on watch restart so the port is released', async () => {
+    const app = uniq('slowshutdown');
+    const port = await reservePort();
+
+    runCLI(
+      `generate @nx/node:app apps/${app} --framework=none --bundler=webpack --no-interactive --port=${port} --linter=eslint --unitTestRunner=jest`
+    );
+
+    // Server with a slow graceful shutdown that holds the port after SIGTERM.
+    // A watch-mode restart must wait for it to exit, otherwise the new
+    // process fails with EADDRINUSE. The 8s hold exceeds the 5s kill grace
+    // period, so the executor force-kills it rather than waiting forever.
+    updateFile(
+      `apps/${app}/src/main.ts`,
+      `
+      import { createServer } from 'http';
+      const server = createServer((req, res) => res.end('ok'));
+      server.listen(${port}, () => console.log('Listening on ${port} pid ' + process.pid));
+      process.on('SIGTERM', () => {
+        setTimeout(() => process.exit(0), 8000);
+      });
+      `
+    );
+
+    const p = await runCommandUntil(
+      `serve ${app}`,
+      (output) => output.includes(`Listening on ${port}`),
+      { timeout: 120_000 }
+    );
+
+    try {
+      const restarted = new Promise<void>((resolve, reject) => {
+        let output = '';
+        const timeoutId = setTimeout(() => {
+          reject(new Error(`Server did not restart. Output:\n${output}`));
+        }, 120_000);
+        const check = (chunk: Buffer) => {
+          output += stripVTControlCharacters(chunk.toString());
+          if (output.includes('EADDRINUSE')) {
+            clearTimeout(timeoutId);
+            reject(new Error(`Restarted server hit EADDRINUSE:\n${output}`));
+          } else if (output.includes(`Listening on ${port}`)) {
+            clearTimeout(timeoutId);
+            resolve();
+          }
+        };
+        p.stdout?.on('data', check);
+        p.stderr?.on('data', check);
+      });
+
+      // Trigger a watch rebuild and restart.
+      updateFile(`apps/${app}/src/main.ts`, (content) =>
+        content.replace(`res.end('ok')`, `res.end('ok v2')`)
+      );
+
+      await restarted;
+    } finally {
+      await killProcessAndPorts(p.pid, port);
+    }
   }, 300_000);
 });

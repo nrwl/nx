@@ -17,6 +17,11 @@
       "description": "the package name of the plugin as it would be published to NPM.",
       "x-priority": "important"
     },
+    "packageManager": {
+      "type": "string",
+      "enum": ["npm", "pnpm", "yarn", "bun"],
+      "description": "Package manager the generated e2e test uses to create the test workspace, install the plugin and run its checks. Defaults to the package manager the workspace already uses."
+    },
     "projectDirectory": {
       "type": "string",
       "description": "the directory where the plugin is placed."
@@ -30,10 +35,16 @@
       "type": "string",
       "description": "Jest config file."
     },
-    "linter": {
-      "description": "The tool to use for running lint checks.",
+    "testRunner": {
       "type": "string",
-      "enum": ["none", "eslint"]
+      "enum": ["jest", "vitest"],
+      "description": "Test runner to use for the e2e tests.",
+      "default": "jest"
+    },
+    "linter": {
+      "description": "The tool to use for running lint checks. Defaults to the linter the workspace already uses.",
+      "type": "string",
+      "enum": ["none", "eslint", "oxlint"]
     },
     "minimal": {
       "type": "boolean",

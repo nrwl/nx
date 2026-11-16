@@ -185,6 +185,99 @@ describe('ast-utils', () => {
             }
         }))"
       `);
+
+      // An override that needs compat tooling must hand parser and parserOptions to
+      // FlatCompat, which resolves the parser and hoists ecmaVersion/sourceType.
+      // Re-emitting them onto the mapped object instead would overwrite the
+      // languageOptions FlatCompat derives from env/extends.
+      expect(
+        getOutput({
+          files: ['*.ts'],
+          parser: '@typescript-eslint/parser',
+          parserOptions: { project: './tsconfig.json' },
+          plugins: ['@typescript-eslint'],
+          rules: { 'no-console': 'error' },
+        })
+      ).toMatchInlineSnapshot(`
+        "...compat.config({
+            parser: "@typescript-eslint/parser",
+            parserOptions: {
+                project: "./tsconfig.json"
+            },
+            plugins: [
+                "@typescript-eslint"
+            ]
+        }).map(config => ({
+            ...config,
+            files: [
+                "**/*.ts"
+            ],
+            rules: {
+                ...config.rules,
+                "no-console": "error"
+            }
+        }))"
+      `);
+
+      // The mapped object must not assign languageOptions, or it would clobber the
+      // globals FlatCompat derives from env.
+      expect(
+        getOutput({
+          files: ['*.js'],
+          parser: '@typescript-eslint/parser',
+          env: { node: true },
+          plugins: ['@typescript-eslint'],
+          rules: { 'no-undef': 'error' },
+        })
+      ).toMatchInlineSnapshot(`
+        "...compat.config({
+            parser: "@typescript-eslint/parser",
+            env: {
+                node: true
+            },
+            plugins: [
+                "@typescript-eslint"
+            ]
+        }).map(config => ({
+            ...config,
+            files: [
+                "**/*.js"
+            ],
+            rules: {
+                ...config.rules,
+                "no-undef": "error"
+            }
+        }))"
+      `);
+
+      // eslintrc allows `parser: null` (use the default parser). Flat config has no
+      // equivalent and FlatCompat throws on it, so the key must be dropped entirely.
+      expect(
+        getOutput({
+          files: ['*.ts'],
+          parser: null,
+          env: { node: true },
+          plugins: ['@typescript-eslint'],
+          rules: {},
+        })
+      ).toMatchInlineSnapshot(`
+        "...compat.config({
+            env: {
+                node: true
+            },
+            plugins: [
+                "@typescript-eslint"
+            ]
+        }).map(config => ({
+            ...config,
+            files: [
+                "**/*.ts"
+            ],
+            rules: {
+                ...config.rules
+            }
+        }))"
+      `);
     });
   });
 
@@ -352,6 +445,33 @@ module.exports = [
         ];"
       `);
     });
+
+    it.each([
+      [
+        'a let',
+        'let eslintConfig = [...baseConfig];\nexport default eslintConfig;',
+      ],
+      [
+        'an import',
+        'import eslintConfig from "./shared.mjs";\nexport default eslintConfig;',
+      ],
+      [
+        'a const bound to a call',
+        'const eslintConfig = defineConfig([...baseConfig]);\nexport default eslintConfig;',
+      ],
+    ])(
+      'should leave the config unchanged when the exported name is %s',
+      (_, body) => {
+        const content = `import baseConfig from "../../eslint.config.mjs";\n${body}\n`;
+
+        const result = addBlockToFlatConfigExport(
+          content,
+          generateFlatPredefinedConfig('flat/react', 'nx', true)
+        );
+
+        expect(result).toBe(content);
+      }
+    );
   });
 
   describe('addImportToFlatConfig', () => {
@@ -1158,6 +1278,33 @@ export default [
                 { ignores: ["something/else"] }
               ];"
       `);
+    });
+
+    it('should remove only the requested plugin from an array exported through a const', () => {
+      const content = `import nxEslintPlugin from "@nx/eslint-plugin";
+
+const eslintConfig = [
+  { plugins: { "@nx": nxEslintPlugin } },
+  { files: ["**/*.tsx"], plugins: { react: reactPlugin } },
+  { plugins: { a: aPlugin, b: bPlugin } },
+  { ignores: ["dist"] },
+];
+
+export default eslintConfig;
+`;
+
+      const result = removePlugin(content, '@nx', '@nx/eslint-plugin');
+
+      expect(result).toBe(`
+
+const eslintConfig = [
+  { files: ["**/*.tsx"], plugins: { react: reactPlugin } },
+  { plugins: { a: aPlugin, b: bPlugin } },
+  { ignores: ["dist"] },
+];
+
+export default eslintConfig;
+`);
     });
 
     it('should remove single plugin from config', () => {

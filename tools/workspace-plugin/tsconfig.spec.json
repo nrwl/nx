@@ -3,7 +3,8 @@
   "compilerOptions": {
     "outDir": "dist/spec",
     "types": ["jest", "node"],
-    "composite": true
+    "composite": true,
+    "rootDir": "."
   },
   "include": [
     "jest.config.ts",

@@ -7,7 +7,7 @@ import { ast, query } from '@phenomnomnominal/tsquery';
 import * as ts from 'typescript';
 import type { RspackExecutorSchema } from '../../../executors/rspack/schema';
 import type { NxAppRspackPluginOptions } from '../../../plugins/utils/models';
-import { toPropertyAssignment } from './ast';
+import { hasMigratedConfigValues, toPropertyAssignment } from './ast';
 import type { MigrationContext, TransformerContext } from './types';
 
 export function buildPostTargetTransformerFactory(
@@ -24,6 +24,19 @@ export function buildPostTargetTransformerFactory(
       projectName: projectDetails.projectName,
       projectRoot: projectDetails.root,
     };
+
+    // outputPath moves into the config, where `{options.outputPath}` can't resolve.
+    const outputPath = target.options?.outputPath;
+    if (target.outputs && typeof outputPath === 'string') {
+      target.outputs = target.outputs.map((output) =>
+        output.startsWith('{options.outputPath}')
+          ? output.replace(
+              '{options.outputPath}',
+              `{workspaceRoot}/${outputPath}`
+            )
+          : output.replace('{options.outputPath}', outputPath)
+      );
+    }
 
     const { pluginOptions, rspackConfigPath } = processOptions(target, context);
 
@@ -140,6 +153,13 @@ function extractPluginOptions(
       delete options.memoryLimit;
     } else if (key === 'standardRspackConfigFunction') {
       delete options.standardRspackConfigFunction;
+    } else if (key === 'transformers') {
+      context.logger.addLog({
+        executorName: '@nx/rspack:rspack',
+        log: `The "transformers" option was removed because Rspack compiles TypeScript with "builtin:swc-loader", which cannot run TypeScript transformer plugins. It never had an effect on the build.`,
+        project: context.projectName,
+      });
+      delete options.transformers;
     } else {
       pluginOptions[key] = value;
       delete options[key];
@@ -162,6 +182,12 @@ function updateRspackConfig(
     sourceFile = ast(rspackConfigText);
   };
   updateSources();
+
+  // A target kept on its executor is converted again on rerun, and its options
+  // are already in the config.
+  if (hasMigratedConfigValues(sourceFile, 'build')) {
+    return;
+  }
 
   setOptionsInRspackConfig(
     tree,
@@ -189,13 +215,29 @@ function setOptionsInRspackConfig(
 
   const optionsSelector =
     'VariableStatement:has(VariableDeclaration:has(Identifier[name=options]))';
-  const optionsVariable = query<ts.VariableStatement>(
+  let optionsVariable = query<ts.VariableStatement>(
     sourceFile,
     optionsSelector
   )[0];
 
-  // This is assuming the `options` variable will be available since it's what the
-  // `convert-config-to-rspack-plugin` generates
+  if (!optionsVariable) {
+    const plugin = query<ts.NewExpression>(
+      sourceFile,
+      'NewExpression:has(Identifier[name=NxAppRspackPlugin])'
+    )[0];
+    const argument = plugin.arguments?.[0];
+    if (argument && !ts.isObjectLiteralExpression(argument)) {
+      throw new Error(
+        'Move NxAppRspackPlugin options into an object literal before converting this config.'
+      );
+    }
+    text = `const options = ${argument?.getText(sourceFile) ?? '{}'};\n${text}`;
+    sourceFile = ast(text);
+    optionsVariable = query<ts.VariableStatement>(
+      sourceFile,
+      optionsSelector
+    )[0];
+  }
 
   let defaultOptionsObject: ts.ObjectLiteralExpression;
   const optionsObject = query<ts.ObjectLiteralExpression>(
@@ -350,8 +392,8 @@ function setOptionsInLegacyNxPlugin(
     legacyNxPluginSelector
   )[0];
 
-  // we're assuming the `useLegacyNxPlugin` function is being called since it's what the `convert-config-to-rspack-plugin` generates
-  // we've already "ensured" that the `convert-config-to-rspack-plugin` was run by checking for the `NxAppRspackPlugin` in the project validation
+  if (!legacyNxPlugin) return;
+
   const updatedLegacyNxPlugin = ts.factory.updateCallExpression(
     legacyNxPlugin,
     legacyNxPlugin.expression,

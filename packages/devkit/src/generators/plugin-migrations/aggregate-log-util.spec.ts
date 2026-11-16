@@ -5,7 +5,7 @@ describe(`aggregateLog utils`, () => {
   it('should aggregate similar logs to single log listing the affected projects', () => {
     // ARRANGE
     let spyLog = '';
-    jest.spyOn(logger, 'warn').mockImplementation((log) => (spyLog = log));
+    vi.spyOn(logger, 'warn').mockImplementation((log) => (spyLog = log));
     const aggregatedLogs = new AggregatedLog();
     aggregatedLogs.addLog({
       executorName: '@nx/vite:serve',
@@ -29,9 +29,9 @@ describe(`aggregateLog utils`, () => {
     // ASSERT
     expect(logger.warn).toHaveBeenCalled();
     expect(spyLog).toMatchInlineSnapshot(`
-      "[1mEncountered the following while migrating '@nx/vite:serve':
-      [22m   • Encountered 'proxyConfig' in project.json. You will need to copy the contents of this file to the 'server.proxy' property in your Vite config file.
-           [1mAffected Projects[22m
+      "Encountered the following while migrating '@nx/vite:serve':
+         • Encountered 'proxyConfig' in project.json. You will need to copy the contents of this file to the 'server.proxy' property in your Vite config file.
+           Affected Projects
             app
             myapp
             shop-app
@@ -42,7 +42,7 @@ describe(`aggregateLog utils`, () => {
   it('should aggregate similar logs to single log and output different logs correctly', () => {
     // ARRANGE
     let spyLog = '';
-    jest.spyOn(logger, 'warn').mockImplementation((log) => (spyLog = log));
+    vi.spyOn(logger, 'warn').mockImplementation((log) => (spyLog = log));
     const aggregatedLogs = new AggregatedLog();
     aggregatedLogs.addLog({
       executorName: '@nx/vite:serve',
@@ -71,17 +71,17 @@ describe(`aggregateLog utils`, () => {
     // ASSERT
     expect(logger.warn).toHaveBeenCalled();
     expect(spyLog).toMatchInlineSnapshot(`
-      "[1mEncountered the following while migrating '@nx/vite:serve':
-      [22m   • Encountered 'proxyConfig' in project.json. You will need to copy the contents of this file to the 'server.proxy' property in your Vite config file.
-           [1mAffected Projects[22m
+      "Encountered the following while migrating '@nx/vite:serve':
+         • Encountered 'proxyConfig' in project.json. You will need to copy the contents of this file to the 'server.proxy' property in your Vite config file.
+           Affected Projects
             app
             shop-app
          • Encountered 'AnotherValue' in project.json. You will need to copy the contents of this file to the 'config.prop' property in your Vite config file.
-           [1mAffected Projects[22m
+           Affected Projects
             shop-app
-      [1mEncountered the following while migrating '@nx/vite:build':
-      [22m   • Encountered 'proxyConfig' in project.json. You will need to copy the contents of this file to the 'server.proxy' property in your Vite config file.
-           [1mAffected Projects[22m
+      Encountered the following while migrating '@nx/vite:build':
+         • Encountered 'proxyConfig' in project.json. You will need to copy the contents of this file to the 'server.proxy' property in your Vite config file.
+           Affected Projects
             myapp
       "
     `);

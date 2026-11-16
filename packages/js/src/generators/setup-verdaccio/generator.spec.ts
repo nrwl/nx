@@ -1,11 +1,12 @@
-import 'nx/src/internal-testing-utils/mock-project-graph';
+import '@nx/devkit/internal-testing-utils/mock-project-graph';
 
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { Tree, readJson, updateJson } from '@nx/devkit';
 
 import generator from './generator';
 import { SetupVerdaccioGeneratorSchema } from './schema';
-import { PackageJson } from 'nx/src/utils/package-json';
+import { PackageJson } from '@nx/devkit/internal';
+import { load } from '@zkochan/js-yaml';
 
 describe('setup-verdaccio generator', () => {
   let tree: Tree;
@@ -19,6 +20,14 @@ describe('setup-verdaccio generator', () => {
     await generator(tree, options);
     const config = tree.read('.verdaccio/config.yml', 'utf-8');
     expect(config).toContain('https://registry.npmjs.org');
+  });
+
+  it('should enable jwt api tokens so verdaccio 7+ accepts the placeholder auth token', async () => {
+    await generator(tree, options);
+    const config = load(tree.read('.verdaccio/config.yml', 'utf-8')) as any;
+    expect(config.security).toEqual({
+      api: { jwt: { sign: { expiresIn: '7d' } } },
+    });
   });
 
   it('should create project.json if it does not exist', async () => {

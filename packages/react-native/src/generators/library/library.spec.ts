@@ -1,4 +1,4 @@
-import 'nx/src/internal-testing-utils/mock-project-graph';
+import '@nx/devkit/internal-testing-utils/mock-project-graph';
 
 import {
   readJson,
@@ -22,7 +22,6 @@ describe('lib', () => {
     skipTsConfig: false,
     unitTestRunner: 'jest',
     strict: true,
-    addPlugin: true,
   };
 
   beforeEach(() => {
@@ -301,9 +300,8 @@ describe('lib', () => {
                 configFile: __dirname + '/.babelrc.js',
               },
             ],
-            '^.+[.](bmp|gif|jpg|jpeg|mp4|png|psd|svg|webp)$': require.resolve(
-              'react-native/jest/assetFileTransformer.js',
-            ),
+            '^.+[.](bmp|gif|jpg|jpeg|mp4|png|psd|svg|webp)$':
+              require.resolve('react-native/jest/assetFileTransformer.js'),
           },
           transformIgnorePatterns: [
             'node_modules/(?!(.pnpm/.+/node_modules/)?(react-native|@react-native(-community)?)/)',
@@ -356,7 +354,7 @@ describe('lib', () => {
       }
     });
 
-    it('should add package.json and .babelrc', async () => {
+    it('should add package.json and .babelrc.js', async () => {
       await libraryGenerator(appTree, {
         ...defaultSchema,
         publishable: true,
@@ -365,7 +363,7 @@ describe('lib', () => {
 
       const packageJson = readJson(appTree, 'my-lib/package.json');
       expect(packageJson.name).toEqual('@proj/my-lib');
-      expect(appTree.exists('my-lib/.babelrc'));
+      expect(appTree.exists('my-lib/.babelrc.js')).toBeTruthy();
     });
   });
 

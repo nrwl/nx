@@ -3,8 +3,10 @@ package dev.nx.gradle.utils
 import dev.nx.gradle.data.Dependency
 import dev.nx.gradle.data.DependsOnEntry
 import dev.nx.gradle.data.ExternalNode
+import groovy.lang.Closure
 import kotlin.io.path.Path
 import org.gradle.api.Project
+import org.gradle.api.Task
 import org.gradle.testfixtures.ProjectBuilder
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
@@ -93,13 +95,14 @@ class ProcessTaskUtilsTest {
   }
 
   @Test
-  fun `test processTask basic properties`() {
+  fun `test a task whose dependency set cannot be fully resolved stays cacheable and fails open`() {
     val project = ProjectBuilder.builder().build()
-    val task = project.tasks.register("compileJava").get()
-    task.group = "build"
-    task.description = "Compiles Java source files"
+    val task = project.tasks.register("packagesOtherProject").get()
+    // Neither path exists, so the set is knowably short. Cacheability is Gradle's verdict, not
+    // the plugin's: the inputs over-declare instead.
+    task.dependsOn(":other:jar")
+    task.dependsOn(":missing:jar")
 
-    val gitIgnoreClassifier = GitIgnoreClassifier(project.rootDir)
     val result =
         processTask(
             task,
@@ -109,7 +112,156 @@ class ProcessTaskUtilsTest {
             externalNodes = mutableMapOf(),
             dependencies = mutableSetOf(),
             targetNameOverrides = emptyMap(),
-            gitIgnoreClassifier = gitIgnoreClassifier,
+            buildOutputClassifier = BuildOutputClassifier.forBuild(project),
+            project = project)
+
+    assertEquals(true, result["cache"])
+    val inputs = result["inputs"] as? List<*>
+    assertNotNull(inputs)
+    assertTrue(
+        inputs!!.any {
+          it is Map<*, *> && it["dependentTasksOutputFiles"] == "**/*" && it["transitive"] == true
+        },
+        "a short dependency set must over-declare the catch-all, got $result")
+  }
+
+  @Test
+  fun `test a self-referential dependsOn terminates`() {
+    val project = ProjectBuilder.builder().build()
+    val task = project.tasks.register("cyclicDeps").get()
+    // Gradle stores dependsOn in a Set, and hashing a self-referential list overflows — a cycle
+    // is reachable only through a Callable.
+    val cyclic = mutableListOf<Any>(":other:jar")
+    cyclic.add(cyclic)
+    task.dependsOn(java.util.concurrent.Callable { cyclic })
+
+    val result =
+        processTask(
+            task,
+            projectBuildPath = ":project",
+            projectRoot = project.projectDir.path,
+            workspaceRoot = project.rootDir.path,
+            externalNodes = mutableMapOf(),
+            dependencies = mutableSetOf(),
+            targetNameOverrides = emptyMap(),
+            buildOutputClassifier = BuildOutputClassifier.forBuild(project),
+            project = project)
+
+    assertNotNull(result["executor"])
+  }
+
+  @Test
+  fun `test a provider dependsOn resolves through the engine`() {
+    val project = ProjectBuilder.builder().build()
+    java.io.File(project.projectDir, "build.gradle").writeText("")
+    val other = ProjectBuilder.builder().withParent(project).withName("other").build()
+    other.tasks.register("jar")
+    project.tasks.register("producedByProvider")
+    val task = project.tasks.register("consumesProvider").get()
+    // `named().map { }` yields a plain Provider, not a TaskProvider.
+    task.dependsOn(project.tasks.named("producedByProvider").map { it })
+    task.dependsOn(":other:jar") // the deadlocking shape (#36668)
+
+    val result =
+        processTask(
+            task,
+            projectBuildPath = ":project",
+            projectRoot = project.projectDir.path,
+            workspaceRoot = project.rootDir.path,
+            externalNodes = mutableMapOf(),
+            dependencies = mutableSetOf(),
+            targetNameOverrides = emptyMap(),
+            buildOutputClassifier = BuildOutputClassifier.forBuild(project),
+            project = project)
+
+    val dependsOn = result["dependsOn"]?.toString() ?: ""
+    assertTrue(
+        dependsOn.contains("producedByProvider"),
+        "the provider's task must survive the safe resolution, got $dependsOn")
+    assertTrue(dependsOn.contains("jar"), "the path edge must also survive, got $dependsOn")
+  }
+
+  @Test
+  fun `test a Groovy closure dependsOn receives the task and is expanded`() {
+    val project = ProjectBuilder.builder().build()
+    java.io.File(project.projectDir, "build.gradle").writeText("")
+    val produced = project.tasks.register("producedByGroovyClosure").get()
+    val task = project.tasks.register("consumesGroovyClosure").get()
+    // Gradle passes the task to `dependsOn { … }`; a Closure is a Callable, so a no-arg call
+    // throws.
+    task.dependsOn(
+        object : Closure<Any?>(this) {
+          fun doCall(owner: Task): Any? {
+            requireNotNull(owner) { "Gradle passes the task to a dependsOn closure" }
+            return produced
+          }
+        })
+    task.dependsOn(":other:jar") // the deadlocking shape (#36668)
+
+    val result =
+        processTask(
+            task,
+            projectBuildPath = ":project",
+            projectRoot = project.projectDir.path,
+            workspaceRoot = project.rootDir.path,
+            externalNodes = mutableMapOf(),
+            dependencies = mutableSetOf(),
+            targetNameOverrides = emptyMap(),
+            buildOutputClassifier = BuildOutputClassifier.forBuild(project),
+            project = project)
+
+    val dependsOn = result["dependsOn"]?.toString() ?: ""
+    assertTrue(
+        dependsOn.contains("producedByGroovyClosure"),
+        "the closure's task must survive the safe resolution, got $dependsOn")
+  }
+
+  @Test
+  fun `test a Callable dependsOn is expanded rather than dropped`() {
+    val project = ProjectBuilder.builder().build()
+    java.io.File(project.projectDir, "build.gradle").writeText("")
+    val produced = project.tasks.register("producedByClosure").get()
+    val task = project.tasks.register("consumesClosure").get()
+    // `dependsOn { … }` stores a Callable; Gradle resolves it by calling it.
+    task.dependsOn(java.util.concurrent.Callable { produced })
+    task.dependsOn(":other:jar") // the deadlocking shape (#36668)
+
+    val result =
+        processTask(
+            task,
+            projectBuildPath = ":project",
+            projectRoot = project.projectDir.path,
+            workspaceRoot = project.rootDir.path,
+            externalNodes = mutableMapOf(),
+            dependencies = mutableSetOf(),
+            targetNameOverrides = emptyMap(),
+            buildOutputClassifier = BuildOutputClassifier.forBuild(project),
+            project = project)
+
+    val dependsOn = result["dependsOn"]?.toString() ?: ""
+    assertTrue(
+        dependsOn.contains("producedByClosure"),
+        "the closure's task must survive the safe resolution, got $dependsOn")
+  }
+
+  @Test
+  fun `test processTask basic properties`() {
+    val project = ProjectBuilder.builder().build()
+    val task = project.tasks.register("compileJava").get()
+    task.group = "build"
+    task.description = "Compiles Java source files"
+
+    val buildOutputClassifier = BuildOutputClassifier.forBuild(project)
+    val result =
+        processTask(
+            task,
+            projectBuildPath = ":project",
+            projectRoot = project.projectDir.path,
+            workspaceRoot = project.rootDir.path,
+            externalNodes = mutableMapOf(),
+            dependencies = mutableSetOf(),
+            targetNameOverrides = emptyMap(),
+            buildOutputClassifier = buildOutputClassifier,
             project = project)
 
     assertEquals(true, result["cache"])
@@ -138,11 +290,6 @@ class ProcessTaskUtilsTest {
       project = ProjectBuilder.builder().build()
       workspaceRoot = project.rootDir.path
       projectRoot = project.projectDir.path
-
-      val gitIgnore = java.io.File(workspaceRoot, ".gitignore")
-      // Any inputs of tasks that are found in ignored files are considered dependent task output
-      // files
-      gitIgnore.writeText("dist")
     }
 
     @Test
@@ -161,10 +308,12 @@ class ProcessTaskUtilsTest {
       val inputFile2 = java.io.File("$workspaceRoot/src/main.kt") // Should be included
       mainTask.inputs.files(inputFile1, inputFile2)
 
-      val gitIgnoreClassifier = GitIgnoreClassifier(java.io.File(workspaceRoot))
+      val buildOutputClassifier =
+          BuildOutputClassifier(
+              listOf(java.io.File(workspaceRoot, "dist"), java.io.File(workspaceRoot, "build")))
       val result =
           getInputsForTask(
-              null, mainTask, projectRoot, workspaceRoot, mutableMapOf(), gitIgnoreClassifier)
+              null, mainTask, projectRoot, workspaceRoot, mutableMapOf(), buildOutputClassifier)
 
       assertNotNull(result)
 
@@ -177,7 +326,281 @@ class ProcessTaskUtilsTest {
           })
 
       // Should contain the non-conflicting input file
-      assertTrue(result.any { it == Path("{projectRoot}", "src", "main.kt").toString() })
+      assertTrue(
+          result.any {
+            it == includeIgnoredInput(Path("{projectRoot}", "src", "main.kt").toString())
+          })
+    }
+
+    @Test
+    fun `test a resolved path dependsOn feeds precise patterns instead of the catch-all`() {
+      val other = ProjectBuilder.builder().withParent(project).withName("other").build()
+      val jar = other.tasks.register("jar").get()
+      jar.outputs.file(java.io.File(workspaceRoot, "other/build/libs/other.jar"))
+
+      val task = project.tasks.register("consumesResolvedPath").get()
+      task.dependsOn(":other:jar")
+
+      val result =
+          getInputsForTask(
+              null,
+              task,
+              projectRoot,
+              workspaceRoot,
+              mutableMapOf(),
+              BuildOutputClassifier(
+                  listOf(
+                      java.io.File(workspaceRoot, "dist"), java.io.File(workspaceRoot, "build"))))
+
+      assertNotNull(result)
+      assertFalse(
+          result!!.any { it is Map<*, *> && it["dependentTasksOutputFiles"] == "**/*" },
+          "a fully resolved path must not fail open, got $result")
+      assertTrue(
+          result.any { it is Map<*, *> && it["dependentTasksOutputFiles"] == "**/*.jar" },
+          "the resolved task's outputs must feed precise patterns, got $result")
+    }
+
+    @Test
+    fun `test a FileCollection's builtBy resolves through the safe resolver`() {
+      val other = ProjectBuilder.builder().withParent(project).withName("other").build()
+      val jar = other.tasks.register("jar").get()
+      jar.outputs.file(java.io.File(workspaceRoot, "other/build/libs/other.jar"))
+      val builder = project.tasks.register("builderTask").get()
+
+      val task = project.tasks.register("consumesContainer").get()
+      task.dependsOn(":other:jar")
+      // builtBy holds a task and a path string; the string is the deadlock shape (#36668).
+      task.dependsOn(project.files("some.txt").builtBy(builder, ":other:jar"))
+
+      val resolved = getDependsOnTask(task)
+      assertTrue(
+          resolved.containsAll(setOf(jar, builder)), "expected both producers, got $resolved")
+
+      val result =
+          getInputsForTask(
+              null,
+              task,
+              projectRoot,
+              workspaceRoot,
+              mutableMapOf(),
+              BuildOutputClassifier(
+                  listOf(
+                      java.io.File(workspaceRoot, "dist"), java.io.File(workspaceRoot, "build"))))
+
+      assertNotNull(result)
+      assertFalse(
+          result!!.any { it is Map<*, *> && it["dependentTasksOutputFiles"] == "**/*" },
+          "a fully resolved builtBy must not fail open, got $result")
+      assertTrue(
+          result.any { it is Map<*, *> && it["dependentTasksOutputFiles"] == "**/*.jar" },
+          "the builtBy producer's outputs must feed precise patterns, got $result")
+    }
+
+    @Test
+    fun `test a bare name inside another project's container resolves in that project`() {
+      val other = ProjectBuilder.builder().withParent(project).withName("other").build()
+      other.tasks.register("jar")
+      val theirs = other.tasks.register("assemble").get()
+      val ours = project.tasks.register("assemble").get()
+
+      val task = project.tasks.register("consumesTheirFiles").get()
+      task.dependsOn(":other:jar")
+      // No qualified path in the container, so it keeps its own resolver: "assemble" is other's.
+      task.dependsOn(other.files("theirs.txt").builtBy("assemble"))
+
+      val resolved = getDependsOnTask(task)
+      assertTrue(theirs in resolved, "expected the producer's own task, got $resolved")
+      assertFalse(ours in resolved, "must not resolve against the consumer, got $resolved")
+    }
+
+    @Test
+    fun `test a bare name beside a qualified path in a foreign container resolves in that project`() {
+      val other = ProjectBuilder.builder().withParent(project).withName("other").build()
+      val jar = other.tasks.register("jar").get()
+      jar.outputs.file(java.io.File(workspaceRoot, "other/build/libs/other.jar"))
+      val theirs = other.tasks.register("assemble").get()
+      val ours = project.tasks.register("assemble").get()
+
+      val task = project.tasks.register("consumesMixedContainer").get()
+      // The qualified path forces a copy; the bare name must still go to the container's own
+      // resolver, not the consumer's.
+      task.dependsOn(other.files("theirs.txt").builtBy("assemble", ":other:jar"))
+
+      val resolved = getDependsOnTask(task)
+      assertTrue(resolved.containsAll(setOf(theirs, jar)), "expected other's tasks, got $resolved")
+      assertFalse(ours in resolved, "must not resolve against the consumer, got $resolved")
+      val result =
+          getInputsForTask(
+              null,
+              task,
+              projectRoot,
+              workspaceRoot,
+              mutableMapOf(),
+              BuildOutputClassifier(
+                  listOf(
+                      java.io.File(workspaceRoot, "dist"), java.io.File(workspaceRoot, "build"))))
+      assertFalse(
+          result!!.any { it is Map<*, *> && it["dependentTasksOutputFiles"] == "**/*" },
+          "a fully resolved foreign container must not fail open, got $result")
+      assertTrue(
+          result.any { it is Map<*, *> && it["dependentTasksOutputFiles"] == "**/*.jar" },
+          "the container's producers must feed precise patterns, got $result")
+    }
+
+    @Test
+    fun `test a Buildable's dependencies pass through the safe resolver`() {
+      val other = ProjectBuilder.builder().withParent(project).withName("other").build()
+      val jar = other.tasks.register("jar").get()
+
+      val task = project.tasks.register("consumesBuildable").get()
+      task.dependsOn(":other:jar")
+      // A bare Buildable is visited by the walker directly, so its path must still be intercepted.
+      val buildable =
+          object : org.gradle.api.Buildable {
+            override fun getBuildDependencies() =
+                project.files("built.txt").builtBy(":other:jar").buildDependencies
+          }
+      task.dependsOn(buildable)
+
+      assertTrue(jar in getDependsOnTask(task), "expected the Buildable's producer")
+    }
+
+    @Test
+    fun `test an absolute path from another build resolves in that build`() {
+      // A second ProjectBuilder root is a separate build, as an included build is.
+      val otherBuild = ProjectBuilder.builder().withName("other-build").build()
+      val theirs = otherBuild.tasks.register("report").get()
+      val ours = project.tasks.register("report").get()
+
+      val task = project.tasks.register("aggregates").get()
+      // The container was built in the other build; ":report" means that build's root task.
+      task.dependsOn(otherBuild.files("r.txt").builtBy(":report").buildDependencies)
+
+      val resolved = getDependsOnTask(task)
+      assertTrue(theirs in resolved, "expected the other build's task, got $resolved")
+      assertFalse(
+          ours in resolved, "must not resolve the path in the consumer's build, got $resolved")
+    }
+
+    @Test
+    fun `test a bare name inside another build's container is lost, not guessed`() {
+      val otherBuild = ProjectBuilder.builder().withName("other-build").build()
+      val theirReport = otherBuild.tasks.register("report").get()
+      val theirAssemble = otherBuild.tasks.register("assemble").get()
+      val ourAssemble = project.tasks.register("assemble").get()
+
+      val task = project.tasks.register("aggregates").get()
+      // The absolute path forces a copy; the bare name's project is unknown across builds.
+      task.dependsOn(otherBuild.files("r.txt").builtBy("assemble", ":report").buildDependencies)
+
+      val resolved = getDependsOnTask(task)
+      assertTrue(theirReport in resolved, "the absolute path resolves in that build, got $resolved")
+      assertFalse(ourAssemble in resolved, "must not resolve against the consumer, got $resolved")
+      assertFalse(theirAssemble in resolved, "cannot know the container's project, got $resolved")
+      val result =
+          getInputsForTask(
+              null,
+              task,
+              projectRoot,
+              workspaceRoot,
+              mutableMapOf(),
+              BuildOutputClassifier(
+                  listOf(
+                      java.io.File(workspaceRoot, "dist"), java.io.File(workspaceRoot, "build"))))
+      assertTrue(
+          result!!.any { it is Map<*, *> && it["dependentTasksOutputFiles"] == "**/*" },
+          "a bare name in a foreign build's container must fail open, got $result")
+    }
+
+    @Test
+    fun `test an input-wired producer is a dependency`() {
+      val other = ProjectBuilder.builder().withParent(project).withName("other").build()
+      val jar = other.tasks.register("jar").get()
+      val producer = project.tasks.register("producesInput").get()
+      producer.outputs.file(java.io.File(workspaceRoot, "build/produced.txt"))
+
+      val task = project.tasks.register("consumesOutput").get()
+      task.dependsOn(":other:jar")
+      // Gradle's getTaskDependencies() is dependsOn plus inputs; both halves must be walked.
+      task.inputs.files(producer.outputs.files)
+
+      val resolved = getDependsOnTask(task)
+      assertTrue(resolved.containsAll(setOf(jar, producer)), "expected both halves, got $resolved")
+    }
+
+    @Test
+    fun `test lookupTask splits absolute, relative and nested forms`() {
+      val other = ProjectBuilder.builder().withParent(project).withName("other").build()
+      val sub = ProjectBuilder.builder().withParent(project).withName("sub").build()
+      val nested = ProjectBuilder.builder().withParent(other).withName("nested").build()
+      other.tasks.register("jar")
+      sub.tasks.register("compileJava")
+      nested.tasks.register("test")
+
+      assertEquals(":other:jar", lookupTask(project, ":other:jar")?.path)
+      assertEquals(":sub:compileJava", lookupTask(project, "sub:compileJava")?.path)
+      assertEquals(":other:nested:test", lookupTask(project, ":other:nested:test")?.path)
+    }
+
+    @Test
+    fun `test lookupTask returns null for a project that does not exist`() {
+      assertNull(
+          lookupTask(project, ":nosuchproject:jar"),
+          "must not invent a project that is not in the build")
+    }
+
+    @Test
+    fun `test lookupTask rejects a trailing colon and resolves bare names in the owner`() {
+      ProjectBuilder.builder().withParent(project).withName("other").build()
+      project.tasks.register("classes")
+
+      // ":other:" names no task; a bare name resolves inside the declaring project.
+      assertNull(lookupTask(project, ":other:"), "a trailing colon names no task")
+      assertEquals(":classes", lookupTask(project, "classes")?.path)
+    }
+
+    @Test
+    fun `test dependsOn declared as a nested list is still seen`() {
+      val task = project.tasks.register("nestedDeps").get()
+      // Gradle stores `dependsOn: [a, b]` as ONE element, so a flat scan misses the paths.
+      task.dependsOn(listOf(":a:test", listOf(":b:test")))
+
+      val buildOutputClassifier =
+          BuildOutputClassifier(
+              listOf(java.io.File(workspaceRoot, "dist"), java.io.File(workspaceRoot, "build")))
+      val result =
+          getInputsForTask(
+              null, task, projectRoot, workspaceRoot, mutableMapOf(), buildOutputClassifier)
+
+      assertNotNull(result)
+      assertTrue(
+          result!!.any {
+            it is Map<*, *> && it["dependentTasksOutputFiles"] == "**/*" && it["transitive"] == true
+          },
+          "a nested qualified path must still trigger the catch-all, got $result")
+    }
+
+    @Test
+    fun `test getInputsForTask fails open to the catch-all for a recovered path dependsOn`() {
+      // :some:other:project is not in the build, so the path cannot resolve and inputs must fail
+      // open.
+      val mainTask = project.tasks.register("pathDependentTask").get()
+      mainTask.dependsOn(":some:other:project:jar")
+
+      val buildOutputClassifier =
+          BuildOutputClassifier(
+              listOf(java.io.File(workspaceRoot, "dist"), java.io.File(workspaceRoot, "build")))
+      val result =
+          getInputsForTask(
+              null, mainTask, projectRoot, workspaceRoot, mutableMapOf(), buildOutputClassifier)
+
+      assertNotNull(result)
+      assertTrue(
+          result!!.any {
+            it is Map<*, *> && it["dependentTasksOutputFiles"] == "**/*" && it["transitive"] == true
+          },
+          "a task with a qualified-path dependsOn must over-declare the catch-all, got $result")
     }
 
     @Test
@@ -193,10 +616,12 @@ class ProcessTaskUtilsTest {
       val mainTask = project.tasks.register("mainTask").get()
       mainTask.dependsOn(dependentTask)
 
-      val gitIgnoreClassifier = GitIgnoreClassifier(java.io.File(workspaceRoot))
+      val buildOutputClassifier =
+          BuildOutputClassifier(
+              listOf(java.io.File(workspaceRoot, "dist"), java.io.File(workspaceRoot, "build")))
       val result =
           getInputsForTask(
-              null, mainTask, projectRoot, workspaceRoot, mutableMapOf(), gitIgnoreClassifier)
+              null, mainTask, projectRoot, workspaceRoot, mutableMapOf(), buildOutputClassifier)
 
       assertNotNull(result)
 
@@ -221,87 +646,603 @@ class ProcessTaskUtilsTest {
     }
 
     @Test
-    fun `test getInputsForTask discovers Copy task source extensions in clean build`() {
-      // Create source files with specific extensions in a source directory
-      val sourceDir = java.io.File("$workspaceRoot/src/resources").apply { mkdirs() }
-      java.io.File(sourceDir, "config.conf").writeText("test config")
-      java.io.File(sourceDir, "data.json").writeText("{}")
+    fun `test getInputsForTask collapses to the catch-all when a dependency declares a directory output`() {
+      // Archive dep -> "**/*.jar"; Copy dep -> "**/*"; the catch-all subsumes, so it collapses.
+      val jarProducer =
+          project.tasks.register("jarProducer", org.gradle.api.tasks.bundling.Jar::class.java).get()
+      jarProducer.archiveExtension.set("jar")
 
-      // Create a Copy task that copies from source to destination (but don't populate destination)
-      val copyTask =
-          project.tasks.register("processResources", org.gradle.api.tasks.Copy::class.java).get()
-      copyTask.from(sourceDir)
-      copyTask.into(java.io.File("$workspaceRoot/build/resources"))
-      // Note: we do NOT create/populate the destination directory to simulate a clean build
+      val copyDep =
+          project.tasks.register("copyBundled", org.gradle.api.tasks.Copy::class.java).get()
+      copyDep.from(java.io.File("$workspaceRoot/dist/bundle.tar.gz"))
+      copyDep.into(java.io.File("$workspaceRoot/build/bundled"))
 
-      // Create a consumer task that depends on the Copy task
-      val consumerTask = project.tasks.register("classes").get()
-      consumerTask.dependsOn(copyTask)
+      val consumer = project.tasks.register("consumerDeterministic").get()
+      consumer.dependsOn(jarProducer, copyDep)
 
-      val gitIgnoreClassifier = GitIgnoreClassifier(java.io.File(workspaceRoot))
-      val result =
+      val buildOutputClassifier =
+          BuildOutputClassifier(
+              listOf(java.io.File(workspaceRoot, "dist"), java.io.File(workspaceRoot, "build")))
+
+      fun outputFileGlobs(): Set<String> =
           getInputsForTask(
-              null, consumerTask, projectRoot, workspaceRoot, mutableMapOf(), gitIgnoreClassifier)
+                  null, consumer, projectRoot, workspaceRoot, mutableMapOf(), buildOutputClassifier)
+              ?.filterIsInstance<Map<*, *>>()
+              ?.mapNotNull { it["dependentTasksOutputFiles"] as? String }
+              ?.toSet() ?: emptySet()
 
-      assertNotNull(result, "Result should not be null")
+      // Clean tree: no artifact files on disk.
+      val clean = outputFileGlobs()
 
-      // Should contain globs for both .conf and .json extensions inferred from Copy task inputs
-      assertTrue(
-          result!!.any {
-            it is Map<*, *> &&
-                it["dependentTasksOutputFiles"] == "**/*.conf" &&
-                it["transitive"] == true
-          },
-          "Expected **/*.conf glob in result: $result")
-      assertTrue(
-          result.any {
-            it is Map<*, *> &&
-                it["dependentTasksOutputFiles"] == "**/*.json" &&
-                it["transitive"] == true
-          },
-          "Expected **/*.json glob in result: $result")
+      // Built tree: create the generated source and jar output on disk (transient build state).
+      java.io.File("$workspaceRoot/dist").mkdirs()
+      java.io.File("$workspaceRoot/dist/bundle.tar.gz").writeText("x")
+      java.io.File("$workspaceRoot/build/libs").mkdirs()
+      java.io.File("$workspaceRoot/build/libs/app.jar").writeText("x")
+      val built = outputFileGlobs()
+
+      // The derivation must be a pure function of the task model, not of on-disk build state.
+      assertEquals(
+          clean,
+          built,
+          "dependentTasksOutputFiles must not change between a clean and a built tree")
+
+      assertEquals(
+          setOf("**/*"),
+          clean,
+          "The catch-all must subsume the specific globs (jar, gz), got $clean")
     }
 
     @Test
-    fun `test getInputsForTask discovers Sync task source extensions in clean build`() {
-      // Create source files with specific extensions in a source directory
-      val sourceDir = java.io.File("$workspaceRoot/src/sync-input").apply { mkdirs() }
-      java.io.File(sourceDir, "config.conf").writeText("test config")
-      java.io.File(sourceDir, "data.json").writeText("{}")
+    fun `test getInputsForTask archive dependency yields its precise extension without the catch-all`() {
+      val jarProducer =
+          project.tasks.register("jarProducer", org.gradle.api.tasks.bundling.Jar::class.java).get()
+      jarProducer.archiveExtension.set("jar")
 
-      // Create a Sync task that syncs from source to destination (but don't populate destination)
-      val syncTask =
-          project.tasks.register("syncResources", org.gradle.api.tasks.Sync::class.java).get()
-      syncTask.from(sourceDir)
-      syncTask.into(java.io.File("$workspaceRoot/build/sync-output"))
-      // Note: we do NOT create/populate the destination directory to simulate a clean build
+      val consumer = project.tasks.register("consumerArchiveOnly").get()
+      consumer.dependsOn(jarProducer)
 
-      // Create a consumer task that depends on the Sync task
-      val consumerTask = project.tasks.register("consumerSync").get()
-      consumerTask.dependsOn(syncTask)
+      val buildOutputClassifier =
+          BuildOutputClassifier(
+              listOf(java.io.File(workspaceRoot, "dist"), java.io.File(workspaceRoot, "build")))
+      val globs =
+          getInputsForTask(
+                  null, consumer, projectRoot, workspaceRoot, mutableMapOf(), buildOutputClassifier)
+              ?.filterIsInstance<Map<*, *>>()
+              ?.mapNotNull { it["dependentTasksOutputFiles"] as? String }
+              ?.toSet() ?: emptySet()
 
-      val gitIgnoreClassifier = GitIgnoreClassifier(java.io.File(workspaceRoot))
+      assertTrue(
+          globs.contains("**/*.jar"),
+          "Expected the precise jar glob from archiveExtension, got $globs")
+      assertFalse(
+          globs.contains("**/*"),
+          "An archive-only dependency must not trigger the catch-all, got $globs")
+    }
+
+    @Test
+    fun `test getInputsForTask falls back to catch-all for uncharacterizable directory output`() {
+      val opaqueDep = project.tasks.register("opaqueDep").get()
+      opaqueDep.outputs.dir(java.io.File("$workspaceRoot/build/opaque"))
+
+      val consumer = project.tasks.register("consumerOpaque").get()
+      consumer.dependsOn(opaqueDep)
+
+      val buildOutputClassifier =
+          BuildOutputClassifier(
+              listOf(java.io.File(workspaceRoot, "dist"), java.io.File(workspaceRoot, "build")))
+
+      fun outputFileGlobs(): Set<String> =
+          getInputsForTask(
+                  null, consumer, projectRoot, workspaceRoot, mutableMapOf(), buildOutputClassifier)
+              ?.filterIsInstance<Map<*, *>>()
+              ?.mapNotNull { it["dependentTasksOutputFiles"] as? String }
+              ?.toSet() ?: emptySet()
+
+      val clean = outputFileGlobs()
+      java.io.File("$workspaceRoot/build/opaque").mkdirs()
+      java.io.File("$workspaceRoot/build/opaque/thing.dat").writeText("x")
+      val built = outputFileGlobs()
+
+      assertEquals(clean, built, "catch-all must be deterministic across clean and built trees")
+      assertTrue(
+          clean.contains("**/*"), "Expected catch-all for an opaque directory output, got $clean")
+    }
+
+    @Test
+    fun `test getInputsForTask over-declares catch-all when a dependency output read fails`() {
+      // A TaskOutputs implementing only the public interface makes the reflective
+      // getFileProperties() read throw; the dependency must over-declare "**/*".
+      val realDep = project.tasks.register("failingDep").get()
+      val fakeDep =
+          object : org.gradle.api.Task by realDep {
+            override fun getOutputs(): org.gradle.api.tasks.TaskOutputs =
+                object : org.gradle.api.tasks.TaskOutputs by realDep.outputs {}
+          }
+      val consumer = project.tasks.register("consumerFailingDep").get()
+      val buildOutputClassifier =
+          BuildOutputClassifier(
+              listOf(java.io.File(workspaceRoot, "dist"), java.io.File(workspaceRoot, "build")))
+
+      val globs =
+          getInputsForTask(
+                  setOf(fakeDep),
+                  consumer,
+                  projectRoot,
+                  workspaceRoot,
+                  mutableMapOf(),
+                  buildOutputClassifier)
+              ?.filterIsInstance<Map<*, *>>()
+              ?.mapNotNull { it["dependentTasksOutputFiles"] as? String }
+              ?.toSet() ?: emptySet()
+
+      assertTrue(
+          globs.contains("**/*"),
+          "A dependency whose output model can't be read must over-declare **/*, got $globs")
+    }
+
+    @Test
+    fun `test getInputsForTask falls back to catch-all for a fileTree-only Copy dependency`() {
+      val treeDir = java.io.File("$workspaceRoot/dist/tree").apply { mkdirs() }
+      java.io.File(treeDir, "a.dat").writeText("x")
+      val copyDep = project.tasks.register("copyTree", org.gradle.api.tasks.Copy::class.java).get()
+      copyDep.from(project.fileTree(treeDir))
+      copyDep.into(java.io.File("$workspaceRoot/build/tree-out"))
+
+      val consumer = project.tasks.register("consumerTree").get()
+      consumer.dependsOn(copyDep)
+
+      val buildOutputClassifier =
+          BuildOutputClassifier(
+              listOf(java.io.File(workspaceRoot, "dist"), java.io.File(workspaceRoot, "build")))
+
+      fun outputFileGlobs(): Set<String> =
+          getInputsForTask(
+                  null, consumer, projectRoot, workspaceRoot, mutableMapOf(), buildOutputClassifier)
+              ?.filterIsInstance<Map<*, *>>()
+              ?.mapNotNull { it["dependentTasksOutputFiles"] as? String }
+              ?.toSet() ?: emptySet()
+
+      val clean = outputFileGlobs()
+      java.io.File(treeDir, "b.json").writeText("{}")
+      val built = outputFileGlobs()
+
+      assertEquals(clean, built, "catch-all must be deterministic across clean and built trees")
+      assertTrue(
+          clean.contains("**/*"),
+          "fileTree-only Copy dependency should yield the catch-all, got $clean")
+      assertFalse(
+          clean.contains("**/*.dat"), "FileTree contents must not be enumerated, got $clean")
+      assertFalse(
+          clean.contains("**/*.json"), "FileTree contents must not be enumerated, got $clean")
+    }
+
+    @Test
+    fun `test getInputsForTask does not use catch-all for a typed compile dependency`() {
+      project.plugins.apply("java")
+      val compileJava = project.tasks.getByName("compileJava")
+
+      val consumer = project.tasks.register("consumerCompile").get()
+      consumer.dependsOn(compileJava)
+
+      val buildOutputClassifier =
+          BuildOutputClassifier(
+              listOf(java.io.File(workspaceRoot, "dist"), java.io.File(workspaceRoot, "build")))
       val result =
           getInputsForTask(
-              null, consumerTask, projectRoot, workspaceRoot, mutableMapOf(), gitIgnoreClassifier)
+              null, consumer, projectRoot, workspaceRoot, mutableMapOf(), buildOutputClassifier)
+      val globs =
+          result
+              ?.filterIsInstance<Map<*, *>>()
+              ?.mapNotNull { it["dependentTasksOutputFiles"] as? String }
+              ?.toSet() ?: emptySet()
 
-      assertNotNull(result, "Result should not be null")
+      // Typed compile task (directory output, but typed) yields a specific class glob, not "**/*".
+      assertTrue(globs.contains("**/*.class"), "Expected class from JavaCompile, got $globs")
+      assertFalse(
+          globs.contains("**/*"),
+          "Typed compile dependency must not trigger the catch-all, got $globs")
+    }
 
-      // Should contain globs for both .conf and .json extensions inferred from Sync task inputs
+    @Test
+    fun `test getInputsForTask emits a directory glob for a committed Copy source dir`() {
+      // A glob keeps files added AFTER graph computation covered; a per-file listing would not.
+      val resourcesDir = java.io.File("$workspaceRoot/src/main/resources").apply { mkdirs() }
+      java.io.File(resourcesDir, "application.conf").writeText("key = value")
+      val copyTask =
+          project.tasks.register("copyResources", org.gradle.api.tasks.Copy::class.java).get()
+      copyTask.from(resourcesDir)
+      copyTask.into(java.io.File("$workspaceRoot/build/out"))
+
+      val buildOutputClassifier =
+          BuildOutputClassifier(
+              listOf(java.io.File(workspaceRoot, "dist"), java.io.File(workspaceRoot, "build")))
+      val result =
+          getInputsForTask(
+              null, copyTask, projectRoot, workspaceRoot, mutableMapOf(), buildOutputClassifier)!!
+
+      val dirGlob = Path("{projectRoot}", "src", "main", "resources").toString() + "/**/*"
       assertTrue(
-          result!!.any {
-            it is Map<*, *> &&
-                it["dependentTasksOutputFiles"] == "**/*.conf" &&
-                it["transitive"] == true
-          },
-          "Expected **/*.conf glob in result for Sync: $result")
+          result.contains(includeIgnoredInput(dirGlob)),
+          "Expected directory glob $dirGlob, got $result")
+      assertFalse(
+          result.contains(
+              includeIgnoredInput(
+                  Path("{projectRoot}", "src", "main", "resources", "application.conf")
+                      .toString())),
+          "Files under a globbed source dir must not be enumerated, got $result")
+    }
+
+    @Test
+    fun `test getInputsForTask emits a directory glob for the processResources source dir`() {
+      // The idiomatic wiring: processResources copies from the main SourceDirectorySet.
+      project.plugins.apply("java")
+      val resourcesDir = java.io.File("$workspaceRoot/src/main/resources").apply { mkdirs() }
+      java.io.File(resourcesDir, "application.conf").writeText("key = value")
+
+      val processResources = project.tasks.getByName("processResources")
+      val buildOutputClassifier =
+          BuildOutputClassifier(
+              listOf(java.io.File(workspaceRoot, "dist"), java.io.File(workspaceRoot, "build")))
+      val result =
+          getInputsForTask(
+              null,
+              processResources,
+              projectRoot,
+              workspaceRoot,
+              mutableMapOf(),
+              buildOutputClassifier)!!
+
+      val dirGlob = Path("{projectRoot}", "src", "main", "resources").toString() + "/**/*"
       assertTrue(
-          result.any {
-            it is Map<*, *> &&
-                it["dependentTasksOutputFiles"] == "**/*.json" &&
-                it["transitive"] == true
-          },
-          "Expected **/*.json glob in result for Sync: $result")
+          result.contains(includeIgnoredInput(dirGlob)),
+          "Expected directory glob $dirGlob, got $result")
+      assertFalse(
+          result.contains(
+              includeIgnoredInput(
+                  Path("{projectRoot}", "src", "main", "resources", "application.conf")
+                      .toString())),
+          "Resource files under a globbed source dir must not be enumerated, got $result")
+    }
+
+    @Test
+    fun `test getInputsForTask does not emit directory globs for build output copy source dirs`() {
+      val generatedDir = java.io.File("$workspaceRoot/dist/generated").apply { mkdirs() }
+      java.io.File(generatedDir, "bundle.tar.gz").writeText("x")
+      val copyTask =
+          project.tasks.register("copyGenerated", org.gradle.api.tasks.Copy::class.java).get()
+      copyTask.from(generatedDir)
+      copyTask.into(java.io.File("$workspaceRoot/build/out"))
+
+      val buildOutputClassifier =
+          BuildOutputClassifier(
+              listOf(java.io.File(workspaceRoot, "dist"), java.io.File(workspaceRoot, "build")))
+      val result =
+          getInputsForTask(
+              null, copyTask, projectRoot, workspaceRoot, mutableMapOf(), buildOutputClassifier)
+              ?: emptyList()
+
+      assertFalse(
+          result.any { it.toString().contains("generated") },
+          "Build output copy source dirs must not become globs or direct inputs, got $result")
+    }
+
+    @Test
+    fun `test getInputsForTask declares a non-build copy source the same on clean and built trees`() {
+      // dist/ is written by another tool, so it isn't a Gradle build dir.
+      val copyTask =
+          project.tasks.register("bundleWeb", org.gradle.api.tasks.Copy::class.java).get()
+      copyTask.from(java.io.File("$workspaceRoot/dist/app.tar.gz"))
+      copyTask.from(java.io.File("$workspaceRoot/web-dist"))
+      copyTask.into(java.io.File("$workspaceRoot/build/out"))
+      val classifier = BuildOutputClassifier(listOf(java.io.File(workspaceRoot, "build")))
+      fun inputs() =
+          getInputsForTask(null, copyTask, projectRoot, workspaceRoot, mutableMapOf(), classifier)
+              ?.toSet()
+
+      val clean = inputs()
+      java.io.File("$workspaceRoot/dist").mkdirs()
+      java.io.File("$workspaceRoot/dist/app.tar.gz").writeText("x")
+      java.io.File("$workspaceRoot/web-dist").mkdirs()
+      java.io.File("$workspaceRoot/web-dist/index.html").writeText("x")
+      val built = inputs()
+
+      assertEquals(clean, built)
+      assertTrue(
+          built!!.contains(
+              includeIgnoredInput(Path("{projectRoot}", "dist", "app.tar.gz").toString())),
+          "Expected the copied file as an input, got $built")
+      assertTrue(
+          built.contains(
+              includeIgnoredInput(Path("{projectRoot}", "web-dist").toString() + "/**/*")),
+          "Expected a glob for the copied dir, got $built")
+    }
+
+    @Test
+    fun `test getInputsForTask resolves relative copy sources outside the project`() {
+      val root = ProjectBuilder.builder().build()
+      val app = ProjectBuilder.builder().withParent(root).withName("app").build()
+      val copyTask = app.tasks.register("bundleWeb", org.gradle.api.tasks.Copy::class.java).get()
+      copyTask.from("../web/dist/app.tar.gz")
+      copyTask.from("../web/site")
+      copyTask.into(app.layout.buildDirectory.dir("out"))
+      val classifier = BuildOutputClassifier(listOf(app.layout.buildDirectory.get().asFile))
+      fun inputs() =
+          getInputsForTask(
+                  null,
+                  copyTask,
+                  app.projectDir.path,
+                  root.rootDir.path,
+                  mutableMapOf(),
+                  classifier)
+              ?.toSet()
+
+      val clean = inputs()
+      java.io.File(root.rootDir, "web/dist").mkdirs()
+      java.io.File(root.rootDir, "web/dist/app.tar.gz").writeText("x")
+      java.io.File(root.rootDir, "web/site").mkdirs()
+      java.io.File(root.rootDir, "web/site/index.html").writeText("x")
+      val built = inputs()
+
+      assertEquals(clean, built)
+      assertTrue(
+          built!!.contains(
+              includeIgnoredInput(Path("{workspaceRoot}", "web", "dist", "app.tar.gz").toString())),
+          "got $built")
+      assertTrue(
+          built.contains(
+              includeIgnoredInput(Path("{workspaceRoot}", "web", "site").toString() + "/**/*")),
+          "got $built")
+    }
+
+    @Test
+    fun `test getInputsForTask excludes build dirs under a copy source glob`() {
+      java.io.File("$workspaceRoot/README.md").writeText("readme")
+      val copyTask =
+          project.tasks.register("docs", org.gradle.api.tasks.bundling.Zip::class.java).get()
+      copyTask.from(project.projectDir)
+      val classifier = BuildOutputClassifier(listOf(java.io.File(workspaceRoot, "build")))
+      val result =
+          getInputsForTask(null, copyTask, projectRoot, workspaceRoot, mutableMapOf(), classifier)!!
+
+      assertTrue(result.contains(includeIgnoredInput("{projectRoot}/**/*")), "got $result")
+      assertTrue(
+          result.contains(
+              includeIgnoredInput("!" + Path("{projectRoot}", "build").toString() + "/**")),
+          "A task must not hash its own build dir, got $result")
+    }
+
+    @Test
+    fun `test getInputsForTask collapses source-set files into a source root glob`() {
+      project.plugins.apply("java")
+      val srcDir = java.io.File("$workspaceRoot/src/main/java").apply { mkdirs() }
+      java.io.File(srcDir, "Foo.java").writeText("class Foo {}")
+      java.io.File(srcDir, "Bar.java").writeText("class Bar {}")
+
+      val compileJava = project.tasks.getByName("compileJava")
+      val buildOutputClassifier =
+          BuildOutputClassifier(
+              listOf(java.io.File(workspaceRoot, "dist"), java.io.File(workspaceRoot, "build")))
+      val result =
+          getInputsForTask(
+              null,
+              compileJava,
+              projectRoot,
+              workspaceRoot,
+              mutableMapOf(),
+              buildOutputClassifier)!!
+
+      val rootGlob = Path("{projectRoot}", "src", "main", "java").toString() + "/**/*"
+      assertTrue(
+          result.contains(includeIgnoredInput(rootGlob)),
+          "Expected source root glob $rootGlob, got $result")
+      assertFalse(
+          result.contains(
+              includeIgnoredInput(
+                  Path("{projectRoot}", "src", "main", "java", "Foo.java").toString())),
+          "Source files under a globbed root must not be enumerated, got $result")
+    }
+
+    @Test
+    fun `test getInputsForTask keeps main and test source root globs disjoint`() {
+      project.plugins.apply("java")
+      val mainDir = java.io.File("$workspaceRoot/src/main/java").apply { mkdirs() }
+      java.io.File(mainDir, "Foo.java").writeText("class Foo {}")
+      val testDir = java.io.File("$workspaceRoot/src/test/java").apply { mkdirs() }
+      java.io.File(testDir, "FooTest.java").writeText("class FooTest {}")
+
+      val buildOutputClassifier =
+          BuildOutputClassifier(
+              listOf(java.io.File(workspaceRoot, "dist"), java.io.File(workspaceRoot, "build")))
+      fun globsOf(taskName: String): List<Any> =
+          getInputsForTask(
+                  null,
+                  project.tasks.getByName(taskName),
+                  projectRoot,
+                  workspaceRoot,
+                  mutableMapOf(),
+                  buildOutputClassifier)
+              ?.filter { (it as? Map<*, *>)?.get("fileset").toString().endsWith("/**/*") }
+              ?: emptyList()
+
+      val mainGlob = Path("{projectRoot}", "src", "main", "java").toString() + "/**/*"
+      val testGlob = Path("{projectRoot}", "src", "test", "java").toString() + "/**/*"
+      assertTrue(globsOf("compileJava").contains(includeIgnoredInput(mainGlob)))
+      assertFalse(globsOf("compileJava").contains(includeIgnoredInput(testGlob)))
+      assertTrue(globsOf("compileTestJava").contains(includeIgnoredInput(testGlob)))
+      assertFalse(globsOf("compileTestJava").contains(includeIgnoredInput(mainGlob)))
+    }
+
+    @Test
+    fun `test getInputsForTask Copy task itself derives generated sources but not checked-in or FileTree`() {
+      // Only generated (build output) sources glob; checked-in sources are direct inputs and
+      // FileTree contents are never enumerated.
+      val syncTask =
+          project.tasks.register("syncResources", org.gradle.api.tasks.Sync::class.java).get()
+      // Generated (the fixture treats "dist" as build output) concrete file sources, intentionally
+      // NOT created.
+      syncTask.from(java.io.File("$workspaceRoot/dist/bundle.tar.gz"))
+      syncTask.from(java.io.File("$workspaceRoot/dist/runner.json"))
+      // Checked-in concrete file source (not build output) - must not yield a glob.
+      syncTask.from(java.io.File("$workspaceRoot/src/main/resources/config.conf"))
+      // A FileTree source whose contents must never be enumerated.
+      val leakDir = java.io.File("$workspaceRoot/dist/leak").apply { mkdirs() }
+      java.io.File(leakDir, "secret.leak").writeText("x")
+      syncTask.from(project.fileTree(leakDir))
+      syncTask.into(java.io.File("$workspaceRoot/build/sync-output"))
+
+      val buildOutputClassifier =
+          BuildOutputClassifier(
+              listOf(java.io.File(workspaceRoot, "dist"), java.io.File(workspaceRoot, "build")))
+
+      fun outputFileGlobs(): Set<String> =
+          getInputsForTask(
+                  null, syncTask, projectRoot, workspaceRoot, mutableMapOf(), buildOutputClassifier)
+              ?.filterIsInstance<Map<*, *>>()
+              ?.mapNotNull { it["dependentTasksOutputFiles"] as? String }
+              ?.toSet() ?: emptySet()
+
+      val clean = outputFileGlobs()
+      // Built tree: create the generated source files on disk.
+      java.io.File("$workspaceRoot/dist/bundle.tar.gz").writeText("x")
+      java.io.File("$workspaceRoot/dist/runner.json").writeText("{}")
+      val built = outputFileGlobs()
+
+      assertEquals(clean, built, "Copy source derivation must not depend on on-disk state")
+      assertTrue(clean.contains("**/*.gz"), "Expected gz from generated from(File), got $clean")
+      assertTrue(clean.contains("**/*.json"), "Expected json from generated from(File), got $clean")
+      assertFalse(
+          clean.contains("**/*.conf"), "Checked-in Copy source must not produce a glob, got $clean")
+      assertFalse(
+          clean.contains("**/*.leak"),
+          "FileTree source contents must not be enumerated, got $clean")
+    }
+
+    @Test
+    fun `test getInputsForTask Copy task itself unwraps provider and FileSystemLocation sources`() {
+      // Provider / FileSystemLocation sources unwrap without the file existing on disk.
+
+      val syncTask =
+          project.tasks.register("syncResources", org.gradle.api.tasks.Sync::class.java).get()
+      // Provider<RegularFile>: layout.buildDirectory.file(...) -> build/... (build output), NOT
+      // created.
+      syncTask.from(project.layout.buildDirectory.file("generated/foo.json"))
+      // Bare FileSystemLocation (RegularFile) under dist/ (build output).
+      syncTask.from(project.layout.projectDirectory.file("dist/bar.xml"))
+      // Checked-in provider source (not build output) - the gate must still skip it.
+      syncTask.from(project.provider { java.io.File("$workspaceRoot/src/main/resources/app.conf") })
+      syncTask.into(java.io.File("$workspaceRoot/build/sync-output"))
+
+      val buildOutputClassifier =
+          BuildOutputClassifier(
+              listOf(java.io.File(workspaceRoot, "dist"), java.io.File(workspaceRoot, "build")))
+
+      fun outputFileGlobs(): Set<String> =
+          getInputsForTask(
+                  null, syncTask, projectRoot, workspaceRoot, mutableMapOf(), buildOutputClassifier)
+              ?.filterIsInstance<Map<*, *>>()
+              ?.mapNotNull { it["dependentTasksOutputFiles"] as? String }
+              ?.toSet() ?: emptySet()
+
+      // Clean tree: none of the provider targets exist on disk yet.
+      val clean = outputFileGlobs()
+      // Built tree: materialize the generated provider target.
+      java.io.File("$workspaceRoot/build/generated").mkdirs()
+      java.io.File("$workspaceRoot/build/generated/foo.json").writeText("{}")
+      val built = outputFileGlobs()
+
+      assertEquals(clean, built, "Provider source derivation must not depend on on-disk state")
+      assertTrue(
+          clean.contains("**/*.json"),
+          "Expected json from from(layout.buildDirectory.file(...)) on a clean tree, got $clean")
+      assertTrue(
+          clean.contains("**/*.xml"), "Expected xml from a FileSystemLocation source, got $clean")
+      assertFalse(
+          clean.contains("**/*.conf"),
+          "Checked-in provider source must not produce a glob, got $clean")
+    }
+
+    @Test
+    fun `test getInputsForTask Copy task itself derives its own from() source extensions`() {
+      val syncTask =
+          project.tasks.register("syncResources", org.gradle.api.tasks.Sync::class.java).get()
+      syncTask.from(java.io.File("$workspaceRoot/dist/bundle.tar.gz"))
+      syncTask.into(java.io.File("$workspaceRoot/build/sync-output"))
+
+      val buildOutputClassifier =
+          BuildOutputClassifier(
+              listOf(java.io.File(workspaceRoot, "dist"), java.io.File(workspaceRoot, "build")))
+
+      fun outputFileGlobs(): Set<String> =
+          getInputsForTask(
+                  null, syncTask, projectRoot, workspaceRoot, mutableMapOf(), buildOutputClassifier)
+              ?.filterIsInstance<Map<*, *>>()
+              ?.mapNotNull { it["dependentTasksOutputFiles"] as? String }
+              ?.toSet() ?: emptySet()
+
+      // Clean tree: the bundle does not exist on disk.
+      val clean = outputFileGlobs()
+      // Built tree: create the generated source.
+      java.io.File("$workspaceRoot/dist").mkdirs()
+      java.io.File("$workspaceRoot/dist/bundle.tar.gz").writeText("x")
+      val built = outputFileGlobs()
+
+      assertEquals(
+          clean, built, "The task's own source derivation must not depend on on-disk state")
+      assertTrue(
+          clean.contains("**/*.gz"),
+          "Expected gz from the Copy task's own from(File) source, got $clean")
+    }
+
+    @Test
+    fun `test getInputsForTask jar sees processResources output through the classes lifecycle task`() {
+      // Ocean nx-api: jar -> classes -> {compileJava, processResources}, where processResources is
+      // a
+      // Copy bundling generated dist/ archives AND copying committed src/main/resources.
+      // Regression:
+      // jar must watch processResources' OUTPUT via "**/*" (covering committed application.conf);
+      // deriving from the copy's sources gave only {gz, json} and silently staled the jar.
+      project.plugins.apply("java")
+
+      val processResources =
+          project.tasks.getByName("processResources") as org.gradle.api.tasks.Copy
+      processResources.from(
+          java.io.File("$workspaceRoot/dist/libs/polygraph/cli/bundle/polygraph-bundle.tar.gz"))
+      processResources.from(
+          java.io.File("$workspaceRoot/dist/libs/polygraph/cli/bundle/polygraph-runner.json"))
+      // A committed resource copied through a directory source (only the "**/*" catch-all covers
+      // it).
+      val resourcesDir = java.io.File("$workspaceRoot/src/main/resources").apply { mkdirs() }
+      java.io.File(resourcesDir, "application.conf").writeText("key = value")
+      processResources.from(resourcesDir)
+      // The generated bundles are intentionally NOT created on disk (clean tree).
+
+      val jar = project.tasks.getByName("jar")
+      val buildOutputClassifier =
+          BuildOutputClassifier(
+              listOf(java.io.File(workspaceRoot, "dist"), java.io.File(workspaceRoot, "build")))
+
+      val result =
+          getInputsForTask(
+              null, jar, projectRoot, workspaceRoot, mutableMapOf(), buildOutputClassifier)
+
+      println("=== getInputsForTask(jar) inputs (verbatim) ===")
+      result?.forEach { println("  $it") }
+      println("=== end jar inputs ===")
+
+      assertNotNull(result, "jar inputs should not be null")
+      val hasPattern = { p: String ->
+        result!!.any { it is Map<*, *> && it["dependentTasksOutputFiles"] == p }
+      }
+      // The catch-all covers processResources' whole output directory: the generated bundles AND
+      // the
+      // committed application.conf. This is the fix for the missed-committed-resource regression.
+      assertTrue(
+          hasPattern("**/*"),
+          "jar must watch processResources' output directory via the catch-all, got $result")
+      assertFalse(
+          hasPattern("**/*.class"),
+          "the catch-all subsumes compileJava's **/*.class on jar, got $result")
     }
 
     @Test
@@ -321,10 +1262,12 @@ class ProcessTaskUtilsTest {
       val consumerTask = project.tasks.register("consumerJar").get()
       consumerTask.dependsOn(jarTask)
 
-      val gitIgnoreClassifier = GitIgnoreClassifier(java.io.File(workspaceRoot))
+      val buildOutputClassifier =
+          BuildOutputClassifier(
+              listOf(java.io.File(workspaceRoot, "dist"), java.io.File(workspaceRoot, "build")))
       val result =
           getInputsForTask(
-              null, consumerTask, projectRoot, workspaceRoot, mutableMapOf(), gitIgnoreClassifier)
+              null, consumerTask, projectRoot, workspaceRoot, mutableMapOf(), buildOutputClassifier)
 
       assertNotNull(result, "Result should not be null")
 
@@ -342,25 +1285,30 @@ class ProcessTaskUtilsTest {
     }
 
     @Test
-    fun `test AGP task detection gracefully handles missing classes in classpath`() {
-      // When AGP classes are not on the classpath, isAgpCopyLikeTask returns false.
-      // This test verifies the detection doesn't crash and gracefully degrades.
-      // Create a plain task (not Copy, Sync, or AGP) as a dependency.
+    fun `test getInputsForTask with a plain dependent yields no output-file globs`() {
+      // A dependent task with no recognized type and no declared outputs contributes no
+      // dependentTasksOutputFiles globs, and the derivation must not crash.
       val plainTask = project.tasks.register("plainTask").get()
 
       // Create a consumer task that depends on it
       val consumerTask = project.tasks.register("consumer").get()
       consumerTask.dependsOn(plainTask)
 
-      val gitIgnoreClassifier = GitIgnoreClassifier(java.io.File(workspaceRoot))
+      val buildOutputClassifier =
+          BuildOutputClassifier(
+              listOf(java.io.File(workspaceRoot, "dist"), java.io.File(workspaceRoot, "build")))
 
-      // This should not crash even though AGP is not on the classpath
       val result =
           getInputsForTask(
-              null, consumerTask, projectRoot, workspaceRoot, mutableMapOf(), gitIgnoreClassifier)
+              null, consumerTask, projectRoot, workspaceRoot, mutableMapOf(), buildOutputClassifier)
 
-      // Verify it completes without error (graceful degradation)
-      // Result can be null if there are no inputs - thats fine
+      // No recognized type or declared outputs -> no output-file globs (result may be null if the
+      // task has no inputs at all).
+      val globs =
+          result?.filterIsInstance<Map<*, *>>()?.count {
+            it.containsKey("dependentTasksOutputFiles")
+          } ?: 0
+      assertEquals(0, globs, "Plain dependent should yield no dependentTasksOutputFiles: $result")
     }
 
     @Test
@@ -376,10 +1324,12 @@ class ProcessTaskUtilsTest {
       val mainTask = project.tasks.register("consumerTask").get()
       mainTask.dependsOn(dependentTask)
 
-      val gitIgnoreClassifier = GitIgnoreClassifier(java.io.File(workspaceRoot))
+      val buildOutputClassifier =
+          BuildOutputClassifier(
+              listOf(java.io.File(workspaceRoot, "dist"), java.io.File(workspaceRoot, "build")))
       val result =
           getInputsForTask(
-              null, mainTask, projectRoot, workspaceRoot, mutableMapOf(), gitIgnoreClassifier)
+              null, mainTask, projectRoot, workspaceRoot, mutableMapOf(), buildOutputClassifier)
 
       assertNotNull(result)
 
@@ -408,7 +1358,9 @@ class ProcessTaskUtilsTest {
       // Pre-compute dependsOnTasks using getDependsOnTask
       val preComputedDependsOn = getDependsOnTask(mainTask)
 
-      val gitIgnoreClassifier = GitIgnoreClassifier(java.io.File(workspaceRoot))
+      val buildOutputClassifier =
+          BuildOutputClassifier(
+              listOf(java.io.File(workspaceRoot, "dist"), java.io.File(workspaceRoot, "build")))
       // Test with pre-computed dependsOnTasks
       val resultWithPreComputed =
           getInputsForTask(
@@ -417,12 +1369,12 @@ class ProcessTaskUtilsTest {
               projectRoot,
               workspaceRoot,
               mutableMapOf(),
-              gitIgnoreClassifier)
+              buildOutputClassifier)
 
       // Test without pre-computed (should compute internally)
       val resultWithoutPreComputed =
           getInputsForTask(
-              null, mainTask, projectRoot, workspaceRoot, mutableMapOf(), gitIgnoreClassifier)
+              null, mainTask, projectRoot, workspaceRoot, mutableMapOf(), buildOutputClassifier)
 
       // Both results should be identical
       assertNotNull(resultWithPreComputed)
@@ -445,9 +1397,13 @@ class ProcessTaskUtilsTest {
 
       // Should contain the input file
       assertTrue(
-          resultWithPreComputed.any { it == Path("{projectRoot}", "src", "main.kt").toString() })
+          resultWithPreComputed.any {
+            it == includeIgnoredInput(Path("{projectRoot}", "src", "main.kt").toString())
+          })
       assertTrue(
-          resultWithoutPreComputed.any { it == Path("{projectRoot}", "src", "main.kt").toString() })
+          resultWithoutPreComputed.any {
+            it == includeIgnoredInput(Path("{projectRoot}", "src", "main.kt").toString())
+          })
     }
 
     @Test
@@ -520,7 +1476,9 @@ class ProcessTaskUtilsTest {
 
       // Get dependsOnTasks once and reuse
       val dependsOnTasks = getDependsOnTask(mainTask)
-      val gitIgnoreClassifier = GitIgnoreClassifier(java.io.File(workspaceRoot))
+      val buildOutputClassifier =
+          BuildOutputClassifier(
+              listOf(java.io.File(workspaceRoot, "dist"), java.io.File(workspaceRoot, "build")))
       val result =
           getInputsForTask(
               dependsOnTasks,
@@ -528,7 +1486,7 @@ class ProcessTaskUtilsTest {
               projectRoot,
               workspaceRoot,
               mutableMapOf(),
-              gitIgnoreClassifier)
+              buildOutputClassifier)
 
       assertNotNull(result)
 
@@ -553,8 +1511,14 @@ class ProcessTaskUtilsTest {
           })
 
       // Should contain regular input files
-      assertTrue(result.any { it == Path("{projectRoot}", "src", "main.kt").toString() })
-      assertTrue(result.any { it == Path("{projectRoot}", "config", "app.properties").toString() })
+      assertTrue(
+          result.any {
+            it == includeIgnoredInput(Path("{projectRoot}", "src", "main.kt").toString())
+          })
+      assertTrue(
+          result.any {
+            it == includeIgnoredInput(Path("{projectRoot}", "config", "app.properties").toString())
+          })
 
       // Verify we have exactly 3 dependentTasksOutputFiles entries (one per unique extension: jar,
       // class, xml)
@@ -563,118 +1527,124 @@ class ProcessTaskUtilsTest {
       assertEquals(3, dependentTasksOutputFilesCount)
 
       // Verify we have the expected number of regular input files (2)
-      val regularInputsCount = result.count { it is String && it.startsWith("{projectRoot}") }
+      val regularInputsCount =
+          result.count { (it as? Map<*, *>)?.get("fileset").toString().startsWith("{projectRoot}") }
       assertEquals(2, regularInputsCount)
     }
 
     @Test
-    fun `test getInputsForTask with gitignore classification`() {
+    fun `test getInputsForTask classifies inputs by build directory`() {
       val project = ProjectBuilder.builder().build()
       val workspaceRoot = project.rootDir.path
       val projectRoot = project.projectDir.path
 
-      // Create .gitignore file
-      val gitignore = java.io.File(project.rootDir, ".gitignore")
-      gitignore.writeText(
-          """
-          build
-          .gradle
-          *.log
-          dist
-          """
-              .trimIndent())
+      // Ignored but not build output: must still be hashed.
+      java.io.File(project.rootDir, ".gitignore").writeText("*.log")
 
       val mainTask = project.tasks.register("mainTask").get()
 
       // Add inputs with mixed types
-      val sourceFile = java.io.File("$workspaceRoot/src/main.kt") // Not ignored - should be input
-      val buildFile = java.io.File("$workspaceRoot/build/classes/Main.class") // Ignored - should be
-      // dependentTasksOutputFiles
-      val logFile =
-          java.io.File("$workspaceRoot/app.log") // Ignored - should be dependentTasksOutputFiles
+      val sourceFile = java.io.File("$workspaceRoot/src/main.kt") // Source - should be input
+      val buildFile = java.io.File("$workspaceRoot/build/classes/Main.class") // Build output
+      val logFile = java.io.File("$workspaceRoot/app.log") // Ignored, not build output
       val configFile =
-          java.io.File("$workspaceRoot/config/app.properties") // Not ignored - should be input
+          java.io.File("$workspaceRoot/config/app.properties") // Source - should be input
 
       mainTask.inputs.files(sourceFile, buildFile, logFile, configFile)
 
-      val gitIgnoreClassifier = GitIgnoreClassifier(java.io.File(workspaceRoot))
+      val buildOutputClassifier =
+          BuildOutputClassifier(
+              listOf(java.io.File(workspaceRoot, "dist"), java.io.File(workspaceRoot, "build")))
       val result =
           getInputsForTask(
-              null, mainTask, projectRoot, workspaceRoot, mutableMapOf(), gitIgnoreClassifier)
+              null, mainTask, projectRoot, workspaceRoot, mutableMapOf(), buildOutputClassifier)
 
       assertNotNull(result)
 
       // Source file should be regular input
-      assertTrue(result!!.any { it == Path("{projectRoot}", "src", "main.kt").toString() })
+      assertTrue(
+          result!!.any {
+            it == includeIgnoredInput(Path("{projectRoot}", "src", "main.kt").toString())
+          })
 
       // Config file should be regular input
-      assertTrue(result.any { it == Path("{projectRoot}", "config", "app.properties").toString() })
-
-      // Build file (class extension) should be consolidated into dependentTasksOutputFiles glob
       assertTrue(
           result.any {
-            it is Map<*, *> &&
-                it["dependentTasksOutputFiles"] == "**/*.class" &&
-                it["transitive"] == true
+            it == includeIgnoredInput(Path("{projectRoot}", "config", "app.properties").toString())
           })
 
-      // Log file should be consolidated into dependentTasksOutputFiles glob
-      assertTrue(
+      // Build output must NOT be a direct input.
+      assertFalse(
           result.any {
-            it is Map<*, *> &&
-                it["dependentTasksOutputFiles"] == "**/*.log" &&
-                it["transitive"] == true
-          })
+            it ==
+                includeIgnoredInput(
+                    Path("{projectRoot}", "build", "classes", "Main.class").toString())
+          },
+          "Build output should not be a direct input: $result")
+      assertTrue(
+          result.any { it == includeIgnoredInput(Path("{projectRoot}", "app.log").toString()) },
+          "An ignored file outside the build directory should be a direct input: $result")
+
+      // Extensions are NOT harvested from build output on disk; they are derived from the task
+      // model (dependent task outputs). This task has no dependents, so no output-file globs exist.
+      assertFalse(
+          result.any { it is Map<*, *> && it["dependentTasksOutputFiles"] == "**/*.class" },
+          "Extensions must not be harvested from build output on disk: $result")
+      assertFalse(
+          result.any { it is Map<*, *> && it["dependentTasksOutputFiles"] == "**/*.log" },
+          "Extensions must not be harvested from build output on disk: $result")
     }
 
     @Test
-    fun `test getInputsForTask gitignore patterns with nested paths`() {
+    fun `test getInputsForTask build directory with nested paths`() {
       val project = ProjectBuilder.builder().build()
       val workspaceRoot = project.rootDir.path
       val projectRoot = project.projectDir.path
 
-      // Create .gitignore with common patterns
-      val gitignore = java.io.File(project.rootDir, ".gitignore")
-      gitignore.writeText(
-          """
-          target
-          dist
-          """
-              .trimIndent())
-
       val mainTask = project.tasks.register("mainTask").get()
 
       // Add inputs
-      val javaSource = java.io.File("$workspaceRoot/src/Main.java") // Not ignored
-      val compiledClass =
-          java.io.File("$workspaceRoot/dist/production/Main.class") // Ignored (dist directory)
-      val jarTarget = java.io.File("$workspaceRoot/dist/app.jar") // Ignored (dist directory)
+      val javaSource = java.io.File("$workspaceRoot/src/Main.java") // Source
+      val compiledClass = java.io.File("$workspaceRoot/dist/production/Main.class") // Build output
+      val jarTarget = java.io.File("$workspaceRoot/dist/app.jar") // Build output
 
       mainTask.inputs.files(javaSource, compiledClass, jarTarget)
 
-      val gitIgnoreClassifier = GitIgnoreClassifier(java.io.File(workspaceRoot))
+      val buildOutputClassifier =
+          BuildOutputClassifier(
+              listOf(java.io.File(workspaceRoot, "dist"), java.io.File(workspaceRoot, "build")))
       val result =
           getInputsForTask(
-              null, mainTask, projectRoot, workspaceRoot, mutableMapOf(), gitIgnoreClassifier)
+              null, mainTask, projectRoot, workspaceRoot, mutableMapOf(), buildOutputClassifier)
 
       assertNotNull(result)
 
-      assertTrue(result!!.any { it == Path("{projectRoot}", "src", "Main.java").toString() })
-
-      // Both ignored files should be consolidated into glob patterns by extension
       assertTrue(
-          result.any {
-            it is Map<*, *> &&
-                it["dependentTasksOutputFiles"] == "**/*.class" &&
-                it["transitive"] == true
+          result!!.any {
+            it == includeIgnoredInput(Path("{projectRoot}", "src", "Main.java").toString())
           })
 
-      assertTrue(
+      // Build output must NOT be a direct input.
+      assertFalse(
           result.any {
-            it is Map<*, *> &&
-                it["dependentTasksOutputFiles"] == "**/*.jar" &&
-                it["transitive"] == true
-          })
+            it ==
+                includeIgnoredInput(
+                    Path("{projectRoot}", "dist", "production", "Main.class").toString())
+          },
+          "Build output should not be a direct input: $result")
+      assertFalse(
+          result.any {
+            it == includeIgnoredInput(Path("{projectRoot}", "dist", "app.jar").toString())
+          },
+          "Build output should not be a direct input: $result")
+
+      // Extensions are NOT harvested from build output on disk (this task has no dependents).
+      assertFalse(
+          result.any { it is Map<*, *> && it["dependentTasksOutputFiles"] == "**/*.class" },
+          "Extensions must not be harvested from build output on disk: $result")
+      assertFalse(
+          result.any { it is Map<*, *> && it["dependentTasksOutputFiles"] == "**/*.jar" },
+          "Extensions must not be harvested from build output on disk: $result")
     }
   }
 
@@ -697,7 +1667,7 @@ class ProcessTaskUtilsTest {
     val inputFile = java.io.File("${project.rootDir.path}/src/test.kt")
     mainTask.inputs.files(inputFile)
 
-    val gitIgnoreClassifier = GitIgnoreClassifier(project.rootDir)
+    val buildOutputClassifier = BuildOutputClassifier.forBuild(project)
     val result =
         processTask(
             mainTask,
@@ -707,7 +1677,7 @@ class ProcessTaskUtilsTest {
             externalNodes = mutableMapOf(),
             dependencies = mutableSetOf(),
             targetNameOverrides = emptyMap(),
-            gitIgnoreClassifier = gitIgnoreClassifier,
+            buildOutputClassifier = buildOutputClassifier,
             project = project)
 
     assertNotNull(result)
@@ -728,7 +1698,10 @@ class ProcessTaskUtilsTest {
     // Verify inputs contain both regular inputs and consolidated dependentTasksOutputFiles
     val inputs = result["inputs"] as? List<*>
     assertNotNull(inputs)
-    assertTrue(inputs!!.any { it == Path("{projectRoot}", "src", "test.kt").toString() })
+    assertTrue(
+        inputs!!.any {
+          it == includeIgnoredInput(Path("{projectRoot}", "src", "test.kt").toString())
+        })
     assertTrue(
         inputs.any {
           it is Map<*, *> &&
@@ -748,7 +1721,9 @@ class ProcessTaskUtilsTest {
       val compileTestKotlin = kotlinProject.tasks.getByName("compileTestKotlin")
       val dependsOnTasks = getDependsOnTask(compileTestKotlin)
 
-      val extensions = inferExtensionsFromInputProperties(compileTestKotlin, dependsOnTasks)
+      val extensions =
+          inferExtensionsFromInputProperties(
+              compileTestKotlin, dependsOnTasks, BuildOutputClassifier.forBuild(kotlinProject))
 
       assertTrue(extensions.contains("class"), "Expected 'class' extension, got $extensions")
       assertTrue(
@@ -763,7 +1738,9 @@ class ProcessTaskUtilsTest {
 
       val compileKotlin = kotlinProject.tasks.getByName("compileKotlin")
 
-      val extensions = inferExtensionsFromInputProperties(compileKotlin, emptySet())
+      val extensions =
+          inferExtensionsFromInputProperties(
+              compileKotlin, emptySet(), BuildOutputClassifier.forBuild(kotlinProject))
 
       assertTrue(
           extensions.contains("class"),
@@ -781,7 +1758,9 @@ class ProcessTaskUtilsTest {
       val compileKotlin = kotlinProject.tasks.getByName("compileKotlin")
       val plain = kotlinProject.tasks.register("plain").get()
 
-      val extensions = inferExtensionsFromInputProperties(plain, setOf(compileKotlin))
+      val extensions =
+          inferExtensionsFromInputProperties(
+              plain, setOf(compileKotlin), BuildOutputClassifier.forBuild(kotlinProject))
 
       assertTrue(
           extensions.contains("class"),
@@ -795,7 +1774,9 @@ class ProcessTaskUtilsTest {
 
       val compileJava = project.tasks.getByName("compileJava")
 
-      val extensions = inferExtensionsFromInputProperties(compileJava, emptySet())
+      val extensions =
+          inferExtensionsFromInputProperties(
+              compileJava, emptySet(), BuildOutputClassifier.forBuild(project))
 
       assertTrue(extensions.contains("class"), "Expected 'class' extension, got $extensions")
       assertFalse(
@@ -811,7 +1792,10 @@ class ProcessTaskUtilsTest {
       val dependentTasks = setOf(jarTask)
 
       val extensions =
-          inferExtensionsFromInputProperties(kotlinProject.tasks.getByName("build"), dependentTasks)
+          inferExtensionsFromInputProperties(
+              kotlinProject.tasks.getByName("build"),
+              dependentTasks,
+              BuildOutputClassifier.forBuild(kotlinProject))
 
       assertTrue(
           extensions.contains("jar"),
@@ -824,7 +1808,9 @@ class ProcessTaskUtilsTest {
       kotlinProject.plugins.apply("org.jetbrains.kotlin.jvm")
 
       val testTask = kotlinProject.tasks.getByName("test")
-      val extensions = inferExtensionsFromInputProperties(testTask, emptySet())
+      val extensions =
+          inferExtensionsFromInputProperties(
+              testTask, emptySet(), BuildOutputClassifier.forBuild(kotlinProject))
 
       assertTrue(
           extensions.contains("class"), "Expected 'class' extension for Test task, got $extensions")
@@ -837,7 +1823,9 @@ class ProcessTaskUtilsTest {
       val project = ProjectBuilder.builder().build()
       val task = project.tasks.register("plainTask").get()
 
-      val extensions = inferExtensionsFromInputProperties(task, emptySet())
+      val extensions =
+          inferExtensionsFromInputProperties(
+              task, emptySet(), BuildOutputClassifier.forBuild(project))
 
       assertTrue(extensions.isEmpty(), "Expected empty extensions for plain task, got $extensions")
     }
@@ -874,7 +1862,7 @@ class ProcessTaskUtilsTest {
               externalNodes = mutableMapOf(),
               dependencies = mutableSetOf(),
               targetNameOverrides = emptyMap(),
-              gitIgnoreClassifier = GitIgnoreClassifier(kotlinProject.rootDir),
+              buildOutputClassifier = BuildOutputClassifier.forBuild(kotlinProject),
               project = kotlinProject)
 
       @Suppress("UNCHECKED_CAST") val options = result["options"] as Map<String, Any?>
@@ -1020,17 +2008,23 @@ class ProcessTaskUtilsTest {
         val inputFile = java.io.File("$projectRoot/src/main.kt")
         mainTask.inputs.files(inputFile)
 
-        val gitIgnoreClassifier = GitIgnoreClassifier(java.io.File(workspaceRoot))
+        val buildOutputClassifier =
+            BuildOutputClassifier(
+                listOf(java.io.File(workspaceRoot, "dist"), java.io.File(workspaceRoot, "build")))
         val result =
             getInputsForTask(
-                null, mainTask, projectRoot, workspaceRoot, mutableMapOf(), gitIgnoreClassifier)
+                null, mainTask, projectRoot, workspaceRoot, mutableMapOf(), buildOutputClassifier)
 
         assertNotNull(result)
         assertTrue(
-            result!!.any { it == Path("{workspaceRoot}", "gradle.properties").toString() },
+            result!!.any {
+              it == includeIgnoredInput(Path("{workspaceRoot}", "gradle.properties").toString())
+            },
             "Expected gradle.properties in inputs: $result")
         assertTrue(
-            result.any { it == Path("{projectRoot}", "src", "main.kt").toString() },
+            result.any {
+              it == includeIgnoredInput(Path("{projectRoot}", "src", "main.kt").toString())
+            },
             "Expected src/main.kt in inputs: $result")
       } finally {
         tempDir.deleteRecursively()
@@ -1057,15 +2051,19 @@ class ProcessTaskUtilsTest {
         val inputFile = java.io.File("$projectRoot/src/main.kt")
         mainTask.inputs.files(inputFile)
 
-        val gitIgnoreClassifier = GitIgnoreClassifier(java.io.File(workspaceRoot))
+        val buildOutputClassifier =
+            BuildOutputClassifier(
+                listOf(java.io.File(workspaceRoot, "dist"), java.io.File(workspaceRoot, "build")))
         val result =
             getInputsForTask(
-                null, mainTask, projectRoot, workspaceRoot, mutableMapOf(), gitIgnoreClassifier)
+                null, mainTask, projectRoot, workspaceRoot, mutableMapOf(), buildOutputClassifier)
 
         assertNotNull(result)
         // Should have src/main.kt but no gradle files
         assertTrue(
-            result!!.any { it == Path("{projectRoot}", "src", "main.kt").toString() },
+            result!!.any {
+              it == includeIgnoredInput(Path("{projectRoot}", "src", "main.kt").toString())
+            },
             "Expected src/main.kt in inputs: $result")
         assertFalse(
             result.any { it.toString().contains("gradle") },

@@ -30,13 +30,13 @@
     },
     "coverageProvider": {
       "type": "string",
-      "enum": ["v8", "istanbul", "custom"],
+      "enum": ["v8", "istanbul", "custom", "none"],
       "default": "v8",
       "description": "Coverage provider to use."
     },
     "testTarget": {
       "type": "string",
-      "description": "The test target of the project to be transformed to use the @nx/vitest:test executor.",
+      "description": "The name of the test target the @nx/vitest plugin infers for the project. Defaults to `test`.",
       "hidden": true
     },
     "skipFormat": {
@@ -64,6 +64,12 @@
       "type": "boolean",
       "default": false,
       "description": "Do not add dependencies to `package.json`.",
+      "x-priority": "internal"
+    },
+    "passWithNoTests": {
+      "type": "boolean",
+      "default": false,
+      "description": "Exit with a zero status when the project has no test files.",
       "x-priority": "internal"
     },
     "zoneless": {

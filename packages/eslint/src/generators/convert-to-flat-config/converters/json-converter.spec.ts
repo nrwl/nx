@@ -1,4 +1,4 @@
-import { Tree, readJson } from '@nx/devkit';
+import { Tree, joinPathFragments, logger, readJson } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { convertEslintJsonToFlatConfig } from './json-converter';
 import { EOL } from 'node:os';
@@ -71,7 +71,8 @@ describe('convertEslintJsonToFlatConfig', () => {
         '',
         readJson(tree, '.eslintrc.json'),
         ['.eslintignore'],
-        'mjs'
+        'mjs',
+        new Set()
       );
 
       expect(content).toMatchInlineSnapshot(`
@@ -87,7 +88,7 @@ describe('convertEslintJsonToFlatConfig', () => {
         });
 
 
-        export default [
+        const eslintConfig = [
             ...nx.configs["flat/base"],
             {
                 files: [
@@ -143,6 +144,8 @@ describe('convertEslintJsonToFlatConfig', () => {
                 ]
             }
         ];
+
+        export default eslintConfig;
         "
       `);
     });
@@ -189,20 +192,30 @@ describe('convertEslintJsonToFlatConfig', () => {
           },
           env: {
             jest: true,
+            browser: false,
+            'shared-node-browser': true,
           },
         })
       );
 
       tree.write('mylib/.eslintignore', `node_modules${EOL}something/else`);
+      const warnSpy = vi.spyOn(logger, 'warn');
 
       const { content } = convertEslintJsonToFlatConfig(
         tree,
         'mylib',
         readJson(tree, 'mylib/.eslintrc.json'),
         ['mylib/.eslintignore'],
-        'mjs'
+        'mjs',
+        new Set([joinPathFragments('mylib', '../../.eslintrc.json')])
       );
 
+      expect(warnSpy).toHaveBeenCalledWith(
+        expect.stringContaining(
+          'The ESLint config in "mylib" disables the "browser" environment.'
+        )
+      );
+      warnSpy.mockRestore();
       expect(content).toMatchInlineSnapshot(`
         "import { FlatCompat } from "@eslint/eslintrc";
         import { dirname } from "path";
@@ -219,11 +232,11 @@ describe('convertEslintJsonToFlatConfig', () => {
         });
 
 
-        export default [
+        const eslintConfig = [
             ...baseConfig,
             ...nx.configs["flat/react-typescript"],
             ...compat.extends("next", "next/core-web-vitals"),
-            { languageOptions: { globals: { ...globals.jest } } },
+            { languageOptions: { globals: { ...globals.jest, ...globals["shared-node-browser"] } } },
             {
                 rules: {
                     "@next/next/no-html-link-for-pages": "off"
@@ -281,6 +294,8 @@ describe('convertEslintJsonToFlatConfig', () => {
                 ]
             }
         ];
+
+        export default eslintConfig;
         "
       `);
     });
@@ -309,13 +324,14 @@ describe('convertEslintJsonToFlatConfig', () => {
         '',
         readJson(tree, '.eslintrc.json'),
         [],
-        'mjs'
+        'mjs',
+        new Set()
       );
 
       expect(content).toMatchInlineSnapshot(`
         "import nx from "@nx/eslint-plugin";
 
-        export default [
+        const eslintConfig = [
             ...nx.configs["flat/base"],
             ...nx.configs["flat/typescript"],
             {
@@ -328,6 +344,97 @@ describe('convertEslintJsonToFlatConfig', () => {
                 }
             }
         ];
+
+        export default eslintConfig;
+        "
+      `);
+    });
+
+    it('names the export eslintConfig2 when an import binds eslintConfig', async () => {
+      const { content } = convertEslintJsonToFlatConfig(
+        tree,
+        'mylib',
+        { parser: 'eslint-config', rules: {} },
+        [],
+        'mjs',
+        new Set()
+      );
+
+      expect(content).toContain(
+        'import eslintConfig from "eslint-config";\n\nconst eslintConfig2 = ['
+      );
+      expect(content).toContain('export default eslintConfig2;');
+      expect(content).not.toContain('const eslintConfig =');
+    });
+
+    it('should hand the parser of an override that needs FlatCompat to compat.config', async () => {
+      // Repro for NXC-4675: an override with a parser plus a non-Nx plugin goes
+      // through the FlatCompat path, which used to drop the parser entirely.
+      // `env` is here on purpose: FlatCompat turns it into languageOptions.globals,
+      // so re-emitting the parser onto the mapped object would wipe those globals.
+      tree.write(
+        '.eslintrc.json',
+        JSON.stringify({
+          root: true,
+          overrides: [
+            {
+              files: ['*.ts'],
+              parser: '@typescript-eslint/parser',
+              parserOptions: { project: './tsconfig.json' },
+              env: { node: true },
+              plugins: ['@typescript-eslint'],
+              rules: { '@typescript-eslint/no-explicit-any': 'error' },
+            },
+          ],
+        })
+      );
+
+      const { content } = convertEslintJsonToFlatConfig(
+        tree,
+        '',
+        readJson(tree, '.eslintrc.json'),
+        [],
+        'mjs',
+        new Set()
+      );
+
+      expect(content).toMatchInlineSnapshot(`
+        "import { FlatCompat } from "@eslint/eslintrc";
+        import { dirname } from "path";
+        import { fileURLToPath } from "url";
+        import js from "@eslint/js";
+
+        const compat = new FlatCompat({
+          baseDirectory: dirname(fileURLToPath(import.meta.url)),
+          recommendedConfig: js.configs.recommended,
+        });
+
+
+        const eslintConfig = [
+            ...compat.config({
+                parser: "@typescript-eslint/parser",
+                parserOptions: {
+                    project: "./tsconfig.json"
+                },
+                env: {
+                    node: true
+                },
+                plugins: [
+                    "@typescript-eslint"
+                ]
+            }).map(config => ({
+                ...config,
+                files: [
+                    "**/*.ts"
+                ],
+                rules: {
+                    ...config.rules,
+                    "@typescript-eslint/no-explicit-any": "error"
+                }
+            }))
+        ];
+
+        export default eslintConfig;
         "
       `);
     });
@@ -347,7 +454,8 @@ describe('convertEslintJsonToFlatConfig', () => {
         '',
         readJson(tree, '.eslintrc.json'),
         [],
-        'mjs'
+        'mjs',
+        new Set()
       );
 
       expect(content).toContain('"dist/**"');
@@ -369,7 +477,8 @@ describe('convertEslintJsonToFlatConfig', () => {
         'mylib',
         readJson(tree, 'mylib/.eslintrc.json'),
         [],
-        'mjs'
+        'mjs',
+        new Set([joinPathFragments('mylib', '../../.eslintrc')])
       );
 
       expect(content).toContain(
@@ -406,7 +515,8 @@ describe('convertEslintJsonToFlatConfig', () => {
         '',
         readJson(tree, '.eslintrc.json'),
         [],
-        'mjs'
+        'mjs',
+        new Set()
       );
 
       expect(addESLintRC).toBe(true);
@@ -423,7 +533,7 @@ describe('convertEslintJsonToFlatConfig', () => {
         });
 
 
-        export default [
+        const eslintConfig = [
             ...nx.configs["flat/base"],
             ...nx.configs["flat/typescript"],
             ...compat.config({
@@ -442,6 +552,8 @@ describe('convertEslintJsonToFlatConfig', () => {
                 }
             }))
         ];
+
+        export default eslintConfig;
         "
       `);
     });
@@ -508,7 +620,8 @@ describe('convertEslintJsonToFlatConfig', () => {
         '',
         readJson(tree, '.eslintrc.json'),
         ['.eslintignore'],
-        'cjs'
+        'cjs',
+        new Set()
       );
 
       expect(content).toMatchInlineSnapshot(`
@@ -634,7 +747,8 @@ describe('convertEslintJsonToFlatConfig', () => {
         'mylib',
         readJson(tree, 'mylib/.eslintrc.json'),
         ['mylib/.eslintignore'],
-        'cjs'
+        'cjs',
+        new Set([joinPathFragments('mylib', '../../.eslintrc.json')])
       );
 
       expect(content).toMatchInlineSnapshot(`
@@ -713,6 +827,126 @@ describe('convertEslintJsonToFlatConfig', () => {
         ];
         "
       `);
+    });
+
+    it('should hand the parser of an override that needs FlatCompat to compat.config', async () => {
+      // Repro for NXC-4675 (cjs): an override with a parser plus a non-Nx plugin
+      // goes through the FlatCompat path, which used to drop the parser entirely.
+      tree.write(
+        '.eslintrc.json',
+        JSON.stringify({
+          root: true,
+          overrides: [
+            {
+              files: ['*.ts'],
+              parser: '@typescript-eslint/parser',
+              parserOptions: { project: './tsconfig.json' },
+              env: { node: true },
+              plugins: ['@typescript-eslint'],
+              rules: { '@typescript-eslint/no-explicit-any': 'error' },
+            },
+          ],
+        })
+      );
+
+      const { content } = convertEslintJsonToFlatConfig(
+        tree,
+        '',
+        readJson(tree, '.eslintrc.json'),
+        [],
+        'cjs',
+        new Set()
+      );
+
+      expect(content).toMatchInlineSnapshot(`
+        "const { FlatCompat } = require("@eslint/eslintrc");
+        const js = require("@eslint/js");
+
+        const compat = new FlatCompat({
+          baseDirectory: __dirname,
+          recommendedConfig: js.configs.recommended,
+        });
+
+        module.exports = [
+            ...compat.config({
+                parser: "@typescript-eslint/parser",
+                parserOptions: {
+                    project: "./tsconfig.json"
+                },
+                env: {
+                    node: true
+                },
+                plugins: [
+                    "@typescript-eslint"
+                ]
+            }).map(config => ({
+                ...config,
+                files: [
+                    "**/*.ts"
+                ],
+                rules: {
+                    ...config.rules,
+                    "@typescript-eslint/no-explicit-any": "error"
+                }
+            }))
+        ];
+        "
+      `);
+    });
+
+    it('should load plugin environment globals from the plugin', () => {
+      const { content } = convertEslintJsonToFlatConfig(
+        tree,
+        '',
+        {
+          plugins: ['jest'],
+          env: { 'jest/globals': true, 'cypress/globals': true },
+          overrides: [
+            {
+              files: ['*.cy.js'],
+              env: { 'jest/globals': true, 'cypress/globals': true },
+              globals: { page: 'readonly' },
+            },
+          ],
+        },
+        [],
+        'cjs',
+        new Set()
+      );
+
+      const compatConfigs: unknown[] = [];
+      const modules: Record<string, unknown> = {
+        '@eslint/eslintrc': {
+          FlatCompat: class {
+            config(config: unknown) {
+              compatConfigs.push(config);
+              return [];
+            }
+          },
+        },
+        '@eslint/js': { configs: { recommended: {} } },
+        'eslint-plugin-jest': {
+          environments: { globals: { globals: { describe: 'readonly' } } },
+        },
+        // eslint-plugin-cypress 5 and later export no eslintrc environments.
+        'eslint-plugin-cypress': { configs: {} },
+      };
+      const module = { exports: [] as unknown[] };
+      new Function('require', 'module', '__dirname', content)(
+        (id: string) => modules[id] ?? {},
+        module,
+        '/'
+      );
+
+      expect(module.exports).toContainEqual({
+        languageOptions: { globals: { describe: 'readonly' } },
+      });
+      expect(compatConfigs).toEqual([
+        {
+          env: { 'jest/globals': true, 'cypress/globals': true },
+          globals: { describe: 'readonly', page: 'readonly' },
+        },
+      ]);
     });
   });
 });

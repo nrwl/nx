@@ -12,3 +12,7 @@ pub mod child_process;
 pub mod rust_pseudo_terminal;
 
 pub mod process_killer;
+
+pub mod strip_queries;
+
+pub mod utf8_carry;

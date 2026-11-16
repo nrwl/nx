@@ -6,17 +6,18 @@ import {
   type ProjectGraph,
   type ProjectGraphProjectNode,
 } from '@nx/devkit';
+import { normalize, relative, sep } from 'path';
 import {
   createProjectRootMappings,
   findProjectForPath,
-} from 'nx/src/project-graph/utils/find-project-for-path';
-import { findAllProjectNodeDependencies } from 'nx/src/utils/project-graph-utils';
-import { normalize, relative, sep } from 'path';
+  findAllProjectNodeDependencies,
+} from '@nx/devkit/internal';
 
 /**
  * Generates an array of paths to watch based on the project dependencies.
  *
  * @param {string} dirname The absolute path to the Remix project, typically `__dirname`.
+ * @deprecated Migrate to React Router with `@nx/react`. This will be removed in Nx 25.
  */
 export async function createWatchPaths(dirname: string): Promise<string[]> {
   const graph = await createProjectGraphAsync();

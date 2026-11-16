@@ -1,4 +1,4 @@
-import { dirname, join } from 'node:path';
+import { join } from 'node:path';
 import { ReleaseType } from 'semver';
 import { NxReleaseVersionConfiguration } from '../../../config/nx-json';
 import type {
@@ -12,6 +12,8 @@ import {
   requireWithTsconfigFallback,
 } from '../../../plugins/js/utils/register';
 import { interpolate } from '../../../tasks-runner/utils';
+import { interpolateReleaseConfig } from '../utils/interpolate-release-config';
+import { resolveFromWorkspace } from '../../../utils/installation-directory';
 import { workspaceRoot } from '../../../utils/workspace-root';
 import { DEFAULT_VERSION_ACTIONS_PATH } from '../config/config';
 import type { ReleaseGroupWithName } from '../config/filter-release-groups';
@@ -24,12 +26,31 @@ import { BUMP_TYPE_REASON_TEXT } from './release-group-processor';
 
 export type SemverBumpType = ReleaseType | 'none';
 
+/**
+ * Lazily resolves the concrete version of a dependency project that is not
+ * already represented in `dependenciesToUpdate`.
+ *
+ * Ecosystem-specific VersionActions implementations can use this when a
+ * manifest reference requires a concrete version but `dependenciesToUpdate`
+ * does not contain one. The resolved value can be the dependency's new version
+ * when it is part of the release, or its current version when it is not being
+ * versioned.
+ *
+ * When the project is not configured for Nx Release, the returned promise
+ * rejects with an error whose `code` is `NX_RELEASE_PROJECT_NOT_CONFIGURED`.
+ *
+ * @public
+ */
+export type ResolveVersionForDependency = (
+  dependencyProjectName: string
+) => Promise<string>;
+
 function resolveVersionActionsPath(
   path: string,
   projectGraphNode: ProjectGraphProjectNode
 ): string {
   try {
-    return require.resolve(path);
+    return resolveFromWorkspace(path);
   } catch {
     try {
       return require.resolve(join(workspaceRoot, path));
@@ -188,6 +209,14 @@ export abstract class VersionActions {
    */
   abstract validManifestFilenames: string[] | null;
   /**
+   * Whether manifests updated by this implementation should be excluded from
+   * the final Prettier pass performed by Nx Release.
+   *
+   * Custom implementations must opt in explicitly. This defaults to false so
+   * their existing formatting behavior does not change.
+   */
+  excludeManifestsFromFormatting = false;
+  /**
    * The interpolated manifest paths to update, if applicable based on the user's configuration, when new
    * versions and dependencies are determined. If no manifest files should be updated based on the user's
    * configuration, this will be an empty array.
@@ -234,7 +263,7 @@ export abstract class VersionActions {
       this.finalConfigForProject.manifestRootsToUpdate.map((manifestRoot) => {
         return {
           ...manifestRoot,
-          path: interpolate(manifestRoot.path, {
+          path: interpolateReleaseConfig(manifestRoot.path, {
             workspaceRoot: '',
             projectRoot: this.projectGraphNode.data.root,
             projectName: this.projectGraphNode.name,
@@ -460,13 +489,18 @@ It is also possible that the project is being processed because of a dependency 
    * with new dependency versions, but for application deployments it might involve
    * updating something else instead, it depends on the type of application.
    *
+   * `resolveVersionForDependency` is intentionally lazy: implementations
+   * decide which manifest values require a concrete version, while release core
+   * remains unaware of ecosystem-specific dependency protocols.
+   *
    * It should return an array of log messages that will be displayed unmodified to the user
    * after the dependencies have been updated.
    */
   abstract updateProjectDependencies(
     tree: Tree,
     projectGraph: ProjectGraph,
-    dependenciesToUpdate: Record<string, string>
+    dependenciesToUpdate: Record<string, string>,
+    resolveVersionForDependency?: ResolveVersionForDependency
   ): Promise<string[]>;
 }
 
@@ -527,7 +561,8 @@ export class NOOP_VERSION_ACTIONS extends VersionActions {
   updateProjectDependencies(
     tree: Tree,
     projectGraph: ProjectGraph,
-    dependenciesToUpdate: Record<string, string>
+    dependenciesToUpdate: Record<string, string>,
+    resolveVersionForDependency?: ResolveVersionForDependency
   ): Promise<string[]> {
     return Promise.resolve([]);
   }

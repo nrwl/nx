@@ -9,6 +9,7 @@ import {
   readFile,
   runCLI,
   runCommand,
+  runCommandAsync,
   tmpProjPath,
   uniq,
   updateJson,
@@ -50,6 +51,10 @@ expect.addSnapshotSerializer({
           '{lock-file-command}'
         )
         .replaceAll('pnpm install --lockfile-only', '{lock-file-command}')
+        .replaceAll(
+          /Skipped lock file update because (?:it is not necessary for Yarn Classic|(?:npm|pnpm|yarn|bun) workspaces are not enabled)\./g,
+          'Skipped lock file update because {package-manager-specific reason}.'
+        )
         .replaceAll(getSelectedPackageManager(), '{package-manager}')
         .replaceAll(e2eRegistryUrl, '{registryUrl}')
         // We trim each line to reduce the chances of snapshot flakiness
@@ -69,10 +74,13 @@ describe('nx release - independent projects', () => {
   let pkg3: string;
   let e2eRegistryUrl: string;
 
-  beforeAll(() => {
+  beforeAll(async () => {
     newProject({
       packages: ['@nx/js'],
     });
+
+    // Keep generated package names aligned with the fixture's dependencies.
+    updateJson('package.json', (json) => ({ ...json, name: '@proj/source' }));
 
     pkg1 = uniq('my-pkg-1');
     runCLI(`generate @nx/workspace:npm-package ${pkg1}`);
@@ -93,7 +101,7 @@ describe('nx release - independent projects', () => {
     });
 
     // Normalize git committer information so it is deterministic in snapshots
-    runCommand(`git config user.email "test@test.com"`);
+    runCommand(`git config user.email "test@users.noreply.github.com"`);
     runCommand(`git config user.name "Test"`);
     // Create a baseline version tag for each project
     runCommand(`git tag ${pkg1}@0.0.0`);
@@ -170,9 +178,6 @@ describe('nx release - independent projects', () => {
         +   "version": "999.9.9-package.2",
         "exports": {
 
-        }
-        +
-
 
         NX   Staging changed files with git
 
@@ -192,9 +197,9 @@ describe('nx release - independent projects', () => {
         NX   Running release version for project: {project-name}
 
         {project-name} 📄 Resolved the current version as 999.9.9-package.2 from manifest: {project-name}/package.json
-        {project-name} ✍️  Updated 1 dependency in manifest: {project-name}/package.json
         {project-name} ❓ Applied semver relative bump "patch", because a dependency was bumped, to get new version 999.9.9
         {project-name} ✍️  New version 999.9.9 written to manifest: {project-name}/package.json
+        {project-name} ✍️  Updated 1 dependency in manifest: {project-name}/package.json
 
         NX   Running release version for project: {project-name}
 
@@ -262,7 +267,7 @@ describe('nx release - independent projects', () => {
         "exports": {
 
 
-        Skipped lock file update because {package-manager} workspaces are not enabled.
+        Skipped lock file update because {package-manager-specific reason}.
 
         NX   Committing changes with git
 
@@ -374,7 +379,7 @@ describe('nx release - independent projects', () => {
         }
 
 
-        Skipped lock file update because {package-manager} workspaces are not enabled.
+        Skipped lock file update because {package-manager-specific reason}.
 
         NX   Committing changes with git
 
@@ -696,14 +701,6 @@ describe('nx release - independent projects', () => {
         Critical path: {DURATION} (1 task)
         Recoverable time: {DURATION}
 
-        Recommendations:
-        - Drastically reduce your run duration by sharing a cache across your team and CI → https://nx.dev/ci/features/remote-cache?utm=performance-report.
-        - Distribute tasks across multiple machines with Nx Agents to increase parallelism without overwhelming resource usage → https://nx.dev/ci/features/distribute-task-execution?utm=performance-report.
-        - Speed up or split the longest tasks on the critical path:
-        {project-name}:nx-release-publish    {DURATION}
-
-        Learn how to improve your run's performance → https://nx.dev/docs/concepts/ci-concepts/parallelization-distribution?utm=performance-report
-
       `);
 
       // Should only contain 2 projects
@@ -757,14 +754,6 @@ describe('nx release - independent projects', () => {
         Critical path: {DURATION} (1 task)
         Recoverable time: {DURATION}
 
-        Recommendations:
-        - Drastically reduce your run duration by sharing a cache across your team and CI → https://nx.dev/ci/features/remote-cache?utm=performance-report.
-        - Distribute tasks across multiple machines with Nx Agents to increase parallelism without overwhelming resource usage → https://nx.dev/ci/features/distribute-task-execution?utm=performance-report.
-        - Speed up or split the longest tasks on the critical path:
-        {project-name}:nx-release-publish    {DURATION}
-
-        Learn how to improve your run's performance → https://nx.dev/docs/concepts/ci-concepts/parallelization-distribution?utm=performance-report
-
         NX   Running target nx-release-publish for project {project-name}:
 
         - {project-name}
@@ -805,14 +794,6 @@ describe('nx release - independent projects', () => {
         Cache: 0/1 hit (0%)
         Critical path: {DURATION} (1 task)
         Recoverable time: {DURATION}
-
-        Recommendations:
-        - Drastically reduce your run duration by sharing a cache across your team and CI → https://nx.dev/ci/features/remote-cache?utm=performance-report.
-        - Distribute tasks across multiple machines with Nx Agents to increase parallelism without overwhelming resource usage → https://nx.dev/ci/features/distribute-task-execution?utm=performance-report.
-        - Speed up or split the longest tasks on the critical path:
-        {project-name}:nx-release-publish    {DURATION}
-
-        Learn how to improve your run's performance → https://nx.dev/docs/concepts/ci-concepts/parallelization-distribution?utm=performance-report
 
       `);
     });
@@ -901,14 +882,6 @@ describe('nx release - independent projects', () => {
         Critical path: {DURATION} (1 task)
         Recoverable time: {DURATION}
 
-        Recommendations:
-        - Drastically reduce your run duration by sharing a cache across your team and CI → https://nx.dev/ci/features/remote-cache?utm=performance-report.
-        - Distribute tasks across multiple machines with Nx Agents to increase parallelism without overwhelming resource usage → https://nx.dev/ci/features/distribute-task-execution?utm=performance-report.
-        - Speed up or split the longest tasks on the critical path:
-        {project-name}:nx-release-publish    {DURATION}
-
-        Learn how to improve your run's performance → https://nx.dev/docs/concepts/ci-concepts/parallelization-distribution?utm=performance-report
-
       `);
 
       // Should only contain the 1 project from group2
@@ -954,14 +927,6 @@ describe('nx release - independent projects', () => {
           Cache: 0/1 hit (0%)
           Critical path: {DURATION} (1 task)
           Recoverable time: {DURATION}
-
-          Recommendations:
-          - Drastically reduce your run duration by sharing a cache across your team and CI → https://nx.dev/ci/features/remote-cache?utm=performance-report.
-          - Distribute tasks across multiple machines with Nx Agents to increase parallelism without overwhelming resource usage → https://nx.dev/ci/features/distribute-task-execution?utm=performance-report.
-          - Speed up or split the longest tasks on the critical path:
-          {project-name}:nx-release-publish    {DURATION}
-
-          Learn how to improve your run's performance → https://nx.dev/docs/concepts/ci-concepts/parallelization-distribution?utm=performance-report
 
       `);
     });
@@ -1050,14 +1015,6 @@ describe('nx release - independent projects', () => {
         Critical path: {DURATION} (1 task)
         Recoverable time: {DURATION}
 
-        Recommendations:
-        - Drastically reduce your run duration by sharing a cache across your team and CI → https://nx.dev/ci/features/remote-cache?utm=performance-report.
-        - Distribute tasks across multiple machines with Nx Agents to increase parallelism without overwhelming resource usage → https://nx.dev/ci/features/distribute-task-execution?utm=performance-report.
-        - Speed up or split the longest tasks on the critical path:
-        {project-name}:nx-release-publish    {DURATION}
-
-        Learn how to improve your run's performance → https://nx.dev/docs/concepts/ci-concepts/parallelization-distribution?utm=performance-report
-
       `);
 
       // Should only contain the 1 project from group2
@@ -1103,14 +1060,6 @@ describe('nx release - independent projects', () => {
         Cache: 0/1 hit (0%)
         Critical path: {DURATION} (1 task)
         Recoverable time: {DURATION}
-
-        Recommendations:
-        - Drastically reduce your run duration by sharing a cache across your team and CI → https://nx.dev/ci/features/remote-cache?utm=performance-report.
-        - Distribute tasks across multiple machines with Nx Agents to increase parallelism without overwhelming resource usage → https://nx.dev/ci/features/distribute-task-execution?utm=performance-report.
-        - Speed up or split the longest tasks on the critical path:
-        {project-name}:nx-release-publish    {DURATION}
-
-        Learn how to improve your run's performance → https://nx.dev/docs/concepts/ci-concepts/parallelization-distribution?utm=performance-report
 
         NX   Running target nx-release-publish for 2 projects:
 
@@ -1175,14 +1124,6 @@ describe('nx release - independent projects', () => {
         Cache: 0/2 hit (0%)
         Critical path: {DURATION} (1 task)
         Recoverable time: {DURATION}
-
-        Recommendations:
-        - Drastically reduce your run duration by sharing a cache across your team and CI → https://nx.dev/ci/features/remote-cache?utm=performance-report.
-        - Distribute tasks across multiple machines with Nx Agents to increase parallelism without overwhelming resource usage → https://nx.dev/ci/features/distribute-task-execution?utm=performance-report.
-        - Speed up or split the longest tasks on the critical path:
-        {project-name}:nx-release-publish    {DURATION}
-
-        Learn how to improve your run's performance → https://nx.dev/docs/concepts/ci-concepts/parallelization-distribution?utm=performance-report
 
       `);
     });

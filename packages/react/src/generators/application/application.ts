@@ -1,17 +1,16 @@
 import {
   logShowProjectCommand,
-  promptWhenInteractive,
+  confirmationPrompt,
+  isInteractive,
 } from '@nx/devkit/internal';
 import { assertSupportedReactVersion } from '../../utils/assert-supported-react-version';
 import {
   formatFiles,
   GeneratorCallback,
   joinPathFragments,
-  readNxJson,
   runTasksInSerial,
   Tree,
   updateJson,
-  updateNxJson,
 } from '@nx/devkit';
 import { initGenerator as jsInitGenerator } from '@nx/js';
 import {
@@ -48,7 +47,6 @@ export async function applicationGenerator(
   schema: Schema
 ): Promise<GeneratorCallback> {
   return await applicationGeneratorInternal(tree, {
-    addPlugin: false,
     useProjectJson: true,
     ...schema,
   });
@@ -64,7 +62,6 @@ export async function applicationGeneratorInternal(
 
   const addTsPlugin = shouldConfigureTsSolutionSetup(
     tree,
-    schema.addPlugin,
     schema.useTsSolution
   );
   const jsInitTask = await jsInitGenerator(tree, {
@@ -72,7 +69,6 @@ export async function applicationGeneratorInternal(
     tsConfigName: schema.rootProject ? 'tsconfig.json' : 'tsconfig.base.json',
     skipFormat: true,
     addTsPlugin,
-    formatter: schema.formatter,
     platform: 'web',
   });
   tasks.push(jsInitTask);
@@ -82,30 +78,12 @@ export async function applicationGeneratorInternal(
   options.useReactRouter =
     options.routing && options.bundler === 'vite'
       ? (options.useReactRouter ??
-        (await promptWhenInteractive<{
-          response: 'Yes' | 'No';
-        }>(
-          {
-            name: 'response',
-            message:
-              'Would you like to use react-router for server-side rendering?',
-            type: 'autocomplete',
-            choices: [
-              {
-                name: 'Yes',
-                message:
-                  'I want to use react-router   [ https://reactrouter.com/start/framework/routing   ]',
-              },
-              {
-                name: 'No',
-                message:
-                  'I do not want to use react-router for server-side rendering',
-              },
-            ],
-            initial: 0,
-          },
-          { response: 'No' }
-        ).then((r) => r.response === 'Yes')))
+        (isInteractive()
+          ? await confirmationPrompt({
+              message:
+                'Would you like to use react-router for server-side rendering?',
+            })
+          : false))
       : false;
 
   const initTask = await reactInitGenerator(tree, {
@@ -114,20 +92,6 @@ export async function applicationGeneratorInternal(
     useReactRouterPlugin: options.useReactRouter,
   });
   tasks.push(initTask);
-
-  if (!options.addPlugin) {
-    const nxJson = readNxJson(tree);
-    nxJson.targetDefaults ??= {};
-    if (!Object.keys(nxJson.targetDefaults).includes('build')) {
-      nxJson.targetDefaults.build = {
-        cache: true,
-        dependsOn: ['^build'],
-      };
-    } else if (!nxJson.targetDefaults.build.dependsOn) {
-      nxJson.targetDefaults.build.dependsOn = ['^build'];
-    }
-    updateNxJson(tree, nxJson);
-  }
 
   if (options.bundler === 'webpack') {
     await initWebpack(tree, options, tasks);

@@ -1,4 +1,18 @@
-import { sanitizeWrapperScript } from './add-nx-scripts';
+import {
+  getDotNxWrapperVersionCommand,
+  sanitizeWrapperScript,
+} from './add-nx-scripts';
+
+describe('getDotNxWrapperVersionCommand', () => {
+  it('should invoke the nx.bat wrapper on Windows', () => {
+    expect(getDotNxWrapperVersionCommand('win32')).toBe('.\\nx.bat --version');
+  });
+
+  it('should invoke the ./nx wrapper on non-Windows platforms', () => {
+    expect(getDotNxWrapperVersionCommand('linux')).toBe('./nx --version');
+    expect(getDotNxWrapperVersionCommand('darwin')).toBe('./nx --version');
+  });
+});
 
 describe('sanitizeWrapperScript', () => {
   it('should remove any comments starting with //#', () => {

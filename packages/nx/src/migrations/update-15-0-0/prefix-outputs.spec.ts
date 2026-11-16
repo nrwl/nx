@@ -84,6 +84,48 @@ describe('15.0.0 migration (prefix-outputs)', () => {
     `);
   });
 
+  it('should prefix outputs in array-shaped target defaults, leaving filters intact', async () => {
+    const nxJson = readNxJson(tree);
+    updateNxJson(tree, {
+      ...nxJson,
+      targetDefaults: {
+        build: [
+          { outputs: ['dist', '{projectRoot}/build'] },
+          {
+            filter: { plugin: '@nx/vite' },
+            outputs: ['out', '{options.outputPath}'],
+          },
+        ],
+      },
+    });
+
+    await prefixOutputs(tree);
+
+    const updated = readNxJson(tree);
+
+    expect(updated.targetDefaults).toMatchInlineSnapshot(`
+      {
+        "build": [
+          {
+            "outputs": [
+              "{workspaceRoot}/dist",
+              "{projectRoot}/build",
+            ],
+          },
+          {
+            "filter": {
+              "plugin": "@nx/vite",
+            },
+            "outputs": [
+              "{workspaceRoot}/out",
+              "{options.outputPath}",
+            ],
+          },
+        ],
+      }
+    `);
+  });
+
   it('should migrate package.json projects', async () => {
     writeJson(tree, 'proj/package.json', {
       name: 'proj',

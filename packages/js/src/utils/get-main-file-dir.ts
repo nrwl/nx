@@ -1,5 +1,5 @@
 import { dirname, relative } from 'path';
-import { normalizePath } from 'nx/src/utils/path';
+import { normalizePath } from '@nx/devkit';
 
 export function getRelativeDirectoryToProjectRoot(
   file: string,

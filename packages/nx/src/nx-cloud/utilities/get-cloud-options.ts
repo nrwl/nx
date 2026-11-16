@@ -1,20 +1,28 @@
 import { CloudTaskRunnerOptions } from '../nx-cloud-tasks-runner-shell';
 import { readNxJson } from '../../config/nx-json';
-import { getRunnerOptions } from '../../tasks-runner/run-command';
 import { workspaceRoot } from '../../utils/workspace-root';
 
 export function getCloudOptions(
   directory = workspaceRoot
 ): CloudTaskRunnerOptions {
+  // Required lazily: this module is reachable from the @nx/devkit/internal
+  // barrel that plugin workers load, and run-command eagerly pulls in the whole
+  // task-execution subsystem.
+  const {
+    getRunnerOptions,
+  }: typeof import('../../tasks-runner/run-command') = require('../../tasks-runner/run-command');
   const nxJson = readNxJson(directory);
 
   // TODO: The default is not always cloud? But it's not handled at the moment
   return getRunnerOptions('default', nxJson, {}, true);
 }
 
-export function getCloudUrl() {
+export function getCloudUrl(directory = workspaceRoot) {
   return removeTrailingSlash(
-    process.env.NX_CLOUD_API || process.env.NRWL_API || `https://cloud.nx.app`
+    process.env.NX_CLOUD_API ||
+      process.env.NRWL_API ||
+      getCloudOptions(directory).url ||
+      `https://cloud.nx.app`
   );
 }
 

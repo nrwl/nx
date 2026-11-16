@@ -12,12 +12,9 @@ import {
 import ignore from 'ignore';
 import { applyEdits, modify } from 'jsonc-parser';
 import { dirname, normalize, relative } from 'node:path/posix';
-import {
-  SyncError,
-  type SyncGeneratorResult,
-} from 'nx/src/utils/sync-generators';
 import * as ts from 'typescript';
 import { assertSupportedTypescriptVersion } from '../../utils/assert-supported-typescript-version';
+import { SyncError, type SyncGeneratorResult } from '@nx/devkit/internal';
 
 interface Tsconfig {
   references?: Array<{ path: string }>;
@@ -52,6 +49,8 @@ type TsconfigInfoCaches = {
   composite: Map<string, boolean>;
   content: Map<string, string>;
   exists: Map<string, boolean>;
+  extendedConfigs: Map<string, ts.ExtendedConfigCacheEntry>;
+  ignore?: ReturnType<typeof ignore>;
 };
 type ChangedFileDetails = {
   duplicates: Set<string>;
@@ -70,6 +69,7 @@ export async function syncGenerator(tree: Tree): Promise<SyncGeneratorResult> {
     composite: new Map(),
     content: new Map(),
     exists: new Map(),
+    extendedConfigs: new Map(),
   };
   // Root tsconfig containing project references for the whole workspace
   const rootTsconfigPath = 'tsconfig.json';
@@ -182,12 +182,13 @@ export async function syncGenerator(tree: Tree): Promise<SyncGeneratorResult> {
 
     if (changedFiles.size > 0) {
       const updatedReferences = Array.from(referencesSet)
-        // Check composite is true in the internal reference before proceeding
+        // Check composite is true in the internal reference before proceeding.
+        // A reference can name a tsconfig file directly rather than a directory.
         .filter((ref) =>
           hasCompositeEnabled(
             tsSysFromTree,
             tsconfigInfoCaches,
-            joinPathFragments(ref, 'tsconfig.json')
+            toFullProjectReferencePath(ref)
           )
         )
         .map((ref) => ({
@@ -239,7 +240,6 @@ export async function syncGenerator(tree: Tree): Promise<SyncGeneratorResult> {
 
     // Collect the dependencies of the source project
     const dependencies = collectProjectDependencies(
-      tree,
       projectName,
       projectGraph,
       collectedDependencies
@@ -279,7 +279,8 @@ export async function syncGenerator(tree: Tree): Promise<SyncGeneratorResult> {
     if (foundRuntimeTsConfig) {
       const sourceProjectTsconfig = parseTsconfig(
         sourceProjectTsconfigPath,
-        tsSysFromTree
+        tsSysFromTree,
+        tsconfigInfoCaches
       );
       keepReferencesInTsconfigJson = sourceProjectTsconfig.fileNames.length > 0;
     }
@@ -352,12 +353,18 @@ function readRawTsconfigContents(
 
 function parseTsconfig(
   tsconfigPath: string,
-  sys: ts.System
+  sys: ts.System,
+  tsconfigInfoCaches: TsconfigInfoCaches
 ): ts.ParsedCommandLine {
   return ts.parseJsonConfigFileContent(
     ts.readConfigFile(tsconfigPath, sys.readFile).config,
     sys,
-    dirname(tsconfigPath)
+    dirname(tsconfigPath),
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    tsconfigInfoCaches.extendedConfigs
   );
 }
 
@@ -446,7 +453,7 @@ function updateTsConfigReferences(
         projectRoot,
         projectRoots
       ) ||
-      isProjectReferenceIgnored(tree, resolvedRefPath)
+      isProjectReferenceIgnored(tree, tsconfigInfoCaches, resolvedRefPath)
     ) {
       // we keep all references within the current Nx project or that are ignored
       references.push(ref);
@@ -581,7 +588,6 @@ function updateTsConfigReferences(
 // to reference transitive dependencies.
 // Collect the dependencies of a project recursively sorted from root to leaf
 function collectProjectDependencies(
-  tree: Tree,
   projectName: string,
   projectGraph: ProjectGraph,
   collectedDependencies: Map<string, ProjectGraphProjectNode[]>
@@ -615,7 +621,6 @@ function collectProjectDependencies(
 
     // Recursively get the dependencies of the target project
     const transitiveDependencies = collectProjectDependencies(
-      tree,
       dep.target,
       projectGraph,
       collectedDependencies
@@ -675,18 +680,22 @@ function isProjectReferenceWithinNxProject(
 
 function isProjectReferenceIgnored(
   tree: Tree,
+  tsconfigInfoCaches: TsconfigInfoCaches,
   refTsConfigPath: string
 ): boolean {
-  const ig = ignore();
-  if (tree.exists('.gitignore')) {
-    ig.add('.git');
-    ig.add(tree.read('.gitignore', 'utf-8'));
-  }
-  if (tree.exists('.nxignore')) {
-    ig.add(tree.read('.nxignore', 'utf-8'));
+  if (!tsconfigInfoCaches.ignore) {
+    const ig = ignore();
+    if (tree.exists('.gitignore')) {
+      ig.add('.git');
+      ig.add(tree.read('.gitignore', 'utf-8'));
+    }
+    if (tree.exists('.nxignore')) {
+      ig.add(tree.read('.nxignore', 'utf-8'));
+    }
+    tsconfigInfoCaches.ignore = ig;
   }
 
-  return ig.ignores(refTsConfigPath);
+  return tsconfigInfoCaches.ignore.ignores(refTsConfigPath);
 }
 
 function getTsConfigDirName(tsConfigPath: string): string {
@@ -741,7 +750,11 @@ function hasCompositeEnabled(
   tsconfigPath: string
 ): boolean {
   if (!tsconfigInfoCaches.composite.has(tsconfigPath)) {
-    const parsed = parseTsconfig(tsconfigPath, tsSysFromTree);
+    const parsed = parseTsconfig(
+      tsconfigPath,
+      { ...tsSysFromTree, readDirectory: () => [] },
+      tsconfigInfoCaches
+    );
     tsconfigInfoCaches.composite.set(
       tsconfigPath,
       parsed.options.composite === true

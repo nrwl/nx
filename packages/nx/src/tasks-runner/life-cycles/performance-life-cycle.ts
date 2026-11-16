@@ -1,6 +1,15 @@
-import type { BatchInfo, PerformanceSummaryPayload } from '../../native';
+import { appendFileSync } from 'node:fs';
+import {
+  TaskReadiness,
+  type BatchInfo,
+  type PerformanceSummaryPayload,
+} from '../../native';
 import { TaskGraph } from '../../config/task-graph';
-import { buildExitSummaryPayload, formatReport } from './performance-report';
+import {
+  buildExitSummaryPayload,
+  formatReport,
+  formatReportMarkdown,
+} from './performance-report';
 import { LifeCycle, TaskResult } from '../life-cycle';
 import { isTuiEnabled } from '../is-tui-enabled';
 import {
@@ -22,8 +31,8 @@ import {
  * coordinator time (hashing, scheduling, continuous-dep waits).
  *
  * Scope: discrete tasks only. Continuous tasks (no end time) are excluded; a
- * discrete task's wait for a continuous dependency to start is eligibility, not
- * contention.
+ * discrete task's wait for a continuous dependency to start, or to be ready, is
+ * eligibility, not contention.
  */
 export class PerformanceLifeCycle implements LifeCycle {
   private readonly timings = new Map<string, TaskTiming>();
@@ -59,6 +68,14 @@ export class PerformanceLifeCycle implements LifeCycle {
         id,
         batchInfo.taskIds.filter((other) => other !== id)
       );
+    }
+  }
+
+  setTaskReadiness(taskId: string, readiness: TaskReadiness): void {
+    const entry = this.entry(taskId);
+    // Each waiter polling a shared producer reports Ready; the first one counts.
+    if (readiness === TaskReadiness.Ready && entry.readyTime == null) {
+      entry.readyTime = Date.now();
     }
   }
 
@@ -166,6 +183,10 @@ export function flushPerformanceReport(): void {
     // restore_terminal cooks the terminal back post-TUI, so console.log's plain \n
     // renders fine; it also supplies the single trailing newline formatReport omits.
     console.log(formatReport(summary));
+    // In GitHub Actions, also append the report to the job summary page — the same stats
+    // as above, led by the run's outcome (a failed-tasks list, or a success line).
+    // Independent of the console.log above so neither masks the other.
+    writePerformanceReportToGitHubActions(summary);
   } catch (e) {
     // Best-effort report; never let it affect the run's exit behavior. Surface the
     // cause only under verbose logging.
@@ -173,4 +194,45 @@ export function flushPerformanceReport(): void {
       console.error(e);
     }
   }
+}
+
+/**
+ * Append the performance report to the GitHub Actions job summary page when running in
+ * Actions (`$GITHUB_STEP_SUMMARY` is set there and nowhere else). No-op otherwise. The
+ * Markdown is rendered below the guard, so non-CI runs don't pay to format a report
+ * nothing reads. Best-effort: a write failure must never affect the run.
+ *
+ * Skipped for a nested run (one nx command invoked by another nx task's command), so only
+ * the outermost run writes to the summary. Nx sets `NX_TASK_TARGET_PROJECT` on every task's
+ * environment, which a nested nx inherits; its absence marks the top-level invocation (the
+ * same "NX is already running" signal `nx exec` uses).
+ */
+function writePerformanceReportToGitHubActions(
+  summary: PerformanceSummary
+): void {
+  const summaryPath = process.env.GITHUB_STEP_SUMMARY;
+  if (
+    process.env.GITHUB_ACTIONS !== 'true' ||
+    !summaryPath ||
+    process.env.NX_TASK_TARGET_PROJECT
+  ) {
+    return;
+  }
+  try {
+    const report = formatReportMarkdown(summary, currentNxCommand());
+    appendFileSync(summaryPath, `${report}\n`);
+  } catch (e) {
+    if (process.env.NX_VERBOSE_LOGGING === 'true') {
+      console.error(e);
+    }
+  }
+}
+
+/**
+ * The nx command as typed — everything after the nx bin (`process.argv[0]` is node,
+ * `[1]` is the bin). Only read on the CLI flush path, where argv is always the real nx
+ * invocation, so it identifies the run in the summary heading.
+ */
+function currentNxCommand(): string {
+  return process.argv.slice(2).join(' ').trim();
 }

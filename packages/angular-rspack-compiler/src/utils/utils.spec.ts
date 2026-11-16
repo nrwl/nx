@@ -2,13 +2,12 @@ import { afterEach, beforeEach, describe, expect, vi, it } from 'vitest';
 import {
   isPresent,
   isUsingWindows,
+  maxTransformWorkers,
   maxWorkers,
-  normalizeQuotes,
   parseMaxWorkers,
 } from './utils';
 import * as nodeOSModule from 'node:os';
 import { ENV_NG_BUILD_MAX_WORKERS } from './constants.ts';
-import * as osModule from 'node:os';
 
 vi.mock('node:os');
 
@@ -97,14 +96,8 @@ describe('maxWorkers', () => {
   });
 });
 
-describe('normalizeQuotes', () => {
-  it.each(["'", '"', '`'])('should remove (%s) quotes if given', (quote) => {
-    expect(normalizeQuotes(`${quote}test${quote}`)).toBe('test');
-  });
-});
-
 describe('isUsingWindows', async () => {
-  const platformSpy = vi.spyOn(osModule, 'platform');
+  const platformSpy = vi.spyOn(nodeOSModule, 'platform');
 
   beforeEach(() => {
     platformSpy.mockClear();
@@ -137,4 +130,24 @@ describe('isUsingWindows', async () => {
     expect(isUsingWindows()).toBe(false);
     expect(platformSpy).toHaveBeenCalledTimes(1);
   });
+});
+
+describe('maxTransformWorkers', () => {
+  beforeEach(() => {
+    vi.spyOn(nodeOSModule, 'availableParallelism').mockReturnValue(16);
+  });
+
+  it.each([
+    ['3', 3],
+    ['2.5', 4],
+    ['0', 4],
+    ['', 4],
+  ])(
+    'should resolve NG_BUILD_MAX_WORKERS=%j to %i workers',
+    (value, expected) => {
+      vi.stubEnv(ENV_NG_BUILD_MAX_WORKERS, value);
+
+      expect(maxTransformWorkers()).toBe(expected);
+    }
+  );
 });

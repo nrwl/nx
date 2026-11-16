@@ -4,10 +4,12 @@ export interface Schema {
   directory?: string;
   name?: string;
   port?: number;
-  linter?: 'eslint' | 'none';
+  linter?: 'eslint' | 'oxlint' | 'none';
   rootProject?: boolean;
   isNest?: boolean;
   skipFormat?: boolean;
-  addPlugin?: boolean;
   useProjectJson?: boolean;
+  /** Name of the app's build target. Defaults to `build`. */
+  buildTarget?: string;
+  testRunner?: 'jest' | 'vitest';
 }

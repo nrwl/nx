@@ -37,10 +37,7 @@ function detectTransformerFormat(plugin: any): TransformerFormat {
   return TransformerFormat.UNKNOWN;
 }
 
-function adaptFunctionBasedTransformer(
-  plugin: any,
-  pluginOptions: Record<string, unknown>
-) {
+function adaptFunctionBasedTransformer(plugin: any) {
   // Handle direct function export
   if (typeof plugin === 'function') {
     return {
@@ -148,7 +145,7 @@ export function loadTsTransformers(
     // Adapt function-based transformers to standard format
     if (format === TransformerFormat.FUNCTION_EXPORT) {
       logger.debug(`Adapting function-based transformer: ${pluginName}`);
-      plugin = adaptFunctionBasedTransformer(plugin, pluginOptions);
+      plugin = adaptFunctionBasedTransformer(plugin);
     } else if (format === TransformerFormat.UNKNOWN) {
       logger.warn(
         `${pluginName} is not a recognized Transformer Plugin format. It should export ` +

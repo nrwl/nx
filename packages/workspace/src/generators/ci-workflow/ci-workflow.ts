@@ -11,8 +11,8 @@ import {
 } from '@nx/devkit';
 import { deduceDefaultBase } from '../../utilities/default-base';
 import { join } from 'path';
-import { getNxCloudUrl, isNxCloudUsed } from 'nx/src/utils/nx-cloud-utils';
 import { isUsingTsSolutionSetup } from '../../utilities/typescript/ts-solution-setup';
+import { getNxCloudUrl, isNxCloudUsed } from '@nx/devkit/internal';
 
 function getNxCloudRecordCommand(
   ci: Schema['ci'],
@@ -56,16 +56,6 @@ function getNxTasksCommand(
   };
 }
 
-function getNxCloudFixCiCommand(packageManagerPrefix: string): Command {
-  return {
-    comments: [
-      `Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci`,
-    ],
-    command: `${packageManagerPrefix} nx fix-ci`,
-    alwaysRun: true,
-  };
-}
-
 function getCiCommands(
   ci: Schema['ci'],
   packageManagerPrefix: string,
@@ -84,7 +74,6 @@ function getCiCommands(
       hasE2E,
       useRunMany
     ),
-    getNxCloudFixCiCommand(packageManagerPrefix),
   ];
 }
 
@@ -153,7 +142,6 @@ function getBitbucketBranchCommands(
 export type Command = {
   command?: string;
   comments?: string[];
-  alwaysRun?: boolean;
 };
 
 export interface Schema {
@@ -172,6 +160,7 @@ export async function ciWorkflowGenerator(tree: Tree, schema: Schema) {
   }
 
   generateFiles(tree, join(__dirname, 'files', ci), '', options);
+  generateFiles(tree, join(__dirname, 'files', 'ci-config'), '', options);
 
   addWorkflowFileToSharedGlobals(nxJson, schema.ci, options.workflowFileName);
 
@@ -281,7 +270,7 @@ function appendOriginPrefix(nxJson: NxJsonConfiguration): void {
   if (nxJson?.affected?.defaultBase) {
     nxJson.affected.defaultBase = `origin/${nxJson.affected.defaultBase}`;
   }
-  if (nxJson.defaultBase || !nxJson.affected) {
+  if (nxJson.defaultBase || !nxJson.affected?.defaultBase) {
     nxJson.defaultBase = `origin/${nxJson.defaultBase ?? deduceDefaultBase()}`;
   }
 }

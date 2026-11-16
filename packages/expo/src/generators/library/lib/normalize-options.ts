@@ -1,12 +1,15 @@
-import { readNxJson, Tree } from '@nx/devkit';
+import { Tree } from '@nx/devkit';
 import {
   determineProjectNameAndRootOptions,
   ensureRootProjectName,
 } from '@nx/devkit/internal';
 import { Schema } from '../schema';
-import { isUsingTsSolutionSetup } from '@nx/js/internal';
+import { normalizeLinterOption, isUsingTsSolutionSetup } from '@nx/js/internal';
+import type { LinterType } from '@nx/js';
 
 export interface NormalizedSchema extends Omit<Schema, 'name'> {
+  // `normalizeOptions` always resolves this, so it is no longer optional.
+  linter: LinterType;
   fileName: string;
   projectName: string;
   projectRoot: string;
@@ -32,11 +35,6 @@ export async function normalizeOptions(
     directory: options.directory,
     importPath: options.importPath,
   });
-  const nxJson = readNxJson(host);
-  const addPluginDefault =
-    process.env.NX_ADD_PLUGINS !== 'false' &&
-    nxJson.useInferencePlugins !== false;
-  options.addPlugin ??= addPluginDefault;
 
   const parsedTags = options.tags
     ? options.tags.split(',').map((s) => s.trim())
@@ -47,6 +45,10 @@ export async function normalizeOptions(
 
   const normalized: NormalizedSchema = {
     ...options,
+    // Resolved in the literal so the type guarantees it: `undefined` is falsy,
+    // so the ESLint arm would still run while the `=== 'eslint'` tsconfig
+    // excludes below are skipped.
+    linter: await normalizeLinterOption(host, options.linter),
     fileName: projectName,
     routePath: `/${projectNames.projectSimpleName}`,
     projectName:

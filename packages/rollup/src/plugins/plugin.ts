@@ -2,13 +2,13 @@ import {
   calculateHashesForCreateNodes,
   getNamedInputs,
   PluginCache,
+  workspaceDataDirectory,
+  hashObject,
 } from '@nx/devkit/internal';
-import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { basename, dirname, join } from 'path';
 import { readdirSync } from 'fs';
 import {
   AggregateCreateNodesError,
-  type CreateDependencies,
   CreateNodesContext,
   createNodesFromFiles,
   CreateNodesResultArray,
@@ -20,18 +20,11 @@ import {
 } from '@nx/devkit';
 import { getLockFileName } from '@nx/js';
 import { type RollupOptions } from 'rollup';
-import { hashObject } from 'nx/src/hasher/file-hasher';
 import {
   isUsingTsSolutionSetup,
   TS_SOLUTION_SETUP_TSCONFIG_INPUT,
   addBuildAndWatchDepsTargets,
 } from '@nx/js/internal';
-/**
- * @deprecated The 'createDependencies' function is now a no-op. This functionality is included in 'createNodesV2'.
- */
-export const createDependencies: CreateDependencies = () => {
-  return [];
-};
 
 export interface RollupPluginOptions {
   buildTargetName?: string;

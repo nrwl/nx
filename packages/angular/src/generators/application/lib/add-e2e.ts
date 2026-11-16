@@ -1,22 +1,19 @@
-import { Tree } from '@nx/devkit';
-import { E2EWebServerDetails } from '@nx/devkit/internal';
 import {
+  Tree,
   addProjectConfiguration,
   ensurePackage,
   getPackageManagerCommand,
   joinPathFragments,
   readNxJson,
 } from '@nx/devkit';
+import {
+  E2EWebServerDetails,
+  readTargetDefaultsForTarget,
+} from '@nx/devkit/internal';
 import { nxVersion } from '../../../utils/versions';
 import type { NormalizedSchema } from './normalized-schema';
 
 export async function addE2e(tree: Tree, options: NormalizedSchema) {
-  // since e2e are separate projects, default to adding plugins
-  const nxJson = readNxJson(tree);
-  const addPlugin =
-    nxJson['useInferencePlugins'] !== false &&
-    process.env.NX_ADD_PLUGINS !== 'false';
-
   const e2eWebServerInfo = getAngularE2EWebServerInfo(
     tree,
     options.name,
@@ -51,7 +48,6 @@ export async function addE2e(tree: Tree, options: NormalizedSchema) {
       ciWebServerCommand: e2eWebServerInfo.e2eCiWebServerCommand,
       ciBaseUrl: e2eWebServerInfo.e2eCiBaseUrl,
       rootProject: options.rootProject,
-      addPlugin,
     });
   } else if (options.e2eTestRunner === 'playwright') {
     const { configurationGenerator } = ensurePackage<
@@ -71,11 +67,12 @@ export async function addE2e(tree: Tree, options: NormalizedSchema) {
       directory: 'src',
       js: false,
       linter: options.linter,
-      setParserOptionsProject: options.setParserOptionsProject,
+      enableTypedLinting: options.enableTypedLinting,
       webServerCommand: e2eWebServerInfo.e2eWebServerCommand,
       webServerAddress: e2eWebServerInfo.e2eWebServerAddress,
+      ciWebServerCommand: e2eWebServerInfo.e2eCiWebServerCommand,
+      ciWebServerAddress: e2eWebServerInfo.e2eCiBaseUrl,
       rootProject: options.rootProject,
-      addPlugin,
     });
   }
 
@@ -89,15 +86,13 @@ function getAngularE2EWebServerInfo(
 ): E2EWebServerDetails & { e2ePort: number } {
   const nxJson = readNxJson(tree);
   let e2ePort = portOverride ?? 4200;
+  const serveTargetOptions = readTargetDefaultsForTarget(
+    'serve',
+    nxJson.targetDefaults
+  )?.options;
 
-  if (
-    nxJson.targetDefaults?.['serve'] &&
-    (nxJson.targetDefaults?.['serve'].options?.port ||
-      nxJson.targetDefaults?.['serve'].options?.env?.PORT)
-  ) {
-    e2ePort =
-      nxJson.targetDefaults?.['serve'].options?.port ||
-      nxJson.targetDefaults?.['serve'].options?.env?.PORT;
+  if (serveTargetOptions?.port || serveTargetOptions?.env?.PORT) {
+    e2ePort = serveTargetOptions.port || serveTargetOptions.env.PORT;
   }
 
   const pm = getPackageManagerCommand();

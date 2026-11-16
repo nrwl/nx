@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 import { getInstalledCypressMajorVersion } from '@nx/cypress/internal';
 import { readJson, readProjectConfiguration, Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
@@ -5,14 +6,14 @@ import { applicationGenerator } from '../application/application';
 import { libraryGenerator } from '../library/library';
 import { cypressComponentConfiguration } from './cypress-component-configuration';
 
-jest.mock('@nx/cypress/internal', () => ({
-  ...jest.requireActual<any>('@nx/cypress/internal'),
-  getInstalledCypressMajorVersion: jest.fn(),
+vi.mock('@nx/cypress/internal', async () => ({
+  ...(await vi.importActual<any>('@nx/cypress/internal')),
+  getInstalledCypressMajorVersion: vi.fn(),
 }));
 
 describe('cypress-component-configuration generator', () => {
   let tree: Tree;
-  let mockedInstalledCypressMajorVersion: jest.Mock<
+  let mockedInstalledCypressMajorVersion: Mock<
     ReturnType<typeof getInstalledCypressMajorVersion>
   > = getInstalledCypressMajorVersion as never;
   // TODO(@leosvelperez): Turn this back to adding the plugin
@@ -24,6 +25,7 @@ describe('cypress-component-configuration generator', () => {
 
   it('should setup nextjs app', async () => {
     await applicationGenerator(tree, {
+      linter: 'eslint',
       directory: 'demo',
       style: 'css',
     });
@@ -43,12 +45,15 @@ describe('cypress-component-configuration generator', () => {
     );
     expect(readJson(tree, 'demo/cypress/tsconfig.json')).toMatchSnapshot();
     expect(tree.read('demo/cypress.config.ts', 'utf-8')).toMatchInlineSnapshot(`
-      "const {
-        nxComponentTestingPreset,
-      } = require('@nx/next/plugins/component-testing');
+      "const { nxComponentTestingPreset } = require('@nx/next/plugins/component-testing');
       const { defineConfig } = require('cypress');
       module.exports = defineConfig({
-        component: nxComponentTestingPreset(__filename),
+        component: {
+          ...nxComponentTestingPreset(__filename),
+          // Cypress 14+ defaults justInTimeCompile to true (webpack only), which can
+          // intermittently run 0 tests in CI. Remove this line to opt back in.
+          justInTimeCompile: false,
+        },
       });
       "
     `);
@@ -88,19 +93,16 @@ describe('cypress-component-configuration generator', () => {
     expect(tree.exists('demo/pages/index.cy.ts')).toBeFalsy();
     expect(
       readProjectConfiguration(tree, 'demo').targets['component-test']
-    ).toEqual({
-      executor: '@nx/cypress:cypress',
-      options: {
-        cypressConfig: 'demo/cypress.config.ts',
-        skipServe: true,
-        testingType: 'component',
-      },
-    });
+    ).toBeUndefined();
+    expect(tree.read('demo/cypress.config.ts', 'utf-8')).toContain(
+      'component:'
+    );
   });
 
   it('should import "mount" from "cypress/react18" when cypress version is lower than v14', async () => {
     mockedInstalledCypressMajorVersion.mockReturnValue(13);
     await applicationGenerator(tree, {
+      linter: 'eslint',
       directory: 'demo',
       style: 'css',
     });
@@ -166,12 +168,15 @@ describe('cypress-component-configuration generator', () => {
     );
     expect(readJson(tree, 'demo/cypress/tsconfig.json')).toMatchSnapshot();
     expect(tree.read('demo/cypress.config.ts', 'utf-8')).toMatchInlineSnapshot(`
-      "const {
-        nxComponentTestingPreset,
-      } = require('@nx/next/plugins/component-testing');
+      "const { nxComponentTestingPreset } = require('@nx/next/plugins/component-testing');
       const { defineConfig } = require('cypress');
       module.exports = defineConfig({
-        component: nxComponentTestingPreset(__filename),
+        component: {
+          ...nxComponentTestingPreset(__filename),
+          // Cypress 14+ defaults justInTimeCompile to true (webpack only), which can
+          // intermittently run 0 tests in CI. Remove this line to opt back in.
+          justInTimeCompile: false,
+        },
       });
       "
     `);

@@ -4,6 +4,10 @@
   "targets": {
     "local-registry": {
       "executor": "@nx/js:verdaccio",
+      "inputs": [
+        "{workspaceRoot}/.verdaccio/**/*",
+        { "externalDependencies": ["verdaccio"] }
+      ],
       "options": {
         "port": 4873,
         "config": ".verdaccio/config.yml",
@@ -11,8 +15,23 @@
         "clear": false
       }
     },
+    "local-registry-e2e": {
+      "executor": "@nx/js:verdaccio",
+      "inputs": [
+        "{workspaceRoot}/.verdaccio/**/*",
+        { "externalDependencies": ["verdaccio"] }
+      ],
+      "options": {
+        "port": 4873,
+        "config": ".verdaccio/config.yml",
+        "storage": "dist/local-registry/storage",
+        "clear": false,
+        "location": "none"
+      }
+    },
     "populate-local-registry-storage": {
       "cache": true,
+      "ultracache": { "mode": "warn" },
       "inputs": [
         {
           "input": "production",
@@ -26,7 +45,7 @@
         "native"
       ],
       "dependsOn": [
-        "local-registry",
+        "local-registry-e2e",
         {
           "target": "build",
           "projects": ["tag:npm:public"]
@@ -34,6 +53,20 @@
       ],
       "command": "node ./scripts/local-registry/run-populate-storage.mjs",
       "outputs": ["{workspaceRoot}/dist/local-registry/storage"]
+    },
+    "populate-e2e-base-workspace": {
+      "cache": true,
+      "ultracache": { "mode": "warn" },
+      "inputs": [
+        "{workspaceRoot}/scripts/local-registry/**/*",
+        {
+          "runtime": "node ./scripts/local-registry/package-manager-versions.mjs"
+        },
+        { "dependentTasksOutputFiles": "**/*" }
+      ],
+      "dependsOn": ["local-registry-e2e", "populate-local-registry-storage"],
+      "command": "node ./scripts/local-registry/build-e2e-base-workspace.mjs",
+      "outputs": ["{workspaceRoot}/dist/local-registry/proj-backup/*.tar"]
     },
     "nx-release": {
       "dependsOn": [
@@ -52,11 +85,8 @@
       "parallelism": false
     },
     "lint": {
-      "dependsOn": ["@nx/nx-source:lint-pnpm-lock"],
-      "cache": true,
-      "inputs": ["{projectRoot}/pnpm-lock.yaml"]
-    },
-    "lint-pnpm-lock": {
+      "command": "eslint pnpm-lock.yaml",
+      "dependsOn": [],
       "cache": true,
       "inputs": [
         "{projectRoot}/pnpm-lock.yaml",
@@ -71,7 +101,9 @@
         "nx:lint-native",
         "check-commit",
         "check-format:quick",
-        "check-lock-files"
+        "check-oxlint:quick",
+        "check-lock-files",
+        "astro-docs:format"
       ]
     }
   }

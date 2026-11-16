@@ -3,6 +3,8 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net8.0</TargetFramework>
+    <!-- The process lives for one evaluation and allocates heavily; server GC is ~25% faster here. -->
+    <ServerGarbageCollection>true</ServerGarbageCollection>
     <!-- Allow running on newer .NET versions if net8.0 isn't available -->
     <RollForward>LatestMajor</RollForward>
     <RootNamespace>MsbuildAnalyzer</RootNamespace>

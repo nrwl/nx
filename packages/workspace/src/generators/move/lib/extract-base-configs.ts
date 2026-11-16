@@ -1,9 +1,4 @@
-import {
-  getProjects,
-  joinPathFragments,
-  ProjectConfiguration,
-  Tree,
-} from '@nx/devkit';
+import { getProjects, ProjectConfiguration, Tree } from '@nx/devkit';
 import { findProjectJestConfig } from '../../utils/jest-config';
 
 export function maybeExtractTsConfigBase(tree: Tree): void {

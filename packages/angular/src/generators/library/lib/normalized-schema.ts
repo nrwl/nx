@@ -1,5 +1,5 @@
 import { UnitTestRunner } from '../../../utils/test-runners';
-import type { Linter, LinterType } from '@nx/eslint';
+import type { LinterType } from '@nx/js';
 
 export interface NormalizedSchema {
   libraryOptions: {
@@ -19,13 +19,13 @@ export interface NormalizedSchema {
     tags?: string;
     strict?: boolean;
     compilationMode?: 'full' | 'partial';
-    setParserOptionsProject?: boolean;
+    enableTypedLinting?: boolean;
     skipModule?: boolean;
     skipPackageJson?: boolean;
     skipPostInstall?: boolean;
     skipTsConfig?: boolean;
     standalone?: boolean;
-    linter: Linter | LinterType;
+    linter: LinterType;
     unitTestRunner: UnitTestRunner;
     prefix: string;
     fileName: string;

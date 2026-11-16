@@ -1,6 +1,7 @@
 import { existsSync } from 'fs';
 import { join } from 'path';
 import { performance } from 'perf_hooks';
+import { customDimensions, PERF_SPAN_SAMPLE_RATE } from '../analytics';
 import { readNxJson } from '../config/configuration';
 import { NxJsonConfiguration } from '../config/nx-json';
 import {
@@ -11,6 +12,7 @@ import {
 import { ProjectConfiguration } from '../config/workspace-json-project-json';
 import { hashObject } from '../hasher/file-hasher';
 import { NxWorkspaceFilesExternals } from '../native';
+import { LOCKFILES } from '../plugins/js/lock-file/lock-file-names';
 import { getRootTsConfigPath } from '../plugins/js/utils/typescript';
 import { assertWorkspaceValidity } from '../utils/assert-workspace-validity';
 import { DelayedSpinner } from '../utils/delayed-spinner';
@@ -18,6 +20,7 @@ import { readJsonFile } from '../utils/fileutils';
 import { PackageJson } from '../utils/package-json';
 import { formatPluginProgressText } from '../utils/plugin-progress-text';
 import { ProgressTopics } from '../utils/progress-topics';
+import { hashWithWorkspaceContext } from '../utils/workspace-context';
 import { workspaceRoot } from '../utils/workspace-root';
 import {
   AggregateProjectGraphError,
@@ -132,6 +135,7 @@ export async function buildProjectGraphUsingProjectFileMap(
   const packageJsonDeps = readCombinedDeps();
   const rootTsConfig = readRootTsConfig();
   const externalNodesHash = hashExternalNodes(externalNodes);
+  const lockFileHash = await hashWithWorkspaceContext(workspaceRoot, LOCKFILES);
 
   let filesToProcess: FileMap;
   let cachedFileData: CachedFileData;
@@ -143,7 +147,8 @@ export async function buildProjectGraphUsingProjectFileMap(
       projects,
       nxJson,
       rootTsConfig,
-      externalNodesHash
+      externalNodesHash,
+      lockFileHash
     );
   if (useCacheData) {
     const fromCache = extractCachedFileData(fileMap, fileMapCache);
@@ -180,7 +185,8 @@ export async function buildProjectGraphUsingProjectFileMap(
       packageJsonDeps,
       fileMap,
       rootTsConfig,
-      externalNodesHash
+      externalNodesHash,
+      lockFileHash
     );
   } catch (e) {
     // we need to include the workspace validity errors in the final error
@@ -378,7 +384,12 @@ async function updateProjectGraphWithPlugins(
       performance.measure(`${plugin.name}:createDependencies`, {
         start: `${plugin.name}:createDependencies - start`,
         end: `${plugin.name}:createDependencies - end`,
-        detail: { track: true },
+        detail: {
+          track: true,
+          ...(customDimensions && {
+            [customDimensions.sampleRate]: PERF_SPAN_SAMPLE_RATE,
+          }),
+        },
       });
     })
   );

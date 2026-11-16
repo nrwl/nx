@@ -28,4 +28,8 @@ impl NxCondvar {
     {
         self.0.wait_while(mutex_guard, condition)
     }
+
+    pub fn notify_all(&self) {
+        self.0.notify_all();
+    }
 }

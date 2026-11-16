@@ -567,7 +567,7 @@ importers:
 
     describe('malformed lock file', () => {
       it('should return all projects when parsing the lock file fails', () => {
-        const warnSpy = jest.spyOn(output, 'warn').mockImplementation();
+        const warnSpy = vi.spyOn(output, 'warn').mockImplementation();
         const result = getTouchedProjectsFromLockFile(
           [
             {

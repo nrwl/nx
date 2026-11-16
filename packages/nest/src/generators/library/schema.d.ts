@@ -1,4 +1,4 @@
-import type { Linter, LinterType } from '@nx/eslint';
+import type { LinterType } from '@nx/js';
 import type { UnitTestRunner } from '../utils';
 
 export interface LibraryGeneratorOptions {
@@ -8,7 +8,7 @@ export interface LibraryGeneratorOptions {
   controller?: boolean;
   global?: boolean;
   importPath?: string;
-  linter?: Linter | LinterType;
+  linter?: LinterType;
   publishable?: boolean;
   service?: boolean;
   skipFormat?: boolean;
@@ -28,9 +28,8 @@ export interface LibraryGeneratorOptions {
     | 'es2021';
   testEnvironment?: 'jsdom' | 'node';
   unitTestRunner?: UnitTestRunner;
-  setParserOptionsProject?: boolean;
+  enableTypedLinting?: boolean;
   skipPackageJson?: boolean;
-  addPlugin?: boolean;
   isUsingTsSolutionsConfig?: boolean;
   useProjectJson?: boolean;
 }

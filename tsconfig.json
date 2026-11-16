@@ -8,6 +8,9 @@
       "path": "./packages/angular"
     },
     {
+      "path": "./packages/conformance"
+    },
+    {
       "path": "./packages/create-nx-plugin"
     },
     {
@@ -81,6 +84,9 @@
     },
     {
       "path": "./packages/rollup"
+    },
+    {
+      "path": "./packages/rolldown"
     },
     {
       "path": "./packages/rsbuild"
@@ -227,9 +233,6 @@
       "path": "./e2e/esbuild"
     },
     {
-      "path": "./e2e/nx-init"
-    },
-    {
       "path": "./e2e/release"
     },
     {
@@ -255,9 +258,6 @@
     },
     {
       "path": "./e2e/react"
-    },
-    {
-      "path": "./e2e/remix"
     },
     {
       "path": "./e2e/utils"
@@ -335,53 +335,29 @@
       "path": "./e2e/module-federation"
     },
     {
-      "path": "./examples/angular-rspack/module-federation/remote"
-    },
-    {
-      "path": "./examples/angular-rspack/module-federation/host"
-    },
-    {
-      "path": "./examples/angular-rspack/zoneless-csr-i18n"
-    },
-    {
-      "path": "./examples/angular-rspack/zoneless-csr-css"
-    },
-    {
-      "path": "./examples/angular-rspack/zoneless-ssg-css"
-    },
-    {
-      "path": "./examples/angular-rspack/zoneless-ssr-css"
-    },
-    {
-      "path": "./examples/angular-rspack/csr-css-assets"
-    },
-    {
-      "path": "./examples/angular-rspack/appshell-css"
-    },
-    {
-      "path": "./examples/angular-rspack/csr-tailwind"
-    },
-    {
-      "path": "./examples/angular-rspack/csr-i18n"
-    },
-    {
-      "path": "./examples/angular-rspack/csr-scss"
-    },
-    {
-      "path": "./examples/angular-rspack/csr-css"
-    },
-    {
-      "path": "./examples/angular-rspack/ssg-css"
-    },
-    {
-      "path": "./examples/angular-rspack/ssr-css"
-    },
-    {
       "path": "./nx-dev/nx-dev-e2e"
     },
     {
       "path": "./e2e/nx-build"
+    },
+    {
+      "path": "./packages/oxlint"
+    },
+    {
+      "path": "./packages/owners"
+    },
+    {
+      "path": "./e2e/oxlint"
+    },
+    {
+      "path": "./e2e/conformance"
+    },
+    {
+      "path": "./e2e/owners"
     }
   ],
-  "extends": "./tsconfig.base.json"
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "ignoreDeprecations": "6.0"
+  }
 }

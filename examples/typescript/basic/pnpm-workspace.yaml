@@ -1,0 +1,6 @@
+# Marks this example as a standalone pnpm workspace: it gets its own
+# pnpm-lock.yaml and install, separate from the repo root workspace. The
+# local nx / @nx/* packages are wired in via link: dependencies, which work
+# across workspace boundaries.
+packages:
+  - 'packages/*'

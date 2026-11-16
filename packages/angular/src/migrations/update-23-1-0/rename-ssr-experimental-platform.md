@@ -48,12 +48,11 @@ After:
 
 Before:
 
-```jsonc {9}
+```jsonc {8}
 // nx.json
 {
-  "targetDefaults": [
-    {
-      "executor": "@nx/angular:application",
+  "targetDefaults": {
+    "@nx/angular:application": {
       "options": {
         "ssr": {
           "entry": "src/server.ts",
@@ -61,18 +60,17 @@ Before:
         },
       },
     },
-  ],
+  },
 }
 ```
 
 After:
 
-```jsonc {9}
+```jsonc {8}
 // nx.json
 {
-  "targetDefaults": [
-    {
-      "executor": "@nx/angular:application",
+  "targetDefaults": {
+    "@nx/angular:application": {
       "options": {
         "ssr": {
           "entry": "src/server.ts",
@@ -80,6 +78,6 @@ After:
         },
       },
     },
-  ],
+  },
 }
 ```

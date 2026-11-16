@@ -1,4 +1,4 @@
-import type { Linter, LinterType } from '@nx/eslint';
+import type { LinterType } from '@nx/js';
 
 export interface Schema {
   directory: string;
@@ -12,9 +12,10 @@ export interface Schema {
   unitTestRunner?: 'jest' | 'vitest' | 'none';
   inSourceTests?: boolean;
   e2eTestRunner?: 'cypress' | 'playwright' | 'none';
-  linter?: Linter | LinterType;
-  setParserOptionsProject?: boolean;
+  linter?: LinterType;
+  formatter?: 'none' | 'prettier' | 'oxfmt';
+  enableTypedLinting?: boolean;
   strict?: boolean;
-  addPlugin?: boolean;
   useProjectJson?: boolean;
+  port?: number;
 }

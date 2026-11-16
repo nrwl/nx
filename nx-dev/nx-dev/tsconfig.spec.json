@@ -4,7 +4,8 @@
     "outDir": "dist/spec",
     "types": ["jest", "node"],
     "lib": ["dom", "es2019"],
-    "jsx": "react"
+    "jsx": "react",
+    "rootDir": "."
   },
   "include": [
     "**/*.spec.ts",

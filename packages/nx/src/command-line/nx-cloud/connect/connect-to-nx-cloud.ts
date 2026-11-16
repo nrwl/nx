@@ -1,5 +1,4 @@
-import { join } from 'path';
-import { handleImport } from '../../../utils/handle-import';
+import { selectPrompt } from '../../../utils/prompt-helpers';
 import { output } from '../../../utils/output';
 import { readNxJson } from '../../../config/configuration';
 import { FsTree, flushChanges } from '../../../generators/tree';
@@ -9,7 +8,6 @@ import {
 } from '../../../nx-cloud/generators/connect-to-nx-cloud/connect-to-nx-cloud';
 import { createNxCloudOnboardingURL } from '../../../nx-cloud/utilities/url-shorten';
 import { isNxCloudUsed } from '../../../utils/nx-cloud-utils';
-import { writeJsonFile } from '../../../utils/fileutils';
 import { runNxSync } from '../../../utils/child-process';
 import { NxJsonConfiguration } from '../../../config/nx-json';
 import { NxArgs } from '../../../utils/command-line-utils';
@@ -18,17 +16,17 @@ import {
   MessageOptionKey,
   recordStat,
   messages,
+  nxCloudDemoHyperlink,
   nxCloudHyperlink,
 } from '../../../utils/ab-testing';
 import { nxVersion } from '../../../utils/versions';
 import { isCI } from '../../../utils/is-ci';
-import { isAiAgent } from '../../../native';
+import { isAiAgent, openUrl } from '../../../native';
 import { detectPackageManager } from '../../../utils/package-manager';
 import { workspaceRoot } from '../../../utils/workspace-root';
 import { getVcsRemoteInfo } from '../../../utils/git-utils';
 import * as pc from 'picocolors';
 const ora = require('ora');
-const open = require('open');
 
 export function onlyDefaultRunnerIsUsed(nxJson: NxJsonConfiguration) {
   const defaultRunner = nxJson.tasksRunnerOptions?.default?.runner;
@@ -201,23 +199,28 @@ async function runConnectToNxCloud(
     undefined,
     options?.generateToken === true
   );
+  const manualConnectNote = {
+    title: `Your Nx Cloud workspace is ready.`,
+    bodyLines: [
+      `To claim it, connect it to your Nx Cloud account:`,
+      `- Go to the following URL to connect your workspace to Nx Cloud:`,
+      '',
+      `${connectCloudUrl}`,
+    ],
+  };
   try {
     const cloudConnectSpinner = ora(
       `Opening Nx Cloud ${connectCloudUrl} in your browser to connect your workspace.`
     ).start();
     await sleep(2000);
-    await open(connectCloudUrl);
-    cloudConnectSpinner.succeed();
+    if (openUrl(connectCloudUrl)) {
+      cloudConnectSpinner.succeed();
+    } else {
+      cloudConnectSpinner.fail();
+      output.note(manualConnectNote);
+    }
   } catch (e) {
-    output.note({
-      title: `Your Nx Cloud workspace is ready.`,
-      bodyLines: [
-        `To claim it, connect it to your Nx Cloud account:`,
-        `- Go to the following URL to connect your workspace to Nx Cloud:`,
-        '',
-        `${connectCloudUrl}`,
-      ],
-    });
+    output.note(manualConnectNote);
   }
 
   return true;
@@ -229,42 +232,43 @@ function sleep(ms: number) {
 
 export async function connectExistingRepoToNxCloudPrompt(
   command = 'init',
-  key: MessageKey = 'setupNxCloud'
+  key: MessageKey = 'setupNxCloud',
+  recordCompletion = true
 ): Promise<MessageOptionKey> {
-  const res = await nxCloudPrompt(key, utmMediumForCommand(command));
-  await recordStat({
-    command,
-    nxVersion,
-    useCloud: res === 'yes',
-    meta: {
-      type: 'complete',
-      setupCloudPrompt: messages.codeOfSelectedPromptMessage(key) || '',
-      nxCloudArg: res,
-      nodeVersion: process.versions.node,
-      os: process.platform,
-      packageManager: detectPackageManager(),
-      aiAgent: isAiAgent(),
-      isCI: isCI(),
-    },
-  });
+  const res = await nxCloudPrompt(key, utmContentForCommand(command));
+  // TODO: once legacy init-v1 (the NX_ADD_PLUGINS=false / useInferencePlugins:false path) is
+  // removed, drop this recordStat and the recordCompletion flag entirely - init-v2 records its
+  // own complete, and view-logs should record its own stat, so this shared helper won't record.
+  // init-v2 records its own init "complete" stat, so it opts out here to avoid double-counting.
+  // Other callers (e.g. view-logs, legacy init-v1) rely on this as their only completion event.
+  if (recordCompletion) {
+    await recordStat({
+      command,
+      nxVersion,
+      useCloud: res === 'yes',
+      meta: {
+        type: 'complete',
+        setupCloudPrompt: messages.codeOfSelectedPromptMessage(key) || '',
+        nxCloudArg: res,
+        nodeVersion: process.versions.node,
+        os: process.platform,
+        packageManager: detectPackageManager(),
+        aiAgent: isAiAgent(),
+        isCI: isCI(),
+      },
+    });
+  }
   return res;
 }
 
 export async function connectToNxCloudWithPrompt(command: string) {
   const setNxCloud = await nxCloudPrompt(
     'setupNxCloud',
-    utmMediumForCommand(command)
+    utmContentForCommand(command)
   );
   let useCloud = false;
   if (setNxCloud === 'yes') {
     useCloud = await connectToNxCloudCommand({ generateToken: false }, command);
-  } else if (setNxCloud === 'never') {
-    const nxJsonPath = join(workspaceRoot, 'nx.json');
-    const nxJson = readNxJson();
-    if (nxJson) {
-      nxJson.neverConnectToCloud = true;
-      writeJsonFile(nxJsonPath, nxJson);
-    }
   }
   await recordStat({
     command,
@@ -284,7 +288,7 @@ export async function connectToNxCloudWithPrompt(command: string) {
   });
 }
 
-function utmMediumForCommand(command: string): string {
+function utmContentForCommand(command: string): string {
   switch (command) {
     case 'migrate':
       return 'nx-migrate';
@@ -297,29 +301,31 @@ function utmMediumForCommand(command: string): string {
 
 async function nxCloudPrompt(
   key: MessageKey,
-  utmMedium: string
+  utmContent: string
 ): Promise<MessageOptionKey> {
   const { message, choices, initial, footer, hint } = messages.getPrompt(key);
 
-  const promptConfig = {
-    name: 'NxCloud',
-    message,
-    type: 'autocomplete',
-    choices,
-    initial,
-  } as any; // meeroslav: types in enquirer are not up to date
-  if (footer) {
-    promptConfig.footer = () =>
-      pc.dim(`${footer} ${nxCloudHyperlink(utmMedium)}`);
-  }
-  if (hint) {
-    promptConfig.hint = () => pc.dim(hint);
-  }
+  // No separate footer/hint slot, so both are folded into the message.
+  const suffix = [
+    hint,
+    footer && `${footer} ${nxCloudHyperlink(utmContent)}`,
+    `See it in action: ${nxCloudDemoHyperlink(utmContent)}`,
+  ]
+    .filter(Boolean)
+    .map((t) => pc.dim(t));
 
-  const enquirer = await handleImport('enquirer');
-  return await enquirer
-    .prompt([promptConfig])
-    .then((a: { NxCloud: MessageOptionKey }) => {
-      return a.NxCloud;
-    });
+  return (await selectPrompt({
+    message: [message, ...suffix].join('\n'),
+    // These choices are `{ value, name }` where `name` is the display text,
+    // the inverse of enquirer's usual `{ name, message }`. Prefer `value` so
+    // the answer is the key the caller compares against, not the label.
+    choices: (choices as any[]).map((c) =>
+      typeof c === 'string'
+        ? { value: c, label: c }
+        : { value: c.value ?? c.name, label: c.message ?? c.name ?? c.value }
+    ),
+    initial:
+      (choices as any[])[initial ?? 0]?.value ??
+      (choices as any[])[initial ?? 0]?.name,
+  })) as MessageOptionKey;
 }

@@ -1,15 +1,42 @@
-import 'nx/src/internal-testing-utils/mock-project-graph';
+import '@nx/devkit/internal-testing-utils/mock-project-graph';
 
 import {
   NxJsonConfiguration,
   readJson,
+  type TargetConfiguration,
+  type TargetDefaults,
   Tree,
   updateJson,
   writeJson,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { LinterInitOptions, lintInitGenerator } from './init';
-import { setWorkspaceRoot } from 'nx/src/utils/workspace-root';
+import { setWorkspaceRoot } from '@nx/devkit/internal';
+
+function getDefault(
+  td: TargetDefaults | undefined,
+  target: string
+): Partial<TargetConfiguration> | undefined {
+  if (!td) return undefined;
+  if (Array.isArray(td)) {
+    const found = td.find(
+      (e) =>
+        (e.target === target || e.executor === target) &&
+        e.projects === undefined &&
+        e.plugin === undefined
+    );
+    if (!found) return undefined;
+    const {
+      target: _t,
+      executor: _e,
+      projects: _p,
+      plugin: _pl,
+      ...rest
+    } = found;
+    return rest;
+  }
+  return td[target];
+}
 
 describe('@nx/eslint:init', () => {
   let tree: Tree;
@@ -18,9 +45,7 @@ describe('@nx/eslint:init', () => {
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     setWorkspaceRoot(tree.root);
-    options = {
-      addPlugin: true,
-    };
+    options = {};
   });
 
   it('should not generate the global eslint config if it already exist', async () => {
@@ -41,9 +66,10 @@ describe('@nx/eslint:init', () => {
     await lintInitGenerator(tree, options);
 
     expect(
-      readJson<NxJsonConfiguration>(tree, 'nx.json').targetDefaults[
+      getDefault(
+        readJson<NxJsonConfiguration>(tree, 'nx.json').targetDefaults,
         '@nx/eslint:lint'
-      ]
+      )
     ).toBeUndefined();
     expect(readJson<NxJsonConfiguration>(tree, 'nx.json').plugins)
       .toMatchInlineSnapshot(`
@@ -99,115 +125,5 @@ describe('@nx/eslint:init', () => {
         ],
       }
     `);
-  });
-
-  describe('(legacy)', () => {
-    describe('CJS', () => {
-      it('should add the root eslint config to the lint targetDefaults for lint', async () => {
-        await lintInitGenerator(tree, {
-          ...options,
-          addPlugin: false,
-          eslintConfigFormat: 'cjs',
-        });
-
-        expect(
-          readJson(tree, 'nx.json').targetDefaults['@nx/eslint:lint']
-        ).toEqual({
-          cache: true,
-          inputs: [
-            'default',
-            '^default',
-            '{workspaceRoot}/.eslintrc.json',
-            '{workspaceRoot}/.eslintignore',
-            '{workspaceRoot}/eslint.config.cjs',
-            '{workspaceRoot}/tools/eslint-rules/**/*',
-          ],
-        });
-      });
-
-      it('should setup lint target defaults', async () => {
-        updateJson<NxJsonConfiguration>(tree, 'nx.json', (json) => {
-          json.namedInputs ??= {};
-          json.namedInputs.production = ['default'];
-          return json;
-        });
-
-        await lintInitGenerator(tree, {
-          ...options,
-          addPlugin: false,
-          eslintConfigFormat: 'cjs',
-        });
-
-        expect(
-          readJson<NxJsonConfiguration>(tree, 'nx.json').targetDefaults[
-            '@nx/eslint:lint'
-          ]
-        ).toEqual({
-          cache: true,
-          inputs: [
-            'default',
-            '^default',
-            '{workspaceRoot}/.eslintrc.json',
-            '{workspaceRoot}/.eslintignore',
-            '{workspaceRoot}/eslint.config.cjs',
-            '{workspaceRoot}/tools/eslint-rules/**/*',
-          ],
-        });
-      });
-    });
-
-    describe('MJS', () => {
-      it('should add the root eslint config to the lint targetDefaults for lint', async () => {
-        await lintInitGenerator(tree, {
-          ...options,
-          addPlugin: false,
-          eslintConfigFormat: 'mjs',
-        });
-
-        expect(
-          readJson(tree, 'nx.json').targetDefaults['@nx/eslint:lint']
-        ).toEqual({
-          cache: true,
-          inputs: [
-            'default',
-            '^default',
-            '{workspaceRoot}/.eslintrc.json',
-            '{workspaceRoot}/.eslintignore',
-            '{workspaceRoot}/eslint.config.mjs',
-            '{workspaceRoot}/tools/eslint-rules/**/*',
-          ],
-        });
-      });
-
-      it('should setup lint target defaults', async () => {
-        updateJson<NxJsonConfiguration>(tree, 'nx.json', (json) => {
-          json.namedInputs ??= {};
-          json.namedInputs.production = ['default'];
-          return json;
-        });
-
-        await lintInitGenerator(tree, {
-          ...options,
-          addPlugin: false,
-          eslintConfigFormat: 'mjs',
-        });
-
-        expect(
-          readJson<NxJsonConfiguration>(tree, 'nx.json').targetDefaults[
-            '@nx/eslint:lint'
-          ]
-        ).toEqual({
-          cache: true,
-          inputs: [
-            'default',
-            '^default',
-            '{workspaceRoot}/.eslintrc.json',
-            '{workspaceRoot}/.eslintignore',
-            '{workspaceRoot}/eslint.config.mjs',
-            '{workspaceRoot}/tools/eslint-rules/**/*',
-          ],
-        });
-      });
-    });
   });
 });

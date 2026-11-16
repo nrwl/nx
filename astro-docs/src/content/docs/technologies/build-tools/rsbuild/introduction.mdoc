@@ -7,7 +7,9 @@ weight: 2
 filter: 'type:References'
 ---
 
-The Nx Plugin for Rsbuild contains executors and generators that support building applications using Rsbuild. In an Rsbuild monorepo, it wires each project into Nx so you can build, serve, and cache them from a single workspace.
+[Rsbuild](https://rsbuild.dev/) is an Rspack-based build tool for web applications. In an Rsbuild monorepo, Nx lets you build, serve, and cache every project from a single workspace.
+
+The Nx Plugin for Rsbuild contains executors and generators that support building applications using Rsbuild, wiring each project into Nx.
 
 ## Requirements
 
@@ -24,7 +26,7 @@ The `@nx/rsbuild` plugin supports the following package versions.
 ### Installation
 
 {% aside type="note" title="Keep Nx Package Versions In Sync" %}
-Make sure to install the `@nx/rsbuild` version that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. You can [fix Nx version mismatches with this recipe](/docs/guides/tips-n-tricks/keep-nx-versions-in-sync).
+Make sure to install the `@nx/rsbuild` version that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. You can [fix Nx version mismatches with this recipe](/docs/kb/keep-nx-versions-in-sync).
 {% /aside %}
 
 In any Nx workspace, you can install `@nx/rsbuild` by running the following command:
@@ -34,6 +36,88 @@ nx add @nx/rsbuild
 ```
 
 This will install the correct version of `@nx/rsbuild`.
+
+## Configure task inference
+
+The `@nx/rsbuild` plugin looks for these configuration files in directories that also contain a `package.json` or `project.json`:
+
+- `rsbuild.config.js`
+- `rsbuild.config.ts`
+- `rsbuild.config.mjs`
+- `rsbuild.config.mts`
+- `rsbuild.config.cjs`
+- `rsbuild.config.cts`
+
+Nx creates a cached `build` task using the output directory from the Rsbuild configuration, continuous `dev` and `preview` tasks, and an `inspect` task. [`@nx/js/typescript` creates the `typecheck` task](/docs/technologies/typescript/introduction#how-the-typescript-plugin-infers-tasks), and the `@nx/rsbuild:init` generator registers that plugin when it's missing.
+
+Configure the plugin in `nx.json`:
+
+```json
+// nx.json
+{
+  "plugins": [
+    {
+      "plugin": "@nx/rsbuild",
+      "options": {
+        "buildTargetName": "build",
+        "devTargetName": "dev",
+        "previewTargetName": "preview",
+        "inspectTargetName": "inspect",
+        "buildDepsTargetName": "build-deps",
+        "watchDepsTargetName": "watch-deps"
+      }
+    }
+  ]
+}
+```
+
+| Option                | Type   | Default   | Description                                        |
+| --------------------- | ------ | --------- | -------------------------------------------------- |
+| `buildTargetName`     | string | `build`   | Name of the cached production build task.          |
+| `devTargetName`       | string | `dev`     | Name of the continuous development server task.    |
+| `previewTargetName`   | string | `preview` | Name of the continuous production preview task.    |
+| `inspectTargetName`   | string | `inspect` | Name of the Rsbuild configuration inspection task. |
+| `buildDepsTargetName` | string | none      | Name of an optional dependency build task.         |
+| `watchDepsTargetName` | string | none      | Name of an optional dependency watch task.         |
+
+Use `include` and `exclude` glob patterns on the plugin entry to scope inference.
+A [target defaults](/docs/reference/nx-json#target-defaults) `plugin` filter must use the exact
+identifier `@nx/rsbuild`.
+
+### Wait for the dev server to be ready
+
+The inferred `dev` and `preview` targets come with a `readyWhen` check, so a task can wait until the server accepts requests instead of only until it has started.
+The `pluginNxReadySignal()` plugin reports the dev or preview server's address to Nx once it listens.
+Generated configs include it, and the migration to Nx 24 adds it to existing configs.
+In a config the migration skipped, import it from `@nx/rsbuild/ready-signal` and add it to `plugins` in `rsbuild.config.*`.
+The report carries the address the server actually listens on, so the waiting task tests against it however the port was chosen.
+
+Without the plugin, the check loads the config when the task runs instead, in the task's environment and with its flags, the way the Rsbuild CLI does.
+That covers the `.env` files for its `--env-mode`.
+It takes the port from the `--port` flag, `server.port`, or the default of 3000, and waits for it.
+With a port of `0`, the server picks its own port.
+There's nothing to wait for then, and the target counts as ready once it has started.
+If another process holds the configured port and Rsbuild moves to the next free one, this check can pass before the server is up.
+
+A dependent task starts as soon as the server task has started, unless its `dependsOn` entry sets `waitFor` to `ready`:
+
+```json
+// apps/myapp-e2e/project.json
+{
+  "targets": {
+    "e2e": {
+      "dependsOn": [
+        { "projects": "myapp", "target": "dev", "waitFor": "ready" }
+      ]
+    }
+  }
+}
+```
+
+The waiting task gets the server's address in the `NX_READY_URL` environment variable, when exactly one target it waits for reported one.
+A `readyWhen` on the target in `targetDefaults` or in the project configuration replaces the inferred check, and `null` turns it off.
+For the other checks, see [wait for a continuous task to be ready](/docs/reference/project-configuration#wait-for-a-continuous-task-to-be-ready).
+For signaling from your own server, see [signal readiness from the task](/docs/reference/project-configuration#signal-readiness-from-the-task).
 
 ## Using @nx/rsbuild
 

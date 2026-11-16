@@ -75,7 +75,7 @@ export default async function (tree: Tree) {
     }
   }
 
-  // nx.json targetDefaults
+  // nx.json targetDefaults (keyed by target name or executor)
   const nxJson = readNxJson(tree);
   if (nxJson?.targetDefaults) {
     let isUpdated = false;
@@ -83,6 +83,11 @@ export default async function (tree: Tree) {
     for (const [targetOrExecutor, targetConfig] of Object.entries(
       nxJson.targetDefaults
     )) {
+      // This migration predates the filtered array value form; values are
+      // plain objects here.
+      if (Array.isArray(targetConfig)) {
+        continue;
+      }
       if (
         !ssrApplicationExecutors.includes(targetOrExecutor) &&
         !ssrApplicationExecutors.includes(targetConfig.executor)

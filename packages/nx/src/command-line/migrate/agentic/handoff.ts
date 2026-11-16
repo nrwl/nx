@@ -1,18 +1,15 @@
-import { mkdirSync, readFileSync, rmSync } from 'fs';
+import {
+  closeSync,
+  constants as fsConstants,
+  fstatSync,
+  lstatSync,
+  mkdirSync,
+  openSync,
+  readFileSync,
+  type BigIntStats,
+} from 'fs';
 import { join } from 'path';
-import { HandoffFile } from './types';
-
-/**
- * Workspace-relative directory holding all migrate-run scratch (handoff
- * files). Shared with the agent permission rules in `definitions.ts` so the
- * pre-authorized write scope can't drift from the actual layout.
- */
-export const MIGRATE_RUNS_RELATIVE_DIR = '.nx/migrate-runs';
-
-/** Returns the run directory for a given workspace + run id (target version). */
-export function runDirPath(workspaceRoot: string, runId: string): string {
-  return join(workspaceRoot, MIGRATE_RUNS_RELATIVE_DIR, runId);
-}
+import { HANDOFFS_DIR_NAME, HandoffFile } from './types';
 
 /**
  * `mkdir -p` with a contextual error wrapper. Without this, the raw
@@ -37,56 +34,22 @@ export function mkdirSafely(dir: string, purpose: string): void {
   }
 }
 
-/**
- * Wipes any prior contents for this run id and recreates an empty directory.
- *
- * Scope of the wipe is intentionally narrow (only `<run-id>/`) so that handoff
- * artifacts from prior runs targeting different versions remain on disk for
- * inspection.
- */
-export function initRunDir(workspaceRoot: string, runId: string): string {
-  const dir = runDirPath(workspaceRoot, runId);
-  rmSync(dir, { recursive: true, force: true });
-  mkdirSafely(dir, 'nx migrate run directory');
-  return dir;
-}
-
-// Windows reserved device names fail to open even with an extension —
-// a migration named `CON` would otherwise produce a `CON.json` that the
-// agent can't write to.
-const WINDOWS_RESERVED_NAMES = /^(con|prn|aux|nul|com[1-9]|lpt[1-9])(\..*)?$/i;
-
-/**
- * The bare `.` / `..` check must come first — otherwise a malformed migration
- * name of exactly `..` would let the handoff write escape the run directory.
- */
-function sanitizeSegment(value: string): string {
-  if (value === '.' || value === '..') return '_';
-  let sanitized = value.replace(/[\x00-\x1f<>:"/\\|?*]/g, '_');
-  // Windows forbids trailing dots/spaces on file/directory names.
-  sanitized = sanitized.replace(/[. ]+$/, '');
-  if (WINDOWS_RESERVED_NAMES.test(sanitized)) {
-    sanitized = `_${sanitized}`;
+// Truncates to a UTF-8 byte budget without splitting a code point.
+export function truncateUtf8(value: string, maxBytes: number): string {
+  let out = '';
+  let used = 0;
+  for (const ch of value) {
+    const bytes = Buffer.byteLength(ch);
+    if (used + bytes > maxBytes) break;
+    out += ch;
+    used += bytes;
   }
-  return sanitized || '_';
+  return out;
 }
 
-/**
- * Absolute path of the handoff file for a migration step within a run.
- * The package's scope (if any) becomes a real subdirectory so the package name
- * stays readable; two packages can ship a migration with the same name without
- * colliding because they land in different package subdirectories. Each
- * segment is sanitized so the path is always writable on every platform.
- */
-export function stepHandoffPath(
-  runDir: string,
-  migration: { package: string; name: string }
-): string {
-  return join(
-    runDir,
-    ...migration.package.split('/').map(sanitizeSegment),
-    `${sanitizeSegment(migration.name)}.json`
-  );
+// Step ids match run-state's STEP_ID (`step-<n>`), so they are safe file names.
+export function runStepHandoffPath(runDir: string, stepId: string): string {
+  return join(runDir, HANDOFFS_DIR_NAME, `${stepId}.json`);
 }
 
 export type HandoffReadFailureReason =
@@ -100,16 +63,153 @@ export type HandoffReadResult =
   | { ok: false; reason: HandoffReadFailureReason; detail?: string };
 
 /**
- * Reads and validates a handoff file written by an agent. Returns a tagged
- * result so callers (the in-loop poller and the post-exit resolver) can
- * distinguish "file not yet written" from "file written but garbage" — the
- * latter is surfaced to the user instead of being collapsed into the same
- * generic ambiguous-outcome prompt.
+ * `lstat`, not `stat`: a symlink in the handoffs dir's place would send every
+ * handoff read and removal wherever it points.
  */
-export function readHandoffWithReason(filePath: string): HandoffReadResult {
+export function handoffsDirState(
+  handoffsDir: string
+): 'directory' | 'missing' | 'other' {
+  try {
+    return lstatSync(handoffsDir).isDirectory() ? 'directory' : 'other';
+  } catch (err) {
+    if ((err as NodeJS.ErrnoException)?.code === 'ENOENT') return 'missing';
+    throw err;
+  }
+}
+
+/**
+ * Non-recursive mkdir: the run dir exists, and a symlink created after the
+ * missing-path check fails with EEXIST instead of being followed.
+ */
+export function ensureRunSubdir(dir: string, notADirectory: () => Error): void {
+  const state = handoffsDirState(dir);
+  switch (state) {
+    case 'directory':
+      return;
+    case 'missing':
+      mkdirSync(dir);
+      return;
+    case 'other':
+      throw notADirectory();
+    default: {
+      const unhandled: never = state;
+      throw new Error(`Unhandled directory state: ${unhandled}`);
+    }
+  }
+}
+
+/**
+ * Thrown by {@link readInspectedFile} when the opened descriptor is not the
+ * file the caller's lstat described: a symlink followed on Windows, or an
+ * atomic replacement between the lstat and the open.
+ */
+export class FileReplacedDuringReadError extends Error {}
+
+/**
+ * Reads the file `stat` describes, refusing a symlink swapped in after the
+ * caller's lstat: O_NOFOLLOW fails the open with ELOOP, and O_NONBLOCK keeps a
+ * planted FIFO from blocking it. Windows has neither flag, so there the inode
+ * comparison is what catches a followed symlink. It does not guard against an
+ * unlink and recreate reusing the inode number. Read errors propagate: a file
+ * the agent cannot read must not pass.
+ */
+export function readInspectedFile(
+  filePath: string,
+  stat: BigIntStats,
+  replacedMessage: string
+): string {
+  const fd = openSync(
+    filePath,
+    fsConstants.O_RDONLY |
+      (fsConstants.O_NOFOLLOW ?? 0) |
+      (fsConstants.O_NONBLOCK ?? 0)
+  );
+  try {
+    const fdStat = fstatSync(fd, { bigint: true });
+    if (
+      !fdStat.isFile() ||
+      fdStat.dev !== stat.dev ||
+      fdStat.ino !== stat.ino
+    ) {
+      throw new FileReplacedDuringReadError(replacedMessage);
+    }
+    return readFileSync(fd, 'utf-8');
+  } finally {
+    closeSync(fd);
+  }
+}
+
+const ATOMIC_READ_ATTEMPTS = 5;
+
+/**
+ * Reads a file its owner publishes atomically (tmp + rename), with
+ * {@link readInspectedFile}'s refusal of a symlink or FIFO but tolerant of the
+ * publish: a rename swaps the inode between the lstat and the open, read as a
+ * replacement, so re-lstat and retry to read the new file. A pre-existing
+ * symlink or FIFO fails the isFile check before any open; a file that keeps
+ * changing past the retry budget is refused. Throws `notRegularMessage` for a
+ * non-regular file; ENOENT and ELOOP propagate.
+ */
+export function readAtomicallyPublishedFile(
+  filePath: string,
+  notRegularMessage: string
+): string {
+  for (let attempt = 1; ; attempt++) {
+    const stat = lstatSync(filePath, { bigint: true });
+    if (!stat.isFile()) {
+      throw new Error(notRegularMessage);
+    }
+    try {
+      return readInspectedFile(
+        filePath,
+        stat,
+        `${filePath} was replaced while being read.`
+      );
+    } catch (e) {
+      if (
+        e instanceof FileReplacedDuringReadError &&
+        attempt < ATOMIC_READ_ATTEMPTS
+      ) {
+        continue;
+      }
+      throw e;
+    }
+  }
+}
+
+/**
+ * Splits "not written yet" from "written but garbage" so callers can surface a
+ * malformed handoff instead of treating it as not written.
+ */
+export function readHandoffWithReason(
+  filePath: string,
+  handoffsDir: string
+): HandoffReadResult {
   let raw: string;
   try {
-    raw = readFileSync(filePath, 'utf-8');
+    switch (handoffsDirState(handoffsDir)) {
+      case 'missing':
+        return { ok: false, reason: 'missing' };
+      case 'other':
+        return {
+          ok: false,
+          reason: 'read-error',
+          detail: `${handoffsDir} is not a directory`,
+        };
+    }
+    const stat = lstatSync(filePath, { bigint: true });
+    if (!stat.isFile()) {
+      return {
+        ok: false,
+        reason: 'read-error',
+        detail: `${filePath} is not a regular file`,
+      };
+    }
+    raw = readInspectedFile(
+      filePath,
+      stat,
+      `${filePath} was replaced while being read`
+    );
   } catch (err) {
     const code = (err as NodeJS.ErrnoException)?.code;
     if (code === 'ENOENT') return { ok: false, reason: 'missing' };
@@ -156,56 +256,4 @@ export function readHandoffWithReason(filePath: string): HandoffReadResult {
     handoff.extras = extras;
   }
   return { ok: true, handoff };
-}
-
-/**
- * Convenience wrapper preserving the original null-on-any-failure contract.
- * Used by the polling loop (`waitForValidHandoff`) where every failure mode
- * is "keep waiting" — the file may be missing, mid-write, or being rewritten.
- */
-export function readHandoff(filePath: string): HandoffFile | null {
-  const result = readHandoffWithReason(filePath);
-  return result.ok ? result.handoff : null;
-}
-
-/**
- * Polls for a valid handoff file. Resolves once `readHandoff` accepts the
- * file's contents. Used to detect when the agent has finished its work so the
- * orchestrator can close the agent's session without depending on the agent
- * exiting on its own.
- *
- * Rejects with the abort reason when `options.signal` is aborted.
- */
-export function waitForValidHandoff(
-  handoffFilePath: string,
-  options: { intervalMs?: number; signal?: AbortSignal } = {}
-): Promise<void> {
-  const intervalMs = options.intervalMs ?? 500;
-  const { signal } = options;
-  return new Promise((resolve, reject) => {
-    if (signal?.aborted) {
-      reject(signal.reason ?? new Error('aborted'));
-      return;
-    }
-    let timer: NodeJS.Timeout | undefined;
-    const onAbort = () => {
-      if (timer) clearTimeout(timer);
-      signal?.removeEventListener('abort', onAbort);
-      reject(signal!.reason ?? new Error('aborted'));
-    };
-    const tick = () => {
-      if (signal?.aborted) {
-        onAbort();
-        return;
-      }
-      if (readHandoff(handoffFilePath) !== null) {
-        signal?.removeEventListener('abort', onAbort);
-        resolve();
-        return;
-      }
-      timer = setTimeout(tick, intervalMs);
-    };
-    signal?.addEventListener('abort', onAbort);
-    timer = setTimeout(tick, intervalMs);
-  });
 }

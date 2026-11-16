@@ -3,52 +3,52 @@
 // existsSync is destructure-imported, so we must mock the whole module.
 // ---------------------------------------------------------------------------
 
-const existsSyncMock = jest.fn<boolean, [unknown]>(() => false);
+const existsSyncMock = vi.fn<boolean, [unknown]>(() => false);
 
-jest.mock('node:fs', () => ({
-  ...jest.requireActual('node:fs'),
+vi.mock('node:fs', async () => ({
+  ...require('node:fs'),
   existsSync: (...args: unknown[]) => existsSyncMock(...args),
 }));
 
-jest.mock('../../plugins/js/utils/typescript', () => ({
-  getRootTsConfigResolveExportsConditions: jest.fn(() => ['development']),
-  getRootTsConfigCustomConditions: jest.fn(() => []),
+vi.mock('../../plugins/js/utils/typescript', () => ({
+  getRootTsConfigResolveExportsConditions: vi.fn(() => ['development']),
+  getRootTsConfigCustomConditions: vi.fn(() => []),
 }));
 
 // Return a working packages-metadata mock so lookupLocalPlugin can resolve
 // package names without needing tsconfig paths.
 const entryPointsToProjectMapMock: Record<string, unknown> = {};
 
-jest.mock('../../plugins/js/utils/packages', () => ({
-  getWorkspacePackagesMetadata: jest.fn(() => ({
+vi.mock('../../plugins/js/utils/packages', () => ({
+  getWorkspacePackagesMetadata: vi.fn(() => ({
     entryPointsToProjectMap: entryPointsToProjectMapMock,
     wildcardEntryPointsToProjectMap: {},
   })),
-  matchImportToWildcardEntryPointsToProjectMap: jest.fn(() => null),
+  matchImportToWildcardEntryPointsToProjectMap: vi.fn(() => null),
 }));
 
-jest.mock('../../utils/workspace-root', () => ({
+vi.mock('../../utils/workspace-root', () => ({
   workspaceRoot: '/workspace',
 }));
 
 // Return a minimal tsconfig for tests that exercise the tsconfig-present path.
-jest.mock('../../utils/fileutils', () => ({
-  readJsonFile: jest.fn(() => ({ compilerOptions: { paths: {} } })),
+vi.mock('../../utils/fileutils', () => ({
+  readJsonFile: vi.fn(() => ({ compilerOptions: { paths: {} } })),
 }));
 
-jest.mock('../../utils/logger', () => ({
-  logger: { verbose: jest.fn(), error: jest.fn() },
+vi.mock('../../utils/logger', () => ({
+  logger: { verbose: vi.fn(), error: vi.fn() },
 }));
 
-jest.mock('../../project-graph/utils/retrieve-workspace-files', () => ({
-  retrieveProjectConfigurationsWithoutPluginInference: jest.fn(() =>
+vi.mock('../../project-graph/utils/retrieve-workspace-files', () => ({
+  retrieveProjectConfigurationsWithoutPluginInference: vi.fn(() =>
     Promise.resolve({})
   ),
-  clearProjectsWithoutPluginInferenceCache: jest.fn(),
+  clearProjectsWithoutPluginInferenceCache: vi.fn(),
 }));
 
-jest.mock('../../project-graph/utils/find-project-for-path', () => ({
-  findProjectForPath: jest.fn(() => null),
+vi.mock('../../project-graph/utils/find-project-for-path', () => ({
+  findProjectForPath: vi.fn(() => null),
 }));
 
 import {
@@ -113,7 +113,7 @@ describe('resolveSubpathFromExports (via getPluginPathAndName)', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('resolves subpath when a custom source condition is present', () => {

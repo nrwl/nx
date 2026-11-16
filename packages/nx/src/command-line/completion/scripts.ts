@@ -3,6 +3,9 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
 import { homedir } from 'os';
 import { delimiter, dirname, join } from 'path';
 
+const BEGIN_MARKER = '###-begin-nx-completions-###';
+const END_MARKER = '###-end-nx-completions-###';
+
 export type Shell = 'bash' | 'zsh' | 'fish' | 'powershell';
 export const SHELLS: readonly Shell[] = ['bash', 'zsh', 'fish', 'powershell'];
 
@@ -58,22 +61,31 @@ function writeOneRcFile(shell: Shell, path: string, script: string): void {
   mkdirSync(dirname(path), { recursive: true });
 
   // Fish keeps each completion in its own file (a full overwrite is correct).
-  // bash/zsh/powershell append to a shared rc file: skip if an nx-completion
-  // block is already present so re-runs are no-ops, and never modify
-  // existing content — the user may have customized around the block.
+  // bash/zsh/powershell share an rc file: replace only the text between the
+  // markers so content the user wrote around the block is kept.
   if (shell === 'fish') {
     writeFileSync(path, script);
   } else {
     const existing = existsSync(path) ? readFileSync(path, 'utf8') : '';
-    if (existing.includes('###-begin-nx-completions-###')) {
+    const start = existing.indexOf(BEGIN_MARKER);
+    const end = start === -1 ? -1 : existing.indexOf(END_MARKER, start);
+    if (end !== -1) {
+      writeFileSync(
+        path,
+        existing.slice(0, start) +
+          script.trimEnd() +
+          existing.slice(end + END_MARKER.length)
+      );
+    } else if (start !== -1) {
       console.warn(
-        `nx: ${shell} completion already present in ${path} — skipping.\n` +
-          `    Remove the existing block manually if you need to reinstall.`
+        `nx: ${shell} completion in ${path} has no end marker — skipping.\n` +
+          `    Remove the existing block manually to reinstall.`
       );
       return;
+    } else {
+      const sep = existing && !existing.endsWith('\n') ? '\n' : '';
+      writeFileSync(path, existing + sep + script);
     }
-    const sep = existing && !existing.endsWith('\n') ? '\n' : '';
-    writeFileSync(path, existing + sep + script);
   }
   console.warn(
     `nx: ${shell} completion installed at ${path}.\n` +

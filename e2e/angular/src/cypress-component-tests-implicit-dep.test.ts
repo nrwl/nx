@@ -1,4 +1,4 @@
-import { runCLI, runE2ETests } from '@nx/e2e-utils';
+import { runCLI, shouldRunCypressTests } from '@nx/e2e-utils';
 import {
   setupCypressComponentTests,
   cleanupCypressComponentTests,
@@ -8,7 +8,8 @@ import {
   CypressComponentTestsSetup,
 } from './cypress-component-tests-setup';
 
-describe('Angular Cypress Component Tests - Implicit Dep', () => {
+// TODO(leosvelperez): Re-enable once a Cypress release fixes https://github.com/cypress-io/cypress/issues/34259
+xdescribe('Angular Cypress Component Tests - Implicit Dep', () => {
   let setup: CypressComponentTestsSetup;
 
   beforeAll(async () => {
@@ -25,8 +26,7 @@ describe('Angular Cypress Component Tests - Implicit Dep', () => {
 
   afterAll(() => cleanupCypressComponentTests());
 
-  // TODO(jack): re-enable when lodash@4.18.0 assignWith bug is resolved
-  it.skip('should test lib with implicit dep on buildTarget', () => {
+  it('should test lib with implicit dep on buildTarget', async () => {
     const { projectName, appName, buildableLibName, usedInAppLibName } = setup;
 
     // creates graph like buildableLib -> lib -> app
@@ -36,7 +36,7 @@ describe('Angular Cypress Component Tests - Implicit Dep', () => {
 
     updateBuilableLibTestsToAssertAppStyles(appName, buildableLibName);
 
-    if (runE2ETests('cypress')) {
+    if (await shouldRunCypressTests()) {
       expect(runCLI(`component-test ${buildableLibName}`)).toContain(
         'All specs passed!'
       );

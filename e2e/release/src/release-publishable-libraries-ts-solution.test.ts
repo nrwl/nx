@@ -1,6 +1,7 @@
 import {
   normalizePerformanceReport,
   cleanupProject,
+  getSelectedPackageManager,
   newProject,
   runCLI,
   runCommandAsync,
@@ -9,6 +10,7 @@ import {
 } from '@nx/e2e-utils';
 import { emptydirSync } from 'fs-extra';
 import { execSync } from 'node:child_process';
+import { configureModernYarn } from './utils';
 
 expect.addSnapshotSerializer({
   serialize(str: string) {
@@ -31,7 +33,7 @@ expect.addSnapshotSerializer({
         .replaceAll(/\d*B\s+dist\//g, 'XXB dist/')
         .replaceAll(/total files:\s+\d*/g, 'total files: X')
         .replaceAll(/\d*B\s+README.md/g, 'XXB README.md')
-        .replaceAll(/[a-fA-F0-9]{7}/g, '{COMMIT_SHA}')
+        .replaceAll(/\b[a-fA-F0-9]{7}\b/g, '{COMMIT_SHA}')
         .replaceAll(/Test @[\w\d]+/g, 'Test @{COMMIT_AUTHOR}')
         .replaceAll(/(\w+) lock file/g, 'PM lock file')
         // Normalize the version title date.
@@ -64,8 +66,15 @@ describe('release publishable libraries in workspace with ts solution setup', ()
       preset: 'ts',
     });
 
+    if (getSelectedPackageManager() === 'yarn') {
+      await configureModernYarn();
+      await runCommandAsync('yarn install');
+    }
+
     // Normalize git committer information so it is deterministic in snapshots
-    await runCommandAsync(`git config user.email "test@test.com"`);
+    await runCommandAsync(
+      `git config user.email "test@users.noreply.github.com"`
+    );
     await runCommandAsync(`git config user.name "Test"`);
     // Create a baseline version tag
     await runCommandAsync(`git tag v0.0.0`);
@@ -103,7 +112,7 @@ describe('release publishable libraries in workspace with ts solution setup', ()
       "name": "@proj/{project-name}",
       -   "version": "0.0.1",
       +   "version": "0.0.2",
-      "type": "module",
+      "files": [
       NX   Updating PM lock file
       NX   Staging changed files with git
       NX   Generating an entry in CHANGELOG.md for v0.0.2
@@ -141,12 +150,6 @@ describe('release publishable libraries in workspace with ts solution setup', ()
       Cache: 0/1 hit (0%)
       Critical path: {DURATION} (1 task)
       Recoverable time: {DURATION}
-      Recommendations:
-      - Drastically reduce your run duration by sharing a cache across your team and CI → https://nx.dev/ci/features/remote-cache?utm=performance-report.
-      - Distribute tasks across multiple machines with Nx Agents to increase parallelism without overwhelming resource usage → https://nx.dev/ci/features/distribute-task-execution?utm=performance-report.
-      - Speed up or split the longest tasks on the critical path:
-      @proj/{project-name}:nx-release-publish    {DURATION}
-      Learn how to improve your run's performance → https://nx.dev/docs/concepts/ci-concepts/parallelization-distribution?utm=performance-report
     `);
   });
 
@@ -167,7 +170,7 @@ describe('release publishable libraries in workspace with ts solution setup', ()
       "name": "@proj/{project-name}",
       -   "version": "0.0.1",
       +   "version": "0.0.3",
-      "type": "module",
+      "files": [
       NX   Updating PM lock file
       NX   Staging changed files with git
       NX   Generating an entry in CHANGELOG.md for v0.0.3
@@ -186,10 +189,10 @@ describe('release publishable libraries in workspace with ts solution setup', ()
       📦  @proj/{project-name}@0.0.3
       === Tarball Contents ===
       XXB README.md
+      XXX.XXX kb dist/README.md
       XXB dist/index.d.ts
       XXB dist/index.esm.css
       XXB dist/index.esm.js
-      XXX.XXX kb dist/README.md
       XXB dist/src/index.d.ts
       XXB dist/src/index.d.ts.map
       XXB dist/src/lib/{project-name}.d.ts
@@ -210,12 +213,6 @@ describe('release publishable libraries in workspace with ts solution setup', ()
       Cache: 0/1 hit (0%)
       Critical path: {DURATION} (1 task)
       Recoverable time: {DURATION}
-      Recommendations:
-      - Drastically reduce your run duration by sharing a cache across your team and CI → https://nx.dev/ci/features/remote-cache?utm=performance-report.
-      - Distribute tasks across multiple machines with Nx Agents to increase parallelism without overwhelming resource usage → https://nx.dev/ci/features/distribute-task-execution?utm=performance-report.
-      - Speed up or split the longest tasks on the critical path:
-      @proj/{project-name}:nx-release-publish    {DURATION}
-      Learn how to improve your run's performance → https://nx.dev/docs/concepts/ci-concepts/parallelization-distribution?utm=performance-report
     `);
   });
 
@@ -236,7 +233,7 @@ describe('release publishable libraries in workspace with ts solution setup', ()
       "name": "@proj/{project-name}",
       -   "version": "0.0.1",
       +   "version": "0.0.4",
-      "type": "module",
+      "files": [
       NX   Updating PM lock file
       NX   Staging changed files with git
       NX   Generating an entry in CHANGELOG.md for v0.0.4
@@ -274,12 +271,6 @@ describe('release publishable libraries in workspace with ts solution setup', ()
       Cache: 0/1 hit (0%)
       Critical path: {DURATION} (1 task)
       Recoverable time: {DURATION}
-      Recommendations:
-      - Drastically reduce your run duration by sharing a cache across your team and CI → https://nx.dev/ci/features/remote-cache?utm=performance-report.
-      - Distribute tasks across multiple machines with Nx Agents to increase parallelism without overwhelming resource usage → https://nx.dev/ci/features/distribute-task-execution?utm=performance-report.
-      - Speed up or split the longest tasks on the critical path:
-      @proj/{project-name}:nx-release-publish    {DURATION}
-      Learn how to improve your run's performance → https://nx.dev/docs/concepts/ci-concepts/parallelization-distribution?utm=performance-report
     `);
   });
 
@@ -300,7 +291,7 @@ describe('release publishable libraries in workspace with ts solution setup', ()
       "name": "@proj/{project-name}",
       -   "version": "0.0.1",
       +   "version": "0.0.6",
-      "main": "./dist/index.cjs.js",
+      "files": [
       NX   Updating PM lock file
       NX   Staging changed files with git
       NX   Generating an entry in CHANGELOG.md for v0.0.6
@@ -319,10 +310,10 @@ describe('release publishable libraries in workspace with ts solution setup', ()
       📦  @proj/{project-name}@0.0.6
       === Tarball Contents ===
       XXB README.md
+      XXX.XXX kb dist/README.md
       XXB dist/index.cjs.js
       XXB dist/index.d.ts
       XXB dist/index.esm.js
-      XXX.XXX kb dist/README.md
       XXB dist/src/index.d.ts
       XXB dist/src/index.d.ts.map
       XXB dist/src/lib/{project-name}.d.ts
@@ -343,12 +334,6 @@ describe('release publishable libraries in workspace with ts solution setup', ()
       Cache: 0/1 hit (0%)
       Critical path: {DURATION} (1 task)
       Recoverable time: {DURATION}
-      Recommendations:
-      - Drastically reduce your run duration by sharing a cache across your team and CI → https://nx.dev/ci/features/remote-cache?utm=performance-report.
-      - Distribute tasks across multiple machines with Nx Agents to increase parallelism without overwhelming resource usage → https://nx.dev/ci/features/distribute-task-execution?utm=performance-report.
-      - Speed up or split the longest tasks on the critical path:
-      @proj/{project-name}:nx-release-publish    {DURATION}
-      Learn how to improve your run's performance → https://nx.dev/docs/concepts/ci-concepts/parallelization-distribution?utm=performance-report
     `);
   });
 });

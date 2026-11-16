@@ -1,4 +1,4 @@
-import 'nx/src/internal-testing-utils/mock-project-graph';
+import '@nx/devkit/internal-testing-utils/mock-project-graph';
 
 import { logger, Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
@@ -15,12 +15,12 @@ describe('component', () => {
     appTree.write('.gitignore', '');
     await createApp(appTree, 'my-app');
     await createLib(appTree, projectName);
-    jest.spyOn(logger, 'warn').mockImplementation(() => {});
-    jest.spyOn(logger, 'debug').mockImplementation(() => {});
+    vi.spyOn(logger, 'warn').mockImplementation(() => {});
+    vi.spyOn(logger, 'debug').mockImplementation(() => {});
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   it('should generate component files', async () => {
@@ -95,7 +95,9 @@ describe('component', () => {
         path: 'my-lib/src/components/hello/hello',
       });
 
-      expect(appTree.exists('my-lib/src/components/hello/hello.tsx'));
+      expect(
+        appTree.exists('my-lib/src/components/hello/hello.tsx')
+      ).toBeTruthy();
     });
 
     it('should create with nested directories', async () => {
@@ -104,7 +106,9 @@ describe('component', () => {
         path: 'my-lib/src/lib/foo/hello-world/hello-world',
       });
 
-      expect(appTree.exists('my-lib/src/lib/foo/hello-world/hello-world.tsx'));
+      expect(
+        appTree.exists('my-lib/src/lib/foo/hello-world/hello-world.tsx')
+      ).toBeTruthy();
     });
   });
 });

@@ -1,4 +1,4 @@
-import 'nx/src/internal-testing-utils/mock-project-graph';
+import '@nx/devkit/internal-testing-utils/mock-project-graph';
 
 import {
   getProjects,
@@ -9,7 +9,10 @@ import {
   writeJson,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { expoApplicationGenerator } from './application';
+import {
+  expoApplicationGenerator,
+  expoApplicationGeneratorInternal,
+} from './application';
 
 describe('app', () => {
   let appTree: Tree;
@@ -189,6 +192,127 @@ describe('app', () => {
 
     const eslintConfig = appTree.read('my-app/eslint.config.mjs', 'utf-8');
     expect(eslintConfig).not.toContain('**/out-tsc');
+  });
+
+  it.each<[string, (tree: Tree) => void, 'eslint' | 'none', boolean]>([
+    [
+      'ESLint v9 is declared',
+      (tree) => declareEslint(tree, '^9.39.0'),
+      'eslint',
+      true,
+    ],
+    [
+      'ESLint v10 is declared',
+      (tree) => declareEslint(tree, '^10.0.0'),
+      'eslint',
+      false,
+    ],
+    ['no ESLint is declared', () => {}, 'eslint', false],
+    [
+      'no ESLint is declared and the root config is eslintrc',
+      (tree) => writeJson(tree, '.eslintrc.json', {}),
+      'eslint',
+      true,
+    ],
+    [
+      'ESLint v9 is declared but the app does not use ESLint',
+      (tree) => declareEslint(tree, '^9.39.0'),
+      'none',
+      false,
+    ],
+  ])(
+    'should disable jsx-a11y/accessible-emoji in the welcome screen only when jsx-a11y is installed: %s',
+    async (_, setup, linter, disabled) => {
+      setup(appTree);
+
+      await expoApplicationGenerator(appTree, {
+        directory: 'my-app',
+        linter,
+        e2eTestRunner: 'none',
+        js: false,
+        unitTestRunner: 'none',
+        skipFormat: true,
+      });
+
+      const [firstLine] = appTree
+        .read('my-app/src/app/App.tsx', 'utf-8')
+        .split('\n');
+      expect(firstLine).toBe(
+        disabled
+          ? '/* eslint-disable jsx-a11y/accessible-emoji */'
+          : "import React, { useRef, useState } from 'react';"
+      );
+    }
+  );
+
+  describe('playwright web server', () => {
+    const plugin = '@nx/expo/plugin';
+
+    it.each([
+      {
+        name: 'the default serve target',
+        plugins: [{ plugin, options: { serveTargetName: 'serve' } }],
+        command: 'npx nx run my-app:serve',
+        url: 'http://localhost:8081',
+      },
+      {
+        name: 'a port in the serve target defaults',
+        plugins: [{ plugin, options: { serveTargetName: 'serve' } }],
+        targetDefaults: { serve: { options: { port: 8082 } } },
+        command: 'npx nx run my-app:serve',
+        url: 'http://localhost:8082',
+      },
+      {
+        name: 'a custom serve target name',
+        plugins: [{ plugin, options: { serveTargetName: 'web' } }],
+        command: 'npx nx run my-app:web',
+        url: 'http://localhost:8081',
+      },
+      {
+        name: 'a port in the custom serve target defaults',
+        plugins: [{ plugin, options: { serveTargetName: 'web' } }],
+        targetDefaults: { web: { options: { port: 9000 } } },
+        command: 'npx nx run my-app:web',
+        url: 'http://localhost:9000',
+      },
+      {
+        name: 'the plugin registered as a string',
+        plugins: [plugin],
+        command: 'npx nx run my-app:serve',
+        url: 'http://localhost:8081',
+      },
+      {
+        name: 'the plugin registered without a serve target name',
+        plugins: [{ plugin, options: {} }],
+        command: 'npx nx run my-app:serve',
+        url: 'http://localhost:8081',
+      },
+    ])(
+      'matches the port of the CI target with $name',
+      async ({ plugins, targetDefaults, command, url }) => {
+        updateJson(appTree, 'nx.json', (json) => {
+          json.plugins = plugins;
+          if (targetDefaults) json.targetDefaults = targetDefaults;
+          return json;
+        });
+
+        await expoApplicationGenerator(appTree, {
+          directory: 'my-app',
+          linter: 'none',
+          e2eTestRunner: 'playwright',
+          js: false,
+          unitTestRunner: 'none',
+          skipFormat: true,
+        });
+
+        const config = appTree.read(
+          'my-app-e2e/playwright.config.mts',
+          'utf-8'
+        );
+        expect(config).toContain(`command: '${command}'`);
+        expect(config).toContain(`'${url}'`);
+      }
+    );
   });
 
   describe('detox', () => {
@@ -420,7 +544,6 @@ describe('app', () => {
         skipFormat: false,
         js: false,
         unitTestRunner: 'jest',
-        addPlugin: true,
       });
 
       expect(readJson(tree, 'tsconfig.json').references).toMatchInlineSnapshot(`
@@ -556,7 +679,6 @@ describe('app', () => {
         skipFormat: false,
         js: false,
         unitTestRunner: 'jest',
-        addPlugin: true,
         useProjectJson: false,
       });
 
@@ -570,12 +692,27 @@ describe('app', () => {
           "version",
           "private",
           "scripts",
-          "nx",
           "dependencies",
+          "nx",
         ]
       `);
 
       expect(packageJson).toHaveProperty('dependencies.expo');
+    });
+
+    it('should default to package.json through the cli entry point', async () => {
+      // generators.json registers the internal entry, so this is what `nx g` runs
+      await expoApplicationGeneratorInternal(tree, {
+        directory: 'my-app',
+        linter: 'eslint',
+        e2eTestRunner: 'none',
+        unitTestRunner: 'none',
+        js: false,
+        skipFormat: true,
+      });
+
+      expect(tree.exists('my-app/project.json')).toBeFalsy();
+      expect(tree.exists('my-app/package.json')).toBeTruthy();
     });
 
     it('should generate project.json if useProjectJson is true', async () => {
@@ -586,7 +723,6 @@ describe('app', () => {
         useProjectJson: true,
         unitTestRunner: 'none',
         js: false,
-        addPlugin: true,
         skipFormat: true,
       });
 
@@ -655,3 +791,10 @@ describe('app', () => {
     });
   });
 });
+
+function declareEslint(tree: Tree, version: string) {
+  updateJson(tree, 'package.json', (json) => {
+    json.devDependencies = { ...json.devDependencies, eslint: version };
+    return json;
+  });
+}

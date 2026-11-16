@@ -7,13 +7,13 @@ import {
   offsetFromRoot,
   ProjectConfiguration,
   readJson,
-  readNxJson,
   readProjectConfiguration,
   runTasksInSerial,
   Tree,
   updateJson,
   updateProjectConfiguration,
   writeJson,
+  getProjects,
 } from '@nx/devkit';
 
 import { Linter as LinterEnum, LinterType } from '../utils/linter';
@@ -23,15 +23,14 @@ import {
 } from '../utils/eslint-file';
 import { extname, join } from 'path';
 import { lintInitGenerator } from '../init/init';
-import { warnEslintExecutorGenerating } from '../../utils/deprecation';
 import type { Linter } from 'eslint';
 import { migrateConfigToMonorepoStyle } from '../init/init-migration';
-import { getProjects } from 'nx/src/generators/utils/project-configuration';
 import { useFlatConfig } from '../../utils/flat-config';
 import {
   createNodeList,
   generateFlatOverride,
   generateSpreadElement,
+  generateTypedLintingFlatConfigOverride,
   stringifyNodeList,
 } from '../utils/flat-config/ast-utils';
 import {
@@ -39,7 +38,10 @@ import {
   BASE_ESLINT_CONFIG_FILENAMES,
 } from '../../utils/config-file';
 import { hasEslintPlugin } from '../utils/plugin';
-import { jsoncEslintParserVersion } from '../../utils/versions';
+import {
+  assertEslintrcFormatSupported,
+  jsoncEslintParserVersion,
+} from '../../utils/versions';
 import { setupRootEsLint } from './setup-root-eslint';
 import { getProjectType } from '@nx/js/internal';
 
@@ -49,39 +51,33 @@ interface LintProjectOptions {
   eslintFilePatterns?: string[];
   tsConfigPaths?: string[];
   skipFormat: boolean;
-  setParserOptionsProject?: boolean;
+  enableTypedLinting?: boolean;
   skipPackageJson?: boolean;
   unitTestRunner?: string;
   rootProject?: boolean;
   keepExistingVersions?: boolean;
-  addPlugin?: boolean;
   eslintConfigFormat?: 'mjs' | 'cjs';
 
   /**
    * @internal
    */
-  addExplicitTargets?: boolean;
   addPackageJsonDependencyChecks?: boolean;
 }
 
 export function lintProjectGenerator(tree: Tree, options: LintProjectOptions) {
-  return lintProjectGeneratorInternal(tree, { addPlugin: false, ...options });
+  return lintProjectGeneratorInternal(tree, options);
 }
 
 export async function lintProjectGeneratorInternal(
   tree: Tree,
   options: LintProjectOptions
 ) {
-  const nxJson = readNxJson(tree);
+  // Init and the root setup skip their version checks when a root config exists.
+  assertEslintrcFormatSupported(tree);
   options.eslintConfigFormat ??= 'mjs';
-  const addPluginDefault =
-    process.env.NX_ADD_PLUGINS !== 'false' &&
-    nxJson.useInferencePlugins !== false;
-  options.addPlugin ??= addPluginDefault;
   const tasks: GeneratorCallback[] = [];
   const initTask = await lintInitGenerator(tree, {
     skipPackageJson: options.skipPackageJson,
-    addPlugin: options.addPlugin,
     eslintConfigFormat: options.eslintConfigFormat,
   });
   tasks.push(initTask);
@@ -107,35 +103,19 @@ export async function lintProjectGeneratorInternal(
     lintFilePatterns.push(`{projectRoot}/package.json`);
   }
 
-  const hasPlugin = hasEslintPlugin(tree);
-  if (hasPlugin && !options.addExplicitTargets) {
-    if (
-      lintFilePatterns &&
-      lintFilePatterns.length &&
-      lintFilePatterns.some(
-        (p) => !['./src', '{projectRoot}', projectConfig.root].includes(p)
-      )
-    ) {
-      projectConfig.targets ??= {};
-      projectConfig.targets['lint'] = {
-        command: `eslint ${lintFilePatterns
-          .join(' ')
-          .replace('{projectRoot}', projectConfig.root)}`,
-      };
-    }
-  } else {
-    warnEslintExecutorGenerating();
+  if (
+    lintFilePatterns &&
+    lintFilePatterns.length &&
+    lintFilePatterns.some(
+      (p) => !['./src', '{projectRoot}', projectConfig.root].includes(p)
+    )
+  ) {
     projectConfig.targets ??= {};
     projectConfig.targets['lint'] = {
-      executor: '@nx/eslint:lint',
+      command: `eslint ${lintFilePatterns
+        .join(' ')
+        .replace('{projectRoot}', projectConfig.root)}`,
     };
-
-    if (lintFilePatterns && lintFilePatterns.length) {
-      // only add lintFilePatterns if they are explicitly defined
-      projectConfig.targets['lint'].options = {
-        lintFilePatterns,
-      };
-    }
   }
 
   // we are adding new project which is not the root project or
@@ -173,7 +153,7 @@ export async function lintProjectGeneratorInternal(
       tree,
       options,
       projectConfig,
-      options.setParserOptionsProject,
+      options.enableTypedLinting,
       options.rootProject,
       addDependencyChecks
     );
@@ -217,7 +197,7 @@ function createEsLintConfiguration(
   tree: Tree,
   options: LintProjectOptions,
   projectConfig: ProjectConfiguration,
-  setParserOptionsProject: boolean,
+  enableTypedLinting: boolean,
   rootProject: boolean,
   addDependencyChecks: boolean
 ) {
@@ -242,24 +222,13 @@ function createEsLintConfiguration(
     }
   }
 
+  // For flat configs, the typed-linting block is appended as a raw AST node
+  // below since `tsconfigRootDir` requires a non-JSON-serializable identifier
+  // (`import.meta.dirname` / `__dirname`).
   const overrides: Linter.ConfigOverride<Linter.RulesRecord>[] = useFlatConfig(
     tree
   )
-    ? // For flat configs, keep generated overrides minimal; only add parserOptions when explicitly requested.
-      [
-        ...(setParserOptionsProject
-          ? [
-              {
-                files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
-                languageOptions: {
-                  parserOptions: {
-                    project: [`${projectConfig.root}/tsconfig.*?.json`],
-                  },
-                },
-              } as unknown as Linter.ConfigOverride<Linter.RulesRecord>,
-            ]
-          : []),
-      ]
+    ? []
     : [
         {
           files: ['*.ts', '*.tsx', '*.js', '*.jsx'],
@@ -276,7 +245,7 @@ function createEsLintConfiguration(
            * parserOptions.project), the executor will attempt to look for the particular error typescript-eslint gives you
            * and provide feedback to the user.
            */
-          parserOptions: !setParserOptionsProject
+          parserOptions: !enableTypedLinting
             ? undefined
             : {
                 project: [`${projectConfig.root}/tsconfig.*?.json`],
@@ -321,6 +290,14 @@ function createEsLintConfiguration(
     if (extendedRootConfig) {
       importMap.set(pathToRootConfig, 'baseConfig');
       nodes.push(generateSpreadElement('baseConfig'));
+    }
+    // After the base config, never before it: ESLint merges `parserOptions`
+    // across entries and the last one wins, so this block's `project: null` only
+    // neutralizes a `project` the base config sets while it comes later.
+    if (enableTypedLinting) {
+      nodes.push(
+        generateTypedLintingFlatConfigOverride(options.eslintConfigFormat)
+      );
     }
     overrides.forEach((override) => {
       nodes.push(generateFlatOverride(override, options.eslintConfigFormat));
@@ -421,12 +398,9 @@ function rootHasEslintLintTarget(
   }
   for (const targetConfig of Object.values(targets)) {
     if (
-      ['@nx/eslint:lint', '@nx/linter:eslint'].includes(
-        targetConfig.executor
-      ) ||
-      (targetConfig.executor === 'nx:run-commands' &&
-        targetConfig.options?.command &&
-        targetConfig.options?.command.startsWith('eslint '))
+      targetConfig.executor === 'nx:run-commands' &&
+      targetConfig.options?.command &&
+      targetConfig.options?.command.startsWith('eslint ')
     ) {
       return true;
     }

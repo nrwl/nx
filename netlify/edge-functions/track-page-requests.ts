@@ -91,6 +91,8 @@ export const config = {
   excludedPath: [
     // API routes
     '/api/*',
+    // Agent discovery endpoints
+    '/.well-known/*',
     // Next.js internals
     '/_next/*',
     '/.netlify/*',

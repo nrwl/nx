@@ -29,6 +29,35 @@
       "description": "Create AI instructions to help migrate workspaces from Next.js 14 to 15.",
       "prompt": "./dist/src/migrations/update-23-1-0/ai-instructions-for-next-15.md",
       "documentation": "./dist/src/migrations/update-23-1-0/upgrade-to-next-15.md"
+    },
+    "update-23-2-0-add-svgr-webpack-if-used": {
+      "version": "23.2.0-beta.4",
+      "description": "Add `@svgr/webpack` when a next config references it.",
+      "implementation": "./dist/src/migrations/update-23-2-0/add-svgr-webpack-if-used",
+      "documentation": "./dist/src/migrations/update-23-2-0/add-svgr-webpack-if-used.md"
+    },
+    "remove-deprecated-executors": {
+      "version": "24.0.0-beta.3",
+      "description": "Converts targets using the removed `@nx/next` executors to inferred tasks; an AI prompt finishes the targets the converter cannot convert safely and validates the project graph.",
+      "implementation": "./dist/src/migrations/update-24-0-0/remove-deprecated-executors",
+      "prompt": "./dist/src/migrations/update-24-0-0/finish-inferred-conversion.md",
+      "documentation": "./dist/src/migrations/update-24-0-0/remove-deprecated-executors.md"
+    },
+    "update-24-0-0-migrate-config-helpers": {
+      "version": "24.0.0-beta.3",
+      "description": "Migrate deprecated next configuration helpers while preserving custom behavior.",
+      "prompt": "./dist/src/migrations/update-24-0-0/migrate-config-helpers.md"
+    },
+    "update-24-1-0-spread-eslint-config-next": {
+      "version": "24.1.0-beta.2",
+      "requires": {
+        "next": ">=16.0.0",
+        "eslint": ">=10.0.0",
+        "eslint-config-next": ">=16.4.0"
+      },
+      "description": "Replaces the Next.js entries Nx generated in flat ESLint configs, the `@next/next` plugin registration or the `next` configs extended through FlatCompat, with a spread of `eslint-config-next/core-web-vitals`.",
+      "implementation": "./dist/src/migrations/update-24-1-0/spread-eslint-config-next",
+      "documentation": "./dist/src/migrations/update-24-1-0/spread-eslint-config-next.md"
     }
   },
   "packageJsonUpdates": {
@@ -77,6 +106,83 @@
         },
         "eslint-config-next": {
           "version": "^15.5.18",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "24.0.2-next15": {
+      "version": "24.0.2-beta.0",
+      "requires": {
+        "next": ">=15.0.0 <16.0.0"
+      },
+      "packages": {
+        "next": {
+          "version": "~15.5.28",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "24.0.2-next16": {
+      "version": "24.0.2-beta.0",
+      "requires": {
+        "next": ">=16.0.0 <17.0.0"
+      },
+      "packages": {
+        "next": {
+          "version": "~16.4.1",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "24.1.0-eslint-config-next": {
+      "version": "24.1.0-beta.2",
+      "requires": {
+        "eslint-config-next": ">=16.0.0 <16.4.0"
+      },
+      "packages": {
+        "eslint-config-next": {
+          "version": "^16.4.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "24.1.0-@next/eslint-plugin-next-14": {
+      "version": "24.1.0-beta.2",
+      "requires": {
+        "@next/eslint-plugin-next": ">=14.0.0 <15.0.0",
+        "next": ">=16.0.0",
+        "eslint": ">=10.0.0"
+      },
+      "packages": {
+        "@next/eslint-plugin-next": {
+          "version": "^16.4.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "24.1.0-@next/eslint-plugin-next-15": {
+      "version": "24.1.0-beta.2",
+      "requires": {
+        "@next/eslint-plugin-next": ">=15.0.0 <16.0.0",
+        "next": ">=16.0.0",
+        "eslint": ">=10.0.0"
+      },
+      "packages": {
+        "@next/eslint-plugin-next": {
+          "version": "^16.4.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "24.1.0-@next/eslint-plugin-next": {
+      "version": "24.1.0-beta.2",
+      "requires": {
+        "@next/eslint-plugin-next": ">=16.0.0 <16.4.0",
+        "eslint": ">=10.0.0"
+      },
+      "packages": {
+        "@next/eslint-plugin-next": {
+          "version": "^16.4.0",
           "alwaysAddToPackageJson": false
         }
       }

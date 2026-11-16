@@ -1,6 +1,7 @@
 import {
   checkFilesExist,
   cleanupProject,
+  configureTargetOptions,
   getSelectedPackageManager,
   getPackageManagerCommand,
   killPorts,
@@ -24,6 +25,7 @@ let originalEnvPort;
 describe('Node Applications', () => {
   const pm = getSelectedPackageManager();
   let workspaceName: string;
+  let restoreServerPort: (() => void) | undefined;
 
   beforeAll(() => {
     originalEnvPort = process.env.PORT;
@@ -37,9 +39,11 @@ describe('Node Applications', () => {
       ],
       preset: 'ts',
     });
+    restoreServerPort = configureTargetOptions(['@nx/js:node'], { port: 0 });
   });
 
   afterAll(() => {
+    restoreServerPort?.();
     process.env.PORT = originalEnvPort;
     cleanupProject();
   });
@@ -150,7 +154,7 @@ describe('Node Applications', () => {
     const port = await reservePort();
     process.env.PORT = `${port}`;
     runCLI(
-      `generate @nx/nest:app apps/${nestapp} --linter=eslint --unitTestRunner=jest`
+      `generate @nx/nest:app apps/${nestapp} --linter=eslint --unitTestRunner=vitest`
     );
 
     expect(() => runCLI(`lint ${nestapp}`)).not.toThrow();

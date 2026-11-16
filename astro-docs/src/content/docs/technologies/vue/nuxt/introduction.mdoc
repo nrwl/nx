@@ -7,7 +7,9 @@ weight: 2
 filter: 'type:References'
 ---
 
-The `@nx/nuxt` plugin lets you build and scale a Nuxt monorepo with [Nuxt](https://nuxt.com/), adding generators, task inference, and caching to your projects.
+[Nuxt](https://nuxt.com/) is a full stack web framework built on Vue. In a Nuxt monorepo, Nx caches task results and runs only the tasks a change affects.
+
+The `@nx/nuxt` plugin adds generators, task inference, and caching to your Nuxt projects.
 
 ## Requirements
 
@@ -32,7 +34,7 @@ npx create-nx-workspace@latest --preset=nuxt
 ### Installation
 
 {% aside type="note" title="Keep Nx Package Versions In Sync" %}
-Make sure to install the `@nx/nuxt` version that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. You can [fix Nx version mismatches with this recipe](/docs/guides/tips-n-tricks/keep-nx-versions-in-sync).
+Make sure to install the `@nx/nuxt` version that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. You can [fix Nx version mismatches with this recipe](/docs/kb/keep-nx-versions-in-sync).
 {% /aside %}
 
 In any Nx workspace, you can install `@nx/nuxt` by running the following command:
@@ -54,9 +56,11 @@ The `@nx/nuxt` plugin will create a task for any project that has an Nuxt config
 - `nuxt.config.cjs`
 - `nuxt.config.cts`
 
+The configuration directory must also contain a `package.json` or `project.json`.
+
 ### View inferred tasks
 
-To view inferred tasks for a project, open the [project details view](/docs/concepts/inferred-tasks) in Nx Console or run `nx show project my-project --web` in the command line.
+To view inferred tasks for a project, open the [project details view](/docs/features/run-tasks#inferred-tasks) in Nx Console or run `nx show project my-project --web` in the command line.
 
 ### @nx/nuxt configuration
 
@@ -70,19 +74,61 @@ The `@nx/nuxt/plugin` is configured in the `plugins` array in `nx.json`.
       "plugin": "@nx/nuxt/plugin",
       "options": {
         "buildTargetName": "build",
-        "testTargetName": "test",
         "serveTargetName": "serve",
         "buildStaticTargetName": "build-static",
-        "serveStaticTargetName": "serve-static"
+        "serveStaticTargetName": "serve-static",
+        "buildDepsTargetName": "build-deps",
+        "watchDepsTargetName": "watch-deps"
       }
     }
   ]
 }
 ```
 
-The `buildTargetName`, `testTargetName` and `serveTargetName` options control the names of the inferred Nuxt tasks. The default names are `build`, `test` and `serve`.
+| Option                  | Type   | Default        | Inferred behavior                                              |
+| ----------------------- | ------ | -------------- | -------------------------------------------------------------- |
+| `buildTargetName`       | string | `build`        | Runs and caches `nuxt build`, including `.nuxt` and `.output`. |
+| `serveTargetName`       | string | `serve`        | Runs `nuxt dev` continuously.                                  |
+| `buildStaticTargetName` | string | `build-static` | Runs and caches `nuxt build --prerender`.                      |
+| `serveStaticTargetName` | string | `serve-static` | Serves `dist` continuously after the static build task.        |
+| `buildDepsTargetName`   | string | none           | Name of an optional dependency build task.                     |
+| `watchDepsTargetName`   | string | none           | Name of an optional dependency watch task.                     |
 
-The `buildStaticTargetName` and `serveStaticTargetName` options control the names of the inferred Nuxt static tasks. The default names are `build-static` and `serve-static`.
+Use `include` and `exclude` glob patterns on the plugin entry to scope inference. A [target defaults](/docs/reference/nx-json#target-defaults) `plugin` filter must use the exact identifier `@nx/nuxt/plugin`.
+
+### Wait for the dev server to be ready
+
+The `serve` task reports to Nx that it's ready, with the address it listens on, when the Nuxt config loads the `@nx/nuxt/ready-signal` module.
+`nuxt dev` answers 503 until it has built the app and serves it, and the module reports once that stops.
+Generated apps include the module.
+In an existing app, add it to `modules`:
+
+```ts
+// apps/my-app/nuxt.config.ts
+export default defineNuxtConfig({
+  modules: ['@nx/nuxt/ready-signal'],
+});
+```
+
+Without the module, the `serve` task gets a check that runs when the task runs, with the task's environment and options.
+It waits until the server answers with any status other than 503, at the address `nuxt dev` uses.
+The check reads that address in the order of the installed `nuxi` or `@nuxt/cli` package.
+From version 3.7.2, that order is:
+
+- The port comes from the `--port` or `-p` flag, then the first set of `NUXT_PORT`, `NITRO_PORT`, and `PORT`, then `devServer.port` in the Nuxt config, 3000 by default.
+- The host comes from the `--host` or `-h` flag, then the first set of `NUXT_HOST`, `NITRO_HOST`, and `HOST`, then `devServer.host`.
+
+Version 3.30 reads only the flags and `devServer`.
+From 3.31, a variable set only in `.env` doesn't count.
+Versions before 3.7.2 read fewer of these sources, some in another order.
+
+If another process holds that port and `nuxt dev` moves to a free one, this check can pass before the server is up.
+The module reports the address the server listens on, so it doesn't have this gap.
+
+The `serve-static` task's file server reports its address once it listens.
+A task waits for either one only when its `dependsOn` entry sets `waitFor` to `ready`.
+A `readyWhen` on the target in `targetDefaults` or in the project configuration replaces the inferred check, and `null` turns it off.
+For the details, see [wait for a continuous task to be ready](/docs/reference/project-configuration#wait-for-a-continuous-task-to-be-ready).
 
 ## Using Nuxt
 
@@ -96,7 +142,7 @@ nx g @nx/nuxt:app apps/my-app
 
 Once you are ready to deploy your Nuxt application, you have absolute freedom to choose any hosting provider that fits your needs.
 
-We have detailed [how to deploy your Nuxt application to Vercel in a separate guide](/docs/technologies/vue/nuxt/guides/deploy-nuxt-to-vercel).
+We have detailed [how to deploy your Nuxt application to Vercel in a separate guide](/docs/kb/deploy-nuxt-to-vercel).
 
 ### E2E testing
 
@@ -109,14 +155,16 @@ This feature is particularly useful for testing in continuous integration (CI) p
 To use the `serve-static` target for testing, run the following command:
 
 ```shell
-nx serve-static my-nuxt-app-e2e
+nx serve-static my-nuxt-app
 ```
 
-This command performs several actions:
+This command performs two actions:
 
-1. It will build the Nuxt application and generate the static HTML files.
-2. It will serve the static HTML files using a simple HTTP server.
-3. It will run the Cypress tests against the served static HTML files.
+1. It builds the Nuxt application and generates the static HTML files.
+2. It serves the static HTML files with a file server.
+
+It doesn't run tests.
+The generated E2E project uses `serve-static` as its web server, in CI for Cypress and in every Playwright run.
 
 ## Set up CI for your Nuxt monorepo
 

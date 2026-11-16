@@ -30,6 +30,7 @@ import { normalizePath } from '../../../utils/path';
 import { workspaceRoot } from '../../../utils/workspace-root';
 import { defaultCreateReleaseProvider as defaultGitHubCreateReleaseProvider } from '../utils/remote-release-clients/github';
 import { defaultCreateReleaseProvider as defaultGitLabCreateReleaseProvider } from '../utils/remote-release-clients/gitlab';
+import { validateReleaseConfigTemplate } from '../utils/interpolate-release-config';
 import { resolveChangelogRenderer } from '../utils/resolve-changelog-renderer';
 import { resolveNxJsonConfigErrorMessage } from '../utils/resolve-nx-json-error-message';
 import { DEFAULT_CONVENTIONAL_COMMITS_CONFIG } from './conventional-commits';
@@ -135,18 +136,12 @@ export interface CreateNxReleaseConfigError {
     | 'INVALID_CHANGELOG_CREATE_RELEASE_API_BASE_URL'
     | 'DOCKER_VERSION_SCHEME_USES_VERSION_ACTIONS_VERSION_WHEN_SKIP_VERSION_ACTIONS'
     | 'GIT_PUSH_FALSE_WITH_CREATE_RELEASE'
-    // TODO(v24): remove this error code along with detectLegacyReleaseTagProperties
     | 'LEGACY_RELEASE_TAG_PATTERN_PROPERTIES_DETECTED';
   data: Record<string, string | string[]>;
 }
 
-// TODO(v24): remove this helper, the call site in createNxReleaseConfig, and
-// the corresponding handleNxReleaseConfigError case. The deprecated flat
-// `releaseTagPattern*` properties were moved to the nested `releaseTag`
-// object in Nx 22 and the consolidation migration runs again in Nx 23 to
-// catch any configs added after the v22 migration. Once Nx 24 lands, configs
-// that still carry the legacy keys are expected to have been repaired via
-// `nx repair`, and we can drop this back-compat error path entirely.
+// Kept on purpose: these keys are otherwise ignored, so a stale config would
+// silently tag with the default pattern. `nx repair` fixes them (22-0-0 migration).
 const LEGACY_RELEASE_TAG_PROPERTY_NAMES = [
   'releaseTagPattern',
   'releaseTagPatternCheckAllBranchesWhen',
@@ -190,7 +185,6 @@ export async function createNxReleaseConfig(
   error: null | CreateNxReleaseConfigError;
   nxReleaseConfig: NxReleaseConfig | null;
 }> {
-  // TODO(v24): remove this back-compat error along with detectLegacyReleaseTagProperties
   const legacyReleaseTagProperties =
     detectLegacyReleaseTagProperties(userConfig);
   if (legacyReleaseTagProperties.length > 0) {
@@ -947,6 +941,16 @@ export async function createNxReleaseConfig(
     }
   }
 
+  // Before validateChangelogConfig, which reports any renderer path error as
+  // an unresolvable renderer
+  validateReleaseConfigTokens({
+    releaseTag: WORKSPACE_DEFAULTS.releaseTag,
+    git: rootGitConfig,
+    version: rootVersionConfig,
+    changelog: rootChangelogConfig,
+    groups: releaseGroups,
+  });
+
   const configError = validateChangelogConfig(
     releaseGroups,
     rootChangelogConfig
@@ -1117,7 +1121,6 @@ export async function handleNxReleaseConfigError(
         });
       }
       break;
-    // TODO(v24): remove this case along with detectLegacyReleaseTagProperties
     case 'LEGACY_RELEASE_TAG_PATTERN_PROPERTIES_DETECTED':
       {
         const properties = error.data.properties as string[];
@@ -1435,6 +1438,56 @@ function isProjectPublic(
     // this will result in it being excluded from the default projects list
     return false;
   }
+}
+
+const releaseTagPatternTokens = ['version', 'projectName', 'releaseGroupName'];
+const commitMessageTokens = ['version', 'projectName'];
+const changelogFileTokens = ['projectName', 'projectRoot', 'workspaceRoot'];
+const changelogRendererTokens = ['workspaceRoot'];
+
+/**
+ * A release can interpolate these fields after it writes files, so an invalid
+ * token has to fail when the config is loaded
+ */
+function validateReleaseConfigTokens(
+  config: Pick<
+    NxReleaseConfig,
+    'releaseTag' | 'git' | 'version' | 'changelog' | 'groups'
+  >
+): void {
+  const templates: Array<[unknown, string[]]> = [
+    [config.releaseTag.pattern, releaseTagPatternTokens],
+    [config.git.commitMessage, commitMessageTokens],
+    [config.version.git.commitMessage, commitMessageTokens],
+    [config.changelog.git.commitMessage, commitMessageTokens],
+  ];
+  const { workspaceChangelog } = config.changelog;
+  if (workspaceChangelog) {
+    // The workspace changelog uses its entryWhenNoChanges as written
+    templates.push(
+      [workspaceChangelog.file, changelogFileTokens],
+      [workspaceChangelog.renderer, changelogRendererTokens]
+    );
+  }
+  for (const group of Object.values(config.groups)) {
+    templates.push([group.releaseTag.pattern, releaseTagPatternTokens]);
+    if (group.changelog) {
+      templates.push(
+        [group.changelog.file, changelogFileTokens],
+        [group.changelog.entryWhenNoChanges, changelogFileTokens],
+        [group.changelog.renderer, changelogRendererTokens]
+      );
+    }
+  }
+  for (const [template, tokens] of templates) {
+    if (typeof template === 'string') {
+      validateReleaseConfigTemplate(template, tokens);
+    }
+  }
+}
+
+export function validateCommitMessageTokens(commitMessage: string): void {
+  validateReleaseConfigTemplate(commitMessage, commitMessageTokens);
 }
 
 /**

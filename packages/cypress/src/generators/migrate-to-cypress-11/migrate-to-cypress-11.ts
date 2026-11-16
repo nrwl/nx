@@ -11,7 +11,7 @@ import {
   updateJson,
   updateProjectConfiguration,
 } from '@nx/devkit';
-import { CypressExecutorOptions } from '../../executors/cypress/cypress.impl';
+import { CypressExecutorOptions } from '../../executors/cypress/schema';
 import {
   assertMinimumCypressVersion,
   getInstalledCypressMajorVersion,
@@ -111,7 +111,7 @@ function migrateCypressExecutorOptions(
     logger.error(stripIndents`
 NX There was an error converting ${projectName}:${target}.
 You can manually update the project by following the migration guide if need be.
-https://nx.dev/cypress/v10-migration-guide
+https://nx.dev/docs/kb/cypress-v11-migration
   `);
     throw e;
   }

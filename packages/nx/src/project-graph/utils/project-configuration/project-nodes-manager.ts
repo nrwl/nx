@@ -11,9 +11,14 @@ import {
   resolveCommandSyntacticSugar,
 } from './target-merging';
 import { validateProject } from './target-normalization';
+import { analyzeWorktreeConflicts } from '../../../utils/git-worktrees';
+import { workspaceRoot } from '../../../utils/workspace-root';
 import { ProjectNameInNodePropsManager } from './name-substitution-manager';
 import type { ConfigurationSourceMaps, SourceInformation } from './source-maps';
-import { targetSourceMapKey } from './source-maps';
+import {
+  recordTargetIdentitySourceMapInfo,
+  targetSourceMapKey,
+} from './source-maps';
 
 import { minimatch } from 'minimatch';
 import { isGlobPattern } from '../../../utils/globs';
@@ -28,7 +33,9 @@ export function mergeProjectConfigurationIntoRootMap(
   // This function is used when reading project configuration
   // in generators, where we don't want to do this.
   skipTargetNormalization?: boolean,
-  deferSpreadsWithoutBase?: boolean
+  // Preserve `'...'` spreads that have no base value (default) so a later
+  // merge layer can resolve them; pass `false` only for a final merge.
+  deferSpreadsWithoutBase: boolean = true
 ): {
   nameChanged: boolean;
 } {
@@ -171,21 +178,25 @@ export function mergeProjectConfigurationIntoRootMap(
       const target = project.targets?.[targetName];
 
       if (sourceMap) {
-        sourceMap[targetSourceMapKey(targetName)] = sourceInformation;
+        // Claims the node key for a newly-created target (or reclaims it from
+        // a weak target-defaults stamp). Whether an *existing* target changes
+        // owners is decided inside `mergeTargetConfigurations`, which knows
+        // whether this merge changed the target's identity.
+        recordTargetIdentitySourceMapInfo(
+          sourceMap,
+          targetSourceMapKey(targetName),
+          sourceInformation
+        );
       }
 
       const normalizedTarget = skipTargetNormalization
         ? target
         : resolveCommandSyntacticSugar(target, project.root);
 
-      let matchingTargets = [];
-      if (isGlobPattern(targetName)) {
-        // find all targets matching the glob pattern
-        // this will map atomized targets to the glob pattern same as it does for targetDefaults
-        matchingTargets = Object.keys(
-          updatedProjectConfiguration.targets
-        ).filter((key) => minimatch(key, targetName));
-      }
+      let matchingTargets = findMatchingTargetNames(
+        targetName,
+        Object.keys(updatedProjectConfiguration.targets)
+      );
       // If no matching targets were found, we can assume that the target name is not (meant to be) a glob pattern
       if (!matchingTargets.length) {
         matchingTargets = [targetName];
@@ -213,6 +224,22 @@ export function mergeProjectConfigurationIntoRootMap(
     updatedProjectConfiguration.name !== matchingProject?.name;
 
   return { nameChanged };
+}
+
+/**
+ * The existing target names a glob-pattern target key merges onto. This maps
+ * atomized targets to the glob pattern the same way targetDefaults does.
+ * Returns an empty array for a non-glob key or a pattern matching nothing;
+ * the merge treats those as literal target names.
+ */
+export function findMatchingTargetNames(
+  pattern: string,
+  targetNames: string[]
+): string[] {
+  if (!isGlobPattern(pattern)) {
+    return [];
+  }
+  return targetNames.filter((name) => minimatch(name, pattern));
 }
 
 export function readProjectConfigurationsFromRootMap(
@@ -250,7 +277,13 @@ export function readProjectConfigurationsFromRootMap(
   }
 
   if (conflicts.size > 0) {
-    throw new MultipleProjectsWithSameNameError(conflicts, projects);
+    // Only on the way to throwing, so a workspace without duplicates never
+    // pays for reading git's worktree registry.
+    throw new MultipleProjectsWithSameNameError(
+      conflicts,
+      projects,
+      analyzeWorktreeConflicts(workspaceRoot, conflicts) ?? undefined
+    );
   }
   if (projectRootsWithNoName.length > 0) {
     throw new ProjectsWithNoNameError(projectRootsWithNoName, projects);
@@ -308,11 +341,15 @@ export class ProjectNodesManager {
   ): void {
     const previousName = this.rootMap[project.root]?.name;
 
+    // This is a final apply — dangling `'...'` spreads must resolve (expand
+    // against the empty base) so they never leak into the project graph.
     mergeProjectConfigurationIntoRootMap(
       this.rootMap,
       project,
       configurationSourceMaps,
-      sourceInformation
+      sourceInformation,
+      undefined,
+      false
     );
 
     const merged = this.rootMap[project.root];
@@ -338,26 +375,22 @@ export class ProjectNodesManager {
 
   /**
    * Inserts project-name sentinels into `inputs` and `dependsOn` on the
-   * merged objects from `mergedRootMap` (defaulting to this manager's
-   * rootMap). Walking the merged entries matters because a spread-produced
-   * array is a fresh instance.
-   *
-   * Pass a different `mergedRootMap` for the default-plugin intermediate
-   * pass, then call again with `this.rootMap` after it's applied so
-   * sentinel parents rebind onto the final arrays.
+   * merged objects in this manager's rootMap. Walking the merged entries —
+   * not the plugin results — matters because a spread-produced array is a
+   * fresh instance, and because sentinels written into plugin-result arrays
+   * would corrupt them for any later merge that re-reads the results.
    */
   registerNameRefs(
     pluginResultProjects?: Record<
       string,
       Omit<ProjectConfiguration, 'root'> & Partial<ProjectConfiguration>
-    >,
-    mergedRootMap: Record<string, ProjectConfiguration> = this.rootMap
+    >
   ): void {
     if (!pluginResultProjects) return;
     const scoped: Record<string, ProjectConfiguration> = {};
     for (const root in pluginResultProjects) {
-      if (mergedRootMap[root]) {
-        scoped[root] = mergedRootMap[root];
+      if (this.rootMap[root]) {
+        scoped[root] = this.rootMap[root];
       }
     }
     this.nameSubstitutionManager.registerNameRefs(scoped);

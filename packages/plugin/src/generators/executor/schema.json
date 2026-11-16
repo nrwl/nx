@@ -35,7 +35,7 @@
     "includeHasher": {
       "type": "boolean",
       "default": false,
-      "description": "Should the boilerplate for a custom hasher be generated?"
+      "description": "No longer supported. Passing this option throws an error, because custom hashers are deprecated. Use target inputs instead."
     },
     "skipLintChecks": {
       "type": "boolean",

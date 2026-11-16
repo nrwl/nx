@@ -12,4 +12,4 @@ export * from './src/utils/find-target-options';
 
 export * from './src/utils/config';
 
-export type { CypressExecutorOptions } from './src/executors/cypress/cypress.impl';
+export type { CypressExecutorOptions } from './src/executors/cypress/schema';

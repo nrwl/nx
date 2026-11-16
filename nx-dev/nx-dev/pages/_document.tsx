@@ -1,3 +1,4 @@
+import { POSTHOG_SNIPPET } from '@nx/nx-dev-feature-analytics';
 import { Head, Html, Main, NextScript } from 'next/document';
 import type { ReactElement } from 'react';
 
@@ -28,6 +29,10 @@ export default function Document(): ReactElement {
           rel="mask-icon"
           href="/favicon/safari-pinned-tab.svg"
           color="#5bbad5"
+        />
+        <script
+          data-cookieconsent="ignore"
+          dangerouslySetInnerHTML={{ __html: POSTHOG_SNIPPET }}
         />
         <script
           dangerouslySetInnerHTML={{

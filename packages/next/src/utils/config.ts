@@ -1,6 +1,6 @@
 import type { NextConfig } from 'next';
 import { resolve } from 'path';
-import { Configuration, RuleSetRule } from 'webpack';
+import { Configuration } from 'webpack';
 import { FileReplacement } from './types';
 import { createCopyPlugin } from './create-copy-plugin';
 

@@ -1,0 +1,630 @@
+import type { Mock } from 'vitest';
+import * as http from 'node:http';
+import type { Server } from 'node:net';
+import type { FileData } from '../../config/project-graph';
+import { expandFilesInput, HashPlanner } from '../../native';
+import {
+  createProjectGraphAndSourceMapsAsync,
+  createProjectGraphAsync,
+} from '../../project-graph/project-graph';
+import { createTaskGraph } from '../../tasks-runner/create-task-graph';
+import { allFileData } from '../../utils/all-file-data';
+import {
+  getExpandedTaskInputs,
+  isSameOriginLocalRequest,
+  ProjectGraphClientResponse,
+  selectedFor,
+  startServer,
+  taskGraphForSelection,
+} from './graph';
+import type { TaskGraph } from '../../config/task-graph';
+
+vi.mock('../../native', async (importOriginal) => ({
+  ...(await importOriginal<any>()),
+  HashPlanner: vi.fn(),
+  transferProjectGraph: vi.fn((g) => g),
+  expandFilesInput: vi.fn((_root: string, globs: string[]) =>
+    globs.filter((g) => !g.startsWith('!'))
+  ),
+}));
+vi.mock('../../native/transform-objects', () => ({
+  transformProjectGraphForRust: vi.fn((g) => g),
+  transformProjectGraphForLocators: vi.fn((g) => g),
+}));
+vi.mock('../../project-graph/project-graph', () => ({
+  createProjectGraphAsync: vi.fn(),
+  createProjectGraphAndSourceMapsAsync: vi.fn(),
+  handleProjectGraphError: vi.fn(),
+}));
+vi.mock('../../config/configuration', () => ({
+  readNxJson: vi.fn(() => ({})),
+  workspaceLayout: vi.fn(() => ({ appsDir: '', libsDir: '' })),
+}));
+vi.mock('../../tasks-runner/create-task-graph', () => ({
+  createTaskGraph: vi.fn(),
+}));
+vi.mock('../../ultracache/ci-status', () => ({
+  isUltracacheOnInCI: vi.fn(async () => false),
+  ultracacheModeInCI: vi.fn(),
+}));
+vi.mock('../../utils/all-file-data', () => ({
+  allFileData: vi.fn(),
+}));
+
+const createProjectGraphAsyncMock = createProjectGraphAsync as Mock;
+const createTaskGraphMock = createTaskGraph as Mock;
+const allFileDataMock = allFileData as Mock;
+const HashPlannerMock = HashPlanner as unknown as Mock;
+
+describe('getExpandedTaskInputs', () => {
+  let getPlansMock: Mock;
+
+  // A workspace with a single project `myproj` that has a `build` target and a
+  // `test:integration` target (whose name contains a colon).
+  function makeResponse(
+    overrides: Partial<ProjectGraphClientResponse> = {}
+  ): ProjectGraphClientResponse {
+    return {
+      hash: 'hash',
+      projects: [
+        {
+          name: 'myproj',
+          type: 'lib',
+          data: {
+            root: 'libs/myproj',
+            targets: { build: {}, 'test:integration': {} },
+          },
+        } as any,
+      ],
+      dependencies: {},
+      fileMap: {
+        myproj: [
+          { file: 'libs/myproj/src/index.ts', hash: 'a' },
+          { file: 'libs/myproj/project.json', hash: 'b' },
+        ],
+      },
+      layout: { appsDir: '', libsDir: '' },
+      affected: [],
+      focus: null,
+      groupByFolder: false,
+      exclude: [],
+      isPartial: false,
+      errors: [],
+      ...overrides,
+    };
+  }
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+
+    getPlansMock = vi.fn().mockReturnValue({});
+    // A plain function so `new HashPlanner(...)` works (arrows are not
+    // constructible under vitest's mocks).
+    HashPlannerMock.mockImplementation(function () {
+      return { getPlans: getPlansMock };
+    });
+
+    createProjectGraphAsyncMock.mockResolvedValue({
+      nodes: {},
+      dependencies: {},
+    });
+
+    // By default the task graph contains the requested task so a plan is
+    // produced. Individual tests override the returned plan.
+    createTaskGraphMock.mockImplementation(
+      (_graph, _overrides, projects, targets) => ({
+        tasks: { [`${projects[0]}:${targets[0]}`]: {} },
+        dependencies: {},
+        continuousDependencies: {},
+        roots: [],
+      })
+    );
+
+    allFileDataMock.mockResolvedValue([] as FileData[]);
+  });
+
+  it('returns the cached value without recomputing when the task is already cached', async () => {
+    const cache = new Map<string, Record<string, string[]>>();
+    const cached = { general: ['already-cached.ts'] };
+    cache.set('myproj:build', cached);
+
+    const result = await getExpandedTaskInputs(
+      makeResponse(),
+      cache,
+      'myproj:build'
+    );
+
+    // Exact same object reference is handed back
+    expect(result).toBe(cached);
+    // None of the expensive downstream work ran
+    expect(createProjectGraphAsyncMock).not.toHaveBeenCalled();
+    expect(createTaskGraphMock).not.toHaveBeenCalled();
+    expect(allFileDataMock).not.toHaveBeenCalled();
+    expect(getPlansMock).not.toHaveBeenCalled();
+  });
+
+  it('caches and returns an empty object when the task has no plan', async () => {
+    // Task graph has no tasks -> no plan is generated for the task id
+    createTaskGraphMock.mockReturnValue({
+      tasks: {},
+      dependencies: {},
+      continuousDependencies: {},
+      roots: [],
+    });
+
+    const cache = new Map<string, Record<string, string[]>>();
+    const result = await getExpandedTaskInputs(
+      makeResponse(),
+      cache,
+      'myproj:build'
+    );
+
+    expect(result).toEqual({});
+    // The empty result is still cached so we don't recompute next time
+    expect(cache.get('myproj:build')).toBe(result);
+    // With no task ids there is no need to ask the planner for plans
+    expect(getPlansMock).not.toHaveBeenCalled();
+  });
+
+  it('expands workspace root, project root, other and external inputs', async () => {
+    getPlansMock.mockReturnValue({
+      'myproj:build': [
+        // grouped workspace inputs: exact file + top-level glob
+        'workspace:[{workspaceRoot}/package.json,{workspaceRoot}/*.md]',
+        // project root fileset
+        'myproj:{projectRoot}/src/**/*',
+        // "other" named input
+        'ProjectConfiguration',
+        // external dependency (has a modifier prefix)
+        'npm:some-pkg',
+      ],
+    });
+
+    allFileDataMock.mockResolvedValue([
+      { file: 'package.json', hash: '1' },
+      { file: 'readme.md', hash: '2' },
+      // nested markdown must NOT match the top-level `*.md` glob
+      { file: 'docs/guide.md', hash: '3' },
+    ] as FileData[]);
+
+    const cache = new Map<string, Record<string, string[]>>();
+    const result = await getExpandedTaskInputs(
+      makeResponse(),
+      cache,
+      'myproj:build'
+    );
+
+    expect(result).toEqual({
+      // workspace roots are sorted, then the ProjectConfiguration file is appended
+      general: ['package.json', 'readme.md', 'libs/myproj/project.json'],
+      // project root glob only matches files under libs/myproj/src
+      myproj: ['libs/myproj/src/index.ts'],
+      external: ['npm:some-pkg'],
+    });
+    // and the same result is stored in the cache
+    expect(cache.get('myproj:build')).toBe(result);
+  });
+
+  it('expands a disk-backed group on disk instead of treating it as external', async () => {
+    getPlansMock.mockReturnValue({
+      'myproj:build': [
+        'files:[libs/myproj/generated/a.json,!libs/myproj/generated/b.json]',
+        'npm:some-pkg',
+      ],
+    });
+
+    const cache = new Map<string, Record<string, string[]>>();
+    const result = await getExpandedTaskInputs(
+      makeResponse(),
+      cache,
+      'myproj:build'
+    );
+
+    expect(expandFilesInput as unknown as Mock).toHaveBeenCalledWith(
+      expect.any(String),
+      ['libs/myproj/generated/a.json', '!libs/myproj/generated/b.json'],
+      ['libs/myproj']
+    );
+    expect(result).toEqual({
+      general: ['libs/myproj/generated/a.json'],
+      external: ['npm:some-pkg'],
+    });
+  });
+
+  it('keeps a brace group intact when splitting a disk-backed group', async () => {
+    getPlansMock.mockReturnValue({
+      'myproj:build': [
+        'files:[{nx,tsconfig.base}.json,libs/myproj/gen/{a,b}/*.ts,!libs/myproj/gen/b/x.ts]',
+      ],
+    });
+
+    const cache = new Map<string, Record<string, string[]>>();
+    await getExpandedTaskInputs(makeResponse(), cache, 'myproj:build');
+
+    expect(expandFilesInput as unknown as Mock).toHaveBeenCalledWith(
+      expect.any(String),
+      [
+        '{nx,tsconfig.base}.json',
+        'libs/myproj/gen/{a,b}/*.ts',
+        '!libs/myproj/gen/b/x.ts',
+      ],
+      ['libs/myproj']
+    );
+  });
+
+  it('keeps a brace group intact in a workspace group too', async () => {
+    getPlansMock.mockReturnValue({
+      'myproj:build': ['workspace:[{workspaceRoot}/{nx,tsconfig.base}.json]'],
+    });
+    allFileDataMock.mockResolvedValue([
+      { file: 'nx.json', hash: '1' },
+      { file: 'tsconfig.base.json', hash: '2' },
+      { file: 'tsconfig.json', hash: '3' },
+    ] as FileData[]);
+
+    const result = await getExpandedTaskInputs(
+      makeResponse(),
+      new Map(),
+      'myproj:build'
+    );
+
+    expect(result.general).toEqual(['nx.json', 'tsconfig.base.json']);
+  });
+
+  it('falls back to a plain split when a brace is unbalanced', async () => {
+    getPlansMock.mockReturnValue({
+      'myproj:build': ['files:[libs/myproj/{a.json,libs/myproj/b.json]'],
+    });
+
+    await getExpandedTaskInputs(makeResponse(), new Map(), 'myproj:build');
+
+    expect(expandFilesInput as unknown as Mock).toHaveBeenCalledWith(
+      expect.any(String),
+      ['libs/myproj/{a.json', 'libs/myproj/b.json'],
+      ['libs/myproj']
+    );
+  });
+
+  it('memoizes: a second call for the same task reuses the cached result', async () => {
+    getPlansMock.mockReturnValue({
+      'myproj:build': ['npm:some-pkg'],
+    });
+
+    const cache = new Map<string, Record<string, string[]>>();
+    const response = makeResponse();
+
+    const first = await getExpandedTaskInputs(response, cache, 'myproj:build');
+    const second = await getExpandedTaskInputs(response, cache, 'myproj:build');
+
+    expect(second).toBe(first);
+    // The heavy work happened exactly once
+    expect(createProjectGraphAsyncMock).toHaveBeenCalledTimes(1);
+    expect(getPlansMock).toHaveBeenCalledTimes(1);
+    expect(allFileDataMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('splits a task id whose target name contains a colon using the project nodes', async () => {
+    getPlansMock.mockReturnValue({
+      'myproj:test:integration': ['npm:some-pkg'],
+    });
+
+    const cache = new Map<string, Record<string, string[]>>();
+    const result = await getExpandedTaskInputs(
+      makeResponse(),
+      cache,
+      'myproj:test:integration'
+    );
+
+    // "test:integration" is parsed as the target (not target + configuration)
+    const [, , projectsArg, targetsArg] = createTaskGraphMock.mock.calls[0];
+    expect(projectsArg).toEqual(['myproj']);
+    expect(targetsArg).toEqual(['test:integration']);
+
+    expect(result).toEqual({ general: [], external: ['npm:some-pkg'] });
+    expect(cache.get('myproj:test:integration')).toBe(result);
+  });
+});
+
+describe('selectedFor', () => {
+  const selection = {
+    targets: ['build', 'test'],
+    configuration: 'production',
+    taskIds: ['a:build:production'],
+  };
+
+  it('builds the selection, with its configuration, for its own targets', () => {
+    expect(selectedFor(['test', 'build'], undefined, selection)).toEqual({
+      configuration: 'production',
+      taskIds: ['a:build:production'],
+    });
+    expect(selectedFor(['build', 'test'], 'production', selection)).toEqual({
+      configuration: 'production',
+      taskIds: ['a:build:production'],
+    });
+  });
+
+  // The selection's ids carry `:production`; built without it the graph holds
+  // `a:build`, and pruning one to the other would leave nothing.
+  it("does not let a page with no configuration drop the selection's", () => {
+    expect(
+      selectedFor(['build', 'test'], undefined, selection).configuration
+    ).toBe('production');
+  });
+
+  it('shows another target or configuration whole rather than pruning it to nothing', () => {
+    expect(selectedFor(['lint'], undefined, selection)).toEqual({
+      configuration: undefined,
+    });
+    expect(selectedFor(['build', 'test'], 'development', selection)).toEqual({
+      configuration: 'development',
+    });
+  });
+
+  it('prunes nothing without a selection', () => {
+    expect(selectedFor(['build', 'test'], 'production', undefined)).toEqual({
+      configuration: 'production',
+    });
+  });
+});
+
+describe('taskGraphForSelection', () => {
+  const task = (id: string) => ({ id }) as any;
+  const built: TaskGraph = {
+    roots: ['lib:build', 'other:build'],
+    tasks: {
+      'app:build': task('app:build'),
+      'lib:build': task('lib:build'),
+      'other:build': task('other:build'),
+    },
+    dependencies: {
+      'app:build': ['lib:build'],
+      'lib:build': [],
+      'other:build': [],
+    },
+    continuousDependencies: {
+      'app:build': [],
+      'lib:build': [],
+      'other:build': [],
+    },
+  };
+
+  // It carries the overrides the run gives each task, which a graph built
+  // here without them would not.
+  it('draws the graph the run executes without building one', () => {
+    const narrowed = { ...built, tasks: { 'app:build': task('app:build') } };
+    const build = vi.fn(() => built);
+    expect(
+      taskGraphForSelection(build, {
+        taskGraph: narrowed,
+        taskIds: ['app:build', 'lib:build'],
+      })
+    ).toBe(narrowed);
+    expect(build).not.toHaveBeenCalled();
+  });
+
+  it('builds and prunes to the ids when given no graph, as the live graph is', () => {
+    const drawn = taskGraphForSelection(() => built, {
+      taskIds: ['app:build', 'lib:build'],
+    });
+    expect(Object.keys(drawn.tasks).sort()).toEqual(['app:build', 'lib:build']);
+  });
+
+  it('draws the whole graph without a selection', () => {
+    expect(taskGraphForSelection(() => built)).toBe(built);
+  });
+});
+
+describe('graph server', () => {
+  let app: Server;
+  let url: URL;
+
+  beforeAll(async () => {
+    (createProjectGraphAndSourceMapsAsync as Mock).mockResolvedValue({
+      projectGraph: {
+        nodes: {
+          proj: {
+            name: 'proj',
+            type: 'lib',
+            data: { root: 'libs/proj', targets: {} },
+          },
+        },
+        dependencies: { proj: [] },
+      },
+      sourceMaps: {},
+    });
+    ({ app, url } = await startServer(
+      '<html></html>',
+      'window.environment = "release";',
+      '127.0.0.1',
+      0,
+      false
+    ));
+  });
+
+  afterAll(async () => {
+    await new Promise((res) => app.close(res));
+  });
+
+  const request = (path: string, headers: Record<string, string> = {}) =>
+    new Promise<number>((resolve, reject) => {
+      http
+        .get(
+          {
+            host: url.hostname,
+            port: url.port,
+            path,
+            headers: { host: url.host, ...headers },
+          },
+          (res) => {
+            res.resume();
+            resolve(res.statusCode);
+          }
+        )
+        .on('error', reject);
+    });
+
+  it('serves the bare printed URL and same-origin requests', async () => {
+    expect(await request('/')).toBe(200);
+    expect(await request('/environment.js')).toBe(200);
+    expect(await request('/project-graph.json')).toBe(200);
+    expect(
+      await request('/project-graph.json', {
+        'sec-fetch-site': 'same-origin',
+        origin: url.origin,
+      })
+    ).toBe(200);
+    expect(await request('/', { 'sec-fetch-site': 'none' })).toBe(200);
+  });
+
+  it.each(['localhost', '[::1]'])(
+    'serves the %s loopback name on its own port',
+    async (name) => {
+      expect(
+        await request('/project-graph.json', { host: `${name}:${url.port}` })
+      ).toBe(200);
+    }
+  );
+
+  it.each([
+    'other.example',
+    'other.example:PORT',
+    '127.0.0.1',
+    'localhost:1',
+    '192.168.1.20:PORT',
+  ])('refuses the host header %s', async (host) => {
+    expect(
+      await request('/project-graph.json', {
+        host: host.replace('PORT', url.port),
+      })
+    ).toBe(403);
+  });
+
+  it.each(['/environment.js', '/help?project=proj&target=build'])(
+    'refuses cross-site requests for %s',
+    async (path) => {
+      expect(await request(path, { 'sec-fetch-site': 'cross-site' })).toBe(403);
+      expect(await request(path, { 'sec-fetch-site': 'same-site' })).toBe(403);
+      expect(await request(path, { origin: 'http://other.example' })).toBe(403);
+      expect(await request(path, { origin: 'null' })).toBe(403);
+    }
+  );
+});
+
+describe('graph server bound to every interface', () => {
+  let app: Server;
+  let port: string;
+
+  beforeAll(async () => {
+    (createProjectGraphAndSourceMapsAsync as Mock).mockResolvedValue({
+      projectGraph: { nodes: {}, dependencies: {} },
+      sourceMaps: {},
+    });
+    let url: URL;
+    ({ app, url } = await startServer('', '', '0.0.0.0', 0, false));
+    port = url.port;
+  });
+
+  afterAll(async () => {
+    await new Promise((res) => app.close(res));
+  });
+
+  const request = (host: string) =>
+    new Promise<number>((resolve, reject) => {
+      http
+        .get(
+          { host: '127.0.0.1', port, path: '/currentHash', headers: { host } },
+          (res) => {
+            res.resume();
+            resolve(res.statusCode);
+          }
+        )
+        .on('error', reject);
+    });
+
+  it.each(['192.168.1.20', '[fe80::1]', 'localhost'])(
+    'serves the interface address %s',
+    async (name) => {
+      expect(await request(`${name}:${port}`)).toBe(200);
+    }
+  );
+
+  it.each(['rebind.example:PORT', '192.168.1.20:1'])(
+    'refuses the host header %s',
+    async (host) => {
+      expect(await request(host.replace('PORT', port))).toBe(403);
+    }
+  );
+});
+
+describe('isSameOriginLocalRequest', () => {
+  const allows = (
+    headers: Record<string, string>,
+    localPort: number,
+    host = '127.0.0.1'
+  ) => isSameOriginLocalRequest({ headers, socket: { localPort } }, host);
+
+  it('treats a host header without a port as port 80', () => {
+    expect(allows({ host: '127.0.0.1' }, 80)).toBe(true);
+    expect(allows({ host: 'localhost:80' }, 80)).toBe(true);
+    expect(
+      allows(
+        {
+          host: 'localhost',
+          origin: 'http://localhost',
+          'sec-fetch-site': 'same-origin',
+        },
+        80
+      )
+    ).toBe(true);
+    expect(allows({ host: 'localhost' }, 4211)).toBe(false);
+  });
+
+  it('refuses host headers that are not a bare authority', () => {
+    expect(allows({ host: 'evil.example@localhost:4211' }, 4211)).toBe(false);
+    expect(allows({ host: 'localhost:4211/x' }, 4211)).toBe(false);
+  });
+});
+
+describe('startServer', () => {
+  let app: Server;
+  let url: URL;
+
+  function get(path: string): Promise<number> {
+    return new Promise((resolve, reject) => {
+      http
+        .get(
+          { host: url.hostname, port: url.port, path, timeout: 5000 },
+          (res) => {
+            res.resume();
+            res.on('end', () => resolve(res.statusCode));
+          }
+        )
+        .on('timeout', function () {
+          this.destroy(new Error(`${path} timed out`));
+        })
+        .on('error', reject);
+    });
+  }
+
+  beforeEach(async () => {
+    (createProjectGraphAndSourceMapsAsync as Mock).mockResolvedValue({
+      projectGraph: { nodes: {}, dependencies: {} },
+      sourceMaps: {},
+    });
+    ({ app, url } = await startServer('', '', '127.0.0.1', 0, false));
+  });
+
+  afterEach(async () => {
+    await new Promise((resolve) => app.close(resolve));
+  });
+
+  it('rejects a task-inputs request without a taskId', async () => {
+    expect(await get('/task-inputs.json')).toBe(400);
+    expect(await get('/currentHash')).toBe(200);
+  });
+
+  it('keeps serving after a request it cannot handle', async () => {
+    expect(await get('//')).toBe(500);
+    expect(await get('/currentHash')).toBe(200);
+  });
+});

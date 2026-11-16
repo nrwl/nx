@@ -69,9 +69,7 @@ function migrateExecutorUsages(tree: Tree): void {
   for (const projectName of projectsToUpdate) {
     const projectConfig = readProjectConfiguration(tree, projectName);
 
-    for (const [targetName, target] of Object.entries(
-      projectConfig.targets || {}
-    )) {
+    for (const [, target] of Object.entries(projectConfig.targets || {})) {
       if (target.executor === '@nx/vite:test') {
         target.executor = '@nx/vitest:test';
       }
@@ -178,6 +176,10 @@ function migrateTargetDefaults(tree: Tree): void {
   for (const [targetOrExecutor, targetConfig] of Object.entries(
     nxJson.targetDefaults
   )) {
+    if (Array.isArray(targetConfig)) {
+      // This migration predates the filtered array value form; values are plain objects here.
+      continue;
+    }
     // Pattern A: Executor-keyed (e.g., "@nx/vite:test": { ... })
     if (targetOrExecutor === '@nx/vite:test') {
       // Move config to new executor key

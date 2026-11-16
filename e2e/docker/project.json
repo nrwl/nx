@@ -10,7 +10,8 @@
       "inputs": ["e2eInputs", "^production"],
       "dependsOn": [
         "@nx/nx-source:populate-local-registry-storage",
-        "@nx/nx-source:local-registry",
+        "@nx/nx-source:populate-e2e-base-workspace",
+        "@nx/nx-source:local-registry-e2e",
         "@nx/nx-source:start-docker-registry"
       ]
     },
@@ -19,7 +20,8 @@
       "inputs": ["e2eInputs", "^production"],
       "dependsOn": [
         "@nx/nx-source:populate-local-registry-storage",
-        "@nx/nx-source:local-registry",
+        "@nx/nx-source:populate-e2e-base-workspace",
+        "@nx/nx-source:local-registry-e2e",
         "@nx/nx-source:start-docker-registry"
       ]
     }

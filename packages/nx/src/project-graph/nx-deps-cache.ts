@@ -35,6 +35,7 @@ export interface FileMapCache {
   pluginsConfig?: any;
   fileMap: FileMap;
   externalNodesHash?: string;
+  lockFileHash?: string;
 }
 
 export const nxProjectGraph = join(
@@ -90,7 +91,7 @@ export function readFileMapCache(): null | FileMapCache {
 
 export function readProjectGraphCache(
   minimumComputedAt?: number
-): null | ProjectGraph {
+): null | { projectGraph: ProjectGraph; computedAt: number | undefined } {
   performance.mark('read project-graph:start');
   ensureCacheDirectory();
 
@@ -128,7 +129,7 @@ export function readProjectGraphCache(
         );
       }
 
-      return projectGraphCache;
+      return { projectGraph: projectGraphCache, computedAt };
     } else {
       return null;
     }
@@ -184,7 +185,8 @@ export function createProjectFileMapCache(
   packageJsonDeps: Record<string, string>,
   fileMap: FileMap,
   tsConfig: { compilerOptions?: { paths?: { [p: string]: any } } },
-  externalNodesHash: string
+  externalNodesHash: string,
+  lockFileHash: string
 ) {
   const nxJsonPlugins = getNxJsonPluginsData(nxJson, packageJsonDeps);
   const newValue: FileMapCache = {
@@ -196,6 +198,7 @@ export function createProjectFileMapCache(
     pluginsConfig: nxJson?.pluginsConfig,
     fileMap,
     externalNodesHash,
+    lockFileHash,
   };
   return newValue;
 }
@@ -211,7 +214,8 @@ export function writeCache(
   cache: FileMapCache,
   projectGraph: ProjectGraph,
   sourceMaps: ConfigurationSourceMaps,
-  errors: ProjectGraphErrorTypes[]
+  errors: ProjectGraphErrorTypes[],
+  computedAt: number
 ): void {
   performance.mark('write cache:start');
   let retry = 1;
@@ -231,7 +235,7 @@ export function writeCache(
       writeJsonFile(tmpProjectGraphPath, {
         ...projectGraph,
         errors,
-        computedAt: Date.now(),
+        computedAt,
       });
       renameSync(tmpProjectGraphPath, nxProjectGraph);
 
@@ -311,7 +315,7 @@ export function writeCacheIfStale(
       // File doesn't exist or can't be stat'd — proceed with write
     }
   }
-  writeCache(cache, projectGraph, sourceMaps, errors);
+  writeCache(cache, projectGraph, sourceMaps, errors, Date.now());
 }
 
 export function shouldRecomputeWholeGraph(
@@ -320,7 +324,8 @@ export function shouldRecomputeWholeGraph(
   projects: Record<string, ProjectConfiguration>,
   nxJson: NxJsonConfiguration,
   tsConfig: { compilerOptions: { paths: { [k: string]: any } } },
-  externalNodesHash: string
+  externalNodesHash: string,
+  lockFileHash: string
 ): boolean {
   if (cache.version !== '6.0') {
     return true;
@@ -369,6 +374,12 @@ export function shouldRecomputeWholeGraph(
 
   // Check if external nodes have changed
   if (externalNodesHash !== cache.externalNodesHash) {
+    return true;
+  }
+
+  // Cached import edges follow node_modules, which an install can re-hoist
+  // after a lock file change that leaves the external nodes unchanged.
+  if (lockFileHash !== cache.lockFileHash) {
     return true;
   }
 

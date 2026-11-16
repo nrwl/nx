@@ -21,6 +21,15 @@ async function populateLocalRegistryStorage() {
   }
 
   process.env.npm_config_registry = registry;
+  // npm publish requires credentials client-side even though the local
+  // verdaccio allows anonymous publishing
+  process.env[`npm_config_//${listenAddress}:${port}/:_authToken`] = authToken;
+
+  // pnpm 11 reads pnpm_config_* env vars instead of npm_config_*
+  process.env.pnpm_config_registry = registry;
+  process.env[`pnpm_config_//${listenAddress}:${port}/:_authToken`] = authToken;
+  // pnpm 11's minimumReleaseAge policy rejects packages published < 24h ago
+  process.env.pnpm_config_minimum_release_age = '0';
 
   // bun
   process.env.BUN_CONFIG_REGISTRY = registry;
@@ -36,7 +45,11 @@ async function populateLocalRegistryStorage() {
     const isVerbose = process.env.NX_VERBOSE_LOGGING === 'true';
 
     console.log('Publishing packages to local registry to populate storage');
-    await runLocalRelease(publishVersion, isVerbose);
+    // The populate target already depends on these builds; rebuilding here
+    // rewrites dist inside the task and destabilizes its Ultracache recording.
+    await runLocalRelease(publishVersion, isVerbose, {
+      excludeTaskDependencies: true,
+    });
   } catch (err) {
     console.error('Error:', err);
     process.exit(1);
@@ -44,12 +57,25 @@ async function populateLocalRegistryStorage() {
 }
 exports.populateLocalRegistryStorage = populateLocalRegistryStorage;
 
-function runLocalRelease(publishVersion, isVerbose) {
+function runLocalRelease(
+  publishVersion,
+  isVerbose,
+  { excludeTaskDependencies = false } = {}
+) {
   return new Promise((res, rej) => {
-    const publishProcess = exec(`pnpm nx-release --local ${publishVersion}`, {
-      env: process.env,
-      maxBuffer: LARGE_BUFFER,
-    });
+    // pnpm exec, NOT the `pnpm nx-release` run-script: `pnpm run` overwrites
+    // the inherited npm_config_registry with pnpm's own file-resolved
+    // registry, which breaks nx-release's localhost safety check now that
+    // nothing writes the local registry to ~/.npmrc.
+    const publishProcess = exec(
+      `pnpm exec nx nx-release @nx/nx-source --parallel 8 --local ${publishVersion}${
+        excludeTaskDependencies ? ' --exclude-task-dependencies' : ''
+      }`,
+      {
+        env: process.env,
+        maxBuffer: LARGE_BUFFER,
+      }
+    );
     let logs = Buffer.from('');
     if (isVerbose) {
       publishProcess?.stdout?.pipe(process.stdout);

@@ -42,7 +42,7 @@ expect.addSnapshotSerializer({
         // We trim each line to reduce the chances of snapshot flakiness
 
         // Slightly different handling needed for bun (length can be 8)
-        .replaceAll(/[a-fA-F0-9]{7,8}/g, '{COMMIT_SHA}')
+        .replaceAll(/\b[a-fA-F0-9]{7,8}\b/g, '{COMMIT_SHA}')
         .replaceAll(/bun publish v\d+\.\d+\.\d+/g, 'bun publish vX.X.X')
         .replaceAll(
           /Integrity:\s*.*/g,
@@ -163,8 +163,6 @@ describe('nx release preserve local dependency protocols', () => {
       -     "@proj/{project-name}": "workspace:*"
       +     "@proj/{project-name}": "0.1.0"
       }
-      }
-      +
       NX   Updating PM lock file
       Would update pnpm-lock.yaml with the following command, but --dry-run was set:
       pnpm install --lockfile-only
@@ -172,6 +170,54 @@ describe('nx release preserve local dependency protocols', () => {
       Would stage files in git with the following command, but --dry-run was set:
       git add {project-name}/package.json {project-name}/package.json
     `);
+  });
+
+  it('should replace the workspace protocol with the current version when the dependency group is excluded from the release', async () => {
+    const {
+      workspacePath,
+      pkg1: releasedProject,
+      pkg2: excludedDependency,
+    } = await initializeProject('pnpm');
+
+    updateJson<NxJsonConfiguration>('nx.json', (nxJson) => {
+      nxJson.release = {
+        groups: {
+          released: {
+            projects: [releasedProject],
+            projectsRelationship: 'independent',
+          },
+          excluded: {
+            projects: [excludedDependency],
+            projectsRelationship: 'independent',
+          },
+        },
+        version: {
+          currentVersionResolver: 'git-tag',
+          preserveLocalDependencyProtocols: false,
+          adjustSemverBumpsForZeroMajorVersion: false,
+        },
+      };
+      return nxJson;
+    });
+
+    await runCommandAsync(`git tag ${releasedProject}@1.0.0`);
+    await runCommandAsync(`git tag ${excludedDependency}@4.2.0`);
+
+    // Release only the dependent project. Its dependency remains outside the release set.
+    const output = runCLI(
+      `release version minor --projects ${releasedProject} --dry-run --verbose`,
+      { cwd: workspacePath }
+    );
+
+    expect(output).toContain(
+      `-     "@proj/${excludedDependency}": "workspace:*"`
+    );
+    expect(output).toContain(`+     "@proj/${excludedDependency}": "4.2.0"`);
+    expect(output).toContain(
+      `${excludedDependency} 🏷️  Resolved the current version as 4.2.0`
+    );
+    expect(output).not.toContain(`${excludedDependency} ❓ Applied`);
+    expect(output).not.toContain(`${excludedDependency} ✍️  New version`);
   });
 
   it('should preserve local dependency protocols when version.preserveLocalDependencyProtocols is not set to false', async () => {
@@ -206,8 +252,6 @@ describe('nx release preserve local dependency protocols', () => {
       -   "version": "0.0.0",
       +   "version": "0.1.0",
       "exports": {
-      }
-      +
       NX   Updating PM lock file
       Would update pnpm-lock.yaml with the following command, but --dry-run was set:
       pnpm install --lockfile-only
@@ -284,13 +328,6 @@ describe('nx release preserve local dependency protocols', () => {
         Cache: 0/2 hit (0%)
         Critical path: {DURATION} (2 tasks)
         Recoverable time: {DURATION}
-        Recommendations:
-        - Drastically reduce your run duration by sharing a cache across your team and CI → https://nx.dev/ci/features/remote-cache?utm=performance-report.
-        - Distribute tasks across multiple machines with Nx Agents to increase parallelism without overwhelming resource usage → https://nx.dev/ci/features/distribute-task-execution?utm=performance-report.
-        - Speed up or split the longest tasks on the critical path:
-        {project-name}:nx-release-publish    {DURATION}
-        {project-name}:nx-release-publish    {DURATION}
-        Learn how to improve your run's performance → https://nx.dev/docs/concepts/ci-concepts/parallelization-distribution?utm=performance-report
       `);
 
       // Ensure that the dependency on pkg2 specified on the registry was replaced with the actual version number during publishing
@@ -366,13 +403,6 @@ describe('nx release preserve local dependency protocols', () => {
         Cache: 0/2 hit (0%)
         Critical path: {DURATION} (2 tasks)
         Recoverable time: {DURATION}
-        Recommendations:
-        - Drastically reduce your run duration by sharing a cache across your team and CI → https://nx.dev/ci/features/remote-cache?utm=performance-report.
-        - Distribute tasks across multiple machines with Nx Agents to increase parallelism without overwhelming resource usage → https://nx.dev/ci/features/distribute-task-execution?utm=performance-report.
-        - Speed up or split the longest tasks on the critical path:
-        {project-name}:nx-release-publish    {DURATION}
-        {project-name}:nx-release-publish    {DURATION}
-        Learn how to improve your run's performance → https://nx.dev/docs/concepts/ci-concepts/parallelization-distribution?utm=performance-report
       `);
 
       // Ensure that the dependency on pkg2 specified on the registry was replaced with the actual version number during publishing

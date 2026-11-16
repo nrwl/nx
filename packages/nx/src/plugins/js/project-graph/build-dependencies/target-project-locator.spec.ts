@@ -13,12 +13,12 @@ import {
 
 import { builtinModules } from 'node:module';
 
-jest.mock('nx/src/utils/workspace-root', () => ({
+vi.mock('nx/src/utils/workspace-root', () => ({
   workspaceRoot: '/root',
 }));
 
-jest.mock('nx/src/plugins/js/utils/resolve-relative-to-dir', () => ({
-  resolveRelativeToDir: jest.fn().mockImplementation((pathOrPackage) => {
+vi.mock('nx/src/plugins/js/utils/resolve-relative-to-dir', () => ({
+  resolveRelativeToDir: vi.fn().mockImplementation((pathOrPackage) => {
     // We intentionally don't want to find this package on disk to test fallback behavior
     if (pathOrPackage.startsWith('@nx/nx-win32-x64-msvc')) {
       return null;
@@ -33,6 +33,30 @@ jest.mock('nx/src/plugins/js/utils/resolve-relative-to-dir', () => ({
     }
     if (pathOrPackage === '@json2csv/plainjs/package.json') {
       return '/root/node_modules/@json2csv/plainjs/dist/cjs/package.json';
+    }
+    // Resolve package.json to the nested module-format stub used by this test.
+    if (pathOrPackage === '@rerouted/pkg/package.json') {
+      return '/root/node_modules/@rerouted/pkg/dist/cjs/package.json';
+    }
+    // exports omit ./package.json. The resolved entry sits below a nested manifest.
+    if (
+      pathOrPackage === '@hidden-exports/pkg/package.json' ||
+      pathOrPackage === 'hidden-exports-pkg/package.json'
+    ) {
+      return null;
+    }
+    if (pathOrPackage === '@hidden-exports/pkg') {
+      return '/root/node_modules/@hidden-exports/pkg/internal/entry/index.cjs';
+    }
+    if (pathOrPackage === 'hidden-exports-pkg') {
+      return '/root/node_modules/hidden-exports-pkg/internal/entry/index.cjs';
+    }
+    // Same shape, but the resolved entry is not under node_modules/<name>/.
+    if (pathOrPackage === '@hidden-exports/linked/package.json') {
+      return null;
+    }
+    if (pathOrPackage === '@hidden-exports/linked') {
+      return '/opt/packages/@hidden-exports/linked/internal/entry/index.cjs';
     }
     return join(
       '/root',
@@ -321,6 +345,14 @@ describe('TargetProjectLocator', () => {
             packageName: 'lodash',
           },
         },
+        'npm:lodash@4.0.0': {
+          name: 'npm:lodash@4.0.0',
+          type: 'npm',
+          data: {
+            version: '4.0.0',
+            packageName: 'lodash',
+          },
+        },
         'npm:lodash-4': {
           name: 'npm:lodash-4',
           type: 'npm',
@@ -588,7 +620,7 @@ describe('TargetProjectLocator', () => {
       expect(proj5).toEqual('proj5');
     });
 
-    it('should be able to resolve packages aliases', () => {
+    it('should prefer alias nodes when canonical package nodes also exist', () => {
       const lodash = targetProjectLocator.findProjectFromImport(
         'lodash',
         'libs/proj/index.ts'
@@ -615,9 +647,10 @@ describe('TargetProjectLocator', () => {
       expect(result).toEqual('child-pm-workspaces');
     });
 
-    it('should convert relative file paths to absolute paths before TypeScript module resolution', () => {
-      const typescriptModule = require('nx/src/plugins/js/utils/typescript');
-      const resolveModuleByImportSpy = jest
+    it('should convert relative file paths to absolute paths before TypeScript module resolution', async () => {
+      const typescriptModule =
+        await import('nx/src/plugins/js/utils/typescript');
+      const resolveModuleByImportSpy = vi
         .spyOn(typescriptModule, 'resolveModuleByImport')
         .mockReturnValue('/root/libs/proj/some-module.ts');
 
@@ -653,9 +686,10 @@ describe('TargetProjectLocator', () => {
       resolveModuleByImportSpy.mockRestore();
     });
 
-    it('should keep absolute file paths as-is for TypeScript module resolution', () => {
-      const typescriptModule = require('nx/src/plugins/js/utils/typescript');
-      const resolveModuleByImportSpy = jest
+    it('should keep absolute file paths as-is for TypeScript module resolution', async () => {
+      const typescriptModule =
+        await import('nx/src/plugins/js/utils/typescript');
+      const resolveModuleByImportSpy = vi
         .spyOn(typescriptModule, 'resolveModuleByImport')
         .mockReturnValue('/root/libs/proj/some-module.ts');
 
@@ -757,6 +791,41 @@ describe('TargetProjectLocator', () => {
         './node_modules/@json2csv/plainjs/dist/cjs/package.json':
           JSON.stringify({
             type: 'commonjs',
+          }),
+        './node_modules/@rerouted/pkg/package.json': JSON.stringify({
+          name: '@rerouted/pkg',
+          version: '2.0.0',
+        }),
+        './node_modules/@rerouted/pkg/dist/cjs/package.json': JSON.stringify({
+          type: 'commonjs',
+        }),
+        // exports hide ./package.json, and a nested manifest carries its own name.
+        './node_modules/@hidden-exports/pkg/package.json': JSON.stringify({
+          name: '@hidden-exports/pkg',
+          version: '4.44.2',
+        }),
+        './node_modules/@hidden-exports/pkg/internal/package.json':
+          JSON.stringify({
+            name: '@hidden-exports/pkg/internal',
+            version: '4.44.2',
+          }),
+        './node_modules/hidden-exports-pkg/package.json': JSON.stringify({
+          name: 'hidden-exports-pkg',
+          version: '1.2.3',
+        }),
+        './node_modules/hidden-exports-pkg/internal/package.json':
+          JSON.stringify({
+            name: 'hidden-exports-internal',
+            version: '9.9.9',
+          }),
+        '/opt/packages/@hidden-exports/linked/package.json': JSON.stringify({
+          name: '@hidden-exports/linked',
+          version: '5.0.0',
+        }),
+        '/opt/packages/@hidden-exports/linked/internal/package.json':
+          JSON.stringify({
+            name: '@hidden-exports/linked/internal',
+            version: '5.0.0',
           }),
       };
       vol.fromJSON(fsJson, '/root');
@@ -962,6 +1031,41 @@ describe('TargetProjectLocator', () => {
             hash: 'sha512-4Md7RPDCSYpmW1HWIpWBOqCd4vWfIqm53S3e/uzQ62iGi7L3r34fK/8nhOMEe+/eVfCx8+gdSCt1d74SlacQHw==',
           },
         },
+        // Versioned-only: a nested manifest must not be able to satisfy the lookup.
+        'npm:@hidden-exports/pkg@4.44.2': {
+          type: 'npm',
+          name: 'npm:@hidden-exports/pkg@4.44.2',
+          data: {
+            version: '4.44.2',
+            packageName: '@hidden-exports/pkg',
+          },
+        },
+        'npm:hidden-exports-pkg@1.2.3': {
+          type: 'npm',
+          name: 'npm:hidden-exports-pkg@1.2.3',
+          data: {
+            version: '1.2.3',
+            packageName: 'hidden-exports-pkg',
+          },
+        },
+        'npm:@hidden-exports/linked@5.0.0': {
+          type: 'npm',
+          name: 'npm:@hidden-exports/linked@5.0.0',
+          data: {
+            version: '5.0.0',
+            packageName: '@hidden-exports/linked',
+          },
+        },
+        // Keep this versioned-only so resolution cannot use the unversioned fallback.
+        'npm:@rerouted/pkg@2.0.0': {
+          type: 'npm',
+          name: 'npm:@rerouted/pkg@2.0.0',
+          data: {
+            version: '2.0.0',
+            packageName: '@rerouted/pkg',
+            hash: 'sha512-4Md7RPDCSYpmW1HWIpWBOqCd4vWfIqm53S3e/uzQ62iGi7L3r34fK/8nhOMEe+/eVfCx8+gdSCt1d74SlacQHw==',
+          },
+        },
       };
 
       targetProjectLocator = new TargetProjectLocator(projects, npmProjects);
@@ -996,9 +1100,10 @@ describe('TargetProjectLocator', () => {
     });
 
     it('should be able to resolve local project', () => {
-      jest
-        .spyOn(targetProjectLocator as any, 'resolveImportWithRequire')
-        .mockReturnValue('libs/proj1/index.ts');
+      vi.spyOn(
+        targetProjectLocator as any,
+        'resolveImportWithRequire'
+      ).mockReturnValue('libs/proj1/index.ts');
 
       const result1 = targetProjectLocator.findProjectFromImport(
         '@org/proj1',
@@ -1006,14 +1111,48 @@ describe('TargetProjectLocator', () => {
       );
       expect(result1).toEqual('@org/proj1');
 
-      jest
-        .spyOn(targetProjectLocator as any, 'resolveImportWithRequire')
-        .mockReturnValue('libs/proj1/some/nested/file.ts');
+      vi.spyOn(
+        targetProjectLocator as any,
+        'resolveImportWithRequire'
+      ).mockReturnValue('libs/proj1/some/nested/file.ts');
       const result2 = targetProjectLocator.findProjectFromImport(
         '@org/proj1/some/nested/path',
         'libs/proj1/index.ts'
       );
       expect(result2).toEqual('@org/proj1');
+    });
+
+    it('should not match Windows node_modules paths to the workspace root project', () => {
+      const targetProjectLocator = new TargetProjectLocator(
+        {
+          ...projects,
+          root: {
+            name: 'root',
+            type: 'app',
+            data: {
+              root: '.',
+            },
+          },
+        },
+        {}
+      );
+
+      vi.spyOn(
+        targetProjectLocator as any,
+        'resolveImportWithRequire'
+      ).mockReturnValue('node_modules\\external-package\\index.js');
+
+      const result = targetProjectLocator.findProjectFromImport(
+        'external-package',
+        'libs/proj1/index.ts'
+      );
+
+      expect(result).toBeUndefined();
+      expect(
+        (targetProjectLocator as any).findProjectOfResolvedModule(
+          '..\\..\\node_modules\\external-package\\index.js'
+        )
+      ).toBeUndefined();
     });
 
     it('should be able to npm dependencies', () => {
@@ -1093,6 +1232,39 @@ describe('TargetProjectLocator', () => {
         'libs/proj/index.ts'
       );
       expect(result).toEqual('npm:@json2csv/plainjs');
+    });
+
+    it('should resolve a rerouted package.json to its versioned node when no root-level node exists', () => {
+      const result = targetProjectLocator.findProjectFromImport(
+        '@rerouted/pkg/some/subpath',
+        'libs/proj/index.ts'
+      );
+      expect(result).toEqual('npm:@rerouted/pkg@2.0.0');
+    });
+
+    it('should resolve a package whose exports omit package.json when a nested package.json is closer to the entry', () => {
+      const scoped = targetProjectLocator.findProjectFromImport(
+        '@hidden-exports/pkg',
+        'libs/proj/index.ts'
+      );
+      const scopedSubpath = targetProjectLocator.findProjectFromImport(
+        '@hidden-exports/pkg/testing',
+        'libs/proj/index.ts'
+      );
+      const unscoped = targetProjectLocator.findProjectFromImport(
+        'hidden-exports-pkg',
+        'libs/proj/index.ts'
+      );
+
+      expect(scoped).toEqual('npm:@hidden-exports/pkg@4.44.2');
+      expect(scopedSubpath).toEqual('npm:@hidden-exports/pkg@4.44.2');
+      expect(unscoped).toEqual('npm:hidden-exports-pkg@1.2.3');
+
+      const linked = targetProjectLocator.findProjectFromImport(
+        '@hidden-exports/linked',
+        'libs/proj/index.ts'
+      );
+      expect(linked).toEqual('npm:@hidden-exports/linked@5.0.0');
     });
   });
 
@@ -1395,6 +1567,20 @@ describe('isBuiltinModuleImport()', () => {
     `should return true for %s builtin module`,
     (builtinModule) => {
       expect(isBuiltinModuleImport(builtinModule)).toBe(true);
+    }
+  );
+
+  it.each(['bun', 'bun:test', 'bun:sqlite'])(
+    `should return true for %s bun builtin module`,
+    (builtinModule) => {
+      expect(isBuiltinModuleImport(builtinModule)).toBe(true);
+    }
+  );
+
+  it.each(['bunyan', 'bun-types'])(
+    `should return false for %s package that only starts with bun`,
+    (importExpr) => {
+      expect(isBuiltinModuleImport(importExpr)).toBe(false);
     }
   );
 });

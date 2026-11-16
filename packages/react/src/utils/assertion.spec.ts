@@ -9,10 +9,9 @@ describe('assertValidStyle', () => {
     ];
 
     schemas.forEach((schema) => {
-      const values = schema.properties.style['x-prompt'].items;
-      expect(() =>
-        values.forEach((value) => assertValidStyle(value)).not.toThrow()
-      );
+      for (const { value } of schema.properties.style['x-prompt'].items) {
+        expect(() => assertValidStyle(value)).not.toThrow();
+      }
     });
   });
 

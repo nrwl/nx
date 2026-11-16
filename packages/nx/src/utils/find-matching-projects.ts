@@ -20,15 +20,24 @@ interface ProjectPattern {
 }
 
 /**
+ * The subset of a {@link ProjectGraphProjectNode} that `findMatchingProjects`
+ * needs. Project names come from the map keys, so only `data.root` and
+ * `data.tags` are read per node — callers may pass full nodes or this slice.
+ */
+export type MatcherProjectNode = {
+  data: Pick<ProjectGraphProjectNode['data'], 'root' | 'tags'>;
+};
+
+/**
  * Find matching project names given a list of potential project names or globs.
  *
  * @param patterns A list of project names or globs to match against.
- * @param projects A map of {@link ProjectGraphProjectNode} by project name.
+ * @param projects A map of {@link MatcherProjectNode} by project name.
  * @returns
  */
 export function findMatchingProjects(
   patterns: string[] = [],
-  projects: Record<string, ProjectGraphProjectNode>
+  projects: Record<string, MatcherProjectNode>
 ): string[] {
   if (!patterns.length || patterns.filter((p) => p.length).length === 0) {
     return []; // Short circuit if called with no patterns
@@ -135,7 +144,7 @@ export function findMatchingProjects(
 
 function addMatchingProjectsByDirectory(
   projectNames: string[],
-  projects: Record<string, ProjectGraphProjectNode>,
+  projects: Record<string, MatcherProjectNode>,
   pattern: ProjectPattern,
   matchedProjects: Set<string>
 ) {
@@ -153,7 +162,7 @@ function addMatchingProjectsByDirectory(
 
 function addMatchingProjectsByName(
   projectNames: string[],
-  projects: Record<string, ProjectGraphProjectNode>,
+  projects: Record<string, MatcherProjectNode>,
   pattern: ProjectPattern,
   matchedProjects: Set<string>
 ) {
@@ -167,9 +176,10 @@ function addMatchingProjectsByName(
   }
 
   if (!isGlobPattern(pattern.value)) {
+    const escapedValue = pattern.value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     // Custom regex that is basically \b but includes hyphens (-) and excludes underscores (_), so "foo" pattern matches "foo_bar" but not "foo-e2e".
     const regex = new RegExp(
-      `(?<![@a-zA-Z0-9-])${pattern.value}(?![@a-zA-Z0-9-])`,
+      `(?<![@a-zA-Z0-9-])${escapedValue}(?![@a-zA-Z0-9-])`,
       'i'
     );
     const matchingProjects = Object.keys(projects).filter((name) =>
@@ -200,7 +210,7 @@ function addMatchingProjectsByName(
 
 function addMatchingProjectsByTag(
   projectNames: string[],
-  projects: Record<string, ProjectGraphProjectNode>,
+  projects: Record<string, MatcherProjectNode>,
   pattern: ProjectPattern,
   matchedProjects: Set<string>
 ) {
@@ -236,7 +246,7 @@ function isExcludePattern(pattern: string): boolean {
 
 function parseStringPattern(
   pattern: string,
-  projects: Record<string, ProjectGraphProjectNode>
+  projects: Record<string, MatcherProjectNode>
 ): ProjectPattern {
   const isExclude = isExcludePattern(pattern);
 
@@ -255,11 +265,13 @@ function parseStringPattern(
     // The pattern may contain a label
   } else {
     const potentialType = pattern.substring(0, indexOfFirstPotentialSeparator);
-    return {
-      type: isValidPatternType(potentialType) ? potentialType : 'unlabeled',
-      value: pattern.substring(indexOfFirstPotentialSeparator + 1),
-      exclude: isExclude,
-    };
+    return isValidPatternType(potentialType)
+      ? {
+          type: potentialType,
+          value: pattern.substring(indexOfFirstPotentialSeparator + 1),
+          exclude: isExclude,
+        }
+      : { type: 'unlabeled', value: pattern, exclude: isExclude };
   }
 }
 

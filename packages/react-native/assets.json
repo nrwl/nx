@@ -2,6 +2,9 @@
   "outDir": "packages/react-native/dist",
   "assets": [
     {
+      "glob": "src/migrations/**/*.md"
+    },
+    {
       "glob": "**/files/**"
     },
     {

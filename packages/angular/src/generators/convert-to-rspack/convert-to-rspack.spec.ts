@@ -1,3 +1,4 @@
+import { withPnpm } from '@nx/devkit/internal-testing-utils';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { convertToRspack } from './convert-to-rspack';
 import {
@@ -9,10 +10,12 @@ import {
   writeJson,
 } from '@nx/devkit';
 import * as _configUtils from '@nx/devkit/internal';
+import { mkdirSync, rmSync, writeFileSync } from 'fs';
+import { join } from 'path';
 
-jest.mock('@nx/devkit/internal', () => ({
-  ...jest.requireActual('@nx/devkit/internal'),
-  loadConfigFile: jest.fn().mockImplementation(async (path) => {
+vi.mock('@nx/devkit/internal', async () => ({
+  ...(await vi.importActual<any>('@nx/devkit/internal')),
+  loadConfigFile: vi.fn().mockImplementation(async (path) => {
     return () => {
       return {};
     };
@@ -20,6 +23,58 @@ jest.mock('@nx/devkit/internal', () => ({
 }));
 
 describe('convert-to-rspack', () => {
+  // The generator keeps a polyfill that resolves from the workspace's
+  // node_modules. Unit tests run against an empty scratch workspace root.
+  const tslib = join(
+    process.env.NX_WORKSPACE_ROOT_PATH,
+    'node_modules',
+    'tslib'
+  );
+  beforeAll(() => {
+    mkdirSync(tslib, { recursive: true });
+    writeFileSync(
+      join(tslib, 'package.json'),
+      '{"name":"tslib","main":"index.js"}'
+    );
+    writeFileSync(join(tslib, 'index.js'), '');
+  });
+  afterAll(() => {
+    rmSync(tslib, { recursive: true, force: true });
+  });
+
+  it('should record the build script decisions @nx/angular-rspack pulls in', async () => {
+    const tree = createTreeWithEmptyWorkspace();
+    addProjectConfiguration(tree, 'app', {
+      root: 'apps/app',
+      projectType: 'application',
+      targets: {
+        build: {
+          executor: '@angular-devkit/build-angular:browser',
+          options: {
+            outputPath: 'dist/apps/app',
+            index: 'apps/app/src/index.html',
+            main: 'apps/app/src/main.ts',
+            tsConfig: 'apps/app/tsconfig.app.json',
+          },
+        },
+      },
+    });
+    writeJson(tree, 'apps/app/tsconfig.json', {});
+
+    await withPnpm(tree, '11.2.2', () =>
+      convertToRspack(tree, { project: 'app' })
+    );
+
+    const pnpmWorkspace = tree.read('pnpm-workspace.yaml', 'utf-8');
+    expect(pnpmWorkspace).toMatch(/['"]?esbuild['"]?: false/);
+    expect(pnpmWorkspace).toMatch(/['"]?lmdb['"]?: false/);
+    expect(pnpmWorkspace).toMatch(/['"]?msgpackr-extract['"]?: false/);
+    expect(pnpmWorkspace).toMatch(/['"]@parcel\/watcher['"]: false/);
+    expect(pnpmWorkspace).toMatch(/['"]?core-js['"]?: false/);
+    // Patches `@angular/build` below 20.2.0, so it has to run.
+    expect(pnpmWorkspace).toMatch(/['"]@nx\/angular-rspack-compiler['"]: true/);
+  });
+
   it('should convert a basic angular webpack application to rspack', async () => {
     // ARRANGE
     const tree = createTreeWithEmptyWorkspace();
@@ -195,6 +250,532 @@ describe('convert-to-rspack', () => {
     expect(updatedProject.targets.serve).not.toBeDefined();
   });
 
+  it('should fold the server tsconfig into the build tsconfig', async () => {
+    // ARRANGE
+    const tree = createTreeWithEmptyWorkspace();
+
+    addProjectConfiguration(tree, 'app', {
+      root: 'apps/app',
+      sourceRoot: 'apps/app/src',
+      projectType: 'application',
+      targets: {
+        build: {
+          executor: '@angular-devkit/build-angular:browser',
+          options: {
+            outputPath: 'dist/apps/app/browser',
+            index: 'apps/app/src/index.html',
+            main: 'apps/app/src/main.ts',
+            tsConfig: 'apps/app/tsconfig.app.json',
+          },
+        },
+        server: {
+          executor: '@angular-devkit/build-angular:server',
+          options: {
+            main: 'apps/app/src/server.ts',
+            tsConfig: 'apps/app/tsconfig.server.json',
+          },
+        },
+      },
+    });
+
+    writeJson(tree, 'apps/app/tsconfig.json', {
+      references: [
+        { path: './tsconfig.app.json' },
+        { path: './tsconfig.server.json' },
+      ],
+    });
+    writeJson(tree, 'apps/app/tsconfig.app.json', {
+      compilerOptions: { types: [] },
+      include: ['src/**/*.ts'],
+      exclude: [
+        'src/**/*.spec.ts',
+        'src/main.server.ts',
+        'src/server.ts',
+        'src/app/app.config.server.ts',
+      ],
+    });
+    writeJson(tree, 'apps/app/tsconfig.server.json', {
+      extends: './tsconfig.app.json',
+      compilerOptions: { types: ['node'] },
+      files: ['src/main.server.ts', 'src/server.ts'],
+    });
+
+    // ACT
+    await convertToRspack(tree, { project: 'app' });
+
+    // ASSERT
+    expect(tree.exists('apps/app/tsconfig.server.json')).toBe(false);
+    expect(readJson(tree, 'apps/app/tsconfig.json').references).toStrictEqual([
+      { path: './tsconfig.app.json' },
+    ]);
+    const tsConfigApp = readJson(tree, 'apps/app/tsconfig.app.json');
+    expect(tsConfigApp.exclude).toStrictEqual(['src/**/*.spec.ts']);
+    expect(tsConfigApp.files).toStrictEqual([
+      'src/main.server.ts',
+      'src/server.ts',
+    ]);
+    expect(tsConfigApp.compilerOptions.types).toStrictEqual(['node']);
+  });
+
+  it('should remove a server tsconfig reference written relative to the workspace root', async () => {
+    // ARRANGE
+    const tree = createTreeWithEmptyWorkspace();
+
+    addProjectConfiguration(tree, 'app', {
+      root: 'apps/app',
+      sourceRoot: 'apps/app/src',
+      projectType: 'application',
+      targets: {
+        build: {
+          executor: '@angular-devkit/build-angular:browser',
+          options: {
+            outputPath: 'dist/apps/app/browser',
+            index: 'apps/app/src/index.html',
+            main: 'apps/app/src/main.ts',
+            tsConfig: 'apps/app/tsconfig.app.json',
+          },
+        },
+        server: {
+          executor: '@angular-devkit/build-angular:server',
+          options: {
+            main: 'apps/app/src/server.ts',
+            tsConfig: 'apps/app/tsconfig.server.json',
+          },
+        },
+      },
+    });
+
+    writeJson(tree, 'apps/app/tsconfig.json', {
+      references: [{ path: 'apps/app/tsconfig.server.json' }],
+    });
+    writeJson(tree, 'apps/app/tsconfig.app.json', { include: ['src/**/*.ts'] });
+    writeJson(tree, 'apps/app/tsconfig.server.json', {
+      extends: './tsconfig.app.json',
+      files: ['src/main.server.ts'],
+    });
+
+    // ACT
+    await convertToRspack(tree, { project: 'app' });
+
+    // ASSERT
+    expect(readJson(tree, 'apps/app/tsconfig.json').references).toStrictEqual(
+      []
+    );
+  });
+
+  it('should add the server entries to a build tsconfig that lists its files', async () => {
+    // ARRANGE
+    const tree = createTreeWithEmptyWorkspace();
+
+    addProjectConfiguration(tree, 'app', {
+      root: 'apps/app',
+      sourceRoot: 'apps/app/src',
+      projectType: 'application',
+      targets: {
+        build: {
+          executor: '@angular-devkit/build-angular:browser',
+          options: {
+            outputPath: 'dist/apps/app/browser',
+            index: 'apps/app/src/index.html',
+            main: 'apps/app/src/main.ts',
+            tsConfig: 'apps/app/tsconfig.app.json',
+          },
+        },
+        server: {
+          executor: '@angular-devkit/build-angular:server',
+          options: {
+            main: 'apps/app/src/server.ts',
+            tsConfig: 'apps/app/tsconfig.server.json',
+          },
+        },
+      },
+    });
+
+    writeJson(tree, 'apps/app/tsconfig.json', {
+      references: [
+        { path: './tsconfig.app.json' },
+        { path: './tsconfig.server.json' },
+      ],
+    });
+    writeJson(tree, 'apps/app/tsconfig.app.json', {
+      compilerOptions: { types: [] },
+      files: ['src/main.ts'],
+      include: ['src/**/*.d.ts'],
+    });
+    writeJson(tree, 'apps/app/tsconfig.server.json', {
+      extends: './tsconfig.app.json',
+      compilerOptions: { types: ['node'] },
+      files: ['src/main.server.ts', 'server.ts'],
+    });
+
+    // ACT
+    await convertToRspack(tree, { project: 'app' });
+
+    // ASSERT
+    const tsConfigApp = readJson(tree, 'apps/app/tsconfig.app.json');
+    expect(tsConfigApp.files).toStrictEqual([
+      'src/main.ts',
+      'src/main.server.ts',
+      'server.ts',
+    ]);
+  });
+
+  it('should add the server entries to a build tsconfig that inherits its files', async () => {
+    // ARRANGE
+    const tree = createTreeWithEmptyWorkspace();
+
+    addProjectConfiguration(tree, 'app', {
+      root: 'apps/app',
+      sourceRoot: 'apps/app/src',
+      projectType: 'application',
+      targets: {
+        build: {
+          executor: '@angular-devkit/build-angular:browser',
+          options: {
+            outputPath: 'dist/apps/app/browser',
+            index: 'apps/app/src/index.html',
+            main: 'apps/app/src/main.ts',
+            tsConfig: 'apps/app/tsconfig.app.json',
+          },
+        },
+        server: {
+          executor: '@angular-devkit/build-angular:server',
+          options: {
+            main: 'apps/app/src/server.ts',
+            tsConfig: 'apps/app/tsconfig.server.json',
+          },
+        },
+      },
+    });
+
+    writeJson(tree, 'apps/app/tsconfig.json', {
+      references: [
+        { path: './tsconfig.app.json' },
+        { path: './tsconfig.server.json' },
+      ],
+    });
+    writeJson(tree, 'configs/tsconfig.shared.json', {
+      compilerOptions: { types: ['jest'] },
+      files: ['../apps/app/src/main.ts'],
+      include: ['../apps/app/src/**/*.d.ts'],
+    });
+    writeJson(tree, 'apps/app/tsconfig.app.json', {
+      extends: '../../configs/tsconfig.shared.json',
+    });
+    writeJson(tree, 'apps/app/tsconfig.server.json', {
+      extends: './tsconfig.app.json',
+      compilerOptions: { types: ['node'] },
+      files: ['src/main.server.ts', 'src/server.ts'],
+    });
+
+    // ACT
+    await convertToRspack(tree, { project: 'app' });
+
+    // ASSERT
+    const tsConfigApp = readJson(tree, 'apps/app/tsconfig.app.json');
+    expect(tsConfigApp.files).toStrictEqual([
+      'src/main.ts',
+      'src/main.server.ts',
+      'src/server.ts',
+    ]);
+    expect(tsConfigApp.compilerOptions.types).toStrictEqual(['jest', 'node']);
+    expect(readJson(tree, 'configs/tsconfig.shared.json').files).toStrictEqual([
+      '../apps/app/src/main.ts',
+    ]);
+  });
+
+  it('should add the server entries when a shared tsconfig excludes them', async () => {
+    // ARRANGE
+    const tree = createTreeWithEmptyWorkspace();
+
+    addProjectConfiguration(tree, 'app', {
+      root: 'apps/app',
+      sourceRoot: 'apps/app/src',
+      projectType: 'application',
+      targets: {
+        build: {
+          executor: '@angular-devkit/build-angular:browser',
+          options: {
+            outputPath: 'dist/apps/app/browser',
+            index: 'apps/app/src/index.html',
+            main: 'apps/app/src/main.ts',
+            tsConfig: 'apps/app/tsconfig.app.json',
+          },
+        },
+        server: {
+          executor: '@angular-devkit/build-angular:server',
+          options: {
+            main: 'apps/app/src/server.ts',
+            tsConfig: 'apps/app/tsconfig.server.json',
+          },
+        },
+      },
+    });
+
+    writeJson(tree, 'apps/app/tsconfig.json', {
+      references: [
+        { path: './tsconfig.app.json' },
+        { path: './tsconfig.server.json' },
+      ],
+    });
+    writeJson(tree, 'configs/tsconfig.shared.json', {
+      compilerOptions: { types: [] },
+      exclude: ['../apps/app/src/main.server.ts', '../apps/app/src/server.ts'],
+    });
+    writeJson(tree, 'apps/app/tsconfig.app.json', {
+      extends: '../../configs/tsconfig.shared.json',
+      include: ['src/**/*.ts'],
+    });
+    writeJson(tree, 'apps/app/tsconfig.server.json', {
+      extends: './tsconfig.app.json',
+      compilerOptions: { types: ['node'] },
+      files: ['src/main.server.ts', 'src/server.ts'],
+    });
+
+    // ACT
+    await convertToRspack(tree, { project: 'app' });
+
+    // ASSERT
+    expect(readJson(tree, 'apps/app/tsconfig.app.json').files).toStrictEqual([
+      'src/main.server.ts',
+      'src/server.ts',
+    ]);
+    expect(
+      readJson(tree, 'configs/tsconfig.shared.json').exclude
+    ).toStrictEqual([
+      '../apps/app/src/main.server.ts',
+      '../apps/app/src/server.ts',
+    ]);
+  });
+
+  it('should keep a tsconfig the build and server targets share', async () => {
+    // ARRANGE
+    const tree = createTreeWithEmptyWorkspace();
+
+    addProjectConfiguration(tree, 'app', {
+      root: 'apps/app',
+      sourceRoot: 'apps/app/src',
+      projectType: 'application',
+      targets: {
+        build: {
+          executor: '@angular-devkit/build-angular:browser',
+          options: {
+            outputPath: 'dist/apps/app/browser',
+            index: 'apps/app/src/index.html',
+            main: 'apps/app/src/main.ts',
+            tsConfig: 'apps/app/tsconfig.app.json',
+          },
+        },
+        server: {
+          executor: '@angular-devkit/build-angular:server',
+          options: {
+            main: 'apps/app/src/server.ts',
+            tsConfig: './apps/app/tsconfig.app.json',
+          },
+        },
+      },
+    });
+
+    writeJson(tree, 'apps/app/tsconfig.json', {
+      references: [{ path: './tsconfig.app.json' }],
+    });
+    writeJson(tree, 'apps/app/tsconfig.app.json', {
+      compilerOptions: { types: ['node'] },
+      include: ['src/**/*.ts'],
+    });
+
+    // ACT
+    await convertToRspack(tree, { project: 'app' });
+
+    // ASSERT
+    expect(readJson(tree, 'apps/app/tsconfig.app.json')).toStrictEqual({
+      compilerOptions: { types: ['node'] },
+      include: ['src/**/*.ts'],
+    });
+    expect(readJson(tree, 'apps/app/tsconfig.json').references).toStrictEqual([
+      { path: './tsconfig.app.json' },
+    ]);
+  });
+
+  it('should fold a tsconfig shared with a build configuration into the other build tsconfigs', async () => {
+    // ARRANGE
+    const tree = createTreeWithEmptyWorkspace();
+
+    addProjectConfiguration(tree, 'app', {
+      root: 'apps/app',
+      sourceRoot: 'apps/app/src',
+      projectType: 'application',
+      targets: {
+        build: {
+          executor: '@angular-devkit/build-angular:browser',
+          options: {
+            outputPath: 'dist/apps/app/browser',
+            index: 'apps/app/src/index.html',
+            main: 'apps/app/src/main.ts',
+            tsConfig: 'apps/app/tsconfig.app.json',
+          },
+          configurations: {
+            production: { tsConfig: 'apps/app/tsconfig.server.json' },
+          },
+        },
+        server: {
+          executor: '@angular-devkit/build-angular:server',
+          options: {
+            main: 'apps/app/src/server.ts',
+            tsConfig: 'apps/app/tsconfig.server.json',
+          },
+        },
+      },
+    });
+
+    writeJson(tree, 'apps/app/tsconfig.json', {
+      references: [
+        { path: './tsconfig.app.json' },
+        { path: './tsconfig.server.json' },
+      ],
+    });
+    writeJson(tree, 'apps/app/tsconfig.app.json', {
+      compilerOptions: { types: [] },
+      include: ['src/**/*.ts'],
+      exclude: ['src/main.server.ts', 'src/server.ts'],
+    });
+    writeJson(tree, 'apps/app/tsconfig.server.json', {
+      extends: './tsconfig.app.json',
+      compilerOptions: { types: ['node'] },
+      files: ['src/main.server.ts', 'src/server.ts'],
+    });
+
+    // ACT
+    await convertToRspack(tree, { project: 'app' });
+
+    // ASSERT
+    const tsConfigApp = readJson(tree, 'apps/app/tsconfig.app.json');
+    expect(tsConfigApp.exclude).toStrictEqual([]);
+    expect(tsConfigApp.compilerOptions.types).toStrictEqual(['node']);
+    expect(tree.exists('apps/app/tsconfig.server.json')).toBe(true);
+    expect(readJson(tree, 'apps/app/tsconfig.json').references).toStrictEqual([
+      { path: './tsconfig.app.json' },
+      { path: './tsconfig.server.json' },
+    ]);
+  });
+
+  it('should fold the server tsconfig into the tsconfig of every build configuration', async () => {
+    // ARRANGE
+    const tree = createTreeWithEmptyWorkspace();
+
+    addProjectConfiguration(tree, 'app', {
+      root: 'apps/app',
+      sourceRoot: 'apps/app/src',
+      projectType: 'application',
+      targets: {
+        build: {
+          executor: '@angular-devkit/build-angular:browser',
+          options: {
+            outputPath: 'dist/apps/app/browser',
+            index: 'apps/app/src/index.html',
+            main: 'apps/app/src/main.ts',
+            tsConfig: 'apps/app/tsconfig.app.json',
+          },
+          configurations: {
+            production: { tsConfig: 'apps/app/tsconfig.prod.json' },
+          },
+        },
+        server: {
+          executor: '@angular-devkit/build-angular:server',
+          options: {
+            main: 'apps/app/src/server.ts',
+            tsConfig: 'apps/app/tsconfig.server.json',
+          },
+        },
+      },
+    });
+
+    writeJson(tree, 'apps/app/tsconfig.json', {
+      references: [
+        { path: './tsconfig.app.json' },
+        { path: './tsconfig.server.json' },
+      ],
+    });
+    const buildTsConfig = {
+      compilerOptions: { types: [] },
+      include: ['src/**/*.ts'],
+      exclude: ['src/main.server.ts', 'src/server.ts'],
+    };
+    writeJson(tree, 'apps/app/tsconfig.app.json', buildTsConfig);
+    writeJson(tree, 'apps/app/tsconfig.prod.json', buildTsConfig);
+    writeJson(tree, 'apps/app/tsconfig.server.json', {
+      extends: './tsconfig.app.json',
+      compilerOptions: { types: ['node'] },
+      files: ['src/main.server.ts', 'src/server.ts'],
+    });
+
+    // ACT
+    await convertToRspack(tree, { project: 'app' });
+
+    // ASSERT
+    const tsConfigProd = readJson(tree, 'apps/app/tsconfig.prod.json');
+    expect(tsConfigProd.exclude).toStrictEqual([]);
+    expect(tsConfigProd.compilerOptions.types).toStrictEqual(['node']);
+  });
+
+  it('should fold a server tsconfig that does not sit next to the build tsconfig', async () => {
+    // ARRANGE
+    const tree = createTreeWithEmptyWorkspace();
+
+    addProjectConfiguration(tree, 'app', {
+      root: 'apps/app',
+      sourceRoot: 'apps/app/src',
+      projectType: 'application',
+      targets: {
+        build: {
+          executor: '@angular-devkit/build-angular:browser',
+          options: {
+            outputPath: 'dist/apps/app/browser',
+            index: 'apps/app/src/index.html',
+            main: 'apps/app/src/main.ts',
+            tsConfig: 'apps/app/tsconfig.app.json',
+          },
+        },
+        server: {
+          executor: '@angular-devkit/build-angular:server',
+          options: {
+            main: 'apps/app/src/server.ts',
+            tsConfig: 'apps/app/config/tsconfig.server.json',
+          },
+        },
+      },
+    });
+
+    writeJson(tree, 'apps/app/tsconfig.json', {
+      references: [
+        { path: './tsconfig.app.json' },
+        { path: './config/tsconfig.server.json' },
+      ],
+    });
+    writeJson(tree, 'apps/app/tsconfig.app.json', {
+      compilerOptions: { types: [] },
+      include: ['src/**/*.ts'],
+      exclude: ['src/main.server.ts', 'src/server.ts'],
+    });
+    writeJson(tree, 'apps/app/config/tsconfig.server.json', {
+      extends: '../tsconfig.app.json',
+      compilerOptions: { types: ['node'] },
+      files: ['../src/main.server.ts', '../src/server.ts'],
+    });
+
+    // ACT
+    await convertToRspack(tree, { project: 'app' });
+
+    // ASSERT
+    expect(tree.exists('apps/app/config/tsconfig.server.json')).toBe(false);
+    const tsConfigApp = readJson(tree, 'apps/app/tsconfig.app.json');
+    expect(tsConfigApp.exclude).toStrictEqual([]);
+    expect(tsConfigApp.files).toStrictEqual([
+      'src/main.server.ts',
+      'src/server.ts',
+    ]);
+  });
+
   it('should normalize paths to libs in workspace correctly', async () => {
     // ARRANGE
     const tree = createTreeWithEmptyWorkspace();
@@ -365,10 +946,8 @@ describe('convert-to-rspack', () => {
     expect(updatedProject.targets.serve).not.toBeDefined();
   });
 
-  it('should convert an angular webpack application with custom webpack config function to rspack', async () => {
-    // ARRANGE
+  it('should refuse a project using a module federation executor', async () => {
     const tree = createTreeWithEmptyWorkspace();
-
     addProjectConfiguration(tree, 'app', {
       root: 'apps/app',
       sourceRoot: 'apps/app/src',
@@ -378,17 +957,35 @@ describe('convert-to-rspack', () => {
           executor: '@nx/angular:webpack-browser',
           options: {
             outputPath: 'dist/apps/app',
-            index: 'apps/app/src/index.html',
             main: 'apps/app/src/main.ts',
-            polyfills: ['tslib'],
             tsConfig: 'apps/app/tsconfig.app.json',
-            assets: [
-              'apps/app/src/favicon.ico',
-              'apps/app/src/assets',
-              { input: 'apps/app/public', glob: '**/*' },
-            ],
-            styles: ['apps/app/src/styles.scss'],
-            scripts: [],
+          },
+        },
+        serve: {
+          executor: '@nx/angular:module-federation-dev-server',
+          options: { buildTarget: 'app:build' },
+        },
+      },
+    });
+
+    await expect(convertToRspack(tree, { project: 'app' })).rejects.toThrow(
+      "The project app is using Module Federation. At the moment, we don't support migrating projects that use Module Federation."
+    );
+  });
+
+  it('should refuse a project whose custom webpack config uses @nx/module-federation', async () => {
+    const tree = createTreeWithEmptyWorkspace();
+    addProjectConfiguration(tree, 'app', {
+      root: 'apps/app',
+      sourceRoot: 'apps/app/src',
+      projectType: 'application',
+      targets: {
+        build: {
+          executor: '@nx/angular:webpack-browser',
+          options: {
+            outputPath: 'dist/apps/app',
+            main: 'apps/app/src/main.ts',
+            tsConfig: 'apps/app/tsconfig.app.json',
             customWebpackConfig: {
               path: 'apps/app/webpack.config.js',
             },
@@ -396,88 +993,20 @@ describe('convert-to-rspack', () => {
         },
       },
     });
-    writeJson(tree, 'apps/app/tsconfig.json', {});
-    tree.write(
-      'apps/app/module-federation.config.js',
-      `
-    module.exports = {
-      name: 'app',
-      exposes: {
-        './app': './src/app/index.ts',
-      },
-      remotes: ['remote1', 'remote2'],
-    };
-    `
-    );
     tree.write(
       'apps/app/webpack.config.js',
-      `
-    const { withModuleFederation } = require('@nx/module-federation/angular');
-    const config = require('./module-federation.config');
-    module.exports = withModuleFederation(config, { dts: false });
-    `
+      `const { withModuleFederation } = require('@nx/module-federation/angular');
+const config = require('./module-federation.config');
+module.exports = withModuleFederation(config, { dts: false });
+`
     );
 
-    // ACT
-    await convertToRspack(tree, { project: 'app' });
-
-    // ASSERT
-    const updatedProject = readProjectConfiguration(tree, 'app');
-    expect(tree.read('apps/app/rspack.config.ts', 'utf-8'))
-      .toMatchInlineSnapshot(`
-      "import { createConfig } from '@nx/angular-rspack';
-      import baseWebpackConfig from './webpack.config';
-      import webpackMerge from 'webpack-merge';
-
-      export default async () => {
-        const baseConfig = await createConfig({
-          options: {
-            root: __dirname,
-
-            outputPath: {
-              base: '../../dist/apps/app',
-            },
-            index: './src/index.html',
-            browser: './src/main.ts',
-            polyfills: ['tslib'],
-            tsConfig: './tsconfig.app.json',
-            assets: [
-              './src/favicon.ico',
-              './src/assets',
-              {
-                input: './public',
-                glob: '**/*',
-              },
-            ],
-            styles: ['./src/styles.scss'],
-            scripts: [],
-          },
-        });
-        return webpackMerge(baseConfig[0], baseWebpackConfig);
-      };
-      "
-    `);
-    expect(tree.read('apps/app/webpack.config.js', 'utf-8'))
-      .toMatchInlineSnapshot(`
-      "const {
-        NxModuleFederationPlugin,
-        NxModuleFederationDevServerPlugin,
-      } = require('@nx/module-federation/rspack');
-      const config = require('./module-federation.config');
-
-      module.exports = {
-        plugins: [
-          new NxModuleFederationPlugin(
-            { config },
-            {
-              dts: false,
-            },
-          ),
-          new NxModuleFederationDevServerPlugin({ config }),
-        ],
-      };
-      "
-    `);
+    await expect(convertToRspack(tree, { project: 'app' })).rejects.toThrow(
+      'The project app is using Module Federation.'
+    );
+    expect(tree.read('apps/app/webpack.config.js', 'utf-8')).toContain(
+      'withModuleFederation(config'
+    );
   });
 
   it('should convert an angular webpack application with custom webpack config to rspack', async () => {
@@ -526,9 +1055,8 @@ describe('convert-to-rspack', () => {
     );
     tree.write('apps/app/webpack.config.js', ``);
 
-    jest
-      .spyOn(_configUtils, 'loadConfigFile')
-      .mockImplementation(async (path) => {
+    vi.spyOn(_configUtils, 'loadConfigFile').mockImplementation(
+      async (path) => {
         return {
           default: {
             module: {
@@ -541,13 +1069,13 @@ describe('convert-to-rspack', () => {
             },
           },
         };
-      });
+      }
+    );
 
     // ACT
     await convertToRspack(tree, { project: 'app' });
 
     // ASSERT
-    const updatedProject = readProjectConfiguration(tree, 'app');
     expect(tree.read('apps/app/rspack.config.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
       "import { createConfig } from '@nx/angular-rspack';
@@ -1095,6 +1623,7 @@ describe('convert-to-rspack', () => {
             },
             serve: {
               continuous: true,
+              readyWhen: { signal: true },
               syncGenerators: ['@nx/js:typescript-sync'],
               executor: '@angular-devkit/build-angular:dev-server',
               options: {},
@@ -1191,6 +1720,7 @@ describe('convert-to-rspack', () => {
             },
             serve: {
               parallelism: false,
+              readyWhen: { signal: true, timeout: 120000 },
               executor: '@angular-devkit/build-angular:dev-server',
               options: {},
             },
@@ -1203,6 +1733,7 @@ describe('convert-to-rspack', () => {
         const updatedProject = readProjectConfiguration(tree, 'app');
         expect(updatedProject.targets.serve).toStrictEqual({
           parallelism: false,
+          readyWhen: { signal: true, timeout: 120000 },
         });
       });
 

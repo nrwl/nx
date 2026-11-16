@@ -1,4 +1,4 @@
-import { logShowProjectCommand } from '@nx/devkit/internal';
+import { logShowProjectCommand, PackageJson } from '@nx/devkit/internal';
 import {
   formatFiles,
   GeneratorCallback,
@@ -25,7 +25,6 @@ import { Schema } from './schema';
 import { ensureDependencies } from '../../utils/ensure-dependencies';
 import { assertSupportedReactNativeVersion } from '../../utils/versions';
 import { syncDeps } from '../../executors/sync-deps/sync-deps.impl';
-import { PackageJson } from 'nx/src/utils/package-json';
 import {
   addProjectToTsSolutionWorkspace,
   shouldConfigureTsSolutionSetup,
@@ -37,7 +36,6 @@ export async function reactNativeApplicationGenerator(
   schema: Schema
 ): Promise<GeneratorCallback> {
   return await reactNativeApplicationGeneratorInternal(host, {
-    addPlugin: false,
     useProjectJson: true,
     ...schema,
   });
@@ -52,14 +50,12 @@ export async function reactNativeApplicationGeneratorInternal(
   const tasks: GeneratorCallback[] = [];
   const addTsPlugin = shouldConfigureTsSolutionSetup(
     host,
-    schema.addPlugin,
     schema.useTsSolution
   );
   const jsInitTask = await jsInitGenerator(host, {
     ...schema,
     skipFormat: true,
     addTsPlugin,
-    formatter: schema.formatter,
     platform: 'web',
   });
   tasks.push(jsInitTask);
@@ -97,7 +93,6 @@ export async function reactNativeApplicationGeneratorInternal(
     options.appProjectRoot,
     options.js,
     options.skipPackageJson,
-    options.addPlugin,
     'tsconfig.app.json'
   );
   tasks.push(jestTask);

@@ -1,12 +1,14 @@
 import {
   cleanupProject,
+  configureTargetOptions,
+  createRsbuildPortConfig,
   killPorts,
   newProject,
   reservePort,
   runCLI,
-  runE2ETests,
   uniq,
   updateFile,
+  shouldRunPlaywrightTests,
 } from '@nx/e2e-utils';
 
 describe('Vue Plugin', () => {
@@ -40,16 +42,23 @@ describe('Vue Plugin', () => {
       `Successfully ran target build for project ${app}`
     );
 
-    if (runE2ETests('playwright')) {
+    if (await shouldRunPlaywrightTests()) {
       const availablePort = await reservePort();
 
       updateFile(`${app}-e2e/playwright.config.mts`, (content) => {
         return content
           .replace(
-            /const baseURL = process\.env\['BASE_URL'\] \|\| '[^']*';/,
-            `const baseURL = process.env['BASE_URL'] || 'http://localhost:${availablePort}';`
+            /(const baseURL = .*)'[^']*'(\)?;)/,
+            `$1'http://localhost:${availablePort}'$2`
           )
-          .replace(/url: '[^']*'/, `url: 'http://localhost:${availablePort}'`);
+          .replace(
+            /const webServerAddress = [^;]*;/,
+            `const webServerAddress = getReadyUrl('http://localhost:${availablePort}');`
+          )
+          .replace(
+            /(url: (?:getReadyUrl\()?)'[^']*'/,
+            `$1'http://localhost:${availablePort}'`
+          );
       });
 
       updateFile(`${app}/vite.config.mts`, (content) => {
@@ -62,9 +71,16 @@ describe('Vue Plugin', () => {
         );
       });
 
-      const e2eResults = runCLI(`e2e ${app}-e2e`);
-      expect(e2eResults).toContain('Successfully ran target e2e');
-      expect(await killPorts(availablePort)).toBeTruthy();
+      const restoreServerOptions = configureTargetOptions(['dev', 'preview'], {
+        strictPort: true,
+      });
+      try {
+        const e2eResults = runCLI(`e2e ${app}-e2e`);
+        expect(e2eResults).toContain('Successfully ran target e2e');
+        expect(await killPorts(availablePort)).toBeTruthy();
+      } finally {
+        restoreServerOptions();
+      }
     }
   }, 200_000);
 
@@ -82,30 +98,35 @@ describe('Vue Plugin', () => {
       `Successfully ran target build for project ${app}`
     );
 
-    if (runE2ETests('playwright')) {
+    if (await shouldRunPlaywrightTests()) {
       const availablePort = await reservePort();
 
       updateFile(`${app}-e2e/playwright.config.mts`, (content) => {
         return content
           .replace(
-            /const baseURL = process\.env\['BASE_URL'\] \|\| '[^']*';/,
-            `const baseURL = process.env['BASE_URL'] || 'http://localhost:${availablePort}';`
+            /(const baseURL = .*)'[^']*'(\)?;)/,
+            `$1'http://localhost:${availablePort}'$2`
           )
-          .replace(/url: '[^']*'/, `url: 'http://localhost:${availablePort}'`);
+          .replace(
+            /(url: (?:getReadyUrl\()?)'[^']*'/,
+            `$1'http://localhost:${availablePort}'`
+          );
       });
 
-      updateFile(`${app}/rsbuild.config.ts`, (content) => {
-        return content.replace(
-          /server:\s*{[^}]*}/,
-          `server: {
-    port: ${availablePort},
-  }`
-        );
+      const config = createRsbuildPortConfig(
+        `${app}/rsbuild.config.ts`,
+        availablePort
+      );
+      const restoreServerOptions = configureTargetOptions(['dev', 'preview'], {
+        config,
       });
-
-      const e2eResults = runCLI(`e2e ${app}-e2e`);
-      expect(e2eResults).toContain('Successfully ran target e2e');
-      expect(await killPorts(availablePort)).toBeTruthy();
+      try {
+        const e2eResults = runCLI(`e2e ${app}-e2e`);
+        expect(e2eResults).toContain('Successfully ran target e2e');
+        expect(await killPorts(availablePort)).toBeTruthy();
+      } finally {
+        restoreServerOptions();
+      }
     }
   }, 200_000);
 

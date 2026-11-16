@@ -8,9 +8,11 @@ import {
   killProcessAndPorts,
   fileExists,
   checkFilesExist,
-  runE2ETests,
+  reservePort,
   updateFile,
   readJson,
+  shouldRunCypressTests,
+  shouldRunPlaywrightTests,
 } from '@nx/e2e-utils';
 
 describe('@nx/react-native', () => {
@@ -91,7 +93,7 @@ describe('@nx/react-native', () => {
 
   it('should start the app', async () => {
     let childProcess: ChildProcess;
-    const port = 8082;
+    const port = await reservePort();
 
     try {
       childProcess = await runCommandUntil(
@@ -120,7 +122,7 @@ describe('@nx/react-native', () => {
 
   it('should serve', async () => {
     let childProcess: ChildProcess;
-    const port = 8081;
+    const port = await reservePort();
 
     try {
       childProcess = await runCommandUntil(
@@ -144,7 +146,7 @@ describe('@nx/react-native', () => {
   });
 
   it('should run e2e for cypress', async () => {
-    if (runE2ETests()) {
+    if (await shouldRunCypressTests()) {
       expect(() => runCLI(`e2e ${appName}-e2e`)).not.toThrow();
 
       expect(() =>
@@ -202,7 +204,7 @@ describe('@nx/react-native', () => {
       `generate @nx/react:application ${appName2} --directory=apps/${appName2} --bundler=vite --e2eTestRunner=playwright --install=false --no-interactive --unitTestRunner=jest --linter=eslint`
     );
     expect(() => runCLI(`build ${appName2}`)).not.toThrow();
-    if (runE2ETests()) {
+    if (await shouldRunPlaywrightTests()) {
       expect(() => runCLI(`e2e ${appName2}-e2e`)).not.toThrow();
       // port and process cleanup
       try {

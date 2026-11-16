@@ -6,23 +6,25 @@ import {
   runTasksInSerial,
   Tree,
 } from '@nx/devkit';
-import { Linter, LinterType, lintProjectGenerator } from '@nx/eslint';
+import { LinterType } from '@nx/js';
 import {
   javaScriptOverride,
   addExtendsToLintConfig,
   addOverrideToLintConfig,
   addPluginsToLintConfig,
   addPredefinedConfigToFlatLintConfig,
+  addTypedLintingToFlatConfig,
   findEslintFile,
   isEslintConfigSupported,
   useFlatConfig,
 } from '@nx/eslint/internal';
 import { eslintPluginPlaywrightVersion } from './versions';
+import { addLintingToProject } from '@nx/js/internal';
 
 export interface PlaywrightLinterOptions {
   project: string;
-  linter: Linter | LinterType;
-  setParserOptionsProject: boolean;
+  linter: LinterType;
+  enableTypedLinting?: boolean;
   skipPackageJson: boolean;
   rootProject: boolean;
   js?: boolean;
@@ -30,7 +32,6 @@ export interface PlaywrightLinterOptions {
    * Directory from the project root, where the playwright files will be located.
    **/
   directory: string;
-  addPlugin?: boolean;
 }
 
 export async function addLinterToPlaywrightProject(
@@ -45,22 +46,26 @@ export async function addLinterToPlaywrightProject(
   const projectConfig = readProjectConfiguration(tree, options.project);
 
   const eslintFile = findEslintFile(tree, projectConfig.root);
-  if (!eslintFile) {
+  const { enableTypedLinting } = options;
+
+  // An existing ESLint config means the project is already registered, so skip
+  // straight to the Playwright-specific shaping below.
+  if (options.linter !== 'eslint' || !eslintFile) {
     tasks.push(
-      await lintProjectGenerator(tree, {
+      await addLintingToProject(tree, {
         project: options.project,
         linter: options.linter,
-        skipFormat: true,
         tsConfigPaths: [joinPathFragments(projectConfig.root, 'tsconfig.json')],
-        setParserOptionsProject: options.setParserOptionsProject,
+        enableTypedLinting,
         skipPackageJson: options.skipPackageJson,
         rootProject: options.rootProject,
-        addPlugin: options.addPlugin,
       })
     );
   }
 
-  if (!options.linter || options.linter !== 'eslint') {
+  // Everything below configures ESLint — predefined configs, `extends`, ignore
+  // entries — which have no equivalent in other linters.
+  if (options.linter !== 'eslint') {
     return runTasksInSerial(...tasks);
   }
 
@@ -96,6 +101,13 @@ export async function addLinterToPlaywrightProject(
         files: ['*.ts', '*.js'],
         rules: {},
       });
+      // `lintProjectGenerator` only runs when the project has no ESLint config
+      // (it already emits the projectService block in that case). For an
+      // existing flat config it didn't run, so emit the block here when typed
+      // linting is requested.
+      if (eslintFile && enableTypedLinting) {
+        addTypedLintingToFlatConfig(tree, projectConfig.root);
+      }
     } else {
       const addExtendsTask = addExtendsToLintConfig(
         tree,
@@ -110,11 +122,12 @@ export async function addLinterToPlaywrightProject(
       }
       addOverrideToLintConfig(tree, projectConfig.root, {
         files: [`${options.directory}/**/*.{ts,js,tsx,jsx}`],
-        parserOptions: !options.setParserOptionsProject
-          ? undefined
-          : {
-              project: `${projectConfig.root}/tsconfig.*?.json`,
-            },
+        // Only emit `parserOptions.project` here on the legacy `.eslintrc`
+        // stack. Flat configs use `parserOptions.projectService` emitted by
+        // `lintProjectGenerator`.
+        parserOptions: enableTypedLinting
+          ? { project: `${projectConfig.root}/tsconfig.*?.json` }
+          : undefined,
         rules: {},
       });
     }

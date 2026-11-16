@@ -1,20 +1,30 @@
+# The noreply GIT_*_EMAIL lets nx release resolve GitHub usernames without a network lookup
 common-env-vars: &common-env-vars
-  GIT_AUTHOR_EMAIL: test@test.com
+  NX_E2E_PORT_POOL: '10000-32767'
+  GIT_AUTHOR_EMAIL: test@users.noreply.github.com
   GIT_AUTHOR_NAME: Test
-  GIT_COMMITTER_EMAIL: test@test.com
+  GIT_COMMITTER_EMAIL: test@users.noreply.github.com
   GIT_COMMITTER_NAME: Test
   SELECTED_PM: 'pnpm'
   NX_NATIVE_LOGGING: 'nx::native::db'
+  # The release profile enables incremental compilation for local dev (see the
+  # root Cargo.toml). Agents build each task once from a cold cache, so
+  # incremental buys nothing here and only inflates the cargo cache.
+  CARGO_INCREMENTAL: '0'
   # Pin corepack to the pnpm version from packageManager. Without this, corepack
   # falls back to "latest" in directories that have no packageManager field
-  # (e.g. e2e temp dirs created by create-nx-workspace), pulling pnpm 11 and
-  # breaking install. Same treatment as .github/workflows/{ci,e2e-matrix}.yml.
+  # (e.g. e2e temp dirs created by create-nx-workspace) instead of the repo's
+  # pinned pnpm. Same treatment as .github/workflows/{ci,e2e-matrix}.yml, which
+  # pair it with `corepack prepare --activate` (see the init step below).
   COREPACK_DEFAULT_TO_LATEST: '0'
   # These are need for build and link validation for next.js and astro apps
   NEXT_PUBLIC_ASTRO_URL: 'https://master--nx-docs.netlify.app'
   NX_DEV_URL: 'https://canary.nx.dev'
   # Cap gradle workers so co-located e2e tasks don't oversubscribe the agent.
   GRADLE_OPTS: '-Dorg.gradle.workers.max=2'
+  NX_CLOUD_USE_ULTRACACHE: 'true'
+  # V4 agents restore dependency artifacts in the background instead of holding the work loop.
+  NX_CLOUD_AGENT_BACKGROUND_ARTIFACT_RESTORE: 'true'
 
 common-init-steps: &common-init-steps
   - name: Checkout
@@ -31,11 +41,20 @@ common-init-steps: &common-init-steps
   - name: Setup toolchains
     uses: 'nrwl/nx-cloud-workflows/v6/workflow-steps/install-mise/main.yaml'
 
+  # Make the repo's pinned pnpm corepack's default so e2e temp dirs (no
+  # packageManager field) resolve it too, instead of corepack's bundled
+  # last-known-good version.
+  - name: Activate repo pnpm via corepack
+    script: |
+      corepack enable
+      corepack prepare --activate
+
   - name: Verify toolchain versions
     script: |
       echo "mise:   $(mise --version)"
       echo "node:   $(node --version)"
       echo "pnpm:   $(pnpm --version)"
+      echo "pnpm outside repo: $(cd $(mktemp -d) && pnpm --version)"
       echo "bun:    $(bun --version)"
       echo "rust:   $(rustc --version) - $(cargo --version)"
       echo "dotnet: $(dotnet --version)"
@@ -72,7 +91,7 @@ common-init-steps: &common-init-steps
 
   - name: Install hyperfine
     script: |
-      cargo install hyperfine
+      cargo install hyperfine --locked
 
   - name: Setup gradle
     script: |
@@ -85,18 +104,18 @@ common-init-steps: &common-init-steps
 
   - name: Configure git metadata (needed for lerna smoke tests)
     script: |
-      git config --global user.email test@test.com
+      git config --global user.email test@users.noreply.github.com
       git config --global user.name "Test Test"
 
 launch-templates:
   linux-large:
     resource-class: 'docker_linux_amd64/large'
-    image: 'us-east1-docker.pkg.dev/nxcloudoperations/nx-cloud/nx-agents-base-images:ubuntu22.04-node20.19-v1'
+    image: 'ubuntu22.04-node20.19-v1'
     env: *common-env-vars
     init-steps: *common-init-steps
 
   linux-extra-large:
     resource-class: 'docker_linux_amd64/extra_large'
-    image: 'us-east1-docker.pkg.dev/nxcloudoperations/nx-cloud/nx-agents-base-images:ubuntu22.04-node20.19-v1'
+    image: 'ubuntu22.04-node20.19-v1'
     env: *common-env-vars
     init-steps: *common-init-steps

@@ -1,4 +1,4 @@
-import 'nx/src/internal-testing-utils/mock-project-graph';
+import '@nx/devkit/internal-testing-utils/mock-project-graph';
 
 import {
   getProjects,
@@ -12,6 +12,7 @@ import {
   updateJson,
   updateNxJson,
 } from '@nx/devkit';
+import { withPnpm } from '@nx/devkit/internal-testing-utils';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { backwardCompatibleVersions } from '../../utils/backward-compatible-versions';
 import { createApp } from '../../utils/nx-devkit/testing';
@@ -21,10 +22,10 @@ import { generateTestApplication, generateTestLibrary } from '../utils/testing';
 import { Schema } from './schema';
 
 let projectGraph: ProjectGraph;
-jest.mock('@nx/devkit', () => {
+vi.mock('@nx/devkit', async () => {
   return {
-    ...jest.requireActual('@nx/devkit'),
-    createProjectGraphAsync: jest.fn().mockImplementation(() => projectGraph),
+    ...(await vi.importActual<any>('@nx/devkit')),
+    createProjectGraphAsync: vi.fn().mockImplementation(() => projectGraph),
   };
 });
 
@@ -63,6 +64,37 @@ describe('lib', () => {
     } else {
       process.env.ESLINT_USE_FLAT_CONFIG = envBackup;
     }
+  });
+
+  describe('pnpm 11 build scripts', () => {
+    it('should record the decisions ng-packagr pulls in for a buildable library', async () => {
+      await withPnpm(tree, '11.2.2', () =>
+        runLibraryGeneratorWithOpts({
+          buildable: true,
+          unitTestRunner: UnitTestRunner.None,
+          linter: 'none',
+        })
+      );
+
+      const pnpmWorkspace = tree.read('pnpm-workspace.yaml', 'utf-8');
+      expect(pnpmWorkspace).toMatch(/['"]?esbuild['"]?: false/);
+      expect(pnpmWorkspace).toMatch(/['"]@parcel\/watcher['"]: false/);
+    });
+
+    it('should record the decisions @angular/build pulls in for a vitest library', async () => {
+      await withPnpm(tree, '11.2.2', () =>
+        runLibraryGeneratorWithOpts({
+          unitTestRunner: UnitTestRunner.VitestAnalog,
+          linter: 'none',
+        })
+      );
+
+      const pnpmWorkspace = tree.read('pnpm-workspace.yaml', 'utf-8');
+      expect(pnpmWorkspace).toMatch(/['"]?esbuild['"]?: false/);
+      expect(pnpmWorkspace).toMatch(/['"]?lmdb['"]?: false/);
+      expect(pnpmWorkspace).toMatch(/['"]?msgpackr-extract['"]?: false/);
+      expect(pnpmWorkspace).toMatch(/['"]@parcel\/watcher['"]: false/);
+    });
   });
 
   it('should run the library generator without erroring if the directory has a trailing slash', async () => {
@@ -195,6 +227,9 @@ describe('lib', () => {
       expect(packageJson.devDependencies['ng-packagr']).toBeDefined();
       expect(packageJson.devDependencies['postcss']).toBeDefined();
       expect(packageJson.devDependencies['autoprefixer']).toBeDefined();
+
+      const libPackageJson = readJson(tree, 'my-lib/package.json');
+      expect(libPackageJson.private).toBeUndefined();
     });
 
     it('should update package.json when buildable', async () => {
@@ -209,6 +244,7 @@ describe('lib', () => {
 
       const libPackageJson = readJson(tree, 'my-lib/package.json');
       expect(libPackageJson.dependencies?.['tslib']).toBeFalsy();
+      expect(libPackageJson.private).toBe(true);
     });
 
     it('should create project configuration', async () => {
@@ -222,7 +258,13 @@ describe('lib', () => {
       const json = readProjectConfiguration(tree, 'my-lib');
       expect(json.root).toEqual('my-lib');
       expect(json.targets.build).toBeDefined();
-      expect(json.targets.test).toBeDefined();
+      // The test target comes from the inferred `@nx/jest/plugin`.
+      expect(json.targets.test).toBeUndefined();
+      expect(
+        readNxJson(tree).plugins.map((p) =>
+          typeof p === 'string' ? p : p.plugin
+        )
+      ).toContain('@nx/jest/plugin');
     });
 
     it('should not generate a module file and index.ts should be empty', async () => {
@@ -823,14 +865,8 @@ describe('lib', () => {
             imports: [
               BrowserModule,
               RouterModule.forRoot([
-                {
-                  path: 'my-lib',
-                  loadChildren: () => import('@proj/my-lib').then((m) => m.MyLibModule),
-                },
-                {
-                  path: 'my-lib2',
-                  loadChildren: () => import('@proj/my-lib2').then((m) => m.MyLib2Module),
-                },
+                { path: 'my-lib', loadChildren: () => import('@proj/my-lib').then((m) => m.MyLibModule) },
+                { path: 'my-lib2', loadChildren: () => import('@proj/my-lib2').then((m) => m.MyLib2Module) },
               ]),
             ],
             declarations: [App],
@@ -1157,6 +1193,79 @@ describe('lib', () => {
   });
 
   describe('--linter', () => {
+    // `linter` has neither a schema default nor an in-code default, so leaving
+    // it unset follows the workspace instead of hardcoding ESLint.
+    describe('workspace detection', () => {
+      const installOxlint = () =>
+        updateJson(tree, 'package.json', (json) => {
+          json.devDependencies = {
+            ...json.devDependencies,
+            oxlint: '^1.70.0',
+          };
+          return json;
+        });
+
+      // The key must be ABSENT, not `undefined`. `normalizeOptions` spreads the
+      // caller's schema over its defaults, so a present-but-undefined `linter`
+      // overrides them and silently skips the code path the CLI actually takes.
+      const runWithoutLinter = () =>
+        generateTestLibrary(tree, {
+          directory: 'my-lib',
+          publishable: false,
+          buildable: false,
+          skipFormat: true,
+          unitTestRunner: UnitTestRunner.Jest,
+          strict: true,
+          standalone: false,
+        } as Schema);
+
+      it('should set up oxlint when the workspace already uses it', async () => {
+        installOxlint();
+
+        await runWithoutLinter();
+
+        expect(tree.exists('my-lib/.oxlintrc.json')).toBe(true);
+        expect(
+          readJson(tree, 'package.json').devDependencies['@nx/eslint']
+        ).toBeUndefined();
+      });
+
+      it('should set up eslint when the workspace already uses it', async () => {
+        updateJson(tree, 'package.json', (json) => {
+          json.devDependencies = { ...json.devDependencies, eslint: '^9.0.0' };
+          return json;
+        });
+
+        await runWithoutLinter();
+
+        expect(tree.exists('my-lib/.oxlintrc.json')).toBe(false);
+        expect(
+          readJson(tree, 'package.json').devDependencies['@nx/eslint']
+        ).toBeDefined();
+      });
+
+      // `detectLinters` comes back empty for a workspace with no linter, so an
+      // opt-out is preserved rather than having ESLint inferred for it.
+      it('should set up no linter when the workspace has none', async () => {
+        await runWithoutLinter();
+
+        expect(tree.exists('my-lib/.oxlintrc.json')).toBe(false);
+        const { devDependencies = {} } = readJson(tree, 'package.json');
+        expect(devDependencies['@nx/eslint']).toBeUndefined();
+      });
+
+      it('should let an explicit linter win over detection', async () => {
+        installOxlint();
+
+        await runLibraryGeneratorWithOpts({ linter: 'eslint' });
+
+        expect(tree.exists('my-lib/.oxlintrc.json')).toBe(false);
+        expect(
+          readJson(tree, 'package.json').devDependencies['@nx/eslint']
+        ).toBeDefined();
+      });
+    });
+
     describe('eslint', () => {
       it('should add valid eslint JSON configuration which extends from Nx presets (flat config)', async () => {
         tree.write('eslint.config.cjs', '');
@@ -1207,12 +1316,12 @@ describe('lib', () => {
         `);
       });
 
-      it('should set parserOptions.project when enabled (flat config)', async () => {
+      it('should enable typed linting via projectService (flat config)', async () => {
         tree.write('eslint.config.cjs', '');
 
         await runLibraryGeneratorWithOpts({
           linter: 'eslint',
-          setParserOptionsProject: true,
+          enableTypedLinting: true,
         });
 
         const eslintConfig = tree.read('my-lib/eslint.config.cjs', 'utf-8');
@@ -1233,9 +1342,11 @@ describe('lib', () => {
                   ],
                   languageOptions: {
                       parserOptions: {
-                          project: [
-                              "my-lib/tsconfig.*?.json"
-                          ]
+                          projectService: true,
+                          // \`projectService\` conflicts with a \`parserOptions.project\` set by any config
+                          // merged into this one. Remove this once you know none of them set it.
+                          project: null,
+                          tsconfigRootDir: __dirname
                       }
                   }
               },
@@ -1336,7 +1447,7 @@ describe('lib', () => {
         process.env.ESLINT_USE_FLAT_CONFIG = 'false';
         await runLibraryGeneratorWithOpts({
           linter: 'eslint',
-          setParserOptionsProject: true,
+          enableTypedLinting: true,
         });
 
         const eslintConfig = readJson(tree, 'my-lib/.eslintrc.json');
@@ -1359,7 +1470,7 @@ describe('lib', () => {
           "import nx from "@nx/eslint-plugin";
           import baseConfig from "../eslint.config.mjs";
 
-          export default [
+          const eslintConfig = [
               ...nx.configs["flat/angular"],
               ...nx.configs["flat/angular-template"],
               ...baseConfig,
@@ -1412,6 +1523,8 @@ describe('lib', () => {
                   rules: {}
               }
           ];
+
+          export default eslintConfig;
           "
         `);
       });

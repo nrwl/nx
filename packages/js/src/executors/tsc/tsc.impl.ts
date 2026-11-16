@@ -71,8 +71,12 @@ export function createTypeScriptCompilationOptions(
     outputPath: joinPathFragments(normalizedOptions.outputPath),
     projectName: context.projectName,
     projectRoot: normalizedOptions.projectRoot,
-    rootDir: joinPathFragments(normalizedOptions.rootDir),
-    tsConfig: joinPathFragments(normalizedOptions.tsConfig),
+    // Keep the Windows drive letter on rootDir/tsConfig (only forward-slash them).
+    // joinPathFragments strips it via normalizePath, leaving them drive-less while
+    // the generated path mappings stay absolute drive-full, so alias-resolved files
+    // fail TypeScript's rootDir containment check (TS6059) on Windows.
+    rootDir: normalizedOptions.rootDir.replace(/\\/g, '/'),
+    tsConfig: normalizedOptions.tsConfig.replace(/\\/g, '/'),
     watch: normalizedOptions.watch,
     deleteOutputPath: normalizedOptions.clean,
     getCustomTransformers: getCustomTrasformersFactory(

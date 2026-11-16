@@ -3,7 +3,7 @@ import {
   loadTsFile,
   requireWithTsconfigFallback,
 } from '../../../plugins/js/utils/register';
-import { interpolate } from '../../../tasks-runner/utils';
+import { interpolateReleaseConfig } from './interpolate-release-config';
 import { workspaceRoot } from '../../../utils/workspace-root';
 
 export function resolveChangelogRenderer(
@@ -14,7 +14,7 @@ export function resolveChangelogRenderer(
     return changelogRendererPathOrImplementation;
   }
 
-  const interpolatedChangelogRendererPath = interpolate(
+  const interpolatedChangelogRendererPath = interpolateReleaseConfig(
     changelogRendererPathOrImplementation,
     {
       workspaceRoot,

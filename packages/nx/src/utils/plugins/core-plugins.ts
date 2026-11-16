@@ -46,6 +46,10 @@ export const CORE_PLUGINS: CorePlugin[] = [
     capabilities: 'executors,generators',
   },
   {
+    name: '@nx/oxlint',
+    capabilities: 'generators',
+  },
+  {
     name: '@nx/nest',
     capabilities: 'generators',
   },
@@ -79,7 +83,11 @@ export const CORE_PLUGINS: CorePlugin[] = [
   },
   {
     name: '@nx/remix',
-    capabilities: 'executors,generators',
+    capabilities: 'generators',
+  },
+  {
+    name: '@nx/rolldown',
+    capabilities: 'generators',
   },
   {
     name: '@nx/rollup',

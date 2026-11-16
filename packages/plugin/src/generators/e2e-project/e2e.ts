@@ -1,6 +1,11 @@
-import { determineProjectNameAndRootOptions } from '@nx/devkit/internal';
+import {
+  determineProjectNameAndRootOptions,
+  type PackageJson,
+} from '@nx/devkit/internal';
 import {
   addProjectConfiguration,
+  detectPackageManager,
+  ensurePackage,
   formatFiles,
   generateFiles,
   getPackageManagerCommand,
@@ -8,17 +13,16 @@ import {
   names,
   offsetFromRoot,
   readJson,
-  readNxJson,
   readProjectConfiguration,
   runTasksInSerial,
+  Tree,
   updateJson,
   updateProjectConfiguration,
   writeJson,
   type GeneratorCallback,
   type ProjectConfiguration,
-  type Tree,
 } from '@nx/devkit';
-import { LinterType, lintProjectGenerator } from '@nx/eslint';
+import type { LinterType } from '@nx/js';
 import {
   addPropertyToJestConfig,
   configurationGenerator,
@@ -26,14 +30,16 @@ import {
 } from '@nx/jest';
 import { getRelativePathToRootTsConfig, setupVerdaccio } from '@nx/js';
 import {
+  addLintingToProject,
   addLocalRegistryScripts,
   normalizeLinterOption,
   addProjectToTsSolutionWorkspace,
   isUsingTsSolutionSetup,
 } from '@nx/js/internal';
-import type { PackageJson } from 'nx/src/utils/package-json';
+import type { VitestGeneratorSchema } from '@nx/vitest/generators';
 import { join } from 'path';
 import type { Schema } from './schema';
+import { nxVersion } from '../../utils/versions';
 
 interface NormalizedSchema extends Schema {
   projectRoot: string;
@@ -41,7 +47,6 @@ interface NormalizedSchema extends Schema {
   pluginPropertyName: string;
   linter: LinterType;
   useProjectJson: boolean;
-  addPlugin: boolean;
   isTsSolutionSetup: boolean;
 }
 
@@ -52,12 +57,6 @@ async function normalizeOptions(
   const linter = await normalizeLinterOption(host, options.linter);
 
   const projectName = options.rootProject ? 'e2e' : `${options.pluginName}-e2e`;
-
-  const nxJson = readNxJson(host);
-  const addPlugin =
-    options.addPlugin ??
-    (process.env.NX_ADD_PLUGINS !== 'false' &&
-      nxJson.useInferencePlugins !== false);
 
   let projectRoot: string;
   const projectNameAndRootOptions = await determineProjectNameAndRootOptions(
@@ -82,7 +81,6 @@ async function normalizeOptions(
     linter,
     pluginPropertyName,
     projectRoot,
-    addPlugin,
     useProjectJson: options.useProjectJson ?? !isTsSolutionSetup,
     isTsSolutionSetup,
   };
@@ -107,11 +105,22 @@ function addFiles(host: Tree, options: NormalizedSchema) {
   );
 
   const simplePluginName = options.pluginName.split('/').pop();
+
+  // One manager drives workspace creation, the install and the checks, so the
+  // generated e2e test cannot straddle two.
+  const packageManager = options.packageManager ?? detectPackageManager();
+  const packageManagerCommands = getPackageManagerCommand(packageManager);
+  // npx otherwise runs from the enclosing workspace package instead of the requested cwd.
+  if (packageManagerCommands.dlx === 'npx') {
+    packageManagerCommands.dlx += ' --workspaces=false';
+  }
+
   generateFiles(host, join(__dirname, './files'), options.projectRoot, {
     ...options,
     tmpl: '',
     rootTsConfigPath: getRelativePathToRootTsConfig(host, options.projectRoot),
-    packageManagerCommands: getPackageManagerCommand(),
+    packageManagerCommands,
+    packageManager,
     pluginPackageName,
     simplePluginName,
   });
@@ -149,7 +158,6 @@ async function addJest(host: Tree, options: NormalizedSchema) {
     supportTsx: false,
     skipSerializers: true,
     skipFormat: true,
-    addPlugin: options.addPlugin,
     compiler: options.isTsSolutionSetup ? 'swc' : undefined,
   });
 
@@ -178,41 +186,173 @@ async function addJest(host: Tree, options: NormalizedSchema) {
 
   const project = readProjectConfiguration(host, options.projectName);
   project.targets ??= {};
-  if (project.targets.e2e) {
-    const e2eTarget = project.targets.e2e;
+  // The e2e target is inferred, so this partial target merges onto it.
+  const e2eTarget = project.targets.e2e;
+  project.targets.e2e = {
+    ...e2eTarget,
+    dependsOn: [`^build`],
+    options: {
+      ...e2eTarget?.options,
+      runInBand: true,
+    },
+  };
 
-    project.targets.e2e = {
-      ...e2eTarget,
-      dependsOn: [`^build`],
-      options: {
-        ...e2eTarget.options,
-        runInBand: true,
-      },
-    };
-
-    updateProjectConfiguration(host, options.projectName, project);
-  }
+  updateProjectConfiguration(host, options.projectName, project);
 
   return jestTask;
+}
+
+async function addVitest(host: Tree, options: NormalizedSchema) {
+  const projectConfiguration: ProjectConfiguration = {
+    name: options.projectName,
+    root: options.projectRoot,
+    projectType: 'application',
+    sourceRoot: `${options.projectRoot}/src`,
+    implicitDependencies: [options.pluginName],
+  };
+
+  if (options.isTsSolutionSetup) {
+    writeJson<PackageJson>(
+      host,
+      joinPathFragments(options.projectRoot, 'package.json'),
+      {
+        name: options.projectName,
+        version: '0.0.1',
+        private: true,
+      }
+    );
+    updateProjectConfiguration(host, options.projectName, projectConfiguration);
+  } else {
+    projectConfiguration.targets = {};
+    addProjectConfiguration(host, options.projectName, projectConfiguration);
+  }
+
+  ensurePackage('@nx/vitest', nxVersion);
+  // Use `require` rather than a dynamic `import()`: `ensurePackage` makes the
+  // on-demand-installed package resolvable via CJS resolution only, so a true
+  // ESM dynamic import cannot see the temp install.
+  const {
+    configurationGenerator: vitestConfigurationGenerator,
+  }: typeof import('@nx/vitest/generators') = require('@nx/vitest/generators');
+
+  const vitestTask = await vitestConfigurationGenerator(host, {
+    project: options.projectName,
+    testTarget: 'e2e',
+    skipFormat: true,
+    testEnvironment: 'node',
+    coverageProvider: 'none',
+  } satisfies Partial<VitestGeneratorSchema>);
+
+  addLocalRegistryScripts(host);
+
+  // Vitest has no `globalTeardown` option. Its `globalSetup` file must export
+  // both `setup` and `teardown`, so wire the local registry scripts through a
+  // wrapper module. Without the teardown, the verdaccio process started in
+  // setup outlives the test run.
+  const vitestGlobalSetupPath = 'tools/scripts/vitest-global-setup.ts';
+  if (!host.exists(vitestGlobalSetupPath)) {
+    host.write(
+      vitestGlobalSetupPath,
+      `/**
+ * This script adapts the local registry scripts to vitest's globalSetup
+ * lifecycle: vitest calls the exported setup and teardown functions around
+ * the test run.
+ */
+
+export { default as setup } from './start-local-registry';
+export { default as teardown } from './stop-local-registry';
+`
+    );
+  }
+
+  // Add globalSetup to vitest config
+  // Check for both .mts and .ts extensions (mts is checked first as it's the default created by @nx/vitest)
+  const vitestConfigExtensions = ['mts', 'ts'];
+  let vitestConfigPath: string | undefined;
+
+  for (const ext of vitestConfigExtensions) {
+    const configPath = joinPathFragments(
+      options.projectRoot,
+      `vitest.config.${ext}`
+    );
+    if (host.exists(configPath)) {
+      vitestConfigPath = configPath;
+      break;
+    }
+  }
+
+  if (vitestConfigPath) {
+    let vitestConfig = host.read(vitestConfigPath, 'utf-8');
+    const globalSetupPath = join(
+      offsetFromRoot(options.projectRoot),
+      vitestGlobalSetupPath
+    );
+
+    // Insert globalSetup in the test config
+    // Look for 'test: {' and insert our properties right after the opening brace
+    const testConfigRegex = /(test:\s*\{\s*)/;
+    const match = testConfigRegex.exec(vitestConfig);
+
+    if (match) {
+      // Extract the indentation from the next line to maintain consistent formatting
+      const afterMatch = vitestConfig.slice(match.index + match[0].length);
+      const nextLineMatch = afterMatch.match(/\n(\s*)/);
+      const indent = nextLineMatch ? nextLineMatch[1] : '    ';
+
+      vitestConfig = vitestConfig.replace(
+        testConfigRegex,
+        `$1\n${indent}globalSetup: '${globalSetupPath}',`
+      );
+      host.write(vitestConfigPath, vitestConfig);
+    } else {
+      // If we can't find the test config block, log a warning
+      throw new Error(
+        `Could not find test configuration block in ${vitestConfigPath}. Please manually add the globalSetup property.`
+      );
+    }
+  } else {
+    // This should not happen as the vitest configuration generator should create the config file
+    throw new Error(
+      `Could not find Vitest config for project ${options.projectName} at ${options.projectRoot}`
+    );
+  }
+
+  const project = readProjectConfiguration(host, options.projectName);
+  project.targets ??= {};
+  const e2eTarget = project.targets.e2e;
+
+  // The suites share a single tmp/test-project directory, so they have to run
+  // one at a time. Vitest 4 removed `poolOptions`, and nested options do not
+  // survive the argv round-trip anyway, so use the scalar options. The e2e
+  // target is inferred, so this partial target merges onto it.
+  project.targets.e2e = {
+    ...e2eTarget,
+    dependsOn: [`^build`],
+    options: {
+      ...e2eTarget?.options,
+      maxWorkers: 1,
+      isolate: false,
+    },
+  };
+
+  updateProjectConfiguration(host, options.projectName, project);
+
+  return vitestTask;
 }
 
 async function addLintingToApplication(
   tree: Tree,
   options: NormalizedSchema
 ): Promise<GeneratorCallback> {
-  const lintTask = await lintProjectGenerator(tree, {
+  return addLintingToProject(tree, {
     linter: options.linter,
     project: options.projectName,
     tsConfigPaths: [
       joinPathFragments(options.projectRoot, 'tsconfig.app.json'),
     ],
-    unitTestRunner: 'jest',
-    skipFormat: true,
-    setParserOptionsProject: false,
-    addPlugin: options.addPlugin,
+    unitTestRunner: options.testRunner ?? 'jest',
+    enableTypedLinting: false,
   });
-
-  return lintTask;
 }
 
 function updatePluginPackageJson(tree: Tree, options: NormalizedSchema) {
@@ -226,7 +366,6 @@ function updatePluginPackageJson(tree: Tree, options: NormalizedSchema) {
 
 export async function e2eProjectGenerator(host: Tree, schema: Schema) {
   return await e2eProjectGeneratorInternal(host, {
-    addPlugin: false,
     useProjectJson: true,
     ...schema,
   });
@@ -237,13 +376,24 @@ export async function e2eProjectGeneratorInternal(host: Tree, schema: Schema) {
 
   validatePlugin(host, schema.pluginName);
   const options = await normalizeOptions(host, schema);
+
+  // Default to jest if no testRunner is specified
+  options.testRunner = options.testRunner ?? 'jest';
+
   addFiles(host, options);
   tasks.push(
     await setupVerdaccio(host, {
       skipFormat: true,
     })
   );
-  tasks.push(await addJest(host, options));
+
+  // Add test runner based on the testRunner option
+  if (options.testRunner === 'vitest') {
+    tasks.push(await addVitest(host, options));
+  } else {
+    tasks.push(await addJest(host, options));
+  }
+
   updatePluginPackageJson(host, options);
 
   if (options.linter !== 'none') {

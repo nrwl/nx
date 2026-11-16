@@ -1,10 +1,13 @@
-import { runCommand } from '../../tasks-runner/run-command';
+import {
+  runCommand,
+  selectTasksForProjects,
+} from '../../tasks-runner/run-command';
 import {
   NxArgs,
   readGraphFileFromGraphArg,
   splitArgsIntoNxArgsAndOverrides,
 } from '../../utils/command-line-utils';
-import { projectHasTarget } from '../../utils/project-graph-utils';
+import { runnableForTarget } from '../../utils/project-graph-utils';
 import { connectToNxCloudIfExplicitlyAsked } from '../nx-cloud/connect/connect-to-nx-cloud';
 import { performance } from 'perf_hooks';
 import {
@@ -50,6 +53,17 @@ export async function runMany(
   const projectGraph = await createProjectGraphAsync({ exitOnError: true });
   const projects = projectsToRun(nxArgs, projectGraph);
 
+  // --graph's file output draws this selection; the live graph builds its own.
+  const selectTasks = () =>
+    selectTasksForProjects(
+      projectGraph,
+      projects.map((p) => p.name),
+      nxArgs,
+      overrides,
+      extraTargetDependencies,
+      extraOptions.excludeTaskDependencies
+    );
+
   if (nxArgs.graph) {
     const file = readGraphFileFromGraphArg(nxArgs);
     const projectNames = projects.map((t) => t.name);
@@ -62,12 +76,14 @@ export async function runMany(
         targets: nxArgs.targets,
         projects: projectNames,
         file,
+        taskSelection: selectTasks,
+        configuration: nxArgs.configuration,
       },
       projectNames
     );
   } else {
     const status = await runCommand(
-      projects,
+      selectTasks(),
       projectGraph,
       { nxJson },
       nxArgs,
@@ -76,6 +92,7 @@ export async function runMany(
       extraTargetDependencies,
       extraOptions
     );
+    await output.drain();
     process.exit(status);
   }
 }
@@ -126,18 +143,4 @@ export function projectsToRun(
   }
 
   return Object.values(selectedProjects);
-}
-
-function runnableForTarget(
-  projects: Record<string, ProjectGraphProjectNode>,
-  targets: string[]
-): Set<string> {
-  const runnable = new Set<string>();
-  for (let projectName in projects) {
-    const project = projects[projectName];
-    if (targets.find((target) => projectHasTarget(project, target))) {
-      runnable.add(projectName);
-    }
-  }
-  return runnable;
 }

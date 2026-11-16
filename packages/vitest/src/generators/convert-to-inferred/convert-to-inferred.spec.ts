@@ -1,13 +1,10 @@
-import {
-  getRelativeProjectJsonSchemaPath,
-  updateProjectConfiguration,
-} from 'nx/src/generators/utils/project-configuration';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { convertToInferred } from './convert-to-inferred';
 import {
   addProjectConfiguration as _addProjectConfiguration,
   type ExpandedPluginConfiguration,
   joinPathFragments,
+  logger,
   type ProjectConfiguration,
   type ProjectGraph,
   readNxJson,
@@ -15,10 +12,15 @@ import {
   type Tree,
   updateNxJson,
   writeJson,
+  updateProjectConfiguration,
 } from '@nx/devkit';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
 import { join } from 'node:path';
 import type { VitestPluginOptions } from '../../plugins/plugin';
+import {
+  getRelativeProjectJsonSchemaPath,
+  NoTargetsToMigrateError,
+} from '@nx/devkit/internal';
 
 let fs: TempFs;
 let projectGraph: ProjectGraph;
@@ -38,22 +40,22 @@ const getMockedConfig = (
   });
 };
 
-jest.mock('vite', () => ({
-  resolveConfig: jest.fn().mockImplementation(getMockedConfig),
+vi.mock('vite', () => ({
+  resolveConfig: vi.fn().mockImplementation(getMockedConfig),
 }));
 
-jest.mock('../../utils/executor-utils', () => ({
-  loadViteDynamicImport: jest.fn().mockImplementation(() => ({
-    resolveConfig: jest.fn().mockImplementation(getMockedConfig),
+vi.mock('../../utils/executor-utils', () => ({
+  loadViteDynamicImport: vi.fn().mockImplementation(() => ({
+    resolveConfig: vi.fn().mockImplementation(getMockedConfig),
   })),
 }));
 
-jest.mock('@nx/devkit', () => ({
-  ...jest.requireActual<any>('@nx/devkit'),
-  createProjectGraphAsync: jest.fn().mockImplementation(async () => {
+vi.mock('@nx/devkit', async () => ({
+  ...(await vi.importActual<any>('@nx/devkit')),
+  createProjectGraphAsync: vi.fn().mockImplementation(async () => {
     return projectGraph;
   }),
-  updateProjectConfiguration: jest
+  updateProjectConfiguration: vi
     .fn()
     .mockImplementation((tree, projectName, projectConfiguration) => {
       function handleEmptyTargets(
@@ -178,7 +180,7 @@ export default defineConfig({
     },
   };
 
-  jest.doMock(
+  vi.doMock(
     join(fs.tempDir, `${projectOpts.appRoot}/vite.config.ts`),
     () => ({
       default: mockedConfigs[`${projectOpts.appRoot}/vite.config.ts`],
@@ -248,6 +250,31 @@ describe('@nx/vitest:convert-to-inferred', () => {
       expect(scopedRegistration).toBeTruthy();
       expect(scopedRegistration.include).toEqual(['myapp/**/*']);
       expect(scopedRegistration.options?.testTargetName).toBe('unit-test');
+    });
+
+    it('leaves the test target on its executor when the vite config has no test block', async () => {
+      const project = createTestProject(tree);
+      const viteConfig = `import { defineConfig } from 'vite';
+
+export default defineConfig({ root: __dirname });`;
+      tree.write('myapp/vite.config.ts', viteConfig);
+      fs.createFileSync('myapp/vite.config.ts', viteConfig);
+      delete mockedConfigs['myapp/vite.config.ts'].test;
+      const warn = vi.spyOn(logger, 'warn').mockImplementation(() => {});
+
+      await expect(
+        convertToInferred(tree, { project: 'myapp', skipFormat: true })
+      ).rejects.toThrow(NoTargetsToMigrateError);
+
+      expect(readProjectConfiguration(tree, project.name).targets).toEqual(
+        project.targets
+      );
+      expect(warn).toHaveBeenCalledWith(
+        expect.stringContaining(
+          'convert-to-inferred left target "test" in project "myapp" on its executor'
+        )
+      );
+      warn.mockRestore();
     });
   });
 

@@ -9,7 +9,7 @@
       "Bash(git log:*)",
       "Bash(gh issue list:*)",
       "Bash(gh issue view:*)",
-      "Bash(npx prettier:*)",
+      "Bash(npx oxfmt:*)",
       "Bash(nx prepush:*)",
       "Bash(pnpm commit:*)",
       "Bash(rg:*)",
@@ -30,6 +30,21 @@
   "enableAllProjectMcpServers": true,
   "env": {
     "BASH_MAX_TIMEOUT_MS": "1800000"
+  },
+  "sandbox": {
+    "filesystem": {
+      "allowWrite": [
+        "~/.nx-pr-reviews",
+        "~/.nx-sandboxes",
+        "/tmp/.nx",
+        "~/.nx"
+      ],
+      "allowRead": ["/tmp/.nx", "~/.nx"]
+    },
+    "network": {
+      "allowedDomains": ["www.google-analytics.com"],
+      "allowUnixSockets": ["/tmp/.nx", "~/.nx"]
+    }
   },
   "extraKnownMarketplaces": {
     "nx-claude-plugins": {

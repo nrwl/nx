@@ -1,0 +1,109 @@
+---
+import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
+import { getCollection } from 'astro:content';
+import KnowledgeBaseArticleList from '../../components/kb/KnowledgeBaseArticleList.astro';
+import KnowledgeBaseFeaturedArticles from '../../components/kb/KnowledgeBaseFeaturedArticles.astro';
+import {
+  getKnowledgeBaseArticles,
+  sortArticlesByLastModified,
+} from '../../utils/knowledge-base';
+
+const articles = getKnowledgeBaseArticles(await getCollection('docs'));
+const featuredArticles = sortArticlesByLastModified(
+  articles.filter((article) => article.featured)
+);
+const allArticles = sortArticlesByLastModified(articles);
+---
+
+<StarlightPage
+  frontmatter={{
+    title: 'Knowledge Base',
+    description:
+      'Find practical Nx guides, troubleshooting steps, recipes, and technical reference articles.',
+    template: 'splash',
+    tableOfContents: false,
+    pagefind: true,
+  }}
+>
+  <div class="kb-page">
+    <p class="kb-hero">
+      Browse practical guides, troubleshooting steps, recipes, and technical
+      reference articles from the Nx team.
+    </p>
+
+    <section class="kb-section" aria-labelledby="featured-articles">
+      <div class="kb-section-heading">
+        <h2 id="featured-articles">Featured articles</h2>
+      </div>
+      <KnowledgeBaseFeaturedArticles articles={featuredArticles} />
+    </section>
+
+    <section class="kb-section" aria-labelledby="all-articles">
+      <div class="kb-section-heading">
+        <h2 id="all-articles">All articles</h2>
+        <p data-kb-article-count aria-live="polite">
+          {allArticles.length} articles
+        </p>
+      </div>
+      <KnowledgeBaseArticleList
+        articles={allArticles}
+        label="All Knowledge Base articles, newest first"
+        filterable
+      />
+    </section>
+  </div>
+</StarlightPage>
+
+<style is:global>
+  .kb-page {
+    padding-block: 1rem 4rem;
+  }
+
+  .kb-hero {
+    max-width: 44rem;
+    margin: -0.25rem 0 2.5rem;
+    color: var(--sl-color-gray-3);
+    font-size: 1rem;
+    line-height: 1.5;
+  }
+
+  .kb-section {
+    margin-top: 3rem;
+  }
+
+  .kb-section-heading {
+    display: flex;
+    margin-bottom: 1rem;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  .kb-section-heading h2 {
+    margin: 0;
+    color: var(--sl-color-white);
+    font-size: 1.45rem;
+  }
+
+  .kb-section-heading p {
+    margin: 0;
+    color: var(--sl-color-gray-4);
+    font-size: 0.85rem;
+  }
+
+  @media (max-width: 40rem) {
+    .kb-page {
+      padding-block-start: 0.25rem;
+    }
+
+    .kb-section {
+      margin-top: 2.5rem;
+    }
+
+    .kb-section-heading {
+      align-items: flex-start;
+      flex-direction: column;
+      gap: 0.3rem;
+    }
+  }
+</style>

@@ -1,4 +1,4 @@
-import 'nx/src/internal-testing-utils/mock-project-graph';
+import '@nx/devkit/internal-testing-utils/mock-project-graph';
 
 import { Tree } from '@nx/devkit';
 import storiesGenerator from './stories';
@@ -50,8 +50,6 @@ describe('react:stories for libraries', () => {
         'utf-8'
       )
     ).toMatchSnapshot();
-
-    const packageJson = JSON.parse(appTree.read('package.json', 'utf-8'));
   });
 
   it('should create the stories without interaction tests', async () => {

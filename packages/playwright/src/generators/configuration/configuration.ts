@@ -1,4 +1,9 @@
-import { resolveImportPath, promptWhenInteractive } from '@nx/devkit/internal';
+import {
+  resolveImportPath,
+  isInteractive,
+  textPrompt,
+  PackageJson,
+} from '@nx/devkit/internal';
 import {
   addDependenciesToPackageJson,
   formatFiles,
@@ -9,14 +14,11 @@ import {
   logger,
   offsetFromRoot,
   output,
-  readNxJson,
   readProjectConfiguration,
   runTasksInSerial,
   toJS,
   Tree,
   updateJson,
-  updateNxJson,
-  updateProjectConfiguration,
   workspaceRoot,
   writeJson,
 } from '@nx/devkit';
@@ -27,10 +29,9 @@ import {
   getProjectPackageManagerWorkspaceStateWarningTask,
   ensureTypescript,
   isUsingTsSolutionSetup,
+  typesNodeVersion,
 } from '@nx/js/internal';
-import { warnPlaywrightExecutorGenerating } from '../../utils/deprecation';
 import { execSync } from 'child_process';
-import { PackageJson } from 'nx/src/utils/package-json';
 import * as path from 'path';
 import { addLinterToPlaywrightProject } from '../../utils/add-linter';
 import { assertSupportedPlaywrightVersion } from '../../utils/assert-supported-playwright-version';
@@ -46,7 +47,7 @@ export function configurationGenerator(
   tree: Tree,
   options: ConfigurationGeneratorSchema
 ) {
-  return configurationGeneratorInternal(tree, { addPlugin: false, ...options });
+  return configurationGeneratorInternal(tree, options);
 }
 
 export async function configurationGeneratorInternal(
@@ -62,7 +63,6 @@ export async function configurationGeneratorInternal(
     await initGenerator(tree, {
       skipFormat: true,
       skipPackageJson: options.skipPackageJson,
-      addPlugin: options.addPlugin,
     })
   );
 
@@ -85,6 +85,8 @@ export async function configurationGeneratorInternal(
     webServerAddress: options.webServerAddress ?? null,
     isTsSolutionSetup,
     ...options,
+    ...getCiWebServer(options),
+    toJsStringLiteral,
   });
   const playwrightConfigFile = options.js
     ? 'playwright.config.mjs'
@@ -98,6 +100,7 @@ export async function configurationGeneratorInternal(
           allowJs: true,
           outDir: 'out-tsc/playwright',
           sourceMap: false,
+          types: ['node'],
         },
         include: [
           joinPathFragments(options.directory, '**/*.ts'),
@@ -136,6 +139,7 @@ export async function configurationGeneratorInternal(
         allowJs: true,
         outDir: `${offsetFromProjectRoot}dist/out-tsc`,
         sourceMap: false,
+        types: ['node'],
       },
       include: [
         '**/*.ts',
@@ -172,7 +176,6 @@ export async function configurationGeneratorInternal(
       }
     } else {
       tsconfig.compilerOptions.outDir = `${offsetFromProjectRoot}dist/out-tsc`;
-      tsconfig.compilerOptions.module = 'commonjs';
     }
 
     writeJson(tree, tsconfigPath, tsconfig);
@@ -204,18 +207,6 @@ export async function configurationGeneratorInternal(
     ignoreTestOutput(tree, options);
   }
 
-  const hasPlugin = readNxJson(tree).plugins?.some((p) =>
-    typeof p === 'string'
-      ? p === '@nx/playwright/plugin'
-      : p.plugin === '@nx/playwright/plugin'
-  );
-
-  if (!hasPlugin) {
-    warnPlaywrightExecutorGenerating();
-    addE2eTarget(tree, options);
-    setupE2ETargetDefaults(tree);
-  }
-
   tasks.push(
     await addLinterToPlaywrightProject(tree, {
       project: options.project,
@@ -223,9 +214,8 @@ export async function configurationGeneratorInternal(
       skipPackageJson: options.skipPackageJson,
       js: options.js,
       directory: options.directory,
-      setParserOptionsProject: options.setParserOptionsProject,
+      enableTypedLinting: options.enableTypedLinting,
       rootProject: options.rootProject ?? projectConfig.root === '.',
-      addPlugin: options.addPlugin,
     })
   );
 
@@ -245,6 +235,14 @@ export async function configurationGeneratorInternal(
           // required since used in playwright config
           '@nx/devkit': nxVersion,
         }
+      ),
+      // The e2e tsconfig loads Node types. Keep an installed version.
+      addDependenciesToPackageJson(
+        tree,
+        {},
+        { '@types/node': typesNodeVersion },
+        undefined,
+        true
       )
     );
   }
@@ -278,12 +276,6 @@ async function normalizeOptions(
   tree: Tree,
   options: ConfigurationGeneratorSchema
 ): Promise<NormalizedGeneratorOptions> {
-  const nxJson = readNxJson(tree);
-  const addPlugin =
-    options.addPlugin ??
-    (process.env.NX_ADD_PLUGINS !== 'false' &&
-      nxJson.useInferencePlugins !== false);
-
   const linter = await normalizeLinterOption(tree, options.linter);
 
   if (!options.webServerCommand || !options.webServerAddress) {
@@ -295,35 +287,55 @@ async function normalizeOptions(
 
   return {
     ...options,
-    addPlugin,
     linter,
     directory: options.directory ?? 'e2e',
   };
 }
 
+function getCiWebServer(options: NormalizedGeneratorOptions): {
+  ciWebServerCommand: string | null;
+  ciWebServerAddress: string | null;
+} {
+  const differs = (ciValue: string | undefined, value: string | undefined) =>
+    ciValue && ciValue !== value ? ciValue : null;
+  return {
+    ciWebServerCommand: differs(
+      options.ciWebServerCommand,
+      options.webServerCommand
+    ),
+    ciWebServerAddress: differs(
+      options.ciWebServerAddress,
+      options.webServerAddress
+    ),
+  };
+}
+
+// The template inserts the result with `<%-`, since `<%=` would HTML-escape it.
+function toJsStringLiteral(value: string): string {
+  return `'${JSON.stringify(value).slice(1, -1).replace(/'/g, "\\'")}'`;
+}
+
 async function promptForMissingServeData(projectName: string) {
-  const { command, port } = await promptWhenInteractive<{
-    command: string;
-    port: number;
-  }>(
-    [
-      {
-        type: 'input',
-        name: 'command',
-        message: 'What command should be run to serve the application locally?',
-        initial: `npx nx serve ${projectName}`,
-      },
-      {
-        type: 'numeral',
-        name: 'port',
-        message: 'What port will the application be served on?',
-        initial: 3000,
-      },
-    ],
-    {
-      command: `npx nx serve ${projectName}`,
-      port: 3000,
-    }
+  if (!isInteractive()) {
+    return {
+      webServerCommand: `npx nx serve ${projectName}`,
+      webServerAddress: 'http://localhost:3000',
+    };
+  }
+
+  const command = await textPrompt({
+    message: 'What command should be run to serve the application locally?',
+    initialValue: `npx nx serve ${projectName}`,
+  });
+  const port = Number(
+    await textPrompt({
+      message: 'What port will the application be served on?',
+      initialValue: '3000',
+      validate: (value) =>
+        value !== '' && !Number.isNaN(Number(value))
+          ? undefined
+          : 'Please enter a number',
+    })
   );
 
   return {
@@ -362,48 +374,6 @@ function recommendVsCodeExtensions(tree: Tree): void {
       recommendations: ['ms-playwright.playwright'],
     });
   }
-}
-
-function setupE2ETargetDefaults(tree: Tree) {
-  const nxJson = readNxJson(tree);
-
-  if (!nxJson.namedInputs) {
-    return;
-  }
-
-  // E2e targets depend on all their project's sources + production sources of dependencies
-  nxJson.targetDefaults ??= {};
-
-  const productionFileSet = !!nxJson.namedInputs?.production;
-  nxJson.targetDefaults.e2e ??= {};
-  nxJson.targetDefaults.e2e.cache ??= true;
-  nxJson.targetDefaults.e2e.inputs ??= [
-    'default',
-    productionFileSet ? '^production' : '^default',
-  ];
-
-  updateNxJson(tree, nxJson);
-}
-
-function addE2eTarget(tree: Tree, options: ConfigurationGeneratorSchema) {
-  const projectConfig = readProjectConfiguration(tree, options.project);
-  if (projectConfig?.targets?.e2e) {
-    throw new Error(`Project ${options.project} already has an e2e target.
-Rename or remove the existing e2e target.`);
-  }
-  projectConfig.targets ??= {};
-  projectConfig.targets.e2e = {
-    executor: '@nx/playwright:playwright',
-    outputs: [`{workspaceRoot}/dist/.playwright/${projectConfig.root}`],
-    options: {
-      // Generator emits `playwright.config.mts` (`.mjs` for `--js`) so the
-      // legacy executor's `--config` flag must point at the same extension.
-      config: `${projectConfig.root}/playwright.config.${
-        options.js ? 'mjs' : 'mts'
-      }`,
-    },
-  };
-  updateProjectConfiguration(tree, options.project, projectConfig);
 }
 
 function ignoreTestOutput(

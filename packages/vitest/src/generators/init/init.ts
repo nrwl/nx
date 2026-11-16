@@ -1,7 +1,8 @@
-import { addPlugin } from '@nx/devkit/internal';
+import { acknowledgeBuildScripts, addPlugin } from '@nx/devkit/internal';
 import {
   type Tree,
   type GeneratorCallback,
+  detectPackageManager,
   readNxJson,
   addDependenciesToPackageJson,
   formatFiles,
@@ -9,10 +10,11 @@ import {
   updateNxJson,
   createProjectGraphAsync,
 } from '@nx/devkit';
+import { coerce, major } from 'semver';
 import { InitGeneratorSchema } from './schema';
 import {
   nxVersion,
-  vitestVersion,
+  versions,
   viteV5Version,
   viteV6Version,
   viteV7Version,
@@ -39,12 +41,23 @@ export function updateDependencies(tree: Tree, schema: InitGeneratorSchema) {
           ? viteV7Version
           : viteVersion;
 
+  // Vite below 8 depends on esbuild (8 bundles rolldown instead), whose install
+  // script only validates the prebuilt binary that ships as an optional
+  // dependency.
+  if (major(coerce(viteVersionToUse)) < 8) {
+    acknowledgeBuildScripts(tree, detectPackageManager(tree.root), {
+      esbuild: false,
+    });
+  }
+
   return addDependenciesToPackageJson(
     tree,
     {},
     {
       '@nx/vitest': nxVersion,
-      vitest: vitestVersion,
+      // The range about to be installed is passed for the case where the
+      // workspace has no vite of its own; it constrains the vitest major.
+      vitest: versions(tree, { viteRange: viteVersionToUse }).vitestVersion,
       vite: viteVersionToUse,
     },
     undefined,
@@ -53,7 +66,7 @@ export function updateDependencies(tree: Tree, schema: InitGeneratorSchema) {
 }
 
 export function updateNxJsonSettings(tree: Tree) {
-  const nxJson = readNxJson(tree);
+  const nxJson = readNxJson(tree) ?? {};
 
   const productionFileSet = nxJson.namedInputs?.production;
   if (productionFileSet) {
@@ -65,45 +78,23 @@ export function updateNxJsonSettings(tree: Tree) {
     nxJson.namedInputs.production = Array.from(new Set(productionFileSet));
   }
 
-  const hasPlugin = nxJson.plugins?.some((p) =>
-    typeof p === 'string' ? p === '@nx/vitest' : p.plugin === '@nx/vitest'
-  );
-
-  if (!hasPlugin) {
-    nxJson.targetDefaults ??= {};
-    nxJson.targetDefaults['@nx/vitest:test'] ??= {};
-    nxJson.targetDefaults['@nx/vitest:test'].cache ??= true;
-    nxJson.targetDefaults['@nx/vitest:test'].inputs ??= [
-      'default',
-      productionFileSet ? '^production' : '^default',
-    ];
-  }
-
   updateNxJson(tree, nxJson);
 }
 
 export async function initGenerator(tree: Tree, schema: InitGeneratorSchema) {
   assertSupportedVitestVersion(tree);
 
-  const nxJson = readNxJson(tree);
-  const addPluginDefault =
-    process.env.NX_ADD_PLUGINS !== 'false' &&
-    nxJson.useInferencePlugins !== false;
-  schema.addPlugin ??= addPluginDefault;
-
-  if (schema.addPlugin) {
-    await addPlugin(
-      tree,
-      await createProjectGraphAsync(),
-      '@nx/vitest',
-      createNodesV2,
-      {
-        testTargetName: ['test', 'vitest:test', 'vitest-test'],
-        ciTargetName: ['test-ci', 'vitest:test-ci', 'vitest-test-ci'],
-      },
-      schema.updatePackageScripts
-    );
-  }
+  await addPlugin(
+    tree,
+    await createProjectGraphAsync(),
+    '@nx/vitest',
+    createNodesV2,
+    {
+      testTargetName: ['test', 'vitest:test', 'vitest-test'],
+      ciTargetName: ['test-ci', 'vitest:test-ci', 'vitest-test-ci'],
+    },
+    schema.updatePackageScripts
+  );
 
   updateNxJsonSettings(tree);
   await ignoreVitestTempFiles(tree, schema.projectRoot);

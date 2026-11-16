@@ -1,4 +1,4 @@
-import 'nx/src/internal-testing-utils/mock-project-graph';
+import '@nx/devkit/internal-testing-utils/mock-project-graph';
 
 import {
   getProjects,
@@ -16,7 +16,9 @@ import { libraryGenerator } from './library';
 const baseLibraryConfig = {
   directory: 'my-lib',
   compiler: 'tsc' as const,
-  addPlugin: true,
+  // Stated rather than inferred: these specs assert ESLint output, and
+  // `detectLinters` comes back empty for a workspace with no linter installed.
+  linter: 'eslint' as const,
 };
 
 describe('lib', () => {
@@ -174,6 +176,7 @@ describe('lib', () => {
 
     it('should generate files', async () => {
       await libraryGenerator(tree, {
+        linter: 'eslint',
         ...baseLibraryConfig,
         directory: 'my-dir/my-lib',
       });
@@ -249,6 +252,7 @@ describe('lib', () => {
 
     it('should generate filenames that do not contain directory with --simpleModuleName', async () => {
       await libraryGenerator(tree, {
+        linter: 'eslint',
         ...baseLibraryConfig,
         directory: 'my-dir/my-lib',
         simpleModuleName: true,
@@ -307,6 +311,33 @@ describe('lib', () => {
           path: './tsconfig.lib.json',
         },
       ]);
+    });
+  });
+
+  describe('--unit-test-runner vitest', () => {
+    it('should generate a vitest configuration', async () => {
+      await libraryGenerator(tree, {
+        ...baseLibraryConfig,
+        unitTestRunner: 'vitest',
+      });
+
+      expect(tree.exists('my-lib/vitest.config.mts')).toBeTruthy();
+      expect(tree.exists('my-lib/jest.config.cts')).toBeFalsy();
+      expect(
+        readJson(tree, 'my-lib/tsconfig.spec.json').compilerOptions.types
+      ).toContain('vitest/globals');
+      expect(tree.read('my-lib/vitest.config.mts', 'utf-8')).toContain(
+        `environment: 'node'`
+      );
+    });
+
+    it('should keep the generated spec file', async () => {
+      await libraryGenerator(tree, {
+        ...baseLibraryConfig,
+        unitTestRunner: 'vitest',
+      });
+
+      expect(tree.exists('my-lib/src/lib/my-lib.spec.ts')).toBeTruthy();
     });
   });
 
@@ -530,9 +561,9 @@ describe('lib', () => {
 
     it('should add project references when using TS solution', async () => {
       await libraryGenerator(tree, {
+        linter: 'eslint',
         directory: 'mylib',
         unitTestRunner: 'jest',
-        addPlugin: true,
         useProjectJson: false,
       } as Schema);
 
@@ -645,9 +676,9 @@ describe('lib', () => {
 
     it('should create a correct package.json for buildable libraries', async () => {
       await libraryGenerator(tree, {
+        linter: 'eslint',
         directory: 'mylib',
         unitTestRunner: 'jest',
-        addPlugin: true,
         useProjectJson: false,
         buildable: true,
         skipFormat: true,
@@ -687,7 +718,6 @@ describe('lib', () => {
       await libraryGenerator(tree, {
         directory: 'mylib',
         unitTestRunner: 'jest',
-        addPlugin: true,
         useProjectJson: false,
         buildable: true,
         skipFormat: true,
@@ -704,7 +734,6 @@ describe('lib', () => {
         buildable: true,
         compiler: 'swc',
         unitTestRunner: 'jest',
-        addPlugin: true,
         useProjectJson: false,
       } as Schema);
 
@@ -756,7 +785,6 @@ describe('lib', () => {
         name: 'my-lib',
         linter: 'none',
         unitTestRunner: 'none',
-        addPlugin: true,
         useProjectJson: false,
         skipFormat: true,
       } as Schema);
@@ -772,7 +800,6 @@ describe('lib', () => {
         name: '@proj/my-lib',
         linter: 'none',
         unitTestRunner: 'none',
-        addPlugin: true,
         useProjectJson: false,
         skipFormat: true,
       } as Schema);
@@ -785,7 +812,6 @@ describe('lib', () => {
         directory: 'mylib',
         linter: 'none',
         unitTestRunner: 'none',
-        addPlugin: true,
         useProjectJson: false,
         skipFormat: true,
       } as Schema);
@@ -795,9 +821,9 @@ describe('lib', () => {
 
     it('should generate project.json if useProjectJson is true', async () => {
       await libraryGenerator(tree, {
+        linter: 'eslint',
         directory: 'mylib',
         unitTestRunner: 'jest',
-        addPlugin: true,
         useProjectJson: true,
         skipFormat: true,
       } as Schema);

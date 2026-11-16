@@ -8,12 +8,13 @@ import { printDiagnostics } from '../typescript/print-diagnostics';
 import { runTypeCheck, TypeCheckOptions } from '../typescript/run-type-check';
 import { relative } from 'path';
 
-function getSwcCmd(
+export function getSwcCmd(
   {
     swcCliOptions: { swcrcPath, destPath, stripLeadingPaths },
     root,
     projectRoot,
     sourceRoot,
+    main,
   }: NormalizedSwcExecutorOptions,
   watch = false
 ) {
@@ -21,7 +22,11 @@ function getSwcCmd(
   let inputDir: string;
 
   if (sourceRoot) {
-    inputDir = relative(projectRoot, sourceRoot);
+    // A main entry outside sourceRoot (e.g. Next.js custom server at <projectRoot>/server)
+    // is only emitted when compiling from the project root.
+    inputDir = relative(sourceRoot, main).startsWith('..')
+      ? '.'
+      : relative(projectRoot, sourceRoot);
   } else {
     // If sourceRoot is not provided, check if `src` exists and use that instead.
     // This is important for root projects to avoid compiling too many directories.
@@ -36,7 +41,9 @@ function getSwcCmd(
   return watch ? swcCmd.concat(' --watch') : swcCmd;
 }
 
-function getTypeCheckOptions(normalizedOptions: NormalizedSwcExecutorOptions) {
+export function getTypeCheckOptions(
+  normalizedOptions: NormalizedSwcExecutorOptions
+): TypeCheckOptions {
   const { sourceRoot, projectRoot, watch, tsConfig, root, outputPath } =
     normalizedOptions;
   const inputDir =
@@ -54,7 +61,7 @@ function getTypeCheckOptions(normalizedOptions: NormalizedSwcExecutorOptions) {
     tsConfigPath: tsConfig,
     outDir: outputPath,
     workspaceRoot: root,
-    rootDir: inputDir,
+    rootDir: join(root, inputDir),
   };
 
   if (watch) {

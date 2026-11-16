@@ -1,7 +1,8 @@
-import { addPlugin } from '@nx/devkit/internal';
+import { acknowledgeBuildScripts, addPlugin } from '@nx/devkit/internal';
 import {
   addDependenciesToPackageJson,
   createProjectGraphAsync,
+  detectPackageManager,
   formatFiles,
   readNxJson,
   removeDependenciesFromPackageJson,
@@ -11,10 +12,7 @@ import {
   type Tree,
 } from '@nx/devkit';
 import { createNodesV2 } from '../../plugins/plugin';
-import {
-  getPresetExt,
-  type JestPresetExtension,
-} from '../../utils/config/config-file';
+import { getPresetExt } from '../../utils/config/config-file';
 import { assertSupportedJestVersion } from '../../utils/assert-supported-jest-version';
 import { versions } from '../../utils/versions';
 import type { JestInitSchema } from './schema';
@@ -30,8 +28,8 @@ function updateProductionFileSet(tree: Tree) {
       '!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)',
       // Remove tsconfig.spec.json
       '!{projectRoot}/tsconfig.spec.json',
-      // Remove jest.config.js/ts
-      '!{projectRoot}/jest.config.[jt]s',
+      // Remove jest configs
+      '!{projectRoot}/jest.config.{cjs,mjs,js,cts,mts,ts}',
       // Remove test-setup.js/ts
       // TODO(meeroslav) this should be standardized
       '!{projectRoot}/src/test-setup.[jt]s',
@@ -44,37 +42,16 @@ function updateProductionFileSet(tree: Tree) {
   updateNxJson(tree, nxJson);
 }
 
-function addJestTargetDefaults(tree: Tree, presetExt: JestPresetExtension) {
-  const nxJson = readNxJson(tree);
-
-  nxJson.targetDefaults ??= {};
-  nxJson.targetDefaults['@nx/jest:jest'] ??= {};
-
-  const productionFileSet = nxJson.namedInputs?.production;
-
-  nxJson.targetDefaults['@nx/jest:jest'].cache ??= true;
-  // Test targets depend on all their project's sources + production sources of dependencies
-  nxJson.targetDefaults['@nx/jest:jest'].inputs ??= [
-    'default',
-    productionFileSet ? '^production' : '^default',
-    `{workspaceRoot}/jest.preset.${presetExt}`,
-  ];
-
-  nxJson.targetDefaults['@nx/jest:jest'].options ??= {
-    passWithNoTests: true,
-  };
-  nxJson.targetDefaults['@nx/jest:jest'].configurations ??= {
-    ci: {
-      ci: true,
-      codeCoverage: true,
-    },
-  };
-
-  updateNxJson(tree, nxJson);
-}
-
 function updateDependencies(tree: Tree, options: JestInitSchema) {
   const { jestVersion, nxVersion } = versions(tree);
+
+  // jest-resolve depends on unrs-resolver, and from jest 30.5.0 it pins a
+  // jest-haste-map that depends on @parcel/watcher. Neither build is needed:
+  // the binding has a fallback and the watcher ships prebuilt.
+  acknowledgeBuildScripts(tree, detectPackageManager(tree.root), {
+    '@parcel/watcher': false,
+    'unrs-resolver': false,
+  });
 
   return addDependenciesToPackageJson(
     tree,
@@ -89,7 +66,7 @@ function updateDependencies(tree: Tree, options: JestInitSchema) {
 }
 
 export function jestInitGenerator(tree: Tree, options: JestInitSchema) {
-  return jestInitGeneratorInternal(tree, { addPlugin: false, ...options });
+  return jestInitGeneratorInternal(tree, options);
 }
 
 export async function jestInitGeneratorInternal(
@@ -98,31 +75,22 @@ export async function jestInitGeneratorInternal(
 ): Promise<GeneratorCallback> {
   assertSupportedJestVersion(tree);
 
-  const nxJson = readNxJson(tree);
-  const addPluginDefault =
-    process.env.NX_ADD_PLUGINS !== 'false' &&
-    nxJson.useInferencePlugins !== false;
-  options.addPlugin ??= addPluginDefault;
-
   const presetExt = getPresetExt(tree);
 
   if (!tree.exists(`jest.preset.${presetExt}`)) {
     updateProductionFileSet(tree);
-    if (options.addPlugin) {
-      await addPlugin(
-        tree,
-        await createProjectGraphAsync(),
-        '@nx/jest/plugin',
-        createNodesV2,
-        {
-          targetName: ['test', 'jest:test', 'jest-test'],
-        },
-        options.updatePackageScripts
-      );
-    } else {
-      addJestTargetDefaults(tree, presetExt);
-    }
   }
+  // Outside the preset gate: executor-era workspaces have a preset but no plugin.
+  await addPlugin(
+    tree,
+    await createProjectGraphAsync(),
+    '@nx/jest/plugin',
+    createNodesV2,
+    {
+      targetName: ['test', 'jest:test', 'jest-test'],
+    },
+    options.updatePackageScripts
+  );
 
   const tasks: GeneratorCallback[] = [];
   if (!options.skipPackageJson) {

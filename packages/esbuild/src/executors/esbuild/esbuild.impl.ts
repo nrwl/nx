@@ -1,13 +1,7 @@
 import * as pc from 'picocolors';
 import type { ExecutorContext } from '@nx/devkit';
-import { createAsyncIterable } from '@nx/devkit/internal';
-import {
-  cacheDir,
-  joinPathFragments,
-  logger,
-  stripIndents,
-  writeJsonFile,
-} from '@nx/devkit';
+import { createAsyncIterable, TargetProjectLocator } from '@nx/devkit/internal';
+import { cacheDir, logger, stripIndents, writeJsonFile } from '@nx/devkit';
 import {
   copyAssets,
   copyPackageJson,
@@ -30,7 +24,7 @@ import {
 } from './lib/build-esbuild-options';
 import { getExtraDependencies } from './lib/get-extra-dependencies';
 import { DependentBuildableProjectNode } from '@nx/js/internal';
-import { rmSync } from 'node:fs';
+import { deleteOutputDir } from '../../utils/fs';
 import { join, relative } from 'path';
 
 const BUILD_WATCH_FAILED = `[ ${pc.red(
@@ -40,26 +34,43 @@ const BUILD_WATCH_SUCCEEDED = `[ ${pc.green(
   'watch'
 )} ] build succeeded, watching for changes...`;
 
-// since the workspace has esbuild 0.17+ installed, there's no definition
-// of esbuild without 'context', therefore, the esbuild import in the else
-// branch below has type never, getting the type to cast later
-type EsBuild = typeof esbuild;
-
 export async function* esbuildExecutor(
   _options: EsBuildExecutorOptions,
   context: ExecutorContext
 ) {
   process.env.NODE_ENV ??= context.configurationName ?? 'production';
 
-  const options = normalizeOptions(_options, context);
+  const options = await normalizeOptions(_options, context);
   if (options.deleteOutputPath)
-    rmSync(options.outputPath, { recursive: true, force: true });
+    deleteOutputDir(context.root, options.outputPath);
 
   const assetsResult = await copyAssets(options, context);
 
+  let targetProjectLocator: TargetProjectLocator;
+  const sourceFile = join(
+    context.root,
+    context.projectGraph.nodes[context.projectName].data.root,
+    'package.json'
+  );
   const externalDependencies: DependentBuildableProjectNode[] =
     options.external.reduce((acc, name) => {
-      const externalNode = context.projectGraph.externalNodes[`npm:${name}`];
+      let externalNode = context.projectGraph.externalNodes[`npm:${name}`];
+      if (
+        (!externalNode || externalNode.data.version.startsWith('link:')) &&
+        name.split('/').length === (name.startsWith('@') ? 2 : 1)
+      ) {
+        targetProjectLocator ??= new TargetProjectLocator(
+          context.projectGraph.nodes,
+          context.projectGraph.externalNodes
+        );
+        const target = targetProjectLocator.findNpmProjectFromImport(
+          name,
+          sourceFile
+        );
+        externalNode = target
+          ? context.projectGraph.externalNodes[target]
+          : externalNode;
+      }
       if (externalNode) {
         acc.push({
           name,
@@ -215,7 +226,7 @@ export async function* esbuildExecutor(
             ? 'meta.json'
             : `meta.${options.format[i]}.json`;
         writeJsonFile(
-          joinPathFragments(options.outputPath, filename),
+          join(context.root, options.outputPath, filename),
           buildResult.metafile
         );
       }

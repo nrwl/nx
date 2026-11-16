@@ -6,20 +6,20 @@ import {
   type GeneratorCallback,
   type Tree,
 } from '@nx/devkit';
-import type { PackageJson } from 'nx/src/utils/package-json';
 import { createPackageGenerator } from '../create-package/create-package';
 import { pluginGenerator } from '../plugin/plugin';
 import type {
   NormalizedPresetGeneratorOptions,
   PresetGeneratorSchema,
 } from './schema';
+import { type PackageJson } from '@nx/devkit/internal';
+import { normalizeLinterOption } from '@nx/js/internal';
 
 export async function presetGenerator(
   tree: Tree,
   rawOptions: PresetGeneratorSchema
 ) {
   return await presetGeneratorInternal(tree, {
-    addPlugin: false,
     useProjectJson: true,
     ...rawOptions,
   });
@@ -30,11 +30,11 @@ export async function presetGeneratorInternal(
   rawOptions: PresetGeneratorSchema
 ) {
   const tasks: GeneratorCallback[] = [];
-  const options = normalizeOptions(rawOptions);
+  const options = await normalizeOptions(tree, rawOptions);
 
   const pluginTask = await pluginGenerator(tree, {
     compiler: 'tsc',
-    linter: 'eslint',
+    linter: options.linter,
     skipFormat: true,
     unitTestRunner: 'jest',
     importPath: options.pluginName,
@@ -47,7 +47,6 @@ export async function presetGeneratorInternal(
         : options.pluginName,
     rootProject: options.createPackageName ? false : true,
     useProjectJson: options.useProjectJson,
-    addPlugin: options.addPlugin,
   });
   tasks.push(pluginTask);
 
@@ -62,10 +61,9 @@ export async function presetGeneratorInternal(
       project: options.pluginName,
       skipFormat: true,
       unitTestRunner: 'jest',
-      linter: 'eslint',
+      linter: options.linter,
       compiler: 'tsc',
       useProjectJson: options.useProjectJson,
-      addPlugin: options.addPlugin,
     });
     tasks.push(cliTask);
   }
@@ -86,9 +84,10 @@ function moveNxPluginToDevDeps(tree: Tree) {
   });
 }
 
-function normalizeOptions(
+async function normalizeOptions(
+  tree: Tree,
   options: PresetGeneratorSchema
-): NormalizedPresetGeneratorOptions {
+): Promise<NormalizedPresetGeneratorOptions> {
   return {
     ...options,
     pluginName: names(
@@ -100,6 +99,9 @@ function normalizeOptions(
       options.createPackageName === 'false' // for command line in e2e, it is passed as a string
         ? undefined
         : options.createPackageName,
+    // Resolved once here rather than left to the two child generators, which
+    // each prompt on their own and would ask the same question twice.
+    linter: await normalizeLinterOption(tree, options.linter),
   };
 }
 

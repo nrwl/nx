@@ -39,6 +39,24 @@
       "description": "Create AI instructions to help migrate workspaces from React 18 to 19.",
       "prompt": "./dist/src/migrations/update-23-1-0/ai-instructions-for-react-19.md",
       "documentation": "./dist/src/migrations/update-23-1-0/upgrade-to-react-19.md"
+    },
+    "update-23-2-0-add-optional-module-federation-packages": {
+      "version": "23.2.0-beta.4",
+      "description": "Add optional Module Federation packages when existing targets require them.",
+      "implementation": "./dist/src/migrations/update-23-2-0/add-optional-module-federation-packages",
+      "documentation": "./dist/src/migrations/update-23-2-0/add-optional-module-federation-packages.md"
+    },
+    "update-23-2-0-add-svgr-webpack-if-used": {
+      "version": "23.2.0-beta.4",
+      "description": "Add `@svgr/webpack` when a webpack config references it.",
+      "implementation": "./dist/src/migrations/update-23-2-0/add-svgr-webpack-if-used",
+      "documentation": "./dist/src/migrations/update-23-2-0/add-svgr-webpack-if-used.md"
+    },
+    "update-24-0-0-register-typescript-plugin-for-typecheck": {
+      "version": "24.0.0-beta.3",
+      "description": "Register @nx/js/typescript with its typecheck target in workspaces that use @nx/react/router-plugin without it, and remove the router plugin's typecheckTargetName option, since @nx/react/router-plugin no longer infers typecheck targets.",
+      "implementation": "./dist/src/migrations/update-24-0-0/register-typescript-plugin-for-typecheck",
+      "documentation": "./dist/src/migrations/update-24-0-0/register-typescript-plugin-for-typecheck.md"
     }
   },
   "packageJsonUpdates": {
@@ -243,6 +261,18 @@
         },
         "@types/react-is": {
           "version": "^19.0.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "23.1.0-eslint-plugin-react": {
+      "version": "23.1.0-beta.5",
+      "requires": {
+        "eslint-plugin-react": "<7.35.0"
+      },
+      "packages": {
+        "eslint-plugin-react": {
+          "version": "^7.35.0",
           "alwaysAddToPackageJson": false
         }
       }

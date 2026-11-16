@@ -1,11 +1,14 @@
-import { getRelativeCwd, logShowProjectCommand } from '@nx/devkit/internal';
+import {
+  getRelativeCwd,
+  logShowProjectCommand,
+  type PackageJson,
+} from '@nx/devkit/internal';
 import {
   addProjectConfiguration,
   formatFiles,
   GeneratorCallback,
   installPackagesTask,
   joinPathFragments,
-  readJson,
   readProjectConfiguration,
   runTasksInSerial,
   toJS,
@@ -23,7 +26,6 @@ import {
   shouldConfigureTsSolutionSetup,
   updateTsconfigFiles,
 } from '@nx/js/internal';
-import type { PackageJson } from 'nx/src/utils/package-json';
 import { relative } from 'path';
 import { addLinting } from '../../utils/add-linting';
 import { extractTsConfigBase } from '../../utils/create-ts-config';
@@ -39,7 +41,6 @@ import { Schema } from './schema';
 
 export function libraryGenerator(tree: Tree, schema: Schema) {
   return libraryGeneratorInternal(tree, {
-    addPlugin: false,
     useProjectJson: true,
     ...schema,
   });
@@ -56,7 +57,7 @@ export async function libraryGeneratorInternal(tree: Tree, schema: Schema) {
     );
   }
 
-  const addTsPlugin = shouldConfigureTsSolutionSetup(tree, schema.addPlugin);
+  const addTsPlugin = shouldConfigureTsSolutionSetup(tree);
   tasks.push(
     await jsInitGenerator(tree, {
       ...schema,
@@ -188,7 +189,6 @@ export async function libraryGeneratorInternal(tree: Tree, schema: Schema) {
         projectConfig
       );
     } else {
-      const nxJson = readJson(tree, 'nx.json');
       await addReleaseConfigForNonTsSolution(
         tree,
         options.projectName,

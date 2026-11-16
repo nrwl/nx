@@ -1,8 +1,11 @@
 import {
   getNamedInputs,
+  getReadyCheckReadyWhen,
   calculateHashesForCreateNodes,
   loadConfigFile,
   PluginCache,
+  workspaceDataDirectory,
+  hashObject,
 } from '@nx/devkit/internal';
 import {
   AggregateCreateNodesError,
@@ -20,8 +23,6 @@ import {
 import { dirname, join } from 'path';
 import { getLockFileName } from '@nx/js';
 import { readdirSync } from 'fs';
-import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
-import { hashObject } from 'nx/src/devkit-internals';
 import { addBuildAndWatchDepsTargets } from '@nx/js/internal';
 
 export interface ExpoPluginOptions {
@@ -139,13 +140,16 @@ function buildExpoTargets(
 
   const targets: Record<string, TargetConfiguration> = {
     [options.startTargetName]: {
-      executor: `@nx/expo:start`,
+      command: `expo start`,
+      options: { cwd: projectRoot },
       continuous: true,
+      readyWhen: getReadyCheckReadyWhen('@nx/expo/ready-check'),
     },
     [options.serveTargetName]: {
       command: `expo start --web`,
       continuous: true,
       options: { cwd: projectRoot, args: ['--clear'] },
+      readyWhen: getReadyCheckReadyWhen('@nx/expo/ready-check'),
     },
     [options.runIosTargetName]: {
       command: `expo run:ios`,
@@ -166,15 +170,18 @@ function buildExpoTargets(
       outputs: [getOutputs(projectRoot, 'dist')],
     },
     [options.installTargetName]: {
-      executor: '@nx/expo:install',
+      command: `expo install`,
+      options: { cwd: projectRoot },
       continuous: false,
     },
     [options.prebuildTargetName]: {
-      executor: `@nx/expo:prebuild`,
+      command: `expo prebuild`,
+      options: { cwd: projectRoot },
       continuous: false,
     },
     [options.buildTargetName]: {
-      executor: `@nx/expo:build`,
+      command: `eas build`,
+      options: { cwd: projectRoot },
       continuous: false,
     },
     [options.submitTargetName]: {

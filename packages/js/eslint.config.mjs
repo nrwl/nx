@@ -7,26 +7,6 @@ export default [
     ignores: ['dist'],
   },
   {
-    files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
-    rules: {
-      'no-restricted-imports': [
-        'error',
-        {
-          name: 'fast-glob',
-          message: 'Please use `tinyglobby` instead.',
-        },
-        {
-          name: 'minimatch',
-          message: 'Please use `picomatch` instead.',
-        },
-        {
-          name: 'fs-extra',
-          message: 'Please use equivalent utilities from `node:fs` instead.',
-        },
-      ],
-    },
-  },
-  {
     files: [
       './package.json',
       './generators.json',

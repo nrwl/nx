@@ -3,10 +3,13 @@ import type { Arguments } from 'yargs';
 import { TEN_MEGABYTES } from '../project-graph/file-utils';
 import { output } from './output';
 import { NxJsonConfiguration } from '../config/nx-json';
-import { execSync } from 'child_process';
+import { execFileSync } from 'child_process';
 import { ProjectGraph } from '../config/project-graph';
+import { assertValidGitRevision } from './git-revision';
 import { workspaceRoot } from './workspace-root';
 import { readParallelFromArgsAndEnv } from '../command-line/yargs-utils/shared-options';
+// Type-only, so it erases and cannot deepen the existing cycle with that module.
+import type { OutputStyle } from '../command-line/yargs-utils/shared-options';
 
 export interface RawNxArgs extends NxArgs {
   prod?: boolean;
@@ -35,7 +38,26 @@ export interface NxArgs {
   select?: string;
   graph?: string | boolean;
   skipNxCache?: boolean;
+  explain?: string | boolean;
   skipRemoteCache?: boolean;
+  /**
+   * The style the user named - CLI flag or `NX_DEFAULT_OUTPUT_STYLE`. Left
+   * undefined when they named none, and that absence is load-bearing: it is how
+   * the streaming and renderer-selection decisions tell "the user wants static"
+   * from "we defaulted to static", which stream continuous tasks differently.
+   */
+  specifiedOutputStyle?: OutputStyle;
+  /**
+   * What the run actually renders with, after the TUI, agent and failures-only
+   * defaults are applied. Always set. Every decision about what to PRINT reads
+   * this; every decision about what the user ASKED FOR reads the field above.
+   */
+  resolvedOutputStyle?: OutputStyle;
+  /**
+   * @deprecated Read `specifiedOutputStyle` for what the user named, or
+   * `resolvedOutputStyle` for what the run renders with. This will be removed
+   * in Nx 24.
+   */
   outputStyle?: string;
   tui?: boolean;
   nxBail?: boolean;
@@ -277,31 +299,29 @@ export function parseFiles(options: NxArgs): { files: string[] } {
 }
 
 function getUncommittedFiles(): string[] {
-  return parseGitOutput(`git diff --name-only --no-renames --relative HEAD .`);
+  return parseGitOutput([
+    'diff',
+    '--name-only',
+    '--no-renames',
+    '--relative',
+    '-z',
+    'HEAD',
+    '.',
+  ]);
 }
 
 function getUntrackedFiles(): string[] {
-  return parseGitOutput(`git ls-files --others --exclude-standard`);
+  return parseGitOutput(['ls-files', '--others', '--exclude-standard', '-z']);
 }
 
 function getMergeBase(base: string, head: string = 'HEAD') {
+  assertValidGitRevision(base);
+  assertValidGitRevision(head);
   try {
-    return execSync(`git merge-base "${base}" "${head}"`, {
-      maxBuffer: TEN_MEGABYTES,
-      cwd: workspaceRoot,
-      stdio: 'pipe',
-      windowsHide: true,
-    })
-      .toString()
-      .trim();
+    return runGit(['merge-base', base, head]).toString().trim();
   } catch {
     try {
-      return execSync(`git merge-base --fork-point "${base}" "${head}"`, {
-        maxBuffer: TEN_MEGABYTES,
-        cwd: workspaceRoot,
-        stdio: 'pipe',
-        windowsHide: true,
-      })
+      return runGit(['merge-base', '--fork-point', base, head])
         .toString()
         .trim();
     } catch {
@@ -311,21 +331,38 @@ function getMergeBase(base: string, head: string = 'HEAD') {
 }
 
 function getFilesUsingBaseAndHead(base: string, head: string): string[] {
-  return parseGitOutput(
-    `git diff --name-only --no-renames --relative "${base}" "${head}"`
-  );
+  assertValidGitRevision(base);
+  assertValidGitRevision(head);
+  return parseGitOutput([
+    'diff',
+    '--name-only',
+    '--no-renames',
+    '--relative',
+    '-z',
+    base,
+    head,
+  ]);
 }
 
-function parseGitOutput(command: string): string[] {
-  return execSync(command, {
+function runGit(args: string[]): Buffer {
+  return execFileSync('git', args, {
     maxBuffer: TEN_MEGABYTES,
     cwd: workspaceRoot,
     stdio: 'pipe',
     windowsHide: true,
-  })
+  });
+}
+
+/**
+ * Parses NUL-terminated paths, so callers must pass `-z`, and must pass it
+ * before the pathspec — git fatals on a `-z` that follows one. Without `-z` git
+ * escapes paths that contain non-ASCII or quoting characters, and honours
+ * `core.quotepath`, which is on by default.
+ */
+function parseGitOutput(args: string[]): string[] {
+  return runGit(args)
     .toString('utf-8')
-    .split('\n')
-    .map((a) => a.trim())
+    .split('\0')
     .filter((a) => a.length > 0);
 }
 

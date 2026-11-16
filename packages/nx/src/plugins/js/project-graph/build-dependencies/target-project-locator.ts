@@ -12,6 +12,7 @@ import {
 import { isRelativePath, readJsonFile } from '../../../../utils/fileutils';
 import { getPackageNameFromImportPath } from '../../../../utils/get-package-name-from-import-path';
 import type { PackageJson } from '../../../../utils/package-json';
+import { normalizePath } from '../../../../utils/path';
 import { workspaceRoot } from '../../../../utils/workspace-root';
 import {
   getWorkspacePackagesMetadata,
@@ -49,9 +50,46 @@ const defaultPackageJsonResolutionCache: PackageJsonResolutionCache = new Map();
 
 const experimentalNodeModules = new Set(['node:sqlite']);
 
+/**
+ * Package root for a file that Node resolved inside `node_modules/<name>/`.
+ * `realpath` keeps that directory for a normal install, including pnpm's store path.
+ */
+function installedPackageJsonFromResolvedFile(
+  resolvedFile: string | null | undefined,
+  packageName: string
+): string | null {
+  if (!resolvedFile) {
+    return null;
+  }
+  const normalized = resolvedFile.replace(/\\/g, '/');
+  const marker = `/node_modules/${packageName}/`;
+  const index = normalized.lastIndexOf(marker);
+  if (index === -1) {
+    return null;
+  }
+  const root = normalized.slice(0, index + marker.length - 1);
+  return join(root, 'package.json');
+}
+
+function isNestedPackageName(
+  manifestName: string | undefined,
+  packageName: string
+): boolean {
+  return !!manifestName && manifestName.startsWith(`${packageName}/`);
+}
+
+// Node's isBuiltin is false for Bun's runtime modules (`bun`, `bun:*`).
+function isBunModuleImport(importExpr: string): boolean {
+  return importExpr === 'bun' || importExpr.startsWith('bun:');
+}
+
 export function isBuiltinModuleImport(importExpr: string): boolean {
   const packageName = getPackageNameFromImportPath(importExpr);
-  return isBuiltin(packageName) || experimentalNodeModules.has(packageName);
+  return (
+    isBuiltin(packageName) ||
+    experimentalNodeModules.has(packageName) ||
+    isBunModuleImport(importExpr)
+  );
 }
 
 // TypeScript matches the `${configDir}` template case-insensitively and only as a
@@ -241,13 +279,21 @@ export class TargetProjectLocator {
       }
 
       const version = clean(externalPackageJson.version);
-      let matchingExternalNode =
-        this.npmProjects[`npm:${externalPackageJson.name}@${version}`];
+      const isAliasImport = packageName !== externalPackageJson.name;
+      let matchingExternalNode: ProjectGraphExternalNode | null = null;
+
+      if (isAliasImport) {
+        // Prefer the alias node when both the alias import and the resolved package
+        // exist in the graph, otherwise generated package.json files lose the alias key.
+        const aliasNpmProjectKey = `npm:${packageName}@npm:${externalPackageJson.name}@${version}`;
+        matchingExternalNode =
+          this.npmProjects[aliasNpmProjectKey] ??
+          this.npmProjects[`npm:${packageName}`];
+      }
 
       if (!matchingExternalNode) {
-        // check if it's a package alias, where the resolved package key is used as the version
-        const aliasNpmProjectKey = `npm:${packageName}@npm:${externalPackageJson.name}@${version}`;
-        matchingExternalNode = this.npmProjects[aliasNpmProjectKey];
+        matchingExternalNode =
+          this.npmProjects[`npm:${externalPackageJson.name}@${version}`];
       }
 
       if (!matchingExternalNode) {
@@ -498,6 +544,7 @@ export class TargetProjectLocator {
   private findProjectOfResolvedModule(
     resolvedModule: string
   ): string | undefined {
+    resolvedModule = normalizePath(resolvedModule);
     if (
       resolvedModule.startsWith('node_modules/') ||
       resolvedModule.includes('/node_modules/')
@@ -577,28 +624,32 @@ export class TargetProjectLocator {
    * In some cases, such as when multiple module formats are published, the resolved package.json
    * might only contain the "type" field - no "name" or "version", so in such cases we keep traversing
    * until we find a package.json that contains the "name" and "version" fields.
+   *
+   * A nested manifest whose name is a subpath of the requested package (for example
+   * `@stencil/core/internal`) is not that package. Prefer `node_modules/<name>/package.json`
+   * — aliases keep that file's own name — and skip subpath manifests while walking up.
    */
   private readPackageJson(
     packageName: string,
     relativeToDir: string
   ): PackageJson | null {
-    // The package.json is directly resolvable
+    // Package specifiers use `/` on every OS. path.join() would use `\` on Windows.
     const packageJsonPath = resolveRelativeToDir(
-      join(packageName, 'package.json'),
+      `${packageName}/package.json`,
       relativeToDir
     );
     if (packageJsonPath) {
       if (this.packageJsonResolutionCache.has(packageJsonPath)) {
-        return this.packageJsonResolutionCache.get(packageJsonPath);
+        const cached = this.packageJsonResolutionCache.get(packageJsonPath);
+        if (cached) {
+          return cached;
+        }
       }
       const parsedPackageJson = readJsonFile(packageJsonPath);
 
       if (parsedPackageJson.name && parsedPackageJson.version) {
         this.packageJsonResolutionCache.set(packageJsonPath, parsedPackageJson);
         return parsedPackageJson;
-      } else {
-        this.packageJsonResolutionCache.set(packageJsonPath, null);
-        return null;
       }
     }
 
@@ -606,31 +657,84 @@ export class TargetProjectLocator {
       // Resolve the main entry point of the package
       const pathOfFileInPackage =
         packageJsonPath ?? resolveRelativeToDir(packageName, relativeToDir);
+      const installedPackageJsonPath = installedPackageJsonFromResolvedFile(
+        pathOfFileInPackage,
+        packageName
+      );
+      if (
+        installedPackageJsonPath &&
+        installedPackageJsonPath !== packageJsonPath
+      ) {
+        const installedPackageJson = this.readCompletePackageJson(
+          installedPackageJsonPath
+        );
+        if (installedPackageJson) {
+          return installedPackageJson;
+        }
+      }
+
       let dir = dirname(pathOfFileInPackage);
 
       while (dir !== dirname(dir)) {
-        const packageJsonPath = join(dir, 'package.json');
-        if (this.packageJsonResolutionCache.has(packageJsonPath)) {
-          return this.packageJsonResolutionCache.get(packageJsonPath);
-        }
-        try {
-          const parsedPackageJson = readJsonFile(packageJsonPath);
-          // Ensure the package.json contains the "name" and "version" fields
-          if (parsedPackageJson.name && parsedPackageJson.version) {
-            this.packageJsonResolutionCache.set(
-              packageJsonPath,
-              parsedPackageJson
-            );
-            return parsedPackageJson;
-          } else {
-            this.packageJsonResolutionCache.set(packageJsonPath, null);
-            return null;
+        const candidatePath = join(dir, 'package.json');
+        if (this.packageJsonResolutionCache.has(candidatePath)) {
+          const cached = this.packageJsonResolutionCache.get(candidatePath);
+          if (
+            cached?.name &&
+            cached.version &&
+            !isNestedPackageName(cached.name, packageName)
+          ) {
+            return cached;
           }
-        } catch {
-          // Package.json is invalid, keep traversing
+          // Cached incomplete manifests, and nested packages, are traversal points.
+        } else {
+          try {
+            const parsedPackageJson = readJsonFile(candidatePath);
+            // Ensure the package.json contains the "name" and "version" fields
+            if (parsedPackageJson.name && parsedPackageJson.version) {
+              if (isNestedPackageName(parsedPackageJson.name, packageName)) {
+                this.packageJsonResolutionCache.set(candidatePath, null);
+              } else {
+                this.packageJsonResolutionCache.set(
+                  candidatePath,
+                  parsedPackageJson
+                );
+                return parsedPackageJson;
+              }
+            } else {
+              // A module-format stub without name/version: remember it and keep
+              // traversing towards the real manifest.
+              this.packageJsonResolutionCache.set(candidatePath, null);
+            }
+          } catch {
+            // Package.json is invalid, keep traversing
+          }
         }
         dir = dirname(dir);
       }
+      return null;
+    } catch {
+      return null;
+    }
+  }
+
+  private readCompletePackageJson(
+    packageJsonPath: string | null
+  ): PackageJson | null {
+    if (!packageJsonPath) {
+      return null;
+    }
+    const cached = this.packageJsonResolutionCache.get(packageJsonPath);
+    if (cached?.name && cached.version) {
+      return cached;
+    }
+    try {
+      const parsedPackageJson = readJsonFile(packageJsonPath);
+      if (parsedPackageJson.name && parsedPackageJson.version) {
+        this.packageJsonResolutionCache.set(packageJsonPath, parsedPackageJson);
+        return parsedPackageJson;
+      }
+      this.packageJsonResolutionCache.set(packageJsonPath, null);
       return null;
     } catch {
       return null;

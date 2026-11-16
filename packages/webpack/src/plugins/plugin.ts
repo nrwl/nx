@@ -1,11 +1,14 @@
 import {
   calculateHashesForCreateNodes,
   getNamedInputs,
+  getReadyCheckReadyWhen,
   PluginCache,
+  hashObject,
+  workspaceDataDirectory,
 } from '@nx/devkit/internal';
+import { sendsReadySignal } from '../utils/dev-server-ready-signal';
 import {
   AggregateCreateNodesError,
-  CreateDependencies,
   CreateNodesContext,
   createNodesFromFiles,
   CreateNodesResult,
@@ -14,20 +17,22 @@ import {
   detectPackageManager,
   getPackageManagerCommand,
   joinPathFragments,
+  PackageManager,
   ProjectConfiguration,
   TargetConfiguration,
   workspaceRoot,
+  normalizePath,
 } from '@nx/devkit';
 import { getLockFileName, getRootTsConfigPath } from '@nx/js';
 import {
   isUsingTsSolutionSetup,
+  pnpmInstallSettingsInputsForInferredTarget,
+  shouldIncludePnpmMajorRuntimeInput,
   TS_SOLUTION_SETUP_TSCONFIG_INPUT,
   addBuildAndWatchDepsTargets,
 } from '@nx/js/internal';
 import { readdirSync } from 'fs';
-import { hashObject } from 'nx/src/hasher/file-hasher';
-import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
-import { dirname, isAbsolute, join, relative, resolve } from 'path';
+import { basename, dirname, isAbsolute, join, relative, resolve } from 'path';
 import { readWebpackOptions } from '../utils/webpack/read-webpack-options';
 import { resolveUserDefinedWebpackConfig } from '../utils/webpack/resolve-user-defined-webpack-config';
 export interface WebpackPluginOptions {
@@ -40,13 +45,6 @@ export interface WebpackPluginOptions {
 }
 
 type WebpackTargets = Pick<ProjectConfiguration, 'targets' | 'metadata'>;
-
-/**
- * @deprecated The 'createDependencies' function is now a no-op. This functionality is included in 'createNodesV2'.
- */
-export const createDependencies: CreateDependencies = () => {
-  return [];
-};
 
 const webpackConfigGlob = '**/webpack.config.{js,ts,mjs,cjs}';
 
@@ -64,6 +62,10 @@ export const createNodes: CreateNodes<WebpackPluginOptions> = [
     const packageManager = detectPackageManager(context.workspaceRoot);
     const pmc = getPackageManagerCommand(packageManager);
     const lockFileName = getLockFileName(packageManager);
+    const includePnpmMajorRuntimeInput = shouldIncludePnpmMajorRuntimeInput(
+      packageManager,
+      context.workspaceRoot
+    );
 
     try {
       const { entries, preErrors } = await filterWebpackConfigs(
@@ -73,7 +75,7 @@ export const createNodes: CreateNodes<WebpackPluginOptions> = [
 
       const projectHashes = await calculateHashesForCreateNodes(
         entries.map((e) => e.projectRoot),
-        normalizedOptions,
+        { ...normalizedOptions, includePnpmMajorRuntimeInput },
         context,
         entries.map(() => [lockFileName])
       );
@@ -89,7 +91,9 @@ export const createNodes: CreateNodes<WebpackPluginOptions> = [
               ctx,
               targetsCache,
               isTsSolutionSetup,
+              packageManager,
               pmc,
+              includePnpmMajorRuntimeInput,
               projectHashes[idx]
             ),
           entries.map((e) => e.configFile),
@@ -124,7 +128,9 @@ async function createNodesInternal(
   context: CreateNodesContext,
   targetsCache: PluginCache<WebpackTargets>,
   isTsSolutionSetup: boolean,
+  packageManager: PackageManager,
   pmc: ReturnType<typeof getPackageManagerCommand>,
+  includePnpmMajorRuntimeInput: boolean,
   hash: string
 ): Promise<CreateNodesResult> {
   const projectRoot = dirname(configFilePath);
@@ -138,7 +144,9 @@ async function createNodesInternal(
         options,
         context,
         isTsSolutionSetup,
-        pmc
+        packageManager,
+        pmc,
+        includePnpmMajorRuntimeInput
       )
     );
   }
@@ -162,7 +170,9 @@ async function createWebpackTargets(
   options: Required<WebpackPluginOptions>,
   context: CreateNodesContext,
   isTsSolutionSetup: boolean,
-  pmc: ReturnType<typeof getPackageManagerCommand>
+  packageManager: PackageManager,
+  pmc: ReturnType<typeof getPackageManagerCommand>,
+  includePnpmMajorRuntimeInput: boolean
 ): Promise<WebpackTargets> {
   const namedInputs = getNamedInputs(projectRoot, context);
 
@@ -183,29 +193,37 @@ async function createWebpackTargets(
 
   const targets: Record<string, TargetConfiguration> = {};
 
+  const buildInputs: TargetConfiguration['inputs'] = [
+    ...('production' in namedInputs
+      ? ['production', '^production']
+      : ['default', '^default']),
+    {
+      externalDependencies: ['webpack-cli'],
+    },
+    TS_SOLUTION_SETUP_TSCONFIG_INPUT,
+  ];
+
   targets[options.buildTargetName] = {
     command: `webpack-cli build`,
     options: { cwd: projectRoot, env: { NODE_ENV: 'production' } },
+    configurations: {
+      development: {
+        env: { NODE_ENV: 'development' },
+      },
+    },
     cache: true,
     dependsOn: [`^${options.buildTargetName}`],
-    inputs:
-      'production' in namedInputs
-        ? [
-            'production',
-            '^production',
-            {
-              externalDependencies: ['webpack-cli'],
-            },
-            TS_SOLUTION_SETUP_TSCONFIG_INPUT,
-          ]
-        : [
-            'default',
-            '^default',
-            {
-              externalDependencies: ['webpack-cli'],
-            },
-            TS_SOLUTION_SETUP_TSCONFIG_INPUT,
-          ],
+    inputs: [
+      ...buildInputs,
+      // The build can emit a pruned pnpm deploy output (NxAppWebpackPlugin
+      // with generatePackageJson), whose install settings come from these
+      // otherwise-unhashed root sources.
+      ...(packageManager === 'pnpm'
+        ? pnpmInstallSettingsInputsForInferredTarget(
+            includePnpmMajorRuntimeInput
+          )
+        : []),
+    ],
     outputs,
     metadata: {
       technologies: ['webpack'],
@@ -222,13 +240,20 @@ async function createWebpackTargets(
     },
   };
 
+  const devServerReadyWhen = getDevServerReadyWhen(
+    configFilePath,
+    webpackOptions
+  );
+
   targets[options.serveTargetName] = {
     continuous: true,
+    inputs: [...buildInputs],
     command: `webpack-cli serve`,
     options: {
       cwd: projectRoot,
       env: { NODE_ENV: 'development' },
     },
+    readyWhen: devServerReadyWhen,
     metadata: {
       technologies: ['webpack'],
       description: 'Starts Webpack dev server',
@@ -245,11 +270,13 @@ async function createWebpackTargets(
 
   targets[options.previewTargetName] = {
     continuous: true,
+    inputs: [...buildInputs],
     command: `webpack-cli serve`,
     options: {
       cwd: projectRoot,
       env: { NODE_ENV: 'production' },
     },
+    readyWhen: devServerReadyWhen,
     metadata: {
       technologies: ['webpack'],
       description: 'Starts Webpack dev server in production mode',
@@ -266,12 +293,14 @@ async function createWebpackTargets(
 
   targets[options.serveStaticTargetName] = {
     continuous: true,
+    inputs: [...buildInputs],
     dependsOn: [options.buildTargetName],
     executor: '@nx/web:file-server',
     options: {
       buildTarget: options.buildTargetName,
       spa: true,
     },
+    readyWhen: { signal: true },
   };
 
   // for `convert-to-inferred` we need to leave the port undefined or the options will not match
@@ -323,9 +352,8 @@ function normalizeOutputPath(
        * If outputPath is absolute, we need to resolve it relative to the workspaceRoot first.
        * After that, we can use the relative path to the workspaceRoot token {workspaceRoot} to generate the output path.
        */
-      return `{workspaceRoot}/${relative(
-        workspaceRoot,
-        resolve(workspaceRoot, outputPath)
+      return `{workspaceRoot}/${normalizePath(
+        relative(workspaceRoot, resolve(workspaceRoot, outputPath))
       )}`;
     } else {
       if (outputPath.startsWith('..')) {
@@ -387,4 +415,25 @@ function normalizeOptions(
     buildDepsTargetName: 'build-deps',
     watchDepsTargetName: 'watch-deps',
   };
+}
+
+// A dev server whose config loads NxAppWebpackPlugin or NxReadySignalPlugin reports
+// when it listens. Otherwise the check reads the config when the task runs,
+// with the task's env and options, and waits for the dev server's port.
+function getDevServerReadyWhen(
+  configFilePath: string,
+  configs: { devServer?: unknown; plugins?: unknown[] }[]
+): TargetConfiguration['readyWhen'] {
+  // webpack-cli starts a dev server for each config with devServer. Only the
+  // first one to listen would signal, so several get the check that waits
+  // for each of them.
+  const withDevServer = configs.filter((config) => config.devServer);
+  const signals =
+    withDevServer.length === 1 && sendsReadySignal(withDevServer[0]);
+  return signals
+    ? { signal: true }
+    : getReadyCheckReadyWhen(
+        '@nx/webpack/ready-check',
+        basename(configFilePath)
+      );
 }

@@ -1,0 +1,58 @@
+---
+title: 'Concurrent Worker Limits'
+description: 'How many Nx Cloud workers your organization can run at once, what happens to a run that needs more, and how to raise the limit.'
+keywords:
+  [
+    concurrent workers,
+    worker limit,
+    worker queue,
+    waiting for workers,
+    nx agents,
+    nx cloud,
+  ]
+filter: 'type:Guides'
+topics:
+  - 'Continuous integration'
+  - 'Nx Cloud'
+---
+
+Each Nx Cloud organization has a limit on how many [workers](/docs/features/ci-features/distribute-task-execution) can run at the same time, shared by every run in every workspace of the organization.
+When your organization is at the limit, new runs wait in a queue until enough workers free up.
+
+## The limit
+
+| Plan          | Concurrent workers                                                   |
+| ------------- | -------------------------------------------------------------------- |
+| Hobby         | 25                                                                   |
+| Team, CI team | 25, or with a worker pack 50 ($75 a month), 75 ($150), or 100 ($225) |
+| Enterprise    | Set by your contract                                                 |
+
+The pool counts every worker Nx Cloud runs for your organization.
+A [main-job worker](/docs/reference/nx-cloud/ci-config#main-job-worker) doesn't count, and neither do machines you run yourself through [bring your own compute](/docs/kb/bring-your-own-compute).
+
+A run gets all of its workers at once: one that asks for 20 waits until 20 are free. A run that asks for more than the limit gets the limit.
+
+## How queueing works
+
+A queued run's page in Nx Cloud shows how many tasks are waiting for workers.
+Queued runs start in the order they arrived.
+
+A queued run is cancelled when a new push lands on its branch, or once it has waited an hour.
+
+If runs queue often, raise the limit or give small changes fewer workers with [`distribute-on` changesets](/docs/features/ci-features/distribute-task-execution#scale-workers-with-pr-size).
+
+## Raise or lower the limit
+
+On Team and CI team, set the limit in your [organization settings](https://cloud.nx.app/go/organization/edit#concurrent-workers).
+A higher limit applies as soon as it's set and is prorated for the rest of the month.
+A lower limit takes effect at the end of the calendar month, and never stops workers that are already running.
+For the other CI team rates, see [CI Plan usage and rates](/docs/kb/ci-plan-usage).
+
+On Hobby, switch to Team or CI team to raise it ([compare plans](https://nx.dev/pricing)).
+
+On Enterprise, the limit is part of your contract. [Talk to sales](https://nx.dev/contact/sales) to change it.
+
+## See current usage
+
+Your organization's usage page in Nx Cloud has a **Concurrent workers** card with the limit, the workers in use right now and how many are waiting in the queue.
+The billing page lists the limit with the rest of your plan, and a queued run's page shows the in-use count and the limit.

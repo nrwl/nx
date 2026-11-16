@@ -55,7 +55,7 @@ export { createNodesFromFiles } from './project-graph/plugins';
 /**
  * @category Tasks
  */
-export type { Task, TaskGraph } from './config/task-graph';
+export type { Task, TaskGraph, TaskGraphEdge } from './config/task-graph';
 
 /**
  * @category Tasks
@@ -70,9 +70,15 @@ export type {
   ImplicitDependencyEntry,
   ImplicitJsonSubsetDependency,
   NxAffectedConfig,
+  NxConformanceConfiguration,
+  NxOwnersConfiguration,
   NxJsonConfiguration,
   PluginConfiguration,
   TargetDefaults,
+  TargetDefaultEntry,
+  TargetDefaultValue,
+  TargetDefaultArrayEntry,
+  TargetDefaultFilter,
 } from './config/nx-json';
 
 /**
@@ -99,6 +105,11 @@ export {
   getPackageManagerVersion,
   isWorkspacesEnabled,
 } from './utils/package-manager';
+
+/**
+ * @category Package Manager
+ */
+export { acknowledgeBuildScripts } from './utils/acknowledge-build-scripts';
 
 /**
  * @category Commands
@@ -243,3 +254,11 @@ export { cacheDir } from './utils/cache-directory';
 export { createProjectFileMapUsingProjectGraph } from './project-graph/file-map-utils';
 
 export { isDaemonEnabled } from './daemon/client/client';
+
+/**
+ * @category Utils
+ */
+export {
+  getReadyUrl,
+  emitReadySignal,
+} from './tasks-runner/readiness/ready-signal';

@@ -1,6 +1,6 @@
 import type { Tree } from '@nx/devkit';
-import { createTreeWithEmptyWorkspace } from 'nx/src/devkit-testing-exports';
 import { upsertBaseUrl } from './upsert-baseUrl';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 
 describe('upsertBaseUrl', () => {
   let tree: Tree;
@@ -72,6 +72,37 @@ export default defineConfig({
           ...nxE2EPreset(__filename, { cypressDir: 'src' }),
         baseUrl: "http://localhost:4200",
               },
+      });"
+    `);
+  });
+
+  it('should update a baseUrl value that uses a type assertion', () => {
+    // ARRANGE
+    tree.write(
+      configFilePath,
+      `import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
+import { defineConfig } from 'cypress';
+
+export default defineConfig({
+  e2e: {
+    ...nxE2EPreset(__filename, { cypressDir: 'src' }),
+    baseUrl: <string>"http://localhost:4200",
+  },
+});`
+    );
+    // ACT
+    upsertBaseUrl(tree, configFilePath, 'http://localhost:4201');
+
+    // ASSERT
+    expect(tree.read(configFilePath, 'utf-8')).toMatchInlineSnapshot(`
+      "import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
+      import { defineConfig } from 'cypress';
+
+      export default defineConfig({
+        e2e: {
+          ...nxE2EPreset(__filename, { cypressDir: 'src' }),
+          baseUrl: "http://localhost:4201",
+        },
       });"
     `);
   });

@@ -12,13 +12,6 @@ export default {
     reactDocgen: 'react-docgen-typescript',
   },
   docs: {},
-  viteFinal: async (config) => {
-    const {
-      nxViteTsPaths,
-      // nx-ignore-next-line
-    } = await import('@nx/vite/plugins/nx-tsconfig-paths.plugin');
-    return mergeConfig(config, {
-      plugins: [nxViteTsPaths()],
-    });
-  },
+  viteFinal: async (config) =>
+    mergeConfig(config, { resolve: { tsconfigPaths: true } }),
 };

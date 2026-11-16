@@ -1,11 +1,6 @@
-import { Linter, LinterType, lintProjectGenerator } from '@nx/eslint';
-import {
-  addDependenciesToPackageJson,
-  GeneratorCallback,
-  runTasksInSerial,
-  Tree,
-} from '@nx/devkit';
-import { extraEslintDependencies } from '@nx/react';
+import { LinterType } from '@nx/js';
+import { GeneratorCallback, runTasksInSerial, Tree } from '@nx/devkit';
+import { addExtraEslintDependencies } from '@nx/react/internal';
 import {
   addExtendsToLintConfig,
   addIgnoresToLintConfig,
@@ -15,36 +10,40 @@ import {
   updateOverrideInLintConfig,
   useFlatConfig,
 } from '@nx/eslint/internal';
+import { addLintingToProject } from '@nx/js/internal';
 
 interface NormalizedSchema {
-  linter?: Linter | LinterType;
+  linter?: LinterType;
   projectName: string;
   projectRoot: string;
-  setParserOptionsProject?: boolean;
+  enableTypedLinting?: boolean;
   tsConfigPaths: string[];
+  unitTestRunner?: string;
   skipPackageJson?: boolean;
-  addPlugin?: boolean;
   buildable?: boolean;
   isTsSolutionSetup?: boolean;
 }
 
 export async function addLinting(host: Tree, options: NormalizedSchema) {
-  if (options.linter === 'none') {
-    return () => {};
-  }
   const tasks: GeneratorCallback[] = [];
+  tasks.push(
+    await addLintingToProject(host, {
+      oxlintPlugins: ['react', 'react-perf'],
+      linter: options.linter,
+      project: options.projectName,
+      tsConfigPaths: options.tsConfigPaths,
+      unitTestRunner: options.unitTestRunner,
+      skipPackageJson: options.skipPackageJson,
+      enableTypedLinting: options.enableTypedLinting,
+      addPackageJsonDependencyChecks: options.buildable,
+    })
+  );
 
-  const lintTask = await lintProjectGenerator(host, {
-    linter: options.linter,
-    project: options.projectName,
-    tsConfigPaths: options.tsConfigPaths,
-    skipFormat: true,
-    skipPackageJson: options.skipPackageJson,
-    addPlugin: options.addPlugin,
-    addPackageJsonDependencyChecks: options.buildable,
-  });
-
-  tasks.push(lintTask);
+  // Everything below configures ESLint — predefined configs, `extends`, ignore
+  // entries — which have no equivalent in other linters.
+  if (options.linter && options.linter !== 'eslint') {
+    return runTasksInSerial(...tasks);
+  }
 
   // Add ignored dependencies and files to dependency-checks rule
   if (isEslintConfigSupported(host)) {
@@ -111,14 +110,7 @@ export async function addLinting(host: Tree, options: NormalizedSchema) {
   }
 
   if (!options.skipPackageJson) {
-    const installTask = await addDependenciesToPackageJson(
-      host,
-      extraEslintDependencies.dependencies,
-      extraEslintDependencies.devDependencies,
-      undefined,
-      true
-    );
-    tasks.push(installTask);
+    tasks.push(addExtraEslintDependencies(host));
   }
 
   return runTasksInSerial(...tasks);

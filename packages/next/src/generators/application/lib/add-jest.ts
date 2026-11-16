@@ -28,7 +28,9 @@ export async function addJest(
     supportTsx: true,
     skipSerializers: true,
     setupFile: 'none',
-    compiler: 'babel',
+    // The generated config is replaced by updateJestConfig, so this only decides
+    // which transformer package gets installed; 'tsc' installs none.
+    compiler: 'tsc',
     skipFormat: true,
     runtimeTsconfigFileName: 'tsconfig.json',
   });
@@ -57,8 +59,8 @@ export async function addJest(
     joinPathFragments(options.appProjectRoot, 'tsconfig.spec.json'),
     (json) => {
       json.compilerOptions.jsx = 'react';
-      // have to override exclude otherwise lint will fail with setParserOptionsProject and jest.config.ts/jest.config.cts
-      if (options.setParserOptionsProject) {
+      // Override exclude so typed linting doesn't fail on jest.config.ts and jest.config.cts.
+      if (options.enableTypedLinting) {
         const tsConfig = readJson(
           host,
           joinPathFragments(options.appProjectRoot, 'tsconfig.json')

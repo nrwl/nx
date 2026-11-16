@@ -10,6 +10,12 @@ export interface CreateWorkspaceOptions {
    * Used when the user provides "." or an absolute path as the workspace name.
    */
   workingDir?: string;
+  /**
+   * @description Scaffold into the current directory in place. Set when the
+   * user passes "." / "./". Relaxes the empty-directory guard, so existing
+   * files in the cwd that collide with generated files are overwritten.
+   */
+  useCurrentDir?: boolean;
   packageManager: PackageManager; // Package manager to use
   nxCloud: NxCloud; // Enable Nx Cloud
   useGitHub?: boolean; // Will you be using GitHub as your git hosting provider?
@@ -52,11 +58,6 @@ export interface CreateWorkspaceOptions {
    * @default false
    */
   skipCloudConnect?: boolean;
-  /**
-   * @description Set neverConnectToCloud in nx.json (full opt-out)
-   * @default false
-   */
-  neverConnectToCloud?: boolean;
   /**
    * @description Whether GitHub CLI (gh) is available on the system (for telemetry)
    */

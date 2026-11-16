@@ -33,9 +33,7 @@ export async function angularInitGenerator(
   // generators do not use `angular.json`, and `nx init` should split
   // `angular.json` into multiple `project.json` files -- as this is preferred
   // by most folks we've talked to.
-  options.addPlugin ??= process.env.NX_RUNNING_NX_IMPORT === 'true';
-
-  if (options.addPlugin) {
+  if (process.env.NX_RUNNING_NX_IMPORT === 'true') {
     await addPlugin(
       tree,
       await createProjectGraphAsync(),

@@ -22,7 +22,6 @@ import nodeResolve from '@rollup/plugin-node-resolve';
 import autoprefixer from 'autoprefixer';
 import { existsSync } from 'node:fs';
 import { dirname, join, parse } from 'node:path';
-import { PackageJson } from 'nx/src/utils/package-json';
 import * as rollup from 'rollup';
 import { analyze } from '../analyze';
 import { deleteOutput } from '../delete-output';
@@ -31,6 +30,7 @@ import { generatePackageJson } from '../package-json/generate-package-json';
 import { swc } from '../swc';
 import { getProjectNode } from './get-project-node';
 import { normalizeOptions } from './normalize-options';
+import { clearTimersOnClose } from './watch-program-timers';
 import { RollupWithNxPluginOptions } from './with-nx-options';
 
 // These use require because the ES import isn't correct.
@@ -41,6 +41,7 @@ const json = require('@rollup/plugin-json');
 
 // Use our inlined postcss plugin instead of external rollup-plugin-postcss
 import { postcss } from '../postcss';
+import { PackageJson } from '@nx/devkit/internal';
 
 const fileExtensions = ['.js', '.jsx', '.ts', '.tsx'];
 
@@ -110,16 +111,23 @@ export function withNx(
           dependencies
         );
 
-  ensureTypeScript();
-  const tsConfigFile = ts.readConfigFile(tsConfigPath, ts.sys.readFile);
-  const tsConfig = ts.parseJsonConfigFileContent(
-    tsConfigFile.config,
-    ts.sys,
-    dirname(tsConfigPath)
-  );
+  // Graph creation only reads output dirs. Its unnormalized tsConfig path
+  // usually doesn't exist, and parsing that scans the whole workspace.
+  let tsConfig: ReturnType<typeof ts.parseJsonConfigFileContent>;
+  if (!global.NX_GRAPH_CREATION) {
+    ensureTypeScript();
+    const tsConfigFile = ts.readConfigFile(tsConfigPath, ts.sys.readFile);
+    tsConfig = ts.parseJsonConfigFileContent(
+      tsConfigFile.config,
+      ts.sys,
+      dirname(tsConfigPath)
+    );
+  }
 
   if (!options.format || !options.format.length) {
-    options.format = readCompatibleFormats(tsConfig);
+    options.format = global.NX_GRAPH_CREATION
+      ? ['esm']
+      : readCompatibleFormats(tsConfig);
   }
 
   if (
@@ -261,6 +269,7 @@ export function withNx(
           : finalConfig.output.dir;
         return require('@rollup/plugin-typescript')({
           tsconfig: tsConfigPath,
+          typescript: clearTimersOnClose(ts),
           compilerOptions: {
             ...tsCompilerOptions,
             composite: false,

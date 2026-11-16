@@ -1,4 +1,4 @@
-import 'nx/src/internal-testing-utils/mock-project-graph';
+import '@nx/devkit/internal-testing-utils/mock-project-graph';
 
 import {
   type NxJsonConfiguration,
@@ -6,7 +6,9 @@ import {
   type Tree,
   updateJson,
 } from '@nx/devkit';
+import { filterUsingGlobPatterns } from '@nx/devkit/internal';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import { jestConfigExtensions } from '../../utils/config/config-file';
 import { jestInitGenerator } from './init';
 import { JestInitSchema } from './schema';
 
@@ -16,9 +18,12 @@ describe('jest', () => {
 
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-    options = {
-      addPlugin: true,
-    };
+    // ensure targetDefaults starts as an empty map so assertions target it
+    updateJson<NxJsonConfiguration>(tree, 'nx.json', (json) => {
+      json.targetDefaults = {};
+      return json;
+    });
+    options = {};
   });
 
   it('should exclude jest files from production fileset', async () => {
@@ -32,14 +37,37 @@ describe('jest', () => {
 
     const productionFileSet = readJson<NxJsonConfiguration>(tree, 'nx.json')
       .namedInputs.production;
-    const jestDefaults = readJson<NxJsonConfiguration>(tree, 'nx.json')
-      .targetDefaults['@nx/jest:jest'];
     expect(productionFileSet).toContain(
       '!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)'
     );
     expect(productionFileSet).toContain('!{projectRoot}/tsconfig.spec.json');
-    expect(productionFileSet).toContain('!{projectRoot}/jest.config.[jt]s');
+    expect(productionFileSet).toContain(
+      '!{projectRoot}/jest.config.{cjs,mjs,js,cts,mts,ts}'
+    );
     expect(productionFileSet).toContain('!{projectRoot}/src/test-setup.[jt]s');
+  });
+
+  it('should exclude every jest config extension from the production fileset', async () => {
+    updateJson<NxJsonConfiguration>(tree, 'nx.json', (json) => {
+      json.namedInputs ??= {};
+      // filterUsingGlobPatterns takes raw globs, so use the project fileset
+      // `default` expands to rather than the named input itself.
+      json.namedInputs.production = ['{projectRoot}/**/*'];
+      return json;
+    });
+
+    await jestInitGenerator(tree, { ...options, addPlugin: false });
+
+    const productionFileSet = readJson<NxJsonConfiguration>(tree, 'nx.json')
+      .namedInputs.production as string[];
+    const jestConfigs = jestConfigExtensions.map((ext) => ({
+      file: `libs/my-lib/jest.config.${ext}`,
+      hash: '',
+    }));
+
+    expect(
+      filterUsingGlobPatterns('libs/my-lib', jestConfigs, productionFileSet)
+    ).toEqual([]);
   });
 
   it('should not alter target defaults if jest.preset.js already exists', async () => {
@@ -58,7 +86,8 @@ describe('jest', () => {
         '!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)',
         '!{projectRoot}/**/*.md',
       ];
-      json.targetDefaults.test = {
+      json.targetDefaults ??= {};
+      json.targetDefaults['test'] = {
         inputs: [
           'default',
           '^production',
@@ -76,11 +105,47 @@ describe('jest', () => {
     expect(readJson<NxJsonConfiguration>(tree, 'nx.json')).toEqual(nxJson);
   });
 
+  it('should register the plugin when jest.preset.js exists without it', async () => {
+    tree.write('jest.preset.js', '');
+
+    await jestInitGenerator(tree, options);
+
+    expect(readJson<NxJsonConfiguration>(tree, 'nx.json').plugins).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ plugin: '@nx/jest/plugin' }),
+      ])
+    );
+  });
+
   it('should add dependencies', async () => {
     await jestInitGenerator(tree, options);
 
     const packageJson = readJson(tree, 'package.json');
     expect(packageJson.devDependencies.jest).toBeDefined();
     expect(packageJson.devDependencies['@nx/jest']).toBeDefined();
+  });
+
+  it('uses inference without changing existing executor defaults', async () => {
+    updateJson<NxJsonConfiguration>(tree, 'nx.json', (json) => {
+      json.targetDefaults = {
+        test: { executor: '@nx/jest:jest' },
+        '@nx/jest:jest': [{ filter: { projects: ['tag:unit'] }, cache: false }],
+      };
+      return json;
+    });
+
+    await jestInitGenerator(tree, options);
+
+    expect(readJson(tree, 'nx.json').plugins).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ plugin: '@nx/jest/plugin' }),
+      ])
+    );
+    const td = readJson<NxJsonConfiguration>(tree, 'nx.json').targetDefaults;
+    // The target-scoped and filtered entries the user authored are left as-is.
+    expect(td['test']).toEqual({ executor: '@nx/jest:jest' });
+    expect(td['@nx/jest:jest']).toEqual([
+      { filter: { projects: ['tag:unit'] }, cache: false },
+    ]);
   });
 });

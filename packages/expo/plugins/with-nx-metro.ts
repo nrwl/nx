@@ -1,34 +1,67 @@
 import { workspaceRoot } from '@nx/devkit';
-import { existsSync, readdirSync, statSync } from 'node:fs';
+import { existsSync, readdirSync, realpathSync, statSync } from 'node:fs';
 import { join } from 'path';
 
-// Cache for metro-config module
-let metroConfig: any = null;
+const metroConfigCache = new Map<string, any>();
 
-/**
- * Lazily require the Metro config helpers.
- *
- * Expo SDK 55+ ships Metro through the `@expo/metro` package family, so the
- * `mergeConfig` used here must come from the same Metro instance that
- * `@expo/metro-config`'s `getDefaultConfig` is built against. Older SDKs
- * (53/54) use the standalone `metro-config` package. We prefer `@expo/metro`
- * and fall back to the standalone package to stay compatible with both.
- */
-function getMetroConfig() {
+// `mergeConfig` must come from the same Metro instance as the app's
+// `getDefaultConfig`: `@expo/metro` on SDK 55+, standalone `metro-config` on
+// 53/54. Resolve from the app root so each app gets its own SDK's copy.
+function getMetroConfig(appRoot: string | undefined, usesExpoMetro: boolean) {
+  const cacheKey = `${appRoot ?? ''}|${usesExpoMetro}`;
+  let metroConfig = metroConfigCache.get(cacheKey);
   if (!metroConfig) {
-    try {
-      metroConfig = require('@expo/metro/metro-config');
-    } catch {
+    const candidates = usesExpoMetro
+      ? ['@expo/metro/metro-config', 'metro-config']
+      : ['metro-config', '@expo/metro/metro-config'];
+    for (const candidate of candidates) {
       try {
-        metroConfig = require('metro-config');
-      } catch (error) {
-        throw new Error(
-          'Unable to load Metro config. Install `@expo/metro` (Expo SDK 55+) or `metro-config` (>= 0.82.0).'
+        metroConfig = require(
+          require.resolve(candidate, appRoot ? { paths: [appRoot] } : undefined)
         );
-      }
+        break;
+      } catch {}
     }
+    if (!metroConfig) {
+      throw new Error(
+        'Unable to load Metro config. Install `@expo/metro` (Expo SDK 55+) or `metro-config` (>= 0.82.0).'
+      );
+    }
+    metroConfigCache.set(cacheKey, metroConfig);
   }
   return metroConfig;
+}
+
+// SDK 55+ ships Metro through `@expo/metro`. Resolve `expo` from the app's
+// own root: probing from this plugin's location reads whichever copy is
+// hoisted, which can belong to a sibling app on a different SDK.
+export function appUsesExpoMetro(appRoot: string | undefined): boolean {
+  try {
+    const expoPkgPath = require.resolve(
+      'expo/package.json',
+      appRoot ? { paths: [appRoot] } : undefined
+    );
+    return parseInt(require(expoPkgPath).version, 10) >= 55;
+  } catch {
+    // expo not resolvable; probe `@expo/metro` process-wide (no root entry
+    // point, so resolve a known subpath)
+    try {
+      require.resolve('@expo/metro/metro-config');
+      return true;
+    } catch {
+      return false;
+    }
+  }
+}
+
+function appOwnsExpo(appNodeModules: string): boolean {
+  const appExpo = join(appNodeModules, 'expo');
+  if (!existsSync(appExpo)) return false;
+  const hoistedExpo = join(workspaceRoot, 'node_modules', 'expo');
+  // no hoisted copy: the app-local one is the only expo, and Expo's HMR
+  // rewrite resolves strictly from `projectRoot`, so anchor at the app
+  if (!existsSync(hoistedExpo)) return true;
+  return realpathSync(appExpo) !== realpathSync(hoistedExpo);
 }
 
 type MetroConfig = any; // We'll use any to avoid importing the type
@@ -83,35 +116,38 @@ export function withNxMetro(userConfig: MetroConfig, opts: WithNxOptions = {}) {
     existsSync(folder)
   );
 
-  // Expo SDK 55+ ships Metro via `@expo/metro` and resolves the project's
-  // Babel config relative to `projectRoot`. Forcing `projectRoot` to the
-  // workspace root breaks that lookup, because the app's `.babelrc.js` lives in
-  // the project directory, not the workspace root (Metro's babel transformer
-  // does `path.resolve(projectRoot, '.babelrc.js')`). So only override
-  // `projectRoot` for older SDKs (53/54). Workspace libraries remain resolvable
-  // via `watchFolders`, `nodeModulesPaths`, and the custom `resolveRequest`.
-  // `@expo/metro` has no root entry point (only subpath exports), so resolve a
-  // known subpath to detect it — `require.resolve('@expo/metro')` would throw
-  // ERR_PACKAGE_PATH_NOT_EXPORTED even when the package is installed.
-  let usesExpoMetro = false;
-  try {
-    require.resolve('@expo/metro/metro-config');
-    usesExpoMetro = true;
-  } catch {}
+  // `getDefaultConfig(__dirname)` set this to the app directory
+  const appRoot: string | undefined = userConfig.projectRoot;
+  const usesExpoMetro = appUsesExpoMetro(appRoot);
 
+  const appNodeModules = appRoot ? join(appRoot, 'node_modules') : null;
+  const hasAppNodeModules = !!appNodeModules && existsSync(appNodeModules);
+  // an app pinning its own `expo` must stay anchored at the app, or the
+  // bundle picks up the hoisted copy alongside its own. Compare real paths:
+  // `ensureNodeModulesSymlink` links the whole app node_modules to the
+  // workspace's, which is not an app-owned copy.
+  const ownsExpo = hasAppNodeModules && appOwnsExpo(appNodeModules);
+
+  // SDK 55+ resolves Babel config and the HMR client relative to
+  // `projectRoot`; SDK 53/54 apps relying on hoisted Expo need the workspace
+  // root so `originModulePath` stays workspace-relative for the Nx resolver.
   const nxConfig: MetroConfig = {
-    ...(usesExpoMetro ? {} : { projectRoot: workspaceRoot }),
+    ...(usesExpoMetro || ownsExpo ? {} : { projectRoot: workspaceRoot }),
     resolver: {
       resolveRequest: getResolveRequest(
         extensions,
         opts.exportsConditionNames,
-        opts.mainFields
+        opts.mainFields,
+        { appRoot, usesExpoMetro }
       ),
-      nodeModulesPaths: [join(workspaceRoot, 'node_modules')],
+      nodeModulesPaths: [
+        ...(hasAppNodeModules ? [appNodeModules] : []),
+        join(workspaceRoot, 'node_modules'),
+      ],
     },
     watchFolders,
   };
 
-  const { mergeConfig } = getMetroConfig();
+  const { mergeConfig } = getMetroConfig(appRoot, usesExpoMetro);
   return mergeConfig(userConfig, nxConfig);
 }

@@ -1,5 +1,6 @@
 import type { NxJsonConfiguration, ProjectConfiguration } from '@nx/devkit';
 import {
+  checkFilesDoNotExist,
   cleanupProject,
   createNonNxProjectDirectory,
   e2eCwd,
@@ -9,6 +10,7 @@ import {
   isNotWindows,
   killProcessAndPorts,
   newProject,
+  packageInstall,
   readFile,
   readJson,
   removeFile,
@@ -27,10 +29,12 @@ import { ensureDirSync } from 'fs-extra';
 import * as path from 'path';
 import { major } from 'semver';
 import { join } from 'path';
+import { angularDevkitVersion } from '@nx/angular/src/utils/versions';
 
 describe('Nx Commands', () => {
   beforeAll(() =>
     newProject({
+      keepBackup: true,
       packages: [
         '@nx/angular',
         '@nx/eslint',
@@ -46,6 +50,23 @@ describe('Nx Commands', () => {
   );
 
   afterAll(() => cleanupProject());
+
+  it('should isolate async commands from the parent Nx invocation', async () => {
+    const original = process.env.NX_CLI_SET;
+    process.env.NX_CLI_SET = 'true';
+    try {
+      const { stdout } = await runCommandAsync(
+        `node -e "console.log(process.env.NX_CLI_SET || 'unset')"`
+      );
+      expect(stdout.trim()).toBe('unset');
+    } finally {
+      if (original === undefined) {
+        delete process.env.NX_CLI_SET;
+      } else {
+        process.env.NX_CLI_SET = original;
+      }
+    }
+  });
 
   describe('show', () => {
     it('should show the list of projects', async () => {
@@ -252,10 +273,18 @@ describe('Nx Commands', () => {
           runCLI(`build ${app}`);
         });
 
-        it('should render target info', () => {
-          const output = normalizeOutput(runCLI(`show target ${app}:build`));
-          expect(output).toMatchSnapshot();
-        });
+        for (const variant of ['pnpm', 'npm-and-yarn']) {
+          const selectedVariant =
+            getSelectedPackageManager() === 'pnpm' ? 'pnpm' : 'npm-and-yarn';
+          // Register the other variant as skipped so Jest retains its snapshot.
+          const test = variant === selectedVariant ? it : it.skip;
+          test(`should render target info: ${variant}`, () => {
+            const output = normalizeOutput(
+              runCLI(`show target ${app}:build`, { verbose: false })
+            );
+            expect(output).toMatchSnapshot();
+          });
+        }
 
         it('should render output paths', () => {
           const output = normalizeOutput(
@@ -768,7 +797,18 @@ describe('Nx Commands', () => {
 // TODO(colum): Change the fetcher to allow incremental migrations over multiple versions, allowing for beforeAll
 describe('migrate', () => {
   beforeEach(() => {
-    newProject({ packages: [] });
+    newProject({
+      keepBackup: true,
+      packages: [],
+    });
+
+    // Synthetic migrations use Angular schematics and workspace utilities.
+    // Install before patching Nx below, since installs can replace that patch.
+    packageInstall(
+      '@angular-devkit/core @angular-devkit/schematics @schematics/angular',
+      undefined,
+      angularDevkitVersion
+    );
 
     updateFile(
       `./node_modules/migrate-parent-package/package.json`,
@@ -996,34 +1036,74 @@ describe('migrate', () => {
   });
 
   it('should run migrations and create individual git commits using a provided custom commit prefix', () => {
-    // Windows has shell escaping issues so this test would always fail
-    if (isNotWindows()) {
-      runCLI(
-        'migrate migrate-parent-package@2.0.0 --from="migrate-parent-package@1.0.0"',
-        {
-          env: {
-            NX_MIGRATE_SKIP_INSTALL: 'true',
-            NX_MIGRATE_USE_LOCAL: 'true',
-          },
-        }
-      );
+    runCLI(
+      'migrate migrate-parent-package@2.0.0 --from="migrate-parent-package@1.0.0"',
+      {
+        env: {
+          NX_MIGRATE_SKIP_INSTALL: 'true',
+          NX_MIGRATE_USE_LOCAL: 'true',
+        },
+      }
+    );
 
-      // runs migrations with createCommits enabled and custom commit-prefix (NOTE: the extra quotes are needed here to avoid shell escaping issues)
-      runCLI(
-        `migrate --run-migrations=migrations.json --create-commits --commit-prefix="'chore(core): AUTOMATED - '"`,
-        {
-          env: {
-            NX_MIGRATE_SKIP_INSTALL: 'true',
-            NX_MIGRATE_USE_LOCAL: 'true',
-          },
-        }
-      );
+    runCLI(
+      `migrate --run-migrations=migrations.json --create-commits --commit-prefix="chore(core): AUTOMATED - "`,
+      {
+        env: {
+          NX_MIGRATE_SKIP_INSTALL: 'true',
+          NX_MIGRATE_USE_LOCAL: 'true',
+        },
+      }
+    );
 
-      const recentCommits = runCommand('git --no-pager log --oneline -n 10');
+    const recentCommits = runCommand('git --no-pager log --oneline -n 10');
 
-      expect(recentCommits).toContain('chore(core): AUTOMATED - run11');
-      expect(recentCommits).toContain('chore(core): AUTOMATED - run20');
-    }
+    expect(recentCommits).toContain('chore(core): AUTOMATED - run11');
+    expect(recentCommits).toContain('chore(core): AUTOMATED - run20');
+  });
+
+  it('should run a single migration with --run-migration without recording run state', () => {
+    runCLI(
+      'migrate migrate-parent-package@2.0.0 --from="migrate-parent-package@1.0.0"',
+      {
+        env: {
+          NX_MIGRATE_SKIP_INSTALL: 'true',
+          NX_MIGRATE_USE_LOCAL: 'true',
+        },
+      }
+    );
+
+    runCLI('migrate --run-migration=migrate-parent-package:run20', {
+      env: {
+        NX_MIGRATE_SKIP_INSTALL: 'true',
+        NX_MIGRATE_USE_LOCAL: 'true',
+      },
+    });
+
+    // only the requested migration runs
+    expect(readFile('file-20')).toEqual('content20');
+    checkFilesDoNotExist('file-11');
+    // no durable run dir and no commit without --create-commits
+    checkFilesDoNotExist('.nx/migrate-runs');
+    expect(runCommand('git --no-pager log --oneline -n 10')).not.toContain(
+      'chore: [nx migration] run20'
+    );
+
+    // commits are opt-in with --create-commits
+    runCLI(
+      'migrate --run-migration=migrate-parent-package:run11 --create-commits',
+      {
+        env: {
+          NX_MIGRATE_SKIP_INSTALL: 'true',
+          NX_MIGRATE_USE_LOCAL: 'true',
+        },
+      }
+    );
+
+    expect(readFile('file-11')).toEqual('content11');
+    const recentCommits = runCommand('git --no-pager log --oneline -n 10');
+    expect(recentCommits).toContain('chore: [nx migration] run11');
+    expect(recentCommits).not.toContain('chore: [nx migration] run20');
   });
 
   it('should fail if a custom commit prefix is provided when --create-commits is not enabled', () => {
@@ -1358,14 +1438,14 @@ catalogs:
       // Verify catalog definitions in pnpm-workspace.yaml
       const workspaceYaml = readFile('pnpm-workspace.yaml');
       // UPDATED packages (no ^ prefix as migrations provide resolved versions)
-      expect(workspaceYaml).toContain('migrate-parent-package: "2.0.0"');
-      expect(workspaceYaml).toContain('migrate-child-package: "9.0.0"');
-      expect(workspaceYaml).toContain('react: "18.2.0"');
-      expect(workspaceYaml).toContain('react-dom: "18.2.0"');
+      expect(workspaceYaml).toContain('migrate-parent-package: 2.0.0');
+      expect(workspaceYaml).toContain('migrate-child-package: 9.0.0');
+      expect(workspaceYaml).toContain('react: 18.2.0');
+      expect(workspaceYaml).toContain('react-dom: 18.2.0');
       // PRESERVED packages (retain original format with ^ prefix)
-      expect(workspaceYaml).toContain('typescript: "^5.3.0"');
-      expect(workspaceYaml).toContain('eslint: "^8.0.0"');
-      expect(workspaceYaml).toContain('prettier: "^3.0.0"');
+      expect(workspaceYaml).toContain('typescript: ^5.3.0');
+      expect(workspaceYaml).toContain('eslint: ^8.0.0');
+      expect(workspaceYaml).toContain('prettier: ^3.0.0');
 
       // Verify explicit version packages: updated and preserved
       expect(packageJson.dependencies['lodash']).toEqual('4.17.21');
@@ -1438,7 +1518,10 @@ describe('global installation', () => {
 
   describe('inside nx directory', () => {
     beforeEach(() => {
-      newProject({ packages: [] });
+      newProject({
+        keepBackup: true,
+        packages: [],
+      });
     });
 
     afterEach(() => {
@@ -1536,6 +1619,7 @@ describe('global installation', () => {
 describe('cross-workspace implicit dependencies', () => {
   beforeAll(() =>
     newProject({
+      keepBackup: true,
       packages: ['@nx/js'],
     })
   );

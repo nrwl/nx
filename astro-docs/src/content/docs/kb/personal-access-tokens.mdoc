@@ -1,0 +1,92 @@
+---
+title: Log in to Nx Cloud from the CLI
+description: Log in to Nx Cloud from your terminal with nx login, manage your CLI sessions, and use a personal access token where you can't log in
+sidebar:
+  label: CLI Login
+filter: 'type:Guides'
+topics:
+  - 'Continuous integration'
+---
+
+Log in so Nx Cloud knows you're a member of the workspace and gives you the
+[access set for logged-in members](#permissions).
+CI runs use [CI access tokens](/docs/kb/access-tokens) instead.
+
+{% aside type="caution" title="Workspaces that use `nxCloudAccessToken`" %}
+`nx login` doesn't run while `nx.json` has `nxCloudAccessToken`.
+Run [`npx nx-cloud convert-to-nx-cloud-id`](/docs/reference/nx-cloud-cli#nx-cloud-convert-to-nx-cloud-id)
+first to switch the workspace to `nxCloudId`.
+{% /aside %}
+
+## Log in
+
+1. Run `npx nx login` from your workspace.
+   It shows a code and opens Nx Cloud in your browser.
+1. On the **Nx Cloud CLI login** page, check that the code matches the one in your terminal and
+   select **Approve**.
+
+![The Nx Cloud CLI login page showing a code to compare with the terminal, with Approve and Deny buttons](../../../assets/nx-cloud/cli-login-approval.avif)
+
+If no browser opens, open the URL the terminal printed.
+
+<!-- TODO: Remove this aside once few developers still log in with a personal access token. -->
+
+{% aside type="caution" title="Already logged in with a personal access token" %}
+When this machine is logged in to the Nx Cloud instance with a personal access token, `nx login`
+asks you to run `npx nx logout` first.
+That logs you out and revokes the stored token.
+Then run `npx nx login` again.
+{% /aside %}
+
+## Check your login
+
+```shell
+npx nx login --status
+```
+
+The command shows the account you're logged in as.
+
+## CLI sessions
+
+In Nx Cloud, open **Personal settings** from the account menu and select **Access tokens**.
+The **CLI sessions** card lists each login.
+
+![The CLI sessions card listing one signed-in device, with Sign out and Sign out of all CLI sessions](../../../assets/nx-cloud/cli-sessions.avif)
+
+**Sign out** ends one session, and **Sign out of all CLI sessions** ends every one.
+A device you sign out needs `nx login` again.
+
+## Log out
+
+```shell
+npx nx logout
+```
+
+With logins for several Nx Cloud instances, see
+[`nx-cloud logout`](/docs/reference/nx-cloud-cli#nx-cloud-logout).
+
+## Permissions
+
+Set both access levels in your workspace's
+[access control settings](https://cloud.nx.app/go/workspace/settings/access).
+
+### Workspace ID access level
+
+The **Default access level** setting covers anyone who isn't logged in, or isn't a member of the
+workspace's Nx Cloud organization.
+It starts at `read-write`.
+Lower it to `read-only` or `none` for any repository that people outside your team can see, such as
+an open source repository or one that's visible across your organization but only editable by one team.
+
+### Personal access token access level
+
+The **Logged in users** setting covers workspace members who ran `nx login`.
+Set it to `read-only`, `read-write`, or `no-cache`.
+
+## Personal access tokens (PATs)
+
+Use a personal access token only where you can't log in: scripts that call the Public API without
+the Nx Cloud CLI, and CI jobs that
+[publish conformance rules](/docs/reference/nx-cloud-cli#nx-cloud-configure).
+Other CI steps use a CI access token.
+Create a personal access token under **Personal settings** > **Access tokens**.

@@ -24,6 +24,7 @@ import org.apache.maven.session.scope.internal.SessionScope
 import org.eclipse.aether.RepositorySystemSession
 import org.eclipse.aether.repository.WorkspaceReader
 import org.slf4j.LoggerFactory
+import java.io.File
 import java.util.concurrent.atomic.AtomicInteger
 
 /**
@@ -85,6 +86,13 @@ class NxMaven(
     DefaultMaven::class.java.getDeclaredMethod(
       "getProjectMap",
       Collection::class.java
+    ).apply { isAccessible = true }
+  }
+
+  private val setAttachedArtifactsMethod by lazy {
+    MavenProject::class.java.getDeclaredMethod(
+      "setAttachedArtifacts",
+      List::class.java
     ).apply { isAccessible = true }
   }
 
@@ -181,7 +189,7 @@ class NxMaven(
       // Apply existing build states to all projects in the graph
       log.debug("   🔄 Applying existing build states to ${graph.allProjects.size} projects...")
       val applyStartTime = System.currentTimeMillis()
-      BuildStateManager.applyBuildStates(graph.allProjects)
+      BuildStateManager.applyBuildStates(graph.allProjects, File(request.baseDirectory))
       val applyTimeMs = System.currentTimeMillis() - applyStartTime
       log.debug("   ✅ Build state application completed in ${applyTimeMs}ms")
     } finally {
@@ -213,6 +221,21 @@ class NxMaven(
 
     // Project map should match session.projects for consistency
     session.projectMap = getProjectMapMethod.invoke(this, selectedProjects) as Map<String?, MavenProject?>?
+
+    selectedProjects.forEach(::detachConsumerPom)
+  }
+
+  /**
+   * Maven 4.0.0-rc-7+ keeps an already-attached consumer POM, which captured the project's
+   * pom file when a previous task attached it. Detach it so this task re-attaches one from the
+   * current (possibly flattened) pom file.
+   */
+  private fun detachConsumerPom(project: MavenProject) {
+    val attached = project.attachedArtifacts
+    val kept = attached.filterNot { it.classifier == "consumer" && it.type == "pom" }
+    if (kept.size != attached.size) {
+      setAttachedArtifactsMethod.invoke(project, kept.toMutableList())
+    }
   }
 
   override fun execute(request: MavenExecutionRequest): MavenExecutionResult {

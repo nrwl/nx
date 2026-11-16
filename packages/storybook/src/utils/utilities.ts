@@ -1,6 +1,5 @@
 import { TargetConfiguration, Tree } from '@nx/devkit';
 import { CompilerOptions } from 'typescript';
-import { statSync } from 'fs';
 import { findNodes } from '@nx/js';
 import ts = require('typescript');
 import { versions } from './versions';
@@ -20,6 +19,12 @@ export const Constants = {
   coreAddonPrefix: '@storybook/addon-',
 };
 type Constants = typeof Constants;
+
+export const storybookFilePatterns = {
+  stories: '**/*.stories.@(js|jsx|ts|tsx|mdx)',
+  config: '.storybook/**/*',
+  tsconfig: 'tsconfig.storybook.json',
+};
 
 export function getStorybookVersionToInstall(tree: Tree): string {
   return versions(tree).storybookVersion;
@@ -43,23 +48,6 @@ export type TsConfig = {
   references?: Array<{ path: string }>;
 };
 
-export function storybookConfigExistsCheck(
-  config: string,
-  projectName: string
-): void {
-  const exists = !!(config && statSync(config).isDirectory());
-
-  if (!exists) {
-    throw new Error(
-      `Could not find Storybook configuration for project ${projectName}.
-      Please generate Storybook configuration using the following command:
-
-      nx g @nx/storybook:configuration --name=${projectName}
-      `
-    );
-  }
-}
-
 export function dedupe(arr: string[]) {
   return Array.from(new Set(arr));
 }
@@ -70,7 +58,6 @@ export function findStorybookAndBuildTargetsAndCompiler(targets: {
   storybookBuildTarget?: string;
   storybookTarget?: string;
   ngBuildTarget?: string;
-  nextBuildTarget?: string;
   viteBuildTarget?: string;
   otherBuildTarget?: string;
   compiler?: string;
@@ -79,28 +66,23 @@ export function findStorybookAndBuildTargetsAndCompiler(targets: {
     storybookBuildTarget?: string;
     storybookTarget?: string;
     ngBuildTarget?: string;
-    nextBuildTarget?: string;
     viteBuildTarget?: string;
     otherBuildTarget?: string;
     compiler?: string;
   } = {};
 
   const arrayOfBuilders = [
-    '@nx/js:babel',
     '@nx/js:swc',
     '@nx/js:tsc',
-    '@nx/webpack:webpack',
-    '@nx/rollup:rollup',
-    '@nx/vite:build',
     '@nx/angular:ng-packagr-lite',
     '@nx/angular:package',
     '@nx/angular:webpack-browser',
     '@nx/esbuild:esbuild',
-    '@nx/next:build',
     '@nxext/vite:build',
     '@angular-devkit/build-angular:application',
     '@angular-devkit/build-angular:browser',
     '@angular-devkit/build-angular:browser-esbuild',
+    '@angular/build:application',
   ];
 
   for (const target in targets) {
@@ -109,37 +91,29 @@ export function findStorybookAndBuildTargetsAndCompiler(targets: {
         targets[target].executor === '@angular-devkit/build-angular:browser' ||
         targets[target].executor ===
           '@angular-devkit/build-angular:browser-esbuild' ||
-        targets[target].executor === '@angular-devkit/build-angular:application'
+        targets[target].executor ===
+          '@angular-devkit/build-angular:application' ||
+        targets[target].executor === '@angular/build:application'
       ) {
         /**
-         * Not looking for '@nx/angular:ng-packagr-lite' or any other
-         * @nx/angular:* executors.
-         * Only looking for '@angular-devkit/build-angular:browser'
-         * because the '@nx/angular:ng-packagr-lite' executor
-         * (and maybe the other custom executors)
-         * does not support styles and extra options, so the user
-         * will be forced to switch to build-storybook to add extra options.
-         *
-         * So we might as well use the build-storybook by default to
-         * avoid any errors.
+         * Only the official Angular application/browser builders. The
+         * '@nx/angular:*' executors (ng-packagr-lite and friends) do not
+         * support styles and extra options, so a project on one of those is
+         * better served by build-storybook, which can carry those options.
          */
         returnObject.ngBuildTarget = target;
       } else if (targets[target].executor.includes('vite')) {
         returnObject.viteBuildTarget = target;
-      } else if (targets[target].executor.includes('next')) {
-        returnObject.nextBuildTarget = target;
       } else {
         returnObject.otherBuildTarget = target;
       }
       returnObject.compiler = targets[target].options?.compiler;
     } else if (
-      targets[target].executor === '@storybook/angular:start-storybook' ||
-      targets[target].executor === '@nx/storybook:storybook'
+      targets[target].executor === '@storybook/angular:start-storybook'
     ) {
       returnObject.storybookTarget = target;
     } else if (
-      targets[target].executor === '@storybook/angular:build-storybook' ||
-      targets[target].executor === '@nx/storybook:build'
+      targets[target].executor === '@storybook/angular:build-storybook'
     ) {
       returnObject.storybookBuildTarget = target;
     } else if (targets[target].options?.compiler) {

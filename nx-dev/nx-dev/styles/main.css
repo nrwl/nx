@@ -113,9 +113,8 @@ iframe[src*='youtube'] {
   width: max-content;
 }
 
-.prose iframe:not(.not-prose):not(.not-prose *)[src^="https://staging.nx.app"],
-.prose iframe:not(.not-prose):not(.not-prose *)[src^="https://nx.app"]
-{
+.prose iframe:not(.not-prose):not(.not-prose *)[src^='https://staging.nx.app'],
+.prose iframe:not(.not-prose):not(.not-prose *)[src^='https://nx.app'] {
   height: 80vh;
   max-width: 100%;
   overflow: hidden;

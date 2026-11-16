@@ -11,6 +11,23 @@ export type { ChangelogChange };
 // Stripped from breaking change explanations (e.g. bot/session markers).
 const HtmlCommentRegex = /<!--[\s\S]*?-->/g;
 
+// git keeps \r, U+2028 and U+2029 inside commit text, and each of them ends a line.
+const LineTerminatorRegex = /\r\n|[\n\r\u2028\u2029]/g;
+
+// Keyed on email: agent display names track model versions (e.g. "Claude Opus
+// 5 (1M context)"), and a human contributor can share a name with an agent.
+const AiAgentAuthorEmails = new Set([
+  'noreply@anthropic.com',
+  'claude@anthropic.com',
+  'amp@ampcode.com',
+  'cursoragent@cursor.com',
+  'openhands@all-hands.dev',
+  'opendevin@all-hands.dev',
+]);
+// The Copilot coding agent's trailer is not always [bot]-suffixed.
+const CopilotAuthorEmailRegex =
+  /^(?:\d+\+)?copilot@users\.noreply\.github\.com$/;
+
 /**
  * The ChangelogRenderOptions are specific to each ChangelogRenderer implementation, and are taken
  * from the user's nx.json configuration and passed as is into the ChangelogRenderer function.
@@ -329,14 +346,14 @@ export default class DefaultChangelogRenderer {
       }
       for (const author of change.authors) {
         const name = this.formatName(author.name);
-        if (!name || name.includes('[bot]')) {
+        if (!name || name.includes('[bot]') || this.isAiAgentAuthor(author)) {
           continue;
         }
-        if (_authors.has(name)) {
-          const entry = _authors.get(name);
-          entry.email.add(author.email);
-        } else {
-          _authors.set(name, { email: new Set([author.email]) });
+        if (!_authors.has(name)) {
+          _authors.set(name, { email: new Set<string>() });
+        }
+        if (author.email) {
+          _authors.get(name).email.add(author.email);
         }
       }
     }
@@ -363,7 +380,9 @@ export default class DefaultChangelogRenderer {
         ...authors
           .sort((a, b) => a.name.localeCompare(b.name))
           .map((i) => {
-            const username = i.username ? ` @${i.username}` : '';
+            const username = i.username
+              ? ` @${i.username.replace(LineTerminatorRegex, ' ')}`
+              : '';
             return `- ${i.name}${username}`;
           })
       );
@@ -376,8 +395,8 @@ export default class DefaultChangelogRenderer {
     let description = change.description;
     let extraLines: string[] = [];
     let extraLinesStr = '';
-    if (description.includes('\n')) {
-      [description, ...extraLines] = description.split('\n');
+    [description, ...extraLines] = description.split(LineTerminatorRegex);
+    if (extraLines.length > 0) {
       const indentation = '  ';
       extraLinesStr = (
         this.isVersionPlans
@@ -420,7 +439,9 @@ export default class DefaultChangelogRenderer {
     }
 
     if (change.description) {
-      breakingLine += `${change.description.trim()}`;
+      breakingLine += change.description
+        .trim()
+        .replace(LineTerminatorRegex, ' ');
     }
 
     if (
@@ -511,7 +532,7 @@ export default class DefaultChangelogRenderer {
     const lines = message
       .slice(startOfBreakingChange)
       .replace(HtmlCommentRegex, '')
-      .split('\n');
+      .split(LineTerminatorRegex);
     // The rest of the "BREAKING CHANGE:" line is always kept; scan from the next.
     const explanationLines: string[] = [lines[0]];
     for (let i = 1; i < lines.length; i++) {
@@ -537,8 +558,16 @@ export default class DefaultChangelogRenderer {
     );
   }
 
+  protected isAiAgentAuthor(author: { name: string; email: string }): boolean {
+    const email = (author.email || '').trim().toLowerCase();
+    return (
+      AiAgentAuthorEmails.has(email) || CopilotAuthorEmailRegex.test(email)
+    );
+  }
+
   protected formatName(name = ''): string {
     return name
+      .replace(LineTerminatorRegex, ' ')
       .split(' ')
       .map((p) => p.trim())
       .join(' ');

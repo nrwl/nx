@@ -6,7 +6,9 @@ import react from '@astrojs/react';
 import markdoc from '@astrojs/markdoc';
 import tailwindcss from '@tailwindcss/vite';
 import sitemap from '@astrojs/sitemap';
+import { unified } from '@astrojs/markdown-remark';
 import { sidebar } from './sidebar.mts';
+import { redirects } from './redirects.mjs';
 import rehypeTableOptionLinks from './src/plugins/utils/rehype-table-option-links.ts';
 import { resolveNxDevUrl } from './src/utils/resolve-nx-dev-url.ts';
 
@@ -15,6 +17,10 @@ import { resolveNxDevUrl } from './src/utils/resolve-nx-dev-url.ts';
 process.env.NX_DEV_URL = resolveNxDevUrl();
 
 const BASE = '/docs';
+
+// Set on non-production builds (versioned snapshots, canary) so the archived
+// pages don't compete with nx.dev in search results.
+const NO_INDEX = process.env.NX_DOCS_NO_INDEX === 'true';
 
 // This is exposed as window.__CONFIG
 const PUBLIC_CONFIG = {
@@ -38,35 +44,15 @@ export default defineConfig({
     },
   },
   markdown: {
-    rehypePlugins: [rehypeTableOptionLinks],
+    // Astro 7 defaults to Satteri. This plugin only runs on loader-generated
+    // markdown (the renderMarkdown path), so we stay on unified for it.
+    processor: unified({ rehypePlugins: [rehypeTableOptionLinks] }),
   },
+  // Astro 7 defaults this to 'jsx', which strips whitespace between inline
+  // elements and joins words together in prose.
+  compressHTML: true,
   trailingSlash: 'never',
-  redirects: {
-    '/knowledge-base/installation':
-      '/docs/knowledge-base/installation-and-updates',
-    '/guides/nx-cloud/ci-resource-usage':
-      '/docs/features/ci-features/resource-usage',
-    '/reference/remote-cache-plugins':
-      '/docs/reference/deprecated/self-hosted-cache-packages',
-    '/reference/remote-cache-plugins/s3-cache':
-      '/docs/reference/deprecated/self-hosted-cache-packages',
-    '/reference/remote-cache-plugins/s3-cache/overview':
-      '/docs/reference/deprecated/self-hosted-cache-packages',
-    '/reference/remote-cache-plugins/gcs-cache':
-      '/docs/reference/deprecated/self-hosted-cache-packages',
-    '/reference/remote-cache-plugins/gcs-cache/overview':
-      '/docs/reference/deprecated/self-hosted-cache-packages',
-    '/reference/remote-cache-plugins/azure-cache':
-      '/docs/reference/deprecated/self-hosted-cache-packages',
-    '/reference/remote-cache-plugins/azure-cache/overview':
-      '/docs/reference/deprecated/self-hosted-cache-packages',
-    '/reference/remote-cache-plugins/shared-fs-cache':
-      '/docs/reference/deprecated/self-hosted-cache-packages',
-    '/reference/remote-cache-plugins/shared-fs-cache/overview':
-      '/docs/reference/deprecated/self-hosted-cache-packages',
-    '/reference/remote-cache-plugins/shared-fs-cache/generators':
-      '/docs/reference/deprecated/self-hosted-cache-packages',
-  },
+  redirects,
   // This adapter doesn't support local previews, so only load it on Netlify.
   adapter: process.env['NETLIFY'] ? netlify() : undefined,
   integrations: [
@@ -74,18 +60,78 @@ export default defineConfig({
     // https://starlight.astro.build/reference/configuration/
     starlight({
       title: 'Nx',
-      tagline:
-        'Get to green PRs in half the time. Nx optimizes your builds, scales your CI, and fixes failed PRs. Built for developers and AI agents.',
       customCss: ['./src/styles/global.css'],
       favicon: '/favicon.svg',
       logo: {
-        light: './src/assets/nx/Nx-dark.png',
-        dark: './src/assets/nx/Nx-light.png',
+        light: './src/assets/nx/nx-lockup-light.svg',
+        dark: './src/assets/nx/nx-lockup-dark.svg',
         replacesTitle: true,
       },
       disable404Route: true,
       lastUpdated: true,
       head: [
+        ...(NO_INDEX
+          ? [
+              {
+                tag: 'meta',
+                attrs: { name: 'robots', content: 'noindex' },
+              },
+            ]
+          : []),
+        // PostHog analytics, consent-gated via Cookiebot and served through the
+        // first-party reverse proxy. Deliberately code-owned (not in the GTM
+        // container) so adblockers that block googletagmanager.com don't also
+        // take PostHog down. Loaded before GTM; the hostname guard keeps it
+        // inert in dev and preview deploys.
+        {
+          tag: 'script',
+          attrs: { 'data-cookieconsent': 'ignore' },
+          content: `!function(t,e){var o,n,p,r;e.__SV||(window.posthog && window.posthog.__loaded)||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.crossOrigin="anonymous",p.setAttribute("data-cookieconsent","ignore"),p.async=!0,p.src=s.api_host.replace(".i.posthog.com","-assets.i.posthog.com")+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+".people (stub)"},o="an ln init xn Cn Br kn In capture Fn nn calculateEventProperties On register register_once register_for_session unregister unregister_for_session Ln getFeatureFlag getFeatureFlagPayload getFeatureFlagResult getAllFeatureFlags isFeatureEnabled reloadFeatureFlags updateFlags updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures on onFeatureFlags onSurveysLoaded onSessionId getSurveys getActiveMatchingSurveys renderSurvey displaySurvey cancelPendingSurvey canRenderSurvey canRenderSurveyAsync Dn identify setPersonProperties unsetPersonProperties group resetGroups setPersonPropertiesForFlags resetPersonPropertiesForFlags setGroupPropertiesForFlags resetGroupPropertiesForFlags reset shutdown setIdentity clearIdentity get_distinct_id getGroups get_session_id get_session_replay_url alias set_config startSessionRecording stopSessionRecording sessionRecordingStarted captureException addExceptionStep captureLog startExceptionAutocapture stopExceptionAutocapture loadToolbar get_property getSessionProperty An Rn createPersonProfile setInternalOrTestUser $n yn jn opt_in_capturing opt_out_capturing has_opted_in_capturing has_opted_out_capturing get_explicit_consent_status is_capturing clear_opt_in_out_capturing Tn debug Ur Rt getPageViewId captureTraceFeedback captureTraceMetric pn".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);
+
+// Only run on the production hostname (inert in dev/preview)
+var h = window.location.hostname;
+if (h === "nx.dev") {
+  posthog.init('phc_eTmACxF0EKeNRjAZbfpdszbHYumyKhWqsIpMU4Wi53c', {
+    api_host: 'https://pha-prx.ops.cloud.nx.app',
+    ui_host: 'https://us.posthog.com',
+    defaults: '2026-05-30',
+    person_profiles: 'identified_only',
+    cookieless_mode: 'on_reject',
+  });
+
+  // Sync PostHog consent state with Cookiebot.
+  // Cookiebot is delivered via the GTM container (GTM-KW8423B6);
+  // data-cookieconsent="ignore" above is inert with GTM delivery (no
+  // auto-blocking) but protects against a future inline Cookiebot setup.
+  // Guards ensure state transitions (and the "Opt in" event) fire once
+  // per genuine consent change, not on every page load.
+  var syncConsent = function () {
+    if (window.Cookiebot && Cookiebot.consent && Cookiebot.consent.statistics) {
+      if (!posthog.has_opted_in_capturing()) {
+        posthog.opt_in_capturing();
+      }
+    } else if (!posthog.has_opted_out_capturing()) {
+      posthog.opt_out_capturing();
+    }
+  };
+
+  // OnAccept/OnDecline fire both on the consent click and on every page
+  // load for returning visitors with stored consent, so these two cover
+  // new choices and returning sessions alike.
+  window.addEventListener('CookiebotOnAccept', syncConsent);
+  window.addEventListener('CookiebotOnDecline', syncConsent);
+
+  // Fallback: if Cookiebot never loads (adblocker kills GTM), treat as
+  // declined — counts the user via the anonymous cookieless hash, stores
+  // nothing client-side. Cookiebot-present-but-unclicked stays pending,
+  // so the banner flow remains authoritative.
+  setTimeout(function () {
+    if (!window.Cookiebot && posthog.get_explicit_consent_status && posthog.get_explicit_consent_status() === 'pending') {
+      posthog.opt_out_capturing();
+    }
+  }, 3000);
+}`,
+        },
         {
           tag: 'script',
           content: `window.__CONFIG = ${JSON.stringify(PUBLIC_CONFIG)};`,
@@ -95,6 +141,24 @@ export default defineConfig({
           attrs: {
             src: `${BASE}/global-scripts.js`,
             defer: true,
+          },
+        },
+        // Link unfurlers (Slack) skip SVG favicons and fall back to /favicon.ico.
+        {
+          tag: 'link',
+          attrs: {
+            rel: 'icon',
+            type: 'image/png',
+            sizes: '32x32',
+            href: `${BASE}/favicon-32x32.png`,
+          },
+        },
+        {
+          tag: 'link',
+          attrs: {
+            rel: 'apple-touch-icon',
+            sizes: '180x180',
+            href: `${BASE}/apple-touch-icon.png`,
           },
         },
       ],
@@ -109,6 +173,7 @@ export default defineConfig({
         './src/plugins/github-stars.middleware.ts',
         './src/plugins/raw-content.middleware.ts',
         './src/plugins/canonical.middleware.ts',
+        './src/plugins/knowledge-base-layout.middleware.ts',
         './src/plugins/schema.middleware.ts',
       ],
       markdown: {

@@ -34,16 +34,19 @@
       "x-priority": "internal"
     },
     "linter": {
-      "description": "The tool to use for running lint checks.",
+      "description": "The tool to use for running lint checks. Defaults to the linter the workspace already uses.",
       "type": "string",
-      "enum": ["eslint", "none"],
-      "default": "none",
-      "x-prompt": "Which linter would you like to use?",
+      "enum": ["eslint", "oxlint", "none"],
       "x-priority": "important"
+    },
+    "formatter": {
+      "description": "The tool to use for code formatting.",
+      "type": "string",
+      "enum": ["none", "prettier", "oxfmt"]
     },
     "unitTestRunner": {
       "type": "string",
-      "enum": ["jest", "none"],
+      "enum": ["jest", "vitest", "none"],
       "description": "Test runner to use for unit tests.",
       "default": "none",
       "x-priority": "important",
@@ -51,7 +54,7 @@
     },
     "e2eTestRunner": {
       "type": "string",
-      "enum": ["jest", "none"],
+      "enum": ["jest", "vitest", "none"],
       "description": "Test runner to use for end-to-end tests",
       "default": "none",
       "x-priority": "important",
@@ -82,16 +85,15 @@
       "description": "Generate JavaScript files rather than TypeScript files.",
       "default": false
     },
-    "setParserOptionsProject": {
+    "enableTypedLinting": {
       "type": "boolean",
-      "description": "Whether or not to configure the ESLint `parserOptions.project` option. We do not do this by default for lint performance reasons.",
+      "description": "Whether to enable typed linting. For flat configs, this configures the recommended `parserOptions.projectService` and `tsconfigRootDir`. For legacy `.eslintrc` configs, this configures `parserOptions.project`. We do not enable this by default for lint performance reasons.",
       "default": false
     },
     "bundler": {
-      "description": "Bundler which is used to package the application",
+      "description": "Bundler which is used to package the application. Defaults to `tsc` in TypeScript solution workspaces, otherwise `rolldown`. `tsc` requires a TypeScript solution workspace.",
       "type": "string",
-      "enum": ["esbuild", "webpack"],
-      "default": "esbuild",
+      "enum": ["tsc", "rolldown", "esbuild", "webpack"],
       "x-priority": "important"
     },
     "framework": {

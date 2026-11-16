@@ -354,12 +354,12 @@ Reference (on master): `packages/cypress/src/generators/init/schema.json`, `pack
 
 Three categories of migration:
 
-| Category                         | Touches                                           | `requires`                                                                  |
-| -------------------------------- | ------------------------------------------------- | --------------------------------------------------------------------------- |
-| Nx-only                          | `nx.json`, executor options, generator defaults   | none                                                                        |
-| Codemod                          | source files / config tied to a third-party major | `{ "<pkg>": ">=N <N+1" }` (or open upper bound for legacy-cleanup codemods) |
-| `packageJsonUpdates` cross-major | bumps `<pkg>` from major N to N+1                 | `{ "<pkg>": ">=N.0.0 <(N+1).0.0" }` (source-major gate)                     |
-| `packageJsonUpdates` same-major  | bumps minor/patch                                 | none required                                                               |
+| Category                         | Touches                                           | `requires`                                                                                 |
+| -------------------------------- | ------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| Nx-only                          | `nx.json`, executor options, generator defaults   | none                                                                                       |
+| Codemod                          | source files / config tied to a third-party major | `{ "<pkg>": ">=N" }` (destination gate; upper bound only when inapplicable at or above it) |
+| `packageJsonUpdates` cross-major | bumps `<pkg>` from major N to N+1                 | `{ "<pkg>": ">=N.0.0 <(N+1).0.0" }` (source-major gate)                                    |
+| `packageJsonUpdates` same-major  | bumps minor/patch                                 | none required                                                                              |
 
 ### Sibling packages
 
@@ -597,7 +597,7 @@ Scope:
 - [blocker] Every `packageJsonUpdates` entry that bumps across a major version has `requires: { "<pkg>": ">=N.0.0 <(N+1).0.0" }`. Source-major gate, not target. Anti-pattern: §6. Reference: `#35587` Module Federation entries.
   - **Read the actual range strings; don't tick this by counting split entries.**
   - [non-blocker / ask author] One-sided gates (`<X` with no lower bound, or `>=Y` with no upper bound) may be intentional or accidental. Legitimate cases: legacy-cleanup codemods that should apply on every source major below the target; a v0→v1 bridge where every v0.x workspace should migrate; bumping a package introduced at vN from `undefined`. Illegitimate cases: a v1→v2 bump expressed as `<2.x` would fire for v0 workspaces too; a `>=N` with no upper bound would fire for future majors. **When you see a one-sided gate, ask the author to confirm intent** — don't auto-flag as blocker.
-- [blocker] Codemod migrations that only make sense at/above a specific third-party major have a `requires` entry. Open upper bound is intentional when the codemod cleans up legacy flags. Runtime per-package guards (`gte`/`lt` inside the migration body) are NOT a substitute for `requires`.
+- [blocker] Codemod migrations that only make sense at/above a specific third-party major have a `requires` entry, open-ended (`>=N`) by default: entry gates evaluate against the version the package lands on in this run, so an upper bound skips multi-major runs that land past it. Anti-pattern: §10. Runtime per-package guards (`gte`/`lt` inside the migration body) are NOT a substitute for an expressible `requires`; only conditions `requires` cannot express (an OR of alternative package names) belong in the body.
 - [blocker] **Nx-only migrations have NO `requires` gate.** A migration that only writes to `nx.json`, executor options, or generator defaults applies regardless of third-party version. Anti-pattern: §5. Reference correction: `#35587` removed the over-gating `@angular/core: >=21.0.0` from `update-unit-test-runner-option`.
 - [blocker] For independent siblings (Angular: `@ngrx/*`, `@angular-eslint/*`, `zone.js`, `jest-preset-angular`), gating on the primary's major is **not sufficient** — each needs its own `requires` entry. Anti-pattern: §7. Verify pairing by reading the sibling's `peerDependencies` at the version range being bumped from.
 - [blocker] A single `packageJsonUpdates` entry must not mix mutually-exclusive cross-major bumps under one `requires` (AND-semantics). Split into separate entries each with its own gate. Concrete example: React PR's `22.3.4` entry mixed `react-router 7.12.0` (cross-major) with `react-router-dom 6.30.3` (v6 patch) — must split.

@@ -10,7 +10,9 @@ export function setGeneratorDefaults(
   nxJson.generators = nxJson.generators ?? {};
   nxJson.generators['@nx/angular:application'] = {
     e2eTestRunner: options.e2eTestRunner,
-    linter: options.linter,
+    // Pinning `none` would freeze the answer detection exists to give, so a
+    // workspace that adopts a linter later would keep getting none.
+    linter: options.linter === 'none' ? undefined : options.linter,
     style: options.style,
     unitTestRunner: options.unitTestRunner,
     strict: !options.strict ? false : undefined,

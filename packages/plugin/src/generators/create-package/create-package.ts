@@ -1,5 +1,6 @@
 import {
   addDependenciesToPackageJson,
+  detectPackageManager,
   formatFiles,
   generateFiles,
   GeneratorCallback,
@@ -21,13 +22,13 @@ import {
   isUsingTsSolutionSetup,
   tsLibVersion,
 } from '@nx/js/internal';
-import type { PackageJson } from 'nx/src/utils/package-json';
-import { nxVersion } from 'nx/src/utils/versions';
+import { addPropertyToJestConfig, findJestConfig } from '@nx/jest';
 import { join } from 'path';
 import { hasGenerator } from '../../utils/has-generator';
 import { generatorGenerator } from '../generator/generator';
 import { CreatePackageSchema } from './schema';
 import { NormalizedSchema, normalizeSchema } from './utils/normalize-schema';
+import { type PackageJson, nxVersion } from '@nx/devkit/internal';
 
 export async function createPackageGenerator(
   host: Tree,
@@ -35,7 +36,6 @@ export async function createPackageGenerator(
 ) {
   return await createPackageGeneratorInternal(host, {
     useProjectJson: true,
-    addPlugin: false,
     ...schema,
   });
 }
@@ -97,7 +97,9 @@ async function addPresetGenerator(
       path: join(projectRoot, 'src/generators/preset/generator'),
       unitTestRunner: schema.unitTestRunner,
       skipFormat: true,
-      skipLintChecks: schema.linter === 'none',
+      // Lint checks are an ESLint-only feature; asking for them under any other
+      // linter makes `pluginLintCheckGenerator` log an error and do nothing.
+      skipLintChecks: schema.linter !== 'eslint',
     });
   }
 
@@ -123,6 +125,14 @@ async function createCliPackage(
   });
 
   host.delete(joinPathFragments(options.projectRoot, 'src'));
+
+  if (options.unitTestRunner === 'jest') {
+    // src and its spec are removed above, so the package has no tests yet.
+    const jestConfig = findJestConfig(host, options.projectRoot);
+    if (jestConfig) {
+      addPropertyToJestConfig(host, jestConfig, 'passWithNoTests', true);
+    }
+  }
 
   const isTsSolutionSetup = isUsingTsSolutionSetup(host);
 
@@ -216,6 +226,8 @@ function addE2eProject(host: Tree, options: NormalizedSchema) {
     join(projectConfiguration.root, 'package.json')
   );
 
+  const packageManager = detectPackageManager();
+
   generateFiles(
     host,
     joinPathFragments(__dirname, './files/e2e'),
@@ -223,7 +235,8 @@ function addE2eProject(host: Tree, options: NormalizedSchema) {
     {
       pluginName: options.project,
       cliName: options.name,
-      packageManagerCommands: getPackageManagerCommand(),
+      packageManager,
+      packageManagerCommands: getPackageManagerCommand(packageManager),
       pluginPackageName,
       tmpl: '',
     }

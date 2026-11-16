@@ -9,10 +9,14 @@ import {
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { ciWorkflowGenerator } from './ci-workflow';
+import { deduceDefaultBase } from '../../utilities/default-base';
 import { vol } from 'memfs';
 
-jest.mock('child_process', () => {
-  const cp = jest.requireActual('child_process');
+const { workspaceRoot: nxWorkspaceRoot } =
+  await vi.importActual<typeof import('@nx/devkit')>('@nx/devkit');
+
+vi.mock('child_process', async () => {
+  const cp = await vi.importActual<any>('child_process');
   return {
     ...cp,
     execSync: (...args) => {
@@ -25,16 +29,16 @@ jest.mock('child_process', () => {
   };
 });
 
-jest.mock('@nx/devkit', () => ({
-  ...jest.requireActual<any>('@nx/devkit'),
+vi.mock('@nx/devkit', async () => ({
+  ...(await vi.importActual<any>('@nx/devkit')),
   workspaceRoot: '/root',
 }));
 
-jest.mock('fs', () => {
-  const memFs = require('memfs').fs;
-  const actualFs = jest.requireActual<any>('fs');
+vi.mock('fs', async () => {
+  const memFs = (await vi.importActual<any>('memfs')).fs;
+  const actualFs = await vi.importActual<any>('fs');
   return {
-    ...jest.requireActual<any>('fs'),
+    ...actualFs,
     existsSync: (p) =>
       p.endsWith('yarn.lock') ||
       p.endsWith('pnpm-lock.yaml') ||
@@ -98,7 +102,7 @@ describe('CI Workflow generator', () => {
           } else {
             fileSys = { 'package-lock.json': '' };
           }
-          vol.fromJSON(fileSys, '');
+          vol.fromJSON(fileSys, nxWorkspaceRoot);
         });
 
         it('should generate github CI config', async () => {
@@ -222,6 +226,23 @@ describe('CI Workflow generator', () => {
           expect(readNxJson(tree).defaultBase).toEqual('origin/my-branch');
         });
 
+        it('should add an origin/ defaultBase when the affected block sets no defaultBase', async () => {
+          const nxJson = readNxJson(tree);
+          delete nxJson.defaultBase;
+          nxJson.affected = { legacy: true };
+          writeJson(tree, 'nx.json', nxJson);
+
+          await ciWorkflowGenerator(tree, {
+            ci: 'bitbucket-pipelines',
+            name: 'CI',
+          });
+
+          expect(readNxJson(tree).defaultBase).toEqual(
+            `origin/${deduceDefaultBase()}`
+          );
+          expect(readNxJson(tree).affected).toEqual({ legacy: true });
+        });
+
         it('should generate gitlab config', async () => {
           await ciWorkflowGenerator(tree, { ci: 'gitlab', name: 'CI' });
 
@@ -329,6 +350,69 @@ describe('CI Workflow generator', () => {
     ]);
   });
 
+  describe('.nx/pipelines/ci.yaml', () => {
+    it('should generate a ci.yaml with build as the default stop-after target', async () => {
+      await ciWorkflowGenerator(tree, { ci: 'github', name: 'CI' });
+
+      expect(tree.exists('.nx/ci-config.yaml')).toBe(false);
+
+      expect(tree.read('.nx/pipelines/ci.yaml', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "# Nx Cloud reads this file to configure your CI pipeline.
+        # Uncomment the "nx-cloud start-workers" line in your CI workflow to distribute tasks across workers.
+        # Learn how to configure this file at https://nx.dev/docs/reference/nx-cloud/ci-config
+        worker-templates:
+          default:
+            workers: 3 linux-medium-js
+            stop-after:
+              - build
+        "
+      `);
+    });
+
+    it('should use e2e-ci as the stop-after target when e2e is present', async () => {
+      updateJson(tree, 'package.json', (json) => {
+        json.devDependencies = {
+          ...json.devDependencies,
+          '@nx/cypress': 'latest',
+        };
+        return json;
+      });
+
+      await ciWorkflowGenerator(tree, { ci: 'github', name: 'CI' });
+
+      expect(tree.read('.nx/pipelines/ci.yaml', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "# Nx Cloud reads this file to configure your CI pipeline.
+        # Uncomment the "nx-cloud start-workers" line in your CI workflow to distribute tasks across workers.
+        # Learn how to configure this file at https://nx.dev/docs/reference/nx-cloud/ci-config
+        worker-templates:
+          default:
+            workers: 3 linux-medium-js
+            stop-after:
+              - e2e-ci
+        "
+      `);
+    });
+
+    it('should generate the same ci.yaml regardless of the CI provider', async () => {
+      await ciWorkflowGenerator(tree, { ci: 'gitlab', name: 'CI' });
+
+      expect(tree.read('.nx/pipelines/ci.yaml', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "# Nx Cloud reads this file to configure your CI pipeline.
+        # Uncomment the "nx-cloud start-workers" line in your CI workflow to distribute tasks across workers.
+        # Learn how to configure this file at https://nx.dev/docs/reference/nx-cloud/ci-config
+        worker-templates:
+          default:
+            workers: 3 linux-medium-js
+            stop-after:
+              - build
+        "
+      `);
+    });
+  });
+
   describe('TS solution setup', () => {
     let nxCloudAccessToken: string;
 
@@ -365,8 +449,11 @@ describe('CI Workflow generator', () => {
     it('should generate github config with typecheck task', async () => {
       await ciWorkflowGenerator(tree, { ci: 'github', name: 'CI' });
 
-      expect(tree.read('.github/workflows/ci.yml', 'utf-8'))
-        .toMatchInlineSnapshot(`
+      const workflow = tree.read('.github/workflows/ci.yml', 'utf-8');
+      expect(workflow).toContain(
+        '# Configure workers and task distribution in .nx/pipelines/ci.yaml'
+      );
+      expect(workflow).toMatchInlineSnapshot(`
         "name: CI
 
         on:
@@ -383,21 +470,22 @@ describe('CI Workflow generator', () => {
           main:
             runs-on: ubuntu-latest
             steps:
-              - uses: actions/checkout@v4
+              - uses: actions/checkout@v7
                 with:
                   filter: tree:0
                   fetch-depth: 0
 
               # This enables task distribution via Nx Cloud
               # Run this command as early as possible, before dependencies are installed
-              # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
+              # Configure workers and task distribution in .nx/pipelines/ci.yaml
+              # Learn more at https://nx.dev/docs/reference/nx-cloud-cli#nx-cloud-start-workers
               # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-              # - run: npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+              # - run: npx nx-cloud start-workers
 
               # Cache node_modules
-              - uses: actions/setup-node@v4
+              - uses: actions/setup-node@v6
                 with:
-                  node-version: 20
+                  node-version: 24
                   cache: 'npm'
 
               - run: npm ci
@@ -406,9 +494,6 @@ describe('CI Workflow generator', () => {
               # Prepend any command with "nx record --" to record its logs to Nx Cloud
               # - run: npx nx record -- echo Hello World
               - run: npx nx affected -t lint test build typecheck
-              # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
-              - run: npx nx fix-ci
-                if: always()
         "
       `);
     });
@@ -431,9 +516,10 @@ describe('CI Workflow generator', () => {
 
               # This enables task distribution via Nx Cloud
               # Run this command as early as possible, before dependencies are installed
-              # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
+              # Configure workers and task distribution in .nx/pipelines/ci.yaml
+              # Learn more at https://nx.dev/docs/reference/nx-cloud-cli#nx-cloud-start-workers
               # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-              # - run: npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+              # - run: npx nx-cloud start-workers
 
               - run: npm ci
               - nx/set-shas:
@@ -443,10 +529,6 @@ describe('CI Workflow generator', () => {
               # - run: npx nx record -- echo Hello World
               - run:
                   command: npx nx affected -t lint test build typecheck
-              # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
-              - run:
-                  command: npx nx fix-ci
-                  when: always
 
         workflows:
           version: 2
@@ -508,9 +590,10 @@ describe('CI Workflow generator', () => {
 
               # This enables task distribution via Nx Cloud
               # Run this command as early as possible, before dependencies are installed
-              # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
+              # Configure workers and task distribution in .nx/pipelines/ci.yaml
+              # Learn more at https://nx.dev/docs/reference/nx-cloud-cli#nx-cloud-start-workers
               # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-              # - script: npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+              # - script: npx nx-cloud start-workers
 
               - script: npm ci
               - script: git branch --track main origin/main
@@ -519,9 +602,6 @@ describe('CI Workflow generator', () => {
               # Prepend any command with "nx record --" to record its logs to Nx Cloud
               # - script: npx nx record -- echo Hello World
               - script: npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build typecheck
-              # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
-              - script: npx nx fix-ci
-                condition: always()
         "
       `);
     });
@@ -534,61 +614,59 @@ describe('CI Workflow generator', () => {
 
       expect(tree.read('bitbucket-pipelines.yml', 'utf-8'))
         .toMatchInlineSnapshot(`
-        "image: node:20
+          "image: node:24
 
-        clone:
-          depth: full
+          clone:
+            depth: full
 
-        pipelines:
-          pull-requests:
-            '**':
-              - step:
-                  name: 'Build and test affected apps on Pull Requests'
-                  script:
-                    - export NX_BRANCH=$BITBUCKET_PR_ID
+          pipelines:
+            pull-requests:
+              '**':
+                - step:
+                    name: 'Build and test affected apps on Pull Requests'
+                    script:
+                      - export NX_BRANCH=$BITBUCKET_PR_ID
 
-                    # This enables task distribution via Nx Cloud
-                    # Run this command as early as possible, before dependencies are installed
-                    # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-                    # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-                    # - npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+                      # This enables task distribution via Nx Cloud
+                      # Run this command as early as possible, before dependencies are installed
+                      # Configure workers and task distribution in .nx/pipelines/ci.yaml
+                      # Learn more at https://nx.dev/docs/reference/nx-cloud-cli#nx-cloud-start-workers
+                      # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
+                      # - npx nx-cloud start-workers
 
-                    - npm ci
+                      - npm ci
 
-                    # Prepend any command with "nx record --" to record its logs to Nx Cloud
-                    # npx nx record -- echo Hello World
-                    - npx nx affected --base=origin/main -t lint test build typecheck
-                    # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
+                      # Prepend any command with "nx record --" to record its logs to Nx Cloud
+                      # npx nx record -- echo Hello World
+                      - npx nx affected --base=origin/main -t lint test build typecheck
 
-                  after-script:
-                    - npx nx fix-ci
+            branches:
+              main:
+                - step:
+                    name: 'Build and test affected apps on "main" branch changes'
+                    script:
+                      - export NX_BRANCH=$BITBUCKET_BRANCH
+                      # This enables task distribution via Nx Cloud
+                      # Run this command as early as possible, before dependencies are installed
+                      # Configure workers and task distribution in .nx/pipelines/ci.yaml
+                      # Learn more at https://nx.dev/docs/reference/nx-cloud-cli#nx-cloud-start-workers
+                      # Connect your workspace by running "nx connect" and uncomment this
+                      # - npx nx-cloud start-workers
 
-          branches:
-            main:
-              - step:
-                  name: 'Build and test affected apps on "main" branch changes'
-                  script:
-                    - export NX_BRANCH=$BITBUCKET_BRANCH
-                    # This enables task distribution via Nx Cloud
-                    # Run this command as early as possible, before dependencies are installed
-                    # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-                    # Connect your workspace by running "nx connect" and uncomment this
-                    # - npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+                      - npm ci
 
-                    - npm ci
-
-                    # Prepend any command with "nx record --" to record its logs to Nx Cloud
-                    # - npx nx record -- echo Hello World
-                    - npx nx affected -t lint test build typecheck --base=HEAD~1
-        "
-      `);
+                      # Prepend any command with "nx record --" to record its logs to Nx Cloud
+                      # - npx nx record -- echo Hello World
+                      - npx nx affected -t lint test build typecheck --base=HEAD~1
+          "
+        `);
     });
 
     it('should generate gitlab config with typecheck task', async () => {
       await ciWorkflowGenerator(tree, { ci: 'gitlab', name: 'CI' });
 
       expect(tree.read('.gitlab-ci.yml', 'utf-8')).toMatchInlineSnapshot(`
-        "image: node:20
+        "image: node:24
         variables:
           CI: 'true'
           GIT_DEPTH: 0
@@ -602,9 +680,10 @@ describe('CI Workflow generator', () => {
           script:
             # This enables task distribution via Nx Cloud
             # Run this command as early as possible, before dependencies are installed
-            # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
+            # Configure workers and task distribution in .nx/pipelines/ci.yaml
+            # Learn more at https://nx.dev/docs/reference/nx-cloud-cli#nx-cloud-start-workers
             # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-            # - npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+            # - npx nx-cloud start-workers
 
             - npm ci
             - export NX_HEAD=$CI_COMMIT_SHA
@@ -613,10 +692,6 @@ describe('CI Workflow generator', () => {
             # Prepend any command with "nx record --" to record its logs to Nx Cloud
             # - npx nx record -- echo Hello World
             - npx nx affected -t lint test build typecheck
-            # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
-
-          after_script:
-            - npx nx fix-ci
         "
       `);
     });

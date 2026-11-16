@@ -4,7 +4,7 @@ import type {
   ProjectGraphClientResponse,
   TaskGraphClientResponse,
 } from 'nx/src/command-line/graph/graph';
-import type { ProjectGraphProjectNode } from '@nx/devkit';
+import type { ProjectGraphProjectNode, TaskGraph } from '@nx/devkit';
 
 import { useTaskGraphContext, NxGraphTaskGraphProvider } from '@nx/graph/tasks';
 import {
@@ -189,7 +189,7 @@ function TasksShellInner() {
     send({
       type: 'initGraph',
       projects: selectedWorkspaceLoaderData.projects,
-      taskGraph: tasksData.taskGraph,
+      taskGraph: withEdgeIds(tasksData.taskGraph),
     });
   }, [orchestrator]);
 
@@ -199,7 +199,7 @@ function TasksShellInner() {
     send({
       type: 'mergeGraph',
       projects: selectedWorkspaceLoaderData.projects,
-      taskGraph: tasksData.taskGraph,
+      taskGraph: withEdgeIds(tasksData.taskGraph),
     });
   }, [orchestrator, tasksData.taskGraph]);
 
@@ -368,7 +368,7 @@ function TasksShellInner() {
               toolPopoverPanelItemActiveClassName="text-slate-200 bg-sky-500 dark:bg-sky-600"
             />
           </NxGraphToolbarItemGroup>
-          <NxGraphToolbarItemGroup className="pl-2 pr-0">
+          <NxGraphToolbarItemGroup className="pr-0 pl-2">
             <NxGraphGroupByProjectTool
               toolClassName="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800 border-slate-300 dark:border-slate-600"
               toolActiveClassName="bg-sky-500 dark:bg-sky-600 text-white dark:text-white"
@@ -403,8 +403,8 @@ function TasksShellInner() {
             onToggleProject={onToggleProject}
           />
         ) : (
-          <div className="absolute bottom-0 left-0 top-4 z-50 flex flex-col">
-            <TabGroup className="mb-2 ml-4 min-w-96 max-w-96">
+          <div className="absolute top-4 bottom-0 left-0 z-50 flex flex-col">
+            <TabGroup className="mb-2 ml-4 max-w-96 min-w-96">
               <TabList className="flex rounded-lg bg-slate-100 p-1 dark:bg-slate-800">
                 <Tab
                   className={classNames(
@@ -665,4 +665,20 @@ function TaskGraphControlsPanel({
       </NxGraphProjectListControl>
     </NxGraphPanel>
   );
+}
+
+// @nx/graph builds its edges from task ids, not edge objects.
+function withEdgeIds(taskGraph: TaskGraph): TaskGraph {
+  const ids = (edges: Record<string, Array<string | { id: string }>>) =>
+    Object.fromEntries(
+      Object.entries(edges).map(([taskId, deps]) => [
+        taskId,
+        deps.map((dep) => (typeof dep === 'string' ? dep : dep.id)),
+      ])
+    );
+  return {
+    ...taskGraph,
+    dependencies: ids(taskGraph.dependencies),
+    continuousDependencies: ids(taskGraph.continuousDependencies),
+  } as unknown as TaskGraph;
 }

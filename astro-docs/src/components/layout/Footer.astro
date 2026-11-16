@@ -1,4 +1,25 @@
 ---
-/* Footer is shown in PageFrame so keeping this blank */
+import LastUpdated from 'virtual:starlight/components/LastUpdated';
+
+const isKnowledgeBaseArticle =
+  Astro.locals.starlightRoute.id.startsWith('kb/') &&
+  Astro.locals.starlightRoute.lastUpdated;
 ---
 
+{
+  isKnowledgeBaseArticle && (
+    <footer class="kb-article-footer">
+      <LastUpdated />
+    </footer>
+  )
+}
+
+<style>
+  .kb-article-footer {
+    display: flex;
+    margin-top: 3rem;
+    justify-content: flex-end;
+    color: var(--sl-color-gray-3);
+    font-size: var(--sl-text-sm);
+  }
+</style>

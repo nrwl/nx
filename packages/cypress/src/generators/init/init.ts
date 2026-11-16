@@ -1,7 +1,11 @@
-import { addPlugin as _addPlugin } from '@nx/devkit/internal';
+import {
+  acknowledgeBuildScripts,
+  addPlugin as _addPlugin,
+} from '@nx/devkit/internal';
 import {
   addDependenciesToPackageJson,
   createProjectGraphAsync,
+  detectPackageManager,
   formatFiles,
   GeneratorCallback,
   ProjectGraph,
@@ -20,27 +24,6 @@ import {
 } from '../../utils/versions';
 import { Schema } from './schema';
 
-function setupE2ETargetDefaults(tree: Tree) {
-  const nxJson = readNxJson(tree);
-
-  if (!nxJson.namedInputs) {
-    return;
-  }
-
-  // E2e targets depend on all their project's sources + production sources of dependencies
-  nxJson.targetDefaults ??= {};
-
-  const productionFileSet = !!nxJson.namedInputs?.production;
-  nxJson.targetDefaults.e2e ??= {};
-  nxJson.targetDefaults.e2e.cache ??= true;
-  nxJson.targetDefaults.e2e.inputs ??= [
-    'default',
-    productionFileSet ? '^production' : '^default',
-  ];
-
-  updateNxJson(tree, nxJson);
-}
-
 function updateDependencies(tree: Tree, options: Schema) {
   const tasks: GeneratorCallback[] = [];
   tasks.push(removeDependenciesFromPackageJson(tree, ['@nx/cypress'], []));
@@ -50,6 +33,12 @@ function updateDependencies(tree: Tree, options: Schema) {
   };
   if (!getInstalledCypressVersion(tree)) {
     devDependencies.cypress = cypressVersion;
+    // The user explicitly asked for cypress, and its postinstall downloads
+    // the binary it needs to run at all, so enable it — npm and yarn run it
+    // unconditionally. Transitive deps stay denied.
+    acknowledgeBuildScripts(tree, detectPackageManager(tree.root), {
+      cypress: true,
+    });
   }
 
   tasks.push(
@@ -107,7 +96,7 @@ function updateProductionFileset(tree: Tree) {
 }
 
 export async function cypressInitGenerator(tree: Tree, options: Schema) {
-  return cypressInitGeneratorInternal(tree, { addPlugin: false, ...options });
+  return cypressInitGeneratorInternal(tree, options);
 }
 
 export async function cypressInitGeneratorInternal(
@@ -118,21 +107,11 @@ export async function cypressInitGeneratorInternal(
 
   updateProductionFileset(tree);
 
-  const nxJson = readNxJson(tree);
-
-  options.addPlugin ??=
-    process.env.NX_ADD_PLUGINS !== 'false' &&
-    nxJson.useInferencePlugins !== false;
-
-  if (options.addPlugin) {
-    await addPlugin(
-      tree,
-      await createProjectGraphAsync(),
-      options.updatePackageScripts
-    );
-  } else {
-    setupE2ETargetDefaults(tree);
-  }
+  await addPlugin(
+    tree,
+    await createProjectGraphAsync(),
+    options.updatePackageScripts
+  );
 
   let installTask: GeneratorCallback = () => {};
   if (!options.skipPackageJson) {

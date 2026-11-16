@@ -4,11 +4,12 @@ import {
   getPackageManagerVersion,
   isWorkspacesEnabled,
   output,
+  readJsonFile,
 } from '@nx/devkit';
 import { execSync } from 'child_process';
-import { daemonClient } from 'nx/src/daemon/client/client';
-// eslint-disable-next-line @typescript-eslint/no-restricted-imports
-import { getLockFileName } from 'nx/src/plugins/js/lock-file/lock-file';
+import { existsSync } from 'fs';
+import { join } from 'path';
+import { daemonClient, getLockFileName } from '@nx/devkit/internal';
 import { gte } from 'semver';
 
 export async function updateLockFile(
@@ -52,7 +53,10 @@ export async function updateLockFile(
   }
 
   const workspacesEnabled = isWorkspacesEnabled(packageManager, cwd);
-  if (!workspacesEnabled) {
+  if (
+    !workspacesEnabled &&
+    !(packageManager === 'npm' && isNpmLockFileRootVersionStale(cwd))
+  ) {
     if (verbose) {
       console.log(
         `\nSkipped lock file update because ${packageManager} workspaces are not enabled.`
@@ -103,7 +107,28 @@ export async function updateLockFile(
     return [];
   }
 
+  // Capture modified/untracked files before the lock file update so we can
+  // detect everything the package-manager command touches on disk.
+  const modifiedBefore = getGitModifiedFiles(cwd);
+
   execLockFileUpdate(command, cwd, env);
+
+  // Capture again after the command to compute the delta.
+  const modifiedAfter = getGitModifiedFiles(cwd);
+  const newlyChanged = [...modifiedAfter].filter((f) => !modifiedBefore.has(f));
+
+  // Always include the lock file itself even if git didn't pick it up
+  // (e.g. it could be .gitignored in unusual setups).
+  if (!newlyChanged.includes(lockFile)) {
+    newlyChanged.push(lockFile);
+  }
+
+  if (verbose && newlyChanged.length > 1) {
+    console.log(`\nDetected additional files changed during lock file update:`);
+    newlyChanged
+      .filter((f) => f !== lockFile)
+      .forEach((f) => console.log(`  ${f}`));
+  }
 
   if (isDaemonEnabled) {
     try {
@@ -120,7 +145,51 @@ export async function updateLockFile(
     }
   }
 
-  return [lockFile];
+  return newlyChanged;
+}
+
+function isNpmLockFileRootVersionStale(cwd: string): boolean {
+  try {
+    const lockFilePath = join(cwd, getLockFileName('npm'));
+    if (!existsSync(lockFilePath)) {
+      return false;
+    }
+    const { version } = readJsonFile(join(cwd, 'package.json'));
+    const lockFile = readJsonFile(lockFilePath);
+    const lockFileRootVersion =
+      lockFile.lockfileVersion === 1
+        ? lockFile.version
+        : lockFile.packages?.['']?.version;
+    return !!version && lockFileRootVersion !== version;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Returns the set of modified, added, and untracked file paths reported by git.
+ * Used to detect all filesystem side-effects of the lock file update command.
+ */
+function getGitModifiedFiles(cwd: string): Set<string> {
+  try {
+    // Do not trim the result: porcelain lines for working-tree-only changes
+    // start with a leading space (e.g. " M path"), and stripping it would
+    // make substring(3) drop the first character of the path on the first line.
+    const result = execSync('git status --porcelain', {
+      cwd,
+      encoding: 'utf-8',
+      windowsHide: true,
+    });
+    return new Set(
+      result
+        .split('\n')
+        .filter((l) => l.length >= 4)
+        .map((l) => l.substring(3))
+    );
+  } catch {
+    // git may not be available or this may not be a git repo
+    return new Set();
+  }
 }
 
 function execLockFileUpdate(command: string, cwd: string, env: object): void {

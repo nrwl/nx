@@ -5,8 +5,8 @@ import {
   type GeneratorCallback,
   type Tree,
 } from '@nx/devkit';
-import type { PackageJson } from 'nx/src/utils/package-json';
 import { getInstalledAngularDevkitVersion, versions } from './version-utils';
+import { type PackageJson } from '@nx/devkit/internal';
 
 export function ensureAngularDependencies(
   tree: Tree,

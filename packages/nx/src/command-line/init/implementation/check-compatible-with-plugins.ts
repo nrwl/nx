@@ -11,6 +11,7 @@ import {
 } from '../../../project-graph/error-types';
 import { workspaceRoot } from '../../../utils/workspace-root';
 import { readJsonFile, writeJsonFile } from '../../../utils/fileutils';
+import { recordInitWrite } from './format';
 import { output } from '../../../utils/output';
 import { createProjectGraphAsync } from '../../../project-graph/project-graph';
 
@@ -148,4 +149,5 @@ export function updatePluginsInNxJson(
     }
   );
   writeJsonFile(nxJsonPath, nxJson);
+  recordInitWrite(nxJsonPath);
 }

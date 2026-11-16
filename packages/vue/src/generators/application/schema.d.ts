@@ -1,4 +1,4 @@
-import type { Linter, LinterType } from '@nx/eslint';
+import type { LinterType } from '@nx/js';
 
 export interface Schema {
   directory: string;
@@ -10,21 +10,22 @@ export interface Schema {
   unitTestRunner?: 'vitest' | 'none';
   inSourceTests?: boolean;
   e2eTestRunner: 'cypress' | 'playwright' | 'none';
-  linter: Linter | LinterType;
-  formatter?: 'none' | 'prettier';
+  linter?: LinterType;
+  formatter?: 'none' | 'prettier' | 'oxfmt';
   routing?: boolean;
   js?: boolean;
   strict?: boolean;
-  setParserOptionsProject?: boolean;
+  enableTypedLinting?: boolean;
   skipPackageJson?: boolean;
   rootProject?: boolean;
-  addPlugin?: boolean;
   nxCloudToken?: string;
   useTsSolution?: boolean;
   useProjectJson?: boolean;
 }
 
 export interface NormalizedSchema extends Omit<Schema, 'useTsSolution'> {
+  // `normalizeOptions` always resolves this, so it is no longer optional.
+  linter: LinterType;
   projectName: string;
   appProjectRoot: string;
   importPath: string;

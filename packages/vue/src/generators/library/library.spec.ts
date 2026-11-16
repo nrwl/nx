@@ -1,4 +1,4 @@
-import 'nx/src/internal-testing-utils/mock-project-graph';
+import '@nx/devkit/internal-testing-utils/mock-project-graph';
 
 import {
   readJson,
@@ -78,10 +78,6 @@ describe('library', () => {
   });
 
   it('should add vue and vitest to package.json when non-buildable', async () => {
-    // Force the v9 flat-config lane. Jest's pnpm hoisting can resolve
-    // `require('eslint')` to a v8 copy in the workspace store, which would
-    // otherwise make `useFlatConfig` route the fresh-install lane through
-    // the v8/v7 stack and not match the v9/v8 snapshot.
     const original = process.env.ESLINT_USE_FLAT_CONFIG;
     process.env.ESLINT_USE_FLAT_CONFIG = 'true';
     try {
@@ -436,7 +432,7 @@ module.exports = [
       }
     });
 
-    it('should add package.json and .babelrc', async () => {
+    it('should add package.json', async () => {
       await libraryGenerator(tree, {
         ...defaultSchema,
         publishable: true,
@@ -445,7 +441,6 @@ module.exports = [
 
       const packageJson = readJson(tree, '/my-lib/package.json');
       expect(packageJson.name).toEqual('@proj/my-lib');
-      expect(tree.exists('/my-lib/.babelrc'));
     });
   });
 
@@ -514,12 +509,12 @@ module.exports = [
     });
   });
 
-  describe('--setParserOptionsProject', () => {
+  describe('--enableTypedLinting', () => {
     it('should set the parserOptions.project in the eslintrc.json file', async () => {
       process.env.ESLINT_USE_FLAT_CONFIG = 'false';
       await libraryGenerator(tree, {
         ...defaultSchema,
-        setParserOptionsProject: true,
+        enableTypedLinting: true,
       });
 
       const eslintConfig = readJson(tree, 'my-lib/.eslintrc.json');
@@ -528,6 +523,30 @@ module.exports = [
       ]);
       expect(eslintConfig.overrides[0].files).toContain('*.vue');
     });
+  });
+
+  describe('eslintrc', () => {
+    it.each([
+      [undefined, 'plugin:vue/essential'],
+      ['^9.33.0', 'plugin:vue/vue3-essential'],
+    ])(
+      'extends the Vue 3 essential config when eslint-plugin-vue is %s',
+      async (declared, expected) => {
+        process.env.ESLINT_USE_FLAT_CONFIG = 'false';
+        if (declared) {
+          updateJson(tree, 'package.json', (json) => {
+            json.devDependencies['eslint-plugin-vue'] = declared;
+            return json;
+          });
+        }
+
+        await libraryGenerator(tree, defaultSchema);
+
+        expect(readJson(tree, 'my-lib/.eslintrc.json').extends).toContain(
+          expected
+        );
+      }
+    );
   });
 
   describe('TS solution setup', () => {
@@ -554,7 +573,7 @@ module.exports = [
     it('should add project references when using TS solution', async () => {
       await libraryGenerator(tree, {
         ...defaultSchema,
-        setParserOptionsProject: true,
+        enableTypedLinting: true,
         linter: 'eslint',
         useProjectJson: false,
       });
@@ -579,7 +598,6 @@ module.exports = [
           "module",
           "types",
           "exports",
-          "nx",
         ]
       `);
       expect(tree.read('my-lib/package.json', 'utf-8')).toMatchInlineSnapshot(`
@@ -595,22 +613,6 @@ module.exports = [
               "default": "./src/index.ts"
             },
             "./package.json": "./package.json"
-          },
-          "nx": {
-            "targets": {
-              "lint": {
-                "executor": "@nx/eslint:lint"
-              },
-              "test": {
-                "executor": "@nx/vitest:test",
-                "outputs": [
-                  "{options.reportsDirectory}"
-                ],
-                "options": {
-                  "reportsDirectory": "coverage/my-lib"
-                }
-              }
-            }
           }
         }
         "
@@ -723,9 +725,8 @@ module.exports = [
     it('should create a correct package.json for buildable libraries', async () => {
       await libraryGenerator(tree, {
         ...defaultSchema,
-        setParserOptionsProject: true,
+        enableTypedLinting: true,
         linter: 'eslint',
-        addPlugin: true,
         useProjectJson: false,
         bundler: 'vite',
         skipFormat: true,
@@ -761,9 +762,8 @@ module.exports = [
 
       await libraryGenerator(tree, {
         ...defaultSchema,
-        setParserOptionsProject: true,
+        enableTypedLinting: true,
         linter: 'eslint',
-        addPlugin: true,
         useProjectJson: false,
         bundler: 'vite',
         skipFormat: true,
@@ -779,7 +779,6 @@ module.exports = [
         ...defaultSchema,
         directory: 'my-lib',
         name: 'my-lib', // import path contains the npm scope, so it would be different
-        addPlugin: true,
         useProjectJson: false,
         skipFormat: true,
       });
@@ -794,7 +793,6 @@ module.exports = [
         ...defaultSchema,
         directory: 'my-lib',
         name: '@proj/my-lib',
-        addPlugin: true,
         useProjectJson: false,
         skipFormat: true,
       });
@@ -806,7 +804,6 @@ module.exports = [
       await libraryGenerator(tree, {
         ...defaultSchema, // defaultSchema has no name
         directory: 'my-lib',
-        addPlugin: true,
         useProjectJson: false,
         skipFormat: true,
       });
@@ -818,7 +815,6 @@ module.exports = [
       await libraryGenerator(tree, {
         ...defaultSchema,
         linter: 'eslint',
-        addPlugin: true,
         useProjectJson: true,
         skipFormat: true,
       });

@@ -4,11 +4,12 @@ import { Tree } from '../../../generators/tree';
 import { readJson, updateJson } from '../../../generators/utils/json';
 import { NxJsonConfiguration } from '../../../config/nx-json';
 import { readNxJson } from '../../../generators/utils/nx-json';
-import { formatChangedFilesWithPrettierIfAvailable } from '../../../generators/internal-utils/format-changed-files-with-prettier-if-available';
+import { formatChangedFiles } from '../../../generators/internal-utils/format-changed-files';
 import { createNxCloudOnboardingURL } from '../../utilities/url-shorten';
 import { getCloudUrl } from '../../utilities/get-cloud-options';
 import { join } from 'path';
 import { getVcsRemoteInfo } from '../../../utils/git-utils';
+import { httpRequest } from '../../../utils/http-client';
 
 function printCloudConnectionDisabledMessage() {
   output.error({
@@ -48,17 +49,20 @@ function getNxInitDate(): string | null {
 }
 
 async function createNxCloudWorkspaceV1(
+  apiUrl: string,
   workspaceName: string,
   installationSource: string,
   nxInitDate: string | null
 ): Promise<{ token: string; url: string }> {
-  const apiUrl = getCloudUrl();
-  const response = await require('axios').post(
+  const response = await httpRequest(
     `${apiUrl}/nx-cloud/create-org-and-workspace`,
     {
-      workspaceName,
-      installationSource,
-      nxInitDate,
+      method: 'POST',
+      data: {
+        workspaceName,
+        installationSource,
+        nxInitDate,
+      },
     }
   );
 
@@ -70,17 +74,20 @@ async function createNxCloudWorkspaceV1(
 }
 
 async function createNxCloudWorkspaceV2(
+  apiUrl: string,
   workspaceName: string,
   installationSource: string,
   nxInitDate: string | null
 ): Promise<{ nxCloudId: string; url: string }> {
-  const apiUrl = getCloudUrl();
-  const response = await require('axios').post(
+  const response = await httpRequest(
     `${apiUrl}/nx-cloud/v2/create-org-and-workspace`,
     {
-      workspaceName,
-      installationSource,
-      nxInitDate,
+      method: 'POST',
+      data: {
+        workspaceName,
+        installationSource,
+        nxInitDate,
+      },
     }
   );
 
@@ -204,8 +211,10 @@ export async function connectToNxCloud(
   )
     return null;
 
+  const apiUrl = getCloudUrl(join(tree.root, schema.directory ?? ''));
   try {
     responseFromCreateNxCloudWorkspaceV2 = await createNxCloudWorkspaceV2(
+      apiUrl,
       getRootPackageName(tree, schema.directory),
       schema.installationSource,
       getNxInitDate()
@@ -213,6 +222,7 @@ export async function connectToNxCloud(
   } catch (e) {
     if (e.response?.status === 404) {
       responseFromCreateNxCloudWorkspaceV1 = await createNxCloudWorkspaceV1(
+        apiUrl,
         getRootPackageName(tree, schema.directory),
         schema.installationSource,
         getNxInitDate()
@@ -228,7 +238,7 @@ export async function connectToNxCloud(
       responseFromCreateNxCloudWorkspaceV2?.nxCloudId,
       schema.directory
     );
-    await formatChangedFilesWithPrettierIfAvailable(tree, {
+    await formatChangedFiles(tree, {
       silent: schema.hideFormatLogs,
     });
     return responseFromCreateNxCloudWorkspaceV2.nxCloudId;
@@ -238,7 +248,7 @@ export async function connectToNxCloud(
       responseFromCreateNxCloudWorkspaceV1?.token,
       schema.directory
     );
-    await formatChangedFilesWithPrettierIfAvailable(tree, {
+    await formatChangedFiles(tree, {
       silent: schema.hideFormatLogs,
     });
     return responseFromCreateNxCloudWorkspaceV1.token;

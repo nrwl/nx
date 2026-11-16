@@ -1,24 +1,26 @@
-import { signalToCode } from '@nx/devkit/internal';
+import {
+  signalToCode,
+  readModulePackageJson,
+  daemonClient,
+  interpolate,
+  getListeningUrl,
+} from '@nx/devkit/internal';
 import { execFileSync, fork } from 'child_process';
 import * as pc from 'picocolors';
 import {
   ExecutorContext,
+  getPackageManagerCommand,
   output,
   parseTargetString,
   readTargetOptions,
 } from '@nx/devkit';
 import { copyFileSync, unlinkSync } from 'fs';
+import { isIPv6 } from 'net';
 import { Schema } from './schema';
-import { platform } from 'os';
 import { join, resolve } from 'path';
-import { readModulePackageJson } from 'nx/src/utils/package-json';
-import { daemonClient } from 'nx/src/daemon/client/client';
-import { interpolate } from 'nx/src/tasks-runner/utils';
 import { stripGlobToBaseDir } from '@nx/js/internal';
 import detectPort from 'detect-port';
-
-// platform specific command name
-const pmCmd = platform() === 'win32' ? `npx.cmd` : 'npx';
+import { waitForPortOpen } from '../../utils/wait-for-port-open';
 
 function getHttpServerArgs(options: Schema) {
   const {
@@ -122,6 +124,40 @@ function getBuildTargetOutputPath(options: Schema, context: ExecutorContext) {
   return outputPath;
 }
 
+/** Whether the server accepts connections before `exited` settles. */
+async function waitUntilListening(
+  port: number,
+  host: string,
+  exited: Promise<unknown>
+): Promise<boolean> {
+  let alive = true;
+  exited.then(() => (alive = false));
+  // A wildcard address accepts connections on the loopback of its family. `::`
+  // also accepts IPv4 ones, and a host may have no ::1, so it gets both probes.
+  const probeHosts =
+    host === '0.0.0.0'
+      ? ['127.0.0.1']
+      : host === '::'
+        ? ['::1', '127.0.0.1']
+        : [host];
+  while (alive) {
+    const connected = await Promise.any(
+      probeHosts.map((probeHost) =>
+        waitForPortOpen(port, { host: probeHost, retries: 0 })
+      )
+    ).then(
+      () => true,
+      () => false
+    );
+    if (connected) {
+      // A child that failed to bind the port leaves it to whoever holds it
+      return alive;
+    }
+    await new Promise((r) => setTimeout(r, 100));
+  }
+  return false;
+}
+
 function createFileWatcher(
   project: string | undefined,
   changeHandler: () => void
@@ -170,6 +206,9 @@ export default async function* fileServerExecutor(
   let disposeWatch: () => void;
 
   if (options.buildTarget) {
+    // Run the build target through the workspace package manager so workspaces
+    // that pin a non-npm manager (e.g. devEngines.packageManager) don't fail.
+    const pmc = getPackageManagerCommand();
     const run = () => {
       if (!running) {
         running = true;
@@ -181,7 +220,7 @@ export default async function* fileServerExecutor(
         process.env.NX_SERVE_STATIC_BUILD_RUNNING = 'true';
         try {
           const args = getBuildTargetCommand(options, context);
-          execFileSync(pmCmd, args, {
+          execFileSync(pmc.exec, args, {
             stdio: [0, 1, 2],
             shell: true,
             windowsHide: true,
@@ -250,6 +289,12 @@ export default async function* fileServerExecutor(
       ...process.env,
     },
   });
+  const exited = new Promise<{ success: boolean }>((res) => {
+    serve.on('exit', (code, signal) => {
+      if (code === null) code = signalToCode(signal);
+      res({ success: code == 0 });
+    });
+  });
 
   const processExitListener = () => {
     serve.kill();
@@ -273,19 +318,16 @@ export default async function* fileServerExecutor(
     process.stderr.write(chunk);
   });
 
-  yield {
-    success: true,
-    baseUrl: `${options.ssl ? 'https' : 'http'}://${options.host}:${port}`,
-  };
+  // http-server's own default when no `-a` is passed
+  const host = options.host || '0.0.0.0';
+  if (!(await waitUntilListening(port, host, exited))) {
+    return exited;
+  }
+  const baseUrl = getListeningUrl(
+    { address: host, family: isIPv6(host) ? 'IPv6' : 'IPv4', port },
+    !!options.ssl
+  );
+  yield { success: true, baseUrl };
 
-  return new Promise<{ success: boolean }>((res) => {
-    serve.on('exit', (code, signal) => {
-      if (code === null) code = signalToCode(signal);
-      if (code == 0) {
-        res({ success: true });
-      } else {
-        res({ success: false });
-      }
-    });
-  });
+  return exited;
 }

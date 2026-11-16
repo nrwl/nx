@@ -1,23 +1,24 @@
-import {
-  addDependenciesToPackageJson,
-  getPackageManagerCommand,
-  Tree,
-} from '@nx/devkit';
+import { addDependenciesToPackageJson, Tree } from '@nx/devkit';
 import { Preset } from '../utils/presets';
 import {
   angularCliVersion,
   nxVersion,
   typescriptVersion,
 } from '../../utils/versions';
-import { getNpmPackageVersion } from '../utils/get-npm-package-version';
 import { NormalizedSchema } from './new';
 import { join } from 'path';
 import yargsParser from 'yargs-parser';
 import { fork, ForkOptions } from 'child_process';
-import { getNxRequirePaths } from 'nx/src/utils/installation-directory';
+import { getNxRequirePaths } from '@nx/devkit/internal';
 
-export function addPresetDependencies(host: Tree, options: NormalizedSchema) {
-  const { dependencies, dev } = getPresetDependencies(options);
+export type PresetDependencies = ReturnType<typeof getPresetDependencies>;
+
+export function addPresetDependencies(
+  host: Tree,
+  options: NormalizedSchema,
+  presetDependencies: PresetDependencies
+) {
+  const { dependencies, dev } = presetDependencies;
   return addDependenciesToPackageJson(
     host,
     dependencies,
@@ -25,6 +26,74 @@ export function addPresetDependencies(host: Tree, options: NormalizedSchema) {
     join(options.directory, 'package.json'),
     true
   );
+}
+
+// Bootstrap dependencies need build script decisions before generation.
+// pnpm 10 also needs decisions for packages added during preset generation.
+const presetDependencyBuildScripts: Record<string, Record<string, boolean>> = {
+  '@nx/angular-rspack': {
+    // Its @nx/angular-rspack-compiler dependency patches `@angular/build`
+    // versions below 20.2.0, so that one has to run. The rest come from the
+    // compiler's `@angular/build` and `@rsbuild/core` peers.
+    '@nx/angular-rspack-compiler': true,
+    'core-js': false,
+    esbuild: false,
+    lmdb: false,
+    'msgpackr-extract': false,
+    '@parcel/watcher': false,
+  },
+  // @nx/express and @nx/nest depend on @nx/node, which depends on @nx/jest.
+  // Its jest-resolve range floats, so it lands on jest 30.5 or later, which
+  // brings unrs-resolver and, through jest-haste-map, @parcel/watcher.
+  '@nx/express': { '@parcel/watcher': false, 'unrs-resolver': false },
+  '@nx/jest': { '@parcel/watcher': false, 'unrs-resolver': false },
+  '@nx/nest': { '@parcel/watcher': false, 'unrs-resolver': false },
+  '@nx/node': { '@parcel/watcher': false, 'unrs-resolver': false },
+  // Both optionally depend on @nx/detox, which depends on @nx/jest. pnpm
+  // installs optionalDependencies by default.
+  '@nx/expo': { '@parcel/watcher': false, 'unrs-resolver': false },
+  '@nx/react-native': { '@parcel/watcher': false, 'unrs-resolver': false },
+  // Both depend on sass, which pulls in @parcel/watcher.
+  '@nx/rspack': { '@parcel/watcher': false },
+  '@nx/webpack': { '@parcel/watcher': false },
+};
+
+export function getPresetBuildScripts(
+  options: NormalizedSchema,
+  { dependencies, dev }: PresetDependencies
+): Record<string, boolean> {
+  // The conditional entries are keyed unconditionally and left `undefined` when
+  // they don't apply, so the version is what says a package gets installed.
+  const declared: Record<string, string | undefined> = {
+    ...dependencies,
+    ...dev,
+  };
+
+  const buildScripts: Record<string, boolean> = {};
+  for (const pkg of Object.keys(declared)) {
+    if (declared[pkg]) {
+      Object.assign(buildScripts, presetDependencyBuildScripts[pkg]);
+    }
+  }
+
+  if (
+    (options.preset === Preset.AngularMonorepo ||
+      options.preset === Preset.AngularStandalone) &&
+    options.bundler === 'rspack'
+  ) {
+    Object.assign(
+      buildScripts,
+      presetDependencyBuildScripts['@nx/angular-rspack']
+    );
+  }
+
+  // A third-party preset's install script is unvetted, and pnpm 10 does not run
+  // it today, so deny it rather than opting in on pnpm 11.
+  if (options.isCustomPreset) {
+    buildScripts[options.preset] = false;
+  }
+
+  return buildScripts;
 }
 
 export function generatePreset(host: Tree, opts: NormalizedSchema) {
@@ -40,7 +109,6 @@ export function generatePreset(host: Tree, opts: NormalizedSchema) {
     stdio: 'inherit',
     cwd: newWorkspaceRoot,
   };
-  const pmc = getPackageManagerCommand();
   const nxInstallationPaths = getNxRequirePaths(newWorkspaceRoot);
   const nxBinForNewWorkspaceRoot = require.resolve('nx/bin/nx', {
     paths: nxInstallationPaths,
@@ -107,24 +175,50 @@ export function generatePreset(host: Tree, opts: NormalizedSchema) {
           : null,
       opts.nxCloudToken ? `--nxCloudToken=${opts.nxCloudToken}` : null,
       opts.formatter ? `--formatter=${opts.formatter}` : null,
+      opts.skipInstall ? `--skipInstall` : null,
       opts.workspaces !== false ? `--workspaces` : `--no-workspaces`,
       opts.useProjectJson ? `--useProjectJson` : null,
     ].filter((e) => !!e);
   }
 }
 
-function getPresetDependencies({
+// `typescript` is pinned here rather than left to `@nx/js:init` so it lands in
+// package.json before the first install. Otherwise npm resolves tsquery's
+// `typescript: >3.0.0` peer to 7.x, whose entry point dropped the compiler API.
+export function getPresetDependencies({
   preset,
   presetVersion,
   bundler,
   e2eTestRunner,
+  js,
 }: NormalizedSchema) {
   switch (preset) {
+    // Generates no project, but a plugin installed later (`npm i -D
+    // @nx/react`) pulls tsquery in and hoists typescript 7 unless the pin is
+    // already in package.json.
     case Preset.Apps:
+      return {
+        dependencies: {},
+        dev: { '@nx/js': nxVersion, typescript: typescriptVersion },
+      };
+
+    // Generates no project, so `@nx/js:init` never runs to add typescript
+    // and pinning it here would be net-new. The preset generator itself does
+    // run - it sets up the chosen formatter.
     case Preset.NPM:
+      return { dependencies: {}, dev: { '@nx/js': nxVersion } };
+
     case Preset.TS:
     case Preset.TsStandalone:
-      return { dependencies: {}, dev: { '@nx/js': nxVersion } };
+      return {
+        dependencies: {},
+        dev: {
+          '@nx/js': nxVersion,
+          // ts-standalone prompts for JS vs TS; mirror `@nx/js:init`, which
+          // skips typescript when `js` is set.
+          typescript: js ? undefined : typescriptVersion,
+        },
+      };
 
     case Preset.AngularMonorepo:
     case Preset.AngularStandalone:
@@ -134,13 +228,15 @@ function getPresetDependencies({
           '@angular-devkit/core': angularCliVersion,
           '@nx/angular': nxVersion,
           '@nx/rspack': bundler === 'rspack' ? nxVersion : undefined,
-          '@nx/angular-rspack': bundler === 'rspack' ? nxVersion : undefined,
           typescript: typescriptVersion,
         },
       };
 
     case Preset.Express:
-      return { dependencies: {}, dev: { '@nx/express': nxVersion } };
+      return {
+        dependencies: {},
+        dev: { '@nx/express': nxVersion, typescript: typescriptVersion },
+      };
 
     case Preset.Nest:
       return {
@@ -150,7 +246,10 @@ function getPresetDependencies({
 
     case Preset.NextJs:
     case Preset.NextJsStandalone:
-      return { dependencies: { '@nx/next': nxVersion }, dev: {} };
+      return {
+        dependencies: { '@nx/next': nxVersion },
+        dev: { typescript: typescriptVersion },
+      };
 
     case Preset.VueMonorepo:
     case Preset.VueStandalone:
@@ -162,6 +261,7 @@ function getPresetDependencies({
           '@nx/playwright':
             e2eTestRunner === 'playwright' ? nxVersion : undefined,
           '@nx/vite': nxVersion,
+          typescript: typescriptVersion,
         },
       };
 
@@ -174,6 +274,7 @@ function getPresetDependencies({
           '@nx/cypress': e2eTestRunner === 'cypress' ? nxVersion : undefined,
           '@nx/playwright':
             e2eTestRunner === 'playwright' ? nxVersion : undefined,
+          typescript: typescriptVersion,
         },
       };
 
@@ -189,14 +290,21 @@ function getPresetDependencies({
           '@nx/jest': bundler !== 'vite' ? nxVersion : undefined,
           '@nx/vite': bundler === 'vite' ? nxVersion : undefined,
           '@nx/webpack': bundler === 'webpack' ? nxVersion : undefined,
+          typescript: typescriptVersion,
         },
       };
 
     case Preset.ReactNative:
-      return { dependencies: {}, dev: { '@nx/react-native': nxVersion } };
+      return {
+        dependencies: {},
+        dev: { '@nx/react-native': nxVersion, typescript: typescriptVersion },
+      };
 
     case Preset.Expo:
-      return { dependencies: {}, dev: { '@nx/expo': nxVersion } };
+      return {
+        dependencies: {},
+        dev: { '@nx/expo': nxVersion, typescript: typescriptVersion },
+      };
 
     case Preset.WebComponents:
       return {
@@ -211,17 +319,14 @@ function getPresetDependencies({
         dev: {
           '@nx/node': nxVersion,
           '@nx/webpack': bundler === 'webpack' ? nxVersion : undefined,
+          typescript: typescriptVersion,
         },
       };
 
     default: {
       return {
         dev: {},
-        dependencies: {
-          [preset]:
-            process.env['NX_E2E_PRESET_VERSION'] ??
-            getNpmPackageVersion(preset, presetVersion),
-        },
+        dependencies: { [preset]: presetVersion },
       };
     }
   }

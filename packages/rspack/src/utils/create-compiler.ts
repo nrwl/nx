@@ -1,13 +1,9 @@
 import { ExecutorContext } from '@nx/devkit';
-import {
-  rspack,
-  type Compiler,
-  type Configuration,
-  type MultiCompiler,
-} from '@rspack/core';
+import type { Compiler, Configuration, MultiCompiler } from '@rspack/core';
 
 import { NormalizedRspackExecutorSchema } from '../executors/rspack/schema';
 import { getRspackConfigs } from '../executors/rspack/lib/config';
+import { loadRspackCore } from './load-rspack-core';
 
 export async function createCompiler(
   options: NormalizedRspackExecutorSchema & {
@@ -21,6 +17,8 @@ export async function createCompiler(
     validateConfig(config);
   }
 
+  // Lazy-loaded to avoid resolving @rspack/core (pure ESM) before a build runs; see load-rspack-core.ts.
+  const { rspack } = loadRspackCore();
   return rspack(config);
 }
 

@@ -1,4 +1,8 @@
-import { getRelativeCwd, logShowProjectCommand } from '@nx/devkit/internal';
+import {
+  getRelativeCwd,
+  logShowProjectCommand,
+  type PackageJson,
+} from '@nx/devkit/internal';
 import { assertSupportedReactVersion } from '../../utils/assert-supported-react-version';
 import {
   addProjectConfiguration,
@@ -7,8 +11,6 @@ import {
   GeneratorCallback,
   installPackagesTask,
   joinPathFragments,
-  logger,
-  readNxJson,
   readProjectConfiguration,
   runTasksInSerial,
   Tree,
@@ -27,7 +29,6 @@ import {
   shouldConfigureTsSolutionSetup,
   updateTsconfigFiles,
 } from '@nx/js/internal';
-import type { PackageJson } from 'nx/src/utils/package-json';
 import { extractTsConfigBase } from '../../utils/create-ts-config';
 import { updateJestConfigContent } from '../../utils/jest-utils';
 import { maybeJs } from '../../utils/maybe-js';
@@ -46,7 +47,6 @@ import { Schema } from './schema';
 
 export async function libraryGenerator(host: Tree, schema: Schema) {
   return await libraryGeneratorInternal(host, {
-    addPlugin: false,
     useProjectJson: true,
     ...schema,
   });
@@ -57,7 +57,7 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
 
   const tasks: GeneratorCallback[] = [];
 
-  const addTsPlugin = shouldConfigureTsSolutionSetup(host, schema.addPlugin);
+  const addTsPlugin = shouldConfigureTsSolutionSetup(host);
   const jsInitTask = await jsInitGenerator(host, {
     ...schema,
     addTsPlugin,
@@ -140,7 +140,6 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
       compiler: options.compiler,
       skipFormat: true,
       testEnvironment: 'jsdom',
-      addPlugin: options.addPlugin,
     });
     tasks.push(viteTask);
     createOrEditViteConfig(
@@ -216,7 +215,6 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
       inSourceTests: options.inSourceTests,
       skipFormat: true,
       testEnvironment: 'jsdom',
-      addPlugin: options.addPlugin,
       compiler: options.compiler,
     });
     tasks.push(vitestTask);
@@ -276,7 +274,6 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
         projectConfiguration
       );
     } else {
-      const nxJson = readNxJson(host);
       await addReleaseConfigForNonTsSolution(
         host,
         options.name,

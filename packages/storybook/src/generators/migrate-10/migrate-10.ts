@@ -1,13 +1,23 @@
-import { formatFiles, logger, readJson, Tree } from '@nx/devkit';
+import {
+  formatFiles,
+  installPackagesTask,
+  logger,
+  output,
+  readJson,
+  Tree,
+  type GeneratorCallback,
+} from '@nx/devkit';
 
-import { output } from 'nx/src/utils/output';
 import { callUpgrade, checkStorybookInstalled } from './calling-storybook-cli';
 import { Schema } from './schema';
 import { join } from 'path';
 import { existsSync, readFileSync } from 'fs';
 import { assertSupportedStorybookVersion } from '../../utils/assert-supported-storybook-version';
 
-export async function migrate10Generator(tree: Tree, schema: Schema) {
+export async function migrate10Generator(
+  tree: Tree,
+  schema: Schema
+): Promise<GeneratorCallback | void> {
   assertSupportedStorybookVersion(tree);
 
   const packageJson = readJson(tree, 'package.json');
@@ -22,10 +32,13 @@ export async function migrate10Generator(tree: Tree, schema: Schema) {
     return;
   }
 
-  callUpgrade(schema);
+  const { nxVersionsRestored } = callUpgrade(schema);
+  const installTask: GeneratorCallback | undefined = nxVersionsRestored
+    ? () => installPackagesTask(tree, true)
+    : undefined;
 
   if (schema.skipAiInstructions) {
-    return;
+    return installTask;
   }
 
   const pathToAiInstructions = join(
@@ -34,7 +47,7 @@ export async function migrate10Generator(tree: Tree, schema: Schema) {
     'ai-instructions-for-cjs-esm.md'
   );
   if (!existsSync(pathToAiInstructions)) {
-    return;
+    return installTask;
   }
 
   const contents = readFileSync(pathToAiInstructions);
@@ -44,6 +57,8 @@ export async function migrate10Generator(tree: Tree, schema: Schema) {
 We created 'tools/ai-migrations/MIGRATE_STORYBOOK_10.md' with instructions for an AI Agent to convert CJS Storybook Configs to ESM in your workspace.`);
 
   await formatFiles(tree);
+
+  return installTask;
 }
 
 export default migrate10Generator;

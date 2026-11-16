@@ -1,4 +1,4 @@
-import type { Linter, LinterType } from '@nx/eslint';
+import type { LinterType } from '@nx/js';
 import type { SupportedStyles } from '@nx/react';
 
 export interface Schema {
@@ -7,20 +7,20 @@ export interface Schema {
   style?: SupportedStyles;
   skipFormat?: boolean;
   tags?: string;
-  unitTestRunner?: 'jest' | 'none';
+  unitTestRunner?: 'jest' | 'vitest' | 'none';
   e2eTestRunner?: 'cypress' | 'playwright' | 'none';
-  linter?: Linter | LinterType;
+  linter?: LinterType;
   js?: boolean;
-  setParserOptionsProject?: boolean;
+  enableTypedLinting?: boolean;
   swc?: boolean;
+  /** @deprecated Next.js discourages custom servers. Write your own server following the Next.js custom server guide instead. It will be removed in Nx v25. */
   customServer?: boolean;
   skipPackageJson?: boolean;
   appDir?: boolean;
   src?: boolean;
   // Internal options
   rootProject?: boolean;
-  addPlugin?: boolean;
   useTsSolution?: boolean;
-  formatter?: 'prettier' | 'none';
+  formatter?: 'prettier' | 'oxfmt' | 'none';
   useProjectJson?: boolean;
 }
