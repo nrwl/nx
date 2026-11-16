@@ -36,6 +36,7 @@ class NxProjectGraphReportPlugin : Plugin<Project> {
           val targetNamePrefix: String = project.findProperty("targetNamePrefix")?.toString() ?: ""
 
           task.projectName.set(project.name)
+          task.projectPath.set(project.path)
           task.projectRef.set(project)
           task.hash.set(hashProperty)
           task.targetNameOverrides.set(targetNameOverrides)
