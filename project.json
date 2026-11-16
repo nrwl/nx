@@ -101,6 +101,7 @@
         "nx:lint-native",
         "check-commit",
         "check-format:quick",
+        "check-oxlint:quick",
         "check-lock-files",
         "astro-docs:format"
       ]
