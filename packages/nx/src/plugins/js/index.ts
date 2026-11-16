@@ -64,7 +64,11 @@ export const createNodes: CreateNodes = [
   },
 ];
 
-function internalCreateNodes(lockFile: string, _, context: CreateNodesContext) {
+async function internalCreateNodes(
+  lockFile: string,
+  _,
+  context: CreateNodesContext
+) {
   const pluginConfig = jsPluginConfig(context.nxJsonConfiguration);
   if (!pluginConfig.analyzeLockfile) {
     return {};
@@ -95,7 +99,7 @@ function internalCreateNodes(lockFile: string, _, context: CreateNodesContext) {
     cachedInstalledLocalPathNodes = cached.installedLocalPathNodes;
 
     return {
-      externalNodes: foldLocalPathHashes(
+      externalNodes: await foldLocalPathHashes(
         cached.nodes,
         cached.localPathSources ?? {},
         workspaceRoot
@@ -126,7 +130,7 @@ function internalCreateNodes(lockFile: string, _, context: CreateNodesContext) {
   });
 
   return {
-    externalNodes: foldLocalPathHashes(
+    externalNodes: await foldLocalPathHashes(
       externalNodes,
       localPathSources,
       workspaceRoot

@@ -1,8 +1,10 @@
 import type { Dirent } from 'node:fs';
-import { readdirSync, statSync } from 'node:fs';
-import { isAbsolute, join } from 'node:path';
+import { lstatSync, readdirSync, realpathSync, statSync } from 'node:fs';
+import { isAbsolute, join, relative } from 'node:path';
 import type { ProjectGraphExternalNode } from '../../../../config/project-graph';
 import { hashArray, hashFile } from '../../../../hasher/file-hasher';
+import { getFilesInDirectoryUsingContext } from '../../../../utils/workspace-context';
+import { isContainedRelativePath, normalizePath } from '../../../../utils/path';
 
 /**
  * Folds the contents of the local-path packages' sources into the hashes of
@@ -10,20 +12,22 @@ import { hashArray, hashFile } from '../../../../hasher/file-hasher';
  * to `workspaceRoot`. Returns new node objects for the folded nodes, so a parser
  * that reuses its nodes keeps their lockfile hashes.
  *
- * A directory hashes the files a pruned deploy output copies from it
- * (`listLocalPathFiles`), ignored ones included. A source outside the
- * workspace keeps its lockfile hash, as linked packages do elsewhere in Nx.
+ * A directory in the workspace hashes the files Nx's workspace index lists in
+ * it, so files that git or `.nxignore` ignores and symbolic links don't count.
+ * A missing source hashes like an empty directory, so a link to output that
+ * isn't built yet keeps its hash once it is. A source outside the workspace
+ * keeps its lockfile hash, as linked packages do elsewhere in Nx.
  */
-export function foldLocalPathHashes(
+export async function foldLocalPathHashes(
   nodes: Record<string, ProjectGraphExternalNode>,
   nodeSources: Record<string, string[]>,
   workspaceRoot: string
-): Record<string, ProjectGraphExternalNode> {
+): Promise<Record<string, ProjectGraphExternalNode>> {
   const nodeNames = Object.keys(nodeSources).filter((name) => nodes[name]);
   if (!nodeNames.length) {
     return nodes;
   }
-  const hashes = hashLocalPathSources(
+  const hashes = await hashLocalPathSources(
     nodeNames.flatMap((name) => nodeSources[name]),
     workspaceRoot
   );
@@ -47,35 +51,74 @@ export function foldLocalPathHashes(
   return folded;
 }
 
-function hashLocalPathSources(
+async function hashLocalPathSources(
   sources: string[],
   workspaceRoot: string
-): Map<string, string> {
+): Promise<Map<string, string>> {
   const hashes = new Map<string, string>();
+  let realWorkspaceRoot: string | undefined;
   for (const source of new Set(sources)) {
     if (isAbsolute(source) || source === '..' || source.startsWith('../')) {
       continue;
     }
     const absolutePath = join(workspaceRoot, source);
-    let isDirectory: boolean;
+    let realPath: string | undefined;
     try {
       const stats = statSync(absolutePath);
       if (stats.isFile()) {
         hashes.set(source, hashFile(absolutePath));
         continue;
       }
-      isDirectory = stats.isDirectory();
-    } catch {
-      isDirectory = false;
+      if (stats.isDirectory()) {
+        realPath = realpathSync(absolutePath);
+      }
+    } catch {}
+    if (!realPath) {
+      hashes.set(source, hashArray([]));
+      continue;
     }
+    realWorkspaceRoot ??= realpathSync(workspaceRoot);
+    const indexDir = relative(realWorkspaceRoot, realPath);
     hashes.set(
       source,
-      isDirectory
-        ? hashLocalPathDirectory(absolutePath)
-        : hashArray([`missing local path ${source}`])
+      isContainedRelativePath(indexDir)
+        ? await hashIndexedDirectory(
+            workspaceRoot,
+            realWorkspaceRoot,
+            normalizePath(indexDir)
+          )
+        : hashLocalPathDirectory(realPath)
     );
   }
   return hashes;
+}
+
+// Mirrors the copier, which skips symbolic links inside a directory
+async function hashIndexedDirectory(
+  workspaceRoot: string,
+  realWorkspaceRoot: string,
+  indexDir: string
+): Promise<string> {
+  const prefix = indexDir ? `${indexDir}/` : '';
+  const files = (
+    await getFilesInDirectoryUsingContext(workspaceRoot, indexDir)
+  ).sort();
+  return hashArray(
+    files.flatMap((file) => {
+      const absolutePath = join(realWorkspaceRoot, file);
+      return isRegularFile(absolutePath)
+        ? [file.slice(prefix.length), hashFile(absolutePath) ?? 'unreadable']
+        : [];
+    })
+  );
+}
+
+function isRegularFile(path: string): boolean {
+  try {
+    return lstatSync(path, { throwIfNoEntry: false })?.isFile() === true;
+  } catch {
+    return false;
+  }
 }
 
 // An unreadable directory fails the copy, not the project graph.

@@ -297,18 +297,20 @@ describe('nx/js/dependencies-and-lockfile', () => {
       );
       write('.gitignore', 'vendor/ignored\nvendor/vend/dist\n');
       write(lockFile, lockFileContent);
-      // `vend` declares the `ttar` tarball. Its ignored dist ships with it.
+      // `vend` declares the `ttar` tarball.
       const sources = [
         ['vend', 'vendor/vend/index.js'],
-        ['vend', 'vendor/vend/dist/index.js'],
-        ['ignored', 'vendor/ignored/index.js'],
         ['vtar', 'vendor/vtar-1.0.0.tgz'],
         ['lnk', 'vendor/lnk/index.js'],
         ['ttar', 'vendor/ttar-1.0.0.tgz'],
         ['alias', 'vendor/real/index.js'],
       ];
-      const names = [...new Set(sources.map(([name]) => name))];
-      for (const [, source] of sources) {
+      const ignoredSources = [
+        'vendor/vend/dist/index.js',
+        'vendor/ignored/index.js',
+      ];
+      const names = [...new Set([...sources.map(([name]) => name), 'ignored'])];
+      for (const source of [...sources.map(([, s]) => s), ...ignoredSources]) {
         write(source, 'V1');
       }
       // Every node of a package, so a package that also has a bare node
@@ -343,6 +345,18 @@ describe('nx/js/dependencies-and-lockfile', () => {
           }
         }
       }
+
+      for (const source of ignoredSources) {
+        write(source, 'V2');
+        expect(await hashes()).toEqual(before);
+        write(source, 'V1');
+      }
+
+      // A missing directory hashes like one with only ignored files, so
+      // building one keeps the hash
+      rmSync(join(root, 'vendor/vend/dist'), { recursive: true });
+      rmSync(join(root, 'vendor/ignored'), { recursive: true });
+      expect(await hashes()).toEqual(before);
     }
   );
 
