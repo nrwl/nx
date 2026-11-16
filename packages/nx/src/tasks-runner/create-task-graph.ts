@@ -19,7 +19,7 @@ import {
   getExecutorInformation,
   parseExecutor,
 } from '../command-line/run/executor-utils';
-import { Schema, schemaAcceptsOption } from '../utils/params';
+import { camelCase, Schema, schemaAcceptsOption } from '../utils/params';
 import { workspaceRoot } from '../utils/workspace-root';
 
 const DUMMY_TASK_TARGET = '__nx_dummy_task__';
@@ -32,8 +32,23 @@ const DUMMY_TASK_TARGET = '__nx_dummy_task__';
  */
 export type DependencyOverrides = Record<
   string,
-  Array<{ from: string; overrides: Record<string, unknown> }>
+  Array<{
+    from: string;
+    overrides: Record<string, unknown>;
+    delivery: OverrideDelivery;
+  }>
 >;
+
+/** The CLI override names that reached a task, split by whether its executor accepts them. */
+export interface OverrideDelivery {
+  sent: string[];
+  unsent: string[];
+}
+
+export type OverrideDeliveries = Record<string, OverrideDelivery>;
+
+/** Per task, the CLI override names its executor does not accept, so it did not get them. */
+export type UnsentOverrides = Record<string, string[]>;
 
 export class ProcessTasks {
   private readonly seen = new Set<string>();
@@ -43,16 +58,14 @@ export class ProcessTasks {
   readonly dependencyOverrides: DependencyOverrides = {};
   private readonly allTargetNames: string[];
   private readonly schemas = new Map<string, Schema | null>();
-  private routedOverrideNames = new Set<string>();
-  private readonly overrideRecipients = new Map<
-    string,
-    Array<{ taskId: string; accepted: boolean }>
-  >();
+  readonly overrideDeliveries: OverrideDeliveries = {};
 
   constructor(
     private readonly extraTargetDependencies: TargetDependencies,
     private readonly projectGraph: ProjectGraph,
-    private readonly recordDependencyOverrides = false
+    private readonly recordDependencyOverrides = false,
+    /** The CLI overrides, which only reach tasks whose executor accepts them. */
+    private readonly cliOverrideNames: string[] = []
   ) {
     const allTargetNames = new Set<string>();
     for (const projectName in projectGraph.nodes) {
@@ -71,11 +84,6 @@ export class ProcessTasks {
     overrides: Record<string, unknown>,
     excludeTaskDependencies: boolean
   ): string[] {
-    this.routedOverrideNames = new Set(
-      Object.keys(overrides).filter(
-        (name) => name !== '_' && name !== '__overrides_unparsed__'
-      )
-    );
     for (const projectName of projectNames) {
       for (const target of targets) {
         const project = this.projectGraph.nodes[projectName];
@@ -127,8 +135,6 @@ export class ProcessTasks {
         );
       }
     }
-
-    this.assertEveryOverrideAccepted();
 
     filterDummyTasks(this.dependencies);
     filterDummyTasks(this.continuousDependencies);
@@ -400,7 +406,7 @@ export class ProcessTasks {
   private recordEdge(
     task: Task,
     dependencyId: string,
-    overrides: Record<string, unknown>
+    { overrides, delivery }: RoutedOverrides
   ) {
     if (!this.recordDependencyOverrides) {
       return;
@@ -411,7 +417,11 @@ export class ProcessTasks {
       task.target.target,
       task.target.configuration
     );
-    (this.dependencyOverrides[dependencyId] ??= []).push({ from, overrides });
+    (this.dependencyOverrides[dependencyId] ??= []).push({
+      from,
+      overrides,
+      delivery,
+    });
   }
 
   private createDummyTask(id: string, task: Task): Task {
@@ -446,9 +456,10 @@ export class ProcessTasks {
       configuration: resolvedConfiguration,
     };
 
-    this.recordOverrideRecipient(id, project, target, overrides);
+    const routed = this.routeOverrides(project, target, overrides);
+    this.overrideDeliveries[id] = routed.delivery;
     const interpolatedOverrides = interpolateOverrides(
-      this.routeOverrides(project, target, overrides),
+      routed.overrides,
       project.name,
       project.data
     );
@@ -470,68 +481,35 @@ export class ProcessTasks {
     };
   }
 
-  private routeOverrides<T extends Record<string, unknown>>(
-    project: ProjectGraphProjectNode,
-    target: string,
-    overrides: T
-  ): T {
-    const routed = { ...overrides };
-    for (const name of this.routedOverrideNames) {
-      if (name in routed && !this.accepts(project, target, name)) {
-        delete routed[name];
-      }
-    }
-    return routed;
-  }
-
-  private recordOverrideRecipient(
-    taskId: string,
+  private routeOverrides(
     project: ProjectGraphProjectNode,
     target: string,
     overrides: Record<string, unknown>
-  ) {
-    for (const name of this.routedOverrideNames) {
-      if (!(name in overrides)) {
-        continue;
-      }
-      if (!this.overrideRecipients.has(name)) {
-        this.overrideRecipients.set(name, []);
-      }
-      this.overrideRecipients.get(name).push({
-        taskId,
-        accepted: this.accepts(project, target, name),
-      });
-    }
-  }
-
-  /** For each task in the graph, the CLI overrides it reached but its executor does not accept. */
-  unsentOverrides(): Record<string, string[]> {
-    const unsent: Record<string, string[]> = {};
-    for (const [name, recipients] of this.overrideRecipients) {
-      for (const { taskId, accepted } of recipients) {
-        if (!accepted && this.tasks[taskId]) {
-          (unsent[taskId] ??= []).push(name);
-        }
+  ): RoutedOverrides {
+    const delivery: OverrideDelivery = { sent: [], unsent: [] };
+    for (const name of this.cliOverrideNames) {
+      if (Object.hasOwn(overrides, name)) {
+        (this.accepts(project, target, name)
+          ? delivery.sent
+          : delivery.unsent
+        ).push(name);
       }
     }
-    return unsent;
-  }
-
-  private assertEveryOverrideAccepted() {
-    const rejected: string[] = [];
-    for (const [name, recipients] of this.overrideRecipients) {
-      const running = recipients.filter(({ taskId }) => this.tasks[taskId]);
-      if (running.length && !running.some(({ accepted }) => accepted)) {
-        rejected.push(
-          `'${name}' is not in the schema of any task in this run (${running
-            .map(({ taskId }) => taskId)
-            .join(', ')})`
-        );
-      }
+    if (!delivery.unsent.length) {
+      return { overrides, delivery };
     }
-    if (rejected.length) {
-      throw new Error(rejected.join('\n'));
+    const routed = { ...overrides };
+    for (const name of delivery.unsent) {
+      delete routed[name];
     }
+    if (Array.isArray(routed.__overrides_unparsed__)) {
+      routed.__overrides_unparsed__ = removeUnparsedOverrides(
+        routed.__overrides_unparsed__,
+        delivery.unsent,
+        overrides
+      );
+    }
+    return { overrides: routed, delivery };
   }
 
   private accepts(
@@ -601,17 +579,19 @@ export function createTaskGraph(
   overrides: Record<string, unknown>,
   excludeTaskDependencies: boolean = false
 ): TaskGraph {
-  return buildTaskGraph(
-    new ProcessTasks(extraTargetDependencies, projectGraph),
+  return routeTaskGraph(
+    projectGraph,
+    extraTargetDependencies,
     projectNames,
     targets,
     configuration,
     overrides,
-    excludeTaskDependencies
-  );
+    excludeTaskDependencies,
+    false
+  ).taskGraph;
 }
 
-/** `createTaskGraph`, plus the overrides each dependency edge would give. */
+/** `createTaskGraph`, plus which CLI overrides reached each task and the overrides each dependency edge would give. */
 export function createTaskGraphWithDependencyOverrides(
   projectGraph: ProjectGraph,
   extraTargetDependencies: TargetDependencies,
@@ -620,39 +600,97 @@ export function createTaskGraphWithDependencyOverrides(
   configuration: string | undefined,
   overrides: Record<string, unknown>,
   excludeTaskDependencies: boolean = false
-): { taskGraph: TaskGraph; dependencyOverrides: DependencyOverrides } {
-  const p = new ProcessTasks(extraTargetDependencies, projectGraph, true);
-  const taskGraph = buildTaskGraph(
-    p,
+) {
+  return routeTaskGraph(
+    projectGraph,
+    extraTargetDependencies,
     projectNames,
     targets,
     configuration,
     overrides,
-    excludeTaskDependencies
+    excludeTaskDependencies,
+    true
   );
-  return { taskGraph, dependencyOverrides: p.dependencyOverrides };
 }
 
-/** `createTaskGraph`, plus the overrides each task did not get. */
-export function createTaskGraphWithUnsentOverrides(
+function routeTaskGraph(
   projectGraph: ProjectGraph,
   extraTargetDependencies: TargetDependencies,
   projectNames: string[],
   targets: string[],
   configuration: string | undefined,
   overrides: Record<string, unknown>,
-  excludeTaskDependencies: boolean = false
-): { taskGraph: TaskGraph; unsentOverrides: Record<string, string[]> } {
-  const p = new ProcessTasks(extraTargetDependencies, projectGraph);
-  const taskGraph = buildTaskGraph(
-    p,
+  excludeTaskDependencies: boolean,
+  recordDependencyOverrides: boolean
+): {
+  taskGraph: TaskGraph;
+  overrideDeliveries: OverrideDeliveries;
+  dependencyOverrides: DependencyOverrides;
+} {
+  const p = new ProcessTasks(
+    extraTargetDependencies,
+    projectGraph,
+    recordDependencyOverrides,
+    Object.keys(overrides).filter(
+      (name) => name !== '_' && name !== '__overrides_unparsed__'
+    )
+  );
+  const roots = p.processTasks(
     projectNames,
     targets,
     configuration,
     overrides,
     excludeTaskDependencies
   );
-  return { taskGraph, unsentOverrides: p.unsentOverrides() };
+  return {
+    taskGraph: {
+      roots,
+      tasks: p.tasks,
+      dependencies: p.dependencies,
+      continuousDependencies: p.continuousDependencies,
+    },
+    overrideDeliveries: p.overrideDeliveries,
+    dependencyOverrides: p.dependencyOverrides,
+  };
+}
+
+/** Fails when a CLI override reached tasks in `taskGraph` but none of them accepts it. */
+export function assertOverridesAccepted(
+  overrideDeliveries: OverrideDeliveries,
+  taskGraph: TaskGraph
+): void {
+  const recipients = new Map<string, { taskIds: string[]; sent: boolean }>();
+  for (const taskId of Object.keys(taskGraph.tasks)) {
+    const { sent = [], unsent = [] } = overrideDeliveries[taskId] ?? {};
+    for (const name of [...sent, ...unsent]) {
+      const recipient = recipients.get(name) ?? { taskIds: [], sent: false };
+      recipient.taskIds.push(taskId);
+      recipient.sent ||= sent.includes(name);
+      recipients.set(name, recipient);
+    }
+  }
+  const rejected = [...recipients]
+    .filter(([, { sent }]) => !sent)
+    .map(
+      ([name, { taskIds }]) =>
+        `'${name}' is not in the schema of any task in this run (${taskIds.join(', ')})`
+    );
+  if (rejected.length) {
+    throw new Error(rejected.join('\n'));
+  }
+}
+
+export function unsentOverrides(
+  overrideDeliveries: OverrideDeliveries,
+  taskGraph: TaskGraph
+): UnsentOverrides {
+  const unsent: UnsentOverrides = {};
+  for (const taskId of Object.keys(taskGraph.tasks)) {
+    if (overrideDeliveries[taskId]?.unsent.length) {
+      unsent[taskId] = overrideDeliveries[taskId].unsent;
+    }
+  }
+  return unsent;
 }
 
 /**
@@ -662,15 +700,20 @@ export function createTaskGraphWithUnsentOverrides(
 export function filterTaskGraphToSelection(
   projectGraph: ProjectGraph,
   taskGraph: TaskGraph,
+  overrideDeliveries: OverrideDeliveries,
   dependencyOverrides: DependencyOverrides,
   initial: Set<string>,
   keep: Set<string>
-): TaskGraph | undefined {
+):
+  | { taskGraph: TaskGraph; overrideDeliveries: OverrideDeliveries }
+  | undefined {
   const tasks: Record<string, Task> = {};
+  const deliveries: OverrideDeliveries = {};
   for (const id of keep) {
     const task = taskGraph.tasks[id];
     if (initial.has(id)) {
       tasks[id] = { ...task };
+      deliveries[id] = overrideDeliveries[id];
       continue;
     }
     const edges = dependencyOverrides[id] ?? [];
@@ -692,37 +735,64 @@ export function filterTaskGraphToSelection(
       overrides,
       outputs: getOutputs(projectGraph.nodes, task.target, overrides),
     };
+    deliveries[id] = edges[0].delivery;
   }
   const pruned = removeTasksFromTaskGraph(
     taskGraph,
     Object.keys(taskGraph.tasks).filter((id) => !keep.has(id))
   );
-  return { ...pruned, tasks };
+  return { taskGraph: { ...pruned, tasks }, overrideDeliveries: deliveries };
 }
 
-function buildTaskGraph(
-  p: ProcessTasks,
-  projectNames: string[],
-  targets: string[],
-  configuration: string | undefined,
-  overrides: Record<string, unknown>,
-  excludeTaskDependencies: boolean
-): TaskGraph {
-  const roots = p.processTasks(
-    projectNames,
-    targets,
-    configuration,
-    overrides,
-    excludeTaskDependencies
-  );
-
-  return {
-    roots,
-    tasks: p.tasks,
-    dependencies: p.dependencies,
-    continuousDependencies: p.continuousDependencies,
-  };
+/**
+ * `raw` without the arguments that set `names`. `parsed` tells a flag that
+ * takes the next argument as its value from a boolean one.
+ */
+function removeUnparsedOverrides(
+  raw: string[],
+  names: string[],
+  parsed: Record<string, unknown>
+): string[] {
+  const removed = new Map(names.map((name) => [camelCase(name), name]));
+  const kept: string[] = [];
+  for (let i = 0; i < raw.length; i++) {
+    const arg = raw[i];
+    if (arg === '--') {
+      kept.push(...raw.slice(i));
+      break;
+    }
+    const flag = /^--?([^=]+)(=.*)?$/.exec(arg);
+    if (!flag || (arg[1] !== '-' && flag[1].length !== 1)) {
+      kept.push(arg);
+      continue;
+    }
+    const key = flag[1].split('.')[0];
+    const negated =
+      key.startsWith('no-') && removed.has(camelCase(key.slice(3)));
+    const name = negated
+      ? removed.get(camelCase(key.slice(3)))
+      : removed.get(camelCase(key));
+    if (name === undefined) {
+      kept.push(arg);
+      continue;
+    }
+    const takesNext =
+      !negated &&
+      flag[2] === undefined &&
+      typeof parsed[name] !== 'boolean' &&
+      i + 1 < raw.length &&
+      !raw[i + 1].startsWith('-');
+    if (takesNext) {
+      i++;
+    }
+  }
+  return kept;
 }
+
+type RoutedOverrides = {
+  overrides: Record<string, unknown>;
+  delivery: OverrideDelivery;
+};
 
 function interpolateOverrides<T = any>(
   args: T,

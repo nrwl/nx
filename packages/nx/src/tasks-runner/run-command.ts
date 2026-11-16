@@ -56,7 +56,12 @@ import {
   processSyncGeneratorResultErrors,
 } from '../utils/sync-generators';
 import { workspaceRoot } from '../utils/workspace-root';
-import { createTaskGraphWithUnsentOverrides } from './create-task-graph';
+import {
+  assertOverridesAccepted,
+  createTaskGraphWithDependencyOverrides,
+  unsentOverrides,
+  type UnsentOverrides,
+} from './create-task-graph';
 import type { TaskPlanningContext } from '../hasher/task-planning-context';
 
 /** What a command runs. */
@@ -68,7 +73,7 @@ export interface TaskSelection {
    */
   initiatingTaskIds: string[];
   /** Per task, the CLI overrides its executor does not accept, so it did not get them. */
-  unsentOverrides?: Record<string, string[]>;
+  unsentOverrides?: UnsentOverrides;
   /**
    * What a rebuilt graph is pruned to: the selected tasks and everything they
    * depend on. Unset keeps the whole rebuilt graph.
@@ -473,19 +478,21 @@ export function selectTasksForProjects(
   extraTargetDependencies: TargetDependencies,
   excludeTaskDependencies: boolean
 ): TaskSelection {
-  const { taskGraph, unsentOverrides } = createTaskGraphWithUnsentOverrides(
-    projectGraph,
-    extraTargetDependencies,
-    projectNames,
-    nxArgs.targets,
-    nxArgs.configuration,
-    overrides,
-    excludeTaskDependencies
-  );
+  const { taskGraph, overrideDeliveries } =
+    createTaskGraphWithDependencyOverrides(
+      projectGraph,
+      extraTargetDependencies,
+      projectNames,
+      nxArgs.targets,
+      nxArgs.configuration,
+      overrides,
+      excludeTaskDependencies
+    );
+  assertOverridesAccepted(overrideDeliveries, taskGraph);
   const projects = new Set(projectNames);
   return {
     taskGraph,
-    unsentOverrides,
+    unsentOverrides: unsentOverrides(overrideDeliveries, taskGraph),
     initiatingTaskIds: Object.values(taskGraph.tasks)
       .filter(
         (t) =>
@@ -887,14 +894,16 @@ async function ensureWorkspaceIsInSyncAndGetGraphs(
       ),
     ];
     projectGraph = await createProjectGraphAsync();
-    const rebuilt = selectTasksForProjects(
+    const rebuiltSelection = selectTasksForProjects(
       projectGraph,
       projectNames,
       nxArgs,
       overrides,
       extraTargetDependencies ?? {},
       extraOptions.excludeTaskDependencies
-    ).taskGraph;
+    );
+    const rebuilt = rebuiltSelection.taskGraph;
+    taskSelection.unsentOverrides = rebuiltSelection.unsentOverrides;
     taskGraph = runValidations(
       projectGraph,
       // Before validation, so a cycle or atomizer error names what will actually run.
@@ -1301,12 +1310,16 @@ function loadTasksRunner(modulePath: string): TasksRunner {
   }
 }
 
+function isVerbose(nxArgs: NxArgs): boolean {
+  return nxArgs.verbose || process.env.NX_VERBOSE_LOGGING === 'true';
+}
+
 export function reportUnsentOverrides(
-  unsentOverrides: Record<string, string[]> | undefined,
+  unsentOverrides: UnsentOverrides | undefined,
   taskGraph: TaskGraph,
   nxArgs: NxArgs
 ): void {
-  if (!nxArgs.verbose && process.env.NX_VERBOSE_LOGGING !== 'true') return;
+  if (!isVerbose(nxArgs)) return;
   for (const [taskId, names] of Object.entries(unsentOverrides ?? {})) {
     if (!taskGraph.tasks[taskId]) continue;
     output.logRawLine(
@@ -1323,7 +1336,7 @@ function reportUltracacheConfigurations(
   ultracacheSkippedTaskIds: string[] | undefined
 ): void {
   if (!outcome || outcome.status === 'skipped') return;
-  if (!nxArgs.verbose && process.env.NX_VERBOSE_LOGGING !== 'true') return;
+  if (!isVerbose(nxArgs)) return;
   const summary = formatUltracacheSummary(
     buildUltracacheOverrides(projectGraph, taskGraph, outcome.configurations),
     outcome.status,
