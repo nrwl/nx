@@ -84,9 +84,8 @@ describe('getCachedSerializedProjectGraphPromise — watcher race coverage', () 
         second = await getCachedSerializedProjectGraphPromise();
       }
 
-      // The smoking gun. Without the fix, the watcher event could
-      // be missed and the daemon would re-serve the first graph
-      // (no 'foo').
+      // A missed watcher event makes the daemon re-serve the first
+      // graph, which has no 'foo'.
       expect(second.projectGraph?.nodes?.foo).toBeDefined();
       expect(second.projectGraph?.nodes?.foo?.data?.root).toBe('libs/foo');
     } finally {
@@ -211,7 +210,7 @@ describe('getCachedSerializedProjectGraphPromise — watcher race coverage', () 
       await new Promise((r) => setImmediate(r));
       await new Promise((r) => setImmediate(r));
 
-      // Without the fix this orphaned rejection is unhandled — the crash.
+      // An unhandled orphaned rejection crashes the daemon.
       expect(
         unhandled.filter(
           (r) =>
