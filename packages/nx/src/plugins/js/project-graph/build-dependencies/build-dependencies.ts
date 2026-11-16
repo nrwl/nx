@@ -11,7 +11,8 @@ export function buildExplicitDependencies(
     analyzeSourceFiles?: boolean;
     analyzePackageJson?: boolean;
   },
-  ctx: CreateDependenciesContext
+  ctx: CreateDependenciesContext,
+  installedLocalPathNodes?: Record<string, Record<string, string>>
 ): RawProjectGraphDependency[] {
   if (totalNumberOfFilesToProcess(ctx) === 0) return [];
 
@@ -30,7 +31,10 @@ export function buildExplicitDependencies(
   });
   const targetProjectLocator = new TargetProjectLocator(
     nodes,
-    ctx.externalNodes
+    ctx.externalNodes,
+    undefined,
+    undefined,
+    installedLocalPathNodes
   );
 
   if (
