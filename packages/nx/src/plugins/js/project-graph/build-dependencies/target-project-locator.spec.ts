@@ -1452,6 +1452,12 @@ describe('TargetProjectLocator', () => {
         manifest: null,
         expected: 'npm:x@file:vendor/x',
       },
+      {
+        scenario: "apps/parent's link to x loads a package named y",
+        parentLinked: true,
+        manifest: { name: 'y', version: '1.0.0' },
+        expected: 'npm:x@file:vendor/x',
+      },
     ])(
       'should resolve a local package imported from a nested workspace when $scenario',
       ({ parentLinked, manifest, expected }) => {

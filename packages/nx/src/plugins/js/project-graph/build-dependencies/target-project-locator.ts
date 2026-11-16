@@ -377,12 +377,23 @@ export class TargetProjectLocator {
       let matchingExternalNode: ProjectGraphExternalNode | null = null;
 
       if (isAliasImport) {
+        // A local package installed under another name gets the node the
+        // lockfile records for that name
+        const installedNodeName = this.packageNamesWithLocalPathNodes.has(
+          packageName
+        )
+          ? this.findInstalledLocalPathNpmProjectFromDir(
+              packageName,
+              fullDirPath
+            )
+          : null;
         // Prefer the alias node when both the alias import and the resolved package
         // exist in the graph, otherwise generated package.json files lose the alias key.
         const aliasNpmProjectKey = `npm:${packageName}@npm:${externalPackageJson.name}@${version}`;
-        matchingExternalNode =
-          this.npmProjects[aliasNpmProjectKey] ??
-          this.npmProjects[`npm:${packageName}`];
+        matchingExternalNode = installedNodeName
+          ? this.npmProjects[installedNodeName]
+          : (this.npmProjects[aliasNpmProjectKey] ??
+            this.npmProjects[`npm:${packageName}`]);
       }
 
       if (!matchingExternalNode) {
