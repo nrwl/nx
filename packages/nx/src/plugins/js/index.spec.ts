@@ -398,22 +398,84 @@ describe('nx/js/dependencies-and-lockfile', () => {
     }
   );
 
-  // apps/a reaches libs/x/dist through out, a link to libs/x that dangles
-  // until the build creates libs/x.
-  it('should depend on the project a link points to through another link, built or not', async () => {
+  // apps/a reaches libs/x/dist through out, a link that dangles until the build
+  // creates libs/x. Node can't resolve `via/../x` past the link via, so that
+  // chain keeps only the link's node.
+  it.each([
+    ['libs/x', ['apps/a/package.json', 'apps/a/src/index.ts']],
+    ['via/../x', []],
+  ])(
+    'should follow a link through another link to %s, built or not',
+    async (outTarget, libsXSourceFiles) => {
+      write(
+        'package.json',
+        JSON.stringify({ name: 'rvws', workspaces: ['apps/*'] })
+      );
+      write('bun.lock', linkedProjectBunLock);
+      write(
+        'apps/a/package.json',
+        JSON.stringify({ dependencies: { x: 'link:../../libs/x/dist' } })
+      );
+      write('apps/a/src/index.ts', `import x from 'x';`);
+      mkdirSync(join(root, 'apps/a/node_modules'));
+      symlinkSync('../../../out/dist', join(root, 'apps/a/node_modules/x'));
+      symlinkSync(outTarget, join(root, 'out'));
+      mkdirSync(join(root, 'libs/anchor'), { recursive: true });
+      symlinkSync('libs/anchor', join(root, 'via'));
+
+      for (const built of [false, true]) {
+        if (built) {
+          write(
+            'libs/x/dist/package.json',
+            JSON.stringify({ name: 'x', version: '1.0.0' })
+          );
+        }
+        const plugin = await loadPluginInNewProcess();
+
+        const dependencies = await createDependencies(
+          plugin,
+          await createExternalNodes(plugin, 'bun.lock'),
+          {
+            'apps/a': ['apps/a/package.json', 'apps/a/src/index.ts'],
+            'libs/x': built ? ['libs/x/dist/package.json'] : [],
+          }
+        );
+
+        const sourceFilesDependingOn = (isTarget: (t: string) => boolean) =>
+          dependencies
+            .filter(({ target }) => isTarget(target))
+            .map(({ sourceFile }) => sourceFile)
+            .sort();
+        expect(sourceFilesDependingOn((t) => t === 'libs/x')).toEqual(
+          libsXSourceFiles
+        );
+        expect(sourceFilesDependingOn((t) => t.startsWith('npm:x'))).toEqual([
+          'apps/a/package.json',
+          'apps/a/src/index.ts',
+        ]);
+      }
+    }
+  );
+
+  // The project apps holds its own copy of x, which Node loads for apps/a until
+  // the build creates the target of apps/a's link.
+  it('should not depend on the project that holds the copy an import loads', async () => {
     write(
       'package.json',
       JSON.stringify({ name: 'rvws', workspaces: ['apps/*'] })
     );
     write('bun.lock', linkedProjectBunLock);
     write(
+      'apps/node_modules/x/package.json',
+      JSON.stringify({ name: 'x', version: '3.0.0' })
+    );
+    write(
       'apps/a/package.json',
       JSON.stringify({ dependencies: { x: 'link:../../libs/x/dist' } })
     );
     write('apps/a/src/index.ts', `import x from 'x';`);
     mkdirSync(join(root, 'apps/a/node_modules'));
-    symlinkSync('../../../out/dist', join(root, 'apps/a/node_modules/x'));
-    symlinkSync('libs/x', join(root, 'out'));
+    symlinkSync('../../../libs/x/dist', join(root, 'apps/a/node_modules/x'));
 
     for (const built of [false, true]) {
       if (built) {
@@ -428,6 +490,7 @@ describe('nx/js/dependencies-and-lockfile', () => {
         plugin,
         await createExternalNodes(plugin, 'bun.lock'),
         {
+          apps: [],
           'apps/a': ['apps/a/package.json', 'apps/a/src/index.ts'],
           'libs/x': built ? ['libs/x/dist/package.json'] : [],
         }
@@ -435,10 +498,17 @@ describe('nx/js/dependencies-and-lockfile', () => {
 
       expect(
         dependencies
-          .filter(({ target }) => target === 'libs/x')
-          .map(({ sourceFile }) => sourceFile)
+          .filter(({ target }) => !target.startsWith('npm:'))
+          .map(({ sourceFile, target }) => [sourceFile, target])
           .sort()
-      ).toEqual(['apps/a/package.json', 'apps/a/src/index.ts']);
+      ).toEqual(
+        built
+          ? [
+              ['apps/a/package.json', 'libs/x'],
+              ['apps/a/src/index.ts', 'libs/x'],
+            ]
+          : []
+      );
     }
   });
 

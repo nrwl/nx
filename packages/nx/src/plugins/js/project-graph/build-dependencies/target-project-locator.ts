@@ -93,6 +93,10 @@ function isNestedPackageName(
   return !!manifestName && manifestName.startsWith(`${packageName}/`);
 }
 
+function isInNodeModules(path: string): boolean {
+  return path.startsWith('node_modules/') || path.includes('/node_modules/');
+}
+
 // Node's isBuiltin is false for Bun's runtime modules (`bun`, `bun:*`).
 function isBunModuleImport(importExpr: string): boolean {
   return importExpr === 'bun' || importExpr.startsWith('bun:');
@@ -503,7 +507,13 @@ export class TargetProjectLocator {
       }
       const installedPath = join(dir, 'node_modules', packageName);
       if (existsSync(installedPath)) {
-        return this.findProjectHoldingLinkTarget(realpathSync(installedPath));
+        let target: string;
+        try {
+          target = realpathSync(installedPath);
+        } catch {
+          return null;
+        }
+        return this.findProjectHoldingLinkTarget(target);
       }
       unbuiltTarget ??= resolveDanglingLink(installedPath);
       if (!relativeDir) {
@@ -516,10 +526,11 @@ export class TargetProjectLocator {
   }
 
   private findProjectHoldingLinkTarget(target: string): string | null {
-    const project = findProjectForPath(
-      normalizePath(relative(workspaceRoot, target)),
-      this.projectRootMappings
-    );
+    const path = normalizePath(relative(workspaceRoot, target));
+    if (isInNodeModules(path)) {
+      return null;
+    }
+    const project = findProjectForPath(path, this.projectRootMappings);
     // A root project holds every path, so it doesn't claim a link
     return project && this.nodes[project].data.root !== '.' ? project : null;
   }
@@ -773,10 +784,7 @@ export class TargetProjectLocator {
     resolvedModule: string
   ): string | undefined {
     resolvedModule = normalizePath(resolvedModule);
-    if (
-      resolvedModule.startsWith('node_modules/') ||
-      resolvedModule.includes('/node_modules/')
-    ) {
+    if (isInNodeModules(resolvedModule)) {
       return undefined;
     }
     let normalizedResolvedModule = resolvedModule.startsWith('./')
