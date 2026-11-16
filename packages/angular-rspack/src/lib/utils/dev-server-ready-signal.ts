@@ -10,11 +10,15 @@ import { resolve } from 'node:path';
 export const READY_SIGNAL_PLUGIN = Symbol.for('@nx/ready-signal-plugin');
 
 /**
- * Reports the dev server's address to an Nx task whose readyWhen is `signal`.
- * `rspack serve` reads `devServer` from the compiler after plugins apply,
- * so wrapping `onListening` here reaches the server it starts.
+ * Reports the dev server's address to an Nx task whose readyWhen is `signal`,
+ * once it listens and `ready` resolves. `rspack serve` reads `devServer` from
+ * the compiler after plugins apply, so wrapping `onListening` here reaches the
+ * server it starts.
  */
-export function applyDevServerReadySignal(compiler: Compiler): void {
+export function applyDevServerReadySignal(
+  compiler: Compiler,
+  ready?: Promise<void>
+): void {
   const devServer = compiler.options.devServer;
   if (!devServer || !process.env.NX_READY_SIGNAL_SOCKET) {
     return;
@@ -23,12 +27,15 @@ export function applyDevServerReadySignal(compiler: Compiler): void {
   devServer.onListening = (server) => {
     onListening?.(server);
     // The dev server has normalized `options.server` to `{ type, options }`
-    emitReadySignal(
-      getListeningUrl(
-        server.server?.address(),
-        server.options.server.type !== 'http'
-      )
+    const url = getListeningUrl(
+      server.server?.address(),
+      server.options.server.type !== 'http'
     );
+    if (ready) {
+      ready.then(() => emitReadySignal(url));
+    } else {
+      emitReadySignal(url);
+    }
   };
 }
 

@@ -4,7 +4,8 @@ import { existsSync, promises as fsPromises } from 'node:fs';
 import { extname, posix, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import type { NormalizedAngularRspackPluginOptions } from '../../models';
-import { servesSsrFromForkedServer } from '../../plugins/angular-ssr-dev-server';
+import { servesSsrFromDevServer } from '../../plugins/angular-ssr-dev-server';
+import { servesSsrFromForkedServer } from '../../plugins/angular-ssr-forked-server';
 import { getIndexOutputFile } from '../../utils/index-file/get-index-output-file';
 import { loadEsmModule } from '../../utils/misc-helpers';
 
@@ -15,22 +16,26 @@ export async function getDevServerConfig(
   const { root } = options;
 
   const servePath = buildServePath(options);
+  // The SSR middleware answers documents, as with `ng serve`.
+  const servesSsr = servesSsrFromDevServer(options);
 
   return {
     host: options.devServer.host,
     port: options.devServer.port,
     headers: options.devServer.headers,
-    historyApiFallback: {
-      index: posix.join(servePath, getIndexOutputFile(options.index)),
-      disableDotRule: true,
-      htmlAcceptHeaders: ['text/html', 'application/xhtml+xml'],
-      rewrites: [
-        {
-          from: new RegExp(`^(?!${servePath})/.*`),
-          to: (context) => context.parsedUrl.href,
+    historyApiFallback: servesSsr
+      ? false
+      : {
+          index: posix.join(servePath, getIndexOutputFile(options.index)),
+          disableDotRule: true,
+          htmlAcceptHeaders: ['text/html', 'application/xhtml+xml'],
+          rewrites: [
+            {
+              from: new RegExp(`^(?!${servePath})/.*`),
+              to: (context) => context.parsedUrl.href,
+            },
+          ],
         },
-      ],
-    },
     compress: false,
     static: false,
     server: getServerConfig(options),
@@ -40,6 +45,7 @@ export async function getDevServerConfig(
     ),
     devMiddleware: {
       publicPath: servePath,
+      ...(servesSsr ? { index: false } : {}),
       writeToDisk:
         platform === 'browser' && options.hasServer
           ? (file) => !file.includes('.hot-update.')

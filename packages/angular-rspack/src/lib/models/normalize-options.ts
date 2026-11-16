@@ -163,6 +163,7 @@ export async function normalizeOptions(
       ? {
           entry: ssr.entry,
           platform: 'node' as const, // @TODO: Add support for neutral platform
+          ...(ssr.serveFromDevServer ? { serveFromDevServer: true } : {}),
         }
       : ssr;
 

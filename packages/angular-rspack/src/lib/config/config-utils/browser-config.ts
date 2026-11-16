@@ -12,6 +12,7 @@ import type { AngularRspackPlugin } from '../../plugins/angular-rspack-plugin';
 import type { SharedLicenseInputs } from '../../plugins/extract-licenses-plugin';
 import type { SharedServerRenderingInputs } from '../../plugins/index-html-plugin';
 import type { SsrReloadServer } from '../../plugins/server/ssr-reload-server';
+import type { AngularSsrDevServer } from '../../plugins/angular-ssr-dev-server';
 import type { DevServerReloads } from '../../plugins/dev-server-reloads';
 import { getDevClientGuardRule } from '../../plugins/loaders/dev-client-guard.loader';
 import { getDevServerConfig } from './dev-server-config-utils';
@@ -31,6 +32,7 @@ export async function getBrowserConfig(
   sharedAngularPlugin?: AngularRspackPlugin,
   serverRenderingInputs?: SharedServerRenderingInputs,
   ssrReloadServer?: SsrReloadServer,
+  ssrDevServer?: AngularSsrDevServer,
   devServerReloads?: DevServerReloads
 ): Promise<Configuration> {
   const isDevServer = isServeMode();
@@ -116,6 +118,7 @@ export async function getBrowserConfig(
         sharedAngularPlugin,
         ssrReloadServer,
         serverRenderingInputs,
+        ssrDevServer,
         devServerReloads,
       }),
     ],

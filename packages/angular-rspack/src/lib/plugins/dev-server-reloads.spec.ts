@@ -61,7 +61,8 @@ async function startHarness(devServer: DevServer) {
           });
         });
       },
-      (compiler: Compiler) => new DevServerReloads().apply(compiler),
+      (compiler: Compiler) =>
+        new DevServerReloads().apply(compiler, { endsRound: true }),
     ],
   });
 

@@ -530,8 +530,16 @@ describe('createConfig', () => {
         './public/**/*.*',
       ]);
 
+      const [devServerSsrConfig] = await _createConfig({
+        ...configBase,
+        root,
+        server: './src/main.server.ts',
+        ssr: { entry: './src/server.ts', serveFromDevServer: true },
+      });
       const [browserOnlyConfig] = await _createConfig({ ...configBase, root });
-      expect(browserOnlyConfig.devServer).not.toHaveProperty('watchFiles');
+      for (const config of [devServerSsrConfig, browserOnlyConfig]) {
+        expect(config.devServer).not.toHaveProperty('watchFiles');
+      }
     } finally {
       vi.unstubAllEnvs();
       await rm(root, { recursive: true, force: true });
@@ -594,6 +602,45 @@ describe('createConfig', () => {
     },
     10000
   );
+
+  it('should leave documents to the SSR middleware only with ssr.serveFromDevServer while serving', async () => {
+    const root = await createSsrProjectRoot();
+    vi.stubEnv('WEBPACK_SERVE', 'true');
+    try {
+      const ssrOptions: AngularRspackPluginOptions = {
+        ...configBase,
+        root,
+        server: './src/main.server.ts',
+      };
+      const [devServerSsrConfig] = await _createConfig({
+        ...ssrOptions,
+        ssr: { entry: './src/server.ts', serveFromDevServer: true },
+      });
+      expect(devServerSsrConfig.devServer).toMatchObject({
+        historyApiFallback: false,
+        devMiddleware: { index: false },
+      });
+
+      const [forkedSsrConfig] = await _createConfig({
+        ...ssrOptions,
+        ssr: { entry: './src/server.ts' },
+      });
+      const [browserOnlyConfig] = await _createConfig({ ...configBase, root });
+      for (const config of [forkedSsrConfig, browserOnlyConfig]) {
+        expect(config.devServer).toMatchObject({
+          historyApiFallback: expect.objectContaining({
+            index: '/index.html',
+          }),
+        });
+        expect((config.devServer || {}).devMiddleware).not.toHaveProperty(
+          'index'
+        );
+      }
+    } finally {
+      vi.unstubAllEnvs();
+      await rm(root, { recursive: true, force: true });
+    }
+  }, 10000);
 
   it('should allow the dev-server hosts in the engine manifest while serving', async () => {
     const root = await createSsrProjectRoot();
