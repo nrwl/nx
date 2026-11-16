@@ -121,6 +121,36 @@ export function convertToCamelCase(
 }
 
 /**
+ * Whether `combineOptionsForExecutor` would keep the command-line option `name`
+ * rather than reject it as not in the schema.
+ */
+export function schemaAcceptsOption(name: string, schema: Schema): boolean {
+  if (schema.additionalProperties !== false) {
+    return true;
+  }
+  return listsOption(name, schema);
+}
+
+function listsOption(name: string, schema: Partial<Schema>): boolean {
+  const properties = schema.properties ?? {};
+  const camelName = camelCase(name);
+  const normalized = properties[camelName] ? camelName : name;
+  if (findSchemaForProperty(normalized, { properties })) {
+    return true;
+  }
+  if (
+    Object.keys(schema.patternProperties ?? {}).some((pattern) =>
+      new RegExp(pattern).test(normalized)
+    )
+  ) {
+    return true;
+  }
+  return [...(schema.anyOf ?? []), ...(schema.oneOf ?? [])].some((branch) =>
+    listsOption(name, branch)
+  );
+}
+
+/**
  * Coerces (and replaces) options identified as 'boolean' or 'number' in the Schema
  *
  * @param opts The options to check

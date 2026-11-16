@@ -15,6 +15,12 @@ import { TargetDependencies } from '../config/nx-json';
 import { output } from '../utils/output';
 import { TargetDependencyConfig } from '../config/workspace-json-project-json';
 import { findCycles } from './task-graph-utils';
+import {
+  getExecutorInformation,
+  parseExecutor,
+} from '../command-line/run/executor-utils';
+import { Schema, schemaAcceptsOption } from '../utils/params';
+import { workspaceRoot } from '../utils/workspace-root';
 
 const DUMMY_TASK_TARGET = '__nx_dummy_task__';
 
@@ -36,6 +42,12 @@ export class ProcessTasks {
   readonly continuousDependencies: { [k: string]: TaskGraphEdge[] } = {};
   readonly dependencyOverrides: DependencyOverrides = {};
   private readonly allTargetNames: string[];
+  private readonly schemas = new Map<string, Schema | null>();
+  private routedOverrideNames = new Set<string>();
+  private readonly overrideRecipients = new Map<
+    string,
+    Array<{ taskId: string; accepted: boolean }>
+  >();
 
   constructor(
     private readonly extraTargetDependencies: TargetDependencies,
@@ -59,6 +71,11 @@ export class ProcessTasks {
     overrides: Record<string, unknown>,
     excludeTaskDependencies: boolean
   ): string[] {
+    this.routedOverrideNames = new Set(
+      Object.keys(overrides).filter(
+        (name) => name !== '_' && name !== '__overrides_unparsed__'
+      )
+    );
     for (const projectName of projectNames) {
       for (const target of targets) {
         const project = this.projectGraph.nodes[projectName];
@@ -110,6 +127,8 @@ export class ProcessTasks {
         );
       }
     }
+
+    this.assertEveryOverrideAccepted();
 
     filterDummyTasks(this.dependencies);
     filterDummyTasks(this.continuousDependencies);
@@ -249,7 +268,15 @@ export class ProcessTasks {
         );
       }
       if (task.id !== selfTaskId) {
-        this.recordEdge(task, selfTaskId, taskOverrides);
+        this.recordEdge(
+          task,
+          selfTaskId,
+          this.routeOverrides(
+            selfProject,
+            dependencyConfig.target,
+            taskOverrides
+          )
+        );
         if (this.tasks[selfTaskId].continuous) {
           this.addContinuousEdge(task, selfTaskId, dependencyConfig);
         } else {
@@ -305,7 +332,15 @@ export class ProcessTasks {
           ];
 
         if (task.id !== depTargetId) {
-          this.recordEdge(task, depTargetId, taskOverrides);
+          this.recordEdge(
+            task,
+            depTargetId,
+            this.routeOverrides(
+              depProject,
+              dependencyConfig.target,
+              taskOverrides
+            )
+          );
           if (depTargetConfiguration.continuous) {
             this.addContinuousEdge(task, depTargetId, dependencyConfig);
           } else {
@@ -411,8 +446,9 @@ export class ProcessTasks {
       configuration: resolvedConfiguration,
     };
 
+    this.recordOverrideRecipient(id, project, target, overrides);
     const interpolatedOverrides = interpolateOverrides(
-      overrides,
+      this.routeOverrides(project, target, overrides),
       project.name,
       project.data
     );
@@ -432,6 +468,95 @@ export class ProcessTasks {
       continuous: project.data.targets[target].continuous ?? false,
       ultracache: project.data.targets[target].ultracache,
     };
+  }
+
+  private routeOverrides<T extends Record<string, unknown>>(
+    project: ProjectGraphProjectNode,
+    target: string,
+    overrides: T
+  ): T {
+    const routed = { ...overrides };
+    for (const name of this.routedOverrideNames) {
+      if (name in routed && !this.accepts(project, target, name)) {
+        delete routed[name];
+      }
+    }
+    return routed;
+  }
+
+  private recordOverrideRecipient(
+    taskId: string,
+    project: ProjectGraphProjectNode,
+    target: string,
+    overrides: Record<string, unknown>
+  ) {
+    for (const name of this.routedOverrideNames) {
+      if (!(name in overrides)) {
+        continue;
+      }
+      if (!this.overrideRecipients.has(name)) {
+        this.overrideRecipients.set(name, []);
+      }
+      this.overrideRecipients.get(name).push({
+        taskId,
+        accepted: this.accepts(project, target, name),
+      });
+    }
+  }
+
+  private assertEveryOverrideAccepted() {
+    const rejected: string[] = [];
+    for (const [name, recipients] of this.overrideRecipients) {
+      const running = recipients.filter(({ taskId }) => this.tasks[taskId]);
+      if (running.length && !running.some(({ accepted }) => accepted)) {
+        rejected.push(
+          `'${name}' is not in the schema of any task in this run (${running
+            .map(({ taskId }) => taskId)
+            .join(', ')})`
+        );
+      }
+    }
+    if (rejected.length) {
+      throw new Error(rejected.join('\n'));
+    }
+  }
+
+  private accepts(
+    project: ProjectGraphProjectNode,
+    target: string,
+    name: string
+  ): boolean {
+    const schema = this.readSchema(project.data.targets[target].executor);
+    return !schema || schemaAcceptsOption(name, schema);
+  }
+
+  private readSchema(executor: string): Schema | null {
+    if (!this.schemas.has(executor)) {
+      this.schemas.set(executor, this.loadSchema(executor));
+    }
+    return this.schemas.get(executor);
+  }
+
+  // A run that cannot resolve an executor fails later with its own error;
+  // treating the schema as accept-all keeps that error.
+  private loadSchema(executor: string): Schema | null {
+    try {
+      const [nodeModule, executorName] = parseExecutor(executor);
+      const projects = Object.fromEntries(
+        Object.entries(this.projectGraph.nodes).map(([name, node]) => [
+          name,
+          node.data,
+        ])
+      );
+      return getExecutorInformation(
+        nodeModule,
+        executorName,
+        workspaceRoot,
+        projects
+      ).schema;
+    } catch {
+      return null;
+    }
   }
 
   resolveConfiguration(
