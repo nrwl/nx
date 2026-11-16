@@ -95,9 +95,11 @@ describe('@nx/eslint:lint-project', () => {
         .toMatchInlineSnapshot(`
         "import baseConfig from "../../eslint.base.config.js";
 
-        export default [
+        const eslintConfig = [
             ...baseConfig
         ];
+
+        export default eslintConfig;
         "
       `);
     });
@@ -121,9 +123,11 @@ describe('@nx/eslint:lint-project', () => {
         .toMatchInlineSnapshot(`
         "import baseConfig from "../../eslint.base.config.mjs";
 
-        export default [
+        const eslintConfig = [
             ...baseConfig
         ];
+
+        export default eslintConfig;
         "
       `);
     });
@@ -198,9 +202,11 @@ describe('@nx/eslint:lint-project', () => {
         .toMatchInlineSnapshot(`
         "import baseConfig from "../../eslint.config.js";
 
-        export default [
+        const eslintConfig = [
             ...baseConfig
         ];
+
+        export default eslintConfig;
         "
       `);
     });
@@ -224,9 +230,11 @@ describe('@nx/eslint:lint-project', () => {
         .toMatchInlineSnapshot(`
         "import baseConfig from "../../eslint.config.mjs";
 
-        export default [
+        const eslintConfig = [
             ...baseConfig
         ];
+
+        export default eslintConfig;
         "
       `);
     });
@@ -271,7 +279,7 @@ describe('@nx/eslint:lint-project', () => {
     expect(tree.read('eslint.config.mjs', 'utf-8')).toMatchInlineSnapshot(`
       "import nx from "@nx/eslint-plugin";
 
-      export default [
+      const eslintConfig = [
           ...nx.configs["flat/base"],
           ...nx.configs["flat/typescript"],
           ...nx.configs["flat/javascript"],
@@ -323,6 +331,8 @@ describe('@nx/eslint:lint-project', () => {
               rules: {}
           }
       ];
+
+      export default eslintConfig;
       "
     `);
   });
@@ -413,7 +423,7 @@ describe('@nx/eslint:lint-project', () => {
       .toMatchInlineSnapshot(`
       "import baseConfig from "../../eslint.config.mjs";
 
-      export default [
+      const eslintConfig = [
           ...baseConfig,
           {
               files: [
@@ -433,6 +443,8 @@ describe('@nx/eslint:lint-project', () => {
               }
           }
       ];
+
+      export default eslintConfig;
       "
     `);
   });
@@ -496,6 +508,26 @@ describe('@nx/eslint:lint-project', () => {
       ];
       "
     `);
+  });
+
+  it('should reject ESLINT_USE_FLAT_CONFIG=false on ESLint v10 before writing a config', async () => {
+    tree.write('.eslintrc.json', '{ "root": true }');
+    updateJson(tree, 'package.json', (json) => {
+      json.devDependencies = { ...json.devDependencies, eslint: '^10.0.0' };
+      return json;
+    });
+    process.env.ESLINT_USE_FLAT_CONFIG = 'false';
+
+    await expect(
+      lintProjectGenerator(tree, {
+        ...defaultOptions,
+        linter: 'eslint',
+        project: 'test-lib',
+      })
+    ).rejects.toThrow(
+      /does not support the legacy "eslintrc" configuration format/
+    );
+    expect(tree.exists('libs/test-lib/.eslintrc.json')).toBe(false);
   });
 
   it('should still set parserOptions.project in legacy .eslintrc config when typed linting is enabled', async () => {

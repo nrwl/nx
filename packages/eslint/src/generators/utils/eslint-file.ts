@@ -27,11 +27,14 @@ import {
   addImportToFlatConfig,
   addPatternsToFlatConfigIgnoresBlock,
   addPluginsToExportsBlock,
+  exportsFlatConfigArray,
+  flatConfigUsesVariable,
   generateAst,
   generateFlatOverride,
   generateFlatPredefinedConfig,
   generatePluginExtendsElement,
   generatePluginExtendsElementWithCompatFixup,
+  generateSpreadElement,
   generateTypedLintingFlatConfigOverride,
   hasFlatConfigIgnoresBlock,
   hasOverride,
@@ -1127,9 +1130,10 @@ export function addTypedLintingToFlatConfig(tree: Tree, root: string): void {
   const updated = addBlockToFlatConfigExport(content, block);
   if (updated === content) {
     // `addBlockToFlatConfigExport` only edits a plain array export
-    // (`export default [...]` / `module.exports = [...]`). A wrapper config such
-    // as `export default tseslint.config(...)` is left untouched, so warn rather
-    // than silently dropping the request.
+    // (`export default [...]`, a `const` array exported by
+    // `export default <name>`, `module.exports = [...]`).
+    // A wrapper config such as `export default tseslint.config(...)` is left
+    // untouched, so warn rather than silently dropping the request.
     logger.warn(
       `Could not enable typed linting in "${fileName}" because its ESLint flat config is not a plain array export. Add \`languageOptions: { parserOptions: { projectService: true } }\` to enable typed linting.`
     );
@@ -1479,6 +1483,101 @@ export function addPredefinedConfigToFlatLintConfig(
   );
 
   tree.write(fileName, content);
+}
+
+/**
+ * Imports a module that exports a flat config array and spreads it into the
+ * project's flat config, e.g. `...nextVitals` from
+ * `eslint-config-next/core-web-vitals`. Returns false, leaving the config
+ * unchanged, when the config already declares or references a variable named
+ * `variableName` or does not export an array literal.
+ */
+export function addSpreadConfigToFlatLintConfig(
+  tree: Tree,
+  root: string,
+  variableName: string,
+  importPath: string,
+  options: { insertAtTheEnd?: boolean; checkBaseConfig?: boolean } = {}
+): boolean {
+  return addImportedConfigToFlatLintConfig(
+    tree,
+    root,
+    variableName,
+    importPath,
+    generateSpreadElement(variableName),
+    options
+  );
+}
+
+/**
+ * Imports a plugin and adds one of its flat config objects to the project's
+ * flat config, e.g. `nextEslintPluginNext.configs['core-web-vitals']` from
+ * `@next/eslint-plugin-next`. Returns false, leaving the config unchanged, when
+ * the config already declares or references a variable named `variableName` or
+ * does not export an array literal.
+ */
+export function addPluginConfigToFlatLintConfig(
+  tree: Tree,
+  root: string,
+  variableName: string,
+  importPath: string,
+  configName: string,
+  options: { insertAtTheEnd?: boolean; checkBaseConfig?: boolean } = {}
+): boolean {
+  return addImportedConfigToFlatLintConfig(
+    tree,
+    root,
+    variableName,
+    importPath,
+    ts.factory.createElementAccessExpression(
+      ts.factory.createPropertyAccessExpression(
+        ts.factory.createIdentifier(variableName),
+        'configs'
+      ),
+      ts.factory.createStringLiteral(configName)
+    ),
+    options
+  );
+}
+
+function addImportedConfigToFlatLintConfig(
+  tree: Tree,
+  root: string,
+  variableName: string,
+  importPath: string,
+  element: ts.Expression,
+  options: { insertAtTheEnd?: boolean; checkBaseConfig?: boolean }
+): boolean {
+  const { insertAtTheEnd = true, checkBaseConfig = false } = options;
+
+  if (!useFlatConfig(tree))
+    throw new Error('Imported configs can only be used with flat configs');
+
+  const fileName = findFlatConfigFile(tree, root);
+  let content = tree.read(fileName, 'utf8');
+  if (
+    flatConfigUsesVariable(content, variableName) ||
+    !exportsFlatConfigArray(content)
+  ) {
+    return false;
+  }
+  content = addImportToFlatConfig(content, variableName, importPath);
+  content = addBlockToFlatConfigExport(content, element, {
+    insertAtTheEnd,
+    checkBaseConfig,
+  });
+
+  tree.write(fileName, content);
+  return true;
+}
+
+export function findFlatConfigFile(
+  tree: Tree,
+  root: string
+): string | undefined {
+  return eslintFlatConfigFilenames
+    .map((file) => joinPathFragments(root, file))
+    .find((path) => tree.exists(path));
 }
 
 export function addPluginsToLintConfig(
