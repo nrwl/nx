@@ -289,9 +289,10 @@ output that still trusts it:
 
 An edit to the `.patch` file of a dependency or to a vendored package changes the task hash through
 the project graph, so neither needs an input.
-A running Nx daemon doesn't detect a change to a gitignored file in a vendored package, such as its
-build output.
-After you change such a file, run `nx daemon --stop` so the next run ships the new contents.
+A change to a file that git or `.nxignore` ignores in a vendored package, such as its build output,
+doesn't change the task hash.
+After you change only such files, run `nx prune my-app --skip-nx-cache` so the output ships the new
+contents.
 
 Then run:
 
