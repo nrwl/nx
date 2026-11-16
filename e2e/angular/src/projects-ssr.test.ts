@@ -253,7 +253,6 @@ ${statement.replace(/^/gm, '  ')}
 
       const checkReloadDocuments = async (name: string) => {
         const outputs = [
-          `dist/${name}/browser/index.html`,
           `dist/${name}/browser/index.original.html`,
           `dist/${name}/server/index.server.html`,
           `dist/${name}/server/index.csr.html`,
