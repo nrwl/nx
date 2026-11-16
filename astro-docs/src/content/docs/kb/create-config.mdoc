@@ -168,6 +168,7 @@ export interface AngularRspackPluginOptions extends PluginUnsupportedOptions {
         platform?: 'node' | 'neutral';
         // Deprecated. Use `platform` instead.
         experimentalPlatform?: 'node' | 'neutral';
+        serveFromDevServer?: boolean;
       };
   stylePreprocessorOptions?: StylePreprocessorOptions;
   styles?: ScriptOrStyleEntry[];
