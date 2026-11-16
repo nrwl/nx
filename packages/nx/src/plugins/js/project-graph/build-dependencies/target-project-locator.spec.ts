@@ -1436,6 +1436,64 @@ describe('TargetProjectLocator', () => {
         ).toEqual(appNode);
       }
     );
+
+    // The lockfile records the vendored x apps/parent installs and none for
+    // apps/parent/child, which imports x.
+    it.each([
+      {
+        scenario: 'nothing installs x',
+        parentLinked: false,
+        manifest: null,
+        expected: 'npm:x',
+      },
+      {
+        scenario: "apps/parent's link to x is missing its target",
+        parentLinked: true,
+        manifest: null,
+        expected: 'npm:x@file:vendor/x',
+      },
+    ])(
+      'should resolve a local package imported from a nested workspace when $scenario',
+      ({ parentLinked, manifest, expected }) => {
+        vol.reset();
+        vol.fromJSON({ 'apps/parent/child/package.json': '{}' }, '/root');
+        if (parentLinked) {
+          vol.mkdirSync('/root/apps/parent/node_modules', { recursive: true });
+          vol.symlinkSync(
+            '../../../vendor/x/dist',
+            '/root/apps/parent/node_modules/x'
+          );
+        }
+        const externalNodes = Object.fromEntries(
+          [
+            ['npm:x', '1.0.0'],
+            ['npm:x@file:vendor/x', 'file:vendor/x'],
+          ].map(([name, version]) => [
+            name,
+            {
+              name,
+              type: 'npm' as const,
+              data: { version, packageName: 'x' },
+            },
+          ])
+        );
+        const targetProjectLocator = new TargetProjectLocator(
+          {},
+          externalNodes,
+          new Map(),
+          new Map(),
+          { 'apps/parent': { x: 'npm:x@file:vendor/x' } }
+        );
+        targetProjectLocator['readPackageJson'] = () => manifest;
+
+        expect(
+          targetProjectLocator.findNpmProjectFromImport(
+            'x',
+            'apps/parent/child/src/main.ts'
+          )
+        ).toEqual(expected);
+      }
+    );
   });
 
   describe('findDependencyInWorkspaceProjects', () => {

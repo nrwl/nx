@@ -359,7 +359,7 @@ export class TargetProjectLocator {
         const installedNodeName = this.packageNamesWithLocalPathNodes.has(
           packageName
         )
-          ? this.findInstalledLocalPathNpmProjectFromDir(
+          ? this.findUnreadableLocalPathNpmProjectFromDir(
               packageName,
               fullDirPath
             )
@@ -466,6 +466,34 @@ export class TargetProjectLocator {
         !relativeDir ||
         existsSync(join(dir, 'node_modules', packageName, 'package.json'))
       ) {
+        return null;
+      }
+    }
+  }
+
+  /**
+   * The node an unreadable import gets once its package can be read: the
+   * record of the nearest importer up to the directory that installs the
+   * package. Null when no directory installs it.
+   */
+  private findUnreadableLocalPathNpmProjectFromDir(
+    packageName: string,
+    fromDirPath: string
+  ): string | null {
+    let installed: string | null = null;
+    for (let dir = fromDirPath; ; dir = dirname(dir)) {
+      const relativeDir = relative(workspaceRoot, dir);
+      if (relativeDir && !isContainedRelativePath(relativeDir)) {
+        return null;
+      }
+      installed ??= this.findInstalledLocalPathNpmProject(
+        packageName,
+        relativeDir ? normalizePath(relativeDir) : '.'
+      );
+      if (hasEntry(join(dir, 'node_modules', packageName))) {
+        return installed;
+      }
+      if (!relativeDir) {
         return null;
       }
     }
@@ -986,6 +1014,15 @@ export class TargetProjectLocator {
     } catch {
       return null;
     }
+  }
+}
+
+// A link counts even when its target is missing
+function hasEntry(path: string): boolean {
+  try {
+    return lstatSync(path, { throwIfNoEntry: false }) !== undefined;
+  } catch {
+    return false;
   }
 }
 
