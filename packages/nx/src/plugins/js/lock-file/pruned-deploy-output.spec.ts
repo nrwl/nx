@@ -30,6 +30,8 @@ import {
   namesakeOverrideRootBunLock,
   overriddenDependencyPrunedBunLock,
   overriddenDependencyRootBunLock,
+  rootDeclaredOverridePrunedBunLock,
+  rootDeclaredOverrideRootBunLock,
   rootProjectOverridePrunedBunLock,
   rootProjectOverrideRootBunLock,
 } from './__fixtures__/bun/pruned-overridden-dependency.bun.lock';
@@ -453,6 +455,20 @@ describe('generatePrunedDeployOutput for bun', () => {
       rootProjectOverridePrunedBunLock
     );
     expect(manifest.dependencies.ms).toBe('2.1.3');
+  });
+
+  // A library takes ms 2.0.0 from the root, which overrides it to 2.1.2.
+  it('declares the version an override installs for a dependency the root declares', () => {
+    const manifest: PackageJson = {
+      name: '@demo/api',
+      version: '0.0.1',
+      dependencies: { ms: '2.0.0' },
+    };
+
+    expect(prune(rootDeclaredOverrideRootBunLock, manifest)).toBe(
+      rootDeclaredOverridePrunedBunLock
+    );
+    expect(manifest.dependencies.ms).toBe('2.1.2');
   });
 
   // apps/api is no workspace, so it installs the root's ms. The workspace that

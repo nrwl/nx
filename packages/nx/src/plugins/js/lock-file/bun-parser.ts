@@ -1972,17 +1972,30 @@ export function stringifyBunLockfile(
         appResolvedSpec !== undefined &&
         (relocatePrunedLocalPathSpec(appResolvedSpec, projectRoot, '')?.spec ??
           appResolvedSpec) === resolvedSpec;
+      // A library's manifest takes the specs it doesn't declare from the
+      // root, which installs them in its own scope.
+      const declaredByRoot =
+        !declaredByApp &&
+        DEPENDENCY_TYPES.some((type) => {
+          const rootSpec = rootLockFile.workspaces['']?.[type]?.[name];
+          return (
+            rootSpec !== undefined &&
+            resolveLockfileCatalog(rootLockFile, name, rootSpec) ===
+              resolvedSpec
+          );
+        });
+      const declaredByInstaller = declaredByApp || declaredByRoot;
       const key = findManifestDependencyKey(
         rootPackages,
         localSources,
-        appScope,
+        declaredByRoot ? [] : appScope,
         name,
         resolvedSpec,
-        declaredByApp
+        declaredByInstaller
       );
       if (key) {
         place([], name, createPackage(key, resolvedSpec));
-        const pinnedSpec = declaredByApp
+        const pinnedSpec = declaredByInstaller
           ? getOverriddenVersionSpec(
               rootPackages[key],
               resolvedSpec,

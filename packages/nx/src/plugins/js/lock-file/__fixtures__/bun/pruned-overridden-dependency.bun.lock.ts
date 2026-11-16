@@ -217,3 +217,46 @@ export const rootProjectOverridePrunedBunLock = `{
   }
 }
 `;
+
+export const rootDeclaredOverrideRootBunLock = `{
+  "lockfileVersion": 2,
+  "configVersion": 1,
+  "workspaces": {
+    "": {
+      "name": "root",
+      "dependencies": {
+        "ms": "2.0.0",
+      },
+    },
+    "apps/api": {
+      "name": "@demo/api",
+      "version": "0.0.1",
+    },
+  },
+  "overrides": {
+    "ms": "2.1.2",
+  },
+  "packages": {
+    "@demo/api": ["@demo/api@workspace:apps/api"],
+
+    "ms": ["ms@2.1.2", "", {}, "sha512-sGkPx+VjMtmA6MX27oA4FBFELFCZZ4S4XqeGOXCv68tT+jb3vk/RyaKWP0PTKyWtmLSM0b+adUTEvbs1PEaH2w=="],
+  }
+}
+`;
+
+export const rootDeclaredOverridePrunedBunLock = `{
+  "lockfileVersion": 2,
+  "configVersion": 1,
+  "workspaces": {
+    "": {
+      "name": "@demo/api",
+      "dependencies": {
+        "ms": "2.1.2",
+      },
+    },
+  },
+  "packages": {
+    "ms": ["ms@2.1.2", "", {}, "sha512-sGkPx+VjMtmA6MX27oA4FBFELFCZZ4S4XqeGOXCv68tT+jb3vk/RyaKWP0PTKyWtmLSM0b+adUTEvbs1PEaH2w=="],
+  }
+}
+`;
