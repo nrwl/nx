@@ -207,45 +207,21 @@ export class AngularSsrDevServer {
         entry: (typeof result)[number]
       ): entry is DevServerMiddlewareObject =>
         typeof entry === 'object' && DEV_MIDDLEWARE_NAMES.has(entry.name ?? '');
-      const first = result.findIndex(isDevMiddleware);
-      if (first !== -1) {
-        // The dev server adds the dev middleware again after a proxy and
-        // after historyApiFallback.
-        result.forEach((entry, index) => {
-          if (isDevMiddleware(entry)) {
-            result[index] = this.#skipServerOnlyFiles(entry);
-          }
-        });
-        result.splice(first, 0, {
-          name: 'angular-ssr-index',
-          middleware: this.#routeIndexToSsr,
-        });
-      }
+      // The dev server adds the dev middleware again after a proxy and after
+      // historyApiFallback.
+      result.forEach((entry, index) => {
+        if (isDevMiddleware(entry)) {
+          result[index] = this.#skipSsrPaths(entry);
+        }
+      });
       result.push({ name: 'angular-ssr', middleware: this.#middleware });
       return result;
     };
   }
 
-  // Bypass the client-only index without changing `originalUrl`, which
-  // Angular's request adapter uses for SSR routing.
-  readonly #routeIndexToSsr = (
-    req: NodeRequest,
-    _res: ServerResponse,
-    next: Next
-  ): void => {
-    const { pathname, search } = new URL(req.url ?? '/', 'http://localhost');
-    if (pathname === `${this.#base}${this.#indexFile}`) {
-      req.originalUrl ??= req.url;
-      req.url = `${this.#base}${search}`;
-    }
-    next();
-  };
-
-  // rspack 1.x's dev middleware also serves the server compilation's files,
-  // which `ng serve` and rspack 2 send to SSR.
-  #skipServerOnlyFiles(
-    entry: DevServerMiddlewareObject
-  ): DevServerMiddlewareObject {
+  // The dev middleware serves the client-only index, and on rspack 1.x the
+  // server compilation's files too. `ng serve` sends both to SSR.
+  #skipSsrPaths(entry: DevServerMiddlewareObject): DevServerMiddlewareObject {
     const wrap = (
       devMiddleware: DevServerMiddlewareObject['middleware']
     ): DevServerMiddlewareObject['middleware'] => {
@@ -253,7 +229,7 @@ export class AngularSsrDevServer {
         return devMiddleware;
       }
       const handle: DevServerMiddlewareHandler = (req, res, next) =>
-        this.#isServerOnlyFile(req.url)
+        this.#isIndexFile(req.url) || this.#isServerOnlyFile(req.url)
           ? next()
           : (devMiddleware as DevServerMiddlewareHandler)(req, res, next);
       return (req, res, next) => {
@@ -277,6 +253,11 @@ export class AngularSsrDevServer {
         middleware = wrap(devMiddleware);
       },
     };
+  }
+
+  #isIndexFile(url = '/'): boolean {
+    const { pathname } = new URL(url, 'http://localhost');
+    return pathname === `${this.#base}${this.#indexFile}`;
   }
 
   #isServerOnlyFile(url = '/'): boolean {

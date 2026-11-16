@@ -471,7 +471,11 @@ exports.reqHandler = handler;`,
     ['/app/a', 200, { url: '/a', originalUrl: '/app/a' }],
     ['/app/', 200, { url: '/', originalUrl: '/app/' }],
     // The dev middleware would answer it with the client-only document.
-    ['/app/index.html', 200, { url: '/', originalUrl: '/app/index.html' }],
+    [
+      '/app/index.html',
+      200,
+      { url: '/index.html', originalUrl: '/app/index.html' },
+    ],
     ['/app/next', 404, undefined],
     ['/other', 404, undefined],
     ['/app', 404, undefined],
