@@ -1,6 +1,6 @@
-import { existsSync, realpathSync } from 'node:fs';
+import { existsSync, lstatSync, readlinkSync, realpathSync } from 'node:fs';
 import { isBuiltin } from 'node:module';
-import { dirname, join, posix, relative, isAbsolute } from 'node:path';
+import { dirname, join, posix, relative, isAbsolute, resolve } from 'node:path';
 import { clean, satisfies } from 'semver';
 import type {
   ProjectGraphExternalNode,
@@ -488,31 +488,40 @@ export class TargetProjectLocator {
     return this.linkedProjectCache.get(cacheKey);
   }
 
-  // Node loads the nearest node_modules copy, so that one decides
+  // Node loads the nearest node_modules copy, so that one decides. A link
+  // whose target isn't built yet decides only when no copy is installed above
+  // it, so the edge doesn't depend on whether the target was built.
   private findLinkedProjectFromDir(
     packageName: string,
     fromDirPath: string
   ): string | null {
+    let unbuiltTarget: string | undefined;
     for (let dir = fromDirPath; ; dir = dirname(dir)) {
       const relativeDir = relative(workspaceRoot, dir);
       if (relativeDir && !isContainedRelativePath(relativeDir)) {
-        return null;
+        break;
       }
       const installedPath = join(dir, 'node_modules', packageName);
       if (existsSync(installedPath)) {
-        const target = normalizePath(
-          relative(workspaceRoot, realpathSync(installedPath))
-        );
-        const project = findProjectForPath(target, this.projectRootMappings);
-        // A root project holds every path, so it doesn't claim a link
-        return project && this.nodes[project].data.root !== '.'
-          ? project
-          : null;
+        return this.findProjectHoldingLinkTarget(realpathSync(installedPath));
       }
+      unbuiltTarget ??= resolveDanglingLink(installedPath);
       if (!relativeDir) {
-        return null;
+        break;
       }
     }
+    return unbuiltTarget
+      ? this.findProjectHoldingLinkTarget(unbuiltTarget)
+      : null;
+  }
+
+  private findProjectHoldingLinkTarget(target: string): string | null {
+    const project = findProjectForPath(
+      normalizePath(relative(workspaceRoot, target)),
+      this.projectRootMappings
+    );
+    // A root project holds every path, so it doesn't claim a link
+    return project && this.nodes[project].data.root !== '.' ? project : null;
   }
 
   private getNpmResolutionCache(packageName: string): NpmResolutionCache {
@@ -959,4 +968,26 @@ export class TargetProjectLocator {
       return null;
     }
   }
+}
+
+// Where a chain of links ends when its last target doesn't exist, in the
+// canonical form `realpathSync` gives once it does
+function resolveDanglingLink(path: string): string | undefined {
+  try {
+    let target = path;
+    for (let hops = 0; hops < 40; hops++) {
+      if (!lstatSync(target, { throwIfNoEntry: false })?.isSymbolicLink()) {
+        if (target === path) {
+          return undefined;
+        }
+        let existing = target;
+        while (!existsSync(existing)) {
+          existing = dirname(existing);
+        }
+        return join(realpathSync(existing), relative(existing, target));
+      }
+      target = resolve(realpathSync(dirname(target)), readlinkSync(target));
+    }
+  } catch {}
+  return undefined;
 }

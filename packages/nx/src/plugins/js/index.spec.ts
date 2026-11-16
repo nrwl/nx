@@ -333,24 +333,22 @@ describe('nx/js/dependencies-and-lockfile', () => {
   // plain directory vendor/x. Neither target is in the package manager's
   // workspaces.
   it.each([['bun.lock', linkedProjectBunLock, 'npm:x', 'npm:x']])(
-    'should depend on the project a link points to and on the link in %s',
+    'should depend on the project a link points to and on the link in %s, built or not',
     async (lockFile, lockFileContent, projectLinkNode, vendoredNode) => {
       write(
         'package.json',
         JSON.stringify({ name: 'rvws', workspaces: ['apps/*'] })
       );
       write(lockFile, lockFileContent);
-      const projectFiles: Record<string, string[]> = {
-        'libs/x': ['libs/x/dist/package.json'],
-      };
+      write(
+        'vendor/x/package.json',
+        JSON.stringify({ name: 'x', version: '1.0.0' })
+      );
+      const projectFiles: Record<string, string[]> = {};
       for (const [app, target] of [
         ['apps/a', 'libs/x/dist'],
         ['apps/b', 'vendor/x'],
       ]) {
-        write(
-          `${target}/package.json`,
-          JSON.stringify({ name: 'x', version: '1.0.0' })
-        );
         write(
           `${app}/package.json`,
           JSON.stringify({ dependencies: { x: `link:../../${target}` } })
@@ -360,27 +358,39 @@ describe('nx/js/dependencies-and-lockfile', () => {
         symlinkSync(`../../../${target}`, join(root, app, 'node_modules/x'));
         projectFiles[app] = [`${app}/package.json`, `${app}/src/index.ts`];
       }
-      const plugin = await loadPluginInNewProcess();
 
-      const dependencies = await createDependencies(
-        plugin,
-        await createExternalNodes(plugin, lockFile),
-        projectFiles
-      );
+      for (const built of [false, true]) {
+        if (built) {
+          write(
+            'libs/x/dist/package.json',
+            JSON.stringify({ name: 'x', version: '1.0.0' })
+          );
+        }
+        const plugin = await loadPluginInNewProcess();
 
-      expect(
-        dependencies
-          .filter(({ source }) => source.startsWith('apps/'))
-          .map(({ sourceFile, target }) => [sourceFile, target])
-          .sort()
-      ).toEqual([
-        ['apps/a/package.json', 'libs/x'],
-        ['apps/a/package.json', projectLinkNode],
-        ['apps/a/src/index.ts', 'libs/x'],
-        ['apps/a/src/index.ts', projectLinkNode],
-        ['apps/b/package.json', vendoredNode],
-        ['apps/b/src/index.ts', vendoredNode],
-      ]);
+        const dependencies = await createDependencies(
+          plugin,
+          await createExternalNodes(plugin, lockFile),
+          {
+            ...projectFiles,
+            'libs/x': built ? ['libs/x/dist/package.json'] : [],
+          }
+        );
+
+        expect(
+          dependencies
+            .filter(({ source }) => source.startsWith('apps/'))
+            .map(({ sourceFile, target }) => [sourceFile, target])
+            .sort()
+        ).toEqual([
+          ['apps/a/package.json', 'libs/x'],
+          ['apps/a/package.json', projectLinkNode],
+          ['apps/a/src/index.ts', 'libs/x'],
+          ['apps/a/src/index.ts', projectLinkNode],
+          ['apps/b/package.json', vendoredNode],
+          ['apps/b/src/index.ts', vendoredNode],
+        ]);
+      }
     }
   );
 
