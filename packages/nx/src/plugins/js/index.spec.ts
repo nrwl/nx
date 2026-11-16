@@ -98,13 +98,15 @@ function writeWorkspace(rootDevDependencies: Record<string, string>) {
   }
 }
 
-// A fresh module registry and an empty Node resolution cache stand in for the
-// next graph computation's process.
+// A fresh module registry, Node resolution cache and workspace index stand in
+// for the next graph computation's process.
 async function loadPluginInNewProcess() {
   vi.resetModules();
   // `_pathCache` is an internal Node API not exposed in @types/node.
   (Module as any)._pathCache = Object.create(null);
-  return await import('./index');
+  const plugin = await import('./index');
+  (await import('../../utils/workspace-context')).resetWorkspaceContext();
+  return plugin;
 }
 
 async function createExternalNodes(
