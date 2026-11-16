@@ -13,8 +13,10 @@ import {
 import { basename } from 'node:path/posix';
 import {
   acknowledgeBuildScripts,
+  ensureTypescript,
   getResolvedPackageVersion,
   readModulePackageJson,
+  type TypescriptAst,
 } from '@nx/devkit/internal';
 import {
   coerce,
@@ -27,7 +29,7 @@ import {
   validRange,
   type SemVer,
 } from 'semver';
-import * as ts from 'typescript';
+import type { CommentRange, Node, SourceFile } from 'typescript';
 import {
   BASE_ESLINT_CONFIG_FILENAMES,
   BASE_ESLINTRC_FILENAMES,
@@ -46,6 +48,8 @@ import {
 } from '../../generators/convert-to-flat-config/eslintrc-only-target-options';
 import { findEslintFile } from '../../generators/utils/eslint-file';
 import { ESLINT_V10_FLOORS } from '../../utils/versions';
+
+let ts: TypescriptAst;
 
 // The ESLint <10 React plugins `@nx/react` installs that have no release
 // supporting v10 (`eslintLegacyDependencies` in `packages/react/src/utils/lint.ts`,
@@ -778,6 +782,7 @@ function fixAndCollectFileReferences(
       tree.write(path, content);
       deletedGeneratedDirectives.push(path);
     }
+    ts ??= ensureTypescript();
     const sourceFile = ts.createSourceFile(
       path,
       content,
@@ -855,9 +860,9 @@ function declaresEslintConfigNextIn(tree: Tree, path: string): boolean {
 
 // Every comment in the file, read from the trivia before each token the parser
 // produced, so the text of a string, template or JSX element never reads as one.
-function collectComments(sourceFile: ts.SourceFile): ts.CommentRange[] {
-  const comments = new Map<number, ts.CommentRange>();
-  const visit = (node: ts.Node): void => {
+function collectComments(sourceFile: SourceFile): CommentRange[] {
+  const comments = new Map<number, CommentRange>();
+  const visit = (node: Node): void => {
     // JSDoc nodes sit inside the comment that holds them, and JSX text has no
     // trivia.
     if (
@@ -907,7 +912,7 @@ const LINE_COMMENT_DIRECTIVES = new Set([
 
 function readDirective(
   content: string,
-  { kind, pos, end }: ts.CommentRange
+  { kind, pos, end }: CommentRange
 ): { label: string; value: string } | undefined {
   const isLine = kind === ts.SyntaxKind.SingleLineCommentTrivia;
   // An unterminated block comment is a syntax error ESLint never gets past.
@@ -929,9 +934,9 @@ function readDirective(
 
 // Every specifier that stops resolving once the package is gone. `require.resolve`
 // counts: it never loads the module, but it throws MODULE_NOT_FOUND all the same.
-function collectModuleSpecifiers(sourceFile: ts.SourceFile): string[] {
+function collectModuleSpecifiers(sourceFile: SourceFile): string[] {
   const specifiers: string[] = [];
-  const collect = (node: ts.Node): void => {
+  const collect = (node: Node): void => {
     if (ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) {
       const { moduleSpecifier } = node;
       if (moduleSpecifier && ts.isStringLiteralLike(moduleSpecifier)) {
