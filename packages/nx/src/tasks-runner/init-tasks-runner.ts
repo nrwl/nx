@@ -57,11 +57,11 @@ async function createOrchestrator(
 
   // A dependency outside the call has already completed, so the call's task
   // graph keeps only the edges between its own tasks.
-  const otherTaskIds = Object.keys(fullTaskGraph.tasks).filter(
+  const taskIdsOutsideThisCall = Object.keys(fullTaskGraph.tasks).filter(
     (id) => !taskIds.includes(id)
   );
   const { roots, dependencies, continuousDependencies } = keepDependencies
-    ? removeTasksFromTaskGraph(fullTaskGraph, otherTaskIds)
+    ? removeTasksFromTaskGraph(fullTaskGraph, taskIdsOutsideThisCall)
     : {
         roots: taskIds,
         dependencies: noDependencies(),
