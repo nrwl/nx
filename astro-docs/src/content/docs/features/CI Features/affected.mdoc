@@ -7,18 +7,16 @@ sidebar:
 filter: 'type:Features'
 ---
 
-{% youtube src="https://youtu.be/0R55-uFQyX4" title="Task-based affected in Nx" /%}
-
 [Remote caching](/docs/features/ci-features/remote-cache) speeds up your CI, but you can go even faster by skipping unnecessary tasks altogether.
 
 Most pull requests change a few files, so CI should only run the tasks those files affect.
 `nx affected` selects and runs only the tasks that need to run for the given changes.
 
-For example, say a `web` app depends on a `ui` library, and your pull request only updates the unit test file `button.spec.ts` in `ui`.
+For example, say `app` depends on a `ui` library, and your pull request only updates the unit test file `button.spec.ts` in `ui`.
 `nx affected` runs `ui:test` and skips `ui:build`, since spec files aren't an input to the [production](/docs/reference/inputs#production-inputs) build.
-It skips `web:build` and `web:test` too, because the spec file for `ui` isn't an input to either.
+It skips `app:build` and `app:test` too, because the spec file for `ui` isn't an input to either.
 
-![Changing button.spec.ts in ui runs ui:test and skips ui:build, web:build, and web:test](../../../../assets/features/ci-features/affected-tasks.svg)
+{% figure name="task-affected" height=640 caption="Pick a changed file. Nx checks the inputs of each task, so a changed spec file only reruns ui's test and lint, while a change to ui's source also reaches the tasks that depend on it." /%}
 
 ## How Nx selects affected tasks
 
@@ -28,7 +26,7 @@ Run `nx affected` with the targets you want, particularly on CI:
 nx affected -t <targets>
 ```
 
-For the `web` and `ui` example, run the affected `build` and `test` tasks:
+For the `app` and `ui` example, run the affected `build` and `test` tasks:
 
 ```shell
 nx affected -t build test
@@ -38,7 +36,7 @@ Nx then:
 
 1. Uses Git to find the files your branch changed, for example `libs/ui/src/button.spec.ts`.
 1. Selects each `build` and `test` task whose [inputs](/docs/reference/inputs) include a changed file.
-1. Selects the tasks that [read the outputs](/docs/reference/inputs#outputs-of-dependent-tasks) of a selected task, like a `web:build` that reads the `ui` build output.
+1. Selects the tasks that [read the outputs](/docs/reference/inputs#outputs-of-dependent-tasks) of a selected task, like an `app:build` that reads the `ui` build output.
 1. Runs the selected tasks and the tasks they depend on, restoring unchanged dependencies from the cache.
 
 Only `ui:test` reads the spec file. In this `nx.json`, `production` is a [named input](/docs/reference/inputs#named-inputs) that leaves out spec files, and `^` reads an input from a project's dependencies:
@@ -69,9 +67,9 @@ nx affected -t build test --graph
 {% aside type="note" title="What decides whether a task is affected" %}
 Nx selects a task when your change touches one of its inputs, not by the task hierarchy in the task graph.
 
-**`dependsOn` alone doesn't make a task affected.** `web:build` depends on `ui:build`, but a change affects `web:build` only through its own inputs, such as `^production`, or the `ui` build output read through [`dependentTasksOutputFiles`](/docs/reference/inputs#outputs-of-dependent-tasks) or an [`includeIgnored`](/docs/reference/inputs#gitignored-files) fileset. An edge that only orders the two tasks doesn't carry the change across.
+**`dependsOn` alone doesn't make a task affected.** `app:build` depends on `ui:build`, but a change affects `app:build` only through its own inputs, such as `^production`, or the `ui` build output read through [`dependentTasksOutputFiles`](/docs/reference/inputs#outputs-of-dependent-tasks) or an [`includeIgnored`](/docs/reference/inputs#gitignored-files) fileset. An edge that only orders the two tasks doesn't carry the change across.
 
-**Declare inputs and outputs, even for tasks you don't cache.** Nx selects tasks from them. If `web:test` lists only `{projectRoot}/**/*`, a change to the `ui` source doesn't select it, even though `web` imports `ui`. If `ui:build` writes to `dist` without listing it in `outputs`, a `web:build` that reads that folder isn't selected when the `ui` build changes.
+**Declare inputs and outputs, even for tasks you don't cache.** Nx selects tasks from them. If `app:test` lists only `{projectRoot}/**/*`, a change to the `ui` source doesn't select it, even though `app` imports `ui`. If `ui:build` writes to `dist` without listing it in `outputs`, a `app:build` that reads that folder isn't selected when the `ui` build changes.
 
 **[Sync generators](/docs/concepts/sync-generators) that change files during a run don't update the selection.** Nx selects tasks before syncing, so run `nx sync` first, or run the command again after a sync applies changes.
 {% /aside %}
@@ -173,7 +171,7 @@ Changing 1 file touches 2 build tasks. Pass --verbose to list each with its reas
 
   libs/ui/src/index.ts:
     - ui:build
-    - web:build
+    - app:build
 ```
 
 `--explain` explains task selection, so it needs targets passed with `-t`. Without them, or with `affected.legacy` set, it stops with an error.
