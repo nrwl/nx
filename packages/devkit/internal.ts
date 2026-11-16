@@ -5,6 +5,7 @@ export {
   safeWriteFileCache,
   emitPluginWorkerLog,
   resolveImplementation,
+  resolveInstalledPackage,
   resolveSchema,
   ImplementationResolutionError,
   SchemaResolutionError,
