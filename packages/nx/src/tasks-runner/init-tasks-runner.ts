@@ -51,25 +51,30 @@ async function createOrchestrator(
 
   const { runnerOptions: options } = getRunner({}, nxJson);
 
-  const tasksById = Object.fromEntries(tasks.map((task) => [task.id, task]));
-  const withoutDependencies = () =>
-    Object.fromEntries(tasks.map((task) => [task.id, []]));
-  // A dependency outside the call has already completed, so only the edges
-  // between the call's tasks stay. The caller reads hashes off its own tasks.
-  const taskGraph: TaskGraph = keepDependencies
-    ? {
-        ...removeTasksFromTaskGraph(
-          fullTaskGraph,
-          Object.keys(fullTaskGraph.tasks).filter((id) => !(id in tasksById))
-        ),
-        tasks: tasksById,
-      }
+  const taskIds = tasks.map((task) => task.id);
+  const noDependencies = () =>
+    Object.fromEntries(taskIds.map((id) => [id, []]));
+
+  // A dependency outside the call has already completed, so the call's task
+  // graph keeps only the edges between its own tasks.
+  const otherTaskIds = Object.keys(fullTaskGraph.tasks).filter(
+    (id) => !taskIds.includes(id)
+  );
+  const { roots, dependencies, continuousDependencies } = keepDependencies
+    ? removeTasksFromTaskGraph(fullTaskGraph, otherTaskIds)
     : {
-        roots: tasks.map((task) => task.id),
-        tasks: tasksById,
-        dependencies: withoutDependencies(),
-        continuousDependencies: withoutDependencies(),
+        roots: taskIds,
+        dependencies: noDependencies(),
+        continuousDependencies: noDependencies(),
       };
+
+  const taskGraph: TaskGraph = {
+    roots,
+    // The caller's own tasks: it reads each hash off the task it passed in
+    tasks: Object.fromEntries(tasks.map((task) => [task.id, task])),
+    dependencies,
+    continuousDependencies,
+  };
 
   const hasher = createTaskHasher(
     projectGraph,
@@ -80,9 +85,10 @@ async function createOrchestrator(
 
   // A task that reads the outputs of a task in the same call hashes after that
   // task has run. Tasks that do not depend on each other hash as before.
-  const hashingDeferredTaskIds = tasks.some(
-    (task) => taskGraph.dependencies[task.id].length > 0
-  )
+  const tasksDependOnEachOther = Object.values(dependencies).some(
+    (edges) => edges.length > 0
+  );
+  const hashingDeferredTaskIds = tasksDependOnEachOther
     ? await hashTasksThatDoNotDependOnOutputsOfOtherTasks(
         hasher,
         projectGraph,
