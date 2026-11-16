@@ -73,6 +73,8 @@ export function createTypecheckTarget(
         compiler,
         options.typescriptAliases ?? []
       ),
+    // tsc reads the `.d.ts` files dependencies emit, so recorded reads churn.
+    ultracache: { mode: 'off' },
     metadata: {
       technologies: options.technologies ?? ['typescript'],
       description: 'Runs type-checking for the project.',
