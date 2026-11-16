@@ -72,7 +72,7 @@ export function ensurePlaywrightBrowsersInstallation() {
 
     // scripts/playwright-install-e2e.mjs, a dependency of these specs, installs
     // the system packages first, but only when NX_E2E_RUN_E2E is 'true'. Both
-    // install only Chromium's headless shell, which headless runs use.
+    // skip full Chromium, since headless runs use its headless shell.
     const playwrightInstallArgs =
       process.env.PLAYWRIGHT_INSTALL_ARGS ||
       (process.env.NX_E2E_RUN_E2E === 'true'
