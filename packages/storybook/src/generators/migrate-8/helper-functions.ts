@@ -175,10 +175,10 @@ export function handleMigrationResult(
 
 export function checkStorybookInstalled(packageJson): boolean {
   return (
-    (packageJson.dependencies['@storybook/core-server'] ||
-      packageJson.devDependencies['@storybook/core-server']) &&
-    (packageJson.dependencies['@nx/storybook'] ||
-      packageJson.devDependencies['@nx/storybook'])
+    (packageJson.dependencies?.['@storybook/core-server'] ||
+      packageJson.devDependencies?.['@storybook/core-server']) &&
+    (packageJson.dependencies?.['@nx/storybook'] ||
+      packageJson.devDependencies?.['@nx/storybook'])
   );
 }
 

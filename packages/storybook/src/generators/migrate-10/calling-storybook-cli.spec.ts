@@ -3,7 +3,7 @@ import { tmpdir } from 'os';
 import { join } from 'path';
 import { execSync } from 'child_process';
 import { output } from '@nx/devkit';
-import { callUpgrade } from './calling-storybook-cli';
+import { callUpgrade, checkStorybookInstalled } from './calling-storybook-cli';
 
 let workspace: string;
 
@@ -139,5 +139,16 @@ describe('callUpgrade', () => {
         bodyLines: [expect.stringContaining('"npm install"')],
       })
     );
+  });
+});
+
+describe('checkStorybookInstalled', () => {
+  it('reads a package.json that has no dependencies map', () => {
+    expect(
+      checkStorybookInstalled({
+        devDependencies: { storybook: '^10.0.0', '@nx/storybook': '22.7.12' },
+      })
+    ).toBeTruthy();
+    expect(checkStorybookInstalled({})).toBeFalsy();
   });
 });

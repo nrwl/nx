@@ -124,9 +124,9 @@ export function checkStorybookInstalled(
   packageJson: Record<string, any>
 ): boolean {
   return (
-    (packageJson.dependencies['storybook'] ||
-      packageJson.devDependencies['storybook']) &&
-    (packageJson.dependencies['@nx/storybook'] ||
-      packageJson.devDependencies['@nx/storybook'])
+    (packageJson.dependencies?.['storybook'] ||
+      packageJson.devDependencies?.['storybook']) &&
+    (packageJson.dependencies?.['@nx/storybook'] ||
+      packageJson.devDependencies?.['@nx/storybook'])
   );
 }
