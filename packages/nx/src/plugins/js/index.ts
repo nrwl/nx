@@ -24,7 +24,11 @@ import {
 import { safeWriteFileCache } from '../../utils/plugin-cache-utils';
 import { nxVersion } from '../../utils/versions';
 import { workspaceRoot } from '../../utils/workspace-root';
-import { readBunLockFile } from './lock-file/bun-parser';
+import {
+  BUN_TEXT_LOCK_FILE,
+  getBunPatchFileHashes,
+  readBunLockFile,
+} from './lock-file/bun-parser';
 import {
   getLockFileDependencies,
   getLockFileName,
@@ -86,7 +90,11 @@ async function internalCreateNodes(
     packageManager !== 'bun'
       ? readFileSync(lockFilePath, 'utf-8')
       : readBunLockFile(lockFilePath);
-  const lockFileHash = getLockFileHash(lockFileContents);
+  const bunPatchFileHashes =
+    lockFile === BUN_TEXT_LOCK_FILE
+      ? getBunPatchFileHashes(workspaceRoot)
+      : undefined;
+  const lockFileHash = getLockFileHash(lockFileContents, bunPatchFileHashes);
   cachedLockFile = { packageManager, lockFile, lockFileContents, lockFileHash };
 
   const cached = readCache<ExternalNodesCache>(
@@ -117,7 +125,8 @@ async function internalCreateNodes(
     lockFile,
     lockFileContents,
     lockFileHash,
-    context
+    context,
+    bunPatchFileHashes
   );
   cachedKeyMap = keyMap;
   cachedInstalledLocalPathNodes = installedLocalPathNodes;
@@ -195,8 +204,15 @@ export const createDependencies: CreateDependencies = (
   return lockfileDependencies.concat(explicitProjectDependencies);
 };
 
-function getLockFileHash(lockFileContents: string) {
-  return hashArray([nxVersion, lockFileContents]);
+function getLockFileHash(
+  lockFileContents: string,
+  bunPatchFileHashes: Map<string, string> = new Map()
+) {
+  return hashArray([
+    nxVersion,
+    lockFileContents,
+    ...[...bunPatchFileHashes].flat(),
+  ]);
 }
 
 // Serialize keyMap to JSON-friendly format

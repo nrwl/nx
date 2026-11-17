@@ -41,6 +41,8 @@ import {
 import { workspaceRoot } from '../../../utils/workspace-root';
 import { getWorkspacePackagesFromGraph } from '../utils/get-workspace-packages-from-graph';
 import {
+  getBunInstalledLocalPathNodes,
+  getBunLocalPathNodeSources,
   getBunTextLockfileDependencies,
   getBunTextLockfileNodes,
 } from './bun-parser';
@@ -90,6 +92,7 @@ const BUN_TEXT_LOCK_PATH = join(workspaceRoot, BUN_TEXT_LOCK_FILE);
 
 /**
  * Parses the lockfile into external nodes, plus the keyMap that getLockFileDependencies reads.
+ * `bunPatchFileHashes` are the patch files of a bun.lock that `lockFileHash` covers.
  * `localPathSources` lists the workspace-relative sources of the nodes installed
  * from the local file tree, whose contents the node hashes do not cover.
  * `installedLocalPathNodes` names the local-path node each importer installs
@@ -100,7 +103,8 @@ export function getLockFileNodes(
   lockFile: string,
   contents: string,
   lockFileHash: string,
-  context: CreateNodesContext
+  context: CreateNodesContext,
+  bunPatchFileHashes?: Map<string, string>
 ): {
   nodes: Record<string, ProjectGraphExternalNode>;
   keyMap: Map<string, any>;
@@ -117,7 +121,8 @@ export function getLockFileNodes(
       lockFile,
       contents,
       lockFileHash,
-      packageJson
+      packageJson,
+      bunPatchFileHashes
     );
   } catch (e) {
     if (!isPostInstallProcess()) {
@@ -135,7 +140,8 @@ export function getLockFileNodesForName(
   lockFile: string,
   contents: string,
   lockFileHash: string,
-  packageJson?: PackageJson
+  packageJson?: PackageJson,
+  bunPatchFileHashes?: Map<string, string>
 ): {
   nodes: Record<string, ProjectGraphExternalNode>;
   keyMap: Map<string, any>;
@@ -163,8 +169,25 @@ export function getLockFileNodesForName(
     return getNpmLockfileNodes(contents, lockFileHash);
   }
   if (lockFile === BUN_TEXT_LOCK_FILE) {
-    const nodes = getBunTextLockfileNodes(contents, lockFileHash);
-    return { nodes, keyMap: new Map(), installedLocalPathNodes: {} };
+    const nodes = getBunTextLockfileNodes(
+      contents,
+      lockFileHash,
+      bunPatchFileHashes
+    );
+    return {
+      nodes,
+      keyMap: new Map(),
+      localPathSources: getBunLocalPathNodeSources(
+        contents,
+        lockFileHash,
+        nodes
+      ),
+      installedLocalPathNodes: getBunInstalledLocalPathNodes(
+        contents,
+        lockFileHash,
+        nodes
+      ),
+    };
   }
   throw new Error(`Unknown lock file: ${lockFile}`);
 }
