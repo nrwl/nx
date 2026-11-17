@@ -221,6 +221,7 @@
       "cache": true,
       "inputs": ["e2eInputs", "^production"],
       "dependsOn": [
+        "...",
         "@nx/nx-source:populate-local-registry-storage",
         "@nx/nx-source:populate-e2e-base-workspace",
         "@nx/nx-source:local-registry-e2e"
@@ -244,6 +245,7 @@
     "e2e-ci--**/**": {
       "inputs": ["...", "e2eInputs", "^production"],
       "dependsOn": [
+        "...",
         "@nx/nx-source:populate-local-registry-storage",
         "@nx/nx-source:populate-e2e-base-workspace",
         "@nx/nx-source:local-registry-e2e"
@@ -349,6 +351,10 @@
         "targetName": "e2e-local",
         "ciTargetName": "e2e-ci"
       }
+    },
+    {
+      "plugin": "./tools/workspace-plugin/src/plugins/e2e-playwright-install-plugin.ts",
+      "exclude": ["e2e/detox/**/*", "e2e/react-native/**/*", "e2e/expo/**/*"]
     },
     {
       "plugin": "@nx/jest/plugin",

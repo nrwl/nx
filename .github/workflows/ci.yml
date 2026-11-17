@@ -318,7 +318,6 @@ jobs:
         if: steps.check-changes.outputs.has_changes == 'true'
         run: |
           pnpm install --frozen-lockfile
-          pnpm playwright install --with-deps
 
       - name: Restore .NET packages
         if: steps.check-changes.outputs.has_changes == 'true'
