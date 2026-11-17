@@ -372,6 +372,12 @@ checksum = "9330f8b2ff13f34540b44e946ef35111825727b38d33286ef986142615121801"
 
 [[package]]
 name = "cfg_aliases"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fd16c4719339c4530435d38e511904438d07cce7950afa3718a84ac36c10e89e"
+
+[[package]]
+name = "cfg_aliases"
 version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "613afe47fcd5fac7ccf1db93babcb082c5994d996f20b8b159f2ad1658eb5724"
@@ -586,7 +592,7 @@ dependencies = [
  "crossterm_winapi",
  "derive_more",
  "document-features",
- "filedescriptor 0.8.3 (registry+https://github.com/rust-lang/crates.io-index)",
+ "filedescriptor",
  "futures-core",
  "mio",
  "parking_lot",
@@ -937,16 +943,6 @@ name = "filedescriptor"
 version = "0.8.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e40758ed24c9b2eeb76c35fb0aebc66c626084edd827e07e1552279814c6682d"
-dependencies = [
- "libc",
- "thiserror 1.0.69",
- "winapi",
-]
-
-[[package]]
-name = "filedescriptor"
-version = "0.8.3"
-source = "git+https://github.com/cammisuli/wezterm?rev=b538ee29e1e89eeb4832fb35ae095564dce34c29#b538ee29e1e89eeb4832fb35ae095564dce34c29"
 dependencies = [
  "libc",
  "thiserror 1.0.69",
@@ -1717,15 +1713,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "ioctl-rs"
-version = "0.1.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f7970510895cee30b3e9128319f2cefd4bde883a39f38baa279567ba3a7eb97d"
-dependencies = [
- "libc",
-]
-
-[[package]]
 name = "ipconfig"
 version = "0.3.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2153,15 +2140,6 @@ checksum = "a64a92489e2744ce060c349162be1c5f33c6969234104dbd99ddb5feb08b8c15"
 
 [[package]]
 name = "memoffset"
-version = "0.6.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5aa361d4faea93603064a027415f07bd8e1d5c88c9fbf68bf56a285428fd79ce"
-dependencies = [
- "autocfg",
-]
-
-[[package]]
-name = "memoffset"
 version = "0.9.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "488016bfae457b036d996092f6cb448677611ce4449e970ceaf42695203f218a"
@@ -2284,16 +2262,14 @@ checksum = "650eef8c711430f1a879fdd01d4745a7deea475becfb90269c06775983bbf086"
 
 [[package]]
 name = "nix"
-version = "0.25.1"
+version = "0.28.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f346ff70e7dbfd675fe90590b92d59ef2de15a8779ae305ebcbfd3f0caf59be4"
+checksum = "ab2156c4fce2f8df6c499cc1c763e4394b7482525bf2a9701c9d79d215f519e4"
 dependencies = [
- "autocfg",
- "bitflags 1.3.2",
+ "bitflags 2.13.0",
  "cfg-if",
+ "cfg_aliases 0.1.1",
  "libc",
- "memoffset 0.6.5",
- "pin-utils",
 ]
 
 [[package]]
@@ -2304,9 +2280,9 @@ checksum = "71e2746dc3a24dd78b3cfcb7be93368c6de9963d30f43a6a73998a9cf4b17b46"
 dependencies = [
  "bitflags 2.13.0",
  "cfg-if",
- "cfg_aliases",
+ "cfg_aliases 0.2.1",
  "libc",
- "memoffset 0.9.1",
+ "memoffset",
 ]
 
 [[package]]
@@ -2317,7 +2293,7 @@ checksum = "74523f3a35e05aba87a1d978330aef40f67b0304ac79c1c00b294c9830543db6"
 dependencies = [
  "bitflags 2.13.0",
  "cfg-if",
- "cfg_aliases",
+ "cfg_aliases 0.2.1",
  "libc",
 ]
 
@@ -2897,18 +2873,19 @@ dependencies = [
 
 [[package]]
 name = "portable-pty"
-version = "0.8.1"
-source = "git+https://github.com/cammisuli/wezterm?rev=b538ee29e1e89eeb4832fb35ae095564dce34c29#b538ee29e1e89eeb4832fb35ae095564dce34c29"
+version = "0.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b4a596a2b3d2752d94f51fac2d4a96737b8705dddd311a32b9af47211f08671e"
 dependencies = [
  "anyhow",
  "bitflags 1.3.2",
  "downcast-rs",
- "filedescriptor 0.8.3 (git+https://github.com/cammisuli/wezterm?rev=b538ee29e1e89eeb4832fb35ae095564dce34c29)",
+ "filedescriptor",
  "lazy_static",
  "libc",
  "log",
- "nix 0.25.1",
- "serial",
+ "nix 0.28.0",
+ "serial2",
  "shared_library",
  "shell-words",
  "winapi",
@@ -3030,7 +3007,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b9e20a958963c291dc322d98411f541009df2ced7b5a4f2bd52337638cfccf20"
 dependencies = [
  "bytes",
- "cfg_aliases",
+ "cfg_aliases 0.2.1",
  "pin-project-lite",
  "quinn-proto",
  "quinn-udp",
@@ -3070,7 +3047,7 @@ version = "0.5.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "addec6a0dcad8a8d96a771f815f0eaf55f9d1805756410b39f5fa81332574cbd"
 dependencies = [
- "cfg_aliases",
+ "cfg_aliases 0.2.1",
  "libc",
  "once_cell",
  "socket2",
@@ -3675,45 +3652,14 @@ dependencies = [
 ]
 
 [[package]]
-name = "serial"
-version = "0.4.0"
+name = "serial2"
+version = "0.2.39"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a1237a96570fc377c13baa1b88c7589ab66edced652e43ffb17088f003db3e86"
+checksum = "c924c7ef58d1fb741cfecb65b9b38a9e049841edd1e419544089f0cbb5a127e7"
 dependencies = [
- "serial-core",
- "serial-unix",
- "serial-windows",
-]
-
-[[package]]
-name = "serial-core"
-version = "0.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3f46209b345401737ae2125fe5b19a77acce90cd53e1658cda928e4fe9a64581"
-dependencies = [
+ "cfg-if",
  "libc",
-]
-
-[[package]]
-name = "serial-unix"
-version = "0.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f03fbca4c9d866e24a459cbca71283f545a37f8e3e002ad8c70593871453cab7"
-dependencies = [
- "ioctl-rs",
- "libc",
- "serial-core",
- "termios 0.2.2",
-]
-
-[[package]]
-name = "serial-windows"
-version = "0.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "15c6d3b776267a75d31bbdfd5d36c0ca051251caafc285827052bc53bcdc8162"
-dependencies = [
- "libc",
- "serial-core",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -4246,15 +4192,6 @@ dependencies = [
 
 [[package]]
 name = "termios"
-version = "0.2.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d5d9cf598a6d7ce700a4e6a9199da127e6819a61e64b68609683cc9a01b5683a"
-dependencies = [
- "libc",
-]
-
-[[package]]
-name = "termios"
 version = "0.3.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "411c5bf740737c7918b8b1fe232dca4dc9f8e754b8ad5e20966814001ed0ac6b"
@@ -4278,7 +4215,7 @@ dependencies = [
  "base64",
  "bitflags 2.13.0",
  "fancy-regex",
- "filedescriptor 0.8.3 (registry+https://github.com/rust-lang/crates.io-index)",
+ "filedescriptor",
  "finl_unicode",
  "fixedbitset 0.4.2",
  "hex",
@@ -4297,7 +4234,7 @@ dependencies = [
  "signal-hook",
  "siphasher 1.0.2",
  "terminfo",
- "termios 0.3.3",
+ "termios",
  "thiserror 1.0.69",
  "ucd-trie",
  "unicode-segmentation",
