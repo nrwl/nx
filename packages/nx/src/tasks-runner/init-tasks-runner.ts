@@ -71,6 +71,14 @@ async function createOrchestrator(
     ultracacheConfigurations
   );
 
+  const nxArgs = {
+    ...options,
+    parallel: tasks.length,
+    lifeCycle: compositedLifeCycle,
+  };
+  // Before hashing: task envs load .env files only once NX_LOAD_DOT_ENV_FILES is set
+  setEnvVarsBasedOnArgs(nxArgs, true);
+
   // A task that reads the outputs of a task in the same call hashes after that
   // task has run. Tasks that do not depend on each other hash as before.
   const tasksDependOnEachOther = Object.values(dependencies).some(
@@ -87,13 +95,6 @@ async function createOrchestrator(
         tasks
       )
     : undefined;
-
-  const nxArgs = {
-    ...options,
-    parallel: tasks.length,
-    lifeCycle: compositedLifeCycle,
-  };
-  setEnvVarsBasedOnArgs(nxArgs, true);
 
   return new TaskOrchestrator(
     hasher,

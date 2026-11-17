@@ -33,6 +33,7 @@ vi.mock('./task-orchestrator', () => ({
 }));
 
 import { runContinuousTasks, runDiscreteTasks } from './init-tasks-runner';
+import { setEnvVarsBasedOnArgs } from './run-command';
 import { TaskOrchestrator } from './task-orchestrator';
 
 describe.each([
@@ -136,6 +137,16 @@ describe('tasks of one call that depend on each other', () => {
       hashTasksThatDoNotDependOnOutputsOfOtherTasks.mock.calls[0];
     expect(graph).toEqual(fullTaskGraph);
     expect(tasks).toEqual([b, c]);
+  });
+
+  it('turns on .env loading before it hashes', async () => {
+    await runDiscreteTasks([b, c], projectGraph, fullTaskGraph, {}, {} as any);
+
+    const [setEnvOrder] = vi.mocked(setEnvVarsBasedOnArgs).mock
+      .invocationCallOrder;
+    const [hashOrder] =
+      hashTasksThatDoNotDependOnOutputsOfOtherTasks.mock.invocationCallOrder;
+    expect(setEnvOrder).toBeLessThan(hashOrder);
   });
 
   it('hashes discrete tasks that do not depend on each other as before', async () => {
