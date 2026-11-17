@@ -7,7 +7,9 @@ import {
   readNxJson,
   readProjectConfiguration,
   updateJson,
+  updateNxJson,
   writeJson,
+  type NxJsonConfiguration,
 } from '@nx/devkit';
 import * as _configUtils from '@nx/devkit/internal';
 import { mkdirSync, rmSync, writeFileSync } from 'fs';
@@ -189,6 +191,19 @@ describe('convert-to-rspack', () => {
             main: 'apps/app/src/server.ts',
           },
         },
+        'serve-ssr': {
+          executor: '@angular-devkit/build-angular:ssr-dev-server',
+          configurations: {
+            development: {
+              browserTarget: 'app:build:development',
+              serverTarget: 'app:server:development',
+            },
+            production: {
+              browserTarget: 'app:build:production',
+              serverTarget: 'app:server:production',
+            },
+          },
+        },
       },
     });
 
@@ -248,6 +263,188 @@ describe('convert-to-rspack', () => {
     expect(pkgJson.scripts?.build).toBeUndefined();
     expect(updatedProject.targets.build).not.toBeDefined();
     expect(updatedProject.targets.serve).not.toBeDefined();
+    expect(updatedProject.targets['serve-ssr']).not.toBeDefined();
+  });
+
+  const externalConfiguration = {
+    external: { browserTarget: 'other:build', serverTarget: 'other:server' },
+  };
+  it.each<
+    [
+      string,
+      {
+        configurations?: Record<string, Record<string, string>>;
+        targetDefaults?: NxJsonConfiguration['targetDefaults'];
+        packageJsonTargets?: Record<string, unknown>;
+      },
+    ]
+  >([
+    [
+      'a configuration whose server target survives the conversion',
+      { configurations: externalConfiguration },
+    ],
+    [
+      'a configuration from a targetDefaults target name key',
+      {
+        targetDefaults: {
+          'serve-ssr': { configurations: externalConfiguration },
+        },
+      },
+    ],
+    [
+      'a configuration from a targetDefaults executor key',
+      {
+        targetDefaults: {
+          '@angular-devkit/build-angular:ssr-dev-server': {
+            configurations: externalConfiguration,
+          },
+        },
+      },
+    ],
+    [
+      'a configuration from a targetDefaults glob key',
+      {
+        targetDefaults: {
+          'serve-*': { configurations: externalConfiguration },
+        },
+      },
+    ],
+    [
+      'a targetDefaults configuration followed by an entry with another executor',
+      {
+        targetDefaults: {
+          'serve-ssr': [
+            { configurations: externalConfiguration },
+            { executor: 'nx:run-commands', options: { command: 'echo' } },
+          ],
+        },
+      },
+    ],
+    [
+      'a configuration from a targetDefaults entry filtered to the project',
+      {
+        targetDefaults: {
+          'serve-ssr': [
+            {
+              filter: { projects: ['app'] },
+              configurations: externalConfiguration,
+            },
+          ],
+        },
+      },
+    ],
+    [
+      'a configuration from the project package.json',
+      {
+        packageJsonTargets: {
+          'serve-ssr': { configurations: externalConfiguration },
+        },
+      },
+    ],
+  ])('should keep an ssr-dev-server target with %s', async (_, options) => {
+    const tree = createTreeWithEmptyWorkspace();
+    const serveSsr = {
+      executor: '@angular-devkit/build-angular:ssr-dev-server',
+      configurations: {
+        development: {
+          browserTarget: 'app:build:development',
+          serverTarget: 'app:server:development',
+        },
+        ...options.configurations,
+      },
+    };
+    if (options.targetDefaults) {
+      const nxJson = readNxJson(tree);
+      nxJson.targetDefaults = {
+        ...nxJson.targetDefaults,
+        ...options.targetDefaults,
+      };
+      updateNxJson(tree, nxJson);
+    }
+    addProjectConfiguration(tree, 'app', {
+      root: 'apps/app',
+      sourceRoot: 'apps/app/src',
+      projectType: 'application',
+      targets: {
+        build: {
+          executor: '@angular-devkit/build-angular:browser',
+          options: {
+            outputPath: 'dist/apps/app/browser',
+            index: 'apps/app/src/index.html',
+            main: 'apps/app/src/main.ts',
+            tsConfig: 'apps/app/tsconfig.app.json',
+          },
+        },
+        server: {
+          executor: '@angular-devkit/build-angular:server',
+          options: { main: 'apps/app/src/server.ts' },
+        },
+        'serve-ssr': serveSsr,
+      },
+    });
+    writeJson(tree, 'apps/app/tsconfig.json', {});
+    if (options.packageJsonTargets) {
+      writeJson(tree, 'apps/app/package.json', {
+        name: 'app',
+        nx: { targets: options.packageJsonTargets },
+      });
+    }
+
+    await convertToRspack(tree, { project: 'app' });
+
+    expect(readProjectConfiguration(tree, 'app').targets['serve-ssr']).toEqual(
+      serveSsr
+    );
+  });
+
+  it('should remove an ssr-dev-server target from a package.json-based project and keep its serve port', async () => {
+    const tree = createTreeWithEmptyWorkspace();
+    updateJson(tree, 'package.json', (json) => ({
+      ...json,
+      workspaces: ['apps/*'],
+    }));
+    writeJson(tree, 'apps/app/package.json', {
+      name: 'app',
+      nx: {
+        sourceRoot: 'apps/app/src',
+        projectType: 'application',
+        targets: {
+          build: {
+            executor: '@angular-devkit/build-angular:browser',
+            options: {
+              outputPath: 'dist/apps/app/browser',
+              index: 'apps/app/src/index.html',
+              main: 'apps/app/src/main.ts',
+              tsConfig: 'apps/app/tsconfig.app.json',
+            },
+          },
+          server: {
+            executor: '@angular-devkit/build-angular:server',
+            options: { main: 'apps/app/src/server.ts' },
+          },
+          'serve-ssr': {
+            executor: '@angular-devkit/build-angular:ssr-dev-server',
+            configurations: {
+              development: {
+                browserTarget: 'app:build:development',
+                serverTarget: 'app:server:development',
+              },
+            },
+          },
+          serve: {
+            executor: '@angular-devkit/build-angular:dev-server',
+            options: { port: 4300 },
+          },
+        },
+      },
+    });
+    writeJson(tree, 'apps/app/tsconfig.json', {});
+
+    await convertToRspack(tree, { project: 'app' });
+
+    const { targets } = readJson(tree, 'apps/app/package.json').nx;
+    expect(targets['serve-ssr']).toBeUndefined();
+    expect(targets.serve).toEqual({ options: { port: 4300 } });
   });
 
   it('should fold the server tsconfig into the build tsconfig', async () => {

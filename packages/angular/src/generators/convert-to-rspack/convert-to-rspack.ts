@@ -3,6 +3,7 @@ import {
   selectPrompt,
   forEachExecutorOptions,
   getNamedInputs,
+  readTargetDefaultsForTarget,
 } from '@nx/devkit/internal';
 import {
   addDependenciesToPackageJson,
@@ -28,6 +29,10 @@ import { isDeepStrictEqual } from 'node:util';
 import { relative, resolve } from 'path';
 import { join } from 'path/posix';
 import { assertSupportedAngularVersion } from '../../utils/assert-supported-angular-version';
+import {
+  everyServerTarget,
+  isTargetAlsoInPackageJson,
+} from '../../utils/targets';
 import { nxVersion } from '../../utils/versions';
 import { acknowledgeAngularBuildScripts } from '../utils/acknowledge-build-scripts';
 import { supportsSsrAllowedHosts, versions } from '../utils/version-utils';
@@ -333,6 +338,27 @@ async function getProjectToConvert(tree: Tree) {
   });
 }
 
+// nx.json targetDefaults and the project's package.json can add configurations the graph merges in
+function mayHaveConfigurationsOutsideProjectJson(
+  tree: Tree,
+  projectRoot: string,
+  targetName: string,
+  executor: string
+): boolean {
+  // Emptied entries drop their filters, so every key that can reach the target matches
+  const targetDefaultKeys = Object.fromEntries(
+    Object.keys(readNxJson(tree)?.targetDefaults ?? {}).map((key) => [key, {}])
+  );
+  if (
+    readTargetDefaultsForTarget(targetName, targetDefaultKeys, executor) !==
+    null
+  ) {
+    return true;
+  }
+
+  return isTargetAlsoInPackageJson(tree, projectRoot, targetName);
+}
+
 export async function convertToRspack(
   tree: Tree,
   schema: ConvertToRspackSchema
@@ -507,11 +533,35 @@ export async function convertToRspack(
     );
   }
 
+  const removedTargetNames = new Set(targetsToRemove);
+  for (const [targetName, target] of Object.entries(project.targets)) {
+    // A configuration whose server target survives the conversion may still run
+    if (
+      target.executor === '@angular-devkit/build-angular:ssr-dev-server' &&
+      everyServerTarget(
+        target,
+        (serverTarget) =>
+          serverTarget.project === projectName &&
+          removedTargetNames.has(serverTarget.target)
+      ) &&
+      !mayHaveConfigurationsOutsideProjectJson(
+        tree,
+        project.root,
+        targetName,
+        target.executor
+      )
+    ) {
+      targetsToRemove.push(targetName);
+    }
+  }
+
   for (const targetName of targetsToRemove) {
     delete project.targets[targetName];
   }
 
   updateProjectConfiguration(tree, projectName, project);
+  // Writing a package.json-based project deletes an empty `targets` from this object
+  project.targets ??= {};
 
   // ensure plugin is registered
   const { rspackInitGenerator } = ensurePackage<typeof import('@nx/rspack')>(
