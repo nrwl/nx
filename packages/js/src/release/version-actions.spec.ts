@@ -13,6 +13,10 @@ vi.mock('@nx/devkit/internal', async () => ({
   ...(await vi.importActual<any>('@nx/devkit/internal')),
   safeSpawn: vi.fn(),
 }));
+vi.mock('nx/src/utils/package-manager', async () => ({
+  ...(await vi.importActual<any>('nx/src/utils/package-manager')),
+  detectPackageManager: vi.fn(() => 'pnpm'),
+}));
 
 describe('readCurrentVersionFromRegistry', () => {
   // registry and tag come back from `npm config get`, i.e. verbatim from a
@@ -324,6 +328,57 @@ describe('JsVersionActions', () => {
     });
     expect(resolveVersion).not.toHaveBeenCalled();
   });
+
+  it.each([
+    {
+      catalogVersion: 'workspace:*',
+      preserveLocalDependencyProtocols: true,
+      newVersion: '1.0.0',
+      expectedCatalogVersion: 'workspace:*',
+    },
+    {
+      catalogVersion: 'workspace:*',
+      preserveLocalDependencyProtocols: false,
+      newVersion: '1.0.0',
+      expectedCatalogVersion: '1.0.0',
+    },
+    {
+      catalogVersion: '^0.0.0',
+      preserveLocalDependencyProtocols: true,
+      newVersion: '^1.0.0',
+      expectedCatalogVersion: '^1.0.0',
+    },
+  ])(
+    'writes $expectedCatalogVersion to a $catalogVersion catalog entry when preserveLocalDependencyProtocols is $preserveLocalDependencyProtocols',
+    async ({
+      catalogVersion,
+      preserveLocalDependencyProtocols,
+      newVersion,
+      expectedCatalogVersion,
+    }) => {
+      const tree = createTreeWithEmptyWorkspace();
+      tree.write(
+        'pnpm-workspace.yaml',
+        `catalog:\n  dependency: ${catalogVersion}\n`
+      );
+      writeJson(tree, 'packages/my-lib/package.json', {
+        dependencies: { dependency: 'catalog:' },
+      });
+      const versionActions = await createVersionActions(tree, {
+        preserveLocalDependencyProtocols,
+      });
+
+      await versionActions.updateProjectDependencies(
+        tree,
+        createProjectGraph(),
+        { dependency: newVersion }
+      );
+
+      expect(tree.read('pnpm-workspace.yaml', 'utf-8')).toBe(
+        `catalog:\n  dependency: ${expectedCatalogVersion}\n`
+      );
+    }
+  );
 
   describe('local dependencies outside the release set', () => {
     const notConfiguredForReleaseError = () =>
