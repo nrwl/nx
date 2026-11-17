@@ -139,3 +139,30 @@ export const transitiveWorkspaceNameBunLock = `{
   }
 }
 `;
+
+// A Bun 1.3.14 install where the root installs the vendored `real` as `alias`,
+// and `real` declares a sibling vendored package.
+export const vendoredFileAliasBunLock = `{
+  "lockfileVersion": 2,
+  "configVersion": 1,
+  "workspaces": {
+    "": {
+      "name": "root",
+      "dependencies": {
+        "alias": "file:./vendor/real",
+      },
+    },
+    "apps/a": {
+      "name": "a",
+      "version": "0.0.0",
+    },
+  },
+  "packages": {
+    "a": ["a@workspace:apps/a"],
+
+    "alias": ["real@file:vendor/real", { "dependencies": { "child": "file:../child" } }],
+
+    "alias/child": ["child@file:vendor/child", {}],
+  }
+}
+`;

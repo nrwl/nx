@@ -17,6 +17,7 @@ import { tarballDependenciesLockFile } from './__fixtures__/bun/tarball-dependen
 import { tupleShapesBunLock } from './__fixtures__/bun/tuple-shapes.bun.lock';
 import {
   transitiveWorkspaceNameBunLock,
+  vendoredFileAliasBunLock,
   vendoredPackagesBunLock,
   workspaceFileDependencyBunLock,
 } from './__fixtures__/bun/vendored-packages.bun.lock';
@@ -2113,6 +2114,11 @@ describe('Bun Parser', () => {
           type: 'static',
         },
         {
+          source: 'npm:eslint-plugin-disable-autofix',
+          target: 'npm:@types/node@18.15.0',
+          type: 'static',
+        },
+        {
           source: 'npm:pretty-format@29.7.0',
           target: 'npm:typescript@5.0.4',
           type: 'static',
@@ -2123,7 +2129,17 @@ describe('Bun Parser', () => {
           type: 'static',
         },
         {
+          source: 'npm:scoped-alias',
+          target: 'npm:pretty-format@29.7.0',
+          type: 'static',
+        },
+        {
           source: 'npm:typescript@5.0.4',
+          target: 'npm:@mattlewis92/eslint-plugin-disable-autofix@3.0.0',
+          type: 'static',
+        },
+        {
+          source: 'npm:alias-dev',
           target: 'npm:@mattlewis92/eslint-plugin-disable-autofix@3.0.0',
           type: 'static',
         },
@@ -2282,8 +2298,6 @@ describe('Bun Parser', () => {
         scenario: 'nested and hoisted vendored packages',
         lockFile: vendoredPackagesBunLock,
         hash: BASIC_LOCK_FILE_HASH,
-        // An import of `vend` resolves to its bare node, which carries the
-        // same dependencies.
         expected: [
           'npm:is-number@3.0.0 -> npm:kind-of@3.2.2',
           'npm:is-odd@1.0.0 -> npm:is-number@3.0.0',
@@ -2310,6 +2324,15 @@ describe('Bun Parser', () => {
         lockFile: workspaceNamesakeBunLock,
         hash: 'workspace-namesake-hash',
         expected: ['npm:foo@file:vendor/foo -> npm:bar@file:vendor/bar'],
+      },
+      {
+        scenario: 'a root alias of a vendored package',
+        lockFile: vendoredFileAliasBunLock,
+        hash: 'vendored-file-alias-hash',
+        expected: [
+          'npm:alias -> npm:child@file:vendor/child',
+          'npm:real@file:vendor/real -> npm:child@file:vendor/child',
+        ],
       },
     ])(
       'should create dependencies of vendored packages ($scenario)',

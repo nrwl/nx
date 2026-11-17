@@ -1090,15 +1090,27 @@ function processPackageForDependencies(
   }
 
   // An import resolves a local package to its bare node, since the installed
-  // manifest's version is not the lockfile path, so that node carries the
-  // same edges.
+  // manifest's version is not the lockfile path, and an aliased package to its
+  // alias node. Both nodes carry the package's edges.
+  const edgeSources: string[] = [];
   const bareNodeName = `npm:${sourcePackageName}`;
   if (
     isLocalPackage &&
     ctx.externalNodes[bareNodeName]?.data.version === sourceVersion
   ) {
-    for (const dependency of [...dependencies]) {
-      dependencies.push({ ...dependency, source: bareNodeName });
+    edgeSources.push(bareNodeName);
+  }
+  const aliasNodeName = `npm:${packageKey}`;
+  if (
+    ctx.externalNodes[aliasNodeName]?.data.version ===
+    `npm:${sourcePackageName}@${sourceVersion}`
+  ) {
+    edgeSources.push(aliasNodeName);
+  }
+  const packageEdges = [...dependencies];
+  for (const source of edgeSources) {
+    for (const dependency of packageEdges) {
+      dependencies.push({ ...dependency, source });
     }
   }
 
