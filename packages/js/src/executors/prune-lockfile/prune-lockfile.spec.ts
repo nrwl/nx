@@ -469,7 +469,12 @@ describe('pruneLockfileExecutor - workspace module dependencies', () => {
     expect(generated.peerDependenciesMeta).toBeUndefined();
   });
 
-  it.each([
+  it.each<{
+    lockFile: string | null;
+    dependencies: Record<string, string>;
+    devDependencies: Record<string, string>;
+    optionalDependencies?: Record<string, string>;
+  }>([
     {
       lockFile: 'bun.lock',
       dependencies: {
@@ -478,6 +483,7 @@ describe('pruneLockfileExecutor - workspace module dependencies', () => {
         '@myorg/c': 'file:./workspace_modules/@myorg/c',
         avend: 'file:../../libs/a/vendor/avend',
         lodash: '^4.17.21',
+        shared: 'file:../../vendor/shared',
         util: 'file:../../vendor/util',
       },
       devDependencies: {
@@ -485,6 +491,7 @@ describe('pruneLockfileExecutor - workspace module dependencies', () => {
         '@myorg/u': 'file:./workspace_modules/@myorg/u',
         uvend: 'file:../../libs/u/vendor/uvend',
       },
+      optionalDependencies: { aopt: 'file:../../libs/a/vendor/aopt' },
     },
     // a Bun workspace without the text bun.lock, on bun.lockb or with no lockfile
     ...['bun.lockb', null].map((lockFile) => ({
@@ -513,9 +520,23 @@ describe('pruneLockfileExecutor - workspace module dependencies', () => {
     },
   ])(
     'declares the workspace modules other modules depend on only for Bun, and their vendored packages only with bun.lock ($lockFile)',
-    async ({ lockFile, dependencies, devDependencies }) => {
-      const module = (name: string, deps: Record<string, string> = {}) =>
-        JSON.stringify({ name, version: '1.0.0', dependencies: deps });
+    async ({
+      lockFile,
+      dependencies,
+      devDependencies,
+      optionalDependencies,
+    }) => {
+      const module = (
+        name: string,
+        deps: Record<string, string> = {},
+        optionalDeps?: Record<string, string>
+      ) =>
+        JSON.stringify({
+          name,
+          version: '1.0.0',
+          dependencies: deps,
+          optionalDependencies: optionalDeps,
+        });
       tempFs.createFilesSync({
         'package.json': JSON.stringify({ name: 'root', version: '0.0.0' }),
         ...(lockFile ? { [lockFile]: '{}' } : {}),
@@ -529,28 +550,39 @@ describe('pruneLockfileExecutor - workspace module dependencies', () => {
             '@myorg/t': 'workspace:*',
           },
         }),
-        'libs/a/package.json': module('@myorg/a', {
-          '@myorg/b': 'workspace:*',
-          '@myorg/c': 'workspace:*',
-          avend: 'file:./vendor/avend',
-        }),
+        'libs/a/package.json': module(
+          '@myorg/a',
+          {
+            '@myorg/b': 'workspace:*',
+            '@myorg/c': 'workspace:*',
+            avend: 'file:./vendor/avend',
+          },
+          { aopt: 'file:./vendor/aopt' }
+        ),
         // a vendored package named like the workspace package util
-        'libs/b/package.json': module('@myorg/b', {
-          util: 'file:../../vendor/util',
-        }),
+        'libs/b/package.json': module(
+          '@myorg/b',
+          { util: 'file:../../vendor/util' },
+          // c, which a visits after b, requires it
+          { shared: 'file:../../vendor/shared' }
+        ),
         'libs/util/package.json': module('util', {
           uvend2: 'file:./vendor/uvend2',
         }),
         // the app's own lodash wins
         'libs/c/package.json': module('@myorg/c', {
           lodash: 'file:../../vendor/lodash',
+          shared: 'file:../../vendor/shared',
         }),
         'libs/t/package.json': module('@myorg/t', {
           '@myorg/u': 'workspace:*',
         }),
-        'libs/u/package.json': module('@myorg/u', {
-          uvend: 'file:vendor/uvend',
-        }),
+        // u's optional uopt is left out: only devDependencies reach u
+        'libs/u/package.json': module(
+          '@myorg/u',
+          { uvend: 'file:vendor/uvend' },
+          { uopt: 'file:./vendor/uopt' }
+        ),
       });
       tempFs.createDirSync('dist/app');
       const workspacePackages = new Map([
@@ -597,6 +629,7 @@ describe('pruneLockfileExecutor - workspace module dependencies', () => {
       );
       expect(generated.dependencies).toEqual(dependencies);
       expect(generated.devDependencies).toEqual(devDependencies);
+      expect(generated.optionalDependencies).toEqual(optionalDependencies);
     }
   );
 

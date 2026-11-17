@@ -145,8 +145,11 @@ function mergeAllowScripts(packageJson: PackageJson) {
  * manifest already declares that name. Without the text bun.lock, the output
  * ships no vendored copy for that declaration to point at.
  * A package a production section reaches goes to dependencies, one only
- * devDependencies reach to devDependencies. A vendored package is declared
- * relative to `projectRoot`, like the app's own.
+ * devDependencies reach to devDependencies. A vendored package the modules
+ * declare only as optional goes to optionalDependencies instead, and is left
+ * out when only devDependencies reach them, since no section holds an
+ * optional devDependency. A vendored package is declared relative to
+ * `projectRoot`, like the app's own.
  */
 function declareTransitiveFolderDependencies(
   packageJson: PackageJson,
@@ -202,17 +205,38 @@ function declareTransitiveFolderDependencies(
         if (workspaceModule) {
           visit(dep, workspaceModule, section);
         } else if (shipsVendoredPackages && spec.startsWith('file:')) {
-          declareVendored(dep, spec, project.data.root, section);
+          if (transitiveSection !== 'optionalDependencies') {
+            declareVendored(dep, spec, project.data.root, section);
+          } else if (section === 'dependencies') {
+            declareVendored(
+              dep,
+              spec,
+              project.data.root,
+              'optionalDependencies'
+            );
+          }
         }
       }
     }
   };
+  // Optional declarations made here, which a module requiring the same
+  // package promotes to dependencies.
+  const declaredOptional = new Set<string>();
   const declareVendored = (
     name: string,
     spec: string,
     moduleRoot: string,
-    section: 'dependencies' | 'devDependencies'
+    section: 'dependencies' | 'optionalDependencies' | 'devDependencies'
   ) => {
+    if (section !== 'optionalDependencies' && declaredOptional.delete(name)) {
+      (packageJson.dependencies ??= {})[name] =
+        packageJson.optionalDependencies[name];
+      delete packageJson.optionalDependencies[name];
+      if (!Object.keys(packageJson.optionalDependencies).length) {
+        delete packageJson.optionalDependencies;
+      }
+      return;
+    }
     if (
       WORKSPACE_MODULE_INSTALL_SECTIONS.some(
         (declared) => packageJson[declared]?.[name]
@@ -224,6 +248,9 @@ function declareTransitiveFolderDependencies(
     (packageJson[section] ??= {})[name] = isAbsolute(path)
       ? spec
       : `file:${posix.relative(projectRoot, posix.join(moduleRoot, path))}`;
+    if (section === 'optionalDependencies') {
+      declaredOptional.add(name);
+    }
   };
   const visitDeclared = (
     section: PackageJsonDependencySection,
