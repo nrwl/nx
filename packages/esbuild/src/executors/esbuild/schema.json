@@ -46,7 +46,7 @@
     },
     "format": {
       "type": "array",
-      "description": "List of module formats to output. Defaults to ESM.",
+      "description": "List of module formats to output.",
       "alias": "f",
       "items": {
         "type": "string",
