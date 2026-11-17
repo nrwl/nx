@@ -2,6 +2,7 @@ import type { MockedFunction } from 'vitest';
 import { normalizeOptions } from './normalize';
 import { ExecutorContext } from '@nx/devkit';
 import { readTsConfig } from '@nx/js';
+import { join } from 'path';
 
 vi.mock('@nx/js', async () => {
   const actualModule = await vi.importActual<any>('@nx/js');
@@ -50,6 +51,25 @@ describe('normalizeOptions', () => {
       dependencies: {},
     },
   };
+
+  it('should read the tsConfig relative to the workspace root', async () => {
+    const rootedContext: ExecutorContext = { ...context, root: '/workspace' };
+
+    await normalizeOptions(
+      {
+        main: 'apps/myapp/src/index.ts',
+        outputPath: 'dist/apps/myapp',
+        tsConfig: 'apps/myapp/tsconfig.app.json',
+        generatePackageJson: true,
+        assets: [],
+      },
+      rootedContext
+    );
+
+    expect(readTsConfig).toHaveBeenCalledWith(
+      join('/workspace', 'apps/myapp/tsconfig.app.json')
+    );
+  });
 
   it('should handle single entry point options', async () => {
     expect(
