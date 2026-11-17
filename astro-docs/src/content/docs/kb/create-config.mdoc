@@ -57,7 +57,7 @@ export default createConfig({
   options: {
     browser: './src/main.ts',
     server: './src/main.server.ts',
-    ssr: { entry: './src/server.ts' },
+    ssr: { entry: './src/server.ts', serveFromDevServer: true },
   },
 });
 ```
@@ -91,7 +91,7 @@ export default createConfig({
   options: {
     browser: './src/main.ts',
     server: './src/main.server.ts',
-    ssr: { entry: './src/server.ts' },
+    ssr: { entry: './src/server.ts', serveFromDevServer: true },
   },
   rspackConfigOverrides: {
     mode: 'development',
@@ -112,7 +112,7 @@ export default createConfig({
   options: {
     browser: './src/main.ts',
     server: './src/main.server.ts',
-    ssr: { entry: './src/server.ts' },
+    ssr: { entry: './src/server.ts', serveFromDevServer: true },
     fileReplacements: [
       {
         replace: './src/environments/environment.ts',
@@ -397,8 +397,9 @@ Configuration for Server-Side Rendering. Can be boolean or object with specific 
   After each server build, it loads the bundle again, so the top-level code in `entry` runs again.
   `isMainModule(import.meta.url)` returns `false` in the bundle, so the `app.listen` block of generated applications doesn't run.
   Applications that the `@nx/angular` generators create set it.
-  The `@nx/angular:convert-to-rspack` generator sets it when `entry` itself creates its `reqHandler`
+  The `@nx/angular:convert-to-rspack` generator sets it when `entry` creates its own `reqHandler`
   export with one of those functions.
+  Each file that replaces `entry` in `fileReplacements` must create its own `reqHandler` export the same way.
 - Not set: `rspack serve` runs the server bundle as a separate server.
   It listens on the port that `entry` sets, `PORT` or 4000 in generated applications.
   The dev-server URL serves the client-rendered application.
