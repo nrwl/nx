@@ -590,7 +590,8 @@ export function resetCustomHasherDeprecationWarnings(): void {
 }
 
 /**
- * `taskGraph` pruned to `required`, which must already hold its dependencies.
+ * `taskGraph` pruned to `required`. Edges to tasks outside it are dropped, so
+ * `required` must hold its dependencies unless they have already run.
  * Unknown ids are ignored: a sync generator can remove a task after selection.
  */
 export function pruneToSelectedTasks(

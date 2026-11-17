@@ -20,7 +20,7 @@ import { daemonClient } from '../daemon/client/client';
 import { RunningTask } from './running-tasks/running-task';
 import { SharedRunningTask } from './running-tasks/shared-running-task';
 import { TaskResultsLifeCycle } from './life-cycles/task-results-life-cycle';
-import { removeTasksFromTaskGraph } from './utils';
+import { pruneToSelectedTasks } from './utils';
 
 async function createOrchestrator(
   tasks: Task[],
@@ -57,11 +57,8 @@ async function createOrchestrator(
 
   // A dependency outside the call has already completed, so the call's task
   // graph keeps only the edges between its own tasks.
-  const excludedTaskIds = Object.keys(fullTaskGraph.tasks).filter(
-    (id) => !taskIds.includes(id)
-  );
   const { roots, dependencies, continuousDependencies } = keepDependencies
-    ? removeTasksFromTaskGraph(fullTaskGraph, excludedTaskIds)
+    ? pruneToSelectedTasks(fullTaskGraph, taskIds)
     : {
         roots: taskIds,
         dependencies: noDependencies(),
