@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import type { ProjectGraph } from '../../../config/project-graph';
 import { output } from '../../../utils/output';
 import type { PackageJson } from '../../../utils/package-json';
+import { rootDeclaredOverrideRootBunLock } from './__fixtures__/bun/pruned-overridden-dependency.bun.lock';
 import { vendoredPackagesRootBunLock } from './__fixtures__/bun/pruned-vendored-packages.bun.lock';
 import { createLockFile, generatePrunedDeployOutput } from './lock-file';
 import { stringifyNpmLockfile } from './npm-parser';
@@ -155,6 +156,29 @@ describe('createLockFile', () => {
         'Use generatePrunedDeployOutput to ship them.',
       ],
     });
+  });
+
+  // The root overrides the ms it declares to 2.1.2, which the pruned bun.lock
+  // declares too.
+  it('declares the version an override installs for a Bun dependency the root declares', async () => {
+    const fs = await vi.importActual<typeof import('node:fs')>('node:fs');
+    (readFileSync as Mock).mockImplementation((path, ...rest) =>
+      String(path).endsWith('bun.lock')
+        ? rootDeclaredOverrideRootBunLock
+        : fs.readFileSync(path, ...rest)
+    );
+    const packageJson: PackageJson = {
+      name: '@demo/api',
+      version: '0.0.1',
+      dependencies: { ms: '2.0.0' },
+    };
+    try {
+      createLockFile(packageJson, graph, 'bun');
+    } finally {
+      (readFileSync as Mock).mockImplementation(() => 'ROOT_LOCKFILE');
+    }
+
+    expect(packageJson.dependencies.ms).toBe('2.1.2');
   });
 
   it('does not warn about missing artifacts for a package manager without them', () => {

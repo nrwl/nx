@@ -397,8 +397,12 @@ function mergeRootTrustedDependencies(
  * An inherited `pnpm.patchedDependencies` goes with it, since the prune scopes
  * the lockfile's patches to the packages that survive it and rewrites their
  * paths onto the output.
- * The manifest is left alone for npm, yarn and bun, which never read that block.
- * Mutating it means callers must write or emit the manifest after this returns.
+ * The block stays in the manifest for npm, yarn and bun, which never read it.
+ * For Bun, a dependency whose spec the pruned bun.lock replaces with its locked
+ * version takes that version too, since a frozen install rejects the pair
+ * otherwise.
+ * Since this mutates the manifest, callers must write or emit it after this
+ * returns.
  *
  * The lockfile alone does not make a complete pnpm output. A workspace
  * declaring build-script approvals, patches or vendored local paths also needs
@@ -417,10 +421,12 @@ export function createLockFile(
   packageManager: PackageManager = detectPackageManager(workspaceRoot)
 ): string {
   let pruned = true;
+  const pinnedSpecs: PinnedManifestSpec[] = [];
   const lockFileContent = buildLockFile(packageJson, graph, packageManager, {
     onPruneFallback: () => {
       pruned = false;
     },
+    onPinnedSpec: (pin) => pinnedSpecs.push(pin),
   });
   if (pruned && packageManager === 'pnpm') {
     stripPrunedLockfilePnpmConfig(packageJson);
@@ -428,9 +434,19 @@ export function createLockFile(
     warnIncompletePrunedPnpmOutput(lockFileContent);
   }
   if (pruned && packageManager === 'bun') {
+    applyPinnedSpecs(packageJson, pinnedSpecs);
     warnIncompletePrunedBunOutput(lockFileContent);
   }
   return lockFileContent;
+}
+
+function applyPinnedSpecs(
+  packageJson: PackageJson,
+  pinnedSpecs: PinnedManifestSpec[]
+): void {
+  for (const { depType, name, spec } of pinnedSpecs) {
+    packageJson[depType][name] = spec;
+  }
 }
 
 // The pieces a pruned bun.lock needs beside it, which only
@@ -612,9 +628,7 @@ function createPrunedLockfile(
   });
   const pruned = pruneError === undefined;
   if (pruned) {
-    for (const { depType, name, spec } of pinnedSpecs) {
-      packageJson[depType][name] = spec;
-    }
+    applyPinnedSpecs(packageJson, pinnedSpecs);
     stripPrunedLockfilePnpmConfig(packageJson);
     if (packageManager === 'pnpm') {
       validatePrunedLocalPathClosure(
