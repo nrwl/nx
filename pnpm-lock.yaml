@@ -320,6 +320,9 @@ catalogs:
     jsonc-parser:
       specifier: ^3.2.0
       version: 3.3.1
+    minimatch:
+      specifier: 11.0.8
+      version: 11.0.8
     next-seo:
       specifier: ^5.13.0
       version: 5.15.0
@@ -589,12 +592,12 @@ catalogs:
       version: 4.1.2
 
 overrides:
+  minimatch@<10: ^10.2.5
   handlebars@<4.7.10: ^4.7.10
   minimist: ^1.2.6
   underscore: ^1.13.8
   brace-expansion: ^5.0.12
   axios: 1.20.0
-  minimatch: ^10.2.5
   shell-quote: ^1.11.0
   tmp: ~0.2.7
   form-data: ^4.0.6
@@ -1379,8 +1382,8 @@ importers:
         specifier: ~2.4.7
         version: 2.4.7(webpack@5.111.0)
       minimatch:
-        specifier: ^10.2.5
-        version: 10.2.5
+        specifier: 'catalog:'
+        version: 11.0.8
       next-sitemap:
         specifier: ^3.1.10
         version: 3.1.55(@next/env@16.3.6)(next@16.3.6(@babel/core@7.29.7(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@playwright/test@1.60.0)(@types/node@24.12.2)(babel-plugin-macros@3.1.0)(babel-plugin-react-compiler@1.0.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(sass@1.105.2))
@@ -2677,8 +2680,8 @@ importers:
         specifier: 5.0.1
         version: 5.0.1
       minimatch:
-        specifier: ^10.2.5
-        version: 10.2.5
+        specifier: 'catalog:'
+        version: 11.0.8
       semver:
         specifier: 'catalog:'
         version: 7.8.5
@@ -2825,6 +2828,9 @@ importers:
       confusing-browser-globals:
         specifier: ^1.0.9
         version: 1.0.11
+      eslint:
+        specifier: ^9.0.0 || ^10.0.0
+        version: 9.39.4(jiti@2.7.0)(supports-color@10.2.2)
       eslint-config-prettier:
         specifier: catalog:eslint
         version: 10.1.8(eslint@9.39.4(jiti@2.7.0)(supports-color@10.2.2))
@@ -2974,8 +2980,8 @@ importers:
         specifier: 'catalog:'
         version: 3.3.1
       minimatch:
-        specifier: ^10.2.5
-        version: 10.2.5
+        specifier: 'catalog:'
+        version: 11.0.8
       picomatch:
         specifier: 'catalog:'
         version: 4.0.7
@@ -3419,8 +3425,8 @@ importers:
         specifier: 2.0.3
         version: 2.0.3
       minimatch:
-        specifier: ^10.2.5
-        version: 10.2.5
+        specifier: 'catalog:'
+        version: 11.0.8
       npm-run-path:
         specifier: ^4.0.1
         version: 4.0.1
@@ -3567,8 +3573,8 @@ importers:
         specifier: 'catalog:'
         version: 7.0.6(supports-color@10.2.2)
       minimatch:
-        specifier: ^10.2.5
-        version: 10.2.5
+        specifier: 'catalog:'
+        version: 11.0.8
       semver:
         specifier: 'catalog:'
         version: 7.8.5
@@ -3629,8 +3635,8 @@ importers:
         specifier: ^1.0.0
         version: 1.0.0
       minimatch:
-        specifier: ^10.2.5
-        version: 10.2.5
+        specifier: 'catalog:'
+        version: 11.0.8
       react:
         specifier: '>=18.0.0 <20.0.0'
         version: 18.3.1
@@ -3861,8 +3867,8 @@ importers:
         specifier: ^1.0.0 || ^2.0.0
         version: 2.0.15(@module-federation/runtime-tools@2.3.3(node-fetch@3.3.2))(core-js@3.36.1)
       minimatch:
-        specifier: ^10.2.5
-        version: 10.2.5
+        specifier: 'catalog:'
+        version: 11.0.8
       semver:
         specifier: 'catalog:'
         version: 7.8.5
@@ -8636,6 +8642,9 @@ packages:
   '@isaacs/fs-minipass@4.0.1':
     resolution: {integrity: sha512-wgm9Ehl2jpeqP3zw/7mo3kRHFp5MEDhqAdwy1fTGkHAwnkGOVsgpvQhL8B5n1qlb01jV3n/bI0ZfZp5lWA1k4w==}
     engines: {node: '>=18.0.0'}
+
+  '@isaacs/nonrecursive-glob-match@1.1.0':
+    resolution: {integrity: sha512-GPm/Dbvk5RLmhRnxXIa7nTpK0xtl4E0wj0MslsuNiJ1FIROU+2+9lgUC/dgF7Ey4QCWhfEsgxilMRMCdHPfDfw==}
 
   '@isaacs/ttlcache@1.4.1':
     resolution: {integrity: sha512-RQgQ4uQ+pLbqXfOmieB91ejmLwvSgv9nLx6sT6sD83s7umBypgg+OIBOBbEUiJXrfpnp9j0mRhYYdzp9uqq3lA==}
@@ -15655,6 +15664,7 @@ packages:
 
   axios-retry@4.5.0:
     resolution: {integrity: sha512-aR99oXhpEDGo0UuAlYcn2iGRds30k366Zfa05XWScR9QaQD4JYiP3/1Qt1u7YlefUOK+cn0CcwoL1oefavQUlQ==}
+    deprecated: axios-retry is no longer maintained. See https://github.com/softonic/axios-retry for alternatives.
     peerDependencies:
       axios: 1.20.0
 
@@ -19243,6 +19253,7 @@ packages:
   image-size@2.0.2:
     resolution: {integrity: sha512-IRqXKlaXwgSMAMtpNzZa1ZAe8m+Sa1770Dhk8VkSsP9LS+iHD62Zd8FQKs8fbPiagBE7BzoFX23cxFnwshpV6w==}
     engines: {node: '>=16.x'}
+    deprecated: Use latest 2.x please
     hasBin: true
 
   immer@9.0.21:
@@ -21474,9 +21485,17 @@ packages:
   minimalistic-assert@1.0.1:
     resolution: {integrity: sha512-UtJcAD4yEaGtjPezWuO9wC4nwUnVH/8/Im3yEHQP4b67cXlD/Qr9hdITCU1xDbSEXg2XKNaP8jsReV7vQd00/A==}
 
+  minimatch@10.2.4:
+    resolution: {integrity: sha512-oRjTw/97aTBN0RHbYCdtF1MQfvusSIBQM0IZEgzl6426+8jSC0nF1a/GmnVLpfB9yyr6g6FTqWqiZVbxrtaCIg==}
+    engines: {node: 18 || 20 || >=22}
+
   minimatch@10.2.5:
     resolution: {integrity: sha512-MULkVLfKGYDFYejP07QOurDLLQpcjk7Fw+7jXS2R2czRQzR56yHRveU5NDJEOviH+hETZKSkIk5c+T23GjFUMg==}
     engines: {node: 18 || 20 || >=22}
+
+  minimatch@11.0.8:
+    resolution: {integrity: sha512-nFQuYSTVrGvysVBps5Ih+0BdnYFN/Cj3C816r6+p7yK+FHrVLGE4O4N9AFwykrlNlvM2HYt+Rad1Uiro6h88Ig==}
+    engines: {node: 20 || >=22}
 
   minimist@1.2.8:
     resolution: {integrity: sha512-2yyAR8qBkN3YuheJanUpWC5U3bb5osDywNB8RzDVlDwDHbocAJveqqj1u8+SVD7jkWT4yvsHCpWqqWqAxb0zCA==}
@@ -21850,6 +21869,7 @@ packages:
 
   node-abort-controller@3.1.1:
     resolution: {integrity: sha512-AGK2yQKIjRuqnc6VkX2Xj5d+QW8xZ87pa1UK6yA6ouUyuxfHuMP6umE5QK7UmTeOAymo+Zx1Fxiuw9rVx8taHQ==}
+    deprecated: This package is no longer needed on supported Node.js versions. Node.js 16+ includes AbortController and AbortSignal as built-in globals. All Node.js versions requiring this polyfill are end-of-life. Use the built-in globals instead.
 
   node-addon-api@6.1.0:
     resolution: {integrity: sha512-+eawOlIgy680F0kBzPUNFhMZGtJ1YmqM6l4+Crf4IkImjYrO/mqPwRMh352g23uIaQKFItcQ64I7KMaJxHgAVA==}
@@ -27318,18 +27338,22 @@ packages:
   yuku-ast@0.19.0:
     resolution: {integrity: sha512-PyCsiScaelhxBGzL8dyeJkLqvRZycoh78R31Vrt/WqYrm0hMFoKwIw/X7Dx5mBKLWAMlV9I9HEyBOHnj2gZVyw==}
     engines: {node: '>=14.18.0'}
+    deprecated: 'Yuku is now one package with one core. Use "yuku" instead: https://yuku.fyi/javascript/. Existing installs keep working but get no more fixes.'
 
   yuku-codegen@0.19.0:
     resolution: {integrity: sha512-uymAKHjDuaP4BEpkXC/BSLz4DUEF5oArZ5AuD3888nb2miChjWSgpPdojEJxm3pjpXkgUaCRJQyNAbnMN33wHg==}
     engines: {node: '>=14.18.0'}
+    deprecated: 'Yuku is now one package with one core. Use "yuku" instead: https://yuku.fyi/javascript/. Existing installs keep working but get no more fixes.'
 
   yuku-core@0.19.0:
     resolution: {integrity: sha512-kYK9e1XdfirNhkipzW0wmMcSWcVF/CWnuugodfVYRCUwvoBefweL9HzB96OiKEhsx78V5WbUxbJqlizMX869Qg==}
     engines: {node: '>=14.18.0'}
+    deprecated: 'Yuku is now one package with one core. Use "yuku" instead: https://yuku.fyi/javascript/. Existing installs keep working but get no more fixes.'
 
   yuku-parser@0.19.0:
     resolution: {integrity: sha512-XrBh9ZiQK5mJVRxZBAvD6LwRyAYrK3MFtH3+onyuxFL5hFD44EC3QOmIC1FjTj6H2MMwq46/NAI+NZxLZPZgxg==}
     engines: {node: '>=14.18.0'}
+    deprecated: 'Yuku is now one package with one core. Use "yuku" instead: https://yuku.fyi/javascript/. Existing installs keep working but get no more fixes.'
 
   zimmerframe@1.1.4:
     resolution: {integrity: sha512-B58NGBEoc8Y9MWWCQGl/gq9xBCe4IiKM0a2x7GZdQKOW5Exr8S1W24J6OgM1njK8xCRGvAJIL/MxXHf6SkmQKQ==}
@@ -33636,6 +33660,8 @@ snapshots:
     dependencies:
       minipass: 7.1.3
 
+  '@isaacs/nonrecursive-glob-match@1.1.0': {}
+
   '@isaacs/ttlcache@1.4.1':
     optional: true
 
@@ -36644,7 +36670,7 @@ snapshots:
       '@zkochan/js-yaml': 0.0.7
       ejs: 5.0.1
       enquirer: 2.3.6
-      minimatch: 10.2.5
+      minimatch: 10.2.4
       nx: 24.0.0-rc.1(@swc-node/register@1.11.1(@emnapi/core@1.11.2)(@emnapi/runtime@1.11.3)(@swc/core@1.15.10(@swc/helpers@0.5.18))(@swc/types@0.1.25)(supports-color@8.1.1)(typescript@6.0.3))(@swc/core@1.15.10(@swc/helpers@0.5.18))
       semver: 7.8.5
       tslib: 2.8.1
@@ -52113,8 +52139,17 @@ snapshots:
 
   minimalistic-assert@1.0.1: {}
 
+  minimatch@10.2.4:
+    dependencies:
+      brace-expansion: 5.0.12
+
   minimatch@10.2.5:
     dependencies:
+      brace-expansion: 5.0.12
+
+  minimatch@11.0.8:
+    dependencies:
+      '@isaacs/nonrecursive-glob-match': 1.1.0
       brace-expansion: 5.0.12
 
   minimist@1.2.8: {}
