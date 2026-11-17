@@ -3,6 +3,7 @@ import { basename, join } from 'path';
 import {
   ExecutorContext,
   getOutputsForTargetAndConfiguration,
+  joinPathFragments,
   workspaceRoot,
 } from '@nx/devkit';
 import { runCommandsExecutor as runCommandsImpl } from '@nx/devkit/internal';
@@ -80,10 +81,10 @@ function buildMavenArgs(
 // Without goals, Maven would only re-apply and re-record the module's build state.
 // Skip it when this task hashes that file and it exists, so its cache entry still holds it.
 // Pom modules always run: Maven 4 copies their POM into the project-local repository.
-function canSkipMaven(
+function findSkippableBuildState(
   options: MavenExecutorSchema,
   context: ExecutorContext
-): boolean {
+): string | undefined {
   if (
     !Array.isArray(options.goals) ||
     options.goals.length > 0 ||
@@ -92,12 +93,12 @@ function canSkipMaven(
     // MAVEN_ARGS can add goals.
     process.env.MAVEN_ARGS?.trim()
   ) {
-    return false;
+    return undefined;
   }
 
   const node = context.projectGraph?.nodes?.[context.projectName];
   if (!node || node.data.tags?.includes('maven:pom')) {
-    return false;
+    return undefined;
   }
 
   const target = node.data.targets?.[context.targetName];
@@ -113,7 +114,7 @@ function canSkipMaven(
       !('dependencies' in input && input.dependencies)
   );
   if (!ownState || !hashesOwnState) {
-    return false;
+    return undefined;
   }
 
   const stateFile = getOutputsForTargetAndConfiguration(
@@ -125,7 +126,40 @@ function canSkipMaven(
     {},
     node
   ).find((output) => basename(output) === buildStateFile);
-  return !!stateFile && existsSync(join(context.root, stateFile));
+  return stateFile && existsSync(join(context.root, stateFile))
+    ? stateFile
+    : undefined;
+}
+
+// Maven 3's banner width, and Maven 4's on an 80-column terminal
+const mavenLineLength = 72;
+
+function mavenRule(label = ''): string {
+  const left = Math.max(0, Math.floor((mavenLineLength - label.length) / 2));
+  const right = Math.max(0, mavenLineLength - label.length - left);
+  return '-'.repeat(left) + label + '-'.repeat(right);
+}
+
+function printSkippedMaven(context: ExecutorContext, stateFile: string): void {
+  const project = context.projectGraph.nodes[context.projectName].data;
+  const groupId = (project.metadata as Record<string, string>)?.groupId;
+  // The analyzer tags each module `maven:<groupId>` and `maven:<packaging>`.
+  const packaging = groupId
+    ? project.tags
+        ?.find((tag) => tag.startsWith('maven:') && tag !== `maven:${groupId}`)
+        ?.slice('maven:'.length)
+    : undefined;
+
+  const lines = [
+    mavenRule(`--< ${getMavenProjectName(context)} >--`),
+    `Skipped Maven for ${context.projectName}:${context.targetName}`,
+    `  from ${joinPathFragments(project.root, 'pom.xml')}`,
+    mavenRule(packaging ? `[ ${packaging} ]` : ''),
+    'This target has no goals to run.',
+    `The module's build state is already in ${stateFile}.`,
+    mavenRule(),
+  ];
+  console.log(lines.map((line) => `[INFO] ${line}`).join('\n'));
 }
 
 /**
@@ -135,7 +169,9 @@ export default async function mavenExecutor(
   options: MavenExecutorSchema,
   context: ExecutorContext
 ): Promise<{ success: boolean }> {
-  if (canSkipMaven(options, context)) {
+  const skippableBuildState = findSkippableBuildState(options, context);
+  if (skippableBuildState) {
+    printSkippedMaven(context, skippableBuildState);
     return { success: true };
   }
 
