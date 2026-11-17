@@ -559,10 +559,15 @@ export function getSecondaryEntryPointPath(
   filePath: string,
   projectRoot: string
 ): string | undefined {
+  const rootTsConfig = getRootTsConfigFileName();
+  if (!rootTsConfig) {
+    return undefined;
+  }
+
   const resolvedImportFile = resolveModuleByImport(
     importExpr,
     filePath, // not strictly necessary, but speeds up resolution
-    path.join(workspaceRoot, getRootTsConfigFileName())
+    path.join(workspaceRoot, rootTsConfig)
   );
   if (!resolvedImportFile) {
     return undefined;
