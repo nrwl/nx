@@ -32,6 +32,7 @@ import {
   lockFileExists,
   LOCKFILES,
 } from './lock-file/lock-file';
+import { foldLocalPathHashes } from './lock-file/utils/local-path-hashes';
 import { buildExplicitDependencies } from './project-graph/build-dependencies/build-dependencies';
 import { jsPluginConfig } from './utils/config';
 
@@ -63,7 +64,11 @@ export const createNodes: CreateNodes = [
   },
 ];
 
-function internalCreateNodes(lockFile: string, _, context: CreateNodesContext) {
+async function internalCreateNodes(
+  lockFile: string,
+  _,
+  context: CreateNodesContext
+) {
   const pluginConfig = jsPluginConfig(context.nxJsonConfiguration);
   if (!pluginConfig.analyzeLockfile) {
     return {};
@@ -94,13 +99,18 @@ function internalCreateNodes(lockFile: string, _, context: CreateNodesContext) {
     cachedInstalledLocalPathNodes = cached.installedLocalPathNodes;
 
     return {
-      externalNodes: cached.nodes,
+      externalNodes: await foldLocalPathHashes(
+        cached.nodes,
+        cached.localPathSources ?? {},
+        workspaceRoot
+      ),
     };
   }
 
   const {
     nodes: externalNodes,
     keyMap,
+    localPathSources = {},
     installedLocalPathNodes,
   } = getLockFileNodes(
     packageManager,
@@ -115,11 +125,16 @@ function internalCreateNodes(lockFile: string, _, context: CreateNodesContext) {
   writeCache(externalNodesCache, lockFileHash, {
     nodes: externalNodes,
     keyMap: serializeKeyMap(keyMap),
+    localPathSources,
     installedLocalPathNodes,
   });
 
   return {
-    externalNodes,
+    externalNodes: await foldLocalPathHashes(
+      externalNodes,
+      localPathSources,
+      workspaceRoot
+    ),
   };
 }
 
@@ -230,6 +245,9 @@ function deserializeKeyMap(
 interface ExternalNodesCache {
   nodes: ProjectGraph['externalNodes'];
   keyMap: Record<string, any>;
+  // The lockfile does not cover these sources' contents, so the cached node
+  // hashes are folded with them on every read.
+  localPathSources?: Record<string, string[]>;
   installedLocalPathNodes: Record<string, Record<string, string>>;
 }
 
