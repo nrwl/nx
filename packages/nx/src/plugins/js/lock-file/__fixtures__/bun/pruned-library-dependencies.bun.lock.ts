@@ -178,3 +178,57 @@ export const libraryOptionalPeerPrunedBunLock = `{
   "packages": {}
 }
 `;
+
+export const libraryGitDependencyRootBunLock = `{
+  "lockfileVersion": 2,
+  "configVersion": 1,
+  "workspaces": {
+    "": {
+      "name": "demo",
+      "dependencies": {
+        "ms": "github:vercel/ms#2.0.0",
+      },
+    },
+    "apps/api": {
+      "name": "@demo/api",
+      "version": "0.0.1",
+      "dependencies": {
+        "@demo/util": "workspace:*",
+      },
+      "devDependencies": {
+        "ms": "2.1.3",
+      },
+    },
+    "libs/util": {
+      "name": "@demo/util",
+      "version": "0.0.1",
+    },
+  },
+  "packages": {
+    "@demo/api": ["@demo/api@workspace:apps/api"],
+
+    "@demo/util": ["@demo/util@workspace:libs/util"],
+
+    "ms": ["ms@github:vercel/ms#9b88d15", {}, "vercel-ms-9b88d15", "sha512-8tHRyjfPaNkkDS55KBYKHIZgNSsmIdDwuDfQQEfQAK2x5A4LQZ1n/L678EYVSQU2uXKDolzX+myzD6B57pSyXg=="],
+
+    "@demo/api/ms": ["ms@2.1.3", "", {}, "sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA=="],
+  }
+}
+`;
+
+export const libraryGitDependencyPrunedBunLock = `{
+  "lockfileVersion": 2,
+  "configVersion": 1,
+  "workspaces": {
+    "": {
+      "name": "@demo/api",
+      "dependencies": {
+        "ms": "github:vercel/ms#9b88d15",
+      },
+    },
+  },
+  "packages": {
+    "ms": ["ms@github:vercel/ms#9b88d15", {}, "vercel-ms-9b88d15", "sha512-8tHRyjfPaNkkDS55KBYKHIZgNSsmIdDwuDfQQEfQAK2x5A4LQZ1n/L678EYVSQU2uXKDolzX+myzD6B57pSyXg=="],
+  }
+}
+`;

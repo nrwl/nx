@@ -21,6 +21,8 @@ import {
 import {
   libraryDependenciesPrunedBunLock,
   libraryDependenciesRootBunLock,
+  libraryGitDependencyPrunedBunLock,
+  libraryGitDependencyRootBunLock,
   libraryOptionalPeerPrunedBunLock,
 } from './__fixtures__/bun/pruned-library-dependencies.bun.lock';
 import {
@@ -345,6 +347,19 @@ describe('generatePrunedDeployOutput for bun', () => {
         overrides: { 'is-buffer': '1.1.5' },
       },
       expected: libraryDependenciesPrunedBunLock,
+    },
+    {
+      // A library imports the root's git `ms`, which the manifest declares at
+      // its locked commit. The app's devDependency installs another `ms` in
+      // the app's workspace scope.
+      scenario: "a library's git dependency the app installs another copy of",
+      rootLockFile: libraryGitDependencyRootBunLock,
+      packageJson: {
+        name: '@demo/api',
+        version: '0.0.1',
+        dependencies: { ms: 'github:vercel/ms#9b88d15' },
+      },
+      expected: libraryGitDependencyPrunedBunLock,
     },
     {
       // Bun 1.3.13 rejects a frozen install whose lockfile omits `optionalPeers`.

@@ -2195,9 +2195,12 @@ function findNearestBunPackageKey(
 /**
  * The root lockfile key for a dependency of the pruned manifest: the app's own
  * resolution when its workspace entry declares the spec (an override can
- * install outside the range) or when it matches the spec. Otherwise the
- * shallowest matching key, since a dependency taken from a workspace library
- * can resolve under that library's scope. A local package matches by source.
+ * install outside the range). A git or tarball spec takes the key that
+ * resolves to it exactly, if any, since the app's nearest key can hold another
+ * copy.
+ * Otherwise the app's resolution when it matches the spec, or the shallowest
+ * matching key, since a dependency taken from a workspace library can resolve
+ * under that library's scope. A local package matches by source.
  */
 function findManifestDependencyKey(
   packages: BunLockFile['packages'],
@@ -2221,9 +2224,31 @@ function findManifestDependencyKey(
   const key = findNearestBunPackageKey(appScope, name, (candidate) =>
     Object.prototype.hasOwnProperty.call(packages, candidate)
   );
-  if (key && (declaredByApp || matches(key))) {
+  if (key && declaredByApp) {
     return key;
   }
+  if (!local && !validRange(spec)) {
+    const resolvesExactly = (candidate: string) =>
+      typeof packages[candidate]?.[0] === 'string' &&
+      getCachedSpecInfo(packages[candidate][0]).version === spec;
+    const exact =
+      findNearestBunPackageKey(appScope, name, resolvesExactly) ??
+      findShallowestBunPackageKey(packages, name, resolvesExactly);
+    if (exact) {
+      return exact;
+    }
+  }
+  if (key && matches(key)) {
+    return key;
+  }
+  return findShallowestBunPackageKey(packages, name, matches);
+}
+
+function findShallowestBunPackageKey(
+  packages: BunLockFile['packages'],
+  name: string,
+  matches: (key: string) => boolean
+): string | undefined {
   let match: string[] | undefined;
   for (const candidate of Object.keys(packages)) {
     const segments = splitBunPackageKey(candidate);
