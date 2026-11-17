@@ -354,9 +354,20 @@ export class TargetProjectLocator {
       );
       // The external package.json path might be not be resolvable, e.g. if a reference has been added to a project package.json, but the install command has not been run yet.
       if (!externalPackageJson) {
+        // A local package whose target is missing, such as a `link:` to
+        // output that isn't built yet, keeps the node the lockfile records
+        const installedNodeName = this.packageNamesWithLocalPathNodes.has(
+          packageName
+        )
+          ? this.findUnreadableLocalPathNpmProjectFromDir(
+              packageName,
+              fullDirPath
+            )
+          : null;
         // Try and fall back to resolving an external node from the graph by name
         const externalNode = this.npmProjects[`npm:${packageName}`];
-        const externalNodeName = externalNode?.name || null;
+        const externalNodeName =
+          installedNodeName ?? (externalNode?.name || null);
         npmResolutionCache.set(npmImportForProject, externalNodeName);
         return externalNodeName;
       }
@@ -366,12 +377,23 @@ export class TargetProjectLocator {
       let matchingExternalNode: ProjectGraphExternalNode | null = null;
 
       if (isAliasImport) {
+        // A local package installed under another name gets the node the
+        // lockfile records for that name
+        const installedNodeName = this.packageNamesWithLocalPathNodes.has(
+          packageName
+        )
+          ? this.findInstalledLocalPathNpmProjectFromDir(
+              packageName,
+              fullDirPath
+            )
+          : null;
         // Prefer the alias node when both the alias import and the resolved package
         // exist in the graph, otherwise generated package.json files lose the alias key.
         const aliasNpmProjectKey = `npm:${packageName}@npm:${externalPackageJson.name}@${version}`;
-        matchingExternalNode =
-          this.npmProjects[aliasNpmProjectKey] ??
-          this.npmProjects[`npm:${packageName}`];
+        matchingExternalNode = installedNodeName
+          ? this.npmProjects[installedNodeName]
+          : (this.npmProjects[aliasNpmProjectKey] ??
+            this.npmProjects[`npm:${packageName}`]);
       }
 
       if (!matchingExternalNode) {
@@ -455,6 +477,34 @@ export class TargetProjectLocator {
         !relativeDir ||
         existsSync(join(dir, 'node_modules', packageName, 'package.json'))
       ) {
+        return null;
+      }
+    }
+  }
+
+  /**
+   * The node an unreadable import gets once its package can be read: the
+   * record of the nearest importer up to the directory that installs the
+   * package. Null when no directory installs it.
+   */
+  private findUnreadableLocalPathNpmProjectFromDir(
+    packageName: string,
+    fromDirPath: string
+  ): string | null {
+    let installed: string | null = null;
+    for (let dir = fromDirPath; ; dir = dirname(dir)) {
+      const relativeDir = relative(workspaceRoot, dir);
+      if (relativeDir && !isContainedRelativePath(relativeDir)) {
+        return null;
+      }
+      installed ??= this.findInstalledLocalPathNpmProject(
+        packageName,
+        relativeDir ? normalizePath(relativeDir) : '.'
+      );
+      if (hasEntry(join(dir, 'node_modules', packageName))) {
+        return installed;
+      }
+      if (!relativeDir) {
         return null;
       }
     }
@@ -975,6 +1025,15 @@ export class TargetProjectLocator {
     } catch {
       return null;
     }
+  }
+}
+
+// A link counts even when its target is missing
+function hasEntry(path: string): boolean {
+  try {
+    return lstatSync(path, { throwIfNoEntry: false }) !== undefined;
+  } catch {
+    return false;
   }
 }
 
