@@ -118,18 +118,13 @@ export class SummaryTerminalOutputLifeCycle implements LifeCycle {
     if (this.cloudLink) {
       bodyLines.push('', `${this.cloudLink.label} ${this.cloudLink.url}`);
     }
-    const unfinished = [...this.failed, ...this.stopped];
-    if (unfinished.length > 0) {
-      const everyLogAddressed = unfinished.every(
-        ({ task, hasOutput }) => task.hash && hasOutput
-      );
+    const logMissing = [...this.failed, ...this.stopped].some(
+      ({ task, hasOutput }) => !task.hash || !hasOutput
+    );
+    if (logMissing) {
       bodyLines.push(
         '',
-        output.dim(
-          everyLogAddressed
-            ? 'Read the full log of each task above for its output.'
-            : 'Re-run with --output-style=static to inline logs.'
-        )
+        output.dim('Re-run with --output-style=static to inline logs.')
       );
     }
 

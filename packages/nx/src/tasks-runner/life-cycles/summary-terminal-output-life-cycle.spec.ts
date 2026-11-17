@@ -278,10 +278,9 @@ describe('SummaryTerminalOutputLifeCycle', () => {
     });
 
     expect(out).not.toContain('--output-style=static');
-    expect(out).not.toContain('Read the full log');
   });
 
-  it('points at the logs rather than a re-run when every failure has one', () => {
+  it('adds no hint when every failure has a log', () => {
     const a = makeTask('a');
     const lifeCycle = new SummaryTerminalOutputLifeCycle([a]);
 
@@ -290,9 +289,7 @@ describe('SummaryTerminalOutputLifeCycle', () => {
       lifeCycle.endCommand();
     });
 
-    expect(out).toContain(
-      'Read the full log of each task above for its output.'
-    );
+    expect(out).toContain('full log:');
     expect(out).not.toContain('--output-style=static');
   });
 
@@ -308,7 +305,6 @@ describe('SummaryTerminalOutputLifeCycle', () => {
     });
 
     expect(out).toContain('Re-run with --output-style=static to inline logs.');
-    expect(out).not.toContain('Read the full log');
   });
 
   it('points at the style that inlines logs when a stopped task has no log', () => {
@@ -322,7 +318,6 @@ describe('SummaryTerminalOutputLifeCycle', () => {
     });
 
     expect(out).toContain('Re-run with --output-style=static to inline logs.');
-    expect(out).not.toContain('Read the full log');
   });
   it('does not address a log for a failure that produced no output', () => {
     const task = makeTask('a:build');
