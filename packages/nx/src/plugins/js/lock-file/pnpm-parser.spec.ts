@@ -3309,6 +3309,111 @@ snapshots:
       );
     });
 
+    // The app vendors `util`, `@demo/lib` takes the same `util` as a peer, and
+    // `@demo/web` uses the workspace package `util`.
+    it('should ship a vendored package named like a workspace package', () => {
+      const lockFile = `lockfileVersion: '9.0'
+
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
+
+importers:
+
+  .: {}
+
+  apps/api:
+    dependencies:
+      '@demo/lib':
+        specifier: workspace:*
+        version: link:../../libs/lib
+      util:
+        specifier: file:../../vendor/util
+        version: file:vendor/util
+
+  apps/web:
+    dependencies:
+      util:
+        specifier: workspace:*
+        version: link:../../libs/util
+
+  libs/lib:
+    dependencies:
+      util:
+        specifier: file:../../vendor/util
+        version: file:vendor/util
+
+  libs/util:
+    dependencies:
+      odd:
+        specifier: file:../../vendor/odd
+        version: file:vendor/odd
+
+packages:
+
+  odd@file:vendor/odd:
+    resolution: {directory: vendor/odd, type: directory}
+
+  util@file:vendor/util:
+    resolution: {directory: vendor/util, type: directory}
+
+snapshots:
+
+  odd@file:vendor/odd: {}
+
+  util@file:vendor/util: {}`;
+      // as relocated by rewritePrunedLocalPathSpecifiers
+      const packageJson = {
+        name: '@demo/api',
+        version: '1.0.0',
+        dependencies: {
+          '@demo/lib': 'workspace:*',
+          util: 'file:local_path_modules/vendor/util',
+        },
+      };
+      const localNode = (name: string): ProjectGraphExternalNode => ({
+        type: 'npm',
+        name: `npm:${name}`,
+        data: { version: `file:vendor/${name}`, packageName: name },
+      });
+      const graph = makeGraph(
+        [
+          { projectName: 'lib', packageName: '@demo/lib', root: 'libs/lib' },
+          { projectName: 'util', packageName: 'util', root: 'libs/util' },
+        ],
+        {},
+        { 'npm:util': localNode('util'), 'npm:odd': localNode('odd') },
+        { lib: ['npm:util'], util: ['npm:odd'] }
+      );
+
+      vol.fromJSON(
+        {
+          'libs/lib/package.json': JSON.stringify({
+            name: '@demo/lib',
+            version: '1.0.0',
+            peerDependencies: { util: 'file:../../vendor/util' },
+          }),
+        },
+        '/virtual'
+      );
+
+      const result = stringifyPnpmLockfile(
+        pruneProjectGraph(graph, packageJson, '/virtual', 'pnpm'),
+        lockFile,
+        packageJson,
+        '/virtual',
+        'apps/api'
+      );
+
+      expect(result).toMatch(
+        /util:\s+specifier: file:local_path_modules\/vendor\/util\s+version: file:local_path_modules\/vendor\/util/
+      );
+      expect(result).toMatch(
+        /'@demo\/lib@file:workspace_modules\/@demo\/lib':\s+dependencies:\s+util: file:local_path_modules\/vendor\/util/
+      );
+      expect(result).not.toContain('workspace_modules/util');
+    });
+
     it('should not infinite-loop on circular workspace dependencies', () => {
       const lockFile = `lockfileVersion: '9.0'
 
@@ -5087,6 +5192,71 @@ snapshots:
       expect(result).toContain(
         'vendor-real-name@file:local_path_modules/libs/vendor:'
       );
+    });
+
+    it('prunes a vendored copy named and versioned like a registry package', () => {
+      // pnpm 12.8.1 install where the root depends on the registry `ms` 2.1.3
+      // and a library vendors its own `ms` 2.1.3
+      const lockFile = `lockfileVersion: '9.0'
+
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
+
+importers:
+
+  .:
+    dependencies:
+      ms:
+        specifier: 2.1.3
+        version: 2.1.3
+
+  apps/app: {}
+
+  libs/lib:
+    dependencies:
+      ms:
+        specifier: file:../vendor/ms
+        version: file:libs/vendor/ms
+
+packages:
+
+  ms@2.1.3:
+    resolution: {integrity: sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA==}
+
+  ms@file:libs/vendor/ms:
+    resolution: {directory: libs/vendor/ms, type: directory}
+
+snapshots:
+
+  ms@2.1.3: {}
+
+  ms@file:libs/vendor/ms: {}
+`;
+      const packageJson = {
+        name: 'app',
+        version: '0.0.1',
+        dependencies: { ms: 'file:local_path_modules/libs/vendor/ms' },
+      };
+      const { nodes } = getPnpmLockfileNodes(lockFile, '__vendored_namesake__');
+
+      const prunedGraph = pruneProjectGraph(
+        makeGraph([], {}, nodes),
+        packageJson,
+        '/root',
+        'pnpm'
+      );
+      const result = stringifyPnpmLockfile(
+        prunedGraph,
+        lockFile,
+        packageJson,
+        '/root'
+      );
+
+      expect(result).toMatch(
+        /ms:\s+specifier: file:local_path_modules\/libs\/vendor\/ms\s+version: file:local_path_modules\/libs\/vendor\/ms/
+      );
+      expect(result).not.toContain('ms@2.1.3');
     });
   });
 

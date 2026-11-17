@@ -441,6 +441,89 @@ describe('copyWorkspaceModules', () => {
     expect(manifest.peerDependenciesMeta).toBeUndefined();
   });
 
+  it('copies workspace modules declared by a relative or absolute file: path', async () => {
+    tempFs.createFilesSync({
+      'pnpm-lock.yaml': '{}',
+      [`${PROJECT_ROOT}/package.json`]: JSON.stringify({
+        name: 'app',
+        version: '0.0.1',
+        dependencies: { '@scope/liba': 'file:../../libs/liba/' },
+      }),
+      'libs/liba/package.json': JSON.stringify({
+        name: '@scope/liba',
+        version: '0.0.1',
+        dependencies: { '@scope/libb': `file:${moduleRoot('libs/libb')}` },
+      }),
+      'libs/libb/package.json': JSON.stringify({
+        name: '@scope/libb',
+        version: '0.0.1',
+      }),
+    });
+    tempFs.createDirSync('dist/app');
+
+    mockGetWorkspacePackages.mockReturnValue(
+      new Map<string, any>([
+        ['@scope/liba', { data: { root: moduleRoot('libs/liba') } }],
+        ['@scope/libb', { data: { root: moduleRoot('libs/libb') } }],
+      ])
+    );
+
+    await runExecutor();
+
+    expect(readCopiedManifest('@scope/liba').dependencies).toEqual({
+      '@scope/libb': 'file:../libb',
+    });
+    expect(readCopiedManifest('@scope/libb').name).toBe('@scope/libb');
+  });
+
+  it.each([
+    {
+      lockFile: 'pnpm-lock.yaml',
+      utilSpec: 'file:../../../local_path_modules/vendor/util',
+    },
+  ])(
+    'does not copy the workspace package a vendored package is named like ($lockFile)',
+    async ({ lockFile, utilSpec }) => {
+      tempFs.createFilesSync({
+        [lockFile]: '{}',
+        [`${PROJECT_ROOT}/package.json`]: JSON.stringify({
+          name: 'app',
+          version: '0.0.1',
+          dependencies: {
+            '@scope/liba': 'workspace:*',
+            util: 'file:../../vendor/util',
+          },
+        }),
+        'libs/liba/package.json': JSON.stringify({
+          name: '@scope/liba',
+          version: '0.0.1',
+          dependencies: { util: 'file:../../vendor/util' },
+        }),
+        'libs/util/package.json': JSON.stringify({
+          name: 'util',
+          version: '1.0.0',
+        }),
+      });
+      tempFs.createDirSync('dist/app');
+
+      mockGetWorkspacePackages.mockReturnValue(
+        new Map<string, any>([
+          ['@scope/liba', { data: { root: moduleRoot('libs/liba') } }],
+          ['util', { data: { root: moduleRoot('libs/util') } }],
+        ])
+      );
+
+      await runExecutor();
+
+      expect(readCopiedManifest('@scope/liba').dependencies).toEqual({
+        util: utilSpec,
+      });
+      expect(
+        existsSync(join(tempFs.tempDir, 'dist/app/workspace_modules/util'))
+      ).toBe(false);
+    }
+  );
+
   it('leaves a copied module non-workspace local-path dep untouched outside pnpm', async () => {
     // An npm workspace: its prune path ships no local-path targets, so the
     // manifest must not be relocated.
