@@ -9,6 +9,7 @@ import { readFileSync } from 'node:fs';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { createRequire } from 'node:module';
 import { dirname, join, resolve, sep } from 'node:path';
+import { unescape } from 'node:querystring';
 import { finished } from 'node:stream';
 import * as tls from 'node:tls';
 import { pathToFileURL } from 'node:url';
@@ -84,6 +85,9 @@ export class AngularSsrDevServer {
   readonly #indexFile: string;
   readonly #resolveFirstLoad: () => void;
   #base = '/';
+  // The dev middleware matches files against the decoded serve path, while
+  // requests are routed by the raw one.
+  #fileBase = '/';
   #lazyCompilationPrefix: string | undefined;
   // Open until the server bundle matching the latest edit is loaded.
   #gate: Deferred | undefined = deferred();
@@ -203,6 +207,7 @@ export class AngularSsrDevServer {
         typeof publicPath === 'string' && publicPath !== '/'
           ? `${publicPath.replace(/\/$/, '')}/`
           : '/';
+      this.#fileBase = getFilePath(this.#base);
       const isDevMiddleware = (
         entry: (typeof result)[number]
       ): entry is DevServerMiddlewareObject =>
@@ -256,21 +261,15 @@ export class AngularSsrDevServer {
   }
 
   #isIndexFile(url = '/'): boolean {
-    const { pathname } = new URL(url, 'http://localhost');
-    return pathname === `${this.#base}${this.#indexFile}`;
+    return getFilePath(url) === `${this.#fileBase}${this.#indexFile}`;
   }
 
   #isServerOnlyFile(url = '/'): boolean {
-    const { pathname } = new URL(url, 'http://localhost');
-    if (!this.#serverFiles || !pathname.startsWith(this.#base)) {
+    const path = getFilePath(url);
+    if (!this.#serverFiles || !path.startsWith(this.#fileBase)) {
       return false;
     }
-    let name: string;
-    try {
-      name = decodeURIComponent(pathname.slice(this.#base.length));
-    } catch {
-      return false;
-    }
+    const name = path.slice(this.#fileBase.length);
     return this.#serverFiles.has(name) && !this.#browserFiles.has(name);
   }
 
@@ -461,6 +460,12 @@ function deferred(): Deferred {
 
 function getAssetNames(compilation: Compilation): Set<string> {
   return new Set(compilation.getAssets().map((asset) => asset.name));
+}
+
+// The dev middleware of both rspack majors decodes the path this way before
+// it looks up a file.
+function getFilePath(url: string): string {
+  return unescape(new URL(url, 'http://localhost').pathname);
 }
 
 function isNodeRequestHandler(value: unknown): value is NodeRequestHandler {

@@ -17,6 +17,7 @@ import {
 import type { AddressInfo } from 'node:net';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
+import { unescape } from 'node:querystring';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { NormalizedAngularRspackPluginOptions } from '../models';
 import { AngularSsrDevServer } from './angular-ssr-dev-server';
@@ -219,16 +220,18 @@ async function startHarness({
   const watching = compiler.watch({ aggregateTimeout: 5 }, () => {});
 
   const sendMessage = vi.fn();
-  const base = servePath === '/' ? '' : servePath;
+  const base = unescape(servePath === '/' ? '' : servePath);
   // Answers the browser document, and the files of both compilations as
-  // rspack 1.x's dev middleware does.
+  // rspack 1.x's dev middleware does, after decoding the path and the serve
+  // path as it does.
   const devMiddleware: DevServerMiddlewareHandler = async (req, res, next) => {
-    if (req.url === `${base}/index.html`) {
+    const path = unescape(new URL(req.url ?? '/', 'http://localhost').pathname);
+    if (path === `${base}/index.html`) {
       res.end('client document');
       return;
     }
-    const name = req.url?.startsWith(`${base}/`)
-      ? req.url.slice(base.length + 1)
+    const name = path.startsWith(`${base}/`)
+      ? path.slice(base.length + 1)
       : undefined;
     for (const output of [browserOutput, serverOutput]) {
       const content =
@@ -476,13 +479,24 @@ exports.reqHandler = handler;`,
       200,
       { url: '/index.html', originalUrl: '/app/index.html' },
     ],
+    [
+      '/app/index%2ehtml',
+      200,
+      { url: '/index%2ehtml', originalUrl: '/app/index%2ehtml' },
+    ],
+    [
+      '/my%20app/index.html',
+      200,
+      { url: '/index.html', originalUrl: '/my%20app/index.html' },
+      '/my%20app',
+    ],
     ['/app/next', 404, undefined],
     ['/other', 404, undefined],
     ['/app', 404, undefined],
   ])(
-    'routes %s under the serve path /app',
-    async (path, status, rendered) => {
-      const harness = await startHarness({ servePath: '/app' });
+    'routes %s under its serve path',
+    async (path, status, rendered, servePath = '/app') => {
+      const harness = await startHarness({ servePath });
 
       const response = await harness.get(path);
 
@@ -513,7 +527,7 @@ exports.reqHandler = handler;`,
     expect((await harness.get('/_rspack/lazy/trigger__0')).status).toBe(404);
   }, 20_000);
 
-  it.each(['/', '/app'])(
+  it.each(['/', '/app', '/my%20app'])(
     'renders files that only the server build emitted under the serve path %s',
     async (servePath) => {
       const harness = await startHarness({ servePath, proxy: true });
