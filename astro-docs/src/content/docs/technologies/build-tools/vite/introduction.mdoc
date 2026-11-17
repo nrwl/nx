@@ -153,15 +153,15 @@ Configure `@nx/vite/plugin` in the `plugins` array in `nx.json`:
 | `devTargetName`         | Name of the Vite dev server task                                | `dev`          |
 | `serveStaticTargetName` | Name of the static file server task                             | `serve-static` |
 | `typecheckTargetName`   | Name of the Vue `vue-tsc` typecheck task, or `false` to skip it | `typecheck`    |
-| `compiler`              | Vue typecheck compiler: `vue-tsc`, `tsc`, or `tsgo`             | auto-detected  |
+| `compiler`              | Vue typecheck compiler: `vue-tsc`, `tsc`, `tsgo`, or `tsrs`     | auto-detected  |
 | `buildDepsTargetName`   | Name of the build-deps task for dependency builds               | none           |
 | `watchDepsTargetName`   | Name of the watch-deps task for dependency watches              | none           |
 
 The build and typecheck tasks are cached, with build outputs based on your Vite configuration.
 The dev, preview, and static-server tasks are continuous.
 When `compiler` is omitted, Nx uses `vue-tsc` when it detects a Vite Vue plugin.
-Set `compiler` to `tsc` or `tsgo` to drop the `vue-tsc` task and let `@nx/js/typescript` provide `typecheck` instead.
-To typecheck with `tsgo`, set `compiler: 'tsgo'` on `@nx/js/typescript`, which ignores the Vite plugin's `compiler`.
+Set `compiler` to `tsc`, `tsgo`, or `tsrs` to drop the `vue-tsc` task and let `@nx/js/typescript` provide `typecheck` instead.
+To use either native compiler, set the same `compiler` value on `@nx/js/typescript`, which ignores the Vite plugin's `compiler`.
 
 ### Wait for the dev server to be ready
 

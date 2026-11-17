@@ -247,7 +247,7 @@ function collectHelperDependencies(
   // For inferred targets or manually added run-commands, check if user is using `tsc` in build target.
   if (
     target.executor === 'nx:run-commands' &&
-    /\b(tsc|tsgo)\b/.test(target.options.command)
+    /\b(tsc|tsgo|tsrs)\b/.test(target.options.command)
   ) {
     const tsConfigPath = resolveTsConfigForRunCommandsTarget(
       workspaceRoot,

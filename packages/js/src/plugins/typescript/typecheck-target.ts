@@ -141,6 +141,8 @@ function getCompilerPackages(compiler: string): string[] {
   switch (compiler) {
     case 'tsgo':
       return ['@typescript/native-preview'];
+    case 'tsrs':
+      return ['tsrs'];
     case 'vue-tsc':
       return ['vue-tsc', 'typescript'];
     default:

@@ -208,16 +208,19 @@ describe('registerTypescriptPluginForTypecheck', () => {
     });
   });
 
-  it("should carry over the framework plugin's tsgo compiler", () => {
-    setPlugins([{ plugin: '@nx/vite/plugin', options: { compiler: 'tsgo' } }]);
+  it.each(['tsgo', 'tsrs'])(
+    "should carry over the framework plugin's %s compiler",
+    (compiler) => {
+      setPlugins([{ plugin: '@nx/vite/plugin', options: { compiler } }]);
 
-    registerTypescriptPluginForTypecheck(tree, '@nx/vite/plugin');
+      registerTypescriptPluginForTypecheck(tree, '@nx/vite/plugin');
 
-    expect(readNxJson(tree).plugins[0]).toEqual({
-      plugin: '@nx/js/typescript',
-      options: { typecheck: { targetName: 'typecheck' }, compiler: 'tsgo' },
-    });
-  });
+      expect(readNxJson(tree).plugins[0]).toEqual({
+        plugin: '@nx/js/typescript',
+        options: { typecheck: { targetName: 'typecheck' }, compiler },
+      });
+    }
+  );
 
   it('should not carry over a vue-tsc compiler', () => {
     setPlugins([

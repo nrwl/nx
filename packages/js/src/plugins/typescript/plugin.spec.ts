@@ -731,6 +731,29 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
       `);
     });
 
+    it('should infer tsrs commands for a solution build and typecheck', async () => {
+      configFiles = await applyFilesToTempFsAndContext(tempFs, {
+        'libs/my-lib/tsconfig.json': JSON.stringify({ files: [] }),
+        'libs/my-lib/tsconfig.lib.json': JSON.stringify({
+          compilerOptions: { outDir: 'dist' },
+        }),
+        'libs/my-lib/package.json': JSON.stringify({ main: 'dist/index.js' }),
+      });
+      const { projects } = await invokeCreateNodesOnMatchingFiles(
+        configFiles,
+        context,
+        {
+          compiler: 'tsrs',
+          build: true,
+          verboseOutput: true,
+        }
+      );
+      expect(projects['libs/my-lib'].targets).toMatchObject({
+        build: { command: 'tsrs --build tsconfig.lib.json --verbose' },
+        typecheck: { command: 'tsrs --build --emitDeclarationOnly --verbose' },
+      });
+    });
+
     it('should create both typecheck and build targets with custom compiler option (tsgo)', async () => {
       configFiles = await applyFilesToTempFsAndContext(tempFs, {
         'libs/my-lib/tsconfig.json': JSON.stringify({ files: [] }),
@@ -3841,35 +3864,45 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
       ]);
     });
 
-    it('should fall back to the lib and then the root tsconfig', async () => {
-      configFiles = await applyFilesToTempFsAndContext(tempFs, {
-        'libs/my-lib/tsconfig.json': JSON.stringify({
-          files: [],
-          references: [{ path: './tsconfig.lib.json' }],
-        }),
-        'libs/my-lib/tsconfig.lib.json': JSON.stringify({
-          include: ['src/**/*.ts'],
-        }),
-        'libs/my-lib/project.json': `{}`,
-        'libs/other-lib/tsconfig.json': JSON.stringify({
-          include: ['src/**/*.ts'],
-        }),
-        'libs/other-lib/project.json': `{}`,
-      });
+    it.each(['tsgo', 'tsrs'] as const)(
+      'should fall back to the lib and then the root tsconfig with %s',
+      async (compiler) => {
+        configFiles = await applyFilesToTempFsAndContext(tempFs, {
+          'libs/my-lib/tsconfig.json': JSON.stringify({
+            files: [],
+            references: [{ path: './tsconfig.lib.json' }],
+          }),
+          'libs/my-lib/tsconfig.lib.json': JSON.stringify({
+            include: ['src/**/*.ts'],
+          }),
+          'libs/my-lib/project.json': `{}`,
+          'libs/other-lib/tsconfig.json': JSON.stringify({
+            include: ['src/**/*.ts'],
+          }),
+          'libs/other-lib/project.json': `{}`,
+        });
 
-      const { projects } = await invokeCreateNodesOnMatchingFiles(
-        configFiles,
-        context,
-        { compiler: 'tsgo' }
-      );
+        const { projects } = await invokeCreateNodesOnMatchingFiles(
+          configFiles,
+          context,
+          { compiler }
+        );
 
-      expect(projects['libs/my-lib'].targets.typecheck.command).toBe(
-        'tsgo -p tsconfig.lib.json --noEmit'
-      );
-      expect(projects['libs/other-lib'].targets.typecheck.command).toBe(
-        'tsgo --noEmit'
-      );
-    });
+        expect(projects['libs/my-lib'].targets.typecheck.command).toBe(
+          `${compiler} -p tsconfig.lib.json --noEmit`
+        );
+        expect(projects['libs/my-lib'].targets.typecheck.inputs).toContainEqual(
+          {
+            externalDependencies: [
+              compiler === 'tsrs' ? 'tsrs' : '@typescript/native-preview',
+            ],
+          }
+        );
+        expect(projects['libs/other-lib'].targets.typecheck.command).toBe(
+          `${compiler} --noEmit`
+        );
+      }
+    );
 
     it('should skip projects whose build already type-checks', async () => {
       const tsconfig = JSON.stringify({ include: ['src/**/*.ts'] });
