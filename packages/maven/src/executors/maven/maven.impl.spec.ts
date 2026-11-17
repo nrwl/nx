@@ -4,7 +4,7 @@ import {
   ProjectConfiguration,
   workspaceRoot,
 } from '@nx/devkit';
-import { runCommandsExecutor } from '@nx/devkit/internal';
+import { runCommandsExecutor, safeExecFileSync } from '@nx/devkit/internal';
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
@@ -14,10 +14,7 @@ import { MavenExecutorSchema } from './schema';
 vi.mock('@nx/devkit/internal', async () => ({
   ...(await vi.importActual<any>('@nx/devkit/internal')),
   runCommandsExecutor: vi.fn(async () => ({ success: true })),
-}));
-vi.mock('../../utils/detect-maven-executable', () => ({
-  detectMavenExecutable: () => 'mvn',
-  isMaven4: () => false,
+  safeExecFileSync: vi.fn(() => 'Apache Maven 3.9.9'),
 }));
 
 describe('Maven Executor', () => {
@@ -140,6 +137,7 @@ describe('Maven Executor', () => {
         },
       };
       vi.mocked(runCommandsExecutor).mockClear();
+      vi.mocked(safeExecFileSync).mockClear();
     });
 
     afterEach(() => {
@@ -156,6 +154,7 @@ describe('Maven Executor', () => {
         success: true,
       });
       expect(runCommandsExecutor).not.toHaveBeenCalled();
+      expect(safeExecFileSync).not.toHaveBeenCalled();
     });
 
     it.each<[string, MavenExecutorSchema, () => void]>([
