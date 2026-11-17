@@ -3,10 +3,13 @@ import {
   readdirSync,
   readFileSync,
   rmSync,
+  symlinkSync,
   writeFileSync,
 } from 'node:fs';
+import Module from 'node:module';
 import { dirname, join } from 'node:path';
 import type { ProjectGraphExternalNode } from '../../config/project-graph';
+import { linkedProjectBunLock } from './lock-file/__fixtures__/bun/linked-project.bun.lock';
 import overriddenLocalPathPnpmLock from './lock-file/__fixtures__/overridden-local-path/pnpm-lock.yaml';
 
 const { root, workspaceDataDirectory } = vi.hoisted(() => {
@@ -93,9 +96,12 @@ function writeWorkspace(rootDevDependencies: Record<string, string>) {
   }
 }
 
-// A fresh module registry stands in for the next graph computation's process.
+// A fresh module registry and an empty Node resolution cache stand in for the
+// next graph computation's process.
 async function loadPluginInNewProcess() {
   vi.resetModules();
+  // `_pathCache` is an internal Node API not exposed in @types/node.
+  (Module as any)._pathCache = Object.create(null);
   return await import('./index');
 }
 
@@ -326,6 +332,185 @@ describe('nx/js/dependencies-and-lockfile', () => {
       ]);
     }
   );
+
+  // apps/a links x to libs/x/dist inside the project libs/x, and apps/b to the
+  // plain directory vendor/x. Neither target is in the package manager's
+  // workspaces.
+  it.each([['bun.lock', linkedProjectBunLock, 'npm:x', 'npm:x']])(
+    'should depend on the project a link points to and on the link in %s, built or not',
+    async (lockFile, lockFileContent, projectLinkNode, vendoredNode) => {
+      write(
+        'package.json',
+        JSON.stringify({ name: 'rvws', workspaces: ['apps/*'] })
+      );
+      write(lockFile, lockFileContent);
+      write(
+        'vendor/x/package.json',
+        JSON.stringify({ name: 'x', version: '1.0.0' })
+      );
+      const projectFiles: Record<string, string[]> = {};
+      for (const [app, target] of [
+        ['apps/a', 'libs/x/dist'],
+        ['apps/b', 'vendor/x'],
+      ]) {
+        write(
+          `${app}/package.json`,
+          JSON.stringify({ dependencies: { x: `link:../../${target}` } })
+        );
+        write(`${app}/src/index.ts`, `import x from 'x';`);
+        mkdirSync(join(root, app, 'node_modules'));
+        symlinkSync(`../../../${target}`, join(root, app, 'node_modules/x'));
+        projectFiles[app] = [`${app}/package.json`, `${app}/src/index.ts`];
+      }
+
+      for (const built of [false, true]) {
+        if (built) {
+          write(
+            'libs/x/dist/package.json',
+            JSON.stringify({ name: 'x', version: '1.0.0' })
+          );
+        }
+        const plugin = await loadPluginInNewProcess();
+
+        const dependencies = await createDependencies(
+          plugin,
+          await createExternalNodes(plugin, lockFile),
+          {
+            ...projectFiles,
+            'libs/x': built ? ['libs/x/dist/package.json'] : [],
+          }
+        );
+
+        expect(
+          dependencies
+            .filter(({ source }) => source.startsWith('apps/'))
+            .map(({ sourceFile, target }) => [sourceFile, target])
+            .sort()
+        ).toEqual([
+          ['apps/a/package.json', 'libs/x'],
+          ['apps/a/package.json', projectLinkNode],
+          ['apps/a/src/index.ts', 'libs/x'],
+          ['apps/a/src/index.ts', projectLinkNode],
+          ['apps/b/package.json', vendoredNode],
+          ['apps/b/src/index.ts', vendoredNode],
+        ]);
+      }
+    }
+  );
+
+  // apps/a reaches libs/x/dist through out, a link that dangles until the build
+  // creates libs/x. Node can't resolve `via/../x` past the link via, so that
+  // chain keeps only the link's node.
+  it.each([
+    ['libs/x', ['apps/a/package.json', 'apps/a/src/index.ts']],
+    ['via/../x', []],
+  ])(
+    'should follow a link through another link to %s, built or not',
+    async (outTarget, libsXSourceFiles) => {
+      write(
+        'package.json',
+        JSON.stringify({ name: 'rvws', workspaces: ['apps/*'] })
+      );
+      write('bun.lock', linkedProjectBunLock);
+      write(
+        'apps/a/package.json',
+        JSON.stringify({ dependencies: { x: 'link:../../libs/x/dist' } })
+      );
+      write('apps/a/src/index.ts', `import x from 'x';`);
+      mkdirSync(join(root, 'apps/a/node_modules'));
+      symlinkSync('../../../out/dist', join(root, 'apps/a/node_modules/x'));
+      symlinkSync(outTarget, join(root, 'out'));
+      mkdirSync(join(root, 'libs/anchor'), { recursive: true });
+      symlinkSync('libs/anchor', join(root, 'via'));
+
+      for (const built of [false, true]) {
+        if (built) {
+          write(
+            'libs/x/dist/package.json',
+            JSON.stringify({ name: 'x', version: '1.0.0' })
+          );
+        }
+        const plugin = await loadPluginInNewProcess();
+
+        const dependencies = await createDependencies(
+          plugin,
+          await createExternalNodes(plugin, 'bun.lock'),
+          {
+            'apps/a': ['apps/a/package.json', 'apps/a/src/index.ts'],
+            'libs/x': built ? ['libs/x/dist/package.json'] : [],
+          }
+        );
+
+        const sourceFilesDependingOn = (isTarget: (t: string) => boolean) =>
+          dependencies
+            .filter(({ target }) => isTarget(target))
+            .map(({ sourceFile }) => sourceFile)
+            .sort();
+        expect(sourceFilesDependingOn((t) => t === 'libs/x')).toEqual(
+          libsXSourceFiles
+        );
+        expect(sourceFilesDependingOn((t) => t.startsWith('npm:x'))).toEqual([
+          'apps/a/package.json',
+          'apps/a/src/index.ts',
+        ]);
+      }
+    }
+  );
+
+  // The project apps holds its own copy of x, which Node loads for apps/a until
+  // the build creates the target of apps/a's link.
+  it('should not depend on the project that holds the copy an import loads', async () => {
+    write(
+      'package.json',
+      JSON.stringify({ name: 'rvws', workspaces: ['apps/*'] })
+    );
+    write('bun.lock', linkedProjectBunLock);
+    write(
+      'apps/node_modules/x/package.json',
+      JSON.stringify({ name: 'x', version: '3.0.0' })
+    );
+    write(
+      'apps/a/package.json',
+      JSON.stringify({ dependencies: { x: 'link:../../libs/x/dist' } })
+    );
+    write('apps/a/src/index.ts', `import x from 'x';`);
+    mkdirSync(join(root, 'apps/a/node_modules'));
+    symlinkSync('../../../libs/x/dist', join(root, 'apps/a/node_modules/x'));
+
+    for (const built of [false, true]) {
+      if (built) {
+        write(
+          'libs/x/dist/package.json',
+          JSON.stringify({ name: 'x', version: '1.0.0' })
+        );
+      }
+      const plugin = await loadPluginInNewProcess();
+
+      const dependencies = await createDependencies(
+        plugin,
+        await createExternalNodes(plugin, 'bun.lock'),
+        {
+          apps: [],
+          'apps/a': ['apps/a/package.json', 'apps/a/src/index.ts'],
+          'libs/x': built ? ['libs/x/dist/package.json'] : [],
+        }
+      );
+
+      expect(
+        dependencies
+          .filter(({ target }) => !target.startsWith('npm:'))
+          .map(({ sourceFile, target }) => [sourceFile, target])
+          .sort()
+      ).toEqual(
+        built
+          ? [
+              ['apps/a/package.json', 'libs/x'],
+              ['apps/a/src/index.ts', 'libs/x'],
+            ]
+          : []
+      );
+    }
+  });
 
   it('should depend on the local copy npm nests under a project', async () => {
     write(
