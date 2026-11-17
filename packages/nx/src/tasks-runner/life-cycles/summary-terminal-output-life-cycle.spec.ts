@@ -268,7 +268,20 @@ describe('SummaryTerminalOutputLifeCycle', () => {
     expect(out).toContain('View run: https://nx.app/runs/abc');
   });
 
-  it('points at the style that inlines logs', () => {
+  it('prints no hint when everything passes', () => {
+    const a = makeTask('a');
+    const lifeCycle = new SummaryTerminalOutputLifeCycle([a]);
+
+    const out = captureOutput(() => {
+      lifeCycle.endTasks([result(a, 'success')]);
+      lifeCycle.endCommand();
+    });
+
+    expect(out).not.toContain('--output-style=static');
+    expect(out).not.toContain('Read the full log');
+  });
+
+  it('points at the logs rather than a re-run when every failure has one', () => {
     const a = makeTask('a');
     const lifeCycle = new SummaryTerminalOutputLifeCycle([a]);
 
@@ -277,7 +290,39 @@ describe('SummaryTerminalOutputLifeCycle', () => {
       lifeCycle.endCommand();
     });
 
-    expect(out).toContain('--output-style=static');
+    expect(out).toContain(
+      'Read the full log of each task above for its output.'
+    );
+    expect(out).not.toContain('--output-style=static');
+  });
+
+  it('points at the style that inlines logs when a failure has no log', () => {
+    const a = makeTask('a');
+    const lifeCycle = new SummaryTerminalOutputLifeCycle([a]);
+
+    const out = captureOutput(() => {
+      lifeCycle.endTasks([
+        { ...result(a, 'failure'), terminalOutput: undefined } as TaskResult,
+      ]);
+      lifeCycle.endCommand();
+    });
+
+    expect(out).toContain('Re-run with --output-style=static to inline logs.');
+    expect(out).not.toContain('Read the full log');
+  });
+
+  it('points at the style that inlines logs when a stopped task has no log', () => {
+    const a = makeTask('a');
+    const b = makeTask('b');
+    const lifeCycle = new SummaryTerminalOutputLifeCycle([a, b]);
+
+    const out = captureOutput(() => {
+      lifeCycle.endTasks([result(a, 'failure', 'boom'), result(b, 'stopped')]);
+      lifeCycle.endCommand();
+    });
+
+    expect(out).toContain('Re-run with --output-style=static to inline logs.');
+    expect(out).not.toContain('Read the full log');
   });
   it('does not address a log for a failure that produced no output', () => {
     const task = makeTask('a:build');
