@@ -363,6 +363,7 @@ function buildLockFile(
   options?: {
     onPruneFallback?: (error: Error) => void;
     workspaceRootPath?: string;
+    sourceProjectRoot?: string;
   }
 ): string {
   const workspaceRootPath = options?.workspaceRootPath ?? workspaceRoot;
@@ -394,7 +395,8 @@ function buildLockFile(
         prunedGraph,
         content,
         normalizedPackageJson,
-        workspaceRootPath
+        workspaceRootPath,
+        options?.sourceProjectRoot
       );
     }
     if (packageManager === 'npm') {
@@ -473,6 +475,7 @@ function createPrunedLockfile(
       pruneError = error;
     },
     workspaceRootPath,
+    sourceProjectRoot: projectRoot,
   });
   const pruned = pruneError === undefined;
   if (pruned) {
