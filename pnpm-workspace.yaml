@@ -21,6 +21,7 @@ minimumReleaseAgeExclude:
   - 'create-nx-plugin'
   - 'tmp@0.2.7'
 overrides:
+  'minimatch@<10': '^10.2.5'
   'handlebars@<4.7.10': '^4.7.10'
   minimist: '^1.2.6'
   underscore: '^1.13.8'
