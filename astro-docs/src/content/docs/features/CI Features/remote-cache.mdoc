@@ -19,8 +19,6 @@ Nx [caches task results locally](/docs/features/cache-task-results) so the same 
 a task with the same inputs.
 Remote caching shares those results across developer machines and CI jobs.
 
-![Three developers and CI sharing cached task results](../../../../assets/features/distributed-caching.svg)
-
 On a remote cache hit, Nx restores the terminal output and declared task artifacts, such as a build
 or distribution directory.
 The command behaves like a local cache hit without running the task again.
@@ -108,6 +106,8 @@ Ultracache is part of every Nx Cloud plan, including Hobby, and traced tasks don
 The first time a task runs on Workers, Nx hashes it from its declared `inputs` and records the files it reads.
 Later CI runs hash the task from that recording, and the recording grows when the task reads a file it didn't read before.
 It lives in Nx Cloud, so your configuration files don't change, and declared `outputs` still decide what Nx caches.
+
+{% figure name="ultracache" height=540 caption="Ultracache records the files shop:test reads, including files from other projects and root config, and stores them as the task's inputs. Click a file to change it: a file the test read reruns it, a file it never read is a cache hit." /%}
 
 Only runs on Workers are recorded, but every CI run hashes from the recording, including on CI machines you manage yourself.
 Runs outside CI hash from declared `inputs`.
