@@ -5350,13 +5350,17 @@ importers:
 
     it('should not shadow a hoisted registry package with a link from a nested importer', () => {
       const withNestedLink = lockFile.replace(
-        '  packages/local: {}',
+        `  packages/local:
+    dependencies:
+`,
         `  packages/local:
     dependencies:
       is-even:
         specifier: link:../../../other/is-even
-        version: link:../../../other/is-even`
+        version: link:../../../other/is-even
+`
       );
+      expect(withNestedLink).toContain('other/is-even');
 
       const { nodes } = getPnpmLockfileNodes(withNestedLink, '__linked_dup__');
 
