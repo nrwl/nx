@@ -50,6 +50,7 @@ const setNodeVersion = (version: string) =>
   });
 
 describe('app', () => {
+  const pruneTargets = ['prune', 'prune-lockfile', 'copy-workspace-modules'];
   let tree: Tree;
   let envBackup: string | undefined;
 
@@ -168,40 +169,6 @@ describe('app', () => {
           "sourceRoot": "my-node-app/src",
           "tags": [],
           "targets": {
-            "copy-workspace-modules": {
-              "cache": true,
-              "dependsOn": [
-                "build",
-              ],
-              "executor": "@nx/js:copy-workspace-modules",
-              "options": {
-                "buildTarget": "build",
-              },
-              "outputs": [
-                "{workspaceRoot}/dist/my-node-app/workspace_modules",
-              ],
-            },
-            "prune": {
-              "dependsOn": [
-                "prune-lockfile",
-                "copy-workspace-modules",
-              ],
-              "executor": "nx:noop",
-            },
-            "prune-lockfile": {
-              "cache": true,
-              "dependsOn": [
-                "build",
-              ],
-              "executor": "@nx/js:prune-lockfile",
-              "options": {
-                "buildTarget": "build",
-              },
-              "outputs": [
-                "{workspaceRoot}/dist/my-node-app/package.json",
-                "{workspaceRoot}/dist/my-node-app/package-lock.json",
-              ],
-            },
             "serve": {
               "configurations": {
                 "development": {
@@ -382,40 +349,6 @@ describe('app', () => {
               },
               "outputs": [
                 "{options.outputPath}",
-              ],
-            },
-            "copy-workspace-modules": {
-              "cache": true,
-              "dependsOn": [
-                "build",
-              ],
-              "executor": "@nx/js:copy-workspace-modules",
-              "options": {
-                "buildTarget": "build",
-              },
-              "outputs": [
-                "{workspaceRoot}/dist/my-dir/my-node-app/workspace_modules",
-              ],
-            },
-            "prune": {
-              "dependsOn": [
-                "prune-lockfile",
-                "copy-workspace-modules",
-              ],
-              "executor": "nx:noop",
-            },
-            "prune-lockfile": {
-              "cache": true,
-              "dependsOn": [
-                "build",
-              ],
-              "executor": "@nx/js:prune-lockfile",
-              "options": {
-                "buildTarget": "build",
-              },
-              "outputs": [
-                "{workspaceRoot}/dist/my-dir/my-node-app/package.json",
-                "{workspaceRoot}/dist/my-dir/my-node-app/package-lock.json",
               ],
             },
             "serve": {
@@ -958,6 +891,55 @@ describe('app', () => {
       );
     });
 
+    it('should add prune targets for rolldown', async () => {
+      await applicationGenerator(tree, {
+        directory: 'myapp',
+        bundler: 'rolldown',
+        skipFormat: true,
+      });
+
+      const targets = readProjectConfiguration(tree, 'myapp').targets;
+      expect(pruneTargets.filter((name) => name in targets)).toEqual(
+        pruneTargets
+      );
+    });
+
+    it.each(['esbuild', 'webpack'] as const)(
+      'should not add prune targets for %s, which generates the package.json',
+      async (bundler) => {
+        await applicationGenerator(tree, {
+          directory: 'myapp',
+          bundler,
+          skipFormat: true,
+        });
+
+        const targets = readProjectConfiguration(tree, 'myapp').targets;
+        expect(pruneTargets.filter((name) => name in targets)).toEqual([]);
+      }
+    );
+
+    it.each([
+      ['esbuild', ['build']],
+      ['webpack', ['build']],
+      ['rolldown', ['build', 'prune']],
+    ] as const)(
+      'should make docker:build depend on prune only when %s has it',
+      async (bundler, dependsOn) => {
+        await applicationGenerator(tree, {
+          directory: 'myapp',
+          bundler,
+          docker: true,
+          skipDockerPlugin: true,
+          skipFormat: true,
+        });
+
+        expect(
+          readProjectConfiguration(tree, 'myapp').targets['docker:build']
+            .dependsOn
+        ).toEqual(dependsOn);
+      }
+    );
+
     it('should default to esbuild for fastify', async () => {
       await applicationGenerator(tree, {
         directory: 'myapp',
@@ -1369,6 +1351,20 @@ describe('app', () => {
         rootDir: 'src',
         emitDeclarationOnly: false,
       });
+    });
+
+    it('should add prune targets for esbuild', async () => {
+      await applicationGenerator(tree, {
+        directory: 'apps/api',
+        bundler: 'esbuild',
+        useProjectJson: false,
+        skipFormat: true,
+      });
+
+      const targets = readProjectConfiguration(tree, '@proj/api').targets;
+      expect(pruneTargets.filter((name) => name in targets)).toEqual(
+        pruneTargets
+      );
     });
 
     it('should use the target name of an existing rolldown registration', async () => {

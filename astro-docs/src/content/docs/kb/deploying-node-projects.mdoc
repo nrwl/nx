@@ -30,6 +30,7 @@ Use pruning when:
 
 {% aside type="tip" %}
 New Node applications include prune targets by default.
+Outside a TS Solution Setup, esbuild and webpack applications build with `generatePackageJson` instead and get no prune target.
 Pass `--docker` to also generate an example Dockerfile: `nx g @nx/node:app --docker`.
 {% /aside %}
 

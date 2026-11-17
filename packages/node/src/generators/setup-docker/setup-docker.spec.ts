@@ -62,7 +62,7 @@ describe('setupDockerGenerator', () => {
       expect(project.targets).toEqual(
         expect.objectContaining({
           'docker:build': {
-            dependsOn: ['build', 'prune'],
+            dependsOn: ['build'],
             command: `docker build . -t ${projectName}`,
             options: {
               cwd: project.root,
