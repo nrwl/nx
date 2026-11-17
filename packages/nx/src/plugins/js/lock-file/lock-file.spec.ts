@@ -164,7 +164,7 @@ describe('generatePrunedDeployOutput', () => {
       packageJson,
       'apps/app',
       '/root',
-      new Set()
+      new Map()
     );
     // the relocation must land in the manifest before the lockfile copies its
     // specifiers

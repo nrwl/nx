@@ -314,6 +314,7 @@ export {
   resetWorkspaceContext,
   resolveCommandSyntacticSugar,
   resolveNxTokensInOptions,
+  resolveWorkspaceModuleDependency,
   runNxSync,
   safeExecFileSync,
   safeSpawn,
