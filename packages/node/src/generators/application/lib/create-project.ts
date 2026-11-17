@@ -10,9 +10,10 @@ import {
   writeJson,
 } from '@nx/devkit';
 import {
-  addPnpmDeployOutputCacheInputs,
+  addDeployOutputCacheInputs,
   PNPM_INSTALL_SETTINGS_INPUTS,
   TS_SOLUTION_SETUP_TSCONFIG_INPUT,
+  type DeployOutputSettingsInput,
   type MatchedTargetRef,
 } from '@nx/js/internal';
 import { addTscAppBuildPlugin } from './add-tsc-build-plugin';
@@ -39,16 +40,18 @@ export function addProject(
   // The generated build target emits the pruned pnpm deploy output when
   // generatePackageJson is on; the install settings it carries are hashed by
   // no default input (see PNPM_INSTALL_SETTINGS_INPUTS).
-  const pnpmDeployInputs = tree.exists('pnpm-lock.yaml')
+  const deployInputs: readonly DeployOutputSettingsInput[] = tree.exists(
+    'pnpm-lock.yaml'
+  )
     ? PNPM_INSTALL_SETTINGS_INPUTS
     : [];
   if (options.bundler === 'esbuild') {
     addBuildTargetDefaults(tree, '@nx/esbuild:esbuild', 'build', [
       TS_SOLUTION_SETUP_TSCONFIG_INPUT,
-      ...pnpmDeployInputs,
+      ...deployInputs,
     ]);
     project.targets.build = getEsBuildConfig(tree, project, options);
-    ensurePnpmDeployInputs(tree, options, project.targets.build);
+    ensureDeployInputs(tree, options, project.targets.build, deployInputs);
   } else if (options.bundler === 'tsc') {
     options.buildTargetName = addTscAppBuildPlugin(
       tree,
@@ -106,18 +109,19 @@ export function addProject(
 }
 
 /**
- * Guarantees the pnpm deploy-settings inputs reach the generated build target
- * even when `addBuildTargetDefaults` skipped writing them because an
+ * Guarantees the deploy-settings inputs reach the generated build target even
+ * when `addBuildTargetDefaults` skipped writing them because an
  * executor-keyed `targetDefaults` entry already existed. Resolution and
  * placement follow nx's own targetDefaults matching (see
- * `addPnpmDeployOutputCacheInputs`).
+ * `addDeployOutputCacheInputs`).
  */
-function ensurePnpmDeployInputs(
+function ensureDeployInputs(
   tree: Tree,
   options: NormalizedSchema,
-  buildTarget: TargetConfiguration
+  buildTarget: TargetConfiguration,
+  deployInputs: readonly DeployOutputSettingsInput[]
 ): void {
-  if (!tree.exists('pnpm-lock.yaml')) {
+  if (deployInputs.length === 0) {
     return;
   }
   const nxJson = readNxJson(tree);
@@ -132,10 +136,11 @@ function ensurePnpmDeployInputs(
     matcherExecutor: buildTarget.executor,
     target: buildTarget,
   };
-  const changed = addPnpmDeployOutputCacheInputs(
+  const changed = addDeployOutputCacheInputs(
     ref,
     nxJson?.targetDefaults,
-    buildTarget.executor
+    buildTarget.executor,
+    deployInputs
   );
   if (changed === 'defaults') {
     updateNxJson(tree, nxJson);
