@@ -479,16 +479,33 @@ export async function convertToRspack(
     }
   }
 
-  // The dev server never calls an app() export, so servers without Angular's
-  // reqHandler keep the separate server that runs their routes.
-  if (
-    createConfigOptions.ssr &&
-    exportsAngularRequestHandler(
-      tree,
-      joinPathFragments(project.root, createConfigOptions.ssr.entry)
-    )
-  ) {
-    createConfigOptions.ssr.serveFromDevServer = true;
+  if (createConfigOptions.ssr) {
+    const replacements: Array<{ replace: string; with: string }> = [
+      createConfigOptions,
+      ...Object.values(configurationOptions),
+    ].flatMap((options) => options.fileReplacements ?? []);
+    // A configuration compiles the file that replaces the entry, so each
+    // replacement, and its own replacements, is a server entry too.
+    const serverEntries = new Set<string>([createConfigOptions.ssr.entry]);
+    for (const entry of serverEntries) {
+      for (const replacement of replacements) {
+        if (replacement.replace === entry) {
+          serverEntries.add(replacement.with);
+        }
+      }
+    }
+    // The dev server never calls an app() export, so servers without Angular's
+    // reqHandler keep the separate server that runs their routes.
+    if (
+      [...serverEntries].every((entry) =>
+        exportsAngularRequestHandler(
+          tree,
+          joinPathFragments(project.root, entry)
+        )
+      )
+    ) {
+      createConfigOptions.ssr.serveFromDevServer = true;
+    }
   }
 
   if (createConfigOptions.ssr && supportsSsrAllowedHosts(tree)) {

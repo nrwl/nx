@@ -298,9 +298,21 @@ describe('convert-to-rspack', () => {
       `${nodeHandlerImport}export let reqHandler = createNodeRequestHandler(app);`,
       false,
     ],
+    [
+      'a handler replaced by a CommonEngine server',
+      `${nodeHandlerImport}export const reqHandler = createNodeRequestHandler(app);`,
+      false,
+      `import { CommonEngine } from '@angular/ssr/node';\nexport function app() {}\nexport default bootstrap;`,
+    ],
+    [
+      'a handler replaced by another handler',
+      `${nodeHandlerImport}export const reqHandler = createNodeRequestHandler(app);`,
+      true,
+      `${nodeHandlerImport}export const reqHandler = createNodeRequestHandler(devApp);`,
+    ],
   ])(
     'should serve SSR from the dev server only for an Angular request handler: %s',
-    async (_, serverFile, servesFromDevServer) => {
+    async (_, serverFile, servesFromDevServer, replacementFile?: string) => {
       const tree = createTreeWithEmptyWorkspace();
       addProjectConfiguration(tree, 'app', {
         root: 'apps/app',
@@ -315,6 +327,18 @@ describe('convert-to-rspack', () => {
               main: 'apps/app/src/main.ts',
               tsConfig: 'apps/app/tsconfig.app.json',
             },
+            ...(replacementFile && {
+              configurations: {
+                development: {
+                  fileReplacements: [
+                    {
+                      replace: 'apps/app/src/server.ts',
+                      with: 'apps/app/src/server.dev.ts',
+                    },
+                  ],
+                },
+              },
+            }),
           },
           server: {
             executor: '@angular-devkit/build-angular:server',
@@ -324,6 +348,9 @@ describe('convert-to-rspack', () => {
       });
       writeJson(tree, 'apps/app/tsconfig.json', {});
       tree.write('apps/app/src/server.ts', serverFile);
+      if (replacementFile) {
+        tree.write('apps/app/src/server.dev.ts', replacementFile);
+      }
 
       await convertToRspack(tree, { project: 'app' });
 
