@@ -1089,9 +1089,9 @@ function processPackageForDependencies(
     dependencies.push(...depDependencies);
   }
 
-  // An import resolves a local package to its bare node, since the installed
-  // manifest's version is not the lockfile path, and an aliased package to its
-  // alias node. Both nodes carry the package's edges.
+  // An import can resolve to a local package's bare node, as the locator's
+  // last fallback, or to an aliased package's alias node, so both nodes carry
+  // the package's edges.
   const edgeSources: string[] = [];
   const bareNodeName = `npm:${sourcePackageName}`;
   if (
