@@ -26,6 +26,9 @@ vi.mock('nx/src/plugins/js/utils/resolve-relative-to-dir', () => ({
     if (pathOrPackage.startsWith('@nx/nx-win32-x64-msvc')) {
       return null;
     }
+    if (pathOrPackage === 'exports-only/package.json' || pathOrPackage === 'exports-only') {
+      return null;
+    }
     // We intentionally don't allow access to the package.json (emulating package exports)
     // return the dist/cjs/package.json file to emulate node's behavior for multi module format packages
     if (pathOrPackage === 'minimatch/package.json') {
@@ -119,6 +122,11 @@ describe('TargetProjectLocator', () => {
         './node_modules/npm-package/package.json': JSON.stringify({
           name: 'npm-package',
           version: '1.0.0',
+        }),
+        './node_modules/exports-only/package.json': JSON.stringify({
+          name: 'exports-only',
+          version: '5.0.0',
+          exports: { './*': './dist/*' },
         }),
         './node_modules/@proj/proj123-base/package.json': JSON.stringify({
           name: '@proj/proj123-base',
@@ -1051,6 +1059,11 @@ describe('TargetProjectLocator', () => {
             packageName: 'hidden-exports-pkg',
           },
         },
+        'npm:exports-only@5.0.0': {
+          type: 'npm',
+          name: 'npm:exports-only@5.0.0',
+          data: { version: '5.0.0', packageName: 'exports-only' },
+        },
         'npm:@hidden-exports/linked@5.0.0': {
           type: 'npm',
           name: 'npm:@hidden-exports/linked@5.0.0',
@@ -1268,6 +1281,12 @@ describe('TargetProjectLocator', () => {
         'libs/proj/index.ts'
       );
       expect(linked).toEqual('npm:@hidden-exports/linked@5.0.0');
+    });
+
+    it('should resolve a versioned package when exports block both Node resolution paths', () => {
+      expect(
+        targetProjectLocator.findProjectFromImport('exports-only', 'libs/proj/index.ts')
+      ).toEqual('npm:exports-only@5.0.0');
     });
   });
 
