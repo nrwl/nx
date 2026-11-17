@@ -88,7 +88,9 @@ function canSkipMaven(
     !Array.isArray(options.goals) ||
     options.goals.length > 0 ||
     options.args?.length ||
-    options.__unparsed__?.length
+    options.__unparsed__?.length ||
+    // MAVEN_ARGS can add goals.
+    process.env.MAVEN_ARGS?.trim()
   ) {
     return false;
   }
