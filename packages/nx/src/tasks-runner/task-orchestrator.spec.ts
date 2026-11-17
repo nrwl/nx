@@ -244,7 +244,10 @@ describe('TaskOrchestrator', () => {
 
       expect(orchestrator.runBatch).not.toHaveBeenCalled();
       expect(orchestrator.postRunSteps).not.toHaveBeenCalled();
-      expect(results).toEqual([]);
+      expect(results.map((r) => [r.task.id, r.status]).sort()).toEqual([
+        ['consumer:build', 'skipped'],
+        ['dep:build', 'skipped'],
+      ]);
     });
 
     it('should not re-hash tasks whose deps were all cache hits', async () => {
@@ -334,6 +337,7 @@ describe('TaskOrchestrator', () => {
         uncacheableCache?: false | undefined;
         failed?: string[];
         bail?: boolean;
+        skipDependents?: boolean;
       }
     ) {
       const tasks = Object.fromEntries(
@@ -388,6 +392,23 @@ describe('TaskOrchestrator', () => {
           }
         );
       }
+      if (opts.skipDependents) {
+        // What completeTasks does to a failed task's dependents.
+        const postRunSteps = orchestrator.postRunSteps;
+        orchestrator.postRunSteps = vi.fn(
+          async (results: TaskResult[], ...rest) => {
+            await postRunSteps(results, ...rest);
+            for (const { task, status } of results) {
+              if (status !== 'failure') continue;
+              for (const [id, ids] of Object.entries(deps)) {
+                if (ids.includes(task.id)) {
+                  orchestrator.completedTasks.set(id, 'skipped');
+                }
+              }
+            }
+          }
+        );
+      }
 
       const results: TaskResult[] = await orchestrator.applyFromCacheOrRunBatch(
         true,
@@ -420,6 +441,7 @@ describe('TaskOrchestrator', () => {
           .sort(([a], [b]) => a - b)
           .map(([, step]) => step),
         resultIds: results.map((r) => r.task.id),
+        statuses: Object.fromEntries(results.map((r) => [r.task.id, r.status])),
       };
     }
 
@@ -491,6 +513,24 @@ describe('TaskOrchestrator', () => {
 
       expect(lookups).toEqual([['dep:install']]);
       expect(runs).toEqual([['dep:install']]);
+    });
+
+    it('should return a result for a held-back task skipped by its failed dependency', async () => {
+      const { runs, statuses } = await runBatch(
+        { 'dep:install': [], 'reader:build': ['dep:install'] },
+        {
+          deferred: ['reader:build'],
+          uncacheable: ['dep:install'],
+          failed: ['dep:install'],
+          skipDependents: true,
+        }
+      );
+
+      expect(runs).toEqual([['dep:install']]);
+      expect(statuses).toEqual({
+        'dep:install': 'failure',
+        'reader:build': 'skipped',
+      });
     });
 
     it('should run a deferred task behind both a cache miss and a non-cacheable task in the first wave', async () => {
