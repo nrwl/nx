@@ -128,7 +128,11 @@ describe('Maven Executor', () => {
       context.root = root;
       project = context.projectGraph.nodes['test-project'].data;
       project.root = 'libs/test-project';
-      project.tags = ['maven:jar'];
+      project.tags = ['maven:com.example', 'maven:jar'];
+      project.metadata = {
+        mavenProject: 'com.example:app',
+        groupId: 'com.example',
+      } as ProjectConfiguration['metadata'];
       project.targets = {
         build: {
           executor: '@nx/maven:maven',
@@ -138,9 +142,11 @@ describe('Maven Executor', () => {
       };
       vi.mocked(runCommandsExecutor).mockClear();
       vi.mocked(safeExecFileSync).mockClear();
+      vi.spyOn(console, 'log').mockImplementation(() => {});
     });
 
     afterEach(() => {
+      vi.mocked(console.log).mockRestore();
       rmSync(root, { recursive: true, force: true });
       if (originalMavenArgs === undefined) {
         delete process.env.MAVEN_ARGS;
@@ -155,6 +161,18 @@ describe('Maven Executor', () => {
       });
       expect(runCommandsExecutor).not.toHaveBeenCalled();
       expect(safeExecFileSync).not.toHaveBeenCalled();
+      // The rule lines are Maven 3.9.11's and 4.0.0-rc-5's output for this module.
+      expect(console.log).toHaveBeenCalledWith(
+        [
+          '[INFO] --------------------------< com.example:app >---------------------------',
+          '[INFO] Skipped Maven for test-project:build',
+          '[INFO]   from libs/test-project/pom.xml',
+          '[INFO] --------------------------------[ jar ]---------------------------------',
+          '[INFO] This target has no goals to run.',
+          "[INFO] The module's build state is already in libs/test-project/target/nx-build-state.json.",
+          '[INFO] ------------------------------------------------------------------------',
+        ].join('\n')
+      );
     });
 
     it.each<[string, MavenExecutorSchema, () => void]>([
@@ -206,6 +224,7 @@ describe('Maven Executor', () => {
       await mavenExecutor(options, context);
 
       expect(runCommandsExecutor).toHaveBeenCalledTimes(1);
+      expect(console.log).not.toHaveBeenCalled();
     });
   });
 });
