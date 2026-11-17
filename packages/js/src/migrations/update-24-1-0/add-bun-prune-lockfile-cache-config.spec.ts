@@ -75,28 +75,32 @@ describe('add-bun-prune-lockfile-cache-config migration', () => {
   });
 
   it.each([
-    ['the binary bun.lockb', '{workspaceRoot}/dist/apps/app1/bun.lockb'],
-    ['another package manager', '{workspaceRoot}/dist/apps/app1/yarn.lock'],
-  ])(
-    'leaves a target whose lockfile is %s alone',
-    async (_, lockfileOutput) => {
-      addProjectConfiguration(tree, 'app1', {
-        root: 'apps/app1',
-        targets: {
-          'prune-lockfile': {
-            executor: '@nx/js:prune-lockfile',
-            outputs: [lockfileOutput],
-          },
+    ['the binary bun.lockb', ['{workspaceRoot}/dist/apps/app1/bun.lockb']],
+    ['another package manager', ['{workspaceRoot}/dist/apps/app1/yarn.lock']],
+    [
+      'excluded from its outputs',
+      [
+        '{workspaceRoot}/dist/apps/app1',
+        '!{workspaceRoot}/dist/apps/app1/bun.lock',
+      ],
+    ],
+  ])('leaves a target whose lockfile is %s alone', async (_, outputs) => {
+    addProjectConfiguration(tree, 'app1', {
+      root: 'apps/app1',
+      targets: {
+        'prune-lockfile': {
+          executor: '@nx/js:prune-lockfile',
+          outputs: [...outputs],
         },
-      });
+      },
+    });
 
-      await update(tree);
+    await update(tree);
 
-      const target = readProjectConfiguration(tree, 'app1').targets[
-        'prune-lockfile'
-      ];
-      expect(target.outputs).toEqual([lockfileOutput]);
-      expect(target.inputs).toBeUndefined();
-    }
-  );
+    const target = readProjectConfiguration(tree, 'app1').targets[
+      'prune-lockfile'
+    ];
+    expect(target.outputs).toEqual(outputs);
+    expect(target.inputs).toBeUndefined();
+  });
 });
