@@ -310,9 +310,22 @@ describe('convert-to-rspack', () => {
       true,
       `${nodeHandlerImport}export const reqHandler = createNodeRequestHandler(devApp);`,
     ],
+    [
+      'a handler replaced through another spelling of its path',
+      `${nodeHandlerImport}export const reqHandler = createNodeRequestHandler(app);`,
+      false,
+      `import { CommonEngine } from '@angular/ssr/node';\nexport function app() {}\nexport default bootstrap;`,
+      'apps/app/src/./server.ts',
+    ],
   ])(
     'should serve SSR from the dev server only for an Angular request handler: %s',
-    async (_, serverFile, servesFromDevServer, replacementFile?: string) => {
+    async (
+      _,
+      serverFile,
+      servesFromDevServer,
+      replacementFile?: string,
+      replacedPath = 'apps/app/src/server.ts'
+    ) => {
       const tree = createTreeWithEmptyWorkspace();
       addProjectConfiguration(tree, 'app', {
         root: 'apps/app',
@@ -332,7 +345,7 @@ describe('convert-to-rspack', () => {
                 development: {
                   fileReplacements: [
                     {
-                      replace: 'apps/app/src/server.ts',
+                      replace: replacedPath,
                       with: 'apps/app/src/server.dev.ts',
                     },
                   ],

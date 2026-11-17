@@ -480,13 +480,24 @@ export async function convertToRspack(
   }
 
   if (createConfigOptions.ssr) {
-    const replacements: Array<{ replace: string; with: string }> = [
+    const replacements = [
       createConfigOptions,
       ...Object.values(configurationOptions),
-    ].flatMap((options) => options.fileReplacements ?? []);
+    ]
+      .flatMap(
+        (options): Array<{ replace: string; with: string }> =>
+          options.fileReplacements ?? []
+      )
+      .map((replacement) => ({
+        replace: joinPathFragments(project.root, replacement.replace),
+        with: joinPathFragments(project.root, replacement.with),
+      }));
     // A configuration compiles the file that replaces the entry, so each
-    // replacement, and its own replacements, is a server entry too.
-    const serverEntries = new Set<string>([createConfigOptions.ssr.entry]);
+    // replacement, and its own replacements, is a server entry too. Paths are
+    // compared normalized, as angular-rspack resolves them before aliasing.
+    const serverEntries = new Set([
+      joinPathFragments(project.root, createConfigOptions.ssr.entry),
+    ]);
     for (const entry of serverEntries) {
       for (const replacement of replacements) {
         if (replacement.replace === entry) {
@@ -498,10 +509,7 @@ export async function convertToRspack(
     // reqHandler keep the separate server that runs their routes.
     if (
       [...serverEntries].every((entry) =>
-        exportsAngularRequestHandler(
-          tree,
-          joinPathFragments(project.root, entry)
-        )
+        exportsAngularRequestHandler(tree, entry)
       )
     ) {
       createConfigOptions.ssr.serveFromDevServer = true;
