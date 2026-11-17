@@ -10,14 +10,19 @@ import { loadRootEnvFiles } from '../utils/dotenv';
 import { CompositeLifeCycle, LifeCycle, TaskResult } from './life-cycle';
 import { TaskOrchestrator } from './task-orchestrator';
 import { createTaskHasher } from '../hasher/create-task-hasher';
+import {
+  getTaskDetails,
+  hashTasksThatDoNotDependOnOutputsOfOtherTasks,
+} from '../hasher/hash-task';
 import type { UltracacheConfigurations } from '../native';
 import type { ProjectGraph } from '../config/project-graph';
 import { daemonClient } from '../daemon/client/client';
 import { RunningTask } from './running-tasks/running-task';
 import { SharedRunningTask } from './running-tasks/shared-running-task';
 import { TaskResultsLifeCycle } from './life-cycles/task-results-life-cycle';
+import { pruneToSelectedTasks } from './utils';
 
-function createOrchestrator(
+async function createOrchestrator(
   tasks: Task[],
   projectGraph: ProjectGraph,
   fullTaskGraph: TaskGraph,
@@ -44,20 +49,19 @@ function createOrchestrator(
 
   const { runnerOptions: options } = getRunner({}, nxJson);
 
+  // A dependency outside the call has already run, or is running if continuous,
+  // so the call's task graph keeps only the edges between its own tasks.
+  const { roots, dependencies, continuousDependencies } = pruneToSelectedTasks(
+    fullTaskGraph,
+    tasks.map((task) => task.id)
+  );
+
   const taskGraph: TaskGraph = {
-    roots: tasks.map((task) => task.id),
-    tasks: tasks.reduce((acc, task) => {
-      acc[task.id] = task;
-      return acc;
-    }, {} as any),
-    dependencies: tasks.reduce((acc, task) => {
-      acc[task.id] = [];
-      return acc;
-    }, {} as any),
-    continuousDependencies: tasks.reduce((acc, task) => {
-      acc[task.id] = [];
-      return acc;
-    }, {} as any),
+    roots,
+    // The caller's own tasks: it reads each hash off the task it passed in
+    tasks: Object.fromEntries(tasks.map((task) => [task.id, task])),
+    dependencies,
+    continuousDependencies,
   };
 
   const hasher = createTaskHasher(
@@ -72,7 +76,25 @@ function createOrchestrator(
     parallel: tasks.length,
     lifeCycle: compositedLifeCycle,
   };
+  // Before hashing: task envs load .env files only once NX_LOAD_DOT_ENV_FILES is set
   setEnvVarsBasedOnArgs(nxArgs, true);
+
+  // A task that reads the outputs of a task in the same call hashes after that
+  // task has run. Tasks that do not depend on each other hash as before.
+  const tasksDependOnEachOther = Object.values(dependencies).some(
+    (edges) => edges.length > 0
+  );
+  const hashingDeferredTaskIds = tasksDependOnEachOther
+    ? await hashTasksThatDoNotDependOnOutputsOfOtherTasks(
+        hasher,
+        projectGraph,
+        fullTaskGraph,
+        nxJson,
+        getTaskDetails(),
+        ultracacheConfigurations,
+        tasks
+      )
+    : undefined;
 
   return new TaskOrchestrator(
     hasher,
@@ -89,7 +111,8 @@ function createOrchestrator(
     // `outputStyle` does not reach them; it merges under its own name.
     nxArgs.specifiedOutputStyle,
     nxArgs.resolvedOutputStyle ?? 'static-failures-only',
-    fullTaskGraph
+    fullTaskGraph,
+    hashingDeferredTaskIds
   );
 }
 
@@ -144,7 +167,9 @@ export async function runDiscreteTasks(
   /** The set to hash from, e.g. from `importUltracacheConfigurations`; omitted hashes natively. */
   ultracacheConfigurations?: UltracacheConfigurations
 ): Promise<Array<Promise<TaskResult[]>>> {
-  const orchestrator = createOrchestrator(
+  // Only a batch runs its tasks in dependency order. A task outside a batch
+  // starts now, so callers pass dependent tasks only when they batch together.
+  const orchestrator = await createOrchestrator(
     tasks,
     projectGraph,
     fullTaskGraph,
@@ -228,7 +253,7 @@ export async function runContinuousTasks(
   /** The set to hash from, e.g. from `importUltracacheConfigurations`; omitted hashes natively. */
   ultracacheConfigurations?: UltracacheConfigurations
 ) {
-  const orchestrator = createOrchestrator(
+  const orchestrator = await createOrchestrator(
     tasks,
     projectGraph,
     fullTaskGraph,
