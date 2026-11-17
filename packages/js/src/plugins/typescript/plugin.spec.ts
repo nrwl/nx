@@ -50,8 +50,8 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
 
   afterEach(() => {
     vi.resetModules();
-    tempFs.cleanup();
     process.chdir(cwd);
+    tempFs.cleanup();
     process.env.NX_CACHE_PROJECT_GRAPH = originalCacheProjectGraph;
     rmSync('tmp/project-graph-cache', { recursive: true, force: true });
   });

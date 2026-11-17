@@ -64,9 +64,9 @@ describe('@nx/cypress/plugin', () => {
   afterEach(() => {
     vi.resetModules();
     resetCjsMocks();
+    process.chdir(cwd);
     tempFs.cleanup();
     tempFs = null;
-    process.chdir(cwd);
     process.env.NX_CACHE_PROJECT_GRAPH = originalCacheProjectGraph;
   });
 
