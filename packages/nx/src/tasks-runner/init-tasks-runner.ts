@@ -49,8 +49,8 @@ async function createOrchestrator(
 
   const { runnerOptions: options } = getRunner({}, nxJson);
 
-  // A dependency outside the call has already completed, so the call's task
-  // graph keeps only the edges between its own tasks.
+  // A dependency outside the call has already run, or is running if continuous,
+  // so the call's task graph keeps only the edges between its own tasks.
   const { roots, dependencies, continuousDependencies } = pruneToSelectedTasks(
     fullTaskGraph,
     tasks.map((task) => task.id)

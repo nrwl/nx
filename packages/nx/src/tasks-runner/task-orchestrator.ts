@@ -2292,7 +2292,7 @@ export class TaskOrchestrator {
         continue;
       }
       // A producer in this task graph is held by dispatch and settled by its
-      // probe or row poll; one outside it (an agent's flat graph) has only its row
+      // probe or row poll; one outside it (on an agent, another call's) has only its row
       if (this.taskGraph.tasks[producerId]) {
         await this.readinessOf(producerId).promise;
       } else {
@@ -2441,7 +2441,7 @@ export class TaskOrchestrator {
     state.reject(e);
   }
 
-  // On an agent the waiter runs in another process with its own flat graph
+  // On an agent the waiter may run in another process, outside this task graph
   private hasReadyWaiter(producerId: string): boolean {
     return Object.values(this.fullTaskGraph.tasks).some((task) =>
       getReadyProducerIds(task, this.fullTaskGraph).includes(producerId)

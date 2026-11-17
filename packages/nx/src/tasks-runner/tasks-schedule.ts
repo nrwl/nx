@@ -24,8 +24,8 @@ export interface Batch {
 }
 
 export interface TasksScheduleHooks {
-  // Readiness of a producer outside this schedule's task graph (an Nx Cloud
-  // agent worker runs one task with a flat graph): null when it has no row
+  // Readiness of a producer outside this schedule's task graph (on an Nx Cloud
+  // agent, one from another call): null when it has no row
   readinessElsewhere?: (producerId: string) => TaskReadiness | null;
   onReadinessHold?: (producerId: string) => void;
 }
@@ -44,7 +44,7 @@ export class TasksSchedule {
   private pendingStart = new Set<string>();
   private completedTasks = new Set<string>();
   private readiness = new Map<string, 'ready' | 'failed'>();
-  // Read from the full graph: an agent worker's own graph has no edges
+  // Read from the full graph: an agent's own graph lacks edges outside its call
   private probedProducers = getReadyDependencies(
     this.fullTaskGraph,
     this.projectGraph
