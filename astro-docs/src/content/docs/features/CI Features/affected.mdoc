@@ -203,6 +203,30 @@ Nx provides two methods to exclude glob patterns (files and folders) from `nx af
 By default, a change to your package manager's lock file affects every task.
 To limit it to the tasks of projects whose resolved dependencies changed, set [`projectsAffectedByDependencyUpdates`](/docs/reference/nx-json#projectsaffectedbydependencyupdates) to `"auto"` in `nx.json`.
 
+## Reduce affected fan-out for JavaScript and TypeScript projects
+
+If your workspace uses `@nx/js` source analysis, you can also enable dependency narrowing to reduce affected fan-out from source-level imports.
+
+```json
+// nx.json
+{
+  "pluginsConfig": {
+    "@nx/js": {
+      "dependencyNarrowing": {
+        "affectedNarrowing": true
+      }
+    }
+  }
+}
+```
+
+This is different from `projectsAffectedByDependencyUpdates`.
+
+- `projectsAffectedByDependencyUpdates` controls what happens when the lock file changes.
+- `dependencyNarrowing.affectedNarrowing` makes `nx affected` more precise for JavaScript and TypeScript source changes.
+
+See [Narrow project graph dependencies](/docs/technologies/typescript/guides/dependency-narrowing) for the full workflow.
+
 ## Not using git
 
 If you aren't using Git, you can pass `--files` to any affected command to indicate what files have been changed.
