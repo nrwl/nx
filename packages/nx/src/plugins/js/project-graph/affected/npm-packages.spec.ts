@@ -920,4 +920,220 @@ describe('getTouchedNpmPackages', () => {
     );
     expect(result).toEqual(['proj1', 'proj2']);
   });
+
+  describe('pnpm-workspace.yaml overrides', () => {
+    it('should mark the overridden package as affected for a workspace yaml override edit', () => {
+      const basePnpmWorkspace = { overrides: { 'happy-nrwl': '1.0.0' } };
+      const headPnpmWorkspace = { overrides: { 'happy-nrwl': '2.0.0' } };
+
+      const result = getTouchedNpmPackages(
+        [
+          {
+            file: 'pnpm-workspace.yaml',
+            getChanges: () => jsonDiff(basePnpmWorkspace, headPnpmWorkspace),
+          },
+        ],
+        projectsConfigurations,
+        nxJson,
+        {},
+        projectGraph
+      );
+
+      expect(result).toEqual(['npm:happy-nrwl']);
+    });
+
+    it('should resolve parent-scoped workspace overrides against the pnpm selector syntax', () => {
+      projectGraph.externalNodes['npm:parent-nrwl'] = {
+        name: 'npm:parent-nrwl',
+        type: 'npm',
+        data: {
+          packageName: 'parent-nrwl',
+          version: '2',
+        },
+      };
+
+      const result = getTouchedNpmPackages(
+        [
+          {
+            file: 'pnpm-workspace.yaml',
+            getChanges: () =>
+              jsonDiff(
+                {},
+                {
+                  overrides: {
+                    'parent-nrwl@>1.0.0>happy-nrwl@>=1.0.0': '2.0.0',
+                  },
+                }
+              ),
+          },
+        ],
+        projectsConfigurations,
+        nxJson,
+        {},
+        projectGraph
+      );
+
+      expect(result).toEqual(['npm:happy-nrwl']);
+    });
+
+    it('should also recognize the pnpm-workspace.yml filename', () => {
+      const result = getTouchedNpmPackages(
+        [
+          {
+            file: 'pnpm-workspace.yml',
+            getChanges: () =>
+              jsonDiff({}, { overrides: { 'happy-nrwl': '2.0.0' } }),
+          },
+        ],
+        projectsConfigurations,
+        nxJson,
+        {},
+        projectGraph
+      );
+
+      expect(result).toEqual(['npm:happy-nrwl']);
+    });
+
+    it('should ignore catalog-only workspace yaml edits', () => {
+      const result = getTouchedNpmPackages(
+        [
+          {
+            file: 'pnpm-workspace.yaml',
+            getChanges: () =>
+              jsonDiff(
+                { catalog: { 'happy-nrwl': '1.0.0' } },
+                { catalog: { 'happy-nrwl': '2.0.0' } }
+              ),
+          },
+        ],
+        projectsConfigurations,
+        nxJson,
+        {},
+        projectGraph
+      );
+
+      expect(result).toEqual([]);
+    });
+
+    it('should combine package.json and workspace yaml override changes', () => {
+      projectGraph.externalNodes['npm:awesome-nrwl'] = {
+        name: 'npm:awesome-nrwl',
+        type: 'npm',
+        data: {
+          packageName: 'awesome-nrwl',
+          version: '1',
+        },
+      };
+
+      const result = getTouchedNpmPackages(
+        [
+          {
+            file: 'package.json',
+            getChanges: () =>
+              jsonDiff({}, { pnpm: { overrides: { 'happy-nrwl': '2.0.0' } } }),
+          },
+          {
+            file: 'pnpm-workspace.yaml',
+            getChanges: () =>
+              jsonDiff({}, { overrides: { 'awesome-nrwl': '1.1.0' } }),
+          },
+        ],
+        projectsConfigurations,
+        nxJson,
+        {},
+        projectGraph
+      );
+
+      expect(result).toEqual(
+        expect.arrayContaining(['npm:happy-nrwl', 'npm:awesome-nrwl'])
+      );
+    });
+
+    it('should mark all projects as affected when a workspace override targets an unknown package', () => {
+      const result = getTouchedNpmPackages(
+        [
+          {
+            file: 'pnpm-workspace.yaml',
+            getChanges: () =>
+              jsonDiff({}, { overrides: { 'some-unknown-package': '1.0.0' } }),
+          },
+        ],
+        projectsConfigurations,
+        nxJson,
+        {},
+        projectGraph
+      );
+
+      expect(result).toEqual(['proj1', 'proj2']);
+    });
+
+    it('should mark all projects as affected on an unparseable workspace yaml', () => {
+      const result = getTouchedNpmPackages(
+        [
+          {
+            file: 'pnpm-workspace.yaml',
+            getChanges: () => [new WholeFileChange()],
+          },
+        ],
+        projectsConfigurations,
+        nxJson,
+        {},
+        projectGraph
+      );
+
+      expect(result).toEqual(['proj1', 'proj2']);
+    });
+
+    it('should mark all projects as affected when the overrides map is replaced with a non-object', () => {
+      const result = getTouchedNpmPackages(
+        [
+          {
+            file: 'pnpm-workspace.yaml',
+            getChanges: () => jsonDiff({}, { overrides: null }),
+          },
+        ],
+        projectsConfigurations,
+        nxJson,
+        {},
+        projectGraph
+      );
+
+      expect(result).toEqual(['proj1', 'proj2']);
+    });
+
+    it('should not mutate the cached package.json changes when combining with workspace overrides', () => {
+      const rootChanges = jsonDiff(
+        {},
+        { pnpm: { overrides: { 'happy-nrwl': '2.0.0' } } }
+      );
+      const originalRootChanges = [...rootChanges];
+
+      const files = [
+        {
+          file: 'package.json',
+          getChanges: () => rootChanges,
+        },
+        {
+          file: 'pnpm-workspace.yaml',
+          getChanges: () =>
+            jsonDiff({}, { overrides: { '@types/happy-nrwl': '2.0.0' } }),
+        },
+      ];
+
+      for (let attempt = 0; attempt < 2; attempt++) {
+        const result = getTouchedNpmPackages(
+          files,
+          projectsConfigurations,
+          nxJson,
+          {},
+          projectGraph
+        );
+        expect(result).toEqual(
+          expect.arrayContaining(['npm:happy-nrwl', 'npm:@types/happy-nrwl'])
+        );
+      }
+
+      expect(rootChanges).toEqual(originalRootChanges);
+    });
+  });
 });

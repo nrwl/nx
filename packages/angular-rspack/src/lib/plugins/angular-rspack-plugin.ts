@@ -1,6 +1,5 @@
 import {
   augmentAppWithServiceWorker,
-  type BudgetCalculatorResult,
   checkBudgets,
   ThresholdSeverity,
 } from '@angular/build/private';
@@ -90,7 +89,8 @@ export class AngularRspackPlugin implements RspackPluginInstance {
   #_options: NormalizedAngularRspackPluginOptions;
   #i18n: I18nOptions | undefined;
   #sourceFileCache: SourceFileCache;
-  #javascriptTransformer: JavaScriptTransformerAdapter;
+  #persistentCachePath: string | undefined;
+  #javascriptTransformer?: JavaScriptTransformerAdapter;
   // This will be defined in the apply method correctly
   #angularCompilation: AngularCompilation;
   #collectedStylesheetAssets: Array<{ path: string; text: string }> = [];
@@ -116,28 +116,37 @@ export class AngularRspackPlugin implements RspackPluginInstance {
   ) {
     this.#_options = options;
     this.#i18n = i18nOptions;
-    const persistentCachePath = getPersistentCachePath(options);
-    this.#sourceFileCache = new SourceFileCache(persistentCachePath);
-    if (persistentCachePath) {
-      this.#javascriptTransformerCache =
-        createJavascriptTransformerCache(persistentCachePath);
+    this.#persistentCachePath = getPersistentCachePath(options);
+    this.#sourceFileCache = new SourceFileCache(this.#persistentCachePath);
+  }
+
+  // Created on first use: its worker pool would otherwise start whenever the
+  // config loads, including when the project graph reads it.
+  #getJavascriptTransformer(): JavaScriptTransformerAdapter {
+    if (!this.#javascriptTransformer) {
+      if (this.#persistentCachePath) {
+        this.#javascriptTransformerCache = createJavascriptTransformerCache(
+          this.#persistentCachePath
+        );
+      }
+      this.#javascriptTransformer = createJavaScriptTransformer(
+        {
+          /**
+           * Matches https://github.com/angular/angular-cli/blob/33ed6e875e509ebbaa0cbdb57be9e932f9915dff/packages/angular/build/src/tools/esbuild/angular/compiler-plugin.ts#L89
+           * where pluginOptions.sourcemap is set https://github.com/angular/angular-cli/blob/61d98fde122468978de9b17bd79761befdbf2fac/packages/angular/build/src/tools/esbuild/compiler-plugin-options.ts#L34
+           */
+          sourcemap: !!(
+            this.#_options.sourceMap.scripts &&
+            (this.#_options.sourceMap.hidden ? 'external' : true)
+          ),
+          thirdPartySourcemaps: this.#_options.sourceMap.vendor,
+          advancedOptimizations: this.#_options.advancedOptimizations,
+          jit: !this.#_options.aot,
+        },
+        this.#javascriptTransformerCache?.cache
+      );
     }
-    this.#javascriptTransformer = createJavaScriptTransformer(
-      {
-        /**
-         * Matches https://github.com/angular/angular-cli/blob/33ed6e875e509ebbaa0cbdb57be9e932f9915dff/packages/angular/build/src/tools/esbuild/angular/compiler-plugin.ts#L89
-         * where pluginOptions.sourcemap is set https://github.com/angular/angular-cli/blob/61d98fde122468978de9b17bd79761befdbf2fac/packages/angular/build/src/tools/esbuild/compiler-plugin-options.ts#L34
-         */
-        sourcemap: !!(
-          this.#_options.sourceMap.scripts &&
-          (this.#_options.sourceMap.hidden ? 'external' : true)
-        ),
-        thirdPartySourcemaps: this.#_options.sourceMap.vendor,
-        advancedOptimizations: this.#_options.advancedOptimizations,
-        jit: !this.#_options.aot,
-      },
-      this.#javascriptTransformerCache?.cache
-    );
+    return this.#javascriptTransformer;
   }
 
   apply(compiler: Compiler) {
@@ -164,11 +173,16 @@ export class AngularRspackPlugin implements RspackPluginInstance {
     let currentWatchingModifiedFiles = new Set<string>();
     let watchRunInitialized = false;
 
-    // Register compilation hook once - adds modified files to dependencies
     compiler.hooks.compilation.tap(PLUGIN_NAME + '_fileDeps', (compilation) => {
       currentWatchingModifiedFiles.forEach((file) => {
         compilation.fileDependencies.add(file);
       });
+      if (this.#_options.hasServer) {
+        // Server-only sources must invalidate the browser-owned Angular compilation.
+        for (const file of this.#sourceFileCache.referencedFiles ?? []) {
+          compilation.fileDependencies.add(normalize(file));
+        }
+      }
     });
 
     compiler.hooks.watchRun.tapAsync(
@@ -343,6 +357,7 @@ export class AngularRspackPlugin implements RspackPluginInstance {
               name: PLUGIN_NAME,
               message: error.text || '',
               file: error.location?.file,
+              ...toRspackLocation(error.location),
               stack: error.text,
             });
           }
@@ -351,6 +366,7 @@ export class AngularRspackPlugin implements RspackPluginInstance {
               name: PLUGIN_NAME,
               message: warning.text || '',
               file: warning.location?.file,
+              ...toRspackLocation(warning.location),
               stack: warning.text,
             });
           }
@@ -463,7 +479,7 @@ export class AngularRspackPlugin implements RspackPluginInstance {
             // Best-effort cleanup that must never fail the compiler teardown.
           }
         };
-        await closeSafely(() => this.#javascriptTransformer.close());
+        await closeSafely(() => this.#javascriptTransformer?.close());
         await closeSafely(() => this.#javascriptTransformerCache?.close());
         // Terminates the worker of a worker-based compilation, which would
         // otherwise keep the process alive.
@@ -626,7 +642,7 @@ export class AngularRspackPlugin implements RspackPluginInstance {
   #exposeLoaderState(compiler: Compiler) {
     compiler.hooks.compilation.tap(PLUGIN_NAME, (compilation) => {
       (compilation as NgRspackCompilation)[NG_RSPACK_SYMBOL_NAME] = () => ({
-        javascriptTransformer: this.#javascriptTransformer,
+        javascriptTransformer: this.#getJavascriptTransformer(),
         typescriptFileCache: this.#sourceFileCache.typeScriptFileCache,
         babelFileCache: this.#sourceFileCache.babelFileCache,
         useTypeScriptTranspilation: this.#useTypeScriptTranspilation,
@@ -674,6 +690,7 @@ export class AngularRspackPlugin implements RspackPluginInstance {
           sass: this.#_options.stylePreprocessorOptions?.sass,
           watch,
           sourceMap: this.#_options.sourceMap.scripts,
+          minifyStyles: this.#_options.optimization.styles.minify,
           preserveSymlinks: this.#_options.preserveSymlinks,
           // '...' splices rspack's default conditions back in; the rest are
           // the bundler's custom conditions the program must match.
@@ -738,7 +755,7 @@ export class AngularRspackPlugin implements RspackPluginInstance {
       await buildAndAnalyze(
         this.#angularCompilation,
         this.#sourceFileCache.typeScriptFileCache,
-        this.#javascriptTransformer
+        this.#getJavascriptTransformer()
       );
     } catch (error) {
       this.#emitError = `Angular compilation emit failed.\n${formatError(
@@ -770,6 +787,18 @@ export class AngularRspackPlugin implements RspackPluginInstance {
     }
     this.#stylesheetMetafileInputs = flattened;
   }
+}
+
+function toRspackLocation(
+  location: { line?: number; column?: number } | null | undefined
+): { loc?: { start: { line: number; column?: number } } } {
+  if (location?.line === undefined) {
+    return {};
+  }
+  // Angular's columns are 0-based, rspack's `loc` columns are 1-based.
+  const column =
+    location.column === undefined ? undefined : location.column + 1;
+  return { loc: { start: { line: location.line, column } } };
 }
 
 function formatError(error: unknown): string {

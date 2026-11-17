@@ -41,6 +41,7 @@ export interface SetupCompilationOptions {
   sass?: Sass;
   watch?: boolean;
   sourceMap?: boolean;
+  minifyStyles?: boolean;
   preserveSymlinks?: boolean;
   customConditions?: string[];
 }
@@ -194,7 +195,7 @@ export async function setupCompilation(
   COMPONENT_STYLESHEET_BUNDLER ??= new ComponentStylesheetBundler(
     {
       workspaceRoot: options.root,
-      optimization: config.mode === 'production',
+      optimization: options.minifyStyles ?? config.mode === 'production',
       cacheOptions: { path: '', basePath: '', enabled: false },
       inlineFonts: false,
       outputNames: {

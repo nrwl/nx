@@ -510,24 +510,24 @@ With the expanded syntax, you also have a third option available to configure ho
     "build": {
       // forward params passed to this target to the dependency targets
       "dependsOn": [
-        { "projects": "{dependencies}", "target": "build", "params": "forward" }
+        { "dependencies": true, "target": "build", "params": "forward" }
       ]
     },
     "test": {
       // ignore params passed to this target, won't be forwarded to the dependency targets
       "dependsOn": [
-        { "projects": "{dependencies}", "target": "build", "params": "ignore" }
+        { "dependencies": true, "target": "build", "params": "ignore" }
       ]
     },
     "lint": {
       // ignore params passed to this target, won't be forwarded to the dependency targets
-      "dependsOn": [{ "projects": "{dependencies}", "target": "build" }]
+      "dependsOn": [{ "dependencies": true, "target": "build" }]
     }
   }
 }
 ```
 
-This also works for a target of the same project. Leave out `projects`:
+This also works for a target of the same project. Leave out `dependencies`:
 
 ```json
 {
@@ -658,7 +658,11 @@ Then set `waitFor` to `ready` on the `dependsOn` entry of each task that should 
   A 404 at the root path is retried at `/index.html`.
   Certificates are verified, except for a loopback address such as `127.0.0.1`, and for `localhost` or a `*.localhost` name whose every address is loopback,
   where a self-signed development certificate works.
+  Nx trusts the certificates in the operating system's store and in the file that `NODE_EXTRA_CA_CERTS` names.
+  `SSL_CERT_FILE` or `SSL_CERT_DIR` replaces the operating system's store.
   Proxy environment variables such as `HTTP_PROXY` and `NO_PROXY` apply to other hosts.
+  A `NO_PROXY` entry is `*` for every host, a domain that also covers its subdomains (`example.com` or `.example.com`), `*.example.com` for the subdomains only, an IP address, or a CIDR range such as `10.0.0.0/8`.
+  Any entry except a CIDR range can end in a port, such as `staging.internal:8080` or `[fd00::1]:8080`, to match only that port.
   A loopback request is never proxied.
   A `0.0.0.0` host connects to `127.0.0.1`, and `[::]` connects to `[::1]`, so both count as loopback.
 - `port`: ready when a TCP connection to the port succeeds.
@@ -742,6 +746,7 @@ These report it once the server listens:
 - The `@nx/nuxt/ready-signal` Nuxt module, which reports only once `nuxt dev` has built the app and stops answering 503.
 - The Metro reporter that the inferred React Native `start` task passes to `react-native start`.
 - The `@nx/web:file-server` executor.
+- The `@nx/js:verdaccio` executor, which reports once its registry listens.
 - Any other executor or Angular builder that returns a successful result with a `baseUrl`, such as `@angular/build:dev-server`.
   Nx reports that `baseUrl` for it, with a `0.0.0.0` or `[::]` host replaced by `localhost`.
 
@@ -768,6 +773,9 @@ The `@nx/web` migration therefore also adds that target to the file server targe
 A `signal` check only passes on the report, so use it for a target whose server runs one of those plugins or calls `emitReadySignal` itself.
 The webpack, Rspack, Vite, and Rsbuild plugins infer it only when the config loads one of those plugins, and a check that reads the config at task time otherwise.
 The Nuxt plugin infers it on the dev server task only when the config loads the Nuxt module.
+The React Router plugin infers it on `react-router dev` when `@nx/vite` is installed
+at the workspace root and the Vite config includes `nxReadySignal()` with no `apply`
+condition or with `apply: 'serve'`.
 The `@nx/web:file-server` targets that the webpack, Rspack, Vite, Nuxt, and Storybook plugins infer, such as `serve-static`, always use it.
 
 The plugins below infer a `command` check on their server targets instead.
@@ -781,7 +789,7 @@ It runs when the task runs, with the task's environment and options, and waits f
   The check finds the port and host the way `nuxt dev` does.
   It then waits until the server answers with any status other than 503, which `nuxt dev` answers until it serves the app.
 - `@nx/react/router-plugin`: the `react-router-serve` target.
-  The `react-router dev` target gets the Vite check, if `@nx/vite` is installed at the workspace root.
+  The `react-router dev` target gets the Vite check when `@nx/vite` is installed at the workspace root and signal support isn't detected.
 - `@nx/storybook/plugin`: the `storybook dev` target.
   It waits only when a port is set, through `--port`, `SBCONFIG_PORT`, or `PORT`.
   Without one, Storybook picks a free port, and the target counts as ready once it has started.
@@ -838,7 +846,7 @@ Set `mode` to choose how a target participates:
 | `error` | yes        | fails the CI run          | no                    |
 | `off`   | no         | no                        | no                    |
 
-The modes apply when your workspace has Ultracache turned on in Nx Cloud.
+The modes apply when your workspace has Ultracache turned on in Nx Cloud, or when a CI pipeline turns it on with [`NX_CLOUD_ULTRACACHE_MODE=on`](/docs/features/ci-features/remote-cache#try-ultracache-on-one-branch-or-workflow).
 
 `on` is the default.
 Use `warn` on a target whose inputs depend on dynamic behavior or external state: Nx keeps watching it and tells you what it touched, but hashes it from what it declared.
@@ -897,7 +905,7 @@ The first path segment cannot contain `*`, so `**/generated/**` is not supported
 {% aside type="note" title="Nx Cloud only" %}
 Nothing outside Nx Cloud records or applies IO, so every mode behaves as `off` without it.
 Applying a recording needs a recording for the task in question, which [Ultracache](/docs/features/ci-features/remote-cache#ultracache) makes when the task runs on Workers. Nx 24 and later apply it in CI by default ([Ultracache and Nx versions](/docs/kb/ultracache-nx-versions)).
-Setting [`NX_CLOUD_USE_ULTRACACHE`](/docs/reference/environment-variables) to `false` turns it off for a run.
+Setting [`NX_CLOUD_ULTRACACHE_MODE`](/docs/reference/environment-variables) to `off` turns it off for a CI pipeline.
 {% /aside %}
 
 A target that defines `ultracache` replaces the inherited settings rather than adding to it. Use the [spread token](#spread-token) to merge instead, either at the object level to keep inherited keys, or inside `ignoreReads` and `ignoreWrites` to keep inherited patterns.
@@ -918,12 +926,12 @@ A target that defines `ultracache` replaces the inherited settings rather than a
 A key written after the spread token overrides the inherited value. For example, `"ultracache": { "...": true, "collectStats": false }` keeps the other inherited settings and turns off successful stat collection, even if the inherited `collectStats` is `true`.
 
 {% aside type="note" title="Workspace-wide exclusions live elsewhere" %}
-`ultracache` applies to one target. To exclude paths across every task in the workspace, use `.nx/workflows/ultracache-config.yaml`. See [improve cache inputs and outputs](/docs/kb/improve-cache-inputs-outputs). The two combine: a task is checked against its own `ultracache` patterns and the workspace-wide ones together, so neither overrides the other.
+`ultracache` applies to one target. To exclude paths across every task in the workspace, use the [`ultracache` section](/docs/reference/nx-cloud/ci-config#ultracache) of `.nx/pipelines/ci.yaml`. See [improve cache inputs and outputs](/docs/kb/improve-cache-inputs-outputs). The two combine: a task is checked against its own `ultracache` patterns and the workspace-wide ones together, so neither overrides the other.
 {% /aside %}
 
 ### Sync generators
 
-In the same way that `dependsOn` tells Nx to run another task before running this task, the `syncGenerator` property tells Nx to run a generator to ensure that your files are in the correct state before this task is run. [Sync generators](/docs/concepts/sync-generators) are especially useful for keeping configuration files up to date with the project graph.
+In the same way that `dependsOn` tells Nx to run another task before running this task, the `syncGenerators` property tells Nx to run a generator to ensure that your files are in the correct state before this task is run. [Sync generators](/docs/concepts/sync-generators) are especially useful for keeping configuration files up to date with the project graph.
 
 ```json
 {

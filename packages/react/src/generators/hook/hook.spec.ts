@@ -136,7 +136,9 @@ describe('hook', () => {
         skipTests: true,
       });
 
-      expect(appTree.exists('/my-lib/src/hooks/use-hello/use-hello.ts'));
+      expect(
+        appTree.exists('/my-lib/src/hooks/use-hello/use-hello.ts')
+      ).toBeTruthy();
     });
 
     it('should create with nested directories', async () => {
@@ -148,7 +150,7 @@ describe('hook', () => {
 
       expect(
         appTree.exists('/my-lib/src/lib/foo/use-hello-world/use-hello-world.ts')
-      );
+      ).toBeTruthy();
     });
   });
 });

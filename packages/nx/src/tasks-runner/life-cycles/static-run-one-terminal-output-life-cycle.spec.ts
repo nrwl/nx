@@ -182,7 +182,8 @@ describe('StaticRunOneTerminalOutputLifeCycle', () => {
 
   describe('endCommand', () => {
     it('summarizes tasks that never ran as a count on success', () => {
-      const neverRan = makeTask('never-ran');
+      // A continuous task nothing needed is never started
+      const neverRan = { ...makeTask('never-ran'), continuous: true };
       const lifeCycle = createLifeCycle({}, [initiating, neverRan]);
 
       lifeCycle.endTasks([taskResult(initiating, 'success')]);
@@ -213,8 +214,22 @@ describe('StaticRunOneTerminalOutputLifeCycle', () => {
       expect(result).not.toContain('Failed tasks:');
     });
 
-    it('lists the names of tasks that never ran under --verbose', () => {
+    it('does not claim success when a discrete task never ran', () => {
+      // A batch worker that stops before reaching a task reports it skipped
       const neverRan = makeTask('never-ran');
+      const lifeCycle = createLifeCycle({}, [initiating, neverRan]);
+
+      lifeCycle.endTasks([taskResult(initiating, 'success')]);
+
+      const result = captureOutput(() => lifeCycle.endCommand());
+
+      expect(result).not.toContain('Successfully ran');
+      expect(result).toContain('did not complete');
+      expect(result).toContain('never-ran:build');
+    });
+
+    it('lists the names of tasks that never ran under --verbose', () => {
+      const neverRan = { ...makeTask('never-ran'), continuous: true };
       const lifeCycle = createLifeCycle({ verbose: true }, [
         initiating,
         neverRan,

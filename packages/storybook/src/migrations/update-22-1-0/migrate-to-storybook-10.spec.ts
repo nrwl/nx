@@ -1,5 +1,5 @@
 import type { MockInstance } from 'vitest';
-import { Tree, readJson, writeJson } from '@nx/devkit';
+import { Tree, writeJson } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import * as utilities from '../../utils/utilities';
 import * as migrate10Generator from '../../generators/migrate-10/migrate-10';

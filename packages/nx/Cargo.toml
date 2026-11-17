@@ -54,7 +54,7 @@ swc_ecma_lexer = "44.0.2"
 swc_ecma_ast = "29.0.2"
 sysinfo = "0.39.1"
 rand = "0.9.0"
-tar = "0.4.44"
+tar = "0.4.46"
 terminal-colorsaurus = "0.4.0"
 thiserror = "1.0.40"
 tracing = { version = "0.1.37", features = ["log"] }
@@ -125,6 +125,12 @@ reqwest = { version = "0.12.22", default-features = false, features = [
   # getenv(), which segfaults when another thread mutates `environ`
   # (process.env writes from JS). See telemetry/service.rs.
   "hickory-dns",
+] }
+# reqwest already builds it with ring; the default provider, aws-lc-rs, would
+# add a C build
+rustls = { version = "0.23", default-features = false, features = [
+  "ring",
+  "std",
 ] }
 rusqlite = { version = "0.32.1", features = ["bundled", "array", "vtab"] }
 notify = "=9.0.0-rc.5"

@@ -99,9 +99,17 @@ due to missing "sourceRoot" in the dependencies' project configuration
       `);
     }
 
-    return dirsToUse.map((sourceDir) =>
-      resolve(workspaceRoot, joinPathFragments(sourceDir, fileGlobPattern))
-    );
+    // A dependency whose sourceRoot is its project root would otherwise scan its
+    // node_modules, where pnpm workspace symlinks fan out across the repo.
+    return [
+      ...dirsToUse.map((sourceDir) =>
+        resolve(workspaceRoot, joinPathFragments(sourceDir, fileGlobPattern))
+      ),
+      ...dirsToUse.map(
+        (sourceDir) =>
+          `!${resolve(workspaceRoot, joinPathFragments(sourceDir, '**/node_modules/**'))}`
+      ),
+    ];
   } catch (e) {
     throw new Error(
       `createGlobPatternsForDependencies: Error when generating globs.\n${e?.message}`

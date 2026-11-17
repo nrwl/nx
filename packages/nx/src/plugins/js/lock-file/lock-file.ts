@@ -41,11 +41,16 @@ import {
 import { workspaceRoot } from '../../../utils/workspace-root';
 import { getWorkspacePackagesFromGraph } from '../utils/get-workspace-packages-from-graph';
 import {
-  BUN_LOCK_FILE,
-  BUN_TEXT_LOCK_FILE,
   getBunTextLockfileDependencies,
   getBunTextLockfileNodes,
 } from './bun-parser';
+import {
+  BUN_LOCK_FILE,
+  BUN_TEXT_LOCK_FILE,
+  NPM_LOCK_FILE,
+  PNPM_LOCK_FILE,
+  YARN_LOCK_FILE,
+} from './lock-file-names';
 import {
   getNpmLockfileDependencies,
   getNpmLockfileNodes,
@@ -64,18 +69,9 @@ import {
   stringifyYarnLockfile,
 } from './yarn-parser';
 
-const YARN_LOCK_FILE = 'yarn.lock';
-const NPM_LOCK_FILE = 'package-lock.json';
-const PNPM_LOCK_FILE = 'pnpm-lock.yaml';
-const PNPM_LOCK_FILE_LEGACY = 'pnpm-lock.yml';
+export { LOCKFILES } from './lock-file-names';
 
-export const LOCKFILES = [
-  YARN_LOCK_FILE,
-  NPM_LOCK_FILE,
-  PNPM_LOCK_FILE,
-  BUN_LOCK_FILE,
-  BUN_TEXT_LOCK_FILE,
-];
+const PNPM_LOCK_FILE_LEGACY = 'pnpm-lock.yml';
 
 export const AUTO_AFFECTED_LOCK_FILES = [
   YARN_LOCK_FILE,
@@ -94,6 +90,10 @@ const BUN_TEXT_LOCK_PATH = join(workspaceRoot, BUN_TEXT_LOCK_FILE);
 
 /**
  * Parses the lockfile into external nodes, plus the keyMap that getLockFileDependencies reads.
+ * `localPathSources` lists the workspace-relative sources of the nodes installed
+ * from the local file tree, whose contents the node hashes do not cover.
+ * `installedLocalPathNodes` names the local-path node each importer installs
+ * per dependency name, keyed by the importer's path ('.' for the root).
  */
 export function getLockFileNodes(
   packageManager: PackageManager,
@@ -104,6 +104,8 @@ export function getLockFileNodes(
 ): {
   nodes: Record<string, ProjectGraphExternalNode>;
   keyMap: Map<string, any>;
+  localPathSources?: Record<string, string[]>;
+  installedLocalPathNodes: Record<string, Record<string, string>>;
 } {
   try {
     const packageJson =
@@ -137,16 +139,22 @@ export function getLockFileNodesForName(
 ): {
   nodes: Record<string, ProjectGraphExternalNode>;
   keyMap: Map<string, any>;
+  localPathSources?: Record<string, string[]>;
+  installedLocalPathNodes: Record<string, Record<string, string>>;
 } {
   if (lockFile === YARN_LOCK_FILE || lockFile === BUN_LOCK_FILE) {
     // yarn-parser only reads optional fields plus an unused `name` for the
     // synthetic root workspace node, which is identical across base/head and
     // therefore irrelevant for affected diffing.
-    return getYarnLockfileNodes(
-      contents,
-      lockFileHash,
-      packageJson ?? ({} as PackageJson)
-    );
+    return {
+      ...getYarnLockfileNodes(
+        contents,
+        lockFileHash,
+        packageJson ?? ({} as PackageJson)
+      ),
+      // No record for Yarn or bun.lockb; imports resolve by version and name
+      installedLocalPathNodes: {},
+    };
   }
   if (lockFile === PNPM_LOCK_FILE || lockFile === PNPM_LOCK_FILE_LEGACY) {
     return getPnpmLockfileNodes(contents, lockFileHash);
@@ -156,7 +164,7 @@ export function getLockFileNodesForName(
   }
   if (lockFile === BUN_TEXT_LOCK_FILE) {
     const nodes = getBunTextLockfileNodes(contents, lockFileHash);
-    return { nodes, keyMap: new Map() };
+    return { nodes, keyMap: new Map(), installedLocalPathNodes: {} };
   }
   throw new Error(`Unknown lock file: ${lockFile}`);
 }

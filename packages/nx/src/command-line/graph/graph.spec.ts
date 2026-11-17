@@ -1,13 +1,20 @@
 import type { Mock } from 'vitest';
+import * as http from 'node:http';
+import type { Server } from 'node:net';
 import type { FileData } from '../../config/project-graph';
 import { expandFilesInput, HashPlanner } from '../../native';
-import { createProjectGraphAsync } from '../../project-graph/project-graph';
+import {
+  createProjectGraphAndSourceMapsAsync,
+  createProjectGraphAsync,
+} from '../../project-graph/project-graph';
 import { createTaskGraph } from '../../tasks-runner/create-task-graph';
 import { allFileData } from '../../utils/all-file-data';
 import {
   getExpandedTaskInputs,
+  isSameOriginLocalRequest,
   ProjectGraphClientResponse,
   selectedFor,
+  startServer,
   taskGraphForSelection,
 } from './graph';
 import type { TaskGraph } from '../../config/task-graph';
@@ -35,6 +42,10 @@ vi.mock('../../config/configuration', () => ({
 }));
 vi.mock('../../tasks-runner/create-task-graph', () => ({
   createTaskGraph: vi.fn(),
+}));
+vi.mock('../../ultracache/ci-status', () => ({
+  isUltracacheOnInCI: vi.fn(async () => false),
+  ultracacheModeInCI: vi.fn(),
 }));
 vi.mock('../../utils/all-file-data', () => ({
   allFileData: vi.fn(),
@@ -400,5 +411,220 @@ describe('taskGraphForSelection', () => {
 
   it('draws the whole graph without a selection', () => {
     expect(taskGraphForSelection(() => built)).toBe(built);
+  });
+});
+
+describe('graph server', () => {
+  let app: Server;
+  let url: URL;
+
+  beforeAll(async () => {
+    (createProjectGraphAndSourceMapsAsync as Mock).mockResolvedValue({
+      projectGraph: {
+        nodes: {
+          proj: {
+            name: 'proj',
+            type: 'lib',
+            data: { root: 'libs/proj', targets: {} },
+          },
+        },
+        dependencies: { proj: [] },
+      },
+      sourceMaps: {},
+    });
+    ({ app, url } = await startServer(
+      '<html></html>',
+      'window.environment = "release";',
+      '127.0.0.1',
+      0,
+      false
+    ));
+  });
+
+  afterAll(async () => {
+    await new Promise((res) => app.close(res));
+  });
+
+  const request = (path: string, headers: Record<string, string> = {}) =>
+    new Promise<number>((resolve, reject) => {
+      http
+        .get(
+          {
+            host: url.hostname,
+            port: url.port,
+            path,
+            headers: { host: url.host, ...headers },
+          },
+          (res) => {
+            res.resume();
+            resolve(res.statusCode);
+          }
+        )
+        .on('error', reject);
+    });
+
+  it('serves the bare printed URL and same-origin requests', async () => {
+    expect(await request('/')).toBe(200);
+    expect(await request('/environment.js')).toBe(200);
+    expect(await request('/project-graph.json')).toBe(200);
+    expect(
+      await request('/project-graph.json', {
+        'sec-fetch-site': 'same-origin',
+        origin: url.origin,
+      })
+    ).toBe(200);
+    expect(await request('/', { 'sec-fetch-site': 'none' })).toBe(200);
+  });
+
+  it.each(['localhost', '[::1]'])(
+    'serves the %s loopback name on its own port',
+    async (name) => {
+      expect(
+        await request('/project-graph.json', { host: `${name}:${url.port}` })
+      ).toBe(200);
+    }
+  );
+
+  it.each([
+    'other.example',
+    'other.example:PORT',
+    '127.0.0.1',
+    'localhost:1',
+    '192.168.1.20:PORT',
+  ])('refuses the host header %s', async (host) => {
+    expect(
+      await request('/project-graph.json', {
+        host: host.replace('PORT', url.port),
+      })
+    ).toBe(403);
+  });
+
+  it.each(['/environment.js', '/help?project=proj&target=build'])(
+    'refuses cross-site requests for %s',
+    async (path) => {
+      expect(await request(path, { 'sec-fetch-site': 'cross-site' })).toBe(403);
+      expect(await request(path, { 'sec-fetch-site': 'same-site' })).toBe(403);
+      expect(await request(path, { origin: 'http://other.example' })).toBe(403);
+      expect(await request(path, { origin: 'null' })).toBe(403);
+    }
+  );
+});
+
+describe('graph server bound to every interface', () => {
+  let app: Server;
+  let port: string;
+
+  beforeAll(async () => {
+    (createProjectGraphAndSourceMapsAsync as Mock).mockResolvedValue({
+      projectGraph: { nodes: {}, dependencies: {} },
+      sourceMaps: {},
+    });
+    let url: URL;
+    ({ app, url } = await startServer('', '', '0.0.0.0', 0, false));
+    port = url.port;
+  });
+
+  afterAll(async () => {
+    await new Promise((res) => app.close(res));
+  });
+
+  const request = (host: string) =>
+    new Promise<number>((resolve, reject) => {
+      http
+        .get(
+          { host: '127.0.0.1', port, path: '/currentHash', headers: { host } },
+          (res) => {
+            res.resume();
+            resolve(res.statusCode);
+          }
+        )
+        .on('error', reject);
+    });
+
+  it.each(['192.168.1.20', '[fe80::1]', 'localhost'])(
+    'serves the interface address %s',
+    async (name) => {
+      expect(await request(`${name}:${port}`)).toBe(200);
+    }
+  );
+
+  it.each(['rebind.example:PORT', '192.168.1.20:1'])(
+    'refuses the host header %s',
+    async (host) => {
+      expect(await request(host.replace('PORT', port))).toBe(403);
+    }
+  );
+});
+
+describe('isSameOriginLocalRequest', () => {
+  const allows = (
+    headers: Record<string, string>,
+    localPort: number,
+    host = '127.0.0.1'
+  ) => isSameOriginLocalRequest({ headers, socket: { localPort } }, host);
+
+  it('treats a host header without a port as port 80', () => {
+    expect(allows({ host: '127.0.0.1' }, 80)).toBe(true);
+    expect(allows({ host: 'localhost:80' }, 80)).toBe(true);
+    expect(
+      allows(
+        {
+          host: 'localhost',
+          origin: 'http://localhost',
+          'sec-fetch-site': 'same-origin',
+        },
+        80
+      )
+    ).toBe(true);
+    expect(allows({ host: 'localhost' }, 4211)).toBe(false);
+  });
+
+  it('refuses host headers that are not a bare authority', () => {
+    expect(allows({ host: 'evil.example@localhost:4211' }, 4211)).toBe(false);
+    expect(allows({ host: 'localhost:4211/x' }, 4211)).toBe(false);
+  });
+});
+
+describe('startServer', () => {
+  let app: Server;
+  let url: URL;
+
+  function get(path: string): Promise<number> {
+    return new Promise((resolve, reject) => {
+      http
+        .get(
+          { host: url.hostname, port: url.port, path, timeout: 5000 },
+          (res) => {
+            res.resume();
+            res.on('end', () => resolve(res.statusCode));
+          }
+        )
+        .on('timeout', function () {
+          this.destroy(new Error(`${path} timed out`));
+        })
+        .on('error', reject);
+    });
+  }
+
+  beforeEach(async () => {
+    (createProjectGraphAndSourceMapsAsync as Mock).mockResolvedValue({
+      projectGraph: { nodes: {}, dependencies: {} },
+      sourceMaps: {},
+    });
+    ({ app, url } = await startServer('', '', '127.0.0.1', 0, false));
+  });
+
+  afterEach(async () => {
+    await new Promise((resolve) => app.close(resolve));
+  });
+
+  it('rejects a task-inputs request without a taskId', async () => {
+    expect(await get('/task-inputs.json')).toBe(400);
+    expect(await get('/currentHash')).toBe(200);
+  });
+
+  it('keeps serving after a request it cannot handle', async () => {
+    expect(await get('//')).toBe(500);
+    expect(await get('/currentHash')).toBe(200);
   });
 });

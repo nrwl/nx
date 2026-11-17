@@ -4,7 +4,7 @@ import {
   loadConfigFile,
 } from '@nx/devkit/internal';
 import type { PlaywrightTestConfig } from '@playwright/test';
-import { fork } from 'node:child_process';
+import { fork, type ForkOptions } from 'node:child_process';
 import { cpus } from 'node:os';
 import { dirname, join } from 'node:path';
 import {
@@ -419,11 +419,17 @@ function forkChildEval(
     // `playwright test` from the project root: a NODE_OPTIONS loader runs at
     // process start and resolves a relative path from there, whichever
     // directory nx was invoked from.
-    const child = fork(workerScriptPath, [configFilePath, workspaceRoot], {
+    const options: ForkOptions & { windowsHide: boolean } = {
       cwd: join(workspaceRoot, dirname(configFilePath)),
       env,
       stdio: ['ignore', 'ignore', 'pipe', 'ipc'],
-    });
+      windowsHide: true,
+    };
+    const child = fork(
+      workerScriptPath,
+      [configFilePath, workspaceRoot],
+      options
+    );
     let stderr = '';
     child.stderr?.on('data', (chunk: Buffer) => {
       if (stderr.length < MAX_STDERR) {

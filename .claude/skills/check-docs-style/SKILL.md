@@ -99,12 +99,25 @@ Common cases where suppression is appropriate:
 
 Do NOT suppress rules just to avoid fixing real violations.
 
+## Phase 3: Persona check
+
+For each changed page, pick the persona or personas who read it, using the home section and journey
+in `astro-docs/personas/` (`bob-beginner.md`, `casey-cloud-curious.md`, `priya-platform.md`, `dana-decision-maker.md`). Read the added and
+removed text as that persona and flag anything that breaks a rule in its "What makes ... content
+different" section. Scope is the local changes, or the PR diff when given a PR.
+
+This phase is advisory. Report the corrections and let the author choose, even in a session that
+auto-fixes everything else, because moving content between pages is an editorial call.
+
 ## Output summary
 
 After fixing, report what you did:
 
 ```
 ## Style check results
+
+### Personas: [personas matched]
+[One line per flag: persona, file:line, rule broken, correction. Or "Flags: none"]
 
 ### Information architecture: [PASS/FAIL]
 [List any violations or confirm all six principles pass]

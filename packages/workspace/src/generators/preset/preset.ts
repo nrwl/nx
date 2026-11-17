@@ -1,4 +1,4 @@
-import { installPackagesTask, logger, names, Tree } from '@nx/devkit';
+import { installPackagesTask, logger, Tree } from '@nx/devkit';
 import { Schema } from './schema';
 import { Preset } from '../utils/presets';
 import { join } from 'path';

@@ -1,8 +1,15 @@
 import { isAbsolute, join, relative, resolve } from 'path';
-import { existsSync, promises as fsp } from 'node:fs';
+import { existsSync, realpathSync } from 'node:fs';
 import * as pc from 'picocolors';
-import { cloneFromUpstream, GitRepository } from '../../utils/git-utils';
-import { stat, mkdir, rm } from 'node:fs/promises';
+import {
+  cloneFromUpstream,
+  getGitRootPath,
+  getGitRootRelativePath,
+  GitRepository,
+  getGitRepositoryStatus,
+  isCloneableGitRepository,
+} from '../../utils/git-utils';
+import { mkdtemp, stat, rm } from 'node:fs/promises';
 import { tmpdir } from 'tmp';
 import { selectPrompt, textPrompt } from '../../utils/prompt-helpers';
 import { output } from '../../utils/output';
@@ -12,6 +19,7 @@ import { readNxJson } from '../../config/nx-json';
 import { readJsonFile } from '../../utils/fileutils';
 import { PackageJson } from '../../utils/package-json';
 import { workspaceRoot } from '../../utils/workspace-root';
+import { redactUrlCredentials } from '../../utils/redact-url-credentials';
 import {
   addPackagePathToWorkspaces,
   detectPackageManager,
@@ -25,7 +33,10 @@ import { resetWorkspaceContext } from '../../utils/workspace-context';
 import { runInstall } from '../init/implementation/utils';
 import { getBaseRef } from '../../utils/command-line-utils';
 import { prepareSourceRepo } from './utils/prepare-source-repo';
-import { mergeRemoteSource } from './utils/merge-remote-source';
+import {
+  createTemporaryRemote,
+  mergeRemoteSource,
+} from './utils/merge-remote-source';
 import { minimatch } from 'minimatch';
 import {
   configurePlugins,
@@ -46,8 +57,7 @@ import {
   buildImportNeedsOptionsResult,
   buildImportNeedsPluginSelectionResult,
   buildImportSuccessResult,
-  buildImportErrorResult,
-  determineImportErrorCode,
+  NxImportError,
   type ImportWarning,
 } from './utils/ai-output';
 
@@ -80,6 +90,29 @@ export interface ImportOptions {
   plugins?: string; // 'skip' | 'all' | comma-separated list
 }
 
+function createDestinationGitClient(): GitRepository {
+  const cwd = process.cwd();
+  if (getGitRepositoryStatus(cwd) === 'not-git') {
+    throw new NxImportError(
+      `${cwd} is not a git repository. Nx imports code by merging its git history, so run "git init", commit your files and try again.`,
+      'NOT_A_GIT_REPOSITORY'
+    );
+  }
+  return new GitRepository(cwd);
+}
+
+function getSourceNotAGitRepositoryMessage(sourceDirectory: string): string {
+  const message = `${sourceDirectory} is not a git repository. Nx imports code along with its git history, so the source must be a git repository.`;
+  // git reports the repository by its real path, so the directory is resolved
+  // too; otherwise a symlinked source yields a path that is not inside it.
+  const realSourceDirectory = realpathSync(sourceDirectory);
+  const pathInEnclosingRepo = getGitRootRelativePath(realSourceDirectory);
+  if (pathInEnclosingRepo) {
+    return `${message}\nIt is a directory inside the git repository at ${getGitRootPath(realSourceDirectory)}. Import that repository instead and select the directory ${pathInEnclosingRepo} with the --source option.`;
+  }
+  return `${message}\nRun "git init" in ${sourceDirectory}, commit the files and try again.`;
+}
+
 export async function importHandler(options: ImportOptions) {
   process.env.NX_RUNNING_NX_IMPORT = 'true';
   let { sourceRepository, ref, source, destination, verbose } = options;
@@ -96,7 +129,10 @@ export async function importHandler(options: ImportOptions) {
 
     if (missingFields.length > 0) {
       writeAiOutput(
-        buildImportNeedsOptionsResult(missingFields, sourceRepository)
+        buildImportNeedsOptionsResult(
+          missingFields,
+          sourceRepository && redactUrlCredentials(sourceRepository)
+        )
       );
       process.exit(0);
     }
@@ -104,7 +140,7 @@ export async function importHandler(options: ImportOptions) {
     // Check if this is a plugin-only call (second step of two-step flow)
     if (destination && options.plugins) {
       const absDestAi = join(process.cwd(), destination);
-      const destGitClient = new GitRepository(process.cwd());
+      const destGitClient = createDestinationGitClient();
       const destFiles = await destGitClient.getGitFiles(absDestAi);
       if (destFiles.length > 0) {
         // Destination not empty + --plugins provided + AI mode = plugin-only mode
@@ -112,7 +148,7 @@ export async function importHandler(options: ImportOptions) {
       }
     }
   }
-  const destinationGitClient = new GitRepository(process.cwd());
+  const destinationGitClient = createDestinationGitClient();
 
   if (await destinationGitClient.hasUncommittedChanges()) {
     throw new Error(
@@ -135,8 +171,6 @@ export async function importHandler(options: ImportOptions) {
     });
   }
 
-  const tempImportDirectory = join(tmpdir, 'nx-import');
-
   if (!sourceRepository) {
     sourceRepository = await textPrompt({
       message:
@@ -145,32 +179,31 @@ export async function importHandler(options: ImportOptions) {
     });
   }
 
+  let sourceIsLocalDirectory = false;
   try {
     const maybeLocalDirectory = await stat(sourceRepository);
     if (maybeLocalDirectory.isDirectory()) {
       sourceRepository = resolve(sourceRepository);
+      sourceIsLocalDirectory = true;
     }
   } catch (e) {
     // It's a remote url
   }
+  const displayRepository = redactUrlCredentials(sourceRepository);
 
+  const tempImportDirectory = await mkdtemp(join(tmpdir, 'nx-import-'));
   const sourceTempRepoPath = join(tempImportDirectory, 'repo');
   let spinner: any;
   if (aiMode) {
     logProgress(
       'cloning',
-      `Cloning ${sourceRepository} into ${sourceTempRepoPath}...`
+      `Cloning ${displayRepository} into ${sourceTempRepoPath}...`
     );
   } else {
     spinner = createSpinner(
-      `Cloning ${sourceRepository} into a temporary directory: ${sourceTempRepoPath} (Use --depth to limit commit history and speed up clone times)`
+      `Cloning ${displayRepository} into a temporary directory: ${sourceTempRepoPath} (Use --depth to limit commit history and speed up clone times)`
     ).start();
   }
-  try {
-    await rm(tempImportDirectory, { recursive: true });
-  } catch {}
-  await mkdir(tempImportDirectory, { recursive: true });
-
   let sourceGitClient: GitRepository;
   try {
     sourceGitClient = await cloneFromUpstream(
@@ -184,12 +217,21 @@ export async function importHandler(options: ImportOptions) {
   } catch (e) {
     if (!aiMode) {
       spinner.fail(
-        `Failed to clone ${sourceRepository} into ${sourceTempRepoPath}`
+        `Failed to clone ${displayRepository} into ${sourceTempRepoPath}`
       );
     }
-    let errorMessage = `Failed to clone ${sourceRepository} into ${sourceTempRepoPath}. Please double check the remote and try again.\n${e.message}`;
-
-    throw new Error(errorMessage);
+    if (
+      sourceIsLocalDirectory &&
+      !(await isCloneableGitRepository(sourceRepository))
+    ) {
+      throw new NxImportError(
+        getSourceNotAGitRepositoryMessage(sourceRepository),
+        'NOT_A_GIT_REPOSITORY'
+      );
+    }
+    throw new Error(
+      `Failed to clone ${displayRepository} into ${sourceTempRepoPath}. Please double check the remote and try again.\n${redactUrlCredentials(e.message)}`
+    );
   }
   if (!aiMode) {
     spinner.succeed(`Cloned into ${sourceTempRepoPath}`);
@@ -251,14 +293,14 @@ export async function importHandler(options: ImportOptions) {
   await sourceGitClient.addFetchRemote(importRemoteName, ref);
   await sourceGitClient.fetch(importRemoteName, ref);
   if (!aiMode) {
-    spinner.succeed(`Fetched ${ref} from ${sourceRepository}`);
+    spinner.succeed(`Fetched ${ref} from ${displayRepository}`);
     spinner.start(
       `Checking out a temporary branch, ${tempImportBranch} based on ${ref}`
     );
   }
   await sourceGitClient.checkout(tempImportBranch, {
     new: true,
-    base: `${importRemoteName}/${ref}`,
+    base: `refs/remotes/${importRemoteName}/${ref}`,
   });
 
   if (!aiMode) {
@@ -269,7 +311,7 @@ export async function importHandler(options: ImportOptions) {
     await stat(absSource);
   } catch (e) {
     throw new Error(
-      `The source directory ${source} does not exist in ${sourceRepository}. Please double check to make sure it exists.`
+      `The source directory ${source} does not exist in ${displayRepository}. Please double check to make sure it exists.`
     );
   }
 
@@ -289,7 +331,7 @@ export async function importHandler(options: ImportOptions) {
     source,
     relativeDestination,
     tempImportBranch,
-    sourceRepository
+    displayRepository
   );
 
   await createTemporaryRemote(
@@ -303,7 +345,7 @@ export async function importHandler(options: ImportOptions) {
   }
   await mergeRemoteSource(
     destinationGitClient,
-    sourceRepository,
+    displayRepository,
     tempImportBranch,
     destination,
     importRemoteName,
@@ -466,7 +508,7 @@ export async function importHandler(options: ImportOptions) {
     output.log({
       title: `Check root dependencies`,
       bodyLines: [
-        `"dependencies" and "devDependencies" are not imported from the source repository (${sourceRepository}).`,
+        `"dependencies" and "devDependencies" are not imported from the source repository (${displayRepository}).`,
         `You may need to add some of those dependencies to this workspace in order to run tasks successfully.`,
       ],
     });
@@ -493,7 +535,7 @@ export async function importHandler(options: ImportOptions) {
             name,
             reason: getPluginReason(name),
           })),
-          sourceRepository,
+          sourceRepository: displayRepository,
           ref,
           source: source || '.',
           destination,
@@ -533,7 +575,7 @@ export async function importHandler(options: ImportOptions) {
 
       writeAiOutput(
         buildImportSuccessResult({
-          sourceRepository,
+          sourceRepository: displayRepository,
           ref,
           source: source || '.',
           destination,
@@ -622,7 +664,7 @@ async function handlePluginOnlyMode(
 
   writeAiOutput(
     buildImportSuccessResult({
-      sourceRepository: options.sourceRepository,
+      sourceRepository: redactUrlCredentials(options.sourceRepository),
       ref: options.ref,
       source: options.source || '.',
       destination: options.destination,
@@ -633,18 +675,6 @@ async function handlePluginOnlyMode(
 
 function getTempImportBranch(sourceBranch: string) {
   return `__nx_tmp_import__/${sourceBranch}`;
-}
-
-async function createTemporaryRemote(
-  destinationGitClient: GitRepository,
-  sourceRemoteUrl: string,
-  remoteName: string
-) {
-  try {
-    await destinationGitClient.deleteGitRemote(remoteName);
-  } catch {}
-  await destinationGitClient.addGitRemote(remoteName, sourceRemoteUrl);
-  await destinationGitClient.fetch(remoteName);
 }
 
 /**

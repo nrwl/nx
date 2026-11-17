@@ -1,3 +1,4 @@
+import { dirname } from 'node:path/posix';
 import { DependencyType } from '../../../../config/project-graph';
 import { defaultFileRead } from '../../../../project-graph/file-utils';
 import type { CreateDependenciesContext } from '../../../../project-graph/plugins';
@@ -73,22 +74,36 @@ function processPackageJson(
         return;
       }
 
-      const externalNodeName = targetProjectLocator.findNpmProjectFromImport(
-        packageName,
-        packageJsonPath
-      );
+      const externalNodeName =
+        targetProjectLocator.findInstalledLocalPathNpmProject(
+          packageName,
+          dirname(packageJsonPath)
+        ) ??
+        targetProjectLocator.findNpmProjectFromImport(
+          packageName,
+          packageJsonPath
+        );
       if (!externalNodeName) {
         return;
       }
 
-      const dependency: RawProjectGraphDependency = {
-        source: sourceProject,
-        target: externalNodeName,
-        sourceFile: packageJsonPath,
-        type: DependencyType.static,
-      };
-      validateDependency(dependency, ctx);
-      collectedDeps.push(dependency);
+      const linkedProject = targetProjectLocator.findLinkedProject(
+        externalNodeName,
+        packageName,
+        packageJsonPath
+      );
+      for (const target of linkedProject
+        ? [linkedProject, externalNodeName]
+        : [externalNodeName]) {
+        const dependency: RawProjectGraphDependency = {
+          source: sourceProject,
+          target,
+          sourceFile: packageJsonPath,
+          type: DependencyType.static,
+        };
+        validateDependency(dependency, ctx);
+        collectedDeps.push(dependency);
+      }
     });
   } catch (e) {
     if (process.env.NX_VERBOSE_LOGGING === 'true') {

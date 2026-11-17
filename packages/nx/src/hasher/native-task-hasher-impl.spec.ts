@@ -1575,6 +1575,26 @@ describe('native task hasher', () => {
     expect(reused.details).toEqual(planned.details);
   });
 
+  it('plans from a graph without task results', async () => {
+    const { taskGraph, impl } = await upfrontFixture();
+    const child = taskGraph.tasks['child:compile'];
+    child.hash = 'hash';
+    child.hashDetails = {
+      command: '',
+      nodes: {},
+      implicitDeps: {},
+      runtime: {},
+    };
+    const getPlans = vi.spyOn(impl.planner, 'getPlansReference');
+
+    await impl.hashTask(taskGraph.tasks['parent:compile'], taskGraph, {});
+
+    const planned = getPlans.mock.calls[0][1].tasks['child:compile'];
+    expect(planned).not.toHaveProperty('hash');
+    expect(planned).not.toHaveProperty('hashDetails');
+    expect(child.hash).toEqual('hash');
+  });
+
   // The entry digest covers the writes, not the reads, because a read
   // reaches the hash as the file group it becomes. That is only true while
   // every read-driven difference has another carrier, so assert it directly
@@ -1669,6 +1689,66 @@ describe('native task hasher', () => {
 
     expect(hash.inputs.files).toContain('libs/parent/doc.md');
     expect(hash.inputs.files).not.toContain('libs/parent/README.md');
+  });
+
+  it('hashes new compound suffixes despite a learned simple-extension exclusion', async () => {
+    await tempFs.createFiles({ '.gitignore': 'libs/child/excluded/\n' });
+    const { taskGraph, impl } = await upfrontFixture();
+    await tempFs.createFiles({ 'libs/child/excluded/cat.ts': 'unread' });
+    const db = connectToNxDb(
+      join(tempFs.tempDir, 'ultracache-category-db'),
+      'ultracache'
+    );
+    try {
+      const configurations = new UltracacheConfigurationStore(db).import({
+        requestedCommit: 'head',
+        configurationsJson: JSON.stringify({
+          'child:compile': {
+            commit: 'head',
+            inputs: [
+              'libs/child/excluded/**/*.ts',
+              '!libs/child/excluded/**/*.{ts,js}',
+            ],
+          },
+        }),
+      });
+      const hash = () =>
+        impl.hashTask(
+          taskGraph.tasks['child:compile'],
+          taskGraph,
+          {},
+          tempFs.tempDir,
+          true,
+          configurations
+        );
+      const before = await hash();
+      await tempFs.createFiles({
+        'libs/child/excluded/cat.one.two.spec.ts': 'new test',
+        'libs/child/excluded/cat.d.ts': 'declaration',
+        'libs/child/excluded/cat.impl.ts': 'implementation',
+      });
+      const added = await hash();
+      expect(added.value).not.toBe(before.value);
+      expect(added.inputs.files).toEqual(
+        expect.arrayContaining([
+          'libs/child/excluded/cat.one.two.spec.ts',
+          'libs/child/excluded/cat.d.ts',
+          'libs/child/excluded/cat.impl.ts',
+        ])
+      );
+      expect(added.inputs.files).not.toContain('libs/child/excluded/cat.ts');
+      await tempFs.createFiles({
+        'libs/child/excluded/cat.one.two.spec.ts': 'changed test',
+      });
+      const edited = await hash();
+      expect(edited.value).not.toBe(added.value);
+      await tempFs.createFiles({
+        'libs/child/excluded/cat.ts': 'still unread',
+      });
+      expect((await hash()).value).toBe(edited.value);
+    } finally {
+      closeDbConnection(db);
+    }
   });
 
   it('names Ultracache groups in hash details by their recorded globs', async () => {
@@ -2223,6 +2303,69 @@ describe('native task hasher', () => {
       'gen:compile'
     ].value;
     expect(again).toEqual(upfront);
+  });
+
+  it('hashes a project root up front as from disk when a sibling extends its name', async () => {
+    await tempFs.createFiles({
+      'libs/gen/project.json': JSON.stringify({ name: 'gen' }),
+      'libs/gen/src/a.ts': 'a',
+      'libs/gen/src/nested/b.ts': 'b',
+      'libs/gen-e2e/x.yaml': 'x',
+    });
+    const workspaceFiles = await retrieveWorkspaceFiles(tempFs.tempDir, {
+      'libs/gen': 'gen',
+    });
+    const builder = new ProjectGraphBuilder(
+      undefined,
+      workspaceFiles.fileMap.projectFileMap
+    );
+    builder.addNode({
+      name: 'gen',
+      type: 'lib',
+      data: {
+        root: 'libs/gen',
+        targets: {
+          compile: {
+            executor: 'nx:run-commands',
+            inputs: [
+              {
+                fileset: '{workspaceRoot}/libs/**/*.yaml',
+                includeIgnored: true,
+              },
+              { fileset: '{projectRoot}/**/*', includeIgnored: true },
+            ],
+          },
+        },
+      },
+    });
+    const projectGraph = builder.getUpdatedProjectGraph();
+    const taskGraph = createTaskGraph(
+      projectGraph,
+      {},
+      ['gen'],
+      ['compile'],
+      undefined,
+      {}
+    );
+    const tasks = Object.values(taskGraph.tasks);
+    const envs = Object.fromEntries(tasks.map((t) => [t.id, {}]));
+    const impl = new NativeTaskHasherImpl(
+      tempFs.tempDir,
+      nxJson,
+      projectGraph,
+      workspaceFiles.rustReferences,
+      { selectivelyHashTsConfig: false }
+    );
+    const expectUpfrontToMatchDisk = async () => {
+      const upfront = (await impl.hashTasksUpfront(tasks, taskGraph, envs))[
+        'gen:compile'
+      ].value;
+      const [fromDisk] = await impl.hashTasks(tasks, taskGraph, envs);
+      expect(upfront).toEqual(fromDisk.value);
+    };
+    await expectUpfrontToMatchDisk();
+    // Answered from the first pass's listing, which now holds the sibling.
+    await expectUpfrontToMatchDisk();
   });
 
   it('hashes both disk-backed groups when a large group lists the same first globs as another', async () => {

@@ -1,7 +1,11 @@
-import type { Socket } from 'net';
+import { chmodSync, mkdirSync, mkdtempSync, rmSync, symlinkSync } from 'fs';
+import { createServer, type Server, type Socket } from 'net';
+import { platform, tmpdir } from 'os';
+import { join } from 'path';
 import type { Mock } from 'vitest';
 import { deserialize as v8_deserialize } from 'v8';
 import {
+  connectToDaemonSocket,
   getForkedProcessOsSocketPath,
   getFullOsSocketPath,
   getPluginOsSocketPath,
@@ -44,6 +48,137 @@ describe('socket paths', () => {
     expect(getForkedProcessSocketPath as Mock).toHaveBeenCalledWith('7');
   });
 });
+
+(platform() === 'win32' ? describe.skip : describe)(
+  'connectToDaemonSocket',
+  () => {
+    let base: string;
+    let server: Server;
+    let accepted: number;
+
+    const listenIn = async (dir: string) => {
+      const socketPath = join(dir, 'd.sock');
+      await new Promise<void>((resolve, reject) => {
+        server.once('error', reject);
+        server.listen(socketPath, resolve);
+      });
+      return socketPath;
+    };
+
+    const dial = (socketPath: string) =>
+      new Promise<NodeJS.ErrnoException | null>((resolve) => {
+        const socket = connectToDaemonSocket(socketPath, () => {
+          socket.destroy();
+          resolve(null);
+        });
+        socket.once('error', resolve);
+      });
+
+    beforeEach(() => {
+      base = mkdtempSync(join(tmpdir(), 'nx-dial-'));
+      accepted = 0;
+      server = createServer((socket) => {
+        accepted++;
+        socket.destroy();
+      });
+    });
+
+    afterEach(async () => {
+      await new Promise((resolve) => server.close(resolve));
+      rmSync(base, { recursive: true, force: true });
+    });
+
+    it('should connect to a socket in an owner-only directory of ours', async () => {
+      expect(await dial(await listenIn(base))).toBeNull();
+    });
+
+    it('should not dial a socket whose directory belongs to another user', async () => {
+      // Every level above it must stay acceptable under the faked uid, so this
+      // reaches the directory's own check: root owns /tmp.
+      const dir = mkdtempSync('/tmp/nx-dial-');
+      const socketPath = await listenIn(dir);
+      const getuid = vi
+        .spyOn(process, 'getuid')
+        .mockReturnValue(process.getuid!() + 1);
+
+      try {
+        const error = await dial(socketPath);
+
+        // Not a permission errno: the client stops polling on those, and the
+        // daemon it starts instead rewrites the record.
+        expect(error?.code).toBe('ENOENT');
+        expect(error?.message).toContain(socketPath);
+        expect(error?.message).toContain('not by you');
+        expect(accepted).toBe(0);
+      } finally {
+        getuid.mockRestore();
+        rmSync(dir, { recursive: true, force: true });
+      }
+    });
+
+    it('should not dial a socket whose directory other users can reach', async () => {
+      const socketPath = await listenIn(base);
+      chmodSync(base, 0o755);
+
+      expect((await dial(socketPath))?.code).toBe('ENOENT');
+      expect(accepted).toBe(0);
+    });
+
+    it('should not dial through a symlink standing in for the directory', async () => {
+      const real = join(base, 'real');
+      mkdirSync(real, { mode: 0o700 });
+      await listenIn(real);
+      symlinkSync(real, join(base, 'link'));
+
+      expect((await dial(join(base, 'link', 'd.sock')))?.code).toBe('ENOENT');
+      expect(accepted).toBe(0);
+    });
+
+    it('should not dial when another user can swap a level above the directory', async () => {
+      const shared = join(base, 'shared');
+      const dir = join(shared, 'd');
+      mkdirSync(dir, { recursive: true, mode: 0o700 });
+      chmodSync(shared, 0o777);
+      const socketPath = await listenIn(dir);
+
+      const error = await dial(socketPath);
+
+      expect(error?.code).toBe('ENOENT');
+      expect(error?.message).toContain(`${shared} is writable by other users`);
+      expect(accepted).toBe(0);
+    });
+
+    it('should dial under a sticky level others can write, as in /tmp', async () => {
+      const shared = join(base, 'shared');
+      const dir = join(shared, 'd');
+      mkdirSync(dir, { recursive: true, mode: 0o700 });
+      chmodSync(shared, 0o1777);
+
+      expect(await dial(await listenIn(dir))).toBeNull();
+    });
+
+    it('should report a directory that is gone as ENOENT', async () => {
+      expect((await dial(join(base, 'gone', 'd.sock')))?.code).toBe('ENOENT');
+    });
+
+    (process.getuid?.() === 0 ? it.skip : it)(
+      'should keep the errno when the directory cannot be looked into',
+      async () => {
+        const locked = join(base, 'locked');
+        mkdirSync(join(locked, 'sockets'), { recursive: true });
+        chmodSync(locked, 0o000);
+
+        try {
+          expect((await dial(join(locked, 'sockets', 'd.sock')))?.code).toBe(
+            'EACCES'
+          );
+        } finally {
+          chmodSync(locked, 0o700);
+        }
+      }
+    );
+  }
+);
 
 describe('serializeWithFallback', () => {
   // JSON.stringify throws on a BigInt; v8 serializes it fine.

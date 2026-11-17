@@ -6,6 +6,7 @@ import { dirname } from 'path';
 import { killProcessTreeGraceful } from '../../native';
 import type { TaskResult } from '../../config/misc-interfaces';
 import { batchOutputPathForKey } from '../cache';
+import { whenStdioClosed } from '../../utils/child-process';
 import { signalToCode } from '../../utils/exit-codes';
 import { output, shouldGroupBatchOutput } from '../../utils/output';
 import {
@@ -76,12 +77,13 @@ export class BatchProcess {
    * summary is still pointing at.
    */
   private readonly captureNonce = randomBytes(4).toString('hex');
+  private readonly stdioClosed: Promise<void>;
 
   constructor(
     private childProcess: ChildProcess,
     private executorName: string,
     /**
-     * Whether the active output style puts task bytes on the terminal at all.
+     * Whether the worker's output is written to the terminal as it streams.
      * `summary` does not, and its life cycle cannot enforce that here: this
      * class writes to `output` directly from a stream handler, so without being
      * told it would print a whole batch into a run that asked for log paths.
@@ -95,6 +97,7 @@ export class BatchProcess {
     /** Labels the capture file so it is identifiable in `batchOutputs/`. */
     private readonly batchId: string = executorName
   ) {
+    this.stdioClosed = whenStdioClosed(this.childProcess);
     this.childProcess.on('message', (message: BatchMessage) => {
       switch (message.type) {
         case BatchMessageType.CompleteTask: {
@@ -345,8 +348,8 @@ export class BatchProcess {
    * batch as one fold, so output no task claimed is not lost.
    *
    * Not valid to read before `flushCapturedOutput`; that flush ends the stream,
-   * so a chunk arriving afterwards - a worker's stdout can deliver past the
-   * exit event `getResults()` settles on - is dropped rather than appended.
+   * so a chunk arriving afterwards - a worker can still write after the
+   * results message `getResults()` settles on - is dropped rather than appended.
    */
   getCapturedOutputPath(): string | undefined {
     return this.capturedOutputPath;
@@ -395,9 +398,13 @@ export class BatchProcess {
       new Promise((_, rej) => {
         this.onExit((code) => {
           if (code !== 0) {
-            rej(
-              new Error(
-                `"${this.executorName}" exited unexpectedly with code: ${code}`
+            // A rejection makes the caller flush the capture, which drops
+            // whatever the crashed worker wrote that has not been read yet.
+            this.stdioClosed.then(() =>
+              rej(
+                new Error(
+                  `"${this.executorName}" exited unexpectedly with code: ${code}`
+                )
               )
             );
           }

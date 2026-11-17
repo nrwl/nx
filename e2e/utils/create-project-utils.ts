@@ -50,6 +50,7 @@ const defaultAngularCliVersion: string = readJsonFile(
 // TODO(jack): we should tag the projects (e.g. tags: ['package']) and filter from that rather than hard-code packages.
 const nxPackages = [
   `@nx/angular`,
+  `@nx/conformance`,
   `@nx/cypress`,
   `@nx/docker`,
   `@nx/eslint-plugin`,
@@ -64,6 +65,7 @@ const nxPackages = [
   `@nx/next`,
   `@nx/node`,
   `@nx/nuxt`,
+  `@nx/owners`,
   `@nx/oxlint`,
   `@nx/plugin`,
   `@nx/playwright`,

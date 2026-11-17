@@ -5,7 +5,7 @@ import { handleImport } from '../../../utils/handle-import';
 export const yargsFixCiCommand: CommandModule = {
   command: 'fix-ci [options]',
   describe:
-    'Fixes CI failures. This command is an alias for [`nx-cloud fix-ci`](/ci/reference/nx-cloud-cli#npx-nxcloud-fix-ci).',
+    'Fixes CI failures. This command is an alias for [`nx-cloud fix-ci`](/docs/reference/nx-cloud-cli#nx-cloud-fix-ci).',
   builder: (yargs) =>
     withVerbose(yargs)
       .help(false)

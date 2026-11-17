@@ -1,4 +1,4 @@
-import { readFileSync } from 'fs';
+import { existsSync, readFileSync } from 'fs';
 import { join } from 'path';
 import { TempFs } from '../../../internal-testing-utils/temp-fs';
 import { IMPLICIT_DEFAULT_RELEASE_GROUP } from './config';
@@ -1146,6 +1146,41 @@ describe('version-plans', () => {
           `);
         });
       });
+    });
+
+    it('should not evaluate shell syntax in version plan file names', async () => {
+      const markerFile = join(tempFs.tempDir, 'marker');
+      process.env.NX_VERSION_PLAN_TEST_MARKER = markerFile;
+      try {
+        await setResolvedVersionPlansOnGroups(
+          [
+            versionPlan({
+              name: 'plan-$(touch "$NX_VERSION_PLAN_TEST_MARKER").md',
+              content: { pkg1: 'patch' },
+              message: 'plan message',
+            }),
+            versionPlan({
+              name: 'plan-`touch "$NX_VERSION_PLAN_TEST_MARKER"`.md',
+              content: { pkg1: 'patch' },
+              message: 'plan message',
+            }),
+          ],
+          [
+            releaseGroup({
+              name: IMPLICIT_DEFAULT_RELEASE_GROUP,
+              projects: ['pkg1'],
+              resolvedVersionPlans: [],
+              projectsRelationship: 'fixed',
+            }),
+          ],
+          ['pkg1'],
+          false
+        );
+      } finally {
+        delete process.env.NX_VERSION_PLAN_TEST_MARKER;
+      }
+
+      expect(existsSync(markerFile)).toBe(false);
     });
   });
 

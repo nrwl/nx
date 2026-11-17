@@ -191,6 +191,73 @@ NX_VERBOSE_LOGGING=true CI=true SELECTED_PM=pnpm pnpm nx e2e e2e-vite --t="shoul
 
 The above command sets verbose logging (this exposes stack traces and underlying errors), sets the defaults to be CI-like and sets Pnpm as the selected package manager.
 
+### Test server ports
+
+E2E tests and unit tests can share a CI machine.
+Choose ports according to what the test needs:
+
+- If a fixture only checks server startup, bind port zero and check the actual port after listening.
+  Keep the socket open while using that port.
+  See the [Node ESM fixtures](e2e/node/src/node-esm-support.test.ts).
+- If a client needs the address before startup, use `reservePort()` from `@nx/e2e-utils`.
+  Use `reservePorts(count)` when the fixture needs consecutive ports.
+  In CI, don't choose a later server's port by opening and closing a port-zero probe.
+  Another process can bind that number before the server starts.
+- Unit tests that need a port before binding use `reservePort()` from `@nx/devkit/internal-testing-utils`
+  when `NX_E2E_PORT_POOL` is set.
+  Follow the conditional allocation in the
+  [Vite readiness tests](packages/vite/src/utils/dev-server-ready-check.spec.ts).
+  The unconfigured local path preserves legacy port-zero probing without shared CI claims.
+
+Keep servers and clients on the same reserved address:
+
+- Pass the port through supported generator and target options, including client URLs and readiness checks.
+  Use `configureTargetOptions()` before generation when generated URLs depend on target defaults.
+  If the workspace will be reused beyond the options' scope, save the returned restore function
+  and call it when that scope ends.
+  Use `finally` for a block, `afterEach` for per-test cleanup, or `afterAll` for suite-wide setup.
+  The [Next Playwright tests](e2e/next/src/next-playwright.test.ts) share one reservation
+  across both E2E runs.
+- Set options on each server target the test invokes.
+  For the default Vite targets, configure `dev` for development and `preview` for CI browser tests.
+  Set `strictPort: true` on Vite targets and React Router `dev` targets that use reserved ports.
+  Automatic fallback can take another test's reserved port before its server starts.
+- Rsbuild needs `server.strictPort: true` in its config because its CLI has no strict-port option.
+  Use [createRsbuildPortConfig()](e2e/utils/rsbuild-utils.ts) to create an alternate config that loads
+  and merges the generated config through the Rsbuild APIs.
+  Pass its returned filename as the server target's `config` option through `configureTargetOptions()`.
+  Its optional port argument overrides the generated port.
+- Account for separate listeners, including Node inspectors and component testing servers.
+  Use port zero where supported if no client needs a known address.
+  For Webpack Cypress component tests, pass the generated config path to
+  [configureCypressComponentTesting()](e2e/utils/cypress-component-utils.ts) and pass its returned
+  CLI option string to the component-test command.
+  Leave the Cypress runner port unset so Cypress can choose it separately.
+- Keep fixed-port and fallback assertions when they are the behavior under test.
+  For tasks that share a fixed port, add matching `scheduling-constraints` and `cannot-run-with`
+  selectors in [.nx/workflows/dynamic-changesets.yaml](.nx/workflows/dynamic-changesets.yaml),
+  following the module-federation rule.
+  These constraints exclude matching tasks from running together on one agent.
+  Other tasks can still share the agent, and conflicting cases within one task must run sequentially.
+
+CI sets `NX_E2E_PORT_POOL=10000-32767`, above common framework defaults.
+The allocator checks that the pool avoids the current Linux or macOS automatic port ranges.
+Requests with a configured pool throw on other platforms.
+Processes sharing the same local network namespace must share the `nx-e2e-port-locks` directory
+under `os.tmpdir()`.
+Reservations coordinate participating helpers but don't hold sockets or exclude other tools
+that bind an explicit port.
+
+Stop servers owned by the test during teardown.
+With the pool set, don't add cleanup that deletes claims or the `nx-e2e-port-locks` directory
+when a test, suite, or parent process finishes.
+A child server or pending startup task can still need the port.
+Those claims stay until the shared directory is discarded.
+The configured pool contains 22,768 ports.
+When no port remains available, `reservePort()` throws `No available ports`.
+`reservePorts(count)` throws `No available run of N consecutive ports` when no suitable block remains,
+even if individual ports are still available.
+
 ### Developing on Windows
 
 To build Nx on Windows, you need to use WSL.

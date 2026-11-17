@@ -44,8 +44,6 @@ describe('vue:stories for libraries', () => {
         'utf-8'
       )
     ).toMatchSnapshot();
-
-    const packageJson = JSON.parse(appTree.read('package.json', 'utf-8'));
   });
 
   it('should create the stories without interaction tests', async () => {

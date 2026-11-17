@@ -1,6 +1,7 @@
 import {
   checkFilesExist,
   cleanupProject,
+  configureTargetOptions,
   ensureCypressInstallation,
   ensurePlaywrightBrowsersInstallation,
   killPorts,
@@ -14,9 +15,6 @@ import {
 
 describe('React Router Applications - TS paths', () => {
   const appName = uniq('app');
-  // Every case here starts a dev server on the 4200 default, as does the sibling
-  // react-router-ts-solution suite running in parallel on the same agent. Whoever
-  // loses the race relocates to 4201 while Playwright still navigates to 4200.
   let appPort: number;
   beforeAll(async () => {
     newProject({
@@ -30,6 +28,7 @@ describe('React Router Applications - TS paths', () => {
         '@nx/eslint',
       ],
     });
+    configureTargetOptions(['dev'], { strictPort: true });
     ensurePlaywrightBrowsersInstallation();
     appPort = await reservePort();
     runCLI(
@@ -85,8 +84,6 @@ describe('React Router Applications - TS paths', () => {
       expect(result).toContain(
         `Successfully ran target e2e for project ${appName}-e2e`
       );
-      // Hygiene, not correctness: the reserved ports already keep the two cases
-      // apart, this just stops dev servers accumulating on the agent.
       expect(await killPorts(appPort)).toBeTruthy();
     }
   });

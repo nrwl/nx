@@ -7,7 +7,7 @@ export interface ExpoEnsureSymlinkOutput {
 }
 
 /**
- * TODO (@xiongemi): remove this function in v20.
+ * TODO(v25): decide whether to remove this executor (NXC-5159).
  * @deprecated It is no longer needed for react native 73.
  */
 export default async function* ensureSymlinkExecutor(

@@ -42,6 +42,13 @@ import { applicationGenerator as angularApplicationGenerator } from '@nx/angular
 import { Schema } from './schema';
 import { applicationGenerator } from './application';
 
+const realNodeVersion = process.versions.node;
+const setNodeVersion = (version: string) =>
+  Object.defineProperty(process.versions, 'node', {
+    value: version,
+    configurable: true,
+  });
+
 describe('app', () => {
   let tree: Tree;
   let envBackup: string | undefined;
@@ -808,7 +815,12 @@ describe('app', () => {
         framework,
       });
 
-      expect(tree.exists(`api/jest.config.cts`)).toBeTruthy();
+      // jest cannot load @nestjs/testing 12
+      expect(
+        tree.exists(
+          framework === 'nest' ? `api/vitest.config.mts` : `api/jest.config.cts`
+        )
+      ).toBeTruthy();
 
       if (checkSpecFile) {
         expect(tree.exists(`api/src/app/app.spec.ts`)).toBeTruthy();
@@ -1538,6 +1550,24 @@ describe('app', () => {
       expect(tsconfigApp.compilerOptions.allowJs).toBe(true);
     });
 
+    it('should keep vitest for a nest app on Nest 11 when serve runs on node', async () => {
+      updateJson(tree, 'package.json', (json) => ({
+        ...json,
+        dependencies: { ...json.dependencies, '@nestjs/core': '^11.0.0' },
+      }));
+
+      await applicationGenerator(tree, {
+        directory: 'apps/api',
+        framework: 'nest',
+        e2eTestRunner: 'none',
+        useProjectJson: false,
+        skipFormat: true,
+      });
+
+      expect(tree.exists('apps/api/vitest.config.mts')).toBe(true);
+      expect(tree.exists('apps/api/jest.config.cts')).toBe(false);
+    });
+
     it('should serve fastify as ESM with node and test it with vitest', async () => {
       await applicationGenerator(tree, {
         directory: 'apps/api',
@@ -1933,6 +1963,49 @@ describe('app', () => {
 
       const project = readProjectConfiguration(tree, 'my-nest-app');
       expect(project.targets.build).toBeUndefined();
+    });
+  });
+
+  describe('Nest.js unit test runner', () => {
+    it('should default to vitest on Nest 12', async () => {
+      await applicationGenerator(tree, {
+        directory: 'my-nest-app',
+        framework: 'nest',
+        e2eTestRunner: 'none',
+      });
+
+      expect(tree.exists('my-nest-app/vitest.config.mts')).toBeTruthy();
+      expect(tree.exists('my-nest-app/jest.config.cts')).toBeFalsy();
+    });
+
+    it('should throw for jest on Nest 12 below Node 24.9', async () => {
+      setNodeVersion('22.12.0');
+      onTestFinished(() => setNodeVersion(realNodeVersion));
+
+      await expect(
+        applicationGenerator(tree, {
+          directory: 'my-nest-app',
+          framework: 'nest',
+          unitTestRunner: 'jest',
+          e2eTestRunner: 'none',
+        })
+      ).rejects.toThrow(/requires Node\.js 24\.9\.0 or later/);
+    });
+
+    it('should keep jest on Nest 11', async () => {
+      updateJson(tree, 'package.json', (json) => ({
+        ...json,
+        dependencies: { ...json.dependencies, '@nestjs/core': '^11.0.0' },
+      }));
+
+      await applicationGenerator(tree, {
+        directory: 'my-nest-app',
+        framework: 'nest',
+        unitTestRunner: 'jest',
+        e2eTestRunner: 'none',
+      });
+
+      expect(tree.exists('my-nest-app/jest.config.cts')).toBeTruthy();
     });
   });
 

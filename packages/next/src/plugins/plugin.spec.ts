@@ -1,7 +1,11 @@
 import { CreateNodesContext } from '@nx/devkit';
+import { isUsingTsSolutionSetup } from '@nx/js/internal';
 import type { NextConfig } from 'next';
+import type { Mock } from 'vitest';
 
+import { existsSync, readdirSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
+import { workspaceDataDirectory } from '@nx/devkit/internal';
 import { createNodesV2 } from './plugin';
 import {
   mockCjsModule,
@@ -9,9 +13,18 @@ import {
   TempFs,
 } from '@nx/devkit/internal-testing-utils';
 
+vi.mock('@nx/js/internal', async () => ({
+  ...(await vi.importActual<any>('@nx/js/internal')),
+  isUsingTsSolutionSetup: vi.fn(),
+}));
+
 describe('@nx/next/plugin', () => {
   let createNodesFunction = createNodesV2[1];
   let context: CreateNodesContext;
+
+  beforeEach(() => {
+    (isUsingTsSolutionSetup as Mock).mockReturnValue(true);
+  });
 
   describe('root projects', () => {
     let tempFs: TempFs;
@@ -97,6 +110,86 @@ describe('@nx/next/plugin', () => {
       expect(nodes).toMatchSnapshot();
     });
   });
+  describe('TS solution setup', () => {
+    let tempFs: TempFs;
+
+    beforeEach(() => {
+      if (existsSync(workspaceDataDirectory)) {
+        for (const file of readdirSync(workspaceDataDirectory)) {
+          if (file.startsWith('next-')) {
+            rmSync(join(workspaceDataDirectory, file), { force: true });
+          }
+        }
+      }
+      tempFs = new TempFs('next-ts-solution');
+      context = {
+        nxJsonConfiguration: {},
+        workspaceRoot: tempFs.tempDir,
+      };
+      tempFs.createFileSync(
+        'apps/ts-solution-app/package.json',
+        JSON.stringify({ name: 'ts-solution-app' })
+      );
+      tempFs.createFileSync('apps/ts-solution-app/next.config.js', '');
+      tempFs.createFileSync('package-lock.json', '{}');
+      mockNextConfig(tempFs.tempDir, 'apps/ts-solution-app/next.config.js', {});
+    });
+
+    afterEach(() => {
+      vi.resetModules();
+      resetCjsMocks();
+      tempFs.cleanup();
+    });
+
+    async function getBuildTarget() {
+      const nodes = await createNodesFunction(
+        ['apps/ts-solution-app/next.config.js'],
+        { buildTargetName: 'build' },
+        context
+      );
+      return nodes[0][1].projects['apps/ts-solution-app'].targets['build'];
+    }
+
+    it('should make build depend on the typecheck of dependencies', async () => {
+      const buildTarget = await getBuildTarget();
+
+      expect(buildTarget.dependsOn).toEqual(['^build', '^typecheck']);
+      expect(buildTarget.syncGenerators).toEqual(['@nx/js:typescript-sync']);
+    });
+
+    it('should use the typecheck target name configured for @nx/js/typescript', async () => {
+      context.nxJsonConfiguration.plugins = [
+        {
+          plugin: '@nx/js/typescript',
+          options: { typecheck: { targetName: 'check-types' } },
+        },
+      ];
+
+      const buildTarget = await getBuildTarget();
+
+      expect(buildTarget.dependsOn).toEqual(['^build', '^check-types']);
+    });
+
+    it('should not depend on the typecheck of dependencies when @nx/js/typescript disables it', async () => {
+      context.nxJsonConfiguration.plugins = [
+        { plugin: '@nx/js/typescript', options: { typecheck: false } },
+      ];
+
+      const buildTarget = await getBuildTarget();
+
+      expect(buildTarget.dependsOn).toEqual(['^build']);
+    });
+
+    it('should not depend on the typecheck of dependencies outside a TS solution setup', async () => {
+      (isUsingTsSolutionSetup as Mock).mockReturnValue(false);
+
+      const buildTarget = await getBuildTarget();
+
+      expect(buildTarget.dependsOn).toEqual(['^build']);
+      expect(buildTarget.syncGenerators).toBeUndefined();
+    });
+  });
+
   describe('output directory resolution', () => {
     let tempFs: TempFs;
 

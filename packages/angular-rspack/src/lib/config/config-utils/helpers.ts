@@ -5,7 +5,7 @@
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.dev/license
  */
-import { readdir, rm } from 'node:fs/promises';
+import { readdirSync, rmSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import {
   AngularRspackPluginOptions,
@@ -17,18 +17,25 @@ import {
 import { configureI18n } from '../i18n/create-i18n-options';
 import type { Configuration } from '@rspack/core';
 
+export function assertOutputPathIsNotProjectRoot(
+  root: string,
+  outputPath: string
+): void {
+  if (resolve(root, outputPath) === root) {
+    throw new Error('Output path MUST not be project root directory!');
+  }
+}
+
 /**
  * Delete an output directory, but error out if it's the root of the project.
  */
-export async function deleteOutputDir(
+export function deleteOutputDir(
   root: string,
   outputPath: string,
   emptyOnlyDirectories?: string[]
-): Promise<void> {
+): void {
+  assertOutputPathIsNotProjectRoot(root, outputPath);
   const resolvedOutputPath = resolve(root, outputPath);
-  if (resolvedOutputPath === root) {
-    throw new Error('Output path MUST not be project root directory!');
-  }
 
   const directoriesToEmpty = emptyOnlyDirectories
     ? new Set(
@@ -42,7 +49,7 @@ export async function deleteOutputDir(
   // directory is mounted or symlinked. Instead the contents are removed.
   let entries;
   try {
-    entries = await readdir(resolvedOutputPath);
+    entries = readdirSync(resolvedOutputPath);
   } catch (error) {
     if (error instanceof Error && 'code' in error && error.code === 'ENOENT') {
       return;
@@ -55,11 +62,11 @@ export async function deleteOutputDir(
 
     // Leave requested directories. This allows symlinks to continue to function.
     if (directoriesToEmpty?.has(fullEntry)) {
-      await deleteOutputDir(resolvedOutputPath, fullEntry);
+      deleteOutputDir(resolvedOutputPath, fullEntry);
       continue;
     }
 
-    await rm(fullEntry, { force: true, recursive: true, maxRetries: 3 });
+    rmSync(fullEntry, { force: true, recursive: true, maxRetries: 3 });
   }
 }
 
@@ -103,7 +110,8 @@ export function getOutputHashFormat(
 }
 
 export async function normalizeOptionWithI18n(
-  options: AngularRspackPluginOptions
+  options: AngularRspackPluginOptions,
+  projectGraphCreation = false
 ) {
   const { options: _options, i18n } = await configureI18n(
     options.root ?? process.cwd(),
@@ -120,7 +128,10 @@ export async function normalizeOptionWithI18n(
         // no-op as i18n is not inlined
       };
 
-  const normalizedOptions = await normalizeOptions(_options);
+  const normalizedOptions = await normalizeOptions(
+    _options,
+    projectGraphCreation
+  );
   if (normalizedOptions.outputMode && i18n.shouldInline) {
     // The engine manifests would need per-locale entry points, which the
     // locale inlining pipeline does not produce yet.

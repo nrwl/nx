@@ -1,5 +1,7 @@
 import {
   cleanupProject,
+  configureTargetOptions,
+  createRsbuildPortConfig,
   killPorts,
   newProject,
   reservePort,
@@ -69,9 +71,16 @@ describe('Vue Plugin', () => {
         );
       });
 
-      const e2eResults = runCLI(`e2e ${app}-e2e`);
-      expect(e2eResults).toContain('Successfully ran target e2e');
-      expect(await killPorts(availablePort)).toBeTruthy();
+      const restoreServerOptions = configureTargetOptions(['dev', 'preview'], {
+        strictPort: true,
+      });
+      try {
+        const e2eResults = runCLI(`e2e ${app}-e2e`);
+        expect(e2eResults).toContain('Successfully ran target e2e');
+        expect(await killPorts(availablePort)).toBeTruthy();
+      } finally {
+        restoreServerOptions();
+      }
     }
   }, 200_000);
 
@@ -104,18 +113,20 @@ describe('Vue Plugin', () => {
           );
       });
 
-      updateFile(`${app}/rsbuild.config.ts`, (content) => {
-        return content.replace(
-          /server:\s*{[^}]*}/,
-          `server: {
-    port: ${availablePort},
-  }`
-        );
+      const config = createRsbuildPortConfig(
+        `${app}/rsbuild.config.ts`,
+        availablePort
+      );
+      const restoreServerOptions = configureTargetOptions(['dev', 'preview'], {
+        config,
       });
-
-      const e2eResults = runCLI(`e2e ${app}-e2e`);
-      expect(e2eResults).toContain('Successfully ran target e2e');
-      expect(await killPorts(availablePort)).toBeTruthy();
+      try {
+        const e2eResults = runCLI(`e2e ${app}-e2e`);
+        expect(e2eResults).toContain('Successfully ran target e2e');
+        expect(await killPorts(availablePort)).toBeTruthy();
+      } finally {
+        restoreServerOptions();
+      }
     }
   }, 200_000);
 

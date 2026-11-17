@@ -83,6 +83,22 @@ describe('fetchRegistryMetadata', () => {
     expect(meta.time).toEqual({ '1.0.0': '2025-06-01T00:00:00.000Z' });
   });
 
+  it('drops versions and dist-tag targets that are not versions', async () => {
+    viewMock.mockResolvedValue(
+      JSON.stringify({
+        name: 'pkg-a',
+        versions: ['1.0.0', 'git+https://git.example.com/pkg-a.git'],
+        'dist-tags': {
+          latest: 'git+https://git.example.com/pkg-a.git',
+          previous: '1.0.0',
+        },
+      })
+    );
+    const meta = await fetchRegistryMetadata('pkg-a');
+    expect(meta.versions).toEqual(['1.0.0']);
+    expect(meta.distTags).toEqual({ previous: '1.0.0' });
+  });
+
   it('fetches the full packument via the empty-version registry view', async () => {
     viewMock.mockResolvedValue(
       JSON.stringify({ name: 'pkg-a', versions: ['1.0.0'] })

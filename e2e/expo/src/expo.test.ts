@@ -9,9 +9,9 @@ import {
   runCommandUntil,
   killProcessAndPorts,
   checkFilesExist,
+  configureTargetOptions,
   updateFile,
   runCLIAsync,
-  killPorts,
   createFile,
   exists,
   removeFile,
@@ -28,7 +28,7 @@ describe('@nx/expo', () => {
   let libName: string;
   let restoreExpoEnv: () => void;
 
-  beforeAll(() => {
+  beforeAll(async () => {
     restoreExpoEnv = setupExpoEnv();
 
     newProject({
@@ -43,6 +43,7 @@ describe('@nx/expo', () => {
     });
     appName = uniq('app');
     libName = uniq('lib');
+    configureTargetOptions(['serve'], { port: await reservePort() });
     // Uses `--e2eTestRunner=cypress`, whose fresh config @nx/cypress now
     // generates via base-setup templating (no tsquery).
     runCLI(
@@ -315,13 +316,6 @@ console.log(
     if (await shouldRunCypressTests()) {
       const results = runCLI(`e2e ${appName}-e2e`);
       expect(results).toContain('Successfully ran target e2e');
-
-      // port and process cleanup
-      try {
-        await killPorts(4200);
-      } catch (err) {
-        expect(err).toBeFalsy();
-      }
     }
   });
 

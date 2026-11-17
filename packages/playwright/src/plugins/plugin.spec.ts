@@ -521,6 +521,10 @@ describe('@nx/playwright/plugin', () => {
           "technologies": [
             "playwright",
           ],
+          "testFileDirectives": {
+            "file": "tests/run-me.spec.ts",
+            "ignore-server-inputs": true,
+          },
         },
         "options": {
           "cwd": "{projectRoot}",
@@ -568,6 +572,10 @@ describe('@nx/playwright/plugin', () => {
           "technologies": [
             "playwright",
           ],
+          "testFileDirectives": {
+            "file": "tests/run-me-2.spec.ts",
+            "ignore-server-inputs": true,
+          },
         },
         "options": {
           "cwd": "{projectRoot}",
@@ -710,6 +718,10 @@ describe('@nx/playwright/plugin', () => {
           "technologies": [
             "playwright",
           ],
+          "testFileDirectives": {
+            "file": "tests/run-me.spec.ts",
+            "ignore-server-inputs": true,
+          },
         },
         "options": {
           "cwd": "{projectRoot}",
@@ -759,6 +771,10 @@ describe('@nx/playwright/plugin', () => {
           "technologies": [
             "playwright",
           ],
+          "testFileDirectives": {
+            "file": "tests/run-me-2.spec.ts",
+            "ignore-server-inputs": true,
+          },
         },
         "options": {
           "cwd": "{projectRoot}",
@@ -812,6 +828,24 @@ describe('@nx/playwright/plugin', () => {
         ],
       }
     `);
+  });
+
+  it('should quote atomized spec and output paths containing shell metacharacters', async () => {
+    await mockPlaywrightConfig(tempFs, { testDir: 'tests' });
+    await tempFs.createFiles({ 'tests/a$(touch pwned).spec.ts': '' });
+
+    const results = await createNodesFunction(
+      ['playwright.config.js'],
+      { targetName: 'e2e', ciTargetName: 'e2e-ci' },
+      context
+    );
+
+    const { targets } = results[0][1].projects['.'];
+    expect(targets['e2e-ci--tests/a$(touch pwned).spec.ts'].command).toBe(
+      process.platform === 'win32'
+        ? `playwright test "tests/a$(touch pwned).spec.ts" --output="test-results/tests-a$(touch pwned)-spec-ts"`
+        : `playwright test 'tests/a$(touch pwned).spec.ts' --output='test-results/tests-a$(touch pwned)-spec-ts'`
+    );
   });
 
   it('should infer dependsOn using the task run in the webServer.command and not set parallelism to false', async () => {
@@ -983,6 +1017,10 @@ describe('@nx/playwright/plugin', () => {
           "technologies": [
             "playwright",
           ],
+          "testFileDirectives": {
+            "file": "tests/run-me.spec.ts",
+            "ignore-server-inputs": true,
+          },
         },
         "options": {
           "cwd": "{projectRoot}",
@@ -1032,6 +1070,10 @@ describe('@nx/playwright/plugin', () => {
           "technologies": [
             "playwright",
           ],
+          "testFileDirectives": {
+            "file": "tests/run-me-2.spec.ts",
+            "ignore-server-inputs": true,
+          },
         },
         "options": {
           "cwd": "{projectRoot}",
@@ -3492,6 +3534,45 @@ module.exports = {};`,
     ]);
   });
 
+  it.each([
+    'bunx nx run app1:serve',
+    'bunx nx serve app1',
+    'bun x nx run app1:serve',
+    'bun x nx serve app1',
+  ])(
+    'should infer the serve dependency from a bun-prefixed webServer command (%s)',
+    async (command) => {
+      const warn = vi
+        .spyOn(devkitInternal, 'emitPluginWorkerLog')
+        .mockImplementation(() => {});
+      try {
+        await mockPlaywrightConfig(tempFs, {
+          testDir: 'tests',
+          webServer: {
+            command,
+            reuseExistingServer: true,
+          },
+        });
+        await tempFs.createFiles({ 'tests/run-me.spec.ts': '' });
+
+        const results = await createNodesFunction(
+          ['playwright.config.js'],
+          { targetName: 'e2e', ciTargetName: 'e2e-ci' },
+          context
+        );
+        const { targets } = results[0][1].projects['.'];
+
+        expect(warn).not.toHaveBeenCalled();
+        expect(targets['e2e'].dependsOn).toEqual([
+          { projects: ['app1'], target: 'serve', waitFor: 'ready' },
+        ]);
+        expect(targets['e2e'].parallelism).toBeUndefined();
+      } finally {
+        warn.mockRestore();
+      }
+    }
+  );
+
   it('warns when a reuseExistingServer webServer command cannot be inferred', async () => {
     const warn = vi
       .spyOn(devkitInternal, 'emitPluginWorkerLog')
@@ -3962,6 +4043,10 @@ module.exports = {};`,
           "technologies": [
             "playwright",
           ],
+          "testFileDirectives": {
+            "file": "tests/run-me.spec.ts",
+            "ignore-server-inputs": true,
+          },
         },
         "options": {
           "cwd": "{projectRoot}",
@@ -4019,6 +4104,10 @@ module.exports = {};`,
           "technologies": [
             "playwright",
           ],
+          "testFileDirectives": {
+            "file": "tests/run-me-2.spec.ts",
+            "ignore-server-inputs": true,
+          },
         },
         "options": {
           "cwd": "{projectRoot}",

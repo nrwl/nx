@@ -123,6 +123,7 @@ export function createAPI(
     const shouldStage =
       (shouldCommit || userProvidedReleaseConfig.git?.stageChanges) ?? false;
     const shouldTag = userProvidedReleaseConfig.git?.tag ?? true;
+    const shouldPushFromGitConfig = args.gitPush ?? nxReleaseConfig.git.push;
 
     const shouldCreateWorkspaceRemoteRelease = shouldCreateRemoteRelease(
       nxReleaseConfig.changelog.workspaceChangelog
@@ -137,6 +138,7 @@ export function createAPI(
       stageChanges: shouldStage,
       gitCommit: false,
       gitTag: false,
+      gitPush: false,
       deleteVersionPlans: false,
     });
 
@@ -289,13 +291,13 @@ export function createAPI(
     }
 
     let hasPushedChanges = false;
-    // If the workspace or any of the release groups specify that a remote release should be created, we need to push the changes to the remote
+    // Push the release commit and tags when git push is enabled, or when a remote release needs them on the remote.
     const shouldPush =
-      (shouldCreateWorkspaceRemoteRelease ||
-        releaseGraph.releaseGroups.some((group) =>
-          shouldCreateRemoteRelease(group.changelog)
-        )) ??
-      false;
+      shouldPushFromGitConfig ||
+      shouldCreateWorkspaceRemoteRelease ||
+      releaseGraph.releaseGroups.some((group) =>
+        shouldCreateRemoteRelease(group.changelog)
+      );
     if (shouldPush) {
       output.logSingleLine(`Pushing to git remote "origin"`);
       await gitPush({

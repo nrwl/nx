@@ -2,16 +2,12 @@ import {
   addProjectConfiguration,
   readNxJson,
   readProjectConfiguration,
-  updateNxJson,
-  updateProjectConfiguration,
-  type ExpandedPluginConfiguration,
   type ProjectConfiguration,
   type Tree,
 } from '@nx/devkit';
 import { mockCjsModule as mockConverterModule } from '@nx/devkit/internal-testing-utils';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import type { RollupPluginOptions } from '../../plugins/plugin';
-import convertToInferred, * as converter from '../../generators/convert-to-inferred/convert-to-inferred';
+import * as converter from '../../generators/convert-to-inferred/convert-to-inferred';
 
 interface CreateProjectOptions {
   name: string;

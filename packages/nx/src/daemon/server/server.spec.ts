@@ -10,6 +10,9 @@ vi.mock('./shutdown-utils', async (importOriginal) => ({
   ...(await importOriginal<typeof import('./shutdown-utils')>()),
   resetInactivityTimeout: vi.fn(),
 }));
+vi.mock('./handle-client-env', () => ({
+  handleClientEnv: vi.fn(),
+}));
 vi.mock('./handle-hash-tasks', () => ({
   handleHashTasks: vi.fn(),
   handleHashTasksUpfront: vi.fn(),
@@ -19,6 +22,7 @@ import {
   consumeMessagesFromSocket,
   parseMessage,
 } from '../../utils/consume-messages-from-socket';
+import { handleClientEnv } from './handle-client-env';
 import { handleHashTasks } from './handle-hash-tasks';
 import { handleMessage } from './server';
 
@@ -50,21 +54,32 @@ describe('handleMessage', () => {
     vi.restoreAllMocks();
   });
 
-  async function send(message: object) {
+  async function send(message: object, socket = fakeSocket()) {
     let response: { error: Error | null };
     const receive = consumeMessagesFromSocket((data) => {
       response = parseMessage(data);
     });
-    const socket = {
-      write: (data: Buffer, cb?: () => void) => {
-        receive(data);
-        cb?.();
-        return true;
-      },
-    } as unknown as Socket;
+    socket.write = ((data: Buffer, cb?: () => void) => {
+      receive(data);
+      cb?.();
+      return true;
+    }) as Socket['write'];
     await handleMessage(socket, Buffer.from(JSON.stringify(message)));
     return response;
   }
+
+  function fakeSocket(): Socket {
+    return {} as Socket;
+  }
+
+  it("applies a client's env on behalf of the connection that sent it", async () => {
+    const socket = fakeSocket();
+    const env = { PATH: '/usr/bin' };
+
+    await send({ type: 'PING', env }, socket);
+
+    expect(handleClientEnv).toHaveBeenCalledWith(env, socket);
+  });
 
   it.each([
     ['the module fails to load', 'throws-at-load.js', expect.any(String)],

@@ -97,7 +97,7 @@
     "@nx/playwright": "workspace:*",
     "@nx/vitest": "workspace:*",
     "@nx/webpack": "workspace:*",
-    "next": "15.5.25",
+    "next": "15.5.28",
     "nx": "workspace:*"
   },
   "publishConfig": {

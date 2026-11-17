@@ -11,6 +11,10 @@ export { isComponent } from './src/utils/ct-utils';
 export { suppressReactComposeHelperWarnings } from './src/utils/deprecation';
 export { hasWebpackPlugin } from './src/utils/has-webpack-plugin';
 export {
+  addExtraEslintDependencies,
+  getExtraEslintDependencies,
+} from './src/utils/lint';
+export {
   getReactDependenciesVersionsToInstall,
   isReact18,
 } from './src/utils/version-utils';

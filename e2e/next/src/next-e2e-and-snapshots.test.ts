@@ -1,8 +1,10 @@
 import {
   getStrippedEnvironmentVariables,
   readFile,
+  reservePort,
   runCLI,
   uniq,
+  configureTargetOptions,
   shouldRunPlaywrightTests,
 } from '@nx/e2e-utils';
 import {
@@ -14,6 +16,7 @@ import {
 
 describe('Next.js Applications - E2E and Snapshots', () => {
   let setup: NextTestSetup;
+  let restoreNextE2EPort: (() => void) | undefined;
 
   beforeAll(() => {
     setup = setupNextTest();
@@ -24,6 +27,8 @@ describe('Next.js Applications - E2E and Snapshots', () => {
   });
 
   afterEach(() => {
+    restoreNextE2EPort?.();
+    restoreNextE2EPort = undefined;
     resetNextEnv(setup);
   });
 
@@ -31,6 +36,8 @@ describe('Next.js Applications - E2E and Snapshots', () => {
 
   it('should run e2e-ci test', async () => {
     const appName = uniq('app');
+    const port = await reservePort();
+    restoreNextE2EPort = configureTargetOptions(['dev', 'start'], { port });
 
     runCLI(
       `generate @nx/next:app ${appName} --no-interactive --style=css --linter=eslint --unitTestRunner=jest`

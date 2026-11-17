@@ -3,13 +3,10 @@ import {
   joinPathFragments,
   logger,
   offsetFromRoot,
-  readJson,
   readNxJson,
   updateNxJson,
   readProjectConfiguration,
-  TargetConfiguration,
   Tree,
-  writeJson,
 } from '@nx/devkit';
 import { isUsingTsSolutionSetup } from '@nx/js/internal';
 import type { VitestPluginOptions } from '../plugins/plugin';
@@ -329,8 +326,6 @@ ${resolveEntries.join('\n')}
       testOption,
       reportsDirectory,
       cacheDir,
-      projectRoot,
-      offsetFromRoot(projectRoot),
       extraOptions.projectAlreadyHasViteTargets,
       resolveTsconfigPaths
     );
@@ -394,8 +389,6 @@ function handleViteConfigFileExists(
   testOption: string,
   reportsDirectory: string,
   cacheDir: string,
-  projectRoot: string,
-  offsetFromRoot: string,
   projectAlreadyHasViteTargets?: TargetFlags,
   resolveTsconfigPaths?: boolean
 ) {

@@ -334,4 +334,10 @@ describe('determineAiAgents', () => {
 
     expect(await determineAiAgents({} as any)).toEqual([]);
   });
+
+  it('should ignore a detected agent when none is requested', async () => {
+    mockDetect.mockReturnValue('claude');
+
+    expect(await determineAiAgents({ aiAgents: ['none'] } as any)).toEqual([]);
+  });
 });

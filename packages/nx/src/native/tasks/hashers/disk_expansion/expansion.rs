@@ -100,7 +100,17 @@ pub(crate) fn expand_globs(
     project_roots: &[String],
     source: &Source,
 ) -> Result<FilesExpansion> {
-    let (positives, negations) = parse_group(globs)?;
+    expand_globs_with_exclusions(workspace_root, globs, project_roots, source, false)
+}
+
+pub(crate) fn expand_globs_with_exclusions(
+    workspace_root: &Path,
+    globs: &[String],
+    project_roots: &[String],
+    source: &Source,
+    ultracache: bool,
+) -> Result<FilesExpansion> {
+    let (positives, negations) = parse_group_with_exclusions(globs, ultracache)?;
     let scope = ProjectScope::new(project_roots);
     expand_entries(workspace_root, &positives, &negations, &scope, source)
 }
@@ -109,6 +119,13 @@ pub(crate) fn expand_globs(
 /// negations. Each brace group becomes one entry per alternative first, so
 /// what a parser sees never holds a `{a,b}`.
 pub(crate) fn parse_group(globs: &[String]) -> Result<(Vec<Positive>, Vec<Negation>)> {
+    parse_group_with_exclusions(globs, false)
+}
+
+pub(crate) fn parse_group_with_exclusions(
+    globs: &[String],
+    ultracache: bool,
+) -> Result<(Vec<Positive>, Vec<Negation>)> {
     let mut positives = Vec::new();
     let mut negations = Vec::new();
     for glob in globs {
@@ -117,7 +134,7 @@ pub(crate) fn parse_group(globs: &[String]) -> Result<(Vec<Positive>, Vec<Negati
         let negated = glob.starts_with('!');
         for entry in expand_literal_braces(glob) {
             match negated {
-                true => negations.push(Negation::parse(&entry)?),
+                true => negations.push(Negation::parse_with_categories(&entry, ultracache)?),
                 false => positives.push(Positive::parse(&entry)?),
             }
         }

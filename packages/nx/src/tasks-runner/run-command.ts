@@ -7,7 +7,7 @@ import {
   readNxJson,
   TargetDependencies,
 } from '../config/nx-json';
-import { ProjectGraph, ProjectGraphProjectNode } from '../config/project-graph';
+import { ProjectGraph } from '../config/project-graph';
 import { Task, TaskGraph } from '../config/task-graph';
 import { TargetDependencyConfig } from '../config/workspace-json-project-json';
 import { daemonClient } from '../daemon/client/client';
@@ -76,6 +76,8 @@ export interface TaskSelection {
   planningContext?: TaskPlanningContext;
   /** The Ultracache configurations selection planned with; the run hashes with the same ones. */
   ultracacheConfigurationOutcome?: UltracacheConfigurationOutcome | null;
+  /** What `nx affected` dropped from tasks hashed from a configuration. Unset for commands that do not select. */
+  ultracacheSkippedTaskIds?: string[];
 }
 import { isTuiEnabled, ORIGINAL_TUI_ENV_VALUE } from './is-tui-enabled';
 import {
@@ -112,6 +114,7 @@ import { TasksRunner, TaskStatus } from './tasks-runner';
 import { pruneToSelectedTasks, shouldStreamOutput } from './utils';
 import { didCommandComplete, getRunExitCode } from './run-outcome';
 import { handleImport } from '../utils/handle-import';
+import { resolveInstalledPackage } from '../utils/installation-directory';
 import * as pc from 'picocolors';
 
 const originalStdoutWrite = process.stdout.write.bind(process.stdout);
@@ -302,9 +305,6 @@ async function getTerminalOutputLifeCycle(
        * Patch stdout.write and stderr.write methods to pass Nx Cloud client logs to the TUI via the lifecycle
        */
       const createPatchedLogWrite = (
-        originalWrite:
-          | typeof process.stdout.write
-          | typeof process.stderr.write,
         isError: boolean
       ): typeof process.stdout.write | typeof process.stderr.write => {
         // @ts-ignore
@@ -323,7 +323,6 @@ async function getTerminalOutputLifeCycle(
             );
           }
 
-          // Check if the log came from the Nx Cloud client, otherwise invoke the original write method
           const stackTrace = new Error().stack;
           const isNxCloudLog = stackTrace.includes(nxCloudClientDir);
           if (isNxCloudLog) {
@@ -360,8 +359,8 @@ async function getTerminalOutputLifeCycle(
         };
       };
 
-      process.stdout.write = createPatchedLogWrite(originalStdoutWrite, false);
-      process.stderr.write = createPatchedLogWrite(originalStderrWrite, true);
+      process.stdout.write = createPatchedLogWrite(false);
+      process.stderr.write = createPatchedLogWrite(true);
 
       // The cloud client calls console.log when NX_VERBOSE_LOGGING is set to true
       console.log = createPatchedConsoleMethod(originalConsoleLog);
@@ -414,10 +413,9 @@ async function getTerminalOutputLifeCycle(
     };
   }
 
-  const { runnerOptions } = getRunner(nxArgs, nxJson);
+  getRunner(nxArgs, nxJson);
   const useDynamicOutput = shouldUseDynamicLifeCycle(
     tasks,
-    runnerOptions,
     nxArgs.specifiedOutputStyle
   );
 
@@ -655,6 +653,7 @@ export async function runTasksForCommand(
       planningContext: taskSelection.planningContext,
       ultracacheConfigurationOutcome:
         taskSelection.ultracacheConfigurationOutcome,
+      ultracacheSkippedTaskIds: taskSelection.ultracacheSkippedTaskIds,
     });
 
     await renderIsDone.finally(() => restoreTerminal?.());
@@ -1033,6 +1032,7 @@ export async function invokeTasksRunner({
   initiatingTasks,
   planningContext,
   ultracacheConfigurationOutcome: loadedUltracacheConfigurationOutcome,
+  ultracacheSkippedTaskIds,
 }: {
   tasks: Task[];
   projectGraph: ProjectGraph;
@@ -1046,6 +1046,7 @@ export async function invokeTasksRunner({
   planningContext?: TaskPlanningContext;
   /** Already loaded for this command; `undefined` loads it here. */
   ultracacheConfigurationOutcome?: UltracacheConfigurationOutcome | null;
+  ultracacheSkippedTaskIds?: string[];
 }): Promise<{
   taskResults: { [id: string]: TaskResult };
   taskStatuses?: Record<string, TaskStatus>;
@@ -1091,7 +1092,8 @@ export async function invokeTasksRunner({
     ultracacheConfigurationOutcome,
     projectGraph,
     taskGraph,
-    nxArgs
+    nxArgs,
+    ultracacheSkippedTaskIds
   );
   const taskResultsLifecycle = new TaskResultsLifeCycle();
   const compositedLifeCycle: LifeCycle = new CompositeLifeCycle([
@@ -1183,6 +1185,8 @@ export async function invokeTasksRunner({
       },
       daemon: daemonClient,
       hashingDeferredTaskIds,
+      ultracacheSkippedTaskIds:
+        ultracacheSkippedTaskIds && new Set(ultracacheSkippedTaskIds),
     }
   );
   if ((promiseOrObservable as any).subscribe) {
@@ -1249,11 +1253,7 @@ async function convertObservableToPromise(
   });
 }
 
-function shouldUseDynamicLifeCycle(
-  tasks: Task[],
-  options: any,
-  outputStyle: string
-) {
+function shouldUseDynamicLifeCycle(tasks: Task[], outputStyle: string) {
   if (
     process.env.NX_BATCH_MODE === 'true' ||
     process.env.NX_VERBOSE_LOGGING === 'true' ||
@@ -1275,19 +1275,20 @@ function shouldUseDynamicLifeCycle(
 }
 
 function loadTasksRunner(modulePath: string): TasksRunner {
+  const isLegacyCloudPackage =
+    modulePath === 'nx-cloud' || modulePath === '@nrwl/nx-cloud';
   try {
-    const maybeTasksRunner = require(modulePath) as
-      | TasksRunner
-      | { default: TasksRunner };
+    const maybeTasksRunner = require(
+      isLegacyCloudPackage
+        ? resolveInstalledPackage(modulePath, [__dirname])
+        : modulePath
+    ) as TasksRunner | { default: TasksRunner };
     // to support both babel and ts formats
     return 'default' in maybeTasksRunner
       ? maybeTasksRunner.default
       : maybeTasksRunner;
   } catch (e) {
-    if (
-      e.code === 'MODULE_NOT_FOUND' &&
-      (modulePath === 'nx-cloud' || modulePath === '@nrwl/nx-cloud')
-    ) {
+    if (e.code === 'MODULE_NOT_FOUND' && isLegacyCloudPackage) {
       return require('../nx-cloud/nx-cloud-tasks-runner-shell')
         .nxCloudTasksRunnerShell;
     }
@@ -1299,13 +1300,15 @@ function reportUltracacheConfigurations(
   outcome: UltracacheConfigurationOutcome | null,
   projectGraph: ProjectGraph,
   taskGraph: TaskGraph,
-  nxArgs: NxArgs
+  nxArgs: NxArgs,
+  ultracacheSkippedTaskIds: string[] | undefined
 ): void {
   if (!outcome || outcome.status === 'skipped') return;
   if (!nxArgs.verbose && process.env.NX_VERBOSE_LOGGING !== 'true') return;
   const summary = formatUltracacheSummary(
     buildUltracacheOverrides(projectGraph, taskGraph, outcome.configurations),
-    outcome.status
+    outcome.status,
+    ultracacheSkippedTaskIds?.length
   );
   output.note({ title: summary.line, bodyLines: summary.bodyLines });
 }

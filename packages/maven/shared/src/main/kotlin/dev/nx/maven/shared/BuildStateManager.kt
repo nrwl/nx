@@ -33,7 +33,7 @@ object BuildStateManager {
     /**
      * Apply build states to all projects that have nx-build-state.json files.
      */
-    fun applyBuildStates(allProjects: List<MavenProject>) {
+    fun applyBuildStates(allProjects: List<MavenProject>, workspaceRoot: File) {
         val startTime = System.currentTimeMillis()
         log.debug("Checking ${allProjects.size} projects for build state files...")
 
@@ -56,7 +56,7 @@ object BuildStateManager {
         projectsToApply.forEach { (project, stateFile) ->
             try {
                 val buildState = gson.fromJson(stateFile.readText(), BuildState::class.java)
-                BuildStateApplier.applyBuildState(project, buildState, projectHelper)
+                BuildStateApplier.applyBuildState(project, buildState, workspaceRoot, projectHelper)
                 log.debug("  Applied build state for ${project.groupId}:${project.artifactId}")
             } catch (e: Exception) {
                 log.error("  Failed to apply build state to ${project.artifactId}: ${e.message}", e)

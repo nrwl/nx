@@ -404,11 +404,8 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
   const nxJson = readNxJson(host);
   let hasPlugin: PluginConfiguration | undefined;
   let buildPlugin: string;
-  let buildConfigFile: string;
   if (options.bundler === 'webpack' || options.bundler === 'vite') {
     buildPlugin = `@nx/${options.bundler}/plugin`;
-    buildConfigFile =
-      options.bundler === 'webpack' ? 'webpack.config.js' : `vite.config.ts`;
     hasPlugin = nxJson.plugins?.find((p) =>
       typeof p === 'string' ? p === buildPlugin : p.plugin === buildPlugin
     );

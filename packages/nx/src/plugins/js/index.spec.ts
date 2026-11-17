@@ -3,10 +3,16 @@ import {
   readdirSync,
   readFileSync,
   rmSync,
+  symlinkSync,
   writeFileSync,
 } from 'node:fs';
+import Module from 'node:module';
 import { dirname, join } from 'node:path';
 import type { ProjectGraphExternalNode } from '../../config/project-graph';
+import { linkedProjectBunLock } from './lock-file/__fixtures__/bun/linked-project.bun.lock';
+import linkedProjectPnpmLock from './lock-file/__fixtures__/linked-project/pnpm-lock.yaml';
+import localPathPackagesPnpmLock from './lock-file/__fixtures__/local-path-packages/pnpm-lock.yaml';
+import overriddenLocalPathPnpmLock from './lock-file/__fixtures__/overridden-local-path/pnpm-lock.yaml';
 
 const { root, workspaceDataDirectory } = vi.hoisted(() => {
   const { mkdtempSync, realpathSync } = require('node:fs');
@@ -92,10 +98,15 @@ function writeWorkspace(rootDevDependencies: Record<string, string>) {
   }
 }
 
-// A fresh module registry stands in for the next graph computation's process.
+// A fresh module registry, Node resolution cache and workspace index stand in
+// for the next graph computation's process.
 async function loadPluginInNewProcess() {
   vi.resetModules();
-  return await import('./index');
+  // `_pathCache` is an internal Node API not exposed in @types/node.
+  (Module as any)._pathCache = Object.create(null);
+  const plugin = await import('./index');
+  (await import('../../utils/workspace-context')).resetWorkspaceContext();
+  return plugin;
 }
 
 async function createExternalNodes(
@@ -112,15 +123,30 @@ async function createExternalNodes(
 
 async function createDependencies(
   plugin: Awaited<ReturnType<typeof loadPluginInNewProcess>>,
-  externalNodes: Record<string, ProjectGraphExternalNode>
+  externalNodes: Record<string, ProjectGraphExternalNode>,
+  // Files per project root, which also names the project
+  projectFiles: Record<string, string[]> = {}
 ) {
+  const projectFileMap = Object.fromEntries(
+    Object.entries(projectFiles).map(([projectRoot, files]) => [
+      projectRoot,
+      files.map((file) => ({ file, hash: file })),
+    ])
+  );
   return await plugin.createDependencies(undefined, {
-    nxJsonConfiguration: {},
+    nxJsonConfiguration: {
+      pluginsConfig: { '@nx/js': { analyzeSourceFiles: true } },
+    },
     workspaceRoot: root,
     externalNodes,
-    projects: {},
-    fileMap: { projectFileMap: {}, nonProjectFiles: [] },
-    filesToProcess: { projectFileMap: {}, nonProjectFiles: [] },
+    projects: Object.fromEntries(
+      Object.keys(projectFiles).map((projectRoot) => [
+        projectRoot,
+        { root: projectRoot },
+      ])
+    ),
+    fileMap: { projectFileMap, nonProjectFiles: [] },
+    filesToProcess: { projectFileMap, nonProjectFiles: [] },
   });
 }
 
@@ -139,6 +165,20 @@ x@1.0.0:
   integrity sha512-x
 `;
 
+const yarnLockFileWithTwoVersionsOfX = `${yarnLockFile}
+b@1.0.0:
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/b/-/b-1.0.0.tgz"
+  integrity sha512-b
+  dependencies:
+    x "2.0.0"
+
+x@2.0.0:
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/x/-/x-2.0.0.tgz"
+  integrity sha512-x2
+`;
+
 describe('nx/js/dependencies-and-lockfile', () => {
   beforeEach(() => {
     write('nx.json', '{}');
@@ -150,11 +190,15 @@ describe('nx/js/dependencies-and-lockfile', () => {
   });
 
   it('should not reuse lockfile dependencies computed against differently named external nodes', async () => {
-    writeWorkspace({ a: '1.0.0', b: '1.0.0', x: '1.0.0' });
-    // The install has not linked x@1.0.0 at the root yet.
-    rmSync(join(root, 'node_modules', 'x'), { recursive: true });
+    // Yarn names a package's node from node_modules, so an install can rename
+    // it without changing the lockfile.
+    write(
+      'package.json',
+      JSON.stringify({ devDependencies: { a: '1.0.0', b: '1.0.0' } })
+    );
+    write('yarn.lock', yarnLockFileWithTwoVersionsOfX);
     const first = await loadPluginInNewProcess();
-    const firstNodes = await createExternalNodes(first);
+    const firstNodes = await createExternalNodes(first, 'yarn.lock');
     expect(Object.keys(firstNodes)).toContain('npm:x@1.0.0');
 
     // A second process misses the first's nodes cache and sees x@1.0.0 linked
@@ -162,13 +206,26 @@ describe('nx/js/dependencies-and-lockfile', () => {
     rmSync(workspaceDataDirectory, { recursive: true });
     write('node_modules/x/package.json', JSON.stringify({ version: '1.0.0' }));
     const second = await loadPluginInNewProcess();
-    const secondNodes = await createExternalNodes(second);
+    const secondNodes = await createExternalNodes(second, 'yarn.lock');
     await createDependencies(first, firstNodes);
 
     expect(await createDependencies(second, secondNodes)).toEqual([
       { source: 'npm:a', target: 'npm:x', type: 'static' },
       { source: 'npm:b', target: 'npm:x@2.0.0', type: 'static' },
     ]);
+  });
+
+  it('should name pnpm external nodes the same however node_modules is linked', async () => {
+    writeWorkspace({ a: '1.0.0', b: '1.0.0', x: '1.0.0' });
+    rmSync(join(root, 'node_modules', 'x'), { recursive: true });
+    const before = await createExternalNodes(await loadPluginInNewProcess());
+
+    rmSync(workspaceDataDirectory, { recursive: true });
+    write('node_modules/x/package.json', JSON.stringify({ version: '2.0.0' }));
+    const after = await createExternalNodes(await loadPluginInNewProcess());
+
+    expect(after).toEqual(before);
+    expect(before['npm:x'].data.version).toEqual('1.0.0');
   });
 
   it('should recompute a cache that another process left partially written', async () => {
@@ -221,6 +278,375 @@ describe('nx/js/dependencies-and-lockfile', () => {
 
     expect(await createDependencies(plugin, nodes)).toEqual([
       { source: 'npm:a', target: 'npm:x', type: 'static' },
+    ]);
+  });
+
+  it.each([['pnpm-lock.yaml', localPathPackagesPnpmLock]])(
+    'should hash the contents of local path packages in %s',
+    async (lockFile, lockFileContent) => {
+      write(
+        'package.json',
+        JSON.stringify({
+          name: 'root',
+          dependencies: {
+            vend: 'file:./vendor/vend',
+            ignored: 'file:./vendor/ignored',
+            vtar: 'file:./vendor/vtar-1.0.0.tgz',
+            lnk: 'link:vendor/lnk',
+            alias: 'file:./vendor/real',
+          },
+        })
+      );
+      write('.gitignore', 'vendor/ignored\nvendor/vend/dist\n');
+      write(lockFile, lockFileContent);
+      // `vend` declares the `ttar` tarball.
+      const sources = [
+        ['vend', 'vendor/vend/index.js'],
+        ['vtar', 'vendor/vtar-1.0.0.tgz'],
+        ['lnk', 'vendor/lnk/index.js'],
+        ['ttar', 'vendor/ttar-1.0.0.tgz'],
+        ['alias', 'vendor/real/index.js'],
+      ];
+      const ignoredSources = [
+        'vendor/vend/dist/index.js',
+        'vendor/ignored/index.js',
+      ];
+      const names = [...new Set([...sources.map(([name]) => name), 'ignored'])];
+      for (const source of [...sources.map(([, s]) => s), ...ignoredSources]) {
+        write(source, 'V1');
+      }
+      // Every node of a package, so a package that also has a bare node
+      // changes only when all of them do.
+      const hashes = async () => {
+        const plugin = await loadPluginInNewProcess();
+        const nodes = await createExternalNodes(plugin, lockFile);
+        return Object.fromEntries(
+          names.map((name) => [
+            name,
+            Object.values(nodes)
+              .filter((node) => node.data.packageName === name)
+              .map((node) => node.data.hash),
+          ])
+        );
+      };
+      const before = await hashes();
+
+      for (const [name, source] of sources) {
+        write(source, 'V2');
+        const after = await hashes();
+        write(source, 'V1');
+
+        expect(before[name].length).toBeGreaterThan(0);
+        for (const [otherName, otherHashes] of Object.entries(before)) {
+          if (otherName === name) {
+            for (const [i, hash] of after[name].entries()) {
+              expect(hash).not.toBe(otherHashes[i]);
+            }
+          } else {
+            expect(after[otherName]).toEqual(otherHashes);
+          }
+        }
+      }
+
+      for (const source of ignoredSources) {
+        write(source, 'V2');
+        expect(await hashes()).toEqual(before);
+        write(source, 'V1');
+      }
+
+      // A missing directory hashes like one with only ignored files, so
+      // building one keeps the hash
+      rmSync(join(root, 'vendor/vend/dist'), { recursive: true });
+      rmSync(join(root, 'vendor/ignored'), { recursive: true });
+      expect(await hashes()).toEqual(before);
+    }
+  );
+
+  // lib and control declare the vendored `ms`, and an override installs the
+  // registry `ms` of the same version for lib.
+  it.each([['pnpm-lock.yaml', overriddenLocalPathPnpmLock, 'npm:ms']])(
+    'should depend on the copy each project installs when an override replaces a local package in %s',
+    async (lockFile, lockFileContent, registryNode) => {
+      write(
+        'package.json',
+        JSON.stringify({
+          name: 'ovr-root',
+          workspaces: ['libs/*'],
+          dependencies: { ms: '2.1.3' },
+        })
+      );
+      write(lockFile, lockFileContent);
+      write(
+        'vendor/ms/package.json',
+        JSON.stringify({ name: 'ms', version: '2.1.3' })
+      );
+      const projectFiles: Record<string, string[]> = {};
+      for (const project of ['libs/lib', 'libs/control']) {
+        write(
+          `${project}/package.json`,
+          JSON.stringify({ dependencies: { ms: 'file:../../vendor/ms' } })
+        );
+        write(`${project}/src/index.ts`, `import ms from 'ms';`);
+        write(
+          `${project}/node_modules/ms/package.json`,
+          JSON.stringify({ name: 'ms', version: '2.1.3' })
+        );
+        projectFiles[project] = [
+          `${project}/package.json`,
+          `${project}/src/index.ts`,
+        ];
+      }
+      const plugin = await loadPluginInNewProcess();
+
+      const dependencies = await createDependencies(
+        plugin,
+        await createExternalNodes(plugin, lockFile),
+        projectFiles
+      );
+
+      expect(
+        dependencies
+          .filter(({ source }) => source in projectFiles)
+          .map(({ sourceFile, target }) => [sourceFile, target])
+          .sort()
+      ).toEqual([
+        ['libs/control/package.json', 'npm:ms@file:vendor/ms'],
+        ['libs/control/src/index.ts', 'npm:ms@file:vendor/ms'],
+        ['libs/lib/package.json', registryNode],
+        ['libs/lib/src/index.ts', registryNode],
+      ]);
+    }
+  );
+
+  // apps/a links x to libs/x/dist inside the project libs/x, and apps/b to the
+  // plain directory vendor/x. Neither target is in the package manager's
+  // workspaces.
+  it.each([
+    ['pnpm-lock.yaml', linkedProjectPnpmLock, 'npm:x', 'npm:x'],
+    ['bun.lock', linkedProjectBunLock, 'npm:x', 'npm:x'],
+  ])(
+    'should depend on the project a link points to and on the link in %s, built or not',
+    async (lockFile, lockFileContent, projectLinkNode, vendoredNode) => {
+      write(
+        'package.json',
+        JSON.stringify({ name: 'rvws', workspaces: ['apps/*'] })
+      );
+      write(lockFile, lockFileContent);
+      write(
+        'vendor/x/package.json',
+        JSON.stringify({ name: 'x', version: '1.0.0' })
+      );
+      const projectFiles: Record<string, string[]> = {};
+      for (const [app, target] of [
+        ['apps/a', 'libs/x/dist'],
+        ['apps/b', 'vendor/x'],
+      ]) {
+        write(
+          `${app}/package.json`,
+          JSON.stringify({ dependencies: { x: `link:../../${target}` } })
+        );
+        write(`${app}/src/index.ts`, `import x from 'x';`);
+        mkdirSync(join(root, app, 'node_modules'));
+        symlinkSync(`../../../${target}`, join(root, app, 'node_modules/x'));
+        projectFiles[app] = [`${app}/package.json`, `${app}/src/index.ts`];
+      }
+
+      for (const built of [false, true]) {
+        if (built) {
+          write(
+            'libs/x/dist/package.json',
+            JSON.stringify({ name: 'x', version: '1.0.0' })
+          );
+        }
+        const plugin = await loadPluginInNewProcess();
+
+        const dependencies = await createDependencies(
+          plugin,
+          await createExternalNodes(plugin, lockFile),
+          {
+            ...projectFiles,
+            'libs/x': built ? ['libs/x/dist/package.json'] : [],
+          }
+        );
+
+        expect(
+          dependencies
+            .filter(({ source }) => source.startsWith('apps/'))
+            .map(({ sourceFile, target }) => [sourceFile, target])
+            .sort()
+        ).toEqual([
+          ['apps/a/package.json', 'libs/x'],
+          ['apps/a/package.json', projectLinkNode],
+          ['apps/a/src/index.ts', 'libs/x'],
+          ['apps/a/src/index.ts', projectLinkNode],
+          ['apps/b/package.json', vendoredNode],
+          ['apps/b/src/index.ts', vendoredNode],
+        ]);
+      }
+    }
+  );
+
+  // apps/a reaches libs/x/dist through out, a link that dangles until the build
+  // creates libs/x. Node can't resolve `via/../x` past the link via, so that
+  // chain keeps only the link's node.
+  it.each([
+    ['libs/x', ['apps/a/package.json', 'apps/a/src/index.ts']],
+    ['via/../x', []],
+  ])(
+    'should follow a link through another link to %s, built or not',
+    async (outTarget, libsXSourceFiles) => {
+      write(
+        'package.json',
+        JSON.stringify({ name: 'rvws', workspaces: ['apps/*'] })
+      );
+      write('bun.lock', linkedProjectBunLock);
+      write(
+        'apps/a/package.json',
+        JSON.stringify({ dependencies: { x: 'link:../../libs/x/dist' } })
+      );
+      write('apps/a/src/index.ts', `import x from 'x';`);
+      mkdirSync(join(root, 'apps/a/node_modules'));
+      symlinkSync('../../../out/dist', join(root, 'apps/a/node_modules/x'));
+      symlinkSync(outTarget, join(root, 'out'));
+      mkdirSync(join(root, 'libs/anchor'), { recursive: true });
+      symlinkSync('libs/anchor', join(root, 'via'));
+
+      for (const built of [false, true]) {
+        if (built) {
+          write(
+            'libs/x/dist/package.json',
+            JSON.stringify({ name: 'x', version: '1.0.0' })
+          );
+        }
+        const plugin = await loadPluginInNewProcess();
+
+        const dependencies = await createDependencies(
+          plugin,
+          await createExternalNodes(plugin, 'bun.lock'),
+          {
+            'apps/a': ['apps/a/package.json', 'apps/a/src/index.ts'],
+            'libs/x': built ? ['libs/x/dist/package.json'] : [],
+          }
+        );
+
+        const sourceFilesDependingOn = (isTarget: (t: string) => boolean) =>
+          dependencies
+            .filter(({ target }) => isTarget(target))
+            .map(({ sourceFile }) => sourceFile)
+            .sort();
+        expect(sourceFilesDependingOn((t) => t === 'libs/x')).toEqual(
+          libsXSourceFiles
+        );
+        expect(sourceFilesDependingOn((t) => t.startsWith('npm:x'))).toEqual([
+          'apps/a/package.json',
+          'apps/a/src/index.ts',
+        ]);
+      }
+    }
+  );
+
+  // The project apps holds its own copy of x, which Node loads for apps/a until
+  // the build creates the target of apps/a's link.
+  it('should not depend on the project that holds the copy an import loads', async () => {
+    write(
+      'package.json',
+      JSON.stringify({ name: 'rvws', workspaces: ['apps/*'] })
+    );
+    write('bun.lock', linkedProjectBunLock);
+    write(
+      'apps/node_modules/x/package.json',
+      JSON.stringify({ name: 'x', version: '3.0.0' })
+    );
+    write(
+      'apps/a/package.json',
+      JSON.stringify({ dependencies: { x: 'link:../../libs/x/dist' } })
+    );
+    write('apps/a/src/index.ts', `import x from 'x';`);
+    mkdirSync(join(root, 'apps/a/node_modules'));
+    symlinkSync('../../../libs/x/dist', join(root, 'apps/a/node_modules/x'));
+
+    for (const built of [false, true]) {
+      if (built) {
+        write(
+          'libs/x/dist/package.json',
+          JSON.stringify({ name: 'x', version: '1.0.0' })
+        );
+      }
+      const plugin = await loadPluginInNewProcess();
+
+      const dependencies = await createDependencies(
+        plugin,
+        await createExternalNodes(plugin, 'bun.lock'),
+        {
+          apps: [],
+          'apps/a': ['apps/a/package.json', 'apps/a/src/index.ts'],
+          'libs/x': built ? ['libs/x/dist/package.json'] : [],
+        }
+      );
+
+      expect(
+        dependencies
+          .filter(({ target }) => !target.startsWith('npm:'))
+          .map(({ sourceFile, target }) => [sourceFile, target])
+          .sort()
+      ).toEqual(
+        built
+          ? [
+              ['apps/a/package.json', 'libs/x'],
+              ['apps/a/src/index.ts', 'libs/x'],
+            ]
+          : []
+      );
+    }
+  });
+
+  it('should depend on the local copy npm nests under a project', async () => {
+    write(
+      'package.json',
+      JSON.stringify({
+        name: 'rvws',
+        workspaces: ['libs/*'],
+        dependencies: { x: 'file:vendor/x.tgz' },
+      })
+    );
+    write(
+      'package-lock.json',
+      readFileSync(
+        join(
+          __dirname,
+          'lock-file/__fixtures__/nested-local-path/package-lock.json.fixture'
+        ),
+        'utf-8'
+      )
+    );
+    write(
+      'libs/a/package.json',
+      JSON.stringify({ name: '@rv/a', dependencies: { x: 'file:x-a.tgz' } })
+    );
+    write('libs/a/src/index.ts', `import x from 'x';`);
+    write(
+      'libs/a/node_modules/x/package.json',
+      JSON.stringify({ name: 'x', version: '1.0.0' })
+    );
+    const projectFiles = {
+      'libs/a': ['libs/a/package.json', 'libs/a/src/index.ts'],
+    };
+    const plugin = await loadPluginInNewProcess();
+
+    const dependencies = await createDependencies(
+      plugin,
+      await createExternalNodes(plugin, 'package-lock.json'),
+      projectFiles
+    );
+
+    expect(
+      dependencies
+        .filter(({ source }) => source === 'libs/a')
+        .map(({ sourceFile, target }) => [sourceFile, target])
+        .sort()
+    ).toEqual([
+      ['libs/a/package.json', 'npm:x@file:libs/a/x-a.tgz'],
+      ['libs/a/src/index.ts', 'npm:x@file:libs/a/x-a.tgz'],
     ]);
   });
 

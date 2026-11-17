@@ -5,6 +5,7 @@ export {
   safeWriteFileCache,
   emitPluginWorkerLog,
   resolveImplementation,
+  resolveInstalledPackage,
   resolveSchema,
   ImplementationResolutionError,
   SchemaResolutionError,
@@ -16,6 +17,8 @@ export {
   createOverrides,
   isAiAgent,
   readShebangHeaders,
+  transformProjectGraphForProjectMatching,
+  unmatchedProjectPatterns,
   // getCatalogManager takes the barrel route here because this file *is*
   // @nx/devkit/internal — first-party consumers only, released in lockstep. Its
   // class-1 siblings in packages/devkit/src/utils/ (semver.ts, package-json.ts)
@@ -119,7 +122,13 @@ export {
 } from './src/utils/require-esm-race';
 export { findPluginForConfigFile } from './src/utils/find-plugin-for-config-file';
 export { getNamedInputs } from './src/utils/get-named-inputs';
-export { parseNxDirectives } from './src/utils/nx-directives';
+export {
+  matchNxDirective,
+  NX_DIRECTIVE_NAMES,
+  parseNxDirectives,
+  readNxDirectiveHeader,
+  type NxDirectiveHeaderLine,
+} from './src/utils/nx-directives';
 export {
   getForwardedArgs,
   getListeningUrl,
@@ -130,7 +139,13 @@ export {
   runReadyCheck,
   type ServerAddress,
 } from './src/utils/readiness';
-export { applyTestFileDirectives } from './src/utils/test-file-directives';
+export {
+  applyTestFileDirectives,
+  appliesTestFileDirective,
+  recordedTestFile,
+  type TestFileDirective,
+} from './src/utils/test-file-directives';
+export { dependsOnProjects } from './src/utils/test-file-depends-on';
 export { hasIgnoreServerInputsDirective } from './src/utils/ignore-server-inputs-directive';
 export { logShowProjectCommand } from './src/utils/log-show-project-command';
 export { eachValueFrom } from './src/utils/rxjs-for-await';
@@ -185,6 +200,7 @@ export {
   type PackageJson,
   type PackageJsonDependencySection,
   type PackageManagerCommands,
+  type ProjectMetadata,
   type ProjectRootMappings,
   RemoteCacheV2,
   type RunCommandsOptions,
@@ -203,10 +219,14 @@ export {
   buildProjectGraphAndSourceMapsWithoutDaemon,
   calculateFileChanges,
   calculateReverseDeps,
+  checkCircularPath,
+  circularPathHasPair,
   codeFrameColumns,
   combineGlobPatterns,
+  computeJsonLineNumbers,
   connectToNxCloud,
   createDirectory,
+  createFileMapUsingProjectGraph,
   createLockFile,
   createNxCloudOnboardingURL,
   createNxCloudOnboardingURLForWelcomeApp,
@@ -223,6 +243,7 @@ export {
   directoryExists,
   dropEmptyPeerDependencySections,
   expandDependencyConfigSyntaxSugar,
+  expandIgnoredCircularDependencies,
   expandInitiatingTasksThroughNoop,
   expandWildcardTargetConfiguration,
   fileDataDepTarget,
@@ -230,12 +251,16 @@ export {
   fileExists,
   filterUsingGlobPatterns,
   findAllProjectNodeDependencies,
+  findFilesInCircularPath,
+  findFilesWithDynamicImports,
   findInstalledPlugins,
   findMatchingConfigFiles,
+  findClosestMatches,
   findMatchingProjects,
   findMatchingTargetNames,
   findProjectForPath,
   findProjectsNpmDependencies,
+  flushChanges,
   forceRegisterEsmLoader,
   generatePrunedDeployOutput,
   getCliPath,
@@ -262,9 +287,12 @@ export {
   getSourceDirOfDependentProjects,
   getTargetConfigurationForTask,
   getTargetInputs,
+  getPath,
   getUnparsedOverrideArgs,
+  getVcsRemoteInfo,
   getWorkspacePackagesFromGraph,
   globWithWorkspaceContext,
+  handleErrors,
   handleImport,
   handleProjectGraphError,
   hashFile,
@@ -295,6 +323,7 @@ export {
   orange,
   parseExecutor,
   parseVersionFromPackageManagerField,
+  pathExists,
   preventRecursionInGraphConstruction,
   quoteShellArg,
   readCachedProjectConfiguration,

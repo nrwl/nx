@@ -1,6 +1,5 @@
 import { Task } from '../../config/task-graph';
 import { LifeCycle, TaskResult } from '../life-cycle';
-import { TaskStatus } from '../tasks-runner';
 
 export class TaskTimingsLifeCycle implements LifeCycle {
   private timings: {

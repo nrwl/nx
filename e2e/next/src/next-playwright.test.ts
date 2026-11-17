@@ -2,6 +2,8 @@ import {
   runCLI,
   cleanupProject,
   newProject,
+  configureTargetOptions,
+  reservePort,
   uniq,
   updateFile,
   shouldRunPlaywrightTests,
@@ -13,10 +15,12 @@ describe('Next Playwright e2e tests', () => {
   const usedInAppLibName = uniq('pw-next-lib');
 
   beforeAll(async () => {
+    const e2ePort = await reservePort();
     projectName = newProject({
       name: uniq('pw-next'),
       packages: ['@nx/next', '@nx/js', '@nx/playwright'],
     });
+    configureTargetOptions(['dev', 'start'], { port: e2ePort });
     runCLI(
       `generate @nx/next:app ${appName} --e2eTestRunner=playwright --no-interactive`
     );

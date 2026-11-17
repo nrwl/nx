@@ -2,6 +2,7 @@ import { performance } from 'perf_hooks';
 
 import { commandsObject } from '../src/command-line/nx-commands';
 import { WorkspaceTypeAndRoot } from '../src/utils/find-workspace-root';
+import { resolveInstalledPackage } from '../src/utils/installation-directory';
 import { stripIndents } from '../src/utils/strip-indents';
 import { daemonClient } from '../src/daemon/client/client';
 import { confirmationPrompt } from '../src/utils/prompt-helpers';
@@ -202,10 +203,11 @@ To clear the cache, you can delete the ".angular/cache" directory (or the direct
 To update the cache configuration, you can directly update the relevant options in your "nx.json" file (https://angular.dev/reference/configs/workspace-config#cache-options).`);
   } else {
     try {
-      // nx-ignore-next-line
-      const cli = require.resolve('@angular/cli/lib/init.js', {
-        paths: [workspace.dir],
-      });
+      const cli = resolveInstalledPackage(
+        '@angular/cli/lib/init.js',
+        [workspace.dir],
+        workspace.dir
+      );
       require(cli);
     } catch (e) {
       console.error(

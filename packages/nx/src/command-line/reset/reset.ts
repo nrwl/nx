@@ -1,4 +1,5 @@
-import { rmSync } from 'node:fs';
+import { lstatSync, readdirSync, rmSync } from 'node:fs';
+import { join } from 'node:path';
 
 import { daemonClient } from '../../daemon/client/client';
 import { DAEMON_DIR_FOR_CURRENT_WORKSPACE } from '../../daemon/tmp-dir';
@@ -19,6 +20,7 @@ import { isNxCloudUsed } from '../../utils/nx-cloud-utils';
 import { readNxJson } from '../../config/configuration';
 import { removeDbConnections } from '../../utils/db-connection';
 import { getBundleInstallDefaultLocation as getCloudClientLocation } from '../../nx-cloud/update-manager';
+import { removeStaleTempInstallDirectories } from '../../utils/package-manager';
 
 // Wait at max 5 seconds before giving up on a failing operation.
 const INCREMENTAL_BACKOFF_MAX_DURATION = 5000;
@@ -72,6 +74,14 @@ export async function resetHandler(args: ResetCommandOptions) {
         }
         await cleanupWorkspaceData();
       },
+    });
+  }
+  if (all) {
+    await runResetStep(errors, {
+      start: 'Removing stale temporary package installs',
+      success: 'Removed stale temporary package installs',
+      failure: 'Failed to remove stale temporary package installs.',
+      run: async () => removeStaleTempInstallDirectories(),
     });
   }
   if ((cloudEnabled && all) || args.onlyCloud) {
@@ -152,7 +162,10 @@ function removeInstalledNxCloudClient() {
     INCREMENTAL_BACKOFF_FIRST_DELAY,
     INCREMENTAL_BACKOFF_MAX_DURATION,
     () => {
-      rmSync(getCloudClientLocation(), { recursive: true, force: true });
+      const location = getCloudClientLocation();
+      if (location) {
+        rmSync(location, { recursive: true, force: true });
+      }
     }
   );
 }
@@ -162,14 +175,78 @@ function cleanupCacheEntries() {
     INCREMENTAL_BACKOFF_FIRST_DELAY,
     INCREMENTAL_BACKOFF_MAX_DURATION,
     () => {
-      rmSync(cacheDir, { recursive: true, force: true });
+      removeNxOwnedCacheEntries(cacheDir);
       // `cacheDir` is the shared directory whenever sharing is available, so
       // this is the checkout's own `.nx/cache`: still there from before the
       // move, and still what a later run falls back to if `~/.nx` stops being
       // reachable. Reset means both.
-      removeIfDistinct(cacheDirectoryForWorkspace(workspaceRoot), cacheDir);
+      const checkoutCache = cacheDirectoryForWorkspace(workspaceRoot);
+      if (checkoutCache !== cacheDir) {
+        removeNxOwnedCacheEntries(checkoutCache);
+      }
     }
   );
+}
+
+// xxh3-64 task hashes are decimal (`hasher.rs`). Older hashes and
+// `<hash>.tar.zst` archives are hex. The DB names its files `{id}-v{schema}.db`.
+const TASK_HASH = /^(?:\d{1,20}|[0-9a-fA-F]{16,64})$/;
+const NX_DATABASE_FILE = /^.+-v\d+\.(?:db(?:-wal|-shm|-journal)?|lock)$/;
+
+function isNxOwnedCacheEntry(
+  name: string,
+  isDirectory: boolean,
+  isSymbolicLink: boolean
+): boolean {
+  if (
+    name === 'terminalOutputs' ||
+    name === 'batchOutputs' ||
+    name === 'run.json' ||
+    name.startsWith('.nx-write-probe-')
+  ) {
+    return true;
+  }
+  if (TASK_HASH.test(name)) {
+    // A hash is a directory of outputs. A regular file with the same name
+    // belongs to whoever put it there; a symlink is removed as the link only.
+    return isDirectory || isSymbolicLink;
+  }
+  if (hasHashPrefix(name, '.commit') || hasHashPrefix(name, '.tar.zst')) {
+    return true;
+  }
+  return NX_DATABASE_FILE.test(name);
+}
+
+function hasHashPrefix(name: string, suffix: string): boolean {
+  return name.endsWith(suffix) && TASK_HASH.test(name.slice(0, -suffix.length));
+}
+
+function removeNxOwnedCacheEntries(dir: string) {
+  let stat;
+  try {
+    // `lstat` so a symlink is left in place instead of deleting through it.
+    stat = lstatSync(dir);
+  } catch (e: any) {
+    if (e?.code === 'ENOENT') {
+      return;
+    }
+    throw e;
+  }
+  if (!stat.isDirectory()) {
+    return;
+  }
+
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    if (
+      isNxOwnedCacheEntry(
+        entry.name,
+        entry.isDirectory(),
+        entry.isSymbolicLink()
+      )
+    ) {
+      rmSync(join(dir, entry.name), { recursive: true, force: true });
+    }
+  }
 }
 
 /** Skips the no-op when the two resolve to one directory. */

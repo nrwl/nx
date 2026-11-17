@@ -12,6 +12,7 @@ import {
   validateDependency,
 } from '../../../project-graph/project-graph-builder';
 import { parseJson } from '../../../utils/json';
+import { BUN_TEXT_LOCK_FILE } from './lock-file-names';
 
 // Highest bun.lock version this parser has been verified against:
 // - 1: workspace packages are no longer listed with their dependencies
@@ -161,15 +162,13 @@ interface PackageIndex {
   patchedPackages: Set<string>;
 }
 
-export const BUN_LOCK_FILE = 'bun.lockb';
-export const BUN_TEXT_LOCK_FILE = 'bun.lock';
+export { BUN_LOCK_FILE, BUN_TEXT_LOCK_FILE } from './lock-file-names';
 
 let currentLockFileHash: string;
 let cachedParsedLockFile: BunLockFile;
 let cachedPackageIndex: PackageIndex;
 
 const keyMap = new Map<string, ProjectGraphExternalNode>();
-const packageVersions = new Map<string, Set<string>>();
 const specParseCache = new Map<
   string,
   { name: string; version: string; protocol: string }
@@ -242,7 +241,6 @@ export function clearCache(): void {
   cachedParsedLockFile = undefined;
   cachedPackageIndex = undefined;
   keyMap.clear();
-  packageVersions.clear();
   specParseCache.clear();
   resolvedVersionCache.clear();
 }

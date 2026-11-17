@@ -84,7 +84,7 @@ Once feedback and context switching are handled, compress the compute side.
 **Cache hit rate is low**
 
 - Ensure tasks are cacheable and deterministic. Define `outputs` and configure `inputs`/`namedInputs` correctly. See: [Configure Inputs](/docs/kb/configure-inputs), [Configure Outputs](/docs/kb/configure-outputs), [Inputs Reference](/docs/reference/inputs)
-- Standardize Node/PNPM versions across dev and CI; avoid environment variables that unintentionally affect inputs.
+- Standardize Node/pnpm versions across dev and CI; avoid environment variables that unintentionally affect inputs.
 - Use [remote caching](/docs/features/ci-features/remote-cache) to share results between CI and developer machines.
 
 **Agents are idle, or queue time is high**

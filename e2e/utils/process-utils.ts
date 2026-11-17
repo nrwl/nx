@@ -70,10 +70,8 @@ export async function killPort(port: number): Promise<boolean> {
   return false;
 }
 
-export async function killPorts(port?: number): Promise<boolean> {
-  return port
-    ? await killPort(port)
-    : (await killPort(3333)) && (await killPort(4200));
+export async function killPorts(port: number): Promise<boolean> {
+  return killPort(port);
 }
 
 export async function killProcessAndPorts(

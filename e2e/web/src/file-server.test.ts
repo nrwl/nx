@@ -27,7 +27,7 @@ describe('file-server', () => {
       `generate @nx/angular:app ${ngAppName} --no-interactive --e2eTestRunner=none`
     );
 
-    const port = 6200;
+    const port = await reservePort();
     const ngServe = await runCommandUntil(
       `serve-static ${ngAppName} --port=${port}`,
       (output) => output.indexOf(`localhost:${port}`) > -1

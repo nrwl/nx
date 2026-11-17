@@ -16,7 +16,7 @@ export function runNxCommand(
     silenceError: false,
   }
 ): string {
-  function _runNxCommand(c) {
+  function _runNxCommand() {
     const cwd = opts.cwd ?? tmpProjPath();
     const execSyncOptions: ExecSyncOptions = {
       cwd,
@@ -34,7 +34,7 @@ export function runNxCommand(
   }
 
   try {
-    return _runNxCommand(command)
+    return _runNxCommand()
       .toString()
       .replace(
         /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g,

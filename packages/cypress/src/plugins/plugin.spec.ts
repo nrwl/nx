@@ -453,6 +453,10 @@ describe('@nx/cypress/plugin', () => {
                       "technologies": [
                         "cypress",
                       ],
+                      "testFileDirectives": {
+                        "file": "src/test.cy.ts",
+                        "ignore-server-inputs": true,
+                      },
                     },
                     "options": {
                       "cwd": ".",
@@ -669,6 +673,10 @@ describe('@nx/cypress/plugin', () => {
                       "technologies": [
                         "cypress",
                       ],
+                      "testFileDirectives": {
+                        "file": "src/test.cy.ts",
+                        "ignore-server-inputs": true,
+                      },
                     },
                     "options": {
                       "cwd": ".",
@@ -1017,6 +1025,10 @@ describe('@nx/cypress/plugin', () => {
                       "technologies": [
                         "cypress",
                       ],
+                      "testFileDirectives": {
+                        "file": "src/test.cy.ts",
+                        "ignore-server-inputs": true,
+                      },
                     },
                     "options": {
                       "cwd": ".",
@@ -1444,6 +1456,10 @@ describe('@nx/cypress/plugin', () => {
                       "technologies": [
                         "cypress",
                       ],
+                      "testFileDirectives": {
+                        "file": "src/test.cy.ts",
+                        "ignore-server-inputs": true,
+                      },
                     },
                     "options": {
                       "cwd": ".",
@@ -1883,6 +1899,10 @@ describe('@nx/cypress/plugin', () => {
                       "technologies": [
                         "cypress",
                       ],
+                      "testFileDirectives": {
+                        "file": "apps/myapp/src/test.cy.ts",
+                        "ignore-server-inputs": true,
+                      },
                     },
                     "options": {
                       "cwd": "apps/myapp",

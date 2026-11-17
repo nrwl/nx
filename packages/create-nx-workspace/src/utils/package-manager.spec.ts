@@ -13,7 +13,19 @@ import {
   findAllWorkspacePackageJsons,
   convertStarToWorkspaceProtocol,
   detectInvokedPackageManager,
+  getPackageManagerCommand,
 } from './package-manager';
+
+vi.mock('node:child_process', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('node:child_process')>()),
+  execSync: vi.fn(() => '1.3.0\n'),
+}));
+
+describe('getPackageManagerCommand', () => {
+  it('runs the locally installed nx with bun rather than bunx', () => {
+    expect(getPackageManagerCommand('bun').exec).toBe('bun');
+  });
+});
 
 describe('detectInvokedPackageManager', () => {
   const originalEnv = process.env;

@@ -58,6 +58,24 @@ export async function cloneFromUpstream(
   return new GitRepository(destination);
 }
 
+/**
+ * Whether `directory` is itself a repository `git clone` accepts: a working
+ * tree root or a bare repository, but not a directory nested inside one.
+ */
+export async function isCloneableGitRepository(
+  directory: string
+): Promise<boolean> {
+  for (const gitDir of [join(directory, '.git'), directory]) {
+    try {
+      await execFileAsync('git', ['rev-parse', '--resolve-git-dir', gitDir], {
+        windowsHide: true,
+      });
+      return true;
+    } catch {}
+  }
+  return false;
+}
+
 export class GitRepository {
   public root = this.getGitRootPath(this.directory);
   constructor(private directory: string) {}
@@ -122,7 +140,7 @@ export class GitRepository {
     ]);
   }
   async fetch(remote: string, ref?: string) {
-    return await this.execGit(['fetch', remote, ...(ref ? [ref] : [])]);
+    return await this.execGit(['fetch', '--', remote, ...(ref ? [ref] : [])]);
   }
 
   async checkout(
@@ -145,7 +163,7 @@ export class GitRepository {
   }
 
   async push(ref: string, remoteName: string) {
-    return await this.execGit(['push', '-u', '-f', remoteName, ref]);
+    return await this.execGit(['push', '-u', '-f', '--', remoteName, ref]);
   }
 
   async commit(message: string) {
@@ -160,7 +178,7 @@ export class GitRepository {
   }
 
   async addGitRemote(name: string, url: string) {
-    return await this.execGit(['remote', 'add', name, url]);
+    return await this.execGit(['remote', 'add', '--no-tags', name, url]);
   }
 
   async hasFilterRepoInstalled() {
@@ -633,6 +651,7 @@ export function getGitRootPath(cwd?: string): string {
   return execFileSync('git', ['rev-parse', '--show-toplevel'], {
     cwd,
     windowsHide: true,
+    stdio: ['ignore', 'pipe', 'pipe'],
   })
     .toString()
     .trim();
@@ -728,7 +747,11 @@ export function getGitRepositoryStatus(
   } catch (err) {
     const stderr =
       (err as { stderr?: Buffer | string })?.stderr?.toString() ?? '';
-    return /not a git repository/i.test(stderr) ? 'not-git' : 'unknown';
+    // Anchored to git's own message so a path quoted in another error, such
+    // as a broken included config file, cannot match.
+    return /^fatal: not a git repository/im.test(stderr)
+      ? 'not-git'
+      : 'unknown';
   }
 }
 

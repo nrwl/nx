@@ -7,3 +7,5 @@
 # ESLint 9 warns that this file is unsupported; that is expected, it is not
 # ESLint's file.
 /examples
+# Prepush passes file paths, which the directory-only pattern does not exclude.
+/examples/**

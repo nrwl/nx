@@ -18,10 +18,7 @@ export async function getDevServerConfig(
   return {
     host: options.devServer.host,
     port: options.devServer.port,
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-      ...options.devServer.headers,
-    },
+    headers: options.devServer.headers,
     historyApiFallback: {
       index: posix.join(servePath, getIndexOutputFile(options.index)),
       disableDotRule: true,
@@ -52,7 +49,9 @@ export async function getDevServerConfig(
       options.devServer.hmr && !options.devServer.liveReload
         ? 'only'
         : options.devServer.hmr,
-    proxy: await getProxyConfig(root, options.devServer.proxyConfig),
+    proxy: options.projectGraphCreation
+      ? undefined
+      : await getProxyConfig(root, options.devServer.proxyConfig),
     ...getWebSocketSettings(options, servePath),
     watchFiles: ['./src/**/*.*', './public/**/*.*'],
     onListening:
@@ -83,7 +82,7 @@ function buildServePath(options: NormalizedAngularRspackPluginOptions): string {
       options.baseHref,
       options.deployUrl
     );
-    if (defaultPath == null) {
+    if (defaultPath == null && !options.projectGraphCreation) {
       console.warn(
         `Warning: --deploy-url and/or --base-href contain unsupported values for ng serve. Default serve path of '/' used. Use --serve-path to override.`
       );
@@ -304,7 +303,7 @@ function getPublicHostOptions(
 ): string {
   let publicHost = options.devServer.publicHost;
 
-  if (publicHost) {
+  if (publicHost && !options.projectGraphCreation) {
     const hostWithProtocol = !/^\w+:\/\//.test(publicHost)
       ? `https://${publicHost}`
       : publicHost;
