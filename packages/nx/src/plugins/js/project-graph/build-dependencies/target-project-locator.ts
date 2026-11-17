@@ -975,6 +975,20 @@ export class TargetProjectLocator {
       // Resolve the main entry point of the package
       const pathOfFileInPackage =
         packageJsonPath ?? resolveRelativeToDir(packageName, relativeToDir);
+      if (!pathOfFileInPackage) {
+        // Node's resolver can reject both paths when a package exports only
+        // types or subpaths. Its installed manifest is still available on disk.
+        let dir = relativeToDir;
+        while (true) {
+          const installed = this.readCompletePackageJson(
+            join(dir, 'node_modules', packageName, 'package.json')
+          );
+          if (installed) return installed;
+          const parent = dirname(dir);
+          if (parent === dir) return null;
+          dir = parent;
+        }
+      }
       const installedPackageJsonPath = installedPackageJsonFromResolvedFile(
         pathOfFileInPackage,
         packageName
