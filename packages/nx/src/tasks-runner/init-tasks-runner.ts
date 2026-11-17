@@ -28,9 +28,7 @@ async function createOrchestrator(
   fullTaskGraph: TaskGraph,
   nxJson: NxJsonConfiguration,
   lifeCycle: LifeCycle,
-  ultracacheConfigurations: UltracacheConfigurations | undefined,
-  /** Keep the dependencies between `tasks`, so a batch runs and hashes them in order. */
-  keepDependencies = false
+  ultracacheConfigurations: UltracacheConfigurations | undefined
 ) {
   loadRootEnvFiles();
   fullTaskGraph = withEdgeObjects(fullTaskGraph);
@@ -51,19 +49,12 @@ async function createOrchestrator(
 
   const { runnerOptions: options } = getRunner({}, nxJson);
 
-  const taskIds = tasks.map((task) => task.id);
-  const noDependencies = () =>
-    Object.fromEntries(taskIds.map((id) => [id, []]));
-
   // A dependency outside the call has already completed, so the call's task
   // graph keeps only the edges between its own tasks.
-  const { roots, dependencies, continuousDependencies } = keepDependencies
-    ? pruneToSelectedTasks(fullTaskGraph, taskIds)
-    : {
-        roots: taskIds,
-        dependencies: noDependencies(),
-        continuousDependencies: noDependencies(),
-      };
+  const { roots, dependencies, continuousDependencies } = pruneToSelectedTasks(
+    fullTaskGraph,
+    tasks.map((task) => task.id)
+  );
 
   const taskGraph: TaskGraph = {
     roots,
@@ -183,8 +174,7 @@ export async function runDiscreteTasks(
     fullTaskGraph,
     nxJson,
     lifeCycle,
-    ultracacheConfigurations,
-    true
+    ultracacheConfigurations
   );
   const releaseProcessListeners = reserveProcessListeners(tasks);
   const batchResults: Array<Promise<TaskResult[]>> = [];

@@ -150,18 +150,40 @@ describe('tasks of one call that depend on each other', () => {
     ).not.toHaveBeenCalled();
   });
 
-  it('starts continuous tasks without the dependencies between them', async () => {
+  it('keeps the dependencies between continuous tasks without hashing them up front', async () => {
+    const serve = (project: string) =>
+      ({
+        id: `${project}:serve`,
+        target: { project, target: 'serve' },
+        continuous: true,
+      }) as any;
+    const api = serve('api');
+    const app = serve('app');
+    // app:serve uses api:serve
+    const continuousTaskGraph = {
+      roots: ['api:serve'],
+      tasks: { 'api:serve': api, 'app:serve': app },
+      dependencies: { 'api:serve': [], 'app:serve': [] },
+      continuousDependencies: {
+        'api:serve': [],
+        'app:serve': [{ id: 'api:serve' }],
+      },
+    } as any;
+
     await runContinuousTasks(
-      [b, c],
+      [api, app],
       projectGraph,
-      fullTaskGraph,
+      continuousTaskGraph,
       {},
       {} as any
     );
 
     const { taskGraph, hashingDeferredTaskIds } = orchestratorArguments();
-    expect(taskGraph.roots).toEqual(['b:build', 'c:build']);
-    expect(taskGraph.dependencies).toEqual({ 'b:build': [], 'c:build': [] });
+    expect(taskGraph.roots).toEqual(['api:serve']);
+    expect(taskGraph.continuousDependencies).toEqual({
+      'api:serve': [],
+      'app:serve': [{ id: 'api:serve' }],
+    });
     expect(hashingDeferredTaskIds).toBeUndefined();
     expect(
       hashTasksThatDoNotDependOnOutputsOfOtherTasks
