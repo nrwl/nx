@@ -251,6 +251,7 @@ app.use((_req, res, next) => {
             `http://localhost:${application.devServerPort}/`,
             { signal: AbortSignal.timeout(30_000) }
           );
+          expect(response.status).toBe(200);
           servedVersion = response.headers.get('x-server-version');
           await response.arrayBuffer();
           if (servedVersion !== '1') {
