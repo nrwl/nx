@@ -479,4 +479,96 @@ describe('explicit package json dependencies', () => {
 
     rootTempFs.cleanup();
   });
+
+  it('should add workspace dependencies declared through a catalog', async () => {
+    const catalogTempFs = new TempFs('explicit-package-json-catalog');
+    try {
+      const catalogProjectsConfigurations = {
+        projects: {
+          'lib-a': { root: 'libs/lib-a', name: 'lib-a' },
+          'lib-b': { root: 'libs/lib-b', name: 'lib-b' },
+          'lib-c': { root: 'libs/lib-c', name: 'lib-c' },
+          'lib-d': { root: 'libs/lib-d', name: 'lib-d' },
+        },
+      };
+
+      await catalogTempFs.createFiles({
+        './nx.json': JSON.stringify({}),
+        './package.json': JSON.stringify({ name: 'root' }),
+        './pnpm-lock.yaml': '',
+        './pnpm-workspace.yaml': [
+          'packages:',
+          "  - 'libs/*'",
+          'catalog:',
+          "  '@repro/lib-a': 'workspace:*'",
+          "  '@repro/lib-c': 'file:libs/lib-c'",
+        ].join('\n'),
+        './libs/lib-a/package.json': JSON.stringify({ name: '@repro/lib-a' }),
+        './libs/lib-b/package.json': JSON.stringify({
+          name: '@repro/lib-b',
+          dependencies: {
+            // Not in the catalog. Listed first to check that later dependencies still resolve
+            '@repro/lib-d': 'catalog:',
+            '@repro/lib-a': 'catalog:',
+            '@repro/lib-c': 'catalog:',
+          },
+        }),
+        './libs/lib-c/package.json': JSON.stringify({ name: '@repro/lib-c' }),
+        './libs/lib-d/package.json': JSON.stringify({ name: '@repro/lib-d' }),
+      });
+
+      const catalogProjects: Record<string, ProjectGraphProjectNode> = {};
+      for (const [name, { root }] of Object.entries(
+        catalogProjectsConfigurations.projects
+      )) {
+        catalogProjects[name] = {
+          name,
+          type: 'lib',
+          data: {
+            root,
+            metadata: {
+              js: {
+                packageName: `@repro/${name}`,
+                isInPackageManagerWorkspaces: true,
+              },
+            },
+          },
+        };
+      }
+
+      const catalogFileMap = createFileMap(
+        catalogProjectsConfigurations as any,
+        await getAllFileDataInContext(catalogTempFs.tempDir)
+      ).fileMap;
+
+      const res = buildExplicitPackageJsonDependencies(
+        {
+          fileMap: catalogFileMap,
+          externalNodes: {},
+          projects: catalogProjectsConfigurations.projects,
+          nxJsonConfiguration: {},
+          filesToProcess: catalogFileMap,
+          workspaceRoot: catalogTempFs.tempDir,
+        },
+        new TargetProjectLocator(catalogProjects, {}, new Map())
+      );
+
+      expect(res).toEqual([
+        {
+          source: 'lib-b',
+          target: 'lib-a',
+          sourceFile: 'libs/lib-b/package.json',
+          type: 'static',
+        },
+        {
+          source: 'lib-b',
+          target: 'lib-c',
+          sourceFile: 'libs/lib-b/package.json',
+          type: 'static',
+        },
+      ]);
+    } finally {
+      catalogTempFs.cleanup();
+    }
+  });
 });

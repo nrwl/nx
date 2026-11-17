@@ -37,6 +37,7 @@ export interface FileMapCache {
   externalNodesHash?: string;
   lockFileHash?: string;
   typescriptResolvable?: boolean;
+  catalogsHash?: string;
 }
 
 export const nxProjectGraph = join(
@@ -188,7 +189,8 @@ export function createProjectFileMapCache(
   tsConfig: { compilerOptions?: { paths?: { [p: string]: any } } },
   externalNodesHash: string,
   lockFileHash: string,
-  typescriptResolvable: boolean
+  typescriptResolvable: boolean,
+  catalogsHash: string
 ) {
   const nxJsonPlugins = getNxJsonPluginsData(nxJson, packageJsonDeps);
   const newValue: FileMapCache = {
@@ -202,6 +204,7 @@ export function createProjectFileMapCache(
     externalNodesHash,
     lockFileHash,
     typescriptResolvable,
+    catalogsHash,
   };
   return newValue;
 }
@@ -329,7 +332,8 @@ export function shouldRecomputeWholeGraph(
   tsConfig: { compilerOptions: { paths: { [k: string]: any } } },
   externalNodesHash: string,
   lockFileHash: string,
-  typescriptResolvable: boolean
+  typescriptResolvable: boolean,
+  catalogsHash: string
 ): boolean {
   if (cache.version !== '6.0') {
     return true;
@@ -390,6 +394,12 @@ export function shouldRecomputeWholeGraph(
   // Cached import edges that need TypeScript module resolution change when
   // typescript starts or stops resolving, which no hashed file records.
   if (typescriptResolvable !== cache.typescriptResolvable) {
+    return true;
+  }
+
+  // Cached package.json dependencies that use a catalog reference follow the
+  // catalog definitions, which an edit can change before any install.
+  if (catalogsHash !== cache.catalogsHash) {
     return true;
   }
 
