@@ -9,8 +9,9 @@ import { addDeployOutputCacheInputsToBuildTargets } from '../../utils/deploy-out
  * unchanged and a cached run replays an output that still trusts it.
  */
 export default async function update(tree: Tree) {
-  // On the binary bun.lockb the deploy output is the manifest alone.
-  if (!tree.exists('bun.lock')) {
+  // A workspace on the binary bun.lockb gets the inputs too: its output
+  // carries the trust list once it switches to bun.lock.
+  if (!tree.exists('bun.lock') && !tree.exists('bun.lockb')) {
     return;
   }
   await addDeployOutputCacheInputsToBuildTargets(

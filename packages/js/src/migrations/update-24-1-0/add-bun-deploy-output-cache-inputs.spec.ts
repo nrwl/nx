@@ -57,9 +57,28 @@ describe('add-bun-deploy-output-cache-inputs migration', () => {
     );
   });
 
-  it('does nothing on the binary bun.lockb', async () => {
+  it('adds the settings fields on the binary bun.lockb', async () => {
     tree.delete('bun.lock');
     tree.write('bun.lockb', '');
+    addProjectConfiguration(tree, 'app1', {
+      root: 'apps/app1',
+      targets: {
+        build: {
+          executor: '@nx/esbuild:esbuild',
+          options: { generatePackageJson: true },
+        },
+      },
+    });
+
+    await update(tree);
+
+    expect(readProjectConfiguration(tree, 'app1').targets.build.inputs).toEqual(
+      ['default', '^default', BUN_SETTINGS_INPUT]
+    );
+  });
+
+  it('does nothing without a Bun lockfile', async () => {
+    tree.delete('bun.lock');
     addProjectConfiguration(tree, 'app1', {
       root: 'apps/app1',
       targets: {

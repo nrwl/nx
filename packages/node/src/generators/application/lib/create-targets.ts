@@ -89,7 +89,12 @@ export function getPruneTargets(
   'copy-workspace-modules': TargetConfiguration;
 } {
   const packageManager = detectPackageManager() ?? 'npm';
-  const lockFileName = getLockFileName(packageManager) ?? 'package-lock.json';
+  // The executor writes only the text bun.lock, which a workspace on the binary
+  // bun.lockb gets once it switches, so a Bun target declares that file.
+  const lockFileName =
+    packageManager === 'bun'
+      ? 'bun.lock'
+      : (getLockFileName(packageManager) ?? 'package-lock.json');
   const pruneLockfileOutputs = [
     `{workspaceRoot}/${joinPathFragments(outputPath, 'package.json')}`,
     `{workspaceRoot}/${joinPathFragments(outputPath, lockFileName)}`,

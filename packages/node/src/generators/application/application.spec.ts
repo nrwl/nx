@@ -2180,13 +2180,9 @@ describe('app', () => {
       (detectPackageManager as Mock).mockReturnValue('bun');
     });
 
-    it.each([
-      ['bun.lock', BUN_INSTALL_SETTINGS_INPUTS],
-      // The binary lockfile's deploy output is the manifest alone
-      ['bun.lockb', []],
-    ])(
-      'adds them to the build target defaults only on the text lockfile (%s)',
-      async (lockFile, deployInputs) => {
+    it.each(['bun.lock', 'bun.lockb'])(
+      'adds them to the build target defaults on either lockfile (%s)',
+      async (lockFile) => {
         tree.write(lockFile, '');
 
         await applicationGenerator(tree, {
@@ -2200,7 +2196,7 @@ describe('app', () => {
           'default',
           '^default',
           TS_SOLUTION_SETUP_TSCONFIG_INPUT,
-          ...deployInputs,
+          ...BUN_INSTALL_SETTINGS_INPUTS,
         ]);
       }
     );

@@ -74,8 +74,41 @@ describe('add-bun-prune-lockfile-cache-config migration', () => {
     ).toBeUndefined();
   });
 
+  it('adds the text bun.lock next to a binary bun.lockb output', async () => {
+    addProjectConfiguration(tree, 'app1', {
+      root: 'apps/app1',
+      targets: {
+        'prune-lockfile': {
+          executor: '@nx/js:prune-lockfile',
+          outputs: [
+            '{workspaceRoot}/dist/apps/app1/package.json',
+            '{workspaceRoot}/dist/apps/app1/bun.lockb',
+          ],
+        },
+      },
+    });
+
+    await update(tree);
+    await update(tree);
+
+    const target = readProjectConfiguration(tree, 'app1').targets[
+      'prune-lockfile'
+    ];
+    expect(target.outputs).toEqual([
+      '{workspaceRoot}/dist/apps/app1/package.json',
+      '{workspaceRoot}/dist/apps/app1/bun.lockb',
+      '{workspaceRoot}/dist/apps/app1/bun.lock',
+      '{workspaceRoot}/dist/apps/app1/patches',
+      '{workspaceRoot}/dist/apps/app1/local_path_modules',
+    ]);
+    expect(target.inputs).toEqual([
+      'default',
+      '^default',
+      '{workspaceRoot}/package.json',
+    ]);
+  });
+
   it.each([
-    ['the binary bun.lockb', ['{workspaceRoot}/dist/apps/app1/bun.lockb']],
     ['another package manager', ['{workspaceRoot}/dist/apps/app1/yarn.lock']],
     [
       'excluded from its outputs',
