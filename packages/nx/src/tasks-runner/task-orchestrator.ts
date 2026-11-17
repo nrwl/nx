@@ -1019,6 +1019,23 @@ export class TaskOrchestrator {
       );
     }
 
+    // A member skipped outside a wave's run (a dependency failed) gets no result
+    // from it; agents expect one per task, as runTaskDirectly returns.
+    const returned = new Set(results.map((result) => result.task.id));
+    for (const taskId of taskIds) {
+      if (
+        !returned.has(taskId) &&
+        this.completedTasks.get(taskId) === 'skipped'
+      ) {
+        results.push({
+          task: batch.taskGraph.tasks[taskId],
+          code: 1,
+          status: 'skipped',
+          terminalOutput: '',
+        });
+      }
+    }
+
     // Once, after every wave: an earlier status would end the batch in the TUI.
     const hasFailures = taskIds.some((taskId) => {
       const status = this.completedTasks.get(taskId);
