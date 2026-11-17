@@ -164,6 +164,13 @@ describe('parseJson', () => {
     ).toEqual({ foo: 'bar' });
   });
 
+  it('should accept null and Buffer input like JSON.parse does', () => {
+    expect(parseJson(null)).toBeNull();
+    expect(
+      parseJson(Buffer.from('{ "foo": "bar" }') as unknown as string)
+    ).toEqual({ foo: 'bar' });
+  });
+
   it('should not call JSON.parse when expectComments is true', () => {
     vi.spyOn(JSON, 'parse');
 
