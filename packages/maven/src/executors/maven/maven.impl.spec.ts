@@ -116,10 +116,12 @@ describe('Maven Executor', () => {
   describe('a phase whose build state is already on disk', () => {
     const buildState = '{projectRoot}/target/nx-build-state.json';
     const noGoals: MavenExecutorSchema = { phase: 'initialize', goals: [] };
+    const originalMavenArgs = process.env.MAVEN_ARGS;
     let root: string;
     let project: ProjectConfiguration;
 
     beforeEach(() => {
+      delete process.env.MAVEN_ARGS;
       root = mkdtempSync(join(tmpdir(), 'nx-maven-executor-'));
       mkdirSync(join(root, 'libs/test-project/target'), { recursive: true });
       writeFileSync(
@@ -140,7 +142,14 @@ describe('Maven Executor', () => {
       vi.mocked(runCommandsExecutor).mockClear();
     });
 
-    afterEach(() => rmSync(root, { recursive: true, force: true }));
+    afterEach(() => {
+      rmSync(root, { recursive: true, force: true });
+      if (originalMavenArgs === undefined) {
+        delete process.env.MAVEN_ARGS;
+      } else {
+        process.env.MAVEN_ARGS = originalMavenArgs;
+      }
+    });
 
     it('reports success without starting Maven when it has no goals', async () => {
       await expect(mavenExecutor(noGoals, context)).resolves.toEqual({
@@ -157,6 +166,7 @@ describe('Maven Executor', () => {
         { ...noGoals, __unparsed__: ['-X'] },
         () => {},
       ],
+      ['MAVEN_ARGS is set', noGoals, () => (process.env.MAVEN_ARGS = 'clean')],
       [
         'the build state file is missing',
         noGoals,
