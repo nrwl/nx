@@ -1,6 +1,9 @@
+import { readFileSync } from 'node:fs';
 import type { ProjectGraph } from '../../../config/project-graph';
 import { output } from '../../../utils/output';
 import type { PackageJson } from '../../../utils/package-json';
+import { rootDeclaredOverrideRootBunLock } from './__fixtures__/bun/pruned-overridden-dependency.bun.lock';
+import { vendoredPackagesRootBunLock } from './__fixtures__/bun/pruned-vendored-packages.bun.lock';
 import { createLockFile, generatePrunedDeployOutput } from './lock-file';
 import { stringifyNpmLockfile } from './npm-parser';
 import { stringifyPnpmLockfile } from './pnpm-parser';
@@ -125,6 +128,59 @@ describe('createLockFile', () => {
     );
   });
 
+  it('warns that a pruned bun.lock is missing the vendored packages it references', async () => {
+    const fs = await vi.importActual<typeof import('node:fs')>('node:fs');
+    (readFileSync as Mock).mockImplementation((path, ...rest) =>
+      String(path).endsWith('bun.lock')
+        ? vendoredPackagesRootBunLock
+        : fs.readFileSync(path, ...rest)
+    );
+    try {
+      createLockFile(
+        {
+          name: '@demo/api',
+          version: '1.0.0',
+          dependencies: { vend: 'file:local_path_modules/vendor/vend' },
+        },
+        graph,
+        'bun'
+      );
+    } finally {
+      (readFileSync as Mock).mockImplementation(() => 'ROOT_LOCKFILE');
+    }
+
+    expect(output.warn).toHaveBeenCalledWith({
+      title: 'The pruned bun.lock needs artifacts this call does not return',
+      bodyLines: [
+        'A standalone install of the output will be missing the vendored file:/link: dependencies it references.',
+        'Use generatePrunedDeployOutput to ship them.',
+      ],
+    });
+  });
+
+  // The root overrides the ms it declares to 2.1.2, which the pruned bun.lock
+  // declares too.
+  it('declares the version an override installs for a Bun dependency the root declares', async () => {
+    const fs = await vi.importActual<typeof import('node:fs')>('node:fs');
+    (readFileSync as Mock).mockImplementation((path, ...rest) =>
+      String(path).endsWith('bun.lock')
+        ? rootDeclaredOverrideRootBunLock
+        : fs.readFileSync(path, ...rest)
+    );
+    const packageJson: PackageJson = {
+      name: '@demo/api',
+      version: '0.0.1',
+      dependencies: { ms: '2.0.0' },
+    };
+    try {
+      createLockFile(packageJson, graph, 'bun');
+    } finally {
+      (readFileSync as Mock).mockImplementation(() => 'ROOT_LOCKFILE');
+    }
+
+    expect(packageJson.dependencies.ms).toBe('2.1.2');
+  });
+
   it('does not warn about missing artifacts for a package manager without them', () => {
     createLockFile({ name: 'app', version: '1.0.0' }, graph, 'npm');
 
@@ -164,7 +220,8 @@ describe('generatePrunedDeployOutput', () => {
       packageJson,
       'apps/app',
       '/root',
-      new Map()
+      new Map(),
+      'pnpm'
     );
     // the relocation must land in the manifest before the lockfile copies its
     // specifiers

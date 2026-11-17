@@ -12,6 +12,7 @@ import {
   dropEmptyPeerDependencySections,
   getCatalogManager,
   getWorkspacePackagesFromGraph,
+  hasTextBunLockfile,
   interpolate,
   movePeerDependencyToDependencies,
   relocatePrunedLocalPathSpec,
@@ -29,7 +30,10 @@ import {
 import { dirname, isAbsolute, join, relative, sep } from 'path';
 import { lstatSync } from 'fs';
 import { stripGlobToBaseDir } from '../../utils/strip-glob-to-base-dir';
-import { WORKSPACE_MODULE_INSTALL_SECTIONS } from '../../utils/workspace-module-sections';
+import {
+  TRANSITIVE_INSTALL_SECTIONS,
+  WORKSPACE_MODULE_INSTALL_SECTIONS,
+} from '../../utils/workspace-module-sections';
 
 type CopiedManifest = {
   dependencies?: Record<string, string>;
@@ -39,19 +43,6 @@ type CopiedManifest = {
   peerDependenciesMeta?: Record<string, { optional?: boolean }>;
   [key: string]: unknown;
 };
-
-// Sections of a copied module's own manifest whose workspace-module deps are
-// rewritten to file: and recursed into. pnpm installs a transitive dependency's
-// regular, optional, and auto-installed peer deps (a workspace peer is linked
-// and recorded under the depending importer's dependencies in the lockfile), but
-// never its devDependencies. A workspace-module peer is moved into dependencies,
-// since pnpm rejects a file: spec under peerDependencies (mirrors the app-level
-// move in prune-lockfile).
-const TRANSITIVE_INSTALL_SECTIONS = [
-  'dependencies',
-  'optionalDependencies',
-  'peerDependencies',
-] as const;
 
 // Resolve `catalog:` references in a copied module manifest to the version the
 // workspace pinned. Only the sections pnpm installs for a `file:` directory
@@ -131,12 +122,18 @@ function handleWorkspaceModules(
 
   const workspaceModules = getWorkspacePackagesFromGraph(projectGraph);
   const catalogManager = getCatalogManager(workspaceRoot);
-  // Only the pnpm prune path tells a vendored package from a workspace package
-  // of the same name. It also ships non-workspace local-path targets, so only
-  // pnpm manifests get their file:/link: specs relocated.
-  const isPnpmWorkspace = detectPackageManager(workspaceRoot) === 'pnpm';
+  // Only the pnpm and Bun prune paths tell a vendored package from a workspace
+  // package of the same name. They also ship non-workspace local-path targets,
+  // so their manifests get their file:/link: specs relocated, except for Bun
+  // without the text bun.lock, whose output ships the manifest alone.
+  const packageManager = detectPackageManager(workspaceRoot);
+  const isPnpmWorkspace = packageManager === 'pnpm';
+  const resolvesLocalPaths = isPnpmWorkspace || packageManager === 'bun';
+  const relocatesLocalPaths =
+    isPnpmWorkspace ||
+    (packageManager === 'bun' && hasTextBunLockfile(workspaceRoot));
   const resolveModule = (name: string, spec: string, dependentRoot: string) =>
-    isPnpmWorkspace
+    resolvesLocalPaths
       ? resolveWorkspaceModuleDependency(
           workspaceModules,
           name,
@@ -243,15 +240,18 @@ function handleWorkspaceModules(
         // A non-workspace file:/link: dep must keep resolving after the module
         // moves. pnpm reads a non-importer manifest file: spec relative to the
         // package dir but a link: spec relative to the install root, so each
-        // rebases onto a different base (pnpm-only; see isPnpmWorkspace).
-        if (!isPnpmWorkspace) {
+        // rebases onto a different base. Bun reads both relative to the
+        // package dir.
+        if (!relocatesLocalPaths) {
           continue;
         }
         const spec = deps[depName];
         const relocation = relocatePrunedLocalPathSpec(
           spec,
           moduleWsRelativeRoot,
-          spec.startsWith('link:') ? '' : `workspace_modules/${pkgName}`
+          isPnpmWorkspace && spec.startsWith('link:')
+            ? ''
+            : `workspace_modules/${pkgName}`
         );
         if (!relocation) {
           continue;
@@ -262,7 +262,7 @@ function handleWorkspaceModules(
             relocation.reason
           );
         }
-        if (section === 'peerDependencies') {
+        if (section === 'peerDependencies' && isPnpmWorkspace) {
           // Moved even when the target cannot ship: pnpm rejects the spec here
           // either way.
           movePeerDependencyToDependencies(
@@ -278,6 +278,13 @@ function handleWorkspaceModules(
       }
     }
     dropEmptyPeerDependencySections(copiedPackageJson);
+    // Bun resolves the devDependencies of a folder dependency the output
+    // manifest lists, but the pruned lockfile leaves them out and a
+    // `workspace:` one cannot resolve outside the workspace.
+    if (packageManager === 'bun' && copiedPackageJson.devDependencies) {
+      delete copiedPackageJson.devDependencies;
+      packageJsonModified = true;
+    }
 
     if (packageJsonModified) {
       writeFileSync(

@@ -106,6 +106,8 @@ export interface PackageJson {
   // npm install-script allowlist (npm 11.16+). Keys are `name`, `name@version`,
   // or git specs; `true` approves, `false` denies.
   allowScripts?: Record<string, boolean>;
+  // Bun install-script allowlist; when set it replaces Bun's default list.
+  trustedDependencies?: string[];
   // Bun patches, `name@version` -> patch file path.
   patchedDependencies?: Record<string, string>;
   bin?: Record<string, string> | string;
@@ -853,6 +855,16 @@ function getDependencyVersionFromPackageJsonFromFileSystem(
   }
 
   return version;
+}
+
+const TARBALL_PATH = /\.(?:tgz|tar\.gz|tar)$/i;
+
+/**
+ * Whether a local dependency path names a tarball rather than a directory, by
+ * the rule npm and Bun share: a `.tgz`, `.tar.gz` or `.tar` suffix in any case.
+ */
+export function isTarballPath(path: string): boolean {
+  return TARBALL_PATH.test(path);
 }
 
 /**

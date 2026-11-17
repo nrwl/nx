@@ -272,6 +272,7 @@ function lockfileEntry(
   return outputs?.find(
     (output): output is string =>
       typeof output === 'string' &&
+      !output.startsWith('!') &&
       (output === lockFile || output.endsWith(`/${lockFile}`))
   );
 }

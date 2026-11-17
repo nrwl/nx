@@ -214,6 +214,7 @@ export {
   createLockFile,
   generatePrunedDeployOutput,
   getLockFileName,
+  hasTextBunLockfile,
 } from './plugins/js/lock-file/lock-file';
 export {
   createPackageJson,

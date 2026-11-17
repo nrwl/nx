@@ -1643,8 +1643,8 @@ describe('createPackageJson', () => {
       );
     });
 
-    // A directory's graph version is relative to the workspace root. pnpm
-    // records a tarball from the root as well.
+    // A directory's graph version is relative to the workspace root. Bun records
+    // a tarball relative to its declarer without `file:`, pnpm from the root.
     const createGraph = (tarballVersion: string): ProjectGraph => ({
       nodes: {
         myapp: {
@@ -1737,6 +1737,30 @@ describe('createPackageJson', () => {
 
     it.each([
       [
+        'bun',
+        'file:../../vendor/ltar-1.0.0.tgz',
+        '../../vendor/ltar-1.0.0.tgz',
+        {
+          abs: 'file:/opt/abs',
+          libvend: 'file:../../vendor/libvend',
+          ltar: 'file:../../vendor/ltar-1.0.0.tgz',
+          ms: '2.1.3',
+          rootvend: 'file:../../vendor/rootvend',
+        },
+      ],
+      [
+        'bun',
+        'file:1.0.0-rc.tgz',
+        '1.0.0-rc.tgz',
+        {
+          abs: 'file:/opt/abs',
+          libvend: 'file:../../vendor/libvend',
+          ltar: 'file:../../libs/lib1/1.0.0-rc.tgz',
+          ms: '2.1.3',
+          rootvend: 'file:../../vendor/rootvend',
+        },
+      ],
+      [
         'pnpm',
         'file:../../vendor/ltar-1.0.0.tgz',
         'file:vendor/ltar-1.0.0.tgz',
@@ -1808,6 +1832,20 @@ describe('createPackageJson', () => {
         'npm:left-pad@1.3.0',
       ],
       [
+        'bun',
+        'npm:left-pad@1.3.0',
+        'link:../../../vendor/x',
+        'npm:left-pad@1.3.0',
+        'npm:left-pad@1.3.0',
+      ],
+      [
+        'bun',
+        'npm:left-pad@1.3.0',
+        'file:1.3.0',
+        'npm:left-pad@1.3.0',
+        'npm:left-pad@1.3.0',
+      ],
+      [
         'pnpm',
         'link:../../../vendor/x',
         'link:../../../vendor/x',
@@ -1815,7 +1853,21 @@ describe('createPackageJson', () => {
         'link:../../vendor/x',
       ],
       [
+        'bun',
+        'link:./vendor/x',
+        'link:../../../vendor/x',
+        undefined,
+        'link:../../vendor/x',
+      ],
+      [
         'pnpm',
+        'npm:@s/x-real@file:vendor/@s/x',
+        'link:../../../vendor/x',
+        'file:./vendor/@s/x',
+        'file:../../vendor/@s/x',
+      ],
+      [
+        'bun',
         'npm:@s/x-real@file:vendor/@s/x',
         'link:../../../vendor/x',
         'file:./vendor/@s/x',
@@ -1906,6 +1958,14 @@ describe('createPackageJson', () => {
         expected: 'link:../../vendor/x',
       },
       {
+        packageManager: 'bun',
+        scenario: 'myapp imports it and lib2 declares it',
+        importer: 'myapp',
+        declarers: ['lib2'],
+        edge: false,
+        expected: 'file:../../vendor/x-1.0.0.tgz',
+      },
+      {
         packageManager: 'pnpm',
         scenario: 'lib2 imports and declares it',
         importer: 'lib2',
@@ -1962,6 +2022,15 @@ describe('createPackageJson', () => {
         expected: 'link:../../libs/nested/vendor/x',
       },
       {
+        packageManager: 'bun',
+        scenario:
+          'lib2 imports it and its parent, which it depends on, declares it',
+        importer: 'lib2',
+        declarers: ['parent'],
+        edge: true,
+        expected: 'file:../../vendor/x-1.0.0.tgz',
+      },
+      {
         packageManager: 'pnpm',
         scenario:
           'lib2 imports it and a project whose root only shares a prefix declares it',
@@ -1981,8 +2050,10 @@ describe('createPackageJson', () => {
         edge,
         expected,
       }) => {
-        const graphVersion = 'link:vendor/x';
-        const spec = 'link:vendor/x';
+        const [graphVersion, spec] =
+          packageManager === 'pnpm'
+            ? ['link:vendor/x', 'link:vendor/x']
+            : ['vendor/x-1.0.0.tgz', 'file:vendor/x-1.0.0.tgz'];
         const projectRoots = {
           lib2: 'libs/nested/lib2',
           parent: 'libs/nested',

@@ -25,8 +25,10 @@ import {
 } from '@nx/devkit';
 import { getLockFileName, getRootTsConfigPath } from '@nx/js';
 import {
+  BUN_INSTALL_SETTINGS_INPUTS,
   isUsingTsSolutionSetup,
   pnpmInstallSettingsInputsForInferredTarget,
+  shouldIncludeBunInstallSettingsInputs,
   shouldIncludePnpmMajorRuntimeInput,
   TS_SOLUTION_SETUP_TSCONFIG_INPUT,
   addBuildAndWatchDepsTargets,
@@ -66,6 +68,11 @@ export const createNodes: CreateNodes<WebpackPluginOptions> = [
       packageManager,
       context.workspaceRoot
     );
+    const includeBunInstallSettingsInputs =
+      shouldIncludeBunInstallSettingsInputs(
+        packageManager,
+        context.workspaceRoot
+      );
 
     try {
       const { entries, preErrors } = await filterWebpackConfigs(
@@ -75,7 +82,11 @@ export const createNodes: CreateNodes<WebpackPluginOptions> = [
 
       const projectHashes = await calculateHashesForCreateNodes(
         entries.map((e) => e.projectRoot),
-        { ...normalizedOptions, includePnpmMajorRuntimeInput },
+        {
+          ...normalizedOptions,
+          includePnpmMajorRuntimeInput,
+          includeBunInstallSettingsInputs,
+        },
         context,
         entries.map(() => [lockFileName])
       );
@@ -94,6 +105,7 @@ export const createNodes: CreateNodes<WebpackPluginOptions> = [
               packageManager,
               pmc,
               includePnpmMajorRuntimeInput,
+              includeBunInstallSettingsInputs,
               projectHashes[idx]
             ),
           entries.map((e) => e.configFile),
@@ -131,6 +143,7 @@ async function createNodesInternal(
   packageManager: PackageManager,
   pmc: ReturnType<typeof getPackageManagerCommand>,
   includePnpmMajorRuntimeInput: boolean,
+  includeBunInstallSettingsInputs: boolean,
   hash: string
 ): Promise<CreateNodesResult> {
   const projectRoot = dirname(configFilePath);
@@ -146,7 +159,8 @@ async function createNodesInternal(
         isTsSolutionSetup,
         packageManager,
         pmc,
-        includePnpmMajorRuntimeInput
+        includePnpmMajorRuntimeInput,
+        includeBunInstallSettingsInputs
       )
     );
   }
@@ -172,7 +186,8 @@ async function createWebpackTargets(
   isTsSolutionSetup: boolean,
   packageManager: PackageManager,
   pmc: ReturnType<typeof getPackageManagerCommand>,
-  includePnpmMajorRuntimeInput: boolean
+  includePnpmMajorRuntimeInput: boolean,
+  includeBunInstallSettingsInputs: boolean
 ): Promise<WebpackTargets> {
   const namedInputs = getNamedInputs(projectRoot, context);
 
@@ -215,14 +230,15 @@ async function createWebpackTargets(
     dependsOn: [`^${options.buildTargetName}`],
     inputs: [
       ...buildInputs,
-      // The build can emit a pruned pnpm deploy output (NxAppWebpackPlugin
-      // with generatePackageJson), whose install settings come from these
-      // otherwise-unhashed root sources.
+      // The build can emit a pruned pnpm or Bun deploy output
+      // (NxAppWebpackPlugin with generatePackageJson), whose install settings
+      // come from these otherwise-unhashed root sources.
       ...(packageManager === 'pnpm'
         ? pnpmInstallSettingsInputsForInferredTarget(
             includePnpmMajorRuntimeInput
           )
         : []),
+      ...(includeBunInstallSettingsInputs ? BUN_INSTALL_SETTINGS_INPUTS : []),
     ],
     outputs,
     metadata: {

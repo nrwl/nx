@@ -89,7 +89,12 @@ export function getPruneTargets(
   'copy-workspace-modules': TargetConfiguration;
 } {
   const packageManager = detectPackageManager() ?? 'npm';
-  const lockFileName = getLockFileName(packageManager) ?? 'package-lock.json';
+  // The executor writes only the text bun.lock, which a workspace on the binary
+  // bun.lockb gets once it switches, so a Bun target declares that file.
+  const lockFileName =
+    packageManager === 'bun'
+      ? 'bun.lock'
+      : (getLockFileName(packageManager) ?? 'package-lock.json');
   const pruneLockfileOutputs = [
     `{workspaceRoot}/${joinPathFragments(outputPath, 'package.json')}`,
     `{workspaceRoot}/${joinPathFragments(outputPath, lockFileName)}`,
@@ -123,6 +128,21 @@ export function getPruneTargets(
       `{workspaceRoot}/pnpm-workspace.yaml`,
       `{workspaceRoot}/package.json`,
       PNPM_MAJOR_RUNTIME_INPUT,
+    ];
+  } else if (packageManager === 'bun') {
+    // A `bun patch` workspace emits the referenced `.patch` files under
+    // `patches/`, and any non-workspace local-path deps ship under
+    // `local_path_modules/`; both are declared so a cache replay restores
+    // them. The patches and trusted install scripts the output declares come
+    // from the root package.json, which nothing else in the hash covers.
+    pruneLockfileOutputs.push(
+      `{workspaceRoot}/${joinPathFragments(outputPath, 'patches')}`,
+      `{workspaceRoot}/${joinPathFragments(outputPath, 'local_path_modules')}`
+    );
+    pruneLockfileInputs = [
+      'default',
+      '^default',
+      `{workspaceRoot}/package.json`,
     ];
   }
   return {

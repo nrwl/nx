@@ -6,6 +6,11 @@ vi.mock('@nx/devkit', async () => ({
   ...(await vi.importActual<any>('@nx/devkit')),
   detectPackageManager: vi.fn(),
 }));
+// The real lookup reads the lockfile on disk and probes `bun --version`.
+vi.mock('@nx/js', async () => {
+  const actual = await vi.importActual<any>('@nx/js');
+  return { ...actual, getLockFileName: vi.fn(actual.getLockFileName) };
+});
 
 // Stub the pruning step so the fixture's own lockfile content drives the
 // artifacts; the fixture root carries the lockfile the read resolves to.
@@ -24,6 +29,7 @@ vi.mock('nx/src/plugins/js/lock-file/pnpm-parser', async () => ({
 }));
 
 import { detectPackageManager } from '@nx/devkit';
+import { getLockFileName } from '@nx/js';
 import { generatePrunedDeployOutput } from '@nx/devkit/internal';
 import {
   mkdirSync,
@@ -85,6 +91,28 @@ describe('getPruneTargets', () => {
       PNPM_MAJOR_RUNTIME_INPUT,
     ]);
   });
+
+  it.each(['bun.lock', 'bun.lockb'])(
+    'declares the text bun.lock, the patches and local_path_modules outputs and hashes the root package.json on Bun (%s)',
+    (rootLockFile) => {
+      (detectPackageManager as Mock).mockReturnValue('bun');
+      (getLockFileName as Mock).mockReturnValue(rootLockFile);
+
+      const targets = getPruneTargets('build', 'dist/my-app');
+
+      expect(targets['prune-lockfile'].outputs).toEqual([
+        '{workspaceRoot}/dist/my-app/package.json',
+        '{workspaceRoot}/dist/my-app/bun.lock',
+        '{workspaceRoot}/dist/my-app/patches',
+        '{workspaceRoot}/dist/my-app/local_path_modules',
+      ]);
+      expect(targets['prune-lockfile'].inputs).toEqual([
+        'default',
+        '^default',
+        '{workspaceRoot}/package.json',
+      ]);
+    }
+  );
 
   it('declares only package.json and the lockfile on npm', () => {
     (detectPackageManager as Mock).mockReturnValue('npm');

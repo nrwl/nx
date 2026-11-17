@@ -230,6 +230,36 @@ describe('copyWorkspaceModules', () => {
     expect(manifest.devDependencies).toEqual({ unknown: 'catalog:' });
   });
 
+  it('removes a copied module devDependencies in a Bun workspace', async () => {
+    tempFs.createFilesSync({
+      'bun.lock': '{}',
+      [`${PROJECT_ROOT}/package.json`]: JSON.stringify({
+        name: 'app',
+        version: '0.0.1',
+        dependencies: { '@scope/liba': 'workspace:*' },
+      }),
+      'libs/liba/package.json': JSON.stringify({
+        name: '@scope/liba',
+        version: '0.0.1',
+        dependencies: { lodash: '^4.17.21' },
+        devDependencies: { '@scope/tool': 'workspace:*' },
+      }),
+    });
+    tempFs.createDirSync('dist/app');
+
+    mockGetWorkspacePackages.mockReturnValue(
+      new Map([
+        ['@scope/liba', { data: { root: moduleRoot('libs/liba') } } as any],
+      ])
+    );
+
+    await runExecutor();
+
+    const manifest = readCopiedManifest('@scope/liba');
+    expect(manifest.dependencies).toEqual({ lodash: '^4.17.21' });
+    expect(manifest.devDependencies).toBeUndefined();
+  });
+
   it('copies a workspace module the app declares only under devDependencies', async () => {
     tempFs.createFilesSync({
       [`${PROJECT_ROOT}/package.json`]: JSON.stringify({
@@ -441,6 +471,46 @@ describe('copyWorkspaceModules', () => {
     expect(manifest.peerDependenciesMeta).toBeUndefined();
   });
 
+  it('rewrites a copied module non-workspace local-path deps from the module directory in a Bun workspace', async () => {
+    tempFs.createFilesSync({
+      'bun.lock': '{}',
+      [`${PROJECT_ROOT}/package.json`]: JSON.stringify({
+        name: 'app',
+        version: '0.0.1',
+        dependencies: { '@scope/liba': 'workspace:*' },
+      }),
+      'libs/liba/package.json': JSON.stringify({
+        name: '@scope/liba',
+        version: '0.0.1',
+        dependencies: {
+          'vendored-dir': 'file:../../vendor/dir',
+          'vendored-link': 'link:../../vendor/link',
+        },
+        peerDependencies: { 'vendored-peer': 'file:../../vendor/peer' },
+      }),
+    });
+    tempFs.createDirSync('dist/app');
+
+    mockGetWorkspacePackages.mockReturnValue(
+      new Map<string, any>([
+        ['@scope/liba', { data: { root: moduleRoot('libs/liba') } }],
+      ])
+    );
+
+    await runExecutor();
+
+    // Bun reads both file: and link: specs of a folder dependency relative to
+    // the package dir, and accepts a file: peer.
+    const manifest = readCopiedManifest('@scope/liba');
+    expect(manifest.dependencies).toEqual({
+      'vendored-dir': 'file:../../../local_path_modules/vendor/dir',
+      'vendored-link': 'link:../../../local_path_modules/vendor/link',
+    });
+    expect(manifest.peerDependencies).toEqual({
+      'vendored-peer': 'file:../../../local_path_modules/vendor/peer',
+    });
+  });
+
   it('copies workspace modules declared by a relative or absolute file: path', async () => {
     tempFs.createFilesSync({
       'pnpm-lock.yaml': '{}',
@@ -478,14 +548,29 @@ describe('copyWorkspaceModules', () => {
 
   it.each([
     {
+      lockFile: 'bun.lock',
+      utilSpec: 'file:../../../local_path_modules/vendor/util',
+    },
+    {
       lockFile: 'pnpm-lock.yaml',
       utilSpec: 'file:../../../local_path_modules/vendor/util',
     },
+    // Bun without the text bun.lock, on bun.lockb or with no lockfile, ships
+    // no local_path_modules
+    { lockFile: 'bun.lockb', utilSpec: 'file:../../vendor/util' },
+    { lockFile: null, utilSpec: 'file:../../vendor/util' },
   ])(
     'does not copy the workspace package a vendored package is named like ($lockFile)',
     async ({ lockFile, utilSpec }) => {
+      if (!lockFile) {
+        // with no lockfile, the invoking package manager decides
+        vi.stubEnv('npm_config_user_agent', 'bun/1.4.4');
+        onTestFinished(() => {
+          vi.unstubAllEnvs();
+        });
+      }
       tempFs.createFilesSync({
-        [lockFile]: '{}',
+        ...(lockFile ? { [lockFile]: '{}' } : {}),
         [`${PROJECT_ROOT}/package.json`]: JSON.stringify({
           name: 'app',
           version: '0.0.1',
@@ -524,7 +609,7 @@ describe('copyWorkspaceModules', () => {
     }
   );
 
-  it('leaves a copied module non-workspace local-path dep untouched outside pnpm', async () => {
+  it('leaves a copied module non-workspace local-path dep untouched outside pnpm and Bun', async () => {
     // An npm workspace: its prune path ships no local-path targets, so the
     // manifest must not be relocated.
     tempFs.createFilesSync({
