@@ -216,6 +216,7 @@ export {
   getLockFileName,
   hasTextBunLockfile,
 } from './plugins/js/lock-file/lock-file';
+export { readLockFileSnapshot } from './plugins/js/lock-file/lock-file-snapshot';
 export {
   createPackageJson,
   findProjectsNpmDependencies,
