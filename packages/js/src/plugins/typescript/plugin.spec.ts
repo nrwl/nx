@@ -3841,6 +3841,45 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
       ]);
     });
 
+    it('should add the root package.json aliases of typescript to the inputs', async () => {
+      configFiles = await applyFilesToTempFsAndContext(tempFs, {
+        'pnpm-lock.yaml': '',
+        'pnpm-workspace.yaml': `catalog:\n  typescript-7: npm:typescript@^7.0.2\n`,
+        'package.json': JSON.stringify({
+          dependencies: { 'typescript-7': 'catalog:' },
+          devDependencies: {
+            typescript: 'npm:@typescript/typescript6@^6.0.2',
+            '@typescript/native': 'npm:typescript@^7.0.2',
+            'typescript-eslint-alias': 'npm:typescript-eslint@^8.0.0',
+            'lodash-alias': 'npm:lodash@^4.17.21',
+          },
+          peerDependencies: { 'typescript-peer': 'npm:typescript@^7.0.2' },
+        }),
+        'apps/my-app/tsconfig.json': JSON.stringify({
+          include: ['src/**/*.ts'],
+        }),
+        'apps/my-app/project.json': `{}`,
+      });
+
+      const { projects } = await invokeCreateNodesOnMatchingFiles(
+        configFiles,
+        context,
+        {}
+      );
+
+      expect(projects['apps/my-app'].targets.typecheck.inputs).toEqual([
+        'production',
+        '^production',
+        {
+          externalDependencies: [
+            'typescript',
+            '@typescript/native',
+            'typescript-7',
+          ],
+        },
+      ]);
+    });
+
     it('should fall back to the lib and then the root tsconfig', async () => {
       configFiles = await applyFilesToTempFsAndContext(tempFs, {
         'libs/my-lib/tsconfig.json': JSON.stringify({

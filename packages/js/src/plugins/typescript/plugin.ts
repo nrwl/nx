@@ -1,11 +1,13 @@
 import {
   FsTree,
+  getCatalogManager,
   getNamedInputs,
   hashFile,
   hashObject,
   getLockFileName,
   workspaceDataDirectory,
   getNxRequirePaths,
+  type PackageJson,
 } from '@nx/devkit/internal';
 import {
   createNodesFromFiles,
@@ -318,6 +320,11 @@ export const createNodesV2: CreateNodes<TscPluginOptions> = [
     const packageManager = detectPackageManager(context.workspaceRoot);
     const pmc = getPackageManagerCommand(packageManager);
     const lockFileName = getLockFileName(packageManager);
+    // Only the noEmit typecheck target lists its compiler packages as inputs
+    const typescriptAliases =
+      !isUsingTsSolutionSetup && normalizedOptions.typecheck
+        ? readRootTypeScriptAliases(context.workspaceRoot)
+        : [];
 
     const {
       configFilePaths: validConfigFilePaths,
@@ -326,7 +333,7 @@ export const createNodesV2: CreateNodes<TscPluginOptions> = [
     } = await resolveValidConfigFilesAndHashes(
       configFilePaths,
       normalizedOptions,
-      hashObject({ options, isUsingTsSolutionSetup }),
+      hashObject({ options, isUsingTsSolutionSetup, typescriptAliases }),
       context,
       cache,
       lockFileName,
@@ -354,7 +361,8 @@ export const createNodesV2: CreateNodes<TscPluginOptions> = [
             validConfigFilePaths,
             cache,
             pmc,
-            isUsingTsSolutionSetup
+            isUsingTsSolutionSetup,
+            typescriptAliases
           );
 
           const { targets } = targetsCache[targetsCacheKey];
@@ -574,7 +582,8 @@ function buildTscTargets(
   configFiles: readonly string[],
   cache: InvocationCache,
   pmc: ReturnType<typeof getPackageManagerCommand>,
-  isUsingTsSolutionSetup: boolean
+  isUsingTsSolutionSetup: boolean,
+  typescriptAliases: string[]
 ) {
   const targets: Record<string, TargetConfiguration> = {};
   const namedInputs = getNamedInputs(config.project.root, context);
@@ -622,6 +631,7 @@ function buildTscTargets(
             siblingFiles.filter((file) => /^tsconfig.*\.json$/.test(file))
           ),
           compiler,
+          typescriptAliases,
           // Like the framework targets it replaces: `{workspaceRoot}` inputs
           // would mark the project affected by any root tsconfig change.
           namedInputs,
@@ -1817,6 +1827,43 @@ function readTsConfig(
     tsSys,
     dirname(tsConfigPath)
   );
+}
+
+/**
+ * Root package.json dependencies that install `typescript` under another name,
+ * such as `"@typescript/native": "npm:typescript@^7"`. Peer dependencies are
+ * left out. Yarn doesn't install the root's own peers, and an input naming a
+ * package with no graph node fails the task.
+ */
+function readRootTypeScriptAliases(workspaceRoot: string): string[] {
+  const packageJsonPath = join(workspaceRoot, 'package.json');
+  if (!existsSync(packageJsonPath)) {
+    return [];
+  }
+  const packageJson = readJsonFile<PackageJson>(packageJsonPath);
+  const catalogManager = getCatalogManager(workspaceRoot);
+  const aliases = new Set<string>();
+  for (const section of [
+    'dependencies',
+    'devDependencies',
+    'optionalDependencies',
+  ] as const) {
+    for (const [name, specifier] of Object.entries(
+      packageJson[section] ?? {}
+    )) {
+      const resolvedSpecifier = catalogManager?.isCatalogReference(specifier)
+        ? catalogManager.resolveCatalogReference(workspaceRoot, name, specifier)
+        : specifier;
+      if (
+        name !== 'typescript' &&
+        resolvedSpecifier &&
+        /^npm:typescript(@|$)/.test(resolvedSpecifier)
+      ) {
+        aliases.add(name);
+      }
+    }
+  }
+  return [...aliases].sort();
 }
 
 function normalizePluginOptions(

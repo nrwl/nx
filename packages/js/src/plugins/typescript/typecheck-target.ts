@@ -22,6 +22,12 @@ export interface TypecheckTargetOptions {
    */
   compiler?: string;
   /**
+   * Names that install `typescript` through an npm alias, such as
+   * `@typescript/native` for `npm:typescript@^7`. The `tsc` binary can come
+   * from any of them, so the default inputs of a `tsc` target include them.
+   */
+  typescriptAliases?: string[];
+  /**
    * Name of the typecheck target, for the dependency on referenced projects
    * in `build` mode. Defaults to `typecheck`.
    */
@@ -62,7 +68,11 @@ export function createTypecheckTarget(
     cache: true,
     inputs:
       options.inputs ??
-      getDefaultTypecheckInputs(options.namedInputs ?? {}, compiler),
+      getDefaultTypecheckInputs(
+        options.namedInputs ?? {},
+        compiler,
+        options.typescriptAliases ?? []
+      ),
     metadata: {
       technologies: options.technologies ?? ['typescript'],
       description: 'Runs type-checking for the project.',
@@ -127,23 +137,29 @@ export function getTsConfigArg(tsConfig: string | undefined): string {
 
 function getDefaultTypecheckInputs(
   namedInputs: Record<string, unknown>,
-  compiler: string
+  compiler: string,
+  typescriptAliases: string[]
 ): TargetConfiguration['inputs'] {
   return [
     ...('production' in namedInputs
       ? ['production', '^production']
       : ['default', '^default']),
-    { externalDependencies: getCompilerPackages(compiler) },
+    {
+      externalDependencies: getCompilerPackages(compiler, typescriptAliases),
+    },
   ];
 }
 
-function getCompilerPackages(compiler: string): string[] {
+function getCompilerPackages(
+  compiler: string,
+  typescriptAliases: string[]
+): string[] {
   switch (compiler) {
     case 'tsgo':
       return ['@typescript/native-preview'];
     case 'vue-tsc':
       return ['vue-tsc', 'typescript'];
     default:
-      return ['typescript'];
+      return ['typescript', ...typescriptAliases];
   }
 }
