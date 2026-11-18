@@ -79,7 +79,7 @@ Use `nx affected` to run tasks only for projects your change touches.
 Keep the pipeline on your CI provider, or run it on [Nx Cloud CI](/docs/features/ci-features#run-ci-on-nx-cloud), which is in [private beta](https://nx.dev/nx-cloud-ci-beta) for GitHub repositories:
 
 {% tabs syncKey="ci-location" %}
-{% tabitem label="External CI" %}
+{% tabitem label="Bring your own CI" %}
 
 ```yaml
 # .github/workflows/ci.yml
@@ -142,7 +142,7 @@ With [_dynamic task packing_](/docs/features/ci-features/distribute-task-executi
 In most workspaces, that adds up to about 50% fewer machine-minutes than remote caching alone.
 
 {% tabs syncKey="ci-location" %}
-{% tabitem label="External CI" %}
+{% tabitem label="Bring your own CI" %}
 
 Set the number of workers in `.nx/pipelines/ci.yaml`:
 
@@ -197,7 +197,7 @@ For every configuration option, see the [CI configuration file reference](/docs/
 These pipelines combine affected, remote caching, and distribution.
 
 {% tabs syncKey="ci-location" %}
-{% tabitem label="External CI" %}
+{% tabitem label="Bring your own CI" %}
 
 ```yaml
 // .nx/pipelines/ci.yaml
