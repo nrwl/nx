@@ -119,17 +119,34 @@ describe('PrerenderPlugin', () => {
   }
 
   it.each([
-    ['an error', new Error('server bundle failed to load')],
-    ['a thrown string', 'server bundle failed to load'],
-    ['an object with a message', { message: 'server bundle failed to load' }],
+    [
+      'an error',
+      new Error('server bundle failed to load'),
+      'server bundle failed to load',
+    ],
+    [
+      'a thrown string',
+      'server bundle failed to load',
+      'server bundle failed to load',
+    ],
+    [
+      'an object with a message',
+      { message: 'server bundle failed to load' },
+      'server bundle failed to load',
+    ],
+    [
+      'an object that cannot be converted to a string',
+      { status: 503, toString: null },
+      'Prerendering failed with a value that cannot be converted to a string.',
+    ],
   ])(
     'reports a route extraction that fails with %s as a build error',
-    async (_, failure) => {
+    async (_, failure, message) => {
       // A server bundle that throws while loading fails the route extraction.
       extractRoutes.mockRejectedValue(failure);
 
       expect(await buildErrors({ discoverRoutes: true })).toEqual([
-        expect.stringContaining('server bundle failed to load'),
+        expect.stringContaining(message),
       ]);
     }
   );

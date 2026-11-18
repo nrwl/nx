@@ -28,6 +28,17 @@ import {
   type SharedServerRenderingInputs,
 } from './index-html-plugin';
 
+function getErrorMessage(error: unknown): string {
+  // A message getter can throw, and so can String() on { toString: null }.
+  try {
+    const message = (error as { message?: unknown } | null | undefined)
+      ?.message;
+    return typeof message === 'string' ? message : String(error);
+  } catch {
+    return 'Prerendering failed with a value that cannot be converted to a string.';
+  }
+}
+
 class RoutesSet extends Set<string> {
   override add(value: string): this {
     return super.add(value.charAt(0) === '/' ? value.slice(1) : value);
@@ -83,10 +94,7 @@ export class PrerenderPlugin implements RspackPluginInstance {
             prerenderedRoutes
           );
         } catch (error) {
-          addError(
-            compilation,
-            typeof error?.message === 'string' ? error.message : String(error)
-          );
+          addError(compilation, getErrorMessage(error));
         } finally {
           callback();
         }
