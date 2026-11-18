@@ -13,7 +13,7 @@ export const tsLibVersion = '^2.3.0';
 export const expressVersion = '^4.21.2';
 export const typesExpressVersion = '^4.17.21';
 export const browserSyncVersion = '^3.0.0';
-export const webpackMergeVersion = '^5.8.0';
+export const webpackMergeVersion = '^6.0.1';
 
 export const angularEslintVersion = '^22.5.0';
 export const typescriptEslintVersion = '^8.40.0';
