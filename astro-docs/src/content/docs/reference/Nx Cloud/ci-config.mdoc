@@ -5,14 +5,14 @@ filter: 'type:References'
 ---
 
 Nx Cloud reads CI configuration from a `.nx/pipelines/ci.yaml` file in your workspace.
-The same file format works whether your pipeline runs on [Nx Cloud CI](/docs/features/ci-features#run-ci-on-nx-cloud) or on an external provider such as GitHub Actions.
+The same file format works whether your pipeline runs on [Nx Cloud CI](/docs/features/ci-features#run-ci-on-nx-cloud) or on your own CI provider, such as GitHub Actions.
 
 {% aside type="note" title="Using .nx/ci-config.yaml?" %}
 We've added support for `.nx/pipelines/ci.yaml`. See the [migration guide](/docs/kb/migrate-from-ci-config).
 {% /aside %}
 
 {% tabs syncKey="ci-location" %}
-{% tabitem label="External CI" %}
+{% tabitem label="Bring your own CI" %}
 
 ```yaml
 # .nx/pipelines/ci.yaml
@@ -62,20 +62,22 @@ jobs:
 
 ## Top-level structure
 
-| Section            | Purpose                                                              |
-| ------------------ | -------------------------------------------------------------------- |
-| `worker-templates` | Named worker setups: counts, sizes, and task rules.                  |
-| `launch-templates` | Machine setups that workers and jobs run on.                         |
-| `ultracache`       | Paths that Ultracache ignores.                                       |
-| `self-healing`     | Which tasks self-healing CI can fix.                                 |
-| `name`             | Display name of the pipeline.                                        |
-| `on`               | Events that start the jobs.                                          |
-| `env`              | Environment variables for every job and its workers, on Nx Cloud CI. |
-| `defaults`         | Defaults for the steps in every job.                                 |
-| `jobs`             | The jobs and their steps.                                            |
+The file serves two setups: **Bring your own CI**, where your own CI provider such as GitHub Actions runs the pipeline, and **Nx Cloud CI**, where Nx Cloud runs it.
+The **Used by** column shows which setup uses each section. `Both` means the section applies to either one.
 
-External CI doesn't run `name`, `on`, `env`, `defaults`, and `jobs`, but still validates them, so one file can serve both kinds of run in the same repository.
-On external CI, workers get values from the `env` of their launch template and from [`start-workers --forward-secrets` and `--forward-vars`](/docs/reference/nx-cloud-cli#nx-cloud-start-workers).
+| Section            | Purpose                                              | Used by     |
+| ------------------ | ---------------------------------------------------- | ----------- |
+| `worker-templates` | Named worker setups: counts, sizes, and task rules.  | Both        |
+| `launch-templates` | Machine setups that workers and jobs run on.         | Both        |
+| `ultracache`       | Paths that Ultracache ignores.                       | Both        |
+| `self-healing`     | Which tasks self-healing CI can fix.                 | Both        |
+| `name`             | Display name of the pipeline.                        | Nx Cloud CI |
+| `on`               | Events that start the jobs.                          | Nx Cloud CI |
+| `env`              | Environment variables for every job and its workers. | Nx Cloud CI |
+| `defaults`         | Defaults for the steps in every job.                 | Nx Cloud CI |
+| `jobs`             | The jobs and their steps.                            | Nx Cloud CI |
+
+Your own CI provider ignores the Nx Cloud CI sections, so one file can configure both. There, workers get environment variables from their launch template's `env` and from [`start-workers --forward-secrets` and `--forward-vars`](/docs/reference/nx-cloud-cli#nx-cloud-start-workers).
 
 {% aside type="note" title="File name" %}
 Nx Cloud CI runs every `.yaml` or `.yml` file in `.nx/pipelines` that has an `on` section, so you can name the file something other than `ci.yaml`.
@@ -90,7 +92,7 @@ For editor validation, add the published schema to the first line of the file:
 ## `worker-templates`
 
 Named worker setups, at most 50 entries.
-On external CI, [`start-workers`](/docs/reference/nx-cloud-cli#nx-cloud-start-workers) starts one entry.
+On your own CI provider, [`start-workers`](/docs/reference/nx-cloud-cli#nx-cloud-start-workers) starts one entry.
 On Nx Cloud CI, a job picks one with `workers: <name>`.
 
 An entry is a count string or a map:
@@ -117,7 +119,7 @@ worker-templates:
 A count string lists `<count> <launch-template>` pairs separated by `;`, with at most 20 templates.
 The template names can come from your [`launch-templates`](#launch-templates) or from the [pre-built templates](/docs/kb/launch-templates).
 
-External CI has no job to take a setup from, so every count needs a template name.
+On your own CI provider, Nx Cloud has no job to take a machine setup from, so every count needs a template name.
 A bare count such as `3` only works on Nx Cloud CI, where it reuses the machine setup of the job.
 
 ### `workers`
@@ -203,7 +205,7 @@ Type: `integer`, minimum `0`. Default: `1`.
 Runs distributed tasks on a background worker on the machine of the main job.
 On Nx Cloud CI, it's on by default and uses the CPU and memory it detects on the machine.
 Set `cpu` and `memory` to limit what it uses, or set `main-job-worker: false` to run tasks only on the other workers.
-External CI doesn't start this worker from `ci.yaml`.
+On your own CI provider, `start-workers` doesn't start this worker from `ci.yaml`.
 To send tasks to it, use `agent: main` in [`assignment-rules`](#assignment-rules).
 The name `main` is reserved, so a launch template can't use it.
 
@@ -257,7 +259,7 @@ To exclude paths for a single target instead, see the [`ultracache` target prope
 ## `self-healing`
 
 Overrides for [self-healing CI](/docs/features/ci-features/self-healing-ci#advanced-configuration-overrides).
-On external CI, these apply to runs started with `nx-cloud start-workers`.
+On your own CI provider, these apply to runs started with `nx-cloud start-workers`.
 
 ```yaml
 # .nx/pipelines/ci.yaml
@@ -573,7 +575,7 @@ For a multi-line value, write to `$GITHUB_ENV` with `NAME<<EOF`.
     CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 ```
 
-On external CI, [`start-workers --forward-secrets`](/docs/reference/nx-cloud-cli#nx-cloud-start-workers) forwards whatever the main job has, fork runs included, so your CI provider's settings decide whether forks get secrets.
+On your own CI provider, [`start-workers --forward-secrets`](/docs/reference/nx-cloud-cli#nx-cloud-start-workers) forwards whatever the main job has, fork runs included, so your CI provider's settings decide whether forks get secrets.
 
 ## Nx Cloud CI limits
 

@@ -18,7 +18,7 @@ If you are receiving this error before your full pipeline has completed, add the
 
 ### The Nx Cloud heartbeat process failed to report its status in time
 
-On external CI, Nx Cloud spawns a background process called the "heartbeat" to help maintain status synchronization between itself and external platforms. When the heartbeat process does not report to Nx Cloud for 30 seconds or longer, Nx Cloud assumes something has gone wrong and terminates the current CI Pipeline Execution.
+When you use Nx Cloud with your own CI provider, it spawns a background process called the "heartbeat" to keep its status in sync with your CI provider. When the heartbeat process does not report to Nx Cloud for 30 seconds or longer, Nx Cloud assumes something has gone wrong and terminates the current CI Pipeline Execution.
 
 With `.nx/pipelines/ci.yaml`, the heartbeat has no off switch.
 To opt out, start the run with [`nx-cloud start-ci-run --require-explicit-completion`](/docs/reference/nx-cloud-cli#nx-cloud-start-ci-run) instead of `start-workers`.
@@ -69,7 +69,7 @@ Pass `--workers <name>` to pick one.
 ### Entry has no launch template
 
 A count such as `default: 3` doesn't name a launch template.
-External CI has no job to take a machine setup from, so every count needs a template name, such as `default: 3 linux-medium-js`.
+On your own CI provider, Nx Cloud has no job to take a machine setup from, so every count needs a template name, such as `default: 3 linux-medium-js`.
 
 ### Invalid CI configuration file
 
