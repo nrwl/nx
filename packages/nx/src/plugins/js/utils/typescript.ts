@@ -1,3 +1,4 @@
+import { fileExists } from '../../../utils/fileutils';
 import { resolveFromWorkspace } from '../../../utils/installation-directory';
 import { workspaceRoot } from '../../../utils/workspace-root';
 import { existsSync } from 'fs';
@@ -288,10 +289,22 @@ function readTsConfigWithApi(
 ): ts.ParsedCommandLine {
   const cwd = host?.getCurrentDirectory?.() ?? process.cwd();
   const absolutePath = resolve(cwd, tsConfigPath);
-  const parse = (api: TypescriptApi) => api.parseConfigFile(absolutePath);
-  const parsed = host
-    ? withHostedTypescriptApi(backend, host, scanFiles, parse)
-    : withTypescriptApi(backend, parse);
+  const exists = host?.fileExists
+    ? host.fileExists(absolutePath)
+    : fileExists(absolutePath);
+  // TypeScript 6 reads a missing tsconfig as an empty one; 7.1 throws.
+  const parse = exists
+    ? (api: TypescriptApi) => api.parseConfigFile(absolutePath)
+    : (api: TypescriptApi) =>
+        api.parseJsonConfigFileContent(
+          {},
+          { configDirectory: dirname(absolutePath) }
+        );
+  // Only the hosted instance can skip the source-file scan.
+  const parsed =
+    host || !scanFiles
+      ? withHostedTypescriptApi(backend, host ?? {}, scanFiles, parse)
+      : withTypescriptApi(backend, parse);
   return toClassicParsedCommandLine(parsed, cwd, isAbsolute(tsConfigPath));
 }
 
