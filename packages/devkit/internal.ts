@@ -30,6 +30,7 @@ export {
   applyDaemonEnvFromClient,
   getGraphTimeDotEnvForTask,
   hashDaemonClientEnv,
+  readLockFileSnapshot,
   resolveStartupHost,
 } from 'nx/src/devkit-internals';
 
