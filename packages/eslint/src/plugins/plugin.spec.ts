@@ -12,6 +12,9 @@ import { TempFs } from '@nx/devkit/internal-testing-utils';
 import { createNodesV2, EslintPluginOptions } from './plugin';
 import { mkdirSync, rmSync } from 'fs';
 
+// Covers the eslintrc path, which ESLint 10 removed.
+vi.mock('eslint', async () => vi.importActual('eslint-v9'));
+
 vi.mock('@nx/devkit/internal', async () => {
   const actual = await vi.importActual<any>('@nx/devkit/internal');
   return {

@@ -161,6 +161,7 @@
     "eslint-plugin-playwright": "^2.10.1",
     "eslint-plugin-react-hooks": "^7.1.0",
     "eslint-plugin-storybook": "^10.3.5",
+    "eslint-v9": "npm:eslint@^9.39.4",
     "express": "^4.21.2",
     "file-type": "^16.2.0",
     "fs-extra": "^11.1.0",
