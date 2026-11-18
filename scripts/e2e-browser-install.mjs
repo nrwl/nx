@@ -18,6 +18,14 @@ const TOOLS = {
     installArgs:
       process.env.PLAYWRIGHT_INSTALL_ARGS || '--with-deps --only-shell',
   },
+  cypress: {
+    name: 'Cypress',
+    versionsFile: 'packages/cypress/src/utils/versions.ts',
+    versionConstant: 'cypressVersion',
+    installArgs: '',
+    // An inherited `0` makes `cypress install` skip the download.
+    env: { CYPRESS_INSTALL_BINARY: undefined },
+  },
 };
 
 const packageName = process.argv[2];
@@ -86,6 +94,7 @@ if (process.env.NX_E2E_RUN_E2E !== 'true') {
         cwd: repoRoot,
         env: {
           ...process.env,
+          ...tool.env,
           // Generated workspaces install with release-age gates off. The
           // uppercase name wins over an inherited lowercase one.
           PNPM_CONFIG_MINIMUM_RELEASE_AGE: '0',

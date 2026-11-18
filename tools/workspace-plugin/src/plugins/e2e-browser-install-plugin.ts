@@ -17,6 +17,10 @@ const INSTALLS: Array<{ task: string; usage: RegExp }> = [
     usage:
       /^import(?!\s+type\s)[^;]*?\sfrom\s+['"](?:@playwright\/test|playwright|playwright-core)['"]/m,
   },
+  {
+    task: '@nx/nx-source:cypress-install-e2e',
+    usage: /\b(?:shouldRunCypressTests|ensureCypressInstallation)\(/,
+  },
 ];
 
 /**

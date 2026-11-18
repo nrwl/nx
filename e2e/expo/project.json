@@ -10,6 +10,9 @@
     },
     "e2e-macos-ci--src/expo-legacy.test.ts": {
       "inputs": ["e2eInputs", "^production"]
+    },
+    "e2e-macos-local": {
+      "dependsOn": ["...", "@nx/nx-source:cypress-install-e2e"]
     }
   }
 }

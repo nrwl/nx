@@ -112,14 +112,10 @@ export default async function (globalConfig: Config.ConfigGlobals) {
 
     process.env.NX_SKIP_PROVENANCE_CHECK = 'true';
 
-    // Installing a workspace unzips the Cypress binary into a cache directory
-    // shared by everything on the machine, so two suites running side by side
-    // can clear that directory out from under each other mid-unzip. Suites that
-    // never run e2e tests do not need the binary at all; the ones that do get it
-    // from `ensureCypressInstallation`, which takes a lock first.
-    if (process.env.NX_E2E_RUN_E2E !== 'true') {
-      process.env.CYPRESS_INSTALL_BINARY = '0';
-    }
+    // Workspace installs would unzip the Cypress binary into the user's cache
+    // with no lock, and two unzips at once can clear it mid-unzip. Suites that
+    // run Cypress get it from `ensureCypressInstallation`, which locks first.
+    process.env.CYPRESS_INSTALL_BINARY = '0';
 
     global.e2eTeardown = () => {
       // Clean up environment variable instead of npm config command

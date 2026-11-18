@@ -9,8 +9,8 @@ import { isVerbose } from './get-env-info';
 // Locks that keep one user's `npx playwright install` runs from overlapping.
 // With `--with-deps`, overlapping runs make `apt` fail on Linux. They live in
 // the home directory so another user can't block or hold them.
+// scripts/e2e-browser-install.mjs takes the same locks.
 const LOCK_DIR = join(homedir(), '.cache', 'nx-e2e-locks');
-// scripts/e2e-browser-install.mjs takes the same lock.
 const PLAYWRIGHT_LOCK_FILE = join(LOCK_DIR, 'playwright-install.lock');
 // Cypress needs the same treatment: it unzips into one cache directory per user,
 // and a second install clears that directory while the first is still unzipping
@@ -37,9 +37,8 @@ function withInstallLock(lockFile: string, toolName: string, fn: () => void) {
 }
 
 export async function ensureCypressInstallation() {
-  // Nothing runs Cypress unless e2e tests are enabled, and the binary is not
-  // fetched while workspaces install in that case, so pulling it here would
-  // download and unzip ~100MB that no test is going to use.
+  // Nothing runs Cypress unless e2e tests are enabled, so pulling the binary
+  // here would download and unzip ~100MB that no test is going to use.
   if (process.env.NX_E2E_RUN_E2E !== 'true') {
     return;
   }
