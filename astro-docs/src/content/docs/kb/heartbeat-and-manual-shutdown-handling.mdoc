@@ -37,7 +37,7 @@ worker-templates:
 👆In the above case, once all the `affected` commands are executed and the main job shuts down, the heartbeat process will stop the pings. So, we'll assume the main job finished, and we can turn off the agents.
 
 In summary, for 99% of cases, you will never have to think about the heartbeat or care that it exists. Your CI will just work.
-The heartbeat only applies to external CI.
+The heartbeat only applies when you use Nx Cloud with your own CI provider.
 On [Nx Cloud CI](/docs/features/ci-features#run-ci-on-nx-cloud), the run ends when the main job does.
 
 ### Caveats
