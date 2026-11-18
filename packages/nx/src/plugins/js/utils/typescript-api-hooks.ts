@@ -22,7 +22,8 @@ type CompilableModule = NodeModule & {
  * TypeScript 7.1 API, hooking `require` the way `@swc-node/register` does
  * through pirates.
  *
- * @returns cleanup that restores the previous extension handlers
+ * @returns cleanup that restores the previous extension handlers. A hook that a
+ * later hook wraps stays in the chain and stops transpiling.
  */
 export function registerTypescriptApiRequireHook(
   backend: ApiTypescriptBackend,
@@ -32,12 +33,13 @@ export function registerTypescriptApiRequireHook(
     require('node:module') as { _extensions: Record<string, ExtensionHandler> }
   )._extensions;
 
+  let reverted = false;
   const restores: Array<() => void> = [];
   for (const extension of TYPESCRIPT_EXTENSIONS) {
     const previous = extensionHandlers[extension];
     const load = previous ?? extensionHandlers['.js'];
     const hook: ExtensionHandler = (module, filename) => {
-      if (!NODE_MODULES_RE.test(filename)) {
+      if (!reverted && !NODE_MODULES_RE.test(filename)) {
         // Node strips types after `_compile` receives the file's source, so
         // the source swapped in here is the untouched TypeScript.
         const compilable = module as CompilableModule;
@@ -67,6 +69,7 @@ export function registerTypescriptApiRequireHook(
   }
 
   return () => {
+    reverted = true;
     for (const restore of restores) {
       restore();
     }
