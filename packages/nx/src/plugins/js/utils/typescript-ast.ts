@@ -10,6 +10,7 @@ import {
   type TypescriptAstGuardsModule,
 } from './typescript-backend';
 
+/** @ts-ignore resolves only when `typescript` is >= 7.1 */
 type ApiDiagnostic = import('typescript/sync').Diagnostic;
 /** @ts-ignore resolves only when `typescript` is >= 7.1 */
 type ApiProgram = import('typescript/sync').Program;
