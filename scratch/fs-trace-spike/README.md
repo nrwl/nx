@@ -80,20 +80,32 @@ Linux
   elevating. The kernel allows one notification listener per filter chain, so a tool
   inside the task that wants its own (some container runtimes) gets `EBUSY`. Untested.
 - The filter is installed between `fork` and `exec`, so the spawn must happen in native
-  code (or via a tiny launcher binary); plain `child_process.spawn` cannot do it.
-- The supervisor thread must outlive the direct child while any descendant is alive,
-  otherwise their opens fail with `ENOSYS`. The spike detaches it; real code needs a
-  deliberate lifetime story for daemonised children.
+  code (or via a tiny launcher binary); plain `child_process.spawn` cannot do it. nx uses
+  the `fstrace-linux` launcher (`linux/src/supervisor.rs`) for this.
+- Descendants that outlive the direct child still carry the filter, and their opens would
+  fail with `ENOSYS` once the listener closed. The launcher is a child subreaper, so
+  orphans stay its descendants and stay traceable under Yama `ptrace_scope` 1. After the
+  program exits, a detached process keeps continuing their syscalls, unlogged.
+- A process using a 32-bit or x32 syscall ABI makes the launcher log `!untraced`, so that
+  worker's results are never reused.
 - seccomp reports _attempted_ opens (it cannot see the result), the shim reports only
   successful ones. Failed lookups matter for cache correctness, so pick one on purpose.
-- Not covered: `io_uring` opens (the filter makes `io_uring_setup` return `ENOSYS` so
-  callers fall back), 32-bit/x32 syscalls on x86_64, `name_to_handle_at`, files that
-  arrive as inherited fds or over sockets, and reads through an fd opened before tracing.
-- Shim only: misses the dynamic loader's library loads, `opendir`, and env-scrubbing
+- Not covered: `io_uring` and file-handle opens (the filter makes `io_uring_setup` and
+  `open_by_handle_at` return `ENOSYS` so callers fall back), files that arrive as inherited
+  fds or over sockets, and reads through an fd opened before tracing. A directory opened
+  in one plugin call and first read in a later one, without rewinding, counts as listed in
+  the earlier call.
+- Shim only: misses the dynamic loader's library loads, directories libc opens internally
+  (fts, `nftw`), and env-scrubbing
   children (`env -i`) drop `LD_PRELOAD`. Hybrid covers all three.
 - The shim keeps a log fd at ≥1000; a child that closes all fds and reuses that number
   would receive our log lines. Needs an fstat guard or a different channel.
-- `stat`/`access`/`readlink`/`readdir` are deliberately not tracked (reads only).
+- `stat`/`access`/`readlink` are not tracked. Directory listings are, as `!list <dir>`
+  lines. On Linux a listing is logged when a directory is opened readably, by the shim
+  (including its `opendir` and `scandir`) or the filter, and again on
+  `lseek(fd, 0, SEEK_SET)`, so each directory costs one line instead of one per
+  `getdents64` call. macOS uses `__getdirentries64` and Windows `NtQueryDirectoryFile(Ex)`.
+- Files opened for writing are logged as `!write <path>` by the Linux and macOS shims.
 
 macOS (run on an M-series Mac, macOS 26, Node 22.15; `demo-macos.mjs`, `bench-macos.mjs`)
 
@@ -255,7 +267,7 @@ tracer for its own target with no new matrix entries. The process platform and
 | Platform | Built                                                              | How                                                                                                                                              |
 | -------- | ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------ |
 | macOS    | `fstrace.darwin.dylib`, `arm64` + `arm64e` + `x86_64`, macOS 11.0+ | clang through `xcrun`, honoring the workflow's `CC` and SDK path                                                                                 |
-| Linux    | `fstrace.linux.so` for the job's `--target`                        | `cargo build -p nx-fstrace-shim`, a root workspace member, so the docker jobs' cross linkers and `.cargo/config.toml` (musl `-crt-static`) apply |
+| Linux    | `fstrace.linux.so` and `fstrace-linux` for the job's `--target`    | `cargo build -p nx-fstrace-shim`, a root workspace member, so the docker jobs' cross linkers and `.cargo/config.toml` (musl `-crt-static`) apply |
 | Windows  | `fstrace-{arm64,x64,x86}.{dll,exe}`                                | `cl` per architecture through `vcvarsall`, found with `vswhere`                                                                                  |
 
 A slice or OS version dyld cannot load is a crash, not a fallback: the first macOS build
@@ -295,7 +307,13 @@ An entry is reused only if all of these are unchanged:
 - the names of the files under each config file's directory and each project root the
   plugin produced, which covers test discovery and existence checks there;
 - the fingerprint (inode, size, mtime, ctime) of every file the worker and its children
-  opened for reading, from loading the plugin through the end of the call.
+  opened for reading, from loading the plugin through the end of the call. A hardlinked
+  file's ctime is left out, because pnpm's store moves it on every install anywhere on the
+  machine, nx's own startup included.
+
+What the worker answered when it loaded (its name, hooks and `createNodes` pattern) is
+cached the same way, against the files it read while loading. A plugin whose hooks are all
+answered from cache never starts a worker. Plugins with `createDependencies` still start one.
 
 The worker writes `!begin`/`!end` markers around each call into its read log, so a
 long-lived worker's calls are told apart, and puts its tracing variables back after the
@@ -317,8 +335,11 @@ with plugin caches on is only stored on top of an existing entry.
 
 A result is not stored when the trace cannot be trusted: the worker script was never seen
 (tracing did not start), a child ran untraced, the call never finished, or an input changed
-during the call. nx's own temp root and `~/.nx` are left out, since everything there is
-derived from inputs already recorded.
+during the call. A file the call wrote and then removed, such as the bundled config vite
+writes to `node_modules/.vite-temp`, is recorded as absent rather than as changed. Windows
+does not log writes yet, so such plugins are not cached there. nx's own temp root, `~/.nx`
+and the daemon's directory are left out, since everything there is derived from inputs
+already recorded.
 
 Measured with `@nx/js/typescript` on this repo (183 config files, 109 projects, 1,269
 recorded inputs, a 485 KB entry):
@@ -330,8 +351,7 @@ recorded inputs, a 485 KB entry):
 | edit `packages/nx/tsconfig.lib.json`   | 1.4-1.6 s (plugin runs, worker restarts) |
 
 Not covered: a file probed for existence (`existsSync`, `stat`) outside the listed
-directories and created later, and an `fs` glob outside them. Directory listings are not
-traced. Carried-forward inputs only grow: a file a deleted project read stays an input
+directories and created later, and an `fs` glob outside them. Carried-forward inputs only grow: a file a deleted project read stays an input
 until `nx reset`, which can cost an extra run but never a stale result. Without the daemon,
 a worker that queries the workspace context hashes files itself, so its inputs cover much
 of the workspace and most edits re-run the plugin.
