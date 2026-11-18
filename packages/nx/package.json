@@ -86,17 +86,13 @@
   },
   "peerDependencies": {
     "@swc-node/register": "catalog:swc",
-    "@swc/core": "catalog:swc",
-    "markdown-factory": "^1.0.0"
+    "@swc/core": "catalog:swc"
   },
   "peerDependenciesMeta": {
     "@swc-node/register": {
       "optional": true
     },
     "@swc/core": {
-      "optional": true
-    },
-    "markdown-factory": {
       "optional": true
     }
   },
