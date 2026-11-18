@@ -20,16 +20,15 @@ import {
 import type { NormalizedAngularRspackPluginOptions } from '../models';
 import { PrerenderPlugin } from './prerender-plugin';
 
-const routeExtraction = vi.hoisted(() => ({ failure: undefined as unknown }));
+const extractRoutes = vi.hoisted(() => vi.fn<() => Promise<unknown>>());
 
 vi.mock('./tools/worker-pool', () => ({
   WorkerPool: class {
     constructor(private readonly options: { filename: string }) {}
 
     run() {
-      // A server bundle that throws while loading fails the route extraction.
       return this.options.filename.includes('routes-extractor-worker')
-        ? Promise.reject(routeExtraction.failure)
+        ? extractRoutes()
         : Promise.resolve({});
     }
 
@@ -77,6 +76,7 @@ describe('PrerenderPlugin', () => {
           server: join(directory, 'server'),
         },
         index: { input: 'index.html', output: 'index.html' },
+        optimization: { styles: { minify: false, inlineCritical: false } },
         prerender,
         zoneless: true,
       } as NormalizedAngularRspackPluginOptions,
@@ -112,13 +112,20 @@ describe('PrerenderPlugin', () => {
     }
   }
 
+  function readPrerenderedRoutes() {
+    return JSON.parse(
+      readFileSync(join(directory, 'prerendered-routes.json'), 'utf8')
+    );
+  }
+
   it.each([
     ['an error', new Error('server bundle failed to load')],
     ['a thrown string', 'server bundle failed to load'],
   ])(
     'reports a route extraction that fails with %s as a build error',
     async (_, failure) => {
-      routeExtraction.failure = failure;
+      // A server bundle that throws while loading fails the route extraction.
+      extractRoutes.mockRejectedValue(failure);
 
       expect(await buildErrors({ discoverRoutes: true })).toEqual([
         expect.stringContaining('server bundle failed to load'),
@@ -128,10 +135,22 @@ describe('PrerenderPlugin', () => {
 
   it('builds without errors when there are no routes to prerender', async () => {
     expect(await buildErrors({ discoverRoutes: false })).toEqual([]);
+    expect(readPrerenderedRoutes()).toEqual({ routes: {} });
+  });
+
+  it('reports route validation errors and prerenders no routes', async () => {
+    extractRoutes.mockResolvedValue({
+      routes: ['home'],
+      errors: ["The 'invalid' server route does not match any routes."],
+    });
+
     expect(
-      JSON.parse(
-        readFileSync(join(directory, 'prerendered-routes.json'), 'utf8')
-      )
-    ).toEqual({ routes: {} });
+      await buildErrors({ discoverRoutes: true, routes: ['about'] })
+    ).toEqual([
+      expect.stringContaining(
+        "The 'invalid' server route does not match any routes."
+      ),
+    ]);
+    expect(readPrerenderedRoutes()).toEqual({ routes: {} });
   });
 });

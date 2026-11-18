@@ -19,6 +19,7 @@ import type {
   RenderResult,
   RenderWorkerData,
 } from './tools/render-worker';
+import type { RoutesExtractorResult } from './tools/routes-extractor-worker';
 import { addError, addWarning } from '../utils/rspack-diagnostics';
 import { assertIsError } from '../utils/misc-helpers';
 import {
@@ -243,6 +244,7 @@ export class PrerenderPlugin implements RspackPluginInstance {
         }
 
         routes ??= await this.#getRoutes(
+          compilation,
           indexFile,
           normalizedOutputPath,
           serverBundlePath,
@@ -310,6 +312,7 @@ export class PrerenderPlugin implements RspackPluginInstance {
   }
 
   async #getRoutes(
+    compilation: Compilation,
     indexFile: string,
     outputPath: string,
     serverBundlePath: string,
@@ -344,9 +347,13 @@ export class PrerenderPlugin implements RspackPluginInstance {
         recordTiming: false,
       });
 
-      const extractedRoutes: string[] = await renderWorker
-        .run({})
-        .finally(() => void renderWorker.destroy());
+      const { routes: extractedRoutes, errors }: RoutesExtractorResult =
+        await renderWorker.run({}).finally(() => void renderWorker.destroy());
+
+      if (errors.length > 0) {
+        errors.forEach((error) => addError(compilation, error));
+        return [];
+      }
 
       for (const route of extractedRoutes) {
         routes.add(route);
