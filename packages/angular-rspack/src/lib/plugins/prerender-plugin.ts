@@ -85,7 +85,7 @@ export class PrerenderPlugin implements RspackPluginInstance {
         } catch (error) {
           addError(
             compilation,
-            error instanceof Error ? error.message : String(error)
+            typeof error?.message === 'string' ? error.message : String(error)
           );
         } finally {
           callback();

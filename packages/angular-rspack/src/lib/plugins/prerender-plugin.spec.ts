@@ -121,6 +121,7 @@ describe('PrerenderPlugin', () => {
   it.each([
     ['an error', new Error('server bundle failed to load')],
     ['a thrown string', 'server bundle failed to load'],
+    ['an object with a message', { message: 'server bundle failed to load' }],
   ])(
     'reports a route extraction that fails with %s as a build error',
     async (_, failure) => {
