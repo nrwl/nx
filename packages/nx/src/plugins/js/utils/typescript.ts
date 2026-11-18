@@ -169,9 +169,8 @@ type TsModuleResolver = (
 
 /**
  * Creates a function that resolves module names the way TypeScript does with
- * `compilerOptions` and returns the resolved file name. Read the options from
- * an absolute tsconfig path: the TypeScript 7.1 resolver ignores a relative
- * `baseUrl`.
+ * `compilerOptions` and returns the resolved file name. TypeScript 7.1 removed
+ * `baseUrl` and ignores it.
  */
 export function createTsModuleResolver(
   compilerOptions: ts.CompilerOptions
@@ -195,7 +194,16 @@ export function createTsModuleResolver(
         ).resolvedModule?.resolvedFileName;
     }
     case 'api': {
-      const options = compilerOptions as unknown as ApiCompilerOptions;
+      // TypeScript 6 resolves a relative `pathsBasePath` against the working
+      // directory, the 7.1 server against the workspace root.
+      const { pathsBasePath } = compilerOptions;
+      const options = {
+        ...compilerOptions,
+        pathsBasePath:
+          typeof pathsBasePath === 'string'
+            ? resolve(pathsBasePath)
+            : pathsBasePath,
+      } as unknown as ApiCompilerOptions;
       let api: TypescriptApi | undefined;
       let resolver: ApiModuleResolver | undefined;
       return (moduleName, containingFile) =>

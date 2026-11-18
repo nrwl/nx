@@ -197,6 +197,25 @@ describe.each(typescriptInstalls)(
       });
     });
 
+    it('should resolve tsconfig paths against a base relative to the working directory', () => {
+      fs.createFileSync('libs/b/src/index.ts', 'export const b = 1;');
+      fs.createDirSync('apps');
+      const originalCwd = process.cwd();
+      process.chdir(join(fs.tempDir, 'apps'));
+      try {
+        const resolved = typescript.createTsModuleResolver({
+          paths: { '@proj/b': ['libs/b/src/index.ts'] },
+          pathsBasePath: '..',
+        })('@proj/b', join(fs.tempDir, 'apps/main.ts'));
+
+        expect(resolved && resolve(resolved)).toBe(
+          join(fs.tempDir, 'libs/b/src/index.ts')
+        );
+      } finally {
+        process.chdir(originalCwd);
+      }
+    });
+
     describe('resolveModuleByImport', () => {
       beforeEach(async () => {
         await fs.createFiles({
