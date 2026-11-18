@@ -1645,22 +1645,21 @@ mod tests {
 
     #[test]
     fn ignored_writes_do_not_extend_flush() {
-        // Regression: an event the filter dropped still flipped the flush into
-        // its quiet window, so writes under `node_modules` — or the daemon's
-        // own log under `.nx/` — re-armed FORCE_FLUSH_QUIET on every arrival
-        // and an idle flush ran to FORCE_FLUSH_MAX instead of returning after
-        // the grace.
+        // Regression: an event the filter dropped still re-armed
+        // FORCE_FLUSH_QUIET, so an idle flush ran to FORCE_FLUSH_MAX.
+        //
+        // The writes match a transient-file glob in a watched dir. inotify
+        // never registers a vetoed dir like `node_modules`, so writes there
+        // raise no event for the filter to drop.
         use std::sync::atomic::{AtomicBool, Ordering};
 
         let dir = tempdir().expect("tempdir");
-        let ignored = dir.path().join("node_modules");
-        fs::create_dir_all(&ignored).expect("mkdir");
         let (watcher, _captured) = start_watcher(dir.path());
 
         let stop = Arc::new(AtomicBool::new(false));
         let writer = {
             let stop = stop.clone();
-            let file = ignored.join("touched.txt");
+            let file = dir.path().join("_tmp_4242_probe");
             std::thread::spawn(move || {
                 let mut i = 0u32;
                 while !stop.load(Ordering::Relaxed) {
