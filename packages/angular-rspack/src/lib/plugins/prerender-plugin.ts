@@ -353,10 +353,6 @@ export class PrerenderPlugin implements RspackPluginInstance {
       }
     }
 
-    if (routes.size === 0) {
-      throw new Error('Could not find any routes to prerender.');
-    }
-
     return [...routes];
   }
 

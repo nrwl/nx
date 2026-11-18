@@ -1,5 +1,11 @@
 import { rspack, type Stats } from '@rspack/core';
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import {
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import {
@@ -119,4 +125,13 @@ describe('PrerenderPlugin', () => {
       ]);
     }
   );
+
+  it('builds without errors when there are no routes to prerender', async () => {
+    expect(await buildErrors({ discoverRoutes: false })).toEqual([]);
+    expect(
+      JSON.parse(
+        readFileSync(join(directory, 'prerendered-routes.json'), 'utf8')
+      )
+    ).toEqual({ routes: {} });
+  });
 });
