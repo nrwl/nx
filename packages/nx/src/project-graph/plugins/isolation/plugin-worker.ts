@@ -71,7 +71,7 @@ if (!socketPath || !expectedPluginName || !hostWorkspaceRoot) {
 // waiting for the `load` message. Deliberately only a path and a flag — the
 // plugin's configuration is arbitrary user JSON from `nx.json` and stays on the
 // socket, off the command line, which `ps -ww` exposes to any local user.
-// The host also spawns this worker with cwd set to the plugin root, so eager
+// The host also spawns this worker with cwd set to the workspace root, so eager
 // loading runs in the correct directory without a process.chdir.
 const eagerPluginPath: string | undefined = process.argv[5];
 const eagerShouldRegisterTSTranspiler = process.argv[6] === '1';

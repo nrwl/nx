@@ -301,19 +301,6 @@ function getNxEnvVariablesForTask(
 }
 
 /**
- * This function loads one or more .env files and expands the variables in them.
- * When multiple files are provided, all files are loaded first, then variable
- * expansion happens once with the complete set of variables. This ensures
- * cross-file variable references resolve correctly.
- * @param filename the .env file(s) to load
- * @param environmentVariables the object to load environment variables into
- * @param override whether to override existing environment variables
- *
- * Parsed file content is cached in-process keyed by (path, mtime). Repeated
- * calls for the same unchanged file skip the file read and re-parse. Variable
- * expansion still runs live since it depends on the caller's env context.
- */
-/**
  * `path:mtime:size:ino` for a file that exists, `null` for one that does not.
  * Any other stat failure throws.
  */
@@ -335,6 +322,19 @@ function loadWithDotEnv(
   return expand({ ...myEnv, processEnv: environmentVariables });
 }
 
+/**
+ * This function loads one or more .env files and expands the variables in them.
+ * When multiple files are provided, all files are loaded first, then variable
+ * expansion happens once with the complete set of variables. This ensures
+ * cross-file variable references resolve correctly.
+ * @param filename the .env file(s) to load
+ * @param environmentVariables the object to load environment variables into
+ * @param override whether to override existing environment variables
+ *
+ * Parsed file content is cached in-process, keyed by each file's path, mtime,
+ * size and inode. Repeated calls for unchanged files skip the read and parse.
+ * Variable expansion still runs per call, since it depends on the caller's env.
+ */
 export function loadAndExpandDotEnvFile(
   filename: string | string[],
   environmentVariables: NodeJS.ProcessEnv,
