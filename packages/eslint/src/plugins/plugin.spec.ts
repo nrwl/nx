@@ -13,6 +13,9 @@ import { createNodesV2, EslintPluginOptions } from './plugin';
 import { existsSync, mkdirSync, rmSync } from 'fs';
 import { join } from 'path';
 
+// Covers the eslintrc path, which ESLint 10 removed.
+vi.mock('eslint', async () => vi.importActual('eslint-v9'));
+
 vi.mock('@nx/devkit/internal', async () => {
   const actual = await vi.importActual<any>('@nx/devkit/internal');
   return {

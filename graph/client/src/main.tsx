@@ -1,4 +1,4 @@
-/* eslint-disable import/first */
+/* eslint-disable import-x/first */
 // debug must be first import
 if (process.env.NODE_ENV === 'development') {
   require('preact/debug');

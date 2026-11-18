@@ -1,5 +1,6 @@
 import {
   mockCjsModule,
+  mockVirtualCjsModule,
   resetCjsMocks,
 } from '@nx/devkit/internal-testing-utils';
 
@@ -7,6 +8,8 @@ function loadConfig(eslintVersion: string) {
   mockCjsModule(import.meta.url, 'eslint/package.json', {
     version: eslintVersion,
   });
+  // The ESLint <10 plugins are not installed in this repo.
+  mockVirtualCjsModule('eslint-plugin-import', {});
   delete require.cache[require.resolve('./react-base')];
   const config = require('./react-base').default;
   return {
