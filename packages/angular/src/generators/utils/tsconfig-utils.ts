@@ -1,5 +1,5 @@
 import type { Tree } from '@nx/devkit';
-import { readTsConfig } from '@nx/js';
+import { readTsConfigWithoutFiles } from '@nx/devkit/internal';
 import { createTreeParseConfigHost } from '@nx/js/internal';
 import { join } from 'node:path';
 import type * as ts from 'typescript';
@@ -33,7 +33,7 @@ export function readResolvedTsConfig(
 ): ts.ParsedCommandLine {
   // an absolute path is what makes the inherited entries come back relative to
   // this config
-  return readTsConfig(
+  return readTsConfigWithoutFiles(
     join(tree.root, tsConfigPath),
     createTreeParseConfigHost(tree)
   );
@@ -43,5 +43,6 @@ export function readCompilerOptionsFromTsConfig(
   tree: Tree,
   tsConfigPath: string
 ): ts.CompilerOptions {
-  return readTsConfig(tsConfigPath, createTreeParseConfigHost(tree)).options;
+  return readTsConfigWithoutFiles(tsConfigPath, createTreeParseConfigHost(tree))
+    .options;
 }

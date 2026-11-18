@@ -1,8 +1,11 @@
 import type { Tree } from '@nx/devkit';
-import { parseTsConfigContent } from '@nx/devkit/internal';
+import {
+  parseTsConfigContent,
+  readTsConfigWithoutFiles,
+} from '@nx/devkit/internal';
 import { dirname } from 'path';
 import type { CompilerOptions } from 'typescript';
-import { createTreeParseConfigHost, readTsConfig } from './ts-config';
+import { createTreeParseConfigHost } from './ts-config';
 
 const enumOptions = new Set<string>([
   'importsNotUsedAsValues',
@@ -24,7 +27,7 @@ export function getNeededCompilerOptionOverrides(
   tsConfigPath: string
 ): Record<keyof CompilerOptions, any> {
   const host = createTreeParseConfigHost(tree);
-  const parsed = readTsConfig(tsConfigPath, host);
+  const parsed = readTsConfigWithoutFiles(tsConfigPath, host);
   // TypeScript accepts several spellings of an enum value and numbers some
   // enums differently between versions, so it parses the given values too.
   const given = parseTsConfigContent(
