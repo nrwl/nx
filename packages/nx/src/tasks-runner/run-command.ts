@@ -165,10 +165,6 @@ async function getTerminalOutputLifeCycle(
 
   const isRunOne = initiatingProject != null;
 
-  if (tasks.length === 1 && !ORIGINAL_TUI_ENV_VALUE) {
-    process.env.NX_TUI = 'false';
-  }
-
   // Kick off in the background so the URL is ready by the exit report. A brief
   // sync preamble (git remote lookup) runs here; the network call does not.
   prefetchRemoteCacheOnboardingUrl(nxJson);
@@ -626,6 +622,13 @@ export async function runTasksForCommand(
     ...new Set(initiatingTasks.map((t) => t.target.project)),
   ];
 
+  if (tasks.length === 1 && !ORIGINAL_TUI_ENV_VALUE) {
+    process.env.NX_TUI = 'false';
+  }
+  // Before the TUI starts: its worker threads read the environment, and JS
+  // adding a variable while they do can crash the process.
+  setEnvVarsBasedOnArgs(nxArgs, extraOptions.loadDotEnvFiles);
+
   const { lifeCycle, renderIsDone, printSummary, restoreTerminal } =
     await getTerminalOutputLifeCycle(
       initiatingProject,
@@ -647,7 +650,6 @@ export async function runTasksForCommand(
       lifeCycle,
       nxJson,
       nxArgs,
-      loadDotEnvFiles: extraOptions.loadDotEnvFiles,
       initiatingProject,
       initiatingTasks,
       planningContext: taskSelection.planningContext,
@@ -1027,7 +1029,6 @@ export async function invokeTasksRunner({
   lifeCycle,
   nxJson,
   nxArgs,
-  loadDotEnvFiles,
   initiatingProject,
   initiatingTasks,
   planningContext,
@@ -1040,7 +1041,6 @@ export async function invokeTasksRunner({
   lifeCycle: LifeCycle;
   nxJson: NxJsonConfiguration;
   nxArgs: NxArgs;
-  loadDotEnvFiles: boolean;
   initiatingProject: string | null;
   initiatingTasks: Task[];
   planningContext?: TaskPlanningContext;
@@ -1051,8 +1051,6 @@ export async function invokeTasksRunner({
   taskResults: { [id: string]: TaskResult };
   taskStatuses?: Record<string, TaskStatus>;
 }> {
-  setEnvVarsBasedOnArgs(nxArgs, loadDotEnvFiles);
-
   // this needs to be done before we start to run the tasks
   const taskDetails = getTaskDetails();
 
