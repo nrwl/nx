@@ -64,6 +64,24 @@ describe.each(typescriptInstalls)(
       });
     });
 
+    it.each([
+      ['an empty', { 'libs/a/tsconfig.json': '{}' }],
+      ['a missing', {}],
+    ])(
+      'should read %s tsconfig with and without its source files',
+      async (_, files) => {
+        await fs.createFiles({ ...files, 'libs/a/src/index.ts': '' });
+        const tsConfigPath = join(fs.tempDir, 'libs/a/tsconfig.json');
+
+        expect(typescript.readTsConfig(tsConfigPath).fileNames).toEqual([
+          join(fs.tempDir, 'libs/a/src/index.ts'),
+        ]);
+        expect(
+          typescript.readTsConfigWithoutFiles(tsConfigPath).fileNames
+        ).toEqual([]);
+      }
+    );
+
     describe('readTsConfigWithoutFiles with a host', () => {
       it('should read the host files and keep relative paths relative', () => {
         const root = join(fs.tempDir, 'not-on-disk');
