@@ -2569,6 +2569,9 @@ importers:
 
   packages/eslint-plugin:
     dependencies:
+      '@eslint/js':
+        specifier: ^9.0.0 || ^10.0.0
+        version: 9.39.5
       '@nx/devkit':
         specifier: workspace:*
         version: link:../devkit
