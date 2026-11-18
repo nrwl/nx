@@ -184,6 +184,8 @@ describe('findNpmDependencies', () => {
     ${'tsconfig.json'}      | ${'tsc --build tsconfig.lib.json --pretty --verbose'}
     ${'tsconfig.base.json'} | ${'tsgo --build tsconfig.lib.json'}
     ${'tsconfig.json'}      | ${'tsgo --build tsconfig.lib.json'}
+    ${'tsconfig.base.json'} | ${'tsrs --build tsconfig.lib.json'}
+    ${'tsconfig.json'}      | ${'tsrs --build tsconfig.lib.json'}
   `(
     'should pick up helper npm dependencies when using "$command" and run-commands',
     ({ fileName, command }) => {

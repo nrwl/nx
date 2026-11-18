@@ -102,7 +102,7 @@ export async function ensureTypescriptPlugin(
 /**
  * Registers `@nx/js/typescript`, with only its typecheck target, in a
  * workspace where `frameworkPlugin` no longer infers `typecheck`. Reuses the
- * framework plugin's `typecheckTargetName` and a `tsgo` compiler, and skips
+ * framework plugin's `typecheckTargetName` and its `tsgo` or `tsrs` compiler, and skips
  * workspaces where `@nx/js/typescript` already infers it or where
  * `typecheckTargetName` is `false`. With
  * `removeTypecheckTargetName`, the option is also dropped from the framework
@@ -153,7 +153,10 @@ export function registerTypescriptPluginForTypecheck(
       plugin: '@nx/js/typescript',
       options: {
         typecheck: { targetName },
-        ...(typecheckOptions.compiler === 'tsgo' ? { compiler: 'tsgo' } : {}),
+        ...(typecheckOptions.compiler === 'tsgo' ||
+        typecheckOptions.compiler === 'tsrs'
+          ? { compiler: typecheckOptions.compiler }
+          : {}),
       },
     });
     moveTypescriptPluginBefore(nxJson.plugins, frameworkPlugin);

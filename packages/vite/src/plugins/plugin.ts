@@ -50,10 +50,10 @@ export interface VitePluginOptions {
   /**
    * The compiler used to typecheck Vue projects. Defaults to `vue-tsc` when the
    * `vite:vue` plugin is detected. Set `vue-tsc` to force the target when
-   * detection misses your setup, or `tsc`/`tsgo` to skip it and rely on
+   * detection misses your setup, or `tsc`, `tsgo`, or `tsrs` to skip it and rely on
    * `@nx/js/typescript`.
    */
-  compiler?: 'tsc' | 'tsgo' | 'vue-tsc';
+  compiler?: 'tsc' | 'tsgo' | 'tsrs' | 'vue-tsc';
   watchDepsTargetName?: string;
   buildDepsTargetName?: string;
 }

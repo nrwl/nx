@@ -56,7 +56,7 @@ import { buildTypechecksProject } from './build-typechecks';
 import { isUsingTsSolutionSetup as _isUsingTsSolutionSetup } from '../../utils/typescript/ts-solution-setup';
 
 export interface TscPluginOptions {
-  compiler?: 'tsc' | 'tsgo';
+  compiler?: 'tsc' | 'tsgo' | 'tsrs';
   typecheck?:
     | boolean
     | {
@@ -76,7 +76,7 @@ export interface TscPluginOptions {
 }
 
 interface NormalizedPluginOptions {
-  compiler: 'tsc' | 'tsgo';
+  compiler: NonNullable<TscPluginOptions['compiler']>;
   typecheck:
     | false
     | {
@@ -1868,9 +1868,9 @@ function normalizePluginOptions(
   }
 
   // These options go unquoted into the inferred targets' shell commands.
-  if (compiler !== 'tsc' && compiler !== 'tsgo') {
+  if (compiler !== 'tsc' && compiler !== 'tsgo' && compiler !== 'tsrs') {
     throw new Error(
-      `The "compiler" option of @nx/js/typescript must be "tsc" or "tsgo", but got ${JSON.stringify(compiler)}.`
+      `The "compiler" option of @nx/js/typescript must be "tsc", "tsgo", or "tsrs", but got ${JSON.stringify(compiler)}.`
     );
   }
   for (const [option, configName] of [
