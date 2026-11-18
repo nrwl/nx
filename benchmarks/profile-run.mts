@@ -77,10 +77,13 @@ import {
   printSampleHotSpots,
   buildSampleMarkdownSection,
 } from './perf-sample.mts';
-import type {
-  ProfileReport,
-  ProcessDetailLinks,
-} from '../packages/nx/src/utils/perf-report.js';
+import type { ProfileReport } from '../packages/nx/src/utils/perf-report.js';
+import {
+  buildScenarioIndexMarkdown,
+  buildSpansSection,
+  buildTotalsSection,
+  type ProcessDetailLinks,
+} from './perf-report-markdown.mts';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -498,14 +501,6 @@ async function runNxWithProfiling(
       if (pid !== null) cpuProfileByPid.set(pid, join(scenarioRunDir, file));
     }
   }
-
-  // Load perf-report exports
-  type PerfReport = typeof import('../packages/nx/src/utils/perf-report.js');
-  const perfReportMod = (await import(
-    join(repoRoot, 'packages', 'nx', 'dist', 'src', 'utils', 'perf-report.js')
-  )) as unknown as PerfReport;
-  const { buildScenarioIndexMarkdown, buildSpansSection, buildTotalsSection } =
-    perfReportMod;
 
   const mainReport = reports.find((r) => r.role === 'main');
   const mainJsTotal = mainReport?.wallClockMs ?? 0;

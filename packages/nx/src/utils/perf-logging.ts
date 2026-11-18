@@ -84,8 +84,7 @@ if (PROFILE_OUT) {
       if (profileEntries.length === 0 && !nativeJson) return;
       flushed = true;
 
-      // Lazily import to avoid pulling in fs/markdown-factory at startup for
-      // every nx invocation.
+      // Required lazily so invocations that never flush a profile skip it.
       const { buildReport, writePidReport } =
         require('./perf-report') as typeof import('./perf-report');
       const { dirname } = require('path') as typeof import('path');
