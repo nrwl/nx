@@ -18,10 +18,18 @@ import {
   isTerminalRun,
   parseExports,
 } from './runtime-lint-utils';
-import { vol } from 'memfs';
+import { createRequire } from 'node:module';
+import { fs as memfs, vol } from 'memfs';
+import { mockCjsModule } from '@nx/devkit/internal-testing-utils';
 
-jest.mock('@nx/devkit', () => ({
-  ...jest.requireActual<any>('@nx/devkit'),
+// Import resolution loads typescript with `require`, which reads through the
+// CJS `fs`; the import graph has loaded it already, so evict it onto memfs.
+mockCjsModule(import.meta.url, 'fs', memfs);
+const cjsRequire = createRequire(import.meta.url);
+delete cjsRequire.cache[cjsRequire.resolve('typescript')];
+
+vi.mock('@nx/devkit', async () => ({
+  ...(await vi.importActual<any>('@nx/devkit')),
   workspaceRoot: '/root',
 }));
 
@@ -312,15 +320,10 @@ describe('dependentsHaveBannedImport + findTransitiveExternalDependencies', () =
 
   it("should return empty array if any dependents don't have banned import", () => {
     expect(
-      hasBannedDependencies(
-        externalDependencies.slice(1),
-        graph,
-        {
-          sourceTag: 'a',
-          bannedExternalImports: ['angular'],
-        },
-        'react-native'
-      )
+      hasBannedDependencies(externalDependencies.slice(1), graph, {
+        sourceTag: 'a',
+        bannedExternalImports: ['angular'],
+      })
     ).toStrictEqual([]);
   });
 
@@ -331,12 +334,7 @@ describe('dependentsHaveBannedImport + findTransitiveExternalDependencies', () =
     };
 
     expect(
-      hasBannedDependencies(
-        externalDependencies.slice(1),
-        graph,
-        constraint,
-        'react-native'
-      )
+      hasBannedDependencies(externalDependencies.slice(1), graph, constraint)
     ).toStrictEqual([[bannedTarget, d, constraint]]);
   });
 
@@ -347,49 +345,19 @@ describe('dependentsHaveBannedImport + findTransitiveExternalDependencies', () =
     };
 
     expect(
-      hasBannedDependencies(
-        externalDependencies.slice(1),
-        graph,
-        constraint,
-        'react'
-      )
+      hasBannedDependencies(externalDependencies.slice(1), graph, constraint)
     ).toStrictEqual([
       [nonBannedTarget, target, constraint],
       [nonBannedTarget, c, constraint],
     ]);
-  });
-
-  it('should return undefined if no baneed external imports found', () => {
-    const constraint: DepConstraint = {
-      sourceTag: 'a',
-      bannedExternalImports: ['angular'],
-    };
-
-    expect(
-      hasBannedDependencies(
-        externalDependencies.slice(1),
-        graph,
-        constraint,
-        'react-native'
-      ).length
-    ).toBe(0);
-    expect(
-      hasBannedDependencies(
-        externalDependencies.slice(1),
-        graph,
-        constraint,
-        'react'
-      ).length
-    ).toBe(0);
   });
 });
 
 describe('is terminal run', () => {
   const originalArgv = process.argv;
 
-  // Set only process.argv rather than reassigning the whole `process` object.
-  // Under Node >= 26 the jest sandbox global is a Proxy and reassigning the
-  // global `process` binding throws ReferenceError; mutating the property works.
+  // Mutate process.argv: reassigning the global `process` binding throws in
+  // sandboxed test globals (Node >= 26).
   const mockProcessArgv = (argv: string[]) => {
     process.argv = argv;
   };
@@ -438,6 +406,26 @@ describe('is terminal run', () => {
     expect(isTerminalRun()).toBe(true);
   });
 
+  it('is a terminal run inside an ESLint concurrency worker on Mac', () => {
+    // ESLint's `--concurrency` lints in worker threads. Node sets a worker's
+    // argv[1] to the worker script, so the eslint binary is not what is seen
+    // here. Workers are started per `lintFiles()` call and end with it, so the
+    // project graph memo cannot outlive a single lint run.
+    mockProcessArgv([
+      '/Users/user/.nvm/versions/node/v22.12.0/bin/node',
+      '/Users/user/my-repo/node_modules/eslint/lib/eslint/worker.js',
+    ]);
+    expect(isTerminalRun()).toBe(true);
+  });
+
+  it('is a terminal run inside an ESLint concurrency worker on Windows', () => {
+    mockProcessArgv([
+      'C:\\Program Files\\nodejs\\node.exe',
+      'C:\\dev\\my-repo\\node_modules\\eslint\\lib\\eslint\\worker.js',
+    ]);
+    expect(isTerminalRun()).toBe(true);
+  });
+
   it('is a terminal run when the command is started from the node module oxlint', () => {
     // `@nx/oxlint`'s boundaries bridge. Without this the graph memo never takes
     // and every linted file re-reads the whole project graph.
@@ -466,6 +454,22 @@ describe('is terminal run', () => {
       '/Users/user/.nvm/versions/node/v22.12.0/bin/node',
       '/Users/user/my-repo/node_modules/.bin/oxc_language_server',
     ]);
+    expect(isTerminalRun()).toBe(false);
+  });
+
+  it('is a terminal run when bun lint runs the rule on Mac', () => {
+    // Mac: $run bun lint .
+    mockProcessArgv(['/Users/user/.bun/bin/bun', 'lint', '.']);
+    expect(isTerminalRun()).toBe(true);
+  });
+
+  it('is a terminal run when bun lint runs the rule on Windows', () => {
+    mockProcessArgv(['C:\\Users\\user\\.bun\\bin\\bun.exe', 'lint']);
+    expect(isTerminalRun()).toBe(true);
+  });
+
+  it('is not a terminal run for other bun commands', () => {
+    mockProcessArgv(['/Users/user/.bun/bin/bun', 'run', 'dev']);
     expect(isTerminalRun()).toBe(false);
   });
 

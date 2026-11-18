@@ -1,9 +1,10 @@
+import type { Mock, MockInstance } from 'vitest';
 import * as os from 'node:os';
 import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { performance } from 'node:perf_hooks';
 import type { NxJsonConfiguration } from '../../config/nx-json';
-import { Task, TaskGraph } from '../../config/task-graph';
+import { Task, TaskGraph, TaskGraphEdge } from '../../config/task-graph';
 import { withEnvironmentVariables } from '../../internal-testing-utils/with-environment';
 import * as nxCloudUtils from '../../utils/nx-cloud-utils';
 import { TaskResult } from '../life-cycle';
@@ -21,7 +22,7 @@ import {
   preDispatchHashTime,
   TimedTask,
 } from './performance-analysis';
-import { formatDuration } from '../../native';
+import { formatDuration, TaskReadiness } from '../../native';
 import {
   buildExitSummaryPayload,
   buildRecommendations,
@@ -55,7 +56,7 @@ function makeTask(
 function makeGraph(
   tasks: Task[],
   deps: Record<string, string[]> = {},
-  continuousDeps: Record<string, string[]> = {}
+  continuousDeps: Record<string, Array<string | TaskGraphEdge>> = {}
 ): TaskGraph {
   return {
     roots: tasks
@@ -63,10 +64,15 @@ function makeGraph(
       .map((t) => t.id),
     tasks: Object.fromEntries(tasks.map((t) => [t.id, t])),
     dependencies: Object.fromEntries(
-      tasks.map((t) => [t.id, deps[t.id] ?? []])
+      tasks.map((t) => [t.id, (deps[t.id] ?? []).map((id) => ({ id }))])
     ),
     continuousDependencies: Object.fromEntries(
-      tasks.map((t) => [t.id, continuousDeps[t.id] ?? []])
+      tasks.map((t) => [
+        t.id,
+        (continuousDeps[t.id] ?? []).map((edge) =>
+          typeof edge === 'string' ? { id: edge } : edge
+        ),
+      ])
     ),
   } as unknown as TaskGraph;
 }
@@ -83,9 +89,9 @@ interface TestEnv {
 // The lifecycle reads its signals from the environment (CI, distribution) and a
 // couple of helpers (hash windows via perf measures, remote cache via isNxCloudUsed)
 // rather than constructor seams. Tests drive the env vars through
-// `withEnvironmentVariables` (auto snapshot/restore) and the helpers through jest
+// `withEnvironmentVariables` (auto snapshot/restore) and the helpers through `vi`
 // spies set up in beforeEach.
-let getEntriesByTypeSpy: jest.SpyInstance;
+let getEntriesByTypeSpy: MockInstance;
 
 /**
  * Make collectHashWindows() observe the given absolute-epoch [start, end] hash
@@ -107,13 +113,13 @@ function setHashWindows(windows: Array<[number, number]>): void {
 }
 
 beforeEach(() => {
-  getEntriesByTypeSpy = jest.spyOn(performance, 'getEntriesByType');
+  getEntriesByTypeSpy = vi.spyOn(performance, 'getEntriesByType');
   setHashWindows([]);
-  jest.spyOn(nxCloudUtils, 'isNxCloudUsed').mockReturnValue(true);
+  vi.spyOn(nxCloudUtils, 'isNxCloudUsed').mockReturnValue(true);
 });
 
 afterEach(() => {
-  jest.restoreAllMocks();
+  vi.restoreAllMocks();
 });
 
 /** The env vars the given TestEnv implies (CI short-circuit + distribution flag). */
@@ -133,9 +139,7 @@ function makeLifeCycle(
   if (env.windows) {
     setHashWindows(env.windows);
   }
-  (nxCloudUtils.isNxCloudUsed as jest.Mock).mockReturnValue(
-    env.remoteCache ?? true
-  );
+  (nxCloudUtils.isNxCloudUsed as Mock).mockReturnValue(env.remoteCache ?? true);
   return new PerformanceLifeCycle(graph, {
     skipNxCache: env.skipped,
     nxJson: {
@@ -165,6 +169,8 @@ function run(
     isCI?: boolean;
     distributing?: boolean;
     neverConnectToCloud?: boolean;
+    /** taskId -> when the orchestrator reported it ready. */
+    ready?: Record<string, number>;
   } = {}
 ) {
   const env: TestEnv = {
@@ -180,6 +186,10 @@ function run(
     lc.startCommand(total, parallelFromTotal(graph, total));
     for (const taskIds of opts.batches ?? []) {
       lc.registerRunningBatch('batch', { executorName: 'e', taskIds } as never);
+    }
+    for (const [taskId, at] of Object.entries(opts.ready ?? {})) {
+      vi.spyOn(Date, 'now').mockReturnValueOnce(at);
+      lc.setTaskReadiness?.(taskId, TaskReadiness.Ready);
     }
     const results = Object.values(graph.tasks).map(
       (task) =>
@@ -500,6 +510,34 @@ describe('PerformanceLifeCycle', () => {
     expect(s.coordinatorOverhead).toBe(3000);
   });
 
+  it('treats a wait for a continuous dependency to be ready as eligibility, not contention', () => {
+    const cores =
+      typeof os.availableParallelism === 'function'
+        ? os.availableParallelism()
+        : os.cpus().length;
+    // parallel=1. `serve` starts at 0 and is ready at 50000; `a` holds the only
+    // slot 0-25000; `e2e` waits for serve to be ready, so it is eligible at
+    // 50000, after the slot has been free for 25000. More slots would not help.
+    const serve = makeTask('serve', { start: 0, continuous: true });
+    const a = makeTask('a', { start: 0, end: 25000 });
+    const e2e = makeTask('e2e', { start: 50000, end: 65000 });
+    const graph = makeGraph(
+      [serve, a, e2e],
+      {},
+      {
+        e2e: [{ id: 'serve', waitFor: 'ready' }],
+      }
+    );
+    const s = run(graph, 1, { ready: { serve: 50000 } })!;
+
+    expect(s.recoverableByParallel).toBe(0);
+    expect(s.recoverableByMachines).toBe(0);
+    expect(s.coordinatorOverhead).toBe(40000);
+    if (cores >= 2) {
+      expect(recStrings(s).join('\n')).not.toContain('Increase parallelism');
+    }
+  });
+
   it('folds batch sequencing into the floor, not coordinator overhead', () => {
     // a and b are independent but in one batch, run sequentially in one process.
     // That ordering is part of the floor, so the packed run has zero overhead.
@@ -736,7 +774,7 @@ describe('cache reporting', () => {
 
     expect(s.remoteCacheEnabled).toBe(false);
     const report = formatReport(s);
-    // No-TTY jest env → no hyperlinks → the tagged URL prints verbatim.
+    // No-TTY test env → no hyperlinks → the tagged URL prints verbatim.
     expect(report).toContain('sharing a cache across your team and CI');
     expect(report).toContain(
       'https://cloud.nx.app/get-started?utm_source=nx-cli&utm_medium=cli&utm_campaign=performance-report&utm_content=remote-cache'
@@ -745,7 +783,7 @@ describe('cache reporting', () => {
 
   it('renders the remote-cache rec as a whole-phrase OSC 8 link (no raw URL) on a hyperlink terminal', () => {
     // FORCE_HYPERLINK overrides the TTY/CI checks in supportsHyperlinks, turning the
-    // OSC 8 hyperlinks on inside the no-TTY jest env.
+    // OSC 8 hyperlinks on inside the no-TTY test env.
     const prev = process.env.FORCE_HYPERLINK;
     process.env.FORCE_HYPERLINK = '1';
     try {
@@ -1281,9 +1319,9 @@ describe('formatReportMarkdown', () => {
   it('renders multiple critical-path tasks as consecutive nested list items', () => {
     // The snapshot above only ever carries one task row, so it pins the per-row prefix
     // and the 2-space nesting indent but not what separates two rows. A blank line there
-    // makes GitHub render a "loose" list with paragraph spacing between the items, which
-    // is exactly the ragged rendering this PR set out to fix. Same chain as the
-    // formatReport snapshot: `c` is filtered out for being under the 20% threshold.
+    // makes GitHub render a "loose" list with paragraph spacing between the items.
+    // Same chain as the formatReport snapshot: `c` is filtered out for being under
+    // the 20% threshold.
     const a = makeTask('a', { start: 0, end: 10000 });
     const b = makeTask('b', { start: 10000, end: 40000 });
     const c = makeTask('c', { start: 40000, end: 45000 });
@@ -1512,12 +1550,12 @@ describe('buildTimespans', () => {
 });
 
 describe('flushPerformanceReport', () => {
-  let logSpy: jest.SpyInstance;
+  let logSpy: MockInstance;
   let logged: string | undefined;
 
   beforeEach(() => {
     logged = undefined;
-    logSpy = jest.spyOn(console, 'log').mockImplementation((msg?: any) => {
+    logSpy = vi.spyOn(console, 'log').mockImplementation((msg?: any) => {
       logged = String(msg);
     });
   });
@@ -1574,7 +1612,7 @@ describe('flushPerformanceReport', () => {
           ...envFor({}),
           GITHUB_ACTIONS: 'true',
           GITHUB_STEP_SUMMARY: summaryFile,
-          // Simulate a top-level invocation; `nx test` sets this on the jest task's env.
+          // Simulate a top-level invocation; nx sets this on any task's env.
           NX_TASK_TARGET_PROJECT: null,
         },
         () => {

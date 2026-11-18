@@ -84,12 +84,36 @@ fn is_vscode_ai() -> bool {
 /// Detects if the current process is being run by the OpenAI Codex CLI.
 ///
 /// `CODEX_THREAD_ID` is set per session by the Codex CLI (verified against
-/// `openai/codex` Rust source). Do not use `CODEX_TUI_RECORD_SESSION` — that
+/// `openai/codex` Rust source). Superset exposes the active agent via
+/// `SUPERSET_AGENT_ID=codex`. Do not use `CODEX_TUI_RECORD_SESSION` — that
 /// variable is *read* by Codex, not set by it.
 fn is_codex_ai() -> bool {
     match env::var("CODEX_THREAD_ID") {
         Ok(_) => {
             debug!("Codex AI detected via CODEX_THREAD_ID environment variable");
+            true
+        }
+        Err(_) => match env::var("SUPERSET_AGENT_ID") {
+            Ok(agent_id) if agent_id == "codex" => {
+                debug!("Codex AI detected via SUPERSET_AGENT_ID=codex environment variable");
+                true
+            }
+            _ => false,
+        },
+    }
+}
+
+/// Detects if the current process is being run by the GitHub Copilot CLI.
+///
+/// `COPILOT_CLI=1` is set by the CLI in the shells it spawns (verified against
+/// 1.0.80, alongside `COPILOT_CLI_BINARY_VERSION` and
+/// `COPILOT_AGENT_SESSION_ID`). Distinct from `is_vscode_ai`, which reports the
+/// VS Code extension's agent mode: the two are different products with
+/// different sandbox configuration, so they must not collapse to one name.
+fn is_copilot_cli_ai() -> bool {
+    match env::var("COPILOT_CLI") {
+        Ok(_) => {
+            debug!("Copilot CLI detected via COPILOT_CLI environment variable");
             true
         }
         Err(_) => false,
@@ -115,6 +139,8 @@ pub fn detect_ai_agent() -> Option<String> {
         Some("codex".to_string())
     } else if is_gemini_ai() {
         Some("gemini".to_string())
+    } else if is_copilot_cli_ai() {
+        Some("copilot-cli".to_string())
     } else if is_vscode_ai() {
         Some("copilot".to_string())
     } else if is_replit_ai() {
@@ -140,6 +166,7 @@ pub fn is_ai_agent() -> bool {
         || is_opencode_ai()
         || is_codex_ai()
         || is_gemini_ai()
+        || is_copilot_cli_ai()
         || is_vscode_ai();
 
     if is_ai {
@@ -163,6 +190,7 @@ mod tests {
             "COMPOSER_NO_INTERACTION",
             "OPENCODE",
             "CODEX_THREAD_ID",
+            "SUPERSET_AGENT_ID",
             "GEMINI_CLI",
             "VSCODE_AGENT",
         ];
@@ -184,6 +212,7 @@ mod tests {
         let original_composer_no_interaction = env::var("COMPOSER_NO_INTERACTION").ok();
         let original_opencode = env::var("OPENCODE").ok();
         let original_codex_thread_id = env::var("CODEX_THREAD_ID").ok();
+        let original_superset_agent_id = env::var("SUPERSET_AGENT_ID").ok();
         let original_gemini_cli = env::var("GEMINI_CLI").ok();
         let original_vscode_agent = env::var("VSCODE_AGENT").ok();
 
@@ -299,6 +328,31 @@ mod tests {
             env::remove_var("CODEX_THREAD_ID");
         }
 
+        // Test Codex AI detection via Superset
+        unsafe {
+            env::set_var("SUPERSET_AGENT_ID", "codex");
+        }
+        assert!(
+            is_codex_ai(),
+            "Should detect Codex AI with SUPERSET_AGENT_ID=codex"
+        );
+        assert!(is_ai_agent(), "Main function should detect Codex AI");
+        assert_eq!(
+            detect_ai_agent(),
+            Some("codex".to_string()),
+            "detect_ai_agent should return codex for SUPERSET_AGENT_ID=codex"
+        );
+        unsafe {
+            env::set_var("SUPERSET_AGENT_ID", "claude");
+        }
+        assert!(
+            !is_codex_ai(),
+            "Should not detect Codex AI with a non-codex SUPERSET_AGENT_ID"
+        );
+        unsafe {
+            env::remove_var("SUPERSET_AGENT_ID");
+        }
+
         // Test Cursor AI detection with wrong PAGER
         unsafe {
             env::set_var("PAGER", "wrong-value");
@@ -339,6 +393,41 @@ mod tests {
         );
         unsafe {
             env::remove_var("GEMINI_CLI");
+        }
+
+        // Test Copilot CLI detection
+        unsafe {
+            env::set_var("COPILOT_CLI", "1");
+        }
+        assert!(
+            is_copilot_cli_ai(),
+            "Should detect Copilot CLI with COPILOT_CLI"
+        );
+        assert!(is_ai_agent(), "Main function should detect Copilot CLI");
+        assert_eq!(
+            detect_ai_agent(),
+            Some("copilot-cli".to_string()),
+            "detect_ai_agent should return copilot-cli for the Copilot CLI"
+        );
+        unsafe {
+            env::remove_var("COPILOT_CLI");
+        }
+
+        // The CLI and the VS Code extension are different products with
+        // different sandbox configuration, so the CLI must win rather than
+        // being reported as the extension when both are somehow present.
+        unsafe {
+            env::set_var("COPILOT_CLI", "1");
+            env::set_var("VSCODE_AGENT", "1");
+        }
+        assert_eq!(
+            detect_ai_agent(),
+            Some("copilot-cli".to_string()),
+            "the CLI should not be reported as the VS Code extension"
+        );
+        unsafe {
+            env::remove_var("COPILOT_CLI");
+            env::remove_var("VSCODE_AGENT");
         }
 
         // Test VS Code AI detection
@@ -414,6 +503,11 @@ mod tests {
         if let Some(val) = original_codex_thread_id {
             unsafe {
                 env::set_var("CODEX_THREAD_ID", val);
+            }
+        }
+        if let Some(val) = original_superset_agent_id {
+            unsafe {
+                env::set_var("SUPERSET_AGENT_ID", val);
             }
         }
         if let Some(val) = original_gemini_cli {

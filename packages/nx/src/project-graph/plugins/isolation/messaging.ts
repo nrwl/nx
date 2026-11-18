@@ -2,15 +2,14 @@ import type { Serializable } from 'child_process';
 import type { Socket } from 'net';
 import type { PluginConfiguration } from '../../../config/nx-json';
 import type { ProjectGraph } from '../../../config/project-graph';
-import { serialize } from '../../../daemon/socket-utils';
-import { MESSAGE_END_SEQ } from '../../../utils/consume-messages-from-socket';
+import { sendMessage } from '../../../daemon/socket-utils';
 import { workspaceRoot } from '../../../utils/workspace-root';
 import type { LoadedNxPlugin } from '../loaded-nx-plugin';
+import type { MaybeStubbedPostTasksExecutionContext } from '../task-results-stub';
 import type {
   CreateDependenciesContext,
   CreateMetadataContext,
   CreateNodesContext,
-  PostTasksExecutionContext,
   PreTasksExecutionContext,
 } from '../public-api';
 import type {
@@ -127,7 +126,7 @@ type PluginMessageDefs = DefineMessages<{
 
   postTasksExecution: {
     payload: {
-      context: PostTasksExecutionContext;
+      context: MaybeStubbedPostTasksExecutionContext;
     };
     result:
       | {
@@ -311,6 +310,5 @@ export function sendMessageOverSocket(
 ): void {
   // Stamped here rather than in each constructor, mirroring the daemon.
   message.workspaceRoot = workspaceRoot;
-  socket.write(serialize(message));
-  socket.write(MESSAGE_END_SEQ);
+  sendMessage(socket, message);
 }

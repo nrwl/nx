@@ -1,15 +1,11 @@
-import {
-  TargetConfiguration,
-  Tree,
-  joinPathFragments,
-  logger,
-} from '@nx/devkit';
+import { TargetConfiguration, Tree, joinPathFragments } from '@nx/devkit';
 import {
   findViteConfig,
   findWebpackConfig,
 } from '../../../utils/find-vite-config';
 import { ViteConfigurationGeneratorSchema } from '../schema';
 import {
+  assertNoRemovedExecutorTargets,
   deleteWebpackConfig,
   editTsConfig,
   findExistingJsBuildTargetInProject,
@@ -27,6 +23,8 @@ export async function convertNonVite(
     [targetName: string]: TargetConfiguration<any>;
   }
 ) {
+  assertNoRemovedExecutorTargets(schema.project, targets);
+
   // Check if it has vite
   const hasViteConfig = findViteConfig(tree, projectRoot);
   const hasIndexHtmlAtRoot = tree.exists(

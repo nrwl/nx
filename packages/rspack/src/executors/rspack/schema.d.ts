@@ -7,6 +7,7 @@ export interface RspackExecutorSchema {
   buildLibsFromSource?: boolean;
   deployUrl?: string;
   extractCss?: boolean;
+  cssModuleHashFunction?: string;
   extractLicenses?: boolean;
   externalDependencies?: 'all' | 'none' | string[];
   fileReplacements?: FileReplacement[];

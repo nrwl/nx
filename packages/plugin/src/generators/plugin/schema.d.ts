@@ -13,13 +13,8 @@ export interface Schema {
   unitTestRunner?: 'jest' | 'vitest' | 'none';
   linter?: LinterType;
   enableTypedLinting?: boolean;
-  /**
-   * @deprecated Use `enableTypedLinting` instead. This option will be removed in Nx v24.
-   */
-  setParserOptionsProject?: boolean;
   compiler?: 'swc' | 'tsc';
   rootProject?: boolean;
   publishable?: boolean;
   useProjectJson?: boolean;
-  addPlugin?: boolean;
 }

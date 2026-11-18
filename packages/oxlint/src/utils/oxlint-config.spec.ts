@@ -1,10 +1,11 @@
+import type { MockInstance } from 'vitest';
 import { logger, readJson, writeJson, type Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { addPluginsToOxlintConfig } from './oxlint-config';
 
 describe('addPluginsToOxlintConfig', () => {
   let tree: Tree;
-  let warn: jest.SpyInstance;
+  let warn: MockInstance;
 
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace();
@@ -12,13 +13,13 @@ describe('addPluginsToOxlintConfig', () => {
     // In `beforeEach`/`afterEach` rather than inline: a failing assertion would
     // skip an inline `mockRestore` and leave `logger.warn` mocked for the rest
     // of the file.
-    warn = jest.spyOn(logger, 'warn').mockImplementation(() => {});
+    warn = vi.spyOn(logger, 'warn').mockImplementation(() => {});
   });
 
   // `restoreAllMocks` rather than `warn.mockRestore()`: if `beforeEach` throws
   // before the spy is assigned, the latter adds a `TypeError` to every test and
   // buries the real cause.
-  afterEach(() => jest.restoreAllMocks());
+  afterEach(() => vi.restoreAllMocks());
 
   it('should write the plugins to the project config', () => {
     addPluginsToOxlintConfig(tree, 'apps/my-app', ['react', 'jsx-a11y']);

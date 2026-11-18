@@ -8,25 +8,33 @@ import { visitNotIgnoredFiles } from './visit-not-ignored-files';
 // a load failure, so without a guard the first call is `undefined is not a
 // function` thrown from inside whatever generator happened to run.
 //
-// The names stripped here are the whole contract of this file; the
-// `guards the simulation itself` test asserts on the same list so the two cannot
-// drift, which is the failure that made the sibling formatter skew spec certify
-// a version of nx that never existed.
-// A checker added later must be added here and to `assertNxSupportsIgnoreCheckers`
-// together, or the guard silently stops covering it.
+// The names stripped are the whole contract of this file. The factory repeats
+// them as a literal because vitest hoists it above this declaration, so
+// `guards the simulation itself` compares the mock's *effect* against this list
+// rather than trusting either copy - drift in either direction fails. That is
+// the hole the sibling formatter skew spec had, which let it certify a version
+// of nx that never existed.
+//
+// A checker added later belongs in both lists, and in
+// `assertNxSupportsIgnoreCheckers` too if it becomes the symbol that probes for.
 const ABSENT_ON_OLDER_NX = [
   'createGitIgnoreChecker',
+  'createOxfmtIgnoreChecker',
   'createPrettierIgnoreChecker',
 ] as const;
 
-jest.mock('nx/src/devkit-internals', () => {
-  const actual = jest.requireActual('nx/src/devkit-internals');
+vi.mock('nx/src/devkit-internals', async () => {
+  const actual = await vi.importActual<any>('nx/src/devkit-internals');
   const olderNx = { ...actual };
   for (const name of [
     'createGitIgnoreChecker',
+    'createOxfmtIgnoreChecker',
     'createPrettierIgnoreChecker',
   ]) {
-    delete olderNx[name];
+    // `undefined`, not deleted: vitest throws on reading an export its mock
+    // factory did not return, where an older nx's CJS module reads as
+    // `undefined`.
+    olderNx[name] = undefined;
   }
   return olderNx;
 });
@@ -38,14 +46,16 @@ describe('ignore checkers against an nx without them', () => {
     tree = createTreeWithEmptyWorkspace();
   });
 
-  it('guards the simulation itself', () => {
-    const internals = require('nx/src/devkit-internals');
+  it('guards the simulation itself', async () => {
+    const actual = await vi.importActual<any>('nx/src/devkit-internals');
+    const mocked: any = await import('nx/src/devkit-internals');
 
-    for (const name of ABSENT_ON_OLDER_NX) {
-      expect(internals[name]).toBeUndefined();
-    }
+    const stripped = Object.keys(actual)
+      .filter((name) => mocked[name] === undefined)
+      .sort();
+    expect(stripped).toEqual([...ABSENT_ON_OLDER_NX].sort());
     // Something must survive, or the mock is testing an empty module.
-    expect(internals.isUsingPrettierInTree).toBeDefined();
+    expect(mocked.isUsingPrettierInTree).toBeDefined();
   });
 
   // The two callers degrade in opposite directions on purpose.
@@ -62,11 +72,15 @@ describe('ignore checkers against an nx without them', () => {
 
   it('should still format, filtering nothing, rather than failing', async () => {
     // Filtering nothing is what this nx pairing always did, so a generator that
-    // formats is the right answer here - not one that refuses to run.
-    tree.write('.prettierrc', '{}');
+    // formats is the right answer here - not one that refuses to run. The
+    // fixture leaves the default oxfmt config in place, so this runs the oxfmt
+    // arm; the sibling formatter skew spec covers the prettier one.
     tree.write('.gitignore', 'ignored.ts\n');
     tree.write('ignored.ts', 'const   x   =   1');
 
     await expect(formatFiles(tree)).resolves.toBeUndefined();
+    // The `.gitignore` above is what makes this "filtering nothing" rather than
+    // "did not throw" - with a checker it would come back untouched.
+    expect(tree.read('ignored.ts', 'utf-8')).toBe('const x = 1;\n');
   });
 });

@@ -1,4 +1,4 @@
-import { minimatch } from 'minimatch';
+import { Minimatch } from 'minimatch';
 import type { ProjectGraphProjectNode } from '../config/project-graph';
 import { isGlobPattern } from './globs';
 
@@ -176,9 +176,10 @@ function addMatchingProjectsByName(
   }
 
   if (!isGlobPattern(pattern.value)) {
+    const escapedValue = pattern.value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     // Custom regex that is basically \b but includes hyphens (-) and excludes underscores (_), so "foo" pattern matches "foo_bar" but not "foo-e2e".
     const regex = new RegExp(
-      `(?<![@a-zA-Z0-9-])${pattern.value}(?![@a-zA-Z0-9-])`,
+      `(?<![@a-zA-Z0-9-])${escapedValue}(?![@a-zA-Z0-9-])`,
       'i'
     );
     const matchingProjects = Object.keys(projects).filter((name) =>
@@ -264,11 +265,13 @@ function parseStringPattern(
     // The pattern may contain a label
   } else {
     const potentialType = pattern.substring(0, indexOfFirstPotentialSeparator);
-    return {
-      type: isValidPatternType(potentialType) ? potentialType : 'unlabeled',
-      value: pattern.substring(indexOfFirstPotentialSeparator + 1),
-      exclude: isExclude,
-    };
+    return isValidPatternType(potentialType)
+      ? {
+          type: potentialType,
+          value: pattern.substring(indexOfFirstPotentialSeparator + 1),
+          exclude: isExclude,
+        }
+      : { type: 'unlabeled', value: pattern, exclude: isExclude };
   }
 }
 
@@ -279,25 +282,24 @@ function isValidPatternType(type: string): type is ProjectPatternType {
 export const getMatchingStringsWithCache = (() => {
   // Map< Pattern, Map< Item, Result >>
   const minimatchCache = new Map<string, Map<string, boolean>>();
-  const regexCache = new Map<string, RegExp>();
+  const matcherCache = new Map<string, Minimatch>();
   return (pattern: string, items: string[]) => {
     if (!minimatchCache.has(pattern)) {
       minimatchCache.set(pattern, new Map());
     }
     const patternCache = minimatchCache.get(pattern)!;
-    if (!regexCache.has(pattern)) {
-      const regex = minimatch.makeRe(pattern, { dot: true });
-      if (regex) {
-        regexCache.set(pattern, regex);
-      } else {
+    if (!matcherCache.has(pattern)) {
+      const matcher = new Minimatch(pattern, { dot: true });
+      if (matcher.set.length === 0) {
         throw new Error('Invalid glob pattern ' + pattern);
       }
+      matcherCache.set(pattern, matcher);
     }
-    const matcher = regexCache.get(pattern);
+    const matcher = matcherCache.get(pattern)!;
     return items.filter((item) => {
       let entry = patternCache.get(item);
       if (entry === undefined || entry === null) {
-        entry = item === pattern ? true : matcher.test(item);
+        entry = item === pattern ? true : matcher.match(item);
         patternCache.set(item, entry);
       }
       return entry;

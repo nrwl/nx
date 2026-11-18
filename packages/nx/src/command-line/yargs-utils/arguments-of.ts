@@ -8,8 +8,10 @@ export type Handler<B extends Builder<any, any>> = (
   args: Awaited<ReturnType<B>['argv']>
 ) => void | Promise<void>;
 
-export interface CommandModule<T, U>
-  extends Omit<YargsCommandModule<T, U>, 'handler'> {
+export interface CommandModule<T, U> extends Omit<
+  YargsCommandModule<T, U>,
+  'handler'
+> {
   builder: Builder<T, U>;
   handler: Handler<Builder<T, U>>;
 }

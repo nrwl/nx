@@ -38,6 +38,12 @@
       ],
       "internal": [
         "dist/internal.d.ts"
+      ],
+      "ready-check": [
+        "dist/ready-check.d.ts"
+      ],
+      "ready-signal": [
+        "dist/ready-signal.d.ts"
       ]
     }
   },
@@ -74,6 +80,16 @@
       "types": "./dist/plugin.d.ts",
       "default": "./dist/plugin.js"
     },
+    "./ready-check": {
+      "@nx/nx-source": "./ready-check.ts",
+      "types": "./dist/ready-check.d.ts",
+      "default": "./dist/ready-check.js"
+    },
+    "./ready-signal": {
+      "@nx/nx-source": "./ready-signal.ts",
+      "types": "./dist/ready-signal.d.ts",
+      "default": "./dist/ready-signal.js"
+    },
     "./tsconfig-paths-plugin": {
       "@nx/nx-source": "./tsconfig-paths-plugin.ts",
       "types": "./dist/tsconfig-paths-plugin.d.ts",
@@ -101,7 +117,7 @@
     "less-loader": "catalog:css",
     "license-webpack-plugin": "^4.0.2",
     "loader-utils": "^2.0.3",
-    "mini-css-extract-plugin": "~2.4.7",
+    "mini-css-extract-plugin": "~2.10.2",
     "parse5": "4.0.0",
     "postcss": "catalog:css",
     "postcss-import": "~14.1.0",

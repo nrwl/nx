@@ -12,10 +12,12 @@ import {
   resolvePackageVersionUsingInstallation,
   resolvePackageVersionUsingRegistry,
 } from '../../../../utils/package-manager';
+import { ensurePackageHasProvenance } from '../../../../utils/provenance';
 import { connectExistingRepoToNxCloudPrompt } from '../../../nx-cloud/connect/connect-to-nx-cloud';
-import { initCloud, setNeverConnectToCloud } from '../utils';
+import { initCloud } from '../utils';
 import { MessageOptionKey } from '../../../../utils/ab-testing';
 import type { Options } from './types';
+import { recordInitWrite } from '../format';
 
 // map of Angular major versions to Nx versions to use for legacy `nx init` migrations,
 // key is major Angular version and value is Nx version to use
@@ -92,15 +94,26 @@ export async function getLegacyMigrationFunctionIfApplicable(
       : '--preserve-angular-cli-layout=false';
     legacyMigrationCommand = `ng g ${pkgName}:ng-add ${preserveAngularCliLayoutFlag}`;
   } else {
-    // use the latest Nx version that supported the Angular version
-    pkgVersion = await resolvePackageVersion(
-      'nx',
-      nxAngularLegacyVersionMap[majorAngularVersion]
-    );
+    try {
+      // use the latest Nx version that supported the Angular version
+      pkgVersion = await resolvePackageVersionUsingRegistry(
+        'nx',
+        nxAngularLegacyVersionMap[majorAngularVersion]
+      );
 
-    pkgScope = gte(pkgVersion, versionWithRescopeToNx) ? '@nx' : '@nrwl';
-    unscopedPkgName = 'angular';
-    pkgName = `${pkgScope}/${unscopedPkgName}`;
+      pkgScope = gte(pkgVersion, versionWithRescopeToNx) ? '@nx' : '@nrwl';
+      unscopedPkgName = 'angular';
+      pkgName = `${pkgScope}/${unscopedPkgName}`;
+
+      for (const pkg of ['nx', `${pkgScope}/workspace`, pkgName]) {
+        await ensurePackageHasProvenance(pkg, pkgVersion);
+      }
+    } catch (e) {
+      // errors are caught in the initHandler and not logged to the user, so we
+      // log it first and then throw to ensure it is logged to the user
+      output.error({ title: e.message });
+      throw e;
+    }
 
     legacyMigrationCommand = `nx@${pkgVersion} init ${process.argv
       .slice(2)
@@ -143,8 +156,6 @@ export async function getLegacyMigrationFunctionIfApplicable(
     if (nxCloudChoice === 'yes') {
       output.log({ title: '🛠️ Setting up Nx Cloud' });
       await initCloud('nx-init-angular');
-    } else if (nxCloudChoice === 'never') {
-      setNeverConnectToCloud(repoRoot);
     }
   };
 }
@@ -179,6 +190,7 @@ async function installDependencies(
     json.dependencies = sortObjectByKeys(json.dependencies);
   }
   writeJsonFile(`package.json`, json);
+  recordInitWrite('package.json');
 
   execSync(pmc.install, { stdio: [0, 1, 2], windowsHide: true });
 }

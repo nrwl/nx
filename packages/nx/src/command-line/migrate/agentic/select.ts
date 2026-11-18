@@ -1,14 +1,16 @@
 import { existsSync, readFileSync, writeFileSync } from 'fs';
 import { applyEdits, modify } from 'jsonc-parser';
 import { join } from 'path';
-import * as pc from 'picocolors';
+import { IS_WASM } from '../../../native';
 import { output } from '../../../utils/output';
 import { workspaceRoot } from '../../../utils/workspace-root';
 import {
   type MigratePromptChoices,
   reportMigratePrompt,
 } from '../migrate-analytics';
-import { migratePrompt } from '../safe-prompt';
+import type { MigrationIdProblem } from '../run';
+import { migrateChoice } from '../safe-prompt';
+import { singleLine } from '../text';
 import { detectInstalledAgents } from './detect-installed';
 import { isInsideAgent } from './inception';
 import { AGENT_DEFINITIONS } from './definitions';
@@ -84,15 +86,49 @@ export async function resolveAgentic(
   return { kind: 'enabled', selectedAgent: selected };
 }
 
+const ID_PROBLEM_LABELS: Record<MigrationIdProblem, string> = {
+  'not-shell-safe': 'not shell-safe',
+  duplicate: 'listed more than once',
+};
+
+export function idProblemLines(
+  problems: ReadonlyArray<{ id: string; problem: MigrationIdProblem }>
+): string[] {
+  return problems.map(
+    ({ id, problem }) => `- ${singleLine(id)} (${ID_PROBLEM_LABELS[problem]})`
+  );
+}
+
 /**
- * No warning when `--validate` is passed with the agentic flow off: validation
- * requires an active agent session by definition.
+ * Drops an enabled agent, with a warning, where the orchestrator that drives
+ * it cannot run: under the WASM build, and for migration ids an orchestrated
+ * run cannot take.
  */
-export function resolveShouldRunValidation(args: {
-  validate: boolean | undefined;
-  agenticKind: ResolvedAgentic['kind'];
-}): boolean {
-  return args.validate !== false && args.agenticKind === 'enabled';
+export function dropUnsupportedAgent(
+  agentic: ResolvedAgentic,
+  idProblems: ReadonlyArray<{ id: string; problem: MigrationIdProblem }>
+): ResolvedAgentic {
+  if (agentic.kind !== 'enabled') return agentic;
+  if (IS_WASM) {
+    output.warn({
+      title:
+        'Skipping the agentic flow: it needs the native nx binary, and this run loaded the WASM build.',
+      bodyLines: ['Continuing the migration without the agentic flow.'],
+    });
+    return { kind: 'disabled' };
+  }
+  if (idProblems.length > 0) {
+    output.warn({
+      title:
+        'Skipping the agentic flow: it needs each migration id to be shell-safe (letters, digits and @/:._-) and listed once, and these are not:',
+      bodyLines: [
+        ...idProblemLines(idProblems),
+        'Continuing the migration without the agentic flow. Generators still run. Prompt-only migrations and the prompt part of hybrid migrations are skipped and listed as next steps, and no AI validation runs.',
+      ],
+    });
+    return { kind: 'disabled' };
+  }
+  return agentic;
 }
 
 /**
@@ -144,7 +180,7 @@ async function resolveFlag(
 function requireInteractiveOrAbort(isInteractive: boolean): void {
   if (isInteractive) return;
   output.error({
-    title: 'The agentic flow is interactive-only in this release.',
+    title: 'The agentic flow needs an interactive terminal.',
     bodyLines: [
       'Re-run in an interactive terminal, or pass `--agentic=false` to skip the agentic flow.',
     ],
@@ -155,9 +191,9 @@ function requireInteractiveOrAbort(isInteractive: boolean): void {
 function warnAgenticInteractiveOnly(): void {
   output.warn({
     title:
-      'Skipping the agentic flow: it is interactive-only in this release and this run is non-interactive.',
+      'Skipping the agentic flow: the agent session needs an interactive terminal, and this run is non-interactive.',
     bodyLines: [
-      'Continuing the migration without the agentic flow. Re-run in an interactive terminal to use it.',
+      'Continuing without the agentic flow. Generators still run, prompt-based changes are left for you to apply, and no AI validation runs. Re-run in an interactive terminal to use the agentic flow.',
     ],
   });
 }
@@ -183,58 +219,50 @@ async function firePromptForAgentic(
   // `name` is typed so renaming a choice here fails to compile instead of
   // silently forking the GA value-space and falling through the switch below.
   type AgenticChoice = {
-    name: MigratePromptChoices['agentic'];
-    message: string;
-    description: string;
+    value: MigratePromptChoices['agentic'];
+    label: string;
+    hint: string;
   };
   const pinChoice: AgenticChoice[] = multipleAgents
     ? [
         {
-          name: 'yes-pin',
-          message: 'Yes, always with the same agent',
-          description: rememberHint,
+          value: 'yes-pin',
+          label: 'Yes, always with the same agent',
+          hint: rememberHint,
         },
       ]
     : [];
   const choices: AgenticChoice[] = [
     {
-      name: 'yes-once',
-      message: 'Yes, just this time',
-      description: applyHint,
+      value: 'yes-once',
+      label: 'Yes, just this time',
+      hint: applyHint,
     },
     {
-      name: 'yes-flex',
-      message: multipleAgents
+      value: 'yes-flex',
+      label: multipleAgents
         ? "Yes, always (I'll pick the agent each run)"
         : 'Yes, always',
-      description: rememberHint,
+      hint: rememberHint,
     },
     ...pinChoice,
-    { name: 'no-once', message: 'No, just this time', description: skipHint },
-    { name: 'no-never', message: 'No, never', description: rememberHint },
+    { value: 'no-once', label: 'No, just this time', hint: skipHint },
+    { value: 'no-never', label: 'No, never', hint: rememberHint },
   ];
 
   // Blank line keeps the prompt from gluing to the previous `npm install`
   // output or any earlier orchestrator line.
   console.log();
-  // `as any`: `footer` and per-choice `description` aren't in enquirer's .d.ts.
-  const response = await migratePrompt<{
-    choice: MigratePromptChoices['agentic'];
-  }>({
-    name: 'choice',
-    type: 'select',
+  // Each choice's hint renders beside it, so the description no longer needs a
+  // footer that tracks the cursor.
+  const choice = await migrateChoice<MigratePromptChoices['agentic']>({
     message: 'Enable the agentic flow?',
     choices,
-    initial: 0,
-    footer: function () {
-      const focused = this.focused as { description?: string };
-      return focused?.description ? pc.dim(`  ${focused.description}`) : '';
-    },
-  } as any);
+  });
 
-  reportMigratePrompt('agentic', response.choice);
+  reportMigratePrompt('agentic', choice);
 
-  switch (response.choice) {
+  switch (choice) {
     case 'yes-once':
       return { enabled: true };
     case 'yes-flex':
@@ -330,12 +358,10 @@ async function selectAgent(
 
   // Blank line keeps the prompt from gluing to the preceding output.
   console.log();
-  const response = await migratePrompt<{ id: AgentId }>({
-    name: 'id',
-    type: 'select',
+  const id = await migrateChoice<AgentId>({
     message: 'Multiple AI agents detected. Which one should Nx use?',
-    choices: detected.map((d) => ({ name: d.id, message: d.displayName })),
+    choices: detected.map((d) => ({ value: d.id, label: d.displayName })),
   });
-  reportMigratePrompt('agent_select', response.id);
-  return detected.find((d) => d.id === response.id)!;
+  reportMigratePrompt('agent_select', id);
+  return detected.find((d) => d.id === id)!;
 }

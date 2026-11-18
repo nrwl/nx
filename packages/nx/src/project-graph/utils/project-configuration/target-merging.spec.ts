@@ -1,4 +1,7 @@
-import { TargetConfiguration } from '../../../config/workspace-json-project-json';
+import {
+  TargetConfiguration,
+  type TargetUltracacheSettings,
+} from '../../../config/workspace-json-project-json';
 import {
   isCompatibleTarget,
   mergeTargetConfigurations,
@@ -428,6 +431,40 @@ describe('target merging', () => {
   });
 
   describe('cache', () => {
+    // Once a consumer reads it, `mode: 'warn'` decides whether a task's
+    // Ultracache configuration may stand in for declared inputs, so losing
+    // it in a merge would silently change how the task hashes.
+    it('should drop an inherited mode when the target replaces the ultracache', () => {
+      const result = mergeTargetConfigurations(
+        {
+          executor: 'nx:run-commands',
+          ultracache: { ignoreReads: ['tmp/**'] },
+        },
+        {
+          executor: 'nx:run-commands',
+          ultracache: { mode: 'warn' },
+        }
+      );
+      expect(result.ultracache).toEqual({ ignoreReads: ['tmp/**'] });
+    });
+
+    it('should keep an inherited mode under the spread token', () => {
+      const result = mergeTargetConfigurations(
+        {
+          executor: 'nx:run-commands',
+          ultracache: { '...': true, ignoreReads: ['tmp/**'] },
+        },
+        {
+          executor: 'nx:run-commands',
+          ultracache: { mode: 'warn' },
+        }
+      );
+      expect(result.ultracache).toEqual({
+        mode: 'warn',
+        ignoreReads: ['tmp/**'],
+      });
+    });
+
     it('should not be merged for incompatible targets', () => {
       const result = mergeTargetConfigurations(
         {
@@ -439,6 +476,237 @@ describe('target merging', () => {
         }
       );
       expect(result.cache).not.toBeDefined();
+    });
+  });
+
+  describe('ultracache', () => {
+    it.each<
+      [
+        TargetUltracacheSettings | undefined,
+        TargetUltracacheSettings,
+        boolean | undefined,
+      ]
+    >([
+      [undefined, { collectStats: true }, true],
+      [undefined, { collectStats: false }, false],
+      [{ '...': true }, { collectStats: true }, true],
+      [{ '...': true, collectStats: false }, { collectStats: true }, false],
+      [{ '...': true, collectStats: true }, { collectStats: false }, true],
+      [{ collectStats: false, '...': true }, { collectStats: true }, true],
+      [{ collectStats: true, '...': true }, { collectStats: false }, false],
+      [{ collectStats: false }, { collectStats: true }, false],
+      [{ ignoreReads: ['tmp/**'] }, { collectStats: true }, undefined],
+    ])(
+      'merges collectStats in %j over %j as %s',
+      (ultracache, base, expected) => {
+        const result = mergeTargetConfigurations(
+          { executor: 'nx:run-commands', ultracache },
+          { executor: 'nx:run-commands', ultracache: base }
+        );
+        expect(result.ultracache.collectStats).toBe(expected);
+      }
+    );
+
+    it('should take the base ultracache when the target does not define one', () => {
+      const result = mergeTargetConfigurations(
+        { executor: 'nx:run-commands' },
+        {
+          executor: 'nx:run-commands',
+          ultracache: { mode: 'off', ignoreReads: ['tmp/**'] },
+        }
+      );
+      expect(result.ultracache).toEqual({
+        mode: 'off',
+        ignoreReads: ['tmp/**'],
+      });
+    });
+
+    it('should replace the base ultracache wholesale when the target defines one', () => {
+      const result = mergeTargetConfigurations(
+        {
+          executor: 'nx:run-commands',
+          ultracache: { ignoreWrites: ['scratch/**'] },
+        },
+        {
+          executor: 'nx:run-commands',
+          ultracache: { mode: 'off', ignoreReads: ['tmp/**'] },
+        }
+      );
+      expect(result.ultracache).toEqual({ ignoreWrites: ['scratch/**'] });
+    });
+
+    it('should shallow-merge with the base ultracache via the spread token', () => {
+      const result = mergeTargetConfigurations(
+        {
+          executor: 'nx:run-commands',
+          ultracache: {
+            '...': true,
+            ignoreWrites: ['scratch/**'],
+          },
+        },
+        {
+          executor: 'nx:run-commands',
+          ultracache: { mode: 'off', ignoreReads: ['tmp/**'] },
+        }
+      );
+      expect(result.ultracache).toEqual({
+        mode: 'off',
+        ignoreReads: ['tmp/**'],
+        ignoreWrites: ['scratch/**'],
+      });
+    });
+
+    it('should not be merged for incompatible targets', () => {
+      const result = mergeTargetConfigurations(
+        { executor: 'foo' },
+        { executor: 'bar', ultracache: { mode: 'off' } }
+      );
+      expect(result.ultracache).not.toBeDefined();
+    });
+
+    // The guard above already skips a base-only ultracache, so this is the case
+    // that decides whether the base is discarded: the target overrode the
+    // executor, so the base describes a different program.
+    it('should not inherit the base ultracache when an incompatible target declares its own', () => {
+      const result = mergeTargetConfigurations(
+        {
+          executor: 'foo',
+          ultracache: { '...': true, ignoreWrites: ['scratch/**'] },
+        },
+        {
+          executor: 'bar',
+          ultracache: { mode: 'off', ignoreReads: ['tmp/**'] },
+        }
+      );
+      // The base contributes nothing — no `mode`, no inherited
+      // `ignoreReads`. The `'...'` survives because there was no base to
+      // expand it against; unlike the target level, `mergeUltracache` does not
+      // strip an unresolved token.
+      expect(result.ultracache).toEqual({
+        '...': true,
+        ignoreWrites: ['scratch/**'],
+      });
+    });
+
+    it('should resolve the spread token inside ignoreReads', () => {
+      const result = mergeTargetConfigurations(
+        {
+          executor: 'nx:run-commands',
+          ultracache: { ignoreReads: ['...', 'tmp/**'] },
+        },
+        {
+          executor: 'nx:run-commands',
+          ultracache: { ignoreReads: ['dist/**'] },
+        }
+      );
+      expect(result.ultracache).toEqual({
+        ignoreReads: ['dist/**', 'tmp/**'],
+      });
+    });
+
+    it('should resolve the spread token inside ignoreWrites under an object spread', () => {
+      const result = mergeTargetConfigurations(
+        {
+          executor: 'nx:run-commands',
+          ultracache: {
+            '...': true,
+            ignoreWrites: ['...', 'scratch/**'],
+          },
+        },
+        {
+          executor: 'nx:run-commands',
+          ultracache: { mode: 'off', ignoreWrites: ['dist/**'] },
+        }
+      );
+      expect(result.ultracache).toEqual({
+        mode: 'off',
+        ignoreWrites: ['dist/**', 'scratch/**'],
+      });
+    });
+
+    it('should keep a falsy ultracache so validation can reject it', () => {
+      const result = mergeTargetConfigurations(
+        { executor: 'nx:run-commands', ultracache: false as any },
+        { executor: 'nx:run-commands' }
+      );
+      expect('ultracache' in result).toBe(true);
+      expect(result.ultracache).toBe(false);
+    });
+
+    it('should not turn an array ultracache into an empty object', () => {
+      const result = mergeTargetConfigurations(
+        { executor: 'nx:run-commands', ultracache: [] as any },
+        { executor: 'nx:run-commands' }
+      );
+      expect(result.ultracache).toEqual([]);
+    });
+
+    it('should let the base win for a glob array authored before the spread', () => {
+      const result = mergeTargetConfigurations(
+        {
+          executor: 'nx:run-commands',
+          ultracache: { ignoreReads: ['tmp/**'], '...': true },
+        },
+        {
+          executor: 'nx:run-commands',
+          ultracache: { ignoreReads: ['dist/**'], mode: 'off' },
+        }
+      );
+      expect(result.ultracache).toEqual({
+        ignoreReads: ['dist/**'],
+        mode: 'off',
+      });
+    });
+
+    it('should let the target win for a glob array authored after the spread', () => {
+      const result = mergeTargetConfigurations(
+        {
+          executor: 'nx:run-commands',
+          ultracache: { '...': true, ignoreReads: ['tmp/**'] },
+        },
+        {
+          executor: 'nx:run-commands',
+          ultracache: { ignoreReads: ['dist/**'], mode: 'off' },
+        }
+      );
+      expect(result.ultracache).toEqual({
+        ignoreReads: ['tmp/**'],
+        mode: 'off',
+      });
+    });
+
+    it('should not mutate the target it was given', () => {
+      const target = {
+        executor: 'nx:run-commands',
+        ultracache: { ignoreReads: ['...', 'tmp/**'] },
+      };
+      const before = JSON.stringify(target);
+
+      mergeTargetConfigurations(target, {
+        executor: 'nx:run-commands',
+        ultracache: { ignoreReads: ['dist/**'] },
+      });
+
+      expect(JSON.stringify(target)).toEqual(before);
+    });
+
+    it('should never leave a literal spread token on the merged globs', () => {
+      const result = mergeTargetConfigurations(
+        {
+          executor: 'nx:run-commands',
+          ultracache: { ignoreReads: ['...'], ignoreWrites: ['...'] },
+        },
+        {
+          executor: 'nx:run-commands',
+          ultracache: { ignoreReads: ['dist/**'], ignoreWrites: ['out/**'] },
+        }
+      );
+      expect(result.ultracache.ignoreReads).not.toContain('...');
+      expect(result.ultracache.ignoreWrites).not.toContain('...');
+      expect(result.ultracache).toEqual({
+        ignoreReads: ['dist/**'],
+        ignoreWrites: ['out/**'],
+      });
     });
   });
 });

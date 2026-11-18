@@ -1,13 +1,29 @@
-import { CreateNodesContext } from '@nx/devkit';
+import { CreateDependenciesContext, CreateNodesContext } from '@nx/devkit';
 import { minimatch } from 'minimatch';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
 import { mkdirSync, rmSync } from 'node:fs';
-import { createNodesV2, OxlintPluginOptions } from './plugin.js';
+import {
+  createDependencies,
+  createNodesV2,
+  OxlintPluginOptions,
+} from './plugin.js';
 
-jest.mock('nx/src/utils/cache-directory', () => ({
-  ...jest.requireActual('nx/src/utils/cache-directory'),
+// The shared setup's `@nx/devkit` mock spreads the module, freezing
+// `workspaceRoot` before TempFs moves it; `getRootTsConfigFileName` reads it.
+vi.mock('@nx/devkit', async () => {
+  const actual = await vi.importActual<any>('@nx/devkit');
+  return Object.defineProperty({ ...actual }, 'workspaceRoot', {
+    get: () => actual.workspaceRoot,
+  });
+});
+
+vi.mock('nx/src/utils/cache-directory', async () => ({
+  ...(await vi.importActual<any>('nx/src/utils/cache-directory')),
   workspaceDataDirectory: 'tmp/oxlint-project-graph-cache',
 }));
+
+const LINTABLE_FILES =
+  '{projectRoot}/**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx,vue,svelte,astro}';
 
 describe('@nx/oxlint plugin', () => {
   let context: CreateNodesContext;
@@ -36,7 +52,7 @@ describe('@nx/oxlint plugin', () => {
   });
 
   afterEach(() => {
-    jest.resetModules();
+    vi.resetModules();
     tempFs.cleanup();
     tempFs = null;
     rmSync('tmp/oxlint-project-graph-cache', { recursive: true, force: true });
@@ -63,8 +79,7 @@ describe('@nx/oxlint plugin', () => {
     const results = await invokeCreateNodesOnMatchingFiles(context);
 
     expect(results.projects['libs/a'].targets.lint).toMatchObject({
-      command: 'oxlint .',
-      options: { cwd: 'libs/a' },
+      executor: '@nx/oxlint:lint',
       cache: true,
     });
   });
@@ -106,8 +121,6 @@ describe('@nx/oxlint plugin', () => {
 
     const results = await invokeCreateNodesOnMatchingFiles(context);
 
-    // Owning a config is not enough: `oxlint` exits 1 with "No files found to
-    // lint" in a directory it has nothing to read.
     expect(results.projects['libs/docs']).toBeUndefined();
   });
 
@@ -123,14 +136,186 @@ describe('@nx/oxlint plugin', () => {
 
     expect(results.projects['libs/a'].targets.lint.inputs).toEqual(
       expect.arrayContaining([
-        // Without these the task stops hashing the project's own source, so Nx
+        // Without this the task stops hashing the project's own source, so Nx
         // replays a cached pass after an edit.
-        'default',
-        '^default',
+        { fileset: LINTABLE_FILES },
         '{workspaceRoot}/.oxlintrc.json',
         '{workspaceRoot}/configs/base.json',
         { externalDependencies: ['oxlint'] },
       ])
+    );
+  });
+
+  // Oxlint cannot lint a README or a JSON file, and no named input is used,
+  // so a workspace's `default` definition does not decide what re-lints.
+  it('should hash only lintable files and not use named inputs', async () => {
+    createFiles({
+      '.oxlintrc.json': `{"rules":{}}`,
+      'libs/a/project.json': `{"name":"a"}`,
+      'libs/a/src/index.ts': `export const a = 1;`,
+    });
+
+    const results = await invokeCreateNodesOnMatchingFiles(context);
+    const inputs = results.projects['libs/a'].targets.lint.inputs;
+
+    expect(inputs.filter((i) => typeof i === 'string')).not.toContain(
+      'default'
+    );
+    expect(inputs).not.toContain('^default');
+    expect(inputs).toContainEqual({ fileset: LINTABLE_FILES });
+    expect(inputs).toContainEqual({
+      fileset:
+        '{projectRoot}/**/{.oxlintrc.json,.oxlintrc.jsonc,oxlint.config.ts,oxlint.config.mts,.eslintignore,.gitignore,tsconfig*.json}',
+    });
+  });
+
+  // Only the boundaries bridge reads other projects, so without it a change
+  // in a dependency must not re-lint the dependents.
+  it('should not hash dependencies without the boundaries bridge', async () => {
+    createFiles({
+      '.oxlintrc.json': `{"rules":{}}`,
+      'libs/a/project.json': `{"name":"a"}`,
+      'libs/a/src/index.ts': `export const a = 1;`,
+    });
+
+    const results = await invokeCreateNodesOnMatchingFiles(context);
+    const inputs = results.projects['libs/a'].targets.lint.inputs;
+
+    expect(inputs.some((i) => (i as any).dependencies === true)).toBe(false);
+  });
+
+  it('should hash dependencies when the boundaries bridge is configured', async () => {
+    createFiles({
+      '.oxlintrc.json': `{"jsPlugins":["@nx/oxlint/boundaries-plugin"],"rules":{}}`,
+      'libs/a/project.json': `{"name":"a"}`,
+      'libs/a/src/index.ts': `export const a = 1;`,
+    });
+
+    const results = await invokeCreateNodesOnMatchingFiles(context);
+    const inputs = results.projects['libs/a'].targets.lint.inputs;
+
+    expect(inputs).toContainEqual({
+      fileset: LINTABLE_FILES,
+      dependencies: true,
+    });
+    expect(inputs).toContainEqual({
+      fileset: '{projectRoot}/package.json',
+      dependencies: true,
+    });
+  });
+
+  // Oxlint layers ignore files from every ancestor of a linted file, which
+  // changes which files are linted.
+  it.each(['.eslintignore', '.gitignore'])(
+    'should declare ancestor %s files as inputs',
+    async (filename) => {
+      createFiles({
+        '.oxlintrc.json': `{"rules":{}}`,
+        'libs/a/project.json': `{"name":"a"}`,
+        'libs/a/src/index.ts': `export const a = 1;`,
+      });
+
+      const results = await invokeCreateNodesOnMatchingFiles(context);
+      const inputs = results.projects['libs/a'].targets.lint.inputs;
+
+      expect(inputs).toContain(`{workspaceRoot}/${filename}`);
+      expect(inputs).toContain(`{workspaceRoot}/libs/${filename}`);
+      // The project's own directory is covered by its own fileset.
+      expect(inputs).not.toContain(`{workspaceRoot}/libs/a/${filename}`);
+    }
+  );
+
+  it('should carry direct nested project roots on the inferred target', async () => {
+    createFiles({
+      '.oxlintrc.json': `{"rules":{}}`,
+      'libs/a/project.json': `{"name":"a"}`,
+      'libs/a/src/index.ts': `export const a = 1;`,
+      'libs/a/nested/project.json': `{"name":"a-nested"}`,
+      'libs/a/nested/src/index.ts': `export const n = 1;`,
+      'libs/a/nested/deeper/project.json': `{"name":"a-deeper"}`,
+      'libs/a/nested/deeper/src/index.ts': `export const d = 1;`,
+    });
+
+    const results = await invokeCreateNodesOnMatchingFiles(context);
+
+    // Nearest parent claims a root, so the grandchild is the child's entry.
+    expect(results.projects['libs/a'].targets.lint.options).toEqual({
+      nestedProjectRoots: ['libs/a/nested'],
+    });
+    expect(results.projects['libs/a/nested'].targets.lint.options).toEqual({
+      nestedProjectRoots: ['libs/a/nested/deeper'],
+    });
+    expect(
+      results.projects['libs/a/nested/deeper'].targets.lint.options
+    ).toBeUndefined();
+  });
+
+  it('should list nested roots regardless of what lints them', async () => {
+    createFiles({
+      '.oxlintrc.json': `{"rules":{}}`,
+      'libs/a/project.json': `{"name":"a"}`,
+      'libs/a/src/index.ts': `export const a = 1;`,
+      // Only markdown inside: this project gets no oxlint target at all.
+      'libs/a/docs-only/project.json': `{"name":"a-docs"}`,
+      'libs/a/docs-only/README.md': `# docs`,
+    });
+
+    const results = await invokeCreateNodesOnMatchingFiles(context);
+
+    expect(results.projects['libs/a'].targets.lint.options).toEqual({
+      nestedProjectRoots: ['libs/a/docs-only'],
+    });
+    expect(results.projects['libs/a/docs-only']).toBeUndefined();
+  });
+
+  it('should declare local jsPlugins as file inputs but never as externalDependencies', async () => {
+    createFiles({
+      '.oxlintrc.json': `{"jsPlugins":["@nx/oxlint/boundaries-plugin","./tools/local-plugin.js",{"name":"acme","specifier":"@acme/oxlint-plugin"},{"name":"local","specifier":"./tools/other-plugin.js"}],"rules":{}}`,
+      'tools/local-plugin.js': `export default { meta: {}, rules: {} };`,
+      'tools/other-plugin.js': `export default { meta: {}, rules: {} };`,
+      'libs/a/project.json': `{"name":"a"}`,
+      'libs/a/src/index.ts': `export const a = 1;`,
+    });
+
+    const results = await invokeCreateNodesOnMatchingFiles(context);
+    const inputs = results.projects['libs/a'].targets.lint.inputs;
+
+    // A local plugin may live outside every project, where no graph edge can
+    // reach it. Packages are graph edges (see createDependencies), never
+    // externalDependencies: naming one with no node fails every task.
+    expect(inputs).toContain('{workspaceRoot}/tools/local-plugin.js');
+    expect(inputs).toContain('{workspaceRoot}/tools/other-plugin.js');
+    expect(inputs).toContainEqual({ externalDependencies: ['oxlint'] });
+  });
+
+  it('should not declare a local jsPlugin outside the workspace as an input', async () => {
+    createFiles({
+      '.oxlintrc.json': `{"jsPlugins":["../outside/plugin.js","./tools/inside.js"],"rules":{}}`,
+      'tools/inside.js': `export default { meta: {}, rules: {} };`,
+      'libs/a/project.json': `{"name":"a"}`,
+      'libs/a/src/index.ts': `export const a = 1;`,
+    });
+
+    const results = await invokeCreateNodesOnMatchingFiles(context);
+    const inputs = results.projects['libs/a'].targets.lint.inputs;
+
+    expect(inputs).toContain('{workspaceRoot}/tools/inside.js');
+    expect(inputs.some((i) => String(i).includes('outside'))).toBe(false);
+  });
+
+  it('should declare local jsPlugins of an extended config as file inputs', async () => {
+    createFiles({
+      '.oxlintrc.json': `{"extends":["./configs/base.json"],"rules":{}}`,
+      'configs/base.json': `{"jsPlugins":["./plugin.js"],"rules":{}}`,
+      'configs/plugin.js': `export default { meta: {}, rules: {} };`,
+      'libs/a/project.json': `{"name":"a"}`,
+      'libs/a/src/index.ts': `export const a = 1;`,
+    });
+
+    const results = await invokeCreateNodesOnMatchingFiles(context);
+
+    expect(results.projects['libs/a'].targets.lint.inputs).toContain(
+      '{workspaceRoot}/configs/plugin.js'
     );
   });
 
@@ -203,12 +388,32 @@ describe('@nx/oxlint plugin', () => {
     const results = await invokeCreateNodesOnMatchingFiles(context);
 
     expect(results.projects['.'].targets.lint).toMatchObject({
-      command: 'oxlint ./src',
+      executor: '@nx/oxlint:lint',
+      options: { lintFilePatterns: ['src'] },
     });
   });
 
-  // Without the root short-circuit, `lintPath` falls through to `.` and the root
-  // project gets `oxlint .`, re-linting every sub-project on top of its own target.
+  it('should not point a root project at a src that is its own project', async () => {
+    createFiles({
+      '.oxlintrc.json': `{"rules":{}}`,
+      'package.json': `{"name":"root-workspace","nx":{}}`,
+      'src/project.json': `{"name":"src"}`,
+      'src/index.ts': `export const value = 1;`,
+      'lib/index.ts': `export const value = 1;`,
+    });
+
+    const results = await invokeCreateNodesOnMatchingFiles(context);
+
+    expect(results.projects['.'].targets.lint.options).toMatchObject({
+      lintFilePatterns: ['lib'],
+    });
+    expect(results.projects['src'].targets.lint.executor).toBe(
+      '@nx/oxlint:lint'
+    );
+  });
+
+  // Without the root short-circuit, such a root project would get a redundant
+  // task linting `.`.
   it('should not give a root project a task when it has no src or lib', async () => {
     createFiles({
       '.oxlintrc.json': `{"rules":{}}`,
@@ -394,6 +599,185 @@ describe('@nx/oxlint plugin', () => {
       expect(results.projects['libs/a'].targets.lint.inputs).toContain(
         '{workspaceRoot}/tsconfig.shared.json'
       );
+    });
+  });
+
+  describe('createDependencies', () => {
+    const external = (name: string) => ({
+      [`npm:${name}`]: {
+        name: `npm:${name}`,
+        type: 'npm' as const,
+        data: { packageName: name, version: '1.0.0' },
+      },
+    });
+    const lintedProject = (root: string) => ({
+      root,
+      targets: { lint: { metadata: { technologies: ['oxlint'] } } },
+    });
+
+    function depsContext(
+      projects: Record<string, any>,
+      externalNodes: Record<string, any>,
+      files: string[]
+    ): CreateDependenciesContext {
+      const projectFileMap: Record<string, { file: string; hash: string }[]> =
+        {};
+      const nonProjectFiles: { file: string; hash: string }[] = [];
+      for (const file of files) {
+        const owner = Object.entries(projects).find(
+          ([, p]) =>
+            file.startsWith(`${p.root}/`) ||
+            (p.root === '.' && !file.includes('/'))
+        );
+        const entry = { file, hash: '' };
+        if (owner) {
+          (projectFileMap[owner[0]] ??= []).push(entry);
+        } else {
+          nonProjectFiles.push(entry);
+        }
+      }
+      const fileMap = { projectFileMap, nonProjectFiles };
+      return {
+        projects,
+        externalNodes,
+        fileMap,
+        filesToProcess: fileMap,
+        nxJsonConfiguration: context.nxJsonConfiguration,
+        workspaceRoot: tempFs.tempDir,
+      } as CreateDependenciesContext;
+    }
+
+    it('should add an implicit edge from every linted project to an npm plugin', async () => {
+      createFiles({
+        '.oxlintrc.json': `{"jsPlugins":["@acme/oxlint-plugin"],"rules":{}}`,
+        'libs/a/src/index.ts': `export const a = 1;`,
+        'libs/b/src/index.ts': `export const b = 1;`,
+      });
+      const ctx = depsContext(
+        { a: lintedProject('libs/a'), b: lintedProject('libs/b') },
+        external('@acme/oxlint-plugin'),
+        ['.oxlintrc.json', 'libs/a/src/index.ts', 'libs/b/src/index.ts']
+      );
+
+      expect(await createDependencies({}, ctx)).toEqual([
+        { source: 'a', target: 'npm:@acme/oxlint-plugin', type: 'implicit' },
+        { source: 'b', target: 'npm:@acme/oxlint-plugin', type: 'implicit' },
+      ]);
+    });
+
+    it('should resolve a package subpath and the object form to the package node', async () => {
+      createFiles({
+        '.oxlintrc.json': `{"jsPlugins":["@nx/oxlint/boundaries-plugin",{"name":"acme","specifier":"@acme/oxlint-plugin"}],"rules":{}}`,
+        'libs/a/src/index.ts': `export const a = 1;`,
+      });
+      const ctx = depsContext(
+        { a: lintedProject('libs/a') },
+        { ...external('@nx/oxlint'), ...external('@acme/oxlint-plugin') },
+        ['.oxlintrc.json', 'libs/a/src/index.ts']
+      );
+
+      expect(await createDependencies({}, ctx)).toEqual([
+        { source: 'a', target: 'npm:@nx/oxlint', type: 'implicit' },
+        { source: 'a', target: 'npm:@acme/oxlint-plugin', type: 'implicit' },
+      ]);
+    });
+
+    it('should add an edge to the workspace project that owns a local plugin', async () => {
+      createFiles({
+        '.oxlintrc.json': `{"jsPlugins":["./tools/lint-plugin/src/index.js"],"rules":{}}`,
+        'tools/lint-plugin/src/index.js': `export default { meta: {}, rules: {} };`,
+        'libs/a/src/index.ts': `export const a = 1;`,
+      });
+      const ctx = depsContext(
+        {
+          a: lintedProject('libs/a'),
+          'lint-plugin': { root: 'tools/lint-plugin' },
+        },
+        {},
+        [
+          '.oxlintrc.json',
+          'tools/lint-plugin/src/index.js',
+          'libs/a/src/index.ts',
+        ]
+      );
+
+      // `^default` then hashes the plugin's sources, and `nx affected` follows
+      // the edge — neither is possible with a file input.
+      expect(await createDependencies({}, ctx)).toEqual([
+        { source: 'a', target: 'lint-plugin', type: 'implicit' },
+      ]);
+    });
+
+    it('should follow the extends chain and ancestor configs', async () => {
+      createFiles({
+        '.oxlintrc.json': `{"extends":["./configs/base.json"],"rules":{}}`,
+        'configs/base.json': `{"jsPlugins":["@acme/oxlint-plugin"],"rules":{}}`,
+        'libs/a/.oxlintrc.json': `{"extends":["../../.oxlintrc.json"],"rules":{}}`,
+        'libs/a/src/index.ts': `export const a = 1;`,
+      });
+      const ctx = depsContext(
+        { a: lintedProject('libs/a') },
+        external('@acme/oxlint-plugin'),
+        [
+          '.oxlintrc.json',
+          'configs/base.json',
+          'libs/a/.oxlintrc.json',
+          'libs/a/src/index.ts',
+        ]
+      );
+
+      expect(await createDependencies({}, ctx)).toEqual([
+        { source: 'a', target: 'npm:@acme/oxlint-plugin', type: 'implicit' },
+      ]);
+    });
+
+    it('should skip specifiers that resolve to nothing and projects Oxlint does not lint', async () => {
+      createFiles({
+        '.oxlintrc.json': `{"jsPlugins":["#local-plugin","file:///abs/plugin.js","not-installed-plugin","@acme/oxlint-plugin"],"rules":{}}`,
+        'libs/a/src/index.ts': `export const a = 1;`,
+        'libs/b/src/index.ts': `export const b = 1;`,
+      });
+      const ctx = depsContext(
+        { a: lintedProject('libs/a'), b: { root: 'libs/b', targets: {} } },
+        external('@acme/oxlint-plugin'),
+        ['.oxlintrc.json', 'libs/a/src/index.ts', 'libs/b/src/index.ts']
+      );
+
+      expect(await createDependencies({}, ctx)).toEqual([
+        { source: 'a', target: 'npm:@acme/oxlint-plugin', type: 'implicit' },
+      ]);
+    });
+
+    it('should not add an edge for a config in an unrelated directory', async () => {
+      createFiles({
+        'libs/b/.oxlintrc.json': `{"jsPlugins":["@acme/oxlint-plugin"],"rules":{}}`,
+        'libs/a/src/index.ts': `export const a = 1;`,
+        'libs/b/src/index.ts': `export const b = 1;`,
+      });
+      const ctx = depsContext(
+        { a: lintedProject('libs/a'), b: lintedProject('libs/b') },
+        external('@acme/oxlint-plugin'),
+        ['libs/b/.oxlintrc.json', 'libs/a/src/index.ts', 'libs/b/src/index.ts']
+      );
+
+      // libs/b's config governs libs/b only; a sibling is neither at nor
+      // below it.
+      expect(await createDependencies({}, ctx)).toEqual([
+        { source: 'b', target: 'npm:@acme/oxlint-plugin', type: 'implicit' },
+      ]);
+    });
+
+    it('should return nothing when no config declares jsPlugins', async () => {
+      createFiles({
+        '.oxlintrc.json': `{"rules":{}}`,
+        'libs/a/src/index.ts': `export const a = 1;`,
+      });
+      const ctx = depsContext({ a: lintedProject('libs/a') }, {}, [
+        '.oxlintrc.json',
+        'libs/a/src/index.ts',
+      ]);
+
+      expect(await createDependencies({}, ctx)).toEqual([]);
     });
   });
 

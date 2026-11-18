@@ -1,0 +1,9 @@
+{
+  "outDir": "packages/owners/dist",
+  "assets": [
+    { "glob": "**/files/**" },
+    { "glob": "src/**/schema.json" },
+    { "glob": "src/**/schema.d.ts" },
+    "LICENSE"
+  ]
+}

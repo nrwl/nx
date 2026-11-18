@@ -17,11 +17,13 @@ import {
 } from '@nx/devkit';
 import {
   findTargetDefault,
+  getDeclaredPackageVersion,
   upsertTargetDefault,
   readModulePackageJson,
 } from '@nx/devkit/internal';
-import { intersects, satisfies, valid, validRange } from 'semver';
+import { gte, intersects, satisfies, valid, validRange } from 'semver';
 import { nxVersion, oxcProjectRuntimeVersion } from '../../utils/versions';
+import { acknowledgeAngularBuildScripts } from './acknowledge-build-scripts';
 import {
   getInstalledAngularDevkitVersion,
   getInstalledAngularVersionInfo,
@@ -42,7 +44,6 @@ export type AddVitestAnalogOptions = {
   skipPackageJson: boolean;
   strict: boolean;
   zoneless: boolean;
-  addPlugin?: boolean;
 };
 
 export async function addVitestAngular(
@@ -84,6 +85,7 @@ export async function addVitestAngular(
   const angularDevkitVersion =
     getInstalledAngularDevkitVersion(tree) ?? pkgVersions.angularDevkitVersion;
 
+  acknowledgeAngularBuildScripts(tree);
   return addDependenciesToPackageJson(
     tree,
     {},
@@ -133,6 +135,7 @@ export async function addVitestAnalog(
       devDependencies['jsdom'] = pkgVersions.jsdomVersion;
     }
 
+    acknowledgeAngularBuildScripts(tree);
     tasks.push(
       addDependenciesToPackageJson(tree, {}, devDependencies, undefined, true)
     );
@@ -149,7 +152,6 @@ export async function addVitestAnalog(
       uiFramework: 'angular',
       testEnvironment: 'jsdom',
       coverageProvider: 'v8',
-      addPlugin: options.addPlugin ?? false,
       skipFormat: options.skipFormat,
       skipPackageJson: options.skipPackageJson,
       zoneless: options.zoneless,
@@ -168,8 +170,7 @@ function validateVitestVersion(tree: Tree): void {
     installedVitestVersion = packageJson.version;
   } catch {}
 
-  const pkgVersions = versions(tree, { minAngularMajorVersion: 21 });
-  const requiredRange = pkgVersions.vitestVersion;
+  const requiredRange = getVitestRangeAngularRequires(tree);
 
   if (installedVitestVersion) {
     if (
@@ -222,6 +223,34 @@ function validateVitestVersion(tree: Tree): void {
         `The generation will continue, but you may encounter issues if the version is not compatible.`
     );
   }
+}
+
+// @angular/build 22.2.0 widened its vitest peer to `^4.0.8 || ^5.0.0`.
+function getVitestRangeAngularRequires(tree: Tree): string {
+  const { vitestVersion } = versions(tree, { minAngularMajorVersion: 21 });
+  const vitestV5Range = '^5.0.0';
+
+  let installedPeerRange: unknown;
+  try {
+    installedPeerRange =
+      readModulePackageJson('@angular/build').packageJson.peerDependencies
+        ?.vitest;
+  } catch {}
+  const declaredAngularBuildVersion = getDeclaredPackageVersion(
+    tree,
+    '@angular/build'
+  );
+
+  const angularBuildPeersVitestV5 =
+    (typeof installedPeerRange === 'string' &&
+      validRange(installedPeerRange) &&
+      intersects(installedPeerRange, vitestV5Range)) ||
+    (!!declaredAngularBuildVersion &&
+      gte(declaredAngularBuildVersion, '22.2.0'));
+
+  return angularBuildPeersVitestV5
+    ? `${vitestVersion} || ${vitestV5Range}`
+    : vitestVersion;
 }
 
 function configureTypeScriptForVitest(tree: Tree, projectRoot: string): void {

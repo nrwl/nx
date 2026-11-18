@@ -28,6 +28,24 @@ export {
 // TS solution awareness; mirrors Node's nearest-package.json semantics).
 export { isEsmProject } from './src/utils/module-format/is-esm-project';
 
+// Inputs for build targets that emit a pruned pnpm or Bun deploy output
+export {
+  PNPM_INSTALL_SETTINGS_INPUTS,
+  PNPM_MAJOR_RUNTIME_INPUT,
+  pnpmInstallSettingsInputsForInferredTarget,
+  shouldIncludePnpmMajorRuntimeInput,
+} from './src/utils/pnpm-install-settings-inputs';
+export {
+  BUN_INSTALL_SETTINGS_INPUTS,
+  shouldIncludeBunInstallSettingsInputs,
+} from './src/utils/bun-install-settings-inputs';
+export {
+  addDeployOutputCacheInputs,
+  type DeployOutputSettingsInput,
+} from './src/utils/deploy-output-cache-inputs';
+export { readRuntimeDependencies } from './src/utils/package-json/runtime-dependencies';
+export type { MatchedTargetRef } from './src/utils/target-defaults-matching';
+
 // TS solution setup detection
 export {
   TS_SOLUTION_SETUP_TSCONFIG_INPUT,
@@ -41,6 +59,10 @@ export {
   shouldConfigureTsSolutionSetup,
   updateTsconfigFiles,
 } from './src/utils/typescript/ts-solution-setup';
+export {
+  ensureTypescriptPlugin,
+  registerTypescriptPluginForTypecheck,
+} from './src/utils/typescript/add-typescript-plugin';
 
 // TypeScript helpers. resolvePathsBaseUrl, extractTsConfigBase,
 // tsConfigBaseOptions, addTsLibDependencies, and resolveModuleByImport ship via
@@ -75,6 +97,7 @@ export {
 // SWC helpers
 export { addSwcConfig, addSwcTestConfig } from './src/utils/swc/add-swc-config';
 export {
+  acknowledgeSwcBuildScripts,
   addSwcDependencies,
   addSwcRegisterDependencies,
 } from './src/utils/swc/add-swc-dependencies';
@@ -97,6 +120,11 @@ export {
   addBuildAndWatchDepsTargets,
   isValidPackageJsonBuildConfig,
 } from './src/plugins/typescript/util';
+export {
+  createTypecheckTarget,
+  selectTypecheckTsConfig,
+  type TypecheckTargetOptions,
+} from './src/plugins/typescript/typecheck-target';
 
 // Generator helpers
 export {
@@ -133,4 +161,5 @@ export {
   swcNodeVersion,
   tsLibVersion,
   typesNodeVersion,
+  typescriptVersion,
 } from './src/utils/versions';

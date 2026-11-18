@@ -1,16 +1,18 @@
 {
-  "buildFiles": ["proj/build.gradle"],
+  "buildFiles": ["proj/build.gradle", "proj/application/build.gradle"],
   "nodes": {
     "proj": {
       "targets": {
         "buildEnvironment": {
           "cache": true,
           "metadata": {
-            "description": "Displays all buildscript dependencies declared in root project \u0027gradle-tutorial\u0027.",
+            "description": "Displays all buildscript dependencies declared in root project 'gradle-tutorial'.",
             "technologies": ["gradle"]
           },
           "command": "./gradlew :buildEnvironment",
-          "options": { "cwd": "proj" }
+          "options": {
+            "cwd": "proj"
+          }
         }
       },
       "metadata": {
@@ -44,7 +46,9 @@
             "technologies": ["gradle"]
           },
           "command": "./gradlew :application:test --tests DemoApplicationTest10",
-          "options": { "cwd": "proj" }
+          "options": {
+            "cwd": "proj"
+          }
         },
         "ci--DemoApplicationTest7": {
           "inputs": [
@@ -67,7 +71,9 @@
             "technologies": ["gradle"]
           },
           "command": "./gradlew :application:test --tests DemoApplicationTest7",
-          "options": { "cwd": "proj" }
+          "options": {
+            "cwd": "proj"
+          }
         },
         "ci--DemoApplicationTest6": {
           "inputs": [
@@ -90,7 +96,9 @@
             "technologies": ["gradle"]
           },
           "command": "./gradlew :application:test --tests DemoApplicationTest6",
-          "options": { "cwd": "proj" }
+          "options": {
+            "cwd": "proj"
+          }
         },
         "ci--DemoApplicationTest3": {
           "inputs": [
@@ -113,7 +121,9 @@
             "technologies": ["gradle"]
           },
           "command": "./gradlew :application:test --tests DemoApplicationTest3",
-          "options": { "cwd": "proj" }
+          "options": {
+            "cwd": "proj"
+          }
         },
         "ci--DemoApplicationTest2": {
           "inputs": [
@@ -136,7 +146,9 @@
             "technologies": ["gradle"]
           },
           "command": "./gradlew :application:test --tests DemoApplicationTest2",
-          "options": { "cwd": "proj" }
+          "options": {
+            "cwd": "proj"
+          }
         },
         "ci--DemoApplicationTest9": {
           "inputs": [
@@ -159,7 +171,9 @@
             "technologies": ["gradle"]
           },
           "command": "./gradlew :application:test --tests DemoApplicationTest9",
-          "options": { "cwd": "proj" }
+          "options": {
+            "cwd": "proj"
+          }
         },
         "ci--DemoApplicationTest": {
           "inputs": [
@@ -182,7 +196,9 @@
             "technologies": ["gradle"]
           },
           "command": "./gradlew :application:test --tests DemoApplicationTest",
-          "options": { "cwd": "proj" }
+          "options": {
+            "cwd": "proj"
+          }
         },
         "ci--DemoApplicationTest5": {
           "inputs": [
@@ -205,7 +221,9 @@
             "technologies": ["gradle"]
           },
           "command": "./gradlew :application:test --tests DemoApplicationTest5",
-          "options": { "cwd": "proj" }
+          "options": {
+            "cwd": "proj"
+          }
         },
         "ci--DemoApplicationTest4": {
           "inputs": [
@@ -228,7 +246,9 @@
             "technologies": ["gradle"]
           },
           "command": "./gradlew :application:test --tests DemoApplicationTest4",
-          "options": { "cwd": "proj" }
+          "options": {
+            "cwd": "proj"
+          }
         },
         "ci--DemoApplicationTest8": {
           "inputs": [
@@ -251,7 +271,9 @@
             "technologies": ["gradle"]
           },
           "command": "./gradlew :application:test --tests DemoApplicationTest8",
-          "options": { "cwd": "proj" }
+          "options": {
+            "cwd": "proj"
+          }
         },
         "ci": {
           "inputs": [
@@ -319,7 +341,9 @@
             "description": "Runs Gradle Tests in CI",
             "technologies": ["gradle"]
           },
-          "options": { "cwd": "proj" },
+          "options": {
+            "cwd": "proj"
+          },
           "executor": "nx:noop"
         }
       },
@@ -331,5 +355,9 @@
       },
       "name": "application"
     }
+  },
+  "buildFileByProjectRoot": {
+    "proj": "proj/build.gradle",
+    "proj/application": "proj/application/build.gradle"
   }
 }

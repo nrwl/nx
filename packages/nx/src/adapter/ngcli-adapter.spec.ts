@@ -7,8 +7,8 @@ import {
   wrapAngularDevkitSchematic,
 } from './ngcli-adapter';
 
-jest.mock('../project-graph/project-graph', () => ({
-  ...jest.requireActual('../project-graph/project-graph'),
+vi.mock('../project-graph/project-graph', async () => ({
+  ...(await vi.importActual('../project-graph/project-graph')),
   createProjectGraphAsync: () => ({
     nodes: {},
     externalNodes: {},

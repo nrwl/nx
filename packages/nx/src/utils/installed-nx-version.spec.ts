@@ -36,7 +36,7 @@ describe('getInstalledNxVersion', () => {
     expect(getInstalledNxVersion()).toBe('99.99.99-test');
   });
 
-  it('is immune to Module._pathCache pollution (regression for #35444)', () => {
+  it('is immune to Module._pathCache pollution (regression for #35444)', async () => {
     // Simulate a polluted cache entry — the kind that gets written when a
     // second `nx` package is loaded into the same process (e.g. the
     // daemon's auto-pull of nx@latest into a tmp dir) and code inside that
@@ -45,11 +45,11 @@ describe('getInstalledNxVersion', () => {
     // non-existent path with a different version; if `getInstalledNxVersion`
     // were going through `require.resolve` without the cache shield, it
     // would read this stale pointer and return the wrong version.
-    const Module = require('module');
+    const Module = await import('module');
     const pollutedPath = '/nonexistent/tmp/nx/package.json';
     // Brute-force pollution: write the bogus value under every cache key
-    // that mentions 'nx/package.json'. The fs-walk path reads from disk
-    // unconditionally and should be unaffected.
+    // that mentions 'nx/package.json'. The detached resolver swaps this cache
+    // out for the call and should be unaffected.
     for (const key of Object.keys(Module._pathCache)) {
       if (key.startsWith('nx/package.json\0')) {
         Module._pathCache[key] = pollutedPath;

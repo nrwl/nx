@@ -4,6 +4,12 @@
       "version": "23.0.0-beta.25",
       "description": "Rewrites `@nx/web/src/*` subpath imports now that the `./src/*` subpath is no longer exposed by `@nx/web`'s exports map. Named imports/exports of public symbols are routed to `@nx/web` and the rest to the new `@nx/web/internal` entry; `require`, dynamic `import` and `jest.mock` calls reference the whole module and are routed to `@nx/web/internal`.",
       "implementation": "./dist/src/migrations/update-23-0-0/rewrite-internal-subpath-imports"
+    },
+    "update-24-0-0-add-ready-when-signal": {
+      "version": "24.0.0-beta.5",
+      "description": "Sets `readyWhen: { signal: true }` on `@nx/web:file-server` targets that get no `readyWhen` from their own configuration or `targetDefaults`, so tasks that depend on them with `waitFor: 'ready'` start once the server is listening. Those targets also get their build target as a dependency.",
+      "implementation": "./dist/src/migrations/update-24-0-0/add-ready-when-signal",
+      "documentation": "./dist/src/migrations/update-24-0-0/add-ready-when-signal.md"
     }
   },
   "packageJsonUpdates": {}

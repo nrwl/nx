@@ -1,9 +1,11 @@
+import type { MockInstance } from 'vitest';
 import '@nx/devkit/internal-testing-utils/mock-project-graph';
 
 import type { Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { generateTestApplication } from '../utils/testing';
 import { webWorkerGenerator } from './web-worker';
+import * as devkitModule from '@nx/devkit';
 
 describe('webWorker generator', () => {
   let tree: Tree;
@@ -15,7 +17,7 @@ describe('webWorker generator', () => {
       directory: appName,
       skipFormat: true,
     });
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('should generate files', async () => {
@@ -25,8 +27,10 @@ describe('webWorker generator', () => {
       skipFormat: true,
     });
 
-    expect(tree.exists(`${appName}/tsconfig.worker.json`));
-    expect(tree.exists(`${appName}/src/app/test-worker.worker.ts`));
+    expect(tree.exists(`${appName}/tsconfig.worker.json`)).toBeTruthy();
+    expect(
+      tree.exists(`${appName}/src/app/test-worker.worker.ts`)
+    ).toBeTruthy();
   });
 
   it('should extend from tsconfig.base.json', async () => {
@@ -56,17 +60,16 @@ describe('webWorker generator', () => {
   });
 
   describe('--skipFormat', () => {
-    let formatFilesSpy: jest.SpyInstance;
+    let formatFilesSpy: MockInstance;
 
     beforeEach(() => {
-      const devkitModule = require('@nx/devkit');
-      formatFilesSpy = jest
+      formatFilesSpy = vi
         .spyOn(devkitModule, 'formatFiles')
         .mockImplementation(() => Promise.resolve());
     });
 
     afterAll(() => {
-      jest.restoreAllMocks();
+      vi.restoreAllMocks();
     });
 
     it('should format files', async () => {

@@ -32,7 +32,7 @@ export function generateSSRFiles(
     '..',
     'files',
     'v20+',
-    options.isUsingApplicationBuilder
+    options.isUsingApplicationBuilder || options.isRspack
       ? 'application-builder'
       : 'server-builder',
     options.standalone ? 'standalone-src' : 'ngmodule-src'

@@ -8,7 +8,6 @@ export async function getViteE2EWebServerInfo(
   tree: Tree,
   projectName: string,
   configFilePath: string,
-  isPluginBeingAdded: boolean,
   e2ePortOverride?: number,
   e2eCIPortOverride?: number
 ) {
@@ -38,8 +37,7 @@ export async function getViteE2EWebServerInfo(
       defaultE2EWebServerAddress: `http://localhost:${e2ePort}`,
       defaultE2ECiBaseUrl: `http://localhost:${e2eCIPortOverride ?? 4300}`,
       defaultE2EPort: e2ePort,
-    },
-    isPluginBeingAdded
+    }
   );
 }
 
@@ -47,7 +45,6 @@ export async function getReactRouterE2EWebServerInfo(
   tree: Tree,
   projectName: string,
   configFilePath: string,
-  isPluginBeingAdded: boolean,
   e2ePortOverride?: number,
   e2eCIPortOverride?: number
 ) {
@@ -68,7 +65,6 @@ export async function getReactRouterE2EWebServerInfo(
       defaultE2EWebServerAddress: `http://localhost:${e2ePort}`,
       defaultE2ECiBaseUrl: `http://localhost:${e2eCIPortOverride ?? 4200}`,
       defaultE2EPort: e2ePort,
-    },
-    isPluginBeingAdded
+    }
   );
 }

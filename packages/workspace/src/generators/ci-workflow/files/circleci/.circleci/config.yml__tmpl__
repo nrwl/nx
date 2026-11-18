@@ -23,10 +23,10 @@ jobs:
 
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
-      # Configure Nx Agents and task distribution in .nx/ci-config.yaml
-      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
+      # Configure workers and task distribution in .nx/pipelines/ci.yaml
+      # Learn more at https://nx.dev/docs/reference/nx-cloud-cli#nx-cloud-start-workers
       <% if (connectedToCloud) { %># Uncomment this line to enable task distribution<% } else { %># Connect your workspace by running "nx connect" and uncomment this line to enable task distribution<% } %>
-      # - run: <%= packageManagerPreInstallPrefix %> nx start-nx-agents
+      # - run: <%= packageManagerPreInstallPrefix %> nx-cloud start-workers
 
       - run: <%= packageManagerInstall %><% if(hasCypress){ %>
       - run: <%= packageManagerPrefix %> cypress install<% } %><% if(hasPlaywright){ %>
@@ -37,8 +37,7 @@ jobs:
 <% for (const command of commands) { %><% if (command.comments) { %><% for (const comment of command.comments) { %>
       # <%- comment %><% } %><% } %><% if (command.command) { %>
       - run:
-          command: <%= command.command %><% if (command.alwaysRun) { %>
-          when: always<% } %><% } %><% } %>
+          command: <%= command.command %><% } %><% } %>
 
 workflows:
   version: 2

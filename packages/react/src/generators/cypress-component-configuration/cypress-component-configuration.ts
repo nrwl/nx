@@ -1,7 +1,6 @@
 import {
   ensurePackage,
   formatFiles,
-  readNxJson,
   readProjectConfiguration,
   Tree,
 } from '@nx/devkit';
@@ -9,17 +8,17 @@ import { assertSupportedReactVersion } from '../../utils/assert-supported-react-
 import type { GeneratorCallback } from '@nx/devkit';
 import { nxVersion } from '../../utils/versions';
 import { addFiles } from './lib/add-files';
-import { configureCypressCT } from '../../utils/ct-utils';
+import {
+  configureCypressCT,
+  resolveCypressCTTarget,
+} from '../../utils/ct-utils';
 import { CypressComponentConfigurationSchema } from './schema.d';
 
 export function cypressComponentConfigGenerator(
   tree: Tree,
   options: CypressComponentConfigurationSchema
 ) {
-  return cypressComponentConfigGeneratorInternal(tree, {
-    addPlugin: false,
-    ...options,
-  });
+  return cypressComponentConfigGeneratorInternal(tree, options);
 }
 
 /**
@@ -37,32 +36,23 @@ export async function cypressComponentConfigGeneratorInternal(
     typeof import('@nx/cypress')
   >('@nx/cypress', nxVersion);
 
-  const nxJson = readNxJson(tree);
-  const addPlugin =
-    process.env.NX_ADD_PLUGINS !== 'false' &&
-    nxJson.useInferencePlugins !== false;
-
-  options.addPlugin ??= addPlugin;
-
   const projectConfig = readProjectConfiguration(tree, options.project);
+  const { found, bundler: buildBundler } = await resolveCypressCTTarget(tree, {
+    project: options.project,
+    buildTarget: options.buildTarget,
+  });
+  const bundler = options.bundler ?? buildBundler;
+
   const installTask = await baseCyCtConfig(tree, {
     project: options.project,
     skipFormat: true,
     jsx: true,
-    addPlugin: options.addPlugin,
+    bundler,
   });
 
-  const found = await configureCypressCT(tree, {
-    project: options.project,
-    buildTarget: options.buildTarget,
-    bundler: options.bundler,
-    validExecutorNames: new Set<string>([
-      '@nx/webpack:webpack',
-      '@nx/vite:build',
-    ]),
-  });
+  await configureCypressCT(tree, { project: options.project, found, bundler });
 
-  await addFiles(tree, projectConfig, options, found);
+  await addFiles(tree, projectConfig, options, buildBundler);
 
   if (!options.skipFormat) {
     await formatFiles(tree);

@@ -15,6 +15,7 @@
  */
 export const ProgressTopics = {
   GraphConstruction: 'graph-construction',
+  AffectedTasks: 'affected-tasks',
 } as const;
 
 export type ProgressTopic =

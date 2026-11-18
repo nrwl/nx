@@ -77,6 +77,12 @@ import {
   resolveSchema,
 } from '../config/schema-utils';
 import { handleImport } from '../utils/handle-import';
+import {
+  selectPrompt,
+  multiselectPrompt,
+  textPrompt,
+  confirmationPrompt,
+} from '../utils/prompt-helpers';
 import { resolveNxTokensInOptions } from '../project-graph/utils/project-configuration/target-merging';
 
 function getProjectGraph(): Promise<ProjectGraph> {
@@ -390,7 +396,6 @@ function getCollection(workflow: any, name: string) {
 }
 
 async function createRecorder(
-  host: NxScopedHost,
   record: {
     loggingQueue: string[];
     // Optional sink — only the migration path populates it; other callers
@@ -432,8 +437,7 @@ async function createRecorder(
         `${pc.blue('RENAME')} ${eventPath} => ${event.to}`
       );
       // Surface as DELETE source + CREATE destination so downstream consumers
-      // (e.g. the agentic validation prompt's `<files_changed>` block) see
-      // both endpoints.
+      // see both endpoints.
       const toPath = event.to.startsWith('/') ? event.to.slice(1) : event.to;
       record.changes?.push({ type: 'DELETE', path: eventPath, content: null });
       record.changes?.push(emptyFileChange('CREATE', toPath));
@@ -452,7 +456,6 @@ function emptyFileChange(
 }
 
 async function runSchematic(
-  host: NxScopedHost,
   root: string,
   workflow: import('@angular-devkit/schematics/tools').NodeWorkflow,
   logger: logging.Logger,
@@ -469,7 +472,7 @@ async function runSchematic(
     error: false,
   };
   workflow.reporter.subscribe(
-    recorder || (await createRecorder(host, record, logger))
+    recorder || (await createRecorder(record, logger))
   );
 
   try {
@@ -938,7 +941,6 @@ export async function generate(
   const schematic = collection.createSchematic(opts.generatorName, true);
   return (
     await runSchematic(
-      fsHost,
       root,
       workflow,
       logger as any,
@@ -1007,8 +1009,72 @@ function createPromptProvider() {
       }
     });
 
-    return require('enquirer').prompt(questions);
+    // Angular hands over a whole form at once; clack asks one question at a
+    // time, so they are run in order and the answers reassembled.
+    return (async () => {
+      const answers: Record<string, any> = {};
+      for (const question of questions) {
+        answers[question.name] = await askSchematicQuestion(question);
+      }
+      return answers;
+    })();
   };
+
+  async function askSchematicQuestion(question: Prompt): Promise<any> {
+    const validate = question.validate
+      ? (value: string) => {
+          const result = question.validate!(value);
+          if (result === true) return undefined;
+          return typeof result === 'string' ? result : 'Invalid value';
+        }
+      : undefined;
+
+    const choices = (question.choices ?? []).map((c) =>
+      typeof c === 'string' ? { value: c } : { value: c.name, label: c.message }
+    );
+
+    switch (question.type) {
+      case 'confirm':
+        return confirmationPrompt({
+          message: question.message,
+          initial: question.initial !== false,
+        });
+      case 'select':
+        return selectPrompt({
+          message: question.message,
+          choices,
+          initial: question.initial,
+        });
+      case 'multiselect':
+        return multiselectPrompt({
+          message: question.message,
+          choices,
+          initialValues: question.initial,
+        });
+      case 'numeral': {
+        // No numeric prompt; the answer is parsed back so callers still get a
+        // number rather than the typed string.
+        const answer = await textPrompt({
+          message: question.message,
+          initialValue:
+            question.initial === undefined
+              ? undefined
+              : String(question.initial),
+          validate: (value) =>
+            value !== '' && !Number.isNaN(Number(value))
+              ? validate?.(value)
+              : 'Please enter a number',
+        });
+        return Number(answer);
+      }
+      default:
+        return textPrompt({
+          message: question.message,
+          initialValue: question.initial,
+          validate,
+        });
+    }
+  }
 }
 
 export async function runMigration(
@@ -1037,7 +1103,7 @@ export async function runMigration(
     changes: [] as FileChange[],
     error: false,
   };
-  workflow.reporter.subscribe(await createRecorder(fsHost, record, logger));
+  workflow.reporter.subscribe(await createRecorder(record, logger));
 
   await workflow
     .execute({
@@ -1095,7 +1161,6 @@ function resolveMigrationsCollection(name: string): string {
   throw new Error(`Collection cannot be resolved: "${name}"`);
 }
 
-let collectionResolutionOverrides = null;
 let mockedSchematics = null;
 
 /**
@@ -1207,22 +1272,9 @@ export function wrapAngularDevkitSchematic(
     };
     const workflow = createWorkflow(fsHost, host.root, options, projects);
 
-    // used for testing
-    if (collectionResolutionOverrides) {
-      const r = (workflow.engineHost as any).resolve;
-      (workflow.engineHost as any).resolve = (collection, b, c) => {
-        if (collectionResolutionOverrides[collection]) {
-          return collectionResolutionOverrides[collection];
-        } else {
-          return r.apply(workflow.engineHost, [collection, b, c]);
-        }
-      };
-    }
-
     const collection = getCollection(workflow, collectionName);
     const schematic = collection.createSchematic(generatorName, true);
     const res = await runSchematic(
-      fsHost,
       host.root,
       workflow,
       logger,
@@ -1434,6 +1486,7 @@ async function getWrappedWorkspaceNodeModulesArchitectHost(
             )
           : null;
 
+        // TODO(v25): remove custom hasher support (NXC-5052).
         const hasherFactory = executorConfig.hasher
           ? this.getImplementationFactory<CustomHasher>(
               executorConfig.hasher,

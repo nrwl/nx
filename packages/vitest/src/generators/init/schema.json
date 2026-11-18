@@ -5,11 +5,6 @@
   "type": "object",
   "description": "Vitest init generator.",
   "properties": {
-    "addPlugin": {
-      "type": "boolean",
-      "x-priority": "internal",
-      "description": "Add plugin to nx.json. Defaults to true for new workspaces."
-    },
     "rootProject": {
       "type": "boolean",
       "x-priority": "internal"

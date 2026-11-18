@@ -47,29 +47,6 @@ module.exports = withNx(
 
 The `@nx/rollup/plugin` will automatically infer a `build` target for any project with a `rollup.config.cjs` file.
 
-{% aside title="Using the Executor Directly" %}
-You can also configure the build using the `@nx/rollup:rollup` executor in your `project.json` or `package.json` instead of the inferred plugin approach:
-
-```jsonc
-// packages/my-awesome-lib/project.json
-{
-  "name": "my-awesome-lib",
-  "targets": {
-    "build": {
-      "executor": "@nx/rollup:rollup",
-      "options": {
-        "main": "packages/my-awesome-lib/src/index.ts",
-        "format": ["esm", "cjs"],
-        "additionalEntryPoints": ["packages/my-awesome-lib/src/foo.ts"],
-        "generateExportsField": true,
-      },
-    },
-  },
-}
-```
-
-{% /aside %}
-
 After compiling our package using `nx build my-awesome-lib` we'll get the following output in our `dist` folder.
 
 {% filetree %}

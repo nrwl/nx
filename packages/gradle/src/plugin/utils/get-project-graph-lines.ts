@@ -4,6 +4,17 @@ import { GradlePluginOptions } from './gradle-plugin-options';
 import { isCI } from '@nx/devkit/internal';
 
 const DEFAULT_GRAPH_TIMEOUT_SECONDS = isCI() ? 600 : 120;
+// setTimeout silently clamps a delay past the 32-bit signed max to 1ms, which
+// would abort immediately — the opposite of what a large value asks for.
+const MAX_TIMEOUT_MS = 2 ** 31 - 1;
+const GRADLE_LOCK_TIMEOUT_MESSAGE = 'Timeout waiting to lock';
+// Gradle gives up on a contended lock (e.g. buildLogic.lock held by another
+// build in the same project) after ~60s, so at the 120s local default one wait
+// consumes the budget and the deadline guard below refuses a retry; retries
+// engage on CI (600s) or a raised NX_GRADLE_PROJECT_GRAPH_TIMEOUT. Do not relax
+// that `>=` to `>` — it refuses the borderline attempt rather than letting the
+// abort fire mid-retry and replace the lock message with a generic timeout.
+const MAX_LOCK_TIMEOUT_RETRIES = 2;
 
 let currentAbortController: AbortController | undefined;
 
@@ -23,10 +34,46 @@ export function getGraphTimeoutMs(): number {
   if (envTimeout) {
     const parsed = Number(envTimeout);
     if (!Number.isNaN(parsed) && parsed > 0) {
-      return parsed * 1000;
+      return Math.min(parsed * 1000, MAX_TIMEOUT_MS);
     }
   }
   return DEFAULT_GRAPH_TIMEOUT_SECONDS * 1000;
+}
+
+function isGradleLockTimeout(e: unknown): boolean {
+  return String(e).includes(GRADLE_LOCK_TIMEOUT_MESSAGE);
+}
+
+async function execGradleWithLockRetry(
+  gradlewFile: string,
+  args: string[],
+  signal: AbortSignal,
+  deadline: number
+): Promise<Buffer> {
+  for (let attempt = 0; ; attempt++) {
+    const attemptStart = Date.now();
+    try {
+      return await execGradleAsync(gradlewFile, args, { signal });
+    } catch (e) {
+      if (
+        signal.aborted ||
+        attempt >= MAX_LOCK_TIMEOUT_RETRIES ||
+        !isGradleLockTimeout(e)
+      ) {
+        throw e;
+      }
+      // Retry only if another full lock wait still fits in the graph timeout.
+      // Otherwise the timeout aborts mid-attempt and its generic message
+      // replaces the lock guidance the user actually needs.
+      const lockWaitMs = Date.now() - attemptStart;
+      if (Date.now() + lockWaitMs >= deadline) {
+        throw e;
+      }
+      output.warn({
+        title: `Gradle lock is held by another build; retrying 'nxProjectGraph' (${attempt + 1}/${MAX_LOCK_TIMEOUT_RETRIES})`,
+      });
+    }
+  }
 }
 
 export async function getNxProjectGraphLines(
@@ -43,6 +90,7 @@ export async function getNxProjectGraphLines(
 
   const timeoutMs = getGraphTimeoutMs();
   const timeoutSeconds = timeoutMs / 1000;
+  const deadline = Date.now() + timeoutMs;
 
   // Cancel any in-flight Gradle process from a previous call, then create a fresh controller.
   cancelPendingProjectGraphRequest();
@@ -51,22 +99,25 @@ export async function getNxProjectGraphLines(
   const signal = controller.signal;
   const timer = setTimeout(() => controller.abort(), timeoutMs);
 
+  const args = [
+    'nxProjectGraph',
+    `-Phash=${gradleConfigHash}`,
+    '--no-configuration-cache', // disable configuration cache
+    '--parallel', // add parallel to improve performance
+    '--build-cache', // enable build cache
+    '--warning-mode',
+    'none',
+    ...gradlePluginOptionsArgs,
+    `-PworkspaceRoot=${workspaceRoot}`,
+    process.env.NX_GRADLE_VERBOSE_LOGGING ? '--info' : '',
+  ];
+
   try {
-    nxProjectGraphBuffer = await execGradleAsync(
+    nxProjectGraphBuffer = await execGradleWithLockRetry(
       gradlewFile,
-      [
-        'nxProjectGraph',
-        `-Phash=${gradleConfigHash}`,
-        '--no-configuration-cache', // disable configuration cache
-        '--parallel', // add parallel to improve performance
-        '--build-cache', // enable build cache
-        '--warning-mode',
-        'none',
-        ...gradlePluginOptionsArgs,
-        `-PworkspaceRoot=${workspaceRoot}`,
-        process.env.NX_GRADLE_VERBOSE_LOGGING ? '--info' : '',
-      ],
-      { signal }
+      args,
+      signal,
+      deadline
     );
   } catch (e: any) {
     // Cancelled by a newer populateProjectGraph call — let the caller handle it
@@ -95,6 +146,19 @@ export async function getNxProjectGraphLines(
             gradlewFile,
             new Error(
               `Could not find Java. Please install Java and try again: https://www.java.com/en/download/help/index_installing.html.\n\r${e.toString()}`
+            ),
+          ],
+        ],
+        []
+      );
+    } else if (isGradleLockTimeout(e)) {
+      throw new AggregateCreateNodesError(
+        [
+          [
+            gradlewFile,
+            new Error(
+              `Could not run 'nxProjectGraph' Gradle task because another Gradle build is holding a lock on the project.\n` +
+                `  Wait for the other build to finish, or run "gradlew --stop" to stop stale Gradle daemons, then try again.\n\r${e.toString()}`
             ),
           ],
         ],

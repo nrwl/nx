@@ -35,14 +35,26 @@
       "implementation": "./dist/src/migrations/update-23-2-0/use-import-meta-dirname",
       "documentation": "./dist/src/migrations/update-23-2-0/use-import-meta-dirname.md"
     },
-    "update-analog-v3": {
-      "version": "23.2.0-beta.8",
+    "migrate-to-vitest-5": {
+      "version": "23.3.0-beta.8",
       "requires": {
-        "@analogjs/vitest-angular": ">=3.0.0-0"
+        "vitest": ">=5.0.0"
       },
-      "description": "Update AnalogJS packages to v3 and replace deprecated import paths.",
-      "implementation": "./dist/src/migrations/update-analog-v3/update-analog-v3",
-      "documentation": "./dist/src/migrations/update-analog-v3/update-analog-v3.md"
+      "description": "Migrate workspaces past breaking changes for Vitest 5.",
+      "implementation": "./dist/src/migrations/update-23-3-0/migrate-to-vitest-5",
+      "prompt": "./dist/src/migrations/update-23-3-0/ai-instructions-for-vitest-5.md"
+    },
+    "remove-deprecated-executors": {
+      "version": "24.0.0-beta.3",
+      "description": "Converts targets using the removed `@nx/vitest` executors to inferred tasks; an AI prompt finishes the targets the converter cannot convert safely and validates the project graph.",
+      "implementation": "./dist/src/migrations/update-24-0-0/remove-deprecated-executors",
+      "prompt": "./dist/src/migrations/update-24-0-0/finish-inferred-conversion.md",
+      "documentation": "./dist/src/migrations/update-24-0-0/remove-deprecated-executors.md"
+    },
+    "update-analog-v3-zone-setup": {
+      "version": "24.1.0-beta.3",
+      "description": "Update legacy Angular Vitest Zone setup imports in workspaces using Analog 3.",
+      "implementation": "./dist/src/migrations/update-analog-v3/update-zone-setup"
     }
   },
   "packageJsonUpdates": {
@@ -150,18 +162,95 @@
         }
       }
     },
-    "23.2.0-analog-v3": {
-      "version": "23.2.0-beta.8",
-      "requires": {
-        "@analogjs/vitest-angular": ">=3.0.0-0"
-      },
+    "24.0.0-analog": {
+      "version": "24.0.0-beta.4",
       "packages": {
         "@analogjs/vite-plugin-angular": {
-          "version": "3.0.0-alpha.70",
+          "version": "~2.7.3",
           "alwaysAddToPackageJson": false
         },
         "@analogjs/vitest-angular": {
-          "version": "3.0.0-alpha.70",
+          "version": "~2.7.3",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "23.3.0-vitest-v5": {
+      "version": "23.3.0-beta.8",
+      "requires": {
+        "vitest": ">=4.0.0 <5.0.0"
+      },
+      "incompatibleWith": {
+        "vite": "<6.4.0",
+        "@analogjs/vitest-angular": "*",
+        "@angular/build": "*",
+        "@vitest/browser-playwright": "*",
+        "@vitest/browser-preview": "*",
+        "@vitest/browser-webdriverio": "*"
+      },
+      "packages": {
+        "vitest": {
+          "version": "^5.0.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "23.3.0-vitest-v5-coverage-v8": {
+      "version": "23.3.0-beta.8",
+      "requires": {
+        "@vitest/coverage-v8": ">=4.0.0 <5.0.0"
+      },
+      "incompatibleWith": {
+        "vite": "<6.4.0",
+        "@analogjs/vitest-angular": "*",
+        "@angular/build": "*",
+        "@vitest/browser-playwright": "*",
+        "@vitest/browser-preview": "*",
+        "@vitest/browser-webdriverio": "*"
+      },
+      "packages": {
+        "@vitest/coverage-v8": {
+          "version": "^5.0.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "23.3.0-vitest-v5-coverage-istanbul": {
+      "version": "23.3.0-beta.8",
+      "requires": {
+        "@vitest/coverage-istanbul": ">=4.0.0 <5.0.0"
+      },
+      "incompatibleWith": {
+        "vite": "<6.4.0",
+        "@analogjs/vitest-angular": "*",
+        "@angular/build": "*",
+        "@vitest/browser-playwright": "*",
+        "@vitest/browser-preview": "*",
+        "@vitest/browser-webdriverio": "*"
+      },
+      "packages": {
+        "@vitest/coverage-istanbul": {
+          "version": "^5.0.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "23.3.0-vitest-v5-ui": {
+      "version": "23.3.0-beta.8",
+      "requires": {
+        "@vitest/ui": ">=4.0.0 <5.0.0"
+      },
+      "incompatibleWith": {
+        "vite": "<6.4.0",
+        "@analogjs/vitest-angular": "*",
+        "@angular/build": "*",
+        "@vitest/browser-playwright": "*",
+        "@vitest/browser-preview": "*",
+        "@vitest/browser-webdriverio": "*"
+      },
+      "packages": {
+        "@vitest/ui": {
+          "version": "^5.0.0",
           "alwaysAddToPackageJson": false
         }
       }

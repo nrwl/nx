@@ -1,18 +1,12 @@
 import { LinterType } from '@nx/js';
-import {
-  addDependenciesToPackageJson,
-  GeneratorCallback,
-  runTasksInSerial,
-  Tree,
-} from '@nx/devkit';
-import { extraEslintDependencies } from '@nx/react';
+import { GeneratorCallback, runTasksInSerial, Tree } from '@nx/devkit';
+import { addExtraEslintDependencies } from '@nx/react/internal';
 import {
   addExtendsToLintConfig,
   addIgnoresToLintConfig,
   addOverrideToLintConfig,
   addPredefinedConfigToFlatLintConfig,
   isEslintConfigSupported,
-  isTypedLintingEnabled,
   updateOverrideInLintConfig,
   useFlatConfig,
 } from '@nx/eslint/internal';
@@ -23,14 +17,9 @@ interface NormalizedSchema {
   projectName: string;
   projectRoot: string;
   enableTypedLinting?: boolean;
-  /**
-   * @deprecated Use `enableTypedLinting` instead. This option will be removed in Nx v24.
-   */
-  setParserOptionsProject?: boolean;
   tsConfigPaths: string[];
   unitTestRunner?: string;
   skipPackageJson?: boolean;
-  addPlugin?: boolean;
   buildable?: boolean;
   isTsSolutionSetup?: boolean;
 }
@@ -45,8 +34,7 @@ export async function addLinting(host: Tree, options: NormalizedSchema) {
       tsConfigPaths: options.tsConfigPaths,
       unitTestRunner: options.unitTestRunner,
       skipPackageJson: options.skipPackageJson,
-      enableTypedLinting: isTypedLintingEnabled(options),
-      addPlugin: options.addPlugin,
+      enableTypedLinting: options.enableTypedLinting,
       addPackageJsonDependencyChecks: options.buildable,
     })
   );
@@ -120,14 +108,7 @@ export async function addLinting(host: Tree, options: NormalizedSchema) {
   }
 
   if (!options.skipPackageJson) {
-    const installTask = addDependenciesToPackageJson(
-      host,
-      extraEslintDependencies.dependencies,
-      extraEslintDependencies.devDependencies,
-      undefined,
-      true
-    );
-    tasks.push(installTask);
+    tasks.push(addExtraEslintDependencies(host));
   }
 
   return runTasksInSerial(...tasks);

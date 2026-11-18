@@ -18,19 +18,6 @@ export const yargsInitCommand: CommandModule = {
     return withInitOptions(yargs);
   },
   handler: async (args: any) => {
-    // Node 24 has stricter readline behavior, and enquirer is not checking for closed state
-    // when invoking operations, thus you get an ERR_USE_AFTER_CLOSE error.
-    process.on('uncaughtException', (error) => {
-      if (
-        error &&
-        typeof error === 'object' &&
-        'code' in error &&
-        error['code'] === 'ERR_USE_AFTER_CLOSE'
-      )
-        return;
-      throw error;
-    });
-
     const useV2 = await isInitV2();
     if (useV2) {
       await require('./init-v2').initHandler(args);

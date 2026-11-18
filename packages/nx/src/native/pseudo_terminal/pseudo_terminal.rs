@@ -1,3 +1,4 @@
+use crate::native::tui::terminal_parser::TerminalParser;
 use anyhow::anyhow;
 use crossbeam_channel::{Receiver, Sender, bounded, unbounded};
 use crossterm::{
@@ -22,18 +23,22 @@ use std::{
 };
 use tracing::debug;
 use tracing::log::trace;
-use vt100_ctt::Parser;
 
 use super::os;
 use crate::native::pseudo_terminal::{child_process::ChildProcess, process_killer::ProcessKiller};
+
+pub enum PtyOutput {
+    CommandHeader(String),
+    Process(String),
+}
 
 pub struct PseudoTerminal {
     // slave is listed before master so that it is dropped first, matching the
     // drop order PtyPair documents and relies on.
     pub slave: Box<dyn SlavePty + Send>,
     pub master: MasterArc,
-    pub stdout_tx: Sender<String>,
-    pub stdout_rx: Receiver<String>,
+    pub stdout_tx: Sender<PtyOutput>,
+    pub stdout_rx: Receiver<PtyOutput>,
     pub printing_rx: Receiver<()>,
     pub quiet: Arc<AtomicBool>,
     pub running: Arc<AtomicBool>,
@@ -53,7 +58,7 @@ impl Default for PseudoTerminalOptions {
     }
 }
 
-pub type ParserArc = Arc<RwLock<Parser>>;
+pub type ParserArc = Arc<RwLock<TerminalParser>>;
 pub type WriterArc = Arc<Mutex<Box<dyn Write + Send>>>;
 /// The control end of the pty. Resizing it issues the TIOCSWINSZ ioctl, which
 /// updates the winsize the kernel reports to the child and raises SIGWINCH so
@@ -127,7 +132,7 @@ impl PseudoTerminal {
         // causing the TUI to hang progressively worse as output accumulates.
         const MAX_RAW_OUTPUT_BYTES: usize = 5 * 1024 * 1024; // 5 MB
 
-        let parser = Arc::new(RwLock::new(Parser::new(h, w, SCROLLBACK_SIZE)));
+        let parser = Arc::new(RwLock::new(TerminalParser::new(h, w, SCROLLBACK_SIZE)));
         let parser_clone = parser.clone();
         let stdout_tx_clone = stdout_tx.clone();
         std::thread::spawn(move || {
@@ -147,6 +152,7 @@ impl PseudoTerminal {
             // copy only — the live stdout passthrough and the TUI parser get
             // raw bytes, so a running child still talks to the real terminal.
             let mut capture_filter = super::strip_queries::QueryFilter::new();
+            let mut capture_decoder = super::utf8_carry::Utf8Carry::default();
 
             'read_loop: loop {
                 if let Ok(len) = reader.read(&mut buf) {
@@ -157,19 +163,16 @@ impl PseudoTerminal {
                             parser.process(&pending_tui_buf);
                             pending_tui_buf.clear();
                         }
-                        let held = capture_filter.flush();
+                        let mut held = capture_decoder.feed(&capture_filter.flush());
+                        held.push_str(&capture_decoder.flush());
                         if !held.is_empty() {
-                            stdout_tx_clone
-                                .send(String::from_utf8_lossy(&held).to_string())
-                                .ok();
+                            stdout_tx_clone.send(PtyOutput::Process(held)).ok();
                         }
                         break;
                     }
-                    let captured = capture_filter.feed(&buf[0..len]);
+                    let captured = capture_decoder.feed(&capture_filter.feed(&buf[0..len]));
                     if !captured.is_empty() {
-                        stdout_tx_clone
-                            .send(String::from_utf8_lossy(&captured).to_string())
-                            .ok();
+                        stdout_tx_clone.send(PtyOutput::Process(captured)).ok();
                     }
                     let quiet = quiet_clone.load(Ordering::Relaxed);
                     trace!("Quiet: {}", quiet);
@@ -198,7 +201,8 @@ impl PseudoTerminal {
                                 let (rows, cols) = screen.size();
                                 let formatted = screen.all_contents_formatted();
                                 let scrollback = screen.scrollback();
-                                let mut compacted = Parser::new(rows, cols, SCROLLBACK_SIZE);
+                                let mut compacted =
+                                    TerminalParser::new(rows, cols, SCROLLBACK_SIZE);
                                 compacted.process(&formatted);
                                 compacted.screen_mut().set_scrollback(scrollback);
                                 *parser = compacted;
@@ -293,7 +297,9 @@ impl PseudoTerminal {
 
         let command_clone = command.clone();
         let command_info = format!("> {}\n\n\r", command_label.unwrap_or(command));
-        self.stdout_tx.send(command_info.clone()).ok();
+        self.stdout_tx
+            .send(PtyOutput::CommandHeader(command_info.clone()))
+            .ok();
 
         if self.is_within_nx_tui {
             // within the tui, update the parser directly so it is displayed in the tui
@@ -311,10 +317,15 @@ impl PseudoTerminal {
 
         let is_tty = tty.unwrap_or_else(|| std::io::stdout().is_tty());
         // Do not manipulate raw mode if running within the context of the NX_TUI, it handles it itself
-        let should_control_raw_mode = is_tty && !self.is_within_nx_tui;
+        let mut should_control_raw_mode = is_tty && !self.is_within_nx_tui;
         if should_control_raw_mode {
             trace!("Enabling raw mode");
-            enable_raw_mode().expect("Failed to enter raw terminal mode");
+            // No controlling terminal (ENXIO from /dev/tty) is a valid setup.
+            // Raw mode is optional there; panicking aborts before the task runs.
+            if let Err(e) = enable_raw_mode() {
+                trace!("Failed to enter raw terminal mode: {:?}", e);
+                should_control_raw_mode = false;
+            }
         }
         let pid = child
             .process_id()
@@ -351,7 +362,11 @@ impl PseudoTerminal {
                 }
                 if should_control_raw_mode {
                     trace!("Disabling raw mode");
-                    disable_raw_mode().expect("Failed to restore non-raw terminal");
+                    // Must not panic: that would skip the exit notification below,
+                    // leaving every consumer of this task's exit waiting forever.
+                    if let Err(e) = disable_raw_mode() {
+                        trace!("Failed to restore non-raw terminal: {:?}", e);
+                    }
                 }
                 exit_to_process_tx.send(exit.to_string()).ok();
             } else {
@@ -420,5 +435,140 @@ mod tests {
             i += 1;
         }
         drop(pseudo_terminal);
+    }
+}
+
+/// stdout is a tty, stdin is not, and the process has no controlling terminal.
+/// `enable_raw_mode` then fails with ENXIO; that must not abort the task.
+#[cfg(all(test, target_os = "linux"))]
+mod no_controlling_tty_tests {
+    use super::*;
+    use std::io::{IsTerminal, Read};
+    use std::os::fd::{FromRawFd, OwnedFd};
+    use std::process::{Command, Stdio};
+    use std::time::Duration;
+
+    const CHILD_ENV: &str = "NX_TEST_NO_CONTROLLING_TTY";
+
+    #[test]
+    fn run_command_without_controlling_terminal_does_not_panic() {
+        if std::env::var(CHILD_ENV).is_ok() {
+            run_true_without_controlling_terminal();
+            return;
+        }
+
+        let exe = std::env::current_exe().expect("current_exe");
+        let (master, slave) = open_pty_pair();
+        // libtest names omit the crate prefix that module_path!() includes.
+        let module = module_path!();
+        let module = module
+            .split_once("::")
+            .map(|(_, rest)| rest)
+            .unwrap_or(module);
+        let test_name =
+            format!("{module}::run_command_without_controlling_terminal_does_not_panic");
+
+        let mut child = Command::new("setsid")
+            .arg("--wait")
+            .arg(&exe)
+            .arg(&test_name)
+            .arg("--exact")
+            .arg("--nocapture")
+            .env(CHILD_ENV, "1")
+            .env("NX_TUI", "false")
+            .stdin(Stdio::from(
+                std::fs::File::open("/dev/null").expect("open /dev/null"),
+            ))
+            .stdout(Stdio::from(slave))
+            .stderr(Stdio::piped())
+            .spawn()
+            .expect("spawn setsid");
+
+        let reader = std::thread::spawn(move || {
+            let mut file = std::fs::File::from(master);
+            let mut buf = Vec::new();
+            let mut tmp = [0u8; 4096];
+            loop {
+                match file.read(&mut tmp) {
+                    Ok(0) => break,
+                    Ok(n) => buf.extend_from_slice(&tmp[..n]),
+                    Err(e) if e.kind() == std::io::ErrorKind::Interrupted => continue,
+                    Err(_) => break,
+                }
+            }
+            buf
+        });
+
+        let status = child.wait().expect("wait for setsid");
+        let mut stderr = String::new();
+        if let Some(mut err) = child.stderr.take() {
+            let _ = err.read_to_string(&mut stderr);
+        }
+        let _stdout = reader.join().unwrap_or_default();
+
+        assert!(
+            status.success(),
+            "task panicked or failed without a controlling terminal\nstatus: {status}\nstderr:\n{stderr}"
+        );
+    }
+
+    fn run_true_without_controlling_terminal() {
+        assert!(
+            std::io::stdout().is_terminal(),
+            "stdout must be a tty to enter the raw-mode path"
+        );
+        assert!(!std::io::stdin().is_terminal(), "stdin must not be a tty");
+        let tty_err = std::fs::OpenOptions::new()
+            .read(true)
+            .write(true)
+            .open("/dev/tty")
+            .expect_err("opening /dev/tty should fail without a controlling terminal");
+        assert_eq!(tty_err.raw_os_error(), Some(libc::ENXIO));
+
+        let mut pseudo_terminal =
+            PseudoTerminal::new(PseudoTerminalOptions { size: (80, 24) }).unwrap();
+        let cp = pseudo_terminal
+            .run_command(
+                String::from("true"),
+                None,
+                None,
+                None,
+                Some(false),
+                None,
+                None,
+            )
+            .unwrap();
+        let exit = cp
+            .wait_receiver
+            .recv_timeout(Duration::from_secs(15))
+            .expect("timed out waiting for the command to exit");
+        assert_eq!(exit, "Success");
+    }
+
+    fn open_pty_pair() -> (OwnedFd, OwnedFd) {
+        let mut master_fd: libc::c_int = -1;
+        let mut slave_fd: libc::c_int = -1;
+        let mut winsize = libc::winsize {
+            ws_row: 24,
+            ws_col: 80,
+            ws_xpixel: 0,
+            ws_ypixel: 0,
+        };
+        let rc = unsafe {
+            libc::openpty(
+                &mut master_fd,
+                &mut slave_fd,
+                std::ptr::null_mut(),
+                std::ptr::null_mut(),
+                &mut winsize,
+            )
+        };
+        assert_eq!(rc, 0, "openpty failed: {}", std::io::Error::last_os_error());
+        unsafe {
+            (
+                OwnedFd::from_raw_fd(master_fd),
+                OwnedFd::from_raw_fd(slave_fd),
+            )
+        }
     }
 }

@@ -1,7 +1,6 @@
 import {
   checkFilesExist,
   cleanupProject,
-  killPorts,
   newProject,
   readFile,
   rmDist,
@@ -39,6 +38,7 @@ describe('Build React libraries and apps', () => {
     childLib2 = uniq('childlib2');
 
     proj = newProject({
+      keepBackup: true,
       packages: ['@nx/react', '@nx/rspack', '@nx/rollup', '@nx/jest'],
     });
 
@@ -116,7 +116,6 @@ module.exports = withNx(
   });
 
   afterEach(() => {
-    killPorts();
     cleanupProject();
   });
 

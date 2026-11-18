@@ -3,7 +3,6 @@ import {
   type GeneratorCallback,
   joinPathFragments,
   ensurePackage,
-  addDependenciesToPackageJson,
   runTasksInSerial,
 } from '@nx/devkit';
 import {
@@ -11,7 +10,6 @@ import {
   addOverrideToLintConfig,
   addPredefinedConfigToFlatLintConfig,
   isEslintConfigSupported,
-  isTypedLintingEnabled,
   useFlatConfig,
 } from '@nx/eslint/internal';
 import {
@@ -19,7 +17,7 @@ import {
   detectLinters,
   addLintingToProject,
 } from '@nx/js/internal';
-import { extraEslintDependencies } from '../../../utils/lint';
+import { addExtraEslintDependencies } from '../../../utils/lint';
 import { NormalizedSchema } from '../schema';
 import { nxVersion } from '../../../utils/versions';
 
@@ -40,8 +38,7 @@ export async function addLinting(host: Tree, options: NormalizedSchema) {
       unitTestRunner: options.unitTestRunner,
       rootProject: options.rootProject,
       skipPackageJson: options.skipPackageJson,
-      enableTypedLinting: isTypedLintingEnabled(options),
-      addPlugin: options.addPlugin,
+      enableTypedLinting: options.enableTypedLinting,
     })
   );
 
@@ -72,13 +69,7 @@ export async function addLinting(host: Tree, options: NormalizedSchema) {
     }
 
     if (!options.skipPackageJson) {
-      const installTask = addDependenciesToPackageJson(
-        host,
-        extraEslintDependencies.dependencies,
-        extraEslintDependencies.devDependencies,
-        undefined,
-        true
-      );
+      const installTask = addExtraEslintDependencies(host);
       const addSwcTask = addSwcDependencies(host);
       tasks.push(installTask, addSwcTask);
     }

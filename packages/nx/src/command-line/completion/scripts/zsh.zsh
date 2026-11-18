@@ -6,6 +6,12 @@
 #    or: nx completion zsh > /usr/local/share/zsh/site-functions/_nx
 #
 if type compdef &>/dev/null; then
+  # In a world-writable directory (/tmp) only trust entries owned by you or root.
+  _nx_trusted_entry () {
+    [[ -z "$(find -H "$1" -prune -perm -0002 2>/dev/null)" ]] ||
+      [[ -n "$(find "$1/$2" -prune \( -user "$EUID" -o -user 0 \) 2>/dev/null)" ]]
+  }
+
   _nx_completions () {
     local reply nx_cmd dir
     local si=$IFS
@@ -14,11 +20,11 @@ if type compdef &>/dev/null; then
     nx_cmd="nx"
     dir="$PWD"
     while [[ "$dir" != "/" ]]; do
-      if [[ -x "$dir/node_modules/.bin/nx" ]]; then
+      if [[ -x "$dir/node_modules/.bin/nx" ]] && _nx_trusted_entry "$dir" node_modules; then
         nx_cmd="$dir/node_modules/.bin/nx"
         break
       fi
-      if [[ -x "$dir/.nx/installation/node_modules/.bin/nx" ]]; then
+      if [[ -x "$dir/.nx/installation/node_modules/.bin/nx" ]] && _nx_trusted_entry "$dir" .nx; then
         nx_cmd="$dir/.nx/installation/node_modules/.bin/nx"
         break
       fi

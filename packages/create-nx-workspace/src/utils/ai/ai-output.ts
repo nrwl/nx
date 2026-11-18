@@ -17,6 +17,8 @@ export function isAiAgent(): boolean {
     _isAiAgent =
       isClaudeCode() ||
       isOpenCode() ||
+      isCodex() ||
+      isCopilotCli() ||
       isReplitAi() ||
       isCursorAi() ||
       isGeminiCli();
@@ -30,6 +32,21 @@ export function isClaudeCode(): boolean {
 
 export function isOpenCode(): boolean {
   return !!process.env.OPENCODE;
+}
+
+export function isCodex(): boolean {
+  return (
+    !!process.env.CODEX_THREAD_ID || process.env.SUPERSET_AGENT_ID === 'codex'
+  );
+}
+
+/**
+ * `COPILOT_CLI` is set by the GitHub Copilot CLI in the shells it spawns.
+ * Distinct from the VS Code extension's agent mode: different products, and
+ * only the CLI drives `create-nx-workspace` from a shell.
+ */
+export function isCopilotCli(): boolean {
+  return !!process.env.COPILOT_CLI;
 }
 
 export function isReplitAi(): boolean {
@@ -51,6 +68,8 @@ export function detectAiAgentName(): string | null {
   if (isClaudeCode()) return 'claude';
   if (isCursorAi()) return 'cursor';
   if (isOpenCode()) return 'opencode';
+  if (isCodex()) return 'codex';
+  if (isCopilotCli()) return 'copilot-cli';
   if (isGeminiCli()) return 'gemini';
   return null;
 }
@@ -112,7 +131,7 @@ export interface SuccessResult {
     preset?: string;
   };
   /** Display these to the user as next steps */
-  userNextSteps: UserNextSteps;
+  userNextSteps?: UserNextSteps;
   /** Reference documentation */
   docs: {
     gettingStarted: string;
@@ -144,7 +163,7 @@ export type AiOutputMessage =
 /**
  * Write NDJSON message to stdout.
  * Each message is a single line of JSON.
- * For success results, also outputs plain text instructions at the end.
+ * For success results with next steps, also outputs plain text instructions.
  */
 export function writeAiOutput(message: AiOutputMessage): void {
   if (isAiAgent()) {
@@ -157,7 +176,10 @@ export function writeAiOutput(message: AiOutputMessage): void {
       message.success
     ) {
       const successMsg = message as SuccessResult;
-      const steps = successMsg.userNextSteps.steps;
+      const steps = successMsg.userNextSteps?.steps;
+      if (!steps?.length) {
+        return;
+      }
 
       let plainText = '\n---USER_NEXT_STEPS---\n';
       plainText +=
@@ -281,21 +303,23 @@ export function buildSuccessResult(options: {
     });
   }
 
-  const userNextSteps: UserNextSteps = {
-    description: 'CRITICAL: Show the user these exact steps to complete setup.',
-    steps,
-  };
-
   const successResult: SuccessResult = {
     stage: 'complete',
     success: true,
     result: resultData,
-    userNextSteps,
     docs: {
       gettingStarted: 'https://nx.dev/getting-started/intro',
       nxCloud: 'https://nx.dev/ci/intro/why-nx-cloud',
     },
   };
+
+  if (steps.length > 0) {
+    successResult.userNextSteps = {
+      description:
+        'CRITICAL: Show the user these exact steps to complete setup.',
+      steps,
+    };
+  }
 
   if (nxCloudError) {
     (successResult as PartialSuccessResult).nxCloudError = nxCloudError;

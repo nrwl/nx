@@ -2,7 +2,7 @@ import { Socket } from 'net';
 import { performance } from 'perf_hooks';
 import {
   consumeMessagesFromSocket,
-  MESSAGE_END_SEQ,
+  writeMessage,
 } from '../../utils/consume-messages-from-socket';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { clientLogger } from '../logger';
@@ -20,10 +20,7 @@ export class VersionMismatchError extends Error {
 export class DaemonSocketMessenger {
   constructor(private socket: Socket) {}
 
-  sendMessage<T extends DaemonMessage>(
-    messageToDaemon: T,
-    force?: 'v8' | 'json'
-  ) {
+  sendMessage<T extends DaemonMessage>(messageToDaemon: T) {
     if (!this.socket) {
       throw new Error('Socket not initialized.');
     }
@@ -34,7 +31,7 @@ export class DaemonSocketMessenger {
     performance.mark(
       'daemon-message-serialization-start-' + messageToDaemon.type
     );
-    const serialized = serialize(messageToDaemon, force);
+    const serialized = serialize(messageToDaemon);
     performance.mark(
       'daemon-message-serialization-end-' + messageToDaemon.type
     );
@@ -43,14 +40,12 @@ export class DaemonSocketMessenger {
       'daemon-message-serialization-start-' + messageToDaemon.type,
       'daemon-message-serialization-end-' + messageToDaemon.type
     );
-    this.socket.write(serialized);
-    // send EOT to indicate that the message has been fully written
-    this.socket.write(MESSAGE_END_SEQ);
+    writeMessage(this.socket, serialized);
     clientLogger.log('[Messenger] Message sent');
   }
 
   listen(
-    onData: (message: string) => void,
+    onData: (message: Buffer) => void,
     onClose: () => void = () => {},
     onError: (err: Error) => void = () => {}
   ): DaemonSocketMessenger {
@@ -64,13 +59,22 @@ export class DaemonSocketMessenger {
 
     this.socket.on(
       'data',
-      consumeMessagesFromSocket(async (message) => {
-        clientLogger.log(
-          '[Messenger] Received message, length:',
-          message.length
-        );
-        onData(message);
-      })
+      consumeMessagesFromSocket(
+        async (message) => {
+          clientLogger.log(
+            '[Messenger] Received message, length:',
+            message.length
+          );
+          onData(message);
+        },
+        // A framing failure leaves the socket open and writable, so nothing
+        // else settles the in-flight request. Route it to the same handler as
+        // a socket error rather than waiting for the keep-alive timeout.
+        (err) => {
+          clientLogger.log('[Messenger] Framing error:', err.message);
+          onError(err);
+        }
+      )
     );
 
     clientLogger.log('[Messenger] listen() complete');

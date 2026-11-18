@@ -12,9 +12,8 @@ use napi::{Status, bindgen_prelude::Unknown};
 
 #[cfg(not(test))]
 use crate::native::ide::nx_console::messaging::NxConsoleMessageConnection;
-#[cfg(not(test))]
-use crate::native::logger::enable_logger;
 use crate::native::pseudo_terminal::pseudo_terminal::{MasterArc, ParserArc, WriterArc};
+use crate::native::tasks::running_tasks_service::TaskReadiness;
 use crate::native::tasks::types::{Task, TaskGraph, TaskResult};
 
 #[cfg(not(test))]
@@ -357,6 +356,7 @@ impl AppLifeCycle {
         title_text: String,
         workspace_root: String,
         task_graph: TaskGraph,
+        ready_dependencies: std::collections::HashMap<String, Vec<String>>,
         is_cloud_enabled: Option<bool>,
     ) -> Self {
         // Get the target names from nx_args.targets
@@ -381,6 +381,7 @@ impl AppLifeCycle {
             None,
         );
         state.set_cloud_enabled(is_cloud_enabled.unwrap_or(false));
+        state.set_ready_dependencies(ready_dependencies);
         let shared_state = Arc::new(Mutex::new(state));
 
         // Default to FullScreen mode for the constructor
@@ -463,8 +464,6 @@ impl AppLifeCycle {
         done_callback: ThreadsafeFunction<(), Unknown<'static>, (), Status, false>,
     ) -> napi::Result<()> {
         debug!("AppLifeCycle::__init called");
-
-        enable_logger();
 
         // Always start in FullScreen mode
         let initial_mode = TuiMode::FullScreen;
@@ -706,6 +705,11 @@ impl AppLifeCycle {
     #[napi]
     pub fn set_task_status(&mut self, task_id: String, status: TaskStatus) {
         self.with_app(|app| app.update_task_status(&task_id, status));
+    }
+
+    #[napi]
+    pub fn set_task_readiness(&mut self, task_id: String, readiness: TaskReadiness) {
+        self.with_app(|app| app.update_task_readiness(&task_id, readiness));
     }
 
     #[napi]

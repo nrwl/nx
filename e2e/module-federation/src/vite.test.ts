@@ -3,7 +3,6 @@ import {
   killProcessAndPorts,
   runCLI,
   runCommandUntil,
-  runE2ETests,
   uniq,
 } from '@nx/e2e-utils';
 import {
@@ -36,14 +35,12 @@ describe('@nx/module-federation v2 - Vite', () => {
       `apps/${provider}/tsconfig.json`
     );
 
-    if (await runE2ETests()) {
-      const serve = await runCommandUntil(
-        `serve ${provider}`,
-        (output) => output.includes('Local:') || output.includes('ready in'),
-        { timeout: 120000 }
-      );
-      await killProcessAndPorts(serve.pid, providerPort);
-    }
+    const serve = await runCommandUntil(
+      `serve ${provider}`,
+      (output) => output.includes('Local:') || output.includes('ready in'),
+      { timeout: 120000 }
+    );
+    await killProcessAndPorts(serve.pid, providerPort);
   }, 600_000);
 
   it('generates a vite consumer + provider in one shot via --providerNames and wires the manifest', async () => {
@@ -66,26 +63,24 @@ describe('@nx/module-federation v2 - Vite', () => {
       `apps/${provider}/src/App.tsx`
     );
 
-    if (await runE2ETests()) {
-      // `nx serve <provider>` brings the consumer up via provider.serve.dependsOn.
-      // Wait for both Vite "Local:" lines (one per app) to confirm the chain
-      // is fully up before killing.
-      let consumerReady = false;
-      let providerReady = false;
-      const serve = await runCommandUntil(
-        `serve ${provider}`,
-        (output) => {
-          if (output.includes(`http://127.0.0.1:${consumerPort}/`)) {
-            consumerReady = true;
-          }
-          if (output.includes(`http://127.0.0.1:${providerPort}/`)) {
-            providerReady = true;
-          }
-          return consumerReady && providerReady;
-        },
-        { timeout: 180000 }
-      );
-      await killProcessAndPorts(serve.pid, consumerPort, providerPort);
-    }
+    // `nx serve <provider>` brings the consumer up via provider.serve.dependsOn.
+    // Wait for both Vite "Local:" lines (one per app) to confirm the chain
+    // is fully up before killing.
+    let consumerReady = false;
+    let providerReady = false;
+    const serve = await runCommandUntil(
+      `serve ${provider}`,
+      (output) => {
+        if (output.includes(`http://127.0.0.1:${consumerPort}/`)) {
+          consumerReady = true;
+        }
+        if (output.includes(`http://127.0.0.1:${providerPort}/`)) {
+          providerReady = true;
+        }
+        return consumerReady && providerReady;
+      },
+      { timeout: 180000 }
+    );
+    await killProcessAndPorts(serve.pid, consumerPort, providerPort);
   }, 900_000);
 });

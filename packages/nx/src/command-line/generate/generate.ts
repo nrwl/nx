@@ -1,5 +1,5 @@
 import * as pc from 'picocolors';
-import { prompt } from 'enquirer';
+import { selectPrompt, textPrompt } from '../../utils/prompt-helpers';
 import { relative } from 'path';
 
 import { readNxJson } from '../../config/configuration';
@@ -24,7 +24,10 @@ import { printHelp } from '../../utils/print-help';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { calculateDefaultProjectName } from '../../config/calculate-default-project-name';
 import { findInstalledPlugins } from '../../utils/plugins/installed-plugins';
-import { getGeneratorInformation } from './generator-utils';
+import {
+  getGeneratorInformation,
+  runGeneratorCallback,
+} from './generator-utils';
 import { getCwd } from '../../utils/path';
 import { reportNxGenerateCommand } from '../../analytics';
 
@@ -146,49 +149,49 @@ async function promptForCollection(
   } else if (!interactive && choices.length > 1) {
     throwInvalidInvocation(Array.from(choicesMap));
   } else if (interactive && choices.length > 1) {
-    const noneOfTheAbove = `\nNone of the above`;
+    const noneOfTheAbove = `None of the above`;
+    // Blank line before the last entry. The newline has to trail the choice
+    // *before* the gap: a leading one would land between the following
+    // choice's radio marker and its text, splitting that row in two.
+    const beforeGap = choices.length - 1;
     choices.push(noneOfTheAbove);
-    let { generator, customCollection } = await prompt<{
-      generator: string;
-      customCollection?: string;
-    }>([
-      {
-        name: 'generator',
-        message: `Which generator would you like to use?`,
-        type: 'autocomplete',
-        // enquirer's typings are incorrect here... It supports (string | Choice)[], but is typed as (string[] | Choice[])
-        choices: choices as string[],
+    const generator = await selectPrompt({
+      message: `Which generator would you like to use?`,
+      // Local-plugin entries carry a separate display label; the rest are
+      // plain collection names. Only the label takes the newline, so the
+      // value still resolves as a collection name.
+      choices: choices.map((c, i) => {
+        const choice =
+          typeof c === 'string'
+            ? { value: c, label: c }
+            : { value: c.value, label: c.message };
+        return i === beforeGap && !choice.label.endsWith('\n')
+          ? { ...choice, label: `${choice.label}\n` }
+          : choice;
+      }),
+    });
+
+    if (generator !== noneOfTheAbove) {
+      return generator;
+    }
+
+    const customCollection = await textPrompt({
+      message: `Which collection would you like to use?`,
+      validate: (value) => {
+        try {
+          getGeneratorInformation(
+            value,
+            generatorName,
+            workspaceRoot,
+            projectsConfiguration.projects
+          );
+          return undefined;
+        } catch {
+          return `Could not find ${value}:${generatorName}`;
+        }
       },
-      {
-        name: 'customCollection',
-        type: 'input',
-        message: `Which collection would you like to use?`,
-        skip: function () {
-          // Skip this question if the user did not answer None of the above
-          return this.state.answers.generator !== noneOfTheAbove;
-        },
-        validate: function (value) {
-          if (this.skipped) {
-            return true;
-          }
-          try {
-            getGeneratorInformation(
-              value,
-              generatorName,
-              workspaceRoot,
-              projectsConfiguration.projects
-            );
-            return true;
-          } catch {
-            logger.error(`\nCould not find ${value}:${generatorName}`);
-            return false;
-          }
-        },
-      },
-    ]);
-    return customCollection
-      ? `${customCollection}:${generatorName}`
-      : generator;
+    });
+    return `${customCollection}:${generatorName}`;
   } else if (deprecatedChoices.size > 0) {
     throw new Error(
       [
@@ -221,33 +224,27 @@ export function parseGeneratorString(value: string): {
 
 async function convertToGenerateOptions(
   generatorOptions: { [p: string]: any },
-  mode: 'generate' | 'new',
   projectsConfiguration?: ProjectsConfigurations
 ): Promise<GenerateOptions> {
   let collectionName: string | null = null;
   let generatorName: string | null = null;
   const interactive = generatorOptions.interactive as boolean;
 
-  if (mode === 'generate') {
-    const generatorDescriptor = generatorOptions['generator'] as string;
-    const { collection, generator } = parseGeneratorString(generatorDescriptor);
+  const generatorDescriptor = generatorOptions['generator'] as string;
+  const { collection, generator } = parseGeneratorString(generatorDescriptor);
 
-    if (collection) {
-      collectionName = collection;
-      generatorName = generator;
-    } else {
-      const generatorString = await promptForCollection(
-        generatorDescriptor,
-        interactive,
-        projectsConfiguration
-      );
-      const parsedGeneratorString = parseGeneratorString(generatorString);
-      collectionName = parsedGeneratorString.collection;
-      generatorName = parsedGeneratorString.generator;
-    }
+  if (collection) {
+    collectionName = collection;
+    generatorName = generator;
   } else {
-    collectionName = generatorOptions.collection as string;
-    generatorName = 'new';
+    const generatorString = await promptForCollection(
+      generatorDescriptor,
+      interactive,
+      projectsConfiguration
+    );
+    const parsedGeneratorString = parseGeneratorString(generatorString);
+    collectionName = parsedGeneratorString.collection;
+    generatorName = parsedGeneratorString.generator;
   }
 
   const res = {
@@ -324,22 +321,13 @@ export async function generate(args: { [k: string]: any }) {
         readProjectsConfigurationFromProjectGraph(projectGraph);
     }
 
-    const opts = await convertToGenerateOptions(
-      args,
-      'generate',
-      projectsConfigurations
-    );
+    const opts = await convertToGenerateOptions(args, projectsConfigurations);
 
     const {
       normalizedGeneratorName,
       schema,
       implementationFactory,
-      generatorConfiguration: {
-        aliases,
-        hidden,
-        ['x-deprecated']: deprecated,
-        ['x-use-standalone-layout']: isStandalonePreset,
-      },
+      generatorConfiguration: { aliases, ['x-deprecated']: deprecated },
     } = getGeneratorInformation(
       opts.collectionName,
       opts.generatorName,
@@ -405,13 +393,7 @@ export async function generate(args: { [k: string]: any }) {
       );
       const implementation = implementationFactory();
 
-      // @todo(v17): Remove this, isStandalonePreset property is defunct.
-      if (normalizedGeneratorName === 'preset' && !isStandalonePreset) {
-        host.write('apps/.gitkeep', '');
-        host.write('libs/.gitkeep', '');
-      }
-
-      const task = await implementation(host, combinedOpts);
+      const result = await implementation(host, combinedOpts);
       host.lock();
 
       const changes = host.listChanges();
@@ -421,9 +403,7 @@ export async function generate(args: { [k: string]: any }) {
       }
       if (!opts.dryRun) {
         flushChanges(workspaceRoot, changes);
-        if (task) {
-          await task();
-        }
+        await runGeneratorCallback(result);
       } else {
         logger.warn(`\nNOTE: The "dryRun" flag means no changes were made.`);
       }

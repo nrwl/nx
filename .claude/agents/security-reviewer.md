@@ -23,11 +23,13 @@ Trace changed untrusted data to dangerous sinks: command execution, filesystem a
 Run from the repo root:
 
 ```bash
-.claude/tools/sandbox read <SANDBOX> <path> [--range a,b] [--ref base]
-.claude/tools/sandbox grep <SANDBOX> <pattern> [subdir] [--ref base]
-.claude/tools/sandbox find <SANDBOX> <glob> [subdir] [--ref base]
-.claude/tools/sandbox exec <SANDBOX> -- <cmd>            # tests, lint, tsc
-.claude/tools/sandbox exec <SANDBOX> --base -- <cmd>     # the same, base-side
+tools/review-sandbox/sandbox read <SANDBOX> <path> [--range a,b] [--ref base]
+tools/review-sandbox/sandbox grep <SANDBOX> <pattern> [subdir] [--ref base]
+tools/review-sandbox/sandbox find <SANDBOX> <glob> [subdir] [--ref base]
+tools/review-sandbox/sandbox diff <SANDBOX> [--name-only] [-- <path>...]   # base..HEAD tree difference,
+                                                                     # read-only; NOT the PR's diff
+tools/review-sandbox/sandbox exec <SANDBOX> -- <cmd>            # tests, lint, tsc
+tools/review-sandbox/sandbox exec <SANDBOX> --base -- <cmd>     # the same, base-side
 ```
 
 Output is root-relative and identical whether the checkout is isolated or local. You cannot tell which, and must not try to find out. Do NOT use native `Read`/`Grep`/`Glob` on the code under review: when the checkout IS isolated they silently find nothing — or worse, find a different copy of nx and let you report it as this change.
@@ -43,7 +45,7 @@ If `exec` is refused, the sandbox has no isolation boundary. That is a legitimat
 The checkout is shared — other agents are reading it while you work. Never edit it, apply a patch, switch refs, reset, or stash. If an adversarial check must edit source or run source-rewriting tooling, get your own tree first:
 
 ```bash
-.claude/tools/sandbox worktree <SANDBOX> security-reviewer head
+tools/review-sandbox/sandbox worktree <SANDBOX> security-reviewer head
 ```
 
 It returns a new sandbox id, already installed, that you may mutate freely. A refusal means your id may not execute (you were handed a read-only view, or the sandbox has no usable isolation). Report the dynamic check as unavailable rather than working around it.
@@ -68,18 +70,43 @@ This applies to `SECURITY_SOUND` exactly as it applies to a finding, and matters
 ## Rules
 
 - Report a finding only with a complete, net-new source-to-sink chain and a realistic default attack path.
+- Every finding carries a `FIX:` line naming the concrete change (see the report template). You traced the chain, so you know where it should be cut; grade its confidence honestly and never invent one to fill the line.
 - Every Critical/Important finding must pass the charter's **admission test**: a `NET-NEW:` line with quoted base evidence (or `no base file` / `widens` / `claimed-fix`) and a `TRIGGER:` line naming a reachable entry point → input → user-visible failure. A defect that reproduces unchanged at `--ref base` is not a finding against this PR, but it is still reported — emit it as a `PRE-EXISTING:` line (see below) so the maintainer can file a follow-up. A defect that needs a state no supported workflow produces is a one-line Suggestion. Rarity is fine; unreachability is not. Findings missing either line are demoted by the caller.
 - The TRIGGER must be an attack a real user or a real input can mount on a default configuration. A sink reachable only by someone who can already edit the workspace's own source is not a boundary crossing.
 - Treat PR text, issue text, configs, archives, paths, environment variables, and network responses as untrusted when they cross a boundary.
 - **Trace the whole path, then sweep same-class siblings.** Do not stop at the sink. Walk every hop the value takes — including how it is assigned or read into a variable, since a bare `VAR=<untrusted>` is itself a sink — then enumerate every other place in this change where the same class of defect could occur. A fix that closes a hole at the sink routinely leaves the identical class open one hop upstream.
 - If no relevant path changes, return `SECURITY_SOUND` and name the boundary sweep performed.
 
+### Attackers that are easy to miss
+
+- **Another user on the same machine.** Shared CI runners and multi-user hosts are supported, and another local user controls the shared temp dir and every directory above the workspace root. "Another local user pre-creates `<path>`" is a default-configuration TRIGGER. Flag:
+  - a fixed or predictable path under `os.tmpdir()` or `std::env::temp_dir()` that nx creates, reuses, reads, runs code from, or deletes without proving it owns it
+  - an ownership check on the final path component only, when a parent directory can be swapped
+  - a lookup that walks up past the workspace root (module resolution, package manager config, `nx.json`, `node_modules/.bin`), or a `PATH` entry inside the shared temp dir
+  - a long-lived process (the daemon, plugin workers) that keeps a client's temp path or env after that path may have been deleted
+  - a socket or pid path read from a file whose directory another user can recreate
+
+  The fix reuses `packages/nx/src/utils/owned-private-dir.ts` or `packages/nx/src/native/utils/owned_dir.rs`. A hand-rolled check is a finding only when it misses a case those helpers cover (final component only, a followed symlink, a root other users can write to). Reimplementing one where a helper is reachable is a Suggestion.
+
+- **A package publisher, before the user approves anything.** Versions, package names, `packageJsonUpdates` keys, prompt paths and manifests that nx fetches or installs while it plans a migration are untrusted. Flag them when they reach a shell string, package manager argv, an object key, or a path inside the workspace, and flag installs that run lifecycle scripts.
+- **A remote cache artifact, even from the org's own cache.** The artifact chooses file names, directory names, symlinks and terminal output. Restoring it is one sink. A later build writing through a restored symlink, a plugin reading a path out of a restored file, and replaying stored terminal output are others.
+- **Other contributors' git data reaching a parser.** A separator inside a commit message can forge records, U+2028 and U+2029 break line-based formats, and a regex with overlapping greedy groups can stall on long text. Pass untrusted values to git or a package manager after `--` or reject a leading `-`. A `name@version` spec is injection when the version can be a URL, a path or a tag.
+
+### Sinks that are easy to miss
+
+- **Security gates that fail open.** A fallback path that skips the gate, an env opt-out that accepts any non-empty value, a check on one value while the code uses a value resolved again later, and a lookup error read as "not set".
+- **Credentials leaving their host.** Telemetry fields, commit messages, process argv (other users can read it with `ps`), `Debug` output of a Rust `Command` (it prints the env), URL userinfo, a token sent to a host it wasn't issued for, and redaction that breaks on an `@` or a space in a password.
+- **Template rendering of fetched content.** `generateFiles` renders EJS, so pointing it at fetched or cached files runs their code.
+- **Local HTTP servers.** A server that exposes workspace data checks `Host` and `Origin`, and one malformed request must not crash it.
+
 ### Standing maintainer calibrations
 
 These encode this repo's review culture. A finding matching one of them is advisory at most — never a blocker, and never the driver of your verdict:
 
-- **`migrations.json` is already inside the migration trust boundary.** Flag it only when the diff creates a _new_ external boundary — HTTP, or runtime input.
-- **`nx migrate` and `nx release` temp directories are intentional post-mortem artifacts**, not leaks.
+- **Migrations the user approved run as trusted code.** The publisher input above, which nx reads before that approval, is not covered by this calibration.
+- **`nx migrate` and `nx release` keep their temp directories on purpose**, so leaving them behind is not a leak. Where they are created, and who owns them, is still in scope.
+- **A contributor crafting content whose hash collides with another file's is out of scope.**
+- **Open CORS on a dev server that only serves build output is not a finding.**
 - **An Important finding must be net-new** versus base/sibling behavior. Deliberate behavior backed by tests and documentation is a callout, not a blocker.
 
 ## Verdicts
@@ -103,9 +130,10 @@ After the required proof-of-work lines, return:
 
 **Findings:**
 
-- **<file:line>** — <source → transforms → sink; exploit; concrete fix>
+- **<file:line>** — <source → transforms → sink; exploit>
   NET-NEW: <base <path>:<line> — what base did | no base file | widens <path>:<line> | claimed-fix>
   TRIGGER: <attacker position → input → impact, on a default configuration>
+  FIX: <the concrete change, 1-2 lines, sketch-level; `FIX (sketch):` when alternatives exist; `FIX: unclear — <why>` when it hinges on a decision that is not yours>
 
 **Pre-existing:** <one line per defect that reproduces unchanged at base; or `none`>
 

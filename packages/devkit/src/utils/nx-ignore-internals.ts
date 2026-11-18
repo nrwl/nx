@@ -2,16 +2,14 @@ import type { TreeIgnoreChecker } from 'nx/src/devkit-internals';
 import { createGitIgnoreChecker } from 'nx/src/devkit-internals';
 
 /**
- * `@nx/devkit`'s `nx` peer spans a major either side, so an older nx that
- * predates the ignore checkers can legally be installed alongside it, and a
- * missing CommonJS named export arrives as `undefined` rather than as a load
- * error. The two callers want opposite things from that, so they get different
- * helpers - see `NOTHING_IGNORED` for the other half.
+ * `@nx/devkit`'s `nx` peer spans a major either side, so an older nx
+ * predating the ignore checkers can be installed, and a missing CommonJS
+ * named export arrives as `undefined`. The two callers want opposite things
+ * from that - see `NOTHING_IGNORED` for the other half.
  *
- * A tree walk cannot degrade: without a checker nothing would be ignored, and
- * the walker would descend into `node_modules` and hand a migration every file
- * in it to rewrite. That is worse than the older nx's own behaviour, which at
- * least read the root `.gitignore`, so this fails instead - once, by name.
+ * A tree walk cannot degrade: with no checker the walker would descend into
+ * `node_modules` and hand a migration every file in it. Worse than the older
+ * nx's own behaviour, so this fails instead - once, by name.
  */
 export function assertNxSupportsIgnoreCheckers(): void {
   if (createGitIgnoreChecker) {
@@ -28,9 +26,8 @@ export function assertNxSupportsIgnoreCheckers(): void {
  * The degrade the other way, for formatting.
  *
  * Filtering nothing is what devkit did before the checkers existed - with no
- * `ignorePath`, prettier's own `getFileInfo` never read the workspace's ignore
- * files either (measured) - so an older nx gets the formatting behaviour it has
- * always had rather than a generator that refuses to run.
+ * `ignorePath`, prettier's `getFileInfo` never read the workspace's ignore
+ * files either (measured) - so an older nx gets the behaviour it always had.
  */
 export const NOTHING_IGNORED: TreeIgnoreChecker = {
   isIgnoredFile: () => false,

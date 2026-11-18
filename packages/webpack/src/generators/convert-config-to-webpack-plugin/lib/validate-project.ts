@@ -16,13 +16,6 @@ function hasAnotherWebpackConfig(tree: Tree, projectRoot: string) {
   }
 }
 
-function isNestProject(project: ProjectConfiguration) {
-  for (const target in project.targets) {
-    if (project.targets[target].executor === '@nx/js:node') {
-      return `The project ${project.name} is using the '@nx/js:node' executor. At the moment, we do not support migrating such projects.`;
-    }
-  }
-}
 /**
  * Validates the project to ensure it can be migrated
  *
@@ -42,6 +35,5 @@ export function validateProject(tree: Tree, project: ProjectConfiguration) {
     return `The project ${project.name} is using Module Federation. At the moment, we don't support migrating projects that use Module Federation.`;
   }
 
-  const hasAnotherConfig = hasAnotherWebpackConfig(tree, project.root);
-  return hasAnotherConfig || isNestProject(project);
+  return hasAnotherWebpackConfig(tree, project.root);
 }

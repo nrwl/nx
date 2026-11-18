@@ -1,21 +1,14 @@
-import {
-  addBuildTargetDefaults,
-  readTargetDefaultsForTarget,
-  mergeTargetConfigurations,
-  type PackageJson,
-} from '@nx/devkit/internal';
+import type { PackageJson } from '@nx/devkit/internal';
 import {
   formatFiles,
   GeneratorCallback,
   joinPathFragments,
   offsetFromRoot,
   readJson,
-  readNxJson,
   readProjectConfiguration,
   runTasksInSerial,
   Tree,
   updateJson,
-  updateProjectConfiguration,
   writeJson,
 } from '@nx/devkit';
 import { getUpdatedPackageJsonContent, readTsConfig } from '@nx/js';
@@ -25,14 +18,10 @@ import {
   ensureTypescript,
   getDefinedCustomConditionName,
   isUsingTsSolutionSetup,
-  TS_SOLUTION_SETUP_TSCONFIG_INPUT,
 } from '@nx/js/internal';
 import { dirname, join, relative } from 'node:path/posix';
-import { RollupExecutorOptions } from '../../executors/rollup/schema';
 import { RollupWithNxPluginOptions } from '../../plugins/with-nx/with-nx-options';
 import { ensureDependencies } from '../../utils/ensure-dependencies';
-import { hasPlugin } from '../../utils/has-plugin';
-import { warnRollupExecutorGenerating } from '../../utils/deprecation';
 import { assertSupportedRollupVersion } from '../../utils/versions';
 import { rollupInitGenerator } from '../init/init';
 import { RollupProjectSchema } from './schema';
@@ -46,11 +35,6 @@ export async function configurationGenerator(
   assertSupportedRollupVersion(tree);
 
   const tasks: GeneratorCallback[] = [];
-  const nxJson = readNxJson(tree);
-  const addPluginDefault =
-    process.env.NX_ADD_PLUGINS !== 'false' &&
-    nxJson.useInferencePlugins !== false;
-  options.addPlugin ??= addPluginDefault;
 
   tasks.push(await rollupInitGenerator(tree, { ...options, skipFormat: true }));
 
@@ -59,15 +43,7 @@ export async function configurationGenerator(
   }
 
   const isTsSolutionSetup = isUsingTsSolutionSetup(tree);
-  let outputConfig: OutputConfig | undefined;
-  if (hasPlugin(tree)) {
-    outputConfig = createRollupConfig(tree, options, isTsSolutionSetup);
-  } else {
-    warnRollupExecutorGenerating();
-    options.buildTarget ??= 'build';
-    checkForTargetConflicts(tree, options);
-    addBuildTarget(tree, options, isTsSolutionSetup);
-  }
+  const outputConfig = createRollupConfig(tree, options, isTsSolutionSetup);
 
   updatePackageJson(tree, options, outputConfig, isTsSolutionSetup);
   if (isTsSolutionSetup) {
@@ -143,20 +119,10 @@ module.exports = withNx(
   };
 }
 
-function checkForTargetConflicts(tree: Tree, options: RollupProjectSchema) {
-  if (options.skipValidation) return;
-  const project = readProjectConfiguration(tree, options.project);
-  if (project.targets?.[options.buildTarget]) {
-    throw new Error(
-      `Project "${options.project}" already has a ${options.buildTarget} target. Pass --skipValidation to ignore this error.`
-    );
-  }
-}
-
 function updatePackageJson(
   tree: Tree,
   options: RollupProjectSchema,
-  outputConfig: OutputConfig | undefined,
+  outputConfig: OutputConfig,
   isTsSolutionSetup: boolean
 ) {
   const project = readProjectConfiguration(tree, options.project);
@@ -177,24 +143,7 @@ function updatePackageJson(
   }
 
   if (isTsSolutionSetup) {
-    let main: string;
-    let outputPath: string;
-    if (outputConfig) {
-      ({ main, outputPath } = outputConfig);
-    } else {
-      // target must exist if we don't receive an outputConfig
-      const projectTarget = project.targets[options.buildTarget];
-      const nxJson = readNxJson(tree);
-      const mergedTarget = mergeTargetConfigurations(
-        projectTarget,
-        readTargetDefaultsForTarget(
-          options.buildTarget,
-          nxJson.targetDefaults,
-          projectTarget.executor
-        )
-      );
-      ({ main, outputPath } = mergedTarget.options);
-    }
+    const { main, outputPath } = outputConfig;
 
     packageJson = getUpdatedPackageJsonContent(packageJson, {
       main,
@@ -220,80 +169,6 @@ function updatePackageJson(
   }
 
   writeJson(tree, packageJsonPath, packageJson);
-}
-
-function addBuildTarget(
-  tree: Tree,
-  options: RollupProjectSchema,
-  isTsSolutionSetup: boolean
-) {
-  addBuildTargetDefaults(tree, '@nx/rollup:rollup', options.buildTarget, [
-    TS_SOLUTION_SETUP_TSCONFIG_INPUT,
-  ]);
-  const project = readProjectConfiguration(tree, options.project);
-  const prevBuildOptions = project.targets?.[options.buildTarget]?.options;
-
-  options.tsConfig ??=
-    prevBuildOptions?.tsConfig ??
-    joinPathFragments(project.root, 'tsconfig.lib.json');
-
-  let outputPath = prevBuildOptions?.outputPath;
-  if (!outputPath) {
-    outputPath = isTsSolutionSetup
-      ? joinPathFragments(project.root, 'dist')
-      : joinPathFragments(
-          'dist',
-          project.root === '.' ? project.name : project.root
-        );
-  }
-
-  const buildOptions: RollupExecutorOptions = {
-    main:
-      options.main ??
-      prevBuildOptions?.main ??
-      joinPathFragments(project.root, 'src/index.ts'),
-    outputPath,
-    tsConfig: options.tsConfig,
-    // TODO(leo): see if we can use this when updating the package.json for the new setup
-    // additionalEntryPoints: prevBuildOptions?.additionalEntryPoints,
-    // generateExportsField: prevBuildOptions?.generateExportsField,
-    compiler: options.compiler ?? 'babel',
-    project: `${project.root}/package.json`,
-    external: options.external,
-    format: (options.format ?? isTsSolutionSetup) ? ['esm'] : undefined,
-  };
-
-  if (options.rollupConfig) {
-    buildOptions.rollupConfig = options.rollupConfig;
-  }
-
-  if (!isTsSolutionSetup) {
-    buildOptions.additionalEntryPoints =
-      prevBuildOptions?.additionalEntryPoints;
-    buildOptions.generateExportsField = prevBuildOptions?.generateExportsField;
-
-    if (tree.exists(joinPathFragments(project.root, 'README.md'))) {
-      buildOptions.assets = [
-        {
-          glob: `${project.root}/README.md`,
-          input: '.',
-          output: '.',
-        },
-      ];
-    }
-  }
-
-  updateProjectConfiguration(tree, options.project, {
-    ...project,
-    targets: {
-      ...project.targets,
-      [options.buildTarget]: {
-        executor: '@nx/rollup:rollup',
-        outputs: ['{options.outputPath}'],
-        options: buildOptions,
-      },
-    },
-  });
 }
 
 function updateTsConfig(tree: Tree, options: RollupProjectSchema): void {

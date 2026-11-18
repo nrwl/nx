@@ -14,7 +14,7 @@ import {
 import { mkdirSync, rmSync } from 'fs';
 import { execSync } from 'node:child_process';
 import { join } from 'path';
-import { createMultiPackageRepo } from './import-utils';
+import { createMultiPackageRepo, createSimpleRepo } from './import-utils';
 
 describe('Nx Import', () => {
   let proj: string;
@@ -88,6 +88,10 @@ describe('Nx Import', () => {
       `import ${remote} ${directory} --ref ${ref} --source ${source} --no-interactive`,
       {
         verbose: true,
+        // nx import reports a failed install on stderr and still exits 0.
+        redirectStderr: true,
+        // The imported app's installs can take longer than 300 s on crowded CI agents.
+        timeout: 10 * 60 * 1000,
       }
     );
 
@@ -129,5 +133,49 @@ describe('Nx Import', () => {
     }
 
     checkFilesExist('packages/a/README.md', 'packages/b/README.md');
+  });
+
+  // Importing OUTSIDE the fixture's `projects/*` globs is what makes this branch
+  // run at all - inside them `isPkgIncluded` is true and it returns before
+  // writing anything.
+  //
+  // `--source .` is required: `--no-interactive` does not suppress that prompt,
+  // which only defaults under `isAiAgent()`.
+  it('should format and commit the workspaces entry it adds', () => {
+    mkdirSync(tempImportE2ERoot, { recursive: true });
+    const repoPath = createSimpleRepo(tempImportE2ERoot, 'workspaces-src');
+
+    // The entry is written with a 2-space `writeJsonFile`, so an off-default
+    // width is what makes the drain's rewrite observable in the committed
+    // bytes.
+    updateJson('.oxfmtrc.json', (json) => {
+      json.tabWidth = 4;
+      return json;
+    });
+    runCommand(`git add . && git commit -m "seed formatter config"`);
+
+    runCLI(
+      `import ${repoPath} imported/pkg --ref main --source . --no-interactive`,
+      { verbose: true }
+    );
+
+    // pnpm keeps its workspaces in pnpm-workspace.yaml; everyone else in
+    // package.json.
+    const workspacesFile =
+      getSelectedPackageManager() === 'pnpm'
+        ? 'pnpm-workspace.yaml'
+        : 'package.json';
+    // The working tree holds the entry before either endpoint runs; only the
+    // amend puts it in HEAD.
+    const committed = runCommand(`git show HEAD:${workspacesFile}`);
+    if (getSelectedPackageManager() === 'pnpm') {
+      // oxfmt does not format YAML, so the entry itself is all the pnpm
+      // branch can assert.
+      expect(committed).toContain('imported/pkg');
+    } else {
+      // 8 spaces = the seeded tabWidth at array depth. The raw write indents
+      // by 4, so this fails if the drain is skipped or runs after the amend.
+      expect(committed).toContain('        "imported/pkg"');
+    }
   });
 });

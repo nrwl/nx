@@ -1051,13 +1051,13 @@ describe('readProjectsConfigurationsFromRootMap', () => {
     expect(() => {
       readProjectConfigurationsFromRootMap(rootMap);
     }).toThrowErrorMatchingInlineSnapshot(`
-      "The following projects are defined in multiple locations:
-      - lib: 
-        - apps/lib-a
-        - apps/lib-b
+              [MultipleProjectsWithSameNameError: The following projects are defined in multiple locations:
+              - lib: 
+                - apps/lib-a
+                - apps/lib-b
 
-      To fix this, set a unique name for each project in a project.json inside the project's root. If the project does not currently have a project.json, you can create one that contains only a name."
-    `);
+              To fix this, set a unique name for each project in a project.json inside the project's root. If the project does not currently have a project.json, you can create one that contains only a name.]
+            `);
   });
 
   it('should read root map into standard projects configurations form', () => {

@@ -7,17 +7,6 @@ export default [
     ignores: ['dist'],
   },
   {
-    rules: {
-      'no-restricted-imports': [
-        'error',
-        '@nx/workspace',
-        '@angular-devkit/core',
-        '@angular-devkit/architect',
-        '@angular-devkit/schematics',
-      ],
-    },
-  },
-  {
     files: ['./package.json'],
     rules: {
       '@nx/dependency-checks': [
@@ -33,6 +22,7 @@ export default [
             'typescript-eslint',
             '@eslint/js',
             'eslint-plugin-import',
+            'eslint-plugin-import-x',
             'eslint-plugin-jsx-a11y',
             'eslint-plugin-react',
             'eslint-plugin-react-hooks',

@@ -13,12 +13,9 @@ export interface Schema {
   inSourceTests?: boolean;
   e2eTestRunner?: 'cypress' | 'playwright' | 'none';
   linter?: LinterType;
+  formatter?: 'none' | 'prettier' | 'oxfmt';
   enableTypedLinting?: boolean;
-  /**
-   * @deprecated Use `enableTypedLinting` instead. This option will be removed in Nx v24.
-   */
-  setParserOptionsProject?: boolean;
   strict?: boolean;
-  addPlugin?: boolean;
   useProjectJson?: boolean;
+  port?: number;
 }

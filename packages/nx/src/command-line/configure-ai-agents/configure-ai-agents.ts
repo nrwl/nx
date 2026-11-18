@@ -1,4 +1,4 @@
-import { prompt } from 'enquirer';
+import { multiselectPrompt } from '../../utils/prompt-helpers';
 import { existsSync, readFileSync } from 'node:fs';
 import { relative } from 'node:path';
 import * as pc from 'picocolors';
@@ -6,12 +6,14 @@ import { claudeMcpJsonPath } from '../../ai/constants';
 import { detectAiAgent } from '../../ai/detect-ai-agent';
 import {
   Agent,
+  agentConfigWriteBlockedLines,
   agentDisplayMap,
   AgentConfiguration,
   configureAgents,
   getAgentConfigurations,
   supportedAgents,
 } from '../../ai/utils';
+import { isPermissionDenied } from '../../utils/permission-errors';
 import { daemonClient } from '../../daemon/client/client';
 import { installPackageToTmp } from '../../utils/package-json';
 import { output } from '../../utils/output';
@@ -19,7 +21,7 @@ import {
   detectPackageManager,
   resolvePackageVersionUsingRegistry,
 } from '../../utils/package-manager';
-import { ensurePackageHasProvenance } from '../../utils/provenance';
+import { resolveVersionWithProvenance } from '../../utils/provenance';
 import { nxVersion } from '../../utils/versions';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { ConfigureAiAgentsOptions } from './command-object';
@@ -60,10 +62,10 @@ export async function configureAiAgentsHandler(
 
   let cleanup: () => void | undefined;
   try {
-    await ensurePackageHasProvenance('nx', 'latest');
+    const version = await resolveVersionWithProvenance('nx', 'latest');
     const packageInstallResults = installPackageToTmp(
       'nx',
-      'latest',
+      version,
       detectPackageManager(workspaceRoot)
     );
     cleanup = packageInstallResults.cleanup;
@@ -92,19 +94,6 @@ export async function configureAiAgentsHandler(
 export async function configureAiAgentsHandlerImpl(
   options: ConfigureAiAgentsOptions
 ): Promise<void> {
-  // Node 24 has stricter readline behavior, and enquirer is not checking for closed state
-  // when invoking operations, thus you get an ERR_USE_AFTER_CLOSE error.
-  process.on('uncaughtException', (error) => {
-    if (
-      error &&
-      typeof error === 'object' &&
-      'code' in error &&
-      error['code'] === 'ERR_USE_AFTER_CLOSE'
-    )
-      return;
-    throw error;
-  });
-
   const normalizedOptions = normalizeOptions(options);
 
   const {
@@ -213,7 +202,7 @@ export async function configureAiAgentsHandlerImpl(
           ...partiallyConfiguredAgents,
           ...outOfDateAgents,
           ...nonConfiguredAgents,
-        ].map((a) => getAgentChoiceForPrompt(a).message),
+        ].map((a) => getAgentChoiceForPrompt(a).label),
       });
       process.exit(1);
     }
@@ -283,10 +272,17 @@ export async function configureAiAgentsHandlerImpl(
         });
       } catch (e) {
         configSpinner.fail('Failed to configure AI agents');
-        output.error({
-          title: 'Error details:',
-          bodyLines: [e.message],
-        });
+        if (isPermissionDenied(e)) {
+          output.error({
+            title: 'Nx was not permitted to write the AI agent configuration',
+            bodyLines: agentConfigWriteBlockedLines(e),
+          });
+        } else {
+          output.error({
+            title: 'Error details:',
+            bodyLines: [e.message],
+          });
+        }
         process.exit(1);
       }
     } else {
@@ -312,29 +308,25 @@ export async function configureAiAgentsHandlerImpl(
 
   // Interactive mode (or non-interactive with explicit --agents)
   const allAgentChoices: AgentPromptChoice[] = [];
-  const preselectedIndices: number[] = [];
-  let currentIndex = 0;
+  const preselectedAgents: Agent[] = [];
 
   // Partially configured agents first (highest priority)
   partiallyConfiguredAgents.forEach((a) => {
     allAgentChoices.push(getAgentChoiceForPrompt(a));
-    preselectedIndices.push(currentIndex);
-    currentIndex++;
+    preselectedAgents.push(a.name);
   });
 
   // Outdated agents second
   for (const a of fullyConfiguredAgents) {
     if (a.outdated) {
       allAgentChoices.push(getAgentChoiceForPrompt(a));
-      preselectedIndices.push(currentIndex);
-      currentIndex++;
+      preselectedAgents.push(a.name);
     }
   }
 
   // Non-configured agents last
   nonConfiguredAgents.forEach((a) => {
     allAgentChoices.push(getAgentChoiceForPrompt(a));
-    currentIndex++;
   });
 
   if (allAgentChoices.length === 0) {
@@ -350,29 +342,20 @@ export async function configureAiAgentsHandlerImpl(
   let selectedAgents: Agent[];
   if (options.interactive !== false) {
     try {
-      selectedAgents = (
-        await prompt<{ agents: Agent[] }>({
-          type: 'multiselect',
-          name: 'agents',
-          message:
-            'Which AI agents would you like to configure? (space to select, enter to confirm)',
-          choices: allAgentChoices,
-          initial: preselectedIndices,
-          required: true,
-          footer: function () {
-            const focused = this.focused as AgentPromptChoice;
-            return pc.dim(
-              `  ${getAgentFooterDescription(focused.agentConfiguration)}`
-            );
-          },
-        } as any)
-      ).agents;
+      selectedAgents = await multiselectPrompt<Agent>({
+        message:
+          'Which AI agents would you like to configure? (space to select, enter to confirm)',
+        choices: allAgentChoices,
+        initialValues: preselectedAgents,
+        required: true,
+        onCancel: () => process.exit(1),
+      });
     } catch {
       process.exit(1);
     }
   } else {
     // non-interactive with explicit --agents: configure all requested
-    selectedAgents = allAgentChoices.map((a) => a.name);
+    selectedAgents = allAgentChoices.map((a) => a.value);
   }
 
   if (selectedAgents?.length === 0) {
@@ -411,18 +394,25 @@ export async function configureAiAgentsHandlerImpl(
     return;
   } catch (e) {
     configSpinner.fail('Failed to set up AI agents');
-    output.error({
-      title: 'Error details:',
-      bodyLines: [e.message],
-    });
+    if (isPermissionDenied(e)) {
+      output.error({
+        title: 'Nx was not permitted to write the AI agent configuration',
+        bodyLines: agentConfigWriteBlockedLines(e),
+      });
+    } else {
+      output.error({
+        title: 'Error details:',
+        bodyLines: [e.message],
+      });
+    }
     process.exit(1);
   }
 }
 
 type AgentPromptChoice = {
-  name: Agent;
-  message: string;
-  agentConfiguration: AgentConfiguration;
+  value: Agent;
+  label: string;
+  hint: string;
 };
 
 /**
@@ -495,11 +485,11 @@ function getAgentChoiceForPrompt(agent: AgentConfiguration): AgentPromptChoice {
   const needsUpdate = partiallyConfigured || agent.outdated;
 
   return {
-    name: agent.name,
-    message: needsUpdate
+    value: agent.name,
+    label: needsUpdate
       ? `${agent.displayName} (update available)`
       : agent.displayName,
-    agentConfiguration: agent,
+    hint: getAgentFooterDescription(agent),
   };
 }
 

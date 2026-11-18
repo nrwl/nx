@@ -26,7 +26,7 @@ Monorepos optimize for atomic changes and shared tooling, while polyrepos optimi
 
 A monorepo doesn't force everything to release together.
 Projects build from the same commit, but each build artifact or Docker image carries its own tag, and teams control when a tag reaches production.
-What a monorepo does force is that every project builds against the latest shared code, so projects stay current with each other - an advantage or a burden depending on what your teams need.
+What a monorepo does force is that every project builds against the latest shared code, so projects stay current with each other, an advantage or a burden depending on what your teams need.
 A polyrepo makes independent cadences the default because everything is already split.
 
 ## When should you choose a polyrepo?
@@ -75,7 +75,7 @@ If every project is placed in its own repository, each team can make their own o
 Unfortunately, this also means that each team has to make their own organizational decisions instead of focusing on feature work that provides business value.
 
 Nx can still be useful with this organizational structure.
-Tooling and maintenance tasks can be centralized through shared [Nx plugins](/docs/concepts/nx-plugins) that each repository can opt-in to using.
+Tooling and maintenance tasks can be centralized through shared [Nx plugins](/docs/plugin-registry) that each repository can opt-in to using.
 Since creating repositories is a frequent occurrence in this scenario, Nx [generators](/docs/features/generate-code) can be used to quickly scaffold out the repository with reasonable tooling defaults.
 
 Polyrepos also fragment the context AI agents work with.

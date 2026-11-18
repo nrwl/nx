@@ -1,14 +1,14 @@
 import { ProjectGraphBuilder } from '../project-graph-builder';
 import { applyImplicitDependencies } from './implicit-project-dependencies';
 
-jest.mock('fs', () => {
-  const memFs = require('memfs').fs;
+vi.mock('fs', async () => {
+  const memFs = (await import('memfs')).fs;
   return {
     ...memFs,
     existsSync: (p) => (p.endsWith('.node') ? true : memFs.existsSync(p)),
   };
 });
-jest.mock('nx/src/utils/workspace-root', () => ({
+vi.mock('nx/src/utils/workspace-root', () => ({
   workspaceRoot: '/root',
 }));
 

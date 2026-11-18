@@ -1,6 +1,9 @@
 use anyhow::Result;
 
-use rusqlite::{Connection, DatabaseName, Error, OptionalExtension, Params, Row, Statement, ToSql};
+use rusqlite::{
+    Connection, DatabaseName, Error, OptionalExtension, Params, Row, Statement, ToSql,
+    TransactionBehavior,
+};
 use std::thread;
 use std::time::Duration;
 use tracing::trace;
@@ -90,8 +93,27 @@ impl NxDbConnection {
         &mut self,
         transaction_operation: impl Fn(&Connection) -> rusqlite::Result<T>,
     ) -> Result<T> {
+        self.transaction_with_behavior(TransactionBehavior::Deferred, transaction_operation)
+    }
+
+    /// Like `transaction`, but takes SQLite's write lock at `BEGIN` rather than
+    /// at the first write, so work the closure does before that write (a
+    /// filesystem check, say) is already serialised against every other writer
+    /// to the same database file.
+    pub fn transaction_immediate<T>(
+        &mut self,
+        transaction_operation: impl Fn(&Connection) -> rusqlite::Result<T>,
+    ) -> Result<T> {
+        self.transaction_with_behavior(TransactionBehavior::Immediate, transaction_operation)
+    }
+
+    fn transaction_with_behavior<T>(
+        &mut self,
+        behavior: TransactionBehavior,
+        transaction_operation: impl Fn(&Connection) -> rusqlite::Result<T>,
+    ) -> Result<T> {
         if let Some(conn) = self.conn.as_mut() {
-            retry_db_operation_when_busy!(conn.transaction().and_then(|tx| {
+            retry_db_operation_when_busy!(conn.transaction_with_behavior(behavior).and_then(|tx| {
                 let result = transaction_operation(&tx)?;
                 tx.commit()?;
                 Ok(result)

@@ -1,3 +1,4 @@
+import type { TSESLint } from '@typescript-eslint/utils';
 import typescript from './configs/typescript';
 import javascript from './configs/javascript';
 import reactTmp from './configs/react-tmp';
@@ -20,6 +21,10 @@ import nxPluginChecksRule, {
 import dependencyChecks, {
   RULE_NAME as dependencyChecksRuleName,
 } from './rules/dependency-checks';
+
+import directiveChecks, {
+  RULE_NAME as directiveChecksRuleName,
+} from './rules/directive-checks';
 
 // Resolve any custom rules that might exist in the current workspace
 import { workspaceRules, loadWorkspaceRules } from './resolve-workspace-rules';
@@ -64,10 +69,12 @@ const configs = {
   },
 };
 
-const rules = {
+// Keep the annotation: the inferred type names RuleModule via a pnpm store path (TS2883).
+const rules: Record<string, TSESLint.RuleModule<string, unknown[]>> = {
   [enforceModuleBoundariesRuleName]: enforceModuleBoundaries,
   [nxPluginChecksRuleName]: nxPluginChecksRule,
   [dependencyChecksRuleName]: dependencyChecks,
+  [directiveChecksRuleName]: directiveChecks,
   ...workspaceRules,
 };
 

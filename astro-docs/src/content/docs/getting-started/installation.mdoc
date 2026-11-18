@@ -1,5 +1,5 @@
 ---
-title: Installation
+title: Install the Nx CLI
 description: Install Nx globally via npm, Homebrew, Chocolatey, or apt. Add Nx to existing repos with nx init.
 sidebar:
   order: 2
@@ -53,7 +53,7 @@ sudo apt install nx
 nx --version
 ```
 
-You should see a version number like `22.5.0`.
+You should see a version number like `23.1.1`.
 
 ### Update global installation
 
@@ -61,10 +61,10 @@ You should see a version number like `22.5.0`.
 {% tabitem label="npm" %}
 
 ```shell
-npm update --global nx
+npm update --global nx@latest
 ```
 
-**Note:** You can also use `yarn global upgrade nx`, `pnpm update --global nx`, or `bun update --global nx`
+**Note:** You can also use `yarn global upgrade nx@latest`, `pnpm update --global nx@latest`, or `bun update --global nx@latest`
 {% /tabitem %}
 
 {% tabitem label="Homebrew (macOS, Linux)" %}
@@ -109,7 +109,7 @@ You can also manually install the [`nx` NPM package](https://www.npmjs.com/packa
 
 ### Update Nx in your repository
 
-When you update Nx in your repository, it will also [automatically update your dependencies](/docs/features/automate-updating-dependencies) if you have an [Nx plugin](/docs/concepts/nx-plugins) installed for that dependency.
+When you update Nx in your repository, it will also [automatically update your dependencies](/docs/features/automate-updating-dependencies) if you have an [Nx plugin](/docs/plugin-registry) installed for that dependency.
 
 To update Nx, run `nx migrate`. It guides you through the update interactively:
 

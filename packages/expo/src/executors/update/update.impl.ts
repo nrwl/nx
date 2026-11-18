@@ -4,7 +4,7 @@ import { resolve as pathResolve } from 'path';
 import { ChildProcess, fork } from 'child_process';
 
 import { resolveEas } from '../../utils/resolve-eas';
-import { installAndUpdatePackageJson } from '../install/install.impl';
+import { installAndUpdatePackageJson } from '../install/install-packages';
 
 import { ExpoEasUpdateOptions } from './schema';
 

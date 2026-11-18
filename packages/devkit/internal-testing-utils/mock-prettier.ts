@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-restricted-imports */
+/* oxlint-disable no-restricted-imports */
 /**
  * Side-effect module: registers a jest mock of `prettier` (whose v3 dynamic
  * imports fail in Jest's VM) for specs that format output. It must remain a

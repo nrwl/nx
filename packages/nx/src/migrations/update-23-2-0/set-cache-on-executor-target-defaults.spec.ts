@@ -473,7 +473,7 @@ describe('set-cache-on-executor-target-defaults migration', () => {
     // their shipped schema, making every target through the key continuous
     // after normalization. The schema is stubbed because the in-memory tree
     // root has no node_modules to resolve against.
-    const getExecutorInformation = jest
+    const getExecutorInformation = vi
       .spyOn(executorUtils, 'getExecutorInformation')
       .mockReturnValue({ schema: { continuous: true } } as any);
 
@@ -499,7 +499,7 @@ describe('set-cache-on-executor-target-defaults migration', () => {
     // The paired test above stubs a continuous schema; without this one the
     // resolved-and-not-continuous return is never observed, because every other
     // fixture reaches its verdict through the catch.
-    const getExecutorInformation = jest
+    const getExecutorInformation = vi
       .spyOn(executorUtils, 'getExecutorInformation')
       .mockReturnValue({ schema: { continuous: false } } as any);
 

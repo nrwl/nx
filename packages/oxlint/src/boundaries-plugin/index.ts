@@ -1,6 +1,6 @@
 /**
- * Experimental bridge exposing Nx's `enforce-module-boundaries` rule to Oxlint
- * as a JS plugin.
+ * Experimental bridge exposing Nx's `enforce-module-boundaries` and
+ * `directive-checks` rules to Oxlint as a JS plugin.
  *
  * Oxlint's JS-plugin rule context deliberately mirrors ESLint's `RuleContext`
  * (`options`, `report`, `filename`, `sourceCode`, …), so the ESLint rule runs
@@ -14,9 +14,13 @@
 // spreads `workspaceRules`, whose module-level initializer compiles the
 // consuming workspace's `tools/eslint-rules` directory just to hand back one
 // rule.
-import { enforceModuleBoundaries } from '@nx/eslint-plugin/internal';
+import {
+  directiveChecks,
+  enforceModuleBoundaries,
+} from '@nx/eslint-plugin/internal';
 
 const RULE_NAME = 'enforce-module-boundaries';
+const DIRECTIVE_CHECKS_RULE_NAME = 'directive-checks';
 
 // Annotated rather than inferred: the inferred type names `Options` /
 // `MessageIds` from a non-portable deep path in `@nx/eslint-plugin` (TS2883).
@@ -36,6 +40,10 @@ const nxOxlintBoundariesPlugin: {
       // self-describing, since `ESLintUtils.RuleCreator` keeps `name` as a
       // sibling of `meta` rather than inside it.
       meta: { ...enforceModuleBoundaries.meta, name: RULE_NAME },
+    },
+    [DIRECTIVE_CHECKS_RULE_NAME]: {
+      ...directiveChecks,
+      meta: { ...directiveChecks.meta, name: DIRECTIVE_CHECKS_RULE_NAME },
     },
   },
 };

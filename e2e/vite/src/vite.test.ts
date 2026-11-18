@@ -4,6 +4,7 @@ import {
   getSelectedPackageManager,
   killProcessAndPorts,
   newProject,
+  readFile,
   readJson,
   reservePort,
   runCLI,
@@ -14,27 +15,21 @@ import {
   updateJson,
 } from '@nx/e2e-utils';
 import { ChildProcess } from 'child_process';
-import { names } from '@nx/devkit';
+import { joinPathFragments, names } from '@nx/devkit';
 
 const myApp = uniq('my-app');
 const myVueApp = uniq('my-vue-app');
 
 describe('@nx/vite/plugin', () => {
   let proj: string;
-  let originalEnv: string;
-  beforeAll(() => {
-    originalEnv = process.env.NX_ADD_PLUGINS;
-    process.env.NX_ADD_PLUGINS = 'true';
-  });
-
   afterAll(() => {
-    process.env.NX_ADD_PLUGINS = originalEnv;
     cleanupProject();
   });
 
   describe('with react', () => {
     beforeAll(() => {
       proj = newProject({
+        keepBackup: true,
         packages: ['@nx/react', '@nx/vue', '@nx/vite', '@nx/vitest'],
       });
       runCLI(
@@ -83,7 +78,7 @@ describe('@nx/vite/plugin', () => {
         const exportedLibraryComponent = names(myBuildableLib).className;
 
         updateFile(
-          `apps/${myApp}/src/app/App.tsx`,
+          `apps/${myApp}/src/app/app.tsx`,
           `import NxWelcome from './nx-welcome';
           import { ${exportedLibraryComponent} } from '@proj/${myBuildableLib}';
           export function App() {
@@ -102,10 +97,9 @@ describe('@nx/vite/plugin', () => {
           `/// <reference types='vitest' />
           import { defineConfig } from 'vite';
           import react from '@vitejs/plugin-react';
-          import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 
           export default defineConfig({
-            root: __dirname,
+            root: import.meta.dirname,
             cacheDir: '../../node_modules/.vite/${myApp}',
           
             server: {
@@ -118,7 +112,8 @@ describe('@nx/vite/plugin', () => {
               host: 'localhost',
             },
           
-            plugins: [react(), nxViteTsPaths({buildLibsFromSource: false})],
+            resolve: { tsconfigPaths: true },
+            plugins: [react()],
           
             build: {
               outDir: '../../dist/${myApp}',
@@ -216,10 +211,9 @@ describe('@nx/vite/plugin', () => {
         `/// <reference types='vitest' />
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 
 export default defineConfig({
-  root: __dirname,
+  root: import.meta.dirname,
   cacheDir: '../../node_modules/.vite/${myApp}',
   server: {
     port: 4200,
@@ -229,14 +223,8 @@ export default defineConfig({
     port: 4300,
     host: 'localhost',
   },
-  plugins: [
-    react(),
-    nxViteTsPaths({
-      buildLibsFromSource: false,
-      buildTarget: 'custom-build',
-      testTarget: 'custom-test',
-    }),
-  ],
+  resolve: { tsconfigPaths: true },
+  plugins: [react()],
   build: {
     outDir: '../../dist/apps/${myApp}',
     emptyOutDir: true,
@@ -267,8 +255,7 @@ export default defineConfig({
         import { render } from '@testing-library/react';
         import { App } from './app';
         import { ${exportedLibraryComponent} } from 'multi-path-lib';
-        // Extensionless .tsx subpath is only resolvable through the plugin's
-        // own file matching, which must try every mapped path value.
+        // Both aliases must fall back to their second mapped path.
         import { ${exportedLibraryComponent} as FromSubpath } from 'multi-path-lib/lib/${myBuildableLib}';
 
         describe('App', () => {
@@ -295,6 +282,9 @@ export default defineConfig({
       });
 
       try {
+        expect(() =>
+          runCLI(`run ${myBuildableLib}:custom-build`)
+        ).not.toThrow();
         expect(() => runCLI(`run ${myApp}:custom-test`)).not.toThrow();
       } finally {
         // Clean up the shared tsconfig so the path alias does not leak into
@@ -420,6 +410,7 @@ export default defineConfig({
 
     beforeAll(() => {
       proj = newProject({
+        keepBackup: true,
         packages: ['@nx/react', '@nx/vite', '@nx/vitest'],
       });
       runCLI(
@@ -445,6 +436,7 @@ export default defineConfig({
 
     beforeAll(() => {
       proj = newProject({
+        keepBackup: true,
         packages: ['@nx/react', '@nx/vite', '@nx/vitest'],
       });
       runCLI(
@@ -488,6 +480,7 @@ export default defineConfig({
 
     beforeAll(() => {
       proj = newProject({
+        keepBackup: true,
         packages: ['@nx/vitest', '@nx/react', '@nx/webpack', '@nx/vite'],
       });
       runCLI(
@@ -532,12 +525,24 @@ export default defineConfig({
       expect(parent.executor).toEqual('nx:noop');
       expect(parent.metadata.nonAtomizedTarget).toEqual('test');
 
+      // The AST edit path used for webpack-bundled apps quotes the key.
+      const reportsDirectory = readFile(`${reactVitest}/vite.config.mts`).match(
+        /'?reportsDirectory'?: '([^']+)'/
+      )[1];
+      // The generated reportsDirectory ends with the project root, so the
+      // plugin appends each spec path without a project-root prefix.
+      expect(reportsDirectory).toEqual(`../coverage/${globDetails.root}`);
       const globAtomized = collectAtomized(globDetails);
       expect(globAtomized.length).toBeGreaterThan(0);
       for (const { target, command } of globAtomized) {
         const relativePath = target.slice('test-ci--'.length);
         expect(relativePath).toMatch(/\.spec\.tsx?$/);
-        expect(command).toEqual(`vitest run ${relativePath}`);
+        expect(command).toEqual(
+          `vitest run ${relativePath} --coverage.reportsDirectory=${joinPathFragments(
+            reportsDirectory,
+            relativePath
+          )}`
+        );
       }
 
       // force the vitest runtime to enumerate the specs; atomization must match

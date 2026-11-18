@@ -34,7 +34,7 @@ describe('printHelp', () => {
     };
 
     let output = '';
-    jest.spyOn(logger, 'info').mockImplementation((x) => (output = x));
+    vi.spyOn(logger, 'info').mockImplementation((x) => (output = x));
 
     printHelp('nx g @nx/demo:example', schema, {
       mode: 'generate',

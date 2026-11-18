@@ -1,0 +1,20 @@
+<svg width="730" height="170" viewBox="0 0 730 170" fill="none" xmlns="http://www.w3.org/2000/svg" font-family="Inter, system-ui, sans-serif">
+<defs>
+<marker id="arrow-gray" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M1 1L9 5L1 9" stroke="#94A3B8" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
+<marker id="arrow-rose" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M1 1L9 5L1 9" stroke="#F43F5E" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
+</defs>
+<rect x="150" y="20" width="110" height="50" rx="8" fill="#94A3B8"/>
+<text x="205" y="42" text-anchor="middle" font-size="15" fill="white">client</text>
+<text x="205" y="60" text-anchor="middle" font-size="11" fill="white" fill-opacity="0.85">scope:client</text>
+<rect x="470" y="20" width="110" height="50" rx="8" fill="#94A3B8"/>
+<text x="525" y="42" text-anchor="middle" font-size="15" fill="white">admin</text>
+<text x="525" y="60" text-anchor="middle" font-size="11" fill="white" fill-opacity="0.85">scope:admin</text>
+<rect x="310" y="100" width="110" height="50" rx="8" fill="#F43F5E"/>
+<text x="365" y="122" text-anchor="middle" font-size="15" fill="white">utils</text>
+<text x="365" y="140" text-anchor="middle" font-size="11" fill="white" fill-opacity="0.85">scope:shared</text>
+<path d="M205 72V100C205 114 215 125 235 125H308" stroke="#94A3B8" stroke-width="1.5" marker-end="url(#arrow-gray)"/>
+<path d="M525 72V100C525 114 515 125 495 125H422" stroke="#94A3B8" stroke-width="1.5" marker-end="url(#arrow-gray)"/>
+<path d="M355 98Q355 45 264 45" stroke="#F43F5E" stroke-width="3" stroke-linecap="round" stroke-dasharray="8 8" marker-end="url(#arrow-rose)"/>
+<circle cx="332" cy="58" r="11" fill="#F43F5E"/>
+<path d="M327.5 53.5L336.5 62.5M336.5 53.5L327.5 62.5" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+</svg>

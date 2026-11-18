@@ -35,7 +35,7 @@ expect.addSnapshotSerializer({
         .replaceAll(/\d*B package\.json/g, 'XXXB package.json')
         .replaceAll(/size:\s*\d*\s?B/g, 'size: XXXB')
         .replaceAll(/\d*\.\d*\s?kB/g, 'XXX.XXX kb')
-        .replaceAll(/[a-fA-F0-9]{7}/g, '{COMMIT_SHA}')
+        .replaceAll(/\b[a-fA-F0-9]{7}\b/g, '{COMMIT_SHA}')
         .replaceAll(/Test @[\w\d]+/g, 'Test @{COMMIT_AUTHOR}')
         // Normalize the version title date.
         .replaceAll(/\(\d{4}-\d{2}-\d{2}\)/g, '(YYYY-MM-DD)')
@@ -59,6 +59,7 @@ describe('nx release version plans', () => {
 
   beforeEach(async () => {
     newProject({
+      keepBackup: true,
       packages: ['@nx/js'],
     });
 
@@ -78,7 +79,9 @@ describe('nx release version plans', () => {
     runCLI(`generate @nx/workspace:npm-package ${pkg5}`);
 
     // Normalize git committer information so it is deterministic in snapshots
-    await runCommandAsync(`git config user.email "test@test.com"`);
+    await runCommandAsync(
+      `git config user.email "test@users.noreply.github.com"`
+    );
     await runCommandAsync(`git config user.name "Test"`);
 
     await runCommandAsync(`git add .`);

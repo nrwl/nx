@@ -1,3 +1,4 @@
+import { readModulePackageJson } from '@nx/devkit/internal';
 import assert from 'node:assert';
 import { isAbsolute } from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -53,6 +54,26 @@ export function isPackageInstalled(root: string, name: string): boolean {
     return true;
   } catch {
     return false;
+  }
+}
+
+export function getInstalledPackageVersionFromRoot(
+  root: string,
+  name: string
+): string | null {
+  try {
+    return readModulePackageJson(name, [root]).packageJson.version ?? null;
+  } catch (error) {
+    const code = (error as { code?: string }).code;
+    // Not installed, or its entry point does not resolve; the version is
+    // unknown either way.
+    if (
+      code === 'MODULE_NOT_FOUND' ||
+      code === 'ERR_PACKAGE_PATH_NOT_EXPORTED'
+    ) {
+      return null;
+    }
+    throw error;
   }
 }
 

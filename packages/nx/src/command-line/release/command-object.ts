@@ -121,6 +121,7 @@ export type ReleaseOptions = NxReleaseArgs &
     preid?: VersionOptions['preid'];
     skipPublish?: boolean;
     otp?: number;
+    gitPush?: boolean;
   };
 
 export type VersionPlanArgs = {
@@ -240,6 +241,11 @@ const releaseCommand: CommandModule<NxReleaseArgs, ReleaseOptions> = {
             type: 'boolean',
             description:
               'Skip publishing by automatically answering no to the confirmation prompt for publishing.',
+          })
+          .option('git-push', {
+            describe:
+              'Whether or not to automatically push the changes made by this command to the remote git repository.',
+            type: 'boolean',
           })
           .option('otp', {
             type: 'number',

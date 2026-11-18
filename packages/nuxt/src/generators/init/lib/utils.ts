@@ -1,15 +1,24 @@
 import {
   addDependenciesToPackageJson,
+  detectPackageManager,
   readNxJson,
   Tree,
   updateNxJson,
 } from '@nx/devkit';
+import { acknowledgeBuildScripts } from '@nx/devkit/internal';
 import { nxVersion } from '../../../utils/versions';
 import { getNuxtDependenciesVersionsToInstall } from '../../../utils/version-utils';
 import { InitSchema } from '../schema';
 
 export async function updateDependencies(host: Tree, schema: InitSchema) {
   const nuxtVersions = await getNuxtDependenciesVersionsToInstall(host);
+
+  // The nuxt toolchain (nitropack, @unhead/bundler) depends on esbuild, whose
+  // install script only validates the prebuilt binary that ships as an optional
+  // dependency.
+  acknowledgeBuildScripts(host, detectPackageManager(host.root), {
+    esbuild: false,
+  });
 
   return addDependenciesToPackageJson(
     host,

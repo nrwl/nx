@@ -3,4 +3,11 @@
  * `packages/nx/src/native/tasks/types.rs` and exposed to TypeScript via NAPI.
  * This file re-exports them so existing imports keep working.
  */
-export type { Task, TaskGraph, TaskTarget, TaskHashDetails } from '../native';
+export type {
+  Task,
+  TaskGraph,
+  TaskGraphEdge,
+  TaskTarget,
+  TaskHashDetails,
+  TaskUltracacheSettings,
+} from '../native';

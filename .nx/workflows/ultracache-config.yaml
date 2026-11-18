@@ -1,0 +1,15 @@
+ignore-reads:
+  - 'dist/target/**'
+ignore-writes:
+  - '**/.swc/**'
+  - 'dist/target/**'
+
+task-exclusions:
+  - target: lint
+    ignore-reads:
+      - '**/dist/**/*.json'
+  - project: graph-client
+    target: build-client
+    ignore-reads:
+      - '**/*.stories.{js,jsx,ts,tsx,mdx}'
+      - '**/*.{spec,test}.{js,jsx,ts,tsx}'

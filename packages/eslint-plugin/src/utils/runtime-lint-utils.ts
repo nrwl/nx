@@ -13,9 +13,10 @@ import { getRootTsConfigFileName, resolveModuleByImport } from '@nx/js';
 import { TargetProjectLocator } from '@nx/js/internal';
 import { AST_NODE_TYPES, TSESLint, TSESTree } from '@typescript-eslint/utils';
 import * as path from 'node:path';
-import { getPath, pathExists } from './graph-utils';
 import {
   findProjectForPath,
+  getPath,
+  pathExists,
   ProjectRootMappings,
   readFileIfExisting,
 } from '@nx/devkit/internal';
@@ -267,19 +268,22 @@ export function getSourceFilePath(sourceFileName: string, projectPath: string) {
 function isConstraintBanningProject(
   externalProject: ProjectGraphExternalNode,
   constraint: DepConstraint,
-  imp: string
+  importSpecifier: string
 ): boolean {
   const { allowedExternalImports, bannedExternalImports } = constraint;
   const { packageName } = externalProject.data;
 
-  if (imp !== packageName && !imp.startsWith(`${packageName}/`)) {
+  if (
+    importSpecifier !== packageName &&
+    !importSpecifier.startsWith(`${packageName}/`)
+  ) {
     return false;
   }
 
   /* Check if import is banned... */
   if (
     bannedExternalImports?.some((importDefinition) =>
-      mapGlobToRegExp(importDefinition).test(imp)
+      mapGlobToRegExp(importDefinition).test(importSpecifier)
     )
   ) {
     return true;
@@ -288,8 +292,8 @@ function isConstraintBanningProject(
   /* ... then check if there is a whitelist and if there is a match in the whitelist.  */
   return allowedExternalImports?.every(
     (importDefinition) =>
-      !imp.startsWith(packageName) ||
-      !mapGlobToRegExp(importDefinition).test(imp)
+      !importSpecifier.startsWith(packageName) ||
+      !mapGlobToRegExp(importDefinition).test(importSpecifier)
   );
 }
 
@@ -338,13 +342,18 @@ export function findTransitiveExternalDependencies(
   }
 
   const externalDependencies = [];
+  const seen = new Set<string>();
   for (let i = 0; i < allReachableProjects.length; i++) {
     const dependencies = graph.dependencies[allReachableProjects[i]];
     if (dependencies) {
       for (let d = 0; d < dependencies.length; d++) {
         const dependency = dependencies[d];
         if (graph.externalNodes[dependency.target]) {
-          externalDependencies.push(dependency);
+          const key = `${dependency.source}|${graph.externalNodes[dependency.target].data.packageName}`;
+          if (!seen.has(key)) {
+            seen.add(key);
+            externalDependencies.push(dependency);
+          }
         }
       }
     }
@@ -363,8 +372,7 @@ export function findTransitiveExternalDependencies(
 export function hasBannedDependencies(
   externalDependencies: ProjectGraphDependency[],
   graph: ProjectGraph,
-  depConstraint: DepConstraint,
-  imp: string
+  depConstraint: DepConstraint
 ):
   | Array<[ProjectGraphExternalNode, ProjectGraphProjectNode, DepConstraint]>
   | undefined {
@@ -373,7 +381,7 @@ export function hasBannedDependencies(
       isConstraintBanningProject(
         graph.externalNodes[dependency.target],
         depConstraint,
-        imp
+        graph.externalNodes[dependency.target].data.packageName
       )
     )
     .map((dep) => [
@@ -450,6 +458,17 @@ export function hasBuildExecutor(
 const ESLINT_REGEX = /node_modules.*[\/\\]eslint(?:\.js)?$/;
 const JEST_REGEX = /node_modules\/.bin\/jest$/; // when we run unit tests in jest
 const NRWL_CLI_REGEX = /nx[\/\\]dist[\/\\]bin[\/\\]run-executor\.js$/;
+// ESLint's multithreaded mode (`--concurrency`, or the `concurrency` option on
+// the `ESLint` class) lints in worker threads, where Node sets argv[1] to the
+// worker script instead of the eslint binary. Without this, ESLINT_REGEX does
+// not match and `ensureGlobalProjectGraph` (project-graph-utils.ts) re-reads the
+// whole project graph for every linted file. Unlike the language-server cases
+// below, this stays safe when the parent is long-lived: ESLint starts workers
+// per `lintFiles()` call and that call ends when they terminate, so the memo
+// cannot outlive a single lint run.
+const ESLINT_WORKER_REGEX =
+  /node_modules.*[\/\\]eslint[\/\\]lib[\/\\]eslint[\/\\]worker\.js$/;
+
 // `@nx/oxlint` runs this rule through Oxlint's JS-plugin bridge, where argv[1]
 // is `node_modules/oxlint/bin/oxlint`. Without this, `ensureGlobalProjectGraph`
 // (project-graph-utils.ts) never memoizes and every linted file re-reads the
@@ -464,13 +483,23 @@ function isOxlintTerminalRun(argv: string[]): boolean {
   return !!argv[1].match(OXLINT_REGEX) && !argv.includes('--lsp');
 }
 
+// `bun lint` hosts ESLint plugins itself, so argv[0] is the bun executable and
+// argv[1] is the `lint` subcommand rather than a script path.
+const BUN_REGEX = /(?:^|[\/\\])bun(?:\.exe)?$/;
+
+function isBunLintRun(argv: string[]): boolean {
+  return !!argv[0].match(BUN_REGEX) && argv[1] === 'lint';
+}
+
 export function isTerminalRun(): boolean {
   return (
     process.argv.length > 1 &&
     (!!process.argv[1].match(NRWL_CLI_REGEX) ||
       !!process.argv[1].match(JEST_REGEX) ||
       !!process.argv[1].match(ESLINT_REGEX) ||
+      !!process.argv[1].match(ESLINT_WORKER_REGEX) ||
       isOxlintTerminalRun(process.argv) ||
+      isBunLintRun(process.argv) ||
       !!process.argv[1].endsWith('/bin/jest.js'))
   );
 }

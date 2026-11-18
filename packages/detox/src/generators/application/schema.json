@@ -60,12 +60,6 @@
       "description": "Whether to enable typed linting. For flat configs, this configures the recommended `parserOptions.projectService` and `tsconfigRootDir`. For legacy `.eslintrc` configs, this configures `parserOptions.project`. We do not enable this by default for lint performance reasons.",
       "default": false
     },
-    "setParserOptionsProject": {
-      "type": "boolean",
-      "description": "Deprecated alias for `enableTypedLinting`.",
-      "default": false,
-      "x-deprecated": "Use `enableTypedLinting` instead. This option will be removed in Nx v24."
-    },
     "useProjectJson": {
       "type": "boolean",
       "description": "Use a `project.json` configuration file instead of inlining the Nx configuration in the `package.json` file."

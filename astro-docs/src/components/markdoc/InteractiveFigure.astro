@@ -1,0 +1,32 @@
+---
+import { InteractiveFigure } from '../interactive/InteractiveFigure';
+
+interface Props {
+  name: string;
+  height: number;
+  caption: string;
+}
+
+const { name, height, caption } = Astro.props;
+---
+
+<figure class="interactive-figure not-content" data-figure={name}>
+  <InteractiveFigure
+    client:visible={{ rootMargin: '200px' }}
+    name={name}
+    height={height}
+  />
+  <figcaption class="interactive-figure-caption">{caption}</figcaption>
+</figure>
+
+<style>
+  .interactive-figure {
+    margin: 2rem 0;
+  }
+  .interactive-figure-caption {
+    margin-top: 0.75rem;
+    font-size: var(--sl-text-sm);
+    line-height: 1.5;
+    color: var(--sl-color-gray-3);
+  }
+</style>

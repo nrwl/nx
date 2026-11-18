@@ -1,4 +1,4 @@
-import { names, Tree } from '@nx/devkit';
+import { Tree } from '@nx/devkit';
 import {
   determineProjectNameAndRootOptions,
   ensureRootProjectName,

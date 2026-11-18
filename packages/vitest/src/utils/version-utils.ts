@@ -1,8 +1,6 @@
 import { getDependencyVersionFromPackageJson, type Tree } from '@nx/devkit';
 import { clean, coerce, major } from 'semver';
-import { vitestVersion } from './versions';
-
-export function getInstalledViteVersion(tree: Tree): string {
+export function getInstalledViteVersion(tree: Tree): string | undefined {
   const installedViteVersion = getDependencyVersionFromPackageJson(
     tree,
     'vite'
@@ -13,10 +11,10 @@ export function getInstalledViteVersion(tree: Tree): string {
     installedViteVersion === 'latest' ||
     installedViteVersion === 'beta'
   ) {
-    return clean(vitestVersion) ?? coerce(vitestVersion).version;
+    return undefined;
   }
 
-  return clean(installedViteVersion) ?? coerce(installedViteVersion).version;
+  return clean(installedViteVersion) ?? coerce(installedViteVersion)?.version;
 }
 
 export function getInstalledViteMajorVersion(

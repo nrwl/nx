@@ -43,6 +43,12 @@ export function parseJson<T extends object = any>(
   input: string,
   options?: JsonParseOptions
 ): T {
+  // npm and Node's require() strip a UTF-8 BOM from JSON files; JSON.parse and
+  // jsonc-parser both reject it.
+  if (typeof input === 'string' && input.charCodeAt(0) === 0xfeff) {
+    input = input.slice(1);
+  }
+
   try {
     if (options?.expectComments !== true) {
       return JSON.parse(input);
@@ -97,4 +103,41 @@ export function serializeJson<T extends object = object>(
   options?: JsonSerializeOptions
 ): string {
   return JSON.stringify(input, null, options?.spaces ?? 2);
+}
+
+/**
+ * Returns the 1-based lines spanned by `characterCount` characters starting at `startOffset`.
+ */
+export function computeJsonLineNumbers(
+  inputText: string,
+  startOffset: number,
+  characterCount: number
+) {
+  const lines = inputText.split('\n');
+  let totalChars = 0;
+  let startLine = 0;
+  let endLine = 0;
+
+  for (let i = 0; i < lines.length; i++) {
+    totalChars += lines[i].length + 1; // +1 for '\n' character
+
+    if (!startLine && totalChars >= startOffset) {
+      startLine = i + 1; // +1 because arrays are 0-based
+    }
+    if (totalChars >= startOffset + characterCount) {
+      endLine = i + 1; // +1 because arrays are 0-based
+      break;
+    }
+  }
+
+  if (!startLine) {
+    throw new Error('Start offset exceeds the text length');
+  }
+  if (!endLine) {
+    throw new Error(
+      'Character count exceeds the text length after start offset'
+    );
+  }
+
+  return { startLine, endLine };
 }

@@ -7,7 +7,6 @@ import {
   joinPathFragments,
   logger,
   normalizePath,
-  readNxJson,
   Tree,
 } from '@nx/devkit';
 import { assertValidStyle } from '../../../utils/assertion';
@@ -37,12 +36,6 @@ export async function normalizeOptions(
     directory: options.directory,
     importPath: options.importPath,
   });
-  const nxJson = readNxJson(host);
-  const addPlugin =
-    process.env.NX_ADD_PLUGINS !== 'false' &&
-    nxJson.useInferencePlugins !== false;
-
-  options.addPlugin ??= addPlugin;
 
   const fileName = projectNames.projectFileName;
 

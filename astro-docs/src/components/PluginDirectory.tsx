@@ -163,13 +163,13 @@ function NxIcon({ className }: { className?: string }) {
   return (
     <svg
       role="img"
-      viewBox="0 0 24 24"
+      viewBox="0 0 383 314"
       xmlns="http://www.w3.org/2000/svg"
       className={className}
       fill="currentColor"
     >
       <title>Nx</title>
-      <path d="M11.987 14.138l-3.132 4.923-5.193-8.427-.012 8.822H0V4.544h3.691l5.247 8.833.005-3.998 3.044 4.759zm.601-5.761c.024-.048 0-3.784.008-3.833h-3.65c.002.059-.005 3.776-.003 3.833h3.645zm5.634 4.134a2.061 2.061 0 0 0-1.969 1.336 1.963 1.963 0 0 1 2.343-.739c.396.161.917.422 1.33.283a2.1 2.1 0 0 0-1.704-.88zm3.39 1.061c-.375-.13-.8-.277-1.109-.681-.06-.08-.116-.17-.176-.265a2.143 2.143 0 0 0-.533-.642c-.294-.216-.68-.322-1.18-.322a2.482 2.482 0 0 0-2.294 1.536 2.325 2.325 0 0 1 4.002.388.75.75 0 0 0 .836.334c.493-.105.46.36 1.203.518v-.133c-.003-.446-.246-.55-.75-.733zm2.024 1.266a.723.723 0 0 0 .347-.638c-.01-2.957-2.41-5.487-5.37-5.487a5.364 5.364 0 0 0-4.487 2.418c-.01-.026-1.522-2.39-1.538-2.418H8.943l3.463 5.423-3.379 5.32h3.54l1.54-2.366 1.568 2.366h3.541l-3.21-5.052a.7.7 0 0 1-.084-.32 2.69 2.69 0 0 1 2.69-2.691h.001c1.488 0 1.736.89 2.057 1.308.634.826 1.9.464 1.9 1.541a.707.707 0 0 0 1.066.596zm.35.133c-.173.372-.56.338-.755.639-.176.271.114.412.114.412s.337.156.538-.311c.104-.231.14-.488.103-.74z" />
+      <path d="M303.126 6.95607e-06L372.135 9.23063e-07C377.59 4.46199e-07 381.674 5.00092 380.585 10.3457L330.576 255.651C323.679 289.482 293.924 313.783 259.398 313.783C230.675 313.783 204.65 296.859 193 270.605L139.152 149.26C135.78 141.661 124.666 142.764 122.854 150.878L87.9797 307.039C87.0995 310.98 83.6021 313.783 79.5638 313.783L10.5525 313.783C5.09982 313.783 1.01599 308.785 2.10217 303.442L51.9406 58.2619C58.8319 24.3605 88.6424 -6.58459e-05 123.237 -6.88703e-05C151.999 -7.13847e-05 178.061 16.9437 189.732 43.2305L243.695 164.766C247.071 172.369 258.192 171.256 259.994 163.136L294.707 6.75452C295.583 2.80814 299.083 7.30947e-06 303.126 6.95607e-06Z" />
     </svg>
   );
 }
@@ -202,7 +202,7 @@ function PluginCard({ plugin }: { plugin: Plugin }) {
       <div className="flex h-full flex-col">
         <div className="mb-3 flex items-center gap-3">
           <GitHubIcon className="h-6 w-6 flex-shrink-0 text-gray-600 dark:text-slate-400" />
-          <h3 className="text-base font-medium leading-tight text-gray-900 dark:text-slate-100">
+          <h3 className="text-base leading-tight font-medium text-gray-900 dark:text-slate-100">
             {plugin.name}
           </h3>
         </div>
@@ -228,15 +228,15 @@ function PluginCard({ plugin }: { plugin: Plugin }) {
           </div>
           <div className="my-1 ml-1 flex flex-1 justify-end text-nowrap">
             {plugin.pluginType === 'official' ? (
-              <span className="inline-flex items-center rounded-full bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20 dark:bg-green-500/10 dark:text-green-400 dark:ring-green-500/20">
+              <span className="inline-flex items-center rounded-full bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-green-600/20 ring-inset dark:bg-green-500/10 dark:text-green-400 dark:ring-green-500/20">
                 Nx Open Source
               </span>
             ) : plugin.nxVersion ? (
-              <span className="inline-flex items-center rounded-full bg-amber-50 px-2 py-1 text-xs font-medium text-amber-700 ring-1 ring-inset ring-amber-600/20 dark:bg-amber-500/10 dark:text-amber-400 dark:ring-amber-500/20">
+              <span className="inline-flex items-center rounded-full bg-amber-50 px-2 py-1 text-xs font-medium text-amber-700 ring-1 ring-amber-600/20 ring-inset dark:bg-amber-500/10 dark:text-amber-400 dark:ring-amber-500/20">
                 Nx {plugin.nxVersion}
               </span>
             ) : (
-              <span className="inline-flex items-center rounded-full bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-600/20 dark:bg-blue-500/10 dark:text-blue-400 dark:ring-blue-500/20">
+              <span className="inline-flex items-center rounded-full bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-blue-600/20 ring-inset dark:bg-blue-500/10 dark:text-blue-400 dark:ring-blue-500/20">
                 Community
               </span>
             )}
@@ -404,7 +404,7 @@ export function PluginDirectory({
           <input
             id="plugin-search"
             name="search"
-            className="block w-full rounded-md border border-slate-300 bg-white py-1.5 pl-8 pr-3 text-sm placeholder-slate-500 transition focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:placeholder-slate-400 dark:focus:border-blue-400 dark:focus:ring-blue-400"
+            className="block w-full rounded-md border border-slate-300 bg-white py-1.5 pr-3 pl-8 text-sm placeholder-slate-500 transition focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:placeholder-slate-400 dark:focus:border-blue-400 dark:focus:ring-blue-400"
             placeholder="Search..."
             value={modifiers.term}
             onChange={(event) =>

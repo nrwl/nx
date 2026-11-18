@@ -17,7 +17,9 @@ import {
   findProjectForPath,
   normalizeProjectRoot,
 } from '../utils/find-project-for-path';
+import { getInstalledPackageVersionFromRoot } from '../utils/misc-helpers';
 import { retrieveOrCreateProjectGraph } from '../utils/graph';
+import { isServeMode } from '../utils/rspack-serve-env';
 import type {
   AngularRspackPluginOptions,
   AssetElement,
@@ -55,15 +57,32 @@ export function resolveFileReplacements(
 export function getHasServer(
   root: string,
   server: string | undefined,
-  ssr: AngularRspackPluginOptions['ssr']
+  ssr: AngularRspackPluginOptions['ssr'],
+  outputMode?: 'server' | undefined,
+  projectGraphCreation = false
 ): boolean {
-  return !!(
-    server &&
-    ssr &&
-    (ssr as { entry: string }).entry &&
-    existsSync(join(root, server)) &&
-    existsSync(join(root, (ssr as { entry: string }).entry))
-  );
+  if (!server || !ssr || !(ssr as { entry: string }).entry) {
+    return false;
+  }
+
+  for (const file of [server, (ssr as { entry: string }).entry]) {
+    if (!existsSync(join(root, file))) {
+      // A missing file downgrades to a browser-only build; outputMode is an
+      // explicit request for a server build, so fail instead. The project
+      // graph infers the requested server build.
+      if (outputMode) {
+        if (projectGraphCreation) {
+          return true;
+        }
+        throw new Error(
+          `The "outputMode" option is set to "${outputMode}", but "${file}" does not exist.`
+        );
+      }
+      return false;
+    }
+  }
+
+  return true;
 }
 
 export function validateSsr(ssr: AngularRspackPluginOptions['ssr']) {
@@ -87,12 +106,56 @@ export function validateSsr(ssr: AngularRspackPluginOptions['ssr']) {
     }
 }
 
-export async function normalizeOptions(
-  options: AngularRspackPluginOptions
-): Promise<NormalizedAngularRspackPluginOptions> {
-  const { fileReplacements = [], server, ssr, optimization } = options;
+export function validateOutputMode(
+  outputMode: AngularRspackPluginOptions['outputMode'],
+  server: string | undefined,
+  ssr: AngularRspackPluginOptions['ssr']
+): asserts outputMode is 'server' | undefined {
+  if (outputMode === undefined) {
+    return;
+  }
+  if (outputMode !== 'server') {
+    throw new Error(
+      `The "${outputMode}" value for the "outputMode" option is not supported. Only "server" is currently supported.`
+    );
+  }
+  if (!server) {
+    throw new Error(
+      'The "server" option is required when "outputMode" is set to "server".'
+    );
+  }
+  if (typeof ssr !== 'object' || !ssr.entry) {
+    throw new Error(
+      'The "ssr.entry" option is required when "outputMode" is set to "server".'
+    );
+  }
+}
 
-  validateSsr(ssr);
+export async function normalizeOptions(
+  options: AngularRspackPluginOptions,
+  projectGraphCreation = false
+): Promise<NormalizedAngularRspackPluginOptions> {
+  const {
+    fileReplacements = [],
+    server,
+    ssr,
+    optimization,
+    outputMode: rawOutputMode,
+  } = options;
+
+  const warn = (message: string) => {
+    if (!projectGraphCreation) {
+      console.warn(message);
+    }
+  };
+
+  if (!projectGraphCreation) {
+    validateSsr(ssr);
+    validateOutputMode(rawOutputMode, server, ssr);
+  }
+  // The project graph skips validation and infers an unsupported value as a
+  // server build.
+  const outputMode = rawOutputMode === undefined ? undefined : 'server';
 
   const normalizedSsr = !ssr
     ? false
@@ -103,12 +166,74 @@ export async function normalizeOptions(
         }
       : ssr;
 
+  if (!projectGraphCreation && options.security?.autoCsp) {
+    throw new Error(
+      'The "security.autoCsp" option is not supported by @nx/angular-rspack yet.'
+    );
+  }
+
+  let prerender = options.prerender ?? false;
+  let appShell = options.appShell ?? false;
+  if (outputMode) {
+    if (options.prerender !== undefined) {
+      warn(
+        'The "prerender" option is not considered when "outputMode" is specified.'
+      );
+    }
+    if (options.appShell !== undefined) {
+      warn(
+        'The "appShell" option is not considered when "outputMode" is specified.'
+      );
+    }
+    // The dev server renders every route at request time anyway.
+    if (!isServeMode()) {
+      warn(
+        'Build-time prerendering of server routes is not supported by @nx/angular-rspack yet. Routes marked for prerendering are rendered at request time.'
+      );
+    }
+    prerender = false;
+    appShell = false;
+  }
+
   const normalizedOptimization = normalizeOptimization(optimization);
 
   const root = options.root ?? process.cwd();
   const tsConfig = options.tsConfig
     ? resolve(root, options.tsConfig)
     : join(root, 'tsconfig.app.json');
+
+  const hasServer = getHasServer(
+    root,
+    server,
+    normalizedSsr,
+    outputMode,
+    projectGraphCreation
+  );
+
+  if (
+    !projectGraphCreation &&
+    hasServer &&
+    options.security?.allowedHosts?.length
+  ) {
+    // The engine only reads the manifest's allowedHosts from @angular/ssr
+    // 21.2 (backported to 20.3.17 and 21.1.5); on older versions the option
+    // would be silently ignored.
+    const ssrVersion = getInstalledPackageVersionFromRoot(root, '@angular/ssr');
+    if (ssrVersion) {
+      const [major, minor, patch] = ssrVersion
+        .split('.')
+        .map((part) => parseInt(part, 10));
+      const isSupported =
+        major >= 22 ||
+        (major === 21 && (minor >= 2 || (minor === 1 && patch >= 5))) ||
+        (major === 20 && (minor > 3 || (minor === 3 && patch >= 17)));
+      if (!isSupported) {
+        throw new Error(
+          `The "security.allowedHosts" option requires "@angular/ssr" version 21.2.0 or greater, 21.1.5 or greater within 21.1, or 20.3.17 or greater within 20.3. You are currently using version ${ssrVersion}.`
+        );
+      }
+    }
+  }
 
   const aot = options.aot ?? true;
   const advancedOptimizations = aot && normalizedOptimization.scripts;
@@ -125,11 +250,19 @@ export async function normalizeOptions(
         )
       : [];
 
-  const globalStyles = normalizeGlobalEntries(options.styles, 'styles');
-  const globalScripts = normalizeGlobalEntries(options.scripts, 'scripts');
+  const globalStyles = normalizeGlobalEntries(
+    options.styles,
+    'styles',
+    projectGraphCreation
+  );
+  const globalScripts = normalizeGlobalEntries(
+    options.scripts,
+    'scripts',
+    projectGraphCreation
+  );
 
   if (options.index === false) {
-    console.warn(
+    warn(
       'Disabling the "index" option is not yet supported. Defaulting to "src/index.html".'
     );
     options.index = join(root, 'src/index.html');
@@ -144,10 +277,10 @@ export async function normalizeOptions(
     indexOutput = options.index;
   } else {
     if (options.index.preloadInitial) {
-      console.warn(`The "index.preloadInitial" option is not yet supported.`);
+      warn(`The "index.preloadInitial" option is not yet supported.`);
     }
     if (options.index.output) {
-      console.warn(`The "index.output" option is not yet supported.`);
+      warn(`The "index.output" option is not yet supported.`);
     }
 
     indexOutput = options.index.output || 'index.html';
@@ -189,7 +322,7 @@ export async function normalizeOptions(
       entryPoints[0].indexOf(name) !== entryPoints[0].lastIndexOf(name)
   );
 
-  if (duplicates.length > 0) {
+  if (!projectGraphCreation && duplicates.length > 0) {
     throw new Error(
       `Multiple bundles have been named the same: '${duplicates.join(`', '`)}'.`
     );
@@ -230,7 +363,7 @@ export async function normalizeOptions(
 
   return {
     advancedOptimizations,
-    appShell: options.appShell ?? false,
+    appShell,
     assets,
     aot,
     baseHref: options.baseHref,
@@ -247,21 +380,24 @@ export async function normalizeOptions(
     fileReplacements: resolveFileReplacements(fileReplacements, root),
     globalStyles,
     globalScripts,
-    hasServer: getHasServer(root, server, normalizedSsr),
+    hasServer,
     index,
     inlineStyleLanguage: options.inlineStyleLanguage ?? 'css',
     namedChunks: options.namedChunks ?? false,
     ngswConfigPath: options.ngswConfigPath,
     optimization: normalizedOptimization,
     outputHashing: options.outputHashing ?? 'none',
+    outputMode,
     outputPath: normalizeOutputPath(root, options.outputPath),
     poll: options.poll ?? undefined,
     polyfills: options.polyfills ?? [],
-    prerender: options.prerender ?? false,
+    prerender,
     projectName: project?.name ?? undefined,
     progress: options.progress ?? true,
+    projectGraphCreation,
     root,
     scripts: options.scripts ?? [],
+    security: options.security,
     serviceWorker: options.serviceWorker,
     server,
     skipTypeChecking: options.skipTypeChecking ?? false,
@@ -271,7 +407,7 @@ export async function normalizeOptions(
     styles: options.styles ?? [],
     stylePreprocessorOptions,
     subresourceIntegrity: options.subresourceIntegrity ?? false,
-    supportedBrowsers: getSupportedBrowsers(root, { warn: console.warn }),
+    supportedBrowsers: getSupportedBrowsers(root, { warn }),
     tsConfig,
     useTsProjectReferences: options.useTsProjectReferences ?? false,
     vendorChunk: options.vendorChunk ?? false,
@@ -490,7 +626,8 @@ function normalizeAssetPatterns(
 
 function normalizeGlobalEntries(
   rawEntries: ScriptOrStyleEntry[] | undefined,
-  defaultName: string
+  defaultName: string,
+  projectGraphCreation: boolean
 ): GlobalEntry[] {
   if (!rawEntries?.length) {
     return [];
@@ -519,7 +656,7 @@ function normalizeGlobalEntries(
       continue;
     }
 
-    if (existing.initial !== inject) {
+    if (!projectGraphCreation && existing.initial !== inject) {
       throw new Error(
         `The "${name}" bundle is mixing injected and non-injected entries. ` +
           'Verify that the project options are correct.'

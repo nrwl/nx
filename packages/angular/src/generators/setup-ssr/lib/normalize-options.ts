@@ -47,6 +47,7 @@ export async function normalizeOptions(
     hydration: options.hydration ?? true,
     isUsingApplicationBuilder,
     isUsingWebpackBuilder,
+    isRspack: options.isRspack ?? false,
     buildTargetExecutor,
     buildTargetTsConfigPath:
       targets.build.options?.tsConfig ??

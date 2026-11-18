@@ -30,6 +30,9 @@ export function getEntryPoints(
     const project = context.projectGraph?.nodes[projectName];
     if (!project) return;
 
+    // Anchor to the workspace root so results do not depend on the invoking cwd.
+    const absProjectRoot = path.join(context.root, project.data.root);
+
     // Known files we generate from our generators. Only one of these should be used to build the project.
     const tsconfigCandidates = [
       'tsconfig.app.json',
@@ -39,7 +42,7 @@ export function getEntryPoints(
     if (tsConfigFileName) tsconfigCandidates.unshift(tsConfigFileName);
     const foundTsConfig = tsconfigCandidates.find((f) => {
       try {
-        return fs.statSync(path.join(project.data.root, f)).isFile();
+        return fs.statSync(path.join(absProjectRoot, f)).isFile();
       } catch {
         return false;
       }
@@ -47,11 +50,9 @@ export function getEntryPoints(
 
     // Workspace projects may not be a TS project, so skip reading source files if tsconfig is not found.
     if (foundTsConfig) {
-      const tsconfig = readJsonFile(
-        path.join(project.data.root, foundTsConfig)
-      );
+      const tsconfig = readJsonFile(path.join(absProjectRoot, foundTsConfig));
       const projectFiles = globSync(tsconfig.include ?? [], {
-        cwd: project.data.root,
+        cwd: absProjectRoot,
         ignore: tsconfig.exclude ?? [],
         expandDirectories: false,
       }).map((f) => path.join(project.data.root, f));

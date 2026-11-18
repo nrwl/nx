@@ -6,7 +6,7 @@ export default defineConfig(() => ({
   root: import.meta.dirname,
   cacheDir: '../../../node_modules/.vite/examples/react/basic',
   server: {
-    port: 4200,
+    port: 4301,
     host: 'localhost',
   },
   preview: {

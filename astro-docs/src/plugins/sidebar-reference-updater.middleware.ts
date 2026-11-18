@@ -75,7 +75,7 @@ async function getDevKitSection({ entry }: StarlightRouteData) {
     label: 'Overview',
     href: '/docs/reference/devkit',
     badge: undefined,
-    isCurrent: entry.slug === 'reference/devkit',
+    isCurrent: entry.id === 'reference/devkit',
     attrs: {},
   };
 
@@ -91,44 +91,38 @@ async function getDevKitSection({ entry }: StarlightRouteData) {
       item.params.slug !== 'ngcli_adapter'
   );
 
-  const devkitRoutes = devkitOnlyItems.map(
-    (record): SidebarLink => ({
-      type: 'link',
-      label: record.props.doc.data.title,
-      href: `/docs/reference/devkit/${record.props.doc.data.slug}`,
-      badge: undefined,
-      isCurrent:
-        entry.slug === `reference/devkit/${record.props.doc.data.slug}`,
-      attrs: {},
-    })
-  );
+  const devkitRoutes = devkitOnlyItems.map((record): SidebarLink => ({
+    type: 'link',
+    label: record.props.doc.data.title,
+    href: `/docs/reference/devkit/${record.props.doc.data.slug}`,
+    badge: undefined,
+    isCurrent: entry.id === `reference/devkit/${record.props.doc.data.slug}`,
+    attrs: {},
+  }));
 
   const ngcliOverview: SidebarLink = {
     type: 'link',
     label: 'Overview',
     href: '/docs/reference/devkit/ngcli_adapter',
     badge: undefined,
-    isCurrent: entry.slug === 'reference/devkit/ngcli_adapter',
+    isCurrent: entry.id === 'reference/devkit/ngcli_adapter',
     attrs: {},
   };
 
-  const ngcliRoutes = ngcliItems.map(
-    (record): SidebarLink => ({
-      type: 'link',
-      label: record.props.doc.data.title,
-      href: `/docs/reference/devkit/${record.props.doc.data.slug}`,
-      badge: undefined,
-      isCurrent:
-        entry.slug === `reference/devkit/${record.props.doc.data.slug}`,
-      attrs: {},
-    })
-  );
+  const ngcliRoutes = ngcliItems.map((record): SidebarLink => ({
+    type: 'link',
+    label: record.props.doc.data.title,
+    href: `/docs/reference/devkit/${record.props.doc.data.slug}`,
+    badge: undefined,
+    isCurrent: entry.id === `reference/devkit/${record.props.doc.data.slug}`,
+    attrs: {},
+  }));
 
   const ngcliSection: SidebarGroup = {
     type: 'group',
     label: 'ngcli_adapter',
     entries: [ngcliOverview, ...ngcliRoutes],
-    collapsed: !entry.slug.startsWith('reference/devkit/ngcli_adapter'),
+    collapsed: !entry.id.startsWith('reference/devkit/ngcli_adapter'),
     badge: undefined,
   };
 
@@ -136,7 +130,7 @@ async function getDevKitSection({ entry }: StarlightRouteData) {
     type: 'group',
     label: 'Devkit',
     entries: [devkitOverview, ngcliSection, ...devkitRoutes],
-    collapsed: !entry.slug.startsWith('reference/devkit'),
+    collapsed: !entry.id.startsWith('reference/devkit'),
     badge: undefined,
   };
 
@@ -174,7 +168,7 @@ async function getNxPackageSection(
     label: 'Overview',
     href: `/docs/reference/${packageName}`,
     badge: undefined,
-    isCurrent: entry.slug === `reference/${packageName}`,
+    isCurrent: entry.id === `reference/${packageName}`,
     attrs: {},
   };
 
@@ -188,16 +182,14 @@ async function getNxPackageSection(
       if (typeof d.data.slug !== 'string') return false;
       return true;
     })
-    .map(
-      (record): SidebarLink => ({
-        type: 'link',
-        label: record.data.title || 'Untitled',
-        href: `/docs/${record.data.slug}`,
-        badge: undefined,
-        isCurrent: entry.slug === record.data.slug,
-        attrs: {},
-      })
-    );
+    .map((record): SidebarLink => ({
+      type: 'link',
+      label: record.data.title || 'Untitled',
+      href: `/docs/${record.data.slug}`,
+      badge: undefined,
+      isCurrent: entry.id === record.data.slug,
+      attrs: {},
+    }));
 
   const label =
     packageName === 'nx'
@@ -207,7 +199,7 @@ async function getNxPackageSection(
     type: 'group',
     label,
     entries: [packageOverview, ...packageRoutes],
-    collapsed: !entry.slug.startsWith(`reference/${packageName}`),
+    collapsed: !entry.id.startsWith(`reference/${packageName}`),
     badge: undefined,
   };
 
@@ -228,7 +220,7 @@ async function getCommandsSection({ entry }: StarlightRouteData) {
       label: d.data.title,
       href: `/docs/${slug}`,
       badge: undefined,
-      isCurrent: entry.slug === slug,
+      isCurrent: entry.id === slug,
     };
   });
 }

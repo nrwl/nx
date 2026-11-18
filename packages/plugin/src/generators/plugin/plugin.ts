@@ -1,5 +1,6 @@
 import {
   addDependenciesToPackageJson,
+  detectPackageManager,
   formatFiles,
   generateFiles,
   GeneratorCallback,
@@ -11,6 +12,8 @@ import {
   updateJson,
   updateProjectConfiguration,
 } from '@nx/devkit';
+import { acknowledgeBuildScripts } from '@nx/devkit/internal';
+import { addPropertyToJestConfig, findJestConfig } from '@nx/jest';
 import {
   libraryGenerator as jsLibraryGenerator,
   addTsLibDependencies,
@@ -81,7 +84,6 @@ function updatePluginConfig(host: Tree, options: NormalizedSchema) {
 export async function pluginGenerator(tree: Tree, schema: Schema) {
   return await pluginGeneratorInternal(tree, {
     useProjectJson: true,
-    addPlugin: false,
     ...schema,
   });
 }
@@ -102,7 +104,6 @@ export async function pluginGeneratorInternal(host: Tree, schema: Schema) {
       linter: options.linter,
       unitTestRunner: options.unitTestRunner,
       useProjectJson: options.useProjectJson,
-      addPlugin: options.addPlugin,
       skipFormat: true,
       useTscExecutor: true,
     })
@@ -130,6 +131,14 @@ export async function pluginGeneratorInternal(host: Tree, schema: Schema) {
     tasks.push(addTsLibDependencies(host));
   }
 
+  // @nx/plugin depends on @nx/jest, so jest-resolve is installed even without a
+  // jest setup. It depends on unrs-resolver and, from jest 30.5.0, on a
+  // jest-haste-map that depends on @parcel/watcher. Neither build is needed:
+  // the binding has a fallback and the watcher ships prebuilt.
+  acknowledgeBuildScripts(host, detectPackageManager(host.root), {
+    '@parcel/watcher': false,
+    'unrs-resolver': false,
+  });
   tasks.push(
     addDependenciesToPackageJson(
       host,
@@ -158,6 +167,14 @@ export async function pluginGeneratorInternal(host: Tree, schema: Schema) {
   await addFiles(host, options);
   updatePluginConfig(host, options);
 
+  if (options.unitTestRunner === 'jest') {
+    // addFiles removes src/lib and its spec, so a fresh plugin has no tests yet.
+    const jestConfig = findJestConfig(host, options.projectRoot);
+    if (jestConfig) {
+      addPropertyToJestConfig(host, jestConfig, 'passWithNoTests', true);
+    }
+  }
+
   if (options.e2eTestRunner !== 'none') {
     tasks.push(
       await e2eProjectGenerator(host, {
@@ -172,7 +189,6 @@ export async function pluginGeneratorInternal(host: Tree, schema: Schema) {
         rootProject: options.rootProject,
         linter: options.linter,
         useProjectJson: options.useProjectJson,
-        addPlugin: options.addPlugin,
         testRunner: options.e2eTestRunner as 'jest' | 'vitest',
       })
     );

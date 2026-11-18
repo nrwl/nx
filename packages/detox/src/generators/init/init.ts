@@ -5,7 +5,6 @@ import {
   detectPackageManager,
   formatFiles,
   GeneratorCallback,
-  readNxJson,
   removeDependenciesFromPackageJson,
   runTasksInSerial,
   Tree,
@@ -19,7 +18,7 @@ import {
 import { Schema } from './schema';
 
 export function detoxInitGenerator(host: Tree, schema: Schema) {
-  return detoxInitGeneratorInternal(host, { addPlugin: false, ...schema });
+  return detoxInitGeneratorInternal(host, schema);
 }
 
 export async function detoxInitGeneratorInternal(host: Tree, schema: Schema) {
@@ -27,42 +26,33 @@ export async function detoxInitGeneratorInternal(host: Tree, schema: Schema) {
 
   const tasks: GeneratorCallback[] = [];
 
-  const nxJson = readNxJson(host);
-  const addPluginDefault =
-    process.env.NX_ADD_PLUGINS !== 'false' &&
-    nxJson.useInferencePlugins !== false;
-
-  schema.addPlugin ??= addPluginDefault;
-
   if (!schema.skipPackageJson) {
     tasks.push(moveDependency(host));
     tasks.push(updateDependencies(host, schema));
   }
 
-  if (schema.addPlugin) {
-    await addPlugin(
-      host,
-      await createProjectGraphAsync(),
-      '@nx/detox/plugin',
-      createNodesV2,
-      {
-        buildTargetName: ['build', 'detox:build', 'detox-build'],
-        startTargetName: ['start', 'detox:start', 'detox-start'],
-        testTargetName: ['test', 'detox:test', 'detox-test'],
-        buildDepsTargetName: [
-          'build-deps',
-          'detox:build-deps',
-          'detox-build-deps',
-        ],
-        watchDepsTargetName: [
-          'watch-deps',
-          'detox:watch-deps',
-          'detox-watch-deps',
-        ],
-      },
-      schema.updatePackageScripts
-    );
-  }
+  await addPlugin(
+    host,
+    await createProjectGraphAsync(),
+    '@nx/detox/plugin',
+    createNodesV2,
+    {
+      buildTargetName: ['build', 'detox:build', 'detox-build'],
+      startTargetName: ['start', 'detox:start', 'detox-start'],
+      testTargetName: ['test', 'detox:test', 'detox-test'],
+      buildDepsTargetName: [
+        'build-deps',
+        'detox:build-deps',
+        'detox-build-deps',
+      ],
+      watchDepsTargetName: [
+        'watch-deps',
+        'detox:watch-deps',
+        'detox-watch-deps',
+      ],
+    },
+    schema.updatePackageScripts
+  );
 
   if (!schema.skipFormat) {
     await formatFiles(host);
@@ -73,10 +63,16 @@ export async function detoxInitGeneratorInternal(host: Tree, schema: Schema) {
 
 export function updateDependencies(host: Tree, schema: Schema) {
   // The user explicitly asked for detox, and its postinstall builds the
-  // framework cache it needs to run at all, so enable it — npm and yarn run
-  // it unconditionally. Transitive deps stay denied.
+  // framework cache it needs to run at all, so enable it. npm and yarn run it
+  // unconditionally. Transitive deps stay denied: dtrace-provider (via
+  // bunyan) falls back to a no-op when its build fails, and jest-resolve (via
+  // @nx/detox's @nx/jest dependency) brings unrs-resolver and, from jest
+  // 30.5.0, a jest-haste-map that depends on @parcel/watcher.
   acknowledgeBuildScripts(host, detectPackageManager(host.root), {
     detox: true,
+    'dtrace-provider': false,
+    '@parcel/watcher': false,
+    'unrs-resolver': false,
   });
   return addDependenciesToPackageJson(
     host,

@@ -101,8 +101,11 @@ describe('nx wrapper / .nx installation', () => {
       j.installation.plugins['@nx/workspace'] = getPublishedVersion();
       return j;
     });
-    expect(() => runNxWrapper(`g npm-package ${uniq('pkg')}`)).not.toThrow();
-    expect(() => checkFilesExist());
+    const pkg = uniq('pkg');
+    expect(() => runNxWrapper(`g npm-package ${pkg}`)).not.toThrow();
+    expect(() =>
+      checkFilesExist(`${pkg}/package.json`, `${pkg}/index.js`)
+    ).not.toThrow();
   });
 
   it('should work with migrate', () => {

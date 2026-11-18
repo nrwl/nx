@@ -8,13 +8,14 @@ import {
   type Tree,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import * as ts from 'typescript';
 import { syncGenerator } from './typescript-sync';
 
 let projectGraph: ProjectGraph;
-jest.mock('@nx/devkit', () => ({
-  ...jest.requireActual('@nx/devkit'),
-  createProjectGraphAsync: jest.fn(() => Promise.resolve(projectGraph)),
-  formatFiles: jest.fn(() => Promise.resolve()),
+vi.mock('@nx/devkit', async () => ({
+  ...(await vi.importActual<any>('@nx/devkit')),
+  createProjectGraphAsync: vi.fn(() => Promise.resolve(projectGraph)),
+  formatFiles: vi.fn(() => Promise.resolve()),
 }));
 
 describe('syncGenerator()', () => {
@@ -262,6 +263,41 @@ describe('syncGenerator()', () => {
       `);
     });
 
+    it('should keep existing references to tsconfig files that are not project directories', async () => {
+      writeJson(tree, 'tsconfig.json', {
+        compilerOptions: {
+          composite: true,
+        },
+        // a missing reference to packages/b forces the references to be rewritten
+        references: [
+          { path: './packages/a' },
+          { path: './tsconfig.workspace.json' },
+        ],
+      });
+      writeJson(tree, 'tsconfig.workspace.json', {
+        compilerOptions: {
+          composite: true,
+        },
+      });
+
+      await syncGenerator(tree);
+
+      const rootTsconfig = readJson(tree, 'tsconfig.json');
+      expect(rootTsconfig.references).toMatchInlineSnapshot(`
+        [
+          {
+            "path": "./packages/a",
+          },
+          {
+            "path": "./tsconfig.workspace.json",
+          },
+          {
+            "path": "./packages/b",
+          },
+        ]
+      `);
+    });
+
     it('should leave comments outside of references untouched in the tsconfig.json when patching', async () => {
       tree.write(
         'tsconfig.json',
@@ -322,6 +358,19 @@ describe('syncGenerator()', () => {
         }
         "
       `);
+    });
+
+    it('should not list the source files of the referenced projects when checking composite', async () => {
+      const readDirectory = vi.spyOn(ts.sys, 'readDirectory');
+
+      await syncGenerator(tree);
+
+      expect(readJson(tree, 'tsconfig.json').references).toStrictEqual([
+        { path: './packages/a' },
+        { path: './packages/b' },
+      ]);
+      expect(readDirectory).not.toHaveBeenCalled();
+      readDirectory.mockRestore();
     });
 
     it('should detect and report duplicate references in root tsconfig.json', async () => {
@@ -480,6 +529,47 @@ describe('syncGenerator()', () => {
           },
         ]
       `);
+    });
+
+    it('should not prune existing external project references that are not dependencies but are ignored by .nxignore', async () => {
+      writeJson(tree, 'packages/b/tsconfig.json', {
+        compilerOptions: {
+          composite: true,
+        },
+        references: [{ path: '../../ignored/dir' }, { path: '../c' }],
+      });
+      tree.write('ignored/dir/tsconfig.json', '{}');
+      tree.write('.nxignore', 'ignored/dir');
+
+      await syncGenerator(tree);
+
+      expect(readJson(tree, 'packages/b/tsconfig.json').references).toEqual([
+        { path: '../a' },
+        { path: '../../ignored/dir' },
+      ]);
+    });
+
+    it('should read the ignore files once regardless of the number of references checked', async () => {
+      addProject('c', ['a']);
+      addProject('d', ['a']);
+      for (const name of ['b', 'c', 'd']) {
+        writeJson(tree, `packages/${name}/tsconfig.json`, {
+          compilerOptions: {
+            composite: true,
+          },
+          references: [{ path: '../x' }, { path: '../y' }, { path: '../z' }],
+        });
+      }
+      tree.write('.gitignore', 'node_modules');
+      tree.write('.nxignore', 'tmp');
+      const read = vi.spyOn(tree, 'read');
+
+      await syncGenerator(tree);
+
+      const readsOf = (file: string) =>
+        read.mock.calls.filter(([path]) => path === file);
+      expect(readsOf('.gitignore')).toHaveLength(1);
+      expect(readsOf('.nxignore')).toHaveLength(1);
     });
 
     it('should skip dependencies listed in `nx.sync.ignoredDependencies` and prune existing references for them', async () => {
@@ -704,6 +794,39 @@ describe('syncGenerator()', () => {
       `);
     });
 
+    it('should read `composite` through `extends` separately for each dependency tsconfig', async () => {
+      writeJson(tree, 'tsconfig.base.json', {
+        compilerOptions: { composite: true },
+      });
+      addProject(
+        'consumer',
+        ['inherits', 'overrides', 'inherits-after-override'],
+        ['tsconfig.lib.json']
+      );
+      addProject('inherits', [], ['tsconfig.lib.json']);
+      addProject('overrides', [], ['tsconfig.lib.json']);
+      addProject('inherits-after-override', [], ['tsconfig.lib.json']);
+      writeJson(tree, 'packages/inherits/tsconfig.lib.json', {
+        extends: '../../tsconfig.base.json',
+      });
+      writeJson(tree, 'packages/overrides/tsconfig.lib.json', {
+        extends: '../../tsconfig.base.json',
+        compilerOptions: { composite: false },
+      });
+      writeJson(tree, 'packages/inherits-after-override/tsconfig.lib.json', {
+        extends: '../../tsconfig.base.json',
+      });
+
+      await syncGenerator(tree);
+
+      expect(
+        readJson(tree, 'packages/consumer/tsconfig.lib.json').references
+      ).toStrictEqual([
+        { path: '../inherits-after-override/tsconfig.lib.json' },
+        { path: '../inherits/tsconfig.lib.json' },
+      ]);
+    });
+
     it('should not add a reference if dependent project is an implicit dependency', async () => {
       addProject('implicit-dep');
       addProjectWithImplicitDependencies('foo', ['implicit-dep']);
@@ -911,13 +1034,7 @@ describe('syncGenerator()', () => {
 
           expect(
             readJson(tree, `packages/b/${runtimeTsConfigFileName}`).references
-          ).toMatchInlineSnapshot(`
-                    [
-                      {
-                        "path": "../a/${runtimeTsConfigFileName}",
-                      },
-                    ]
-                `);
+          ).toEqual([{ path: `../a/${runtimeTsConfigFileName}` }]);
         }
       );
 
@@ -1101,61 +1218,35 @@ describe('syncGenerator()', () => {
           ).toBeUndefined();
           expect(
             readJson(tree, `packages/b/${runtimeTsConfigFileName}`).references
-          ).toMatchInlineSnapshot(`
-                      [
-                        {
-                          "path": "../a/${runtimeTsConfigFileName}",
-                        },
-                      ]
-                  `);
+          ).toEqual([{ path: `../a/${runtimeTsConfigFileName}` }]);
           expect(
             readJson(tree, 'packages/c/tsconfig.json').references
           ).toBeUndefined();
           expect(
             readJson(tree, `packages/c/${runtimeTsConfigFileName}`).references
-          ).toMatchInlineSnapshot(`
-                      [
-                        {
-                          "path": "../a/${runtimeTsConfigFileName}",
-                        },
-                        {
-                          "path": "../b/${runtimeTsConfigFileName}",
-                        },
-                      ]
-                  `);
+          ).toEqual([
+            { path: `../a/${runtimeTsConfigFileName}` },
+            { path: `../b/${runtimeTsConfigFileName}` },
+          ]);
           expect(
             readJson(tree, 'packages/d/tsconfig.json').references
           ).toBeUndefined();
           expect(
             readJson(tree, `packages/d/${runtimeTsConfigFileName}`).references
-          ).toMatchInlineSnapshot(`
-                      [
-                        {
-                          "path": "../a/${runtimeTsConfigFileName}",
-                        },
-                        {
-                          "path": "../b/${runtimeTsConfigFileName}",
-                        },
-                      ]
-                  `);
+          ).toEqual([
+            { path: `../a/${runtimeTsConfigFileName}` },
+            { path: `../b/${runtimeTsConfigFileName}` },
+          ]);
           expect(
             readJson(tree, 'packages/e/tsconfig.json').references
           ).toBeUndefined();
           expect(
             readJson(tree, `packages/e/${runtimeTsConfigFileName}`).references
-          ).toMatchInlineSnapshot(`
-                      [
-                        {
-                          "path": "../a/${runtimeTsConfigFileName}",
-                        },
-                        {
-                          "path": "../b/${runtimeTsConfigFileName}",
-                        },
-                        {
-                          "path": "../d/${runtimeTsConfigFileName}",
-                        },
-                      ]
-                  `);
+          ).toEqual([
+            { path: `../a/${runtimeTsConfigFileName}` },
+            { path: `../b/${runtimeTsConfigFileName}` },
+            { path: `../d/${runtimeTsConfigFileName}` },
+          ]);
           delete process.env.NX_ENABLE_TS_SYNC_TRANSITIVE_DEPENDENCIES;
         }
       );

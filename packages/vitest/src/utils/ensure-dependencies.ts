@@ -6,11 +6,10 @@ import {
   type GeneratorCallback,
   type Tree,
 } from '@nx/devkit';
+import { acknowledgeSwcBuildScripts } from '@nx/js/internal';
 import { coerce, major } from 'semver';
 import {
   ajvVersion,
-  analogVitestAngular,
-  analogVitestAngularV3,
   edgeRuntimeVmVersion,
   happyDomVersion,
   jsdomVersion,
@@ -20,7 +19,6 @@ import {
   vitePluginReactV4Version,
   vitePluginReactVersion,
 } from './versions';
-import { getAnalogMajorVersion } from './analog-version';
 
 export type EnsureDependenciesOptions = {
   uiFramework: 'angular' | 'react' | 'vue' | 'none';
@@ -51,17 +49,10 @@ export async function ensureDependencies(
     );
   }
 
-  if (schema.uiFramework === 'angular') {
-    const analogVersion =
-      getAnalogMajorVersion(tree) >= 3
-        ? analogVitestAngularV3
-        : analogVitestAngular;
-    devDependencies['@analogjs/vitest-angular'] = analogVersion;
-    devDependencies['@analogjs/vite-plugin-angular'] = analogVersion;
-  }
-
   if (schema.uiFramework === 'react') {
     if (schema.compiler === 'swc') {
+      // @vitejs/plugin-react-swc depends on @swc/core.
+      acknowledgeSwcBuildScripts(tree);
       devDependencies['@vitejs/plugin-react-swc'] = vitePluginReactSwcVersion;
     } else {
       // @vitejs/plugin-react v6 requires Vite 8+, use v4 for older versions.

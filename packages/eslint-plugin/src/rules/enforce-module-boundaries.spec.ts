@@ -5,7 +5,15 @@ import { DependencyType } from '@nx/devkit';
 import { TargetProjectLocator } from '@nx/js/internal';
 import * as parser from '@typescript-eslint/parser';
 import { TSESLint } from '@typescript-eslint/utils';
-import { vol } from 'memfs';
+import { createRequire } from 'node:module';
+import { fs as memfs, vol } from 'memfs';
+import { mockCjsModule } from '@nx/devkit/internal-testing-utils';
+
+// typescript is loaded with `require` and reads through the CJS `fs`; the
+// import graph has loaded it already, so evict it onto memfs.
+mockCjsModule(import.meta.url, 'fs', memfs);
+const cjsRequire = createRequire(import.meta.url);
+delete cjsRequire.cache[cjsRequire.resolve('typescript')];
 import { join } from 'node:path';
 import {
   FileDataDependency,
@@ -15,17 +23,17 @@ import enforceModuleBoundaries, {
   RULE_NAME as enforceModuleBoundariesRuleName,
 } from '../../src/rules/enforce-module-boundaries';
 
-jest.mock('@nx/devkit', () => ({
-  ...jest.requireActual<any>('@nx/devkit'),
+vi.mock('@nx/devkit', async () => ({
+  ...(await vi.importActual<any>('@nx/devkit')),
   workspaceRoot: '/root',
 }));
 
-jest.mock('nx/src/utils/workspace-root', () => ({
+vi.mock('nx/src/utils/workspace-root', () => ({
   workspaceRoot: '/root',
 }));
 
-jest.mock('nx/src/plugins/js/utils/resolve-relative-to-dir', () => ({
-  resolveRelativeToDir: jest.fn().mockImplementation((pathOrPackage) => {
+vi.mock('nx/src/plugins/js/utils/resolve-relative-to-dir', () => ({
+  resolveRelativeToDir: vi.fn().mockImplementation((pathOrPackage) => {
     return join(
       '/root',
       'node_modules',
@@ -662,6 +670,289 @@ describe('Enforce Module Boundaries (eslint)', () => {
       expect(failures.length).toEqual(2);
       expect(failures[0].message).toEqual(message);
       expect(failures[1].message).toEqual(message);
+    });
+
+    it('should error when importing a project that transitively depends on a banned external package', () => {
+      const failures = runRule(
+        {
+          depConstraints: [
+            { sourceTag: 'api', bannedExternalImports: ['npm-package'] },
+          ],
+          checkNestedExternalImports: true,
+        },
+        `${process.cwd()}/proj/libs/api/src/index.ts`,
+        `
+          import '@mycompany/impl';
+          import('@mycompany/impl');
+        `,
+        {
+          ...graph,
+          dependencies: {
+            ...graph.dependencies,
+            implName: [
+              {
+                source: 'implName',
+                target: 'npm:npm-package',
+                type: DependencyType.static,
+              },
+            ],
+          },
+        },
+        fileMap
+      );
+
+      const message =
+        'A project tagged with "api" is not allowed to import "@mycompany/impl". Nested import of "npm-package" found at implName';
+      expect(failures.length).toEqual(2);
+      expect(failures[0].message).toEqual(message);
+      expect(failures[1].message).toEqual(message);
+    });
+
+    it('should not error when importing a project whose transitive external dependencies are not banned', () => {
+      const failures = runRule(
+        {
+          depConstraints: [
+            { sourceTag: 'api', bannedExternalImports: ['npm-package'] },
+          ],
+          checkNestedExternalImports: true,
+        },
+        `${process.cwd()}/proj/libs/api/src/index.ts`,
+        `
+          import '@mycompany/impl';
+          import('@mycompany/impl');
+        `,
+        {
+          ...graph,
+          dependencies: {
+            ...graph.dependencies,
+            implName: [
+              {
+                source: 'implName',
+                target: 'npm:npm-awesome-package',
+                type: DependencyType.static,
+              },
+            ],
+          },
+        },
+        fileMap
+      );
+
+      expect(failures.length).toEqual(0);
+    });
+
+    describe.each([
+      {
+        name: 'a mixed banned and allowed constraint',
+        constraint: {
+          sourceTag: 'api',
+          bannedExternalImports: ['npm-package'],
+          allowedExternalImports: ['npm-package2'],
+        },
+      },
+      {
+        name: 'an allowed-only constraint',
+        constraint: {
+          sourceTag: 'api',
+          allowedExternalImports: ['npm-package2'],
+        },
+      },
+      {
+        name: 'an empty allowed constraint',
+        constraint: { sourceTag: 'api', allowedExternalImports: [] },
+      },
+    ])('nested external imports with $name', ({ constraint }) => {
+      it('should error when importing a project that transitively depends on an external package outside the allowed list', () => {
+        const failures = runRule(
+          { depConstraints: [constraint], checkNestedExternalImports: true },
+          `${process.cwd()}/proj/libs/api/src/index.ts`,
+          `
+              import '@mycompany/impl';
+              import('@mycompany/impl');
+            `,
+          {
+            ...graph,
+            dependencies: {
+              ...graph.dependencies,
+              implName: [
+                {
+                  source: 'implName',
+                  target: 'npm:npm-awesome-package',
+                  type: DependencyType.static,
+                },
+              ],
+            },
+          },
+          fileMap
+        );
+
+        const message =
+          'A project tagged with "api" is not allowed to import "@mycompany/impl". Nested import of "npm-awesome-package" found at implName';
+        expect(failures.length).toEqual(2);
+        expect(failures[0].message).toEqual(message);
+        expect(failures[1].message).toEqual(message);
+      });
+    });
+
+    it('should not error when importing a project whose transitive external dependencies are in the allowed list', () => {
+      const failures = runRule(
+        {
+          depConstraints: [
+            { sourceTag: 'api', allowedExternalImports: ['npm-awesome-*'] },
+          ],
+          checkNestedExternalImports: true,
+        },
+        `${process.cwd()}/proj/libs/api/src/index.ts`,
+        `
+          import '@mycompany/impl';
+          import('@mycompany/impl');
+        `,
+        {
+          ...graph,
+          dependencies: {
+            ...graph.dependencies,
+            implName: [
+              {
+                source: 'implName',
+                target: 'npm:npm-awesome-package',
+                type: DependencyType.static,
+              },
+            ],
+          },
+        },
+        fileMap
+      );
+
+      expect(failures.length).toEqual(0);
+    });
+
+    it('should report the project owning the nested import when the banned package is more than one hop away', () => {
+      const failures = runRule(
+        {
+          depConstraints: [
+            { sourceTag: 'api', bannedExternalImports: ['npm-package'] },
+          ],
+          checkNestedExternalImports: true,
+        },
+        `${process.cwd()}/proj/libs/api/src/index.ts`,
+        `
+          import '@mycompany/impl';
+        `,
+        {
+          ...graph,
+          dependencies: {
+            ...graph.dependencies,
+            implName: [
+              {
+                source: 'implName',
+                target: 'impl2Name',
+                type: DependencyType.static,
+              },
+            ],
+            impl2Name: [
+              {
+                source: 'impl2Name',
+                target: 'npm:npm-package',
+                type: DependencyType.static,
+              },
+            ],
+          },
+        },
+        fileMap
+      );
+
+      expect(failures.length).toEqual(1);
+      expect(failures[0].message).toEqual(
+        'A project tagged with "api" is not allowed to import "@mycompany/impl". Nested import of "npm-package" found at impl2Name'
+      );
+    });
+
+    it('should report a single violation when multiple dependency edges reach the same banned package', () => {
+      const failures = runRule(
+        {
+          depConstraints: [
+            { sourceTag: 'api', bannedExternalImports: ['npm-package'] },
+          ],
+          checkNestedExternalImports: true,
+        },
+        `${process.cwd()}/proj/libs/api/src/index.ts`,
+        `
+          import '@mycompany/impl';
+        `,
+        {
+          ...graph,
+          dependencies: {
+            ...graph.dependencies,
+            implName: [
+              {
+                source: 'implName',
+                target: 'npm:npm-package',
+                type: DependencyType.static,
+              },
+              {
+                source: 'implName',
+                target: 'npm:npm-package',
+                type: DependencyType.dynamic,
+              },
+            ],
+          },
+        },
+        fileMap
+      );
+
+      expect(failures.length).toEqual(1);
+      expect(failures[0].message).toEqual(
+        'A project tagged with "api" is not allowed to import "@mycompany/impl". Nested import of "npm-package" found at implName'
+      );
+    });
+
+    it('should report a single violation when multiple versions of the same banned package are reached', () => {
+      const failures = runRule(
+        {
+          depConstraints: [
+            { sourceTag: 'api', bannedExternalImports: ['npm-package'] },
+          ],
+          checkNestedExternalImports: true,
+        },
+        `${process.cwd()}/proj/libs/api/src/index.ts`,
+        `
+          import '@mycompany/impl';
+        `,
+        {
+          ...graph,
+          externalNodes: {
+            ...graph.externalNodes,
+            'npm:npm-package@2.0.0': {
+              name: 'npm:npm-package@2.0.0',
+              type: 'npm',
+              data: {
+                packageName: 'npm-package',
+                version: '2.0.0',
+              },
+            },
+          },
+          dependencies: {
+            ...graph.dependencies,
+            implName: [
+              {
+                source: 'implName',
+                target: 'npm:npm-package',
+                type: DependencyType.static,
+              },
+              {
+                source: 'implName',
+                target: 'npm:npm-package@2.0.0',
+                type: DependencyType.static,
+              },
+            ],
+          },
+        },
+        fileMap
+      );
+
+      expect(failures.length).toEqual(1);
+      expect(failures[0].message).toEqual(
+        'A project tagged with "api" is not allowed to import "@mycompany/impl". Nested import of "npm-package" found at implName'
+      );
     });
 
     it('should error when importing transitive npm packages', () => {
@@ -1744,6 +2035,207 @@ Violation detected in:
     expect(failures.length).toEqual(2);
     expect(failures[0].message).toEqual(message);
     expect(failures[1].message).toEqual(message);
+  });
+
+  describe('atomized e2e specs with "@nx-ignore-server-inputs"', () => {
+    const projectGraph: ProjectGraph = {
+      nodes: {
+        shopE2eName: {
+          name: 'shopE2eName',
+          type: 'e2e',
+          data: {
+            root: 'apps/shop-e2e',
+            tags: ['scope:e2e'],
+            implicitDependencies: [],
+            targets: {
+              'e2e-ci--src/checkout.spec.ts': {
+                metadata: {
+                  testFileDirectives: {
+                    file: 'apps/shop-e2e/src/checkout.spec.ts',
+                    'ignore-server-inputs': true,
+                  },
+                },
+              },
+              'test-ci--src/unit.spec.ts': {},
+            },
+          },
+        },
+        myappName: {
+          name: 'myappName',
+          type: 'app',
+          data: {
+            root: 'apps/myapp',
+            tags: [],
+            implicitDependencies: [],
+            targets: {},
+          },
+        },
+        otherName: {
+          name: 'otherName',
+          type: 'lib',
+          data: {
+            root: 'libs/other',
+            tags: [],
+            implicitDependencies: [],
+            targets: {},
+          },
+        },
+        implName: {
+          name: 'implName',
+          type: 'lib',
+          data: {
+            root: 'libs/impl',
+            tags: [],
+            implicitDependencies: [],
+            targets: {},
+          },
+        },
+        myappE2eName: {
+          name: 'myappE2eName',
+          type: 'e2e',
+          data: {
+            root: 'apps/myapp-e2e',
+            tags: [],
+            implicitDependencies: [],
+            targets: {},
+          },
+        },
+      },
+      externalNodes: {
+        'npm:npm-package': {
+          name: 'npm:npm-package',
+          type: 'npm',
+          data: { packageName: 'npm-package', version: '2.3.4' },
+        },
+      },
+      dependencies: {
+        shopE2eName: [
+          {
+            source: 'shopE2eName',
+            target: 'otherName',
+            type: DependencyType.dynamic,
+          },
+          {
+            source: 'shopE2eName',
+            target: 'otherName',
+            type: DependencyType.static,
+          },
+        ],
+      },
+    };
+    const fileMap: ProjectFileMap = {
+      shopE2eName: [
+        createFile('apps/shop-e2e/src/checkout.spec.ts', [
+          ['otherName', DependencyType.static],
+          ['otherName', DependencyType.dynamic],
+        ]),
+        createFile('apps/shop-e2e/src/support.ts', [
+          ['otherName', DependencyType.static],
+          ['otherName', DependencyType.dynamic],
+        ]),
+      ],
+      myappName: [createFile('apps/myapp/src/index.ts')],
+      otherName: [createFile('libs/other/src/index.ts')],
+      implName: [createFile('libs/impl/src/index.ts')],
+      myappE2eName: [createFile('apps/myapp-e2e/src/index.ts')],
+    };
+    const imports = `
+      import '../../myapp/src/index';
+      import '@mycompany/myapp';
+      import '@mycompany/other';
+      import '@mycompany/impl';
+      import '@mycompany/myapp-e2e';
+      import 'npm-package';
+    `;
+    const allChecks = [
+      'noRelativeOrAbsoluteImportsAcrossLibraries',
+      'noImportsOfApps',
+      'noImportsOfLazyLoadedLibraries',
+      'onlyTagsConstraintViolation',
+      'noImportsOfE2e',
+      'bannedExternalImportsViolation',
+    ];
+
+    it.each([
+      [
+        'skips the path, app, lazy-loaded and tag checks in a spec with the directive',
+        'src/checkout.spec.ts',
+        `// @nx-ignore-server-inputs\n${imports}`,
+        ['noImportsOfE2e', 'bannedExternalImportsViolation'],
+      ],
+      [
+        'checks a spec without the directive',
+        'src/checkout.spec.ts',
+        imports,
+        allChecks,
+      ],
+      [
+        'checks a spec with only "@nx-depends-on"',
+        'src/checkout.spec.ts',
+        `// @nx-depends-on: otherName\n${imports}`,
+        allChecks,
+      ],
+      [
+        'checks a spec whose directive has a value',
+        'src/checkout.spec.ts',
+        `// @nx-ignore-server-inputs: false\n${imports}`,
+        allChecks,
+      ],
+      [
+        'checks a spec whose split task does not apply the directive',
+        'src/unit.spec.ts',
+        `// @nx-ignore-server-inputs\n${imports}`,
+        allChecks,
+      ],
+      [
+        'checks a file with the directive that no atomized target runs',
+        'src/support.ts',
+        `// @nx-ignore-server-inputs\n${imports}`,
+        allChecks,
+      ],
+      [
+        'checks a file with the directive that the graph does not list yet',
+        'src/new.spec.ts',
+        `// @nx-ignore-server-inputs\n${imports}`,
+        allChecks,
+      ],
+      [
+        'checks imports that are not bare in a spec with the directive',
+        'src/checkout.spec.ts',
+        `// @nx-ignore-server-inputs
+          import { a } from '../../myapp/src/index';
+          import type { B } from '@mycompany/myapp';
+          import {} from '@mycompany/myapp';
+          import { someValue } from '@mycompany/other';
+          import * as impl from '@mycompany/impl';
+        `,
+        [
+          'noRelativeOrAbsoluteImportsAcrossLibraries',
+          'noImportsOfApps',
+          'noImportsOfApps',
+          'noImportsOfLazyLoadedLibraries',
+          'onlyTagsConstraintViolation',
+        ],
+      ],
+    ])('%s', (_, file, content, messageIds) => {
+      const failures = runRule(
+        {
+          depConstraints: [
+            {
+              sourceTag: 'scope:e2e',
+              onlyDependOnLibsWithTags: ['scope:e2e'],
+              bannedExternalImports: ['npm-package'],
+            },
+          ],
+        },
+        `${process.cwd()}/proj/apps/shop-e2e/${file}`,
+        content,
+        projectGraph,
+        fileMap
+      );
+
+      expect(failures.map((failure) => failure.messageId)).toEqual(messageIds);
+    });
   });
 
   it('should error when absolute path within project detected', () => {

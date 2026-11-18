@@ -13,18 +13,19 @@ public static partial class TargetBuilder
     private static Target CreateBuildTarget(
         string targetName,
         string fileName,
-        string projectName,
-        Dictionary<string, string> properties,
+        EvaluatedProperties properties,
         string projectDirectory,
         string workspaceRoot,
-        PluginOptions options,
         string productionInput,
         string defaultConfiguration,
         string description,
         List<string> directoryBuildInputs)
     {
-        var outputPath = GetOutputPath(properties, projectName, projectDirectory, workspaceRoot);
-        var intermediatePath = GetIntermediateOutputPath(properties, projectName, projectDirectory, workspaceRoot);
+        var outputPath = GetOutputPath(properties, projectDirectory, workspaceRoot);
+        var intermediatePath = GetIntermediateOutputPath(properties, projectDirectory, workspaceRoot);
+        // The package defaults OpenApiDocumentsDirectory to $(BaseIntermediateOutputPath),
+        // so merely referencing it lands on obj, which is already an output.
+        var openApiDocumentsOutputs = GetOpenApiDocumentsOutputs(properties, fileName, projectDirectory, workspaceRoot, outputPath, intermediatePath);
         string[] defaultFlags = ["--no-restore", "--no-dependencies"];
 
         var defaultArgs = defaultConfiguration == "Release"
@@ -56,13 +57,15 @@ public static partial class TargetBuilder
             [
                 productionInput,
                 $"^{productionInput}",
-                "{workspaceRoot}/.editorconfig",
                 new { workingDirectory = "absolute" },
                 new { dependentTasksOutputFiles = "**/*" },
+                new { env = "NUGET_PACKAGES" },
                 .. directoryBuildInputs
             ],
-            Outputs = new[] { outputPath, intermediatePath }
+            Outputs = new[] { outputPath }
                 .Where(p => p is not null)
+                .Concat(GetIntermediateOutputs(intermediatePath))
+                .Concat(openApiDocumentsOutputs)
                 .ToArray()!,
             Metadata = new TargetMetadata
             {
@@ -74,10 +77,8 @@ public static partial class TargetBuilder
 
     private static void AddBuildTarget(
         Dictionary<string, Target> targets,
-        string projectName,
         string fileName,
-        bool isTest,
-        Dictionary<string, string> properties,
+        EvaluatedProperties properties,
         string projectDirectory,
         string workspaceRoot,
         PluginOptions options,
@@ -88,11 +89,9 @@ public static partial class TargetBuilder
         targets[targetName] = CreateBuildTarget(
             targetName,
             fileName,
-            projectName,
             properties,
             projectDirectory,
             workspaceRoot,
-            options,
             productionInput,
             "Debug",
             "Build the .NET project",
@@ -101,10 +100,8 @@ public static partial class TargetBuilder
 
     private static void AddBuildReleaseTarget(
         Dictionary<string, Target> targets,
-        string projectName,
         string fileName,
-        bool isTest,
-        Dictionary<string, string> properties,
+        EvaluatedProperties properties,
         string projectDirectory,
         string workspaceRoot,
         PluginOptions options,
@@ -115,11 +112,9 @@ public static partial class TargetBuilder
         targets[releaseTargetName] = CreateBuildTarget(
             releaseTargetName,
             fileName,
-            projectName,
             properties,
             projectDirectory,
             workspaceRoot,
-            options,
             productionInput,
             "Release",
             "Build the .NET project in Release configuration",

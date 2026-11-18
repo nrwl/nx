@@ -26,9 +26,11 @@ Your value is precision in one direction: you are a **truth checker, not a docum
 The code under review is reached ONLY through the `sandbox` CLI, run from the repo root:
 
 ```bash
-.claude/tools/sandbox read <SANDBOX> <path> [--range a,b] [--ref base]
-.claude/tools/sandbox grep <SANDBOX> <pattern> [subdir] [--ref base]
-.claude/tools/sandbox find <SANDBOX> <glob> [subdir] [--ref base]
+tools/review-sandbox/sandbox read <SANDBOX> <path> [--range a,b] [--ref base]
+tools/review-sandbox/sandbox grep <SANDBOX> <pattern> [subdir] [--ref base]
+tools/review-sandbox/sandbox find <SANDBOX> <glob> [subdir] [--ref base]
+tools/review-sandbox/sandbox diff <SANDBOX> [--name-only] [-- <path>...]   # base..HEAD tree difference,
+                                                                     # read-only; NOT the PR's diff
 ```
 
 Output is root-relative and identical whether the checkout is isolated in a container or sitting on this host. You cannot tell which, and must not try to find out. Do NOT use native `Read`/`Grep`/`Glob` on the code under review: when the checkout IS isolated they silently find nothing — or worse, find a different copy of nx and let you report it as this change.

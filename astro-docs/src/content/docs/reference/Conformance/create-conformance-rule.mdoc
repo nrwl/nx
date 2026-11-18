@@ -72,7 +72,7 @@ The implementation function of the rule is passed a `context` object which conta
 - **`tree`**: A `ReadOnlyConformanceTree` that can be used to read files from the workspace instead of directly from disk. Useful for unit testing rules as a test tree can be provided to the rule implementation (see [Testing Conformance Rules](/docs/reference/conformance/test-conformance-rule)).
 - **`projectGraph`**: The Nx project graph
 - **`fileMapCache`**: The Nx file map cache
-- **`ruleOptions`**: The resolved rule configuration options based on the current workspace
+- **`ruleOptions`**: The resolved rule configuration options based on the current workspace, including Nx Cloud configuration for Nx Cloud Enterprise workspaces
 
 ## Violation interface
 
@@ -87,7 +87,13 @@ interface ConformanceViolation {
 }
 ```
 
+To report the entire workspace, set `workspaceViolation: true`.
+A violation with neither `file` nor `sourceProject` must set it, so leaving both off by mistake can't silently report the whole workspace.
+The rules runner checks this at runtime and throws an error for a violation that breaks it.
+
 ### Automatic project inference
+
+When a violation has a `file` but no `sourceProject`, the runner infers the owning project from the Nx project file map where it can:
 
 ```typescript
 violations.push({
@@ -102,6 +108,32 @@ violations.push({
 2. **Use `sourceProject` only** for project-wide issues (missing configuration, structure problems)
 3. **Use `file` (and optional explicit `sourceProject`)** for violations tied to specific files in projects
 4. **Use `file` only** for files that may not belong to projects (CI configs, root files, etc.)
+
+### How violations are displayed
+
+The terminal reporter groups a rule's violations by scope and prints them in this order:
+
+1. Workspace violations, marked with 🌐
+2. Violations with a project, grouped by project and marked with ◼. Files reported under the same message are listed beneath it.
+3. File violations with no owning project, marked with `-`
+
+```text
+┌  my-rule - maintainability | medium severity | status: enforced
+│
+🌐  Workspace
+│    ▲ Workspace configuration issue
+│
+◼  shared-utils
+│    ▲ Missing proper imports
+│    - libs/shared-utils/src/helpers.ts
+│    - libs/shared-utils/src/constants.ts
+│
+◼  api-server
+│    ▲ Missing required target
+│
+-  .github/workflows/ci.yml
+└    ▲ Workflow configuration issue
+```
 
 ## Conformance rule examples
 
@@ -146,7 +178,7 @@ export default createConformanceRule<object>({
 {% /tabitem %}
 {% tabitem label="project violation" %}
 
-The `@nx/conformance:ensure-owners` rule provides us an example of how to write a rule that reports on a project being in violation of the rule. The `@nx/owners` plugin adds an `owners` metadata property to every project node that has an owner in the project graph. This rule checks each project node metadata to make sure that each project has some owner defined.
+The `@nx/owners/ensure-owners` rule provides us an example of how to write a rule that reports on a project being in violation of the rule. The `@nx/owners` plugin adds an `owners` metadata property to every project node that has an owner in the project graph. This rule checks each project node metadata to make sure that each project has some owner defined.
 
 ```ts
 import { ProjectGraphProjectNode } from '@nx/devkit';

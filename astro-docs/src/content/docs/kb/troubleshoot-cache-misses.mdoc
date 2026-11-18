@@ -43,3 +43,31 @@ Problem: A task is being executed when you expect it to be replayed from the cac
 {% aside type="note" title="Note" %}
 Nx Cloud cannot access your source code, so it can only tell you which inputs are different based on their saved content hash, but not the exact git diff of the source code.
 {% /aside %}
+
+## Check 4: Check if a dependency version differs between machines
+
+If the hash inputs of the two tasks show a different version of the same package, check whether
+the project imports that package without declaring it.
+For example, one machine has `npm:is-number@3.0.0` and the other has `npm:is-number@7.0.0`.
+
+Nx hashes the version of a package that an import loads.
+An undeclared import loads whichever version the package manager placed in the root
+`node_modules`.
+When the lock file has several versions of that package, the placed version can differ between
+two machines that use the same lock file:
+
+- Optional dependencies that only install on one platform change which version ends up at the
+  root, so macOS and Linux can load different versions.
+- An install that updates an existing `node_modules` can keep a version that a fresh install
+  would replace.
+
+The two machines run different code, so their tasks don't share cache results.
+
+To fix it, declare the package with the version the project needs.
+Use the project's `package.json` if the project is a workspace package of your package manager.
+Otherwise, use the root `package.json`.
+The package manager then installs the declared version on every machine.
+
+If you can't declare the package, force a single version with your package manager's overrides,
+such as `overrides` in pnpm and npm or `resolutions` in Yarn.
+Packages that depend on another version of it get the forced version too.

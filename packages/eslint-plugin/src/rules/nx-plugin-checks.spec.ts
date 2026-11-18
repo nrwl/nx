@@ -6,12 +6,12 @@ import {
   validateNoDuplicateKeys,
 } from './nx-plugin-checks';
 
-jest.mock('@nx/devkit', () => ({
-  ...jest.requireActual<any>('@nx/devkit'),
+vi.mock('@nx/devkit', async () => ({
+  ...(await vi.importActual<any>('@nx/devkit')),
   workspaceRoot: '/root',
 }));
 
-jest.mock('nx/src/utils/workspace-root', () => ({
+vi.mock('nx/src/utils/workspace-root', () => ({
   workspaceRoot: '/root',
 }));
 
@@ -21,7 +21,7 @@ describe('checkIfIdentifierIsFunction', () => {
   });
 
   afterEach(() => {
-    jest.resetModules();
+    vi.resetModules();
   });
 
   it('should detect export function', () => {

@@ -23,7 +23,7 @@ expect.addSnapshotSerializer({
         .replaceAll(/\d*B package\.json/g, 'XXXB package.json')
         .replaceAll(/size:\s*\d*\s?B/g, 'size: XXXB')
         .replaceAll(/\d*\.\d*\s?kB/g, 'XXX.XXX kb')
-        .replaceAll(/[a-fA-F0-9]{7}/g, '{COMMIT_SHA}')
+        .replaceAll(/\b[a-fA-F0-9]{7}\b/g, '{COMMIT_SHA}')
         .replaceAll(/Test @[\w\d]+/g, 'Test @{COMMIT_AUTHOR}')
         // Normalize the version title date.
         .replaceAll(/\(\d{4}-\d{2}-\d{2}\)/g, '(YYYY-MM-DD)')
@@ -80,6 +80,9 @@ describe('nx release pre-version command', () => {
     const result2 = runCLI('release patch -d --first-release');
 
     expect(result2).toContain('NX   Executing pre-version command');
+    expect(result2).not.toContain(
+      'Executing the following pre-version command:'
+    );
 
     const result3 = runCLI('release patch -d --first-release --verbose');
 
@@ -122,6 +125,8 @@ describe('nx release pre-version command', () => {
     // command should fail because the pre-version command will fail
     const result5 = runCLI('release patch -d --first-release', {
       silenceError: true,
+      verbose: false,
+      env: { NX_VERBOSE_LOGGING: 'false' },
     });
     expect(result5).toContain(
       'NX   The pre-version command failed. Retry with --verbose to see the full output of the pre-version command.'

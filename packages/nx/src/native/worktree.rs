@@ -1,16 +1,28 @@
 use crate::native::utils::command::create_command;
+use dashmap::DashMap;
 use std::path::{Path, PathBuf};
 use std::sync::OnceLock;
 
-static MAIN_WORKTREE_ROOT: OnceLock<Option<String>> = OnceLock::new();
+/// Keyed by `workspace_root`, because the entry point takes one: a cache that
+/// ignores its own argument answers for whichever root asked first.
+///
+/// Only tests resolve more than one root in a process today. Every production
+/// caller passes the single `workspaceRoot`, so this is not the shape of a live
+/// bug — it is what stops the parameter from being a lie.
+static MAIN_WORKTREE_ROOTS: OnceLock<DashMap<String, Option<String>>> = OnceLock::new();
 
 /// If `workspace_root` is inside a git worktree, returns the main repo root.
 /// Returns `None` when already in the main repo (or not in a git repo at all).
 #[napi]
 pub fn get_main_worktree_root(workspace_root: String) -> anyhow::Result<Option<String>> {
-    Ok(MAIN_WORKTREE_ROOT
-        .get_or_init(|| resolve_main_worktree_root(&workspace_root).unwrap_or(None))
-        .clone())
+    let cache = MAIN_WORKTREE_ROOTS.get_or_init(DashMap::new);
+    if let Some(cached) = cache.get(&workspace_root) {
+        return Ok(cached.clone());
+    }
+
+    let resolved = resolve_main_worktree_root(&workspace_root).unwrap_or(None);
+    cache.insert(workspace_root, resolved.clone());
+    Ok(resolved)
 }
 
 fn resolve_main_worktree_root(workspace_root: &str) -> anyhow::Result<Option<String>> {
@@ -123,6 +135,58 @@ mod tests {
         assert!(
             !resolved.starts_with(r"\\?\"),
             "expected a plain path, got verbatim: {resolved}"
+        );
+    }
+
+    // The cache is process-global, so an unkeyed one hands the first caller's
+    // answer to every later root. Exercised through the public entry point:
+    // the tests above call `resolve_main_worktree_root` and so never touch it.
+    #[test]
+    fn caches_each_workspace_root_separately() {
+        let tmp = TempDir::new().unwrap();
+        let main = tmp.path().join("main");
+        init_repo(&main);
+
+        let worktree = tmp.path().join("wt");
+        git(&main, &["worktree", "add", worktree.to_str().unwrap()]);
+
+        // Main repo first, so a stale `None` would be what the worktree sees.
+        assert_eq!(
+            get_main_worktree_root(main.to_str().unwrap().to_string()).unwrap(),
+            None
+        );
+
+        let from_worktree = get_main_worktree_root(worktree.to_str().unwrap().to_string())
+            .unwrap()
+            .expect("a linked worktree should resolve to the main repo root");
+        assert_eq!(
+            PathBuf::from(&from_worktree),
+            dunce::canonicalize(&main).unwrap()
+        );
+
+        // Repeat both to pin that the entries did not overwrite one another.
+        assert_eq!(
+            get_main_worktree_root(main.to_str().unwrap().to_string()).unwrap(),
+            None
+        );
+        assert_eq!(
+            get_main_worktree_root(worktree.to_str().unwrap().to_string()).unwrap(),
+            Some(from_worktree.clone())
+        );
+
+        // Now prove the second read came from the cache rather than being
+        // recomputed: remove the `.git` file the resolver keys on, so a
+        // recomputation could only answer `None`.
+        std::fs::remove_file(worktree.join(".git")).unwrap();
+        assert_eq!(
+            resolve_main_worktree_root(worktree.to_str().unwrap()).unwrap(),
+            None,
+            "sanity: without .git the resolver cannot find the main root"
+        );
+        assert_eq!(
+            get_main_worktree_root(worktree.to_str().unwrap().to_string()).unwrap(),
+            Some(from_worktree),
+            "the cached entry should survive the repo going away"
         );
     }
 }

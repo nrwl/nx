@@ -59,11 +59,6 @@ export interface CreateWorkspaceOptions {
    */
   skipCloudConnect?: boolean;
   /**
-   * @description Set neverConnectToCloud in nx.json (full opt-out)
-   * @default false
-   */
-  neverConnectToCloud?: boolean;
-  /**
    * @description Whether GitHub CLI (gh) is available on the system (for telemetry)
    */
   ghAvailable?: boolean;

@@ -32,6 +32,9 @@ export default [
             'typescript',
             'react',
             'react-native',
+            // Resolved from the CLI plugin that `react-native start` runs
+            '@react-native/community-cli-plugin',
+            'metro',
             '@nx/jest',
             '@nx/rollup',
             '@nx/storybook',
@@ -47,24 +50,6 @@ export default [
     },
     languageOptions: {
       parser: jsoncEslintParser,
-    },
-  },
-  {
-    files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
-    rules: {
-      'no-restricted-imports': [
-        'error',
-        '@nx/workspace',
-        {
-          name: 'fs-extra',
-          message: 'Please use equivalent utilities from `node:fs` instead.',
-        },
-        {
-          name: 'chalk',
-          message:
-            'Please use `picocolors` in place of `chalk` for rendering terminal colors',
-        },
-      ],
     },
   },
 ];

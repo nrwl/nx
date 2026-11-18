@@ -1,11 +1,10 @@
 import {
   checkFilesExist,
   exists,
-  killPorts,
   readJson,
   runCLI,
   runCLIAsync,
-  runE2ETests,
+  shouldRunPlaywrightTests,
 } from '@nx/e2e-utils';
 
 export async function checkApp(
@@ -49,11 +48,10 @@ export async function checkApp(
     expect(packageJson.dependencies.next).toBeDefined();
   }
 
-  if (opts.checkE2E && (await runE2ETests())) {
+  if (opts.checkE2E && (await shouldRunPlaywrightTests())) {
     const e2eResults = runCLI(
       `e2e ${appName}-e2e --no-watch --configuration=production`
     );
     expect(e2eResults).toContain('Successfully ran target e2e for project');
-    expect(await killPorts()).toBeTruthy();
   }
 }

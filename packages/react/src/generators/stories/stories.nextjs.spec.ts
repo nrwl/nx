@@ -13,7 +13,7 @@ describe('nextjs:stories for applications', () => {
   beforeEach(async () => {
     tree = await createTestUIApp('test-ui-app');
     tree.write(
-      'test-ui-app/components/test.tsx',
+      'test-ui-app/src/components/test.tsx',
       `import './test.module.scss';
 
       export interface TestProps {
@@ -37,10 +37,8 @@ describe('nextjs:stories for applications', () => {
     });
 
     expect(
-      tree.exists('test-ui-app/components/test.stories.tsx')
+      tree.exists('test-ui-app/src/components/test.stories.tsx')
     ).toMatchSnapshot();
-
-    const packageJson = JSON.parse(tree.read('package.json', 'utf-8'));
   });
 
   it('should create the stories without interaction tests', async () => {
@@ -50,7 +48,7 @@ describe('nextjs:stories for applications', () => {
     });
 
     expect(
-      tree.exists('test-ui-app/components/test.stories.tsx')
+      tree.exists('test-ui-app/src/components/test.stories.tsx')
     ).toMatchSnapshot();
     const packageJson = JSON.parse(tree.read('package.json', 'utf-8'));
     expect(
@@ -67,10 +65,12 @@ describe('nextjs:stories for applications', () => {
   it('should ignore paths', async () => {
     await storiesGenerator(tree, {
       project: 'test-ui-app',
-      ignorePaths: ['test-ui-app/components/**'],
+      ignorePaths: ['test-ui-app/src/components/**'],
     });
 
-    expect(tree.exists('test-ui-app/components/test.stories.tsx')).toBeFalsy();
+    expect(
+      tree.exists('test-ui-app/src/components/test.stories.tsx')
+    ).toBeFalsy();
   });
 });
 

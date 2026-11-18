@@ -97,9 +97,8 @@ describe('app', () => {
               configFile: __dirname + '/.babelrc.js',
             },
           ],
-          '^.+[.](bmp|gif|jpg|jpeg|mp4|png|psd|svg|webp)$': require.resolve(
-            'react-native/jest/assetFileTransformer.js',
-          ),
+          '^.+[.](bmp|gif|jpg|jpeg|mp4|png|psd|svg|webp)$':
+            require.resolve('react-native/jest/assetFileTransformer.js'),
         },
         transformIgnorePatterns: [
           'node_modules/(?!(.pnpm/.+/node_modules/)?(react-native|@react-native(-community)?)/)',
@@ -109,6 +108,37 @@ describe('app', () => {
       "
     `);
   });
+
+  it.each([
+    ['^7.0.0', false],
+    ['^8.0.0', true],
+  ])(
+    'should resolve tsconfig paths for vite %s',
+    async (viteVersion, native) => {
+      updateJson(appTree, 'package.json', (json) => {
+        json.devDependencies = { ...json.devDependencies, vite: viteVersion };
+        return json;
+      });
+
+      await reactNativeApplicationGenerator(appTree, {
+        directory: 'my-app',
+        displayName: 'myApp',
+        linter: 'none',
+        e2eTestRunner: 'none',
+        install: false,
+        unitTestRunner: 'none',
+        bundler: 'vite',
+      });
+
+      const config = appTree.read('my-app/vite.config.mts', 'utf-8');
+      const packageJson = readJson(appTree, 'package.json');
+      expect(config.includes('tsconfigPaths: true')).toBe(native);
+      expect(config.includes('tsconfigPaths({ loose: true })')).toBe(!native);
+      expect(
+        packageJson.devDependencies['vite-tsconfig-paths'] !== undefined
+      ).toBe(!native);
+    }
+  );
 
   it('should generate targets', async () => {
     await reactNativeApplicationGenerator(appTree, {
@@ -175,6 +205,59 @@ describe('app', () => {
     const eslintConfig = appTree.read('my-app/eslint.config.mjs', 'utf-8');
     expect(eslintConfig).not.toContain('**/out-tsc');
   });
+
+  it.each<[string, (tree: Tree) => void, 'eslint' | 'none', boolean]>([
+    [
+      'ESLint v9 is declared',
+      (tree) => declareEslint(tree, '^9.39.0'),
+      'eslint',
+      true,
+    ],
+    [
+      'ESLint v10 is declared',
+      (tree) => declareEslint(tree, '^10.0.0'),
+      'eslint',
+      false,
+    ],
+    ['no ESLint is declared', () => {}, 'eslint', false],
+    [
+      'no ESLint is declared and the root config is eslintrc',
+      (tree) => writeJson(tree, '.eslintrc.json', {}),
+      'eslint',
+      true,
+    ],
+    [
+      'ESLint v9 is declared but the app does not use ESLint',
+      (tree) => declareEslint(tree, '^9.39.0'),
+      'none',
+      false,
+    ],
+  ])(
+    'should disable jsx-a11y/accessible-emoji in the welcome screen only when jsx-a11y is installed: %s',
+    async (_, setup, linter, disabled) => {
+      setup(appTree);
+
+      await reactNativeApplicationGenerator(appTree, {
+        name: 'my-app',
+        directory: 'my-app',
+        linter,
+        e2eTestRunner: 'none',
+        install: false,
+        unitTestRunner: 'none',
+        bundler: 'webpack',
+        skipFormat: true,
+      });
+
+      const [firstLine] = appTree
+        .read('my-app/src/app/App.tsx', 'utf-8')
+        .split('\n');
+      expect(firstLine).toBe(
+        disabled
+          ? '/* eslint-disable jsx-a11y/accessible-emoji */'
+          : "import React, { useRef, useState } from 'react';"
+      );
+    }
+  );
 
   describe('detox', () => {
     it('should create e2e app with directory', async () => {
@@ -332,7 +415,6 @@ describe('app', () => {
         install: false,
         unitTestRunner: 'jest',
         bundler: 'vite',
-        addPlugin: true,
         useProjectJson: false,
       });
 
@@ -352,8 +434,8 @@ describe('app', () => {
           "name",
           "version",
           "private",
-          "nx",
           "dependencies",
+          "nx",
         ]
       `);
       expect(readJson(tree, 'my-app/tsconfig.json')).toMatchInlineSnapshot(`
@@ -472,7 +554,6 @@ describe('app', () => {
         install: false,
         unitTestRunner: 'jest',
         bundler: 'vite',
-        addPlugin: true,
         useProjectJson: false,
       });
 
@@ -485,8 +566,8 @@ describe('app', () => {
           "name",
           "version",
           "private",
-          "nx",
           "dependencies",
+          "nx",
         ]
       `);
     });
@@ -499,7 +580,6 @@ describe('app', () => {
         install: false,
         unitTestRunner: 'jest',
         bundler: 'vite',
-        addPlugin: true,
         useProjectJson: true,
         skipFormat: true,
       });
@@ -546,7 +626,6 @@ describe('app', () => {
         install: false,
         unitTestRunner: 'none',
         bundler: 'webpack',
-        addPlugin: true,
         useProjectJson: false,
         skipFormat: true,
       });
@@ -565,7 +644,6 @@ describe('app', () => {
         install: false,
         unitTestRunner: 'none',
         bundler: 'webpack',
-        addPlugin: true,
         useProjectJson: false,
         skipFormat: true,
       });
@@ -575,3 +653,10 @@ describe('app', () => {
     });
   });
 });
+
+function declareEslint(tree: Tree, version: string) {
+  updateJson(tree, 'package.json', (json) => {
+    json.devDependencies = { ...json.devDependencies, eslint: version };
+    return json;
+  });
+}

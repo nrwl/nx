@@ -18,7 +18,7 @@ import type {
 import { join, resolve } from 'path';
 import { clean, coerce, gt } from 'semver';
 import { installPackagesTask } from '../tasks/install-packages-task';
-// eslint-disable-next-line @typescript-eslint/no-restricted-imports -- nx/src/utils/catalog exists since nx 22.0.0, the whole supported range; swap to the nx/src/devkit-internals re-export in v25
+// oxlint-disable-next-line no-restricted-imports -- nx/src/utils/catalog exists since nx 22.0.0, the whole supported range; swap to the nx/src/devkit-internals re-export in v25
 import {
   getCatalogDependenciesFromPackageJson,
   getCatalogManager,

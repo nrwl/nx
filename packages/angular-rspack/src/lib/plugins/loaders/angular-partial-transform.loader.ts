@@ -1,4 +1,3 @@
-import { readFile } from 'node:fs/promises';
 import { LoaderContext, RawSourceMap } from '@rspack/core';
 import { toTypeScriptFileCacheKey } from '@nx/angular-rspack-compiler';
 import { NG_RSPACK_SYMBOL_NAME, NgRspackCompilation } from '../../models';
@@ -7,8 +6,13 @@ import {
   isForwardableSourceMap,
 } from './inline-source-map';
 
+export interface AngularPartialTransformLoaderOptions {
+  /** Absolute path of the engine manifest virtual module. */
+  engineManifestPath: string;
+}
+
 export default function loader(
-  this: LoaderContext<unknown>,
+  this: LoaderContext<AngularPartialTransformLoaderOptions>,
   content: string,
   inputMap?: string | RawSourceMap
 ) {
@@ -45,6 +49,14 @@ export default function loader(
       request.startsWith('data:text/javascript') &&
       request.includes('__module_federation_bundler_runtime__')
     ) {
+      callback(null, content, chainMap);
+      return;
+    }
+
+    // The engine manifest virtual module mentions '@angular' but needs no
+    // transform, and it has no on-disk file for the transformer worker to
+    // read.
+    if (request === this.getOptions().engineManifestPath) {
       callback(null, content, chainMap);
       return;
     }
@@ -102,16 +114,13 @@ export default function loader(
 
     // A mismatched entry means the chained map changed since the entry was
     // produced. The transformer's persistent cache is keyed on the file
-    // bytes only, so `transformFile` would return the same stale output;
-    // hand it the current file data instead, which always runs the worker
-    // and re-reads the changed map file. A cold process has no entry to
-    // compare against, so a stale persistent entry can still be served
-    // there, matching the esbuild application builder's behavior.
+    // bytes only, so `transformFile` would return the same stale output. A
+    // cold process has no entry to compare against, so a stale persistent
+    // entry can still be served there, matching the esbuild application
+    // builder's behavior.
     const transformed =
       cachedTransform !== undefined
-        ? readFile(request, 'utf8').then((data) =>
-            javascriptTransformer.transformData(request, data, false, false)
-          )
+        ? javascriptTransformer.transformFileUncached(request, false, false)
         : javascriptTransformer.transformFile(request, false, false);
 
     transformed.then(

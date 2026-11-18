@@ -5,30 +5,6 @@ export default [
   ...baseConfig,
   { ignores: ['dist'] },
   {
-    files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
-    rules: {
-      'no-restricted-imports': [
-        'error',
-        {
-          name: 'fs-extra',
-          message: 'Please use equivalent utilities from `node:fs` instead.',
-        },
-      ],
-    },
-  },
-  {
-    files: ['**/*.ts'],
-    rules: {
-      'no-restricted-imports': [
-        'error',
-        '@angular-devkit/architect',
-        '@angular-devkit/core',
-        '@angular-devkit/schematics',
-      ],
-    },
-    ignores: ['./src/migrations/**'],
-  },
-  {
     files: [
       './package.json',
       './generators.json',

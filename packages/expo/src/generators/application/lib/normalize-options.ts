@@ -1,4 +1,4 @@
-import { names, readNxJson, Tree } from '@nx/devkit';
+import { names, Tree } from '@nx/devkit';
 import {
   determineProjectNameAndRootOptions,
   ensureRootProjectName,
@@ -7,8 +7,10 @@ import { normalizeLinterOption, isUsingTsSolutionSetup } from '@nx/js/internal';
 import { Schema } from '../schema';
 import type { LinterType } from '@nx/js';
 
-export interface NormalizedSchema
-  extends Omit<Schema, 'name' | 'useTsSolution'> {
+export interface NormalizedSchema extends Omit<
+  Schema,
+  'name' | 'useTsSolution'
+> {
   // `normalizeOptions` always resolves this, so it is no longer optional.
   linter: LinterType;
   className: string;
@@ -39,11 +41,6 @@ export async function normalizeOptions(
     projectType: 'application',
     directory: options.directory,
   });
-  const nxJson = readNxJson(host);
-  const addPluginDefault =
-    process.env.NX_ADD_PLUGINS !== 'false' &&
-    nxJson.useInferencePlugins !== false;
-  options.addPlugin ??= addPluginDefault;
 
   const { className } = names(projectName);
   const parsedTags = options.tags

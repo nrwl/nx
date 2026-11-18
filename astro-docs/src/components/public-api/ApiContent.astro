@@ -1,0 +1,33 @@
+---
+import { Code } from '@astrojs/starlight/components';
+import ApiTable from './ApiTable.astro';
+import type { ReferenceMedia } from '../../plugins/utils/openapi-reference';
+interface Props {
+  content: ReferenceMedia[];
+}
+const { content } = Astro.props;
+---
+
+{content.map((media) => (
+  <div class="media-content">
+    {media.mediaType && <p>Content type: <code>{media.mediaType}</code>.</p>}
+    <Fragment set:html={media.schema.html} />
+    <Fragment set:html={media.description.html} />
+    <ApiTable table={media.fields} />
+    {media.examples.map((example) => (
+      <>
+        <p><strong>{example.label}</strong></p>
+        <Fragment set:html={example.description.html} />
+        {example.code !== undefined && <Code code={example.code} lang={example.language} />}
+        {example.url && <p>Example URL: <a href={example.url}>{example.url}</a></p>}
+      </>
+    ))}
+    {media.fieldTarget && <p><a href={`#${media.fieldTarget}`}>View field definitions</a></p>}
+    {media.definition && (
+      <details>
+        <summary>Schema definition</summary>
+        <Code code={media.definition} lang="json" />
+      </details>
+    )}
+  </div>
+))}

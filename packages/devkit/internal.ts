@@ -5,21 +5,52 @@ export {
   safeWriteFileCache,
   emitPluginWorkerLog,
   resolveImplementation,
+  resolveInstalledPackage,
   resolveSchema,
   ImplementationResolutionError,
   SchemaResolutionError,
   resolvePrompt,
   PromptResolutionError,
   acknowledgeBuildScripts,
+  acknowledgeDeclaredBuildScripts,
+  createCliOptions,
+  createOverrides,
+  isAiAgent,
+  readShebangHeaders,
+  transformProjectGraphForProjectMatching,
+  unmatchedProjectPatterns,
   // getCatalogManager takes the barrel route here because this file *is*
   // @nx/devkit/internal — first-party consumers only, released in lockstep. Its
   // class-1 siblings in packages/devkit/src/utils/ (semver.ts, package-json.ts)
   // ship to external plugins under the +/- 1 tolerance, so they must keep
   // importing nx/src/utils/catalog directly. See packages/devkit/CLAUDE.md.
   getCatalogManager,
+  getDaemonClientEnvGeneration,
+  getAppliedDaemonClientEnv,
+  applyDaemonEnvFromClient,
+  getGraphTimeDotEnvForTask,
+  hashDaemonClientEnv,
+  resolveStartupHost,
 } from 'nx/src/devkit-internals';
 
+// Formatter detection and setup. `@nx/js` needs these to write and detect a
+// workspace's formatter config, and it depends on `@nx/devkit` rather than on
+// `nx`, so this is its declared route to them. Against an older nx they arrive
+// as `undefined` rather than as a load error; `@nx/js` turns that into one
+// descriptive error up front (`assertNxSupportsFormatters`) instead of carrying
+// a fallback per call site.
+export {
+  detectFormatterInTree,
+  prettierConfigFiles,
+  oxfmtConfigFiles,
+} from 'nx/src/devkit-internals';
+export type { FormatterType } from 'nx/src/devkit-internals';
+
 // Generators
+export {
+  addReadyWhenSignalToTargets,
+  readApplicableTargetDefaults,
+} from './src/generators/add-ready-when-signal';
 export {
   determineArtifactNameAndDirectoryOptions,
   getRelativeCwd,
@@ -31,6 +62,11 @@ export {
 } from './src/generators/e2e-web-server-info-utils';
 export { forEachExecutorOptions } from './src/generators/executor-options-utils';
 export { AggregatedLog } from './src/generators/plugin-migrations/aggregate-log-util';
+export { finalizeBatchConversion } from './src/generators/plugin-migrations/batch-conversion-finalize';
+export {
+  openBatchConversionSession,
+  type BatchConversionSession,
+} from './src/generators/plugin-migrations/batch-conversion-session';
 export {
   migrateProjectExecutorsToPlugin,
   migrateProjectExecutorsToPluginV1,
@@ -47,7 +83,7 @@ export {
   ensureRootProjectName,
   resolveImportPath,
 } from './src/generators/project-name-and-root-utils';
-export { promptWhenInteractive } from './src/generators/prompt';
+export { isInteractive } from './src/generators/prompt';
 export {
   addBuildTargetDefaults,
   addE2eCiTargetDefaults,
@@ -62,10 +98,13 @@ export { addPlugin } from './src/utils/add-plugin';
 export {
   getDeclaredPackageVersion,
   getInstalledPackageVersion,
+  getInstalledPackageVersionFromTree,
 } from './src/utils/installed-version';
 export {
   assertSupportedInstalledPackageVersion,
   assertSupportedPackageVersion,
+  getResolvedPackageVersion,
+  getSatisfyingInstalledPackageVersion,
 } from './src/utils/version-floor';
 export {
   createAsyncIterable,
@@ -77,8 +116,37 @@ export {
   calculateHashesForCreateNodes,
 } from './src/utils/calculate-hash-for-create-nodes';
 export { loadConfigFile, clearRequireCache } from './src/utils/config-utils';
+export {
+  isRequireEsmRaceError,
+  retryOnRequireEsmRace,
+} from './src/utils/require-esm-race';
 export { findPluginForConfigFile } from './src/utils/find-plugin-for-config-file';
 export { getNamedInputs } from './src/utils/get-named-inputs';
+export {
+  matchNxDirective,
+  NX_DIRECTIVE_NAMES,
+  parseNxDirectives,
+  readNxDirectiveHeader,
+  type NxDirectiveHeaderLine,
+} from './src/utils/nx-directives';
+export {
+  getForwardedArgs,
+  getListeningUrl,
+  getReadyCheckReadyWhen,
+  getServerAddress,
+  parseCacArgs,
+  parseCommanderArgs,
+  runReadyCheck,
+  type ServerAddress,
+} from './src/utils/readiness';
+export {
+  applyTestFileDirectives,
+  appliesTestFileDirective,
+  recordedTestFile,
+  type TestFileDirective,
+} from './src/utils/test-file-directives';
+export { dependsOnProjects } from './src/utils/test-file-depends-on';
+export { hasIgnoreServerInputsDirective } from './src/utils/ignore-server-inputs-directive';
 export { logShowProjectCommand } from './src/utils/log-show-project-command';
 export { eachValueFrom } from './src/utils/rxjs-for-await';
 export { checkAndCleanWithSemver } from './src/utils/semver';
@@ -109,7 +177,7 @@ export {
   type ChangedFile,
   CompositeLifeCycle,
   DeletedFileChange,
-  type DependsOnEntryLocation,
+  confirmationPrompt,
   // NOTE: distinct from @nx/devkit's public FileChange (generators/tree.ts),
   // which describes a pending Tree write. This one is a per-file diff
   // ({ file, getChanges }), and the two barrels are routinely imported side by
@@ -132,6 +200,7 @@ export {
   type PackageJson,
   type PackageJsonDependencySection,
   type PackageManagerCommands,
+  type ProjectMetadata,
   type ProjectRootMappings,
   RemoteCacheV2,
   type RunCommandsOptions,
@@ -150,10 +219,14 @@ export {
   buildProjectGraphAndSourceMapsWithoutDaemon,
   calculateFileChanges,
   calculateReverseDeps,
+  checkCircularPath,
+  circularPathHasPair,
   codeFrameColumns,
   combineGlobPatterns,
+  computeJsonLineNumbers,
   connectToNxCloud,
   createDirectory,
+  createFileMapUsingProjectGraph,
   createLockFile,
   createNxCloudOnboardingURL,
   createNxCloudOnboardingURLForWelcomeApp,
@@ -161,13 +234,16 @@ export {
   createProjectGraphAndSourceMapsAsync,
   createProjectRootMappings,
   createRunManyDynamicOutputRenderer,
+  createTargetDefaultsResults,
   createTaskId,
   daemonClient,
   deduceDefaultBase,
   defaultFileRead,
   deriveGroupNameFromTarget,
   directoryExists,
+  dropEmptyPeerDependencySections,
   expandDependencyConfigSyntaxSugar,
+  expandIgnoredCircularDependencies,
   expandInitiatingTasksThroughNoop,
   expandWildcardTargetConfiguration,
   fileDataDepTarget,
@@ -175,15 +251,23 @@ export {
   fileExists,
   filterUsingGlobPatterns,
   findAllProjectNodeDependencies,
+  findFilesInCircularPath,
+  findFilesWithDynamicImports,
   findInstalledPlugins,
   findMatchingConfigFiles,
+  findClosestMatches,
   findMatchingProjects,
+  findMatchingTargetNames,
   findProjectForPath,
   findProjectsNpmDependencies,
+  flushChanges,
   forceRegisterEsmLoader,
+  generatePrunedDeployOutput,
   getCliPath,
   getCustomHasher,
   getDependencyConfigs,
+  getEnvFilesForTask,
+  getEnvPathsForTask,
   getExecutorForTask,
   getExecutorInformation,
   getExecutorNameForTask,
@@ -203,9 +287,12 @@ export {
   getSourceDirOfDependentProjects,
   getTargetConfigurationForTask,
   getTargetInputs,
+  getPath,
   getUnparsedOverrideArgs,
+  getVcsRemoteInfo,
   getWorkspacePackagesFromGraph,
   globWithWorkspaceContext,
+  handleErrors,
   handleImport,
   handleProjectGraphError,
   hashFile,
@@ -223,16 +310,22 @@ export {
   isProjectGraphProjectNode,
   isRelativePath,
   isWholeFileChange,
+  killChildOnHostExit,
   killProcessTreeGraceful,
   loadTsFile,
   mergeTargetConfigurations,
+  movePeerDependencyToDependencies,
+  multiselectPrompt,
   normalizeDependencyConfigDefinition,
   normalizeDependencyConfigProjects,
   normalizeTargetDependencyWithStringProjects,
   nxVersion,
   orange,
   parseExecutor,
+  parseVersionFromPackageManagerField,
+  pathExists,
   preventRecursionInGraphConstruction,
+  quoteShellArg,
   readCachedProjectConfiguration,
   readFileIfExisting,
   readFileMapCache,
@@ -243,12 +336,17 @@ export {
   readProjectAndTargetFromTargetString,
   registerTsConfigPaths,
   registerTsProject,
+  relocatePrunedLocalPathSpec,
   removeTasksFromTaskGraph,
   requireWithTsconfigFallback,
   resetWorkspaceContext,
+  resolveCommandSyntacticSugar,
+  resolveNxTokensInOptions,
+  resolveWorkspaceModuleDependency,
   runNxSync,
   safeExecFileSync,
   safeSpawn,
+  selectPrompt,
   setWorkspaceRoot,
   setupAiAgentsGenerator,
   setupWorkspaceContext,
@@ -256,8 +354,11 @@ export {
   toNewFormat,
   toOldFormat,
   transformLegacyOutputs,
+  textPrompt,
   unparse,
+  hasTextBunLockfile,
   validateOutputs,
+  warnUnshippableLocalPathSpec,
   workspaceDataDirectory,
   workspaceRootInner,
 } from 'nx/src/devkit-internals';
@@ -271,3 +372,4 @@ export {
 // Only erased types are re-exported — `AfterAllProjectsVersioned` below, and
 // `FinalConfigForProject` via nx/src/devkit-internals.
 export type { AfterAllProjectsVersioned } from 'nx/release';
+export { migrateRemovedExecutors } from './src/generators/plugin-migrations/remove-executors';
