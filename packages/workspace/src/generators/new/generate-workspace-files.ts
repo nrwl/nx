@@ -328,12 +328,18 @@ async function createReadme(
 
   // default to an empty one for custom presets
   const presetInfo: PresetInfo = presetToPluginMap[preset] ?? {
-    package: '',
     generateLibCmd: null,
   };
 
   const nxCloudOnboardingUrl = nxCloudToken
-    ? await createNxCloudOnboardingURL('readme', nxCloudToken, undefined, false)
+    ? await createNxCloudOnboardingURL(
+        'readme',
+        nxCloudToken,
+        undefined,
+        false,
+        false,
+        join(tree.root, directory)
+      )
     : null;
 
   generateFiles(tree, join(__dirname, './files-readme'), directory, {

@@ -12,19 +12,17 @@ import { NormalizedSchema } from '../schema';
 export function updateBuildTargets(tree: Tree, schema: NormalizedSchema) {
   getProjects(tree).forEach((projectConfig, project) => {
     let changed = false;
-    Object.entries(projectConfig.targets || {}).forEach(
-      ([target, targetConfig]) => {
-        changed =
-          updateJsonValue(targetConfig, (value) => {
-            const [project, target, configuration] = value.split(':');
-            if (project === schema.projectName && target) {
-              return configuration
-                ? `${schema.newProjectName}:${target}:${configuration}`
-                : `${schema.newProjectName}:${target}`;
-            }
-          }) || changed;
-      }
-    );
+    Object.entries(projectConfig.targets || {}).forEach(([, targetConfig]) => {
+      changed =
+        updateJsonValue(targetConfig, (value) => {
+          const [project, target, configuration] = value.split(':');
+          if (project === schema.projectName && target) {
+            return configuration
+              ? `${schema.newProjectName}:${target}:${configuration}`
+              : `${schema.newProjectName}:${target}`;
+          }
+        }) || changed;
+    });
     if (changed) {
       updateProjectConfiguration(tree, project, projectConfig);
     }
@@ -44,8 +42,10 @@ function updateJsonValue(
         changed = true;
       }
     } else if (Array.isArray(value)) {
-      value.forEach((x, idx) => recur(value, idx, x));
-    } else if (typeof value === 'object') {
+      value.forEach((x, idx) => {
+        changed = recur(value, idx, x) || changed;
+      });
+    } else if (value && typeof value === 'object') {
       Object.entries(value).forEach(([k, v]) => {
         changed = recur(value, k, v) || changed;
       });

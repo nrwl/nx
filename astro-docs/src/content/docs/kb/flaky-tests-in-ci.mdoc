@@ -64,7 +64,7 @@ team cannot prioritize flakes from a set of disconnected build logs.
 ## Flaky tests in Playwright, Cypress, Jest, and Vitest
 
 End-to-end tests flake more than unit tests because they carry real browsers, real servers, and
-real network calls. Both major e2e runners can retry a failed test - `retries` in
+real network calls. Both major e2e runners can retry a failed test: `retries` in
 `playwright.config.ts`, and `retries` (with separate `runMode` and `openMode` values) in the Cypress
 config. Playwright even labels a fail-then-pass result as flaky in its report.
 
@@ -94,7 +94,7 @@ test suite. Nx creates a hash from that task's inputs each time it runs.
 
 When one task hash both fails and succeeds, Nx Cloud knows that task is flaky. A task that fails
 once after a new commit has a new hash and may be a regression.
-A task that passes and fails with one hash - even on different machines, days apart - is
+A task that passes and fails with one hash (even on different machines, days apart) is
 nondeterministic.
 
 When distributed task execution is enabled and a known flaky task fails, Nx Cloud sends it to a

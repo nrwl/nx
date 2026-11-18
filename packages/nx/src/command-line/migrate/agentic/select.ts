@@ -1,7 +1,6 @@
 import { existsSync, readFileSync, writeFileSync } from 'fs';
 import { applyEdits, modify } from 'jsonc-parser';
 import { join } from 'path';
-import * as pc from 'picocolors';
 import { IS_WASM } from '../../../native';
 import { output } from '../../../utils/output';
 import { workspaceRoot } from '../../../utils/workspace-root';

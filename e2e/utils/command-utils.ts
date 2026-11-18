@@ -24,6 +24,7 @@ import {
   isVerboseE2ERun,
 } from './get-env-info';
 import { logError, logInfo, secondsSince } from './log-utils';
+import { promisifiedTreeKill } from './process-utils';
 
 export interface RunCmdOpts {
   silenceError?: boolean;
@@ -230,12 +231,8 @@ export async function shouldRunPlaywrightTests(): Promise<boolean> {
     return false;
   }
   const startTime = performance.now();
-  // Playwright is deliberately not awaited: `npx playwright install
-  // --with-deps` takes longer than a test's timeout, so waiting on it here
-  // fails the suite outright.
-  ensurePlaywrightBrowsersInstallation().then(() =>
-    logInfo(`Playwright ready (${secondsSince(startTime)}s)`)
-  );
+  ensurePlaywrightBrowsersInstallation();
+  logInfo(`Playwright ready (${secondsSince(startTime)}s)`);
   return true;
 }
 
@@ -330,10 +327,23 @@ export function runCommandUntil(
     let output = '';
     let complete = false;
 
-    const timeoutId = setTimeout(() => {
+    const timeoutId = setTimeout(async () => {
       if (!complete) {
         complete = true;
-        p.kill();
+        if (
+          p.pid !== undefined &&
+          p.exitCode === null &&
+          p.signalCode === null
+        ) {
+          try {
+            await promisifiedTreeKill(p.pid, 'SIGKILL');
+          } catch (error) {
+            logError(
+              'Failed to terminate command after startup timeout',
+              String(error)
+            );
+          }
+        }
         logError(
           `Output did not meet the criteria:`,
           output
@@ -346,6 +356,7 @@ export function runCommandUntil(
     }, timeout);
 
     function checkCriteria(c) {
+      if (complete) return;
       output += c.toString();
       const strippedOutput = stripVTControlCharacters(output);
       if (criteria(strippedOutput) && !complete) {

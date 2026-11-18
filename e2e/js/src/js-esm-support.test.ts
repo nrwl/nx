@@ -3,6 +3,7 @@ import { execSync } from 'child_process';
 import {
   checkFilesExist,
   cleanupProject,
+  hasAssignedPort,
   getPackageManagerCommand,
   getSelectedPackageManager,
   newProject,
@@ -298,8 +299,10 @@ describe('JS ESM/CJS Support', () => {
             res.writeHead(200, { 'Content-Type': 'text/plain' });
             res.end('CommonJS server running');
           });
-          server.listen(3000, () => {
-            console.log('Server running on port 3000');
+          server.listen(0, () => {
+            const address = server.address();
+            if (!address || typeof address === 'string') throw new Error('Missing server address');
+            console.log('Server running on port ' + address.port);
           });
         `
       );
@@ -313,9 +316,10 @@ describe('JS ESM/CJS Support', () => {
         {
           cwd: tmpProjPath(),
           timeout: 5000,
+          env: { ...process.env, PORT: '0' },
         }
       ).toString();
-      expect(result).toContain('Server running on port 3000');
+      expect(hasAssignedPort(result, 'Server running on port ')).toBe(true);
     }, 600000);
 
     it('should serve ESM apps', async () => {
@@ -336,8 +340,10 @@ describe('JS ESM/CJS Support', () => {
             res.writeHead(200, { 'Content-Type': 'text/plain' });
             res.end('ESM server running');
           });
-          server.listen(3001, () => {
-            console.log('ESM server running on port 3001');
+          server.listen(0, () => {
+            const address = server.address();
+            if (!address || typeof address === 'string') throw new Error('Missing server address');
+            console.log('ESM server running on port ' + address.port);
           });
         `
       );
@@ -345,10 +351,11 @@ describe('JS ESM/CJS Support', () => {
       runCLI(`build ${nodeapp}`);
       checkFilesExist(`dist/apps/${nodeapp}/main.js`);
 
-      const serveProcess = await runCommandUntil(`serve ${nodeapp}`, (output) =>
-        output.includes('ESM server running on port 3001')
+      const serveProcess = await runCommandUntil(
+        `serve ${nodeapp}`,
+        (output) => hasAssignedPort(output, 'ESM server running on port '),
+        { env: { PORT: '0' } }
       );
-
       await promisifiedTreeKill(serveProcess.pid, 'SIGKILL');
     }, 600000);
 
@@ -368,19 +375,19 @@ describe('JS ESM/CJS Support', () => {
             res.writeHead(200, { 'Content-Type': 'text/plain' });
             res.end('Hello from CommonJS');
           });
-          server.listen(3100, () => {
-            console.log('CommonJS server ready on port 3100');
+          server.listen(0, () => {
+            const address = server.address();
+            if (!address || typeof address === 'string') throw new Error('Missing server address');
+            console.log('CommonJS server ready on port ' + address.port);
           });
         `
       );
 
       const serveProcess = await runCommandUntil(
         `serve ${nodeapp}`,
-        (output) => {
-          return output.includes('CommonJS server ready on port 3100');
-        }
+        (output) => hasAssignedPort(output, 'CommonJS server ready on port '),
+        { env: { PORT: '0' } }
       );
-
       await promisifiedTreeKill(serveProcess.pid, 'SIGKILL');
     }, 600000);
 
@@ -403,19 +410,19 @@ describe('JS ESM/CJS Support', () => {
             res.writeHead(200, { 'Content-Type': 'text/plain' });
             res.end('Hello from ESM');
           });
-          server.listen(3101, () => {
-            console.log('ESM server ready on port 3101');
+          server.listen(0, () => {
+            const address = server.address();
+            if (!address || typeof address === 'string') throw new Error('Missing server address');
+            console.log('ESM server ready on port ' + address.port);
           });
         `
       );
 
       const serveProcess = await runCommandUntil(
         `serve ${nodeapp}`,
-        (output) => {
-          return output.includes('ESM server ready on port 3101');
-        }
+        (output) => hasAssignedPort(output, 'ESM server ready on port '),
+        { env: { PORT: '0' } }
       );
-
       await promisifiedTreeKill(serveProcess.pid, 'SIGKILL');
     }, 600000);
   });

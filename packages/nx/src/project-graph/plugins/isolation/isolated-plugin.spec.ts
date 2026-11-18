@@ -103,7 +103,6 @@ describe('IsolatedPlugin', () => {
     plugin._alive = true;
     plugin.pendingCount = 0;
     plugin.spawnAndConnectCount = 0;
-    plugin.shutdownCount = 0;
 
     // Mock spawnAndConnect
     const spawnAndConnect = vi.fn().mockImplementation(async () => {
@@ -116,7 +115,6 @@ describe('IsolatedPlugin', () => {
     // Mock shutdown
     const shutdown = vi.fn().mockImplementation(async () => {
       plugin._alive = false;
-      plugin.shutdownCount++;
     });
     plugin.shutdown = shutdown;
 

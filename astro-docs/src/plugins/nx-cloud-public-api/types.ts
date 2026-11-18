@@ -66,6 +66,7 @@ export interface OpenApiReference {
   version: string;
   introduction: ReferenceProse;
   description: ReferenceProse;
+  overview: { heading: ReferenceHeading; body: ReferenceProse }[];
   navigation: {
     heading: ReferenceHeading;
     links: { label: string; href: string; id?: string }[];

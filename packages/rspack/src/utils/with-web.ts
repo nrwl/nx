@@ -35,7 +35,7 @@ export interface WithWebOptions {
       ) => Record<string, any> | Promise<Record<string, any>>);
 }
 
-// TODO(v25): remove the inert config-helper stubs in this file.
+// TODO(v25): remove the inert config-helper stubs in this file (NXC-5164).
 /**
  * @deprecated Use `NxAppRspackPlugin` from `@nx/rspack/app-plugin`.
  * This inert stub will be removed in Nx v25.

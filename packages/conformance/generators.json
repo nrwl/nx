@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/schema",
+  "name": "nx/conformance",
+  "version": "0.1",
+  "generators": {
+    "create-rule": {
+      "factory": "./dist/src/generators/create-rule/create-rule",
+      "schema": "./dist/src/generators/create-rule/schema.json",
+      "description": "Create a new conformance rule"
+    },
+    "preset": {
+      "factory": "./dist/src/generators/preset/preset",
+      "schema": "./dist/src/generators/preset/schema.json",
+      "description": "Nx workspace preset which includes a working conformance rule"
+    }
+  }
+}

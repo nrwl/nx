@@ -38,6 +38,11 @@
       "additionalProperties": {
         "type": "object",
         "properties": {
+          "...": {
+            "type": "boolean",
+            "const": true,
+            "description": "Controls merge priority against a compatible inherited target: keys before this token defer to the inherited value, and keys after it take precedence. A target with a different executor, command or script replaces the inherited target regardless. options, configurations, ultracache and metadata merge by their own rules wherever the token sits."
+          },
           "executor": {
             "description": "The function that Nx will invoke when you run this target",
             "type": "string"
@@ -100,6 +105,12 @@
                     "params": {
                       "type": "string",
                       "description": "Configuration for params handling.",
+                      "enum": ["ignore", "forward"],
+                      "default": "ignore"
+                    },
+                    "options": {
+                      "type": "string",
+                      "description": "Whether to forward task options to the dependency target.",
                       "enum": ["ignore", "forward"],
                       "default": "ignore"
                     },

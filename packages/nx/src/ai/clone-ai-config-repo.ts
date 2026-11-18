@@ -1,10 +1,21 @@
 import { execSync } from 'child_process';
-import { existsSync, mkdirSync, readdirSync, renameSync, rmSync } from 'fs';
-import { tmpdir } from 'os';
+import { existsSync, readdirSync, renameSync, rmSync } from 'fs';
 import { join } from 'path';
+import {
+  NX_HOME_TMP_DIR,
+  NX_TMP_DIR,
+  NX_USER_TMP_DIR,
+} from '../utils/nx-tmp-dir';
+import {
+  canonicalDir,
+  type DirRefusal,
+  DirectoryRefusedError,
+  ensureOwnedPrivateDir,
+  ensureSafeSharedRoot,
+} from '../utils/owned-private-dir';
 
 const REPO_URL = 'https://github.com/nrwl/nx-ai-agents-config';
-const CACHE_DIR = join(tmpdir(), 'nx-ai-agents-config');
+const CACHE_DIR_NAME = 'nx-ai-agents-config';
 
 // `git rev-parse --local-env-vars`, plus GIT_NAMESPACE and the indexed
 // GIT_CONFIG_KEY_<n> / GIT_CONFIG_VALUE_<n> pairs. Hooks export GIT_INDEX_FILE;
@@ -85,9 +96,6 @@ function getLatestCommitHash(): string {
  */
 function cloneRepo(targetPath: string): void {
   try {
-    // Ensure parent directory exists
-    mkdirSync(CACHE_DIR, { recursive: true });
-
     // Use a temporary path first to avoid race conditions
     const tempPath = `${targetPath}.tmp.${process.pid}`;
 
@@ -148,16 +156,16 @@ function cloneRepo(targetPath: string): void {
 /**
  * Clean up old cached versions, keeping only the current one.
  */
-function cleanupOldCaches(currentCommitHash: string): void {
-  if (!existsSync(CACHE_DIR)) {
+function cleanupOldCaches(cacheDir: string, currentCommitHash: string): void {
+  if (!existsSync(cacheDir)) {
     return;
   }
 
   try {
-    const entries = readdirSync(CACHE_DIR, { withFileTypes: true });
+    const entries = readdirSync(cacheDir, { withFileTypes: true });
     for (const entry of entries) {
       if (entry.isDirectory() && entry.name !== currentCommitHash) {
-        const oldCachePath = join(CACHE_DIR, entry.name);
+        const oldCachePath = join(cacheDir, entry.name);
         rmSync(oldCachePath, { recursive: true, force: true });
       }
     }
@@ -174,15 +182,18 @@ function cleanupOldCaches(currentCommitHash: string): void {
  * 3. If not, clones the repository and cleans up old caches
  *
  * @returns The path to the cached repository
- * @throws Error if unable to fetch or clone the repository
+ * @throws Error if unable to fetch or clone the repository, or a
+ * DirectoryRefusedError if no owner-only cache directory can be established
  */
 export function getAiConfigRepoPath(): string {
+  const cacheDir = ensureOwnedCacheDir();
+
   // 1. Get latest commit hash (first 10 chars)
   const commitHash = getLatestCommitHash();
 
   // 2. Reuse cached version if it still has content (macOS may have
   // swept its files but left the directory tree).
-  const cachedPath = join(CACHE_DIR, commitHash);
+  const cachedPath = join(cacheDir, commitHash);
   if (hasRootFile(cachedPath)) {
     return cachedPath;
   }
@@ -194,9 +205,52 @@ export function getAiConfigRepoPath(): string {
   cloneRepo(cachedPath);
 
   // 4. Clean up old cached versions
-  cleanupOldCaches(commitHash);
+  cleanupOldCaches(cacheDir, commitHash);
 
   return cachedPath;
+}
+
+/**
+ * The cached files are copied into the workspace, so every directory holding
+ * them must be owner-only. Falls back to `~/.nx` when the shared tmp root is
+ * refused, e.g. because another account created it.
+ */
+function ensureOwnedCacheDir(): string {
+  const shared = ensureSafeSharedRoot(NX_TMP_DIR);
+  const sharedCache = join(NX_USER_TMP_DIR, CACHE_DIR_NAME);
+  const sharedRefusal =
+    shared.status === 'ok'
+      ? ownedChainRefusal([NX_USER_TMP_DIR, sharedCache])
+      : shared.refusal;
+  if (!sharedRefusal) {
+    return sharedCache;
+  }
+
+  if (NX_HOME_TMP_DIR && !isSharedTmpDir(NX_HOME_TMP_DIR)) {
+    const homeCache = join(NX_HOME_TMP_DIR, CACHE_DIR_NAME);
+    if (!ownedChainRefusal([NX_HOME_TMP_DIR, homeCache])) {
+      return homeCache;
+    }
+  }
+  throw new DirectoryRefusedError(sharedRefusal);
+}
+
+function ownedChainRefusal(dirs: string[]): DirRefusal | undefined {
+  for (const dir of dirs) {
+    const owned = ensureOwnedPrivateDir(dir);
+    if (owned.status !== 'ok') {
+      return owned.refusal;
+    }
+  }
+  return undefined;
+}
+
+/** A `$HOME` of `/tmp` makes `~/.nx` the shared root itself, which must stay 1777. */
+function isSharedTmpDir(dir: string): boolean {
+  const resolved = canonicalDir(dir);
+  return [NX_TMP_DIR, NX_USER_TMP_DIR].some(
+    (shared) => canonicalDir(shared) === resolved
+  );
 }
 
 /**

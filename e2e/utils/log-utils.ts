@@ -1,4 +1,4 @@
-import { styleText } from 'node:util';
+import { stripVTControlCharacters, styleText } from 'node:util';
 
 const orangeColor = (text) => `\x1b[38;5;214m${text}\x1b[39m`;
 
@@ -71,4 +71,17 @@ export function trimDaemonLog(contents: string, tailLines = 30): string {
 
 export function secondsSince(startTime: number): string {
   return ((performance.now() - startTime) / 1000).toFixed(1);
+}
+
+export function hasAssignedPort(output: string, readyPrefix: string): boolean {
+  return stripVTControlCharacters(output)
+    .split(/\r?\n/)
+    .some((line) => {
+      const prefixIndex = line.indexOf(readyPrefix);
+      const port =
+        prefixIndex !== -1
+          ? line.slice(prefixIndex + readyPrefix.length).trim()
+          : '';
+      return /^[1-9]\d*$/.test(port) && Number(port) <= 65535;
+    });
 }

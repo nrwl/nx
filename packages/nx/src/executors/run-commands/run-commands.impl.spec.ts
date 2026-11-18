@@ -6,6 +6,8 @@ import { readFileSync, writeFileSync } from 'fs';
 import { env } from 'npm-run-path';
 import { relative } from 'path';
 import { dirSync, fileSync } from 'tmp';
+import { PseudoTerminal } from '../../tasks-runner/pseudo-terminal';
+import { logger } from '../../utils/logger';
 import runCommands, {
   interpolateArgsIntoCommand,
   runCommands as startRunCommands,
@@ -214,6 +216,87 @@ describe('Run Commands', () => {
     expect(result.terminalOutput).not.toContain('2 --key=123');
   });
 
+  describe('unknown options with object values', () => {
+    const lintContext = { projectName: 'proj', targetName: 'lint' } as any;
+    let warn: ReturnType<typeof vi.spyOn>;
+
+    beforeEach(() => {
+      warn = vi.spyOn(logger, 'warn').mockImplementation(() => {});
+    });
+
+    afterEach(() => {
+      warn.mockRestore();
+    });
+
+    it('should warn once per dropped option, naming it and the target', async () => {
+      const result = await runCommands(
+        {
+          commands: ['echo 1', 'echo 2 {args}'],
+          lintFilePatterns: ['a.ts'],
+          fix: true,
+          __unparsed__: [],
+        },
+        lintContext
+      );
+      expect(result.terminalOutput).toContain('1 --fix=true');
+      expect(result.terminalOutput).not.toContain('a.ts');
+      expect(warn).toHaveBeenCalledTimes(1);
+      expect(warn.mock.calls[0][0]).toContain('"lintFilePatterns"');
+      expect(warn.mock.calls[0][0]).toContain('proj:lint');
+      expect(warn.mock.calls[0][0]).toContain('"args"');
+    });
+
+    it('should not warn for string, number, boolean or null options', async () => {
+      await runCommands(
+        {
+          command: 'echo',
+          str: 'a',
+          num: 1,
+          bool: true,
+          nothing: null,
+          __unparsed__: [],
+        },
+        lintContext
+      );
+      expect(warn).not.toHaveBeenCalled();
+    });
+
+    it('should not warn for an object option built from a forwarded dotted flag', async () => {
+      const result = await runCommands(
+        {
+          command: 'echo vitest',
+          coverage: { enabled: true },
+          __unparsed__: ['--coverage.enabled=true'],
+        },
+        lintContext
+      );
+      expect(result.terminalOutput).toContain('vitest --coverage.enabled=true');
+      expect(warn).not.toHaveBeenCalled();
+    });
+
+    it('should not warn when unknown options are not forwarded', async () => {
+      await runCommands(
+        {
+          command: 'echo',
+          lintFilePatterns: ['a.ts'],
+          forwardAllArgs: false,
+          __unparsed__: [],
+        },
+        lintContext
+      );
+      await runCommands(
+        {
+          command: 'echo {args.fix}',
+          lintFilePatterns: ['a.ts'],
+          fix: true,
+          __unparsed__: [],
+        },
+        lintContext
+      );
+      expect(warn).not.toHaveBeenCalled();
+    });
+  });
+
   it('should interpolate all unknown args as if they were --args', async () => {
     const f = fileSync().name;
     const result = await runCommands(
@@ -349,8 +432,8 @@ describe('Run Commands', () => {
   describe('readyWhen', () => {
     describe('single string', () => {
       it('should error when parallel = false', async () => {
-        try {
-          await runCommands(
+        await expect(
+          runCommands(
             {
               commands: [{ command: 'echo foo' }, { command: 'echo bar' }],
               parallel: false,
@@ -358,13 +441,12 @@ describe('Run Commands', () => {
               __unparsed__: [],
             },
             context
-          );
-          fail('should throw');
-        } catch (e) {
-          expect(e.message).toEqual(
+          )
+        ).rejects.toThrow(
+          new Error(
             `ERROR: Bad executor config for run-commands - "readyWhen" can only be used when "parallel=true".`
-          );
-        }
+          )
+        );
       });
 
       it('should return success true when the string specified as ready condition is found', async () => {
@@ -383,6 +465,73 @@ describe('Run Commands', () => {
         expect(readFile(f)).toEqual('');
       });
 
+      it('should complete a single command when the string specified as ready condition is found in a terminal that supports a pseudo terminal', async () => {
+        const isSupported = vi
+          .spyOn(PseudoTerminal, 'isSupported')
+          .mockReturnValue(true);
+        try {
+          const f = fileSync().name;
+          const result = await runCommands(
+            {
+              command: `echo READY && sleep 1 && echo 1 >> ${f}`,
+              readyWhen: 'READY',
+              usePty: true,
+              __unparsed__: [],
+            },
+            context
+          );
+          expect(result).toEqual(expect.objectContaining({ success: true }));
+          expect(readFile(f)).toEqual('');
+          await vi.waitFor(() => expect(readFile(f)).toEqual('1'), {
+            timeout: 3000,
+          });
+        } finally {
+          isSupported.mockRestore();
+        }
+      });
+
+      it.each([
+        ['passed in', context, { id: 'app:serve', continuous: true }],
+        [
+          'resolved from the project graph',
+          {
+            projectName: 'app',
+            targetName: 'serve',
+            projectGraph: {
+              nodes: {
+                app: { data: { targets: { serve: { continuous: true } } } },
+              },
+            },
+          },
+          undefined,
+        ],
+      ])(
+        'should keep a continuous task running after the string specified as ready condition is found in a terminal that supports a pseudo terminal, with the task %s',
+        async (_, taskContext, task) => {
+          const isSupported = vi
+            .spyOn(PseudoTerminal, 'isSupported')
+            .mockReturnValue(true);
+          try {
+            const f = fileSync().name;
+            const runningTask = await startRunCommands(
+              {
+                command: `echo READY && sleep 1 && echo 1 >> ${f}`,
+                readyWhen: 'READY',
+                usePty: true,
+                __unparsed__: [],
+              },
+              taskContext as any,
+              task
+            );
+            const result = await runningTask.getResults();
+            expect(result.code).toBe(0);
+            expect(readFile(f)).toEqual('1');
+          } finally {
+            isSupported.mockRestore();
+          }
+        }
+      );
+
       it('should return success true when the string specified as ready condition is found on stderr', async () => {
         const result = await runCommands(
           {
@@ -393,6 +542,93 @@ describe('Run Commands', () => {
           context
         );
         expect(result).toEqual(expect.objectContaining({ success: true }));
+      });
+
+      it.each([
+        [
+          true,
+          'in two writes',
+          'READY',
+          [
+            `node -e "process.stdout.write('REA');setTimeout(()=>process.stdout.write('DY'),100)"`,
+          ],
+        ],
+        [
+          true,
+          'on stderr in two writes',
+          'READY',
+          [
+            `node -e "process.stderr.write('REA');setTimeout(()=>process.stderr.write('DY'),100)"`,
+          ],
+        ],
+        [
+          true,
+          'with an escape sequence inside it',
+          'READY',
+          [`node -e "process.stdout.write('RE\\u001b[1mADY')"`],
+        ],
+        [
+          true,
+          'with the escape sequence it holds',
+          '\u001b[1mREADY',
+          [`node -e "process.stdout.write('\\u001b[1mREADY')"`],
+        ],
+        [
+          true,
+          'in two writes with the escape sequence it holds',
+          '\u001b[1mREADY',
+          [
+            `node -e "process.stdout.write('\\u001b[1mREA');setTimeout(()=>process.stdout.write('DY'),100)"`,
+          ],
+        ],
+        [
+          false,
+          'across stdout and stderr',
+          'READY',
+          [
+            `node -e "process.stdout.write('REA');setTimeout(()=>process.stderr.write('DY'),100)"`,
+          ],
+        ],
+        [
+          false,
+          'across two commands',
+          'READY',
+          [
+            `node -e "process.stdout.write('REA')"`,
+            `node -e "setTimeout(()=>process.stdout.write('DY'),100)"`,
+          ],
+        ],
+      ])(
+        'should return success %s when the string specified as ready condition is printed %s',
+        async (success, _, readyWhen, commands) => {
+          const result = await runCommands(
+            {
+              commands,
+              parallel: true,
+              readyWhen,
+              __unparsed__: [],
+            },
+            context
+          );
+          expect(result.success).toBe(success);
+        }
+      );
+
+      it('should fail when every command exits before the string specified as ready condition is found', async () => {
+        const result = await runCommands(
+          {
+            commands: ['echo hi', 'echo there'],
+            parallel: true,
+            readyWhen: 'READY',
+            __unparsed__: [],
+          },
+          context
+        );
+        expect(result.success).toBe(false);
+        expect(result.terminalOutput).toContain('echo there');
+        expect(result.terminalOutput).toContain(
+          'exited before printing the readyWhen text "READY"'
+        );
       });
     });
 
@@ -425,26 +661,31 @@ describe('Run Commands', () => {
         expect(result).toEqual(expect.objectContaining({ success: true }));
       });
 
-      it('should keep waiting when not all strings specified as ready condition were found', async () => {
+      it('should keep waiting when not all strings specified as ready condition were found, then fail naming the missing ones', async () => {
         const f = fileSync().name;
         let result: { success: boolean } | null = null;
 
-        runCommands(
+        const run = runCommands(
           {
-            commands: [`echo 1 >> ${f} && echo READY`, `echo foo`],
+            commands: [`echo 1 >> ${f} && echo READY`, `echo foo && sleep 1`],
             parallel: true,
             readyWhen: ['READY', 'bar'],
             __unparsed__: [],
           },
 
           context
-        ).then((res) => {
+        );
+        run.then((res) => {
           result = res;
         });
 
         await new Promise((resolve) => setTimeout(resolve, 150));
         expect(readFile(f)).toEqual('1');
         expect(result).toBeNull();
+
+        const { success, terminalOutput } = await run;
+        expect(success).toBe(false);
+        expect(terminalOutput).toContain('readyWhen text "bar"');
       });
     });
   });
@@ -452,17 +693,16 @@ describe('Run Commands', () => {
   it('should stop execution and fail when a command fails', async () => {
     const f = fileSync().name;
 
-    try {
-      await runCommands(
-        {
-          commands: [`echo 1 >> ${f} && exit 1`, `echo 2 >> ${f}`],
-          parallel: false,
-          __unparsed__: [],
-        },
-        context
-      );
-      fail('should fail when a command fails');
-    } catch (e) {}
+    const result = await runCommands(
+      {
+        commands: [`echo 1 >> ${f} && exit 1`, `echo 2 >> ${f}`],
+        parallel: false,
+        __unparsed__: [],
+      },
+      context
+    );
+
+    expect(result.success).toBe(false);
     expect(readFile(f)).toEqual('1');
   });
 
@@ -1193,8 +1433,8 @@ describe('Run Commands', () => {
     });
 
     it('should error if the specified .env file does not exist', async () => {
-      try {
-        await runCommands(
+      await expect(
+        runCommands(
           {
             commands: [
               {
@@ -1206,14 +1446,52 @@ describe('Run Commands', () => {
           },
 
           context
-        );
-        fail('should not reach');
-      } catch (e) {
-        expect(e.message).toContain(
-          `no such file or directory, open '/somePath/.fakeEnv'`
-        );
-      }
+        )
+      ).rejects.toThrow(`no such file or directory, open '/somePath/.fakeEnv'`);
     });
+
+    it.each([
+      { streamOutput: true, streamed: 1 },
+      // The default export rethrows the error for its caller to print
+      { streamOutput: undefined, streamed: 0 },
+    ])(
+      'should report a non-zero exit code and the error if the specified .env file does not exist, with streamOutput $streamOutput',
+      async ({ streamOutput, streamed }) => {
+        const error = `no such file or directory, open '/somePath/.fakeEnv'`;
+        const stderrWrite = vi
+          .spyOn(process.stderr, 'write')
+          .mockImplementation(() => true);
+        try {
+          const task = await startRunCommands(
+            {
+              command: 'echo hi',
+              envFile: '/somePath/.fakeEnv',
+              streamOutput,
+              __unparsed__: [],
+            },
+            context
+          );
+          const output: string[] = [];
+          task.onOutput((chunk) => output.push(chunk));
+          const { code, terminalOutput } = await new Promise<{
+            code: number;
+            terminalOutput: string;
+          }>((res) =>
+            task.onExit((code, terminalOutput) => res({ code, terminalOutput }))
+          );
+          expect(code).toBe(1);
+          expect(terminalOutput).toContain(error);
+          expect(output).toEqual([expect.stringContaining(error)]);
+          expect(
+            stderrWrite.mock.calls.filter(([chunk]) =>
+              String(chunk).includes(error)
+            )
+          ).toHaveLength(streamed);
+        } finally {
+          stderrWrite.mockRestore();
+        }
+      }
+    );
   });
 
   describe('fail-fast behavior in parallel execution', () => {

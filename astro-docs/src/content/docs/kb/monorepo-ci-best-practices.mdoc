@@ -310,14 +310,14 @@ same commands you already run.
 Declare the shape of the run once:
 
 ```yaml
-# .nx/ci-config.yaml
-dte:
-  distribute-on: 5 linux-medium-js
-lifecycle:
-  stop-after:
-    - lint
-    - test
-    - build
+# .nx/pipelines/ci.yaml
+worker-templates:
+  default:
+    workers: 5 linux-medium-js
+    stop-after:
+      - lint
+      - test
+      - build
 ```
 
 Then start the agents before your tasks:

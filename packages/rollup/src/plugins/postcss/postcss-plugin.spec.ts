@@ -1,5 +1,5 @@
 import { postcss } from './postcss-plugin';
-import type { Plugin, PluginContext } from 'rollup';
+import type { PluginContext } from 'rollup';
 
 describe('postcss plugin', () => {
   describe('plugin initialization', () => {

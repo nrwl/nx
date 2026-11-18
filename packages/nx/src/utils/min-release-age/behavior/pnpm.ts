@@ -460,7 +460,7 @@ export function pickPnpmVersion(
 
   const wholeMapMissing = metadata.time === null;
   if (wholeMapMissing && behavior.missingTimeMap === 'error') {
-    throw missingTime(metadata, policy);
+    throw missingTime(metadata);
   }
 
   const type = classifySpec(spec);
@@ -491,7 +491,7 @@ function pickExact(
   behavior: PnpmBehavior
 ): PickOutcome {
   const unconstrained = spec;
-  if (mature(metadata, policy, spec, behavior)) {
+  if (mature(metadata, policy, spec)) {
     return { version: spec, unconstrained };
   }
   if (behavior.looseFallback) {
@@ -512,12 +512,12 @@ function pickTag(
     throw violation(metadata, policy, spec, 'tag', []);
   }
   const unconstrained = tagTarget;
-  if (mature(metadata, policy, tagTarget, behavior)) {
+  if (mature(metadata, policy, tagTarget)) {
     return { version: tagTarget, unconstrained };
   }
 
   const degraded = degradeTagToCompliant(tagTarget, metadata, (v) =>
-    mature(metadata, policy, v, behavior)
+    mature(metadata, policy, v)
   );
   if (degraded) {
     return { version: degraded, unconstrained };
@@ -540,7 +540,7 @@ function pickRange(
   behavior: PnpmBehavior,
   unconstrained: string
 ): PickOutcome {
-  const matureInRange = matureVersions(metadata, policy, behavior);
+  const matureInRange = matureVersions(metadata, policy);
   const newest = maxSatisfying(matureInRange, spec, {
     includePrerelease: false,
   });
@@ -568,10 +568,9 @@ function pickRange(
 
 function matureVersions(
   metadata: RegistryMetadata,
-  policy: MinReleaseAgePolicy,
-  behavior: PnpmBehavior
+  policy: MinReleaseAgePolicy
 ): string[] {
-  return metadata.versions.filter((v) => mature(metadata, policy, v, behavior));
+  return metadata.versions.filter((v) => mature(metadata, policy, v));
 }
 
 // pnpm blocks a version whose individual time entry is missing (treated too
@@ -579,8 +578,7 @@ function matureVersions(
 function mature(
   metadata: RegistryMetadata,
   policy: MinReleaseAgePolicy,
-  version: string,
-  behavior: PnpmBehavior
+  version: string
 ): boolean {
   if (policy.isExcluded(metadata.name, version)) {
     return true;
@@ -702,10 +700,7 @@ function failOnImmatureDetail(
   );
 }
 
-function missingTime(
-  metadata: RegistryMetadata,
-  policy: MinReleaseAgePolicy
-): MinReleaseAgeViolationError {
+function missingTime(metadata: RegistryMetadata): MinReleaseAgeViolationError {
   return new MinReleaseAgeViolationError({
     packageManager: 'pnpm',
     packageName: metadata.name,

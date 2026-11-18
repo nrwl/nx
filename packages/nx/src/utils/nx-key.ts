@@ -1,4 +1,8 @@
-import { getNxRequirePaths } from './installation-directory';
+import { pathToFileURL } from 'url';
+import {
+  getNxRequirePaths,
+  resolveInstalledPackage,
+} from './installation-directory';
 import { getPackageManagerCommand } from './package-manager';
 import { workspaceRoot } from './workspace-root';
 import type { NxKey } from '@nx/key';
@@ -21,26 +25,30 @@ export function createNxKeyLicenseeInformation(nxKey: NxKey) {
 // is just the filesystem lookup and is microseconds when the package is absent.
 // Only treat MODULE_NOT_FOUND as "not installed" so unrelated errors (permission,
 // corrupt package.json, etc.) still surface instead of being silently hidden.
-function packageInstalled(name: string): boolean {
+function resolveInstalled(name: string): string | null {
   try {
-    require.resolve(name, { paths: getNxRequirePaths() });
-    return true;
+    return pathToFileURL(resolveInstalledPackage(name, getNxRequirePaths()))
+      .href;
   } catch (e: any) {
-    if (e?.code === 'MODULE_NOT_FOUND') return false;
+    if (e?.code === 'MODULE_NOT_FOUND') return null;
     throw e;
   }
 }
 
 export async function getNxKeyInformation(): Promise<NxKey | null> {
-  if (packageInstalled('@nx/key')) {
-    const { getNxKeyInformationAsync } = await import('@nx/key');
+  const nxKeyUrl = resolveInstalled('@nx/key');
+  if (nxKeyUrl) {
+    const { getNxKeyInformationAsync }: typeof import('@nx/key') = await import(
+      nxKeyUrl
+    );
     return getNxKeyInformationAsync(workspaceRoot);
   }
-  if (packageInstalled('@nx/powerpack-license')) {
+  const powerpackLicenseUrl = resolveInstalled('@nx/powerpack-license');
+  if (powerpackLicenseUrl) {
     const {
       getPowerpackLicenseInformation,
       getPowerpackLicenseInformationAsync,
-    } = await import('@nx/powerpack-license');
+    } = await import(powerpackLicenseUrl);
     return (
       getPowerpackLicenseInformationAsync ?? getPowerpackLicenseInformation
     )(workspaceRoot);

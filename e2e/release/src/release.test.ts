@@ -43,13 +43,17 @@ expect.addSnapshotSerializer({
         .replaceAll(/size:\s*\d*\s?B/g, 'size: XXXB')
         .replaceAll(/\d*\.\d*\s?kB/g, 'XXX.XXX kb')
         .replaceAll(/\b[a-fA-F0-9]{7}\b/g, '{COMMIT_SHA}')
-        .replaceAll(/Test @[\w\d]+/g, 'Test @{COMMIT_AUTHOR}')
         // Normalize the version title date.
         .replaceAll(/\(\d{4}-\d{2}-\d{2}\)/g, '(YYYY-MM-DD)')
         // We trim each line to reduce the chances of snapshot flakiness
         .split('\n')
         .map((r) => r.trim())
         .join('\n')
+        // Either the dependency chain or the independent package can take longer.
+        .replaceAll(
+          /^Critical path: \{DURATION\} \((?:1 task|2 tasks)\)$/gm,
+          'Critical path: {DURATION} ({TASK_COUNT} tasks)'
+        )
     );
   },
   test(val: string) {
@@ -198,7 +202,7 @@ describe('nx release', () => {
       +
       + ### ❤️ Thank You
       +
-      + - Test @{COMMIT_AUTHOR}
+      + - Test @test
 
 
       NX   Committing changes with git
@@ -218,7 +222,7 @@ describe('nx release', () => {
 
       ### ❤️ Thank You
 
-      - Test @{COMMIT_AUTHOR}
+      - Test @test
     `);
 
     // This is the verdaccio instance that the e2e tests themselves are working from
@@ -308,7 +312,7 @@ describe('nx release', () => {
 
       Run duration: {DURATION}
       Cache: 0/3 hit (0%)
-      Critical path: {DURATION} (2 tasks)
+      Critical path: {DURATION} ({TASK_COUNT} tasks)
       Recoverable time: {DURATION}
 
     `);
@@ -498,7 +502,7 @@ describe('nx release', () => {
 
       Run duration: {DURATION}
       Cache: 0/3 hit (0%)
-      Critical path: {DURATION} (2 tasks)
+      Critical path: {DURATION} ({TASK_COUNT} tasks)
       Recoverable time: {DURATION}
 
   `);
@@ -606,7 +610,7 @@ describe('nx release', () => {
 
       Run duration: {DURATION}
       Cache: 0/3 hit (0%)
-      Critical path: {DURATION} (2 tasks)
+      Critical path: {DURATION} ({TASK_COUNT} tasks)
       Recoverable time: {DURATION}
 
     `);
@@ -646,7 +650,7 @@ describe('nx release', () => {
 
       Run duration: {DURATION}
       Cache: 0/3 hit (0%)
-      Critical path: {DURATION} (2 tasks)
+      Critical path: {DURATION} ({TASK_COUNT} tasks)
       Recoverable time: {DURATION}
 
     `);
@@ -691,7 +695,7 @@ describe('nx release', () => {
 
       Run duration: {DURATION}
       Cache: 0/3 hit (0%)
-      Critical path: {DURATION} (2 tasks)
+      Critical path: {DURATION} ({TASK_COUNT} tasks)
       Recoverable time: {DURATION}
 
     `);

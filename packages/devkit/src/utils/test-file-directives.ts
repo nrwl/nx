@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import type { TargetConfiguration } from 'nx/src/devkit-exports';
+import { normalizePath, type TargetConfiguration } from 'nx/src/devkit-exports';
 import { emitPluginWorkerLog } from 'nx/src/devkit-internals';
 import { parseNxDirectives } from './nx-directives';
 import {
@@ -9,11 +9,15 @@ import {
 } from './test-file-depends-on';
 import { withoutServerInputs } from './without-server-inputs';
 
+export type TestFileDirective = 'depends-on' | 'ignore-server-inputs';
+
 /**
  * `target` with the `@nx-depends-on` and `@nx-ignore-server-inputs`
  * directives of a workspace-relative test file applied. A directive that lists
  * no projects, has a value it does not take, or is not supported
- * (`ignoreServerInputs: false`) is skipped with a warning.
+ * (`ignoreServerInputs: false`) is skipped with a warning. The target's
+ * metadata records the file, and `ignore-server-inputs` when supported, for
+ * `recordedTestFile` and `appliesTestFileDirective`.
  */
 export function applyTestFileDirectives(
   target: TargetConfiguration,
@@ -24,7 +28,15 @@ export function applyTestFileDirectives(
   const directives = parseNxDirectives(
     readFileSync(join(workspaceRoot, file), 'utf-8')
   );
-  let result = target;
+  let result: TargetConfiguration = {
+    ...target,
+    metadata: {
+      ...target.metadata,
+      testFileDirectives: options.ignoreServerInputs
+        ? { file: normalizePath(file), 'ignore-server-inputs': true }
+        : { file: normalizePath(file) },
+    },
+  };
 
   const dependsOn = directives.get('depends-on');
   if (dependsOn !== undefined) {
@@ -57,4 +69,28 @@ export function applyTestFileDirectives(
   }
 
   return result;
+}
+
+/**
+ * The workspace-relative test file that `target` runs, when
+ * `applyTestFileDirectives` returned it.
+ */
+export function recordedTestFile(
+  target: TargetConfiguration
+): string | undefined {
+  return target.metadata?.testFileDirectives?.file;
+}
+
+/**
+ * Whether `target` applies `directive` to its test file. Every target that
+ * `applyTestFileDirectives` returned applies `depends-on`, and any other
+ * target applies neither.
+ */
+export function appliesTestFileDirective(
+  target: TargetConfiguration,
+  directive: TestFileDirective
+): boolean {
+  return directive === 'depends-on'
+    ? recordedTestFile(target) !== undefined
+    : target.metadata?.testFileDirectives?.[directive] === true;
 }

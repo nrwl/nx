@@ -2,6 +2,7 @@
 const scopes = [
   { value: 'angular',           name: 'angular:               anything Angular specific' },
   { value: 'angular-rspack',    name: 'angular-rspack:        anything Angular Rspack specific' },
+  { value: 'conformance',       name: 'conformance:           anything Conformance specific' },
   { value: 'core',              name: 'core:                  anything Nx core specific' },
   { value: 'bundling',          name: 'bundling:              anything bundling specific (e.g. rollup, webpack, etc.)' },
   { value: 'detox',             name: 'detox:                 anything Detox specific' },
@@ -16,6 +17,7 @@ const scopes = [
   { value: 'node',              name: 'node:                  anything Node specific' },
   { value: 'nuxt',              name: 'nuxt:                  anything Nuxt specific' },
   { value: 'nx-cloud',          name: 'nx-cloud:              anything Nx Cloud specific' },
+  { value: 'owners',            name: 'owners:                anything Owners specific' },
   { value: 'nx-plugin',         name: 'nx-plugin:             anything Nx Plugin specific' },
   { value: 'nx-dev',            name: 'nx-dev:                anything related to docs infrastructure' },
   { value: 'react',             name: 'react:                 anything React specific' },

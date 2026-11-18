@@ -85,7 +85,6 @@ function createWebpackConfig(
     main: options.main ?? joinPathFragments(project.root, 'src/main.ts'),
     tsConfig:
       options.tsConfig ?? joinPathFragments(project.root, 'tsconfig.app.json'),
-    webpackConfig: joinPathFragments(project.root, 'webpack.config.js'),
   };
 
   if (options.babelConfig) {

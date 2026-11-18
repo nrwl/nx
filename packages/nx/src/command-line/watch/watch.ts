@@ -128,7 +128,7 @@ class BatchCommandRunner extends BatchFunctionRunner {
 
     return Promise.all(
       envs.map((env) => {
-        return new Promise<void>((resolve, reject) => {
+        return new Promise<void>((resolve) => {
           const commandExec = spawn(this.command, {
             stdio: 'inherit',
             shell: true,

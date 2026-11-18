@@ -303,7 +303,7 @@ Add `{ "env": "CI" }` to that list, or add `"..."` to keep the inferred inputs.
 
 Run `nx e2e frontend-e2e` to execute e2e tests with Cypress.
 
-You can run your e2e test against a production build by using the `production` [configuration](/docs/kb/executors-and-configurations#use-task-configurations)
+You can run your e2e test against a production build by using the `production` [configuration](/docs/kb/executors-and-configurations#use-configurations)
 
 ```shell
 nx e2e frontend-e2e --configuration=production
@@ -355,9 +355,9 @@ For adding more dynamic configurations to your Cypress configuration, you can lo
 
 ## Environment variables
 
-If you need to pass a variable to Cypress that you don't want to commit to your repository (i.e. API keys, dynamic values based on configurations, API URLs), you can use [Cypress environment variables](https://docs.cypress.io/guides/guides/environment-variables).
+If you need to pass a variable to Cypress that you don't want to commit to your repository (i.e. API keys, dynamic values based on configurations, API URLs), you can use [Cypress environment variables](https://docs.cypress.io/app/guides/environment-variables).
 
-The most common ways to pass environment variables to Cypress are the [`cypress.env.json` file](https://docs.cypress.io/guides/guides/environment-variables#Option-1-configuration-file) and the `-e` Cypress arg, which you can set in the [project configuration](/docs/reference/project-configuration#task-definitions-targets) or on the command line.
+The most common ways to pass environment variables to Cypress are the [`cypress.env.json` file](https://docs.cypress.io/app/guides/environment-variables#2-cypressenvjson) and the `-e` Cypress arg, which you can set in the [project configuration](/docs/reference/project-configuration#task-definitions-targets) or on the command line.
 
 Create a `cypress.env.json` file in the projects root (i.e. `apps/my-cool-app-e2e/cypress.env.json`). Cypress will automatically pick up this file. This method is helpful for configurations that you don't want to commit. Make sure to add the file to the `.gitignore` and add documentation so people in your repo know what values to populate in their local copy of the `cypress.env.json` file.
 

@@ -181,5 +181,22 @@ describe('markdown utils', () => {
         }
       `);
     });
+
+    it('should only treat a heading at the start of a \\n separated line as a release', () => {
+      const markdown = [
+        '## 1.0.1',
+        '',
+        '### ❤️ Thank You',
+        '',
+        '- Mallory\r## 1.0.2\u2028## 1.1.0\u2029## 2.0.0',
+        '',
+        '## 1.0.0\r',
+        '\r',
+        '- Initial release\r',
+      ].join('\n');
+      expect(
+        parseChangelogMarkdown(markdown).releases.map((r) => r.version)
+      ).toEqual(['1.0.1', '1.0.0']);
+    });
   });
 });

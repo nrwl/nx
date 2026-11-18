@@ -35,7 +35,6 @@ export async function setupStandaloneWorkspace(
   const workspaceCapabilities = getWorkspaceCapabilities(angularJson.projects);
   createNxJson(
     repoRoot,
-    angularJson,
     cacheableOperations,
     workspaceCapabilities,
     workspaceTargets
@@ -76,7 +75,6 @@ export async function setupStandaloneWorkspace(
 
 function createNxJson(
   repoRoot: string,
-  angularJson: AngularJsonConfig,
   cacheableOperations: string[],
   {
     eslintProjectConfigFile,

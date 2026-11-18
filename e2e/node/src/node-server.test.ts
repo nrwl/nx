@@ -2,6 +2,7 @@ import {
   checkFilesDoNotExist,
   checkFilesExist,
   cleanupProject,
+  configureTargetOptions,
   getSelectedPackageManager,
   killPort,
   killProcessAndPorts,
@@ -19,6 +20,7 @@ import { stripVTControlCharacters } from 'node:util';
 
 describe('Node Applications + webpack', () => {
   let proj: string;
+  let restoreServerPort: (() => void) | undefined;
   const selectedPm = getSelectedPackageManager();
 
   // TODO(nicholas): Look into how this can work with npm instead of forcing pnpm.
@@ -31,9 +33,13 @@ describe('Node Applications + webpack', () => {
       // Solution is to use pnpm or run fix it via npm ex.(npm dedupe --force)
       packageManager: selectedPm === 'npm' ? 'pnpm' : selectedPm,
     });
+    restoreServerPort = configureTargetOptions(['@nx/js:node'], { port: 0 });
   });
 
-  afterAll(() => cleanupProject());
+  afterAll(() => {
+    restoreServerPort?.();
+    cleanupProject();
+  });
 
   function addLibImport(appName: string, libName: string, importPath?: string) {
     const mainFile = `apps/${appName}/src/main.ts`;
@@ -94,7 +100,7 @@ describe('Node Applications + webpack', () => {
         `generate @nx/node:app apps/${koaApp} --framework=koa --port=${koaPort} --no-interactive --linter=eslint --unitTestRunner=jest --e2eTestRunner=jest`
       );
       runCLI(
-        `generate @nx/node:app apps/${nestApp} --framework=nest --port=${nestPort} --bundler=webpack --no-interactive --linter=eslint --unitTestRunner=jest --e2eTestRunner=jest --verbose`
+        `generate @nx/node:app apps/${nestApp} --framework=nest --port=${nestPort} --bundler=webpack --no-interactive --linter=eslint --unitTestRunner=vitest --e2eTestRunner=jest --verbose`
       );
 
       addLibImport(expressApp, testLib1);
@@ -191,12 +197,18 @@ describe('Node Applications + webpack', () => {
       return config;
     });
 
-    await runCommandUntil(`serve ${nodeApp1} `, (output) =>
-      output.includes('Hello World')
+    const p = await runCommandUntil(
+      `serve ${nodeApp1}`,
+      (output) => output.includes('Hello World'),
+      { timeout: 120_000 }
     );
 
-    checkFilesExist(`dist/apps/${nodeApp1}/main.js`);
-    checkFilesExist(`dist/apps/${nodeApp2}/main.js`);
+    try {
+      checkFilesExist(`dist/apps/${nodeApp1}/main.js`);
+      checkFilesExist(`dist/apps/${nodeApp2}/main.js`);
+    } finally {
+      await killProcessAndPorts(p.pid);
+    }
   }, 300_000);
 
   it('should wait for the previous process to exit on watch restart so the port is released', async () => {
@@ -223,8 +235,10 @@ describe('Node Applications + webpack', () => {
       `
     );
 
-    const p = await runCommandUntil(`serve ${app}`, (output) =>
-      output.includes(`Listening on ${port}`)
+    const p = await runCommandUntil(
+      `serve ${app}`,
+      (output) => output.includes(`Listening on ${port}`),
+      { timeout: 120_000 }
     );
 
     try {

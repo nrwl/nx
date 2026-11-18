@@ -14,7 +14,9 @@ export async function detectUiFramework(
       continue;
     }
 
-    const npmDependency = dep.target.replace('npm:', '');
+    const npmDependency =
+      graph.externalNodes?.[dep.target]?.data.packageName ??
+      dep.target.replace('npm:', '');
 
     if (
       dep.target.startsWith(`npm:@${ANGULAR_NPM_SCOPE}/`) ||

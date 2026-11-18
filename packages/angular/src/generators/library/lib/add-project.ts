@@ -1,10 +1,6 @@
 import type { Tree } from '@nx/devkit';
 import { addBuildTargetDefaults } from '@nx/devkit/internal';
-import {
-  addProjectConfiguration,
-  joinPathFragments,
-  readJson,
-} from '@nx/devkit';
+import { addProjectConfiguration, joinPathFragments } from '@nx/devkit';
 import { addReleaseConfigForNonTsSolution } from '@nx/js/internal';
 import type { AngularProjectConfiguration } from '../../../utils/types';
 import type { NormalizedSchema } from './normalized-schema';
@@ -47,7 +43,6 @@ export async function addProject(
     };
 
     if (libraryOptions.publishable) {
-      const nxJson = readJson(tree, 'nx.json');
       await addReleaseConfigForNonTsSolution(
         tree,
         libraryOptions.name,

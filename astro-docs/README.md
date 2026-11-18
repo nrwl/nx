@@ -199,6 +199,24 @@ npx astro dev
 npx astro dev --port 3000
 ```
 
+### Running browser tests
+
+Run `pnpm nx pw-e2e astro-docs` to test the development server. Run
+`pnpm nx e2e-ci astro-docs` to test the built site with the preview server.
+Both servers use a two-minute readiness timeout for `/docs`. The check follows
+redirects and requires a final 2xx response. It verifies the URL's response and
+does not identify the process serving it.
+
+For direct Playwright invocation, start the local server first, then run
+`pnpm exec playwright test --config astro-docs/playwright.config.ts`.
+Global setup retains the same two-minute readiness check for this workflow.
+Each HTTP request has a five-second deadline.
+
+`BASE_URL` changes the browser destination only. Both Nx and direct Playwright
+invocations still require `http://localhost:4321/docs`, including when
+`BASE_URL` points to a deployment. Start the local server on port 4321 for
+these tests.
+
 ### Adding New Content
 
 #### Regular Documentation

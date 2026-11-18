@@ -6,7 +6,7 @@ export const yargsStopAllAgentsCommand: CommandModule = {
   command: 'stop-all-agents [options]',
   aliases: ['complete-ci-run'],
   describe:
-    'Terminates all dedicated agents associated with this CI pipeline execution. This command is an alias for [`nx-cloud stop-all-agents`](/docs/reference/nx-cloud-cli#nx-cloud-stop-all-agents).',
+    'Terminates all dedicated agents associated with this CI pipeline execution. This command is an alias for [`nx-cloud stop-all-agents`](/docs/reference/nx-cloud-cli#nx-cloud-stop-all-workers).',
   builder: (yargs) =>
     withVerbose(yargs)
       .help(false)

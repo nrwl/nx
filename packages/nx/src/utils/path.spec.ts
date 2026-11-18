@@ -45,4 +45,21 @@ describe('isContainedRelativePath', () => {
   it('should reject absolute paths, which path.join would treat as relative', () => {
     expect(isContainedRelativePath('/etc/profile')).toBe(false);
   });
+
+  it.each(['.\\migrations.json', 'a\\b\\..\\migrations.json'])(
+    'should accept the contained backslash-separated path %s',
+    (path) => {
+      expect(isContainedRelativePath(path)).toBe(true);
+    }
+  );
+
+  it.each([
+    '..\\migrations.json',
+    'a/..\\..\\migrations.json',
+    '\\etc\\profile',
+    'C:\\etc\\profile',
+    'C:a\\..\\..\\migrations.json',
+  ])('should reject the backslash-separated escaping path %s', (path) => {
+    expect(isContainedRelativePath(path)).toBe(false);
+  });
 });

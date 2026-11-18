@@ -1,29 +1,27 @@
-import { TasksRunner } from './tasks-runner';
 import {
   getRunner,
   selectTasksForProjects,
   setEnvVarsBasedOnArgs,
 } from './run-command';
 import type { NxArgs } from '../utils/command-line-utils';
-import { NxJsonConfiguration } from '../config/nx-json';
-import { join } from 'path';
 // getRunner loads the runner with a bare require, so compare against the
 // instance from the same channel rather than the vite-imported copy.
 const {
   nxCloudTasksRunnerShell,
 } = require('../nx-cloud/nx-cloud-tasks-runner-shell');
 import { withEnvironmentVariables } from '../internal-testing-utils/with-environment';
+import { resolveInstalledPackage } from '../utils/installation-directory';
+
+vi.mock('../utils/installation-directory', async (importActual) => {
+  const actual =
+    await importActual<typeof import('../utils/installation-directory')>();
+  return {
+    ...actual,
+    resolveInstalledPackage: vi.fn(actual.resolveInstalledPackage),
+  };
+});
 
 describe('getRunner', () => {
-  let nxJson: NxJsonConfiguration;
-  let mockRunner: TasksRunner;
-  let overrides: any;
-
-  beforeEach(() => {
-    nxJson = {};
-    mockRunner = vi.fn();
-  });
-
   it('uses default runner when no tasksRunnerOptions are present', () => {
     // getRunner loads the runner with a bare require, so fetch the expected
     // instance through the same channel rather than mocking the module.
@@ -73,6 +71,15 @@ describe('getRunner', () => {
         "url": "https://my-nx-cloud.app",
       }
     `);
+  });
+
+  it('looks up the legacy nx-cloud package only inside the workspace and nx installation', () => {
+    const { tasksRunner } = getRunner({}, { nxCloudId: 'XXXX-XXX' });
+
+    expect(resolveInstalledPackage).toHaveBeenCalledWith('nx-cloud', [
+      __dirname,
+    ]);
+    expect(tasksRunner).toEqual(nxCloudTasksRunnerShell);
   });
 
   it('uses cloud runner when tasksRunnerOptions are not present and accessToken is set in env', () => {

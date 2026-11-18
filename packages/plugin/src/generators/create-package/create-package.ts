@@ -1,5 +1,6 @@
 import {
   addDependenciesToPackageJson,
+  detectPackageManager,
   formatFiles,
   generateFiles,
   GeneratorCallback,
@@ -225,6 +226,8 @@ function addE2eProject(host: Tree, options: NormalizedSchema) {
     join(projectConfiguration.root, 'package.json')
   );
 
+  const packageManager = detectPackageManager();
+
   generateFiles(
     host,
     joinPathFragments(__dirname, './files/e2e'),
@@ -232,7 +235,8 @@ function addE2eProject(host: Tree, options: NormalizedSchema) {
     {
       pluginName: options.project,
       cliName: options.name,
-      packageManagerCommands: getPackageManagerCommand(),
+      packageManager,
+      packageManagerCommands: getPackageManagerCommand(packageManager),
       pluginPackageName,
       tmpl: '',
     }

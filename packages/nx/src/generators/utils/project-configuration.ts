@@ -17,7 +17,6 @@ import { output } from '../../utils/output';
 import { PackageJson } from '../../utils/package-json';
 import { joinPathFragments, normalizePath } from '../../utils/path';
 import { readJson, writeJson } from './json';
-import { readNxJson } from './nx-json';
 
 import type { Tree } from '../tree';
 import { toProjectName } from '../../config/to-project-name';

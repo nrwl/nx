@@ -1,5 +1,5 @@
 extends: substitution
-message: "Use '%s' instead of '%s'. Product names must be capitalized."
+message: "Use '%s' instead of '%s'. Product names must use their official casing."
 level: error
 ignorecase: false
 swap:
@@ -8,3 +8,4 @@ swap:
   '(?:nx agents|NX Agents|Nx agents|NX agents)': Nx Agents
   '(?:nx replay|NX Replay|Nx replay|NX replay)': Nx Replay
   '(?:UltraCache|Ultra Cache|Ultra cache)': Ultracache
+  '(?:PNPM|Pnpm)': pnpm

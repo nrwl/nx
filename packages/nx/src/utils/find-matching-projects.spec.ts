@@ -407,8 +407,13 @@ describe.each([
   });
 });
 
+// Keep the fastest run, since a pause or preemption only adds to a run's time
 function time(fn: () => void, iterations = 1) {
-  const start = performance.now();
-  for (let i = 0; i < iterations; i++) fn();
-  return performance.now() - start;
+  let fastest = Infinity;
+  for (let run = 0; run < 10; run++) {
+    const start = performance.now();
+    for (let i = 0; i < iterations; i++) fn();
+    fastest = Math.min(fastest, performance.now() - start);
+  }
+  return fastest;
 }

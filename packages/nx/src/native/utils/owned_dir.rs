@@ -26,10 +26,10 @@ const PEER_WRITE_BITS: u32 = 0o022;
 /// Why a guard refused a directory. Data, not a sentence: `remedy_for` decides
 /// on it.
 ///
-/// `ForeignOwner` and `ForeignSharedContainer` are separate variants rather
-/// than one carrying a flag, because which advice is correct turns on which was
-/// refused: root can take over the shared container, and cannot help with a
-/// per-user directory.
+/// The foreign-owner variants are separate rather than one carrying a flag,
+/// because which advice is correct turns on which directory was refused: root
+/// can take over the shared container, cannot help with a per-user directory,
+/// and should not be asked to open up an arbitrary level above a configured one.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum DirRefusal {
     NotCreated { dir: PathBuf, code: Option<String> },
@@ -37,6 +37,7 @@ pub enum DirRefusal {
     NotADirectory { dir: PathBuf, symlink: bool },
     ForeignOwner { dir: PathBuf, uid: u32 },
     ForeignSharedContainer { dir: PathBuf, uid: u32 },
+    ForeignAncestor { dir: PathBuf, uid: u32 },
     NotTightenable { dir: PathBuf, mode: u32 },
     PeerWritableNotSticky { dir: PathBuf, mode: u32 },
 }
@@ -81,6 +82,11 @@ pub fn describe_refusal(refusal: &DirRefusal) -> String {
         }
         DirRefusal::ForeignSharedContainer { dir, uid } => format!(
             "{} belongs to another user (uid {}) rather than to you or to root",
+            dir.display(),
+            uid
+        ),
+        DirRefusal::ForeignAncestor { dir, uid } => format!(
+            "{} sits above the configured directory and belongs to another user (uid {}) rather than to you or to root",
             dir.display(),
             uid
         ),
@@ -138,6 +144,10 @@ pub fn remedy_for(refusal: &DirRefusal) -> Option<String> {
                 dir.display()
             ))
         }
+        DirRefusal::ForeignAncestor { dir, .. } => Some(format!(
+            "{} belongs to another user on this machine, so Nx will not create anything beneath it. Point the setting that chose this location at a path where you or root own every level.",
+            dir.display()
+        )),
         DirRefusal::NotADirectory { symlink: false, .. }
         | DirRefusal::NotCreated { .. }
         | DirRefusal::NotInspectable { .. }
@@ -406,6 +416,21 @@ pub fn is_peer_writable(dir: &Path) -> bool {
         .unwrap_or(false)
 }
 
+/// Whether an existing `dir` is a real directory owned by us that no other user
+/// can write into. Judges only: nothing is created or re-locked, so a directory
+/// another program made stays as it was. Always `true` where ownership is
+/// unknowable.
+pub fn is_owned_unshared_dir(dir: &Path) -> bool {
+    if !HAS_OWNERSHIP {
+        return true;
+    }
+    std::fs::symlink_metadata(dir).is_ok_and(|metadata| {
+        metadata.is_dir()
+            && uid_of(&metadata) == current_uid()
+            && mode_of(&metadata) & PEER_WRITE_BITS == 0
+    })
+}
+
 /// Create a shared container as sticky + world-writable if it does not exist,
 /// and report whether the resulting path is safe for the current user.
 ///
@@ -434,6 +459,108 @@ pub fn ensure_safe_shared_root(dir: &Path) -> GuardResult<()> {
     // peer-writable non-sticky container, which trusting the creation would
     // brand safe.
     is_safe_shared_root(dir)
+}
+
+/// The kernel's own limit on links followed in one lookup.
+const MAX_LINKS: usize = 40;
+
+/// Whether a level above a configured directory is safe to look the next name
+/// up in. Owned by us or root, and not writable by other users unless sticky.
+/// Group write on a level of ours is the user's own grant and is accepted.
+fn is_safe_ancestor(dir: &Path, uid: u32, mode: u32) -> GuardResult<()> {
+    let ours = uid == current_uid();
+    if !ours && uid != 0 {
+        return Err(DirRefusal::ForeignAncestor {
+            dir: dir.to_path_buf(),
+            uid,
+        });
+    }
+
+    let peer_write = if ours { 0o002 } else { PEER_WRITE_BITS };
+    if mode & peer_write == 0 || mode & S_ISVTX != 0 {
+        Ok(())
+    } else {
+        Err(DirRefusal::PeerWritableNotSticky {
+            dir: dir.to_path_buf(),
+            mode,
+        })
+    }
+}
+
+/// Create `dir` and any missing level above it, judging every level from the
+/// filesystem root down with `is_safe_ancestor`.
+///
+/// Walked one name at a time rather than canonicalized: each name is looked up
+/// only in a level already judged, and a link is followed only when it is ours
+/// or root's.
+pub fn ensure_safe_ancestry(dir: &Path) -> GuardResult<()> {
+    if !HAS_OWNERSHIP {
+        return mkdir(dir, 0o755, true).map_err(|e| not_created(dir, &e));
+    }
+
+    let mut pending = resolve_path(dir);
+    let mut judged = PathBuf::new();
+    let mut links = 0;
+
+    'walk: loop {
+        let path = std::mem::take(&mut pending);
+        let mut components = path.components();
+        while let Some(component) = components.next() {
+            let name = match component {
+                Component::Normal(name) => name,
+                Component::CurDir => continue,
+                Component::ParentDir => {
+                    judged.pop();
+                    continue;
+                }
+                Component::Prefix(_) | Component::RootDir => {
+                    judged.push(component);
+                    let metadata = std::fs::symlink_metadata(&judged).map_err(|e| {
+                        DirRefusal::NotInspectable {
+                            dir: judged.clone(),
+                            code: error_code(&e),
+                        }
+                    })?;
+                    is_safe_ancestor(&judged, uid_of(&metadata), mode_of(&metadata))?;
+                    continue;
+                }
+            };
+
+            let next = judged.join(name);
+            // An explicit mode, so a level made under umask `000` is not
+            // world-writable and refused by the check below.
+            match mkdir(&next, 0o755, false) {
+                Ok(()) => {}
+                Err(e) if e.kind() == io::ErrorKind::AlreadyExists => {}
+                Err(e) => return Err(not_created(&next, &e)),
+            }
+
+            let not_inspectable = |e: io::Error| DirRefusal::NotInspectable {
+                dir: next.clone(),
+                code: error_code(&e),
+            };
+            let metadata = std::fs::symlink_metadata(&next).map_err(not_inspectable)?;
+            if metadata.is_dir() {
+                is_safe_ancestor(&next, uid_of(&metadata), mode_of(&metadata))?;
+                judged = next;
+                continue;
+            }
+            if !metadata.file_type().is_symlink() {
+                return Err(not_a_directory(&next, &metadata));
+            }
+
+            let uid = uid_of(&metadata);
+            links += 1;
+            if (uid != current_uid() && uid != 0) || links > MAX_LINKS {
+                return Err(not_a_directory(&next, &metadata));
+            }
+            pending = std::fs::read_link(&next)
+                .map_err(not_inspectable)?
+                .join(components.as_path());
+            continue 'walk;
+        }
+        return Ok(());
+    }
 }
 
 /// Ensure `dir` exists, is a real directory owned by us, and carries no group
@@ -649,6 +776,91 @@ mod tests {
         assert!(matches!(refusal, DirRefusal::PeerWritableNotSticky { .. }));
     }
 
+    #[cfg(all(not(windows), not(target_family = "wasm")))]
+    #[test]
+    fn ensure_safe_ancestry_creates_missing_levels_without_peer_write() {
+        let temp = TempDir::new().unwrap();
+        let dir = temp.path().join("one").join("two");
+
+        ensure_safe_ancestry(&dir).expect("should establish");
+
+        assert_eq!(mode_bits(&temp.path().join("one")), 0o755);
+        assert_eq!(mode_bits(&dir), 0o755);
+    }
+
+    #[cfg(all(not(windows), not(target_family = "wasm")))]
+    #[test]
+    fn ensure_safe_ancestry_refuses_a_world_writable_level_without_the_sticky_bit() {
+        let temp = TempDir::new().unwrap();
+        let loose = temp.path().join("loose");
+        std::fs::create_dir(&loose).unwrap();
+        chmod_real_directory(&loose, 0o777);
+
+        let refusal = ensure_safe_ancestry(&loose.join("one")).expect_err("should refuse");
+
+        assert!(matches!(refusal, DirRefusal::PeerWritableNotSticky { .. }));
+        assert!(!loose.join("one").exists());
+    }
+
+    #[cfg(all(not(windows), not(target_family = "wasm")))]
+    #[test]
+    fn ensure_safe_ancestry_accepts_a_group_writable_level_of_ours() {
+        let temp = TempDir::new().unwrap();
+        let project = temp.path().join("proj");
+        std::fs::create_dir(&project).unwrap();
+        chmod_real_directory(&project, 0o775);
+
+        ensure_safe_ancestry(&project.join("one")).expect("should establish");
+    }
+
+    #[cfg(all(not(windows), not(target_family = "wasm")))]
+    #[test]
+    fn ensure_safe_ancestry_follows_a_link_of_ours() {
+        let temp = TempDir::new().unwrap();
+        let real = temp.path().join("real");
+        std::fs::create_dir(&real).unwrap();
+        let nested = temp.path().join("nested");
+        std::fs::create_dir(&nested).unwrap();
+        std::os::unix::fs::symlink("../real", nested.join("link")).unwrap();
+
+        ensure_safe_ancestry(&nested.join("link").join("one")).expect("should establish");
+
+        assert!(real.join("one").is_dir());
+    }
+
+    #[cfg(all(not(windows), not(target_family = "wasm")))]
+    #[test]
+    fn ensure_safe_ancestry_judges_the_level_a_link_was_found_in() {
+        let temp = TempDir::new().unwrap();
+        let ours = temp.path().join("ours");
+        std::fs::create_dir(&ours).unwrap();
+        let loose = temp.path().join("loose");
+        std::fs::create_dir(&loose).unwrap();
+        chmod_real_directory(&loose, 0o777);
+        std::os::unix::fs::symlink(&ours, loose.join("link")).unwrap();
+
+        let refusal =
+            ensure_safe_ancestry(&loose.join("link").join("one")).expect_err("should refuse");
+
+        assert!(matches!(refusal, DirRefusal::PeerWritableNotSticky { .. }));
+        assert!(!ours.join("one").exists());
+    }
+
+    #[cfg(all(not(windows), not(target_family = "wasm")))]
+    #[test]
+    fn ensure_safe_ancestry_refuses_a_link_loop() {
+        let temp = TempDir::new().unwrap();
+        let link = temp.path().join("link");
+        std::os::unix::fs::symlink("link", &link).unwrap();
+
+        let refusal = ensure_safe_ancestry(&link.join("one")).expect_err("should refuse");
+
+        assert!(matches!(
+            refusal,
+            DirRefusal::NotADirectory { symlink: true, .. }
+        ));
+    }
+
     #[test]
     fn describe_refusal_reports_the_mode_the_way_chmod_writes_it() {
         let refusal = DirRefusal::PeerWritableNotSticky {
@@ -719,6 +931,38 @@ mod tests {
                 uid: 0,
             })
             .is_some_and(|r| r.contains("NX_SOCKET_DIR"))
+        );
+    }
+
+    /// A level above a configured directory may be a home directory or a mount,
+    /// so handing it to root and opening it to everyone is never the advice.
+    #[test]
+    fn remedy_for_never_offers_the_chown_for_a_foreign_ancestor() {
+        let remedy = remedy_for(&DirRefusal::ForeignAncestor {
+            dir: PathBuf::from("/home/other"),
+            uid: 1002,
+        })
+        .expect("should advise");
+
+        assert!(!remedy.contains("chown"));
+        assert!(!remedy.contains("chmod"));
+        assert!(!remedy.contains("1777"));
+        assert!(remedy.contains("/home/other"));
+        assert!(remedy.contains("you or root own every level"));
+    }
+
+    #[test]
+    fn is_safe_ancestor_reports_a_foreign_level_as_an_ancestor() {
+        let foreign = current_uid().max(1000) + 1;
+        let refusal = is_safe_ancestor(Path::new("/home/other"), foreign, 0o40755)
+            .expect_err("should refuse");
+
+        assert_eq!(
+            refusal,
+            DirRefusal::ForeignAncestor {
+                dir: PathBuf::from("/home/other"),
+                uid: foreign,
+            }
         );
     }
 

@@ -2,9 +2,12 @@ import type { Mock } from 'vitest';
 import {
   extractReferencesFromCommit,
   getLatestGitTagForPattern,
+  gitPush,
   parseConventionalCommitsMessage,
+  parseVersionPlanCommit,
   sanitizeProjectNameForGitTag,
 } from './git';
+import { execCommand } from './exec-command';
 import { RepoGitTags } from './repository-git-tags';
 
 vi.mock('./exec-command', () => ({
@@ -258,6 +261,58 @@ See merge request nx-release-test/nx-release-test!2`,
           },
         ]
       `);
+    });
+  });
+
+  describe('parseVersionPlanCommit', () => {
+    const author = { name: 'Test Author', email: 'test@example.com' };
+    const authorsOf = (body: string) =>
+      parseVersionPlanCommit({
+        message: 'chore: add version plan',
+        body,
+        shortHash: 'abc123',
+        author,
+      }).authors;
+
+    it('should read co-authors from Co-authored-by trailers', () => {
+      expect(
+        authorsOf(`Some description
+
+Co-authored-by: John Doe <john@example.com>
+co-authored-by:Jane Doe<jane@example.com>
+  CO-AUTHORED-BY:   Indented Person   < indented@example.com >
+Co-authored-by: <missing-name@example.com>
+Co-authored-by: No Email
+Co-authored-by: Jim <Jimbo> Doe <jim@example.com>`)
+      ).toEqual([
+        author,
+        { name: 'John Doe', email: 'john@example.com' },
+        { name: 'Jane Doe', email: 'jane@example.com' },
+        { name: 'Indented Person', email: 'indented@example.com' },
+        { name: '', email: 'missing-name@example.com' },
+        { name: 'Jim <Jimbo> Doe', email: 'jim@example.com' },
+      ]);
+    });
+
+    it('should parse long malformed Co-authored-by trailers in linear time', () => {
+      const n = 200_000;
+      const start = performance.now();
+      const authors = authorsOf(
+        [
+          `Co-authored-by: ${'<'.repeat(n)}`,
+          `Co-authored-by:${' '.repeat(n)}x`,
+          `Co-authored-by: ${'a'.repeat(n)}`,
+          'co-authored-by:'.repeat(n / 10),
+          `Co-authored-by: ${'<\r'.repeat(n / 2)}`,
+          `Co-authored-by: ${'<\u2028'.repeat(n / 2)}`,
+          'Co-authored-by: John Doe <john@example.com>',
+        ].join('\n')
+      );
+      expect(performance.now() - start).toBeLessThan(1000);
+      expect(authors).toEqual([
+        author,
+        { name: 'John Doe', email: 'john@example.com' },
+      ]);
     });
   });
 
@@ -697,6 +752,46 @@ See merge request nx-release-test/nx-release-test!2`,
       expect(sanitizeProjectNameForGitTag(':apps:backend:api-service')).toBe(
         'apps/backend/api-service'
       );
+    });
+  });
+
+  describe('gitPush', () => {
+    const gitRemote =
+      'https://x-access-token:s3cr3t-token@github.com/nrwl/nx.git';
+
+    beforeEach(() => {
+      (execCommand as Mock).mockReset();
+    });
+
+    afterEach(() => {
+      vi.restoreAllMocks();
+    });
+
+    it('should redact remote URL credentials in the verbose command echo', async () => {
+      const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+
+      await gitPush({ gitRemote, dryRun: true, verbose: true });
+
+      const printed = logSpy.mock.calls.flat().join('\n');
+      expect(printed).toContain(
+        'git push --follow-tags --no-verify --atomic https://***@github.com/nrwl/nx.git'
+      );
+      expect(printed).not.toContain('s3cr3t-token');
+    });
+
+    it('should redact remote URL credentials in a push error', async () => {
+      (execCommand as Mock).mockImplementationOnce(() =>
+        Promise.reject(
+          `fatal: The current branch main has no upstream branch.\n    git push --set-upstream ${gitRemote} main\n`
+        )
+      );
+
+      const error = await gitPush({ gitRemote }).catch((e) => e);
+
+      expect(error.message).toContain(
+        'git push --set-upstream https://***@github.com/nrwl/nx.git main'
+      );
+      expect(error.message).not.toContain('s3cr3t-token');
     });
   });
 });

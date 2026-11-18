@@ -24,7 +24,14 @@ import {
   expandIgnoredCircularDependencies,
   findFilesInCircularPath,
   findFilesWithDynamicImports,
-} from '../utils/graph-utils';
+  hasIgnoreServerInputsDirective,
+  isProjectGraphProjectNode,
+  isRelativePath,
+} from '@nx/devkit/internal';
+import {
+  findSplitTargets,
+  splitTargetsApply,
+} from '../utils/directive-checks/split-targets';
 import { readProjectGraph } from '../utils/project-graph-utils';
 import {
   appIsMFERemote,
@@ -49,11 +56,6 @@ import {
   matchImportWithWildcard,
   stringifyTags,
 } from '../utils/runtime-lint-utils';
-import {
-  hasIgnoreServerInputsDirective,
-  isRelativePath,
-  isProjectGraphProjectNode,
-} from '@nx/devkit/internal';
 
 export type Options = [
   {
@@ -274,13 +276,11 @@ export default ESLintUtils.RuleCreator(
         return false;
       }
       if (ignoreServerInputsSpec === undefined) {
-        const specPath = normalizePath(
-          relative(sourceProject.data.root, sourceFilePath)
-        );
         ignoreServerInputsSpec =
           hasIgnoreServerInputsDirective(context.sourceCode.text) &&
-          Object.keys(sourceProject.data.targets ?? {}).some((targetName) =>
-            targetName.endsWith(`--${specPath}`)
+          splitTargetsApply(
+            findSplitTargets(sourceProject, sourceFilePath),
+            'ignore-server-inputs'
           );
       }
       return ignoreServerInputsSpec;

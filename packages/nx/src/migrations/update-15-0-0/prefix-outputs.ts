@@ -5,12 +5,8 @@ import {
   updateProjectConfiguration,
 } from '../../generators/utils/project-configuration';
 import { readNxJson, updateNxJson } from '../../generators/utils/nx-json';
-import { joinPathFragments } from '../../utils/path';
 import { join } from 'path';
-import {
-  transformLegacyOutputs,
-  validateOutputs,
-} from '../../tasks-runner/utils';
+import { transformLegacyOutputs } from '../../tasks-runner/utils';
 import { updateJson } from '../../generators/utils/json';
 import { PackageJson } from '../../utils/package-json';
 import { targetDefaultConfigs } from '../utils/target-defaults';

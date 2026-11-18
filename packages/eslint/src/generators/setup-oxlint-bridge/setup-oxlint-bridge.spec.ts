@@ -38,6 +38,34 @@ describe('setup-oxlint-bridge', () => {
       expect(content).not.toContain('buildFromOxlintConfig');
     });
 
+    it.each([
+      'export default []',
+      'export default defineConfig({ rules: {} })',
+    ])(
+      'updates %s once and leaves trailing statements intact',
+      async (config) => {
+        const file = 'eslint.config.mjs';
+        tree.write(file, config + '\nconst later = [1];');
+        await setupOxlintBridgeGenerator(tree, { skipFormat: true });
+        const first = tree.read(file, 'utf-8');
+        expect(first).toContain(
+          '...oxlint.buildFromOxlintConfig(oxlintConfig)'
+        );
+        expect(first).toContain('const later = [1];');
+        await setupOxlintBridgeGenerator(tree, { skipFormat: true });
+        expect(tree.read(file, 'utf-8')).toBe(first);
+      }
+    );
+
+    it('rejects an unsupported export before changing the tree', async () => {
+      tree.write('eslint.config.mjs', 'export default customConfig;');
+      const before = tree.listChanges();
+      await expect(setupOxlintBridgeGenerator(tree, {})).rejects.toThrow(
+        'Expected an exported flat config'
+      );
+      expect(tree.listChanges()).toEqual(before);
+    });
+
     it('should add dependencies to package.json', async () => {
       tree.write(
         'eslint.config.mjs',
@@ -77,7 +105,7 @@ describe('setup-oxlint-bridge', () => {
       expect(content).toContain(`import oxlint from 'eslint-plugin-oxlint'`);
       expect(content).toContain(`import { createJiti } from 'jiti'`);
       expect(content).toContain('createJiti(import.meta.url)');
-      expect(content).toContain('jiti.import');
+      expect(content).toContain('createJiti(import.meta.url).import');
       expect(content).toContain("reportUnusedDisableDirectives: 'off'");
       expect(content).toContain('buildFromOxlintConfig(oxlintConfig)');
     });
@@ -134,7 +162,9 @@ describe('setup-oxlint-bridge', () => {
       expect(result).toContain(`import oxlint from 'eslint-plugin-oxlint'`);
       expect(result).toContain(`import { createJiti } from 'jiti'`);
       expect(result).toContain('createJiti(import.meta.url)');
-      expect(result).toContain(`await jiti.import('./oxlint.config.ts')`);
+      expect(result).toContain(
+        `await createJiti(import.meta.url).import("./oxlint.config.ts")`
+      );
       expect(result).toContain("reportUnusedDisableDirectives: 'off'");
       expect(result).toContain('...oxlint.buildFromOxlintConfig(oxlintConfig)');
       // buildFromOxlintConfig should be the last thing before ];
@@ -159,7 +189,9 @@ describe('setup-oxlint-bridge', () => {
       expect(result).toContain(`require('eslint-plugin-oxlint')`);
       expect(result).toContain(`require('jiti')`);
       expect(result).toContain('createJiti(__filename)');
-      expect(result).toContain("jiti('./oxlint.config.ts').default");
+      expect(result).toContain(
+        'createJiti(__filename)("./oxlint.config.ts").default'
+      );
       expect(result).toContain("reportUnusedDisableDirectives: 'off'");
       expect(result).toContain('...oxlint.buildFromOxlintConfig(oxlintConfig)');
     });
@@ -176,7 +208,7 @@ describe('setup-oxlint-bridge', () => {
       const result = injectOxlintBridge(input, 'mjs', './oxlint.config.ts');
 
       // The existing element without trailing comma should get one
-      expect(result).toContain('flat/base"],');
+      expect(result).toMatch(/flat\/base"\]\s*,/);
     });
 
     it('should not duplicate comma if already present', () => {

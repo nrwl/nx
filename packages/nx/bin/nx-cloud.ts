@@ -7,6 +7,7 @@ import {
 } from '../src/nx-cloud/update-manager';
 import type { CloudTaskRunnerOptions } from '../src/nx-cloud/nx-cloud-tasks-runner-shell';
 import { output } from '../src/utils/output';
+import { resolveInstalledPackage } from '../src/utils/installation-directory';
 import {
   UnknownCommandError,
   getCloudClient,
@@ -23,6 +24,17 @@ export async function invokeCommandWithNxCloudClient(
 ) {
   try {
     const client = await getCloudClient(options);
+    if (client.runCLI) {
+      return client
+        .runCLI(process.argv.slice(2))
+        .then((exitCode) =>
+          process.exit(typeof exitCode === 'number' ? exitCode : 0)
+        )
+        .catch((e) => {
+          console.error(e);
+          process.exit(1);
+        });
+    }
     client.invoke(command);
   } catch (e: any) {
     if (e instanceof UnknownCommandError) {
@@ -41,7 +53,9 @@ export async function invokeCommandWithNxCloudClient(
       try {
         // TODO: Remove this when all enterprise customers have updated.
         // Try requiring the bin from the `nx-cloud` package.
-        return require('nx-cloud/bin/nx-cloud');
+        return require(
+          resolveInstalledPackage('nx-cloud/bin/nx-cloud', [__dirname])
+        );
       } catch {}
       body.push(
         'If you are an Nx Enterprise customer, please reach out to your assigned Developer Productivity Engineer.',

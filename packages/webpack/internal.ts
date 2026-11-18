@@ -12,7 +12,7 @@ export type { EnsureDependenciesOptions } from './src/utils/ensure-dependencies'
 export { resolveUserDefinedWebpackConfig } from './src/utils/webpack/resolve-user-defined-webpack-config';
 export { suppressWebpackComposeHelperWarnings } from './src/utils/deprecation';
 export { WebpackNxBuildCoordinationPlugin } from './src/plugins/webpack-nx-build-coordination-plugin';
-// TODO(v25): remove with the deprecated ssr-dev-server executor
+// TODO(v25): remove with the deprecated ssr-dev-server executor (NXC-5167)
 export type { WebSsrDevServerOptions } from './src/executors/ssr-dev-server/schema';
 export { default as ssrDevServerExecutor } from './src/executors/ssr-dev-server/ssr-dev-server.impl';
 export { applyBaseConfig } from './src/plugins/nx-webpack-plugin/lib/apply-base-config';

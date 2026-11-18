@@ -339,17 +339,38 @@ describe('waitForWebserverExecutor', () => {
     await listen(server, 0);
     const { port } = server.address() as AddressInfo;
 
-    const result = await waitForWebserverExecutor(
-      { servers: [{ url: `http://127.0.0.1:${port}` }], timeout: 300 },
-      context
-    );
+    const request = vi.mocked(http.request);
+    const actualRequest = request.getMockImplementation()!;
+    // Expire the fake budget if a regression prevents the connection error.
+    const watchdog = setTimeout(() => vi.advanceTimersByTime(300), 10_000);
+    vi.useFakeTimers({ toFake: ['Date', 'setTimeout', 'clearTimeout'] });
+    const deadline = Date.now() + 300;
+    request.mockImplementation((...args) => {
+      const req = actualRequest(...args);
+      req.once('error', () => {
+        // Advancing timers here would hide the connection error.
+        vi.setSystemTime(deadline);
+      });
+      return req;
+    });
 
-    // Without the hop count this reads as the configured server refusing
-    // connections, which is the one thing it is known not to be doing.
-    expect(result).toEqual({ success: false });
-    expect(errorSpy).toHaveBeenCalledWith(
-      expect.stringContaining('ECONNREFUSED after 1 redirects')
-    );
+    try {
+      const result = await waitForWebserverExecutor(
+        { servers: [{ url: `http://127.0.0.1:${port}` }], timeout: 300 },
+        context
+      );
+
+      // Without the hop count this reads as the configured server refusing
+      // connections, which is the one thing it is known not to be doing.
+      expect(result).toEqual({ success: false });
+      expect(errorSpy).toHaveBeenCalledWith(
+        expect.stringContaining('ECONNREFUSED after 1 redirects')
+      );
+    } finally {
+      request.mockImplementation(actualRequest);
+      vi.useRealTimers();
+      clearTimeout(watchdog);
+    }
   });
 
   it('waits for every configured server, not just the first', async () => {
@@ -1291,7 +1312,10 @@ function listen(server: AnyServer, port: number): Promise<void> {
 // the developer running the suite happens to have listening.
 async function closedPort(): Promise<number> {
   const server = createTcpServer();
-  await listen(server, 0);
+  const requestedPort = process.env.NX_E2E_PORT_POOL
+    ? await (await import('@nx/devkit/internal-testing-utils')).reservePort()
+    : 0;
+  await listen(server, requestedPort);
   const { port } = server.address() as AddressInfo;
   await close(server);
   return port;

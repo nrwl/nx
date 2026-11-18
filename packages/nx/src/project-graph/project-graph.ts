@@ -49,7 +49,7 @@ import {
   getNxPluginCapabilitiesStore,
   noteGraphReadFromCache,
 } from './plugins/nx-plugin-capabilities';
-import { getPlugins, getPluginsSeparated } from './plugins/get-plugins';
+import { getPluginsSeparated } from './plugins/get-plugins';
 import { ConfigurationResult } from './utils/project-configuration-utils';
 import {
   retrieveProjectConfigurations,

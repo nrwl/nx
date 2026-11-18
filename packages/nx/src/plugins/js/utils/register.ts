@@ -1,11 +1,21 @@
-import { dirname, isAbsolute, join, resolve, sep } from 'path';
+import { dirname, isAbsolute, resolve, sep } from 'path';
 import { existsSync } from 'fs';
 import type { TsConfigOptions } from 'ts-node';
 import type { CompilerOptions } from 'typescript';
 import { readJsonFile } from '../../../utils/fileutils';
+import {
+  resolveFromWorkspace,
+  resolveInstalledPackage,
+} from '../../../utils/installation-directory';
 import { logger, NX_PREFIX, stripIndent } from '../../../utils/logger';
 import { workspaceRoot } from '../../../utils/workspace-root';
 import { getRootTsConfigPath, readTsConfigWithoutFiles } from './typescript';
+import { createRequire } from 'node:module';
+
+// Node passes a stand-in require, without a cache, require.extensions or
+// Module._load, when an ESM loader hook supplies this module's source, as
+// Yarn PnP does.
+if (!require.cache) require = createRequire(__filename);
 
 const swcNodeInstalled = packageIsInstalled('@swc-node/register');
 const tsNodeInstalled = packageIsInstalled('ts-node/register');
@@ -418,7 +428,7 @@ export function ensureCjsResolverPatched(): void {
 
 function tryResolveLoader(specifier: string): string | null {
   try {
-    return require.resolve(specifier);
+    return resolveInstalledPackage(specifier, [__dirname]);
   } catch {
     return null;
   }
@@ -651,8 +661,9 @@ export function getSwcTranspiler(
     (typeof import('@swc-node/register/register'))['register'];
 
   // These are requires to prevent it from registering when it shouldn't
-  const register = require('@swc-node/register/register')
-    .register as ISwcRegister;
+  const register = require(
+    resolveInstalledPackage('@swc-node/register/register', [__dirname])
+  ).register as ISwcRegister;
 
   const cleanupFn = register({
     ...compilerOptions,
@@ -667,7 +678,9 @@ export function getTsNodeTranspiler(
   tsNodeOptions?: TsConfigOptions,
   preferTsNode?: boolean
 ): (...args: unknown[]) => unknown {
-  const { register } = require('ts-node') as typeof import('ts-node');
+  const { register } = require(
+    resolveInstalledPackage('ts-node', [__dirname])
+  ) as typeof import('ts-node');
   // ts-node doesn't provide a cleanup method
   const service = register({
     ...tsNodeOptions,
@@ -778,7 +791,7 @@ export function getTranspiler(
   const preferTsNode = process.env.NX_PREFER_TS_NODE === 'true';
 
   if (!ts) {
-    ts = require('typescript');
+    ts = require(resolveFromWorkspace('typescript'));
   }
 
   compilerOptions.lib = ['es2021'];
@@ -1302,7 +1315,11 @@ function readCompilerOptions(tsConfigPath): {
 function readCompilerOptionsWithSwc(tsConfigPath) {
   const {
     readDefaultTsConfig,
-  }: typeof import('@swc-node/register/read-default-tsconfig') = require('@swc-node/register/read-default-tsconfig');
+  }: typeof import('@swc-node/register/read-default-tsconfig') = require(
+    resolveInstalledPackage('@swc-node/register/read-default-tsconfig', [
+      __dirname,
+    ])
+  );
   const compilerOptions = readDefaultTsConfig(tsConfigPath);
   // This is returned in compiler options for some reason, but not part of the typings.
   // @swc-node/register filters the files to transpile based on it, but it can be limiting when processing
@@ -1369,7 +1386,7 @@ function warnNoTranspiler() {
 
 function packageIsInstalled(m: string) {
   try {
-    const p = require.resolve(m);
+    resolveInstalledPackage(m, [__dirname]);
     return true;
   } catch {
     return false;
@@ -1383,7 +1400,7 @@ function packageIsInstalled(m: string) {
  */
 export function getTsNodeCompilerOptions(compilerOptions: CompilerOptions) {
   if (!ts) {
-    ts = require('typescript');
+    ts = require(resolveFromWorkspace('typescript'));
   }
 
   const flagMap: Partial<{

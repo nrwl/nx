@@ -1,3 +1,6 @@
+import { mkdirSync, mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { delimiter, join } from 'node:path';
 import type { Mock } from 'vitest';
 import { createSerializableError } from '../../utils/serializable-error';
 import { reasonToError } from './get-plugins';
@@ -245,3 +248,52 @@ describe('getPluginsSeparated', () => {
     });
   });
 });
+
+describe.skipIf(process.platform === 'win32')(
+  'loading a plugin into the daemon',
+  () => {
+    const originalEnv = process.env;
+    let root: string;
+    let folder: string;
+    let loadingMethod: typeof import('./get-plugins').loadingMethod;
+    let daemonHostsPluginsInProcess: typeof import('./get-plugins').daemonHostsPluginsInProcess;
+
+    beforeEach(async () => {
+      vi.resetModules();
+      root = mkdtempSync(join(tmpdir(), 'nx-berry-'));
+      folder = join(root, 'xfs-1a2b3c4d');
+      mkdirSync(folder, { mode: 0o755 });
+      process.env = { PATH: '/usr/bin' };
+      const { setLiveClientBerryEnv } =
+        await import('../../daemon/client/daemon-environment');
+      setLiveClientBerryEnv({
+        BERRY_BIN_FOLDER: folder,
+        PATH: [folder, '/usr/bin'].join(delimiter),
+      });
+      ({ loadingMethod, daemonHostsPluginsInProcess } =
+        await import('./get-plugins'));
+    });
+
+    afterEach(() => {
+      process.env = originalEnv;
+      delete global.NX_DAEMON;
+      rmSync(root, { recursive: true, force: true });
+    });
+
+    it("puts the live client's bin folders on the daemon PATH", async () => {
+      global.NX_DAEMON = true;
+
+      await loadingMethod('p', '/root');
+
+      expect(daemonHostsPluginsInProcess()).toBe(true);
+      expect(process.env.PATH).toEqual([folder, '/usr/bin'].join(delimiter));
+    });
+
+    it('leaves a client process PATH alone', async () => {
+      await loadingMethod('p', '/root');
+
+      expect(daemonHostsPluginsInProcess()).toBe(false);
+      expect(process.env.PATH).toEqual('/usr/bin');
+    });
+  }
+);

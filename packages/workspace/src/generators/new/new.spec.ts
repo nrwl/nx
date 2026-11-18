@@ -424,15 +424,14 @@ describe('new', () => {
   it('should throw an error when the directory is not empty', async () => {
     tree.write('my-workspace/file.txt', '');
 
-    try {
-      await newGenerator(tree, {
+    await expect(
+      newGenerator(tree, {
         ...defaultOptions,
         name: 'my-workspace',
         directory: 'my-workspace',
         appName: 'app',
-      });
-      fail('Generating into a non-empty directory should error.');
-    } catch (e) {}
+      })
+    ).rejects.toThrow('is not an empty directory.');
   });
 
   it('should not throw for a non-empty directory when skipEmptyDirCheck is set', async () => {

@@ -440,7 +440,7 @@ describe('lib', () => {
     it('should not generate .module styles', async () => {
       await libraryGenerator(tree, { ...defaultSchema, globalCss: true });
 
-      expect(tree.exists('my-lib/src/lib/my-lib.css'));
+      expect(tree.exists('my-lib/src/lib/my-lib.css')).toBeTruthy();
       expect(tree.exists('my-lib/src/lib/my-lib.module.css')).toBeFalsy();
     });
   });
@@ -609,7 +609,7 @@ describe('lib', () => {
 
       const packageJson = readJson(tree, '/my-lib/package.json');
       expect(packageJson.name).toEqual('@proj/my-lib');
-      expect(tree.exists('/my-lib/.babelrc'));
+      expect(tree.exists('/my-lib/.babelrc')).toBeTruthy();
     });
 
     it('should add rollup config file', async () => {

@@ -38,8 +38,8 @@ describe('@nx/angular/plugin', () => {
 
   afterEach(() => {
     vi.resetModules();
-    tempFs.cleanup();
     process.chdir(cwd);
+    tempFs.cleanup();
   });
 
   it('should infer tasks from multiple projects in angular.json', async () => {

@@ -29,7 +29,7 @@ export async function addReleaseConfigForTsSolution(
     nxJson.release = {
       ...nxJson.release,
       version: {
-        preVersionCommand: `${pmc.dlx} nx run-many -t build`,
+        preVersionCommand: `${pmc.exec} nx run-many -t build`,
         ...nxJson.release?.version,
       },
     };

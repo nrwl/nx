@@ -90,7 +90,7 @@ export function getPackageManagerCommand(
       // bun doesn't current support programmatically reading config https://github.com/oven-sh/bun/issues/7140
       return {
         install: 'bun install --ignore-scripts',
-        exec: 'bunx',
+        exec: 'bun',
         globalAdd: 'bun install -g',
       };
   }

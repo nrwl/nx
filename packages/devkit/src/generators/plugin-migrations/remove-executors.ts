@@ -1,10 +1,13 @@
 import {
+  createProjectGraphAsync,
   getProjects,
   logger,
+  readCachedProjectGraph,
   readNxJson,
   type Tree,
   updateNxJson,
 } from 'nx/src/devkit-exports';
+import { readSourceMapsCache } from 'nx/src/devkit-internals';
 import { formatFiles } from '../format-files';
 import {
   NoTargetsToMigrateError,
@@ -38,8 +41,21 @@ export async function migrateRemovedExecutors(
       removed.has(target.executor)
     )
   );
-  if (!affected.length && !Object.keys(relevantDefaults).length) {
-    return { skipAgentic: true };
+  const pluginTargets = await findPluginTargets(removed, projects);
+  if (pluginTargets === null) {
+    const message =
+      'The project graph could not be created, so targets created by plugins were not checked for removed executors. Inspect the project graph for targets that still use them, and change the plugin that creates each one.';
+    nextSteps.push(message);
+    agentContext.push(message);
+  }
+  if (
+    !affected.length &&
+    !Object.keys(relevantDefaults).length &&
+    !pluginTargets?.length
+  ) {
+    return nextSteps.length
+      ? { skipAgentic: true, nextSteps }
+      : { skipAgentic: true };
   }
 
   // Capture options before converters remove them, including executor defaults.
@@ -73,7 +89,9 @@ export async function migrateRemovedExecutors(
   // some ignore `@nrwl` aliases. Re-scan so those are named rather than
   // inferred from silence.
   const leftovers: string[] = [];
-  const usedExecutors = new Set<string>();
+  const usedExecutors = new Set(
+    pluginTargets?.map((target) => target.executor)
+  );
   for (const [name, project] of getProjects(tree)) {
     for (const [targetName, target] of Object.entries(project.targets ?? {})) {
       if (removed.has(target.executor)) {
@@ -93,6 +111,19 @@ export async function migrateRemovedExecutors(
         ', '
       )}. Replace each one; the converter could not.`
     );
+  }
+
+  if (pluginTargets?.length) {
+    const names = pluginTargets
+      .map(
+        ({ project, target, executor, plugin }) =>
+          `${project}:${target} (${executor}${plugin ? `, from ${plugin}` : ''})`
+      )
+      .join(', ');
+    const message = `According to the project graph, these targets are created by plugins and use removed executors: ${names}. This migration cannot convert them; change the plugin that creates each one before running them.`;
+    logger.warn(message);
+    nextSteps.push(message);
+    agentContext.push(message);
   }
 
   removeDeadExecutorDefaults(tree, removed, usedExecutors);
@@ -117,6 +148,83 @@ export async function migrateRemovedExecutors(
   );
   await formatFiles(tree);
   return nextSteps.length ? { nextSteps, agentContext } : { agentContext };
+}
+
+interface PluginTarget {
+  project: string;
+  target: string;
+  executor: string;
+  plugin?: string;
+}
+
+const configurationPlugins = new Set([
+  'nx/core/project-json',
+  'nx/core/package-json',
+  'nx/target-defaults',
+]);
+
+// Every plugin's remove-executors migration runs in one `nx migrate` process,
+// and a failed graph build leaves no usable cache, so build it at most once.
+const graphUnavailable = Symbol.for(
+  '@nx/devkit/remove-executors/graph-unavailable'
+);
+
+/**
+ * Graph targets that use a removed executor which project configuration does
+ * not declare. Returns `null` when the graph cannot be created.
+ */
+async function findPluginTargets(
+  removed: Set<string>,
+  projects: ReturnType<typeof getProjects>
+): Promise<PluginTarget[] | null> {
+  if (globalThis[graphUnavailable]) {
+    return null;
+  }
+  let graph: ReturnType<typeof readCachedProjectGraph>;
+  try {
+    graph = readCachedProjectGraph();
+  } catch {
+    try {
+      graph = await createProjectGraphAsync();
+    } catch {
+      globalThis[graphUnavailable] = true;
+      logger.warn(
+        'The project graph could not be created, so targets created by plugins were not checked for removed executors.'
+      );
+      return null;
+    }
+  }
+  // Older nx versions do not export the source map reader.
+  const sourceMaps =
+    typeof readSourceMapsCache === 'function' ? readSourceMapsCache() : null;
+  const found: PluginTarget[] = [];
+  for (const [name, node] of Object.entries(graph.nodes)) {
+    const declared = projects.get(name)?.targets ?? {};
+    const sourceMap = sourceMaps?.[node.data.root] ?? {};
+    for (const [targetName, target] of Object.entries(
+      node.data.targets ?? {}
+    )) {
+      if (
+        !removed.has(target.executor) ||
+        declared[targetName]?.executor ||
+        declared[targetName]?.command
+      ) {
+        continue;
+      }
+      const plugin = (sourceMap[`targets.${targetName}.executor`] ??
+        sourceMap[`targets.${targetName}`])?.[1];
+      if (configurationPlugins.has(plugin)) {
+        continue;
+      }
+      found.push({
+        project: name,
+        target: targetName,
+        executor: target.executor,
+        plugin,
+      });
+    }
+  }
+  return found;
 }
 
 // The converters merge an unfiltered executor-keyed default into every target

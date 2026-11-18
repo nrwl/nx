@@ -84,8 +84,3 @@ export function ensureTypescript() {
     typescriptVersion
   );
 }
-
-import {
-  getRelativePathToRootTsConfig as _getRelativePathToRootTsConfig,
-  getRootTsConfigPathInTree as _getRootTsConfigPathInTree,
-} from './ts-config';

@@ -238,21 +238,6 @@ export function normalizeTargetDependencyWithStringProjects(
   };
 }
 
-class InvalidOutputsError extends Error {
-  constructor(
-    public outputs: string[],
-    public invalidOutputs: Set<string>
-  ) {
-    super(InvalidOutputsError.createMessage(invalidOutputs));
-  }
-
-  private static createMessage(invalidOutputs: Set<string>) {
-    const invalidOutputsList =
-      '\n - ' + Array.from(invalidOutputs).join('\n - ');
-    return `The following outputs are invalid:${invalidOutputsList}\nPlease run "nx repair" to repair your configuration`;
-  }
-}
-
 function assertOutputsAreValidType(outputs: unknown) {
   if (!Array.isArray(outputs)) {
     throw new Error("The 'outputs' field must be an array");
@@ -567,7 +552,7 @@ export function getExecutorForTask(
   );
 }
 
-// TODO(v25): remove custom hasher support.
+// TODO(v25): remove custom hasher support (NXC-5052).
 export function getCustomHasher(
   task: Task,
   projects: Record<string, ProjectConfiguration>
@@ -605,7 +590,8 @@ export function resetCustomHasherDeprecationWarnings(): void {
 }
 
 /**
- * `taskGraph` pruned to `required`, which must already hold its dependencies.
+ * `taskGraph` pruned to `required`. Edges to tasks outside it are dropped, so
+ * `required` must hold its dependencies unless they have already run.
  * Unknown ids are ignored: a sync generator can remove a task after selection.
  */
 export function pruneToSelectedTasks(

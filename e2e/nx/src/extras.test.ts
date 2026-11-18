@@ -312,14 +312,44 @@ describe('Extra Nx Misc Tests', () => {
         return config;
       });
 
-      try {
-        runCLI(`run ${mylib}:error`);
-        fail('Should error if process errors');
-      } catch (e) {
-        expect(e.stderr.toString()).toContain(
-          'command "exit 1" exited with non-zero status code'
-        );
-      }
+      expect(() => runCLI(`run ${mylib}:error`)).toThrow(
+        expect.objectContaining({
+          stderr: expect.stringContaining(
+            'command "exit 1" exited with non-zero status code'
+          ),
+        })
+      );
+    });
+
+    it('should fail and skip dependents when a command cannot start', () => {
+      updateJson(join('libs', mylib, 'project.json'), (config) => {
+        config.targets['missing-env'] = {
+          executor: 'nx:run-commands',
+          options: {
+            command: 'echo hi',
+            envFile: `libs/${mylib}/.missing.env`,
+          },
+        };
+        config.targets['after-missing-env'] = {
+          executor: 'nx:run-commands',
+          dependsOn: ['missing-env'],
+          options: { command: 'echo DEPENDENT_RAN' },
+        };
+        return config;
+      });
+
+      // Summary, the default in an agent environment, prints no task output
+      const output = runCLI(
+        `run ${mylib}:after-missing-env --output-style=static`,
+        { silenceError: true }
+      );
+
+      expect(runCLI.lastExitCode).toBe(1);
+      expect(output.match(/no such file or directory/g)).toHaveLength(1);
+      expect(output).toContain(
+        `Running target after-missing-env for project ${mylib} and 1 task it depends on failed`
+      );
+      expect(output).not.toContain('DEPENDENT_RAN');
     });
 
     it('run command should not break if output property is missing in options and arguments', async () => {

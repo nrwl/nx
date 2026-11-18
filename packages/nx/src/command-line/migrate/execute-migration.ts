@@ -26,7 +26,6 @@ import {
   detectPackageManager,
   getPackageManagerCommand,
 } from '../../utils/package-manager';
-import { output } from '../../utils/output';
 import { existsSync } from 'fs';
 import { getNxRequirePaths } from '../../utils/installation-directory';
 import { needsShellQuoting } from '../../utils/shell-quoting';

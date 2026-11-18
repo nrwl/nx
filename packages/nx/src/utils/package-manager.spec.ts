@@ -45,7 +45,6 @@ import { parse } from 'yaml';
 import * as configModule from '../config/configuration';
 import * as projectGraphFileUtils from '../project-graph/file-utils';
 import * as fileUtils from '../utils/fileutils';
-import * as registryConfig from './registry-config';
 import { mockCjsModule } from '../internal-testing-utils/cjs-mock';
 
 // package-manager.ts lazy-requires ./registry-config (CJS channel), which
@@ -65,12 +64,14 @@ beforeEach(() => {
 import { workspaceRoot } from './workspace-root';
 import {
   addPackagePathToWorkspaces,
+  assertValidPackageName,
   clearPackageManagerVersionCache,
   detectPackageManager,
   getPackageManagerCommand,
   getPackageManagerVersion,
   getPackageWorkspaces,
   getWorkspaceRegistryUrlForDisplay,
+  InvalidResolvedVersionError,
   isWorkspacesEnabled,
   modifyPnpmWorkspaceYamlToFitNewDirectory,
   modifyYarnRcToFitNewDirectory,
@@ -79,6 +80,7 @@ import {
   packageRegistryView,
   parseRegistryViewJson,
   parseVersionFromPackageManagerField,
+  resolvePackageVersionUsingInstallation,
   resolvePackageVersionUsingRegistry,
   PackageManager,
 } from './package-manager';
@@ -88,6 +90,7 @@ describe('package-manager', () => {
     afterEach(() => {
       vi.restoreAllMocks();
       vi.clearAllMocks();
+      vi.unstubAllEnvs();
     });
     it('should detect package manager in nxJson', () => {
       vi.spyOn(configModule, 'readNxJson').mockReturnValueOnce({
@@ -102,114 +105,110 @@ describe('package-manager', () => {
           packageManager: 'yarn',
         },
       });
-      expect(detectPackageManager()).toEqual('yarn');
+      expect(detectPackageManager(workspaceRoot)).toEqual('yarn');
     });
 
     it('should detect yarn package manager from yarn.lock', () => {
       vi.spyOn(configModule, 'readNxJson').mockReturnValueOnce({});
       vi.spyOn(fs, 'existsSync').mockImplementation((p) => {
         switch (p) {
-          case 'yarn.lock':
+          case join(workspaceRoot, 'yarn.lock'):
             return true;
-          case 'pnpm-lock.yaml':
+          case join(workspaceRoot, 'pnpm-lock.yaml'):
             return false;
-          case 'package-lock.json':
+          case join(workspaceRoot, 'package-lock.json'):
             return false;
-          case 'bun.lockb':
+          case join(workspaceRoot, 'bun.lockb'):
             return false;
-          case 'bun.lock':
+          case join(workspaceRoot, 'bun.lock'):
             return false;
           default:
             return require('fs').existsSync(p);
         }
       });
-      const packageManager = detectPackageManager();
+      const packageManager = detectPackageManager(workspaceRoot);
       expect(packageManager).toEqual('yarn');
-      expect(fs.existsSync).toHaveBeenNthCalledWith(3, 'yarn.lock');
     });
 
     it('should detect pnpm package manager from pnpm-lock.yaml', () => {
       vi.spyOn(configModule, 'readNxJson').mockReturnValueOnce({});
       vi.spyOn(fs, 'existsSync').mockImplementation((p) => {
         switch (p) {
-          case 'yarn.lock':
+          case join(workspaceRoot, 'yarn.lock'):
             return false;
-          case 'pnpm-lock.yaml':
+          case join(workspaceRoot, 'pnpm-lock.yaml'):
             return true;
-          case 'package-lock.json':
+          case join(workspaceRoot, 'package-lock.json'):
             return false;
-          case 'bun.lockb':
+          case join(workspaceRoot, 'bun.lockb'):
             return false;
-          case 'bun.lock':
+          case join(workspaceRoot, 'bun.lock'):
             return false;
           default:
             return require('fs').existsSync(p);
         }
       });
-      const packageManager = detectPackageManager();
+      const packageManager = detectPackageManager(workspaceRoot);
       expect(packageManager).toEqual('pnpm');
-      expect(fs.existsSync).toHaveBeenCalledTimes(4);
     });
 
     it('should detect bun package manager from bun.lockb', () => {
       vi.spyOn(configModule, 'readNxJson').mockReturnValueOnce({});
       vi.spyOn(fs, 'existsSync').mockImplementation((p) => {
         switch (p) {
-          case 'yarn.lock':
+          case join(workspaceRoot, 'yarn.lock'):
             return false;
-          case 'pnpm-lock.yaml':
+          case join(workspaceRoot, 'pnpm-lock.yaml'):
             return false;
-          case 'package-lock.json':
+          case join(workspaceRoot, 'package-lock.json'):
             return false;
-          case 'bun.lockb':
+          case join(workspaceRoot, 'bun.lockb'):
             return true;
-          case 'bun.lock':
+          case join(workspaceRoot, 'bun.lock'):
             return false;
           default:
             return require('fs').existsSync(p);
         }
       });
-      const packageManager = detectPackageManager();
+      const packageManager = detectPackageManager(workspaceRoot);
       expect(packageManager).toEqual('bun');
-      expect(fs.existsSync).toHaveBeenCalledTimes(1);
     });
 
     it('should detect bun package manager from bun.lock', () => {
       vi.spyOn(configModule, 'readNxJson').mockReturnValueOnce({});
       vi.spyOn(fs, 'existsSync').mockImplementation((p) => {
         switch (p) {
-          case 'yarn.lock':
+          case join(workspaceRoot, 'yarn.lock'):
             return false;
-          case 'pnpm-lock.yaml':
+          case join(workspaceRoot, 'pnpm-lock.yaml'):
             return false;
-          case 'package-lock.json':
+          case join(workspaceRoot, 'package-lock.json'):
             return false;
-          case 'bun.lock':
+          case join(workspaceRoot, 'bun.lock'):
             return true;
-          case 'bun.lockb':
+          case join(workspaceRoot, 'bun.lockb'):
             return false;
           default:
             return require('fs').existsSync(p);
         }
       });
-      const packageManager = detectPackageManager();
+      const packageManager = detectPackageManager(workspaceRoot);
       expect(packageManager).toEqual('bun');
-      expect(fs.existsSync).toHaveBeenCalledTimes(2);
     });
 
     it('should use npm package manager as default', () => {
       vi.spyOn(configModule, 'readNxJson').mockReturnValueOnce({});
       vi.spyOn(fs, 'existsSync').mockImplementation((p) => {
         switch (p) {
-          case 'yarn.lock':
+          case join(workspaceRoot, 'yarn.lock'):
             return false;
-          case 'pnpm-lock.yaml':
+          case join(workspaceRoot, 'pnpm-lock.yaml'):
             return false;
-          case 'package-lock.json':
+          case join(workspaceRoot, 'package-lock.json'):
             return false;
-          case 'bun.lockb':
+          case join(workspaceRoot, 'bun.lockb'):
             return false;
-          case 'bun.lock':
+          case join(workspaceRoot, 'bun.lock'):
             return false;
           default:
             return require('fs').existsSync(p);
@@ -218,9 +217,8 @@ describe('package-manager', () => {
       const originalUserAgent = process.env.npm_config_user_agent;
       delete process.env.npm_config_user_agent;
       try {
-        const packageManager = detectPackageManager();
+        const packageManager = detectPackageManager(workspaceRoot);
         expect(packageManager).toEqual('npm');
-        expect(fs.existsSync).toHaveBeenCalledTimes(5);
       } finally {
         process.env.npm_config_user_agent = originalUserAgent;
       }
@@ -230,24 +228,46 @@ describe('package-manager', () => {
       vi.spyOn(configModule, 'readNxJson').mockReturnValueOnce({});
       vi.spyOn(fs, 'existsSync').mockImplementation((p) => {
         switch (p) {
-          case 'yarn.lock':
+          case join(workspaceRoot, 'yarn.lock'):
             return false;
-          case 'pnpm-lock.yaml':
+          case join(workspaceRoot, 'pnpm-lock.yaml'):
             return false;
-          case 'package-lock.json':
+          case join(workspaceRoot, 'package-lock.json'):
             return true;
-          case 'bun.lockb':
+          case join(workspaceRoot, 'bun.lockb'):
             return false;
-          case 'bun.lock':
+          case join(workspaceRoot, 'bun.lock'):
             return false;
           default:
             return require('fs').existsSync(p);
         }
       });
-      const packageManager = detectPackageManager();
+      const packageManager = detectPackageManager(workspaceRoot);
       expect(packageManager).toEqual('npm');
-      expect(fs.existsSync).toHaveBeenCalledTimes(5);
     });
+
+    it.each([
+      { name: 'its own lockfile', lockFile: 'yarn.lock', expected: 'yarn' },
+      {
+        name: 'the invoking manager when no lockfile exists',
+        lockFile: undefined,
+        expected: 'bun',
+      },
+    ])(
+      'should use $name for an explicit directory',
+      ({ lockFile, expected }) => {
+        const directory = join(workspaceRoot, '..', 'other-workspace');
+        vi.spyOn(configModule, 'readNxJson').mockReturnValueOnce({});
+        vi.spyOn(fs, 'existsSync').mockImplementation(
+          (p) =>
+            p === join(workspaceRoot, 'pnpm-lock.yaml') ||
+            (lockFile !== undefined && p === join(directory, lockFile))
+        );
+        vi.stubEnv('npm_config_user_agent', 'bun/1.0.25');
+
+        expect(detectPackageManager(directory)).toEqual(expected);
+      }
+    );
 
     it('should detect pnpm from npm_config_user_agent when no lock file exists', () => {
       vi.spyOn(configModule, 'readNxJson').mockReturnValueOnce({});
@@ -269,7 +289,7 @@ describe('package-manager', () => {
       process.env.npm_config_user_agent =
         'yarn/1.22.21 npm/? node/v20.11.1 darwin arm64';
       try {
-        expect(detectPackageManager()).toEqual('yarn');
+        expect(detectPackageManager(workspaceRoot)).toEqual('yarn');
       } finally {
         process.env.npm_config_user_agent = originalUserAgent;
       }
@@ -291,7 +311,7 @@ describe('package-manager', () => {
       vi.spyOn(configModule, 'readNxJson').mockReturnValueOnce({});
       vi.spyOn(fs, 'existsSync').mockImplementation((p) => {
         switch (p) {
-          case 'yarn.lock':
+          case join(workspaceRoot, 'yarn.lock'):
             return true;
           default:
             return false;
@@ -301,7 +321,7 @@ describe('package-manager', () => {
       process.env.npm_config_user_agent =
         'pnpm/8.15.4 npm/? node/v20.11.1 darwin arm64';
       try {
-        expect(detectPackageManager()).toEqual('yarn');
+        expect(detectPackageManager(workspaceRoot)).toEqual('yarn');
       } finally {
         process.env.npm_config_user_agent = originalUserAgent;
       }
@@ -865,6 +885,20 @@ describe('package-manager', () => {
       );
     });
 
+    it.each([
+      [
+        'a raw @',
+        'https://ci-user:Tr0ub4dor@S3cr3tTail@registry.corp.example/',
+      ],
+      ['a space', 'https://ci-user:correct horse@registry.corp.example/'],
+    ])('masks a userinfo with %s the way the URL parser reads it', (_, url) => {
+      stubPackageManagerConfig({ registry: url });
+
+      expect(getWorkspaceRegistryUrlForDisplay('nx')).toBe(
+        'https://***@registry.corp.example/'
+      );
+    });
+
     it('asks npm under the overlay the fetch runs with', () => {
       mockGetNpmSpawnRegistryEnv.mockReturnValue({
         npm_config_registry: 'https://from-overlay.example.com/',
@@ -1110,6 +1144,19 @@ describe('package-manager', () => {
           expect(args.some((arg) => arg.endsWith(`=${REGISTRY_PAYLOAD}`))).toBe(
             true
           );
+        }
+      );
+
+      it.each(['npm', 'yarn', 'pnpm', 'bun'] as const)(
+        'should leave the registry to %s when none is given',
+        (packageManager) => {
+          const { args } = getPackageManagerCommand(packageManager).publishArgv(
+            'dist/packages/my-pkg',
+            undefined,
+            '@org:registry',
+            'latest'
+          );
+          expect(args.some((arg) => arg.includes('registry'))).toBe(false);
         }
       );
 
@@ -1377,6 +1424,21 @@ describe('package-manager', () => {
       ]);
     });
 
+    it.each([
+      '--userconfig=/tmp/other.npmrc',
+      '-g',
+      '../outside',
+      '/tmp/outside',
+      'https://example.com/pkg.tgz',
+      '',
+    ])('should not hand %j to the package manager', async (pkg) => {
+      await expect(
+        packageRegistryView(pkg, 'latest', ['version'])
+      ).rejects.toThrow(`Invalid package name: "${pkg}".`);
+
+      expect(execMock).not.toHaveBeenCalled();
+    });
+
     it('should keep a shell on Windows and quote every argument', async () => {
       // Node refuses to execFile the package manager's .cmd shim without a
       // shell, so the spawn stays on exec there.
@@ -1579,6 +1641,42 @@ describe('package-manager', () => {
       expect(text).toContain('https://***@reg.example.com/nx');
     });
 
+    it('redacts a password with a raw @ up to the last @ of the authority', async () => {
+      vi.spyOn(configModule, 'readNxJson').mockReturnValue({
+        cli: { packageManager: 'npm' },
+      });
+      const leakyUrl =
+        'https://ci-user:Tr0ub4dor@S3cr3tTail@reg.example.com/nx';
+      execMock.mockImplementation(((
+        _file: string,
+        _args: string[],
+        options: any,
+        callback: any
+      ) => {
+        const cb = typeof options === 'function' ? options : callback;
+        const err: any = new Error(
+          `Command failed: npm view\nnpm error request to ${leakyUrl} failed`
+        );
+        // An `@` past the authority belongs to the package spec.
+        err.stderr = `npm error request to ${leakyUrl}@1.0.0 failed`;
+        cb(err);
+        return undefined;
+      }) as any);
+
+      let caught: any;
+      try {
+        await packageRegistryView('nx', 'latest', ['--json']);
+      } catch (e) {
+        caught = e;
+      }
+
+      expect(caught).toBeDefined();
+      const text = [caught.message, caught.stderr].join('\n');
+      expect(text).not.toContain('S3cr3tTail');
+      expect(text).toContain('https://***@reg.example.com/nx failed');
+      expect(text).toContain('https://***@reg.example.com/nx@1.0.0 failed');
+    });
+
     it('should resolve config from the Nx installation directory in a non-JS workspace', async () => {
       const installationPath = join(workspaceRoot, '.nx', 'installation');
       (existsSync as Mock).mockReturnValue(false);
@@ -1679,6 +1777,23 @@ describe('package-manager', () => {
         '/tmp/pack',
       ]);
       expect(options.env.npm_config_force).toBe('true');
+    });
+
+    it('should keep npm from running scripts of what it packs', async () => {
+      vi.stubEnv('npm_config_ignore_scripts', 'false');
+      await packageRegistryPack('/tmp/pack', 'nx', '1.0.0');
+      vi.unstubAllEnvs();
+
+      const [, , options] = execMock.mock.calls[0];
+      expect(options.env.npm_config_ignore_scripts).toBe('true');
+    });
+
+    it('should not hand a flag-shaped package name to npm', async () => {
+      await expect(
+        packageRegistryPack('/tmp/pack', '--userconfig=/tmp/x', '1.0.0')
+      ).rejects.toThrow('Invalid package name: "--userconfig=/tmp/x".');
+
+      expect(execMock).not.toHaveBeenCalled();
     });
 
     it('should leave npm min-release-age alone by default', async () => {
@@ -1856,6 +1971,216 @@ describe('package-manager', () => {
       ].join('\n');
       expect(causeText).not.toContain('SECRET-TOKEN-123');
       expect(causeText).toContain('https://***@reg.example.com/nx');
+    });
+
+    function mockViewOutput(stdout: string) {
+      vi.spyOn(childProcess, 'execFile').mockImplementation(((
+        _file: string,
+        _args: string[],
+        options: any,
+        callback: any
+      ) => {
+        const cb = typeof options === 'function' ? options : callback;
+        cb(null, { stdout });
+        return undefined;
+      }) as any);
+    }
+
+    it('returns the version the registry reports', async () => {
+      mockViewOutput('3.0.0\n');
+
+      await expect(
+        resolvePackageVersionUsingRegistry('pkg', 'latest')
+      ).resolves.toBe('3.0.0');
+    });
+
+    it('returns the highest of the versions matching a range', async () => {
+      mockViewOutput("pkg@3.0.0 '3.0.0'\npkg@3.1.0 '3.1.0'\n");
+
+      await expect(
+        resolvePackageVersionUsingRegistry('pkg', '^3.0.0')
+      ).resolves.toBe('3.1.0');
+    });
+
+    it.each([
+      ['a single release', 'git+https://git.example.com/pkg.git\n'],
+      [
+        'one of several releases',
+        "pkg@3.0.0 '3.0.0'\npkg@3.1.0 'git+https://git.example.com/pkg.git'\n",
+      ],
+    ])(
+      'rejects a version field of %s that is not a version',
+      async (_, stdout) => {
+        mockViewOutput(stdout);
+
+        await expect(
+          resolvePackageVersionUsingRegistry('pkg', '^3.0.0')
+        ).rejects.toBeInstanceOf(InvalidResolvedVersionError);
+      }
+    );
+  });
+
+  describe('resolvePackageVersionUsingInstallation', () => {
+    beforeEach(() => {
+      clearPackageManagerVersionCache();
+      vi.spyOn(configModule, 'readNxJson').mockReturnValue({
+        cli: { packageManager: 'yarn' },
+      });
+      (existsSync as Mock).mockReturnValue(false);
+      (statSync as Mock).mockImplementation(() => {
+        throw new Error('ENOENT: no such file or directory');
+      });
+      (readFileSync as Mock).mockImplementation(require('fs').readFileSync);
+      vi.spyOn(childProcess, 'execSync').mockReturnValue('10.0.0' as any);
+    });
+
+    afterEach(() => {
+      vi.restoreAllMocks();
+      vi.clearAllMocks();
+    });
+
+    // The add command lands the given package.json in the temp directory.
+    function mockInstalledPackageJson(packageJson: object) {
+      vi.spyOn(childProcess, 'exec').mockImplementation(((
+        _command: string,
+        options: any,
+        callback: any
+      ) => {
+        mkdirSync(join(options.cwd, 'node_modules/pkg'), { recursive: true });
+        writeFileSync(
+          join(options.cwd, 'node_modules/pkg/package.json'),
+          JSON.stringify(packageJson)
+        );
+        callback(null, { stdout: '' });
+        return undefined;
+      }) as any);
+    }
+
+    it('returns the version of the installed package', async () => {
+      mockInstalledPackageJson({ name: 'pkg', version: '4.0.0' });
+
+      await expect(
+        resolvePackageVersionUsingInstallation('pkg', 'latest')
+      ).resolves.toBe('4.0.0');
+    });
+
+    it('rejects a version of the installed package that is not a version', async () => {
+      mockInstalledPackageJson({
+        name: 'pkg',
+        version: 'git+https://git.example.com/pkg.git',
+      });
+
+      await expect(
+        resolvePackageVersionUsingInstallation('pkg', 'latest')
+      ).rejects.toBeInstanceOf(InvalidResolvedVersionError);
+    });
+
+    it('passes the package spec to the shell as a single argument', async () => {
+      const execMock = vi.spyOn(childProcess, 'exec').mockImplementation(((
+        _cmd: string,
+        options: any,
+        callback: any
+      ) => {
+        const cb = typeof options === 'function' ? options : callback;
+        cb(new Error('install failed'));
+        return undefined;
+      }) as any);
+      const platform = Object.getOwnPropertyDescriptor(process, 'platform');
+      Object.defineProperty(process, 'platform', { value: 'linux' });
+
+      try {
+        await expect(
+          resolvePackageVersionUsingInstallation(
+            'typescript',
+            'latest; echo x > marker'
+          )
+        ).rejects.toThrow('install failed');
+      } finally {
+        Object.defineProperty(process, 'platform', platform);
+      }
+
+      expect(execMock.mock.calls[0][0]).toContain(
+        " 'typescript@latest; echo x > marker'"
+      );
+    });
+
+    it.each([
+      ['1.22.22', 'yarn add -W mypackage@next --ignore-scripts'],
+      ['4.0.0', 'yarn add mypackage@next'],
+    ])(
+      'installs without lifecycle scripts with yarn %s',
+      async (version, expectedCommand) => {
+        clearPackageManagerVersionCache();
+        vi.spyOn(configModule, 'readNxJson').mockReturnValue({
+          cli: { packageManager: 'yarn' },
+        });
+        (existsSync as Mock).mockReturnValue(false);
+        vi.spyOn(childProcess, 'execSync').mockReturnValue(version as any);
+        const exec = vi.spyOn(childProcess, 'exec').mockImplementation(((
+          _command: string,
+          _options: any,
+          callback: any
+        ) => {
+          callback(new Error('install stubbed'));
+          return undefined;
+        }) as any);
+
+        await expect(
+          resolvePackageVersionUsingInstallation('mypackage', 'next')
+        ).rejects.toThrow('install stubbed');
+
+        const [command, options] = exec.mock.calls[0];
+        expect(command).toBe(expectedCommand);
+        expect((options as any).env.YARN_ENABLE_SCRIPTS).toBe('false');
+      }
+    );
+
+    it('should not hand a flag-shaped package name to the package manager', async () => {
+      const execMock = vi.spyOn(childProcess, 'exec');
+
+      await expect(
+        resolvePackageVersionUsingInstallation('--userconfig=/tmp/x', 'latest')
+      ).rejects.toThrow('Invalid package name: "--userconfig=/tmp/x".');
+
+      expect(execMock).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('assertValidPackageName', () => {
+    it.each([
+      'nx',
+      '@nx/js',
+      'JSONStream',
+      'lodash.merge',
+      'a_b-c~d',
+      '7zip',
+      '@scope/_plugin',
+      '@scope/-plugin',
+      '@_scope/plugin',
+      '@-scope/plugin',
+    ])('should accept %j', (name) => {
+      expect(() => assertValidPackageName(name)).not.toThrow();
+    });
+
+    it.each([
+      '--userconfig=/tmp/other.npmrc',
+      '-g',
+      '.hidden',
+      '_private',
+      '@scope/.plugin',
+      '@scope',
+      '@scope/',
+      '@/name',
+      'name/extra',
+      '@scope/../outside',
+      'nx@latest',
+      'nx; id',
+      '$(id)',
+      '',
+    ])('should reject %j', (name) => {
+      expect(() => assertValidPackageName(name)).toThrow(
+        /Invalid package name/
+      );
     });
   });
 });

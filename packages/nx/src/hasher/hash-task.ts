@@ -10,7 +10,7 @@ import {
 import { readProjectsConfigurationFromProjectGraph } from '../project-graph/project-graph';
 import { getTaskIOService } from '../tasks-runner/task-io-service';
 import { getTaskSpecificEnv } from '../tasks-runner/task-env';
-// TODO(v25): remove custom hasher support.
+// TODO(v25): remove custom hasher support (NXC-5052).
 import { getCustomHasher } from '../tasks-runner/utils';
 import { getDbConnection } from '../utils/db-connection';
 import { getInputs, TaskHasher } from './task-hasher';
@@ -34,7 +34,9 @@ export async function hashTasksThatDoNotDependOnOutputsOfOtherTasks(
   taskGraph: TaskGraph,
   nxJson: NxJsonConfiguration,
   tasksDetails: TaskDetails | null,
-  ultracacheConfigurations?: UltracacheConfigurations
+  ultracacheConfigurations?: UltracacheConfigurations,
+  /** The tasks to hash; an agent runs a few tasks of a larger task graph. */
+  tasks: Task[] = Object.values(taskGraph.tasks)
 ): Promise<Set<string>> {
   performance.mark('hashMultipleTasks:start');
 
@@ -45,8 +47,7 @@ export async function hashTasksThatDoNotDependOnOutputsOfOtherTasks(
   const deferredByConfiguration = ultracacheConfigurations
     ? new Set(getUltracacheDeferredTaskIds(ultracacheConfigurations, taskGraph))
     : null;
-  const tasks = Object.values(taskGraph.tasks);
-  // TODO(v25): remove custom hasher support.
+  // TODO(v25): remove custom hasher support (NXC-5052).
   const tasksWithHashers = await Promise.all(
     tasks.map(async (task) => {
       const customHasher = getCustomHasher(task, projects);
@@ -134,7 +135,7 @@ export async function hashTask(
 
   const projectsConfigurations =
     readProjectsConfigurationFromProjectGraph(projectGraph);
-  // TODO(v25): remove custom hasher support.
+  // TODO(v25): remove custom hasher support (NXC-5052).
   const customHasher = getCustomHasher(task, projectsConfigurations.projects);
 
   const { value, details, inputs } = await (customHasher
@@ -202,7 +203,7 @@ export async function hashTasks(
     (task) => !task.hash
   );
 
-  // TODO(v25): remove custom hasher support.
+  // TODO(v25): remove custom hasher support (NXC-5052).
   // Separate tasks with custom hashers from those without
   const tasksWithCustomHashers: Task[] = [];
   const tasksWithoutCustomHashers: Task[] = [];

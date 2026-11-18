@@ -1,61 +1,57 @@
 import {
   addDependenciesToPackageJson,
   formatFiles,
-  GeneratorCallback,
+  type GeneratorCallback,
   logger,
-  runTasksInSerial,
-  Tree,
+  type Tree,
 } from '@nx/devkit';
+import ts = require('typescript');
+import { assertSupportedEslintVersion } from '../../utils/assert-supported-eslint-version';
+import {
+  baseEslintConfigFilenames,
+  eslintFlatConfigFilenames,
+} from '../../utils/flat-config';
 import { findEslintFile } from '../utils/eslint-file';
 import { eslintPluginOxlintVersion, jitiVersion } from '../../utils/versions';
 import type { SetupOxlintBridgeSchema } from './schema';
 
-/**
- * Injects the JITI bridge into an existing ESLint flat config so that
- * `eslint-plugin-oxlint` can dynamically read `oxlint.config.ts` and
- * disable overlapping ESLint rules via `buildFromOxlintConfig()`.
- *
- * This is the community-standard pattern used by Analog alpha, documented
- * by `eslint-plugin-oxlint`, and recommended for ESLint/Oxlint coexistence
- * during gradual migration.
- */
 export async function setupOxlintBridgeGenerator(
   tree: Tree,
   options: SetupOxlintBridgeSchema
 ): Promise<GeneratorCallback> {
-  const tasks: GeneratorCallback[] = [];
-  const oxlintConfigPath = options.oxlintConfigPath ?? './oxlint.config.ts';
-
-  // 1. Find the existing ESLint flat config
-  const eslintFile = findEslintFile(tree);
-  if (!eslintFile) {
+  assertSupportedEslintVersion(tree);
+  const file = findEslintFile(tree);
+  if (!file)
     throw new Error(
       'No ESLint config file found. Run `nx g @nx/eslint:init` first.'
     );
-  }
-
-  const content = tree.read(eslintFile, 'utf-8');
-  const isFlatConfig =
-    content.includes('export default') || content.includes('module.exports');
-  if (!isFlatConfig) {
+  if (
+    ![...eslintFlatConfigFilenames, ...baseEslintConfigFilenames].includes(
+      file
+    ) ||
+    !file.endsWith('js')
+  ) {
     throw new Error(
-      `The ESLint config "${eslintFile}" does not appear to be a flat config. ` +
-        'Convert to flat config first with `nx g @nx/eslint:convert-to-flat-config`.'
+      `The ESLint config "${file}" does not appear to be a flat config.`
     );
   }
-
-  // 2. Check if the bridge is already set up
-  if (content.includes('eslint-plugin-oxlint')) {
-    logger.info(
-      'eslint-plugin-oxlint is already referenced in the ESLint config. Skipping.'
-    );
+  const content = tree.read(file, 'utf-8');
+  const source = parse(content);
+  if (source.statements.some(importsBridge)) {
+    logger.info('The config already imports eslint-plugin-oxlint. Skipping.');
     return () => {};
   }
 
-  // 3. Install dependencies
-  if (!options.skipPackageJson) {
-    tasks.push(
-      addDependenciesToPackageJson(
+  const format = source.statements.some(ts.isExportAssignment) ? 'mjs' : 'cjs';
+  const updated = injectOxlintBridge(
+    content,
+    format,
+    options.oxlintConfigPath ?? './oxlint.config.ts'
+  );
+  tree.write(file, updated);
+  const install = options.skipPackageJson
+    ? () => {}
+    : addDependenciesToPackageJson(
         tree,
         {},
         {
@@ -64,141 +60,95 @@ export async function setupOxlintBridgeGenerator(
         },
         undefined,
         options.keepExistingVersions
-      )
-    );
-  }
-
-  // 4. Inject the bridge into the ESLint config
-  const format = content.includes('export default') ? 'mjs' : 'cjs';
-  const updatedContent = injectOxlintBridge(content, format, oxlintConfigPath);
-  tree.write(eslintFile, updatedContent);
-
-  // 5. Format
-  if (!options.skipFormat) {
-    await formatFiles(tree);
-  }
-
-  return runTasksInSerial(...tasks);
+      );
+  if (!options.skipFormat) await formatFiles(tree);
+  return install;
 }
 
-/**
- * Injects the JITI bridge code into an ESLint flat config string.
- *
- * Adds:
- * - `import oxlint from 'eslint-plugin-oxlint'`
- * - `import { createJiti } from 'jiti'`
- * - Top-level JITI import of oxlint.config.ts
- * - `reportUnusedDisableDirectives: 'off'` config block
- * - `...oxlint.buildFromOxlintConfig(oxlintConfig)` spread at end
- */
+function parse(content: string) {
+  return ts.createSourceFile(
+    'eslint.config.js',
+    content,
+    ts.ScriptTarget.Latest,
+    true,
+    ts.ScriptKind.JS
+  );
+}
+
+function importsBridge(stmt: ts.Statement): boolean {
+  if (ts.isImportDeclaration(stmt)) {
+    return (
+      ts.isStringLiteral(stmt.moduleSpecifier) &&
+      stmt.moduleSpecifier.text === 'eslint-plugin-oxlint'
+    );
+  }
+  return (
+    ts.isVariableStatement(stmt) &&
+    stmt.declarationList.declarations.some(
+      ({ initializer }) =>
+        initializer &&
+        ts.isCallExpression(initializer) &&
+        initializer.expression.getText() === 'require' &&
+        initializer.arguments.length === 1 &&
+        ts.isStringLiteral(initializer.arguments[0]) &&
+        initializer.arguments[0].text === 'eslint-plugin-oxlint'
+    )
+  );
+}
+
+function exportValue(stmt: ts.Statement, format: 'mjs' | 'cjs') {
+  if (format === 'mjs' && ts.isExportAssignment(stmt)) return stmt.expression;
+  if (
+    format === 'cjs' &&
+    ts.isExpressionStatement(stmt) &&
+    ts.isBinaryExpression(stmt.expression) &&
+    stmt.expression.operatorToken.kind === ts.SyntaxKind.EqualsToken &&
+    stmt.expression.left.getText() === 'module.exports'
+  ) {
+    return stmt.expression.right;
+  }
+}
+
 export function injectOxlintBridge(
   content: string,
   format: 'mjs' | 'cjs',
-  oxlintConfigPath: string
-): string {
-  if (format === 'mjs') {
-    return injectOxlintBridgeESM(content, oxlintConfigPath);
+  configPath: string
+) {
+  const source = parse(content);
+  for (const stmt of source.statements) {
+    const value = exportValue(stmt, format);
+    if (!value) continue;
+    const elements = ts.isArrayLiteralExpression(value)
+      ? value.elements
+      : ts.isCallExpression(value) &&
+          value.expression.getText() === 'defineConfig'
+        ? value.arguments
+        : undefined;
+    if (!elements) break;
+    const path = JSON.stringify(configPath);
+    const setup =
+      format === 'mjs'
+        ? `import oxlint from 'eslint-plugin-oxlint';\nimport { createJiti } from 'jiti';\nconst oxlintConfig = (await createJiti(import.meta.url).import(${path})).default;`
+        : `const oxlint = require('eslint-plugin-oxlint');\nconst { createJiti } = require('jiti');\nconst oxlintConfig = createJiti(__filename)(${path}).default;`;
+    const insert = value.end - 1;
+    const separator = elements.length && !elements.hasTrailingComma ? ',' : '';
+    const blocks =
+      "{ linterOptions: { reportUnusedDisableDirectives: 'off' } },\n  ...oxlint.buildFromOxlintConfig(oxlintConfig)";
+    return (
+      content.slice(0, stmt.getStart(source)) +
+      setup +
+      '\n\n' +
+      content.slice(stmt.getStart(source), insert) +
+      separator +
+      '\n  ' +
+      blocks +
+      ',\n' +
+      content.slice(insert)
+    );
   }
-  return injectOxlintBridgeCJS(content, oxlintConfigPath);
-}
-
-function injectOxlintBridgeESM(
-  content: string,
-  oxlintConfigPath: string
-): string {
-  // Add imports before the export default
-  const importBlock = [
-    `import oxlint from 'eslint-plugin-oxlint';`,
-    `import { createJiti } from 'jiti';`,
-    '',
-    `const jiti = createJiti(import.meta.url);`,
-    `const oxlintConfig = /** @type {{ default: import('oxlint').OxlintConfig }} */ (`,
-    `  await jiti.import('${oxlintConfigPath}')`,
-    `).default;`,
-  ].join('\n');
-
-  // Find the export default position and insert imports before it
-  const exportIdx = content.indexOf('export default');
-  if (exportIdx === -1) {
-    return content;
-  }
-
-  const before = content.slice(0, exportIdx).trimEnd();
-  const after = content.slice(exportIdx);
-
-  // Build the bridge config blocks to append inside the export array
-  const bridgeBlocks = [
-    `  {`,
-    `    linterOptions: {`,
-    `      reportUnusedDisableDirectives: 'off',`,
-    `    },`,
-    `  },`,
-    `  ...oxlint.buildFromOxlintConfig(oxlintConfig)`,
-  ].join('\n');
-
-  // Insert bridge blocks at the end of the export array
-  const updatedAfter = insertBeforeClosingBracket(after, bridgeBlocks);
-
-  return `${before}\n${importBlock}\n\n${updatedAfter}`;
-}
-
-function injectOxlintBridgeCJS(
-  content: string,
-  oxlintConfigPath: string
-): string {
-  // CJS: use require() and synchronous JITI
-  const importBlock = [
-    `const oxlint = require('eslint-plugin-oxlint');`,
-    `const { createJiti } = require('jiti');`,
-    '',
-    `const jiti = createJiti(__filename);`,
-    `const oxlintConfig = jiti('${oxlintConfigPath}').default;`,
-  ].join('\n');
-
-  const exportsIdx = content.indexOf('module.exports');
-  if (exportsIdx === -1) {
-    return content;
-  }
-
-  const before = content.slice(0, exportsIdx).trimEnd();
-  const after = content.slice(exportsIdx);
-
-  const bridgeBlocks = [
-    `  {`,
-    `    linterOptions: {`,
-    `      reportUnusedDisableDirectives: 'off',`,
-    `    },`,
-    `  },`,
-    `  ...oxlint.buildFromOxlintConfig(oxlintConfig)`,
-  ].join('\n');
-
-  const updatedAfter = insertBeforeClosingBracket(after, bridgeBlocks);
-
-  return `${before}\n${importBlock}\n\n${updatedAfter}`;
-}
-
-/**
- * Insert content before the last `];` in the string. This appends
- * config blocks to the end of the flat config export array.
- */
-function insertBeforeClosingBracket(
-  content: string,
-  insertion: string
-): string {
-  // Find the last `];` which closes the export default array
-  const closingIdx = content.lastIndexOf('];');
-  if (closingIdx === -1) {
-    return content;
-  }
-
-  const before = content.slice(0, closingIdx).trimEnd();
-  const after = content.slice(closingIdx);
-
-  // Ensure trailing comma on the last element
-  const needsComma = !before.trimEnd().endsWith(',');
-  const comma = needsComma ? ',' : '';
-
-  return `${before}${comma}\n${insertion},\n${after}`;
+  throw new Error(
+    'Expected an exported flat config array or defineConfig(...) call.'
+  );
 }
 
 export default setupOxlintBridgeGenerator;

@@ -1,11 +1,32 @@
 import { emitReadySignal } from '@nx/devkit';
 import { getListeningUrl } from '@nx/devkit/internal';
-import { rspack } from '@rspack/core';
+import {
+  type Configuration,
+  type DevServer,
+  rspack,
+  ValidationError,
+} from '@rspack/core';
+import { existsSync } from 'node:fs';
 import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import {
+  createServer,
+  type IncomingMessage,
+  type ServerResponse,
+} from 'node:http';
+import type { AddressInfo } from 'node:net';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  describe,
+  expect,
+  it,
+  vi,
+} from 'vitest';
 import { _createConfig, createConfig } from '../config/create-config';
+import type { AngularRspackPluginOptions } from '../models';
 
 vi.mock('@nx/devkit', async (importOriginal) => ({
   ...(await importOriginal()),
@@ -196,4 +217,349 @@ describe('NgRspackPlugin', () => {
     },
     10000
   );
+
+  describe('dev server CORS', () => {
+    type Middleware = ReturnType<
+      NonNullable<DevServer['setupMiddlewares']>
+    >[number];
+    type Handler = (
+      req: IncomingMessage,
+      res: ServerResponse,
+      next: () => void
+    ) => void;
+
+    const options: AngularRspackPluginOptions = {
+      browser: './src/main.ts',
+      index: './src/index.html',
+      tsConfig: './tsconfig.base.json',
+      outputPath: './dist',
+      deleteOutputPath: false,
+    };
+    const ALLOW_ORIGIN = 'access-control-allow-origin';
+
+    // Stand-ins for the dev server's own entries, in its order: `headers`,
+    // the dev middleware, the proxy and the handler that ends OPTIONS requests.
+    function devServerMiddlewares(headers: DevServer['headers']): Middleware[] {
+      const setHeaders: Handler = (_, res, next) => {
+        for (const [name, value] of Object.entries(headers ?? {})) {
+          res.setHeader(name, value);
+        }
+        next();
+      };
+      const devMiddleware: Handler = (req, res, next) =>
+        req.method === 'GET' && req.url === '/main.js' ? res.end() : next();
+      const proxy: Handler = (req, res, next) =>
+        req.url?.startsWith('/api') ? res.end('proxied') : next();
+      const endOptions: Handler = (req, res, next) => {
+        if (req.method !== 'OPTIONS') {
+          return next();
+        }
+        res.statusCode = 204;
+        res.end();
+      };
+      return [
+        ...(headers === undefined
+          ? []
+          : [{ name: 'set-headers', middleware: setHeaders }]),
+        { name: '@rspack/dev-middleware', middleware: devMiddleware },
+        { name: 'http-proxy-middleware', middleware: proxy },
+        { name: 'options-middleware', middleware: endOptions },
+      ];
+    }
+
+    async function serve(config: Configuration) {
+      const compiler = rspack(config);
+      const devServer = compiler.options.devServer || {};
+      const ownMiddlewares = devServerMiddlewares(devServer.headers);
+      const middlewares =
+        devServer.setupMiddlewares?.(ownMiddlewares, {}) ?? ownMiddlewares;
+      const server = createServer((req, res) => {
+        let index = 0;
+        const next = () => {
+          const entry = middlewares[index++];
+          if (!entry) {
+            res.statusCode = 404;
+            res.end();
+            return;
+          }
+          const handler =
+            typeof entry === 'function' ? entry : entry.middleware;
+          (handler as Handler)(req, res, next);
+        };
+        next();
+      });
+      await new Promise<void>((resolve) =>
+        server.listen(0, '127.0.0.1', resolve)
+      );
+      const { port } = server.address() as AddressInfo;
+      return {
+        send: (method: string, path: string, headers: Record<string, string>) =>
+          fetch(`http://127.0.0.1:${port}${path}`, { method, headers }),
+        close: async () => {
+          await new Promise((resolve) => server.close(resolve));
+          await new Promise((resolve) => compiler.close(resolve));
+        },
+      };
+    }
+
+    describe('by default', () => {
+      let devServer: Awaited<ReturnType<typeof serve>>;
+      beforeAll(async () => {
+        devServer = await serve((await _createConfig(options))[0]);
+      }, 10000);
+      afterAll(() => devServer.close());
+
+      it.each([
+        ['a foreign origin', 'https://evil.example', null],
+        [
+          'a host that only starts with localhost',
+          'http://localhost.evil.example',
+          null,
+        ],
+        ['localhost', 'http://localhost:4000', 'http://localhost:4000'],
+        [
+          'a localhost subdomain',
+          'https://app.localhost',
+          'https://app.localhost',
+        ],
+        ['127.0.0.1', 'http://127.0.0.1:8080', 'http://127.0.0.1:8080'],
+        ['[::1]', 'http://[::1]:3000', 'http://[::1]:3000'],
+      ])('answers a request from %s', async (_, origin, allowed) => {
+        const { headers } = await devServer.send('GET', '/main.js', {
+          origin,
+        });
+
+        expect(headers.get(ALLOW_ORIGIN)).toBe(allowed);
+        expect(headers.get('vary')).toBe('Origin');
+      });
+
+      it('answers a preflight request from localhost and lets the proxy forward it', async () => {
+        const preflight = {
+          origin: 'http://localhost:4000',
+          'access-control-request-method': 'PUT',
+          'access-control-request-headers': 'content-type,x-token',
+        };
+
+        const asset = await devServer.send('OPTIONS', '/main.js', preflight);
+        expect(asset.status).toBe(204);
+        expect(Object.fromEntries(asset.headers)).toMatchObject({
+          [ALLOW_ORIGIN]: 'http://localhost:4000',
+          'access-control-allow-methods': 'GET,HEAD,PUT,PATCH,POST,DELETE',
+          'access-control-allow-headers': 'content-type,x-token',
+          vary: 'Origin, Access-Control-Request-Headers',
+        });
+
+        const proxied = await devServer.send('OPTIONS', '/api/data', preflight);
+        expect(await proxied.text()).toBe('proxied');
+        expect(proxied.headers.get(ALLOW_ORIGIN)).toBe('http://localhost:4000');
+
+        const foreign = await devServer.send('OPTIONS', '/main.js', {
+          ...preflight,
+          origin: 'https://evil.example',
+        });
+        expect(foreign.headers.get(ALLOW_ORIGIN)).toBeNull();
+      });
+    });
+
+    const setCustomOrigin: Handler = (_, res, next) => {
+      res.setHeader('Access-Control-Allow-Origin', 'https://custom.example');
+      next();
+    };
+    it.each<[string, Parameters<typeof createConfig>[0]]>([
+      [
+        'devServer.headers',
+        {
+          options: {
+            ...options,
+            devServer: {
+              headers: {
+                'Access-Control-Allow-Origin': 'https://custom.example',
+              },
+            },
+          },
+        },
+      ],
+      [
+        'rspackConfigOverrides.devServer.headers',
+        {
+          options,
+          rspackConfigOverrides: {
+            devServer: {
+              headers: {
+                'access-control-allow-origin': 'https://custom.example',
+              },
+            },
+          },
+        },
+      ],
+      [
+        'a middleware that setupMiddlewares puts first',
+        {
+          options,
+          rspackConfigOverrides: {
+            devServer: {
+              setupMiddlewares: (middlewares) => [
+                setCustomOrigin,
+                ...middlewares,
+              ],
+            },
+          },
+        },
+      ],
+    ])(
+      'keeps the allowed origin that %s sets',
+      async (_, config) => {
+        const devServer = await serve((await createConfig(config))[0]);
+        try {
+          const { headers } = await devServer.send('GET', '/main.js', {
+            origin: 'http://localhost:4000',
+          });
+
+          expect(headers.get(ALLOW_ORIGIN)).toBe('https://custom.example');
+        } finally {
+          await devServer.close();
+        }
+      },
+      10000
+    );
+  });
+
+  async function createDeleteProjectRoot(): Promise<string> {
+    const root = await mkdtemp(join(tmpdir(), 'ng-rspack-delete-'));
+    await mkdir(join(root, 'src'), { recursive: true });
+    await writeFile(join(root, 'src', 'main.server.ts'), '');
+    await writeFile(join(root, 'src', 'server.ts'), '');
+    return root;
+  }
+
+  const deleteOptions = {
+    browser: './src/main.ts',
+    index: './src/index.html',
+    tsConfig: './tsconfig.base.json',
+    outputPath: './dist',
+    progress: false,
+  };
+  const ssrOptions = {
+    server: './src/main.server.ts',
+    ssr: { entry: './src/server.ts' },
+  };
+
+  it.each<[string, boolean, boolean, boolean | undefined, boolean, boolean]>([
+    [
+      'deletes the output path when a build compiler is created',
+      false,
+      false,
+      undefined,
+      true,
+      true,
+    ],
+    [
+      'deletes the output path when an SSR dev server compiler is created',
+      true,
+      true,
+      undefined,
+      true,
+      true,
+    ],
+    [
+      'keeps the output path for a browser-only dev server',
+      true,
+      false,
+      undefined,
+      true,
+      false,
+    ],
+    [
+      'deletes the output path for a browser-only dev server with writeToDisk',
+      true,
+      false,
+      true,
+      true,
+      true,
+    ],
+    [
+      'keeps the output path when "deleteOutputPath" is disabled',
+      false,
+      false,
+      undefined,
+      false,
+      false,
+    ],
+  ])(
+    '%s, and never when the config loads',
+    async (_, serve, hasServer, writeToDisk, deleteOutputPath, deletes) => {
+      if (serve) {
+        vi.stubEnv('RSPACK_SERVE', 'true');
+      }
+      const root = await createDeleteProjectRoot();
+      const sentinel = join(root, 'dist', 'SENTINEL');
+      try {
+        await mkdir(join(root, 'dist'), { recursive: true });
+        await writeFile(sentinel, '');
+
+        const configs = await _createConfig(
+          {
+            ...deleteOptions,
+            deleteOutputPath,
+            root,
+            ...(hasServer ? ssrOptions : {}),
+          },
+          writeToDisk === undefined
+            ? undefined
+            : { devServer: { devMiddleware: { writeToDisk } } }
+        );
+        expect(existsSync(sentinel)).toBe(true);
+
+        const multiCompiler = rspack(configs);
+        try {
+          expect(existsSync(sentinel)).toBe(!deletes);
+        } finally {
+          await new Promise((resolve) => multiCompiler.close(resolve));
+        }
+      } finally {
+        await rm(root, { recursive: true, force: true });
+      }
+    },
+    10000
+  );
+
+  it('fails creating the compiler when the output path cannot be deleted', async () => {
+    const root = await createDeleteProjectRoot();
+    try {
+      // A file where the output directory should be can't be emptied.
+      await writeFile(join(root, 'dist'), '');
+      const configs = await _createConfig({
+        ...deleteOptions,
+        deleteOutputPath: true,
+        root,
+      });
+
+      expect(() => rspack(configs)).toThrow(ValidationError);
+      expect(() => rspack(configs)).toThrow('ENOTDIR');
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  });
+
+  it('refuses to delete an output path at the project root when the compiler is created', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'ng-rspack-delete-'));
+    try {
+      const configs = await _createConfig({
+        browser: './src/main.ts',
+        index: './src/index.html',
+        tsConfig: './tsconfig.base.json',
+        outputPath: { base: '.', browser: 'browser' },
+        deleteOutputPath: true,
+        progress: false,
+        root,
+      });
+
+      expect(() => rspack(configs)).toThrow(ValidationError);
+      expect(() => rspack(configs)).toThrow(
+        'Output path MUST not be project root directory!'
+      );
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  });
 });

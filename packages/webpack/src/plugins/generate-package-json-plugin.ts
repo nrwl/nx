@@ -1,4 +1,3 @@
-import * as fs from 'fs';
 import type { Compiler, WebpackPluginInstance } from 'webpack';
 import {
   createPackageJson,
@@ -10,9 +9,9 @@ import {
 import {
   detectPackageManager,
   type ProjectGraph,
-  readJsonFile,
   serializeJson,
 } from '@nx/devkit';
+import { readRuntimeDependencies } from '@nx/js/internal';
 
 const pluginName = 'GeneratePackageJsonPlugin';
 
@@ -29,19 +28,6 @@ export class GeneratePackageJsonPlugin implements WebpackPluginInstance {
       runtimeDependencies?: string[];
     }
   ) {}
-
-  private resolveRuntimeDependencies(): Record<string, string> {
-    const runtimeDependencies: Record<string, string> = {};
-    if (this.options.runtimeDependencies) {
-      for (const dep of this.options.runtimeDependencies) {
-        const depPkgJson = require.resolve(`${dep}/package.json`);
-        if (!fs.existsSync(depPkgJson)) continue;
-        const { name, version } = readJsonFile(depPkgJson);
-        runtimeDependencies[name] = version;
-      }
-    }
-    return runtimeDependencies;
-  }
 
   apply(compiler: Compiler): void {
     const { sources } = require('webpack') as typeof import('webpack');
@@ -74,7 +60,10 @@ export class GeneratePackageJsonPlugin implements WebpackPluginInstance {
               target: HelperDependency.tsc,
             });
           }
-          const runtimeDependencies = this.resolveRuntimeDependencies();
+          const runtimeDependencies = readRuntimeDependencies(
+            this.options.runtimeDependencies ?? [],
+            [__dirname, this.options.root]
+          );
 
           const packageJson = createPackageJson(
             this.options.projectName,

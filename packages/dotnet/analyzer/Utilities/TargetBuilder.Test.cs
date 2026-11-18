@@ -35,6 +35,17 @@ public static partial class TargetBuilder
                 Cwd = "{projectRoot}",
                 Args = [.. defaultFlags]
             },
+            Configurations = new Dictionary<string, TargetConfiguration>
+            {
+                ["debug"] = new TargetConfiguration
+                {
+                    Args = [.. defaultFlags, "--configuration", "Debug"]
+                },
+                ["release"] = new TargetConfiguration
+                {
+                    Args = [.. defaultFlags, "--configuration", "Release"]
+                }
+            },
             DependsOn = [options.BuildTargetName],
             Cache = true,
             Inputs =

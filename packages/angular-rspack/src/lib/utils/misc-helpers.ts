@@ -1,3 +1,4 @@
+import { readModulePackageJson } from '@nx/devkit/internal';
 import assert from 'node:assert';
 import { isAbsolute } from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -61,15 +62,11 @@ export function getInstalledPackageVersionFromRoot(
   name: string
 ): string | null {
   try {
-    const packageJsonPath = require.resolve(`${name}/package.json`, {
-      paths: [root],
-    });
-
-    return (require(packageJsonPath) as { version?: string }).version ?? null;
+    return readModulePackageJson(name, [root]).packageJson.version ?? null;
   } catch (error) {
     const code = (error as { code?: string }).code;
-    // Not installed, or the package does not export its package.json; the
-    // version is unknown either way.
+    // Not installed, or its entry point does not resolve; the version is
+    // unknown either way.
     if (
       code === 'MODULE_NOT_FOUND' ||
       code === 'ERR_PACKAGE_PATH_NOT_EXPORTED'

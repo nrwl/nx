@@ -2,7 +2,7 @@ import * as pc from 'picocolors';
 import type { ChildProcess, Serializable } from 'child_process';
 import { readFileSync } from 'fs';
 import { Transform } from 'stream';
-import { killProcessTree, killProcessTreeGraceful } from '../../native';
+import { killProcessTreeGraceful } from '../../native';
 import { signalToCode } from '../../utils/exit-codes';
 import { addPrefixTransformer, getColor } from './output-prefix';
 import type { RunningTask } from './running-task';

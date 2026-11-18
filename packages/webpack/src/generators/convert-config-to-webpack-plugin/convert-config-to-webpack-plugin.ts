@@ -6,7 +6,6 @@ import {
   Tree,
   joinPathFragments,
   updateProjectConfiguration,
-  ProjectConfiguration,
 } from '@nx/devkit';
 import { WebpackExecutorOptions } from '../../executors/webpack/schema';
 import { extractWebpackOptions } from './lib/extract-webpack-options';

@@ -153,6 +153,13 @@ function extractPluginOptions(
       delete options.memoryLimit;
     } else if (key === 'standardRspackConfigFunction') {
       delete options.standardRspackConfigFunction;
+    } else if (key === 'transformers') {
+      context.logger.addLog({
+        executorName: '@nx/rspack:rspack',
+        log: `The "transformers" option was removed because Rspack compiles TypeScript with "builtin:swc-loader", which cannot run TypeScript transformer plugins. It never had an effect on the build.`,
+        project: context.projectName,
+      });
+      delete options.transformers;
     } else {
       pluginOptions[key] = value;
       delete options[key];

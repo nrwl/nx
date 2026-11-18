@@ -108,6 +108,39 @@ describe('app', () => {
         '@parcel/watcher'
       );
     });
+
+    it('should deny the unrs-resolver build script pulled in by eslint-plugin-import-x', async () => {
+      await withPnpm(appTree, '11.2.2', () =>
+        applicationGenerator(appTree, {
+          ...schema,
+          unitTestRunner: 'none',
+          e2eTestRunner: 'none',
+        })
+      );
+
+      expect(appTree.read('pnpm-workspace.yaml', 'utf-8')).toMatch(
+        /['"]?unrs-resolver['"]?: false/
+      );
+    });
+
+    it('should not record an unrs-resolver decision on ESLint v9', async () => {
+      updateJson(appTree, 'package.json', (json) => ({
+        ...json,
+        devDependencies: { ...json.devDependencies, eslint: '^9.39.0' },
+      }));
+
+      await withPnpm(appTree, '11.2.2', () =>
+        applicationGenerator(appTree, {
+          ...schema,
+          unitTestRunner: 'none',
+          e2eTestRunner: 'none',
+        })
+      );
+
+      expect(appTree.read('pnpm-workspace.yaml', 'utf-8') ?? '').not.toContain(
+        'unrs-resolver'
+      );
+    });
   });
 
   describe('not nested', () => {
@@ -735,6 +768,27 @@ describe('app', () => {
       .toString();
 
     expect(appSpecContent).toMatch(/import App from '.\/app'/);
+  });
+
+  it('should add flat config and ESLint v10 plugins by default', async () => {
+    delete process.env.ESLINT_USE_FLAT_CONFIG;
+    await applicationGenerator(appTree, { ...schema, linter: 'eslint' });
+
+    const packageJson = readJson(appTree, '/package.json');
+
+    expect(packageJson.devDependencies.eslint).toMatch(/^\^?10\./);
+    expect(packageJson.devDependencies['eslint-plugin-import-x']).toMatch(
+      /^\^?4\./
+    );
+    expect(packageJson.devDependencies['eslint-plugin-react-hooks']).toMatch(
+      /^\^?7\./
+    );
+    // react/jsx-a11y/import have no ESLint v10 release, so they must not install
+    expect(packageJson.devDependencies['eslint-plugin-react']).toBeUndefined();
+    expect(
+      packageJson.devDependencies['eslint-plugin-jsx-a11y']
+    ).toBeUndefined();
+    expect(packageJson.devDependencies['eslint-plugin-import']).toBeUndefined();
   });
 
   it('should add .eslintrc.json and dependencies', async () => {

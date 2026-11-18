@@ -1,6 +1,6 @@
 ---
 title: 'Dedicated Compute Cluster'
-description: 'Reserve an isolated Nx Cloud compute environment for your organization and unlock Docker-in-Docker, sandboxing, and read-through caches.'
+description: 'Reserve an isolated Nx Cloud compute environment for your organization and unlock Docker-in-Docker, Docker layer caching, and read-through caches.'
 keywords:
   [
     dedicated compute,
@@ -36,8 +36,6 @@ A dedicated compute cluster unlocks the following:
 
 - [**Docker-in-Docker**](#docker-in-docker-on-agents) - build and push container images, run
   Testcontainers, and run any task that needs a Docker daemon, directly on Workers.
-- [**Sandboxing**](/docs/kb/sandboxing) - confine each task to its declared
-  [`inputs`](/docs/reference/project-configuration#inputs-and-named-inputs) and [`outputs`](/docs/reference/project-configuration#outputs), and catch any read or write outside them.
 - [**Docker layer caching**](/docs/kb/docker-layer-caching) - reuse Docker build
   layers across CI runs.
 - [**Docker read-through cache**](/docs/kb/docker-read-through-cache) - serve
@@ -45,7 +43,7 @@ A dedicated compute cluster unlocks the following:
 - [**npm read-through cache**](/docs/kb/npm-read-through-cache) - serve repeated
   npm installs from a cache close to your agents.
 
-DinD is available on every agent in the cluster automatically. The four add-ons are enabled
+DinD is available on every agent in the cluster automatically. The three add-ons are enabled
 individually once the cluster is active, and are cancelled if you cancel the dedicated compute
 cluster.
 
@@ -67,6 +65,6 @@ A dedicated compute cluster is provisioned through your organization settings:
 2. On the **Dedicated compute cluster** card, click **Request add-on** and confirm.
 3. You will be notified via email when the cluster is ready to use.
 
-Once the cluster is active, the dependent add-ons (sandboxing, Docker layer caching, and the
-read-through caches) become available to enable on the same page. If you request one of them before
+Once the cluster is active, the dependent add-ons (Docker layer caching and the read-through
+caches) become available to enable on the same page. If you request one of them before
 the cluster is ready, it is queued and activates automatically when the cluster comes online.

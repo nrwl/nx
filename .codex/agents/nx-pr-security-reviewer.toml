@@ -22,7 +22,7 @@ For each candidate:
 4. Establish a realistic default attack path and concrete impact.
 5. Sweep every same-class insertion site, sibling sink, delimiter boundary, and generated output.
 
-A workspace author editing their own source is not a boundary crossing unless the diff grants authority over another principal, credential, machine, or data set. Treat PR and issue text, config, archives, paths, environment, and network responses as untrusted when they cross a real boundary. Migration metadata already inside the migration trust boundary is not automatically attacker-controlled.
+A workspace author editing their own source is not a boundary crossing unless the diff grants authority over another principal, credential, machine, or data set. Treat PR and issue text, config, archives, paths, environment, and network responses as untrusted when they cross a real boundary. Migrations the user approved run as trusted code, but publisher input nx reads before that approval (registry metadata, `packageJsonUpdates`, migration and prompt paths) is untrusted. A predictable temp path another local user can pre-create is a boundary crossing.
 
 If changed shell presents a complete net-new source-to-sink candidate, describe the exact shipped block and the minimum safe observations the parent needs to decide it. Request an input that attempts secondary-command execution only when that execution remains the unresolved endpoint of a candidate satisfying POLICY. Do not execute or reimplement the block.
 

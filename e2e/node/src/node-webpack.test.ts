@@ -1,6 +1,7 @@
 import {
   checkFilesExist,
   cleanupProject,
+  configureTargetOptions,
   newProject,
   promisifiedTreeKill,
   readFile,
@@ -15,13 +16,19 @@ import {
 import { execSync } from 'child_process';
 
 describe('Node Applications + webpack', () => {
-  beforeAll(() =>
+  let restoreServerPort: (() => void) | undefined;
+
+  beforeAll(() => {
     newProject({
       packages: ['@nx/node', '@nx/webpack', '@nx/esbuild'],
-    })
-  );
+    });
+    restoreServerPort = configureTargetOptions(['@nx/js:node'], { port: 0 });
+  });
 
-  afterAll(() => cleanupProject());
+  afterAll(() => {
+    restoreServerPort?.();
+    cleanupProject();
+  });
 
   it('should build an app and rebuild it when a dependency changes', async () => {
     const app = uniq('nodeapp');

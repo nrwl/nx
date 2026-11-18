@@ -14,7 +14,10 @@ import {
 } from '@nx/devkit';
 import { withPnpm } from '@nx/devkit/internal-testing-utils';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { getInstalledCypressMajorVersion } from '../../utils/versions';
+import {
+  getInstalledCypressMajorVersion,
+  nxVersion,
+} from '../../utils/versions';
 import { componentConfigurationGenerator } from './component-configuration';
 import { cypressInitGenerator } from '../init/init';
 
@@ -162,6 +165,20 @@ describe('Cypress Component Configuration', () => {
       })
     ).rejects.toThrow(
       'Cypress 16 component testing requires Vite 8. Found Vite 7.0.0. Update Vite to 8 or use Cypress 15.'
+    );
+  });
+
+  it('should add @nx/cypress when cypress is already installed', async () => {
+    mockedInstalledCypressVersion.mockReturnValue(15);
+
+    await componentConfigurationGenerator(tree, {
+      project: 'cool-lib',
+      skipFormat: true,
+      bundler: 'webpack',
+    });
+
+    expect(readJson(tree, 'package.json').devDependencies['@nx/cypress']).toBe(
+      nxVersion
     );
   });
 
