@@ -222,10 +222,10 @@ MSBuild merges the imported items with the project's own items.
 </ItemGroup>
 ```
 
-The plugin adds a tag only when it applies to every evaluated inner build of a multi-target project.
-If an `NxTag` item applies to only some target frameworks, the plugin omits that tag
-and warns with the project path and omitted tags.
-Define shared tags without a target-framework condition to include them in the Nx project.
+The plugin combines tags from every evaluated target framework and removes duplicates.
+A tag conditioned on one target framework or its platform is kept on the Nx project.
+These are project-level tags, so filtering by a tag doesn't select a framework for a task.
+If `TargetFrameworks` varies by host OS, the tags can differ between machines.
 
 Nx project tags have no configuration-specific scope.
 Tags conditioned on `Configuration` reflect the configuration selected for the project graph.

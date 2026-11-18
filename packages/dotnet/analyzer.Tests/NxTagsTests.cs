@@ -25,7 +25,7 @@ public class NxTagsTests : IDisposable
     }
 
     [Fact]
-    public void EmitsOnlyTagsSharedByEveryTargetFramework()
+    public void CombinesTagsFromEveryTargetFramework()
     {
         WriteProject(
             """
@@ -36,6 +36,8 @@ public class NxTagsTests : IDisposable
               <ItemGroup>
                 <NxTag Include="scope:shared;owner:devflow" />
                 <NxTag Include="tfm:net8.0" Condition="'$(TargetFramework)' == 'net8.0'" />
+                <NxTag Include="tfm:net9.0" Condition="'$(TargetFramework)' == 'net9.0'" />
+                <NxTag Include="outer:only" Condition="'$(TargetFramework)' == ''" />
                 <NxTag Include="requires:emulator" />
               </ItemGroup>
             </Project>
@@ -52,12 +54,9 @@ public class NxTagsTests : IDisposable
             .ToArray();
 
         Assert.Equal(
-            new[] { "owner:devflow", "requires:emulator", "scope:shared" },
+            new[] { "owner:devflow", "requires:emulator", "scope:shared", "tfm:net8.0", "tfm:net9.0" },
             tags);
-        Assert.Contains(Path.Combine(_workspaceRoot, "Tagged.csproj"), error);
-        Assert.Contains("NxTag values [tfm:net8.0]", error);
-        Assert.Contains("do not apply to every target framework", error);
-        Assert.Single(error.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries));
+        Assert.DoesNotContain("Warning:", error);
     }
 
     [Theory]
@@ -84,7 +83,7 @@ public class NxTagsTests : IDisposable
     }
 
     [Fact]
-    public void WarnsAndOmitsTagsWhenAllTagsAreFrameworkSpecific()
+    public void KeepsTagsWhenAllTagsAreFrameworkSpecific()
     {
         WriteProject("""
             <Project Sdk="Microsoft.NET.Sdk">
@@ -100,9 +99,32 @@ public class NxTagsTests : IDisposable
         using var result = RunAnalyzer(_workspaceRoot, out var error, "Tagged.csproj");
         var node = result.RootElement.GetProperty("nodesByFile").GetProperty("Tagged.csproj");
 
-        Assert.False(node.TryGetProperty("tags", out _));
-        Assert.Contains("NxTag values [requires:emulator]", error);
-        Assert.Contains("Define shared tags without a target-framework condition.", error);
+        Assert.Equal(
+            new[] { "requires:emulator" },
+            node.GetProperty("tags").EnumerateArray().Select(tag => tag.GetString()).ToArray());
+        Assert.DoesNotContain("Warning:", error);
+    }
+
+    [Fact]
+    public void KeepsTagsConditionedOnTargetFrameworkPlatform()
+    {
+        WriteProject("""
+            <Project Sdk="Microsoft.NET.Sdk">
+              <PropertyGroup>
+                <TargetFrameworks>net8.0;net8.0-windows</TargetFrameworks>
+              </PropertyGroup>
+              <ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">
+                <NxTag Include="platform:windows" />
+              </ItemGroup>
+            </Project>
+            """);
+
+        using var result = RunAnalyzer(_workspaceRoot, out var error, "Tagged.csproj");
+        var tags = result.RootElement.GetProperty("nodesByFile").GetProperty("Tagged.csproj")
+            .GetProperty("tags").EnumerateArray().Select(tag => tag.GetString()).ToArray();
+
+        Assert.Equal(new[] { "platform:windows" }, tags);
+        Assert.DoesNotContain("Warning:", error);
     }
 
     [Theory]
