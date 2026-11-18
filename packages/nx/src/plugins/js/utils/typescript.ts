@@ -9,6 +9,15 @@ const normalizedAppRoot = workspaceRoot.replace(/\\/g, '/');
 
 let tsModule: typeof import('typescript');
 
+export function isTypeScriptResolvable(): boolean {
+  try {
+    resolveFromWorkspace('typescript');
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export function readTsConfig(
   tsConfigPath: string,
   sys?: ts.System

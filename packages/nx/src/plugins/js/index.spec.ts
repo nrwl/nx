@@ -46,6 +46,24 @@ vi.mock('node:child_process', async (importOriginal) => {
         : actual.execSync(command, options)) as typeof actual.execSync,
   };
 });
+// nx's own install always resolves typescript in this repo, so specs that need
+// it unresolvable flip this.
+const typescriptResolution = vi.hoisted(() => ({ resolvable: true }));
+vi.mock('../../utils/installation-directory', async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import('../../utils/installation-directory')>();
+  return {
+    ...actual,
+    resolveFromWorkspace: (specifier: string, root?: string) => {
+      if (specifier === 'typescript' && !typescriptResolution.resolvable) {
+        throw Object.assign(new Error(`Cannot find module 'typescript'`), {
+          code: 'MODULE_NOT_FOUND',
+        });
+      }
+      return actual.resolveFromWorkspace(specifier, root);
+    },
+  };
+});
 vi.mock('../../utils/workspace-root', () => ({ workspaceRoot: root }));
 vi.mock('../../utils/cache-directory', async (importOriginal) => ({
   ...(await importOriginal<typeof import('../../utils/cache-directory')>()),
@@ -196,6 +214,8 @@ describe('nx/js/dependencies-and-lockfile', () => {
 
   afterEach(() => {
     rmSync(root, { recursive: true, force: true });
+    typescriptResolution.resolvable = true;
+    vi.restoreAllMocks();
   });
 
   it('should not reuse lockfile dependencies computed against differently named external nodes', async () => {
@@ -751,6 +771,46 @@ describe('nx/js/dependencies-and-lockfile', () => {
       ['libs/a/src/index.ts', 'npm:x@file:libs/a/x-a.tgz'],
     ]);
   });
+
+  it.each([
+    { rootTsConfig: true, typescriptResolvable: false, warns: true },
+    { rootTsConfig: false, typescriptResolvable: false, warns: false },
+    { rootTsConfig: true, typescriptResolvable: true, warns: false },
+  ])(
+    'should create import dependencies with root tsconfig $rootTsConfig and typescript resolvable $typescriptResolvable',
+    async ({ rootTsConfig, typescriptResolvable, warns }) => {
+      typescriptResolution.resolvable = typescriptResolvable;
+      if (rootTsConfig) {
+        write('tsconfig.base.json', '{}');
+      }
+      write('libs/a/src/index.ts', 'export const a = 1;');
+      // With a root tsconfig, the bare import reaches TypeScript module resolution.
+      write(
+        'libs/b/src/index.ts',
+        `import { a } from '../../a/src/index';\nimport 'unknown-package';`
+      );
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const plugin = await loadPluginInNewProcess();
+
+      const dependencies = await createDependencies(
+        plugin,
+        {},
+        {
+          'libs/a': ['libs/a/src/index.ts'],
+          'libs/b': ['libs/b/src/index.ts'],
+        }
+      );
+
+      expect(
+        dependencies.map(({ sourceFile, target }) => [sourceFile, target])
+      ).toEqual([['libs/b/src/index.ts', 'libs/a']]);
+      expect(
+        warn.mock.calls.some(([message]) =>
+          String(message).includes('"typescript" package')
+        )
+      ).toBe(warns);
+    }
+  );
 
   it('should not create dependencies from a lockfile that createNodes skipped', async () => {
     write('package.json', JSON.stringify({ devDependencies: { a: '1.0.0' } }));

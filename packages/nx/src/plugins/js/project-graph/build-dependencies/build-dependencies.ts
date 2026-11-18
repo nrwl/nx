@@ -1,7 +1,11 @@
 import { ProjectGraphProjectNode } from '../../../../config/project-graph';
 import { CreateDependenciesContext } from '../../../../project-graph/plugins';
 import { RawProjectGraphDependency } from '../../../../project-graph/project-graph-builder';
-import { resolveFromWorkspace } from '../../../../utils/installation-directory';
+import { logger } from '../../../../utils/logger';
+import {
+  getRootTsConfigFileName,
+  isTypeScriptResolvable,
+} from '../../utils/typescript';
 import { buildExplicitPackageJsonDependencies } from './explicit-package-json-dependencies';
 import { buildExplicitTypeScriptDependencies } from './explicit-project-dependencies';
 import { TargetProjectLocator } from './target-project-locator';
@@ -41,16 +45,14 @@ export function buildExplicitDependencies(
     jsPluginConfig.analyzeSourceFiles === undefined ||
     jsPluginConfig.analyzeSourceFiles === true
   ) {
-    let tsExists = false;
-    try {
-      resolveFromWorkspace('typescript');
-      tsExists = true;
-    } catch {}
-    if (tsExists) {
-      dependencies = dependencies.concat(
-        buildExplicitTypeScriptDependencies(ctx, targetProjectLocator)
+    if (getRootTsConfigFileName() && !isTypeScriptResolvable()) {
+      logger.warn(
+        `Nx could not resolve the "typescript" package from the workspace root, so imports that need TypeScript module resolution (such as "baseUrl" or inherited "paths") do not create project dependencies. Add "typescript" to the workspace root's dependencies to detect them.`
       );
     }
+    dependencies = dependencies.concat(
+      buildExplicitTypeScriptDependencies(ctx, targetProjectLocator)
+    );
   }
   if (
     jsPluginConfig.analyzePackageJson === undefined ||
