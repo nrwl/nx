@@ -4,6 +4,7 @@ import { existsSync, promises as fsPromises } from 'node:fs';
 import { extname, posix, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import type { NormalizedAngularRspackPluginOptions } from '../../models';
+import { servesSsrFromForkedServer } from '../../plugins/angular-ssr-dev-server';
 import { getIndexOutputFile } from '../../utils/index-file/get-index-output-file';
 import { loadEsmModule } from '../../utils/misc-helpers';
 
@@ -44,6 +45,9 @@ export async function getDevServerConfig(
           ? (file) => !file.includes('.hot-update.')
           : undefined,
     },
+    open: options.devServer.open
+      ? `${servePath === '/' ? '' : servePath}/`
+      : false,
     liveReload: options.devServer.liveReload,
     hot:
       options.devServer.hmr && !options.devServer.liveReload
@@ -53,7 +57,11 @@ export async function getDevServerConfig(
       ? undefined
       : await getProxyConfig(root, options.devServer.proxyConfig),
     ...getWebSocketSettings(options, servePath),
-    watchFiles: ['./src/**/*.*', './public/**/*.*'],
+    // Without DevServerReloads, a separate SSR server's app reloads on source
+    // changes.
+    ...(servesSsrFromForkedServer(options)
+      ? { watchFiles: ['./src/**/*.*', './public/**/*.*'] }
+      : {}),
     onListening:
       platform === 'browser'
         ? (devServer) => {
