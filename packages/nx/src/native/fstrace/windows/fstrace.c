@@ -1,6 +1,7 @@
 // Loaded into every process in the traced tree. Rebinds import-table entries for ntdll's
-// file opens and for CreateProcessW, records successful read-opens of regular files to
-// %FSTRACE_OUT%, and injects itself into child processes.
+// file opens and directory queries and for CreateProcessW, records successful read-opens
+// of regular files and directory listings to %FSTRACE_OUT%, and injects itself into child
+// processes.
 #include "fstrace.h"
 #include <winternl.h>
 #include <psapi.h>
@@ -14,25 +15,31 @@ typedef NTSTATUS(NTAPI *PFN_NtCreateFile)(PHANDLE, ACCESS_MASK, POBJECT_ATTRIBUT
                                           PLARGE_INTEGER, ULONG, ULONG, ULONG, ULONG, PVOID, ULONG);
 typedef NTSTATUS(NTAPI *PFN_NtOpenFile)(PHANDLE, ACCESS_MASK, POBJECT_ATTRIBUTES, PIO_STATUS_BLOCK, ULONG, ULONG);
 typedef NTSTATUS(NTAPI *PFN_LdrLoadDll)(PWSTR, PULONG, PUNICODE_STRING, PVOID *);
+typedef NTSTATUS(NTAPI *PFN_NtQueryDirectoryFile)(HANDLE, HANDLE, PVOID, PVOID, PIO_STATUS_BLOCK, PVOID, ULONG,
+                                                  FILE_INFORMATION_CLASS, BOOLEAN, PUNICODE_STRING, BOOLEAN);
+typedef NTSTATUS(NTAPI *PFN_NtQueryDirectoryFileEx)(HANDLE, HANDLE, PVOID, PVOID, PIO_STATUS_BLOCK, PVOID, ULONG,
+                                                    FILE_INFORMATION_CLASS, ULONG, PUNICODE_STRING);
+typedef FARPROC(WINAPI *PFN_GetProcAddress)(HMODULE, LPCSTR);
 
 static PFN_NtCreateFile Real_NtCreateFile;
 static PFN_NtOpenFile Real_NtOpenFile;
 static PFN_LdrLoadDll Real_LdrLoadDll;
 static PFN_CreateProcessW Real_CreateProcessW;
+static PFN_NtQueryDirectoryFile Real_NtQueryDirectoryFile;
+static PFN_NtQueryDirectoryFileEx Real_NtQueryDirectoryFileEx;
+static PFN_GetProcAddress Real_GetProcAddress;
 static HANDLE g_log = INVALID_HANDLE_VALUE;
 static HMODULE g_self;
 static WCHAR g_dll[MAX_PATH];
 static __declspec(thread) int t_busy;
 
-static void record(HANDLE h, POBJECT_ATTRIBUTES oa) {
-  FILE_STANDARD_INFO info;
-  if (GetFileInformationByHandleEx(h, FileStandardInfo, &info, sizeof info) && info.Directory) return;
-
+// Writes `<prefix><path>` for an open handle. Absolute DOS paths in `oa` are used as given;
+// anything else asks the kernel.
+static void write_path(const char *prefix, HANDLE h, POBJECT_ATTRIBUTES oa) {
   WCHAR wbuf[1024];
   const WCHAR *p;
   DWORD n;
   UNICODE_STRING *name = oa ? oa->ObjectName : NULL;
-  // Absolute DOS paths are used as given; anything relative to a handle asks the kernel.
   if (name && !oa->RootDirectory && name->Length >= 14 && wcsncmp(name->Buffer, L"\\??\\", 4) == 0 &&
       name->Buffer[5] == L':') {
     p = name->Buffer + 4;
@@ -46,12 +53,21 @@ static void record(HANDLE h, POBJECT_ATTRIBUTES oa) {
       n -= 4;
     }
   }
-  char out[4100];
-  int len = WideCharToMultiByte(CP_UTF8, 0, p, n, out, sizeof out - 1, NULL, NULL);
+  char out[4110];
+  size_t plen = strlen(prefix);
+  memcpy(out, prefix, plen);
+  int len = WideCharToMultiByte(CP_UTF8, 0, p, n, out + plen, (int)(sizeof out - plen - 1), NULL, NULL);
   if (len <= 0) return;
+  len += (int)plen;
   out[len++] = '\n';
   DWORD written;
   WriteFile(g_log, out, len, &written, NULL);
+}
+
+static void record(HANDLE h, POBJECT_ATTRIBUTES oa) {
+  FILE_STANDARD_INFO info;
+  if (GetFileInformationByHandleEx(h, FileStandardInfo, &info, sizeof info) && info.Directory) return;
+  write_path("", h, oa);
 }
 
 // Marks a child whose subtree is not traced, so a consumer can distrust the read list.
@@ -78,6 +94,15 @@ static void maybe_record(NTSTATUS s, HANDLE *h, ACCESS_MASK access, POBJECT_ATTR
   t_busy = 0;
 }
 
+static void maybe_record_listing(NTSTATUS s, HANDLE dir) {
+  if (!NT_SUCCESS(s) || g_log == INVALID_HANDLE_VALUE || t_busy) return;
+  t_busy = 1;
+  DWORD err = GetLastError();
+  write_path("!list ", dir, NULL);
+  SetLastError(err);
+  t_busy = 0;
+}
+
 static NTSTATUS NTAPI My_NtCreateFile(PHANDLE h, ACCESS_MASK access, POBJECT_ATTRIBUTES oa, PIO_STATUS_BLOCK io,
                                       PLARGE_INTEGER size, ULONG attrs, ULONG share, ULONG disp, ULONG opts,
                                       PVOID ea, ULONG ealen) {
@@ -93,6 +118,22 @@ static NTSTATUS NTAPI My_NtOpenFile(PHANDLE h, ACCESS_MASK access, POBJECT_ATTRI
   return s;
 }
 
+static NTSTATUS NTAPI My_NtQueryDirectoryFile(HANDLE h, HANDLE ev, PVOID apc, PVOID ctx, PIO_STATUS_BLOCK io,
+                                              PVOID buf, ULONG len, FILE_INFORMATION_CLASS cls, BOOLEAN single,
+                                              PUNICODE_STRING mask, BOOLEAN restart) {
+  NTSTATUS s = Real_NtQueryDirectoryFile(h, ev, apc, ctx, io, buf, len, cls, single, mask, restart);
+  maybe_record_listing(s, h);
+  return s;
+}
+
+static NTSTATUS NTAPI My_NtQueryDirectoryFileEx(HANDLE h, HANDLE ev, PVOID apc, PVOID ctx, PIO_STATUS_BLOCK io,
+                                                PVOID buf, ULONG len, FILE_INFORMATION_CLASS cls, ULONG flags,
+                                                PUNICODE_STRING mask) {
+  NTSTATUS s = Real_NtQueryDirectoryFileEx(h, ev, apc, ctx, io, buf, len, cls, flags, mask);
+  maybe_record_listing(s, h);
+  return s;
+}
+
 static BOOL WINAPI My_CreateProcessW(LPCWSTR app, LPWSTR cmd, LPSECURITY_ATTRIBUTES pa, LPSECURITY_ATTRIBUTES ta,
                                      BOOL inherit, DWORD flags, LPVOID env, LPCWSTR cwd, LPSTARTUPINFOW si,
                                      LPPROCESS_INFORMATION pi) {
@@ -103,6 +144,7 @@ static BOOL WINAPI My_CreateProcessW(LPCWSTR app, LPWSTR cmd, LPSECURITY_ATTRIBU
 }
 
 static void patch_module(HMODULE mod);
+static FARPROC WINAPI My_GetProcAddress(HMODULE mod, LPCSTR name);
 
 static NTSTATUS NTAPI My_LdrLoadDll(PWSTR path, PULONG flags, PUNICODE_STRING name, PVOID *base) {
   NTSTATUS s = Real_LdrLoadDll(path, flags, name, base);
@@ -119,8 +161,22 @@ static struct {
     {(void **)&Real_NtOpenFile, (void *)My_NtOpenFile, NULL},
     {(void **)&Real_LdrLoadDll, (void *)My_LdrLoadDll, NULL},
     {(void **)&Real_CreateProcessW, (void *)My_CreateProcessW, NULL},
+    {(void **)&Real_NtQueryDirectoryFile, (void *)My_NtQueryDirectoryFile, NULL},
+    {(void **)&Real_NtQueryDirectoryFileEx, (void *)My_NtQueryDirectoryFileEx, NULL},
+    {(void **)&Real_GetProcAddress, (void *)My_GetProcAddress, NULL},
 };
 #define NHOOKS (sizeof g_hooks / sizeof g_hooks[0])
+#define HOOK_CREATE_PROCESS 3
+#define HOOK_GET_PROC_ADDRESS 6
+
+// Runtimes such as libuv look ntdll functions up by name instead of importing them, so
+// lookups of a hooked function return the hook.
+static FARPROC WINAPI My_GetProcAddress(HMODULE mod, LPCSTR name) {
+  FARPROC p = Real_GetProcAddress(mod, name);
+  for (size_t i = 0; p && i < NHOOKS; i++)
+    if ((void *)p == *g_hooks[i].real || (void *)p == g_hooks[i].kernel32_stub) return (FARPROC)g_hooks[i].mine;
+  return p;
+}
 
 static void patch_module(HMODULE mod) {
   if (mod == g_self) return;
@@ -159,7 +215,12 @@ BOOL WINAPI DllMain(HINSTANCE hinst, DWORD reason, LPVOID reserved) {
   Real_NtOpenFile = (PFN_NtOpenFile)GetProcAddress(ntdll, "NtOpenFile");
   Real_LdrLoadDll = (PFN_LdrLoadDll)GetProcAddress(ntdll, "LdrLoadDll");
   Real_CreateProcessW = (PFN_CreateProcessW)GetProcAddress(kb, "CreateProcessW");
-  g_hooks[3].kernel32_stub = (void *)GetProcAddress(GetModuleHandleW(L"kernel32.dll"), "CreateProcessW");
+  Real_NtQueryDirectoryFile = (PFN_NtQueryDirectoryFile)GetProcAddress(ntdll, "NtQueryDirectoryFile");
+  Real_NtQueryDirectoryFileEx = (PFN_NtQueryDirectoryFileEx)GetProcAddress(ntdll, "NtQueryDirectoryFileEx");
+  Real_GetProcAddress = (PFN_GetProcAddress)GetProcAddress(kb, "GetProcAddress");
+  HMODULE k32 = GetModuleHandleW(L"kernel32.dll");
+  g_hooks[HOOK_CREATE_PROCESS].kernel32_stub = (void *)GetProcAddress(k32, "CreateProcessW");
+  g_hooks[HOOK_GET_PROC_ADDRESS].kernel32_stub = (void *)GetProcAddress(k32, "GetProcAddress");
 
   HMODULE mods[1024];
   DWORD needed;

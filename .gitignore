@@ -58,6 +58,7 @@ out
 *.node
 packages/nx/src/native/fstrace.darwin.dylib
 packages/nx/src/native/fstrace.linux.so
+packages/nx/src/native/fstrace-linux
 packages/nx/src/native/fstrace-*.dll
 packages/nx/src/native/fstrace-*.exe
 

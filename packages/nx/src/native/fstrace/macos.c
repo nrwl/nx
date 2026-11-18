@@ -1,4 +1,5 @@
-// Injected through DYLD_INSERT_LIBRARIES. Records successful read-opens to $FSTRACE_OUT.
+// Injected through DYLD_INSERT_LIBRARIES. Records successful read-opens and directory
+// listings to $FSTRACE_OUT.
 // Binaries dyld would strip the variable from are started as ad-hoc re-signed copies kept
 // in $FSTRACE_SIP_DIR, so tracing continues below them.
 //
@@ -18,6 +19,7 @@
 #include <spawn.h>
 #include <stdarg.h>
 #include <stdint.h>
+#include <sys/attr.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -53,21 +55,23 @@ static void write_line(const char *prefix, const char *path) {
   if (n > 0) write(g_log, buf, (size_t)n < sizeof buf ? (size_t)n : sizeof buf - 1);
 }
 
-static void record(int dirfd, const char *path) {
+static void record_as(const char *prefix, int dirfd, const char *path) {
   if (g_log < 0 || !path) return;
   int saved = errno;
   if (path[0] == '/') {
-    write_line("", path);
+    write_line(prefix, path);
   } else {
     char dir[PATH_MAX], full[PATH_MAX * 2 + 2];
     int ok = dirfd == AT_FDCWD ? getcwd(dir, sizeof dir) != NULL : fcntl(dirfd, F_GETPATH, dir) == 0;
     if (ok) {
       snprintf(full, sizeof full, "%s/%s", dir, path);
-      write_line("", full);
+      write_line(prefix, full);
     }
   }
   errno = saved;
 }
+
+static void record(int dirfd, const char *path) { record_as("", dirfd, path); }
 
 // Marks an exec whose subtree is not traced, so a consumer can distrust the read list.
 static void record_untraced(const char *path) {
@@ -76,7 +80,24 @@ static void record_untraced(const char *path) {
   errno = saved;
 }
 
+// Logs `!list <dir>` for a directory whose entries were read through `fd`.
+static void record_listing(int fd) {
+  if (g_log < 0) return;
+  int saved = errno;
+  char dir[PATH_MAX];
+  if (fcntl(fd, F_GETPATH, dir) == 0) write_line("!list ", dir);
+  errno = saved;
+}
+
 static int reads(int flags) { return (flags & O_ACCMODE) != O_WRONLY && !(flags & O_DIRECTORY); }
+
+// Files the traced tree wrote are its own output. One it wrote and then removed was a
+// temporary file, not an input that went missing.
+static void record_open(int fd, int dirfd, const char *path, int flags) {
+  if (fd < 0) return;
+  if (reads(flags)) record(dirfd, path);
+  if ((flags & O_ACCMODE) != O_RDONLY) record_as("!write ", dirfd, path);
+}
 
 // ---------------------------------------------------------------------------------------
 // Code signature: is this a binary dyld strips DYLD_* variables for?
@@ -450,7 +471,7 @@ static int my_open(const char *path, int flags, ...) {
     va_end(ap);
   }
   int fd = open(path, flags, mode);
-  if (fd >= 0 && reads(flags)) record(AT_FDCWD, path);
+  record_open(fd, AT_FDCWD, path, flags);
   return fd;
 }
 
@@ -463,14 +484,33 @@ static int my_openat(int dirfd, const char *path, int flags, ...) {
     va_end(ap);
   }
   int fd = openat(dirfd, path, flags, mode);
-  if (fd >= 0 && reads(flags)) record(dirfd, path);
+  record_open(fd, dirfd, path, flags);
   return fd;
 }
 
 static FILE *my_fopen(const char *path, const char *mode) {
   FILE *f = fopen(path, mode);
   if (f && mode && (mode[0] == 'r' || strchr(mode, '+'))) record(AT_FDCWD, path);
+  if (f && mode && (mode[0] != 'r' || strchr(mode, '+'))) record_as("!write ", AT_FDCWD, path);
   return f;
+}
+
+// ---------------------------------------------------------------------------------------
+// Directory listings. readdir, scandir and fts all read entries through __getdirentries64,
+// which libsystem_c imports from libsystem_kernel, so interposing it covers them.
+
+extern ssize_t __getdirentries64(int fd, void *buf, size_t n, off_t *basep);
+
+static ssize_t my_getdirentries64(int fd, void *buf, size_t n, off_t *basep) {
+  ssize_t r = __getdirentries64(fd, buf, n, basep);
+  if (r > 0) record_listing(fd);
+  return r;
+}
+
+static int my_getattrlistbulk(int fd, struct attrlist *attrs, void *buf, size_t n, uint64_t opts) {
+  int r = getattrlistbulk(fd, attrs, buf, n, opts);
+  if (r > 0) record_listing(fd);
+  return r;
 }
 
 // ---------------------------------------------------------------------------------------
@@ -526,4 +566,6 @@ __attribute__((used, section("__DATA,__interpose"))) static const interpose_t in
     {(const void *)my_execve, (const void *)execve},
     {(const void *)my_posix_spawn, (const void *)posix_spawn},
     {(const void *)my_posix_spawnp, (const void *)posix_spawnp},
+    {(const void *)my_getdirentries64, (const void *)__getdirentries64},
+    {(const void *)my_getattrlistbulk, (const void *)getattrlistbulk},
 };

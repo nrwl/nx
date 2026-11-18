@@ -16,7 +16,8 @@
   "main": "nx.linux-arm64-gnu.node",
   "files": [
     "nx.linux-arm64-gnu.node",
-    "fstrace.linux.so"
+    "fstrace.linux.so",
+    "fstrace-linux"
   ],
   "publishConfig": {
     "access": "public"

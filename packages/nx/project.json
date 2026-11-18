@@ -48,6 +48,7 @@
       "outputs": [
         "{projectRoot}/src/native/fstrace.darwin.dylib",
         "{projectRoot}/src/native/fstrace.linux.so",
+        "{projectRoot}/src/native/fstrace-linux",
         "{projectRoot}/src/native/fstrace-*.{dll,exe}"
       ],
       "command": "node scripts/build-fstrace-shim.mjs"

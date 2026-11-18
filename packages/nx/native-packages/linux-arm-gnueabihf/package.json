@@ -16,7 +16,8 @@
   "main": "nx.linux-arm-gnueabihf.node",
   "files": [
     "nx.linux-arm-gnueabihf.node",
-    "fstrace.linux.so"
+    "fstrace.linux.so",
+    "fstrace-linux"
   ],
   "publishConfig": {
     "access": "public"

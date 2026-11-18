@@ -16,7 +16,8 @@
   "main": "nx.linux-arm64-musl.node",
   "files": [
     "nx.linux-arm64-musl.node",
-    "fstrace.linux.so"
+    "fstrace.linux.so",
+    "fstrace-linux"
   ],
   "libc": [
     "musl"

@@ -4,7 +4,7 @@
 // macOS: one dylib with every slice a traced process tree can need, because an inserted
 // library dyld cannot load kills the process. arm64 for native programs, arm64e for
 // re-signed copies of Apple's binaries, x86_64 for Intel Macs and Rosetta.
-// Linux: the LD_PRELOAD shim for the requested target.
+// Linux: the LD_PRELOAD shim and the seccomp launcher for the requested target.
 // Windows: the DLL and its launcher for arm64, x64 and x86, because a traced process can
 // start a child of any of them and injecting it needs that architecture's build.
 import { execFileSync } from 'node:child_process';
@@ -66,19 +66,23 @@ function buildLinux() {
     ],
     { cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'inherit'] }
   );
-  const so = out
+  const artifacts = out
     .split('\n')
     .filter(Boolean)
     .map((line) => JSON.parse(line))
-    .filter(
-      (m) => m.reason === 'compiler-artifact' && m.target?.name === 'fstrace'
-    )
+    .filter((m) => m.reason === 'compiler-artifact');
+  const so = artifacts
+    .filter((m) => m.target?.name === 'fstrace')
     .flatMap((m) => m.filenames)
     .find((f) => f.endsWith('.so'));
-  if (!so) {
-    throw new Error('cargo did not report the fstrace shim library');
+  const launcher = artifacts.find(
+    (m) => m.target?.name === 'fstrace-linux'
+  )?.executable;
+  if (!so || !launcher) {
+    throw new Error('cargo did not report the fstrace shim and launcher');
   }
   copyFileSync(so, join(nativeDir, 'fstrace.linux.so'));
+  copyFileSync(launcher, join(nativeDir, 'fstrace-linux'));
 }
 
 function buildWindows() {

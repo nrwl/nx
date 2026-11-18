@@ -1,4 +1,6 @@
 import {
+  accessSync,
+  constants,
   existsSync,
   mkdirSync,
   readdirSync,
@@ -16,10 +18,11 @@ import {
 
 /**
  * Records which files an isolated plugin worker, and every process it starts,
- * opens for reading. The tracer is a library injected into the process tree:
- * `LD_PRELOAD` on Linux, `DYLD_INSERT_LIBRARIES` on macOS, and a launcher that
- * injects a DLL on Windows. Each traced process appends one line per
- * successful read-open to the worker's log. Sources are in
+ * opens for reading and which directories they list. The tracer is a library
+ * injected into the process tree: `LD_PRELOAD` on Linux, under a launcher that
+ * adds a seccomp filter for what bypasses libc; `DYLD_INSERT_LIBRARIES` on
+ * macOS; and a launcher that injects a DLL on Windows. Each traced process
+ * appends one line per event to the worker's log. Sources are in
  * `src/native/fstrace`, built by `scripts/build-fstrace-shim.mjs` into the
  * platform packages.
  */
@@ -35,6 +38,7 @@ export interface TracedWorkerCommand extends WorkerCommand {
 }
 
 const nativeDir = join(__dirname, '../../../native');
+const LINUX_LAUNCHER = 'fstrace-linux';
 
 /** Directory the worker logs live in, also used to tell nx's files from a plugin's. */
 export const READ_LOG_DIR = join(workspaceDataDirectory, 'plugin-reads');
@@ -101,8 +105,24 @@ export function findTracer(): string | null {
       // Not installed for this platform variant.
     }
   }
-  tracerPath = candidates.find((c) => existsSync(c)) ?? null;
+  tracerPath = candidates.find(isComplete) ?? null;
   return tracerPath;
+}
+
+/** Linux also needs the launcher next to the shim, and it must be executable. */
+function isComplete(tracer: string): boolean {
+  if (!existsSync(tracer)) {
+    return false;
+  }
+  if (process.platform !== 'linux') {
+    return true;
+  }
+  try {
+    accessSync(join(dirname(tracer), LINUX_LAUNCHER), constants.X_OK);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 export function isReadTracingEnabled(): boolean {
@@ -179,7 +199,12 @@ export function traceWorkerCommand(
       env.LD_PRELOAD = [tracer, worker.env.LD_PRELOAD]
         .filter(Boolean)
         .join(' ');
-      return { ...worker, env, logPath };
+      return {
+        command: join(dirname(tracer), LINUX_LAUNCHER),
+        args: ['trace', logPath, worker.command, ...worker.args],
+        env,
+        logPath,
+      };
     case 'darwin': {
       env.DYLD_INSERT_LIBRARIES = [tracer, worker.env.DYLD_INSERT_LIBRARIES]
         .filter(Boolean)

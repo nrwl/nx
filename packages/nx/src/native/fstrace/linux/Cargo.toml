@@ -8,5 +8,9 @@ publish = false
 name = "fstrace"
 crate-type = ["cdylib"]
 
+[[bin]]
+name = "fstrace-linux"
+path = "src/launcher.rs"
+
 [dependencies]
 libc = "0.2"

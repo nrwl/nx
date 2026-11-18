@@ -45,7 +45,7 @@ const VALID_AUTHORS_FOR_LATEST = [
     // .dll files, such as the dotnet analyzer's.
     // Always run before the artifacts step because we still need the .node files for native-packages
     execSync(
-      'find ./dist ./packages/nx/dist \\( -name "*.node" -o -name "fstrace.darwin.dylib" -o -name "fstrace.linux.so" -o -name "fstrace-*.dll" -o -name "fstrace-*.exe" \\) -delete',
+      'find ./dist ./packages/nx/dist \\( -name "*.node" -o -name "fstrace.darwin.dylib" -o -name "fstrace.linux.so" -o -name "fstrace-linux" -o -name "fstrace-*.dll" -o -name "fstrace-*.exe" \\) -delete',
       {
         stdio: [0, 1, 2],
         maxBuffer: LARGE_BUFFER,
