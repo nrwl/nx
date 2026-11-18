@@ -63,6 +63,15 @@
       "implementation": "./dist/src/migrations/update-24-1-0/migrate-to-eslint-v10",
       "prompt": "./dist/src/migrations/update-24-1-0/finish-eslint-v10-migration.md",
       "documentation": "./dist/src/migrations/update-24-1-0/migrate-to-eslint-v10.md"
+    },
+    "update-24-1-0-add-eslint-js": {
+      "version": "24.1.0-beta.3",
+      "requires": {
+        "eslint": ">=10.0.0"
+      },
+      "description": "Adds `@eslint/js` v10 to workspaces on ESLint v10 that use `@nx/eslint-plugin`, or moves a declared v9 `@eslint/js` to v10, since ESLint v10 no longer installs it and the plugin's flat configs import it.",
+      "implementation": "./dist/src/migrations/update-24-1-0/add-eslint-js",
+      "documentation": "./dist/src/migrations/update-24-1-0/add-eslint-js.md"
     }
   },
   "packageJsonUpdates": {
