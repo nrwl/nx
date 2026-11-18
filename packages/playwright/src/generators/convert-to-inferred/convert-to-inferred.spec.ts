@@ -13,19 +13,23 @@ import {
   writeJson,
   updateProjectConfiguration,
 } from '@nx/devkit';
-import { TempFs } from '@nx/devkit/internal-testing-utils';
+import {
+  mockCjsModule,
+  resetCjsMocks,
+  TempFs,
+} from '@nx/devkit/internal-testing-utils';
 import { join } from 'node:path';
 import { getRelativeProjectJsonSchemaPath } from '@nx/devkit/internal';
 
 let fs: TempFs;
 
 let projectGraph: ProjectGraph;
-jest.mock('@nx/devkit', () => ({
-  ...jest.requireActual<any>('@nx/devkit'),
-  createProjectGraphAsync: jest.fn().mockImplementation(async () => {
+vi.mock('@nx/devkit', async () => ({
+  ...(await vi.importActual<any>('@nx/devkit')),
+  createProjectGraphAsync: vi.fn().mockImplementation(async () => {
     return projectGraph;
   }),
-  updateProjectConfiguration: jest
+  updateProjectConfiguration: vi
     .fn()
     .mockImplementation((tree, projectName, projectConfiguration) => {
       function handleEmptyTargets(
@@ -163,15 +167,14 @@ function createTestProject(
     `${projectOpts.appRoot}/playwright.config.ts`,
     playwrightConfigContents
   );
-  jest.doMock(
+  // loadConfigFile `require`s the config, which `vi.doMock` cannot reach.
+  mockCjsModule(
+    import.meta.url,
     join(fs.tempDir, `${projectOpts.appRoot}/playwright.config.ts`),
-    () => ({
+    {
       default: {
         outputDir: '../dist/.playwright/myapp-e2e',
       },
-    }),
-    {
-      virtual: true,
     }
   );
 
@@ -200,12 +203,13 @@ describe('Playwright - Convert Executors To Plugin', () => {
 
   afterEach(() => {
     fs.reset();
+    resetCjsMocks();
   });
 
   describe('--project', () => {
     it('should setup a new Playwright plugin and only migrate one specific project', async () => {
       // ARRANGE
-      const existingProject = createTestProject(tree, {
+      createTestProject(tree, {
         appRoot: 'existing',
         appName: 'existing',
         e2eTargetName: 'e2e',
@@ -213,12 +217,12 @@ describe('Playwright - Convert Executors To Plugin', () => {
       const project = createTestProject(tree, {
         e2eTargetName: 'test',
       });
-      const secondProject = createTestProject(tree, {
+      createTestProject(tree, {
         appRoot: 'second',
         appName: 'second',
         e2eTargetName: 'test',
       });
-      const thirdProject = createTestProject(tree, {
+      createTestProject(tree, {
         appRoot: 'third',
         appName: 'third',
         e2eTargetName: 'integration',
@@ -262,7 +266,7 @@ describe('Playwright - Convert Executors To Plugin', () => {
 
     it('should add project to existing plugins includes', async () => {
       // ARRANGE
-      const existingProject = createTestProject(tree, {
+      createTestProject(tree, {
         appRoot: 'existing',
         appName: 'existing',
         e2eTargetName: 'e2e',
@@ -270,12 +274,12 @@ describe('Playwright - Convert Executors To Plugin', () => {
       const project = createTestProject(tree, {
         e2eTargetName: 'e2e',
       });
-      const secondProject = createTestProject(tree, {
+      createTestProject(tree, {
         appRoot: 'second',
         appName: 'second',
         e2eTargetName: 'e2e',
       });
-      const thirdProject = createTestProject(tree, {
+      createTestProject(tree, {
         appRoot: 'third',
         appName: 'third',
         e2eTargetName: 'e2e',
@@ -320,7 +324,7 @@ describe('Playwright - Convert Executors To Plugin', () => {
 
     it('should remove include when all projects are included', async () => {
       // ARRANGE
-      const existingProject = createTestProject(tree, {
+      createTestProject(tree, {
         appRoot: 'existing',
         appName: 'existing',
         e2eTargetName: 'e2e',
@@ -328,12 +332,12 @@ describe('Playwright - Convert Executors To Plugin', () => {
       const project = createTestProject(tree, {
         e2eTargetName: 'e2e',
       });
-      const secondProject = createTestProject(tree, {
+      createTestProject(tree, {
         appRoot: 'second',
         appName: 'second',
         e2eTargetName: 'e2e',
       });
-      const thirdProject = createTestProject(tree, {
+      createTestProject(tree, {
         appRoot: 'third',
         appName: 'third',
         e2eTargetName: 'e2e',
@@ -496,7 +500,7 @@ describe('Playwright - Convert Executors To Plugin', () => {
 
     it('should setup a new Playwright plugin to match only projects migrated', async () => {
       // ARRANGE
-      const existingProject = createTestProject(tree, {
+      createTestProject(tree, {
         appRoot: 'existing',
         appName: 'existing',
         e2eTargetName: 'e2e',
@@ -504,12 +508,12 @@ describe('Playwright - Convert Executors To Plugin', () => {
       const project = createTestProject(tree, {
         e2eTargetName: 'test',
       });
-      const secondProject = createTestProject(tree, {
+      createTestProject(tree, {
         appRoot: 'second',
         appName: 'second',
         e2eTargetName: 'test',
       });
-      const thirdProject = createTestProject(tree, {
+      createTestProject(tree, {
         appRoot: 'third',
         appName: 'third',
         e2eTargetName: 'integration',

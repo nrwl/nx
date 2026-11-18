@@ -1,25 +1,38 @@
-import {
-  withModuleFederation,
-  withModuleFederationForSSR,
-} from '@nx/module-federation/webpack';
+import { logger } from '@nx/devkit';
 
-/**
- * @deprecated Use `@nx/module-federation/webpack` instead. This will be removed in Nx v22.
- */
-export { withModuleFederation, withModuleFederationForSSR };
+// TODO(v25): Delete this subpath (NXC-5165). It keeps 23.x configs loading during graph creation so `nx migrate` can run.
+const REMOVED_MESSAGE =
+  'Nx Module Federation was removed in Nx v24. `@nx/react/module-federation` is a stub that keeps old configs loadable during project graph creation; it does not configure Module Federation. Follow https://nx.dev/docs/kb/migrate-from-nx-module-federation to move to the official Module Federation plugin.';
 
-// Support for older generated code: `const withModuleFederation = require('@nx/react/module-federation')`
-/**
- * @deprecated Use `@nx/module-federation/webpack` instead. This will be removed in Nx v22.
- */
+type IdentityConfigFn = <T>(config: T, ...rest: unknown[]) => T;
+
+let warned = false;
+
+// Graph creation only reads the config, so it keeps working; a build would silently drop federation.
+function failOutsideGraphCreation(): void {
+  if (!global.NX_GRAPH_CREATION) throw new Error(REMOVED_MESSAGE);
+  if (warned) return;
+  warned = true;
+  logger.warn(REMOVED_MESSAGE);
+}
+
+/** @deprecated Removed in Nx v24. Use `ModuleFederationPlugin` from `@module-federation/enhanced`. This stub will be removed in Nx v25. */
+export async function withModuleFederation(
+  ..._args: unknown[]
+): Promise<IdentityConfigFn> {
+  failOutsideGraphCreation();
+  return (config) => config;
+}
+
+/** @deprecated Removed in Nx v24. Use `ModuleFederationPlugin` from `@module-federation/enhanced`. This stub will be removed in Nx v25. */
+export async function withModuleFederationForSSR(
+  ..._args: unknown[]
+): Promise<IdentityConfigFn> {
+  failOutsideGraphCreation();
+  return (config) => config;
+}
+
+// Older generated configs use `const withModuleFederation = require('@nx/react/module-federation')`.
 module.exports = withModuleFederation;
-
-// Allow newer generated code to work: `const { withModuleFederation } = require(...)`;
-/**
- * @deprecated Use `@nx/module-federation/webpack` instead. This will be removed in Nx v22.
- */
 module.exports.withModuleFederation = withModuleFederation;
-/**
- * @deprecated Use `@nx/module-federation/webpack` instead. This will be removed in Nx v22.
- */
 module.exports.withModuleFederationForSSR = withModuleFederationForSSR;

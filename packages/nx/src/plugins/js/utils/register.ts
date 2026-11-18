@@ -1,10 +1,21 @@
-import { dirname, isAbsolute, join, resolve, sep } from 'path';
-import { existsSync, readFileSync } from 'fs';
+import { dirname, isAbsolute, resolve, sep } from 'path';
+import { existsSync } from 'fs';
 import type { TsConfigOptions } from 'ts-node';
 import type { CompilerOptions } from 'typescript';
+import { readJsonFile } from '../../../utils/fileutils';
+import {
+  resolveFromWorkspace,
+  resolveInstalledPackage,
+} from '../../../utils/installation-directory';
 import { logger, NX_PREFIX, stripIndent } from '../../../utils/logger';
 import { workspaceRoot } from '../../../utils/workspace-root';
 import { getRootTsConfigPath, readTsConfigWithoutFiles } from './typescript';
+import { createRequire } from 'node:module';
+
+// Node passes a stand-in require, without a cache, require.extensions or
+// Module._load, when an ESM loader hook supplies this module's source, as
+// Yarn PnP does.
+if (!require.cache) require = createRequire(__filename);
 
 const swcNodeInstalled = packageIsInstalled('@swc-node/register');
 const tsNodeInstalled = packageIsInstalled('ts-node/register');
@@ -51,13 +62,6 @@ function ensureEsmLoaderRegistered(opts: { required: boolean }): void {
     return;
   }
 
-  // ts-node reads compilerOptions from this env var. Setting nodenext
-  // module/resolution avoids surprises when ts-node is the chosen loader.
-  process.env.TS_NODE_COMPILER_OPTIONS ??= JSON.stringify({
-    moduleResolution: 'nodenext',
-    module: 'nodenext',
-  });
-
   // Prefer @swc-node/register/esm (faster) over ts-node/esm.
   const swcEsm = tryResolveLoader('@swc-node/register/esm');
   const tsNodeEsm = tryResolveLoader('ts-node/esm');
@@ -83,8 +87,59 @@ function ensureEsmLoaderRegistered(opts: { required: boolean }): void {
   }
 
   const url = require('node:url') as typeof import('node:url');
+  if (!swcEsm) {
+    // ts-node/esm reads TS_NODE_COMPILER_OPTIONS from its hooks thread, which
+    // snapshots process.env only when the first hook in the process registers,
+    // possibly long before this call. A registered setter module runs on the
+    // hooks thread itself, so the value lands there without mutating this
+    // process's env (which an existing hooks thread would never see, and
+    // child processes would inherit).
+    module.register(
+      'data:text/javascript,' +
+        encodeURIComponent(
+          `process.env.TS_NODE_COMPILER_OPTIONS = ${JSON.stringify(
+            resolveTsNodeEsmCompilerOptions(
+              process.env.TS_NODE_COMPILER_OPTIONS
+            )
+          )};`
+        )
+    );
+  }
   module.register(url.pathToFileURL(loaderPath));
   isTsEsmLoaderRegistered = true;
+}
+
+/**
+ * Effective `TS_NODE_COMPILER_OPTIONS` value for `ts-node/esm`. CommonJS emit
+ * can never work for the true-ESM loads the loader exists for (`import.meta`
+ * fails with TS1343), and CommonJS-format files are deferred to the `require`
+ * pipeline untouched, so `module`/`moduleResolution` are forced to `nodenext`
+ * over any inherited value. Values that are not a JSON object pass through
+ * unchanged for ts-node to handle.
+ *
+ * Exported so the merge semantics can be exercised directly in unit tests.
+ */
+export function resolveTsNodeEsmCompilerOptions(
+  raw: string | undefined
+): string {
+  if (raw === undefined) {
+    return JSON.stringify({ moduleResolution: 'nodenext', module: 'nodenext' });
+  }
+  try {
+    const parsed = JSON.parse(raw);
+    if (
+      typeof parsed === 'object' &&
+      parsed !== null &&
+      !Array.isArray(parsed)
+    ) {
+      return JSON.stringify({
+        ...parsed,
+        module: 'nodenext',
+        moduleResolution: 'nodenext',
+      });
+    }
+  } catch {}
+  return raw;
 }
 
 /**
@@ -373,7 +428,7 @@ export function ensureCjsResolverPatched(): void {
 
 function tryResolveLoader(specifier: string): string | null {
   try {
-    return require.resolve(specifier);
+    return resolveInstalledPackage(specifier, [__dirname]);
   } catch {
     return null;
   }
@@ -606,8 +661,9 @@ export function getSwcTranspiler(
     (typeof import('@swc-node/register/register'))['register'];
 
   // These are requires to prevent it from registering when it shouldn't
-  const register = require('@swc-node/register/register')
-    .register as ISwcRegister;
+  const register = require(
+    resolveInstalledPackage('@swc-node/register/register', [__dirname])
+  ).register as ISwcRegister;
 
   const cleanupFn = register({
     ...compilerOptions,
@@ -622,7 +678,9 @@ export function getTsNodeTranspiler(
   tsNodeOptions?: TsConfigOptions,
   preferTsNode?: boolean
 ): (...args: unknown[]) => unknown {
-  const { register } = require('ts-node') as typeof import('ts-node');
+  const { register } = require(
+    resolveInstalledPackage('ts-node', [__dirname])
+  ) as typeof import('ts-node');
   // ts-node doesn't provide a cleanup method
   const service = register({
     ...tsNodeOptions,
@@ -733,7 +791,7 @@ export function getTranspiler(
   const preferTsNode = process.env.NX_PREFER_TS_NODE === 'true';
 
   if (!ts) {
-    ts = require('typescript');
+    ts = require(resolveFromWorkspace('typescript'));
   }
 
   compilerOptions.lib = ['es2021'];
@@ -829,11 +887,17 @@ export function isNativeTypeStripError(err: unknown): boolean {
  * Module resolution failures - typically a tsconfig path alias that hasn't
  * been registered yet, or a workspace lib not surfaced via package manager
  * symlinks. CJS uses `MODULE_NOT_FOUND`, ESM uses `ERR_MODULE_NOT_FOUND`.
+ * `ERR_PACKAGE_PATH_NOT_EXPORTED` covers a linked package shadowing a path
+ * alias for a subpath its `exports` doesn't list.
  */
 function isModuleNotFoundError(err: unknown): boolean {
   if (!err || typeof err !== 'object') return false;
   const code = (err as { code?: string }).code;
-  return code === 'MODULE_NOT_FOUND' || code === 'ERR_MODULE_NOT_FOUND';
+  return (
+    code === 'MODULE_NOT_FOUND' ||
+    code === 'ERR_MODULE_NOT_FOUND' ||
+    code === 'ERR_PACKAGE_PATH_NOT_EXPORTED'
+  );
 }
 
 /**
@@ -947,6 +1011,14 @@ export function loadTsFile<T = any>(
     return require(filePath) as T;
   }
 
+  // Executors and generators load in processes that never loaded a plugin
+  // (batch workers, forked tasks), so the NodeNext `.js` -> `.ts` resolvers the
+  // plugin loader installs are not there yet. Both are idempotent.
+  ensureCjsResolverPatched();
+  if (preferNodeStripTypes) {
+    ensureNodeNextEsmResolverRegistered();
+  }
+
   if (!preferNodeStripTypes) {
     if (!resolvedTsConfigPath) {
       throw new Error(
@@ -961,9 +1033,10 @@ export function loadTsFile<T = any>(
     }
   }
 
-  // Native strip path: no registration up front. pnpm/npm/yarn workspaces
-  // resolve aliases without tsconfig-paths. On failure, lazy-register what
-  // the specific error code indicates is needed and retry:
+  // Native strip path: no tsconfig-paths or transpiler registration up
+  // front. pnpm/npm/yarn workspaces resolve aliases without tsconfig-paths.
+  // On failure, lazy-register what the specific error code indicates is
+  // needed and retry:
   //   - MODULE_NOT_FOUND -> first try tsconfig-paths (alias resolution).
   //     If that still fails (e.g. extensionless `import './foo'` when
   //     `foo.ts` is adjacent - Node's resolver doesn't add `.ts`), escalate
@@ -1123,8 +1196,8 @@ export function requireWithTsconfigFallback<T = any>(
  *   - ESM-redispatch signals callers expect to handle
  *     (`ERR_REQUIRE_ESM`, `ERR_REQUIRE_ASYNC_MODULE`)
  *   - plain module-resolution failures (`MODULE_NOT_FOUND`,
- *     `ERR_MODULE_NOT_FOUND`) - disabling strip-types doesn't fix a missing
- *     module, the hint just misleads.
+ *     `ERR_MODULE_NOT_FOUND`, `ERR_PACKAGE_PATH_NOT_EXPORTED`) - disabling
+ *     strip-types doesn't fix a missing module, the hint just misleads.
  */
 function augmentLoadFailure(filePath: string, err: unknown): unknown {
   if (!(err instanceof Error)) return err;
@@ -1133,7 +1206,8 @@ function augmentLoadFailure(filePath: string, err: unknown): unknown {
     code === 'ERR_REQUIRE_ESM' ||
     code === 'ERR_REQUIRE_ASYNC_MODULE' ||
     code === 'MODULE_NOT_FOUND' ||
-    code === 'ERR_MODULE_NOT_FOUND'
+    code === 'ERR_MODULE_NOT_FOUND' ||
+    code === 'ERR_PACKAGE_PATH_NOT_EXPORTED'
   ) {
     return err;
   }
@@ -1241,7 +1315,11 @@ function readCompilerOptions(tsConfigPath): {
 function readCompilerOptionsWithSwc(tsConfigPath) {
   const {
     readDefaultTsConfig,
-  }: typeof import('@swc-node/register/read-default-tsconfig') = require('@swc-node/register/read-default-tsconfig');
+  }: typeof import('@swc-node/register/read-default-tsconfig') = require(
+    resolveInstalledPackage('@swc-node/register/read-default-tsconfig', [
+      __dirname,
+    ])
+  );
   const compilerOptions = readDefaultTsConfig(tsConfigPath);
   // This is returned in compiler options for some reason, but not part of the typings.
   // @swc-node/register filters the files to transpile based on it, but it can be limiting when processing
@@ -1308,7 +1386,7 @@ function warnNoTranspiler() {
 
 function packageIsInstalled(m: string) {
   try {
-    const p = require.resolve(m);
+    resolveInstalledPackage(m, [__dirname]);
     return true;
   } catch {
     return false;
@@ -1322,7 +1400,7 @@ function packageIsInstalled(m: string) {
  */
 export function getTsNodeCompilerOptions(compilerOptions: CompilerOptions) {
   if (!ts) {
-    ts = require('typescript');
+    ts = require(resolveFromWorkspace('typescript'));
   }
 
   const flagMap: Partial<{
@@ -1383,7 +1461,7 @@ function resolvePathsBaseUrl(tsconfigPath: string): string {
     const absolute = resolve(queue.shift()!);
     const dir = dirname(absolute);
     try {
-      const raw = JSON.parse(readFileSync(absolute, 'utf-8'));
+      const raw = readJsonFile(absolute);
       chain.push({ dir, raw });
       const exts: string[] = raw.extends
         ? Array.isArray(raw.extends)

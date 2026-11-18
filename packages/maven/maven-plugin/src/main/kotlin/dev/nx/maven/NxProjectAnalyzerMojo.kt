@@ -85,7 +85,6 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
     allProjects: List<MavenProject>
   ): List<ProjectAnalysis> {
 
-    val gitIgnoreClassifier = GitIgnoreClassifier(workspaceRoot)
     val startTime = System.currentTimeMillis()
     log.info("Creating shared component instances for optimized analysis...")
 
@@ -95,7 +94,7 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
     // Create shared component instances ONCE for all projects (major optimization)
 
     val pathFormatter = PathFormatter()
-    val mojoAnalyzer = MojoAnalyzer(sharedExpressionResolver, pathFormatter, gitIgnoreClassifier, workspaceRoot)
+    val mojoAnalyzer = MojoAnalyzer(sharedExpressionResolver, pathFormatter, workspaceRoot)
 
     val sharedTestClassDiscovery = TestClassDiscovery()
 
@@ -106,7 +105,7 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
       session,
       mojoAnalyzer,
       pathFormatter,
-      gitIgnoreClassifier,
+      workspaceRoot,
       targetNamePrefix ?: ""
     )
 
@@ -212,9 +211,7 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
         dependency.addProperty("type", "static")
         dependency.addProperty("source", sourceRoot)
         dependency.addProperty("target", "maven:${extDep.groupId}:${extDep.artifactId}")
-        dependency.addProperty("sourceFile", pathFormatter.normalizeRelativePath(
-          analysis.pomFile.canonicalFile.relativeTo(canonicalWorkspaceRoot).path
-        ))
+        dependency.addProperty("sourceFile", pathFormatter.relativePath(analysis.pomFile.canonicalFile, canonicalWorkspaceRoot))
         result.add(dependency)
       }
     }
@@ -235,7 +232,7 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
 
     inMemoryAnalyses.forEach { analysis ->
       val resultTuple = JsonArray()
-      resultTuple.add(analysis.pomFile.canonicalFile.relativeTo(workspaceRoot).path) // Root path (workspace root)
+      resultTuple.add(analysis.pomFile.canonicalFile.relativeTo(workspaceRoot).invariantSeparatorsPath) // Root path (workspace root)
 
       val projects = JsonObject()
 
@@ -269,7 +266,7 @@ class NxProjectAnalyzerMojo : AbstractMojo() {
     projects: List<MavenProject>
   ): Map<String, String> =
     projects.associate { project ->
-      "${project.groupId}:${project.artifactId}" to pathFormatter.normalizeRelativePath(project.basedir.canonicalFile.relativeTo(workspaceRoot).path)
+      "${project.groupId}:${project.artifactId}" to pathFormatter.relativePath(project.basedir.canonicalFile, workspaceRoot)
     }
 }
 

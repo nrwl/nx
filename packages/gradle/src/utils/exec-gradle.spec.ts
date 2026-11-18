@@ -17,7 +17,7 @@ describe('exec gradle', () => {
     });
 
     afterEach(() => {
-      jest.resetModules();
+      vi.resetModules();
       process.chdir(cwd);
     });
 
@@ -148,15 +148,17 @@ describe('exec gradle', () => {
 
 describe('execGradleAsync', () => {
   afterEach(() => {
-    jest.resetModules();
-    jest.restoreAllMocks();
+    vi.doUnmock('@nx/devkit/internal');
+    vi.resetModules();
+    vi.restoreAllMocks();
   });
 
-  function loadWithMockedSpawn() {
+  async function loadWithMockedSpawn() {
     let captured: any;
-    jest.doMock('@nx/devkit/internal', () => ({
-      ...jest.requireActual('@nx/devkit/internal'),
-      safeSpawn: jest.fn((binary, args, options) => {
+    vi.doMock('@nx/devkit/internal', async () => ({
+      ...(await vi.importActual<any>('@nx/devkit/internal')),
+      killChildOnHostExit: vi.fn(),
+      safeSpawn: vi.fn((binary, args, options) => {
         captured = { binary, args, options };
         const EventEmitter = require('events');
         const cp: any = new EventEmitter();
@@ -166,14 +168,14 @@ describe('execGradleAsync', () => {
         return cp;
       }),
     }));
-    const { execGradleAsync } = require('./exec-gradle');
+    const { execGradleAsync } = await import('./exec-gradle');
     return { execGradleAsync, getCaptured: () => captured };
   }
 
   // NXC-4659: gradle plugin options are interpolated into `-Pkey=value`, so a
   // shell here would make nx.json command-injectable.
   it('should pass args literally without a shell', async () => {
-    const { execGradleAsync, getCaptured } = loadWithMockedSpawn();
+    const { execGradleAsync, getCaptured } = await loadWithMockedSpawn();
     const malicious = '-PtargetNamePrefix=x; touch /tmp/pwned';
 
     await execGradleAsync('/ws/gradlew', ['nxProjectGraph', malicious]);
@@ -187,9 +189,10 @@ describe('execGradleAsync', () => {
   // Node emits `error` instead of `exit`.
   it('should reject when the spawn itself fails', async () => {
     let captured: any;
-    jest.doMock('@nx/devkit/internal', () => ({
-      ...jest.requireActual('@nx/devkit/internal'),
-      safeSpawn: jest.fn(() => {
+    vi.doMock('@nx/devkit/internal', async () => ({
+      ...(await vi.importActual<any>('@nx/devkit/internal')),
+      killChildOnHostExit: vi.fn(),
+      safeSpawn: vi.fn(() => {
         const EventEmitter = require('events');
         const cp: any = new EventEmitter();
         cp.stdout = new EventEmitter();
@@ -198,15 +201,67 @@ describe('execGradleAsync', () => {
         return cp;
       }),
     }));
-    const { execGradleAsync } = require('./exec-gradle');
+    const { execGradleAsync } = await import('./exec-gradle');
 
     await expect(
       execGradleAsync('/ws/gradlew', ['nxProjectGraph'])
     ).rejects.toThrow('spawn EACCES');
   });
 
+  // A wedged JVM can survive the kill signal; the promise must still settle
+  // on abort or the timeout error never surfaces.
+  it('should reject on abort even if the process never exits', async () => {
+    const killProcessTreeGraceful = vi.fn(() => Promise.resolve());
+    vi.doMock('@nx/devkit/internal', async () => ({
+      ...(await vi.importActual<any>('@nx/devkit/internal')),
+      killChildOnHostExit: vi.fn(),
+      safeSpawn: vi.fn(() => {
+        const EventEmitter = require('events');
+        const cp: any = new EventEmitter();
+        cp.pid = 123;
+        cp.stdout = new EventEmitter();
+        cp.stderr = new EventEmitter();
+        return cp; // never emits `exit`
+      }),
+      killProcessTreeGraceful,
+    }));
+    const { execGradleAsync } = await import('./exec-gradle');
+
+    const controller = new AbortController();
+    const promise = execGradleAsync('/ws/gradlew', ['nxProjectGraph'], {
+      signal: controller.signal,
+    });
+    controller.abort();
+
+    await expect(promise).rejects.toBeDefined();
+    expect(killProcessTreeGraceful).toHaveBeenCalledWith(123);
+  });
+
+  it('should register the gradle process to be killed on host exit', async () => {
+    const killChildOnHostExit = vi.fn();
+    let spawned: any;
+    vi.doMock('@nx/devkit/internal', async () => ({
+      ...(await vi.importActual<any>('@nx/devkit/internal')),
+      safeSpawn: vi.fn(() => {
+        const EventEmitter = require('events');
+        spawned = new EventEmitter();
+        spawned.pid = 456;
+        spawned.stdout = new EventEmitter();
+        spawned.stderr = new EventEmitter();
+        setImmediate(() => spawned.emit('exit', 0, null));
+        return spawned;
+      }),
+      killChildOnHostExit,
+    }));
+    const { execGradleAsync } = await import('./exec-gradle');
+
+    await execGradleAsync('/ws/gradlew', ['nxProjectGraph']);
+
+    expect(killChildOnHostExit).toHaveBeenCalledWith(spawned);
+  });
+
   it('should drop empty args the shell used to swallow', async () => {
-    const { execGradleAsync, getCaptured } = loadWithMockedSpawn();
+    const { execGradleAsync, getCaptured } = await loadWithMockedSpawn();
 
     await execGradleAsync('/ws/gradlew', ['nxProjectGraph', '']);
 

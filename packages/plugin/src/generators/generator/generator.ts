@@ -205,10 +205,6 @@ async function updateGeneratorJson(host: Tree, options: NormalizedSchema) {
       schema: `${dir}/schema.json`,
       description: options.description,
     };
-    // @todo(v17): Remove this, prop is defunct.
-    if (options.name === 'preset') {
-      generators[options.name]['x-use-standalone-layout'] = true;
-    }
     json.generators = generators;
     return json;
   });

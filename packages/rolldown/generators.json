@@ -1,0 +1,18 @@
+{
+  "name": "Nx rolldown",
+  "version": "0.1",
+  "generators": {
+    "init": {
+      "factory": "./dist/src/generators/init/init#rolldownInitGenerator",
+      "schema": "./dist/src/generators/init/schema.json",
+      "description": "Initialize the `@nx/rolldown` plugin.",
+      "aliases": ["ng-add"],
+      "hidden": true
+    },
+    "configuration": {
+      "factory": "./dist/src/generators/configuration/configuration#configurationGenerator",
+      "schema": "./dist/src/generators/configuration/schema.json",
+      "description": "Add a Rolldown configuration to a project."
+    }
+  }
+}

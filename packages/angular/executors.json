@@ -20,16 +20,6 @@
       "schema": "./dist/src/executors/browser-esbuild/schema.json",
       "description": "Builds an Angular application using [esbuild](https://esbuild.github.io/)."
     },
-    "module-federation-dev-server": {
-      "implementation": "./dist/src/executors/module-federation-dev-server/module-federation-dev-server.impl",
-      "schema": "./dist/src/executors/module-federation-dev-server/schema.json",
-      "description": "Serves host [Module Federation](https://module-federation.io/) applications ([webpack](https://webpack.js.org/)-based) allowing to specify which remote applications should be served with the host."
-    },
-    "module-federation-dev-ssr": {
-      "implementation": "./dist/src/executors/module-federation-ssr-dev-server/module-federation-ssr-dev-server.impl",
-      "schema": "./dist/src/executors/module-federation-ssr-dev-server/schema.json",
-      "description": "The module-federation-ssr-dev-server executor is reserved exclusively for use with host SSR Module Federation applications. It allows the user to specify which remote applications should be served with the host."
-    },
     "application": {
       "implementation": "./dist/src/executors/application/application.impl",
       "schema": "./dist/src/executors/application/schema.json",

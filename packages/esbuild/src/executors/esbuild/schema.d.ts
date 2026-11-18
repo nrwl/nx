@@ -9,12 +9,6 @@ export interface EsBuildExecutorOptions {
   bundle?: boolean;
   declaration?: boolean;
   declarationRootDir?: string;
-  /**
-   * Use oxc-transform for generating TypeScript declaration files (.d.ts)
-   * instead of the TypeScript compiler. Requires `isolatedDeclarations: true`
-   * in the project's tsconfig.
-   */
-  useOxcDeclarations?: boolean;
   deleteOutputPath?: boolean;
   esbuildOptions?: Record<string, any>;
   esbuildConfig?: string;
@@ -37,8 +31,10 @@ export interface EsBuildExecutorOptions {
   watch?: boolean;
 }
 
-export interface NormalizedEsBuildExecutorOptions
-  extends Omit<EsBuildExecutorOptions, 'esbuildOptions' | 'esbuildConfig'> {
+export interface NormalizedEsBuildExecutorOptions extends Omit<
+  EsBuildExecutorOptions,
+  'esbuildOptions' | 'esbuildConfig'
+> {
   assets: (AssetGlob | string)[];
   singleEntry: boolean;
   external: string[];

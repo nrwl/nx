@@ -8,6 +8,7 @@ import {
   killProcessTree,
   killProcessTreeGraceful,
 } from '../native';
+import { output } from '../utils/output';
 import { PseudoIPCServer } from './pseudo-ipc';
 import { RunningTask } from './running-tasks/running-task';
 import { codeToSignal, messageToCode } from '../utils/exit-codes';
@@ -106,7 +107,8 @@ export class PseudoTerminal {
         execArgv,
         quiet,
         tty
-      )
+      ),
+      quiet
     );
     this.childProcesses.add(cp);
     cp.onExit(() => this.releaseChild(cp));
@@ -146,7 +148,8 @@ export class PseudoTerminal {
         commandLabel
       ),
       id,
-      this.pseudoIPC
+      this.pseudoIPC,
+      quiet
     );
     this.childProcesses.add(cp);
     cp.onExit(() => this.releaseChild(cp));
@@ -170,17 +173,29 @@ export class PseudoTtyProcess implements RunningTask {
 
   private exitCallbacks: Array<(code: number, terminalOutput: string) => void> =
     [];
-  private outputCallbacks: Array<(output: string) => void> = [];
+  private outputCallbacks: Array<
+    (output: string, isCommandHeader: boolean) => void
+  > = [];
 
   private terminalOutputChunks: string[] = [];
 
   constructor(
     public rustPseudoTerminal: RustPseudoTerminal,
-    private childProcess: ChildProcess
+    private childProcess: ChildProcess,
+    /**
+     * Whether the native side is suppressing this task's output. When it is
+     * not, Rust writes each chunk straight to our stdout, so `CLIOutput` has to
+     * be told - it never sees those writes and would otherwise assume the
+     * cursor is still at a line start.
+     */
+    private readonly quiet: boolean = false
   ) {
-    childProcess.onOutput((output) => {
-      this.terminalOutputChunks.push(output);
-      this.outputCallbacks.forEach((cb) => cb(output));
+    childProcess.onOutput((chunk, isCommandHeader) => {
+      if (!this.quiet) {
+        output.noteExternalWrite(chunk);
+      }
+      this.terminalOutputChunks.push(chunk);
+      this.outputCallbacks.forEach((cb) => cb(chunk, isCommandHeader));
     });
 
     childProcess.onExit((message) => {
@@ -207,7 +222,9 @@ export class PseudoTtyProcess implements RunningTask {
     this.exitCallbacks.push(callback);
   }
 
-  onOutput(callback: (message: string) => void): void {
+  onOutput(
+    callback: (message: string, isCommandHeader: boolean) => void
+  ): void {
     this.outputCallbacks.push(callback);
   }
 
@@ -245,9 +262,10 @@ export class PseudoTtyProcessWithSend extends PseudoTtyProcess {
     public rustPseudoTerminal: RustPseudoTerminal,
     _childProcess: ChildProcess,
     private id: string,
-    private pseudoIpc: PseudoIPCServer
+    private pseudoIpc: PseudoIPCServer,
+    quiet: boolean = false
   ) {
-    super(rustPseudoTerminal, _childProcess);
+    super(rustPseudoTerminal, _childProcess, quiet);
   }
 
   send(message: Serializable) {

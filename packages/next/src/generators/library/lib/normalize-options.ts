@@ -1,4 +1,4 @@
-import { readNxJson, Tree } from '@nx/devkit';
+import { Tree } from '@nx/devkit';
 import {
   determineProjectNameAndRootOptions,
   ensureRootProjectName,
@@ -11,6 +11,7 @@ export interface NormalizedSchema extends Schema {
   // `normalizeOptions` always resolves this, so it is no longer optional.
   linter: LinterType;
   importPath: string;
+  projectName: string;
   projectRoot: string;
   isUsingTsSolutionConfig: boolean;
 }
@@ -20,21 +21,14 @@ export async function normalizeOptions(
   options: Schema
 ): Promise<NormalizedSchema> {
   await ensureRootProjectName(options, 'library');
-  const { projectRoot, importPath } = await determineProjectNameAndRootOptions(
-    host,
-    {
+  const { projectName, projectRoot, importPath } =
+    await determineProjectNameAndRootOptions(host, {
       name: options.name,
       projectType: 'library',
       directory: options.directory,
       importPath: options.importPath,
-    }
-  );
+    });
 
-  const nxJson = readNxJson(host);
-  const addPlugin =
-    process.env.NX_ADD_PLUGINS !== 'false' &&
-    nxJson.useInferencePlugins !== false;
-  options.addPlugin ??= addPlugin;
   const isUsingTsSolutionConfig = isUsingTsSolutionSetup(host);
 
   return {
@@ -43,6 +37,9 @@ export async function normalizeOptions(
     // `=== 'eslint'`, and an unresolved `undefined` would skip all of it.
     linter: await normalizeLinterOption(host, options.linter),
     importPath,
+    // Same rule as the React library generator, which registers the project.
+    projectName:
+      isUsingTsSolutionConfig && !options.name ? importPath : projectName,
     projectRoot,
     isUsingTsSolutionConfig,
     useProjectJson: options.useProjectJson ?? !isUsingTsSolutionConfig,

@@ -12,12 +12,16 @@ import type {
   CreateNodesContext,
   CreateNodesResult,
   NxPlugin,
-  PostTasksExecutionContext,
   PreTasksExecutionContext,
   ProjectsMetadata,
 } from './public-api';
 import { isIsolationEnabled } from './isolation/enabled';
 import { isDaemonEnabled } from '../../daemon/client/client';
+import {
+  rehydrateTerminalOutputs,
+  type MaybeStubbedPostTasksExecutionContext,
+} from './task-results-stub';
+import type { NxPluginCapabilities } from './nx-plugin-capabilities';
 
 /**
  * NOTE: Avoid using `import type` with this class. It causes issues with
@@ -48,7 +52,7 @@ export class LoadedNxPlugin {
     context: PreTasksExecutionContext
   ) => Promise<NodeJS.ProcessEnv>;
   readonly postTasksExecution?: (
-    context: PostTasksExecutionContext
+    context: MaybeStubbedPostTasksExecutionContext
   ) => Promise<void>;
 
   readonly options?: unknown;
@@ -103,24 +107,38 @@ export class LoadedNxPlugin {
       ];
     }
 
-    /**
-     * Wraps the plugin-provided createNodes function to provide performance
-     * measurement and error handling.
-     */
     if (this.createNodes) {
       const inner = this.createNodes[1];
       this.createNodes[1] = async (...args) => {
         performance.mark(`${plugin.name}:createNodes - start`);
         let projectCount = 0;
         try {
-          const result = await inner(...args);
+          const result = (await inner(...args)).map(
+            ([pluginName, file, r]) =>
+              [pluginName, file, withoutUndefinedValues(r)] as const
+          );
           for (const [, , r] of result) {
             projectCount += Object.keys(r.projects ?? {}).length;
           }
           return result;
         } catch (e) {
           if (isAggregateCreateNodesError(e)) {
-            throw e;
+            const partialResults = e.partialResults.map(
+              ([file, r]) => [file, withoutUndefinedValues(r)] as const
+            );
+            if (
+              partialResults.every(([, r], i) => r === e.partialResults[i][1])
+            ) {
+              throw e;
+            }
+            // Fresh tuples, as the constructor coerces each error in place.
+            throw new AggregateCreateNodesError(
+              e.errors.map(([file, error]): [string | null, Error] => [
+                file,
+                error,
+              ]),
+              partialResults
+            );
           }
           // The underlying plugin errored out. We can't know any partial results.
           throw new AggregateCreateNodesError([[null, e]], []);
@@ -174,8 +192,68 @@ export class LoadedNxPlugin {
     }
 
     if (plugin.postTasksExecution) {
-      this.postTasksExecution = async (context: PostTasksExecutionContext) =>
-        plugin.postTasksExecution(this.options, context);
+      // The single rehydration point: every transport hands its context
+      // straight here, so a context bound for an isolated plugin stays stubbed
+      // across that second hop rather than being read and re-stubbed.
+      this.postTasksExecution = async (
+        context: MaybeStubbedPostTasksExecutionContext
+      ) =>
+        plugin.postTasksExecution(
+          this.options,
+          await rehydrateTerminalOutputs(context)
+        );
     }
   }
+
+  capabilities(): NxPluginCapabilities {
+    return {
+      createNodesPattern: this.createNodes?.[0],
+      hasCreateDependencies: !!this.createDependencies,
+      hasCreateMetadata: !!this.createMetadata,
+      hasPreTasksExecution: !!this.preTasksExecution,
+      hasPostTasksExecution: !!this.postTasksExecution,
+    };
+  }
+}
+
+/**
+ * Drops `undefined` values (`null` in arrays) like the default JSON transport,
+ * so results from in-process plugins or the v8 serializer can't override an
+ * earlier plugin's value with `undefined`. Copies what it changes instead of
+ * writing to plugin-owned objects.
+ */
+function withoutUndefinedValues<T>(value: T): T {
+  if (value === null || typeof value !== 'object') {
+    return value;
+  }
+  if (Array.isArray(value)) {
+    let copy: unknown[] | undefined;
+    for (let i = 0; i < value.length; i++) {
+      const item = value[i];
+      const normalized =
+        item === undefined ? null : withoutUndefinedValues(item);
+      if (!copy && normalized !== item) {
+        copy = value.slice(0, i);
+      }
+      copy?.push(normalized);
+    }
+    return (copy ?? value) as T;
+  }
+  const record = value as Record<string, unknown>;
+  const keys = Object.keys(record);
+  let entries: Array<[string, unknown]> | undefined;
+  for (let i = 0; i < keys.length; i++) {
+    const item = record[keys[i]];
+    const normalized =
+      item === undefined ? undefined : withoutUndefinedValues(item);
+    if (!entries && (item === undefined || normalized !== item)) {
+      entries = keys.slice(0, i).map((key) => [key, record[key]]);
+    }
+    if (entries && normalized !== undefined) {
+      entries.push([keys[i], normalized]);
+    }
+  }
+  // `Object.fromEntries` defines own properties, so a `__proto__` key stays
+  // a key instead of setting the copy's prototype.
+  return (entries ? Object.fromEntries(entries) : value) as T;
 }

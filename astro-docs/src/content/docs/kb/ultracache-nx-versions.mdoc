@@ -1,0 +1,30 @@
+---
+title: Ultracache and Nx versions
+description: Ultracache requires Nx 24.0.0 or later. Upgrade older workspaces, and control Ultracache for one CI pipeline with NX_CLOUD_ULTRACACHE_MODE.
+sidebar:
+  label: Ultracache and Nx versions
+filter: 'type:Guides'
+topics:
+  - 'Continuous integration'
+  - 'Tasks & caching'
+---
+
+[Ultracache](/docs/features/ci-features/remote-cache#ultracache) requires Nx 24.0.0 or later.
+Once [Ultracache is on](/docs/features/ci-features/remote-cache#turn-on-ultracache) for your workspace in Nx Cloud, Nx 24 and later use it in CI by default.
+Runs outside CI always hash tasks from the `inputs` declared in your project configuration.
+
+Earlier Nx versions don't support Ultracache.
+To use it, [update your workspace](/docs/features/automate-updating-dependencies) to Nx 24.0.0 or later.
+
+## Control Ultracache for one pipeline
+
+Set `NX_CLOUD_ULTRACACHE_MODE` in a CI pipeline to override the workspace setting for that pipeline only.
+Set it to `on` to try Ultracache on one branch before you turn it on for the workspace, or to `off` to skip it for one pipeline.
+For every value and where to set it, see [try Ultracache on one branch or workflow](/docs/features/ci-features/remote-cache#try-ultracache-on-one-branch-or-workflow).
+
+To turn Ultracache off for a single target instead, set [`ultracache.mode`](/docs/reference/project-configuration#ultracache) to `off`.
+
+## When Nx can't read the recordings
+
+Nx makes one attempt to read the recordings from Nx Cloud.
+If the read fails, the run continues and Nx hashes every task in that run from its declared `inputs`.

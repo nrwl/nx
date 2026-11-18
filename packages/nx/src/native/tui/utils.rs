@@ -1,4 +1,5 @@
 use hashbrown::HashSet;
+use std::borrow::Cow;
 
 use crate::native::tui::components::tasks_list::{TaskItem, TaskStatus};
 use crate::native::utils::time::current_timestamp_millis;
@@ -129,6 +130,120 @@ pub fn normalize_newlines(input: &[u8]) -> Vec<u8> {
         i += 1;
     }
     output
+}
+
+/// Caps the count of ICH (`CSI n @`), IL (`CSI n L`) and SD (`CSI n T`) at
+/// the screen size. vt100 runs those loops `n` times even though anything
+/// past the screen edge is discarded, so a huge `n` stalls the parser.
+///
+/// The scan follows vte's state table: C0 controls and DEL inside a sequence
+/// leave it running, and CAN, SUB and ESC abandon it.
+pub fn clamp_csi_counts(input: &[u8], rows: u16, cols: u16) -> Cow<'_, [u8]> {
+    #[derive(Clone, Copy)]
+    enum State {
+        Ground,
+        Escape,
+        EscapeIntermediate,
+        CsiEntry,
+        CsiParam,
+        CsiIntermediate,
+        CsiIgnore,
+    }
+
+    let mut state = State::Ground;
+    let mut count = 0u32;
+    let mut digits: Option<(usize, usize)> = None;
+    let mut first_param_done = false;
+    let mut edits = Vec::new();
+
+    for (i, &b) in input.iter().enumerate() {
+        if matches!(b, 0x18 | 0x1a) {
+            state = State::Ground;
+            continue;
+        }
+        if b == 0x1b {
+            state = State::Escape;
+            continue;
+        }
+        let dispatch = match (state, b) {
+            (State::Ground, _) => false,
+            (State::Escape, b'[') => {
+                state = State::CsiEntry;
+                count = 0;
+                digits = None;
+                first_param_done = false;
+                false
+            }
+            (State::Escape | State::EscapeIntermediate, 0x20..=0x2f) => {
+                state = State::EscapeIntermediate;
+                false
+            }
+            (State::Escape | State::EscapeIntermediate, 0x30..=0x7e) => {
+                state = State::Ground;
+                false
+            }
+            (State::CsiEntry | State::CsiParam, b'0'..=b'9') => {
+                state = State::CsiParam;
+                if !first_param_done {
+                    count = count.saturating_mul(10).saturating_add(u32::from(b - b'0'));
+                    digits = Some((digits.map_or(i, |(start, _)| start), i + 1));
+                }
+                false
+            }
+            (State::CsiEntry | State::CsiParam, b';' | b':') => {
+                state = State::CsiParam;
+                first_param_done = true;
+                false
+            }
+            (State::CsiEntry, 0x3c..=0x3f) => {
+                state = State::CsiParam;
+                false
+            }
+            (State::CsiParam | State::CsiIntermediate, 0x3c..=0x3f)
+            | (State::CsiIntermediate, 0x30..=0x3b) => {
+                state = State::CsiIgnore;
+                false
+            }
+            (State::CsiEntry | State::CsiParam | State::CsiIntermediate, 0x20..=0x2f) => {
+                state = State::CsiIntermediate;
+                false
+            }
+            (State::CsiEntry | State::CsiParam | State::CsiIntermediate, 0x40..=0x7e) => {
+                state = State::Ground;
+                true
+            }
+            (State::CsiIgnore, 0x40..=0x7e) => {
+                state = State::Ground;
+                false
+            }
+            _ => false,
+        };
+        if !dispatch {
+            continue;
+        }
+        let limit = match b {
+            b'@' => cols,
+            b'L' | b'T' => rows,
+            _ => continue,
+        };
+        if let Some(span) = digits.filter(|_| count > u32::from(limit)) {
+            edits.push((span, limit));
+        }
+    }
+
+    if edits.is_empty() {
+        return Cow::Borrowed(input);
+    }
+    let mut out = Vec::with_capacity(input.len());
+    let mut copied = 0;
+    for ((start, end), limit) in edits {
+        out.extend_from_slice(&input[copied..start]);
+        out.extend(input[start..end].iter().filter(|b| !b.is_ascii_digit()));
+        out.extend_from_slice(limit.to_string().as_bytes());
+        copied = end;
+    }
+    out.extend_from_slice(&input[copied..]);
+    Cow::Owned(out)
 }
 
 use super::pty::PtyInstance;
@@ -316,6 +431,44 @@ fn pad_symbol(symbol: &str, padding: usize) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn clamp_csi_counts_bounds_insert_and_scroll_counts_by_the_screen() {
+        assert_eq!(
+            &*clamp_csi_counts(
+                b"abc\r\x1b[65535@\x1b[65535L\x1b[65535;1T\x1b[65535:2@",
+                24,
+                80
+            ),
+            b"abc\r\x1b[80@\x1b[24L\x1b[24;1T\x1b[80:2@"
+        );
+    }
+
+    #[test]
+    fn clamp_csi_counts_bounds_counts_with_controls_inside_the_sequence() {
+        let cases: [(&[u8], &[u8]); 6] = [
+            (b"\x1b[655\x7f35@", b"\x1b[\x7f80@"),
+            (b"\x1b[6\x005535@", b"\x1b[\x0080@"),
+            (b"\x1b\x00[65535@", b"\x1b\x00[80@"),
+            (b"\x1b[\x0065535L", b"\x1b[\x0024L"),
+            (b"\x1b[65\xc235T", b"\x1b[\xc224T"),
+            (b"\x1b[?65535@", b"\x1b[?80@"),
+        ];
+        for (input, expected) in cases {
+            assert_eq!(
+                &*clamp_csi_counts(input, 24, 80),
+                expected,
+                "{}",
+                input.escape_ascii()
+            );
+        }
+    }
+
+    #[test]
+    fn clamp_csi_counts_leaves_abandoned_and_ignored_sequences_alone() {
+        let input = b"\x1b[65535\x18@\x1b[65535\x1b@\x1b[1<65535@\x1b(65535@\x1b[;65535@";
+        assert_eq!(&*clamp_csi_counts(input, 24, 80), input);
+    }
 
     // Kept in lockstep with the TS formatDuration; drift would make the popup and
     // the terminal report disagree.

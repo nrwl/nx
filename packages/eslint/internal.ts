@@ -8,10 +8,13 @@ export {
   addExtendsToLintConfig,
   addIgnoresToLintConfig,
   addOverrideToLintConfig,
+  addPluginConfigToFlatLintConfig,
   addPluginsToLintConfig,
   addPredefinedConfigToFlatLintConfig,
+  addSpreadConfigToFlatLintConfig,
   addTypedLintingToFlatConfig,
   findEslintFile,
+  findFlatConfigFile,
   inspectTypedLinting,
   isEslintConfigSupported,
   isTypedLintingEnabled,
@@ -23,6 +26,7 @@ export {
 
 export { addImportToFlatConfig } from './src/generators/utils/flat-config/ast-utils';
 
+export { isEslintConfigFile, isFlatConfig } from './src/utils/config-file';
 export { useFlatConfig } from './src/utils/flat-config';
 
 export {
@@ -37,5 +41,3 @@ export {
   typescriptESLintVersion,
   versions,
 } from './src/utils/versions';
-
-export type { Schema } from './src/executors/lint/schema';

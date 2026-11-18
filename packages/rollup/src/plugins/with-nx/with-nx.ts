@@ -6,7 +6,6 @@ import {
   readJsonFile,
   workspaceRoot,
 } from '@nx/devkit';
-import { oxcDeclarations } from './oxc-declarations';
 import { isAbsolute, resolve } from 'path';
 import {
   calculateProjectBuildableDependencies,
@@ -31,6 +30,7 @@ import { generatePackageJson } from '../package-json/generate-package-json';
 import { swc } from '../swc';
 import { getProjectNode } from './get-project-node';
 import { normalizeOptions } from './normalize-options';
+import { clearTimersOnClose } from './watch-program-timers';
 import { RollupWithNxPluginOptions } from './with-nx-options';
 
 // These use require because the ES import isn't correct.
@@ -111,16 +111,23 @@ export function withNx(
           dependencies
         );
 
-  ensureTypeScript();
-  const tsConfigFile = ts.readConfigFile(tsConfigPath, ts.sys.readFile);
-  const tsConfig = ts.parseJsonConfigFileContent(
-    tsConfigFile.config,
-    ts.sys,
-    dirname(tsConfigPath)
-  );
+  // Graph creation only reads output dirs. Its unnormalized tsConfig path
+  // usually doesn't exist, and parsing that scans the whole workspace.
+  let tsConfig: ReturnType<typeof ts.parseJsonConfigFileContent>;
+  if (!global.NX_GRAPH_CREATION) {
+    ensureTypeScript();
+    const tsConfigFile = ts.readConfigFile(tsConfigPath, ts.sys.readFile);
+    tsConfig = ts.parseJsonConfigFileContent(
+      tsConfigFile.config,
+      ts.sys,
+      dirname(tsConfigPath)
+    );
+  }
 
   if (!options.format || !options.format.length) {
-    options.format = readCompatibleFormats(tsConfig);
+    options.format = global.NX_GRAPH_CREATION
+      ? ['esm']
+      : readCompatibleFormats(tsConfig);
   }
 
   if (
@@ -253,38 +260,28 @@ export function withNx(
       }),
       image(),
       json(),
-      // When useOxcDeclarations is enabled with a non-tsc compiler, skip
-      // TypeScript entirely. SWC/Babel handles JS, oxc handles declarations.
-      ...(options.useOxcDeclarations && (useSwc || useBabel)
-        ? []
-        : [
-            (() => {
-              // @rollup/plugin-typescript needs outDir and declarationDir to match Rollup's output directory
-              const { outDir, declarationDir, ...tsCompilerOptions } =
-                compilerOptions;
-              const rollupOutputDir = Array.isArray(finalConfig.output)
-                ? finalConfig.output[0].dir
-                : finalConfig.output.dir;
-              return require('@rollup/plugin-typescript')({
-                tsconfig: tsConfigPath,
-                compilerOptions: {
-                  ...tsCompilerOptions,
-                  composite: false,
-                  outDir: rollupOutputDir,
-                  declarationDir: rollupOutputDir,
-                  noEmitOnError: !options.skipTypeCheck,
-                },
-              });
-            })(),
-          ]),
-      options.useOxcDeclarations
-        ? oxcDeclarations({
-            projectRoot,
-            sourceRoot: join(workspaceRoot, projectSourceRoot),
-          })
-        : typeDefinitions({
-            projectRoot,
-          }),
+      (() => {
+        // @rollup/plugin-typescript needs outDir and declarationDir to match Rollup's output directory
+        const { outDir, declarationDir, ...tsCompilerOptions } =
+          compilerOptions;
+        const rollupOutputDir = Array.isArray(finalConfig.output)
+          ? finalConfig.output[0].dir
+          : finalConfig.output.dir;
+        return require('@rollup/plugin-typescript')({
+          tsconfig: tsConfigPath,
+          typescript: clearTimersOnClose(ts),
+          compilerOptions: {
+            ...tsCompilerOptions,
+            composite: false,
+            outDir: rollupOutputDir,
+            declarationDir: rollupOutputDir,
+            noEmitOnError: !options.skipTypeCheck,
+          },
+        });
+      })(),
+      typeDefinitions({
+        projectRoot,
+      }),
       postcss({
         inject: true,
         extract: options.extractCss,

@@ -1,19 +1,17 @@
-import * as fs from 'fs';
 import type { Compiler, RspackPluginInstance } from '@rspack/core';
 import {
-  createLockFile,
   createPackageJson,
+  generatePrunedDeployOutput,
   getHelperDependenciesFromProjectGraph,
-  getLockFileName,
   HelperDependency,
   readTsConfig,
 } from '@nx/js';
 import {
   detectPackageManager,
   type ProjectGraph,
-  readJsonFile,
   serializeJson,
 } from '@nx/devkit';
+import { readRuntimeDependencies } from '@nx/js/internal';
 
 const pluginName = 'GeneratePackageJsonPlugin';
 
@@ -30,19 +28,6 @@ export class GeneratePackageJsonPlugin implements RspackPluginInstance {
       runtimeDependencies?: string[];
     }
   ) {}
-
-  private resolveRuntimeDependencies(): Record<string, string> {
-    const runtimeDependencies: Record<string, string> = {};
-    if (this.options.runtimeDependencies) {
-      for (const dep of this.options.runtimeDependencies) {
-        const depPkgJson = require.resolve(`${dep}/package.json`);
-        if (!fs.existsSync(depPkgJson)) continue;
-        const { name, version } = readJsonFile(depPkgJson);
-        runtimeDependencies[name] = version;
-      }
-    }
-    return runtimeDependencies;
-  }
 
   apply(compiler: Compiler): void {
     compiler.hooks.thisCompilation.tap(pluginName, (compilation) => {
@@ -75,7 +60,10 @@ export class GeneratePackageJsonPlugin implements RspackPluginInstance {
             });
           }
 
-          const runtimeDependencies = this.resolveRuntimeDependencies();
+          const runtimeDependencies = readRuntimeDependencies(
+            this.options.runtimeDependencies ?? [],
+            [__dirname, this.options.root]
+          );
 
           const packageJson = createPackageJson(
             this.options.projectName,
@@ -95,30 +83,27 @@ export class GeneratePackageJsonPlugin implements RspackPluginInstance {
             ...runtimeDependencies,
           };
 
+          const packageManager = detectPackageManager(this.options.root);
+
+          generatePrunedDeployOutput(
+            packageJson,
+            this.options.projectGraph,
+            this.options.projectGraph.nodes[this.options.projectName].data.root,
+            {
+              emit: (assetPath, content) =>
+                compilation.emitAsset(
+                  assetPath,
+                  new sources.RawSource(content)
+                ),
+              packageManager,
+              workspaceRoot: this.options.root,
+            }
+          );
+
           compilation.emitAsset(
             'package.json',
             new sources.RawSource(serializeJson(packageJson))
           );
-          const packageManager = detectPackageManager(this.options.root);
-
-          if (packageManager === 'bun') {
-            compilation
-              .getLogger('GeneratePackageJsonPlugin')
-              .warn(
-                'Bun lockfile generation is not supported. Only package.json will be generated.'
-              );
-          } else {
-            compilation.emitAsset(
-              getLockFileName(packageManager),
-              new sources.RawSource(
-                createLockFile(
-                  packageJson,
-                  this.options.projectGraph,
-                  packageManager
-                )
-              )
-            );
-          }
         }
       );
     });

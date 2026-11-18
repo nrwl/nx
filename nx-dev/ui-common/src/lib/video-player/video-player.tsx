@@ -430,14 +430,14 @@ export function VideoPlayerButton({
           aria-hidden="true"
           className={cx(
             'absolute',
-            isSmall ? 'left-3 top-3 size-4' : 'left-6 top-6 size-8'
+            isSmall ? 'top-3 left-3 size-4' : 'top-6 left-6 size-8'
           )}
         />
         <motion.div
           variants={child}
           className={cx(
             'absolute',
-            isSmall ? 'left-10 top-3 w-48' : 'left-20 top-4 w-48'
+            isSmall ? 'top-3 left-10 w-48' : 'top-4 left-20 w-48'
           )}
         >
           <p className={cx('font-medium', isSmall ? 'text-xs' : 'text-base')}>
@@ -703,14 +703,14 @@ export function VideoPlayerInlineButton({
           aria-hidden="true"
           className={cx(
             'absolute',
-            isSmall ? 'left-3 top-3 size-4' : 'left-6 top-6 size-8'
+            isSmall ? 'top-3 left-3 size-4' : 'top-6 left-6 size-8'
           )}
         />
         <motion.div
           variants={child}
           className={cx(
             'absolute',
-            isSmall ? 'left-10 top-2 w-24' : 'left-20 top-4 w-48'
+            isSmall ? 'top-2 left-10 w-24' : 'top-4 left-20 w-48'
           )}
         >
           <p className={cx('font-medium', isSmall ? 'text-sm' : 'text-base')}>

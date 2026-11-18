@@ -91,7 +91,6 @@ ${Array.from(options.validExecutorNames)
   .map((ve) => ` - ${ve}`)
   .join('\n')}
 
-${frameworkHelperMessage(Array.from(options.buildTarget), executorName)}
 This is most likely because the provided --build-target is not a build target for an application or framework.
 For example, the provide build target, '${options.buildTarget}' is:
  - the build target for a buildable/publishable library instead of an app.
@@ -117,39 +116,6 @@ If you do not have an app in the workspace to you can make a new app with 'nx g 
       foundConfig
     )
   );
-}
-
-function frameworkHelperMessage(
-  validExecutorNames: string[],
-  executorName: string
-): string {
-  const executorsToFramework = {
-    '@nx/webpack:webpack': 'react',
-    '@nx/vite:build': 'react',
-    '@nrwl/webpack:webpack': 'react',
-    '@nrwl/vite:build': 'react',
-    '@nx/angular:webpack-browser': 'angular',
-    '@nrwl/angular:webpack-browser': 'angular',
-    '@angular-devkit/build-angular:browser': 'angular',
-    '@nx/next:build': 'next',
-    '@nrwl/next:build': 'next',
-  };
-  const buildTargetFramework = executorsToFramework[executorName];
-  const invokedGeneratorFramework = validExecutorNames.find(
-    (e) => !!executorsToFramework[e]
-  );
-
-  if (
-    buildTargetFramework &&
-    invokedGeneratorFramework &&
-    buildTargetFramework !== invokedGeneratorFramework
-  ) {
-    return `It looks like you're using a different plugin generator than the --build-target framework is set up for.
-The provided build target is configured for ${buildTargetFramework} instead of ${invokedGeneratorFramework}.
-Try using @nx/${buildTargetFramework} instead.`;
-  }
-
-  return '';
 }
 
 async function findInGraph(

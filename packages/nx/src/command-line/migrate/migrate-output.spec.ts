@@ -1,3 +1,4 @@
+import type { MockInstance } from 'vitest';
 import {
   buildDirectiveBlockBodyLines,
   buildRetainedAtSuccessBody,
@@ -37,16 +38,6 @@ describe('migrate-output', () => {
     status: 'completed',
     kind: 'applied',
     commit: { kind: 'none' },
-  });
-  const deferred = (
-    name: string,
-    sha: string | null = null,
-    pkg: string = PKG
-  ): MigrationOutcome => ({
-    migration: { package: pkg, name },
-    status: 'completed',
-    kind: 'deferred',
-    commit: { kind: 'landed', sha },
   });
   const deferredNoCommit = (
     name: string,
@@ -373,9 +364,9 @@ describe('migrate-output', () => {
   });
 
   describe('logFailureRecap', () => {
-    let infoSpy: jest.SpyInstance;
+    let infoSpy: MockInstance;
     beforeEach(() => {
-      infoSpy = jest.spyOn(logger, 'info').mockImplementation(() => undefined);
+      infoSpy = vi.spyOn(logger, 'info').mockImplementation(() => undefined);
     });
     afterEach(() => {
       infoSpy.mockRestore();

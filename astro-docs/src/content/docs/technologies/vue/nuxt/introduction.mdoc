@@ -60,7 +60,7 @@ The configuration directory must also contain a `package.json` or `project.json`
 
 ### View inferred tasks
 
-To view inferred tasks for a project, open the [project details view](/docs/concepts/mental-model#inferred-tasks) in Nx Console or run `nx show project my-project --web` in the command line.
+To view inferred tasks for a project, open the [project details view](/docs/features/run-tasks#inferred-tasks) in Nx Console or run `nx show project my-project --web` in the command line.
 
 ### @nx/nuxt configuration
 
@@ -96,6 +96,40 @@ The `@nx/nuxt/plugin` is configured in the `plugins` array in `nx.json`.
 
 Use `include` and `exclude` glob patterns on the plugin entry to scope inference. A [target defaults](/docs/reference/nx-json#target-defaults) `plugin` filter must use the exact identifier `@nx/nuxt/plugin`.
 
+### Wait for the dev server to be ready
+
+The `serve` task reports to Nx that it's ready, with the address it listens on, when the Nuxt config loads the `@nx/nuxt/ready-signal` module.
+`nuxt dev` answers 503 until it has built the app and serves it, and the module reports once that stops.
+Generated apps include the module.
+In an existing app, add it to `modules`:
+
+```ts
+// apps/my-app/nuxt.config.ts
+export default defineNuxtConfig({
+  modules: ['@nx/nuxt/ready-signal'],
+});
+```
+
+Without the module, the `serve` task gets a check that runs when the task runs, with the task's environment and options.
+It waits until the server answers with any status other than 503, at the address `nuxt dev` uses.
+The check reads that address in the order of the installed `nuxi` or `@nuxt/cli` package.
+From version 3.7.2, that order is:
+
+- The port comes from the `--port` or `-p` flag, then the first set of `NUXT_PORT`, `NITRO_PORT`, and `PORT`, then `devServer.port` in the Nuxt config, 3000 by default.
+- The host comes from the `--host` or `-h` flag, then the first set of `NUXT_HOST`, `NITRO_HOST`, and `HOST`, then `devServer.host`.
+
+Version 3.30 reads only the flags and `devServer`.
+From 3.31, a variable set only in `.env` doesn't count.
+Versions before 3.7.2 read fewer of these sources, some in another order.
+
+If another process holds that port and `nuxt dev` moves to a free one, this check can pass before the server is up.
+The module reports the address the server listens on, so it doesn't have this gap.
+
+The `serve-static` task's file server reports its address once it listens.
+A task waits for either one only when its `dependsOn` entry sets `waitFor` to `ready`.
+A `readyWhen` on the target in `targetDefaults` or in the project configuration replaces the inferred check, and `null` turns it off.
+For the details, see [wait for a continuous task to be ready](/docs/reference/project-configuration#wait-for-a-continuous-task-to-be-ready).
+
 ## Using Nuxt
 
 ### Generate a new Nuxt app
@@ -121,14 +155,16 @@ This feature is particularly useful for testing in continuous integration (CI) p
 To use the `serve-static` target for testing, run the following command:
 
 ```shell
-nx serve-static my-nuxt-app-e2e
+nx serve-static my-nuxt-app
 ```
 
-This command performs several actions:
+This command performs two actions:
 
-1. It will build the Nuxt application and generate the static HTML files.
-2. It will serve the static HTML files using a simple HTTP server.
-3. It will run the Cypress tests against the served static HTML files.
+1. It builds the Nuxt application and generates the static HTML files.
+2. It serves the static HTML files with a file server.
+
+It doesn't run tests.
+The generated E2E project uses `serve-static` as its web server, in CI for Cypress and in every Playwright run.
 
 ## Set up CI for your Nuxt monorepo
 

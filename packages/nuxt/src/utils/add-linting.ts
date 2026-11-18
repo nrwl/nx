@@ -12,7 +12,6 @@ import {
   addIgnoresToLintConfig,
   findEslintFile,
   isEslintConfigSupported,
-  isTypedLintingEnabled,
   lintConfigHasOverride,
   replaceOverridesInLintConfig,
   updateOverrideInLintConfig,
@@ -33,10 +32,6 @@ export async function addLinting(
     unitTestRunner?: 'vitest' | 'none';
     rootProject?: boolean;
     enableTypedLinting?: boolean;
-    /**
-     * @deprecated Use `enableTypedLinting` instead. This option will be removed in Nx v24.
-     */
-    setParserOptionsProject?: boolean;
   }
 ) {
   const tasks: GeneratorCallback[] = [];
@@ -48,19 +43,18 @@ export async function addLinting(
       tsConfigPaths: [joinPathFragments(options.projectRoot, 'tsconfig.json')],
       unitTestRunner: options.unitTestRunner,
       rootProject: options.rootProject,
-      enableTypedLinting: isTypedLintingEnabled(options),
-      addPlugin: true,
+      enableTypedLinting: options.enableTypedLinting,
     })
   );
 
   // Everything below configures ESLint — predefined configs, `extends`, ignore
   // entries — which have no equivalent in other linters.
   if (options.linter === 'eslint') {
-    const enableTypedLinting = isTypedLintingEnabled(options);
+    const { enableTypedLinting } = options;
     const isFlatConfig = useFlatConfig(host);
 
     // Version-aware dependencies:
-    // - Flat config (v4+): use @nuxt/eslint-config ^1.10.0 with createConfigForNuxt
+    // - Flat config (v4+): use @nuxt/eslint-config with createConfigForNuxt
     // - Legacy (.eslintrc.json): use @nuxt/eslint-config ~0.5.6 with extends
     const devDependencies: Record<string, string> = {
       '@nuxt/eslint-config': isFlatConfig

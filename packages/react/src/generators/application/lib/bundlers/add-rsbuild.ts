@@ -19,7 +19,6 @@ export async function initRsbuild(
   }: typeof import('@nx/rsbuild/generators') = require('@nx/rsbuild/generators');
   const initTask = await initGenerator(tree, {
     skipPackageJson: options.skipPackageJson,
-    addPlugin: true,
     skipFormat: true,
   });
   tasks.push(initTask);
@@ -52,7 +51,7 @@ export async function setupRsbuildConfiguration(
     ),
     tsConfig: './tsconfig.app.json',
     target: 'web',
-    devServerPort: options.devServerPort ?? 4200,
+    devServerPort: options.port ?? 4200,
   });
   tasks.push(rsbuildTask);
 

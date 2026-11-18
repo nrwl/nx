@@ -46,9 +46,8 @@ export default async function* extractI18nExecutor(
     '@angular-devkit/build-angular',
     '@nx/angular:extract-i18n'
   );
-  const { executeExtractI18nBuilder } = await import(
-    '@angular-devkit/build-angular'
-  );
+  const { executeExtractI18nBuilder } =
+    await import('@angular-devkit/build-angular');
 
   return await executeExtractI18nBuilder(options, builderContext);
 }

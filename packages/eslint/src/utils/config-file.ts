@@ -1,5 +1,4 @@
-import { existsSync, statSync } from 'fs';
-import { basename, dirname, join, resolve } from 'path';
+import { basename } from 'path';
 import {
   baseEslintConfigFilenames,
   eslintFlatConfigFilenames,
@@ -18,6 +17,13 @@ export const ESLINT_CONFIG_FILENAMES = [
 export const BASE_ESLINT_CONFIG_FILENAMES = baseEslintConfigFilenames;
 
 export const baseEsLintConfigFile = '.eslintrc.base.json';
+export const BASE_ESLINTRC_FILENAMES = [
+  baseEsLintConfigFile,
+  '.eslintrc.base.js',
+  '.eslintrc.base.cjs',
+  '.eslintrc.base.yaml',
+  '.eslintrc.base.yml',
+];
 export const baseEsLintFlatConfigFile = 'eslint.base.config.mjs';
 // Make sure we can handle previous file extension as well for migrations or custom generators.
 export const legacyBaseEsLintFlatConfigFile = 'eslint.base.config.js';
@@ -28,66 +34,12 @@ export function isFlatConfig(configFilePath: string): boolean {
   return ESLINT_FLAT_CONFIG_FILENAMES.includes(configFileName);
 }
 
-// https://eslint.org/docs/latest/use/configure/configuration-files#configuration-file-resolution
-export function findFlatConfigFile(
-  directory: string,
-  workspaceRoot: string
-): string | null {
-  let currentDir = resolve(workspaceRoot, directory);
+const ALL_ESLINT_CONFIG_FILENAMES = new Set([
+  ...ESLINT_CONFIG_FILENAMES,
+  ...BASE_ESLINT_CONFIG_FILENAMES,
+  ...BASE_ESLINTRC_FILENAMES,
+]);
 
-  while (true) {
-    const configFilePath = getConfigFileInDirectory(
-      currentDir,
-      ESLINT_FLAT_CONFIG_FILENAMES
-    );
-    if (configFilePath) {
-      return configFilePath;
-    }
-    if (currentDir === workspaceRoot) {
-      break;
-    }
-    currentDir = dirname(currentDir);
-  }
-
-  return null;
-}
-
-export function findOldConfigFile(
-  filePathOrDirectory: string,
-  workspaceRoot: string
-): string | null {
-  let currentDir = resolve(workspaceRoot, filePathOrDirectory);
-  if (!statSync(currentDir).isDirectory()) {
-    currentDir = dirname(currentDir);
-  }
-
-  while (true) {
-    const configFilePath = getConfigFileInDirectory(
-      currentDir,
-      ESLINT_OLD_CONFIG_FILENAMES
-    );
-    if (configFilePath) {
-      return configFilePath;
-    }
-    if (currentDir === workspaceRoot) {
-      break;
-    }
-    currentDir = dirname(currentDir);
-  }
-
-  return null;
-}
-
-function getConfigFileInDirectory(
-  directory: string,
-  candidateFileNames: string[]
-): string | null {
-  for (const filename of candidateFileNames) {
-    const filePath = join(directory, filename);
-    if (existsSync(filePath)) {
-      return filePath;
-    }
-  }
-
-  return null;
+export function isEslintConfigFile(filePath: string): boolean {
+  return ALL_ESLINT_CONFIG_FILENAMES.has(basename(filePath));
 }

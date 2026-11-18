@@ -108,6 +108,7 @@ describe('jsonDiff', () => {
     });
   });
 
+  // As in JSON, an `undefined` value is no key at all.
   it('should work for added array values', () => {
     const result = jsonDiff(
       {
@@ -121,7 +122,7 @@ describe('jsonDiff', () => {
     expect(result).toEqual(
       expect.arrayContaining([
         {
-          type: JsonDiffType.Modified,
+          type: JsonDiffType.Added,
           path: ['rules'],
           value: {
             lhs: undefined,

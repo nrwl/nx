@@ -7,24 +7,20 @@ export interface Schema {
   style?: SupportedStyles;
   skipFormat?: boolean;
   tags?: string;
-  unitTestRunner?: 'jest' | 'none';
+  unitTestRunner?: 'jest' | 'vitest' | 'none';
   e2eTestRunner?: 'cypress' | 'playwright' | 'none';
   linter?: LinterType;
   js?: boolean;
   enableTypedLinting?: boolean;
-  /**
-   * @deprecated Use `enableTypedLinting` instead. This option will be removed in Nx v24.
-   */
-  setParserOptionsProject?: boolean;
   swc?: boolean;
+  /** @deprecated Next.js discourages custom servers. Write your own server following the Next.js custom server guide instead. It will be removed in Nx v25. */
   customServer?: boolean;
   skipPackageJson?: boolean;
   appDir?: boolean;
   src?: boolean;
   // Internal options
   rootProject?: boolean;
-  addPlugin?: boolean;
   useTsSolution?: boolean;
-  formatter?: 'prettier' | 'none';
+  formatter?: 'prettier' | 'oxfmt' | 'none';
   useProjectJson?: boolean;
 }

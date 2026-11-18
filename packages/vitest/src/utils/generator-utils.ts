@@ -3,20 +3,16 @@ import {
   joinPathFragments,
   logger,
   offsetFromRoot,
-  readJson,
   readNxJson,
+  updateNxJson,
   readProjectConfiguration,
-  TargetConfiguration,
   Tree,
-  updateProjectConfiguration,
-  writeJson,
 } from '@nx/devkit';
 import { isUsingTsSolutionSetup } from '@nx/js/internal';
-import { VitestExecutorOptions } from '../executors/test/schema';
 import type { VitestPluginOptions } from '../plugins/plugin';
 import { ensureViteConfigIsCorrect } from './vite-config-edit-utils';
-import { warnVitestExecutorGenerating } from './deprecation';
-import { nxVersion } from './versions';
+import { getInstalledViteMajorVersion } from './version-utils';
+import { viteTsconfigPathsVersion, viteStaticCopyVersion } from './versions';
 
 export type Target = 'build' | 'serve' | 'test' | 'preview';
 export type TargetFlags = Partial<Record<Target, boolean>>;
@@ -30,7 +26,6 @@ export interface VitestGeneratorSchema {
   testTarget?: string;
   skipFormat?: boolean;
   testEnvironment?: 'node' | 'jsdom' | 'happy-dom' | 'edge-runtime' | string;
-  addPlugin?: boolean;
   runtimeTsconfigFileName?: string;
   compiler?: 'babel' | 'swc';
   projectType?: 'application' | 'library';
@@ -44,8 +39,8 @@ export function addOrChangeTestTarget(
   const nxJson = readNxJson(tree);
   const target = options.testTarget ?? 'test';
 
-  // The plugin only infers the target names it is registered for, so a request
-  // for any other name still needs an explicit target.
+  // The plugin only infers the target names it is registered for, so any other
+  // name gets its own project-scoped plugin registration below.
   hasPlugin ||=
     nxJson.plugins?.some((p) => {
       if (typeof p === 'string') {
@@ -67,28 +62,25 @@ export function addOrChangeTestTarget(
 
   const project = readProjectConfiguration(tree, options.project);
 
-  const reportsDirectory = joinPathFragments(
-    'coverage',
-    project.root === '.' ? options.project : project.root
-  );
-  const testOptions: VitestExecutorOptions = {
-    reportsDirectory,
-  };
-
-  project.targets ??= {};
-
-  if (project.targets[target]) {
+  if (project.targets?.[target]) {
     throw new Error(`Target "${target}" already exists in the project.`);
-  } else {
-    warnVitestExecutorGenerating();
-    project.targets[target] = {
-      executor: '@nx/vitest:test',
-      outputs: ['{options.reportsDirectory}'],
-      options: testOptions,
-    };
   }
+  nxJson.plugins ??= [];
+  nxJson.plugins.push({
+    plugin: '@nx/vitest',
+    include: [project.root === '.' ? '**/*' : `${project.root}/**/*`],
+    options: { testTargetName: target },
+  });
+  updateNxJson(tree, nxJson);
+}
 
-  updateProjectConfiguration(tree, options.project, project);
+// Escape a value for emission inside a single-quoted source literal.
+function escapeLiteral(value: string): string {
+  return value
+    .replace(/\\/g, '\\\\')
+    .replace(/'/g, "\\'")
+    .replace(/\n/g, '\\n')
+    .replace(/\r/g, '\\r');
 }
 
 export interface ViteConfigFileOptions {
@@ -97,6 +89,13 @@ export interface ViteConfigFileOptions {
   includeVitest?: boolean;
   inSourceTests?: boolean;
   testEnvironment?: 'node' | 'jsdom' | 'happy-dom' | 'edge-runtime' | string;
+  testInclude?: string[];
+  /**
+   * Aliases to emit under `resolve.alias`, as alias -> project-relative path.
+   * Only applies when a new config file is written; an existing config is left
+   * untouched.
+   */
+  resolveAlias?: Record<string, string>;
   rolldownOptionsExternal?: string[];
   imports?: string[];
   plugins?: string[];
@@ -116,6 +115,7 @@ export function createOrEditViteConfig(
     projectAlreadyHasViteTargets?: TargetFlags;
     skipPackageJson?: boolean;
     vitestFileName?: boolean;
+    skipNxPlugins?: boolean;
   } = {}
 ) {
   const { root: projectRoot } = readProjectConfiguration(tree, options.project);
@@ -169,23 +169,34 @@ export function createOrEditViteConfig(
 
   const imports: string[] = options.imports ? [...options.imports] : [];
   const plugins: string[] = options.plugins ? [...options.plugins] : [];
+  const needsPaths = !isTsSolutionSetup && !extraOptions.skipNxPlugins;
+  const useNativePaths =
+    needsPaths && (getInstalledViteMajorVersion(tree) ?? 8) >= 8;
+  const dependencies: Record<string, string> = {};
+  if (needsPaths && !useNativePaths) {
+    imports.push(`import tsconfigPaths from 'vite-tsconfig-paths'`);
+    plugins.push('tsconfigPaths({ loose: true })');
+    dependencies['vite-tsconfig-paths'] = viteTsconfigPathsVersion;
+  }
+  if (!onlyVitest && options.includeLib && !isTsSolutionSetup) {
+    plugins.push(`import('vite-plugin-static-copy').then(({ viteStaticCopy }) => viteStaticCopy({
+      targets: [
+        { src: '*.md', dest: '.' },
+        { src: 'package.json', dest: '.', overwrite: false },
+      ],
+      silent: true,
+    }))`);
+    dependencies['vite-plugin-static-copy'] = viteStaticCopyVersion;
+  }
+  if (!extraOptions.skipPackageJson && Object.keys(dependencies).length) {
+    addDependenciesToPackageJson(tree, {}, dependencies, undefined, true);
+  }
 
   if (!onlyVitest && options.includeLib && !isTsSolutionSetup) {
     imports.push(
       `import dts from 'vite-plugin-dts'`,
       `import * as path from 'path'`
     );
-  }
-
-  if (!isTsSolutionSetup) {
-    imports.push(
-      `import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin'`,
-      `import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin'`
-    );
-    plugins.push(`nxViteTsPaths()`, `nxCopyAssetsPlugin(['*.md'])`);
-    if (!extraOptions.skipPackageJson) {
-      addDependenciesToPackageJson(tree, {}, { '@nx/vite': nxVersion });
-    }
   }
 
   if (!onlyVitest && options.includeLib) {
@@ -202,13 +213,19 @@ export function createOrEditViteConfig(
       ? `./coverage/${options.project}`
       : `${offsetFromRoot(projectRoot)}coverage/${projectRoot}`;
 
+  const testInclude = options.testInclude ?? [
+    '{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}',
+  ];
+
   const testOption = options.includeVitest
     ? `  test: {
     name: '${options.project}',
     watch: false,
     globals: true,
     environment: '${options.testEnvironment ?? 'jsdom'}',
-    include: ['{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    include: [${testInclude
+      .map((pattern) => `'${escapeLiteral(pattern)}'`)
+      .join(', ')}],
 ${options.passWithNoTests ? `    passWithNoTests: true,\n` : ''}\
 ${options.setupFile ? `    setupFiles: ['${options.setupFile}'],\n` : ''}\
 ${
@@ -256,15 +273,34 @@ ${
     host: 'localhost',
   },`;
 
-  const workerOption = isTsSolutionSetup
-    ? `  // Uncomment this if you are using workers.
+  const workerOption = `  // Uncomment this if you are using workers.
   // worker: {
   //  plugins: [],
-  // },`
-    : `  // Uncomment this if you are using workers.
-  // worker: {
-  //   plugins: () => [ nxViteTsPaths() ],
   // },`;
+
+  const aliasEntries = Object.entries(options.resolveAlias ?? {});
+  // Path-based workspace libraries need Vite's native tsconfig paths
+  // resolution, which is off by default. Workspaces on project references
+  // resolve through package.json instead.
+  const resolveTsconfigPaths = useNativePaths;
+  const resolveEntries = [
+    resolveTsconfigPaths ? `    tsconfigPaths: true,` : '',
+    aliasEntries.length
+      ? `    alias: {
+${aliasEntries
+  .map(
+    ([alias, target]) =>
+      `      '${escapeLiteral(alias)}': join(import.meta.dirname, '${escapeLiteral(target)}'),`
+  )
+  .join('\n')}
+    },`
+      : '',
+  ].filter(Boolean);
+  const resolveOption = resolveEntries.length
+    ? `  resolve: {
+${resolveEntries.join('\n')}
+  },`
+    : '';
 
   const cacheDir = `cacheDir: '${normalizedJoinPaths(
     offsetFromRoot(projectRoot),
@@ -274,6 +310,11 @@ ${
   )}',`;
 
   if (tree.exists(viteConfigPath)) {
+    if (aliasEntries.length) {
+      logger.warn(
+        `${viteConfigPath} already exists; the requested resolve.alias entries were not added to it.`
+      );
+    }
     handleViteConfigFileExists(
       tree,
       viteConfigPath,
@@ -285,14 +326,16 @@ ${
       testOption,
       reportsDirectory,
       cacheDir,
-      projectRoot,
-      offsetFromRoot(projectRoot),
-      extraOptions.projectAlreadyHasViteTargets
+      extraOptions.projectAlreadyHasViteTargets,
+      resolveTsconfigPaths
     );
     return;
   }
 
-  // When using vitest.config, use vitest/config import and skip vite-specific options
+  if (aliasEntries.length) {
+    imports.push(`import { join } from 'node:path'`);
+  }
+
   const viteConfigContent = extraOptions.vitestFileName
     ? `import { defineConfig } from 'vitest/config';
 ${imports.join(';\n')}${imports.length ? ';' : ''}
@@ -301,6 +344,7 @@ export default defineConfig(() => ({
   root: import.meta.dirname,
   ${printOptions(
     cacheDir,
+    resolveOption,
     plugins.length ? `  plugins: [${plugins.join(', ')}],` : '',
     defineOption,
     testOption
@@ -317,7 +361,8 @@ export default defineConfig(() => ({
     cacheDir,
     devServerOption,
     previewServerOption,
-    `  plugins: [${plugins.join(', ')}],`,
+    resolveOption,
+    plugins.length ? `  plugins: [${plugins.join(', ')}],` : '',
     workerOption,
     buildOption,
     defineOption,
@@ -344,9 +389,8 @@ function handleViteConfigFileExists(
   testOption: string,
   reportsDirectory: string,
   cacheDir: string,
-  projectRoot: string,
-  offsetFromRoot: string,
-  projectAlreadyHasViteTargets?: TargetFlags
+  projectAlreadyHasViteTargets?: TargetFlags,
+  resolveTsconfigPaths?: boolean
 ) {
   if (
     projectAlreadyHasViteTargets?.build &&
@@ -389,7 +433,9 @@ function handleViteConfigFileExists(
   const testOptionObject = {
     globals: true,
     environment: options.testEnvironment ?? 'jsdom',
-    include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    include: options.testInclude ?? [
+      'src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}',
+    ],
     ...(options.passWithNoTests ? { passWithNoTests: true } : {}),
     reporters: ['default'],
     coverage: {
@@ -408,7 +454,8 @@ function handleViteConfigFileExists(
     testOption,
     testOptionObject,
     cacheDir,
-    projectAlreadyHasViteTargets ?? {}
+    projectAlreadyHasViteTargets ?? {},
+    resolveTsconfigPaths
   );
 
   if (!changed) {

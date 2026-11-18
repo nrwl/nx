@@ -1,14 +1,19 @@
 import yargsParser from 'yargs-parser';
 import { ExecutorContext } from '../../config/misc-interfaces';
+import type { Task } from '../../config/task-graph';
 import { isTuiEnabled } from '../../tasks-runner/is-tui-enabled';
 import { PseudoTerminal } from '../../tasks-runner/pseudo-terminal';
+import { resolveTokens } from '../../tasks-runner/tokens';
 import { createTaskId } from '../../tasks-runner/utils';
 import { NoopChildProcess } from '../../tasks-runner/running-tasks/noop-child-process';
 import {
+  calculateCwd,
   ParallelRunningTasks,
+  processEnv,
   runSingleCommandWithPseudoTerminal,
   SeriallyRunningTasks,
 } from './running-tasks';
+import { logger } from '../../utils/logger';
 import { isAlreadyQuoted, needsShellQuoting } from '../../utils/shell-quoting';
 
 export const LARGE_BUFFER = 1024 * 1000000;
@@ -55,6 +60,7 @@ const propKeys = [
   'parallel',
   'no-parallel',
   'readyWhen',
+  'readyWhenStatus',
   'cwd',
   'args',
   'envFile',
@@ -100,9 +106,33 @@ export default async function (
 export async function runCommands(
   options: RunCommandsOptions,
   context: ExecutorContext,
-  taskId?: string
+  task?: Pick<Task, 'id' | 'ultracache' | 'continuous'>,
+  baseEnv?: NodeJS.ProcessEnv,
+  warn: (message: string) => void = (message) => logger.warn(message)
 ) {
-  const normalized = normalizeOptions(options);
+  // The orchestrator's in-process path passes the task with a stub context,
+  // so prefer it.
+  const resolvedTaskId =
+    task?.id ??
+    createTaskId(
+      context.projectName,
+      context.targetName,
+      context.configurationName
+    );
+  let env: NodeJS.ProcessEnv;
+  const normalized = normalizeOptions(
+    options,
+    () =>
+      (env ??= processEnv(
+        options.color,
+        calculateCwd(options.cwd, context),
+        options.env ?? {},
+        options.envFile,
+        baseEnv
+      )),
+    resolvedTaskId,
+    warn
+  );
 
   if (normalized.readyWhenStatus.length && !normalized.parallel) {
     throw new Error(
@@ -141,26 +171,43 @@ export async function runCommands(
   const tuiEnabled = isTuiEnabled();
 
   try {
-    const resolvedTaskId =
-      taskId ??
-      createTaskId(
-        context.projectName,
-        context.targetName,
-        context.configurationName
-      );
-    const runningTask = isSingleCommandAndCanUsePseudoTerminal
+    // `runExecutor` can name a target the task graph does not hold, hence the
+    // project lookup; `convert-nx-executor` has neither graph, and only then
+    // is the config unknowable, which counts as tracked and discrete.
+    // `projectGraph` is typed as present, but `convert-nx-executor` passes
+    // null for both graphs.
+    const targetConfiguration =
+      context.projectName && context.targetName
+        ? context.projectGraph?.nodes?.[context.projectName]?.data.targets?.[
+            context.targetName
+          ]
+        : undefined;
+    const resolvedTask = task ??
+      context.taskGraph?.tasks?.[resolvedTaskId] ?? {
+        id: resolvedTaskId,
+        ultracache: targetConfiguration?.ultracache,
+        continuous: targetConfiguration?.continuous,
+      };
+    // The pseudo terminal runner ignores readyWhen, which keeps a continuous
+    // task running past the match. A discrete task must end there.
+    const usePtyRunner =
+      isSingleCommandAndCanUsePseudoTerminal &&
+      (!normalized.readyWhenStatus.length || resolvedTask.continuous === true);
+    const runningTask = usePtyRunner
       ? await runSingleCommandWithPseudoTerminal(
           normalized,
           context,
-          resolvedTaskId
+          resolvedTask,
+          baseEnv
         )
       : options.parallel
-        ? new ParallelRunningTasks(normalized, context, resolvedTaskId)
+        ? new ParallelRunningTasks(normalized, context, resolvedTask, baseEnv)
         : new SeriallyRunningTasks(
             normalized,
             context,
             tuiEnabled,
-            resolvedTaskId
+            resolvedTask,
+            baseEnv
           );
     return runningTask;
   } catch (e) {
@@ -174,7 +221,10 @@ export async function runCommands(
 }
 
 function normalizeOptions(
-  options: RunCommandsOptions
+  options: RunCommandsOptions,
+  env: () => NodeJS.ProcessEnv,
+  taskId: string,
+  warn: (message: string) => void
 ): NormalizedRunCommandsOptions {
   if (options.readyWhen && typeof options.readyWhen === 'string') {
     options.readyWhenStatus = [
@@ -203,10 +253,46 @@ function normalizeOptions(
     );
   }
 
-  if (options.args && Array.isArray(options.args)) {
-    options.args = options.args.join(' ');
-  }
+  Object.assign(options, normalizeArgs(options));
 
+  const normalized = options as NormalizedRunCommandsOptions;
+  let forwardsUnknownOptions = false;
+  normalized.commands.forEach((c) => {
+    const forwardAllArgs = c.forwardAllArgs ?? options.forwardAllArgs ?? true;
+    forwardsUnknownOptions ||=
+      c.command.indexOf('{args.') === -1 &&
+      (c.command.indexOf('{args}') > -1 || forwardAllArgs);
+    c.command = interpolateArgsIntoCommand(
+      c.command,
+      normalized,
+      forwardAllArgs,
+      env
+    );
+  });
+  if (forwardsUnknownOptions) {
+    for (const option of droppedUnknownOptions(normalized)) {
+      warn(
+        `Option "${option}" was not forwarded to the command for ${taskId} because its value is an object or array. Use "args" to pass extra values to the command.`
+      );
+    }
+  }
+  return normalized;
+}
+
+/** The options `interpolateArgsIntoCommand` reads, from the task's options. */
+export function normalizeArgs(
+  options: RunCommandsOptions
+): Pick<
+  NormalizedRunCommandsOptions,
+  | 'args'
+  | 'parsedArgs'
+  | '__unparsed__'
+  | 'unknownOptions'
+  | 'unparsedCommandArgs'
+> {
+  const args = Array.isArray(options.args)
+    ? options.args.join(' ')
+    : options.args;
   const unparsedCommandArgs = yargsParser(options.__unparsed__, {
     configuration: {
       'parse-numbers': false,
@@ -215,27 +301,19 @@ function normalizeOptions(
       'camel-case-expansion': false,
     },
   });
-  options.unknownOptions = Object.keys(options)
+  const unknownOptions = Object.keys(options)
     .filter(
       (p) => propKeys.indexOf(p) === -1 && unparsedCommandArgs[p] === undefined
     )
     .reduce((m, c) => ((m[c] = options[c]), m), {});
 
-  options.parsedArgs = parseArgs(
+  return {
+    args,
+    __unparsed__: options.__unparsed__,
+    unknownOptions,
+    parsedArgs: parseArgs(unparsedCommandArgs, unknownOptions, args),
     unparsedCommandArgs,
-    options.unknownOptions,
-    options.args as string
-  );
-  options.unparsedCommandArgs = unparsedCommandArgs;
-
-  (options as NormalizedRunCommandsOptions).commands.forEach((c) => {
-    c.command = interpolateArgsIntoCommand(
-      c.command,
-      options as NormalizedRunCommandsOptions,
-      c.forwardAllArgs ?? options.forwardAllArgs ?? true
-    );
-  });
-  return options as NormalizedRunCommandsOptions;
+  };
 }
 
 export function interpolateArgsIntoCommand(
@@ -248,7 +326,8 @@ export function interpolateArgsIntoCommand(
     | 'unknownOptions'
     | 'unparsedCommandArgs'
   >,
-  forwardAllArgs: boolean
+  forwardAllArgs: boolean,
+  env: () => NodeJS.ProcessEnv = () => process.env
 ): string {
   if (command.indexOf('{args.') > -1 && command.indexOf('{args}') > -1) {
     throw new Error(
@@ -256,10 +335,17 @@ export function interpolateArgsIntoCommand(
     );
   }
   if (command.indexOf('{args.') > -1) {
-    const regex = /{args\.([^}]+)}/g;
-    return command.replace(regex, (_, group: string) =>
-      opts.parsedArgs[group] !== undefined ? opts.parsedArgs[group] : ''
-    );
+    return resolveTokens(command, {
+      isToken: (name) => name === 'args',
+      // Overrides are parsed without dot-notation, so `{args.a.b}` reads the
+      // `--a.b` override
+      read: (_, path) =>
+        Object.hasOwn(opts.parsedArgs, path)
+          ? opts.parsedArgs[path]
+          : undefined,
+      env: { read: env },
+      noValue: () => '',
+    });
   } else if (command.indexOf('{args}') > -1) {
     const regex = /{args}/g;
     const args = [
@@ -289,6 +375,24 @@ export function interpolateArgsIntoCommand(
   } else {
     return command;
   }
+}
+
+// `null` unsets an option, so it is skipped without a warning. A dotted flag
+// such as `--a.b=1` reaches the command through `__unparsed__`.
+function droppedUnknownOptions(
+  opts: Pick<
+    NormalizedRunCommandsOptions,
+    'parsedArgs' | 'unknownOptions' | 'unparsedCommandArgs'
+  >
+) {
+  const unparsedKeys = Object.keys(opts.unparsedCommandArgs ?? {});
+  return Object.keys(opts.unknownOptions ?? {}).filter(
+    (k) =>
+      typeof opts.unknownOptions[k] === 'object' &&
+      opts.unknownOptions[k] !== null &&
+      opts.parsedArgs[k] === opts.unknownOptions[k] &&
+      !unparsedKeys.some((u) => u.startsWith(`${k}.`))
+  );
 }
 
 function unknownOptionsToArgsArray(

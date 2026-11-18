@@ -1,4 +1,9 @@
-import { NX_CLOUD_URL, nxCloudHyperlink } from './ab-testing';
+import {
+  NX_CLOUD_DEMO_URL,
+  NX_CLOUD_URL,
+  nxCloudDemoHyperlink,
+  nxCloudHyperlink,
+} from './ab-testing';
 
 describe('nxCloudHyperlink', () => {
   const BEL = '\u0007';
@@ -32,5 +37,18 @@ describe('nxCloudHyperlink', () => {
   it('falls back to the bare URL when hyperlinks are unsupported', () => {
     process.env.FORCE_HYPERLINK = '0';
     expect(nxCloudHyperlink('nx-migrate')).toBe(NX_CLOUD_URL);
+  });
+
+  it('points the demo link at the demo with the same attribution', () => {
+    process.env.FORCE_HYPERLINK = '1';
+    const link = nxCloudDemoHyperlink('nx-migrate');
+
+    expect(link).toContain(`${BEL}${NX_CLOUD_DEMO_URL}${OSC}`);
+    expect(link).toContain(
+      `${NX_CLOUD_DEMO_URL}?utm_source=nx-cli&utm_medium=cli&utm_campaign=nx-cloud-connect&utm_content=nx-migrate`
+    );
+
+    process.env.FORCE_HYPERLINK = '0';
+    expect(nxCloudDemoHyperlink('nx-migrate')).toBe(NX_CLOUD_DEMO_URL);
   });
 });

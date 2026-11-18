@@ -9,7 +9,7 @@ import {
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { hasPlugin as hasRollupPlugin } from '@nx/rollup/internal';
-import { expoLibraryGenerator } from './library';
+import { expoLibraryGenerator, expoLibraryGeneratorInternal } from './library';
 import { Schema } from './schema';
 
 describe('lib', () => {
@@ -23,7 +23,6 @@ describe('lib', () => {
     unitTestRunner: 'jest',
     strict: true,
     js: false,
-    addPlugin: true,
   };
 
   beforeEach(() => {
@@ -426,7 +425,7 @@ describe('lib', () => {
       }
     });
 
-    it('should add package.json and .babelrc', async () => {
+    it('should add package.json and .babelrc.js', async () => {
       await expoLibraryGenerator(appTree, {
         ...defaultSchema,
         publishable: true,
@@ -435,7 +434,7 @@ describe('lib', () => {
 
       const packageJson = readJson(appTree, 'my-lib/package.json');
       expect(packageJson.name).toEqual('@proj/my-lib');
-      expect(appTree.exists('my-lib/.babelrc'));
+      expect(appTree.exists('my-lib/.babelrc.js')).toBeTruthy();
     });
   });
 
@@ -666,6 +665,11 @@ describe('lib', () => {
             "src/**/*.spec.jsx",
             "src/**/*.d.ts",
           ],
+          "references": [
+            {
+              "path": "./tsconfig.lib.json",
+            },
+          ],
         }
       `);
     });
@@ -755,6 +759,17 @@ describe('lib', () => {
       });
 
       expect(readJson(appTree, 'my-lib/package.json').nx).toBeUndefined();
+    });
+
+    it('should default to package.json through the cli entry point', async () => {
+      // generators.json registers the internal entry, so this is what `nx g` runs
+      await expoLibraryGeneratorInternal(appTree, {
+        ...defaultSchema,
+        strict: false,
+      });
+
+      expect(appTree.exists('my-lib/project.json')).toBeFalsy();
+      expect(appTree.exists('my-lib/package.json')).toBeTruthy();
     });
 
     it('should generate project.json if useProjectJson is true', async () => {

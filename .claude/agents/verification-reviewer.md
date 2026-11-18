@@ -28,11 +28,13 @@ Verify the PR's evidence in one pass:
 Run from the repo root:
 
 ```bash
-.claude/tools/sandbox read <SANDBOX> <path> [--range a,b] [--ref base]
-.claude/tools/sandbox grep <SANDBOX> <pattern> [subdir] [--ref base]
-.claude/tools/sandbox find <SANDBOX> <glob> [subdir] [--ref base]
-.claude/tools/sandbox exec <SANDBOX> -- <cmd>            # tests, lint, tsc
-.claude/tools/sandbox exec <SANDBOX> --base -- <cmd>     # the same, base-side
+tools/review-sandbox/sandbox read <SANDBOX> <path> [--range a,b] [--ref base]
+tools/review-sandbox/sandbox grep <SANDBOX> <pattern> [subdir] [--ref base]
+tools/review-sandbox/sandbox find <SANDBOX> <glob> [subdir] [--ref base]
+tools/review-sandbox/sandbox diff <SANDBOX> [--name-only] [-- <path>...]   # base..HEAD tree difference,
+                                                                     # read-only; NOT the PR's diff
+tools/review-sandbox/sandbox exec <SANDBOX> -- <cmd>            # tests, lint, tsc
+tools/review-sandbox/sandbox exec <SANDBOX> --base -- <cmd>     # the same, base-side
 ```
 
 Output is root-relative and identical whether the checkout is isolated or local. You cannot tell which, and must not try to find out. Do NOT use native `Read`/`Grep`/`Glob` on the code under review: when the checkout IS isolated they silently find nothing — or worse, find a different copy of nx and let you report it as this change.
@@ -43,6 +45,8 @@ Output is root-relative and identical whether the checkout is isolated or local.
 
 **Read the docs rules from the checkout, not from memory** — `astro-docs/STYLE_GUIDE.md` and the docs section of `CLAUDE.md` are the committed authority, and they change.
 
+When the diff changes pages under `astro-docs/src/content/`, also follow "Phase 3: Persona check" in `.claude/skills/check-docs-style/SKILL.md`. Read that skill and the persona files with `--ref base`, so a PR branch that predates them still gets the check and a PR can't rewrite the rules it's judged by. Report the result under `**Persona check:**`. A flag there is advisory, never a Finding, so it needs no `NET-NEW` or `TRIGGER` line.
+
 If `exec` is refused, the sandbox has no isolation boundary. That is a legitimate configuration, not a fault: review statically and say so in your report. Never work around a refusal by running the command outside the CLI.
 
 ## Mutating source to prove a point
@@ -50,7 +54,7 @@ If `exec` is refused, the sandbox has no isolation boundary. That is a legitimat
 The checkout is shared — other agents are reading it while you work. Never edit it, apply a patch, switch refs, reset, or stash. Proving a test actually fails without the fix means mutating source, so get your own tree first:
 
 ```bash
-.claude/tools/sandbox worktree <SANDBOX> verification-reviewer head
+tools/review-sandbox/sandbox worktree <SANDBOX> verification-reviewer head
 ```
 
 It returns a new sandbox id, already installed, that you may mutate freely. Pass `base` instead of `head` for a baseline mutation. A refusal means your id may not execute (you were handed a read-only view, or the sandbox has no usable isolation). Fall back to static mapping and say the test-effectiveness check was unavailable.
@@ -75,6 +79,7 @@ This applies to `VERIFICATION_SOUND` exactly as it applies to a finding, and mat
 - Do not demand academic coverage or more comments. Missing tests are Suggestions — including a missing regression test for the behavior this PR changed. Only false coverage (a test that cannot fail, or asserts the wrong thing) is a finding, and it is Critical.
 - Docs that do not work for a reader are Critical, not a wording note. Voice/rhythm/positioning asks stay Suggestions even when the style guide names them.
 - Ground docs findings in a changed behavior plus a named stale page, or a committed rule plus file/line.
+- Every finding carries a `FIX:` line naming the concrete change (see the report template). You established what the test, comment, or page should say; grade its confidence honestly and never invent one to fill the line.
 - Every Critical/Important finding must pass the charter's **admission test**: a `NET-NEW:` line with quoted base evidence (or `no base file` / `widens` / `claimed-fix`) and a `TRIGGER:` line naming a reachable entry point → input → user-visible failure. A defect that reproduces unchanged at `--ref base` is not a finding against this PR, but it is still reported — emit it as a `PRE-EXISTING:` line (see below) so the maintainer can file a follow-up. A defect that needs a state no supported workflow produces is a one-line Suggestion. Rarity is fine; unreachability is not. Findings missing either line are demoted by the caller.
 - Pre-existing gaps are the dominant false positive here: an untested helper the PR merely calls, a stale doc page the diff did not affect, a comment the diff did not touch. Those go under **Pre-existing**, not Findings — reported, never blocking.
 - Never quote non-public ticket content in the report. It reaches a public draft.
@@ -113,13 +118,16 @@ After the required proof-of-work lines, return:
 
 **Findings:**
 
-- **<file:line>** — [test|ticket|comment|docs] <evidence and concrete fix>
+- **<file:line>** — [test|ticket|comment|docs] <evidence>
   NET-NEW: <base <path>:<line> — what base did | no base file | widens <path>:<line> | claimed-fix>
   TRIGGER: <entry point → input → user-visible failure>
+  FIX: <the concrete change, 1-2 lines, sketch-level; `FIX (sketch):` when alternatives exist; `FIX: unclear — <why>` when it hinges on a decision that is not yours>
 
 **Pre-existing:** <one line per defect that reproduces unchanged at base; or `none`>
 
 - **<file:line>** — <defect>. Present at base <path>:<line>.
+
+**Persona check:** <`n/a` when no docs page changed; otherwise personas matched, then one line per flag: persona, file:line, rule broken, correction; or `Flags: none`>
 
 **Suggestions:** <non-blocking coverage or wording ideas; or `none`>
 ```

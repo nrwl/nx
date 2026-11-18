@@ -12,3 +12,6 @@ export * from './test-utils';
 export * from './process-utils';
 export * from './strip-indents';
 export * from './port-utils';
+export * from './target-defaults-utils';
+export * from './cypress-component-utils';
+export * from './rsbuild-utils';

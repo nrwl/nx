@@ -12,6 +12,7 @@ import { ExecutorContext } from '../../config/misc-interfaces';
 import { readProjectsConfigurationFromProjectGraph } from '../../project-graph/project-graph';
 import { readNxJson } from '../../config/configuration';
 import { isAsyncIterator } from '../../utils/async-iterator';
+import { output } from '../../utils/output';
 import {
   getExecutorInformation,
   parseExecutor,
@@ -112,6 +113,9 @@ async function runTasks(
   } catch (e) {
     const isVerbose = tasks[0].overrides.verbose;
     console.error(isVerbose ? e : e.message);
+    // `process.exit` does not wait for pipe writes, so the reason this worker
+    // died could otherwise be the one line that never arrives.
+    await output.drain();
     process.exit(1);
   }
 }
@@ -125,6 +129,7 @@ process.on('message', async (message: BatchMessage) => {
         message.batchTaskGraph,
         message.fullTaskGraph
       );
+      await output.drain();
       process.send({
         type: BatchMessageType.CompleteBatchExecution,
         results,

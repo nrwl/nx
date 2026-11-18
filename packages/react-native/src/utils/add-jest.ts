@@ -13,7 +13,6 @@ export async function addJest(
   appProjectRoot: string,
   js: boolean,
   skipPackageJson: boolean,
-  addPlugin: boolean,
   runtimeTsconfigFileName: string
 ): Promise<GeneratorCallback> {
   if (unitTestRunner !== 'jest') {
@@ -34,7 +33,6 @@ export async function addJest(
     compiler: 'babel',
     skipPackageJson,
     skipFormat: true,
-    addPlugin,
     runtimeTsconfigFileName,
   });
 

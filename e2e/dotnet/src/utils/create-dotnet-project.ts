@@ -1,6 +1,6 @@
 import { e2eConsoleLogger, runCommand, tmpProjPath } from '@nx/e2e-utils';
 import { execSync } from 'child_process';
-import { writeFileSync } from 'fs-extra';
+import { readFileSync, writeFileSync } from 'fs-extra';
 import { join } from 'path';
 
 export interface DotNetProjectOptions {
@@ -232,4 +232,39 @@ export function setCustomOutputPath(
     },
     cwd
   );
+}
+
+/**
+ * Sets options on the `@nx/dotnet` plugin entry in nx.json and returns a
+ * function that puts the entry back. `nx add` registers the plugin as a bare
+ * string, so setting an option means replacing that entry with its expanded
+ * form.
+ */
+export function setDotNetPluginOptions(
+  options: Record<string, unknown>,
+  cwd: string = tmpProjPath()
+): () => void {
+  const nxJsonPath = join(cwd, 'nx.json');
+  const nxJson = JSON.parse(readFileSync(nxJsonPath, 'utf-8'));
+  const index = nxJson.plugins?.findIndex((plugin: any) =>
+    typeof plugin === 'string'
+      ? plugin === '@nx/dotnet'
+      : plugin?.plugin === '@nx/dotnet'
+  );
+  if (index === undefined || index === -1) {
+    throw new Error('nx.json does not register @nx/dotnet');
+  }
+
+  const original = nxJson.plugins[index];
+  nxJson.plugins[index] =
+    typeof original === 'string'
+      ? { plugin: original, options }
+      : { ...original, options: { ...original.options, ...options } };
+  writeFileSync(nxJsonPath, JSON.stringify(nxJson, null, 2));
+
+  return () => {
+    const current = JSON.parse(readFileSync(nxJsonPath, 'utf-8'));
+    current.plugins[index] = original;
+    writeFileSync(nxJsonPath, JSON.stringify(current, null, 2));
+  };
 }

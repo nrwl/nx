@@ -99,6 +99,7 @@ dev-debug.log
 node_modules/
 # Environment variables
 .env
+!/.env
 !e2e/dotnet/.env
 # Editor directories and files
 .idea
@@ -154,8 +155,11 @@ packages/cypress/README.md
 packages/playwright/README.md
 packages/vite/README.md
 packages/webpack/README.md
+packages/rolldown/README.md
 packages/rollup/README.md
 packages/docker/README.md
+packages/conformance/README.md
+packages/owners/README.md
 packages/gradle/README.md
 packages/rsbuild/README.md
 packages/web/README.md
@@ -199,3 +203,6 @@ e2e/**/*.d.ts
 e2e/**/*.d.ts.map
 
 .nx/migrate-runs
+
+# Generated on Netlify builds by astro-docs/scripts/sync-agent-skills.mjs
+astro-docs/public/.well-known/agent-skills

@@ -1,33 +1,34 @@
+import type { Mock } from 'vitest';
 import { detectPlugins } from './init-v2';
 
 // Mock dependencies
-jest.mock('fs', () => ({
-  ...jest.requireActual('fs'),
-  existsSync: jest.fn((path: string) => {
+vi.mock('fs', async () => ({
+  ...require('fs'),
+  existsSync: vi.fn((path: string) => {
     if (path === 'package.json') return true;
     return false;
   }),
 }));
 
-jest.mock('../../utils/fileutils', () => ({
-  readJsonFile: jest.fn(),
-  fileExists: jest.fn(() => false),
+vi.mock('../../utils/fileutils', () => ({
+  readJsonFile: vi.fn(),
+  fileExists: vi.fn(() => false),
 }));
 
 import { readJsonFile } from '../../utils/fileutils';
-const mockReadJsonFile = readJsonFile as jest.Mock;
+const mockReadJsonFile = readJsonFile as Mock;
 
-jest.mock('../../utils/workspace-context', () => ({
-  globWithWorkspaceContextSync: jest.fn(() => []),
+vi.mock('../../utils/workspace-context', () => ({
+  globWithWorkspaceContextSync: vi.fn(() => []),
 }));
 
-jest.mock('../../utils/output', () => ({
-  output: { log: jest.fn() },
+vi.mock('../../utils/output', () => ({
+  output: { log: vi.fn() },
 }));
 
 describe('detectPlugins', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('should not suggest a plugin that is already installed as an npm dependency', async () => {

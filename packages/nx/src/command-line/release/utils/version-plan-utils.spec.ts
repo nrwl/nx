@@ -1,7 +1,6 @@
 import {
   getProjectsAffectedByVersionPlan,
   areAllVersionPlanProjectsFiltered,
-  getVersionPlanProjectsOutsideFilter,
   validateResolvedVersionPlansAgainstFilter,
 } from './version-plan-utils';
 import type {
@@ -205,176 +204,73 @@ describe('version-plan-utils', () => {
     });
   });
 
-  describe('getVersionPlanProjectsOutsideFilter', () => {
-    it('should return projects in version plan that are not filtered', () => {
-      const plan: ProjectsVersionPlan = {
-        projectVersionBumps: {
-          'project-a': 'major',
-          'project-b': 'patch',
-          'project-c': 'minor',
-        },
-        commit: undefined,
-        message: undefined,
-        absolutePath: undefined,
-        relativePath: undefined,
-        fileName: undefined,
-        createdOnMs: undefined,
-      };
-      const filteredProjects = new Set(['project-a']); // only project-a is filtered
-
-      const result = getVersionPlanProjectsOutsideFilter(
-        plan,
-        mockReleaseGroup,
-        filteredProjects
-      );
-
-      expect(result.sort()).toEqual(['project-b', 'project-c']);
-    });
-
-    it('should return empty array when all version plan projects are filtered', () => {
-      const plan: ProjectsVersionPlan = {
-        projectVersionBumps: {
-          'project-a': 'major',
-          'project-b': 'patch',
-        },
-        commit: undefined,
-        message: undefined,
-        absolutePath: undefined,
-        relativePath: undefined,
-        fileName: undefined,
-        createdOnMs: undefined,
-      };
-      const filteredProjects = new Set(['project-a', 'project-b', 'project-c']);
-
-      const result = getVersionPlanProjectsOutsideFilter(
-        plan,
-        mockReleaseGroup,
-        filteredProjects
-      );
-
-      expect(result).toEqual([]);
-    });
-
-    it('should return empty array when filteredProjects is undefined', () => {
-      const plan: ProjectsVersionPlan = {
-        projectVersionBumps: {
-          'project-a': 'major',
-        },
-        commit: undefined,
-        message: undefined,
-        absolutePath: undefined,
-        relativePath: undefined,
-        fileName: undefined,
-        createdOnMs: undefined,
-      };
-
-      const result = getVersionPlanProjectsOutsideFilter(
-        plan,
-        mockReleaseGroup,
-        undefined
-      );
-
-      expect(result).toEqual([]);
-    });
-
-    it('should handle group version plans correctly', () => {
-      const plan: GroupVersionPlan = {
-        groupVersionBump: 'minor',
-        commit: undefined,
-        message: undefined,
-        absolutePath: undefined,
-        relativePath: undefined,
-        fileName: undefined,
-        createdOnMs: undefined,
-      };
-      const filteredProjects = new Set(['project-a']); // only project-a is filtered
-
-      const result = getVersionPlanProjectsOutsideFilter(
-        plan,
-        mockReleaseGroup,
-        filteredProjects
-      );
-
-      expect(result.sort()).toEqual(['project-b', 'project-c']);
-    });
-  });
-
   describe('validateResolvedVersionPlansAgainstFilter', () => {
-    it('should return null when all version plan projects are within the filter', () => {
-      const plan: ProjectsVersionPlan = {
-        projectVersionBumps: {
-          'project-a': 'major',
-          'project-b': 'patch',
-        },
-        commit: undefined,
-        message: undefined,
-        absolutePath: undefined,
-        relativePath: undefined,
-        fileName: undefined,
-        createdOnMs: undefined,
-      };
+    const projectsPlan = (
+      fileName: string,
+      projectVersionBumps: ProjectsVersionPlan['projectVersionBumps']
+    ): ProjectsVersionPlan => ({
+      projectVersionBumps,
+      commit: undefined,
+      message: undefined,
+      absolutePath: undefined,
+      relativePath: undefined,
+      fileName,
+      createdOnMs: undefined,
+    });
 
+    const filterError = (fileName: string, projects: string[]) => ({
+      title:
+        'Version plan contains projects not included in the release filter',
+      bodyLines: [
+        `The following projects in version plan '${fileName}' are not being released:`,
+        ...projects.map((p) => `  - ${p}`),
+        '',
+        'Either include all projects from the version plan in your release command,',
+        'or create separate version plans for different sets of projects.',
+      ],
+    });
+
+    it('should return null when all version plan projects are within the filter', () => {
       const releaseGroupWithPlan: ReleaseGroupWithName = {
         ...mockReleaseGroup,
-        resolvedVersionPlans: [plan],
+        resolvedVersionPlans: [
+          projectsPlan('plan.md', {
+            'project-a': 'major',
+            'project-b': 'patch',
+          }),
+        ],
       };
 
-      const releaseGroups = [releaseGroupWithPlan];
-      const releaseGroupToFilteredProjects = new Map([
-        [
-          releaseGroupWithPlan,
-          new Set(['project-a', 'project-b', 'project-c']),
-        ],
-      ]);
-
       const result = validateResolvedVersionPlansAgainstFilter(
-        releaseGroups,
-        releaseGroupToFilteredProjects
+        [releaseGroupWithPlan],
+        new Map([
+          [
+            releaseGroupWithPlan,
+            new Set(['project-a', 'project-b', 'project-c']),
+          ],
+        ])
       );
 
       expect(result).toBeNull();
     });
 
     it('should return an error when version plan contains projects outside the filter', () => {
-      const plan: ProjectsVersionPlan = {
-        projectVersionBumps: {
-          'project-a': 'major',
-          'project-b': 'patch',
-        },
-        commit: undefined,
-        message: undefined,
-        absolutePath: undefined,
-        relativePath: undefined,
-        fileName: undefined,
-        createdOnMs: undefined,
-      };
-
       const releaseGroupWithPlan: ReleaseGroupWithName = {
         ...mockReleaseGroup,
-        resolvedVersionPlans: [plan],
+        resolvedVersionPlans: [
+          projectsPlan('plan.md', {
+            'project-a': 'major',
+            'project-b': 'patch',
+          }),
+        ],
       };
 
-      const releaseGroups = [releaseGroupWithPlan];
-      const releaseGroupToFilteredProjects = new Map([
-        [releaseGroupWithPlan, new Set(['project-a'])], // Only project-a is filtered
-      ]);
-
       const result = validateResolvedVersionPlansAgainstFilter(
-        releaseGroups,
-        releaseGroupToFilteredProjects
+        [releaseGroupWithPlan],
+        new Map([[releaseGroupWithPlan, new Set(['project-a'])]])
       );
 
-      expect(result).toEqual({
-        title:
-          'Version plan contains projects not included in the release filter',
-        bodyLines: [
-          'The following projects in the version plan are not being released:',
-          '  - project-b',
-          '',
-          'Either include all projects from the version plan in your release command,',
-          'or create separate version plans for different sets of projects.',
-        ],
-      });
+      expect(result).toEqual(filterError('plan.md', ['project-b']));
     });
 
     it('should return an error for group version plans when not all group projects are filtered', () => {
@@ -384,7 +280,7 @@ describe('version-plan-utils', () => {
         message: undefined,
         absolutePath: undefined,
         relativePath: undefined,
-        fileName: undefined,
+        fileName: 'plan.md',
         createdOnMs: undefined,
       };
 
@@ -393,27 +289,12 @@ describe('version-plan-utils', () => {
         resolvedVersionPlans: [plan],
       };
 
-      const releaseGroups = [releaseGroupWithPlan];
-      const releaseGroupToFilteredProjects = new Map([
-        [releaseGroupWithPlan, new Set(['project-a', 'project-b'])], // Missing project-c
-      ]);
-
       const result = validateResolvedVersionPlansAgainstFilter(
-        releaseGroups,
-        releaseGroupToFilteredProjects
+        [releaseGroupWithPlan],
+        new Map([[releaseGroupWithPlan, new Set(['project-a', 'project-b'])]])
       );
 
-      expect(result).toEqual({
-        title:
-          'Version plan contains projects not included in the release filter',
-        bodyLines: [
-          'The following projects in the version plan are not being released:',
-          '  - project-c',
-          '',
-          'Either include all projects from the version plan in your release command,',
-          'or create separate version plans for different sets of projects.',
-        ],
-      });
+      expect(result).toEqual(filterError('plan.md', ['project-c']));
     });
 
     it('should skip validation when resolvedVersionPlans is false', () => {
@@ -422,14 +303,9 @@ describe('version-plan-utils', () => {
         resolvedVersionPlans: false,
       };
 
-      const releaseGroups = [releaseGroupWithoutPlans];
-      const releaseGroupToFilteredProjects = new Map([
-        [releaseGroupWithoutPlans, new Set(['project-a'])],
-      ]);
-
       const result = validateResolvedVersionPlansAgainstFilter(
-        releaseGroups,
-        releaseGroupToFilteredProjects
+        [releaseGroupWithoutPlans],
+        new Map([[releaseGroupWithoutPlans, new Set(['project-a'])]])
       );
 
       expect(result).toBeNull();
@@ -441,81 +317,93 @@ describe('version-plan-utils', () => {
         resolvedVersionPlans: [],
       };
 
-      const releaseGroups = [releaseGroupWithEmptyPlans];
-      const releaseGroupToFilteredProjects = new Map([
-        [releaseGroupWithEmptyPlans, new Set(['project-a'])],
-      ]);
-
       const result = validateResolvedVersionPlansAgainstFilter(
-        releaseGroups,
-        releaseGroupToFilteredProjects
+        [releaseGroupWithEmptyPlans],
+        new Map([[releaseGroupWithEmptyPlans, new Set(['project-a'])]])
       );
 
       expect(result).toBeNull();
     });
 
     it('should check all release groups and return error for the first invalid one', () => {
-      const validPlan: ProjectsVersionPlan = {
-        projectVersionBumps: {
-          'project-a': 'major',
-        },
-        commit: undefined,
-        message: undefined,
-        absolutePath: undefined,
-        relativePath: undefined,
-        fileName: undefined,
-        createdOnMs: undefined,
-      };
-
-      const invalidPlan: ProjectsVersionPlan = {
-        projectVersionBumps: {
-          'project-b': 'patch',
-          'project-c': 'minor',
-        },
-        commit: undefined,
-        message: undefined,
-        absolutePath: undefined,
-        relativePath: undefined,
-        fileName: undefined,
-        createdOnMs: undefined,
-      };
-
       const group1: ReleaseGroupWithName = {
         ...mockReleaseGroup,
         name: 'group1',
         projects: ['project-a'],
-        resolvedVersionPlans: [validPlan],
+        resolvedVersionPlans: [
+          projectsPlan('valid.md', { 'project-a': 'major' }),
+        ],
       };
 
       const group2: ReleaseGroupWithName = {
         ...mockReleaseGroup,
         name: 'group2',
         projects: ['project-b', 'project-c'],
-        resolvedVersionPlans: [invalidPlan],
+        resolvedVersionPlans: [
+          projectsPlan('invalid.md', {
+            'project-b': 'patch',
+            'project-c': 'minor',
+          }),
+        ],
       };
 
-      const releaseGroups = [group1, group2];
-      const releaseGroupToFilteredProjects = new Map([
-        [group1, new Set(['project-a'])],
-        [group2, new Set(['project-b'])], // Missing project-c
-      ]);
-
       const result = validateResolvedVersionPlansAgainstFilter(
-        releaseGroups,
-        releaseGroupToFilteredProjects
+        [group1, group2],
+        new Map([
+          [group1, new Set(['project-a'])],
+          [group2, new Set(['project-b'])],
+        ])
       );
 
-      expect(result).toEqual({
-        title:
-          'Version plan contains projects not included in the release filter',
-        bodyLines: [
-          'The following projects in the version plan are not being released:',
-          '  - project-c',
-          '',
-          'Either include all projects from the version plan in your release command,',
-          'or create separate version plans for different sets of projects.',
+      expect(result).toEqual(filterError('invalid.md', ['project-c']));
+    });
+
+    it('should return null for version plans that only target release groups outside the filter', () => {
+      const filteredGroup: ReleaseGroupWithName = {
+        ...mockReleaseGroup,
+        name: 'group-a',
+        projects: ['project-a'],
+        resolvedVersionPlans: [projectsPlan('a.md', { 'project-a': 'patch' })],
+      };
+      const unfilteredGroup: ReleaseGroupWithName = {
+        ...mockReleaseGroup,
+        name: 'group-b',
+        projects: ['project-b'],
+        resolvedVersionPlans: [projectsPlan('b.md', { 'project-b': 'minor' })],
+      };
+
+      const result = validateResolvedVersionPlansAgainstFilter(
+        [filteredGroup, unfilteredGroup],
+        new Map([[filteredGroup, new Set(['project-a'])]])
+      );
+
+      expect(result).toBeNull();
+    });
+
+    it('should return an error when a version plan spans a filtered and an unfiltered release group', () => {
+      const filteredGroup: ReleaseGroupWithName = {
+        ...mockReleaseGroup,
+        name: 'group-a',
+        projects: ['project-a'],
+        resolvedVersionPlans: [
+          projectsPlan('shared.md', { 'project-a': 'patch' }),
         ],
-      });
+      };
+      const unfilteredGroup: ReleaseGroupWithName = {
+        ...mockReleaseGroup,
+        name: 'group-b',
+        projects: ['project-b'],
+        resolvedVersionPlans: [
+          projectsPlan('shared.md', { 'project-b': 'minor' }),
+        ],
+      };
+
+      const result = validateResolvedVersionPlansAgainstFilter(
+        [filteredGroup, unfilteredGroup],
+        new Map([[filteredGroup, new Set(['project-a'])]])
+      );
+
+      expect(result).toEqual(filterError('shared.md', ['project-b']));
     });
   });
 });

@@ -8,11 +8,7 @@ use tracing::trace;
 use super::pseudo_terminal::WriterArc;
 
 pub fn handle_path_space(path: String) -> String {
-    if path.contains(' ') {
-        format!("'{}'", path)
-    } else {
-        path
-    }
+    format!("'{}'", path.replace('\'', r"'\''"))
 }
 
 pub fn write_to_pty(stdin: &mut Stdin, writer: WriterArc) -> anyhow::Result<()> {
@@ -47,18 +43,15 @@ pub fn write_to_pty(stdin: &mut Stdin, writer: WriterArc) -> anyhow::Result<()> 
                     // Read data from stdin
                     loop {
                         match stdin.read(&mut buffer) {
+                            Ok(0) => return Ok(()),
                             Ok(n) => {
                                 let mut writer = writer.lock();
                                 writer.write_all(&buffer[..n])?;
                                 writer.flush()?;
                             }
-                            Err(e) => {
-                                if e.kind() == std::io::ErrorKind::WouldBlock {
-                                    break;
-                                } else if e.kind() == std::io::ErrorKind::Interrupted {
-                                    continue;
-                                }
-                            }
+                            Err(e) if e.kind() == std::io::ErrorKind::WouldBlock => break,
+                            Err(e) if e.kind() == std::io::ErrorKind::Interrupted => continue,
+                            Err(e) => return Err(e.into()),
                         }
                     }
                 }

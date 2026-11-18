@@ -19,7 +19,10 @@ ctx="$repo_root/tmp/review-sandbox-ctx"
 rm -rf "$ctx"
 mkdir -p "$ctx"
 cp "$repo_root"/{mise.toml,package.json,pnpm-lock.yaml,pnpm-workspace.yaml} "$ctx/"
-cp -r "$repo_root/patches" "$ctx/"
+mkdir -p "$ctx/patches"
+if [ -d "$repo_root/patches" ]; then
+  cp -r "$repo_root/patches/." "$ctx/patches/"
+fi
 
 # Image ID before/after is exact, where grepping the log for "CACHED" is a guess.
 before=$(docker images -q "$IMAGE" 2>/dev/null || true)

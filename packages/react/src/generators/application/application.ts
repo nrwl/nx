@@ -1,20 +1,16 @@
 import {
   logShowProjectCommand,
-  promptWhenInteractive,
-  upsertTargetDefault,
+  confirmationPrompt,
+  isInteractive,
 } from '@nx/devkit/internal';
 import { assertSupportedReactVersion } from '../../utils/assert-supported-react-version';
 import {
   formatFiles,
   GeneratorCallback,
   joinPathFragments,
-  readNxJson,
   runTasksInSerial,
-  type TargetConfiguration,
-  type TargetDefaults,
   Tree,
   updateJson,
-  updateNxJson,
 } from '@nx/devkit';
 import { initGenerator as jsInitGenerator } from '@nx/js';
 import {
@@ -51,7 +47,6 @@ export async function applicationGenerator(
   schema: Schema
 ): Promise<GeneratorCallback> {
   return await applicationGeneratorInternal(tree, {
-    addPlugin: false,
     useProjectJson: true,
     ...schema,
   });
@@ -67,7 +62,6 @@ export async function applicationGeneratorInternal(
 
   const addTsPlugin = shouldConfigureTsSolutionSetup(
     tree,
-    schema.addPlugin,
     schema.useTsSolution
   );
   const jsInitTask = await jsInitGenerator(tree, {
@@ -75,7 +69,6 @@ export async function applicationGeneratorInternal(
     tsConfigName: schema.rootProject ? 'tsconfig.json' : 'tsconfig.base.json',
     skipFormat: true,
     addTsPlugin,
-    formatter: schema.formatter,
     platform: 'web',
   });
   tasks.push(jsInitTask);
@@ -85,30 +78,12 @@ export async function applicationGeneratorInternal(
   options.useReactRouter =
     options.routing && options.bundler === 'vite'
       ? (options.useReactRouter ??
-        (await promptWhenInteractive<{
-          response: 'Yes' | 'No';
-        }>(
-          {
-            name: 'response',
-            message:
-              'Would you like to use react-router for server-side rendering?',
-            type: 'autocomplete',
-            choices: [
-              {
-                name: 'Yes',
-                message:
-                  'I want to use react-router   [ https://reactrouter.com/start/framework/routing   ]',
-              },
-              {
-                name: 'No',
-                message:
-                  'I do not want to use react-router for server-side rendering',
-              },
-            ],
-            initial: 0,
-          },
-          { response: 'No' }
-        ).then((r) => r.response === 'Yes')))
+        (isInteractive()
+          ? await confirmationPrompt({
+              message:
+                'Would you like to use react-router for server-side rendering?',
+            })
+          : false))
       : false;
 
   const initTask = await reactInitGenerator(tree, {
@@ -117,25 +92,6 @@ export async function applicationGeneratorInternal(
     useReactRouterPlugin: options.useReactRouter,
   });
   tasks.push(initTask);
-
-  if (!options.addPlugin) {
-    const nxJson = readNxJson(tree) ?? {};
-    const existing = findBuildDefault(nxJson.targetDefaults);
-    if (!existing) {
-      upsertTargetDefault(tree, nxJson, {
-        target: 'build',
-        cache: true,
-        dependsOn: ['^build'],
-      });
-      updateNxJson(tree, nxJson);
-    } else if (!existing.dependsOn) {
-      upsertTargetDefault(tree, nxJson, {
-        target: 'build',
-        dependsOn: ['^build'],
-      });
-      updateNxJson(tree, nxJson);
-    }
-  }
 
   if (options.bundler === 'webpack') {
     await initWebpack(tree, options, tasks);
@@ -249,21 +205,6 @@ export async function applicationGeneratorInternal(
   });
 
   return runTasksInSerial(...tasks);
-}
-
-function findBuildDefault(
-  td: TargetDefaults | undefined
-): Partial<TargetConfiguration> | undefined {
-  if (!td) return undefined;
-  const value = td['build'];
-  if (value === undefined) return undefined;
-  if (Array.isArray(value)) {
-    const found = value.find((e) => e.filter === undefined);
-    if (!found) return undefined;
-    const { filter: _f, ...rest } = found;
-    return rest;
-  }
-  return value;
 }
 
 export default applicationGenerator;

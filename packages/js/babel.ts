@@ -1,6 +1,5 @@
 import { dirname } from 'path';
 import { parse } from 'semver';
-import { logger } from '@nx/devkit';
 
 /*
  * Babel preset to provide TypeScript support and module/nomodule for Nx.
@@ -13,11 +12,6 @@ export interface NxWebBabelPresetOptions {
     legacy?: boolean;
   };
   loose?: boolean;
-  /** @deprecated Use `loose` option instead of `classProperties.loose`
-   */
-  classProperties?: {
-    loose?: boolean;
-  };
 }
 
 module.exports = function (api: any, options: NxWebBabelPresetOptions = {}) {
@@ -35,15 +29,7 @@ module.exports = function (api: any, options: NxWebBabelPresetOptions = {}) {
     (caller) => caller?.emitDecoratorMetadata ?? true
   );
 
-  // Determine settings  for `@babel//babel-plugin-transform-class-properties`,
-  // so that we can sync the `loose` option with `@babel/preset-env`.
-  // TODO(v21): Remove classProperties since it's no longer needed, now that the class props transform is in preset-env.
-  const loose = options.classProperties?.loose ?? options.loose ?? true;
-  if (options.classProperties) {
-    logger.warn(
-      `Use =\`loose\` option instead of \`classProperties.loose\`. The \`classProperties\` option will be removed in Nx 20`
-    );
-  }
+  const loose = options.loose ?? true;
 
   const plugins = [
     !isNxPackage

@@ -31,7 +31,6 @@ describe('detox application generator', () => {
         appProject: 'my-app',
         linter: 'none',
         framework: 'react-native',
-        addPlugin: true,
       });
     });
 
@@ -102,7 +101,6 @@ describe('detox application generator', () => {
         appProject: 'my-dir-my-app',
         linter: 'none',
         framework: 'react-native',
-        addPlugin: true,
       });
     });
 
@@ -173,7 +171,6 @@ describe('detox application generator', () => {
         appProject: 'my-dir-my-app',
         linter: 'none',
         framework: 'react-native',
-        addPlugin: true,
       });
     });
 
@@ -243,7 +240,6 @@ describe('detox application generator', () => {
         appProject: 'my-dir-my-app',
         linter: 'none',
         framework: 'react-native',
-        addPlugin: true,
       });
     });
 
@@ -289,10 +285,7 @@ describe('detox application generator', () => {
         "{
           "preset": "../../jest.preset",
           "rootDir": ".",
-          "testMatch": [
-            "<rootDir>/src/**/*.test.ts?(x)",
-            "<rootDir>/src/**/*.spec.ts?(x)"
-          ],
+          "testMatch": ["<rootDir>/src/**/*.test.ts?(x)", "<rootDir>/src/**/*.spec.ts?(x)"],
           "testTimeout": 120000,
           "maxWorkers": 1,
           "globalSetup": "detox/runners/jest/globalSetup",
@@ -302,10 +295,7 @@ describe('detox application generator', () => {
           "verbose": true,
           "setupFilesAfterEnv": ["<rootDir>/test-setup.ts"],
           "transform": {
-            "^.+\\\\.(ts|js|html)$": [
-              "ts-jest",
-              { "tsconfig": "<rootDir>/tsconfig.e2e.json" }
-            ]
+            "^.+\\\\.(ts|js|html)$": ["ts-jest", { "tsconfig": "<rootDir>/tsconfig.e2e.json" }]
           }
         }
         "
@@ -343,7 +333,6 @@ describe('detox application generator', () => {
         appProject: 'my-dir-my-app',
         linter: 'none',
         framework: 'expo',
-        addPlugin: true,
       });
     });
 
@@ -433,7 +422,6 @@ describe('detox application generator', () => {
           appProject: 'my-app',
           linter: 'none',
           framework: 'expo',
-          addPlugin: true,
         })
       ).rejects.toThrow(/Detox with Expo 54\+ is not supported/);
     });
@@ -456,7 +444,6 @@ describe('detox application generator', () => {
         appProject: 'my-app',
         linter: 'none',
         framework: 'react-native',
-        addPlugin: true,
       });
 
       expect(tree.exists('my-app-e2e/.detoxrc.json')).toBeTruthy();
@@ -474,7 +461,6 @@ describe('detox application generator', () => {
         appProject: 'my-app',
         linter: 'none',
         framework: 'react-native',
-        addPlugin: true,
       });
 
       expect(readJson(tree, 'my-app-e2e/tsconfig.json')).toMatchInlineSnapshot(`
@@ -519,7 +505,6 @@ describe('detox application generator', () => {
         appProject: 'my-app',
         linter: 'none',
         framework: 'react-native',
-        addPlugin: true,
       });
 
       expect(readJson(tree, 'my-app-e2e/tsconfig.json')).toMatchInlineSnapshot(`
@@ -586,7 +571,6 @@ describe('detox application generator', () => {
         appProject: 'my-app',
         linter: 'none',
         framework: 'react-native',
-        addPlugin: true,
         useProjectJson: false,
       });
 
@@ -647,7 +631,6 @@ describe('detox application generator', () => {
         appProject: 'my-app',
         linter: 'none',
         framework: 'react-native',
-        addPlugin: true,
         skipFormat: true,
         useProjectJson: false,
       });
@@ -728,7 +711,6 @@ describe('detox application generator', () => {
         e2eName: 'my-app-e2e',
         linter: 'none',
         framework: 'react-native',
-        addPlugin: true,
         skipFormat: true,
         useProjectJson: false,
       });
@@ -756,7 +738,6 @@ describe('detox application generator', () => {
         e2eName: 'my-app-e2e',
         linter: 'none',
         framework: 'react-native',
-        addPlugin: true,
         skipFormat: true,
         useProjectJson: true,
       });
@@ -793,7 +774,6 @@ describe('detox application generator', () => {
       appProject: 'my-app',
       linter: 'oxlint',
       framework: 'react-native',
-      addPlugin: true,
     });
 
     // Detox specs are Jest, so the project needs its own config to turn the

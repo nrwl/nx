@@ -1,4 +1,4 @@
-import { prompt } from 'enquirer';
+import { confirmationPrompt } from '../../utils/prompt-helpers';
 import { rmSync } from 'node:fs';
 import { NxReleaseConfiguration, readNxJson } from '../../config/nx-json';
 import { createProjectFileMapUsingProjectGraph } from '../../project-graph/file-map-utils';
@@ -123,6 +123,7 @@ export function createAPI(
     const shouldStage =
       (shouldCommit || userProvidedReleaseConfig.git?.stageChanges) ?? false;
     const shouldTag = userProvidedReleaseConfig.git?.tag ?? true;
+    const shouldPushFromGitConfig = args.gitPush ?? nxReleaseConfig.git.push;
 
     const shouldCreateWorkspaceRemoteRelease = shouldCreateRemoteRelease(
       nxReleaseConfig.changelog.workspaceChangelog
@@ -137,6 +138,7 @@ export function createAPI(
       stageChanges: shouldStage,
       gitCommit: false,
       gitTag: false,
+      gitPush: false,
       deleteVersionPlans: false,
     });
 
@@ -145,7 +147,7 @@ export function createAPI(
 
     await setResolvedVersionPlansOnGroups(
       rawVersionPlans,
-      releaseGraph.releaseGroups,
+      releaseGraph.allReleaseGroups,
       Object.keys(projectGraph.nodes),
       args.verbose
     );
@@ -153,7 +155,7 @@ export function createAPI(
     // Validate version plans against the filter after resolution
     const versionPlanValidationError =
       validateResolvedVersionPlansAgainstFilter(
-        releaseGraph.releaseGroups,
+        releaseGraph.allReleaseGroups,
         releaseGraph.releaseGroupToFilteredProjects
       );
     if (versionPlanValidationError) {
@@ -289,13 +291,13 @@ export function createAPI(
     }
 
     let hasPushedChanges = false;
-    // If the workspace or any of the release groups specify that a remote release should be created, we need to push the changes to the remote
+    // Push the release commit and tags when git push is enabled, or when a remote release needs them on the remote.
     const shouldPush =
-      (shouldCreateWorkspaceRemoteRelease ||
-        releaseGraph.releaseGroups.some((group) =>
-          shouldCreateRemoteRelease(group.changelog)
-        )) ??
-      false;
+      shouldPushFromGitConfig ||
+      shouldCreateWorkspaceRemoteRelease ||
+      releaseGraph.releaseGroups.some((group) =>
+        shouldCreateRemoteRelease(group.changelog)
+      );
     if (shouldPush) {
       output.logSingleLine(`Pushing to git remote "origin"`);
       await gitPush({
@@ -444,21 +446,11 @@ export function createAPI(
 }
 
 async function promptForPublish(): Promise<boolean> {
-  try {
-    const reply = await prompt<{ confirmation: boolean }>([
-      {
-        name: 'confirmation',
-        message: 'Do you want to publish these versions?',
-        type: 'confirm',
-      },
-    ]);
-    return reply.confirmation;
-  } catch {
-    // Ensure the cursor is always restored before exiting
-    process.stdout.write('\u001b[?25h');
-    // Handle the case where the user exits the prompt with ctrl+c
-    return false;
-  }
+  return confirmationPrompt({
+    message: 'Do you want to publish these versions?',
+    // Cancelling is a decision not to publish, not a failure.
+    onCancel: () => false,
+  });
 }
 
 function shouldCreateRemoteRelease(

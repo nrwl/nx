@@ -21,25 +21,18 @@ pipelines:
             <% } %>
             # This enables task distribution via Nx Cloud
             # Run this command as early as possible, before dependencies are installed
-            # Configure Nx Agents and task distribution in .nx/ci-config.yaml
-            # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
+            # Configure workers and task distribution in .nx/pipelines/ci.yaml
+            # Learn more at https://nx.dev/docs/reference/nx-cloud-cli#nx-cloud-start-workers
             <% if (connectedToCloud) { %># Uncomment this line to enable task distribution<% } else { %># Connect your workspace by running "nx connect" and uncomment this line to enable task distribution<% } %>
-            # - <%= packageManagerPreInstallPrefix %> nx start-nx-agents
+            # - <%= packageManagerPreInstallPrefix %> nx-cloud start-workers
 
             - <%= packageManagerInstall %><% if(hasCypress){ %>
             - <%= packageManagerPrefix %> cypress install<% } %><% if(hasPlaywright){ %>
             - <%= packageManagerPrefix %> playwright install --with-deps<% } %>
 
 <% for (const command of commands) { %><% if (command.comments) { %><% for (const comment of command.comments) { %>
-            # <%- comment %><% } %><% } %><% if (command.command && !command.alwaysRun) { %>
+            # <%- comment %><% } %><% } %><% if (command.command) { %>
             - <%= command.command %><% } %><% } %>
-<% const alwaysRunCommands = commands.filter(c => c.alwaysRun && c.command) %>
-<% if (alwaysRunCommands.length > 0) { %>
-          after-script:
-<% for (const command of alwaysRunCommands) { %>
-            - <%= command.command %>
-<% } %>
-<% } %>
 
   branches:
     main:
@@ -49,11 +42,11 @@ pipelines:
             - export NX_BRANCH=$BITBUCKET_BRANCH
             # This enables task distribution via Nx Cloud
             # Run this command as early as possible, before dependencies are installed
-            # Configure Nx Agents and task distribution in .nx/ci-config.yaml
-            # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
-            <% if (connectedToCloud) { %>- <%= packageManagerPreInstallPrefix %> nx start-nx-agents
+            # Configure workers and task distribution in .nx/pipelines/ci.yaml
+            # Learn more at https://nx.dev/docs/reference/nx-cloud-cli#nx-cloud-start-workers
+            <% if (connectedToCloud) { %>- <%= packageManagerPreInstallPrefix %> nx-cloud start-workers
             <% } else { %># Connect your workspace by running "nx connect" and uncomment this
-            # - <%= packageManagerPreInstallPrefix %> nx start-nx-agents
+            # - <%= packageManagerPreInstallPrefix %> nx-cloud start-workers
             <% } %>
             <% if(packageManager == 'pnpm'){ %>
             - npm install --prefix=$HOME/.local -g pnpm@11
@@ -64,12 +57,5 @@ pipelines:
             - <%= packageManagerInstall %>
 
 <% for (const command of branchCommands) { %><% if (command.comments) { %><% for (const comment of command.comments) { %>
-            # <%- comment %><% } %><% } %><% if (command.command && !command.alwaysRun) { %>
+            # <%- comment %><% } %><% } %><% if (command.command) { %>
             - <%= command.command %><% } %><% } %>
-<% const alwaysRunBranchCommands = branchCommands.filter(c => c.alwaysRun && c.command) %>
-<% if (alwaysRunBranchCommands.length > 0) { %>
-          after-script:
-<% for (const command of alwaysRunBranchCommands) { %>
-            - <%= command.command %>
-<% } %>
-<% } %>

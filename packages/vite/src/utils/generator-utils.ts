@@ -1,5 +1,6 @@
-import { addBuildTargetDefaults } from '@nx/devkit/internal';
+import { confirmationPrompt } from '@nx/devkit/internal';
 import {
+  addDependenciesToPackageJson,
   joinPathFragments,
   logger,
   offsetFromRoot,
@@ -7,14 +8,13 @@ import {
   readProjectConfiguration,
   TargetConfiguration,
   Tree,
-  updateProjectConfiguration,
   writeJson,
 } from '@nx/devkit';
 import { isUsingTsSolutionSetup } from '@nx/js/internal';
-import { ViteBuildExecutorOptions } from '../executors/build/schema';
-import { VitePreviewServerExecutorOptions } from '../executors/preview-server/schema';
 import { ViteConfigurationGeneratorSchema } from '../generators/configuration/schema';
 import { ensureViteConfigIsCorrect } from './vite-config-edit-utils';
+import { getInstalledViteMajorVersion } from './version-utils';
+import { viteTsconfigPathsVersion, viteStaticCopyVersion } from './versions';
 
 export type Target = 'build' | 'serve' | 'test' | 'preview';
 export type TargetFlags = Partial<Record<Target, boolean>>;
@@ -33,7 +33,7 @@ export function findExistingJsBuildTargetInProject(targets: {
   } = {};
 
   const supportedExecutors = {
-    build: ['@nx/js:babel', '@nx/js:swc', '@nx/rollup:rollup'],
+    build: ['@nx/js:swc'],
   };
   const unsupportedExecutors = [
     '@nx/angular:ng-packagr-lite',
@@ -78,119 +78,31 @@ export function findExistingJsBuildTargetInProject(targets: {
   return output;
 }
 
-export function addBuildTarget(
-  tree: Tree,
-  options: ViteConfigurationGeneratorSchema,
-  target: string
+// A leftover target on one of these can't run, and it shadows the inferred
+// target with the same name, so converting around it leaves a broken project.
+const removedConvertibleExecutors = [
+  '@nx/rollup:rollup',
+  '@nx/vite:build',
+  '@nx/vite:dev-server',
+  '@nx/vite:preview-server',
+  '@nx/webpack:dev-server',
+  '@nx/webpack:webpack',
+];
+
+export function assertNoRemovedExecutorTargets(
+  projectName: string,
+  targets: Record<string, TargetConfiguration> | undefined
 ) {
-  addBuildTargetDefaults(tree, '@nx/vite:build');
-  const project = readProjectConfiguration(tree, options.project);
-
-  const isTsSolutionSetup = isUsingTsSolutionSetup(tree);
-  const buildOptions: ViteBuildExecutorOptions = {
-    outputPath: isTsSolutionSetup
-      ? joinPathFragments(project.root, 'dist')
-      : joinPathFragments(
-          'dist',
-          project.root != '.' ? project.root : options.project
-        ),
-  };
-  project.targets ??= {};
-  project.targets[target] = {
-    executor: '@nx/vite:build',
-    outputs: ['{options.outputPath}'],
-    defaultConfiguration: 'production',
-    options: buildOptions,
-    configurations: {
-      development: {
-        mode: 'development',
-      },
-      production: {
-        mode: 'production',
-      },
-    },
-  };
-
-  updateProjectConfiguration(tree, options.project, project);
-}
-
-export function addServeTarget(
-  tree: Tree,
-  options: ViteConfigurationGeneratorSchema,
-  target: string
-) {
-  const project = readProjectConfiguration(tree, options.project);
-
-  project.targets ??= {};
-
-  project.targets[target] = {
-    executor: '@nx/vite:dev-server',
-    defaultConfiguration: 'development',
-    options: {
-      buildTarget: `${options.project}:build`,
-    },
-    configurations: {
-      development: {
-        buildTarget: `${options.project}:build:development`,
-        hmr: true,
-      },
-      production: {
-        buildTarget: `${options.project}:build:production`,
-        hmr: false,
-      },
-    },
-  };
-
-  updateProjectConfiguration(tree, options.project, project);
-}
-
-/**
- * Adds a target for the preview server.
- *
- * @param tree
- * @param options
- * @param serveTarget An existing serve target.
- */
-export function addPreviewTarget(
-  tree: Tree,
-  options: ViteConfigurationGeneratorSchema,
-  serveTarget: string
-) {
-  const project = readProjectConfiguration(tree, options.project);
-
-  const previewOptions: VitePreviewServerExecutorOptions = {
-    buildTarget: `${options.project}:build`,
-  };
-
-  project.targets ??= {};
-
-  // Update the options from the passed serve target.
-  if (project.targets[serveTarget]) {
-    const target = project.targets[serveTarget];
-    if (target.executor === '@nxext/vite:dev') {
-      previewOptions.proxyConfig = target.options.proxyConfig;
-    }
-    previewOptions['https'] = target.options?.https;
-    previewOptions['open'] = target.options?.open;
+  const removedTargets = Object.entries(targets ?? {})
+    .filter(([, target]) =>
+      removedConvertibleExecutors.includes(target.executor)
+    )
+    .map(([targetName, target]) => `${targetName} (${target.executor})`);
+  if (removedTargets.length) {
+    throw new Error(
+      `The project ${projectName} has targets using removed executors: ${removedTargets.join(', ')}. Convert them to inferred targets first, for example with "nx g @nx/workspace:infer-targets --project=${projectName}".`
+    );
   }
-
-  // Adds a preview target.
-  project.targets.preview = {
-    dependsOn: ['build'],
-    executor: '@nx/vite:preview-server',
-    defaultConfiguration: 'development',
-    options: previewOptions,
-    configurations: {
-      development: {
-        buildTarget: `${options.project}:build:development`,
-      },
-      production: {
-        buildTarget: `${options.project}:build:production`,
-      },
-    },
-  };
-
-  updateProjectConfiguration(tree, options.project, project);
 }
 
 export function editTsConfig(
@@ -332,15 +244,6 @@ export interface ViteConfigFileOptions {
   useEsmExtension?: boolean;
   port?: number;
   previewPort?: number;
-  /**
-   * How to generate TypeScript declaration files (.d.ts) during the build.
-   * - `'tsc'` — uses the TypeScript compiler (via vite-plugin-dts)
-   * - `'oxc'` — uses oxc-transform's `isolatedDeclaration` (requires `isolatedDeclarations: true` in tsconfig)
-   * - `'rolldown-plugin-dts'` — uses Rolldown-native DTS bundling
-   * - `'none'` — skips declaration generation
-   * Defaults to `'tsc'` when not specified.
-   */
-  declarations?: 'tsc' | 'oxc' | 'rolldown-plugin-dts' | 'none';
 }
 
 export function createOrEditViteConfig(
@@ -401,48 +304,50 @@ export function createOrEditViteConfig(
 
   const imports: string[] = options.imports ? [...options.imports] : [];
   const plugins: string[] = options.plugins ? [...options.plugins] : [];
-
-  if (!onlyVitest && options.includeLib) {
-    const decl = options.declarations ?? 'tsc';
-    if (decl === 'oxc') {
-      imports.push(
-        `import { nxOxcDeclarationsPlugin } from '@nx/vite/plugins/nx-oxc-declarations.plugin'`
-      );
-    } else if (decl === 'rolldown-plugin-dts') {
-      imports.push(`import { dts } from 'rolldown-plugin-dts'`);
-    } else if (decl === 'tsc') {
-      imports.push(
-        `import dts from 'vite-plugin-dts'`,
-        `import * as path from 'path'`
-      );
-    }
+  const needsPaths = !isTsSolutionSetup;
+  const useNativePaths =
+    needsPaths && (getInstalledViteMajorVersion(tree) ?? 8) >= 8;
+  const dependencies: Record<string, string> = {};
+  if (needsPaths && !useNativePaths) {
+    imports.push(`import tsconfigPaths from 'vite-tsconfig-paths'`);
+    plugins.push('tsconfigPaths({ loose: true })');
+    dependencies['vite-tsconfig-paths'] = viteTsconfigPathsVersion;
+  }
+  if (!onlyVitest && options.includeLib && !isTsSolutionSetup) {
+    plugins.push(`import('vite-plugin-static-copy').then(({ viteStaticCopy }) => viteStaticCopy({
+      targets: [
+        { src: '*.md', dest: '.' },
+        { src: 'package.json', dest: '.', overwrite: false },
+      ],
+      silent: true,
+    }))`);
+    dependencies['vite-plugin-static-copy'] = viteStaticCopyVersion;
+  }
+  if (Object.keys(dependencies).length) {
+    addDependenciesToPackageJson(tree, {}, dependencies, undefined, true);
   }
 
-  if (!isTsSolutionSetup) {
-    // TODO(v24): drop this branch; emit `tsconfigPaths()` from
-    // `vite-tsconfig-paths` instead of the deprecated nx helpers.
+  if (!onlyVitest && options.includeLib) {
     imports.push(
-      `import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin'`,
-      `import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin'`
+      `import dts from 'vite-plugin-dts'`,
+      `import * as path from 'path'`
     );
-    plugins.push(`nxViteTsPaths()`, `nxCopyAssetsPlugin(['*.md'])`);
   }
 
   if (!onlyVitest && options.includeLib) {
-    const decl = options.declarations ?? 'tsc';
-    if (decl === 'oxc') {
-      plugins.push(
-        `nxOxcDeclarationsPlugin({ projectRoot: import.meta.dirname })`
-      );
-    } else if (decl === 'rolldown-plugin-dts') {
-      plugins.push(`dts()`);
-    } else if (decl === 'tsc') {
-      plugins.push(
-        `dts({ entryRoot: 'src', tsconfigPath: path.join(import.meta.dirname, 'tsconfig.lib.json')${
-          !isTsSolutionSetup ? ', pathsToAliases: false' : ''
-        } })`
-      );
-    }
+    plugins.push(
+      `dts({ entryRoot: 'src', tsconfigPath: path.join(import.meta.dirname, 'tsconfig.lib.json')${
+        !isTsSolutionSetup ? ', pathsToAliases: false' : ''
+      } })`
+    );
+  }
+
+  // Lets the inferred serve and preview targets know when the server is up
+  if (!onlyVitest && !options.includeLib) {
+    imports.push(
+      `import { nxReadySignal } from '@nx/vite/plugins/nx-ready-signal.plugin'`
+    );
+    plugins.push('nxReadySignal()');
   }
 
   const reportsDirectory = isTsSolutionSetup
@@ -500,15 +405,19 @@ ${
     host: 'localhost',
   },`;
 
-  const workerOption = isTsSolutionSetup
-    ? `  // Uncomment this if you are using workers.
+  const workerOption = `  // Uncomment this if you are using workers.
   // worker: {
   //  plugins: [],
-  // },`
-    : `  // Uncomment this if you are using workers.
-  // worker: {
-  //   plugins: () => [ nxViteTsPaths() ],
   // },`;
+
+  // Path-based workspace libraries need Vite's native tsconfig paths
+  // resolution, which is off by default. Workspaces on project references
+  // resolve through package.json instead.
+  const resolveOption = !useNativePaths
+    ? ''
+    : `  resolve: {
+    tsconfigPaths: true,
+  },`;
 
   const cacheDir = `cacheDir: '${normalizedJoinPaths(
     offsetFromRoot(projectRoot),
@@ -529,9 +438,8 @@ ${
       testOption,
       reportsDirectory,
       cacheDir,
-      projectRoot,
-      offsetFromRoot(projectRoot),
-      projectAlreadyHasViteTargets
+      projectAlreadyHasViteTargets,
+      useNativePaths
     );
     return;
   }
@@ -546,7 +454,8 @@ export default defineConfig(() => ({
     cacheDir,
     devServerOption,
     previewServerOption,
-    `  plugins: [${plugins.join(', ')}],`,
+    resolveOption,
+    plugins.length ? `  plugins: [${plugins.join(', ')}],` : '',
     workerOption,
     buildOption,
     defineOption,
@@ -583,18 +492,10 @@ export function getViteConfigPathForProject(
   projectName: string,
   target?: string
 ) {
-  let viteConfigPath: string | undefined;
   const { targets, root } = readProjectConfiguration(tree, projectName);
-  if (target) {
-    viteConfigPath = targets?.[target]?.options?.configFile;
-  } else {
-    const config = Object.values(targets).find(
-      (config) =>
-        config.executor === '@nrwl/nx:build' ||
-        config.executor === '@nrwl/vite:build'
-    );
-    viteConfigPath = config?.options?.configFile;
-  }
+  const viteConfigPath: string | undefined = target
+    ? targets?.[target]?.options?.configFile
+    : undefined;
 
   return normalizeViteConfigFilePathWithTree(tree, root, viteConfigPath);
 }
@@ -646,13 +547,9 @@ async function handleUnsupportedUserProvidedTargetsErrors(
      your changes before converting a project to use Vite, and test the converted project thoroughly before deploying it.
     `
   );
-  const { Confirm } = require('enquirer');
-  const prompt = new Confirm({
-    name: 'question',
+  const shouldConvert = await confirmationPrompt({
     message: `Should we convert the ${validFoundTargetName} target to use the @nx/vite:${executor} executor?`,
-    initial: true,
   });
-  const shouldConvert = await prompt.run();
   if (!shouldConvert) {
     throw new Error(
       `The ${target} target ${userProvidedTargetName} cannot be converted to use the @nx/vite:${executor} executor.
@@ -681,13 +578,9 @@ export async function handleUnknownConfiguration(projectName: string) {
       `
   );
 
-  const { Confirm } = require('enquirer');
-  const prompt = new Confirm({
-    name: 'question',
+  const shouldConvert = await confirmationPrompt({
     message: `Should Nx convert your project to use Vite?`,
-    initial: true,
   });
-  const shouldConvert = await prompt.run();
   if (!shouldConvert) {
     throw new Error(`
       Nx could not verify that your project can be converted to use Vite.
@@ -707,9 +600,8 @@ function handleViteConfigFileExists(
   testOption: string,
   reportsDirectory: string,
   cacheDir: string,
-  projectRoot: string,
-  offsetFromRoot: string,
-  projectAlreadyHasViteTargets?: TargetFlags
+  projectAlreadyHasViteTargets?: TargetFlags,
+  resolveTsconfigPaths?: boolean
 ) {
   if (
     projectAlreadyHasViteTargets?.build &&
@@ -770,7 +662,8 @@ function handleViteConfigFileExists(
     testOption,
     testOptionObject,
     cacheDir,
-    projectAlreadyHasViteTargets ?? {}
+    projectAlreadyHasViteTargets ?? {},
+    resolveTsconfigPaths
   );
 
   if (!changed) {

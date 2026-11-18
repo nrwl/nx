@@ -1,12 +1,13 @@
 import { dirname, join, resolve } from 'path';
-import { mkdirSync } from 'fs';
 import { NX_TMP_DIR, NX_USER_TMP_DIR } from '../utils/nx-tmp-dir';
 import { nxVersion } from '../utils/versions';
 import {
   DirectoryRefusedError,
   ensureOwnedPrivateDir,
+  ensureSafeAncestry,
   ensureSafeSharedRoot,
   isOwnedRealDirectory,
+  isSafeAncestry,
   isSafeSharedRoot,
 } from '../utils/owned-private-dir';
 
@@ -33,8 +34,12 @@ export function getNativeFileCacheLocationToDelete(): string | null {
   if (configured !== undefined) {
     // Checked for ownership before it is handed to a recursive delete: being
     // configured does not make it ours. Weaker than the load path below, which
-    // also enforces mode and validates the version directory.
-    return isOwnedRealDirectory(configured) ? configured : null;
+    // also enforces mode and validates the version directory. The leaf's
+    // `lstat` resolves through every level above it, so those are judged too.
+    return isSafeAncestry(dirname(configured)).status === 'ok' &&
+      isOwnedRealDirectory(configured)
+      ? configured
+      : null;
   }
   return isSafeSharedRoot(NX_TMP_DIR).status === 'ok' &&
     isOwnedRealDirectory(NX_USER_TMP_DIR) &&
@@ -63,7 +68,10 @@ export function ensureSecureNativeFileCacheLocation(
       // Held to the same 0700 bar as the default location: a `.node` is loaded
       // out of here. Unlike NX_SOCKET_DIR it is not additionally refused for
       // naming one of Nx's own roots, which is the only case that throws.
-      mkdirSync(dirname(dir), { recursive: true });
+      const parents = ensureSafeAncestry(dirname(dir));
+      if (parents.status !== 'ok') {
+        throw new DirectoryRefusedError(parents.refusal);
+      }
       const established = ensureOwnedPrivateDir(dir);
       if (established.status !== 'ok') {
         // The guard's own reason rather than a fixed sentence: `not-created

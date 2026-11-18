@@ -9,7 +9,7 @@ topics:
   - 'Module Federation'
 ---
 
-Nx v23 introduces a new generator surface in `@nx/react` (`@nx/react:consumer` and `@nx/react:provider`) that replaces the v22 `host` and `remote` generators. Shared logic (federation-name validation, port defaults, version pins) lives in `@nx/module-federation` so framework-specific generators can build on it. The new model has two roles:
+Nx v23 introduces a new generator surface in `@nx/react` (`@nx/react:consumer` and `@nx/react:provider`) that replaces the v22 `host` and `remote` generators. Both generators wire up the official Module Federation plugins directly and do not install `@nx/module-federation`. The new model has two roles:
 
 - **Provider** - an app that exposes a federated component.
 - **Consumer** - an app that loads federated components at runtime via a hardcoded `PROVIDERS` list in `src/mf.ts`.
@@ -100,7 +100,7 @@ export function lazyProvider(alias, exposeName) {
 }
 ```
 
-Edit `PROVIDERS` to point at different providers. The entry is each provider's `remoteEntry.js` URL - the entry every bundler emits at dev + build time. (The richer [`mf-manifest.json`](https://module-federation.io/configure/manifest-fields) works for production builds and for rspack/rsbuild dev, but `@module-federation/vite` only emits it at build time, so the generator uses `remoteEntry.js` for a consistent dev experience.)
+Edit `PROVIDERS` to point at different providers. The entry is each provider's `remoteEntry.js` URL, the entry every bundler emits at dev + build time. (The richer [`mf-manifest.json`](https://module-federation.io/configure/manifest-fields) works for production builds and for rspack/rsbuild dev, but `@module-federation/vite` only emits it at build time, so the generator uses `remoteEntry.js` for a consistent dev experience.)
 
 The generated `App.tsx` renders each provider inside a `ProviderBoundary` (an inline class that combines `Suspense` with an error boundary, so one unreachable provider can't unmount the whole tree):
 
@@ -126,21 +126,21 @@ Wrap each `<ProviderBoundary>` in your router of choice (TanStack Router, React 
 
 ## What changed in v23
 
-The following surfaces are deprecated in v23 and will be removed in v24:
+Nx v23 deprecated the following surfaces, and Nx v24 removed them:
 
 - `@nx/react:host`, `@nx/react:remote`, `@nx/react:federate-module`
-- `@nx/angular:host`, `@nx/angular:remote`, `@nx/angular:setup-mf`, `@nx/angular:federate-module`
+- `@nx/angular:host`, `@nx/angular:remote`, `@nx/angular:setup-mf`, `@nx/angular:federate-module`, `@nx/angular:convert-to-with-mf`
 - `@nx/react:module-federation-dev-server`, `@nx/react:module-federation-ssr-dev-server`, `@nx/react:module-federation-static-server`
 - `@nx/angular:module-federation-dev-server`, `@nx/angular:module-federation-dev-ssr`
 - `@nx/rspack:module-federation-dev-server`, `@nx/rspack:module-federation-ssr-dev-server`, `@nx/rspack:module-federation-static-server`
 
-The most user-visible change: **`nx serve <host>` no longer auto-builds and serves all remotes.** With dynamic federation, the relationship is inverted - serve a provider and Nx brings its consumer along (`provider.serve.dependsOn = ['<consumer>:serve']`). Missing providers don't crash the consumer; they reject at `loadRemote` time and the generated `ProviderBoundary` renders an inline fallback.
+The most user-visible change: **`nx serve <host>` no longer auto-builds and serves all remotes.** With dynamic federation, the relationship is inverted. Serve a provider and Nx brings its consumer along (`provider.serve.dependsOn = ['<consumer>:serve']`). Missing providers don't crash the consumer; they reject at `loadRemote` time and the generated `ProviderBoundary` renders an inline fallback.
 
 Angular Module Federation in Nx is no longer supported. Use [`@angular-architects/native-federation`](https://www.npmjs.com/package/@angular-architects/native-federation) for the supported Angular path going forward.
 
 ## Migrate from `host` / `remote`
 
-There is **no automated codemod**. Existing setups vary widely (custom executors, host orchestration, SSR variants) and a generator would not land cleanly. Migrate manually using the steps below, or paste the AI prompt at the end of this section into Cursor / Claude Code / Copilot to perform the rewrite on your own codebase.
+The steps below regenerate each app and move webpack apps onto a different bundler. Follow them by hand or paste the AI prompt at the end of this section into your AI assistant. To keep your current webpack or Rspack setup, follow [migrating off `@nx/module-federation`](/docs/kb/migrate-from-nx-module-federation). `nx migrate` to Nx v24 uses that guide too.
 
 ### Manual steps
 
@@ -157,7 +157,7 @@ There is **no automated codemod**. Existing setups vary widely (custom executors
 Paste this into your AI assistant of choice, adjusted with your project paths:
 
 ```markdown
-You are migrating an Nx workspace from the deprecated `@nx/react:host` / `@nx/react:remote` generators to the new
+You are migrating an Nx workspace from the removed `@nx/react:host` / `@nx/react:remote` generators to the new
 `@nx/react:consumer` / `@nx/react:provider` generators (Nx v23+).
 
 For each `host` app in `apps/`:

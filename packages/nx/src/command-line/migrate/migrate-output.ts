@@ -5,7 +5,7 @@ import { isHybridMigration } from './migration-shape';
 /**
  * Pure presentation helpers for the migrate run phase (`--run-migrations` and
  * the single-migration worker). Shared glyph vocabulary:
- *   `→` start, `✓` success, `✗` failure, `↷` skipped, `ℹ` info, `─` boundary
+ *   `→` start, `↷` skipped, `ℹ` info, `─` boundary
  *
  * Inputs are typed structurally (e.g. `{ name: string }[]`) so this module
  * stays decoupled from the migration executor in migrate.ts.
@@ -38,26 +38,9 @@ export function logMigrationBoundary(
 }
 
 /**
- * Logs the outcome line that closes an agentic phase. Vocabulary:
- *   ✓ <label>[ (<sha>)]: <summary>
- */
-export function logAgenticSuccessOutcome(
-  label: string,
-  sha: string | null,
-  summary: string
-): void {
-  const shaPart = sha ? ` (${sha})` : '';
-  logger.info(`${pc.green('✓')} ${label}${shaPart}: ${summary}`);
-}
-
-/**
- * Logs the skip line for a migration that waived its AI step through
- * `skipAgentic`, plus a verbose note for any `agentContext` the waiver
- * dropped. A hybrid waives its paired prompt; a generator-only migration
- * waives the validation pass, so callers must reach here only once they know
- * one was on the table. Under `inside-agent` only a hybrid can, so the
- * hand-off dropped alongside is always a prompt's; a waived generator-only
- * migration keeps its own. The note is author-facing, hence `--verbose`.
+ * Callers must already know an agentic step was owed; this only picks which one
+ * the waiver dropped. The dropped-`agentContext` note is aimed at the migration
+ * author, hence `--verbose`.
  */
 export function logWaivedAgenticStep(
   migration: {

@@ -1,6 +1,4 @@
-import { source } from '@angular-devkit/schematics';
 import { createCommandGraph } from './create-command-graph';
-import { CommandGraph } from './command-graph';
 
 export { createCommandGraph } from './create-command-graph';
 

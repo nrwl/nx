@@ -2,6 +2,9 @@ use crate::native::hasher::hash;
 use crate::native::utils::command::create_shell_command;
 use dashmap::DashMap;
 use std::collections::HashMap;
+#[cfg(target_os = "windows")]
+use std::os::windows::process::CommandExt;
+use std::process::Command;
 use tracing::trace;
 
 pub fn hash_runtime(
@@ -18,13 +21,13 @@ pub fn hash_runtime(
 
     let mut command_builder = create_shell_command();
 
-    command_builder.arg(command);
+    append_shell_command(&mut command_builder, command);
 
     command_builder.current_dir(workspace_root);
     env.iter().for_each(|(key, value)| {
         command_builder.env(key, value);
     });
-    trace!("executing: {:?}", command_builder);
+    trace!("executing: {:?} in {:?}", command, workspace_root);
     let output = command_builder
         .output()
         .map_err(|e| anyhow::anyhow!("Failed to execute: '{}'\n{}", command, e))?;
@@ -39,6 +42,24 @@ pub fn hash_runtime(
     Ok(hash_result)
 }
 
+// Rust escapes inner quotes as \" when it quotes an argument, and `cmd /C`
+// keeps that escape, so any quoted token inside the command reaches its
+// program mangled. Hand cmd the raw line wrapped in one outer quote pair
+// instead, which it strips as documented for /C.
+#[cfg(target_os = "windows")]
+fn append_shell_command(command_builder: &mut Command, command: &str) {
+    if command.contains('"') {
+        command_builder.raw_arg(format!("\"{command}\""));
+    } else {
+        command_builder.arg(command);
+    }
+}
+
+#[cfg(not(target_os = "windows"))]
+fn append_shell_command(command_builder: &mut Command, command: &str) {
+    command_builder.arg(command);
+}
+
 fn runtime_cache_key(command: &str, env: &HashMap<String, String>) -> String {
     let mut entries: Vec<_> = env.iter().collect();
     entries.sort_by(|(a, _), (b, _)| a.cmp(b));
@@ -50,6 +71,8 @@ mod tests {
     use super::*;
     use dashmap::DashMap;
     use std::collections::HashMap;
+    use std::io::Write;
+    use std::sync::{Arc, Mutex};
 
     #[test]
     fn test_hash_runtime() {
@@ -60,6 +83,50 @@ mod tests {
 
         let result = hash_runtime(workspace_root, command, &env, &cache).unwrap();
         assert_eq!(result, "10571312846059850300");
+    }
+
+    #[test]
+    fn hashes_output_of_command_with_quoted_argument() {
+        let workspace_root = if cfg!(windows) { "C:\\" } else { "/tmp" };
+        let command = "node -e \"console.log('a b')\"";
+        let env: HashMap<String, String> = HashMap::new();
+        let cache = DashMap::new();
+
+        let result = hash_runtime(workspace_root, command, &env, &cache).unwrap();
+        assert_eq!(result, hash(b"a b"));
+    }
+
+    #[test]
+    fn trace_log_omits_env_values() {
+        #[derive(Clone, Default)]
+        struct Logs(Arc<Mutex<Vec<u8>>>);
+        impl Write for Logs {
+            fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
+                self.0.lock().unwrap().write(buf)
+            }
+            fn flush(&mut self) -> std::io::Result<()> {
+                Ok(())
+            }
+        }
+
+        let workspace_root = if cfg!(windows) { "C:\\" } else { "/tmp" };
+        let command = "echo runtime";
+        let env = HashMap::from([("NPM_TOKEN".to_string(), "npm_s3cr3t".to_string())]);
+        let cache = DashMap::new();
+
+        let logs = Logs::default();
+        let writer = logs.clone();
+        let subscriber = tracing_subscriber::fmt()
+            .with_max_level(tracing::Level::TRACE)
+            .with_writer(move || writer.clone())
+            .finish();
+        tracing::subscriber::with_default(subscriber, || {
+            hash_runtime(workspace_root, command, &env, &cache).unwrap()
+        });
+
+        let logs = String::from_utf8(logs.0.lock().unwrap().clone()).unwrap();
+        assert!(logs.contains("echo runtime"), "{logs}");
+        assert!(!logs.contains("npm_s3cr3t"), "{logs}");
     }
 
     #[test]

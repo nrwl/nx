@@ -69,7 +69,7 @@ npx create-nx-workspace@latest --template=empty
 Converting your largest repository in place works too, but then everything you import afterwards has to be reconciled against conventions that were set before the migration started.
 
 Settle your [folder structure](/docs/kb/folder-structure) before importing anything.
-`nx import` puts files where you tell it to, so the destination conventions win.
+`nx import` puts files where you tell it to, so the destination conventions decide where everything lands.
 Deciding that applications live in `apps/` and libraries in `packages/` now saves a round of renames later.
 
 {% aside type="caution" title="The destination directory must be empty" %}
@@ -136,7 +136,7 @@ Without it, a `--no-interactive` run stops and reports `"missingFields": ["ref"]
 
 Each import lands as a merge commit with the source history attached, so `git log` and `git blame` keep working on the moved files.
 The underlying mechanism is a `git merge --allow-unrelated-histories` against the reorganized source branch.
-To run those steps by hand, or to understand what the command is doing, see [preserving git histories](/docs/guides/adopting-nx/preserving-git-histories).
+To run those steps by hand, or to understand what the command is doing, see [preserving git histories](/docs/kb/preserving-git-histories).
 
 Plugin detection depends on how you import.
 A whole-repository import detects the stack and offers the matching plugins, and you should accept them.
@@ -147,7 +147,7 @@ A subdirectory import does not detect anything, so add plugins yourself with `np
 
 `nx import` covers the deterministic part well, and most real migrations still have workspace-specific gaps: a missing runtime, conflicting tooling versions, or a script that reaches outside the project folder.
 Run `nx configure-ai-agents` to install the Nx skills, including the `nx import` skill, then prompt your agent to drive the migration and react to the failures as they surface.
-See the [AI setup guide](/docs/getting-started/ai-setup) and the [nx import guide](/docs/guides/adopting-nx/import-project) for the details.
+See the [AI setup guide](/docs/getting-started/ai-setup) and the [nx import guide](/docs/kb/import-project) for the details.
 
 {% /aside %}
 

@@ -1,9 +1,12 @@
-import { allowDirectNxImports, baseConfig } from '../eslint.config.mjs';
+import { baseConfig } from '../eslint.config.mjs';
 import playwright from 'eslint-plugin-playwright';
 
 export default [
   ...baseConfig,
-  playwright.configs['flat/recommended'],
+  {
+    ...playwright.configs['flat/recommended'],
+    files: ['e2e/**/*.{ts,js}'],
+  },
   {
     files: ['**/*.spec.ts', '**/*.test.ts', '**/*.spec.js', '**/*.test.js'],
     rules: {
@@ -18,10 +21,8 @@ export default [
       '.netlify/',
       'test-output/',
       'playwright-report/',
+      'public/.well-known/agent-skills/',
       'src/content/banner.json',
     ],
   },
-  // Private docs site (not a published plugin): its build-time schema parser
-  // reads nx internal types directly, so it opts out of the devkit boundary.
-  allowDirectNxImports,
 ];

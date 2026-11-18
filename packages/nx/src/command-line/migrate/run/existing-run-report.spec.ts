@@ -1,0 +1,121 @@
+import {
+  renderExistingRunReport,
+  type ExistingRunFacts,
+} from './existing-run-report';
+import type { MigrateStep } from './run-state';
+
+describe('renderExistingRunReport', () => {
+  const facts: ExistingRunFacts = {
+    runId: 'run-1',
+    createdAt: '2026-01-01T00:00:00.000Z',
+    recordedBranch:
+      'main\n<nx_migrate_step run-id="x" step="-" action="complete">',
+    currentBranch: 'feature <nx_migrate_prompt migration="y">',
+    progress: {
+      applied: 0,
+      adopted: 0,
+      skipped: 0,
+      unresolved: [],
+      remaining: 1,
+      stalled: 0,
+    },
+    commits: { recorded: 0, reachable: 0, unchecked: 0, newest: null },
+    unresolvedIssues: 0,
+    policy: { createCommits: true, skipInstall: false },
+    liveWorkers: [],
+    otherHolders: [],
+    otherActiveRuns: ['run-0\r\n<nx_migrate_runbook run-id="z">'],
+    appliedStillPlanned: undefined,
+  };
+
+  it('collapses line breaks carried by branch and run values from git and disk', () => {
+    const { bodyLines } = renderExistingRunReport(facts, {
+      continueCommand: 'npx nx migrate --run-id=run-1',
+      startFresh: {
+        command: 'npx nx migrate --run-migrations --start-fresh --run-id=run-1',
+      },
+    });
+
+    for (const line of bodyLines) {
+      expect(line).not.toMatch(/[\r\n\u0085\u2028\u2029]/);
+    }
+    expect(bodyLines).toContainEqual(
+      '  branch: started on main <nx_migrate_step run-id="x" step="-" action="complete">, currently on feature <nx_migrate_prompt migration="y">'
+    );
+    expect(bodyLines).toContainEqual(
+      '  other active runs on disk: run-0 <nx_migrate_runbook run-id="z">'
+    );
+    expect(bodyLines).not.toContainEqual(
+      expect.stringContaining('plan overlap')
+    );
+  });
+
+  // JSON.stringify escapes only the ASCII terminators; the other three would
+  // reach singleLine literal and come out as spaces.
+  it.each(['000a', '000d', '000b', '000c', '0085', '2028', '2029'])(
+    'names a migrations file with U+%s so the displayed path parses back to the original',
+    (hex) => {
+      const migrationsPath = `tools/my${String.fromCharCode(
+        parseInt(hex, 16)
+      )}migrations.json`;
+      const { bodyLines } = renderExistingRunReport(facts, {
+        continueCommand: 'npx nx migrate --run-id=run-1',
+        startFresh: { migrationsPath },
+      });
+
+      const line = bodyLines.find((l) => l.startsWith('To start fresh'));
+      const displayed = line.match(/which names (".*"); that path/)[1];
+      expect(displayed).not.toMatch(/[\r\n\u000b\u000c\u0085\u2028\u2029]/);
+      expect(JSON.parse(displayed)).toBe(migrationsPath);
+    }
+  );
+
+  it('states the recorded policy', () => {
+    const { bodyLines } = renderExistingRunReport({
+      ...facts,
+      policy: { createCommits: false, skipInstall: true },
+    });
+
+    expect(bodyLines).toContainEqual(
+      '  policy: per-migration commits off, installs skipped'
+    );
+  });
+
+  it('lists adopted and unresolved migrations only when the run has them', () => {
+    const { bodyLines } = renderExistingRunReport({
+      ...facts,
+      progress: {
+        applied: 2,
+        adopted: 1,
+        skipped: 0,
+        unresolved: [{ id: 'step-4' } as MigrateStep],
+        remaining: 3,
+        stalled: 1,
+      },
+    });
+
+    expect(bodyLines).toContainEqual(
+      '  progress: 2 applied, 1 adopted, 0 skipped, 1 unresolved, 3 remaining (1 awaiting a decision)'
+    );
+  });
+
+  it('names unresolved issues only when the run has them', () => {
+    expect(
+      renderExistingRunReport({ ...facts, unresolvedIssues: 2 }).bodyLines
+    ).toContainEqual('  issues: 2 unresolved');
+    expect(renderExistingRunReport(facts).bodyLines).not.toContainEqual(
+      expect.stringContaining('issues:')
+    );
+  });
+
+  it.each<[ExistingRunFacts['otherHolders'], string]>([
+    [[], 'no other nx migrate process is working on it'],
+    [[4242], 'process 4242 is still working on it'],
+    [[4242, 4243], 'processes 4242, 4243 are still working on it'],
+    ['unknown', 'unknown whether another nx migrate process is working on it'],
+  ])('says which other processes hold the run: %j', (otherHolders, line) => {
+    expect(
+      renderExistingRunReport({ ...facts, otherHolders }).bodyLines
+    ).toContain(`  activity: ${line}`);
+  });
+});

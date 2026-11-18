@@ -1,13 +1,13 @@
 import {
   applyChangesToString,
   ChangeType,
-  ensurePackage,
   formatFiles,
   logger,
   type StringChange,
   type Tree,
   visitNotIgnoredFiles,
 } from '@nx/devkit';
+import { ensureTypescript } from '@nx/js/internal';
 import type {
   ExportDeclaration,
   ExportSpecifier,
@@ -72,7 +72,7 @@ export function rewriteCreateNodesV2Imports(
   source: string,
   specifiers: ReadonlySet<string>
 ): string {
-  ts ??= ensurePackage<typeof import('typescript')>('typescript', '*');
+  ts ??= ensureTypescript();
   const sourceFile = ts.createSourceFile(
     'tmp.ts',
     source,

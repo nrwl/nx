@@ -1,6 +1,9 @@
 import { getDependencyVersionFromPackageJson, type Tree } from '@nx/devkit';
-import { getDeclaredPackageVersion } from '@nx/devkit/internal';
-import { lt, subset, validRange } from 'semver';
+import {
+  getResolvedPackageVersion,
+  getSatisfyingInstalledPackageVersion,
+} from '@nx/devkit/internal';
+import { coerce, gte, lt, subset, validRange } from 'semver';
 
 const minCypressVersion = '15.20.1';
 
@@ -9,31 +12,77 @@ const minCypressVersion = '15.20.1';
  * Angular version. Must be called after `@nx/cypress` has been ensured.
  */
 export function assertCypressComponentTestingSupport(tree: Tree): void {
-  const angularVersion = getDeclaredPackageVersion(tree, '@angular/core');
-  if (!angularVersion || lt(angularVersion, '22.1.0')) {
+  const angularVersion = getResolvedPackageVersion(tree, '@angular/core');
+  // Cypress loads webpack-dev-server from build-angular, so its version decides
+  // this check. Angular core stands in when build-angular isn't declared.
+  const buildAngularVersion =
+    getResolvedPackageVersion(tree, '@angular-devkit/build-angular') ??
+    angularVersion;
+  if (
+    buildAngularVersion &&
+    gte(coerce(buildAngularVersion)?.version ?? buildAngularVersion, '22.2.0')
+  ) {
+    throw new Error(
+      `Cypress Component Testing doesn't support Angular 22.2 and higher yet. ` +
+        `Cypress rejects the webpack-dev-server 6 that @angular-devkit/build-angular 22.2 and higher installs. ` +
+        `See https://github.com/cypress-io/cypress/issues/34259.`
+    );
+  }
+
+  if (!angularVersion) {
+    return;
+  }
+  // A prerelease of 22.1 counts as 22.1.
+  const angularRelease = coerce(angularVersion)?.version ?? angularVersion;
+  if (lt(angularRelease, '22.1.0')) {
     return;
   }
 
+  const found = findCypressBelow(tree, minCypressVersion);
+  if (found) {
+    throwForUnsupportedCypress(found);
+  }
+}
+
+/**
+ * Returns the installed Cypress version, or the declared range when nothing
+ * satisfying is installed, if it cannot reach `floor`; `null` otherwise.
+ *
+ * A satisfying install decides. Without one, only a range capped below the
+ * floor fails: `^15.17.0` installs 15.20.1+, so its lower bound cannot be
+ * compared. Declarations that are not ranges (`latest`, `file:`) are not
+ * gated.
+ * When Cypress is not declared, the generators install `cypressVersion`.
+ */
+export function findCypressBelow(tree: Tree, floor: string): string | null {
   const {
     cypressVersion,
   }: typeof import('@nx/cypress/internal') = require('@nx/cypress/internal');
-  // When Cypress is not installed, the generators install `cypressVersion`
-  const declaredCypressVersion =
-    getDependencyVersionFromPackageJson(tree, 'cypress') ?? cypressVersion;
-
-  // Gate only ranges capped below the floor. `^15.17.0` installs 15.20.1+, so
-  // comparing its lower bound would reject workspaces that work. Dist tags
-  // (`latest`, `next`) aren't ranges and aren't gated.
-  if (
-    !validRange(declaredCypressVersion) ||
-    !subset(declaredCypressVersion, `<${minCypressVersion}`)
-  ) {
-    return;
+  const declaredCypressVersion = getDependencyVersionFromPackageJson(
+    tree,
+    'cypress'
+  );
+  const installedCypressVersion = declaredCypressVersion
+    ? getSatisfyingInstalledPackageVersion(
+        tree,
+        'cypress',
+        declaredCypressVersion
+      )
+    : null;
+  if (installedCypressVersion) {
+    const release =
+      coerce(installedCypressVersion)?.version ?? installedCypressVersion;
+    return lt(release, floor) ? installedCypressVersion : null;
   }
 
+  const range = declaredCypressVersion ?? cypressVersion;
+  return validRange(range) && subset(range, `<${floor}`) ? range : null;
+}
+
+function throwForUnsupportedCypress(found: string): never {
   throw new Error(
     `Cypress Component Testing with Angular 22.1 and higher requires Cypress ${minCypressVersion} or higher. ` +
-      `Found Cypress ${declaredCypressVersion}. Earlier Cypress versions can't load Angular's Babel 8 dependencies. ` +
+      `Found Cypress ${found}. Earlier Cypress versions can't load Angular's Babel 8 dependencies. ` +
       `Please upgrade Cypress. ` +
       `See https://github.com/cypress-io/cypress/issues/34461.`
   );

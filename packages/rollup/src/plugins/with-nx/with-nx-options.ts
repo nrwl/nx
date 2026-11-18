@@ -81,13 +81,6 @@ export interface RollupWithNxPluginOptions {
    */
   tsConfig: string;
   /**
-   * Use oxc-transform for generating TypeScript declaration files (.d.ts)
-   * instead of the TypeScript compiler. Requires `isolatedDeclarations: true`
-   * in the project's tsconfig. This is significantly faster and removes the
-   * need for TypeScript during builds when using a non-tsc compiler (swc, babel).
-   */
-  useOxcDeclarations?: boolean;
-  /**
    * Whether to generate a package.json file in the output path. It's not supported when the workspace is
    * set up with TypeScript Project References along with the package managers' Workspaces feature. Otherwise,
    * it defaults to `true`.
@@ -102,8 +95,7 @@ export interface AssetGlobPattern {
   output: string;
 }
 
-export interface NormalizedRollupWithNxPluginOptions
-  extends RollupWithNxPluginOptions {
+export interface NormalizedRollupWithNxPluginOptions extends RollupWithNxPluginOptions {
   assets: AssetGlobPattern[];
   compiler: 'babel' | 'tsc' | 'swc';
   format: ('cjs' | 'esm')[];

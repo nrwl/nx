@@ -35,7 +35,11 @@ import initGenerator from '../init/init';
 import { VitestGeneratorSchema } from './schema';
 import { detectUiFramework } from '../../utils/detect-ui-framework';
 import { getInstalledViteMajorVersion } from '../../utils/version-utils';
-import { getInstalledVitestMajorVersion, versions } from '../../utils/versions';
+import {
+  analogVitestAngular,
+  getInstalledVitestMajorVersion,
+  versions,
+} from '../../utils/versions';
 import { assertSupportedVitestVersion } from '../../utils/assert-supported-vitest-version';
 import { clean, coerce, major } from 'semver';
 import type {
@@ -95,11 +99,7 @@ export function configurationGenerator(
   schema: VitestGeneratorSchema,
   hasPlugin = false
 ) {
-  return configurationGeneratorInternal(
-    tree,
-    { addPlugin: false, ...schema },
-    hasPlugin
-  );
+  return configurationGeneratorInternal(tree, schema, hasPlugin);
 }
 
 export async function configurationGeneratorInternal(
@@ -130,9 +130,25 @@ export async function configurationGeneratorInternal(
 
   tasks.push(await jsInitGenerator(tree, { ...schema, skipFormat: true }));
 
+  // Written before init so version selection sees it: analog peers vitest 4,
+  // and init is what picks the vitest version.
+  if (uiFramework === 'angular' && !schema.skipPackageJson) {
+    tasks.push(
+      addDependenciesToPackageJson(
+        tree,
+        {},
+        {
+          '@analogjs/vitest-angular': analogVitestAngular,
+          '@analogjs/vite-plugin-angular': analogVitestAngular,
+        },
+        undefined,
+        true
+      )
+    );
+  }
+
   const initTask = await initGenerator(tree, {
     skipFormat: true,
-    addPlugin: schema.addPlugin,
     projectRoot: root,
     viteVersion: schema.viteVersion,
     skipPackageJson: schema.skipPackageJson,
@@ -284,13 +300,13 @@ getTestBed().initTestEnvironment(
     updateNxJson(tree, nxJson);
   }
 
-  const devDependencies = await getCoverageProviderDependency(
-    tree,
-    schema.coverageProvider
-  );
-  devDependencies['@types/node'] = typesNodeVersion;
-
   if (!schema.skipPackageJson) {
+    const devDependencies = await getCoverageProviderDependency(
+      tree,
+      schema.coverageProvider
+    );
+    devDependencies['@types/node'] = typesNodeVersion;
+
     const installDependenciesTask = addDependenciesToPackageJson(
       tree,
       {},
@@ -305,7 +321,8 @@ getTestBed().initTestEnvironment(
   // workspace files in favor of inlining the projects into a root vitest.config
   // via `test.projects` (https://vitest.dev/guide/migration.html#workspace-is-replaced-with-projects).
   // Emit that shape for vitest 4+ and when the installed version can't be
-  // detected (new installs resolve to v4); vitest 3 keeps the workspace file.
+  // detected (a new install resolves to 4 or 5); vitest 3 keeps the workspace
+  // file.
   if (!isRootProject) {
     const projectGlobs = `'**/vite.config.{mjs,js,ts,mts}', '**/vitest.config.{mjs,js,ts,mts}'`;
     const vitestMajorVersion = getInstalledVitestMajorVersion(tree);

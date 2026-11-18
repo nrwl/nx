@@ -1,18 +1,19 @@
+import type { MockInstance } from 'vitest';
 import { validateOptions } from './validate-options';
 import * as angularVersionUtils from '../../../executors/utilities/angular-version-utils';
 
 describe('validateOptions', () => {
-  let getInstalledAngularVersionInfoSpy: jest.SpyInstance;
+  let getInstalledAngularVersionInfoSpy: MockInstance;
 
   beforeEach(() => {
-    getInstalledAngularVersionInfoSpy = jest.spyOn(
+    getInstalledAngularVersionInfoSpy = vi.spyOn(
       angularVersionUtils,
       'getInstalledAngularVersionInfo'
     );
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   describe('when Angular version is < 21', () => {

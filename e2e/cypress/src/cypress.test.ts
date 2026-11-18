@@ -1,23 +1,29 @@
 import { join } from 'node:path';
 import {
   checkFilesExist,
+  configureTargetOptions,
+  configureCypressComponentTesting,
   cleanupProject,
   createFile,
   killPort,
+  killPorts,
   newProject,
+  readFile,
   readJson,
+  reservePort,
   runCLI,
   runCommand,
-  runE2ETests,
   tmpProjPath,
   uniq,
   updateFile,
+  shouldRunCypressTests,
 } from '@nx/e2e-utils';
 
 const TEN_MINS_MS = 600_000;
 
 describe('Cypress E2E Test runner', () => {
   const myapp = uniq('myapp');
+  let myappPort: number;
 
   beforeAll(() => {
     newProject({
@@ -35,9 +41,10 @@ describe('Cypress E2E Test runner', () => {
 
   it(
     'should generate an app with the Cypress as e2e test runner',
-    () => {
+    async () => {
+      myappPort = await reservePort();
       runCLI(
-        `generate @nx/react:app apps/${myapp} --e2eTestRunner=cypress --linter=eslint`
+        `generate @nx/react:app apps/${myapp} --e2eTestRunner=cypress --linter=eslint --port=${myappPort}`
       );
 
       // Ensure project typechecks (See: https://github.com/nrwl/nx/issues/32930)
@@ -49,7 +56,7 @@ describe('Cypress E2E Test runner', () => {
 
       // Making sure the package.json file contains the Cypress dependency
       const packageJson = readJson('package.json');
-      expect(packageJson.devDependencies['cypress']).toBeTruthy();
+      expect(packageJson.devDependencies['cypress']).toMatch(/^\^16\./);
 
       // Making sure the cypress folders & files are created
       checkFilesExist(`apps/${myapp}-e2e/cypress.config.ts`);
@@ -60,6 +67,83 @@ describe('Cypress E2E Test runner', () => {
       checkFilesExist(`apps/${myapp}-e2e/src/support/app.po.ts`);
       checkFilesExist(`apps/${myapp}-e2e/src/support/e2e.ts`);
       checkFilesExist(`apps/${myapp}-e2e/src/support/commands.ts`);
+    },
+    TEN_MINS_MS
+  );
+
+  it(
+    'should keep the server inputs out of atomized specs with "@nx-ignore-server-inputs"',
+    () => {
+      const app = uniq('app');
+      runCLI(
+        `generate @nx/react:app apps/${app} --e2eTestRunner=cypress --linter=eslint --unitTestRunner=none --no-interactive`
+      );
+      createFile(
+        `apps/${app}/src/app/feature.ts`,
+        `export const feature = 'feature';\n`
+      );
+      createFile(
+        `apps/${app}-e2e/src/e2e/feature.cy.ts`,
+        `// @nx-ignore-server-inputs\nimport '../../../${app}/src/app/feature';\n${readFile(
+          `apps/${app}-e2e/src/e2e/app.cy.ts`
+        )}`
+      );
+
+      const { targets } = JSON.parse(runCLI(`show project ${app}-e2e --json`));
+      expect(targets['e2e-ci--src/e2e/app.cy.ts'].dependsOn).toEqual([
+        { projects: [app], target: 'preview', waitFor: 'ready' },
+      ]);
+      expect(targets['e2e-ci--src/e2e/feature.cy.ts'].dependsOn).toEqual([
+        { projects: [app], target: 'preview', waitFor: 'ready', inputs: false },
+      ]);
+
+      expect(runCLI(`lint ${app}-e2e`)).toContain(
+        'Successfully ran target lint'
+      );
+    },
+    TEN_MINS_MS
+  );
+
+  it(
+    'should run e2e tests against the local web server when CI is not set',
+    async () => {
+      if (!(await shouldRunCypressTests())) {
+        return;
+      }
+      const app = uniq('app');
+      const e2eProject = `${app}-e2e`;
+      const port = await reservePort();
+      runCLI(
+        `generate @nx/react:app apps/${app} --e2eTestRunner=cypress --linter=eslint --unitTestRunner=none --port=${port} --no-interactive`
+      );
+      const [, ciServerTarget, localServerTarget] =
+        readFile(`apps/${e2eProject}/cypress.config.ts`).match(
+          new RegExp(
+            `process\\.env\\['CI'\\]\\s*\\?\\s*'[^']* nx run ${app}:([\\w-]+)[^']*'\\s*:\\s*'[^']* nx run ${app}:([\\w-]+)[^']*'`
+          )
+        ) ?? [];
+      expect(localServerTarget).toBeDefined();
+
+      const restoreServerOptions = configureTargetOptions([localServerTarget], {
+        strictPort: true,
+      });
+      try {
+        // runCLI sets CI, and an undefined value drops it from the child env.
+        // Without CI and a TTY, an out-of-sync workspace fails the run.
+        const result = runCLI(`e2e ${e2eProject} --skip-sync`, {
+          env: { CI: undefined },
+        });
+        expect(result).toContain(
+          `Successfully ran target e2e for project ${e2eProject}`
+        );
+        expect(result).toMatch(
+          new RegExp(`nx run ${app}:${localServerTarget}(?![\\w-])`)
+        );
+        expect(result).not.toContain(`nx run ${app}:${ciServerTarget}`);
+      } finally {
+        restoreServerOptions();
+        await killPorts(port);
+      }
     },
     TEN_MINS_MS
   );
@@ -81,31 +165,36 @@ describe('Cypress E2E Test runner', () => {
         `
 describe('env vars', () => {
   it('should have cli args', () => {
-    assert.equal(Cypress.env('cliArg'), 'i am from the cli args');
+    cy.env(['cliArg']).then(({ cliArg }) => {
+      assert.equal(cliArg, 'i am from the cli args');
+    });
   });
 
   it('should have cypress.env.json vars', () => {
-    assert.equal(
-      Cypress.env('cypressEnvJson'),
-      'i am from the cypress.env.json file'
-    );
+    cy.env(['cypressEnvJson']).then(({ cypressEnvJson }) => {
+      assert.equal(cypressEnvJson, 'i am from the cypress.env.json file');
+    });
   });
 });`
       );
 
-      if (await runE2ETests('cypress')) {
-        // contains the correct output and works
-        const run1 = runCLI(
-          `e2e ${myapp}-e2e --config \\'{\\"env\\":{\\"cliArg\\":\\"i am from the cli args\\"}}\\'`
+      if (await shouldRunCypressTests()) {
+        const restoreServerOptions = configureTargetOptions(
+          ['dev', 'preview', 'serve'],
+          { strictPort: true }
         );
-        expect(run1).toContain('All specs passed!');
-        // tests should not fail because of a config change. The ESM
-        // shape (import / export default) uses `import.meta.url` rather
-        // than `__filename` so it works under both Nx's native TS strip
-        // (ESM) and Cypress's bundled tsx CJS loader.
-        updateFile(
-          `apps/${myapp}-e2e/cypress.config.ts`,
-          `
+        try {
+          const run1 = runCLI(
+            `e2e ${myapp}-e2e --config \\'{\\"env\\":{\\"cliArg\\":\\"i am from the cli args\\"}}\\'`
+          );
+          expect(run1).toContain('All specs passed!');
+          // tests should not fail because of a config change. The ESM
+          // shape (import / export default) uses `import.meta.url` rather
+          // than `__filename` so it works under both Nx's native TS strip
+          // (ESM) and Cypress's bundled tsx CJS loader.
+          updateFile(
+            `apps/${myapp}-e2e/cypress.config.ts`,
+            `
 import { defineConfig } from 'cypress';
 import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
 
@@ -122,46 +211,48 @@ export default defineConfig({
         timeout: 60_000,
       },
     }),
-    baseUrl: 'http://localhost:4200',
+    baseUrl: 'http://localhost:${myappPort}',
   },
   env: {
     fromCyConfig: 'i am from the cypress config file'
   }
 });`
-        );
+          );
 
-        const run2 = runCLI(
-          `e2e ${myapp}-e2e --config \\'{\\"env\\":{\\"cliArg\\":\\"i am from the cli args\\"}}\\'`
-        );
-        expect(run2).toContain('All specs passed!');
+          const run2 = runCLI(
+            `e2e ${myapp}-e2e --config \\'{\\"env\\":{\\"cliArg\\":\\"i am from the cli args\\"}}\\'`
+          );
+          expect(run2).toContain('All specs passed!');
 
-        // make sure project.json env vars also work
-        checkFilesExist(`apps/${myapp}-e2e/src/e2e/env.cy.ts`);
-        updateFile(
-          `apps/${myapp}-e2e/src/e2e/env.cy.ts`,
-          `
+          checkFilesExist(`apps/${myapp}-e2e/src/e2e/env.cy.ts`);
+          updateFile(
+            `apps/${myapp}-e2e/src/e2e/env.cy.ts`,
+            `
         describe('env vars', () => {
           it('should not have cli args', () => {
-            assert.equal(Cypress.env('cliArg'), undefined);
+            cy.env(['cliArg']).then(({ cliArg }) => {
+              assert.equal(cliArg, undefined);
+            });
           });
 
           it('should have cypress.env.json vars', () => {
-            assert.equal(
-              Cypress.env('cypressEnvJson'),
-              'i am from the cypress.env.json file'
-            );
+            cy.env(['cypressEnvJson']).then(({ cypressEnvJson }) => {
+              assert.equal(cypressEnvJson, 'i am from the cypress.env.json file');
+            });
           });
 
           it('should have cypress config vars', () => {
-            assert.equal(
-              Cypress.env('fromCyConfig'),
-              'i am from the cypress config file'
-            );
+            cy.env(['fromCyConfig']).then(({ fromCyConfig }) => {
+              assert.equal(fromCyConfig, 'i am from the cypress config file');
+            });
           });
         });`
-        );
-        const run3 = runCLI(`e2e ${myapp}-e2e`);
-        expect(run3).toContain('All specs passed!');
+          );
+          const run3 = runCLI(`e2e ${myapp}-e2e`);
+          expect(run3).toContain('All specs passed!');
+        } finally {
+          restoreServerOptions();
+        }
       }
     },
     TEN_MINS_MS
@@ -171,32 +262,37 @@ export default defineConfig({
     `should allow CT and e2e in same project for a next project`,
     async () => {
       const appName = uniq('next-cy-app');
+      const port = await reservePort();
+      configureTargetOptions(['dev'], { port });
       runCLI(
         `generate @nx/next:app apps/${appName} --e2eTestRunner=none --no-interactive `
       );
       runCLI(
-        `generate @nx/next:component apps/${appName}/components/btn --no-interactive`
+        `generate @nx/next:component apps/${appName}/src/components/btn --no-interactive`
       );
 
       runCLI(
         `generate @nx/next:cypress-component-configuration --project=${appName} --generate-tests --no-interactive`
       );
       runCLI(
-        `generate @nx/cypress:configuration --project=${appName} --devServerTarget=${appName}:dev --baseUrl=http://localhost:3000 --no-interactive`
+        `generate @nx/cypress:configuration --project=${appName} --devServerTarget=${appName}:dev --baseUrl=http://127.0.0.1:${port} --no-interactive`
       );
 
-      if (await runE2ETests('cypress')) {
-        expect(runCLI(`run ${appName}:component-test`)).toContain(
-          'All specs passed!'
+      if (await shouldRunCypressTests()) {
+        const componentTestArgs = await configureCypressComponentTesting(
+          `apps/${appName}/cypress.config.ts`
         );
+        expect(
+          runCLI(`run ${appName}:component-test ${componentTestArgs}`)
+        ).toContain('All specs passed!');
         expect(runCLI(`run ${appName}:e2e`)).toContain('All specs passed!');
       }
-      expect(await killPort(4200)).toBeTruthy();
     },
     TEN_MINS_MS
   );
 
-  it(
+  // TODO(leosvelperez): Re-enable once a Cypress release fixes https://github.com/cypress-io/cypress/issues/34259
+  xit(
     `should allow CT and e2e in same project for an angular project`,
     async () => {
       let appName = uniq(`angular-cy-app`);
@@ -214,7 +310,7 @@ export default defineConfig({
         `generate @nx/cypress:e2e --project=${appName} --baseUrl=http://localhost:4200 --no-interactive`
       );
 
-      if (await runE2ETests('cypress')) {
+      if (await shouldRunCypressTests()) {
         expect(runCLI(`run ${appName}:component-test`)).toContain(
           'All specs passed!'
         );

@@ -135,13 +135,20 @@ describe('convertConfigToRspackPluginGenerator', () => {
 
     expect(tree.read(`${project.name}/rspack.config.old.js`, 'utf-8'))
       .toMatchInlineSnapshot(`
-      "const { composePlugins } = require('@nx/rspack');
-      // Nx plugins for rspack.
-      module.exports = composePlugins((config) => {
-        return config;
-      });
-      "
-    `);
+        "// Nx plugins for rspack.
+        module.exports = composeLegacyPlugins((config) => {
+          return config;
+        });
+        function composeLegacyPlugins(...plugins) {
+          return async (config, ctx) => {
+            for (const plugin of plugins) {
+              config = await (await plugin)(config, ctx);
+            }
+            return config;
+          };
+        }
+        "
+      `);
 
     expect(tree.read(`another-app/rspack.config.js`, 'utf-8'))
       .toMatchInlineSnapshot(`
@@ -157,6 +164,77 @@ describe('convertConfigToRspackPluginGenerator', () => {
 
     expect(tree.exists(`${project.name}/rspack.config.old.js`)).toBe(true);
     expect(tree.exists(`another-app/rspack.config.old.js`)).toBe(false);
+  });
+
+  it('should keep custom callbacks running from the old config', async () => {
+    const project = createProject(tree, { name: 'my-app', root: 'my-app' });
+    tree.write(
+      `${project.name}/rspack.config.js`,
+      `
+      const { composePlugins, withNx } = require('@nx/rspack');
+      module.exports = composePlugins(
+        withNx(),
+        (config) => {
+          config.plugins.push('custom');
+          return config;
+        },
+        Promise.resolve((config, ctx) => ({ ...config, mode: ctx.mode }))
+      );
+      `
+    );
+
+    await convertConfigToRspackPluginGenerator(tree, { project: project.name });
+
+    const oldConfig = { exports: undefined };
+    new Function(
+      'module',
+      'require',
+      tree.read(`${project.name}/rspack.config.old.js`, 'utf-8')
+    )(oldConfig, () => ({}));
+    await expect(
+      oldConfig.exports({ plugins: [] }, { mode: 'production' })
+    ).resolves.toEqual({ plugins: ['custom'], mode: 'production' });
+  });
+
+  it('should not add the React plugin to a config that does not use withReact', async () => {
+    const project = createProject(tree, { name: 'my-app', root: 'my-app' });
+    tree.write(
+      `${project.name}/rspack.config.js`,
+      `
+      const { composePlugins, withNx, withWeb } = require('@nx/rspack');
+      module.exports = composePlugins(withNx(), withWeb(), (config) => config);
+      `
+    );
+
+    await convertConfigToRspackPluginGenerator(tree, {
+      project: project.name,
+    });
+
+    expect(tree.read(`${project.name}/rspack.config.js`, 'utf-8'))
+      .toMatchInlineSnapshot(`
+      "const { NxAppRspackPlugin } = require('@nx/rspack/app-plugin');
+      const { useLegacyNxPlugin } = require('@nx/rspack');
+
+      // This file was migrated using @nx/rspack:convert-config-to-rspack-plugin from your './rspack.config.old.js'
+      // Please check that the options here are correct as they were moved from the old rspack.config.js to this file.
+      const options = {};
+
+      /**
+       * @type{import('@rspack/core').RspackOptionsNormalized}
+       */
+      module.exports = async () => ({
+        plugins: [
+          new NxAppRspackPlugin(),
+          // NOTE: useLegacyNxPlugin ensures that the non-standard Rspack configuration file previously used still works.
+          // To remove its usage, move options such as "plugins" into this file as standard Rspack configuration options.
+          // To enhance configurations after Nx plugins have applied, you can add a new plugin with the \\\`apply\\\` method.
+          // e.g. \\\`{ apply: (compiler) => { /* modify compiler.options */ }\\\`
+          // eslint-disable-next-line react-hooks/rules-of-hooks
+          await useLegacyNxPlugin(require('./rspack.config.old'), options),
+        ],
+      });
+      "
+    `);
   });
 
   it('should update project.json adding the standardRspackConfigFunction option', async () => {

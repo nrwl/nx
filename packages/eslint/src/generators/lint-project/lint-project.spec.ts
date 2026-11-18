@@ -17,7 +17,6 @@ describe('@nx/eslint:lint-project', () => {
 
   const defaultOptions = {
     skipFormat: false,
-    addPlugin: true,
   };
 
   beforeEach(() => {
@@ -63,7 +62,7 @@ describe('@nx/eslint:lint-project', () => {
         ...defaultOptions,
         linter: 'eslint',
         project: 'test-lib',
-        setParserOptionsProject: false,
+        enableTypedLinting: false,
         skipFormat: true,
       });
 
@@ -88,7 +87,7 @@ describe('@nx/eslint:lint-project', () => {
         ...defaultOptions,
         linter: 'eslint',
         project: 'test-lib',
-        setParserOptionsProject: false,
+        enableTypedLinting: false,
         skipFormat: true,
       });
 
@@ -96,9 +95,11 @@ describe('@nx/eslint:lint-project', () => {
         .toMatchInlineSnapshot(`
         "import baseConfig from "../../eslint.base.config.js";
 
-        export default [
+        const eslintConfig = [
             ...baseConfig
         ];
+
+        export default eslintConfig;
         "
       `);
     });
@@ -113,7 +114,7 @@ describe('@nx/eslint:lint-project', () => {
         ...defaultOptions,
         linter: 'eslint',
         project: 'test-lib',
-        setParserOptionsProject: false,
+        enableTypedLinting: false,
         skipFormat: true,
         eslintConfigFormat: 'mjs',
       });
@@ -122,9 +123,11 @@ describe('@nx/eslint:lint-project', () => {
         .toMatchInlineSnapshot(`
         "import baseConfig from "../../eslint.base.config.mjs";
 
-        export default [
+        const eslintConfig = [
             ...baseConfig
         ];
+
+        export default eslintConfig;
         "
       `);
     });
@@ -139,7 +142,7 @@ describe('@nx/eslint:lint-project', () => {
         ...defaultOptions,
         linter: 'eslint',
         project: 'test-lib',
-        setParserOptionsProject: false,
+        enableTypedLinting: false,
         skipFormat: true,
       });
 
@@ -166,7 +169,7 @@ describe('@nx/eslint:lint-project', () => {
         ...defaultOptions,
         linter: 'eslint',
         project: 'test-lib',
-        setParserOptionsProject: false,
+        enableTypedLinting: false,
         skipFormat: true,
       });
 
@@ -191,7 +194,7 @@ describe('@nx/eslint:lint-project', () => {
         ...defaultOptions,
         linter: 'eslint',
         project: 'test-lib',
-        setParserOptionsProject: false,
+        enableTypedLinting: false,
         skipFormat: true,
       });
 
@@ -199,9 +202,11 @@ describe('@nx/eslint:lint-project', () => {
         .toMatchInlineSnapshot(`
         "import baseConfig from "../../eslint.config.js";
 
-        export default [
+        const eslintConfig = [
             ...baseConfig
         ];
+
+        export default eslintConfig;
         "
       `);
     });
@@ -216,7 +221,7 @@ describe('@nx/eslint:lint-project', () => {
         ...defaultOptions,
         linter: 'eslint',
         project: 'test-lib',
-        setParserOptionsProject: false,
+        enableTypedLinting: false,
         skipFormat: true,
         eslintConfigFormat: 'mjs',
       });
@@ -225,9 +230,11 @@ describe('@nx/eslint:lint-project', () => {
         .toMatchInlineSnapshot(`
         "import baseConfig from "../../eslint.config.mjs";
 
-        export default [
+        const eslintConfig = [
             ...baseConfig
         ];
+
+        export default eslintConfig;
         "
       `);
     });
@@ -242,7 +249,7 @@ describe('@nx/eslint:lint-project', () => {
         ...defaultOptions,
         linter: 'eslint',
         project: 'test-lib',
-        setParserOptionsProject: false,
+        enableTypedLinting: false,
         skipFormat: true,
       });
 
@@ -264,7 +271,7 @@ describe('@nx/eslint:lint-project', () => {
       ...defaultOptions,
       linter: 'eslint',
       project: 'test-lib',
-      setParserOptionsProject: false,
+      enableTypedLinting: false,
       skipFormat: true,
       eslintConfigFormat: 'mjs',
     });
@@ -272,7 +279,7 @@ describe('@nx/eslint:lint-project', () => {
     expect(tree.read('eslint.config.mjs', 'utf-8')).toMatchInlineSnapshot(`
       "import nx from "@nx/eslint-plugin";
 
-      export default [
+      const eslintConfig = [
           ...nx.configs["flat/base"],
           ...nx.configs["flat/typescript"],
           ...nx.configs["flat/javascript"],
@@ -324,6 +331,8 @@ describe('@nx/eslint:lint-project', () => {
               rules: {}
           }
       ];
+
+      export default eslintConfig;
       "
     `);
   });
@@ -334,7 +343,7 @@ describe('@nx/eslint:lint-project', () => {
       ...defaultOptions,
       linter: 'eslint',
       project: 'test-lib',
-      setParserOptionsProject: false,
+      enableTypedLinting: false,
       skipFormat: true,
       eslintConfigFormat: 'cjs',
     });
@@ -414,7 +423,7 @@ describe('@nx/eslint:lint-project', () => {
       .toMatchInlineSnapshot(`
       "import baseConfig from "../../eslint.config.mjs";
 
-      export default [
+      const eslintConfig = [
           ...baseConfig,
           {
               files: [
@@ -434,6 +443,8 @@ describe('@nx/eslint:lint-project', () => {
               }
           }
       ];
+
+      export default eslintConfig;
       "
     `);
   });
@@ -499,41 +510,24 @@ describe('@nx/eslint:lint-project', () => {
     `);
   });
 
-  it('should treat the deprecated setParserOptionsProject as enableTypedLinting in flat config', async () => {
-    process.env.ESLINT_USE_FLAT_CONFIG = 'true';
-
-    await lintProjectGenerator(tree, {
-      ...defaultOptions,
-      linter: 'eslint',
-      project: 'test-lib',
-      setParserOptionsProject: true,
-      skipFormat: true,
-      eslintConfigFormat: 'mjs',
+  it('should reject ESLINT_USE_FLAT_CONFIG=false on ESLint v10 before writing a config', async () => {
+    tree.write('.eslintrc.json', '{ "root": true }');
+    updateJson(tree, 'package.json', (json) => {
+      json.devDependencies = { ...json.devDependencies, eslint: '^10.0.0' };
+      return json;
     });
+    process.env.ESLINT_USE_FLAT_CONFIG = 'false';
 
-    const content = tree.read('libs/test-lib/eslint.config.mjs', 'utf-8');
-    expect(content).toContain('projectService: true');
-    expect(content).toContain('tsconfigRootDir: import.meta.dirname');
-  });
-
-  it('should honor the deprecated setParserOptionsProject when the new flag arrives with schema default `false`', async () => {
-    // Simulates the CLI path where nx's params parser fills in schema defaults,
-    // so `enableTypedLinting` arrives as `false` (not `undefined`) while a user
-    // explicitly passes the deprecated flag.
-    process.env.ESLINT_USE_FLAT_CONFIG = 'true';
-
-    await lintProjectGenerator(tree, {
-      ...defaultOptions,
-      linter: 'eslint',
-      project: 'test-lib',
-      enableTypedLinting: false,
-      setParserOptionsProject: true,
-      skipFormat: true,
-      eslintConfigFormat: 'mjs',
-    });
-
-    const content = tree.read('libs/test-lib/eslint.config.mjs', 'utf-8');
-    expect(content).toContain('projectService: true');
+    await expect(
+      lintProjectGenerator(tree, {
+        ...defaultOptions,
+        linter: 'eslint',
+        project: 'test-lib',
+      })
+    ).rejects.toThrow(
+      /does not support the legacy "eslintrc" configuration format/
+    );
+    expect(tree.exists('libs/test-lib/.eslintrc.json')).toBe(false);
   });
 
   it('should still set parserOptions.project in legacy .eslintrc config when typed linting is enabled', async () => {
@@ -566,7 +560,7 @@ describe('@nx/eslint:lint-project', () => {
       ...defaultOptions,
       linter: 'eslint',
       project: 'test-lib',
-      setParserOptionsProject: false,
+      enableTypedLinting: false,
     });
 
     expect(tree.read('libs/test-lib/.eslintrc.json', 'utf-8'))
@@ -599,7 +593,7 @@ describe('@nx/eslint:lint-project', () => {
       linter: 'eslint',
       project: 'test-lib',
       eslintFilePatterns: ['libs/test-lib/src/**/*.ts'],
-      setParserOptionsProject: false,
+      enableTypedLinting: false,
     });
 
     const projectConfig = readProjectConfiguration(tree, 'test-lib');
@@ -617,7 +611,7 @@ describe('@nx/eslint:lint-project', () => {
       ...defaultOptions,
       linter: 'eslint',
       project: 'buildable-lib',
-      setParserOptionsProject: false,
+      enableTypedLinting: false,
     });
 
     expect(tree.read('libs/buildable-lib/.eslintrc.json', 'utf-8'))
@@ -645,9 +639,7 @@ describe('@nx/eslint:lint-project', () => {
               "@nx/dependency-checks": [
                 "error",
                 {
-                  "ignoredFiles": [
-                    "{projectRoot}/eslint.config.{js,cjs,mjs,ts,cts,mts}"
-                  ]
+                  "ignoredFiles": ["{projectRoot}/eslint.config.{js,cjs,mjs,ts,cts,mts}"]
                 }
               ]
             }
@@ -666,7 +658,7 @@ describe('@nx/eslint:lint-project', () => {
       ...defaultOptions,
       linter: 'eslint',
       project: 'buildable-lib',
-      setParserOptionsProject: false,
+      enableTypedLinting: false,
       eslintFilePatterns: ['libs/test-lib/src/**/*.ts'],
     });
 
@@ -685,7 +677,7 @@ describe('@nx/eslint:lint-project', () => {
       ...defaultOptions,
       linter: 'eslint',
       project: 'test-lib',
-      setParserOptionsProject: false,
+      enableTypedLinting: false,
     });
 
     expect(tree.read('libs/test-lib/.eslintrc.json', 'utf-8'))
@@ -723,7 +715,7 @@ describe('@nx/eslint:lint-project', () => {
       ...defaultOptions,
       linter: 'eslint',
       project: 'buildable-lib',
-      setParserOptionsProject: false,
+      enableTypedLinting: false,
     });
 
     expect(readJson(tree, 'nx.json').pluginsConfig['@nx/js']).toEqual({
@@ -746,7 +738,7 @@ describe('@nx/eslint:lint-project', () => {
       ...defaultOptions,
       linter: 'eslint',
       project: 'buildable-lib',
-      setParserOptionsProject: false,
+      enableTypedLinting: false,
     });
 
     expect(readJson(tree, 'nx.json').pluginsConfig['@nx/js']).toEqual({
@@ -762,7 +754,7 @@ describe('@nx/eslint:lint-project', () => {
       linter: 'eslint',
       eslintFilePatterns: ['libs/test-lib/**/*.ts'],
       project: 'test-lib',
-      setParserOptionsProject: false,
+      enableTypedLinting: false,
     });
 
     const eslintConfig = readJson(tree, 'libs/test-lib/.eslintrc.json');
@@ -777,7 +769,7 @@ describe('@nx/eslint:lint-project', () => {
       linter: 'eslint',
       eslintFilePatterns: ['libs/test-lib/**/*.ts'],
       project: 'test-lib',
-      setParserOptionsProject: false,
+      enableTypedLinting: false,
       rootProject: true,
     });
 
@@ -836,40 +828,5 @@ describe('@nx/eslint:lint-project', () => {
           "node_modules
           "
         `);
-  });
-
-  it('should support generating explicit targets on project config', async () => {
-    addProjectConfiguration(tree, 'explicit-lib', {
-      root: 'libs/explicit-lib',
-      projectType: 'library',
-      targets: {},
-    });
-    addProjectConfiguration(tree, 'inferred-lib', {
-      root: 'libs/inferred-lib',
-      projectType: 'library',
-      targets: {},
-    });
-
-    await lintProjectGenerator(tree, {
-      ...defaultOptions,
-      linter: 'eslint',
-      project: 'explicit-lib',
-      addExplicitTargets: true,
-    });
-    await lintProjectGenerator(tree, {
-      ...defaultOptions,
-      linter: 'eslint',
-      project: 'inferred-lib',
-      addExplicitTargets: false,
-    });
-
-    const explicitCOnfig = readProjectConfiguration(tree, 'explicit-lib');
-    expect(explicitCOnfig.targets.lint).toMatchInlineSnapshot(`
-      {
-        "executor": "@nx/eslint:lint",
-      }
-    `);
-    const inferredConfig = readProjectConfiguration(tree, 'inferred-lib');
-    expect(inferredConfig.targets.lint).toBeUndefined();
   });
 });

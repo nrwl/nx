@@ -1,4 +1,5 @@
-import { type NxJsonConfiguration, readNxJson } from '../config/nx-json';
+import { readNxJson } from '../config/nx-json';
+import { isAnalyticsEnabled } from '../utils/analytics-enabled';
 import { workspaceRoot } from '../utils/workspace-root';
 import { nxVersion } from '../utils/versions';
 import { IS_WASM } from '../native';
@@ -76,12 +77,17 @@ export async function startAnalytics() {
       return;
     }
 
-    const workspaceId = generateWorkspaceId(workspaceRoot, nxJson);
-    if (!workspaceId) {
+    const rawWorkspaceId = generateWorkspaceId(workspaceRoot, nxJson);
+    if (!rawWorkspaceId) {
       // Not a git repo — no telemetry
       return;
     }
     const isNxCloud = !!(nxJson?.nxCloudId ?? nxJson?.nxCloudAccessToken);
+    // The Nx Cloud id or access token is a credential; the repo key is
+    // already a digest.
+    const workspaceId = isNxCloud
+      ? createHash('sha256').update(rawWorkspaceId).digest('hex')
+      : rawWorkspaceId;
     // A CI fleet is not a user: shared images bake in /etc/machine-id, so a
     // uid would collapse whole fleets into one GA "user" (and trip per-user
     // collection caps). GA falls back to cid = workspace for CI traffic.
@@ -275,10 +281,6 @@ function getPackageManagerInfo() {
     name: pm,
     version: getPackageManagerVersion(pm),
   };
-}
-
-function isAnalyticsEnabled(nxJson: NxJsonConfiguration | null): boolean {
-  return nxJson?.analytics === true;
 }
 
 // Mix workspace id in: shared Docker images (Gitpod, Cypress, etc.) bake

@@ -2,33 +2,38 @@
 // Kept in its own file so the module mocks below don't leak into the main
 // migrate spec.
 
-const mockRunSingleMigrationWorker = jest.fn();
-const mockReportRunError = jest.fn();
-const mockReportGenerateError = jest.fn();
+const mockRunSingleMigrationWorker = vi.fn();
+const mockReportRunError = vi.fn();
+const mockReportGenerateError = vi.fn();
 
-jest.mock('./run', () => ({
+// migrate.ts lazy-requires ./run (CJS channel), which vi.mock cannot
+// intercept; replace the module in the require channel instead.
+import { mockCjsModule } from '../../internal-testing-utils/cjs-mock';
+mockCjsModule(import.meta.url, './run', {
   runSingleMigrationWorker: (...args: unknown[]) =>
     mockRunSingleMigrationWorker(...args),
-}));
+  runOrchestratorInit: vi.fn(),
+  runOrchestratorReconcile: vi.fn(),
+});
 
-jest.mock('../../daemon/client/client', () => ({
+vi.mock('../../daemon/client/client', () => ({
   daemonClient: {
-    stop: jest.fn().mockResolvedValue(undefined),
+    stop: vi.fn().mockResolvedValue(undefined),
     enabled: () => false,
-    reset: jest.fn(),
+    reset: vi.fn(),
   },
 }));
 
-jest.mock('./migrate-analytics', () => ({
-  ...jest.requireActual('./migrate-analytics'),
+vi.mock('./migrate-analytics', async () => ({
+  ...(await vi.importActual('./migrate-analytics')),
   reportMigrateRunError: (...args: unknown[]) => mockReportRunError(...args),
   reportMigrateGenerateError: (...args: unknown[]) =>
     mockReportGenerateError(...args),
 }));
 
-const mockReadNxJson = jest.fn();
-jest.mock('../../config/configuration', () => ({
-  ...jest.requireActual('../../config/configuration'),
+const mockReadNxJson = vi.fn();
+vi.mock('../../config/configuration', async () => ({
+  ...(await vi.importActual('../../config/configuration')),
   readNxJson: (...args: unknown[]) => mockReadNxJson(...args),
 }));
 
@@ -44,12 +49,12 @@ describe('migrate() single-migration dispatch', () => {
     mockRunSingleMigrationWorker.mockReset().mockResolvedValue(undefined);
     mockReportRunError.mockReset();
     mockReportGenerateError.mockReset();
-    jest.spyOn(output, 'log').mockImplementation(() => {});
-    jest.spyOn(output, 'warn').mockImplementation(() => {});
-    jest.spyOn(output, 'error').mockImplementation(() => {});
+    vi.spyOn(output, 'log').mockImplementation(() => {});
+    vi.spyOn(output, 'warn').mockImplementation(() => {});
+    vi.spyOn(output, 'error').mockImplementation(() => {});
   });
 
-  afterEach(() => jest.restoreAllMocks());
+  afterEach(() => vi.restoreAllMocks());
 
   it('passes the raw run-phase flags through to the worker', async () => {
     await migrate(
@@ -73,6 +78,7 @@ describe('migrate() single-migration dispatch', () => {
     expect(mockRunSingleMigrationWorker.mock.calls[0][0]).toStrictEqual({
       root: ROOT,
       runMigration: '@nx/js:gen',
+      runId: undefined,
       agentic: 'claude-code',
       validate: false,
       createCommits: true,
@@ -83,14 +89,28 @@ describe('migrate() single-migration dispatch', () => {
     });
   });
 
-  describe('single-migration parse-error funnel routing', () => {
+  describe('run-phase parse-error funnel routing', () => {
     it('reports a single-migration parse error through the run funnel, not the generate funnel', async () => {
       // An empty --run-migration fails to parse with `runMigrations`
-      // undefined, so only the single-migration classification keeps it out of
-      // the generate funnel.
+      // undefined, so only the run-phase classification keeps it out of the
+      // generate funnel.
       const exit = await migrate(ROOT, { runMigration: '' }, [
         '--run-migration',
       ]);
+
+      expect(exit).toBe(1);
+      expect(mockReportRunError).toHaveBeenCalledWith(
+        expect.objectContaining({ code: 'other' })
+      );
+      expect(mockReportGenerateError).not.toHaveBeenCalled();
+    });
+
+    it('reports a run-phase flag conflict through the run funnel, not the generate funnel', async () => {
+      const exit = await migrate(
+        ROOT,
+        { runMigration: 'a', stepAction: 'retry' },
+        ['--run-migration=a', '--step-action=retry']
+      );
 
       expect(exit).toBe(1);
       expect(mockReportRunError).toHaveBeenCalledWith(
@@ -175,6 +195,35 @@ describe('migrate() single-migration dispatch', () => {
       expect(mockRunSingleMigrationWorker.mock.calls[0][0]).toMatchObject({
         commitPrefix: 'custom: ',
         createCommits: undefined,
+      });
+    });
+
+    it('shields a dispensed invocation (--run-migration with --run-id) the same way', async () => {
+      mockReadNxJson.mockReturnValue({
+        migrate: { agentic: true, commitPrefix: 'custom: ' },
+      });
+
+      await migrate(
+        ROOT,
+        {
+          runMigration: '@nx/js:gen',
+          runId: '20260721T000000-abcd',
+          skipInstall: true,
+          verbose: false,
+        },
+        ['--run-migration=@nx/js:gen', '--run-id=20260721T000000-abcd']
+      );
+
+      expect(mockRunSingleMigrationWorker).toHaveBeenCalledTimes(1);
+      expect(mockRunSingleMigrationWorker.mock.calls[0][0]).toMatchObject({
+        // A recorded worker commits per the run's config, so nx.json's commit
+        // options are not overlaid onto it either; the yargs default stands.
+        commitPrefix: 'chore: [nx migration] ',
+        // The nx.json agentic default must not leak into a recorded run; it
+        // would trip the --agentic/--run-id parse conflict.
+        agentic: undefined,
+        runMigration: '@nx/js:gen',
+        runId: '20260721T000000-abcd',
       });
     });
   });

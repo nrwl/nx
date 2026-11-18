@@ -1,12 +1,14 @@
 import {
   checkFilesExist,
   cleanupProject,
+  configureTargetOptions,
+  createRsbuildPortConfig,
   reservePort,
   newProject,
   runCLI,
   runCLIAsync,
-  runE2ETests,
   uniq,
+  shouldRunPlaywrightTests,
 } from '@nx/e2e-utils';
 
 describe('Build React applications and libraries with Rsbuild', () => {
@@ -88,11 +90,21 @@ describe('Build React applications and libraries with Rsbuild', () => {
     await runCLIAsync(`build ${rsbuildApp}`);
     checkFilesExist(`apps/${rsbuildApp}/dist/index.html`);
 
-    if (await runE2ETests()) {
-      const result = runCLI(`e2e ${rsbuildApp}-e2e --verbose`);
-      expect(result).toContain(
-        `Successfully ran target e2e for project ${rsbuildApp}-e2e`
+    if (await shouldRunPlaywrightTests()) {
+      const config = createRsbuildPortConfig(
+        `apps/${rsbuildApp}/rsbuild.config.ts`
       );
+      const restoreServerOptions = configureTargetOptions(['dev', 'preview'], {
+        config,
+      });
+      try {
+        const result = runCLI(`e2e ${rsbuildApp}-e2e --verbose`);
+        expect(result).toContain(
+          `Successfully ran target e2e for project ${rsbuildApp}-e2e`
+        );
+      } finally {
+        restoreServerOptions();
+      }
     }
   }, 300_000);
 });

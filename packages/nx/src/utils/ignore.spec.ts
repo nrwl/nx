@@ -2,6 +2,7 @@ import { createTree } from '../generators/testing-utils/create-tree';
 import {
   createGitIgnoreChecker,
   createIgnoreChainResolver,
+  createOxfmtIgnoreChecker,
   createPrettierIgnoreChecker,
   isIgnoredByChain,
   posixDirname,
@@ -194,8 +195,10 @@ describe('posixDirname', () => {
 });
 
 // Each constructor bundles three values - which files it reads, whether they
-// cascade, and whether they merge. They are unreachable from a caller, so the
-// only way to pin them is through what the returned predicates do.
+// cascade, and whether they merge. git's and prettier's are unreachable from a
+// caller, so the only way to pin them is through what the returned predicates
+// do. oxfmt's is exported as `OXFMT_IGNORE_OPTIONS` because the disk-backed
+// resolver needs the same set, but it is pinned the same way here.
 describe('the ignore checkers', () => {
   function treeWith(files: Record<string, string>) {
     const tree = createTree();
@@ -238,6 +241,41 @@ describe('the ignore checkers', () => {
 
       expect(git.isIgnoredFile('a.ts')).toBe(false);
     });
+
+    it('keeps a file inside an ignored directory ignored despite a nested negation', () => {
+      // git never re-includes inside an excluded directory (verified with
+      // `git check-ignore`). Without the ancestor walk the nested negation is
+      // the nearest opinion and would answer "not ignored".
+      const git = createGitIgnoreChecker(
+        treeWith({ '.gitignore': 'dist/\n', 'dist/.gitignore': '!keep.ts\n' })
+      );
+
+      expect(git.isIgnoredFile('dist/keep.ts')).toBe(true);
+    });
+
+    it('keeps a directory inside an ignored directory ignored despite a nested negation', () => {
+      const git = createGitIgnoreChecker(
+        treeWith({ '.gitignore': 'dist/\n', 'dist/.gitignore': '!sub/\n' })
+      );
+
+      expect(git.isIgnoredDirectory('dist/sub')).toBe(true);
+      // Two ignored ancestors up: the walk must not stop at the immediate
+      // parent.
+      expect(git.isIgnoredFile('dist/sub/a.ts')).toBe(true);
+    });
+
+    it('lets a merged negation re-include a directory, files inside included', () => {
+      // The excluded-ancestor rule only bites while the ancestor stays
+      // excluded: `!dist/` un-ignores the directory itself, and git then walks
+      // it (verified with `git check-ignore`). The ancestor walk must consult
+      // the negation, not just the exclusion.
+      const git = createGitIgnoreChecker(
+        treeWith({ '.gitignore': 'dist/\n', '.nxignore': '!dist/\n' })
+      );
+
+      expect(git.isIgnoredDirectory('dist')).toBe(false);
+      expect(git.isIgnoredFile('dist/a.ts')).toBe(false);
+    });
   });
 
   describe('createPrettierIgnoreChecker', () => {
@@ -272,9 +310,57 @@ describe('the ignore checkers', () => {
     });
   });
 
+  describe('createOxfmtIgnoreChecker', () => {
+    it('reads .gitignore and .prettierignore, not .nxignore', () => {
+      const oxfmt = createOxfmtIgnoreChecker(
+        treeWith({
+          '.gitignore': 'a.ts\n',
+          '.prettierignore': 'b.ts\n',
+          '.nxignore': 'c.ts\n',
+        })
+      );
+
+      expect(oxfmt.isIgnoredFile('a.ts')).toBe(true);
+      expect(oxfmt.isIgnoredFile('b.ts')).toBe(true);
+      expect(oxfmt.isIgnoredFile('c.ts')).toBe(false);
+    });
+
+    // The one axis oxfmt differs from prettier on, measured against both CLIs.
+    it('cascades, unlike prettier', () => {
+      const oxfmt = createOxfmtIgnoreChecker(
+        treeWith({ 'apps/foo/.prettierignore': 'nested.ts\n' })
+      );
+
+      expect(oxfmt.isIgnoredFile('apps/foo/nested.ts')).toBe(true);
+      expect(oxfmt.isIgnoredFile('apps/bar/nested.ts')).toBe(false);
+    });
+
+    it('keeps the files separate, so .prettierignore cannot re-include', () => {
+      const oxfmt = createOxfmtIgnoreChecker(
+        treeWith({ '.gitignore': 'a.ts\n', '.prettierignore': '!a.ts\n' })
+      );
+
+      expect(oxfmt.isIgnoredFile('a.ts')).toBe(true);
+    });
+
+    it('keeps a file inside an ignored directory ignored despite a nested negation', () => {
+      // Measured against the oxfmt 0.60.0 CLI: a scan skips `dist/keep.ts`
+      // because it never enters `dist/`, so the nested negation is never read.
+      const oxfmt = createOxfmtIgnoreChecker(
+        treeWith({
+          '.gitignore': 'dist/\n',
+          'dist/.prettierignore': '!keep.ts\n',
+        })
+      );
+
+      expect(oxfmt.isIgnoredFile('dist/keep.ts')).toBe(true);
+    });
+  });
+
   it.each([
     ['git', createGitIgnoreChecker],
     ['prettier', createPrettierIgnoreChecker],
+    ['oxfmt', createOxfmtIgnoreChecker],
   ])('%s always ignores the hardcoded directories', (_name, create) => {
     const checker = create(treeWith({ '.gitignore': '!node_modules\n' }));
 

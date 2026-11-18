@@ -15,7 +15,6 @@ import type {
   ImportDeclaration,
   ImportSpecifier,
   ImportTypeNode,
-  LiteralTypeNode,
   Node,
   SourceFile,
   StringLiteral,

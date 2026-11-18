@@ -20,22 +20,18 @@ export interface Schema {
   globalCss?: boolean;
   strict?: boolean;
   enableTypedLinting?: boolean;
-  /**
-   * @deprecated Use `enableTypedLinting` instead. This option will be removed in Nx v24.
-   */
-  setParserOptionsProject?: boolean;
   compiler?: 'babel' | 'swc';
   remotes?: string[];
+  /** @deprecated Use {@link Schema.port} instead. This option will be removed in Nx v25. */
   devServerPort?: number;
   skipPackageJson?: boolean;
   rootProject?: boolean;
   bundler?: 'webpack' | 'vite' | 'rspack' | 'rsbuild';
   minimal?: boolean;
   // Internal options
-  addPlugin?: boolean;
   nxCloudToken?: string;
   useTsSolution?: boolean;
-  formatter?: 'prettier' | 'none';
+  formatter?: 'prettier' | 'oxfmt' | 'none';
   useProjectJson?: boolean;
   port?: number;
 }
@@ -52,7 +48,6 @@ export interface NormalizedSchema<T extends Schema = Schema> extends T {
   fileName: string;
   hasStyles: boolean;
   unitTestRunner: 'jest' | 'vitest' | 'none';
-  addPlugin?: boolean;
   names: ReturnType<typeof names>;
   isUsingTsSolutionConfig?: boolean;
 }

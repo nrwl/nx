@@ -19,6 +19,7 @@ import { normalizeOptions } from './lib/normalize-options';
 import { Schema } from './schema';
 import { addE2e } from './lib/add-e2e';
 import { addJest } from './lib/add-jest';
+import { addVitest } from './lib/add-vitest';
 import { addProject } from './lib/add-project';
 import { createApplicationFiles } from './lib/create-application-files';
 import { setDefaults } from './lib/set-defaults';
@@ -33,14 +34,13 @@ import {
   shouldConfigureTsSolutionSetup,
   updateTsconfigFiles,
   sortPackageJsonFields,
+  typesNodeVersion,
 } from '@nx/js/internal';
 import { configureForSwc } from '../../utils/add-swc-to-custom-server';
 import { updateJestConfig } from '../../utils/jest-config-util';
-import { isNext14, isNext15 } from '../../utils/version-utils';
 
 export async function applicationGenerator(host: Tree, schema: Schema) {
   return await applicationGeneratorInternal(host, {
-    addPlugin: false,
     useProjectJson: true,
     ...schema,
   });
@@ -53,7 +53,6 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
 
   const addTsPlugin = shouldConfigureTsSolutionSetup(
     host,
-    schema.addPlugin,
     schema.useTsSolution
   );
   const jsInitTask = await jsInitGenerator(host, {
@@ -93,6 +92,9 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
   const jestTask = await addJest(host, options);
   tasks.push(jestTask);
 
+  const vitestTask = await addVitest(host, options);
+  tasks.push(vitestTask);
+
   const styledTask = addStyleDependencies(host, {
     style: options.style,
     swc: !host.exists(joinPathFragments(options.appProjectRoot, '.babelrc')),
@@ -109,15 +111,19 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
   }
 
   if (options.customServer) {
-    await customServerGenerator(host, {
+    const customServerTask = await customServerGenerator(host, {
       project: options.projectName,
       compiler: options.swc ? 'swc' : 'tsc',
     });
+    if (customServerTask) {
+      tasks.push(customServerTask);
+    }
   }
 
   if (!options.skipPackageJson) {
     const reactVersions = await getReactDependenciesVersionsToInstall(host);
     const devDependencies: Record<string, string> = {
+      '@types/node': typesNodeVersion,
       '@types/react': reactVersions['@types/react'],
       '@types/react-dom': reactVersions['@types/react-dom'],
     };

@@ -2,7 +2,7 @@ use itertools::Itertools;
 use regex::Regex;
 use std::sync::LazyLock;
 
-use crate::native::glob::{contains_glob_pattern, glob_transform::partition_glob};
+use crate::native::glob::glob_transform::partition_glob;
 
 const ALLOWED_WORKSPACE_ROOT_OUTPUT_PREFIXES: [&str; 2] = ["!{workspaceRoot}", "{workspaceRoot}"];
 
@@ -24,13 +24,11 @@ pub fn validate_outputs(outputs: Vec<String>) -> anyhow::Result<()> {
             missing_prefix.push(output);
         } else {
             for prefix in ALLOWED_WORKSPACE_ROOT_OUTPUT_PREFIXES.iter() {
-                if let Some(trimmed) = output.strip_prefix(prefix) {
-                    if contains_glob_pattern(&trimmed) {
-                        let (root, _) = partition_glob(&trimmed)?;
-                        if root.is_empty() {
-                            workspace_globs.push(output);
-                        }
-                    }
+                if let Some(trimmed) = output.strip_prefix(prefix)
+                    && let (root, Some(_)) = partition_glob(trimmed)
+                    && root.is_empty()
+                {
+                    workspace_globs.push(output);
                 }
             }
         }
@@ -67,7 +65,7 @@ pub fn get_transformable_outputs(outputs: Vec<String>) -> Vec<String> {
 
 #[cfg(test)]
 mod test {
-    use super::is_missing_prefix;
+    use super::{is_missing_prefix, validate_outputs};
 
     #[test]
     fn test_is_missing_prefix() {
@@ -75,5 +73,21 @@ mod test {
         assert!(is_missing_prefix("!dist"));
         assert!(!is_missing_prefix("{workspaceRoot}/dist"));
         assert!(!is_missing_prefix("!{workspaceRoot}/dist"));
+    }
+
+    #[test]
+    fn a_workspace_root_output_must_name_a_directory_before_its_pattern() {
+        for accepted in ["{workspaceRoot}/@scope", "{workspaceRoot}/dist/**"] {
+            assert!(
+                validate_outputs(vec![accepted.into()]).is_ok(),
+                "{accepted}"
+            );
+        }
+        for rejected in ["{workspaceRoot}/brace}", "{workspaceRoot}/**"] {
+            assert!(
+                validate_outputs(vec![rejected.into()]).is_err(),
+                "{rejected}"
+            );
+        }
     }
 }

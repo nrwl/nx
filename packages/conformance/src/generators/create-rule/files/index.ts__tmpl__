@@ -1,0 +1,17 @@
+import { createConformanceRule, ConformanceViolation } from '@nx/conformance';
+
+export default createConformanceRule({
+  name: '<%= ruleName %>',
+  category: '<%= category %>',
+  description: '<%= description %>',
+  implementation: async (context) => {
+    const violations: ConformanceViolation[] = [];
+
+    return {
+      severity: 'low',
+      details: {
+        violations,
+      },
+    };
+  },
+});

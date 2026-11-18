@@ -1,9 +1,7 @@
-import { addPlugin } from '@nx/devkit/internal';
 import {
   type Tree,
   type GeneratorCallback,
   readNxJson,
-  createProjectGraphAsync,
   addDependenciesToPackageJson,
   formatFiles,
   runTasksInSerial,
@@ -11,7 +9,6 @@ import {
   updateNxJson,
 } from '@nx/devkit';
 import { InitGeneratorSchema } from './schema';
-import { createNodes } from '../../plugins/plugin';
 import { nxVersion } from '../../utils/versions';
 
 export function updateDependencies(tree: Tree, schema: InitGeneratorSchema) {

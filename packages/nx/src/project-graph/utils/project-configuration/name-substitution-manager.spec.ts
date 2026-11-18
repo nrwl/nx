@@ -1781,10 +1781,9 @@ describe('ProjectNameInNodePropsManager', () => {
       // Reproduces the real-world bug: devkit has a target literally named
       // "nx:echo" and a "parent" target with dependsOn: ["nx:echo"]. A
       // different project at root "." is transiently named "nx" by an early
-      // plugin, then renamed to "@nx/nx-source". Without the fix, the
-      // substitution manager incorrectly rewrites "nx:echo" →
-      // "@nx/nx-source:echo" because it parses "nx:echo" as project "nx"
-      // target "echo" and a dirty entry exists for the name "nx".
+      // plugin, then renamed to "@nx/nx-source". Parsing "nx:echo" as project
+      // "nx" target "echo" would match the dirty entry for the name "nx" and
+      // rewrite it to "@nx/nx-source:echo".
       const manager = createManager();
 
       // Project at root that transiently has name "nx", then renamed

@@ -1,6 +1,6 @@
 import '@nx/devkit/internal-testing-utils/mock-project-graph';
 
-import { readProjectConfiguration, Tree } from '@nx/devkit';
+import { readJson, readProjectConfiguration, Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { presetGenerator } from './preset';
 import { Preset } from '../utils/presets';
@@ -12,12 +12,133 @@ describe('preset', () => {
   beforeEach(() => {
     envBackup = process.env.ESLINT_USE_FLAT_CONFIG;
     delete process.env.ESLINT_USE_FLAT_CONFIG;
-    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    // The tree carries no formatter config, so detection resolves to none and
+    // the snapshots record raw generator output - double quotes, no comma
+    // spacing, `server:{`. That is
+    // valid code that simply has not been formatted; do not "tidy" it, or the
+    // snapshots stop matching what a caller who asked for no formatter gets.
+    tree = createTreeWithEmptyWorkspace({
+      layout: 'apps-libs',
+      formatter: 'none',
+    });
   });
 
   afterEach(() => {
     if (envBackup === undefined) delete process.env.ESLINT_USE_FLAT_CONFIG;
     else process.env.ESLINT_USE_FLAT_CONFIG = envBackup;
+  });
+
+  describe('formatter', () => {
+    // The apps preset generates no project, so nothing downstream configures
+    // the formatter and the choice the user passed would be dropped - the next
+    // generator to run would then pick the default instead.
+    it.each([
+      ['prettier', '.prettierrc', '.oxfmtrc.json'],
+      ['oxfmt', '.oxfmtrc.json', '.prettierrc'],
+    ])(
+      'should honour --formatter=%s on the apps preset',
+      async (formatter, expected, notExpected) => {
+        tree.delete('.prettierrc');
+
+        await presetGenerator(tree, {
+          name: 'apps-preset',
+          preset: Preset.Apps,
+          linter: 'eslint',
+          formatter,
+        } as any);
+
+        expect(tree.exists(expected)).toBe(true);
+        expect(tree.exists(notExpected)).toBe(false);
+        // The config alone is not enough: a workspace configured for a
+        // formatter it never installed fails `nx format` outright.
+        expect(readJson(tree, 'package.json').devDependencies).toHaveProperty(
+          formatter
+        );
+      }
+    );
+
+    it.each([
+      ['prettier', '.prettierrc', '.oxfmtrc.json'],
+      ['oxfmt', '.oxfmtrc.json', '.prettierrc'],
+    ])(
+      'should honour --formatter=%s on the npm preset',
+      async (formatter, expected, notExpected) => {
+        // The npm preset generates no project either, so it had been dropping
+        // --formatter the same way the apps preset did.
+        tree.delete('.prettierrc');
+
+        await presetGenerator(tree, {
+          name: 'npm-preset',
+          preset: Preset.NPM,
+          linter: 'eslint',
+          formatter,
+        } as any);
+
+        expect(tree.exists(expected)).toBe(true);
+        expect(tree.exists(notExpected)).toBe(false);
+        expect(readJson(tree, 'package.json').devDependencies).toHaveProperty(
+          formatter
+        );
+      }
+    );
+
+    it.each([['prettier'], ['oxfmt']])(
+      'should honour --formatter=%s on the ts preset',
+      async (formatter) => {
+        tree.delete('.prettierrc');
+
+        await presetGenerator(tree, {
+          name: 'ts-preset',
+          preset: Preset.TS,
+          linter: 'eslint',
+          formatter,
+        } as any);
+
+        expect(readJson(tree, 'package.json').devDependencies).toHaveProperty(
+          formatter
+        );
+      }
+    );
+
+    it.each([['prettier'], ['oxfmt']])(
+      'should not touch package.json on the ts preset with --skipInstall and --formatter=%s',
+      async (formatter) => {
+        tree.delete('.prettierrc');
+        // The whole file, not just the formatter entry: any change here makes
+        // `installPackagesTask` run a real install, which is exactly what
+        // `--skipInstall` promises not to do.
+        const packageJsonBefore = tree.read('package.json', 'utf-8');
+
+        await presetGenerator(tree, {
+          name: 'ts-preset',
+          preset: Preset.TS,
+          linter: 'eslint',
+          formatter,
+          skipInstall: true,
+        } as any);
+
+        expect(tree.read('package.json', 'utf-8')).toBe(packageJsonBefore);
+        // The choice is not dropped: the config survives, so formatter
+        // detection re-adds the dependency on the next @nx/js:init run.
+        expect(
+          tree.exists(formatter === 'oxfmt' ? '.oxfmtrc.json' : '.prettierrc')
+        ).toBe(true);
+      }
+    );
+
+    it('should configure nothing when the formatter is none', async () => {
+      tree.delete('.prettierrc');
+
+      await presetGenerator(tree, {
+        name: 'apps-preset',
+        preset: Preset.Apps,
+        linter: 'eslint',
+        formatter: 'none',
+      } as any);
+
+      expect(tree.exists('.prettierrc')).toBe(false);
+      expect(tree.exists('.oxfmtrc.json')).toBe(false);
+    });
   });
 
   it(`should create files (preset = angular-monorepo)`, async () => {
@@ -79,44 +200,40 @@ describe('preset', () => {
     expect(tree.exists(`/apps/${name}/src/main.tsx`)).toBe(true);
     expect(tree.read(`apps/${name}/webpack.config.js`, 'utf-8'))
       .toMatchInlineSnapshot(`
-      "const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
-      const { NxReactWebpackPlugin } = require('@nx/react/webpack-plugin');
-      const { join } = require('path');
+        "const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
+        const { NxReactWebpackPlugin } = require('@nx/react/webpack-plugin');
+        const { join } = require('path');
 
-      module.exports = {
-        output: {
-          path: join(__dirname, '../../dist/apps/react-preset-monorepo'),
-          clean: true,
-        },
-        devServer: {
-          port: 4200,
-          historyApiFallback: {
-            index: '/index.html',
-            disableDotRule: true,
-            htmlAcceptHeaders: ['text/html', 'application/xhtml+xml'],
+        module.exports = {
+          output: {
+            path: join(__dirname, '../../dist/apps/react-preset-monorepo'),
+            clean: true,
           },
-        },
-        plugins: [
-          new NxAppWebpackPlugin({
-            tsConfig: './tsconfig.app.json',
-            compiler: 'babel',
-            main: './src/main.tsx',
-            index: './src/index.html',
-            baseHref: '/',
-            assets: ['./src/favicon.ico', './src/assets'],
-            styles: ['./src/styles.css'],
-            outputHashing: process.env['NODE_ENV'] === 'production' ? 'all' : 'none',
-            optimization: process.env['NODE_ENV'] === 'production',
-          }),
-          new NxReactWebpackPlugin({
-            // Uncomment this line if you don't want to use SVGR
-            // See: https://react-svgr.com/
-            // svgr: false
-          }),
-        ],
-      };
-      "
-    `);
+          devServer: {
+            port: 4200,
+            historyApiFallback: {
+              index: '/index.html',
+              disableDotRule: true,
+              htmlAcceptHeaders: ['text/html', 'application/xhtml+xml'],
+            },
+          },
+          plugins: [
+            new NxAppWebpackPlugin({
+              tsConfig: './tsconfig.app.json',
+              compiler: 'babel',
+              main: './src/main.tsx',
+              index: './src/index.html',
+              baseHref: '/',
+              assets: ["./src/favicon.ico","./src/assets"],
+              styles: ["./src/styles.css"],
+              outputHashing: process.env['NODE_ENV'] === 'production' ? 'all' : 'none',
+              optimization: process.env['NODE_ENV'] === 'production',
+            }),
+            new NxReactWebpackPlugin(),
+          ],
+        };
+        "
+      `);
   });
 
   it(`should create files (preset = vue-monorepo)`, async () => {
@@ -130,51 +247,53 @@ describe('preset', () => {
     expect(tree.exists(`apps/${name}/src/main.ts`)).toBe(true);
     expect(tree.read(`apps/${name}/vite.config.mts`, 'utf-8'))
       .toMatchInlineSnapshot(`
-      "/// <reference types='vitest' />
-      import { defineConfig } from 'vite';
-      import vue from '@vitejs/plugin-vue';
-      import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
-      import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
+        "/// <reference types='vitest' />
+        import { defineConfig } from 'vite';
+        import vue from '@vitejs/plugin-vue';
+        import { nxReadySignal } from '@nx/vite/plugins/nx-ready-signal.plugin';
 
-      export default defineConfig(() => ({
-        root: import.meta.dirname,
-        cacheDir: '../../node_modules/.vite/apps/vue-preset-monorepo',
-        server:{
-          port: 4200,
-          host: 'localhost',
-        },
-        preview:{
-          port: 4300,
-          host: 'localhost',
-        },
-        plugins: [vue(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
-        // Uncomment this if you are using workers.
-        // worker: {
-        //   plugins: () => [ nxViteTsPaths() ],
-        // },
-        build: {
-          outDir: '../../dist/apps/vue-preset-monorepo',
-          emptyOutDir: true,
-          reportCompressedSize: true,
-          commonjsOptions: {
-            transformMixedEsModules: true,
+        export default defineConfig(() => ({
+          root: import.meta.dirname,
+          cacheDir: '../../node_modules/.vite/apps/vue-preset-monorepo',
+          server:{
+            port: 4200,
+            host: 'localhost',
           },
-        },
-        test: {
-          name: 'vue-preset-monorepo',
-          watch: false,
-          globals: true,
-          environment: 'jsdom',
-          include: ['{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-          reporters: ['default'],
-          coverage: {
-            reportsDirectory: '../../coverage/apps/vue-preset-monorepo',
-            provider: 'v8' as const,
-          }
-        },
-      }));
-      "
-    `);
+          preview:{
+            port: 4300,
+            host: 'localhost',
+          },
+          resolve: {
+            tsconfigPaths: true,
+          },
+          plugins: [vue(), nxReadySignal()],
+          // Uncomment this if you are using workers.
+          // worker: {
+          //  plugins: [],
+          // },
+          build: {
+            outDir: '../../dist/apps/vue-preset-monorepo',
+            emptyOutDir: true,
+            reportCompressedSize: true,
+            commonjsOptions: {
+              transformMixedEsModules: true,
+            },
+          },
+          test: {
+            name: 'vue-preset-monorepo',
+            watch: false,
+            globals: true,
+            environment: 'jsdom',
+            include: ['{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+            reporters: ['default'],
+            coverage: {
+              reportsDirectory: '../../coverage/apps/vue-preset-monorepo',
+              provider: 'v8' as const,
+            }
+          },
+        }));
+        "
+      `);
   });
 
   it(`should create files (preset = nuxt)`, async () => {
@@ -211,6 +330,32 @@ describe('preset', () => {
 
     expect(tree.exists(`apps/${name}/src/main.ts`)).toBe(true);
     expect(tree.exists(`apps/${name}/eslint.config.mjs`)).toBe(true);
+  });
+
+  it('should pass the node bundler through (preset = node-monorepo)', async () => {
+    const name = 'node-preset';
+    await presetGenerator(tree, {
+      name,
+      preset: Preset.NodeMonorepo,
+      bundler: 'rolldown',
+      linter: 'none',
+      framework: 'none',
+    });
+
+    expect(tree.exists(`apps/${name}/rolldown.config.ts`)).toBe(true);
+  });
+
+  it('should pass the tsc bundler through instead of falling back (preset = node-monorepo)', async () => {
+    // tsc needs a TS solution workspace, so a forwarded value fails loudly.
+    await expect(
+      presetGenerator(tree, {
+        name: 'node-preset',
+        preset: Preset.NodeMonorepo,
+        bundler: 'tsc',
+        linter: 'none',
+        framework: 'none',
+      })
+    ).rejects.toThrow(/requires a TypeScript solution workspace/);
   });
 
   it('should create files (preset = react-native)', async () => {
@@ -259,16 +404,12 @@ describe('preset', () => {
             main: './src/main.tsx',
             index: './src/index.html',
             baseHref: '/',
-            assets: ['./src/favicon.ico', './src/assets'],
-            styles: ['./src/styles.css'],
+            assets: ["./src/favicon.ico","./src/assets"],
+            styles: ["./src/styles.css"],
             outputHashing: process.env['NODE_ENV'] === 'production' ? 'all' : 'none',
             optimization: process.env['NODE_ENV'] === 'production',
           }),
-          new NxReactWebpackPlugin({
-            // Uncomment this line if you don't want to use SVGR
-            // See: https://react-svgr.com/
-            // svgr: false
-          }),
+          new NxReactWebpackPlugin(),
         ],
       };
       "
@@ -289,8 +430,7 @@ describe('preset', () => {
       "/// <reference types='vitest' />
       import { defineConfig } from 'vite';
       import react from '@vitejs/plugin-react';
-      import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
-      import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
+      import { nxReadySignal } from '@nx/vite/plugins/nx-ready-signal.plugin';
 
       export default defineConfig(() => ({
         root: import.meta.dirname,
@@ -303,10 +443,13 @@ describe('preset', () => {
           port: 4300,
           host: 'localhost',
         },
-        plugins: [react(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
+        resolve: {
+          tsconfigPaths: true,
+        },
+        plugins: [react(), nxReadySignal()],
         // Uncomment this if you are using workers.
         // worker: {
-        //   plugins: () => [ nxViteTsPaths() ],
+        //  plugins: [],
         // },
         build: {
           outDir: './dist/react-standalone-preset-vite',
@@ -346,8 +489,7 @@ describe('preset', () => {
       "/// <reference types='vitest' />
       import { defineConfig } from 'vite';
       import vue from '@vitejs/plugin-vue';
-      import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
-      import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
+      import { nxReadySignal } from '@nx/vite/plugins/nx-ready-signal.plugin';
 
       export default defineConfig(() => ({
         root: import.meta.dirname,
@@ -360,10 +502,13 @@ describe('preset', () => {
           port: 4300,
           host: 'localhost',
         },
-        plugins: [vue(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
+        resolve: {
+          tsconfigPaths: true,
+        },
+        plugins: [vue(), nxReadySignal()],
         // Uncomment this if you are using workers.
         // worker: {
-        //   plugins: () => [ nxViteTsPaths() ],
+        //  plugins: [],
         // },
         build: {
           outDir: './dist/vue-standalone-preset',

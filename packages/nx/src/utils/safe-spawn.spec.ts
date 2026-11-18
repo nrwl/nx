@@ -1,9 +1,10 @@
+import type { Mock } from 'vitest';
 import { execFileSync, spawn } from 'child_process';
 import { safeExecFileSync, safeSpawn } from './safe-spawn';
 
-jest.mock('child_process', () => ({
-  spawn: jest.fn(),
-  execFileSync: jest.fn(),
+vi.mock('child_process', () => ({
+  spawn: vi.fn(),
+  execFileSync: vi.fn(),
 }));
 
 describe('safeSpawn', () => {
@@ -18,8 +19,8 @@ describe('safeSpawn', () => {
   }
 
   beforeEach(() => {
-    (spawn as jest.Mock).mockReset();
-    (execFileSync as jest.Mock).mockReset();
+    (spawn as Mock).mockReset();
+    (execFileSync as Mock).mockReset();
   });
 
   afterEach(() => setPlatform(originalPlatform));
@@ -32,7 +33,7 @@ describe('safeSpawn', () => {
       cwd: '/ws',
     });
 
-    const [binary, args, options] = (spawn as jest.Mock).mock.calls[0];
+    const [binary, args, options] = (spawn as Mock).mock.calls[0];
     expect(binary).toBe('./mvnw');
     expect(args).toEqual(['-DtargetNamePrefix=a; touch /tmp/pwned']);
     expect(options.shell).toBe(false);
@@ -48,7 +49,7 @@ describe('safeSpawn', () => {
 
     safeSpawn(binary, ['-DtargetNamePrefix=api'], { cwd: 'C:\\ws' });
 
-    expect((spawn as jest.Mock).mock.calls[0][2].shell).toBe(true);
+    expect((spawn as Mock).mock.calls[0][2].shell).toBe(true);
   });
 
   // Node launches an .exe directly, so neither the shell nor the refusal below
@@ -59,7 +60,7 @@ describe('safeSpawn', () => {
 
     safeSpawn('C:\\Users\\u\\claude.exe', ['--system-prompt', prompt], {});
 
-    const [binary, args, options] = (spawn as jest.Mock).mock.calls[0];
+    const [binary, args, options] = (spawn as Mock).mock.calls[0];
     expect(binary).toBe('C:\\Users\\u\\claude.exe');
     expect(args).toEqual(['--system-prompt', prompt]);
     expect(options.shell).toBe(false);
@@ -72,7 +73,7 @@ describe('safeSpawn', () => {
 
     safeSpawn('C:\\ws\\my.app\\gradlew', ['tasks'], {});
 
-    expect((spawn as jest.Mock).mock.calls[0][2].shell).toBe(true);
+    expect((spawn as Mock).mock.calls[0][2].shell).toBe(true);
   });
 
   // A percent sign is legal in a Windows directory name; refusing it broke
@@ -83,7 +84,7 @@ describe('safeSpawn', () => {
 
     safeSpawn('C:\\ws\\100% done\\gradlew.bat', ['tasks'], {});
 
-    expect((spawn as jest.Mock).mock.calls[0][0]).toBe(
+    expect((spawn as Mock).mock.calls[0][0]).toBe(
       '"C:\\ws\\100% done\\gradlew.bat"'
     );
   });
@@ -104,7 +105,7 @@ describe('safeSpawn', () => {
 
     safeSpawn('C:\\ws\\my dir\\gradlew.bat', ['tasks'], {});
 
-    expect((spawn as jest.Mock).mock.calls[0][0]).toBe(
+    expect((spawn as Mock).mock.calls[0][0]).toBe(
       '"C:\\ws\\my dir\\gradlew.bat"'
     );
   });
@@ -116,7 +117,7 @@ describe('safeSpawn', () => {
 
     safeSpawn('mvnw.cmd', ['-DtargetNamePrefix=a&calc'], {});
 
-    expect((spawn as jest.Mock).mock.calls[0][1]).toEqual([
+    expect((spawn as Mock).mock.calls[0][1]).toEqual([
       '"-DtargetNamePrefix=a&calc"',
     ]);
   });
@@ -128,7 +129,7 @@ describe('safeSpawn', () => {
 
     safeSpawn('mvnw.cmd', ['-DworkspaceRoot=C:\\ws\\100% done'], {});
 
-    expect((spawn as jest.Mock).mock.calls[0][1]).toEqual([
+    expect((spawn as Mock).mock.calls[0][1]).toEqual([
       '"-DworkspaceRoot=C:\\ws\\100% done"',
     ]);
   });
@@ -140,7 +141,7 @@ describe('safeSpawn', () => {
 
     safeSpawn('mvnw.cmd', ['-DtargetNamePrefix=%FOO%'], {});
 
-    expect((spawn as jest.Mock).mock.calls[0][1]).toEqual([
+    expect((spawn as Mock).mock.calls[0][1]).toEqual([
       '-DtargetNamePrefix=%FOO%',
     ]);
   });
@@ -159,7 +160,7 @@ describe('safeSpawn', () => {
 
     safeSpawn('./mvnw', ['-DtargetNamePrefix=%PATH%'], {});
 
-    expect((spawn as jest.Mock).mock.calls[0][1]).toEqual([
+    expect((spawn as Mock).mock.calls[0][1]).toEqual([
       '-DtargetNamePrefix=%PATH%',
     ]);
   });
@@ -182,7 +183,7 @@ describe('safeSpawn', () => {
 
     safeSpawn('mvnw.cmd', ['-DworkspaceRoot=C:\\Users\\me\\my ws'], {});
 
-    expect((spawn as jest.Mock).mock.calls[0][1]).toEqual([
+    expect((spawn as Mock).mock.calls[0][1]).toEqual([
       '"-DworkspaceRoot=C:\\Users\\me\\my ws"',
     ]);
   });
@@ -192,7 +193,7 @@ describe('safeSpawn', () => {
 
     safeSpawn('./mvnw', ['-DtargetNamePrefix=a&calc'], {});
 
-    expect((spawn as jest.Mock).mock.calls[0][1]).toEqual([
+    expect((spawn as Mock).mock.calls[0][1]).toEqual([
       '-DtargetNamePrefix=a&calc',
     ]);
   });
@@ -215,10 +216,10 @@ describe('safeExecFileSync', () => {
       writable: true,
       value: 'linux',
     });
-    (execFileSync as jest.Mock).mockReturnValue('Apache Maven 3.9.9\n');
+    (execFileSync as Mock).mockReturnValue('Apache Maven 3.9.9\n');
 
     expect(safeExecFileSync('mvn', ['--version'])).toBe('Apache Maven 3.9.9\n');
-    expect((execFileSync as jest.Mock).mock.calls[0][2]).toMatchObject({
+    expect((execFileSync as Mock).mock.calls[0][2]).toMatchObject({
       encoding: 'utf-8',
       windowsHide: true,
       shell: false,

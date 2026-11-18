@@ -1,18 +1,16 @@
 import {
-  addDependenciesToPackageJson,
   GeneratorCallback,
   joinPathFragments,
   runTasksInSerial,
   Tree,
 } from '@nx/devkit';
-import { extraEslintDependencies } from '@nx/react';
+import { addExtraEslintDependencies } from '@nx/react/internal';
 import { NormalizedSchema } from './normalize-options';
 import {
   addExtendsToLintConfig,
   addOverrideToLintConfig,
   addPredefinedConfigToFlatLintConfig,
   isEslintConfigSupported,
-  isTypedLintingEnabled,
   useFlatConfig,
 } from '@nx/eslint/internal';
 import { addLintingToProject } from '@nx/js/internal';
@@ -26,8 +24,7 @@ export async function addLinting(host: Tree, options: NormalizedSchema) {
       tsConfigPaths: [
         joinPathFragments(options.e2eProjectRoot, 'tsconfig.app.json'),
       ],
-      enableTypedLinting: isTypedLintingEnabled(options),
-      addPlugin: options.addPlugin,
+      enableTypedLinting: options.enableTypedLinting,
       // Detox e2e specs are Jest; this is what enables the linter's Jest rules.
       unitTestRunner: 'jest',
     })
@@ -62,14 +59,7 @@ export async function addLinting(host: Tree, options: NormalizedSchema) {
     }
   }
 
-  const installTask = addDependenciesToPackageJson(
-    host,
-    extraEslintDependencies.dependencies,
-    extraEslintDependencies.devDependencies,
-    undefined,
-    true
-  );
-  tasks.push(installTask);
+  tasks.push(addExtraEslintDependencies(host));
 
   return runTasksInSerial(...tasks);
 }

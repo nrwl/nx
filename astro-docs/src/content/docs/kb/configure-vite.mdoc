@@ -16,7 +16,22 @@ The `@nx/vite` plugin generators take care of configuring Vite for you. However,
 
 ## TypeScript paths
 
-Use the [`vite-tsconfig-paths`](https://www.npmjs.com/package/vite-tsconfig-paths) plugin so Vite resolves the TypeScript path aliases declared in your workspace's base `tsconfig`:
+Vite 8 resolves the TypeScript path aliases declared in your workspace's base `tsconfig` through `resolve.tsconfigPaths`. Vite marks the option experimental and leaves it off by default, so set it explicitly:
+
+```ts
+// vite.config.ts
+import { defineConfig } from 'vite';
+
+export default defineConfig({
+  resolve: {
+    tsconfigPaths: true,
+  },
+});
+```
+
+The inferred `@nx/vite/plugin` ensures each project extends the workspace base `tsconfig`, so Vite resolves the aliases end-to-end.
+
+On earlier Vite versions the option does not exist. Use the [`vite-tsconfig-paths`](https://www.npmjs.com/package/vite-tsconfig-paths) plugin instead:
 
 ```ts
 // vite.config.ts
@@ -27,12 +42,6 @@ export default defineConfig({
   plugins: [tsconfigPaths()],
 });
 ```
-
-The inferred `@nx/vite/plugin` automatically ensures each project extends the workspace base `tsconfig`, so the community plugin handles path resolution end-to-end.
-
-{% aside type="caution" title="`nxViteTsPaths` is deprecated" %}
-The `nxViteTsPaths()` plugin from `@nx/vite/plugins/nx-tsconfig-paths.plugin` is deprecated and will be removed in Nx v24. It still works in v23, but using it logs a deprecation warning. Swap it for `tsconfigPaths()` from `vite-tsconfig-paths` as shown above.
-{% /aside %}
 
 ## Framework plugins
 
@@ -110,16 +119,17 @@ When you need glob-based copying (for example, picking up `*.md` files from your
 // vite.config.ts
 /// <reference types='vitest' />
 import { defineConfig } from 'vite';
-import tsconfigPaths from 'vite-tsconfig-paths';
 import { viteStaticCopy } from 'vite-plugin-static-copy';
 // ...
 
 export default defineConfig({
   root: __dirname,
   cacheDir: '../../node_modules/.vite/libs/testlib',
+  resolve: {
+    tsconfigPaths: true,
+  },
 
   plugins: [
-    tsconfigPaths(),
     viteStaticCopy({
       targets: [{ src: '*.md', dest: '.' }],
     }),
@@ -131,10 +141,6 @@ export default defineConfig({
   // ...
 });
 ```
-
-{% aside type="caution" title="`nxCopyAssetsPlugin` is deprecated" %}
-The `nxCopyAssetsPlugin` plugin from `@nx/vite/plugins/nx-copy-assets.plugin` is deprecated and will be removed in Nx v24. It still works in v23, but using it logs a deprecation warning. Use Vite's native `publicDir` option or `vite-plugin-static-copy` as shown above.
-{% /aside %}
 
 ## For testing
 

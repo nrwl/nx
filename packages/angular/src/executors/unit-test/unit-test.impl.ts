@@ -94,6 +94,14 @@ function validateOptions(options: UnitTestExecutorOptions): void {
       );
     }
   }
+
+  if (lt(angularVersion, '22.2.0')) {
+    if (options.splitting !== undefined) {
+      throw new Error(
+        `The "splitting" option requires Angular version 22.2.0 or greater. You are currently using version ${angularVersion}.`
+      );
+    }
+  }
 }
 
 /**

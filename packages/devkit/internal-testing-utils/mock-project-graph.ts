@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-restricted-imports */
+/* oxlint-disable no-restricted-imports */
 /**
  * Side-effect module: registers a jest mock of `@nx/devkit`'s
  * `createProjectGraphAsync` for generator specs. It must remain a dedicated

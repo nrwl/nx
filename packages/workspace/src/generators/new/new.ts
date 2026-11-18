@@ -13,7 +13,8 @@ import { Linter, LinterType } from '../../utils/lint';
 import { generateWorkspaceFiles } from './generate-workspace-files';
 import { addPresetDependencies, generatePreset } from './generate-preset';
 import { execSync } from 'child_process';
-import { Agent } from '@nx/devkit/internal';
+import { acknowledgeDeclaredBuildScripts, Agent } from '@nx/devkit/internal';
+import { getNpmPackageVersion } from '../utils/get-npm-package-version';
 
 interface Schema {
   directory: string;
@@ -42,7 +43,7 @@ interface Schema {
   useGitHub?: boolean;
   nxCloud?: 'yes' | 'skip' | 'circleci' | 'github';
   analytics?: boolean;
-  formatter?: string;
+  formatter?: 'none' | 'prettier' | 'oxfmt';
   workspaces?: boolean;
   workspaceGlobs?: string | string[];
   useProjectJson?: boolean;
@@ -66,14 +67,23 @@ export async function newGenerator(tree: Tree, opts: Schema) {
   const options = normalizeOptions(opts);
   validateOptions(options, tree);
 
-  const { token, aiAgentsCallback } = await generateWorkspaceFiles(
-    tree,
-    options
-  );
+  const { token, aiAgentsCallback, presetDependencies } =
+    await generateWorkspaceFiles(tree, options);
 
   options.nxCloudToken = token;
 
-  addPresetDependencies(tree, options);
+  addPresetDependencies(tree, options, presetDependencies);
+  if (options.isCustomPreset && options.presetVersion) {
+    // The preset generator only runs after the install below, so the
+    // decisions it declares for its dependency tree are recorded here.
+    await acknowledgeDeclaredBuildScripts(
+      tree,
+      options.packageManager as PackageManager,
+      options.preset,
+      options.presetVersion,
+      options.directory
+    );
+  }
 
   await formatFiles(tree);
 
@@ -98,7 +108,19 @@ export async function newGenerator(tree: Tree, opts: Schema) {
       );
     }
     // TODO: move all of these into create-nx-workspace
-    if (options.preset !== Preset.NPM && !options.isCustomPreset) {
+    // The npm preset normally skips the preset generator entirely, which is why
+    // `--formatter` used to be dropped for it. Run it when there is a formatter
+    // to set up. `schema.json` defaults to `none`, so this fork is taken only
+    // when a formatter was actually asked for, which on this preset means an
+    // explicit `--formatter`.
+    const npmPresetNeedsFormatter =
+      options.preset === Preset.NPM &&
+      !!options.formatter &&
+      options.formatter !== 'none';
+    if (
+      (options.preset !== Preset.NPM || npmPresetNeedsFormatter) &&
+      !options.isCustomPreset
+    ) {
       await generatePreset(tree, options);
     }
     // if we move this into create-nx-workspace, we can also easily log things out like nx console install success
@@ -189,6 +211,11 @@ function normalizeOptions(options: Schema): NormalizedSchema {
   normalized.isCustomPreset = !Object.values(Preset).includes(
     options.preset as any
   );
+  if (normalized.isCustomPreset) {
+    normalized.presetVersion =
+      process.env['NX_E2E_PRESET_VERSION'] ??
+      getNpmPackageVersion(normalized.preset, normalized.presetVersion);
+  }
 
   return normalized as NormalizedSchema;
 }

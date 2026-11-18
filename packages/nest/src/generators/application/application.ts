@@ -12,6 +12,11 @@ import {
 import type { ApplicationGeneratorOptions } from './schema';
 import { assertSupportedNestJsVersion } from '../../utils/assert-supported-nestjs-version';
 import { assertVitestSupported } from '../../utils/assert-vitest-supported';
+import {
+  assertJestSupported,
+  configureJestForEsmOnlyNestJs,
+  usesEsmOnlyNestJs,
+} from '../../utils/unit-test-runner';
 import { ensureDependencies } from '../../utils/ensure-dependencies';
 
 export async function applicationGenerator(
@@ -19,7 +24,6 @@ export async function applicationGenerator(
   rawOptions: ApplicationGeneratorOptions
 ): Promise<GeneratorCallback> {
   return await applicationGeneratorInternal(tree, {
-    addPlugin: false,
     useProjectJson: true,
     ...rawOptions,
   });
@@ -33,6 +37,9 @@ export async function applicationGeneratorInternal(
 
   const options = await normalizeOptions(tree, rawOptions);
 
+  if (options.unitTestRunner === 'jest') {
+    assertJestSupported(tree);
+  }
   if (options.unitTestRunner === 'vitest') {
     assertVitestSupported(tree);
   }
@@ -48,6 +55,9 @@ export async function applicationGeneratorInternal(
     toNodeApplicationGeneratorOptions(options)
   );
   tasks.push(nodeApplicationTask);
+  if (options.unitTestRunner === 'jest' && usesEsmOnlyNestJs(tree)) {
+    tasks.push(configureJestForEsmOnlyNestJs(tree, options.appProjectName));
+  }
   createFiles(tree, options);
   updateTsConfig(tree, options);
 

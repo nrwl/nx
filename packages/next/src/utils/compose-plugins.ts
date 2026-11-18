@@ -4,29 +4,32 @@ import type {
   NextPlugin,
   NextPluginThatReturnsConfigFn,
 } from './config';
-import { warnComposePluginsDeprecation } from './deprecation';
 
+// TODO(v25): remove the inert config-helper stubs in this file (NXC-5164).
+/**
+ * @deprecated Export the Next.js config directly and compose
+ * any other wrappers yourself.
+ * This inert stub will be removed in Nx v25.
+ */
 export function composePlugins(
-  ...plugins: (NextPlugin | NextPluginThatReturnsConfigFn)[]
+  ..._plugins: (NextPlugin | NextPluginThatReturnsConfigFn)[]
 ): (baseConfig: NextConfig) => NextConfigFn {
-  return function (baseConfig: NextConfig) {
-    return async function combined(
-      phase: string,
-      context: any
-    ): Promise<NextConfig> {
+  return (baseConfig) => async (phase: string) => {
+    const { PHASE_PRODUCTION_SERVER } = require('next/constants');
+    // Copied into production builds, so only resolve the warning on Nx task runs.
+    if (
+      phase !== PHASE_PRODUCTION_SERVER &&
+      !global.NX_GRAPH_CREATION &&
+      process.env.NX_TASK_TARGET_TARGET
+    ) {
+      const { workspaceRoot } = require('@nx/devkit');
+      const { warnComposePluginsDeprecation } = require(
+        require.resolve('@nx/next/src/utils/deprecation', {
+          paths: [workspaceRoot],
+        })
+      ) as typeof import('./deprecation');
       warnComposePluginsDeprecation(phase);
-      let config = baseConfig;
-      for (const plugin of plugins) {
-        const fn = await plugin;
-        const configOrFn = fn(config);
-        if (typeof configOrFn === 'function') {
-          config = await configOrFn(phase, context);
-        } else {
-          config = configOrFn;
-        }
-      }
-
-      return config;
-    };
+    }
+    return baseConfig;
   };
 }

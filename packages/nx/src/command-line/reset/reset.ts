@@ -1,23 +1,26 @@
-import { rmSync } from 'node:fs';
+import { lstatSync, readdirSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { daemonClient } from '../../daemon/client/client';
 import { DAEMON_DIR_FOR_CURRENT_WORKSPACE } from '../../daemon/tmp-dir';
 import {
   cacheDir,
+  cacheDirectoryForWorkspace,
+  sharedDataDirectory,
   workspaceDataDirectory,
-  workspaceDataDirectoryForWorkspace,
 } from '../../utils/cache-directory';
 import { output } from '../../utils/output';
+import { globalSpinner } from '../../utils/spinner';
 import { getNativeFileCacheLocationToDelete } from '../../native/native-file-cache-location';
-import { getMainWorktreeRoot } from '../../native';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { ResetCommandOptions } from './command-object';
 import { getCloudClient } from '../../nx-cloud/utilities/client';
 import { getCloudOptions } from '../../nx-cloud/utilities/get-cloud-options';
 import { isNxCloudUsed } from '../../utils/nx-cloud-utils';
 import { readNxJson } from '../../config/configuration';
+import { removeDbConnections } from '../../utils/db-connection';
 import { getBundleInstallDefaultLocation as getCloudClientLocation } from '../../nx-cloud/update-manager';
+import { removeStaleTempInstallDirectories } from '../../utils/package-manager';
 
 // Wait at max 5 seconds before giving up on a failing operation.
 const INCREMENTAL_BACKOFF_MAX_DURATION = 5000;
@@ -26,7 +29,7 @@ const INCREMENTAL_BACKOFF_MAX_DURATION = 5000;
 const INCREMENTAL_BACKOFF_FIRST_DELAY = 100;
 
 export async function resetHandler(args: ResetCommandOptions) {
-  let errors = [];
+  const errors: string[] = [];
 
   const all =
     args.onlyDaemon === undefined &&
@@ -36,70 +39,64 @@ export async function resetHandler(args: ResetCommandOptions) {
   const nxJson = readNxJson();
   const cloudEnabled = isNxCloudUsed(nxJson);
 
-  const startupMessage = all
-    ? 'Resetting the Nx cache and stopping the daemon.'
-    : 'Resetting:';
-  const bodyLines = [];
-  if (!all) {
-    if (args.onlyDaemon) {
-      bodyLines.push('- Nx Daemon and its workspace data');
-    }
-    if (args.onlyCache) {
-      bodyLines.push('- Cache directory');
-    }
-    if (args.onlyWorkspaceData) {
-      bodyLines.push('- Workspace data directory');
-    }
-    if (args.onlyCloud && cloudEnabled) {
-      bodyLines.push('- Nx Cloud Client');
-    }
-  }
-  output.note({ title: startupMessage, bodyLines });
-
   if (all || args.onlyDaemon) {
-    try {
-      await killDaemon();
-    } catch (e) {
-      errors.push('Failed to stop the Nx Daemon.', e.toString());
-    }
-    try {
-      await cleanupDaemonWorkspaceData();
-    } catch (e) {
-      errors.push(
-        'Failed to clean up the daemon workspace data directory.',
-        e.toString()
-      );
-    }
+    await runResetStep(errors, {
+      start: 'Stopping the Nx Daemon',
+      success: 'Stopped the Nx Daemon',
+      failure: 'Failed to stop the Nx Daemon.',
+      run: killDaemon,
+    });
+    await runResetStep(errors, {
+      start: 'Removing the Nx Daemon workspace data',
+      success: 'Removed the Nx Daemon workspace data',
+      failure: 'Failed to clean up the daemon workspace data directory.',
+      run: cleanupDaemonWorkspaceData,
+    });
   }
   if (all || args.onlyCache) {
-    try {
-      await cleanupCacheEntries();
-    } catch (e) {
-      errors.push('Failed to clean up the cache directory.', e.toString());
-    }
+    await runResetStep(errors, {
+      start: 'Removing the cache directory',
+      success: 'Removed the cache directory',
+      failure: 'Failed to clean up the cache directory.',
+      run: cleanupCacheEntries,
+    });
   }
   if (all || args.onlyWorkspaceData) {
-    try {
-      await cleanupNativeFileCache();
-    } catch {
-      // ignore, deleting the native file cache is not critical and can fail if another process is locking the file
-    }
-    try {
-      await cleanupWorkspaceData();
-    } catch (e) {
-      errors.push(
-        'Failed to clean up the workspace data directory.',
-        e.toString()
-      );
-    }
+    await runResetStep(errors, {
+      start: 'Removing the workspace data directory',
+      success: 'Removed the workspace data directory',
+      failure: 'Failed to clean up the workspace data directory.',
+      run: async () => {
+        try {
+          await cleanupNativeFileCache();
+        } catch {
+          // ignore, deleting the native file cache is not critical and can fail if another process is locking the file
+        }
+        await cleanupWorkspaceData();
+      },
+    });
+  }
+  if (all) {
+    await runResetStep(errors, {
+      start: 'Removing stale temporary package installs',
+      success: 'Removed stale temporary package installs',
+      failure: 'Failed to remove stale temporary package installs.',
+      run: async () => removeStaleTempInstallDirectories(),
+    });
   }
   if ((cloudEnabled && all) || args.onlyCloud) {
-    try {
-      await resetCloudClient();
-      await removeInstalledNxCloudClient();
-    } catch (e) {
-      errors.push('Failed to reset the Nx Cloud client.', e.toString());
-    }
+    await runResetStep(errors, {
+      start: 'Cleaning up the Nx Cloud client',
+      success: 'Cleaned up the Nx Cloud client',
+      failure: 'Failed to clean up the Nx Cloud client.',
+      run: resetCloudClient,
+    });
+    await runResetStep(errors, {
+      start: 'Removing the installed Nx Cloud client',
+      success: 'Removed the installed Nx Cloud client',
+      failure: 'Failed to reset the Nx Cloud client.',
+      run: removeInstalledNxCloudClient,
+    });
   }
   if (errors.length > 0) {
     output.error({
@@ -111,6 +108,26 @@ export async function resetHandler(args: ResetCommandOptions) {
     output.success({
       title: 'Successfully reset the Nx workspace.',
     });
+  }
+}
+
+/** Records a failure in `errors` so the remaining steps still run. */
+async function runResetStep(
+  errors: string[],
+  step: {
+    start: string;
+    success: string;
+    failure: string;
+    run: () => Promise<void>;
+  }
+) {
+  globalSpinner.start(step.start);
+  try {
+    await step.run();
+    globalSpinner.succeed(step.success);
+  } catch (e) {
+    globalSpinner.fail(step.failure);
+    errors.push(step.failure, e.toString());
   }
 }
 
@@ -136,9 +153,8 @@ function cleanupDaemonWorkspaceData() {
 async function resetCloudClient() {
   // Remove nx cloud marker files. This helps if the use happens to run `nx-cloud start-ci-run` or
   // similar commands on their local machine.
-  try {
-    (await getCloudClient(getCloudOptions())).invoke('cleanup');
-  } catch {}
+  // `exit` would end the process here, before reset reports its result.
+  await (await getCloudClient(getCloudOptions())).invoke('cleanup', false);
 }
 
 function removeInstalledNxCloudClient() {
@@ -146,8 +162,10 @@ function removeInstalledNxCloudClient() {
     INCREMENTAL_BACKOFF_FIRST_DELAY,
     INCREMENTAL_BACKOFF_MAX_DURATION,
     () => {
-      const cloudClientDir = getCloudClientLocation();
-      rmSync(join(cloudClientDir, 'cloud'), { recursive: true, force: true });
+      const location = getCloudClientLocation();
+      if (location) {
+        rmSync(location, { recursive: true, force: true });
+      }
     }
   );
 }
@@ -157,9 +175,85 @@ function cleanupCacheEntries() {
     INCREMENTAL_BACKOFF_FIRST_DELAY,
     INCREMENTAL_BACKOFF_MAX_DURATION,
     () => {
-      rmSync(cacheDir, { recursive: true, force: true });
+      removeNxOwnedCacheEntries(cacheDir);
+      // `cacheDir` is the shared directory whenever sharing is available, so
+      // this is the checkout's own `.nx/cache`: still there from before the
+      // move, and still what a later run falls back to if `~/.nx` stops being
+      // reachable. Reset means both.
+      const checkoutCache = cacheDirectoryForWorkspace(workspaceRoot);
+      if (checkoutCache !== cacheDir) {
+        removeNxOwnedCacheEntries(checkoutCache);
+      }
     }
   );
+}
+
+// xxh3-64 task hashes are decimal (`hasher.rs`). Older hashes and
+// `<hash>.tar.zst` archives are hex. The DB names its files `{id}-v{schema}.db`.
+const TASK_HASH = /^(?:\d{1,20}|[0-9a-fA-F]{16,64})$/;
+const NX_DATABASE_FILE = /^.+-v\d+\.(?:db(?:-wal|-shm|-journal)?|lock)$/;
+
+function isNxOwnedCacheEntry(
+  name: string,
+  isDirectory: boolean,
+  isSymbolicLink: boolean
+): boolean {
+  if (
+    name === 'terminalOutputs' ||
+    name === 'batchOutputs' ||
+    name === 'run.json' ||
+    name.startsWith('.nx-write-probe-')
+  ) {
+    return true;
+  }
+  if (TASK_HASH.test(name)) {
+    // A hash is a directory of outputs. A regular file with the same name
+    // belongs to whoever put it there; a symlink is removed as the link only.
+    return isDirectory || isSymbolicLink;
+  }
+  if (hasHashPrefix(name, '.commit') || hasHashPrefix(name, '.tar.zst')) {
+    return true;
+  }
+  return NX_DATABASE_FILE.test(name);
+}
+
+function hasHashPrefix(name: string, suffix: string): boolean {
+  return name.endsWith(suffix) && TASK_HASH.test(name.slice(0, -suffix.length));
+}
+
+function removeNxOwnedCacheEntries(dir: string) {
+  let stat;
+  try {
+    // `lstat` so a symlink is left in place instead of deleting through it.
+    stat = lstatSync(dir);
+  } catch (e: any) {
+    if (e?.code === 'ENOENT') {
+      return;
+    }
+    throw e;
+  }
+  if (!stat.isDirectory()) {
+    return;
+  }
+
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    if (
+      isNxOwnedCacheEntry(
+        entry.name,
+        entry.isDirectory(),
+        entry.isSymbolicLink()
+      )
+    ) {
+      rmSync(join(dir, entry.name), { recursive: true, force: true });
+    }
+  }
+}
+
+/** Skips the no-op when the two resolve to one directory. */
+function removeIfDistinct(dir: string, from: string) {
+  if (dir !== from) {
+    rmSync(dir, { recursive: true, force: true });
+  }
 }
 
 function cleanupNativeFileCache() {
@@ -182,21 +276,19 @@ function cleanupWorkspaceData() {
     INCREMENTAL_BACKOFF_FIRST_DELAY,
     INCREMENTAL_BACKOFF_MAX_DURATION,
     () => {
+      // Analytics opened the DB at startup; Windows cannot delete an open file.
+      removeDbConnections();
       rmSync(workspaceDataDirectory, { recursive: true, force: true });
 
-      // If in a worktree, also clean the shared workspace data directory
-      // in the main repo where the DB actually lives
-      try {
-        const mainRoot = getMainWorktreeRoot(workspaceRoot);
-        if (mainRoot) {
-          const sharedDir = workspaceDataDirectoryForWorkspace(mainRoot);
-          if (sharedDir !== workspaceDataDirectory) {
-            rmSync(sharedDir, { recursive: true, force: true });
-          }
-        }
-      } catch {
-        // Worktree detection is best-effort during reset
-      }
+      // Also clean wherever the DB actually lives, which is outside this
+      // checkout whenever the shared root is reachable. Resolved through the
+      // same decision the DB itself uses, so reset cannot delete a directory
+      // this process never wrote to -- a sandboxed agent that fell back to its
+      // own checkout, or a configured location, yields nothing extra.
+      removeIfDistinct(
+        sharedDataDirectory(workspaceRoot, 'workspace-data'),
+        workspaceDataDirectory
+      );
     }
   );
 }

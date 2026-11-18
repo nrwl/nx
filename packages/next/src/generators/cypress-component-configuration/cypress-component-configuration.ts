@@ -7,7 +7,6 @@ import {
   readProjectConfiguration,
   runTasksInSerial,
   Tree,
-  updateProjectConfiguration,
   visitNotIgnoredFiles,
 } from '@nx/devkit';
 import { getProjectSourceRoot } from '@nx/js/internal';
@@ -22,10 +21,7 @@ export function cypressComponentConfiguration(
   tree: Tree,
   options: CypressComponentConfigurationGeneratorSchema
 ) {
-  return cypressComponentConfigurationInternal(tree, {
-    addPlugin: false,
-    ...options,
-  });
+  return cypressComponentConfigurationInternal(tree, options);
 }
 
 export async function cypressComponentConfigurationInternal(
@@ -45,7 +41,6 @@ export async function cypressComponentConfigurationInternal(
       skipFormat: true,
       framework: 'next',
       jsx: true,
-      addPlugin: options.addPlugin,
     })
   );
 
@@ -56,7 +51,6 @@ export async function cypressComponentConfigurationInternal(
   tasks.push(
     await webpackInitGenerator(tree, {
       skipFormat: true,
-      addPlugin: options.addPlugin,
     })
   );
   const {
@@ -67,17 +61,6 @@ export async function cypressComponentConfigurationInternal(
   );
 
   const projectConfig = readProjectConfiguration(tree, options.project);
-  if (
-    projectConfig.targets?.['component-test']?.executor ===
-    '@nx/cypress:cypress'
-  ) {
-    projectConfig.targets['component-test'].options = {
-      ...projectConfig.targets['component-test'].options,
-      skipServe: true,
-    };
-    updateProjectConfiguration(tree, options.project, projectConfig);
-  }
-
   await addFiles(tree, projectConfig, options);
 
   if (!options.skipFormat) {
@@ -92,12 +75,10 @@ async function addFiles(
   projectConfig: ProjectConfiguration,
   opts: CypressComponentConfigurationGeneratorSchema
 ) {
-  const { addMountDefinition, addDefaultCTConfig } = await import(
-    '@nx/cypress/internal'
-  );
-  const { getInstalledCypressMajorVersion } = await import(
-    '@nx/cypress/internal'
-  );
+  const { addMountDefinition, addDefaultCTConfig } =
+    await import('@nx/cypress/internal');
+  const { getInstalledCypressMajorVersion } =
+    await import('@nx/cypress/internal');
   const installedCypressMajorVersion = getInstalledCypressMajorVersion(tree);
 
   const ctFile = joinPathFragments(

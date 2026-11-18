@@ -32,6 +32,19 @@
       "requires": {
         "@rsbuild/core": ">=2.0.0"
       }
+    },
+    "update-24-0-0-register-typescript-plugin-for-typecheck": {
+      "version": "24.0.0-beta.3",
+      "description": "Register @nx/js/typescript with its typecheck target in workspaces that use @nx/rsbuild without it, and remove the typecheckTargetName option from @nx/rsbuild, since @nx/rsbuild no longer infers typecheck targets.",
+      "implementation": "./dist/src/migrations/update-24-0-0/register-typescript-plugin-for-typecheck",
+      "documentation": "./dist/src/migrations/update-24-0-0/register-typescript-plugin-for-typecheck.md"
+    },
+    "update-24-0-0-add-ready-signal-plugin": {
+      "version": "24.0.0-beta.5",
+      "description": "Adds `pluginNxReadySignal()` from `@nx/rsbuild/ready-signal` to existing Rsbuild configs so the inferred dev and preview targets report readiness once the server listens. Configs the generator cannot edit safely are completed by an AI prompt.",
+      "implementation": "./dist/src/migrations/update-24-0-0/add-ready-signal-plugin",
+      "prompt": "./dist/src/migrations/update-24-0-0/finish-ready-signal-plugin.md",
+      "documentation": "./dist/src/migrations/update-24-0-0/add-ready-signal-plugin.md"
     }
   },
   "packageJsonUpdates": {

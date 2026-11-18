@@ -5,46 +5,46 @@ import { createAPI } from './changelog';
 import type { ReleaseGroupWithName } from './config/filter-release-groups';
 import type { ReleaseGraph } from './utils/release-graph';
 
-jest.mock('../../project-graph/project-graph', () => ({
-  createProjectGraphAsync: jest.fn(),
+vi.mock('../../project-graph/project-graph', () => ({
+  createProjectGraphAsync: vi.fn(),
 }));
 
-jest.mock('../../project-graph/file-map-utils', () => ({
-  createProjectFileMapUsingProjectGraph: jest.fn(),
-  createFileMapUsingProjectGraph: jest.fn(() =>
+vi.mock('../../project-graph/file-map-utils', () => ({
+  createProjectFileMapUsingProjectGraph: vi.fn(),
+  createFileMapUsingProjectGraph: vi.fn(() =>
     Promise.resolve({
       fileMap: { projectFileMap: {}, nonProjectFiles: [] },
     })
   ),
 }));
 
-jest.mock('./utils/git', () => ({
-  ...jest.requireActual('./utils/git'),
-  getCommitHash: jest.fn(() => Promise.resolve('abc123')),
-  getGitDiff: jest.fn(() => Promise.resolve([])),
-  parseCommits: jest.fn(() => []),
-  gitAdd: jest.fn(),
-  gitPush: jest.fn(),
-  gitTag: jest.fn(),
-  sanitizeProjectNameForGitTag: jest.fn((projectName) => projectName),
+vi.mock('./utils/git', async () => ({
+  ...(await vi.importActual('./utils/git')),
+  getCommitHash: vi.fn(() => Promise.resolve('abc123')),
+  getGitDiff: vi.fn(() => Promise.resolve([])),
+  parseCommits: vi.fn(() => []),
+  gitAdd: vi.fn(),
+  gitPush: vi.fn(),
+  gitTag: vi.fn(),
+  sanitizeProjectNameForGitTag: vi.fn((projectName) => projectName),
 }));
 
-jest.mock('./config/version-plans', () => ({
-  ...jest.requireActual('./config/version-plans'),
-  readRawVersionPlans: jest.fn(() => Promise.resolve([])),
-  setResolvedVersionPlansOnGroups: jest.fn(),
+vi.mock('./config/version-plans', async () => ({
+  ...(await vi.importActual('./config/version-plans')),
+  readRawVersionPlans: vi.fn(() => Promise.resolve([])),
+  setResolvedVersionPlansOnGroups: vi.fn(),
 }));
 
-jest.mock('./changelog/version-plan-filtering', () => ({
-  ...jest.requireActual('./changelog/version-plan-filtering'),
-  resolveChangelogFromSHA: jest.fn(() => Promise.resolve('fromsha')),
-  resolveWorkspaceChangelogFromSHA: jest.fn(() => Promise.resolve('fromsha')),
+vi.mock('./changelog/version-plan-filtering', async () => ({
+  ...(await vi.importActual('./changelog/version-plan-filtering')),
+  resolveChangelogFromSHA: vi.fn(() => Promise.resolve('fromsha')),
+  resolveWorkspaceChangelogFromSHA: vi.fn(() => Promise.resolve('fromsha')),
 }));
 
 const MOCK_CHANGELOG_CONTENTS = '## 1.0.0\n\nMocked changelog contents';
 
-jest.mock('./utils/resolve-changelog-renderer', () => ({
-  resolveChangelogRenderer: jest.fn(
+vi.mock('./utils/resolve-changelog-renderer', () => ({
+  resolveChangelogRenderer: vi.fn(
     () =>
       class FakeChangelogRenderer {
         async render() {
@@ -54,25 +54,25 @@ jest.mock('./utils/resolve-changelog-renderer', () => ({
   ),
 }));
 
-jest.mock('./utils/remote-release-clients/remote-release-client', () => ({
-  ...jest.requireActual('./utils/remote-release-clients/remote-release-client'),
-  createRemoteReleaseClient: jest.fn(() =>
+vi.mock('./utils/remote-release-clients/remote-release-client', async () => ({
+  ...(await vi.importActual(
+    './utils/remote-release-clients/remote-release-client'
+  )),
+  createRemoteReleaseClient: vi.fn(() =>
     Promise.resolve({
       remoteReleaseProviderName: 'GitHub',
-      createPostGitTask: jest.fn(),
+      createPostGitTask: vi.fn(),
     })
   ),
 }));
 
-const {
-  createProjectGraphAsync,
-} = require('../../project-graph/project-graph');
-const {
-  createProjectFileMapUsingProjectGraph,
-} = require('../../project-graph/file-map-utils');
-const {
-  resolveChangelogFromSHA,
-} = require('./changelog/version-plan-filtering');
+const { createProjectGraphAsync } =
+  await import('../../project-graph/project-graph');
+const { createProjectFileMapUsingProjectGraph } =
+  await import('../../project-graph/file-map-utils');
+const { resolveChangelogFromSHA, resolveWorkspaceChangelogFromSHA } =
+  await import('./changelog/version-plan-filtering');
+const { gitPush } = await import('./utils/git');
 
 describe('releaseChangelog', () => {
   let tempFs: TempFs;
@@ -82,7 +82,7 @@ describe('releaseChangelog', () => {
   let releaseGraph: ReleaseGraph;
 
   beforeEach(async () => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     tempFs = new TempFs('nx-release-changelog-test');
     await tempFs.createFiles({
@@ -141,23 +141,24 @@ describe('releaseChangelog', () => {
 
     releaseGraph = {
       releaseGroups: [releaseGroup],
+      allReleaseGroups: [releaseGroup],
       releaseGroupToFilteredProjects: new Map([
         [releaseGroup, new Set(['pkg-a'])],
       ]),
-      resolveRepositoryTags: jest.fn(),
+      resolveRepositoryTags: vi.fn(),
       filterLog: null,
     } as unknown as ReleaseGraph;
 
-    jest.spyOn(output, 'warn').mockImplementation(() => {});
-    jest.spyOn(output, 'log').mockImplementation(() => {});
-    jest.spyOn(output, 'logSingleLine').mockImplementation(() => {});
-    jest.spyOn(output, 'note').mockImplementation(() => {});
-    jest.spyOn(output, 'error').mockImplementation(() => {});
+    vi.spyOn(output, 'warn').mockImplementation(() => {});
+    vi.spyOn(output, 'log').mockImplementation(() => {});
+    vi.spyOn(output, 'logSingleLine').mockImplementation(() => {});
+    vi.spyOn(output, 'note').mockImplementation(() => {});
+    vi.spyOn(output, 'error').mockImplementation(() => {});
   });
 
   afterEach(() => {
     tempFs.cleanup();
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   function runReleaseChangelog(
@@ -218,7 +219,27 @@ describe('releaseChangelog', () => {
     });
   });
 
-  describe('independent project changelogs', () => {
+  describe('git push', () => {
+    it('should redact credentials of a remote passed as a URL when logging the push', async () => {
+      const gitRemote =
+        'https://x-access-token:s3cr3t-token@github.com/nrwl/nx.git';
+
+      await runReleaseChangelog({
+        forceChangelogGeneration: true,
+        gitPush: true,
+        gitRemote,
+      });
+
+      expect(output.logSingleLine).toHaveBeenCalledWith(
+        'Pushing to git remote "https://***@github.com/nrwl/nx.git"'
+      );
+      expect(gitPush).toHaveBeenCalledWith(
+        expect.objectContaining({ gitRemote })
+      );
+    });
+  });
+
+  describe('project changelogs', () => {
     it('should not resolve a changelog from ref for an unversioned dependent project', async () => {
       await tempFs.createFiles({
         'packages/pkg-b/package.json': JSON.stringify({
@@ -273,6 +294,130 @@ describe('releaseChangelog', () => {
             projectName: 'pkg-a',
             releaseGroupName: '__default__',
           },
+        })
+      );
+    });
+
+    it('should resolve a changelog from ref using the fixed release group name', async () => {
+      releaseGroup.name = 'group-a';
+      releaseGroup.projectsRelationship = 'fixed';
+      releaseGroup.projects = ['pkg-a'];
+      releaseGroup.changelog = {
+        createRelease: false,
+        entryWhenNoChanges: false,
+        file: false,
+      } as ReleaseGroupWithName['changelog'];
+
+      await runReleaseChangelog({
+        forceChangelogGeneration: true,
+        projects: ['pkg-a'],
+        version: undefined,
+        versionData: {
+          'pkg-a': {
+            currentVersion: '0.0.0',
+            newVersion: '1.0.0',
+            dependentProjects: [],
+          },
+        },
+      });
+
+      expect(resolveChangelogFromSHA).toHaveBeenCalledTimes(1);
+      expect(resolveChangelogFromSHA).toHaveBeenCalledWith(
+        expect.objectContaining({
+          tagPatternValues: {
+            releaseGroupName: 'group-a',
+          },
+        })
+      );
+    });
+  });
+
+  describe('workspace changelog', () => {
+    it('should not require a previous workspace tag when the workspace changelog is disabled', async () => {
+      // Each release group is tagged with its own releaseTag.pattern, so no tag matches the
+      // workspace-level pattern and there is no workspace "from" ref to resolve
+      vi.mocked(resolveWorkspaceChangelogFromSHA).mockResolvedValueOnce(null);
+
+      await tempFs.createFiles({
+        'packages/pkg-b/package.json': JSON.stringify({
+          name: 'pkg-b',
+          version: '1.0.0',
+        }),
+      });
+      projectGraph.nodes['pkg-b'] = {
+        name: 'pkg-b',
+        type: 'lib',
+        data: {
+          root: 'packages/pkg-b',
+          targets: {
+            'nx-release-publish': {},
+          },
+        } as any,
+      };
+      releaseGroup.name = 'group-a';
+      releaseGroup.projectsRelationship = 'independent';
+      const releaseGroupB = {
+        ...releaseGroup,
+        name: 'group-b',
+        projects: ['pkg-b'],
+        changelog: {
+          createRelease: false,
+          entryWhenNoChanges: false,
+          file: false,
+        },
+      } as ReleaseGroupWithName;
+      releaseGraph.releaseGroups = [releaseGroup, releaseGroupB];
+      releaseGraph.releaseGroupToFilteredProjects = new Map([
+        [releaseGroup, new Set(['pkg-a'])],
+        [releaseGroupB, new Set(['pkg-b'])],
+      ]);
+
+      // With more than one release group the workspace changelog defaults to disabled,
+      // while group-b still has project changelogs enabled
+      const releaseChangelog = createAPI(
+        {
+          groups: {
+            'group-a': {
+              projects: ['pkg-a'],
+              projectsRelationship: 'independent',
+              releaseTag: { pattern: 'a@{version}' },
+              changelog: false,
+            },
+            'group-b': {
+              projects: ['pkg-b'],
+              projectsRelationship: 'independent',
+              releaseTag: { pattern: 'b@{version}' },
+              changelog: true,
+            },
+          },
+        },
+        true
+      );
+
+      const result = await releaseChangelog({
+        versionData: {
+          'pkg-a': {
+            currentVersion: '0.0.0',
+            newVersion: null,
+            dependentProjects: [],
+          },
+          'pkg-b': {
+            currentVersion: '1.0.0',
+            newVersion: '1.0.1',
+            dependentProjects: [],
+          },
+        },
+        gitCommit: false,
+        gitTag: false,
+        gitPush: false,
+        stageChanges: false,
+        releaseGraph,
+      } as Parameters<ReturnType<typeof createAPI>>[0]);
+
+      expect(result.workspaceChangelog).toBeUndefined();
+      expect(resolveChangelogFromSHA).toHaveBeenCalledWith(
+        expect.objectContaining({
+          projectRoot: 'packages/pkg-b',
         })
       );
     });

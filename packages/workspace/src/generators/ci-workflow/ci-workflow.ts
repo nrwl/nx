@@ -56,16 +56,6 @@ function getNxTasksCommand(
   };
 }
 
-function getNxCloudFixCiCommand(packageManagerPrefix: string): Command {
-  return {
-    comments: [
-      `Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci`,
-    ],
-    command: `${packageManagerPrefix} nx fix-ci`,
-    alwaysRun: true,
-  };
-}
-
 function getCiCommands(
   ci: Schema['ci'],
   packageManagerPrefix: string,
@@ -84,7 +74,6 @@ function getCiCommands(
       hasE2E,
       useRunMany
     ),
-    getNxCloudFixCiCommand(packageManagerPrefix),
   ];
 }
 
@@ -153,7 +142,6 @@ function getBitbucketBranchCommands(
 export type Command = {
   command?: string;
   comments?: string[];
-  alwaysRun?: boolean;
 };
 
 export interface Schema {
@@ -282,7 +270,7 @@ function appendOriginPrefix(nxJson: NxJsonConfiguration): void {
   if (nxJson?.affected?.defaultBase) {
     nxJson.affected.defaultBase = `origin/${nxJson.affected.defaultBase}`;
   }
-  if (nxJson.defaultBase || !nxJson.affected) {
+  if (nxJson.defaultBase || !nxJson.affected?.defaultBase) {
     nxJson.defaultBase = `origin/${nxJson.defaultBase ?? deduceDefaultBase()}`;
   }
 }

@@ -31,65 +31,6 @@ const storybookConfigs = storybook.configs['flat/recommended'].map((config) => {
   return { ...config, rules: ownRules };
 });
 
-// Patterns shared between the base rule and the allowDirectNxImports
-// escape hatch below.
-const restrictedImportPatterns = [
-  {
-    group: ['nx/src/plugins/js*'],
-    message:
-      "Imports from 'nx/src/plugins/js' are not allowed. Use '@nx/js' instead",
-  },
-  {
-    group: ['**/native-bindings', '**/native-bindings.js', ''],
-    message:
-      'Direct imports from native-bindings.js are not allowed. Import from index.js instead.',
-  },
-];
-
-// Published packages must not import 'nx' directly — '@nx/devkit' (or
-// '@nx/devkit/internal' for first-party-only utilities) is the compatibility
-// boundary between plugin majors and nx majors. See packages/devkit/CLAUDE.md.
-// packages/nx and packages/devkit redefine this rule in their own configs.
-//
-// Anchored regex rather than a `['nx', 'nx/**']` glob: eslint matches import
-// groups with gitignore semantics, so the slash-less `nx` entry needed to catch
-// the bare specifier is unanchored and also matches any local path with an `nx`
-// segment (e.g. create-nx-workspace's `./utils/nx/nx-cloud`). `nx/**` itself is
-// fine — it contains a slash, so it is anchored. The regex matches only the real
-// package — `nx` and `nx/…` — while leaving relative paths and `@nx/*` alone.
-//
-// `nx/release` is exempt: it is a public, stable entry point whose runtime API
-// (VersionActions, releasePublish, releaseVersion) transitively pulls in the
-// project graph, so routing it through the devkit barrels — which plugin graph
-// hooks load in every plugin worker — would add ~73 modules to the closure they
-// eagerly load. Release-extension plugins import it directly.
-const directNxImportPattern = {
-  regex: '^nx($|/(?!release($|/)))',
-  message:
-    "Import from '@nx/devkit' or '@nx/devkit/internal' instead of 'nx' — devkit is the version-compatibility boundary (see packages/devkit/CLAUDE.md).",
-};
-
-// Escape hatch for non-published projects (e2e suites, the graph client)
-// that legitimately reach into nx internals. Append AFTER baseConfig.
-//
-// WARNING: this matches every linted file by default. Flat config *replaces* a
-// rule's options rather than merging them, so appending this after a config that
-// redefines `@typescript-eslint/no-restricted-imports` for a narrower set of
-// files silently discards that narrower configuration. The failure is invisible
-// in CI, because the result is *fewer* lint errors, not more. Narrow it by
-// overriding `files` AFTER the spread — `{ ...allowDirectNxImports, files:
-// ['**/*.spec.ts'] }` — in any project that defines its own
-// `no-restricted-imports` overrides (see packages/nx/eslint.config.mjs).
-export const allowDirectNxImports = {
-  files: ['**/*'],
-  rules: {
-    '@typescript-eslint/no-restricted-imports': [
-      'error',
-      { patterns: restrictedImportPatterns },
-    ],
-  },
-};
-
 // Shared base consumed by every subproject via the named export below.
 // IMPORTANT: subprojects import `{ baseConfig }`, not the default, so they
 // don't inherit the root's "ignore everything" safety net.
@@ -107,26 +48,10 @@ export const baseConfig = [
   {
     rules: {
       '@typescript-eslint/explicit-module-boundary-types': 'off',
-      'no-restricted-imports': [
-        'error',
-        {
-          paths: [
-            {
-              name: 'create-nx-workspace',
-              message: 'Please import utils from nx or @nx/devkit instead.',
-            },
-            {
-              name: 'node-fetch',
-              message:
-                "Please default to native fetch instead of 'node-fetch'.",
-            },
-          ],
-        },
-      ],
-      '@typescript-eslint/no-restricted-imports': [
-        'error',
-        { patterns: [...restrictedImportPatterns, directNxImportPattern] },
-      ],
+      // no-restricted-imports (paths and patterns, including the nx →
+      // @nx/devkit boundary) moved to .oxlintrc.json. Projects that need
+      // different lists carry their own nested .oxlintrc.json (packages/nx
+      // and packages/devkit replace the nx boundary group there).
     },
   },
   {
@@ -153,39 +78,10 @@ export const baseConfig = [
   {
     files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
     rules: {
-      '@nx/enforce-module-boundaries': [
-        'error',
-        {
-          enforceBuildableLibDependency: true,
-          checkDynamicDependenciesExceptions: ['.*'],
-          allow: [],
-          // These cycles are intentional: plugin packages declare graph edges to
-          // their lazy-loaded (ensurePackage) peers, via `implicitDependencies`
-          // in project.json or, for `js`, devDependencies in package.json. The
-          // project graph is cyclic by design; the task graph is kept acyclic
-          // via explicit `dependsOn` overrides on the relevant build-base
-          // targets.
-          ignoredCircularDependencies: [
-            ['js', 'workspace'],
-            ['js', '@nx/oxlint'],
-            ['angular', 'workspace'],
-            ['express', 'node'],
-            ['nest', 'node'],
-            ['nuxt', 'vue'],
-          ],
-          depConstraints: [
-            {
-              sourceTag: '*',
-              onlyDependOnLibsWithTags: ['*'],
-            },
-          ],
-        },
-      ],
+      // @nx/enforce-module-boundaries moved to .oxlintrc.json (run by the
+      // oxlint targets via the @nx/oxlint/boundaries-plugin bridge).
       '@nx/workspace-valid-command-object': 'error',
       '@nx/workspace-require-windows-hide': 'error',
-      // allowSeparateTypeImports keeps `import type` declarations distinct from
-      // value ones; collapsing that split would churn ~226 files.
-      'no-duplicate-imports': ['error', { allowSeparateTypeImports: true }],
     },
   },
   {

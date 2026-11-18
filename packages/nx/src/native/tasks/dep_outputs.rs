@@ -1,32 +1,64 @@
 use crate::native::tasks::types::HashInstruction;
-use crate::native::tasks::types::{Task, TaskGraph};
+use crate::native::tasks::types::{Task, TaskGraph, TaskGraphEdge};
 use rayon::prelude::*;
-use std::collections::{HashSet, VecDeque};
+use std::collections::{HashMap, HashSet, VecDeque};
 use tracing::{debug, trace};
 
 /// Collects all dependent tasks using BFS traversal
 /// Note: Only processes regular dependencies, not continuous_dependencies.
 /// Continuous tasks (like watch/serve) don't produce outputs that need to be hashed.
-fn collect_task_dependencies<'a>(
+pub(super) fn collect_task_dependencies<'a>(
     task_graph: &'a TaskGraph,
     initial_task_id: &str,
     transitive: bool,
 ) -> Vec<&'a Task> {
+    collect_over(
+        task_graph,
+        &task_graph.dependencies,
+        initial_task_id,
+        transitive,
+        |_| true,
+    )
+}
+
+/// Collects every continuous dependency in the chain whose inputs the task
+/// takes on: the servers of this task, their servers, and so on. An edge from
+/// `inputs: false` is not followed. Cycles and the task itself are skipped.
+pub(super) fn collect_continuous_dependencies<'a>(
+    task_graph: &'a TaskGraph,
+    initial_task_id: &str,
+) -> Vec<&'a Task> {
+    collect_over(
+        task_graph,
+        &task_graph.continuous_dependencies,
+        initial_task_id,
+        true,
+        |edge| edge.inputs != Some(false),
+    )
+}
+
+fn collect_over<'a>(
+    task_graph: &'a TaskGraph,
+    edges: &'a HashMap<String, Vec<TaskGraphEdge>>,
+    initial_task_id: &str,
+    transitive: bool,
+    follows: impl Fn(&TaskGraphEdge) -> bool,
+) -> Vec<&'a Task> {
     let mut result = Vec::new();
-    let mut visited = HashSet::new();
+    let mut visited = HashSet::from([initial_task_id]);
     let mut queue = VecDeque::from([initial_task_id]);
 
     while let Some(task_id) = queue.pop_front() {
         // Get dependencies for this task
-        let Some(deps) = task_graph.dependencies.get(task_id) else {
+        let Some(deps) = edges.get(task_id) else {
             continue;
         };
 
         for dep in deps {
-            let dep_str = dep.as_str();
+            let dep_str = dep.id.as_str();
 
             // Skip if already seen
-            if !visited.insert(dep_str) {
+            if !follows(dep) || !visited.insert(dep_str) {
                 continue;
             }
 
@@ -118,6 +150,7 @@ pub(super) fn get_dep_output(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::native::test_utils::edges_to;
     use std::collections::HashMap;
 
     pub(super) fn create_test_task(project: &str, outputs: Vec<String>) -> Task {
@@ -136,7 +169,7 @@ mod tests {
         let mut dependencies = HashMap::new();
         dependencies.insert(
             "task1:build".to_string(),
-            vec!["task2:build".to_string(), "task3:build".to_string()],
+            edges_to(&["task2:build", "task3:build"]),
         );
 
         let task_graph = TaskGraph {
@@ -162,8 +195,8 @@ mod tests {
         tasks.insert("task3:build".to_string(), create_test_task("task3", vec![]));
 
         let mut dependencies = HashMap::new();
-        dependencies.insert("task1:build".to_string(), vec!["task2:build".to_string()]);
-        dependencies.insert("task2:build".to_string(), vec!["task3:build".to_string()]);
+        dependencies.insert("task1:build".to_string(), edges_to(&["task2:build"]));
+        dependencies.insert("task2:build".to_string(), edges_to(&["task3:build"]));
 
         let task_graph = TaskGraph {
             roots: vec![],
@@ -181,6 +214,39 @@ mod tests {
     }
 
     #[test]
+    fn collects_the_chain_of_continuous_dependencies_once_each() {
+        let mut task_graph = TaskGraph {
+            roots: vec![],
+            tasks: HashMap::new(),
+            dependencies: HashMap::new(),
+            continuous_dependencies: HashMap::new(),
+        };
+        for project in ["e2e", "web", "api"] {
+            let task = create_test_task(project, vec![]);
+            task_graph.dependencies.insert(task.id.clone(), vec![]);
+            task_graph.tasks.insert(task.id.clone(), task);
+        }
+        // e2e -> web -> api -> e2e closes a loop back to the served task.
+        task_graph
+            .continuous_dependencies
+            .insert("e2e:build".into(), edges_to(&["web:build"]));
+        task_graph
+            .continuous_dependencies
+            .insert("web:build".into(), edges_to(&["api:build"]));
+        task_graph
+            .continuous_dependencies
+            .insert("api:build".into(), edges_to(&["e2e:build"]));
+
+        let mut ids: Vec<&str> = collect_continuous_dependencies(&task_graph, "e2e:build")
+            .iter()
+            .map(|t| t.id.as_str())
+            .collect();
+        ids.sort();
+        assert_eq!(ids, vec!["api:build", "web:build"]);
+        assert!(collect_task_dependencies(&task_graph, "e2e:build", true).is_empty());
+    }
+
+    #[test]
     fn test_deduplicates_diamond_dependencies() {
         // Diamond pattern: task1 -> task2 -> task4
         //                   task1 -> task3 -> task4
@@ -193,10 +259,10 @@ mod tests {
         let mut dependencies = HashMap::new();
         dependencies.insert(
             "task1:build".to_string(),
-            vec!["task2:build".to_string(), "task3:build".to_string()],
+            edges_to(&["task2:build", "task3:build"]),
         );
-        dependencies.insert("task2:build".to_string(), vec!["task4:build".to_string()]);
-        dependencies.insert("task3:build".to_string(), vec!["task4:build".to_string()]);
+        dependencies.insert("task2:build".to_string(), edges_to(&["task4:build"]));
+        dependencies.insert("task3:build".to_string(), edges_to(&["task4:build"]));
 
         let task_graph = TaskGraph {
             roots: vec![],
@@ -243,32 +309,41 @@ mod tests {
 
         // Create diamond pattern repeated at each level
         for level in 0..depth {
-            let left = format!("left{}", level);
-            let right = format!("right{}", level);
-            let bottom = format!("bottom{}", level);
+            let left = format!("left{}:build", level);
+            let right = format!("right{}:build", level);
+            let bottom = format!("bottom{}:build", level);
 
             tasks.insert(
                 left.clone(),
-                tests::create_test_task(&left, vec![format!("dist/left{}", level)]),
+                tests::create_test_task(
+                    &format!("left{}", level),
+                    vec![format!("dist/left{}", level)],
+                ),
             );
             tasks.insert(
                 right.clone(),
-                tests::create_test_task(&right, vec![format!("dist/right{}", level)]),
+                tests::create_test_task(
+                    &format!("right{}", level),
+                    vec![format!("dist/right{}", level)],
+                ),
             );
             tasks.insert(
                 bottom.clone(),
-                tests::create_test_task(&bottom, vec![format!("dist/bottom{}", level)]),
+                tests::create_test_task(
+                    &format!("bottom{}", level),
+                    vec![format!("dist/bottom{}", level)],
+                ),
             );
 
             if level == 0 {
-                dependencies.insert("root:build".to_string(), vec![left.clone(), right.clone()]);
+                dependencies.insert("root:build".to_string(), edges_to(&[&left, &right]));
             } else {
-                let prev_bottom = format!("bottom{}", level - 1);
-                dependencies.insert(prev_bottom, vec![left.clone(), right.clone()]);
+                let prev_bottom = format!("bottom{}:build", level - 1);
+                dependencies.insert(prev_bottom, edges_to(&[&left, &right]));
             }
 
-            dependencies.insert(left, vec![bottom.clone()]);
-            dependencies.insert(right, vec![bottom]);
+            dependencies.insert(left, edges_to(&[&bottom]));
+            dependencies.insert(right, edges_to(&[&bottom]));
         }
 
         TaskGraph {
@@ -281,24 +356,25 @@ mod tests {
 
     #[test]
     fn test_performance_large_graph() {
-        // This test verifies that deduplication works and the function is fast
-        // on a large diamond graph (depth 30 = 90 tasks with many duplicate paths)
-        let graph = create_diamond_graph(30);
+        // Each diamond doubles the paths below it. At this depth a walk that revisits
+        // shared dependencies still finishes (about 1s in a debug build) and fails.
+        let graph = create_diamond_graph(18);
         let root_task = &graph.tasks["root:build"];
 
-        let start = std::time::Instant::now();
-        let result = get_dep_output(root_task, &graph, "**/*.js", true).unwrap();
-        let elapsed = start.elapsed();
+        // Keep the fastest run, since a pause or preemption only adds to a run's time
+        let mut fastest = std::time::Duration::MAX;
+        let mut result = vec![];
+        for _ in 0..10 {
+            let start = std::time::Instant::now();
+            result = get_dep_output(root_task, &graph, "**/*.js", true).unwrap();
+            fastest = fastest.min(start.elapsed());
+        }
 
-        // Verify we got results
-        assert!(!result.is_empty());
-
-        // Without deduplication, this would take exponential time
-        // With deduplication and parallelization, should be very fast
+        assert_eq!(result.len(), 3 * 18);
         assert!(
-            elapsed.as_millis() < 10,
+            fastest.as_millis() < 10,
             "Performance regression: expected <10ms, got {:?}",
-            elapsed
+            fastest
         );
     }
 }

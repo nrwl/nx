@@ -5,24 +5,17 @@ import {
   type Tree,
 } from '@nx/devkit';
 import { acknowledgeBuildScripts } from '@nx/devkit/internal';
-import {
-  oxcTransformVersion,
-  swcCoreVersion,
-  swcHelpersVersion,
-} from '@nx/js/internal';
+import { swcCoreVersion, swcHelpersVersion } from '@nx/js/internal';
 import { coreJsVersion, swcLoaderVersion, tsLibVersion } from './versions';
 
 export type EnsureDependenciesOptions = {
   compiler?: 'babel' | 'swc' | 'tsc';
-  useOxcDeclarations?: boolean;
 };
 
 export function ensureDependencies(
   tree: Tree,
   options: EnsureDependenciesOptions
 ): GeneratorCallback {
-  const devDependencies: Record<string, string> = {};
-
   switch (options.compiler) {
     case 'swc':
       // @swc/core's postinstall only installs a wasm fallback for platforms not
@@ -30,28 +23,39 @@ export function ensureDependencies(
       acknowledgeBuildScripts(tree, detectPackageManager(tree.root), {
         '@swc/core': false,
       });
-      devDependencies['@swc/helpers'] = swcHelpersVersion;
-      devDependencies['@swc/core'] = swcCoreVersion;
-      devDependencies['swc-loader'] = swcLoaderVersion;
-      break;
+      return addDependenciesToPackageJson(
+        tree,
+        {},
+        {
+          '@swc/helpers': swcHelpersVersion,
+          '@swc/core': swcCoreVersion,
+          'swc-loader': swcLoaderVersion,
+        },
+        undefined,
+        true
+      );
     case 'babel':
-      devDependencies['core-js'] = coreJsVersion; // needed for preset-env to work
-      devDependencies['tslib'] = tsLibVersion;
-      break;
+      // core-js' install script only prints a funding message.
+      acknowledgeBuildScripts(tree, detectPackageManager(tree.root), {
+        'core-js': false,
+      });
+      return addDependenciesToPackageJson(
+        tree,
+        {},
+        {
+          'core-js': coreJsVersion, // needed for preset-env to work
+          tslib: tsLibVersion,
+        },
+        undefined,
+        true
+      );
     default:
-      devDependencies['tslib'] = tsLibVersion;
-      break;
+      return addDependenciesToPackageJson(
+        tree,
+        {},
+        { tslib: tsLibVersion },
+        undefined,
+        true
+      );
   }
-
-  if (options.useOxcDeclarations) {
-    devDependencies['oxc-transform'] = oxcTransformVersion;
-  }
-
-  return addDependenciesToPackageJson(
-    tree,
-    {},
-    devDependencies,
-    undefined,
-    true
-  );
 }

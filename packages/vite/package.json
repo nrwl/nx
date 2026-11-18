@@ -36,14 +36,17 @@
       "plugins/nx-copy-assets.plugin": [
         "dist/plugins/nx-copy-assets.plugin.d.ts"
       ],
+      "plugins/nx-ready-signal.plugin": [
+        "dist/plugins/nx-ready-signal.plugin.d.ts"
+      ],
       "plugins/nx-tsconfig-paths.plugin": [
         "dist/plugins/nx-tsconfig-paths.plugin.d.ts"
       ],
       "plugins/rollup-replace-files.plugin": [
         "dist/plugins/rollup-replace-files.plugin.d.ts"
       ],
-      "plugins/nx-oxc-declarations.plugin": [
-        "dist/plugins/nx-oxc-declarations.plugin.d.ts"
+      "ready-check": [
+        "dist/ready-check.d.ts"
       ]
     }
   },
@@ -62,6 +65,11 @@
       "types": "./dist/plugin.d.ts",
       "default": "./dist/plugin.js"
     },
+    "./ready-check": {
+      "@nx/nx-source": "./ready-check.ts",
+      "types": "./dist/ready-check.d.ts",
+      "default": "./dist/ready-check.js"
+    },
     "./executors": {
       "@nx/nx-source": "./executors.ts",
       "types": "./dist/executors.d.ts",
@@ -72,6 +80,11 @@
       "types": "./dist/plugins/nx-copy-assets.plugin.d.ts",
       "default": "./dist/plugins/nx-copy-assets.plugin.js"
     },
+    "./plugins/nx-ready-signal.plugin": {
+      "@nx/nx-source": "./plugins/nx-ready-signal.plugin.ts",
+      "types": "./dist/plugins/nx-ready-signal.plugin.d.ts",
+      "default": "./dist/plugins/nx-ready-signal.plugin.js"
+    },
     "./plugins/nx-tsconfig-paths.plugin": {
       "@nx/nx-source": "./plugins/nx-tsconfig-paths.plugin.ts",
       "types": "./dist/plugins/nx-tsconfig-paths.plugin.d.ts",
@@ -81,11 +94,6 @@
       "@nx/nx-source": "./plugins/rollup-replace-files.plugin.ts",
       "types": "./dist/plugins/rollup-replace-files.plugin.d.ts",
       "default": "./dist/plugins/rollup-replace-files.plugin.js"
-    },
-    "./plugins/nx-oxc-declarations.plugin": {
-      "@nx/nx-source": "./plugins/nx-oxc-declarations.plugin.ts",
-      "types": "./dist/plugins/nx-oxc-declarations.plugin.d.ts",
-      "default": "./dist/plugins/nx-oxc-declarations.plugin.js"
     }
   },
   "author": "Victor Savkin",
@@ -104,11 +112,9 @@
   "dependencies": {
     "@nx/devkit": "workspace:*",
     "@phenomnomnominal/tsquery": "catalog:typescript",
-    "enquirer": "catalog:",
     "@nx/js": "workspace:*",
     "@nx/vitest": "workspace:*",
     "picomatch": "catalog:",
-    "tsconfig-paths": "catalog:typescript",
     "semver": "catalog:",
     "tslib": "catalog:typescript",
     "ajv": "catalog:"

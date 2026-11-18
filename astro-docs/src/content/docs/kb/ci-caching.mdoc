@@ -14,7 +14,7 @@ it again.
 In a typical workflow, the same code is built and tested many times: locally before pushing, on
 every CI run of a PR, and again after merging.
 A build cache eliminates every repeat execution, which is why teams adopting one commonly see
-30-70% faster CI.
+40-90% faster CI.
 
 ## How a build cache works
 
@@ -25,7 +25,7 @@ If not, the task runs and the result is stored.
 Correctness depends entirely on the inputs being complete, so cache tooling that understands your
 project structure matters more than raw storage speed.
 Nx [caches task results](/docs/features/cache-task-results) with inputs inferred from your
-tooling configuration, and [how caching works](/docs/concepts/how-caching-works) covers the
+tooling configuration, and [how caching works](/docs/features/cache-task-results#how-caching-works) covers the
 hashing model in detail.
 
 ## Local cache vs remote cache
@@ -56,7 +56,7 @@ A cache only removes repeat work, and two other sources of CI time need differen
 
 Together these form a pipeline where the worst case is bounded by the largest single task, not
 the size of the repository.
-The [building blocks of fast CI](/docs/concepts/ci-concepts/building-blocks-fast-ci) covers the
+The [building blocks of fast CI](/docs/features/ci-features#building-blocks-of-fast-ci) covers the
 full picture.
 
 ## Frequently asked questions
@@ -64,17 +64,17 @@ full picture.
 ### Is it safe to cache test results in CI?
 
 Yes, when the cache key covers every input the test depends on.
-Nx hashes source files, dependency graphs, configuration, and declared environment variables, and
-[task sandboxing](/docs/features/ci-features/sandboxing) can enforce that tasks don't read
-undeclared inputs.
+Nx hashes source files, dependency graphs, configuration, and declared environment variables.
+On Nx Cloud, [Ultracache](/docs/features/ci-features/remote-cache#ultracache) also records the files each test actually reads, so an
+undeclared read inside the workspace doesn't cause a stale hit.
 Flaky tests are the real hazard: a flaky failure cached as a result is misleading, which is why
-Nx Cloud [detects flaky tasks](/docs/features/ci-features/flaky-tasks) and retries them instead
+Nx Cloud [detects flaky tasks](/docs/kb/flaky-tasks) and retries them instead
 of caching the noise.
 
 ### How much faster does CI get with a remote cache?
 
 It depends on how often the same task re-runs on unchanged code.
-Across Nx Cloud workspaces we observed 30-70% faster CI, with the biggest wins in repositories
+Across Nx Cloud workspaces we observed 40-90% faster CI, with the biggest wins in repositories
 with many projects where most PRs touch a small slice.
 
 ### Do I need a monorepo to benefit from CI caching?

@@ -8,6 +8,18 @@ import {
   extractLicenses,
 } from './extract-licenses-plugin';
 
+const { angularBuild } = vi.hoisted(() => ({
+  angularBuild: { version: '22.2.0' },
+}));
+vi.mock('@nx/angular-rspack-compiler', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@nx/angular-rspack-compiler')>()),
+  // Stands in for the installed @angular/build version.
+  isAngularBuildVersionAtLeast: (version: string) =>
+    angularBuild.version.localeCompare(version, undefined, {
+      numeric: true,
+    }) >= 0,
+}));
+
 describe('extractLicenses', () => {
   let root: string;
 
@@ -40,6 +52,7 @@ describe('extractLicenses', () => {
 
   beforeEach(async () => {
     root = await mkdtemp(join(tmpdir(), 'extract-licenses-'));
+    angularBuild.version = '22.2.0';
   });
 
   afterEach(async () => {
@@ -112,6 +125,51 @@ describe('extractLicenses', () => {
 
     expect(content.match(/Package: foo/g)).toHaveLength(1);
   });
+
+  it.each([
+    {
+      version: '22.1.3',
+      found: ['FOO LICENCE TEXT', 'BAR CUSTOM LICENSE TEXT'],
+      missing: ['BAR LICENSE TEXT'],
+    },
+    {
+      version: '22.1.2',
+      found: ['BAR LICENSE TEXT'],
+      missing: ['FOO LICENCE TEXT', 'BAR CUSTOM LICENSE TEXT'],
+    },
+  ])(
+    'should find license text the way @angular/build $version does',
+    async ({ version, found, missing }) => {
+      angularBuild.version = version;
+      await addPackage('foo', '1.0.0', 'MIT', {
+        name: 'LICENCE',
+        content: 'FOO LICENCE TEXT',
+      });
+      await addPackage('bar', '1.0.0', 'SEE LICENSE IN CUSTOM.txt', {
+        name: 'LICENSE',
+        content: 'BAR LICENSE TEXT',
+      });
+      await writeFile(
+        join(root, 'node_modules', 'bar', 'CUSTOM.txt'),
+        'BAR CUSTOM LICENSE TEXT'
+      );
+
+      const content = await extractLicenses(
+        metafileFor(
+          join('node_modules', 'foo', 'index.js'),
+          join('node_modules', 'bar', 'index.js')
+        ),
+        root
+      );
+
+      for (const text of found) {
+        expect(content).toContain(text);
+      }
+      for (const text of missing) {
+        expect(content).not.toContain(text);
+      }
+    }
+  );
 
   it('should emit an entry without license text when no license file exists', async () => {
     await addPackage('foo', '1.0.0', 'MIT');

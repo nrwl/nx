@@ -2,6 +2,7 @@ import {
   exec,
   execSync,
   spawnSync,
+  type ChildProcess as NodeChildProcess,
   type ExecOptions,
   type ExecSyncOptions,
   type SpawnSyncOptions,
@@ -13,7 +14,11 @@ import {
   getPackageManagerCommand,
   PackageManagerCommands,
 } from './package-manager';
-import { workspaceRoot, workspaceRootInner } from './workspace-root';
+import {
+  isTrustedNxInstall,
+  workspaceRoot,
+  workspaceRootInner,
+} from './workspace-root';
 import { ChildProcess } from '../native';
 import { messageToCode } from './exit-codes';
 import { readJsonFile } from './fileutils';
@@ -105,7 +110,10 @@ function findInstalledNxBin(root: string): string | null {
   for (let dir = root; ; dir = dirname(dir)) {
     // The nearest install wins, so an unusable manifest there ends the search
     // rather than deferring to an ancestor.
-    if (existsSync(join(dir, 'node_modules', 'nx', 'package.json'))) {
+    if (
+      existsSync(join(dir, 'node_modules', 'nx', 'package.json')) &&
+      isTrustedNxInstall(join(dir, 'node_modules'), root)
+    ) {
       return readInstalledNxBin(dir);
     }
     if (dir === dirname(dir)) {
@@ -155,6 +163,7 @@ export function runNxArgvSync(
       `Command failed: nx ${argv.join(' ')} (exit code ${result.status})`
     );
     (error as any).status = result.status ?? 1;
+    (error as any).signal = result.signal;
     throw error;
   }
 }
@@ -214,6 +223,30 @@ export async function runNxAsync(
   });
 }
 
+export function hasExited(child: NodeChildProcess): boolean {
+  return child.exitCode !== null || child.signalCode !== null;
+}
+
+/**
+ * Settles once `child`'s stdio has closed, which Node reports after 'exit'.
+ * Call it at spawn time: a 'close' emitted before the call is missed. Gives up
+ * 1s after 'exit', since a descendant can keep the pipes open indefinitely.
+ */
+export function whenStdioClosed(child: NodeChildProcess): Promise<void> {
+  return new Promise((resolve) => {
+    let timeout: NodeJS.Timeout | undefined;
+    child.once('close', () => {
+      clearTimeout(timeout);
+      resolve();
+    });
+    child.once('exit', () => {
+      // Node runs expired timers before it reads the pipes, so a blocked event
+      // loop would otherwise give up on output that is already there.
+      timeout = setTimeout(() => setImmediate(resolve), 1000);
+    });
+  });
+}
+
 export class PseudoTtyProcess {
   isAlive = true;
 
@@ -234,7 +267,7 @@ export class PseudoTtyProcess {
   }
 
   onOutput(callback: (message: string) => void): void {
-    this.childProcess.onOutput(callback);
+    this.childProcess.onOutput((message) => callback(message));
   }
 
   kill(): void {

@@ -4,7 +4,7 @@ export interface Schema {
   directory: string;
   name?: string;
   linter?: LinterType;
-  formatter?: 'none' | 'prettier';
+  formatter?: 'none' | 'prettier' | 'oxfmt';
   skipFormat?: boolean;
   unitTestRunner?: 'vitest' | 'none';
   e2eTestRunner?: 'cypress' | 'playwright' | 'none';
@@ -13,10 +13,6 @@ export interface Schema {
   skipPackageJson?: boolean;
   rootProject?: boolean;
   enableTypedLinting?: boolean;
-  /**
-   * @deprecated Use `enableTypedLinting` instead. This option will be removed in Nx v24.
-   */
-  setParserOptionsProject?: boolean;
   style?: 'css' | 'scss' | 'none';
   nxCloudToken?: string;
   useTsSolution?: boolean;

@@ -1,13 +1,7 @@
 import * as pc from 'picocolors';
 import type { ExecutorContext } from '@nx/devkit';
-import { createAsyncIterable } from '@nx/devkit/internal';
-import {
-  cacheDir,
-  joinPathFragments,
-  logger,
-  stripIndents,
-  writeJsonFile,
-} from '@nx/devkit';
+import { createAsyncIterable, TargetProjectLocator } from '@nx/devkit/internal';
+import { cacheDir, logger, stripIndents, writeJsonFile } from '@nx/devkit';
 import {
   copyAssets,
   copyPackageJson,
@@ -16,7 +10,6 @@ import {
   runTypeCheck as _runTypeCheck,
   TypeCheckOptions,
 } from '@nx/js';
-import { emitOxcDeclarations } from '@nx/js/src/utils/typescript/oxc-declaration-emitter';
 import * as esbuild from 'esbuild';
 import { normalizeOptions } from './lib/normalize';
 
@@ -31,7 +24,7 @@ import {
 } from './lib/build-esbuild-options';
 import { getExtraDependencies } from './lib/get-extra-dependencies';
 import { DependentBuildableProjectNode } from '@nx/js/internal';
-import { rmSync } from 'node:fs';
+import { deleteOutputDir } from '../../utils/fs';
 import { join, relative } from 'path';
 
 const BUILD_WATCH_FAILED = `[ ${pc.red(
@@ -41,11 +34,6 @@ const BUILD_WATCH_SUCCEEDED = `[ ${pc.green(
   'watch'
 )} ] build succeeded, watching for changes...`;
 
-// since the workspace has esbuild 0.17+ installed, there's no definition
-// of esbuild without 'context', therefore, the esbuild import in the else
-// branch below has type never, getting the type to cast later
-type EsBuild = typeof esbuild;
-
 export async function* esbuildExecutor(
   _options: EsBuildExecutorOptions,
   context: ExecutorContext
@@ -54,13 +42,35 @@ export async function* esbuildExecutor(
 
   const options = await normalizeOptions(_options, context);
   if (options.deleteOutputPath)
-    rmSync(options.outputPath, { recursive: true, force: true });
+    deleteOutputDir(context.root, options.outputPath);
 
   const assetsResult = await copyAssets(options, context);
 
+  let targetProjectLocator: TargetProjectLocator;
+  const sourceFile = join(
+    context.root,
+    context.projectGraph.nodes[context.projectName].data.root,
+    'package.json'
+  );
   const externalDependencies: DependentBuildableProjectNode[] =
     options.external.reduce((acc, name) => {
-      const externalNode = context.projectGraph.externalNodes[`npm:${name}`];
+      let externalNode = context.projectGraph.externalNodes[`npm:${name}`];
+      if (
+        (!externalNode || externalNode.data.version.startsWith('link:')) &&
+        name.split('/').length === (name.startsWith('@') ? 2 : 1)
+      ) {
+        targetProjectLocator ??= new TargetProjectLocator(
+          context.projectGraph.nodes,
+          context.projectGraph.externalNodes
+        );
+        const target = targetProjectLocator.findNpmProjectFromImport(
+          name,
+          sourceFile
+        );
+        externalNode = target
+          ? context.projectGraph.externalNodes[target]
+          : externalNode;
+      }
       if (externalNode) {
         acc.push({
           name,
@@ -137,36 +147,6 @@ export async function* esbuildExecutor(
                       setup(build: esbuild.PluginBuild) {
                         build.onEnd(async (result: esbuild.BuildResult) => {
                           if (
-                            options.useOxcDeclarations &&
-                            options.declaration
-                          ) {
-                            // Type-check without emitting if needed
-                            if (!options.skipTypeCheck) {
-                              const typeCheckOpts = getTypeCheckOptions(
-                                options,
-                                context
-                              );
-                              typeCheckOpts.mode = 'noEmit';
-                              const { errors, warnings } =
-                                await _runTypeCheck(typeCheckOpts);
-                              if (errors.length > 0 || warnings.length > 0) {
-                                await printDiagnostics(errors, warnings);
-                              }
-                              hasTypeErrors = errors.length > 0;
-                            }
-                            // Emit declarations with oxc
-                            const projectRoot =
-                              context.projectGraph.nodes[context.projectName]
-                                .data.root;
-                            const oxcResult = await emitOxcDeclarations({
-                              projectRoot: join(context.root, projectRoot),
-                              outDir: options.outputPath,
-                              rootDir:
-                                options.declarationRootDir ?? context.root,
-                            });
-                            hasTypeErrors =
-                              hasTypeErrors || oxcResult.errors.length > 0;
-                          } else if (
                             !options.skipTypeCheck ||
                             (options.isTsSolutionSetup && options.declaration)
                           ) {
@@ -222,36 +202,8 @@ export async function* esbuildExecutor(
       }
     );
   } else {
-    // Run type-checks and/or declaration emission.
-    if (options.useOxcDeclarations && options.declaration) {
-      // When using oxc for declarations, run type-check separately (noEmit mode)
-      // if needed, then emit declarations with oxc-transform.
-      if (!options.skipTypeCheck) {
-        const typeCheckOpts = getTypeCheckOptions(options, context);
-        // Override to noEmit since oxc handles declaration emission
-        typeCheckOpts.mode = 'noEmit';
-        const { errors, warnings } = await _runTypeCheck(typeCheckOpts);
-        if (errors.length > 0 || warnings.length > 0) {
-          await printDiagnostics(errors, warnings);
-        }
-        if (errors.length > 0) {
-          yield { success: false };
-          return;
-        }
-      }
-
-      const projectRoot =
-        context.projectGraph.nodes[context.projectName].data.root;
-      const { errors } = await emitOxcDeclarations({
-        projectRoot: join(context.root, projectRoot),
-        outDir: options.outputPath,
-        rootDir: options.declarationRootDir ?? context.root,
-      });
-      if (errors.length > 0) {
-        yield { success: false };
-        return;
-      }
-    } else if (
+    // Run type-checks first and bail if they don't pass.
+    if (
       !options.skipTypeCheck ||
       (options.isTsSolutionSetup && options.declaration)
     ) {
@@ -274,7 +226,7 @@ export async function* esbuildExecutor(
             ? 'meta.json'
             : `meta.${options.format[i]}.json`;
         writeJsonFile(
-          joinPathFragments(options.outputPath, filename),
+          join(context.root, options.outputPath, filename),
           buildResult.metafile
         );
       }

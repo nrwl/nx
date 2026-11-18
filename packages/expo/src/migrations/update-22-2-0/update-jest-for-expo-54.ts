@@ -1,14 +1,12 @@
-import {
-  Tree,
-  getProjects,
-  updateJson,
-  logger,
-  readJson,
-  joinPathFragments,
-  formatFiles,
-} from '@nx/devkit';
+import { Tree, getProjects, updateJson, logger, formatFiles } from '@nx/devkit';
 import { removePropertyFromJestConfig } from '@nx/jest';
 import { join } from 'path';
+
+// `preset: 'jest-expo'` or a `jest-expo/<variant>` subpath
+const JEST_EXPO_PRESET_REGEX = /preset:\s*['"]jest-expo(\/[^'"]*)?['"]/;
+// the resolver line the SDK 53 generator wrote (see utils/jest/add-jest.ts)
+const SDK_53_RESOLVER_REGEX =
+  /resolver:\s*require\.resolve\(\s*['"]\.\/jest\.resolver\.js['"]\s*\)/;
 
 /**
  * Update Jest configuration for Expo SDK 54.
@@ -23,10 +21,6 @@ export default async function update(tree: Tree) {
   const projects = getProjects(tree);
 
   for (const [projectName, config] of projects.entries()) {
-    if (!isExpoProject(tree, config.root)) {
-      continue;
-    }
-
     // Check if this project has Jest configured
     const jestConfigPath = findJestConfigPath(tree, config.root);
     if (!jestConfigPath) {
@@ -35,10 +29,12 @@ export default async function update(tree: Tree) {
 
     const jestConfigContent = tree.read(jestConfigPath, 'utf-8');
 
-    // Only process if this is an Expo project with jest-expo preset and custom resolver
+    // No package.json check: expo libraries often have no project-level
+    // package.json (or one without expo), which skipped real expo projects.
+    // Only the jest config is reliable: jest-expo preset + custom resolver.
     if (
-      !jestConfigContent.includes('jest-expo') ||
-      !jestConfigContent.includes('jest.resolver.js')
+      !JEST_EXPO_PRESET_REGEX.test(jestConfigContent) ||
+      !SDK_53_RESOLVER_REGEX.test(jestConfigContent)
     ) {
       continue;
     }
@@ -166,21 +162,5 @@ function updateTsConfigFilesForV54(tree: Tree, projectRoot: string): void {
     } catch {
       // Skip if JSON is invalid
     }
-  }
-}
-
-function isExpoProject(tree: Tree, projectRoot: string): boolean {
-  const packageJsonPath = joinPathFragments(projectRoot, 'package.json');
-  if (!tree.exists(packageJsonPath)) {
-    return false;
-  }
-
-  try {
-    const packageJson = readJson(tree, packageJsonPath);
-    return Boolean(
-      packageJson.dependencies?.expo || packageJson.devDependencies?.expo
-    );
-  } catch {
-    return false;
   }
 }

@@ -1,0 +1,6 @@
+extends: substitution
+message: "Use '%s' instead of '%s'. Feature names are lowercase, like remote caching."
+level: warning
+ignorecase: false
+swap:
+  'Dynamic Task Packing': dynamic task packing

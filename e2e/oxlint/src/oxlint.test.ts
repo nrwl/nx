@@ -1,3 +1,4 @@
+import { stripVTControlCharacters } from 'node:util';
 import {
   checkFilesExist,
   cleanupProject,
@@ -45,7 +46,8 @@ function runExpectingFailure(command: string): string {
   try {
     runCLI(command);
   } catch (e: any) {
-    return `${e.stdout ?? ''}${e.stderr ?? ''}`;
+    // `runCLI` sets FORCE_COLOR=false, which picocolors reads as "forced on".
+    return stripVTControlCharacters(`${e.stdout ?? ''}${e.stderr ?? ''}`);
   }
   throw new Error(`Expected "${command}" to fail, but it succeeded.`);
 }
@@ -68,6 +70,52 @@ describe('Oxlint', () => {
           (typeof p === 'string' ? p : p.plugin) === '@nx/oxlint'
       )
     ).toBe(true);
+  });
+
+  it('should make jsPlugins dependencies of every linted project', () => {
+    const lib = uniq('oxlintlinted');
+    const plugin = uniq('oxlintplugin');
+    runCLI(
+      `generate @nx/js:lib packages/${lib} --linter=oxlint --unitTestRunner=none --no-interactive`
+    );
+    runCLI(
+      `generate @nx/js:lib packages/${plugin} --linter=none --unitTestRunner=none --no-interactive`
+    );
+    updateFile(
+      `packages/${plugin}/src/index.js`,
+      `export default { meta: { name: 'local' }, rules: {} };\n`
+    );
+    updateFile(
+      '.oxlintrc.json',
+      JSON.stringify({
+        jsPlugins: [
+          '@nx/oxlint/boundaries-plugin',
+          `./packages/${plugin}/src/index.js`,
+        ],
+        rules: {},
+      })
+    );
+
+    // A workspace plugin is a project edge, so editing it marks every project
+    // it lints as affected — the behavior a hand-maintained input list cannot
+    // give.
+    expect(
+      runCLI(`show projects --affected --files=packages/${plugin}/src/index.js`)
+    ).toContain(lib);
+    runCLI('graph --file=plugin-graph.json');
+    expect(
+      readJson('plugin-graph.json').graph.dependencies[lib]
+    ).toContainEqual({ source: lib, target: plugin, type: 'implicit' });
+
+    // `graph --file` leaves npm nodes out, so the package edge is read from
+    // the graph Nx stores.
+    expect(
+      readJson('.nx/workspace-data/project-graph.json').dependencies[lib]
+    ).toContainEqual({
+      source: lib,
+      target: 'npm:@nx/oxlint',
+      type: 'implicit',
+    });
   });
 
   it('should pass, serve a re-run from cache, fail on a violation, then pass once fixed', () => {
@@ -121,5 +169,49 @@ describe('Oxlint', () => {
     const afterFix = runCLI(command);
     expect(afterFix).toContain(`Successfully ran target ${targetName}`);
     expect(afterFix).not.toContain('existing outputs match the cache');
+  });
+
+  it('should lint several projects in one batch and still report per project', () => {
+    const clean = uniq('oxlintclean');
+    const broken = uniq('oxlintbroken');
+    for (const lib of [clean, broken]) {
+      runCLI(
+        `generate @nx/js:lib packages/${lib} --linter=oxlint --unitTestRunner=none --no-interactive`
+      );
+    }
+    updateFile(
+      '.oxlintrc.json',
+      JSON.stringify({ rules: { 'no-debugger': 'error' } })
+    );
+    updateFile(
+      `packages/${broken}/src/index.ts`,
+      `export function boom() {\n  debugger;\n}\n`
+    );
+    const targetName = requireOxlintTarget(clean);
+    const command = `run-many -t ${targetName} -p ${clean},${broken}`;
+
+    const output = runExpectingFailure(command);
+    expect(output).toContain(`Running 2 tasks with @nx/oxlint:lint`);
+    expect(output).toContain(`packages/${broken}/src/index.ts`);
+    expect(output).toContain('no-debugger');
+    expect(output).toContain(`- ${broken}:${targetName}`);
+    expect(output).not.toContain(`- ${clean}:${targetName}`);
+
+    expect(runCLI(`run ${clean}:${targetName}`)).toContain(
+      'existing outputs match the cache'
+    );
+
+    const unbatched = runExpectingFailure(
+      `${command} --batch=false --skip-nx-cache`
+    );
+    expect(unbatched).not.toContain('Running 2 tasks with');
+    expect(unbatched).toContain(`packages/${broken}/src/index.ts`);
+    expect(unbatched).toContain('no-debugger');
+
+    // A CLI flag reaches Oxlint: a config with no rules finds nothing.
+    updateFile('empty.oxlintrc.json', JSON.stringify({ rules: {} }));
+    expect(
+      runCLI(`${command} --config empty.oxlintrc.json --skip-nx-cache`)
+    ).toContain(`Successfully ran target ${targetName}`);
   });
 });

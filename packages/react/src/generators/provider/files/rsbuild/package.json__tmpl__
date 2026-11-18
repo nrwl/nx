@@ -13,6 +13,7 @@
   },
   "devDependencies": {
     "@module-federation/rsbuild-plugin": "<%= versions.moduleFederationRsbuildPluginVersion %>",
+    "@nx/rsbuild": "<%= versions.nxVersion %>",
     "@rsbuild/core": "<%= versions.rsbuildCoreVersion %>",
     "@rsbuild/plugin-react": "<%= versions.rsbuildPluginReactVersion %>",
     "@types/react": "<%= versions.typesReactVersion %>",

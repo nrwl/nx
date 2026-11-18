@@ -1,9 +1,9 @@
 const mocks = {
-  prompt: jest.fn(),
-  getInstalledNxVersion: jest.fn(),
-  getInstalledVersion: jest.fn(),
-  getInstalledPackageGroup: jest.fn(),
-  getInstalledLegacyNrwlWorkspaceVersion: jest.fn(),
+  prompt: vi.fn(),
+  getInstalledNxVersion: vi.fn(),
+  getInstalledVersion: vi.fn(),
+  getInstalledPackageGroup: vi.fn(),
+  getInstalledLegacyNrwlWorkspaceVersion: vi.fn(),
 };
 const mockPrompt = mocks.prompt;
 const mockGetInstalledNxVersion = mocks.getInstalledNxVersion;
@@ -11,10 +11,12 @@ const mockGetInstalledVersion = mocks.getInstalledVersion;
 const mockGetInstalledPackageGroup = mocks.getInstalledPackageGroup;
 const mockGetInstalledLegacyNrwlWorkspaceVersion =
   mocks.getInstalledLegacyNrwlWorkspaceVersion;
-jest.mock('enquirer', () => ({
-  prompt: (...args: any[]) => mocks.prompt(...args),
+vi.mock('@clack/prompts', () => ({
+  autocomplete: (...args: any[]) => mocks.prompt(...args),
+  text: (...args: any[]) => mocks.prompt(...args),
+  isCancel: () => false,
 }));
-jest.mock('../../utils/installed-nx-version', () => ({
+vi.mock('../../utils/installed-nx-version', () => ({
   getInstalledNxVersion: () => mocks.getInstalledNxVersion(),
   getInstalledVersion: (pkg: string) => mocks.getInstalledVersion(pkg),
   getInstalledPackageGroup: (pkg: string) =>
@@ -25,21 +27,21 @@ jest.mock('../../utils/installed-nx-version', () => ({
 // These tests exercise the migrate logic, not the cooldown wrapper: delegate the
 // policy-aware resolver to the legacy registry resolution so the existing
 // `resolvePackageVersionUsingRegistry` spies keep driving the assertions.
-jest.mock('./resolve-package-version', () => ({
+vi.mock('./resolve-package-version', () => ({
   isRegistryResolutionEnabled: () => true,
-  resolvePackageVersionRespectingMinReleaseAge: (
+  resolvePackageVersionRespectingMinReleaseAge: async (
     packageName: string,
     version: string
   ) =>
-    require('../../utils/package-manager').resolvePackageVersionUsingRegistry(
-      packageName,
-      version
-    ),
+    (
+      await import('../../utils/package-manager')
+    ).resolvePackageVersionUsingRegistry(packageName, version),
 }));
 import { resolveCatalogSpecifiers } from '../../utils/catalog';
 import * as configModule from '../../config/configuration';
 import { PackageJson } from '../../utils/package-json';
 import * as packageMgrUtils from '../../utils/package-manager';
+import * as provenance from '../../utils/provenance';
 
 import {
   confirmCommitsOnDefaultBranch,
@@ -54,7 +56,7 @@ import {
   isHybridMigration,
   isNpmPeerDepsError,
   isPromptOnlyMigration,
-  isSingleMigrationInvocation,
+  isRunPhaseInvocation,
   Migrator,
   normalizeVersion,
   parseMigrationReturn,
@@ -63,13 +65,14 @@ import {
   ResolvedMigrationConfiguration,
   resolveCanonicalNxPackage,
   resolveDocumentationFileToWorkspacePath,
-  resolveMigrationForRun,
   resolveInclude,
 } from './migrate';
 import type { MigrateArgs } from './command-object';
 import { applyNxJsonMigrateDefaults } from './migrate-config';
 import { MinReleaseAgeViolationError } from '../../utils/min-release-age/errors';
+import { TempFs } from '../../internal-testing-utils/temp-fs';
 import {
+  promptContentKey,
   readPromptFilesFromInstall,
   validateMigrationEntries,
   writePromptMigrationFiles,
@@ -78,6 +81,7 @@ import {
   existsSync,
   mkdirSync,
   mkdtempSync,
+  readdirSync,
   readFileSync,
   realpathSync,
   rmSync,
@@ -85,8 +89,12 @@ import {
   writeFileSync,
 } from 'fs';
 import { tmpdir } from 'os';
+import Module from 'node:module';
 import { dirname, join } from 'path';
+import { gt } from 'semver';
 import { logger } from '../../utils/logger';
+import { output } from '../../utils/output';
+import { setWorkspaceRoot } from '../../utils/workspace-root';
 
 const createPackageJson = (
   overrides: Partial<PackageJson> = {}
@@ -147,6 +155,23 @@ describe('Migration', () => {
 
       await expect(migrator.migrate('mypackage', '2.0.0')).rejects.toThrow(
         'Fetched migration metadata for mypackage is invalid: the target version is missing.'
+      );
+    });
+
+    it('should fail fast when a fetched migration config carries a version that is not a version', async () => {
+      const migrator = new Migrator({
+        packageJson: createPackageJson(),
+        getInstalledPackageVersion: () => '1.0.0',
+        fetch: () =>
+          Promise.resolve({
+            version: 'git+https://git.example.com/mypackage.git',
+          }),
+        from: {},
+        to: {},
+      });
+
+      await expect(migrator.migrate('mypackage', 'latest')).rejects.toThrow(
+        'Fetched migration metadata for mypackage is invalid: the target version "git+https://git.example.com/mypackage.git" is not a valid version.'
       );
     });
 
@@ -619,6 +644,7 @@ describe('Migration', () => {
               ],
             };
           }
+          // A reverse package-group edge must not pull this package into the update.
           if (pkg === '@my-company/lib-6') {
             return {
               version: '2.0.0',
@@ -932,11 +958,11 @@ describe('Migration', () => {
 
     describe('--interactive', () => {
       beforeEach(() => {
-        jest.clearAllMocks();
+        vi.clearAllMocks();
       });
 
       it('should prompt when --interactive and there is a package updates group with confirmation prompts', async () => {
-        mockPrompt.mockReturnValue(Promise.resolve({ shouldApply: true }));
+        mockPrompt.mockReturnValue(Promise.resolve('Yes'));
         const promptMessage =
           'Do you want to update the packages related to <some fwk name>?';
         const migrator = new Migrator({
@@ -989,14 +1015,14 @@ describe('Migration', () => {
           minVersionWithSkippedUpdates: undefined,
         });
         expect(mockPrompt).toHaveBeenCalledWith(
-          expect.arrayContaining([
-            expect.objectContaining({ message: promptMessage }),
-          ])
+          expect.objectContaining({
+            message: expect.stringContaining(promptMessage),
+          })
         );
       });
 
       it('should filter out updates when prompt answer is false', async () => {
-        mockPrompt.mockReturnValue(Promise.resolve({ shouldApply: false }));
+        mockPrompt.mockReturnValue(Promise.resolve('No'));
         const migrator = new Migrator({
           packageJson: createPackageJson({
             dependencies: { child1: '1.0.0', child2: '1.0.0', child3: '1.0.0' },
@@ -1049,7 +1075,7 @@ describe('Migration', () => {
       });
 
       it('should not prompt and get all updates when --interactive=false', async () => {
-        mockPrompt.mockReturnValue(Promise.resolve({ shouldApply: false }));
+        mockPrompt.mockReturnValue(Promise.resolve('No'));
         const migrator = new Migrator({
           packageJson: createPackageJson({
             dependencies: { child1: '1.0.0', child2: '1.0.0', child3: '1.0.0' },
@@ -1106,7 +1132,7 @@ describe('Migration', () => {
 
     describe('--include', () => {
       beforeEach(() => {
-        jest.clearAllMocks();
+        vi.clearAllMocks();
       });
 
       it('should keep required packages and drop optional ones when include is required', async () => {
@@ -1153,7 +1179,7 @@ describe('Migration', () => {
       });
 
       it('should drop entries that contain only optional packages without firing their x-prompt', async () => {
-        mockPrompt.mockReturnValue(Promise.resolve({ shouldApply: true }));
+        mockPrompt.mockReturnValue(Promise.resolve('Yes'));
         const migrator = new Migrator({
           packageJson: createPackageJson({
             dependencies: {
@@ -1287,6 +1313,188 @@ describe('Migration', () => {
         expect(result.packageUpdates.requiredChild).toBeUndefined();
       });
 
+      it('should skip optional update migrations when include is required', async () => {
+        const migrator = new Migrator({
+          packageJson: createPackageJson({ dependencies: { dep: '1.0.0' } }),
+          getInstalledPackageVersion: () => '1.0.0',
+          fetch: (p) => {
+            if (p === 'mypackage') {
+              return Promise.resolve({
+                version: '2.0.0',
+                generators: {
+                  migration: { version: '2.0.0' },
+                  'update-dep': {
+                    version: '2.0.0',
+                    requires: { dep: '>=1.0.0 <2.0.0' },
+                    optionalUpdate: true,
+                  },
+                },
+              });
+            }
+            return Promise.resolve(null);
+          },
+          from: {},
+          to: {},
+          include: 'required',
+          requiredPackages: new Set(['mypackage']),
+        });
+
+        const result = await migrator.migrate('mypackage', '2.0.0');
+
+        expect(result.migrations.map((m) => m.name)).toEqual(['migration']);
+      });
+
+      it("should collect required packages' optional update migrations and the migrations the optional updates enable when include is optional", async () => {
+        const installed: Record<string, string> = {
+          nx: '24.0.0',
+          '@nx/angular': '24.0.0',
+          '@angular/core': '21.2.0',
+          cypress: '15.5.0',
+          rxjs: '7.8.0',
+        };
+        const migrator = new Migrator({
+          packageJson: createPackageJson({ dependencies: installed }),
+          getInstalledPackageVersion: (p, overrides) =>
+            overrides?.[p] ?? installed[p] ?? null,
+          fetch: (p, v) => {
+            if (p === 'nx') {
+              return Promise.resolve({
+                version: '24.0.0',
+                packageGroup: [{ package: '@nx/angular', version: '*' }],
+              });
+            }
+            if (p === '@nx/angular') {
+              return Promise.resolve({
+                version: '24.0.0',
+                packageJsonUpdates: {
+                  '20.0.0': {
+                    version: '20.0.0',
+                    packages: { rxjs: { version: '6.6.0' } },
+                  },
+                  '23.1.0': {
+                    version: '23.1.0',
+                    requires: { '@angular/core': '>=21.2.0 <22.0.0' },
+                    packages: { '@angular/core': { version: '22.0.0' } },
+                  },
+                },
+                generators: {
+                  // met only by the stale rxjs pin, which is never written
+                  'update-for-rxjs-6': {
+                    version: '20.0.0',
+                    requires: { rxjs: '>=6.0.0 <7.0.0' },
+                  },
+                  // already applied
+                  'update-for-angular-21': {
+                    version: '22.0.0',
+                    requires: { '@angular/core': '>=21.0.0' },
+                  },
+                  'update-for-angular-22': {
+                    version: '23.1.0',
+                    requires: { '@angular/core': '>=22.0.0' },
+                  },
+                  'upgrade-to-cypress-16': {
+                    version: '23.1.0',
+                    requires: { cypress: '>=15.0.0 <16.0.0' },
+                    optionalUpdate: true,
+                  },
+                },
+              });
+            }
+            return Promise.resolve({ version: v });
+          },
+          from: { nx: '0.0.0' },
+          to: {},
+          excludeAppliedMigrations: true,
+          include: 'optional',
+          requiredPackages: new Set(['nx', '@nx/angular']),
+        });
+
+        const result = await migrator.migrate('nx', '24.0.0');
+
+        expect(result.migrations.map((m) => m.name)).toEqual([
+          'update-for-angular-22',
+          'upgrade-to-cypress-16',
+        ]);
+      });
+
+      it.each([
+        {
+          scenario: 'stop at the installed plugin version',
+          pluginVersion: '23.2.0',
+          groupVersion: '*',
+          targetVersion: '24.0.0',
+          expected: ['optional-update-22'],
+        },
+        {
+          scenario: 'include fixed-version package group members',
+          pluginVersion: '24.0.0',
+          groupVersion: '24.0.0',
+          targetVersion: '24.0.0',
+          expected: ['optional-update-22', 'optional-update-23-3'],
+        },
+        {
+          scenario: 'stop at a target older than the installed version',
+          pluginVersion: '24.0.0',
+          groupVersion: '*',
+          targetVersion: '23.0.0',
+          expected: ['optional-update-22'],
+        },
+      ])(
+        "should $scenario when collecting required packages' migrations with include optional",
+        async ({ pluginVersion, groupVersion, targetVersion, expected }) => {
+          const installed: Record<string, string> = {
+            nx: '24.0.0',
+            '@nx/cypress': pluginVersion,
+            cypress: '14.5.0',
+          };
+          const migrator = new Migrator({
+            packageJson: createPackageJson({ dependencies: installed }),
+            getInstalledPackageVersion: (p, overrides) =>
+              overrides?.[p] ?? installed[p] ?? null,
+            fetch: (p, v) => {
+              if (p === 'nx') {
+                return Promise.resolve({
+                  version: v,
+                  packageGroup: [
+                    { package: '@nx/cypress', version: groupVersion },
+                  ],
+                });
+              }
+              if (p === '@nx/cypress') {
+                return Promise.resolve({
+                  version: v,
+                  generators: {
+                    // Metadata above the installed version pruned this entry.
+                    ...(!gt(v, pluginVersion) && {
+                      'optional-update-22': {
+                        version: '22.0.0',
+                        requires: { cypress: '^14.0.0' },
+                        optionalUpdate: true,
+                      },
+                    }),
+                    'optional-update-23-3': {
+                      version: '23.3.0',
+                      requires: { cypress: '^14.0.0' },
+                      optionalUpdate: true,
+                    },
+                  },
+                });
+              }
+              return Promise.resolve({ version: v });
+            },
+            from: { nx: '0.0.0' },
+            to: {},
+            excludeAppliedMigrations: true,
+            include: 'optional',
+            requiredPackages: new Set(['nx', '@nx/cypress']),
+          });
+
+          const result = await migrator.migrate('nx', targetVersion);
+
+          expect(result.migrations.map((m) => m.name)).toEqual(expected);
+        }
+      );
+
       it.each(['required', 'optional'] as const)(
         'should throw when constructed with include=%s but no requiredPackages',
         (include) => {
@@ -1311,7 +1519,7 @@ describe('Migration', () => {
 
     describe('requirements', () => {
       beforeEach(() => {
-        jest.clearAllMocks();
+        vi.clearAllMocks();
       });
 
       it('should collect updates that meet requirements and leave out those that do not meet them', async () => {
@@ -1473,8 +1681,237 @@ describe('Migration', () => {
         });
       });
 
+      it('should re-evaluate held updates after later package groups satisfy their gates', async () => {
+        mockPrompt.mockResolvedValue('Yes');
+        const installedVersions = {
+          mypackage: '1.0.0',
+          'first-owner': '1.0.0',
+          'second-owner': '1.0.0',
+          'third-owner': '1.0.0',
+          blocker: '1.0.0',
+          'intermediate-blocker': '1.0.0',
+          result: '1.0.0',
+          'shared-result': '1.0.0',
+        };
+        const migrator = new Migrator({
+          packageJson: createPackageJson({
+            dependencies: installedVersions,
+          }),
+          getInstalledPackageVersion: (p) => installedVersions[p] ?? null,
+          fetch: (p): Promise<ResolvedMigrationConfiguration> => {
+            if (p === 'mypackage') {
+              return Promise.resolve({
+                version: '2.0.0',
+                packageGroup: [
+                  { package: 'first-owner', version: '*' },
+                  { package: 'second-owner', version: '*' },
+                  { package: 'third-owner', version: '*' },
+                ],
+              });
+            } else if (p === 'first-owner') {
+              return Promise.resolve({
+                version: '2.0.0',
+                packageJsonUpdates: {
+                  gated: {
+                    version: '2.0.0',
+                    'x-prompt': 'Apply held update?',
+                    incompatibleWith: { blocker: '<2.0.0' },
+                    packages: {
+                      result: { version: '2.0.0' },
+                      'shared-result': { version: '2.0.0' },
+                    },
+                  },
+                },
+              });
+            } else if (p === 'second-owner') {
+              return Promise.resolve({
+                version: '2.0.0',
+                packageJsonUpdates: {
+                  unblock: {
+                    version: '2.0.0',
+                    incompatibleWith: { 'intermediate-blocker': '<2.0.0' },
+                    packages: { blocker: { version: '2.0.0' } },
+                  },
+                },
+              });
+            } else if (p === 'third-owner') {
+              return Promise.resolve({
+                version: '2.0.0',
+                packageJsonUpdates: {
+                  unblock: {
+                    version: '2.0.0',
+                    requires: { mypackage: '>=2.0.0' },
+                    packages: {
+                      'intermediate-blocker': { version: '2.0.0' },
+                      'shared-result': { version: '3.0.0' },
+                    },
+                  },
+                },
+              });
+            }
+
+            return Promise.resolve({ version: '2.0.0' });
+          },
+          from: {},
+          to: {},
+          interactive: true,
+        });
+
+        const result = await migrator.migrate('mypackage', '2.0.0');
+
+        expect(result.packageUpdates).toEqual({
+          mypackage: { version: '2.0.0', addToPackageJson: false },
+          'first-owner': { version: '2.0.0', addToPackageJson: false },
+          'second-owner': { version: '2.0.0', addToPackageJson: false },
+          'third-owner': { version: '2.0.0', addToPackageJson: false },
+          blocker: { version: '2.0.0', addToPackageJson: false },
+          'intermediate-blocker': {
+            version: '2.0.0',
+            addToPackageJson: false,
+          },
+          result: { version: '2.0.0', addToPackageJson: false },
+          'shared-result': { version: '3.0.0', addToPackageJson: false },
+        });
+        expect(mockPrompt).toHaveBeenCalledTimes(1);
+      });
+
+      it('should not re-prompt or apply a held update that was declined once its gate was satisfied', async () => {
+        mockPrompt.mockResolvedValue('No');
+        const installedVersions = {
+          mypackage: '1.0.0',
+          'gated-owner': '1.0.0',
+          'unblocker-owner': '1.0.0',
+          blocker: '1.0.0',
+          result: '1.0.0',
+        };
+        const migrator = new Migrator({
+          packageJson: createPackageJson({
+            dependencies: installedVersions,
+          }),
+          getInstalledPackageVersion: (p) => installedVersions[p] ?? null,
+          fetch: (p): Promise<ResolvedMigrationConfiguration> => {
+            if (p === 'mypackage') {
+              return Promise.resolve({
+                version: '2.0.0',
+                packageGroup: [
+                  { package: 'gated-owner', version: '*' },
+                  { package: 'unblocker-owner', version: '*' },
+                ],
+              });
+            } else if (p === 'gated-owner') {
+              return Promise.resolve({
+                version: '2.0.0',
+                packageJsonUpdates: {
+                  gated: {
+                    version: '2.0.0',
+                    'x-prompt': 'Apply held update?',
+                    incompatibleWith: { blocker: '<2.0.0' },
+                    packages: { result: { version: '2.0.0' } },
+                  },
+                },
+              });
+            } else if (p === 'unblocker-owner') {
+              return Promise.resolve({
+                version: '2.0.0',
+                packageJsonUpdates: {
+                  unblock: {
+                    version: '2.0.0',
+                    requires: { mypackage: '>=2.0.0' },
+                    packages: { blocker: { version: '2.0.0' } },
+                  },
+                },
+              });
+            }
+
+            return Promise.resolve({ version: '2.0.0' });
+          },
+          from: {},
+          to: {},
+          interactive: true,
+        });
+
+        const result = await migrator.migrate('mypackage', '2.0.0');
+
+        expect(result).toStrictEqual({
+          migrations: [],
+          packageUpdates: {
+            mypackage: { version: '2.0.0', addToPackageJson: false },
+            'gated-owner': { version: '2.0.0', addToPackageJson: false },
+            'unblocker-owner': { version: '2.0.0', addToPackageJson: false },
+            blocker: { version: '2.0.0', addToPackageJson: false },
+          },
+          minVersionWithSkippedUpdates: '2.0.0',
+        });
+        expect(mockPrompt).toHaveBeenCalledTimes(1);
+      });
+
+      it('should keep the last metadata when a package is staged twice at the same version, gated or not', async () => {
+        const installedVersions = {
+          mypackage: '1.0.0',
+          gate: '2.0.0',
+          child: '1.0.0',
+        };
+        const createMigrator = (gated: boolean) =>
+          new Migrator({
+            packageJson: createPackageJson({
+              dependencies: installedVersions,
+            }),
+            getInstalledPackageVersion: (p) => installedVersions[p] ?? null,
+            fetch: (p): Promise<ResolvedMigrationConfiguration> => {
+              if (p === 'mypackage') {
+                return Promise.resolve({
+                  version: '2.0.0',
+                  packageJsonUpdates: {
+                    first: {
+                      version: '2.0.0',
+                      // Already satisfied: the gate only selects the code path,
+                      // it never holds the group.
+                      ...(gated ? { requires: { gate: '^2.0.0' } } : {}),
+                      packages: {
+                        child: {
+                          version: '2.0.0',
+                          addToPackageJson: 'dependencies',
+                        },
+                      },
+                    },
+                    second: {
+                      version: '2.0.0',
+                      ...(gated ? { requires: { gate: '^2.0.0' } } : {}),
+                      packages: {
+                        child: {
+                          version: '2.0.0',
+                          addToPackageJson: 'devDependencies',
+                          ignoreMigrations: true,
+                        },
+                      },
+                    },
+                  },
+                });
+              }
+
+              return Promise.resolve({ version: '2.0.0' });
+            },
+            from: {},
+            to: {},
+          });
+
+        const gated = await createMigrator(true).migrate('mypackage', '2.0.0');
+        const ungated = await createMigrator(false).migrate(
+          'mypackage',
+          '2.0.0'
+        );
+
+        const expected = {
+          version: '2.0.0',
+          addToPackageJson: 'devDependencies',
+          ignoreMigrations: true,
+        };
+        expect(gated.packageUpdates.child).toEqual(expected);
+        expect(ungated.packageUpdates.child).toEqual(expected);
+      });
+
       it('should prompt when requirements are met', async () => {
-        mockPrompt.mockReturnValue(Promise.resolve({ shouldApply: true }));
+        mockPrompt.mockReturnValue(Promise.resolve('Yes'));
         const promptMessage =
           'Do you want to update the packages related to <some fwk name>?';
         const migrator = new Migrator({
@@ -1519,14 +1956,14 @@ describe('Migration', () => {
           minVersionWithSkippedUpdates: undefined,
         });
         expect(mockPrompt).toHaveBeenCalledWith(
-          expect.arrayContaining([
-            expect.objectContaining({ message: promptMessage }),
-          ])
+          expect.objectContaining({
+            message: expect.stringContaining(promptMessage),
+          })
         );
       });
 
       it('should not prompt when requirements are not met', async () => {
-        mockPrompt.mockReturnValue(Promise.resolve({ shouldApply: true }));
+        mockPrompt.mockReturnValue(Promise.resolve('Yes'));
         const promptMessage =
           'Do you want to update the packages related to <some fwk name>?';
         const migrator = new Migrator({
@@ -1618,6 +2055,7 @@ describe('Migration', () => {
               },
             });
           } else if (p === 'newChild') {
+            // Uninstalled packages must contribute no migrations even when metadata exists.
             return Promise.resolve({
               version: '3.0.0',
               generators: {
@@ -1654,6 +2092,7 @@ describe('Migration', () => {
           child: { version: '2.0.0', addToPackageJson: false },
           newChild: { version: '3.0.0', addToPackageJson: false },
         },
+        uninstalledDeclaredPackages: ['newChild'],
       });
     });
 
@@ -1739,7 +2178,7 @@ describe('Migration', () => {
     });
 
     it('should not generate migrations for packages which confirmation prompt answer was false', async () => {
-      mockPrompt.mockReturnValue(Promise.resolve({ shouldApply: false }));
+      mockPrompt.mockReturnValue(Promise.resolve('No'));
       const migrator = new Migrator({
         packageJson: createPackageJson({
           dependencies: { child: '1.0.0', child2: '1.0.0' },
@@ -2384,7 +2823,7 @@ module.exports = {
         // Only an nx.json pin makes this observable: without it, bun's
         // lockfiles outrank yarn.lock in detection and the manifest is
         // skipped anyway.
-        const spy = jest
+        const spy = vi
           .spyOn(configModule, 'readNxJson')
           .mockReturnValue({ cli: { packageManager: 'yarn' } });
         try {
@@ -2481,7 +2920,7 @@ module.exports = {
         JSON.stringify({ name: 'nx', version: '23.4.0' })
       );
       // detectPackageManager reads nx.json, which throws on a malformed file.
-      const spy = jest
+      const spy = vi
         .spyOn(configModule, 'readNxJson')
         .mockImplementation(() => {
           throw new Error('Cannot parse nx.json');
@@ -2620,7 +3059,7 @@ module.exports = {
     });
 
     it('returns undefined rather than an ancestor version when the manifest locator throws a value that cannot be stringified', () => {
-      const verboseSpy = jest.spyOn(logger, 'verbose').mockImplementation();
+      const verboseSpy = vi.spyOn(logger, 'verbose').mockImplementation();
       try {
         const ws = join(root, 'ws');
         mkdirSync(ws, { recursive: true });
@@ -2772,7 +3211,7 @@ module.exports = {
     });
 
     it('logs the location that supplied the version', () => {
-      const verboseSpy = jest.spyOn(logger, 'verbose').mockImplementation();
+      const verboseSpy = vi.spyOn(logger, 'verbose').mockImplementation();
       try {
         mkdirSync(join(root, 'node_modules', 'nx'), { recursive: true });
         writeFileSync(
@@ -2847,7 +3286,7 @@ module.exports = {
       mockGetInstalledVersion.mockReset();
       mockGetInstalledPackageGroup.mockReset();
       mockGetInstalledLegacyNrwlWorkspaceVersion.mockReset();
-      jest.restoreAllMocks();
+      vi.restoreAllMocks();
       Object.defineProperty(process.stdin, 'isTTY', {
         value: originalStdinIsTTY,
         configurable: true,
@@ -2855,9 +3294,10 @@ module.exports = {
     });
 
     it('should work for generating migrations', async () => {
-      jest
-        .spyOn(packageMgrUtils, 'resolvePackageVersionUsingRegistry')
-        .mockResolvedValue('12.3.0');
+      vi.spyOn(
+        packageMgrUtils,
+        'resolvePackageVersionUsingRegistry'
+      ).mockResolvedValue('12.3.0');
       const r = await parseMigrationsOptions({
         packageAndVersion: '8.12.0',
         from: '@myscope/a@12.3,@myscope/b@1.1.1',
@@ -2924,6 +3364,19 @@ module.exports = {
       expect(r).toEqual({
         type: 'runSingleMigration',
         runMigration: '@nx/js:my-migration',
+        runId: undefined,
+      });
+    });
+
+    it('should carry the run id for a recorded single migration', async () => {
+      const r = await parseMigrationsOptions({
+        runMigration: '@nx/js:my-migration',
+        runId: 'run-1',
+      });
+      expect(r).toMatchObject({
+        type: 'runSingleMigration',
+        runMigration: '@nx/js:my-migration',
+        runId: 'run-1',
       });
     });
 
@@ -2931,6 +3384,155 @@ module.exports = {
       await expect(() =>
         parseMigrationsOptions({ runMigration: '' })
       ).rejects.toThrow(/'--run-migration' requires a migration id/);
+    });
+
+    it('should reject an empty --run-id', async () => {
+      await expect(() =>
+        parseMigrationsOptions({ runMigration: 'a', runId: '' })
+      ).rejects.toThrow(/'--run-id' requires the id of the migrate run/);
+    });
+
+    describe('orchestrator reconcile', () => {
+      it('discriminates a reconcile from a bare --run-id', async () => {
+        expect(await parseMigrationsOptions({ runId: 'run-1' })).toEqual({
+          type: 'orchestratorReconcile',
+          runId: 'run-1',
+        });
+      });
+
+      it('carries a --step-action decision on a reconcile', async () => {
+        expect(
+          await parseMigrationsOptions({ runId: 'run-1', stepAction: 'retry' })
+        ).toEqual({
+          type: 'orchestratorReconcile',
+          runId: 'run-1',
+          stepAction: 'retry',
+        });
+      });
+
+      it('rejects an unrecognized --step-action value instead of forwarding it unchecked', async () => {
+        await expect(() =>
+          parseMigrationsOptions({ runId: 'run-1', stepAction: 'bogus' })
+        ).rejects.toThrow(
+          /'--step-action' must be one of retry, skip, retry-clean, adopt, unresolved/
+        );
+      });
+
+      it('still rejects an empty --run-id', async () => {
+        await expect(() =>
+          parseMigrationsOptions({ runId: '' })
+        ).rejects.toThrow(/'--run-id' requires the id of the migrate run/);
+      });
+
+      it('rejects --run-migrations rather than silently reconciling instead', async () => {
+        await expect(() =>
+          parseMigrationsOptions({
+            runId: 'run-1',
+            runMigrations: 'migrations.json',
+          })
+        ).rejects.toThrow(
+          /'--run-id' .* cannot be combined with '--run-migrations'.*pass '--agentic' \(or '--agentic=<agent>'\) as well/
+        );
+        await expect(() =>
+          parseMigrationsOptions({
+            runId: 'run-1',
+            runMigrations: 'migrations.json',
+            agentic: false,
+          })
+        ).rejects.toThrow(
+          /'--run-id' .* cannot be combined with '--run-migrations'/
+        );
+      });
+
+      it('continues a run in a new agent session for --run-migrations --agentic=<agent> --run-id', async () => {
+        expect(
+          await parseMigrationsOptions({
+            runId: 'run-1',
+            runMigrations: 'migrations.json',
+            agentic: 'claude-code',
+            ifExists: false,
+          })
+        ).toEqual({
+          type: 'runMigrations',
+          runMigrations: 'migrations.json',
+          ifExists: false,
+          agentic: 'claude-code',
+          validate: undefined,
+          interactive: undefined,
+          runId: 'run-1',
+        });
+        expect(
+          await parseMigrationsOptions({
+            runId: 'run-1',
+            runMigrations: '',
+            agentic: true,
+            ifExists: false,
+          })
+        ).toMatchObject({ type: 'runMigrations', runId: 'run-1' });
+      });
+
+      it('rejects a step action on a continue', async () => {
+        await expect(() =>
+          parseMigrationsOptions({
+            runId: 'run-1',
+            runMigrations: 'migrations.json',
+            agentic: 'claude-code',
+            stepAction: 'retry',
+          })
+        ).rejects.toThrow(
+          /'--step-action' cannot be combined with '--run-migrations'/
+        );
+      });
+    });
+
+    describe('--start-fresh', () => {
+      it('carries it on a --run-migrations invocation only', async () => {
+        expect(
+          await parseMigrationsOptions({
+            runMigrations: 'migrations.json',
+            startFresh: true,
+            runId: 'run-1',
+            ifExists: false,
+          })
+        ).toEqual({
+          type: 'runMigrations',
+          runMigrations: 'migrations.json',
+          ifExists: false,
+          agentic: undefined,
+          validate: undefined,
+          interactive: undefined,
+          runId: 'run-1',
+          startFresh: true,
+        });
+      });
+
+      it('rejects it without --run-migrations or --run-id', async () => {
+        await expect(() =>
+          parseMigrationsOptions({ startFresh: true })
+        ).rejects.toThrow(/'--start-fresh' requires '--run-migrations'/);
+        await expect(() =>
+          parseMigrationsOptions({
+            startFresh: true,
+            runMigrations: 'migrations.json',
+          })
+        ).rejects.toThrow(
+          /'--start-fresh' requires '--run-id=<id>' naming the run to replace/
+        );
+      });
+    });
+
+    it('should reject --step-action without --run-id', async () => {
+      await expect(() =>
+        parseMigrationsOptions({ stepAction: 'retry' })
+      ).rejects.toThrow(/'--step-action' requires '--run-id'/);
+    });
+
+    it('should reject --step-action combined with --run-migration', async () => {
+      await expect(() =>
+        parseMigrationsOptions({ runMigration: 'a', stepAction: 'retry' })
+      ).rejects.toThrow(
+        /'--step-action' cannot be combined with '--run-migration'/
+      );
     });
 
     it('should reject --run-migration combined with --run-migrations', async () => {
@@ -2966,6 +3568,28 @@ module.exports = {
       });
     });
 
+    it('should reject --agentic combined with --run-id', async () => {
+      // A recorded run is driven by the outer agent; only the explicit "on"
+      // values conflict, on both the recorded and the bare reconcile shape.
+      await expect(() =>
+        parseMigrationsOptions({
+          runMigration: 'a',
+          runId: 'r1',
+          agentic: true,
+        })
+      ).rejects.toThrow(/'--agentic' cannot be combined with '--run-id'/);
+      await expect(() =>
+        parseMigrationsOptions({ runId: 'r1', agentic: 'claude-code' })
+      ).rejects.toThrow(/'--agentic' cannot be combined with '--run-id'/);
+      await expect(
+        parseMigrationsOptions({
+          runMigration: 'a',
+          runId: 'r1',
+          agentic: false,
+        })
+      ).resolves.toMatchObject({ type: 'runSingleMigration', runId: 'r1' });
+    });
+
     it('should reject --run-migration combined with --if-exists', async () => {
       await expect(() =>
         parseMigrationsOptions({ runMigration: 'a', ifExists: true })
@@ -2990,25 +3614,26 @@ module.exports = {
       });
     });
 
-    it('classifies --run-migration as a single-migration invocation and everything else as not', () => {
-      expect(isSingleMigrationInvocation({ runMigration: '@nx/js:x' })).toBe(
-        true
-      );
+    it('classifies the run flags as run-phase and everything else as not', () => {
+      expect(isRunPhaseInvocation({ runMigration: '@nx/js:x' })).toBe(true);
+      expect(isRunPhaseInvocation({ runId: 'run-1' })).toBe(true);
+      expect(isRunPhaseInvocation({ stepAction: 'retry' })).toBe(true);
       // Variables rather than fresh literals: the Pick parameter drops
       // MigrateArgs's index signature, so excess-property checking would
       // reject these near-miss keys inline.
       const runMigrationsArgs: MigrateArgs = { runMigrations: '' };
-      expect(isSingleMigrationInvocation(runMigrationsArgs)).toBe(false);
+      expect(isRunPhaseInvocation(runMigrationsArgs)).toBe(false);
       const packageAndVersionArgs: MigrateArgs = {
         packageAndVersion: 'nx@latest',
       };
-      expect(isSingleMigrationInvocation(packageAndVersionArgs)).toBe(false);
+      expect(isRunPhaseInvocation(packageAndVersionArgs)).toBe(false);
     });
 
     it('should default to nx@latest when no packageAndVersion is provided', async () => {
-      jest
-        .spyOn(packageMgrUtils, 'resolvePackageVersionUsingRegistry')
-        .mockImplementation((pkg, version) => Promise.resolve(version));
+      vi.spyOn(
+        packageMgrUtils,
+        'resolvePackageVersionUsingRegistry'
+      ).mockImplementation((pkg, version) => Promise.resolve(version));
       const r = await parseMigrationsOptions({});
       expect(r).toMatchObject({
         type: 'generateMigrations',
@@ -3049,9 +3674,10 @@ module.exports = {
 
     it('should resolve the latest dist-tag up front for a bare invocation on v22+', async () => {
       mockGetInstalledNxVersion.mockReturnValue('22.0.0');
-      jest
-        .spyOn(packageMgrUtils, 'resolvePackageVersionUsingRegistry')
-        .mockResolvedValue('23.1.0');
+      vi.spyOn(
+        packageMgrUtils,
+        'resolvePackageVersionUsingRegistry'
+      ).mockResolvedValue('23.1.0');
       const r = await parseMigrationsOptions({});
       expect(r).toMatchObject({
         type: 'generateMigrations',
@@ -3193,7 +3819,7 @@ module.exports = {
     });
 
     it('should handle different variations of the target package', async () => {
-      const packageRegistryViewSpy = jest
+      const packageRegistryViewSpy = vi
         .spyOn(packageMgrUtils, 'resolvePackageVersionUsingRegistry')
         .mockImplementation((pkg, version) => {
           return Promise.resolve(version);
@@ -3693,11 +4319,12 @@ module.exports = {
     });
 
     it('should handle backslashes in package names', async () => {
-      jest
-        .spyOn(packageMgrUtils, 'resolvePackageVersionUsingRegistry')
-        .mockImplementation((pkg, version) => {
-          return Promise.resolve('12.3.0');
-        });
+      vi.spyOn(
+        packageMgrUtils,
+        'resolvePackageVersionUsingRegistry'
+      ).mockImplementation(() => {
+        return Promise.resolve('12.3.0');
+      });
       const r = await parseMigrationsOptions({
         packageAndVersion: '@nx\\workspace@8.12.0',
         from: '@myscope\\a@12.3,@myscope\\b@1.1.1',
@@ -3822,8 +4449,8 @@ module.exports = {
         // `nx migrate <pkg>` hard-fail with a `--include` error the user never
         // passed. The overlay must carry it as a default, not a flag, and a
         // target that doesn't support optional updates must fall back to 'all' with a warning.
-        const warnSpy = jest
-          .spyOn(require('../../utils/output').output, 'warn')
+        const warnSpy = vi
+          .spyOn((await import('../../utils/output')).output, 'warn')
           .mockImplementation(() => {});
         const result = await parseMigrationsOptions(
           applyNxJsonMigrateDefaults(
@@ -3870,7 +4497,7 @@ module.exports = {
     beforeEach(() => {
       originalCi = process.env.CI;
       originalTty = process.stdin.isTTY;
-      jest.clearAllMocks();
+      vi.clearAllMocks();
     });
 
     afterEach(() => {
@@ -3979,7 +4606,7 @@ module.exports = {
         configurable: true,
       });
       process.env.CI = 'false';
-      mockPrompt.mockReturnValueOnce(Promise.resolve({ include: 'required' }));
+      mockPrompt.mockReturnValueOnce(Promise.resolve('required'));
       const result = await resolveInclude(
         undefined,
         supportsOptionalMigrationsContext
@@ -3994,10 +4621,10 @@ module.exports = {
         configurable: true,
       });
       process.env.CI = 'false';
-      mockPrompt.mockReturnValueOnce(Promise.resolve({ include: 'all' }));
+      mockPrompt.mockReturnValueOnce(Promise.resolve('all'));
       await resolveInclude(undefined, supportsOptionalMigrationsContext);
-      const choices = mockPrompt.mock.calls[0][0].choices;
-      expect(choices.map((c: { name: string }) => c.name)).toEqual([
+      const choices = mockPrompt.mock.calls[0][0].options;
+      expect(choices.map((c: { value: string }) => c.value)).toEqual([
         'required',
         'optional',
         'all',
@@ -4010,14 +4637,14 @@ module.exports = {
         configurable: true,
       });
       process.env.CI = 'false';
-      mockPrompt.mockReturnValueOnce(Promise.resolve({ include: 'all' }));
+      mockPrompt.mockReturnValueOnce(Promise.resolve('all'));
       await resolveInclude(undefined, {
         hasFrom: true,
         hasExcludeAppliedMigrations: false,
         targetSupportsOptionalUpdates: true,
       });
-      const choices = mockPrompt.mock.calls[0][0].choices;
-      expect(choices.map((c: { name: string }) => c.name)).toEqual([
+      const choices = mockPrompt.mock.calls[0][0].options;
+      expect(choices.map((c: { value: string }) => c.value)).toEqual([
         'required',
         'all',
       ]);
@@ -4029,14 +4656,14 @@ module.exports = {
         configurable: true,
       });
       process.env.CI = 'false';
-      mockPrompt.mockReturnValueOnce(Promise.resolve({ include: 'all' }));
+      mockPrompt.mockReturnValueOnce(Promise.resolve('all'));
       await resolveInclude(undefined, {
         hasFrom: false,
         hasExcludeAppliedMigrations: true,
         targetSupportsOptionalUpdates: true,
       });
-      const choices = mockPrompt.mock.calls[0][0].choices;
-      expect(choices.map((c: { name: string }) => c.name)).toEqual([
+      const choices = mockPrompt.mock.calls[0][0].options;
+      expect(choices.map((c: { value: string }) => c.value)).toEqual([
         'required',
         'all',
       ]);
@@ -4048,13 +4675,13 @@ module.exports = {
         configurable: true,
       });
       process.env.CI = 'false';
-      mockPrompt.mockReturnValueOnce(Promise.resolve({ include: 'all' }));
+      mockPrompt.mockReturnValueOnce(Promise.resolve('all'));
       await resolveInclude(undefined, {
         ...supportsOptionalMigrationsContext,
         interactive: true,
       });
-      const choices = mockPrompt.mock.calls[0][0].choices;
-      expect(choices.map((c: { name: string }) => c.name)).toEqual([
+      const choices = mockPrompt.mock.calls[0][0].options;
+      expect(choices.map((c: { value: string }) => c.value)).toEqual([
         'required',
         'all',
       ]);
@@ -4415,7 +5042,7 @@ module.exports = {
 
   describe('minimum-release-age violation propagation', () => {
     afterEach(() => {
-      jest.restoreAllMocks();
+      vi.restoreAllMocks();
     });
 
     function violation() {
@@ -4448,9 +5075,23 @@ module.exports = {
 
     it('the fetcher surfaces a cooldown violation instead of falling back to install', async () => {
       const err = violation();
-      jest
-        .spyOn(packageMgrUtils, 'resolvePackageVersionUsingRegistry')
-        .mockRejectedValue(err);
+      vi.spyOn(
+        packageMgrUtils,
+        'resolvePackageVersionUsingRegistry'
+      ).mockRejectedValue(err);
+      const fetch = createFetcher({} as any);
+      await expect(fetch('mypackage', 'latest')).rejects.toBe(err);
+    });
+
+    it('the fetcher surfaces a release whose version is not a version instead of falling back to install', async () => {
+      const err = new packageMgrUtils.InvalidResolvedVersionError(
+        'mypackage',
+        'git+https://git.example.com/mypackage.git'
+      );
+      vi.spyOn(
+        packageMgrUtils,
+        'resolvePackageVersionUsingRegistry'
+      ).mockRejectedValue(err);
       const fetch = createFetcher({} as any);
       await expect(fetch('mypackage', 'latest')).rejects.toBe(err);
     });
@@ -4458,10 +5099,11 @@ module.exports = {
     it('the fetcher rejects when an exact requested version comes back as a different version', async () => {
       // A config surface (registry proxy, override, cooldown gate) silently
       // substituting another version must fail the run, not corrupt the plan.
-      jest
-        .spyOn(packageMgrUtils, 'resolvePackageVersionUsingRegistry')
-        .mockResolvedValue('2.0.1');
-      jest.spyOn(packageMgrUtils, 'packageRegistryView').mockResolvedValue(
+      vi.spyOn(
+        packageMgrUtils,
+        'resolvePackageVersionUsingRegistry'
+      ).mockResolvedValue('2.0.1');
+      vi.spyOn(packageMgrUtils, 'packageRegistryView').mockResolvedValue(
         JSON.stringify({
           dist: {
             tarball:
@@ -4476,10 +5118,11 @@ module.exports = {
     });
 
     it('the fetcher passes through tag and range specs that resolve to a different version', async () => {
-      jest
-        .spyOn(packageMgrUtils, 'resolvePackageVersionUsingRegistry')
-        .mockResolvedValue('2.0.1');
-      jest.spyOn(packageMgrUtils, 'packageRegistryView').mockResolvedValue(
+      vi.spyOn(
+        packageMgrUtils,
+        'resolvePackageVersionUsingRegistry'
+      ).mockResolvedValue('2.0.1');
+      vi.spyOn(packageMgrUtils, 'packageRegistryView').mockResolvedValue(
         JSON.stringify({
           dist: {
             tarball:
@@ -4491,6 +5134,263 @@ module.exports = {
       await expect(fetch('mypackage', 'latest')).resolves.toMatchObject({
         version: '2.0.1',
       });
+    });
+  });
+
+  describe('fetched package names', () => {
+    afterEach(() => {
+      vi.restoreAllMocks();
+    });
+
+    it('does not fall back to installing a flag-shaped package name', async () => {
+      vi.spyOn(
+        packageMgrUtils,
+        'resolvePackageVersionUsingRegistry'
+      ).mockRejectedValue(new Error('Unable to resolve version'));
+      const createTempNpmDirectory = vi
+        .spyOn(packageMgrUtils, 'createTempNpmDirectory')
+        .mockImplementation(() => {
+          throw new Error('installed');
+        });
+      const fetch = createFetcher({ add: 'npm-add' } as any);
+
+      await expect(fetch('--userconfig=/tmp/x', 'latest')).rejects.toThrow(
+        /Invalid package name: "--userconfig=\/tmp\/x"/
+      );
+      expect(createTempNpmDirectory).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('fetching migrations config from the registry', () => {
+    afterEach(() => {
+      vi.restoreAllMocks();
+    });
+
+    it.each([
+      ['the npm registry', 'registry.npmjs.org'],
+      // npmjs' CNAME, so it serves the same metadata.
+      ['the yarn registry', 'registry.yarnpkg.com'],
+      ['a local registry', 'localhost'],
+      // The loopback literals a local registry is just as often reached by,
+      // neither of which contains "localhost".
+      ['a local registry on IPv4 loopback', '127.0.0.1'],
+      ['a local registry on IPv6 loopback', '[::1]'],
+      ['an Artifactory host', 'myco.artifactory.example.com'],
+    ])(
+      'reads a migration-less packument straight from %s',
+      async (_label, host) => {
+        vi.spyOn(
+          packageMgrUtils,
+          'resolvePackageVersionUsingRegistry'
+        ).mockResolvedValue('2.0.1');
+        vi.spyOn(packageMgrUtils, 'packageRegistryView').mockResolvedValue(
+          JSON.stringify({
+            dist: {
+              tarball: `https://${host}/mypackage/-/mypackage-2.0.1.tgz`,
+            },
+          })
+        );
+        const fetch = createFetcher({} as any);
+        await expect(fetch('mypackage', 'latest')).resolves.toMatchObject({
+          version: '2.0.1',
+        });
+        expect(fetch.stats).toMatchObject({
+          registryCount: 1,
+          installCount: 0,
+        });
+      }
+    );
+
+    it('reads the one-element array npm 12 prints for an exact spec', async () => {
+      vi.spyOn(
+        packageMgrUtils,
+        'resolvePackageVersionUsingRegistry'
+      ).mockResolvedValue('2.0.1');
+      vi.spyOn(packageMgrUtils, 'packageRegistryView').mockResolvedValue(
+        JSON.stringify([
+          {
+            dist: {
+              tarball:
+                'https://registry.npmjs.org/mypackage/-/mypackage-2.0.1.tgz',
+            },
+          },
+        ])
+      );
+      const fetch = createFetcher({} as any);
+      await expect(fetch('mypackage', '2.0.1')).resolves.toMatchObject({
+        version: '2.0.1',
+      });
+      expect(fetch.stats).toMatchObject({
+        registryCount: 1,
+        installCount: 0,
+      });
+    });
+
+    it('skips the tarball-host check when the package declares migration config', async () => {
+      // The tarball host is off the allowlist on purpose, so only the declared
+      // nx-migrations can skip the check.
+      vi.spyOn(
+        packageMgrUtils,
+        'resolvePackageVersionUsingRegistry'
+      ).mockResolvedValue('2.0.1');
+      vi.spyOn(packageMgrUtils, 'packageRegistryView').mockResolvedValue(
+        JSON.stringify({
+          'nx-migrations': { packageGroup: ['mypackage-plugin'] },
+          dist: {
+            tarball:
+              'https://registry.corp.example.com/mypackage/-/mypackage-2.0.1.tgz',
+          },
+        })
+      );
+      const fetch = createFetcher({} as any);
+      await expect(fetch('mypackage', 'latest')).resolves.toMatchObject({
+        version: '2.0.1',
+      });
+      expect(fetch.stats).toMatchObject({
+        registryCount: 1,
+        installCount: 0,
+      });
+    });
+
+    it.each([
+      ['an unsupported registry', 'registry.corp.example.com'],
+      // Look-alikes of the exact-matched hosts: a substring test would take these
+      // for the official registries and skip the install fallback.
+      [
+        'a host the yarn registry is a prefix of',
+        'registry.yarnpkg.com.corp.example',
+      ],
+      [
+        'a host the yarn registry is a suffix of',
+        'mirror-registry.yarnpkg.com',
+      ],
+      [
+        'a host the npm registry is a prefix of',
+        'registry.npmjs.org.corp.example',
+      ],
+      ['a host the loopback address is a prefix of', '127.0.0.1.corp.example'],
+    ])(
+      'falls back to install for a migration-less packument from %s',
+      async (_label, host) => {
+        vi.spyOn(
+          packageMgrUtils,
+          'resolvePackageVersionUsingRegistry'
+        ).mockResolvedValue('2.0.1');
+        vi.spyOn(packageMgrUtils, 'packageRegistryView').mockResolvedValue(
+          JSON.stringify({
+            dist: {
+              tarball: `https://${host}/mypackage/-/mypackage-2.0.1.tgz`,
+            },
+          })
+        );
+        vi.spyOn(packageMgrUtils, 'createTempNpmDirectory').mockReturnValue({
+          dir: join(tmpdir(), 'nx-migrate-spec-does-not-exist'),
+          cleanup: async () => {},
+        });
+        const fetch = createFetcher({ add: 'npm-add' } as any);
+        // The install fails in this harness; the assertion is that the fetcher routed
+        // to install after the registry refusal, retrying the original spec rather
+        // than the resolved version.
+        await expect(fetch('mypackage', 'latest')).rejects.toThrow(
+          'Failed to fetch migrations for mypackage@latest'
+        );
+        expect(fetch.stats).toMatchObject({
+          installCount: 1,
+          fallbackReason: 'unsupported-registry',
+        });
+      }
+    );
+
+    it('installs the exact nx version whose provenance was verified', async () => {
+      vi.spyOn(
+        packageMgrUtils,
+        'resolvePackageVersionUsingRegistry'
+      ).mockRejectedValue(new Error('registry unavailable'));
+      const provenanceSpy = vi
+        .spyOn(provenance, 'resolveVersionWithProvenance')
+        .mockResolvedValue('2.0.1');
+      vi.spyOn(packageMgrUtils, 'createTempNpmDirectory').mockReturnValue({
+        dir: join(tmpdir(), 'nx-migrate-spec-does-not-exist'),
+        cleanup: async () => {},
+      });
+      const fetch = createFetcher({ add: 'npm-add' } as any);
+
+      await expect(fetch('nx', 'latest')).rejects.toThrow(
+        'Command failed: npm-add nx@2.0.1'
+      );
+      expect(provenanceSpy).toHaveBeenCalledWith('nx', 'latest');
+    });
+
+    it('passes the install fallback spec to the shell as a single argument', async () => {
+      const dir = realpathSync(
+        mkdtempSync(join(tmpdir(), 'nx-migrate-install-spec-'))
+      );
+      const marker = join(dir, 'marker');
+      vi.spyOn(
+        packageMgrUtils,
+        'resolvePackageVersionUsingRegistry'
+      ).mockRejectedValue(new Error('No match found for version'));
+      vi.spyOn(packageMgrUtils, 'createTempNpmDirectory').mockReturnValue({
+        dir,
+        cleanup: async () => {},
+      });
+      const fetch = createFetcher({ add: 'npm-add' } as any);
+      const version = `latest; echo x > ${marker}`;
+
+      try {
+        await expect(fetch('mypackage', version)).rejects.toThrow(
+          `Failed to fetch migrations for mypackage@${version}`
+        );
+        expect(existsSync(marker)).toBe(false);
+      } finally {
+        rmSync(dir, { recursive: true, force: true });
+      }
+    });
+
+    it('installs without lifecycle scripts when falling back to install', async () => {
+      vi.spyOn(
+        packageMgrUtils,
+        'resolvePackageVersionUsingRegistry'
+      ).mockRejectedValue(new Error('registry unavailable'));
+      const dir = mkdtempSync(join(tmpdir(), 'nx-migrate-spec-'));
+      vi.spyOn(packageMgrUtils, 'createTempNpmDirectory').mockReturnValue({
+        dir,
+        cleanup: async () => {},
+      });
+      writeFileSync(
+        join(dir, 'add.js'),
+        `const fs = require('fs');
+        fs.mkdirSync('node_modules/mypackage', { recursive: true });
+        fs.writeFileSync(
+          'node_modules/mypackage/package.json',
+          JSON.stringify({ name: 'mypackage', version: '2.0.1' })
+        );
+        fs.writeFileSync(
+          'call.json',
+          JSON.stringify({
+            args: process.argv.slice(2),
+            YARN_ENABLE_SCRIPTS: process.env.YARN_ENABLE_SCRIPTS,
+          })
+        );`
+      );
+
+      try {
+        const fetch = createFetcher({
+          add: 'node add.js',
+          ignoreScriptsFlag: '--ignore-scripts',
+        } as any);
+        await expect(fetch('mypackage', 'latest')).resolves.toMatchObject({
+          version: '2.0.1',
+        });
+        expect(
+          JSON.parse(readFileSync(join(dir, 'call.json'), 'utf-8'))
+        ).toEqual({
+          args: ['mypackage@latest', '--ignore-scripts'],
+          YARN_ENABLE_SCRIPTS: 'false',
+        });
+      } finally {
+        rmSync(dir, { recursive: true, force: true });
+      }
     });
   });
 
@@ -4540,7 +5440,7 @@ module.exports = {
       } else {
         delete (process.stdin as { isTTY?: boolean }).isTTY;
       }
-      jest.restoreAllMocks();
+      vi.restoreAllMocks();
     });
 
     function setTty(value: boolean) {
@@ -4551,21 +5451,22 @@ module.exports = {
     }
 
     function mockRegistry(map: { latest?: string } & Record<string, string>) {
-      jest
-        .spyOn(packageMgrUtils, 'resolvePackageVersionUsingRegistry')
-        .mockImplementation((_pkg, version) => {
-          const v = String(version);
-          if (v in map) return Promise.resolve(map[v]!);
-          const match = v.match(/^\^(\d+)\.0\.0$/);
-          if (match && map[match[1]]) return Promise.resolve(map[match[1]]!);
-          if (match) return Promise.reject(new Error('none'));
-          return Promise.resolve(v);
-        });
+      vi.spyOn(
+        packageMgrUtils,
+        'resolvePackageVersionUsingRegistry'
+      ).mockImplementation((_pkg, version) => {
+        const v = String(version);
+        if (v in map) return Promise.resolve(map[v]!);
+        const match = v.match(/^\^(\d+)\.0\.0$/);
+        if (match && map[match[1]]) return Promise.resolve(map[match[1]]!);
+        if (match) return Promise.reject(new Error('none'));
+        return Promise.resolve(v);
+      });
     }
 
-    function spyWarn() {
-      return jest
-        .spyOn(require('../../utils/output').output, 'warn')
+    async function spyWarn() {
+      return vi
+        .spyOn((await import('../../utils/output')).output, 'warn')
         .mockImplementation(() => {});
     }
 
@@ -4583,7 +5484,7 @@ module.exports = {
         '21': '21.5.3',
         '22': '22.5.3',
       });
-      mockPrompt.mockResolvedValue({ chosen: '21.5.3' });
+      mockPrompt.mockResolvedValue('21.5.3');
 
       const r = await parseWithIncludes({
         packageAndVersion: 'next',
@@ -4592,13 +5493,11 @@ module.exports = {
 
       expect(mockPrompt).toHaveBeenCalledWith(
         expect.objectContaining({
-          type: 'select',
-          name: 'chosen',
           message: 'How would you like to proceed?',
-          choices: expect.arrayContaining([
-            expect.objectContaining({ name: '21.5.3' }),
-            expect.objectContaining({ name: '22.5.3' }),
-            expect.objectContaining({ name: '23.1.0' }),
+          options: expect.arrayContaining([
+            expect.objectContaining({ value: '21.5.3' }),
+            expect.objectContaining({ value: '22.5.3' }),
+            expect.objectContaining({ value: '23.1.0' }),
           ]),
         })
       );
@@ -4616,7 +5515,7 @@ module.exports = {
         '21': '21.5.3',
         '22': '22.5.3',
       });
-      mockPrompt.mockResolvedValue({ chosen: '22.5.3' });
+      mockPrompt.mockResolvedValue('22.5.3');
 
       await parseWithIncludes({
         packageAndVersion: 'latest',
@@ -4624,8 +5523,8 @@ module.exports = {
       });
 
       const promptArgs = mockPrompt.mock.calls[0][0];
-      const choices = promptArgs.choices as { name: string }[];
-      expect(choices.map((c) => c.name)).toEqual(['22.5.3', '23.1.0']);
+      const choices = promptArgs.options as { value: string }[];
+      expect(choices.map((c) => c.value)).toEqual(['22.5.3', '23.1.0']);
     });
 
     it('should not include the current-major option when installed is on the latest minor of the current major but behind on patch', async () => {
@@ -4636,7 +5535,7 @@ module.exports = {
         '21': '21.5.3',
         '22': '22.5.3',
       });
-      mockPrompt.mockResolvedValue({ chosen: '22.5.3' });
+      mockPrompt.mockResolvedValue('22.5.3');
 
       await parseWithIncludes({
         packageAndVersion: 'latest',
@@ -4644,8 +5543,8 @@ module.exports = {
       });
 
       const promptArgs = mockPrompt.mock.calls[0][0];
-      const choices = promptArgs.choices as { name: string }[];
-      expect(choices.map((c) => c.name)).toEqual(['22.5.3', '23.1.0']);
+      const choices = promptArgs.options as { value: string }[];
+      expect(choices.map((c) => c.value)).toEqual(['22.5.3', '23.1.0']);
     });
 
     it('should omit the current-major (v22) step from the multi-major prompt', async () => {
@@ -4656,7 +5555,7 @@ module.exports = {
         '22': '22.5.3',
         '23': '23.5.3',
       });
-      mockPrompt.mockResolvedValue({ chosen: '23.5.3' });
+      mockPrompt.mockResolvedValue('23.5.3');
 
       await parseWithIncludes({
         packageAndVersion: 'latest',
@@ -4664,9 +5563,9 @@ module.exports = {
       });
 
       const promptArgs = mockPrompt.mock.calls[0][0];
-      const choices = promptArgs.choices as { name: string }[];
+      const choices = promptArgs.options as { value: string }[];
       // The 22.x current-major step is suppressed; only next-major and direct.
-      expect(choices.map((c) => c.name)).toEqual(['23.5.3', '24.1.0']);
+      expect(choices.map((c) => c.value)).toEqual(['23.5.3', '24.1.0']);
     });
 
     it('should keep --include=required valid when multi-major redirects to the next major (v22 install)', async () => {
@@ -4680,7 +5579,7 @@ module.exports = {
         '22': '22.5.3',
         '23': '23.5.3',
       });
-      mockPrompt.mockResolvedValue({ chosen: '23.5.3' });
+      mockPrompt.mockResolvedValue('23.5.3');
 
       const r = await parseWithIncludes({
         packageAndVersion: 'nx@24.0.0',
@@ -4700,8 +5599,8 @@ module.exports = {
         '21': '21.5.3',
         '22': '22.5.3',
       });
-      mockPrompt.mockResolvedValue({ chosen: '21.5.3' });
-      const warnSpy = spyWarn();
+      mockPrompt.mockResolvedValue('21.5.3');
+      const warnSpy = await spyWarn();
 
       const r = await parseWithIncludes({
         packageAndVersion: 'nx@23.1.0',
@@ -4716,7 +5615,7 @@ module.exports = {
     it('should warn (not prompt) in non-TTY environments', async () => {
       setTty(false);
       mockRegistry({ latest: '23.1.0' });
-      const warnSpy = spyWarn();
+      const warnSpy = await spyWarn();
 
       const r = await parseWithIncludes({
         packageAndVersion: 'latest',
@@ -4731,7 +5630,7 @@ module.exports = {
     it('should warn (not prompt) when --no-interactive is passed in a TTY', async () => {
       setTty(true);
       mockRegistry({ latest: '23.1.0' });
-      const warnSpy = spyWarn();
+      const warnSpy = await spyWarn();
 
       const r = await parseWithIncludes({
         packageAndVersion: 'latest',
@@ -4747,7 +5646,7 @@ module.exports = {
     it('should not prompt or warn when --multi-major-mode=direct is set', async () => {
       setTty(true);
       mockRegistry({ latest: '23.1.0' });
-      const warnSpy = spyWarn();
+      const warnSpy = await spyWarn();
 
       const r = await parseWithIncludes({
         packageAndVersion: 'latest',
@@ -4764,7 +5663,7 @@ module.exports = {
       setTty(true);
       process.env.NX_MULTI_MAJOR_MODE = 'direct';
       mockRegistry({ latest: '23.1.0' });
-      const warnSpy = spyWarn();
+      const warnSpy = await spyWarn();
 
       const r = await parseWithIncludes({
         packageAndVersion: 'latest',
@@ -4783,7 +5682,7 @@ module.exports = {
         '21': '21.5.3',
         '22': '22.5.3',
       });
-      const warnSpy = spyWarn();
+      const warnSpy = await spyWarn();
 
       const r = await parseWithIncludes({
         packageAndVersion: 'latest',
@@ -4804,7 +5703,7 @@ module.exports = {
         '21': '21.5.3',
         '22': '22.5.3',
       });
-      const warnSpy = spyWarn();
+      const warnSpy = await spyWarn();
 
       const r = await parseWithIncludes({
         packageAndVersion: 'latest',
@@ -4823,7 +5722,7 @@ module.exports = {
       // Next-major lookup fails → next-major option dropped. Both unavailable.
       mockGetInstalledNxVersion.mockReturnValue('21.5.3');
       mockRegistry({ latest: '23.1.0', '21': '21.5.3' });
-      const warnSpy = spyWarn();
+      const warnSpy = await spyWarn();
 
       const r = await parseWithIncludes({
         packageAndVersion: 'latest',
@@ -4850,7 +5749,7 @@ module.exports = {
         '21': '21.5.3',
         '22': '22.5.3',
       });
-      const warnSpy = spyWarn();
+      const warnSpy = await spyWarn();
 
       const r = await parseWithIncludes({
         packageAndVersion: 'latest',
@@ -4892,7 +5791,7 @@ module.exports = {
         '23': '23.5.3',
         '24': '24.5.3',
       });
-      const warnSpy = spyWarn();
+      const warnSpy = await spyWarn();
 
       const r = await parseWithIncludes({
         packageAndVersion: 'nx@23.0.0',
@@ -4908,7 +5807,7 @@ module.exports = {
     it('should not prompt or warn when delta is exactly 1 major', async () => {
       setTty(true);
       mockRegistry({ latest: '22.5.3' });
-      const warnSpy = spyWarn();
+      const warnSpy = await spyWarn();
 
       const r = await parseWithIncludes({
         packageAndVersion: 'latest',
@@ -4924,7 +5823,7 @@ module.exports = {
       setTty(true);
       mockGetInstalledNxVersion.mockReturnValue('13.10.0');
       mockRegistry({ latest: '23.1.0' });
-      const warnSpy = spyWarn();
+      const warnSpy = await spyWarn();
 
       const r = await parseWithIncludes({
         packageAndVersion: 'latest',
@@ -4939,7 +5838,7 @@ module.exports = {
     it('should not prompt or warn for --include=optional', async () => {
       setTty(true);
       mockGetInstalledNxVersion.mockReturnValue('23.0.0');
-      const warnSpy = spyWarn();
+      const warnSpy = await spyWarn();
 
       const r = await parseWithIncludes({ include: 'optional' });
 
@@ -4961,7 +5860,7 @@ module.exports = {
           '21': '21.5.3',
           '22': '22.5.3',
         });
-        mockPrompt.mockResolvedValue({ chosen: '21.5.3' });
+        mockPrompt.mockResolvedValue('21.5.3');
 
         const r = await parseWithIncludes({
           packageAndVersion: positional,
@@ -4983,7 +5882,7 @@ module.exports = {
       // unavailable → fall back to warn.
       mockGetInstalledNxVersion.mockReturnValue('21.5.3');
       mockRegistry({ latest: '23.1.0', '21': '21.5.3' });
-      const warnSpy = spyWarn();
+      const warnSpy = await spyWarn();
 
       const r = await parseWithIncludes({
         packageAndVersion: 'latest',
@@ -5022,7 +5921,7 @@ module.exports = {
         '21': '21.5.3',
         '22': '22.5.3',
       });
-      mockPrompt.mockResolvedValue({ chosen: '22.5.3' });
+      mockPrompt.mockResolvedValue('22.5.3');
 
       const r = await parseWithIncludes({
         packageAndVersion: 'latest',
@@ -5042,7 +5941,7 @@ module.exports = {
         '21': '21.5.3',
         '22': '22.5.3',
       });
-      mockPrompt.mockResolvedValue({ chosen: '23.1.0' });
+      mockPrompt.mockResolvedValue('23.1.0');
 
       const r = await parseWithIncludes({
         packageAndVersion: 'latest',
@@ -5128,7 +6027,7 @@ module.exports = {
         '21': '21.5.3',
         '22': '22.5.3',
       });
-      mockPrompt.mockResolvedValue({ chosen: '22.5.3' });
+      mockPrompt.mockResolvedValue('22.5.3');
 
       const r = await parseWithIncludes({
         packageAndVersion: 'latest',
@@ -5313,6 +6212,8 @@ module.exports = {
       ['../../etc/passwd'],
       ['./safe/../../escape.md'],
       ['/etc/passwd'],
+      ['..\\..\\etc\\passwd'],
+      ['safe/..\\..\\escape.md'],
     ])(
       'should reject prompt path %p that escapes the migrations directory',
       async (badPath) => {
@@ -5330,18 +6231,128 @@ module.exports = {
         ).rejects.toThrow(/Invalid prompt path/);
       }
     );
+
+    describe('in an installed package', () => {
+      let dir: string;
+      let packageDir: string;
+
+      const readPrompt = (prompt: string) =>
+        readPromptFilesFromInstall(
+          'pkg',
+          '1.0.0',
+          { generators: { m: { version: '1.0.0', prompt } } },
+          join(packageDir, 'migrations.json')
+        );
+
+      beforeEach(() => {
+        dir = mkdtempSync(join(tmpdir(), 'nx-prompt-install-'));
+        packageDir = join(dir, 'node_modules', 'pkg');
+        mkdirSync(join(packageDir, 'prompts'), { recursive: true });
+        writeFileSync(join(packageDir, 'prompts', 'x.md'), '# X');
+        mkdirSync(join(dir, 'outside'));
+        writeFileSync(join(dir, 'outside', 'credentials.md'), 'secret');
+      });
+
+      afterEach(() => {
+        rmSync(dir, { recursive: true, force: true });
+      });
+
+      it('should read a prompt file shipped by the package', async () => {
+        await expect(readPrompt('./prompts/x.md')).resolves.toEqual({
+          './prompts/x.md': '# X',
+        });
+      });
+
+      it('should read a prompt file when the package itself is a link', async () => {
+        const linkedPackageDir = join(dir, 'linked-pkg');
+        symlinkSync(packageDir, linkedPackageDir, 'dir');
+        packageDir = linkedPackageDir;
+
+        await expect(readPrompt('prompts/x.md')).resolves.toEqual({
+          'prompts/x.md': '# X',
+        });
+      });
+
+      it('should reject a prompt path that leaves the package through a linked dependency', async () => {
+        mkdirSync(join(packageDir, 'node_modules'));
+        symlinkSync(
+          join(dir, 'outside'),
+          join(packageDir, 'node_modules', 'pkg'),
+          'dir'
+        );
+
+        await expect(
+          readPrompt('node_modules/pkg/credentials.md')
+        ).rejects.toThrow(/Could not find prompt file/);
+      });
+
+      it('should reject a prompt path that leaves the package through any other link', async () => {
+        symlinkSync(join(dir, 'outside'), join(packageDir, 'linked'), 'dir');
+
+        await expect(readPrompt('linked/credentials.md')).rejects.toThrow(
+          /Could not find prompt file/
+        );
+      });
+
+      it('should reject a prompt path into a dependency copied into the package', async () => {
+        mkdirSync(join(packageDir, 'node_modules', 'pkg'), { recursive: true });
+        writeFileSync(
+          join(packageDir, 'node_modules', 'pkg', 'credentials.md'),
+          'secret'
+        );
+
+        await expect(
+          readPrompt('node_modules/pkg/credentials.md')
+        ).rejects.toThrow(/Could not find prompt file/);
+      });
+    });
+  });
+
+  describe('prompt file name', () => {
+    it.each([
+      ['./prompts/project.json'],
+      ['./prompts/vite.config.ts'],
+      ['./prompts/no-extension'],
+      ['./prompts/.md'],
+      ['./prompts/project.json:x.md'],
+      ['./prompts/a|b.md'],
+      ['./prompts/a?.md'],
+      ['./prompts/a*.md'],
+      ['./prompts/a<b>.md'],
+      ['./prompts/a"b.md'],
+      ['./prompts/a\nb.md'],
+      ['./pro:mpts/x.md'],
+    ])('should reject prompt path %s', async (badPath) => {
+      await expect(
+        readPromptFilesFromInstall(
+          'pkg',
+          '1.0.0',
+          {
+            generators: {
+              m: { version: '1.0.0', prompt: badPath },
+            },
+          },
+          '/tmp/fake-pkg/migrations.json'
+        )
+      ).rejects.toThrow(/prompt files must be markdown \(\.md\) files/);
+    });
   });
 
   describe('generateMigrationsJsonAndUpdatePackageJson (--include=optional)', () => {
+    let tempFs: TempFs;
     let root: string;
 
     beforeEach(() => {
-      root = mkdtempSync(join(tmpdir(), 'nx-migrate-optional-'));
+      // TempFs, not a bare mkdtemp: this path formats the files it writes, and
+      // the formatter resolves config from the workspace root. Without moving
+      // the root, that resolution escapes into the real repo.
+      tempFs = new TempFs('nx-migrate-optional');
+      root = tempFs.tempDir;
       writeFileSync(join(root, 'nx.json'), JSON.stringify({}));
     });
 
     afterEach(() => {
-      rmSync(root, { recursive: true, force: true });
+      tempFs.cleanup();
     });
 
     // NXC-4590: under `--include=optional` the target package (e.g. `nx`) is in
@@ -5364,7 +6375,7 @@ module.exports = {
 
       // `packageGroup` puts `requiredChild` in nx's required closure; both `nx`
       // and `requiredChild` are dropped under optional, leaving `optionalChild`.
-      const fetch = (p: string, version: string) => {
+      const fetch = (p: string) => {
         if (p === 'nx') {
           return Promise.resolve({
             version: '23.0.0',
@@ -5407,6 +6418,223 @@ module.exports = {
     });
   });
 
+  describe('generateMigrationsJsonAndUpdatePackageJson (installed versions)', () => {
+    let tempFs: TempFs;
+    let root: string;
+    const originalNodePath = process.env.NODE_PATH;
+
+    beforeEach(() => {
+      tempFs = new TempFs('nx-migrate-installed');
+      root = join(tempFs.tempDir, 'ws');
+      tempFs.createFileSync('ws/nx.json', '{}');
+      setWorkspaceRoot(root);
+    });
+
+    afterEach(() => {
+      if (originalNodePath === undefined) delete process.env.NODE_PATH;
+      else process.env.NODE_PATH = originalNodePath;
+      (Module as any)._initPaths();
+      vi.restoreAllMocks();
+      tempFs.cleanup();
+    });
+
+    function writePackage(dir: string, name: string) {
+      tempFs.createFileSync(
+        `${dir}/package.json`,
+        JSON.stringify({ name, version: '1.0.0' })
+      );
+    }
+
+    // The layout pnpm's global virtual store installs.
+    function linkFromOutsideStore(name: string) {
+      writePackage(`store/${name}`, name);
+      tempFs.createSymlinkSync(
+        `store/${name}`,
+        `ws/node_modules/${name}`,
+        'dir'
+      );
+    }
+
+    async function generate(
+      devDependencies: Record<string, string>,
+      generators: Record<string, { requires?: Record<string, string> }>
+    ) {
+      tempFs.createFileSync(
+        'ws/package.json',
+        JSON.stringify({ name: 'ws', devDependencies })
+      );
+      const fetch = (pkg: string) =>
+        Promise.resolve(
+          pkg === 'nx'
+            ? {
+                version: '2.0.0',
+                packageGroup: [{ package: '@nx/js', version: '*' }],
+                generators: Object.fromEntries(
+                  Object.entries(generators).map(([name, generator]) => [
+                    name,
+                    { version: '2.0.0', factory: './unused', ...generator },
+                  ])
+                ),
+              }
+            : { version: '2.0.0' }
+        );
+
+      await generateMigrationsJsonAndUpdatePackageJson(
+        root,
+        {
+          type: 'generateMigrations',
+          targetPackage: 'nx',
+          targetVersion: '2.0.0',
+          from: {},
+          to: {},
+          interactive: false,
+          include: 'all',
+        },
+        fetch as any
+      );
+
+      const migrationsPath = join(root, 'migrations.json');
+      return {
+        devDependencies: JSON.parse(
+          readFileSync(join(root, 'package.json'), 'utf-8')
+        ).devDependencies,
+        migrations: existsSync(migrationsPath)
+          ? JSON.parse(readFileSync(migrationsPath, 'utf-8')).migrations.map(
+              (m: { name: string }) => m.name
+            )
+          : [],
+      };
+    }
+
+    // The layout an outer workspace that hoists its dependencies installs.
+    function installAboveWorkspace(name: string) {
+      writePackage(`node_modules/${name}`, name);
+    }
+
+    it.each([
+      ['linked from a store outside the workspace', linkFromOutsideStore],
+      ['installed only above the workspace', installAboveWorkspace],
+    ])('reads the versions of packages %s', async (_layout, install) => {
+      install('nx');
+      install('@nx/js');
+      install('dep');
+
+      const result = await generate(
+        { nx: '1.0.0', '@nx/js': '1.0.0', dep: '1.0.0' },
+        { 'needs-dep': { requires: { dep: '^1.0.0' } } }
+      );
+
+      expect(result.devDependencies['@nx/js']).toBe('2.0.0');
+      expect(result.migrations).toEqual(['needs-dep']);
+    });
+
+    it('warns about declared packages it cannot find installed', async () => {
+      const warn = vi.spyOn(output, 'warn').mockImplementation(() => {});
+      writePackage('ws/node_modules/nx', 'nx');
+
+      await generate({ nx: '1.0.0', '@nx/js': '1.0.0' }, {});
+
+      expect(warn).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: expect.stringContaining('installed: @nx/js'),
+        })
+      );
+    });
+
+    it('treats a NODE_PATH package in a directory the workspace root prefixes as not installed', async () => {
+      writePackage('ws/node_modules/nx', 'nx');
+      writePackage('ws-np/node_modules/sibling-dep', 'sibling-dep');
+      process.env.NODE_PATH = join(tempFs.tempDir, 'ws-np', 'node_modules');
+      (Module as any)._initPaths();
+
+      const result = await generate(
+        { nx: '1.0.0' },
+        {
+          unconditional: {},
+          'needs-sibling-dep': { requires: { 'sibling-dep': '^1.0.0' } },
+        }
+      );
+
+      expect(result.migrations).toEqual(['unconditional']);
+    });
+  });
+
+  describe('generateMigrationsJsonAndUpdatePackageJson (addToPackageJson)', () => {
+    let tempFs: TempFs;
+    let root: string;
+
+    beforeEach(() => {
+      tempFs = new TempFs('nx-migrate-add-to-package-json');
+      root = tempFs.tempDir;
+      writeFileSync(join(root, 'nx.json'), JSON.stringify({}));
+    });
+
+    afterEach(() => {
+      delete (Object.prototype as any).polluted;
+      tempFs.cleanup();
+    });
+
+    it('only adds packages to the dependencies and devDependencies sections', async () => {
+      writeFileSync(
+        join(root, 'package.json'),
+        JSON.stringify({
+          name: 'w',
+          version: '0.0.0',
+          devDependencies: { plugin: '1.0.0' },
+        })
+      );
+
+      const fetch = (p: string) => {
+        if (p === 'plugin') {
+          return Promise.resolve({
+            version: '2.0.0',
+            packageJsonUpdates: {
+              version2: {
+                version: '2.0.0',
+                packages: {
+                  dep: { version: '2.0.0', addToPackageJson: 'dependencies' },
+                  devDep: {
+                    version: '2.0.0',
+                    alwaysAddToPackageJson: 'devDependencies',
+                  },
+                  polluted: { version: 'yes', addToPackageJson: '__proto__' },
+                  preinstall: {
+                    version: 'echo hi',
+                    alwaysAddToPackageJson: 'scripts',
+                  },
+                },
+              },
+            },
+          });
+        }
+        return Promise.resolve({ version: '2.0.0' });
+      };
+
+      await generateMigrationsJsonAndUpdatePackageJson(
+        root,
+        {
+          type: 'generateMigrations',
+          targetPackage: 'plugin',
+          targetVersion: '2.0.0',
+          from: { plugin: '1.0.0' },
+          to: {},
+          interactive: false,
+        },
+        fetch as any
+      );
+
+      expect(({} as any).polluted).toBeUndefined();
+      expect(
+        JSON.parse(readFileSync(join(root, 'package.json'), 'utf-8'))
+      ).toEqual({
+        name: 'w',
+        version: '0.0.0',
+        dependencies: { dep: '2.0.0' },
+        devDependencies: { plugin: '2.0.0', devDep: '2.0.0' },
+      });
+    });
+  });
+
   describe('writePromptMigrationFiles', () => {
     let tmpRoot: string;
 
@@ -5417,6 +6645,29 @@ module.exports = {
     afterEach(() => {
       rmSync(tmpRoot, { recursive: true, force: true });
     });
+
+    it.each([
+      ['files/..\\..\\..\\..\\x.md', 'x.md'],
+      ['files\\x.md', 'x.md'],
+      ['files/x.md\\..', 'files'],
+    ])(
+      'should keep prompt %s inside the target version directory',
+      (prompt, baseName) => {
+        const migrations = [
+          { package: 'pkg', name: 'm', version: '1.0.0', prompt },
+        ];
+
+        const written = writePromptMigrationFiles(
+          tmpRoot,
+          migrations,
+          { [promptContentKey('pkg', prompt)]: 'X' },
+          '1.0.0'
+        );
+
+        expect(written).toEqual([`tools/ai-migrations/pkg/1.0.0/${baseName}`]);
+        expect(readdirSync(tmpRoot)).toEqual(['tools']);
+      }
+    );
 
     it('should write prompt files under the package and target version directories using the basename', () => {
       const migrations = [
@@ -5711,70 +6962,78 @@ module.exports = {
           string,
           boolean | undefined,
           'disabled' | 'inside-agent' | 'enabled',
-          { effective: boolean; agenticHasDiffContext: boolean },
+          { effective: boolean },
         ]
       >([
-        [
-          'explicit true, no agentic',
-          true,
-          'disabled',
-          { effective: true, agenticHasDiffContext: false },
-        ],
-        [
-          'explicit false, no agentic',
-          false,
-          'disabled',
-          { effective: false, agenticHasDiffContext: false },
-        ],
-        [
-          'unset, no agentic',
-          undefined,
-          'disabled',
-          { effective: false, agenticHasDiffContext: false },
-        ],
+        ['explicit true, no agentic', true, 'disabled', { effective: true }],
+        ['explicit false, no agentic', false, 'disabled', { effective: false }],
+        ['unset, no agentic', undefined, 'disabled', { effective: false }],
         [
           'unset, inside-agent',
           undefined,
           'inside-agent',
-          { effective: false, agenticHasDiffContext: false },
+          { effective: false },
         ],
         [
           'unset, agentic enabled — soft-force on',
           undefined,
           'enabled',
-          { effective: true, agenticHasDiffContext: true },
+          { effective: true },
         ],
         [
           'explicit true, agentic enabled',
           true,
           'enabled',
-          { effective: true, agenticHasDiffContext: true },
+          { effective: true },
         ],
       ])('git repo: %s', (_label, createCommits, agenticKind, expected) => {
         expect(
           resolveCreateCommits({
             createCommits,
-            agenticKind,
+            mode: agenticKind,
             isGitRepo: true,
           })
         ).toEqual(expected);
       });
 
-      it('warns and drops diff context when createCommits=false is explicit alongside agentic', () => {
+      it('warns when createCommits=false is explicit alongside agentic', () => {
         const result = resolveCreateCommits({
           createCommits: false,
-          agenticKind: 'enabled',
+          mode: 'enabled',
           isGitRepo: true,
         });
         expect(result.effective).toBe(false);
-        expect(result.agenticHasDiffContext).toBe(false);
         expect(result.warning).toMatch(/--no-create-commits/);
+      });
+
+      it('words the explicit --no-create-commits warning without naming --agentic on the orchestrated path', () => {
+        const result = resolveCreateCommits({
+          createCommits: false,
+          mode: 'orchestrated',
+          isGitRepo: true,
+        });
+        expect(result.effective).toBe(false);
+        expect(result.warning).toMatch(/orchestrated migrate runs/);
+        expect(result.warning).toMatch(/--no-create-commits/);
+        expect(result.warning).not.toMatch(/--agentic/);
+      });
+
+      it('words the no-git warning without naming --agentic on the orchestrated path', () => {
+        const result = resolveCreateCommits({
+          createCommits: undefined,
+          mode: 'orchestrated',
+          isGitRepo: false,
+        });
+        expect(result.effective).toBe(false);
+        expect(result.warning).toMatch(/Orchestrated migrate runs/);
+        expect(result.warning).toMatch(/not a git repository/);
+        expect(result.warning).not.toMatch(/--agentic/);
       });
 
       it('errors when --create-commits is explicit without a git repo', () => {
         const result = resolveCreateCommits({
           createCommits: true,
-          agenticKind: 'disabled',
+          mode: 'disabled',
           isGitRepo: false,
         });
         expect(result.effective).toBe(false);
@@ -5783,14 +7042,13 @@ module.exports = {
         );
       });
 
-      it('degrades agentic without git (createCommits unset): warns, no error, no diff context', () => {
+      it('degrades agentic without git (createCommits unset): warns, no error', () => {
         const result = resolveCreateCommits({
           createCommits: undefined,
-          agenticKind: 'enabled',
+          mode: 'enabled',
           isGitRepo: false,
         });
         expect(result.effective).toBe(false);
-        expect(result.agenticHasDiffContext).toBe(false);
         expect(result.error).toBeUndefined();
         expect(result.warning).toMatch(/not a git repository/);
       });
@@ -5798,7 +7056,7 @@ module.exports = {
       it('notes the dropped --commit-prefix in the agentic-without-git warning when the prefix is customized', () => {
         const result = resolveCreateCommits({
           createCommits: undefined,
-          agenticKind: 'enabled',
+          mode: 'enabled',
           isGitRepo: false,
           commitPrefixIsCustom: true,
         });
@@ -5809,7 +7067,7 @@ module.exports = {
       it('notes the dropped --commit-prefix in the --no-create-commits + agentic warning when the prefix is customized', () => {
         const result = resolveCreateCommits({
           createCommits: false,
-          agenticKind: 'enabled',
+          mode: 'enabled',
           isGitRepo: true,
           commitPrefixIsCustom: true,
         });
@@ -5821,7 +7079,7 @@ module.exports = {
       it('does not mention --commit-prefix when the prefix is unchanged', () => {
         const result = resolveCreateCommits({
           createCommits: undefined,
-          agenticKind: 'enabled',
+          mode: 'enabled',
           isGitRepo: false,
           commitPrefixIsCustom: false,
         });
@@ -5831,7 +7089,7 @@ module.exports = {
       it('warns that a configured commit prefix has no effect when commits stay disabled', () => {
         const result = resolveCreateCommits({
           createCommits: undefined,
-          agenticKind: 'disabled',
+          mode: 'disabled',
           isGitRepo: true,
           commitPrefixIsCustom: true,
         });
@@ -5843,7 +7101,7 @@ module.exports = {
       it('does not warn about the commit prefix when commits are disabled and the prefix is default', () => {
         const result = resolveCreateCommits({
           createCommits: undefined,
-          agenticKind: 'disabled',
+          mode: 'disabled',
           isGitRepo: true,
           commitPrefixIsCustom: false,
         });
@@ -5853,7 +7111,7 @@ module.exports = {
       it('does not warn when commits are enabled even though the agentic flow is disabled', () => {
         const result = resolveCreateCommits({
           createCommits: true,
-          agenticKind: 'disabled',
+          mode: 'disabled',
           isGitRepo: true,
           commitPrefixIsCustom: true,
         });
@@ -5864,7 +7122,7 @@ module.exports = {
 
     describe('confirmCommitsOnDefaultBranch', () => {
       beforeEach(() => {
-        jest.clearAllMocks();
+        vi.clearAllMocks();
       });
 
       it('proceeds without prompting when the branch cannot be resolved', async () => {
@@ -5898,7 +7156,7 @@ module.exports = {
       });
 
       it('proceeds when the user confirms on the default branch', async () => {
-        mockPrompt.mockResolvedValue({ proceed: true });
+        mockPrompt.mockResolvedValue('Yes');
         await expect(
           confirmCommitsOnDefaultBranch({
             currentBranch: 'main',
@@ -5909,7 +7167,7 @@ module.exports = {
       });
 
       it('aborts when the user declines on the default branch', async () => {
-        mockPrompt.mockResolvedValue({ proceed: false });
+        mockPrompt.mockResolvedValue('No');
         await expect(
           confirmCommitsOnDefaultBranch({
             currentBranch: 'main',
@@ -6002,146 +7260,6 @@ module.exports = {
             '  - tools/ai-migrations/@nx/rspack/2.0.0/perf-options.md'
         );
       });
-    });
-  });
-
-  describe('resolveMigrationForRun', () => {
-    let tmpRoot: string;
-    let warnSpy: jest.SpyInstance;
-
-    const writeInstalledPackage = (
-      pkgName: string,
-      documentationRelToMigrationsDir: string | null
-    ) => {
-      const pkgDir = join(tmpRoot, 'node_modules', pkgName);
-      mkdirSync(pkgDir, { recursive: true });
-      writeFileSync(
-        join(pkgDir, 'package.json'),
-        JSON.stringify({
-          name: pkgName,
-          version: '1.0.0',
-          'nx-migrations': './migrations.json',
-        })
-      );
-      writeFileSync(
-        join(pkgDir, 'migrations.json'),
-        JSON.stringify({ generators: {} })
-      );
-      if (documentationRelToMigrationsDir) {
-        const docAbs = join(pkgDir, documentationRelToMigrationsDir);
-        mkdirSync(dirname(docAbs), { recursive: true });
-        writeFileSync(docAbs, '# doc');
-      }
-    };
-
-    beforeEach(() => {
-      // realpath so the workspace-relative assertion isn't defeated by the
-      // macOS /tmp -> /private/tmp symlink (require.resolve returns realpaths).
-      tmpRoot = realpathSync(mkdtempSync(join(tmpdir(), 'nx-migration-docs-')));
-      warnSpy = jest.spyOn(logger, 'warn').mockImplementation(() => {});
-    });
-
-    afterEach(() => {
-      warnSpy.mockRestore();
-      rmSync(tmpRoot, { recursive: true, force: true });
-    });
-
-    it('resolves the documentation file to a workspace-relative node_modules path', () => {
-      writeInstalledPackage('@nx/foo', './src/migrations/update-1-0-0/do.md');
-      const { documentationPath } = resolveMigrationForRun(
-        tmpRoot,
-        {
-          package: '@nx/foo',
-          name: 'update-1-0-0',
-          implementation: './src/migrations/update-1-0-0/do',
-          documentation: './src/migrations/update-1-0-0/do.md',
-        },
-        true
-      );
-      expect(documentationPath).toBe(
-        join('node_modules', '@nx/foo', 'src/migrations/update-1-0-0/do.md')
-      );
-      expect(warnSpy).not.toHaveBeenCalled();
-    });
-
-    it('returns no documentation path (and does not warn) when none is declared', () => {
-      writeInstalledPackage('@nx/foo', null);
-      const { documentationPath } = resolveMigrationForRun(
-        tmpRoot,
-        {
-          package: '@nx/foo',
-          name: 'update-1-0-0',
-          implementation: './src/migrations/update-1-0-0/do',
-        },
-        true
-      );
-      expect(documentationPath).toBeUndefined();
-      expect(warnSpy).not.toHaveBeenCalled();
-    });
-
-    it('does not resolve documentation for non-agentic runs', () => {
-      writeInstalledPackage('@nx/foo', './src/migrations/update-1-0-0/do.md');
-      const { documentationPath } = resolveMigrationForRun(
-        tmpRoot,
-        {
-          package: '@nx/foo',
-          name: 'update-1-0-0',
-          implementation: './src/migrations/update-1-0-0/do',
-          documentation: './src/migrations/update-1-0-0/do.md',
-        },
-        false
-      );
-      expect(documentationPath).toBeUndefined();
-      expect(warnSpy).not.toHaveBeenCalled();
-    });
-
-    it('warns and skips when a declared documentation file is not present', () => {
-      writeInstalledPackage('@nx/foo', null);
-      const { documentationPath } = resolveMigrationForRun(
-        tmpRoot,
-        {
-          package: '@nx/foo',
-          name: 'update-1-0-0',
-          implementation: './src/migrations/update-1-0-0/do',
-          documentation: './src/migrations/update-1-0-0/missing.md',
-        },
-        true
-      );
-      expect(documentationPath).toBeUndefined();
-      expect(warnSpy).toHaveBeenCalledTimes(1);
-      expect(warnSpy.mock.calls[0][0]).toContain(
-        './src/migrations/update-1-0-0/missing.md'
-      );
-    });
-
-    it('throws when an implementation migration package cannot be resolved', () => {
-      expect(() =>
-        resolveMigrationForRun(
-          tmpRoot,
-          {
-            package: '@nx/not-installed',
-            name: 'update-1-0-0',
-            implementation: './x',
-            documentation: './x.md',
-          },
-          true
-        )
-      ).toThrow();
-    });
-
-    it('is non-fatal for prompt-only migrations when the package cannot be resolved', () => {
-      const { documentationPath } = resolveMigrationForRun(
-        tmpRoot,
-        {
-          package: '@nx/not-installed',
-          name: 'update-1-0-0',
-          prompt: './x.md',
-          documentation: './x.md',
-        },
-        true
-      );
-      expect(documentationPath).toBeUndefined();
-      expect(warnSpy).toHaveBeenCalledTimes(1);
     });
   });
 

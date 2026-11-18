@@ -48,4 +48,15 @@ describe('@nx/oxlint/boundaries-plugin', () => {
 
     expect(typeof rule.create).toEqual('function');
   });
+
+  it('exposes the directive-checks rule with its name, schema and create function', () => {
+    const rule = boundariesPlugin.rules['directive-checks'] as {
+      meta?: { name?: string; schema?: unknown };
+      create?: unknown;
+    };
+
+    expect(rule.meta?.name).toEqual('directive-checks');
+    expect(rule.meta?.schema).toBeDefined();
+    expect(typeof rule.create).toEqual('function');
+  });
 });
