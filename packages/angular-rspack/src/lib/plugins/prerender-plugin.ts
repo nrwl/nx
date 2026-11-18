@@ -52,36 +52,43 @@ export class PrerenderPlugin implements RspackPluginInstance {
     compiler.hooks.afterEmit.tapAsync(
       'Angular Rspack',
       async (compilation, callback) => {
-        const inputs = this.#serverRenderingInputs?.current;
-        if (!inputs) {
+        try {
+          const inputs = this.#serverRenderingInputs?.current;
+          if (!inputs) {
+            addError(
+              compilation,
+              'Could not prerender because the browser build did not generate the index html.'
+            );
+            return;
+          }
+
+          const prerenderedRoutes = new Set<string>();
+          if (this.#_options.appShell) {
+            await this.#prerenderAppShell(compilation, inputs);
+            prerenderedRoutes.add('/');
+          }
+          if (this.#_options.prerender) {
+            for (const route of await this.#prerenderSSGUniversal(
+              compilation,
+              inputs
+            )) {
+              // RoutesSet stores routes without the leading slash; the manifest
+              // keys carry it, matching the esbuild application builder.
+              prerenderedRoutes.add(`/${route}`);
+            }
+          }
+          await this.#writePrerenderedRoutesManifest(
+            compilation,
+            prerenderedRoutes
+          );
+        } catch (error) {
           addError(
             compilation,
-            'Could not prerender because the browser build did not generate the index html.'
+            error instanceof Error ? error.message : String(error)
           );
+        } finally {
           callback();
-          return;
         }
-
-        const prerenderedRoutes = new Set<string>();
-        if (this.#_options.appShell) {
-          await this.#prerenderAppShell(compilation, inputs);
-          prerenderedRoutes.add('/');
-        }
-        if (this.#_options.prerender) {
-          for (const route of await this.#prerenderSSGUniversal(
-            compilation,
-            inputs
-          )) {
-            // RoutesSet stores routes without the leading slash; the manifest
-            // keys carry it, matching the esbuild application builder.
-            prerenderedRoutes.add(`/${route}`);
-          }
-        }
-        await this.#writePrerenderedRoutesManifest(
-          compilation,
-          prerenderedRoutes
-        );
-        callback();
       }
     );
   }
