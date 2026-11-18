@@ -314,14 +314,21 @@ function getNodes(
     }
   }
 
-  const maybeAliasedPackageVersions = new Map<string, string>(); // <version, alias>
+  // <version, aliases>, since several aliases can resolve to one version
+  const maybeAliasedPackageVersions = new Map<string, Set<string>>();
+  const addMaybeAlias = (depVersion: string, depName: string) => {
+    if (!maybeAliasedPackageVersions.has(depVersion)) {
+      maybeAliasedPackageVersions.set(depVersion, new Set());
+    }
+    maybeAliasedPackageVersions.get(depVersion).add(depName);
+  };
 
   if (data.importers['.'].optionalDependencies) {
     for (const [depName, depVersion] of Object.entries(
       data.importers['.'].optionalDependencies
     )) {
       if (isAliasVersion(depVersion)) {
-        maybeAliasedPackageVersions.set(depVersion, depName);
+        addMaybeAlias(depVersion, depName);
       }
     }
   }
@@ -330,7 +337,7 @@ function getNodes(
       data.importers['.'].devDependencies
     )) {
       if (isAliasVersion(depVersion)) {
-        maybeAliasedPackageVersions.set(depVersion, depName);
+        addMaybeAlias(depVersion, depName);
       }
     }
   }
@@ -339,7 +346,7 @@ function getNodes(
       data.importers['.'].dependencies
     )) {
       if (isAliasVersion(depVersion)) {
-        maybeAliasedPackageVersions.set(depVersion, depName);
+        addMaybeAlias(depVersion, depName);
       }
     }
   }
@@ -421,7 +428,7 @@ function getNodes(
         snapshot.peerDependencies
       )) {
         if (isAliasVersion(depVersion)) {
-          maybeAliasedPackageVersions.set(depVersion, depName);
+          addMaybeAlias(depVersion, depName);
         }
       }
     }
@@ -430,7 +437,7 @@ function getNodes(
         snapshot.optionalDependencies
       )) {
         if (isAliasVersion(depVersion)) {
-          maybeAliasedPackageVersions.set(depVersion, depName);
+          addMaybeAlias(depVersion, depName);
         }
       }
     }
@@ -439,7 +446,7 @@ function getNodes(
         snapshot.dependencies
       )) {
         if (isAliasVersion(depVersion)) {
-          maybeAliasedPackageVersions.set(depVersion, depName);
+          addMaybeAlias(depVersion, depName);
         }
       }
     }
@@ -447,8 +454,7 @@ function getNodes(
     if (packageNameObj) {
       packageNames.add(packageNameObj);
     }
-    const aliasedDep = maybeAliasedPackageVersions.get(`/${key}`);
-    if (aliasedDep) {
+    for (const aliasedDep of maybeAliasedPackageVersions.get(`/${key}`) ?? []) {
       packageNames.add({
         key,
         packageName: aliasedDep,
@@ -456,8 +462,7 @@ function getNodes(
         alias: true,
       });
     }
-    const localAlias = maybeAliasedPackageVersions.get(key);
-    if (localAlias) {
+    for (const localAlias of maybeAliasedPackageVersions.get(key) ?? []) {
       packageNames.add({
         key,
         packageName: localAlias,
