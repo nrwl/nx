@@ -303,6 +303,38 @@ describe('remove-deprecated-executors', () => {
     ).toMatchInlineSnapshot(`{}`);
   });
 
+  it('keeps the root eslint config in a scoped include so projects relying on it keep their lint target', async () => {
+    const rootConfig = `export default [{}];\n`;
+    tree.write('eslint.config.mjs', rootConfig);
+    fs.createFileSync('eslint.config.mjs', rootConfig);
+    for (const name of ['a', 'c']) {
+      const project: ProjectConfiguration = {
+        name,
+        root: `libs/${name}`,
+        projectType: 'library',
+        targets: name === 'a' ? { lint: { executor: '@nx/eslint:lint' } } : {},
+      };
+      addProjectConfiguration(tree, name, project);
+      fs.createFileSync(`libs/${name}/project.json`, JSON.stringify(project));
+      tree.write(`libs/${name}/src/index.js`, `export const a = 1;`);
+      fs.createFileSync(`libs/${name}/src/index.js`, `export const a = 1;`);
+    }
+
+    await update(tree);
+
+    expect(
+      readNxJson(tree).plugins.find(
+        (plugin) =>
+          typeof plugin !== 'string' && plugin.plugin === '@nx/eslint/plugin'
+      )
+    ).toEqual({
+      plugin: '@nx/eslint/plugin',
+      options: { targetName: 'lint' },
+      include: ['libs/a/**/*', 'eslint.config.mjs'],
+    });
+    expect(readProjectConfiguration(tree, 'a').targets).toEqual({});
+  });
+
   it('skips the prompt when no project uses the removed executors', async () => {
     const nxJson = readNxJson(tree);
 
