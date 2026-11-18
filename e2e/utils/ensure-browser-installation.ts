@@ -1,4 +1,4 @@
-import { execSync } from 'node:child_process';
+import { execSync, spawnSync } from 'node:child_process';
 import { homedir } from 'os';
 import { join } from 'path';
 import { FileLock } from 'nx/src/native';
@@ -46,22 +46,39 @@ export async function ensureCypressInstallation() {
   // Only one process may unzip into the user's Cypress cache at a time,
   // for the same reason Playwright installs are serialized below.
   withInstallLock(CYPRESS_LOCK_FILE, 'Cypress', () => {
-    try {
-      // No-op when the binary is installed. `cypress run` smoke-tests it on first
-      // use, so this skips `cypress verify`, which always reruns that test.
-      execSync('npx cypress install', {
-        stdio: isVerbose() ? 'inherit' : 'pipe',
+    // No-op when the binary is installed. `cypress run` smoke-tests it on first
+    // use, so this skips `cypress verify`, which always reruns that test.
+    const { status, signal, error, stdout, stderr } = spawnSync(
+      'npx cypress install',
+      {
+        shell: true,
         encoding: 'utf-8',
         cwd: tmpProjPath(),
-        // The binary is skipped while workspaces are installed, so this call
-        // has to be allowed to fetch it.
-        env: { ...process.env, CYPRESS_INSTALL_BINARY: undefined },
-      });
-    } catch (error) {
-      e2eConsoleLogger('Failed to install Cypress:', error);
-      throw error;
+        // Workspace installs skip the binary, so this call installs it from the
+        // developer's source that global-setup.ts saved, or from the default.
+        env: {
+          ...process.env,
+          CYPRESS_INSTALL_BINARY: process.env.NX_E2E_CYPRESS_INSTALL_BINARY,
+        },
+      }
+    );
+    // Cypress prints its binary source, which can be a URL with credentials.
+    const output = redactUrlCredentials(`${stdout ?? ''}${stderr ?? ''}`);
+    if (status !== 0) {
+      const reason = error?.message ?? `exit code ${status ?? signal}`;
+      e2eConsoleLogger(`Failed to install Cypress (${reason}):`, output);
+      throw new Error(`Failed to install Cypress (${reason}).`);
+    }
+    if (isVerbose()) {
+      process.stdout.write(output);
     }
   });
+}
+
+function redactUrlCredentials(text: string) {
+  return text
+    .replace(/(https?:\/\/)[^\s/?#]*@/gi, '$1***@')
+    .replace(/(https?:\/\/[^\s?#]*)\?[^\s#]*/gi, '$1?***');
 }
 
 export function ensurePlaywrightBrowsersInstallation() {

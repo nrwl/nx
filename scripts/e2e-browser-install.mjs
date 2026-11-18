@@ -1,7 +1,7 @@
 // Runs a browser testing tool's install command for the version generated
 // workspaces get (its Nx generator's range), before the e2e suites run. Holds
 // the lock e2e/utils/ensure-browser-installation.ts takes for that tool.
-import { execSync } from 'node:child_process';
+import { execSync, spawnSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { homedir } from 'node:os';
@@ -23,10 +23,26 @@ const TOOLS = {
     versionsFile: 'packages/cypress/src/utils/versions.ts',
     versionConstant: 'cypressVersion',
     installArgs: '',
-    // An inherited `0` makes `cypress install` skip the download.
-    env: { CYPRESS_INSTALL_BINARY: undefined },
+    // An inherited `0` makes `cypress install` skip the download. Cypress trims
+    // and dequotes the value before that check. Other values are a binary
+    // source (a version, URL or ZIP path) and pass through.
+    env:
+      process.env.CYPRESS_INSTALL_BINARY?.trim().replace(
+        /^"([\s\S]*)"$/,
+        '$1'
+      ) === '0'
+        ? { CYPRESS_INSTALL_BINARY: undefined }
+        : {},
+    // Cypress prints its binary source, which can be a URL with credentials.
+    redactOutput: true,
   },
 };
+
+function redactUrlCredentials(text) {
+  return text
+    .replace(/(https?:\/\/)[^\s/?#]*@/gi, '$1***@')
+    .replace(/(https?:\/\/[^\s?#]*)\?[^\s#]*/gi, '$1?***');
+}
 
 const packageName = process.argv[2];
 const tool = TOOLS[packageName];
@@ -87,26 +103,40 @@ if (process.env.NX_E2E_RUN_E2E !== 'true') {
     // pnpm reads the .npmrc in cwd, so run from the repo root, not a shared temp
     // dir. --ignore-workspace skips the repo's pnpm-workspace.yaml (overrides),
     // which generated workspaces don't read either.
-    execSync(
-      `pnpm --ignore-workspace --registry=${registry} dlx ${packageName}@${workspaceVersion} install ${tool.installArgs}`,
-      {
-        stdio: 'inherit',
-        cwd: repoRoot,
-        env: {
-          ...process.env,
-          ...tool.env,
-          // Generated workspaces install with release-age gates off. The
-          // uppercase name wins over an inherited lowercase one.
-          PNPM_CONFIG_MINIMUM_RELEASE_AGE: '0',
-          // dlx reuses a cached install of a version whatever overrides built
-          // it, so use a cache only this script fills.
-          PNPM_CONFIG_CACHE_DIR: join(
-            repoRoot,
-            'node_modules/.cache/e2e-browser-install'
-          ),
-        },
+    const command = `pnpm --ignore-workspace --registry=${registry} dlx ${packageName}@${workspaceVersion} install ${tool.installArgs}`;
+    const options = {
+      cwd: repoRoot,
+      env: {
+        ...process.env,
+        ...tool.env,
+        // Generated workspaces install with release-age gates off. The
+        // uppercase name wins over an inherited lowercase one.
+        PNPM_CONFIG_MINIMUM_RELEASE_AGE: '0',
+        // dlx reuses a cached install of a version whatever overrides built
+        // it, so use a cache only this script fills.
+        PNPM_CONFIG_CACHE_DIR: join(
+          repoRoot,
+          'node_modules/.cache/e2e-browser-install'
+        ),
+      },
+    };
+    if (tool.redactOutput) {
+      const { status, signal, error, stdout, stderr } = spawnSync(command, {
+        ...options,
+        shell: true,
+        encoding: 'utf-8',
+      });
+      process.stdout.write(redactUrlCredentials(stdout ?? ''));
+      process.stderr.write(redactUrlCredentials(stderr ?? ''));
+      if (status !== 0) {
+        console.error(
+          `${tool.name} installation failed (${error?.message ?? `exit code ${status ?? signal}`}).`
+        );
+        process.exitCode = status || 1;
       }
-    );
+    } else {
+      execSync(command, { ...options, stdio: 'inherit' });
+    }
   } finally {
     lock.unlock();
   }

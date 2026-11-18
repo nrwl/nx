@@ -114,7 +114,16 @@ export default async function (globalConfig: Config.ConfigGlobals) {
 
     // Workspace installs would unzip the Cypress binary into the user's cache
     // with no lock, and two unzips at once can clear it mid-unzip. Suites that
-    // run Cypress get it from `ensureCypressInstallation`, which locks first.
+    // run Cypress get it from `ensureCypressInstallation`, which locks first
+    // and installs from the developer's binary source saved here.
+    const cypressInstallBinary = process.env.CYPRESS_INSTALL_BINARY;
+    // Cypress trims and dequotes the value before comparing it to `0`.
+    if (
+      cypressInstallBinary &&
+      cypressInstallBinary.trim().replace(/^"([\s\S]*)"$/, '$1') !== '0'
+    ) {
+      process.env.NX_E2E_CYPRESS_INSTALL_BINARY = cypressInstallBinary;
+    }
     process.env.CYPRESS_INSTALL_BINARY = '0';
 
     global.e2eTeardown = () => {
