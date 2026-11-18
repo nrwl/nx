@@ -115,22 +115,25 @@ export function updateProjectConfigForBrowserBuilder(
     defaultConfiguration: 'production',
   };
 
-  projectConfig.targets['serve-ssr'] = {
-    continuous: true,
-    readyWhen: { signal: true },
-    executor: '@angular-devkit/build-angular:ssr-dev-server',
-    configurations: {
-      development: {
-        browserTarget: `${options.project}:build:development`,
-        serverTarget: `${options.project}:server:development`,
+  // The rspack conversion removes the server target this would run
+  if (!options.isRspack) {
+    projectConfig.targets['serve-ssr'] = {
+      continuous: true,
+      readyWhen: { signal: true },
+      executor: '@angular-devkit/build-angular:ssr-dev-server',
+      configurations: {
+        development: {
+          browserTarget: `${options.project}:build:development`,
+          serverTarget: `${options.project}:server:development`,
+        },
+        production: {
+          browserTarget: `${options.project}:build:production`,
+          serverTarget: `${options.project}:server:production`,
+        },
       },
-      production: {
-        browserTarget: `${options.project}:build:production`,
-        serverTarget: `${options.project}:server:production`,
-      },
-    },
-    defaultConfiguration: 'development',
-  };
+      defaultConfiguration: 'development',
+    };
+  }
 
   projectConfig.targets.prerender = {
     executor: '@angular-devkit/build-angular:prerender',

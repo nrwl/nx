@@ -605,10 +605,10 @@ function writeResidualTarget(
 
   // `updateProjectConfiguration` writes a package-based project (no
   // project.json) by spreading the config over package.json `nx`, and deletes an
-  // empty `targets` from this very (cached) object before the spread. Two
-  // consequences: the old `nx.targets` entry (executor included) survives in
-  // package.json, and the cache can no longer take a later write (the Phase 4
-  // revert). Delete the entry here and keep the cache writable.
+  // empty `targets` from this very (cached) object before the spread, so the
+  // cache can no longer take a later write (the Phase 4 revert). Older nx
+  // versions also keep the old `nx.targets` entry (executor included) in
+  // package.json. Delete the entry here and keep the cache writable.
   if (!projectConfig.targets) {
     projectConfig.targets = {};
     deletePackageJsonTarget(tree, projectConfig.root, targetName);
