@@ -396,7 +396,7 @@
       "documentation": "./dist/src/migrations/update-24-0-0/remove-scam-generator-defaults.md"
     },
     "update-24-1-0-remove-rspack-ssr-dev-server-targets": {
-      "version": "24.1.0-beta.2",
+      "version": "24.1.0-beta.3",
       "description": "Removes the `@angular-devkit/build-angular:ssr-dev-server` targets of Rspack projects whose `serverTarget` values all name missing targets. Those targets can't run.",
       "implementation": "./dist/src/migrations/update-24-1-0/remove-rspack-ssr-dev-server-targets",
       "documentation": "./dist/src/migrations/update-24-1-0/remove-rspack-ssr-dev-server-targets.md"
