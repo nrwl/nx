@@ -9,6 +9,7 @@ import {
   getTypescriptBackend,
   readTsConfig as readTsConfigWithBackend,
   readTsConfigWithoutFiles,
+  unhandledTypescriptBackend,
 } from '@nx/devkit/internal';
 import { existsSync, readFileSync, realpathSync, statSync } from 'fs';
 import { dirname, isAbsolute, join, relative, resolve, sep } from 'path';
@@ -53,10 +54,8 @@ export function readTsConfig(
       return sys
         ? readTsConfigWithBackend(tsConfigPath, sys)
         : readTsConfigWithBackend(resolve(tsConfigPath));
-    default: {
-      const unhandled: never = backend;
-      throw new Error(`Unhandled TypeScript backend: ${unhandled}`);
-    }
+    default:
+      return unhandledTypescriptBackend(backend);
   }
 }
 
@@ -79,10 +78,8 @@ export function readTsConfigFromTree(
         tsConfigPath,
         createTreeParseConfigHost(tree)
       );
-    default: {
-      const unhandled: never = backend;
-      throw new Error(`Unhandled TypeScript backend: ${unhandled}`);
-    }
+    default:
+      return unhandledTypescriptBackend(backend);
   }
 }
 
@@ -222,10 +219,8 @@ function getClassicSys(): ts.System | undefined {
       return backend.ts.sys;
     case 'api':
       return undefined;
-    default: {
-      const unhandled: never = backend;
-      throw new Error(`Unhandled TypeScript backend: ${unhandled}`);
-    }
+    default:
+      return unhandledTypescriptBackend(backend);
   }
 }
 

@@ -2,6 +2,7 @@ import { joinPathFragments, logger } from '@nx/devkit';
 import {
   getTypescriptBackend,
   requireClassicTypescript,
+  unhandledTypescriptBackend,
   type ApiTypescriptBackend,
 } from '@nx/devkit/internal';
 import { spawn, spawnSync } from 'child_process';
@@ -50,10 +51,8 @@ export function compileTypeScript(options: TypeScriptCompilationOptions): {
       return createProgram(backend.ts, tsConfig, normalizedOptions);
     case 'api':
       return compileWithTscCli(backend, tsConfig, normalizedOptions);
-    default: {
-      const unhandled: never = backend;
-      throw new Error(`Unhandled TypeScript backend: ${unhandled}`);
-    }
+    default:
+      return unhandledTypescriptBackend(backend);
   }
 }
 
@@ -79,10 +78,8 @@ export function compileTypeScriptWatcher(
       return watchWithClassicProgram(backend.ts, tsConfig, options, callback);
     case 'api':
       return watchWithTscCli(backend, tsConfig, normalizedOptions, callback);
-    default: {
-      const unhandled: never = backend;
-      throw new Error(`Unhandled TypeScript backend: ${unhandled}`);
-    }
+    default:
+      return unhandledTypescriptBackend(backend);
   }
 }
 

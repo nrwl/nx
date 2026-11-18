@@ -14,6 +14,7 @@ import {
 import {
   getTypescriptBackend,
   requireClassicTypescript,
+  unhandledTypescriptBackend,
   type ApiTypescriptBackend,
   type TypescriptBackend,
 } from './typescript-backend';
@@ -74,10 +75,8 @@ function ensureEsmLoaderRegistered(opts: { required: boolean }): void {
     case 'api':
       registerTypescriptApiEsmLoader(backend, opts);
       return;
-    default: {
-      const unhandled: never = backend;
-      throw new Error(`Unhandled TypeScript backend: ${unhandled}`);
-    }
+    default:
+      return unhandledTypescriptBackend(backend);
   }
 }
 
@@ -889,10 +888,8 @@ export function getTranspiler(
       _getTranspiler = (options) =>
         registerTypescriptApiRequireHook(backend, options);
       break;
-    default: {
-      const unhandled: never = backend;
-      throw new Error(`Unhandled TypeScript backend: ${unhandled}`);
-    }
+    default:
+      unhandledTypescriptBackend(backend);
   }
 
   let registrationKey = JSON.stringify(compilerOptions);
@@ -1469,10 +1466,8 @@ function isTranspilerAvailable(): boolean {
       return false;
     case 'api':
       return true;
-    default: {
-      const unhandled: never = backend;
-      throw new Error(`Unhandled TypeScript backend: ${unhandled}`);
-    }
+    default:
+      return unhandledTypescriptBackend(backend);
   }
 }
 

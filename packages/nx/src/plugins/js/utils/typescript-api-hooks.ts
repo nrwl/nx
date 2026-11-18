@@ -7,11 +7,10 @@ import {
   type ApiCompilerOptions,
   type ApiTypescriptBackend,
 } from './typescript-backend';
+import { ModuleKind } from './typescript-enums';
 
 const TYPESCRIPT_EXTENSIONS = ['.ts', '.tsx', '.mts', '.cts'];
 const NODE_MODULES_RE = /[\\/]node_modules[\\/]/;
-// The same value in every TypeScript version Nx supports.
-const MODULE_KIND_ESNEXT = 99;
 
 type ExtensionHandler = (module: NodeModule, filename: string) => void;
 type CompilableModule = NodeModule & {
@@ -92,7 +91,7 @@ export function registerTypescriptApiImportHook(
 
   const esmCompilerOptions: CompilerOptions = {
     ...compilerOptions,
-    module: MODULE_KIND_ESNEXT,
+    module: ModuleKind.ESNext,
     moduleResolution: undefined,
   };
   module.registerHooks({

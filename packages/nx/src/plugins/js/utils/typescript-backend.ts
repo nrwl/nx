@@ -7,13 +7,13 @@ import {
 import { workspaceRoot } from '../../../utils/workspace-root';
 
 /** @ts-ignore resolves only when `typescript` is >= 7.1 */
-export type TypescriptApiModule = typeof import('typescript/sync');
+type TypescriptApiModule = typeof import('typescript/sync');
 /** @ts-ignore resolves only when `typescript` is >= 7.1 */
 export type TypescriptApi = import('typescript/sync').API;
 /** @ts-ignore resolves only when `typescript` is >= 7.1 */
 export type ApiCompilerOptions = import('typescript/sync').CompilerOptions;
 /** @ts-ignore resolves only when `typescript` is >= 7.1 */
-export type TypescriptAstModule = typeof import('typescript/ast');
+type TypescriptAstModule = typeof import('typescript/ast');
 /** @ts-ignore resolves only when `typescript` is >= 7.1 */
 export type TypescriptAstGuardsModule = typeof import('typescript/ast/is');
 
@@ -43,34 +43,29 @@ export type ApiTypescriptBackend = {
 };
 
 /**
- * File system operations a TypeScript 7.1 API call sends to the caller instead
- * of the disk. Paths are absolute. A member left out uses the disk.
+ * File reads and existence checks a TypeScript 7.1 API call sends to the caller
+ * instead of the disk. Paths are absolute. A member left out uses the disk.
  */
 export interface TypescriptApiFileSystem {
   readFile?(path: string): string | undefined;
   fileExists?(path: string): boolean;
   directoryExists?(path: string): boolean;
-  getAccessibleEntries?(path: string): {
-    files: string[];
-    directories: string[];
-  };
 }
 
 export type TypescriptBackend = ClassicTypescriptBackend | ApiTypescriptBackend;
 
-export type TypescriptSetupErrorReason =
-  | 'api-unavailable'
-  | 'classic-required'
-  | 'unrecognized';
-
 export class TypescriptSetupError extends Error {
-  readonly reason: TypescriptSetupErrorReason;
-
-  constructor(reason: TypescriptSetupErrorReason, message: string) {
+  constructor(message: string) {
     super(message);
     this.name = 'TypescriptSetupError';
-    this.reason = reason;
   }
+}
+
+/** The `default` of a switch that handles every {@link TypescriptBackend}. */
+export function unhandledTypescriptBackend(backend: never): never {
+  throw new Error(
+    `Unhandled TypeScript backend: ${(backend as TypescriptBackend).kind}`
+  );
 }
 
 const packageJsonPathByLookup = new Map<string, string>();
@@ -80,6 +75,7 @@ const hostedApiByPackageJsonPath = new Map<string, TypescriptApi>();
 
 type ActiveFileSystem = {
   fileSystem: TypescriptApiFileSystem;
+  listDirectories: boolean;
   error?: { value: unknown };
 };
 let activeFileSystem: ActiveFileSystem | undefined;
@@ -124,13 +120,10 @@ export function requireClassicTypescript(feature: string): typeof ts {
       return backend.ts;
     case 'api':
       throw new TypescriptSetupError(
-        'classic-required',
         `${feature} needs the TypeScript 6 API, but the workspace's "typescript" is ${backend.version}. Install TypeScript 6 as "typescript" and TypeScript ${backend.version} under an alias, e.g. "@typescript/native": "npm:typescript@${backend.version}".`
       );
-    default: {
-      const unhandled: never = backend;
-      throw new Error(`Unhandled TypeScript backend: ${unhandled}`);
-    }
+    default:
+      return unhandledTypescriptBackend(backend);
   }
 }
 
@@ -152,17 +145,19 @@ export function withTypescriptApi<T>(
 }
 
 /**
- * Like {@link withTypescriptApi}, but the file system operations `fn`'s
- * requests make go to `fileSystem`. An error `fileSystem` throws fails the
+ * Like {@link withTypescriptApi}, but the file reads and existence checks of
+ * `fn`'s requests go to `fileSystem`, and directory listings come back empty
+ * unless `listDirectories` is set. An error `fileSystem` throws fails the
  * request and is rethrown as is.
  */
 export function withHostedTypescriptApi<T>(
   backend: ApiTypescriptBackend,
   fileSystem: TypescriptApiFileSystem,
+  listDirectories: boolean,
   fn: (api: TypescriptApi) => T
 ): T {
   const previous = activeFileSystem;
-  const active: ActiveFileSystem = { fileSystem };
+  const active: ActiveFileSystem = { fileSystem, listDirectories };
   activeFileSystem = active;
   try {
     return runOnApi(
@@ -212,13 +207,13 @@ function runOnApi<T>(
 function createFileSystemCallbacks(
   serverFS: TypescriptApiFsModule['serverFS']
 ): FileSystemCallbacks {
-  const call = <R>(run: (fileSystem: TypescriptApiFileSystem) => R) => {
+  const call = <R>(run: (active: ActiveFileSystem) => R) => {
     const active = activeFileSystem;
     if (!active) {
       return serverFS.useOS;
     }
     try {
-      return run(active.fileSystem);
+      return run(active);
     } catch (e) {
       // A callback that throws breaks the API instance for every later
       // request; `serverFS.error` fails only this one.
@@ -229,24 +224,24 @@ function createFileSystemCallbacks(
 
   return {
     readFile: (path) =>
-      call((fileSystem) =>
+      call(({ fileSystem }) =>
         fileSystem.readFile ? fileSystem.readFile(path) : serverFS.useOS
       ),
     fileExists: (path) =>
-      call((fileSystem) =>
+      call(({ fileSystem }) =>
         fileSystem.fileExists ? fileSystem.fileExists(path) : serverFS.useOS
       ),
     directoryExists: (path) =>
-      call((fileSystem) =>
+      call(({ fileSystem }) =>
         fileSystem.directoryExists
           ? fileSystem.directoryExists(path)
           : serverFS.useOS
       ),
-    getAccessibleEntries: (path) =>
-      call((fileSystem) =>
-        fileSystem.getAccessibleEntries
-          ? { ...fileSystem.getAccessibleEntries(path), symlinks: undefined }
-          : serverFS.useOS
+    getAccessibleEntries: () =>
+      call(({ listDirectories }) =>
+        listDirectories
+          ? serverFS.useOS
+          : { files: [], directories: [], symlinks: undefined }
       ),
     realpath: serverFS.useOS,
     stat: serverFS.useOS,
@@ -264,7 +259,6 @@ function loadBackend(
   const match = typeof version === 'string' && /^(\d+)\.(\d+)\./.exec(version);
   if (!match) {
     throw new TypescriptSetupError(
-      'unrecognized',
       `Could not read the version of the TypeScript package at ${packageRoot}.`
     );
   }
@@ -283,7 +277,6 @@ function loadBackend(
 
   if (major === 7 && minor === 0) {
     throw new TypescriptSetupError(
-      'api-unavailable',
       `TypeScript ${version} has no programmatic API, which Nx needs. Install typescript@>=7.1, or install TypeScript 6 as "typescript" and TypeScript 7.0 under an alias, e.g. "@typescript/native": "npm:typescript@${version}".`
     );
   }
@@ -326,7 +319,6 @@ function loadBackend(
 
 function unrecognizedShape(version: string, packageRoot: string) {
   return new TypescriptSetupError(
-    'unrecognized',
     `The TypeScript ${version} package at ${packageRoot} does not expose the API its version implies.`
   );
 }

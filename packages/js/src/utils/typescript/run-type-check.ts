@@ -20,6 +20,7 @@ import {
   codeFrameColumns,
   flattenApiDiagnosticMessage,
   getTypescriptBackend,
+  unhandledTypescriptBackend,
   withTypescriptApi,
   type ApiTypescriptBackend,
 } from '@nx/devkit/internal';
@@ -77,10 +78,8 @@ export async function runTypeCheckWatch(
       return runClassicTypeCheckWatch(backend.ts, options, callback);
     case 'api':
       return runApiTypeCheckWatch(backend, options, callback);
-    default: {
-      const unhandled: never = backend;
-      throw new Error(`Unhandled TypeScript backend: ${unhandled}`);
-    }
+    default:
+      return unhandledTypescriptBackend(backend);
   }
 }
 
@@ -363,10 +362,8 @@ export async function runTypeCheck(
       return runClassicTypeCheck(backend.ts, options);
     case 'api':
       return runApiTypeCheck(backend, options);
-    default: {
-      const unhandled: never = backend;
-      throw new Error(`Unhandled TypeScript backend: ${unhandled}`);
-    }
+    default:
+      return unhandledTypescriptBackend(backend);
   }
 }
 
