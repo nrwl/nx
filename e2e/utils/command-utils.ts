@@ -231,12 +231,8 @@ export async function shouldRunPlaywrightTests(): Promise<boolean> {
     return false;
   }
   const startTime = performance.now();
-  // Playwright is deliberately not awaited: `npx playwright install
-  // --with-deps` takes longer than a test's timeout, so waiting on it here
-  // fails the suite outright.
-  ensurePlaywrightBrowsersInstallation().then(() =>
-    logInfo(`Playwright ready (${secondsSince(startTime)}s)`)
-  );
+  ensurePlaywrightBrowsersInstallation();
+  logInfo(`Playwright ready (${secondsSince(startTime)}s)`);
   return true;
 }
 

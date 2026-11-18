@@ -7,7 +7,25 @@
     "validate": "nx run-many -t lint,test,build,e2e"
   },
   "nx": {
-    "includedScripts": []
+    "includedScripts": [],
+    "targets": {
+      "playwright-install": {
+        "cache": false,
+        "command": "playwright install --only-shell chromium"
+      },
+      "e2e": {
+        "dependsOn": [
+          "...",
+          "playwright-install"
+        ]
+      },
+      "e2e-ci--**/*": {
+        "dependsOn": [
+          "...",
+          "playwright-install"
+        ]
+      }
+    }
   },
   "dependencies": {
     "react": "^19.0.0",

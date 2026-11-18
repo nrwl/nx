@@ -72,6 +72,42 @@ describe('daemon environment', () => {
       expect(env.COLOR).toBeUndefined();
     });
 
+    it('should exclude package-manager vars not covered by the lowercase prefixes', () => {
+      process.env.PNPM_HOME = '/home/user/.local/share/pnpm';
+      process.env.PNPM_SCRIPT_SRC_DIR = '/some/project/subdir';
+      process.env.COREPACK_ENABLE_STRICT = '0';
+      process.env.COREPACK_ROOT = '/usr/lib/node_modules/corepack';
+
+      const env = getDaemonEnv();
+
+      expect(env.PNPM_HOME).toBeUndefined();
+      expect(env.PNPM_SCRIPT_SRC_DIR).toBeUndefined();
+      expect(env.COREPACK_ENABLE_STRICT).toBeUndefined();
+      expect(env.COREPACK_ROOT).toBeUndefined();
+    });
+
+    it('should exclude the vars git sets when Nx runs from a hook', () => {
+      process.env.GIT_INDEX_FILE = '/repo/.git/index.lock';
+      process.env.GIT_PREFIX = 'packages/nx/';
+      process.env.GIT_REFLOG_ACTION = 'pull';
+      process.env.GIT_AUTHOR_DATE = '@1754990000 +0000';
+      process.env.GIT_COMMITTER_DATE = '@1754990000 +0000';
+
+      const env = getDaemonEnv();
+
+      expect(env.GIT_INDEX_FILE).toBeUndefined();
+      expect(env.GIT_PREFIX).toBeUndefined();
+      expect(env.GIT_REFLOG_ACTION).toBeUndefined();
+      expect(env.GIT_AUTHOR_DATE).toBeUndefined();
+      expect(env.GIT_COMMITTER_DATE).toBeUndefined();
+    });
+
+    it('should exclude NX_CONSOLE', () => {
+      process.env.NX_CONSOLE = 'true';
+
+      expect(getDaemonEnv().NX_CONSOLE).toBeUndefined();
+    });
+
     it('should exclude terminal identification vars', () => {
       process.env.TERM = 'xterm-ghostty';
       process.env.TERM_PROGRAM = 'vscode';

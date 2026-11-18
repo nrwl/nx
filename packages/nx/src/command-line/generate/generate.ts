@@ -24,7 +24,10 @@ import { printHelp } from '../../utils/print-help';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { calculateDefaultProjectName } from '../../config/calculate-default-project-name';
 import { findInstalledPlugins } from '../../utils/plugins/installed-plugins';
-import { getGeneratorInformation } from './generator-utils';
+import {
+  getGeneratorInformation,
+  runGeneratorCallback,
+} from './generator-utils';
 import { getCwd } from '../../utils/path';
 import { reportNxGenerateCommand } from '../../analytics';
 
@@ -390,7 +393,7 @@ export async function generate(args: { [k: string]: any }) {
       );
       const implementation = implementationFactory();
 
-      const task = await implementation(host, combinedOpts);
+      const result = await implementation(host, combinedOpts);
       host.lock();
 
       const changes = host.listChanges();
@@ -400,9 +403,7 @@ export async function generate(args: { [k: string]: any }) {
       }
       if (!opts.dryRun) {
         flushChanges(workspaceRoot, changes);
-        if (task) {
-          await task();
-        }
+        await runGeneratorCallback(result);
       } else {
         logger.warn(`\nNOTE: The "dryRun" flag means no changes were made.`);
       }

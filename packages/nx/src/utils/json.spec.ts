@@ -155,6 +155,22 @@ describe('parseJson', () => {
     });
   });
 
+  it('should ignore a leading UTF-8 byte order mark', () => {
+    expect(parseJson('\uFEFF{ "foo": "bar" }')).toEqual({ foo: 'bar' });
+    expect(
+      parseJson('\uFEFF{ /* a comment */ "foo": "bar" }', {
+        expectComments: true,
+      })
+    ).toEqual({ foo: 'bar' });
+  });
+
+  it('should accept null and Buffer input like JSON.parse does', () => {
+    expect(parseJson(null)).toBeNull();
+    expect(
+      parseJson(Buffer.from('{ "foo": "bar" }') as unknown as string)
+    ).toEqual({ foo: 'bar' });
+  });
+
   it('should not call JSON.parse when expectComments is true', () => {
     vi.spyOn(JSON, 'parse');
 

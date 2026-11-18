@@ -1,0 +1,91 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "$id": "EnforceProjectBoundaries",
+  "title": "Enforce Project Boundaries Rule Configuration",
+  "type": "object",
+  "properties": {
+    "requireBuildableDependenciesForBuildableProjects": {
+      "oneOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "buildTargetNames": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": ["buildTargetNames"]
+        }
+      ]
+    },
+    "ignoredCircularDependencies": {
+      "type": "array",
+      "items": {
+        "type": "array",
+        "minItems": 2,
+        "maxItems": 2,
+        "items": {
+          "type": "string"
+        }
+      }
+    },
+    "depConstraints": {
+      "type": "array",
+      "items": {
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "sourceTag": {
+                "type": "string"
+              },
+              "onlyDependOnProjectsWithTags": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "notDependOnProjectsWithTags": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "required": ["sourceTag"]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "allSourceTags": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "onlyDependOnProjectsWithTags": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "notDependOnProjectsWithTags": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "required": ["allSourceTags"]
+          }
+        ]
+      }
+    }
+  },
+  "additionalProperties": false
+}

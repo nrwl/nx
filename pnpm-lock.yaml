@@ -314,6 +314,9 @@ catalogs:
     jsonc-parser:
       specifier: ^3.2.0
       version: 3.3.1
+    minimatch:
+      specifier: 11.0.8
+      version: 11.0.8
     next-seo:
       specifier: ^5.13.0
       version: 5.15.0
@@ -364,10 +367,10 @@ catalogs:
       specifier: 22.6.0
       version: 22.6.0
     '@typescript-eslint/type-utils':
-      specifier: ^8.0.0
+      specifier: ^8.58.0
       version: 8.59.0
     '@typescript-eslint/utils':
-      specifier: ^8.0.0
+      specifier: ^8.58.0
       version: 8.59.0
     angular-eslint:
       specifier: 22.6.0
@@ -559,12 +562,12 @@ catalogs:
       version: 4.1.2
 
 overrides:
+  minimatch@<10: ^10.2.5
   handlebars@<4.7.10: ^4.7.10
   minimist: ^1.2.6
   underscore: ^1.13.8
   brace-expansion: ^5.0.12
   axios: 1.20.0
-  minimatch: ^10.2.5
   shell-quote: ^1.11.0
   tmp: ~0.2.7
   form-data: ^4.0.6
@@ -1058,6 +1061,9 @@ importers:
       eslint-plugin-import:
         specifier: ^2.32.0
         version: 2.32.0(@typescript-eslint/parser@8.59.0(eslint@9.39.4(jiti@2.7.0)(supports-color@8.1.1))(supports-color@8.1.1)(typescript@6.0.3))(eslint@9.39.4(jiti@2.7.0)(supports-color@8.1.1))(supports-color@8.1.1)
+      eslint-plugin-import-x:
+        specifier: ^4.17.1
+        version: 4.17.1(@typescript-eslint/utils@8.59.0(eslint@9.39.4(jiti@2.7.0)(supports-color@8.1.1))(supports-color@8.1.1)(typescript@6.0.3))(eslint-import-resolver-node@0.3.9(supports-color@8.1.1))(eslint@9.39.4(jiti@2.7.0)(supports-color@8.1.1))(supports-color@8.1.1)
       eslint-plugin-jest:
         specifier: ^29.15.2
         version: 29.15.2(@typescript-eslint/eslint-plugin@8.59.0(@typescript-eslint/parser@8.59.0(eslint@9.39.4(jiti@2.7.0)(supports-color@8.1.1))(supports-color@8.1.1)(typescript@6.0.3))(eslint@9.39.4(jiti@2.7.0)(supports-color@8.1.1))(supports-color@8.1.1)(typescript@6.0.3))(eslint@9.39.4(jiti@2.7.0)(supports-color@8.1.1))(jest@30.3.0(@types/node@24.12.2)(babel-plugin-macros@3.1.0)(esbuild-register@3.6.0(esbuild@0.25.0)(supports-color@8.1.1))(supports-color@8.1.1)(ts-node@10.9.1(@swc/core@1.15.10(@swc/helpers@0.5.18))(@types/node@24.12.2)(typescript@6.0.3)))(supports-color@8.1.1)(typescript@6.0.3)
@@ -1170,8 +1176,8 @@ importers:
         specifier: ~0.82.4
         version: 0.82.4
       minimatch:
-        specifier: ^10.2.5
-        version: 10.2.5
+        specifier: 'catalog:'
+        version: 11.0.8
       next-sitemap:
         specifier: ^3.1.10
         version: 3.1.55(@next/env@16.4.5)(next@16.4.5(@babel/core@7.29.7(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@playwright/test@1.64.1)(@types/node@24.12.2)(babel-plugin-macros@3.1.0)(babel-plugin-react-compiler@1.0.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(sass@1.105.2))
@@ -1385,6 +1391,9 @@ importers:
       canvaskit-wasm:
         specifier: ^0.42.0
         version: 0.42.0
+      motion:
+        specifier: ^14.12.0
+        version: 14.14.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       octokit:
         specifier: ^2.0.14
         version: 2.1.0(encoding@0.1.13)
@@ -1415,6 +1424,12 @@ importers:
       nx:
         specifier: workspace:*
         version: link:../../packages/nx
+
+  e2e/conformance:
+    dependencies:
+      '@nx/e2e-utils':
+        specifier: workspace:*
+        version: link:../utils
 
   e2e/cypress:
     dependencies:
@@ -1541,6 +1556,12 @@ importers:
       nx:
         specifier: workspace:*
         version: link:../../packages/nx
+
+  e2e/owners:
+    dependencies:
+      '@nx/e2e-utils':
+        specifier: workspace:*
+        version: link:../utils
 
   e2e/oxlint:
     dependencies:
@@ -2307,6 +2328,37 @@ importers:
         specifier: catalog:vite
         version: 4.1.2(@opentelemetry/api@1.9.1)(@types/node@24.12.2)(jsdom@26.1.0(supports-color@10.2.2))(vite@8.0.16(@types/node@24.12.2)(esbuild@0.28.1)(jiti@2.7.0)(less@4.8.1(supports-color@10.2.2))(sass-embedded@1.105.2)(sass@1.101.0)(terser@5.49.0)(tsx@4.20.5)(yaml@2.9.0))
 
+  packages/conformance:
+    dependencies:
+      '@nx/devkit':
+        specifier: workspace:*
+        version: link:../devkit
+      '@nx/js':
+        specifier: workspace:*
+        version: link:../js
+      ajv:
+        specifier: 'catalog:'
+        version: 8.20.0
+      picocolors:
+        specifier: 'catalog:'
+        version: 1.1.1
+      semver:
+        specifier: 'catalog:'
+        version: 7.8.5
+      tslib:
+        specifier: catalog:typescript
+        version: 2.8.1
+      yargs:
+        specifier: 'catalog:'
+        version: 17.7.2
+    devDependencies:
+      esbuild:
+        specifier: ^0.25.0
+        version: 0.25.0
+      nx:
+        specifier: workspace:*
+        version: link:../nx
+
   packages/create-nx-plugin:
     dependencies:
       create-nx-workspace:
@@ -2417,8 +2469,8 @@ importers:
         specifier: 5.0.1
         version: 5.0.1
       minimatch:
-        specifier: ^10.2.5
-        version: 10.2.5
+        specifier: 'catalog:'
+        version: 11.0.8
       semver:
         specifier: 'catalog:'
         version: 7.8.5
@@ -2547,6 +2599,9 @@ importers:
       confusing-browser-globals:
         specifier: ^1.0.9
         version: 1.0.11
+      eslint:
+        specifier: ^9.0.0 || ^10.0.0
+        version: 9.39.4(jiti@2.7.0)(supports-color@10.2.2)
       eslint-config-prettier:
         specifier: catalog:eslint
         version: 10.1.8(eslint@9.39.4(jiti@2.7.0)(supports-color@10.2.2))
@@ -2696,8 +2751,8 @@ importers:
         specifier: 'catalog:'
         version: 3.3.1
       minimatch:
-        specifier: ^10.2.5
-        version: 10.2.5
+        specifier: 'catalog:'
+        version: 11.0.8
       picomatch:
         specifier: 'catalog:'
         version: 4.0.7
@@ -3120,8 +3175,8 @@ importers:
         specifier: 2.0.3
         version: 2.0.3
       minimatch:
-        specifier: ^10.2.5
-        version: 10.2.5
+        specifier: 'catalog:'
+        version: 11.0.8
       npm-run-path:
         specifier: ^4.0.1
         version: 4.0.1
@@ -3173,34 +3228,34 @@ importers:
     optionalDependencies:
       '@nx/nx-darwin-arm64':
         specifier: '*'
-        version: 21.6.2
+        version: 24.0.5
       '@nx/nx-darwin-x64':
         specifier: '*'
-        version: 21.6.2
+        version: 24.0.5
       '@nx/nx-freebsd-x64':
         specifier: '*'
-        version: 21.6.2
+        version: 24.0.5
       '@nx/nx-linux-arm-gnueabihf':
         specifier: '*'
-        version: 21.6.2
+        version: 24.0.5
       '@nx/nx-linux-arm64-gnu':
         specifier: '*'
-        version: 21.6.2
+        version: 24.0.5
       '@nx/nx-linux-arm64-musl':
         specifier: '*'
-        version: 21.6.2
+        version: 24.0.5
       '@nx/nx-linux-x64-gnu':
         specifier: '*'
-        version: 21.6.2
+        version: 24.0.5
       '@nx/nx-linux-x64-musl':
         specifier: '*'
-        version: 21.6.2
+        version: 24.0.5
       '@nx/nx-win32-arm64-msvc':
         specifier: '*'
-        version: 21.6.2
+        version: 24.0.5
       '@nx/nx-win32-x64-msvc':
         specifier: '*'
-        version: 21.6.2
+        version: 24.0.5
 
   packages/nx/native-packages/darwin-arm64: {}
 
@@ -3221,6 +3276,28 @@ importers:
   packages/nx/native-packages/win32-arm64-msvc: {}
 
   packages/nx/native-packages/win32-x64-msvc: {}
+
+  packages/owners:
+    dependencies:
+      '@nx/devkit':
+        specifier: workspace:*
+        version: link:../devkit
+      jsonc-parser:
+        specifier: 'catalog:'
+        version: 3.3.1
+      minimatch:
+        specifier: 'catalog:'
+        version: 11.0.8
+      tslib:
+        specifier: catalog:typescript
+        version: 2.8.1
+    devDependencies:
+      '@nx/conformance':
+        specifier: workspace:*
+        version: link:../conformance
+      nx:
+        specifier: workspace:*
+        version: link:../nx
 
   packages/oxlint:
     dependencies:
@@ -3265,8 +3342,8 @@ importers:
         specifier: 'catalog:'
         version: 7.0.6(supports-color@10.2.2)
       minimatch:
-        specifier: ^10.2.5
-        version: 10.2.5
+        specifier: 'catalog:'
+        version: 11.0.8
       semver:
         specifier: 'catalog:'
         version: 7.8.5
@@ -3327,8 +3404,8 @@ importers:
         specifier: ^1.0.0
         version: 1.0.0
       minimatch:
-        specifier: ^10.2.5
-        version: 10.2.5
+        specifier: 'catalog:'
+        version: 11.0.8
       react:
         specifier: '>=18.0.0 <20.0.0'
         version: 18.3.1
@@ -3556,8 +3633,8 @@ importers:
         specifier: ^1.0.0 || ^2.0.0
         version: 2.0.15(@module-federation/runtime-tools@2.3.3(node-fetch@3.3.2))(core-js@3.36.1)
       minimatch:
-        specifier: ^10.2.5
-        version: 10.2.5
+        specifier: 'catalog:'
+        version: 11.0.8
       semver:
         specifier: 'catalog:'
         version: 7.8.5
@@ -8147,6 +8224,9 @@ packages:
     resolution: {integrity: sha512-wgm9Ehl2jpeqP3zw/7mo3kRHFp5MEDhqAdwy1fTGkHAwnkGOVsgpvQhL8B5n1qlb01jV3n/bI0ZfZp5lWA1k4w==}
     engines: {node: '>=18.0.0'}
 
+  '@isaacs/nonrecursive-glob-match@1.1.0':
+    resolution: {integrity: sha512-GPm/Dbvk5RLmhRnxXIa7nTpK0xtl4E0wj0MslsuNiJ1FIROU+2+9lgUC/dgF7Ey4QCWhfEsgxilMRMCdHPfDfw==}
+
   '@isaacs/ttlcache@1.4.1':
     resolution: {integrity: sha512-RQgQ4uQ+pLbqXfOmieB91ejmLwvSgv9nLx6sT6sD83s7umBypgg+OIBOBbEUiJXrfpnp9j0mRhYYdzp9uqq3lA==}
     engines: {node: '>=12'}
@@ -9966,19 +10046,9 @@ packages:
       '@nx/webpack':
         optional: true
 
-  '@nx/nx-darwin-arm64@21.6.2':
-    resolution: {integrity: sha512-Iwf7gxWMeDdrNqXYkVOib6PlDYwLw51+nMiFm1UW5nKxbQyVYHp7lhQNHsZrQ7Oqo84m9swWgzE7bhs21HkbYQ==}
-    cpu: [arm64]
-    os: [darwin]
-
   '@nx/nx-darwin-arm64@24.0.5':
     resolution: {integrity: sha512-9PjlxLE/EUoqHeply47177Pj3uUzfeitHGb/BaxQsQxuYckccWtfzXPnfyvfhTovDL/h8Tik2WBS6oObNh/YAg==}
     cpu: [arm64]
-    os: [darwin]
-
-  '@nx/nx-darwin-x64@21.6.2':
-    resolution: {integrity: sha512-A+q5AULxNEk15ol8ELmnOIUQuwBV5n9vK/vpzpfmTQqsMAUC6ksdBOI8N7I6+YVWLV0vUHWoRp9iH7I2IecERQ==}
-    cpu: [x64]
     os: [darwin]
 
   '@nx/nx-darwin-x64@24.0.5':
@@ -9986,31 +10056,15 @@ packages:
     cpu: [x64]
     os: [darwin]
 
-  '@nx/nx-freebsd-x64@21.6.2':
-    resolution: {integrity: sha512-Hw6eOsdtD21j/B514eRJzgX03ew8ErFCfxWtjLwl7wB31Dw4nZbScj2FNDTc0xtg6oXCkw5Gt5uFKI5QFQUVfg==}
-    cpu: [x64]
-    os: [freebsd]
-
   '@nx/nx-freebsd-x64@24.0.5':
     resolution: {integrity: sha512-j577U7wxQGJMXyXXQyuJIc2LBwjHwpElDdFgqamoQjTnoYoJWUtYW5AHzqTma9DMu++PvXLfQzg/j42pkJZH4A==}
     cpu: [x64]
     os: [freebsd]
 
-  '@nx/nx-linux-arm-gnueabihf@21.6.2':
-    resolution: {integrity: sha512-fzFyOioyO0G+NqThTwqn6YRcVZOHdsdN7M/lGSgjgfOChNuf3A0eTQzy2jh/8j868YpKV/esPlBphq3CGXWPmg==}
-    cpu: [arm]
-    os: [linux]
-
   '@nx/nx-linux-arm-gnueabihf@24.0.5':
     resolution: {integrity: sha512-ANRCi1N5D6MLBZ3Jf9tqUlOyr1DnOsqPRqJrRbmIJlpElEndawL02HeE/BrJT9sP/Tu1Tt4uQs+/x1TJD1SVjQ==}
     cpu: [arm]
     os: [linux]
-
-  '@nx/nx-linux-arm64-gnu@21.6.2':
-    resolution: {integrity: sha512-daRHdZzJWtzuEkrN+jDKdN59K2nPsXIHbWZq/4bIxvz/hszRX4hQZcrpVgtr0YV6jHY+/gKZCJsKnr2yYdaF3w==}
-    cpu: [arm64]
-    os: [linux]
-    libc: [glibc]
 
   '@nx/nx-linux-arm64-gnu@24.0.5':
     resolution: {integrity: sha512-+UUfUOqqel1f3Qls1H6LYaBD+h72dElbl21mo+8m7D271QJBPrqWLf6hB+KhIVLj+n/Jreg9fSA92j9VSKr0xQ==}
@@ -10018,23 +10072,11 @@ packages:
     os: [linux]
     libc: [glibc]
 
-  '@nx/nx-linux-arm64-musl@21.6.2':
-    resolution: {integrity: sha512-pB67mhywxV+WrVCiYV/+DgK2lfen3dv8PPgmBN/7qHQUgHqTJSLw7f9upiLlApuVN20qyCaktNT6Nq41Q88NCg==}
-    cpu: [arm64]
-    os: [linux]
-    libc: [musl]
-
   '@nx/nx-linux-arm64-musl@24.0.5':
     resolution: {integrity: sha512-jTuuza0fhv3CA6avIVkjm5XttFmJP2p28zDzMXvHSdNga56k7BaZekSHiSQyv1Y5ot6LCalSsimuyXVMfgcyAQ==}
     cpu: [arm64]
     os: [linux]
     libc: [musl]
-
-  '@nx/nx-linux-x64-gnu@21.6.2':
-    resolution: {integrity: sha512-pavN0n/VdQP2qKxdjdL8lt0fJWK5N3AvH3veSM5UROZ06HZVURcqEt3T74vLUGRiRnIPbFO/YEJGt2cO2THwXg==}
-    cpu: [x64]
-    os: [linux]
-    libc: [glibc]
 
   '@nx/nx-linux-x64-gnu@24.0.5':
     resolution: {integrity: sha512-B9FXZuMkXXGoFEZiPtx81VAigRF5/9DrXTOFHG419QXM3Dz3BsCMP8rwowcz+WbXzw0+DNKm8tIKE5wEBsYuVA==}
@@ -10042,31 +10084,15 @@ packages:
     os: [linux]
     libc: [glibc]
 
-  '@nx/nx-linux-x64-musl@21.6.2':
-    resolution: {integrity: sha512-nEEkb3fBuqL18q6q7oqC1PpRiP8LMCmLf7UkGl6owDzCPy48K36Nept2YjHzABdUN2Wv5kojCWjNpGqhnTZSiw==}
-    cpu: [x64]
-    os: [linux]
-    libc: [musl]
-
   '@nx/nx-linux-x64-musl@24.0.5':
     resolution: {integrity: sha512-zrykHhL2yvHfpdzGCSdlTc2gGQZXNtut9/agF2b30JbDqXH9RIyVGg2su2/Su69OQuDuAEYfM8rGMYQdY2fV5w==}
     cpu: [x64]
     os: [linux]
     libc: [musl]
 
-  '@nx/nx-win32-arm64-msvc@21.6.2':
-    resolution: {integrity: sha512-FnVZbMHN4PeaNdyPDNKyUWCK1+XKBi3A15jb0VdiJHTv+6jzNxBfPZfsI6RkAjSag3TeVC/Lgz0asWTW3LDyXA==}
-    cpu: [arm64]
-    os: [win32]
-
   '@nx/nx-win32-arm64-msvc@24.0.5':
     resolution: {integrity: sha512-GIkAmdDfPiYF3VPJP+GeXNH6fv5yvP9o8h6aV0Utc6Sws0a0T8ZTwczUTaWm3+R1ELqcBvjR+739wnKBWegkmQ==}
     cpu: [arm64]
-    os: [win32]
-
-  '@nx/nx-win32-x64-msvc@21.6.2':
-    resolution: {integrity: sha512-7xzDBz7TgaCfAxFa1Z1V+1YXNiCBHSUzLOeWAQYZ1McBltuxjEddK4w4FcHMVvjs7NUUTja+5fDxE42rUp9IQw==}
-    cpu: [x64]
     os: [win32]
 
   '@nx/nx-win32-x64-msvc@24.0.5':
@@ -15078,6 +15104,7 @@ packages:
 
   axios-retry@4.5.0:
     resolution: {integrity: sha512-aR99oXhpEDGo0UuAlYcn2iGRds30k366Zfa05XWScR9QaQD4JYiP3/1Qt1u7YlefUOK+cn0CcwoL1oefavQUlQ==}
+    deprecated: axios-retry is no longer maintained. See https://github.com/softonic/axios-retry for alternatives.
     peerDependencies:
       axios: 1.20.0
 
@@ -15927,6 +15954,10 @@ packages:
   comment-json@4.2.5:
     resolution: {integrity: sha512-bKw/r35jR3HGt5PEPm1ljsQQGyCrR8sFGNiN5L+ykDHdpO8Smxkrkla9Yi6NkQyUrb8V54PGhfMs6NrIwtxtdw==}
     engines: {node: '>= 6'}
+
+  comment-parser@1.4.9:
+    resolution: {integrity: sha512-+2AvZKjJaNq9GQljm3tr0utwrig5BL+jgJGvz5rDpGKNIp+ojcRXWUwBbh/sGIi1QCprR6PsKFakub+w1v+4hQ==}
+    engines: {node: '>= 12.0.0'}
 
   common-ancestor-path@2.0.0:
     resolution: {integrity: sha512-dnN3ibLeoRf2HNC+OlCiNc5d2zxbLJXOtiZUudNFSXZrNSydxcCsSpRzXwfu7BBWCIfHPw+xTayeBvJCP/D8Ng==}
@@ -17136,6 +17167,15 @@ packages:
     peerDependencies:
       eslint: '>=7.0.0'
 
+  eslint-import-context@0.1.9:
+    resolution: {integrity: sha512-K9Hb+yRaGAGUbwjhFNHvSmmkZs9+zbuoe3kFQ4V1wYjrepUFYM2dZAfNtjbbj3qsPfUfsA68Bx/ICWQMi+C8Eg==}
+    engines: {node: ^12.20.0 || ^14.18.0 || >=16.0.0}
+    peerDependencies:
+      unrs-resolver: ^1.0.0
+    peerDependenciesMeta:
+      unrs-resolver:
+        optional: true
+
   eslint-import-resolver-node@0.3.9:
     resolution: {integrity: sha512-WFj2isz22JahUv+B788TlO3N6zL3nNJGU8CcZbPZvVEkBPaJdCV4vy5wyghty5ROFbCRnm132v8BScu5/1BQ8g==}
 
@@ -17164,6 +17204,19 @@ packages:
     resolution: {integrity: sha512-iTJtdIZbyCUlagEI4YlVcwgPFV7X379Qi/upujaD4kvOaQkMvzmpt90vfSnaqgqprp/HPIvhnzv3fdI7mYV4QQ==}
     peerDependencies:
       eslint: '>=9'
+
+  eslint-plugin-import-x@4.17.1:
+    resolution: {integrity: sha512-4cdstYkKCyjumM2Q9NSI03K8D2a9F4Ssz33K2lv2hQa4KmR9jPLwk3uWGtNvclfqBrPGfGuMBwsGMbe6dMRbfg==}
+    engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
+    peerDependencies:
+      '@typescript-eslint/utils': ^8.56.0
+      eslint: ^8.57.0 || ^9.0.0 || ^10.0.0
+      eslint-import-resolver-node: '*'
+    peerDependenciesMeta:
+      '@typescript-eslint/utils':
+        optional: true
+      eslint-import-resolver-node:
+        optional: true
 
   eslint-plugin-import@2.32.0:
     resolution: {integrity: sha512-whOE1HFo/qJDyX4SnXzP4N6zOWn79WhnCUY/iDR0mPfQZO8wcYE4JClzI2oZrhBnnMUCBCHZhO6VQyoBU95mZA==}
@@ -17891,6 +17944,20 @@ packages:
       react:
         optional: true
       react-dom:
+        optional: true
+
+  framer-motion@14.14.0:
+    resolution: {integrity: sha512-fidRX0VzkZdA9OovFiBSzJtt9/jLcJpna78Z+KCqQQZIWoIpN3tOhEXAhhAw/FObUUh+o3Y18yx1F4BP0mVJ8Q==}
+    peerDependencies:
+      react: ^18.0.0 || ^19.0.0
+      react-dom: ^18.0.0 || ^19.0.0
+      remix: ^3.1.0
+    peerDependenciesMeta:
+      react:
+        optional: true
+      react-dom:
+        optional: true
+      remix:
         optional: true
 
   fresh@0.5.2:
@@ -20826,9 +20893,17 @@ packages:
   minimalistic-assert@1.0.1:
     resolution: {integrity: sha512-UtJcAD4yEaGtjPezWuO9wC4nwUnVH/8/Im3yEHQP4b67cXlD/Qr9hdITCU1xDbSEXg2XKNaP8jsReV7vQd00/A==}
 
+  minimatch@10.2.4:
+    resolution: {integrity: sha512-oRjTw/97aTBN0RHbYCdtF1MQfvusSIBQM0IZEgzl6426+8jSC0nF1a/GmnVLpfB9yyr6g6FTqWqiZVbxrtaCIg==}
+    engines: {node: 18 || 20 || >=22}
+
   minimatch@10.2.5:
     resolution: {integrity: sha512-MULkVLfKGYDFYejP07QOurDLLQpcjk7Fw+7jXS2R2czRQzR56yHRveU5NDJEOviH+hETZKSkIk5c+T23GjFUMg==}
     engines: {node: 18 || 20 || >=22}
+
+  minimatch@11.0.8:
+    resolution: {integrity: sha512-nFQuYSTVrGvysVBps5Ih+0BdnYFN/Cj3C816r6+p7yK+FHrVLGE4O4N9AFwykrlNlvM2HYt+Rad1Uiro6h88Ig==}
+    engines: {node: 20 || >=22}
 
   minimist@1.2.8:
     resolution: {integrity: sha512-2yyAR8qBkN3YuheJanUpWC5U3bb5osDywNB8RzDVlDwDHbocAJveqqj1u8+SVD7jkWT4yvsHCpWqqWqAxb0zCA==}
@@ -20953,8 +21028,28 @@ packages:
   motion-dom@11.18.1:
     resolution: {integrity: sha512-g76KvA001z+atjfxczdRtw/RXOM3OMSdd1f4DL77qCTF/+avrRJiawSG4yDibEQ215sr9kpinSlX2pCTJ9zbhw==}
 
+  motion-dom@14.14.0:
+    resolution: {integrity: sha512-IAxcKhYkuQA2W0Tlx1AvVgImfqEoF3/t3IovbPQJlYkefmGsmrXjn967lMII5VmFmLpQEab4+ZkHo/ijJ4Esig==}
+
   motion-utils@11.18.1:
     resolution: {integrity: sha512-49Kt+HKjtbJKLtgO/LKj9Ld+6vw9BjH5d9sc40R/kVyH8GLAXgT42M2NnuPcJNuA3s9ZfZBUcwIgpmZWGEE+hA==}
+
+  motion-utils@14.7.0:
+    resolution: {integrity: sha512-woO0/Nb7ys75f94fjvQi/6leiHGvZUYkeHUPEZ3vxsV+9OpEVhkxp01x8MlRwX0zt31EqgXsKDAoBoJLC148Tw==}
+
+  motion@14.14.0:
+    resolution: {integrity: sha512-a306U6sV5VKq1abtzKiinB+UQjiY88jrsvQzWORP3WPv/DFANyoYVlPbdnmJPMEbusyPXB4GyQJVANaq/pSIYQ==}
+    peerDependencies:
+      react: ^18.0.0 || ^19.0.0
+      react-dom: ^18.0.0 || ^19.0.0
+      remix: ^3.1.0
+    peerDependenciesMeta:
+      react:
+        optional: true
+      react-dom:
+        optional: true
+      remix:
+        optional: true
 
   mri@1.2.0:
     resolution: {integrity: sha512-tzzskb3bG8LvYGFF/mDTpq3jpI6Q9wc3LEmBaghu+DdCssd1FakN7Bc0hVNmEyGq1bq3RgfkCb3cmQLpNPOroA==}
@@ -21177,6 +21272,7 @@ packages:
 
   node-abort-controller@3.1.1:
     resolution: {integrity: sha512-AGK2yQKIjRuqnc6VkX2Xj5d+QW8xZ87pa1UK6yA6ouUyuxfHuMP6umE5QK7UmTeOAymo+Zx1Fxiuw9rVx8taHQ==}
+    deprecated: This package is no longer needed on supported Node.js versions. Node.js 16+ includes AbortController and AbortSignal as built-in globals. All Node.js versions requiring this polyfill are end-of-life. Use the built-in globals instead.
 
   node-addon-api@6.1.0:
     resolution: {integrity: sha512-+eawOlIgy680F0kBzPUNFhMZGtJ1YmqM6l4+Crf4IkImjYrO/mqPwRMh352g23uIaQKFItcQ64I7KMaJxHgAVA==}
@@ -24206,6 +24302,10 @@ packages:
     resolution: {integrity: sha512-mV0kkeBHcjcb0M5NqKtKVg/uTIYNlIIniyDfSGrSfxpEdM9C365jK0z55pl9K0xAkNTJi2OAOVFQpgMPUk+V0w==}
     peerDependencies:
       svelte: ^4.0.0
+
+  stable-hash-x@0.2.0:
+    resolution: {integrity: sha512-o3yWv49B/o4QZk5ZcsALc6t0+eCelPc44zZsLtCQnZPDwFpDYSWcDnrv2TtMmMbQ7uKo3J0HTURCqckw23czNQ==}
+    engines: {node: '>=12.0.0'}
 
   stack-trace@0.0.10:
     resolution: {integrity: sha512-KGzahc7puUKkzyMt+IqAep+TVNbKP+k2Lmwhub39m1AsTSkaDutx56aDCo+HLDzf/D26BIHTJWNiTG1KAJiQCg==}
@@ -32730,6 +32830,8 @@ snapshots:
     dependencies:
       minipass: 7.1.3
 
+  '@isaacs/nonrecursive-glob-match@1.1.0': {}
+
   '@isaacs/ttlcache@1.4.1': {}
 
   '@istanbuljs/load-nyc-config@1.1.0':
@@ -35550,7 +35652,7 @@ snapshots:
       '@zkochan/js-yaml': 0.0.7
       ejs: 5.0.1
       enquirer: 2.3.6
-      minimatch: 10.2.5
+      minimatch: 10.2.4
       nx: 24.0.5(@swc-node/register@1.11.1(@emnapi/core@1.11.2)(@emnapi/runtime@1.11.3)(@swc/core@1.15.10(@swc/helpers@0.5.18))(@swc/types@0.1.25)(supports-color@8.1.1)(typescript@6.0.3))(@swc/core@1.15.10(@swc/helpers@0.5.18))
       semver: 7.8.5
       tslib: 2.8.1
@@ -35877,61 +35979,31 @@ snapshots:
       - vitest
       - webpack
 
-  '@nx/nx-darwin-arm64@21.6.2':
-    optional: true
-
   '@nx/nx-darwin-arm64@24.0.5':
-    optional: true
-
-  '@nx/nx-darwin-x64@21.6.2':
     optional: true
 
   '@nx/nx-darwin-x64@24.0.5':
     optional: true
 
-  '@nx/nx-freebsd-x64@21.6.2':
-    optional: true
-
   '@nx/nx-freebsd-x64@24.0.5':
-    optional: true
-
-  '@nx/nx-linux-arm-gnueabihf@21.6.2':
     optional: true
 
   '@nx/nx-linux-arm-gnueabihf@24.0.5':
     optional: true
 
-  '@nx/nx-linux-arm64-gnu@21.6.2':
-    optional: true
-
   '@nx/nx-linux-arm64-gnu@24.0.5':
-    optional: true
-
-  '@nx/nx-linux-arm64-musl@21.6.2':
     optional: true
 
   '@nx/nx-linux-arm64-musl@24.0.5':
     optional: true
 
-  '@nx/nx-linux-x64-gnu@21.6.2':
-    optional: true
-
   '@nx/nx-linux-x64-gnu@24.0.5':
-    optional: true
-
-  '@nx/nx-linux-x64-musl@21.6.2':
     optional: true
 
   '@nx/nx-linux-x64-musl@24.0.5':
     optional: true
 
-  '@nx/nx-win32-arm64-msvc@21.6.2':
-    optional: true
-
   '@nx/nx-win32-arm64-msvc@24.0.5':
-    optional: true
-
-  '@nx/nx-win32-x64-msvc@21.6.2':
     optional: true
 
   '@nx/nx-win32-x64-msvc@24.0.5':
@@ -42885,6 +42957,8 @@ snapshots:
       has-own-prop: 2.0.0
       repeat-string: 1.6.1
 
+  comment-parser@1.4.9: {}
+
   common-ancestor-path@2.0.0: {}
 
   common-path-prefix@3.0.0: {}
@@ -43950,6 +44024,7 @@ snapshots:
   dtrace-provider@0.8.8:
     dependencies:
       nan: 2.23.0
+    optional: true
 
   dts-resolver@3.0.0(oxc-resolver@11.24.2):
     optionalDependencies:
@@ -44450,6 +44525,13 @@ snapshots:
     dependencies:
       eslint: 9.39.4(jiti@2.7.0)(supports-color@8.1.1)
 
+  eslint-import-context@0.1.9(unrs-resolver@1.11.1):
+    dependencies:
+      get-tsconfig: 4.10.1
+      stable-hash-x: 0.2.0
+    optionalDependencies:
+      unrs-resolver: 1.11.1
+
   eslint-import-resolver-node@0.3.9(supports-color@8.1.1):
     dependencies:
       debug: 3.2.7(supports-color@8.1.1)
@@ -44472,6 +44554,24 @@ snapshots:
     dependencies:
       eslint: 9.39.4(jiti@2.7.0)(supports-color@8.1.1)
       globals: 17.5.0
+
+  eslint-plugin-import-x@4.17.1(@typescript-eslint/utils@8.59.0(eslint@9.39.4(jiti@2.7.0)(supports-color@8.1.1))(supports-color@8.1.1)(typescript@6.0.3))(eslint-import-resolver-node@0.3.9(supports-color@8.1.1))(eslint@9.39.4(jiti@2.7.0)(supports-color@8.1.1))(supports-color@8.1.1):
+    dependencies:
+      '@typescript-eslint/types': 8.59.0
+      comment-parser: 1.4.9
+      debug: 4.4.3(supports-color@8.1.1)
+      eslint: 9.39.4(jiti@2.7.0)(supports-color@8.1.1)
+      eslint-import-context: 0.1.9(unrs-resolver@1.11.1)
+      is-glob: 4.0.3
+      minimatch: 10.2.5
+      semver: 7.8.5
+      stable-hash-x: 0.2.0
+      unrs-resolver: 1.11.1
+    optionalDependencies:
+      '@typescript-eslint/utils': 8.59.0(eslint@9.39.4(jiti@2.7.0)(supports-color@8.1.1))(supports-color@8.1.1)(typescript@6.0.3)
+      eslint-import-resolver-node: 0.3.9(supports-color@8.1.1)
+    transitivePeerDependencies:
+      - supports-color
 
   eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.59.0(eslint@9.39.4(jiti@2.7.0)(supports-color@8.1.1))(supports-color@8.1.1)(typescript@6.0.3))(eslint@9.39.4(jiti@2.7.0)(supports-color@8.1.1))(supports-color@8.1.1):
     dependencies:
@@ -45662,6 +45762,15 @@ snapshots:
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
 
+  framer-motion@14.14.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
+    dependencies:
+      motion-dom: 14.14.0
+      motion-utils: 14.7.0
+      tslib: 2.8.1
+    optionalDependencies:
+      react: 18.3.1
+      react-dom: 18.3.1(react@18.3.1)
+
   fresh@0.5.2: {}
 
   fresh@2.0.0: {}
@@ -45865,6 +45974,7 @@ snapshots:
       minimatch: 10.2.5
       once: 1.4.0
       path-is-absolute: 1.0.1
+    optional: true
 
   glob@7.2.3:
     dependencies:
@@ -50586,8 +50696,17 @@ snapshots:
 
   minimalistic-assert@1.0.1: {}
 
+  minimatch@10.2.4:
+    dependencies:
+      brace-expansion: 5.0.12
+
   minimatch@10.2.5:
     dependencies:
+      brace-expansion: 5.0.12
+
+  minimatch@11.0.8:
+    dependencies:
+      '@isaacs/nonrecursive-glob-match': 1.1.0
       brace-expansion: 5.0.12
 
   minimist@1.2.8: {}
@@ -50796,13 +50915,28 @@ snapshots:
 
   module-details-from-path@1.0.4: {}
 
-  moment@2.30.1: {}
+  moment@2.30.1:
+    optional: true
 
   motion-dom@11.18.1:
     dependencies:
       motion-utils: 11.18.1
 
+  motion-dom@14.14.0:
+    dependencies:
+      motion-utils: 14.7.0
+
   motion-utils@11.18.1: {}
+
+  motion-utils@14.7.0: {}
+
+  motion@14.14.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
+    dependencies:
+      framer-motion: 14.14.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      tslib: 2.8.1
+    optionalDependencies:
+      react: 18.3.1
+      react-dom: 18.3.1(react@18.3.1)
 
   mri@1.2.0: {}
 
@@ -50874,6 +51008,7 @@ snapshots:
       mkdirp: 0.5.6
       ncp: 2.0.0
       rimraf: 2.4.5
+    optional: true
 
   mz@2.7.0:
     dependencies:
@@ -50881,7 +51016,8 @@ snapshots:
       object-assign: 4.1.1
       thenify-all: 1.6.0
 
-  nan@2.23.0: {}
+  nan@2.23.0:
+    optional: true
 
   nanoid@3.3.20: {}
 
@@ -50893,7 +51029,8 @@ snapshots:
 
   natural-compare@1.4.0: {}
 
-  ncp@2.0.0: {}
+  ncp@2.0.0:
+    optional: true
 
   needle@2.9.1(supports-color@10.2.2):
     dependencies:
@@ -54343,6 +54480,7 @@ snapshots:
   rimraf@2.4.5:
     dependencies:
       glob: 6.0.4
+    optional: true
 
   rimraf@3.0.2:
     dependencies:
@@ -54539,7 +54677,8 @@ snapshots:
 
   safe-buffer@5.2.1: {}
 
-  safe-json-stringify@1.2.0: {}
+  safe-json-stringify@1.2.0:
+    optional: true
 
   safe-push-apply@1.0.0:
     dependencies:
@@ -55594,6 +55733,8 @@ snapshots:
     dependencies:
       svelte: 4.2.20
       swrev: 4.0.0
+
+  stable-hash-x@0.2.0: {}
 
   stack-trace@0.0.10: {}
 

@@ -24,7 +24,10 @@ import {
   expandIgnoredCircularDependencies,
   findFilesInCircularPath,
   findFilesWithDynamicImports,
-} from '../utils/graph-utils';
+  hasIgnoreServerInputsDirective,
+  isProjectGraphProjectNode,
+  isRelativePath,
+} from '@nx/devkit/internal';
 import {
   findSplitTargets,
   splitTargetsApply,
@@ -53,11 +56,6 @@ import {
   matchImportWithWildcard,
   stringifyTags,
 } from '../utils/runtime-lint-utils';
-import {
-  hasIgnoreServerInputsDirective,
-  isRelativePath,
-  isProjectGraphProjectNode,
-} from '@nx/devkit/internal';
 
 export type Options = [
   {

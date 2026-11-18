@@ -1,4 +1,5 @@
 import {
+  convertWithUninferredTargetsRewritten,
   migrateProjectExecutorsToPlugin,
   NoTargetsToMigrateError,
   processTargetOutputs,
@@ -17,6 +18,7 @@ import { createNodesV2, type JestPluginOptions } from '../../plugins/plugin';
 import { jestConfigExtensions } from '../../utils/config/config-file';
 import { assertSupportedJestVersion } from '../../utils/assert-supported-jest-version';
 import { getInstalledJestMajorVersion } from '../../utils/versions';
+import { jestConfigRewrite } from './lib/rewrite-uninferred-targets';
 
 interface Schema {
   project?: string;
@@ -27,26 +29,33 @@ export async function convertToInferred(tree: Tree, options: Schema) {
   assertSupportedJestVersion(tree);
 
   const projectGraph = await createProjectGraphAsync();
-  const migratedProjects =
-    await migrateProjectExecutorsToPlugin<JestPluginOptions>(
-      tree,
-      projectGraph,
-      '@nx/jest/plugin',
-      createNodesV2,
-      { targetName: 'test' },
-      [
-        {
-          executors: ['@nx/jest:jest', '@nrwl/jest:jest'],
-          postTargetTransformer,
-          targetPluginOptionMapper: (targetName) => ({ targetName }),
-        },
-      ],
-      options.project
-    );
+  await convertWithUninferredTargetsRewritten(
+    tree,
+    jestConfigRewrite,
+    async () => {
+      const migratedProjects =
+        await migrateProjectExecutorsToPlugin<JestPluginOptions>(
+          tree,
+          projectGraph,
+          '@nx/jest/plugin',
+          createNodesV2,
+          { targetName: 'test' },
+          [
+            {
+              executors: jestConfigRewrite.executors,
+              postTargetTransformer,
+              targetPluginOptionMapper: (targetName) => ({ targetName }),
+            },
+          ],
+          options.project
+        );
 
-  if (migratedProjects.size === 0) {
-    throw new NoTargetsToMigrateError();
-  }
+      if (migratedProjects.size === 0) {
+        throw new NoTargetsToMigrateError();
+      }
+    },
+    options.project
+  );
 
   if (!options.skipFormat) {
     await formatFiles(tree);

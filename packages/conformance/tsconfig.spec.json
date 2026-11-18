@@ -1,0 +1,25 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "out-tsc/spec",
+    "customConditions": ["@nx/nx-source"],
+    "types": ["vitest/globals", "node"],
+    "composite": true,
+    "rootDir": "."
+  },
+  "include": [
+    "vitest.config.mts",
+    "**/*.test.ts",
+    "**/*.spec.ts",
+    "**/*.d.ts",
+    "*.json"
+  ],
+  "references": [
+    {
+      "path": "../nx"
+    },
+    {
+      "path": "./tsconfig.lib.json"
+    }
+  ]
+}

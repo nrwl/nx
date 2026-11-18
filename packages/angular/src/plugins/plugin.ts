@@ -25,6 +25,7 @@ import { getLockFileName } from '@nx/js';
 import { existsSync, readdirSync, statSync } from 'node:fs';
 import { basename, dirname, isAbsolute, join, relative } from 'node:path';
 import * as posix from 'node:path/posix';
+import { pathToFileURL } from 'node:url';
 import { targetFromTargetString } from '../utils/targets';
 import { findVitestBaseConfig, loadVite } from './utils/vitest';
 
@@ -590,7 +591,7 @@ async function getNgPackagrOutputs(
 
     try {
       if (configPath.endsWith('.js')) {
-        const result = await import(configPath);
+        const result = await import(pathToFileURL(configPath).href);
 
         return result['default'] ?? result;
       }

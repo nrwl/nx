@@ -607,11 +607,18 @@
               "type": "string",
               "description": "The path to write the generated owners file to. Defaults based on format (e.g. '.github/CODEOWNERS')."
             },
+            "prefix": {
+              "type": "string",
+              "description": "Prefix applied to owner strings (e.g. '@org')."
+            },
             "patterns": {
               "type": "array",
               "description": "List of ownership patterns to apply.",
               "items": {
-                "$ref": "#/definitions/ownersPattern"
+                "allOf": [
+                  { "$ref": "#/definitions/ownersPattern" },
+                  { "required": ["owners"] }
+                ]
               }
             },
             "sections": {
@@ -641,7 +648,7 @@
                   },
                   "patterns": {
                     "type": "array",
-                    "description": "List of ownership patterns within this section.",
+                    "description": "List of ownership patterns within this section. A pattern without owners uses the section's defaultOwners.",
                     "items": {
                       "$ref": "#/definitions/ownersPattern"
                     }
@@ -744,20 +751,35 @@
         },
         "files": {
           "type": "array",
-          "description": "File glob patterns this ownership pattern applies to (for non-project-based ownership).",
+          "description": "File glob patterns this ownership pattern applies to. With projects, they are relative to each matched project root.",
           "items": {
             "type": "string"
           }
         },
         "owners": {
-          "type": "array",
-          "description": "List of owners (e.g. GitHub usernames or team handles) for the matched projects or files.",
-          "items": {
-            "type": "string"
-          }
+          "description": "List of owners (e.g. GitHub usernames or team handles) for the matched projects or files, or false to mark them as having no owners.",
+          "oneOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "boolean",
+              "enum": [false]
+            }
+          ]
+        },
+        "applyPrefix": {
+          "type": "boolean",
+          "description": "Whether the root owners prefix applies to this pattern. Defaults to true."
+        },
+        "prefix": {
+          "type": "string",
+          "description": "Prefix for this pattern's owners, taking precedence over the root owners prefix."
         }
       },
-      "required": ["owners"],
       "additionalProperties": false
     },
     "inputs": {

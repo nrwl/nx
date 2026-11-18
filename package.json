@@ -10,6 +10,7 @@
     "check-commit": "node ./scripts/commit-lint.js",
     "check-format": "nx format:check --all",
     "check-format:quick": "nx format:check",
+    "check-oxlint:quick": "node ./scripts/oxlint-changed-files.js",
     "check-imports": "node ./scripts/check-imports.js",
     "check-lock-files": "node ./scripts/check-lock-files.js",
     "check-codeowners": "tsx ./scripts/check-codeowners.ts",
@@ -156,6 +157,7 @@
     "eslint-config-prettier": "catalog:eslint",
     "eslint-plugin-cypress": "^6.3.1",
     "eslint-plugin-import": "^2.32.0",
+    "eslint-plugin-import-x": "^4.17.1",
     "eslint-plugin-jest": "^29.15.2",
     "eslint-plugin-jsx-a11y": "^6.10.2",
     "eslint-plugin-playwright": "^2.10.1",
@@ -290,6 +292,7 @@
       "check-commit",
       "check-format",
       "check-format:quick",
+      "check-oxlint:quick",
       "check-imports",
       "check-lock-files",
       "check-codeowners"

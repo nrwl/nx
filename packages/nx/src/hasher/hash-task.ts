@@ -34,7 +34,9 @@ export async function hashTasksThatDoNotDependOnOutputsOfOtherTasks(
   taskGraph: TaskGraph,
   nxJson: NxJsonConfiguration,
   tasksDetails: TaskDetails | null,
-  ultracacheConfigurations?: UltracacheConfigurations
+  ultracacheConfigurations?: UltracacheConfigurations,
+  /** The tasks to hash; an agent runs a few tasks of a larger task graph. */
+  tasks: Task[] = Object.values(taskGraph.tasks)
 ): Promise<Set<string>> {
   performance.mark('hashMultipleTasks:start');
 
@@ -45,7 +47,6 @@ export async function hashTasksThatDoNotDependOnOutputsOfOtherTasks(
   const deferredByConfiguration = ultracacheConfigurations
     ? new Set(getUltracacheDeferredTaskIds(ultracacheConfigurations, taskGraph))
     : null;
-  const tasks = Object.values(taskGraph.tasks);
   // TODO(v25): remove custom hasher support (NXC-5052).
   const tasksWithHashers = await Promise.all(
     tasks.map(async (task) => {

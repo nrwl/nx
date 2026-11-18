@@ -8,10 +8,7 @@ topics:
   - 'Nx Cloud'
 ---
 
-{% youtube
-src="https://youtu.be/0YxcxIR7QU0"
-title="10x Faster e2e Tests!"
-width="100%" /%}
+{% figure name="atomization" height=380 caption="One 18-minute e2e task, split into one task per spec file and spread across workers. On the next pull request, only the tasks that read the changed file rerun, and only one spec is among them. Everything else comes from the cache, so the run needs fewer workers." /%}
 
 Certain tasks like end-to-end (e2e) tests, integration tests, or large unit test suites can be large, monolithic tasks that take a considerable amount of time to execute. As a result, teams often push them to a nightly or even weekly build rather than running them for each PR. This approach is suboptimal as it increases the risk of merging problematic PRs.
 

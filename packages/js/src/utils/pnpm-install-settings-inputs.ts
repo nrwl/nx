@@ -26,12 +26,6 @@ import { join } from 'path';
  * once, and the pin can be removed later. Plugins re-infer on every graph
  * build, so they use {@link pnpmInstallSettingsInputsForInferredTarget} to
  * add the probe only while no valid pin exists.
- *
- * The contents of vendored non-workspace local-path dependencies also ship in
- * the deploy output but are not covered: their set is derived from the
- * lockfile at build time, so no static input list stays correct as
- * dependencies change. Covering them needs content hashing at the graph level
- * (the pnpm parser's directory/link external nodes hash only name and path).
  */
 export const PNPM_MAJOR_RUNTIME_INPUT: { runtime: string } = {
   runtime: `node -e "try{console.log('pnpm major '+require('child_process').execSync('pnpm --version',{stdio:['ignore','pipe','ignore']}).toString().trim().split('.')[0])}catch{console.log('pnpm major unavailable')}"`,

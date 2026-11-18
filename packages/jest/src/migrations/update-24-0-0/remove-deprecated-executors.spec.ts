@@ -437,22 +437,29 @@ describe('remove-deprecated-executors', () => {
         ...readNxJson(tree),
         targetDefaults: {
           test: {
-            options: { codeCoverage: true },
-            configurations: {
-              ci: { jestConfig: 'apps/app2/jest.ci.config.js' },
-            },
+            options: { passWithNoTests: true },
+            configurations: { ci: { ci: true } },
           },
         },
       });
       createTestProject(tree);
       addApp2('jest.app.config.js');
+      const project = readProjectConfiguration(tree, 'app2');
+      project.targets.test.configurations = {
+        ci: { jestConfig: 'apps/app2/jest.ci.config.js' },
+      };
+      updateProjectConfiguration(tree, 'app2', project);
 
       const { app2 } = await runUpdate();
 
-      expect(app2.test.options).toMatchObject({ coverage: true });
+      expect(app2.test.options).toMatchObject({ passWithNoTests: true });
       expect(app2.test.configurations).toEqual({
-        ci: { command: 'jest --config ./apps/app2/jest.ci.config.js' },
+        ci: {
+          command: 'jest --config ./apps/app2/jest.ci.config.js',
+          ci: true,
+        },
       });
+      projectGraph.nodes.app2.data = readProjectConfiguration(tree, 'app2');
       expect(await getJestProjectsAsync()).toEqual([
         '<rootDir>/apps/app2/jest.app.config.js',
         '<rootDir>/apps/app2/jest.ci.config.js',
@@ -509,6 +516,10 @@ describe('remove-deprecated-executors', () => {
           '@nx/jest:jest': { options: { runInBand: true } },
           test: { options: { silent: true } },
         },
+      },
+      {
+        reason: 'a target-name default sets an option the rewrite renames',
+        targetDefaults: { test: { options: { codeCoverage: true } } },
       },
       {
         reason: 'target defaults would fill a spread',
