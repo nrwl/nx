@@ -10,7 +10,7 @@ import { isVerbose } from './get-env-info';
 // With `--with-deps`, overlapping runs make `apt` fail on Linux. They live in
 // the home directory so another user can't block or hold them.
 const LOCK_DIR = join(homedir(), '.cache', 'nx-e2e-locks');
-// scripts/playwright-install-e2e.mjs takes the same lock.
+// scripts/e2e-browser-install.mjs takes the same lock.
 const PLAYWRIGHT_LOCK_FILE = join(LOCK_DIR, 'playwright-install.lock');
 // Cypress needs the same treatment: it unzips into one cache directory per user,
 // and a second install clears that directory while the first is still unzipping
@@ -71,7 +71,7 @@ export function ensurePlaywrightBrowsersInstallation() {
       `Process ${process.pid} acquired lock, installing Playwright browsers...`
     );
 
-    // scripts/playwright-install-e2e.mjs, a dependency of these specs, installs
+    // scripts/e2e-browser-install.mjs, a dependency of these specs, installs
     // the system packages first, but only when NX_E2E_RUN_E2E is 'true'. Both
     // skip full Chromium, since headless runs use its headless shell.
     const playwrightInstallArgs =

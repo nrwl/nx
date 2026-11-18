@@ -1,12 +1,32 @@
-// Installs browsers and system packages for the Playwright version generated
-// workspaces get (the @nx/playwright generator's range), before the e2e suites
-// run. Holds the lock e2e/utils/ensure-browser-installation.ts takes.
+// Runs a browser testing tool's install command for the version generated
+// workspaces get (its Nx generator's range), before the e2e suites run. Holds
+// the lock e2e/utils/ensure-browser-installation.ts takes for that tool.
 import { execSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+
+// Keyed by npm package name.
+const TOOLS = {
+  playwright: {
+    name: 'Playwright',
+    versionsFile: 'packages/playwright/src/utils/versions.ts',
+    versionConstant: 'playwrightVersion',
+    // Headless runs use Chromium's headless shell, so full Chromium is skipped.
+    installArgs:
+      process.env.PLAYWRIGHT_INSTALL_ARGS || '--with-deps --only-shell',
+  },
+};
+
+const packageName = process.argv[2];
+const tool = TOOLS[packageName];
+if (!tool) {
+  throw new Error(
+    `Usage: node scripts/e2e-browser-install.mjs <${Object.keys(TOOLS).join('|')}>`
+  );
+}
 
 // Matches the e2e-run check in e2e/utils/ensure-browser-installation.ts, which
 // installs the system packages itself when this skips.
@@ -18,22 +38,21 @@ if (process.env.NX_E2E_RUN_E2E !== 'true') {
   const { maxSatisfying, satisfies } = require('semver');
 
   const repoRoot = fileURLToPath(new URL('..', import.meta.url));
-  const versionsFile = new URL(
-    '../packages/playwright/src/utils/versions.ts',
-    import.meta.url
-  );
+  const versionsFile = new URL(`../${tool.versionsFile}`, import.meta.url);
   const range = readFileSync(versionsFile, 'utf-8').match(
-    /playwrightVersion = '([^']+)'/
+    new RegExp(`\\b${tool.versionConstant} = '([^']+)'`)
   )?.[1];
   if (!range) {
-    throw new Error(`No playwrightVersion found in ${versionsFile.pathname}.`);
+    throw new Error(
+      `No ${tool.versionConstant} found in ${versionsFile.pathname}.`
+    );
   }
   // Verdaccio's uplink, which generated workspaces resolve through. The inherited
   // registry can point at a local one that is not running yet.
   const registry = 'https://registry.npmjs.org/';
   const { versions, 'dist-tags': distTags } = JSON.parse(
     execSync(
-      `npm view --registry=${registry} playwright versions dist-tags --json`,
+      `npm view --registry=${registry} ${packageName} versions dist-tags --json`,
       { encoding: 'utf-8' }
     )
   );
@@ -43,28 +62,25 @@ if (process.env.NX_E2E_RUN_E2E !== 'true') {
     ? distTags.latest
     : maxSatisfying(versions, range);
   if (!workspaceVersion) {
-    throw new Error(`No published Playwright version satisfies ${range}.`);
+    throw new Error(`No published ${tool.name} version satisfies ${range}.`);
   }
 
-  // Headless runs use Chromium's headless shell, so full Chromium is skipped.
-  const installArgs =
-    process.env.PLAYWRIGHT_INSTALL_ARGS || '--with-deps --only-shell';
   const lock = new FileLock(
-    join(homedir(), '.cache', 'nx-e2e-locks', 'playwright-install.lock')
+    join(homedir(), '.cache', 'nx-e2e-locks', `${packageName}-install.lock`)
   );
   if (!lock.tryLock()) {
-    console.log('Waiting for another Playwright installation...');
+    console.log(`Waiting for another ${tool.name} installation...`);
     lock.lock();
   }
   try {
     console.log(
-      `Installing Playwright ${workspaceVersion} for generated workspaces.`
+      `Installing ${tool.name} ${workspaceVersion} for generated workspaces.`
     );
     // pnpm reads the .npmrc in cwd, so run from the repo root, not a shared temp
     // dir. --ignore-workspace skips the repo's pnpm-workspace.yaml (overrides),
     // which generated workspaces don't read either.
     execSync(
-      `pnpm --ignore-workspace --registry=${registry} dlx playwright@${workspaceVersion} install ${installArgs}`,
+      `pnpm --ignore-workspace --registry=${registry} dlx ${packageName}@${workspaceVersion} install ${tool.installArgs}`,
       {
         stdio: 'inherit',
         cwd: repoRoot,
@@ -77,7 +93,7 @@ if (process.env.NX_E2E_RUN_E2E !== 'true') {
           // it, so use a cache only this script fills.
           PNPM_CONFIG_CACHE_DIR: join(
             repoRoot,
-            'node_modules/.cache/playwright-install-e2e'
+            'node_modules/.cache/e2e-browser-install'
           ),
         },
       }

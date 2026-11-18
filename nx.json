@@ -353,7 +353,7 @@
       }
     },
     {
-      "plugin": "./tools/workspace-plugin/src/plugins/e2e-playwright-install-plugin.ts",
+      "plugin": "./tools/workspace-plugin/src/plugins/e2e-browser-install-plugin.ts",
       "exclude": ["e2e/detox/**/*", "e2e/react-native/**/*", "e2e/expo/**/*"]
     },
     {
