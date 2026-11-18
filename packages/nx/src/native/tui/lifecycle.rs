@@ -322,6 +322,15 @@ fn with_shared_app<R>(shared: &SharedAppInstance, f: impl FnOnce(&mut dyn TuiApp
     f(&mut *guard)
 }
 
+/// Makes the first read of env vars that dependencies cache, so it happens on the
+/// JS thread: made first on a worker, it races JS adding a variable. Module load is
+/// too early, before root `.env` files apply.
+fn prime_env_caches() {
+    let _ = &*colored::control::SHOULD_COLORIZE;
+    let _ = std::backtrace::Backtrace::capture();
+    crossterm::style::Colored::ansi_color_disabled_memoized();
+}
+
 #[napi]
 #[derive(Clone)]
 pub struct AppLifeCycle {
@@ -471,11 +480,7 @@ impl AppLifeCycle {
 
         let app = self.app.clone();
         let console_socket_paths = NxConsoleMessageConnection::socket_paths(&self.workspace_root);
-        // Memoize these env reads here on the JS thread: made first on a worker, they race
-        // JS adding a variable. Module load is too early, before root `.env` files apply.
-        let _ = &*colored::control::SHOULD_COLORIZE;
-        let _ = std::backtrace::Backtrace::capture();
-        crossterm::style::Colored::ansi_color_disabled_memoized();
+        prime_env_caches();
 
         // Create Tui with FullScreen viewport
         let mut tui = Tui::new().map_err(|e| napi::Error::from_reason(e.to_string()))?;
