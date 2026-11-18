@@ -266,9 +266,10 @@ export function createPackageJson(
     // npm throws EOVERRIDE when an override sets the version of a package that
     // is also a direct dependency (unless specs match). The pruned dist pins
     // exact versions and already resolved everything via the lockfile, so drop
-    // those redundant overrides. An object form without a `.` key sets no
-    // version for the package itself, only for its dependencies, so npm
-    // accepts it next to a direct dependency and it has to be kept.
+    // those redundant overrides. In the object form, only the `.` key sets the
+    // version of the package itself; the other keys only constrain its
+    // dependencies, which npm accepts next to a direct dependency, so they
+    // are kept.
     const mergedOverrides = {
       ...rootPackageJson.overrides,
       ...packageJson.overrides,
@@ -276,17 +277,22 @@ export function createPackageJson(
     const overrides: typeof mergedOverrides = {};
     let hasOverrides = false;
     for (const name in mergedOverrides) {
-      const override = mergedOverrides[name];
-      const constrainsDependenciesOnly =
-        typeof override === 'object' && override !== null && !('.' in override);
+      let override = mergedOverrides[name];
       if (
-        !constrainsDependenciesOnly &&
-        (packageJson.dependencies?.[name] ||
-          packageJson.devDependencies?.[name] ||
-          packageJson.peerDependencies?.[name] ||
-          packageJson.optionalDependencies?.[name])
+        packageJson.dependencies?.[name] ||
+        packageJson.devDependencies?.[name] ||
+        packageJson.peerDependencies?.[name] ||
+        packageJson.optionalDependencies?.[name]
       ) {
-        continue;
+        if (typeof override !== 'object' || override === null) {
+          continue;
+        }
+        const dependencyOverrides = { ...override };
+        delete dependencyOverrides['.'];
+        if (Object.keys(dependencyOverrides).length === 0) {
+          continue;
+        }
+        override = dependencyOverrides;
       }
       overrides[name] = override;
       hasOverrides = true;

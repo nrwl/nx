@@ -1258,7 +1258,7 @@ describe('createPackageJson', () => {
       });
     });
 
-    it('should drop an npm override that pins a direct dependency through a "." key', () => {
+    it('should drop only the "." key of an npm override on a direct dependency', () => {
       spies.push(
         vi
           .spyOn(fs, 'existsSync')
@@ -1274,7 +1274,8 @@ describe('createPackageJson', () => {
               ...rootPackageJson(),
               overrides: {
                 // `.` sets the version of `typescript` itself, which npm
-                // rejects with EOVERRIDE against the direct dependency.
+                // rejects with EOVERRIDE against the direct dependency, while
+                // `foo` only constrains its dependencies and is kept.
                 typescript: { '.': '5.0.0', foo: '1.0.0' },
                 // transitive-only, in either form - must be carried through.
                 foo: '1.0.0',
@@ -1300,10 +1301,43 @@ describe('createPackageJson', () => {
         name: 'other-name',
         version: '1.2.3',
         overrides: {
+          typescript: { foo: '1.0.0' },
           foo: '1.0.0',
           bar: { '.': '2.0.0' },
         },
       });
+    });
+
+    it('should drop an npm override on a direct dependency that only has a "." key', () => {
+      spies.push(
+        vi
+          .spyOn(fs, 'existsSync')
+          .mockImplementation(
+            (path) =>
+              path === 'libs/lib1/package.json' || path === 'package.json'
+          )
+      );
+      spies.push(
+        vi.spyOn(fileutilsModule, 'readJsonFile').mockImplementation((path) => {
+          if (path === 'package.json') {
+            return {
+              ...rootPackageJson(),
+              overrides: {
+                typescript: { '.': '5.0.0' },
+              },
+            };
+          }
+          if (path === 'libs/lib1/package.json') {
+            return projectPackageJson();
+          }
+        })
+      );
+
+      expect(
+        createPackageJson('lib1', graph, {
+          root: '',
+        })
+      ).not.toHaveProperty('overrides');
     });
 
     it('should add resolutions (yarn)', () => {
