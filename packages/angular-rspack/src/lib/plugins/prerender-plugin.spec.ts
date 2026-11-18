@@ -142,7 +142,6 @@ describe('PrerenderPlugin', () => {
   ])(
     'reports a route extraction that fails with %s as a build error',
     async (_, failure, message) => {
-      // A server bundle that throws while loading fails the route extraction.
       extractRoutes.mockRejectedValue(failure);
 
       expect(await buildErrors({ discoverRoutes: true })).toEqual([
