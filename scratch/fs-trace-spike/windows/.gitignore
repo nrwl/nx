@@ -1,9 +1,0 @@
-*.exe
-*.obj
-*.lib
-*.exp
-*.dll
-*.log
-obj-*/
-data/
-src/

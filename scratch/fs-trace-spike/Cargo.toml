@@ -1,8 +1,0 @@
-# Standalone workspace for the spike addon. The shims live in packages/nx/src/native/fstrace
-# and are built by scripts/build-fstrace-shim.mjs.
-[workspace]
-resolver = "2"
-members = ["addon"]
-
-[profile.release]
-opt-level = 3
