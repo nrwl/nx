@@ -184,8 +184,8 @@ public static class Analyzer
                             node.ProjectInstance?.GetPropertyValue("TargetFramework")))
                         .Select(node => node.ProjectInstance!)
                         .ToList();
-                    var tags = ProjectUtilities.GetCommonNxTags(
-                        innerBuilds.Count > 0 ? innerBuilds : nodes.Select(node => node.ProjectInstance!).ToList());
+                    var tags = ProjectUtilities.GetNxTags(
+                        innerBuilds.Count > 0 ? innerBuilds : nodes.Select(node => node.ProjectInstance!));
 
                     // Everything outside the project directory that feeds the build — the nearest
                     // Directory.* ancestors, every file MSBuild imported, and sources or analyzer
