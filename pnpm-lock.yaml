@@ -2238,9 +2238,6 @@ importers:
       loader-utils:
         specifier: 3.3.1
         version: 3.3.1
-      open:
-        specifier: 10.1.0
-        version: 10.1.0
       ora:
         specifier: 'catalog:'
         version: 5.4.1
