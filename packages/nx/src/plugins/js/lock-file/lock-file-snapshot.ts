@@ -143,7 +143,7 @@ export function readLockFileSnapshot(
     lockFileHash: contents.lockFileHash,
     hasExternalDependency(packageName) {
       const nodes = getNodes();
-      if (nodes[packageName]) {
+      if (Object.hasOwn(nodes, packageName)) {
         return true;
       }
       const npmNode = nodes[`npm:${packageName}`];
