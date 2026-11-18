@@ -50,8 +50,8 @@ describe('@nx/vitest glob discovery against a real filesystem', () => {
         .fn()
         .mockImplementation(async (inlineConfig: Record<string, any>) => {
           // Emulates vite's config hook phases (pre, user, post) for the
-          // root value only.
-          let root = rawRoot;
+          // root value only. An inline root replaces the authored one.
+          let root = inlineConfig?.root ?? rawRoot;
           const runHook = (plugin: Record<string, any>) => {
             const hook =
               typeof plugin.config === 'function'
@@ -164,6 +164,29 @@ describe('@nx/vitest glob discovery against a real filesystem', () => {
 
       expect(targets['test'].inputs).toContainEqual(
         '{workspaceRoot}/tools/vitest/setup.mts'
+      );
+    });
+
+    it("should resolve entries against the project root when cwd 'workspaceRoot' replaces an authored root", async () => {
+      await temp.createFiles({
+        'libs/lib1/vitest.config.ts': '',
+        'libs/lib1/package.json': '{"name":"lib1"}',
+        'libs/lib1/src/a.spec.ts': '',
+        'libs/tools/setup.mts': '',
+        'tools/setup.mts': '',
+      });
+      mockResolvedTestConfig({ setupFiles: ['../../tools/setup.mts'] }, 'sub');
+
+      const targets = await getProjectTargets('libs/lib1/vitest.config.ts', {
+        testTargetName: 'test',
+        cwd: 'workspaceRoot',
+      });
+
+      expect(targets['test'].inputs).toContainEqual(
+        '{workspaceRoot}/tools/setup.mts'
+      );
+      expect(targets['test'].inputs).not.toContainEqual(
+        '{workspaceRoot}/libs/tools/setup.mts'
       );
     });
 
@@ -840,6 +863,162 @@ describe('@nx/vitest glob discovery against a real filesystem', () => {
     expect(targets['test-ci'].outputs).toEqual([
       `{projectRoot}/coverage/src/root.spec.ts`,
     ]);
+  });
+
+  describe("cwd: 'workspaceRoot'", () => {
+    const workspaceRootOptions: VitestPluginOptions = {
+      testTargetName: 'test',
+      ciTargetName: 'test-ci',
+      cwd: 'workspaceRoot',
+    };
+
+    it('should run a nested project from the workspace root with --root', async () => {
+      await temp.createFiles({
+        'libs/lib1/vitest.config.ts': '',
+        'libs/lib1/package.json': '{"name":"lib1"}',
+        'libs/lib1/src/a.spec.ts': '',
+      });
+      mockResolvedTestConfig({}, join(temp.tempDir, 'libs/lib1'));
+
+      const projectRootTargets = await getProjectTargets(
+        'libs/lib1/vitest.config.ts'
+      );
+      const targets = await getProjectTargets(
+        'libs/lib1/vitest.config.ts',
+        workspaceRootOptions
+      );
+
+      expect(targets.test.command).toBe('vitest --root libs/lib1');
+      expect(targets.test.options.cwd).toBe('.');
+      expect(targets['test-ci--src/a.spec.ts'].command).toBe(
+        'vitest run --root libs/lib1 libs/lib1/src/a.spec.ts --coverage.reportsDirectory=coverage/src/a.spec.ts'
+      );
+      expect(targets['test-ci--src/a.spec.ts'].options.cwd).toBe('.');
+      for (const name of ['test', 'test-ci', 'test-ci--src/a.spec.ts']) {
+        expect(targets[name].inputs).toEqual(projectRootTargets[name].inputs);
+        expect(targets[name].outputs).toEqual(projectRootTargets[name].outputs);
+      }
+    });
+
+    it('should leave a workspace-root project unchanged', async () => {
+      await temp.createFiles({
+        'vitest.config.ts': '',
+        'src/root.spec.ts': '',
+      });
+      mockResolvedTestConfig({});
+
+      const projectRootTargets = await getProjectTargets('vitest.config.ts');
+      const targets = await getProjectTargets(
+        'vitest.config.ts',
+        workspaceRootOptions
+      );
+
+      expect(targets.test.command).toBe('vitest');
+      expect(targets['test-ci--src/root.spec.ts'].command).toBe(
+        'vitest run src/root.spec.ts --coverage.reportsDirectory=coverage/src/root.spec.ts'
+      );
+      expect(targets).toEqual(projectRootTargets);
+    });
+
+    it('should map coverage from the project root when --root replaces an authored root', async () => {
+      await temp.createFiles({
+        'libs/lib1/vitest.config.ts': '',
+        'libs/lib1/package.json': '{"name":"lib1"}',
+        'libs/lib1/src/a.spec.ts': '',
+      });
+      mockResolvedTestConfig({}, './test-root');
+
+      const targets = await getProjectTargets(
+        'libs/lib1/vitest.config.ts',
+        workspaceRootOptions
+      );
+
+      expect(targets['test-ci--src/a.spec.ts'].outputs).toEqual([
+        `{projectRoot}/coverage/src/a.spec.ts`,
+      ]);
+    });
+
+    it('should resolve a relative test.root against the workspace root', async () => {
+      await temp.createFiles({
+        'libs/lib1/vitest.config.ts': '',
+        'libs/lib1/package.json': '{"name":"lib1"}',
+        'libs/lib1/test-root/src/a.spec.ts': '',
+      });
+      mockResolvedTestConfig({ root: 'libs/lib1/test-root' });
+
+      const targets = await getProjectTargets(
+        'libs/lib1/vitest.config.ts',
+        workspaceRootOptions
+      );
+
+      expect(targets['test-ci--test-root/src/a.spec.ts'].command).toBe(
+        'vitest run --root libs/lib1 libs/lib1/test-root/src/a.spec.ts --coverage.reportsDirectory=coverage/test-root/src/a.spec.ts'
+      );
+      expect(targets['test-ci--test-root/src/a.spec.ts'].outputs).toEqual([
+        `{projectRoot}/test-root/coverage/test-root/src/a.spec.ts`,
+      ]);
+    });
+
+    it('should enumerate from a test.dir relative to the workspace root', async () => {
+      await temp.createFiles({
+        'libs/lib1/vitest.config.ts': '',
+        'libs/lib1/package.json': '{"name":"lib1"}',
+        'libs/lib1/src/a.spec.ts': '',
+        'libs/lib1/tests/b.spec.ts': '',
+      });
+      mockResolvedTestConfig({ dir: 'libs/lib1/tests' });
+
+      const targets = await getProjectTargets(
+        'libs/lib1/vitest.config.ts',
+        workspaceRootOptions
+      );
+
+      expect(
+        Object.keys(targets).filter((name) => name.startsWith('test-ci--'))
+      ).toEqual(['test-ci--tests/b.spec.ts']);
+      expect(targets['test-ci--tests/b.spec.ts'].command).toBe(
+        'vitest run --root libs/lib1 libs/lib1/tests/b.spec.ts --coverage.reportsDirectory=coverage/tests/b.spec.ts'
+      );
+    });
+
+    it('should not redirect coverage for a reportsDirectory that resolves to the project root under test.root', async () => {
+      await temp.createFiles({
+        'libs/lib1/vitest.config.ts': '',
+        'libs/lib1/package.json': '{"name":"lib1"}',
+        'libs/lib1/test-root/src/a.spec.ts': '',
+      });
+      mockResolvedTestConfig({
+        root: 'libs/lib1/test-root',
+        coverage: { reportsDirectory: '..' },
+      });
+
+      const targets = await getProjectTargets(
+        'libs/lib1/vitest.config.ts',
+        workspaceRootOptions
+      );
+
+      expect(targets['test-ci--test-root/src/a.spec.ts'].command).toBe(
+        'vitest run --root libs/lib1 libs/lib1/test-root/src/a.spec.ts'
+      );
+    });
+
+    it('should not redirect coverage for a reportsDirectory that resolves to the workspace root', async () => {
+      await temp.createFiles({
+        'libs/lib1/vitest.config.ts': '',
+        'libs/lib1/package.json': '{"name":"lib1"}',
+        'libs/lib1/src/a.spec.ts': '',
+      });
+      mockResolvedTestConfig({ coverage: { reportsDirectory: '../..' } });
+
+      const targets = await getProjectTargets(
+        'libs/lib1/vitest.config.ts',
+        workspaceRootOptions
+      );
+
+      expect(targets['test-ci--src/a.spec.ts'].command).toBe(
+        'vitest run --root libs/lib1 libs/lib1/src/a.spec.ts'
+      );
+    });
   });
 
   it.each([
