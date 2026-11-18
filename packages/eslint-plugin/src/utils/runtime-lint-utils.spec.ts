@@ -15,6 +15,7 @@ import {
   hasBannedImport,
   hasNoneOfTheseTags,
   belongsToDifferentEntryPoint,
+  getSecondaryEntryPointPath,
   isTerminalRun,
   parseExports,
 } from './runtime-lint-utils';
@@ -519,6 +520,18 @@ describe('isAngularSecondaryEntrypoint', () => {
       'libs/features/secondary/random/folder/api.ts': 'const bla = "foo"',
     };
     vol.fromJSON(fsJson, '/root');
+  });
+
+  it('does not throw when the workspace has no root tsconfig', () => {
+    vol.unlinkSync('/root/tsconfig.base.json');
+
+    expect(
+      getSecondaryEntryPointPath(
+        '@project/standard',
+        'libs/features/src/index.ts',
+        'libs/standard'
+      )
+    ).toBeUndefined();
   });
 
   it('should return false if they belong to same entrypoints', () => {
