@@ -5,8 +5,10 @@ import {
   createFile,
   detectPackageManager,
   getPackageManagerCommand,
+  logError,
   newProject,
   packageManagerLockFile,
+  promisifiedTreeKill,
   readFile,
   readJson,
   rmDist,
@@ -70,46 +72,68 @@ describe('js:tsc executor', () => {
         },
       }
     );
-    updateFile(`libs/${lib}/README.md`, `Hello, World!`);
-    updateJson(`libs/${lib}/package.json`, (json) => {
-      json.version = '999.9.9';
-      return json;
-    });
-    updateFile(`libs/${lib}/docs/a/b/nested.md`, 'Nested File');
-    await expect(
-      waitUntil(
-        () => readFile(`dist/libs/${lib}/README.md`).includes(`Hello, World!`),
-        {
-          timeout: 20_000,
-          ms: 500,
+    let watchCleanupError: unknown;
+    try {
+      updateFile(`libs/${lib}/README.md`, `Hello, World!`);
+      updateJson(`libs/${lib}/package.json`, (json) => {
+        json.version = '999.9.9';
+        return json;
+      });
+      updateFile(`libs/${lib}/docs/a/b/nested.md`, 'Nested File');
+      await expect(
+        waitUntil(
+          () =>
+            readFile(`dist/libs/${lib}/README.md`).includes(`Hello, World!`),
+          {
+            timeout: 20_000,
+            ms: 500,
+          }
+        )
+      ).resolves.not.toThrow();
+      await expect(
+        waitUntil(
+          () =>
+            readFile(`dist/libs/${lib}/docs/a/b/nested.md`).includes(
+              `Nested File`
+            ),
+          {
+            timeout: 20_000,
+            ms: 500,
+          }
+        )
+      ).resolves.not.toThrow();
+      await expect(
+        waitUntil(
+          () =>
+            readFile(`dist/libs/${lib}/package.json`).includes(
+              `"version": "999.9.9"`
+            ),
+          {
+            timeout: 20_000,
+            ms: 500,
+          }
+        )
+      ).resolves.not.toThrow();
+    } finally {
+      if (
+        libBuildProcess.pid !== undefined &&
+        libBuildProcess.exitCode === null &&
+        libBuildProcess.signalCode === null
+      ) {
+        try {
+          await promisifiedTreeKill(libBuildProcess.pid, 'SIGKILL');
+        } catch (error) {
+          watchCleanupError = error;
+          logError(
+            'Failed to stop the TypeScript watch process',
+            String(error)
+          );
         }
-      )
-    ).resolves.not.toThrow();
-    await expect(
-      waitUntil(
-        () =>
-          readFile(`dist/libs/${lib}/docs/a/b/nested.md`).includes(
-            `Nested File`
-          ),
-        {
-          timeout: 20_000,
-          ms: 500,
-        }
-      )
-    ).resolves.not.toThrow();
-    await expect(
-      waitUntil(
-        () =>
-          readFile(`dist/libs/${lib}/package.json`).includes(
-            `"version": "999.9.9"`
-          ),
-        {
-          timeout: 20_000,
-          ms: 500,
-        }
-      )
-    ).resolves.not.toThrow();
-    libBuildProcess.kill();
+      }
+    }
+    if (watchCleanupError !== undefined) {
+      throw watchCleanupError;
+    }
 
     const parentLib = uniq('parentlib');
     runCLI(
