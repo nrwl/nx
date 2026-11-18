@@ -8,7 +8,7 @@
 //! `WorkspaceFileIndex` is here because the index over the file map was, and
 //! is about the workspace rather than about ignored files; see NXC-5006.
 
-use std::collections::HashMap;
+use std::collections::{BTreeSet, HashMap};
 use std::path::Path;
 use std::sync::{Arc, OnceLock};
 
@@ -16,7 +16,7 @@ use anyhow::Result;
 use rayon::prelude::*;
 use xxhash_rust::xxh3;
 
-use super::disk_expansion::{FilesExpansion, Source, expand_globs};
+use super::disk_expansion::{FilesExpansion, Source, expand_globs, parse_group, scope_roots};
 use crate::native::types::FileData;
 use crate::native::workspace::ignored_index::{IgnoredIndex, RunStage};
 
@@ -94,18 +94,37 @@ impl WorkspaceFileIndex {
 pub(crate) fn collect_ignored_file_paths(
     workspace_root: &Path,
     globs: &[String],
+    project_roots: &[String],
     source: &Source,
 ) -> Result<Vec<String>> {
-    Ok(expand_globs(workspace_root, globs, source)?.files)
+    Ok(expand_globs(workspace_root, globs, project_roots, source)?.files)
 }
 
 #[napi]
 /// The files an `includeIgnored` fileset group matches on disk, sorted.
-pub fn expand_files_input(workspace_root: String, globs: Vec<String>) -> Result<Vec<String>> {
+/// Given the workspace's project roots, an entry skips projects nested below
+/// the one it reads from, as hashing does.
+pub fn expand_files_input(
+    workspace_root: String,
+    globs: Vec<String>,
+    project_roots: Option<Vec<String>>,
+) -> Result<Vec<String>> {
     let workspace_root = Path::new(&workspace_root);
+    let roots = match project_roots {
+        Some(all) => {
+            let all: BTreeSet<String> = all
+                .into_iter()
+                .map(|root| root.trim_end_matches('/').to_string())
+                .filter(|root| !root.is_empty() && root != ".")
+                .collect();
+            scope_roots(&parse_group(&globs)?.0, &all)
+        }
+        None => Vec::new(),
+    };
     collect_ignored_file_paths(
         workspace_root,
         &globs,
+        &roots,
         &Source::fileset_from_disk(workspace_root),
     )
 }

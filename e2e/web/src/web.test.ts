@@ -3,18 +3,20 @@ import {
   checkFilesExist,
   cleanupProject,
   createFile,
+  getSelectedPackageManager,
   isNotWindows,
   killPorts,
   listFiles,
   newProject,
   readFile,
+  reservePort,
   runCLI,
   runCLIAsync,
-  runE2ETests,
   tmpProjPath,
   uniq,
   updateFile,
   updateJson,
+  shouldRunPlaywrightTests,
 } from '@nx/e2e-utils';
 import { join } from 'path';
 import { copyFileSync } from 'fs';
@@ -38,8 +40,9 @@ describe('Web Components Applications', () => {
 
   it('should be able to generate a web app', async () => {
     const appName = uniq('app');
+    const port = await reservePort();
     runCLI(
-      `generate @nx/web:app apps/${appName} --bundler=webpack --no-interactive --unitTestRunner=vitest --linter=eslint`
+      `generate @nx/web:app apps/${appName} --bundler=webpack --no-interactive --unitTestRunner=vitest --linter=eslint --port=${port}`
     );
 
     const lintResults = runCLI(`lint ${appName}`);
@@ -54,10 +57,10 @@ describe('Web Components Applications', () => {
 
     expect(lintE2eResults).toContain('Successfully ran target lint');
 
-    if (isNotWindows() && (await runE2ETests())) {
+    if (isNotWindows() && (await shouldRunPlaywrightTests())) {
       const e2eResults = runCLI(`e2e ${appName}-e2e`);
       expect(e2eResults).toContain('Successfully ran target e2e for project');
-      await killPorts();
+      await killPorts(port);
     }
 
     copyFileSync(
@@ -438,3 +441,25 @@ function setPluginOption(
     );
   });
 }
+
+describe('Web Components Applications - pnpm build scripts', () => {
+  beforeAll(() => newProject({ packages: ['@nx/web', '@nx/vitest'] }));
+  afterAll(() => cleanupProject());
+
+  it('should record an allowBuilds decision for @swc/core on pnpm', () => {
+    if (getSelectedPackageManager() !== 'pnpm') {
+      return;
+    }
+
+    const appName = uniq('app');
+    runCLI(
+      `generate @nx/web:app apps/${appName} --bundler=none --compiler=swc --no-interactive --unitTestRunner=none --e2eTestRunner=none`
+    );
+
+    // pnpm 11 refuses to install deps whose build scripts are neither allowed
+    // nor denied, so the app generator must have recorded a decision
+    expect(readFile('pnpm-workspace.yaml')).toMatch(
+      /['"]@swc\/core['"]: false/
+    );
+  }, 300_000);
+});

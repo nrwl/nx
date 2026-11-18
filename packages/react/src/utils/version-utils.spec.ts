@@ -23,11 +23,11 @@ import {
 
 let projectGraph: ProjectGraph;
 
-jest.mock('@nx/devkit', () => {
-  const original = jest.requireActual('@nx/devkit');
+vi.mock('@nx/devkit', async () => {
+  const original = await vi.importActual<any>('@nx/devkit');
   return {
     ...original,
-    createProjectGraphAsync: jest
+    createProjectGraphAsync: vi
       .fn()
       .mockImplementation(() => Promise.resolve(projectGraph)),
   };

@@ -1,4 +1,5 @@
 import {
+  FileChange,
   isWholeFileChange,
   WholeFileChange,
 } from '../../../../project-graph/file-utils';
@@ -8,8 +9,12 @@ import {
   JsonChange,
 } from '../../../../utils/json-diff';
 import { logger } from '../../../../utils/logger';
-import { TouchedProjectLocator } from '../../../../project-graph/affected/affected-project-graph-models';
 import {
+  DependencyChanges,
+  TouchedProjectLocator,
+} from '../../../../project-graph/affected/affected-project-graph-models';
+import {
+  ProjectGraph,
   ProjectGraphExternalNode,
   ProjectGraphProjectNode,
 } from '../../../../config/project-graph';
@@ -18,14 +23,94 @@ import { getPackageNameFromImportPath } from '../../../../utils/get-package-name
 
 export const getTouchedNpmPackages: TouchedProjectLocator<
   WholeFileChange | JsonChange
-> = (touchedFiles, _, nxJson, packageJson, projectGraph): string[] => {
+> = (touchedFiles, _nodes, nxJson, _packageJson, projectGraph): string[] =>
+  touchedNpmPackages(touchedFiles, nxJson, projectGraph) ??
+  Object.keys(projectGraph.nodes);
+
+/**
+ * The same change as task selection consumes it: the packages that moved,
+ * which a plan names as `External`, and the workspace projects the root
+ * package.json depends on directly.
+ */
+export function packageJsonDependencyChanges(
+  touchedFiles: FileChange<WholeFileChange | JsonChange>[],
+  nxJson: NxJsonConfiguration,
+  projectGraph: ProjectGraph
+): DependencyChanges {
+  const touched = touchedNpmPackages(touchedFiles, nxJson, projectGraph);
+  if (touched === null) {
+    return { externals: [], changedExternalTypes: ['npm'], projects: [] };
+  }
+  return {
+    externals: touched.filter((name) => name in projectGraph.externalNodes),
+    changedExternalTypes: [],
+    projects: touched.filter((name) => name in projectGraph.nodes),
+  };
+}
+
+const PNPM_WORKSPACE_FILES = ['pnpm-workspace.yaml', 'pnpm-workspace.yml'];
+
+/**
+ * External nodes and workspace projects the root package.json change names,
+ * or null when it cannot be pinned to them: a removed dependency, a global
+ * package, or an override selector matching nothing in the graph.
+ *
+ * Also reads `overrides` from `pnpm-workspace.yaml` (pnpm 10+): the field
+ * moves there when the root `package.json` has no `pnpm` block, and pnpm 12
+ * no longer reads `package.json#pnpm` at all. Yaml override diffs are rewritten
+ * to the `pnpm.overrides.*` path and matched by the existing pnpm selector
+ * logic. Catalog and other workspace settings are left alone.
+ */
+function touchedNpmPackages(
+  touchedFiles: FileChange<WholeFileChange | JsonChange>[],
+  nxJson: NxJsonConfiguration,
+  projectGraph: ProjectGraph
+): string[] | null {
   const packageJsonChange = touchedFiles.find((f) => f.file === 'package.json');
-  if (!packageJsonChange) return [];
+  const workspaceYamlChange = touchedFiles.find((f) =>
+    PNPM_WORKSPACE_FILES.includes(f.file)
+  );
+  if (!packageJsonChange && !workspaceYamlChange) return [];
 
   const globalPackages = new Set(getGlobalPackages(nxJson.plugins));
 
   let touched = [];
-  const changes = packageJsonChange.getChanges();
+  const changes: (WholeFileChange | JsonChange)[] = packageJsonChange
+    ? [...packageJsonChange.getChanges()]
+    : [];
+
+  if (workspaceYamlChange) {
+    for (const c of workspaceYamlChange.getChanges()) {
+      // Unparseable yaml - be conservative and fall back to all projects.
+      if (!isJsonChange(c)) return null;
+
+      // Catalog, patchedDependencies, settings, etc. do not change which
+      // packages the lockfile resolves to.
+      if (c.path[0] !== 'overrides') continue;
+
+      // Replacing the whole `overrides` map with something non-mappy
+      // (null, scalar, array) is a shape we don't understand - fall back.
+      if (c.path.length === 1) {
+        if (!isObjectOrUndefined(c.value.lhs)) return null;
+        if (!isObjectOrUndefined(c.value.rhs)) return null;
+      } else {
+        // pnpm's workspace overrides take string selectors as keys and
+        // string versions as leaves; a non-string leaf is a shape we
+        // don't model.
+        if (c.value.lhs !== undefined && typeof c.value.lhs !== 'string') {
+          return null;
+        }
+        if (c.value.rhs !== undefined && typeof c.value.rhs !== 'string') {
+          return null;
+        }
+      }
+
+      changes.push({
+        ...c,
+        path: ['pnpm', 'overrides', ...c.path.slice(1)],
+      });
+    }
+  }
 
   const npmPackages = Object.values(projectGraph.externalNodes);
   let packagesByName: Map<string, ProjectGraphExternalNode[]> | undefined;
@@ -38,10 +123,8 @@ export const getTouchedNpmPackages: TouchedProjectLocator<
       (c.path[0] === 'dependencies' || c.path[0] === 'devDependencies') &&
       c.path.length === 2
     ) {
-      // A package was deleted so mark all workspace projects as touched.
       if (c.type === JsonDiffType.Deleted) {
-        touched = Object.keys(projectGraph.nodes);
-        break;
+        return null;
       } else {
         let npmPackage: ProjectGraphProjectNode | ProjectGraphExternalNode =
           npmPackages.find((pkg) => pkg.data.packageName === c.path[1]);
@@ -67,7 +150,7 @@ export const getTouchedNpmPackages: TouchedProjectLocator<
 
         if ('packageName' in npmPackage.data) {
           if (globalPackages.has(npmPackage.data.packageName)) {
-            return Object.keys(projectGraph.nodes);
+            return null;
           }
         }
       }
@@ -87,10 +170,9 @@ export const getTouchedNpmPackages: TouchedProjectLocator<
         c.path[0] === 'pnpm'
       );
 
-      // An unresolved selector can still target a transitive dependency,
-      // so fall back to marking every project affected.
+      // An unresolved selector can still target a transitive dependency.
       if (!matchingNpmPackages.length) {
-        return Object.keys(projectGraph.nodes);
+        return null;
       }
 
       if (
@@ -98,7 +180,7 @@ export const getTouchedNpmPackages: TouchedProjectLocator<
           globalPackages.has(pkg.data.packageName)
         )
       ) {
-        return Object.keys(projectGraph.nodes);
+        return null;
       }
 
       touched.push(...matchingNpmPackages.map((pkg) => pkg.name));
@@ -117,7 +199,7 @@ export const getTouchedNpmPackages: TouchedProjectLocator<
     );
   }
   return [...new Set(touched)];
-};
+}
 
 function getPackageSelector(change: JsonChange): string | undefined {
   if (
@@ -175,4 +257,11 @@ function getGlobalPackages(plugins: NxJsonConfiguration['plugins']) {
       getPackageNameFromImportPath(typeof p === 'string' ? p : p.plugin)
     )
     .concat('nx');
+}
+
+function isObjectOrUndefined(value: unknown): boolean {
+  return (
+    value === undefined ||
+    (value !== null && typeof value === 'object' && !Array.isArray(value))
+  );
 }

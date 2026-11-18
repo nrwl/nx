@@ -19,11 +19,17 @@ import {
 } from './get-env-info';
 
 import { output, readJsonFile } from '@nx/devkit';
-import { angularDevkitVersion as defaultAngularCliVersion } from '@nx/angular/internal';
 import { typescriptVersion as defaultTypescriptVersion } from '@nx/js/src/utils/versions';
 import { dump } from '@zkochan/js-yaml';
 import { execFileSync, execSync, ExecSyncOptions } from 'node:child_process';
-import { existsSync, readFileSync } from 'node:fs';
+import {
+  existsSync,
+  lstatSync,
+  readdirSync,
+  readFileSync,
+  realpathSync,
+  writeFileSync,
+} from 'node:fs';
 import { join, resolve } from 'node:path';
 import { performance, PerformanceMeasure } from 'node:perf_hooks';
 import { resetWorkspaceContext } from 'nx/src/utils/workspace-context';
@@ -37,9 +43,14 @@ import { logError, logInfo } from './log-utils';
 
 let projName: string;
 
+const defaultAngularCliVersion: string = readJsonFile(
+  require.resolve('@angular/cli/package.json')
+).version;
+
 // TODO(jack): we should tag the projects (e.g. tags: ['package']) and filter from that rather than hard-code packages.
 const nxPackages = [
   `@nx/angular`,
+  `@nx/conformance`,
   `@nx/cypress`,
   `@nx/docker`,
   `@nx/eslint-plugin`,
@@ -54,9 +65,11 @@ const nxPackages = [
   `@nx/next`,
   `@nx/node`,
   `@nx/nuxt`,
+  `@nx/owners`,
   `@nx/oxlint`,
   `@nx/plugin`,
   `@nx/playwright`,
+  `@nx/rolldown`,
   `@nx/rollup`,
   `@nx/react`,
   `@nx/remix`,
@@ -89,17 +102,14 @@ export function openInEditor(projectDirectory: string = tmpProjPath()) {
 /**
  * Locate a pre-built base workspace template for this package manager and preset,
  * produced by the `populate-e2e-base-workspace` task and restored via Nx cache on
- * each agent. Templates are not selected for `NX_ADD_PLUGINS=false`; combinations
- * that were not pre-built also fall back to building the workspace the original way.
+ * each agent. Combinations that were not pre-built fall back to building the
+ * workspace the original way.
  */
 function sharedBaseWorkspacePath(
   packageManager: string,
   preset: string
 ): string | null {
-  if (
-    process.env.NX_E2E_SKIP_SHARED_BASE === 'true' ||
-    process.env.NX_ADD_PLUGINS === 'false'
-  ) {
+  if (process.env.NX_E2E_SKIP_SHARED_BASE === 'true') {
     return null;
   }
   const candidate = join(
@@ -112,6 +122,72 @@ function sharedBaseWorkspacePath(
     `${packageManager}-${preset}.tar`
   );
   return existsSync(candidate) ? candidate : null;
+}
+
+/**
+ * pnpm writes the absolute store path into node_modules/.modules.yaml and refuses to
+ * touch the tree when it no longer matches (ERR_PNPM_UNEXPECTED_STORE). The template
+ * is built on a different machine from the one that seeds a workspace out of it, so
+ * repoint the record at this machine's store. Reinstalling would also fix it, and
+ * would cost the whole saving the template exists for.
+ */
+function alignPnpmStoreDir(workspace: string): void {
+  const modulesYaml = join(workspace, 'node_modules', '.modules.yaml');
+  if (!existsSync(modulesYaml)) {
+    return;
+  }
+  const storeDir = execSync('pnpm store path', {
+    cwd: workspace,
+    encoding: 'utf-8',
+    stdio: ['ignore', 'pipe', 'pipe'],
+  }).trim();
+  const contents = readFileSync(modulesYaml, 'utf-8');
+  // Rewritten in place rather than re-dumped: pnpm 10 writes plain YAML and pnpm 11
+  // a JSON-ish dialect, and only this one value is machine-specific.
+  const updated = contents.replace(
+    /^(\s*"?storeDir"?\s*:\s*)("[^"]*"|[^,\n]*)/m,
+    (_match, key) => `${key}${JSON.stringify(storeDir)}`
+  );
+  if (updated !== contents) {
+    writeFileSync(modulesYaml, updated);
+  }
+}
+
+/**
+ * pnpm bin shims hardcode absolute NODE_PATHs, so a copied workspace's shims still
+ * resolve the hidden hoist dir (node_modules/.pnpm/node_modules) of the original.
+ */
+function repointPnpmBinShims(
+  workspace: string,
+  from: string,
+  to: string
+): void {
+  const [fromDir, toDir] = [`${from}/`, `${to}/`];
+  const visit = (dir: string, depth: number) => {
+    const binDir = join(dir, 'node_modules', '.bin');
+    if (existsSync(binDir)) {
+      for (const name of readdirSync(binDir)) {
+        const shim = join(binDir, name);
+        // Symlinked bins point into the store; rewriting them would edit the store.
+        if (!lstatSync(shim).isFile()) continue;
+        const contents = readFileSync(shim, 'utf-8');
+        if (contents.includes(fromDir)) {
+          writeFileSync(shim, contents.split(fromDir).join(toDir));
+        }
+      }
+    }
+    if (depth === 0) return;
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      if (
+        entry.isDirectory() &&
+        entry.name !== 'node_modules' &&
+        !entry.name.startsWith('.')
+      ) {
+        visit(join(dir, entry.name), depth - 1);
+      }
+    }
+  };
+  visit(workspace, 2);
 }
 
 // Package managers whose workspace has already been built once in this process.
@@ -128,7 +204,7 @@ export function newProject({
   packageManager = getSelectedPackageManager(),
   packages,
   preset = 'apps',
-  typescriptVersion = defaultTypescriptVersion,
+  typescriptVersion,
   keepBackup = false,
 }: {
   name?: string;
@@ -180,6 +256,9 @@ export function newProject({
           ],
           { stdio: 'pipe' }
         );
+        if (packageManager === 'pnpm') {
+          alignPnpmStoreDir(stagingDirectory);
+        }
         // runCreateWorkspace (the else branch) sets the module-level projName as a
         // side effect that downstream helpers (packageInstall ->
         // getPackageManagerCommand) rely on; mirror it when seeding from the template.
@@ -231,13 +310,8 @@ export function newProject({
         // Installing typescript directly reclaims that slot. pnpm/yarn resolve
         // peers per dependent, so they are unaffected.
         // TODO: remove once tsquery bounds its peer or nx stops depending on it.
-        // The `apps` preset pins typescript ~6.0.3, so any suite that needs an
-        // older line (Remix) re-pins regardless of package manager.
-        if (
-          packageManager === 'npm' ||
-          typescriptVersion !== defaultTypescriptVersion
-        ) {
-          packageInstall('typescript', projScope, typescriptVersion);
+        if (packageManager === 'npm') {
+          packageInstall('typescript', projScope, defaultTypescriptVersion);
         }
         const packageInstallEnd = performance.mark('packageInstall:end');
         packageInstallMeasure = performance.measure(
@@ -252,6 +326,7 @@ export function newProject({
       execSync(`${getPackageManagerCommand({ packageManager }).runNx} reset`, {
         cwd: stagingDirectory,
         stdio: isVerbose() ? 'inherit' : 'pipe',
+        env: getStrippedEnvironmentVariables(stagingDirectory),
       });
 
       if (keepBackup || builtOnce.has(packageManager)) {
@@ -291,11 +366,28 @@ export function newProject({
           env: { CI: 'true', ...process.env },
           encoding: 'utf-8',
         });
+        // pnpm 12 skips an install whose lockfile is unchanged, so the copied bin
+        // shims keep NODE_PATHs into the staging directory the backup was built in.
+        repointPnpmBinShims(
+          projectDirectory,
+          join(realpathSync(e2eCwd), projScope),
+          realpathSync(projectDirectory)
+        );
       } catch (e) {
         console.log('newProject() - reinstall pnpm dependencies failed');
         console.error('Full error:', e);
         throw e;
       }
+    }
+
+    // Apply suite-specific versions after copying the shared package-manager
+    // backup so they work for every package manager without changing the backup.
+    if (
+      typescriptVersion &&
+      readJsonFile(`${projectDirectory}/package.json`).devDependencies
+        ?.typescript !== typescriptVersion
+    ) {
+      packageInstall('typescript', projName, typescriptVersion);
     }
 
     const newProjectEnd = performance.mark('new-project:end');
@@ -370,7 +462,7 @@ export function runCreateWorkspace(
     extraArgs?: string;
     useDetectedPm?: boolean;
     cwd?: string;
-    bundler?: 'webpack' | 'vite';
+    bundler?: 'webpack' | 'vite' | 'rspack' | 'esbuild';
     standaloneApi?: boolean;
     routing?: boolean;
     useReactRouter?: boolean;
@@ -648,7 +740,9 @@ export function runNgNew(
   }
 
   projName = uniq('ng-proj');
-  const command = `${pmc.runUninstalledPackage} @angular/cli@${angularCliVersion} new ${projName} --package-manager=${packageManager}`;
+  // Installed once below, after the ranges are pinned. Installing here would
+  // resolve the latest minor, which npm then refuses to downgrade to the pin.
+  const command = `${pmc.runUninstalledPackage} @angular/cli@${angularCliVersion} new ${projName} --package-manager=${packageManager} --skip-install`;
   execSync(command, {
     cwd: e2eCwd,
     stdio: isVerbose() ? 'inherit' : 'pipe',

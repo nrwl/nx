@@ -393,7 +393,7 @@ function collectDependentTasks(
   areTopLevelDeps = true,
   dependentTasks = new Map<string, { project: string; isTopLevel: boolean }>()
 ): Map<string, { project: string; isTopLevel: boolean }> {
-  for (const depTask of taskGraph.dependencies[task] ?? []) {
+  for (const { id: depTask } of taskGraph.dependencies[task] ?? []) {
     if (dependentTasks.has(depTask)) {
       if (!dependentTasks.get(depTask).isTopLevel && areTopLevelDeps) {
         dependentTasks.get(depTask).isTopLevel = true;

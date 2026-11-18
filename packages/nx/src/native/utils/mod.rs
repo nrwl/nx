@@ -1,9 +1,10 @@
 mod find_matching_projects;
 mod get_mod_time;
 pub mod json;
+pub mod json_diff;
 mod normalize_trait;
+pub mod owned_dir;
 pub mod path;
-#[cfg(not(target_arch = "wasm32"))]
 pub mod socket_path;
 pub mod time;
 
@@ -19,5 +20,6 @@ pub mod ci;
 pub mod command;
 pub mod file_lock;
 pub mod git;
+pub mod open_url;
 
 pub use atomics::*;

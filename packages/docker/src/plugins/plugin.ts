@@ -164,10 +164,12 @@ export function getProjectNameFromPath(
   workspaceRoot: string
 ): string {
   const root = projectRoot === '.' ? workspaceRoot : projectRoot;
+  // Docker image names allow only these characters, and the name goes unquoted
+  // into the inferred targets' shell commands.
   const normalized = root
     .replace(/^[\\/]/, '')
-    .replace(/[\\/\s]+/g, '-')
-    .toLowerCase();
+    .toLowerCase()
+    .replace(/[^a-z0-9._-]+/g, '-');
   return normalized.length > 128 ? normalized.slice(-128) : normalized;
 }
 

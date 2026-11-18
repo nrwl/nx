@@ -7,7 +7,17 @@ import {
   updateJson,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import * as linter from '@nx/eslint';
+import { mockCjsModule } from '@nx/devkit/internal-testing-utils';
+import { createRequire } from 'module';
+
+// `addLintingToProject` loads @nx/eslint through ensurePackage (`require`), so
+// the spy must live on the CJS channel.
+const cjsLinter = createRequire(import.meta.url)('@nx/eslint');
+const lintProjectGenerator = vi.fn(cjsLinter.lintProjectGenerator);
+mockCjsModule(import.meta.url, '@nx/eslint', {
+  ...cjsLinter,
+  lintProjectGenerator,
+});
 import { addLintingGenerator } from './add-linting';
 
 describe('addLinting generator', () => {
@@ -38,7 +48,7 @@ describe('addLinting generator', () => {
   });
 
   it('should invoke the lintProjectGenerator', async () => {
-    jest.spyOn(linter, 'lintProjectGenerator');
+    lintProjectGenerator.mockClear();
 
     await addLintingGenerator(tree, {
       linter: 'eslint',
@@ -49,15 +59,12 @@ describe('addLinting generator', () => {
     });
 
     // Assert the arguments, not just the call: this is the only test that sees
-    // the `addLintingToProject` hop, and `addExplicitTargets` in particular
-    // decides whether the project gets an explicit `lint` target or relies on
-    // inference — it can be dropped in the hop with every suite still green.
-    expect(linter.lintProjectGenerator).toHaveBeenCalledWith(
+    // the `addLintingToProject` hop, and a key dropped there would leave every
+    // other suite green.
+    expect(lintProjectGenerator).toHaveBeenCalledWith(
       expect.anything(),
       expect.objectContaining({
         project: appProjectName,
-        addExplicitTargets: true,
-        addPlugin: false,
         rootProject: false,
         tsConfigPaths: [`${appProjectRoot}/tsconfig.app.json`],
       })
@@ -68,7 +75,7 @@ describe('addLinting generator', () => {
     // `mockClear`: this suite has no `restoreMocks`, and `spyOn` on an
     // already-spied property hands back the same mock — so without it the
     // previous test's call is still recorded and this one fails on it.
-    jest.spyOn(linter, 'lintProjectGenerator').mockClear();
+    lintProjectGenerator.mockClear();
 
     await addLintingGenerator(tree, {
       prefix: 'myOrg',
@@ -78,7 +85,7 @@ describe('addLinting generator', () => {
       skipFormat: true,
     });
 
-    expect(linter.lintProjectGenerator).not.toHaveBeenCalled();
+    expect(lintProjectGenerator).not.toHaveBeenCalled();
     // The angular-eslint install is the visible half — without the early return
     // it lands on top of an Oxlint project. Both spellings: the flat-config
     // path installs `angular-eslint`, the legacy path the scoped trio.
@@ -98,7 +105,7 @@ describe('addLinting generator', () => {
 
   // `linter` has no schema default, so leaving it unset follows the workspace.
   it('should set up oxlint when the workspace already uses it', async () => {
-    jest.spyOn(linter, 'lintProjectGenerator').mockClear();
+    lintProjectGenerator.mockClear();
     updateJson(tree, 'package.json', (json) => {
       json.devDependencies = { ...json.devDependencies, oxlint: '^1.70.0' };
       return json;
@@ -111,7 +118,7 @@ describe('addLinting generator', () => {
       skipFormat: true,
     });
 
-    expect(linter.lintProjectGenerator).not.toHaveBeenCalled();
+    expect(lintProjectGenerator).not.toHaveBeenCalled();
     expect(tree.exists('.oxlintrc.json')).toBe(true);
     const plugins = (readJson(tree, 'nx.json').plugins ?? []).map((p) =>
       typeof p === 'string' ? p : p.plugin
@@ -170,6 +177,52 @@ describe('addLinting generator', () => {
 
     const { devDependencies } = readJson(tree, 'package.json');
     expect(devDependencies['@typescript-eslint/utils']).toBe('^8.58.0');
+  });
+
+  // A range spanning 20 and 21 with 21 installed still gets angular-eslint 20,
+  // so ESLint must stay on v9 with it.
+  it.each([
+    ['~20.3.0', undefined],
+    ['>=20.0.0 <22.0.0', '21.2.0'],
+  ])(
+    'should pin ESLint v9 when the workspace declares Angular %s (installed: %s)',
+    async (declared, installed) => {
+      updateJson(tree, 'package.json', (json) => ({
+        ...json,
+        dependencies: { ...json.dependencies, '@angular/core': declared },
+      }));
+      if (installed) {
+        tree.write(
+          'node_modules/@angular/core/package.json',
+          JSON.stringify({ name: '@angular/core', version: installed })
+        );
+      }
+
+      await addLintingGenerator(tree, {
+        linter: 'eslint',
+        prefix: 'myOrg',
+        projectName: appProjectName,
+        projectRoot: appProjectRoot,
+        skipFormat: true,
+      });
+
+      const { devDependencies } = readJson(tree, 'package.json');
+      expect(devDependencies['eslint']).toBe('^9.8.0');
+      expect(devDependencies['angular-eslint']).toBe('^20.3.0');
+    }
+  );
+
+  it('should install ESLint v10 when the workspace uses the latest Angular version', async () => {
+    await addLintingGenerator(tree, {
+      linter: 'eslint',
+      prefix: 'myOrg',
+      projectName: appProjectName,
+      projectRoot: appProjectRoot,
+      skipFormat: true,
+    });
+
+    const { devDependencies } = readJson(tree, 'package.json');
+    expect(devDependencies['eslint']).toBe('^10.0.0');
   });
 
   it('should correctly generate the .eslintrc.json file', async () => {
@@ -344,7 +397,7 @@ describe('addLinting generator', () => {
       "import nx from "@nx/eslint-plugin";
       import baseConfig from "../../eslint.config.mjs";
 
-      export default [
+      const eslintConfig = [
           ...nx.configs["flat/angular"],
           ...nx.configs["flat/angular-template"],
           ...baseConfig,
@@ -397,12 +450,14 @@ describe('addLinting generator', () => {
               rules: {}
           }
       ];
+
+      export default eslintConfig;
       "
     `);
     expect(tree.read('eslint.config.mjs', 'utf-8')).toMatchInlineSnapshot(`
       "import nx from "@nx/eslint-plugin";
 
-      export default [
+      const eslintConfig = [
           ...nx.configs["flat/base"],
           ...nx.configs["flat/typescript"],
           ...nx.configs["flat/javascript"],
@@ -454,6 +509,8 @@ describe('addLinting generator', () => {
               rules: {}
           }
       ];
+
+      export default eslintConfig;
       "
     `);
   });

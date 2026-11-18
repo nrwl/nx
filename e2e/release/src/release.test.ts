@@ -13,6 +13,7 @@ import {
   readFile,
   readJson,
   runCLI,
+  runCLIAsync,
   runCommandAsync,
   runCommandUntil,
   tmpProjPath,
@@ -20,7 +21,9 @@ import {
   updateFile,
   updateJson,
 } from '@nx/e2e-utils';
-import { execSync } from 'node:child_process';
+import { ChildProcess, execSync } from 'node:child_process';
+import { createServer, Server } from 'node:http';
+import { AddressInfo } from 'node:net';
 import type { NxReleaseVersionConfiguration } from 'nx/src/config/nx-json';
 
 expect.addSnapshotSerializer({
@@ -40,13 +43,17 @@ expect.addSnapshotSerializer({
         .replaceAll(/size:\s*\d*\s?B/g, 'size: XXXB')
         .replaceAll(/\d*\.\d*\s?kB/g, 'XXX.XXX kb')
         .replaceAll(/\b[a-fA-F0-9]{7}\b/g, '{COMMIT_SHA}')
-        .replaceAll(/Test @[\w\d]+/g, 'Test @{COMMIT_AUTHOR}')
         // Normalize the version title date.
         .replaceAll(/\(\d{4}-\d{2}-\d{2}\)/g, '(YYYY-MM-DD)')
         // We trim each line to reduce the chances of snapshot flakiness
         .split('\n')
         .map((r) => r.trim())
         .join('\n')
+        // Either the dependency chain or the independent package can take longer.
+        .replaceAll(
+          /^Critical path: \{DURATION\} \((?:1 task|2 tasks)\)$/gm,
+          'Critical path: {DURATION} ({TASK_COUNT} tasks)'
+        )
     );
   },
   test(val: string) {
@@ -59,11 +66,32 @@ describe('nx release', () => {
   let pkg2: string;
   let pkg3: string;
   let previousPackageManager: string;
+  let githubApi: Server;
+  let apiBaseUrl: string;
+  const requests: string[] = [];
+  const verdaccioPort = 7190;
+  let registryProcess: ChildProcess;
 
-  beforeAll(() => {
+  beforeAll(async () => {
     previousPackageManager = process.env.SELECTED_PM;
     // Ensure consistent package manager usage in all environments for this file
     process.env.SELECTED_PM = 'npm';
+
+    githubApi = createServer((request, response) => {
+      requests.push(`${request.method} ${request.url}`);
+      response.setHeader('Content-Type', 'application/json');
+      response.writeHead(
+        request.method === 'GET' &&
+          request.url.startsWith('/repos/nrwl/fake-repo/releases/tags/')
+          ? 404
+          : 500
+      );
+      response.end(JSON.stringify({ message: 'Not Found' }));
+    });
+    await new Promise<void>((resolve) =>
+      githubApi.listen(0, '127.0.0.1', resolve)
+    );
+    apiBaseUrl = `http://127.0.0.1:${(githubApi.address() as AddressInfo).port}`;
 
     newProject({
       packages: ['@nx/js'],
@@ -85,14 +113,25 @@ describe('nx release', () => {
       return json;
     });
   });
-  afterAll(() => {
-    cleanupProject();
-    process.env.SELECTED_PM = previousPackageManager;
+  afterAll(async () => {
+    try {
+      if (registryProcess) {
+        await killProcessAndPorts(registryProcess.pid, verdaccioPort);
+      }
+    } finally {
+      await new Promise<void>((resolve, reject) =>
+        githubApi.close((error) => (error ? reject(error) : resolve()))
+      );
+      cleanupProject();
+      process.env.SELECTED_PM = previousPackageManager;
+    }
   });
 
   it('should version and publish multiple related npm packages with zero config', async () => {
     // Normalize git committer information so it is deterministic in snapshots
-    await runCommandAsync(`git config user.email "test@test.com"`);
+    await runCommandAsync(
+      `git config user.email "test@users.noreply.github.com"`
+    );
     await runCommandAsync(`git config user.name "Test"`);
     // Create a baseline version tag
     await runCommandAsync(`git tag v0.0.0`);
@@ -163,7 +202,7 @@ describe('nx release', () => {
       +
       + ### ❤️ Thank You
       +
-      + - Test @{COMMIT_AUTHOR}
+      + - Test @test
 
 
       NX   Committing changes with git
@@ -183,7 +222,7 @@ describe('nx release', () => {
 
       ### ❤️ Thank You
 
-      - Test @{COMMIT_AUTHOR}
+      - Test @test
     `);
 
     // This is the verdaccio instance that the e2e tests themselves are working from
@@ -273,7 +312,7 @@ describe('nx release', () => {
 
       Run duration: {DURATION}
       Cache: 0/3 hit (0%)
-      Critical path: {DURATION} (2 tasks)
+      Critical path: {DURATION} ({TASK_COUNT} tasks)
       Recoverable time: {DURATION}
 
     `);
@@ -312,9 +351,8 @@ describe('nx release', () => {
     // Run additional custom verdaccio instance to publish the packages to
     runCLI(`generate setup-verdaccio`);
 
-    const verdaccioPort = 7190;
     const customRegistryUrl = `http://localhost:${verdaccioPort}`;
-    const process = await runCommandUntil(
+    registryProcess = await runCommandUntil(
       // location=none so a killed process can't leak registry config into
       // ~/.npmrc; every consumer passes --registry explicitly instead
       `local-registry @proj/source --port=${verdaccioPort} --location none`,
@@ -464,7 +502,7 @@ describe('nx release', () => {
 
       Run duration: {DURATION}
       Cache: 0/3 hit (0%)
-      Critical path: {DURATION} (2 tasks)
+      Critical path: {DURATION} ({TASK_COUNT} tasks)
       Recoverable time: {DURATION}
 
   `);
@@ -572,7 +610,7 @@ describe('nx release', () => {
 
       Run duration: {DURATION}
       Cache: 0/3 hit (0%)
-      Critical path: {DURATION} (2 tasks)
+      Critical path: {DURATION} ({TASK_COUNT} tasks)
       Recoverable time: {DURATION}
 
     `);
@@ -612,7 +650,7 @@ describe('nx release', () => {
 
       Run duration: {DURATION}
       Cache: 0/3 hit (0%)
-      Critical path: {DURATION} (2 tasks)
+      Critical path: {DURATION} ({TASK_COUNT} tasks)
       Recoverable time: {DURATION}
 
     `);
@@ -657,7 +695,7 @@ describe('nx release', () => {
 
       Run duration: {DURATION}
       Cache: 0/3 hit (0%)
-      Critical path: {DURATION} (2 tasks)
+      Critical path: {DURATION} ({TASK_COUNT} tasks)
       Recoverable time: {DURATION}
 
     `);
@@ -694,7 +732,11 @@ describe('nx release', () => {
             projects: ['*', '!@proj/source'],
             changelog: {
               // This should be merged with and take priority over the projectChangelogs config at the root of the config
-              createRelease: 'github',
+              createRelease: {
+                provider: 'github-enterprise-server',
+                hostname: 'github.com',
+                apiBaseUrl,
+              },
             },
           },
         },
@@ -713,9 +755,14 @@ describe('nx release', () => {
       return nxJson;
     });
 
-    // Perform a dry-run this time to show that it works but also prevent making any requests to github within the test
-    const changelogDryRunOutput = runCLI(
+    // Dry runs still look up existing releases; keep those reads local.
+    const { stdout: changelogDryRunOutput } = await runCLIAsync(
       `release changelog 1000.0.0-next.0 --dry-run`
+    );
+    expect(requests).toEqual(
+      Array(3).fill(
+        'GET /repos/nrwl/fake-repo/releases/tags/default-v1000.0.0-next.0'
+      )
     );
     expect(changelogDryRunOutput).toMatchInlineSnapshot(`
 
@@ -792,7 +839,8 @@ describe('nx release', () => {
     `);
 
     // port and process cleanup
-    await killProcessAndPorts(process.pid, verdaccioPort);
+    await killProcessAndPorts(registryProcess.pid, verdaccioPort);
+    registryProcess = undefined;
 
     // Add custom nx release config to control version resolution
     updateJson<NxJsonConfiguration>('nx.json', (nxJson) => {

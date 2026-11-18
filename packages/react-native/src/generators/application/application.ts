@@ -36,7 +36,6 @@ export async function reactNativeApplicationGenerator(
   schema: Schema
 ): Promise<GeneratorCallback> {
   return await reactNativeApplicationGeneratorInternal(host, {
-    addPlugin: false,
     useProjectJson: true,
     ...schema,
   });
@@ -51,7 +50,6 @@ export async function reactNativeApplicationGeneratorInternal(
   const tasks: GeneratorCallback[] = [];
   const addTsPlugin = shouldConfigureTsSolutionSetup(
     host,
-    schema.addPlugin,
     schema.useTsSolution
   );
   const jsInitTask = await jsInitGenerator(host, {
@@ -95,7 +93,6 @@ export async function reactNativeApplicationGeneratorInternal(
     options.appProjectRoot,
     options.js,
     options.skipPackageJson,
-    options.addPlugin,
     'tsconfig.app.json'
   );
   tasks.push(jestTask);

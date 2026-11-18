@@ -1,4 +1,4 @@
-import { readNxJson, Tree } from '@nx/devkit';
+import { Tree } from '@nx/devkit';
 import {
   determineProjectNameAndRootOptions,
   ensureRootProjectName,
@@ -35,11 +35,6 @@ export async function normalizeOptions(
     directory: options.directory,
     importPath: options.importPath,
   });
-  const nxJson = readNxJson(host);
-  const addPluginDefault =
-    process.env.NX_ADD_PLUGINS !== 'false' &&
-    nxJson.useInferencePlugins !== false;
-  options.addPlugin ??= addPluginDefault;
 
   const parsedTags = options.tags
     ? options.tags.split(',').map((s) => s.trim())

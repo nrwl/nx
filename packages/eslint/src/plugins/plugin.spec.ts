@@ -2,37 +2,49 @@ import {
   calculateHashesForCreateNodes,
   globWithWorkspaceContext,
 } from '@nx/devkit/internal';
-import { CreateNodesContext } from '@nx/devkit';
+import {
+  CreateNodesContext,
+  getOutputsForTargetAndConfiguration,
+  type ProjectGraphProjectNode,
+} from '@nx/devkit';
 import { minimatch } from 'minimatch';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
 import { createNodesV2, EslintPluginOptions } from './plugin';
 import { mkdirSync, rmSync } from 'fs';
 
-jest.mock('@nx/devkit/internal', () => {
-  const actual = jest.requireActual('@nx/devkit/internal');
+vi.mock('@nx/devkit/internal', async () => {
+  const actual = await vi.importActual<any>('@nx/devkit/internal');
   return {
     ...actual,
-    calculateHashesForCreateNodes: jest.fn(
-      actual.calculateHashesForCreateNodes
-    ),
-    globWithWorkspaceContext: jest.fn(actual.globWithWorkspaceContext),
+    calculateHashesForCreateNodes: vi.fn(actual.calculateHashesForCreateNodes),
+    globWithWorkspaceContext: vi.fn(actual.globWithWorkspaceContext),
   };
 });
 
-jest.mock('nx/src/utils/cache-directory', () => ({
-  ...jest.requireActual('nx/src/utils/cache-directory'),
+// The shared setup's `@nx/devkit` mock spreads the module, freezing
+// `workspaceRoot` before TempFs moves it; `getRootTsConfigFileName` reads it.
+vi.mock('@nx/devkit', async () => {
+  const actual = await vi.importActual<any>('@nx/devkit');
+  return Object.defineProperty({ ...actual }, 'workspaceRoot', {
+    get: () => actual.workspaceRoot,
+  });
+});
+
+vi.mock('nx/src/utils/cache-directory', async () => ({
+  ...(await vi.importActual<any>('nx/src/utils/cache-directory')),
   workspaceDataDirectory: 'tmp/project-graph-cache',
 }));
 
-const resolveESLintClassSpy = jest.fn();
-jest.mock('../utils/resolve-eslint-class', () => ({
-  resolveESLintClass: (...args) => {
-    resolveESLintClassSpy(...args);
-    return jest
-      .requireActual('../utils/resolve-eslint-class')
-      .resolveESLintClass(...args);
-  },
-}));
+const resolveESLintClassSpy = vi.fn();
+vi.mock('../utils/resolve-eslint-class', async () => {
+  const actual = await vi.importActual<any>('../utils/resolve-eslint-class');
+  return {
+    resolveESLintClass: (...args) => {
+      resolveESLintClassSpy(...args);
+      return actual.resolveESLintClass(...args);
+    },
+  };
+});
 
 describe('@nx/eslint/plugin', () => {
   let context: CreateNodesContext;
@@ -62,10 +74,10 @@ describe('@nx/eslint/plugin', () => {
   });
 
   afterEach(() => {
-    jest.resetModules();
+    vi.resetModules();
     resolveESLintClassSpy.mockClear();
-    jest.mocked(calculateHashesForCreateNodes).mockClear();
-    jest.mocked(globWithWorkspaceContext).mockClear();
+    vi.mocked(calculateHashesForCreateNodes).mockClear();
+    vi.mocked(globWithWorkspaceContext).mockClear();
     tempFs.cleanup();
     tempFs = null;
     rmSync('tmp/project-graph-cache', { recursive: true, force: true });
@@ -74,12 +86,10 @@ describe('@nx/eslint/plugin', () => {
   describe('config hash inputs', () => {
     async function captureInputs(files: string[]) {
       const captured = new Error('Hash inputs captured');
-      jest.mocked(globWithWorkspaceContext).mockResolvedValueOnce([]);
-      jest
-        .mocked(calculateHashesForCreateNodes)
-        .mockRejectedValueOnce(captured);
+      vi.mocked(globWithWorkspaceContext).mockResolvedValueOnce([]);
+      vi.mocked(calculateHashesForCreateNodes).mockRejectedValueOnce(captured);
       await expect(createNodesV2[1](files, {}, context)).rejects.toBe(captured);
-      const [roots, , , inputs] = jest
+      const [roots, , , inputs] = vi
         .mocked(calculateHashesForCreateNodes)
         .mock.calls.at(-1);
       return Object.fromEntries(
@@ -272,7 +282,7 @@ describe('@nx/eslint/plugin', () => {
                     },
                   },
                   "outputs": [
-                    "{options.outputFile}",
+                    "{options.cwd ?? .}/{options.o ?? options.output-file}",
                   ],
                 },
               },
@@ -331,7 +341,7 @@ describe('@nx/eslint/plugin', () => {
                     },
                   },
                   "outputs": [
-                    "{options.outputFile}",
+                    "{options.cwd ?? .}/{options.o ?? options.output-file}",
                   ],
                 },
               },
@@ -423,7 +433,7 @@ describe('@nx/eslint/plugin', () => {
                     },
                   },
                   "outputs": [
-                    "{options.outputFile}",
+                    "{options.cwd ?? .}/{options.o ?? options.output-file}",
                   ],
                 },
               },
@@ -482,7 +492,7 @@ describe('@nx/eslint/plugin', () => {
                     },
                   },
                   "outputs": [
-                    "{options.outputFile}",
+                    "{options.cwd ?? .}/{options.o ?? options.output-file}",
                   ],
                 },
               },
@@ -617,7 +627,7 @@ describe('@nx/eslint/plugin', () => {
                     },
                   },
                   "outputs": [
-                    "{options.outputFile}",
+                    "{options.cwd ?? .}/{options.o ?? options.output-file}",
                   ],
                 },
               },
@@ -659,7 +669,7 @@ describe('@nx/eslint/plugin', () => {
                     },
                   },
                   "outputs": [
-                    "{options.outputFile}",
+                    "{options.cwd ?? .}/{options.o ?? options.output-file}",
                   ],
                 },
               },
@@ -667,6 +677,51 @@ describe('@nx/eslint/plugin', () => {
           },
         }
       `);
+    });
+
+    it('should cache the report ESLint writes from the project root', async () => {
+      createFiles({
+        'libs/my-lib/.eslintrc.json': `{}`,
+        'libs/my-lib/project.json': `{}`,
+        'libs/my-lib/index.ts': `console.log('hello world')`,
+      });
+      const { projects } = await invokeCreateNodesOnMatchingFiles(context, {
+        targetName: 'lint',
+      });
+      const node: ProjectGraphProjectNode = {
+        name: 'my-lib',
+        type: 'lib',
+        data: { root: 'libs/my-lib', ...projects['libs/my-lib'] },
+      };
+      const target = { project: 'my-lib', target: 'lint' };
+
+      expect(
+        getOutputsForTargetAndConfiguration(
+          target,
+          { 'output-file': '../../reports/lint.json' },
+          node
+        )
+      ).toStrictEqual(['reports/lint.json']);
+      expect(
+        getOutputsForTargetAndConfiguration(
+          target,
+          { o: '../../reports/lint.json' },
+          node
+        )
+      ).toStrictEqual(['reports/lint.json']);
+      expect(
+        getOutputsForTargetAndConfiguration(target, {}, node)
+      ).toStrictEqual([]);
+
+      node.data.targets.lint.options['output-file'] =
+        '../../reports/default.json';
+      expect(
+        getOutputsForTargetAndConfiguration(
+          target,
+          { o: '../../reports/ci.json' },
+          node
+        )
+      ).toStrictEqual(['reports/ci.json']);
     });
 
     // This is intentionally disabled, since we should always create a node for project that contains eslint config
@@ -736,8 +791,8 @@ describe('@nx/eslint/plugin', () => {
         targetName: 'lint',
       });
       // configFiles is built from Object.keys(fileSys) in this test harness,
-      // so the input order seen by the plugin is c-lib, a-lib, b-lib. With
-      // the fix, that is the exact order the plugin emits.
+      // so the input order seen by the plugin is c-lib, a-lib, b-lib. The
+      // plugin must emit the projects in that order.
       expect(Object.keys(result.projects)).toEqual([
         'libs/c-lib',
         'libs/a-lib',
@@ -800,7 +855,7 @@ describe('@nx/eslint/plugin', () => {
                     },
                   },
                   "outputs": [
-                    "{options.outputFile}",
+                    "{options.cwd ?? .}/{options.o ?? options.output-file}",
                   ],
                 },
               },
@@ -843,7 +898,7 @@ describe('@nx/eslint/plugin', () => {
                     },
                   },
                   "outputs": [
-                    "{options.outputFile}",
+                    "{options.cwd ?? .}/{options.o ?? options.output-file}",
                   ],
                 },
               },
@@ -904,7 +959,7 @@ describe('@nx/eslint/plugin', () => {
                     },
                   },
                   "outputs": [
-                    "{options.outputFile}",
+                    "{options.cwd ?? .}/{options.o ?? options.output-file}",
                   ],
                 },
               },
@@ -969,7 +1024,7 @@ describe('@nx/eslint/plugin', () => {
                     },
                   },
                   "outputs": [
-                    "{options.outputFile}",
+                    "{options.cwd ?? .}/{options.o ?? options.output-file}",
                   ],
                 },
               },
@@ -1055,7 +1110,7 @@ describe('@nx/eslint/plugin', () => {
                     },
                   },
                   "outputs": [
-                    "{options.outputFile}",
+                    "{options.cwd ?? .}/{options.o ?? options.output-file}",
                   ],
                 },
               },
@@ -1115,7 +1170,7 @@ describe('@nx/eslint/plugin', () => {
                     },
                   },
                   "outputs": [
-                    "{options.outputFile}",
+                    "{options.cwd ?? .}/{options.o ?? options.output-file}",
                   ],
                 },
               },

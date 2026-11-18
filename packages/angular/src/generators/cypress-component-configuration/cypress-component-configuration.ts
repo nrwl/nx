@@ -10,7 +10,6 @@ import {
   readProjectConfiguration,
   runTasksInSerial,
   Tree,
-  updateProjectConfiguration,
 } from '@nx/devkit';
 import { relative } from 'path';
 import {
@@ -96,8 +95,6 @@ export async function cypressComponentConfiguration(
     await baseCyCTConfig(tree, {
       project: options.project,
       skipFormat: true,
-      addPlugin: false,
-      addExplicitTargets: true,
       skipPackageJson: options.skipPackageJson,
     })
   );
@@ -229,21 +226,10 @@ async function configureCypressCT(
     }
   }
 
-  const ctConfigOptions: NxComponentTestingOptions = {};
+  const ctConfigOptions: NxComponentTestingOptions = {
+    buildTarget: found.target,
+  };
   const projectConfig = readProjectConfiguration(tree, options.project);
-  if (
-    projectConfig.targets?.['component-test']?.executor ===
-    '@nx/cypress:cypress'
-  ) {
-    projectConfig.targets['component-test'].options = {
-      ...projectConfig.targets['component-test'].options,
-      skipServe: true,
-      devServerTarget: found.target,
-    };
-    updateProjectConfiguration(tree, options.project, projectConfig);
-  } else {
-    ctConfigOptions.buildTarget = found.target;
-  }
 
   const {
     addDefaultCTConfig,

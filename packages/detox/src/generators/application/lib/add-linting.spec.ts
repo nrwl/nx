@@ -92,6 +92,6 @@ describe('Add Linting', () => {
     });
     const project = readProjectConfiguration(tree, 'my-app-e2e');
 
-    expect(project.targets.lint).toBeUndefined();
+    expect(project.targets?.lint).toBeUndefined();
   });
 });

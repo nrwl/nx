@@ -15,7 +15,7 @@ check and fix any issues. Do not wait to be asked.
 Read `astro-docs/STYLE_GUIDE.md` (the "Information architecture" section) and
 `astro-docs/sidebar.mts` to understand where the page lives in the sidebar hierarchy.
 
-For every new or moved page, evaluate against ALL SEVEN principles. These are non-negotiable:
+For every new or moved page, evaluate against ALL SIX principles. These are non-negotiable:
 
 ### 1. Progressive disclosure ("journey" rule)
 
@@ -33,30 +33,23 @@ For every new or moved page, evaluate against ALL SEVEN principles. These are no
 - Is this a learning page (narrative/guide) or a lookup page (reference/API)?
 - Flag if it's in the wrong category (e.g., a reference page in a guides section).
 
-### 4. Pen and paper test ("theory" rule)
-
-- Can the page be explained using only pen and paper (no terminal needed)?
-- YES = belongs in "How Nx Works" (architecture/concepts)
-- NO (needs terminal/code examples) = belongs in "Platform Features" or "Technologies"
-- Flag if a concept page has terminal output, CLI commands, or code-heavy examples.
-
-### 5. Universal vs. specific ("placement" rule)
+### 4. Universal vs. specific ("placement" rule)
 
 - Does this feature apply to every Nx user?
-- YES = "Platform Features"
+- YES = "Core features", or "CI features" when it only applies in CI
 - NO (only React/Angular/etc. users) = "Technologies"
-- Flag if a technology-specific page is in Platform Features or vice versa.
+- Flag if a technology-specific page is in Core features or vice versa.
 
-### 6. Golden path ("one way" rule)
+### 5. Golden path ("one way" rule)
 
 - Does the page teach one default workflow, or does it enumerate flags and variants?
 - Flag sentences a first-time user needs neither to succeed nor to choose. Those belong in a Knowledge Base guide.
 
-### 7. One page per feature ("don't make me hunt" rule)
+### 6. One page per feature ("don't make me hunt" rule)
 
 - List the questions a new reader, or an AI answering for one, would ask about this feature.
 - Flag any answer that lives only on another page. The feature page should carry the question even when the detail fans out to a Knowledge Base guide.
-- This is the counterweight to principle 6, not an exception to it: trim variants, keep decisions.
+- This is the counterweight to principle 5, not an exception to it: trim variants, keep decisions.
 
 ## Phase 2: Style validation
 
@@ -106,6 +99,16 @@ Common cases where suppression is appropriate:
 
 Do NOT suppress rules just to avoid fixing real violations.
 
+## Phase 3: Persona check
+
+For each changed page, pick the persona or personas who read it, using the home section and journey
+in `astro-docs/personas/` (`bob-beginner.md`, `casey-cloud-curious.md`, `priya-platform.md`, `dana-decision-maker.md`). Read the added and
+removed text as that persona and flag anything that breaks a rule in its "What makes ... content
+different" section. Scope is the local changes, or the PR diff when given a PR.
+
+This phase is advisory. Report the corrections and let the author choose, even in a session that
+auto-fixes everything else, because moving content between pages is an editorial call.
+
 ## Output summary
 
 After fixing, report what you did:
@@ -113,8 +116,11 @@ After fixing, report what you did:
 ```
 ## Style check results
 
+### Personas: [personas matched]
+[One line per flag: persona, file:line, rule broken, correction. Or "Flags: none"]
+
 ### Information architecture: [PASS/FAIL]
-[List any violations or confirm all seven principles pass]
+[List any violations or confirm all six principles pass]
 
 ### Vale: [X errors fixed, Y warnings fixed, Z suggestions noted]
 [Summary of changes made]

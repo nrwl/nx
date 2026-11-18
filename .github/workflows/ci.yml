@@ -9,7 +9,11 @@ on:
     branches:
       - "**"
 
+permissions:
+  contents: read
+
 env:
+  NX_E2E_PORT_POOL: '10000-32767'
   NX_CLOUD_ACCESS_TOKEN: ${{ secrets.NX_CLOUD_ACCESS_TOKEN }}
   NX_CLOUD_ENABLE_METRICS_COLLECTION: 'true'
   PNPM_HOME: ~/.pnpm
@@ -21,6 +25,7 @@ env:
   # falls back to "latest" in directories that have no packageManager field
   # (e.g. e2e temp dirs) instead of the repo's pinned pnpm.
   COREPACK_DEFAULT_TO_LATEST: '0'
+  NX_CLOUD_USE_ULTRACACHE: 'true'
 
 jobs:
   main-linux:
@@ -37,10 +42,12 @@ jobs:
       NX_CLOUD_NO_TIMEOUTS: 'true'
       NX_ALLOW_NON_CACHEABLE_DTE: 'true'
       NX_CLOUD_EXPERIMENTAL_POLLING: 'true'
-      NX_CLOUD_CONTINUOUS_ASSIGNMENT: 'true'
       NX_FIX_CI_EXPERIMENTAL: 'true'
       NX_FIX_CI_TRACING: 'true'
       NX_FIX_CI_STABLE_OUTPUT_SCHEMA: 'true'
+      NX_CLOUD_VERBOSE_LOGGING: 'true'
+      NX_CLOUD_DISABLE_BUFFER_TASK_COMPLETIONS: 'true'
+      NX_CLOUD_TASK_CLUSTERING: 'true'
 
     steps:
       - name: Checkout
@@ -63,7 +70,7 @@ jobs:
           main-branch-name: 'master'
 
       - name: Start CI Run
-        run: npx nx-cloud@next start-ci-run --distribute-on="./.nx/workflows/dynamic-changesets.yaml" --stop-agents-after="e2e"
+        run: npx nx-cloud@next start-workers
 
       - name: Setup dev tools with mise
         uses: jdx/mise-action@146a28175021df8ca24f8ee1828cc2a60f980bd5 # v3
@@ -105,16 +112,20 @@ jobs:
           pnpm nx record -- nx format:check &
           pids+=($!)
 
-          pnpm nx record -- nx sync:check
+          pnpm nx record -- nx sync:check &
           pids+=($!)
 
-          pnpm nx build workspace-plugin && pnpm nx record -- pnpm nx-cloud conformance:check
+          pnpm nx build workspace-plugin && pnpm nx record -- pnpm nx-cloud conformance:check &
           pids+=($!)
 
           pnpm nx run-many -t check-imports check-lock-files check-codeowners --parallel=1 --no-dte &
           pids+=($!)
 
-          pnpm nx affected --targets=lint,oxlint,test,build,e2e,e2e-ci,format-native,lint-native,check-native-wasm,gradle:build-ci,vale,run,validate-example &
+          pnpm nx affected --targets=lint,oxlint,test,build,e2e,e2e-ci,format-native,lint-native,check-native-wasm,gradle:build-ci,vale,validate-links,format,run,validate-example &
+          pids+=($!)
+
+          # astro-docs has no graph dependency on packages/, so `affected` would skip this
+          pnpm nx run astro-docs:validate-package-links &
           pids+=($!)
 
           for pid in "${pids[@]}"; do
@@ -160,14 +171,6 @@ jobs:
         run: git fetch origin master:master
         if: ${{ github.event_name == 'pull_request' }}
 
-      - name: Setup dev tools with mise
-        uses: jdx/mise-action@146a28175021df8ca24f8ee1828cc2a60f980bd5 # v3
-
-      - name: Enable corepack and install pnpm
-        run: |
-          corepack enable
-          corepack prepare --activate
-
       - name: Set SHAs
         uses: nrwl/nx-set-shas@310288c04d90696f9f1bc27c5e3caea6642b53d4 # v5.0.0
         with:
@@ -184,6 +187,16 @@ jobs:
             echo "has_changes=false" >> $GITHUB_OUTPUT
             echo "No React Native projects affected, skipping macOS tests"
           fi
+
+      - name: Setup dev tools with mise
+        if: steps.check-changes.outputs.has_changes == 'true'
+        uses: jdx/mise-action@146a28175021df8ca24f8ee1828cc2a60f980bd5 # v3
+
+      - name: Enable corepack and install pnpm
+        if: steps.check-changes.outputs.has_changes == 'true'
+        run: |
+          corepack enable
+          corepack prepare --activate
 
       - name: Configure Detox Environment, Install applesimutils
         if: steps.check-changes.outputs.has_changes == 'true'
@@ -305,7 +318,6 @@ jobs:
         if: steps.check-changes.outputs.has_changes == 'true'
         run: |
           pnpm install --frozen-lockfile
-          pnpm playwright install --with-deps
 
       - name: Restore .NET packages
         if: steps.check-changes.outputs.has_changes == 'true'

@@ -67,10 +67,16 @@ export async function createRunOneDynamicOutputRenderer({
     }
   }
 
+  let stoppedBySignal = false;
+  const onSignal = () => {
+    stoppedBySignal = true;
+    clearRenderInterval();
+  };
+
   process.on('exit', () => clearRenderInterval());
-  process.on('SIGINT', () => clearRenderInterval());
-  process.on('SIGTERM', () => clearRenderInterval());
-  process.on('SIGHUP', () => clearRenderInterval());
+  process.on('SIGINT', onSignal);
+  process.on('SIGTERM', onSignal);
+  process.on('SIGHUP', onSignal);
 
   const lifeCycle = {} as Partial<LifeCycle>;
 
@@ -95,6 +101,7 @@ export async function createRunOneDynamicOutputRenderer({
   let totalCompletedTasks = 0;
   let totalSuccessfulTasks = 0;
   let totalFailedTasks = 0;
+  let totalStoppedTasks = 0;
   let totalCachedTasks = 0;
 
   // Used to control the rendering of the spinner
@@ -271,6 +278,9 @@ export async function createRunOneDynamicOutputRenderer({
             );
           }
           break;
+        case 'stopped':
+          totalStoppedTasks++;
+          break;
       }
       delete tasksToTerminalOutputs[t.task.id];
     }
@@ -352,6 +362,13 @@ export async function createRunOneDynamicOutputRenderer({
 
       const viewLogs = viewLogsFooterRows(totalFailedTasks);
 
+      const notRunTasks = totalTasks - totalCompletedTasks;
+      // After a signal, the tasks that never ran include ones the run
+      // stopped before reaching, which "skipped" would mislabel
+      const notRunLine = stoppedBySignal
+        ? `${LEFT_PAD}${output.colors.red(figures.ellipsis)}${SPACER}${notRunTasks}/${totalTasks} had not started`
+        : `${LEFT_PAD}${pc.yellow('⏭')}${SPACER}${notRunTasks}/${totalTasks} skipped`;
+
       renderLines(
         [
           output.applyNxPrefix(
@@ -362,12 +379,18 @@ export async function createRunOneDynamicOutputRenderer({
           '',
           `${LEFT_PAD}${output.colors.red(
             figures.cross
-          )}${SPACER}${totalFailedTasks}${`/${totalCompletedTasks}`} failed`,
+          )}${SPACER}${totalFailedTasks}${`/${totalTasks}`} failed`,
           `${LEFT_PAD}${output.dim(
             figures.tick
-          )}${SPACER}${totalSuccessfulTasks}${`/${totalCompletedTasks}`} succeeded ${output.dim(
+          )}${SPACER}${totalSuccessfulTasks}${`/${totalTasks}`} succeeded ${output.dim(
             `[${totalCachedTasks} read from cache]`
           )}`,
+          ...(totalStoppedTasks > 0
+            ? [
+                `${LEFT_PAD}${output.colors.red(figures.ellipsis)}${SPACER}${totalStoppedTasks}/${totalTasks} were in progress`,
+              ]
+            : []),
+          ...(notRunTasks > 0 ? [notRunLine] : []),
           ...viewLogs,
         ],
         'red'

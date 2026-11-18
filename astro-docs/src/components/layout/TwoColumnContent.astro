@@ -48,11 +48,13 @@ const isKnowledgeBase = Astro.url.pathname.startsWith('/docs/kb/');
 
       .right-sidebar {
         position: sticky;
-        top: var(--sl-nav-height);
+        top: calc(var(--sl-nav-height) + var(--top-banner-h, 0px));
         border-inline-start: 1px solid var(--sl-color-hairline);
         padding-top: 1rem;
         width: 100%;
-        max-height: calc(100vh - var(--sl-nav-height));
+        max-height: calc(
+          100vh - var(--sl-nav-height) - var(--top-banner-h, 0px)
+        );
         overflow-y: auto;
         scrollbar-width: none;
       }

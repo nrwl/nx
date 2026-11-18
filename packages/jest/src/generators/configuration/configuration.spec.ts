@@ -32,7 +32,6 @@ describe('jestProject', () => {
     setupFile: 'none',
     skipFormat: false,
     compiler: 'tsc',
-    addPlugin: true,
   };
 
   beforeEach(async () => {
@@ -581,7 +580,10 @@ describe('jestProject', () => {
         project: 'pkg1',
       });
 
-      expect(tree.exists('packages/pkg1/tsconfig.spec.json')).toBeTruthy();
+      expect(
+        readJson(tree, 'packages/pkg1/tsconfig.spec.json').compilerOptions
+          .rootDir
+      ).toBe('.');
       expect(tree.exists('packages/pkg1/jest.config.ts')).toBeTruthy();
       expect(tree.read('packages/pkg1/jest.config.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
@@ -594,6 +596,70 @@ describe('jestProject', () => {
       `);
       expect(tree.exists('packages/pkg1/.spec.swcrc')).toBeFalsy();
     });
+
+    it('should reference the runtime tsconfig from tsconfig.spec.json', async () => {
+      writeJson(tree, 'packages/pkg1/tsconfig.lib.json', {
+        extends: '../../tsconfig.base.json',
+      });
+
+      await configurationGenerator(tree, {
+        ...defaultOptions,
+        project: 'pkg1',
+        runtimeTsconfigFileName: 'tsconfig.lib.json',
+      });
+
+      expect(
+        readJson(tree, 'packages/pkg1/tsconfig.spec.json').references
+      ).toEqual([{ path: './tsconfig.lib.json' }]);
+    });
+
+    it.each([
+      ['noEmit', true],
+      ['composite', false],
+    ])(
+      'should not reference a runtime tsconfig with %s set to %s',
+      async (option, value) => {
+        writeJson(tree, 'packages/pkg1/tsconfig.lib.json', {
+          extends: '../../tsconfig.base.json',
+          compilerOptions: { [option]: value },
+        });
+
+        await configurationGenerator(tree, {
+          ...defaultOptions,
+          project: 'pkg1',
+          runtimeTsconfigFileName: 'tsconfig.lib.json',
+        });
+
+        expect(
+          readJson(tree, 'packages/pkg1/tsconfig.spec.json').references
+        ).toBeUndefined();
+      }
+    );
+
+    it.each([
+      // the generator adds ./tsconfig.spec.json to tsconfig.json before the check
+      ['tsconfig.json', []],
+      ['tsconfig.lib.json', [{ path: 'tsconfig.spec.json' }]],
+    ])(
+      'should not reference a runtime %s that references tsconfig.spec.json',
+      async (runtimeTsconfigFileName, references) => {
+        writeJson(tree, `packages/pkg1/${runtimeTsconfigFileName}`, {
+          extends: '../../tsconfig.base.json',
+          files: [],
+          references,
+        });
+
+        await configurationGenerator(tree, {
+          ...defaultOptions,
+          project: 'pkg1',
+          runtimeTsconfigFileName,
+        });
+
+        expect(
+          readJson(tree, 'packages/pkg1/tsconfig.spec.json').references
+        ).toBeUndefined();
+      }
+    );
 
     it('should set isolatedModules in tsconfig.spec.json for ts-jest below TypeScript 6', async () => {
       updateJson(tree, 'package.json', (json) => {

@@ -10,6 +10,9 @@
     },
     "e2e-macos-ci--src/react-native.test.ts": {
       "inputs": ["e2eInputs", "^production"]
+    },
+    "e2e-macos-local": {
+      "dependsOn": ["...", "@nx/nx-source:playwright-install-e2e"]
     }
   }
 }

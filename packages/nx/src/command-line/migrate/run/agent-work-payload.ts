@@ -87,12 +87,27 @@ export function readAgentWorkPayload(
   if (payload.migrationId !== expected.migrationId) {
     return null;
   }
-  const matchesKind =
-    expected.kind === 'generator-validation'
-      ? payload.kind === 'generator-validation'
-      : payload.kind === undefined &&
+  let matchesKind: boolean;
+  switch (expected.kind) {
+    case 'generator-validation':
+      matchesKind = payload.kind === 'generator-validation';
+      break;
+    case 'migration-prompt':
+      matchesKind =
+        payload.kind === undefined &&
         expected.promptPath !== undefined &&
         payload.prompt === expected.promptPath;
+      break;
+    case 'final-validation':
+      // Derived from run state at every dispense; nothing is stored.
+      throw new Error(
+        'The final validation pass stores no agent-work payload.'
+      );
+    default: {
+      const exhaustive: never = expected.kind;
+      throw new Error(`Unhandled awaiting kind '${exhaustive}'.`);
+    }
+  }
   return matchesKind ? payload : null;
 }
 

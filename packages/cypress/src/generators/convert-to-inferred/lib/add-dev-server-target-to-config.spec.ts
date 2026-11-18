@@ -245,5 +245,41 @@ export default defineConfig({
         });"
       `);
     });
+
+    it('should update webServerCommands and ciWebServerCommand values that use type assertions', () => {
+      // ARRANGE
+      tree.write(
+        configFilePath,
+        `import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
+import { defineConfig } from 'cypress';
+
+export default defineConfig({
+  e2e: {
+    ...nxE2EPreset(__filename, { cypressDir: 'src', webServerCommands: <Record<string, string>>{default: "npx nx run test:serve"}, ciWebServerCommand: <string>"npx nx run test:static-serve" }),
+    baseUrl: "http://localhost:4200",
+  },
+});`
+      );
+      // ACT
+      addDevServerTargetToConfig(
+        tree,
+        configFilePath,
+        { default: 'npx nx run myorg:serve' },
+        'npx nx run myorg:static-serve'
+      );
+
+      // ASSERT
+      expect(tree.read(configFilePath, 'utf-8')).toMatchInlineSnapshot(`
+        "import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
+        import { defineConfig } from 'cypress';
+
+        export default defineConfig({
+          e2e: {
+            ...nxE2EPreset(__filename, { cypressDir: 'src', webServerCommands: {"default":"npx nx run myorg:serve"}, ciWebServerCommand: "npx nx run myorg:static-serve" }),
+            baseUrl: "http://localhost:4200",
+          },
+        });"
+      `);
+    });
   });
 });

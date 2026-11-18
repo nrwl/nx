@@ -6,6 +6,10 @@ import path = require('path');
 
 import type { PluginConfiguration } from '../../../config/nx-json';
 import type { ProjectGraph } from '../../../config/project-graph';
+import {
+  getLiveClientBerryEnv,
+  withTrustedBerryBinFolders,
+} from '../../../daemon/client/daemon-environment';
 import { serverLogger } from '../../../daemon/logger';
 import { sandboxSocketHint } from '../../../daemon/sandbox-socket-hint';
 import { SOCKET_REFUSED_EXIT_CODE } from '../../../utils/socket-refused-exit-code';
@@ -546,6 +550,13 @@ export class IsolatedPlugin implements LoadedNxPlugin {
   }
 
   async setWorkerEnv(env: Record<string, string>): Promise<void> {
+    // A restart may have spawned under the previous client env but not yet
+    // finished loading. Wait for that worker so it receives the update too.
+    // Do not start a stopped worker solely to forward env: its next spawn
+    // will inherit the daemon's already-updated environment.
+    if (!this._alive && this._connectPromise) {
+      await this._connectPromise;
+    }
     if (!this._alive) {
       return;
     }
@@ -641,8 +652,9 @@ async function startPluginWorker(name: string) {
     isWorkerTypescript ? 'plugin-worker.ts' : 'plugin-worker.js'
   );
 
-  const env: Record<string, string> = {
+  const env = withTrustedBerryBinFolders({
     ...process.env,
+    ...getLiveClientBerryEnv(),
     ...(isWorkerTypescript
       ? {
           SWC_NODE_PROJECT: path.join(
@@ -651,7 +663,7 @@ async function startPluginWorker(name: string) {
           ),
         }
       : {}),
-  };
+  });
 
   // Keep the host pid readable for diagnostics, the counter collision-free
   // within this process, and entropy for a reused pid across process runs. The

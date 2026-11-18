@@ -1,12 +1,16 @@
+import { runWithHookSuppliedSource } from 'nx/src/internal-testing-utils/hook-supplied-source';
+import { mkdtempSync, realpathSync, rmSync, writeFileSync } from 'fs';
+import { tmpdir } from 'os';
 import { join } from 'path';
+import { pathToFileURL } from 'url';
 import {
   clearConfigFromRequireCache,
   isTranspilerRecoverableError,
   unwrapCjsInterop,
 } from './config-utils';
 
-// Jest's require.cache is not the real module cache, so the tests drive the
-// helper through its injectable cache with hand-built module graphs.
+// Drive the helper through its injectable cache with hand-built module graphs
+// rather than the real require.cache.
 describe('clearConfigFromRequireCache', () => {
   let cache: NodeJS.Dict<NodeModule>;
 
@@ -144,19 +148,29 @@ describe('isTranspilerRecoverableError', () => {
     }
   });
 
-  it('should classify identically on a host nx that does not export the classifiers', () => {
+  it('should classify identically on a host nx that does not export the classifiers', async () => {
     // nx 23.0/23.1 recover these error classes in loadTsFile but do not
     // re-export the classifiers from devkit-internals.
-    jest.isolateModules(() => {
-      jest.doMock('nx/src/devkit-internals', () => ({}));
-      const {
-        isTranspilerRecoverableError: withoutHostClassifiers,
-      } = require('./config-utils');
+    vi.resetModules();
+    // Each name listed as `undefined`: vitest throws on reading an export its
+    // mock factory did not return.
+    vi.doMock('nx/src/devkit-internals', () => ({
+      forceRegisterEsmLoader: undefined,
+      isRequireInEsmScopeError: undefined,
+      isTsEsmNamedExportLinkageError: undefined,
+      loadTsFile: undefined,
+      registerTsProject: undefined,
+    }));
+    try {
+      const { isTranspilerRecoverableError: withoutHostClassifiers } =
+        await import('./config-utils');
       for (const [err, path, expected] of cases) {
         expect(withoutHostClassifiers(err, path)).toBe(expected);
       }
-    });
-    jest.dontMock('nx/src/devkit-internals');
+    } finally {
+      vi.doUnmock('nx/src/devkit-internals');
+      vi.resetModules();
+    }
   });
 });
 
@@ -221,5 +235,27 @@ describe('unwrapCjsInterop', () => {
     };
 
     expect(unwrapCjsInterop(path, module, cache)).toBe(module);
+  });
+});
+
+describe('loadConfigFile', () => {
+  it('reloads an edited config when a loader hook supplies its CommonJS source', () => {
+    const dir = realpathSync(mkdtempSync(join(tmpdir(), 'config-utils-')));
+    const configPath = join(dir, 'config.cjs');
+    writeFileSync(configPath, 'module.exports = { version: 1 };');
+    const configUtils = pathToFileURL(join(__dirname, 'config-utils.ts')).href;
+
+    const result = runWithHookSuppliedSource(`
+      import { writeFileSync } from 'node:fs';
+      const { loadConfigFile } = await import(${JSON.stringify(configUtils)});
+      const first = await loadConfigFile(${JSON.stringify(configPath)});
+      writeFileSync(${JSON.stringify(configPath)}, 'module.exports = { version: 2 };');
+      const second = await loadConfigFile(${JSON.stringify(configPath)});
+      console.log(first.version, second.version);
+    `);
+    rmSync(dir, { recursive: true, force: true });
+
+    expect(result.stderr).not.toContain('Error');
+    expect(result.stdout.trim()).toBe('1 2');
   });
 });

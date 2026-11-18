@@ -160,7 +160,7 @@ export interface NxAppRspackPluginOptions {
    */
   progress?: boolean;
   /**
-   * Add an additional chunk for the rspack runtime. Defaults to `true` when `target === 'web'`.
+   * Add an additional chunk for the rspack runtime. Defaults to `true` when `target` runs in a browser or `ssr` is set.
    */
   runtimeChunk?: boolean;
   /**

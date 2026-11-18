@@ -60,6 +60,7 @@ import { stripVTControlCharacters } from 'util';
 import type { ChildProcess } from 'child_process';
 import { withEnvironmentVariables } from '../../internal-testing-utils/with-environment';
 import { output } from '../../utils/output';
+import { BatchMessageType } from '../batch/batch-messages';
 import { BatchProcess } from './batch-process';
 
 function fakeChildProcess() {
@@ -72,6 +73,10 @@ function fakeChildProcess() {
   // tests that production cannot reach.
   (child as any).stdout = new PassThrough();
   (child as any).stderr = new PassThrough();
+  (child as any).connected = true;
+  (child as any).disconnect = vi.fn(() => {
+    (child as any).connected = false;
+  });
   return child;
 }
 
@@ -135,6 +140,68 @@ const FOLDING_ENV = {
 };
 
 describe('BatchProcess', () => {
+  it('disconnects the worker once it reports the batch results', async () => {
+    const child = fakeChildProcess();
+    const batch = new BatchProcess(child, '@nx/js:tsc');
+    const results = batch.getResults();
+
+    child.emit('message', {
+      type: BatchMessageType.CompleteBatchExecution,
+      results: { 'proj:build': { success: true } },
+    });
+
+    await expect(results).resolves.toEqual({
+      'proj:build': { success: true },
+    });
+    expect(child.disconnect).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps what a crashed worker writes after exiting in its captured log', async () => {
+    await withFoldingEnvAsync(async () => {
+      const child = fakeChildProcess();
+      const batch = new BatchProcess(child, '@nx/gradle:batch');
+      const onExit = vi.fn();
+      batch.onExit(onExit);
+      // The orchestrator's crash path: flush the capture, then read it.
+      const captured = batch.getResults().then(
+        () => null,
+        async () => {
+          await batch.flushCapturedOutput();
+          return readFileSync(batch.getCapturedOutputPath(), 'utf-8');
+        }
+      );
+
+      (child as any).stdout.emit('data', Buffer.from('HEAD\n'));
+      child.emit('exit', 1, null);
+      expect(onExit).toHaveBeenCalledWith(1);
+      await new Promise((resolve) => setImmediate(resolve));
+      (child as any).stdout.emit('data', Buffer.from('LATE-OUT\n'));
+      (child as any).stderr.emit('data', Buffer.from('LATE-ERR\n'));
+      child.emit('close', 1, null);
+
+      expect(await captured).toEqual('HEAD\nLATE-OUT\nLATE-ERR\n');
+      batch.discardCapturedOutput();
+    });
+  });
+
+  it('keeps the worker connected while it streams task results', () => {
+    const child = fakeChildProcess();
+    const batch = new BatchProcess(child, '@nx/js:tsc');
+    const onTaskResults = vi.fn();
+    batch.onTaskResults(onTaskResults);
+
+    child.emit('message', {
+      type: BatchMessageType.CompleteTask,
+      task: 'proj:build',
+      result: { success: true },
+    });
+
+    expect(onTaskResults).toHaveBeenCalledWith('proj:build', {
+      success: true,
+    });
+    expect(child.disconnect).not.toHaveBeenCalled();
+  });
+
   it('forwards batch output live when grouping does not apply', () => {
     const child = fakeChildProcess();
 
@@ -327,9 +394,9 @@ describe('BatchProcess', () => {
     });
 
     const path = batch.getCapturedOutputPath();
-    // Production order: both readers flush before touching the path. stdout can
-    // still deliver past the exit event that getResults() settles on, and the
-    // flush has ended the stream by then - so the late chunk is lost. What must
+    // Production order: both readers flush before touching the path. A worker
+    // can still write after the results message getResults() settles on, and
+    // the flush has ended the stream by then - so the late chunk is lost. What must
     // NOT happen is a second file, or the write killing the run.
     await batch.flushCapturedOutput();
     expect(() =>

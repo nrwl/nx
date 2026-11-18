@@ -5,18 +5,24 @@
 //!   themselves live in `crate::native::glob::glob_transform`.
 //! - `expansion` resolves the entries into files, leaning on the workspace
 //!   context or an index wherever it can, and walking where it cannot.
+//! - `scope` keeps an entry to its project's files, out of nested projects.
 
 mod entries;
 mod expansion;
+mod scope;
 
 pub(crate) use entries::{Negation, Positive};
 pub use expansion::FilesExpansion;
-pub(crate) use expansion::validate_files_globs;
+#[cfg(test)]
+use expansion::NOTHING_TRACKED;
 pub(crate) use expansion::{
     FilesExpansionCache, Source, expand_cached, expand_entries, expand_globs,
+    expand_globs_with_exclusions,
 };
-#[cfg(test)]
-use expansion::{NOTHING_TRACKED, parse_group, validate_files_glob};
+pub(crate) use expansion::{
+    parse_group, parse_group_with_exclusions, validate_files_glob, validate_files_globs,
+};
+pub(crate) use scope::{ProjectScope, ScopedMatcher, scope_roots};
 
 #[cfg(test)]
 pub(crate) mod tests {
@@ -32,6 +38,7 @@ pub(crate) mod tests {
         expand_globs(
             workspace_root,
             globs,
+            &[],
             &Source::fileset_from_disk(workspace_root),
         )
     }
@@ -45,6 +52,7 @@ pub(crate) mod tests {
         expand_globs(
             workspace_root,
             globs,
+            &[],
             &Source::fileset_reading_disk(tracked_file, workspace_root),
         )
     }
@@ -62,6 +70,80 @@ pub(crate) mod tests {
             .write_str("{}")
             .unwrap();
         temp
+    }
+
+    #[test]
+    fn ultracache_exclusions_match_suffix_categories_without_narrowing_positives() {
+        let temp = TempDir::new().unwrap();
+        let names = [
+            "cat.ts",
+            "cat.js",
+            ".hidden.ts",
+            "cat.spec.ts",
+            "cat.one.two.spec.ts",
+            "cat.d.ts",
+            "cat.impl.ts",
+            "cat.t!s",
+            "cat.spec.t!s",
+            ".env",
+            "exact.spec.ts",
+            "skip/cat.spec.ts",
+        ];
+        for name in names {
+            temp.child(format!("dist/{name}")).write_str(name).unwrap();
+        }
+        for (negative, excluded) in [
+            ("!dist/**/*.{ts,js}", vec!["cat.ts", "cat.js", ".hidden.ts"]),
+            (
+                "!dist/**/*.{spec.ts,d.ts}",
+                vec![
+                    "cat.spec.ts",
+                    "cat.one.two.spec.ts",
+                    "cat.d.ts",
+                    "exact.spec.ts",
+                    "skip/cat.spec.ts",
+                ],
+            ),
+            ("!dist/**/*.impl.ts", vec!["cat.impl.ts"]),
+            ("!dist/**/*.t!s", vec!["cat.t!s"]),
+            ("!dist/**/*.t\\!s", vec!["cat.t!s"]),
+            ("!dist/exact.spec.ts", vec!["exact.spec.ts"]),
+            ("!dist/skip/**", vec!["skip/cat.spec.ts"]),
+        ] {
+            let patterns = globs(&["dist/**/*", negative]);
+            let expanded = expand_globs_with_exclusions(
+                temp.path(),
+                &patterns,
+                &[],
+                &Source::fileset_from_disk(temp.path()),
+                true,
+            )
+            .unwrap();
+            for name in names {
+                assert_eq!(
+                    expanded.files.contains(&format!("dist/{name}")),
+                    !excluded.contains(&name),
+                    "{negative}: {name}"
+                );
+            }
+        }
+        // Ordinary declared negatives still exclude compound suffixes too.
+        for (positive, negative) in [
+            ("dist/**/*.{ts,js}", "!dist/**/*.{ts,js}"),
+            ("dist/**/*.t!s", "!dist/**/*.t!s"),
+        ] {
+            let ordinary = expand_files(temp.path(), &globs(&[positive, negative])).unwrap();
+            assert!(ordinary.files.is_empty());
+        }
+        let positive = expand_globs_with_exclusions(
+            temp.path(),
+            &globs(&["dist/**/*.ts"]),
+            &[],
+            &Source::fileset_from_disk(temp.path()),
+            true,
+        )
+        .unwrap();
+        assert!(positive.files.contains(&"dist/cat.one.two.spec.ts".into()));
     }
 
     pub(crate) fn globs(list: &[&str]) -> Vec<String> {
@@ -84,7 +166,7 @@ pub(crate) mod tests {
     #[test]
     fn a_source_that_ignores_the_filter_cannot_widen_the_result() {
         let temp = workspace();
-        let everything = |dir: &str, _accept: PathPredicate| {
+        let everything = |dir: &str, _accept: PathPredicate, _skip: &[String]| {
             (dir == "dist/gen").then(|| globs(&["dist/gen/a.js", "dist/gen/a.js.map"]))
         };
         let group = globs(&["dist/gen/**/*.js"]);
@@ -93,6 +175,7 @@ pub(crate) mod tests {
             temp.path(),
             &positives,
             &negations,
+            &ProjectScope::default(),
             &Source::fileset(NOTHING_TRACKED, &everything),
         )
         .unwrap();
@@ -103,7 +186,7 @@ pub(crate) mod tests {
     fn a_directory_is_whatever_the_source_says_it_holds() {
         let temp = workspace();
         // A phantom the disk does not have, to prove the source is believed.
-        let listed = |dir: &str, accept: PathPredicate| {
+        let listed = |dir: &str, accept: PathPredicate, _skip: &[String]| {
             (dir == "dist/gen").then(|| {
                 globs(&[
                     "dist/gen/a.js",
@@ -122,6 +205,7 @@ pub(crate) mod tests {
             temp.path(),
             &positives,
             &negations,
+            &ProjectScope::default(),
             &Source::fileset(NOTHING_TRACKED, &listed),
         )
         .unwrap();
@@ -135,6 +219,7 @@ pub(crate) mod tests {
             temp.path(),
             &parse_group(&globs(&["dist/other/**"])).unwrap().0,
             &[],
+            &ProjectScope::default(),
             &Source::fileset(NOTHING_TRACKED, &listed),
         )
         .unwrap();
@@ -317,6 +402,86 @@ pub(crate) mod tests {
         assert_eq!(
             expansion.files,
             vec!["dist/gen/a.js", "dist/gen/nested/b.js"]
+        );
+    }
+
+    #[test]
+    fn a_walk_skips_a_directory_a_negation_excludes_whole() {
+        let temp = workspace();
+        let skipped = std::sync::Mutex::new(Vec::new());
+        let reading = |dir: &str, accept: PathPredicate, skip: &[String]| {
+            skipped.lock().unwrap().extend(skip.iter().cloned());
+            crate::native::walker::read_directory(temp.path(), dir, accept, skip)
+        };
+        let expand = |group: &[&str]| {
+            skipped.lock().unwrap().clear();
+            let files = expand_globs(
+                temp.path(),
+                &globs(group),
+                &[],
+                &Source::fileset(NOTHING_TRACKED, reading),
+            )
+            .unwrap()
+            .files;
+            (files, skipped.lock().unwrap().clone())
+        };
+        let kept = vec!["dist/gen/a.js", "dist/gen/a.js.map", "dist/other/c.js"];
+        for negation in [
+            "!dist/gen/nested",
+            "!dist/gen/nested/**",
+            "!dist/gen/nested/**/*",
+        ] {
+            assert_eq!(
+                expand(&["dist/**", negation]),
+                (globs(&kept), globs(&["dist/gen/nested"])),
+                "{negation}"
+            );
+        }
+        // Other files in the folder are still wanted, so it is walked.
+        assert_eq!(
+            expand(&["dist/**", "!dist/**/*.map"]),
+            (
+                globs(&["dist/gen/a.js", "dist/gen/nested/b.js", "dist/other/c.js"]),
+                vec![]
+            )
+        );
+        // A folder outside where the glob reads is not its to skip.
+        assert_eq!(
+            expand(&["dist/gen/**", "!dist/other"]).1,
+            Vec::<String>::new()
+        );
+    }
+
+    #[test]
+    fn a_walk_skips_projects_nested_below_the_one_it_reads_from() {
+        let temp = TempDir::new().unwrap();
+        for path in [
+            "packages/gradle/src/a.ts",
+            "packages/gradle/build/out.json",
+            "packages/gradle/batch-runner/build.gradle.kts",
+            "packages/gradle/batch-runner/build/runner.jar",
+        ] {
+            temp.child(path).write_str("x").unwrap();
+        }
+        let roots = globs(&["packages/gradle", "packages/gradle/batch-runner"]);
+        let expand = |group: &[&str]| {
+            expand_globs(
+                temp.path(),
+                &globs(group),
+                &roots,
+                &Source::fileset_from_disk(temp.path()),
+            )
+            .unwrap()
+            .files
+        };
+        assert_eq!(
+            expand(&["packages/gradle/**/*"]),
+            vec!["packages/gradle/build/out.json", "packages/gradle/src/a.ts"]
+        );
+        // Read from inside the nested project, the glob is that project's.
+        assert_eq!(
+            expand(&["packages/gradle/batch-runner/build/**"]),
+            vec!["packages/gradle/batch-runner/build/runner.jar"]
         );
     }
 

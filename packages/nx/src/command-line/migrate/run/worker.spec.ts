@@ -58,63 +58,34 @@ vi.mock('../agentic/select', async () => ({
   resolveAgentic: (...args: unknown[]) => mockResolveAgentic(...args),
 }));
 
-const mockRunStep = vi.fn();
-// worker.ts lazy-requires the agentic modules (CJS channel); replace them
-// in the require channel as well as the import graph.
+// Stands in for the agent process: worker.ts lazy-requires the session
+// module (CJS channel), so replace it in the require channel.
+const mockDriveMasterSession = vi.fn();
 import { mockCjsModule } from '../../../internal-testing-utils/cjs-mock';
-mockCjsModule(import.meta.url, '../agentic/run-step', {
-  runAgenticPromptStep: (...args: unknown[]) => mockRunStep(...args),
-});
-vi.mock('../agentic/run-step', () => ({
-  runAgenticPromptStep: (...args: unknown[]) => mockRunStep(...args),
-}));
-
-const mockGitignoreFallback = vi.fn();
-mockCjsModule(import.meta.url, '../agentic/handoff-gitignore', {
-  ...require('../agentic/handoff-gitignore'),
-  applyAgenticHandoffGitignoreFallback: (...args: unknown[]) =>
-    mockGitignoreFallback(...args),
-});
-vi.mock('../agentic/handoff-gitignore', async () => ({
-  ...(await vi.importActual('../agentic/handoff-gitignore')),
-  applyAgenticHandoffGitignoreFallback: (...args: unknown[]) =>
-    mockGitignoreFallback(...args),
-}));
-
-// Passthrough spy: the real initRunDir still runs (the runDir assertions below
-// depend on its output) while the call order stays observable.
-const mockInitRunDir = vi.fn();
-{
-  const realHandoff = require('../agentic/handoff');
-  mockCjsModule(import.meta.url, '../agentic/handoff', {
-    ...realHandoff,
-    initRunDir: (...args: unknown[]) => {
-      mockInitRunDir(...args);
-      return realHandoff.initRunDir(...args);
-    },
-  });
-}
-vi.mock('../agentic/handoff', async () => {
-  const actual = await vi.importActual('../agentic/handoff');
-  return {
-    ...actual,
-    initRunDir: (...args: unknown[]) => {
-      mockInitRunDir(...args);
-      return actual.initRunDir(...args);
-    },
-  };
+mockCjsModule(import.meta.url, '../agentic/master/run-master-session', {
+  driveMasterSession: (...args: unknown[]) => mockDriveMasterSession(...args),
 });
 
 const mockIsGitRepository = vi.fn();
 const mockGetGitCurrentBranch = vi.fn();
 const mockGetLatestCommitSha = vi.fn();
 const mockGetGitRemoteNames = vi.fn(() => [] as string[]);
+const mockGetPathCommitExposure = vi.fn();
+// Reached only by tests that run the real commitMigrationIfRequested.
+const mockHasUncommittedChanges = vi.fn();
+const mockTryCommitChangesAsync = vi.fn();
 vi.mock('../../../utils/git-utils', async () => ({
   ...(await vi.importActual('../../../utils/git-utils')),
   isGitRepository: (...args: unknown[]) => mockIsGitRepository(...args),
   getGitCurrentBranch: (...args: unknown[]) => mockGetGitCurrentBranch(...args),
   getLatestCommitSha: (...args: unknown[]) => mockGetLatestCommitSha(...args),
   getGitRemoteNames: (...args: unknown[]) => mockGetGitRemoteNames(),
+  getPathCommitExposure: (...args: unknown[]) =>
+    mockGetPathCommitExposure(...args),
+  hasUncommittedChanges: (...args: unknown[]) =>
+    mockHasUncommittedChanges(...args),
+  tryCommitChangesAsync: (...args: unknown[]) =>
+    mockTryCommitChangesAsync(...args),
 }));
 
 const mockGetBaseRef = vi.fn();
@@ -124,9 +95,18 @@ vi.mock('../../../utils/command-line-utils', async () => ({
 }));
 
 const mockReportRunError = vi.fn();
+const mockReportInvocation = vi.fn();
+const mockReportSingleComplete = vi.fn();
+const mockReportSingleAbandoned = vi.fn();
 vi.mock('../migrate-analytics', async () => ({
   ...(await vi.importActual('../migrate-analytics')),
   reportMigrateRunError: (...args: unknown[]) => mockReportRunError(...args),
+  reportMigrateSingleMigrationInvocation: (...args: unknown[]) =>
+    mockReportInvocation(...args),
+  reportMigrateSingleMigrationComplete: (...args: unknown[]) =>
+    mockReportSingleComplete(...args),
+  reportMigrateSingleMigrationAbandoned: (...args: unknown[]) =>
+    mockReportSingleAbandoned(...args),
 }));
 
 const mockCanPrompt = vi.fn();
@@ -142,7 +122,7 @@ vi.mock('../../../config/configuration', async () => ({
   readNxJson: () => ({}),
 }));
 
-// The agentic preflight reads the installed nx version; the tmp roots used
+// An agentic run's init reads the installed nx version; the tmp roots used
 // below have no node_modules to resolve it from.
 vi.mock('../../../utils/package-json', async () => ({
   ...(await vi.importActual('../../../utils/package-json')),
@@ -157,15 +137,21 @@ vi.mock('../../../utils/package-manager', () => ({
   getPackageManagerCommand: () => ({ exec: 'npx', install: 'npm install' }),
 }));
 
+vi.mock('fs', async () => ({ ...require('fs') }));
+
+import * as fs from 'fs';
 import {
   existsSync,
   mkdirSync,
   mkdtempSync,
+  readdirSync,
   readFileSync,
+  renameSync,
   rmSync,
   writeFileSync,
 } from 'fs';
 import { tmpdir } from 'os';
+import { FileLock } from '../../../native';
 import { join } from 'path';
 import { logger } from '../../../utils/logger';
 import { output } from '../../../utils/output';
@@ -183,10 +169,16 @@ import {
   type MigrateRunIssue,
   type MigrateRunState,
   type MigrateStep,
+  type MigrateStepAwaitingKind,
+  type MigrateStepBase,
   type MigrateStepStatus,
+  type MigrateTreeOperation,
 } from './run-state';
 import { applyStepEvent } from './state-machine';
 import { depsHash } from './util';
+import { BrokerStaleRequestError, BrokerUnavailableError } from './broker';
+import { answered, readRequest, serviced } from './test-utils';
+import { agentWorkPayloadPath } from './agent-work-payload';
 
 const RUN_NEXT_FIRST =
   'Run the dispensed "next" command first: its response restates this work and names the handoff file to write.';
@@ -219,6 +211,7 @@ const migStep = (
 ): MigrateStep => ({
   id,
   roundIndex,
+  kind: 'migration',
   migrationId,
   status,
   attempt: 1,
@@ -267,18 +260,21 @@ describe('runSingleMigrationWorker', () => {
     mockCommit.mockReset().mockResolvedValue({ status: 'no-changes' });
     mockCheckpoint.mockReset();
     mockResolveAgentic.mockReset().mockResolvedValue({ kind: 'disabled' });
-    mockRunStep
-      .mockReset()
-      .mockResolvedValue({ summary: 'agent summary', ambiguous: false });
-    mockGitignoreFallback.mockReset().mockResolvedValue(undefined);
-    mockInitRunDir.mockReset();
+    mockDriveMasterSession.mockReset();
     mockIsGitRepository.mockReset().mockReturnValue(true);
     mockGetGitCurrentBranch.mockReset().mockReturnValue('feature/x');
     mockGetBaseRef.mockReset().mockReturnValue('main');
     mockReportRunError.mockReset();
+    mockReportInvocation.mockReset();
+    mockReportSingleComplete.mockReset();
+    mockReportSingleAbandoned.mockReset();
     mockCanPrompt.mockReset().mockReturnValue(false);
     mockMigrateConfirm.mockReset().mockResolvedValue(true);
     mockGetLatestCommitSha.mockReset().mockReturnValue(null);
+    // What git reports for the tmp roots, which are not repositories.
+    mockGetPathCommitExposure.mockReset().mockReturnValue('unknown');
+    mockHasUncommittedChanges.mockReset();
+    mockTryCommitChangesAsync.mockReset();
     mockLogSkippedInstall.mockReset();
     mockChangedDepInstallerCtor.mockReset();
     mockStringifiedDeps.mockReset().mockReturnValue('{"deps":1}');
@@ -350,6 +346,7 @@ describe('runSingleMigrationWorker', () => {
       validate?: boolean;
       commits?: MigrateCommitLedgerEntry[];
       issues?: MigrateRunIssue[];
+      singleMigration?: boolean;
     }
   ): string {
     const dir = runDir(root, runId);
@@ -376,12 +373,12 @@ describe('runSingleMigrationWorker', () => {
       ...(opts.skipInstall ? { skipInstall: true } : {}),
       rounds: rounds.map((r) => ({
         index: r.index,
-        planHash: 'h',
         planSnapshot: `plan-${r.index}.json`,
       })),
       steps: opts.steps,
       commits: opts.commits ?? [],
       ...(opts.issues ? { issues: opts.issues } : {}),
+      ...(opts.singleMigration ? { singleMigration: true } : {}),
       analytics: { startEmitted: false, completeEmitted: false },
     };
     writeRunState(dir, state);
@@ -483,9 +480,10 @@ describe('runSingleMigrationWorker', () => {
         )
       ).rejects.toThrow('no agent');
       expect(mockRunMigration).not.toHaveBeenCalled();
-      expect(mockReportRunError).toHaveBeenCalledWith(
-        expect.objectContaining({ code: 'agentic' })
-      );
+      expect(mockReportRunError).toHaveBeenCalledWith({
+        code: 'agentic',
+        error: new Error('no agent'),
+      });
     });
 
     it('errors and never runs the migration for --create-commits without git', async () => {
@@ -500,23 +498,31 @@ describe('runSingleMigrationWorker', () => {
       expect(mockRunMigration).not.toHaveBeenCalled();
     });
 
-    it('aborts without running the migration when the user declines on the default branch', async () => {
-      writeMigrations([genMig('@nx/js', 'gen')]);
-      mockCanPrompt.mockReturnValue(true);
-      mockGetGitCurrentBranch.mockReturnValue('main');
-      mockMigrateConfirm.mockResolvedValue(false);
+    it.each([
+      ['without an agent', { kind: 'disabled' }],
+      ['with an agent', ENABLED_AGENTIC],
+    ])(
+      'aborts without running the migration when the user declines on the default branch %s',
+      async (_label, agentic) => {
+        writeMigrations([genMig('@nx/js', 'gen')]);
+        mockResolveAgentic.mockResolvedValue(agentic);
+        mockCanPrompt.mockReturnValue(true);
+        mockGetGitCurrentBranch.mockReturnValue('main');
+        mockMigrateConfirm.mockResolvedValue(false);
 
-      await runSingleMigrationWorker(
-        standaloneInput({ runMigration: '@nx/js:gen', createCommits: true })
-      );
+        await runSingleMigrationWorker(
+          standaloneInput({ runMigration: '@nx/js:gen', createCommits: true })
+        );
 
-      expect(mockRunMigration).not.toHaveBeenCalled();
-      expect(output.log).toHaveBeenCalledWith(
-        expect.objectContaining({
-          title: expect.stringContaining('default branch'),
-        })
-      );
-    });
+        expect(mockRunMigration).not.toHaveBeenCalled();
+        expect(output.log).toHaveBeenCalledWith(
+          expect.objectContaining({
+            title: expect.stringContaining('default branch'),
+          })
+        );
+        expect(existsSync(join(root, '.nx', 'migrate-runs'))).toBe(false);
+      }
+    );
 
     it('runs the migration when the user confirms on the default branch', async () => {
       writeMigrations([genMig('@nx/js', 'gen')]);
@@ -666,7 +672,7 @@ describe('runSingleMigrationWorker', () => {
       expect(mockCheckpoint).not.toHaveBeenCalled();
     });
 
-    it('forwards a generator-only migration agentContext to the outer agent', async () => {
+    it('forwards a generator-only migration agentContext to the outer agent when no validation runs', async () => {
       mockResolveAgentic.mockResolvedValue({ kind: 'inside-agent' });
       writeMigrations([genMig('@nx/js', 'gen')]);
       mockRunMigration.mockResolvedValue({
@@ -678,12 +684,69 @@ describe('runSingleMigrationWorker', () => {
       });
 
       await runSingleMigrationWorker(
-        standaloneInput({ runMigration: '@nx/js:gen' })
+        standaloneInput({ runMigration: '@nx/js:gen', validate: false })
       );
 
       expect(stdout).toContain('<agent_context migration="@nx/js:gen">');
       expect(stdout).toContain('hint one');
     });
+
+    it("hands a generator-only migration's changes to the outer agent for validation", async () => {
+      mockResolveAgentic.mockResolvedValue({ kind: 'inside-agent' });
+      writeMigrations([genMig('@nx/js', 'gen')]);
+      mockRunMigration.mockResolvedValue({
+        changes: changeList(),
+        nextSteps: [],
+        agentContext: ['hint one'],
+        logs: 'generator log',
+        madeChanges: true,
+      });
+
+      await runSingleMigrationWorker(
+        standaloneInput({ runMigration: '@nx/js:gen' })
+      );
+
+      // Captured for the payload, as a recorded step's validation pass is.
+      expect(mockRunMigration.mock.calls[0][3]).toBe(true);
+      expect(output.log).toHaveBeenCalledWith({
+        title:
+          "The following migration's generator ran without an AI-driven part. Validate its changes in this workspace, fixing only what lies within the migration's scope, then continue.",
+        bodyLines: [],
+      });
+      expect(stdout).toContain('<nx_migrate_prompt migration="@nx/js:gen">');
+      expect(stdout).toContain('"kind": "generator-validation"');
+      expect(stdout).toContain('"logs": "generator log"');
+      // The context rides in the payload instead of a block of its own.
+      expect(stdout).not.toContain('<agent_context');
+    });
+
+    it.each<[string, Record<string, unknown>, AgenticArg?]>([
+      ['when the generator made no changes', { kind: 'inside-agent' }],
+      ['outside an agent', { kind: 'disabled' }],
+      ['inside an agent with --agentic=false', { kind: 'inside-agent' }, false],
+    ])(
+      'hands no validation work to an agent %s',
+      async (label, agentic, agenticArg) => {
+        mockResolveAgentic.mockResolvedValue(agentic);
+        writeMigrations([genMig('@nx/js', 'gen')]);
+        if (label !== 'when the generator made no changes') {
+          mockRunMigration.mockResolvedValue({
+            changes: changeList(),
+            nextSteps: [],
+            agentContext: [],
+            logs: '',
+            madeChanges: true,
+          });
+        }
+
+        await runSingleMigrationWorker(
+          standaloneInput({ runMigration: '@nx/js:gen', agentic: agenticArg })
+        );
+
+        expect(mockRunMigration).toHaveBeenCalledTimes(1);
+        expect(stdout).not.toContain('<nx_migrate_prompt');
+      }
+    );
 
     it('does not forward agentContext outside an agent', async () => {
       writeMigrations([genMig('@nx/js', 'gen')]);
@@ -719,8 +782,7 @@ describe('runSingleMigrationWorker', () => {
         )
       ).resolves.toBeUndefined();
 
-      // The standalone run has no later commit or end-of-run recap to absorb
-      // the diff, so it must pass its own guidance instead of the default.
+      // The standalone run has no later migration step to absorb the diff.
       expect(mockCommit).toHaveBeenCalledWith(
         root,
         expect.objectContaining({ name: 'gen' }),
@@ -728,7 +790,7 @@ describe('runSingleMigrationWorker', () => {
         'chore: [nx migration] ',
         expect.any(Function),
         [],
-        'Commit or revert the changes manually.'
+        'manual'
       );
       // `commitMigrationIfRequested` already logs the failure with that
       // guidance; the worker must not print a second message for it.
@@ -867,24 +929,39 @@ describe('runSingleMigrationWorker', () => {
       expect(mockRunMigration).toHaveBeenCalledTimes(1);
     });
 
-    it('warns and still executes when the active-run scan fails', async () => {
+    it('refuses without running the migration when .nx/migrate-runs is not a directory', async () => {
       writeMigrations([genMig('@nx/js', 'gen')]);
-      // migrate-runs as a file makes the scan fail with ENOTDIR
       mkdirSync(join(root, '.nx'), { recursive: true });
       writeFileSync(join(root, '.nx', 'migrate-runs'), 'not a directory');
 
-      await runSingleMigrationWorker(
-        standaloneInput({ runMigration: '@nx/js:gen' })
-      );
+      await expect(
+        runSingleMigrationWorker(
+          standaloneInput({ runMigration: '@nx/js:gen', agentic: false })
+        )
+      ).rejects.toThrow(/migrate-runs/);
+      expect(mockRunMigration).not.toHaveBeenCalled();
+    });
 
-      expect(output.warn).toHaveBeenCalledWith(
-        expect.objectContaining({
-          title: expect.stringContaining(
-            'Could not check for an active migrate run'
-          ),
-        })
-      );
-      expect(mockRunMigration).toHaveBeenCalledTimes(1);
+    it('refuses before selecting an agent while another process works on a run', async () => {
+      writeMigrations([genMig('@nx/js', 'gen')]);
+      const dir = setupRun('held-run', { steps: [] });
+      mkdirSync(join(dir, 'activity'), { recursive: true });
+      const holder = new FileLock(join(dir, 'activity', '999-cafe.lock'));
+      holder.lock();
+
+      try {
+        await expect(
+          runSingleMigrationWorker(
+            standaloneInput({ runMigration: '@nx/js:gen' })
+          )
+        ).rejects.toThrow(
+          "Not running the migration while migrate run 'held-run' is in use"
+        );
+      } finally {
+        holder.unlock();
+      }
+      expect(mockResolveAgentic).not.toHaveBeenCalled();
+      expect(mockRunMigration).not.toHaveBeenCalled();
     });
 
     it('does not commit when the generator makes no changes, even with -C', async () => {
@@ -1061,6 +1138,45 @@ describe('runSingleMigrationWorker', () => {
   });
 
   describe('recorded execution (--run-id)', () => {
+    it.each([
+      [
+        'reports a recorded invocation for a step of a --run-migrations run',
+        false,
+        [[{ migrationType: 'generator', orchestrated: true }]],
+      ],
+      [
+        'reports no invocation for a retry in the agent session of a --run-migration run',
+        true,
+        [],
+      ],
+    ])('%s', async (_label, singleMigration, calls) => {
+      setupRun('run-1', {
+        migrations: [genMig('@nx/js', 'gen')],
+        steps: [migStep('step-1', '@nx/js:gen', 'dispensed')],
+        singleMigration,
+      });
+
+      await runSingleMigrationWorker(recordedInput('@nx/js:gen', 'run-1'));
+
+      expect(mockReportInvocation.mock.calls).toEqual(calls);
+    });
+
+    it('holds the run before it reads the plan', async () => {
+      const dir = setupRun('run-1', {
+        steps: [migStep('step-1', '@nx/js:gen', 'dispensed')],
+        migrations: [genMig('@nx/js', 'gen')],
+      });
+      rmSync(join(dir, 'plan-0.json'));
+
+      await expect(
+        runSingleMigrationWorker(recordedInput('@nx/js:gen', 'run-1'))
+      ).rejects.toThrow("The plan snapshot 'plan-0.json' for migrate run");
+
+      const names = readdirSync(join(dir, 'activity'));
+      expect(names).toHaveLength(1);
+      expect(new FileLock(join(dir, 'activity', names[0])).check()).toBe(true);
+    });
+
     it('records a generator migration: dispensed -> running -> succeeded with an outcome', async () => {
       mockRunMigration.mockResolvedValue({
         changes: changeList(),
@@ -1543,6 +1659,7 @@ describe('runSingleMigrationWorker', () => {
           {
             ...migStep('step-1', '@nx/js:gen', 'dispensed'),
             generatorCompleted: true,
+            commitStarted: true,
           },
         ],
         migrations: [genMig('@nx/js', 'gen')],
@@ -1560,6 +1677,7 @@ describe('runSingleMigrationWorker', () => {
         sha: 'face0001face0001face0001face0001face0001',
         stepIds: ['step-1'],
       });
+      expect(state.steps[0].commitStarted).toBeUndefined();
     });
 
     it('installs the retry from the baseline captured at dispense, not from the generator output', async () => {
@@ -1597,7 +1715,8 @@ describe('runSingleMigrationWorker', () => {
       expect(mockRunInstall).toHaveBeenCalledWith(
         root,
         'post-migration',
-        expect.stringContaining('--run-id=run-1')
+        expect.stringContaining('--run-id=run-1'),
+        undefined
       );
     });
 
@@ -1633,7 +1752,7 @@ describe('runSingleMigrationWorker', () => {
       });
 
       expect(mockRunInstall).not.toHaveBeenCalled();
-      expect(mockLogSkippedInstall).toHaveBeenCalledWith(root);
+      expect(mockLogSkippedInstall).toHaveBeenCalledWith(root, undefined);
     });
 
     it('passes the run install policy to the installer on a first attempt', async () => {
@@ -1791,7 +1910,8 @@ describe('runSingleMigrationWorker', () => {
       expect(mockRunInstall).toHaveBeenCalledWith(
         root,
         'post-migration',
-        expect.stringContaining('--run-id=run-1')
+        expect.stringContaining('--run-id=run-1'),
+        undefined
       );
       expect(stdout).toContain('<nx_migrate_prompt migration="@nx/js:h">');
     });
@@ -2101,7 +2221,8 @@ describe('runSingleMigrationWorker', () => {
       expect(mockRunInstall).toHaveBeenCalledWith(
         root,
         'post-migration',
-        expect.stringContaining('--run-id=run-1')
+        expect.stringContaining('--run-id=run-1'),
+        undefined
       );
       expect(mockCommit).not.toHaveBeenCalled();
       const step = readRunState(dir).steps[0];
@@ -2416,6 +2537,47 @@ describe('runSingleMigrationWorker', () => {
         stepIds: ['step-1'],
       });
       expect(state.steps[0].status).toBe('failed');
+      // Git never ran and the lease was released: nothing may be in history.
+      expect(state.steps[0].commitStarted).toBeUndefined();
+    });
+
+    it('keeps the commit it landed marked as started when the record write fails', async () => {
+      mockRunMigration.mockResolvedValue({
+        changes: changeList(),
+        nextSteps: [],
+        agentContext: [],
+        logs: '',
+        madeChanges: true,
+      });
+      const realRename = renameSync;
+      mockCommit.mockImplementation(async () => {
+        vi.spyOn(fs, 'renameSync').mockImplementationOnce(
+          (from: string, to: string) => {
+            if (!String(to).endsWith('run.json')) return realRename(from, to);
+            throw Object.assign(new Error('disk full'), { code: 'ENOSPC' });
+          }
+        );
+        return {
+          status: 'committed',
+          sha: 'face0001face0001face0001face0001face0001',
+        };
+      });
+      const dir = setupRun('run-1', {
+        steps: [migStep('step-1', '@nx/js:gen', 'dispensed')],
+        migrations: [genMig('@nx/js', 'gen')],
+        createCommits: true,
+      });
+
+      await expect(
+        runSingleMigrationWorker(recordedInput('@nx/js:gen', 'run-1'))
+      ).rejects.toThrow('disk full');
+
+      const state = readRunState(dir);
+      expect(state.commits).not.toContainEqual(
+        expect.objectContaining({ kind: 'landed' })
+      );
+      expect(state.steps[0].commitStarted).toBe(true);
+      expect(state.treeOperation).toBeUndefined();
     });
 
     it('only matches the latest round step when an older round has the same migration id', async () => {
@@ -2512,6 +2674,260 @@ describe('runSingleMigrationWorker', () => {
     });
   });
 
+  describe('recorded execution through the session broker', () => {
+    const nonce = 'deadbeef';
+    const committed = {
+      status: 'committed' as const,
+      sha: 'face0003face0003face0003face0003face0003',
+    };
+
+    beforeEach(() => {
+      process.env.NX_MIGRATE_BROKER = nonce;
+      mockRunMigration.mockResolvedValue({
+        changes: changeList(),
+        nextSteps: [],
+        agentContext: [],
+        logs: '',
+        madeChanges: true,
+      });
+    });
+
+    afterEach(() => {
+      delete process.env.NX_MIGRATE_BROKER;
+    });
+
+    function committingRun(): string {
+      return setupRun('run-1', {
+        steps: [migStep('step-1', '@nx/js:gen', 'dispensed')],
+        migrations: [genMig('@nx/js', 'gen')],
+        createCommits: true,
+      });
+    }
+
+    function validatingRun(step: Partial<MigrateStepBase> = {}): string {
+      return setupRun('run-1', {
+        steps: [{ ...migStep('step-1', '@nx/js:gen', 'dispensed'), ...step }],
+        migrations: [genMig('@nx/js', 'gen')],
+        createCommits: true,
+        validate: true,
+      });
+    }
+
+    const run = () =>
+      runSingleMigrationWorker(recordedInput('@nx/js:gen', 'run-1'));
+
+    it('leaves the commit the session landed to the record the session made, naming the steps it absorbed', async () => {
+      mockCommit.mockResolvedValue(committed);
+      const dir = setupRun('run-1', {
+        steps: [
+          migStep('step-0', '@nx/js:prior', 'failed'),
+          migStep('step-1', '@nx/js:gen', 'dispensed'),
+        ],
+        migrations: [genMig('@nx/js', 'gen')],
+        createCommits: true,
+        commits: [{ kind: 'failed', stepIds: ['step-0'] }],
+      });
+
+      await serviced(
+        root,
+        dir,
+        { createCommits: true, skipInstall: false },
+        run
+      );
+
+      expect(mockCommit).toHaveBeenCalledTimes(1);
+      const state = readRunState(dir);
+      expect(state.steps[1].status).toBe('succeeded');
+      expect(state.steps[1].commitLedgerIndex).toBe(1);
+      expect(state.commits).toEqual([
+        { kind: 'failed', stepIds: ['step-0'] },
+        { kind: 'landed', sha: committed.sha, stepIds: ['step-1', 'step-0'] },
+      ]);
+    });
+
+    it('leaves the step untouched when the session answered stale', async () => {
+      const dir = committingRun();
+
+      await expect(
+        answered(dir, nonce, { kind: 'stale' }, run)
+      ).rejects.toBeInstanceOf(BrokerStaleRequestError);
+
+      const state = readRunState(dir);
+      expect(state.steps[0].status).toBe('running');
+      expect(state.commits).toEqual([]);
+    });
+
+    it('keeps the commit the session started marked when the session is gone before answering', async () => {
+      // The parent reserved the tree and marked the step, then died: the
+      // commit may be in history, and the debt alone would let a skip hide it.
+      const dir = setupRun('run-1', {
+        steps: [
+          {
+            ...migStep('step-1', '@nx/js:gen', 'dispensed'),
+            commitStarted: true,
+          },
+        ],
+        migrations: [genMig('@nx/js', 'gen')],
+        createCommits: true,
+      });
+
+      await expect(run()).rejects.toBeInstanceOf(BrokerUnavailableError);
+
+      const state = readRunState(dir);
+      expect(state.steps[0].status).toBe('failed');
+      expect(state.commits).toEqual([{ kind: 'failed', stepIds: ['step-1'] }]);
+      expect(state.steps[0].commitStarted).toBe(true);
+    });
+
+    it('installs through the session before handing validation to the agent', async () => {
+      const dir = validatingRun();
+
+      await answered(dir, nonce, { kind: 'installed', output: [] }, run);
+
+      expect(mockInstallDepsIfChanged).not.toHaveBeenCalled();
+      expect(mockCommit).not.toHaveBeenCalled();
+      const state = readRunState(dir);
+      expect(state.steps[0].status).toBe('awaiting-prompt-outcome');
+      expect(state.steps[0].awaitingKind).toBe('generator-validation');
+      expect(readRequest(dir)).toEqual({
+        kind: 'install',
+        stepId: 'step-1',
+        attempt: 1,
+      });
+    });
+
+    it('fails the step, without debt, when the session reported the install it owed failed', async () => {
+      const dir = validatingRun();
+
+      await expect(
+        answered(
+          dir,
+          nonce,
+          {
+            kind: 'install-failed',
+            message: 'registry unreachable',
+            peerDeps: false,
+            output: [],
+          },
+          run
+        )
+      ).rejects.toThrow('registry unreachable');
+
+      const state = readRunState(dir);
+      expect(state.steps[0].status).toBe('failed');
+      expect(state.steps[0].outcome.summary).toBe('registry unreachable');
+      expect(state.commits).toEqual([]);
+    });
+
+    it('reinstalls a retried step from its baseline through the session', async () => {
+      const dir = validatingRun({
+        generatorCompleted: true,
+        validationOwed: true,
+        depsHashAtDispense: 'baseline-from-an-earlier-dispense',
+      });
+
+      await answered(dir, nonce, { kind: 'installed', output: [] }, run);
+
+      expect(mockRunInstall).not.toHaveBeenCalled();
+      expect(mockRunMigration).not.toHaveBeenCalled();
+      expect(readRunState(dir).steps[0].status).toBe('awaiting-prompt-outcome');
+      expect(readRequest(dir)).toMatchObject({ kind: 'install', attempt: 1 });
+    });
+  });
+
+  describe('recorded execution: tree reservation', () => {
+    const committed = {
+      status: 'committed' as const,
+      sha: 'face0030face0030face0030face0030face0030',
+    };
+
+    beforeEach(() => {
+      delete process.env.NX_MIGRATE_BROKER;
+      mockRunMigration.mockResolvedValue({
+        changes: changeList(),
+        nextSteps: [],
+        agentContext: [],
+        logs: '',
+        madeChanges: true,
+      });
+    });
+
+    function committingRun(): string {
+      return setupRun('run-1', {
+        steps: [migStep('step-1', '@nx/js:gen', 'dispensed')],
+        migrations: [genMig('@nx/js', 'gen')],
+        createCommits: true,
+      });
+    }
+
+    const run = () =>
+      runSingleMigrationWorker(recordedInput('@nx/js:gen', 'run-1'));
+
+    it('fails the attempt without debt when another live process holds the tree', async () => {
+      vi.spyOn(process, 'kill').mockReturnValue(true as never);
+      const dir = committingRun();
+      writeRunState(dir, {
+        ...readRunState(dir),
+        treeOperation: {
+          kind: 'action-install',
+          stepId: 'step-0',
+          attempt: 1,
+          owner: 'another-process',
+          pid: process.pid,
+        },
+      });
+
+      await expect(run()).rejects.toThrow(
+        `held by process ${process.pid} for the install of step 'step-0'`
+      );
+
+      expect(mockCommit).not.toHaveBeenCalled();
+      const state = readRunState(dir);
+      expect(state.steps[0].status).toBe('failed');
+      expect(state.steps[0].outcome.summary).toContain('held by process');
+      expect(state.commits).toEqual([]);
+      expect(state.treeOperation.owner).toBe('another-process');
+    });
+
+    it('holds the tree while it commits in process and releases it once the step is recorded', async () => {
+      const dir = committingRun();
+      let heldDuringCommit: MigrateTreeOperation | undefined;
+      mockCommit.mockImplementation(async () => {
+        heldDuringCommit = readRunState(dir).treeOperation;
+        return committed;
+      });
+
+      await run();
+
+      expect(heldDuringCommit).toEqual({
+        kind: 'commit',
+        stepId: 'step-1',
+        attempt: 1,
+        owner: expect.any(String),
+        pid: process.pid,
+      });
+      const state = readRunState(dir);
+      expect(state.steps[0].status).toBe('succeeded');
+      expect(state.treeOperation).toBeUndefined();
+    });
+
+    it('releases the tree when the install throws after reserving it', async () => {
+      mockInstallDepsIfChanged.mockRejectedValue(
+        new Error('registry unreachable')
+      );
+      const dir = setupRun('run-1', {
+        steps: [migStep('step-1', '@nx/js:gen', 'dispensed')],
+        migrations: [genMig('@nx/js', 'gen')],
+      });
+
+      await expect(run()).rejects.toThrow('registry unreachable');
+
+      const state = readRunState(dir);
+      expect(state.steps[0].status).toBe('failed');
+      expect(state.treeOperation).toBeUndefined();
+    });
+  });
+
   describe('run id validation', () => {
     it.each(['../escape', '..', '.'])(
       'rejects the unsafe run id %s',
@@ -2545,315 +2961,389 @@ describe('runSingleMigrationWorker', () => {
     });
   });
 
-  describe('agentic execution (spawn mode)', () => {
+  describe('with an agent', () => {
     beforeEach(() => {
       mockResolveAgentic.mockResolvedValue(ENABLED_AGENTIC);
     });
 
-    it('enables commits by default: checkpoints, runs the prompt step, then commits', async () => {
-      writeMigrations([promptMig('@nx/js', 'p')]);
-      mockCommit.mockResolvedValue({ status: 'committed', sha: 'abc0' });
+    const agentInput = (runMigration: string, validate?: boolean) =>
+      standaloneInput({ runMigration, createCommits: false, validate });
+
+    const runDirs = () => {
+      const dir = join(root, '.nx', 'migrate-runs');
+      return existsSync(dir)
+        ? readdirSync(dir, { withFileTypes: true })
+            .filter((entry) => entry.isDirectory())
+            .map((entry) => entry.name)
+        : [];
+    };
+
+    // What the agent session left on disk, as driveMasterSession reads it.
+    const sessionEndsWith = (
+      settle: (state: MigrateRunState) => MigrateRunState
+    ) =>
+      mockDriveMasterSession.mockImplementation(
+        async ({ ready }: { ready: { runRoot: string; runId: string } }) =>
+          settle(readRunState(runDir(ready.runRoot, ready.runId)))
+      );
+
+    const settleStep =
+      (status: MigrateStepStatus) =>
+      (state: MigrateRunState): MigrateRunState => ({
+        ...state,
+        status: 'completed',
+        steps: state.steps.map((step) => ({ ...step, status })),
+      });
+
+    it.each<[string, PlannedMigration, boolean, MigrateStepAwaitingKind]>([
+      [
+        'a prompt-only migration',
+        promptMig('@nx/js', 'm'),
+        false,
+        'migration-prompt',
+      ],
+      [
+        'a hybrid migration',
+        hybridMig('@nx/js', 'm'),
+        true,
+        'migration-prompt',
+      ],
+      [
+        'a generator migration that changed files',
+        genMig('@nx/js', 'm'),
+        true,
+        'generator-validation',
+      ],
+    ])(
+      'runs %s up to its agent work, then starts the agent on the stored work',
+      async (_label, migration, runsGenerator, awaitingKind) => {
+        writeMigrations([migration]);
+        mockRunMigration.mockResolvedValue({
+          changes: changeList(),
+          nextSteps: [],
+          agentContext: [],
+          logs: '',
+          madeChanges: true,
+        });
+        let parked: MigrateStep | undefined;
+        let payloadStored = false;
+        mockDriveMasterSession.mockImplementation(
+          async ({ ready }: { ready: { runRoot: string; runId: string } }) => {
+            const dir = runDir(ready.runRoot, ready.runId);
+            const state = readRunState(dir);
+            parked = state.steps[0];
+            payloadStored = existsSync(
+              agentWorkPayloadPath(dir, parked.id, parked.attempt)
+            );
+            return settleStep('succeeded')(state);
+          }
+        );
+
+        const exitCode = await runSingleMigrationWorker(agentInput('@nx/js:m'));
+
+        expect(mockRunMigration).toHaveBeenCalledTimes(runsGenerator ? 1 : 0);
+        expect(parked).toMatchObject({
+          status: 'awaiting-prompt-outcome',
+          awaitingKind,
+        });
+        expect(payloadStored).toBe(true);
+        // The agent reads the work from its first "next", not from this stdout.
+        expect(stdout).not.toContain('<nx_migrate_prompt');
+        expect(output.log).toHaveBeenCalledWith(
+          expect.objectContaining({
+            title: 'Starting Claude Code for migration @nx/js:m.',
+          })
+        );
+        expect(output.log).toHaveBeenCalledWith(
+          expect.objectContaining({
+            title: 'Migration @nx/js:m is complete.',
+          })
+        );
+        expect(mockReportSingleComplete).toHaveBeenCalledWith({
+          agentUsed: 'claude-code',
+        });
+        expect(exitCode).toBeUndefined();
+        expect(runDirs()).toEqual([]);
+      }
+    );
+
+    it.each<[string, Record<string, unknown>, boolean | undefined]>([
+      ['made no changes', { changes: [], madeChanges: false }, undefined],
+      ['ran with --validate=false', {}, false],
+      [
+        'waived its validation with skipAgentic',
+        { skipAgentic: true },
+        undefined,
+      ],
+    ])(
+      'completes a generator migration that %s without starting the agent',
+      async (_label, result, validate) => {
+        writeMigrations([genMig('@nx/js', 'gen')]);
+        mockRunMigration.mockResolvedValue({
+          changes: changeList(),
+          nextSteps: [],
+          agentContext: [],
+          logs: '',
+          madeChanges: true,
+          ...result,
+        });
+
+        const exitCode = await runSingleMigrationWorker(
+          agentInput('@nx/js:gen', validate)
+        );
+
+        expect(mockRunMigration).toHaveBeenCalledTimes(1);
+        expect(mockDriveMasterSession).not.toHaveBeenCalled();
+        // The record is removed when the run ends, so the hint is the
+        // command the user ran.
+        expect(mockChangedDepInstallerCtor).toHaveBeenCalledWith(
+          root,
+          true,
+          'nx migrate --run-migration=@nx/js:gen'
+        );
+        expect(output.log).toHaveBeenCalledWith(
+          expect.objectContaining({
+            title: 'Migration @nx/js:gen is complete.',
+          })
+        );
+        expect(mockReportSingleComplete).toHaveBeenCalledWith({});
+        expect(exitCode).toBeUndefined();
+        expect(runDirs()).toEqual([]);
+      }
+    );
+
+    it('tells the user to commit by hand when the commit of a migration that needs no agent fails', async () => {
+      writeMigrations([genMig('@nx/js', 'gen')]);
+      mockRunMigration.mockResolvedValue({
+        changes: changeList(),
+        nextSteps: [],
+        agentContext: [],
+        logs: '',
+        madeChanges: true,
+      });
+      const { commitMigrationIfRequested } =
+        await vi.importActual<typeof import('../migrate-commits')>(
+          '../migrate-commits'
+        );
+      mockCommit.mockImplementation(commitMigrationIfRequested);
+      mockGetPathCommitExposure.mockReturnValue('ignored');
+      mockHasUncommittedChanges.mockReturnValue(true);
+      mockTryCommitChangesAsync.mockRejectedValue(
+        new Error('error: gpg failed to sign the data')
+      );
 
       await runSingleMigrationWorker(
-        standaloneInput({ runMigration: '@nx/js:p' })
-      );
-
-      expect(mockCheckpoint).toHaveBeenCalledWith(
-        root,
-        'chore: [nx migration] '
-      );
-      expect(mockRunStep).toHaveBeenCalledWith(
-        expect.objectContaining({
-          root,
-          migration: expect.objectContaining({ name: 'p' }),
-          agentic: ENABLED_AGENTIC,
-          runDir: join(root, '.nx', 'migrate-runs', '1.0.0'),
+        standaloneInput({
+          runMigration: '@nx/js:gen',
+          createCommits: true,
+          validate: false,
         })
       );
-      expect(mockRunStep.mock.calls[0][0].implContext).toBeUndefined();
-      expect(mockRunStep.mock.calls[0][0].mode).toBeUndefined();
-      expect(mockCheckpoint.mock.invocationCallOrder[0]).toBeLessThan(
-        mockRunStep.mock.invocationCallOrder[0]
+
+      const printed = [
+        ...vi.mocked(logger.info).mock.calls.map(([text]) => String(text)),
+        ...vi.mocked(output.warn).mock.calls.map(([{ title }]) => title),
+      ].join('\n');
+      expect(printed).toContain(
+        'Commit or revert any remaining uncommitted changes manually.'
       );
-      expect(mockRunStep.mock.invocationCallOrder[0]).toBeLessThan(
-        mockCommit.mock.invocationCallOrder[0]
-      );
-      expect(stdout).not.toContain('<nx_migrate_prompt');
-    });
-
-    it('logs the landed commit sha with the success outcome', async () => {
-      writeMigrations([promptMig('@nx/js', 'p')]);
-      mockCommit.mockResolvedValue({
-        status: 'committed',
-        sha: 'abc123ababc123ababc123ababc123ababc123ab',
-      });
-
-      await runSingleMigrationWorker(
-        standaloneInput({ runMigration: '@nx/js:p' })
-      );
-
-      expect(logger.info).toHaveBeenCalledWith(
-        expect.stringContaining('(abc123ababc123ababc123ababc123ababc123ab)')
-      );
-    });
-
-    it('omits the sha from the success outcome when the commit did not land', async () => {
-      writeMigrations([promptMig('@nx/js', 'p')]);
-      mockCommit.mockResolvedValue({ status: 'failed', reason: 'boom' });
-
-      await runSingleMigrationWorker(
-        standaloneInput({ runMigration: '@nx/js:p' })
-      );
-
-      expect(logger.info).toHaveBeenCalledWith(
-        expect.stringMatching(/Applied: agent summary$/)
-      );
-    });
-
-    it('warns when the agentic prompt step ran with the install skipped', async () => {
-      writeMigrations([promptMig('@nx/js', 'p')]);
-      mockCommit.mockResolvedValue({ status: 'committed', sha: 'abc0' });
-      mockSkippedInstall = true;
-
-      await runSingleMigrationWorker(
-        standaloneInput({ runMigration: '@nx/js:p' })
-      );
-
-      expect(mockLogSkippedInstall).toHaveBeenCalledWith(root);
-    });
-
-    it('runs the gitignore preflight for the single-entry plan before the step', async () => {
-      writeMigrations([promptMig('@nx/js', 'p')]);
-
-      await runSingleMigrationWorker(
-        standaloneInput({ runMigration: '@nx/js:p' })
-      );
-
-      expect(mockGitignoreFallback).toHaveBeenCalledWith({
-        migrations: [expect.objectContaining({ name: 'p' })],
-        installedNxVersion: '99.0.0',
-        effectiveCreateCommits: true,
-        commitPrefix: 'chore: [nx migration] ',
-        root,
-      });
-      expect(mockCheckpoint.mock.invocationCallOrder[0]).toBeLessThan(
-        mockGitignoreFallback.mock.invocationCallOrder[0]
-      );
-      expect(mockGitignoreFallback.mock.invocationCallOrder[0]).toBeLessThan(
-        mockInitRunDir.mock.invocationCallOrder[0]
-      );
-      expect(mockInitRunDir.mock.invocationCallOrder[0]).toBeLessThan(
-        mockRunStep.mock.invocationCallOrder[0]
-      );
-    });
-
-    it('honors --no-create-commits with a warning and no checkpoint', async () => {
-      writeMigrations([promptMig('@nx/js', 'p')]);
-
-      await runSingleMigrationWorker(
-        standaloneInput({ runMigration: '@nx/js:p', createCommits: false })
-      );
-
+      expect(printed).not.toMatch(/later commit|next successful commit/);
+      // The tmp root is not a git repository, and an unknown tree status
+      // counts as dirty.
       expect(output.warn).toHaveBeenCalledWith(
         expect.objectContaining({
-          title: expect.stringContaining('--no-create-commits'),
+          title:
+            'The changes made by @nx/js:gen could not be committed and may remain in the working tree; review and commit them manually.',
         })
       );
-      expect(mockCheckpoint).not.toHaveBeenCalled();
-      expect(mockRunStep).toHaveBeenCalledTimes(1);
-      // The disabled state must reach the step's commit funnel too, which
-      // gates on its third argument.
-      expect(mockCommit).toHaveBeenCalledTimes(1);
-      expect(mockCommit.mock.calls[0][2]).toBe(false);
     });
 
-    it('validates a generator migration and defers the commit until validation succeeds', async () => {
-      writeMigrations([genMig('@nx/js', 'gen')]);
-      mockRunMigration.mockResolvedValue({
-        changes: changeList(),
-        nextSteps: [],
-        agentContext: ['hint'],
-        logs: 'gen logs',
-        madeChanges: true,
-      });
-      mockCommit.mockResolvedValue({ status: 'committed', sha: 'abc0' });
+    it('exits 1 and says to re-run the command when the session ends with the migration unfinished', async () => {
+      writeMigrations([promptMig('@nx/js', 'p')]);
+      sessionEndsWith((state) => state);
 
-      await runSingleMigrationWorker(
-        standaloneInput({ runMigration: '@nx/js:gen' })
+      const exitCode = await runSingleMigrationWorker(agentInput('@nx/js:p'));
+
+      expect(exitCode).toBe(1);
+      expect(output.warn).toHaveBeenCalledWith({
+        title:
+          'Migration @nx/js:p did not finish. Re-run the same command to run it again.',
+        bodyLines: [],
+      });
+      expect(mockReportSingleAbandoned).toHaveBeenCalledWith({
+        agentUsed: 'claude-code',
+      });
+      expect(mockReportSingleComplete).not.toHaveBeenCalled();
+      expect(runDirs()).toEqual([]);
+    });
+
+    it('keeps the record while a process the session left behind still works on the run', async () => {
+      writeMigrations([promptMig('@nx/js', 'p')]);
+      let runId: string;
+      let holder: FileLock;
+      mockDriveMasterSession.mockImplementation(
+        async ({ ready }: { ready: { runRoot: string; runId: string } }) => {
+          runId = ready.runId;
+          const dir = runDir(ready.runRoot, runId);
+          holder = new FileLock(join(dir, 'activity', '999-cafe.lock'));
+          holder.lock();
+          return readRunState(dir);
+        }
       );
 
-      // Generator output is captured for the validation prompt.
-      expect(mockRunMigration.mock.calls[0][3]).toBe(true);
-      expect(mockRunStep).toHaveBeenCalledWith(
+      try {
+        await runSingleMigrationWorker(agentInput('@nx/js:p'));
+
+        expect(runDirs()).toEqual([runId]);
+        expect(output.warn).toHaveBeenCalledWith({
+          title: `Kept .nx/migrate-runs/${runId}: process 999 is still working on it. Other nx migrate runs refuse until it ends, and the next --run-migration removes it.`,
+          bodyLines: [],
+        });
+      } finally {
+        holder?.unlock();
+      }
+    });
+
+    const SHA = 'cafe0001cafe0001cafe0001cafe0001cafe0001';
+    it.each<
+      [
+        string,
+        Partial<MigrateStepBase>,
+        boolean,
+        'log' | 'error',
+        string,
+        string[],
+        number | undefined,
+      ]
+    >([
+      [
+        'applied through a handoff',
+        {
+          status: 'succeeded',
+          promptOutcome: { status: 'completed', summary: 'Moved the config.' },
+        },
+        true,
+        'log',
+        'Migration @nx/js:p is complete.',
+        ['Moved the config.', `Commit: ${SHA}`],
+        undefined,
+      ],
+      [
+        'adopted after a failed handoff',
+        {
+          status: 'succeeded',
+          adopted: true,
+          outcome: { summary: 'Adopted after the attempt failed.' },
+          promptOutcome: { status: 'failed', summary: 'Types fail.' },
+        },
+        false,
+        'log',
+        'Migration @nx/js:p is complete.',
+        ['Adopted after the attempt failed.'],
+        undefined,
+      ],
+      [
+        'skipped through a handoff',
+        {
+          status: 'skipped',
+          promptOutcome: { status: 'skipped', summary: 'No config to move.' },
+        },
+        false,
+        'log',
+        'Migration @nx/js:p was skipped.',
+        ['No config to move.'],
+        undefined,
+      ],
+      [
+        'skipped after a failed handoff',
+        {
+          status: 'skipped',
+          promptOutcome: { status: 'failed', summary: 'Types fail.' },
+        },
+        false,
+        'log',
+        'Migration @nx/js:p was skipped.',
+        [],
+        undefined,
+      ],
+      [
+        'left unresolved',
+        {
+          status: 'unresolved',
+          promptOutcome: { status: 'failed', summary: 'Types fail.' },
+        },
+        false,
+        'error',
+        'Migration @nx/js:p is unresolved.',
+        ['Types fail.'],
+        1,
+      ],
+    ])(
+      'ends a session where the migration was %s with its outcome and summary',
+      async (_label, fields, committed, method, title, bodyLines, code) => {
+        writeMigrations([promptMig('@nx/js', 'p')]);
+        vi.spyOn(output, 'error').mockImplementation(() => {});
+        sessionEndsWith((state) => ({
+          ...state,
+          status: 'completed',
+          steps: state.steps.map((step) => ({ ...step, ...fields })),
+          commits: committed
+            ? [{ kind: 'landed', sha: SHA, stepIds: [state.steps[0].id] }]
+            : [],
+        }));
+
+        const exitCode = await runSingleMigrationWorker(agentInput('@nx/js:p'));
+
+        expect(output[method]).toHaveBeenCalledWith({ title, bodyLines });
+        expect(exitCode).toBe(code);
+        expect(runDirs()).toEqual([]);
+      }
+    );
+
+    it('hands the session the migration and the re-run hint, and exits 1 when the session could not start', async () => {
+      writeMigrations([promptMig('@nx/js', 'p')]);
+      mockDriveMasterSession.mockResolvedValue(null);
+
+      const exitCode = await runSingleMigrationWorker(agentInput('@nx/js:p'));
+
+      expect(exitCode).toBe(1);
+      expect(mockDriveMasterSession).toHaveBeenCalledWith(
         expect.objectContaining({
-          mode: 'generic-validation',
-          implContext: {
-            logs: 'gen logs',
-            changes: changeList(),
-            agentContext: ['hint'],
-            hasDiffContext: true,
-          },
+          migration: expect.objectContaining({ package: '@nx/js', name: 'p' }),
+          notStartedHint:
+            'Migration @nx/js:p did not finish. Re-run the same command to run it again.',
         })
       );
-      expect(mockRunStep.mock.invocationCallOrder[0]).toBeLessThan(
-        mockCommit.mock.invocationCallOrder[0]
-      );
+      expect(runDirs()).toEqual([]);
     });
 
-    it('warns when the validation step ran with the install skipped', async () => {
+    it('removes the run record when the migration fails', async () => {
       writeMigrations([genMig('@nx/js', 'gen')]);
-      mockRunMigration.mockResolvedValue({
-        changes: changeList(),
-        nextSteps: [],
-        agentContext: [],
-        logs: '',
-        madeChanges: true,
-      });
-      mockCommit.mockResolvedValue({ status: 'committed', sha: 'abc0' });
-      mockSkippedInstall = true;
-
-      await runSingleMigrationWorker(
-        standaloneInput({ runMigration: '@nx/js:gen' })
-      );
-
-      expect(mockLogSkippedInstall).toHaveBeenCalledWith(root);
-    });
-
-    it('does not commit when validation fails', async () => {
-      writeMigrations([genMig('@nx/js', 'gen')]);
-      mockRunMigration.mockResolvedValue({
-        changes: changeList(),
-        nextSteps: [],
-        agentContext: [],
-        logs: '',
-        madeChanges: true,
-      });
-      mockRunStep.mockRejectedValue(new Error('validation failed'));
+      mockRunMigration.mockRejectedValue(new Error('generator blew up'));
 
       await expect(
-        runSingleMigrationWorker(
-          standaloneInput({ runMigration: '@nx/js:gen' })
-        )
-      ).rejects.toThrow('validation failed');
-      expect(mockCommit).not.toHaveBeenCalled();
-      expect(mockReportRunError).toHaveBeenCalledWith(
-        expect.objectContaining({
-          code: 'agentic',
-          migrationPackage: '@nx/js',
-          migrationName: 'gen',
-        })
-      );
+        runSingleMigrationWorker(agentInput('@nx/js:gen'))
+      ).rejects.toThrow('generator blew up');
+      expect(mockDriveMasterSession).not.toHaveBeenCalled();
+      expect(runDirs()).toEqual([]);
     });
 
-    it('skips validation with --no-validate and commits through the plain path', async () => {
-      writeMigrations([genMig('@nx/js', 'gen')]);
-      mockRunMigration.mockResolvedValue({
-        changes: changeList(),
-        nextSteps: [],
-        agentContext: [],
-        logs: '',
-        madeChanges: true,
+    it('drops the agent for a migration id that is not shell-safe and runs without it', async () => {
+      writeMigrations([genMig('@nx/js', 'rename files')]);
+
+      await runSingleMigrationWorker(agentInput('@nx/js:rename files'));
+
+      expect(output.warn).toHaveBeenCalledWith({
+        title:
+          'Skipping the agentic flow: it needs each migration id to be shell-safe (letters, digits and @/:._-) and listed once, and these are not:',
+        bodyLines: [
+          '- @nx/js:rename files (not shell-safe)',
+          'Continuing the migration without the agentic flow. Generators still run. Prompt-only migrations and the prompt part of hybrid migrations are skipped and listed as next steps, and no AI validation runs.',
+        ],
       });
-      mockCommit.mockResolvedValue({ status: 'committed', sha: 'abc0' });
-
-      await runSingleMigrationWorker(
-        standaloneInput({ runMigration: '@nx/js:gen', validate: false })
-      );
-
-      expect(mockRunStep).not.toHaveBeenCalled();
-      // Fourth argument is captureGeneratorOutput; a generator-only
-      // migration needs it only when validation runs.
-      expect(mockRunMigration.mock.calls[0][3]).toBe(false);
-      expect(mockCommit).toHaveBeenCalledTimes(1);
-    });
-
-    it('skips validation when the generator produced no changes', async () => {
-      writeMigrations([genMig('@nx/js', 'gen')]);
-      // Default mockRunMigration returns no changes.
-
-      await runSingleMigrationWorker(
-        standaloneInput({ runMigration: '@nx/js:gen' })
-      );
-
-      expect(mockRunStep).not.toHaveBeenCalled();
-      expect(mockCommit).not.toHaveBeenCalled();
-    });
-
-    it('runs the prompt step with impl context for a hybrid migration', async () => {
-      writeMigrations([hybridMig('@nx/js', 'h')]);
-      mockRunMigration.mockResolvedValue({
-        changes: changeList(),
-        nextSteps: ['follow up'],
-        agentContext: ['generator hint'],
-        logs: 'generator ran',
-        madeChanges: true,
-      });
-      mockCommit.mockResolvedValue({ status: 'committed', sha: 'abc0' });
-
-      await runSingleMigrationWorker(
-        standaloneInput({ runMigration: '@nx/js:h' })
-      );
-
-      expect(mockRunStep).toHaveBeenCalledWith(
-        expect.objectContaining({
-          migration: expect.objectContaining({ name: 'h' }),
-          implContext: {
-            logs: 'generator ran',
-            changes: changeList(),
-            agentContext: ['generator hint'],
-            hasDiffContext: true,
-          },
-        })
-      );
-      expect(mockRunStep.mock.calls[0][0].mode).toBeUndefined();
-      expect(mockRunStep.mock.invocationCallOrder[0]).toBeLessThan(
-        mockCommit.mock.invocationCallOrder[0]
-      );
-      expect(stdout).not.toContain('<nx_migrate_prompt');
-      expect(output.log).toHaveBeenCalledWith(
-        expect.objectContaining({ bodyLines: ['- follow up'] })
-      );
-    });
-
-    it('reads the migration collection once and resolves hybrid documentation from it', async () => {
-      writeMigrations([
-        { ...hybridMig('@nx/js', 'h'), documentation: './docs/h.md' },
-      ]);
-      mockResolveDocumentationFile.mockReturnValue('docs/h.md');
-
-      await runSingleMigrationWorker(
-        standaloneInput({ runMigration: '@nx/js:h' })
-      );
-
-      expect(mockReadMigrationCollection).toHaveBeenCalledTimes(1);
-      expect(mockRunMigration.mock.calls[0][4]).toBe(DEFAULT_COLLECTION);
-      expect(mockResolveDocumentationFile).toHaveBeenCalledWith(
-        root,
-        '/mock-collection',
-        './docs/h.md'
-      );
-      expect(mockRunStep).toHaveBeenCalledWith(
-        expect.objectContaining({ documentationPath: 'docs/h.md' })
-      );
-    });
-
-    it('warns when the hybrid prompt step ran with the install skipped', async () => {
-      writeMigrations([hybridMig('@nx/js', 'h')]);
-      mockRunMigration.mockResolvedValue({
-        changes: changeList(),
-        nextSteps: [],
-        agentContext: [],
-        logs: '',
-        madeChanges: true,
-      });
-      mockCommit.mockResolvedValue({ status: 'committed', sha: 'abc0' });
-      mockSkippedInstall = true;
-
-      await runSingleMigrationWorker(
-        standaloneInput({ runMigration: '@nx/js:h' })
-      );
-
-      expect(mockLogSkippedInstall).toHaveBeenCalledWith(root);
+      expect(mockRunMigration).toHaveBeenCalledTimes(1);
+      expect(mockDriveMasterSession).not.toHaveBeenCalled();
+      expect(runDirs()).toEqual([]);
     });
   });
 
@@ -2874,24 +3364,6 @@ describe('runSingleMigrationWorker', () => {
       (logger.info as Mock).mock.calls
         .map((args) => String(args[0] ?? ''))
         .join('\n');
-
-    it('skips the prompt step for a waived hybrid with the agentic flow enabled', async () => {
-      mockResolveAgentic.mockResolvedValue(ENABLED_AGENTIC);
-      writeMigrations([hybridMig('@nx/js', 'h')]);
-      waives();
-      mockCommit.mockResolvedValue({ status: 'committed', sha: 'abc0' });
-
-      await runSingleMigrationWorker(
-        standaloneInput({ runMigration: '@nx/js:h' })
-      );
-
-      expect(mockRunStep).not.toHaveBeenCalled();
-      expect(logged()).toContain(
-        'Prompt phase skipped. The migration reported nothing left for the AI step to do.'
-      );
-      // The generator half still ran, so its changes are committed.
-      expect(mockCommit).toHaveBeenCalledTimes(1);
-    });
 
     it('does not tell the user to apply a waived hybrid prompt manually', async () => {
       writeMigrations([hybridMig('@nx/js', 'h')]);
@@ -2922,65 +3394,25 @@ describe('runSingleMigrationWorker', () => {
       expect(stdout).not.toContain('<agent_context');
     });
 
-    it('skips the validation step for a waived generator-only migration', async () => {
-      mockResolveAgentic.mockResolvedValue(ENABLED_AGENTIC);
-      writeMigrations([genMig('@nx/js', 'gen')]);
-      waives();
-      mockCommit.mockResolvedValue({ status: 'committed', sha: 'abc0' });
-
-      await runSingleMigrationWorker(
-        standaloneInput({ runMigration: '@nx/js:gen' })
-      );
-
-      expect(mockRunStep).not.toHaveBeenCalled();
-      expect(logged()).toContain(
-        'Validation skipped. The migration reported its changes need no AI review.'
-      );
-      expect(mockCommit).toHaveBeenCalledTimes(1);
-    });
-
-    // `agenticRun` is built only for `kind: 'enabled'` and the hand-off is
-    // emitted only under `kind: 'inside-agent'`, so a generator-only migration
-    // has no validation step to waive there and keeps its hand-off. A hybrid
-    // owes its prompt in every mode, hence the asymmetry with the test above.
-    it('keeps the outer-agent hand-off for a waived generator-only migration under inside-agent', async () => {
+    it('drops the validation hand-off for a waived generator-only migration under inside-agent', async () => {
       mockResolveAgentic.mockResolvedValue({ kind: 'inside-agent' });
       writeMigrations([genMig('@nx/js', 'gen')]);
       waives({ agentContext: ['hint for the outer agent'] });
-      const verboseSpy = vi
-        .spyOn(logger, 'verbose')
-        .mockImplementation(() => undefined);
 
       await runSingleMigrationWorker(
         standaloneInput({ runMigration: '@nx/js:gen' })
       );
 
-      expect(stdout).toContain('<agent_context migration="@nx/js:gen">');
-      expect(stdout).toContain('hint for the outer agent');
-      // Nothing was waived, so neither the user-facing line nor the
-      // author-facing note applies.
-      expect(logged()).not.toContain('Validation skipped');
-      expect(verboseSpy).not.toHaveBeenCalled();
-    });
-
-    it('stays silent for a waived generator-only migration that had no changes to validate', async () => {
-      mockResolveAgentic.mockResolvedValue(ENABLED_AGENTIC);
-      writeMigrations([genMig('@nx/js', 'gen')]);
-      waives({ changes: [], madeChanges: false });
-
-      await runSingleMigrationWorker(
-        standaloneInput({ runMigration: '@nx/js:gen' })
+      expect(logged()).toContain(
+        'Validation skipped. The migration reported its changes need no AI review.'
       );
-
-      expect(mockRunStep).not.toHaveBeenCalled();
-      expect(logged()).not.toContain('Validation skipped');
+      expect(stdout).not.toContain('<nx_migrate_prompt');
+      expect(stdout).not.toContain('<agent_context');
     });
 
     it('notes an agentContext dropped by a waiver behind --verbose', async () => {
-      mockResolveAgentic.mockResolvedValue(ENABLED_AGENTIC);
       writeMigrations([hybridMig('@nx/js', 'h')]);
       waives({ agentContext: ['hint'] });
-      mockCommit.mockResolvedValue({ status: 'committed', sha: 'abc0' });
       const verboseSpy = vi
         .spyOn(logger, 'verbose')
         .mockImplementation(() => undefined);

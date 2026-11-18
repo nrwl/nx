@@ -79,7 +79,9 @@ describe('nx release version plans', () => {
     runCLI(`generate @nx/workspace:npm-package ${pkg5}`);
 
     // Normalize git committer information so it is deterministic in snapshots
-    await runCommandAsync(`git config user.email "test@test.com"`);
+    await runCommandAsync(
+      `git config user.email "test@users.noreply.github.com"`
+    );
     await runCommandAsync(`git config user.name "Test"`);
 
     await runCommandAsync(`git add .`);

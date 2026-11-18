@@ -4,6 +4,7 @@ import {
   readProjectConfiguration,
   Tree,
   updateNxJson,
+  updateJson,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import {
@@ -11,8 +12,8 @@ import {
   createOrEditViteConfig,
 } from './generator-utils';
 
-jest.mock('@nx/js/src/utils/typescript/ts-solution-setup', () => ({
-  isUsingTsSolutionSetup: jest.fn(() => false),
+vi.mock('@nx/js/src/utils/typescript/ts-solution-setup', () => ({
+  isUsingTsSolutionSetup: vi.fn(() => false),
 }));
 
 describe('createOrEditViteConfig', () => {
@@ -28,6 +29,25 @@ describe('createOrEditViteConfig', () => {
   });
 
   describe('vitest config generation', () => {
+    it.each([5, 6, 7])('should preserve path aliases on Vite %s', (version) => {
+      updateJson(tree, 'package.json', (json) => ({
+        ...json,
+        devDependencies: { vite: `^${version}.0.0` },
+      }));
+      createOrEditViteConfig(
+        tree,
+        { project: 'my-app', includeVitest: true, coverageProvider: 'none' },
+        true,
+        { vitestFileName: true }
+      );
+      const config = tree.read('apps/my-app/vitest.config.ts', 'utf-8');
+      expect(config).toContain(
+        "import tsconfigPaths from 'vite-tsconfig-paths'"
+      );
+      expect(config).toContain('tsconfigPaths({ loose: true })');
+      expect(config).not.toContain('tsconfigPaths: true');
+    });
+
     it('should escape special characters in testInclude patterns', () => {
       createOrEditViteConfig(
         tree,
@@ -374,10 +394,11 @@ describe('addOrChangeTestTarget', () => {
       false
     );
 
-    expect(targetsOf('my-app-e2e').e2e).toEqual({
-      executor: '@nx/vitest:test',
-      outputs: ['{options.reportsDirectory}'],
-      options: { reportsDirectory: 'coverage/apps/my-app-e2e' },
+    expect(targetsOf('my-app-e2e').e2e).toBeUndefined();
+    expect(readNxJson(tree).plugins).toContainEqual({
+      plugin: '@nx/vitest',
+      include: ['apps/my-app-e2e/**/*'],
+      options: { testTargetName: 'e2e' },
     });
   });
 

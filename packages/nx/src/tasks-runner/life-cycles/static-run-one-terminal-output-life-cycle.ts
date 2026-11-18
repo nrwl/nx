@@ -101,7 +101,12 @@ export class StaticRunOneTerminalOutputLifeCycle implements LifeCycle {
 
     // A stopped task was killed mid-flight, so the run did not complete even
     // though nothing outright failed — matching run-many and didCommandComplete.
-    if (this.failedTasks.length === 0 && this.stoppedTasks.length === 0) {
+    // A discrete task that never reported was skipped, which fails the run too.
+    if (
+      this.failedTasks.length === 0 &&
+      this.stoppedTasks.length === 0 &&
+      !this.skippedTasks().some((t) => !t.continuous)
+    ) {
       output.addVerticalSeparatorWithoutNewLines('green');
 
       const bodyLines =
@@ -131,7 +136,7 @@ export class StaticRunOneTerminalOutputLifeCycle implements LifeCycle {
       if (skippedTasks.length > 0) {
         bodyLines.push(
           output.dim(
-            'Tasks not run because their dependencies failed or --nx-bail=true:'
+            'Tasks not run because their dependencies failed, --nx-bail=true, or their batch ended before reaching them:'
           ),
           '',
           ...skippedTasks.map((task) => `${output.dim('-')} ${task.id}`),

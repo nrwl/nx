@@ -2,13 +2,7 @@ import {
   determineProjectNameAndRootOptions,
   ensureRootProjectName,
 } from '@nx/devkit/internal';
-import {
-  getProjects,
-  logger,
-  normalizePath,
-  readNxJson,
-  Tree,
-} from '@nx/devkit';
+import { getProjects, logger, normalizePath, Tree } from '@nx/devkit';
 import { NormalizedSchema, Schema } from '../schema';
 import {
   normalizeLinterOption,
@@ -50,12 +44,6 @@ export async function normalizeOptions(
       bundler = 'vite';
     }
   }
-  const nxJson = readNxJson(host);
-
-  const addPlugin =
-    process.env.NX_ADD_PLUGINS !== 'false' &&
-    nxJson.useInferencePlugins !== false;
-
   const isUsingTsSolutionConfig = isUsingTsSolutionSetup(host);
 
   let appMain: string | undefined;
@@ -88,7 +76,6 @@ export async function normalizeOptions(
   }
 
   const normalized: NormalizedSchema = {
-    addPlugin,
     ...options,
     projectName:
       isUsingTsSolutionConfig && !options.name ? importPath : projectName,

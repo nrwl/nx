@@ -12,6 +12,8 @@ import {
   workspaceDataDirectory,
   PluginCache,
   getFilesInDirectoryUsingContext,
+  applyTestFileDirectives,
+  quoteShellArg,
 } from '@nx/devkit/internal';
 import {
   AggregateCreateNodesError,
@@ -47,6 +49,12 @@ import {
   type ProbeEnv,
   type ResolvedWebServer,
 } from './webserver-readiness';
+import { createRequire } from 'node:module';
+
+// Node passes a stand-in require, without a cache, require.extensions or
+// Module._load, when an ESM loader hook supplies this module's source, as
+// Yarn PnP does.
+if (!require.cache) require = createRequire(__filename);
 
 export interface PlaywrightPluginOptions {
   targetName?: string;
@@ -56,15 +64,31 @@ export interface PlaywrightPluginOptions {
    * for a server to be ready before failing. Overrides the `timeout` each
    * Playwright `webServer` configures. Defaults to that configured timeout,
    * or 60000 when neither is set.
+   *
+   * @deprecated Wait for the web server task's `readyWhen` instead, which
+   * `waitForServerReady` turns on. This option will be removed in Nx 25.
    */
   webServerTimeout?: number;
   /**
-   * Whether to infer a task that waits for the web server to be ready before the
-   * Playwright test tasks run. When false, no readiness task is inferred and the
-   * tests fall back to Playwright's own `reuseExistingServer` probe. Defaults to
-   * true.
+   * Whether to infer a task that probes the web server's port or url before the
+   * Playwright test tasks run. Defaults to false: the test tasks wait for the
+   * web server task's `readyWhen` instead. Turn it on for a server without a
+   * `readyWhen`, which counts as ready once it starts, so that Playwright's own
+   * probe doesn't miss and start a second server.
+   *
+   * @deprecated The test tasks wait for the web server task's `readyWhen`.
+   * This option will be removed in Nx 25.
    */
   waitForWebServer?: boolean;
+  /**
+   * Whether the inferred dependencies on the web server tasks wait for those
+   * tasks' `readyWhen` (`waitFor: 'ready'`) rather than for them to start.
+   * Defaults to true.
+   *
+   * @deprecated Leave it unset to wait for the web server task's `readyWhen`,
+   * the only behavior in Nx 25. This option will be removed in Nx 25.
+   */
+  waitForServerReady?: boolean;
 }
 
 interface NormalizedOptions {
@@ -73,6 +97,7 @@ interface NormalizedOptions {
   mergeReportsTargetName: string;
   webServerTimeout?: number;
   waitForWebServer: boolean;
+  waitForServerReady: boolean;
 }
 
 type PlaywrightTargets = Pick<ProjectConfiguration, 'targets' | 'metadata'>;
@@ -435,7 +460,12 @@ async function buildPlaywrightTargets(
     },
   };
 
-  applyChainDependsOn(baseTargetConfig, e2eChain, e2eReadyTargetName);
+  applyChainDependsOn(
+    baseTargetConfig,
+    e2eChain,
+    e2eReadyTargetName,
+    options.waitForServerReady
+  );
 
   targets[options.targetName] = {
     ...baseTargetConfig,
@@ -446,6 +476,7 @@ async function buildPlaywrightTargets(
         : ['default', '^default']),
       ...tsconfigJsonInputs,
       { externalDependencies: ['@playwright/test'] },
+      { env: 'CI' },
     ],
     outputs: getTargetOutputs(
       testOutput,
@@ -458,13 +489,15 @@ async function buildPlaywrightTargets(
   if (e2eReadyTargetName) {
     targets[e2eReadyTargetName] = buildWaitForWebserverTarget(
       e2eChain,
-      options.webServerTimeout
+      options.webServerTimeout,
+      options.waitForServerReady
     );
   }
   if (ciReadyTargetName && ciReadyTargetName !== e2eReadyTargetName) {
     targets[ciReadyTargetName] = buildWaitForWebserverTarget(
       ciChain,
-      options.webServerTimeout
+      options.webServerTimeout,
+      options.waitForServerReady
     );
   }
 
@@ -486,6 +519,7 @@ async function buildPlaywrightTargets(
           : ['default', '^default']),
         ...tsconfigJsonInputs,
         { externalDependencies: ['@playwright/test'] },
+        { env: 'CI' },
       ],
       outputs: getTargetOutputs(
         testOutput,
@@ -498,7 +532,12 @@ async function buildPlaywrightTargets(
     // Unconditionally: the chains can differ in ways the shared-gate check
     // deliberately ignores (an extra uncovered server flips parallelism), and
     // re-deriving is a no-op when they match.
-    applyChainDependsOn(ciBaseTargetConfig, ciChain, ciReadyTargetName);
+    applyChainDependsOn(
+      ciBaseTargetConfig,
+      ciChain,
+      ciReadyTargetName,
+      options.waitForServerReady
+    );
 
     const groupName = 'E2E (CI)';
     metadata = { targetGroups: { [groupName]: [] } };
@@ -546,38 +585,42 @@ async function buildPlaywrightTargets(
 
       const targetName = `${options.ciTargetName}--${relativeSpecFilePath}`;
       ciTargetGroup.push(targetName);
-      targets[targetName] = {
-        ...ciBaseTargetConfig,
-        options: {
-          ...ciBaseTargetConfig.options,
-          env: getAtomizedTaskEnvVars(reporterOutputs, outputSubfolder),
-        },
-        outputs: getAtomizedTaskOutputs(
-          testOutput,
-          reporterOutputs,
-          context.workspaceRoot,
-          projectRoot,
-          outputSubfolder
-        ),
-        command: `${
-          baseTargetConfig.command
-        } ${relativeSpecFilePath} --output=${joinPathFragments(
-          testOutput,
-          outputSubfolder
-        )}`,
-        metadata: {
-          technologies: ['playwright'],
-          description: `Runs Playwright Tests in ${relativeSpecFilePath} in CI`,
-          help: {
-            command: `${pmc.exec} playwright test --help`,
-            example: {
-              options: {
-                workers: 1,
+      targets[targetName] = applyTestFileDirectives(
+        {
+          ...ciBaseTargetConfig,
+          options: {
+            ...ciBaseTargetConfig.options,
+            env: getAtomizedTaskEnvVars(reporterOutputs, outputSubfolder),
+          },
+          outputs: getAtomizedTaskOutputs(
+            testOutput,
+            reporterOutputs,
+            context.workspaceRoot,
+            projectRoot,
+            outputSubfolder
+          ),
+          command: `${baseTargetConfig.command} ${quoteShellArg(
+            relativeSpecFilePath
+          )} --output=${quoteShellArg(
+            joinPathFragments(testOutput, outputSubfolder)
+          )}`,
+          metadata: {
+            technologies: ['playwright'],
+            description: `Runs Playwright Tests in ${relativeSpecFilePath} in CI`,
+            help: {
+              command: `${pmc.exec} playwright test --help`,
+              example: {
+                options: {
+                  workers: 1,
+                },
               },
             },
           },
         },
-      };
+        context.workspaceRoot,
+        testFile,
+        { ignoreServerInputs: true }
+      );
 
       dependsOn.push({
         target: targetName,
@@ -701,7 +744,8 @@ function normalizeOptions(options: PlaywrightPluginOptions): NormalizedOptions {
     targetName: options?.targetName ?? 'e2e',
     ciTargetName,
     mergeReportsTargetName: `${ciTargetName}--merge-reports`,
-    waitForWebServer: options?.waitForWebServer ?? true,
+    waitForWebServer: options?.waitForWebServer ?? false,
+    waitForServerReady: options?.waitForServerReady !== false,
   };
 }
 
@@ -975,7 +1019,8 @@ function sameChain(a: ChainWebserver, b: ChainWebserver): boolean {
 
 function buildWaitForWebserverTarget(
   chain: ChainWebserver,
-  webServerTimeout: number | undefined
+  webServerTimeout: number | undefined,
+  waitForServerReady: boolean
 ): TargetConfiguration {
   return {
     executor: '@nx/playwright:wait-for-webserver',
@@ -984,7 +1029,7 @@ function buildWaitForWebserverTarget(
       servers: chain.readinessServers,
       ...(webServerTimeout != null ? { timeout: webServerTimeout } : {}),
     },
-    dependsOn: getDependsOn(chain.commandTasks),
+    dependsOn: getDependsOn(chain.commandTasks, waitForServerReady),
     metadata: {
       technologies: ['playwright'],
       description:
@@ -1120,8 +1165,9 @@ function parseTaskFromCommand(command: string): {
   hasConfiguration: boolean;
 } | null {
   const nxRunRegex =
-    /^(?:(?:npx|yarn|bun|pnpm|pnpm exec|pnpx) )?nx run (\S+:\S+)$/;
-  const infixRegex = /^(?:(?:npx|yarn|bun|pnpm|pnpm exec|pnpx) )?nx (\S+ \S+)$/;
+    /^(?:(?:npx|yarn|bun|bunx|bun x|pnpm|pnpm exec|pnpx) )?nx run (\S+:\S+)$/;
+  const infixRegex =
+    /^(?:(?:npx|yarn|bun|bunx|bun x|pnpm|pnpm exec|pnpx) )?nx (\S+ \S+)$/;
 
   const nxRunMatch = command.match(nxRunRegex);
   if (nxRunMatch) {
@@ -1155,12 +1201,17 @@ function chainRequiresSerialization(chain: ChainWebserver): boolean {
 function applyChainDependsOn(
   targetConfig: TargetConfiguration,
   chain: ChainWebserver,
-  readyTargetName: string | undefined
+  readyTargetName: string | undefined,
+  waitForServerReady: boolean
 ): void {
   if (chain.commandTasks.length) {
+    const serverDependsOn = getDependsOn(
+      chain.commandTasks,
+      waitForServerReady
+    );
     targetConfig.dependsOn = readyTargetName
-      ? [...getDependsOn(chain.commandTasks), { target: readyTargetName }]
-      : getDependsOn(chain.commandTasks);
+      ? [...serverDependsOn, { target: readyTargetName }]
+      : serverDependsOn;
   } else {
     delete targetConfig.dependsOn;
   }
@@ -1172,8 +1223,9 @@ function applyChainDependsOn(
 }
 
 function getDependsOn(
-  tasks: Array<{ project: string; target: string }>
-): TargetConfiguration['dependsOn'] {
+  tasks: Array<{ project: string; target: string }>,
+  waitForServerReady: boolean
+): TargetDependencyConfig[] {
   const projectsPerTask = new Map<string, string[]>();
 
   for (const { project, target } of tasks) {
@@ -1186,6 +1238,7 @@ function getDependsOn(
   return Array.from(projectsPerTask.entries()).map(([target, projects]) => ({
     projects,
     target,
+    ...(waitForServerReady ? { waitFor: 'ready' as const } : {}),
   }));
 }
 

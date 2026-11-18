@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`convert-to-inferred all projects should migrate all projects using the webpack executors 1`] = `
+exports[`convert-to-inferred > all projects > should migrate all projects using the webpack executors 1`] = `
 "const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
 const { NxReactWebpackPlugin } = require('@nx/react/webpack-plugin');
 const { useLegacyNxPlugin } = require('@nx/webpack');
@@ -90,7 +90,7 @@ module.exports = async () => ({
 "
 `;
 
-exports[`convert-to-inferred all projects should migrate all projects using the webpack executors 2`] = `
+exports[`convert-to-inferred > all projects > should migrate all projects using the webpack executors 2`] = `
 "const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
 const { NxReactWebpackPlugin } = require('@nx/react/webpack-plugin');
 const { useLegacyNxPlugin } = require('@nx/webpack');
@@ -180,7 +180,7 @@ module.exports = async () => ({
 "
 `;
 
-exports[`convert-to-inferred all projects should migrate all projects using the webpack executors 3`] = `
+exports[`convert-to-inferred > all projects > should migrate all projects using the webpack executors 3`] = `
 "const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
 const { NxReactWebpackPlugin } = require('@nx/react/webpack-plugin');
 const { useLegacyNxPlugin } = require('@nx/webpack');

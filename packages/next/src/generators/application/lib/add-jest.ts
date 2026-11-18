@@ -6,7 +6,6 @@ import {
   updateJson,
   GeneratorCallback,
 } from '@nx/devkit';
-import { isTypedLintingEnabled } from '@nx/eslint/internal';
 
 import { nxVersion } from '../../../utils/versions';
 import { NormalizedSchema } from './normalize-options';
@@ -61,7 +60,7 @@ export async function addJest(
     (json) => {
       json.compilerOptions.jsx = 'react';
       // Override exclude so typed linting doesn't fail on jest.config.ts and jest.config.cts.
-      if (isTypedLintingEnabled(options)) {
+      if (options.enableTypedLinting) {
         const tsConfig = readJson(
           host,
           joinPathFragments(options.appProjectRoot, 'tsconfig.json')

@@ -10,17 +10,18 @@ import {
   writeJson,
 } from '@nx/devkit';
 import {
-  addPnpmDeployOutputCacheInputs,
+  addDeployOutputCacheInputs,
+  BUN_INSTALL_SETTINGS_INPUTS,
   PNPM_INSTALL_SETTINGS_INPUTS,
   TS_SOLUTION_SETUP_TSCONFIG_INPUT,
+  type DeployOutputSettingsInput,
   type MatchedTargetRef,
 } from '@nx/js/internal';
-import { hasWebpackPlugin } from '../../../utils/has-webpack-plugin';
+import { addTscAppBuildPlugin } from './add-tsc-build-plugin';
 import { NormalizedSchema } from './normalized-schema';
 import {
   getEsBuildConfig,
   getServeConfig,
-  getWebpackBuildConfig,
   getPruneTargets,
 } from './create-targets';
 
@@ -37,39 +38,54 @@ export function addProject(
     tags: options.parsedTags,
   };
 
-  // The generated build target emits the pruned pnpm deploy output when
-  // generatePackageJson is on; the install settings it carries are hashed by
-  // no default input (see PNPM_INSTALL_SETTINGS_INPUTS).
-  const pnpmDeployInputs = tree.exists('pnpm-lock.yaml')
+  // The generated build target emits the pruned deploy output when
+  // generatePackageJson is on; the pnpm or Bun install settings it carries are
+  // hashed by no default input (see PNPM_INSTALL_SETTINGS_INPUTS and
+  // BUN_INSTALL_SETTINGS_INPUTS). The binary bun.lockb gets the Bun inputs too:
+  // the output carries the trust list once the workspace switches to bun.lock.
+  const deployInputs: readonly DeployOutputSettingsInput[] = tree.exists(
+    'pnpm-lock.yaml'
+  )
     ? PNPM_INSTALL_SETTINGS_INPUTS
-    : [];
+    : tree.exists('bun.lock') || tree.exists('bun.lockb')
+      ? BUN_INSTALL_SETTINGS_INPUTS
+      : [];
   if (options.bundler === 'esbuild') {
     addBuildTargetDefaults(tree, '@nx/esbuild:esbuild', 'build', [
       TS_SOLUTION_SETUP_TSCONFIG_INPUT,
-      ...pnpmDeployInputs,
+      ...deployInputs,
     ]);
     project.targets.build = getEsBuildConfig(tree, project, options);
-    ensurePnpmDeployInputs(tree, options, project.targets.build);
-  } else if (options.bundler === 'webpack') {
-    if (!hasWebpackPlugin(tree) && options.addPlugin === false) {
-      addBuildTargetDefaults(tree, `@nx/webpack:webpack`, 'build', [
-        TS_SOLUTION_SETUP_TSCONFIG_INPUT,
-        ...pnpmDeployInputs,
-      ]);
-      project.targets.build = getWebpackBuildConfig(tree, project, options);
-      ensurePnpmDeployInputs(tree, options, project.targets.build);
-    }
+    ensureDeployInputs(tree, options, project.targets.build, deployInputs);
+  } else if (options.bundler === 'tsc') {
+    options.buildTargetName = addTscAppBuildPlugin(
+      tree,
+      options.appProjectRoot
+    );
   }
+  // The rolldown build target comes from @nx/rolldown:configuration.
   project.targets = {
     ...project.targets,
-    ...getPruneTargets('build', options.outputPath),
+    ...getPruneTargets(options.buildTargetName, options.outputPath),
   };
-  project.targets.serve = getServeConfig(options);
+  if (!options.serveRuntime) {
+    project.targets.serve = getServeConfig(options);
+  } else {
+    // @nx/js/node or @nx/js/tsx infers the command. `^build` builds workspace
+    // libraries whose exports point at their output.
+    project.targets.serve = { continuous: true, dependsOn: ['^build'] };
+  }
+  // The framework templates call emitReadySignal once the server listens
+  if (options.isNest || (options.framework && options.framework !== 'none')) {
+    project.targets.serve.readyWhen = { signal: true };
+  }
 
   const packageJson: PackageJson = {
     name: options.importPath,
     version: '0.0.1',
     private: true,
+    // Node runs the TypeScript source as ESM; without this it warns on every start.
+    ...(options.serveRuntime === 'node' && { type: 'module' }),
     dependencies: { ...frameworkDependencies },
   };
 
@@ -83,7 +99,12 @@ export function addProject(
     addProjectConfiguration(tree, options.name, project);
   }
 
-  if (!options.useProjectJson || options.isUsingTsSolutionConfig) {
+  // The prune targets read the project package.json for the deps to deploy.
+  if (
+    !options.useProjectJson ||
+    options.isUsingTsSolutionConfig ||
+    !options.rootProject
+  ) {
     writeJson(
       tree,
       joinPathFragments(options.appProjectRoot, 'package.json'),
@@ -93,18 +114,19 @@ export function addProject(
 }
 
 /**
- * Guarantees the pnpm deploy-settings inputs reach the generated build target
- * even when `addBuildTargetDefaults` skipped writing them because an
+ * Guarantees the deploy-settings inputs reach the generated build target even
+ * when `addBuildTargetDefaults` skipped writing them because an
  * executor-keyed `targetDefaults` entry already existed. Resolution and
  * placement follow nx's own targetDefaults matching (see
- * `addPnpmDeployOutputCacheInputs`).
+ * `addDeployOutputCacheInputs`).
  */
-function ensurePnpmDeployInputs(
+function ensureDeployInputs(
   tree: Tree,
   options: NormalizedSchema,
-  buildTarget: TargetConfiguration
+  buildTarget: TargetConfiguration,
+  deployInputs: readonly DeployOutputSettingsInput[]
 ): void {
-  if (!tree.exists('pnpm-lock.yaml')) {
+  if (deployInputs.length === 0) {
     return;
   }
   const nxJson = readNxJson(tree);
@@ -119,10 +141,11 @@ function ensurePnpmDeployInputs(
     matcherExecutor: buildTarget.executor,
     target: buildTarget,
   };
-  const changed = addPnpmDeployOutputCacheInputs(
+  const changed = addDeployOutputCacheInputs(
     ref,
     nxJson?.targetDefaults,
-    buildTarget.executor
+    buildTarget.executor,
+    deployInputs
   );
   if (changed === 'defaults') {
     updateNxJson(tree, nxJson);

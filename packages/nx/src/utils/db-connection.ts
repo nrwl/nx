@@ -17,7 +17,7 @@ const dbConnectionMap = new Map<string, ExternalObject<any>>();
  * cache hit resolves to artifacts that were never written here.
  */
 let _sharedDir: string | undefined;
-function sharedWorkspaceDataDirectory(root: string): string {
+export function sharedWorkspaceDataDirectory(root: string): string {
   _sharedDir ??= sharedDataDirectory(root, 'workspace-data');
   return _sharedDir;
 }
@@ -29,9 +29,10 @@ export function getDbConnection(
   } = {}
 ) {
   opts.directory ??= sharedWorkspaceDataDirectory(workspaceRoot);
-  const key = `${opts.directory}:${opts.dbName ?? 'default'}`;
+  const dbName = opts.dbName ?? (process.env.NX_DB_NAME || undefined);
+  const key = JSON.stringify([opts.directory, dbName]);
   const connection = getEntryOrSet(dbConnectionMap, key, () =>
-    connectToNxDb(opts.directory, opts.dbName)
+    connectToNxDb(opts.directory, dbName)
   );
   return connection;
 }
@@ -48,14 +49,15 @@ export function getLocalDbConnection(
   } = {}
 ) {
   const directory = workspaceDataDirectoryForWorkspace(workspaceRoot);
-  const key = `${directory}:${opts.dbName ?? 'default'}`;
+  const dbName = opts.dbName ?? (process.env.NX_DB_NAME || undefined);
+  const key = JSON.stringify([directory, dbName]);
   const connection = getEntryOrSet(dbConnectionMap, key, () =>
-    connectToNxDb(directory, opts.dbName)
+    connectToNxDb(directory, dbName)
   );
   return connection;
 }
 
-function removeDbConnections() {
+export function removeDbConnections() {
   for (const connection of dbConnectionMap.values()) {
     closeDbConnection(connection);
   }

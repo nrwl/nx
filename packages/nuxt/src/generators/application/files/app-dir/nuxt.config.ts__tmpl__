@@ -1,10 +1,11 @@
-import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+import tsconfigPaths from 'vite-tsconfig-paths';
 import { defineNuxtConfig } from 'nuxt/config';
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   workspaceDir: '<%= offsetFromRoot %>',
   devtools: { enabled: true },
+  modules: ['@nx/nuxt/ready-signal'],
   devServer: {
     host: 'localhost',
     port: 4200,
@@ -22,8 +23,6 @@ export default defineNuxtConfig({
   css: ['~/assets/css/styles.<%= style %>'],
   <%_ } _%>
   vite: {
-    plugins: [
-      nxViteTsPaths()
-    ],
+    plugins: [tsconfigPaths({ loose: true })],
   },
 });

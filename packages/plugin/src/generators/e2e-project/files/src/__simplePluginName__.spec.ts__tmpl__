@@ -58,7 +58,7 @@ function createTestProject() {
   });
 
   execSync(
-    `<%= packageManagerCommands.dlx %> create-nx-workspace@latest ${projectName} --preset apps --nxCloud=skip --no-interactive`,
+    `<%= packageManagerCommands.dlx %> create-nx-workspace@latest ${projectName} --preset apps --nxCloud=skip --no-interactive --packageManager=<%= packageManager %>`,
     {
       cwd: dirname(projectDirectory),
       stdio: 'inherit',

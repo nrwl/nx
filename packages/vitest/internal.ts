@@ -14,3 +14,4 @@ export {
   createOrEditViteConfig,
   ViteConfigFileOptions,
 } from './src/utils/generator-utils';
+export { convertToInferred as convertVitestToInferred } from './src/generators/convert-to-inferred/convert-to-inferred';

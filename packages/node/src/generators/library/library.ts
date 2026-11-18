@@ -13,7 +13,6 @@ import {
   names,
   offsetFromRoot,
   readJson,
-  readNxJson,
   readProjectConfiguration,
   runTasksInSerial,
   toJS,
@@ -22,7 +21,6 @@ import {
   updateTsConfigsToJs,
   writeJson,
 } from '@nx/devkit';
-import { isTypedLintingEnabled } from '@nx/eslint/internal';
 import { libraryGenerator as jsLibraryGenerator } from '@nx/js';
 import {
   addSwcConfig,
@@ -47,7 +45,6 @@ export interface NormalizedSchema extends Schema {
 
 export async function libraryGenerator(tree: Tree, schema: Schema) {
   return await libraryGeneratorInternal(tree, {
-    addPlugin: false,
     useProjectJson: true,
     ...schema,
   });
@@ -93,7 +90,6 @@ export async function libraryGeneratorInternal(tree: Tree, schema: Schema) {
       importPath: schema.importPath,
       testEnvironment: 'node',
       skipFormat: true,
-      enableTypedLinting: isTypedLintingEnabled(schema),
       useProjectJson: options.useProjectJson,
     })
   );
@@ -149,13 +145,6 @@ async function normalizeOptions(
     importPath: options.importPath,
   });
 
-  const nxJson = readNxJson(tree);
-  const addPluginDefault =
-    process.env.NX_ADD_PLUGINS !== 'false' &&
-    nxJson.useInferencePlugins !== false;
-
-  options.addPlugin ??= addPluginDefault;
-
   const fileName = names(
     options.simpleModuleName
       ? projectNames.projectSimpleName
@@ -170,8 +159,7 @@ async function normalizeOptions(
   // TS solution setup is not configured, we additionally check if the TS
   // solution setup will be configured by the jsLibraryGenerator
   const isUsingTsSolutionConfig =
-    isUsingTsSolutionSetup(tree) ||
-    shouldConfigureTsSolutionSetup(tree, options.addPlugin);
+    isUsingTsSolutionSetup(tree) || shouldConfigureTsSolutionSetup(tree);
   return {
     ...options,
     fileName,

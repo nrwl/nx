@@ -15,6 +15,21 @@ export function projectHasTarget(
   );
 }
 
+/** The projects that define at least one of `targets`. */
+export function runnableForTarget(
+  projects: Record<string, ProjectGraphProjectNode>,
+  targets: string[]
+): Set<string> {
+  const runnable = new Set<string>();
+  for (const projectName in projects) {
+    const project = projects[projectName];
+    if (targets.some((target) => projectHasTarget(project, target))) {
+      runnable.add(projectName);
+    }
+  }
+  return runnable;
+}
+
 export function projectHasTargetAndConfiguration(
   project: ProjectGraphProjectNode,
   target: string,

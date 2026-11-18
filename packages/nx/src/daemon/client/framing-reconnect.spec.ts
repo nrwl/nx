@@ -1,4 +1,4 @@
-import { randomBytes } from 'crypto';
+import { mkdtempSync, rmSync } from 'fs';
 import { createServer, Server } from 'net';
 import { tmpdir } from 'os';
 import { join } from 'path';
@@ -6,10 +6,12 @@ import { DaemonClient } from './client';
 
 describe('watcher channels under a repeating framing failure', () => {
   let server: Server;
+  let socketDir: string;
   let connections = 0;
 
   afterEach(() => {
     server?.close();
+    rmSync(socketDir, { recursive: true, force: true });
     delete process.env.NX_DAEMON;
   });
 
@@ -17,10 +19,8 @@ describe('watcher channels under a repeating framing failure', () => {
   // the deterministic case: a payload over NX_MAX_MESSAGE_SIZE fails the same
   // way on every redial, so reconnecting can never clear it.
   const startHostileDaemon = async () => {
-    const path = join(
-      tmpdir(),
-      `nx-framing-${randomBytes(6).toString('hex')}.sock`
-    );
+    socketDir = mkdtempSync(join(tmpdir(), 'nx-framing-'));
+    const path = join(socketDir, 'd.sock');
     connections = 0;
     await new Promise<void>((res) => {
       server = createServer((socket) => {

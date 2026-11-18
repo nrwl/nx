@@ -10,9 +10,10 @@ export const tsLibVersion = '^2.3.0';
 export const minSupportedStorybookVersion = '8.0.0';
 
 // Fresh-install default. Latest supported major.
-export const storybookVersion = '^10.5.0';
+export const storybookVersion = '^10.6.2';
 export const reactVersion = '^18.2.0';
 export const viteVersion = '^6.0.0';
+export const viteTsconfigPathsVersion = '~4.3.2';
 
 export const coreJsVersion = '^3.36.1';
 
@@ -31,9 +32,9 @@ const latestVersions: StorybookVersions = {
 
 type CompatVersions = 8 | 9 | 10;
 const versionMap: Record<CompatVersions, StorybookVersions> = {
-  8: { storybookVersion: '^8.6.11', testRunnerVersion: '^0.21.0' },
-  9: { storybookVersion: '^9.0.5', testRunnerVersion: '^0.23.0' },
-  10: { storybookVersion: '^10.5.0', testRunnerVersion },
+  8: { storybookVersion: '^8.6.19', testRunnerVersion: '^0.21.0' },
+  9: { storybookVersion: '^9.1.21', testRunnerVersion: '^0.23.0' },
+  10: { storybookVersion: '^10.6.2', testRunnerVersion },
 };
 
 export function versions(tree: Tree): StorybookVersions {

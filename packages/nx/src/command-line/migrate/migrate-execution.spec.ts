@@ -14,17 +14,6 @@ vi.mock('./migrate-commits', () => ({
     mockCommitCheckpointBeforeMigrations(...args),
 }));
 
-const mockRunAgenticPromptStep = vi.fn();
-// executeMigrations lazy-requires ./agentic/run-step (CJS channel).
-mockCjsModule(import.meta.url, './agentic/run-step', {
-  runAgenticPromptStep: (...args: unknown[]) =>
-    mockRunAgenticPromptStep(...args),
-});
-vi.mock('./agentic/run-step', () => ({
-  runAgenticPromptStep: (...args: unknown[]) =>
-    mockRunAgenticPromptStep(...args),
-}));
-
 const mockNgRunMigration = vi.fn();
 // execute-migration loads the ng compat layer through handleImport (CJS
 // channel), which vi.mock cannot intercept; replace it there instead.
@@ -62,7 +51,6 @@ import { dirname, join } from 'path';
 import type { MigrationsJson } from '../../config/misc-interfaces';
 import { logger } from '../../utils/logger';
 import { output } from '../../utils/output';
-import type { ResolvedAgentic } from './agentic/types';
 import {
   ChangedDepInstaller,
   executeMigrations,
@@ -70,6 +58,7 @@ import {
   getImplementationPath,
   parseMigrationReturn,
   readMigrationCollection,
+  runInstall,
   runNxOrAngularMigration,
 } from './migrate';
 
@@ -104,9 +93,11 @@ function writeImplFile(pkgDir: string, relPath: string, source: string): void {
 // child_process.spawn returns an EventEmitter with a `.stderr` stream; tests
 // drive install outcomes by emitting on these directly.
 class FakeChildProcess extends EventEmitter {
+  stdout: EventEmitter | null;
   stderr: EventEmitter | null;
-  constructor(withStderr = false) {
+  constructor(withStderr = false, withStdout = false) {
     super();
+    this.stdout = withStdout ? new EventEmitter() : null;
     this.stderr = withStderr ? new EventEmitter() : null;
   }
 }
@@ -563,6 +554,28 @@ describe('ChangedDepInstaller', () => {
     expect(mockSpawn.mock.calls[0][0]).toContain('install');
   });
 
+  it('spawns the install command when only a catalog entry changed', async () => {
+    writeFileSync(join(tmpRoot, 'pnpm-lock.yaml'), '');
+    writePackageJson({ dependencies: { foo: 'catalog:' } });
+    writeFileSync(
+      join(tmpRoot, 'pnpm-workspace.yaml'),
+      'catalog:\n  foo: 1.0.0\n'
+    );
+    const installer = new ChangedDepInstaller(tmpRoot, false);
+    writeFileSync(
+      join(tmpRoot, 'pnpm-workspace.yaml'),
+      'catalog:\n  foo: 2.0.0\n'
+    );
+    const child = new FakeChildProcess();
+    mockSpawn.mockReturnValue(child);
+
+    const promise = installer.installDepsIfChanged();
+    child.emit('close', 0);
+    await promise;
+
+    expect(mockSpawn).toHaveBeenCalledTimes(1);
+  });
+
   it('does not spawn a second install when nothing changes after a prior install', async () => {
     writePackageJson();
     const installer = new ChangedDepInstaller(tmpRoot, false);
@@ -706,6 +719,208 @@ describe('ChangedDepInstaller', () => {
         errorSpy.mockRestore();
       }
     });
+  });
+});
+
+describe('runInstall with an output sink', () => {
+  let tmpRoot: string;
+
+  beforeEach(() => {
+    tmpRoot = mkdtempSync(join(tmpdir(), 'nx-migrate-install-'));
+    writeFileSync(join(tmpRoot, 'package-lock.json'), '{}');
+  });
+
+  afterEach(() => {
+    rmSync(tmpRoot, { recursive: true, force: true });
+  });
+
+  function sink() {
+    const calls: unknown[][] = [];
+    return {
+      calls,
+      notice: (...args: unknown[]) => calls.push(['notice', ...args]),
+      line: (...args: unknown[]) => calls.push(['line', ...args]),
+      raw: (...args: unknown[]) => calls.push(['raw', ...args]),
+    };
+  }
+
+  it('detaches the package manager from the terminal and collects both streams in order', async () => {
+    const child = new FakeChildProcess(true, true);
+    mockSpawn.mockReturnValue(child);
+    const out = sink();
+    const logSpy = vi.spyOn(output, 'log');
+    const stderrSpy = vi.spyOn(process.stderr, 'write');
+
+    const promise = runInstall(tmpRoot, 'post-migration', undefined, out);
+    child.stdout!.emit('data', Buffer.from('added 1 package\n'));
+    child.stderr!.emit('data', Buffer.from('npm warn old\n'));
+    child.emit('close', 0);
+    await promise;
+
+    expect(mockSpawn.mock.calls[0][1]).toMatchObject({
+      stdio: ['ignore', 'pipe', 'pipe'],
+      detached: process.platform !== 'win32',
+    });
+    expect(out.calls).toEqual([
+      [
+        'notice',
+        'log',
+        {
+          title: expect.stringMatching(
+            /^Running 'npm install .*' to make sure necessary packages are installed$/
+          ),
+        },
+      ],
+      ['raw', 'added 1 package\n'],
+      ['raw', 'npm warn old\n'],
+    ]);
+    expect(logSpy).not.toHaveBeenCalled();
+    expect(stderrSpy).not.toHaveBeenCalled();
+  });
+
+  it('decodes a multi-byte character split across chunks of one stream', async () => {
+    const child = new FakeChildProcess(true, true);
+    mockSpawn.mockReturnValue(child);
+    const out = sink();
+
+    const promise = runInstall(tmpRoot, 'post-migration', undefined, out);
+    const euro = Buffer.from('\u20ac');
+    child.stdout!.emit('data', euro.subarray(0, 1));
+    child.stderr!.emit('data', Buffer.from('warn \u20ac'));
+    child.stdout!.emit('data', euro.subarray(1));
+    child.emit('close', 0);
+    await promise;
+
+    expect(out.calls.filter((call) => call[0] === 'raw')).toEqual([
+      ['raw', ''],
+      ['raw', 'warn \u20ac'],
+      ['raw', '\u20ac'],
+    ]);
+  });
+
+  it('flushes a sequence still incomplete when a stream ends', async () => {
+    const child = new FakeChildProcess(true, true);
+    mockSpawn.mockReturnValue(child);
+    const out = sink();
+
+    const promise = runInstall(tmpRoot, 'post-migration', undefined, out);
+    child.stdout!.emit('data', Buffer.from([0xe2]));
+    child.stdout!.emit('end');
+    child.stderr!.emit('data', Buffer.from([0xe2]));
+    child.stderr!.emit('end');
+    child.emit('close', 1);
+
+    await expect(promise).rejects.toThrow(/^Command failed:/);
+    expect(out.calls.filter((call) => call[0] === 'raw')).toEqual([
+      ['raw', ''],
+      ['raw', '\ufffd'],
+      ['raw', ''],
+      ['raw', '\ufffd'],
+    ]);
+  });
+
+  it('rejects a spawn failure only after both streams ended, so the sink is complete', async () => {
+    const child = new FakeChildProcess(true, true);
+    mockSpawn.mockReturnValue(child);
+    const out = sink();
+    let settled = false;
+
+    const promise = runInstall(tmpRoot, 'post-migration', undefined, out);
+    promise.catch(() => (settled = true));
+    child.emit('error', new Error('spawn /bin/sh EACCES'));
+    child.stdout!.emit('data', Buffer.from([0xe2]));
+    child.stdout!.emit('end');
+    await new Promise((resolve) => setImmediate(resolve));
+    const settledBeforeClose = settled;
+    child.stderr!.emit('end');
+    child.emit('close', -2);
+
+    await expect(promise).rejects.toThrow('spawn /bin/sh EACCES');
+    expect(settledBeforeClose).toBe(false);
+    expect(out.calls.filter((call) => call[0] === 'raw')).toEqual([
+      ['raw', ''],
+      ['raw', '\ufffd'],
+      ['raw', ''],
+    ]);
+  });
+
+  it('does not classify the stderr of a package manager other than npm', async () => {
+    rmSync(join(tmpRoot, 'package-lock.json'));
+    writeFileSync(join(tmpRoot, 'pnpm-lock.yaml'), '');
+    const child = new FakeChildProcess(true, true);
+    mockSpawn.mockReturnValue(child);
+    const out = sink();
+
+    const promise = runInstall(tmpRoot, 'post-migration', undefined, out);
+    child.stderr!.emit('data', Buffer.from('npm ERR! code ERESOLVE\n'));
+    child.emit('close', 1);
+
+    await expect(promise).rejects.toThrow(/^Command failed:/);
+    expect(out.calls).toContainEqual(['raw', 'npm ERR! code ERESOLVE\n']);
+    expect(out.calls.some((call) => call[1] === 'error')).toBe(false);
+  });
+
+  it('still classifies a peer conflict from stderr and sends the guidance to the sink', async () => {
+    const child = new FakeChildProcess(true, true);
+    mockSpawn.mockReturnValue(child);
+    const out = sink();
+    const errorSpy = vi.spyOn(output, 'error');
+
+    const promise = runInstall(
+      tmpRoot,
+      'post-migration',
+      'nx migrate --run-migration=@nx/js:x',
+      out
+    );
+    child.stderr!.emit('data', Buffer.from('npm ERR! code ERESOLVE\n'));
+    child.emit('close', 1);
+
+    await expect(promise).rejects.toMatchObject({
+      name: 'NpmPeerDepsInstallError',
+    });
+    expect(errorSpy).not.toHaveBeenCalled();
+    const guidance = out.calls.find(
+      (call) => call[0] === 'notice' && call[1] === 'error'
+    );
+    expect(guidance[2]).toMatchObject({
+      title:
+        'Some migrations have been applied, but installing the updated dependencies failed',
+      bodyLines: expect.arrayContaining([
+        '   nx migrate --run-migration=@nx/js:x --skip-install',
+      ]),
+    });
+  });
+
+  it('rejects a spawn failure at once without a sink', async () => {
+    const child = new FakeChildProcess(true);
+    mockSpawn.mockReturnValue(child);
+    vi.spyOn(output, 'log').mockImplementation(() => {});
+
+    const promise = runInstall(tmpRoot);
+    child.emit('error', new Error('spawn /bin/sh EACCES'));
+
+    await expect(promise).rejects.toThrow('spawn /bin/sh EACCES');
+  });
+
+  it('keeps the terminal as the default when no sink is given', async () => {
+    const child = new FakeChildProcess(true);
+    mockSpawn.mockReturnValue(child);
+    const logSpy = vi.spyOn(output, 'log').mockImplementation(() => {});
+    const stderrSpy = vi
+      .spyOn(process.stderr, 'write')
+      .mockImplementation(() => true);
+
+    const promise = runInstall(tmpRoot);
+    child.stderr!.emit('data', Buffer.from('npm warn old\n'));
+    child.emit('close', 0);
+    await promise;
+
+    expect(mockSpawn.mock.calls[0][1]).toMatchObject({
+      stdio: ['inherit', 'inherit', 'pipe'],
+    });
+    expect(mockSpawn.mock.calls[0][1].detached).toBeUndefined();
+    expect(logSpy).toHaveBeenCalledTimes(1);
+    expect(stderrSpy).toHaveBeenCalledWith(Buffer.from('npm warn old\n'));
   });
 });
 
@@ -871,16 +1086,6 @@ describe('executeMigrations', () => {
   describe('skipAgentic', () => {
     let infoSpy: MockInstance;
 
-    const AGENTIC_ENABLED: ResolvedAgentic = {
-      kind: 'enabled',
-      selectedAgent: {
-        id: 'claude-code',
-        displayName: 'Claude Code',
-        binary: '/usr/local/bin/claude',
-        source: 'path',
-      },
-    };
-
     // Writes a migration implementation plus its `migrations.json` entry, so
     // each case can pick its own return value and change footprint.
     const writeMigration = (
@@ -916,9 +1121,7 @@ describe('executeMigrations', () => {
         /* shouldCreateCommits: */ true,
         'chore(repo): ',
         true,
-        AGENTIC_ENABLED,
-        false,
-        /* shouldRunValidation: */ true
+        { kind: 'disabled' }
       );
 
     const logged = () =>
@@ -930,26 +1133,13 @@ describe('executeMigrations', () => {
         status: 'committed',
         sha: 'sha',
       });
-      mockRunAgenticPromptStep.mockResolvedValue({
-        ambiguous: false,
-        summary: 'done',
-      });
     });
 
     afterEach(() => {
       infoSpy.mockRestore();
     });
 
-    it('runs the prompt step for a hybrid that does not waive it', async () => {
-      const m = hybrid('hybrid-keeps', `tree.write('kept.txt', 'x');`);
-
-      const result = await run([m]);
-
-      expect(mockRunAgenticPromptStep).toHaveBeenCalledTimes(1);
-      expect(result.waivedAgenticStepsCount).toBe(0);
-    });
-
-    it('skips the prompt step, the next-steps entry, and the deferral for a waived hybrid', async () => {
+    it('drops the next-steps entry and the deferral for a waived hybrid', async () => {
       const m = hybrid(
         'hybrid-waives',
         `tree.write('waived.txt', 'x'); return { skipAgentic: true };`
@@ -957,33 +1147,9 @@ describe('executeMigrations', () => {
 
       const result = await run([m]);
 
-      expect(mockRunAgenticPromptStep).not.toHaveBeenCalled();
       expect(result.skippedPrompts).toEqual([]);
       expect(result.skippedPromptsCount).toBe(0);
       expect(result.nextSteps).toEqual([]);
-      expect(result.waivedAgenticStepsCount).toBe(1);
-      expect(logged()).toContain(
-        'Prompt phase skipped. The migration reported nothing left for the AI step to do.'
-      );
-    });
-
-    it('waives the prompt step with the agentic flow disabled too', async () => {
-      const m = hybrid(
-        'hybrid-waives-offline',
-        `tree.write('waived.txt', 'x'); return { skipAgentic: true };`
-      );
-
-      const result = await executeMigrations(
-        tmpRoot,
-        [m] as Parameters<typeof executeMigrations>[1],
-        false,
-        true,
-        'chore(repo): ',
-        true,
-        { kind: 'disabled' }
-      );
-
-      expect(result.skippedPrompts).toEqual([]);
       expect(result.waivedAgenticStepsCount).toBe(1);
       expect(logged()).toContain(
         'Prompt phase skipped. The migration reported nothing left for the AI step to do.'
@@ -1017,43 +1183,9 @@ describe('executeMigrations', () => {
       expect(result.waivedAgenticStepsCount).toBe(1);
     });
 
-    it('skips the validation step for a waived generator-only migration', async () => {
-      const m = writeMigration(
-        'gen-waives',
-        `tree.write('validated.txt', 'x'); return { skipAgentic: true };`
-      );
-
-      const result = await run([m]);
-
-      expect(mockRunAgenticPromptStep).not.toHaveBeenCalled();
-      expect(result.waivedAgenticStepsCount).toBe(1);
-      expect(logged()).toContain(
-        'Validation skipped. The migration reported its changes need no AI review.'
-      );
-    });
-
-    it('stays silent for a waived generator-only migration that had no changes to validate', async () => {
-      const m = writeMigration(
-        'gen-noop-waives',
-        `return { skipAgentic: true };`
-      );
-
-      const result = await run([m]);
-
-      expect(mockRunAgenticPromptStep).not.toHaveBeenCalled();
-      expect(logged()).not.toContain('Validation skipped');
-      // Nothing was going to run, so there is no waived step to report.
-      expect(result.waivedAgenticStepsCount).toBe(0);
-      expect(result.migrationsWithNoChanges.map((m) => m.name)).toEqual([
-        'gen-noop-waives',
-      ]);
-    });
-
-    // `agenticRun` requires `kind: 'enabled'` and the outer-agent hand-off
-    // requires `kind: 'inside-agent'`, so these two pin the asymmetry that
-    // falls out of that: a hybrid's prompt is owed in every mode and waiving
-    // it moots the hand-off, while a generator-only migration has no
-    // validation step to waive under `inside-agent` and keeps the hand-off.
+    // These two pin an asymmetry: a hybrid's prompt is owed in every mode and
+    // waiving it moots the hand-off, while a generator-only migration has no
+    // AI step to waive and keeps the hand-off.
     const runInsideAgent = (m: Record<string, unknown>) =>
       executeMigrations(
         tmpRoot,
@@ -1062,9 +1194,7 @@ describe('executeMigrations', () => {
         true,
         'chore(repo): ',
         true,
-        { kind: 'inside-agent' },
-        false,
-        /* shouldRunValidation: */ true
+        { kind: 'inside-agent' }
       );
 
     it('keeps the outer-agent hand-off for a waived generator-only migration under inside-agent', async () => {
@@ -1125,18 +1255,6 @@ describe('executeMigrations', () => {
       expect(written).not.toContain('<agent_context');
       expect(result.waivedAgenticStepsCount).toBe(1);
       expect(result.skippedPrompts).toEqual([]);
-    });
-
-    it('runs the validation step for a generator-only migration that does not waive it', async () => {
-      const m = writeMigration(
-        'gen-keeps',
-        `tree.write('validated.txt', 'x');`
-      );
-
-      const result = await run([m]);
-
-      expect(mockRunAgenticPromptStep).toHaveBeenCalledTimes(1);
-      expect(result.waivedAgenticStepsCount).toBe(0);
     });
   });
 });

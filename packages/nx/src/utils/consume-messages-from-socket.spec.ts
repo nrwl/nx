@@ -270,8 +270,7 @@ describe('the message size limit', () => {
 
   it('defaults to a ceiling above the string limit it replaced', () => {
     // Anything that previously worked was capped at MAX_STRING_LENGTH, so the
-    // default has to clear that comfortably or this PR regresses the payloads
-    // it exists to support.
+    // default has to clear that comfortably or those payloads regress.
     expect(DEFAULT_MAX_MESSAGE_SIZE).toBeGreaterThan(536_870_888);
   });
 

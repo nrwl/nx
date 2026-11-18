@@ -51,3 +51,29 @@ describe('NX_HOME_TMP_DIR', () => {
     ).toBeUndefined();
   });
 });
+
+describe.skipIf(process.platform === 'win32')(
+  'homeDirIsDistinctFromSharedTmp',
+  () => {
+    async function load(home: string) {
+      await loadHomeTmpDir(() => home);
+      return (await import('./nx-tmp-dir')).homeDirIsDistinctFromSharedTmp();
+    }
+
+    afterEach(() => {
+      vi.doUnmock('node:os');
+    });
+
+    it.each([
+      ['the shared temp dir', '/tmp'],
+      ['a directory under it', '/tmp/nx-home-spec-absent/user'],
+      ['the shared .nx container', '/tmp/.nx/1000'],
+    ])('refuses a home at %s', async (_label, home) => {
+      expect(await load(home)).toBe(false);
+    });
+
+    it('accepts a home outside the shared temp dir', async () => {
+      expect(await load(process.cwd())).toBe(true);
+    });
+  }
+);

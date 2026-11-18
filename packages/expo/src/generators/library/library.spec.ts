@@ -23,7 +23,6 @@ describe('lib', () => {
     unitTestRunner: 'jest',
     strict: true,
     js: false,
-    addPlugin: true,
   };
 
   beforeEach(() => {
@@ -426,7 +425,7 @@ describe('lib', () => {
       }
     });
 
-    it('should add package.json and .babelrc', async () => {
+    it('should add package.json and .babelrc.js', async () => {
       await expoLibraryGenerator(appTree, {
         ...defaultSchema,
         publishable: true,
@@ -435,7 +434,7 @@ describe('lib', () => {
 
       const packageJson = readJson(appTree, 'my-lib/package.json');
       expect(packageJson.name).toEqual('@proj/my-lib');
-      expect(appTree.exists('my-lib/.babelrc'));
+      expect(appTree.exists('my-lib/.babelrc.js')).toBeTruthy();
     });
   });
 
@@ -665,6 +664,11 @@ describe('lib', () => {
             "src/**/*.test.jsx",
             "src/**/*.spec.jsx",
             "src/**/*.d.ts",
+          ],
+          "references": [
+            {
+              "path": "./tsconfig.lib.json",
+            },
           ],
         }
       `);

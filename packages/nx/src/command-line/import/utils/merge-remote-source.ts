@@ -22,11 +22,23 @@ export async function mergeRemoteSource(
     `Merging files and git history from ${branchName} from ${sourceRemoteUrl} into ${destination}`
   );
   await destinationGitClient.mergeUnrelatedHistories(
-    `${remoteName}/${tempBranch}`,
+    `refs/remotes/${remoteName}/${tempBranch}`,
     `feat(repo): merge ${branchName} from ${sourceRemoteUrl}`
   );
 
   spinner.succeed(
     `Merged files and git history from ${branchName} from ${sourceRemoteUrl} into ${destination}`
   );
+}
+
+export async function createTemporaryRemote(
+  destinationGitClient: GitRepository,
+  sourceRemoteUrl: string,
+  remoteName: string
+) {
+  try {
+    await destinationGitClient.deleteGitRemote(remoteName);
+  } catch {}
+  await destinationGitClient.addGitRemote(remoteName, sourceRemoteUrl);
+  await destinationGitClient.fetch(remoteName);
 }

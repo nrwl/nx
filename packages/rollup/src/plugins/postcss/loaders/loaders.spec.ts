@@ -6,7 +6,7 @@ describe('Loaders', () => {
     id: '/path/to/file.css',
     sourceMap: false,
     dependencies: new Set(),
-    warn: jest.fn(),
+    warn: vi.fn(),
   });
 
   describe('isSupported', () => {

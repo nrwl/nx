@@ -8,7 +8,7 @@ Cypress 16 turned `cy.getCookie()`, `cy.getCookies()`, `cy.getAllCookies()`, `cy
 
 Confirm both conditions before changing anything. If either fails, make no changes and stop.
 
-1. `<files_changed>` or `<advisory_context>` lists at least one file with a renamed `Cypress.Commands.overwriteQuery()` call. Search the workspace for `Cypress.Commands.overwriteQuery(` if the wrapper sections are absent.
+1. `impl.changes` or `impl.agentContext` in the step's `nx_migrate_prompt` block lists at least one file with a renamed `Cypress.Commands.overwriteQuery()` call. Search the workspace for `Cypress.Commands.overwriteQuery(` if those fields are absent.
 2. The workspace is on Cypress 16 or later (`cypress` in `package.json`).
 
 ## Step 1: Verify the pre-pass

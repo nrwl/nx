@@ -115,63 +115,6 @@ module.exports = {
 };
 ```
 
-If you're using `composePlugins` with `withNx`, you can create a `withSvgr` helper function:
-
-{% aside type="caution" title="`composePlugins` and `withNx` are deprecated" %}
-The `@nx/webpack` `composePlugins` and `withNx` helpers are deprecated and will be removed in Nx v24. They still work in v23, but using them logs a deprecation warning. Prefer a standard webpack config using `NxAppWebpackPlugin` and run `nx g @nx/webpack:convert-to-inferred` to migrate. See the [webpack config guide](/docs/kb/webpack-config-setup) for details.
-{% /aside %}
-
-```javascript frame="none"
-// filename: webpack.config.js
-const { composePlugins, withNx } = require('@nx/webpack');
-
-function withSvgr(svgrOptions = {}) {
-  const defaultOptions = {
-    svgo: false,
-    titleProp: true,
-    ref: true,
-  };
-
-  const options = { ...defaultOptions, ...svgrOptions };
-
-  return function configure(config) {
-    // Remove existing SVG loader if present
-    const svgLoaderIdx = config.module.rules.findIndex(
-      (rule) =>
-        typeof rule === 'object' &&
-        typeof rule.test !== 'undefined' &&
-        rule.test.toString().includes('svg')
-    );
-
-    if (svgLoaderIdx !== -1) {
-      config.module.rules.splice(svgLoaderIdx, 1);
-    }
-
-    // Add SVGR loader
-    config.module.rules.push({
-      test: /\.svg$/,
-      issuer: /\.(js|ts|md)x?$/,
-      use: [
-        {
-          loader: require.resolve('@svgr/webpack'),
-          options,
-        },
-        {
-          loader: require.resolve('file-loader'),
-          options: {
-            name: '[name].[hash].[ext]',
-          },
-        },
-      ],
-    });
-
-    return config;
-  };
-}
-
-module.exports = composePlugins(withNx(), withSvgr());
-```
-
 ### SVGR for Next.js
 
 As of Nx 22, SVGR support for Next.js is no longer included by default. You can configure it manually using the same approach as Webpack. For detailed information, refer to the [official SVGR documentation](https://react-svgr.com/docs/webpack/).
@@ -245,63 +188,6 @@ module.exports = {
 
   // ...other config
 };
-```
-
-If you're using `composePlugins` with `withNx`, you can update your `next.config.js` to use a `withSvgr` helper function:
-
-```javascript frame="none"
-// filename: next.config.js
-const { composePlugins, withNx } = require('@nx/next');
-
-function withSvgr(svgrOptions = {}) {
-  const defaultOptions = {
-    svgo: false,
-    titleProp: true,
-    ref: true,
-  };
-
-  const options = { ...defaultOptions, ...svgrOptions };
-
-  return function configure(config) {
-    // Remove existing SVG loader if present
-    const svgLoaderIdx = config.module.rules.findIndex(
-      (rule) =>
-        typeof rule === 'object' &&
-        typeof rule.test !== 'undefined' &&
-        rule.test.toString().includes('svg')
-    );
-
-    if (svgLoaderIdx !== -1) {
-      config.module.rules.splice(svgLoaderIdx, 1);
-    }
-
-    // Add SVGR loader
-    config.module.rules.push({
-      test: /\.svg$/,
-      issuer: /\.(js|ts|md)x?$/,
-      use: [
-        {
-          loader: require.resolve('@svgr/webpack'),
-          options,
-        },
-        {
-          loader: require.resolve('file-loader'),
-          options: {
-            name: '[name].[hash].[ext]',
-          },
-        },
-      ],
-    });
-
-    return config;
-  };
-}
-
-const nextConfig = {
-  // your Next.js config here
-};
-
-module.exports = composePlugins(withNx(), withSvgr())(nextConfig);
 ```
 
 ### SVGR for Vite

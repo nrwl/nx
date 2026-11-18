@@ -10,7 +10,7 @@ plugins {
 
 group = "dev.nx.gradle"
 
-version = "0.1.25"
+version = "0.1.26"
 
 repositories { mavenCentral() }
 
@@ -18,7 +18,6 @@ dependencies {
   implementation(libs.gson)
   implementation(libs.javaparser.core)
   implementation(libs.kotlinx.coroutines.core)
-  implementation(libs.jgit)
   implementation(platform(libs.opentelemetry.bom))
   implementation(libs.opentelemetry.api)
   implementation(libs.opentelemetry.sdk)

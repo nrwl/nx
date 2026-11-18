@@ -1,12 +1,13 @@
+import type { Mock } from 'vitest';
 import { execGradleAsync } from '../../utils/exec-gradle';
 import {
   getGraphTimeoutMs,
   getNxProjectGraphLines,
 } from './get-project-graph-lines';
 
-jest.mock('../../utils/exec-gradle', () => ({
-  ...jest.requireActual('../../utils/exec-gradle'),
-  execGradleAsync: jest.fn(),
+vi.mock('../../utils/exec-gradle', async () => ({
+  ...(await vi.importActual<any>('../../utils/exec-gradle')),
+  execGradleAsync: vi.fn(),
 }));
 
 const lockTimeoutOutput = Buffer.from(
@@ -16,7 +17,7 @@ const lockTimeoutOutput = Buffer.from(
 );
 
 describe('getNxProjectGraphLines', () => {
-  const execGradleAsyncMock = execGradleAsync as jest.Mock;
+  const execGradleAsyncMock = execGradleAsync as Mock;
 
   beforeEach(() => {
     execGradleAsyncMock.mockReset();

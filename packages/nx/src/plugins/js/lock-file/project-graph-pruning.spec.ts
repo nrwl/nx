@@ -87,6 +87,59 @@ describe('project-graph-pruning', () => {
       expect(node?.name).toBe('npm:lodash');
     });
 
+    it('should match the highest version for a wildcard when no bare node exists', () => {
+      delete graph.externalNodes['npm:lodash'];
+      const node = findNodeMatchingVersion(graph, 'lodash', '*');
+      expect(node?.name).toBe('npm:lodash@4.17.20');
+    });
+
+    it('should match the highest registry version for a wildcard when an outside link holds the bare node', () => {
+      graph.externalNodes['npm:lodash'] = {
+        type: 'npm',
+        name: 'npm:lodash',
+        data: { packageName: 'lodash', version: 'link:../outside/lodash' },
+      };
+      expect(findNodeMatchingVersion(graph, 'lodash', '*')?.name).toBe(
+        'npm:lodash@4.17.20'
+      );
+    });
+
+    it('should prefer a stable version over a prerelease for a wildcard when no bare node exists', () => {
+      delete graph.externalNodes['npm:lodash'];
+      graph.externalNodes['npm:lodash@5.0.0-beta.1'] = {
+        type: 'npm',
+        name: 'npm:lodash@5.0.0-beta.1',
+        data: { packageName: 'lodash', version: '5.0.0-beta.1' },
+      };
+      expect(findNodeMatchingVersion(graph, 'lodash', '*')?.name).toBe(
+        'npm:lodash@4.17.20'
+      );
+      expect(findNodeMatchingVersion(graph, 'lodash', 'latest')?.name).toBe(
+        'npm:lodash@4.17.20'
+      );
+    });
+
+    it('should sort local-path versions after semver versions', () => {
+      delete graph.externalNodes['npm:lodash'];
+      graph.externalNodes['npm:lodash@file:vendor/lodash.tgz'] = {
+        type: 'npm',
+        name: 'npm:lodash@file:vendor/lodash.tgz',
+        data: {
+          packageName: 'lodash',
+          version: 'file:vendor/lodash.tgz',
+        },
+      };
+      expect(findNodeMatchingVersion(graph, 'lodash', '*')?.name).toBe(
+        'npm:lodash@4.17.20'
+      );
+      expect(findNodeMatchingVersion(graph, 'lodash', '^3.0.0')?.name).toBe(
+        'npm:lodash@3.0.0'
+      );
+      expect(findNodeMatchingVersion(graph, 'lodash', 'latest')?.name).toBe(
+        'npm:lodash@4.17.20'
+      );
+    });
+
     it('should handle latest version', () => {
       const node = findNodeMatchingVersion(graph, 'lodash', 'latest');
       expect(node).toBeDefined();
@@ -616,10 +669,8 @@ describe('project-graph-pruning', () => {
 
   describe('pruneProjectGraph', () => {
     let graph: ProjectGraph;
-    let workspacePackages: Map<string, ProjectGraphProjectNode>;
 
     beforeEach(() => {
-      workspacePackages = new Map();
       graph = {
         nodes: {
           'workspace-lib': {
@@ -695,8 +746,6 @@ describe('project-graph-pruning', () => {
           },
         },
       };
-      // Note: workspacePackages is populated by getWorkspacePackagesFromGraph
-      // which looks for project.data.metadata.js.packageName
     });
 
     it('should prune unused external nodes', () => {

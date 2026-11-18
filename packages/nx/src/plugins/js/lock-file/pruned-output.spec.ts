@@ -14,6 +14,7 @@ import { output } from '../../../utils/output';
 import type { PackageJson } from '../../../utils/package-json';
 import * as pacakgeManager from '../../../utils/package-manager';
 import {
+  assertNoWorkspaceModulePathCollision,
   containLocalPath,
   containShippedLocalFilePaths,
   getPrunedPnpmInstallArtifacts,
@@ -2110,6 +2111,42 @@ describe('getPrunedPnpmLocalPathArtifacts', () => {
   });
 });
 
+describe('assertNoWorkspaceModulePathCollision', () => {
+  const synthesized = new Set(['workspace_modules/mylib']);
+
+  it('throws when a local-path dependency sits at a copied module path', () => {
+    expect(() =>
+      assertNoWorkspaceModulePathCollision(
+        {
+          'vendored@file:workspace_modules/mylib': {
+            resolution: {
+              directory: 'workspace_modules/mylib',
+              type: 'directory',
+            },
+          },
+        },
+        synthesized
+      )
+    ).toThrowErrorMatchingInlineSnapshot(
+      `[Error: Cannot prune pnpm lockfile: local-path dependency "file:workspace_modules/mylib" sits where the standalone output copies a workspace module of the same name. Move it out of workspace_modules/ so they do not collide.]`
+    );
+  });
+
+  it('allows local-path dependencies elsewhere', () => {
+    expect(() =>
+      assertNoWorkspaceModulePathCollision(
+        {
+          'vendored@file:vendor/mylib': {
+            resolution: { directory: 'vendor/mylib', type: 'directory' },
+          },
+          'is-even@1.0.0': { resolution: { integrity: 'sha512-x' } },
+        },
+        synthesized
+      )
+    ).not.toThrow();
+  });
+});
+
 describe('containShippedLocalFilePaths', () => {
   it('relocates vendored file: keys, resolutions, and refs; leaves others', () => {
     const lockfile = {
@@ -2374,7 +2411,7 @@ describe('rewritePrunedLocalPathSpecifiers', () => {
       dependencies: { vendored: 'file:./vendor/pkg' },
     };
 
-    rewritePrunedLocalPathSpecifiers(packageJson, 'apps/api', WS, new Set());
+    rewritePrunedLocalPathSpecifiers(packageJson, 'apps/api', WS, new Map());
 
     expect(packageJson.dependencies.vendored).toBe(
       'file:local_path_modules/apps/api/vendor/pkg'
@@ -2388,7 +2425,7 @@ describe('rewritePrunedLocalPathSpecifiers', () => {
       dependencies: { shared: 'link:../shared' },
     };
 
-    rewritePrunedLocalPathSpecifiers(packageJson, 'apps/api', WS, new Set());
+    rewritePrunedLocalPathSpecifiers(packageJson, 'apps/api', WS, new Map());
 
     expect(packageJson.dependencies.shared).toBe(
       'link:local_path_modules/apps/shared'
@@ -2406,7 +2443,7 @@ describe('rewritePrunedLocalPathSpecifiers', () => {
       packageJson,
       'apps/nested/api',
       WS,
-      new Set()
+      new Map()
     );
 
     expect(packageJson.dependencies.lib).toBe(
@@ -2422,7 +2459,7 @@ describe('rewritePrunedLocalPathSpecifiers', () => {
       peerDependenciesMeta: { shared: { optional: true } },
     };
 
-    rewritePrunedLocalPathSpecifiers(packageJson, 'apps/api', WS, new Set());
+    rewritePrunedLocalPathSpecifiers(packageJson, 'apps/api', WS, new Map());
 
     expect(packageJson.dependencies).toEqual({
       shared: 'link:local_path_modules/apps/shared',
@@ -2444,7 +2481,7 @@ describe('rewritePrunedLocalPathSpecifiers', () => {
       },
     };
 
-    rewritePrunedLocalPathSpecifiers(packageJson, 'apps/api', WS, new Set());
+    rewritePrunedLocalPathSpecifiers(packageJson, 'apps/api', WS, new Map());
 
     expect(packageJson.peerDependencies).toEqual({ react: '^18.0.0' });
     expect(packageJson.peerDependenciesMeta).toEqual({
@@ -2460,7 +2497,7 @@ describe('rewritePrunedLocalPathSpecifiers', () => {
       dependencies: { external: 'file:../../../outside/pkg' },
     };
 
-    rewritePrunedLocalPathSpecifiers(packageJson, 'apps/api', WS, new Set());
+    rewritePrunedLocalPathSpecifiers(packageJson, 'apps/api', WS, new Map());
 
     expect(packageJson.dependencies.external).toBe('file:../../../outside/pkg');
     expect(warn).toHaveBeenCalledWith(
@@ -2476,7 +2513,7 @@ describe('rewritePrunedLocalPathSpecifiers', () => {
       dependencies: { vendored: 'link:/opt/thing' },
     };
 
-    rewritePrunedLocalPathSpecifiers(packageJson, 'apps/api', WS, new Set());
+    rewritePrunedLocalPathSpecifiers(packageJson, 'apps/api', WS, new Map());
 
     expect(packageJson.dependencies.vendored).toBe('link:/opt/thing');
     expect(warn).toHaveBeenCalledWith(
@@ -2492,7 +2529,7 @@ describe('rewritePrunedLocalPathSpecifiers', () => {
       dependencies: { 'root-pkg': 'link:../..' },
     };
 
-    rewritePrunedLocalPathSpecifiers(packageJson, 'apps/api', WS, new Set());
+    rewritePrunedLocalPathSpecifiers(packageJson, 'apps/api', WS, new Map());
 
     expect(packageJson.dependencies['root-pkg']).toBe('link:../..');
     expect(warn).toHaveBeenCalledWith(
@@ -2511,7 +2548,7 @@ describe('rewritePrunedLocalPathSpecifiers', () => {
       peerDependenciesMeta: { external: { optional: true } },
     };
 
-    rewritePrunedLocalPathSpecifiers(packageJson, 'apps/api', WS, new Set());
+    rewritePrunedLocalPathSpecifiers(packageJson, 'apps/api', WS, new Map());
 
     expect(packageJson.dependencies).toEqual({
       external: 'link:../../../outside/shared',
@@ -2534,10 +2571,39 @@ describe('rewritePrunedLocalPathSpecifiers', () => {
       packageJson,
       'apps/api',
       WS,
-      new Set(['@scope/lib'])
+      new Map([
+        [
+          '@scope/lib',
+          { name: 'lib', type: 'lib', data: { root: 'libs/lib' } },
+        ],
+      ])
     );
 
     expect(packageJson.dependencies['@scope/lib']).toBe('link:../../libs/lib');
+  });
+
+  it('rewrites a vendored package named like a workspace package', () => {
+    const packageJson: PackageJson = {
+      name: 'api',
+      version: '0.0.1',
+      dependencies: { '@scope/lib': 'file:../../vendor/lib' },
+    };
+
+    rewritePrunedLocalPathSpecifiers(
+      packageJson,
+      'apps/api',
+      WS,
+      new Map([
+        [
+          '@scope/lib',
+          { name: 'lib', type: 'lib', data: { root: 'libs/lib' } },
+        ],
+      ])
+    );
+
+    expect(packageJson.dependencies['@scope/lib']).toBe(
+      'file:local_path_modules/vendor/lib'
+    );
   });
 
   it('leaves a registry specifier untouched', () => {
@@ -2547,7 +2613,7 @@ describe('rewritePrunedLocalPathSpecifiers', () => {
       dependencies: { lodash: '^4.17.21' },
     };
 
-    rewritePrunedLocalPathSpecifiers(packageJson, 'apps/api', WS, new Set());
+    rewritePrunedLocalPathSpecifiers(packageJson, 'apps/api', WS, new Map());
 
     expect(packageJson.dependencies.lodash).toBe('^4.17.21');
   });
@@ -2563,7 +2629,7 @@ describe('rewritePrunedLocalPathSpecifiers', () => {
       dependencies: { shared: 'catalog:' },
     };
 
-    rewritePrunedLocalPathSpecifiers(packageJson, 'apps/api', WS, new Set());
+    rewritePrunedLocalPathSpecifiers(packageJson, 'apps/api', WS, new Map());
 
     expect(packageJson.dependencies.shared).toBe(
       'link:local_path_modules/apps/shared'

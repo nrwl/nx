@@ -15,13 +15,22 @@ import {
   hasBannedImport,
   hasNoneOfTheseTags,
   belongsToDifferentEntryPoint,
+  getSecondaryEntryPointPath,
   isTerminalRun,
   parseExports,
 } from './runtime-lint-utils';
-import { vol } from 'memfs';
+import { createRequire } from 'node:module';
+import { fs as memfs, vol } from 'memfs';
+import { mockCjsModule } from '@nx/devkit/internal-testing-utils';
 
-jest.mock('@nx/devkit', () => ({
-  ...jest.requireActual<any>('@nx/devkit'),
+// Import resolution loads typescript with `require`, which reads through the
+// CJS `fs`; the import graph has loaded it already, so evict it onto memfs.
+mockCjsModule(import.meta.url, 'fs', memfs);
+const cjsRequire = createRequire(import.meta.url);
+delete cjsRequire.cache[cjsRequire.resolve('typescript')];
+
+vi.mock('@nx/devkit', async () => ({
+  ...(await vi.importActual<any>('@nx/devkit')),
   workspaceRoot: '/root',
 }));
 
@@ -348,9 +357,8 @@ describe('dependentsHaveBannedImport + findTransitiveExternalDependencies', () =
 describe('is terminal run', () => {
   const originalArgv = process.argv;
 
-  // Set only process.argv rather than reassigning the whole `process` object.
-  // Under Node >= 26 the jest sandbox global is a Proxy and reassigning the
-  // global `process` binding throws ReferenceError; mutating the property works.
+  // Mutate process.argv: reassigning the global `process` binding throws in
+  // sandboxed test globals (Node >= 26).
   const mockProcessArgv = (argv: string[]) => {
     process.argv = argv;
   };
@@ -450,6 +458,22 @@ describe('is terminal run', () => {
     expect(isTerminalRun()).toBe(false);
   });
 
+  it('is a terminal run when bun lint runs the rule on Mac', () => {
+    // Mac: $run bun lint .
+    mockProcessArgv(['/Users/user/.bun/bin/bun', 'lint', '.']);
+    expect(isTerminalRun()).toBe(true);
+  });
+
+  it('is a terminal run when bun lint runs the rule on Windows', () => {
+    mockProcessArgv(['C:\\Users\\user\\.bun\\bin\\bun.exe', 'lint']);
+    expect(isTerminalRun()).toBe(true);
+  });
+
+  it('is not a terminal run for other bun commands', () => {
+    mockProcessArgv(['/Users/user/.bun/bin/bun', 'run', 'dev']);
+    expect(isTerminalRun()).toBe(false);
+  });
+
   it('is not a terminal run when the is started from the IDE', () => {
     // Visual Studio Code mac
     mockProcessArgv([
@@ -496,6 +520,18 @@ describe('isAngularSecondaryEntrypoint', () => {
       'libs/features/secondary/random/folder/api.ts': 'const bla = "foo"',
     };
     vol.fromJSON(fsJson, '/root');
+  });
+
+  it('does not throw when the workspace has no root tsconfig', () => {
+    vol.unlinkSync('/root/tsconfig.base.json');
+
+    expect(
+      getSecondaryEntryPointPath(
+        '@project/standard',
+        'libs/features/src/index.ts',
+        'libs/standard'
+      )
+    ).toBeUndefined();
   });
 
   it('should return false if they belong to same entrypoints', () => {

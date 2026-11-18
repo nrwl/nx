@@ -12,6 +12,7 @@
     "react-dom": "<%= versions.reactDomVersion %>"
   },
   "devDependencies": {
+    "@nx/rspack": "<%= versions.nxVersion %>",
     "@rspack/cli": "<%= versions.rspackCliVersion %>",
     "@rspack/core": "<%= versions.rspackCoreVersion %>",
     "@rspack/dev-server": "<%= versions.rspackDevServerVersion %>",

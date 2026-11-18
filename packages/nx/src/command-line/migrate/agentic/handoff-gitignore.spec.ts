@@ -1,8 +1,4 @@
 import type { Mock } from 'vitest';
-vi.mock('../../../utils/git-utils', () => ({
-  hasUncommittedChanges: vi.fn(),
-  tryCommitChanges: vi.fn(),
-}));
 vi.mock('../../../utils/logger', () => ({
   logger: { info: vi.fn() },
 }));
@@ -10,16 +6,10 @@ vi.mock('../../../utils/logger', () => ({
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
-import {
-  hasUncommittedChanges,
-  tryCommitChanges,
-} from '../../../utils/git-utils';
 import { logger } from '../../../utils/logger';
 import { applyAgenticHandoffGitignoreFallback } from './handoff-gitignore';
 import { isHandoffGitignoreMigration } from './types';
 
-const mockHas = hasUncommittedChanges as Mock;
-const mockTry = tryCommitChanges as Mock;
 const mockInfo = logger.info as Mock;
 
 const HANDOFF_GITIGNORE_MIGRATION = {
@@ -27,8 +17,6 @@ const HANDOFF_GITIGNORE_MIGRATION = {
   name: '23-0-0-add-migrate-runs-to-git-ignore',
   version: '23.0.0-beta.18',
 };
-
-const COMMIT_PREFIX = 'chore: [nx migration] ';
 
 // picocolors wraps logger output in ANSI escapes when the runtime detects a
 // TTY. Strip them in assertions so the message reads as intended rather than
@@ -57,8 +45,6 @@ describe('applyAgenticHandoffGitignoreFallback', () => {
 
   beforeEach(() => {
     workspace = mkdtempSync(join(tmpdir(), 'nx-handoff-gitignore-'));
-    mockHas.mockReset();
-    mockTry.mockReset();
     mockInfo.mockReset();
   });
 
@@ -66,89 +52,14 @@ describe('applyAgenticHandoffGitignoreFallback', () => {
     rmSync(workspace, { recursive: true, force: true });
   });
 
-  it('defers to the hoist path when the v23 gitignore migration is in the queue (primary check wins over the version fallback)', async () => {
-    writeFileSync(gitignorePath(), 'node_modules\n');
-    await applyAgenticHandoffGitignoreFallback({
-      migrations: [
-        HANDOFF_GITIGNORE_MIGRATION,
-        { package: '@nx/react', name: 'some-other' },
-      ],
-      // Pre-v23 nx — without the primary "migration in queue" check, the
-      // version fallback below would fire and apply the entry inline. The
-      // assertion locks in that the migration-in-queue signal wins.
-      installedNxVersion: '22.5.0',
-      effectiveCreateCommits: true,
-      commitPrefix: COMMIT_PREFIX,
-      root: workspace,
-    });
-    expect(readFileSync(gitignorePath(), 'utf-8')).toBe('node_modules\n');
-    expect(mockTry).not.toHaveBeenCalled();
-    expect(mockInfo).not.toHaveBeenCalled();
-  });
-
-  it('keeps the .gitignore mutation but skips the standalone commit with commitStandalone: false, even when commits are enabled', async () => {
-    // The orchestrator applies the fallback before its init checkpoint; a
-    // standalone commit there would sweep the user's pre-existing changes in
-    // along with the entry, so the checkpoint carries the edit instead.
-    writeFileSync(gitignorePath(), 'node_modules\n');
-    mockHas.mockReturnValue(true);
-    await applyAgenticHandoffGitignoreFallback({
-      migrations: [{ package: '@nx/react', name: 'some-other' }],
-      installedNxVersion: '22.5.0',
-      effectiveCreateCommits: true,
-      commitPrefix: COMMIT_PREFIX,
-      root: workspace,
-      commitStandalone: false,
-    });
-    expect(readFileSync(gitignorePath(), 'utf-8')).toContain(
-      '.nx/migrate-runs'
-    );
-    expect(mockTry).not.toHaveBeenCalled();
-  });
-
-  it('applies the entry with applyWhenPlanned even when the migration is in the queue and nx is at v23+', async () => {
-    // The orchestrator's run scratch exists before the hoisted migration runs,
-    // so a planned migration must not defer, and a planned migration means the
-    // missing entry is not a conscious removal.
-    writeFileSync(gitignorePath(), 'node_modules\n');
-    mockHas.mockReturnValue(false);
-    await applyAgenticHandoffGitignoreFallback({
-      migrations: [HANDOFF_GITIGNORE_MIGRATION],
-      installedNxVersion: '23.0.0',
-      effectiveCreateCommits: false,
-      commitPrefix: COMMIT_PREFIX,
-      root: workspace,
-      applyWhenPlanned: true,
-    });
-    expect(readFileSync(gitignorePath(), 'utf-8')).toContain(
-      '.nx/migrate-runs'
-    );
-  });
-
-  it('still respects a conscious removal with applyWhenPlanned when the migration is not in the queue', async () => {
-    writeFileSync(gitignorePath(), 'node_modules\n');
-    await applyAgenticHandoffGitignoreFallback({
-      migrations: [{ package: '@nx/react', name: 'some-other' }],
-      installedNxVersion: '23.0.0',
-      effectiveCreateCommits: false,
-      commitPrefix: COMMIT_PREFIX,
-      root: workspace,
-      applyWhenPlanned: true,
-    });
-    expect(readFileSync(gitignorePath(), 'utf-8')).toBe('node_modules\n');
-  });
-
   it('does nothing when the migration is not in the queue and installed nx is at v23+ (respect conscious removal)', async () => {
     writeFileSync(gitignorePath(), 'node_modules\n');
     await applyAgenticHandoffGitignoreFallback({
       migrations: [{ package: '@nx/react', name: 'some-23-mig' }],
       installedNxVersion: '23.2.0',
-      effectiveCreateCommits: true,
-      commitPrefix: COMMIT_PREFIX,
       root: workspace,
     });
     expect(readFileSync(gitignorePath(), 'utf-8')).toBe('node_modules\n');
-    expect(mockTry).not.toHaveBeenCalled();
     expect(mockInfo).not.toHaveBeenCalled();
   });
 
@@ -157,24 +68,17 @@ describe('applyAgenticHandoffGitignoreFallback', () => {
     await applyAgenticHandoffGitignoreFallback({
       migrations: [{ package: '@nx/react', name: 'some-mig' }],
       installedNxVersion: '23.0.0-beta.1',
-      effectiveCreateCommits: true,
-      commitPrefix: COMMIT_PREFIX,
       root: workspace,
     });
     expect(readFileSync(gitignorePath(), 'utf-8')).toBe('node_modules\n');
-    expect(mockTry).not.toHaveBeenCalled();
   });
 
-  it('applies the gitignore entry inline and creates a preflight commit when installed nx < v23 and commits are enabled', async () => {
+  it('applies the gitignore entry inline when installed nx < v23', async () => {
     writeFileSync(gitignorePath(), 'node_modules\n');
-    mockHas.mockReturnValue(true);
-    mockTry.mockReturnValue('abc123');
 
     await applyAgenticHandoffGitignoreFallback({
       migrations: [{ package: '@nx/react', name: 'some-22-mig' }],
       installedNxVersion: '22.5.0',
-      effectiveCreateCommits: true,
-      commitPrefix: COMMIT_PREFIX,
       root: workspace,
     });
 
@@ -186,34 +90,6 @@ describe('applyAgenticHandoffGitignoreFallback', () => {
     expect(readFileSync(gitignorePath(), 'utf-8')).toBe(
       'node_modules\n\n.nx/migrate-runs'
     );
-    expect(mockTry).toHaveBeenCalledWith(
-      `${COMMIT_PREFIX}add .nx/migrate-runs to .gitignore`,
-      workspace,
-      ['.nx/migrate-runs']
-    );
-    const messages = mockInfo.mock.calls.map((c) => stripAnsi(c[0]));
-    expect(messages).toEqual([
-      `- Added .nx/migrate-runs to .gitignore so this run's scratch state is ignored.`,
-      `  Commit: abc123`,
-    ]);
-  });
-
-  it('applies the gitignore entry inline but skips the commit when commits are disabled', async () => {
-    writeFileSync(gitignorePath(), 'node_modules\n');
-
-    await applyAgenticHandoffGitignoreFallback({
-      migrations: [{ package: '@nx/react', name: 'some-22-mig' }],
-      installedNxVersion: '22.5.0',
-      effectiveCreateCommits: false,
-      commitPrefix: COMMIT_PREFIX,
-      root: workspace,
-    });
-
-    expect(readFileSync(gitignorePath(), 'utf-8')).toBe(
-      'node_modules\n\n.nx/migrate-runs'
-    );
-    expect(mockTry).not.toHaveBeenCalled();
-    expect(mockHas).not.toHaveBeenCalled();
     const messages = mockInfo.mock.calls.map((c) => stripAnsi(c[0]));
     expect(messages).toEqual([
       `- Added .nx/migrate-runs to .gitignore so this run's scratch state is ignored.`,
@@ -225,78 +101,9 @@ describe('applyAgenticHandoffGitignoreFallback', () => {
     await applyAgenticHandoffGitignoreFallback({
       migrations: [{ package: '@nx/react', name: 'some-22-mig' }],
       installedNxVersion: '22.5.0',
-      effectiveCreateCommits: true,
-      commitPrefix: COMMIT_PREFIX,
       root: workspace,
     });
     expect(readFileSync(gitignorePath(), 'utf-8')).toBe('node_modules\n.nx\n');
-    expect(mockTry).not.toHaveBeenCalled();
-  });
-
-  it('skips the commit step but keeps the .gitignore mutation when `hasUncommittedChanges` returns false (race / filter)', async () => {
-    writeFileSync(gitignorePath(), 'node_modules\n');
-    mockHas.mockReturnValue(false);
-
-    await applyAgenticHandoffGitignoreFallback({
-      migrations: [{ package: '@nx/react', name: 'some-22-mig' }],
-      installedNxVersion: '22.5.0',
-      effectiveCreateCommits: true,
-      commitPrefix: COMMIT_PREFIX,
-      root: workspace,
-    });
-
-    expect(readFileSync(gitignorePath(), 'utf-8')).toBe(
-      'node_modules\n\n.nx/migrate-runs'
-    );
-    expect(mockTry).not.toHaveBeenCalled();
-  });
-
-  it('logs a yellow warning but leaves the .gitignore mutation in place when the commit attempt throws', async () => {
-    writeFileSync(gitignorePath(), 'node_modules\n');
-    mockHas.mockReturnValue(true);
-    mockTry.mockImplementation(() => {
-      throw new Error('error: gpg failed to sign the data');
-    });
-
-    await applyAgenticHandoffGitignoreFallback({
-      migrations: [{ package: '@nx/react', name: 'some-22-mig' }],
-      installedNxVersion: '22.5.0',
-      effectiveCreateCommits: true,
-      commitPrefix: COMMIT_PREFIX,
-      root: workspace,
-    });
-
-    expect(readFileSync(gitignorePath(), 'utf-8')).toBe(
-      'node_modules\n\n.nx/migrate-runs'
-    );
-    const warningMessage = stripAnsi(mockInfo.mock.calls.at(-1)![0]);
-    expect(warningMessage).toContain(
-      'Could not create the agentic preflight commit'
-    );
-    expect(warningMessage).toContain('error: gpg failed to sign the data');
-    expect(warningMessage).toContain('remains in the working tree');
-  });
-
-  it('is silent on a successful commit when `tryCommitChanges` returns null (HEAD-resolve race)', async () => {
-    writeFileSync(gitignorePath(), 'node_modules\n');
-    mockHas.mockReturnValue(true);
-    mockTry.mockReturnValue(null);
-
-    await applyAgenticHandoffGitignoreFallback({
-      migrations: [{ package: '@nx/react', name: 'some-22-mig' }],
-      installedNxVersion: '22.5.0',
-      effectiveCreateCommits: true,
-      commitPrefix: COMMIT_PREFIX,
-      root: workspace,
-    });
-
-    expect(mockTry).toHaveBeenCalledTimes(1);
-    const messages = mockInfo.mock.calls.map((c) => stripAnsi(c[0]));
-    // The 'Added ...' line is emitted; the 'Commit: <sha>' line is NOT —
-    // we have nothing meaningful to print when the sha could not be
-    // resolved, and the diff cleared from the working tree.
-    expect(messages).toEqual([
-      `- Added .nx/migrate-runs to .gitignore so this run's scratch state is ignored.`,
-    ]);
+    expect(mockInfo).not.toHaveBeenCalled();
   });
 });

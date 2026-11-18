@@ -1,6 +1,5 @@
 import { ProjectGraph } from '../../../config/project-graph';
 import { findMatchingProjects } from '../../../utils/find-matching-projects';
-import { output } from '../../../utils/output';
 import { IMPLICIT_DEFAULT_RELEASE_GROUP, NxReleaseConfig } from './config';
 import { GroupVersionPlan, ProjectsVersionPlan } from './version-plans';
 import { NxReleaseDockerConfiguration } from '../../../config/nx-json';

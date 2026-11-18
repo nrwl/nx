@@ -35,6 +35,11 @@ export function addDependencies(
   dependencies['@angular/ssr'] =
     withSsrAllowedHostsSupport(angularDevkitVersion);
 
+  if (options.isUsingApplicationBuilder || options.isRspack) {
+    // The server template imports @nx/js/ready-signal, which must resolve from the workspace root
+    devDependencies['@nx/js'] = nxVersion;
+  }
+
   if (options.isUsingApplicationBuilder) {
     dependencies['@angular-devkit/build-angular'] = angularDevkitVersion;
   } else if (!options.isRspack) {

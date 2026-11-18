@@ -16,6 +16,17 @@ import {
 } from './target-normalization';
 
 describe('normalizeTarget', () => {
+  it('keeps targets with removed executors loadable for migrations', () => {
+    const project = { name: 'app', root: 'apps/app' };
+    const target = {
+      executor: '@nx/next:build',
+      options: { outputPath: 'dist/apps/app' },
+    };
+    expect(
+      normalizeTarget(target, project, workspaceRoot, { app: project }, '')
+    ).toMatchObject(target);
+  });
+
   it('should support {projectRoot}, {workspaceRoot}, and {projectName} tokens', () => {
     const config = {
       name: 'project',
@@ -119,6 +130,203 @@ describe('validateAndNormalizeProjectRootMap', () => {
     expect(projectRootMap['libs/a/ui'].name).toEqual('ui');
   });
 
+  describe('ultracache validation through the real merge pipeline', () => {
+    // The root-map tests below construct shapes the pipeline cannot produce.
+    // This one goes through mergeCreateNodesResults so a falsy ultracache is
+    // proven to reach validation the way an authored project.json would.
+    const resultsFor = (ultracache: unknown) => [
+      [
+        [
+          'nx/core/project-json',
+          'libs/a/ui/project.json',
+          {
+            projects: {
+              'libs/a/ui': {
+                name: 'a-ui',
+                root: 'libs/a/ui',
+                targets: { build: { executor: 'nx:run-commands', ultracache } },
+              },
+            },
+          },
+        ],
+      ],
+    ];
+
+    // Escaping this call is what takes the daemon down: only the three
+    // classifiable errors are collected, and `shutdown-utils` exits the
+    // process for anything else.
+    it('collects ultracache: false authored on a project instead of throwing', async () => {
+      const { mergeCreateNodesResults } =
+        await import('../project-configuration-utils');
+      const errors: Error[] = [];
+
+      expect(() =>
+        mergeCreateNodesResults(
+          resultsFor(false) as any,
+          [],
+          {} as any,
+          tempFs.tempDir,
+          errors
+        )
+      ).not.toThrow();
+
+      expect(errors.map((e) => e.message)).toEqual([
+        expect.stringMatching(/"ultracache" configuration for target "build"/),
+      ]);
+    });
+
+    it('accepts a well-formed ultracache authored on a project', async () => {
+      const { mergeCreateNodesResults } =
+        await import('../project-configuration-utils');
+      const errors: Error[] = [];
+
+      expect(() =>
+        mergeCreateNodesResults(
+          resultsFor({ mode: 'off', ignoreReads: ['tmp/**'] }) as any,
+          [],
+          {} as any,
+          tempFs.tempDir,
+          errors
+        )
+      ).not.toThrow();
+
+      expect(errors).toEqual([]);
+    });
+  });
+
+  describe('ultracache validation', () => {
+    const projectRootMapWithUltracache = (ultracache: unknown) => ({
+      'libs/a/ui': {
+        root: 'libs/a/ui',
+        name: 'a-ui',
+        targets: { build: { executor: 'nx:run-commands', ultracache } },
+      },
+    });
+
+    // Aggregated as a WorkspaceValidityError so `mergeCreateNodesResults` can
+    // classify it; a bespoke class escapes to the daemon.
+    const ultracacheErrors = (ultracache: unknown): string[] => {
+      try {
+        validateAndNormalizeProjectRootMap(
+          tempFs.tempDir,
+          projectRootMapWithUltracache(ultracache) as any,
+          {}
+        );
+      } catch (e) {
+        expect(e).toBeInstanceOf(AggregateError);
+        for (const inner of (e as AggregateError).errors) {
+          expect(inner.name).toEqual('WorkspaceValidityError');
+        }
+        return (e as AggregateError).errors.map((inner) => inner.message);
+      }
+      return [];
+    };
+
+    it('should reject a non-object ultracache', () => {
+      expect(ultracacheErrors(false)).toEqual([
+        expect.stringMatching(
+          /"ultracache" configuration for target "build" in project "a-ui"/
+        ),
+      ]);
+    });
+
+    it('should reject a string where a glob array is required', () => {
+      expect(ultracacheErrors({ ignoreReads: 'tmp/**' })).toEqual([
+        expect.stringMatching(
+          /"ultracache.ignoreReads" for target "build" in project "a-ui" must be an array of glob patterns, but it is a string/
+        ),
+      ]);
+    });
+
+    it('should reject a non-string element inside a glob array', () => {
+      expect(ultracacheErrors({ ignoreWrites: ['ok/**', 7] })).toEqual([
+        expect.stringMatching(
+          /"ultracache.ignoreWrites\[1\]".*must be a glob pattern string/
+        ),
+      ]);
+    });
+
+    it('should reject a mode that is not one of the four', () => {
+      expect(ultracacheErrors({ mode: 'enabled' })).toEqual([
+        expect.stringMatching(
+          /"ultracache.mode" for target "build" in project "a-ui" must be one of "on", "warn", "error", "off", but it is "enabled"/
+        ),
+      ]);
+    });
+
+    it('should reject a mode that is not a string', () => {
+      expect(ultracacheErrors({ mode: false })).toEqual([
+        expect.stringMatching(/"ultracache.mode".*but it is a boolean/),
+      ]);
+    });
+
+    it.each(['on', 'warn', 'error', 'off'])('should accept mode %s', (mode) => {
+      expect(ultracacheErrors({ mode })).toEqual([]);
+    });
+
+    it.each([true, false, undefined])(
+      'should accept collectStats %s',
+      (collectStats) => {
+        expect(ultracacheErrors({ collectStats })).toEqual([]);
+      }
+    );
+
+    it.each(['true', 'false', 0, 1, null, [], {}])(
+      'should reject collectStats %j',
+      (collectStats) => {
+        expect(ultracacheErrors({ collectStats })).toEqual([
+          expect.stringMatching(
+            /"ultracache.collectStats" for target "build" in project "a-ui" must be a boolean/
+          ),
+        ]);
+      }
+    );
+
+    it('should reject a key that is not an ultracache option', () => {
+      expect(ultracacheErrors({ ignoredReads: ['tmp/**'] })).toEqual([
+        expect.stringMatching(
+          /"ultracache.ignoredReads" for target "build" in project "a-ui" is not an ultracache option/
+        ),
+      ]);
+    });
+
+    // A spread with no base to resolve against survives merging, so rejecting
+    // it here would fail a config the merge deliberately let through.
+    it('should accept the spread token as a key', () => {
+      expect(ultracacheErrors({ '...': true, mode: 'warn' })).toEqual([]);
+    });
+
+    it('should report every malformed key in one error', () => {
+      const [message] = ultracacheErrors({
+        mode: 'enabled',
+        ignoredReads: ['tmp/**'],
+        ignoreReads: 'tmp/**',
+        ignoreWrites: ['ok/**', 7],
+      });
+
+      expect(message).toMatch(
+        /"ultracache.ignoredReads" .* is not an ultracache option/
+      );
+      expect(message).toMatch(/"ultracache.mode"/);
+      expect(message).toMatch(/"ultracache.ignoreReads"/);
+      expect(message).toMatch(/"ultracache.ignoreWrites\[1\]"/);
+    });
+
+    it('should accept a well-formed ultracache', () => {
+      expect(
+        ultracacheErrors({
+          mode: 'warn',
+          ignoreReads: ['tmp/**'],
+          ignoreWrites: ['scratch/**'],
+        })
+      ).toEqual([]);
+    });
+
+    it('should accept a target with no ultracache', () => {
+      expect(ultracacheErrors(undefined)).toEqual([]);
+    });
+  });
+
   it('should fall back to the folder name when project.json cannot be parsed', () => {
     tempFs.createFilesSync({
       'libs/a/ui/project.json': 'not json',
@@ -218,7 +426,7 @@ describe('validateAndNormalizeProjectRootMap', () => {
   });
 });
 
-describe('target-name cache fallback', () => {
+describe('normalization against target defaults', () => {
   let warn: MockInstance;
 
   beforeEach(() => {
@@ -247,299 +455,81 @@ describe('target-name cache fallback', () => {
     return rootMap['libs/project'].targets[targetName];
   }
 
-  it('should apply the target-name default when an executor default shadowed it', () => {
-    const target = normalize(
-      // The executor key won outright, so the merged target carries its
-      // `inputs` but never saw the `build` key's `cache`.
-      { executor: '@nx/angular:webpack-browser', inputs: ['production'] },
-      {
-        build: { cache: true, inputs: ['production', '^production'] },
-        '@nx/angular:webpack-browser': { inputs: ['production'] },
-      }
-    );
-
-    expect(target.cache).toBe(true);
-  });
-
-  it('should not override cache already resolved on the target', () => {
-    const target = normalize(
-      { executor: '@nx/angular:webpack-browser', cache: false },
-      {
-        build: { cache: true },
-        '@nx/angular:webpack-browser': { inputs: ['production'] },
-      }
-    );
-
-    expect(target.cache).toBe(false);
-  });
-
-  it('should not apply to continuous targets', () => {
-    // `api` is deliberately outside the long-running name list, so only the
-    // `continuous` clause can reject this.
-    const target = normalize(
-      { executor: 'nx:run-commands', continuous: true },
-      { api: { cache: true }, 'nx:run-commands': { inputs: ['default'] } },
-      'api'
-    );
-
-    expect(target.cache).toBeUndefined();
-  });
-
-  it.each(['serve', 'dev', 'start', 'build-watch', 'test:watch'])(
-    'should not apply to %s, which the pre-23 guard excluded by name',
-    (targetName) => {
+  describe('cache', () => {
+    it('should not read cache from a target-name key an executor key shadowed', () => {
       const target = normalize(
-        { executor: 'nx:run-commands' },
+        // The executor key won outright, so the merged target carries its
+        // `inputs` and never saw the `build` key's `cache`.
+        { executor: '@nx/angular:webpack-browser', inputs: ['production'] },
         {
-          [targetName]: { cache: true },
-          'nx:run-commands': { inputs: ['default'] },
-        },
-        targetName
+          build: { cache: true, inputs: ['production', '^production'] },
+          '@nx/angular:webpack-browser': { inputs: ['production'] },
+        }
       );
 
       expect(target.cache).toBeUndefined();
-    }
-  );
-
-  it('should read the last unfiltered entry of an array-shaped default', () => {
-    const target = normalize(
-      { executor: '@nx/angular:webpack-browser' },
-      {
-        build: [
-          { cache: false },
-          // Later unfiltered entry wins, matching the in-key merge order.
-          { cache: true },
-        ],
-        '@nx/angular:webpack-browser': { inputs: ['production'] },
-      }
-    );
-
-    expect(target.cache).toBe(true);
-  });
-
-  it('should restore nothing when a filtered entry decides cache', () => {
-    // The filtered entry carries `cache: true` and the unfiltered one `false`,
-    // so ignoring filters would restore caching. Whether the filter applies
-    // can't be evaluated here, so the value is unknowable and nothing is done.
-    const target = normalize(
-      { executor: '@nx/angular:webpack-browser' },
-      {
-        build: [
-          { cache: false },
-          { filter: { projects: ['project'] }, cache: true },
-        ],
-        '@nx/angular:webpack-browser': { inputs: ['production'] },
-      }
-    );
-
-    expect(target.cache).toBeUndefined();
-  });
-
-  it('should not materialize cache when the target-name default opts out', () => {
-    const target = normalize(
-      { executor: '@nx/angular:webpack-browser' },
-      {
-        build: { cache: false },
-        '@nx/angular:webpack-browser': { inputs: ['production'] },
-      }
-    );
-
-    expect(target.cache).toBeUndefined();
-  });
-
-  it('should apply to a target that explicitly opts out of continuity', () => {
-    // The schema is stubbed continuous so the opt-out is the only thing that
-    // can decide this: `normalizeTarget` skips the lookup when `continuous` is
-    // present on the target at all. Without the stub the executor simply fails
-    // to resolve here, and the test would pass without exercising the opt-out.
-    const getExecutorInformation = vi
-      .spyOn(executorUtils, 'getExecutorInformation')
-      .mockReturnValue({ schema: { continuous: true } } as any);
-
-    const target = normalize(
-      { executor: '@nx/js:verdaccio', continuous: false },
-      {
-        'local-registry': { cache: true },
-        '@nx/js:verdaccio': { inputs: ['default'] },
-      },
-      'local-registry'
-    );
-
-    expect(target.continuous).toBe(false);
-    expect(target.cache).toBe(true);
-
-    getExecutorInformation.mockRestore();
-  });
-
-  it('should not apply when the executor schema makes the target continuous', () => {
-    // The paired case: no explicit opt-out, so the schema decides and the
-    // target is continuous. Caching it would be invalid.
-    const getExecutorInformation = vi
-      .spyOn(executorUtils, 'getExecutorInformation')
-      .mockReturnValue({ schema: { continuous: true } } as any);
-
-    const target = normalize(
-      { executor: '@nx/js:verdaccio' },
-      {
-        'local-registry': { cache: true },
-        '@nx/js:verdaccio': { inputs: ['default'] },
-      },
-      'local-registry'
-    );
-
-    expect(target.continuous).toBe(true);
-    expect(target.cache).toBeUndefined();
-
-    getExecutorInformation.mockRestore();
-  });
-
-  it('should not apply when no executor key shadowed the target name key', () => {
-    // The name key's entry declares a foreign executor, so it was dropped as
-    // incompatible rather than shadowed. Pre-23 this target WAS cacheable —
-    // that derivation matched on target name alone and never read the entry's
-    // `executor` — so this is a deliberate narrowing, not parity. Restoring it
-    // would set `cache` with no key to name in the warning and no migration
-    // able to retire it.
-    const target = normalize(
-      { executor: '@nx/angular:webpack-browser' },
-      { build: { cache: true, executor: '@nx/js:tsc' } }
-    );
-
-    expect(target.cache).toBeUndefined();
-    expect(warn).not.toHaveBeenCalled();
-  });
-
-  it('should warn naming the shadowing key and the key it was read from', () => {
-    normalize(
-      { executor: '@nx/angular:webpack-browser' },
-      {
-        build: { cache: true },
-        '@nx/angular:webpack-browser': { inputs: ['production'] },
-      }
-    );
-
-    expect(warn).toHaveBeenCalledTimes(1);
-    const bodyLines = warn.mock.calls[0][0].bodyLines.join('\n');
-    expect(bodyLines).toContain(
-      '"@nx/angular:webpack-browser" does not set "cache", so it was read from "build"'
-    );
-    // The deadline is load-bearing: the TODO(v24) markers on both halves assume
-    // it, so the user-facing text has to name the same release.
-    expect(bodyLines).toContain('will be removed in Nx 24');
-  });
-
-  it('should group the warning across projects and targets', () => {
-    const rootMap = {
-      'libs/a': {
-        name: 'a',
-        root: 'libs/a',
-        targets: { build: { executor: '@nx/angular:webpack-browser' } },
-      },
-      'libs/b': {
-        name: 'b',
-        root: 'libs/b',
-        targets: {
-          build: { executor: '@nx/angular:webpack-browser' },
-          test: { executor: '@nx/jest:jest' },
-        },
-      },
-    };
-    validateAndNormalizeProjectRootMap(workspaceRoot, rootMap, {
-      targetDefaults: {
-        build: { cache: true },
-        test: { cache: true },
-        '@nx/angular:webpack-browser': { inputs: ['production'] },
-        '@nx/jest:jest': { inputs: ['default'] },
-      },
+      expect(warn).not.toHaveBeenCalled();
     });
 
-    // Three shadowed targets across two projects, but only two distinct
-    // (executor key, target key) pairs — and one warning.
-    expect(warn).toHaveBeenCalledTimes(1);
-    const bodyLines: string[] = warn.mock.calls[0][0].bodyLines;
-    expect(
-      bodyLines.filter((line) => line.includes('does not set "cache"'))
-    ).toHaveLength(2);
+    it('should not read cache from a target-name key that lost for another reason', () => {
+      // The name key's entry declares a foreign executor, so resolution
+      // discarded it as incompatible rather than shadowing it.
+      const target = normalize(
+        { executor: '@nx/angular:webpack-browser' },
+        { build: { cache: true, executor: '@nx/js:tsc' } }
+      );
+
+      expect(target.cache).toBeUndefined();
+      expect(warn).not.toHaveBeenCalled();
+    });
+
+    it('should keep the cache that resolution decided', () => {
+      const target = normalize(
+        { executor: '@nx/angular:webpack-browser', cache: true },
+        {
+          build: { cache: false },
+          '@nx/angular:webpack-browser': { cache: true },
+        }
+      );
+
+      expect(target.cache).toBe(true);
+    });
   });
 
-  it('should not warn when nothing was shadowed', () => {
-    normalize(
-      { executor: '@nx/angular:webpack-browser' },
-      {
-        build: { cache: true },
-      }
-    );
+  describe('continuity', () => {
+    it('should take continuous from the executor schema', () => {
+      const getExecutorInformation = vi
+        .spyOn(executorUtils, 'getExecutorInformation')
+        .mockReturnValue({ schema: { continuous: true } } as any);
 
-    expect(warn).not.toHaveBeenCalled();
-  });
+      const target = normalize(
+        { executor: '@nx/js:verdaccio' },
+        { '@nx/js:verdaccio': { inputs: ['default'] } },
+        'local-registry'
+      );
 
-  it('should leave cache unset when no target-name default exists', () => {
-    const target = normalize(
-      { executor: '@nx/angular:webpack-browser' },
-      { '@nx/angular:webpack-browser': { inputs: ['production'] } }
-    );
+      expect(target.continuous).toBe(true);
 
-    expect(target.cache).toBeUndefined();
-  });
+      getExecutorInformation.mockRestore();
+    });
 
-  it.each([
-    ['an array entry that is null', JSON.parse('[null,{"cache":true}]')],
-    ['a string', JSON.parse('"nonsense"')],
-    ['a number', JSON.parse('7')],
-  ])('should not throw when the target-name default is %s', (_label, build) => {
-    // nx.json is hand-edited, and this runs inside graph construction — a
-    // throw here fails every nx command, not just the fallback.
-    expect(() =>
-      normalize({ executor: '@nx/js:tsc' }, {
-        build,
-        '@nx/js:tsc': { inputs: ['default'] },
-      } as any)
-    ).not.toThrow();
-  });
+    it('should let a target opt out of the schema flag', () => {
+      // `normalizeTarget` skips the schema lookup when `continuous` is present
+      // on the target at all, and this executor does not resolve here without
+      // the stub, so the stub is what makes the opt-out observable.
+      const getExecutorInformation = vi
+        .spyOn(executorUtils, 'getExecutorInformation')
+        .mockReturnValue({ schema: { continuous: true } } as any);
 
-  it('should not treat an inherited key as a shadowing executor key', () => {
-    // `targetDefaults["__proto__"]` resolves through the prototype chain to a
-    // truthy object, so an unguarded lookup reports a shadowing key that the
-    // user never wrote — restoring cache and naming it in the warning.
-    const target = normalize(
-      { executor: '__proto__' },
-      { build: { cache: true } }
-    );
+      const target = normalize(
+        { executor: '@nx/js:verdaccio', continuous: false },
+        { '@nx/js:verdaccio': { inputs: ['default'] } },
+        'local-registry'
+      );
 
-    expect(target.cache).toBeUndefined();
-    expect(warn).not.toHaveBeenCalled();
-  });
+      expect(target.continuous).toBe(false);
 
-  it('should not restore cache when the target-name key declares none', () => {
-    // The most common nx.json shape there is: a name key carrying only
-    // dependsOn/inputs alongside an executor key. Nothing opted in, so nothing
-    // is restored.
-    const target = normalize(
-      { executor: '@nx/angular:webpack-browser' },
-      {
-        build: { dependsOn: ['^build'] },
-        '@nx/angular:webpack-browser': { inputs: ['production'] },
-      }
-    );
-
-    expect(target.cache).toBeUndefined();
-    expect(warn).not.toHaveBeenCalled();
-  });
-
-  it('should stop at a filtered entry rather than read past it to a later one', () => {
-    // Reading past the filter would find the unfiltered `cache: true` and
-    // restore caching for a project the filter may never have covered.
-    const target = normalize(
-      { executor: '@nx/angular:webpack-browser' },
-      {
-        build: [
-          { filter: { projects: ['legacy-app'] }, cache: false },
-          { cache: true },
-        ],
-        '@nx/angular:webpack-browser': { inputs: ['production'] },
-      }
-    );
-
-    expect(target.cache).toBeUndefined();
+      getExecutorInformation.mockRestore();
+    });
   });
 });

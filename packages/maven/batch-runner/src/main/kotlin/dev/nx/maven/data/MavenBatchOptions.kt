@@ -176,12 +176,27 @@ data class TaskGraph(
     val tasks: Map<String, Task>,
 
     /**
-     * Map of Task IDs to IDs of tasks which the task depends on
+     * Map of Task IDs to the edges to tasks which the task depends on
      */
-    val dependencies: Map<String, List<String>>,
+    val dependencies: Map<String, List<TaskGraphEdge>>,
 
     /**
-     * Map of Task IDs to IDs of continuous dependency tasks
+     * Map of Task IDs to the edges to continuous dependency tasks
      */
-    val continuousDependencies: Map<String, List<String>>
+    val continuousDependencies: Map<String, List<TaskGraphEdge>>
+)
+
+/**
+ * An edge from a task to one of the tasks it depends on
+ */
+data class TaskGraphEdge(
+    /**
+     * ID of the task depended on
+     */
+    val id: String,
+
+    /**
+     * What the dependent waits for on a continuous dependency: "started" or "ready"
+     */
+    val waitFor: String?
 )

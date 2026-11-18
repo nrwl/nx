@@ -1,12 +1,14 @@
 // The run's issue ledger. Agents supply only the handoff's `issues` /
 // `issueUpdates`; ids, fingerprints, routing, claims and archiving are nx's.
 
+import { createHash } from 'crypto';
 import { mkdirSync, readFileSync } from 'fs';
 import { join } from 'path';
 import { writeJsonFile } from '../../../utils/fileutils';
 import { publishFileAtomically } from './atomic-write';
 import { MIGRATE_RUNS_RELATIVE_DIR } from '../agentic/types';
 import { singleLine } from '../text';
+import { warnToAgent } from './agent-output';
 import {
   ISSUE_ID,
   issueFingerprint,
@@ -21,7 +23,10 @@ import {
 } from './run-state';
 
 export { issueFingerprint };
-import { splitMigrationId } from './state-machine';
+import { splitMigrationId, unresolvedFailureDetail } from './state-machine';
+
+// Reserves summary space for the attempt count and the failure.
+const MAX_UNRESOLVED_ID_CHARS = 200;
 
 const ISSUES_DIR_NAME = 'issues';
 
@@ -102,12 +107,20 @@ export function parseHandoffIssues(
   reportingStep: MigrateStep
 ): ParsedHandoffIssues {
   if (extras !== undefined) {
-    const unknown = unknownKey(extras, ['outcome', 'issues', 'issueUpdates']);
+    // A single run keeps no issue ledger: nx prints its handoff summary when
+    // the run ends, and deletes the run's record.
+    const singleMigration = state.singleMigration === true;
+    const unknown = unknownKey(
+      extras,
+      singleMigration ? ['outcome'] : ['outcome', 'issues', 'issueUpdates']
+    );
     if (unknown !== undefined) {
       return invalid(
-        `the handoff has an unrecognized field ${quoted(
-          unknown
-        )}; the fields accepted next to "status" and "summary" are "outcome", "issues" and "issueUpdates"`
+        `the handoff has an unrecognized field ${quoted(unknown)}; ${
+          singleMigration
+            ? `a --run-migration run accepts only "outcome" next to "status" and "summary", and its problems go in "summary"`
+            : `the fields accepted next to "status" and "summary" are "outcome", "issues" and "issueUpdates"`
+        }`
       );
     }
     if (extras['outcome'] !== undefined && extras['outcome'] !== 'skipped') {
@@ -294,8 +307,9 @@ function parseIssueUpdate(
       value.id
     )}, which is not an issue nx has recorded for this run`;
   }
-  if (issue.claimedByStepId !== reportingStep.id) {
-    return `${label} references ${issue.id}, which is not assigned to this step; only issues the dispensed digest marks assigned to the current step can be updated`;
+  const refusal = issueUpdateRefusal(issue, reportingStep);
+  if (refusal !== null) {
+    return `${label} references ${issue.id}, which ${refusal}`;
   }
   const disposition = value.disposition;
   if (disposition !== 'resolved' && disposition !== 'deferred-final') {
@@ -315,16 +329,43 @@ function parseIssueUpdate(
   };
 }
 
+// Claims serialize the migration steps that could fix an issue. The final
+// validation pass runs alone after all of them, so it takes every issue still
+// open instead: by then any it could claim has been deferred to it.
+function issueUpdateRefusal(
+  issue: MigrateRunIssue,
+  reportingStep: MigrateStep
+): string | null {
+  switch (reportingStep.kind) {
+    case 'migration':
+      return issue.claimedByStepId === reportingStep.id
+        ? null
+        : 'is not assigned to this step; only issues the dispensed digest marks assigned to the current step can be updated';
+    case 'final-validation':
+      return issue.disposition !== 'resolved'
+        ? null
+        : 'is already resolved; the pass may update any issue still open';
+    default: {
+      const exhaustive: never = reportingStep;
+      throw new Error(`Unrecognized step: ${JSON.stringify(exhaustive)}`);
+    }
+  }
+}
+
 // A bare identifier matches the whole package name, scoped names included:
 // nothing splits on '/'. Step ids are unique, so the result needs no dedup.
 function mappedStepIds(identifier: string, state: MigrateRunState): string[] {
   if (identifier.includes(':')) {
     return state.steps
-      .filter((s) => s.migrationId === identifier)
+      .filter((s) => s.kind === 'migration' && s.migrationId === identifier)
       .map((s) => s.id);
   }
   return state.steps
-    .filter((s) => splitMigrationId(s.migrationId).package === identifier)
+    .filter(
+      (s) =>
+        s.kind === 'migration' &&
+        splitMigrationId(s.migrationId).package === identifier
+    )
     .map((s) => s.id);
 }
 
@@ -346,6 +387,76 @@ export interface IssueApplication {
 }
 
 /**
+ * Mints the run issue carrying a given-up step's last failure to the completion
+ * report: unscoped and deferred, so no later step claims it, with the migration
+ * id in the summary so identical failures stay apart. A report with the same
+ * text is taken over, not merged: the fingerprint is derived from the summary,
+ * so the ledger cannot hold both, and a merge would keep the report's scope.
+ * Same locking contract as {@link applyReportedIssues}.
+ */
+export function mintUnresolvedIssue(
+  state: MigrateRunState,
+  step: MigrateStep
+): { application: IssueApplication; issueId: string } {
+  const attempts = `${step.attempt} attempt${step.attempt === 1 ? '' : 's'}`;
+  let subject: string;
+  switch (step.kind) {
+    case 'migration':
+      subject = `Migration ${abbreviatedMigrationId(step.migrationId)}`;
+      break;
+    case 'final-validation':
+      subject = 'The final validation pass';
+      break;
+    default: {
+      const exhaustive: never = step;
+      throw new Error(`Unrecognized step: ${JSON.stringify(exhaustive)}`);
+    }
+  }
+  const prefix = `${subject} was left unresolved after ${attempts}: `;
+  const room = MAX_SUMMARY_CHARS - prefix.length;
+  const detail = unresolvedFailureDetail(step);
+  const summary =
+    prefix +
+    (detail.length > room ? `${detail.slice(0, room - 3)}...` : detail);
+  const ledger = state.issues ?? [];
+  const index = ledger.findIndex(
+    (i) => i.fingerprint === issueFingerprint(summary)
+  );
+  if (index === -1) {
+    const application = applyReportedIssues(
+      state,
+      step,
+      [{ summary, applicableMigrations: 'unknown' }],
+      []
+    );
+    return { application, issueId: application.newIssues[0].entry.id };
+  }
+  const {
+    claimedByStepId: _claim,
+    resolvedByStepId: _credit,
+    resolvedAtCommitCount: _fence,
+    ...rest
+  } = ledger[index];
+  const entry: MigrateRunIssue = {
+    ...rest,
+    applicableStepIds: 'unknown',
+    disposition: 'deferred-final',
+  };
+  const issues = [...ledger];
+  issues[index] = entry;
+  return {
+    application: {
+      state: { ...state, issues },
+      newIssues: [],
+      updates: [
+        { issueId: entry.id, stepId: step.id, disposition: 'deferred-final' },
+      ],
+    },
+    issueId: entry.id,
+  };
+}
+
+/**
  * Pure. Must run on state read fresh inside the fold's locked write, or ids
  * collide and the claim checks test state that is no longer on disk.
  */
@@ -353,7 +464,10 @@ export function applyReportedIssues(
   state: MigrateRunState,
   reportingStep: MigrateStep,
   issues: ReportedIssue[],
-  updates: ReportedIssueUpdate[]
+  updates: ReportedIssueUpdate[],
+  // The index of the entry that will carry this application's resolutions:
+  // the next append, unless a parent session already recorded it.
+  resolvedAtCommitCount: number = state.commits.length
 ): IssueApplication {
   const ledger = [...(state.issues ?? [])];
   const newIssues: IssueApplication['newIssues'] = [];
@@ -377,7 +491,8 @@ export function applyReportedIssues(
         existing,
         report,
         reportingStep,
-        state
+        state,
+        resolvedAtCommitCount
       );
       if (outcome.entry !== existing) {
         ledger[existingIndex] = outcome.entry;
@@ -418,7 +533,7 @@ export function applyReportedIssues(
       ...(disposition === 'resolved'
         ? {
             resolvedByStepId: reportingStep.id,
-            resolvedAtCommitCount: state.commits.length,
+            resolvedAtCommitCount,
           }
         : {}),
     };
@@ -445,7 +560,7 @@ export function applyReportedIssues(
               ...rest,
               disposition: 'resolved',
               resolvedByStepId: reportingStep.id,
-              resolvedAtCommitCount: state.commits.length,
+              resolvedAtCommitCount,
             }
           : { ...rest, disposition: update.disposition };
     }
@@ -493,7 +608,8 @@ function applyDuplicateReport(
   existing: MigrateRunIssue,
   report: ReportedIssue,
   reportingStep: MigrateStep,
-  state: MigrateRunState
+  state: MigrateRunState,
+  resolvedAtCommitCount: number
 ): { entry: MigrateRunIssue; archive: boolean } {
   const intent = reportIntent(report);
   const merged = mergedApplicableStepIds(existing, report, state);
@@ -539,7 +655,7 @@ function applyDuplicateReport(
         ...(disposition === 'resolved'
           ? {
               resolvedByStepId: reportingStep.id,
-              resolvedAtCommitCount: state.commits.length,
+              resolvedAtCommitCount,
             }
           : {}),
       },
@@ -648,6 +764,30 @@ export function attachIssueIdsToCommitEntry(
   if (entry.kind !== 'landed') return entry;
   const issueIds = issueIdsForCommit(state, entry.stepIds);
   return issueIds.length > 0 ? { ...entry, issueIds } : entry;
+}
+
+/**
+ * Adds to a landed entry the resolutions it can now carry, keeping the ids it
+ * has; other entries pass through. Repeating it is a no-op, since
+ * `issueIdsForCommit` skips resolutions an entry already carries.
+ */
+export function enrichCommitEntryIssueIds(
+  state: MigrateRunState,
+  index: number
+): MigrateRunState {
+  const entry = state.commits[index];
+  if (entry.kind !== 'landed') return state;
+  const existing = entry.issueIds ?? [];
+  const added = issueIdsForCommit(state, entry.stepIds).filter(
+    (id) => !existing.includes(id)
+  );
+  if (added.length === 0) return state;
+  return {
+    ...state,
+    commits: state.commits.map((c, i) =>
+      i === index ? { ...c, issueIds: [...existing, ...added] } : c
+    ),
+  };
 }
 
 /**
@@ -873,21 +1013,38 @@ export function renderIssueDigestLines(
 ): string[] {
   const unresolved = unresolvedIssues(state);
   if (unresolved.length === 0) return [];
-  const assigned = unresolved.filter(
-    (i) => i.disposition === 'recorded' && i.claimedByStepId === currentStepId
-  );
-  const entries = [
-    ...assigned.map((i) => digestEntry(i, 'assigned to this step')),
-    ...unresolved
-      .filter(
+  const currentStep = state.steps.find((s) => s.id === currentStepId);
+  // Deferred issues are the pass's own work; every other step reads them as
+  // out of reach.
+  const passDispense = currentStep?.kind === 'final-validation';
+  const assigned = passDispense
+    ? unresolved
+    : unresolved.filter(
         (i) =>
-          i.disposition === 'recorded' && i.claimedByStepId !== currentStepId
+          i.disposition === 'recorded' && i.claimedByStepId === currentStepId
+      );
+  const entries = passDispense
+    ? assigned.map((i) =>
+        digestEntry(
+          i,
+          i.disposition === 'deferred-final'
+            ? 'deferred to this step'
+            : 'assigned to this step'
+        )
       )
-      .map((i) => digestEntry(i, 'recorded')),
-    ...unresolved
-      .filter((i) => i.disposition === 'deferred-final')
-      .map((i) => digestEntry(i, 'deferred past the migration steps')),
-  ];
+    : [
+        ...assigned.map((i) => digestEntry(i, 'assigned to this step')),
+        ...unresolved
+          .filter(
+            (i) =>
+              i.disposition === 'recorded' &&
+              i.claimedByStepId !== currentStepId
+          )
+          .map((i) => digestEntry(i, 'recorded')),
+        ...unresolved
+          .filter((i) => i.disposition === 'deferred-final')
+          .map((i) => digestEntry(i, 'deferred past the migration steps')),
+      ];
   const fixedLines = [
     ``,
     stepDigestHeading(runId),
@@ -936,8 +1093,12 @@ export function renderUnresolvedIssueLines(
   return [heading, ...boundedEntryLines(entries, runId, budget)];
 }
 
-function unresolvedIssues(state: MigrateRunState): MigrateRunIssue[] {
+export function unresolvedIssues(state: MigrateRunState): MigrateRunIssue[] {
   return (state.issues ?? []).filter((i) => i.disposition !== 'resolved');
+}
+
+export function hasUnresolvedIssues(state: MigrateRunState): boolean {
+  return unresolvedIssues(state).length > 0;
 }
 
 function stepDigestHeading(runId: string): string {
@@ -1028,6 +1189,18 @@ function issuesDir(runDirPath: string): string {
 // directory.
 export function issueArchivePath(runDirPath: string, issueId: string): string {
   return join(issuesDir(runDirPath), `${issueId}.json`);
+}
+
+// The runbook points every later consumer at issues/<id>.json for the full
+// details, so a rebuild from run-state fields (the reported detail is gone
+// with the lost file) must not stay silent.
+export function warnReconstructedArchives(issueIds: string[]): void {
+  if (issueIds.length === 0) return;
+  warnToAgent({
+    title: `The archived details for ${issueIds.join(
+      ', '
+    )} were missing or unreadable and were rebuilt from the run state; the originally reported detail is lost.`,
+  });
 }
 
 /**
@@ -1131,6 +1304,16 @@ const NEW_ISSUE_ARCHIVE_KEYS = [
   'disposition',
   'detail',
 ] as const;
+
+// Hashes the full id so ids sharing a visible prefix stay distinct.
+function abbreviatedMigrationId(migrationId: string): string {
+  if (migrationId.length <= MAX_UNRESOLVED_ID_CHARS) return migrationId;
+  const digest = createHash('sha256')
+    .update(migrationId)
+    .digest('hex')
+    .slice(0, 8);
+  return `${migrationId.slice(0, MAX_UNRESOLVED_ID_CHARS - 12)}...[${digest}]`;
+}
 
 // Shared by the write path and the intactness check so their shapes cannot
 // drift.
@@ -1271,10 +1454,10 @@ function reconstructedArchiveShell(
     summary: entry.summary,
     reportedByStepId: entry.reportedByStepId,
     applicableMigrations: Array.isArray(entry.applicableStepIds)
-      ? entry.applicableStepIds.map(
-          (stepId) =>
-            state.steps.find((s) => s.id === stepId)?.migrationId ?? stepId
-        )
+      ? entry.applicableStepIds.map((stepId) => {
+          const step = state.steps.find((s) => s.id === stepId);
+          return step?.kind === 'migration' ? step.migrationId : stepId;
+        })
       : 'unknown',
     reconstructed: true,
   };

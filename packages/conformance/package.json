@@ -1,0 +1,130 @@
+{
+  "name": "@nx/conformance",
+  "description": "The Nx Plugin for Conformance, which allows users to write and apply rules for an entire workspace that help with consistency, maintainability, reliability and security.",
+  "version": "0.0.1",
+  "type": "commonjs",
+  "files": [
+    "dist",
+    "!dist/tsconfig.tsbuildinfo",
+    "executors.json",
+    "migrations.json",
+    "generators.json"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nrwl/nx.git",
+    "directory": "packages/conformance"
+  },
+  "bugs": {
+    "url": "https://github.com/nrwl/nx/issues"
+  },
+  "keywords": [
+    "Monorepo",
+    "Conformance",
+    "Lint",
+    "CLI"
+  ],
+  "author": "Victor Savkin",
+  "license": "MIT",
+  "homepage": "https://nx.dev",
+  "main": "./dist/src/index.js",
+  "types": "./dist/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "rules-runner": [
+        "dist/src/rules-runner.d.ts"
+      ],
+      "resolve-rule": [
+        "dist/src/resolve-rule.d.ts"
+      ],
+      "conformance-handler": [
+        "dist/src/commands/conformance/conformance.d.ts"
+      ],
+      "testing": [
+        "dist/testing/index.d.ts"
+      ],
+      "src/generators/create-rule/create-rule": [
+        "dist/src/generators/create-rule/create-rule.d.ts"
+      ],
+      "src/executors/bundle-rules/executor": [
+        "dist/src/executors/bundle-rules/executor.d.ts"
+      ]
+    }
+  },
+  "exports": {
+    ".": {
+      "@nx/nx-source": "./src/index.ts",
+      "types": "./dist/src/index.d.ts",
+      "default": "./dist/src/index.js"
+    },
+    "./package.json": "./package.json",
+    "./executors.json": "./executors.json",
+    "./generators.json": "./generators.json",
+    "./migrations.json": "./migrations.json",
+    "./rules-runner": {
+      "@nx/nx-source": "./src/rules-runner.ts",
+      "types": "./dist/src/rules-runner.d.ts",
+      "default": "./dist/src/rules-runner.js"
+    },
+    "./resolve-rule": {
+      "@nx/nx-source": "./src/resolve-rule.ts",
+      "types": "./dist/src/resolve-rule.d.ts",
+      "default": "./dist/src/resolve-rule.js"
+    },
+    "./conformance-handler": {
+      "@nx/nx-source": "./src/commands/conformance/conformance.ts",
+      "types": "./dist/src/commands/conformance/conformance.d.ts",
+      "default": "./dist/src/commands/conformance/conformance.js"
+    },
+    "./testing": {
+      "@nx/nx-source": "./testing/index.ts",
+      "types": "./dist/testing/index.d.ts",
+      "default": "./dist/testing/index.js"
+    },
+    "./src/generators/create-rule/create-rule": {
+      "@nx/nx-source": "./src/generators/create-rule/create-rule.ts",
+      "types": "./dist/src/generators/create-rule/create-rule.d.ts",
+      "default": "./dist/src/generators/create-rule/create-rule.js"
+    },
+    "./src/executors/bundle-rules/executor": {
+      "@nx/nx-source": "./src/executors/bundle-rules/executor.ts",
+      "types": "./dist/src/executors/bundle-rules/executor.d.ts",
+      "default": "./dist/src/executors/bundle-rules/executor.js"
+    },
+    "./src/executors/bundle-rules/schema.json": "./dist/src/executors/bundle-rules/schema.json",
+    "./*": {
+      "@nx/nx-source": "./src/rules/*/index.ts",
+      "default": "./dist/src/rules/*/index.js"
+    }
+  },
+  "nx-migrations": {
+    "migrations": "./migrations.json",
+    "supportsOptionalMigrations": true
+  },
+  "executors": "./executors.json",
+  "generators": "./generators.json",
+  "dependencies": {
+    "@nx/devkit": "workspace:*",
+    "ajv": "catalog:",
+    "picocolors": "catalog:",
+    "semver": "catalog:",
+    "tslib": "catalog:typescript",
+    "yargs": "catalog:"
+  },
+  "peerDependencies": {
+    "@nx/js": "workspace:*",
+    "esbuild": ">=0.19.2 <1.0.0"
+  },
+  "peerDependenciesMeta": {
+    "esbuild": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.0",
+    "nx": "workspace:*"
+  }
+}

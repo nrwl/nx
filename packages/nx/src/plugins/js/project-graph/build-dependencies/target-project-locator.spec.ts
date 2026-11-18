@@ -13,8 +13,11 @@ import {
 
 import { builtinModules } from 'node:module';
 
+const mockedWorkspaceRoot = vi.hoisted(() => ({ path: '/root' }));
 vi.mock('nx/src/utils/workspace-root', () => ({
-  workspaceRoot: '/root',
+  get workspaceRoot() {
+    return mockedWorkspaceRoot.path;
+  },
 }));
 
 vi.mock('nx/src/plugins/js/utils/resolve-relative-to-dir', () => ({
@@ -33,6 +36,30 @@ vi.mock('nx/src/plugins/js/utils/resolve-relative-to-dir', () => ({
     }
     if (pathOrPackage === '@json2csv/plainjs/package.json') {
       return '/root/node_modules/@json2csv/plainjs/dist/cjs/package.json';
+    }
+    // Resolve package.json to the nested module-format stub used by this test.
+    if (pathOrPackage === '@rerouted/pkg/package.json') {
+      return '/root/node_modules/@rerouted/pkg/dist/cjs/package.json';
+    }
+    // exports omit ./package.json. The resolved entry sits below a nested manifest.
+    if (
+      pathOrPackage === '@hidden-exports/pkg/package.json' ||
+      pathOrPackage === 'hidden-exports-pkg/package.json'
+    ) {
+      return null;
+    }
+    if (pathOrPackage === '@hidden-exports/pkg') {
+      return '/root/node_modules/@hidden-exports/pkg/internal/entry/index.cjs';
+    }
+    if (pathOrPackage === 'hidden-exports-pkg') {
+      return '/root/node_modules/hidden-exports-pkg/internal/entry/index.cjs';
+    }
+    // Same shape, but the resolved entry is not under node_modules/<name>/.
+    if (pathOrPackage === '@hidden-exports/linked/package.json') {
+      return null;
+    }
+    if (pathOrPackage === '@hidden-exports/linked') {
+      return '/opt/packages/@hidden-exports/linked/internal/entry/index.cjs';
     }
     return join(
       '/root',
@@ -768,6 +795,41 @@ describe('TargetProjectLocator', () => {
           JSON.stringify({
             type: 'commonjs',
           }),
+        './node_modules/@rerouted/pkg/package.json': JSON.stringify({
+          name: '@rerouted/pkg',
+          version: '2.0.0',
+        }),
+        './node_modules/@rerouted/pkg/dist/cjs/package.json': JSON.stringify({
+          type: 'commonjs',
+        }),
+        // exports hide ./package.json, and a nested manifest carries its own name.
+        './node_modules/@hidden-exports/pkg/package.json': JSON.stringify({
+          name: '@hidden-exports/pkg',
+          version: '4.44.2',
+        }),
+        './node_modules/@hidden-exports/pkg/internal/package.json':
+          JSON.stringify({
+            name: '@hidden-exports/pkg/internal',
+            version: '4.44.2',
+          }),
+        './node_modules/hidden-exports-pkg/package.json': JSON.stringify({
+          name: 'hidden-exports-pkg',
+          version: '1.2.3',
+        }),
+        './node_modules/hidden-exports-pkg/internal/package.json':
+          JSON.stringify({
+            name: 'hidden-exports-internal',
+            version: '9.9.9',
+          }),
+        '/opt/packages/@hidden-exports/linked/package.json': JSON.stringify({
+          name: '@hidden-exports/linked',
+          version: '5.0.0',
+        }),
+        '/opt/packages/@hidden-exports/linked/internal/package.json':
+          JSON.stringify({
+            name: '@hidden-exports/linked/internal',
+            version: '5.0.0',
+          }),
       };
       vol.fromJSON(fsJson, '/root');
 
@@ -972,6 +1034,41 @@ describe('TargetProjectLocator', () => {
             hash: 'sha512-4Md7RPDCSYpmW1HWIpWBOqCd4vWfIqm53S3e/uzQ62iGi7L3r34fK/8nhOMEe+/eVfCx8+gdSCt1d74SlacQHw==',
           },
         },
+        // Versioned-only: a nested manifest must not be able to satisfy the lookup.
+        'npm:@hidden-exports/pkg@4.44.2': {
+          type: 'npm',
+          name: 'npm:@hidden-exports/pkg@4.44.2',
+          data: {
+            version: '4.44.2',
+            packageName: '@hidden-exports/pkg',
+          },
+        },
+        'npm:hidden-exports-pkg@1.2.3': {
+          type: 'npm',
+          name: 'npm:hidden-exports-pkg@1.2.3',
+          data: {
+            version: '1.2.3',
+            packageName: 'hidden-exports-pkg',
+          },
+        },
+        'npm:@hidden-exports/linked@5.0.0': {
+          type: 'npm',
+          name: 'npm:@hidden-exports/linked@5.0.0',
+          data: {
+            version: '5.0.0',
+            packageName: '@hidden-exports/linked',
+          },
+        },
+        // Keep this versioned-only so resolution cannot use the unversioned fallback.
+        'npm:@rerouted/pkg@2.0.0': {
+          type: 'npm',
+          name: 'npm:@rerouted/pkg@2.0.0',
+          data: {
+            version: '2.0.0',
+            packageName: '@rerouted/pkg',
+            hash: 'sha512-4Md7RPDCSYpmW1HWIpWBOqCd4vWfIqm53S3e/uzQ62iGi7L3r34fK/8nhOMEe+/eVfCx8+gdSCt1d74SlacQHw==',
+          },
+        },
       };
 
       targetProjectLocator = new TargetProjectLocator(projects, npmProjects);
@@ -1139,9 +1236,46 @@ describe('TargetProjectLocator', () => {
       );
       expect(result).toEqual('npm:@json2csv/plainjs');
     });
+
+    it('should resolve a rerouted package.json to its versioned node when no root-level node exists', () => {
+      const result = targetProjectLocator.findProjectFromImport(
+        '@rerouted/pkg/some/subpath',
+        'libs/proj/index.ts'
+      );
+      expect(result).toEqual('npm:@rerouted/pkg@2.0.0');
+    });
+
+    it('should resolve a package whose exports omit package.json when a nested package.json is closer to the entry', () => {
+      const scoped = targetProjectLocator.findProjectFromImport(
+        '@hidden-exports/pkg',
+        'libs/proj/index.ts'
+      );
+      const scopedSubpath = targetProjectLocator.findProjectFromImport(
+        '@hidden-exports/pkg/testing',
+        'libs/proj/index.ts'
+      );
+      const unscoped = targetProjectLocator.findProjectFromImport(
+        'hidden-exports-pkg',
+        'libs/proj/index.ts'
+      );
+
+      expect(scoped).toEqual('npm:@hidden-exports/pkg@4.44.2');
+      expect(scopedSubpath).toEqual('npm:@hidden-exports/pkg@4.44.2');
+      expect(unscoped).toEqual('npm:hidden-exports-pkg@1.2.3');
+
+      const linked = targetProjectLocator.findProjectFromImport(
+        '@hidden-exports/linked',
+        'libs/proj/index.ts'
+      );
+      expect(linked).toEqual('npm:@hidden-exports/linked@5.0.0');
+    });
   });
 
   describe('findNpmProjectFromImport', () => {
+    afterEach(() => {
+      mockedWorkspaceRoot.path = '/root';
+    });
+
     it('should resolve external node when the version does not match its own package.json (i.e. git remote) ', () => {
       const projects = {
         proj: {
@@ -1218,6 +1352,154 @@ describe('TargetProjectLocator', () => {
 
       expect(result).toEqual('npm:foo@0.0.1');
     });
+
+    // lib installs its own vendored `x` 2.0.0. The root installs a vendored
+    // copy, which Bun names by path and then bare, or the registry package of
+    // the same version.
+    const rootVendoredX = {
+      rootCopy: 'a vendored copy',
+      rootVersion: '1.0.0',
+      rootNodes: [
+        ['npm:x@file:vendor/x', 'file:vendor/x'],
+        ['npm:x', 'file:vendor/x'],
+      ],
+      rootInstalled: { '.': { x: 'npm:x@file:vendor/x' } },
+      appNode: 'npm:x@file:vendor/x',
+    };
+    it.each([
+      { workspaceRoot: '/root', ...rootVendoredX },
+      { workspaceRoot: '/root/', ...rootVendoredX },
+      {
+        workspaceRoot: '/root',
+        rootCopy: 'the registry package of the same version',
+        rootVersion: '2.0.0',
+        rootNodes: [['npm:x', '2.0.0']],
+        rootInstalled: {},
+        appNode: 'npm:x',
+      },
+    ])(
+      'should resolve a local package to the copy the nearest importer installs when the workspace root is $workspaceRoot and the root installs $rootCopy',
+      ({ workspaceRoot, rootVersion, rootNodes, rootInstalled, appNode }) => {
+        mockedWorkspaceRoot.path = workspaceRoot;
+        vol.fromJSON(
+          {
+            'node_modules/x/package.json': JSON.stringify({
+              name: 'x',
+              version: rootVersion,
+            }),
+            'libs/lib/node_modules/x/package.json': JSON.stringify({
+              name: 'x',
+              version: '2.0.0',
+            }),
+            // Declares lib's copy, but the lockfile records no such importer
+            'apps/app/fixtures/package.json': JSON.stringify({
+              dependencies: { x: 'file:../../../libs/vendor/x' },
+            }),
+          },
+          '/root'
+        );
+        const externalNodes = Object.fromEntries(
+          [
+            ...rootNodes,
+            ['npm:x@file:libs/vendor/x', 'file:libs/vendor/x'],
+          ].map(([name, version]) => [
+            name,
+            {
+              name,
+              type: 'npm' as const,
+              data: { version, packageName: 'x' },
+            },
+          ])
+        );
+        const targetProjectLocator = new TargetProjectLocator(
+          {},
+          externalNodes,
+          new Map(),
+          new Map(),
+          {
+            ...rootInstalled,
+            'libs/lib': { x: 'npm:x@file:libs/vendor/x' },
+          }
+        );
+
+        expect(
+          targetProjectLocator.findNpmProjectFromImport(
+            'x',
+            'libs/lib/src/index.ts'
+          )
+        ).toEqual('npm:x@file:libs/vendor/x');
+        expect(
+          targetProjectLocator.findNpmProjectFromImport(
+            'x',
+            'apps/app/fixtures/index.ts'
+          )
+        ).toEqual(appNode);
+      }
+    );
+
+    // The lockfile records the vendored x apps/parent installs and none for
+    // apps/parent/child, which imports x.
+    it.each([
+      {
+        scenario: 'nothing installs x',
+        parentLinked: false,
+        manifest: null,
+        expected: 'npm:x',
+      },
+      {
+        scenario: "apps/parent's link to x is missing its target",
+        parentLinked: true,
+        manifest: null,
+        expected: 'npm:x@file:vendor/x',
+      },
+      {
+        scenario: "apps/parent's link to x loads a package named y",
+        parentLinked: true,
+        manifest: { name: 'y', version: '1.0.0' },
+        expected: 'npm:x@file:vendor/x',
+      },
+    ])(
+      'should resolve a local package imported from a nested workspace when $scenario',
+      ({ parentLinked, manifest, expected }) => {
+        vol.reset();
+        vol.fromJSON({ 'apps/parent/child/package.json': '{}' }, '/root');
+        if (parentLinked) {
+          vol.mkdirSync('/root/apps/parent/node_modules', { recursive: true });
+          vol.symlinkSync(
+            '../../../vendor/x/dist',
+            '/root/apps/parent/node_modules/x'
+          );
+        }
+        const externalNodes = Object.fromEntries(
+          [
+            ['npm:x', '1.0.0'],
+            ['npm:x@file:vendor/x', 'file:vendor/x'],
+          ].map(([name, version]) => [
+            name,
+            {
+              name,
+              type: 'npm' as const,
+              data: { version, packageName: 'x' },
+            },
+          ])
+        );
+        const targetProjectLocator = new TargetProjectLocator(
+          {},
+          externalNodes,
+          new Map(),
+          new Map(),
+          { 'apps/parent': { x: 'npm:x@file:vendor/x' } }
+        );
+        targetProjectLocator['readPackageJson'] = () => manifest;
+
+        expect(
+          targetProjectLocator.findNpmProjectFromImport(
+            'x',
+            'apps/parent/child/src/main.ts'
+          )
+        ).toEqual(expected);
+      }
+    );
   });
 
   describe('findDependencyInWorkspaceProjects', () => {
@@ -1440,6 +1722,20 @@ describe('isBuiltinModuleImport()', () => {
     `should return true for %s builtin module`,
     (builtinModule) => {
       expect(isBuiltinModuleImport(builtinModule)).toBe(true);
+    }
+  );
+
+  it.each(['bun', 'bun:test', 'bun:sqlite'])(
+    `should return true for %s bun builtin module`,
+    (builtinModule) => {
+      expect(isBuiltinModuleImport(builtinModule)).toBe(true);
+    }
+  );
+
+  it.each(['bunyan', 'bun-types'])(
+    `should return false for %s package that only starts with bun`,
+    (importExpr) => {
+      expect(isBuiltinModuleImport(importExpr)).toBe(false);
     }
   );
 });

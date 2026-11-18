@@ -1,28 +1,30 @@
 import { inspect } from 'node:util';
 import type { Mock } from 'vitest';
 import { output } from '../../../../utils/output';
+import { TempFs } from '../../../../internal-testing-utils/temp-fs';
 import { GithubRemoteReleaseClient } from './github';
 
-vi.mock('axios', () => {
-  const get = vi.fn();
-  return { get, default: { get } };
-});
+vi.mock('../../../../utils/http-client', () => ({
+  httpRequest: vi.fn(),
+}));
 
 vi.mock('node:child_process', async () => ({
   ...require('node:child_process'),
   execFileSync: vi.fn(),
-  execSync: require('node:child_process').execSync,
+  execSync: vi.fn(require('node:child_process').execSync),
 }));
 
 vi.mock('../../../../utils/prompt-helpers', () => ({
   selectPrompt: vi.fn(),
 }));
 
-import { execFileSync } from 'node:child_process';
+import { execFileSync, execSync } from 'node:child_process';
 import { selectPrompt } from '../../../../utils/prompt-helpers';
 
-const axiosGetMock = (await import('axios')).default.get as Mock;
+const httpRequestMock = (await import('../../../../utils/http-client'))
+  .httpRequest as Mock;
 const execFileSyncMock = execFileSync as Mock;
+const execSyncMock = execSync as Mock;
 const selectPromptMock = selectPrompt as Mock;
 
 describe('GithubRemoteReleaseClient', () => {
@@ -41,7 +43,7 @@ describe('GithubRemoteReleaseClient', () => {
   });
 
   it('should prefer the username returned by ungh', async () => {
-    axiosGetMock.mockResolvedValue({
+    httpRequestMock.mockResolvedValue({
       data: {
         user: {
           username: 'from-ungh',
@@ -59,7 +61,7 @@ describe('GithubRemoteReleaseClient', () => {
   });
 
   it('should fall back to gh api when ungh does not return a username', async () => {
-    axiosGetMock.mockResolvedValue({
+    httpRequestMock.mockResolvedValue({
       data: {
         user: null,
       },
@@ -97,7 +99,7 @@ describe('GithubRemoteReleaseClient', () => {
   });
 
   it('should fall back to gh api when ungh fails', async () => {
-    axiosGetMock.mockRejectedValue(new Error('ungh unavailable'));
+    httpRequestMock.mockRejectedValue(new Error('ungh unavailable'));
     execFileSyncMock.mockReturnValue(
       JSON.stringify({
         items: [{ login: 'from-gh' }],
@@ -123,7 +125,7 @@ describe('GithubRemoteReleaseClient', () => {
     await client.applyUsernameToAuthors(authors);
 
     expect(authors.get('Test User')?.username).toBeUndefined();
-    expect(axiosGetMock).not.toHaveBeenCalled();
+    expect(httpRequestMock).not.toHaveBeenCalled();
     expect(execFileSyncMock).not.toHaveBeenCalled();
   });
 
@@ -135,14 +137,14 @@ describe('GithubRemoteReleaseClient', () => {
     await client.applyUsernameToAuthors(authors);
 
     expect(authors.get('Test User')?.username).toBeUndefined();
-    expect(axiosGetMock).not.toHaveBeenCalled();
+    expect(httpRequestMock).not.toHaveBeenCalled();
     expect(execFileSyncMock).not.toHaveBeenCalled();
   });
 
   it('should skip a bad email but still resolve a valid one in the same set', async () => {
     // The guard must `continue` past the empty email, not `break` out of the
     // loop, so a valid email later in the set is still looked up.
-    axiosGetMock.mockResolvedValue({
+    httpRequestMock.mockResolvedValue({
       data: {
         user: {
           username: 'from-ungh',
@@ -156,14 +158,14 @@ describe('GithubRemoteReleaseClient', () => {
     await client.applyUsernameToAuthors(authors);
 
     expect(authors.get('Test User')?.username).toBe('from-ungh');
-    expect(axiosGetMock).toHaveBeenCalledTimes(1);
-    expect(axiosGetMock).toHaveBeenCalledWith(
+    expect(httpRequestMock).toHaveBeenCalledTimes(1);
+    expect(httpRequestMock).toHaveBeenCalledWith(
       'https://ungh.cc/users/find/test@example.com'
     );
   });
 
   it('should leave the username unset when both lookups fail', async () => {
-    axiosGetMock.mockRejectedValue(new Error('ungh unavailable'));
+    httpRequestMock.mockRejectedValue(new Error('ungh unavailable'));
     execFileSyncMock.mockImplementation(() => {
       throw new Error('gh unavailable');
     });
@@ -175,6 +177,156 @@ describe('GithubRemoteReleaseClient', () => {
       client.applyUsernameToAuthors(authors)
     ).resolves.toBeUndefined();
     expect(authors.get('Test User')?.username).toBeUndefined();
+  });
+
+  it.each([
+    ['ungh', 'octocat\n\n## 1.0.2'],
+    ['ungh', '**octocat**'],
+    ['ungh', 42],
+    ['gh api', 'octocat\r## 1.0.2'],
+  ])(
+    'should ignore a username from %s that is not a GitHub login: %j',
+    async (source, username) => {
+      httpRequestMock.mockResolvedValue({
+        data: { user: source === 'ungh' ? { username } : null },
+      });
+      execFileSyncMock.mockReturnValue(
+        JSON.stringify({
+          items: source === 'gh api' ? [{ login: username }] : [],
+        })
+      );
+      const authors = new Map<
+        string,
+        { email: Set<string>; username?: string }
+      >([['Test User', { email: new Set(['test@example.com']) }]]);
+
+      await client.applyUsernameToAuthors(authors);
+
+      expect(authors.get('Test User')?.username).toBeUndefined();
+    }
+  );
+
+  it('should ignore a noreply email whose local part is not a GitHub login', async () => {
+    httpRequestMock.mockResolvedValue({ data: { user: null } });
+    execFileSyncMock.mockReturnValue(JSON.stringify({ items: [] }));
+    const authors = new Map<string, { email: Set<string>; username?: string }>([
+      [
+        'Mallory',
+        {
+          email: new Set([
+            '12345+mallory\r## 1.0.2\u2028## 1.1.0@users.noreply.github.com',
+          ]),
+        },
+      ],
+    ]);
+
+    await client.applyUsernameToAuthors(authors);
+
+    expect(authors.get('Mallory')?.username).toBeUndefined();
+  });
+
+  it.each(['octo-cat', 'octocat_corp', 'renovate[bot]'])(
+    'should accept the GitHub login %s',
+    async (login) => {
+      httpRequestMock.mockResolvedValue({
+        data: { user: { username: login } },
+      });
+      const authors = new Map<
+        string,
+        { email: Set<string>; username?: string }
+      >([['Test User', { email: new Set(['test@example.com']) }]]);
+
+      await client.applyUsernameToAuthors(authors);
+
+      expect(authors.get('Test User')?.username).toBe(login);
+    }
+  );
+
+  describe('resolveTokenData', () => {
+    let tempFs: TempFs;
+    const originalEnv = process.env;
+
+    beforeEach(() => {
+      tempFs = new TempFs('gh-cli-config', false);
+      process.env = {
+        ...originalEnv,
+        XDG_CONFIG_HOME: tempFs.tempDir,
+        PATH: tempFs.tempDir,
+      };
+      delete process.env.GITHUB_TOKEN;
+      delete process.env.GH_TOKEN;
+    });
+
+    afterEach(() => {
+      process.env = originalEnv;
+      tempFs.cleanup();
+    });
+
+    it('should request the gh CLI token for the given hostname', async () => {
+      tempFs.createFileSync(
+        'gh/hosts.yml',
+        `github.com:
+    user: personal
+    git_protocol: https
+ghe.example.com:
+    user: work
+    git_protocol: https
+`
+      );
+      execFileSyncMock.mockReturnValue('gho_work\n');
+
+      await expect(
+        GithubRemoteReleaseClient.resolveTokenData('ghe.example.com')
+      ).resolves.toEqual({ token: 'gho_work', headerName: 'Authorization' });
+      expect(execFileSyncMock).toHaveBeenCalledWith(
+        'gh',
+        ['auth', 'token', '--hostname', 'ghe.example.com'],
+        expect.any(Object)
+      );
+    });
+  });
+
+  describe('resolveRepoData', () => {
+    let originalVerbose: string | undefined;
+    let errorSpy: ReturnType<typeof vi.spyOn>;
+
+    beforeEach(() => {
+      originalVerbose = process.env.NX_VERBOSE_LOGGING;
+      process.env.NX_VERBOSE_LOGGING = 'true';
+      errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    });
+
+    afterEach(() => {
+      if (originalVerbose === undefined) {
+        delete process.env.NX_VERBOSE_LOGGING;
+      } else {
+        process.env.NX_VERBOSE_LOGGING = originalVerbose;
+      }
+    });
+
+    it('should redact credentials of an unrecognized remote URL', () => {
+      execSyncMock.mockReturnValue(
+        'https://oauth2:s3cr3t-token@gitlab.example.com/nrwl/nx.git\n'
+      );
+
+      expect(GithubRemoteReleaseClient.resolveRepoData(false)).toBeNull();
+
+      const printed = inspect(errorSpy.mock.calls);
+      expect(printed).toContain('https://***@gitlab.example.com/nrwl/nx.git');
+      expect(printed).not.toContain('s3cr3t-token');
+    });
+
+    it('should redact credentials of a remote passed as a URL', () => {
+      expect(
+        GithubRemoteReleaseClient.resolveRepoData(
+          false,
+          'https://x-access-token:s3cr3t-token@gitlab.example.com/nrwl/nx.git'
+        )
+      ).toBeNull();
+
+      expect(errorSpy).toHaveBeenCalled();
+      expect(inspect(errorSpy.mock.calls)).not.toContain('s3cr3t-token');
+    });
   });
 
   describe('handleError', () => {
@@ -270,7 +422,7 @@ describe('GithubRemoteReleaseClient', () => {
 
     it('should redact the token when it has trailing whitespace', async () => {
       const token = 'ghp_secret';
-      // Axios trims header values, so the dump holds the trimmed token while
+      // fetch trims header values, so the dump holds the trimmed token while
       // tokenData still carries the untrimmed value read from the environment.
       const clientWithToken = new GithubRemoteReleaseClient(repoData, false, {
         token: `${token}\n`,
@@ -306,8 +458,8 @@ describe('GithubRemoteReleaseClient', () => {
 
     it('should redact the token when it contains a line break', async () => {
       const token = 'ghp_secret';
-      // Defensive: node rejects a CR/LF header outright, so axios cannot produce
-      // this pairing. Pins the needle that would cover it if it ever could.
+      // Defensive: fetch rejects a CR/LF header outright, so a request cannot
+      // produce this pairing. Pins the needle that would cover it if it ever could.
       const clientWithToken = new GithubRemoteReleaseClient(repoData, false, {
         token: `${token.slice(0, 4)}\r\n${token.slice(4)}`,
         headerName: 'Authorization',

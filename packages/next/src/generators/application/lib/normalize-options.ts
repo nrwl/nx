@@ -1,4 +1,4 @@
-import { joinPathFragments, readNxJson, Tree } from '@nx/devkit';
+import { joinPathFragments, Tree } from '@nx/devkit';
 import {
   determineProjectNameAndRootOptions,
   ensureRootProjectName,
@@ -41,13 +41,6 @@ export async function normalizeOptions(
     rootProject: options.rootProject,
   });
   options.rootProject = appProjectRoot === '.';
-
-  const nxJson = readNxJson(host);
-  const addPlugin =
-    process.env.NX_ADD_PLUGINS !== 'false' &&
-    nxJson.useInferencePlugins !== false;
-
-  options.addPlugin ??= addPlugin;
 
   const isTsSolutionSetup =
     options.useTsSolution || isUsingTsSolutionSetup(host);

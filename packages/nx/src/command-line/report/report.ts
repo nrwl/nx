@@ -1,6 +1,6 @@
 import * as pc from 'picocolors';
 import { output } from '../../utils/output';
-import { join, sep } from 'path';
+import { sep } from 'path';
 import { homedir } from 'os';
 import {
   detectPackageManager,
@@ -581,9 +581,7 @@ export function findMisalignedPackagesForPackage(
 export function findInstalledPowerpackPlugins(): PackageJson[] {
   const installedPlugins = findInstalledPlugins();
   return installedPlugins.filter((dep) =>
-    new RegExp(
-      '@nx/powerpack*|@nx/(.+)-cache|@nx/(conformance|owners|enterprise*)'
-    ).test(dep.name)
+    new RegExp('@nx/powerpack*|@nx/(.+)-cache|@nx/enterprise*').test(dep.name)
   );
 }
 

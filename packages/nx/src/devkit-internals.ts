@@ -31,6 +31,7 @@ export { retrieveProjectConfigurationsWithAngularProjects } from './project-grap
 export {
   mergeTargetConfigurations,
   resolveCommandSyntacticSugar,
+  resolveNxTokensInOptions,
 } from './project-graph/utils/project-configuration/target-merging';
 export {
   findMatchingTargetNames,
@@ -104,6 +105,8 @@ export {
   applyDaemonEnvFromClient,
 } from './daemon/client/daemon-environment';
 export { isCI } from './utils/is-ci';
+export { createCliOptions } from './utils/create-cli-options';
+export { createOverrides } from './utils/command-line-utils';
 export {
   isUsingPrettierInTree,
   prettierConfigFiles,
@@ -117,6 +120,17 @@ export {
 export { readYamlFile } from './utils/fileutils';
 export { globalSpinner } from './utils/spinner';
 export { signalToCode } from './utils/exit-codes';
+export { handleErrors } from './utils/handle-errors';
+export { computeJsonLineNumbers } from './utils/json';
+export {
+  checkCircularPath,
+  circularPathHasPair,
+  expandIgnoredCircularDependencies,
+  findFilesInCircularPath,
+  findFilesWithDynamicImports,
+  getPath,
+  pathExists,
+} from './project-graph/utils/project-graph-paths';
 export { handleImport } from './utils/handle-import';
 export { PluginCache, safeWriteFileCache } from './utils/plugin-cache-utils';
 export { emitPluginWorkerLog } from './project-graph/plugins/isolation/worker-streaming';
@@ -138,7 +152,10 @@ export {
   getCatalogManager,
   getCatalogDependenciesFromPackageJson,
 } from './utils/catalog';
-export { acknowledgeBuildScripts } from './utils/acknowledge-build-scripts';
+export {
+  acknowledgeBuildScripts,
+  acknowledgeDeclaredBuildScripts,
+} from './utils/acknowledge-build-scripts';
 
 // Exposed for first-party plugins in this repo (imported via @nx/devkit/internal).
 export { default as runCommandsExecutor } from './executors/run-commands/run-commands.impl';
@@ -168,13 +185,23 @@ export type { InputDefinition } from './config/workspace-json-project-json';
 export type { ChangedFile, UnregisterCallback } from './daemon/client/client';
 export { daemonClient } from './daemon/client/client';
 export type { RunCommandsOptions } from './executors/run-commands/run-commands.impl';
-export { LARGE_BUFFER } from './executors/run-commands/run-commands.impl';
-export { FsTree } from './generators/tree';
+export {
+  LARGE_BUFFER,
+  interpolateArgsIntoCommand,
+  normalizeArgs as normalizeRunCommandsArgs,
+} from './executors/run-commands/run-commands.impl';
+export { FsTree, flushChanges } from './generators/tree';
 export { getRelativeProjectJsonSchemaPath } from './generators/utils/project-configuration';
 export { hashFile } from './hasher/file-hasher';
 export { filterUsingGlobPatterns, getTargetInputs } from './hasher/task-hasher';
 export type { JsonInput } from './native';
-export { killProcessTreeGraceful } from './native';
+export {
+  isAiAgent,
+  killProcessTreeGraceful,
+  readShebangHeaders,
+  unmatchedProjectPatterns,
+} from './native';
+export { transformProjectGraphForProjectMatching } from './native/transform-objects';
 export { killChildOnHostExit } from './utils/kill-child-on-host-exit';
 export { connectToNxCloud } from './nx-cloud/generators/connect-to-nx-cloud/connect-to-nx-cloud';
 export type { NxCloudOnBoardingStatus } from './nx-cloud/models/onboarding-status';
@@ -187,6 +214,7 @@ export {
   createLockFile,
   generatePrunedDeployOutput,
   getLockFileName,
+  hasTextBunLockfile,
 } from './plugins/js/lock-file/lock-file';
 export {
   createPackageJson,
@@ -222,7 +250,11 @@ export {
   readPackageJson,
 } from './project-graph/file-utils';
 export type { FileMapCache } from './project-graph/nx-deps-cache';
-export { readFileMapCache } from './project-graph/nx-deps-cache';
+export {
+  readFileMapCache,
+  readSourceMapsCache,
+} from './project-graph/nx-deps-cache';
+export { findClosestMatches } from './utils/string-similarity';
 export { isNpmProject } from './project-graph/operators';
 export {
   buildProjectGraphAndSourceMapsWithoutDaemon,
@@ -232,6 +264,7 @@ export {
   readCachedProjectConfiguration,
 } from './project-graph/project-graph';
 export type { ProjectRootMappings } from './project-graph/utils/find-project-for-path';
+export { createFileMapUsingProjectGraph } from './project-graph/file-map-utils';
 export type { BatchResults } from './tasks-runner/batch/batch-messages';
 export type { CachedResult, TaskWithCachedResult } from './tasks-runner/cache';
 export { Cache } from './tasks-runner/cache';
@@ -240,10 +273,7 @@ export type { LifeCycle, TaskMetadata } from './tasks-runner/life-cycle';
 export { CompositeLifeCycle } from './tasks-runner/life-cycle';
 export { createRunManyDynamicOutputRenderer } from './tasks-runner/life-cycles/dynamic-run-many-terminal-output-life-cycle';
 export type { TaskStatus, TasksRunner } from './tasks-runner/tasks-runner';
-export type {
-  DependsOnEntryLocation,
-  NormalizedTargetDependencyConfig,
-} from './tasks-runner/utils';
+export type { NormalizedTargetDependencyConfig } from './tasks-runner/utils';
 export {
   calculateReverseDeps,
   createTaskId,
@@ -251,6 +281,7 @@ export {
   expandInitiatingTasksThroughNoop,
   expandWildcardTargetConfiguration,
   getCliPath,
+  // TODO(v25): remove custom hasher support (NXC-5052).
   getCustomHasher,
   getDependencyConfigs,
   getExecutorForTask,
@@ -283,9 +314,12 @@ export {
   isRelativePath,
   readFileIfExisting,
 } from './utils/fileutils';
-export { getLatestCommitSha } from './utils/git-utils';
+export { getLatestCommitSha, getVcsRemoteInfo } from './utils/git-utils';
 export { combineGlobPatterns, isGlobPattern } from './utils/globs';
-export { getNxRequirePaths } from './utils/installation-directory';
+export {
+  getNxRequirePaths,
+  resolveInstalledPackage,
+} from './utils/installation-directory';
 export { NX_PREFIX } from './utils/logger';
 export type {
   CLIErrorMessageConfig,
@@ -304,6 +338,7 @@ export {
   dropEmptyPeerDependencySections,
   movePeerDependencyToDependencies,
   relocatePrunedLocalPathSpec,
+  resolveWorkspaceModuleDependency,
   warnUnshippableLocalPathSpec,
 } from './plugins/js/lock-file/pruned-output';
 export type { PackageManagerCommands } from './utils/package-manager';
@@ -328,3 +363,5 @@ export {
 } from './utils/workspace-context';
 export { setWorkspaceRoot, workspaceRootInner } from './utils/workspace-root';
 export { safeExecFileSync, safeSpawn } from './utils/safe-spawn';
+export { resolveStartupHost } from './tasks-runner/readiness/startup-host';
+export type { ProjectMetadata } from './config/workspace-json-project-json';

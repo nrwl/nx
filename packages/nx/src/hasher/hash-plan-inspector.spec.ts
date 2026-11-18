@@ -158,6 +158,39 @@ describe('HashPlanInspector', () => {
       expect(inputs.files).not.toContain('apps/test-app/dist/out.js.map');
     });
 
+    it('leaves out the files of a project nested below the project root', async () => {
+      await tempFs.createFiles({
+        '.gitignore': 'dist\nbuild\n',
+        'apps/test-app/dist/out.js': 'built',
+        'apps/test-app/nested/project.json': '{}',
+        'apps/test-app/nested/src/index.ts': 'nested',
+        'apps/test-app/nested/build/out.js': 'nested build',
+      });
+      const graph: ProjectGraph = JSON.parse(JSON.stringify(projectGraph));
+      graph.nodes['nested'] = {
+        name: 'nested',
+        type: 'lib',
+        data: { root: 'apps/test-app/nested', targets: {} },
+      };
+      graph.dependencies['nested'] = [];
+      graph.nodes['test-app'].data.targets.build.inputs = [
+        { fileset: '{projectRoot}/**/*', includeIgnored: true },
+      ];
+      const diskInspector = new HashPlanInspector(graph, tempFs.tempDir);
+      await diskInspector.init();
+
+      const inputs = diskInspector.inspectTaskInputs({
+        project: 'test-app',
+        target: 'build',
+      })['test-app:build'];
+
+      expect(inputs.files).toContain('apps/test-app/dist/out.js');
+      expect(inputs.files).toContain('apps/test-app/src/main.ts');
+      expect(
+        inputs.files.filter((f) => f.startsWith('apps/test-app/nested/'))
+      ).toEqual([]);
+    });
+
     it('does not report a declared exact path that is missing', async () => {
       const graph: ProjectGraph = JSON.parse(JSON.stringify(projectGraph));
       graph.nodes['test-app'].data.targets.build.inputs = [

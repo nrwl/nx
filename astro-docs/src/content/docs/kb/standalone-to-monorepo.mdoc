@@ -50,26 +50,28 @@ For this recipe, we'll assume that the root-level app is named `my-app`. The hig
 
    It can be difficult to know which files are root-level config files and which files are project-specific config files. Here is a non-exhaustive list of config files to help distinguish between the two.
 
-   | Type of Config  | Files                                                                                                                                                                                                           |
-   | --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-   | _Root-level_    | `.eslintignore`, `.eslintrc.base.json`, `.gitignore`, `jest.config.ts`, `jest.preset.js`, `nx.json`, `package.json`, `tsconfig.base.json`, and any formatter config files (e.g. `.prettierrc`, `.oxfmtrc.json`) |
-   | _Project-level_ | `.eslintrc.json`, `index.html`, `project.json`, `jest.config.app.ts`, `tsconfig.app.json`, `tsconfig.json`, `tsconfig.spec.json`, `vite.config.ts`, `webpack.config.js`                                         |
+   | Type of Config  | Files                                                                                                                                                                                                   |
+   | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+   | _Root-level_    | `.eslintignore`, `.eslintrc.base.json`, `.gitignore`, `jest.preset.js`, `nx.json`, `package.json`, `tsconfig.base.json`, and any formatter config files (e.g. `.prettierrc`, `.oxfmtrc.json`)           |
+   | _Project-level_ | `.eslintrc.json`, `index.html`, `project.json`, `jest.config.ts` (`jest.config.app.ts` before Nx 24), `tsconfig.app.json`, `tsconfig.json`, `tsconfig.spec.json`, `vite.config.ts`, `webpack.config.js` |
 
-   {% aside title="jest.config.app.ts" type="note" %}
-   `jest.config.app.ts` in the root should be renamed to `jest.config.ts` when moved to `apps/temp`. Also update the `jestConfig` option in `project.json` to point to `jest.config.ts` instead of `jest.config.app.ts`.
+   {% aside title="Jest configuration" type="note" %}
+   In a new workspace, the root project's Jest config is `jest.config.ts`, so copy it to `apps/temp`.
+
+   A workspace created before Nx 24 can have `jest.config.app.ts` (any extension) in the root next to a workspace `jest.config.ts` that lists the projects. Leave `jest.config.ts` in the root. Copy `jest.config.app.ts` to `apps/temp` as `jest.config.ts`, and update the references to it, such as the `include` list in `tsconfig.spec.json` and the `--config` flag of the project's `test` target in `project.json`.
    {% /aside %}
 
 5. Update the paths of the project-specific config files that were copied into `apps/temp`.
 
    Here is a non-exhaustive list of properties that will need to be updated to have the correct path:
 
-   | Config File(s)                                             | Properties to Check                                                                                                                                                   |
-   | ---------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-   | `project.json`                                             | `$schema`, `sourceRoot`, `root`, `outputPath`, `reportsDirectory`, `cypressConfig`, `lintFilePatterns`, `index`, `main`, `tsConfig`, `assets`, `styles`, `jestConfig` |
-   | `tsconfig.json`, `tsconfig.app.json`, `tsconfig.spec.json` | `extends`, `outDir`, `files`                                                                                                                                          |
-   | `.eslintrc.json`                                           | `extends`                                                                                                                                                             |
-   | `jest.config.ts`                                           | `preset`, `coverageDirectory`                                                                                                                                         |
-   | `vite.config.ts`                                           | `cacheDir`, `root`, `dir`                                                                                                                                             |
+   | Config File(s)                                             | Properties to Check                                                                                                                                     |
+   | ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+   | `project.json`                                             | `$schema`, `sourceRoot`, `root`, `outputPath`, `reportsDirectory`, `cypressConfig`, `lintFilePatterns`, `index`, `main`, `tsConfig`, `assets`, `styles` |
+   | `tsconfig.json`, `tsconfig.app.json`, `tsconfig.spec.json` | `extends`, `outDir`, `files`                                                                                                                            |
+   | `.eslintrc.json`                                           | `extends`                                                                                                                                               |
+   | `jest.config.ts`                                           | `preset`, `coverageDirectory`                                                                                                                           |
+   | `vite.config.ts`                                           | `cacheDir`, `root`, `dir`                                                                                                                               |
 
 6. Doublecheck that all the tasks defined in the `apps/temp/project.json` file still work.
 

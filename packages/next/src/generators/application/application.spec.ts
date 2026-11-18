@@ -1,6 +1,8 @@
+import { withPnpm } from '@nx/devkit/internal-testing-utils';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import {
   getProjects,
+  logger,
   readJson,
   readNxJson,
   readProjectConfiguration,
@@ -14,6 +16,21 @@ import { applicationGenerator } from './application';
 import { join } from 'path';
 
 describe('app', () => {
+  it('declares Node types without a unit test runner or linter', async () => {
+    const workspace = createTreeWithEmptyWorkspace();
+    await applicationGenerator(workspace, {
+      directory: 'app',
+      style: 'css',
+      unitTestRunner: 'none',
+      e2eTestRunner: 'none',
+      linter: 'none',
+      skipFormat: true,
+    });
+    expect(
+      readJson(workspace, 'package.json').devDependencies['@types/node']
+    ).toBeDefined();
+  });
+
   let tree: Tree;
   let envBackup: string | undefined;
 
@@ -26,6 +43,61 @@ describe('app', () => {
   afterEach(() => {
     if (envBackup === undefined) delete process.env.ESLINT_USE_FLAT_CONFIG;
     else process.env.ESLINT_USE_FLAT_CONFIG = envBackup;
+  });
+
+  describe('pnpm 11 build scripts', () => {
+    it('should deny the @swc/core build script for the swc custom server setup', async () => {
+      await withPnpm(tree, '11.2.2', () =>
+        applicationGenerator(tree, { directory: uniq(), style: 'css' })
+      );
+
+      expect(tree.read('pnpm-workspace.yaml', 'utf-8')).toMatch(
+        /['"]@swc\/core['"]: false/
+      );
+    });
+
+    it('should deny the unrs-resolver build script pulled in by eslint-config-next', async () => {
+      await withPnpm(tree, '11.2.2', () =>
+        applicationGenerator(tree, {
+          directory: uniq(),
+          style: 'css',
+          linter: 'eslint',
+          unitTestRunner: 'none',
+        })
+      );
+
+      expect(tree.read('pnpm-workspace.yaml', 'utf-8')).toMatch(
+        /['"]?unrs-resolver['"]?: false/
+      );
+    });
+
+    it('should deny the @parcel/watcher build script pulled in by sass', async () => {
+      await withPnpm(tree, '11.2.2', () =>
+        applicationGenerator(tree, {
+          directory: uniq(),
+          style: 'scss',
+          unitTestRunner: 'none',
+        })
+      );
+
+      expect(tree.read('pnpm-workspace.yaml', 'utf-8')).toMatch(
+        /['"]@parcel\/watcher['"]: false/
+      );
+    });
+
+    it('should not record a @parcel/watcher decision without scss', async () => {
+      await withPnpm(tree, '11.2.2', () =>
+        applicationGenerator(tree, {
+          directory: uniq(),
+          style: 'css',
+          unitTestRunner: 'none',
+        })
+      );
+
+      expect(tree.read('pnpm-workspace.yaml', 'utf-8') ?? '').not.toContain(
+        '@parcel/watcher'
+      );
+    });
   });
 
   it('should add a .gitkeep file to the public directory', async () => {
@@ -273,65 +345,27 @@ describe('app', () => {
     );
   });
 
-  it('should set up the nx next build builder', async () => {
-    const name = uniq();
-
-    // addPlugin: false -> legacy @nx/next:build executor, which relies on
-    // withNx to redirect the build output to --outputPath.
-    await applicationGenerator(tree, {
-      directory: name,
-      style: 'css',
-      addPlugin: false,
-    });
-
-    expect(tree.read(join(name, 'next.config.js'), 'utf-8'))
-      .toMatchInlineSnapshot(`
-      "//@ts-check
-
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
-      const { composePlugins, withNx } = require('@nx/next');
-
-      /**
-       * @type {import('@nx/next/plugins/with-nx').WithNxOptions}
-       **/
-      const nextConfig = {
-        // Use this to set Nx-specific options
-        // See: https://nx.dev/docs/technologies/react/next/Guides/next-config-setup
-        nx: {},
-      };
-
-      const plugins = [
-        // Add more Next.js plugins to this list if needed.
-        withNx,
-      ];
-
-      module.exports = composePlugins(...plugins)(nextConfig);
-      "
-    `);
-  });
-
   it('should generate a plain next.config.js for the inferred plugin', async () => {
     const name = uniq();
 
     await applicationGenerator(tree, {
       directory: name,
       style: 'css',
-      addPlugin: true,
     });
 
     expect(tree.read(join(name, 'next.config.js'), 'utf-8'))
       .toMatchInlineSnapshot(`
-      "//@ts-check
+        "//@ts-check
 
-      /** @type {import('next').NextConfig} */
-      const nextConfig = {
-        // Next.js options go here
-        // See: https://nextjs.org/docs/app/api-reference/config/next-config-js
-      };
+        /** @type {import('next').NextConfig} */
+        const nextConfig = {
+          // Next.js options go here
+          // See: https://nextjs.org/docs/app/api-reference/config/next-config-js
+        };
 
-      module.exports = nextConfig;
-      "
-    `);
+        module.exports = nextConfig;
+        "
+      `);
   });
 
   describe('--unit-test-runner none', () => {
@@ -358,6 +392,24 @@ describe('app', () => {
       });
       expect(tree.exists(`${name}-e2e`)).toBeFalsy();
     });
+  });
+
+  it('should run playwright against the dev server locally and the production server in ci', async () => {
+    const name = uniq();
+
+    await applicationGenerator(tree, {
+      directory: name,
+      style: 'css',
+      e2eTestRunner: 'playwright',
+    });
+
+    const config = tree.read(`${name}-e2e/playwright.config.mts`, 'utf-8');
+    expect(config).toContain(
+      `getReadyUrl(isCI ? 'http://localhost:3000' : 'http://127.0.0.1:3000')`
+    );
+    expect(config).toContain(
+      `command: isCI ? 'npx nx run ${name}:start' : 'npx nx run ${name}:dev'`
+    );
   });
 
   it('should generate functional components by default', async () => {
@@ -435,18 +487,20 @@ describe('app', () => {
 
         expect(tree.read(`${name}/eslint.config.mjs`, 'utf-8'))
           .toMatchInlineSnapshot(`
-          "import nextEslintPluginNext from '@next/eslint-plugin-next';
-          import nx from '@nx/eslint-plugin';
+          "import nx from '@nx/eslint-plugin';
+          import nextVitals from 'eslint-config-next/core-web-vitals';
           import baseConfig from '../eslint.config.mjs';
 
-          export default [
-            { plugins: { '@next/next': nextEslintPluginNext } },
+          const eslintConfig = [
+            ...nextVitals,
             ...nx.configs['flat/react-typescript'],
             ...baseConfig,
             {
               ignores: ['.next/**/*'],
             },
           ];
+
+          export default eslintConfig;
           "
         `);
       });
@@ -463,12 +517,12 @@ describe('app', () => {
 
         expect(tree.read(`${name}/eslint.config.cjs`, 'utf-8'))
           .toMatchInlineSnapshot(`
-          "const nextEslintPluginNext = require('@next/eslint-plugin-next');
-          const nx = require('@nx/eslint-plugin');
+          "const nx = require('@nx/eslint-plugin');
+          const nextVitals = require('eslint-config-next/core-web-vitals');
           const baseConfig = require('../eslint.config.cjs');
 
           module.exports = [
-            { plugins: { '@next/next': nextEslintPluginNext } },
+            ...nextVitals,
 
             ...nx.configs['flat/react-typescript'],
             ...baseConfig,
@@ -491,10 +545,33 @@ describe('app', () => {
         const packageJson = readJson(tree, '/package.json');
         expect(packageJson).toMatchObject({
           devDependencies: {
-            'eslint-config-next': '^16.1.6',
-            '@next/eslint-plugin-next': '^16.1.6',
+            'eslint-config-next': '^16.4.0',
+            '@next/eslint-plugin-next': '^16.4.0',
           },
         });
+      });
+
+      it('should install ESLint v10 without the React plugins in an empty Nx workspace', async () => {
+        delete process.env.ESLINT_USE_FLAT_CONFIG;
+        const name = uniq();
+        await applicationGenerator(tree, {
+          directory: name,
+          style: 'css',
+          linter: 'eslint',
+        });
+
+        const { devDependencies } = readJson(tree, '/package.json');
+        expect(devDependencies.eslint).toMatch(/^\^?10\./);
+        // eslint-config-next 16 depends on and registers its own React plugins
+        for (const pkg of [
+          'eslint-plugin-import',
+          'eslint-plugin-import-x',
+          'eslint-plugin-jsx-a11y',
+          'eslint-plugin-react',
+          'eslint-plugin-react-hooks',
+        ]) {
+          expect(devDependencies).not.toHaveProperty(pkg);
+        }
       });
 
       it('should install eslint-config-next@15 when an existing Next.js 15 project is detected', async () => {
@@ -555,6 +632,72 @@ describe('app', () => {
         });
       });
 
+      it('should use the FlatCompat config in a Next.js 16 project that keeps eslint-config-next 15', async () => {
+        tree.write(
+          '/package.json',
+          JSON.stringify({
+            name: '@proj/source',
+            dependencies: { next: '~16.1.0' },
+            devDependencies: { 'eslint-config-next': '15.5.29' },
+          })
+        );
+        const name = uniq();
+
+        await applicationGenerator(tree, {
+          linter: 'eslint',
+          directory: name,
+          style: 'css',
+        });
+
+        const config = tree.read(`${name}/eslint.config.mjs`, 'utf-8');
+        expect(config).toMatch(
+          /fixupConfigRules\(compat\.extends\(['"]next\/core-web-vitals['"]\)\)/
+        );
+        expect(config).not.toContain('nextVitals');
+        const { devDependencies } = readJson(tree, '/package.json');
+        expect(devDependencies.eslint).toMatch(/^\^9\./);
+        expect(devDependencies['eslint-config-next']).toBe('15.5.29');
+        expect(devDependencies['@next/eslint-plugin-next']).toBe('^15.5.18');
+      });
+
+      it('should load the core-web-vitals config of a kept @next/eslint-plugin-next 15 through FlatCompat when the root config registers React plugins', async () => {
+        tree.write(
+          '/package.json',
+          JSON.stringify({
+            name: '@proj/source',
+            dependencies: { next: '~16.1.6' },
+            devDependencies: {
+              eslint: '^9.8.0',
+              'eslint-config-next': '^16.1.6',
+              '@next/eslint-plugin-next': '^15.5.18',
+            },
+          })
+        );
+        tree.write(
+          'eslint.config.mjs',
+          "import react from 'eslint-plugin-react';\n\nexport default [{ plugins: { react } }];\n"
+        );
+        const name = uniq();
+
+        await applicationGenerator(tree, {
+          linter: 'eslint',
+          directory: name,
+          style: 'css',
+        });
+
+        const config = tree.read(`${name}/eslint.config.mjs`, 'utf-8');
+        expect(config).toMatch(
+          /fixupConfigRules\(\s*compat\.extends\(['"]plugin:@next\/next\/core-web-vitals['"]\)\s*\)/
+        );
+        expect(config).not.toMatch(/compat\.extends\(['"]next/);
+        expect(config).not.toContain('nextVitals');
+        expect(config).not.toMatch(/configs\[['"]core-web-vitals['"]\]/);
+        const { devDependencies } = readJson(tree, '/package.json');
+        expect(devDependencies['@next/eslint-plugin-next']).toBe('^15.5.18');
+        expect(devDependencies['eslint-config-next']).toBe('^16.1.6');
+        expect(devDependencies['@eslint/compat']).toBeDefined();
+      });
+
       it('should add .eslintrc.json and dependencies', async () => {
         process.env.ESLINT_USE_FLAT_CONFIG = 'false';
         await applicationGenerator(tree, {
@@ -563,13 +706,12 @@ describe('app', () => {
           style: 'css',
         });
 
-        const packageJson = readJson(tree, '/package.json');
-        expect(packageJson).toMatchObject({
-          devDependencies: {
-            'eslint-plugin-react': expect.anything(),
-            'eslint-plugin-react-hooks': expect.anything(),
-          },
-        });
+        // eslint-config-next 16 ships only a flat config, which eslintrc
+        // cannot extend.
+        const { devDependencies } = readJson(tree, '/package.json');
+        expect(devDependencies['eslint-config-next']).toBe('^15.5.18');
+        expect(devDependencies['@next/eslint-plugin-next']).toBe('^15.5.18');
+        expect(devDependencies['eslint-plugin-react']).toBeDefined();
 
         const eslintJson = readJson(tree, `myapp/.eslintrc.json`);
         expect(eslintJson).toMatchInlineSnapshot(`
@@ -617,6 +759,55 @@ describe('app', () => {
           }
         `);
       });
+
+      it('should install eslint-config-next 15 when the root eslintrc config cannot be edited', async () => {
+        tree.write(
+          '/package.json',
+          JSON.stringify({
+            name: '@proj/source',
+            dependencies: { next: '~16.1.6' },
+            devDependencies: { eslint: '^9.8.0' },
+          })
+        );
+        tree.write('.eslintrc.js', 'module.exports = {};\n');
+
+        await applicationGenerator(tree, {
+          linter: 'eslint',
+          directory: uniq(),
+          style: 'css',
+        });
+
+        const { devDependencies } = readJson(tree, '/package.json');
+        expect(devDependencies['eslint-config-next']).toBe('^15.5.18');
+        expect(devDependencies['@next/eslint-plugin-next']).toBe('^15.5.18');
+      });
+
+      it('should reject a declared eslint-config-next 16 in an eslintrc workspace before writing a config', async () => {
+        tree.write(
+          '/package.json',
+          JSON.stringify({
+            name: '@proj/source',
+            dependencies: { next: '~16.1.6' },
+            devDependencies: {
+              eslint: '^9.8.0',
+              'eslint-config-next': '^16.4.0',
+            },
+          })
+        );
+        tree.write('.eslintrc.json', '{}');
+        const name = uniq();
+
+        await expect(
+          applicationGenerator(tree, {
+            linter: 'eslint',
+            directory: name,
+            style: 'css',
+          })
+        ).rejects.toThrow(
+          'The workspace uses the eslintrc config format and declares eslint-config-next v16.'
+        );
+        expect(tree.exists(`${name}/.eslintrc.json`)).toBe(false);
+      });
     });
 
     describe('root level', () => {
@@ -663,11 +854,11 @@ describe('app', () => {
         const eslintContents = tree.read('eslint.config.mjs', 'utf-8');
 
         expect(eslintContents).toMatchInlineSnapshot(`
-          "import nextEslintPluginNext from '@next/eslint-plugin-next';
+          "import nextVitals from 'eslint-config-next/core-web-vitals';
           import nx from '@nx/eslint-plugin';
 
-          export default [
-            { plugins: { '@next/next': nextEslintPluginNext } },
+          const eslintConfig = [
+            ...nextVitals,
             ...nx.configs['flat/base'],
             ...nx.configs['flat/typescript'],
             ...nx.configs['flat/javascript'],
@@ -692,10 +883,160 @@ describe('app', () => {
             },
             ...nx.configs['flat/react-typescript'],
           ];
+
+          export default eslintConfig;
           "
         `);
         process.env['ESLINT_USE_FLAT_CONFIG'] =
           prevEslintUseFlatConfigEnvVarValue;
+      });
+
+      describe('with an existing root config', () => {
+        // The generator writes its Next.js rule only into a block whose files cover these extensions.
+        const rulesBlock = `{ files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'], rules: {} }`;
+        let warnSpy: ReturnType<typeof vi.spyOn>;
+
+        beforeEach(() => {
+          warnSpy = vi.spyOn(logger, 'warn');
+        });
+
+        afterEach(() => {
+          warnSpy.mockRestore();
+        });
+
+        it.each([
+          [
+            'imports eslint-config-next',
+            `import vitals from 'eslint-config-next/core-web-vitals';\nimport coreWebVitals from 'eslint-config-next/core-web-vitals';\n\nexport default [...coreWebVitals, ${rulesBlock}];\n`,
+          ],
+          [
+            'loads @next/eslint-plugin-next',
+            `import nextPlugin from '@next/eslint-plugin-next';\n\nexport default [nextPlugin.configs.recommended, ${rulesBlock}];\n`,
+          ],
+          [
+            'registers the @next/next plugin',
+            `import { next } from './eslint.shared.mjs';\n\nexport default [{ plugins: { '@next/next': next } }, ${rulesBlock}];\n`,
+          ],
+          [
+            'sets a @next/next rule',
+            `export default [{ rules: { '@next/next/no-img-element': 'off' } }, ${rulesBlock}];\n`,
+          ],
+          [
+            'extends next through FlatCompat',
+            `import { FlatCompat } from '@eslint/eslintrc';\n\nconst compat = new FlatCompat({ baseDirectory: import.meta.dirname });\n\nexport default [...compat.extends('next'), ${rulesBlock}];\n`,
+          ],
+          [
+            'extends next/core-web-vitals through FlatCompat',
+            `import { FlatCompat } from '@eslint/eslintrc';\n\nconst compat = new FlatCompat({ baseDirectory: import.meta.dirname });\n\nexport default [...compat.extends('next/core-web-vitals'), ${rulesBlock}];\n`,
+          ],
+        ])(
+          'should not add the Next.js lint config when the root config %s',
+          async (_, config) => {
+            tree.write('eslint.config.mjs', config);
+
+            await applicationGenerator(tree, {
+              name: uniq(),
+              directory: '.',
+              style: 'css',
+              linter: 'eslint',
+              appDir: true,
+            });
+
+            const eslintContents = tree.read('eslint.config.mjs', 'utf-8');
+            expect(eslintContents).not.toContain('nextVitals');
+            expect(eslintContents).not.toContain('no-html-link-for-pages');
+            expect(warnSpy).toHaveBeenCalledWith(
+              expect.stringContaining(
+                'eslint.config.mjs already sets up Next.js linting'
+              )
+            );
+          }
+        );
+
+        it.each([
+          [
+            'uses the name nextVitals',
+            `const nextVitals = { rules: {} };\n\nexport default [nextVitals, ${rulesBlock}];\n`,
+          ],
+          [
+            'references nextVitals in a shorthand property',
+            `export default [{ settings: { nextVitals } }, ${rulesBlock}];\n`,
+          ],
+          [
+            'references nextVitals in a computed key',
+            `export default [{ settings: { [nextVitals]: true } }, ${rulesBlock}];\n`,
+          ],
+          [
+            'does not export an array literal',
+            `import { defineConfig } from 'eslint/config';\n\nexport default defineConfig([]);\n`,
+          ],
+        ])(
+          'should warn and leave the root config without the Next.js lint config when it %s',
+          async (_, config) => {
+            tree.write('eslint.config.mjs', config);
+
+            await applicationGenerator(tree, {
+              name: uniq(),
+              directory: '.',
+              style: 'css',
+              linter: 'eslint',
+              appDir: true,
+            });
+
+            const eslintContents = tree.read('eslint.config.mjs', 'utf-8');
+            expect(eslintContents).not.toContain('eslint-config-next');
+            expect(eslintContents).not.toContain('no-html-link-for-pages');
+            expect(warnSpy).toHaveBeenCalledWith(
+              expect.stringContaining(
+                'The Next.js lint config was not added to eslint.config.mjs'
+              )
+            );
+          }
+        );
+
+        it.each([
+          [
+            'nextVitals as a property key',
+            `const options = { nextVitals: true };\n\nexport default [];\n`,
+          ],
+          [
+            'nextVitals as a member name',
+            `import shared from './shared.mjs';\n\nexport default [{ settings: shared.nextVitals }];\n`,
+          ],
+          [
+            'the eslint-config-next TypeScript preset',
+            `import nextTs from 'eslint-config-next/typescript';\n\nexport default [...nextTs];\n`,
+          ],
+          [
+            'the eslint-config-next parser',
+            `import parser from 'eslint-config-next/parser.js';\n\nexport default [{ languageOptions: { parser } }];\n`,
+          ],
+          [
+            'a FlatCompat extend of next/typescript',
+            `import { FlatCompat } from '@eslint/eslintrc';\n\nconst compat = new FlatCompat({ baseDirectory: import.meta.dirname });\n\nexport default [...compat.extends('next/typescript')];\n`,
+          ],
+          [
+            'a FlatCompat config extending next/typescript.js',
+            `import { FlatCompat } from '@eslint/eslintrc';\n\nconst compat = new FlatCompat({ baseDirectory: import.meta.dirname });\n\nexport default [...compat.config({ extends: ['next/typescript.js'] })];\n`,
+          ],
+        ])(
+          'should add the Next.js lint config when the root config only has %s',
+          async (_, config) => {
+            tree.write('eslint.config.mjs', config);
+
+            await applicationGenerator(tree, {
+              name: uniq(),
+              directory: '.',
+              style: 'css',
+              linter: 'eslint',
+              appDir: true,
+            });
+
+            expect(tree.read('eslint.config.mjs', 'utf-8')).toContain(
+              '...nextVitals'
+            );
+          }
+        );
       });
 
       it('should scope tsconfig to the src/ project directory', async () => {
@@ -890,7 +1231,6 @@ describe('app', () => {
         unitTestRunner: 'jest',
         style: 'css',
         e2eTestRunner: 'cypress',
-        addPlugin: true,
         useProjectJson: false,
       });
 
@@ -989,6 +1329,7 @@ describe('app', () => {
             "module": "esnext",
             "moduleResolution": "bundler",
             "outDir": "./out-tsc/jest",
+            "rootDir": ".",
             "types": [
               "jest",
               "node",
@@ -1057,7 +1398,6 @@ describe('app', () => {
         unitTestRunner: 'jest',
         style: 'css',
         e2eTestRunner: 'cypress',
-        addPlugin: true,
         useProjectJson: false,
       });
 
@@ -1085,7 +1425,6 @@ describe('app', () => {
         unitTestRunner: 'jest',
         style: 'css',
         e2eTestRunner: 'cypress',
-        addPlugin: true,
         useProjectJson: true,
         skipFormat: true,
       });
@@ -1130,7 +1469,6 @@ describe('app', () => {
         unitTestRunner: 'jest',
         style: 'css',
         e2eTestRunner: 'none',
-        addPlugin: true,
         useProjectJson: true,
         src: false,
         skipFormat: true,
@@ -1150,7 +1488,6 @@ describe('app', () => {
         unitTestRunner: 'jest',
         style: 'css',
         e2eTestRunner: 'none',
-        addPlugin: true,
         useProjectJson: false,
         skipFormat: true,
       });
@@ -1168,7 +1505,6 @@ describe('app', () => {
         unitTestRunner: 'jest',
         style: 'css',
         e2eTestRunner: 'none',
-        addPlugin: true,
         useProjectJson: false,
         src: false,
         skipFormat: true,
@@ -1453,7 +1789,7 @@ describe('app (legacy)', () => {
     }
   });
 
-  it('should generate build and serve targets', async () => {
+  it('should infer build and serve targets even for legacy callers', async () => {
     const name = uniq();
 
     await applicationGenerator(tree, {
@@ -1462,8 +1798,8 @@ describe('app (legacy)', () => {
     });
 
     const projectConfiguration = readProjectConfiguration(tree, name);
-    expect(projectConfiguration.targets.build).toBeDefined();
-    expect(projectConfiguration.targets.serve).toBeDefined();
+    expect(projectConfiguration.targets.build).toBeUndefined();
+    expect(projectConfiguration.targets.serve).toBeUndefined();
   });
 
   describe('--unit-test-runner jest', () => {

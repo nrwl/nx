@@ -5,6 +5,8 @@ import { file } from 'astro/loaders';
 import { PluginLoader } from './plugins/plugin.loader';
 import { NxReferencePackagesLoader } from './plugins/nx-reference-packages.loader';
 import { CommunityPluginsLoader } from './plugins/community-plugins.loader';
+import { NxCloudPublicApiLoader } from './plugins/nx-cloud-public-api.loader';
+import type { OpenApiReference } from './plugins/utils/openapi-reference';
 
 // Compose with `.extend()`, never `.and()`. Zod 4 drops the left-hand side of a nested
 // intersection, so passing an intersection as `docsSchema({ extend })` silently loses
@@ -94,6 +96,13 @@ const communityPlugins = defineCollection({
   }),
 });
 
+const nxCloudPublicApi = defineCollection({
+  loader: NxCloudPublicApiLoader(),
+  schema: baseSchema.extend({
+    reference: z.custom<OpenApiReference>(),
+  }),
+});
+
 // Banner collection for showing time-based notifications (webinars, events, etc.)
 const banner = defineCollection({
   loader: file('src/content/banner.json'),
@@ -117,4 +126,5 @@ export const collections = {
   'nx-reference-packages': nxReferencePackages,
   'plugin-docs': pluginDocs,
   'community-plugins': communityPlugins,
+  'nx-cloud-public-api': nxCloudPublicApi,
 };

@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 import { dirname } from 'node:path/posix';
 import type { CreateNodes } from 'nx/src/devkit-exports';
 import {
@@ -27,7 +28,7 @@ import {
 } from './executor-to-plugin-migrator.test-utils';
 
 // See the engine spec: keeps executor resolution honest to the temp workspace.
-jest.mock('nx/src/utils/has-nx-js-plugin', () => ({
+vi.mock('nx/src/utils/has-nx-js-plugin', () => ({
   hasNxJsPlugin: () => false,
 }));
 
@@ -77,7 +78,7 @@ describe('batch conversion finalize', () => {
   function engineChild(
     plugin: SyntheticPlugin,
     executor: string,
-    logger?: { warn: jest.Mock },
+    logger?: { warn: Mock },
     migrations = migrationsFor(executor)
   ) {
     return () =>
@@ -95,7 +96,7 @@ describe('batch conversion finalize', () => {
 
   async function runBatch(
     children: Array<() => unknown | Promise<unknown>>,
-    finalizeLogger?: { warn: jest.Mock }
+    finalizeLogger?: { warn: Mock }
   ) {
     const session = openBatchConversionSession(ctx.tree);
     try {
@@ -148,8 +149,8 @@ describe('batch conversion finalize', () => {
       OTHER_PLUGIN_PATH,
       OTHER_CONFIG_GLOB
     );
-    const warnA = jest.fn();
-    const warnB = jest.fn();
+    const warnA = vi.fn();
+    const warnB = vi.fn();
 
     await runBatch([
       engineChild(pluginA, SYNTHETIC_EXECUTOR, { warn: warnA }),
@@ -237,8 +238,8 @@ describe('batch conversion finalize', () => {
     try {
       const batchPlugin = createSyntheticPlugin();
       const inlinePlugin = createSyntheticPlugin();
-      const batchWarn = jest.fn();
-      const inlineWarn = jest.fn();
+      const batchWarn = vi.fn();
+      const inlineWarn = vi.fn();
 
       await runBatch([
         engineChild(batchPlugin, SYNTHETIC_EXECUTOR, { warn: batchWarn }),
@@ -301,8 +302,8 @@ describe('batch conversion finalize', () => {
       OTHER_PLUGIN_PATH,
       OTHER_CONFIG_GLOB
     );
-    const warnA = jest.fn();
-    const warnB = jest.fn();
+    const warnA = vi.fn();
+    const warnB = vi.fn();
 
     await runBatch([
       engineChild(pluginA, SYNTHETIC_EXECUTOR, { warn: warnA }),
@@ -361,7 +362,7 @@ describe('batch conversion finalize', () => {
     nxJson.plugins = ['@acme/foreign/plugin'];
     updateNxJson(ctx.tree, nxJson);
     const plugin = createSyntheticPlugin();
-    const warn = jest.fn();
+    const warn = vi.fn();
 
     await runBatch([engineChild(plugin, SYNTHETIC_EXECUTOR, { warn })]);
 
@@ -416,8 +417,8 @@ describe('batch conversion finalize', () => {
       }),
       OTHER_PLUGIN_PATH
     );
-    const warnA = jest.fn();
-    const warnB = jest.fn();
+    const warnA = vi.fn();
+    const warnB = vi.fn();
 
     await runBatch([
       engineChild(pluginB, OTHER_EXECUTOR, { warn: warnB }),
@@ -491,7 +492,7 @@ describe('batch conversion finalize', () => {
     ];
     updateNxJson(ctx.tree, nxJson);
     const plugin = createSyntheticPlugin();
-    const warn = jest.fn();
+    const warn = vi.fn();
 
     await runBatch([engineChild(plugin, SYNTHETIC_EXECUTOR, { warn })]);
 
@@ -570,8 +571,8 @@ describe('batch conversion finalize', () => {
         return results;
       },
     ];
-    const warnA = jest.fn();
-    const warnB = jest.fn();
+    const warnA = vi.fn();
+    const warnB = vi.fn();
 
     await runBatch([
       () =>
@@ -660,7 +661,7 @@ describe('batch conversion finalize', () => {
         return results;
       },
     ];
-    const warn = jest.fn();
+    const warn = vi.fn();
 
     await runBatch([
       () =>
@@ -733,8 +734,8 @@ describe('batch conversion finalize', () => {
     try {
       const batchPlugin = divergentFactory();
       const inlinePlugin = divergentFactory();
-      const batchWarn = jest.fn();
-      const inlineWarn = jest.fn();
+      const batchWarn = vi.fn();
+      const inlineWarn = vi.fn();
 
       await runBatch([
         engineChild(batchPlugin, SYNTHETIC_EXECUTOR, { warn: batchWarn }),
@@ -777,7 +778,7 @@ describe('batch conversion finalize', () => {
       });
     }
     const plugin = createSyntheticPlugin();
-    const warn = jest.fn();
+    const warn = vi.fn();
 
     await runBatch([
       engineChild(plugin, SYNTHETIC_EXECUTOR, { warn }),
@@ -867,7 +868,7 @@ describe('batch conversion finalize', () => {
         });
       },
     ];
-    const warn = jest.fn();
+    const warn = vi.fn();
 
     await runBatch([
       () =>
@@ -937,8 +938,8 @@ describe('batch conversion finalize', () => {
       OTHER_PLUGIN_PATH,
       OTHER_CONFIG_GLOB
     );
-    const warnA = jest.fn();
-    const warnB = jest.fn();
+    const warnA = vi.fn();
+    const warnB = vi.fn();
 
     await runBatch([
       engineChild(pluginA, SYNTHETIC_EXECUTOR, { warn: warnA }),
@@ -999,8 +1000,8 @@ describe('batch conversion finalize', () => {
       OTHER_PLUGIN_PATH,
       OTHER_CONFIG_GLOB
     );
-    const warnA = jest.fn();
-    const warnB = jest.fn();
+    const warnA = vi.fn();
+    const warnB = vi.fn();
 
     await runBatch([
       engineChild(pluginA, SYNTHETIC_EXECUTOR, { warn: warnA }, [
@@ -1051,7 +1052,7 @@ describe('batch conversion finalize', () => {
     nxJson.targetDefaults['nx:run-commands'] = { options: { color: true } };
     updateNxJson(ctx.tree, nxJson);
     const plugin = createSyntheticPlugin();
-    const warn = jest.fn();
+    const warn = vi.fn();
 
     await runBatch([engineChild(plugin, SYNTHETIC_EXECUTOR, { warn })]);
 
@@ -1106,7 +1107,7 @@ describe('batch conversion finalize', () => {
       ctx.fs.createFileSync(`${root}/${SYNTHETIC_CONFIG_FILE}`, '{}');
     }
     const plugin = createSyntheticPlugin();
-    const warn = jest.fn();
+    const warn = vi.fn();
 
     await runBatch([engineChild(plugin, SYNTHETIC_EXECUTOR, { warn })]);
 
@@ -1152,7 +1153,7 @@ describe('batch conversion finalize', () => {
     }
     seedExecutorDefault(SYNTHETIC_EXECUTOR);
     const plugin = createSyntheticPlugin();
-    const finalizeWarn = jest.fn();
+    const finalizeWarn = vi.fn();
 
     const session = openBatchConversionSession(ctx.tree);
     try {
@@ -1333,7 +1334,7 @@ describe('batch conversion finalize', () => {
       target: uniformExecutorTarget(),
     });
     const nxJsonBefore = ctx.tree.read('nx.json', 'utf-8');
-    const finalizeWarn = jest.fn();
+    const finalizeWarn = vi.fn();
 
     await runBatch([async () => {}], { warn: finalizeWarn });
 
@@ -1360,7 +1361,7 @@ describe('batch conversion finalize', () => {
         return target;
       }
     );
-    const warn = jest.fn();
+    const warn = vi.fn();
 
     await runBatch([engineChild(plugin, SYNTHETIC_EXECUTOR, { warn })]);
 
@@ -1429,7 +1430,7 @@ describe('batch conversion finalize', () => {
         return results;
       },
     ];
-    const warn = jest.fn();
+    const warn = vi.fn();
 
     await runBatch([
       () =>

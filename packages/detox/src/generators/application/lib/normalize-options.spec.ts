@@ -24,7 +24,6 @@ describe('Normalize Options', () => {
     };
     const options = await normalizeOptions(appTree, schema);
     expect(options).toEqual({
-      addPlugin: true,
       framework: 'react-native',
       e2eDirectory: 'apps/my-app-e2e',
       e2eProjectName: 'my-app-e2e',
@@ -56,7 +55,6 @@ describe('Normalize Options', () => {
     };
     const options = await normalizeOptions(appTree, schema);
     expect(options).toEqual({
-      addPlugin: true,
       appDisplayName: 'app display name',
       appExpoName: 'appdisplayname',
       appClassName: 'MyApp',
@@ -90,7 +88,6 @@ describe('Normalize Options', () => {
     };
     const options = await normalizeOptions(appTree, schema);
     expect(options).toEqual({
-      addPlugin: true,
       appProject: 'my-app',
       appClassName: 'MyApp',
       appDisplayName: 'MyApp',

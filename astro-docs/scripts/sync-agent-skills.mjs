@@ -2,7 +2,9 @@
 /**
  * Generates the Agent Skills Discovery index (RFC v0.2.0) that nx.dev serves at
  * /.well-known/agent-skills/, from the skills published in
- * nrwl/nx-ai-agents-config.
+ * nrwl/nx-ai-agents-config. It reads generated/.agents/skills, the copy that
+ * `nx configure-ai-agents` installs, whose SKILL.md files already carry their
+ * name and description in frontmatter.
  *
  * The output is build-time only and gitignored. Vendoring the skills into this
  * repo meant every upstream edit landed here as a large diff, three of them
@@ -16,9 +18,10 @@ import { mkdir, rm, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { gzipSync } from 'node:zlib';
+import { parse as parseYaml } from 'yaml';
 
 const REPO = 'nrwl/nx-ai-agents-config';
-const SOURCE_DIR = 'artifacts/skills';
+const SOURCE_DIR = 'generated/.agents/skills';
 const SCHEMA = 'https://schemas.agentskills.io/discovery/0.2.0/schema.json';
 const PUBLIC_PATH = '/.well-known/agent-skills';
 
@@ -56,24 +59,19 @@ function sha256(content) {
   return `sha256:${createHash('sha256').update(content).digest('hex')}`;
 }
 
-/** Escape a description for a double-quoted YAML scalar. */
-function yamlString(value) {
-  return `"${value.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`;
-}
-
-/**
- * The repo stores the body and its metadata separately; agents expect one
- * SKILL.md whose frontmatter carries name and description.
- */
-function withFrontmatter(meta, body) {
-  return [
-    '---',
-    `name: ${meta.name}`,
-    `description: ${yamlString(meta.description)}`,
-    '---',
-    '',
-    body.trimStart(),
-  ].join('\n');
+/** The name and description from a SKILL.md's YAML frontmatter. */
+function readFrontmatter(skillName, skillMd) {
+  const match = /^---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)/.exec(skillMd);
+  if (!match) {
+    throw new Error(`${skillName}/SKILL.md has no frontmatter`);
+  }
+  const { name, description } = parseYaml(match[1]) ?? {};
+  if (typeof name !== 'string' || typeof description !== 'string') {
+    throw new Error(
+      `${skillName}/SKILL.md frontmatter lacks name or description`
+    );
+  }
+  return { name, description };
 }
 
 const BLOCK = 512;
@@ -163,17 +161,16 @@ const written = new Map();
 const skills = [];
 
 for (const [skillName, skillFiles] of bySkill) {
-  const metaRaw = skillFiles.get('SKILL.md.meta.json');
-  const body = skillFiles.get('SKILL.md');
-  if (!metaRaw || !body) {
-    throw new Error(`${skillName} is missing SKILL.md or SKILL.md.meta.json`);
+  const skillMd = skillFiles.get('SKILL.md');
+  if (!skillMd) {
+    throw new Error(`${skillName} is missing SKILL.md`);
   }
-  const meta = JSON.parse(metaRaw);
+  const meta = readFrontmatter(skillName, skillMd);
 
   const payload = [
-    { name: 'SKILL.md', content: withFrontmatter(meta, body) },
+    { name: 'SKILL.md', content: skillMd },
     ...[...skillFiles]
-      .filter(([name]) => name !== 'SKILL.md' && name !== 'SKILL.md.meta.json')
+      .filter(([name]) => name !== 'SKILL.md')
       .map(([name, content]) => ({ name, content })),
   ];
 

@@ -10,24 +10,14 @@ export function servePostTargetTransformer(migrationLogs: AggregatedLog) {
     inferredTargetConfiguration: TargetConfiguration
   ) => {
     if (target.options) {
-      handlePropertiesFromTargetOptions(
-        tree,
-        target.options,
-        projectDetails.projectName,
-        projectDetails.root
-      );
+      handlePropertiesFromTargetOptions(target.options);
     }
 
     if (target.configurations) {
       for (const configurationName in target.configurations) {
         const configuration = target.configurations[configurationName];
 
-        handlePropertiesFromTargetOptions(
-          tree,
-          configuration,
-          projectDetails.projectName,
-          projectDetails.root
-        );
+        handlePropertiesFromTargetOptions(configuration);
       }
 
       if (Object.keys(target.configurations).length === 0) {
@@ -49,12 +39,7 @@ export function servePostTargetTransformer(migrationLogs: AggregatedLog) {
   };
 }
 
-function handlePropertiesFromTargetOptions(
-  tree: Tree,
-  options: any,
-  projectName: string,
-  projectRoot: string
-) {
+function handlePropertiesFromTargetOptions(options: any) {
   if ('debug' in options) {
     delete options.debug;
   }

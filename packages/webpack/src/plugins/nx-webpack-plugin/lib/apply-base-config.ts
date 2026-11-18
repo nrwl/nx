@@ -31,16 +31,6 @@ const extensionAlias = {
 const extensions = ['.ts', '.tsx', '.mjs', '.js', '.jsx'];
 const mainFields = ['module', 'main'];
 
-// webpack 5.110 widened `optimization.minimize` to accept an object it fills per
-// asset type. The types shipped with 5.x still declare a boolean, so the real
-// shape is spelled out once here instead of being cast at the assignment.
-type MinimizeOption = boolean | Record<string, never>;
-
-type OptimizationWithMinimize = Omit<
-  NonNullable<Configuration['optimization']>,
-  'minimize'
-> & { minimize?: MinimizeOption };
-
 /**
  * `withNx` builds a raw config that webpack validates, and only the boolean is
  * schema-valid before 5.110. `NxAppWebpackPlugin` instead mutates options that
@@ -48,7 +38,7 @@ type OptimizationWithMinimize = Omit<
  * `minimize`, so a boolean throws there.
  */
 function setMinimizeValue(
-  optimization: OptimizationWithMinimize,
+  optimization: NonNullable<Configuration['optimization']>,
   shouldMinify: boolean,
   configIsNormalized: boolean
 ): void {

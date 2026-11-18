@@ -9,16 +9,16 @@ import {
   runCommandUntil,
   killProcessAndPorts,
   checkFilesExist,
+  configureTargetOptions,
   updateFile,
   runCLIAsync,
-  runE2ETests,
-  killPorts,
   createFile,
   exists,
   removeFile,
   runCommand,
   tmpProjPath,
   reservePort,
+  shouldRunCypressTests,
 } from '@nx/e2e-utils';
 import { join } from 'path';
 import { setupExpoEnv } from './setup';
@@ -28,7 +28,7 @@ describe('@nx/expo', () => {
   let libName: string;
   let restoreExpoEnv: () => void;
 
-  beforeAll(() => {
+  beforeAll(async () => {
     restoreExpoEnv = setupExpoEnv();
 
     newProject({
@@ -43,6 +43,7 @@ describe('@nx/expo', () => {
     });
     appName = uniq('app');
     libName = uniq('lib');
+    configureTargetOptions(['serve'], { port: await reservePort() });
     // Uses `--e2eTestRunner=cypress`, whose fresh config @nx/cypress now
     // generates via base-setup templating (no tsquery).
     runCLI(
@@ -288,7 +289,7 @@ console.log(
     // run prebuild command with git check disable
     process.env['EXPO_NO_GIT_STATUS'] = 'true';
     const prebuildResult = await runCLIAsync(
-      `prebuild ${appName} --no-interactive --install=false`
+      `prebuild ${appName} -- --no-install`
     );
     expect(prebuildResult.combinedOutput).toContain(
       'Successfully ran target prebuild for project'
@@ -296,40 +297,25 @@ console.log(
   });
 
   it('should install', async () => {
-    // run install command
-    let installResults = await runCLIAsync(
-      `install ${appName} --force --no-interactive`
-    );
-    expect(installResults.combinedOutput).toContain(
-      'Successfully ran target install'
-    );
-
-    installResults = await runCLIAsync(
-      `install ${appName} --force --packages=@react-native-async-storage/async-storage,react-native-image-picker --no-interactive`
+    const installResults = await runCLIAsync(
+      `install ${appName} -- @react-native-async-storage/async-storage react-native-image-picker`
     );
     expect(installResults.combinedOutput).toContain(
       'Successfully ran target install'
     );
     const packageJson = readJson(join(appName, 'package.json'));
-    expect(packageJson).toMatchObject({
-      dependencies: {
-        '@react-native-async-storage/async-storage': '*',
-        'react-native-image-picker': '*',
-      },
-    });
+    expect(packageJson.dependencies).toHaveProperty(
+      '@react-native-async-storage/async-storage'
+    );
+    expect(packageJson.dependencies).toHaveProperty(
+      'react-native-image-picker'
+    );
   });
 
   it('should run e2e for cypress', async () => {
-    if (await runE2ETests()) {
+    if (await shouldRunCypressTests()) {
       const results = runCLI(`e2e ${appName}-e2e`);
       expect(results).toContain('Successfully ran target e2e');
-
-      // port and process cleanup
-      try {
-        await killPorts(4200);
-      } catch (err) {
-        expect(err).toBeFalsy();
-      }
     }
   });
 

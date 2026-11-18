@@ -16,7 +16,7 @@ experimental while it is pre-1.0.
 
 ## How Nx picks a formatter
 
-Detection runs in this order, and the first match wins:
+Detection checks these in order of precedence and uses the first match:
 
 1. An oxfmt config file exists at the workspace root.
 2. A Prettier config file exists at the workspace root, or `package.json` has a `prettier` key.
@@ -38,7 +38,7 @@ The oxfmt config files Nx looks for:
 
 ### When both are configured
 
-oxfmt wins, and Nx warns once so the switch is not silent.
+oxfmt takes precedence, and Nx warns once so the switch is not silent.
 Adding an `.oxfmtrc.json` to a workspace that already has a `.prettierrc` switches the whole
 workspace over, including generator formatting.
 To go back, delete the oxfmt config.

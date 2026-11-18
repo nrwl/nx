@@ -1,7 +1,9 @@
+# The noreply GIT_*_EMAIL lets nx release resolve GitHub usernames without a network lookup
 common-env-vars: &common-env-vars
-  GIT_AUTHOR_EMAIL: test@test.com
+  NX_E2E_PORT_POOL: '10000-32767'
+  GIT_AUTHOR_EMAIL: test@users.noreply.github.com
   GIT_AUTHOR_NAME: Test
-  GIT_COMMITTER_EMAIL: test@test.com
+  GIT_COMMITTER_EMAIL: test@users.noreply.github.com
   GIT_COMMITTER_NAME: Test
   SELECTED_PM: 'pnpm'
   NX_NATIVE_LOGGING: 'nx::native::db'
@@ -20,21 +22,43 @@ common-env-vars: &common-env-vars
   NX_DEV_URL: 'https://canary.nx.dev'
   # Cap gradle workers so co-located e2e tasks don't oversubscribe the agent.
   GRADLE_OPTS: '-Dorg.gradle.workers.max=2'
+  NX_CLOUD_USE_ULTRACACHE: 'true'
+  # V4 agents restore dependency artifacts in the background instead of holding the work loop.
+  NX_CLOUD_AGENT_BACKGROUND_ARTIFACT_RESTORE: 'true'
 
 common-init-steps: &common-init-steps
   - name: Checkout
     uses: 'nrwl/nx-cloud-workflows/v6/workflow-steps/checkout/main.yaml'
 
-  - name: Cache restore
-    uses: 'nrwl/nx-cloud-workflows/v6/workflow-steps/cache/main.yaml'
-    inputs:
-      key: 'pnpm-lock.yaml'
-      paths: ~/.local/share/pnpm/store
-      base-branch: 'master'
+  - group-name: Restore caches and toolchains
+    parallel: true
+    steps:
+      - name: Cache restore
+        uses: 'nrwl/nx-cloud-workflows/v6/workflow-steps/cache/main.yaml'
+        inputs:
+          key: 'pnpm-lock.yaml'
+          paths: ~/.local/share/pnpm/store
+          base-branch: 'master'
 
-  # reads mise.toml and installs toolchains needed for repo
-  - name: Setup toolchains
-    uses: 'nrwl/nx-cloud-workflows/v6/workflow-steps/install-mise/main.yaml'
+      # reads mise.toml and installs toolchains needed for repo
+      - name: Setup toolchains
+        uses: 'nrwl/nx-cloud-workflows/v6/workflow-steps/install-mise/main.yaml'
+
+      - name: Install system deps
+        script: |
+          # apt mirror+file failover: tab-separated; printf preserves \t (YAML heredocs don't).
+          printf 'https://archive.ubuntu.com/ubuntu/\tpriority:1\n'       | sudo tee /etc/apt/apt-mirrors.txt > /dev/null
+          printf 'https://security.ubuntu.com/ubuntu/\tpriority:2\n'      | sudo tee -a /etc/apt/apt-mirrors.txt > /dev/null
+          printf 'http://azure.archive.ubuntu.com/ubuntu/\tpriority:3\n'  | sudo tee -a /etc/apt/apt-mirrors.txt > /dev/null
+          # Retries=0: mirror+file already retries via failover; apt-level retries multiply stall on a dead mirror.
+          sudo tee /etc/apt/apt.conf.d/80-nx-mirror-failover > /dev/null <<'EOF'
+          Acquire::http::Timeout "5";
+          Acquire::https::Timeout "5";
+          Acquire::Retries "0";
+          EOF
+          sudo sed -i 's|http://archive.ubuntu.com/ubuntu|mirror+file:/etc/apt/apt-mirrors.txt|g; s|http://security.ubuntu.com/ubuntu|mirror+file:/etc/apt/apt-mirrors.txt|g' /etc/apt/sources.list
+          sudo apt-get update
+          sudo apt-get install -y ca-certificates lsof libvips-dev libglib2.0-dev libgirepository1.0-dev zip unzip
 
   # Make the repo's pinned pnpm corepack's default so e2e temp dirs (no
   # packageManager field) resolve it too, instead of corepack's bundled
@@ -55,52 +79,40 @@ common-init-steps: &common-init-steps
       echo "dotnet: $(dotnet --version)"
       echo "java:   $(javac --version)"
 
-  - name: Install system deps
-    script: |
-      # apt mirror+file failover: tab-separated; printf preserves \t (YAML heredocs don't).
-      printf 'https://archive.ubuntu.com/ubuntu/\tpriority:1\n'       | sudo tee /etc/apt/apt-mirrors.txt > /dev/null
-      printf 'https://security.ubuntu.com/ubuntu/\tpriority:2\n'      | sudo tee -a /etc/apt/apt-mirrors.txt > /dev/null
-      printf 'http://azure.archive.ubuntu.com/ubuntu/\tpriority:3\n'  | sudo tee -a /etc/apt/apt-mirrors.txt > /dev/null
-      # Retries=0: mirror+file already retries via failover; apt-level retries multiply stall on a dead mirror.
-      sudo tee /etc/apt/apt.conf.d/80-nx-mirror-failover > /dev/null <<'EOF'
-      Acquire::http::Timeout "5";
-      Acquire::https::Timeout "5";
-      Acquire::Retries "0";
-      EOF
-      sudo sed -i 's|http://archive.ubuntu.com/ubuntu|mirror+file:/etc/apt/apt-mirrors.txt|g; s|http://security.ubuntu.com/ubuntu|mirror+file:/etc/apt/apt-mirrors.txt|g' /etc/apt/sources.list
-      sudo apt-get update
-      sudo apt-get install -y ca-certificates lsof libvips-dev libglib2.0-dev libgirepository1.0-dev zip unzip
+  - group-name: Install dependencies
+    parallel: true
+    steps:
+      - name: Pnpm install and browsers
+        script: |
+          pnpm install --frozen-lockfile
+          pnpm exec cypress install
 
-  - name: Pnpm Install from lockfile
-    script: |
-      pnpm install --frozen-lockfile
+      # cargo's built-in git client has no stall timeout and has hung cloning git dependencies.
+      - name: Install rust deps and hyperfine
+        script: |
+          export CARGO_NET_GIT_FETCH_WITH_CLI=true
+          for attempt in 1 2 3; do
+            if timeout 180 cargo fetch; then
+              break
+            fi
+            test "$attempt" -lt 3 || exit 1
+            echo "cargo fetch failed or stalled; retrying ($attempt/3)."
+          done
+          cargo install hyperfine --locked
 
-  - name: Install browsers
-    script: |
-      pnpm exec cypress install
-      pnpm exec playwright install --with-deps
+      - name: Setup gradle
+        script: |
+          ./gradlew wrapper
+          ./gradlew --version
 
-  - name: Install rust deps
-    script: |
-      cargo fetch
+      - name: Restore .NET analyzer projects
+        script: |
+          dotnet restore nx.sln
 
-  - name: Install hyperfine
-    script: |
-      cargo install hyperfine
-
-  - name: Setup gradle
-    script: |
-      ./gradlew wrapper
-      ./gradlew --version
-
-  - name: Restore .NET analyzer projects
-    script: |
-      dotnet restore nx.sln
-
-  - name: Configure git metadata (needed for lerna smoke tests)
-    script: |
-      git config --global user.email test@test.com
-      git config --global user.name "Test Test"
+      - name: Configure git metadata (needed for lerna smoke tests)
+        script: |
+          git config --global user.email test@users.noreply.github.com
+          git config --global user.name "Test Test"
 
 launch-templates:
   linux-large:

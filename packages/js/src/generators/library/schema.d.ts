@@ -24,17 +24,12 @@ export interface LibraryGeneratorSchema {
   publishable?: boolean;
   buildable?: boolean;
   enableTypedLinting?: boolean;
-  /**
-   * @deprecated Use `enableTypedLinting` instead. This option will be removed in Nx v24.
-   */
-  setParserOptionsProject?: boolean;
   config?: 'workspace' | 'project' | 'npm-scripts';
   compiler?: Compiler;
   bundler?: Bundler;
   skipTypeCheck?: boolean;
   minimal?: boolean;
   rootProject?: boolean;
-  addPlugin?: boolean;
   useProjectJson?: boolean;
   useTscExecutor?: boolean;
   /** @internal Only honored by the vitest setup. */

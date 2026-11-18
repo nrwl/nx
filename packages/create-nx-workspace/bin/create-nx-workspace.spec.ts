@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 import {
   applyEmptyPresetAlias,
   validateWorkspaceName,
@@ -8,6 +9,7 @@ import {
 import * as clack from '@clack/prompts';
 import { CnwError } from '../src/utils/error-utils';
 import { Preset } from '../src/utils/preset/preset';
+import { isCI } from '../src/utils/ci/is-ci';
 import {
   mkdtempSync,
   mkdirSync,
@@ -18,15 +20,15 @@ import {
 import { join, basename, dirname } from 'path';
 import { tmpdir } from 'os';
 
-jest.mock('@clack/prompts', () => ({
+vi.mock('@clack/prompts', () => ({
   __esModule: true,
-  autocomplete: jest.fn(),
-  text: jest.fn(),
-  isCancel: jest.fn(() => false),
+  autocomplete: vi.fn(),
+  text: vi.fn(),
+  isCancel: vi.fn(() => false),
 }));
 
-jest.mock('../src/utils/ci/is-ci', () => ({
-  isCI: jest.fn(() => false),
+vi.mock('../src/utils/ci/is-ci', () => ({
+  isCI: vi.fn(() => false),
 }));
 
 describe('validateWorkspaceName', () => {
@@ -53,7 +55,7 @@ describe('validateWorkspaceName', () => {
   it('should throw CnwError with INVALID_WORKSPACE_NAME code', () => {
     try {
       validateWorkspaceName('4name');
-      fail('Expected CnwError to be thrown');
+      expect.unreachable('Expected CnwError to be thrown');
     } catch (e) {
       expect(e).toBeInstanceOf(CnwError);
       expect((e as CnwError).code).toBe('INVALID_WORKSPACE_NAME');
@@ -246,7 +248,7 @@ describe('resolveSpecialFolderName', () => {
     it('should throw INVALID_PATH when parent directory does not exist', () => {
       try {
         resolveSpecialFolderName('/nonexistent-parent-dir-xyz/acme');
-        fail('Expected CnwError to be thrown');
+        expect.unreachable('Expected CnwError to be thrown');
       } catch (e) {
         expect(e).toBeInstanceOf(CnwError);
         expect((e as CnwError).code).toBe('INVALID_PATH');
@@ -269,14 +271,13 @@ describe('resolveSpecialFolderName', () => {
 });
 
 describe('determineFolder - explicit "." confirmation', () => {
-  const { isCI } = require('../src/utils/ci/is-ci');
   let originalCwd: string;
 
   beforeEach(() => {
     originalCwd = process.cwd();
-    (clack.autocomplete as jest.Mock).mockReset();
-    (clack.text as jest.Mock).mockReset();
-    (isCI as jest.Mock).mockReset().mockReturnValue(false);
+    (clack.autocomplete as Mock).mockReset();
+    (clack.text as Mock).mockReset();
+    (isCI as Mock).mockReset().mockReturnValue(false);
   });
 
   afterEach(() => {
@@ -295,7 +296,7 @@ describe('determineFolder - explicit "." confirmation', () => {
   it('scaffolds in place when the user confirms', async () => {
     const tmpDir = realpathSync(mkdtempSync(join(tmpdir(), 'cnw-test-')));
     process.chdir(tmpDir);
-    (clack.autocomplete as jest.Mock).mockResolvedValueOnce('Yes');
+    (clack.autocomplete as Mock).mockResolvedValueOnce('Yes');
 
     const parsedArgs = dotArgs();
     const result = await determineFolder(parsedArgs);
@@ -311,8 +312,8 @@ describe('determineFolder - explicit "." confirmation', () => {
   it('falls back to a named subfolder when the user declines', async () => {
     const tmpDir = realpathSync(mkdtempSync(join(tmpdir(), 'cnw-test-')));
     process.chdir(tmpDir);
-    (clack.autocomplete as jest.Mock).mockResolvedValueOnce('No');
-    (clack.text as jest.Mock).mockResolvedValueOnce('myorg');
+    (clack.autocomplete as Mock).mockResolvedValueOnce('No');
+    (clack.text as Mock).mockResolvedValueOnce('myorg');
 
     const parsedArgs = dotArgs();
     const result = await determineFolder(parsedArgs);
@@ -370,7 +371,7 @@ describe('determinePresetOptions', () => {
   beforeEach(() => {
     // Recorded calls persist across tests otherwise, so any assertion on which
     // questions were asked would see every earlier test's prompts too.
-    (clack.autocomplete as jest.Mock).mockClear();
+    (clack.autocomplete as Mock).mockClear();
   });
 
   // Every stack must come back with the resolved linter. Once the schemas
@@ -502,10 +503,8 @@ describe('determinePresetOptions', () => {
       } as any);
 
       expect(result.linter).toBeUndefined();
-      const linterQuestions = (
-        clack.autocomplete as jest.Mock
-      ).mock.calls.filter(([question]) =>
-        String(question?.message ?? '').includes('linter')
+      const linterQuestions = (clack.autocomplete as Mock).mock.calls.filter(
+        ([question]) => String(question?.message ?? '').includes('linter')
       );
       expect(linterQuestions).toHaveLength(0);
     }
@@ -580,13 +579,13 @@ describe('determineUnitTestRunner', () => {
         e2eTestRunner: 'jest',
         workspaceType: 'integrated',
       },
-      expected: 'jest',
+      expected: 'vitest',
       excluded: '',
     },
   };
 
   beforeEach(() => {
-    (clack.autocomplete as jest.Mock).mockClear();
+    (clack.autocomplete as Mock).mockClear();
   });
 
   it.each(Object.keys(stacks))(
@@ -604,7 +603,7 @@ describe('determineUnitTestRunner', () => {
     'should not offer %s an excluded runner',
     async (stack) => {
       const { args, excluded } = stacks[stack];
-      (clack.autocomplete as jest.Mock).mockImplementation(
+      (clack.autocomplete as Mock).mockImplementation(
         async ({ options }) => options[0].value
       );
 
@@ -614,7 +613,7 @@ describe('determineUnitTestRunner', () => {
         interactive: true,
       } as any);
 
-      const question = (clack.autocomplete as jest.Mock).mock.calls
+      const question = (clack.autocomplete as Mock).mock.calls
         .map(([q]) => q)
         .find((q) => String(q?.message ?? '').includes('unit test runner'));
       expect(question).toBeDefined();
@@ -623,4 +622,103 @@ describe('determineUnitTestRunner', () => {
       ).not.toContain(excluded);
     }
   );
+});
+
+describe('node bundler prompt', () => {
+  const base = {
+    interactive: true,
+    workspaces: true,
+    name: 'myorg',
+    linter: 'eslint',
+    stack: 'node',
+    preset: Preset.NodeMonorepo,
+    appName: 'api',
+    docker: false,
+    unitTestRunner: 'vitest',
+  } as any;
+
+  const bundlerQuestions = () =>
+    (clack.autocomplete as Mock).mock.calls.filter(([q]) =>
+      String(q?.message ?? '').includes('build your app')
+    );
+
+  beforeEach(() => {
+    (clack.autocomplete as Mock).mockReset();
+    (clack.autocomplete as Mock).mockImplementation(async ({ message }) =>
+      String(message).includes('build your app') ? 'rolldown' : 'none'
+    );
+  });
+
+  it.each(['express', 'koa', 'none'])(
+    'should ask for %s apps in a workspaces monorepo',
+    async (framework) => {
+      const result = await determinePresetOptions({ ...base, framework });
+
+      expect(result.bundler).toBe('rolldown');
+      expect(
+        bundlerQuestions()[0][0].options.map((o: { value: string }) => o.value)
+      ).toEqual(['tsc', 'rolldown']);
+    }
+  );
+
+  it('should ask right after the framework when no preset is given', async () => {
+    (clack.autocomplete as Mock).mockImplementation(async ({ message }) =>
+      String(message).includes('framework')
+        ? 'express'
+        : String(message).includes('build your app')
+          ? 'rolldown'
+          : 'none'
+    );
+    (clack.text as Mock).mockResolvedValue('api');
+
+    const result = await determinePresetOptions({
+      ...base,
+      preset: undefined,
+      appName: undefined,
+    });
+
+    const messages = (clack.autocomplete as Mock).mock.calls.map(([q]) =>
+      String(q.message)
+    );
+    expect(result.bundler).toBe('rolldown');
+    expect(messages.indexOf('How would you like to build your app?')).toBe(
+      messages.findIndex((m) => m.includes('framework')) + 1
+    );
+  });
+
+  it.each([
+    [
+      '--bundler is passed',
+      { framework: 'express', bundler: 'esbuild' },
+      'esbuild',
+    ],
+    [
+      '--no-workspaces is passed',
+      { framework: 'express', workspaces: false },
+      undefined,
+    ],
+    ['the framework is fastify', { framework: 'fastify' }, undefined],
+    ['the framework is nest', { framework: 'nest' }, undefined],
+    [
+      'the preset is node-standalone',
+      { framework: 'express', preset: Preset.NodeStandalone },
+      undefined,
+    ],
+  ])('should not ask when %s', async (_, args, expected) => {
+    const result = await determinePresetOptions({ ...base, ...args });
+
+    expect(result.bundler).toBe(expected);
+    expect(bundlerQuestions()).toHaveLength(0);
+  });
+
+  it('should default to tsc when not interactive', async () => {
+    const result = await determinePresetOptions({
+      ...base,
+      framework: 'express',
+      interactive: false,
+    });
+
+    expect(result.bundler).toBe('tsc');
+    expect(bundlerQuestions()).toHaveLength(0);
+  });
 });

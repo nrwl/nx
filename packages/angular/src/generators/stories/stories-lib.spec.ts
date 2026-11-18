@@ -4,9 +4,9 @@ import { Tree, writeJson } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { componentGenerator } from '../component/component';
 import { librarySecondaryEntryPointGenerator } from '../library-secondary-entry-point/library-secondary-entry-point';
-import { scamGenerator } from '../scam/scam';
 import {
   createStorybookTestWorkspaceForLib,
+  generateTestInlineScam,
   generateTestLibrary,
 } from '../utils/testing';
 import { angularStoriesGenerator } from './stories';
@@ -139,18 +139,14 @@ describe('angularStories generator: libraries', () => {
     });
 
     it('should run twice without errors', async () => {
-      try {
-        await angularStoriesGenerator(tree, {
-          name: libName,
-          skipFormat: true,
-        });
-        await angularStoriesGenerator(tree, {
-          name: libName,
-          skipFormat: true,
-        });
-      } catch {
-        fail('Should not fail when running it twice.');
-      }
+      await angularStoriesGenerator(tree, {
+        name: libName,
+        skipFormat: true,
+      });
+      await angularStoriesGenerator(tree, {
+        name: libName,
+        skipFormat: true,
+      });
     });
 
     it('should handle modules with variable declarations rather than literals', async () => {
@@ -213,10 +209,9 @@ describe('angularStories generator: libraries', () => {
     });
 
     it('should generate stories file for scam component', async () => {
-      await scamGenerator(tree, {
+      await generateTestInlineScam(tree, {
         name: 'my-scam',
         path: `${libName}/src/lib/my-scam/my-scam`,
-        skipFormat: true,
       });
 
       await angularStoriesGenerator(tree, { name: libName, skipFormat: true });
@@ -227,11 +222,9 @@ describe('angularStories generator: libraries', () => {
     });
 
     it('should generate stories file for inline scam component', async () => {
-      await scamGenerator(tree, {
+      await generateTestInlineScam(tree, {
         name: 'my-scam',
         path: `${libName}/src/lib/my-scam/my-scam`,
-        inlineScam: true,
-        skipFormat: true,
       });
 
       await angularStoriesGenerator(tree, { name: libName, skipFormat: true });

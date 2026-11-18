@@ -1,6 +1,3 @@
-// nx-ignore-next-line
-const { withNx } = require('@nx/next/plugins/with-nx');
-
 // For deploy previews, always point to the matching astro-docs preview
 // (overrides any site-level env var that would otherwise point to production).
 if (
@@ -27,7 +24,7 @@ if (
   }
 }
 
-module.exports = withNx({
+module.exports = {
   typescript: {
     ignoreBuildErrors: true,
   },
@@ -177,4 +174,4 @@ module.exports = withNx({
     }
     return config;
   },
-});
+};

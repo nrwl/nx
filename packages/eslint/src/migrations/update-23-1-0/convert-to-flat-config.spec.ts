@@ -122,9 +122,41 @@ describe('convert-to-flat-config migration', () => {
   });
 
   it.each(['.eslintrc.js', '.eslintrc.cjs'])(
-    'should route a %s root config to the prompt without converting',
+    'should convert a %s root config built from literals',
     async (jsConfig) => {
       tree.write(jsConfig, 'module.exports = { root: true };');
+
+      const result = await update(tree);
+
+      expect(tree.exists('eslint.config.mjs')).toBe(true);
+      expect(tree.exists(jsConfig)).toBe(false);
+      expect(result!.agentContext.join('\n')).not.toContain(
+        'root ESLint config is JavaScript-based'
+      );
+    }
+  );
+
+  it('should route a JavaScript root config the generator does not read to the prompt', async () => {
+    // The generator would convert only `.eslintrc.base.json` and never open the
+    // JavaScript root config beside it, so the migration does not run it.
+    tree.write('.eslintrc.base.json', JSON.stringify({ rules: {} }));
+    tree.write('.eslintrc.js', 'module.exports = { root: true };');
+
+    const result = await update(tree);
+
+    expect(tree.exists('.eslintrc.js')).toBe(true);
+    expect(result!.agentContext.join('\n')).toContain(
+      'root ESLint config is JavaScript-based'
+    );
+  });
+
+  it.each(['.eslintrc.js', '.eslintrc.cjs'])(
+    'should route a %s root config that computes its values to the prompt without converting',
+    async (jsConfig) => {
+      tree.write(
+        jsConfig,
+        "module.exports = { root: true, rules: require('./rules.js') };"
+      );
 
       const result = await update(tree);
 
@@ -268,9 +300,13 @@ export default [
       };
       return json;
     });
-    // A JavaScript-based root config makes rootState 'js', so the generator does
-    // not run; a project already on flat config must still be reconciled.
-    tree.write('.eslintrc.js', 'module.exports = { root: true };');
+    // A JavaScript-based root config it cannot read makes rootState 'js', so the
+    // generator does not run; a project already on flat config must still be
+    // reconciled.
+    tree.write(
+      '.eslintrc.js',
+      "module.exports = { root: true, rules: require('./rules.js') };"
+    );
     tree.write(
       'apps/app/eslint.config.mjs',
       `export default [
@@ -343,6 +379,63 @@ export default [
       ).toBe(true);
     }
   );
+
+  it('should not surface a project config the generator was able to convert', async () => {
+    tree.write('.eslintrc.json', JSON.stringify({ root: true }));
+    addProjectConfiguration(tree, 'js-lib', {
+      root: 'libs/js-lib',
+      targets: {
+        lint: {
+          executor: '@nx/eslint:lint',
+          options: { lintFilePatterns: ['libs/js-lib'] },
+        },
+      },
+    });
+    tree.write(
+      'libs/js-lib/.eslintrc.js',
+      `module.exports = { rules: { 'no-console': 'error' } };`
+    );
+
+    const result = await update(tree);
+
+    expect(tree.exists('libs/js-lib/.eslintrc.js')).toBe(false);
+    expect(tree.exists('libs/js-lib/eslint.config.mjs')).toBe(true);
+    expect(result).toBeDefined();
+    expect(
+      [...result!.agentContext, ...result!.nextSteps].some((entry) =>
+        entry.includes('libs/js-lib/.eslintrc.js')
+      )
+    ).toBe(false);
+  });
+
+  it('should collect explicit rules from a JavaScript-based config the generator converts', async () => {
+    tree.write('.eslintrc.json', JSON.stringify({ root: true }));
+    addProjectConfiguration(tree, 'js-lib', {
+      root: 'libs/js-lib',
+      targets: {
+        lint: {
+          executor: '@nx/eslint:lint',
+          options: { lintFilePatterns: ['libs/js-lib'] },
+        },
+      },
+    });
+    tree.write(
+      'libs/js-lib/.eslintrc.js',
+      `module.exports = {
+        rules: { 'no-console': 'error' },
+        overrides: [{ files: ['*.ts'], rules: { 'no-debugger': 'warn' } }],
+      };`
+    );
+
+    const result = await update(tree);
+
+    expect(result).toBeDefined();
+    const baseline = result!.agentContext.find((entry) =>
+      entry.includes('Passing-state requirement')
+    );
+    expect(baseline).toContain('no-console');
+    expect(baseline).toContain('no-debugger');
+  });
 
   it('should collect explicit rules from YAML configs and overrides for the passing baseline', async () => {
     tree.write(

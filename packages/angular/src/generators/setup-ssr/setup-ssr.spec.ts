@@ -572,6 +572,24 @@ describe('setupSSR', () => {
       ).toBe('dist/app1/browser');
     });
 
+    it('should add a serve-ssr target that signals readiness', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      await generateTestApplication(tree, {
+        directory: 'app1',
+        standalone: false,
+        bundler: 'webpack',
+        skipFormat: true,
+      });
+
+      await setupSsr(tree, { project: 'app1', skipFormat: true });
+
+      const serveSsr = readProjectConfiguration(tree, 'app1').targets[
+        'serve-ssr'
+      ];
+      expect(serveSsr.continuous).toBe(true);
+      expect(serveSsr.readyWhen).toStrictEqual({ signal: true });
+    });
+
     it('should reference the server tsconfig with a path relative to the project tsconfig', async () => {
       const tree = createTreeWithEmptyWorkspace();
       await generateTestApplication(tree, {
@@ -635,6 +653,34 @@ describe('setupSSR', () => {
     expect(devDependencies['@nx/webpack']).toBe(nxVersion);
     expect(devDependencies['webpack-merge']).toBe(webpackMergeVersion);
   });
+
+  it.each([
+    ['the application builder', undefined, nxVersion],
+    ['a webpack server target', '@nx/angular:webpack-browser', undefined],
+  ])(
+    'should add "@nx/js", which the server file imports to report readiness, only for %s',
+    async (_, executor, expected) => {
+      const tree = createTreeWithEmptyWorkspace();
+      await generateTestApplication(tree, {
+        directory: 'app1',
+        skipFormat: true,
+      });
+      if (executor) {
+        const project = readProjectConfiguration(tree, 'app1');
+        project.targets.build.executor = executor;
+        updateProjectConfiguration(tree, 'app1', project);
+      }
+      updateJson(tree, 'package.json', (json) => {
+        delete json.devDependencies['@nx/js'];
+        return json;
+      });
+
+      await setupSsr(tree, { project: 'app1', skipFormat: true });
+
+      const { devDependencies } = readJson<PackageJson>(tree, 'package.json');
+      expect(devDependencies['@nx/js']).toBe(expected);
+    }
+  );
 
   it('should not install webpack dependencies for a non-webpack build executor', async () => {
     const tree = createTreeWithEmptyWorkspace();

@@ -1,5 +1,6 @@
 import type { Tree } from '@nx/devkit';
-import { ast, query } from '@phenomnomnominal/tsquery';
+import { query } from '@phenomnomnominal/tsquery';
+import { parseSourceFile } from '../../../utils/migrations';
 
 /**
  * Add or update the webServerCommands and ciWebServerCommand options in the Cypress Config
@@ -19,7 +20,7 @@ export function addDevServerTargetToConfig(
 ) {
   let configFileContents = tree.read(configFilePath, 'utf-8');
 
-  let sourceFile = ast(configFileContents);
+  let sourceFile = parseSourceFile(configFilePath, configFileContents);
 
   const NX_E2E_PRESET_SELECTOR =
     'PropertyAssignment:has(Identifier[name=e2e]) CallExpression:has(Identifier[name=nxE2EPreset])';
@@ -77,7 +78,7 @@ export function addDevServerTargetToConfig(
 
     if (ciDevServerTarget) {
       configFileContents = tree.read(configFilePath, 'utf-8');
-      sourceFile = ast(configFileContents);
+      sourceFile = parseSourceFile(configFilePath, configFileContents);
       nxE2ePresetOptionsNode = query(sourceFile, NX_E2E_PRESET_SELECTOR)[0];
 
       const NX_E2E_PRESET_OPTIONS_SELECTOR =

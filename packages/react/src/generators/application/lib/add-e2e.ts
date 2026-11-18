@@ -1,5 +1,4 @@
 import { E2EWebServerDetails, type PackageJson } from '@nx/devkit/internal';
-import { isTypedLintingEnabled } from '@nx/eslint/internal';
 import {
   addProjectConfiguration,
   ensurePackage,
@@ -52,7 +51,6 @@ export async function addE2e(
         options.appProjectRoot,
         `webpack.config.${options.js ? 'js' : 'ts'}`
       ),
-      options.addPlugin,
       options.port
     );
   } else if (options.bundler === 'rspack') {
@@ -66,7 +64,6 @@ export async function addE2e(
         options.appProjectRoot,
         `rspack.config.${options.js ? 'js' : 'ts'}`
       ),
-      options.addPlugin,
       options.port
     );
   } else if (options.bundler === 'vite') {
@@ -80,7 +77,6 @@ export async function addE2e(
             options.appProjectRoot,
             `vite.config.${options.js ? 'js' : 'ts'}`
           ),
-          options.addPlugin,
           options.port ?? 4200,
           // If the user manually sets the port, then use it for dev and preview
           options.port
@@ -92,7 +88,6 @@ export async function addE2e(
             options.appProjectRoot,
             `vite.config.${options.js ? 'js' : 'ts'}`
           ),
-          options.addPlugin,
           options.port ?? 4200,
           // If the user manually sets the port, then use it for dev and preview
           options.port
@@ -110,7 +105,6 @@ export async function addE2e(
         options.appProjectRoot,
         `rsbuild.config.${options.js ? 'js' : 'ts'}`
       ),
-      options.addPlugin,
       options.port ?? 4200
     );
   }
@@ -120,6 +114,8 @@ export async function addE2e(
       buildTarget: `${options.projectName}:build`,
       targetName: 'serve-static',
       spa: true,
+      // The e2e config waits on options.port; serve-static has to listen there.
+      port: options.port,
     });
   }
   switch (options.e2eTestRunner) {
@@ -173,7 +169,7 @@ export async function addE2e(
         baseUrl: e2eWebServerInfo.e2eWebServerAddress,
         jsx: true,
         rootProject: options.rootProject,
-        enableTypedLinting: isTypedLintingEnabled(options),
+        enableTypedLinting: options.enableTypedLinting,
         webServerCommands: {
           default: e2eWebServerInfo.e2eWebServerCommand,
           production: e2eWebServerInfo.e2eCiWebServerCommand,
@@ -225,11 +221,12 @@ export async function addE2e(
         directory: 'src',
         js: false,
         linter: options.linter,
-        enableTypedLinting: isTypedLintingEnabled(options),
-        webServerCommand: e2eWebServerInfo.e2eCiWebServerCommand,
-        webServerAddress: e2eWebServerInfo.e2eCiBaseUrl,
+        enableTypedLinting: options.enableTypedLinting,
+        webServerCommand: e2eWebServerInfo.e2eWebServerCommand,
+        webServerAddress: e2eWebServerInfo.e2eWebServerAddress,
+        ciWebServerCommand: e2eWebServerInfo.e2eCiWebServerCommand,
+        ciWebServerAddress: e2eWebServerInfo.e2eCiBaseUrl,
         rootProject: options.rootProject,
-        addPlugin: options.addPlugin,
       });
 
       return e2eTask;

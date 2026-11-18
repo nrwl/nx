@@ -8,7 +8,6 @@ export async function getWebpackE2EWebServerInfo(
   tree: Tree,
   projectName: string,
   configFilePath: string,
-  isPluginBeingAdded: boolean,
   e2ePortOverride?: number
 ) {
   const nxJson = readNxJson(tree);
@@ -39,7 +38,6 @@ export async function getWebpackE2EWebServerInfo(
       defaultE2ECiBaseUrl: `http://localhost:${e2ePort}`,
       defaultE2EPort: e2ePort,
       e2EPortIsExplicit: e2ePortOverride != null,
-    },
-    isPluginBeingAdded
+    }
   );
 }

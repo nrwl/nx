@@ -2,8 +2,8 @@ import { names } from '@nx/devkit';
 import type { AggregatedLog } from '@nx/devkit/internal';
 
 /**
- * Logic copied from `packages/react-native/src/utils/get-cli-options.ts`,
- * which was used by most executors to map their options to CLI options.
+ * Maps options to CLI args the way the removed executors did, so converted
+ * targets run the same React Native CLI command.
  */
 export function createProcessOptions(
   executorName: string,

@@ -1,12 +1,13 @@
 import {
   cleanupProject,
+  configureCypressComponentTesting,
   createFile,
   newProject,
   packageInstall,
   runCLI,
-  runE2ETests,
   uniq,
   updateFile,
+  shouldRunCypressTests,
 } from '@nx/e2e-utils';
 
 describe('NextJs Component Testing', () => {
@@ -23,7 +24,7 @@ describe('NextJs Component Testing', () => {
   xit('should test a NextJs app', async () => {
     const appName = uniq('next-app');
     createAppWithCt(appName);
-    if (await runE2ETests()) {
+    if (await shouldRunCypressTests()) {
       expect(runCLI(`component-test ${appName}`)).toContain(
         'All specs passed!'
       );
@@ -33,52 +34,67 @@ describe('NextJs Component Testing', () => {
   it('should test a NextJs app using babel compiler', async () => {
     const appName = uniq('next-app');
     createAppWithCt(appName);
-    //  add bable compiler to app
     addBabelSupport(`apps/${appName}`);
-    if (await runE2ETests()) {
-      expect(runCLI(`component-test ${appName}`)).toContain(
-        'All specs passed!'
+    if (await shouldRunCypressTests()) {
+      const componentTestArgs = await configureCypressComponentTesting(
+        `apps/${appName}/cypress.config.ts`
       );
+      expect(
+        runCLI(`component-test ${appName} ${componentTestArgs}`)
+      ).toContain('All specs passed!');
     }
   });
 
   it('should test a NextJs lib using babel compiler', async () => {
     const libName = uniq('next-lib');
     createLibWithCt(libName, false);
-    //  add bable compiler to lib
     addBabelSupport(`libs/${libName}`);
-    if (await runE2ETests()) {
-      expect(runCLI(`component-test ${libName}`)).toContain(
-        'All specs passed!'
+    if (await shouldRunCypressTests()) {
+      const componentTestArgs = await configureCypressComponentTesting(
+        `libs/${libName}/cypress.config.ts`
       );
+      expect(
+        runCLI(`component-test ${libName} ${componentTestArgs}`)
+      ).toContain('All specs passed!');
     }
   });
 
   it('should test a NextJs lib', async () => {
     const libName = uniq('next-lib');
     createLibWithCt(libName, false);
-    if (await runE2ETests()) {
-      expect(runCLI(`component-test ${libName}`)).toContain(
-        'All specs passed!'
+    if (await shouldRunCypressTests()) {
+      const componentTestArgs = await configureCypressComponentTesting(
+        `libs/${libName}/cypress.config.ts`
       );
+      expect(
+        runCLI(`component-test ${libName} ${componentTestArgs}`)
+      ).toContain('All specs passed!');
     }
   });
 
   it('should test a NextJs buildable lib', async () => {
     const buildableLibName = uniq('next-buildable-lib');
     createLibWithCt(buildableLibName, true);
-    if (await runE2ETests()) {
-      expect(runCLI(`component-test ${buildableLibName}`)).toContain(
-        'All specs passed!'
+    if (await shouldRunCypressTests()) {
+      const componentTestArgs = await configureCypressComponentTesting(
+        `libs/${buildableLibName}/cypress.config.ts`
       );
+      expect(
+        runCLI(`component-test ${buildableLibName} ${componentTestArgs}`)
+      ).toContain('All specs passed!');
     }
   });
 
   it('should test a NextJs server component that uses router', async () => {
     const lib = uniq('next-lib');
     createLibWithCtCypress(lib);
-    if (await runE2ETests()) {
-      expect(runCLI(`component-test ${lib}`)).toContain('All specs passed!');
+    if (await shouldRunCypressTests()) {
+      const componentTestArgs = await configureCypressComponentTesting(
+        `${lib}/cypress.config.ts`
+      );
+      expect(runCLI(`component-test ${lib} ${componentTestArgs}`)).toContain(
+        'All specs passed!'
+      );
     }
   }, 600_000);
 });

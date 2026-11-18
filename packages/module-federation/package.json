@@ -1,13 +1,12 @@
 {
   "name": "@nx/module-federation",
-  "description": "The Nx Plugin for Module Federation contains executors and utilities that support building applications using Module Federation.",
+  "description": "Migrations that move workspaces off Nx Module Federation, which was removed in Nx v24.",
   "version": "0.0.1",
   "type": "commonjs",
   "files": [
     "dist",
     "!dist/tsconfig.tsbuildinfo",
-    "migrations.json",
-    "executors.json"
+    "migrations.json"
   ],
   "repository": {
     "type": "git",
@@ -40,9 +39,6 @@
       "webpack": [
         "dist/webpack.d.ts"
       ],
-      "url-helpers": [
-        "dist/url-helpers.d.ts"
-      ],
       "angular.js": [
         "dist/angular.d.ts"
       ],
@@ -51,12 +47,6 @@
       ],
       "webpack.js": [
         "dist/webpack.d.ts"
-      ],
-      "url-helpers.js": [
-        "dist/url-helpers.d.ts"
-      ],
-      "internal": [
-        "dist/internal.d.ts"
       ]
     }
   },
@@ -68,9 +58,7 @@
     },
     "./package.json": "./package.json",
     "./package": "./package.json",
-    "./executors.json": "./executors.json",
     "./migrations.json": "./migrations.json",
-    "./executors": "./executors.json",
     "./migrations": "./migrations.json",
     "./angular": {
       "@nx/nx-source": "./angular.ts",
@@ -101,57 +89,14 @@
       "@nx/nx-source": "./webpack.ts",
       "types": "./dist/webpack.d.ts",
       "default": "./dist/webpack.js"
-    },
-    "./url-helpers": {
-      "@nx/nx-source": "./url-helpers.ts",
-      "types": "./dist/url-helpers.d.ts",
-      "default": "./dist/url-helpers.js"
-    },
-    "./url-helpers.js": {
-      "@nx/nx-source": "./url-helpers.ts",
-      "types": "./dist/url-helpers.d.ts",
-      "default": "./dist/url-helpers.js"
-    },
-    "./internal": {
-      "@nx/nx-source": "./internal.ts",
-      "types": "./dist/internal.d.ts",
-      "default": "./dist/internal.js"
-    },
-    "./runtime-library-control-plugin": {
-      "@nx/nx-source": "./src/utils/plugins/runtime-library-control.plugin.ts",
-      "default": "./dist/src/utils/plugins/runtime-library-control.plugin.js"
     }
   },
-  "executors": "./executors.json",
   "dependencies": {
     "@nx/devkit": "workspace:*",
-    "@nx/js": "workspace:*",
-    "@nx/web": "workspace:*",
-    "@rspack/core": "catalog:rspack",
-    "express": "^4.21.2",
-    "http-proxy-middleware": "catalog:",
-    "picocolors": "catalog:",
     "tslib": "catalog:typescript"
   },
-  "peerDependencies": {
-    "@module-federation/enhanced": "^2.0.0",
-    "@module-federation/node": "^2.0.0",
-    "webpack": "^5.0.0"
-  },
-  "peerDependenciesMeta": {
-    "@module-federation/enhanced": {
-      "optional": true
-    },
-    "@module-federation/node": {
-      "optional": true
-    },
-    "webpack": {
-      "optional": true
-    }
-  },
   "devDependencies": {
-    "nx": "workspace:*",
-    "webpack": "catalog:"
+    "nx": "workspace:*"
   },
   "nx-migrations": {
     "migrations": "./migrations.json",

@@ -22,9 +22,8 @@ describe('isExpoProject', () => {
     );
 
     // Mock loadConfigFile to read from the in-memory tree
-    jest
-      .spyOn(nxDevkitConfigUtils, 'loadConfigFile')
-      .mockImplementation(async (filePath: string) => {
+    vi.spyOn(nxDevkitConfigUtils, 'loadConfigFile').mockImplementation(
+      async (filePath: string) => {
         // Convert absolute path to relative path for tree.read
         const relativePath = path.relative(tree.root, filePath);
 
@@ -56,11 +55,12 @@ describe('isExpoProject', () => {
           }
         }
         return null; // Should not reach here for valid app config files
-      });
+      }
+    );
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   it('should return true when both Expo dependency and app config with expo field exist', async () => {

@@ -5,13 +5,13 @@ import {
   Tree,
   joinPathFragments,
 } from '@nx/devkit';
+import { getResolvedPackageVersion } from '@nx/devkit/internal';
 import { LinterType } from '@nx/js';
 import {
   addExtendsToLintConfig,
   addOverrideToLintConfig,
   addPredefinedConfigToFlatLintConfig,
   isEslintConfigSupported,
-  isTypedLintingEnabled,
   lintConfigHasOverride,
   replaceOverridesInLintConfig,
   updateOverrideInLintConfig,
@@ -23,6 +23,7 @@ import {
   eslintPluginVueVersion,
   vueEslintConfigPrettierVersion,
   vueEslintConfigTypescriptVersion,
+  vueEslintParserVersion,
 } from './versions';
 import { addLintingToProject } from '@nx/js/internal';
 
@@ -34,13 +35,8 @@ export async function addLinting(
     projectRoot: string;
     unitTestRunner?: 'vitest' | 'none';
     enableTypedLinting?: boolean;
-    /**
-     * @deprecated Use `enableTypedLinting` instead. This option will be removed in Nx v24.
-     */
-    setParserOptionsProject?: boolean;
     skipPackageJson?: boolean;
     rootProject?: boolean;
-    addPlugin?: boolean;
     projectName: string;
   },
   projectType: 'lib' | 'app'
@@ -55,9 +51,8 @@ export async function addLinting(
         joinPathFragments(options.projectRoot, `tsconfig.${projectType}.json`),
       ],
       unitTestRunner: options.unitTestRunner,
-      enableTypedLinting: isTypedLintingEnabled(options),
+      enableTypedLinting: options.enableTypedLinting,
       rootProject: options.rootProject,
-      addPlugin: options.addPlugin,
       skipPackageJson: options.skipPackageJson,
     })
   );
@@ -71,7 +66,7 @@ export async function addLinting(
         host,
         options.projectRoot,
         [
-          'plugin:vue/vue3-essential',
+          getVueEssentialConfig(host),
           'eslint:recommended',
           '@vue/eslint-config-typescript',
           '@vue/eslint-config-prettier/skip-formatting',
@@ -86,6 +81,8 @@ export async function addLinting(
       '@vue/eslint-config-prettier': vueEslintConfigPrettierVersion,
       '@vue/eslint-config-typescript': vueEslintConfigTypescriptVersion,
       'eslint-plugin-vue': eslintPluginVueVersion,
+      // eslint-plugin-vue v10 takes its parser as a peer dependency.
+      'vue-eslint-parser': vueEslintParserVersion,
     };
     if (
       isEslintConfigSupported(host, options.projectRoot) &&
@@ -108,6 +105,18 @@ export async function addLinting(
   }
 
   return runTasksInSerial(...tasks);
+}
+
+// On eslint-plugin-vue 9, `essential` is the Vue 2 config; 10 renamed `vue3-essential` to `essential`.
+function getVueEssentialConfig(tree: Tree): string {
+  const version = getResolvedPackageVersion(
+    tree,
+    'eslint-plugin-vue',
+    eslintPluginVueVersion
+  );
+  return version && Number(version.split('.')[0]) < 10
+    ? 'plugin:vue/vue3-essential'
+    : 'plugin:vue/essential';
 }
 
 function editEslintConfigFiles(tree: Tree, projectRoot: string) {

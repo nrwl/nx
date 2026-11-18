@@ -41,8 +41,8 @@ pub struct IgnoredIndex {
     tracked: RwLock<BTreeSet<String>>,
     /// The tracked directories that have been walked. Only under one of these
     /// is there a listing to answer from, or a hash that may be served
-    /// without a stat. A declared output is tracked and never listed, since
-    /// nothing asks one for its files.
+    /// without a stat. A declared output is listed once the outputs check
+    /// first asks for its files.
     listed: RwLock<BTreeSet<String>>,
     /// Every file under a listed directory, sorted, workspace-relative.
     members: RwLock<BTreeSet<String>>,
@@ -91,7 +91,7 @@ impl Content {
     }
 }
 
-fn now_secs() -> u64 {
+pub(crate) fn now_secs() -> u64 {
     SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .map(|d| d.as_secs())
@@ -133,6 +133,25 @@ fn under(path: &str, dir: &str) -> bool {
     dir.is_empty()
         || path == dir
         || (path.len() > dir.len() && path.starts_with(dir) && path.as_bytes()[dir.len()] == b'/')
+}
+
+/// The members that are `dir` or sit under it, sorted. A sibling like
+/// `dir-e2e` sorts between `dir` and `dir/`, so the range starts at `dir/`.
+fn members_under(members: &BTreeSet<String>, dir: &str) -> Vec<String> {
+    if dir.is_empty() {
+        return members.iter().cloned().collect();
+    }
+    let prefix = format!("{dir}/");
+    members
+        .get(dir)
+        .into_iter()
+        .chain(
+            members
+                .range(prefix.clone()..)
+                .take_while(|path| path.starts_with(&prefix)),
+        )
+        .cloned()
+        .collect()
 }
 
 /// Whether `set` holds `path` or one of its ancestors: one lookup per level.
@@ -291,14 +310,7 @@ impl IgnoredIndex {
         {
             return None;
         }
-        let members = self.members.read();
-        Some(
-            members
-                .range(dir.to_string()..)
-                .take_while(|path| under(path, dir))
-                .cloned()
-                .collect(),
-        )
+        Some(members_under(&self.members.read(), dir))
     }
 
     /// The files under `dir` that `accept` admits, workspace-relative and in
@@ -307,13 +319,15 @@ impl IgnoredIndex {
     /// `cached`, a tracked directory answers from its listing, walking the
     /// first time and keeping it current from events after. Otherwise, and
     /// for a directory nothing tracks, the disk is read and not remembered.
-    /// `None` only when `dir` cannot be read at all.
+    /// `None` only when `dir` cannot be read at all. A disk read does not
+    /// enter the directories in `skip`.
     pub(crate) fn files_under(
         &self,
         workspace_root: &Path,
         dir: &str,
         cached: bool,
         accept: PathPredicate,
+        skip: &[String],
     ) -> Option<Vec<String>> {
         if cached && self.is_tracked(dir) {
             // A listing that cannot settle, because the disk kept moving
@@ -324,7 +338,7 @@ impl IgnoredIndex {
             }
             trace!("no listing for {dir:?}; reading it from disk instead");
         }
-        read_directory(workspace_root, dir, accept)
+        read_directory(workspace_root, dir, accept, skip)
     }
 
     /// A reported write or creation. Under a listed prefix a file becomes a
@@ -440,11 +454,7 @@ impl IgnoredIndex {
     /// a kept but unlisted directory.
     fn remove(&self, path: &str) -> bool {
         let mut members = self.members.write();
-        let gone: Vec<String> = members
-            .range(path.to_string()..)
-            .take_while(|p| under(p, path))
-            .cloned()
-            .collect();
+        let gone = members_under(&members, path);
         for p in &gone {
             members.remove(p);
             self.contents.remove(p);
@@ -457,11 +467,7 @@ impl IgnoredIndex {
     /// what is no longer there. A file the seed saw again is left as it
     /// was: its stamp still decides whether the hash stands.
     fn replace_under(&self, members: &mut BTreeSet<String>, dir: &str, seeded: Vec<String>) {
-        let before: Vec<String> = members
-            .range(dir.to_string()..)
-            .take_while(|p| under(p, dir))
-            .cloned()
-            .collect();
+        let before = members_under(members, dir);
         let fresh: BTreeSet<String> = seeded.into_iter().collect();
         for path in &before {
             if !fresh.contains(path) {
@@ -558,8 +564,6 @@ impl IgnoredIndex {
 /// owns the watch.
 pub(crate) type CatchUp = Arc<dyn Fn() + Send + Sync>;
 
-/// The hasher's handle on an index: lists only after catching up with the
-/// watch behind it.
 #[napi]
 pub struct IgnoredIndexReader {
     index: Arc<IgnoredIndex>,
@@ -581,23 +585,20 @@ impl IgnoredIndexReader {
         &self.index
     }
 
+    /// Applies what the watch delivered, so the reads of `index` that follow
+    /// never predate a reported write. It locks the files and may hash on the
+    /// rayon pool, so call it before a parallel section, never from a pool job.
+    pub(crate) fn catch_up(&self) {
+        debug_assert!(
+            rayon::current_thread_index().is_none(),
+            "catching up from a rayon pool job can deadlock"
+        );
+        (self.catch_up)();
+    }
+
     /// See `IgnoredIndex::track`.
     pub(crate) fn track(&self, workspace_root: &Path, dir: &str) -> bool {
         self.index.track(workspace_root, dir)
-    }
-
-    /// The files under `dir` that `accept` admits, once the index has applied
-    /// what the watch delivered, so an answer never predates a reported write.
-    /// See `IgnoredIndex::files_under`.
-    pub(crate) fn files_under(
-        &self,
-        workspace_root: &Path,
-        dir: &str,
-        cached: bool,
-        accept: PathPredicate,
-    ) -> Option<Vec<String>> {
-        (self.catch_up)();
-        self.index.files_under(workspace_root, dir, cached, accept)
     }
 }
 
@@ -669,6 +670,68 @@ mod tests {
             index.list(temp.path(), "dist").unwrap(),
             vec!["dist/gen/a.js", "dist/gen/nested/b.js", "dist/other/c.js"]
         );
+    }
+
+    #[test]
+    fn a_sibling_whose_name_extends_a_directory_does_not_hide_it() {
+        let temp = workspace();
+        for file in ["dist/gen+1/z.js", "dist/gen-e2e/x.js", "dist/gen.old/y.js"] {
+            temp.child(file).write_str(file).unwrap();
+        }
+        let index = watched();
+        assert!(index.track(temp.path(), "dist"));
+        index.list(temp.path(), "dist").unwrap();
+        assert_eq!(
+            index.list(temp.path(), "dist/gen").unwrap(),
+            vec!["dist/gen/a.js", "dist/gen/nested/b.js"]
+        );
+        let files = |cached| {
+            let mut found = index
+                .files_under(temp.path(), "dist/gen", cached, &|_| true, &[])
+                .unwrap();
+            found.sort();
+            found
+        };
+        assert_eq!(files(true), files(false));
+
+        std::fs::remove_file(temp.path().join("dist/gen/nested/b.js")).unwrap();
+        index.note_written(temp.path(), "dist/gen");
+        assert_eq!(
+            index.list(temp.path(), "dist/gen").unwrap(),
+            vec!["dist/gen/a.js"]
+        );
+
+        std::fs::remove_dir_all(temp.path().join("dist/gen")).unwrap();
+        index.note_deleted_all(&["dist/gen"]);
+        assert_eq!(
+            index.list(temp.path(), "dist").unwrap(),
+            vec![
+                "dist/gen+1/z.js",
+                "dist/gen-e2e/x.js",
+                "dist/gen.old/y.js",
+                "dist/other/c.js"
+            ]
+        );
+    }
+
+    #[test]
+    fn an_unwatched_sibling_whose_name_extends_a_directory_does_not_hide_it() {
+        let temp = workspace();
+        temp.child("dist/gen-e2e/x.js").write_str("x").unwrap();
+        let index = IgnoredIndex::new(None);
+        assert!(index.track(temp.path(), "dist"));
+        index
+            .files_under(temp.path(), "dist", true, &|_| true, &[])
+            .unwrap();
+        let files = |cached| {
+            let mut found = index
+                .files_under(temp.path(), "dist/gen", cached, &|_| true, &[])
+                .unwrap();
+            found.sort();
+            found
+        };
+        assert_eq!(files(true), files(false));
+        assert_eq!(files(true), vec!["dist/gen/a.js", "dist/gen/nested/b.js"]);
     }
 
     #[test]
@@ -749,7 +812,13 @@ mod tests {
         assert_eq!(
             {
                 let mut found = index
-                    .files_under(temp.path(), "dist", true, &|path| path.ends_with(".js"))
+                    .files_under(
+                        temp.path(),
+                        "dist",
+                        true,
+                        &|path| path.ends_with(".js"),
+                        &[],
+                    )
                     .unwrap();
                 found.sort();
                 found
@@ -1148,8 +1217,9 @@ mod tests {
         let temp = workspace();
         let index = watched();
         assert!(index.track(temp.path(), "dist/other"));
-        // Tracked but never listed, as a declared output is: its hashes are
-        // kept, and nothing is trusted, because no walk vouched for it.
+        // Tracked but not listed yet, as a declared output is until its first
+        // check: its hashes are kept, and nothing is trusted, because no walk
+        // vouched for it.
         assert!(!index.is_listed("dist/other/c.js"));
         index.hash_file(
             temp.path(),
@@ -1202,7 +1272,7 @@ mod tests {
     }
 
     /// The shapes `holds` is given, and the two it is never given. Paths
-    /// reach it trimmed by `partition_glob` and shape-checked by
+    /// reach it trimmed by `normalize_glob` and shape-checked by
     /// `validate_shape`, so a trailing slash and a leading slash cannot
     /// arrive; both are pinned as the answers they would get, not as answers
     /// anything relies on.
@@ -1227,7 +1297,7 @@ mod tests {
         // An empty set answers nothing, whatever the path.
         assert!(!holds(&BTreeSet::new(), "a/b"));
         assert!(!holds(&BTreeSet::new(), ""));
-        // Never reached: `partition_glob` trims a trailing slash, and
+        // Never reached: `normalize_glob` trims a trailing slash, and
         // `validate_shape` rejects an absolute glob before anything asks.
         assert!(!holds(&named, "a/b/"));
         assert!(!holds(&root, "/a/b"));

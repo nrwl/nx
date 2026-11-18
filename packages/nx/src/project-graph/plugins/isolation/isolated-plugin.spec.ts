@@ -103,7 +103,6 @@ describe('IsolatedPlugin', () => {
     plugin._alive = true;
     plugin.pendingCount = 0;
     plugin.spawnAndConnectCount = 0;
-    plugin.shutdownCount = 0;
 
     // Mock spawnAndConnect
     const spawnAndConnect = vi.fn().mockImplementation(async () => {
@@ -116,7 +115,6 @@ describe('IsolatedPlugin', () => {
     // Mock shutdown
     const shutdown = vi.fn().mockImplementation(async () => {
       plugin._alive = false;
-      plugin.shutdownCount++;
     });
     plugin.shutdown = shutdown;
 
@@ -428,6 +426,57 @@ describe('IsolatedPlugin', () => {
 
       // setupHooks should have called shutdown immediately
       expect(shutdown).toHaveBeenCalled();
+    });
+  });
+
+  describe('environment updates during worker restart', () => {
+    it('forwards an update to a worker whose restart is still connecting', async () => {
+      const loadResult = createLoadResult({
+        createNodesPattern: '**/*.json',
+        hasCreateDependencies: true,
+      });
+      const { plugin, spawnAndConnect, sendRequest } =
+        createTestPlugin(loadResult);
+      await plugin.shutdown();
+
+      let finishConnecting: () => void;
+      spawnAndConnect.mockImplementation(
+        () =>
+          new Promise((resolve) => {
+            finishConnecting = () => {
+              plugin._alive = true;
+              resolve(loadResult);
+            };
+          })
+      );
+      sendRequest.mockImplementation((type: string) =>
+        type === 'setWorkerEnv'
+          ? { success: true }
+          : { success: true, result: [] }
+      );
+
+      const hook = plugin.createNodes[1]([], {});
+      const env = { BASE_URL: 'http://localhost:4301' };
+      const update = plugin.setWorkerEnv(env);
+      expect(sendRequest).not.toHaveBeenCalled();
+
+      finishConnecting();
+      await Promise.all([hook, update]);
+
+      expect(spawnAndConnect).toHaveBeenCalledTimes(1);
+      expect(sendRequest).toHaveBeenCalledWith('setWorkerEnv', env);
+    });
+
+    it('does not start a stopped worker just to update its environment', async () => {
+      const { plugin, spawnAndConnect, sendRequest } = createTestPlugin(
+        createLoadResult({ createNodesPattern: '**/*.json' })
+      );
+      await plugin.shutdown();
+
+      await plugin.setWorkerEnv({ BASE_URL: 'http://localhost:4301' });
+
+      expect(spawnAndConnect).not.toHaveBeenCalled();
+      expect(sendRequest).not.toHaveBeenCalled();
     });
   });
 

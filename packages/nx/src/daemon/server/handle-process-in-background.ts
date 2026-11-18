@@ -1,6 +1,8 @@
 import { HandlerResult } from './server';
 import { serverLogger } from '../logger';
 import { getNxRequirePaths } from '../../utils/installation-directory';
+import { serializeResult } from '../socket-utils';
+import { requireWithNativeJsLoader } from './native-js-loader';
 
 export async function handleProcessInBackground(payload: {
   type: string;
@@ -9,16 +11,14 @@ export async function handleProcessInBackground(payload: {
 }): Promise<HandlerResult> {
   let fn;
   try {
-    fn = require(
+    fn = requireWithNativeJsLoader(
       require.resolve(payload.requirePath, {
         paths: getNxRequirePaths(),
       })
     ).default;
   } catch (e) {
-    return {
-      description: `Unable to require ${payload.requirePath}`,
-      error: new Error(`Unable to require ${payload.requirePath}`),
-    };
+    const description = `Unable to require ${payload.requirePath}`;
+    return { description, error: toTransportableError(e, description) };
   }
 
   try {
@@ -28,9 +28,21 @@ export async function handleProcessInBackground(payload: {
       description: payload.type,
     };
   } catch (e) {
-    return {
-      description: `Error when processing ${payload.type}.`,
-      error: e,
-    };
+    const description = `Error when processing ${payload.type}.`;
+    return { description, error: toTransportableError(e, description) };
+  }
+}
+
+function toTransportableError(e: unknown, fallbackMessage: string): Error {
+  if (!(e instanceof Error)) {
+    return new Error(fallbackMessage);
+  }
+  try {
+    serializeResult(e, null, null);
+    return e;
+  } catch {
+    const copy = new Error(e.message);
+    copy.stack = e.stack;
+    return copy;
   }
 }

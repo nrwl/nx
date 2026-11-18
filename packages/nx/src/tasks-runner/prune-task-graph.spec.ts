@@ -16,7 +16,7 @@ function graph(): TaskGraph {
     }) as any;
   return {
     roots: ['a'],
-    dependencies: { a: [], b: ['a'] },
+    dependencies: { a: [], b: [{ id: 'a' }] },
     continuousDependencies: {},
     tasks: { a: task('a'), b: task('b') },
   };

@@ -1,10 +1,5 @@
 {
   "executors": {
-    "playwright": {
-      "implementation": "./dist/src/executors/playwright/playwright.impl",
-      "schema": "./dist/src/executors/playwright/schema.json",
-      "description": "Run Playwright tests."
-    },
     "merge-reports": {
       "implementation": "./dist/src/executors/merge-reports/merge-reports.impl",
       "schema": "./dist/src/executors/merge-reports/schema.json",

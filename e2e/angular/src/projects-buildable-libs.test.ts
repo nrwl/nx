@@ -1,7 +1,9 @@
 import { names } from '@nx/devkit';
+import { webpackMergeVersion } from '@nx/angular/src/utils/versions';
 import {
   checkFilesDoNotExist,
   checkFilesExist,
+  packageInstall,
   readFile,
   readJson,
   runCLI,
@@ -120,6 +122,9 @@ describe('Angular Projects - Buildable Libraries', () => {
         
       `
     );
+
+    // Switching executors by hand bypasses the generator's dependency setup.
+    packageInstall('webpack-merge', undefined, webpackMergeVersion);
 
     // update the project.json
     updateJson(join(app1, 'project.json'), (config) => {

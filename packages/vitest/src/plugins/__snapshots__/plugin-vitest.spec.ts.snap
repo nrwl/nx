@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`@nx/vitest root project should create nodes 1`] = `
+exports[`@nx/vitest > root project > should create nodes 1`] = `
 [
   [
     "vitest.config.ts",
@@ -67,7 +67,7 @@ exports[`@nx/vitest root project should create nodes 1`] = `
 ]
 `;
 
-exports[`@nx/vitest root project should create nodes with ci target name 1`] = `
+exports[`@nx/vitest > root project > should create nodes with ci target name 1`] = `
 [
   [
     "vitest.config.ts",
@@ -291,7 +291,7 @@ exports[`@nx/vitest root project should create nodes with ci target name 1`] = `
 ]
 `;
 
-exports[`@nx/vitest root project should create nodes with ci target name and ci group name 1`] = `
+exports[`@nx/vitest > root project > should create nodes with ci target name and ci group name 1`] = `
 [
   [
     "vitest.config.ts",

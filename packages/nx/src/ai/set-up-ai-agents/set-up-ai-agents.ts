@@ -1,10 +1,9 @@
-import { existsSync, readFileSync } from 'fs';
+import { existsSync, lstatSync, readdirSync, readFileSync } from 'fs';
 import { join } from 'path';
 import { major } from 'semver';
 import TOML from 'smol-toml';
 import { formatChangedFiles } from '../../generators/internal-utils/format-changed-files';
 import { Tree } from '../../generators/tree';
-import { generateFiles } from '../../generators/utils/generate-files';
 import { readJson, updateJson, writeJson } from '../../generators/utils/json';
 import { readNxJson } from '../../generators/utils/nx-json';
 import { isAnalyticsEnabled } from '../../utils/analytics-enabled';
@@ -21,7 +20,7 @@ import {
 import { installPackageToTmp } from '../../utils/package-json';
 import { detectPackageManager } from '../../utils/package-manager';
 import { addEntryToGitIgnore } from '../../utils/ignore';
-import { ensurePackageHasProvenance } from '../../utils/provenance';
+import { resolveVersionWithProvenance } from '../../utils/provenance';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { getInstalledNxVersion } from '../../utils/installed-nx-version';
 import {
@@ -40,6 +39,8 @@ import {
   rulesRegex,
 } from '../constants';
 import { getAiConfigRepoPath } from '../clone-ai-config-repo';
+import { logger } from '../../utils/logger';
+import { DirectoryRefusedError } from '../../utils/owned-private-dir';
 import { Agent, supportedAgents } from '../utils';
 import {
   NormalizedSetupAiAgentsGeneratorSchema,
@@ -89,11 +90,15 @@ export async function setupAiAgentsGenerator(
   }
 
   try {
-    await ensurePackageHasProvenance('nx', normalizedOptions.packageVersion);
+    const version = await resolveVersionWithProvenance(
+      'nx',
+      normalizedOptions.packageVersion,
+      tree.root
+    );
 
     const { tempDir, cleanup } = installPackageToTmp(
       'nx',
-      normalizedOptions.packageVersion,
+      version,
       detectPackageManager(tree.root)
     );
 
@@ -128,6 +133,19 @@ function normalizeOptions(
   };
 }
 
+function copyFilesVerbatim(tree: Tree, srcDir: string, destDir: string) {
+  for (const entry of readdirSync(srcDir)) {
+    const srcPath = join(srcDir, entry);
+    const destPath = join(destDir, entry);
+    const stats = lstatSync(srcPath);
+    if (stats.isDirectory()) {
+      copyFilesVerbatim(tree, srcPath, destPath);
+    } else if (stats.isFile()) {
+      tree.write(destPath, readFileSync(srcPath));
+    }
+  }
+}
+
 export async function setupAiAgentsGeneratorImpl(
   tree: Tree,
   options: NormalizedSetupAiAgentsGeneratorSchema
@@ -151,7 +169,11 @@ export async function setupAiAgentsGeneratorImpl(
 
   if (hasAgent('claude')) {
     const claudePath = join(options.directory, 'CLAUDE.md');
-    writeAgentRules(tree, claudePath, options.writeNxCloudRules);
+    writeAgentRules(
+      tree,
+      importsAgentsMd(tree, claudePath) ? agentsMd : claudePath,
+      options.writeNxCloudRules
+    );
 
     // Configure Claude plugin via marketplace (plugin includes MCP server)
     const claudeSettingsPath = join(
@@ -278,8 +300,14 @@ export async function setupAiAgentsGeneratorImpl(
   if (needsAiConfigRepo) {
     try {
       aiConfigRepoPath = getAiConfigRepoPath();
-    } catch {
-      // Network/clone failure — individual consumers handle fallback
+    } catch (e) {
+      // Individual consumers handle a missing repo; a refused cache dir is the
+      // one failure the user can fix, so say why skills were skipped.
+      if (e instanceof DirectoryRefusedError) {
+        logger.warn(
+          `Skipping Nx skills and commands for AI agents: ${e.message}`
+        );
+      }
     }
   }
 
@@ -332,11 +360,10 @@ export async function setupAiAgentsGeneratorImpl(
     if (hasAgent('codex') || hasAgent('cursor') || hasAgent('gemini')) {
       const sharedSkillsSrc = join(repoPath, 'generated/.agents');
       if (existsSync(sharedSkillsSrc)) {
-        generateFiles(
+        copyFilesVerbatim(
           tree,
           sharedSkillsSrc,
-          join(options.directory, '.agents'),
-          {}
+          join(options.directory, '.agents')
         );
       }
     }
@@ -358,7 +385,7 @@ export async function setupAiAgentsGeneratorImpl(
       if (hasAgent(agent)) {
         const srcPath = join(repoPath, src);
         if (existsSync(srcPath)) {
-          generateFiles(tree, srcPath, join(options.directory, dest), {});
+          copyFilesVerbatim(tree, srcPath, join(options.directory, dest));
         }
       }
     }
@@ -487,6 +514,20 @@ function withEntries(
   ...values: readonly string[]
 ): string[] {
   return [...new Set([...(existing ?? []), ...values])];
+}
+
+function importsAgentsMd(tree: Tree, claudePath: string): boolean {
+  if (!tree.exists(claudePath)) {
+    return false;
+  }
+  const nxBlock = tree.read(claudePath, 'utf-8').match(rulesRegex)?.[0];
+  return (
+    nxBlock
+      ?.replace(nxRulesMarkerCommentStart, '')
+      .replace(nxRulesMarkerCommentEnd, '')
+      .replace(nxRulesMarkerCommentDescription, '')
+      .trim() === '@AGENTS.md'
+  );
 }
 
 function writeAgentRules(tree: Tree, path: string, writeNxCloudRules: boolean) {

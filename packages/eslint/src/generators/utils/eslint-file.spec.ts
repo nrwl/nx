@@ -11,7 +11,6 @@ import {
   addTypedLintingToFlatConfig,
   findEslintFile,
   inspectTypedLinting,
-  isTypedLintingEnabled,
   lintConfigHasOverride,
   replaceOverridesInLintConfig,
 } from './eslint-file';
@@ -172,8 +171,8 @@ module.exports = [
       expect(readJson(tree, 'package.json').devDependencies)
         .toMatchInlineSnapshot(`
         {
-          "@eslint/compat": "^1.1.1",
-          "@eslint/eslintrc": "^3.0.0",
+          "@eslint/compat": "^2.0.5",
+          "@eslint/eslintrc": "^3.3.0",
           "eslint": "9.0.0",
         }
       `);
@@ -588,7 +587,7 @@ module.exports = [
       addIgnoresToLintConfig(tree, '', ['**/some-dir/**/*']);
 
       expect(tree.read('eslint.config.cjs', 'utf-8')).toMatchInlineSnapshot(`
-        "module.exports = [,
+        "module.exports = [
             {
                 ignores: [
                     "**/some-dir/**/*"
@@ -1715,31 +1714,6 @@ module.exports = [
     });
   });
 
-  describe('isTypedLintingEnabled', () => {
-    it('is enabled by the new flag', () => {
-      expect(isTypedLintingEnabled({ enableTypedLinting: true })).toBe(true);
-    });
-
-    it('falls back to the deprecated setParserOptionsProject flag', () => {
-      expect(isTypedLintingEnabled({ setParserOptionsProject: true })).toBe(
-        true
-      );
-    });
-
-    it('honors the deprecated flag even when enableTypedLinting defaults to false', () => {
-      expect(
-        isTypedLintingEnabled({
-          enableTypedLinting: false,
-          setParserOptionsProject: true,
-        })
-      ).toBe(true);
-    });
-
-    it('is disabled when neither flag is set', () => {
-      expect(isTypedLintingEnabled({})).toBe(false);
-    });
-  });
-
   describe('addTypedLintingToFlatConfig', () => {
     let originalUseFlatConfig: string | undefined;
     beforeEach(() => {
@@ -1909,7 +1883,7 @@ module.exports = [
     });
 
     it('warns and leaves the config untouched when it is not a plain array export', () => {
-      const warn = jest.spyOn(logger, 'warn').mockImplementation(() => {});
+      const warn = vi.spyOn(logger, 'warn').mockImplementation(() => {});
       const original = `export default tseslint.config({ files: ['**/*.ts'], rules: {} });\n`;
       tree.write('libs/test/eslint.config.mjs', original);
 
@@ -1925,7 +1899,7 @@ module.exports = [
     it('warns and leaves the config untouched when a local parserOptions cannot be read', () => {
       // Appending would risk converting an unread `project` setup to the project
       // service, so the config is left for the user to complete.
-      const warn = jest.spyOn(logger, 'warn').mockImplementation(() => {});
+      const warn = vi.spyOn(logger, 'warn').mockImplementation(() => {});
       const original = `export default [{ languageOptions: { parserOptions: makeOptions() } }];\n`;
       tree.write('libs/test/eslint.config.mjs', original);
 

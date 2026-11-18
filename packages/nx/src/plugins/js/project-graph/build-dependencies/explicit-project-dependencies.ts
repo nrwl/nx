@@ -17,26 +17,16 @@ function isRoot(
   return projects[projectName]?.root === '.';
 }
 
-function convertImportToDependency(
+function convertImportToDependencies(
   importExpr: string,
   sourceFile: string,
   source: string,
   type: RawProjectGraphDependency['type'],
   targetProjectLocator: TargetProjectLocator
-): RawProjectGraphDependency | undefined {
-  const target = targetProjectLocator.findProjectFromImport(
-    importExpr,
-    sourceFile
-  );
-  if (!target) {
-    return;
-  }
-  return {
-    source,
-    target,
-    sourceFile,
-    type,
-  };
+): RawProjectGraphDependency[] {
+  return targetProjectLocator
+    .findDependencyTargetsFromImport(importExpr, sourceFile)
+    .map((target) => ({ source, target, sourceFile, type }));
 }
 
 export function buildExplicitTypeScriptDependencies(
@@ -82,44 +72,38 @@ export function buildExplicitTypeScriptDependencies(
     const normalizedFilePath = normalizePath(relative(workspaceRoot, file));
 
     for (const importExpr of staticImportExpressions) {
-      const dependency = convertImportToDependency(
+      for (const dependency of convertImportToDependencies(
         importExpr,
         normalizedFilePath,
         sourceProject,
         DependencyType.static,
         targetProjectLocator
-      );
-      if (!dependency) {
-        continue;
-      }
-
-      // TODO: These edges technically should be allowed but we need to figure out how to separate config files out from root
-      if (
-        isRoot(ctx.projects, dependency.source) ||
-        !isRoot(ctx.projects, dependency.target)
-      ) {
-        res.push(dependency);
+      )) {
+        // TODO: These edges technically should be allowed but we need to figure out how to separate config files out from root
+        if (
+          isRoot(ctx.projects, dependency.source) ||
+          !isRoot(ctx.projects, dependency.target)
+        ) {
+          res.push(dependency);
+        }
       }
     }
     for (const importExpr of dynamicImportExpressions) {
-      const dependency = convertImportToDependency(
+      for (const dependency of convertImportToDependencies(
         importExpr,
         normalizedFilePath,
         sourceProject,
         DependencyType.dynamic,
         targetProjectLocator
-      );
-      if (!dependency) {
-        continue;
-      }
-
-      // TODO: These edges technically should be allowed but we need to figure out how to separate config files out from root
-      if (
-        isRoot(ctx.projects, dependency.source) ||
-        !isRoot(ctx.projects, dependency.target)
-      ) {
-        validateDependency(dependency, ctx);
-        res.push(dependency);
+      )) {
+        // TODO: These edges technically should be allowed but we need to figure out how to separate config files out from root
+        if (
+          isRoot(ctx.projects, dependency.source) ||
+          !isRoot(ctx.projects, dependency.target)
+        ) {
+          validateDependency(dependency, ctx);
+          res.push(dependency);
+        }
       }
     }
   }

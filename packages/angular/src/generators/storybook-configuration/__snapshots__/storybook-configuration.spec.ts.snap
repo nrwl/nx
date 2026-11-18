@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`StorybookConfiguration generator should configure storybook to use webpack 5 1`] = `
+exports[`StorybookConfiguration generator > should configure storybook to use webpack 5 1`] = `
 "import type { StorybookConfig } from '@storybook/angular';
 
 
@@ -30,7 +30,7 @@ export default config;
 "
 `;
 
-exports[`StorybookConfiguration generator should configure storybook with interaction tests and install dependencies 1`] = `
+exports[`StorybookConfiguration generator > should configure storybook with interaction tests and install dependencies 1`] = `
 "import type { Meta, StoryObj } from '@storybook/angular';
 import { TestButton } from './test-button';
 import { expect } from 'storybook/test';
@@ -66,7 +66,7 @@ export const Heading: Story = {
 "
 `;
 
-exports[`StorybookConfiguration generator should configure storybook with interaction tests and install dependencies 2`] = `
+exports[`StorybookConfiguration generator > should configure storybook with interaction tests and install dependencies 2`] = `
 "import type { Meta, StoryObj } from '@storybook/angular';
 import { TestOther } from './test-other';
 import { expect } from 'storybook/test';
@@ -92,7 +92,7 @@ export const Heading: Story = {
 "
 `;
 
-exports[`StorybookConfiguration generator should generate in the correct folder 1`] = `
+exports[`StorybookConfiguration generator > should generate in the correct folder 1`] = `
 [
   ".gitignore",
   ".oxfmtrc.json",
@@ -201,7 +201,7 @@ exports[`StorybookConfiguration generator should generate in the correct folder 
 ]
 `;
 
-exports[`StorybookConfiguration generator should generate the right files 1`] = `
+exports[`StorybookConfiguration generator > should generate the right files 1`] = `
 [
   ".gitignore",
   ".oxfmtrc.json",

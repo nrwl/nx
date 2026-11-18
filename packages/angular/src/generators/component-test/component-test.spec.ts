@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 import '@nx/devkit/internal-testing-utils/mock-project-graph';
 
 import {
@@ -11,21 +12,39 @@ import { componentGenerator } from '../component/component';
 import { generateTestLibrary } from '../utils/testing';
 import { componentTestGenerator } from './component-test';
 import { EOL } from 'node:os';
+import { mockCjsModule } from '@nx/devkit/internal-testing-utils';
+import { createRequire } from 'node:module';
 
-jest.mock('@nx/cypress/internal');
+vi.mock('@nx/cypress/internal');
+// The generator also `require`s @nx/cypress/internal; share the automocks.
+mockCjsModule(import.meta.url, '@nx/cypress/internal', {
+  ...createRequire(import.meta.url)('@nx/cypress/internal'),
+  assertMinimumCypressVersion,
+  getInstalledCypressMajorVersion,
+});
 
 describe('Angular Cypress Component Test Generator', () => {
   let tree: Tree;
-  let mockedAssertMinimumCypressVersion: jest.Mock<
+  let mockedAssertMinimumCypressVersion: Mock<
     ReturnType<typeof assertMinimumCypressVersion>
   > = assertMinimumCypressVersion as never;
-  let mockedInstalledCypressMajorVersion: jest.Mock<
+  let mockedInstalledCypressMajorVersion: Mock<
     ReturnType<typeof getInstalledCypressMajorVersion>
   > = getInstalledCypressMajorVersion as never;
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     // silence warnings about missing .gitignore file
     tree.write('.gitignore', '');
+    // Cypress can't run component tests on Angular 22.2+ yet.
+    // See: https://github.com/cypress-io/cypress/issues/34259
+    updateJson(tree, 'package.json', (json) => {
+      json.dependencies = {
+        ...json.dependencies,
+        '@angular/core': '~22.1.0',
+        '@angular-devkit/build-angular': '~22.1.0',
+      };
+      return json;
+    });
     mockedAssertMinimumCypressVersion.mockReturnValue();
   });
 

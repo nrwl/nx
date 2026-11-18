@@ -1,23 +1,35 @@
+import type { Mock } from 'vitest';
 import { getPruneTargets } from './create-targets';
 import { PNPM_MAJOR_RUNTIME_INPUT } from '@nx/js/internal';
 
-jest.mock('@nx/devkit', () => ({
-  ...jest.requireActual('@nx/devkit'),
-  detectPackageManager: jest.fn(),
+vi.mock('@nx/devkit', async () => ({
+  ...(await vi.importActual<any>('@nx/devkit')),
+  detectPackageManager: vi.fn(),
 }));
+// The real lookup reads the lockfile on disk and probes `bun --version`.
+vi.mock('@nx/js', async () => {
+  const actual = await vi.importActual<any>('@nx/js');
+  return { ...actual, getLockFileName: vi.fn(actual.getLockFileName) };
+});
 
 // Stub the pruning step so the fixture's own lockfile content drives the
 // artifacts; the fixture root carries the lockfile the read resolves to.
-jest.mock('nx/src/plugins/js/lock-file/project-graph-pruning', () => ({
-  ...jest.requireActual('nx/src/plugins/js/lock-file/project-graph-pruning'),
-  pruneProjectGraph: jest.fn((graph) => graph),
+vi.mock('nx/src/plugins/js/lock-file/project-graph-pruning', async () => ({
+  ...(await vi.importActual<any>(
+    'nx/src/plugins/js/lock-file/project-graph-pruning'
+  )),
+  pruneProjectGraph: vi.fn((graph) => graph),
 }));
-jest.mock('nx/src/plugins/js/lock-file/pnpm-parser', () => ({
-  ...jest.requireActual('nx/src/plugins/js/lock-file/pnpm-parser'),
-  stringifyPnpmLockfile: jest.fn(),
+const { stringifyPnpmLockfile } = vi.hoisted(() => ({
+  stringifyPnpmLockfile: vi.fn(),
+}));
+vi.mock('nx/src/plugins/js/lock-file/pnpm-parser', async () => ({
+  ...(await vi.importActual<any>('nx/src/plugins/js/lock-file/pnpm-parser')),
+  stringifyPnpmLockfile,
 }));
 
 import { detectPackageManager } from '@nx/devkit';
+import { getLockFileName } from '@nx/js';
 import { generatePrunedDeployOutput } from '@nx/devkit/internal';
 import {
   mkdirSync,
@@ -43,14 +55,14 @@ function coveredByDeclaredOutput(
 }
 
 describe('getPruneTargets', () => {
-  afterEach(() => jest.resetAllMocks());
+  afterEach(() => vi.resetAllMocks());
 
   it('declares the pnpm-workspace.yaml, patches, and local_path_modules outputs on pnpm', () => {
     // The prune-lockfile executor emits pnpm-workspace.yaml (pnpm 11+ settings),
     // any `pnpm patch` files under patches/, and non-workspace local-path deps
     // under local_path_modules/; all must be declared outputs or a cache replay
     // drops them.
-    (detectPackageManager as jest.Mock).mockReturnValue('pnpm');
+    (detectPackageManager as Mock).mockReturnValue('pnpm');
 
     const targets = getPruneTargets('build', 'dist/my-app');
 
@@ -67,7 +79,7 @@ describe('getPruneTargets', () => {
     // allowBuilds and supportedArchitectures come from these two files and are
     // recorded nowhere in the lockfile, so without them in the hash a revoked
     // approval replays the previous artifact.
-    (detectPackageManager as jest.Mock).mockReturnValue('pnpm');
+    (detectPackageManager as Mock).mockReturnValue('pnpm');
 
     const targets = getPruneTargets('build', 'dist/my-app');
 
@@ -80,8 +92,30 @@ describe('getPruneTargets', () => {
     ]);
   });
 
+  it.each(['bun.lock', 'bun.lockb'])(
+    'declares the text bun.lock, the patches and local_path_modules outputs and hashes the root package.json on Bun (%s)',
+    (rootLockFile) => {
+      (detectPackageManager as Mock).mockReturnValue('bun');
+      (getLockFileName as Mock).mockReturnValue(rootLockFile);
+
+      const targets = getPruneTargets('build', 'dist/my-app');
+
+      expect(targets['prune-lockfile'].outputs).toEqual([
+        '{workspaceRoot}/dist/my-app/package.json',
+        '{workspaceRoot}/dist/my-app/bun.lock',
+        '{workspaceRoot}/dist/my-app/patches',
+        '{workspaceRoot}/dist/my-app/local_path_modules',
+      ]);
+      expect(targets['prune-lockfile'].inputs).toEqual([
+        'default',
+        '^default',
+        '{workspaceRoot}/package.json',
+      ]);
+    }
+  );
+
   it('declares only package.json and the lockfile on npm', () => {
-    (detectPackageManager as jest.Mock).mockReturnValue('npm');
+    (detectPackageManager as Mock).mockReturnValue('npm');
 
     const targets = getPruneTargets('build', 'dist/my-app');
 
@@ -99,7 +133,7 @@ describe('getPruneTargets', () => {
   // prune-lockfile output, or a cache replay on a fresh machine restores only
   // the declared files and the pruned deploy loses the vendored dependency.
   it('declares outputs covering the local-path artifacts the prune-lockfile executor writes', () => {
-    (detectPackageManager as jest.Mock).mockReturnValue('pnpm');
+    (detectPackageManager as Mock).mockReturnValue('pnpm');
 
     const workspaceRoot = mkdtempSync(join(tmpdir(), 'nx-prune-outputs-'));
     try {
@@ -128,9 +162,6 @@ describe('getPruneTargets', () => {
       writeFileSync(
         join(workspaceRoot, 'vendor/dir/index.js'),
         'module.exports = {};'
-      );
-      const { stringifyPnpmLockfile } = jest.requireMock(
-        'nx/src/plugins/js/lock-file/pnpm-parser'
       );
       stringifyPnpmLockfile.mockReturnValue(
         [

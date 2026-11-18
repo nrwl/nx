@@ -2,11 +2,13 @@ import { performance } from 'perf_hooks';
 
 import { commandsObject } from '../src/command-line/nx-commands';
 import { WorkspaceTypeAndRoot } from '../src/utils/find-workspace-root';
+import { resolveInstalledPackage } from '../src/utils/installation-directory';
 import { stripIndents } from '../src/utils/strip-indents';
 import { daemonClient } from '../src/daemon/client/client';
 import { confirmationPrompt } from '../src/utils/prompt-helpers';
 import { output } from '../src/utils/output';
 import { flushAnalytics } from '../src/analytics';
+import { isCI } from '../src/utils/is-ci';
 
 /**
  * Nx is being run inside a workspace.
@@ -127,6 +129,12 @@ function shouldDelegateToAngularCLI() {
 }
 
 async function ensureNxConsoleInstalledViaDaemon(): Promise<void> {
+  // Asking the daemon makes a fresh daemon install nx@latest in the background,
+  // so skip it whenever the prompt could not be shown anyway.
+  if (!process.stdout.isTTY || isCI()) {
+    return;
+  }
+
   // Only proceed if daemon is available
   if (!daemonClient.enabled() || !(await daemonClient.isServerAvailable())) {
     return;
@@ -136,7 +144,7 @@ async function ensureNxConsoleInstalledViaDaemon(): Promise<void> {
   const status = await daemonClient.getNxConsoleStatus();
 
   // If we should prompt the user
-  if (status.shouldPrompt && process.stdout.isTTY) {
+  if (status.shouldPrompt) {
     output.log({
       title: "Install Nx's official editor extension to:",
       bodyLines: [
@@ -195,10 +203,11 @@ To clear the cache, you can delete the ".angular/cache" directory (or the direct
 To update the cache configuration, you can directly update the relevant options in your "nx.json" file (https://angular.dev/reference/configs/workspace-config#cache-options).`);
   } else {
     try {
-      // nx-ignore-next-line
-      const cli = require.resolve('@angular/cli/lib/init.js', {
-        paths: [workspace.dir],
-      });
+      const cli = resolveInstalledPackage(
+        '@angular/cli/lib/init.js',
+        [workspace.dir],
+        workspace.dir
+      );
       require(cli);
     } catch (e) {
       console.error(

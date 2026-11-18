@@ -7,7 +7,6 @@ import {
   addDependenciesToPackageJson,
   createProjectGraphAsync,
   formatFiles,
-  runTasksInSerial,
   type ProjectConfiguration,
   type Tree,
   logger as devkitLogger,
@@ -79,7 +78,7 @@ export async function convertToInferred(tree: Tree, options: Schema) {
       .flat()
       .find((v) => v.includes('@nx/webpack:convert-config-to-webpack-plugin'));
 
-    if (convertMessage.length > 0) {
+    if (convertMessage?.length > 0) {
       logger.flushLogs((message) => !convertMessage.includes(message));
       throw new Error(convertMessage);
     } else {
@@ -102,9 +101,11 @@ export async function convertToInferred(tree: Tree, options: Schema) {
     await formatFiles(tree);
   }
 
-  return runTasksInSerial(installCallback, () => {
-    migrationContext.logger.flushLogs();
-  });
+  // Flushed now rather than in the callback so remove-deprecated-executors, which
+  // skips the install callback, still prints these.
+  migrationContext.logger.flushLogs();
+
+  return installCallback;
 }
 
 function skipProjectFilterFactory(tree: Tree) {

@@ -42,7 +42,6 @@ export default [
             '@nx/vite',
             '@nx/vitest',
             '@nx/webpack',
-            '@module-federation/node',
             '@phenomnomnominal/tsquery',
             '@pmmmwh/react-refresh-webpack-plugin',
             '@svgr/rollup',

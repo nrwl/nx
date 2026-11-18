@@ -2,18 +2,18 @@ import {
   checkFilesDoNotExist,
   checkFilesExist,
   cleanupProject,
+  configureTargetOptions,
   createFile,
-  ensureCypressInstallation,
   killPorts,
   listFiles,
   newProject,
   readFile,
+  reservePort,
   runCLI,
   runCLIAsync,
-  runE2ETests,
   uniq,
   updateFile,
-  updateJson,
+  shouldRunPlaywrightTests,
 } from '@nx/e2e-utils';
 import { readFileSync } from 'fs-extra';
 import { join } from 'path';
@@ -21,7 +21,7 @@ import { join } from 'path';
 describe('React Applications', () => {
   let proj: string;
   describe('Crystal Supported Tests', () => {
-    beforeAll(async () => {
+    beforeAll(() => {
       proj = newProject({
         keepBackup: true,
         packages: [
@@ -34,16 +34,16 @@ describe('React Applications', () => {
           '@nx/eslint',
         ],
       });
-      await ensureCypressInstallation();
     });
 
     afterAll(() => cleanupProject());
     it('should be able to use Vite to build and test apps', async () => {
       const appName = uniq('app');
       const libName = uniq('lib');
+      const port = await reservePort();
 
       runCLI(
-        `generate @nx/react:app apps/${appName} --name=${appName} --bundler=vite --no-interactive --skipFormat --linter=eslint --unitTestRunner=vitest`
+        `generate @nx/react:app apps/${appName} --name=${appName} --bundler=vite --no-interactive --skipFormat --linter=eslint --unitTestRunner=vitest --port=${port}`
       );
       runCLI(
         `generate @nx/react:lib libs/${libName} --bundler=none --no-interactive --unit-test-runner=vitest --skipFormat --linter=eslint`
@@ -65,14 +65,26 @@ describe('React Applications', () => {
 
       checkFilesExist(`dist/apps/${appName}/index.html`);
 
-      if (await runE2ETests()) {
-        const e2eResults = runCLI(`e2e ${appName}-e2e`);
-        expect(e2eResults).toContain('Successfully ran target e2e for project');
-        expect(await killPorts()).toBeTruthy();
+      if (await shouldRunPlaywrightTests()) {
+        const restoreServerOptions = configureTargetOptions(
+          ['dev', 'preview'],
+          {
+            strictPort: true,
+          }
+        );
+        try {
+          const e2eResults = runCLI(`e2e ${appName}-e2e`);
+          expect(e2eResults).toContain(
+            'Successfully ran target e2e for project'
+          );
+          expect(await killPorts(port)).toBeTruthy();
+        } finally {
+          restoreServerOptions();
+        }
       }
     }, 250_000);
 
-    it('should be able to generate a react app + lib (with CSR and SSR)', async () => {
+    it('should be able to generate a react app + lib', async () => {
       const appName = uniq('app');
       const libName = uniq('lib');
       const libWithNoComponents = uniq('lib');
@@ -151,19 +163,6 @@ describe('React Applications', () => {
         checkSourceMap: true,
         checkStyles: true,
         checkLinter: true,
-        // TODO(jack): check why Playwright tests are timing out in CI
-        checkE2E: false,
-      });
-
-      // Set up SSR and check app
-      runCLI(`generate @nx/react:setup-ssr ${appName} --skipFormat`);
-      checkFilesExist(`apps/${appName}/src/main.server.tsx`);
-      checkFilesExist(`apps/${appName}/server.ts`);
-
-      await testGeneratedApp(appName, {
-        checkSourceMap: false,
-        checkStyles: false,
-        checkLinter: false,
         // TODO(jack): check why Playwright tests are timing out in CI
         checkE2E: false,
       });
@@ -275,10 +274,8 @@ describe('React Applications', () => {
     });
   });
 
-  // TODO(colum): Revisit when cypress --js works with crystal
-  describe('Non-Crystal Tests', () => {
-    beforeAll(async () => {
-      process.env.NX_ADD_PLUGINS = 'false';
+  describe('Webpack apps', () => {
+    beforeAll(() => {
       proj = newProject({
         keepBackup: true,
         packages: [
@@ -289,12 +286,10 @@ describe('React Applications', () => {
           '@nx/eslint',
         ],
       });
-      await ensureCypressInstallation();
     });
 
     afterAll(() => {
       cleanupProject();
-      delete process.env.NX_ADD_PLUGINS;
     });
 
     it('should be able to use JS and JSX', async () => {
@@ -340,12 +335,12 @@ describe('React Applications', () => {
       );
 
       // make sure stylePreprocessorOptions works
-      updateJson(join('apps', appName, 'project.json'), (config) => {
-        config.targets.build.options.stylePreprocessorOptions = {
-          includePaths: ['libs/shared/lib'],
-        };
-        return config;
-      });
+      updateFile(`apps/${appName}/webpack.config.js`, (content) =>
+        content.replace(
+          'new NxAppWebpackPlugin({',
+          `new NxAppWebpackPlugin({ stylePreprocessorOptions: { includePaths: ['libs/shared/lib'] },`
+        )
+      );
       updateFile(
         `apps/${appName}/src/base.${style}`,
         `html { font-family: "Comic Sans MS"; }`
@@ -363,9 +358,12 @@ describe('React Applications', () => {
         `body { font-family: "Comic Sans MS"; }`
       );
 
-      runCLI(`build ${appName} --outputHashing none`);
+      runCLI(`build ${appName}`);
 
-      expect(readFile(`dist/apps/${appName}/styles.css`)).toMatch(
+      const stylesFile = listFiles(`dist/apps/${appName}`).find((f) =>
+        /^styles\..*css$/.test(f)
+      );
+      expect(readFile(`dist/apps/${appName}/${stylesFile}`)).toMatch(
         /Comic Sans MS/
       );
     });
@@ -409,10 +407,12 @@ describe('React Applications', () => {
         expect(buildResults.combinedOutput).toMatch(/HELLO FROM LIB/);
 
         // Only load app PostCSS config
-        updateJson(`apps/${appName}/project.json`, (json) => {
-          json.targets.build.options.postcssConfig = `apps/${appName}/postcss.config.js`;
-          return json;
-        });
+        updateFile(`apps/${appName}/webpack.config.js`, (content) =>
+          content.replace(
+            'new NxAppWebpackPlugin({',
+            `new NxAppWebpackPlugin({ postcssConfig: 'apps/${appName}/postcss.config.js',`
+          )
+        );
 
         buildResults = await runCLIAsync(`build ${appName}`);
 
@@ -456,10 +456,9 @@ async function testGeneratedApp(
     'Test Suites: 1 passed, 1 total'
   );
 
-  if (opts.checkE2E && (await runE2ETests())) {
+  if (opts.checkE2E && (await shouldRunPlaywrightTests())) {
     const e2eResults = runCLI(`e2e ${appName}-e2e`);
     expect(e2eResults).toContain('Successfully ran target e2e');
-    expect(await killPorts()).toBeTruthy();
   }
 }
 

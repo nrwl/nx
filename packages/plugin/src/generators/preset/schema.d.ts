@@ -4,7 +4,6 @@ export interface PresetGeneratorSchema {
   pluginName: string;
   createPackageName?: string;
   useProjectJson?: boolean;
-  addPlugin?: boolean;
   linter?: LinterType;
 }
 

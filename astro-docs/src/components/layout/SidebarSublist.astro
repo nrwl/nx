@@ -27,11 +27,13 @@ export type SidebarEntry = SidebarLink | SidebarGroup;
 
 interface Props {
   sublist: SidebarEntry[];
+  currentGroupPath?: SidebarEntry[];
 
   nested?: boolean;
 }
 
-const { sublist, nested } = Astro.props;
+const { sublist, currentGroupPath = [], nested } = Astro.props;
+const currentGroup = currentGroupPath.at(-1);
 
 // Copied from https://github.com/withastro/starlight/blob/46524ac/packages/starlight/utils/navigation.ts#L447
 function flattenSidebar(entries: SidebarEntry[]): SidebarEntry[] {
@@ -82,10 +84,14 @@ function getIconPath(iconName: string | undefined): string | null {
             <details
               open={
                 flattenSidebar(entry.entries).some((i: any) => i.isCurrent) ||
+                currentGroupPath.includes(entry) ||
                 !entry.collapsed
               }
             >
-              <summary class={icon ? 'py-2 pl-0' : ''}>
+              <summary
+                class={icon ? 'py-2 pl-0' : ''}
+                aria-current={entry === currentGroup && 'page'}
+              >
                 <div class="group-label">
                   {icon && (
                     <img
@@ -106,7 +112,11 @@ function getIconPath(iconName: string | undefined): string | null {
                 </div>
                 <Icon name="right-caret" class="caret" size="1.25rem" />
               </summary>
-              <Astro.self sublist={entry.entries} nested />
+              <Astro.self
+                sublist={entry.entries}
+                currentGroupPath={currentGroupPath}
+                nested
+              />
             </details>
           )}
         </li>

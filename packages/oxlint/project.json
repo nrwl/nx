@@ -9,6 +9,13 @@
       "inputs": ["copyReadme"],
       "outputs": ["{projectRoot}/README.md"],
       "dependsOn": ["^build", "build-base"]
+    },
+    "test": {
+      "inputs": [
+        "...",
+        "{workspaceRoot}/tools/vitest/**/*",
+        "{workspaceRoot}/scripts/jest-mocks/clack-prompts.js"
+      ]
     }
   }
 }

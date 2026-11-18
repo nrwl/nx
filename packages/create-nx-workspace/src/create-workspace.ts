@@ -1,4 +1,4 @@
-import { existsSync, unlinkSync } from 'node:fs';
+import { existsSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs';
 import { join } from 'path';
 import { createEmptyWorkspace } from './create-empty-workspace';
 import { createPreset } from './create-preset';
@@ -25,6 +25,10 @@ import { getPackageNameFromThirdPartyPreset } from './utils/preset/get-third-par
 import { Preset } from './utils/preset/preset';
 import { downloadTemplate } from './utils/template/download-template';
 import {
+  removeTemplateAiAgents,
+  shouldRemoveTemplateAiAgents,
+} from './utils/template/remove-template-ai-agents';
+import {
   addConnectUrlToReadme,
   amendOrCommitReadme,
 } from './utils/template/update-readme';
@@ -32,6 +36,7 @@ import { execAndWait } from './utils/child-process-utils';
 import {
   generatePackageManagerFiles,
   getPackageManagerCommand,
+  getPackageManagerVersion,
 } from './utils/package-manager';
 import { isAiAgent, logProgress } from './utils/ai/ai-output';
 import { confirmThirdPartyPreset } from './internal-utils/prompts';
@@ -125,8 +130,20 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
         unlinkSync(npmLockPath);
       }
 
+      if (shouldRemoveTemplateAiAgents(options, rawArgs)) {
+        removeTemplateAiAgents(directory);
+      }
+
       // Generate package manager specific files (e.g., .yarnrc.yml for Yarn Berry)
       generatePackageManagerFiles(directory, packageManager);
+
+      const packageJsonPath = join(directory, 'package.json');
+      const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf-8'));
+      packageJson.packageManager = `${packageManager}@${getPackageManagerVersion(packageManager)}`;
+      writeFileSync(
+        packageJsonPath,
+        JSON.stringify(packageJson, null, 2) + '\n'
+      );
 
       // Install dependencies with the user's package manager
       if (aiMode) {
@@ -383,7 +400,7 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
 
     // Auto-open the Cloud setup URL in the browser when user selected 'yes'
     if (!options.skipCloudConnect) {
-      await openCloudSetupUrl(connectUrl);
+      openCloudSetupUrl({ connectUrl, workspaceDirectory: directory });
     }
   } else if (isTemplate && nxCloud === 'skip') {
     // Strip marker comments from README
@@ -406,7 +423,6 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
 }
 
 function setAnalyticsPreference(directory: string, enabled: boolean): void {
-  const { readFileSync, writeFileSync } = require('fs');
   const nxJsonPath = join(directory, 'nx.json');
   const nxJson = JSON.parse(readFileSync(nxJsonPath, 'utf-8'));
   nxJson.analytics = enabled;

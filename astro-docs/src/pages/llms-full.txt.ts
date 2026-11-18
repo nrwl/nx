@@ -70,6 +70,17 @@ export const GET: APIRoute = async ({ site }) => {
     }
   }
 
+  const publicApi = await getCollection('nx-cloud-public-api');
+  for (const doc of publicApi) {
+    const slug = doc.data.slug;
+    entries.push({
+      slug,
+      title: doc.data.title,
+      content: doc.body || '',
+      section: slug.split('/')[0] || 'reference',
+    });
+  }
+
   // Get plugin docs (executors, generators for each plugin)
   try {
     const pluginDocs = await getCollection('plugin-docs');

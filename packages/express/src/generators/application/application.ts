@@ -6,7 +6,6 @@ import {
 import {
   addDependenciesToPackageJson,
   formatFiles,
-  readNxJson,
   runTasksInSerial,
   toJS,
   updateJson,
@@ -59,10 +58,30 @@ app.get('/api', (req, res) => {
 });
 
 const port = process.env.PORT || 3333;
-const server = app.listen(port, () => {
+const server = app.listen(port, async (error${options.js ? '' : '?: Error'}) => {
+  // A failed listen also reaches the 'error' listener below
+  if (error) {
+    return;
+  }
   console.log(\`Listening at http://localhost:\${port}/api\`);
+  // Set when Nx waits for this server to be ready
+  if (process.env.NX_READY_SIGNAL_SOCKET) {
+    try {
+      // Function keeps TypeScript and bundlers from rewriting or bundling the import
+      const load = new Function('s', 'return import(s)')${options.js ? '' : ' as (s: string) => Promise<{ emitReadySignal(server: unknown): boolean }>'};
+      (await load('@nx/js/ready-signal')).emitReadySignal(server);
+    } catch {
+      // @nx/js isn't installed
+    }
+  }
 });
-server.on('error', console.error);
+server.on('error', (error) => {
+  console.error(error);
+  // Errors after listen, such as a failed accept, leave the server running
+  if (!server.listening) {
+    process.exit(1);
+  }
+});
 `
   );
 
@@ -73,7 +92,6 @@ server.on('error', console.error);
 
 export async function applicationGenerator(tree: Tree, schema: Schema) {
   return await applicationGeneratorInternal(tree, {
-    addPlugin: false,
     useProjectJson: true,
     ...schema,
   });
@@ -121,12 +139,6 @@ async function normalizeOptions(
       projectType: 'application',
       directory: options.directory,
     });
-  const nxJson = readNxJson(host);
-  const addPlugin =
-    process.env.NX_ADD_PLUGINS !== 'false' &&
-    nxJson.useInferencePlugins !== false;
-  options.addPlugin ??= addPlugin;
-
   const useProjectJson =
     options.useProjectJson ?? !isUsingTsSolutionSetup(host);
 

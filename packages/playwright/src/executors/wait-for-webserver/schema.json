@@ -4,6 +4,7 @@
   "title": "Schema for Playwright Wait For Web Server Executor",
   "description": "Waits for the E2E web server(s) to be ready.",
   "type": "object",
+  "x-deprecated": "The `@nx/playwright:wait-for-webserver` executor is deprecated and will be removed in Nx v25. The e2e targets wait for the dev server's `readyWhen` instead.",
   "properties": {
     "servers": {
       "type": "array",

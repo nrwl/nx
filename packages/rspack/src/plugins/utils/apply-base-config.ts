@@ -1,5 +1,6 @@
 import * as path from 'path';
-import { type ExecutorContext } from '@nx/devkit';
+import { type ExecutorContext, readJsonFile } from '@nx/devkit';
+import { existsSync } from 'fs';
 import { LicenseWebpackPlugin } from 'license-webpack-plugin';
 import type {
   Compiler,
@@ -17,11 +18,16 @@ import { GeneratePackageJsonPlugin } from './plugins/generate-package-json-plugi
 import { getOutputHashFormat } from './hash-format';
 import { NxTsconfigPathsRspackPlugin } from './plugins/nx-tsconfig-paths-rspack-plugin';
 import { getTerserEcmaVersion } from './get-terser-ecma-version';
+import {
+  getBrowserslistTargets,
+  getUnsupportedEnvironmentFeatures,
+} from './get-browserslist-targets';
 import nodeExternals = require('webpack-node-externals');
 import { NormalizedNxAppRspackPluginOptions } from './models';
 import { isUsingTsSolutionSetup } from '@nx/js/internal';
 import { getNonBuildableLibs } from './get-non-buildable-libs';
 import { isServeMode } from '../../utils/is-serve-mode';
+import { warnUnsupportedTransformers } from './warn-unsupported-transformers';
 
 const IGNORED_RSPACK_WARNINGS = [
   /The comment file/i,
@@ -52,6 +58,8 @@ export function applyBaseConfig(
     compiler?: Compiler;
   } = {}
 ): void {
+  const hasTransformers = !!options.transformers?.length;
+
   // Defaults that was applied from executor schema previously.
   options.externalDependencies ??= 'all';
   options.fileReplacements ??= [];
@@ -68,6 +76,8 @@ export function applyBaseConfig(
 
   // Some of the options only work during actual tasks, not when reading the rspack config during CreateNodes.
   if (global.NX_GRAPH_CREATION) return;
+
+  warnUnsupportedTransformers(hasTransformers, options.projectRoot);
 
   applyNxDependentConfig(options, config, { useNormalizedEntry }, rspackCore);
 }
@@ -115,7 +125,10 @@ function applyNxIndependentConfig(
   config.devtool =
     options.sourceMap === true ? 'source-map' : options.sourceMap;
 
-  const existingOutputConfig = config.output as Output;
+  // v1 configs may still carry libraryTarget, which v2's Output type dropped.
+  const existingOutputConfig = config.output as Output & {
+    libraryTarget?: string;
+  };
   const existingLibraryTarget = existingOutputConfig?.libraryTarget;
   const existingLibraryType =
     typeof existingOutputConfig?.library === 'object' &&
@@ -172,16 +185,16 @@ function applyNxIndependentConfig(
     clean: config.output?.clean ?? true,
   };
 
-  config.watch = options.watch;
+  config.watch = options.watch ?? config.watch;
 
   config.watchOptions = {
     poll: options.poll,
   };
 
-  // TODO(v24): drop once @rspack/core v1 is out of the support window.
+  // TODO(v25): drop once @rspack/core v1 is out of the support window (NXC-5161).
   // v2 removed top-level `profile`; Rsdoctor replaces it.
   if (options.statsJson && installedRspackMajor < 2) {
-    config.profile = true;
+    (config as { profile?: boolean }).profile = true;
   }
 
   config.performance = {
@@ -213,6 +226,10 @@ function applyNxIndependentConfig(
                 // this needs to be false to allow toplevel variables to be used in the global scope
                 // important especially for module-federation which operates as such
                 module: false,
+                // Keeps SWC from hoisting a callback passed in a class field
+                // initializer into one binding shared by all instances:
+                // https://github.com/swc-project/swc/issues/12380
+                compress: { inline: 0, reduce_funcs: false },
                 mangle: {
                   keep_classnames: true,
                 },
@@ -393,6 +410,7 @@ function applyNxDependentConfig(
   }
 
   if (options.extractLicenses) {
+    const projectPackageName = readProjectPackageName(options);
     plugins.push(
       new LicenseWebpackPlugin({
         stats: {
@@ -401,6 +419,10 @@ function applyNxDependentConfig(
         },
         perChunkOutput: false,
         outputFilename: `3rdpartylicenses.txt`,
+        // Loader-prefixed `data:` modules (the Module Federation runtime) resolve
+        // to the package.json in the cwd, which is the project root.
+        excludedPackageTest: (packageName: string) =>
+          !!projectPackageName && packageName === projectPackageName,
       }) as unknown as RspackPluginInstance
     );
   }
@@ -500,6 +522,25 @@ function applyNxDependentConfig(
         cache,
       }).cache
     : cache;
+  const projectRoot = path.join(options.root, options.projectRoot);
+  const browserslistTargets = getBrowserslistTargets(
+    config.target,
+    projectRoot
+  );
+  if (browserslistTargets) {
+    // For `web`, rspack writes its runtime code with arrow functions and other modern syntax.
+    config.output = {
+      ...config.output,
+      environment: {
+        ...getUnsupportedEnvironmentFeatures(
+          rspackCore,
+          projectRoot,
+          browserslistTargets.queries
+        ),
+        ...config.output?.environment,
+      },
+    };
+  }
   config.module = {
     ...config.module,
     rules: [
@@ -535,6 +576,9 @@ function applyNxDependentConfig(
 
         type: 'javascript/auto',
         options: {
+          ...(browserslistTargets
+            ? { env: { targets: browserslistTargets.swc } }
+            : {}),
           jsc: {
             parser: {
               syntax: 'typescript',
@@ -563,4 +607,18 @@ function applyNxDependentConfig(
 
   config.plugins ??= [];
   config.plugins.push(...plugins);
+}
+
+function readProjectPackageName(
+  options: NormalizedNxAppRspackPluginOptions
+): string | undefined {
+  const packageJsonPath = path.join(
+    options.root,
+    options.projectRoot,
+    'package.json'
+  );
+  if (!existsSync(packageJsonPath)) {
+    return undefined;
+  }
+  return readJsonFile(packageJsonPath).name;
 }

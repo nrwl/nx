@@ -1,11 +1,13 @@
 import {
   calculateHashesForCreateNodes,
   loadConfigFile,
+  getDaemonClientEnvGeneration,
   getNamedInputs,
   hashObject,
   workspaceDataDirectory,
   PluginCache,
   globWithWorkspaceContext,
+  applyTestFileDirectives,
 } from '@nx/devkit/internal';
 import {
   AggregateCreateNodesError,
@@ -24,6 +26,7 @@ import {
 import { getLockFileName } from '@nx/js';
 import { readdirSync } from 'fs';
 import { dirname, join, relative, resolve } from 'path';
+import * as posix from 'node:path/posix';
 import { NX_PLUGIN_OPTIONS } from '../utils/constants';
 
 export interface CypressPluginOptions {
@@ -32,6 +35,14 @@ export interface CypressPluginOptions {
   openTargetName?: string;
   componentTestingTargetName?: string;
   ciComponentTestingTargetName?: string;
+  /**
+   * Wait for the web server task's `readyWhen` and test against the URL it
+   * reports. Defaults to `true`.
+   *
+   * @deprecated Leave it unset to wait for the web server task's `readyWhen`,
+   * the only behavior in Nx 25. This option will be removed in Nx 25.
+   */
+  waitForServerReady?: boolean;
 }
 
 const cypressConfigGlob = '**/cypress.config.{js,ts,mjs,cjs}';
@@ -59,6 +70,10 @@ export const createNodes: CreateNodes<CypressPluginOptions> = [
     const pmc = getPackageManagerCommand(packageManager);
     const lockFileName = getLockFileName(packageManager);
     const normalizedOptions = normalizeOptions(options);
+    // A generated config can read `CI`, which no file hash covers. Other vars
+    // stay out of the key, since loading a config can write them.
+    const ambientCI = process.env.CI;
+    const ambientEnvGeneration = getDaemonClientEnvGeneration();
 
     try {
       const { entries, preErrors } = await filterCypressConfigs(
@@ -68,7 +83,7 @@ export const createNodes: CreateNodes<CypressPluginOptions> = [
 
       const projectHashes = await calculateHashesForCreateNodes(
         entries.map((e) => e.projectRoot),
-        normalizedOptions,
+        { ...normalizedOptions, ambientCI },
         context,
         entries.map(() => [lockFileName])
       );
@@ -105,7 +120,14 @@ export const createNodes: CreateNodes<CypressPluginOptions> = [
       }
       return results;
     } finally {
-      pluginCache.writeToDisk();
+      // Targets built after the daemon applied another client's env, or after
+      // `CI` changed, would be cached under the wrong key.
+      if (
+        getDaemonClientEnvGeneration() === ambientEnvGeneration &&
+        process.env.CI === ambientCI
+      ) {
+        pluginCache.writeToDisk();
+      }
     }
   },
 ];
@@ -152,7 +174,7 @@ async function createNodesInternal(
 
 function getTargetOutputs(outputs: string[], subfolder?: string): string[] {
   return outputs.map((output) =>
-    subfolder ? join(output, subfolder) : output
+    subfolder ? posix.join(output, subfolder) : output
   );
 }
 
@@ -332,10 +354,18 @@ async function buildCypressTargets(
     ...cypressConfig.e2e?.env,
   };
 
-  const webServerCommands: Record<string, string> =
+  const commands: Record<string, string> =
     pluginPresetOptions?.webServerCommands;
+  // A copy, since `default` is deleted below and configs can share the object.
+  const webServerCommands: Record<string, string> = commands && {
+    ...commands,
+    // The spread skips an inherited `default`, which the targets use.
+    ...(commands.default ? { default: commands.default } : {}),
+  };
   const shouldReuseExistingServer =
     pluginPresetOptions?.reuseExistingServer ?? true;
+  const waitForServer: { waitFor?: 'ready' } =
+    options.waitForServerReady === false ? {} : { waitFor: 'ready' };
 
   const namedInputs = getNamedInputs(projectRoot, context);
 
@@ -351,7 +381,7 @@ async function buildCypressTargets(
         env: { TS_NODE_COMPILER_OPTIONS: tsNodeCompilerOptions },
       },
       cache: true,
-      inputs: getInputs(namedInputs),
+      inputs: [...getInputs(namedInputs), { env: 'CI' }],
       outputs: getOutputs(
         projectRoot,
         cypressConfig,
@@ -379,6 +409,7 @@ async function buildCypressTargets(
           {
             projects: [webServerCommandTask.project],
             target: webServerCommandTask.target,
+            ...waitForServer,
           },
         ];
       } else {
@@ -493,11 +524,19 @@ async function buildCypressTargets(
             {
               target: ciWebServerCommandTask.target,
               projects: [ciWebServerCommandTask.project],
+              ...waitForServer,
             },
           ];
         } else {
           targets[targetName].parallelism = false;
         }
+
+        targets[targetName] = applyTestFileDirectives(
+          targets[targetName],
+          context.workspaceRoot,
+          file,
+          { ignoreServerInputs: true }
+        );
       }
 
       targets[options.ciTargetName] = {
@@ -744,15 +783,15 @@ async function getSpecFilesAndPatternsForTestType(
     cypressConfig[testType].specPattern ??
     defaultPatterns[testType].specPattern;
   const specPatterns = Array.isArray(specPattern)
-    ? specPattern.map((p) => join(projectRoot, p))
-    : [join(projectRoot, specPattern)];
+    ? specPattern.map((p) => posix.join(projectRoot, p))
+    : [posix.join(projectRoot, specPattern)];
 
   const excludeSpecPattern =
     cypressConfig[testType].excludeSpecPattern ??
     defaultPatterns[testType].excludeSpecPattern;
   const excludeSpecPatterns: string[] = Array.isArray(excludeSpecPattern)
-    ? excludeSpecPattern.map((p) => join(projectRoot, p))
-    : [join(projectRoot, excludeSpecPattern)];
+    ? excludeSpecPattern.map((p) => posix.join(projectRoot, p))
+    : [posix.join(projectRoot, excludeSpecPattern)];
   const specFiles = await globWithWorkspaceContext(
     workspaceRoot,
     specPatterns,

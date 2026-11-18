@@ -1,19 +1,27 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`@nx/vite:configuration js library with --bundler=vite should add build and test targets with vite and vitest 1`] = `
+exports[`@nx/vite:configuration > js library with --bundler=vite > should add build and test targets with vite and vitest 1`] = `
 "/// <reference types='vitest' />
 import { defineConfig } from 'vite';
 import dts from 'vite-plugin-dts';
 import * as path from 'path';
-import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
-import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
 export default defineConfig(() => ({
   root: import.meta.dirname,
   cacheDir: '../node_modules/.vite/my-lib',
+  resolve: {
+    tsconfigPaths: true,
+  },
   plugins: [
-    nxViteTsPaths(),
-    nxCopyAssetsPlugin(['*.md']),
+    import('vite-plugin-static-copy').then(({ viteStaticCopy }) =>
+      viteStaticCopy({
+        targets: [
+          { src: '*.md', dest: '.' },
+          { src: 'package.json', dest: '.', overwrite: false },
+        ],
+        silent: true,
+      }),
+    ),
     dts({
       entryRoot: 'src',
       tsconfigPath: path.join(import.meta.dirname, 'tsconfig.lib.json'),
@@ -22,7 +30,7 @@ export default defineConfig(() => ({
   ],
   // Uncomment this if you are using workers.
   // worker: {
-  //   plugins: () => [ nxViteTsPaths() ],
+  //  plugins: [],
   // },
   // Configuration for building your library.
   // See: https://vite.dev/guide/build.html#library-mode
@@ -63,7 +71,7 @@ export default defineConfig(() => ({
 "
 `;
 
-exports[`@nx/vite:configuration js library with --bundler=vite should add build and test targets with vite and vitest 2`] = `
+exports[`@nx/vite:configuration > js library with --bundler=vite > should add build and test targets with vite and vitest 2`] = `
 "# my-lib
 
 This library was generated with [Nx](https://nx.dev).
@@ -78,7 +86,7 @@ Run \`nx test my-lib\` to execute the unit tests via [Vitest](https://vitest.dev
 "
 `;
 
-exports[`@nx/vite:configuration js library with --bundler=vite should add build and test targets with vite and vitest 3`] = `
+exports[`@nx/vite:configuration > js library with --bundler=vite > should add build and test targets with vite and vitest 3`] = `
 "{
   "extends": "./tsconfig.json",
   "compilerOptions": {
@@ -105,7 +113,7 @@ exports[`@nx/vite:configuration js library with --bundler=vite should add build 
 "
 `;
 
-exports[`@nx/vite:configuration js library with --bundler=vite should respect provided unitTestRunner="jest" 1`] = `
+exports[`@nx/vite:configuration > js library with --bundler=vite > should respect provided unitTestRunner='jest' 1`] = `
 "# my-lib
 
 This library was generated with [Nx](https://nx.dev).
@@ -120,7 +128,7 @@ Run \`nx test my-lib\` to execute the unit tests via [Jest](https://jestjs.io).
 "
 `;
 
-exports[`@nx/vite:configuration js library with --bundler=vite should respect provided unitTestRunner="jest" 2`] = `
+exports[`@nx/vite:configuration > js library with --bundler=vite > should respect provided unitTestRunner='jest' 2`] = `
 "{
   "extends": "./tsconfig.json",
   "compilerOptions": {
@@ -134,7 +142,7 @@ exports[`@nx/vite:configuration js library with --bundler=vite should respect pr
 "
 `;
 
-exports[`@nx/vite:configuration js library with --bundler=vite should respect provided unitTestRunner="jest" 3`] = `
+exports[`@nx/vite:configuration > js library with --bundler=vite > should respect provided unitTestRunner='jest' 3`] = `
 "module.exports = {
   displayName: 'my-lib',
   preset: '../jest.preset.js',
@@ -147,7 +155,7 @@ exports[`@nx/vite:configuration js library with --bundler=vite should respect pr
 "
 `;
 
-exports[`@nx/vite:configuration js library with --bundler=vite should respect provided unitTestRunner="none" 1`] = `
+exports[`@nx/vite:configuration > js library with --bundler=vite > should respect provided unitTestRunner='none' 1`] = `
 "# my-lib
 
 This library was generated with [Nx](https://nx.dev).
@@ -158,7 +166,7 @@ Run \`nx build my-lib\` to build the library.
 "
 `;
 
-exports[`@nx/vite:configuration js library with --bundler=vite should respect provided unitTestRunner="none" 2`] = `
+exports[`@nx/vite:configuration > js library with --bundler=vite > should respect provided unitTestRunner='none' 2`] = `
 "{
   "extends": "./tsconfig.json",
   "compilerOptions": {
@@ -171,22 +179,30 @@ exports[`@nx/vite:configuration js library with --bundler=vite should respect pr
 "
 `;
 
-exports[`@nx/vite:configuration library mode should add config for building library 1`] = `
+exports[`@nx/vite:configuration > library mode > should add config for building library 1`] = `
 "/// <reference types='vitest' />
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import dts from 'vite-plugin-dts';
 import * as path from 'path';
-import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
-import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
 export default defineConfig(() => ({
   root: import.meta.dirname,
   cacheDir: '../../node_modules/.vite/libs/react-lib-nonb-jest',
+  resolve: {
+    tsconfigPaths: true,
+  },
   plugins: [
     react(),
-    nxViteTsPaths(),
-    nxCopyAssetsPlugin(['*.md']),
+    import('vite-plugin-static-copy').then(({ viteStaticCopy }) =>
+      viteStaticCopy({
+        targets: [
+          { src: '*.md', dest: '.' },
+          { src: 'package.json', dest: '.', overwrite: false },
+        ],
+        silent: true,
+      }),
+    ),
     dts({
       entryRoot: 'src',
       tsconfigPath: path.join(import.meta.dirname, 'tsconfig.lib.json'),
@@ -195,7 +211,7 @@ export default defineConfig(() => ({
   ],
   // Uncomment this if you are using workers.
   // worker: {
-  //   plugins: () => [ nxViteTsPaths() ],
+  //  plugins: [],
   // },
   // Configuration for building your library.
   // See: https://vite.dev/guide/build.html#library-mode
@@ -224,22 +240,30 @@ export default defineConfig(() => ({
 "
 `;
 
-exports[`@nx/vite:configuration library mode should set up non buildable library correctly 1`] = `
+exports[`@nx/vite:configuration > library mode > should set up non buildable library correctly 1`] = `
 "/// <reference types='vitest' />
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import dts from 'vite-plugin-dts';
 import * as path from 'path';
-import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
-import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
 export default defineConfig(() => ({
   root: import.meta.dirname,
   cacheDir: '../../node_modules/.vite/libs/react-lib-nonb-jest',
+  resolve: {
+    tsconfigPaths: true,
+  },
   plugins: [
     react(),
-    nxViteTsPaths(),
-    nxCopyAssetsPlugin(['*.md']),
+    import('vite-plugin-static-copy').then(({ viteStaticCopy }) =>
+      viteStaticCopy({
+        targets: [
+          { src: '*.md', dest: '.' },
+          { src: 'package.json', dest: '.', overwrite: false },
+        ],
+        silent: true,
+      }),
+    ),
     dts({
       entryRoot: 'src',
       tsconfigPath: path.join(import.meta.dirname, 'tsconfig.lib.json'),
@@ -248,7 +272,7 @@ export default defineConfig(() => ({
   ],
   // Uncomment this if you are using workers.
   // worker: {
-  //   plugins: () => [ nxViteTsPaths() ],
+  //  plugins: [],
   // },
   // Configuration for building your library.
   // See: https://vite.dev/guide/build.html#library-mode
@@ -289,22 +313,30 @@ export default defineConfig(() => ({
 "
 `;
 
-exports[`@nx/vite:configuration library mode should set up non buildable library which already has vite.config.mts correctly 1`] = `
+exports[`@nx/vite:configuration > library mode > should set up non buildable library which already has vite.config.mts correctly 1`] = `
 "/// <reference types='vitest' />
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import dts from 'vite-plugin-dts';
 import * as path from 'path';
-import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
-import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
 export default defineConfig(() => ({
   root: import.meta.dirname,
   cacheDir: '../../node_modules/.vite/libs/react-lib-nonb-vitest',
+  resolve: {
+    tsconfigPaths: true,
+  },
   plugins: [
     react(),
-    nxViteTsPaths(),
-    nxCopyAssetsPlugin(['*.md']),
+    import('vite-plugin-static-copy').then(({ viteStaticCopy }) =>
+      viteStaticCopy({
+        targets: [
+          { src: '*.md', dest: '.' },
+          { src: 'package.json', dest: '.', overwrite: false },
+        ],
+        silent: true,
+      }),
+    ),
     dts({
       entryRoot: 'src',
       tsconfigPath: path.join(import.meta.dirname, 'tsconfig.lib.json'),
@@ -313,7 +345,7 @@ export default defineConfig(() => ({
   ],
   // Uncomment this if you are using workers.
   // worker: {
-  //   plugins: () => [ nxViteTsPaths() ],
+  //  plugins: [],
   // },
   // Configuration for building your library.
   // See: https://vite.dev/guide/build.html#library-mode
@@ -354,12 +386,11 @@ export default defineConfig(() => ({
 "
 `;
 
-exports[`@nx/vite:configuration transform React app to use Vite should create vite.config file at the root of the app 1`] = `
+exports[`@nx/vite:configuration > transform React app to use Vite > should create vite.config file at the root of the app 1`] = `
 "/// <reference types='vitest' />
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
-import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
+import { nxReadySignal } from '@nx/vite/plugins/nx-ready-signal.plugin';
 
 export default defineConfig(() => ({
   root: import.meta.dirname,
@@ -372,10 +403,13 @@ export default defineConfig(() => ({
     port: 4300,
     host: 'localhost',
   },
-  plugins: [react(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
+  resolve: {
+    tsconfigPaths: true,
+  },
+  plugins: [react(), nxReadySignal()],
   // Uncomment this if you are using workers.
   // worker: {
-  //   plugins: () => [ nxViteTsPaths() ],
+  //  plugins: [],
   // },
   build: {
     outDir: '../../dist/apps/my-test-react-app',
@@ -389,7 +423,7 @@ export default defineConfig(() => ({
 "
 `;
 
-exports[`@nx/vite:configuration transform React app to use Vite should move index.html to the root of the project 1`] = `
+exports[`@nx/vite:configuration > transform React app to use Vite > should move index.html to the root of the project 1`] = `
 "<!doctype html>
 <html lang="en">
   <head>
@@ -408,11 +442,10 @@ exports[`@nx/vite:configuration transform React app to use Vite should move inde
 "
 `;
 
-exports[`@nx/vite:configuration transform Web app to use Vite should create vite.config file at the root of the app 1`] = `
+exports[`@nx/vite:configuration > transform Web app to use Vite > should create vite.config file at the root of the app 1`] = `
 "/// <reference types='vitest' />
 import { defineConfig } from 'vite';
-import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
-import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
+import { nxReadySignal } from '@nx/vite/plugins/nx-ready-signal.plugin';
 
 export default defineConfig(() => ({
   root: import.meta.dirname,
@@ -425,10 +458,13 @@ export default defineConfig(() => ({
     port: 4300,
     host: 'localhost',
   },
-  plugins: [nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
+  resolve: {
+    tsconfigPaths: true,
+  },
+  plugins: [nxReadySignal()],
   // Uncomment this if you are using workers.
   // worker: {
-  //   plugins: () => [ nxViteTsPaths() ],
+  //  plugins: [],
   // },
   build: {
     outDir: '../../dist/apps/my-test-web-app',
@@ -442,7 +478,7 @@ export default defineConfig(() => ({
 "
 `;
 
-exports[`@nx/vite:configuration transform Web app to use Vite should move index.html to the root of the project 1`] = `
+exports[`@nx/vite:configuration > transform Web app to use Vite > should move index.html to the root of the project 1`] = `
 "<!doctype html>
 <html lang="en">
   <head>
@@ -461,12 +497,11 @@ exports[`@nx/vite:configuration transform Web app to use Vite should move index.
 "
 `;
 
-exports[`@nx/vite:configuration vitest should create a vitest configuration if "includeVitest" is true 1`] = `
+exports[`@nx/vite:configuration > vitest > should create a vitest configuration if "includeVitest" is true 1`] = `
 "/// <reference types='vitest' />
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
-import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
+import { nxReadySignal } from '@nx/vite/plugins/nx-ready-signal.plugin';
 
 export default defineConfig(() => ({
   root: import.meta.dirname,
@@ -479,10 +514,13 @@ export default defineConfig(() => ({
     port: 4300,
     host: 'localhost',
   },
-  plugins: [react(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
+  resolve: {
+    tsconfigPaths: true,
+  },
+  plugins: [react(), nxReadySignal()],
   // Uncomment this if you are using workers.
   // worker: {
-  //   plugins: () => [ nxViteTsPaths() ],
+  //  plugins: [],
   // },
   build: {
     outDir: '../../dist/apps/my-test-react-app',

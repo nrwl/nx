@@ -11,11 +11,9 @@ import { lintProjectGenerator } from './lint-project';
 
 let projectGraph: ProjectGraph;
 
-jest.mock('@nx/devkit', () => ({
-  ...jest.requireActual<any>('@nx/devkit'),
-  createProjectGraphAsync: jest
-    .fn()
-    .mockImplementation(async () => projectGraph),
+vi.mock('@nx/devkit', async () => ({
+  ...(await vi.importActual<any>('@nx/devkit')),
+  createProjectGraphAsync: vi.fn().mockImplementation(async () => projectGraph),
 }));
 
 describe('@nx/eslint:lint-project (convert to monorepo style)', () => {
@@ -23,7 +21,6 @@ describe('@nx/eslint:lint-project (convert to monorepo style)', () => {
 
   const defaultOptions = {
     skipFormat: false,
-    addPlugin: true,
   };
 
   beforeEach(() => {
@@ -80,7 +77,7 @@ describe('@nx/eslint:lint-project (convert to monorepo style)', () => {
       ...defaultOptions,
       linter: 'eslint',
       project: 'nestedpkg',
-      setParserOptionsProject: false,
+      enableTypedLinting: false,
     });
 
     expect(readJson(tree, 'package.json')).toMatchObject({
@@ -106,7 +103,7 @@ describe('@nx/eslint:lint-project (convert to monorepo style)', () => {
       ...defaultOptions,
       linter: 'eslint',
       project: 'nestedpkg',
-      setParserOptionsProject: false,
+      enableTypedLinting: false,
     });
 
     expect(tree.exists('.eslintrc.base.json')).toBe(true);
@@ -152,7 +149,7 @@ describe('@nx/eslint:lint-project (convert to monorepo style)', () => {
       ...defaultOptions,
       linter: 'eslint',
       project: 'nestedpkg',
-      setParserOptionsProject: false,
+      enableTypedLinting: false,
     });
 
     expect(tree.exists('.eslintrc.base.json')).toBe(true);
@@ -177,7 +174,7 @@ describe('@nx/eslint:lint-project (convert to monorepo style)', () => {
       ...defaultOptions,
       linter: 'eslint',
       project: 'nestedpkg',
-      setParserOptionsProject: false,
+      enableTypedLinting: false,
     });
 
     expect(tree.exists('.eslintrc.base.json')).toBe(false);
@@ -195,7 +192,7 @@ describe('@nx/eslint:lint-project (convert to monorepo style)', () => {
       ...defaultOptions,
       linter: 'eslint',
       project: 'nestedpkg',
-      setParserOptionsProject: false,
+      enableTypedLinting: false,
     });
 
     expect(readJson(tree, '.eslintrc.base.json')).toEqual({});

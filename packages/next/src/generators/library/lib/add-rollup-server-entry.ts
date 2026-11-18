@@ -1,9 +1,4 @@
-import {
-  joinPathFragments,
-  readProjectConfiguration,
-  Tree,
-  updateProjectConfiguration,
-} from '@nx/devkit';
+import { joinPathFragments, Tree } from '@nx/devkit';
 import type { NormalizedSchema } from './normalize-options';
 
 /**
@@ -21,31 +16,21 @@ export function addRollupServerEntry(
     options.projectRoot,
     'rollup.config.cjs'
   );
-  if (tree.exists(rollupConfigPath)) {
-    const content = tree.read(rollupConfigPath, 'utf-8');
-    const updated = content.replace(
-      /^(\s*)main: .*\n/m,
-      (line, indent) =>
-        line + `${indent}additionalEntryPoints: ['./${serverEntry}'],\n`
-    );
-    if (updated === content) {
-      throw new Error(
-        `Could not add the server entry to ${rollupConfigPath}: "main" option not found.`
-      );
-    }
-    tree.write(rollupConfigPath, updated);
-    return;
-  }
-
-  const project = readProjectConfiguration(tree, options.projectName);
-  const build = project.targets?.build;
-  if (build?.executor !== '@nx/rollup:rollup') {
+  if (!tree.exists(rollupConfigPath)) {
     throw new Error(
-      `Could not add the server entry to the "build" target of "${options.projectName}": expected the @nx/rollup:rollup executor.`
+      `Could not add the server entry: ${rollupConfigPath} not found.`
     );
   }
-  build.options.additionalEntryPoints = [
-    joinPathFragments(options.projectRoot, serverEntry),
-  ];
-  updateProjectConfiguration(tree, options.projectName, project);
+  const content = tree.read(rollupConfigPath, 'utf-8');
+  const updated = content.replace(
+    /^(\s*)main: .*\n/m,
+    (line, indent) =>
+      line + `${indent}additionalEntryPoints: ['./${serverEntry}'],\n`
+  );
+  if (updated === content) {
+    throw new Error(
+      `Could not add the server entry to ${rollupConfigPath}: "main" option not found.`
+    );
+  }
+  tree.write(rollupConfigPath, updated);
 }

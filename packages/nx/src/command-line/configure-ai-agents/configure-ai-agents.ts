@@ -21,7 +21,7 @@ import {
   detectPackageManager,
   resolvePackageVersionUsingRegistry,
 } from '../../utils/package-manager';
-import { ensurePackageHasProvenance } from '../../utils/provenance';
+import { resolveVersionWithProvenance } from '../../utils/provenance';
 import { nxVersion } from '../../utils/versions';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { ConfigureAiAgentsOptions } from './command-object';
@@ -62,10 +62,10 @@ export async function configureAiAgentsHandler(
 
   let cleanup: () => void | undefined;
   try {
-    await ensurePackageHasProvenance('nx', 'latest');
+    const version = await resolveVersionWithProvenance('nx', 'latest');
     const packageInstallResults = installPackageToTmp(
       'nx',
-      'latest',
+      version,
       detectPackageManager(workspaceRoot)
     );
     cleanup = packageInstallResults.cleanup;
@@ -94,21 +94,6 @@ export async function configureAiAgentsHandler(
 export async function configureAiAgentsHandlerImpl(
   options: ConfigureAiAgentsOptions
 ): Promise<void> {
-  // Node 24's stricter readline throws ERR_USE_AFTER_CLOSE when a prompt
-  // library operates on a closed interface. Added for enquirer, which nx no
-  // longer uses; verify against Node 24 before removing.
-  // TODO(v24): drop if @clack/prompts proves not to need it.
-  process.on('uncaughtException', (error) => {
-    if (
-      error &&
-      typeof error === 'object' &&
-      'code' in error &&
-      error['code'] === 'ERR_USE_AFTER_CLOSE'
-    )
-      return;
-    throw error;
-  });
-
   const normalizedOptions = normalizeOptions(options);
 
   const {
@@ -428,7 +413,6 @@ type AgentPromptChoice = {
   value: Agent;
   label: string;
   hint: string;
-  agentConfiguration: AgentConfiguration;
 };
 
 /**
@@ -506,7 +490,6 @@ function getAgentChoiceForPrompt(agent: AgentConfiguration): AgentPromptChoice {
       ? `${agent.displayName} (update available)`
       : agent.displayName,
     hint: getAgentFooterDescription(agent),
-    agentConfiguration: agent,
   };
 }
 

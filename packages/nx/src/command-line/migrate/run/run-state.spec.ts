@@ -5,6 +5,7 @@ import {
   mkdtempSync,
   readdirSync,
   rmSync,
+  symlinkSync,
   writeFileSync,
 } from 'fs';
 import { tmpdir } from 'os';
@@ -130,6 +131,19 @@ describe('run-state', () => {
       expect(() => readRunState(dir)).toThrow(join(dir, 'run.json'));
     });
 
+    it('refuses a run.json that is a symlink instead of following it', () => {
+      const dir = join(root, 'run-1');
+      mkdirSync(dir, { recursive: true });
+      const elsewhere = join(root, 'planted.json');
+      writeFileSync(elsewhere, JSON.stringify(buildState()));
+      symlinkSync(elsewhere, join(dir, 'run.json'));
+
+      // A valid target proves the symlink is refused, not merely read through
+      // and rejected for its content.
+      expect(() => readRunState(dir)).toThrow(/corrupt run state/i);
+      expect(() => readRunState(dir)).toThrow(/not a regular file/i);
+    });
+
     it('refuses a run state missing required top-level fields', () => {
       const dir = join(root, 'run-1');
       mkdirSync(dir, { recursive: true });
@@ -216,6 +230,12 @@ describe('run-state', () => {
       );
       expect(() => readRunState(dir)).toThrow(/corrupt run state/i);
 
+      writeFileSync(
+        join(dir, 'run.json'),
+        JSON.stringify(buildState({ singleMigration: 'yes' as never }))
+      );
+      expect(() => readRunState(dir)).toThrow(/corrupt run state/i);
+
       // promptOutcome.status is a closed set too.
       writeFileSync(
         join(dir, 'run.json'),
@@ -267,6 +287,70 @@ describe('run-state', () => {
             steps: [{ ...validStep, hasGenerator: 'false' }] as never,
           })
         )
+      );
+      expect(() => readRunState(dir)).toThrow(/corrupt run state/i);
+
+      // A string marker would count as adopted under the tally's truthiness
+      // check.
+      writeFileSync(
+        join(dir, 'run.json'),
+        JSON.stringify(
+          buildState({
+            steps: [{ ...validStep, adopted: 'true' }] as never,
+          })
+        )
+      );
+      expect(() => readRunState(dir)).toThrow(/corrupt run state/i);
+    });
+
+    it('refuses an unresolved issue id that names no issue or sits on a step not given up on', () => {
+      const dir = join(root, 'run-1');
+      mkdirSync(dir, { recursive: true });
+      const unresolvedStep = {
+        id: 'step-1',
+        roundIndex: 0,
+        migrationId: '@nx/js:a',
+        status: 'unresolved',
+        attempt: 1,
+        dispenseCount: 1,
+        unresolvedIssueId: 'issue-1',
+      };
+      const summary =
+        'Migration @nx/js:a was left unresolved after 1 attempt: boom';
+      const issue = {
+        id: 'issue-1',
+        fingerprint: issueFingerprint(summary),
+        summary,
+        reportedByStepId: 'step-1',
+        applicableStepIds: 'unknown',
+        disposition: 'deferred-final',
+      };
+      const withState = (overrides: Record<string, unknown>) =>
+        JSON.stringify(
+          buildState({
+            steps: [unresolvedStep],
+            issues: [issue],
+            ...overrides,
+          } as never)
+        );
+
+      writeFileSync(join(dir, 'run.json'), withState({}));
+      expect(readRunState(dir).steps[0].unresolvedIssueId).toBe('issue-1');
+
+      writeFileSync(join(dir, 'run.json'), withState({ issues: [] }));
+      expect(() => readRunState(dir)).toThrow(/corrupt run state/i);
+
+      writeFileSync(
+        join(dir, 'run.json'),
+        withState({ steps: [{ ...unresolvedStep, status: 'failed' }] })
+      );
+      expect(() => readRunState(dir)).toThrow(/corrupt run state/i);
+
+      writeFileSync(
+        join(dir, 'run.json'),
+        withState({
+          steps: [{ ...unresolvedStep, unresolvedIssueId: 'nope' }],
+        })
       );
       expect(() => readRunState(dir)).toThrow(/corrupt run state/i);
     });
@@ -350,7 +434,34 @@ describe('run-state', () => {
       expect(() => readRunState(dir)).toThrow(/corrupt run state/i);
     });
 
-    it('refuses a step without a migrationId, the documented format invariant', () => {
+    it('refuses a migration step without a migrationId, the documented format invariant', () => {
+      const dir = join(root, 'run-1');
+      mkdirSync(dir, { recursive: true });
+      for (const kind of [{}, { kind: 'migration' }]) {
+        writeFileSync(
+          join(dir, 'run.json'),
+          JSON.stringify(
+            buildState({
+              steps: [
+                {
+                  id: 'step-1',
+                  roundIndex: 0,
+                  ...kind,
+                  status: 'pending',
+                  attempt: 1,
+                  dispenseCount: 0,
+                },
+              ] as never,
+            })
+          )
+        );
+
+        expect(() => readRunState(dir)).toThrow(/corrupt run state/i);
+      }
+    });
+
+    it('reads a step without a kind as a migration step', () => {
+      // Runs written before steps had a kind hold only migrations.
       const dir = join(root, 'run-1');
       mkdirSync(dir, { recursive: true });
       writeFileSync(
@@ -361,6 +472,7 @@ describe('run-state', () => {
               {
                 id: 'step-1',
                 roundIndex: 0,
+                migrationId: '@nx/js:a',
                 status: 'pending',
                 attempt: 1,
                 dispenseCount: 0,
@@ -370,7 +482,44 @@ describe('run-state', () => {
         )
       );
 
-      expect(() => readRunState(dir)).toThrow(/corrupt run state/i);
+      expect(readRunState(dir).steps[0]).toEqual({
+        id: 'step-1',
+        roundIndex: 0,
+        kind: 'migration',
+        migrationId: '@nx/js:a',
+        status: 'pending',
+        attempt: 1,
+        dispenseCount: 0,
+      });
+    });
+
+    it('refuses a step kind outside the closed set, and a final-validation step carrying a migrationId', () => {
+      const dir = join(root, 'run-1');
+      mkdirSync(dir, { recursive: true });
+      for (const kindFields of [
+        { kind: 'install', migrationId: '@nx/js:a' },
+        { kind: 'final-validation', migrationId: '@nx/js:a' },
+      ]) {
+        writeFileSync(
+          join(dir, 'run.json'),
+          JSON.stringify(
+            buildState({
+              steps: [
+                {
+                  id: 'step-1',
+                  roundIndex: 0,
+                  ...kindFields,
+                  status: 'pending',
+                  attempt: 1,
+                  dispenseCount: 0,
+                },
+              ] as never,
+            })
+          )
+        );
+
+        expect(() => readRunState(dir)).toThrow(/corrupt run state/i);
+      }
     });
 
     it('refuses a migrationId the dispensed command could not carry safely', () => {
@@ -432,9 +581,7 @@ describe('run-state', () => {
       ]) {
         writeFileSync(
           join(dir, 'run.json'),
-          JSON.stringify(
-            buildState({ rounds: [{ index: 0, planHash: 'h', planSnapshot }] })
-          )
+          JSON.stringify(buildState({ rounds: [{ index: 0, planSnapshot }] }))
         );
 
         expect(() => readRunState(dir)).toThrow(/corrupt run state/i);
@@ -497,8 +644,8 @@ describe('run-state', () => {
     });
 
     it('refuses recorded git refs that are not commit shas', () => {
-      // A died step's ref is rendered into the `git reset --hard <ref>`
-      // remediation the agent is told to run.
+      // A died step's ref is the target of the `git reset --hard` a clean
+      // retry runs.
       const dir = join(root, 'run-1');
       mkdirSync(dir, { recursive: true });
       const step = {
@@ -580,11 +727,12 @@ describe('run-state', () => {
       const dir = join(root, 'run-1');
       mkdirSync(dir, { recursive: true });
       const state = buildState({
-        rounds: [{ index: 0, planHash: 'hash', planSnapshot: 'plan-0.json' }],
+        rounds: [{ index: 0, planSnapshot: 'plan-0.json' }],
         steps: [
           {
             id: 'step-1',
             roundIndex: 0,
+            kind: 'migration',
             migrationId: '@nx/js:a',
             status: 'succeeded',
             attempt: 2,
@@ -599,6 +747,7 @@ describe('run-state', () => {
             outcome: { summary: 'done' },
             promptOutcome: { status: 'completed', summary: 'applied' },
             awaitingKind: 'migration-prompt',
+            commitStarted: true,
             generatorCompleted: true,
           },
         ],
@@ -613,7 +762,9 @@ describe('run-state', () => {
         checkpointFailed: true,
         skipInstall: true,
         validate: false,
+        gitRefAtInit: 'abc0'.repeat(10),
         runbookPath: 'RUNBOOK.md',
+        branch: 'feature/upgrade',
         issues: [
           {
             id: 'issue-1',
@@ -695,10 +846,17 @@ describe('run-state', () => {
       const dir = join(root, 'run-1');
       mkdirSync(dir, { recursive: true });
 
-      // A truthy string must not stand in for the flag that gates a validation pass.
+      // A truthy string must not stand in for a flag that gates a validation pass.
       writeFileSync(
         join(dir, 'run.json'),
-        JSON.stringify(buildState({ validate: 'yes' as never }))
+        JSON.stringify(buildState({ validate: 'yes' } as never))
+      );
+      expect(() => readRunState(dir)).toThrow(/corrupt run state/i);
+
+      // The ref is interpolated into a command the agent runs verbatim.
+      writeFileSync(
+        join(dir, 'run.json'),
+        JSON.stringify(buildState({ gitRefAtInit: 'HEAD; touch pwned' }))
       );
       expect(() => readRunState(dir)).toThrow(/corrupt run state/i);
 
@@ -732,6 +890,17 @@ describe('run-state', () => {
           })
         )
       );
+      expect(() => readRunState(dir)).toThrow(/corrupt run state/i);
+    });
+
+    it('refuses a non-string branch', () => {
+      const dir = join(root, 'run-1');
+      mkdirSync(dir, { recursive: true });
+      writeFileSync(
+        join(dir, 'run.json'),
+        JSON.stringify(buildState({ branch: 42 as never }))
+      );
+
       expect(() => readRunState(dir)).toThrow(/corrupt run state/i);
     });
 
@@ -1018,6 +1187,39 @@ describe('run-state', () => {
       expect(() => readRunState(dir)).toThrow(/corrupt run state/i);
     });
 
+    it('accepts a well-formed tree reservation and refuses a malformed one', () => {
+      const dir = join(root, 'run-1');
+      mkdirSync(dir, { recursive: true });
+      const valid = {
+        kind: 'commit' as const,
+        stepId: 'step-1',
+        attempt: 1,
+        owner: 'abcd1234',
+        pid: 4242,
+      };
+      writeFileSync(
+        join(dir, 'run.json'),
+        JSON.stringify(buildState({ treeOperation: valid }))
+      );
+      expect(readRunState(dir).treeOperation).toEqual(valid);
+
+      for (const treeOperation of [
+        { ...valid, kind: 'rebase' },
+        { ...valid, owner: '' },
+        { ...valid, pid: 0 },
+        { ...valid, pid: '4242' },
+        { ...valid, attempt: 0 },
+        { ...valid, stepId: 7 },
+      ]) {
+        writeFileSync(
+          join(dir, 'run.json'),
+          JSON.stringify(buildState({ treeOperation: treeOperation as never }))
+        );
+
+        expect(() => readRunState(dir)).toThrow(/corrupt run state/i);
+      }
+    });
+
     it('refuses a malformed no-progress record', () => {
       const dir = join(root, 'run-1');
       mkdirSync(dir, { recursive: true });
@@ -1063,6 +1265,7 @@ describe('run-state', () => {
     it('returns no active run when there are no runs', () => {
       expect(findActiveRun(root)).toEqual({
         active: null,
+        activeRunIds: [],
         uninterpretable: [],
       });
     });
@@ -1105,14 +1308,13 @@ describe('run-state', () => {
 
       expect(result.active?.runId).toBe('newer');
       expect(result.active?.state.status).toBe('active');
+      expect(result.activeRunIds.sort()).toEqual(['newer', 'older']);
       expect(result.uninterpretable).toEqual([
         { dirName: 'corrupt', reason: expect.stringContaining('JSON') },
       ]);
     });
 
     it('reports a run dir whose run.json cannot be read instead of treating it as absent', () => {
-      // run.json as a directory makes readFileSync fail with a raw fs error
-      // (EISDIR), the same failure class as EACCES on a file.
       mkdirSync(join(migrateRunsDir(root), 'unreadable', 'run.json'), {
         recursive: true,
       });
@@ -1121,7 +1323,10 @@ describe('run-state', () => {
 
       expect(result.active).toBeNull();
       expect(result.uninterpretable).toEqual([
-        { dirName: 'unreadable', reason: expect.stringContaining('EISDIR') },
+        {
+          dirName: 'unreadable',
+          reason: expect.stringContaining('is not a regular file'),
+        },
       ]);
     });
 
@@ -1137,6 +1342,7 @@ describe('run-state', () => {
       const result = findActiveRun(root);
 
       expect(result.active).toBeNull();
+      expect(result.activeRunIds).toEqual([]);
       expect(result.uninterpretable).toEqual([
         { dirName: 'evil;rm -rf', reason: 'its name is not a valid run id' },
       ]);

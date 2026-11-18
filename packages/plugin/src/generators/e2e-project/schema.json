@@ -17,6 +17,11 @@
       "description": "the package name of the plugin as it would be published to NPM.",
       "x-priority": "important"
     },
+    "packageManager": {
+      "type": "string",
+      "enum": ["npm", "pnpm", "yarn", "bun"],
+      "description": "Package manager the generated e2e test uses to create the test workspace, install the plugin and run its checks. Defaults to the package manager the workspace already uses."
+    },
     "projectDirectory": {
       "type": "string",
       "description": "the directory where the plugin is placed."
