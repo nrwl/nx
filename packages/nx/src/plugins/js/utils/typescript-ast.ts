@@ -3,6 +3,7 @@ import type * as ts from 'typescript';
 import { workspaceRoot } from '../../../utils/workspace-root';
 import {
   getTypescriptBackend,
+  unhandledTypescriptBackend,
   withTypescriptApi,
   type ApiTypescriptBackend,
   type ClassicTypescriptBackend,
@@ -10,6 +11,8 @@ import {
 } from './typescript-backend';
 
 type ApiDiagnostic = import('typescript/sync').Diagnostic;
+/** @ts-ignore resolves only when `typescript` is >= 7.1 */
+type ApiProgram = import('typescript/sync').Program;
 
 // TypeScript 6 guards that TypeScript 7.1 exports under another name.
 type RenamedNodeGuard =
@@ -43,18 +46,11 @@ type AbsentSyntaxKind =
 type TypescriptFactory = Pick<
   ts.NodeFactory,
   | 'createArrayLiteralExpression'
-  | 'createCallExpression'
   | 'createFalse'
-  | 'createIdentifier'
-  | 'createImportSpecifier'
   | 'createObjectLiteralExpression'
   | 'createPropertyAssignment'
-  | 'createSpreadAssignment'
   | 'createStringLiteral'
   | 'createTrue'
-  | 'createVariableDeclaration'
-  | 'createVariableDeclarationList'
-  | 'createVariableStatement'
 > & {
   // TypeScript 7.1's token flags have other values.
   createNumericLiteral(value: string | number): ts.NumericLiteral;
@@ -119,10 +115,7 @@ export type TypescriptAst = Pick<
     length?: number
   ): TypescriptScanner;
   factory: TypescriptFactory;
-  NodeFlags: Pick<
-    typeof ts.NodeFlags,
-    'BlockScoped' | 'Const' | 'Let' | 'None'
-  >;
+  NodeFlags: Pick<typeof ts.NodeFlags, 'BlockScoped' | 'Const'>;
   SymbolFlags: Pick<typeof ts.SymbolFlags, 'Alias' | 'Value'>;
   SyntaxKind: Omit<typeof ts.SyntaxKind, AbsentSyntaxKind>;
 };
@@ -159,10 +152,8 @@ export function getTypescriptAst(): TypescriptAst {
       }
       return ast;
     }
-    default: {
-      const unhandled: never = backend;
-      throw new Error(`Unhandled TypeScript backend: ${unhandled}`);
-    }
+    default:
+      return unhandledTypescriptBackend(backend);
   }
 }
 
@@ -179,10 +170,8 @@ export function hasParseErrors(sourceFile: ts.SourceFile): boolean {
         .parseDiagnostics?.length;
     case 'api':
       return hasApiParseErrors(backend, sourceFile);
-    default: {
-      const unhandled: never = backend;
-      throw new Error(`Unhandled TypeScript backend: ${unhandled}`);
-    }
+    default:
+      return unhandledTypescriptBackend(backend);
   }
 }
 
@@ -204,10 +193,8 @@ export function printNode(node: ts.Node): string {
       return withTypescriptApi(backend, (api) =>
         api.printer.printNode(node as never)
       );
-    default: {
-      const unhandled: never = backend;
-      throw new Error(`Unhandled TypeScript backend: ${unhandled}`);
-    }
+    default:
+      return unhandledTypescriptBackend(backend);
   }
 }
 
@@ -237,24 +224,43 @@ function hasApiParseErrors(
       ? '.nx-parse-check.tsx'
       : '.nx-parse-check.ts'
   );
+  return withSingleFileProgram(
+    backend,
+    fileName,
+    sourceFile.text,
+    (program) => program.getSyntacticDiagnostics(fileName).length > 0
+  );
+}
+
+// A program of the one file `filePath` holding `content`, with no lib files or
+// imports loaded.
+function withSingleFileProgram<T>(
+  backend: ApiTypescriptBackend,
+  filePath: string,
+  content: string,
+  read: (program: ApiProgram) => T
+): T {
   return withTypescriptApi(backend, (api) => {
     const snapshot = api.createSnapshot({
-      fileSystem: { kind: 'layer', files: { [fileName]: sourceFile.text } },
+      fileSystem: { kind: 'layer', files: { [filePath]: content } },
       createPrograms: [
-        {
-          rootFiles: [fileName],
-          compilerOptions: { noLib: true, noResolve: true, types: [] },
-        },
+        { rootFiles: [filePath], compilerOptions: singleFileCompilerOptions },
       ],
     });
     try {
-      const [program] = snapshot.operation.createdPrograms;
-      return program.getSyntacticDiagnostics(fileName).length > 0;
+      return read(snapshot.operation.createdPrograms[0]);
     } finally {
       snapshot.dispose();
     }
   });
 }
+
+const singleFileCompilerOptions = {
+  noLib: true,
+  noResolve: true,
+  allowJs: true,
+  types: [],
+};
 
 export interface SourceFileSymbol {
   readonly name: string;
@@ -279,13 +285,6 @@ type ReadSourceFile<T> = (
   checker: SourceFileChecker
 ) => T;
 
-const checkerCompilerOptions = {
-  noLib: true,
-  noResolve: true,
-  allowJs: true,
-  types: [],
-};
-
 /**
  * Type-checks `content` as a program of one file and passes the file and its
  * checker to `read`. `fileName` is workspace-relative, and its extension picks
@@ -307,10 +306,8 @@ export function withSourceFileChecker<T>(
       return checkWithClassicTypescript(backend, fileName, content, read);
     case 'api':
       return checkWithTypescriptApi(backend, fileName, content, read);
-    default: {
-      const unhandled: never = backend;
-      throw new Error(`Unhandled TypeScript backend: ${unhandled}`);
-    }
+    default:
+      return unhandledTypescriptBackend(backend);
   }
 }
 
@@ -326,7 +323,7 @@ function checkWithClassicTypescript<T>(
     ts.ScriptTarget.Latest,
     true
   );
-  const program = ts.createProgram([fileName], checkerCompilerOptions, {
+  const program = ts.createProgram([fileName], singleFileCompilerOptions, {
     getSourceFile: (name) => (name === fileName ? sourceFile : undefined),
     getDefaultLibFileName: () => 'lib.d.ts',
     writeFile: () => {},
@@ -358,56 +355,45 @@ function checkWithTypescriptApi<T>(
     workspaceRoot,
     jsFilePattern.test(fileName) ? `${fileName}.tsx` : fileName
   );
-  return withTypescriptApi(backend, (api) => {
-    const snapshot = api.createSnapshot({
-      fileSystem: { kind: 'layer', files: { [filePath]: content } },
-      createPrograms: [
-        { rootFiles: [filePath], compilerOptions: checkerCompilerOptions },
-      ],
-    });
-    try {
-      const [program] = snapshot.operation.createdPrograms;
-      const { checker } = snapshot.getProject(program.id);
-      // The API returns the same symbol object for every lookup, but its
-      // declarations are handles, so each symbol gets one resolved copy.
-      const symbols = new Map<ApiSymbol, SourceFileSymbol>();
-      const toSymbol = (
-        symbol: ApiSymbol | undefined
-      ): SourceFileSymbol | undefined => {
-        if (!symbol) {
-          return undefined;
-        }
-        let resolved = symbols.get(symbol);
-        if (!resolved) {
-          resolved = {
-            name: symbol.name,
-            declarations: symbol.declarations.map(
-              (declaration) => declaration.resolve() as ts.Node
-            ),
-            valueDeclaration: symbol.valueDeclaration?.resolve() as
-              | ts.Node
-              | undefined,
-          };
-          symbols.set(symbol, resolved);
-        }
-        return resolved;
-      };
+  return withSingleFileProgram(backend, filePath, content, (program) => {
+    const { checker } = program.getProject();
+    // The API returns the same symbol object for every lookup, but its
+    // declarations are handles, so each symbol gets one resolved copy.
+    const symbols = new Map<ApiSymbol, SourceFileSymbol>();
+    const toSymbol = (
+      symbol: ApiSymbol | undefined
+    ): SourceFileSymbol | undefined => {
+      if (!symbol) {
+        return undefined;
+      }
+      let resolved = symbols.get(symbol);
+      if (!resolved) {
+        resolved = {
+          name: symbol.name,
+          declarations: symbol.declarations.map(
+            (declaration) => declaration.resolve() as ts.Node
+          ),
+          valueDeclaration: symbol.valueDeclaration?.resolve() as
+            | ts.Node
+            | undefined,
+        };
+        symbols.set(symbol, resolved);
+      }
+      return resolved;
+    };
 
-      const sourceFile = program.getSourceFile(filePath);
-      keepByteOrderMark(sourceFile, content);
-      return read(sourceFile as unknown as ts.SourceFile, {
-        getSymbolAtLocation: (node) =>
-          toSymbol(checker.getSymbolAtLocation(node as never)),
-        getShorthandAssignmentValueSymbol: (node) =>
-          toSymbol(checker.getShorthandAssignmentValueSymbol(node as never)),
-        getSymbolsInScope: (location, meaning) =>
-          checker
-            .getSymbolsInScope(location as never, meaning as never)
-            .map((symbol) => toSymbol(symbol)),
-      });
-    } finally {
-      snapshot.dispose();
-    }
+    const sourceFile = program.getSourceFile(filePath);
+    keepByteOrderMark(sourceFile, content);
+    return read(sourceFile as unknown as ts.SourceFile, {
+      getSymbolAtLocation: (node) =>
+        toSymbol(checker.getSymbolAtLocation(node as never)),
+      getShorthandAssignmentValueSymbol: (node) =>
+        toSymbol(checker.getShorthandAssignmentValueSymbol(node as never)),
+      getSymbolsInScope: (location, meaning) =>
+        checker
+          .getSymbolsInScope(location as never, meaning as never)
+          .map((symbol) => toSymbol(symbol)),
+    });
   });
 }
 
@@ -513,21 +499,7 @@ function createApiAst(backend: ApiTypescriptBackend): TypescriptAst {
   const factory = {
     createArrayLiteralExpression: (elements?: never[], multiLine?: boolean) =>
       f.createArrayLiteralExpression(elements ?? [], multiLine),
-    createCallExpression: (
-      expression: never,
-      typeArguments: never[] | undefined,
-      argumentsArray: never[] | undefined
-    ) =>
-      f.createCallExpression(
-        expression,
-        undefined,
-        typeArguments,
-        argumentsArray ?? [],
-        NodeFlags.None
-      ),
     createFalse: () => f.createKeywordExpression(SyntaxKind.FalseKeyword),
-    createIdentifier: f.createIdentifier,
-    createImportSpecifier: f.createImportSpecifier,
     createNumericLiteral: (value: string | number) =>
       f.createNumericLiteral(String(value), TokenFlags.None),
     createObjectLiteralExpression: (
@@ -542,37 +514,12 @@ function createApiAst(backend: ApiTypescriptBackend): TypescriptAst {
         undefined,
         initializer
       ),
-    createSpreadAssignment: f.createSpreadAssignment,
     createStringLiteral: (text: string, isSingleQuote?: boolean) =>
       f.createStringLiteral(
         text,
         isSingleQuote ? TokenFlags.SingleQuote : TokenFlags.None
       ),
     createTrue: () => f.createKeywordExpression(SyntaxKind.TrueKeyword),
-    createVariableDeclaration: (
-      name: unknown,
-      exclamationToken?: never,
-      type?: never,
-      initializer?: never
-    ) =>
-      f.createVariableDeclaration(
-        asIdentifier(name),
-        exclamationToken,
-        type,
-        initializer
-      ),
-    createVariableDeclarationList: (declarations: never[], flags?: number) =>
-      f.createVariableDeclarationList(declarations, flags ?? NodeFlags.None),
-    createVariableStatement: (
-      modifiers: never[] | undefined,
-      declarationList: never
-    ) =>
-      f.createVariableStatement(
-        modifiers,
-        Array.isArray(declarationList)
-          ? f.createVariableDeclarationList(declarationList, NodeFlags.None)
-          : declarationList
-      ),
   };
 
   // 7.1 nodes have TypeScript 6's shape for what Nx reads, but not its
@@ -656,10 +603,8 @@ export function getSyntaxErrors(fileName: string, content: string): string[] {
     }
     case 'api':
       return getApiSyntaxErrors(backend, fileName, content);
-    default: {
-      const unhandled: never = backend;
-      throw new Error(`Unhandled TypeScript backend: ${unhandled}`);
-    }
+    default:
+      return unhandledTypescriptBackend(backend);
   }
 }
 
@@ -669,30 +614,11 @@ function getApiSyntaxErrors(
   content: string
 ): string[] {
   const filePath = join(workspaceRoot, fileName);
-  return withTypescriptApi(backend, (api) => {
-    const snapshot = api.createSnapshot({
-      fileSystem: { kind: 'layer', files: { [filePath]: content } },
-      createPrograms: [
-        {
-          rootFiles: [filePath],
-          compilerOptions: {
-            allowJs: true,
-            noLib: true,
-            noResolve: true,
-            types: [],
-          },
-        },
-      ],
-    });
-    try {
-      const [program] = snapshot.operation.createdPrograms;
-      return program
-        .getSyntacticDiagnostics(filePath)
-        .map((diagnostic) => flattenApiDiagnosticMessage(diagnostic, ' '));
-    } finally {
-      snapshot.dispose();
-    }
-  });
+  return withSingleFileProgram(backend, filePath, content, (program) =>
+    program
+      .getSyntacticDiagnostics(filePath)
+      .map((diagnostic) => flattenApiDiagnosticMessage(diagnostic, ' '))
+  );
 }
 
 /**

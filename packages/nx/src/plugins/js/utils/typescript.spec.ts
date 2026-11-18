@@ -266,11 +266,11 @@ describe('getTypescriptBackend', () => {
   });
 
   it.each([
-    ['7.0.2', 'api-unavailable'],
-    ['next', 'unrecognized'],
+    ['7.0.2', 'TypeScript 7.0.2 has no programmatic API'],
+    ['next', 'Could not read the version of the TypeScript package'],
   ])(
     'should throw a setup error for TypeScript version %s',
-    async (version, reason) => {
+    async (version, message) => {
       await fs.createFiles({
         'node_modules/typescript/package.json': JSON.stringify({
           name: 'typescript',
@@ -292,9 +292,7 @@ describe('getTypescriptBackend', () => {
         error = e;
       }
       expect(error).toBeInstanceOf(TypescriptSetupError);
-      expect((error as InstanceType<typeof TypescriptSetupError>).reason).toBe(
-        reason
-      );
+      expect((error as Error).message).toContain(message);
     }
   );
 });

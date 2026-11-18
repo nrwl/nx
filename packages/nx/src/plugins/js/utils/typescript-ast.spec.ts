@@ -133,10 +133,10 @@ describe('getTypescriptAst', () => {
       expect(
         printNode(
           ast.factory.createArrayLiteralExpression([
-            ast.factory.createIdentifier(parsedName.text),
+            ast.factory.createStringLiteral(parsedName.text),
           ])
         )
-      ).toBe('[a]');
+      ).toBe('["a"]');
     }
   );
 
@@ -346,8 +346,7 @@ describe('getTypescriptAst', () => {
       const { printNode } = await import('./typescript-ast');
       const build = ({
         factory: f,
-        NodeFlags,
-      }: Pick<TypescriptAst, 'factory' | 'NodeFlags'>): ts.Node[] => [
+      }: Pick<TypescriptAst, 'factory'>): ts.Node[] => [
         f.createStringLiteral('plain'),
         f.createStringLiteral('single', true),
         f.createStringLiteral('\u00fcn\u00ef \u{1F600}'),
@@ -359,7 +358,6 @@ describe('getTypescriptAst', () => {
         f.createNumericLiteral('0x10'),
         f.createTrue(),
         f.createFalse(),
-        f.createIdentifier('name'),
         f.createObjectLiteralExpression(),
         f.createObjectLiteralExpression([], true),
         f.createObjectLiteralExpression([
@@ -370,7 +368,6 @@ describe('getTypescriptAst', () => {
               f.createPropertyAssignment('d', f.createTrue()),
             ])
           ),
-          f.createSpreadAssignment(f.createIdentifier('rest')),
         ]),
         f.createObjectLiteralExpression(
           [
@@ -397,53 +394,6 @@ describe('getTypescriptAst', () => {
           [f.createStringLiteral('a'), f.createFalse()],
           true
         ),
-        f.createCallExpression(f.createIdentifier('fn'), undefined, undefined),
-        f.createCallExpression(f.createIdentifier('fn'), undefined, [
-          f.createIdentifier('a'),
-          f.createObjectLiteralExpression([
-            f.createPropertyAssignment('b', f.createStringLiteral('c')),
-          ]),
-        ]),
-        f.createImportSpecifier(false, undefined, f.createIdentifier('a')),
-        f.createImportSpecifier(
-          true,
-          f.createIdentifier('a'),
-          f.createIdentifier('b')
-        ),
-        f.createVariableStatement(
-          undefined,
-          f.createVariableDeclarationList(
-            [
-              f.createVariableDeclaration(
-                'configValues',
-                undefined,
-                undefined,
-                f.createObjectLiteralExpression(
-                  [f.createPropertyAssignment('a', f.createNumericLiteral(1))],
-                  true
-                )
-              ),
-            ],
-            NodeFlags.Const
-          )
-        ),
-        f.createVariableStatement(undefined, [
-          f.createVariableDeclaration('v'),
-          f.createVariableDeclaration(
-            f.createIdentifier('w'),
-            undefined,
-            undefined,
-            f.createNumericLiteral(1)
-          ),
-        ]),
-        f.createVariableStatement(
-          undefined,
-          f.createVariableDeclarationList(
-            [f.createVariableDeclaration('l')],
-            NodeFlags.Let
-          )
-        ),
-        f.createVariableDeclarationList([f.createVariableDeclaration('n')]),
       ];
 
       const ts6Printer = ts6.createPrinter();

@@ -6,6 +6,7 @@ import type * as ts from 'typescript';
 import type { Node, SyntaxKind } from 'typescript';
 import {
   getTypescriptBackend,
+  unhandledTypescriptBackend,
   withHostedTypescriptApi,
   withTypescriptApi,
   type ApiCompilerOptions,
@@ -28,15 +29,12 @@ type ApiModuleResolver = import('typescript/sync').ModuleResolver;
  * `Tree`. A member left out uses the disk. Paths reach the members absolute or
  * relative to `getCurrentDirectory()`.
  */
-export interface TsConfigHost {
+export interface TsConfigHost extends TypescriptApiFileSystem {
   /**
    * Resolves relative paths, `tsConfigPath` included, and the paths read from
    * a relative `tsConfigPath` stay relative to it. Defaults to `process.cwd()`.
    */
   getCurrentDirectory?(): string;
-  readFile?(path: string): string | undefined;
-  fileExists?(path: string): boolean;
-  directoryExists?(path: string): boolean;
 }
 
 export function isTypeScriptResolvable(): boolean {
@@ -103,10 +101,8 @@ function parseTsConfig(
     }
     case 'api':
       return readTsConfigWithApi(backend, tsConfigPath, host, scanFiles);
-    default: {
-      const unhandled: never = backend;
-      throw new Error(`Unhandled TypeScript backend: ${unhandled}`);
-    }
+    default:
+      return unhandledTypescriptBackend(backend);
   }
 }
 
@@ -214,10 +210,8 @@ export function createTsModuleResolver(
             .resolvedModule?.resolvedFileName;
         });
     }
-    default: {
-      const unhandled: never = backend;
-      throw new Error(`Unhandled TypeScript backend: ${unhandled}`);
-    }
+    default:
+      return unhandledTypescriptBackend(backend);
   }
 }
 
@@ -248,7 +242,7 @@ export function parseTsConfigContent(
           configDirectory: resolve(cwd, configDirectory),
         });
       const parsed = host
-        ? withHostedTypescriptApi(backend, toApiFileSystem(host, true), parse)
+        ? withHostedTypescriptApi(backend, host, true, parse)
         : withTypescriptApi(backend, parse);
       return toClassicParsedCommandLine(
         parsed,
@@ -256,10 +250,8 @@ export function parseTsConfigContent(
         isAbsolute(configDirectory)
       );
     }
-    default: {
-      const unhandled: never = backend;
-      throw new Error(`Unhandled TypeScript backend: ${unhandled}`);
-    }
+    default:
+      return unhandledTypescriptBackend(backend);
   }
 }
 
@@ -283,10 +275,8 @@ export function transpileTypescript(
             compilerOptions: compilerOptions as unknown as ApiCompilerOptions,
           }).outputText
       );
-    default: {
-      const unhandled: never = backend;
-      throw new Error(`Unhandled TypeScript backend: ${unhandled}`);
-    }
+    default:
+      return unhandledTypescriptBackend(backend);
   }
 }
 
@@ -298,29 +288,11 @@ function readTsConfigWithApi(
 ): ts.ParsedCommandLine {
   const cwd = host?.getCurrentDirectory?.() ?? process.cwd();
   const absolutePath = resolve(cwd, tsConfigPath);
+  const parse = (api: TypescriptApi) => api.parseConfigFile(absolutePath);
   const parsed = host
-    ? withHostedTypescriptApi(
-        backend,
-        toApiFileSystem(host, scanFiles),
-        (api) => api.parseConfigFile(absolutePath)
-      )
-    : parseConfigFileWithApi(backend, absolutePath);
+    ? withHostedTypescriptApi(backend, host, scanFiles, parse)
+    : withTypescriptApi(backend, parse);
   return toClassicParsedCommandLine(parsed, cwd, isAbsolute(tsConfigPath));
-}
-
-function toApiFileSystem(
-  host: TsConfigHost,
-  scanFiles: boolean
-): TypescriptApiFileSystem {
-  return {
-    readFile: host.readFile && ((path: string) => host.readFile(path)),
-    fileExists: host.fileExists && ((path: string) => host.fileExists(path)),
-    directoryExists:
-      host.directoryExists && ((path: string) => host.directoryExists(path)),
-    getAccessibleEntries: scanFiles
-      ? undefined
-      : () => ({ files: [], directories: [] }),
-  };
 }
 
 function toClassicParsedCommandLine(
@@ -375,13 +347,6 @@ const PATH_OPTIONS = [
   'tsBuildInfoFile',
 ] as const;
 const PATH_LIST_OPTIONS = ['rootDirs', 'typeRoots'] as const;
-
-function parseConfigFileWithApi(
-  backend: ApiTypescriptBackend,
-  tsConfigPath: string
-): ApiParsedCommandLine {
-  return withTypescriptApi(backend, (api) => api.parseConfigFile(tsConfigPath));
-}
 
 function toClassicDiagnostic(diagnostic: ApiDiagnostic): ts.Diagnostic {
   return {

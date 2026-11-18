@@ -381,6 +381,7 @@ export {
   hasTextBunLockfile,
   validateOutputs,
   warnUnshippableLocalPathSpec,
+  unhandledTypescriptBackend,
   withSourceFileChecker,
   withTypescriptApi,
   workspaceDataDirectory,
