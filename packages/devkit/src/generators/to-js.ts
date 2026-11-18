@@ -1,6 +1,6 @@
 import type { Tree } from 'nx/src/devkit-exports';
 import { transpileTypescript } from 'nx/src/devkit-internals';
-import type { CompilerOptions, ModuleKind, ScriptTarget } from 'typescript';
+import type { CompilerOptions } from 'typescript';
 import { ensureTypescript } from '../utils/ensure-typescript';
 import { ensurePackage } from '../utils/package-json';
 import { typescriptVersion } from '../utils/versions';
@@ -12,8 +12,10 @@ const MODULE_KIND_ESNEXT = 99;
 
 export type ToJSOptions = {
   extension?: '.js' | '.mjs' | '.cjs';
-  module?: ModuleKind;
-  target?: ScriptTarget;
+  /** A TypeScript `ModuleKind` value. */
+  module?: number;
+  /** A TypeScript `ScriptTarget` value. */
+  target?: number;
   useJsx?: boolean;
 };
 
