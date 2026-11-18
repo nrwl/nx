@@ -5,12 +5,12 @@ describe('assertWorkspaceValidity', () => {
 
   beforeEach(() => {
     mockProjects = {
-      app1: {},
-      'app1-e2e': {},
-      app2: {},
-      'app2-e2e': {},
-      lib1: {},
-      lib2: {},
+      app1: { root: 'apps/app1' },
+      'app1-e2e': { root: 'apps/app1-e2e' },
+      app2: { root: 'apps/app2' },
+      'app2-e2e': { root: 'apps/app2-e2e' },
+      lib1: { root: 'libs/lib1' },
+      lib2: { root: 'libs/lib2' },
     };
   });
 

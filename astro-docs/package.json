@@ -22,6 +22,7 @@
     "astro": "^7.3.2",
     "astro-og-canvas": "^0.13.1",
     "canvaskit-wasm": "^0.42.0",
+    "motion": "^14.12.0",
     "octokit": "^2.0.14",
     "sharp": "^0.35.5",
     "tailwindcss": "4.1.11"
