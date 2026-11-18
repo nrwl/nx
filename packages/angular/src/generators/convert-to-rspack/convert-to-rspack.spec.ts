@@ -447,6 +447,131 @@ describe('convert-to-rspack', () => {
     expect(targets.serve).toEqual({ options: { port: 4300 } });
   });
 
+  const nodeHandlerImport = `import { createNodeRequestHandler } from '@angular/ssr/node';\n`;
+
+  it.each([
+    [
+      'a web request handler',
+      `import { createRequestHandler } from '@angular/ssr';\nexport const reqHandler = createRequestHandler(handle);`,
+      true,
+    ],
+    [
+      'an aliased import',
+      `import { createNodeRequestHandler as create } from '@angular/ssr/node';\nexport const reqHandler = create(app);`,
+      true,
+    ],
+    [
+      'a namespace import',
+      `import * as ssr from '@angular/ssr/node';\nexport const reqHandler = ssr.createNodeRequestHandler(app);`,
+      true,
+    ],
+    [
+      'an export list',
+      `${nodeHandlerImport}const handler = createNodeRequestHandler(app);\nexport { handler as reqHandler };`,
+      true,
+    ],
+    [
+      'a type assertion',
+      `${nodeHandlerImport}export const reqHandler = createNodeRequestHandler(app) as Handler;`,
+      true,
+    ],
+    [
+      'a CommonEngine server',
+      `import { CommonEngine } from '@angular/ssr/node';\nexport function app() {}\nexport default bootstrap;`,
+      false,
+    ],
+    [
+      'a same-name function from another module',
+      `import { createNodeRequestHandler } from './ssr';\nexport const reqHandler = createNodeRequestHandler(app);`,
+      false,
+    ],
+    [
+      'a handler that another call wraps',
+      `${nodeHandlerImport}export const reqHandler = withLogging(createNodeRequestHandler(app));`,
+      false,
+    ],
+    [
+      'a reassignable export',
+      `${nodeHandlerImport}export let reqHandler = createNodeRequestHandler(app);`,
+      false,
+    ],
+    [
+      'a handler replaced by a CommonEngine server',
+      `${nodeHandlerImport}export const reqHandler = createNodeRequestHandler(app);`,
+      false,
+      `import { CommonEngine } from '@angular/ssr/node';\nexport function app() {}\nexport default bootstrap;`,
+    ],
+    [
+      'a handler replaced by another handler',
+      `${nodeHandlerImport}export const reqHandler = createNodeRequestHandler(app);`,
+      true,
+      `${nodeHandlerImport}export const reqHandler = createNodeRequestHandler(devApp);`,
+    ],
+    [
+      'a handler replaced through another spelling of its path',
+      `${nodeHandlerImport}export const reqHandler = createNodeRequestHandler(app);`,
+      false,
+      `import { CommonEngine } from '@angular/ssr/node';\nexport function app() {}\nexport default bootstrap;`,
+      'apps/app/src/./server.ts',
+    ],
+  ])(
+    'should serve SSR from the dev server only for an Angular request handler: %s',
+    async (
+      _,
+      serverFile,
+      servesFromDevServer,
+      replacementFile?: string,
+      replacedPath = 'apps/app/src/server.ts'
+    ) => {
+      const tree = createTreeWithEmptyWorkspace();
+      addProjectConfiguration(tree, 'app', {
+        root: 'apps/app',
+        sourceRoot: 'apps/app/src',
+        projectType: 'application',
+        targets: {
+          build: {
+            executor: '@angular-devkit/build-angular:browser',
+            options: {
+              outputPath: 'dist/apps/app/browser',
+              index: 'apps/app/src/index.html',
+              main: 'apps/app/src/main.ts',
+              tsConfig: 'apps/app/tsconfig.app.json',
+            },
+            ...(replacementFile && {
+              configurations: {
+                development: {
+                  fileReplacements: [
+                    {
+                      replace: replacedPath,
+                      with: 'apps/app/src/server.dev.ts',
+                    },
+                  ],
+                },
+              },
+            }),
+          },
+          server: {
+            executor: '@angular-devkit/build-angular:server',
+            options: { main: 'apps/app/src/server.ts' },
+          },
+        },
+      });
+      writeJson(tree, 'apps/app/tsconfig.json', {});
+      tree.write('apps/app/src/server.ts', serverFile);
+      if (replacementFile) {
+        tree.write('apps/app/src/server.dev.ts', replacementFile);
+      }
+
+      await convertToRspack(tree, { project: 'app' });
+
+      const config = tree.read('apps/app/rspack.config.ts', 'utf-8');
+      expect(config).toContain(`entry: './src/server.ts'`);
+      expect(config.includes('serveFromDevServer: true')).toBe(
+        servesFromDevServer
+      );
+    }
+  );
+
   it('should fold the server tsconfig into the build tsconfig', async () => {
     // ARRANGE
     const tree = createTreeWithEmptyWorkspace();

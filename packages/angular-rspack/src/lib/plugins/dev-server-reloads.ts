@@ -1,6 +1,8 @@
 import type { Compilation, Compiler } from '@rspack/core';
 import { createHash } from 'node:crypto';
 
+type CompilerKind = 'browser' | 'server';
+
 interface DevServerInstance {
   webSocketServer?: { clients: unknown[] } | null;
   sendMessage(clients: unknown[], type: string): void;
@@ -10,26 +12,39 @@ const PLUGIN_NAME = 'DevServerReloads';
 
 /**
  * Sends the dev server's `static-changed` message, which makes its client
- * reload the page, for the browser outputs its hot client leaves alone:
- * documents, copied files, web workers and the files that chunks load, such as
- * images in styles. Without hot, the client reloads by itself whenever the
- * compilation hash changes, which every output change does.
+ * reload the page, for the changes its hot client leaves alone: server-only
+ * edits and browser outputs outside the page's chunk files (documents, copied
+ * files, web workers and the files that chunks load, such as images in
+ * styles). Without hot, the client reloads by itself whenever the compilation
+ * hash changes, which every output change does.
  */
 export class DevServerReloads {
-  #outputs: Map<string, string> | undefined;
-  readonly #emitted = new Set<string>();
+  readonly #outputs = new Map<CompilerKind, Map<string, string>>();
+  readonly #emitted: Record<CompilerKind, Set<string>> = {
+    browser: new Set(),
+    server: new Set(),
+  };
+  #liveReload = false;
+  #hot = false;
   #devServer: DevServerInstance | undefined;
+  #roundEnded = false;
+  #hasErrors = false;
+  #pageChanged = false;
+  #otherBrowserChanged = false;
+  #serverChanged = false;
 
-  apply(compiler: Compiler): void {
+  /**
+   * Taps the browser compiler. Without an SSR server its build ends the
+   * round; otherwise the server build does.
+   */
+  apply(compiler: Compiler, { endsRound }: { endsRound: boolean }): void {
     const devServer = compiler.options.devServer;
     // The dev server turns both on unless they are set to false.
-    if (
-      !devServer ||
-      devServer.liveReload === false ||
-      devServer.hot === false
-    ) {
+    if (!devServer || devServer.liveReload === false) {
       return;
     }
+    this.#liveReload = true;
+    this.#hot = devServer.hot !== false;
     const setupMiddlewares = devServer.setupMiddlewares;
     devServer.setupMiddlewares = (middlewares, server) => {
       this.#devServer = server;
@@ -37,49 +52,87 @@ export class DevServerReloads {
         ? setupMiddlewares(middlewares, server)
         : middlewares;
     };
-    // Lists the files a build emits, so `#record` reads only those. rspack
-    // doesn't emit the assets it keeps from the previous build.
-    compiler.hooks.assetEmitted.tap(PLUGIN_NAME, (file) => {
-      this.#emitted.add(file);
-    });
+    this.trackEmits('browser', compiler);
     compiler.hooks.done.tap(PLUGIN_NAME, (stats) => {
-      const reload =
-        this.#record(stats.compilation) && !stats.compilation.errors.length;
-      const clients = this.#devServer?.webSocketServer?.clients;
-      if (reload && clients) {
-        this.#devServer?.sendMessage(clients, 'static-changed');
+      this.record('browser', stats.compilation);
+      if (endsRound) {
+        this.endRound();
       }
     });
   }
 
-  /** Whether a browser output outside the page's chunks changed. */
-  #record(compilation: Compilation): boolean {
-    const previous = this.#outputs;
+  /**
+   * Lists the files a build emits, so `record` reads only those. rspack
+   * doesn't emit the assets it keeps from the previous build.
+   */
+  trackEmits(kind: CompilerKind, compiler: Compiler): void {
+    compiler.hooks.assetEmitted.tap(PLUGIN_NAME, (file) => {
+      if (this.#liveReload) {
+        this.#emitted[kind].add(file);
+      }
+    });
+  }
+
+  record(kind: CompilerKind, compilation: Compilation): void {
+    if (!this.#liveReload) {
+      return;
+    }
+    const emitted = this.#emitted[kind];
+    if (compilation.errors.length) {
+      this.#hasErrors = true;
+    }
+    const previous = this.#outputs.get(kind);
     const current = new Map<string, string>();
-    const browserFiles = classifyBrowserFiles(compilation);
-    let otherChanged = false;
+    const browserFiles =
+      kind === 'browser' ? classifyBrowserFiles(compilation) : undefined;
     for (const asset of compilation.getAssets()) {
       if (asset.name.endsWith('.map') || asset.name.includes('.hot-update.')) {
         continue;
       }
       const known = previous?.get(asset.name);
       const digest =
-        known !== undefined && !this.#emitted.has(asset.name)
+        known !== undefined && !emitted.has(asset.name)
           ? known
           : createHash('sha1').update(asset.source.buffer()).digest('hex');
       current.set(asset.name, digest);
-      if (
-        previous &&
-        known !== digest &&
-        !browserFiles.page.has(asset.name) &&
-        !browserFiles.runtime.has(asset.name)
-      ) {
-        otherChanged = true;
+      if (!previous || known === digest) {
+        continue;
+      }
+      if (!browserFiles) {
+        this.#serverChanged = true;
+      } else if (browserFiles.page.has(asset.name)) {
+        this.#pageChanged = true;
+      } else if (!browserFiles.runtime.has(asset.name)) {
+        this.#otherBrowserChanged = true;
       }
     }
-    this.#outputs = current;
-    this.#emitted.clear();
-    return otherChanged;
+    this.#outputs.set(kind, current);
+    emitted.clear();
+  }
+
+  /** Decides on the changes recorded since the previous round ended. */
+  endRound(): void {
+    if (!this.#liveReload) {
+      return;
+    }
+    // The hot client applies page changes, or reloads when it can't. A server
+    // change that comes with them shows on that reload or the next request.
+    const reload =
+      this.#roundEnded &&
+      this.#hot &&
+      !this.#hasErrors &&
+      (this.#otherBrowserChanged ||
+        (this.#serverChanged && !this.#pageChanged));
+    this.#roundEnded = true;
+    this.#hasErrors = false;
+    this.#pageChanged = false;
+    this.#otherBrowserChanged = false;
+    this.#serverChanged = false;
+
+    const clients = this.#devServer?.webSocketServer?.clients;
+    if (reload && clients) {
+      this.#devServer?.sendMessage(clients, 'static-changed');
+    }
   }
 }
 

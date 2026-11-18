@@ -4,6 +4,7 @@ import {
   type Configuration,
   type DevServer,
   rspack,
+  type Stats,
   ValidationError,
 } from '@rspack/core';
 import { existsSync } from 'node:fs';
@@ -562,4 +563,58 @@ describe('NgRspackPlugin', () => {
       await rm(root, { recursive: true, force: true });
     }
   });
+
+  it('reports the dev server address of an SSR app once its server bundle loads', async () => {
+    vi.stubEnv('NX_READY_SIGNAL_SOCKET', '/tmp/nx-ready.sock');
+    vi.stubEnv('RSPACK_SERVE', 'true');
+    vi.spyOn(console, 'log').mockImplementation(() => {});
+    const root = await mkdtemp(join(tmpdir(), 'ng-rspack-ssr-'));
+    try {
+      await mkdir(join(root, 'src'), { recursive: true });
+      await writeFile(join(root, 'src', 'main.server.ts'), '');
+      await writeFile(join(root, 'src', 'server.ts'), '');
+      const configs = await createConfig({
+        options: {
+          browser: './src/main.ts',
+          index: './src/index.html',
+          tsConfig: './tsconfig.base.json',
+          outputPath: './dist',
+          deleteOutputPath: false,
+          root,
+          server: './src/main.server.ts',
+          ssr: { entry: './src/server.ts', serveFromDevServer: true },
+        },
+      });
+
+      const compiler = rspack(configs);
+      try {
+        const [browser, server] = compiler.compilers;
+        (browser.options.devServer || {}).onListening?.({
+          server: {
+            address: () => ({ address: '::', family: 'IPv6', port: 4200 }),
+          },
+          options: { server: { type: 'http', options: {} } },
+        });
+        expect(emitReadySignal).not.toHaveBeenCalled();
+
+        await mkdir(join(root, 'dist', 'server'), { recursive: true });
+        await writeFile(join(root, 'dist', 'server', 'server.js'), '');
+        await server.hooks.watchRun.promise(server);
+        await server.hooks.done.promise({
+          hasErrors: () => false,
+          compilation: { errors: [], getAssets: () => [] },
+        } as unknown as Stats);
+
+        await vi.waitFor(() =>
+          expect(emitReadySignal).toHaveBeenCalledWith(
+            'https://localhost:4200/'
+          )
+        );
+      } finally {
+        await new Promise((resolve) => compiler.close(resolve));
+      }
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  }, 10000);
 });

@@ -22,6 +22,7 @@ import { type PlatformServerExportsLoaderOptions } from '../../plugins/loaders/p
 import { EngineManifestPlugin } from '../../plugins/engine-manifest-plugin';
 import type { SharedServerRenderingInputs } from '../../plugins/index-html-plugin';
 import type { SsrReloadServer } from '../../plugins/server/ssr-reload-server';
+import type { AngularSsrDevServer } from '../../plugins/angular-ssr-dev-server';
 import { getDevClientGuardRule } from '../../plugins/loaders/dev-client-guard.loader';
 import { PrerenderPlugin } from '../../plugins/prerender-plugin';
 import { ServerAssetsPlugin } from '../../plugins/server-assets-plugin';
@@ -43,7 +44,8 @@ export async function getServerConfig(
   sharedLicenseInputs?: SharedLicenseInputs,
   sharedAngularPlugin?: AngularRspackPlugin,
   serverRenderingInputs?: SharedServerRenderingInputs,
-  ssrReloadServer?: SsrReloadServer
+  ssrReloadServer?: SsrReloadServer,
+  ssrDevServer?: AngularSsrDevServer
 ): Promise<Configuration> {
   const isDevServer = isServeMode();
   const { root } = normalizedOptions;
@@ -214,6 +216,7 @@ export async function getServerConfig(
         sharedLicenseInputs,
         sharedAngularPlugin,
         ssrReloadServer,
+        ssrDevServer,
       }),
       ...((normalizedOptions.prerender || normalizedOptions.appShell) &&
       !isDevServer
@@ -244,9 +247,9 @@ function installedRspackSupportsVirtualModules(root: string): boolean {
 }
 
 /**
- * The hosts the application engine accepts while serving. The forked server
- * process is browsed directly, so the engine check is the only host check on
- * the SSR dev path.
+ * The hosts the application engine accepts while serving. A separate SSR
+ * server is browsed directly, so this is its only host check; the dev server
+ * checks hosts first.
  */
 function getServeModeAllowedHosts(
   devServer: NormalizedDevServerOptions

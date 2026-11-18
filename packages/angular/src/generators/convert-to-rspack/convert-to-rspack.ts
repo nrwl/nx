@@ -37,6 +37,7 @@ import { nxVersion } from '../../utils/versions';
 import { acknowledgeAngularBuildScripts } from '../utils/acknowledge-build-scripts';
 import { supportsSsrAllowedHosts, versions } from '../utils/version-utils';
 import { createConfig } from './lib/create-config';
+import { exportsAngularRequestHandler } from './lib/exports-angular-request-handler';
 import { getCustomWebpackConfig } from './lib/get-custom-webpack-config';
 import { mergeServerTsConfig } from './lib/merge-server-tsconfig';
 import { updateTsconfig } from './lib/update-tsconfig';
@@ -501,6 +502,43 @@ export async function convertToRspack(
     } else if (target.executor === '@angular-devkit/build-angular:app-shell') {
       createConfigOptions.appShell = true;
       targetsToRemove.push(targetName);
+    }
+  }
+
+  if (createConfigOptions.ssr) {
+    const replacements = [
+      createConfigOptions,
+      ...Object.values(configurationOptions),
+    ]
+      .flatMap(
+        (options): Array<{ replace: string; with: string }> =>
+          options.fileReplacements ?? []
+      )
+      .map((replacement) => ({
+        replace: joinPathFragments(project.root, replacement.replace),
+        with: joinPathFragments(project.root, replacement.with),
+      }));
+    // A configuration compiles the file that replaces the entry, so each
+    // replacement, and its own replacements, is a server entry too. Paths are
+    // compared normalized, as angular-rspack resolves them before aliasing.
+    const serverEntries = new Set([
+      joinPathFragments(project.root, createConfigOptions.ssr.entry),
+    ]);
+    for (const entry of serverEntries) {
+      for (const replacement of replacements) {
+        if (replacement.replace === entry) {
+          serverEntries.add(replacement.with);
+        }
+      }
+    }
+    // The dev server never calls an app() export, so servers without Angular's
+    // reqHandler keep the separate server that runs their routes.
+    if (
+      [...serverEntries].every((entry) =>
+        exportsAngularRequestHandler(tree, entry)
+      )
+    ) {
+      createConfigOptions.ssr.serveFromDevServer = true;
     }
   }
 

@@ -530,8 +530,16 @@ describe('createConfig', () => {
         './public/**/*.*',
       ]);
 
+      const [devServerSsrConfig] = await _createConfig({
+        ...configBase,
+        root,
+        server: './src/main.server.ts',
+        ssr: { entry: './src/server.ts', serveFromDevServer: true },
+      });
       const [browserOnlyConfig] = await _createConfig({ ...configBase, root });
-      expect(browserOnlyConfig.devServer).not.toHaveProperty('watchFiles');
+      for (const config of [devServerSsrConfig, browserOnlyConfig]) {
+        expect(config.devServer).not.toHaveProperty('watchFiles');
+      }
     } finally {
       vi.unstubAllEnvs();
       await rm(root, { recursive: true, force: true });
@@ -561,6 +569,52 @@ describe('createConfig', () => {
       await rm(root, { recursive: true, force: true });
     }
   }, 10000);
+
+  it('should warn once per process that serving SSR from a separate server is deprecated', async () => {
+    // A fresh module, since earlier tests already printed the warning.
+    vi.resetModules();
+    const { _createConfig: createFreshConfig } =
+      await import('./create-config.js');
+    const root = await createSsrProjectRoot();
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const deprecationWarnings = () =>
+      warnSpy.mock.calls.filter(([message]) =>
+        String(message).includes('Serving SSR from a separate server')
+      );
+    const options: AngularRspackPluginOptions = {
+      ...configBase,
+      root,
+      server: './src/main.server.ts',
+      ssr: { entry: './src/server.ts' },
+    };
+    try {
+      await createFreshConfig(options);
+      vi.stubEnv('WEBPACK_SERVE', 'true');
+      await createFreshConfig({
+        ...options,
+        ssr: { entry: './src/server.ts', serveFromDevServer: true },
+      });
+      await createFreshConfig({ ...configBase, root });
+      // Graph creation inside `rspack serve` inherits its environment.
+      global.NX_GRAPH_CREATION = true;
+      await createFreshConfig(options);
+      delete global.NX_GRAPH_CREATION;
+      expect(deprecationWarnings()).toHaveLength(0);
+
+      await createFreshConfig(options);
+      await createFreshConfig(options);
+      expect(deprecationWarnings()).toEqual([
+        [
+          'WARNING: Serving SSR from a separate server on PORT is deprecated and will be removed in Nx 25. Set "ssr.serveFromDevServer: true" in the createConfig options to serve SSR from the dev server.',
+        ],
+      ]);
+    } finally {
+      delete global.NX_GRAPH_CREATION;
+      vi.unstubAllEnvs();
+      warnSpy.mockRestore();
+      await rm(root, { recursive: true, force: true });
+    }
+  }, 20000);
 
   it.each([
     ['prerender', { prerender: { discoverRoutes: true } }],
@@ -594,6 +648,45 @@ describe('createConfig', () => {
     },
     10000
   );
+
+  it('should leave documents to the SSR middleware only with ssr.serveFromDevServer while serving', async () => {
+    const root = await createSsrProjectRoot();
+    vi.stubEnv('WEBPACK_SERVE', 'true');
+    try {
+      const ssrOptions: AngularRspackPluginOptions = {
+        ...configBase,
+        root,
+        server: './src/main.server.ts',
+      };
+      const [devServerSsrConfig] = await _createConfig({
+        ...ssrOptions,
+        ssr: { entry: './src/server.ts', serveFromDevServer: true },
+      });
+      expect(devServerSsrConfig.devServer).toMatchObject({
+        historyApiFallback: false,
+        devMiddleware: { index: false },
+      });
+
+      const [forkedSsrConfig] = await _createConfig({
+        ...ssrOptions,
+        ssr: { entry: './src/server.ts' },
+      });
+      const [browserOnlyConfig] = await _createConfig({ ...configBase, root });
+      for (const config of [forkedSsrConfig, browserOnlyConfig]) {
+        expect(config.devServer).toMatchObject({
+          historyApiFallback: expect.objectContaining({
+            index: '/index.html',
+          }),
+        });
+        expect((config.devServer || {}).devMiddleware).not.toHaveProperty(
+          'index'
+        );
+      }
+    } finally {
+      vi.unstubAllEnvs();
+      await rm(root, { recursive: true, force: true });
+    }
+  }, 10000);
 
   it('should allow the dev-server hosts in the engine manifest while serving', async () => {
     const root = await createSsrProjectRoot();

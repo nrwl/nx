@@ -25,10 +25,11 @@ import {
 import { isServeMode } from '../utils/rspack-serve-env';
 import { addBodyScript } from '../utils/index-file/add-body-script';
 import { AngularRspackPlugin } from './angular-rspack-plugin';
+import type { AngularSsrDevServer } from './angular-ssr-dev-server';
 import {
-  AngularSsrDevServer,
+  AngularSsrForkedServer,
   servesSsrFromForkedServer,
-} from './angular-ssr-dev-server';
+} from './angular-ssr-forked-server';
 import { connectSsrReload } from './client/ssr-reload-client';
 import type { SsrReloadServer } from './server/ssr-reload-server';
 import type { DevServerReloads } from './dev-server-reloads';
@@ -54,6 +55,7 @@ export class NgRspackPlugin implements RspackPluginInstance {
     | SharedServerRenderingInputs
     | undefined;
   private readonly ssrReloadServer: SsrReloadServer | undefined;
+  private readonly ssrDevServer: AngularSsrDevServer | undefined;
   private readonly devServerReloads: DevServerReloads | undefined;
   readonly [READY_SIGNAL_PLUGIN] = true;
 
@@ -82,6 +84,8 @@ export class NgRspackPlugin implements RspackPluginInstance {
        */
       serverRenderingInputs?: SharedServerRenderingInputs;
       ssrReloadServer?: SsrReloadServer;
+      /** Serves SSR from the dev server of an SSR app in serve mode. */
+      ssrDevServer?: AngularSsrDevServer;
       /** Reloads the dev server's pages for changes it misses (serve mode). */
       devServerReloads?: DevServerReloads;
     }
@@ -93,6 +97,7 @@ export class NgRspackPlugin implements RspackPluginInstance {
     this.sharedAngularPlugin = extraOptions.sharedAngularPlugin;
     this.serverRenderingInputs = extraOptions.serverRenderingInputs;
     this.ssrReloadServer = extraOptions.ssrReloadServer;
+    this.ssrDevServer = extraOptions.ssrDevServer;
     this.devServerReloads = extraOptions.devServerReloads;
   }
 
@@ -103,7 +108,10 @@ export class NgRspackPlugin implements RspackPluginInstance {
 
     applyDevServerCors(compiler);
 
-    if (
+    if (this.ssrDevServer) {
+      // With SSR, ready means the dev server's URL renders.
+      applyDevServerReadySignal(compiler, this.ssrDevServer.firstLoad);
+    } else if (
       !isDevServer ||
       !this.pluginOptions.hasServer ||
       !ssrServerEmitsReadySignal(
@@ -143,12 +151,17 @@ export class NgRspackPlugin implements RspackPluginInstance {
       isDevServer &&
       servesSsrFromForkedServer(this.pluginOptions)
     ) {
-      new AngularSsrDevServer(this.pluginOptions, ssrReloadServer).apply(
+      new AngularSsrForkedServer(this.pluginOptions, ssrReloadServer).apply(
         compiler
       );
     }
-    if (!this.isPlatformServer) {
-      this.devServerReloads?.apply(compiler);
+    if (this.isPlatformServer) {
+      this.ssrDevServer?.applyToServer(compiler);
+    } else {
+      this.ssrDevServer?.applyToBrowser(compiler);
+      this.devServerReloads?.apply(compiler, {
+        endsRound: !this.ssrDevServer,
+      });
     }
     if (this.isPlatformServer) {
       // The server bundle is CommonJS; the marker keeps Node loading it as
