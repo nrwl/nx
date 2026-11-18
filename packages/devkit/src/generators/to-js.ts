@@ -1,9 +1,10 @@
 import type { Tree } from 'nx/src/devkit-exports';
 import { transpileTypescript } from 'nx/src/devkit-internals';
 import type { CompilerOptions } from 'typescript';
-import { ensureTypescript } from '../utils/ensure-typescript';
-import { ensurePackage } from '../utils/package-json';
-import { typescriptVersion } from '../utils/versions';
+import {
+  ensureTypescript,
+  loadTypescriptWithoutAdapter,
+} from '../utils/ensure-typescript';
 
 // The same values in every TypeScript version Nx supports.
 const JSX_EMIT_PRESERVE = 1;
@@ -56,13 +57,8 @@ function loadTranspile(): (
   input: string,
   compilerOptions: CompilerOptions
 ) => string {
-  // @nx/devkit's nx peer range includes versions without transpileTypescript.
-  // Those do not support TypeScript 7.1, so the TypeScript module transpiles.
   if (typeof transpileTypescript !== 'function') {
-    return ensurePackage<typeof import('typescript')>(
-      'typescript',
-      typescriptVersion
-    ).transpile;
+    return loadTypescriptWithoutAdapter().transpile;
   }
   ensureTypescript();
   return transpileTypescript;

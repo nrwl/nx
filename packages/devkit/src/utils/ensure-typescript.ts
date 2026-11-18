@@ -12,10 +12,8 @@ import { typescriptVersion } from './versions';
  * directory first.
  */
 export function ensureTypescript(): TypescriptAst {
-  // @nx/devkit's nx peer range includes versions without getTypescriptAst.
-  // Those do not support TypeScript 7.1, so the module itself is the AST.
   if (typeof getTypescriptAst !== 'function') {
-    return ensurePackage<TypescriptAst>('typescript', typescriptVersion);
+    return loadTypescriptWithoutAdapter();
   }
   try {
     return getTypescriptAst();
@@ -26,6 +24,23 @@ export function ensureTypescript(): TypescriptAst {
   }
   ensurePackage('typescript', typescriptVersion);
   return getTypescriptAst();
+}
+
+/**
+ * Loads the TypeScript module for an nx without the TypeScript adapter, which
+ * @nx/devkit's nx peer range includes. Such an nx predates TypeScript 7.1.
+ */
+export function loadTypescriptWithoutAdapter(): typeof import('typescript') {
+  const ts = ensurePackage<typeof import('typescript')>(
+    'typescript',
+    typescriptVersion
+  );
+  if (typeof ts.createSourceFile !== 'function') {
+    throw new Error(
+      `The installed nx does not support TypeScript ${ts.version}. Update nx to match @nx/devkit, or install TypeScript 6 as "typescript".`
+    );
+  }
+  return ts;
 }
 
 /**
