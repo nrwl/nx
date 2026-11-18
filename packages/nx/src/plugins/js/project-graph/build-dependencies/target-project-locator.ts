@@ -22,6 +22,7 @@ import {
 import { resolveRelativeToDir } from '../../utils/resolve-relative-to-dir';
 import {
   getRootTsConfigFileName,
+  isTypeScriptResolvable,
   resolveModuleByImport,
 } from '../../utils/typescript';
 
@@ -130,6 +131,7 @@ export class TargetProjectLocator {
   private paths = this.tsConfig.config?.compilerOptions?.paths;
   private parsedPathPatterns: ParsedPatterns | undefined;
   private typescriptResolutionCache = new Map<string, string | null>();
+  private typescriptResolvable: boolean | undefined;
   private linkedProjectCache = new Map<string, string | null>();
   private packagesMetadata: {
     entryPointsToProjectMap: Record<string, ProjectGraphProjectNode>;
@@ -274,7 +276,10 @@ export class TargetProjectLocator {
         : externalProject;
     }
 
-    if (this.tsConfig.config) {
+    if (
+      this.tsConfig.config &&
+      (this.typescriptResolvable ??= isTypeScriptResolvable())
+    ) {
       // TODO: this can be removed once we rework resolveImportWithRequire below
       // to properly handle ESM (exports, imports, conditions)
       const resolvedProject = this.resolveImportWithTypescript(

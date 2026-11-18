@@ -13,7 +13,10 @@ import { ProjectConfiguration } from '../config/workspace-json-project-json';
 import { hashObject } from '../hasher/file-hasher';
 import { NxWorkspaceFilesExternals } from '../native';
 import { LOCKFILES } from '../plugins/js/lock-file/lock-file-names';
-import { getRootTsConfigPath } from '../plugins/js/utils/typescript';
+import {
+  getRootTsConfigPath,
+  isTypeScriptResolvable,
+} from '../plugins/js/utils/typescript';
 import { assertWorkspaceValidity } from '../utils/assert-workspace-validity';
 import { DelayedSpinner } from '../utils/delayed-spinner';
 import { readJsonFile } from '../utils/fileutils';
@@ -136,6 +139,7 @@ export async function buildProjectGraphUsingProjectFileMap(
   const rootTsConfig = readRootTsConfig();
   const externalNodesHash = hashExternalNodes(externalNodes);
   const lockFileHash = await hashWithWorkspaceContext(workspaceRoot, LOCKFILES);
+  const typescriptResolvable = isTypeScriptResolvable();
 
   let filesToProcess: FileMap;
   let cachedFileData: CachedFileData;
@@ -148,7 +152,8 @@ export async function buildProjectGraphUsingProjectFileMap(
       nxJson,
       rootTsConfig,
       externalNodesHash,
-      lockFileHash
+      lockFileHash,
+      typescriptResolvable
     );
   if (useCacheData) {
     const fromCache = extractCachedFileData(fileMap, fileMapCache);
@@ -186,7 +191,8 @@ export async function buildProjectGraphUsingProjectFileMap(
       fileMap,
       rootTsConfig,
       externalNodesHash,
-      lockFileHash
+      lockFileHash,
+      typescriptResolvable
     );
   } catch (e) {
     // we need to include the workspace validity errors in the final error
