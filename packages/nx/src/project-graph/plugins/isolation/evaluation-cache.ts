@@ -2,6 +2,7 @@ import {
   type BigIntStats,
   existsSync,
   mkdirSync,
+  readdirSync,
   readFileSync,
   statSync,
 } from 'node:fs';
@@ -29,7 +30,9 @@ import type { CreateNodesContext, CreateNodesResult } from '../public-api';
  *   root it produced (names only), which covers test discovery and existence
  *   checks;
  * - every file the worker and its children opened for reading while loading
- *   the plugin and during the call, by fingerprint.
+ *   the plugin and during the call, by fingerprint;
+ * - the entry names of every directory they listed, but not those entries'
+ *   contents unless they were also read.
  *
  * A plugin's own result cache answers unchanged projects without reading
  * their inputs, so one call's reads cover only what it re-evaluated. Inputs
@@ -46,7 +49,15 @@ interface EvaluationEntry {
   configFiles: string[];
   listingHash: string;
   inputs: Array<[path: string, fingerprint: string]>;
+  listings: Array<[dir: string, names: string]>;
   results: CreateNodesResults;
+}
+
+/** What one call touched: files it read, directories it listed, files it wrote. */
+export interface CallTrace {
+  reads: string[];
+  listings: string[];
+  writes: string[];
 }
 
 export interface TraceMarkers {
@@ -68,8 +79,17 @@ function isUnder(path: string, dir: string): boolean {
   return p === d || p.startsWith(d.endsWith(sep) ? d : d + sep);
 }
 
+/**
+ * A hardlinked file's ctime moves whenever any link to it is added or removed,
+ * anywhere on the machine, as pnpm does with its store on every install. Its
+ * own writes still move its mtime.
+ */
+function ownCtime(s: BigIntStats): bigint | null {
+  return s.isFile() && s.nlink > 1n ? null : s.ctimeNs;
+}
+
 function describe(s: BigIntStats): string {
-  return `${s.ino}:${s.size}:${s.mtimeNs}:${s.ctimeNs}`;
+  return `${s.ino}:${s.size}:${s.mtimeNs}:${ownCtime(s) ?? '-'}`;
 }
 
 function fingerprint(path: string): string {
@@ -80,13 +100,23 @@ function fingerprint(path: string): string {
   }
 }
 
+/** The directory's entry names, or `-` when it cannot be listed. */
+function listingFingerprint(dir: string): string {
+  try {
+    return hashArray(readdirSync(dir).sort());
+  } catch {
+    return '-';
+  }
+}
+
 // nx's own state: the temp root (node's compile cache, native binding copies,
-// re-signed binaries) and ~/.nx (its database). Derived from inputs already
-// recorded, and rewritten as nx runs.
-const derivedDirs = [NX_TMP_DIR, join(homedir(), '.nx')].flatMap((dir) => [
-  dir,
-  canonicalDir(dir),
-]);
+// re-signed binaries), ~/.nx (its database) and the daemon's directory. Derived
+// from inputs already recorded, and rewritten as nx runs.
+const derivedDirs = [
+  NX_TMP_DIR,
+  join(homedir(), '.nx'),
+  join(workspaceDataDirectory, 'd'),
+].flatMap((dir) => [dir, canonicalDir(dir)]);
 
 /** The workspace context's file index, which nx keeps, not the plugin. */
 function isWorkspaceIndex(path: string): boolean {
@@ -103,21 +133,35 @@ function isNoise(path: string): boolean {
   }
   return (
     process.platform !== 'win32' &&
-    (path.startsWith('/dev/') ||
-      path.startsWith('/proc/') ||
-      path.startsWith('/sys/'))
+    ['/dev', '/proc', '/sys'].some((dir) => isUnder(path, dir))
   );
 }
 
 /**
- * The reads attributed to one call: everything before the first call marker,
- * which is the worker loading the plugin, plus everything between this call's
- * markers. `null` when the trace cannot be trusted to be complete.
+ * The reads and listings attributed to one call: everything before the first
+ * call marker, which is the worker loading the plugin, plus everything between
+ * this call's markers. `null` when the trace cannot be trusted to be complete.
  */
 export function readCallTrace(
   markers: TraceMarkers,
   traceId: string
-): string[] | null {
+): CallTrace | null {
+  return readTrace(markers, traceId);
+}
+
+/**
+ * The reads and listings of the worker loading the plugin, up to the first call
+ * marker. Read once the load has answered, so everything that shaped the answer
+ * is already in the log.
+ */
+export function readLoadTrace(markers: TraceMarkers): CallTrace | null {
+  return readTrace(markers, null);
+}
+
+function readTrace(
+  markers: TraceMarkers,
+  traceId: string | null
+): CallTrace | null {
   let lines: string[];
   try {
     lines = readFileSync(markers.logPath, 'utf8').split('\n');
@@ -125,6 +169,8 @@ export function readCallTrace(
     return null;
   }
   const reads = new Set<string>();
+  const listings = new Set<string>();
+  const writes = new Set<string>();
   // Reads before any call marker are the worker loading the plugin.
   let phase: 'load' | 'other' | 'call' | 'done' = 'load';
   let sawWorkerScript = false;
@@ -137,6 +183,7 @@ export function readCallTrace(
       return null;
     }
     if (line.startsWith('!begin ')) {
+      if (traceId === null) break;
       if (line === `!begin ${traceId}`) phase = 'call';
       else if (phase === 'load') phase = 'other';
       continue;
@@ -145,13 +192,190 @@ export function readCallTrace(
       if (line === `!end ${traceId}`) phase = 'done';
       continue;
     }
-    if (phase === 'load' || phase === 'call') {
-      const path = resolve(line);
-      if (samePath(path, markers.workerScript)) sawWorkerScript = true;
-      if (!isNoise(path)) reads.add(path);
+    if (phase !== 'load' && phase !== 'call') continue;
+    if (line.startsWith('!list ')) {
+      const dir = resolve(line.slice(6));
+      if (!isNoise(dir)) listings.add(dir);
+      continue;
+    }
+    if (line.startsWith('!write ')) {
+      writes.add(resolve(line.slice(7)));
+      continue;
+    }
+    const path = resolve(line);
+    if (samePath(path, markers.workerScript)) sawWorkerScript = true;
+    if (!isNoise(path)) reads.add(path);
+  }
+  const finished = traceId === null || phase === 'done';
+  return sawWorkerScript && finished
+    ? { reads: [...reads], listings: [...listings], writes: [...writes] }
+    : null;
+}
+
+function identityOf(
+  name: string,
+  index: number | undefined,
+  plugin: PluginConfiguration
+): string[] {
+  const config = typeof plugin === 'string' ? { plugin } : plugin;
+  return [
+    nxVersion,
+    process.platform,
+    name,
+    String(index ?? ''),
+    JSON.stringify([
+      config?.plugin,
+      config?.options,
+      config?.include,
+      config?.exclude,
+    ]),
+  ];
+}
+
+function nxEnv(): string[] {
+  return Object.keys(process.env)
+    .filter((k) => k.startsWith('NX_'))
+    .sort()
+    .map((k) => `${k}=${process.env[k]}`);
+}
+
+type Fingerprints = Pick<EvaluationEntry, 'inputs' | 'listings'>;
+
+/** Whether every recorded file and listing still matches. */
+function unchanged(
+  plugin: string,
+  { inputs, listings }: Fingerprints
+): boolean {
+  for (const [path, fp] of inputs) {
+    if (fingerprint(path) !== fp) {
+      logger.verbose(`[plugin-evaluation-cache] ${plugin}: ${path} changed`);
+      return false;
     }
   }
-  return sawWorkerScript && phase === 'done' ? [...reads] : null;
+  for (const [dir, names] of listings ?? []) {
+    if (listingFingerprint(dir) !== names) {
+      logger.verbose(
+        `[plugin-evaluation-cache] ${plugin}: ${dir} entries changed`
+      );
+      return false;
+    }
+  }
+  return true;
+}
+
+/**
+ * Fingerprints what a traced run read and listed, or `null` when any of it
+ * changed after `startedMs`, because the run may have seen either version.
+ */
+function fingerprintTrace(
+  plugin: string,
+  paths: Iterable<string>,
+  dirs: Iterable<string>,
+  written: ReadonlySet<string>,
+  startedMs: number
+): Fingerprints | null {
+  const changed = (path: string) => {
+    logger.verbose(
+      `[plugin-evaluation-cache] not caching ${plugin}: ${path} changed while it ran`
+    );
+    return null;
+  };
+  const startedNs = BigInt(Math.floor(startedMs * 1_000_000));
+  const changedDuringCall = (s: BigIntStats) =>
+    s.mtimeNs >= startedNs || (ownCtime(s) ?? 0n) >= startedNs;
+
+  // A missing path may have been removed during the call. Removing it
+  // touched its nearest surviving ancestor.
+  const removedDuringCall = (path: string): boolean => {
+    for (let dir = dirname(path); ; dir = dirname(dir)) {
+      try {
+        return changedDuringCall(statSync(dir, { bigint: true }));
+      } catch {
+        if (dirname(dir) === dir) return false;
+      }
+    }
+  };
+
+  const inputs: EvaluationEntry['inputs'] = [];
+  for (const path of [...paths].sort()) {
+    let fp = '-';
+    try {
+      const s = statSync(path, { bigint: true });
+      // Opening a directory is not reading its entries. Listing it is.
+      if (s.isDirectory()) continue;
+      if (changedDuringCall(s)) return changed(path);
+      fp = describe(s);
+    } catch {
+      // Gone because the run removed what it wrote: absent is what it left.
+      if (!written.has(path) && removedDuringCall(path)) return changed(path);
+    }
+    inputs.push([path, fp]);
+  }
+
+  const listings: EvaluationEntry['listings'] = [];
+  for (const dir of [...dirs].sort()) {
+    // Fingerprint before stat, so an entry added in between moves the mtime.
+    const fp = listingFingerprint(dir);
+    try {
+      if (changedDuringCall(statSync(dir, { bigint: true })))
+        return changed(dir);
+    } catch {
+      if (removedDuringCall(dir)) return changed(dir);
+    }
+    listings.push([dir, fp]);
+  }
+  return { inputs, listings };
+}
+
+/**
+ * Reuses what an isolated plugin's worker answered when it loaded (its name,
+ * hooks and createNodes pattern) while nothing it read or listed while loading
+ * has changed, so a plugin whose hooks are all answered from cache never starts
+ * a worker. Plugin caches are left out: they do not shape that answer.
+ */
+export class LoadResultCache<T> {
+  private readonly cachePath: string;
+  private readonly identity: string[];
+
+  constructor(
+    name: string,
+    index: number | undefined,
+    plugin: PluginConfiguration
+  ) {
+    this.identity = ['load', ...identityOf(name, index, plugin)];
+    this.cachePath = join(CACHE_DIR, `${hashArray(this.identity)}.json`);
+  }
+
+  private key(): string {
+    return hashArray([...this.identity, ...nxEnv()]);
+  }
+
+  lookup(): T | null {
+    let entry: Fingerprints & { key: string; result: T };
+    try {
+      entry = readJsonFile(this.cachePath);
+    } catch {
+      return null;
+    }
+    return entry.key === this.key() && unchanged(this.identity[3], entry)
+      ? entry.result
+      : null;
+  }
+
+  store(result: T, trace: CallTrace, startedMs: number): void {
+    const isPluginCache = (path: string) =>
+      isUnder(path, workspaceDataDirectory) && !isWorkspaceIndex(path);
+    const fingerprints = fingerprintTrace(
+      this.identity[3],
+      trace.reads.filter((p) => !isPluginCache(p)),
+      trace.listings.filter((d) => !isUnder(d, workspaceDataDirectory)),
+      new Set(trace.writes),
+      startedMs
+    );
+    if (!fingerprints) return;
+    mkdirSync(CACHE_DIR, { recursive: true });
+    writeJsonFile(this.cachePath, { key: this.key(), ...fingerprints, result });
+  }
 }
 
 export class EvaluationCache {
@@ -163,32 +387,16 @@ export class EvaluationCache {
     index: number | undefined,
     plugin: PluginConfiguration
   ) {
-    const config = typeof plugin === 'string' ? { plugin } : plugin;
-    this.identity = [
-      nxVersion,
-      process.platform,
-      name,
-      String(index ?? ''),
-      JSON.stringify([
-        config?.plugin,
-        config?.options,
-        config?.include,
-        config?.exclude,
-      ]),
-    ];
+    this.identity = identityOf(name, index, plugin);
     this.cachePath = join(CACHE_DIR, `${hashArray(this.identity)}.json`);
   }
 
   private key(context: CreateNodesContext): string {
-    const nxEnv = Object.keys(process.env)
-      .filter((k) => k.startsWith('NX_'))
-      .sort()
-      .map((k) => `${k}=${process.env[k]}`);
     return hashArray([
       ...this.identity,
       context.workspaceRoot,
       hashObject(context.nxJsonConfiguration ?? {}),
-      ...nxEnv,
+      ...nxEnv(),
     ]);
   }
 
@@ -232,32 +440,43 @@ export class EvaluationCache {
     const entry = this.readEntry();
     if (!entry) return null;
     const files = [...configFiles].sort();
+    if (entry.key !== this.key(context)) {
+      logger.verbose(
+        `[plugin-evaluation-cache] ${this.identity[2]}: nx.json, the plugin's options or the NX_ environment changed`
+      );
+      return null;
+    }
     if (
-      entry.key !== this.key(context) ||
       entry.configFiles.length !== files.length ||
       entry.configFiles.some((f, i) => f !== files[i])
     ) {
+      logger.verbose(
+        `[plugin-evaluation-cache] ${this.identity[2]}: the matched config files changed`
+      );
       return null;
     }
-    for (const [path, fp] of entry.inputs) {
-      if (fingerprint(path) !== fp) {
-        logger.verbose(`[plugin-evaluation-cache] ${path} changed`);
-        return null;
-      }
+    if (!unchanged(this.identity[2], entry)) {
+      return null;
     }
     const listing = await this.listingHash(
       context.workspaceRoot,
       files,
       entry.results
     );
-    return listing === entry.listingHash ? entry.results : null;
+    if (listing !== entry.listingHash) {
+      logger.verbose(
+        `[plugin-evaluation-cache] ${this.identity[2]}: files were added or removed under a project root`
+      );
+      return null;
+    }
+    return entry.results;
   }
 
   async store(
     configFiles: readonly string[],
     context: CreateNodesContext,
     results: CreateNodesResults,
-    reads: string[],
+    trace: CallTrace,
     callStartedMs: number,
     bypassedPluginCaches: boolean
   ): Promise<void> {
@@ -267,7 +486,7 @@ export class EvaluationCache {
       return;
     }
     const paths = new Set<string>();
-    for (const path of reads) {
+    for (const path of trace.reads) {
       if (isUnder(path, workspaceDataDirectory) && !isWorkspaceIndex(path)) {
         if (bypassedPluginCaches) {
           // Read with plugin caches off: a cache that ignores the switch, such
@@ -283,23 +502,21 @@ export class EvaluationCache {
     }
     for (const [path] of previous?.inputs ?? []) paths.add(path);
 
-    const startedNs = BigInt(Math.floor(callStartedMs * 1_000_000));
-    const inputs: EvaluationEntry['inputs'] = [];
-    for (const path of [...paths].sort()) {
-      let fp = '-';
-      try {
-        const s = statSync(path, { bigint: true });
-        // Opening a directory is not reading content. Listings are covered
-        // by the config files and project root listings instead.
-        if (s.isDirectory()) continue;
-        // Written during the call: the result may reflect either version.
-        if (s.mtimeNs >= startedNs || s.ctimeNs >= startedNs) return;
-        fp = describe(s);
-      } catch {
-        // Gone now: recorded as absent, so it reappearing re-runs the plugin.
-      }
-      inputs.push([path, fp]);
+    const dirs = new Set<string>();
+    for (const dir of trace.listings) {
+      // Plugin caches list their own directory as they rewrite it.
+      if (!isUnder(dir, workspaceDataDirectory)) dirs.add(dir);
     }
+    for (const [dir] of previous?.listings ?? []) dirs.add(dir);
+
+    const fingerprints = fingerprintTrace(
+      this.identity[2],
+      paths,
+      dirs,
+      new Set(trace.writes),
+      callStartedMs
+    );
+    if (!fingerprints) return;
     const files = [...configFiles].sort();
     const entry: EvaluationEntry & { key: string } = {
       key: this.key(context),
@@ -309,7 +526,7 @@ export class EvaluationCache {
         files,
         results
       ),
-      inputs,
+      ...fingerprints,
       results,
     };
     mkdirSync(CACHE_DIR, { recursive: true });

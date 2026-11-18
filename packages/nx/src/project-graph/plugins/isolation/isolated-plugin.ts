@@ -59,7 +59,9 @@ import {
 } from './plugin-lifecycle-manager';
 import {
   EvaluationCache,
+  LoadResultCache,
   readCallTrace,
+  readLoadTrace,
   type TraceMarkers,
 } from './evaluation-cache';
 import {
@@ -148,7 +150,8 @@ export class IsolatedPlugin implements LoadedNxPlugin {
     | null = null;
 
   /**
-   * Creates and loads an isolated plugin worker.
+   * Creates and loads an isolated plugin worker. When an earlier load's answer
+   * still holds, the worker is not started until a hook call needs it.
    */
   static async load(
     plugin: PluginConfiguration,
@@ -168,9 +171,23 @@ export class IsolatedPlugin implements LoadedNxPlugin {
       index
     );
 
+    const loadCache = isReadTracingEnabled()
+      ? new LoadResultCache<LoadResultPayload>(name, index, plugin)
+      : null;
+    const cached = loadCache?.lookup();
+    if (cached) {
+      instance.setupHooks(cached);
+      return instance;
+    }
+
     try {
+      const startedMs = performance.timeOrigin + performance.now();
       const loadResult = await instance.spawnAndConnect();
       instance.setupHooks(loadResult);
+      const trace = instance.readTrace && readLoadTrace(instance.readTrace);
+      if (loadCache && trace) {
+        loadCache.store(loadResult, trace, startedMs);
+      }
       return instance;
     } catch (e) {
       // A timed-out worker is still running, and the caller is about to drop this instance.
@@ -567,8 +584,8 @@ export class IsolatedPlugin implements LoadedNxPlugin {
     bypassPluginCaches: boolean
   ): Promise<void> {
     try {
-      const reads = readCallTrace(readTrace, traceId);
-      if (!reads) {
+      const trace = readCallTrace(readTrace, traceId);
+      if (!trace) {
         logger.verbose(
           `[isolated-plugin] not caching createNodes results for "${this.name}": the read trace is incomplete`
         );
@@ -578,7 +595,7 @@ export class IsolatedPlugin implements LoadedNxPlugin {
         configFiles,
         ctx,
         results,
-        reads,
+        trace,
         startedMs,
         bypassPluginCaches
       );
