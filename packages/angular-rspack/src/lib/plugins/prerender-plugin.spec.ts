@@ -158,7 +158,10 @@ describe('PrerenderPlugin', () => {
   it('reports route validation errors and prerenders no routes', async () => {
     extractRoutes.mockResolvedValue({
       routes: ['home'],
-      errors: ["The 'invalid' server route does not match any routes."],
+      errors: [
+        "The 'invalid' server route does not match any routes.",
+        "Invalid '/x' route configuration: the path cannot start with a slash.",
+      ],
     });
 
     expect(
@@ -166,6 +169,9 @@ describe('PrerenderPlugin', () => {
     ).toEqual([
       expect.stringContaining(
         "The 'invalid' server route does not match any routes."
+      ),
+      expect.stringContaining(
+        "Invalid '/x' route configuration: the path cannot start with a slash."
       ),
     ]);
     expect(readPrerenderedRoutes()).toEqual({ routes: {} });
