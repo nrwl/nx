@@ -1,5 +1,6 @@
 import {
   CreateNodesContext,
+  normalizePath,
   ProjectGraph,
   Task,
   workspaceRoot,
@@ -397,6 +398,70 @@ describe('@nx/playwright/plugin', () => {
         ],
       ]
     `);
+  });
+
+  it('keeps atomized paths independent of the workspace location', async () => {
+    const reportDir = join(tempFs.tempDir, 'reports/e2e');
+    const config = {
+      testDir: 'tests',
+      outputDir: join(reportDir, 'results'),
+      reporter: [
+        ['html', { outputFolder: join(reportDir, 'html') }],
+        ['junit', { outputFile: join(reportDir, 'junit/report.xml') }],
+        ['blob', { outputFile: join(reportDir, 'blob/report.zip') }],
+      ],
+    };
+    await tempFs.createFiles({
+      'apps/my-app/package.json': '{}',
+      'apps/my-app/playwright.config.js': `module.exports = ${JSON.stringify(
+        config
+      )}`,
+      'apps/my-app/tests/run-me.spec.ts': '',
+    });
+
+    const results = await createNodesFunction(
+      ['apps/my-app/playwright.config.js'],
+      { targetName: 'e2e', ciTargetName: 'e2e-ci' },
+      context
+    );
+    const target =
+      results[0][1].projects['apps/my-app'].targets[
+        'e2e-ci--tests/run-me.spec.ts'
+      ];
+
+    expect(target.command).toBe(
+      'playwright test tests/run-me.spec.ts --output=../../reports/e2e/results/tests-run-me-spec-ts'
+    );
+    expect(target.options.env).toEqual({
+      PLAYWRIGHT_HTML_OUTPUT_DIR: '../../reports/e2e/html/tests-run-me-spec-ts',
+      PLAYWRIGHT_HTML_REPORT: '../../reports/e2e/html/tests-run-me-spec-ts',
+      PLAYWRIGHT_JUNIT_OUTPUT_FILE:
+        '../../reports/e2e/junit/tests-run-me-spec-ts/report.xml',
+      PLAYWRIGHT_BLOB_OUTPUT_FILE:
+        '../../reports/e2e/blob/tests-run-me-spec-ts.zip',
+    });
+    expect(JSON.stringify(target)).not.toContain(normalizePath(tempFs.tempDir));
+  });
+
+  it('keeps atomized output paths outside the workspace absolute', async () => {
+    const outputDir = `${normalizePath(tempFs.tempDir)}-external-results`;
+    await mockPlaywrightConfig(tempFs, {
+      testDir: 'tests',
+      outputDir,
+    });
+    await tempFs.createFiles({ 'tests/run-me.spec.ts': '' });
+
+    const results = await createNodesFunction(
+      ['playwright.config.js'],
+      { targetName: 'e2e', ciTargetName: 'e2e-ci' },
+      context
+    );
+    const target =
+      results[0][1].projects['.'].targets['e2e-ci--tests/run-me.spec.ts'];
+
+    expect(target.command).toBe(
+      `playwright test tests/run-me.spec.ts --output=${outputDir}/tests-run-me-spec-ts`
+    );
   });
 
   it('should create nodes for distributed CI', async () => {
