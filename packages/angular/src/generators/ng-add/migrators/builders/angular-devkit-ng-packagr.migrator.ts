@@ -10,7 +10,7 @@ import {
   updateProjectConfiguration,
 } from '@nx/devkit';
 import { getRootTsConfigPathInTree } from '@nx/js';
-import { basename } from 'path';
+import { basename, dirname } from 'path';
 import { addBuildableLibrariesPostCssDependencies } from '../../../utils/dependencies';
 import type { Logger, ProjectMigrationInfo } from '../../utilities';
 import { BuilderMigrator } from './builder.migrator';
@@ -61,6 +61,7 @@ export class AngularDevkitNgPackagrMigrator extends BuilderMigrator {
         this.updateNgPackageJson(name, target);
       }
       this.updateTsConfigs(name, target);
+      this.updateOtherTsConfigs(name, target);
       this.updateCacheableOperations([name]);
       if (!isLibraryBuilder) {
         addBuildableLibrariesPostCssDependencies(this.tree);
@@ -174,8 +175,7 @@ export class AngularDevkitNgPackagrMigrator extends BuilderMigrator {
     targetName: string,
     target: TargetConfiguration
   ): void {
-    const tsConfigPath =
-      target.options?.tsConfig ?? target.configurations?.development?.tsConfig;
+    const tsConfigPath = this.getBuildTsConfigPath(target);
     if (!tsConfigPath) {
       this.logger.warn(
         `The "${targetName}" target does not have the "tsConfig" option configured. Skipping updating the tsConfig file.`
@@ -193,11 +193,10 @@ export class AngularDevkitNgPackagrMigrator extends BuilderMigrator {
     }
 
     const rootTsConfigFile = getRootTsConfigPathInTree(this.tree);
-    const projectOffsetFromRoot = offsetFromRoot(this.projectConfig.root);
     this.updateTsConfigFile(
       tsConfigPath,
       rootTsConfigFile,
-      projectOffsetFromRoot
+      offsetFromRoot(dirname(tsConfigPath))
     );
 
     updateJson(this.tree, tsConfigPath, (json) => {
@@ -207,5 +206,95 @@ export class AngularDevkitNgPackagrMigrator extends BuilderMigrator {
 
       return json;
     });
+  }
+
+  // Other tsconfig files usually extend the build one, so only an `extends`
+  // pointing at the root tsconfig, which ng-add renames, is updated.
+  private updateOtherTsConfigs(
+    targetName: string,
+    target: TargetConfiguration
+  ): void {
+    const originalTarget = this.originalProjectConfig.targets[targetName];
+    const tsConfigPaths: [originalPath: string, path: string][] = [
+      [originalTarget.options?.tsConfig, target.options?.tsConfig],
+      ...Object.entries(target.configurations ?? {}).map(
+        ([name, configuration]): [string, string] => [
+          originalTarget.configurations?.[name]?.tsConfig,
+          configuration.tsConfig,
+        ]
+      ),
+    ];
+    const rootTsConfigFile = getRootTsConfigPathInTree(this.tree);
+    const visited = new Set([this.getBuildTsConfigPath(target)]);
+
+    for (const [originalPath, path] of tsConfigPaths) {
+      if (!path || !originalPath || visited.has(path)) {
+        continue;
+      }
+      visited.add(path);
+
+      if (!this.tree.exists(path)) {
+        this.logger.warn(
+          `The tsConfig file "${originalPath}" specified in the "${targetName}" target could not be found. Skipping updating the tsConfig file.`
+        );
+        continue;
+      }
+
+      const newExtends = `${offsetFromRoot(dirname(path))}${rootTsConfigFile}`;
+      const updateExtends = (extendsPath: unknown) =>
+        this.extendsRootTsConfig(
+          extendsPath,
+          dirname(originalPath),
+          rootTsConfigFile
+        )
+          ? newExtends
+          : extendsPath;
+
+      updateJson(this.tree, path, (json) => {
+        if (Array.isArray(json.extends)) {
+          json.extends = json.extends.map(updateExtends);
+        } else if (json.extends !== undefined) {
+          json.extends = updateExtends(json.extends);
+        }
+
+        return json;
+      });
+    }
+  }
+
+  // Resolves a relative `extends` like TypeScript does, which appends `.json`
+  // when the path as written doesn't exist.
+  private extendsRootTsConfig(
+    extendsPath: unknown,
+    tsConfigDir: string,
+    rootTsConfigFile: string
+  ): boolean {
+    if (typeof extendsPath !== 'string') {
+      return false;
+    }
+    const normalizedExtendsPath = extendsPath.replace(/\\/g, '/');
+    if (
+      !normalizedExtendsPath.startsWith('./') &&
+      !normalizedExtendsPath.startsWith('../')
+    ) {
+      return false;
+    }
+
+    let resolvedPath = joinPathFragments(tsConfigDir, normalizedExtendsPath);
+    if (!resolvedPath.endsWith('.json') && !this.tree.exists(resolvedPath)) {
+      resolvedPath = `${resolvedPath}.json`;
+    }
+
+    return (
+      resolvedPath === 'tsconfig.json' || resolvedPath === rootTsConfigFile
+    );
+  }
+
+  private getBuildTsConfigPath(
+    target: TargetConfiguration
+  ): string | undefined {
+    return (
+      target.options?.tsConfig ?? target.configurations?.development?.tsConfig
+    );
   }
 }

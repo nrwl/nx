@@ -11,6 +11,7 @@ import {
 } from '@nx/devkit';
 import { dirname } from 'path';
 import type { Logger, ProjectMigrationInfo } from '../../utilities';
+import { replacePathPrefix } from '../migrator';
 import { BuilderMigrator } from './builder.migrator';
 
 export class AngularEslintLintMigrator extends BuilderMigrator {
@@ -88,19 +89,19 @@ export class AngularEslintLintMigrator extends BuilderMigrator {
       target.options.lintFilePatterns.map((pattern) => {
         // replace the old source root with the new root, we want to lint all
         // matching files in the project, not just the ones in the source root
-        if (pattern.startsWith(this.project.oldSourceRoot)) {
-          return joinPathFragments(
-            this.project.newRoot,
-            pattern.replace(this.project.oldSourceRoot, '')
+        const newPattern =
+          replacePathPrefix(
+            pattern,
+            this.project.oldSourceRoot,
+            this.project.newRoot
+          ) ??
+          replacePathPrefix(
+            pattern,
+            this.project.oldRoot,
+            this.project.newRoot
           );
-        }
-
-        // replace the old root with the new root
-        if (pattern.startsWith(this.project.oldRoot)) {
-          return joinPathFragments(
-            this.project.newRoot,
-            pattern.replace(this.project.oldRoot, '')
-          );
+        if (newPattern !== undefined) {
+          return newPattern;
         }
 
         // do nothing, warn about the pattern

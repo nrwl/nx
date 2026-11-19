@@ -1097,6 +1097,106 @@ describe('lib migrator', () => {
       });
     });
 
+    it('should update the extends of other tsConfig files in the build target only when it points to the root tsConfig', async () => {
+      writeJson(tree, 'projects/lib1/tsconfig.lib.json', {
+        extends: '../../tsconfig.json',
+      });
+      writeJson(tree, 'projects/lib1/tsconfig.lib.prod.json', {
+        extends: './tsconfig.lib.json',
+      });
+      writeJson(tree, 'projects/lib1/tsconfig.lib.ci.json', {
+        extends: '../../tsconfig.json',
+      });
+      writeJson(tree, 'projects/lib1/tsconfig.lib.staging.json', {
+        extends: '../../tsconfig',
+      });
+      const project = addProject('lib1', {
+        root: 'projects/lib1',
+        sourceRoot: 'projects/lib1/src',
+        architect: {
+          build: {
+            builder: '@angular-devkit/build-angular:ng-packagr',
+            configurations: {
+              production: { tsConfig: 'projects/lib1/tsconfig.lib.prod.json' },
+              development: { tsConfig: 'projects/lib1/tsconfig.lib.json' },
+              ci: { tsConfig: 'projects/lib1/tsconfig.lib.ci.json' },
+              staging: { tsConfig: 'projects/lib1/tsconfig.lib.staging.json' },
+            },
+          },
+        },
+      });
+      const migrator = new LibMigrator(tree, {}, project);
+
+      await migrator.migrate();
+
+      expect(readJson(tree, 'libs/lib1/tsconfig.lib.prod.json')).toStrictEqual({
+        extends: './tsconfig.lib.json',
+      });
+      expect(readJson(tree, 'libs/lib1/tsconfig.lib.ci.json')).toStrictEqual({
+        extends: '../../tsconfig.base.json',
+      });
+      expect(
+        readJson(tree, 'libs/lib1/tsconfig.lib.staging.json')
+      ).toStrictEqual({ extends: '../../tsconfig.base.json' });
+    });
+
+    it('should update a tsConfig file in a nested directory relative to its own location', async () => {
+      writeJson(tree, 'projects/lib1/config/tsconfig.lib.json', {
+        extends: '../../../tsconfig.json',
+        include: ['../src/**/*.ts'],
+      });
+      const project = addProject('lib1', {
+        root: 'projects/lib1',
+        sourceRoot: 'projects/lib1',
+        architect: {
+          build: {
+            builder: '@angular/build:library',
+            options: { tsConfig: 'projects/lib1/config/tsconfig.lib.json' },
+          },
+        },
+      });
+      const migrator = new LibMigrator(tree, {}, project);
+
+      await migrator.migrate();
+
+      expect(
+        readJson(tree, 'libs/lib1/config/tsconfig.lib.json')
+      ).toStrictEqual({
+        extends: '../../../tsconfig.base.json',
+        compilerOptions: { outDir: '../../../dist/out-tsc' },
+        include: ['../src/**/*.ts'],
+      });
+    });
+
+    it('should only convert paths inside the project root', async () => {
+      writeJson(tree, 'projects/lib1/tsconfig.lib.json', {
+        extends: '../../tsconfig.json',
+      });
+      const project = addProject('lib1', {
+        root: 'projects/lib1',
+        sourceRoot: 'projects/lib1',
+        architect: {
+          build: {
+            builder: '@angular/build:library',
+            options: {
+              tsConfig: './projects/lib1/tsconfig.lib.json',
+              assets: ['projects/lib1-shared/notice.txt'],
+            },
+          },
+        },
+      });
+      const migrator = new LibMigrator(tree, {}, project);
+
+      await migrator.migrate();
+
+      const { options } = readProjectConfiguration(tree, 'lib1').targets.build;
+      expect(options.tsConfig).toBe('libs/lib1/tsconfig.lib.json');
+      expect(options.assets).toStrictEqual(['projects/lib1-shared/notice.txt']);
+      expect(readJson(tree, 'libs/lib1/tsconfig.lib.json').extends).toBe(
+        '../../tsconfig.base.json'
+      );
+    });
+
     it('should not overwrite the include option in the tsConfig file specified in the build target options', async () => {
       writeJson(tree, 'projects/lib1/tsconfig.lib.json', {
         extends: '../../tsconfig.json',

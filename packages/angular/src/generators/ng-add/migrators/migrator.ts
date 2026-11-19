@@ -5,6 +5,7 @@ import type {
 } from '@nx/devkit';
 import {
   joinPathFragments,
+  normalizePath,
   readNxJson,
   updateJson,
   updateNxJson,
@@ -44,21 +45,23 @@ export abstract class Migrator {
   }
 
   protected convertRootPath(originalPath: string): string {
-    return originalPath?.startsWith(this.project.oldRoot)
-      ? joinPathFragments(
-          this.project.newRoot,
-          originalPath.replace(this.project.oldRoot, '')
-        )
-      : originalPath;
+    return (
+      replacePathPrefix(
+        originalPath,
+        this.project.oldRoot,
+        this.project.newRoot
+      ) ?? originalPath
+    );
   }
 
   protected convertSourceRootPath(originalPath: string): string {
-    return originalPath?.startsWith(this.project.oldSourceRoot)
-      ? joinPathFragments(
-          this.project.newSourceRoot,
-          originalPath.replace(this.project.oldSourceRoot, '')
-        )
-      : originalPath;
+    return (
+      replacePathPrefix(
+        originalPath,
+        this.project.oldSourceRoot,
+        this.project.newSourceRoot
+      ) ?? originalPath
+    );
   }
 
   protected moveFile(from: string, to: string, required: boolean = true): void {
@@ -172,4 +175,35 @@ export abstract class Migrator {
 
     return value;
   }
+}
+
+/**
+ * Returns `undefined` when `path` isn't under `oldPrefix`. The prefix matches
+ * whole path segments, and an empty prefix (a root project) matches any path.
+ */
+export function replacePathPrefix(
+  path: string | undefined,
+  oldPrefix: string,
+  newPrefix: string
+): string | undefined {
+  if (typeof path !== 'string') {
+    return undefined;
+  }
+
+  const normalizedPath = normalizePath(path).replace(/^\.\//, '');
+  const normalizedPrefix = normalizePath(oldPrefix)
+    .replace(/^\.\//, '')
+    .replace(/\/+$/, '');
+  if (
+    normalizedPrefix === '' ||
+    normalizedPath === normalizedPrefix ||
+    normalizedPath.startsWith(`${normalizedPrefix}/`)
+  ) {
+    return joinPathFragments(
+      newPrefix,
+      normalizedPath.slice(normalizedPrefix.length)
+    );
+  }
+
+  return undefined;
 }
