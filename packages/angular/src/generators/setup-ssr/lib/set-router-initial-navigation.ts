@@ -7,19 +7,28 @@ import { insertImport } from '@nx/js';
 import { ast, query } from '@phenomnomnominal/tsquery';
 import type {
   CallExpression,
+  Expression,
   ImportSpecifier,
   ObjectLiteralElementLike,
-  ObjectLiteralExpression,
   Printer,
   SourceFile,
+  SpreadAssignment,
 } from 'typescript';
 import {
   EmitHint,
+  SyntaxKind,
   createPrinter,
   factory,
+  isAsExpression,
   isCallExpression,
+  isElementAccessExpression,
   isIdentifier,
+  isNonNullExpression,
+  isObjectLiteralExpression,
+  isParenthesizedExpression,
+  isPropertyAccessExpression,
   isPropertyAssignment,
+  isSatisfiesExpression,
 } from 'typescript';
 import type { NormalizedGeneratorOptions } from '../schema';
 
@@ -177,9 +186,11 @@ function processFileWithNgModuleSetup(
 function updateRouterModuleForRootCallExpression(
   node: CallExpression
 ): CallExpression {
-  const existingOptions = node.arguments[1] as
-    | ObjectLiteralExpression
-    | undefined;
+  const optionsArgument = node.arguments[1];
+  const existingOptions =
+    optionsArgument && isObjectLiteralExpression(optionsArgument)
+      ? optionsArgument
+      : undefined;
 
   const existingProperties = existingOptions?.properties
     ? factory.createNodeArray(
@@ -209,7 +220,10 @@ function updateRouterModuleForRootCallExpression(
         ])
       )
     : factory.createObjectLiteralExpression(
-        factory.createNodeArray([initialNavigationProperty])
+        factory.createNodeArray([
+          ...getSpreadOptions(optionsArgument),
+          initialNavigationProperty,
+        ])
       );
   const args = [node.arguments[0], routerOptions];
 
@@ -218,6 +232,54 @@ function updateRouterModuleForRootCallExpression(
     node.typeArguments,
     args
   );
+}
+
+// `?? {}` lets a value typed `undefined` be spread (TS2698). Other expressions get
+// only initialNavigation, since TypeScript rejects `??` after some of them (TS2869).
+function getSpreadOptions(
+  optionsArgument: Expression | undefined
+): SpreadAssignment[] {
+  if (!optionsArgument) {
+    return [];
+  }
+  const value = skipWrappers(optionsArgument);
+  if (
+    !(isIdentifier(value) && value.text !== 'undefined') &&
+    !isPropertyAccessExpression(value) &&
+    !isElementAccessExpression(value) &&
+    !isCallExpression(value)
+  ) {
+    return [];
+  }
+  let operand = optionsArgument;
+  while (isParenthesizedExpression(operand)) {
+    operand = operand.expression;
+  }
+  return [
+    factory.createSpreadAssignment(
+      factory.createParenthesizedExpression(
+        factory.createBinaryExpression(
+          isAsExpression(operand) || isSatisfiesExpression(operand)
+            ? factory.createParenthesizedExpression(operand)
+            : operand,
+          SyntaxKind.QuestionQuestionToken,
+          factory.createObjectLiteralExpression()
+        )
+      )
+    ),
+  ];
+}
+
+function skipWrappers(expression: Expression): Expression {
+  while (
+    isParenthesizedExpression(expression) ||
+    isAsExpression(expression) ||
+    isNonNullExpression(expression) ||
+    isSatisfiesExpression(expression)
+  ) {
+    expression = expression.expression;
+  }
+  return expression;
 }
 
 function getProvideRouterCallExpression(

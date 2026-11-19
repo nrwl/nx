@@ -140,5 +140,41 @@ export class AppModule {}
         "
       `);
     });
+
+    it.each([
+      ['routerOptions', '...(routerOptions ?? {}), '],
+      ['config.routerOptions', '...(config.routerOptions ?? {}), '],
+      ["config['routerOptions']", "...(config['routerOptions'] ?? {}), "],
+      ['getRouterOptions()', '...(getRouterOptions() ?? {}), '],
+      [
+        'routerOptions as ExtraOptions',
+        '...((routerOptions as ExtraOptions) ?? {}), ',
+      ],
+      ['undefined', ''],
+    ])('should handle router options passed as %s', (options, spread) => {
+      tree.write(
+        'apps/app1/src/app.module.ts',
+        `import { NgModule } from '@angular/core';
+import { ExtraOptions, RouterModule } from '@angular/router';
+import { appRoutes, config, getRouterOptions, routerOptions } from './app.routes';
+
+@NgModule({
+  imports: [RouterModule.forRoot(appRoutes, ${options})],
+})
+export class AppModule {}
+`
+      );
+
+      setRouterInitialNavigation(tree, {
+        project: 'app1',
+        standalone: false,
+        isUsingApplicationBuilder: true,
+        buildTargetTsConfigPath: 'apps/app1/tsconfig.app.json',
+      });
+
+      expect(tree.read('apps/app1/src/app.module.ts', 'utf-8')).toContain(
+        `RouterModule.forRoot(appRoutes, { ${spread}initialNavigation: 'enabledBlocking' })`
+      );
+    });
   });
 });
