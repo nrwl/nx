@@ -33,6 +33,11 @@ overrides:
   # form-data@4.0.6 pulls hasown via two paths (direct + es-set-tostringtag);
   # pin to one version so expand-deps can flatten nx's published deps.
   hasown: '2.0.4'
+  # yargs 18.1 wants string-width 8 while cliui 9 and wrap-ansi 9 still ask for 7;
+  # align them so expand-deps can flatten nx's published deps.
+  'cliui@9>string-width': '^8.2.1'
+  'wrap-ansi@9>string-width': '^8.2.1'
+  'strip-ansi@>=7.0.0 <8': '^7.2.0'
   '@xhmikosr/decompress@>=11.0.0 <11.1.4': '11.1.4'
   'piscina@>=4.0.0 <4.9.4': '4.9.4'
   'piscina@>=5.0.0 <5.3.2': '5.3.2'
