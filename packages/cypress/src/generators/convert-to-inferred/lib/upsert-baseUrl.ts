@@ -1,6 +1,6 @@
 import type { Tree } from '@nx/devkit';
 
-import { tsquery } from '@nx/devkit/internal';
+import { query } from '@nx/devkit/internal';
 import { parseSourceFile } from '../../../utils/migrations';
 
 export function upsertBaseUrl(
@@ -14,7 +14,7 @@ export function upsertBaseUrl(
   const BASE_URL_SELECTOR =
     'PropertyAssignment:has(Identifier[name=e2e]) PropertyAssignment:has(Identifier[name="baseUrl"])';
 
-  const baseUrlNodes = tsquery.query(sourceFile, BASE_URL_SELECTOR);
+  const baseUrlNodes = query(sourceFile, BASE_URL_SELECTOR);
   if (baseUrlNodes.length !== 0) {
     // The property exists in the config
     const baseUrlValueNode = baseUrlNodes[0].getChildAt(2);
@@ -37,7 +37,7 @@ export function upsertBaseUrl(
     const E2E_OBJECT_SELECTOR =
       'PropertyAssignment:has(Identifier[name=e2e]) ObjectLiteralExpression';
 
-    const e2eConfigNodes = tsquery.query(sourceFile, E2E_OBJECT_SELECTOR);
+    const e2eConfigNodes = query(sourceFile, E2E_OBJECT_SELECTOR);
     if (e2eConfigNodes.length !== 0) {
       const e2eConfigNode = e2eConfigNodes[0];
       tree.write(

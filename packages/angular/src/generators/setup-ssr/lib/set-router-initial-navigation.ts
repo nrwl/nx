@@ -6,7 +6,8 @@ import {
 import { insertImport } from '@nx/js';
 import {
   ensureTypescript,
-  tsquery,
+  ast,
+  query,
   type TypescriptAst,
 } from '@nx/devkit/internal';
 import type {
@@ -48,7 +49,7 @@ export function setRouterInitialNavigation(
 
 function processFileWithStandaloneSetup(tree: Tree, filePath: string) {
   let content = tree.read(filePath, 'utf-8');
-  let sourceFile = tsquery.ast(content);
+  let sourceFile = ast(content);
 
   const provideRouterCallExpression =
     getProvideRouterCallExpression(sourceFile);
@@ -74,7 +75,7 @@ function processFileWithStandaloneSetup(tree: Tree, filePath: string) {
   );
   recorder.applyChanges();
 
-  sourceFile = tsquery.ast(recorder.content);
+  sourceFile = ast(recorder.content);
   sourceFile = insertImport(
     tree,
     sourceFile,
@@ -83,7 +84,7 @@ function processFileWithStandaloneSetup(tree: Tree, filePath: string) {
     '@angular/router'
   );
 
-  const withDisabledInitialNavigationImportNode = tsquery.query(
+  const withDisabledInitialNavigationImportNode = query(
     sourceFile,
     'ImportDeclaration ImportSpecifier:has(Identifier[name=withDisabledInitialNavigation])'
   )[0] as ImportSpecifier;
@@ -108,7 +109,7 @@ function processFileWithStandaloneSetup(tree: Tree, filePath: string) {
 }
 
 function processFileWithNgModuleSetup(tree: Tree, filePath: string) {
-  const sourceFile = tsquery.ast(tree.read(filePath, 'utf-8'));
+  const sourceFile = ast(tree.read(filePath, 'utf-8'));
 
   const routerModuleForRootCallExpression =
     getRouterModuleForRootCallExpression(sourceFile);
@@ -151,7 +152,7 @@ function isCallTo(node: Node, name: string): boolean {
 function getProvideRouterCallExpression(
   sourceFile: SourceFile
 ): CallExpression | null {
-  const routerModuleForRootCalls = tsquery.query(
+  const routerModuleForRootCalls = query(
     sourceFile.getText(),
     'PropertyAssignment:has(Identifier[name=providers]) > ArrayLiteralExpression CallExpression:has(Identifier[name=provideRouter])'
   ) as CallExpression[];
@@ -162,7 +163,7 @@ function getProvideRouterCallExpression(
 function getRouterModuleForRootCallExpression(
   sourceFile: SourceFile
 ): CallExpression | null {
-  const routerModuleForRootCalls = tsquery.query(
+  const routerModuleForRootCalls = query(
     sourceFile.getText(),
     'Decorator > CallExpression:has(Identifier[name=NgModule]) PropertyAssignment:has(Identifier[name=imports]) > ArrayLiteralExpression CallExpression:has(Identifier[name=forRoot])'
   ) as CallExpression[];

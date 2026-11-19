@@ -1,5 +1,5 @@
 import { formatFiles, type Tree } from '@nx/devkit';
-import { tsquery } from '@nx/devkit/internal';
+import { ast, query } from '@nx/devkit/internal';
 import type { PropertyAssignment } from 'typescript';
 import { cypressProjectConfigs } from '../../utils/migrations';
 
@@ -20,18 +20,18 @@ export default async function removeExperimentalPromptCommand(tree: Tree) {
       continue;
     }
 
-    const sourceFile = tsquery.ast(contents);
+    const sourceFile = ast(contents);
     // `:has()` may match nested PropertyAssignments (e.g. an outer object whose
     // value contains the flag). Restrict to ones whose own `name` is the flag.
-    const propAssigns = tsquery
-      .query<PropertyAssignment>(sourceFile, SELECTOR)
-      .filter((p) => {
+    const propAssigns = query<PropertyAssignment>(sourceFile, SELECTOR).filter(
+      (p) => {
         const name = p.name;
         return (
           // Identifier name has `.text`; StringLiteral name does too.
           'text' in name && name.text === 'experimentalPromptCommand'
         );
-      });
+      }
+    );
     if (propAssigns.length === 0) {
       continue;
     }

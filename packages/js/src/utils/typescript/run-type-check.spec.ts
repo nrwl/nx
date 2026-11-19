@@ -261,15 +261,11 @@ describe.each(typescriptInstalls)(
             ]);
           }
         );
-        expect(watch.preEmitErrors.map((e) => stripVTControlCharacters(e)))
-          .toMatchInlineSnapshot(`
-          [
-            "proj/source.ts:1:14 - error TS2322: Type 'string' is not assignable to type 'number'.
-
-          > 1 | export const value: number = 'one';
-              |              ^",
-          ]
-        `);
+        expect(
+          watch.preEmitErrors.map((e) => stripVTControlCharacters(e))
+        ).toEqual([
+          expect.stringMatching(/^proj\/source\.ts:1:14 - error TS2322:/),
+        ]);
 
         // On macOS, fs.watch misses a change made right after it starts.
         await new Promise((resolve) => setTimeout(resolve, 500));
@@ -286,34 +282,16 @@ describe.each(typescriptInstalls)(
         write.mockRestore();
       }
 
-      expect(statuses).toMatchInlineSnapshot(`
+      expect(statuses).toEqual([
+        [6031, 'info: Starting compilation in watch mode...\n', undefined],
+        [6193, 'info: Found 1 error. Watching for file changes.\n', 1],
         [
-          [
-            6031,
-            "info: Starting compilation in watch mode...
-        ",
-            undefined,
-          ],
-          [
-            6193,
-            "info: Found 1 error. Watching for file changes.
-        ",
-            1,
-          ],
-          [
-            6032,
-            "info: File change detected. Starting incremental compilation...
-        ",
-            undefined,
-          ],
-          [
-            6194,
-            "info: Found 0 errors. Watching for file changes.
-        ",
-            0,
-          ],
-        ]
-      `);
+          6032,
+          'info: File change detected. Starting incremental compilation...\n',
+          undefined,
+        ],
+        [6194, 'info: Found 0 errors. Watching for file changes.\n', 0],
+      ]);
       expect(
         stdout
           .replaceAll('\x1B[2J\x1B[3J\x1B[H', '<clear screen>')

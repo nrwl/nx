@@ -2,7 +2,8 @@ import {
   AggregatedLog,
   migrateProjectExecutorsToPlugin,
   NoTargetsToMigrateError,
-  tsquery,
+  ast,
+  query,
 } from '@nx/devkit/internal';
 import {
   addDependenciesToPackageJson,
@@ -127,11 +128,11 @@ function skipProjectFilterFactory(tree: Tree) {
       return `The rspack config path is missing in the project configuration (${projectConfiguration.root}).`;
     }
 
-    const sourceFile = tsquery.ast(tree.read(rspackConfigPath, 'utf-8'));
+    const sourceFile = ast(tree.read(rspackConfigPath, 'utf-8'));
 
     const composePluginsSelector =
       'CallExpression:has(Identifier[name=composePlugins])';
-    const composePlugins = tsquery.query<ts.CallExpression>(
+    const composePlugins = query<ts.CallExpression>(
       sourceFile,
       composePluginsSelector
     )[0];
@@ -142,7 +143,7 @@ function skipProjectFilterFactory(tree: Tree) {
 
     const nxAppRspackPluginSelector =
       'PropertyAssignment:has(Identifier[name=plugins]) NewExpression:has(Identifier[name=NxAppRspackPlugin])';
-    const nxAppRspackPlugin = tsquery.query<ts.NewExpression>(
+    const nxAppRspackPlugin = query<ts.NewExpression>(
       sourceFile,
       nxAppRspackPluginSelector
     )[0];

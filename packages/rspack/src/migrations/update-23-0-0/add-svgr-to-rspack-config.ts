@@ -1,7 +1,8 @@
 import {
   ensureTypescript,
   forEachExecutorOptions,
-  tsquery,
+  ast,
+  query,
   type TypescriptAst,
 } from '@nx/devkit/internal';
 import {
@@ -124,11 +125,11 @@ export default async function addSvgrToRspackConfig(tree: Tree) {
 
       const content = tree.read(rspackConfigPath, 'utf-8');
 
-      const sourceFile = tsquery.ast(content);
+      const sourceFile = ast(content);
 
       // Check if this is a withReact setup
       if (content.includes('withReact')) {
-        const withReactCalls = tsquery.query(
+        const withReactCalls = query(
           sourceFile,
           'CallExpression[expression.name=withReact]'
         );
@@ -178,7 +179,7 @@ export default async function addSvgrToRspackConfig(tree: Tree) {
       }
       // Otherwise check if this is NxReactRspackPlugin setup
       else if (content.includes('NxReactRspackPlugin')) {
-        const pluginCalls = tsquery.query(
+        const pluginCalls = query(
           sourceFile,
           'NewExpression[expression.name=NxReactRspackPlugin]'
         );
@@ -242,15 +243,15 @@ export default async function addSvgrToRspackConfig(tree: Tree) {
   // Update rspack configs to add withSvgr function inline
   for (const [rspackConfigPath, config] of projects.entries()) {
     let content = tree.read(rspackConfigPath, 'utf-8');
-    const sourceFile = tsquery.ast(content);
+    const sourceFile = ast(content);
     const changes: StringChange[] = [];
 
     // Build the svgr options for this specific config
     let svgrOptionsStr = '';
 
     if (config.svgrOptions) {
-      const importStatements = tsquery.query(sourceFile, 'ImportDeclaration');
-      const requireStatements = tsquery.query(
+      const importStatements = query(sourceFile, 'ImportDeclaration');
+      const requireStatements = query(
         sourceFile,
         'VariableStatement:has(CallExpression[expression.name=require])'
       );
@@ -293,7 +294,7 @@ export default async function addSvgrToRspackConfig(tree: Tree) {
 
     // Remove svgr option based on the style (withReact OR NxReactRspackPlugin)
     if (config.isWithReact) {
-      const withReactCalls = tsquery.query(
+      const withReactCalls = query(
         sourceFile,
         'CallExpression[expression.name=withReact]'
       );
@@ -349,7 +350,7 @@ export default async function addSvgrToRspackConfig(tree: Tree) {
               }
 
               if (config.svgrOptions) {
-                const composePluginsCalls = tsquery.query(
+                const composePluginsCalls = query(
                   sourceFile,
                   'CallExpression[expression.name=composePlugins]'
                 );
@@ -386,7 +387,7 @@ export default async function addSvgrToRspackConfig(tree: Tree) {
       }
     } else {
       // Remove svgr option from first NxReactRspackPlugin call
-      const pluginCalls = tsquery.query(
+      const pluginCalls = query(
         sourceFile,
         'NewExpression[expression.name=NxReactRspackPlugin]'
       );
@@ -447,7 +448,7 @@ export default async function addSvgrToRspackConfig(tree: Tree) {
 
       // For NxReactRspackPlugin style, wrap the entire module.exports or export default with withSvgr
       if (config.svgrOptions) {
-        const allAssignments = tsquery.query(sourceFile, 'BinaryExpression');
+        const allAssignments = query(sourceFile, 'BinaryExpression');
 
         const moduleExportsAssignment = allAssignments.find((node) => {
           const binaryExpr = node as ts.BinaryExpression;
@@ -461,10 +462,7 @@ export default async function addSvgrToRspackConfig(tree: Tree) {
           );
         }) as ts.BinaryExpression | undefined;
 
-        const exportDefaultStatements = tsquery.query(
-          sourceFile,
-          'ExportAssignment'
-        );
+        const exportDefaultStatements = query(sourceFile, 'ExportAssignment');
         const exportDefaultStatement = exportDefaultStatements[0] as
           | ts.ExportAssignment
           | undefined;

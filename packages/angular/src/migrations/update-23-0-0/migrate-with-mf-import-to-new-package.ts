@@ -4,7 +4,7 @@ import {
   formatFiles,
   visitNotIgnoredFiles,
 } from '@nx/devkit';
-import { tsquery } from '@nx/devkit/internal';
+import { ast, query } from '@nx/devkit/internal';
 import { getProjectsFilteredByDependencies } from '../utils/projects';
 import { nxVersion } from '../../utils/versions';
 
@@ -31,8 +31,8 @@ export default async function migrateWithMfImport(tree: Tree) {
         return;
       }
 
-      const sourceFile = tsquery.ast(contents);
-      const importNodes = tsquery.query(
+      const sourceFile = ast(contents);
+      const importNodes = query(
         sourceFile,
         NX_ANGULAR_MODULE_FEDERATION_IMPORT_SELECTOR
       );

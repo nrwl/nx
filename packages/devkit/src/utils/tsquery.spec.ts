@@ -76,12 +76,6 @@ describe.each([
       'ExportAssignment ObjectLiteralExpression:first-child',
       ["{ cacheDir: '../../node_modules/.vite/app', test: { maxThreads: 4 } }"],
     ],
-    [
-      'ImportDeclaration + ImportDeclaration',
-      [
-        "import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';",
-      ],
-    ],
   ])('should match %s', (selector, expected) => {
     const matches = tsquery.query(tsquery.ast(source), selector);
 

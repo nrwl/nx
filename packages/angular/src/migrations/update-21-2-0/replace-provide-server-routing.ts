@@ -1,7 +1,8 @@
 import { formatFiles, visitNotIgnoredFiles, type Tree } from '@nx/devkit';
 import {
   ensureTypescript,
-  tsquery,
+  ast,
+  query,
   type TypescriptAst,
 } from '@nx/devkit/internal';
 import type {
@@ -52,9 +53,9 @@ function processFile(tree: Tree, filePath: string): void {
   }
 
   ts ??= ensureTypescript();
-  const sourceFile = tsquery.ast(content);
+  const sourceFile = ast(content);
 
-  const providersArray = tsquery.query<ArrayLiteralExpression>(
+  const providersArray = query<ArrayLiteralExpression>(
     sourceFile,
     'PropertyAssignment:has(Identifier[name=providers]) > ArrayLiteralExpression'
   )[0];

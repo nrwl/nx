@@ -1,5 +1,5 @@
 import { formatFiles, visitNotIgnoredFiles, type Tree } from '@nx/devkit';
-import { tsquery } from '@nx/devkit/internal';
+import { ast, query } from '@nx/devkit/internal';
 import type { Identifier, StringLiteral } from 'typescript';
 import picomatch = require('picomatch');
 
@@ -24,13 +24,14 @@ export default async function renameRollupOptionsToRolldownOptions(tree: Tree) {
       return;
     }
 
-    const sourceFile = tsquery.ast(contents);
+    const sourceFile = ast(contents);
     // Extra .text filter guards against the outer-PropertyAssignment descendant
     // trap: ensures the matched node's own name is `rollupOptions`, not a
     // nested node that merely contains an identifier with that name.
-    const nodes = tsquery
-      .query<Identifier | StringLiteral>(sourceFile, ROLLUP_OPTIONS_SELECTOR)
-      .filter((node) => (node as any).text === 'rollupOptions');
+    const nodes = query<Identifier | StringLiteral>(
+      sourceFile,
+      ROLLUP_OPTIONS_SELECTOR
+    ).filter((node) => (node as any).text === 'rollupOptions');
 
     if (nodes.length === 0) {
       return;

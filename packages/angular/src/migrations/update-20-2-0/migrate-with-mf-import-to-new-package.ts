@@ -1,4 +1,4 @@
-import { forEachExecutorOptions, tsquery } from '@nx/devkit/internal';
+import { forEachExecutorOptions, ast, query } from '@nx/devkit/internal';
 import {
   type Tree,
   formatFiles,
@@ -34,8 +34,8 @@ export default async function migrateWithMfImport(tree: Tree) {
         return;
       }
 
-      const sourceFile = tsquery.ast(contents);
-      const importNodes = tsquery.query(
+      const sourceFile = ast(contents);
+      const importNodes = query(
         sourceFile,
         NX_ANGULAR_MODULE_FEDERATION_IMPORT_SELECTOR
       );

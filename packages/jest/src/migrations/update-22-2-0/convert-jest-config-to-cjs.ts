@@ -28,7 +28,7 @@ import { dirname } from 'path';
  * as they use ESM semantics and don't need the CJS conversion.
  */
 export default async function convertJestConfigToCjs(tree: Tree) {
-  const { ast: parseAst, query } = require('@nx/devkit/internal').tsquery;
+  const { ast: parseAst, query } = require('@nx/devkit/internal');
 
   const jestConfigPaths = await globAsync(tree, ['**/jest.config.ts']);
   const projectsWithEsmOnlyFeatures: string[] = [];

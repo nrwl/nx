@@ -5,7 +5,7 @@ import {
   visitNotIgnoredFiles,
   type Tree,
 } from '@nx/devkit';
-import { getInstalledPackageVersion, tsquery } from '@nx/devkit/internal';
+import { getInstalledPackageVersion, ast, query } from '@nx/devkit/internal';
 import { addVitestTempFilesToGitIgnore } from '../../utils/ignore-vitest-temp-files';
 import { major } from 'semver';
 import type {
@@ -43,7 +43,7 @@ export default async function migrateToVitest5(tree: Tree) {
     const hasSequential = contents.includes('sequential');
     if (!hasEntryPoints && !hasSequential) return;
 
-    const sourceFile = tsquery.ast(contents);
+    const sourceFile = ast(contents);
     if (hasEntryPoints) {
       rewriteRemovedEntryPoints(
         tree,
@@ -166,8 +166,7 @@ function reportUnrewritableSpecifiers(
     moduleSpecifiers.map((node) => node.getStart(sourceFile))
   );
   const stragglers = new Set(
-    tsquery
-      .query<StringLiteral>(sourceFile, 'StringLiteral')
+    query<StringLiteral>(sourceFile, 'StringLiteral')
       .filter(
         (node) =>
           node.text in REMOVED_ENTRY_POINTS &&
@@ -190,16 +189,16 @@ function rewriteRemovedEntryPoints(
   sourceFile: SourceFile,
   unhandled: string[]
 ): void {
-  const specifiers = tsquery.query<StringLiteral>(
+  const specifiers = query<StringLiteral>(
     sourceFile,
     'ImportDeclaration > StringLiteral, ExportDeclaration > StringLiteral'
   );
   reportUnrewritableSpecifiers(sourceFile, specifiers, filePath, unhandled);
 
   const opaqueStarts = new Set(
-    tsquery
-      .query<StringLiteral>(sourceFile, OPAQUE_DECLARATIONS)
-      .map((node) => node.getStart(sourceFile))
+    query<StringLiteral>(sourceFile, OPAQUE_DECLARATIONS).map((node) =>
+      node.getStart(sourceFile)
+    )
   );
 
   let updated = contents;
@@ -265,12 +264,10 @@ function whyNotRewritable(
 }
 
 function boundNamesOf(specifier: StringLiteral): string[] {
-  return tsquery
-    .query<ImportSpecifier | ExportSpecifier>(
-      specifier.parent,
-      'ImportSpecifier, ExportSpecifier'
-    )
-    .map((element) => (element.propertyName ?? element.name).text);
+  return query<ImportSpecifier | ExportSpecifier>(
+    specifier.parent,
+    'ImportSpecifier, ExportSpecifier'
+  ).map((element) => (element.propertyName ?? element.name).text);
 }
 
 /**
@@ -286,30 +283,26 @@ function detectSequentialUsage(
 ): void {
   // Both AST forms of a property key, and only in an options object handed to
   // a test or suite call. A loose `{ sequential: true }` is someone else's API.
-  const optionKeys = tsquery
-    .query(
-      sourceFile,
-      'PropertyAssignment > :matches(Identifier[name=sequential], StringLiteral[value=sequential])'
-    )
-    .filter((key) => {
-      // PropertyAssignment < ObjectLiteralExpression < CallExpression.
-      const call = key.parent?.parent?.parent as CallExpression | undefined;
-      return (
-        !!call &&
-        'arguments' in call &&
-        TEST_CALLEES.has(call.expression.getText(sourceFile).split('.')[0])
-      );
-    });
-  const modifiers = tsquery
-    .query<PropertyAccessExpression>(
-      sourceFile,
-      'PropertyAccessExpression:has(Identifier[name=sequential])'
-    )
-    .filter(
-      (node) =>
-        node.name.text === 'sequential' &&
-        TEST_CALLEES.has(node.expression.getText(sourceFile))
+  const optionKeys = query(
+    sourceFile,
+    'PropertyAssignment > :matches(Identifier[name=sequential], StringLiteral[value=sequential])'
+  ).filter((key) => {
+    // PropertyAssignment < ObjectLiteralExpression < CallExpression.
+    const call = key.parent?.parent?.parent as CallExpression | undefined;
+    return (
+      !!call &&
+      'arguments' in call &&
+      TEST_CALLEES.has(call.expression.getText(sourceFile).split('.')[0])
     );
+  });
+  const modifiers = query<PropertyAccessExpression>(
+    sourceFile,
+    'PropertyAccessExpression:has(Identifier[name=sequential])'
+  ).filter(
+    (node) =>
+      node.name.text === 'sequential' &&
+      TEST_CALLEES.has(node.expression.getText(sourceFile))
+  );
   const usages = [...optionKeys, ...modifiers];
   if (usages.length === 0) return;
 

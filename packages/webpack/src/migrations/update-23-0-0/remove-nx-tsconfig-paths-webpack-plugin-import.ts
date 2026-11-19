@@ -1,5 +1,5 @@
 import { formatFiles, Tree, visitNotIgnoredFiles } from '@nx/devkit';
-import { tsquery } from '@nx/devkit/internal';
+import { ast, query } from '@nx/devkit/internal';
 
 const DEPRECATED_SYMBOL = 'NxTsconfigPathsWebpackPlugin';
 const DEPRECATED_PACKAGE = '@nx/webpack';
@@ -64,15 +64,12 @@ export default async function removeNxTsconfigPathsWebpackPluginImport(
     let didRewrite = true;
     while (didRewrite) {
       didRewrite = false;
-      const sourceFile = tsquery.ast(contents);
+      const sourceFile = ast(contents);
 
-      const importNode = tsquery.query(sourceFile, ES_IMPORT_SELECTOR)[0];
+      const importNode = query(sourceFile, ES_IMPORT_SELECTOR)[0];
       if (importNode) {
-        const specifiers = tsquery.query(
-          importNode,
-          IMPORT_SPECIFIERS_SELECTOR
-        );
-        const targetIdentifier = tsquery.query(
+        const specifiers = query(importNode, IMPORT_SPECIFIERS_SELECTOR);
+        const targetIdentifier = query(
           importNode,
           TARGET_IMPORT_SPECIFIER_SELECTOR
         )[0];
@@ -80,7 +77,7 @@ export default async function removeNxTsconfigPathsWebpackPluginImport(
           // Walk to the ImportSpecifier to cover `Foo` and `Foo as Bar`.
           const targetSpec = targetIdentifier.parent;
           if (specifiers.length === 1) {
-            const modulePathNode = tsquery.query(
+            const modulePathNode = query(
               importNode,
               ES_MODULE_PATH_SELECTOR
             )[0];
@@ -107,13 +104,10 @@ export default async function removeNxTsconfigPathsWebpackPluginImport(
         }
       }
 
-      const stmtNode = tsquery.query(sourceFile, CJS_REQUIRE_STMT_SELECTOR)[0];
+      const stmtNode = query(sourceFile, CJS_REQUIRE_STMT_SELECTOR)[0];
       if (stmtNode) {
-        const bindingElements = tsquery.query(
-          stmtNode,
-          CJS_BINDING_ELEMENTS_SELECTOR
-        );
-        const targetIdentifier = tsquery.query(
+        const bindingElements = query(stmtNode, CJS_BINDING_ELEMENTS_SELECTOR);
+        const targetIdentifier = query(
           stmtNode,
           CJS_TARGET_BINDING_SELECTOR
         )[0];
@@ -121,7 +115,7 @@ export default async function removeNxTsconfigPathsWebpackPluginImport(
           // Walk to the BindingElement to cover `Foo` and `Foo: Bar`.
           const targetBinding = targetIdentifier.parent;
           if (bindingElements.length === 1) {
-            const requirePathNode = tsquery.query(
+            const requirePathNode = query(
               stmtNode,
               CJS_REQUIRE_PATH_SELECTOR
             )[0];

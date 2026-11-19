@@ -1,6 +1,6 @@
 import { formatFiles, type Tree, visitNotIgnoredFiles } from '@nx/devkit';
 import { ensureTypescript } from '@nx/js/internal';
-import { tsquery, type TypescriptAst } from '@nx/devkit/internal';
+import { ast, query, type TypescriptAst } from '@nx/devkit/internal';
 import type {
   Identifier,
   ImportDeclaration,
@@ -74,7 +74,7 @@ function processVitestConfig(
   const hasIndexScripts = contents.includes('indexScripts');
   if (!hasC8Provider && !hasNoneProvider && !hasIndexScripts) return;
 
-  const sourceFile = tsquery.ast(contents);
+  const sourceFile = ast(contents);
   const edits: TextEdit[] = [];
 
   const c8EditCountBefore = edits.length;
@@ -119,7 +119,7 @@ function collectCoverageProviderC8Edits(
   contents: string,
   edits: TextEdit[]
 ): void {
-  const literals = tsquery.query<StringLiteral>(
+  const literals = query<StringLiteral>(
     sourceFile,
     'PropertyAssignment:has(Identifier[name=provider]) > StringLiteral[value=c8]'
   );
@@ -137,7 +137,7 @@ function collectBrowserProviderNoneEdits(
   contents: string,
   edits: TextEdit[]
 ): void {
-  const literals = tsquery.query<StringLiteral>(
+  const literals = query<StringLiteral>(
     sourceFile,
     'PropertyAssignment:has(Identifier[name=provider]) > StringLiteral[value=none]'
   );
@@ -154,7 +154,7 @@ function collectIndexScriptsRenameEdits(
   sourceFile: SourceFile,
   edits: TextEdit[]
 ): void {
-  const identifiers = tsquery.query<Identifier>(
+  const identifiers = query<Identifier>(
     sourceFile,
     'PropertyAssignment > Identifier[name=indexScripts]'
   );
@@ -179,11 +179,8 @@ function processSnapshotEnvironmentImport(
   const contents = tree.read(filePath, 'utf-8');
   if (!contents.includes('SnapshotEnvironment')) return;
 
-  const sourceFile = tsquery.ast(contents);
-  const importDecls = tsquery.query<ImportDeclaration>(
-    sourceFile,
-    'ImportDeclaration'
-  );
+  const sourceFile = ast(contents);
+  const importDecls = query<ImportDeclaration>(sourceFile, 'ImportDeclaration');
   const edits: TextEdit[] = [];
 
   for (const decl of importDecls) {

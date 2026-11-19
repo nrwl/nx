@@ -1,7 +1,8 @@
 import {
   ensureTypescript,
   forEachExecutorOptions,
-  tsquery,
+  ast,
+  query,
   type TypescriptAst,
 } from '@nx/devkit/internal';
 import {
@@ -142,11 +143,11 @@ export default async function addSvgrToWebpackConfig(tree: Tree) {
 
       const content = tree.read(webpackConfigPath, 'utf-8');
 
-      const sourceFile = tsquery.ast(content);
+      const sourceFile = ast(content);
 
       // Check if this is a withReact setup
       if (content.includes('withReact')) {
-        const withReactCalls = tsquery.query(
+        const withReactCalls = query(
           sourceFile,
           'CallExpression[expression.name=withReact]'
         );
@@ -196,7 +197,7 @@ export default async function addSvgrToWebpackConfig(tree: Tree) {
       }
       // Otherwise check if this is NxReactWebpackPlugin setup
       else if (content.includes('NxReactWebpackPlugin')) {
-        const pluginCalls = tsquery.query(
+        const pluginCalls = query(
           sourceFile,
           'NewExpression[expression.name=NxReactWebpackPlugin]'
         );
@@ -260,15 +261,15 @@ export default async function addSvgrToWebpackConfig(tree: Tree) {
   // Update webpack configs to add withSvgr function inline
   for (const [webpackConfigPath, config] of projects.entries()) {
     let content = tree.read(webpackConfigPath, 'utf-8');
-    const sourceFile = tsquery.ast(content);
+    const sourceFile = ast(content);
     const changes: StringChange[] = [];
 
     // Build the svgr options for this specific config
     let svgrOptionsStr = '';
 
     if (config.svgrOptions) {
-      const importStatements = tsquery.query(sourceFile, 'ImportDeclaration');
-      const requireStatements = tsquery.query(
+      const importStatements = query(sourceFile, 'ImportDeclaration');
+      const requireStatements = query(
         sourceFile,
         'VariableStatement:has(CallExpression[expression.name=require])'
       );
@@ -312,7 +313,7 @@ export default async function addSvgrToWebpackConfig(tree: Tree) {
     // Remove svgr option based on the style (withReact OR NxReactWebpackPlugin)
     if (config.isWithReact) {
       // Remove svgr option from first withReact call (only one expected)
-      const withReactCalls = tsquery.query(
+      const withReactCalls = query(
         sourceFile,
         'CallExpression[expression.name=withReact]'
       );
@@ -368,7 +369,7 @@ export default async function addSvgrToWebpackConfig(tree: Tree) {
               }
 
               if (config.svgrOptions) {
-                const composePluginsCalls = tsquery.query(
+                const composePluginsCalls = query(
                   sourceFile,
                   'CallExpression[expression.name=composePlugins]'
                 );
@@ -405,7 +406,7 @@ export default async function addSvgrToWebpackConfig(tree: Tree) {
       }
     } else {
       // Remove svgr option from first NxReactWebpackPlugin call
-      const pluginCalls = tsquery.query(
+      const pluginCalls = query(
         sourceFile,
         'NewExpression[expression.name=NxReactWebpackPlugin]'
       );
@@ -469,7 +470,7 @@ export default async function addSvgrToWebpackConfig(tree: Tree) {
 
       // For NxReactWebpackPlugin style, wrap the entire module.exports or export default with withSvgr
       if (config.svgrOptions) {
-        const allAssignments = tsquery.query(sourceFile, 'BinaryExpression');
+        const allAssignments = query(sourceFile, 'BinaryExpression');
 
         // Find the one that has module.exports on the left side
         const moduleExportsAssignment = allAssignments.find((node) => {
@@ -485,10 +486,7 @@ export default async function addSvgrToWebpackConfig(tree: Tree) {
         }) as ts.BinaryExpression | undefined;
 
         // Also check for export default
-        const exportDefaultStatements = tsquery.query(
-          sourceFile,
-          'ExportAssignment'
-        );
+        const exportDefaultStatements = query(sourceFile, 'ExportAssignment');
         const exportDefaultStatement = exportDefaultStatements[0] as
           | ts.ExportAssignment
           | undefined;

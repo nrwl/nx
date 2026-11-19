@@ -27,10 +27,11 @@
 // Changes from upstream:
 // - Parses and reads nodes through `getTypescriptAst`, so it runs on the
 //   workspace's TypeScript, 7.1 included.
-// - Keeps only `ast`, `query` and `replace`, and selectors as strings.
+// - Keeps only `ast`, `query` and `replace`, selectors as strings, and the
+//   selector types Nx uses: no sibling, adjacent, class or field selectors.
 // - `replace` returns the spliced text instead of reprinting the whole file.
-// - Sibling and nth-child selectors find a node's siblings through
-//   `forEachChild`, so a node in a JSDoc array has none.
+// - Nth-child selectors find a node's siblings through `forEachChild`, so a
+//   node in a JSDoc array has none.
 
 import type * as esquery from 'esquery';
 import type { Node, ScriptKind, SourceFile } from 'typescript';
@@ -61,7 +62,7 @@ type Matcher = (
  * Parses `source` with the workspace's TypeScript, as TSX unless `scriptKind`
  * says otherwise.
  */
-function ast(
+export function ast(
   source: string,
   fileName = '',
   scriptKind?: ScriptKind
@@ -80,13 +81,12 @@ function ast(
  * Returns the nodes in `code` that match `selector`, an ESQuery selector over
  * TypeScript node kinds.
  */
-function query<T extends Node = Node>(
+export function query<T extends Node = Node>(
   code: string | Node,
-  selector: string,
-  scriptKind?: ScriptKind
+  selector: string
 ): T[] {
   const kinds = getKinds(getTypescriptAst());
-  const root = isNode(code) ? code : ast(code, '', scriptKind);
+  const root = isNode(code) ? code : ast(code);
   const parsedSelector = parseSelector(selector, kinds);
   const results: T[] = [];
   traverse(root, [], (node, ancestors) => {
@@ -102,13 +102,12 @@ function query<T extends Node = Node>(
  * `stringTransformer` returns for it. A `null` or `undefined` result keeps the
  * node. The rest of the text is kept as is.
  */
-function replace(
+export function replace(
   source: string,
   selector: string,
-  stringTransformer: (node: Node) => string | null | undefined,
-  scriptKind?: ScriptKind
+  stringTransformer: (node: Node) => string | null | undefined
 ): string {
-  const matches = query(source, selector, scriptKind);
+  const matches = query(source, selector);
   const replacements = matches.map((node) => stringTransformer(node));
   let result = source;
   for (let index = matches.length - 1; index >= 0; index--) {
@@ -277,22 +276,6 @@ function getPath(obj: unknown, path: string, kinds: Kinds): unknown {
   return obj;
 }
 
-function inPath(node: Node, ancestor: unknown, path: string[]): boolean {
-  if (path.length === 0) {
-    return node === ancestor;
-  }
-  if (ancestor == null) {
-    return false;
-  }
-  const [first] = path;
-  const field = ancestor[first];
-  const remainingPath = path.slice(1);
-  if (Array.isArray(field)) {
-    return field.some((item) => inPath(node, item, remainingPath));
-  }
-  return inPath(node, field, remainingPath);
-}
-
 // TypeScript 7.1 nodes expose their children through prototype getters, so
 // the parent's child arrays come from `forEachChild` rather than its keys.
 function getChildArrays(parent: Node): readonly Node[][] {
@@ -369,56 +352,6 @@ const descendant: Matcher = (
     findMatches(ancestor, selector.left, ancestors.slice(index + 1), kinds)
   );
 
-const CLASS_MATCHERS: Record<
-  esquery.Class['name'],
-  (node: Node, properties: Properties, kinds: Kinds) => boolean
-> = {
-  declaration: (_, properties) => properties.kindName.endsWith('Declaration'),
-  expression: isExpression,
-  function: (_, { kindName }) =>
-    kindName.startsWith('Function') ||
-    kindName === 'ArrowFunction' ||
-    kindName === 'MethodDeclaration',
-  pattern: (node, properties, kinds) =>
-    properties.kindName.endsWith('Pattern') ||
-    isExpression(node, properties, kinds),
-  statement: (_, properties) =>
-    properties.kindName.endsWith('Statement') ||
-    properties.kindName.endsWith('Declaration'),
-};
-
-function isExpression(
-  node: Node,
-  { kindName }: Properties,
-  kinds: Kinds
-): boolean {
-  return (
-    kindName.endsWith('Expression') ||
-    kindName.endsWith('Literal') ||
-    (kindName === 'Identifier' &&
-      !!node.parent &&
-      getProperties(node.parent, kinds).kindName !== 'MetaProperty') ||
-    kindName === 'MetaProperty'
-  );
-}
-
-const classMatcher: Matcher = (node, selector: esquery.Class, _, kinds) => {
-  const properties = getProperties(node, kinds);
-  if (!properties.kindName) {
-    return false;
-  }
-  const matcher = CLASS_MATCHERS[selector.name];
-  if (matcher) {
-    return matcher(node, properties, kinds);
-  }
-  throw new SyntaxError(`Unknown class name: "${selector.name}"`);
-};
-
-const field: Matcher = (node, selector: esquery.Field, ancestors) => {
-  const path = selector.name.split('.');
-  return inPath(node, ancestors[path.length - 1], path);
-};
-
 const has: Matcher = (node, selector: esquery.Has, _, kinds) => {
   let found = false;
   selector.selectors.forEach((childSelector) => {
@@ -466,71 +399,11 @@ function nthChildMatcher(
   };
 }
 
-function findSibling(
-  node: Node,
-  ancestors: Node[],
-  test: (nodes: Node[], index: number) => boolean
-): boolean {
-  if (!ancestors[0] || !node.parent) {
-    return false;
-  }
-  return getChildArrays(node.parent).some((nodes) => {
-    const index = nodes.indexOf(node);
-    return index !== -1 && test(nodes, index);
-  });
-}
-
-const sibling: Matcher = (node, selector: esquery.Sibling, ancestors, kinds) =>
-  (findMatches(node, selector.right, ancestors, kinds) &&
-    findSibling(node, ancestors, (nodes, index) =>
-      nodes
-        .slice(0, index)
-        .some((preceding) =>
-          findMatches(preceding, selector.left, ancestors, kinds)
-        )
-    )) ||
-  (!!selector.left.subject &&
-    findMatches(node, selector.left, ancestors, kinds) &&
-    findSibling(node, ancestors, (nodes, index) =>
-      nodes
-        .slice(index, nodes.length)
-        .some((following) =>
-          findMatches(following, selector.right, ancestors, kinds)
-        )
-    ));
-
-const adjacent: Matcher = (
-  node,
-  selector: esquery.Adjacent,
-  ancestors,
-  kinds
-) =>
-  (findMatches(node, selector.right, ancestors, kinds) &&
-    findSibling(
-      node,
-      ancestors,
-      (nodes, index) =>
-        index > 0 &&
-        findMatches(nodes[index - 1], selector.left, ancestors, kinds)
-    )) ||
-  (!!selector.right.subject &&
-    findMatches(node, selector.left, ancestors, kinds) &&
-    findSibling(
-      node,
-      ancestors,
-      (nodes, index) =>
-        index < nodes.length - 1 &&
-        findMatches(nodes[index + 1], selector.right, ancestors, kinds)
-    ));
-
 const MATCHERS: Record<string, Matcher> = {
-  adjacent,
   attribute,
   child,
   compound: matches('every'),
-  class: classMatcher,
   descendant,
-  field,
   'nth-child': nthChildMatcher((selector) => selector.index.value - 1),
   'nth-last-child': nthChildMatcher(
     (selector, length) => length - selector.index.value
@@ -539,7 +412,6 @@ const MATCHERS: Record<string, Matcher> = {
   identifier,
   matches: matches('some'),
   not,
-  sibling,
   type: () => false,
   wildcard: () => true,
 };
