@@ -54,7 +54,7 @@ export const SYNTHETIC_EXECUTOR = '@acme/tool:build';
 export interface SyntheticPluginOptions {
   targetName?: string;
   variant?: string;
-  configToTargetName?: Record<string, string>;
+  configFiles?: Record<string, string>;
 }
 
 /**

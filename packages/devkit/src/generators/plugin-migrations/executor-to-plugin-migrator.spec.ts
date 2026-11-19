@@ -531,7 +531,7 @@ describe('per-project plugin options', () => {
       ctx.tree,
       ctx.projectGraph,
       configMigrations((targetName, project) => ({
-        configToTargetName: { [`${project.name}.cfg`]: targetName },
+        configFiles: { [`${project.name}.cfg`]: targetName },
       })),
       {},
       undefined,
@@ -540,12 +540,12 @@ describe('per-project plugin options', () => {
 
     const ids = scope.executorScopes[0].inferenceOptionSetIds.get('e2e');
     expect(scope.optionSetGroups.map((group) => group.options)).toEqual([
-      { configToTargetName: { 'app1.cfg': 'e2e' } },
-      { configToTargetName: { 'app2.cfg': 'e2e' } },
+      { configFiles: { 'app1.cfg': 'e2e' } },
+      { configFiles: { 'app2.cfg': 'e2e' } },
     ]);
     expect([ids.get('app1'), ids.get('app2')]).toEqual([0, 1]);
     expect(scope.pluginOptionsByProject.get('app2')).toEqual({
-      configToTargetName: { 'app2.cfg': 'e2e' },
+      configFiles: { 'app2.cfg': 'e2e' },
     });
   });
 
@@ -559,7 +559,7 @@ describe('per-project plugin options', () => {
       ctx.tree,
       ctx.projectGraph,
       configMigrations((targetName) => ({
-        configToTargetName: { [`${targetName}.cfg`]: targetName },
+        configFiles: { [`${targetName}.cfg`]: targetName },
       })),
       {},
       undefined,
@@ -567,7 +567,7 @@ describe('per-project plugin options', () => {
     );
 
     expect(scope.pluginOptionsByProject.get('app1')).toEqual({
-      configToTargetName: { 'test.cfg': 'test', 'e2e.cfg': 'e2e' },
+      configFiles: { 'test.cfg': 'test', 'e2e.cfg': 'e2e' },
     });
     expect(warn).not.toHaveBeenCalled();
   });
@@ -582,7 +582,7 @@ describe('per-project plugin options', () => {
       ctx.tree,
       ctx.projectGraph,
       configMigrations((targetName) => ({
-        configToTargetName: { 'shared.cfg': targetName },
+        configFiles: { 'shared.cfg': targetName },
       })),
       {},
       undefined,
@@ -593,10 +593,10 @@ describe('per-project plugin options', () => {
       new Map([['test', new Set(['app1'])]])
     );
     expect(scope.pluginOptionsByProject.get('app1')).toEqual({
-      configToTargetName: { 'shared.cfg': 'test' },
+      configFiles: { 'shared.cfg': 'test' },
     });
     expect(warn.mock.calls[0][0]).toBe(
-      'The e2e target on project "app1" cannot be migrated. The "configToTargetName" plugin option is already set to {"shared.cfg":"test"} by another target of the project, and the plugin can only infer one target per option. The target keeps its current configuration; rerun the migration once the other target is inferred to convert it.'
+      'The e2e target on project "app1" cannot be migrated. The "configFiles" plugin option is already set to {"shared.cfg":"test"} by another target of the project, and the plugin can only infer one target per option. The target keeps its current configuration; rerun the migration once the other target is inferred to convert it.'
     );
   });
 
@@ -701,13 +701,13 @@ describe('per-project plugin options', () => {
           include: ['other/**/*'],
           options: {
             targetName: 'build',
-            configToTargetName: { 'build.cfg': 'build' },
+            configFiles: { 'build.cfg': 'build' },
           },
         },
       ],
       configMigrations((targetName) => ({
         targetName,
-        configToTargetName: { [`${targetName}.cfg`]: targetName },
+        configFiles: { [`${targetName}.cfg`]: targetName },
       }))
     );
 
@@ -716,7 +716,7 @@ describe('per-project plugin options', () => {
         plugin: SYNTHETIC_PLUGIN_PATH,
         options: {
           targetName: 'build',
-          configToTargetName: { 'build.cfg': 'build' },
+          configFiles: { 'build.cfg': 'build' },
         },
       },
     ]);

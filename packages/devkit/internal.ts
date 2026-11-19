@@ -119,10 +119,12 @@ export {
 export { loadConfigFile, clearRequireCache } from './src/utils/config-utils';
 export {
   assertUniqueConfigTargetNames,
-  readConfigToTargetName,
+  readConfigFiles,
+  resolveConfigFileTarget,
+  type ConfigFileEntry,
   type ConfigFileNamePatterns,
   type ConfigFileTargets,
-} from './src/utils/config-to-target-name';
+} from './src/utils/config-files';
 export {
   isRequireEsmRaceError,
   retryOnRequireEsmRace,
