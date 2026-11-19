@@ -1,6 +1,7 @@
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
+import { logger } from '../../../utils/logger';
 import * as packageManager from '../../../utils/package-manager';
 import {
   getPrunedPnpmInstallArtifacts,
@@ -17,7 +18,7 @@ describe('pnpm v13 pruned output artifacts', () => {
   beforeEach(() => {
     root = mkdtempSync(join(tmpdir(), 'nx-pnpm-v13-artifacts-'));
     vi.spyOn(packageManager, 'getPackageManagerVersion').mockReturnValue(
-      '13.0.0'
+      '12.22.0'
     );
     mkdirSync(join(root, 'patches'), { recursive: true });
     writeFileSync(join(root, 'patches/foo.patch'), 'patch content');
@@ -57,6 +58,7 @@ packages:
       )
     ).toEqual({
       packages: [],
+      lockfile: { format: 'v13' },
       allowBuilds: { foo: true },
       patchedDependencies: { 'foo@1.0.0': 'patches/patches/foo.patch' },
     });
@@ -64,6 +66,42 @@ packages:
       path: 'patches/patches/foo.patch',
       content: 'patch content',
     });
+  });
+
+  it('does not set v13 format when the emitted lockfile is v9', () => {
+    writeFileSync(
+      join(root, 'pnpm-workspace.yaml'),
+      'lockfile:\n  format: v13\n'
+    );
+    const v9 = `lockfileVersion: '9.0'
+importers:
+  .: {}
+`;
+    const artifacts = getPrunedPnpmInstallArtifacts(root, v9, {
+      name: 'app',
+      version: '1.0.0',
+    });
+    expect(
+      yaml(
+        artifacts.find((a) => a.path === 'pnpm-workspace.yaml')
+          .content as string
+      )
+    ).toEqual({ packages: [] });
+  });
+
+  it('does not set standalone format for a v13 root lockfile fallback', () => {
+    const artifacts = getPrunedPnpmInstallArtifacts(
+      root,
+      lockfile,
+      { name: 'app', version: '1.0.0' },
+      { includeLocalPathArtifacts: false }
+    );
+    expect(
+      yaml(
+        artifacts.find((a) => a.path === 'pnpm-workspace.yaml')
+          .content as string
+      )
+    ).not.toHaveProperty('lockfile');
   });
 
   it('keeps approvals unfiltered for a root fallback with other projects', () => {
@@ -76,6 +114,25 @@ packages:
     ).toMatchObject({
       allowBuilds: { foo: true, absent: true },
     });
+  });
+
+  it('keeps root settings when a fallback lockfile cannot be normalized', () => {
+    const warn = vi.spyOn(logger, 'warn').mockImplementation(() => {});
+    const rootLockfile = lockfile.replace('foo: 1.0.0', 'foo: "catalog:"');
+    const artifacts = getPrunedPnpmInstallArtifacts(
+      root,
+      rootLockfile,
+      { name: 'app', version: '1.0.0' },
+      { includeLocalPathArtifacts: false }
+    );
+    expect(artifacts).toHaveLength(1);
+    expect(yaml(artifacts[0].content as string)).toEqual({
+      packages: [],
+      allowBuilds: { foo: true, absent: true },
+    });
+    expect(warn).toHaveBeenCalledWith(
+      expect.stringContaining('Missing pnpm catalog')
+    );
   });
 
   it('ships local directories, tarballs and links but excludes copied workspace modules', () => {

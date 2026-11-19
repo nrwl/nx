@@ -1,11 +1,12 @@
 /**
- * pnpm v12.21's v13 wire format keeps peer bindings as properties instead of
+ * pnpm's v13 wire format keeps peer bindings as properties instead of
  * peer-suffixed references. Adapt it to Nx's existing snapshot model while
  * retaining the wire bindings for pruning and serialization.
  *
  * Format: https://github.com/pnpm/pnpm/blob/b8d388835f9a40ee1ac53fbc2d4b58c3ebfa5600/pnpm/crates/lockfile/src/next_format.rs
  * Selection: https://github.com/pnpm/pnpm/blob/b8d388835f9a40ee1ac53fbc2d4b58c3ebfa5600/pnpm/crates/lockfile/src/next_format/read/choose.rs
  * References: https://github.com/pnpm/pnpm/blob/b8d388835f9a40ee1ac53fbc2d4b58c3ebfa5600/pnpm/crates/lockfile/src/next_format/reference.rs
+ * Directory declarations: https://github.com/pnpm/pnpm/blob/eb0fda4ee3891f9c10e8bad83d1c3c5af343591f/pnpm/crates/lockfile/src/next_format/package/dependencies.rs
  *
  * The internal `(nx-v13-N)` keys distinguish snapshots only within Nx. They
  * are not pnpm peer hashes and are never written into the v13 document.
@@ -29,16 +30,30 @@ type Peer =
       optional?: boolean;
       below?: boolean;
     };
-interface Snapshot extends Fields {
-  dependencies?: Record<string, Reference>;
-  optionalDependencies?: Record<string, Reference>;
+interface Snapshot<Dependency = Reference> extends Fields {
+  dependencies?: Record<string, Dependency>;
+  optionalDependencies?: Record<string, Dependency>;
   peerDependencies?: Record<string, Peer>;
   unboundPeerDependencies?: string[];
   optional?: boolean;
 }
-interface Package extends Snapshot {
+type PackageDependency =
+  | string
+  | {
+      specifier?: string;
+      version?: string;
+      with?: Bindings;
+      injected?: boolean;
+    };
+export interface PnpmV13DirectoryDeclarations {
+  dependencies?: Record<string, string>;
+  optionalDependencies?: Record<string, string>;
+  dependenciesMeta?: Record<string, { injected?: boolean }>;
+}
+interface Package extends Snapshot<PackageDependency> {
   integrity?: string;
   resolution?: Fields;
+  specifiers?: PnpmV13DirectoryDeclarations;
   snapshots?: Snapshot[];
 }
 interface Importer extends Fields {
@@ -63,6 +78,7 @@ interface Variant {
   sourceKey: string;
   source: Package;
   snapshot: Snapshot;
+  declarations?: PnpmV13DirectoryDeclarations | null;
   bindings: Bindings;
   normalized?: PackageSnapshot;
 }
@@ -78,7 +94,12 @@ interface Metadata {
 const metadata = Symbol('pnpm lockfile v13');
 const packageMetadata = Symbol('pnpm lockfile v13 snapshot');
 const importerMetadata = Symbol('pnpm lockfile v13 source importer');
+const directoryMetadata = Symbol('pnpm lockfile v13 directory declarations');
 type Normalized = Lockfile & { [metadata]?: Metadata };
+const packageDependencyFields = [
+  'dependencies',
+  'optionalDependencies',
+] as const;
 const dependencyFields = [
   'dependencies',
   'devDependencies',
@@ -128,13 +149,31 @@ export function normalizePnpmLockfileV13(input: unknown): Lockfile {
   const variants = new Map<string, Variant>();
   const byPackage = new Map<string, Variant[]>();
   for (const [key, source] of Object.entries(wirePackages)) {
+    const declarations = isDirectoryPackage(key, source)
+      ? readDirectoryDeclarations(source)
+      : undefined;
+    const { dependencies, optionalDependencies, ...sourceMetadata } = source;
+    const sharedDependencies = { dependencies, optionalDependencies };
     const snapshots = source.snapshots?.length ? source.snapshots : [{}];
     const entries = snapshots.map((snapshot, index) => {
-      const effective: Snapshot = { ...source, ...snapshot };
-      for (const field of ['dependencies', 'optionalDependencies'] as const) {
-        if (source[field] || snapshot[field]) {
+      const effective: Snapshot = { ...sourceMetadata, ...snapshot };
+      for (const field of packageDependencyFields) {
+        const shared = sharedDependencies[field];
+        if (shared || snapshot[field]) {
           // pnpm's shared graph entries take precedence over snapshot entries.
-          effective[field] = { ...snapshot[field], ...source[field] } as never;
+          // Declaration-only entries leave each snapshot's edge in place.
+          const refs = { ...snapshot[field] };
+          for (const [name, entry] of Object.entries(shared ?? {})) {
+            if (typeof entry === 'string') {
+              refs[name] = entry;
+            } else if (entry.version !== undefined) {
+              refs[name] = {
+                version: entry.version,
+                ...(entry.with === undefined ? {} : { with: entry.with }),
+              };
+            }
+          }
+          effective[field] = refs;
         }
       }
       if (source.peerDependencies || snapshot.peerDependencies) {
@@ -151,6 +190,7 @@ export function normalizePnpmLockfileV13(input: unknown): Lockfile {
         sourceKey: key,
         source,
         snapshot: effective,
+        declarations,
         bindings,
       };
       variants.set(variant.key, variant);
@@ -315,6 +355,7 @@ export function normalizePnpmLockfileV13(input: unknown): Lockfile {
     const output: Fields = { ...source };
     for (const field of graphFields) delete output[field];
     delete output.integrity;
+    if (variant.declarations !== undefined) delete output.specifiers;
     const resolution = { ...source.resolution };
     if (source.integrity !== undefined && resolution.integrity === undefined)
       resolution.integrity = source.integrity;
@@ -403,15 +444,24 @@ export function normalizePnpmLockfileV13(input: unknown): Lockfile {
   return result;
 }
 
+export function recordPnpmV13DirectoryDeclarations(
+  snapshot: PackageSnapshot,
+  declarations: PnpmV13DirectoryDeclarations
+): void {
+  Object.assign(snapshot, { [directoryMetadata]: declarations });
+}
+
 /**
  * Nx's graph coalesces peer variants into one package/version node. The
  * generic root-snapshot builder therefore picks the first variant. Recover
- * the original project's references when its complete dependency set matches
- * the constructed importer, without guessing across unrelated project scopes.
+ * the source project's references for matching dependencies. Callers without
+ * a known source project require a compatible dependency set.
  */
 export function selectPnpmLockfileV13ImporterReferences(
   lockfile: Lockfile,
-  importer: ProjectSnapshot
+  importer: ProjectSnapshot,
+  sourceImporter?: string,
+  copiedWorkspaceModules: Readonly<Record<string, string>> = {}
 ): void {
   const state = (lockfile as Normalized)[metadata];
   if (!state || !isPnpmLockfileV13(lockfile)) return;
@@ -428,9 +478,23 @@ export function selectPnpmLockfileV13ImporterReferences(
     return state.variants.get(key)?.sourceKey ?? key;
   };
   let selected: { id: string; refs: string[]; extras: number } | undefined;
-  for (const [id, candidate] of Object.entries(state.normalizedImporters)) {
+  const hasSource =
+    sourceImporter !== undefined &&
+    Object.hasOwn(state.normalizedImporters, sourceImporter);
+  const candidates: [string, ProjectSnapshot][] = hasSource
+    ? [[sourceImporter, state.normalizedImporters[sourceImporter]]]
+    : Object.entries(state.normalizedImporters);
+  for (const [id, candidate] of candidates) {
     const refs: string[] = [];
     for (const { field, name, ref } of output) {
+      if (
+        hasSource &&
+        Object.hasOwn(copiedWorkspaceModules, name) &&
+        ref === `file:workspace_modules/${name}`
+      ) {
+        refs.push(ref);
+        continue;
+      }
       // Deployment can promote a peer into dependencies. Prefer the original
       // section, then inspect the other sections the v13 importer can contain.
       const sections = [
@@ -443,8 +507,10 @@ export function selectPnpmLockfileV13ImporterReferences(
           (source) =>
             source !== undefined && baseKey(name, source) === baseKey(name, ref)
         );
-      if (found === undefined) break;
-      refs.push(found);
+      if (found === undefined && !hasSource) break;
+      // A generated manifest can promote a transitive dependency or select a
+      // different version. Keep its graph-selected ref if it has no match.
+      refs.push(found ?? ref);
     }
     if (refs.length !== output.length) continue;
     const extras =
@@ -585,13 +651,24 @@ export function stringifyPnpmLockfileV13(lockfile: Lockfile): PnpmLockfileV13 {
     }
     projects[id] = result;
   }
-  const groups = new Map<string, { source: Package; snapshots: Snapshot[] }>();
+  const groups = new Map<
+    string,
+    {
+      source: Package;
+      declarations?: PnpmV13DirectoryDeclarations | null;
+      snapshots: Snapshot[];
+    }
+  >();
   const packages: Record<string, Package> = {};
   for (const [key, pkg] of Object.entries(lockfile.packages ?? {})) {
     const variant = currentVariants.get(key);
     if (!variant) {
-      const synthetic = { ...pkg } as unknown as Package;
-      for (const field of ['dependencies', 'optionalDependencies'] as const) {
+      const { [directoryMetadata]: declarations, ...snapshot } =
+        pkg as PackageSnapshot & {
+          [directoryMetadata]?: PnpmV13DirectoryDeclarations;
+        };
+      const synthetic = snapshot as unknown as Package;
+      for (const field of packageDependencyFields) {
         if (pkg[field])
           synthetic[field] = Object.fromEntries(
             Object.entries(pkg[field]).map(([name, ref]) => [
@@ -599,6 +676,9 @@ export function stringifyPnpmLockfileV13(lockfile: Lockfile): PnpmLockfileV13 {
               emitRef(name, ref),
             ])
           );
+      }
+      if (isDirectoryPackage(key, synthetic)) {
+        writeDirectoryDeclarations(synthetic, declarations ?? null);
       }
       packages[key] = synthetic;
       continue;
@@ -608,7 +688,7 @@ export function stringifyPnpmLockfileV13(lockfile: Lockfile): PnpmLockfileV13 {
     if (!group) {
       const source = { ...variant.source };
       for (const field of graphFields) delete source[field];
-      // Metadata remains raw: integrity, specifiers and non-registry resolution
+      // Metadata remains raw: integrity and non-registry resolution
       // retain their v13 representation instead of leaking normalized fields.
       if (stable(pkg.resolution) !== stable(variant.normalized?.resolution)) {
         source.resolution = { ...pkg.resolution };
@@ -620,7 +700,8 @@ export function stringifyPnpmLockfileV13(lockfile: Lockfile): PnpmLockfileV13 {
       const declarations = declaredPeers(variant.source.peerDependencies);
       if (Object.keys(declarations).length)
         source.peerDependencies = declarations;
-      group = { source, snapshots: [] };
+      if (variant.declarations !== undefined) delete source.specifiers;
+      group = { source, declarations: variant.declarations, snapshots: [] };
       groups.set(currentKey, group);
     }
     const snapshot: Snapshot = {};
@@ -669,11 +750,14 @@ export function stringifyPnpmLockfileV13(lockfile: Lockfile): PnpmLockfileV13 {
     if (pkg.id !== undefined) snapshot.id = pkg.id;
     group.snapshots.push(snapshot);
   }
-  for (const [key, { source, snapshots }] of groups) {
-    packages[key] =
+  for (const [key, { source, declarations, snapshots }] of groups) {
+    const pkg =
       snapshots.length === 1
         ? { ...source, ...snapshots[0] }
         : { ...source, snapshots };
+    if (declarations !== undefined)
+      writeDirectoryDeclarations(pkg, declarations);
+    packages[key] = pkg;
   }
   const result = {
     ...lockfile,
@@ -693,6 +777,78 @@ export function stringifyPnpmLockfileV13(lockfile: Lockfile): PnpmLockfileV13 {
   if (Object.keys(settings).length) result.settings = settings;
   else delete result.settings;
   return result;
+}
+
+function isDirectoryPackage(key: string, pkg: Package): boolean {
+  return (
+    pkg.resolution?.type === 'directory' ||
+    (Object.keys(pkg.resolution ?? {}).length === 0 &&
+      pkg.integrity === undefined &&
+      aliasParts(key).version.startsWith('file:'))
+  );
+}
+
+function readDirectoryDeclarations(
+  pkg: Package
+): PnpmV13DirectoryDeclarations | null {
+  // pnpm 12.21 stored declarations in a separate specifiers record.
+  if (pkg.specifiers) return pkg.specifiers;
+
+  const declarations: PnpmV13DirectoryDeclarations = {};
+  let recorded = packageDependencyFields.every(
+    (field) => pkg[field] === undefined
+  );
+  for (const field of packageDependencyFields) {
+    for (const [name, entry] of Object.entries(pkg[field] ?? {})) {
+      const specifier = typeof entry === 'string' ? entry : entry.specifier;
+      if (specifier !== undefined) {
+        (declarations[field] ??= {})[name] = specifier;
+        recorded = true;
+      }
+      if (typeof entry !== 'string' && entry.injected === true) {
+        (declarations.dependenciesMeta ??= {})[name] = { injected: true };
+      }
+    }
+  }
+  return recorded ? declarations : null;
+}
+
+function writeDirectoryDeclarations(
+  pkg: Package,
+  declarations: PnpmV13DirectoryDeclarations | null
+): void {
+  for (const field of packageDependencyFields) {
+    const deps: Record<string, PackageDependency> = {};
+    for (const [name, specifier] of Object.entries(
+      declarations?.[field] ?? {}
+    )) {
+      const ref = pkg[field]?.[name];
+      const injected = declarations.dependenciesMeta?.[name]?.injected === true;
+      deps[name] =
+        ref === specifier && !injected
+          ? specifier
+          : {
+              specifier,
+              ...(typeof ref === 'string' ? { version: ref } : ref),
+              ...(injected ? { injected: true } : {}),
+            };
+    }
+    for (const [name, ref] of Object.entries(pkg[field] ?? {})) {
+      if (!Object.hasOwn(deps, name)) {
+        deps[name] = typeof ref === 'string' ? { version: ref } : ref;
+      }
+    }
+    // pnpm uses an empty dependencies map to distinguish an older directory
+    // package with no declaration record from a manifest with no dependencies.
+    if (
+      Object.keys(deps).length ||
+      (declarations === null && field === 'dependencies')
+    ) {
+      pkg[field] = deps;
+    } else {
+      delete pkg[field];
+    }
+  }
 }
 
 function isObject(value: unknown): value is Fields {

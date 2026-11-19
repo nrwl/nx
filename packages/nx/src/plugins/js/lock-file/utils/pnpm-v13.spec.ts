@@ -218,6 +218,37 @@ describe('pnpm lockfile v13 adapter', () => {
     });
   });
 
+  it('keeps the source project peer when its workspace dependency is copied', () => {
+    const raw = peerFixture();
+    const normalized = normalizePnpmLockfileV13({
+      ...raw,
+      importers: {
+        ...raw.importers,
+        other: {
+          dependencies: {
+            ...raw.importers.other.dependencies,
+            local: { specifier: 'workspace:*', version: 'link:libs/local' },
+          },
+        },
+        'libs/local': { name: 'local' },
+      },
+    });
+    const root = {
+      specifiers: { plugin: '1.0.0', local: 'file:./workspace_modules/local' },
+      dependencies: {
+        plugin: normalized.importers['.'].dependencies.plugin,
+        local: 'file:workspace_modules/local',
+      },
+    };
+    selectPnpmLockfileV13ImporterReferences(normalized, root, 'other', {
+      local: 'libs/local',
+    });
+    expect(root.dependencies).toEqual({
+      plugin: normalized.importers.other.dependencies.plugin,
+      local: 'file:workspace_modules/local',
+    });
+  });
+
   it('leaves ambiguous mixed project dependencies and older lockfiles unchanged', () => {
     const normalized = normalizePnpmLockfileV13(peerFixture());
     const root = {
@@ -399,7 +430,104 @@ describe('pnpm lockfile v13 adapter', () => {
     );
   });
 
-  it('serializes copied workspace packages and does not restore stripped settings', () => {
+  it('preserves directory declarations separately from snapshot refs and peer bindings', () => {
+    const key = 'local@file:vendor/local';
+    const normalized = normalizePnpmLockfileV13({
+      lockfileVersion: '13.0',
+      projects: { '.': {} },
+      packages: {
+        [key]: {
+          dependencies: {
+            exact: '1.0.0',
+            sibling: {
+              specifier: 'file:../sibling',
+              version: 'file:vendor/sibling',
+              injected: true,
+            },
+            tool: { specifier: '^1.0.0' },
+          },
+          optionalDependencies: { missing: { specifier: '^2.0.0' } },
+          snapshots: [
+            {
+              dependencies: {
+                tool: { version: '1.0.0', with: { peer: '2.0.0' } },
+              },
+            },
+            { dependencies: { tool: '1.1.0' } },
+          ],
+        },
+        'sibling@file:vendor/sibling': {},
+        'exact@1.0.0': {},
+        'tool@1.1.0': {},
+        'tool@1.0.0': {
+          snapshots: [
+            { peerDependencies: { peer: { version: '1.0.0' } } },
+            { peerDependencies: { peer: { version: '2.0.0' } } },
+          ],
+        },
+        'peer@1.0.0': {},
+        'peer@2.0.0': {},
+      },
+    });
+    const snapshot = normalized.packages[`${key}(nx-v13-0)`];
+    expect(snapshot.dependencies).toEqual({
+      exact: '1.0.0',
+      sibling: 'file:vendor/sibling',
+      tool: '1.0.0(nx-v13-1)',
+    });
+    expect(snapshot.optionalDependencies).not.toHaveProperty('missing');
+
+    const output = stringifyPnpmLockfileV13(normalized);
+    expect(output.packages[key]).toMatchObject({
+      dependencies: {
+        exact: { specifier: '1.0.0' },
+        sibling: { specifier: 'file:../sibling', injected: true },
+        tool: { specifier: '^1.0.0' },
+      },
+      optionalDependencies: { missing: { specifier: '^2.0.0' } },
+      snapshots: [
+        {
+          dependencies: {
+            sibling: 'file:vendor/sibling',
+            tool: { version: '1.0.0', with: { peer: '2.0.0' } },
+          },
+        },
+        { dependencies: { tool: '1.1.0' } },
+      ],
+    });
+    const reparsed = normalizePnpmLockfileV13(output);
+    expect(reparsed.packages[`${key}(nx-v13-0)`].dependencies).toEqual(
+      snapshot.dependencies
+    );
+  });
+
+  it('writes legacy directory specifier records inline', () => {
+    const key = 'local@file:vendor/local';
+    const normalized = normalizePnpmLockfileV13({
+      lockfileVersion: '13.0',
+      projects: { '.': {} },
+      packages: {
+        [key]: {
+          dependencies: { sibling: 'file:vendor/sibling' },
+          specifiers: {
+            dependencies: { sibling: 'file:../sibling' },
+            dependenciesMeta: { sibling: { injected: true } },
+          },
+        },
+      },
+    });
+    expect(stringifyPnpmLockfileV13(normalized).packages[key]).toEqual({
+      dependencies: {
+        sibling: {
+          specifier: 'file:../sibling',
+          version: 'file:vendor/sibling',
+          injected: true,
+        },
+      },
+    });
+  });
+
+  it('serializes a directory with no declaration record and does not restore stripped settings', () => {
     const normalized = normalizePnpmLockfileV13({
       lockfileVersion: '13.0',
       settings: {
@@ -416,13 +544,13 @@ describe('pnpm lockfile v13 adapter', () => {
     delete normalized.patchedDependencies;
     normalized.packages['local@file:workspace_modules/local'] = {
       resolution: { type: 'directory', directory: 'workspace_modules/local' },
-      dependencies: { missingOptional: '2.0.0' },
+      dependencies: { leaf: '2.0.0' },
     };
     const output = stringifyPnpmLockfileV13(normalized);
     expect(output.settings).toEqual({ autoInstallPeers: false });
     expect(output.packages['local@file:workspace_modules/local']).toEqual({
       resolution: { type: 'directory', directory: 'workspace_modules/local' },
-      dependencies: { missingOptional: '2.0.0' },
+      dependencies: { leaf: { version: '2.0.0' } },
     });
   });
 });

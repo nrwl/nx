@@ -175,4 +175,189 @@ describe('pnpm v13 project graph and pruning', () => {
     expect(selected.dependencies.peer).toBe('19.0.0');
     expect(selected.dependencies.leaf).toBe('2.0.0');
   });
+
+  it('writes the manifest declarations of copied directory packages beside their resolved refs', () => {
+    const source = JSON.stringify({
+      lockfileVersion: '13.0',
+      projects: {
+        '.': {
+          dependencies: {
+            '@scope/module': {
+              specifier: 'workspace:*',
+              version: 'file:libs/module',
+              injected: true,
+            },
+          },
+        },
+        'libs/module': {
+          name: '@scope/module',
+          dependencies: {
+            '@scope/sibling': {
+              specifier: 'workspace:*',
+              version: 'link:../sibling',
+            },
+            leaf: { specifier: '^1.0.0', version: '1.2.0' },
+          },
+        },
+        'libs/sibling': { name: '@scope/sibling' },
+      },
+      packages: {
+        '@scope/module@file:libs/module': {},
+        'leaf@1.2.0': { integrity: 'sha512-leaf' },
+      },
+    });
+    vol.fromJSON(
+      {
+        'libs/module/package.json': JSON.stringify({
+          name: '@scope/module',
+          version: '1.0.0',
+          dependencies: { '@scope/sibling': 'workspace:*', leaf: '^1.0.0' },
+          dependenciesMeta: { '@scope/sibling': { injected: true } },
+          optionalDependencies: { absent: '^2.0.0' },
+        }),
+        'libs/sibling/package.json': JSON.stringify({
+          name: '@scope/sibling',
+          version: '1.0.0',
+        }),
+      },
+      '/root'
+    );
+    const graph: ProjectGraph = {
+      ...graphFor(source),
+      nodes: {
+        module: {
+          name: 'module',
+          type: 'lib',
+          data: {
+            root: 'libs/module',
+            metadata: { js: { packageName: '@scope/module' } },
+          },
+        },
+        sibling: {
+          name: 'sibling',
+          type: 'lib',
+          data: {
+            root: 'libs/sibling',
+            metadata: { js: { packageName: '@scope/sibling' } },
+          },
+        },
+      },
+    };
+    const output = stringifyPnpmLockfile(
+      graph,
+      source,
+      {
+        name: 'app',
+        version: '1.0.0',
+        dependencies: { '@scope/module': 'workspace:*' },
+      },
+      '/root'
+    );
+    const parsed = require('@zkochan/js-yaml').load(output);
+    expect(
+      parsed.packages['@scope/module@file:workspace_modules/@scope/module']
+    ).toMatchObject({
+      dependencies: {
+        '@scope/sibling': {
+          specifier: 'file:../sibling',
+          version: 'file:workspace_modules/@scope/sibling',
+          injected: true,
+        },
+        leaf: { specifier: '^1.0.0', version: '1.2.0' },
+      },
+      optionalDependencies: { absent: { specifier: '^2.0.0' } },
+    });
+    expect(
+      parsed.packages['@scope/sibling@file:workspace_modules/@scope/sibling']
+    ).not.toHaveProperty('dependencies');
+  });
+
+  it('keeps the vendored dependency of a copied module when a workspace project shares its name', () => {
+    const shared = {
+      specifier: 'file:../../vendor/shared',
+      version: 'file:vendor/shared',
+    };
+    const source = JSON.stringify({
+      lockfileVersion: '13.0',
+      projects: {
+        '.': {
+          dependencies: {
+            'copied-module': {
+              specifier: 'workspace:*',
+              version: 'file:libs/module',
+              injected: true,
+            },
+          },
+        },
+        'libs/module': {
+          name: 'copied-module',
+          dependencies: { shared },
+        },
+        'libs/shared': { name: 'shared' },
+      },
+      packages: {
+        'copied-module@file:libs/module': { dependencies: { shared } },
+        'shared@file:vendor/shared': {},
+      },
+    });
+    vol.fromJSON(
+      {
+        'libs/module/package.json': JSON.stringify({
+          name: 'copied-module',
+          version: '1.0.0',
+          dependencies: { shared: shared.specifier },
+        }),
+      },
+      '/root'
+    );
+    const graph: ProjectGraph = {
+      ...graphFor(source),
+      nodes: {
+        module: {
+          name: 'module',
+          type: 'lib',
+          data: {
+            root: 'libs/module',
+            metadata: { js: { packageName: 'copied-module' } },
+          },
+        },
+        shared: {
+          name: 'shared',
+          type: 'lib',
+          data: {
+            root: 'libs/shared',
+            metadata: { js: { packageName: 'shared' } },
+          },
+        },
+      },
+    };
+    const manifest = {
+      name: 'app',
+      version: '1.0.0',
+      dependencies: { 'copied-module': 'workspace:*' },
+    };
+    const pruned = pruneProjectGraph(graph, manifest, '/root', 'pnpm');
+    const output = stringifyPnpmLockfile(
+      pruned,
+      source,
+      manifest,
+      '/root',
+      '.'
+    );
+    const parsed = require('@zkochan/js-yaml').load(output);
+
+    expect(
+      parsed.packages['copied-module@file:workspace_modules/copied-module']
+        .dependencies.shared
+    ).toEqual({
+      specifier: 'file:../../local_path_modules/vendor/shared',
+      version: 'file:local_path_modules/vendor/shared',
+    });
+    expect(
+      parsed.packages['shared@file:local_path_modules/vendor/shared']
+    ).toBeDefined();
+    expect(
+      parsed.packages['shared@file:workspace_modules/shared']
+    ).toBeUndefined();
+  });
 });
