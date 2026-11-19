@@ -419,10 +419,16 @@ async function selectAgent(
   }
 
   if (detected.length === 0) {
+    const unshownRejections = rejected.filter((r) => r.agent.id !== explicitId);
     output.error({
       title:
-        'Agentic flow was enabled, but no supported AI agent is installed on this machine.',
-      bodyLines: INSTALL_SUPPORTED_AGENTS_HINT,
+        rejected.length > 0
+          ? 'Agentic flow was enabled, but no installed AI agent could be used.'
+          : 'Agentic flow was enabled, but no supported AI agent is installed on this machine.',
+      bodyLines: [
+        ...unshownRejections.flatMap(rejectedBinaryLines),
+        ...INSTALL_SUPPORTED_AGENTS_HINT,
+      ],
     });
     throw new Error('No installed AI agent available.');
   }
