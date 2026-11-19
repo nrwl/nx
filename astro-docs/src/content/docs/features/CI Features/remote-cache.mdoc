@@ -109,16 +109,19 @@ It lives in Nx Cloud, so your configuration files don't change, and declared `ou
 
 {% figure name="ultracache" height=540 caption="Ultracache records the files shop:test reads, including files from other projects and root config, and stores them as the task's inputs. Click a file to change it: a file the test read reruns it, a file it never read is a cache hit." /%}
 
-Only runs on Workers are recorded, but every CI run hashes from the recording, including on CI machines you manage yourself.
+Only runs on Workers are recorded. Once a task has a recording, every CI run hashes from it, including on CI machines you manage yourself.
 Runs outside CI hash from declared `inputs`.
 Cache hits, continuous tasks, tasks with `cache: false`, and tasks run by a batch executor aren't traced.
 
 ### Turn on Ultracache
 
-New Nx Cloud workspaces start with Ultracache on.
+Ultracache requires Nx 24.0.0 or later and [Nx Cloud Workers](/docs/features/ci-features/distribute-task-execution).
+On CI machines you manage yourself, including manual distribution, nothing is recorded, so a workspace that never runs on Workers hashes its tasks from their declared `inputs`.
+
+New Nx Cloud workspaces start with the **Ultracache** setting on, so it takes effect once the workspace runs on Workers with Nx 24.0.0 or later.
 For an existing workspace, open the workspace's [**Settings**](https://cloud.nx.app/go/workspace/settings) page in Nx Cloud and set **Ultracache** to **On**.
 
-Ultracache requires Nx 24.0.0 or later, which uses it in CI by default.
+Nx 24.0.0 and later use Ultracache in CI by default.
 Earlier Nx versions don't support it, so [update your workspace](/docs/features/automate-updating-dependencies) first.
 If Nx can't read the recordings from Nx Cloud, the run doesn't fail and Nx hashes its tasks from their declared `inputs`.
 For details, see [Ultracache and Nx versions](/docs/kb/ultracache-nx-versions).
