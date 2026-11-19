@@ -15,6 +15,8 @@ import {
   filterTaskGraphToSelection,
 } from './create-task-graph';
 import { pruneToSelectedTasks } from './utils';
+import { output } from '../utils/output';
+import type { MockInstance } from 'vitest';
 
 describe('createTaskGraph', () => {
   let projectGraph: ProjectGraph;
@@ -3723,6 +3725,105 @@ describe('createTaskGraph', () => {
       { id: 'lib1:build' },
       { id: 'lib2:build' },
     ]);
+  });
+
+  describe('dependsOn entries that match nothing', () => {
+    function graphWithDependsOn(
+      dependsOn: TargetConfiguration['dependsOn']
+    ): ProjectGraph {
+      return {
+        nodes: {
+          app1: {
+            name: 'app1',
+            type: 'app',
+            data: {
+              root: 'app1-root',
+              targets: {
+                build: { executor: 'nx:run-commands', dependsOn },
+              },
+            },
+          },
+          lib1: {
+            name: 'lib1',
+            type: 'lib',
+            data: {
+              root: 'lib1-root',
+              targets: {
+                'build:prod': { executor: 'nx:run-commands' },
+              },
+            },
+          },
+        },
+        dependencies: { app1: [], lib1: [] },
+      };
+    }
+
+    let warnSpy: MockInstance<typeof output.warn>;
+
+    beforeEach(() => {
+      warnSpy = vi.spyOn(output, 'warn').mockImplementation(() => {});
+    });
+
+    afterEach(() => {
+      warnSpy.mockRestore();
+    });
+
+    it('should warn when a project:target string names no project and no target', () => {
+      createTaskGraph(
+        graphWithDependsOn(['missing-project:dependency']),
+        {},
+        ['app1'],
+        ['build'],
+        null,
+        {}
+      );
+
+      expect(warnSpy).toHaveBeenCalledWith({
+        title: '`dependsOn` is misconfigured for app1:build',
+        bodyLines: [
+          '"missing-project:dependency" does not match any project or target.',
+        ],
+      });
+    });
+
+    it('should warn when a projects filter matches no project', () => {
+      createTaskGraph(
+        graphWithDependsOn([{ projects: 'missing-project', target: 'build' }]),
+        {},
+        ['app1'],
+        ['build'],
+        null,
+        {}
+      );
+
+      expect(warnSpy).toHaveBeenCalledTimes(1);
+    });
+
+    it('should not warn for a target with colons that some other project has', () => {
+      createTaskGraph(
+        graphWithDependsOn(['build:prod']),
+        {},
+        ['app1'],
+        ['build'],
+        null,
+        {}
+      );
+
+      expect(warnSpy).not.toHaveBeenCalled();
+    });
+
+    it('should not warn for a plain target the project lacks', () => {
+      createTaskGraph(
+        graphWithDependsOn(['codegen']),
+        {},
+        ['app1'],
+        ['build'],
+        null,
+        {}
+      );
+
+      expect(warnSpy).not.toHaveBeenCalled();
+    });
   });
 
   it('should handle negative patterns in dependsOn', () => {

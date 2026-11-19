@@ -192,6 +192,16 @@ export class ProcessTasks {
           `Project patterns "${dependencyConfig.projects}" does not match any projects.`,
         ],
       });
+    } else if (
+      dependencyConfig.target.includes(':') &&
+      !this.allTargetNames.includes(dependencyConfig.target)
+    ) {
+      output.warn({
+        title: `\`dependsOn\` is misconfigured for ${task.target.project}:${task.target.target}`,
+        bodyLines: [
+          `"${dependencyConfig.target}" does not match any project or target.`,
+        ],
+      });
     }
     for (const projectName of dependencyConfig.projects) {
       this.processTasksForSingleProject(
