@@ -48,8 +48,9 @@ export async function ensureCypressInstallation() {
   withInstallLock(CYPRESS_LOCK_FILE, 'Cypress', () => {
     // No-op when the binary is installed. `cypress run` smoke-tests it on first
     // use, so this skips `cypress verify`, which always reruns that test.
-    const { status, signal, error, stdout, stderr } = spawnSync(
-      'npx cypress install',
+    // One pipe for both streams keeps the output in the order it was printed.
+    const { status, signal, error, stdout } = spawnSync(
+      'npx cypress install 2>&1',
       {
         shell: true,
         encoding: 'utf-8',
@@ -63,7 +64,7 @@ export async function ensureCypressInstallation() {
       }
     );
     // Cypress prints its binary source, which can be a URL with credentials.
-    const output = redactUrlCredentials(`${stdout ?? ''}${stderr ?? ''}`);
+    const output = redactUrlCredentials(stdout ?? '');
     if (status !== 0) {
       const reason = error?.message ?? `exit code ${status ?? signal}`;
       e2eConsoleLogger(`Failed to install Cypress (${reason}):`, output);

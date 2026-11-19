@@ -121,13 +121,13 @@ if (process.env.NX_E2E_RUN_E2E !== 'true') {
       },
     };
     if (tool.redactOutput) {
-      const { status, signal, error, stdout, stderr } = spawnSync(command, {
+      // One pipe for both streams keeps the log in the order it was printed.
+      const { status, signal, error, stdout } = spawnSync(`${command} 2>&1`, {
         ...options,
         shell: true,
         encoding: 'utf-8',
       });
       process.stdout.write(redactUrlCredentials(stdout ?? ''));
-      process.stderr.write(redactUrlCredentials(stderr ?? ''));
       if (status !== 0) {
         console.error(
           `${tool.name} installation failed (${error?.message ?? `exit code ${status ?? signal}`}).`
