@@ -1340,6 +1340,60 @@ describe('createPackageJson', () => {
       ).not.toHaveProperty('overrides');
     });
 
+    it('should replace a "$name" npm override value with the root spec when the generated package.json does not declare name', () => {
+      spies.push(
+        vi
+          .spyOn(fs, 'existsSync')
+          .mockImplementation(
+            (path) =>
+              path === 'libs/lib1/package.json' || path === 'package.json'
+          )
+      );
+      spies.push(
+        vi.spyOn(fileutilsModule, 'readJsonFile').mockImplementation((path) => {
+          if (path === 'package.json') {
+            return {
+              ...rootPackageJson(),
+              overrides: {
+                // `tslib` and `nx` are only declared by the root package.json,
+                // so npm could not resolve `$tslib` or `$nx` in the dist.
+                typescript: { '.': '$typescript', foo: '$tslib' },
+                bar: { baz: '$nx' },
+                qux: '$tslib',
+                // `random` is declared by the generated package.json, and
+                // `missing` by neither, so these are left to npm.
+                quux: '$random',
+                corge: '$missing',
+              },
+            };
+          }
+          if (path === 'libs/lib1/package.json') {
+            return projectPackageJson();
+          }
+        })
+      );
+
+      expect(
+        createPackageJson('lib1', graph, {
+          root: '',
+        })
+      ).toEqual({
+        dependencies: {
+          random: '1.0.0',
+          typescript: '^4.8.4',
+        },
+        name: 'other-name',
+        version: '1.2.3',
+        overrides: {
+          typescript: { foo: '~2.4.0' },
+          bar: { baz: '> 14' },
+          qux: '~2.4.0',
+          quux: '$random',
+          corge: '$missing',
+        },
+      });
+    });
+
     it('should add resolutions (yarn)', () => {
       spies.push(
         vi

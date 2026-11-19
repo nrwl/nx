@@ -294,7 +294,11 @@ export function createPackageJson(
         }
         override = dependencyOverrides;
       }
-      overrides[name] = override;
+      overrides[name] = resolveNpmOverrideReferences(
+        override,
+        packageJson,
+        rootPackageJson
+      );
       hasOverrides = true;
     }
     if (hasOverrides) {
@@ -355,6 +359,46 @@ export function createPackageJson(
   // endregion Overrides/Resolutions
 
   return packageJson;
+}
+
+// The sections npm reads, in this order, to resolve a `$name` override value.
+const NPM_OVERRIDE_REFERENCE_SECTIONS: PackageJsonDependencySection[] = [
+  'devDependencies',
+  'optionalDependencies',
+  'dependencies',
+  'peerDependencies',
+];
+
+// npm fails on a `$name` override value that the installed package.json does
+// not declare, so such a value takes the root package.json's spec for `name`.
+function resolveNpmOverrideReferences<T extends string | object>(
+  override: T,
+  packageJson: PackageJson,
+  rootPackageJson: PackageJson
+): T {
+  if (typeof override === 'string') {
+    if (!override.startsWith('$')) {
+      return override;
+    }
+    const name = override.slice(1);
+    const findSpec = (manifest: PackageJson) =>
+      NPM_OVERRIDE_REFERENCE_SECTIONS.map(
+        (section) => manifest[section]?.[name]
+      ).find(Boolean);
+    if (findSpec(packageJson)) {
+      return override;
+    }
+    return (findSpec(rootPackageJson) ?? override) as T;
+  }
+  if (typeof override !== 'object' || override === null) {
+    return override;
+  }
+  return Object.fromEntries(
+    Object.entries(override).map(([key, value]) => [
+      key,
+      resolveNpmOverrideReferences(value, packageJson, rootPackageJson),
+    ])
+  ) as T;
 }
 
 const LOCAL_PATH_SPEC_SECTIONS: PackageJsonDependencySection[] = [
