@@ -134,6 +134,11 @@ export class ReleaseGraph {
     ReleaseGroupWithName,
     Set<string>
   >();
+  /**
+   * Names of release groups that no filter selected, which are only in scope because
+   * `updateDependents` pulled in some of their projects as dependents.
+   */
+  readonly releaseGroupsAddedForDependents = new Set<string>();
   private originalFilteredProjects = new Set<string>();
   private matchedProjectsForFilter = new Set<string>();
 
@@ -589,6 +594,7 @@ export class ReleaseGraph {
         resolvedVersionPlans: false,
       } as const;
       this.releaseGroups.push(groupForDependents);
+      this.releaseGroupsAddedForDependents.add(group.name);
       // Add the projects from this group that are actually being processed
       const projectsInGroup = new Set(
         group.projects.filter((p) => dependentsToProcess.has(p))
