@@ -113,6 +113,12 @@ describe('@nx/angular/plugin', () => {
                       "production",
                       "^production",
                       {
+                        "fields": [
+                          "projects.my-app",
+                        ],
+                        "json": "{workspaceRoot}/angular.json",
+                      },
+                      {
                         "externalDependencies": [
                           "@angular/cli",
                         ],
@@ -176,6 +182,12 @@ describe('@nx/angular/plugin', () => {
                       "default",
                       "^production",
                       {
+                        "fields": [
+                          "projects.my-app",
+                        ],
+                        "json": "{workspaceRoot}/angular.json",
+                      },
+                      {
                         "externalDependencies": [
                           "@angular/cli",
                           "karma",
@@ -219,6 +231,12 @@ describe('@nx/angular/plugin', () => {
                       "production",
                       "^production",
                       {
+                        "fields": [
+                          "projects.my-lib",
+                        ],
+                        "json": "{workspaceRoot}/angular.json",
+                      },
+                      {
                         "externalDependencies": [
                           "@angular/cli",
                         ],
@@ -251,6 +269,12 @@ describe('@nx/angular/plugin', () => {
                     "inputs": [
                       "default",
                       "^production",
+                      {
+                        "fields": [
+                          "projects.my-lib",
+                        ],
+                        "json": "{workspaceRoot}/angular.json",
+                      },
                       {
                         "externalDependencies": [
                           "@angular/cli",
@@ -416,6 +440,12 @@ describe('@nx/angular/plugin', () => {
                       "production",
                       "^production",
                       {
+                        "fields": [
+                          "projects.org1-app1",
+                        ],
+                        "json": "{workspaceRoot}/nested-ng-workspaces/org1/angular.json",
+                      },
+                      {
                         "externalDependencies": [
                           "@angular/cli",
                         ],
@@ -479,6 +509,12 @@ describe('@nx/angular/plugin', () => {
                       "default",
                       "^production",
                       {
+                        "fields": [
+                          "projects.org1-app1",
+                        ],
+                        "json": "{workspaceRoot}/nested-ng-workspaces/org1/angular.json",
+                      },
+                      {
                         "externalDependencies": [
                           "@angular/cli",
                           "karma",
@@ -522,6 +558,12 @@ describe('@nx/angular/plugin', () => {
                       "production",
                       "^production",
                       {
+                        "fields": [
+                          "projects.org1-lib1",
+                        ],
+                        "json": "{workspaceRoot}/nested-ng-workspaces/org1/angular.json",
+                      },
+                      {
                         "externalDependencies": [
                           "@angular/cli",
                         ],
@@ -554,6 +596,12 @@ describe('@nx/angular/plugin', () => {
                     "inputs": [
                       "default",
                       "^production",
+                      {
+                        "fields": [
+                          "projects.org1-lib1",
+                        ],
+                        "json": "{workspaceRoot}/nested-ng-workspaces/org1/angular.json",
+                      },
                       {
                         "externalDependencies": [
                           "@angular/cli",
@@ -604,6 +652,12 @@ describe('@nx/angular/plugin', () => {
                     "inputs": [
                       "production",
                       "^production",
+                      {
+                        "fields": [
+                          "projects.org2-app1",
+                        ],
+                        "json": "{workspaceRoot}/nested-ng-workspaces/org2/angular.json",
+                      },
                       {
                         "externalDependencies": [
                           "@angular/cli",
@@ -668,6 +722,12 @@ describe('@nx/angular/plugin', () => {
                       "default",
                       "^production",
                       {
+                        "fields": [
+                          "projects.org2-app1",
+                        ],
+                        "json": "{workspaceRoot}/nested-ng-workspaces/org2/angular.json",
+                      },
+                      {
                         "externalDependencies": [
                           "@angular/cli",
                           "karma",
@@ -711,6 +771,12 @@ describe('@nx/angular/plugin', () => {
                       "production",
                       "^production",
                       {
+                        "fields": [
+                          "projects.org2-lib1",
+                        ],
+                        "json": "{workspaceRoot}/nested-ng-workspaces/org2/angular.json",
+                      },
+                      {
                         "externalDependencies": [
                           "@angular/cli",
                         ],
@@ -743,6 +809,12 @@ describe('@nx/angular/plugin', () => {
                     "inputs": [
                       "default",
                       "^production",
+                      {
+                        "fields": [
+                          "projects.org2-lib1",
+                        ],
+                        "json": "{workspaceRoot}/nested-ng-workspaces/org2/angular.json",
+                      },
                       {
                         "externalDependencies": [
                           "@angular/cli",
@@ -939,6 +1011,10 @@ describe('@nx/angular/plugin', () => {
       inputs: [
         'production',
         '^production',
+        {
+          json: '{workspaceRoot}/angular.json',
+          fields: ['projects.my-lib'],
+        },
         { externalDependencies: ['@angular/cli'] },
       ],
       outputs: ['{workspaceRoot}/dist/my-lib'],
@@ -979,6 +1055,32 @@ describe('@nx/angular/plugin', () => {
     expect(projects['projects/other-lib'].targets.build.cache).toBe(true);
     expect(projects['projects/other-lib'].targets.build.outputs).toStrictEqual([
       '{workspaceRoot}/dist/other-lib',
+    ]);
+  });
+
+  it('should use the whole angular.json as an input for a project name containing a dot', async () => {
+    await createAngularWorkspace('');
+    await addAngularProjectToWorkspace('my.lib', '', {
+      root: 'projects/my.lib',
+      sourceRoot: 'projects/my.lib',
+      projectType: 'library',
+      architect: {
+        build: {
+          builder: '@angular/build:library',
+          options: { tsConfig: 'projects/my.lib/tsconfig.lib.json' },
+        },
+      },
+    });
+
+    const nodes = await createNodesFunction(['angular.json'], {}, context);
+
+    expect(
+      nodes[0][1].projects['projects/my.lib'].targets.build.inputs
+    ).toStrictEqual([
+      'production',
+      '^production',
+      '{workspaceRoot}/angular.json',
+      { externalDependencies: ['@angular/cli'] },
     ]);
   });
 
@@ -1043,6 +1145,12 @@ describe('@nx/angular/plugin', () => {
         "inputs": [
           "production",
           "^production",
+          {
+            "fields": [
+              "projects.my-app",
+            ],
+            "json": "{workspaceRoot}/angular.json",
+          },
           {
             "externalDependencies": [
               "@angular/cli",
@@ -1190,6 +1298,12 @@ describe('@nx/angular/plugin', () => {
         "inputs": [
           "production",
           "^production",
+          {
+            "fields": [
+              "projects.my-app",
+            ],
+            "json": "{workspaceRoot}/angular.json",
+          },
           {
             "externalDependencies": [
               "@angular/cli",

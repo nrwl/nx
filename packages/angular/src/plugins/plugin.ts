@@ -59,6 +59,7 @@ export type AngularProjectConfiguration = {
   targets?: Record<string, AngularTargetConfiguration>;
 };
 type AngularJson = { projects?: Record<string, AngularProjectConfiguration> };
+type TargetInput = TargetConfiguration['inputs'][number];
 
 const knownExecutors = {
   appShell: new Set(['@angular-devkit/build-angular:app-shell']),
@@ -299,7 +300,10 @@ async function buildAngularProjects(
       }
 
       if (targets[nxTargetName].inputs?.length) {
-        targets[nxTargetName].inputs.push({ externalDependencies });
+        targets[nxTargetName].inputs.push(
+          getAngularJsonInput(configFilePath, projectName),
+          { externalDependencies }
+        );
       }
 
       if (angularTarget.configurations) {
@@ -337,13 +341,20 @@ async function buildAngularProjects(
       target,
       projects,
       angularJson,
+      configFilePath,
       angularWorkspaceRoot,
       context
     );
   }
 
   for (const { project, target } of prerenderTargets) {
-    updatePrerenderTarget(project, target, projects, angularJson);
+    updatePrerenderTarget(
+      project,
+      target,
+      projects,
+      angularJson,
+      configFilePath
+    );
   }
 
   return Object.entries(projects).reduce((acc, [projectName, project]) => {
@@ -361,6 +372,7 @@ function updateAppShellTarget(
   targetName: string,
   projects: AngularProjects,
   angularJson: AngularJson,
+  configFilePath: string,
   angularWorkspaceRoot: string,
   context: CreateNodesContext
 ): void {
@@ -402,7 +414,10 @@ function updateAppShellTarget(
   }
 
   target.cache = true;
-  target.inputs = inputs;
+  target.inputs = mergeInputs(
+    ...inputs,
+    getAngularJsonInput(configFilePath, projectName)
+  );
   target.outputs = outputs;
 }
 
@@ -564,7 +579,8 @@ function updatePrerenderTarget(
   projectName: string,
   targetName: string,
   projects: AngularProjects,
-  angularJson: AngularJson
+  angularJson: AngularJson,
+  configFilePath: string
 ): void {
   // it must exist since we collected it when processing it
   const target = projects[projectName].targets[targetName];
@@ -589,7 +605,10 @@ function updatePrerenderTarget(
   }
 
   target.cache = true;
-  target.inputs = inputs;
+  target.inputs = mergeInputs(
+    ...inputs,
+    getAngularJsonInput(configFilePath, projectName)
+  );
   target.outputs = outputs;
 }
 
@@ -961,13 +980,17 @@ function mergeInputs(
   ...inputs: TargetConfiguration['inputs']
 ): TargetConfiguration['inputs'] {
   const stringInputs = new Set<string>();
+  const jsonInputs = new Map<string, TargetInput>();
   const externalDependencies = new Set<string>();
 
+  // we only infer json and external dependencies input definitions, so we
+  // don't need to handle the other ones
   for (const input of inputs) {
     if (typeof input === 'string') {
       stringInputs.add(input);
+    } else if ('json' in input) {
+      jsonInputs.set(JSON.stringify(input), input);
     } else if ('externalDependencies' in input) {
-      // we only infer external dependencies, so we don't need to handle the other input definitions
       for (const externalDependency of input.externalDependencies) {
         externalDependencies.add(externalDependency);
       }
@@ -976,10 +999,24 @@ function mergeInputs(
 
   return [
     ...stringInputs,
+    ...jsonInputs.values(),
     ...(externalDependencies.size
       ? [{ externalDependencies: Array.from(externalDependencies) }]
       : []),
   ];
+}
+
+// JSON input fields are split on '.', so a project name containing one can't
+// be selected and the whole file is used instead.
+function getAngularJsonInput(
+  configFilePath: string,
+  projectName: string
+): TargetInput {
+  const angularJsonPath = `{workspaceRoot}/${configFilePath}`;
+
+  return projectName.includes('.')
+    ? angularJsonPath
+    : { json: angularJsonPath, fields: [`projects.${projectName}`] };
 }
 
 // Inferred outputs can't vary by configuration, so a target with a
