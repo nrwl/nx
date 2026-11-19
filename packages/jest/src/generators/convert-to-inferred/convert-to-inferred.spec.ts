@@ -157,6 +157,24 @@ function createTestProject(
   return project;
 }
 
+function addSwaggerTarget(tree: Tree, project: ProjectConfiguration) {
+  writeJestConfig(tree, project.root, undefined, 'jest.config.swagger.js');
+  project.targets['generate-swagger-spec'] = {
+    executor: '@nx/jest:jest',
+    options: { jestConfig: `${project.root}/jest.config.swagger.js` },
+  };
+  updateProjectConfiguration(tree, project.name, project);
+  fs.createFileSync(`${project.root}/project.json`, JSON.stringify(project));
+}
+
+const tsNodeEnv = {
+  TS_NODE_COMPILER_OPTIONS: JSON.stringify({
+    moduleResolution: 'node10',
+    module: 'commonjs',
+    customConditions: null,
+  }),
+};
+
 describe('Jest - Convert Executors To Plugin', () => {
   let tree: Tree;
 
@@ -178,6 +196,41 @@ describe('Jest - Convert Executors To Plugin', () => {
   });
 
   describe('--project', () => {
+    it('runs a target on a config file the plugin does not infer only in the named project', async () => {
+      const project = createTestProject(tree);
+      addSwaggerTarget(tree, project);
+      const project2 = createTestProject(tree, {
+        appRoot: 'apps/project2',
+        appName: 'project2',
+      });
+      addSwaggerTarget(tree, project2);
+      const project2Targets = readProjectConfiguration(
+        tree,
+        project2.name
+      ).targets;
+
+      await convertToInferred(tree, {
+        project: project.name,
+        skipFormat: true,
+      });
+
+      expect(
+        readProjectConfiguration(tree, project.name).targets[
+          'generate-swagger-spec'
+        ]
+      ).toEqual({
+        executor: 'nx:run-commands',
+        options: {
+          command: 'jest --config ./apps/app1/jest.config.swagger.js',
+          cwd: '.',
+          env: tsNodeEnv,
+        },
+      });
+      expect(readProjectConfiguration(tree, project2.name).targets).toEqual(
+        project2Targets
+      );
+    });
+
     it('should set up the jest plugin and migrate specified project by removing the target when it only has options that are removed', async () => {
       const project = createTestProject(tree, undefined, {
         tsConfig: `${defaultTestProjectOptions.appRoot}/tsconfig.spec.json`,
@@ -1087,6 +1140,32 @@ describe('Jest - Convert Executors To Plugin', () => {
   });
 
   describe('all projects', () => {
+    it('runs a target on a config file the plugin does not infer when it is the only jest target', async () => {
+      const root = 'apps/swagger-only';
+      const project: ProjectConfiguration = {
+        name: 'swagger-only',
+        root,
+        projectType: 'application',
+        targets: {},
+      };
+      addProject(tree, project.name, project);
+      fs.createFileSync(`${root}/project.json`, JSON.stringify(project));
+      addSwaggerTarget(tree, readProjectConfiguration(tree, project.name));
+
+      await convertToInferred(tree, { skipFormat: true });
+
+      expect(readProjectConfiguration(tree, project.name).targets).toEqual({
+        'generate-swagger-spec': {
+          executor: 'nx:run-commands',
+          options: {
+            command: 'jest --config ./apps/swagger-only/jest.config.swagger.js',
+            cwd: '.',
+            env: tsNodeEnv,
+          },
+        },
+      });
+    });
+
     it('centralizes shared test config without changing the effective target (equivalence)', async () => {
       // Two projects share a non-inferred option (codeCoverage -> coverage), so
       // it must be hoisted once into targetDefaults and still resolve

@@ -322,6 +322,15 @@ fn with_shared_app<R>(shared: &SharedAppInstance, f: impl FnOnce(&mut dyn TuiApp
     f(&mut *guard)
 }
 
+/// Makes the first read of env vars that dependencies cache, so it happens on the
+/// JS thread: made first on a worker, it races JS adding a variable. Module load is
+/// too early, before root `.env` files apply.
+fn prime_env_caches() {
+    let _ = &*colored::control::SHOULD_COLORIZE;
+    let _ = std::backtrace::Backtrace::capture();
+    crossterm::style::Colored::ansi_color_disabled_memoized();
+}
+
 #[napi]
 #[derive(Clone)]
 pub struct AppLifeCycle {
@@ -470,7 +479,8 @@ impl AppLifeCycle {
         debug!("Initializing Terminal UI - Mode: {:?}", initial_mode);
 
         let app = self.app.clone();
-        let workspace_root = self.workspace_root.clone();
+        let console_socket_paths = NxConsoleMessageConnection::socket_paths(&self.workspace_root);
+        prime_env_caches();
 
         // Create Tui with FullScreen viewport
         let mut tui = Tui::new().map_err(|e| napi::Error::from_reason(e.to_string()))?;
@@ -528,7 +538,7 @@ impl AppLifeCycle {
         spawn(async move {
             // Set up console messenger (identical for both modes)
             {
-                let connection = NxConsoleMessageConnection::new(&workspace_root).await;
+                let connection = NxConsoleMessageConnection::connect(console_socket_paths).await;
                 with_shared_app(&app, |a| a.set_console_messenger(connection));
             }
 

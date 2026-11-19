@@ -515,6 +515,179 @@ describe('createConfig', () => {
     }
   }, 10000);
 
+  it('should reload on source changes only for SSR apps served by a separate server', async () => {
+    const root = await createSsrProjectRoot();
+    vi.stubEnv('WEBPACK_SERVE', 'true');
+    try {
+      const [forkedSsrConfig] = await _createConfig({
+        ...configBase,
+        root,
+        server: './src/main.server.ts',
+        ssr: { entry: './src/server.ts' },
+      });
+      expect((forkedSsrConfig.devServer || {}).watchFiles).toEqual([
+        './src/**/*.*',
+        './public/**/*.*',
+      ]);
+
+      const [devServerSsrConfig] = await _createConfig({
+        ...configBase,
+        root,
+        server: './src/main.server.ts',
+        ssr: { entry: './src/server.ts', serveFromDevServer: true },
+      });
+      const [browserOnlyConfig] = await _createConfig({ ...configBase, root });
+      for (const config of [devServerSsrConfig, browserOnlyConfig]) {
+        expect(config.devServer).not.toHaveProperty('watchFiles');
+      }
+    } finally {
+      vi.unstubAllEnvs();
+      await rm(root, { recursive: true, force: true });
+    }
+  }, 10000);
+
+  it('should keep devServer overrides off the server build while serving', async () => {
+    const root = await createSsrProjectRoot();
+    vi.stubEnv('WEBPACK_SERVE', 'true');
+    try {
+      const [browserConfig, serverConfig] = await _createConfig(
+        {
+          ...configBase,
+          root,
+          server: './src/main.server.ts',
+          ssr: { entry: './src/server.ts' },
+        },
+        { devServer: { headers: { 'x-override': '1' } } }
+      );
+
+      expect(browserConfig.devServer).toMatchObject({
+        headers: { 'x-override': '1' },
+      });
+      expect(serverConfig.devServer).toBe(false);
+    } finally {
+      vi.unstubAllEnvs();
+      await rm(root, { recursive: true, force: true });
+    }
+  }, 10000);
+
+  it('should warn once per process that serving SSR from a separate server is deprecated', async () => {
+    // A fresh module, since earlier tests already printed the warning.
+    vi.resetModules();
+    const { _createConfig: createFreshConfig } =
+      await import('./create-config.js');
+    const root = await createSsrProjectRoot();
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const deprecationWarnings = () =>
+      warnSpy.mock.calls.filter(([message]) =>
+        String(message).includes('Serving SSR from a separate server')
+      );
+    const options: AngularRspackPluginOptions = {
+      ...configBase,
+      root,
+      server: './src/main.server.ts',
+      ssr: { entry: './src/server.ts' },
+    };
+    try {
+      await createFreshConfig(options);
+      vi.stubEnv('WEBPACK_SERVE', 'true');
+      await createFreshConfig({
+        ...options,
+        ssr: { entry: './src/server.ts', serveFromDevServer: true },
+      });
+      await createFreshConfig({ ...configBase, root });
+      // Graph creation inside `rspack serve` inherits its environment.
+      global.NX_GRAPH_CREATION = true;
+      await createFreshConfig(options);
+      delete global.NX_GRAPH_CREATION;
+      expect(deprecationWarnings()).toHaveLength(0);
+
+      await createFreshConfig(options);
+      await createFreshConfig(options);
+      expect(deprecationWarnings()).toEqual([
+        [
+          'WARNING: Serving SSR from a separate server on PORT is deprecated and will be removed in Nx 25. Set "ssr.serveFromDevServer: true" in the createConfig options to serve SSR from the dev server.',
+        ],
+      ]);
+    } finally {
+      delete global.NX_GRAPH_CREATION;
+      vi.unstubAllEnvs();
+      warnSpy.mockRestore();
+      await rm(root, { recursive: true, force: true });
+    }
+  }, 20000);
+
+  it.each([
+    ['prerender', { prerender: { discoverRoutes: true } }],
+    ['appShell', { appShell: true }],
+  ])(
+    'should prerender with %s only outside the dev server',
+    async (_option, prerenderOptions) => {
+      const root = await createSsrProjectRoot();
+      const hasPrerenderPlugin = (config: Configuration) =>
+        config.plugins?.some(
+          (plugin) => plugin?.constructor.name === 'PrerenderPlugin'
+        );
+      const options: AngularRspackPluginOptions = {
+        ...configBase,
+        root,
+        server: './src/main.server.ts',
+        ssr: { entry: './src/server.ts' },
+        ...prerenderOptions,
+      };
+      try {
+        const [, buildServerConfig] = await _createConfig(options);
+        expect(hasPrerenderPlugin(buildServerConfig)).toBe(true);
+
+        vi.stubEnv('WEBPACK_SERVE', 'true');
+        const [, serveServerConfig] = await _createConfig(options);
+        expect(hasPrerenderPlugin(serveServerConfig)).toBe(false);
+      } finally {
+        vi.unstubAllEnvs();
+        await rm(root, { recursive: true, force: true });
+      }
+    },
+    10000
+  );
+
+  it('should leave documents to the SSR middleware only with ssr.serveFromDevServer while serving', async () => {
+    const root = await createSsrProjectRoot();
+    vi.stubEnv('WEBPACK_SERVE', 'true');
+    try {
+      const ssrOptions: AngularRspackPluginOptions = {
+        ...configBase,
+        root,
+        server: './src/main.server.ts',
+      };
+      const [devServerSsrConfig] = await _createConfig({
+        ...ssrOptions,
+        ssr: { entry: './src/server.ts', serveFromDevServer: true },
+      });
+      expect(devServerSsrConfig.devServer).toMatchObject({
+        historyApiFallback: false,
+        devMiddleware: { index: false },
+      });
+
+      const [forkedSsrConfig] = await _createConfig({
+        ...ssrOptions,
+        ssr: { entry: './src/server.ts' },
+      });
+      const [browserOnlyConfig] = await _createConfig({ ...configBase, root });
+      for (const config of [forkedSsrConfig, browserOnlyConfig]) {
+        expect(config.devServer).toMatchObject({
+          historyApiFallback: expect.objectContaining({
+            index: '/index.html',
+          }),
+        });
+        expect((config.devServer || {}).devMiddleware).not.toHaveProperty(
+          'index'
+        );
+      }
+    } finally {
+      vi.unstubAllEnvs();
+      await rm(root, { recursive: true, force: true });
+    }
+  }, 10000);
+
   it('should allow the dev-server hosts in the engine manifest while serving', async () => {
     const root = await createSsrProjectRoot();
     vi.stubEnv('WEBPACK_SERVE', 'true');

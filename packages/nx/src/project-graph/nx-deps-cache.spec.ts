@@ -20,6 +20,8 @@ describe('nx deps utils', () => {
           createNxJson({}),
           createTsConfigJson(),
           '',
+          '',
+          true,
           ''
         )
       ).toEqual(false);
@@ -34,6 +36,8 @@ describe('nx deps utils', () => {
           createNxJson({}),
           createTsConfigJson(),
           '',
+          '',
+          true,
           ''
         )
       ).toEqual(true);
@@ -48,6 +52,8 @@ describe('nx deps utils', () => {
           createNxJson({}),
           createTsConfigJson(),
           '',
+          '',
+          true,
           ''
         )
       ).toEqual(true);
@@ -69,6 +75,8 @@ describe('nx deps utils', () => {
           createNxJson({}),
           createTsConfigJson(),
           '',
+          '',
+          true,
           ''
         )
       ).toEqual(true);
@@ -83,6 +91,8 @@ describe('nx deps utils', () => {
           createNxJson({}),
           createTsConfigJson({ mylib: ['libs/mylib/changed.ts'] }),
           '',
+          '',
+          true,
           ''
         )
       ).toEqual(true);
@@ -99,6 +109,8 @@ describe('nx deps utils', () => {
           }),
           createTsConfigJson(),
           '',
+          '',
+          true,
           ''
         )
       ).toEqual(true);
@@ -113,6 +125,8 @@ describe('nx deps utils', () => {
           createNxJson({}),
           createTsConfigJson(),
           '',
+          '',
+          true,
           ''
         )
       ).toEqual(true);
@@ -127,6 +141,8 @@ describe('nx deps utils', () => {
           createNxJson({ pluginsConfig: { somePlugin: { one: 1 } } }),
           createTsConfigJson(),
           '',
+          '',
+          true,
           ''
         )
       ).toEqual(true);
@@ -143,6 +159,8 @@ describe('nx deps utils', () => {
           createNxJson({}),
           createTsConfigJson(),
           externalNodesHash,
+          '',
+          true,
           ''
         )
       ).toEqual(false);
@@ -157,6 +175,8 @@ describe('nx deps utils', () => {
           createNxJson({}),
           createTsConfigJson(),
           hashObject({}),
+          '',
+          true,
           ''
         )
       ).toEqual(false);
@@ -173,6 +193,8 @@ describe('nx deps utils', () => {
           createNxJson({}),
           createTsConfigJson(),
           externalNodesHash,
+          '',
+          true,
           ''
         )
       ).toEqual(true);
@@ -189,6 +211,8 @@ describe('nx deps utils', () => {
           createNxJson({}),
           createTsConfigJson(),
           hashObject({}),
+          '',
+          true,
           ''
         )
       ).toEqual(true);
@@ -202,7 +226,41 @@ describe('nx deps utils', () => {
           createNxJson({}),
           createTsConfigJson(),
           '',
-          'lock-files-after-install'
+          'lock-files-after-install',
+          true,
+          ''
+        )
+      ).toEqual(true);
+    });
+
+    it('should be true when typescript becomes resolvable', () => {
+      expect(
+        shouldRecomputeWholeGraph(
+          createCache({ typescriptResolvable: false }),
+          createPackageJsonDeps({}),
+          createProjectsConfiguration({}),
+          createNxJson({}),
+          createTsConfigJson(),
+          '',
+          '',
+          true,
+          ''
+        )
+      ).toEqual(true);
+    });
+
+    it('should be true when the catalog definitions change', () => {
+      expect(
+        shouldRecomputeWholeGraph(
+          createCache({ catalogsHash: 'catalogs-before-edit' }),
+          createPackageJsonDeps({}),
+          createProjectsConfiguration({}),
+          createNxJson({}),
+          createTsConfigJson(),
+          '',
+          '',
+          true,
+          'catalogs-after-edit'
         )
       ).toEqual(true);
     });
@@ -390,6 +448,8 @@ describe('nx deps utils', () => {
         {} as any,
         {},
         '',
+        '',
+        true,
         ''
       );
     });
@@ -401,6 +461,8 @@ describe('nx deps utils', () => {
         {} as any,
         undefined,
         '',
+        '',
+        true,
         ''
       );
 
@@ -424,6 +486,8 @@ describe('nx deps utils', () => {
       },
       externalNodesHash: '',
       lockFileHash: '',
+      typescriptResolvable: true,
+      catalogsHash: '',
     };
     return { ...defaults, ...p };
   }

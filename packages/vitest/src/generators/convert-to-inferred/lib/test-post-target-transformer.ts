@@ -3,6 +3,7 @@ import {
   processTargetOutputs,
   resolveNxTokensInOptions,
 } from '@nx/devkit/internal';
+import { posix } from 'node:path';
 import { toProjectRelativePath } from './utils';
 
 export function testPostTargetTransformer(
@@ -90,10 +91,34 @@ function removePropertiesFromTargetOptions(
     delete targetOptions.reportsDirectory;
   }
 
-  if ('testFiles' in targetOptions) {
-    targetOptions.testNamePattern = `"/(${targetOptions.testFiles
-      .map((f) => f.replace('.', '\\.'))
-      .join('|')})/"`;
-    delete targetOptions.testFiles;
+  // A later --coverage replaces the whole coverage object on the Vitest CLI
+  if (typeof targetOptions.coverage === 'boolean') {
+    targetOptions['coverage.enabled'] = targetOptions.coverage;
+    delete targetOptions.coverage;
   }
+
+  for (const name of ['testFiles', 'testFile']) {
+    if (name in targetOptions) {
+      const filters: string[] = resolveNxTokensInOptions(
+        [targetOptions[name]].flat(),
+        { root: projectRoot, name: projectDetails.projectName },
+        name
+      );
+      targetOptions.args = filters.map((filter) =>
+        toProjectFilter(filter, projectRoot)
+      );
+      delete targetOptions[name];
+    }
+  }
+}
+
+// Vitest resolves a relative filter against the cwd, which is now the project
+// root. nx:run-commands joins args with spaces, so a filter with one is quoted.
+function toProjectFilter(filter: string, projectRoot: string): string {
+  const normalized = posix.normalize(filter);
+  const prefix = `${posix.normalize(projectRoot)}/`;
+  const relative = normalized.startsWith(prefix)
+    ? normalized.slice(prefix.length)
+    : normalized;
+  return relative.includes(' ') ? `"${relative}"` : relative;
 }

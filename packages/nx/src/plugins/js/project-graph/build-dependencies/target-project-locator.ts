@@ -10,6 +10,10 @@ import {
   createProjectRootMappings,
   findProjectForPath,
 } from '../../../../project-graph/utils/find-project-for-path';
+import {
+  type CatalogManager,
+  getCatalogManager,
+} from '../../../../utils/catalog';
 import { isRelativePath, readJsonFile } from '../../../../utils/fileutils';
 import { getPackageNameFromImportPath } from '../../../../utils/get-package-name-from-import-path';
 import type { PackageJson } from '../../../../utils/package-json';
@@ -22,6 +26,7 @@ import {
 import { resolveRelativeToDir } from '../../utils/resolve-relative-to-dir';
 import {
   getRootTsConfigFileName,
+  isTypeScriptResolvable,
   resolveModuleByImport,
 } from '../../utils/typescript';
 
@@ -130,7 +135,9 @@ export class TargetProjectLocator {
   private paths = this.tsConfig.config?.compilerOptions?.paths;
   private parsedPathPatterns: ParsedPatterns | undefined;
   private typescriptResolutionCache = new Map<string, string | null>();
+  private typescriptResolvable: boolean | undefined;
   private linkedProjectCache = new Map<string, string | null>();
+  private catalogManager: CatalogManager | null | undefined;
   private packagesMetadata: {
     entryPointsToProjectMap: Record<string, ProjectGraphProjectNode>;
     wildcardEntryPointsToProjectMap: Record<string, ProjectGraphProjectNode>;
@@ -274,7 +281,10 @@ export class TargetProjectLocator {
         : externalProject;
     }
 
-    if (this.tsConfig.config) {
+    if (
+      this.tsConfig.config &&
+      (this.typescriptResolvable ??= isTypeScriptResolvable())
+    ) {
       // TODO: this can be removed once we rework resolveImportWithRequire below
       // to properly handle ESM (exports, imports, conditions)
       const resolvedProject = this.resolveImportWithTypescript(
@@ -694,9 +704,27 @@ export class TargetProjectLocator {
       return null;
     }
 
+    let specifier = packageVersion;
+    let isCatalogSpecifier = false;
+    if (this.catalogManager === undefined) {
+      this.catalogManager = getCatalogManager(workspaceRoot);
+    }
+    if (this.catalogManager?.isCatalogReference(packageVersion)) {
+      const catalogValue = this.catalogManager.resolveCatalogReference(
+        workspaceRoot,
+        dep,
+        packageVersion
+      );
+      if (typeof catalogValue !== 'string') {
+        return null;
+      }
+      specifier = catalogValue;
+      isCatalogSpecifier = true;
+    }
+
     const workspaceRegex = /^workspace:/;
-    const hasWorkspaceProtocol = workspaceRegex.test(packageVersion);
-    const normalizedRange = packageVersion.replace(workspaceRegex, '');
+    const hasWorkspaceProtocol = workspaceRegex.test(specifier);
+    const normalizedRange = specifier.replace(workspaceRegex, '');
 
     /**
      * Regex is needed to test for workspace: protocol because following options are all valid:
@@ -713,7 +741,11 @@ export class TargetProjectLocator {
       const targetPath = maybeDep?.data.root;
 
       const normalizedPath = normalizedRange.replace('file:', '');
-      const resolvedPath = posix.join(dirname(packageJsonPath), normalizedPath);
+      // Package managers resolve a catalog's `file:` paths from the workspace root
+      const resolvedPath = posix.join(
+        isCatalogSpecifier ? '.' : dirname(packageJsonPath),
+        normalizedPath
+      );
 
       if (targetPath === resolvedPath) {
         return maybeDep?.name;

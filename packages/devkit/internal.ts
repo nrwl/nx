@@ -30,6 +30,7 @@ export {
   applyDaemonEnvFromClient,
   getGraphTimeDotEnvForTask,
   hashDaemonClientEnv,
+  readLockFileSnapshot,
   resolveStartupHost,
 } from 'nx/src/devkit-internals';
 
@@ -373,3 +374,12 @@ export {
 // `FinalConfigForProject` via nx/src/devkit-internals.
 export type { AfterAllProjectsVersioned } from 'nx/release';
 export { migrateRemovedExecutors } from './src/generators/plugin-migrations/remove-executors';
+export {
+  assertAcceptedOptions,
+  assertOutputOptionsKept,
+  convertWithUninferredTargetsRewritten,
+  isPlainPath,
+  optionsFor,
+  type TargetOptions,
+  type UninferredTargetRewrite,
+} from './src/generators/plugin-migrations/rewrite-uninferred-targets';

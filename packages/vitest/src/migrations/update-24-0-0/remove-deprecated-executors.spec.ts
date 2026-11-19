@@ -6,7 +6,10 @@ import {
   type ProjectGraph,
   readNxJson,
   readProjectConfiguration,
+  type TargetConfiguration,
   type Tree,
+  updateNxJson,
+  updateProjectConfiguration,
   writeJson,
 } from '@nx/devkit';
 import {
@@ -234,7 +237,7 @@ describe('remove-deprecated-executors', () => {
     ).toMatchInlineSnapshot(`
       {
         "options": {
-          "testMode": "watch",
+          "testMode": "run",
           "testTargetName": "test",
         },
         "plugin": "@nx/vitest",
@@ -250,6 +253,161 @@ describe('remove-deprecated-executors', () => {
         },
       }
     `);
+  });
+
+  describe('targets on a config file the plugin does not infer', () => {
+    function addTarget(
+      projectName: string,
+      targetName: string,
+      target: TargetConfiguration
+    ) {
+      const project = readProjectConfiguration(tree, projectName);
+      project.targets[targetName] = target;
+      updateProjectConfiguration(tree, projectName, project);
+      fs.createFileSync(
+        `${project.root}/project.json`,
+        JSON.stringify(project)
+      );
+    }
+
+    it('runs Vitest with the config file from the workspace root', async () => {
+      const project = createTestProject(tree);
+      addTarget(project.name, 'e2e-test', {
+        executor: '@nx/vitest:test',
+        outputs: ['{options.reportsDirectory}'],
+        options: {
+          configFile: `${project.root}/vitest.config.e2e.mts`,
+          reportsDirectory: `coverage/${project.root}/e2e`,
+          testFiles: ['src/app.e2e.spec.ts'],
+          mode: 'e2e',
+          passWithNoTests: true,
+        },
+        configurations: { ci: { coverage: true } },
+      });
+
+      const result = await update(tree);
+
+      expect(readProjectConfiguration(tree, project.name).targets)
+        .toMatchInlineSnapshot(`
+        {
+          "e2e-test": {
+            "configurations": {
+              "ci": {
+                "coverage.enabled": true,
+              },
+            },
+            "executor": "nx:run-commands",
+            "options": {
+              "args": [
+                "src/app.e2e.spec.ts",
+              ],
+              "command": "vitest run --root myapp --config ./vitest.config.e2e.mts",
+              "coverage.reportsDirectory": "../coverage/myapp/e2e",
+              "cwd": ".",
+              "mode": "e2e",
+              "passWithNoTests": true,
+            },
+            "outputs": [
+              "{workspaceRoot}/coverage/myapp/e2e",
+            ],
+          },
+          "test": {
+            "options": {
+              "config": "./vite.config.ts",
+            },
+          },
+        }
+      `);
+      expect(result.nextSteps).toBeUndefined();
+    });
+
+    it('passes --root . for a root project', async () => {
+      const project = createTestProject(tree, {
+        appName: 'root-app',
+        appRoot: '.',
+      });
+      addTarget(project.name, 'e2e-test', {
+        executor: '@nx/vitest:test',
+        options: { configFile: 'vitest.config.e2e.mts' },
+      });
+
+      await update(tree);
+
+      expect(
+        readProjectConfiguration(tree, project.name).targets['e2e-test'].options
+      ).toEqual({
+        command: 'vitest run --root . --config ./vitest.config.e2e.mts',
+        cwd: '.',
+      });
+    });
+
+    it('converts the other projects when one project has no config file', async () => {
+      createTestProject(tree);
+      addProjectConfiguration(tree, 'no-config', {
+        root: 'no-config',
+        projectType: 'library',
+        targets: { test: { executor: '@nx/vitest:test', options: {} } },
+      });
+      fs.createFileSync('no-config/project.json', '{}');
+
+      const result = await update(tree);
+
+      expect(readProjectConfiguration(tree, 'myapp').targets.test).toEqual({
+        options: { config: './vite.config.ts' },
+      });
+      expect(readProjectConfiguration(tree, 'no-config').targets.test).toEqual({
+        executor: '@nx/vitest:test',
+        options: {},
+      });
+      expect(result.nextSteps).toEqual([
+        'These targets still use removed executors: no-config:test (@nx/vitest:test). Replace each one before running them.',
+      ]);
+    });
+
+    it('keeps a target on its executor when a target-name default sets an option the rewrite renames', async () => {
+      const project = createTestProject(tree);
+      const nxJson = readNxJson(tree);
+      nxJson.targetDefaults = {
+        'e2e-test': { options: { reportsDirectory: 'coverage/e2e' } },
+      };
+      updateNxJson(tree, nxJson);
+      const e2e: TargetConfiguration = {
+        executor: '@nx/vitest:test',
+        options: { configFile: `${project.root}/vitest.config.e2e.mts` },
+      };
+      addTarget(project.name, 'e2e-test', e2e);
+
+      const result = await update(tree);
+
+      expect(
+        readProjectConfiguration(tree, project.name).targets['e2e-test']
+      ).toEqual(e2e);
+      expect(result.nextSteps).toEqual([
+        'These targets still use removed executors: myapp:e2e-test (@nx/vitest:test). Replace each one before running them.',
+      ]);
+    });
+
+    it('keeps a target on its executor when an option has no CLI equivalent', async () => {
+      const project = createTestProject(tree);
+      const benchmark: TargetConfiguration = {
+        executor: '@nx/vitest:test',
+        options: {
+          configFile: `${project.root}/vitest.config.bench.mts`,
+          runMode: 'benchmark',
+        },
+      };
+      addTarget(project.name, 'bench', benchmark);
+
+      const result = await update(tree);
+
+      expect(readProjectConfiguration(tree, project.name).targets).toEqual({
+        test: { options: { config: './vite.config.ts' } },
+        bench: benchmark,
+      });
+      expect(result.nextSteps).toEqual([
+        'These targets still use removed executors: myapp:bench (@nx/vitest:test). Replace each one before running them.',
+      ]);
+    });
   });
 
   it('skips the prompt when no project uses the removed executors', async () => {

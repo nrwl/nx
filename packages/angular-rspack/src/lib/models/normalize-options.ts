@@ -163,6 +163,7 @@ export async function normalizeOptions(
       ? {
           entry: ssr.entry,
           platform: 'node' as const, // @TODO: Add support for neutral platform
+          ...(ssr.serveFromDevServer ? { serveFromDevServer: true } : {}),
         }
       : ssr;
 
@@ -487,7 +488,7 @@ function normalizeSourceMap(
     return {
       scripts: sourceMap,
       styles: sourceMap,
-      hidden: sourceMap,
+      hidden: false,
       vendor: sourceMap,
     };
   }

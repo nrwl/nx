@@ -58,6 +58,7 @@ import {
   uninferredTargetWarning,
   type MissingPair,
   retainedResidualsWarning,
+  takenOverTargetWarning,
   type PackageJsonIdentitySource,
   revertedTargetsWarning,
   unverifiedPairsWarning,
@@ -82,9 +83,18 @@ type SkipProjectFilter = (
   projectConfiguration: ProjectConfiguration
 ) => false | string;
 
+/**
+ * The plugin options that infer `targetName` on the project. Object-valued
+ * options of a project's targets merge key by key.
+ */
+type TargetPluginOptionMapper<T> = (
+  targetName: string,
+  projectConfiguration: ProjectConfiguration
+) => Partial<T>;
+
 type MigrationDefinition<T> = {
   executors: string[];
-  targetPluginOptionMapper: (targetName: string) => Partial<T>;
+  targetPluginOptionMapper: TargetPluginOptionMapper<T>;
   postTargetTransformer: PostTargetTransformer;
   skipProjectFilter?: SkipProjectFilter;
   skipTargetFilter?: SkipTargetFilter;
@@ -130,7 +140,8 @@ interface ExecutorScope<T> {
   executor: string;
   migration: MigrationDefinition<T>;
   targetAndProjects: Map<string, Set<string>>;
-  inferenceOptionSetIdsByTarget: Map<string, number>;
+  /** target name -> project name -> inference option set id */
+  inferenceOptionSetIds: Map<string, Map<string, number>>;
 }
 
 /**
@@ -199,8 +210,11 @@ export function collectMigrationScope<T>(
 
     for (const executor of migration.executors) {
       const targetAndProjects = new Map<string, Set<string>>();
-      const inferenceOptionSetIdsByTarget = new Map<string, number>();
-      const inferenceOptionsByTarget = new Map<string, Partial<T>>();
+      const inferenceOptionSetIds = new Map<string, Map<string, number>>();
+      const inferenceOptionsByTarget = new Map<
+        string,
+        Map<string, Partial<T>>
+      >();
       // Fresh per executor to preserve the previous per-migrator semantics
       // (each executor got its own migrator + skipped set).
       const skippedForExecutor = new Set<string>();
@@ -251,63 +265,69 @@ export function collectMigrationScope<T>(
             return;
           }
 
-          if (!inferenceOptionsByTarget.has(targetName)) {
-            inferenceOptionsByTarget.set(
-              targetName,
-              migration.targetPluginOptionMapper(targetName)
-            );
-          }
-          const inferenceOptions = inferenceOptionsByTarget.get(targetName);
+          const inferenceOptions = migration.targetPluginOptionMapper(
+            targetName,
+            projectGraph.nodes[projectName].data
+          );
 
           // One registration cannot map different target names through the
           // same option
           const existing = claimedOptionsByProject.get(projectName);
-          const takenOption = Object.keys(inferenceOptions).find(
-            (option) =>
-              existing?.[option] !== undefined &&
-              !isDeepEqual(existing[option], inferenceOptions[option])
+          const takenOption = findConflictingPluginOption(
+            existing,
+            inferenceOptions
           );
           if (takenOption && !migration.allowSharedOptionOverwrite) {
             log.warn(
-              `The ${targetName} target on project "${projectName}" cannot be migrated. The "${takenOption}" plugin option is already set to "${existing[takenOption]}" by another target of the project, and the plugin can only infer one target per option. The target keeps its current configuration; rerun the migration once the other target is inferred to convert it.`
+              `The ${targetName} target on project "${projectName}" cannot be migrated. The "${takenOption}" plugin option is already set to ${JSON.stringify(existing[takenOption])} by another target of the project, and the plugin can only infer one target per option. The target keeps its current configuration; rerun the migration once the other target is inferred to convert it.`
             );
             return;
           }
-          claimedOptionsByProject.set(projectName, {
-            ...(existing ?? ({} as T)),
-            ...inferenceOptions,
-          } as T);
+          claimedOptionsByProject.set(
+            projectName,
+            mergePluginOptions(existing, inferenceOptions)
+          );
 
           if (!targetAndProjects.has(targetName)) {
             targetAndProjects.set(targetName, new Set());
+            inferenceOptionsByTarget.set(targetName, new Map());
           }
           targetAndProjects.get(targetName).add(projectName);
+          inferenceOptionsByTarget
+            .get(targetName)
+            .set(projectName, inferenceOptions);
         }
       );
 
       for (const [targetName, projs] of targetAndProjects) {
-        const inferenceOptions = inferenceOptionsByTarget.get(targetName);
-        const key = stableStringify(inferenceOptions);
-        if (!optionSetGroupsByKey.has(key)) {
-          optionSetGroupsByKey.set(key, {
-            id: optionSetGroupsByKey.size,
-            options: inferenceOptions,
-            targetNames: new Set(),
-            migratedRoots: new Set(),
-          });
-        }
-        const optionSetGroup = optionSetGroupsByKey.get(key);
-        optionSetGroup.targetNames.add(targetName);
-        inferenceOptionSetIdsByTarget.set(targetName, optionSetGroup.id);
-
+        const optionSetIdsByProject = new Map<string, number>();
+        inferenceOptionSetIds.set(targetName, optionSetIdsByProject);
         for (const project of projs) {
+          const inferenceOptions = inferenceOptionsByTarget
+            .get(targetName)
+            .get(project);
+          const key = stableStringify(inferenceOptions);
+          if (!optionSetGroupsByKey.has(key)) {
+            optionSetGroupsByKey.set(key, {
+              id: optionSetGroupsByKey.size,
+              options: inferenceOptions,
+              targetNames: new Set(),
+              migratedRoots: new Set(),
+            });
+          }
+          const optionSetGroup = optionSetGroupsByKey.get(key);
+          optionSetGroup.targetNames.add(targetName);
+          optionSetIdsByProject.set(project, optionSetGroup.id);
           optionSetGroup.migratedRoots.add(
             projectGraph.nodes[project].data.root
           );
-          pluginOptionsByProject.set(project, {
-            ...(pluginOptionsByProject.get(project) ?? ({} as T)),
-            ...inferenceOptions,
-          } as T);
+          pluginOptionsByProject.set(
+            project,
+            mergePluginOptions(
+              pluginOptionsByProject.get(project),
+              inferenceOptions
+            )
+          );
         }
       }
 
@@ -319,7 +339,7 @@ export function collectMigrationScope<T>(
         executor,
         migration,
         targetAndProjects,
-        inferenceOptionSetIdsByTarget,
+        inferenceOptionSetIds,
       });
     }
   }
@@ -432,14 +452,15 @@ export async function computeResidualByProject<T>(
       ) ?? {};
 
     for (const [targetName, projectNames] of executorScope.targetAndProjects) {
-      const optionSetId =
-        executorScope.inferenceOptionSetIdsByTarget.get(targetName);
-      if (optionSetId === undefined) {
-        throw new Error(
-          `Could not find an inference option set for target "${targetName}".`
-        );
-      }
       for (const projectName of projectNames) {
+        const optionSetId = executorScope.inferenceOptionSetIds
+          .get(targetName)
+          ?.get(projectName);
+        if (optionSetId === undefined) {
+          throw new Error(
+            `Could not find an inference option set for target "${targetName}".`
+          );
+        }
         const root = projectGraph.nodes[projectName].data.root;
         const fullInferredTarget = getFullInferredTarget(
           inferredTargetsByOptionSet,
@@ -585,10 +606,10 @@ function writeResidualTarget(
 
   // `updateProjectConfiguration` writes a package-based project (no
   // project.json) by spreading the config over package.json `nx`, and deletes an
-  // empty `targets` from this very (cached) object before the spread. Two
-  // consequences: the old `nx.targets` entry (executor included) survives in
-  // package.json, and the cache can no longer take a later write (the Phase 4
-  // revert). Delete the entry here and keep the cache writable.
+  // empty `targets` from this very (cached) object before the spread, so the
+  // cache can no longer take a later write (the Phase 4 revert). Older nx
+  // versions also keep the old `nx.targets` entry (executor included) in
+  // package.json. Delete the entry here and keep the cache writable.
   if (!projectConfig.targets) {
     projectConfig.targets = {};
     deletePackageJsonTarget(tree, projectConfig.root, targetName);
@@ -625,6 +646,46 @@ function readCachedProjectConfiguration(
   const readProjectConfig = readProjectConfiguration(tree, projectName);
   projectConfigsByName.set(projectName, readProjectConfig);
   return readProjectConfig;
+}
+
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+/**
+ * The first option `next` sets to a different value than `existing`. Plain
+ * object values conflict only on a key both set differently.
+ */
+function findConflictingPluginOption<T>(
+  existing: T | undefined,
+  next: Partial<T>
+): string | undefined {
+  return Object.keys(next).find((option) => {
+    const current = existing?.[option];
+    const value = next[option];
+    if (current === undefined) {
+      return false;
+    }
+    if (isPlainObject(current) && isPlainObject(value)) {
+      return Object.keys(value).some(
+        (key) =>
+          current[key] !== undefined && !isDeepEqual(current[key], value[key])
+      );
+    }
+    return !isDeepEqual(current, value);
+  });
+}
+
+function mergePluginOptions<T>(existing: T | undefined, next: Partial<T>): T {
+  const merged = { ...(existing ?? {}) } as Record<string, unknown>;
+  for (const [option, value] of Object.entries(next)) {
+    const current = merged[option];
+    merged[option] =
+      isPlainObject(current) && isPlainObject(value)
+        ? { ...current, ...value }
+        : value;
+  }
+  return merged as T;
 }
 
 function isDeepEqual(a: unknown, b: unknown): boolean {
@@ -933,9 +994,10 @@ function computeInferredExecutorByPair<T>(
   const inferredExecutorByPair = new Map<string, string | undefined>();
   for (const executorScope of scope.executorScopes) {
     for (const [targetName, projectNames] of executorScope.targetAndProjects) {
-      const optionSetId =
-        executorScope.inferenceOptionSetIdsByTarget.get(targetName);
       for (const projectName of projectNames) {
+        const optionSetId = executorScope.inferenceOptionSetIds
+          .get(targetName)
+          .get(projectName);
         const root = projectGraph.nodes[projectName]?.data.root;
         const inferredTarget = getFullInferredTarget(
           inferredTargetsByOptionSet,
@@ -1491,14 +1553,7 @@ export async function migrateProjectExecutorsToPlugin<T>(
   pluginPath: string,
   createNodesV2: CreateNodes<T>,
   defaultPluginOptions: T,
-  migrations: Array<{
-    executors: string[];
-    targetPluginOptionMapper: (targetName: string) => Partial<T>;
-    postTargetTransformer: PostTargetTransformer;
-    skipProjectFilter?: SkipProjectFilter;
-    skipTargetFilter?: SkipTargetFilter;
-    allowSharedOptionOverwrite?: boolean;
-  }>,
+  migrations: MigrationDefinition<T>[],
   specificProjectToMigrate?: string,
   logger?: typeof devkitLogger
 ): Promise<Map<string, Record<string, string>>> {
@@ -1523,14 +1578,7 @@ export async function migrateProjectExecutorsToPluginV1<T>(
   pluginPath: string,
   createNodes: CreateNodes<T>,
   defaultPluginOptions: T,
-  migrations: Array<{
-    executors: string[];
-    targetPluginOptionMapper: (targetName: string) => Partial<T>;
-    postTargetTransformer: PostTargetTransformer;
-    skipProjectFilter?: SkipProjectFilter;
-    skipTargetFilter?: SkipTargetFilter;
-    allowSharedOptionOverwrite?: boolean;
-  }>,
+  migrations: MigrationDefinition<T>[],
   specificProjectToMigrate?: string
 ): Promise<Map<string, Record<string, string>>> {
   const projects = await migrateProjects(
@@ -1571,9 +1619,11 @@ export async function inferOncePerOptionSet<T>(
   rawMatchedConfigFiles: string[];
   inferredExecutors: Set<string>;
   inferredRoots: Set<string>;
+  nonMigratedInferredTargetNames: Map<string, Set<string>>;
   createNodesErrors: CreateNodesFileError[];
 }> {
   const inferredTargetsByOptionSet: InferredTargetsByOptionSet = new Map();
+  const nonMigratedInferredTargetNames = new Map<string, Set<string>>();
   const rawMatchedFiles = new Set<string>();
   const inferredRoots = new Set<string>();
   const erroredConfigFiles = new Set<string>();
@@ -1588,6 +1638,7 @@ export async function inferOncePerOptionSet<T>(
       erroredConfigFiles: [],
       inferredExecutors,
       inferredRoots,
+      nonMigratedInferredTargetNames,
       createNodesErrors,
     };
   }
@@ -1647,6 +1698,14 @@ export async function inferOncePerOptionSet<T>(
         // every inferred root would retain up to (option sets x roots) targets
         // for nothing.
         if (!group.migratedRoots.has(root)) {
+          for (const targetName of group.targetNames) {
+            if (projectConfig.targets?.[targetName]) {
+              if (!nonMigratedInferredTargetNames.has(root)) {
+                nonMigratedInferredTargetNames.set(root, new Set());
+              }
+              nonMigratedInferredTargetNames.get(root).add(targetName);
+            }
+          }
           continue;
         }
 
@@ -1696,6 +1755,10 @@ export async function inferOncePerOptionSet<T>(
     erroredConfigFiles: [...erroredConfigFiles],
     inferredExecutors,
     inferredRoots,
+    // Roots outside an option set's migrated roots, with the option set's target
+    // names the plugin infers for them. A root migrated under another option set
+    // can appear here too.
+    nonMigratedInferredTargetNames,
     createNodesErrors,
   };
 }
@@ -1709,24 +1772,29 @@ export async function inferOncePerOptionSet<T>(
  * the file.
  */
 function isFileOwnedByAnyRoot(file: string, roots: Set<string>): boolean {
+  return findOwningRoot(file, roots) !== undefined;
+}
+
+/** The innermost root in `roots` that owns `file`, per `isFileOwnedByAnyRoot`. */
+function findOwningRoot(file: string, roots: Set<string>): string | undefined {
   if (roots.has(file)) {
-    return true;
+    return file;
   }
   const firstSlash = file.indexOf('/');
   if (firstSlash === -1) {
     // A workspace-root-level file is owned only by the root project.
-    return roots.has('.');
+    return roots.has('.') ? '.' : undefined;
   }
   let dir = file;
   let slash = dir.lastIndexOf('/');
   while (slash !== -1) {
     dir = dir.slice(0, slash);
     if (roots.has(dir)) {
-      return true;
+      return dir;
     }
     slash = dir.lastIndexOf('/');
   }
-  return false;
+  return undefined;
 }
 
 // Minimatch metacharacters plus extglob prefix operators (`!+@()`). A path
@@ -1770,15 +1838,15 @@ export function generatedIncludeRoots(
 }
 
 /**
- * Whether a registration's `include` globs already cover every config file the
- * plugin globs that is owned by an inferred project root (so the registration
- * can be left unscoped). Plugin inference is a pure function of the matched
- * config-file set, so this answers what the old per-project
- * `arePluginIncludesRequired` re-inference computed without running any
- * additional inference, differing only on matched files that contribute no
- * project: those are invisible here, so an `include` the old diff-based check
- * kept for their sake is now deleted, letting future config files in such
- * locations infer eagerly. The Phase 4 verification pass guards the current
+ * The config files a registration's `include` globs leave out. When none are
+ * left out, every config file the plugin globs that is owned by an inferred
+ * project root is covered, so the registration can be left unscoped. Plugin
+ * inference is a pure function of the matched config-file set, so this answers
+ * what the old per-project `arePluginIncludesRequired` re-inference computed
+ * without running any additional inference, differing only on matched files
+ * that contribute no project: those are invisible here, so an `include` the old
+ * diff-based check kept for their sake is now deleted, letting future config
+ * files in such locations infer eagerly. The Phase 4 verification pass guards the current
  * behavioral outcome either way.
  *
  * Every glob this generator emits scopes to a single root (`*` for the root
@@ -1787,19 +1855,19 @@ export function generatedIncludeRoots(
  * running minimatch (whose `#matchGlobstar`/`slashSplit` dominate at scale) per
  * (file, glob). Only user-authored includes or any `exclude` fall through.
  */
-function includeCoversAllConfigFiles(
+function configFilesOutsideInclude(
   include: string[] | undefined,
   exclude: string[] | undefined,
   configFiles: string[]
-): boolean {
+): string[] {
   if (!include || include.length === 0) {
-    return true;
+    return [];
   }
   if (!exclude || exclude.length === 0) {
     const includeRoots = generatedIncludeRoots(include);
     if (includeRoots) {
-      return configFiles.every((file) =>
-        isFileOwnedByAnyRoot(file, includeRoots)
+      return configFiles.filter(
+        (file) => !isFileOwnedByAnyRoot(file, includeRoots)
       );
     }
   }
@@ -1811,10 +1879,10 @@ function includeCoversAllConfigFiles(
   // so the fenced-off configs get inferred (and executed). `findMatchingConfigFiles`
   // applies include/exclude with Nx's exact ordered semantics, so coverage holds
   // only when every config file survives the same filter Nx would run.
-  return (
-    findMatchingConfigFiles(configFiles, include, exclude ?? []).length ===
-    configFiles.length
+  const covered = new Set(
+    findMatchingConfigFiles(configFiles, include, exclude ?? [])
   );
+  return configFiles.filter((file) => !covered.has(file));
 }
 
 /** One harvested verification error, attributable to a plugin registration. */
@@ -2342,14 +2410,7 @@ async function migrateProjects<T>(
   createNodes: CreateNodes<T>,
   createNodesV2: CreateNodes<T>,
   defaultPluginOptions: T,
-  migrations: Array<{
-    executors: string[];
-    targetPluginOptionMapper: (targetName: string) => Partial<T>;
-    postTargetTransformer: PostTargetTransformer;
-    skipProjectFilter?: SkipProjectFilter;
-    skipTargetFilter?: SkipTargetFilter;
-    allowSharedOptionOverwrite?: boolean;
-  }>,
+  migrations: MigrationDefinition<T>[],
   specificProjectToMigrate?: string,
   logger?: typeof devkitLogger
 ): Promise<Map<string, Record<string, string>>> {
@@ -2379,6 +2440,7 @@ async function migrateProjects<T>(
     rawMatchedConfigFiles,
     inferredExecutors,
     inferredRoots,
+    nonMigratedInferredTargetNames,
     createNodesErrors,
   } = await inferOncePerOptionSet(
     tree,
@@ -2437,6 +2499,17 @@ async function migrateProjects<T>(
   const pluginPreRegistered = (readNxJson(tree).plugins ?? []).some((plugin) =>
     isRegistrationOfPlugin(plugin, pluginPath)
   );
+  const migratedTargetNamesByProject = new Map<string, Set<string>>();
+  for (const { targetAndProjects } of scope.executorScopes) {
+    for (const [targetName, projectNames] of targetAndProjects) {
+      for (const projectName of projectNames) {
+        if (!migratedTargetNamesByProject.has(projectName)) {
+          migratedTargetNamesByProject.set(projectName, new Set());
+        }
+        migratedTargetNamesByProject.get(projectName).add(targetName);
+      }
+    }
+  }
   addPluginRegistrations(
     tree,
     projects,
@@ -2446,7 +2519,12 @@ async function migrateProjects<T>(
     spinner,
     matchedConfigFiles,
     erroredConfigFilesFromInference,
-    rawMatchedConfigFiles
+    rawMatchedConfigFiles,
+    migratedTargetNamesByProject,
+    nonMigratedInferredTargetNames,
+    projectConfigsByName,
+    rootsWithExecutorTarget(projectConfigsByName, migrations),
+    logger ?? devkitLogger
   );
 
   // An open batch session (`infer-targets` with several plugins selected)
@@ -2529,6 +2607,30 @@ async function migrateProjects<T>(
   return projects;
 }
 
+/**
+ * Compares both ways over the keys this migration can set, so a registration
+ * that sets such an option the migrated projects leave unset does not absorb
+ * them, and the reverse. Registration keys the migration never sets (e.g. one
+ * written by the plugin's init generator) do not block a match.
+ */
+function hasSameEffectiveOptions(
+  registrationOptions: Record<string, unknown>,
+  options: Record<string, unknown>,
+  defaultPluginOptions: Record<string, unknown>,
+  migrationKeys: Set<string>
+): boolean {
+  const keys = new Set([
+    ...Object.keys(registrationOptions).filter((key) => migrationKeys.has(key)),
+    ...Object.keys(options),
+  ]);
+  return [...keys].every((key) =>
+    isDeepEqual(
+      registrationOptions[key] ?? defaultPluginOptions?.[key],
+      options[key] ?? defaultPluginOptions?.[key]
+    )
+  );
+}
+
 function addPluginRegistrations<T>(
   tree: Tree,
   projects: Map<string, Record<string, string>>,
@@ -2554,7 +2656,13 @@ function addPluginRegistrations<T>(
   // this migration's inference pass produced a project from. Used to detect
   // config files owned by NON-MIGRATED projects that the plugin would infer once
   // the registration is workspace-wide, see below.
-  rawMatchedConfigFiles: string[]
+  rawMatchedConfigFiles: string[],
+  migratedTargetNamesByProject: Map<string, Set<string>>,
+  nonMigratedInferredTargetNames: Map<string, Set<string>>,
+  projectConfigsByName: Map<string, ProjectConfiguration>,
+  // Roots of projects with a target on an executor this conversion migrates.
+  executorTargetRoots: Set<string>,
+  logger: typeof devkitLogger
 ) {
   const nxJson = readNxJson(tree);
 
@@ -2573,45 +2681,264 @@ function addPluginRegistrations<T>(
       migratedRoots.add(root);
     }
   }
-  const nonMigratedProjectRoots = new Set<string>();
+  const nonMigratedNodesByRoot = new Map<string, ProjectGraphProjectNode>();
   for (const node of Object.values(projectGraph.nodes)) {
     const root = node?.data?.root;
     if (root && !migratedRoots.has(root)) {
-      nonMigratedProjectRoots.add(root);
+      nonMigratedNodesByRoot.set(root, node);
     }
   }
-  const nonMigratedProjectConfigFiles = rawMatchedConfigFiles.filter((file) =>
-    isFileOwnedByAnyRoot(file, nonMigratedProjectRoots)
-  );
+  const nonMigratedProjectRoots = new Set(nonMigratedNodesByRoot.keys());
 
   // Fold errored files (broken configs the plugin would fail to infer) and
   // non-migrated project configs (roots the plugin would infer workspace-wide)
   // into the coverage set: an unscoped `include` is chosen only when neither lies
-  // outside the migrated roots.
-  const coverageConfigFiles = [
-    ...matchedConfigFiles,
-    ...erroredConfigFiles,
-    ...nonMigratedProjectConfigFiles,
-  ];
+  // outside the migrated roots. Each file records why it keeps an `include`, as
+  // the project root or config file the warning names.
+  const keptIncludeReasons: KeptIncludeReasons = {
+    notMigrated: new Map(),
+    nothingToMigrate: new Map(),
+    newProjects: new Map(),
+    otherOptions: new Map(),
+    errored: new Map(),
+  };
+  const projectRoots = new Set([...migratedRoots, ...nonMigratedProjectRoots]);
+  const recordProjectConfigFile = (file: string) => {
+    const root = findOwningRoot(file, projectRoots);
+    if (root === undefined) {
+      keptIncludeReasons.newProjects.set(file, file);
+    } else if (migratedRoots.has(root)) {
+      keptIncludeReasons.otherOptions.set(file, root);
+    } else if (executorTargetRoots.has(root)) {
+      keptIncludeReasons.notMigrated.set(file, root);
+    } else {
+      keptIncludeReasons.nothingToMigrate.set(file, root);
+    }
+  };
+  for (const file of matchedConfigFiles) {
+    recordProjectConfigFile(file);
+  }
+  for (const file of rawMatchedConfigFiles) {
+    if (isFileOwnedByAnyRoot(file, nonMigratedProjectRoots)) {
+      recordProjectConfigFile(file);
+    }
+  }
+  for (const file of erroredConfigFiles) {
+    for (const labelsByFile of Object.values(keptIncludeReasons)) {
+      labelsByFile.delete(file);
+    }
+    keptIncludeReasons.errored.set(file, file);
+  }
+  const coverageConfigFiles = Object.values(keptIncludeReasons).flatMap(
+    (labelsByFile) => [...labelsByFile.keys()]
+  );
+
+  const ownerRootByPath = buildOwnerRootByPath(
+    Object.values(projectGraph.nodes).map((node) => node.data.root),
+    nonMigratedInferredTargetNames.keys()
+  );
+  const ownerOf = (file: string) => findProjectForPath(file, ownerRootByPath);
+  const configFilesByOwner = new Map<string, string[]>();
+  for (const file of rawMatchedConfigFiles) {
+    const owner = ownerOf(file);
+    if (owner == null) {
+      continue;
+    }
+    if (!configFilesByOwner.has(owner)) {
+      configFilesByOwner.set(owner, []);
+    }
+    configFilesByOwner.get(owner).push(file);
+  }
+  const takenOver = findTakenOverTargets(
+    tree,
+    projectConfigsByName,
+    nonMigratedInferredTargetNames,
+    nonMigratedNodesByRoot,
+    configFilesByOwner
+  );
+
+  /**
+   * Rewrites `registration.exclude` so it fences off the non-migrated projects
+   * whose targets the widened registration would take over, and admits every
+   * project this run migrates or `before` already reached. Returns the fenced
+   * roots.
+   */
+  const fenceRegistration = (
+    registration: ExpandedPluginConfiguration,
+    before: Pick<ExpandedPluginConfiguration, 'include' | 'exclude'> | null,
+    { targetNames, roots }: { targetNames: Set<string>; roots: string[] },
+    laterPluginRegistered: boolean
+  ): Set<string> => {
+    const migratedGlobs = new Set(roots.map(rootIncludeGlob));
+    const kept = (registration.exclude ?? []).filter(
+      (glob) => !migratedGlobs.has(glob)
+    );
+    const baseline = { include: registration.include, exclude: kept };
+
+    const fenced = new Map<string, TakenOverTarget[]>();
+    for (const entry of takenOver) {
+      if (
+        !targetNames.has(entry.targetName) ||
+        !reachesConfigFiles(baseline, entry.configFiles) ||
+        (before && reachesConfigFiles(before, entry.configFiles))
+      ) {
+        continue;
+      }
+      const root = entry.node.data.root;
+      if (!fenced.has(root)) {
+        fenced.set(root, []);
+      }
+      fenced.get(root).push(entry);
+    }
+
+    const added = [...fenced.keys()].map((root) => ({
+      root,
+      glob: rootIncludeGlob(root),
+    }));
+    const withFences = [...kept, ...added.map(({ glob }) => glob)];
+    const mustStayReached = new Map(
+      roots.map((root) => [root, configFilesByOwner.get(root) ?? []])
+    );
+    if (before) {
+      for (const [root, ownFiles] of configFilesByOwner) {
+        if (!mustStayReached.has(root)) {
+          mustStayReached.set(
+            root,
+            findMatchingConfigFiles(
+              ownFiles,
+              before.include ?? [],
+              before.exclude ?? []
+            )
+          );
+        }
+      }
+    }
+    for (const [root, reachedFiles] of mustStayReached) {
+      if (
+        findMatchingConfigFiles(reachedFiles, [], withFences).length <
+        reachedFiles.length
+      ) {
+        added.push({ root, glob: `!${rootIncludeGlob(root)}` });
+      }
+    }
+    // Shallower roots first, so a re-admitted migrated root wins over the
+    // fence of the project it sits in, and a fence nested under it wins again.
+    // A later duplicate of an entry overrides it, so the earlier one is dropped.
+    const sortedExclude = () => {
+      added.sort((a, b) => rootDepth(a.root) - rootDepth(b.root));
+      const globs = added.map(({ glob }) => glob);
+      return [...kept.filter((glob) => !globs.includes(glob)), ...globs];
+    };
+    let exclude = sortedExclude();
+
+    // A re-admit also reopens files an existing entry excludes deeper down.
+    // Exclude them again after it: by their owner's root glob when that glob
+    // reaches only files that should stay out, otherwise file by file.
+    if (added.some(({ glob }) => glob.startsWith('!'))) {
+      const touched = new Set([...fenced.keys(), ...roots]);
+      const untouched = rawMatchedConfigFiles.filter(
+        (file) => !touched.has(ownerOf(file))
+      );
+      const admittedBefore = new Set(
+        findMatchingConfigFiles(untouched, [], kept)
+      );
+      const excludedBefore = new Set(
+        untouched.filter((file) => !admittedBefore.has(file))
+      );
+      const reopenedByOwner = new Map<string | undefined, string[]>();
+      for (const file of findMatchingConfigFiles(untouched, [], exclude)) {
+        if (excludedBefore.has(file)) {
+          const owner = ownerOf(file);
+          reopenedByOwner.set(owner, [
+            ...(reopenedByOwner.get(owner) ?? []),
+            file,
+          ]);
+        }
+      }
+      for (const [owner, files] of reopenedByOwner) {
+        const ownerGlob = owner == null ? null : rootIncludeGlob(owner);
+        if (
+          ownerGlob &&
+          findMatchingConfigFiles(rawMatchedConfigFiles, [ownerGlob], []).every(
+            (file) => excludedBefore.has(file) || fenced.has(ownerOf(file))
+          )
+        ) {
+          added.push({ root: owner, glob: ownerGlob });
+        } else {
+          added.push(...files.map((file) => ({ root: file, glob: file })));
+        }
+      }
+      exclude = sortedExclude();
+    }
+
+    if (exclude.length > 0) {
+      registration.exclude = exclude;
+    } else {
+      delete registration.exclude;
+    }
+    for (const [root, entries] of fenced) {
+      for (const { node, targetName } of entries) {
+        logger.warn(
+          takenOverTargetWarning(
+            pluginPath,
+            node.name,
+            root,
+            targetName,
+            node.data.targets[targetName],
+            rootIncludeGlob(root),
+            laterPluginRegistered
+          )
+        );
+      }
+    }
+    return new Set(fenced.keys());
+  };
+  // Files a fence covers need no include coverage, so the include can still be
+  // dropped while the exclude stays.
+  const coverageOutside = (fencedRoots: Set<string>) =>
+    fencedRoots.size > 0
+      ? coverageConfigFiles.filter((file) => !fencedRoots.has(ownerOf(file)))
+      : coverageConfigFiles;
 
   const registrationGroups = new Map<
     string,
-    { options: Record<string, string>; include: string[] }
+    {
+      options: Record<string, string>;
+      include: string[];
+      targetNames: Set<string>;
+      roots: string[];
+    }
   >();
   for (const [project, options] of projects.entries()) {
-    const projectIncludeGlob =
-      projectGraph.nodes[project].data.root === '.'
-        ? '*'
-        : join(projectGraph.nodes[project].data.root, '**/*');
+    const root = projectGraph.nodes[project].data.root;
+    const projectIncludeGlob = rootIncludeGlob(root);
     const key = stableStringify(options);
     if (!registrationGroups.has(key)) {
-      registrationGroups.set(key, { options, include: [] });
+      registrationGroups.set(key, {
+        options,
+        include: [],
+        targetNames: new Set(),
+        roots: [],
+      });
     }
-    registrationGroups.get(key).include.push(projectIncludeGlob);
+    const group = registrationGroups.get(key);
+    group.include.push(projectIncludeGlob);
+    group.roots.push(root);
+    for (const targetName of migratedTargetNamesByProject.get(project) ?? []) {
+      group.targetNames.add(targetName);
+    }
+  }
+
+  const migrationKeys = new Set(Object.keys(defaultPluginOptions ?? {}));
+  for (const options of projects.values()) {
+    for (const key of Object.keys(options)) {
+      migrationKeys.add(key);
+    }
   }
 
   let index = 0;
-  for (const { options, include } of registrationGroups.values()) {
+  for (const group of registrationGroups.values()) {
+    const { options, include } = group;
     index++;
     spinner.updateText(
       `${index}/${registrationGroups.size} - Applying plugin configuration...`
@@ -2620,11 +2947,11 @@ function addPluginRegistrations<T>(
       (plugin): plugin is ExpandedPluginConfiguration =>
         typeof plugin !== 'string' &&
         plugin.plugin === pluginPath &&
-        Object.keys(options).every(
-          (key) =>
-            plugin.options[key] === options[key] ||
-            (plugin.options[key] === undefined &&
-              options[key] === defaultPluginOptions[key])
+        hasSameEffectiveOptions(
+          (plugin.options ?? {}) as Record<string, unknown>,
+          options,
+          defaultPluginOptions as Record<string, unknown>,
+          migrationKeys
         )
     );
 
@@ -2635,20 +2962,28 @@ function addPluginRegistrations<T>(
         options,
         include: [...include],
       };
+      const fencedRoots = fenceRegistration(plugin, null, group, false);
 
-      if (
-        includeCoversAllConfigFiles(
-          plugin.include,
-          plugin.exclude,
-          coverageConfigFiles
-        )
-      ) {
+      const uncovered = configFilesOutsideInclude(
+        plugin.include,
+        plugin.exclude,
+        coverageOutside(fencedRoots)
+      );
+      if (uncovered.length === 0) {
         delete plugin.include;
+      } else {
+        logger.warn(
+          keptIncludeWarning(pluginPath, uncovered, keptIncludeReasons)
+        );
       }
 
       nxJson.plugins.push(plugin);
-    } else if (existingPlugin.include) {
-      for (const projectIncludeGlob of include) {
+    } else {
+      const before = {
+        include: existingPlugin.include && [...existingPlugin.include],
+        exclude: existingPlugin.exclude && [...existingPlugin.exclude],
+      };
+      for (const projectIncludeGlob of existingPlugin.include ? include : []) {
         if (
           !existingPlugin.include.some((include) =>
             minimatch(projectIncludeGlob, include, { dot: true })
@@ -2657,21 +2992,195 @@ function addPluginRegistrations<T>(
           existingPlugin.include.push(projectIncludeGlob);
         }
       }
+      const position = nxJson.plugins.indexOf(existingPlugin);
+      const fencedRoots = fenceRegistration(
+        existingPlugin,
+        before,
+        group,
+        nxJson.plugins
+          .slice(position + 1)
+          .some((plugin) => !isRegistrationOfPlugin(plugin, pluginPath))
+      );
 
-      if (
-        includeCoversAllConfigFiles(
-          existingPlugin.include,
-          existingPlugin.exclude,
-          coverageConfigFiles
-        )
-      ) {
+      const uncovered = configFilesOutsideInclude(
+        existingPlugin.include,
+        existingPlugin.exclude,
+        coverageOutside(fencedRoots)
+      );
+      if (uncovered.length === 0) {
         delete existingPlugin.include;
+      } else {
+        logger.warn(
+          keptIncludeWarning(pluginPath, uncovered, keptIncludeReasons)
+        );
       }
     }
   }
   spinner.updateText(`Migrations done`);
 
   updateNxJson(tree, nxJson);
+}
+
+function rootIncludeGlob(root: string): string {
+  return root === '.' ? '*' : join(root, '**/*');
+}
+
+function reachesConfigFiles(
+  registration: Pick<ExpandedPluginConfiguration, 'include' | 'exclude'>,
+  configFiles: string[]
+): boolean {
+  return (
+    findMatchingConfigFiles(
+      configFiles,
+      registration.include ?? [],
+      registration.exclude ?? []
+    ).length > 0
+  );
+}
+
+function rootDepth(root: string): number {
+  return root === '.' ? 0 : root.split('/').length;
+}
+
+interface TakenOverTarget {
+  node: ProjectGraphProjectNode;
+  targetName: string;
+  /** The plugin's matched config files whose closest project root is the node's. */
+  configFiles: string[];
+}
+
+/**
+ * Targets of non-migrated projects that the plugin infers under the same name
+ * and whose identity comes from another plugin. An identity authored in
+ * project.json or package.json merges after every plugin, so it is never
+ * replaced.
+ */
+function findTakenOverTargets(
+  tree: Tree,
+  projectConfigsByName: Map<string, ProjectConfiguration>,
+  nonMigratedInferredTargetNames: Map<string, Set<string>>,
+  nonMigratedNodesByRoot: Map<string, ProjectGraphProjectNode>,
+  configFilesByOwner: Map<string, string[]>
+): TakenOverTarget[] {
+  const takenOver: TakenOverTarget[] = [];
+  for (const [root, targetNames] of nonMigratedInferredTargetNames) {
+    const node = nonMigratedNodesByRoot.get(root);
+    const configFiles = configFilesByOwner.get(root);
+    if (!node || !configFiles) {
+      continue;
+    }
+    for (const targetName of targetNames) {
+      if (
+        node.data.targets?.[targetName] &&
+        !treeAuthorsTargetIdentity(
+          tree,
+          projectConfigsByName.get(node.name),
+          root,
+          targetName
+        )
+      ) {
+        takenOver.push({ node, targetName, configFiles });
+      }
+    }
+  }
+  return takenOver;
+}
+
+function treeAuthorsTargetIdentity(
+  tree: Tree,
+  project: ProjectConfiguration | undefined,
+  root: string,
+  targetName: string
+): boolean {
+  const target = project?.targets?.[targetName];
+  if (target?.executor !== undefined || target?.command !== undefined) {
+    return true;
+  }
+  const source = packageJsonAuthorsTargetIdentity(tree, root, targetName);
+  return source === 'script' || source === 'nxTargets';
+}
+
+/** Config file -> the project root or config file a kept-include warning names. */
+interface KeptIncludeReasons {
+  notMigrated: Map<string, string>;
+  nothingToMigrate: Map<string, string>;
+  newProjects: Map<string, string>;
+  otherOptions: Map<string, string>;
+  errored: Map<string, string>;
+}
+
+function rootsWithExecutorTarget(
+  projectConfigsByName: Map<string, ProjectConfiguration>,
+  migrations: Array<{ executors: string[] }>
+): Set<string> {
+  const executors = new Set(migrations.flatMap((m) => m.executors));
+  const roots = new Set<string>();
+  for (const project of projectConfigsByName.values()) {
+    if (
+      Object.values(project.targets ?? {}).some((target) =>
+        executors.has(target.executor)
+      )
+    ) {
+      roots.add(project.root);
+    }
+  }
+  return roots;
+}
+
+const KEPT_INCLUDE_LIST_LIMIT = 5;
+
+function keptIncludeWarning(
+  pluginPath: string,
+  uncoveredConfigFiles: string[],
+  reasons: KeptIncludeReasons
+): string {
+  const list = (labelsByFile: Map<string, string>) => {
+    const labels = [
+      ...new Set(
+        uncoveredConfigFiles
+          .filter((file) => labelsByFile.has(file))
+          .map((file) => labelsByFile.get(file))
+      ),
+    ];
+    const shown = labels.slice(0, KEPT_INCLUDE_LIST_LIMIT).join(', ');
+    return labels.length > KEPT_INCLUDE_LIST_LIMIT
+      ? `${shown} and ${labels.length - KEPT_INCLUDE_LIST_LIMIT} more`
+      : shown;
+  };
+  const lines: string[] = [];
+  const notMigrated = list(reasons.notMigrated);
+  if (notMigrated) {
+    lines.push(
+      `projects that were not migrated: ${notMigrated}. Migrate them too to drop the "include".`
+    );
+  }
+  const nothingToMigrate = list(reasons.nothingToMigrate);
+  if (nothingToMigrate) {
+    lines.push(
+      `projects with no target this conversion can migrate: ${nothingToMigrate}. The "include" keeps the plugin from adding targets to them.`
+    );
+  }
+  const newProjects = list(reasons.newProjects);
+  if (newProjects) {
+    lines.push(
+      `config files outside any project, where the plugin would create a new project: ${newProjects}.`
+    );
+  }
+  const errored = list(reasons.errored);
+  if (errored) {
+    lines.push(
+      `config files the plugin fails to load: ${errored}. Fix them to drop the "include".`
+    );
+  }
+  const otherOptions = list(reasons.otherOptions);
+  if (otherOptions) {
+    lines.push(
+      `projects migrated with different plugin options, which have their own registration: ${otherOptions}. Give them the same plugin options to share one registration.`
+    );
+  }
+  return `convert-to-inferred kept an explicit "include" list on the ${pluginPath} registration in nx.json. Without it, the plugin would also apply to:\n${lines
+    .map((line) => `  - ${line}`)
+    .join('\n')}`;
 }
 
 interface CreateNodesFileError {
@@ -2700,9 +3209,10 @@ function dropUninferredTargets<T>(
   const keptProjects = new Set<string>();
   for (const executorScope of scope.executorScopes) {
     for (const [targetName, projectNames] of executorScope.targetAndProjects) {
-      const optionSetId =
-        executorScope.inferenceOptionSetIdsByTarget.get(targetName);
       for (const projectName of projectNames) {
+        const optionSetId = executorScope.inferenceOptionSetIds
+          .get(targetName)
+          .get(projectName);
         const root = projectGraph.nodes[projectName].data.root;
         if (
           inferredTargetsByOptionSet

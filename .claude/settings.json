@@ -29,6 +29,7 @@
   },
   "enableAllProjectMcpServers": true,
   "env": {
+    "NX_CLOUD_MCP_URL": "https://staging.nx.app/nx-cloud/mcp",
     "BASH_MAX_TIMEOUT_MS": "1800000"
   },
   "sandbox": {

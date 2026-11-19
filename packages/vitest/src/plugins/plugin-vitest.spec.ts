@@ -1,6 +1,7 @@
 import type { Mock } from 'vitest';
 import { CreateNodesContext } from '@nx/devkit';
 import { existsSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { readFile } from 'node:fs/promises';
 import { globWithWorkspaceContext } from '@nx/devkit/internal';
 import { createNodesV2 } from './plugin';
@@ -734,6 +735,35 @@ describe('@nx/vitest', () => {
         expect.objectContaining({ dir: expect.stringMatching(/[/\\]tests$/) })
       );
       expect(globWithWorkspaceContext).not.toHaveBeenCalled();
+    });
+
+    it("should resolve test.dir from the workspace root on the 'vitest' opt-out path when cwd is 'workspaceRoot'", async () => {
+      (existsSync as Mock).mockReturnValue(false);
+      (loadViteDynamicImport as Mock).mockResolvedValueOnce({
+        resolveConfig: vi.fn().mockResolvedValue({
+          path: 'vitest.config.ts',
+          config: {},
+          dependencies: [],
+          test: { dir: 'libs/lib1/tests' },
+        }),
+      });
+      const { createVitest } = await import('vitest/node');
+
+      await createNodesFunction(
+        ['libs/lib1/vitest.config.ts'],
+        {
+          testTargetName: 'test',
+          ciTargetName: 'test-ci',
+          discoverTestFiles: 'vitest',
+          cwd: 'workspaceRoot',
+        },
+        context
+      );
+
+      expect(createVitest).toHaveBeenCalledWith(
+        'test',
+        expect.objectContaining({ dir: resolve('libs/lib1/tests') })
+      );
     });
 
     it("should use the serve-resolved test.dir on the 'vitest' opt-out path", async () => {

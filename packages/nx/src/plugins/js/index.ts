@@ -1,10 +1,6 @@
-import { existsSync, readFileSync, rmSync } from 'fs';
-import { join } from 'path';
+import { existsSync, rmSync } from 'fs';
 import { performance } from 'perf_hooks';
-import {
-  ProjectGraph,
-  ProjectGraphExternalNode,
-} from '../../config/project-graph';
+import { ProjectGraphExternalNode } from '../../config/project-graph';
 import { hashArray } from '../../hasher/file-hasher';
 import {
   CreateDependencies,
@@ -14,21 +10,11 @@ import {
   createNodesFromFiles,
 } from '../../project-graph/plugins';
 import { RawProjectGraphDependency } from '../../project-graph/project-graph-builder';
-import { workspaceDataDirectory } from '../../utils/cache-directory';
 import { combineGlobPatterns } from '../../utils/globs';
 import { logger } from '../../utils/logger';
-import {
-  detectPackageManager,
-  type PackageManager,
-} from '../../utils/package-manager';
+import { detectPackageManager } from '../../utils/package-manager';
 import { safeWriteFileCache } from '../../utils/plugin-cache-utils';
-import { nxVersion } from '../../utils/versions';
 import { workspaceRoot } from '../../utils/workspace-root';
-import {
-  BUN_TEXT_LOCK_FILE,
-  getBunPatchFileHashes,
-  readBunLockFile,
-} from './lock-file/bun-parser';
 import {
   getLockFileDependencies,
   getLockFileName,
@@ -36,6 +22,14 @@ import {
   lockFileExists,
   LOCKFILES,
 } from './lock-file/lock-file';
+import {
+  dependenciesCache,
+  externalNodesCache,
+  readCache,
+  readCachedExternalNodes,
+  readLockFile,
+  type LockFileContents,
+} from './lock-file/lock-file-snapshot';
 import { foldLocalPathHashes } from './lock-file/utils/local-path-hashes';
 import { buildExplicitDependencies } from './project-graph/build-dependencies/build-dependencies';
 import { jsPluginConfig } from './utils/config';
@@ -44,14 +38,7 @@ export const name = 'nx/js/dependencies-and-lockfile';
 
 // An install can rewrite the lockfile between createNodes and
 // createDependencies, so both parse the one createNodes read.
-let cachedLockFile:
-  | {
-      packageManager: PackageManager;
-      lockFile: string;
-      lockFileContents: string;
-      lockFileHash: string;
-    }
-  | undefined;
+let cachedLockFile: LockFileContents | undefined;
 let cachedKeyMap: Map<string, any> | undefined;
 let cachedInstalledLocalPathNodes:
   | Record<string, Record<string, string>>
@@ -85,24 +72,11 @@ async function internalCreateNodes(
     return {};
   }
 
-  const lockFilePath = join(workspaceRoot, lockFile);
-  const lockFileContents =
-    packageManager !== 'bun'
-      ? readFileSync(lockFilePath, 'utf-8')
-      : readBunLockFile(lockFilePath);
-  const bunPatchFileHashes =
-    lockFile === BUN_TEXT_LOCK_FILE
-      ? getBunPatchFileHashes(workspaceRoot)
-      : undefined;
-  const lockFileHash = getLockFileHash(lockFileContents, bunPatchFileHashes);
-  cachedLockFile = { packageManager, lockFile, lockFileContents, lockFileHash };
+  cachedLockFile = readLockFile(workspaceRoot, packageManager, lockFile);
+  const { lockFileContents, lockFileHash, bunPatchFileHashes } = cachedLockFile;
 
-  const cached = readCache<ExternalNodesCache>(
-    externalNodesCache,
-    lockFileHash
-  );
-  // An older build of the same version writes no record, so its entry misses
-  if (cached?.installedLocalPathNodes) {
+  const cached = readCachedExternalNodes(lockFileHash);
+  if (cached) {
     cachedKeyMap = deserializeKeyMap(cached.keyMap, cached.nodes);
     cachedInstalledLocalPathNodes = cached.installedLocalPathNodes;
 
@@ -204,17 +178,6 @@ export const createDependencies: CreateDependencies = (
   return lockfileDependencies.concat(explicitProjectDependencies);
 };
 
-function getLockFileHash(
-  lockFileContents: string,
-  bunPatchFileHashes: Map<string, string> = new Map()
-) {
-  return hashArray([
-    nxVersion,
-    lockFileContents,
-    ...[...bunPatchFileHashes].flat(),
-  ]);
-}
-
 // Serialize keyMap to JSON-friendly format
 function serializeKeyMap(keyMap: Map<string, any>): Record<string, any> {
   const serialized: Record<string, any> = {};
@@ -258,25 +221,6 @@ function deserializeKeyMap(
   return keyMap;
 }
 
-interface ExternalNodesCache {
-  nodes: ProjectGraph['externalNodes'];
-  keyMap: Record<string, any>;
-  // The lockfile does not cover these sources' contents, so the cached node
-  // hashes are folded with them on every read.
-  localPathSources?: Record<string, string[]>;
-  installedLocalPathNodes: Record<string, Record<string, string>>;
-}
-
-function readCache<T>(path: string, key: string): T | undefined {
-  try {
-    const cache = JSON.parse(readFileSync(path, 'utf-8'));
-    return cache.key === key ? cache.data : undefined;
-  } catch {
-    // Another process can be mid-write, so an unreadable cache is a miss.
-    return undefined;
-  }
-}
-
 function writeCache(path: string, key: string, data: unknown) {
   const content = safeStringify({ key, data });
   if (content === undefined) {
@@ -304,11 +248,3 @@ function tryRemoveFile(path: string): void {
     // Best effort
   }
 }
-
-// Each cache file holds its key, so key and data come from one write.
-// Older Nx versions read other names with a hash file; keep these distinct.
-const externalNodesCache = join(workspaceDataDirectory, 'lockfile-nodes.json');
-const dependenciesCache = join(
-  workspaceDataDirectory,
-  'lockfile-dependencies.json'
-);
