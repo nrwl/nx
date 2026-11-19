@@ -419,7 +419,7 @@ describe('EvaluationCache', () => {
   });
 
   it('should not store when an input was removed during the call', async () => {
-    const started = Date.now();
+    const started = Date.now() - 10;
     rmSync(b);
     await cache.store(
       configFiles,
@@ -525,7 +525,7 @@ describe('EvaluationCache', () => {
 
     it('should not store when a listed directory gains an entry as it is fingerprinted', async () => {
       await new Promise((r) => setTimeout(r, 20));
-      const started = Date.now();
+      const started = Date.now() - 10;
       const real = vi.mocked(readdirSync).getMockImplementation()!;
       vi.mocked(readdirSync).mockImplementationOnce(((path, options) => {
         writeFileSync(join(listed, 'two.txt'), '2');
@@ -544,7 +544,7 @@ describe('EvaluationCache', () => {
     });
 
     it('should not store when a listed directory was removed during the call', async () => {
-      const started = Date.now();
+      const started = Date.now() - 10;
       rmSync(listed, { recursive: true });
       await cache.store(
         configFiles,
