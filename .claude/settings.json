@@ -48,15 +48,15 @@
     }
   },
   "extraKnownMarketplaces": {
-    "nx-claude-plugins": {
+    "nx-plugins": {
       "source": {
-        "source": "github",
-        "repo": "nrwl/nx-ai-agents-config",
-        "ref": "experimental"
+        "source": "url",
+        "url": "https://raw.githubusercontent.com/nrwl/nx-ai-agents-config/main/plugins/.claude-plugin/marketplace.json"
       }
     }
   },
   "enabledPlugins": {
-    "nx@nx-claude-plugins": true
+    "nx@nx-plugins": true,
+    "nx-cloud@nx-plugins": true
   }
 }
