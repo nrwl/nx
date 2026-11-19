@@ -19,6 +19,9 @@ import { getRelativeProjectJsonSchemaPath } from '@nx/devkit/internal';
 let fs: TempFs;
 
 let projectGraph: ProjectGraph;
+// Covers the eslintrc path, which ESLint 10 removed.
+vi.mock('eslint', async () => vi.importActual('eslint-v9'));
+
 vi.mock('@nx/devkit', async () => ({
   ...(await vi.importActual<any>('@nx/devkit')),
   createProjectGraphAsync: vi.fn().mockImplementation(async () => {
