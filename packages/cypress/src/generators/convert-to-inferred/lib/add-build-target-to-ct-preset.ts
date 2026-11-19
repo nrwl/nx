@@ -1,7 +1,7 @@
 import type { Tree } from '@nx/devkit';
 import {
   ensureTypescript,
-  tsquery,
+  query,
   type TypescriptAst,
 } from '@nx/devkit/internal';
 import type { CallExpression, Expression, PropertyName } from 'typescript';
@@ -25,16 +25,14 @@ export function addBuildTargetToComponentTestingPreset(
   if (contents === null) {
     return false;
   }
-  const presetCall = tsquery
-    .query<CallExpression>(
-      parseSourceFile(configFilePath, contents),
-      'CallExpression'
-    )
-    .find(
-      (call) =>
-        ts.isIdentifier(call.expression) &&
-        call.expression.text === 'nxComponentTestingPreset'
-    );
+  const presetCall = query<CallExpression>(
+    parseSourceFile(configFilePath, contents),
+    'CallExpression'
+  ).find(
+    (call) =>
+      ts.isIdentifier(call.expression) &&
+      call.expression.text === 'nxComponentTestingPreset'
+  );
   const [pathToConfig, options] = presetCall?.arguments ?? [];
   if (!pathToConfig) {
     return false;

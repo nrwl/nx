@@ -1,6 +1,6 @@
 import { type Tree } from '@nx/devkit';
 import { indentBy } from './indent-by';
-import { tsquery } from '@nx/devkit/internal';
+import { ast, query } from '@nx/devkit/internal';
 
 const DEFINE_CONFIG_SELECTOR =
   'CallExpression:has(Identifier[name=defineConfig]) > ObjectLiteralExpression';
@@ -16,11 +16,11 @@ export function addHtmlTemplatePath(
     'PropertyAssignment:has(Identifier[name=template]) > StringLiteral';
 
   let configContents = tree.read(configFilePath, 'utf-8');
-  const sourceFile = tsquery.ast(configContents);
+  const sourceFile = ast(configContents);
 
-  const htmlConfigNodes = tsquery.query(sourceFile, HTML_CONFIG_SELECTOR);
+  const htmlConfigNodes = query(sourceFile, HTML_CONFIG_SELECTOR);
   if (htmlConfigNodes.length === 0) {
-    const defineConfigNodes = tsquery.query(sourceFile, DEFINE_CONFIG_SELECTOR);
+    const defineConfigNodes = query(sourceFile, DEFINE_CONFIG_SELECTOR);
     if (defineConfigNodes.length === 0) {
       throw new Error(
         `Could not find 'defineConfig' in the config file at ${configFilePath}.`
@@ -35,10 +35,7 @@ export function addHtmlTemplatePath(
     )}\t${configContents.slice(defineConfigNode.getStart() + 1)}`;
   } else {
     const htmlConfigNode = htmlConfigNodes[0];
-    const templateStringNodes = tsquery.query(
-      htmlConfigNode,
-      TEMPLATE_STRING_SELECTOR
-    );
+    const templateStringNodes = query(htmlConfigNode, TEMPLATE_STRING_SELECTOR);
     if (templateStringNodes.length === 0) {
       configContents = `${configContents.slice(
         0,
@@ -70,11 +67,11 @@ export function addCopyAssets(
 
   const copyAssetArrayElement = `{ from: '${from}' }`;
   let configContents = tree.read(configFilePath, 'utf-8');
-  const sourceFile = tsquery.ast(configContents);
+  const sourceFile = ast(configContents);
 
-  const outputConfigNodes = tsquery.query(sourceFile, OUTPUT_CONFIG_SELECTOR);
+  const outputConfigNodes = query(sourceFile, OUTPUT_CONFIG_SELECTOR);
   if (outputConfigNodes.length === 0) {
-    const defineConfigNodes = tsquery.query(sourceFile, DEFINE_CONFIG_SELECTOR);
+    const defineConfigNodes = query(sourceFile, DEFINE_CONFIG_SELECTOR);
     if (defineConfigNodes.length === 0) {
       throw new Error(
         `Could not find 'defineConfig' in the config file at ${configFilePath}.`
@@ -89,10 +86,7 @@ export function addCopyAssets(
     )},${configContents.slice(defineConfigNode.getStart() + 1)}`;
   } else {
     const outputConfigNode = outputConfigNodes[0];
-    const copyAssetsArrayNodes = tsquery.query(
-      outputConfigNode,
-      COPY_ARRAY_SELECTOR
-    );
+    const copyAssetsArrayNodes = query(outputConfigNode, COPY_ARRAY_SELECTOR);
     if (copyAssetsArrayNodes.length === 0) {
       configContents = `${configContents.slice(
         0,
@@ -131,7 +125,7 @@ export function addExperimentalSwcPlugin(
     'CallExpression:has(Identifier[name=defineConfig]) ObjectLiteralExpression PropertyAssignment:has(Identifier[name=tools]) > ObjectLiteralExpression';
 
   let configContents = tree.read(configFilePath, 'utf-8');
-  const sourceFile = tsquery.ast(configContents);
+  const sourceFile = ast(configContents);
 
   const pluginToAdd = indentBy(1)(`['${pluginName}', {}],`);
   const pluginsArrayToAdd = indentBy(1)(`plugins: [\n${pluginToAdd}\n],`);
@@ -142,9 +136,9 @@ export function addExperimentalSwcPlugin(
   const swcObjectToAdd = indentBy(1)(`swc: {\n${jscObjectToAdd}\n},`);
   const toolsObjectToAdd = indentBy(1)(`tools: {\n${swcObjectToAdd}\n},`);
 
-  const toolsNodes = tsquery.query(sourceFile, TOOLS_SELECTOR);
+  const toolsNodes = query(sourceFile, TOOLS_SELECTOR);
   if (toolsNodes.length === 0) {
-    const defineConfigNodes = tsquery.query(sourceFile, DEFINE_CONFIG_SELECTOR);
+    const defineConfigNodes = query(sourceFile, DEFINE_CONFIG_SELECTOR);
     if (defineConfigNodes.length === 0) {
       throw new Error(
         `Could not find 'defineConfig' in the config file at ${configFilePath}.`
@@ -158,7 +152,7 @@ export function addExperimentalSwcPlugin(
       defineConfigNode.getStart() + 1
     )}`;
   } else {
-    const swcNodes = tsquery.query(sourceFile, SWC_SELECTOR);
+    const swcNodes = query(sourceFile, SWC_SELECTOR);
     if (swcNodes.length === 0) {
       const toolsNode = toolsNodes[0];
       configContents = `${configContents.slice(
@@ -168,7 +162,7 @@ export function addExperimentalSwcPlugin(
         toolsNode.getStart() + 1
       )}`;
     } else {
-      const jscNodes = tsquery.query(sourceFile, SWC_JSC_SELECTOR);
+      const jscNodes = query(sourceFile, SWC_JSC_SELECTOR);
       if (jscNodes.length === 0) {
         const swcNode = swcNodes[0];
         configContents = `${configContents.slice(
@@ -178,7 +172,7 @@ export function addExperimentalSwcPlugin(
           swcNode.getStart() + 1
         )}`;
       } else {
-        const experimentalNodes = tsquery.query(
+        const experimentalNodes = query(
           sourceFile,
           SWC_JSC_EXPERIMENTAL_SELECTOR
         );
@@ -191,7 +185,7 @@ export function addExperimentalSwcPlugin(
             experimentalObjectToAdd
           )}\n\t\t\t${configContents.slice(jscNode.getStart() + 1)}`;
         } else {
-          const pluginsArrayNodes = tsquery.query(
+          const pluginsArrayNodes = query(
             sourceFile,
             SWC_JSC_EXPERIMENTAL_PLUGIN_ARRAY_SELECTOR
           );
@@ -234,13 +228,13 @@ export function addSourceDefine(
     'CallExpression:has(Identifier[name=defineConfig]) ObjectLiteralExpression PropertyAssignment:has(Identifier[name=source]) ObjectLiteralExpression PropertyAssignment:has(Identifier[name=define]) > ObjectLiteralExpression';
 
   let configContents = tree.read(configFilePath, 'utf-8');
-  const sourceFile = tsquery.ast(configContents);
+  const sourceFile = ast(configContents);
 
   const defineProperty = `'${key}': '${value}'`;
 
-  const sourceConfigNodes = tsquery.query(sourceFile, SOURCE_CONFIG_SELECTOR);
+  const sourceConfigNodes = query(sourceFile, SOURCE_CONFIG_SELECTOR);
   if (sourceConfigNodes.length === 0) {
-    const defineConfigNodes = tsquery.query(sourceFile, DEFINE_CONFIG_SELECTOR);
+    const defineConfigNodes = query(sourceFile, DEFINE_CONFIG_SELECTOR);
     if (defineConfigNodes.length === 0) {
       throw new Error(
         `Could not find 'defineConfig' in the config file at ${configFilePath}.`
@@ -257,7 +251,7 @@ export function addSourceDefine(
     )},${configContents.slice(defineConfigNode.getStart() + 1)}`;
   } else {
     const sourceConfigNode = sourceConfigNodes[0];
-    const defineObjectNodes = tsquery.query(sourceFile, DEFINE_OBJECT_SELECTOR);
+    const defineObjectNodes = query(sourceFile, DEFINE_OBJECT_SELECTOR);
     if (defineObjectNodes.length === 0) {
       configContents = `${configContents.slice(
         0,

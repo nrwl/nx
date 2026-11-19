@@ -1,9 +1,9 @@
 import { type Tree } from '@nx/devkit';
-import { tsquery } from '@nx/devkit/internal';
+import { ast, query } from '@nx/devkit/internal';
 
 export function transformPluginConfig(tree: Tree, configPath: string) {
   let contents = tree.read(configPath, 'utf-8');
-  const sourceFile = tsquery.ast(contents);
+  const sourceFile = ast(contents);
   const replacements: { start: number; end: number; text: string }[] = [];
 
   for (const [source, destination, fromClass, toClass] of [
@@ -20,7 +20,7 @@ export function transformPluginConfig(tree: Tree, configPath: string) {
       'NxReactRspackPlugin',
     ],
   ]) {
-    const imports = tsquery.query(
+    const imports = query(
       sourceFile,
       `ImportDeclaration > StringLiteral[value="${source}"], CallExpression:has(Identifier[name=require]) > StringLiteral[value="${source}"]`
     );
@@ -32,10 +32,7 @@ export function transformPluginConfig(tree: Tree, configPath: string) {
         text: `'${destination}'`,
       });
     }
-    for (const node of tsquery.query(
-      sourceFile,
-      `Identifier[name=${fromClass}]`
-    )) {
+    for (const node of query(sourceFile, `Identifier[name=${fromClass}]`)) {
       replacements.push({
         start: node.getStart(),
         end: node.getEnd(),
@@ -44,7 +41,7 @@ export function transformPluginConfig(tree: Tree, configPath: string) {
     }
   }
 
-  for (const node of tsquery.query(
+  for (const node of query(
     sourceFile,
     'ImportDeclaration > StringLiteral[value=webpack]'
   )) {

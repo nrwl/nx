@@ -84,7 +84,7 @@ export function getModuleFilePaths(
 
 function hasNgModule(tree: Tree, filePath: string): boolean {
   ensureTypescript();
-  const { ast, query } = require('@nx/devkit/internal').tsquery;
+  const { ast, query } = require('@nx/devkit/internal');
   const fileContent = tree.read(filePath, 'utf-8');
   const sourceFile = ast(fileContent);
   const ngModule = query(

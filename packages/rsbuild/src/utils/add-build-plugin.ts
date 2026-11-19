@@ -1,6 +1,6 @@
 import { type Tree } from '@nx/devkit';
 import { ensureTypescript } from '@nx/js/internal';
-import { tsquery, type TypescriptAst } from '@nx/devkit/internal';
+import { ast, query, type TypescriptAst } from '@nx/devkit/internal';
 import type * as ts from 'typescript';
 import { indentBy } from './indent-by';
 
@@ -26,10 +26,10 @@ export function addBuildPlugin(
   configContents = `import { ${pluginName} } from '${importPath}';
   ${configContents}`;
 
-  const sourceFile = tsquery.ast(configContents);
+  const sourceFile = ast(configContents);
 
   const configObject = (
-    tsquery.query(sourceFile, DEFINE_CONFIG_CALL) as ts.CallExpression[]
+    query(sourceFile, DEFINE_CONFIG_CALL) as ts.CallExpression[]
   )
     .map((call) => findConfigObject(call.arguments[0]))
     .find(Boolean);
@@ -39,9 +39,9 @@ export function addBuildPlugin(
     );
   }
   // The selector also matches nested arrays such as tools.rspack.plugins.
-  const pluginsArrayNode = tsquery
-    .query(sourceFile, PLUGINS_ARRAY_SELECTOR)
-    .find((node) => node.parent.parent === configObject);
+  const pluginsArrayNode = query(sourceFile, PLUGINS_ARRAY_SELECTOR).find(
+    (node) => node.parent.parent === configObject
+  );
   if (!pluginsArrayNode) {
     configContents = `${configContents.slice(
       0,

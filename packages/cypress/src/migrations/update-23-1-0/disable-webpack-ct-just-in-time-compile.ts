@@ -1,6 +1,6 @@
 import { formatFiles, type Tree } from '@nx/devkit';
 import { ensureTypescript } from '@nx/js/internal';
-import { tsquery, type TypescriptAst } from '@nx/devkit/internal';
+import { query, type TypescriptAst } from '@nx/devkit/internal';
 import type { CallExpression, PropertyAssignment } from 'typescript';
 import {
   JIT_COMPILE_DISABLE_COMMENT,
@@ -81,13 +81,11 @@ function isWebpackComponentTesting(component: PropertyAssignment): boolean {
 function usesNxComponentTestingPreset(component: PropertyAssignment): boolean {
   ts ??= ensureTypescript();
 
-  return tsquery
-    .query<CallExpression>(component, 'CallExpression')
-    .some(
-      (call) =>
-        ts.isIdentifier(call.expression) &&
-        call.expression.text === 'nxComponentTestingPreset'
-    );
+  return query<CallExpression>(component, 'CallExpression').some(
+    (call) =>
+      ts.isIdentifier(call.expression) &&
+      call.expression.text === 'nxComponentTestingPreset'
+  );
 }
 
 function hasInlineDevServerFramework(component: PropertyAssignment): boolean {
@@ -110,12 +108,9 @@ function getComponentProperty(
 ): PropertyAssignment[] {
   ts ??= ensureTypescript();
 
-  return tsquery
-    .query<PropertyAssignment>(component, 'PropertyAssignment')
-    .filter(
-      (property) =>
-        ts.isIdentifier(property.name) && property.name.text === name
-    );
+  return query<PropertyAssignment>(component, 'PropertyAssignment').filter(
+    (property) => ts.isIdentifier(property.name) && property.name.text === name
+  );
 }
 
 function setsJustInTimeCompile(component: PropertyAssignment): boolean {

@@ -1,6 +1,6 @@
 import { type Tree, formatFiles, visitNotIgnoredFiles } from '@nx/devkit';
 import picomatch = require('picomatch');
-import { tsquery } from '@nx/devkit/internal';
+import { ast, query } from '@nx/devkit/internal';
 
 export default async function (tree: Tree) {
   visitNotIgnoredFiles(tree, '', (path) => {
@@ -22,8 +22,8 @@ export default async function (tree: Tree) {
       'CallExpression:has(Identifier[name=withModuleFederation]),CallExpression:has(Identifier[name=withModuleFederationForSSR])';
     const EXISTING_MF_OVERRIDES_SELECTOR = 'ObjectLiteralExpression';
 
-    const sourceFile = tsquery.ast(webpackConfigContents);
-    const withModuleFederationNodes = tsquery.query(
+    const sourceFile = ast(webpackConfigContents);
+    const withModuleFederationNodes = query(
       sourceFile,
       WITH_MODULE_FEDERATION_SELECTOR
     );
@@ -32,7 +32,7 @@ export default async function (tree: Tree) {
     }
 
     const withModuleFederationNode = withModuleFederationNodes[0];
-    const existingOverridesNodes = tsquery.query(
+    const existingOverridesNodes = query(
       withModuleFederationNode,
       EXISTING_MF_OVERRIDES_SELECTOR
     );
@@ -56,7 +56,7 @@ export default async function (tree: Tree) {
         existingOverrideNode = node;
       }
       const DTS_PROPERTY_SELECTOR = 'PropertyAssignment > Identifier[name=dts]';
-      const dtsPropertyNode = tsquery.query(
+      const dtsPropertyNode = query(
         existingOverrideNode,
         DTS_PROPERTY_SELECTOR
       );

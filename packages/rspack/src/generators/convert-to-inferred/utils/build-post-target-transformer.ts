@@ -4,7 +4,8 @@ import {
   printNode,
   processTargetOutputs,
   toProjectRelativePath,
-  tsquery,
+  ast,
+  query,
   type TypescriptAst,
 } from '@nx/devkit/internal';
 import type {
@@ -194,7 +195,7 @@ function updateRspackConfig(
 
   const updateSources = () => {
     rspackConfigText = tree.read(rspackConfig, 'utf-8');
-    sourceFile = tsquery.ast(rspackConfigText);
+    sourceFile = ast(rspackConfigText);
   };
   updateSources();
 
@@ -231,13 +232,13 @@ function setOptionsInRspackConfig(
 
   const optionsSelector =
     'VariableStatement:has(VariableDeclaration:has(Identifier[name=options]))';
-  let optionsVariable = tsquery.query<VariableStatement>(
+  let optionsVariable = query<VariableStatement>(
     sourceFile,
     optionsSelector
   )[0];
 
   if (!optionsVariable) {
-    const plugin = tsquery.query<NewExpression>(
+    const plugin = query<NewExpression>(
       sourceFile,
       'NewExpression:has(Identifier[name=NxAppRspackPlugin])'
     )[0];
@@ -248,14 +249,11 @@ function setOptionsInRspackConfig(
       );
     }
     text = `const options = ${argument?.getText(sourceFile) ?? '{}'};\n${text}`;
-    sourceFile = tsquery.ast(text);
-    optionsVariable = tsquery.query<VariableStatement>(
-      sourceFile,
-      optionsSelector
-    )[0];
+    sourceFile = ast(text);
+    optionsVariable = query<VariableStatement>(sourceFile, optionsSelector)[0];
   }
 
-  const optionsObject = tsquery.query<ObjectLiteralExpression>(
+  const optionsObject = query<ObjectLiteralExpression>(
     optionsVariable,
     'ObjectLiteralExpression'
   )[0];
@@ -334,7 +332,7 @@ function setOptionsInNxRspackPlugin(
 ): void {
   const nxAppRspackPluginSelector =
     'PropertyAssignment:has(Identifier[name=plugins]) NewExpression:has(Identifier[name=NxAppRspackPlugin])';
-  const nxAppRspackPlugin = tsquery.query<NewExpression>(
+  const nxAppRspackPlugin = query<NewExpression>(
     sourceFile,
     nxAppRspackPluginSelector
   )[0];
@@ -356,7 +354,7 @@ function setOptionsInLegacyNxPlugin(
 ): void {
   const legacyNxPluginSelector =
     'AwaitExpression CallExpression:has(Identifier[name=useLegacyNxPlugin])';
-  const legacyNxPlugin = tsquery.query<CallExpression>(
+  const legacyNxPlugin = query<CallExpression>(
     sourceFile,
     legacyNxPluginSelector
   )[0];

@@ -1,6 +1,6 @@
 import { formatFiles, visitNotIgnoredFiles, type Tree } from '@nx/devkit';
 import { ensureTypescript } from '@nx/js/internal';
-import { tsquery, type TypescriptAst } from '@nx/devkit/internal';
+import { ast, query, type TypescriptAst } from '@nx/devkit/internal';
 import type { CallExpression } from 'typescript';
 import { cypressProjectConfigs } from '../../utils/migrations';
 
@@ -36,10 +36,10 @@ function updateCyExecItsCalls(fileContent: string): string {
   }
 
   ts ??= ensureTypescript();
-  const sourceFile = tsquery.ast(fileContent);
+  const sourceFile = ast(fileContent);
   const updates: Array<{ start: number; end: number; text: string }> = [];
 
-  const callExpressions = tsquery.query<CallExpression>(
+  const callExpressions = query<CallExpression>(
     sourceFile,
     'CallExpression:has(PropertyAccessExpression > Identifier[name="its"])'
   );

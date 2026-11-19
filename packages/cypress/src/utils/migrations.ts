@@ -120,6 +120,9 @@ export function getObjectProperty(
   );
 }
 
+// Resolves the module specifier that binds the `nxComponentTestingPreset`
+// identifier in a cypress config, covering both ESM `import` and CJS
+// `require` forms. Returns null when no such binding is found.
 export function getComponentTestingPresetImport(
   sourceFile: SourceFile
 ): string | null {

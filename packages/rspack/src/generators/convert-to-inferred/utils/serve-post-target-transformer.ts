@@ -3,7 +3,8 @@ import {
   printNode,
   processTargetOutputs,
   toProjectRelativePath,
-  tsquery,
+  ast,
+  query,
   type TypescriptAst,
 } from '@nx/devkit/internal';
 import {
@@ -212,7 +213,7 @@ function updateRspackConfig(
 
   const updateSources = () => {
     rspackConfigText = tree.read(rspackConfigPath, 'utf-8');
-    sourceFile = tsquery.ast(rspackConfigText);
+    sourceFile = ast(rspackConfigText);
   };
   updateSources();
 
@@ -252,7 +253,7 @@ function setOptionsInRspackConfig(
 
   const configValuesSelector =
     'VariableDeclaration:has(Identifier[name=configValues]) ObjectLiteralExpression';
-  const configValuesObject = tsquery.query<ObjectLiteralExpression>(
+  const configValuesObject = query<ObjectLiteralExpression>(
     sourceFile,
     configValuesSelector
   )[0];
@@ -301,10 +302,10 @@ function setOptionsInRspackConfig(
 
   tree.write(rspackConfigPath, text);
 
-  sourceFile = tsquery.ast(text);
+  sourceFile = ast(text);
   const buildOptionsSelector =
     'VariableStatement:has(VariableDeclaration:has(Identifier[name=buildOptions]))';
-  const buildOptionsStatement = tsquery.query<VariableStatement>(
+  const buildOptionsStatement = query<VariableStatement>(
     sourceFile,
     buildOptionsSelector
   )[0];
@@ -327,7 +328,7 @@ function setDevServerOptionsInRspackConfig(
 ) {
   const rspackConfigDevServerSelector =
     'ObjectLiteralExpression > PropertyAssignment:has(Identifier[name=devServer])';
-  const rspackConfigDevServer = tsquery.query<PropertyAssignment>(
+  const rspackConfigDevServer = query<PropertyAssignment>(
     sourceFile,
     rspackConfigDevServerSelector
   )[0];
@@ -353,7 +354,7 @@ function setDevServerOptionsInRspackConfig(
 
   const rspackConfigSelector =
     'ObjectLiteralExpression:has(PropertyAssignment:has(Identifier[name=plugins]))';
-  const rspackConfig = tsquery.query<ObjectLiteralExpression>(
+  const rspackConfig = query<ObjectLiteralExpression>(
     sourceFile,
     rspackConfigSelector
   )[0];

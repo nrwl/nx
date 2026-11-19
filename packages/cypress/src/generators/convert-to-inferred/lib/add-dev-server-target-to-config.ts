@@ -1,5 +1,5 @@
 import type { Tree } from '@nx/devkit';
-import { tsquery } from '@nx/devkit/internal';
+import { query } from '@nx/devkit/internal';
 import { parseSourceFile } from '../../../utils/migrations';
 
 /**
@@ -24,14 +24,11 @@ export function addDevServerTargetToConfig(
 
   const NX_E2E_PRESET_SELECTOR =
     'PropertyAssignment:has(Identifier[name=e2e]) CallExpression:has(Identifier[name=nxE2EPreset])';
-  const nxE2ePresetOptionsNodes = tsquery.query(
-    sourceFile,
-    NX_E2E_PRESET_SELECTOR
-  );
+  const nxE2ePresetOptionsNodes = query(sourceFile, NX_E2E_PRESET_SELECTOR);
   if (nxE2ePresetOptionsNodes.length !== 0) {
     const NX_E2E_PRESET_OPTIONS_SELECTOR =
       'PropertyAssignment:has(Identifier[name=e2e]) CallExpression:has(Identifier[name=nxE2EPreset]) > ObjectLiteralExpression';
-    const optionsObjectNodes = tsquery.query(
+    const optionsObjectNodes = query(
       sourceFile,
       NX_E2E_PRESET_OPTIONS_SELECTOR
     );
@@ -40,7 +37,7 @@ export function addDevServerTargetToConfig(
     let nxE2ePresetOptionsNode = nxE2ePresetOptionsNodes[0];
     const WEB_SERVER_COMMANDS_SELECTOR =
       'PropertyAssignment:has(Identifier[name=webServerCommands])';
-    const webServerCommandsNodes = tsquery.query(
+    const webServerCommandsNodes = query(
       nxE2ePresetOptionsNode,
       WEB_SERVER_COMMANDS_SELECTOR
     );
@@ -82,14 +79,11 @@ export function addDevServerTargetToConfig(
     if (ciDevServerTarget) {
       configFileContents = tree.read(configFilePath, 'utf-8');
       sourceFile = parseSourceFile(configFilePath, configFileContents);
-      nxE2ePresetOptionsNode = tsquery.query(
-        sourceFile,
-        NX_E2E_PRESET_SELECTOR
-      )[0];
+      nxE2ePresetOptionsNode = query(sourceFile, NX_E2E_PRESET_SELECTOR)[0];
 
       const NX_E2E_PRESET_OPTIONS_SELECTOR =
         'PropertyAssignment:has(Identifier[name=e2e]) CallExpression:has(Identifier[name=nxE2EPreset]) > ObjectLiteralExpression';
-      const optionsObjectNodes = tsquery.query(
+      const optionsObjectNodes = query(
         sourceFile,
         NX_E2E_PRESET_OPTIONS_SELECTOR
       );
@@ -97,7 +91,7 @@ export function addDevServerTargetToConfig(
 
       const CI_WEB_SERVER_COMMANDS_SELECTOR =
         'PropertyAssignment:has(Identifier[name=ciWebServerCommand])';
-      const ciWebServerCommandsNodes = tsquery.query(
+      const ciWebServerCommandsNodes = query(
         nxE2ePresetOptionsNode,
         CI_WEB_SERVER_COMMANDS_SELECTOR
       );

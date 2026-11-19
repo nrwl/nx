@@ -14,8 +14,8 @@ import { getModuleDeclarations } from './module-info';
 import type { TypescriptAst } from '@nx/devkit/internal';
 
 let tsModule: TypescriptAst;
-let tsqueryAst: typeof import('@nx/devkit/internal').tsquery.ast;
-let tsqueryQuery: typeof import('@nx/devkit/internal').tsquery.query;
+let tsqueryAst: typeof import('@nx/devkit/internal').ast;
+let tsqueryQuery: typeof import('@nx/devkit/internal').query;
 
 export interface ComponentInfo {
   componentFileName: string;
@@ -115,7 +115,7 @@ export function getStandaloneComponentsInfo(
 function getStandaloneComponents(tree: Tree, filePath: string): string[] {
   if (!tsqueryAst) {
     ensureTypescript();
-    const tsqueryModule = require('@nx/devkit/internal').tsquery;
+    const tsqueryModule = require('@nx/devkit/internal');
     tsqueryAst = tsqueryModule.ast;
     tsqueryQuery = tsqueryModule.query;
   }
@@ -178,7 +178,7 @@ function tryGetComponentInfo(
   try {
     if (!tsqueryQuery) {
       ensureTypescript();
-      const tsqueryModule = require('@nx/devkit/internal').tsquery;
+      const tsqueryModule = require('@nx/devkit/internal');
       tsqueryAst = tsqueryModule.ast;
       tsqueryQuery = tsqueryModule.query;
     }

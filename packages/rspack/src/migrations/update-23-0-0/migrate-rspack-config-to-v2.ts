@@ -1,9 +1,5 @@
 import { type Tree, formatFiles, visitNotIgnoredFiles } from '@nx/devkit';
-import {
-  ensureTypescript,
-  tsquery,
-  type TypescriptAst,
-} from '@nx/devkit/internal';
+import { ensureTypescript, ast, type TypescriptAst } from '@nx/devkit/internal';
 import type * as ts from 'typescript';
 
 let tsModule: TypescriptAst;
@@ -88,7 +84,7 @@ export function rewriteLibraryTarget(source: string): string {
   tsModule ??= ensureTypescript();
   if (!source.includes('libraryTarget')) return source;
 
-  const sourceFile = tsquery.ast(source);
+  const sourceFile = ast(source);
   const edits: SourceEdit[] = [];
 
   const visit = (node: ts.Node) => {
@@ -139,7 +135,7 @@ export function disableLazyCompilationForModuleFederation(
   }
   if (source.includes('lazyCompilation')) return source;
 
-  const sourceFile = tsquery.ast(source);
+  const sourceFile = ast(source);
   const edits: SourceEdit[] = [];
 
   const insertIntoObject = (obj: ts.ObjectLiteralExpression) => {
@@ -184,7 +180,7 @@ export function rewriteExperimentsCss(source: string): string {
   tsModule ??= ensureTypescript();
   if (!/\bcss\s*:/.test(source)) return source;
 
-  const sourceFile = tsquery.ast(source);
+  const sourceFile = ast(source);
   const edits: SourceEdit[] = [];
 
   const visit = (node: ts.Node) => {

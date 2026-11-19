@@ -1,6 +1,6 @@
 import { Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { tsquery } from '@nx/devkit/internal';
+import { ast, query } from '@nx/devkit/internal';
 import {
   buildOption,
   buildOptionObject,
@@ -41,8 +41,8 @@ describe('ensureViteConfigIsCorrect', () => {
       { build: false, test: true, serve: false }
     );
     const appFileContent = tree.read('apps/my-app/vite.config.ts', 'utf-8');
-    const file = tsquery.ast(appFileContent);
-    const buildNode = tsquery.query(
+    const file = ast(appFileContent);
+    const buildNode = query(
       file,
       'PropertyAssignment:has(Identifier[name="build"])'
     );
@@ -101,8 +101,8 @@ describe('ensureViteConfigIsCorrect', () => {
       { build: false, test: true, serve: false }
     );
     const appFileContent = tree.read('apps/my-app/vite.config.ts', 'utf-8');
-    const file = tsquery.ast(appFileContent);
-    const buildNode = tsquery.query(
+    const file = ast(appFileContent);
+    const buildNode = query(
       file,
       'PropertyAssignment:has(Identifier[name="build"])'
     );
@@ -155,8 +155,8 @@ describe('ensureViteConfigIsCorrect', () => {
       { build: false, test: false, serve: false }
     );
     const appFileContent = tree.read('apps/my-app/vite.config.ts', 'utf-8');
-    const file = tsquery.ast(appFileContent);
-    const buildNode = tsquery.query(
+    const file = ast(appFileContent);
+    const buildNode = query(
       file,
       'PropertyAssignment:has(Identifier[name="build"])'
     );
@@ -211,8 +211,8 @@ describe('ensureViteConfigIsCorrect', () => {
       { build: false, test: false, serve: false }
     );
     const appFileContent = tree.read('apps/my-app/vite.config.ts', 'utf-8');
-    const file = tsquery.ast(appFileContent);
-    const buildNode = tsquery.query(
+    const file = ast(appFileContent);
+    const buildNode = query(
       file,
       'PropertyAssignment:has(Identifier[name="build"])'
     );
@@ -235,8 +235,8 @@ describe('ensureViteConfigIsCorrect', () => {
       { build: false, test: false, serve: false }
     );
     const appFileContent = tree.read('apps/my-app/vite.config.ts', 'utf-8');
-    const file = tsquery.ast(appFileContent);
-    const buildNode = tsquery.query(
+    const file = ast(appFileContent);
+    const buildNode = query(
       file,
       'PropertyAssignment:has(Identifier[name="build"])'
     );

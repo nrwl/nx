@@ -6,7 +6,7 @@ import {
   workspaceDataDirectory,
   hashObject,
   getReadyCheckReadyWhen,
-  tsquery,
+  query,
 } from '@nx/devkit/internal';
 import {
   AggregateCreateNodesError,
@@ -449,7 +449,7 @@ async function getStorybookFramework(
 ): Promise<string | undefined> {
   const resolvedPath = join(context.workspaceRoot, configFilePath);
   const mainTsJs = readFileSync(resolvedPath, 'utf-8');
-  const importDeclarations = tsquery.query(
+  const importDeclarations = query(
     mainTsJs,
     'ImportDeclaration:has(ImportSpecifier:has([text="StorybookConfig"]))'
   )?.[0];
@@ -458,7 +458,7 @@ async function getStorybookFramework(
     return parseFrameworkName(mainTsJs);
   }
 
-  const storybookConfigImportPackage = tsquery.query(
+  const storybookConfigImportPackage = query(
     importDeclarations,
     'StringLiteral'
   )?.[0];
@@ -473,7 +473,7 @@ async function getStorybookFramework(
 }
 
 function parseFrameworkName(mainTsJs: string) {
-  const frameworkPropertyAssignment = tsquery.query(
+  const frameworkPropertyAssignment = query(
     mainTsJs,
     `PropertyAssignment:has(Identifier:has([text="framework"]))`
   )?.[0];
@@ -482,7 +482,7 @@ function parseFrameworkName(mainTsJs: string) {
     return undefined;
   }
 
-  const propertyAssignments = tsquery.query(
+  const propertyAssignments = query(
     frameworkPropertyAssignment,
     `PropertyAssignment:has(Identifier:has([text="name"]))`
   );
@@ -492,7 +492,7 @@ function parseFrameworkName(mainTsJs: string) {
   });
 
   if (!namePropertyAssignment) {
-    const storybookConfigImportPackage = tsquery.query(
+    const storybookConfigImportPackage = query(
       frameworkPropertyAssignment,
       'StringLiteral'
     )?.[0];
@@ -500,7 +500,7 @@ function parseFrameworkName(mainTsJs: string) {
   }
 
   return stringLiteralValue(
-    tsquery.query(namePropertyAssignment, `StringLiteral`)?.[0]
+    query(namePropertyAssignment, `StringLiteral`)?.[0]
   );
 }
 

@@ -17,7 +17,7 @@ import {
   resolvePrompt,
   resolveSchema,
   SchemaResolutionError,
-  tsquery,
+  query,
 } from '@nx/devkit/internal';
 import * as path from 'path';
 import { valid } from 'semver';
@@ -665,7 +665,7 @@ export function checkIfIdentifierIsFunction(
       true
     );
 
-    const exportedFunctions = tsquery.query(
+    const exportedFunctions = query(
       sourceFile,
       `
       FunctionDeclaration[name.text="${identifier}"][modifiers],

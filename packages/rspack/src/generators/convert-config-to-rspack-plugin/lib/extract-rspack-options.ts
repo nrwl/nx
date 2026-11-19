@@ -1,7 +1,9 @@
 import { Tree } from '@nx/devkit';
 import {
   ensureTypescript,
-  tsquery,
+  ast,
+  query,
+  replace,
   type TypescriptAst,
 } from '@nx/devkit/internal';
 import type { CallExpression, Identifier, Node, NodeArray } from 'typescript';
@@ -10,23 +12,17 @@ let ts: TypescriptAst;
 
 export function extractRspackOptions(tree: Tree, rspackConfigPath: string) {
   const source = tree.read(rspackConfigPath).toString('utf-8');
-  const sourceFile = tsquery.ast(source);
+  const sourceFile = ast(source);
 
   const withNxQuery = 'CallExpression:has(Identifier[name="withNx"])';
   const withReactQuery = 'CallExpression:has(Identifier[name="withReact"])';
   const withWebQuery = 'CallExpression:has(Identifier[name="withWeb"])';
 
-  const withNxCall = tsquery.query(sourceFile, withNxQuery) as CallExpression[];
+  const withNxCall = query(sourceFile, withNxQuery) as CallExpression[];
 
-  const withReactCall = tsquery.query(
-    sourceFile,
-    withReactQuery
-  ) as CallExpression[];
+  const withReactCall = query(sourceFile, withReactQuery) as CallExpression[];
 
-  const withWebCall = tsquery.query(
-    sourceFile,
-    withWebQuery
-  ) as CallExpression[];
+  const withWebCall = query(sourceFile, withWebQuery) as CallExpression[];
 
   // If the config is empty set to empty string to avoid undefined. Undefined is used to check if the withNx exists inside of the config file.
   let withNxConfig: Node | '' | undefined,
@@ -97,8 +93,7 @@ const REMOVED_HELPERS = new Set([
 ]);
 
 function findHelperReferences(source: string): string[] {
-  const names = tsquery
-    .query<Identifier>(tsquery.ast(source), 'Identifier')
+  const names = query<Identifier>(ast(source), 'Identifier')
     .map((node) => node.text)
     .filter((name) => REMOVED_HELPERS.has(name));
   return [...new Set(names)];
@@ -108,7 +103,7 @@ function findHelperReferences(source: string): string[] {
 // remaining callbacks with a local copy.
 function inlineComposePlugins(source: string): string {
   let found = false;
-  const updatedSource = tsquery.replace(
+  const updatedSource = replace(
     source,
     'CallExpression > Identifier[name="composePlugins"]',
     (node) => {
@@ -143,7 +138,7 @@ function removeCallExpressions(
 
     let callExpression: CallExpression | undefined;
     while (
-      (callExpression = tsquery.query<CallExpression>(
+      (callExpression = query<CallExpression>(
         modifiedSource,
         callExpressionQuery
       )[0])
@@ -183,7 +178,7 @@ function findImportDeclarationRange(
   moduleName: string
 ): [number, number] | undefined {
   ts ??= ensureTypescript();
-  for (const statement of tsquery.ast(source).statements) {
+  for (const statement of ast(source).statements) {
     if (!ts.isVariableStatement(statement)) continue;
 
     const { declarations } = statement.declarationList;

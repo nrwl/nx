@@ -8,6 +8,8 @@ import type { TypescriptAst } from './typescript-ast';
 const ts6: typeof ts = require('typescript');
 
 const fixtures: Record<string, string> = {
+  // A file without a name parses as TypeScript, so `<string>b` is a cast.
+  '': 'const a = <string>b;',
   'bom.ts': `${String.fromCharCode(0xfeff)}// héllo\nimport { a } from "./a";\nexport const x = 1;\n`,
   'next.config.js': [
     "const { withNx } = require('@nx/next');",
@@ -222,24 +224,6 @@ describe('getTypescriptAst', () => {
         );
       }
     );
-
-    it('should parse a file without a name as TypeScript', () => {
-      const text = 'const a = <string>b;';
-
-      const sourceFile = ast.createSourceFile(
-        '',
-        text,
-        ast.ScriptTarget.Latest,
-        true
-      );
-
-      expect(describeTree(ast, sourceFile)).toEqual(
-        describeTree(
-          ts6,
-          ts6.createSourceFile('', text, ts6.ScriptTarget.Latest, true)
-        )
-      );
-    });
 
     it('should answer every node guard as TypeScript 6 does', () => {
       const guards = Object.keys(ast).filter(

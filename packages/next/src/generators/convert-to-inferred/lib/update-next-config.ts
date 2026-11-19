@@ -7,7 +7,8 @@ import {
 import {
   AggregatedLog,
   ensureTypescript,
-  tsquery,
+  ast,
+  query,
   type TypescriptAst,
 } from '@nx/devkit/internal';
 import type { Node, ObjectLiteralExpression } from 'typescript';
@@ -32,7 +33,7 @@ export function updateNextConfig(
   }
 
   const nextConfigContents = tree.read(nextConfigPath, 'utf-8');
-  let sourceFile = tsquery.ast(nextConfigContents);
+  let sourceFile = ast(nextConfigContents);
 
   const reservedVarQuery = `
   VariableStatement VariableDeclarationList > VariableDeclaration:has(Identifier[name=configValues]),
@@ -40,7 +41,7 @@ export function updateNextConfig(
   VariableStatement VariableDeclarationList > VariableDeclaration:has(Identifier[name=options])
   `;
 
-  const matches = tsquery.query(sourceFile, reservedVarQuery);
+  const matches = query(sourceFile, reservedVarQuery);
   if (matches.length > 0) {
     migrationLogs.addLog({
       project: project.projectName,
@@ -52,7 +53,7 @@ export function updateNextConfig(
 
   // Query to check for composePlugins in module.exports
   const composePluginsQuery = `ExpressionStatement > BinaryExpression > CallExpression > CallExpression:has(Identifier[name=composePlugins])`;
-  const composePluginNode = tsquery.query(sourceFile, composePluginsQuery)[0];
+  const composePluginNode = query(sourceFile, composePluginsQuery)[0];
 
   if (!composePluginNode) {
     migrationLogs.addLog({
@@ -81,15 +82,15 @@ export function updateNextConfig(
   findLastRequire(sourceFile);
 
   const updatedCode = `${nextConfigContents.slice(0, lastRequireEndPosition)}\n\n${updatedConfigFileContents}\n\n${nextConfigContents.slice(lastRequireEndPosition)}`;
-  sourceFile = tsquery.ast(updatedCode);
+  sourceFile = ast(updatedCode);
 
-  const nextConfigNode = tsquery.query(
+  const nextConfigNode = query(
     sourceFile,
     'VariableDeclaration:has(Identifier[name=nextConfig]) ObjectLiteralExpression'
   )[0];
 
   if (nextConfigNode) {
-    const nxNode = tsquery.query<ObjectLiteralExpression>(
+    const nxNode = query<ObjectLiteralExpression>(
       nextConfigNode,
       'PropertyAssignment:has(Identifier[name=nx]) ObjectLiteralExpression'
     )[0];

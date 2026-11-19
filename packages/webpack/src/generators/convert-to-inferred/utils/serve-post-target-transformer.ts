@@ -3,7 +3,8 @@ import {
   printNode,
   processTargetOutputs,
   toProjectRelativePath,
-  tsquery,
+  ast,
+  query,
   type TypescriptAst,
 } from '@nx/devkit/internal';
 import {
@@ -250,7 +251,7 @@ function updateWebpackConfig(
 
   const updateSources = () => {
     webpackConfigText = tree.read(webpackConfigPath, 'utf-8');
-    sourceFile = tsquery.ast(webpackConfigText);
+    sourceFile = ast(webpackConfigText);
   };
   updateSources();
 
@@ -290,7 +291,7 @@ function setOptionsInWebpackConfig(
 
   const configValuesSelector =
     'VariableDeclaration:has(Identifier[name=configValues]) ObjectLiteralExpression';
-  const configValuesObject = tsquery.query<ObjectLiteralExpression>(
+  const configValuesObject = query<ObjectLiteralExpression>(
     sourceFile,
     configValuesSelector
   )[0];
@@ -339,10 +340,10 @@ function setOptionsInWebpackConfig(
 
   tree.write(webpackConfigPath, text);
 
-  sourceFile = tsquery.ast(text);
+  sourceFile = ast(text);
   const buildOptionsSelector =
     'VariableStatement:has(VariableDeclaration:has(Identifier[name=buildOptions]))';
-  const buildOptionsStatement = tsquery.query<VariableStatement>(
+  const buildOptionsStatement = query<VariableStatement>(
     sourceFile,
     buildOptionsSelector
   )[0];
@@ -365,7 +366,7 @@ function setDevServerOptionsInWebpackConfig(
 ) {
   const webpackConfigDevServerSelector =
     'ObjectLiteralExpression > PropertyAssignment:has(Identifier[name=devServer])';
-  const webpackConfigDevServer = tsquery.query<PropertyAssignment>(
+  const webpackConfigDevServer = query<PropertyAssignment>(
     sourceFile,
     webpackConfigDevServerSelector
   )[0];
@@ -391,7 +392,7 @@ function setDevServerOptionsInWebpackConfig(
 
   const webpackConfigSelector =
     'ObjectLiteralExpression:has(PropertyAssignment:has(Identifier[name=plugins]))';
-  const webpackConfig = tsquery.query<ObjectLiteralExpression>(
+  const webpackConfig = query<ObjectLiteralExpression>(
     sourceFile,
     webpackConfigSelector
   )[0];

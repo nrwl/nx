@@ -1,6 +1,6 @@
 import { formatFiles, type Tree, visitNotIgnoredFiles } from '@nx/devkit';
 import { ensureTypescript } from '@nx/js/internal';
-import { tsquery, type TypescriptAst } from '@nx/devkit/internal';
+import { ast, query, type TypescriptAst } from '@nx/devkit/internal';
 import picomatch = require('picomatch');
 import type {
   ArrayLiteralExpression,
@@ -133,7 +133,7 @@ function processVitestConfig(
   // Cheap precheck: skip files that don't mention any v4 target.
   if (!mightContainV4Targets(contents)) return;
 
-  const sourceFile = tsquery.ast(contents);
+  const sourceFile = ast(contents);
   const edits: TextEdit[] = [];
 
   collectCoverageRemovalEdits(sourceFile, contents, edits);
@@ -174,7 +174,7 @@ function collectCoverageRemovalEdits(
   edits: TextEdit[]
 ): void {
   for (const optionName of COVERAGE_DEAD_OPTIONS) {
-    const identifiers = tsquery.query<Identifier>(
+    const identifiers = query<Identifier>(
       sourceFile,
       `PropertyAssignment > Identifier[name=${optionName}]`
     );
@@ -195,7 +195,7 @@ function collectWorkspaceRenameEdits(
   sourceFile: SourceFile,
   edits: TextEdit[]
 ): void {
-  const identifiers = tsquery.query<Identifier>(
+  const identifiers = query<Identifier>(
     sourceFile,
     'PropertyAssignment > Identifier[name=workspace]'
   );
@@ -213,7 +213,7 @@ function collectDepsOptimizerWebEdits(
   sourceFile: SourceFile,
   edits: TextEdit[]
 ): void {
-  const identifiers = tsquery.query<Identifier>(
+  const identifiers = query<Identifier>(
     sourceFile,
     'PropertyAssignment > Identifier[name=web]'
   );
@@ -231,7 +231,7 @@ function collectUseAtomicsRemovalEdits(
   contents: string,
   edits: TextEdit[]
 ): void {
-  const identifiers = tsquery.query<Identifier>(
+  const identifiers = query<Identifier>(
     sourceFile,
     'PropertyAssignment > Identifier[name=useAtomics]'
   );
@@ -251,7 +251,7 @@ function collectMinWorkersRemovalEdits(
   contents: string,
   edits: TextEdit[]
 ): void {
-  const identifiers = tsquery.query<Identifier>(
+  const identifiers = query<Identifier>(
     sourceFile,
     'PropertyAssignment > Identifier[name=minWorkers]'
   );
@@ -272,17 +272,15 @@ function collectReporterRenameEdits(
   contents: string,
   edits: TextEdit[]
 ): void {
-  const reportersProperties = tsquery
-    .query<PropertyAssignment>(
-      sourceFile,
-      'PropertyAssignment:has(Identifier[name=reporters])'
-    )
-    .filter(
-      (p) =>
-        ts.isIdentifier(p.name) &&
-        p.name.text === 'reporters' &&
-        isImmediateChildOfTest(p.name)
-    );
+  const reportersProperties = query<PropertyAssignment>(
+    sourceFile,
+    'PropertyAssignment:has(Identifier[name=reporters])'
+  ).filter(
+    (p) =>
+      ts.isIdentifier(p.name) &&
+      p.name.text === 'reporters' &&
+      isImmediateChildOfTest(p.name)
+  );
 
   for (const property of reportersProperties) {
     const init = property.initializer;
@@ -311,7 +309,7 @@ function collectPoolOptionDetectLogs(
   filePath: string,
   unhandled: string[]
 ): void {
-  const singleHits = tsquery.query<Identifier>(
+  const singleHits = query<Identifier>(
     sourceFile,
     'PropertyAssignment > Identifier[name=/^single(Thread|Fork)$/]'
   );
@@ -338,7 +336,7 @@ function collectPoolOptionDetectLogs(
     }
   }
 
-  const maxHits = tsquery.query<Identifier>(
+  const maxHits = query<Identifier>(
     sourceFile,
     'PropertyAssignment > Identifier[name=/^max(Threads|Forks)$/]'
   );
@@ -357,7 +355,7 @@ function collectPoolOptionDetectLogs(
   }
 
   for (const optionName of POOL_FLATTEN_OPTIONS) {
-    const ids = tsquery.query<Identifier>(
+    const ids = query<Identifier>(
       sourceFile,
       `PropertyAssignment > Identifier[name=${optionName}]`
     );
@@ -377,7 +375,7 @@ function collectPoolOptionDetectLogs(
     }
   }
 
-  const memoryLimitIds = tsquery.query<Identifier>(
+  const memoryLimitIds = query<Identifier>(
     sourceFile,
     'PropertyAssignment > Identifier[name=memoryLimit]'
   );
@@ -418,7 +416,7 @@ function collectDepsServerMoveLogs(
   unhandled: string[]
 ): void {
   for (const name of ['external', 'inline', 'fallbackCJS']) {
-    const ids = tsquery.query<Identifier>(
+    const ids = query<Identifier>(
       sourceFile,
       `PropertyAssignment > Identifier[name=${name}]`
     );
@@ -445,7 +443,7 @@ function collectMatchGlobsLogs(
   unhandled: string[]
 ): void {
   for (const name of ['poolMatchGlobs', 'environmentMatchGlobs']) {
-    const ids = tsquery.query<Identifier>(
+    const ids = query<Identifier>(
       sourceFile,
       `PropertyAssignment > Identifier[name=${name}]`
     );
@@ -468,7 +466,7 @@ function collectBrowserStringProviderLogs(
   filePath: string,
   unhandled: string[]
 ): void {
-  const providers = tsquery.query<StringLiteral>(
+  const providers = query<StringLiteral>(
     sourceFile,
     'PropertyAssignment:has(Identifier[name=provider]) > StringLiteral'
   );
@@ -491,7 +489,7 @@ function collectTesterScriptsLogs(
   filePath: string,
   unhandled: string[]
 ): void {
-  const ids = tsquery.query<Identifier>(
+  const ids = query<Identifier>(
     sourceFile,
     'PropertyAssignment > Identifier[name=testerScripts]'
   );
@@ -518,10 +516,7 @@ function collectCustomReporterCallbackLogs(
   unhandled: string[]
 ): void {
   for (const name of REMOVED_REPORTER_CALLBACKS) {
-    const ids = tsquery.query<Identifier>(
-      sourceFile,
-      `Identifier[name=${name}]`
-    );
+    const ids = query<Identifier>(sourceFile, `Identifier[name=${name}]`);
     const matchedAsName = ids.some(isPropertyOrMethodName);
     if (matchedAsName) {
       unhandled.push(
@@ -573,11 +568,8 @@ function processImportsAndCustomCode(
 
   if (!hasBrowserPackage && !hasDefineWorkspace && !hasJestSnapshot) return;
 
-  const sourceFile = tsquery.ast(contents);
-  const importDecls = tsquery.query<ImportDeclaration>(
-    sourceFile,
-    'ImportDeclaration'
-  );
+  const sourceFile = ast(contents);
+  const importDecls = query<ImportDeclaration>(sourceFile, 'ImportDeclaration');
   const edits: TextEdit[] = [];
 
   for (const decl of importDecls) {

@@ -152,7 +152,7 @@ export {
   ensureClassicTypescript,
   ensureTypescript,
 } from './src/utils/ensure-typescript';
-export { tsquery } from './src/utils/tsquery';
+export { ast, query, replace, tsquery } from './src/utils/tsquery';
 export { hasIgnoreServerInputsDirective } from './src/utils/ignore-server-inputs-directive';
 export { logShowProjectCommand } from './src/utils/log-show-project-command';
 export { eachValueFrom } from './src/utils/rxjs-for-await';

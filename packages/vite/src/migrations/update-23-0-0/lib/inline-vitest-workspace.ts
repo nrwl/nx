@@ -1,6 +1,6 @@
 import { joinPathFragments, type Tree, visitNotIgnoredFiles } from '@nx/devkit';
 import { ensureTypescript } from '@nx/js/internal';
-import { tsquery, type TypescriptAst } from '@nx/devkit/internal';
+import { ast, type TypescriptAst } from '@nx/devkit/internal';
 import picomatch = require('picomatch');
 import type {
   Expression,
@@ -103,7 +103,7 @@ function tryInlineWorkspaceFile(
  * Returns `null` for any other shape.
  */
 function extractStaticProjectGlobs(contents: string): string[] | null {
-  const sourceFile = tsquery.ast(contents);
+  const sourceFile = ast(contents);
   const exportAssignment = sourceFile.statements.find(
     (s) => ts.isExportAssignment(s) && !s.isExportEquals
   );
@@ -166,7 +166,7 @@ function tryAddProjectsToConfig(
   entries: string[]
 ): boolean {
   const contents = tree.read(configPath, 'utf-8');
-  const configObject = findDefaultExportConfigObject(tsquery.ast(contents));
+  const configObject = findDefaultExportConfigObject(ast(contents));
   if (!configObject) return false;
   if (hasSpreadOrUnsupportedProperty(configObject.properties, ['test'])) {
     return false;
@@ -349,7 +349,7 @@ function determineStaticProjectName(
   configPath: string
 ): { name: string } | 'default' | undefined {
   const configObject = findDefaultExportConfigObject(
-    tsquery.ast(tree.read(configPath, 'utf-8'))
+    ast(tree.read(configPath, 'utf-8'))
   );
   if (!configObject) return undefined;
   if (hasSpreadOrUnsupportedProperty(configObject.properties, ['test'])) {
