@@ -8,7 +8,6 @@ import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-// Keyed by npm package name.
 const TOOLS = {
   playwright: {
     name: 'Playwright',

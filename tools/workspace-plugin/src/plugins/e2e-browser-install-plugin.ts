@@ -2,7 +2,6 @@ import type { CreateNodes, CreateNodesResult } from '@nx/devkit';
 import { readFileSync } from 'node:fs';
 import { join, posix } from 'node:path';
 
-// Each install task, and the spec source that makes a spec depend on it.
 const INSTALLS: Array<{ task: string; usage: RegExp }> = [
   {
     task: '@nx/nx-source:playwright-install-e2e',
