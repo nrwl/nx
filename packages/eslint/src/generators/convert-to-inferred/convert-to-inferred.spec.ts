@@ -1533,8 +1533,8 @@ describe('Eslint - Convert Executors To Plugin', () => {
       ${{}}                                                         | ${undefined}
       ${{ command: 'echo not-eslint' }}                             | ${undefined}
       ${{ cwd: 'tools', args: ['--fix'], env: { CI: '1' } }}        | ${undefined}
-      ${{ cacheLocation: 'cache-dir' }}                             | ${{ options: { 'cache-location': 'cache-dir' } }}
-      ${{ cacheLocation: 'cache-dir', command: 'echo not-eslint' }} | ${{ options: { 'cache-location': 'cache-dir' } }}
+      ${{ cacheLocation: 'cache-dir' }}                             | ${{ options: { 'cache-location': './cache-dir/myapp' } }}
+      ${{ cacheLocation: 'cache-dir', command: 'echo not-eslint' }} | ${{ options: { 'cache-location': './cache-dir/myapp' } }}
     `(
       'should keep only the options the executor defined out of $options',
       async ({ options, expectedTarget }) => {
