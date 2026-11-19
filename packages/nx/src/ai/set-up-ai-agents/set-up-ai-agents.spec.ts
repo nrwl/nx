@@ -1360,6 +1360,27 @@ sandbox_mode = "read-only"
         // Should NOT have agents (fallback doesn't include them)
         expect(content).not.toContain('[agents');
       });
+
+      it('should not duplicate an unquoted nx-mcp table when repo is unavailable', async () => {
+        getAiConfigRepoPathSpy.mockImplementation(() => {
+          throw new Error('Network error');
+        });
+
+        const existingConfig = `[mcp_servers.nx-mcp]
+command = "npx"
+args = ["nx", "mcp"]
+`;
+        tree.write('.codex/config.toml', existingConfig);
+
+        await setupAiAgentsGenerator(tree, {
+          directory: '.',
+          agents: ['codex'],
+        });
+
+        expect(tree.read('.codex/config.toml')?.toString()).toEqual(
+          existingConfig
+        );
+      });
     });
 
     describe('Nx version-specific MCP configuration', () => {

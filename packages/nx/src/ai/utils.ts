@@ -1,6 +1,5 @@
 import { existsSync, readFileSync } from 'fs';
 import { resolve } from 'path';
-import TOML from 'smol-toml';
 import { readNxJson } from '../config/configuration';
 import { flushChanges, FsTree } from '../generators/tree';
 import {
@@ -17,7 +16,7 @@ import {
   codexConfigTomlPath,
   geminiMdPath,
   geminiSettingsPath,
-  nxMcpTomlHeader,
+  hasNxMcpTomlServer,
   opencodeMcpPath,
   parseGeminiSettings,
 } from './constants';
@@ -53,17 +52,6 @@ export type AgentConfiguration = {
   outdated: boolean;
   disabled?: boolean;
 };
-
-function isCodexMcpConfigured(tomlContents: string): boolean {
-  try {
-    const config = TOML.parse(tomlContents) as {
-      mcp_servers?: Record<string, unknown>;
-    };
-    return !!config.mcp_servers?.['nx-mcp'];
-  } catch {
-    return tomlContents.includes(nxMcpTomlHeader);
-  }
-}
 
 export async function getAgentConfigurations(
   agentsToConsider: Agent[],
@@ -218,7 +206,7 @@ async function getAgentConfiguration(
       let mcpConfigured: boolean;
       if (existsSync(mcpPath)) {
         const tomlContents = readFileSync(mcpPath, 'utf-8');
-        mcpConfigured = isCodexMcpConfigured(tomlContents);
+        mcpConfigured = hasNxMcpTomlServer(tomlContents);
       } else {
         mcpConfigured = false;
       }
