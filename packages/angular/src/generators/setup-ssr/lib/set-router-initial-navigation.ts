@@ -10,6 +10,7 @@ import type {
   Expression,
   ImportSpecifier,
   ObjectLiteralElementLike,
+  ObjectLiteralExpression,
   Printer,
   SourceFile,
   SpreadAssignment,
@@ -24,7 +25,6 @@ import {
   isElementAccessExpression,
   isIdentifier,
   isNonNullExpression,
-  isObjectLiteralExpression,
   isParenthesizedExpression,
   isPropertyAccessExpression,
   isPropertyAssignment,
@@ -186,11 +186,9 @@ function processFileWithNgModuleSetup(
 function updateRouterModuleForRootCallExpression(
   node: CallExpression
 ): CallExpression {
-  const optionsArgument = node.arguments[1];
-  const existingOptions =
-    optionsArgument && isObjectLiteralExpression(optionsArgument)
-      ? optionsArgument
-      : undefined;
+  const existingOptions = node.arguments[1] as
+    | ObjectLiteralExpression
+    | undefined;
 
   const existingProperties = existingOptions?.properties
     ? factory.createNodeArray(
@@ -215,15 +213,13 @@ function updateRouterModuleForRootCallExpression(
     ? factory.updateObjectLiteralExpression(
         existingOptions,
         factory.createNodeArray([
+          ...getSpreadOptions(node.arguments[1]),
           ...existingProperties,
           initialNavigationProperty,
         ])
       )
     : factory.createObjectLiteralExpression(
-        factory.createNodeArray([
-          ...getSpreadOptions(optionsArgument),
-          initialNavigationProperty,
-        ])
+        factory.createNodeArray([initialNavigationProperty])
       );
   const args = [node.arguments[0], routerOptions];
 
@@ -234,14 +230,9 @@ function updateRouterModuleForRootCallExpression(
   );
 }
 
-// `?? {}` lets a value typed `undefined` be spread (TS2698). Other expressions get
-// only initialNavigation, since TypeScript rejects `??` after some of them (TS2869).
-function getSpreadOptions(
-  optionsArgument: Expression | undefined
-): SpreadAssignment[] {
-  if (!optionsArgument) {
-    return [];
-  }
+// `?? {}` lets a value typed `undefined` be spread (TS2698). Other expressions
+// aren't spread, since TypeScript rejects `??` after some of them (TS2869).
+function getSpreadOptions(optionsArgument: Expression): SpreadAssignment[] {
   const value = skipWrappers(optionsArgument);
   if (
     !(isIdentifier(value) && value.text !== 'undefined') &&

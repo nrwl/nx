@@ -218,16 +218,20 @@ export class AppModule {}
     });
 
     it.each([
-      ['routerOptions', '...(routerOptions ?? {}), '],
-      ['config.routerOptions', '...(config.routerOptions ?? {}), '],
-      ["config['routerOptions']", "...(config['routerOptions'] ?? {}), "],
-      ['getRouterOptions()', '...(getRouterOptions() ?? {}), '],
+      ['routerOptions', '{ ...(routerOptions ?? {}), '],
+      ['config.routerOptions', '{ ...(config.routerOptions ?? {}), '],
+      ["config['routerOptions']", "{ ...(config['routerOptions'] ?? {}), "],
+      ['getRouterOptions()', '{ ...(getRouterOptions() ?? {}), '],
       [
         'routerOptions as ExtraOptions',
-        '...((routerOptions as ExtraOptions) ?? {}), ',
+        '{ ...((routerOptions as ExtraOptions) ?? {}), ',
       ],
-      ['undefined', ''],
-    ])('should handle router options passed as %s', (options, spread) => {
+      ['undefined', '{ '],
+      [
+        '/* options */ routerOptions',
+        '/* options */ { ...(routerOptions ?? {}), ',
+      ],
+    ])('should handle router options passed as %s', (options, start) => {
       tree.write(
         'apps/app1/src/app.module.ts',
         `import { NgModule } from '@angular/core';
@@ -249,7 +253,7 @@ export class AppModule {}
       });
 
       expect(tree.read('apps/app1/src/app.module.ts', 'utf-8')).toContain(
-        `RouterModule.forRoot(appRoutes, { ${spread}initialNavigation: 'enabledBlocking' })`
+        `RouterModule.forRoot(appRoutes, ${start}initialNavigation: 'enabledBlocking' })`
       );
     });
   });
