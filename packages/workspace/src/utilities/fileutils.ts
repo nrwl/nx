@@ -5,14 +5,13 @@ import {
   renameSync as fsRenameSync,
 } from 'fs';
 import { basename, resolve as pathResolve } from 'path';
+import { readJsonFile, writeJsonFile } from '@nx/devkit';
 import {
-  readJsonFile,
-  writeJsonFile,
   fileExists,
   directoryExists,
   isRelativePath,
   createDirectory,
-} from 'nx/src/utils/fileutils';
+} from '@nx/devkit/internal';
 
 export { fileExists, directoryExists, isRelativePath, createDirectory };
 

@@ -1,21 +1,32 @@
 // Needed so the current environment is not used
-jest.mock('@nx/devkit', () => ({
-  ...jest.requireActual('@nx/devkit'),
-  getPackageManagerCommand: jest.fn(() => ({
+vi.mock('@nx/devkit', async () => ({
+  ...(await vi.importActual<any>('@nx/devkit')),
+  getPackageManagerCommand: vi.fn(() => ({
     exec: 'npx',
   })),
 }));
 
 // Needed so the current environment is not used
-jest.mock('@nx/js/internal', () => ({
-  ...jest.requireActual('@nx/js/internal'),
-  isUsingTsSolutionSetup: jest.fn(() => false),
+vi.mock('@nx/js/internal', async () => ({
+  ...(await vi.importActual<any>('@nx/js/internal')),
+  isUsingTsSolutionSetup: vi.fn(() => false),
 }));
 
 import { CreateNodesContext } from '@nx/devkit';
+import {
+  BUN_INSTALL_SETTINGS_INPUTS,
+  PNPM_INSTALL_SETTINGS_INPUTS,
+  PNPM_MAJOR_RUNTIME_INPUT,
+} from '@nx/js/internal';
+import { hashObject, workspaceDataDirectory } from '@nx/devkit/internal';
+import { rmSync } from 'fs';
 import { createNodesV2 } from './plugin';
-import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
 import { join } from 'path';
+import {
+  mockCjsModule,
+  resetCjsMocks,
+  TempFs,
+} from '@nx/devkit/internal-testing-utils';
 
 describe('@nx/webpack/plugin', () => {
   let createNodesFunction = createNodesV2[1];
@@ -46,7 +57,9 @@ describe('@nx/webpack/plugin', () => {
   });
 
   afterEach(() => {
-    jest.resetModules();
+    resetCjsMocks();
+    vi.resetModules();
+    tempFs.cleanup();
     if (originalCacheProjectGraph !== undefined) {
       process.env.NX_CACHE_PROJECT_GRAPH = originalCacheProjectGraph;
     } else {
@@ -92,6 +105,13 @@ describe('@nx/webpack/plugin', () => {
                   "build-something": {
                     "cache": true,
                     "command": "webpack-cli build",
+                    "configurations": {
+                      "development": {
+                        "env": {
+                          "NODE_ENV": "development",
+                        },
+                      },
+                    },
                     "dependsOn": [
                       "^build-something",
                     ],
@@ -142,6 +162,23 @@ describe('@nx/webpack/plugin', () => {
                   "my-serve": {
                     "command": "webpack-cli serve",
                     "continuous": true,
+                    "inputs": [
+                      "production",
+                      "^production",
+                      {
+                        "externalDependencies": [
+                          "webpack-cli",
+                        ],
+                      },
+                      {
+                        "fields": [
+                          "extends",
+                          "files",
+                          "include",
+                        ],
+                        "json": "{workspaceRoot}/tsconfig.json",
+                      },
+                    ],
                     "metadata": {
                       "description": "Starts Webpack dev server",
                       "help": {
@@ -165,10 +202,31 @@ describe('@nx/webpack/plugin', () => {
                         "NODE_ENV": "development",
                       },
                     },
+                    "readyWhen": {
+                      "command": "node -e "require('@nx/webpack/ready-check').waitForDevServer(process.argv[1])" webpack.config.js",
+                      "interval": 1000,
+                    },
                   },
                   "preview-site": {
                     "command": "webpack-cli serve",
                     "continuous": true,
+                    "inputs": [
+                      "production",
+                      "^production",
+                      {
+                        "externalDependencies": [
+                          "webpack-cli",
+                        ],
+                      },
+                      {
+                        "fields": [
+                          "extends",
+                          "files",
+                          "include",
+                        ],
+                        "json": "{workspaceRoot}/tsconfig.json",
+                      },
+                    ],
                     "metadata": {
                       "description": "Starts Webpack dev server in production mode",
                       "help": {
@@ -192,6 +250,10 @@ describe('@nx/webpack/plugin', () => {
                         "NODE_ENV": "production",
                       },
                     },
+                    "readyWhen": {
+                      "command": "node -e "require('@nx/webpack/ready-check').waitForDevServer(process.argv[1])" webpack.config.js",
+                      "interval": 1000,
+                    },
                   },
                   "serve-static": {
                     "continuous": true,
@@ -199,10 +261,30 @@ describe('@nx/webpack/plugin', () => {
                       "build-something",
                     ],
                     "executor": "@nx/web:file-server",
+                    "inputs": [
+                      "production",
+                      "^production",
+                      {
+                        "externalDependencies": [
+                          "webpack-cli",
+                        ],
+                      },
+                      {
+                        "fields": [
+                          "extends",
+                          "files",
+                          "include",
+                        ],
+                        "json": "{workspaceRoot}/tsconfig.json",
+                      },
+                    ],
                     "options": {
                       "buildTarget": "build-something",
                       "port": 9000,
                       "spa": true,
+                    },
+                    "readyWhen": {
+                      "signal": true,
                     },
                   },
                   "watch-deps": {
@@ -221,9 +303,207 @@ describe('@nx/webpack/plugin', () => {
     `);
   });
 
-  function mockWebpackConfig(config: any) {
-    jest.mock(join(tempFs.tempDir, 'my-app/webpack.config.js'), () => config, {
-      virtual: true,
+  describe('readyWhen', () => {
+    // NxAppWebpackPlugin and NxReadySignalPlugin carry this marker
+    const signallingPlugin = {
+      [Symbol.for('@nx/ready-signal-plugin')]: true,
+      apply() {},
+    };
+    const readyWhen = async () => {
+      const [[, { projects }]] = await createNodesFunction(
+        ['my-app/webpack.config.js'],
+        {},
+        context
+      );
+      const { targets } = projects['my-app'];
+      return [targets.serve.readyWhen, targets.preview.readyWhen];
+    };
+
+    it('waits for the signal when the config loads a plugin that sends it', async () => {
+      mockWebpackConfig({
+        devServer: { port: 9000 },
+        plugins: [signallingPlugin],
+      });
+
+      expect(await readyWhen()).toEqual([{ signal: true }, { signal: true }]);
     });
+
+    it('checks the port at task time when nothing in the config signals', async () => {
+      mockWebpackConfig({ devServer: { port: 9000 }, plugins: [{}] });
+      const check = {
+        command: `node -e "require('@nx/webpack/ready-check').waitForDevServer(process.argv[1])" webpack.config.js`,
+        interval: 1000,
+      };
+
+      expect(await readyWhen()).toEqual([check, check]);
+    });
+
+    it('checks every port when several configs start a dev server', async () => {
+      // Only the first dev server to listen would signal
+      mockWebpackConfig([
+        { devServer: { port: 9000 }, plugins: [signallingPlugin] },
+        { devServer: { port: 9001 }, plugins: [signallingPlugin] },
+      ]);
+
+      expect((await readyWhen())[0]).toHaveProperty('command');
+    });
+
+    it('checks the port when a dev server config lacks the plugin', async () => {
+      // The plugin only wraps an existing devServer object
+      mockWebpackConfig([
+        { plugins: [signallingPlugin] },
+        { devServer: { port: 9000 } },
+      ]);
+
+      expect((await readyWhen())[0]).toHaveProperty('command');
+    });
+  });
+
+  it('adds the pnpm install settings inputs in a pnpm workspace', async () => {
+    tempFs.removeFileSync('package-lock.json');
+    tempFs.createFileSync('pnpm-lock.yaml', 'lockfileVersion: 9.0');
+    mockWebpackConfig({
+      output: {
+        path: 'dist/foo',
+      },
+    });
+
+    const nodes = await createNodesFunction(
+      ['my-app/webpack.config.js'],
+      {
+        buildTargetName: 'build',
+        serveTargetName: 'serve',
+        previewTargetName: 'preview',
+        serveStaticTargetName: 'serve-static',
+      },
+      context
+    );
+
+    expect(nodes[0][1].projects['my-app'].targets.build.inputs).toEqual(
+      expect.arrayContaining(PNPM_INSTALL_SETTINGS_INPUTS)
+    );
+  });
+
+  it.each([
+    ['bun.lock', true],
+    ['bun.lockb', false],
+  ])(
+    'adds the Bun install settings inputs only on the text lockfile (%s)',
+    async (lockFile, included) => {
+      tempFs.removeFileSync('package-lock.json');
+      tempFs.createFileSync(lockFile, '');
+      mockWebpackConfig({ output: { path: 'dist/foo' } });
+
+      const nodes = await createNodesFunction(
+        ['my-app/webpack.config.js'],
+        { buildTargetName: 'build' },
+        context
+      );
+
+      expect(nodes[0][1].projects['my-app'].targets.build.inputs).toEqual(
+        included
+          ? expect.arrayContaining(BUN_INSTALL_SETTINGS_INPUTS)
+          : expect.not.arrayContaining(BUN_INSTALL_SETTINGS_INPUTS)
+      );
+    }
+  );
+
+  it('omits the pnpm major runtime probe when the root package.json pins a pnpm version', async () => {
+    tempFs.removeFileSync('package-lock.json');
+    tempFs.createFileSync('pnpm-lock.yaml', 'lockfileVersion: 9.0');
+    tempFs.createFileSync(
+      'package.json',
+      JSON.stringify({ packageManager: 'pnpm@10.12.1' })
+    );
+    mockWebpackConfig({ output: { path: 'dist/foo' } });
+
+    const nodes = await createNodesFunction(
+      ['my-app/webpack.config.js'],
+      { buildTargetName: 'build' },
+      context
+    );
+
+    const inputs = nodes[0][1].projects['my-app'].targets.build.inputs;
+    expect(inputs).toEqual(
+      expect.arrayContaining(
+        PNPM_INSTALL_SETTINGS_INPUTS.filter(
+          (input) => input !== PNPM_MAJOR_RUNTIME_INPUT
+        )
+      )
+    );
+    expect(inputs).not.toContainEqual(PNPM_MAJOR_RUNTIME_INPUT);
+  });
+
+  it.each([
+    ['another package manager', 'yarn@4.9.1'],
+    ['a URL', 'pnpm@https://example.com/pnpm.tgz'],
+    ['an unparseable version', 'pnpm@latest'],
+  ])(
+    'keeps the pnpm major runtime probe when the root packageManager field names %s',
+    async (_, packageManager) => {
+      tempFs.removeFileSync('package-lock.json');
+      tempFs.createFileSync('pnpm-lock.yaml', 'lockfileVersion: 9.0');
+      tempFs.createFileSync('package.json', JSON.stringify({ packageManager }));
+      mockWebpackConfig({ output: { path: 'dist/foo' } });
+
+      const nodes = await createNodesFunction(
+        ['my-app/webpack.config.js'],
+        { buildTargetName: 'build' },
+        context
+      );
+
+      expect(nodes[0][1].projects['my-app'].targets.build.inputs).toEqual(
+        expect.arrayContaining(PNPM_INSTALL_SETTINGS_INPUTS)
+      );
+    }
+  );
+
+  it('recomputes cached targets when the root pnpm pin is removed', async () => {
+    const options = { buildTargetName: 'build-pin-cache' };
+    const cachePath = join(
+      workspaceDataDirectory,
+      `webpack-${hashObject(options)}.hash`
+    );
+    rmSync(cachePath, { force: true });
+    process.env.NX_CACHE_PROJECT_GRAPH = 'true';
+    tempFs.removeFileSync('package-lock.json');
+    tempFs.createFileSync('pnpm-lock.yaml', 'lockfileVersion: 9.0');
+    tempFs.createFileSync(
+      'package.json',
+      JSON.stringify({ packageManager: 'pnpm@10.12.1' })
+    );
+    mockWebpackConfig({ output: { path: 'dist/foo' } });
+
+    try {
+      const pinned = await createNodesFunction(
+        ['my-app/webpack.config.js'],
+        options,
+        context
+      );
+      expect(
+        pinned[0][1].projects['my-app'].targets['build-pin-cache'].inputs
+      ).not.toContainEqual(PNPM_MAJOR_RUNTIME_INPUT);
+
+      tempFs.writeFile('package.json', JSON.stringify({}));
+      const unpinned = await createNodesFunction(
+        ['my-app/webpack.config.js'],
+        options,
+        context
+      );
+      expect(
+        unpinned[0][1].projects['my-app'].targets['build-pin-cache'].inputs
+      ).toContainEqual(PNPM_MAJOR_RUNTIME_INPUT);
+    } finally {
+      rmSync(cachePath, { force: true });
+    }
+  });
+
+  function mockWebpackConfig(config: any) {
+    // loadConfigFile `require`s the config, which `vi.mock` cannot reach.
+    mockCjsModule(
+      import.meta.url,
+      join(tempFs.tempDir, 'my-app/webpack.config.js'),
+      config
+    );
   }
 });

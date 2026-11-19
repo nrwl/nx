@@ -225,7 +225,7 @@ export const mavenPluginVersion = '0.0.8';`;
   });
 
   it('should reject invalid version format', async () => {
-    expect(async () => {
+    await expect(async () => {
       await generator(tree, {
         newVersion: '0.0',
         nxVersion: '22.1.0-beta.6',

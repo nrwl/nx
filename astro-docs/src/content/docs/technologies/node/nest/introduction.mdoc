@@ -19,22 +19,30 @@ Many conventions and best practices used in Angular applications can be also be 
 
 ## Requirements
 
-The `@nx/nest` plugin supports the following NestJS package versions.
+The `@nx/nest` plugin supports the following NestJS package versions. NestJS 12 requires Nx 24.1 or later.
 
-| Package        | Supported Versions   |
-| -------------- | -------------------- |
-| `@nestjs/core` | ^10.0.0 \|\| ^11.0.0 |
+| Package        | Supported Versions                |
+| -------------- | --------------------------------- |
+| `@nestjs/core` | ^10.0.0 \|\| ^11.0.0 \|\| ^12.0.0 |
 
-The plugin detects the installed `@nestjs/core` major and routes the rest of the `@nestjs/*` family (plus `rxjs` and `reflect-metadata`) to versions that pair with it. Fresh installs default to NestJS v11.
+The plugin detects the installed `@nestjs/core` major and routes the rest of the `@nestjs/*` family (plus `rxjs` and `reflect-metadata`) to versions that pair with it. Starting with Nx 24.1, fresh installs default to NestJS v12.
 
-| Nx Version     | Default NestJS Version |
-| -------------- | ---------------------- |
-| 23.x (current) | ^11.0.0                |
-| 22.x           | ^11.0.0                |
-| 21.x           | ^11.0.0                |
-| 20.x           | ^10.0.0                |
+| Nx Version      | Default NestJS Version |
+| --------------- | ---------------------- |
+| 24.1+ (current) | ^12.0.0                |
+| 24.0.x          | ^11.0.0                |
+| 23.x            | ^11.0.0                |
+| 22.x            | ^11.0.0                |
+| 21.x            | ^11.0.0                |
+| 20.x            | ^10.0.0                |
 
 [Nx generators](/docs/features/generate-code) install the latest supported versions automatically when scaffolding new projects.
+
+Version 12 of `@nestjs/schematics` requires TypeScript 6 or later. If your workspace is on TypeScript 5 when a generator installs NestJS 12, the generator also upgrades `typescript` to the version Nx installs by default.
+
+NestJS 12 ships as ES modules only, so new NestJS 12 projects use Vitest for unit tests by default. Jest can load NestJS 12 only on Node.js 24.9 or later. When you pass `--unitTestRunner=jest` on Node.js 24.9+, the generators install Jest 30.5 and run the project's test target with `NODE_OPTIONS=--experimental-vm-modules`. On an older Node.js, they fail with an error. NestJS 11 and earlier work with Jest on any supported Node.js.
+
+To move an existing NestJS 11 workspace to NestJS 12, run `nx migrate latest --include=all`. The NestJS 12 migration is optional, so it runs only when you include optional migrations. If a project tests NestJS code with Jest and the workspace runs a Node.js below 24.9, the migration keeps NestJS 11 and prints the command to run once that project moves to Vitest or Node.js 24.9+.
 
 ## Setting up @nx/nest
 
@@ -49,7 +57,7 @@ npx create-nx-workspace@latest my-workspace --template nrwl/nestjs-template
 ### Installation
 
 {% aside type="note" title="Keep Nx Package Versions In Sync" %}
-Make sure to install the `@nx/nest` version that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. You can [fix Nx version mismatches with this recipe](/docs/guides/tips-n-tricks/keep-nx-versions-in-sync).
+Make sure to install the `@nx/nest` version that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. You can [fix Nx version mismatches with this recipe](/docs/kb/keep-nx-versions-in-sync).
 {% /aside %}
 
 In any Nx workspace, you can install `@nx/nest` by running the following command:
@@ -96,7 +104,7 @@ To make the library `publishable`, use the following command:
 nx g @nx/nest:lib libs/my-nest-lib --publishable --importPath=@my-workspace/my-nest-lib
 ```
 
-> Read more about [building and publishing libraries here](/docs/concepts/buildable-and-publishable-libraries).
+> Read more about [building and publishing libraries here](/docs/kb/buildable-and-publishable-libraries).
 
 ### Nest generators
 
@@ -167,7 +175,7 @@ The debugger will automatically:
 
 For advanced debugging scenarios, you can manually configure the debug port by setting the port option in the `serve` target in the `project.json`, or by running the serve command with `--port <number>`.
 
-For additional information on Node.js debugging, see the [Node.js debugging getting started guide](https://nodejs.org/en/docs/guides/debugging-getting-started/#inspector-clients).
+For additional information on Node.js debugging, see the [Node.js debugging getting started guide](https://nodejs.org/en/learn/getting-started/debugging#inspector-clients).
 
 ### Lint
 
@@ -231,13 +239,13 @@ Ensuring a smooth and reliable deployment of a Nest.js application in a producti
    Create a Dockerfile that specifies the application's environment and dependencies. Build a Docker image and optionally push it to a container registry. Deploy and run the Docker container on the server. Use the `@nx/node:setup-docker` generator to set up Docker for your project.
 
 2. **Installing Dependencies on the Server:**
-   Transfer the build artifacts to the server, install all dependencies using the package manager of your choice, and start the application. Ensure that [NxAppWebpackPlugin](/docs/technologies/build-tools/webpack/guides/webpack-plugins#nxappwebpackplugin) is configured with `generatePackageJson: true` so that the build artifacts directory includes `package.json` and `package-lock.json` (or the equivalent files for other package managers).
+   Transfer the build artifacts to the server, install all dependencies using the package manager of your choice, and start the application. Ensure that [NxAppWebpackPlugin](/docs/kb/webpack-plugins#nxappwebpackplugin) is configured with `generatePackageJson: true` so that the build artifacts directory includes `package.json` and `package-lock.json` (or the equivalent files for other package managers).
 
 3. **Transferring Pre-installed Dependencies:**
    Install dependencies during the build process, and transfer the build artifacts along with the `node_modules` directory to the server. Typically, the artifacts are archived for faster transfer and then unarchived on the server.
 
 4. **Bundling Dependencies:**
-   By default, Nx/Nest creates a setup that externalizes all dependencies, meaning they are not included in the bundle. This behavior can be adjusted using the `externalDependencies` parameter in the webpack configuration with [NxAppWebpackPlugin](/docs/technologies/build-tools/webpack/guides/webpack-plugins#nxappwebpackplugin). After bundling, transfer the package to the server and start the application.
+   By default, Nx/Nest creates a setup that externalizes all dependencies, meaning they are not included in the bundle. This behavior can be adjusted using the `externalDependencies` parameter in the webpack configuration with [NxAppWebpackPlugin](/docs/kb/webpack-plugins#nxappwebpackplugin). After bundling, transfer the package to the server and start the application.
 
 {% aside type="note" title="Bundling Dependencies" %}
 Bundling dependencies is typically not recommended for Node applications.

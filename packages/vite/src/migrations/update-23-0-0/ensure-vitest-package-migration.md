@@ -11,7 +11,7 @@ Migration that runs automatically when upgrading to Nx 23. It is a safety net fo
 
 ## Why this migration exists
 
-The vitest support that previously lived in `@nx/vite` (the `@nx/vite:test` executor, the `@nx/vite:vitest` generator, and the vitest target inference in `@nx/vite/plugin`) was removed in Nx 23 and is now exclusively provided by the `@nx/vitest` package. See the [Migrating from @nx/vite guide](/technologies/test-tools/vitest/guides/migrating-from-nx-vite).
+The vitest support that previously lived in `@nx/vite` (the `@nx/vite:test` executor, the `@nx/vite:vitest` generator, and the vitest target inference in `@nx/vite/plugin`) was removed in Nx 23 and is now exclusively provided by the `@nx/vitest` package. See the [Migrating from @nx/vite guide](https://nx.dev/docs/kb/migrating-from-nx-vite).
 
 ## No action required
 

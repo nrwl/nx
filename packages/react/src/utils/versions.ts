@@ -37,24 +37,26 @@ export const testingLibraryDomVersion = '10.4.0';
 export const reduxjsToolkitVersion = '^2.5.0';
 export const reactReduxVersion = '^9.2.0';
 
+// ESLint <10 (eslintrc / flat) stack. eslint-plugin-react, -jsx-a11y and -import
+// have no ESLint v10 release, and react-hooks v5 peer-caps at v9.
 export const eslintPluginImportVersion = '2.31.0';
 export const eslintPluginJsxA11yVersion = '6.10.1';
-export const eslintPluginReactVersion = '7.35.0';
+export const eslintPluginReactVersion = '^7.35.0';
 export const eslintPluginReactHooksVersion = '5.0.0';
+
+// ESLint v10 stack. The pinned plugins above have no release that supports v10
+// (react-hooks gains it in 7.1), so v10 workspaces swap to eslint-plugin-import-x
+// and react-hooks v7. Nx does not pick a replacement for react/jsx-a11y.
+export const eslintPluginImportXVersion = '^4.17.1';
+export const eslintPluginReactHooksV7Version = '7.1.1';
 
 export const tsLibVersion = '^2.3.0';
 
 export const postcssVersion = '8.4.38';
 export const autoprefixerVersion = '10.4.13';
 
-// SSR and Module Federation
+// SSR
 export const expressVersion = '^4.21.2';
-export const typesExpressVersion = '^4.17.21';
-export const isbotVersion = '^3.6.5';
-export const corsVersion = '~2.8.5';
-export const typesCorsVersion = '~2.8.12';
-export const moduleFederationNodeVersion = '^2.7.21';
-export const moduleFederationEnhancedVersion = '^2.1.0';
 
 // style preprocessors
 export const sassVersion = '^1.97.2';
@@ -62,3 +64,4 @@ export const sassVersion = '^1.97.2';
 // rollup plugins (if needed)
 export const rollupPluginUrlVersion = '^8.0.2';
 export const svgrRollupVersion = '^8.1.0';
+export const svgrWebpackVersion = '^8.0.1';

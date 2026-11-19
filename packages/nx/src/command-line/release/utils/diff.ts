@@ -77,17 +77,12 @@ function formatNoExpand(
   patchColor: (s: string) => string
 ): string {
   const lines: string[] = [];
-  let aLine = 0;
-  let bLine = 0;
 
   // Group diffs into hunks with context
   const hunks: Array<{
-    aStart: number;
-    bStart: number;
     lines: string[];
   }> = [];
-  let currentHunk: { aStart: number; bStart: number; lines: string[] } | null =
-    null;
+  let currentHunk: { lines: string[] } | null = null;
   let trailingContext = 0;
 
   for (let i = 0; i < diffs.length; i++) {
@@ -99,8 +94,6 @@ function formatNoExpand(
       if (!currentHunk) {
         const contextStart = Math.max(0, i - contextLines);
         currentHunk = {
-          aStart: aLine - (i - contextStart),
-          bStart: bLine - (i - contextStart),
           lines: [],
         };
         // Add leading context
@@ -139,15 +132,6 @@ function formatNoExpand(
           trailingContext = 0;
         }
       }
-    }
-
-    if (type === DIFF_DELETE) {
-      aLine++;
-    } else if (type === DIFF_INSERT) {
-      bLine++;
-    } else {
-      aLine++;
-      bLine++;
     }
   }
 

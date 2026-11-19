@@ -1,4 +1,8 @@
-import { logShowProjectCommand, getRelativeCwd } from '@nx/devkit/internal';
+import {
+  logShowProjectCommand,
+  getRelativeCwd,
+  PackageJson,
+} from '@nx/devkit/internal';
 import {
   addProjectConfiguration,
   formatFiles,
@@ -9,7 +13,6 @@ import {
   names,
   offsetFromRoot,
   ProjectConfiguration,
-  readJson,
   runTasksInSerial,
   toJS,
   Tree,
@@ -39,7 +42,6 @@ import {
   addReleaseConfigForTsSolution,
   releaseTasks,
 } from '@nx/js/internal';
-import { PackageJson } from 'nx/src/utils/package-json';
 import { addRollupBuildTarget } from '@nx/react/internal';
 import { relative } from 'path';
 import {
@@ -52,7 +54,6 @@ export async function reactNativeLibraryGenerator(
   schema: Schema
 ): Promise<GeneratorCallback> {
   return await reactNativeLibraryGeneratorInternal(host, {
-    addPlugin: false,
     useProjectJson: true,
     ...schema,
   });
@@ -66,7 +67,7 @@ export async function reactNativeLibraryGeneratorInternal(
 
   const tasks: GeneratorCallback[] = [];
 
-  const addTsPlugin = shouldConfigureTsSolutionSetup(host, schema.addPlugin);
+  const addTsPlugin = shouldConfigureTsSolutionSetup(host);
   const jsInitTask = await jsInitGenerator(host, {
     ...schema,
     addTsPlugin,
@@ -115,7 +116,6 @@ export async function reactNativeLibraryGeneratorInternal(
     options.projectRoot,
     options.js,
     options.skipPackageJson,
-    options.addPlugin,
     'tsconfig.lib.json'
   );
   tasks.push(jestTask);
@@ -218,7 +218,6 @@ async function addProject(
     }
   } else {
     if (options.publishable) {
-      const nxJson = readJson(host, 'nx.json');
       await addReleaseConfigForNonTsSolution(host, options.name, project);
     }
     addProjectConfiguration(host, options.name, project);

@@ -1,5 +1,6 @@
 import { workspaceRoot } from '@nx/devkit';
 import type { LoaderContext } from 'astro/loaders';
+import { generatedDocFileURL } from './generated-doc-file-url';
 import type { CollectionEntry } from 'astro:content';
 import { fork } from 'node:child_process';
 import { join, relative } from 'node:path';
@@ -104,7 +105,9 @@ export async function loadCnwPackage(
       filter: 'type:References',
     },
     // @ts-expect-error - astro types are mismatched bc of auto generated location loading, etc
-    rendered: await renderMarkdown(markdown),
+    rendered: await renderMarkdown(markdown, {
+      fileURL: generatedDocFileURL('reference/create-nx-workspace'),
+    }),
   };
 
   return entry;

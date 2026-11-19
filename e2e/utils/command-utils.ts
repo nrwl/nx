@@ -9,7 +9,6 @@ import { existsSync } from 'fs-extra';
 import * as isCI from 'is-ci';
 import { join } from 'node:path';
 import { stripVTControlCharacters } from 'node:util';
-import { gte } from 'semver';
 import { packageInstall, tmpProjPath } from './create-project-utils';
 import {
   ensureCypressInstallation,
@@ -19,13 +18,13 @@ import { fileExists, readJson, updateJson } from './file-utils';
 import {
   detectPackageManager,
   getNpmMajorVersion,
-  getPnpmVersion,
   getPublishedVersion,
   getStrippedEnvironmentVariables,
   getYarnMajorVersion,
   isVerboseE2ERun,
 } from './get-env-info';
-import { logError, logInfo } from './log-utils';
+import { logError, logInfo, secondsSince } from './log-utils';
+import { promisifiedTreeKill } from './process-utils';
 
 export interface RunCmdOpts {
   silenceError?: boolean;
@@ -129,7 +128,6 @@ export function getPackageManagerCommand({
 } {
   const npmMajorVersion = getNpmMajorVersion();
   const yarnMajorVersion = getYarnMajorVersion(path);
-  const pnpmVersion = getPnpmVersion();
   const publishedVersion = getPublishedVersion();
   const isYarnWorkspace = fileExists(join(path, 'package.json'))
     ? readJson('package.json').workspaces
@@ -158,11 +156,16 @@ export function getPackageManagerCommand({
         npmMajorVersion && +npmMajorVersion >= 7 ? '--yes' : ''
       } create-nx-workspace@${publishedVersion}`,
       run: (script: string, args: string) => `yarn ${script} ${args}`,
-      runNx: `yarn nx`,
+      // Yarn Classic's script runner consumes the first `--`, including the
+      // delimiter required by `nx exec`. Its exec command preserves argv.
+      runNx:
+        yarnMajorVersion && +yarnMajorVersion >= 2
+          ? 'yarn nx'
+          : 'yarn exec -- nx',
       runNxSilent:
         yarnMajorVersion && +yarnMajorVersion >= 2
           ? 'yarn nx'
-          : `yarn --silent nx`,
+          : 'yarn --silent exec -- nx',
       runUninstalledPackage: 'npx --yes',
       install: 'yarn',
       ciInstall: 'yarn --frozen-lockfile',
@@ -173,7 +176,10 @@ export function getPackageManagerCommand({
         yarnMajorVersion && +yarnMajorVersion >= 2
           ? 'yarn lerna'
           : `yarn --silent lerna`,
-      exec: 'yarn',
+      exec:
+        yarnMajorVersion && +yarnMajorVersion >= 2
+          ? 'yarn'
+          : 'yarn --silent exec --',
     },
     pnpm: {
       createWorkspace: `pnpm dlx create-nx-workspace@${publishedVersion}`,
@@ -188,7 +194,7 @@ export function getPackageManagerCommand({
       addDev: isPnpmWorkspace ? 'pnpm add -Dw' : 'pnpm add -D',
       list: 'pnpm ls --depth 10',
       runLerna: `pnpm exec lerna`,
-      exec: pnpmVersion && gte(pnpmVersion, '6.13.0') ? 'pnpm exec' : 'pnpx',
+      exec: 'pnpm exec',
     },
     bun: {
       // See note in runCreateWorkspace in create-project-utils.ts for why we don't set @{version} for `bunx create-nx-workspace` right now
@@ -208,14 +214,30 @@ export function getPackageManagerCommand({
   }[packageManager.trim() as PackageManager];
 }
 
-export function runE2ETests(runner?: 'cypress' | 'playwright') {
+export async function shouldRunCypressTests(): Promise<boolean> {
+  if (!isE2ERunEnabled()) {
+    return false;
+  }
+  const startTime = performance.now();
+  // Cypress unzips into a cache shared by the whole machine, so this has to
+  // finish before the suite starts running tests.
+  await ensureCypressInstallation();
+  logInfo(`Cypress ready (${secondsSince(startTime)}s)`);
+  return true;
+}
+
+export async function shouldRunPlaywrightTests(): Promise<boolean> {
+  if (!isE2ERunEnabled()) {
+    return false;
+  }
+  const startTime = performance.now();
+  ensurePlaywrightBrowsersInstallation();
+  logInfo(`Playwright ready (${secondsSince(startTime)}s)`);
+  return true;
+}
+
+function isE2ERunEnabled(): boolean {
   if (process.env.NX_E2E_RUN_E2E === 'true') {
-    if (!runner || runner === 'cypress') {
-      ensureCypressInstallation();
-    }
-    if (!runner || runner === 'playwright') {
-      ensurePlaywrightBrowsersInstallation();
-    }
     return true;
   }
 
@@ -236,7 +258,6 @@ export function runCommandAsync(
   command: string,
   opts: RunCmdOpts = {
     silenceError: false,
-    env: process['env'],
   }
 ): Promise<{ stdout: string; stderr: string; combinedOutput: string }> {
   return new Promise((resolve, reject) => {
@@ -250,7 +271,7 @@ export function runCommandAsync(
           NX_DAEMON: opts.daemon === false ? 'false' : 'true',
           // Use new versioning by default in e2e tests
           NX_INTERNAL_USE_LEGACY_VERSIONING: 'false',
-          ...(opts.env || getStrippedEnvironmentVariables()),
+          ...(opts.env || getStrippedEnvironmentVariables(opts.cwd)),
           FORCE_COLOR: 'false',
         },
         encoding: 'utf-8',
@@ -306,10 +327,23 @@ export function runCommandUntil(
     let output = '';
     let complete = false;
 
-    const timeoutId = setTimeout(() => {
+    const timeoutId = setTimeout(async () => {
       if (!complete) {
         complete = true;
-        p.kill();
+        if (
+          p.pid !== undefined &&
+          p.exitCode === null &&
+          p.signalCode === null
+        ) {
+          try {
+            await promisifiedTreeKill(p.pid, 'SIGKILL');
+          } catch (error) {
+            logError(
+              'Failed to terminate command after startup timeout',
+              String(error)
+            );
+          }
+        }
         logError(
           `Output did not meet the criteria:`,
           output
@@ -322,6 +356,7 @@ export function runCommandUntil(
     }, timeout);
 
     function checkCriteria(c) {
+      if (complete) return;
       output += c.toString();
       const strippedOutput = stripVTControlCharacters(output);
       if (criteria(strippedOutput) && !complete) {
@@ -413,12 +448,17 @@ export function runNgAdd(
  * stable placeholders so the report can stay in snapshots. Scoped to the report
  * block (from `Run duration:` to the next `NX` section header or end of output);
  * no-op when no report is present.
+ *
+ * The Recommendations section is dropped entirely: runs under 30s (every e2e run
+ * when healthy) print none, and a slow run crossing that floor must not flake the
+ * snapshot by re-introducing it.
  */
 export function normalizePerformanceReport(output: string): string {
   return output.replace(
     /\n[ \t]*Run duration:[\s\S]*?(?=\n[ \t]*\n(?:[ \t]*\n)*[ \t]*NX |\s*$)/g,
     (block) =>
       block
+        .replace(/\n[ \t]*\n[ \t]*Recommendations?:[\s\S]*$/, '')
         // Durations: match the minute form ("1m 30s") first so its "30s" isn't matched
         // alone; the optional "<" also captures a "<1ms" (sub-millisecond) duration.
         .replace(/<?(?:\b\d+m \d+s\b|\b\d+(?:\.\d+)?m?s\b)/g, '{DURATION}')
@@ -461,7 +501,7 @@ export function runCLI(
         NX_DAEMON: opts.daemon === false ? 'false' : 'true',
         // Use new versioning by default in e2e tests
         NX_INTERNAL_USE_LEGACY_VERSIONING: 'false',
-        ...getStrippedEnvironmentVariables(),
+        ...getStrippedEnvironmentVariables(opts.cwd),
         ...opts.env,
       },
       encoding: 'utf-8',
@@ -469,8 +509,7 @@ export function runCLI(
       maxBuffer: 50 * 1024 * 1024,
       timeout: timeoutMs,
     });
-    const elapsed = ((performance.now() - startTime) / 1000).toFixed(1);
-    logInfo(`Run Command: ${command} (${elapsed}s)`);
+    logInfo(`Run Command: ${command} (${secondsSince(startTime)}s)`);
 
     if (opts.verbose ?? isVerboseE2ERun()) {
       output.log({
@@ -522,7 +561,7 @@ export function runLernaCLI(
       cwd: opts.cwd || tmpProjPath(),
       env: {
         CI: 'true',
-        ...(opts.env || getStrippedEnvironmentVariables()),
+        ...(opts.env || getStrippedEnvironmentVariables(opts.cwd)),
       },
       encoding: 'utf-8',
       stdio: 'pipe',

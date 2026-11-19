@@ -1,4 +1,7 @@
-import { determineArtifactNameAndDirectoryOptions } from '@nx/devkit/internal';
+import {
+  determineArtifactNameAndDirectoryOptions,
+  PackageJson,
+} from '@nx/devkit/internal';
 import {
   formatFiles,
   generateFiles,
@@ -12,7 +15,6 @@ import {
   type Tree,
 } from '@nx/devkit';
 import { isUsingTsSolutionSetup } from '@nx/js/internal';
-import { PackageJson } from 'nx/src/utils/package-json';
 import { join } from 'path';
 import { getArtifactMetadataDirectory } from '../../utils/paths';
 import { nxVersion } from '../../utils/versions';
@@ -39,16 +41,6 @@ function addFiles(host: Tree, options: NormalizedSchema) {
     host.delete(
       joinPathFragments(options.directory, `${options.fileName}.spec.ts`)
     );
-  }
-}
-
-function addHasherFiles(host: Tree, options: NormalizedSchema) {
-  generateFiles(host, join(__dirname, './files/hasher'), options.directory, {
-    ...options,
-  });
-
-  if (options.unitTestRunner === 'none') {
-    host.delete(joinPathFragments(options.directory, 'hasher.spec.ts'));
   }
 }
 
@@ -143,9 +135,6 @@ async function updateExecutorJson(host: Tree, options: NormalizedSchema) {
       schema: `${dir}/schema.json`,
       description: options.description,
     };
-    if (options.includeHasher) {
-      executors[options.name].hasher = `${dir}/hasher`;
-    }
     json.executors = executors;
 
     return json;
@@ -213,12 +202,16 @@ async function normalizeOptions(
 }
 
 export async function executorGenerator(host: Tree, schema: Schema) {
+  // TODO(v25): remove the includeHasher option (NXC-5052).
+  if (schema.includeHasher) {
+    throw new Error(
+      'Custom hashers are deprecated and will be removed in Nx 25, so the executor generator no longer creates them. Declare what the executor depends on as target inputs instead: https://nx.dev/docs/kb/local-executors#replace-a-custom-hasher-with-inputs'
+    );
+  }
+
   const options = await normalizeOptions(host, schema);
 
   addFiles(host, options);
-  if (options.includeHasher) {
-    addHasherFiles(host, options);
-  }
 
   await updateExecutorJson(host, options);
 

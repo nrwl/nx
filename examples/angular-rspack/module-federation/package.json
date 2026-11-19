@@ -1,0 +1,16 @@
+{
+  "name": "examples-angular-rspack-module-federation",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "postinstall": "cd ../../.. && pnpm nx run-many -t build -p nx angular-rspack rspack module-federation",
+    "validate": "nx run-many -t build"
+  },
+  "nx": {
+    "includedScripts": []
+  },
+  "devDependencies": {
+    "@nx/rspack": "link:../../../packages/rspack",
+    "nx": "link:../../../packages/nx"
+  }
+}

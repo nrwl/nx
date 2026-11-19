@@ -20,7 +20,8 @@
       ],
       "dependsOn": [
         "@nx/nx-source:populate-local-registry-storage",
-        "@nx/nx-source:local-registry",
+        "@nx/nx-source:populate-e2e-base-workspace",
+        "@nx/nx-source:local-registry-e2e",
         ":gradle-project-graph:gradle:publishToMavenLocal"
       ]
     },
@@ -34,7 +35,8 @@
       ],
       "dependsOn": [
         "@nx/nx-source:populate-local-registry-storage",
-        "@nx/nx-source:local-registry",
+        "@nx/nx-source:populate-e2e-base-workspace",
+        "@nx/nx-source:local-registry-e2e",
         ":gradle-project-graph:gradle:publishToMavenLocal"
       ]
     }

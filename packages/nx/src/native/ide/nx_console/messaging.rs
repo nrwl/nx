@@ -1,4 +1,9 @@
-use std::{collections::HashMap, sync::Arc, time::Duration};
+use std::{
+    collections::HashMap,
+    path::{Path, PathBuf},
+    sync::Arc,
+    time::Duration,
+};
 
 use once_cell::sync::Lazy;
 use parking_lot::Mutex;
@@ -17,7 +22,7 @@ use crate::native::{
         components::tasks_list::{TaskItem, TaskStatus},
         pty::PtyInstance,
     },
-    utils::socket_path::get_full_nx_console_socket_path,
+    utils::socket_path::{SocketKind, legacy_nx_console_socket_path, resolve_socket_path},
 };
 
 #[derive(Serialize, Deserialize)]
@@ -66,9 +71,37 @@ fn throttled(operation_key: &'static str, throttle_duration: Duration) -> bool {
 }
 
 impl NxConsoleMessageConnection {
-    pub async fn new(workspace_root: &str) -> Self {
-        let socket_path = get_full_nx_console_socket_path(workspace_root);
-        let client = IpcTransport::new(&socket_path)
+    /// The sockets to dial, in order. Reads the environment, so call it on the
+    /// JS thread: a worker reading it while JS adds a variable can crash.
+    pub fn socket_paths(workspace_root: &str) -> Vec<PathBuf> {
+        let resolved = resolve_socket_path(SocketKind::NxConsole, workspace_root, None)
+            .inspect_err(|e| trace!("Could not resolve the Nx Console socket: {:?}", e))
+            .ok()
+            .map(|resolution| resolution.path);
+
+        // An extension that has not yet adopted the resolver is still listening
+        // where both ends used to derive the path for themselves. Without this
+        // it would look to the user like no IDE is running -- there is no
+        // handshake or version field to tell them otherwise.
+        let legacy = legacy_nx_console_socket_path(workspace_root, None)
+            .filter(|legacy| resolved.as_ref() != Some(legacy));
+
+        resolved.into_iter().chain(legacy).collect()
+    }
+
+    pub async fn connect(socket_paths: Vec<PathBuf>) -> Self {
+        for socket_path in &socket_paths {
+            if let Some(client) = Self::dial(socket_path).await {
+                return Self {
+                    client: Some(client),
+                };
+            }
+        }
+        Self { client: None }
+    }
+
+    async fn dial(socket_path: &Path) -> Option<Arc<Client>> {
+        IpcTransport::new(socket_path)
             .await
             .map(|transport| {
                 ClientBuilder::new().build_with_tokio(transport.writer, transport.reader)
@@ -77,9 +110,7 @@ impl NxConsoleMessageConnection {
                 trace!(?socket_path, "Could not connect to Nx Console: {}", e);
             })
             .ok()
-            .map(Arc::new);
-
-        Self { client }
+            .map(Arc::new)
     }
 
     pub fn is_connected(&self) -> bool {

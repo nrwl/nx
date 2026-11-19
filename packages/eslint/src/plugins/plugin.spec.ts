@@ -1,23 +1,54 @@
-import { CreateNodesContext } from '@nx/devkit';
+import {
+  calculateHashesForCreateNodes,
+  globWithWorkspaceContext,
+} from '@nx/devkit/internal';
+import {
+  CreateNodesContext,
+  getOutputsForTargetAndConfiguration,
+  type ProjectGraphProjectNode,
+} from '@nx/devkit';
 import { minimatch } from 'minimatch';
-import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
+import { TempFs } from '@nx/devkit/internal-testing-utils';
 import { createNodesV2, EslintPluginOptions } from './plugin';
-import { mkdirSync, rmSync } from 'fs';
+import { existsSync, mkdirSync, rmSync } from 'fs';
+import { join } from 'path';
 
-jest.mock('nx/src/utils/cache-directory', () => ({
-  ...jest.requireActual('nx/src/utils/cache-directory'),
+// Covers the eslintrc path, which ESLint 10 removed.
+vi.mock('eslint', async () => vi.importActual('eslint-v9'));
+
+vi.mock('@nx/devkit/internal', async () => {
+  const actual = await vi.importActual<any>('@nx/devkit/internal');
+  return {
+    ...actual,
+    calculateHashesForCreateNodes: vi.fn(actual.calculateHashesForCreateNodes),
+    globWithWorkspaceContext: vi.fn(actual.globWithWorkspaceContext),
+  };
+});
+
+// The shared setup's `@nx/devkit` mock spreads the module, freezing
+// `workspaceRoot` before TempFs moves it; `getRootTsConfigFileName` reads it.
+vi.mock('@nx/devkit', async () => {
+  const actual = await vi.importActual<any>('@nx/devkit');
+  return Object.defineProperty({ ...actual }, 'workspaceRoot', {
+    get: () => actual.workspaceRoot,
+  });
+});
+
+vi.mock('nx/src/utils/cache-directory', async () => ({
+  ...(await vi.importActual<any>('nx/src/utils/cache-directory')),
   workspaceDataDirectory: 'tmp/project-graph-cache',
 }));
 
-const resolveESLintClassSpy = jest.fn();
-jest.mock('../utils/resolve-eslint-class', () => ({
-  resolveESLintClass: (...args) => {
-    resolveESLintClassSpy(...args);
-    return jest
-      .requireActual('../utils/resolve-eslint-class')
-      .resolveESLintClass(...args);
-  },
-}));
+const resolveESLintClassSpy = vi.fn();
+vi.mock('../utils/resolve-eslint-class', async () => {
+  const actual = await vi.importActual<any>('../utils/resolve-eslint-class');
+  return {
+    resolveESLintClass: (...args) => {
+      resolveESLintClassSpy(...args);
+      return actual.resolveESLintClass(...args);
+    },
+  };
+});
 
 describe('@nx/eslint/plugin', () => {
   let context: CreateNodesContext;
@@ -47,11 +78,136 @@ describe('@nx/eslint/plugin', () => {
   });
 
   afterEach(() => {
-    jest.resetModules();
+    vi.resetModules();
     resolveESLintClassSpy.mockClear();
+    vi.mocked(calculateHashesForCreateNodes).mockClear();
+    vi.mocked(globWithWorkspaceContext).mockClear();
     tempFs.cleanup();
     tempFs = null;
     rmSync('tmp/project-graph-cache', { recursive: true, force: true });
+  });
+
+  describe('config hash inputs', () => {
+    async function captureInputs(
+      files: string[],
+      options: EslintPluginOptions = {}
+    ) {
+      const captured = new Error('Hash inputs captured');
+      vi.mocked(globWithWorkspaceContext).mockResolvedValueOnce([]);
+      vi.mocked(calculateHashesForCreateNodes).mockRejectedValueOnce(captured);
+      await expect(createNodesV2[1](files, options, context)).rejects.toBe(
+        captured
+      );
+      const [roots, , , inputs] = vi
+        .mocked(calculateHashesForCreateNodes)
+        .mock.calls.at(-1);
+      return Object.fromEntries(
+        roots.map((root, index) => [root, inputs[index]])
+      );
+    }
+
+    it('hashes strict descendant configs in discovery order, including duplicates', async () => {
+      const configs = [
+        'libs/a/nested/eslint.config.js',
+        'libs/ab/eslint.config.js',
+        'eslint.config.js',
+        'libs/a/eslint.config.js',
+        'libs/a/nested/.eslintrc.json',
+        'libs/a/nested/eslint.config.js',
+      ];
+      expect(
+        await captureInputs([
+          ...configs,
+          'libs/a/nested/project.json',
+          'project.json',
+          'libs/a/project.json',
+          'libs/project.json',
+          'apps/absent/project.json',
+        ])
+      ).toEqual({
+        'libs/a/nested': ['libs/a/nested/.eslintignore', 'package-lock.json'],
+        '.': [...configs, '.eslintignore', 'package-lock.json'],
+        'libs/a': [
+          configs[0],
+          configs[4],
+          configs[5],
+          'libs/a/.eslintignore',
+          'package-lock.json',
+        ],
+        libs: [
+          configs[0],
+          configs[1],
+          configs[3],
+          configs[4],
+          configs[5],
+          'libs/.eslintignore',
+          'package-lock.json',
+        ],
+        'apps/absent': ['apps/absent/.eslintignore', 'package-lock.json'],
+      });
+    });
+
+    it('normalizes descendant paths without extending the literal-dot exception', async () => {
+      const configs = [
+        'eslint.config.js',
+        'a/eslint.config.js',
+        'a/b/eslint.config.js',
+        'a//c/eslint.config.js',
+        'a/./d/eslint.config.js',
+        'ab/eslint.config.js',
+      ];
+      const descendants = [configs[2], configs[3], configs[4]];
+      expect(
+        await captureInputs([
+          ...configs,
+          'project.json',
+          '././project.json',
+          './a/project.json',
+          'a//project.json',
+          'a/child/../project.json',
+          'a/b/project.json',
+        ])
+      ).toEqual({
+        '.': [...configs, '.eslintignore', 'package-lock.json'],
+        './.': ['.eslintignore', 'package-lock.json'],
+        './a': [...descendants, 'a/.eslintignore', 'package-lock.json'],
+        'a/': [...descendants, 'a/.eslintignore', 'package-lock.json'],
+        'a/child/..': [...descendants, 'a/.eslintignore', 'package-lock.json'],
+        'a/b': ['a/b/.eslintignore', 'package-lock.json'],
+      });
+    });
+
+    it('uses the scoped config list supplied to each invocation', async () => {
+      const project = 'libs/a/project.json';
+      const nested = 'libs/a/nested/eslint.config.js';
+      expect(await captureInputs([project, nested])).toEqual({
+        'libs/a': [nested, 'libs/a/.eslintignore', 'package-lock.json'],
+      });
+      expect(await captureInputs([project, 'libs/b/eslint.config.js'])).toEqual(
+        {
+          'libs/a': ['libs/a/.eslintignore', 'package-lock.json'],
+        }
+      );
+      expect(await captureInputs([project, nested])).toEqual({
+        'libs/a': [nested, 'libs/a/.eslintignore', 'package-lock.json'],
+      });
+    });
+
+    it("hashes the workspace root .eslintignore when cwd is 'workspaceRoot'", async () => {
+      expect(
+        await captureInputs(
+          ['eslint.config.js', 'project.json', 'libs/a/project.json'],
+          { cwd: 'workspaceRoot' }
+        )
+      ).toEqual({
+        '.': ['eslint.config.js', '.eslintignore', 'package-lock.json'],
+        'libs/a': [
+          'libs/a/.eslintignore',
+          '.eslintignore',
+          'package-lock.json',
+        ],
+      });
+    });
   });
 
   it('should not create any nodes when there are no eslint configs', async () => {
@@ -151,7 +307,7 @@ describe('@nx/eslint/plugin', () => {
                     },
                   },
                   "outputs": [
-                    "{options.outputFile}",
+                    "{options.cwd ?? .}/{options.o ?? options.output-file}",
                   ],
                 },
               },
@@ -210,7 +366,7 @@ describe('@nx/eslint/plugin', () => {
                     },
                   },
                   "outputs": [
-                    "{options.outputFile}",
+                    "{options.cwd ?? .}/{options.o ?? options.output-file}",
                   ],
                 },
               },
@@ -302,7 +458,7 @@ describe('@nx/eslint/plugin', () => {
                     },
                   },
                   "outputs": [
-                    "{options.outputFile}",
+                    "{options.cwd ?? .}/{options.o ?? options.output-file}",
                   ],
                 },
               },
@@ -361,7 +517,7 @@ describe('@nx/eslint/plugin', () => {
                     },
                   },
                   "outputs": [
-                    "{options.outputFile}",
+                    "{options.cwd ?? .}/{options.o ?? options.output-file}",
                   ],
                 },
               },
@@ -496,7 +652,7 @@ describe('@nx/eslint/plugin', () => {
                     },
                   },
                   "outputs": [
-                    "{options.outputFile}",
+                    "{options.cwd ?? .}/{options.o ?? options.output-file}",
                   ],
                 },
               },
@@ -538,7 +694,7 @@ describe('@nx/eslint/plugin', () => {
                     },
                   },
                   "outputs": [
-                    "{options.outputFile}",
+                    "{options.cwd ?? .}/{options.o ?? options.output-file}",
                   ],
                 },
               },
@@ -546,6 +702,51 @@ describe('@nx/eslint/plugin', () => {
           },
         }
       `);
+    });
+
+    it('should cache the report ESLint writes from the project root', async () => {
+      createFiles({
+        'libs/my-lib/.eslintrc.json': `{}`,
+        'libs/my-lib/project.json': `{}`,
+        'libs/my-lib/index.ts': `console.log('hello world')`,
+      });
+      const { projects } = await invokeCreateNodesOnMatchingFiles(context, {
+        targetName: 'lint',
+      });
+      const node: ProjectGraphProjectNode = {
+        name: 'my-lib',
+        type: 'lib',
+        data: { root: 'libs/my-lib', ...projects['libs/my-lib'] },
+      };
+      const target = { project: 'my-lib', target: 'lint' };
+
+      expect(
+        getOutputsForTargetAndConfiguration(
+          target,
+          { 'output-file': '../../reports/lint.json' },
+          node
+        )
+      ).toStrictEqual(['reports/lint.json']);
+      expect(
+        getOutputsForTargetAndConfiguration(
+          target,
+          { o: '../../reports/lint.json' },
+          node
+        )
+      ).toStrictEqual(['reports/lint.json']);
+      expect(
+        getOutputsForTargetAndConfiguration(target, {}, node)
+      ).toStrictEqual([]);
+
+      node.data.targets.lint.options['output-file'] =
+        '../../reports/default.json';
+      expect(
+        getOutputsForTargetAndConfiguration(
+          target,
+          { o: '../../reports/ci.json' },
+          node
+        )
+      ).toStrictEqual(['reports/ci.json']);
     });
 
     // This is intentionally disabled, since we should always create a node for project that contains eslint config
@@ -615,8 +816,8 @@ describe('@nx/eslint/plugin', () => {
         targetName: 'lint',
       });
       // configFiles is built from Object.keys(fileSys) in this test harness,
-      // so the input order seen by the plugin is c-lib, a-lib, b-lib. With
-      // the fix, that is the exact order the plugin emits.
+      // so the input order seen by the plugin is c-lib, a-lib, b-lib. The
+      // plugin must emit the projects in that order.
       expect(Object.keys(result.projects)).toEqual([
         'libs/c-lib',
         'libs/a-lib',
@@ -679,7 +880,7 @@ describe('@nx/eslint/plugin', () => {
                     },
                   },
                   "outputs": [
-                    "{options.outputFile}",
+                    "{options.cwd ?? .}/{options.o ?? options.output-file}",
                   ],
                 },
               },
@@ -722,7 +923,7 @@ describe('@nx/eslint/plugin', () => {
                     },
                   },
                   "outputs": [
-                    "{options.outputFile}",
+                    "{options.cwd ?? .}/{options.o ?? options.output-file}",
                   ],
                 },
               },
@@ -783,7 +984,7 @@ describe('@nx/eslint/plugin', () => {
                     },
                   },
                   "outputs": [
-                    "{options.outputFile}",
+                    "{options.cwd ?? .}/{options.o ?? options.output-file}",
                   ],
                 },
               },
@@ -848,7 +1049,7 @@ describe('@nx/eslint/plugin', () => {
                     },
                   },
                   "outputs": [
-                    "{options.outputFile}",
+                    "{options.cwd ?? .}/{options.o ?? options.output-file}",
                   ],
                 },
               },
@@ -934,7 +1135,7 @@ describe('@nx/eslint/plugin', () => {
                     },
                   },
                   "outputs": [
-                    "{options.outputFile}",
+                    "{options.cwd ?? .}/{options.o ?? options.output-file}",
                   ],
                 },
               },
@@ -994,7 +1195,7 @@ describe('@nx/eslint/plugin', () => {
                     },
                   },
                   "outputs": [
-                    "{options.outputFile}",
+                    "{options.cwd ?? .}/{options.o ?? options.output-file}",
                   ],
                 },
               },
@@ -1002,6 +1203,190 @@ describe('@nx/eslint/plugin', () => {
           },
         }
       `);
+    });
+  });
+
+  describe("cwd: 'workspaceRoot'", () => {
+    it('should lint a nested project from the workspace root', async () => {
+      createFiles({
+        '.eslintrc.json': `{}`,
+        '.eslintignore': `dist`,
+        'apps/my-app/.eslintignore': `generated`,
+        'apps/my-app/project.json': `{}`,
+        'apps/my-app/index.ts': `console.log('hello world')`,
+      });
+      const { projects } = await invokeCreateNodesOnMatchingFiles(context, {
+        targetName: 'lint',
+        cwd: 'workspaceRoot',
+      });
+      const target = projects['apps/my-app'].targets.lint;
+      expect(target.command).toBe('eslint apps/my-app');
+      expect(target.options).toEqual({
+        cwd: '.',
+        env: { ESLINT_USE_FLAT_CONFIG: 'false' },
+      });
+      expect(target.inputs).toEqual([
+        'default',
+        '^default',
+        '{workspaceRoot}/.eslintrc.json',
+        '{workspaceRoot}/.eslintignore',
+        '{workspaceRoot}/tools/eslint-rules/**/*',
+        { externalDependencies: ['eslint'] },
+      ]);
+      expect(
+        getOutputsForTargetAndConfiguration(
+          { project: 'my-app', target: 'lint' },
+          { 'output-file': 'report.json' },
+          {
+            name: 'my-app',
+            type: 'lib',
+            data: { root: 'apps/my-app', targets: { lint: target } },
+          } as ProjectGraphProjectNode
+        )
+      ).toEqual(['report.json']);
+    });
+
+    it.each([
+      [
+        'a project .eslintignore',
+        {
+          '.eslintrc.json': `{}`,
+          'apps/my-app/.eslintignore': ``,
+        },
+      ],
+      [
+        'a config in a parent directory',
+        {
+          'apps/.eslintrc.json': `{}`,
+        },
+      ],
+      [
+        'its own config',
+        {
+          '.eslintrc.json': `{}`,
+          'apps/my-app/.eslintrc.json': `{}`,
+        },
+      ],
+    ])(
+      'should apply the workspace root .eslintignore when inferring the target with %s',
+      async (_, files) => {
+        createFiles({
+          ...files,
+          '.eslintignore': `apps/my-app/**`,
+          'apps/my-app/project.json': `{}`,
+          'apps/my-app/index.ts': `console.log('hello world')`,
+        });
+        const projectRootResult = await invokeCreateNodesOnMatchingFiles(
+          context,
+          { targetName: 'lint' }
+        );
+        expect(Object.keys(projectRootResult.projects)).toEqual([
+          'apps/my-app',
+        ]);
+
+        const { projects } = await invokeCreateNodesOnMatchingFiles(context, {
+          targetName: 'lint',
+          cwd: 'workspaceRoot',
+        });
+        expect(projects).toEqual({});
+      }
+    );
+
+    describe('flat config outside the workspace root', () => {
+      async function inferTarget(projectRoot: string) {
+        const { projects } = await invokeCreateNodesOnMatchingFiles(context, {
+          targetName: 'lint',
+          cwd: 'workspaceRoot',
+        });
+        return projects[projectRoot].targets.lint;
+      }
+
+      it("should pass a project's own config", async () => {
+        createFiles({
+          'eslint.config.cjs': `module.exports = [];`,
+          'apps/flat-own/eslint.config.cjs': `module.exports = [];`,
+          'apps/flat-own/project.json': `{}`,
+          'apps/flat-own/index.ts': `console.log('hello world')`,
+        });
+        const target = await inferTarget('apps/flat-own');
+
+        expect(target.command).toBe(
+          'eslint apps/flat-own --config apps/flat-own/eslint.config.cjs'
+        );
+        expect(target.options).toEqual({ cwd: '.' });
+      });
+
+      it('should pass a config in a parent directory', async () => {
+        createFiles({
+          'eslint.config.cjs': `module.exports = [];`,
+          'apps/eslint.config.cjs': `module.exports = [];`,
+          'apps/x/project.json': `{}`,
+          'apps/x/index.js': `console.log('hello world')`,
+        });
+        const target = await inferTarget('apps/x');
+
+        expect(target.command).toBe(
+          'eslint apps/x --config apps/eslint.config.cjs'
+        );
+      });
+
+      it('should pass a parent config under a legacy root config', async () => {
+        createFiles({
+          '.eslintrc.json': `{}`,
+          'apps/eslint.config.cjs': `module.exports = [];`,
+          'apps/x/project.json': `{}`,
+          'apps/x/index.js': `console.log('hello world')`,
+        });
+        const target = await inferTarget('apps/x');
+
+        expect(target.command).toBe(
+          'eslint apps/x --config apps/eslint.config.cjs'
+        );
+      });
+
+      it('should not search above the workspace root without a root config', async () => {
+        const parentConfigMarker = join(tempFs.tempDir, 'parent-config-ran');
+        tempFs.createFileSync(
+          'eslint.config.cjs',
+          `require('fs').writeFileSync(${JSON.stringify(parentConfigMarker)}, '');
+module.exports = [];`
+        );
+        context = { ...context, workspaceRoot: join(tempFs.tempDir, 'ws') };
+        createFiles({
+          'ws/package-lock.json': '{}',
+          'ws/apps/eslint.config.cjs': `module.exports = [];`,
+          'ws/apps/x/project.json': `{}`,
+          'ws/apps/x/index.js': `console.log('hello world')`,
+        });
+        configFiles = configFiles.map((file) => file.replace(/^ws\//, ''));
+
+        const target = await inferTarget('apps/x');
+
+        expect(target.command).toBe(
+          'eslint apps/x --config apps/eslint.config.cjs'
+        );
+        expect(existsSync(parentConfigMarker)).toBe(false);
+      });
+    });
+    it('should leave a root project unchanged', async () => {
+      createFiles({
+        '.eslintrc.json': `{}`,
+        '.eslintignore': `dist`,
+        'package.json': `{}`,
+        'src/index.ts': `console.log('hello world')`,
+      });
+      const projectRootResult = await invokeCreateNodesOnMatchingFiles(
+        context,
+        {
+          targetName: 'lint',
+        }
+      );
+      const result = await invokeCreateNodesOnMatchingFiles(context, {
+        targetName: 'lint',
+        cwd: 'workspaceRoot',
+      });
+      expect(result.projects['.'].targets.lint.command).toBe('eslint ./src');
+      expect(result).toEqual(projectRootResult);
     });
   });
 

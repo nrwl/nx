@@ -40,7 +40,6 @@ export async function addE2e(
         appDisplayName: options.displayName,
         appName: options.name,
         framework: 'react-native',
-        setParserOptionsProject: options.setParserOptionsProject,
         skipFormat: true,
       });
     case 'none':

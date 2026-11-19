@@ -2,8 +2,8 @@ import * as pc from 'picocolors';
 import * as yargs from 'yargs';
 
 import { reportCommandRunEvent } from '../analytics';
-import { output } from '../utils/output';
 import { yargsAddCommand } from './add/command-object';
+import { resolveConformanceCommandObject } from './conformance/command-object';
 import {
   yargsAffectedBuildCommand,
   yargsAffectedCommand,
@@ -46,6 +46,7 @@ import { yargsLogoutCommand } from './nx-cloud/logout/command-object';
 import { yargsRecordCommand } from './nx-cloud/record/command-object';
 import { yargsStartAgentCommand } from './nx-cloud/start-agent/command-object';
 import { yargsStartCiRunCommand } from './nx-cloud/start-ci-run/command-object';
+import { yargsStartNxAgentsCommand } from './nx-cloud/start-nx-agents/command-object';
 import { yargsRegisterCommand } from './register/command-object';
 import { yargsReleaseCommand } from './release/command-object';
 import { yargsRepairCommand } from './repair/command-object';
@@ -116,6 +117,7 @@ export const commandsObject = yargs
   .command(yargsLogoutCommand)
   .command(yargsRecordCommand)
   .command(yargsStartCiRunCommand)
+  .command(yargsStartNxAgentsCommand)
   .command(yargsStartAgentCommand)
   .command(yargsStopAllAgentsCommand)
   .command(yargsFixCiCommand)
@@ -123,8 +125,8 @@ export const commandsObject = yargs
   .command(yargsDownloadCloudClientCommand)
   .command(yargsMcpCommand)
   .command(yargsCompletionCommand)
-  .command(resolveConformanceCommandObject())
-  .command(resolveConformanceCheckCommandObject())
+  .command(resolveConformanceCommandObject('conformance'))
+  .command(resolveConformanceCommandObject('conformance:check'))
   .scriptName('nx')
   .middleware((args) => {
     // Skip analytics during shell completion (defensive — bin/nx.ts exits
@@ -134,9 +136,11 @@ export const commandsObject = yargs
       return;
     }
     const context = (commandsObject as any).getInternalMethods().getContext();
+    // The infix command (`nx <target> [project]`) has no name of its own, and
+    // its target and `_` hold user input, so report it as `run`.
     const command =
       (context.commands ?? []).join(' ') ||
-      (args._ ?? []).slice(0, 1).join(' ');
+      (args.target && args.target !== 'undefined' ? 'run' : '');
     // Internal commands (e.g. `_migrate`) are spawned by their public
     // wrapper, which already reported the run - skip to avoid double counts.
     if (command && !command.startsWith('_')) {
@@ -148,54 +152,3 @@ export const commandsObject = yargs
   // so that it shows up in help. The default yargs implementation of --version is not
   // hit, as the implementation in nx.ts is hit first and calls process.exit(0).
   .version();
-
-function createMissingConformanceCommand(
-  command: 'conformance' | 'conformance:check'
-) {
-  return {
-    command,
-    // Hide from --help output in the common case of not having the plugin installed
-    describe: false,
-    handler: () => {
-      output.error({
-        title: `${command} is not available`,
-        bodyLines: [
-          `In order to use the \`nx ${command}\` command you must have an active Nx key and the \`@nx/conformance\` plugin installed.`,
-          '',
-          'To learn more, visit https://nx.dev/nx-enterprise/powerpack/conformance',
-        ],
-      });
-      process.exit(1);
-    },
-  };
-}
-
-function resolveConformanceCommandObject() {
-  try {
-    const { yargsConformanceCommand } = (() => {
-      try {
-        return require('@nx/powerpack-conformance');
-      } catch {
-        return require('@nx/conformance');
-      }
-    })();
-    return yargsConformanceCommand;
-  } catch {
-    return createMissingConformanceCommand('conformance');
-  }
-}
-
-function resolveConformanceCheckCommandObject() {
-  try {
-    const { yargsConformanceCheckCommand } = (() => {
-      try {
-        return require('@nx/powerpack-conformance');
-      } catch {
-        return require('@nx/conformance');
-      }
-    })();
-    return yargsConformanceCheckCommand;
-  } catch {
-    return createMissingConformanceCommand('conformance:check');
-  }
-}

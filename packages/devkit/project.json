@@ -9,6 +9,19 @@
       "command": "node ./scripts/copy-readme.js devkit packages/devkit/readme-template.md packages/devkit/README.md",
       "inputs": ["copyReadme"],
       "dependsOn": ["^build", "build-base"]
+    },
+    "test": {
+      "inputs": [
+        "...",
+        "{workspaceRoot}/tools/vitest/**/*",
+        "{workspaceRoot}/scripts/jest-mocks/clack-prompts.js",
+        "{workspaceRoot}/packages/cypress/plugin.ts",
+        "{workspaceRoot}/packages/cypress/tsconfig.json",
+        "{workspaceRoot}/packages/cypress/tsconfig.lib.json",
+        "{workspaceRoot}/packages/vite/plugin.ts",
+        "{workspaceRoot}/packages/vite/tsconfig.json",
+        "{workspaceRoot}/packages/vite/tsconfig.lib.json"
+      ]
     }
   }
 }

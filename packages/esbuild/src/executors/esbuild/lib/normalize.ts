@@ -1,4 +1,5 @@
 import { joinPathFragments, logger, type ExecutorContext } from '@nx/devkit';
+import { loadConfigFile } from '@nx/devkit/internal';
 import { readTsConfig } from '@nx/js';
 import { isUsingTsSolutionSetup } from '@nx/js/internal';
 import * as esbuild from 'esbuild';
@@ -10,10 +11,10 @@ import type {
   NormalizedEsBuildExecutorOptions,
 } from '../schema';
 
-export function normalizeOptions(
+export async function normalizeOptions(
   options: EsBuildExecutorOptions,
   context: ExecutorContext
-): NormalizedEsBuildExecutorOptions {
+): Promise<NormalizedEsBuildExecutorOptions> {
   const isTsSolutionSetup = isUsingTsSolutionSetup();
   if (isTsSolutionSetup && options.generatePackageJson) {
     throw new Error(
@@ -21,7 +22,10 @@ export function normalizeOptions(
     );
   }
 
-  const tsConfig = readTsConfig(options.tsConfig);
+  // `tsConfig` is relative to the workspace root, and `readTsConfig` resolves a
+  // relative path against `process.cwd()` — so anchor it here, or running the
+  // target from anywhere but the workspace root reads a path that doesn't exist.
+  const tsConfig = readTsConfig(path.join(context.root, options.tsConfig));
 
   // If we're not generating package.json file, then copy it as-is as an asset when not using ts solution setup.
   const assets =
@@ -88,7 +92,10 @@ export function normalizeOptions(
       throw new Error(
         `Path of esbuildConfig does not exist: ${userDefinedConfig}`
       );
-    userDefinedBuildOptions = require(userDefinedConfig);
+    // Use loadConfigFile so TypeScript configs (import type, satisfies, TS
+    // plugin imports) are transpiled instead of require()'d raw.
+    userDefinedBuildOptions =
+      await loadConfigFile<esbuild.BuildOptions>(userDefinedConfig);
   } else if (options.esbuildOptions) {
     userDefinedBuildOptions = options.esbuildOptions;
   }

@@ -4,19 +4,44 @@ import {
   CopyRspackPlugin,
   DefinePlugin,
   RspackPluginInstance,
+  ValidationError,
 } from '@rspack/core';
-import { posix, relative, resolve } from 'node:path';
+import { posix, relative, resolve, sep } from 'node:path';
 import { getEntryPoints } from '../config/config-utils/entry-points';
+import {
+  assertOutputPathIsNotProjectRoot,
+  deleteOutputDir,
+} from '../config/config-utils/helpers';
 import type {
   I18nOptions,
   NormalizedAngularRspackPluginOptions,
 } from '../models';
-import { loadEsmModule } from '../utils/misc-helpers';
+import { applyDevServerCors } from '../utils/dev-server-cors';
+import {
+  applyDevServerReadySignal,
+  ssrServerEmitsReadySignal,
+  READY_SIGNAL_PLUGIN,
+} from '../utils/dev-server-ready-signal';
 import { isServeMode } from '../utils/rspack-serve-env';
+import { addBodyScript } from '../utils/index-file/add-body-script';
 import { AngularRspackPlugin } from './angular-rspack-plugin';
-import { AngularSsrDevServer } from './angular-ssr-dev-server';
+import type { AngularSsrDevServer } from './angular-ssr-dev-server';
+import {
+  AngularSsrForkedServer,
+  servesSsrFromForkedServer,
+} from './angular-ssr-forked-server';
+import { connectSsrReload } from './client/ssr-reload-client';
+import type { SsrReloadServer } from './server/ssr-reload-server';
+import type { DevServerReloads } from './dev-server-reloads';
+import {
+  ExtractLicensesPlugin,
+  type SharedLicenseInputs,
+} from './extract-licenses-plugin';
 import { I18nInlinePlugin } from './i18n-inline-plugin';
-import { IndexHtmlPlugin } from './index-html-plugin';
+import {
+  IndexHtmlPlugin,
+  type SharedServerRenderingInputs,
+} from './index-html-plugin';
 import { ProgressPlugin } from './progress-plugin';
 import { RxjsEsmResolutionPlugin } from './rxjs-esm-resolution';
 
@@ -24,31 +49,164 @@ export class NgRspackPlugin implements RspackPluginInstance {
   readonly pluginOptions: NormalizedAngularRspackPluginOptions;
   readonly isPlatformServer: boolean;
   readonly i18n: I18nOptions;
+  private readonly sharedLicenseInputs: SharedLicenseInputs | undefined;
+  private readonly sharedAngularPlugin: AngularRspackPlugin | undefined;
+  private readonly serverRenderingInputs:
+    | SharedServerRenderingInputs
+    | undefined;
+  private readonly ssrReloadServer: SsrReloadServer | undefined;
+  private readonly ssrDevServer: AngularSsrDevServer | undefined;
+  private readonly devServerReloads: DevServerReloads | undefined;
+  readonly [READY_SIGNAL_PLUGIN] = true;
 
   constructor(
     pluginOptions: NormalizedAngularRspackPluginOptions,
     extraOptions: {
       platform: 'browser' | 'server';
       i18nOptions: I18nOptions;
+      /**
+       * License extraction inputs shared across the compilers of an SSR
+       * build, so the browser and server compilers emit the union instead of
+       * overwriting each other's licenses file.
+       */
+      sharedLicenseInputs?: SharedLicenseInputs;
+      /**
+       * Angular compilation shared across the compilers of an SSR build: the
+       * browser compiler owns it (its program includes the server entry
+       * points) and the server compiler consumes its output instead of
+       * running a second compilation. When absent, each compiler runs its
+       * own compilation.
+       */
+      sharedAngularPlugin?: AngularRspackPlugin;
+      /**
+       * Filled by the browser compiler of an SSR build for the server
+       * compiler.
+       */
+      serverRenderingInputs?: SharedServerRenderingInputs;
+      ssrReloadServer?: SsrReloadServer;
+      /** Serves SSR from the dev server of an SSR app in serve mode. */
+      ssrDevServer?: AngularSsrDevServer;
+      /** Reloads the dev server's pages for changes it misses (serve mode). */
+      devServerReloads?: DevServerReloads;
     }
   ) {
     this.pluginOptions = pluginOptions;
     this.i18n = extraOptions.i18nOptions;
     this.isPlatformServer = extraOptions.platform === 'server';
+    this.sharedLicenseInputs = extraOptions.sharedLicenseInputs;
+    this.sharedAngularPlugin = extraOptions.sharedAngularPlugin;
+    this.serverRenderingInputs = extraOptions.serverRenderingInputs;
+    this.ssrReloadServer = extraOptions.ssrReloadServer;
+    this.ssrDevServer = extraOptions.ssrDevServer;
+    this.devServerReloads = extraOptions.devServerReloads;
   }
 
   apply(compiler: Compiler) {
     const root = this.pluginOptions.root;
     const isDevServer = isServeMode();
+    const ssrReloadServer = this.ssrReloadServer;
 
-    if (this.isPlatformServer && isDevServer) {
-      if (
-        this.pluginOptions.ssr &&
-        typeof this.pluginOptions.ssr === 'object' &&
-        this.pluginOptions.ssr.entry !== undefined
-      ) {
-        new AngularSsrDevServer(this.pluginOptions).apply(compiler);
+    applyDevServerCors(compiler);
+
+    if (this.ssrDevServer) {
+      // With SSR, ready means the dev server's URL renders.
+      applyDevServerReadySignal(compiler, this.ssrDevServer.firstLoad);
+    } else if (
+      !isDevServer ||
+      !this.pluginOptions.hasServer ||
+      !ssrServerEmitsReadySignal(
+        root,
+        this.pluginOptions.ssr,
+        this.pluginOptions.fileReplacements
+      )
+    ) {
+      applyDevServerReadySignal(compiler);
+    }
+
+    if (!this.isPlatformServer && this.pluginOptions.deleteOutputPath) {
+      const outputPath = this.pluginOptions.outputPath.base;
+      const devServer = compiler.options.devServer;
+      try {
+        assertOutputPathIsNotProjectRoot(root, outputPath);
+        // A dev server writes to the output path only when its middleware's
+        // writeToDisk is set; otherwise it serves from memory.
+        if (
+          !isDevServer ||
+          (typeof devServer === 'object' &&
+            devServer.devMiddleware?.writeToDisk)
+        ) {
+          deleteOutputDir(root, outputPath);
+        }
+      } catch (error) {
+        // rspack-cli's serve exits 0 on any other error thrown while it
+        // creates the compiler.
+        throw new ValidationError(
+          error instanceof Error ? error.message : String(error)
+        );
       }
+    }
+
+    if (
+      this.isPlatformServer &&
+      isDevServer &&
+      servesSsrFromForkedServer(this.pluginOptions)
+    ) {
+      new AngularSsrForkedServer(this.pluginOptions, ssrReloadServer).apply(
+        compiler
+      );
+    }
+    if (this.isPlatformServer) {
+      this.ssrDevServer?.applyToServer(compiler);
+    } else {
+      this.ssrDevServer?.applyToBrowser(compiler);
+      this.devServerReloads?.apply(compiler, {
+        endsRound: !this.ssrDevServer,
+      });
+    }
+    if (this.isPlatformServer) {
+      // The server bundle is CommonJS; the marker keeps Node loading it as
+      // such under a `"type": "module"` workspace package.json.
+      compiler.hooks.thisCompilation.tap('NgRspackPlugin', (compilation) => {
+        compilation.hooks.processAssets.tap(
+          {
+            name: 'NgRspackPlugin',
+            stage: compiler.rspack.Compilation.PROCESS_ASSETS_STAGE_ADDITIONS,
+          },
+          () => {
+            if (!compilation.getAsset('package.json')) {
+              compilation.emitAsset(
+                'package.json',
+                new compiler.rspack.sources.RawSource('{"type": "commonjs"}\n')
+              );
+            }
+          }
+        );
+      });
+    } else {
+      // Deployment tooling reads this at the output root of every build; the
+      // PrerenderPlugin overwrites it with the rendered routes after emit.
+      compiler.hooks.thisCompilation.tap('NgRspackPlugin', (compilation) => {
+        compilation.hooks.processAssets.tap(
+          {
+            name: 'NgRspackPlugin',
+            stage: compiler.rspack.Compilation.PROCESS_ASSETS_STAGE_ADDITIONS,
+          },
+          () => {
+            compilation.emitAsset(
+              posix.join(
+                ...relative(
+                  this.pluginOptions.outputPath.browser,
+                  this.pluginOptions.outputPath.base
+                ).split(sep),
+                'prerendered-routes.json'
+              ),
+              new compiler.rspack.sources.RawSource(
+                JSON.stringify({ routes: {} }, null, 2)
+              )
+            );
+          }
+        );
+      });
     }
     if (!isDevServer && this.pluginOptions.progress) {
       new ProgressPlugin(this.isPlatformServer ? 'server' : 'browser').apply(
@@ -103,13 +261,7 @@ export class NgRspackPlugin implements RspackPluginInstance {
       }).apply(compiler);
     }
     if (this.pluginOptions.extractLicenses) {
-      const { LicenseWebpackPlugin } = require('license-webpack-plugin');
-      new LicenseWebpackPlugin({
-        stats: {
-          warnings: false,
-          errors: false,
-        },
-        perChunkOutput: false,
+      new ExtractLicensesPlugin({
         outputFilename: posix.join(
           relative(
             this.pluginOptions.outputPath.browser,
@@ -117,14 +269,28 @@ export class NgRspackPlugin implements RspackPluginInstance {
           ),
           '3rdpartylicenses.txt'
         ),
-        skipChildCompilers: true,
-      }).apply(compiler as any);
+        rootDirectory: root,
+        sharedInputs: this.sharedLicenseInputs,
+      }).apply(compiler);
     }
     if (this.i18n.shouldInline) {
       new I18nInlinePlugin(this.pluginOptions, this.i18n).apply(compiler);
     }
     new RxjsEsmResolutionPlugin().apply(compiler);
-    new AngularRspackPlugin(this.pluginOptions, this.i18n).apply(compiler);
+    if (this.sharedAngularPlugin) {
+      if (this.isPlatformServer) {
+        this.sharedAngularPlugin.applyToDependentCompiler(compiler);
+      } else {
+        this.sharedAngularPlugin.apply(compiler);
+      }
+    } else {
+      new AngularRspackPlugin(this.pluginOptions, this.i18n).apply(compiler);
+    }
+    if (!this.isPlatformServer && ssrReloadServer) {
+      compiler.hooks.shutdown.tapPromise('NgRspackPlugin', () =>
+        ssrReloadServer.close()
+      );
+    }
     if (!this.isPlatformServer && this.pluginOptions.index) {
       new IndexHtmlPlugin({
         indexPath: this.pluginOptions.index.input,
@@ -139,6 +305,19 @@ export class NgRspackPlugin implements RspackPluginInstance {
         i18n: this.i18n,
         optimization: this.pluginOptions.optimization,
         postTransform: this.pluginOptions.index.transformer,
+        serverPostTransform: ssrReloadServer
+          ? async (html) => {
+              if (!compiler.watchMode) {
+                return html;
+              }
+              const port = await ssrReloadServer.getPort();
+              return addBodyScript(
+                html,
+                `(${connectSsrReload.toString()})(${port});`,
+                'nx-angular-ssr-reload'
+              );
+            }
+          : undefined,
         isSsr: !!(
           this.pluginOptions.ssr ||
           this.pluginOptions.prerender ||
@@ -153,44 +332,8 @@ export class NgRspackPlugin implements RspackPluginInstance {
         chunksIntegrity: this.pluginOptions.subresourceIntegrity
           ? new Map()
           : undefined,
+        serverRenderingInputs: this.serverRenderingInputs,
       }).apply(compiler);
-    }
-    if (
-      this.pluginOptions.devServer.open &&
-      isDevServer &&
-      !this.isPlatformServer
-    ) {
-      compiler.hooks.afterEmit.tapAsync(
-        'AngularRspackPlugin',
-        async (_, callback) => {
-          const protocol = this.pluginOptions.devServer.ssl ? 'https' : 'http';
-          const hostname =
-            this.pluginOptions.devServer.host === '0.0.0.0'
-              ? 'localhost'
-              : this.pluginOptions.devServer.host;
-          const port = this.pluginOptions.devServer.port;
-          const devServerOpts = compiler.options.devServer;
-          const publicPath =
-            typeof devServerOpts === 'object'
-              ? devServerOpts.devMiddleware?.publicPath
-              : undefined;
-          const pathname =
-            typeof publicPath === 'string' ? publicPath : undefined;
-
-          const serverAddress = new URL(`${protocol}://${hostname}:${port}`);
-          if (pathname) {
-            // Ensure pathname starts with a slash
-            serverAddress.pathname = pathname.startsWith('/')
-              ? pathname
-              : `/${pathname}`;
-          }
-
-          const open = (await loadEsmModule<typeof import('open')>('open'))
-            .default;
-          await open(serverAddress.toString());
-          callback();
-        }
-      );
     }
   }
 }

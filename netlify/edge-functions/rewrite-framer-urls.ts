@@ -159,11 +159,14 @@ export default async function handler(
   if (nextjsPaths.has(pathname)) return context.next();
 
   // Blog/changelog routing: proxy to standalone blog site, or fall through to Next.js.
+  // The CI plan cost calculator is a route of the blog site too.
   const isBlogPath =
     pathname === '/blog' ||
     pathname.startsWith('/blog/') ||
     pathname === '/changelog' ||
-    pathname.startsWith('/changelog/');
+    pathname.startsWith('/changelog/') ||
+    pathname === '/pricing/calculator' ||
+    pathname === '/pricing/calculator/';
 
   if (isBlogPath && !blogUrl) return context.next();
 
@@ -278,6 +281,8 @@ export const config = {
     '/courses/*',
     '/_next/*',
     '/.netlify/*',
+    // Agent discovery endpoints - Next rewrites these to astro-docs
+    '/.well-known/*',
     // Legacy docs paths — must bypass Framer so _redirects 301 rules fire
     '/ci',
     '/ci/*',
@@ -337,6 +342,18 @@ export const config = {
     '/troubleshooting/*',
     '/using-nx',
     '/using-nx/*',
+    // Legacy backlink targets sitting under Framer- and blog-proxied routes.
+    // Exact paths only, so the proxies keep serving everything else.
+    '/blog/2024-05-08-nx-19-release',
+    '/blog/evolving-nx',
+    // DOC-660: excludedPath matching is case-sensitive, so the '/docs/*' entry
+    // above does not cover this indexed mixed-case URL.
+    '/Docs/Knowledge',
+    '/cypress/overview',
+    '/jest/overview',
+    '/more-concepts/monorepo-nx-enterprise',
+    '/more-concepts/global-nx',
+    '/storybook/overview-react',
     '/ai',
     '/advent-of-code',
     '/launch-nx',

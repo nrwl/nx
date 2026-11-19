@@ -1,13 +1,14 @@
 import {
   checkFilesExist,
   cleanupProject,
-  killPorts,
   newProject,
+  reservePort,
   runCLI,
-  runE2ETests,
   uniq,
   updateFile,
   updateJson,
+  shouldRunPlaywrightTests,
+  configureTargetOptions,
 } from '@nx/e2e-utils';
 
 describe('Next.js App Router', () => {
@@ -16,7 +17,7 @@ describe('Next.js App Router', () => {
   beforeAll(
     () =>
       (proj = newProject({
-        packages: ['@nx/next', '@nx/js', '@nx/playwright'],
+        packages: ['@nx/next', '@nx/eslint', '@nx/js', '@nx/playwright'],
       }))
   );
 
@@ -25,6 +26,8 @@ describe('Next.js App Router', () => {
   it('should be able to generate and build app with default App Router', async () => {
     const appName = uniq('app');
     const jsLib = uniq('tslib');
+    const port = await reservePort();
+    configureTargetOptions(['dev', 'start'], { port });
 
     runCLI(
       `generate @nx/next:app ${appName} --e2eTestRunner=playwright --appDir=true`
@@ -72,12 +75,11 @@ describe('Next.js App Router', () => {
     const lintResults = runCLI(`lint ${appName}`);
     expect(lintResults).toContain('Successfully ran target lint');
 
-    if (runE2ETests()) {
+    if (await shouldRunPlaywrightTests()) {
       const e2eResults = runCLI(
         `e2e ${appName}-e2e --configuration=production`
       );
       expect(e2eResults).toContain('Successfully ran target e2e for project');
-      await killPorts();
     }
   }, 300_000);
 });

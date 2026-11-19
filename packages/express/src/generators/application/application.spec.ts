@@ -1,3 +1,17 @@
+// Pin the detected package manager so inferred lock-file outputs (e.g.
+// prune-lockfile) and package-manager commands are deterministic regardless of
+// which package manager runs the tests.
+vi.mock('@nx/devkit', async () => {
+  const actual = await vi.importActual<any>('@nx/devkit');
+  return {
+    ...actual,
+    detectPackageManager: vi.fn(() => 'npm'),
+    getPackageManagerCommand: vi.fn((pm = 'npm') =>
+      actual.getPackageManagerCommand(pm)
+    ),
+  };
+});
+
 import {
   readJson,
   readProjectConfiguration,
@@ -6,6 +20,7 @@ import {
   writeJson,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import { transpileModule } from 'typescript';
 import { applicationGenerator } from './application';
 import { Schema } from './schema';
 
@@ -26,11 +41,16 @@ describe('app', () => {
 
   it('should generate files', async () => {
     await applicationGenerator(appTree, {
+      linter: 'eslint',
       directory: 'my-node-app',
     } as Schema);
 
     const mainFile = appTree.read('my-node-app/src/main.ts').toString();
     expect(mainFile).toContain(`import express from 'express';`);
+    expect(mainFile).toContain("load('@nx/js/ready-signal')");
+    expect(mainFile).toContain('emitReadySignal(server)');
+    expect(mainFile).toContain('app.listen(port, async (error?: Error) =>');
+    expect(mainFile).toContain('process.exit(1)');
 
     const tsconfig = readJson(appTree, 'my-node-app/tsconfig.json');
     expect(tsconfig).toMatchInlineSnapshot(`
@@ -55,9 +75,20 @@ describe('app', () => {
     expect(appTree.exists('my-node-app/eslint.config.mjs')).toBeTruthy();
   });
 
+  it('should set up vitest when asked for it', async () => {
+    await applicationGenerator(appTree, {
+      directory: 'my-node-app',
+      unitTestRunner: 'vitest',
+    } as Schema);
+
+    expect(appTree.exists('my-node-app/vitest.config.mts')).toBeTruthy();
+    expect(appTree.exists('my-node-app/jest.config.cts')).toBeFalsy();
+  });
+
   it('should generate the .eslintrc.json file (eslintrc)', async () => {
     process.env.ESLINT_USE_FLAT_CONFIG = 'false';
     await applicationGenerator(appTree, {
+      linter: 'eslint',
       directory: 'my-node-app',
     } as Schema);
 
@@ -137,9 +168,14 @@ describe('app', () => {
       } as Schema);
 
       expect(appTree.exists('my-node-app/src/main.js')).toBeTruthy();
-      expect(appTree.read('my-node-app/src/main.js').toString()).toContain(
-        `import express from 'express';`
-      );
+      const mainFile = appTree.read('my-node-app/src/main.js').toString();
+      expect(mainFile).toContain(`import express from 'express';`);
+      expect(mainFile).toContain("load('@nx/js/ready-signal')");
+      const { diagnostics } = transpileModule(mainFile, {
+        fileName: 'main.js',
+        reportDiagnostics: true,
+      });
+      expect(diagnostics).toEqual([]);
 
       const tsConfig = readJson(appTree, 'my-node-app/tsconfig.json');
       expect(tsConfig.compilerOptions).toEqual({
@@ -181,6 +217,7 @@ describe('app', () => {
 
     it('should add project references when using TS solution', async () => {
       await applicationGenerator(appTree, {
+        linter: 'eslint',
         directory: 'myapp',
         useProjectJson: false,
       } as Schema);
@@ -205,8 +242,8 @@ describe('app', () => {
           "name",
           "version",
           "private",
-          "nx",
           "dependencies",
+          "nx",
         ]
       `);
       expect(readJson(appTree, 'myapp/package.json')).toMatchInlineSnapshot(`
@@ -217,30 +254,6 @@ describe('app', () => {
           "name": "@proj/myapp",
           "nx": {
             "targets": {
-              "build": {
-                "configurations": {
-                  "development": {
-                    "outputHashing": "none",
-                  },
-                  "production": {},
-                },
-                "defaultConfiguration": "production",
-                "executor": "@nx/webpack:webpack",
-                "options": {
-                  "assets": [
-                    "myapp/src/assets",
-                  ],
-                  "compiler": "tsc",
-                  "main": "myapp/src/main.ts",
-                  "outputPath": "myapp/dist",
-                  "target": "node",
-                  "tsConfig": "myapp/tsconfig.app.json",
-                  "webpackConfig": "myapp/webpack.config.js",
-                },
-                "outputs": [
-                  "{options.outputPath}",
-                ],
-              },
               "copy-workspace-modules": {
                 "cache": true,
                 "dependsOn": [
@@ -253,9 +266,6 @@ describe('app', () => {
                 "outputs": [
                   "{workspaceRoot}/myapp/dist/workspace_modules",
                 ],
-              },
-              "lint": {
-                "executor": "@nx/eslint:lint",
               },
               "prune": {
                 "dependsOn": [
@@ -297,16 +307,14 @@ describe('app', () => {
                   "buildTarget": "@proj/myapp:build",
                   "runBuildTargetDependencies": false,
                 },
+                "readyWhen": {
+                  "signal": true,
+                },
               },
               "test": {
-                "executor": "@nx/jest:jest",
                 "options": {
-                  "jestConfig": "myapp/jest.config.cts",
                   "passWithNoTests": true,
                 },
-                "outputs": [
-                  "{projectRoot}/test-output/jest/coverage",
-                ],
               },
             },
           },
@@ -414,6 +422,7 @@ describe('app', () => {
 
     it('should generate project.json if useProjectJson is true', async () => {
       await applicationGenerator(appTree, {
+        linter: 'eslint',
         directory: 'myapp',
         useProjectJson: true,
         skipFormat: true,
@@ -430,30 +439,6 @@ describe('app', () => {
           "sourceRoot": "myapp/src",
           "tags": [],
           "targets": {
-            "build": {
-              "configurations": {
-                "development": {
-                  "outputHashing": "none",
-                },
-                "production": {},
-              },
-              "defaultConfiguration": "production",
-              "executor": "@nx/webpack:webpack",
-              "options": {
-                "assets": [
-                  "myapp/src/assets",
-                ],
-                "compiler": "tsc",
-                "main": "myapp/src/main.ts",
-                "outputPath": "myapp/dist",
-                "target": "node",
-                "tsConfig": "myapp/tsconfig.app.json",
-                "webpackConfig": "myapp/webpack.config.js",
-              },
-              "outputs": [
-                "{options.outputPath}",
-              ],
-            },
             "copy-workspace-modules": {
               "cache": true,
               "dependsOn": [
@@ -466,9 +451,6 @@ describe('app', () => {
               "outputs": [
                 "{workspaceRoot}/myapp/dist/workspace_modules",
               ],
-            },
-            "lint": {
-              "executor": "@nx/eslint:lint",
             },
             "prune": {
               "dependsOn": [
@@ -510,16 +492,14 @@ describe('app', () => {
                 "buildTarget": "@proj/myapp:build",
                 "runBuildTargetDependencies": false,
               },
+              "readyWhen": {
+                "signal": true,
+              },
             },
             "test": {
-              "executor": "@nx/jest:jest",
               "options": {
-                "jestConfig": "myapp/jest.config.cts",
                 "passWithNoTests": true,
               },
-              "outputs": [
-                "{projectRoot}/test-output/jest/coverage",
-              ],
             },
           },
         }

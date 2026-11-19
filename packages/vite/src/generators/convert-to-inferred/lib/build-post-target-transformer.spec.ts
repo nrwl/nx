@@ -1,11 +1,8 @@
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import {
-  buildPostTargetTransformer,
-  moveBuildLibsFromSourceToViteConfig,
-} from './build-post-target-transformer';
+import { buildPostTargetTransformer } from './build-post-target-transformer';
 
 describe('buildPostTargetTransformer', () => {
-  it('should remove the correct options and move the AST options to the vite config file correctly and remove outputs when they match inferred', () => {
+  it('should migrate build options and remove outputs that match inferred', () => {
     // ARRANGE
     const tree = createTreeWithEmptyWorkspace();
 
@@ -42,7 +39,7 @@ describe('buildPostTargetTransformer', () => {
 
     // ASSERT
     const configFile = tree.read('apps/myapp/vite.config.ts', 'utf-8');
-    expect(configFile).toMatchSnapshot();
+    expect(configFile).toBe(viteConfigFileV17);
     expect(target).toMatchInlineSnapshot(`
       {
         "options": {
@@ -54,7 +51,7 @@ describe('buildPostTargetTransformer', () => {
     `);
   });
 
-  it('should move the AST options to each vite config file correctly for configurations', () => {
+  it('should migrate configuration options without rewriting Vite configs', () => {
     // ARRANGE
     const tree = createTreeWithEmptyWorkspace();
 
@@ -97,9 +94,9 @@ describe('buildPostTargetTransformer', () => {
 
     // ASSERT
     const configFile = tree.read('apps/myapp/vite.config.ts', 'utf-8');
-    expect(configFile).toMatchSnapshot();
+    expect(configFile).toBe(viteConfigFileV17);
     const devConfigFile = tree.read('apps/myapp/vite.dev.config.ts', 'utf-8');
-    expect(devConfigFile).toMatchSnapshot();
+    expect(devConfigFile).toBe(viteConfigFileV17);
     expect(target).toMatchInlineSnapshot(`
       {
         "configurations": {
@@ -167,70 +164,73 @@ describe('buildPostTargetTransformer', () => {
     `);
   });
 
-  describe('moveBuildLibsFromSourceToViteConfig', () => {
-    it('should add buildLibsFromSource to existing nxViteTsPaths plugin with no existing options', () => {
-      // ARRANGE
-      const tree = createTreeWithEmptyWorkspace();
-      tree.write('vite.config.ts', viteConfigFileV17);
+  it('should leave the Vite config unchanged when rerun', () => {
+    const tree = createTreeWithEmptyWorkspace();
+    const viteConfig = `import { defineConfig } from 'vite';
 
-      // ACT
-      moveBuildLibsFromSourceToViteConfig(tree, 'vite.config.ts');
-
-      // ASSERT
-      const newContents = tree.read('vite.config.ts', 'utf-8');
-      expect(newContents).toContain(
-        'nxViteTsPaths({ buildLibsFromSource: options.buildLibsFromSource })'
-      );
-      expect(newContents).toMatchSnapshot();
+export default defineConfig(() => ({
+  root: import.meta.dirname,
+}));
+`;
+    tree.write('libs/ui/vite.config.mts', viteConfig);
+    const createTarget = () => ({
+      outputs: ['{options.outputPath}'],
+      options: { outputPath: 'dist/libs/ui' },
+      configurations: {
+        development: { mode: 'development' },
+        production: { mode: 'production' },
+      },
     });
+    const inferredTargetConfiguration = {
+      outputs: ['{projectRoot}/{options.outDir}'],
+    };
+    const projectDetails = { projectName: 'ui', root: 'libs/ui' };
 
-    it('should add buildLibsFromSource to existing nxViteTsPaths plugin with existing options', () => {
-      // ARRANGE
-      const tree = createTreeWithEmptyWorkspace();
-      tree.write('vite.config.ts', viteConfigFileV17NxViteTsPathsOpts);
+    // A package.json script with the same name keeps the target, so a rerun
+    // transforms it again.
+    buildPostTargetTransformer(
+      createTarget(),
+      tree,
+      projectDetails,
+      inferredTargetConfiguration
+    );
+    buildPostTargetTransformer(
+      createTarget(),
+      tree,
+      projectDetails,
+      inferredTargetConfiguration
+    );
 
-      // ACT
-      moveBuildLibsFromSourceToViteConfig(tree, 'vite.config.ts');
+    expect(tree.read('libs/ui/vite.config.mts', 'utf-8')).toBe(viteConfig);
+  });
 
-      // ASSERT
-      const newContents = tree.read('vite.config.ts', 'utf-8');
-      expect(newContents).toContain(
-        'nxViteTsPaths({buildLibsFromSource: options.buildLibsFromSource,  debug: true })'
-      );
-      expect(newContents).toMatchSnapshot();
-    });
+  it('should preserve user configValues declarations', () => {
+    const tree = createTreeWithEmptyWorkspace();
+    const viteConfig = `import { defineConfig } from 'vite';
 
-    it('should add buildLibsFromSource to new nxViteTsPaths plugin when the plugin is not added', () => {
-      // ARRANGE
-      const tree = createTreeWithEmptyWorkspace();
-      tree.write('vite.config.ts', viteConfigFileV17NoNxViteTsPaths);
+function getDefines() {
+  const configValues = { DEBUG: false };
+  return configValues;
+}
 
-      // ACT
-      moveBuildLibsFromSourceToViteConfig(tree, 'vite.config.ts');
+export default defineConfig(() => ({
+  root: import.meta.dirname,
+  define: getDefines(),
+}));
+`;
+    tree.write('libs/ui/vite.config.mts', viteConfig);
 
-      // ASSERT
-      const newContents = tree.read('vite.config.ts', 'utf-8');
-      expect(newContents).toContain(
-        'nxViteTsPaths({ buildLibsFromSource: options.buildLibsFromSource })'
-      );
-      expect(newContents).toMatchSnapshot();
-    });
+    buildPostTargetTransformer(
+      {
+        options: { outputPath: 'dist/libs/ui' },
+        configurations: { production: { mode: 'production' } },
+      },
+      tree,
+      { projectName: 'ui', root: 'libs/ui' },
+      { outputs: ['{projectRoot}/{options.outDir}'] }
+    );
 
-    it('should add buildLibsFromSource to new nxViteTsPaths plugin when the plugins property does not exist', () => {
-      // ARRANGE
-      const tree = createTreeWithEmptyWorkspace();
-      tree.write('vite.config.ts', viteConfigFileV17NoPlugins);
-
-      // ACT
-      moveBuildLibsFromSourceToViteConfig(tree, 'vite.config.ts');
-
-      // ASSERT
-      const newContents = tree.read('vite.config.ts', 'utf-8');
-      expect(newContents).toContain(
-        'nxViteTsPaths({ buildLibsFromSource: options.buildLibsFromSource })'
-      );
-      expect(newContents).toMatchSnapshot();
-    });
+    expect(tree.read('libs/ui/vite.config.mts', 'utf-8')).toBe(viteConfig);
   });
 });
 
@@ -254,197 +254,6 @@ export default defineConfig({
   },
 
   plugins: [react(), nxViteTsPaths()],
-
-  // Uncomment this if you are using workers.
-  // worker: {
-  //  plugins: [ nxViteTsPaths() ],
-  // },
-
-  build: {
-    outDir: '../../dist/apps/myapp',
-    reportCompressedSize: true,
-    commonjsOptions: {
-      transformMixedEsModules: true,
-    },
-  },
-
-  test: {
-    globals: true,
-    cache: {
-      dir: '../../node_modules/.vitest',
-    },
-    environment: 'jsdom',
-    include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-
-    reporters: ['default'],
-    coverage: {
-      reportsDirectory: '../../coverage/apps/myapp',
-      provider: 'v8',
-    },
-  },
-});`;
-const viteConfigFileV17NoOutDir = `/// <reference types='vitest' />
-import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
-import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
-
-export default defineConfig({
-  root: __dirname,
-  cacheDir: '../../node_modules/.vite/apps/myapp',
-
-  server: {
-    port: 4200,
-    host: 'localhost',
-  },
-
-  preview: {
-    port: 4300,
-    host: 'localhost',
-  },
-
-  plugins: [react(), nxViteTsPaths()],
-
-  // Uncomment this if you are using workers.
-  // worker: {
-  //  plugins: [ nxViteTsPaths() ],
-  // },
-
-  build: {
-    reportCompressedSize: true,
-    commonjsOptions: {
-      transformMixedEsModules: true,
-    },
-  },
-
-  test: {
-    globals: true,
-    cache: {
-      dir: '../../node_modules/.vitest',
-    },
-    environment: 'jsdom',
-    include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-
-    reporters: ['default'],
-    coverage: {
-      reportsDirectory: '../../coverage/apps/myapp',
-      provider: 'v8',
-    },
-  },
-});`;
-const viteConfigFileV17NxViteTsPathsOpts = `/// <reference types='vitest' />
-import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
-import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
-
-export default defineConfig({
-  root: __dirname,
-  cacheDir: '../../node_modules/.vite/apps/myapp',
-
-  server: {
-    port: 4200,
-    host: 'localhost',
-  },
-
-  preview: {
-    port: 4300,
-    host: 'localhost',
-  },
-
-  plugins: [react(), nxViteTsPaths({ debug: true })],
-
-  // Uncomment this if you are using workers.
-  // worker: {
-  //  plugins: [ nxViteTsPaths() ],
-  // },
-
-  build: {
-    outDir: '../../dist/apps/myapp',
-    reportCompressedSize: true,
-    commonjsOptions: {
-      transformMixedEsModules: true,
-    },
-  },
-
-  test: {
-    globals: true,
-    cache: {
-      dir: '../../node_modules/.vitest',
-    },
-    environment: 'jsdom',
-    include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-
-    reporters: ['default'],
-    coverage: {
-      reportsDirectory: '../../coverage/apps/myapp',
-      provider: 'v8',
-    },
-  },
-});`;
-const viteConfigFileV17NoNxViteTsPaths = `/// <reference types='vitest' />
-import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
-
-export default defineConfig({
-  root: __dirname,
-  cacheDir: '../../node_modules/.vite/apps/myapp',
-
-  server: {
-    port: 4200,
-    host: 'localhost',
-  },
-
-  preview: {
-    port: 4300,
-    host: 'localhost',
-  },
-
-  plugins: [react()],
-
-  // Uncomment this if you are using workers.
-  // worker: {
-  //  plugins: [ nxViteTsPaths() ],
-  // },
-
-  build: {
-    outDir: '../../dist/apps/myapp',
-    reportCompressedSize: true,
-    commonjsOptions: {
-      transformMixedEsModules: true,
-    },
-  },
-
-  test: {
-    globals: true,
-    cache: {
-      dir: '../../node_modules/.vitest',
-    },
-    environment: 'jsdom',
-    include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-
-    reporters: ['default'],
-    coverage: {
-      reportsDirectory: '../../coverage/apps/myapp',
-      provider: 'v8',
-    },
-  },
-});`;
-const viteConfigFileV17NoPlugins = `/// <reference types='vitest' />
-import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
-
-export default defineConfig({
-  root: __dirname,
-  cacheDir: '../../node_modules/.vite/apps/myapp',
-
-  server: {
-    port: 4200,
-    host: 'localhost',
-  },
-
-  preview: {
-    port: 4300,
-    host: 'localhost',
-  },
 
   // Uncomment this if you are using workers.
   // worker: {

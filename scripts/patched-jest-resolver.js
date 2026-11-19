@@ -65,6 +65,7 @@ module.exports = function (modulePath, options) {
   // Only use custom resolution for workspace packages
   // Let default resolver handle published packages and everything else
   const workspacePackages = [
+    '@nx/rolldown',
     '@nx/rollup',
     '@nx/eslint',
     '@nx/vite',
@@ -97,6 +98,7 @@ module.exports = function (modulePath, options) {
     '@nx/nest',
     '@nx/node',
     '@nx/nuxt',
+    '@nx/oxlint',
     '@nx/playwright',
     '@nx/plugin',
     '@nx/react',
@@ -114,7 +116,32 @@ module.exports = function (modulePath, options) {
       return options.defaultResolver(modulePath, options);
     }
 
-    return enhancedResolver(path.resolve(options.basedir), modulePath);
+    const basedir = path.resolve(options.basedir);
+    try {
+      return enhancedResolver(basedir, modulePath);
+    } catch (err) {
+      // An ESM package under NodeNext imports its siblings with a `.js`
+      // extension that only exists after a build. Map that onto the TypeScript
+      // source so such a package is loadable from any consumer's tests, rather
+      // than only its own via a per-package `moduleNameMapper`.
+      //
+      // Only an adjacent `.ts`/`.tsx` counts. Handing the extensionless
+      // specifier back to the resolver would also accept `./foo.json` and
+      // `./foo/index.ts`, neither of which NodeNext resolves for `./foo.js` —
+      // a test would pass on an import that fails in the published package.
+      if (/^\.{1,2}\//.test(modulePath) && modulePath.endsWith('.js')) {
+        const withoutExt = modulePath.slice(0, -'.js'.length);
+        for (const ext of ['.ts', '.tsx']) {
+          const candidate = path.resolve(basedir, withoutExt + ext);
+          if (isWorkspaceFile(candidate)) {
+            return candidate;
+          }
+        }
+      }
+      // The original names the `.js` specifier that actually appears in the
+      // source, which is what a developer greps for.
+      throw err;
+    }
   }
 
   const ext = path.extname(modulePath);

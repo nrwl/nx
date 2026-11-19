@@ -2,8 +2,11 @@ import {
   addDependenciesToPackageJson,
   GeneratorCallback,
   runTasksInSerial,
+  Tree,
+  joinPathFragments,
 } from '@nx/devkit';
-import { Linter, LinterType, lintProjectGenerator } from '@nx/eslint';
+import { getResolvedPackageVersion } from '@nx/devkit/internal';
+import { LinterType } from '@nx/js';
 import {
   addExtendsToLintConfig,
   addOverrideToLintConfig,
@@ -16,52 +19,54 @@ import {
   versions,
 } from '@nx/eslint/internal';
 import type { Linter as EsLintLinter } from 'eslint';
-import { Tree } from 'nx/src/generators/tree';
-import { joinPathFragments } from 'nx/src/utils/path';
 import {
   eslintPluginVueVersion,
   vueEslintConfigPrettierVersion,
   vueEslintConfigTypescriptVersion,
+  vueEslintParserVersion,
 } from './versions';
+import { addLintingToProject } from '@nx/js/internal';
 
 export async function addLinting(
   host: Tree,
   options: {
-    linter: Linter | LinterType;
+    linter: LinterType;
     name: string;
     projectRoot: string;
     unitTestRunner?: 'vitest' | 'none';
-    setParserOptionsProject?: boolean;
+    enableTypedLinting?: boolean;
     skipPackageJson?: boolean;
     rootProject?: boolean;
-    addPlugin?: boolean;
     projectName: string;
   },
   projectType: 'lib' | 'app'
 ) {
-  if (options.linter === 'eslint') {
-    const tasks: GeneratorCallback[] = [];
-    const lintTask = await lintProjectGenerator(host, {
+  const tasks: GeneratorCallback[] = [];
+  tasks.push(
+    await addLintingToProject(host, {
+      oxlintPlugins: ['vue'],
       linter: options.linter,
       project: options.projectName,
       tsConfigPaths: [
         joinPathFragments(options.projectRoot, `tsconfig.${projectType}.json`),
       ],
       unitTestRunner: options.unitTestRunner,
-      skipFormat: true,
-      setParserOptionsProject: options.setParserOptionsProject,
+      enableTypedLinting: options.enableTypedLinting,
       rootProject: options.rootProject,
-      addPlugin: options.addPlugin,
-    });
-    tasks.push(lintTask);
+      skipPackageJson: options.skipPackageJson,
+    })
+  );
 
+  // Everything below configures ESLint — predefined configs, `extends`, ignore
+  // entries — which have no equivalent in other linters.
+  if (options.linter === 'eslint') {
     if (useFlatConfig(host)) {
     } else {
       const addExtendsTask = addExtendsToLintConfig(
         host,
         options.projectRoot,
         [
-          'plugin:vue/vue3-essential',
+          getVueEssentialConfig(host),
           'eslint:recommended',
           '@vue/eslint-config-typescript',
           '@vue/eslint-config-prettier/skip-formatting',
@@ -76,6 +81,8 @@ export async function addLinting(
       '@vue/eslint-config-prettier': vueEslintConfigPrettierVersion,
       '@vue/eslint-config-typescript': vueEslintConfigTypescriptVersion,
       'eslint-plugin-vue': eslintPluginVueVersion,
+      // eslint-plugin-vue v10 takes its parser as a peer dependency.
+      'vue-eslint-parser': vueEslintParserVersion,
     };
     if (
       isEslintConfigSupported(host, options.projectRoot) &&
@@ -95,11 +102,21 @@ export async function addLinting(
       );
       tasks.push(installTask);
     }
-
-    return runTasksInSerial(...tasks);
-  } else {
-    return () => {};
   }
+
+  return runTasksInSerial(...tasks);
+}
+
+// On eslint-plugin-vue 9, `essential` is the Vue 2 config; 10 renamed `vue3-essential` to `essential`.
+function getVueEssentialConfig(tree: Tree): string {
+  const version = getResolvedPackageVersion(
+    tree,
+    'eslint-plugin-vue',
+    eslintPluginVueVersion
+  );
+  return version && Number(version.split('.')[0]) < 10
+    ? 'plugin:vue/vue3-essential'
+    : 'plugin:vue/essential';
 }
 
 function editEslintConfigFiles(tree: Tree, projectRoot: string) {

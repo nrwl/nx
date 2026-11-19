@@ -74,7 +74,7 @@ export function BlogContainer({ blogPosts, tags }: BlogContainerProps) {
     <main id="main" role="main" className="w-full py-8">
       <div className="mx-auto mb-8 w-full max-w-[1088px] px-8">
         <>
-          <header className="mb-8 mt-20">
+          <header className="mt-20 mb-8">
             <h1
               id="blog-title"
               className="text-xl font-semibold tracking-tight text-zinc-900 md:text-2xl dark:text-zinc-100"
@@ -100,7 +100,7 @@ export function BlogContainer({ blogPosts, tags }: BlogContainerProps) {
         <FeaturedBlogs blogs={firstFiveBlogs} />
         {!!remainingBlogs.length && (
           <>
-            <div className="mx-auto mb-8 mt-20 flex items-center justify-between border-b-2 border-zinc-300 pb-3 text-sm dark:border-zinc-700">
+            <div className="mx-auto mt-20 mb-8 flex items-center justify-between border-b-2 border-zinc-300 pb-3 text-sm dark:border-zinc-700">
               <h2 className="font-semibold">All blogs</h2>
               <div className="flex gap-2">
                 <Link

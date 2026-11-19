@@ -11,7 +11,7 @@ import {
 
 import { ExpoSyncDepsOptions } from './schema';
 import { findAllNpmDependencies } from '../../utils/find-all-npm-dependencies';
-import { PackageJson } from 'nx/src/utils/package-json';
+import { PackageJson } from '@nx/devkit/internal';
 
 export interface ReactNativeSyncDepsOutput {
   success: boolean;

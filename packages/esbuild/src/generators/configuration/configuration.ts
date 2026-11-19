@@ -1,6 +1,8 @@
 import {
   addBuildTargetDefaults,
   readTargetDefaultsForTarget,
+  mergeTargetConfigurations,
+  PackageJson,
 } from '@nx/devkit/internal';
 import {
   formatFiles,
@@ -21,8 +23,6 @@ import {
   TS_SOLUTION_SETUP_TSCONFIG_INPUT,
 } from '@nx/js/internal';
 import { basename, dirname, join } from 'node:path/posix';
-import { mergeTargetConfigurations } from 'nx/src/devkit-internals';
-import { PackageJson } from 'nx/src/utils/package-json';
 import { getOutExtension } from '../../executors/esbuild/lib/build-esbuild-options';
 import { EsBuildExecutorOptions } from '../../executors/esbuild/schema';
 import { assertSupportedEsbuildVersion } from '../../utils/assert-supported-esbuild-version';
@@ -174,9 +174,6 @@ function updatePackageJson(
       format = ['esm'],
       esbuildOptions,
     } = mergedTarget.options;
-
-    // the file must exist in the TS solution setup
-    const tsconfigBase = readJson(tree, 'tsconfig.base.json');
 
     // can't use the declarationRootDir as rootDir because it only affects the typings,
     // not the runtime entry point

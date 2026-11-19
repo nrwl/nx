@@ -1,0 +1,75 @@
+---
+title: Configuring Browser Support
+description: Learn how to configure browser compatibility for your Nx applications using browserslist, optimize bundle size with modern browser targets, and debug your browser support configuration.
+filter: 'type:Guides'
+topics:
+  - 'Recipes'
+---
+
+Builds that use [browserslist](https://github.com/browserslist/browserslist), such as `@nx/rspack` web builds, read your application's browser support from it.
+It decides which transformations run on your code in both production and development builds.
+
+Vite doesn't read browserslist.
+Set [`build.target`](https://vite.dev/config/build-options#build-target) in your Vite config instead.
+
+In general, the more modern your applications browser support is, the smaller the filesize as the code can rely on modern API's being present and not have to ship polyfills or shimmed code.
+
+Nx generators don't create a browserslist config.
+To add one, use either of these options:
+
+- Create a `.browserslistrc` file in the project root.
+- Add a `browserslist` key to the project's `package.json`.
+
+Browserslist also looks in parent directories, so a config in the workspace root applies to every project that doesn't have its own.
+
+For example, the following `.browserslistrc` supports only recent browser versions.
+
+```text
+last 1 Chrome version
+last 1 Firefox version
+last 2 Edge major versions
+last 2 Safari major version
+last 2 iOS major versions
+Firefox ESR
+not IE 9-11
+```
+
+This configuration is used for many tools including babel, autoprefixer, postcss, and more to decide which transforms are necessary on the source code when producing built code to run in the browser.
+
+For additional information regarding the format and rule options, please see: https://github.com/browserslist/browserslist#queries
+
+## Debugging browser support
+
+Sometimes broad configurations like `> 0.5%, not IE 11` can lead to surprising results, due to supporting browsers like Opera Mini or Android UC browser.
+
+To see what browsers your configuration is supporting, run `npx browserslist` in the application's directory to get an output of browsers and versions to support.
+
+```text {% title="npx browserslist" frame="terminal" %}
+chrome 154
+edge 154
+edge 153
+firefox 157
+firefox 153
+ios_saf 27.0
+ios_saf 26.6
+ios_saf 26.5
+ios_saf 26.4
+ios_saf 26.3
+ios_saf 26.2
+ios_saf 26.1
+ios_saf 26.0
+safari 27
+safari 26.6
+safari 26.5
+safari 26.4
+safari 26.3
+safari 26.2
+safari 26.1
+safari 26.0
+```
+
+Alternatively, if your support config is short you can just add it as a string param on the CLI:
+
+```shell
+npx browserslist '> 0.5%, not IE 11'
+```

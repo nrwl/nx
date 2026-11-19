@@ -2,15 +2,10 @@ import {
   determineProjectNameAndRootOptions,
   ensureRootProjectName,
 } from '@nx/devkit/internal';
-import {
-  getProjects,
-  logger,
-  normalizePath,
-  readNxJson,
-  Tree,
-} from '@nx/devkit';
+import { getProjects, logger, normalizePath, Tree } from '@nx/devkit';
 import { NormalizedSchema, Schema } from '../schema';
 import {
+  normalizeLinterOption,
   getProjectSourceRoot,
   getProjectType,
   isUsingTsSolutionSetup,
@@ -49,35 +44,10 @@ export async function normalizeOptions(
       bundler = 'vite';
     }
   }
-  const nxJson = readNxJson(host);
-
-  const addPlugin =
-    process.env.NX_ADD_PLUGINS !== 'false' &&
-    nxJson.useInferencePlugins !== false;
-
   const isUsingTsSolutionConfig = isUsingTsSolutionSetup(host);
 
-  const normalized = {
-    addPlugin,
-    ...options,
-    projectName:
-      isUsingTsSolutionConfig && !options.name ? importPath : projectName,
-    bundler,
-    fileName,
-    routePath: `/${projectNames.projectFileName}`,
-    name: projectName,
-    projectRoot,
-    parsedTags,
-    importPath,
-    isUsingTsSolutionConfig,
-    useProjectJson: options.useProjectJson ?? !isUsingTsSolutionConfig,
-  } as NormalizedSchema;
-
-  // Libraries with a bundler or is publishable must also be buildable.
-  normalized.bundler =
-    normalized.bundler !== 'none' || options.publishable ? 'vite' : 'none';
-
-  normalized.inSourceTests === normalized.minimal || normalized.inSourceTests;
+  let appMain: string | undefined;
+  let appSourceRoot: string | undefined;
 
   if (options.appProject) {
     const appProjectConfig = getProjects(host).get(options.appProject);
@@ -93,17 +63,39 @@ export async function normalizeOptions(
       );
     }
 
-    const appSourceRoot = getProjectSourceRoot(appProjectConfig, host);
+    const projectSourceRoot = getProjectSourceRoot(appProjectConfig, host);
 
     try {
-      normalized.appMain = appProjectConfig.targets.build.options.main;
-      normalized.appSourceRoot = normalizePath(appSourceRoot);
+      appMain = appProjectConfig.targets.build.options.main;
+      appSourceRoot = normalizePath(projectSourceRoot);
     } catch (e) {
       throw new Error(
         `Could not locate project main for ${options.appProject}`
       );
     }
   }
+
+  const normalized: NormalizedSchema = {
+    ...options,
+    projectName:
+      isUsingTsSolutionConfig && !options.name ? importPath : projectName,
+    // Libraries with a bundler or that are publishable must also be buildable.
+    bundler: bundler !== 'none' || options.publishable ? 'vite' : 'none',
+    fileName,
+    routePath: `/${projectNames.projectFileName}`,
+    name: projectName,
+    projectRoot,
+    parsedTags,
+    importPath,
+    isUsingTsSolutionConfig,
+    useProjectJson: options.useProjectJson ?? !isUsingTsSolutionConfig,
+    js: options.js ?? false,
+    appMain,
+    appSourceRoot,
+    // Framework-specific ESLint shaping is guarded on `=== 'eslint'`, so an
+    // unresolved `undefined` would create a bare config with none of it.
+    linter: await normalizeLinterOption(host, options.linter),
+  };
 
   return normalized;
 }

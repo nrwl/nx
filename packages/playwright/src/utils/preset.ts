@@ -1,7 +1,7 @@
 import { workspaceRoot } from '@nx/devkit';
 import { getInstalledPackageVersion } from '@nx/devkit/internal';
 import { isUsingTsSolutionSetup } from '@nx/js/internal';
-import { defineConfig } from '@playwright/test';
+import type { PlaywrightTestConfig } from '@playwright/test';
 import { lstatSync } from 'node:fs';
 import { dirname, join, relative } from 'node:path';
 import { lt } from 'semver';
@@ -99,7 +99,12 @@ export function nxE2EPreset(
     ]);
   }
 
-  return defineConfig({
+  // Plain object on purpose: consumers spread this into their own
+  // `defineConfig(...)` call. Calling `defineConfig` here would require
+  // `@playwright/test` at runtime, which crashes when the preset package and
+  // the consuming workspace resolve different copies of it (playwright
+  // refuses to be loaded twice in one process).
+  return {
     testDir: options?.testDir ?? './src',
     outputDir: testResultOuputDir,
     /* Run tests in files in parallel */
@@ -112,5 +117,5 @@ export function nxE2EPreset(
     workers: process.env.CI ? 1 : undefined,
     /* Reporter to use. See https://playwright.dev/docs/test-reporters */
     reporter: [...reporters],
-  });
+  } satisfies PlaywrightTestConfig;
 }

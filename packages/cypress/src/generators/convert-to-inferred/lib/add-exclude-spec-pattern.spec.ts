@@ -1,6 +1,6 @@
 import type { Tree } from '@nx/devkit';
-import { createTreeWithEmptyWorkspace } from 'nx/src/devkit-testing-exports';
 import { addExcludeSpecPattern } from './add-exclude-spec-pattern';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 
 describe('addExcludeSpecPattern', () => {
   let tree: Tree;
@@ -176,6 +176,40 @@ export default defineConfig({
     ...nxE2EPreset(__filename, { cypressDir: 'src' }),
     baseUrl: "http://localhost:4200",
     excludeSpecPattern: ["somefile.spec.ts"]
+  },
+});`
+    );
+
+    // ACT
+    addExcludeSpecPattern(tree, configFilePath, 'mytests/**/*.spec.ts');
+
+    // ASSERT
+    expect(tree.read(configFilePath, 'utf-8')).toMatchInlineSnapshot(`
+      "import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
+      import { defineConfig } from 'cypress';
+
+      export default defineConfig({
+        e2e: {
+          ...nxE2EPreset(__filename, { cypressDir: 'src' }),
+          baseUrl: "http://localhost:4200",
+          excludeSpecPattern: ["mytests/**/*.spec.ts"]
+        },
+      });"
+    `);
+  });
+
+  it('should update an excludeSpecPattern value that uses a type assertion', () => {
+    // ARRANGE
+    tree.write(
+      configFilePath,
+      `import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
+import { defineConfig } from 'cypress';
+
+export default defineConfig({
+  e2e: {
+    ...nxE2EPreset(__filename, { cypressDir: 'src' }),
+    baseUrl: "http://localhost:4200",
+    excludeSpecPattern: <string>"somefile.spec.ts"
   },
 });`
     );

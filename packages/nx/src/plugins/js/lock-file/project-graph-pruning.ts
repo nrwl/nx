@@ -1,4 +1,4 @@
-import { gte, satisfies } from 'semver';
+import { rcompare, satisfies, valid } from 'semver';
 import {
   ProjectGraph,
   ProjectGraphExternalNode,
@@ -8,8 +8,13 @@ import { reverse } from '../../../project-graph/operators';
 import { ProjectGraphBuilder } from '../../../project-graph/project-graph-builder';
 import { getCatalogManager } from '../../../utils/catalog';
 import { PackageJson } from '../../../utils/package-json';
+import { PackageManager } from '../../../utils/package-manager';
 import { workspaceRoot } from '../../../utils/workspace-root';
 import { getWorkspacePackagesFromGraph } from '../utils/get-workspace-packages-from-graph';
+import {
+  normalizeLocalPathSpec,
+  uncontainLocalPathSpec,
+} from './pruned-output';
 
 /**
  * Prune project graph's external nodes and their dependencies
@@ -18,15 +23,17 @@ import { getWorkspacePackagesFromGraph } from '../utils/get-workspace-packages-f
 export function pruneProjectGraph(
   graph: ProjectGraph,
   prunedPackageJson: PackageJson,
-  workspaceRootPath: string = workspaceRoot
+  workspaceRootPath: string = workspaceRoot,
+  packageManager?: PackageManager
 ): ProjectGraph {
   const builder = new ProjectGraphBuilder();
   const workspacePackages = getWorkspacePackagesFromGraph(graph);
-  const combinedDependencies = normalizeDependencies(
+  const { combinedDependencies, localPathNodes } = normalizeDependencies(
     prunedPackageJson,
     graph,
     workspacePackages,
-    workspaceRootPath
+    workspaceRootPath,
+    packageManager
   );
 
   addNodesAndDependencies(
@@ -35,6 +42,13 @@ export function pruneProjectGraph(
     workspacePackages,
     builder
   );
+  // A local-path dependency is keyed in the lockfile by the target's real
+  // package name, which an aliased one does not share with its manifest entry,
+  // so the name-based lookup above cannot reach its node. Add the nodes matched
+  // by target path rather than repeating that match here.
+  for (const node of localPathNodes) {
+    traverseNode(graph, builder, node);
+  }
 
   for (const project of workspacePackages.values()) {
     const node = graph.nodes[project.name];
@@ -50,12 +64,18 @@ export function pruneProjectGraph(
 
 // ensure that dependency ranges from package.json (e.g. ^1.0.0)
 // are replaced with the actual version based on the available nodes (e.g. 1.0.1)
+// Also returns the external nodes matched for local-path dependencies, whose
+// names the caller cannot re-derive from the returned map.
 function normalizeDependencies(
   packageJson: PackageJson,
   graph: ProjectGraph,
   workspacePackages: Map<string, ProjectGraphProjectNode>,
-  workspaceRootPath: string
-) {
+  workspaceRootPath: string,
+  packageManager?: PackageManager
+): {
+  combinedDependencies: Record<string, string>;
+  localPathNodes: ProjectGraphExternalNode[];
+} {
   const {
     dependencies,
     devDependencies,
@@ -69,11 +89,12 @@ function normalizeDependencies(
     ...optionalDependencies,
     ...peerDependencies,
   };
+  const localPathNodes: ProjectGraphExternalNode[] = [];
 
+  const manager = getCatalogManager(workspaceRootPath);
   Object.entries(combinedDependencies).forEach(
     ([packageName, versionRange]) => {
       let resolvedVersionRange = versionRange;
-      const manager = getCatalogManager(workspaceRootPath);
       if (manager?.isCatalogReference(versionRange)) {
         resolvedVersionRange = manager.resolveCatalogReference(
           workspaceRootPath,
@@ -105,10 +126,31 @@ function normalizeDependencies(
         packageName,
         resolvedVersionRange
       );
+      // A file:/link: local-path dependency (e.g. a vendored tarball) records a
+      // path where a version would go, so the version-based lookups above never
+      // match it; findLocalPathNode matches it on that path instead (pnpm-only,
+      // matching the rest of the local-path handling).
+      const localPathNode =
+        !node &&
+        packageManager === 'pnpm' &&
+        !workspacePackages.has(packageName) &&
+        isLocalPathSpecifier(resolvedVersionRange)
+          ? findLocalPathNode(graph, packageName, resolvedVersionRange)
+          : undefined;
       if (node) {
         combinedDependencies[packageName] = node.data.version;
       } else if (workspacePackages.has(packageName)) {
         // workspace module, leave as is
+        combinedDependencies[packageName] = resolvedVersionRange;
+      } else if (localPathNode) {
+        combinedDependencies[packageName] = localPathNode.data.version;
+        localPathNodes.push(localPathNode);
+      } else if (
+        packageManager === 'pnpm' &&
+        resolvedVersionRange.startsWith('link:')
+      ) {
+        // Only a link: is valid importer-only in a pnpm lockfile (see
+        // mapRootSnapshot); a nodeless file: (stale lockfile) or npm/yarn still throw.
         combinedDependencies[packageName] = resolvedVersionRange;
       } else {
         throw new Error(
@@ -117,7 +159,74 @@ function normalizeDependencies(
       }
     }
   );
-  return combinedDependencies;
+  return { combinedDependencies, localPathNodes };
+}
+
+/**
+ * A `file:` (local tarball or directory) or `link:` specifier resolves to a
+ * single local package. pnpm records its path relative to the workspace root in
+ * the lockfile, while the manifest records it relative to the declaring package,
+ * so the two never match by string.
+ */
+export function isLocalPathSpecifier(versionExpr: string): boolean {
+  return versionExpr.startsWith('file:') || versionExpr.startsWith('link:');
+}
+
+/**
+ * The pnpm parser gives the bare `npm:<name>` to an outside `link:` when no
+ * registry version holds it. Such a node says nothing about which registry
+ * version a project resolves, so lookups that fall back to registry versions
+ * skip it.
+ */
+export function isLinkNode(node: ProjectGraphExternalNode): boolean {
+  return node.data.version.startsWith('link:');
+}
+
+/**
+ * The external node for a `file:`/`link:` local-path dependency.
+ *
+ * The target path is what identifies one: an aliased dependency (`"alias":
+ * "file:libs/x"`) is keyed in the lockfile by the target's real package name, so
+ * the manifest's own name matches nothing. A manifest the pruned output already
+ * rewrote carries a workspace-root-relative path, relocated under the shipped
+ * output directory, which strips back to the path the lockfile records.
+ *
+ * A manifest that was not rewritten records the path relative to the declaring
+ * package instead, and this has no way to resolve that against the workspace
+ * root, so it falls back to the package name. Two local-path packages sharing a
+ * name cannot be told apart by it, so that throws rather than risking a match to
+ * the wrong one.
+ */
+export function findLocalPathNode(
+  graph: ProjectGraph,
+  packageName: string,
+  versionExpr: string
+): ProjectGraphExternalNode | undefined {
+  const localPathNodes = Object.values(graph.externalNodes).filter((node) =>
+    isLocalPathSpecifier(node.data.version)
+  );
+  // Only the manifest side is read back from its shipped location; the lock
+  // file records the source path, which relocation never touched.
+  const sourceSpec = uncontainLocalPathSpec(versionExpr);
+  const targetMatch = localPathNodes.find(
+    (node) => normalizeLocalPathSpec(node.data.version) === sourceSpec
+  );
+  if (targetMatch) {
+    return targetMatch;
+  }
+  const matches = localPathNodes.filter(
+    (node) => node.data.packageName === packageName
+  );
+  if (matches.length > 1) {
+    throw new Error(
+      `Pruned lock file creation failed. Multiple local-path packages named "${packageName}" were found in the lock file (${matches
+        .map((node) => node.data.version)
+        .join(
+          ', '
+        )}), so the manifest's "${packageName}" dependency cannot be matched to one of them. Rename the packages so their names are unique.`
+    );
+  }
+  return matches[0];
 }
 
 export function findNodeMatchingVersion(
@@ -125,15 +234,21 @@ export function findNodeMatchingVersion(
   packageName: string,
   versionExpr: string
 ) {
-  if (versionExpr === '*') {
-    return graph.externalNodes[`npm:${packageName}`];
+  const bareNode = graph.externalNodes[`npm:${packageName}`];
+  if (versionExpr === '*' && bareNode && !isLinkNode(bareNode)) {
+    return bareNode;
   }
   const nodes = Object.values(graph.externalNodes)
     .filter((n) => n.data.packageName === packageName)
-    .sort((a, b) => (gte(b.data.version, a.data.version) ? 1 : -1));
+    .sort(compareVersionsDescending);
 
-  if (versionExpr === 'latest') {
-    return nodes.sort((a, b) => +gte(b.data.version, a.data.version))[0];
+  // A package with several versions can have no bare registry node, for
+  // example when the pnpm root importer does not declare it. An outside
+  // `link:` can then hold the bare name; it sorts last, so any registry
+  // version wins over it. A stable version wins over a prerelease, which
+  // `*` does not match.
+  if (versionExpr === '*' || versionExpr === 'latest') {
+    return nodes.find((n) => satisfies(n.data.version, '*')) ?? nodes[0];
   }
   if (
     graph.externalNodes[`npm:${packageName}`] &&
@@ -145,6 +260,20 @@ export function findNodeMatchingVersion(
     return graph.externalNodes[`npm:${packageName}`];
   }
   return nodes.find((n) => satisfies(n.data.version, versionExpr));
+}
+
+// Local-path and other non-semver versions, such as file:vendor/foo.tgz,
+// sort after every semver version.
+function compareVersionsDescending(
+  a: ProjectGraphExternalNode,
+  b: ProjectGraphExternalNode
+): number {
+  const aIsSemver = valid(a.data.version) !== null;
+  const bIsSemver = valid(b.data.version) !== null;
+  if (aIsSemver && bIsSemver) {
+    return rcompare(a.data.version, b.data.version);
+  }
+  return Number(bIsSemver) - Number(aIsSemver);
 }
 
 export function addNodesAndDependencies(
@@ -280,18 +409,24 @@ function switchNodeToHoisted(
   builder.removeNode(node.name);
   invBuilder.removeNode(node.name);
 
-  // modify the node and re-add it
-  node.name = `npm:${node.data.packageName}`;
-  builder.addExternalNode(node);
-  invBuilder.addExternalNode(node);
+  // Re-add under the hoisted name as a new object. The node is shared by
+  // reference with the caller's graph, so renaming it in place would leave that
+  // graph with a node keyed `npm:<pkg>@<version>` but named `npm:<pkg>`, and
+  // every later prune of the same graph would fail to resolve the edge.
+  const hoistedNode: ProjectGraphExternalNode = {
+    ...node,
+    name: `npm:${node.data.packageName}`,
+  };
+  builder.addExternalNode(hoistedNode);
+  invBuilder.addExternalNode(hoistedNode);
 
   targets.forEach((target) => {
-    builder.addStaticDependency(node.name, target);
-    invBuilder.addStaticDependency(target, node.name);
+    builder.addStaticDependency(hoistedNode.name, target);
+    invBuilder.addStaticDependency(target, hoistedNode.name);
   });
   sources.forEach((source) => {
-    builder.addStaticDependency(source, node.name);
-    invBuilder.addStaticDependency(node.name, source);
+    builder.addStaticDependency(source, hoistedNode.name);
+    invBuilder.addStaticDependency(hoistedNode.name, source);
   });
 }
 

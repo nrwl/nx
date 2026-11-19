@@ -1,10 +1,10 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`react:storybook-configuration should configure everything and install correct dependencies 1`] = `
+exports[`react:storybook-configuration > should configure everything and install correct dependencies 1`] = `
 "import type { StorybookConfig } from '@storybook/react-vite';
 
-import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 import { mergeConfig } from 'vite';
+import tsconfigPaths from 'vite-tsconfig-paths';
 import react from '@vitejs/plugin-react';
 
 const config: StorybookConfig = {
@@ -17,7 +17,8 @@ const config: StorybookConfig = {
 
   viteFinal: async (config) =>
     mergeConfig(config, {
-      plugins: [react(), nxViteTsPaths()],
+      resolve: {},
+      plugins: [react(), tsconfigPaths({ loose: true })],
     }),
 };
 
@@ -29,7 +30,7 @@ export default config;
 "
 `;
 
-exports[`react:storybook-configuration should generate stories for components 1`] = `
+exports[`react:storybook-configuration > should generate stories for components 1`] = `
 "import type { Meta, StoryObj } from '@storybook/react-webpack5';
 import { MyComponent } from './my-component';
 import { expect } from 'storybook/test';
@@ -55,7 +56,7 @@ export const Heading = {
 "
 `;
 
-exports[`react:storybook-configuration should generate stories for components written in plain JS 1`] = `
+exports[`react:storybook-configuration > should generate stories for components written in plain JS 1`] = `
 "import componentName from './test-ui-libplain';
 import { expect } from 'storybook/test';
 

@@ -2,10 +2,55 @@ import type { AgentId } from './cli-args';
 export type { AgentId };
 
 /**
+ * Workspace-relative directory holding all migrate-run scratch: a run
+ * directory per run id. Shared by the run-dir layout in `run-state.ts` and the
+ * agent permission rules in `definitions.ts` so the pre-authorized write scope
+ * can't drift from the actual layout. It lives here so `definitions.ts`,
+ * loaded whenever the agentic flow is resolved, doesn't pull in the run state
+ * module for the path alone.
+ */
+export const MIGRATE_RUNS_RELATIVE_DIR = '.nx/migrate-runs';
+
+/**
+ * The one subtree of a run directory an agent writes; everything beside it is
+ * state Nx owns, so the pre-authorized write scope stops here. Handoff names
+ * derive from step ids, so flattening them into the run dir would leave Nx no
+ * name it could safely add.
+ */
+export const HANDOFFS_DIR_NAME = 'handoffs';
+
+/**
+ * Sibling subtree holding the per-step prompt files Nx writes for the agent
+ * to read. They stay out of `handoffs/`, which is the agent's to write.
+ */
+export const PROMPTS_DIR_NAME = 'prompts';
+
+/**
+ * Composite identity of the v23 migration that adds `.nx/migrate-runs` to
+ * `.gitignore`. Hard-coded because the agentic preflight is a deliberate
+ * one-off coupling: this exact migration owns the entry that keeps
+ * `.nx/migrate-runs/<run-id>/...` scratch out of per-migration commits. If
+ * the migration is ever renamed, this entry must move with it.
+ */
+const HANDOFF_GITIGNORE_MIGRATION_PACKAGE = 'nx';
+const HANDOFF_GITIGNORE_MIGRATION_NAME =
+  '23-0-0-add-migrate-runs-to-git-ignore';
+
+export function isHandoffGitignoreMigration(m: {
+  package: string;
+  name: string;
+}): boolean {
+  return (
+    m.package === HANDOFF_GITIGNORE_MIGRATION_PACKAGE &&
+    m.name === HANDOFF_GITIGNORE_MIGRATION_NAME
+  );
+}
+
+/**
  * A coding agent that was found on the user's machine, ready to be spawned.
  *
  * Produced by `detect-installed.ts`. The `binary` is an absolute path so the
- * runner can spawn it directly without re-resolving against PATH.
+ * master session can spawn it directly without re-resolving against PATH.
  */
 export interface DetectedInstalledAgent {
   id: AgentId;
@@ -15,19 +60,8 @@ export interface DetectedInstalledAgent {
 }
 
 /**
- * Inputs the runner provides when asking an agent definition to build its
- * spawn arguments. Kept minimal — agent-specific quirks (e.g. transient agent
- * name for OpenCode) are encoded inside the definition, not here.
- */
-export interface InvocationContext {
-  systemContext: string;
-  userPrompt: string;
-  workspaceRoot: string;
-}
-
-/**
- * What an agent definition returns from `buildInteractive`. The runner combines
- * this with the detected binary path to actually spawn.
+ * What a master invocation builder returns. The master session combines this
+ * with the detected binary path to actually spawn.
  */
 export interface InvocationSpec {
   args: string[];
@@ -45,13 +79,11 @@ export interface AgentDefinition {
   binaryNames: string[];
   /** Absolute paths to probe as a fallback when PATH lookup misses. */
   wellKnownPaths(): string[];
-  buildInteractive(ctx: InvocationContext): InvocationSpec;
 }
 
 /**
  * Output of the agent's handoff file, written at the end of an agentic step.
- * The two locked fields drive the failure-handling matrix in the design doc;
- * extra fields are tolerated and surfaced via `extras`.
+ * Extra fields are tolerated and surfaced via `extras`.
  */
 export interface HandoffFile {
   status: 'success' | 'failed';
@@ -60,27 +92,12 @@ export interface HandoffFile {
 }
 
 /**
- * Outcome the runner reports back to the migrate orchestrator after a single
- * agentic step. The four kinds mirror the (a)/(b)/(c) matrix plus the user's
- * choice when (c) fires.
- *
- * `ambiguous-abort.causeSummary`: pre-rendered explanation lines. Populated
- * when Ctrl+C bypasses the ambiguous prompt (so the cause was never shown
- * inline) and forwarded so the caller can surface it. Omitted when the user
- * chose "abort" at the prompt — the cause was already shown there.
- */
-export type HandoffOutcome =
-  | { kind: 'success'; summary: string; extras?: Record<string, unknown> }
-  | { kind: 'failed'; summary: string; extras?: Record<string, unknown> }
-  | { kind: 'ambiguous-continue' }
-  | { kind: 'ambiguous-abort'; causeSummary?: string[] };
-
-/**
- * Result of the up-front resolution phase that runs once per `--run-migrations`
- * invocation, before the migration loop. Cached and consulted for every entry.
+ * Result of the up-front resolution phase, run once per run-phase invocation
+ * and applied to every migration it covers.
  *
  * - `inside-agent`: nx detected it is itself running inside another agent;
- *   every agentic step is skipped and prompt migrations go to `nextSteps`.
+ *   every agentic step is skipped and prompt migrations are surfaced for the
+ *   outer agent to apply.
  * - `disabled`: the user opted out (explicit `--agentic=false`, declined the
  *   up-front prompt, or non-TTY without the flag).
  * - `enabled`: the agentic flow runs and `selectedAgent` is the agent it
@@ -90,9 +107,3 @@ export type ResolvedAgentic =
   | { kind: 'inside-agent' }
   | { kind: 'disabled' }
   | { kind: 'enabled'; selectedAgent: DetectedInstalledAgent };
-
-/** The `enabled` variant, useful for narrowed function signatures. */
-export type EnabledResolvedAgentic = Extract<
-  ResolvedAgentic,
-  { kind: 'enabled' }
->;

@@ -8,12 +8,12 @@ import {
 } from '@nx/devkit';
 import { getRootTsConfigPathInTree } from '../../../utilities/ts-config';
 import { Schema } from '../schema';
+import { isUsingTsSolutionSetup } from '../../../utilities/typescript/ts-solution-setup';
+import { relative } from 'path';
 import {
   createProjectRootMappings,
   findProjectForPath,
-} from 'nx/src/project-graph/utils/find-project-for-path';
-import { isUsingTsSolutionSetup } from '../../../utilities/typescript/ts-solution-setup';
-import { relative } from 'path';
+} from '@nx/devkit/internal';
 
 /**
  * Updates the tsconfig paths to remove the project.

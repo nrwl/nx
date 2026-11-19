@@ -1,4 +1,4 @@
-import type { Linter, LinterType } from '@nx/eslint';
+import type { LinterType } from '@nx/js';
 import type { E2eTestRunner, UnitTestRunner } from '../../utils/test-runners';
 import type { Styles } from '../utils/types';
 
@@ -14,13 +14,13 @@ export interface Schema {
   style?: Styles;
   skipTests?: boolean;
   tags?: string;
-  linter?: Linter | LinterType;
+  linter?: LinterType;
   unitTestRunner?: UnitTestRunner;
   e2eTestRunner?: E2eTestRunner;
   backendProject?: string;
   strict?: boolean;
   port?: number;
-  setParserOptionsProject?: boolean;
+  enableTypedLinting?: boolean;
   skipPackageJson?: boolean;
   standalone?: boolean;
   rootProject?: boolean;
@@ -28,6 +28,6 @@ export interface Schema {
   bundler?: 'webpack' | 'esbuild' | 'rspack';
   ssr?: boolean;
   nxCloudToken?: string;
-  addPlugin?: boolean;
   zoneless?: boolean;
+  formatter?: 'prettier' | 'oxfmt' | 'none';
 }

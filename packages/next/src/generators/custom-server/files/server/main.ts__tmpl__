@@ -11,12 +11,12 @@ import * as path from 'path';
 import next from 'next';
 
 // Next.js server options:
-// - The environment variable is set by `@nx/next:server` when running the dev server.
-// - The fallback `__dirname` is for production builds.
+// - `NX_NEXT_DIR` overrides the Next.js app directory.
+// - The fallback resolves the app directory from the built server's location.
 // - Feel free to change this to suit your needs.
 
 const dev = process.env.NODE_ENV === 'development';
-const dir = process.env.NX_NEXT_DIR || <%- hasPlugin ? `path.join(__dirname, '${projectPathFromDist}')` : `path.join(__dirname, dev ? '..' : '', '${projectPathFromDist}')`; %> 
+const dir = process.env.NX_NEXT_DIR || path.join(__dirname, '<%- projectPathFromDist %>');
 
 // HTTP Server options:
 // - Feel free to change this to suit your needs.
@@ -34,7 +34,17 @@ async function main() {
     handle(req, res, parsedUrl);
   });
 
-  server.listen(port, hostname);
+  await new Promise<void>((resolve) => server.listen(port, hostname, resolve));
+  // Set when Nx waits for this server to be ready
+  if (process.env.NX_READY_SIGNAL_SOCKET) {
+    try {
+      // Function keeps TypeScript and bundlers from rewriting or bundling the import
+      const load = new Function('s', 'return import(s)') as (s: string) => Promise<{ emitReadySignal(server: unknown): boolean }>;
+      (await load('@nx/js/ready-signal')).emitReadySignal(server);
+    } catch {
+      // @nx/js isn't installed
+    }
+  }
 
   console.log(`[ ready ] on http://${hostname}:${port}`)
 }

@@ -1,7 +1,8 @@
 {
   "compilerOptions": {
     "jsx": "react-jsx",
-    "lib": ["ES2022", "dom"]
+    "lib": ["ES2022", "dom"],
+    "ignoreDeprecations": "6.0"
   },
   "files": [],
   "include": [],

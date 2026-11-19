@@ -10,5 +10,4 @@ export interface ConfigurationGeneratorSchema {
   target?: 'node' | 'web' | 'webworker';
   webpackConfig?: string;
   babelConfig?: string;
-  addPlugin?: boolean;
 }

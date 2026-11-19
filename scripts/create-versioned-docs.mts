@@ -31,6 +31,10 @@
  * NOT include @netlify/plugin-nextjs, so Netlify serves pure static files.
  *
  * The resulting branch is deployed via Netlify branch deploys at v{major}.nx.dev.
+ *
+ * Archived docs are kept out of search results two ways: the build runs with
+ * the site's no-index env var so every page emits a robots meta tag, and the
+ * generated netlify.toml sends `X-Robots-Tag: noindex` for all paths.
  */
 
 import { execSync } from 'node:child_process';
@@ -38,11 +42,13 @@ import {
   cpSync,
   existsSync,
   mkdirSync,
+  readdirSync,
   readFileSync,
   rmSync,
   writeFileSync,
 } from 'node:fs';
 import { resolve } from 'node:path';
+import { parse as parseYaml } from 'yaml';
 
 const ROOT = resolve(import.meta.dirname, '..');
 
@@ -55,6 +61,12 @@ const FIRST_ASTRO_MAJOR = 21;
 process.env.NX_GRADLE_DISABLE = 'true';
 process.env.NX_MAVEN_DISABLE = 'true';
 process.env.NX_DOTNET_DISABLE = 'true';
+
+// Emit `<meta name="robots" content="noindex">` on every page. Archived docs
+// must not compete with nx.dev in search results. NEXT_PUBLIC_NO_INDEX is the
+// legacy nx-dev flag, NX_DOCS_NO_INDEX the astro-docs one.
+process.env.NEXT_PUBLIC_NO_INDEX = 'true';
+process.env.NX_DOCS_NO_INDEX = 'true';
 
 // Must match the Netlify UI publish directory setting
 const PUBLISH_DIR = 'nx-dev/nx-dev/.next';
@@ -103,6 +115,97 @@ function findLatestStableTag(major: string): string | null {
 }
 
 /**
+ * Force every built page to `noindex`.
+ *
+ * The no-index env var covers almost everything, but a page's own `head`
+ * frontmatter wins over the global config — self-hosted-cache-packages.mdoc
+ * pins `index, follow` — and non-Starlight artifacts have no head at all.
+ */
+function normalizeRobotsMeta(publishDir: string): void {
+  const tag = '<meta name="robots" content="noindex"/>';
+  const robotsMeta = /<meta\s[^>]*name=["']robots["'][^>]*>/gi;
+  let rewritten = 0;
+
+  const walk = (dir: string): void => {
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      const path = resolve(dir, entry.name);
+      if (entry.isDirectory()) {
+        walk(path);
+        continue;
+      }
+      if (!entry.name.endsWith('.html')) continue;
+
+      const original = readFileSync(path, 'utf-8');
+      let updated: string;
+      if (robotsMeta.test(original)) {
+        robotsMeta.lastIndex = 0;
+        updated = original.replace(robotsMeta, tag);
+      } else if (/<\/head>/i.test(original)) {
+        updated = original.replace(/<\/head>/i, (m) => tag + m);
+      } else {
+        // Headless stubs: the parser hoists a leading meta into the implicit head.
+        updated = original.replace(/<!doctype html>/i, (m) => m + tag);
+      }
+      if (updated !== original) {
+        writeFileSync(path, updated);
+        rewritten++;
+      }
+    }
+  };
+
+  walk(publishDir);
+  console.log(`Forced noindex on ${rewritten} HTML pages.`);
+}
+
+/**
+ * Add `X-Robots-Tag: noindex` to the netlify.toml headers block. The header
+ * backstops the per-page meta tag: it applies to non-HTML assets too, and JS
+ * running on the page can't override it.
+ */
+function ensureNoindexHeader(headersAndRedirects: string): string {
+  if (headersAndRedirects.includes('X-Robots-Tag')) {
+    return headersAndRedirects;
+  }
+  if (/\[headers\.values\]\n/.test(headersAndRedirects)) {
+    return headersAndRedirects.replace(
+      /\[headers\.values\]\n/,
+      '[headers.values]\n    X-Robots-Tag = "noindex"\n'
+    );
+  }
+  return `[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Robots-Tag = "noindex"
+
+${headersAndRedirects}`;
+}
+
+/**
+ * The versioned branch installs without this repo's pnpm-workspace.yaml, so a
+ * `catalog:` specifier has to be replaced with the version it points to.
+ */
+function resolveCatalogSpecifier(name: string, specifier: string): string {
+  if (!specifier.startsWith('catalog:')) {
+    return specifier;
+  }
+  const workspace = parseYaml(
+    readFileSync(resolve(ROOT, 'pnpm-workspace.yaml'), 'utf-8')
+  );
+  const catalogName = specifier.slice('catalog:'.length) || 'default';
+  const catalog =
+    catalogName === 'default'
+      ? (workspace.catalog ?? workspace.catalogs?.default)
+      : workspace.catalogs?.[catalogName];
+  const version = catalog?.[name];
+  if (!version) {
+    throw new Error(
+      `Could not resolve ${name}@${specifier} from pnpm-workspace.yaml`
+    );
+  }
+  return version;
+}
+
+/**
  * Write the shared scaffolding every versioned branch needs.
  * Writes headers/redirects netlify.toml content to the publish dir.
  */
@@ -113,8 +216,10 @@ function writeSharedScaffolding(
   const rootPkg = JSON.parse(
     readFileSync(resolve(ROOT, 'package.json'), 'utf-8')
   );
-  const nxVersion =
-    rootPkg.devDependencies?.nx ?? rootPkg.dependencies?.nx ?? 'latest';
+  const nxVersion = resolveCatalogSpecifier(
+    'nx',
+    rootPkg.devDependencies?.nx ?? rootPkg.dependencies?.nx ?? 'latest'
+  );
 
   // Root package.json with nx so Netlify install succeeds
   writeFileSync(
@@ -135,11 +240,16 @@ function writeSharedScaffolding(
 
   // Generate a real pnpm-lock.yaml from the stub package.json.
   // Must use --no-frozen-lockfile since there's no existing lockfile yet.
+  // --ignore-workspace: tmpDir sits inside the repo, so pnpm would otherwise
+  // write the lockfile to the repo root.
   console.log('Generating pnpm-lock.yaml for versioned branch...');
-  execSync('pnpm install --lockfile-only --no-frozen-lockfile', {
-    cwd: tmpDir,
-    stdio: 'inherit',
-  });
+  execSync(
+    'pnpm install --lockfile-only --no-frozen-lockfile --ignore-workspace',
+    {
+      cwd: tmpDir,
+      stdio: 'inherit',
+    }
+  );
 
   // Project named "nx-dev" at nx-dev/nx-dev/ to match the Netlify build command:
   // npx nx run nx-dev:deploy-build:netlify --skip-nx-cache
@@ -178,7 +288,8 @@ function writeSharedScaffolding(
 [build.environment]
   NETLIFY_NEXT_PLUGIN_SKIP = "true"
 
-${headersAndRedirects}`
+${ensureNoindexHeader(headersAndRedirects)}
+`
   );
 }
 
@@ -200,6 +311,7 @@ function stageRedirectToProd(tmpDir: string): void {
   <head>
     <meta charset="utf-8">
     <title>Redirecting to nx.dev/docs</title>
+    <meta name="robots" content="noindex">
     <meta http-equiv="refresh" content="0; url=https://nx.dev/docs">
     <link rel="canonical" href="https://nx.dev/docs">
     <script>window.location.replace("https://nx.dev/docs");</script>
@@ -490,6 +602,8 @@ if (redirectToProd) {
 } else {
   buildAndStageNextjs(tmpDir);
 }
+
+normalizeRobotsMeta(resolve(tmpDir, PUBLISH_DIR));
 
 // --- Step 2: Create orphan branch ---
 console.log('\n=== Step 2: Creating orphan branch ===\n');

@@ -27,19 +27,42 @@
     },
     "update-23-1-0-remove-removed-typescript-eslint-extension-rules": {
       "version": "23.1.0-beta.5",
-      "requires": {
-        "typescript-eslint": ">=8.0.0"
-      },
       "description": "Handle typescript-eslint rules removed in v8 in ESLint flat configs, since referencing a removed rule stops the config from loading. Deletes the removed formatting/extension rules (e.g. @typescript-eslint/no-extra-semi) and rewrites the safe 1:1 renames (no-throw-literal -> only-throw-error, no-useless-template-literals -> no-unnecessary-template-expression) to preserve enforcement.",
       "implementation": "./dist/src/migrations/update-23-1-0/remove-removed-typescript-eslint-extension-rules"
     },
     "update-23-1-0-migrate-ban-types-rule": {
       "version": "23.1.0-beta.5",
-      "requires": {
-        "typescript-eslint": ">=8.0.0"
-      },
       "description": "Migrate the removed @typescript-eslint/ban-types rule to its v8 successors (no-empty-object-type, no-unsafe-function-type, no-wrapper-object-types), whose options do not map 1:1 - so it is driven by an AI prompt rather than a deterministic codemod.",
       "prompt": "./dist/src/migrations/update-23-1-0/migrate-ban-types-rule.md"
+    },
+    "remove-deprecated-executors": {
+      "version": "24.0.0-beta.3",
+      "description": "Converts targets using the removed `@nx/eslint` executors to inferred tasks; an AI prompt finishes the targets the converter cannot convert safely and validates the project graph.",
+      "implementation": "./dist/src/migrations/update-24-0-0/remove-deprecated-executors",
+      "prompt": "./dist/src/migrations/update-24-0-0/finish-inferred-conversion.md",
+      "documentation": "./dist/src/migrations/update-24-0-0/remove-deprecated-executors.md"
+    },
+    "update-24-0-0-replace-set-parser-options-project": {
+      "version": "24.0.0-beta.5",
+      "description": "Replaces the removed `setParserOptionsProject` generator option with `enableTypedLinting` in the generator defaults of `nx.json` and project configuration, so generators resolve typed linting as before.",
+      "implementation": "./dist/src/migrations/update-24-0-0/replace-set-parser-options-project",
+      "documentation": "./dist/src/migrations/update-24-0-0/replace-set-parser-options-project.md"
+    },
+    "update-24-1-0-add-directive-checks-rule": {
+      "version": "24.1.0-beta.1",
+      "description": "Adds the `@nx/directive-checks` rule to the root ESLint config that project configs extend, in workspaces whose files use the `@nx-depends-on` or `@nx-ignore-server-inputs` directives.",
+      "implementation": "./dist/src/migrations/update-24-1-0/add-directive-checks-rule",
+      "documentation": "./dist/src/migrations/update-24-1-0/add-directive-checks-rule.md"
+    },
+    "update-24-1-0-migrate-to-eslint-v10": {
+      "version": "24.1.0-beta.2",
+      "requires": {
+        "eslint": ">=10.0.0"
+      },
+      "description": "Prepare the workspace for ESLint v10: convert eslintrc configs to flat config, since v10 removed the eslintrc format, and replace the ESLint plugins that have no v10 release.",
+      "implementation": "./dist/src/migrations/update-24-1-0/migrate-to-eslint-v10",
+      "prompt": "./dist/src/migrations/update-24-1-0/finish-eslint-v10-migration.md",
+      "documentation": "./dist/src/migrations/update-24-1-0/migrate-to-eslint-v10.md"
     }
   },
   "packageJsonUpdates": {
@@ -279,6 +302,62 @@
         },
         "@typescript-eslint/typescript-estree": {
           "version": "^8.58.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "24.1.0": {
+      "version": "24.1.0-beta.2",
+      "requires": {
+        "eslint": ">=9.0.0 <10.0.0"
+      },
+      "incompatibleWith": {
+        "angular-eslint": "<21.3.0",
+        "@angular-eslint/eslint-plugin": "<21.3.0",
+        "eslint-config-next": "<16.4.0",
+        "@nuxt/eslint-config": "<1.0.0",
+        "eslint-plugin-vue": "<9.0.0",
+        "@vue/eslint-config-typescript": "<14.0.0"
+      },
+      "packages": {
+        "eslint": {
+          "version": "^10.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "typescript-eslint": {
+          "version": "^8.58.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@typescript-eslint/eslint-plugin": {
+          "version": "^8.58.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@typescript-eslint/parser": {
+          "version": "^8.58.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@typescript-eslint/utils": {
+          "version": "^8.58.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@typescript-eslint/type-utils": {
+          "version": "^8.58.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@typescript-eslint/rule-tester": {
+          "version": "^8.58.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@typescript-eslint/scope-manager": {
+          "version": "^8.58.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@typescript-eslint/typescript-estree": {
+          "version": "^8.58.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@eslint/compat": {
+          "version": "^2.0.5",
           "alwaysAddToPackageJson": false
         }
       }

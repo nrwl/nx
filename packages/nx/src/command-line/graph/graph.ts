@@ -12,7 +12,6 @@ import { VersionMismatchError } from '../../daemon/client/daemon-socket-messenge
 import * as http from 'node:http';
 import { minimatch } from 'minimatch';
 import { URL } from 'node:url';
-import open from 'open';
 import {
   basename,
   dirname,
@@ -46,9 +45,16 @@ import {
   handleProjectGraphError,
 } from '../../project-graph/project-graph';
 import { createTaskGraph } from '../../tasks-runner/create-task-graph';
+import { pruneToSelectedTasks } from '../../tasks-runner/utils';
+import {
+  selectTasksForProjects,
+  type TaskSelection,
+} from '../../tasks-runner/run-command';
+import type { NxArgs } from '../../utils/command-line-utils';
+import { runnableForTarget } from '../../utils/project-graph-utils';
 import { allFileData } from '../../utils/all-file-data';
 import { splitArgsIntoNxArgsAndOverrides } from '../../utils/command-line-utils';
-import { HashPlanner, transferProjectGraph } from '../../native';
+import { expandFilesInput, HashPlanner, openUrl } from '../../native';
 import { transformProjectGraphForRust } from '../../native/transform-objects';
 import { getAffectedGraphNodes } from '../affected/affected';
 import { readFileMapCache } from '../../project-graph/nx-deps-cache';
@@ -60,6 +66,12 @@ import { createTaskHasher } from '../../hasher/create-task-hasher';
 import { getTaskSpecificEnv } from '../../tasks-runner/task-env';
 import { ProjectGraphError } from '../../project-graph/error-types';
 import { isNxCloudUsed } from '../../utils/nx-cloud-utils';
+import {
+  isUltracacheOnInCI,
+  ultracacheModeInCI,
+} from '../../ultracache/ci-status';
+import { hasCustomHasher } from '../show/show-target/utils';
+import { splitTargetFromNodes } from '../../utils/split-target';
 
 export interface GraphError {
   message: string;
@@ -256,6 +268,14 @@ export async function generateGraph(
     focus?: string;
     exclude?: string[];
     affected?: boolean;
+    /**
+     * What the command would run for `targets`, or how to build it. A builder
+     * is only called where an output needs it, so the live graph can still
+     * open, and show the error, when the task graph cannot be built.
+     */
+    taskSelection?: TaskSelection | (() => TaskSelection);
+    /** The `-c` the tasks run with; their ids carry it. */
+    configuration?: string;
   },
   affectedProjects: string[]
 ): Promise<void> {
@@ -306,6 +326,26 @@ export async function generateGraph(
     }
   }
   let prunedGraph = pruneExternalNodes(rawGraph);
+
+  // `nx graph --targets` has no command to take a selection from, so it draws
+  // the projects' targets.
+  const jsonTaskSelection = () =>
+    args.targets?.length
+      ? (resolveSelection(args.taskSelection) ??
+        selectTasksForProjects(
+          rawGraph,
+          args.projects?.length
+            ? args.projects
+            : [...runnableForTarget(rawGraph.nodes, args.targets)],
+          {
+            targets: args.targets,
+            configuration: args.configuration,
+          } as NxArgs,
+          {},
+          {},
+          false
+        ))
+      : undefined;
 
   const projects = Object.values(
     prunedGraph.nodes
@@ -384,12 +424,7 @@ export async function generateGraph(
   if (args.print || args.file === 'stdout') {
     console.log(
       JSON.stringify(
-        await createJsonOutput(
-          prunedGraph,
-          rawGraph,
-          args.projects,
-          args.targets
-        ),
+        await createJsonOutput(prunedGraph, rawGraph, jsonTaskSelection()),
         null,
         2
       )
@@ -427,7 +462,9 @@ export async function generateGraph(
       const taskGraphClientResponse = args.targets
         ? await createTaskGraphForTargetsAndProjects(
             args.targets,
-            args.projects
+            args.projects,
+            args.configuration,
+            args.taskSelection
           )
         : await createTaskGraphClientResponse();
 
@@ -463,8 +500,7 @@ export async function generateGraph(
       const json = await createJsonOutput(
         prunedGraph,
         rawGraph,
-        args.projects,
-        args.targets
+        jsonTaskSelection()
       );
 
       writeJsonFile(fullFilePath, json);
@@ -501,7 +537,14 @@ export async function generateGraph(
         affectedProjects,
         args.focus,
         args.groupByFolder,
-        excludePatterns
+        excludePatterns,
+        typeof args.taskSelection === 'object' && args.taskSelection.taskIds
+          ? {
+              targets: args.targets,
+              configuration: args.configuration,
+              taskIds: args.taskSelection.taskIds,
+            }
+          : undefined
       );
       app = result.app;
       url = result.url;
@@ -566,7 +609,9 @@ export async function generateGraph(
     });
 
     if (args.open) {
-      open(url.toString());
+      // Best-effort: openUrl never throws, returning false if no opener could be
+      // spawned. The URL is printed above, so a failure is silent.
+      openUrl(url.toString());
     }
 
     return new Promise((res) => {
@@ -602,7 +647,7 @@ function findAvailablePort(
   });
 }
 
-async function startServer(
+export async function startServer(
   html: string,
   environmentJs: string,
   host: string,
@@ -611,7 +656,8 @@ async function startServer(
   affected: string[] = [],
   focus: string = null,
   groupByFolder: boolean = false,
-  exclude: string[] = []
+  exclude: string[] = [],
+  selection?: TaskSelectionForGraph
 ) {
   let unregisterFileWatcher: (() => void) | undefined;
 
@@ -642,7 +688,16 @@ async function startServer(
 
   isFilteredGraph = !!(focus || exclude.length > 0);
 
-  const app = http.createServer(async (req, res) => {
+  const handleRequest = async (
+    req: http.IncomingMessage,
+    res: http.ServerResponse
+  ) => {
+    if (!isSameOriginLocalRequest(req, host)) {
+      res.writeHead(403, { 'Content-Type': 'text/plain' });
+      res.end('Forbidden');
+      return;
+    }
+
     // parse URL
     const parsedUrl = new URL(req.url, `http://${host}:${port}`);
     // extract URL path
@@ -675,7 +730,8 @@ async function startServer(
     if (sanitizePath === 'task-graph.json') {
       const projectsParam = parsedUrl.searchParams.get('projects');
       const targetsParam = parsedUrl.searchParams.get('targets');
-      const configuration = parsedUrl.searchParams.get('configuration');
+      const configuration =
+        parsedUrl.searchParams.get('configuration') || undefined;
 
       res.writeHead(200, { 'Content-Type': 'application/json' });
 
@@ -685,12 +741,14 @@ async function startServer(
           ? projectsParam.split(' ').filter(Boolean)
           : undefined;
 
+        const request = selectedFor(targetNames, configuration, selection);
         return res.end(
           JSON.stringify(
             await createTaskGraphForTargetsAndProjects(
               targetNames,
               projectNames,
-              configuration
+              request.configuration,
+              { taskIds: request.taskIds }
             )
           )
         );
@@ -704,10 +762,19 @@ async function startServer(
       performance.mark('task input generation:start');
 
       const taskId = parsedUrl.searchParams.get('taskId');
-      res.writeHead(200, { 'Content-Type': 'application/json' });
-      const inputs = await getExpandedTaskInputs(taskId);
+      if (!taskId) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Missing taskId' }));
+        return;
+      }
+      const inputs = await getExpandedTaskInputs(
+        currentProjectGraphClientResponse,
+        expandedTaskInputsCache,
+        taskId
+      );
       performance.mark('task input generation:end');
 
+      res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ [taskId]: inputs }));
       performance.measure(
         'task input generation',
@@ -769,6 +836,19 @@ async function startServer(
       res.statusCode = 500;
       res.end(`Error getting the file: ${err}.`);
     }
+  };
+
+  const app = http.createServer((req, res) => {
+    handleRequest(req, res).catch((err) => {
+      output.error({
+        title: `Failed to handle graph request ${req.url}`,
+        bodyLines: [err?.stack ?? String(err)],
+      });
+      if (!res.headersSent) {
+        res.writeHead(500, { 'Content-Type': 'text/plain' });
+      }
+      res.end();
+    });
   });
 
   const handleTermination = async (exitCode: number) => {
@@ -797,6 +877,53 @@ async function startServer(
       res({ app, url: new URL(`http://${host}:${availablePort}`) });
     });
   });
+}
+
+export function isSameOriginLocalRequest(
+  req: Pick<http.IncomingMessage, 'headers'> & {
+    socket: Pick<net.Socket, 'localPort'>;
+  },
+  host: string
+): boolean {
+  const authority = parseHostHeader(req.headers.host);
+  if (
+    !authority ||
+    Number(authority.port || 80) !== req.socket.localPort ||
+    !isAllowedHostname(authority.hostname.replace(/^\[|\]$/g, ''), host)
+  ) {
+    return false;
+  }
+
+  const fetchSite = req.headers['sec-fetch-site'];
+  if (fetchSite && fetchSite !== 'same-origin' && fetchSite !== 'none') {
+    return false;
+  }
+
+  const origin = req.headers.origin;
+  return !origin || origin.toLowerCase() === authority.origin;
+}
+
+function parseHostHeader(hostHeader: string | undefined): URL | null {
+  if (!hostHeader || /[/\\@?#]/.test(hostHeader)) {
+    return null;
+  }
+  try {
+    return new URL(`http://${hostHeader}`);
+  } catch {
+    return null;
+  }
+}
+
+const loopbackHostnames = new Set(['localhost', '127.0.0.1', '::1']);
+
+function isAllowedHostname(hostname: string, boundHost: string): boolean {
+  const bound = boundHost.toLowerCase();
+  if (loopbackHostnames.has(hostname) || hostname === bound) {
+    return true;
+  }
+  // DNS rebinding needs a domain name, so an IP literal is safe to accept
+  // once the user binds a non-loopback interface.
+  return !loopbackHostnames.has(bound) && net.isIP(hostname) !== 0;
 }
 
 let currentProjectGraphClientResponse: ProjectGraphClientResponse = {
@@ -881,7 +1008,8 @@ function createProjectGraphListener() {
             errors,
             currentProjectGraphClientResponse.affected,
             isFilteredGraph ? currentProjectGraphClientResponse.focus : null,
-            isFilteredGraph ? currentProjectGraphClientResponse.exclude : []
+            isFilteredGraph ? currentProjectGraphClientResponse.exclude : [],
+            await isUltracacheOnInCI(readNxJson())
           );
 
         if (
@@ -918,13 +1046,49 @@ function createProjectGraphListener() {
   );
 }
 
+/** The graph's nodes, with `ultracacheInCI` set to each target's Ultracache mode in CI. */
+function markTargetsHashedFromUltracacheInCI(
+  graph: ProjectGraph
+): ProjectGraphProjectNode[] {
+  return Object.values(graph.nodes).map((node) => {
+    const targets = Object.entries(node.data.targets ?? {});
+    const modes = new Map(
+      targets.flatMap(([name, target]) => {
+        const mode = ultracacheModeInCI(
+          target,
+          hasCustomHasher(node.name, name, graph)
+        );
+        return mode ? [[name, mode] as const] : [];
+      })
+    );
+    if (!modes.size) {
+      return node;
+    }
+    return {
+      ...node,
+      data: {
+        ...node.data,
+        targets: Object.fromEntries(
+          targets.map(([name, target]) => [
+            name,
+            modes.has(name)
+              ? { ...target, ultracacheInCI: modes.get(name) }
+              : target,
+          ])
+        ),
+      },
+    };
+  });
+}
+
 function transformProjectGraphToClientResponse(
   projectGraph: ProjectGraph,
   sourceMaps: ConfigurationSourceMaps,
   errors: GraphError[] | null,
   affected: string[] = [],
   focus: string = null,
-  exclude: string[] = []
+  exclude: string[] = [],
+  ultracacheOnInCI = false
 ): {
   projectGraphClientResponse: ProjectGraphClientResponse;
   sourceMapResponse: ConfigurationSourceMaps;
@@ -940,7 +1104,9 @@ function transformProjectGraphToClientResponse(
     readFileMapCache()?.fileMap.projectFileMap || {};
 
   const layout = workspaceLayout();
-  const projects: ProjectGraphProjectNode[] = Object.values(graph.nodes);
+  const projects: ProjectGraphProjectNode[] = ultracacheOnInCI
+    ? markTargetsHashedFromUltracacheInCI(graph)
+    : Object.values(graph.nodes);
   const dependencies = graph.dependencies;
 
   const nxJson = readNxJson();
@@ -1034,7 +1200,8 @@ async function createProjectGraphAndSourceMapClientResponse(
       errors,
       affected,
       focus,
-      exclude
+      exclude,
+      await isUltracacheOnInCI(readNxJson())
     );
 
   performance.mark('project graph response generation:end');
@@ -1057,9 +1224,7 @@ async function createProjectGraphAndSourceMapClientResponse(
   };
 }
 
-async function createTaskGraphClientResponse(
-  pruneExternal: boolean = false
-): Promise<TaskGraphClientResponse> {
+async function createTaskGraphClientResponse(): Promise<TaskGraphClientResponse> {
   let graph: ProjectGraph;
   try {
     graph = await createProjectGraphAsync({ exitOnError: false });
@@ -1067,9 +1232,6 @@ async function createTaskGraphClientResponse(
     if (e instanceof ProjectGraphError) {
       graph = e.getPartialProjectGraph();
     }
-  }
-  if (pruneExternal) {
-    graph = pruneExternalNodes(graph);
   }
 
   const nxJson = readNxJson();
@@ -1102,7 +1264,7 @@ async function createTaskGraphClientResponse(
 
     const planner = new HashPlanner(
       nxJson,
-      transferProjectGraph(transformProjectGraphForRust(graph))
+      transformProjectGraphForRust(graph)
     );
     performance.mark('task hash plan generation:start');
 
@@ -1178,26 +1340,74 @@ async function createExpandedTaskInputResponse(
 
 // Performance optimized functions for lazy loading task graphs
 
-// In-memory cache for task graphs to avoid regeneration
-const taskGraphCache = new Map<string, TaskGraphClientResponse>();
-
 // In-memory cache for expanded task inputs to avoid regeneration
 const expandedTaskInputsCache = new Map<string, Record<string, string[]>>();
 
 // Clear cache when project graph changes
 function clearTaskGraphCache() {
-  taskGraphCache.clear();
   expandedTaskInputsCache.clear();
 }
 
+export interface TaskSelectionForGraph {
+  targets: string[];
+  configuration?: string;
+  taskIds: string[];
+}
+
 /**
- * Creates a single task graph for multiple projects with multiple targets
- * If no projects specified, returns graph for all projects with the targets
+ * The selection applies only to a page asking for its exact targets with its configuration
+ * or none (the ids carry it); anything else would prune to nothing, so it is shown whole.
+ */
+export function selectedFor(
+  targets: string[],
+  configuration: string | undefined,
+  selection: TaskSelectionForGraph | undefined
+): { configuration?: string; taskIds?: string[] } {
+  const applies =
+    selection &&
+    targets.length === selection.targets.length &&
+    targets.every((target) => selection.targets.includes(target)) &&
+    (configuration === undefined || configuration === selection.configuration);
+  return applies
+    ? { configuration: selection.configuration, taskIds: selection.taskIds }
+    : { configuration };
+}
+
+function resolveSelection<T>(
+  selection: T | (() => T) | undefined
+): T | undefined {
+  return typeof selection === 'function' ? (selection as () => T)() : selection;
+}
+
+/**
+ * The task graph to draw: the selection's own when it has one, otherwise built
+ * and, given ids, pruned to them. The live graph rebuilds per request, so it
+ * passes only ids.
+ */
+export function taskGraphForSelection(
+  build: () => TaskGraph,
+  selection?: { taskGraph?: TaskGraph; taskIds?: string[] }
+): TaskGraph {
+  if (selection?.taskGraph) {
+    return selection.taskGraph;
+  }
+  const taskGraph = build();
+  return selection?.taskIds
+    ? pruneToSelectedTasks(taskGraph, selection.taskIds)
+    : taskGraph;
+}
+
+/**
+ * The task graph client response for `targetNames`: `selection`'s graph when given,
+ * else built for `projectNames` (default: every project with one of the targets).
  */
 async function createTaskGraphForTargetsAndProjects(
   targetNames: string[],
   projectNames?: string[],
-  configuration?: string
+  configuration?: string,
+  selection?:
+    | { taskGraph?: TaskGraph; taskIds?: string[] }
+    | (() => TaskSelection)
 ): Promise<TaskGraphClientResponse> {
   // Get project graph
   let graph: ProjectGraph;
@@ -1225,21 +1435,25 @@ async function createTaskGraphForTargetsAndProjects(
   }
 
   try {
-    // Create single task graph
-    const taskGraph = createTaskGraph(
-      graph,
-      {},
-      projectsToUse,
-      targetNames,
-      configuration,
-      {}
+    const taskGraph = taskGraphForSelection(
+      () =>
+        createTaskGraph(
+          graph,
+          {},
+          projectsToUse,
+          targetNames,
+          configuration,
+          {}
+        ),
+      // Built in here, so an error is reported in the page like any other.
+      resolveSelection(selection)
     );
 
     performance.mark(`task graph generation:end`);
 
     const planner = new HashPlanner(
       nxJson,
-      transferProjectGraph(transformProjectGraphForRust(graph))
+      transformProjectGraphForRust(graph)
     );
     performance.mark('task hash plan generation:start');
 
@@ -1282,7 +1496,9 @@ async function createTaskGraphForTargetsAndProjects(
   }
 }
 
-async function getExpandedTaskInputs(
+export async function getExpandedTaskInputs(
+  depGraphClientResponse: ProjectGraphClientResponse,
+  expandedTaskInputsCache: Map<string, Record<string, string[]>>,
   taskId: string
 ): Promise<Record<string, string[]>> {
   // Check cache first
@@ -1291,7 +1507,17 @@ async function getExpandedTaskInputs(
   }
 
   // Use the optimized version that only creates the specific task graph needed
-  const [projectName, targetName, configuration] = taskId.split(':');
+  // Use colon-aware splitting so that target names containing colons
+  // (e.g. "test:integration") are parsed correctly instead of being
+  // mistaken for a target + configuration pair.
+  const projectNodes = Object.fromEntries(
+    depGraphClientResponse.projects.map((p) => [p.name, p])
+  );
+  const [projectName, targetName, configuration] = splitTargetFromNodes(
+    taskId,
+    projectNodes,
+    { silent: true }
+  );
   const taskGraphResponse = await createTaskGraphForTargetsAndProjects(
     [targetName],
     [projectName],
@@ -1306,11 +1532,9 @@ async function getExpandedTaskInputs(
   if (inputs) {
     result = expandInputs(
       inputs,
-      currentProjectGraphClientResponse.projects.find(
-        (p) => p.name === projectName
-      ),
+      depGraphClientResponse.projects.find((p) => p.name === projectName),
       allWorkspaceFiles,
-      currentProjectGraphClientResponse
+      depGraphClientResponse
     );
   }
 
@@ -1318,6 +1542,31 @@ async function getExpandedTaskInputs(
   expandedTaskInputsCache.set(taskId, result);
 
   return result;
+}
+
+// A brace group ({a,b}.json) carries commas, so a glob list joined with
+// commas can only be split at brace depth zero.
+function splitGlobGroup(group: string): string[] {
+  const globs: string[] = [];
+  let current = '';
+  let depth = 0;
+  for (const char of group) {
+    if (char === '{') {
+      depth++;
+    } else if (char === '}' && depth > 0) {
+      depth--;
+    }
+    if (char === ',' && depth === 0) {
+      globs.push(current);
+      current = '';
+    } else {
+      current += char;
+    }
+  }
+  globs.push(current);
+  // An unbalanced `{` would swallow the rest of the list; a plain split is
+  // the better guess then.
+  return depth === 0 ? globs : group.split(',');
 }
 
 function expandInputs(
@@ -1332,11 +1581,21 @@ function expandInputs(
   const projectRootInputs: string[] = [];
   const externalInputs: string[] = [];
   const otherInputs: string[] = [];
+  const filesInputs: string[][] = [];
   inputs.forEach((input) => {
     // grouped workspace inputs look like workspace:[pattern,otherPattern]
     if (input.startsWith('workspace:[')) {
-      const inputs = input.substring(11, input.length - 1).split(',');
-      workspaceRootInputs.push(...inputs);
+      workspaceRootInputs.push(
+        ...splitGlobGroup(input.substring(11, input.length - 1))
+      );
+      return;
+    }
+    // Disk-backed groups look like files:[glob,!otherGlob]. They expand on
+    // disk, so they must be matched before the `:` catch-all below classifies
+    // them as external dependencies.
+    const diskBacked = /^files:\[(.*)\]$/.exec(input);
+    if (diskBacked) {
+      filesInputs.push(splitGlobGroup(diskBacked[1]));
       return;
     }
     const maybeProjectName = input.split(':')[0];
@@ -1362,6 +1621,10 @@ function expandInputs(
   const workspaceRootsExpanded: string[] = getExpandedWorkspaceRoots(
     workspaceRootInputs,
     allWorkspaceFiles
+  );
+  const projectRoots = depGraphClientResponse.projects.map((p) => p.data.root);
+  const filesExpanded = filesInputs.flatMap((globs) =>
+    expandFilesInput(workspaceRoot, globs, projectRoots)
   );
 
   const otherInputsExpanded = otherInputs.map((input) => {
@@ -1405,7 +1668,11 @@ function expandInputs(
     }, {});
 
   return {
-    general: [...workspaceRootsExpanded, ...otherInputsExpanded],
+    general: [
+      ...workspaceRootsExpanded,
+      ...filesExpanded,
+      ...otherInputsExpanded,
+    ],
     ...projectRootsExpanded,
     external: externalInputs,
   };
@@ -1469,22 +1736,14 @@ function getExpandedWorkspaceRoots(
 async function createJsonOutput(
   prunedGraph: ProjectGraph,
   rawGraph: ProjectGraph,
-  projects: string[],
-  targets?: string[]
+  taskSelection?: TaskSelection
 ): Promise<GraphJson> {
   const response: GraphJson = {
     graph: prunedGraph,
   };
 
-  if (targets?.length) {
-    const taskGraph = createTaskGraph(
-      rawGraph,
-      {},
-      projects,
-      targets,
-      undefined,
-      {}
-    );
+  if (taskSelection) {
+    const taskGraph = taskSelection.taskGraph;
 
     const hasher = createTaskHasher(rawGraph, readNxJson());
     let tasks = Object.values(taskGraph.tasks);

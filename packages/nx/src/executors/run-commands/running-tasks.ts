@@ -3,7 +3,12 @@ import { ChildProcess, spawn, Serializable } from 'child_process';
 import { env as appendLocalEnv } from 'npm-run-path';
 import { isAbsolute, join } from 'path';
 import { ExecutorContext } from '../../config/misc-interfaces';
-import { killProcessTree, killProcessTreeGraceful } from '../../native';
+import {
+  IS_WASM,
+  killProcessTree,
+  killProcessTreeGraceful,
+  LogMatcher,
+} from '../../native';
 import {
   createPseudoTerminal,
   PseudoTerminal,
@@ -14,12 +19,60 @@ import {
   loadAndExpandDotEnvFile,
   unloadDotEnvFile,
 } from '../../tasks-runner/task-env';
+import { readEnv } from '../../tasks-runner/tokens';
+import type { Task } from '../../config/task-graph';
 import { registerTaskProcessStart } from '../../tasks-runner/task-io-service';
+import { hasExited, whenStdioClosed } from '../../utils/child-process';
 import { signalToCode } from '../../utils/exit-codes';
+import { output as cliOutput } from '../../utils/output';
 import {
   NormalizedRunCommandsOptions,
   RunCommandsCommandOptions,
 } from './run-commands.impl';
+
+/**
+ * The one place this file puts task output on the terminal.
+ *
+ * Deliberately write-only: recording a chunk and printing it are separate steps
+ * whose ORDER matters at some call sites - the data handlers notify output
+ * listeners between the two - so a helper that bundled them would silently
+ * reorder the terminal write relative to those listeners. What is worth
+ * funnelling is the write itself, because it carries an invariant: anything
+ * reaching the terminal has to go through `cliOutput` or
+ * {@link CLIOutput.atLineStart} goes stale, and `addColorAndPrefix` splits on
+ * newlines without ever appending one, so these chunks routinely end mid-line.
+ */
+function streamChunk(
+  chunk: string,
+  streamOutput: boolean,
+  target: NodeJS.WriteStream = process.stdout
+) {
+  if (streamOutput) {
+    cliOutput.writeTaskOutputChunk(chunk, target);
+  }
+}
+
+/**
+ * The non-zero-exit warning, emitted from three call sites that each keep their
+ * output in a different accumulator. Deliberately has no trailing newline, so
+ * whatever prints next has to account for the cursor being mid-line.
+ */
+function commandExitedNonZeroWarning(command: string): string {
+  return `Warning: command "${command}" exited with non-zero status code`;
+}
+
+function commandsExitedBeforeReadyWarning(
+  commands: RunningNodeProcess[],
+  readyWhenStatus: { stringToMatch: string; found: boolean }[]
+): string {
+  const exited =
+    commands.length === 1 ? `command "${commands[0].command}"` : 'all commands';
+  const missing = readyWhenStatus
+    .filter(({ found }) => !found)
+    .map(({ stringToMatch }) => `"${stringToMatch}"`)
+    .join(', ');
+  return `Warning: ${exited} exited before printing the readyWhen text ${missing}`;
+}
 
 export class ParallelRunningTasks implements RunningTask {
   private readonly childProcesses: RunningNodeProcess[];
@@ -38,7 +91,8 @@ export class ParallelRunningTasks implements RunningTask {
   constructor(
     options: NormalizedRunCommandsOptions,
     context: ExecutorContext,
-    taskId: string
+    task: Pick<Task, 'id' | 'ultracache'>,
+    baseEnv?: NodeJS.ProcessEnv
   ) {
     this.childProcesses = options.commands.map(
       (commandConfig) =>
@@ -50,7 +104,8 @@ export class ParallelRunningTasks implements RunningTask {
           options.readyWhenStatus,
           options.streamOutput,
           options.envFile,
-          taskId
+          task,
+          baseEnv
         )
     );
     this.readyWhenStatus = options.readyWhenStatus;
@@ -104,11 +159,8 @@ export class ParallelRunningTasks implements RunningTask {
 
   private async run() {
     if (this.readyWhenStatus.length) {
-      let {
-        childProcess,
-        result: { code, terminalOutput },
-      } = await Promise.race(
-        this.childProcesses.map(
+      const settled = await Promise.race([
+        ...this.childProcesses.map(
           (childProcess) =>
             new Promise<{
               childProcess: RunningNodeProcess;
@@ -120,33 +172,67 @@ export class ParallelRunningTasks implements RunningTask {
                 }
               });
               childProcess.onExit((code, terminalOutput) => {
+                // A failed command reports only once its output is read, so
+                // readyWhen text a sibling prints meanwhile must not hide it.
+                if (
+                  code === 0 &&
+                  this.childProcesses.some(
+                    (p) => p !== childProcess && p.exitedWithFailure
+                  )
+                ) {
+                  return;
+                }
                 res({
                   childProcess,
                   result: { code, terminalOutput },
                 });
               });
             })
-        )
-      );
+        ),
+        Promise.all(
+          this.childProcesses.map((childProcess) =>
+            childProcess.outputWhenClosed()
+          )
+        ).then((outputs) => ({ outputsOfExitedCommands: outputs })),
+      ]);
+
+      if ('outputsOfExitedCommands' in settled) {
+        const warning = commandsExitedBeforeReadyWarning(
+          this.childProcesses,
+          this.readyWhenStatus
+        );
+        for (const cb of this.outputCallbacks) {
+          cb(warning);
+        }
+        streamChunk(warning, this.streamOutput, process.stderr);
+        this.emitExit(
+          1,
+          settled.outputsOfExitedCommands.join('\r\n') + warning
+        );
+        return;
+      }
+
+      let {
+        childProcess,
+        result: { code, terminalOutput },
+      } = settled;
 
       if (code !== 0) {
-        const output = `Warning: command "${childProcess.command}" exited with non-zero status code`;
-        terminalOutput += output;
-        if (this.streamOutput) {
-          process.stderr.write(output);
-        }
+        const warning = commandExitedNonZeroWarning(childProcess.command);
+        terminalOutput += warning;
+        streamChunk(warning, this.streamOutput, process.stderr);
       }
 
       this.emitExit(code, terminalOutput);
     } else {
       const runningProcesses = new Set<RunningNodeProcess>();
-      let hasFailure = false;
-      let failureDetails: {
-        childProcess: RunningNodeProcess;
-        code: number;
-        terminalOutput: string;
-      } | null = null;
+      let failedProcess: RunningNodeProcess | null = null;
       const terminalOutputs = new Map<RunningNodeProcess, string>();
+      const failFast = (childProcess: RunningNodeProcess) => {
+        if (failedProcess) return;
+        failedProcess = childProcess;
+        this.terminateRemainingProcesses(runningProcesses, childProcess);
+      };
 
       await Promise.allSettled(
         this.childProcesses.map(async (childProcess) => {
@@ -157,16 +243,15 @@ export class ParallelRunningTasks implements RunningTask {
               cb(terminalOutput);
             }
           });
+          // Results wait for the output to drain, which a descendant holding
+          // the pipes can stretch to a second.
+          childProcess.onFailedExit(() => failFast(childProcess));
 
           const { code, terminalOutput } = await childProcess.getResults();
           terminalOutputs.set(childProcess, terminalOutput);
 
-          if (code !== 0 && !hasFailure) {
-            hasFailure = true;
-            failureDetails = { childProcess, code, terminalOutput };
-
-            // Immediately terminate all other running processes
-            this.terminateRemainingProcesses(runningProcesses, childProcess);
+          if (code !== 0) {
+            failFast(childProcess);
           }
 
           runningProcesses.delete(childProcess);
@@ -175,13 +260,11 @@ export class ParallelRunningTasks implements RunningTask {
 
       let terminalOutput = Array.from(terminalOutputs.values()).join('\r\n');
 
-      if (hasFailure && failureDetails) {
+      if (failedProcess) {
         // Add failure message
-        const output = `Warning: command "${failureDetails.childProcess.command}" exited with non-zero status code`;
-        terminalOutput += output;
-        if (this.streamOutput) {
-          process.stderr.write(output);
-        }
+        const warning = commandExitedNonZeroWarning(failedProcess.command);
+        terminalOutput += warning;
+        streamChunk(warning, this.streamOutput, process.stderr);
 
         this.emitExit(1, terminalOutput);
       } else {
@@ -211,7 +294,12 @@ export class SeriallyRunningTasks implements RunningTask {
     [];
   private code: number | null = 0;
   private error: any;
-  private outputCallbacks: Array<(terminalOutput: string) => void> = [];
+  private outputCallbacks: Array<
+    (terminalOutput: string, isCommandHeader?: boolean) => void
+  > = [];
+  // A command can be killed after it exits, while its output drains. The
+  // signal then reaches no process, so this is what stops the next command.
+  private killSignal: NodeJS.Signals | null = null;
 
   // Memoized exit so late getResults()/onExit() callers don't hang.
   private exited = false;
@@ -221,11 +309,19 @@ export class SeriallyRunningTasks implements RunningTask {
     options: NormalizedRunCommandsOptions,
     context: ExecutorContext,
     private readonly tuiEnabled: boolean,
-    private readonly taskId: string
+    private readonly task: Pick<Task, 'id' | 'ultracache'>,
+    private readonly baseEnv?: NodeJS.ProcessEnv
   ) {
     this.run(options, context)
       .catch((e) => {
         this.error = e;
+        this.code = 1;
+        const message = e?.message ?? String(e);
+        this.terminalOutputChunks.push(message);
+        for (const cb of this.outputCallbacks) {
+          cb(message);
+        }
+        streamChunk(message, options.streamOutput, process.stderr);
       })
       .finally(() => {
         const terminalOutput = this.terminalOutputChunks.join('');
@@ -272,7 +368,7 @@ export class SeriallyRunningTasks implements RunningTask {
     this.exitCallbacks.push(cb);
   }
 
-  onOutput(cb: (terminalOutput: string) => void) {
+  onOutput(cb: (terminalOutput: string, isCommandHeader?: boolean) => void) {
     this.outputCallbacks.push(cb);
   }
 
@@ -281,6 +377,7 @@ export class SeriallyRunningTasks implements RunningTask {
   }
 
   kill(signal?: NodeJS.Signals) {
+    this.killSignal = signal ?? 'SIGTERM';
     return this.currentProcess?.kill(signal);
   }
 
@@ -289,22 +386,27 @@ export class SeriallyRunningTasks implements RunningTask {
     context: ExecutorContext
   ) {
     for (const c of options.commands) {
+      if (this.killSignal) {
+        this.code = signalToCode(this.killSignal);
+        break;
+      }
       const childProcess = await this.createProcess(
         c,
         options.color,
         calculateCwd(options.cwd, context),
         options.processEnv ?? options.env ?? {},
-        this.taskId,
+        this.task,
         options.usePty,
         options.streamOutput,
         options.tty,
-        options.envFile
+        options.envFile,
+        this.baseEnv
       );
       this.currentProcess = childProcess;
 
-      childProcess.onOutput((output) => {
+      childProcess.onOutput((output: string, isCommandHeader?: boolean) => {
         for (const cb of this.outputCallbacks) {
-          cb(output);
+          cb(output, isCommandHeader);
         }
       });
 
@@ -312,11 +414,9 @@ export class SeriallyRunningTasks implements RunningTask {
       this.terminalOutputChunks.push(terminalOutput);
       this.code = code;
       if (code !== 0) {
-        const output = `Warning: command "${c.command}" exited with non-zero status code`;
-        if (options.streamOutput) {
-          process.stderr.write(output);
-        }
-        this.terminalOutputChunks.push(output);
+        const warning = commandExitedNonZeroWarning(c.command);
+        streamChunk(warning, options.streamOutput, process.stderr);
+        this.terminalOutputChunks.push(warning);
 
         // Stop running commands
         break;
@@ -329,11 +429,12 @@ export class SeriallyRunningTasks implements RunningTask {
     color: boolean,
     cwd: string,
     env: Record<string, string>,
-    taskId: string,
+    task: Pick<Task, 'id' | 'ultracache'>,
     usePty: boolean = true,
     streamOutput: boolean = true,
     tty: boolean,
-    envFile?: string
+    envFile?: string,
+    baseEnv?: NodeJS.ProcessEnv
   ): Promise<PseudoTtyProcess | RunningNodeProcess> {
     // The rust runCommand is always a tty, so it will not look nice in parallel and if we need prefixes
     // currently does not work properly in windows
@@ -354,14 +455,15 @@ export class SeriallyRunningTasks implements RunningTask {
         env,
         streamOutput,
         tty,
-        envFile
+        envFile,
+        baseEnv
       );
 
       // Register process for metrics collection (direct run-commands execution)
       // Skip registration if we're in a forked executor - the fork wrapper already registered
       const pid = pseudoTtyProcess.getPid();
       if (pid && !process.env.NX_FORKED_TASK_EXECUTOR) {
-        registerTaskProcessStart(taskId, pid);
+        registerTaskProcessStart(task, pid);
       }
 
       return pseudoTtyProcess;
@@ -375,20 +477,76 @@ export class SeriallyRunningTasks implements RunningTask {
       [],
       streamOutput,
       envFile,
-      taskId
+      task,
+      baseEnv
     );
   }
 }
 
+// Running children share one process listener per event instead of adding one
+// each. The listeners are removed once the last child exits: a signal handler
+// left behind would stop a forked executor from exiting on that signal.
+const runningNodeProcesses = new Set<RunningNodeProcess>();
+
+function killRunningNodeProcessesOnExit() {
+  for (const runningNodeProcess of runningNodeProcesses) {
+    runningNodeProcess.killOnExit();
+  }
+}
+
+function terminateRunningNodeProcesses() {
+  for (const runningNodeProcess of runningNodeProcesses) {
+    runningNodeProcess.kill('SIGTERM');
+  }
+}
+
+function trackRunningNodeProcess(runningNodeProcess: RunningNodeProcess) {
+  if (runningNodeProcesses.size === 0) {
+    process.on('exit', killRunningNodeProcessesOnExit);
+    // In the direct path, detached children don't get OS SIGINT (own process
+    // group via setsid); the orchestrator's cleanup() sends SIGTERM via
+    // killProcessTreeGraceful. Signal handlers here are only needed in the
+    // forked path where there's no orchestrator to dispatch signals.
+    if (process.env.NX_FORKED_TASK_EXECUTOR) {
+      process.on('SIGINT', terminateRunningNodeProcesses);
+      process.on('SIGTERM', terminateRunningNodeProcesses);
+      process.on('SIGHUP', terminateRunningNodeProcesses);
+    }
+  }
+  runningNodeProcesses.add(runningNodeProcess);
+}
+
+function untrackRunningNodeProcess(runningNodeProcess: RunningNodeProcess) {
+  if (
+    !runningNodeProcesses.delete(runningNodeProcess) ||
+    runningNodeProcesses.size > 0
+  ) {
+    return;
+  }
+  process.removeListener('exit', killRunningNodeProcessesOnExit);
+  process.removeListener('SIGINT', terminateRunningNodeProcesses);
+  process.removeListener('SIGTERM', terminateRunningNodeProcesses);
+  process.removeListener('SIGHUP', terminateRunningNodeProcesses);
+}
+
 class RunningNodeProcess implements RunningTask {
+  /** This class's writes, funnelled through {@link streamChunk}. */
+  private stream(chunk: string, target: NodeJS.WriteStream = process.stdout) {
+    streamChunk(chunk, this.streamOutput, target);
+  }
+
   private terminalOutputChunks: string[] = [];
   private childProcess: ChildProcess;
   private exitCallbacks: Array<(code: number, terminalOutput: string) => void> =
     [];
   private outputCallbacks: Array<(terminalOutput: string) => void> = [];
+  private failedExitCallbacks: Array<() => void> = [];
   private killPromise: Promise<void> | null = null;
   private closedPromise: Promise<void>;
+  private stdioClosed: Promise<void>;
   public command: string;
+  // Set at 'exit', while the output may still be unread.
+  public exitedWithFailure = false;
 
   // Memoized exit so late getResults()/onExit() callers don't hang.
   private exited = false;
@@ -401,17 +559,16 @@ class RunningNodeProcess implements RunningTask {
     cwd: string,
     env: Record<string, string>,
     private readyWhenStatus: { stringToMatch: string; found: boolean }[],
-    streamOutput = true,
+    private readonly streamOutput = true,
     envFile: string,
-    private taskId: string
+    private task: Pick<Task, 'id' | 'ultracache'>,
+    baseEnv?: NodeJS.ProcessEnv
   ) {
-    env = processEnv(color, cwd, env, envFile);
+    env = processEnv(color, cwd, env, envFile, baseEnv);
     this.command = commandConfig.command;
     const header = pc.dim('> ') + commandConfig.command + '\r\n\r\n';
     this.terminalOutputChunks.push(header);
-    if (streamOutput) {
-      process.stdout.write(header);
-    }
+    this.stream(header);
     this.childProcess = spawn(commandConfig.command, [], {
       shell: true,
       detached: process.platform !== 'win32',
@@ -421,6 +578,7 @@ class RunningNodeProcess implements RunningTask {
       stdio: ['inherit', 'pipe', 'pipe'],
     });
 
+    this.stdioClosed = whenStdioClosed(this.childProcess);
     this.closedPromise = new Promise<void>((resolve) => {
       this.childProcess.on('close', resolve);
     });
@@ -430,10 +588,10 @@ class RunningNodeProcess implements RunningTask {
     // Register process for metrics collection
     // Skip registration if we're in a forked executor - the fork wrapper already registered
     if (this.childProcess.pid && !process.env.NX_FORKED_TASK_EXECUTOR) {
-      registerTaskProcessStart(taskId, this.childProcess.pid);
+      registerTaskProcessStart(this.task, this.childProcess.pid);
     }
 
-    this.addListeners(commandConfig, streamOutput);
+    this.addListeners(commandConfig);
   }
 
   getResults(): Promise<{ code: number; terminalOutput: string }> {
@@ -462,8 +620,18 @@ class RunningNodeProcess implements RunningTask {
     this.exitCallbacks.push(cb);
   }
 
+  /** Runs at a non-zero 'exit', before the rest of the output is read. */
+  onFailedExit(cb: () => void): void {
+    this.failedExitCallbacks.push(cb);
+  }
+
   send(message: Serializable): void {
     this.childProcess.send(message);
+  }
+
+  async outputWhenClosed(): Promise<string> {
+    await this.closedPromise;
+    return this.terminalOutputChunks.join('');
   }
 
   private emitExit(code: number, terminalOutput: string): void {
@@ -479,13 +647,15 @@ class RunningNodeProcess implements RunningTask {
   kill(signal?: NodeJS.Signals): Promise<void> {
     if (this.killPromise) return this.killPromise;
     if (!this.childProcess.pid) return Promise.resolve();
+    // An exited child's pid is free for reuse, so signalling it could reach an
+    // unrelated process.
+    const signalled = hasExited(this.childProcess)
+      ? Promise.resolve()
+      : killProcessTreeGraceful(this.childProcess.pid, signal);
     // Cache the promise so concurrent callers (e.g. cleanup() after a
     // fire-and-forget kill from cleanUpUnneededContinuousTasks) await the
     // same in-progress operation instead of no-oping.
-    this.killPromise = killProcessTreeGraceful(
-      this.childProcess.pid,
-      signal
-    ).then(() =>
+    this.killPromise = signalled.then(() =>
       // Wait for stdio drain and close events before the orchestrator
       // tears down the event loop via process.exit().
       Promise.race([
@@ -496,55 +666,42 @@ class RunningNodeProcess implements RunningTask {
     return this.killPromise;
   }
 
+  // Last resort on process exit, so it has to be sync. A graceful kill in
+  // progress tracks cleanup subprocesses that this must not interfere with.
+  killOnExit() {
+    if (this.childProcess.pid && !this.killPromise) {
+      killProcessTree(this.childProcess.pid);
+    }
+  }
+
   private triggerOutputListeners(output: string) {
     for (const cb of this.outputCallbacks) {
       cb(output);
     }
   }
 
-  private addListeners(
-    commandConfig: RunCommandsCommandOptions,
-    streamOutput: boolean
-  ) {
-    // Named handlers so they can be removed when the child exits.
-    // Otherwise each RunningNodeProcess leaks process listeners; with
-    // many run-commands tasks this triggers MaxListenersExceededWarning.
-    const isForked = !!process.env.NX_FORKED_TASK_EXECUTOR;
-    const onProcessExit = () => {
-      if (this.childProcess.pid && !this.killPromise) {
-        killProcessTree(this.childProcess.pid);
-      }
-    };
-    const onSigInt = () => {
-      this.kill('SIGTERM');
-    };
-    const onSigTerm = () => {
-      this.kill('SIGTERM');
-    };
-    const onSigHup = () => {
-      this.kill('SIGTERM');
-    };
-    const removeProcessListeners = () => {
-      process.removeListener('exit', onProcessExit);
-      if (isForked) {
-        process.removeListener('SIGINT', onSigInt);
-        process.removeListener('SIGTERM', onSigTerm);
-        process.removeListener('SIGHUP', onSigHup);
-      }
-    };
-
+  private addListeners(commandConfig: RunCommandsCommandOptions) {
     this.childProcess.stdout.setEncoding('utf8');
     this.childProcess.stderr.setEncoding('utf8');
+    const exitedWithFailure = () => this.exitedWithFailure;
+    // Separate matchers, so a ready string never spans stdout and stderr
+    const stdoutReady = readyWhenMatcher(
+      this.readyWhenStatus,
+      exitedWithFailure
+    );
+    const stderrReady = readyWhenMatcher(
+      this.readyWhenStatus,
+      exitedWithFailure
+    );
     this.childProcess.stdout.on('data', (data) => {
       const output = addColorAndPrefix(data, commandConfig);
 
       this.terminalOutputChunks.push(output);
       this.triggerOutputListeners(output);
 
-      if (streamOutput) {
-        process.stdout.write(output);
-      }
-      if (this.readyWhenStatus.length && isReady(this.readyWhenStatus, data)) {
+      this.stream(output);
+
+      if (this.readyWhenStatus.length && stdoutReady(data)) {
         for (const cb of this.exitCallbacks) {
           cb(0, this.terminalOutputChunks.join(''));
         }
@@ -556,62 +713,58 @@ class RunningNodeProcess implements RunningTask {
       this.terminalOutputChunks.push(output);
       this.triggerOutputListeners(output);
 
-      if (streamOutput) {
-        process.stderr.write(output);
-      }
-      if (this.readyWhenStatus.length && isReady(this.readyWhenStatus, err)) {
+      this.stream(output, process.stderr);
+
+      if (this.readyWhenStatus.length && stderrReady(err)) {
         for (const cb of this.exitCallbacks) {
-          cb(1, this.terminalOutputChunks.join(''));
+          cb(0, this.terminalOutputChunks.join(''));
         }
       }
     });
     this.childProcess.on('error', (err) => {
       const output = addColorAndPrefix(err.toString(), commandConfig);
       this.terminalOutputChunks.push(output);
-      if (streamOutput) {
-        process.stderr.write(output);
-      }
+      this.stream(output, process.stderr);
       const terminalOutput = this.terminalOutputChunks.join('');
       this.terminalOutputChunks = [];
-      removeProcessListeners();
+      untrackRunningNodeProcess(this);
       this.emitExit(1, terminalOutput);
     });
-    this.childProcess.on('exit', (code, signal) => {
+    this.childProcess.on('exit', async (code, signal) => {
       if (code === null) {
         code = signalToCode(signal);
       }
-      removeProcessListeners();
+      untrackRunningNodeProcess(this);
+      this.exitedWithFailure = code !== 0;
+      if (this.exitedWithFailure) {
+        for (const cb of this.failedExitCallbacks) {
+          cb();
+        }
+      }
+      // The last stdout and stderr chunks can still be unread at 'exit'.
+      await this.stdioClosed;
+      if (
+        code === 0 &&
+        this.readyWhenStatus.length &&
+        !isReady(this.readyWhenStatus)
+      ) {
+        // A parallel companion may still print the readyWhen text. Keep the
+        // output for ParallelRunningTasks, which decides once all have closed.
+        return;
+      }
       const terminalOutput = this.terminalOutputChunks.join('');
       this.terminalOutputChunks = [];
-      if (!this.readyWhenStatus.length || isReady(this.readyWhenStatus)) {
-        this.emitExit(code, terminalOutput);
-      } else if (code !== 0) {
-        // Process crashed before readyWhen matched; surface the failure so
-        // awaiters unblock. A clean exit (code 0) is left as-is — a parallel
-        // companion command may still produce the readyWhen output.
-        this.emitExit(code, terminalOutput);
-      }
+      this.emitExit(code, terminalOutput);
     });
-    // Terminate any task processes on exit (sync, last resort).
-    // Skip if graceful kill is already in progress — it tracks cleanup
-    // subprocesses and we must not interfere with them.
-    process.on('exit', onProcessExit);
-    // In the direct path, detached children don't get OS SIGINT (own process
-    // group via setsid); the orchestrator's cleanup() sends SIGTERM via
-    // killProcessTreeGraceful. Signal handlers here are only needed in the
-    // forked path where there's no orchestrator to dispatch signals.
-    if (isForked) {
-      process.on('SIGINT', onSigInt);
-      process.on('SIGTERM', onSigTerm);
-      process.on('SIGHUP', onSigHup);
-    }
+    trackRunningNodeProcess(this);
   }
 }
 
 export async function runSingleCommandWithPseudoTerminal(
   normalized: NormalizedRunCommandsOptions,
   context: ExecutorContext,
-  taskId: string
+  task: Pick<Task, 'id' | 'ultracache'>,
+  baseEnv?: NodeJS.ProcessEnv
 ): Promise<PseudoTtyProcess> {
   const pseudoTerminal = createPseudoTerminal();
   const pseudoTtyProcess = await createProcessWithPseudoTty(
@@ -622,14 +775,15 @@ export async function runSingleCommandWithPseudoTerminal(
     normalized.env,
     normalized.streamOutput,
     pseudoTerminal ? normalized.isTTY : false,
-    normalized.envFile
+    normalized.envFile,
+    baseEnv
   );
 
   // Register process for metrics collection (direct run-commands execution)
   // Skip registration if we're in a forked executor - the fork wrapper already registered
   const pid = pseudoTtyProcess.getPid();
   if (pid && !process.env.NX_FORKED_TASK_EXECUTOR) {
-    registerTaskProcessStart(taskId, pid);
+    registerTaskProcessStart(task, pid);
   }
 
   registerProcessListener(pseudoTtyProcess, pseudoTerminal);
@@ -644,11 +798,12 @@ async function createProcessWithPseudoTty(
   env: Record<string, string>,
   streamOutput: boolean = true,
   tty: boolean,
-  envFile?: string
+  envFile?: string,
+  baseEnv?: NodeJS.ProcessEnv
 ) {
   return pseudoTerminal.runCommand(commandConfig.command, {
     cwd,
-    jsEnv: processEnv(color, cwd, env, envFile),
+    jsEnv: processEnv(color, cwd, env, envFile, baseEnv),
     quiet: !streamOutput,
     tty,
   });
@@ -677,7 +832,7 @@ function addColorAndPrefix(out: string, config: RunCommandsCommandOptions) {
   return out;
 }
 
-function calculateCwd(
+export function calculateCwd(
   cwd: string | undefined,
   context: ExecutorContext
 ): string {
@@ -690,21 +845,22 @@ function calculateCwd(
  * Env variables are processed in the following order:
  * - env option from executor options
  * - env file from envFile option if provided
- * - local env variables
+ * - local env variables, read from `baseEnv`
  */
-function processEnv(
+export function processEnv(
   color: boolean,
   cwd: string,
   envOptionFromExecutor: Record<string, string>,
-  envFile?: string
+  envFile?: string,
+  baseEnv: NodeJS.ProcessEnv = process.env
 ) {
-  let localEnv = appendLocalEnv({ cwd: cwd ?? process.cwd() });
+  let localEnv = appendLocalEnv({ cwd: cwd ?? process.cwd(), env: baseEnv });
   localEnv = {
-    ...process.env,
+    ...baseEnv,
     ...localEnv,
   };
 
-  if (process.env.NX_LOAD_DOT_ENV_FILES !== 'false' && envFile) {
+  if (readEnv(baseEnv, 'NX_LOAD_DOT_ENV_FILES') !== 'false' && envFile) {
     loadEnvVarsFile(envFile, localEnv);
   }
   let res: Record<string, string> = {
@@ -725,19 +881,45 @@ function processEnv(
 }
 
 function isReady(
-  readyWhenStatus: { stringToMatch: string; found: boolean }[] = [],
-  data?: string
+  readyWhenStatus: { stringToMatch: string; found: boolean }[]
 ): boolean {
-  if (data) {
-    for (const readyWhenElement of readyWhenStatus) {
-      if (data.toString().indexOf(readyWhenElement.stringToMatch) > -1) {
-        readyWhenElement.found = true;
-        break;
+  return readyWhenStatus.every((readyWhenElement) => readyWhenElement.found);
+}
+
+// The output as printed, kept across chunks, matches strings that hold escape
+// sequences. LogMatcher, absent from the WASM binding, matches text with
+// escapes inside it.
+function readyWhenMatcher(
+  readyWhenStatus: { stringToMatch: string; found: boolean }[],
+  exitedWithFailure: () => boolean
+): (chunk: string) => boolean {
+  const matchers = readyWhenStatus.map((status) => ({
+    status,
+    matcher: IS_WASM ? null : new LogMatcher([status.stringToMatch]),
+    tail: '',
+    matched: false,
+  }));
+  return (chunk) => {
+    // The status is shared, so only a chunk with this command's own match
+    // reports ready. Once ready, only a failed command can change the result.
+    if (isReady(readyWhenStatus) && !exitedWithFailure()) return false;
+    let matchedNow = false;
+    for (const entry of matchers) {
+      const { status, matcher } = entry;
+      if (entry.matched) continue;
+      const printed = entry.tail + chunk;
+      entry.matched =
+        printed.includes(status.stringToMatch) || !!matcher?.feed(chunk);
+      entry.tail = printed.slice(
+        Math.max(0, printed.length - status.stringToMatch.length + 1)
+      );
+      if (entry.matched) {
+        status.found = true;
+        matchedNow = true;
       }
     }
-  }
-
-  return readyWhenStatus.every((readyWhenElement) => readyWhenElement.found);
+    return matchedNow && isReady(readyWhenStatus);
+  };
 }
 
 function loadEnvVarsFile(path: string, env: Record<string, string> = {}) {
@@ -772,7 +954,7 @@ function registerProcessListener(
   });
 
   // Terminate any task processes on exit (sync, last resort).
-  // The per-child exit handlers and PseudoTerminal.shutdown() use the
+  // killRunningNodeProcessesOnExit and PseudoTerminal.shutdown() use the
   // sync killProcessTree for this path. We call kill() here as a
   // best-effort fallback — it returns a Promise but on 'exit' only
   // synchronous work runs, so the initial signal is sent but the

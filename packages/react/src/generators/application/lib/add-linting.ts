@@ -3,9 +3,8 @@ import {
   type GeneratorCallback,
   joinPathFragments,
   ensurePackage,
-  readJson,
+  runTasksInSerial,
 } from '@nx/devkit';
-import { lintProjectGenerator } from '@nx/eslint';
 import {
   addExtendsToLintConfig,
   addOverrideToLintConfig,
@@ -13,29 +12,39 @@ import {
   isEslintConfigSupported,
   useFlatConfig,
 } from '@nx/eslint/internal';
-import { addDependenciesToPackageJson, runTasksInSerial } from '@nx/devkit';
-import { addSwcDependencies } from '@nx/js/internal';
-import { extraEslintDependencies } from '../../../utils/lint';
+import {
+  addSwcDependencies,
+  detectLinters,
+  addLintingToProject,
+} from '@nx/js/internal';
+import { addExtraEslintDependencies } from '../../../utils/lint';
 import { NormalizedSchema } from '../schema';
 import { nxVersion } from '../../../utils/versions';
 
 export async function addLinting(host: Tree, options: NormalizedSchema) {
+  if (options.linter === 'none') {
+    return () => {};
+  }
+
   const tasks: GeneratorCallback[] = [];
-  if (options.linter === 'eslint') {
-    const lintTask = await lintProjectGenerator(host, {
+  tasks.push(
+    await addLintingToProject(host, {
+      oxlintPlugins: ['react', 'react-perf', 'jsx-a11y'],
       linter: options.linter,
       project: options.projectName,
       tsConfigPaths: [
         joinPathFragments(options.appProjectRoot, 'tsconfig.app.json'),
       ],
       unitTestRunner: options.unitTestRunner,
-      skipFormat: true,
       rootProject: options.rootProject,
       skipPackageJson: options.skipPackageJson,
-      addPlugin: options.addPlugin,
-    });
-    tasks.push(lintTask);
+      enableTypedLinting: options.enableTypedLinting,
+    })
+  );
 
+  // Predefined configs, `extends` and ignore entries are ESLint concepts with
+  // no equivalent in other linters.
+  if (options.linter === 'eslint') {
     if (isEslintConfigSupported(host)) {
       if (useFlatConfig(host)) {
         addPredefinedConfigToFlatLintConfig(
@@ -60,13 +69,7 @@ export async function addLinting(host: Tree, options: NormalizedSchema) {
     }
 
     if (!options.skipPackageJson) {
-      const installTask = addDependenciesToPackageJson(
-        host,
-        extraEslintDependencies.dependencies,
-        extraEslintDependencies.devDependencies,
-        undefined,
-        true
-      );
+      const installTask = addExtraEslintDependencies(host);
       const addSwcTask = addSwcDependencies(host);
       tasks.push(installTask, addSwcTask);
     }
@@ -81,7 +84,7 @@ async function ignoreReactRouterFilesInEslintConfig(
   tree: Tree,
   projectRoot: string | undefined
 ): Promise<void> {
-  if (!isEslintInstalled(tree)) {
+  if (!detectLinters(tree).includes('eslint')) {
     return;
   }
 
@@ -107,18 +110,4 @@ async function ignoreReactRouterFilesInEslintConfig(
   const directory = isUsingFlatConfig ? '' : (projectRoot ?? '');
 
   addIgnoresToLintConfig(tree, directory, ['**/build', '**/.react-router']);
-}
-
-export function isEslintInstalled(tree: Tree): boolean {
-  try {
-    require('eslint');
-    return true;
-  } catch {}
-
-  // it might not be installed yet, but it might be in the tree pending install
-  const { devDependencies, dependencies } = tree.exists('package.json')
-    ? readJson(tree, 'package.json')
-    : {};
-
-  return !!devDependencies?.['eslint'] || !!dependencies?.['eslint'];
 }

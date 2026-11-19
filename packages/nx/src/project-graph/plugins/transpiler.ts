@@ -4,11 +4,15 @@ import type * as ts from 'typescript';
 import {
   ensureCjsResolverPatched,
   ensureNodeNextEsmResolverRegistered,
+  ensureResolveConditionsInjected,
   isNativeStripPreferred,
   registerTranspiler,
   registerTsConfigPaths,
 } from '../../plugins/js/utils/register';
-import { readTsConfigWithoutFiles } from '../../plugins/js/utils/typescript';
+import {
+  getRootTsConfigResolveExportsConditions,
+  readTsConfigWithoutFiles,
+} from '../../plugins/js/utils/typescript';
 import { workspaceRoot } from '../../utils/workspace-root';
 
 export let unregisterPluginTSTranspiler: (() => void) | null = null;
@@ -28,6 +32,13 @@ export function registerPluginTSTranspiler() {
   if (unregisterPluginTSTranspiler !== null) {
     return;
   }
+
+  // Align Node's runtime resolution with the source-first plugin entry so the
+  // plugin's transitive workspace imports don't fall through to unbuilt `dist`.
+  // A no-op inside a plugin worker/daemon already spawned with `--conditions`.
+  ensureResolveConditionsInjected(
+    getRootTsConfigResolveExportsConditions(workspaceRoot)
+  );
 
   if (isNativeStripPreferred()) {
     // Native strip handles `.ts` syntax but doesn't rewrite NodeNext-style

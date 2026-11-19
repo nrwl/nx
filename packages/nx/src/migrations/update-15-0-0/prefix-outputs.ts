@@ -1,16 +1,12 @@
 import { Tree } from '../../generators/tree';
-import { formatChangedFilesWithPrettierIfAvailable } from '../../generators/internal-utils/format-changed-files-with-prettier-if-available';
+import { formatChangedFiles } from '../../generators/internal-utils/format-changed-files';
 import {
   getProjects,
   updateProjectConfiguration,
 } from '../../generators/utils/project-configuration';
 import { readNxJson, updateNxJson } from '../../generators/utils/nx-json';
-import { joinPathFragments } from '../../utils/path';
 import { join } from 'path';
-import {
-  transformLegacyOutputs,
-  validateOutputs,
-} from '../../tasks-runner/utils';
+import { transformLegacyOutputs } from '../../tasks-runner/utils';
 import { updateJson } from '../../generators/utils/json';
 import { PackageJson } from '../../utils/package-json';
 import { targetDefaultConfigs } from '../utils/target-defaults';
@@ -73,5 +69,5 @@ export default async function (tree: Tree) {
     updateNxJson(tree, nxJson);
   }
 
-  await formatChangedFilesWithPrettierIfAvailable(tree);
+  await formatChangedFiles(tree);
 }

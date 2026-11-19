@@ -1,6 +1,7 @@
 import { ProjectConfiguration } from '@nx/devkit';
 import {
   checkFilesExist,
+  checkFilesMatchingPatternExist,
   cleanupProject,
   createFile,
   expectTestsPass,
@@ -69,7 +70,9 @@ describe('Nx Plugin', () => {
       `generate @nx/plugin:plugin ${plugin} --linter=eslint --e2eTestRunner=jest --publishable`
     );
     const lintResults = runCLI(`lint ${plugin}`);
-    expect(lintResults).toContain('All files pass linting');
+    expect(lintResults).toContain(
+      `Successfully ran target lint for project ${plugin}`
+    );
 
     const buildResults = runCLI(`build ${plugin}`);
     expect(buildResults).toContain('Done compiling TypeScript files');
@@ -85,6 +88,33 @@ describe('Nx Plugin', () => {
     runCLI(`e2e ${plugin}-e2e`);
   }, 90000);
 
+  it('should be able to generate a Nx Plugin with vitest e2e tests', async () => {
+    const plugin = uniq('plugin');
+
+    runCLI(
+      `generate @nx/plugin:plugin ${plugin} --linter=eslint --e2eTestRunner=vitest --publishable`
+    );
+    const lintResults = runCLI(`lint ${plugin}`);
+    expect(lintResults).toContain(
+      `Successfully ran target lint for project ${plugin}`
+    );
+
+    const buildResults = runCLI(`build ${plugin}`);
+    expect(buildResults).toContain('Done compiling TypeScript files');
+    checkFilesExist(
+      `dist/${plugin}/package.json`,
+      `dist/${plugin}/src/index.js`
+    );
+
+    // Verify vitest config was created
+    checkFilesMatchingPatternExist(`${plugin}-e2e/vitest.config.(ts|mts)`);
+
+    // Run the e2e tests with vitest
+    expect(() => {
+      runCLI(`e2e ${plugin}-e2e`);
+    }).not.toThrow();
+  }, 120000);
+
   it('should be able to generate a migration', async () => {
     const plugin = uniq('plugin');
     const version = '1.0.0';
@@ -95,7 +125,9 @@ describe('Nx Plugin', () => {
     );
 
     const lintResults = runCLI(`lint ${plugin}`);
-    expect(lintResults).toContain('All files pass linting');
+    expect(lintResults).toContain(
+      `Successfully ran target lint for project ${plugin}`
+    );
 
     expectTestsPass(await runCLIAsync(`test ${plugin}`));
 
@@ -127,7 +159,9 @@ describe('Nx Plugin', () => {
     );
 
     const lintResults = runCLI(`lint ${plugin}`);
-    expect(lintResults).toContain('All files pass linting');
+    expect(lintResults).toContain(
+      `Successfully ran target lint for project ${plugin}`
+    );
 
     expectTestsPass(await runCLIAsync(`test ${plugin}`));
 
@@ -160,11 +194,13 @@ describe('Nx Plugin', () => {
 
     runCLI(`generate @nx/plugin:plugin ${plugin} --linter=eslint`);
     runCLI(
-      `generate @nx/plugin:executor --name ${executor} --path=${plugin}/src/executors/${executor}/executor --includeHasher`
+      `generate @nx/plugin:executor --name ${executor} --path=${plugin}/src/executors/${executor}/executor`
     );
 
     const lintResults = runCLI(`lint ${plugin}`);
-    expect(lintResults).toContain('All files pass linting');
+    expect(lintResults).toContain(
+      `Successfully ran target lint for project ${plugin}`
+    );
 
     expectTestsPass(await runCLIAsync(`test ${plugin}`));
 
@@ -174,19 +210,16 @@ describe('Nx Plugin', () => {
       `${plugin}/src/executors/${executor}/schema.d.ts`,
       `${plugin}/src/executors/${executor}/schema.json`,
       `${plugin}/src/executors/${executor}/executor.ts`,
-      `${plugin}/src/executors/${executor}/hasher.ts`,
       `${plugin}/src/executors/${executor}/executor.spec.ts`,
       `dist/${plugin}/src/executors/${executor}/schema.d.ts`,
       `dist/${plugin}/src/executors/${executor}/schema.json`,
-      `dist/${plugin}/src/executors/${executor}/executor.js`,
-      `dist/${plugin}/src/executors/${executor}/hasher.js`
+      `dist/${plugin}/src/executors/${executor}/executor.js`
     );
     const executorsJson = readJson(`${plugin}/executors.json`);
     expect(executorsJson).toMatchObject({
       executors: expect.objectContaining({
         [executor]: {
           implementation: `./src/executors/${executor}/executor`,
-          hasher: `./src/executors/${executor}/hasher`,
           schema: `./src/executors/${executor}/schema.json`,
           description: `${executor} executor`,
         },

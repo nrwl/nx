@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "private": false,
   "type": "commonjs",
-  "description": "The Nx Plugin for Angular contains executors, generators, and utilities for managing Angular applications and libraries within an Nx workspace. It provides: \n\n- Integration with libraries such as Storybook, Jest, ESLint, Playwright and Cypress. \n\n- Generators to help scaffold code quickly (like: Micro Frontends, Libraries, both internal to your codebase and publishable to npm) \n\n- Single Component Application Modules (SCAMs) \n\n- NgRx helpers. \n\n- Utilities for automatic workspace refactoring.",
+  "description": "The Nx Plugin for Angular contains executors, generators, and utilities for managing Angular applications and libraries within an Nx workspace. It provides: \n\n- Integration with libraries such as Storybook, Jest, ESLint, Playwright and Cypress. \n\n- Generators to help scaffold code quickly (like: Micro Frontends, Libraries, both internal to your codebase and publishable to npm) \n\n- NgRx helpers. \n\n- Utilities for automatic workspace refactoring.",
   "repository": {
     "type": "git",
     "url": "https://github.com/nrwl/nx.git",
@@ -32,10 +32,6 @@
       "types": "./dist/types/nx-angular.d.ts",
       "default": "./dist/fesm2022/nx-angular.mjs"
     },
-    "./mf": {
-      "types": "./dist/types/nx-angular-mf.d.ts",
-      "default": "./dist/fesm2022/nx-angular-mf.mjs"
-    },
     "./package.json": {
       "default": "./package.json"
     },
@@ -45,6 +41,7 @@
     "./generators": "./dist/generators.js",
     "./executors": "./dist/executors.js",
     "./plugin": "./dist/plugin.js",
+    "./ready-check": "./dist/ready-check.js",
     "./tailwind": "./dist/tailwind.js",
     "./plugins/component-testing": "./dist/plugins/component-testing.js",
     "./internal": "./dist/internal.js",
@@ -74,22 +71,17 @@
     "@nx/devkit": "workspace:*",
     "@nx/eslint": "workspace:*",
     "@nx/js": "workspace:*",
-    "@nx/module-federation": "workspace:*",
-    "@nx/rspack": "workspace:*",
-    "@nx/web": "workspace:*",
-    "@nx/webpack": "workspace:*",
     "@phenomnomnominal/tsquery": "catalog:typescript",
     "@typescript-eslint/type-utils": "catalog:eslint",
-    "enquirer": "catalog:",
+    "jsonc-parser": "catalog:",
     "magic-string": "~0.30.2",
     "picocolors": "catalog:",
     "picomatch": "catalog:",
     "semver": "catalog:",
-    "tslib": "catalog:typescript",
-    "webpack-merge": "^5.8.0"
+    "tslib": "catalog:typescript"
   },
   "devDependencies": {
-    "@nx/cypress": "workspace:*",
+    "@nx/storybook": "workspace:*",
     "@nx/vitest": "workspace:*",
     "nx": "workspace:*"
   },
@@ -98,9 +90,14 @@
     "@angular-devkit/build-angular": "catalog:angular-supported-versions",
     "@angular-devkit/core": "catalog:angular-supported-versions",
     "@angular-devkit/schematics": "catalog:angular-supported-versions",
+    "@nx/cypress": "workspace:*",
+    "@nx/playwright": "workspace:*",
     "@schematics/angular": "catalog:angular-supported-versions",
+    "@nx/rspack": "workspace:*",
+    "@nx/webpack": "workspace:*",
     "ng-packagr": "catalog:angular-supported-versions",
-    "rxjs": "catalog:angular-supported-versions"
+    "rxjs": "catalog:angular-supported-versions",
+    "webpack-merge": "^5.8.0"
   },
   "peerDependenciesMeta": {
     "@angular/build": {
@@ -109,7 +106,22 @@
     "@angular-devkit/build-angular": {
       "optional": true
     },
+    "@nx/cypress": {
+      "optional": true
+    },
+    "@nx/playwright": {
+      "optional": true
+    },
+    "@nx/rspack": {
+      "optional": true
+    },
+    "@nx/webpack": {
+      "optional": true
+    },
     "ng-packagr": {
+      "optional": true
+    },
+    "webpack-merge": {
       "optional": true
     }
   },

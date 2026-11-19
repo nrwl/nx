@@ -2,11 +2,15 @@ import {
   detectPackageManager,
   getPackageManagerCommand,
   output,
+  readJsonFile,
+  workspaceRoot,
+  writeJsonFile,
 } from '@nx/devkit';
 import { execSync } from 'child_process';
+import { join } from 'path';
 import { Schema } from './schema';
 
-export function callUpgrade(schema: Schema): 1 | Buffer {
+export function callUpgrade(schema: Schema): { success: boolean } {
   const packageManager = detectPackageManager();
   const pm = getPackageManagerCommand(packageManager);
   try {
@@ -19,15 +23,24 @@ export function callUpgrade(schema: Schema): 1 | Buffer {
       color: 'blue',
     });
 
-    execSync(
-      `${pm.dlx} ${
-        packageManager === 'yarn' ? 'storybook' : 'storybook@latest'
-      } upgrade ${schema.autoAcceptAllPrompts ? '--yes' : ''}`,
-      {
-        stdio: [0, 1, 2],
-        windowsHide: true,
+    const nxVersions = readNxDependencyVersions();
+    try {
+      execSync(
+        `${pm.dlx} ${
+          packageManager === 'yarn' ? 'storybook' : 'storybook@latest'
+        } upgrade ${schema.autoAcceptAllPrompts ? '--yes' : ''}`,
+        {
+          stdio: [0, 1, 2],
+          windowsHide: true,
+        }
+      );
+    } finally {
+      // The CLI installed the versions it bumped, and Nx skips its own install
+      // when the declarations end up unchanged, so reinstall here.
+      if (restoreNxDependencyVersions(nxVersions)) {
+        installRestoredNxVersions(pm.install);
       }
-    );
+    }
 
     output.log({
       title: `Storybook packages upgraded.`,
@@ -48,17 +61,72 @@ export function callUpgrade(schema: Schema): 1 | Buffer {
       color: 'red',
     });
     console.log(e);
-    return 1;
+    return { success: false };
   }
+  return { success: true };
+}
+
+function installRestoredNxVersions(installCommand: string): void {
+  try {
+    execSync(installCommand, {
+      cwd: workspaceRoot,
+      stdio: [0, 1, 2],
+      windowsHide: true,
+    });
+  } catch {
+    output.warn({
+      title: 'Failed to install the restored Nx package versions',
+      bodyLines: [`Run "${installCommand}" to install them.`],
+    });
+  }
+}
+
+const dependencySections = ['dependencies', 'devDependencies'] as const;
+
+function isNxPackage(name: string): boolean {
+  return name === 'nx' || name.startsWith('@nx/');
+}
+
+function readNxDependencyVersions(): Record<string, Record<string, string>> {
+  const packageJson = readJsonFile(join(workspaceRoot, 'package.json'));
+  const versions: Record<string, Record<string, string>> = {};
+  for (const section of dependencySections) {
+    versions[section] = Object.fromEntries(
+      Object.entries<string>(packageJson[section] ?? {}).filter(([name]) =>
+        isNxPackage(name)
+      )
+    );
+  }
+  return versions;
+}
+
+function restoreNxDependencyVersions(
+  versions: Record<string, Record<string, string>>
+): boolean {
+  const packageJsonPath = join(workspaceRoot, 'package.json');
+  const packageJson = readJsonFile(packageJsonPath);
+  let changed = false;
+  for (const section of dependencySections) {
+    for (const [name, version] of Object.entries(versions[section])) {
+      if (packageJson[section]?.[name] !== version) {
+        packageJson[section][name] = version;
+        changed = true;
+      }
+    }
+  }
+  if (changed) {
+    writeJsonFile(packageJsonPath, packageJson);
+  }
+  return changed;
 }
 
 export function checkStorybookInstalled(
   packageJson: Record<string, any>
 ): boolean {
   return (
-    (packageJson.dependencies['storybook'] ||
-      packageJson.devDependencies['storybook']) &&
-    (packageJson.dependencies['@nx/storybook'] ||
-      packageJson.devDependencies['@nx/storybook'])
+    (packageJson.dependencies?.['storybook'] ||
+      packageJson.devDependencies?.['storybook']) &&
+    (packageJson.dependencies?.['@nx/storybook'] ||
+      packageJson.devDependencies?.['@nx/storybook'])
   );
 }

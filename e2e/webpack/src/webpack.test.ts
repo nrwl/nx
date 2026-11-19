@@ -248,85 +248,6 @@ describe('Webpack Plugin', () => {
     expect(readMainFile(`dist/apps/${appName}`)).not.toMatch(`await Promise`);
   });
 
-  it('should allow options to be passed from the executor', async () => {
-    const appName = uniq('app');
-    runCLI(
-      `generate @nx/web:app ${appName} --directory=apps/${appName} --bundler webpack`
-    );
-
-    checkFilesExist(`apps/${appName}/project.json`);
-    updateJson(`apps/${appName}/project.json`, (json) => {
-      json.targets.build = {
-        executor: '@nx/webpack:webpack',
-        outputs: ['{options.outputPath}'],
-        options: {
-          generatePackageJson: true, // This should be passed to the plugin.
-          outputPath: `dist/apps/${appName}`,
-          webpackConfig: `apps/${appName}/webpack.config.js`,
-        },
-      };
-      return json;
-    });
-
-    checkFilesExist(`apps/${appName}/webpack.config.js`);
-    updateFile(
-      `apps/${appName}/webpack.config.js`,
-      `
-        const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
-        const { join } = require('path');
-        module.exports = {
-          output: {
-            path: join(__dirname, '../../dist/apps/demo'),
-          },
-          plugins: [
-            new NxAppWebpackPlugin({
-              // NOTE: generatePackageJson is missing here, but executor passes it.
-              target: 'web',
-              compiler: 'swc',
-              main: './src/main.ts',
-              tsConfig: './tsconfig.app.json',
-              optimization: false,
-              outputHashing: 'none',
-            }),
-          ],
-        };`
-    );
-
-    runCLI(`build ${appName}`);
-
-    fileExists(`dist/apps/${appName}/package.json`);
-  });
-
-  it('should resolve assets from executors as relative to workspace root', () => {
-    const appName = uniq('app');
-    runCLI(
-      `generate @nx/web:app ${appName} --directory=apps/${appName} --bundler webpack`
-    );
-    updateFile('shared/docs/TEST.md', 'TEST');
-    updateJson(`apps/${appName}/project.json`, (json) => {
-      json.targets.build = {
-        executor: '@nx/webpack:webpack',
-        outputs: ['{options.outputPath}'],
-        options: {
-          assets: [
-            {
-              input: 'shared/docs',
-              glob: 'TEST.md',
-              output: '.',
-            },
-          ],
-          outputPath: `dist/apps/${appName}`,
-          webpackConfig: `apps/${appName}/webpack.config.js`,
-        },
-      };
-      return json;
-    });
-
-    runCLI(`build ${appName}`);
-
-    checkFilesExist(`dist/apps/${appName}/TEST.md`);
-  });
-
   it('it should support building libraries and apps when buildLibsFromSource is false', () => {
     const appName = uniq('app');
     const myPkg = uniq('my-pkg');
@@ -381,7 +302,60 @@ describe('Webpack Plugin', () => {
     );
   });
 
-  it('should be able to support webpack config with nx enhanced and babel', () => {
+  it('should build a tsc app that imports a workspace lib from source', () => {
+    // Regression for #35017: ts-loader 9.5.7+ forwards the tsconfig rootDir to
+    // transpileModule, so lib sources bundled from source (outside the app
+    // rootDir) failed with TS6059.
+    const appName = uniq('app');
+    const myPkg = uniq('my-pkg');
+
+    runCLI(
+      `generate @nx/web:application ${appName} --directory=apps/${appName} --bundler=webpack`
+    );
+
+    runCLI(
+      `generate @nx/js:lib ${myPkg} --directory=libs/${myPkg} --importPath=@${appName}/${myPkg}`
+    );
+
+    updateFile(`libs/${myPkg}/src/index.ts`, `export const foo = 'bar';\n`);
+
+    updateFile(
+      `apps/${appName}/src/main.ts`,
+      `import { foo } from '@${appName}/${myPkg}';\nconsole.log(foo);\n`
+    );
+
+    updateFile(
+      `apps/${appName}/webpack.config.js`,
+      `
+      const path  = require('path');
+      const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
+
+      module.exports = {
+        target: 'node',
+        output: {
+          path: path.join(__dirname, '../../dist/${appName}')
+        },
+        plugins: [
+          new NxAppWebpackPlugin({
+            compiler: 'tsc',
+            main: 'apps/${appName}/src/main.ts',
+            tsConfig: 'apps/${appName}/tsconfig.app.json',
+            outputHashing: 'none',
+            optimization: false,
+          })
+        ]
+      };`
+    );
+
+    const result = runCLI(`build ${appName}`);
+
+    expect(result).not.toContain('TS6059');
+    expect(result).toContain(
+      `Successfully ran target build for project ${appName}`
+    );
+  });
+
+  it('should support native webpack plugins with babel', () => {
     const appName = uniq('app');
 
     runCLI(
@@ -391,26 +365,33 @@ describe('Webpack Plugin', () => {
     updateFile(
       `apps/${appName}/webpack.config.js`,
       `
-      const { composePlugins, withNx } = require('@nx/webpack');
-      const { withReact } = require('@nx/react');
+      const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
+      const { NxReactWebpackPlugin } = require('@nx/react/webpack-plugin');
       const { join } = require('path');
-      
-      const pluginOption = {
-        index: 'apps/${appName}/src/index.html',
-        main: 'apps/${appName}/src/main.ts',
-        tsConfig: 'apps/${appName}/tsconfig.app.json',
-        outputPath: 'dist/apps/${appName}',
-      }
-      
-      // Nx composable plugins for webpack.
-      module.exports = composePlugins(
-        withNx(pluginOption),
-        withReact(pluginOption),
-      );`
+
+      module.exports = {
+        output: {
+          path: join(__dirname, '../../dist/apps/${appName}'),
+        },
+        plugins: [
+          new NxAppWebpackPlugin({
+            compiler: 'babel',
+            index: './src/index.html',
+            main: './src/main.ts',
+            tsConfig: './tsconfig.app.json',
+            outputHashing: 'none',
+          }),
+          new NxReactWebpackPlugin(),
+        ],
+      };`
     );
 
     const result = runCLI(`build ${appName}`);
 
+    checkFilesExist(
+      `dist/apps/${appName}/main.js`,
+      `dist/apps/${appName}/index.html`
+    );
     expect(result).toContain(`nx run ${appName}:build`);
     expect(result).toContain(
       `Successfully ran target build for project ${appName}`

@@ -5,9 +5,10 @@
     "moduleResolution": "bundler",
     "declaration": true,
     "composite": false,
-    "outDir": "dist"
+    "outDir": "dist",
+    "rootDir": "."
   },
-  "include": ["index.ts", "mf/**/*"],
+  "include": ["index.ts"],
   "angularCompilerOptions": {
     "compilationMode": "partial"
   }

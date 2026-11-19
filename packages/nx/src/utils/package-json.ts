@@ -1,10 +1,11 @@
 import { exec, execSync } from 'child_process';
 import { promisify } from 'util';
 import { existsSync, writeFileSync } from 'fs';
+import Module, { createRequire } from 'node:module';
 import { dirname, join, resolve } from 'path';
 
 const execAsync = promisify(exec);
-import { dirSync } from 'tmp';
+import which from 'which';
 import { NxJsonConfiguration } from '../config/nx-json';
 import {
   ProjectConfiguration,
@@ -18,6 +19,7 @@ import { mergeTargetConfigurations } from '../project-graph/utils/project-config
 import { getCatalogManager } from './catalog';
 import { readJsonFile } from './fileutils';
 import { hasNxJsPlugin } from './has-nx-js-plugin';
+import { isContainedRelativePath } from './path';
 import { getNxRequirePaths } from './installation-directory';
 import {
   createTempNpmDirectory,
@@ -29,8 +31,7 @@ import {
 } from './package-manager';
 import { workspaceRoot } from './workspace-root';
 
-export interface NxProjectPackageJsonConfiguration
-  extends Partial<ProjectConfiguration> {
+export interface NxProjectPackageJsonConfiguration extends Partial<ProjectConfiguration> {
   includedScripts?: string[];
 }
 
@@ -98,11 +99,17 @@ export interface PackageJson {
       libc?: string[];
     };
     ignoredOptionalDependencies?: string[];
+    packageExtensions?: Record<string, unknown>;
+    patchedDependencies?: Record<string, string>;
   };
   overrides?: PackageOverride;
   // npm install-script allowlist (npm 11.16+). Keys are `name`, `name@version`,
   // or git specs; `true` approves, `false` denies.
   allowScripts?: Record<string, boolean>;
+  // Bun install-script allowlist; when set it replaces Bun's default list.
+  trustedDependencies?: string[];
+  // Bun patches, `name@version` -> patch file path.
+  patchedDependencies?: Record<string, string>;
   bin?: Record<string, string> | string;
   workspaces?:
     | string[]
@@ -151,6 +158,19 @@ export function normalizePackageGroup(
 export function readNxMigrateConfig(
   json: Partial<PackageJson>
 ): NxMigrationsConfiguration & { packageGroup?: ArrayPackageGroup } {
+  // Registry fetching uses this value to build a temporary extraction path.
+  // Reject unsupported absolute paths and escaping parent traversal before extraction.
+  const assertContained = (migrations: string): string => {
+    if (!isContainedRelativePath(migrations)) {
+      throw new Error(
+        `Invalid migrations path "${migrations}" in package "${json.name ?? 'unknown'}@${
+          json.version ?? 'unknown'
+        }": migration paths must not be absolute or escape their base directory through parent traversal.`
+      );
+    }
+    return migrations;
+  };
+
   const parseNxMigrationsConfig = (
     fromJson?: string | NxMigrationsConfiguration
   ): NxMigrationsConfiguration & { packageGroup?: ArrayPackageGroup } => {
@@ -158,11 +178,13 @@ export function readNxMigrateConfig(
       return {};
     }
     if (typeof fromJson === 'string') {
-      return { migrations: fromJson, packageGroup: [] };
+      return { migrations: assertContained(fromJson), packageGroup: [] };
     }
 
     return {
-      ...(fromJson.migrations ? { migrations: fromJson.migrations } : {}),
+      ...(fromJson.migrations
+        ? { migrations: assertContained(fromJson.migrations) }
+        : {}),
       ...(fromJson.packageGroup
         ? { packageGroup: normalizePackageGroup(fromJson.packageGroup) }
         : {}),
@@ -325,11 +347,9 @@ export function readModulePackageJsonWithoutFallbacks(
   packageJson: PackageJson;
   path: string;
 } {
-  const packageJsonPath: string = require.resolve(
+  const packageJsonPath = resolveWithoutCachePollution(
     `${moduleSpecifier}/package.json`,
-    {
-      paths: requirePaths,
-    }
+    requirePaths
   );
   const packageJson: PackageJson = readJsonFile(packageJsonPath);
 
@@ -360,37 +380,115 @@ export function readModulePackageJson(
   packageJson: PackageJson;
   path: string;
 } {
-  let packageJsonPath: string;
-  let packageJson: PackageJson;
-
+  let exported: { packageJson: PackageJson; path: string } | undefined;
   try {
-    ({ path: packageJsonPath, packageJson } =
-      readModulePackageJsonWithoutFallbacks(moduleSpecifier, requirePaths));
-  } catch {
-    const entryPoint = require.resolve(moduleSpecifier, {
-      paths: requirePaths,
-    });
+    exported = readModulePackageJsonWithoutFallbacks(
+      moduleSpecifier,
+      requirePaths
+    );
+  } catch {}
+  // A wildcard export can map package.json to a nested `{"type": ...}` stub,
+  // so a nameless manifest is kept only when the lookup step finds no other.
+  if (exported?.packageJson.name) {
+    return exported;
+  }
 
-    let moduleRootPath = dirname(entryPoint);
+  const lookupPathMatch = findPackageJsonInLookupPaths(
+    moduleSpecifier,
+    requirePaths
+  );
+  if (lookupPathMatch) {
+    return {
+      packageJson: readJsonFile(lookupPathMatch),
+      path: lookupPathMatch,
+    };
+  }
+  if (exported) {
+    return exported;
+  }
+
+  const entryPoint = resolveWithoutCachePollution(
+    moduleSpecifier,
+    requirePaths
+  );
+
+  let moduleRootPath = dirname(entryPoint);
+  let packageJsonPath = join(moduleRootPath, 'package.json');
+
+  while (!existsSync(packageJsonPath)) {
+    moduleRootPath = dirname(moduleRootPath);
     packageJsonPath = join(moduleRootPath, 'package.json');
+  }
 
-    while (!existsSync(packageJsonPath)) {
-      moduleRootPath = dirname(moduleRootPath);
-      packageJsonPath = join(moduleRootPath, 'package.json');
-    }
-
-    packageJson = readJsonFile(packageJsonPath);
-    if (packageJson.name && packageJson.name !== moduleSpecifier) {
-      throw new Error(
-        `Found module ${packageJson.name} while trying to locate ${moduleSpecifier}/package.json`
-      );
-    }
+  const packageJson: PackageJson = readJsonFile(packageJsonPath);
+  if (packageJson.name && packageJson.name !== moduleSpecifier) {
+    throw new Error(
+      `Found module ${packageJson.name} while trying to locate ${moduleSpecifier}/package.json`
+    );
   }
 
   return {
     packageJson,
     path: packageJsonPath,
   };
+}
+
+function findPackageJsonInLookupPaths(
+  moduleSpecifier: string,
+  requirePaths: string[]
+): string | undefined {
+  for (const requirePath of requirePaths) {
+    const lookupPaths =
+      createRequire(join(resolve(requirePath), 'noop.js')).resolve.paths(
+        moduleSpecifier
+      ) ?? [];
+    for (const lookupPath of lookupPaths) {
+      const candidate = join(lookupPath, moduleSpecifier, 'package.json');
+      if (existsSync(candidate)) {
+        // Resolving gives a symlinked package the same real path Node returns.
+        return resolveWithoutCachePollution(candidate, requirePaths);
+      }
+    }
+  }
+}
+
+/**
+ * Resolve `request` via Node's CJS resolver while neutralising both ways
+ * `require.resolve(req, { paths })` can lie about the `paths` argument:
+ *
+ *   1. Process-wide `Module._pathCache`. It is swapped out for the duration
+ *      of the call, so any cache entries written are discarded and any
+ *      previously-poisoned entries are not read. Without this, an
+ *      in-process load of a second `nx` package (e.g. the temp `nx@latest`
+ *      install used by the daemon's AI-agents and console-status checks)
+ *      can poison the cache key this call uses and make us read the temp
+ *      path instead of the workspace path.
+ *
+ *   2. Package self-reference. When a file inside package `nx` calls
+ *      `require.resolve('nx/...')`, Node returns that calling package's
+ *      own file regardless of `paths`. We avoid that by issuing the
+ *      resolve from a `createRequire` rooted at a synthetic path that is
+ *      outside any package, so the resolver has no "self" to reference
+ *      and must honour `paths`.
+ *
+ * Node's single-threaded synchronous execution means `require.resolve` does
+ * not yield, so no other code in the process can observe the swapped cache.
+ *
+ * Throws like `require.resolve` when nothing matches.
+ */
+export function resolveWithoutCachePollution(
+  request: string,
+  requirePaths: string[]
+): string {
+  // `_pathCache` is an internal Node API not exposed in @types/node.
+  const realCache = (Module as any)._pathCache;
+  (Module as any)._pathCache = Object.create(null);
+  try {
+    const detachedRequire = createRequire('/__nx_detached_resolver__/x.js');
+    return detachedRequire.resolve(request, { paths: requirePaths });
+  } finally {
+    (Module as any)._pathCache = realCache;
+  }
 }
 
 /**
@@ -402,10 +500,7 @@ function preparePackageInstallation(
   requiredVersion: string,
   packageManager: PackageManager
 ) {
-  const { dir: tempDir, cleanup } = createTempNpmDirectory?.() ?? {
-    dir: dirSync().name,
-    cleanup: () => {},
-  };
+  const { dir: tempDir, cleanup } = createTempNpmDirectory();
 
   console.log(`Fetching ${pkg}...`);
   const isVerbose = process.env.NX_VERBOSE_LOGGING === 'true';
@@ -416,20 +511,46 @@ function preparePackageInstallation(
   // it into the temp dir, so the `-w` here resolves to the temp dir.
   const pmCommands = getPackageManagerCommand(packageManager);
   const preInstallCommand = pmCommands.preInstall;
-  const installCommand = `${pmCommands.addDev} ${pkg}@${requiredVersion} ${
-    pmCommands.ignoreScriptsFlag ?? ''
-  }`;
+
+  // Keep peer dependencies out of the temp install. `ensurePackage` puts the
+  // workspace's `node_modules` on `NODE_PATH`, so a loaded package resolves its
+  // peers from the workspace instead of pulling its own (possibly incompatible)
+  // copies into the temp dir.
+  //
+  // npm needs `--legacy-peer-deps` rather than `--omit=peer`: npm marks a package
+  // as a peer if anything in the tree peer-depends on it, so `--omit=peer` also
+  // prunes packages that are real dependencies. Bun's `--omit=peer` does not.
+  //
+  // pnpm has no plain flag for it. Up to 11 it takes `--config.<setting>`;
+  // pnpm 12 gave `--config` a meaning of its own and takes the setting from
+  // the environment instead.
+  const skipPeerDependenciesFlags: Partial<Record<PackageManager, string>> = {
+    npm: '--legacy-peer-deps',
+    bun: '--omit=peer',
+    pnpm: '--config.auto-install-peers=false',
+  };
+  // Yarn Berry requires an environment variable (not a CLI flag) to disable lifecycle scripts.
+  // Apply this defensively for all package managers when pulling nx@latest to tmp.
+  const installEnv: NodeJS.ProcessEnv = {
+    YARN_ENABLE_SCRIPTS: 'false',
+    ...(packageManager === 'pnpm'
+      ? { PNPM_CONFIG_AUTO_INSTALL_PEERS: 'false' }
+      : {}),
+  };
+  const installCommand = [
+    pmCommands.addDev,
+    `${pkg}@${requiredVersion}`,
+    skipPeerDependenciesFlags[packageManager],
+    pmCommands.ignoreScriptsFlag,
+  ]
+    .filter(Boolean)
+    .join(' ');
 
   const execOptions = {
     cwd: tempDir,
     stdio: isVerbose ? 'inherit' : 'ignore',
     windowsHide: true,
-    // Yarn Berry requires an environment variable (not a CLI flag) to disable lifecycle scripts.
-    // Apply this defensively for all package managers when pulling nx@latest to tmp.
-    env: {
-      ...process.env,
-      YARN_ENABLE_SCRIPTS: 'false',
-    },
+    env: { ...process.env, ...installEnv },
   } as const;
 
   return {
@@ -438,6 +559,7 @@ function preparePackageInstallation(
     preInstallCommand,
     installCommand,
     execOptions,
+    installEnv,
   };
 }
 
@@ -465,24 +587,49 @@ export function installPackageToTmp(
   };
 }
 
+/**
+ * @param options.env Base env for each install command, read as the command
+ * starts. Defaults to `process.env`. With it, a `yarn` that only Corepack
+ * provides runs through Corepack.
+ */
 export async function installPackageToTmpAsync(
   pkg: string,
   requiredVersion: string,
-  packageManager: PackageManager
+  packageManager: PackageManager,
+  options: { env?: () => NodeJS.ProcessEnv } = {}
 ): Promise<{
   tempDir: string;
   cleanup: () => void;
 }> {
-  const { tempDir, cleanup, preInstallCommand, installCommand, execOptions } =
-    preparePackageInstallation(pkg, requiredVersion, packageManager);
+  const {
+    tempDir,
+    cleanup,
+    preInstallCommand,
+    installCommand,
+    execOptions,
+    installEnv,
+  } = preparePackageInstallation(pkg, requiredVersion, packageManager);
+
+  const run = (command: string) => {
+    if (!options.env) {
+      return execAsync(command, execOptions);
+    }
+    const env = { ...options.env(), ...installEnv };
+    return execAsync(
+      packageManager === 'yarn'
+        ? yarnThroughCorepackIfNeeded(command, env)
+        : command,
+      { ...execOptions, env }
+    );
+  };
 
   try {
     if (preInstallCommand) {
       // ensure package.json and repo in tmp folder is set to a proper package manager state
-      await execAsync(preInstallCommand, execOptions);
+      await run(preInstallCommand);
     }
 
-    await execAsync(installCommand, execOptions);
+    await run(installCommand);
 
     return {
       tempDir,
@@ -493,6 +640,20 @@ export async function installPackageToTmpAsync(
     cleanup();
     throw error;
   }
+}
+
+function yarnThroughCorepackIfNeeded(
+  command: string,
+  env: NodeJS.ProcessEnv
+): string {
+  const path =
+    Object.entries(env).find(([key]) => key.toUpperCase() === 'PATH')?.[1] ??
+    '';
+  const onPath = (bin: string) =>
+    !!path && !!which.sync(bin, { path, nothrow: true });
+  return !onPath('yarn') && onPath('corepack')
+    ? `corepack ${command}`
+    : command;
 }
 
 /**
@@ -694,6 +855,16 @@ function getDependencyVersionFromPackageJsonFromFileSystem(
   }
 
   return version;
+}
+
+const TARBALL_PATH = /\.(?:tgz|tar\.gz|tar)$/i;
+
+/**
+ * Whether a local dependency path names a tarball rather than a directory, by
+ * the rule npm and Bun share: a `.tgz`, `.tar.gz` or `.tar` suffix in any case.
+ */
+export function isTarballPath(path: string): boolean {
+  return TARBALL_PATH.test(path);
 }
 
 /**

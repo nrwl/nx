@@ -1,12 +1,12 @@
-jest.mock('child_process');
+vi.mock('child_process');
 import * as cp from 'child_process';
 import { deduceDefaultBase } from './default-base';
 
 describe('deduceDefaultBase', () => {
-  const execSyncSpy = jest.spyOn(cp, 'execSync');
+  const execSyncSpy = vi.spyOn(cp, 'execSync');
 
   afterEach(() => {
-    jest.resetAllMocks();
+    vi.resetAllMocks();
   });
 
   it('should work when not set', () => {

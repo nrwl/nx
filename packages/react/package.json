@@ -30,9 +30,6 @@
   ],
   "typesVersions": {
     "*": {
-      "mf": [
-        "dist/mf/index.d.ts"
-      ],
       "babel": [
         "dist/babel.d.ts"
       ],
@@ -47,6 +44,9 @@
       ],
       "router-plugin": [
         "dist/router-plugin.d.ts"
+      ],
+      "ready-check": [
+        "dist/ready-check.d.ts"
       ],
       "ast-utils": [
         "dist/ast-utils.d.ts"
@@ -101,24 +101,22 @@
     }
   },
   "dependencies": {
+    "@babel/preset-react": "^7.22.5",
     "@phenomnomnominal/tsquery": "catalog:typescript",
-    "@svgr/webpack": "catalog:",
     "minimatch": "catalog:",
     "tslib": "catalog:typescript",
     "@nx/devkit": "workspace:*",
     "@nx/js": "workspace:*",
     "@nx/eslint": "workspace:*",
     "@nx/web": "workspace:*",
-    "@nx/module-federation": "workspace:*",
-    "@nx/rollup": "workspace:*",
-    "express": "^4.21.2",
-    "http-proxy-middleware": "catalog:",
     "semver": "catalog:"
   },
   "devDependencies": {
     "@nx/cypress": "workspace:*",
     "@nx/playwright": "workspace:*",
+    "@nx/rollup": "workspace:*",
     "@nx/rsbuild": "workspace:*",
+    "@nx/rspack": "workspace:*",
     "@nx/vite": "workspace:*",
     "@nx/vitest": "workspace:*",
     "@nx/webpack": "workspace:*",
@@ -141,11 +139,6 @@
     "./migrations.json": "./migrations.json",
     "./generators.json": "./generators.json",
     "./executors.json": "./executors.json",
-    "./mf": {
-      "@nx/nx-source": "./mf/index.ts",
-      "types": "./dist/mf/index.d.ts",
-      "default": "./dist/mf/index.js"
-    },
     "./babel": {
       "@nx/nx-source": "./babel.ts",
       "types": "./dist/babel.d.ts",
@@ -170,6 +163,11 @@
       "@nx/nx-source": "./router-plugin.ts",
       "types": "./dist/router-plugin.d.ts",
       "default": "./dist/router-plugin.js"
+    },
+    "./ready-check": {
+      "@nx/nx-source": "./ready-check.ts",
+      "types": "./dist/ready-check.d.ts",
+      "default": "./dist/ready-check.js"
     },
     "./ast-utils": {
       "@nx/nx-source": "./ast-utils.ts",

@@ -1,6 +1,7 @@
 import {
   getE2EWebServerInfo,
   readTargetDefaultsForTarget,
+  type PackageJson,
 } from '@nx/devkit/internal';
 import {
   addProjectConfiguration,
@@ -13,7 +14,6 @@ import {
 } from '@nx/devkit';
 import { nxVersion } from '../../../utils/versions';
 import { NormalizedSchema } from '../schema';
-import type { PackageJson } from 'nx/src/utils/package-json';
 
 export async function addE2e(
   host: Tree,
@@ -75,7 +75,6 @@ export async function addE2e(
       baseUrl: e2eWebServerInfo.e2eWebServerAddress,
       ciBaseUrl: e2eWebServerInfo.e2eCiBaseUrl,
       jsx: true,
-      addPlugin: true,
     });
 
     return e2eTask;
@@ -119,10 +118,11 @@ export async function addE2e(
       directory: 'src',
       js: false,
       linter: options.linter,
-      setParserOptionsProject: options.setParserOptionsProject,
-      webServerAddress: e2eWebServerInfo.e2eCiBaseUrl,
-      webServerCommand: e2eWebServerInfo.e2eCiWebServerCommand,
-      addPlugin: true,
+      enableTypedLinting: options.enableTypedLinting,
+      webServerCommand: e2eWebServerInfo.e2eWebServerCommand,
+      webServerAddress: e2eWebServerInfo.e2eWebServerAddress,
+      ciWebServerCommand: e2eWebServerInfo.e2eCiWebServerCommand,
+      ciWebServerAddress: e2eWebServerInfo.e2eCiBaseUrl,
     });
 
     return e2eTask;
@@ -161,7 +161,6 @@ async function getNuxtE2EWebServerInfo(
       defaultE2EWebServerAddress: `http://localhost:${e2ePort}`,
       defaultE2ECiBaseUrl: 'http://localhost:4200',
       defaultE2EPort: e2ePort,
-    },
-    true
+    }
   );
 }

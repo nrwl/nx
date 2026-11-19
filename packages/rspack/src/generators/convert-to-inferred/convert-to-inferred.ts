@@ -7,9 +7,9 @@ import {
   addDependenciesToPackageJson,
   createProjectGraphAsync,
   formatFiles,
-  runTasksInSerial,
   type ProjectConfiguration,
   type Tree,
+  logger as devkitLogger,
 } from '@nx/devkit';
 import { ast, query } from '@phenomnomnominal/tsquery';
 import * as ts from 'typescript';
@@ -20,7 +20,6 @@ import {
   servePostTargetTransformerFactory,
   type MigrationContext,
 } from './utils';
-import { logger as devkitLogger } from 'nx/src/devkit-exports';
 import { assertSupportedRspackVersion } from '../../utils/assert-supported-rspack-version';
 
 interface Schema {
@@ -77,7 +76,7 @@ export async function convertToInferred(tree: Tree, options: Schema) {
       .flat()
       .find((v) => v.includes('@nx/rspack:convert-config-to-rspack-plugin'));
 
-    if (convertMessage.length > 0) {
+    if (convertMessage?.length > 0) {
       logger.flushLogs((message) => !convertMessage.includes(message));
       throw new Error(convertMessage);
     } else {
@@ -106,9 +105,11 @@ export async function convertToInferred(tree: Tree, options: Schema) {
     await formatFiles(tree);
   }
 
-  return runTasksInSerial(installCallback, () => {
-    migrationContext.logger.flushLogs();
-  });
+  // Flushed now rather than in the callback so remove-deprecated-executors, which
+  // skips the install callback, still prints these.
+  migrationContext.logger.flushLogs();
+
+  return installCallback;
 }
 
 function skipProjectFilterFactory(tree: Tree) {

@@ -1,34 +1,7 @@
 import { availableParallelism, platform } from 'node:os';
-import { ArrayLiteralExpression, PropertyAssignment } from 'ts-morph';
 import { ENV_NG_BUILD_MAX_WORKERS } from './constants';
 
 export const isUsingWindows = () => platform() === 'win32';
-
-export function getTextByProperty(
-  name: string,
-  properties: PropertyAssignment[]
-) {
-  return properties
-    .filter((property) => property.getName() === name)
-    .map((property) => normalizeQuotes(property.getInitializer()?.getText()))
-    .filter((url): url is string => url !== undefined);
-}
-
-export function getAllTextByProperty(
-  name: string,
-  properties: PropertyAssignment[]
-) {
-  return properties
-    .filter((property) => property.getName() === name)
-    .map((property) => property.getInitializer() as ArrayLiteralExpression)
-    .flatMap((array) =>
-      array.getElements().map((el) => normalizeQuotes(el.getText()))
-    );
-}
-
-export function normalizeQuotes(str?: string) {
-  return str ? str.replace(/['"`]/g, '') : str;
-}
 
 export function isPresent(variable: string | undefined): variable is string {
   return typeof variable === 'string' && variable.trim() !== '';
@@ -45,4 +18,17 @@ export const maxWorkers = () => {
   return parsedWorkers !== null
     ? parsedWorkers
     : Math.min(4, Math.max(availableParallelism() - 1, 1));
+};
+
+/**
+ * The JavaScript transformer's worker count on `@angular/build` >= 22.2, as
+ * its `maxTransformWorkers` computes it. That transformer keeps a fixed pool of
+ * this size and rejects anything but an integer >= 1.
+ */
+export const maxTransformWorkers = () => {
+  const value = process.env[ENV_NG_BUILD_MAX_WORKERS];
+  const parsed = isPresent(value) ? Number(value) : NaN;
+  return Number.isInteger(parsed) && parsed >= 1
+    ? parsed
+    : Math.max(1, Math.min(6, Math.floor(availableParallelism() / 4)));
 };

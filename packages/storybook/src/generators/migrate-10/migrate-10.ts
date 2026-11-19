@@ -1,6 +1,5 @@
-import { formatFiles, logger, readJson, Tree } from '@nx/devkit';
+import { formatFiles, logger, readJson, Tree, output } from '@nx/devkit';
 
-import { output } from 'nx/src/utils/output';
 import { callUpgrade, checkStorybookInstalled } from './calling-storybook-cli';
 import { Schema } from './schema';
 import { join } from 'path';

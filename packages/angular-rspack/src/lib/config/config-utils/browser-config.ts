@@ -1,4 +1,4 @@
-import { TS_ALL_EXT_REGEX } from '@nx/angular-rspack-compiler';
+import type { SwcTranspilationTransform } from '@nx/angular-rspack-compiler';
 import type { Configuration } from '@rspack/core';
 import { isRspackV2 } from '../../utils/rspack-version';
 import { isServeMode } from '../../utils/rspack-serve-env';
@@ -8,9 +8,17 @@ import type {
   NormalizedAngularRspackPluginOptions,
 } from '../../models';
 import { NgRspackPlugin } from '../../plugins/ng-rspack';
+import type { AngularRspackPlugin } from '../../plugins/angular-rspack-plugin';
+import type { SharedLicenseInputs } from '../../plugins/extract-licenses-plugin';
+import type { SharedServerRenderingInputs } from '../../plugins/index-html-plugin';
+import type { SsrReloadServer } from '../../plugins/server/ssr-reload-server';
+import type { AngularSsrDevServer } from '../../plugins/angular-ssr-dev-server';
+import type { DevServerReloads } from '../../plugins/dev-server-reloads';
+import { getDevClientGuardRule } from '../../plugins/loaders/dev-client-guard.loader';
 import { getDevServerConfig } from './dev-server-config-utils';
 import { getPolyfillsEntry, toRspackEntries } from './entry-points';
 import { getOptimization } from './optimization-config';
+import { getSwcTranspilationRules } from './swc-transpilation';
 import { resolve } from 'path';
 import { HmrLoader } from '../../plugins/loaders/hmr-accept-loader';
 
@@ -18,7 +26,14 @@ export async function getBrowserConfig(
   normalizedOptions: NormalizedAngularRspackPluginOptions,
   i18n: I18nOptions,
   hashFormat: HashFormat,
-  defaultConfig: Configuration
+  defaultConfig: Configuration,
+  swcTranspilationTransform: SwcTranspilationTransform,
+  sharedLicenseInputs?: SharedLicenseInputs,
+  sharedAngularPlugin?: AngularRspackPlugin,
+  serverRenderingInputs?: SharedServerRenderingInputs,
+  ssrReloadServer?: SsrReloadServer,
+  ssrDevServer?: AngularSsrDevServer,
+  devServerReloads?: DevServerReloads
 ): Promise<Configuration> {
   const isDevServer = isServeMode();
   const isProduction = process.env['NODE_ENV'] === 'production';
@@ -69,6 +84,9 @@ export async function getBrowserConfig(
       isDevServer || isRspackV2()
         ? {}
         : ({ outputModule: true } as unknown as Configuration['experiments']),
+    // rspack-cli 2 turns lazy compilation on when this is unset. 1.x never
+    // does, and 1.x before 1.5 rejects the top-level key.
+    ...(isRspackV2() ? { lazyCompilation: false } : {}),
     resolve: {
       ...defaultConfig.resolve,
       mainFields: ['es2020', 'es2015', 'browser', 'module', 'main'],
@@ -77,22 +95,9 @@ export async function getBrowserConfig(
     module: {
       ...defaultConfig.module,
       rules: [
-        {
-          test: TS_ALL_EXT_REGEX,
-          use: [
-            {
-              loader: 'builtin:swc-loader',
-              options: {
-                jsc: {
-                  parser: {
-                    syntax: 'typescript',
-                  },
-                  target: 'es2022',
-                },
-              },
-            },
-          ],
-        },
+        ...getSwcTranspilationRules(swcTranspilationTransform),
+        // Web workers get the dev-server entries too.
+        ...(isDevServer ? [getDevClientGuardRule()] : []),
         ...(normalizedOptions.devServer?.hmr
           ? [
               {
@@ -109,6 +114,12 @@ export async function getBrowserConfig(
       new NgRspackPlugin(normalizedOptions, {
         i18nOptions: i18n,
         platform: 'browser',
+        sharedLicenseInputs,
+        sharedAngularPlugin,
+        ssrReloadServer,
+        serverRenderingInputs,
+        ssrDevServer,
+        devServerReloads,
       }),
     ],
   };

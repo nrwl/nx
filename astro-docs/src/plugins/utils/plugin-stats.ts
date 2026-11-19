@@ -359,6 +359,9 @@ export function shouldFetchStats(
 
 export const PLUGIN_IGNORE_LIST = [
   'add-nx-to-monorepo',
+  // Documented by the hand-written pages under reference/Conformance and reference/Owners
+  'conformance',
+  'owners',
   'cra-to-nx',
   'create-nx-plugin',
   'create-nx-workspace',

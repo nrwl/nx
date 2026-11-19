@@ -8,7 +8,7 @@ import type { NxWebpackExecutionContext } from '../../utils/config';
 import type { NxAppWebpackPluginOptions } from '../nx-webpack-plugin/nx-app-webpack-plugin-options';
 import type { Compiler, Configuration } from 'webpack';
 import { normalizeOptions } from '../nx-webpack-plugin/lib/normalize-options';
-import { readNxJson } from 'nx/src/config/configuration';
+import { readNxJsonFromDisk as readNxJson } from '@nx/devkit/internal';
 
 /**
  * This function is used to wrap the legacy plugin function to be used with the `composePlugins` function.
@@ -75,13 +75,18 @@ export async function useLegacyNxPlugin(
     apply(compiler: Compiler) {
       compiler.hooks.beforeCompile.tapPromise('NxLegacyAsyncPlugin', () => {
         return new Promise<void>((resolve) => {
-          fn(compiler.options as Configuration, ctx).then((updated) => {
-            // Merge options back shallowly since it's a fully functional configuration.
-            // Most likely, the user modified the config in place, but this guarantees that updates are applied if users did something like:
-            // `return { ...config, plugins: [...config.plugins, new MyPlugin()] }`
-            Object.assign(compiler.options, updated);
-            resolve();
-          });
+          // Legacy functions are typed to take `Configuration` but mutate the
+          // normalized options in place. From webpack 5.111 the two types
+          // conflict (`output.copy`), and the public signature can't widen.
+          fn(compiler.options as unknown as Configuration, ctx).then(
+            (updated) => {
+              // Merge options back shallowly since it's a fully functional configuration.
+              // Most likely, the user modified the config in place, but this guarantees that updates are applied if users did something like:
+              // `return { ...config, plugins: [...config.plugins, new MyPlugin()] }`
+              Object.assign(compiler.options, updated);
+              resolve();
+            }
+          );
         });
       });
     },

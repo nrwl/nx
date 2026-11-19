@@ -13,6 +13,7 @@ import {
 } from '@nx/devkit';
 import { findTargetDefault, upsertTargetDefault } from '@nx/devkit/internal';
 import { getProjectSourceRoot } from '@nx/js/internal';
+import { supportsSsrAllowedHosts } from '../../utils/version-utils';
 import type { NormalizedGeneratorOptions } from '../schema';
 import {
   DEFAULT_BROWSER_DIR,
@@ -68,6 +69,12 @@ export function updateProjectConfigForApplicationBuilder(
     entry: joinPathFragments(sourceRoot, options.serverFileName),
   };
   buildTarget.options.outputMode = 'server';
+  if (supportsSsrAllowedHosts(tree)) {
+    // The engine matches the request host against this list and an unset list
+    // matches nothing, so surface it for the deployment to fill in
+    buildTarget.options.security ??= {};
+    buildTarget.options.security.allowedHosts ??= [];
+  }
 
   updateProjectConfiguration(tree, options.project, project);
 }
@@ -93,7 +100,9 @@ export function updateProjectConfigForBrowserBuilder(
 
   projectConfig.targets.server = {
     dependsOn: ['build'],
-    executor: buildTarget.executor.startsWith('@angular-devkit/build-angular:')
+    executor: options.buildTargetExecutor.startsWith(
+      '@angular-devkit/build-angular:'
+    )
       ? '@angular-devkit/build-angular:server'
       : '@nx/angular:webpack-server',
     options: {
@@ -106,21 +115,25 @@ export function updateProjectConfigForBrowserBuilder(
     defaultConfiguration: 'production',
   };
 
-  projectConfig.targets['serve-ssr'] = {
-    continuous: true,
-    executor: '@angular-devkit/build-angular:ssr-dev-server',
-    configurations: {
-      development: {
-        browserTarget: `${options.project}:build:development`,
-        serverTarget: `${options.project}:server:development`,
+  // The rspack conversion removes the server target this would run
+  if (!options.isRspack) {
+    projectConfig.targets['serve-ssr'] = {
+      continuous: true,
+      readyWhen: { signal: true },
+      executor: '@angular-devkit/build-angular:ssr-dev-server',
+      configurations: {
+        development: {
+          browserTarget: `${options.project}:build:development`,
+          serverTarget: `${options.project}:server:development`,
+        },
+        production: {
+          browserTarget: `${options.project}:build:production`,
+          serverTarget: `${options.project}:server:production`,
+        },
       },
-      production: {
-        browserTarget: `${options.project}:build:production`,
-        serverTarget: `${options.project}:server:production`,
-      },
-    },
-    defaultConfiguration: 'development',
-  };
+      defaultConfiguration: 'development',
+    };
+  }
 
   projectConfig.targets.prerender = {
     executor: '@angular-devkit/build-angular:prerender',

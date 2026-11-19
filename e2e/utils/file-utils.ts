@@ -37,6 +37,17 @@ export function updateFile(
   }
 }
 
+/**
+ * Replaces a generated node app's main file but keeps its leading shebang and
+ * `@nx-target-name` comment, from which the `serve` target is inferred.
+ */
+export function updateMainFile(f: string, content: string): void {
+  const header =
+    readFileSync(tmpProjPath(f), 'utf-8').match(/^#!.*\n(?:\/\/.*\n)*/)?.[0] ??
+    '';
+  updateFile(f, header + content);
+}
+
 export function renameFile(f: string, newPath: string): void {
   ensureDirSync(path.dirname(tmpProjPath(newPath)));
   renameSync(tmpProjPath(f), tmpProjPath(newPath));

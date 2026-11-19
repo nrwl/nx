@@ -20,7 +20,6 @@ import {
 import { isGlobPattern } from '../../../utils/globs';
 import type { CreateNodesResult } from '../../plugins/public-api';
 import {
-  SourceInformation,
   ConfigurationSourceMaps,
   targetSourceMapKey,
   TARGET_DEFAULTS_PLUGIN_NAME,
@@ -54,8 +53,7 @@ export function createTargetDefaultsResults(
   specifiedPluginRootMap: Record<string, ProjectConfiguration>,
   defaultPluginRootMap: Record<string, ProjectConfiguration>,
   nxJsonConfiguration: NxJsonConfiguration,
-  specifiedSourceMaps?: ConfigurationSourceMaps,
-  defaultSourceMaps?: ConfigurationSourceMaps
+  specifiedSourceMaps?: ConfigurationSourceMaps
 ): CreateNodesResultEntry[] {
   const targetDefaultsConfig = nxJsonConfiguration.targetDefaults;
   if (!targetDefaultsConfig) {
@@ -126,8 +124,8 @@ export function createTargetDefaultsResults(
         ? resolveSourcePlugin(
             root,
             targetName,
-            specifiedSourceMaps,
-            defaultSourceMaps
+            defaultTargets[targetName],
+            specifiedSourceMaps
           )
         : undefined;
 
@@ -203,6 +201,9 @@ type EffectiveTarget = {
   // incompatible-replaced and dropped when the winner uses the
   // `options.commands` form (#36067).
   options?: { command?: unknown; commands?: unknown };
+  // True when the layers are incompatible, so the default layer
+  // wholesale-replaces the specified one during the real merge.
+  replacesSpecified: boolean;
 };
 
 function effectiveTargetForLookup(
@@ -219,7 +220,7 @@ function effectiveTargetForLookup(
 
   if (resolvedSpecified && resolvedDefault) {
     if (!isCompatibleTarget(resolvedSpecified, resolvedDefault)) {
-      return effectiveFromWinner(resolvedDefault);
+      return effectiveFromWinner(resolvedDefault, true);
     }
     return {
       executor: resolvedDefault.executor ?? resolvedSpecified.executor,
@@ -227,22 +228,27 @@ function effectiveTargetForLookup(
       options:
         runCommandsCommandIdentity(resolvedDefault) ??
         runCommandsCommandIdentity(resolvedSpecified),
+      replacesSpecified: false,
     };
   }
   if (resolvedSpecified) {
-    return effectiveFromWinner(resolvedSpecified);
+    return effectiveFromWinner(resolvedSpecified, false);
   }
   if (resolvedDefault) {
-    return effectiveFromWinner(resolvedDefault);
+    return effectiveFromWinner(resolvedDefault, false);
   }
   return undefined;
 }
 
-function effectiveFromWinner(target: TargetConfiguration): EffectiveTarget {
+function effectiveFromWinner(
+  target: TargetConfiguration,
+  replacesSpecified: boolean
+): EffectiveTarget {
   return {
     executor: target.executor,
     command: target.command,
     options: runCommandsCommandIdentity(target),
+    replacesSpecified,
   };
 }
 
@@ -262,17 +268,27 @@ function runCommandsCommandIdentity(
   };
 }
 
+// Whether an entry states what the target runs. run-commands identity lives in
+// these two option keys, which are also what the identity stamp overwrites.
+function authorsCommandIdentity(target: TargetConfiguration): boolean {
+  return (
+    target.options?.command !== undefined ||
+    target.options?.commands !== undefined
+  );
+}
+
 /**
  * Returns one synthetic defaults target per matching `targetDefaults` entry for
  * `targetName` at `root` (empty when no defaults apply). Emitting per entry
  * rather than a single pre-merged target lets source maps attribute fields to
  * the specific array element they came from; the entries merge downstream in
- * document order. Each synthetic stamps the effective executor/command (and the
- * winner's run-commands options identity) so neither merge neighbor can
- * incompatible-replace it and drop its contributions.
+ * document order. A synthetic normally stamps the effective executor/command
+ * (and the winner's run-commands options identity) so neither merge neighbor
+ * can incompatible-replace it and drop its contributions; an entry naming its
+ * own command keeps that command instead, per {@link authorsCommandIdentity}.
  *
- * @param effective The shape the real merge will land on. Used both as the
- *   executor filter context and as the locked identity stamped onto the
+ * @param effective The shape the real merge will land on. Used as the executor
+ *   filter context and, in most cases, as the identity stamped onto the
  *   synthetic.
  */
 function buildSyntheticTargetsForRoot(
@@ -299,6 +315,8 @@ function buildSyntheticTargetsForRoot(
     target: TargetConfiguration;
   }[] = [];
   for (const { index, config } of resolved.matches) {
+    // Read before desugaring, which synthesises an executor for `command`.
+    const authoredExecutor = config.executor;
     const synthetic = resolveCommandSyntacticSugar(deepClone(config), root);
 
     // Compatibility guard, per entry: an entry incompatible with the effective
@@ -314,19 +332,35 @@ function buildSyntheticTargetsForRoot(
       continue;
     }
 
-    // Pre-stamp executor/command from the effective shape so the
-    // synthetic can't be incompatible-replaced during the real merge.
-    if (effective.executor !== undefined) {
-      synthetic.executor = effective.executor;
-    }
-    if (effective.command !== undefined) {
-      synthetic.command = effective.command;
-    }
-    // run-commands compatibility keys off options.command/commands, not the
-    // top-level command. Stamp the winner's so the synthetic stays compatible
-    // when the winning target uses the options.commands form (#36067).
-    if (effective.options !== undefined) {
-      synthetic.options = { ...synthetic.options, ...effective.options };
+    // Stamping over an entry that names its own command would discard it
+    // (#36700), so the stamp is limited to the replacing path it was added
+    // for (#36142).
+    const wouldOverwriteAuthoredCommand =
+      effective.options !== undefined && authorsCommandIdentity(synthetic);
+
+    if (effective.replacesSpecified || !wouldOverwriteAuthoredCommand) {
+      // Pre-stamp executor/command from the effective shape so the
+      // synthetic can't be incompatible-replaced during the real merge.
+      if (effective.executor !== undefined) {
+        synthetic.executor = effective.executor;
+      }
+      if (effective.command !== undefined) {
+        synthetic.command = effective.command;
+      }
+      // run-commands compatibility keys off options.command/commands, not the
+      // top-level command. Stamp the winner's so the synthetic stays compatible
+      // when the winning target uses the options.commands form (#36067). Both
+      // keys are cleared first, since `isCompatibleTarget` reads `command` in
+      // preference to `commands` and a leftover one would defeat the stamp.
+      if (effective.options !== undefined) {
+        const { command, commands, ...rest } = synthetic.options ?? {};
+        synthetic.options = { ...rest, ...effective.options };
+      }
+    } else if (authoredExecutor === undefined) {
+      // Unstamped, an executor desugaring synthesised for the `command`
+      // shorthand reads as a rival run-commands target and replaces the one
+      // this entry should merge into.
+      delete synthetic.executor;
     }
 
     synthetics.push({ key: resolved.key, index, target: synthetic });
@@ -484,9 +518,9 @@ function mergeMatchingEntries(
   for (const entry of entries) {
     if (!entryFilterMatches(entry.filter, ctx)) continue;
     const config = stripFilter(entry);
-    // A lone matching entry is returned without merging so deferred `'...'`
-    // spread tokens survive for the downstream merge; only a second match
-    // triggers a merge, later entry winning.
+    // Later matches merge on top, earlier entry as base. Unresolvable `'...'`
+    // spreads are deferred by default so they survive for the downstream
+    // merge against the plugin-provided target.
     acc = acc === null ? config : mergeTargetConfigurations(config, acc);
   }
   return acc;
@@ -504,6 +538,11 @@ function entryFilterMatches(
   if (!filter) return true;
 
   if (filter.projects) {
+    // No project context: a `projects` filter can't match, and passing the
+    // absent node to `findMatchingProjects` would dereference undefined.
+    if (!ctx.projectName || !ctx.projectNode) {
+      return false;
+    }
     const matched = findMatchingProjects([...filter.projects], {
       [ctx.projectName]: ctx.projectNode,
     });
@@ -558,41 +597,38 @@ function normalizeTargetDefaultValue(
 function resolveSourcePlugin(
   root: string,
   targetName: string,
-  specifiedSourceMaps: ConfigurationSourceMaps | undefined,
-  defaultSourceMaps: ConfigurationSourceMaps | undefined
+  defaultTarget: TargetConfiguration | undefined,
+  specifiedSourceMaps: ConfigurationSourceMaps | undefined
 ): string | undefined {
-  // Default-plugin attribution overrides specified-plugin attribution in the
-  // merge, so check it first. The executor/command keys carry the plugin that
-  // *created* the target, which is what `filter.plugin` ("targets originated by
-  // X") means. The top-level `targets.<name>` node key is deliberately NOT used
-  // as a fallback: it tracks the last writer, so a later plugin augmenting the
-  // target would mis-attribute it. The trade-off is that a target with neither
-  // an executor nor a command (a rare, non-runnable shape) resolves to no
-  // source plugin and won't match a `filter.plugin` default — accepted, since
-  // every runnable target carries one of these keys.
-  const executorKey = `${targetSourceMapKey(targetName)}.executor`;
-  const commandKey = `${targetSourceMapKey(targetName)}.command`;
-  const candidates: (string | undefined)[] = [
-    pluginFromSourceMap(defaultSourceMaps, root, executorKey),
-    pluginFromSourceMap(defaultSourceMaps, root, commandKey),
-    pluginFromSourceMap(specifiedSourceMaps, root, executorKey),
-    pluginFromSourceMap(specifiedSourceMaps, root, commandKey),
-  ];
+  // `filter.plugin` ("targets originated by X") can only name a plugin from
+  // nx.json's `plugins` — the specified set. When the default layer authors
+  // the target's identity (its merged config carries an executor or command,
+  // which the merge lets win), the originator is a default plugin and the
+  // target has no matchable source plugin; no source maps are needed to see
+  // that. Otherwise the specified layer's executor/command attribution names
+  // the originator. The top-level `targets.<name>` node key is deliberately
+  // NOT used as a fallback: it tracks ownership, so a later plugin augmenting
+  // the target would mis-attribute it. The trade-off is that a target with
+  // neither an executor nor a command (a rare, non-runnable shape) resolves to
+  // no source plugin and won't match a `filter.plugin` default — accepted,
+  // since every runnable target carries one of these keys.
+  if (
+    defaultTarget &&
+    (defaultTarget.executor !== undefined ||
+      defaultTarget.command !== undefined)
+  ) {
+    return undefined;
+  }
 
-  for (const candidate of candidates) {
-    if (candidate && candidate !== TARGET_DEFAULTS_PLUGIN_NAME)
-      return candidate;
+  const sourceMap = specifiedSourceMaps?.[root];
+  for (const identityKey of ['executor', 'command']) {
+    const plugin =
+      sourceMap?.[`${targetSourceMapKey(targetName)}.${identityKey}`]?.[1];
+    if (plugin && plugin !== TARGET_DEFAULTS_PLUGIN_NAME) {
+      return plugin;
+    }
   }
   return undefined;
-}
-
-function pluginFromSourceMap(
-  maps: ConfigurationSourceMaps | undefined,
-  root: string,
-  key: string
-): string | undefined {
-  const entry = maps?.[root]?.[key] as SourceInformation | undefined;
-  return entry?.[1];
 }
 
 // Builds a name → MatcherProjectNode view for `findMatchingProjects` to

@@ -2,7 +2,7 @@ import { Compilation, type Compiler, RspackPluginInstance } from '@rspack/core';
 import { augmentAppWithServiceWorker } from '@angular/build/private';
 import { workspaceRoot } from '@nx/devkit';
 import { existsSync } from 'fs';
-import { readFile } from 'fs/promises';
+import { readFile, writeFile } from 'fs/promises';
 import { join } from 'path';
 import assert from 'assert';
 import {
@@ -14,9 +14,18 @@ import { getIndexOutputFile } from '../utils/index-file/get-index-output-file';
 import { WorkerPool } from './tools/worker-pool';
 import { maxWorkers } from '../utils/max-workers';
 import { ensureOutputPaths, getLocaleOutputPaths } from '../utils/i18n';
-import { RenderOptions, RenderResult } from './tools/render-worker';
+import type {
+  RenderOptions,
+  RenderResult,
+  RenderWorkerData,
+} from './tools/render-worker';
 import { addError, addWarning } from '../utils/rspack-diagnostics';
 import { assertIsError } from '../utils/misc-helpers';
+import {
+  emitsServerIndexAsOriginal,
+  type ServerRenderingInputs,
+  type SharedServerRenderingInputs,
+} from './index-html-plugin';
 
 class RoutesSet extends Set<string> {
   override add(value: string): this {
@@ -27,44 +36,90 @@ class RoutesSet extends Set<string> {
 export class PrerenderPlugin implements RspackPluginInstance {
   #_options: NormalizedAngularRspackPluginOptions;
   #i18n: I18nOptions | undefined;
+  #serverRenderingInputs: SharedServerRenderingInputs | undefined;
 
   constructor(
     options: NormalizedAngularRspackPluginOptions,
-    i18nOptions?: I18nOptions
+    i18nOptions?: I18nOptions,
+    serverRenderingInputs?: SharedServerRenderingInputs
   ) {
     this.#_options = options;
     this.#i18n = i18nOptions;
+    this.#serverRenderingInputs = serverRenderingInputs;
   }
 
   apply(compiler: Compiler) {
     compiler.hooks.afterEmit.tapAsync(
       'Angular Rspack',
       async (compilation, callback) => {
+        const inputs = this.#serverRenderingInputs?.current;
+        if (!inputs) {
+          addError(
+            compilation,
+            'Could not prerender because the browser build did not generate the index html.'
+          );
+          callback();
+          return;
+        }
+
+        const prerenderedRoutes = new Set<string>();
         if (this.#_options.appShell) {
-          await this.#prerenderAppShell(compilation);
+          await this.#prerenderAppShell(compilation, inputs);
+          prerenderedRoutes.add('/');
         }
         if (this.#_options.prerender) {
-          await this.#prerenderSSGUniversal(compilation);
+          for (const route of await this.#prerenderSSGUniversal(
+            compilation,
+            inputs
+          )) {
+            // RoutesSet stores routes without the leading slash; the manifest
+            // keys carry it, matching the esbuild application builder.
+            prerenderedRoutes.add(`/${route}`);
+          }
         }
+        await this.#writePrerenderedRoutesManifest(
+          compilation,
+          prerenderedRoutes
+        );
         callback();
       }
     );
   }
 
-  async #prerenderAppShell(compilation: Compilation) {
+  /**
+   * Overwrites the empty `prerendered-routes.json` emitted at the output root
+   * by the browser compiler with the routes that were prerendered.
+   */
+  async #writePrerenderedRoutesManifest(
+    compilation: Compilation,
+    prerenderedRoutes: Set<string>
+  ): Promise<void> {
+    // fromEntries keeps a route literally named "__proto__" an own key.
+    const routes = Object.fromEntries(
+      [...prerenderedRoutes].sort().map((route) => [route, {}])
+    );
+
+    try {
+      await writeFile(
+        join(this.#_options.outputPath.base, 'prerendered-routes.json'),
+        JSON.stringify({ routes }, null, 2)
+      );
+    } catch (error) {
+      assertIsError(error);
+      addError(compilation, error.message);
+    }
+  }
+
+  async #prerenderAppShell(
+    compilation: Compilation,
+    inputs: ServerRenderingInputs
+  ) {
     // Users can specify a different base html file e.g. "src/home.html"
     const indexFile = getIndexOutputFile(
       this.#_options.index as IndexExpandedDefinition
     );
 
-    const worker = new WorkerPool({
-      filename: require.resolve('./tools/render-worker'),
-      maxThreads: maxWorkers(),
-      workerData: {
-        zonePackage: this.#resolveZonePackage(workspaceRoot),
-      },
-      recordTiming: false,
-    });
+    const worker = this.#createRenderWorkerPool(inputs);
 
     try {
       const outputPaths = this.#i18n
@@ -94,7 +149,13 @@ export class PrerenderPlugin implements RspackPluginInstance {
 
         try {
           const options: RenderOptions = {
+            ...this.#getDocumentRenderOptions(inputs, locale),
             indexFile,
+            emitsOriginalIndex:
+              inputs.emitsOriginalIndex ??
+              emitsServerIndexAsOriginal(
+                this.#_options.index as IndexExpandedDefinition
+              ),
             deployUrl: this.#_options.deployUrl || '',
             inlineCriticalCss:
               !!this.#_options.optimization.styles.inlineCritical,
@@ -135,20 +196,16 @@ export class PrerenderPlugin implements RspackPluginInstance {
     }
   }
 
-  async #prerenderSSGUniversal(compilation: Compilation) {
+  async #prerenderSSGUniversal(
+    compilation: Compilation,
+    inputs: ServerRenderingInputs
+  ): Promise<string[]> {
     // Users can specify a different base html file e.g. "src/home.html"
     const indexFile = getIndexOutputFile(
       this.#_options.index as IndexExpandedDefinition
     );
 
-    const worker = new WorkerPool({
-      filename: require.resolve('./tools/render-worker'),
-      maxThreads: maxWorkers(),
-      workerData: {
-        zonePackage: this.#resolveZonePackage(workspaceRoot),
-      },
-      recordTiming: false,
-    });
+    const worker = this.#createRenderWorkerPool(inputs);
 
     let routes: string[] | undefined;
 
@@ -186,10 +243,21 @@ export class PrerenderPlugin implements RspackPluginInstance {
         );
 
         try {
+          const documentRenderOptions = this.#getDocumentRenderOptions(
+            inputs,
+            locale
+          );
+          const emitsOriginalIndex =
+            inputs.emitsOriginalIndex ??
+            emitsServerIndexAsOriginal(
+              this.#_options.index as IndexExpandedDefinition
+            );
           const results = (await Promise.all(
             routes.map((route) => {
               const options: RenderOptions = {
+                ...documentRenderOptions,
                 indexFile,
+                emitsOriginalIndex,
                 deployUrl: this.#_options.deployUrl || '',
                 inlineCriticalCss:
                   !!this.#_options.optimization.styles.inlineCritical,
@@ -230,6 +298,8 @@ export class PrerenderPlugin implements RspackPluginInstance {
     } finally {
       void worker.destroy();
     }
+
+    return routes ?? [];
   }
 
   async #getRoutes(
@@ -294,6 +364,31 @@ export class PrerenderPlugin implements RspackPluginInstance {
     }
 
     return this.#_options.prerender;
+  }
+
+  #createRenderWorkerPool(inputs: ServerRenderingInputs): WorkerPool {
+    return new WorkerPool({
+      filename: require.resolve('./tools/render-worker'),
+      maxThreads: maxWorkers(),
+      workerData: {
+        zonePackage: this.#resolveZonePackage(workspaceRoot),
+        criticalCssPlans: inputs.criticalCssPlans,
+      } satisfies RenderWorkerData,
+      recordTiming: false,
+    });
+  }
+
+  #getDocumentRenderOptions(
+    inputs: ServerRenderingInputs,
+    locale: string
+  ): Pick<RenderOptions, 'document' | 'nonce'> {
+    const indexHtml = inputs.indexHtml.get(locale);
+    if (!indexHtml) {
+      throw new Error(
+        `Could not find the index html generated for the "${locale}" locale.`
+      );
+    }
+    return { document: indexHtml.server, nonce: indexHtml.nonce };
   }
 
   #resolveZonePackage(workspaceRoot: string): string | false {

@@ -1,5 +1,4 @@
 import { writeFileSync } from 'fs';
-import { dirSync } from 'tmp';
 import ora from 'ora';
 import { join } from 'path';
 
@@ -11,6 +10,10 @@ import {
 import { execAndWait } from './utils/child-process-utils';
 import { nxVersion } from './utils/nx/nx-version';
 import { CnwError } from './utils/error-utils';
+import {
+  createTempInstallDirectory,
+  keepTempInstallDirectory,
+} from './utils/temp-install-directory';
 
 /**
  * Creates a temporary directory and installs Nx in it.
@@ -18,13 +21,13 @@ import { CnwError } from './utils/error-utils';
  * @returns directory where Nx is installed
  */
 export async function createSandbox(packageManager: PackageManager) {
+  const tmpDir = createTempInstallDirectory();
   const installSpinner = ora(
     `Installing dependencies with ${packageManager}`
   ).start();
 
   const { install, preInstall } = getPackageManagerCommand(packageManager);
 
-  const tmpDir = dirSync().name;
   try {
     writeFileSync(
       join(tmpDir, 'package.json'),
@@ -59,6 +62,7 @@ export async function createSandbox(packageManager: PackageManager) {
       lines.push(`Exit code: ${exitCode}`);
     }
     if (logFile) {
+      keepTempInstallDirectory(tmpDir);
       lines.push(`Log file: ${logFile}`);
     }
     lines.push(

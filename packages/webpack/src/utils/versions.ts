@@ -13,7 +13,8 @@ export const tsLibVersion = '^2.3.0';
 export const minSupportedWebpackVersion = '5.0.0';
 
 // Fresh-install versions written when the package is not already present.
-export const webpackVersion = '^5.101.3';
+// Capped: 5.111.0 breaks MF builds (webpack/webpack#22034). Lift once @module-federation/enhanced fixes it.
+export const webpackVersion = '~5.110.0';
 export const webpackDevServerVersion = '^5.2.1';
 export const webpackCliVersion = '^7.0.0';
 

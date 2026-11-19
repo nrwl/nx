@@ -1,7 +1,6 @@
 'use client';
 
-import type { ProjectGraphProjectNode } from 'nx/src/config/project-graph';
-import type { TaskGraph } from 'nx/src/config/task-graph';
+import type { ProjectGraphProjectNode, TaskGraph } from '@nx/devkit';
 import { useCallback, useEffect, useMemo } from 'react';
 import { RenderTheme } from '@nx/graph';
 import { NxGraphTaskGraphProvider, useTaskGraphContext } from '@nx/graph/tasks';

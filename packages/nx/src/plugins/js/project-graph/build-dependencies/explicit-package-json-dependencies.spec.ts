@@ -380,4 +380,195 @@ describe('explicit package json dependencies', () => {
       ])
     );
   });
+
+  it('should add dependencies from the root package.json of a project rooted at "."', async () => {
+    const rootTempFs = new TempFs('explicit-package-json-root');
+    const rootProjectsConfigurations = {
+      projects: {
+        'root-package': { root: '.', name: 'root-package' },
+        'child-package': {
+          root: 'packages/child-package',
+          name: 'child-package',
+        },
+      },
+    };
+
+    await rootTempFs.createFiles({
+      './nx.json': JSON.stringify({}),
+      './tsconfig.base.json': JSON.stringify({}),
+      './package.json': JSON.stringify({
+        name: 'root-package',
+        dependencies: { 'child-package': 'file:packages/child-package' },
+      }),
+      './packages/child-package/package.json': JSON.stringify({
+        name: 'child-package',
+        version: '1.0.0',
+      }),
+    });
+
+    const rootProjects = {
+      'root-package': {
+        name: 'root-package',
+        type: 'lib',
+        data: {
+          root: '.',
+          metadata: {
+            js: {
+              packageName: 'root-package',
+              packageExports: undefined,
+              isInPackageManagerWorkspaces: true,
+            },
+          },
+        },
+      },
+      'child-package': {
+        name: 'child-package',
+        type: 'lib',
+        data: {
+          root: 'packages/child-package',
+          metadata: {
+            js: {
+              packageName: 'child-package',
+              packageExports: undefined,
+              isInPackageManagerWorkspaces: true,
+            },
+          },
+        },
+      },
+    };
+
+    const rootFileMap = createFileMap(
+      rootProjectsConfigurations as any,
+      await getAllFileDataInContext(rootTempFs.tempDir)
+    ).fileMap;
+
+    const builder = new ProjectGraphBuilder(
+      undefined,
+      rootFileMap.projectFileMap
+    );
+    Object.values(rootProjects).forEach((p) => {
+      builder.addNode(p as any);
+    });
+
+    const rootCtx = {
+      fileMap: rootFileMap,
+      externalNodes: builder.getUpdatedProjectGraph().externalNodes,
+      projects: rootProjectsConfigurations.projects,
+      nxJsonConfiguration: {},
+      filesToProcess: rootFileMap,
+      workspaceRoot: rootTempFs.tempDir,
+    } as any;
+
+    const targetProjectLocator = new TargetProjectLocator(
+      rootProjects as any,
+      rootCtx.externalNodes,
+      new Map()
+    );
+
+    const res = buildExplicitPackageJsonDependencies(
+      rootCtx,
+      targetProjectLocator
+    );
+
+    expect(res).toContainEqual({
+      source: 'root-package',
+      target: 'child-package',
+      sourceFile: 'package.json',
+      type: 'static',
+    });
+
+    rootTempFs.cleanup();
+  });
+
+  it('should add workspace dependencies declared through a catalog', async () => {
+    const catalogTempFs = new TempFs('explicit-package-json-catalog');
+    try {
+      const catalogProjectsConfigurations = {
+        projects: {
+          'lib-a': { root: 'libs/lib-a', name: 'lib-a' },
+          'lib-b': { root: 'libs/lib-b', name: 'lib-b' },
+          'lib-c': { root: 'libs/lib-c', name: 'lib-c' },
+          'lib-d': { root: 'libs/lib-d', name: 'lib-d' },
+        },
+      };
+
+      await catalogTempFs.createFiles({
+        './nx.json': JSON.stringify({}),
+        './package.json': JSON.stringify({ name: 'root' }),
+        './pnpm-lock.yaml': '',
+        './pnpm-workspace.yaml': [
+          'packages:',
+          "  - 'libs/*'",
+          'catalog:',
+          "  '@repro/lib-a': 'workspace:*'",
+          "  '@repro/lib-c': 'file:libs/lib-c'",
+        ].join('\n'),
+        './libs/lib-a/package.json': JSON.stringify({ name: '@repro/lib-a' }),
+        './libs/lib-b/package.json': JSON.stringify({
+          name: '@repro/lib-b',
+          dependencies: {
+            // Not in the catalog. Listed first to check that later dependencies still resolve
+            '@repro/lib-d': 'catalog:',
+            '@repro/lib-a': 'catalog:',
+            '@repro/lib-c': 'catalog:',
+          },
+        }),
+        './libs/lib-c/package.json': JSON.stringify({ name: '@repro/lib-c' }),
+        './libs/lib-d/package.json': JSON.stringify({ name: '@repro/lib-d' }),
+      });
+
+      const catalogProjects: Record<string, ProjectGraphProjectNode> = {};
+      for (const [name, { root }] of Object.entries(
+        catalogProjectsConfigurations.projects
+      )) {
+        catalogProjects[name] = {
+          name,
+          type: 'lib',
+          data: {
+            root,
+            metadata: {
+              js: {
+                packageName: `@repro/${name}`,
+                isInPackageManagerWorkspaces: true,
+              },
+            },
+          },
+        };
+      }
+
+      const catalogFileMap = createFileMap(
+        catalogProjectsConfigurations as any,
+        await getAllFileDataInContext(catalogTempFs.tempDir)
+      ).fileMap;
+
+      const res = buildExplicitPackageJsonDependencies(
+        {
+          fileMap: catalogFileMap,
+          externalNodes: {},
+          projects: catalogProjectsConfigurations.projects,
+          nxJsonConfiguration: {},
+          filesToProcess: catalogFileMap,
+          workspaceRoot: catalogTempFs.tempDir,
+        },
+        new TargetProjectLocator(catalogProjects, {}, new Map())
+      );
+
+      expect(res).toEqual([
+        {
+          source: 'lib-b',
+          target: 'lib-a',
+          sourceFile: 'libs/lib-b/package.json',
+          type: 'static',
+        },
+        {
+          source: 'lib-b',
+          target: 'lib-c',
+          sourceFile: 'libs/lib-b/package.json',
+          type: 'static',
+        },
+      ]);
+    } finally {
+      catalogTempFs.cleanup();
+    }
+  });
 });

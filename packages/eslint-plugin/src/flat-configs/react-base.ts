@@ -1,6 +1,18 @@
-import * as importPlugin from 'eslint-plugin-import';
 import globals from 'globals';
+import { major } from 'semver';
 import tseslint, { type ConfigArray } from 'typescript-eslint';
+
+// ESLint v10 has no eslint-plugin-import release; v10 workspaces install the
+// maintained eslint-plugin-import-x fork, whose rules are namespaced `import-x/*`.
+// Require only the plugin installed for the running ESLint major.
+const isEslint10OrLater = major(require('eslint/package.json').version) >= 10;
+const importPluginName = isEslint10OrLater ? 'import-x' : 'import';
+const importPluginModule = isEslint10OrLater
+  ? require('eslint-plugin-import-x')
+  : require('eslint-plugin-import');
+// import-x's own flat configs register its `.default`, and ESLint rejects two
+// different objects under one plugin name. eslint-plugin-import has no `.default`.
+const importPlugin = importPluginModule.default ?? importPluginModule;
 
 /**
  * This configuration is intended to be applied to ALL files within a React
@@ -28,7 +40,7 @@ const config: ConfigArray = tseslint.config({
     '**/*.mjs',
     '**/*.jsx',
   ],
-  plugins: { import: importPlugin },
+  plugins: { [importPluginName]: importPlugin },
   languageOptions: {
     globals: {
       ...globals.browser,
@@ -148,11 +160,12 @@ const config: ConfigArray = tseslint.config({
 
     /**
      * Import rule configurations
-     * https://github.com/benmosher/eslint-plugin-import
+     * https://github.com/import-js/eslint-plugin-import (ESLint v9 and earlier)
+     * https://github.com/un-ts/eslint-plugin-import-x (ESLint v10 and later)
      */
-    'import/first': 'error',
-    'import/no-amd': 'error',
-    'import/no-webpack-loader-syntax': 'error',
+    [`${importPluginName}/first`]: 'error',
+    [`${importPluginName}/no-amd`]: 'error',
+    [`${importPluginName}/no-webpack-loader-syntax`]: 'error',
   },
 });
 

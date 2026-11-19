@@ -1,86 +1,253 @@
 ---
-title: 'Remote Caching (Nx Replay)'
-description: 'Learn how to use Nx Replay to share computation caches across your team and CI, speeding up builds and saving CI costs.'
+title: Remote caching
+description: Share cached task results across developer machines and CI with Nx Cloud remote caching, and hash each task from the files it reads with Ultracache, so CI skips work that already ran and costs less.
+keywords:
+  [
+    remote cache,
+    remote caching,
+    ultracache,
+    cache hit rate,
+    task inputs,
+    nx replay,
+  ]
 sidebar:
   order: 11
 filter: 'type:Features'
 ---
 
-{% youtube
-src="https://youtu.be/NF1__N_snog"
-title="Remote Caching with Nx Replay"
- /%}
+Nx [caches task results locally](/docs/features/cache-task-results) so the same machine doesn't repeat
+a task with the same inputs.
+Remote caching shares those results across developer machines and CI jobs.
 
-Nx [caches task results locally](/docs/features/cache-task-results) to avoid rebuilding the same code twice. Remote caching extends this by **sharing the cache across your team and CI**.
+On a remote cache hit, Nx restores the terminal output and declared task artifacts, such as a build
+or distribution directory.
+The command behaves like a local cache hit without running the task again.
 
-![Diagram showing Teika sharing his cache with CI, Kimiko and James](../../../../assets/features/distributed-caching.svg)
-
-- **Zero config** and **secure** by default
-- Drastically **speeds up task execution times** during local development, and more critically in CI
-- **Saves money on CI/CD costs** by reducing the number of tasks that need to be executed (we observed 30-70% faster CI & half the cost)
-
-Nx **restores terminal output, along with the files and artifacts** created from running the task (e.g., your build or dist directory). If you want to learn more about the conceptual model behind Nx caching, read [How Caching Works](/docs/concepts/how-caching-works).
+Every cache hit is a task your CI machines don't run, so remote caching shortens pipelines and cuts machine-minutes, which reduces cost.
 
 ## Configure remote caching
 
-To use **Nx Replay**, you need to connect your workspace to Nx Cloud (if you haven't already).
+Connect your workspace to Nx Cloud:
 
 ```shell
 npx nx@latest connect
 ```
 
-See the [connect to Nx Cloud recipe](/docs/guides/nx-cloud/setup-ci) for all the details.
+{% call_to_action title="Connect from your browser" url="https://cloud.nx.app/get-started?utm_source=nx-docs&utm_medium=website&utm_campaign=nx-cloud-signup&utm_content=remote-cache" icon="nxcloud" description="Sign in to Nx Cloud and connect your repository without the CLI" /%}
 
-## Why use remote caching (Nx Replay)?
+For authentication and CI setup details, see [Setting Up CI](/docs/getting-started/setup-ci).
 
-Nx Replay directly benefits your organization by:
+## Why use remote caching
 
-- **Speeding up CI pipelines:** With Nx Replay, tasks that have already been executed in a PR's initial CI pipeline run can **reuse cached results in subsequent runs**. This reduces the need to re-run unaffected tasks, significantly speeding up the CI process for modified PRs. This benefit complements the [affected command](/docs/features/ci-features/affected), which optimizes pipelines by only running tasks for projects that could be impacted by code changes.
+Remote caching can reduce work in several places:
 
-- **Boosting local developer efficiency:** Depending on [how cache permissions](/docs/guides/nx-cloud/access-tokens) are set for your workspace, developers can reuse cached results from CI on their local machines. As a result, tasks like builds and tests can complete instantly if they were already executed in CI. This accelerates developer workflows without any extra steps required.
+- Repeated CI runs can reuse tasks that already ran with the same inputs.
+- Developers can reuse results created in CI when their cache permissions grant access.
+- CI jobs and Workers can transfer task artifacts through the shared cache.
 
-- **Enabling Nx Agents:** Nx Replay is crucial for [Nx Agents](/docs/features/ci-features/distribute-task-execution) to function efficiently. Nx Agents leverage remote caching as a **transport mechanism** for transferring task artifacts between machines as it distributes tasks. When a task depends on another task that may have been executed on a different agent, Nx Replay ensures the necessary artifacts are transferred seamlessly. This allows each agent to execute only its assigned tasks while relying on cached results for dependencies, ensuring tasks run only once and are shared across all agents. [Learn more about Nx Agents](/docs/features/ci-features/distribute-task-execution).
+[`nx affected`](/docs/features/ci-features/affected) runs only the tasks your change reaches.
+The tasks they depend on run too, and those restore from the cache when nothing in them changed.
+When you push to the same pull request again, `nx affected` selects the same tasks, and the ones your new commit doesn't reach are cache hits.
 
-## What gets stored?
+Workers use remote caching to share artifacts
+between machines.
+When a task depends on output produced by another agent, Nx restores that output before running the
+dependent task.
 
-Nx Cloud stores the following:
+## What Nx Cloud stores
 
-- **Terminal output:** The terminal output generated when running a task. This includes logs, warnings, and errors.
-- **Task artifacts:** The output files of a task defined in the [`outputs` property of your project configuration](/docs/guides/tasks--caching/configure-outputs). For example, the build output, test results, or linting reports.
-- **Hash:** The hash of the inputs to the computation. The inputs include the source code, runtime values, and command line arguments. Note that the hash is included in the cache, but the actual inputs are not.
+Each cached task result contains:
 
-Learn more about [how caching works](/docs/concepts/how-caching-works#what-is-cached).
+- Terminal output written to standard output and standard error.
+- Files matched by the task's `outputs` configuration.
+- The hash that identifies the task computation.
 
-Cache correctness depends on your tasks declaring the right `inputs` and `outputs`. If a task reads a file that isn't in its inputs, cache hits can serve stale results. If it writes outside its declared outputs, those files go missing on a cache restore. [Task sandboxing](/docs/features/ci-features/sandboxing) uses IO tracing to catch these mismatches so you can fix them before they cause problems.
+The cache entry doesn't contain the input source files.
+Nx hashes those inputs to calculate the task hash.
+For more information, see [what Nx caches](/docs/features/cache-task-results#what-nx-caches).
 
-## Security in remote caching
+A task's `inputs` decide whether it hits or misses the cache, and its `outputs` decide which files are
+restored on a hit.
+To see which tasks read or write files outside them, open **Analytics** > **Cache inputs and outputs**
+in Nx Cloud, and open a task's **Report** tab for the files each process read and wrote.
+[Improve cache inputs and outputs](/docs/kb/improve-cache-inputs-outputs) walks through fixing them
+with a coding agent, and on Nx Cloud, Ultracache handles most of them for you.
 
-Since we work with many large corporations (including banks, insurance companies, and governments), we take security very seriously. Nx Cloud provides several features to ensure your data remains safe and secure:
+## Ultracache
 
-- **Immutability:** Each cache entry is immutable, meaning once an entry is created, it cannot be altered. This ensures that cached results cannot be tampered with by malicious parties, preventing the injection of vulnerabilities into your build process.
+Ultracache improves cache hit rates and keeps file inputs correct without requiring you to maintain complex configuration.
+It gives you several benefits:
 
-- **Access Control via Tokens:** Nx Cloud allows you to [control who can read from and write to the cache](/docs/guides/nx-cloud/access-tokens). For example, you can configure these settings to restrict cache write access to your CI pipeline while allowing all developers to only read.
+- **Faster CI and lower compute costs.** Changing a file a task never reads no longer invalidates its cache.
+  Fewer unnecessary cache misses mean fewer tasks to run, which can substantially reduce CI compute (**up to 3× in some cases**).
+- **Correct cache invalidation.** By default, Ultracache tracks every file a task reads,
+  preventing stale cache hits from missing input declarations.
+- **No input configuration maintenance.** Ultracache records file inputs for new targets
+  automatically and keeps them up to date as your tasks change. You don't need to maintain file
+  lists by hand.
+- **Increased extensibility.** Ultracache automatically configures file inputs for scripts you run
+  through Nx. Any new technology you add gets the same automatic configuration, without needing
+  an Nx plugin.
 
-- **End-to-End Encryption:** Nx Cloud supports end-to-end encryption to protect your data. Task artifacts are encrypted before being sent to the remote cache and decrypted when retrieved. This ensures that even if someone gains access to Nx Cloud servers, they cannot view your stored artifacts. For more details, visit the [encryption documentation](/docs/guides/nx-cloud/encryption).
+[Manually configured inputs](/docs/kb/configure-inputs) and [inputs inferred by plugins](/docs/features/run-tasks#inferred-tasks)
+can include files a task doesn't need, causing unnecessary cache misses, or omit files it does need,
+causing stale cache hits. Ultracache records the task's actual file reads instead of requiring you to
+keep that list precise as the task changes.
 
-- **Nx Enterprise (Self-Hosting and EU Regions):** For organizations with specific compliance or data residency requirements, Nx Enterprise offers the option to self-host Nx Cloud on your own infrastructure. Additionally, you can choose to host in EU regions, ensuring that your data complies with regional data protection laws. This is available to our [Nx Enterprise customers](https://nx.dev/enterprise).
+{% aside type="note" title="Works with complex workspaces" %}
+Ultracache tracks file reads across project boundaries, so you can improve cache reuse in workspaces
+with large projects or circular dependencies without reorganizing them first.
+{% /aside %}
 
-- **SOC Certification:** Nx and Nx Cloud are SOC Type 1 and Type 2 certified, providing an additional layer of assurance that your data is handled according to industry-standard security practices. For more details, you can visit our [security page](https://security.nx.app).
+Ultracache is part of every Nx Cloud plan, including Hobby, and traced tasks don't use credits.
 
-### Configure caching access
+### How Ultracache works
 
-Caching access can be restricted in terms of read/write access. You can configure this in your [Nx Cloud dashboard](https://nx.app). Learn more about [cache security here](/docs/concepts/ci-concepts/cache-security).
+The first time a task runs on Workers, Nx hashes it from its declared `inputs` and records the files it reads.
+Later CI runs hash the task from that recording, and the recording grows when the task reads a file it didn't read before.
+It lives in Nx Cloud, so your configuration files don't change, and declared `outputs` still decide what Nx caches.
 
-## FAQ
+{% figure name="ultracache" height=540 caption="Ultracache records the files shop:test reads, including files from other projects and root config, and stores them as the task's inputs. Click a file to change it: a file the test read reruns it, a file it never read is a cache hit." /%}
 
-### What if the remote cache is offline?
+Only runs on Workers are recorded, but every CI run hashes from the recording, including on CI machines you manage yourself.
+Runs outside CI hash from declared `inputs`.
+Cache hits, continuous tasks, tasks with `cache: false`, and tasks run by a batch executor aren't traced.
 
-Nx Replay automatically syncs the remote cache to the local cache folder. As such, if the remote cache is not available, it will automatically fall back to the local cache or just run the task if it is not cached.
+### Turn on Ultracache
 
-### Can I self-host my remote cache?
+New Nx Cloud workspaces start with Ultracache on.
+For an existing workspace, open the workspace's [**Settings**](https://cloud.nx.app/go/workspace/settings) page in Nx Cloud and set **Ultracache** to **On**.
 
-If you're an enterprise and have special restrictions, [reach out to us](https://nx.dev/enterprise/trial). Our enterprise plan includes various hosting options, from dedicated EU region hosting, to single-tenant and also on-premise.
+Ultracache requires Nx 24.0.0 or later, which uses it in CI by default.
+Earlier Nx versions don't support it, so [update your workspace](/docs/features/automate-updating-dependencies) first.
+If Nx can't read the recordings from Nx Cloud, the run doesn't fail and Nx hashes its tasks from their declared `inputs`.
+For details, see [Ultracache and Nx versions](/docs/kb/ultracache-nx-versions).
 
-### How can I skip Nx Cloud caching?
+To skip Ultracache for a single pipeline, set `NX_CLOUD_ULTRACACHE_MODE` to `off`, as the next section describes.
 
-To learn more about how to temporarily skip task caching, head over to [our corresponding docs page](/docs/guides/tasks--caching/skipping-cache#skip-remote-caching-from-nx-cloud).
+#### Try Ultracache on one branch or workflow
+
+To trial Ultracache before turning it on for the whole workspace, set `NX_CLOUD_ULTRACACHE_MODE` for a single CI pipeline.
+It overrides the workspace setting for that pipeline only.
+The value is case-insensitive and maps to the [`ultracache.mode`](/docs/reference/project-configuration#ultracache) modes:
+
+| Value   | Effect                                                                                  |
+| ------- | --------------------------------------------------------------------------------------- |
+| `on`    | Turns Ultracache on. Targets keep their own `mode`, and the rest use `on`.              |
+| `warn`  | Applies `warn` to every task, overriding each target's `mode`.                          |
+| `error` | Applies `error` to every task, overriding each target's `mode`.                         |
+| `off`   | Turns Ultracache off for every task, so Nx hashes each task from its declared `inputs`. |
+| Unset   | Uses the workspace setting and each target's `mode`.                                    |
+
+Any other value fails the run with `NX_CLOUD_ULTRACACHE_MODE must be on, warn, error, or off.`
+
+Set it at the job or workflow level so both the command that starts the CI run (`nx-cloud start-workers` or `nx-cloud start-ci-run`) and your Nx commands see it.
+Nx Cloud Workers pick it up automatically:
+
+```yaml
+# .github/workflows/ultracache-trial.yml
+on:
+  push:
+    branches: [try-ultracache]
+
+env:
+  NX_CLOUD_ULTRACACHE_MODE: 'on'
+
+jobs:
+  main:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - run: npx nx-cloud start-workers
+      - run: npm ci
+      - run: npx nx affected -t lint test build
+```
+
+It doesn't change which tasks run, so tasks that `nx affected` leaves out stay out.
+
+{% aside type="note" title="The workspace setting stays the same" %}
+`NX_CLOUD_ULTRACACHE_MODE` doesn't change the **Ultracache** setting saved in Nx Cloud. Other branches and pipelines keep using it.
+{% /aside %}
+
+### Turn off Ultracache for a target
+
+Every target uses Ultracache by default.
+Set `ultracache.mode` to `off` to hash a target from its declared `inputs` instead.
+This also turns off tracing for the target, so its reads and writes no longer appear under
+**Analytics** > **Cache inputs and outputs**:
+
+```json
+// project.json
+{
+  "targets": {
+    "e2e": {
+      "ultracache": {
+        "mode": "off"
+      }
+    }
+  }
+}
+```
+
+To keep Ultracache on but leave paths such as a tool's scratch directory out of a target's recording,
+list them in `ultracache.ignoreReads` and `ultracache.ignoreWrites`.
+For every mode and option, see the [`ultracache` target property](/docs/reference/project-configuration#ultracache).
+
+### Ultracache and affected
+
+[`nx affected`](/docs/features/ci-features/affected) uses task inputs to determine which tasks a change affects and need to run.
+For tasks with an Ultracache recording, those inputs come from the files the task actually reads.
+This makes `nx affected` more efficient and accurate: unused files no longer select tasks unnecessarily,
+and files missing from declared inputs no longer cause affected tasks to be overlooked.
+
+## Remote cache security
+
+A cache hit replays files and terminal output without running the task, so the main risk is cache poisoning: a tampered entry that developers and CI then use as real task output.
+Nx Cloud guards against it in several ways:
+
+- Your source code never reaches the cache. Nx Cloud stores the task hash, the files matched by `outputs`, and the terminal output.
+- Cache entries are immutable. Once Nx Cloud stores an entry, no later run can overwrite it.
+- CI writes are scoped by token. Use a [read-write token](/docs/kb/access-tokens#read--write-access) only on protected branches, such as `main`. On other branches, a [read-only token](/docs/kb/access-tokens#read-only-access) reads the shared cache and writes to a cache isolated to that run, so a pull request can't change what `main` restores.
+- Nx Cloud protects against [CREEP (CVE-2025-36852)](https://nx.dev/blog/creep-vulnerability-build-cache-security#the-creep-vulnerability), where an untrusted pull request writes a poisoned artifact that a trusted build later restores. With the token setup above, pull request writes stay isolated from the cache used by protected branches.
+- Developers [log in to Nx Cloud](/docs/kb/personal-access-tokens).
+  [Workspace settings](https://cloud.nx.app/go/workspace/settings/access) decide whether each
+  developer can write to the cache, and whether unauthenticated machines get read-write, read-only,
+  or no access.
+- [End-to-end encryption](/docs/kb/encryption) encrypts artifacts on your machines before they're uploaded, with a key Nx Cloud never sees.
+
+To keep a poisoned entry from ever reaching your users, [skip the cache](/docs/kb/skipping-cache) when you build the artifact you deploy.
+For the full list of precautions, see [cache security](/docs/kb/cache-security).
+Nx publishes compliance information, including SOC 2, on the [Nx security site](https://security.nx.app).
+
+## Remote cache availability
+
+Nx checks the local cache before requesting a result from the remote cache.
+If the remote cache is unavailable, local cache hits remain available, and Nx runs tasks that aren't
+cached locally.
+
+## Enterprise remote caching
+
+Organizations with specific data residency or infrastructure requirements can
+[contact the Nx Enterprise team](https://nx.dev/enterprise/trial) to discuss remote caching deployment
+options.
+
+## Skip remote caching
+
+Use `--skipRemoteCache` when one command shouldn't read from or write to the remote cache.
+For related local cache options, see [skip task caching](/docs/kb/skipping-cache).
+
+## Related guides
+
+{% cardgrid %}
+
+{% linkcard title="Cache security" description="Prevent cache poisoning and control what reaches the cache" href="/docs/kb/cache-security" /%}
+
+{% linkcard title="CI access tokens" description="Scope cache access for CI with read-only and read-write tokens" href="/docs/kb/access-tokens" /%}
+
+{% linkcard title="End-to-end encryption" description="Encrypt cached artifacts before they leave your machines" href="/docs/kb/encryption" /%}
+
+{% linkcard title="Self-hosted remote cache" description="Run your own cache server against the OpenAPI specification" href="/docs/kb/self-hosted-caching" /%}
+
+{% /cardgrid %}

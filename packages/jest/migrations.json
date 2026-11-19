@@ -65,12 +65,14 @@
     "migrate-jest-executor-setup-file": {
       "version": "23.0.0-beta.22",
       "description": "Migrate the deprecated `setupFile` option of the `@nx/jest:jest` executor: push the file path into `setupFilesAfterEnv` in the project's Jest config and remove the option from `project.json` and `nx.json` target defaults.",
-      "implementation": "./dist/src/migrations/update-23-0-0/migrate-jest-executor-setup-file"
+      "implementation": "./dist/src/migrations/update-23-0-0/migrate-jest-executor-setup-file",
+      "documentation": "./dist/src/migrations/update-23-0-0/migrate-jest-executor-setup-file.md"
     },
     "migrate-jest-configuration-skip-setup-file": {
       "version": "23.0.0-beta.22",
       "description": "Migrate the deprecated `skipSetupFile` option of the `@nx/jest:configuration` generator stored as a default in `nx.json` or per-project `project.json` to `setupFile: 'none'` (when `true`) or remove it (when `false`).",
-      "implementation": "./dist/src/migrations/update-23-0-0/migrate-jest-configuration-skip-setup-file"
+      "implementation": "./dist/src/migrations/update-23-0-0/migrate-jest-configuration-skip-setup-file",
+      "documentation": "./dist/src/migrations/update-23-0-0/migrate-jest-configuration-skip-setup-file.md"
     },
     "update-23-0-0-migrate-create-nodes-v2-import": {
       "version": "23.0.0-beta.24",
@@ -87,6 +89,13 @@
       "implementation": "./dist/src/migrations/update-23-1-0/set-ts-jest-isolated-modules",
       "prompt": "./dist/src/migrations/update-23-1-0/verify-typecheck.md",
       "documentation": "./dist/src/migrations/update-23-1-0/set-ts-jest-isolated-modules.md"
+    },
+    "remove-deprecated-executors": {
+      "version": "24.0.0-beta.3",
+      "description": "Converts targets using the removed `@nx/jest` executors to inferred tasks; an AI prompt finishes the targets the converter cannot convert safely and validates the project graph.",
+      "implementation": "./dist/src/migrations/update-24-0-0/remove-deprecated-executors",
+      "prompt": "./dist/src/migrations/update-24-0-0/finish-inferred-conversion.md",
+      "documentation": "./dist/src/migrations/update-24-0-0/remove-deprecated-executors.md"
     }
   },
   "packageJsonUpdates": {

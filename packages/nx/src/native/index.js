@@ -1,15 +1,23 @@
+// Node passes a stand-in require, without a cache, require.extensions or
+// Module._load, when an ESM loader hook supplies this module's source, as
+// Yarn PnP does.
+if (!require.cache) require = require('module').createRequire(__filename);
+
 const { join, basename } = require('path');
 const {
+  chmodSync,
   copyFileSync,
-  existsSync,
-  mkdirSync,
+  lstatSync,
   renameSync,
   statSync,
   unlinkSync,
 } = require('fs');
+const { createHash } = require('crypto');
 const Module = require('module');
 const { nxVersion } = require('../utils/versions');
-const { getNativeFileCacheLocation } = require('./native-file-cache-location');
+const {
+  ensureSecureNativeFileCacheLocation,
+} = require('./native-file-cache-location');
 
 const MAX_COPY_RETRIES = 3;
 
@@ -73,8 +81,31 @@ function statsOrNull(path) {
   }
 }
 
-function isNoExecError(e) {
-  return e.code === 'EACCES' || e.code === 'EPERM';
+function lstatsOrNull(path) {
+  try {
+    return lstatSync(path);
+  } catch {
+    return null;
+  }
+}
+
+// A trusted entry is one only the current user could have written.
+function isTrustedCacheEntry(stats) {
+  if (!stats?.isFile()) {
+    return false;
+  }
+  if (typeof process.getuid !== 'function') {
+    return true;
+  }
+  return stats.uid === process.getuid() && (stats.mode & 0o022) === 0;
+}
+
+function removeIfPresent(path) {
+  try {
+    unlinkSync(path);
+  } catch {
+    // Ignore cleanup errors
+  }
 }
 
 // We override the _load function so that when a native file is required,
@@ -95,66 +126,119 @@ Module._load = function (request, parent, isMain) {
     const nativeLocation = require.resolve(modulePath);
     const fileName = basename(nativeLocation);
 
-    // we copy the file to a workspace-scoped tmp directory and prefix with nxVersion to avoid stale files being loaded
-    const nativeFileCacheLocation = getNativeFileCacheLocation();
+    // null when the cache dir cannot be created *and trusted*; loading in place
+    // from node_modules is safer than loading out of a directory we don't own.
+    const nativeFileCacheLocation = ensureSecureNativeFileCacheLocation();
+    if (!nativeFileCacheLocation) {
+      return originalLoad.apply(this, [nativeLocation, parent, isMain]);
+    }
+
+    // nxVersion alone is not enough: in a source checkout it is the placeholder
+    // 0.0.1 for every worktree, so hashing the resolved binding path keeps each
+    // checkout in its own entry.
+    const cacheKey =
+      nxVersion +
+      '-' +
+      createHash('sha256')
+        .update(nativeLocation)
+        .digest('hex')
+        .substring(0, 12);
+
     // This is a path to copy to, not the one that gets loaded
     const tmpTmpFile = join(
       nativeFileCacheLocation,
-      nxVersion + '-' + Math.random() + fileName
+      cacheKey + '-' + Math.random() + fileName
     );
     // This is the path that will get loaded
-    const tmpFile = join(nativeFileCacheLocation, nxVersion + '-' + fileName);
-    const expectedFileSize = statSync(nativeLocation).size;
-    const existingFileStats = statsOrNull(tmpFile);
+    const tmpFile = join(nativeFileCacheLocation, cacheKey + '-' + fileName);
+    const sourceStats = statSync(nativeLocation);
+    const expectedFileSize = sourceStats.size;
+    const existingFileStats = lstatsOrNull(tmpFile);
 
-    // If the file to be loaded already exists, just load it
-    if (existingFileStats?.size === expectedFileSize) {
+    // Size alone does not detect a rebuilt binding: a small Rust edit routinely
+    // produces a byte-identical size. The copy is taken after the build, so a
+    // cache entry older than the source means the source was rebuilt since.
+    const isFresh =
+      isTrustedCacheEntry(existingFileStats) &&
+      existingFileStats.size === expectedFileSize &&
+      existingFileStats.mtimeMs >= sourceStats.mtimeMs;
+
+    const loadFromCache = () => {
       try {
         return originalLoad.apply(this, [tmpFile, parent, isMain]);
       } catch (e) {
-        // If loading from cache fails due to noexec, fall back to original location
-        if (isNoExecError(e)) {
+        // ENOENT: the resolver's realpath can lose the file to a concurrent
+        // `nx reset` after its stat found it.
+        if (
+          e.code === 'EACCES' ||
+          e.code === 'EPERM' ||
+          e.code === 'ENOENT' ||
+          e.code === 'MODULE_NOT_FOUND' ||
+          e.code === 'ERR_DLOPEN_FAILED'
+        ) {
           return originalLoad.apply(this, [nativeLocation, parent, isMain]);
         }
         throw e;
       }
-    }
-    if (!existsSync(nativeFileCacheLocation)) {
-      mkdirSync(nativeFileCacheLocation, { recursive: true });
+    };
+
+    if (isFresh) {
+      return loadFromCache();
     }
 
     // Retry copying up to 3 times, validating after each copy
+    let attemptsMade = 0;
+    let cacheError = null;
     for (let attempt = 1; attempt <= MAX_COPY_RETRIES; attempt++) {
+      attemptsMade = attempt;
+      // A concurrent `nx reset` or a tmp cleaner can remove the directory.
+      if (attempt > 1 && !ensureSecureNativeFileCacheLocation()) {
+        return originalLoad.apply(this, [nativeLocation, parent, isMain]);
+      }
       // First copy to a unique location for each process
-      copyFileSync(nativeLocation, tmpTmpFile);
+      try {
+        copyFileSync(nativeLocation, tmpTmpFile);
+        chmodSync(tmpTmpFile, sourceStats.mode & 0o755);
+      } catch (e) {
+        // Permission errors won't heal on retry, and a throwing copy can still
+        // have left a partial file behind.
+        cacheError = e;
+        removeIfPresent(tmpTmpFile);
+        if (e.code === 'ENOENT') {
+          continue;
+        }
+        break;
+      }
 
       // Validate the copy - check file size matches expected
       const copiedFileStats = statsOrNull(tmpTmpFile);
       if (copiedFileStats?.size === expectedFileSize) {
         // Copy succeeded, rename to final location and load
-        renameSync(tmpTmpFile, tmpFile);
         try {
-          return originalLoad.apply(this, [tmpFile, parent, isMain]);
+          renameSync(tmpTmpFile, tmpFile);
         } catch (e) {
-          // If loading from cache fails due to noexec, fall back to original location
-          if (isNoExecError(e)) {
-            return originalLoad.apply(this, [nativeLocation, parent, isMain]);
+          // Unguarded, this throws out of `require` and native-bindings.js
+          // reports it as a missing optional dependency, which it is not.
+          cacheError = e;
+          removeIfPresent(tmpTmpFile);
+          if (e.code === 'ENOENT') {
+            continue;
           }
-          throw e;
+          break;
         }
+        return loadFromCache();
       }
 
       // Copy failed validation, clean up the malformed file
-      try {
-        unlinkSync(tmpTmpFile);
-      } catch {
-        // Ignore cleanup errors
-      }
+      removeIfPresent(tmpTmpFile);
     }
 
-    // All retries failed - warn and load from original location
+    // Name the errno: ENOSPC, EROFS, EACCES and EDQUOT are all actionable and
+    // otherwise indistinguishable.
     console.warn(
-      `Warning: Failed to copy native module to cache after ${MAX_COPY_RETRIES} attempts. ` +
+      `Warning: Failed to copy native module to cache after ${attemptsMade} attempt${
+        attemptsMade === 1 ? '' : 's'
+      }${cacheError ? ` (${cacheError.code ?? cacheError.message})` : ''}. ` +
         `Loading from original location instead. ` +
         `This may cause file locking issues on Windows.`
     );
@@ -166,8 +250,13 @@ Module._load = function (request, parent, isMain) {
 };
 
 const indexModulePath = require.resolve('./native-bindings.js');
-delete require.cache[indexModulePath];
-const indexModule = require('./native-bindings.js');
-
-module.exports = indexModule;
+// Absent on Node 22.15–22.22.2 and 24.0–24.11.0 under a `module.registerHooks()`
+// load hook (Playwright 1.64): node evaluates CJS imported from ESM with its
+// internal loader there.
+if (require.cache) {
+  delete require.cache[indexModulePath];
+}
+// A direct re-export: node's CommonJS export lexer follows this form, so ESM
+// importers see the named exports. Assigning via a variable hides them.
+module.exports = require('./native-bindings.js');
 Module._load = originalLoad;

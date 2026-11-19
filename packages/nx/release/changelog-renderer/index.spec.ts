@@ -3,8 +3,8 @@ import { DEFAULT_CONVENTIONAL_COMMITS_CONFIG } from '../../src/command-line/rele
 import { GithubRemoteReleaseClient } from '../../src/command-line/release/utils/remote-release-clients/github';
 import DefaultChangelogRenderer from './index';
 
-jest.mock('../../src/project-graph/file-map-utils', () => ({
-  createFileMapUsingProjectGraph: jest.fn().mockImplementation(() => {
+vi.mock('../../src/project-graph/file-map-utils', () => ({
+  createFileMapUsingProjectGraph: vi.fn().mockImplementation(() => {
     return Promise.resolve({
       allWorkspaceFiles: [],
       fileMap: {
@@ -183,6 +183,250 @@ describe('ChangelogRenderer', () => {
 
                   - James Henry"
               `);
+      });
+
+      it('should not collect empty author emails (which would otherwise be attributed to the "find" user via ungh)', async () => {
+        const applyUsernameSpy = vi
+          .spyOn(remoteReleaseClient, 'applyUsernameToAuthors')
+          .mockResolvedValue(undefined);
+        const renderer = new DefaultChangelogRenderer({
+          changes: [
+            {
+              shortHash: 'abc1234',
+              authors: [
+                {
+                  name: 'Test User',
+                  email: '',
+                },
+              ],
+              body: '"\n\nM\tpackages/pkg-a/src/index.ts\n"',
+              description: 'a change with no author email',
+              type: 'fix',
+              scope: 'pkg-a',
+              githubReferences: [{ value: 'abc1234', type: 'hash' }],
+              isBreaking: false,
+              revertedHashes: [],
+              affectedProjects: ['pkg-a'],
+            },
+          ],
+          remoteReleaseClient,
+          changelogEntryVersion: 'v1.1.0',
+          project: null,
+          isVersionPlans: false,
+          entryWhenNoChanges: false,
+          changelogRenderOptions: {
+            authors: true,
+            applyUsernameToAuthors: true,
+          },
+          conventionalCommitsConfig: DEFAULT_CONVENTIONAL_COMMITS_CONFIG,
+        });
+        const markdown = await renderer.render();
+
+        expect(applyUsernameSpy).toHaveBeenCalledTimes(1);
+        const passedAuthors = applyUsernameSpy.mock.calls[0][0];
+        // The empty email must not have been collected, so there is nothing to
+        // look up against ungh and no chance of attributing it to the "find" user.
+        expect([...passedAuthors.get('Test User').email]).toEqual([]);
+        // The author is still credited, just without an @handle.
+        expect(markdown).toMatchInlineSnapshot(`
+          "## v1.1.0
+
+          ### 🩹 Fixes
+
+          - **pkg-a:** a change with no author email
+
+          ### ❤️ Thank You
+
+          - Test User"
+        `);
+
+        applyUsernameSpy.mockRestore();
+      });
+
+      it('should exclude AI coding agents from the Thank You section', async () => {
+        const renderer = new DefaultChangelogRenderer({
+          changes: [
+            {
+              shortHash: 'abc1234',
+              authors: [
+                { name: 'James Henry', email: 'jh@example.com' },
+                // A human whose name happens to match an agent's must still be thanked
+                { name: 'Claude Dubois', email: 'claude.dubois@example.com' },
+                // One email, many display names, because the names track model versions
+                { name: 'Claude', email: 'noreply@anthropic.com' },
+                {
+                  name: 'Claude Opus 5 (1M context)',
+                  email: 'noreply@anthropic.com',
+                },
+                { name: 'Claude Sonnet 5', email: 'noreply@anthropic.com' },
+                { name: 'Claude Code', email: 'claude@anthropic.com' },
+                { name: 'Amp', email: 'amp@ampcode.com' },
+                { name: 'Cursor Agent', email: 'cursoragent@cursor.com' },
+                { name: 'OpenHands', email: 'opendevin@all-hands.dev' },
+                // The Copilot coding agent commits under both of these spellings
+                { name: 'Copilot', email: 'Copilot@users.noreply.github.com' },
+                {
+                  name: 'copilot-swe-agent[bot]',
+                  email: '198982749+Copilot@users.noreply.github.com',
+                },
+              ],
+              body: '"\n\nM\tpackages/pkg-a/src/index.ts\n"',
+              description: 'a change co-authored by agents',
+              type: 'fix',
+              scope: 'pkg-a',
+              githubReferences: [{ value: 'abc1234', type: 'hash' }],
+              isBreaking: false,
+              revertedHashes: [],
+              affectedProjects: ['pkg-a'],
+            },
+          ],
+          remoteReleaseClient,
+          changelogEntryVersion: 'v1.1.0',
+          project: null,
+          isVersionPlans: false,
+          entryWhenNoChanges: false,
+          changelogRenderOptions: {
+            authors: true,
+          },
+          conventionalCommitsConfig: DEFAULT_CONVENTIONAL_COMMITS_CONFIG,
+        });
+        const markdown = await renderer.render();
+        expect(markdown).toMatchInlineSnapshot(`
+          "## v1.1.0
+
+          ### 🩹 Fixes
+
+          - **pkg-a:** a change co-authored by agents
+
+          ### ❤️ Thank You
+
+          - Claude Dubois
+          - James Henry"
+        `);
+      });
+
+      it('should not let an author name start a new line', async () => {
+        const renderer = new DefaultChangelogRenderer({
+          changes: [
+            {
+              shortHash: 'abc1234',
+              authors: [
+                {
+                  name: 'Mallory\r## 1.1.1\u2028## 1.2.0\u2029## 2.0.0',
+                  email: 'mallory@example.com',
+                },
+              ],
+              body: '"\n\nM\tpackages/pkg-a/src/index.ts\n"',
+              description: 'a change',
+              type: 'fix',
+              scope: 'pkg-a',
+              githubReferences: [{ value: 'abc1234', type: 'hash' }],
+              isBreaking: false,
+              revertedHashes: [],
+              affectedProjects: ['pkg-a'],
+            },
+          ],
+          remoteReleaseClient,
+          changelogEntryVersion: 'v1.1.0',
+          project: null,
+          isVersionPlans: false,
+          entryWhenNoChanges: false,
+          changelogRenderOptions: {
+            authors: true,
+          },
+          conventionalCommitsConfig: DEFAULT_CONVENTIONAL_COMMITS_CONFIG,
+        });
+        const markdown = await renderer.render();
+        expect(markdown).toMatchInlineSnapshot(`
+          "## v1.1.0
+
+          ### 🩹 Fixes
+
+          - **pkg-a:** a change
+
+          ### ❤️ Thank You
+
+          - Mallory ## 1.1.1 ## 1.2.0 ## 2.0.0"
+        `);
+      });
+
+      it('should not let a resolved username start a new line', async () => {
+        const renderer = new DefaultChangelogRenderer({
+          changes: [
+            {
+              shortHash: 'abc1234',
+              authors: [{ name: 'Contributor', email: 'c@example.com' }],
+              body: '',
+              description: 'a change',
+              type: 'fix',
+              scope: 'pkg-a',
+              isBreaking: false,
+              affectedProjects: ['pkg-a'],
+            },
+          ],
+          remoteReleaseClient: {
+            ...remoteReleaseClient,
+            remoteReleaseProviderName: 'GitHub',
+            getRemoteRepoData: () => ({}),
+            applyUsernameToAuthors: async (authors) => {
+              for (const meta of authors.values()) {
+                meta.username = 'octocat\n\n## 1.1.1\r## 1.2.0';
+              }
+            },
+          } as any,
+          changelogEntryVersion: 'v1.1.0',
+          project: null,
+          isVersionPlans: false,
+          entryWhenNoChanges: false,
+          changelogRenderOptions: {
+            authors: true,
+            applyUsernameToAuthors: true,
+          },
+          conventionalCommitsConfig: DEFAULT_CONVENTIONAL_COMMITS_CONFIG,
+        });
+        const markdown = await renderer.render();
+        expect(markdown.split('\n').at(-1)).toBe(
+          '- Contributor @octocat  ## 1.1.1 ## 1.2.0'
+        );
+      });
+
+      it('should indent the extra lines of a description regardless of the line terminator used', async () => {
+        const renderer = new DefaultChangelogRenderer({
+          changes: [
+            {
+              shortHash: 'abc1234',
+              authors: [],
+              body: '',
+              description:
+                'a change\r\nmore details\r## 1.1.1\u2028## 1.2.0\u2029## 2.0.0',
+              type: 'fix',
+              scope: '',
+              isBreaking: false,
+              affectedProjects: ['pkg-a'],
+            },
+          ],
+          remoteReleaseClient,
+          changelogEntryVersion: 'v1.1.0',
+          project: null,
+          isVersionPlans: true,
+          entryWhenNoChanges: false,
+          changelogRenderOptions: {
+            authors: true,
+          },
+          conventionalCommitsConfig: DEFAULT_CONVENTIONAL_COMMITS_CONFIG,
+        });
+        const markdown = await renderer.render();
+        expect(markdown).toMatchInlineSnapshot(`
+          "## v1.1.0
+
+          ### 🩹 Fixes
+
+          - a change
+            more details
+            ## 1.1.1
+            ## 1.2.0
+            ## 2.0.0"
+        `);
       });
 
       it('should not generate a Thank You section when changelogRenderOptions.authors is false', async () => {
@@ -1126,6 +1370,56 @@ M	packages/angular/src/utils/versions.ts
           - **core:** remove the old API  ([#54321](https://example.com/example/example/pull/54321))
             The old API has been removed.
             Migrate to the new API instead.
+
+          ### ❤️ Thank You
+
+          - Test User"
+        `);
+      });
+
+      it('should split the breaking change explanation on every kind of line terminator', async () => {
+        const breakingChangeWithMixedLineTerminators: ChangelogChange = {
+          shortHash: 'def456',
+          authors: [{ name: 'Test User', email: 'test@example.com' }],
+          body:
+            'BREAKING CHANGE: The old API has been removed.\r\n' +
+            'Migrate to the new API instead.\rIt is faster.\u2028## 1.1.1\u2029## 1.2.0\n' +
+            '"\n\nM\tpackages/nx/file.ts\n"',
+          description: 'remove the old API\r## 2.0.0',
+          type: 'feat',
+          scope: 'core',
+          githubReferences: [{ value: 'def456', type: 'hash' }],
+          isBreaking: true,
+          revertedHashes: [],
+          affectedProjects: ['nx'],
+        };
+
+        const markdown = await new DefaultChangelogRenderer({
+          changes: [breakingChangeWithMixedLineTerminators],
+          remoteReleaseClient,
+          changelogEntryVersion: 'v1.1.0',
+          project: null,
+          isVersionPlans: false,
+          entryWhenNoChanges: false,
+          changelogRenderOptions: { authors: true },
+          conventionalCommitsConfig: DEFAULT_CONVENTIONAL_COMMITS_CONFIG,
+        }).render();
+
+        expect(markdown).toMatchInlineSnapshot(`
+          "## v1.1.0
+
+          ### 🚀 Features
+
+          - ⚠️  **core:** remove the old API
+
+            ## 2.0.0
+
+          ### ⚠️  Breaking Changes
+
+          - **core:** remove the old API ## 2.0.0
+            The old API has been removed.
+            Migrate to the new API instead.
+            It is faster.
 
           ### ❤️ Thank You
 

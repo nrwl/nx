@@ -224,6 +224,13 @@ class MavenExpressionResolver(
     fun resolveProperty(propertyPath: String, project: MavenProject): List<String> {
         return when(propertyPath) {
             "project.build.resources" -> project.build.resources.mapNotNull { resource -> resource.directory }
+            "project.build.outputDirectory" -> listOfNotNull(project.build.outputDirectory)
+            // A pom module's artifact is its pom, which is always an input.
+            "project.artifact.file" -> if (project.packaging == "pom") emptyList() else listOf(
+                "${project.build.directory}/${project.build.finalName}.${project.artifact?.artifactHandler?.extension ?: "jar"}"
+            )
+            // Attachers (source, javadoc, test-jar, shade) name files <finalName>-<classifier>.<ext>.
+            "project.attachedArtifacts" -> listOf("${project.build.directory}/${project.build.finalName}-*")
             else -> emptyList()
         }
     }

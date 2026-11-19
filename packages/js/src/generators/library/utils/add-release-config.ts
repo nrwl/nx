@@ -10,8 +10,8 @@ import {
   Tree,
   writeJson,
 } from '@nx/devkit';
-import { findMatchingProjects } from 'nx/src/utils/find-matching-projects';
 import setupVerdaccio from '../../setup-verdaccio/generator';
+import { findMatchingProjects } from '@nx/devkit/internal';
 
 /**
  * Adds release option in nx.json to build the project before versioning
@@ -29,7 +29,7 @@ export async function addReleaseConfigForTsSolution(
     nxJson.release = {
       ...nxJson.release,
       version: {
-        preVersionCommand: `${pmc.dlx} nx run-many -t build`,
+        preVersionCommand: `${pmc.exec} nx run-many -t build`,
         ...nxJson.release?.version,
       },
     };

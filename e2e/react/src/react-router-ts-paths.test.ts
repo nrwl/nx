@@ -1,18 +1,21 @@
 import {
   checkFilesExist,
   cleanupProject,
-  ensureCypressInstallation,
-  ensurePlaywrightBrowsersInstallation,
+  configureTargetOptions,
+  killPorts,
   newProject,
   readFile,
+  reservePort,
   runCLI,
-  runE2ETests,
   uniq,
+  shouldRunCypressTests,
+  shouldRunPlaywrightTests,
 } from '@nx/e2e-utils';
 
 describe('React Router Applications - TS paths', () => {
   const appName = uniq('app');
-  beforeAll(() => {
+  let appPort: number;
+  beforeAll(async () => {
     newProject({
       packages: [
         '@nx/react',
@@ -24,9 +27,10 @@ describe('React Router Applications - TS paths', () => {
         '@nx/eslint',
       ],
     });
-    ensurePlaywrightBrowsersInstallation();
+    configureTargetOptions(['dev'], { strictPort: true });
+    appPort = await reservePort();
     runCLI(
-      `generate @nx/react:app ${appName} --use-react-router --routing --linter=eslint --unit-test-runner=vitest --e2e-test-runner=playwright --no-interactive`
+      `generate @nx/react:app ${appName} --use-react-router --routing --linter=eslint --unit-test-runner=vitest --e2e-test-runner=playwright --port=${appPort} --no-interactive`
     );
   });
 
@@ -72,26 +76,29 @@ describe('React Router Applications - TS paths', () => {
     expect(typeCheckResult).toContain('Successfully ran target typecheck');
   });
 
-  it('should execute e2e tests using playwright', () => {
-    if (runE2ETests()) {
+  it('should execute e2e tests using playwright', async () => {
+    if (await shouldRunPlaywrightTests()) {
       const result = runCLI(`e2e ${appName}-e2e --verbose`);
       expect(result).toContain(
         `Successfully ran target e2e for project ${appName}-e2e`
       );
+      expect(await killPorts(appPort)).toBeTruthy();
     }
   });
 
-  it('should execute e2e tests using cypress', () => {
+  // Covers a cold Cypress binary install, which can wait on another suite's.
+  it('should execute e2e tests using cypress', async () => {
     const cypressAppName = uniq('cypress-app');
-    ensureCypressInstallation();
+    const cypressAppPort = await reservePort();
     runCLI(
-      `generate @nx/react:app ${cypressAppName} --use-react-router --routing --linter=eslint --unit-test-runner=none  --no-interactive`
+      `generate @nx/react:app ${cypressAppName} --use-react-router --routing --linter=eslint --unit-test-runner=none --e2e-test-runner=cypress --port=${cypressAppPort} --no-interactive`
     );
-    if (runE2ETests()) {
+    if (await shouldRunCypressTests()) {
       const result = runCLI(`e2e ${cypressAppName}-e2e --verbose`);
       expect(result).toContain(
         `Successfully ran target e2e for project ${cypressAppName}-e2e`
       );
+      expect(await killPorts(cypressAppPort)).toBeTruthy();
     }
-  });
+  }, 300_000);
 });

@@ -12,12 +12,17 @@ import { ExecutorContext } from '../../config/misc-interfaces';
 import { readProjectsConfigurationFromProjectGraph } from '../../project-graph/project-graph';
 import { readNxJson } from '../../config/configuration';
 import { isAsyncIterator } from '../../utils/async-iterator';
+import { output } from '../../utils/output';
 import {
   getExecutorInformation,
   parseExecutor,
 } from '../../command-line/run/executor-utils';
 import { ProjectConfiguration } from '../../config/workspace-json-project-json';
 import { ProjectGraph } from '../../config/project-graph';
+
+// Batch workers are inside an Nx run just like task workers (see
+// bin/run-executor.ts) — mark it so nested tooling can detect Nx.
+process.env.NX_CLI_SET = 'true';
 
 function getBatchExecutor(
   executorName: string,
@@ -108,6 +113,9 @@ async function runTasks(
   } catch (e) {
     const isVerbose = tasks[0].overrides.verbose;
     console.error(isVerbose ? e : e.message);
+    // `process.exit` does not wait for pipe writes, so the reason this worker
+    // died could otherwise be the one line that never arrives.
+    await output.drain();
     process.exit(1);
   }
 }
@@ -121,6 +129,7 @@ process.on('message', async (message: BatchMessage) => {
         message.batchTaskGraph,
         message.fullTaskGraph
       );
+      await output.drain();
       process.send({
         type: BatchMessageType.CompleteBatchExecution,
         results,

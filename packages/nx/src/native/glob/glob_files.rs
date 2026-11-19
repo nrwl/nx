@@ -1,16 +1,15 @@
 use rayon::prelude::*;
+use std::sync::Arc;
 
-use crate::native::glob::build_glob_set;
+use crate::native::glob::{NxGlobSet, build_glob_set};
 use crate::native::types::FileData;
 
 /// Get workspace config files based on provided globs
 pub fn glob_files(
     files: &[FileData],
-    globs: Vec<String>,
+    globs: Arc<NxGlobSet>,
     exclude: Option<Vec<String>>,
 ) -> napi::Result<impl ParallelIterator<Item = &FileData>> {
-    let globs = build_glob_set(&globs)?;
-
     let exclude_glob_set = match exclude {
         Some(exclude) => {
             if exclude.is_empty() {
@@ -68,7 +67,7 @@ mod test {
             fd("h.ts"),
         ];
 
-        let matched: Vec<&str> = glob_files(&files, vec!["**/*".into()], None)
+        let matched: Vec<&str> = glob_files(&files, build_glob_set(&["**/*"]).unwrap(), None)
             .unwrap()
             .map(|f| f.file.as_str())
             .collect();
@@ -94,7 +93,7 @@ mod test {
 
         let matched: Vec<&str> = glob_files(
             &files,
-            vec!["**/*.ts".into()],
+            build_glob_set(&["**/*.ts"]).unwrap(),
             Some(vec!["**/*.spec.ts".into()]),
         )
         .unwrap()

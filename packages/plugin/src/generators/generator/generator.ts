@@ -1,4 +1,7 @@
-import { determineArtifactNameAndDirectoryOptions } from '@nx/devkit/internal';
+import {
+  determineArtifactNameAndDirectoryOptions,
+  PackageJson,
+} from '@nx/devkit/internal';
 import {
   formatFiles,
   generateFiles,
@@ -13,7 +16,6 @@ import {
 } from '@nx/devkit';
 import { isUsingTsSolutionSetup } from '@nx/js/internal';
 import { join } from 'node:path';
-import { PackageJson } from 'nx/src/utils/package-json';
 import { hasGenerator } from '../../utils/has-generator';
 import { getArtifactMetadataDirectory } from '../../utils/paths';
 import { nxVersion } from '../../utils/versions';
@@ -203,10 +205,6 @@ async function updateGeneratorJson(host: Tree, options: NormalizedSchema) {
       schema: `${dir}/schema.json`,
       description: options.description,
     };
-    // @todo(v17): Remove this, prop is defunct.
-    if (options.name === 'preset') {
-      generators[options.name]['x-use-standalone-layout'] = true;
-    }
     json.generators = generators;
     return json;
   });

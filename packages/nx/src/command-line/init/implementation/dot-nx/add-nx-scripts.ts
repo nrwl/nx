@@ -1,4 +1,5 @@
 import { execSync } from 'child_process';
+import { recordInitWrite } from '../format';
 import { readFileSync, constants as FsConstants } from 'fs';
 import * as path from 'path';
 import { valid } from 'semver';
@@ -72,7 +73,10 @@ export function generateDotNxSetup(version?: string) {
   flushChanges(host.root, changes);
   // Ensure that the dot-nx installation is available.
   // This is needed when using a global nx with dot-nx, otherwise running any nx command using global command will fail due to missing modules.
-  // Pipe stderr so failures surface in telemetry instead of bare "Command failed: ./nx --version".
+  // Intentionally not runNxSync: when the repo has a package.json it would run
+  // `<pm> exec nx` instead of the wrapper, but this call must run the
+  // just-written wrapper itself so it bootstraps .nx/installation.
+  // Pipe stderr so failures surface in telemetry instead of bare "Command failed".
   try {
     execSync(getDotNxWrapperVersionCommand(), {
       stdio: ['ignore', 'ignore', 'pipe'],
@@ -101,6 +105,10 @@ export function writeMinimalNxJson(host: Tree, version: string) {
         version: normalizeVersionForNxJson('nx', version),
       },
     });
+    recordInitWrite('nx.json');
+    // Only this file. The wrapper scripts written by `generateDotNxSetup`
+    // above (`.nx/nxw.js`, `nx`, `nx.bat`) are deliberately left out: they are
+    // vendored artifacts, and two of them have no formatter at all.
   }
 }
 

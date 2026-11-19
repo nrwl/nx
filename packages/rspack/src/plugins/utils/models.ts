@@ -71,6 +71,12 @@ export interface NxAppRspackPluginOptions {
   commonChunk?: boolean;
 
   /**
+   * Hash algorithm used to generate CSS module class names. Defaults to `md5`,
+   * which FIPS-restricted OpenSSL rejects. Changing it renames generated class names.
+   */
+  cssModuleHashFunction?: string;
+
+  /**
    * The deploy path for the application. e.g. `/my-app/`
    */
   deployUrl?: string;
@@ -154,7 +160,7 @@ export interface NxAppRspackPluginOptions {
    */
   progress?: boolean;
   /**
-   * Add an additional chunk for the rspack runtime. Defaults to `true` when `target === 'web'`.
+   * Add an additional chunk for the rspack runtime. Defaults to `true` when `target` runs in a browser or `ssr` is set.
    */
   runtimeChunk?: boolean;
   /**
@@ -267,8 +273,7 @@ export interface NxAppRspackPluginOptions {
   useLegacyHtmlPlugin?: boolean;
 }
 
-export interface NormalizedNxAppRspackPluginOptions
-  extends NxAppRspackPluginOptions {
+export interface NormalizedNxAppRspackPluginOptions extends NxAppRspackPluginOptions {
   projectName: string;
   root: string;
   projectRoot: string;

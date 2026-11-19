@@ -11,17 +11,17 @@ import {
 import { TempFs } from '@nx/devkit/internal-testing-utils';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { join } from 'node:path';
-import { getRelativeProjectJsonSchemaPath } from 'nx/src/generators/utils/project-configuration';
+import { getRelativeProjectJsonSchemaPath } from '@nx/devkit/internal';
 import { convertToInferred } from './convert-to-inferred';
 
 let fs: TempFs;
 let projectGraph: ProjectGraph;
-jest.mock('@nx/devkit', () => ({
-  ...jest.requireActual('@nx/devkit'),
-  createProjectGraphAsync: jest
+vi.mock('@nx/devkit', async () => ({
+  ...(await vi.importActual<any>('@nx/devkit')),
+  createProjectGraphAsync: vi
     .fn()
     .mockImplementation(() => Promise.resolve(projectGraph)),
-  updateProjectConfiguration: jest
+  updateProjectConfiguration: vi
     .fn()
     .mockImplementation((tree, projectName, projectConfiguration) => {
       function handleEmptyTargets(
@@ -62,35 +62,20 @@ jest.mock('@nx/devkit', () => ({
       projectGraph.nodes[projectName].data = projectConfiguration;
     }),
 }));
-jest.mock('nx/src/devkit-internals', () => {
-  // Use a proxy to lazily access the actual module to avoid initialization timing issues with SWC
-  const getActual = () =>
-    jest.requireActual('nx/src/project-graph/utils/retrieve-workspace-files');
-  const getActualDevkitInternals = () =>
-    jest.requireActual('nx/src/devkit-internals');
-
-  return new Proxy(
-    {},
-    {
-      get(target, prop) {
-        if (prop === 'getExecutorInformation') {
-          return jest
-            .fn()
-            .mockImplementation((pkg, ...args) =>
-              getActualDevkitInternals().getExecutorInformation(
-                '@nx/webpack',
-                ...args
-              )
-            );
-        }
-        if (prop === 'retrieveProjectConfigurations') {
-          return getActual().retrieveProjectConfigurations;
-        }
-        // For all other properties, return from the actual module
-        return getActualDevkitInternals()[prop];
-      },
-    }
+vi.mock('nx/src/devkit-internals', async () => {
+  const actual = await vi.importActual<any>('nx/src/devkit-internals');
+  const { retrieveProjectConfigurations } = await vi.importActual<any>(
+    'nx/src/project-graph/utils/retrieve-workspace-files'
   );
+  return {
+    ...actual,
+    retrieveProjectConfigurations,
+    getExecutorInformation: vi
+      .fn()
+      .mockImplementation((pkg, ...args) =>
+        actual.getExecutorInformation('@nx/webpack', ...args)
+      ),
+  };
 });
 
 function addProject(tree: Tree, name: string, project: ProjectConfiguration) {
@@ -205,13 +190,9 @@ function writeDetoxConfig(tree: Tree, projectRoot: string) {
     `${projectRoot}/.detoxrc.json`,
     JSON.stringify(detoxConfig)
   );
-  jest.doMock(
-    join(fs.tempDir, projectRoot, '.detoxrc.json'),
-    () => detoxConfig,
-    {
-      virtual: true,
-    }
-  );
+  vi.doMock(join(fs.tempDir, projectRoot, '.detoxrc.json'), () => detoxConfig, {
+    virtual: true,
+  });
 }
 
 function createProject(
@@ -319,7 +300,7 @@ describe('convert-to-inferred', () => {
 
   afterEach(() => {
     fs.cleanup();
-    jest.resetModules();
+    vi.resetModules();
   });
 
   it('should convert project to use inference plugin', async () => {
@@ -449,5 +430,57 @@ describe('convert-to-inferred', () => {
         },
       },
     });
+  });
+
+  it('keeps per-project config when two projects would centralize a command-carrying target', async () => {
+    // Each migrated detox target carries a per-project `command`, which gives it
+    // an identity in the project.json (default) layer. Nx's `resolveSourcePlugin`
+    // then refuses to apply a `filter: { plugin }` targetDefault to it, so the
+    // shared `options.args` / `configurations` MUST stay in project.json, with
+    // one project the hoist never triggers, but with two it does.
+    const emptyExtraConfigurations = {
+      'build-android': { production: {} },
+      'build-ios': { production: {} },
+      'test-android': { production: {} },
+      'test-ios': { production: {} },
+    };
+    const project1 = createProject(
+      tree,
+      {},
+      undefined,
+      emptyExtraConfigurations
+    );
+    writeDetoxConfig(tree, project1.root);
+    const project2 = createProject(
+      tree,
+      { appName: 'demo2-e2e', appRoot: 'apps/demo2-e2e' },
+      undefined,
+      emptyExtraConfigurations
+    );
+    writeDetoxConfig(tree, project2.root);
+
+    await convertToInferred(tree, {});
+
+    // The whole build-ios target stays per-project: command, the shared args,
+    // and the production configuration, so `nx build-ios --configuration
+    // production` still selects the release build.
+    const projectConfig = readProjectConfiguration(tree, project1.name);
+    expect(projectConfig.targets['build-ios']).toEqual({
+      command: 'nx run demo-e2e:build',
+      options: { args: ['--args="-c ios.sim.debug"'] },
+      configurations: {
+        production: { args: ['--args="-c ios.sim.release"'] },
+      },
+    });
+
+    // No plugin-scoped targetDefault entry was emitted for a command-carrying
+    // target (Nx would silently drop it).
+    const targetDefaults = readNxJson(tree).targetDefaults ?? {};
+    for (const value of Object.values(targetDefaults)) {
+      const entries = Array.isArray(value) ? value : [value];
+      for (const entry of entries) {
+        expect((entry as any)?.filter?.plugin).not.toBe('@nx/detox/plugin');
+      }
+    }
   });
 });

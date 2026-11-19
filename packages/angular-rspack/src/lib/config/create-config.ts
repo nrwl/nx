@@ -2,19 +2,32 @@ import { type Configuration } from '@rspack/core';
 import { merge as rspackMerge } from 'webpack-merge';
 import { type AngularRspackPluginOptions } from '../models';
 import {
-  deleteOutputDir,
   getOutputHashFormat,
   normalizeOptionWithI18n,
 } from './config-utils/helpers';
 import { getCommonConfig } from './config-utils/common-config';
 import { getServerConfig } from './config-utils/server-config';
 import { getBrowserConfig } from './config-utils/browser-config';
+import { getSwcTranspilationTransform } from './config-utils/swc-transpilation';
 import {
   handleConfigurations,
   parseConfigurationMode,
 } from './config-utils/user-defined-config-helpers';
 import { assertSupportedRspackCoreVersion } from '../utils/assert-supported-rspack-version';
 import { isServeMode } from '../utils/rspack-serve-env';
+import type { SharedLicenseInputs } from '../plugins/extract-licenses-plugin';
+import type { SharedServerRenderingInputs } from '../plugins/index-html-plugin';
+import { AngularRspackPlugin } from '../plugins/angular-rspack-plugin';
+import { SsrReloadServer } from '../plugins/server/ssr-reload-server';
+import {
+  AngularSsrDevServer,
+  servesSsrFromDevServer,
+} from '../plugins/angular-ssr-dev-server';
+import {
+  servesSsrFromForkedServer,
+  warnForkedServerDeprecation,
+} from '../plugins/angular-ssr-forked-server';
+import { DevServerReloads } from '../plugins/dev-server-reloads';
 
 export async function createConfig(
   defaultOptions: {
@@ -47,18 +60,16 @@ export async function _createConfig(
   options: AngularRspackPluginOptions,
   rspackConfigOverrides?: Partial<Configuration>
 ): Promise<Configuration[]> {
-  assertSupportedRspackCoreVersion();
-
-  const { i18n, i18nHash, normalizedOptions } =
-    await normalizeOptionWithI18n(options);
-  const hashFormat = getOutputHashFormat(normalizedOptions.outputHashing);
-
-  if (normalizedOptions.deleteOutputPath) {
-    await deleteOutputDir(
-      normalizedOptions.root,
-      normalizedOptions.outputPath.base
-    );
+  const projectGraphCreation = !!global.NX_GRAPH_CREATION;
+  if (!projectGraphCreation) {
+    assertSupportedRspackCoreVersion();
   }
+
+  const { i18n, i18nHash, normalizedOptions } = await normalizeOptionWithI18n(
+    options,
+    projectGraphCreation
+  );
+  const hashFormat = getOutputHashFormat(normalizedOptions.outputHashing);
 
   const defaultConfig = await getCommonConfig(
     normalizedOptions,
@@ -67,14 +78,69 @@ export async function _createConfig(
     hashFormat
   );
 
+  // Overrides may point module resolution at a different tsconfig; derive
+  // the swc rule semantics from the one the bundler will actually use.
+  const overrideTsConfig = rspackConfigOverrides?.resolve?.tsConfig;
+  const swcTranspilationTransform = getSwcTranspilationTransform(
+    typeof overrideTsConfig === 'string'
+      ? overrideTsConfig
+      : (overrideTsConfig?.configFile ?? normalizedOptions.tsConfig)
+  );
+
+  // The browser and server compilers write the licenses file to the same
+  // location; sharing the collected inputs makes each emit the union.
+  const sharedLicenseInputs: SharedLicenseInputs | undefined =
+    normalizedOptions.hasServer ? new Map() : undefined;
+
+  // An SSR build's compilers also share one Angular compilation: the browser
+  // program already includes the server entry points, so the server compiler
+  // consumes the browser compilation's output instead of running a second
+  // compilation of the same program.
+  const sharedAngularPlugin = normalizedOptions.hasServer
+    ? new AngularRspackPlugin(normalizedOptions, i18n)
+    : undefined;
+
+  // The browser compiler generates the documents and critical CSS plans the
+  // server compiler renders with.
+  const serverRenderingInputs: SharedServerRenderingInputs | undefined =
+    normalizedOptions.hasServer ? {} : undefined;
+
+  const servesFromForkedServer =
+    isServeMode() && servesSsrFromForkedServer(normalizedOptions);
+  if (servesFromForkedServer && !normalizedOptions.projectGraphCreation) {
+    warnForkedServerDeprecation();
+  }
+  const ssrReloadServer = servesFromForkedServer
+    ? new SsrReloadServer()
+    : undefined;
+  // The separate server restarts after each server build, so a reload sent
+  // when the browser build ends can reach it while it restarts.
+  const devServerReloads =
+    isServeMode() && !servesFromForkedServer
+      ? new DevServerReloads()
+      : undefined;
+  const ssrDevServer =
+    isServeMode() && servesSsrFromDevServer(normalizedOptions)
+      ? new AngularSsrDevServer(normalizedOptions, devServerReloads)
+      : undefined;
+
   const configs: Configuration[] = [];
   if (normalizedOptions.hasServer) {
     const serverConfig: Configuration = await getServerConfig(
       normalizedOptions,
       i18n,
-      defaultConfig
+      defaultConfig,
+      swcTranspilationTransform,
+      sharedLicenseInputs,
+      sharedAngularPlugin,
+      serverRenderingInputs,
+      ssrReloadServer,
+      ssrDevServer
     );
-    const mergedConfig = rspackMerge(serverConfig, rspackConfigOverrides ?? {});
+    const mergedConfig = rspackMerge(
+      serverConfig,
+      toServerOverrides(rspackConfigOverrides ?? {})
+    );
     configs.push(mergedConfig);
   }
 
@@ -82,9 +148,37 @@ export async function _createConfig(
     normalizedOptions,
     i18n,
     hashFormat,
-    defaultConfig
+    defaultConfig,
+    swcTranspilationTransform,
+    sharedLicenseInputs,
+    sharedAngularPlugin,
+    serverRenderingInputs,
+    ssrReloadServer,
+    ssrDevServer,
+    devServerReloads
   );
   const mergedConfig = rspackMerge(browserConfig, rspackConfigOverrides ?? {});
   configs.unshift(mergedConfig);
   return configs;
+}
+
+// rspack's node lazy-compilation client throws in the server bundle, and on
+// rspack 2 a `devServer` key adds the dev-server client and HMR code to it.
+function toServerOverrides(
+  overrides: Partial<Configuration>
+): Partial<Configuration> {
+  const {
+    lazyCompilation: _lazyCompilation,
+    devServer: _devServer,
+    ...serverOverrides
+  } = overrides;
+  if (!serverOverrides.experiments) {
+    return serverOverrides;
+  }
+  // rspack 1.x also reads it from experiments.
+  const { lazyCompilation: _experimentsLazyCompilation, ...experiments } =
+    serverOverrides.experiments as Configuration['experiments'] & {
+      lazyCompilation?: unknown;
+    };
+  return { ...serverOverrides, experiments };
 }

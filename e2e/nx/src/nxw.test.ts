@@ -11,7 +11,6 @@ import {
   readJson,
   readFile,
 } from '@nx/e2e-utils';
-import { styleText } from 'node:util';
 
 describe('nx wrapper / .nx installation', () => {
   let runNxWrapper: ReturnType<typeof newWrappedNxWorkspace>;
@@ -85,13 +84,11 @@ describe('nx wrapper / .nx installation', () => {
       installedPluginEnd
     );
 
-    expect(
-      installedPluginLines.some((x) => x.includes(`${styleText('bold', 'nx')}`))
-    );
-    expect(
-      installedPluginLines.some((x) =>
-        x.includes(`${styleText('bold', '@nx/js')}`)
-      )
+    expect(installedPluginLines).toEqual(
+      expect.arrayContaining([
+        expect.stringMatching(/^nx(?:\s|$)/),
+        expect.stringMatching(/^@nx\/js(?:\s|$)/),
+      ])
     );
 
     output = runNxWrapper('list @nx/js');
@@ -104,8 +101,11 @@ describe('nx wrapper / .nx installation', () => {
       j.installation.plugins['@nx/workspace'] = getPublishedVersion();
       return j;
     });
-    expect(() => runNxWrapper(`g npm-package ${uniq('pkg')}`)).not.toThrow();
-    expect(() => checkFilesExist());
+    const pkg = uniq('pkg');
+    expect(() => runNxWrapper(`g npm-package ${pkg}`)).not.toThrow();
+    expect(() =>
+      checkFilesExist(`${pkg}/package.json`, `${pkg}/index.js`)
+    ).not.toThrow();
   });
 
   it('should work with migrate', () => {

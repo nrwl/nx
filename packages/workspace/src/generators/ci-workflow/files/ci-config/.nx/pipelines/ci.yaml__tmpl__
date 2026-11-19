@@ -1,0 +1,8 @@
+# Nx Cloud reads this file to configure your CI pipeline.
+# Uncomment the "nx-cloud start-workers" line in your CI workflow to distribute tasks across workers.
+# Learn how to configure this file at https://nx.dev/docs/reference/nx-cloud/ci-config
+worker-templates:
+  default:
+    workers: 3 linux-medium-js
+    stop-after:
+      - <% if(hasE2E){ %>e2e-ci<% } else { %>build<% } %>

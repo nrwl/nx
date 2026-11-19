@@ -1,4 +1,4 @@
-import type { Linter, LinterType } from '@nx/eslint';
+import type { LinterType } from '@nx/js';
 import type { UnitTestRunner } from '../../utils/test-runners';
 
 export interface Schema {
@@ -19,10 +19,10 @@ export interface Schema {
   parent?: string;
   tags?: string;
   strict?: boolean;
-  linter?: Linter | LinterType;
+  linter?: LinterType;
   unitTestRunner?: UnitTestRunner;
   compilationMode?: 'full' | 'partial';
-  setParserOptionsProject?: boolean;
+  enableTypedLinting?: boolean;
   skipModule?: boolean;
   skipPackageJson?: boolean;
   standalone?: boolean;
@@ -35,6 +35,5 @@ export interface Schema {
   skipTests?: boolean;
   selector?: string;
   skipSelector?: boolean;
-  addPlugin?: boolean;
   skipTsConfig?: boolean;
 }

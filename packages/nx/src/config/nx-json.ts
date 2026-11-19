@@ -1,5 +1,5 @@
 import { existsSync } from 'node:fs';
-import { dirname, join } from 'node:path';
+import { join } from 'node:path';
 import type ChangelogRenderer from '../../release/changelog-renderer';
 import type { ChangelogRenderOptions } from '../../release/changelog-renderer';
 import type { validReleaseVersionPrefixes } from '../command-line/release/utils/release-graph';
@@ -26,14 +26,17 @@ export interface ImplicitJsonSubsetDependency<T = '*' | string[]> {
   [key: string]: T | ImplicitJsonSubsetDependency<T>;
 }
 
-/**
- * @deprecated Use {@link NxJsonConfiguration#defaultBase } instead
- */
 export interface NxAffectedConfig {
   /**
    * Default based branch used by affected commands.
+   * @deprecated Use {@link NxJsonConfiguration#defaultBase } instead. This will be removed in Nx 25.
    */
   defaultBase?: string;
+  /**
+   * Select every task of each affected project, instead of only the tasks
+   * whose inputs a change reaches. Defaults to `false`.
+   */
+  legacy?: boolean;
 }
 
 /**
@@ -71,8 +74,10 @@ export type TargetDefaultEntry = {
 export type TargetDefaultFilter = {
   /**
    * Restrict the default to targets originated by a specific plugin
-   * (e.g. `@nx/vite`). Matches against the plugin that wrote the target's
-   * `executor` or `command`.
+   * (e.g. `@nx/vite`). Matches against the plugin from nx.json's `plugins`
+   * that wrote the target's `executor` or `command`. Targets whose
+   * executor/command comes from `project.json` or `package.json` have no
+   * source plugin and never match.
    */
   plugin?: string;
   /**
@@ -743,6 +748,116 @@ export interface NxReleaseConfiguration {
   versionPlans?: NxReleaseVersionPlansConfiguration | boolean;
 }
 
+/**
+ * Configuration for the `nx conformance` command, provided by `@nx/conformance`.
+ */
+export interface NxConformanceConfiguration {
+  /**
+   * Optional path to write the conformance results to, defaults to "dist/conformance-result.json".
+   * Set to false to disable writing the conformance results to a file.
+   */
+  outputPath?: string | false;
+  rules: {
+    /**
+     * Relative path to a local rule implementation, node_module path or nx-cloud rule ID for Nx Cloud Enterprise.
+     */
+    rule: string;
+    /**
+     * Rule specific configuration options.
+     */
+    options?: Record<string, unknown>;
+    /**
+     * The projects array allows users to opt in or out of violations for specific projects being reported by the current rule.
+     * The array can contain any valid matchers for findMatchingProjects(), by default the implied value is ["*"].
+     *
+     * We additionally provide an object syntax for projects which allows users to provide by a matcher string and an
+     * explanation to communicate to their colleagues why a particular project or projects was included or excluded from
+     * consideration from the rule.
+     *
+     * The explanation currently does nothing to affect any functionality.
+     */
+    projects?: Array<string | { matcher: string; explanation: string }>;
+    /**
+     * Optional explanation field for users to be able to communicate to their colleague why a particular rule is
+     * enabled and important to the workspace in question.
+     *
+     * Currently does nothing to affect any functionality.
+     */
+    explanation?: string;
+    /**
+     * Override the default status of the rule, which is "enforced".
+     *
+     * If set to "evaluated", the rule will be reported as normal, but not enforced (will exit with code 0).
+     * If set to "disabled", the rule will not be evaluated at all.
+     */
+    status?: 'enforced' | 'evaluated' | 'disabled';
+  }[];
+}
+
+type NxOwnersPatternBase = {
+  /**
+   * Owner IDs for the matched files, or `false` to mark them as having no owners
+   * (e.g. files managed by a bot user).
+   */
+  owners: string[] | false;
+  description?: string;
+  /**
+   * Whether the root `owners.prefix` applies to this pattern. Defaults to `true`.
+   */
+  applyPrefix?: boolean;
+  /**
+   * Prefix for this pattern's owners, taking precedence over the root `owners.prefix`.
+   */
+  prefix?: string;
+};
+
+type NxOwnersPattern = NxOwnersPatternBase & NxOwnersPatternTarget;
+
+type NxOwnersSectionPattern = Omit<NxOwnersPatternBase, 'owners'> &
+  Partial<Pick<NxOwnersPatternBase, 'owners'>> &
+  NxOwnersPatternTarget;
+
+/**
+ * When both `projects` and `files` are provided, file patterns are evaluated relative to each
+ * matched project root instead of the workspace root.
+ */
+type NxOwnersPatternTarget =
+  | { files: string[] }
+  | { projects: string[] }
+  | { projects: string[]; files: string[] };
+
+/**
+ * Configuration for CODEOWNERS generation, provided by `@nx/owners`.
+ */
+export interface NxOwnersConfiguration {
+  /**
+   * Defaults to `github`.
+   */
+  format?: 'github' | 'gitlab' | 'bitbucket';
+  /**
+   * Defaults to the format's conventional location, e.g. `.github/CODEOWNERS`.
+   */
+  outputPath?: string;
+  /**
+   * Prefix applied to owner strings, e.g. `@org`.
+   */
+  prefix?: string;
+  patterns?: NxOwnersPattern[];
+  /**
+   * GitLab only. Groups patterns with approval requirements.
+   */
+  sections?: {
+    name: string;
+    /**
+     * A pattern without `owners` uses the section's `defaultOwners`.
+     */
+    patterns: NxOwnersSectionPattern[];
+    defaultOwners?: string[];
+    numberOfRequiredApprovals?: number;
+    optional?: boolean;
+  }[];
+}
+
 export interface NxSyncConfiguration {
   /**
    * List of workspace-wide sync generators to be run (not attached to targets).
@@ -773,7 +888,9 @@ export interface NxSyncConfiguration {
 export interface NxMigrateConfiguration {
   /**
    * Whether to automatically create a git commit after each migration runs.
-   * Equivalent to the `--create-commits` flag. Defaults to `false`.
+   * Equivalent to the `--create-commits` flag. Defaults to `true` when the
+   * agentic flow runs the migrations in a Git repository, and `false`
+   * otherwise.
    */
   createCommits?: boolean;
 
@@ -805,8 +922,7 @@ export interface NxMigrateConfiguration {
   /**
    * Whether `nx migrate` resolves package versions via the npm registry
    * (faster) instead of a package-manager install. The
-   * `NX_MIGRATE_USE_REGISTRY_RESOLUTION` and legacy
-   * `NX_MIGRATE_SKIP_REGISTRY_FETCH` env vars take precedence over this.
+   * `NX_MIGRATE_USE_REGISTRY_RESOLUTION` env var takes precedence over this.
    * Defaults to `true`.
    */
   useRegistryResolution?: boolean;
@@ -821,11 +937,19 @@ export interface NxMigrateConfiguration {
   agentic?: boolean | AgentId;
 
   /**
-   * Whether to run agent-driven validation after generator-only migrations when
-   * the agentic flow is enabled. Equivalent to the `--validate` flag. Defaults
-   * to `true` when the agentic flow is enabled.
+   * Whether the AI agent driving a migrate run reviews the changes of
+   * generator-only migrations. Equivalent to the `--validate` flag. Defaults to
+   * `true`.
    */
   validate?: boolean;
+
+  /**
+   * Whether a migrate run an AI agent drives ends with a final check, where the
+   * agent makes sure the projects the run touched still lint, build, and pass
+   * their unit tests. Equivalent to the `--final-validation` flag. Defaults to
+   * `true`.
+   */
+  finalValidation?: boolean;
 }
 
 /**
@@ -856,7 +980,6 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
   targetDefaults?: TargetDefaults;
   /**
    * Default options for `nx affected`
-   * @deprecated use {@link defaultBase} instead. For more information see https://nx.dev/deprecated/affected-config#affected-config
    */
   affected?: NxAffectedConfig;
 
@@ -982,7 +1105,8 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
   useDaemonProcess?: boolean;
 
   /**
-   * Set this to false to disable adding inference plugins when generating new projects
+   * When false, `nx add` does not update package.json scripts by default and
+   * `nx init` uses its legacy setup. Generators always add their inference plugin.
    */
   useInferencePlugins?: boolean;
 
@@ -1007,6 +1131,16 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
    * Configuration for the `nx migrate` command.
    */
   migrate?: NxMigrateConfiguration;
+
+  /**
+   * Configuration for the `nx conformance` command.
+   */
+  conformance?: NxConformanceConfiguration;
+
+  /**
+   * Configuration for CODEOWNERS generation. Set to `true` to enable it with defaults.
+   */
+  owners?: NxOwnersConfiguration | boolean;
 
   /**
    * Sets the maximum size of the local cache. Accepts a number followed by a unit (e.g. 100MB). Accepted units are B, KB, MB, and GB.

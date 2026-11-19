@@ -1,0 +1,380 @@
+---
+title: Webpack plugins
+description: A guide for webpack plugins that are provided by Nx.
+sidebar:
+  label: Webpack plugins
+filter: 'type:Guides'
+topics:
+  - 'Webpack'
+---
+
+Nx provides [basic plugins](#basic-plugins) that work in a standard [webpack configuration](https://webpack.js.org/configuration/) file and integrate directly with the Webpack CLI.
+
+Nx v24 removed the [Nx-enhanced plugins](#nx-enhanced-plugins), such as `composePlugins` and `withNx`. Their exports remain only as inert stubs.
+
+For more information on webpack configuration and the
+difference between basic and Nx-enhanced configuration, see
+the [Webpack configuration guide](/docs/kb/webpack-config-setup).
+
+## Basic plugins
+
+The basic plugins work with a standard webpack configuration file by adding them to the `plugins` option.
+
+### NxAppWebpackPlugin
+
+The `NxAppWebpackPlugin` plugin provides common configuration for the build, including TypeScript support and linking
+workspace libraries (via tsconfig paths).
+
+#### Options
+
+##### tsConfig
+
+Type: `string`
+
+The tsconfig file for the project. e.g. `tsconfig.json`.
+
+##### main
+
+Type: `string`
+
+The entry point for the bundle. e.g. `src/main.ts`.
+
+##### additionalEntryPoints
+
+Type: `Array<{ entryName: string; entryPath: string; }>`
+
+Secondary entry points for the bundle.
+
+#### assets
+
+Type: `string[]`
+
+Assets to be copied over to the output path.
+
+##### babelConfig
+
+Type: `string`
+
+Babel configuration file if compiler is babel.
+
+##### babelUpwardRootMode
+
+Type: `boolean`
+If true, Babel will look for a babel.config.json up the directory tree.
+
+##### baseHref
+
+Type: `string`
+
+Set `<base href>` for the resulting index.html.
+
+##### buildLibsFromSource
+
+Type: `boolean`
+
+Build the libraries from source. Default is `true`.
+
+##### compiler
+
+Type: `'babel' | 'swc' | 'tsc'`
+
+The compiler to use. Default is `babel` and requires a `.babelrc` file.
+
+##### crossOrigin
+
+Type: `'none' | 'anonymous' | 'use-credentials'`
+
+Set `crossorigin` attribute on the `script` and `link` tags.
+
+##### deleteOutputPath
+
+Type: `boolean`
+
+Delete the output path before building.
+
+**`Deprecated`**
+
+Use [`output.clean`](https://webpack.js.org/guides/output-management/#cleaning-up-the-dist-folder) instead.
+
+##### deployUrl
+
+Type: `string`
+
+The deploy path for the application. e.g. `/my-app/`
+
+##### externalDependencies
+
+Type: `'all' | 'none' | string[]`
+
+Define external packages that will not be bundled. Use `all` to exclude all 3rd party packages, and `none` to bundle all
+packages. Use an array to exclude specific packages from the bundle. Default is `none`.
+
+##### extractCss
+
+Type: `boolean`
+
+Extract CSS as an external file. Default is `true`.
+
+##### extractLicenses
+
+Type: `boolean`
+Extract licenses from 3rd party modules and add them to the output.
+
+##### fileReplacements
+
+Type: `FileReplacement[]`
+
+Replace files at build time. e.g. `[{ "replace": "src/a.dev.ts", "with": "src/a.prod.ts" }]`
+
+##### generateIndexHtml
+
+Type: `boolean`
+
+Generate an `index.html` file if `index.html` is passed. Default is `true`
+
+##### generatePackageJson
+
+Type: `boolean`
+
+Generate a `package.json` file for the bundle. Useful for Node applications.
+
+##### runtimeDependencies
+
+Type: `string[]`
+
+Add runtime dependencies to the generated `package.json` file. Useful for Docker installs. Only works in conjunction with `generatePackageJson` option.
+
+##### index
+
+Type: `string`
+
+Path to the `index.html`.
+
+##### memoryLimit
+
+Type: `number`
+
+Set the memory limit for the type-checking process. Default is `2048`.
+
+##### namedChunks
+
+Type: `boolean`
+
+Use the source file name in output chunks. Useful for development or for Node.
+
+##### optimization
+
+Type: `boolean`
+
+Optimize the bundle using Terser.
+
+##### outputFileName
+
+Type: `string`
+
+Specify the output filename for the bundle. Useful for Node applications that use `@nx/js:node` to serve.
+
+##### outputHashing
+
+Type: `'none' | 'all'`
+
+Use file hashes in the output filenames. Recommended for production web applications.
+
+##### outputPath
+
+Type: `string`
+
+Override `output.path` in webpack configuration. This setting is not recommended and exists for backwards compatibility.
+
+##### poll
+
+Type: `number`
+
+Override `watchOptions.poll` in webpack configuration. This setting is not recommended and exists for backwards
+compatibility.
+
+##### polyfills
+
+Type: `string`
+
+The polyfill file to use. Useful for supporting legacy browsers. e.g. `src/polyfills.ts`
+
+##### postcssConfig
+
+Type: `string`
+Manually set the PostCSS configuration file. By default, PostCSS will look for `postcss.config.js` in the directory.
+
+##### progress
+
+Type: `boolean`
+
+Display build progress in the terminal.
+
+##### runtimeChunk
+
+Type: `boolean`
+
+Add an additional chunk for the Webpack runtime. Defaults to `true` when `target === 'web'`.
+
+##### scripts
+
+Type: `string[]`
+
+External scripts that will be included before the main application entry.
+
+##### skipOverrides
+
+Type: `boolean`
+
+Do not add a `overrides` and `resolutions` entries to the generated package.json file. Only works in conjunction with `generatePackageJson` option.
+
+##### skipPackageManager
+
+Type: `boolean`
+
+Do not add a `packageManager` entry to the generated package.json file. Only works in conjunction with `generatePackageJson` option.
+
+##### skipTypeChecking
+
+Type: `boolean`
+
+Skip type checking. Default is `false`.
+
+**`Deprecated`**
+
+Use [`typeCheckOptions`](#typecheckoptions) instead. This option will be removed in Nx 24.
+
+##### typeCheckOptions
+
+Type: `boolean | { async: boolean }`
+
+Configure type checking during the build. Set to `true` to enable type checking with default options (async: true). Set to `false` to disable type checking entirely. Use `{ async: true }` to run type checking in a separate process without blocking the build. Use `{ async: false }` to run type checking synchronously. Default is `{ async: true }`.
+
+##### sourceMap
+
+Type: `boolean | 'hidden'`
+
+Generate source maps.
+
+##### ssr
+
+Type: `boolean`
+
+When `true`, `process.env.NODE_ENV` will be excluded from the bundle. Useful for building a web application to run in a
+Node environment.
+
+##### statsJson
+
+Type: `boolean`
+
+Generate a `stats.json` file which can be analyzed using tools such as `webpack-bundle-analyzer`.
+
+##### stylePreprocessorOptions
+
+Type: `object`
+
+Options for the style preprocessor. e.g. `{ "includePaths": [] }` for SASS.
+
+##### styles
+
+Type: `string[]`
+
+External stylesheets that will be included with the application.
+
+##### subresourceIntegrity
+
+Type: `boolean`
+
+Enables the use of subresource integrity validation.
+
+##### target
+
+Type: `string | string[]`
+
+Override the `target` option in webpack configuration. This setting is not recommended and exists for backwards
+compatibility.
+
+##### transformers
+
+Type: `TransformerEntry[]`
+
+List of TypeScript Compiler Transformers Plugins.
+
+##### vendorChunk
+
+Type: `boolean`
+
+Generate a separate vendor chunk for 3rd party packages.
+
+##### verbose
+
+Type: `boolean`
+
+Log additional information for debugging purposes.
+
+##### watch
+
+Type: `boolean`
+
+Watch for file changes.
+
+##### watchDependencies
+
+Type: `boolean`
+
+Watch for buildable dependencies and rebuild when they change. Default is `true`.
+
+#### Example
+
+```js
+const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
+const { join } = require('path');
+
+module.exports = {
+  output: {
+    path: join(__dirname, '../../dist/apps/demo'),
+  },
+  devServer: {
+    port: 4200,
+  },
+  plugins: [
+    new NxAppWebpackPlugin({
+      main: './src/main.ts',
+      tsConfig: './tsconfig.app.json',
+      index: './src/index.html',
+      styles: ['./src/styles.css'],
+      outputHashing: process.env['NODE_ENV'] === 'production' ? 'all' : 'none',
+      optimization: process.env['NODE_ENV'] === 'production',
+    }),
+  ],
+};
+```
+
+### NxReactWebpackPlugin
+
+This plugin adds React support, such as Fast Refresh, to your Webpack configuration.
+
+#### Example
+
+```js
+const { NxReactWebpackPlugin } = require('@nx/react/webpack-plugin');
+
+module.exports = {
+  // ...
+  plugins: [new NxReactWebpackPlugin()],
+};
+```
+
+## Nx-enhanced plugins
+
+Nx v24 removed the behavior of `composePlugins`, `withNx`, `withWeb`, and `withReact`.
+Their exports remain as inert stubs so existing configs load during migration.
+`composePlugins` no longer invokes custom callbacks.
+
+Use [`NxAppWebpackPlugin`](#nxappwebpackplugin) and [`NxReactWebpackPlugin`](#nxreactwebpackplugin) in a standard webpack config.
+Move custom callback behavior into that config or a local webpack plugin.
+Run `nx migrate` for per-project migration instructions.
+
+### withModuleFederation and withModuleFederationForSSR
+
+Nx v24 removed these helpers. To move an existing config onto the official `ModuleFederationPlugin`, follow [migrate from Nx Module Federation](/docs/kb/migrate-from-nx-module-federation) for React or [migrate Angular Module Federation](/docs/kb/migrate-angular-module-federation) for Angular. New React micro frontends use the [`@nx/react:consumer` and `@nx/react:provider`](/docs/kb/consumer-and-provider) generators.

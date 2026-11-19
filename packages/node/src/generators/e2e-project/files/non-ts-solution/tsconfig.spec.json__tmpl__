@@ -3,10 +3,10 @@
   "compilerOptions": {
     "outDir": "<%= offsetFromRoot %>dist/out-tsc",
     "module": "commonjs",
-    "types": ["jest", "node"]
+    "types": <%- testRunner === 'vitest' ? '["vitest/globals", "node"]' : '["jest", "node"]' %>
   },
   "include": [
-    "jest.config.ts",
+    "<%= testRunner === 'vitest' ? 'vitest.config.mts' : 'jest.config.ts' %>",
     "src/**/*.ts"
   ]
 }

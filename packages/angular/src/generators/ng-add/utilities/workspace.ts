@@ -15,14 +15,13 @@ import {
   getRootTsConfigPathInTree,
   initGenerator as jsInitGenerator,
 } from '@nx/js';
-import { deduceDefaultBase } from 'nx/src/utils/default-base';
 import { prettierVersion } from '@nx/js/internal';
-import { toNewFormat } from 'nx/src/adapter/angular-json';
 import { angularDevkitVersion, nxVersion } from '../../../utils/versions';
 import type { ProjectMigrator } from '../migrators';
 import type { GeneratorOptions } from '../schema';
 import type { WorkspaceRootFileTypesInfo } from './types';
 import { join } from 'path';
+import { deduceDefaultBase, toNewFormat } from '@nx/devkit/internal';
 
 export function validateWorkspace(tree: Tree): void {
   const errors: string[] = [];
@@ -190,9 +189,7 @@ export async function updateRootEsLintConfig(
   existingEsLintConfig: any | undefined,
   unitTestRunner?: string
 ): Promise<void> {
-  await lintInitGenerator(tree, {
-    addPlugin: false,
-  });
+  await lintInitGenerator(tree, {});
 
   if (!existingEsLintConfig) {
     // There was no eslint config in the root, so we set it up and use it as-is

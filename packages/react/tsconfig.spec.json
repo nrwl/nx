@@ -3,8 +3,9 @@
   "compilerOptions": {
     "outDir": "out-tsc/spec",
     "customConditions": ["@nx/nx-source"],
-    "types": ["jest", "node"],
-    "composite": true
+    "types": ["vitest/globals", "node"],
+    "composite": true,
+    "rootDir": "."
   },
   "include": [
     "**/*.spec.ts",

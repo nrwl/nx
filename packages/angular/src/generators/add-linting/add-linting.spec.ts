@@ -1,4 +1,4 @@
-import 'nx/src/internal-testing-utils/mock-project-graph';
+import '@nx/devkit/internal-testing-utils/mock-project-graph';
 import {
   ProjectConfiguration,
   Tree,
@@ -7,7 +7,17 @@ import {
   updateJson,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import * as linter from '@nx/eslint';
+import { mockCjsModule } from '@nx/devkit/internal-testing-utils';
+import { createRequire } from 'module';
+
+// `addLintingToProject` loads @nx/eslint through ensurePackage (`require`), so
+// the spy must live on the CJS channel.
+const cjsLinter = createRequire(import.meta.url)('@nx/eslint');
+const lintProjectGenerator = vi.fn(cjsLinter.lintProjectGenerator);
+mockCjsModule(import.meta.url, '@nx/eslint', {
+  ...cjsLinter,
+  lintProjectGenerator,
+});
 import { addLintingGenerator } from './add-linting';
 
 describe('addLinting generator', () => {
@@ -38,7 +48,68 @@ describe('addLinting generator', () => {
   });
 
   it('should invoke the lintProjectGenerator', async () => {
-    jest.spyOn(linter, 'lintProjectGenerator');
+    lintProjectGenerator.mockClear();
+
+    await addLintingGenerator(tree, {
+      linter: 'eslint',
+      prefix: 'myOrg',
+      projectName: appProjectName,
+      projectRoot: appProjectRoot,
+      skipFormat: true,
+    });
+
+    // Assert the arguments, not just the call: this is the only test that sees
+    // the `addLintingToProject` hop, and a key dropped there would leave every
+    // other suite green.
+    expect(lintProjectGenerator).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        project: appProjectName,
+        rootProject: false,
+        tsConfigPaths: [`${appProjectRoot}/tsconfig.app.json`],
+      })
+    );
+  });
+
+  it('should not set up ESLint for --linter=oxlint', async () => {
+    // `mockClear`: this suite has no `restoreMocks`, and `spyOn` on an
+    // already-spied property hands back the same mock — so without it the
+    // previous test's call is still recorded and this one fails on it.
+    lintProjectGenerator.mockClear();
+
+    await addLintingGenerator(tree, {
+      prefix: 'myOrg',
+      projectName: appProjectName,
+      projectRoot: appProjectRoot,
+      linter: 'oxlint',
+      skipFormat: true,
+    });
+
+    expect(lintProjectGenerator).not.toHaveBeenCalled();
+    // The angular-eslint install is the visible half — without the early return
+    // it lands on top of an Oxlint project. Both spellings: the flat-config
+    // path installs `angular-eslint`, the legacy path the scoped trio.
+    const { devDependencies } = readJson(tree, 'package.json');
+    for (const pkg of [
+      'angular-eslint',
+      '@angular-eslint/eslint-plugin',
+      '@angular-eslint/eslint-plugin-template',
+      '@angular-eslint/template-parser',
+      // Installed on both the flat and legacy paths, so it lands under this
+      // test's shape even though the two sets above are path-specific.
+      '@typescript-eslint/utils',
+    ]) {
+      expect(devDependencies ?? {}).not.toHaveProperty(pkg);
+    }
+  });
+
+  // `linter` has no schema default, so leaving it unset follows the workspace.
+  it('should set up oxlint when the workspace already uses it', async () => {
+    lintProjectGenerator.mockClear();
+    updateJson(tree, 'package.json', (json) => {
+      json.devDependencies = { ...json.devDependencies, oxlint: '^1.70.0' };
+      return json;
+    });
 
     await addLintingGenerator(tree, {
       prefix: 'myOrg',
@@ -47,12 +118,40 @@ describe('addLinting generator', () => {
       skipFormat: true,
     });
 
-    expect(linter.lintProjectGenerator).toHaveBeenCalled();
+    expect(lintProjectGenerator).not.toHaveBeenCalled();
+    expect(tree.exists('.oxlintrc.json')).toBe(true);
+    const plugins = (readJson(tree, 'nx.json').plugins ?? []).map((p) =>
+      typeof p === 'string' ? p : p.plugin
+    );
+    expect(plugins).toContain('@nx/oxlint');
+    // The one observable this generator alone controls. `addLintingToProject`
+    // resolves the linter again on its own, so the oxlint config and the plugin
+    // registration land whether or not the guard above saw a resolved value.
+    const { devDependencies } = readJson(tree, 'package.json');
+    expect(devDependencies ?? {}).not.toHaveProperty('angular-eslint');
+  });
+
+  // The oxlint arm passes `skipFormat: true` down to `@nx/oxlint`, so this
+  // generator owns the formatting. The early return must not skip it.
+  it('should still format when the linter is not eslint', async () => {
+    tree.write(`${appProjectRoot}/unformatted.json`, '{"a":1,   "b":2}');
+
+    await addLintingGenerator(tree, {
+      prefix: 'myOrg',
+      projectName: appProjectName,
+      projectRoot: appProjectRoot,
+      linter: 'oxlint',
+    });
+
+    expect(tree.read(`${appProjectRoot}/unformatted.json`, 'utf-8')).toBe(
+      '{ "a": 1, "b": 2 }\n'
+    );
   });
 
   it('should add the Angular specific EsLint devDependencies (eslintrc)', async () => {
     process.env.ESLINT_USE_FLAT_CONFIG = 'false';
     await addLintingGenerator(tree, {
+      linter: 'eslint',
       prefix: 'myOrg',
       projectName: appProjectName,
       projectRoot: appProjectRoot,
@@ -69,6 +168,7 @@ describe('addLinting generator', () => {
 
   it('should use flat config and install correct dependencies when using it', async () => {
     await addLintingGenerator(tree, {
+      linter: 'eslint',
       prefix: 'myOrg',
       projectName: appProjectName,
       projectRoot: appProjectRoot,
@@ -79,9 +179,56 @@ describe('addLinting generator', () => {
     expect(devDependencies['@typescript-eslint/utils']).toBe('^8.58.0');
   });
 
+  // A range spanning 20 and 21 with 21 installed still gets angular-eslint 20,
+  // so ESLint must stay on v9 with it.
+  it.each([
+    ['~20.3.0', undefined],
+    ['>=20.0.0 <22.0.0', '21.2.0'],
+  ])(
+    'should pin ESLint v9 when the workspace declares Angular %s (installed: %s)',
+    async (declared, installed) => {
+      updateJson(tree, 'package.json', (json) => ({
+        ...json,
+        dependencies: { ...json.dependencies, '@angular/core': declared },
+      }));
+      if (installed) {
+        tree.write(
+          'node_modules/@angular/core/package.json',
+          JSON.stringify({ name: '@angular/core', version: installed })
+        );
+      }
+
+      await addLintingGenerator(tree, {
+        linter: 'eslint',
+        prefix: 'myOrg',
+        projectName: appProjectName,
+        projectRoot: appProjectRoot,
+        skipFormat: true,
+      });
+
+      const { devDependencies } = readJson(tree, 'package.json');
+      expect(devDependencies['eslint']).toBe('^9.8.0');
+      expect(devDependencies['angular-eslint']).toBe('^20.3.0');
+    }
+  );
+
+  it('should install ESLint v10 when the workspace uses the latest Angular version', async () => {
+    await addLintingGenerator(tree, {
+      linter: 'eslint',
+      prefix: 'myOrg',
+      projectName: appProjectName,
+      projectRoot: appProjectRoot,
+      skipFormat: true,
+    });
+
+    const { devDependencies } = readJson(tree, 'package.json');
+    expect(devDependencies['eslint']).toBe('^10.0.0');
+  });
+
   it('should correctly generate the .eslintrc.json file', async () => {
     process.env.ESLINT_USE_FLAT_CONFIG = 'false';
     await addLintingGenerator(tree, {
+      linter: 'eslint',
       prefix: 'myOrg',
       projectName: appProjectName,
       projectRoot: appProjectRoot,
@@ -90,6 +237,122 @@ describe('addLinting generator', () => {
 
     const eslintConfig = readJson(tree, `${appProjectRoot}/.eslintrc.json`);
     expect(eslintConfig).toMatchSnapshot();
+  });
+
+  it('should set parserOptions.project in the .eslintrc.json file when typed linting is enabled', async () => {
+    process.env.ESLINT_USE_FLAT_CONFIG = 'false';
+    await addLintingGenerator(tree, {
+      linter: 'eslint',
+      prefix: 'myOrg',
+      projectName: appProjectName,
+      projectRoot: appProjectRoot,
+      skipFormat: true,
+      enableTypedLinting: true,
+    });
+
+    const eslintConfig = readJson(tree, `${appProjectRoot}/.eslintrc.json`);
+    const tsOverride = eslintConfig.overrides.find((o) =>
+      o.files.includes('*.ts')
+    );
+    expect(tsOverride.parserOptions).toEqual({
+      project: [`${appProjectRoot}/tsconfig.*?.json`],
+    });
+    expect(
+      tree.read(`${appProjectRoot}/.eslintrc.json`, 'utf-8')
+    ).not.toContain('projectService');
+  });
+
+  it('should carry over typed linting from an existing YAML config', async () => {
+    process.env.ESLINT_USE_FLAT_CONFIG = 'false';
+    // `findEslintFile` prefers `.eslintrc.yaml` over `.eslintrc.json`, so the
+    // carry-over check reads the YAML while the overrides are rewritten into the
+    // JSON that `lintProjectGenerator` creates.
+    tree.write(
+      `${appProjectRoot}/.eslintrc.yaml`,
+      `overrides:\n  - files: ['*.ts']\n    parserOptions:\n      project: ['${appProjectRoot}/tsconfig.*?.json']\n`
+    );
+
+    await addLintingGenerator(tree, {
+      linter: 'eslint',
+      prefix: 'myOrg',
+      projectName: appProjectName,
+      projectRoot: appProjectRoot,
+      skipFormat: true,
+    });
+
+    const eslintConfig = readJson(tree, `${appProjectRoot}/.eslintrc.json`);
+    const tsOverride = eslintConfig.overrides.find((o) =>
+      o.files.includes('*.ts')
+    );
+    expect(tsOverride.parserOptions).toEqual({
+      project: [`${appProjectRoot}/tsconfig.*?.json`],
+    });
+  });
+
+  it('should not add parserOptions.project when the existing config runs the project service', async () => {
+    // The project service needs no glob and typescript-eslint throws when one
+    // sits next to it, so there is nothing to carry over here.
+    process.env.ESLINT_USE_FLAT_CONFIG = 'false';
+    tree.write(
+      `${appProjectRoot}/.eslintrc.yaml`,
+      `overrides:\n  - files: ['*.ts']\n    parserOptions:\n      projectService: true\n`
+    );
+
+    await addLintingGenerator(tree, {
+      linter: 'eslint',
+      prefix: 'myOrg',
+      projectName: appProjectName,
+      projectRoot: appProjectRoot,
+      skipFormat: true,
+    });
+
+    const eslintConfig = readJson(tree, `${appProjectRoot}/.eslintrc.json`);
+    const tsOverride = eslintConfig.overrides.find((o) =>
+      o.files.includes('*.ts')
+    );
+    expect(tsOverride.parserOptions).toBeUndefined();
+  });
+
+  it('should not carry over parserOptions.project when the project service is also on', async () => {
+    // A top-level `parserOptions` survives the override rewrite, so re-emitting
+    // the glob below it would leave the project service and a `project` in
+    // effect together, which typescript-eslint rejects.
+    process.env.ESLINT_USE_FLAT_CONFIG = 'false';
+    tree.write(
+      `${appProjectRoot}/.eslintrc.yaml`,
+      `parserOptions:\n  projectService: true\noverrides:\n  - files: ['*.ts']\n    parserOptions:\n      project: ['${appProjectRoot}/tsconfig.*?.json']\n`
+    );
+
+    await addLintingGenerator(tree, {
+      linter: 'eslint',
+      prefix: 'myOrg',
+      projectName: appProjectName,
+      projectRoot: appProjectRoot,
+      skipFormat: true,
+    });
+
+    const eslintConfig = readJson(tree, `${appProjectRoot}/.eslintrc.json`);
+    const tsOverride = eslintConfig.overrides.find((o) =>
+      o.files.includes('*.ts')
+    );
+    expect(tsOverride.parserOptions).toBeUndefined();
+  });
+
+  it('should not set parserOptions in the .eslintrc.json file when typed linting is disabled', async () => {
+    process.env.ESLINT_USE_FLAT_CONFIG = 'false';
+    await addLintingGenerator(tree, {
+      linter: 'eslint',
+      prefix: 'myOrg',
+      projectName: appProjectName,
+      projectRoot: appProjectRoot,
+      skipFormat: true,
+    });
+
+    const eslintConfig = readJson(tree, `${appProjectRoot}/.eslintrc.json`);
+    const tsOverride = eslintConfig.overrides.find((o) =>
+      o.files.includes('*.ts')
+    );
+    expect(tsOverride.parserOptions).toBeUndefined();
   });
 
   it('should not touch the package.json when run with `--skipPackageJson`', async () => {
@@ -122,6 +385,7 @@ describe('addLinting generator', () => {
     });
 
     await addLintingGenerator(tree, {
+      linter: 'eslint',
       prefix: 'myOrg',
       projectName: 'lib1',
       projectRoot: 'libs/lib1',
@@ -133,7 +397,7 @@ describe('addLinting generator', () => {
       "import nx from "@nx/eslint-plugin";
       import baseConfig from "../../eslint.config.mjs";
 
-      export default [
+      const eslintConfig = [
           ...nx.configs["flat/angular"],
           ...nx.configs["flat/angular-template"],
           ...baseConfig,
@@ -186,12 +450,14 @@ describe('addLinting generator', () => {
               rules: {}
           }
       ];
+
+      export default eslintConfig;
       "
     `);
     expect(tree.read('eslint.config.mjs', 'utf-8')).toMatchInlineSnapshot(`
       "import nx from "@nx/eslint-plugin";
 
-      export default [
+      const eslintConfig = [
           ...nx.configs["flat/base"],
           ...nx.configs["flat/typescript"],
           ...nx.configs["flat/javascript"],
@@ -243,6 +509,8 @@ describe('addLinting generator', () => {
               rules: {}
           }
       ];
+
+      export default eslintConfig;
       "
     `);
   });
@@ -256,6 +524,7 @@ describe('addLinting generator', () => {
     });
 
     await addLintingGenerator(tree, {
+      linter: 'eslint',
       prefix: 'myOrg',
       projectName: 'lib1',
       projectRoot: 'libs/lib1',

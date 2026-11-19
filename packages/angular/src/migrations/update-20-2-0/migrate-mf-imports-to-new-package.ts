@@ -1,5 +1,9 @@
-import { createProjectGraphAsync, Tree } from '@nx/devkit';
-import { formatFiles, visitNotIgnoredFiles } from '@nx/devkit';
+import {
+  createProjectGraphAsync,
+  Tree,
+  formatFiles,
+  visitNotIgnoredFiles,
+} from '@nx/devkit';
 import { ast, query } from '@phenomnomnominal/tsquery';
 
 const MF_IMPORT_TO_UPDATE = 'ModuleFederationConfig';

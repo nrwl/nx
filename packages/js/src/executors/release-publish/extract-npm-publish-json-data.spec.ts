@@ -461,5 +461,352 @@ prepublishOnly from package-a
               }"
       `);
     });
+
+    it('should extract the relevant JSON data when a files[].path contains curly braces', () => {
+      // pnpm/npm publish emit the literal file path, so a template dir such as
+      // "templates/{{name}}" puts braces inside a string value. A brace-counting
+      // regex mismatches the top-level object here; the scanner must not (#36236).
+      const commandOutput = `{
+  "id": "repro-curly-braces@0.0.1",
+  "name": "repro-curly-braces",
+  "version": "0.0.1",
+  "size": 300,
+  "unpackedSize": 200,
+  "shasum": "cf4a6657f230ddf5375102bafc8f5184002a620a",
+  "integrity": "sha512-Qra/YIkAxVavs3tumB/svugHLY5CISujdeUcMd2FfvtVkjEEsVAEYbqZTq0ixnkvjVrLr27mAvH94GjjMKWzIg==",
+  "filename": "repro-curly-braces-0.0.1.tgz",
+  "files": [
+    {
+      "path": "package.json",
+      "size": 200,
+      "mode": 420
+    },
+    {
+      "path": "templates/{{name}}/file.txt",
+      "size": 6,
+      "mode": 420
+    }
+  ],
+  "entryCount": 2,
+  "bundled": []
+}`;
+      const res = extractNpmPublishJsonData(commandOutput);
+
+      expect(res.beforeJsonData).toMatchInlineSnapshot(`""`);
+      expect(res.jsonData).toMatchInlineSnapshot(`
+        {
+          "bundled": [],
+          "entryCount": 2,
+          "filename": "repro-curly-braces-0.0.1.tgz",
+          "files": [
+            {
+              "mode": 420,
+              "path": "package.json",
+              "size": 200,
+            },
+            {
+              "mode": 420,
+              "path": "templates/{{name}}/file.txt",
+              "size": 6,
+            },
+          ],
+          "id": "repro-curly-braces@0.0.1",
+          "integrity": "sha512-Qra/YIkAxVavs3tumB/svugHLY5CISujdeUcMd2FfvtVkjEEsVAEYbqZTq0ixnkvjVrLr27mAvH94GjjMKWzIg==",
+          "name": "repro-curly-braces",
+          "shasum": "cf4a6657f230ddf5375102bafc8f5184002a620a",
+          "size": 300,
+          "unpackedSize": 200,
+          "version": "0.0.1",
+        }
+      `);
+      expect(res.afterJsonData).toMatchInlineSnapshot(`""`);
+    });
+
+    it('should still extract the summary when surrounding output has unbalanced braces', () => {
+      // A lifecycle script can print arbitrary text: balanced brace pairs that are
+      // not JSON (the {{name}} in the echoed line) alongside a genuinely unmatched
+      // trailing '}'. Neither must swallow or corrupt the real summary object,
+      // whose files[].path also carries braces.
+      const commandOutput = `> repro@0.0.1 prepublishOnly
+> echo "generating {{name}} scaffold"
+
+generating {{name}} scaffold
+{
+  "id": "repro@0.0.1",
+  "name": "repro",
+  "version": "0.0.1",
+  "size": 300,
+  "unpackedSize": 200,
+  "shasum": "cf4a6657f230ddf5375102bafc8f5184002a620a",
+  "integrity": "sha512-Qra/YIkAxVavs3tumB/svugHLY5CISujdeUcMd2FfvtVkjEEsVAEYbqZTq0ixnkvjVrLr27mAvH94GjjMKWzIg==",
+  "filename": "repro-0.0.1.tgz",
+  "files": [
+    {
+      "path": "templates/{{name}}/file.txt",
+      "size": 6,
+      "mode": 420
+    }
+  ],
+  "entryCount": 1,
+  "bundled": []
+}
+done }`;
+      const res = extractNpmPublishJsonData(commandOutput);
+
+      expect(res.beforeJsonData).toMatchInlineSnapshot(`
+        "> repro@0.0.1 prepublishOnly
+        > echo "generating {{name}} scaffold"
+
+        generating {{name}} scaffold
+        "
+      `);
+      expect(res.jsonData).toMatchInlineSnapshot(`
+        {
+          "bundled": [],
+          "entryCount": 1,
+          "filename": "repro-0.0.1.tgz",
+          "files": [
+            {
+              "mode": 420,
+              "path": "templates/{{name}}/file.txt",
+              "size": 6,
+            },
+          ],
+          "id": "repro@0.0.1",
+          "integrity": "sha512-Qra/YIkAxVavs3tumB/svugHLY5CISujdeUcMd2FfvtVkjEEsVAEYbqZTq0ixnkvjVrLr27mAvH94GjjMKWzIg==",
+          "name": "repro",
+          "shasum": "cf4a6657f230ddf5375102bafc8f5184002a620a",
+          "size": 300,
+          "unpackedSize": 200,
+          "version": "0.0.1",
+        }
+      `);
+      expect(res.afterJsonData).toMatchInlineSnapshot(`
+        "
+        done }"
+      `);
+    });
+
+    it('should still extract the summary when preceding output has an unpaired quote', () => {
+      // Lifecycle output before the JSON can carry a lone '"' (an inch mark here).
+      // Quote tracking must not leak from that plain text onto the summary and
+      // hide its braces.
+      const commandOutput = `> repro@0.0.1 prepublishOnly
+> echo scaffold
+
+generated a 12" template
+{
+  "id": "repro@0.0.1",
+  "name": "repro",
+  "version": "0.0.1",
+  "size": 300,
+  "unpackedSize": 200,
+  "shasum": "cf4a6657f230ddf5375102bafc8f5184002a620a",
+  "integrity": "sha512-Qra/YIkAxVavs3tumB/svugHLY5CISujdeUcMd2FfvtVkjEEsVAEYbqZTq0ixnkvjVrLr27mAvH94GjjMKWzIg==",
+  "filename": "repro-0.0.1.tgz",
+  "files": [
+    {
+      "path": "package.json",
+      "size": 200,
+      "mode": 420
+    }
+  ],
+  "entryCount": 1,
+  "bundled": []
+}`;
+      const res = extractNpmPublishJsonData(commandOutput);
+
+      expect(res.beforeJsonData).toMatchInlineSnapshot(`
+        "> repro@0.0.1 prepublishOnly
+        > echo scaffold
+
+        generated a 12" template
+        "
+      `);
+      expect(res.jsonData).toMatchInlineSnapshot(`
+        {
+          "bundled": [],
+          "entryCount": 1,
+          "filename": "repro-0.0.1.tgz",
+          "files": [
+            {
+              "mode": 420,
+              "path": "package.json",
+              "size": 200,
+            },
+          ],
+          "id": "repro@0.0.1",
+          "integrity": "sha512-Qra/YIkAxVavs3tumB/svugHLY5CISujdeUcMd2FfvtVkjEEsVAEYbqZTq0ixnkvjVrLr27mAvH94GjjMKWzIg==",
+          "name": "repro",
+          "shasum": "cf4a6657f230ddf5375102bafc8f5184002a620a",
+          "size": 300,
+          "unpackedSize": 200,
+          "version": "0.0.1",
+        }
+      `);
+      expect(res.afterJsonData).toMatchInlineSnapshot(`""`);
+    });
+
+    it('should extract the summary when a files[].path uses backslash-escaped separators', () => {
+      // A Windows-style path escapes its separators as \\ and can include braces;
+      // the escape handling must not mis-terminate the surrounding string value.
+      const commandOutput = `{
+  "id": "repro@0.0.1",
+  "name": "repro",
+  "version": "0.0.1",
+  "size": 300,
+  "unpackedSize": 200,
+  "shasum": "cf4a6657f230ddf5375102bafc8f5184002a620a",
+  "integrity": "sha512-Qra/YIkAxVavs3tumB/svugHLY5CISujdeUcMd2FfvtVkjEEsVAEYbqZTq0ixnkvjVrLr27mAvH94GjjMKWzIg==",
+  "filename": "repro-0.0.1.tgz",
+  "files": [
+    {
+      "path": "templates\\\\{{name}}\\\\file.txt",
+      "size": 6,
+      "mode": 420
+    }
+  ],
+  "entryCount": 1,
+  "bundled": []
+}`;
+      const res = extractNpmPublishJsonData(commandOutput);
+
+      expect(res.beforeJsonData).toMatchInlineSnapshot(`""`);
+      expect(res.jsonData).toMatchInlineSnapshot(`
+        {
+          "bundled": [],
+          "entryCount": 1,
+          "filename": "repro-0.0.1.tgz",
+          "files": [
+            {
+              "mode": 420,
+              "path": "templates\\{{name}}\\file.txt",
+              "size": 6,
+            },
+          ],
+          "id": "repro@0.0.1",
+          "integrity": "sha512-Qra/YIkAxVavs3tumB/svugHLY5CISujdeUcMd2FfvtVkjEEsVAEYbqZTq0ixnkvjVrLr27mAvH94GjjMKWzIg==",
+          "name": "repro",
+          "shasum": "cf4a6657f230ddf5375102bafc8f5184002a620a",
+          "size": 300,
+          "unpackedSize": 200,
+          "version": "0.0.1",
+        }
+      `);
+      expect(res.afterJsonData).toMatchInlineSnapshot(`""`);
+    });
+
+    it('should still extract the summary when lifecycle output contains comment-like text or globs', () => {
+      // Lifecycle scripts print arbitrary text, including paths and globs such as
+      // "dist/*.js" or a "// build" line. These are not JSON comments and must not
+      // hide the summary that follows.
+      const commandOutput = `> repro@0.0.1 prepublishOnly
+> node ./scripts/build.js
+
+emitting dist/*.js and dist/**/*.d.ts
+// build complete
+{
+  "id": "repro@0.0.1",
+  "name": "repro",
+  "version": "0.0.1",
+  "size": 300,
+  "unpackedSize": 200,
+  "shasum": "cf4a6657f230ddf5375102bafc8f5184002a620a",
+  "integrity": "sha512-Qra/YIkAxVavs3tumB/svugHLY5CISujdeUcMd2FfvtVkjEEsVAEYbqZTq0ixnkvjVrLr27mAvH94GjjMKWzIg==",
+  "filename": "repro-0.0.1.tgz",
+  "files": [
+    {
+      "path": "package.json",
+      "size": 200,
+      "mode": 420
+    }
+  ],
+  "entryCount": 1,
+  "bundled": []
+}`;
+      const res = extractNpmPublishJsonData(commandOutput);
+
+      expect(res.beforeJsonData).toMatchInlineSnapshot(`
+        "> repro@0.0.1 prepublishOnly
+        > node ./scripts/build.js
+
+        emitting dist/*.js and dist/**/*.d.ts
+        // build complete
+        "
+      `);
+      expect(res.jsonData).toMatchInlineSnapshot(`
+        {
+          "bundled": [],
+          "entryCount": 1,
+          "filename": "repro-0.0.1.tgz",
+          "files": [
+            {
+              "mode": 420,
+              "path": "package.json",
+              "size": 200,
+            },
+          ],
+          "id": "repro@0.0.1",
+          "integrity": "sha512-Qra/YIkAxVavs3tumB/svugHLY5CISujdeUcMd2FfvtVkjEEsVAEYbqZTq0ixnkvjVrLr27mAvH94GjjMKWzIg==",
+          "name": "repro",
+          "shasum": "cf4a6657f230ddf5375102bafc8f5184002a620a",
+          "size": 300,
+          "unpackedSize": 200,
+          "version": "0.0.1",
+        }
+      `);
+      expect(res.afterJsonData).toMatchInlineSnapshot(`""`);
+    });
+
+    it('should unwrap the nested summary when a files[].path contains curly braces', () => {
+      // Combines the npm >= 11.16 / pnpm nesting under the package name with a
+      // brace-carrying file path, exercising the unwrap and scanner together.
+      const commandOutput = `{
+  "@scope/repro": {
+    "id": "@scope/repro@0.0.1",
+    "name": "@scope/repro",
+    "version": "0.0.1",
+    "size": 300,
+    "unpackedSize": 200,
+    "shasum": "cf4a6657f230ddf5375102bafc8f5184002a620a",
+    "integrity": "sha512-Qra/YIkAxVavs3tumB/svugHLY5CISujdeUcMd2FfvtVkjEEsVAEYbqZTq0ixnkvjVrLr27mAvH94GjjMKWzIg==",
+    "filename": "scope-repro-0.0.1.tgz",
+    "files": [
+      {
+        "path": "templates/{{name}}/file.txt",
+        "size": 6,
+        "mode": 420
+      }
+    ],
+    "entryCount": 1,
+    "bundled": []
+  }
+}`;
+      const res = extractNpmPublishJsonData(commandOutput);
+
+      expect(res.beforeJsonData).toMatchInlineSnapshot(`""`);
+      expect(res.jsonData).toMatchInlineSnapshot(`
+        {
+          "bundled": [],
+          "entryCount": 1,
+          "filename": "scope-repro-0.0.1.tgz",
+          "files": [
+            {
+              "mode": 420,
+              "path": "templates/{{name}}/file.txt",
+              "size": 6,
+            },
+          ],
+          "id": "@scope/repro@0.0.1",
+          "integrity": "sha512-Qra/YIkAxVavs3tumB/svugHLY5CISujdeUcMd2FfvtVkjEEsVAEYbqZTq0ixnkvjVrLr27mAvH94GjjMKWzIg==",
+          "name": "@scope/repro",
+          "shasum": "cf4a6657f230ddf5375102bafc8f5184002a620a",
+          "size": 300,
+          "unpackedSize": 200,
+          "version": "0.0.1",
+        }
+      `);
+      expect(res.afterJsonData).toMatchInlineSnapshot(`""`);
+    });
   });
 });

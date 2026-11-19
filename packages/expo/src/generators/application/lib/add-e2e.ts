@@ -1,6 +1,7 @@
 import {
   getE2EWebServerInfo,
   readTargetDefaultsForTarget,
+  type PackageJson,
 } from '@nx/devkit/internal';
 import {
   addProjectConfiguration,
@@ -11,8 +12,6 @@ import {
   Tree,
   writeJson,
 } from '@nx/devkit';
-import type { PackageJson } from 'nx/src/utils/package-json';
-import { hasExpoPlugin } from '../../../utils/has-expo-plugin';
 import { nxVersion } from '../../../utils/versions';
 import { NormalizedSchema } from './normalize-options';
 
@@ -20,24 +19,10 @@ export async function addE2e(
   tree: Tree,
   options: NormalizedSchema
 ): Promise<GeneratorCallback> {
-  const hasPlugin = hasExpoPlugin(tree);
-  if (!hasPlugin) {
-    const { webStaticServeGenerator } = ensurePackage<typeof import('@nx/web')>(
-      '@nx/web',
-      nxVersion
-    );
-
-    await webStaticServeGenerator(tree, {
-      buildTarget: `${options.projectName}:export`,
-      targetName: 'serve-static',
-    });
-  }
-
   const e2eWebServerInfo = await getExpoE2EWebServerInfo(
     tree,
     options.projectName,
-    joinPathFragments(options.appProjectRoot, 'app.json'),
-    options.addPlugin
+    joinPathFragments(options.appProjectRoot, 'app.json')
   );
 
   switch (options.e2eTestRunner) {
@@ -136,11 +121,12 @@ export async function addE2e(
         directory: 'src',
         js: false,
         linter: options.linter,
-        setParserOptionsProject: options.setParserOptionsProject,
-        webServerCommand: e2eWebServerInfo.e2eCiWebServerCommand,
-        webServerAddress: e2eWebServerInfo.e2eCiBaseUrl,
+        enableTypedLinting: options.enableTypedLinting,
+        webServerCommand: e2eWebServerInfo.e2eWebServerCommand,
+        webServerAddress: e2eWebServerInfo.e2eWebServerAddress,
+        ciWebServerCommand: e2eWebServerInfo.e2eCiWebServerCommand,
+        ciWebServerAddress: e2eWebServerInfo.e2eCiBaseUrl,
         rootProject: options.rootProject,
-        addPlugin: options.addPlugin,
       });
 
       return e2eTask;
@@ -157,7 +143,6 @@ export async function addE2e(
         appDisplayName: options.displayName,
         appName: options.simpleName,
         framework: 'expo',
-        setParserOptionsProject: options.setParserOptionsProject,
         skipFormat: true,
       });
     case 'none':
@@ -169,11 +154,10 @@ export async function addE2e(
 async function getExpoE2EWebServerInfo(
   tree: Tree,
   projectName: string,
-  configFilePath: string,
-  isPluginBeingAdded: boolean
+  configFilePath: string
 ) {
   const nxJson = readNxJson(tree);
-  let e2ePort = isPluginBeingAdded ? 8081 : 4200;
+  let e2ePort = 8081;
   const serveTargetOptions = readTargetDefaultsForTarget(
     'serve',
     nxJson.targetDefaults
@@ -183,7 +167,7 @@ async function getExpoE2EWebServerInfo(
     e2ePort = serveTargetOptions.port;
   }
 
-  return getE2EWebServerInfo(
+  const info = await getE2EWebServerInfo(
     tree,
     projectName,
     {
@@ -198,7 +182,13 @@ async function getExpoE2EWebServerInfo(
       defaultE2EWebServerAddress: `http://localhost:${e2ePort}`,
       defaultE2ECiBaseUrl: 'http://localhost:4200',
       defaultE2EPort: e2ePort,
-    },
-    isPluginBeingAdded
+    }
   );
+
+  // The plugin infers no serve-static target, so CI runs the dev server
+  return {
+    ...info,
+    e2eCiWebServerCommand: info.e2eWebServerCommand,
+    e2eCiBaseUrl: info.e2eWebServerAddress,
+  };
 }

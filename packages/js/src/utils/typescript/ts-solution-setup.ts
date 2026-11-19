@@ -12,14 +12,14 @@ import {
 } from '@nx/devkit';
 import { existsSync } from 'node:fs';
 import { basename, dirname, join } from 'node:path/posix';
-import { FsTree } from 'nx/src/generators/tree';
+import { FsTree } from '@nx/devkit/internal';
 import {
   getPackageManagerWorkspacesPatterns,
   getProjectPackageManagerWorkspaceState,
   isUsingPackageManagerWorkspaces,
 } from '../package-manager-workspaces';
 import { getNeededCompilerOptionOverrides } from './configuration';
-import type { JsonInput } from 'nx/src/native';
+import type { JsonInput } from '@nx/devkit/internal';
 
 export const TS_SOLUTION_SETUP_TSCONFIG_INPUT: JsonInput = {
   json: '{workspaceRoot}/tsconfig.json',
@@ -40,22 +40,10 @@ export function isUsingTypeScriptPlugin(tree: Tree): boolean {
 
 export function shouldConfigureTsSolutionSetup(
   tree: Tree,
-  addPlugins: boolean,
   addTsPlugin?: boolean
 ): boolean {
   if (addTsPlugin !== undefined) {
     return addTsPlugin;
-  }
-
-  if (addPlugins === undefined) {
-    const nxJson = readNxJson(tree);
-    addPlugins =
-      process.env.NX_ADD_PLUGINS !== 'false' &&
-      nxJson.useInferencePlugins !== false;
-  }
-
-  if (!addPlugins) {
-    return false;
   }
 
   if (!isUsingPackageManagerWorkspaces(tree)) {

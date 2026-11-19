@@ -1,6 +1,6 @@
 import { Tree, readJson } from '@nx/devkit';
-import { createTreeWithEmptyWorkspace } from 'nx/src/devkit-testing-exports';
 import { applicationGenerator } from '../application/application';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 
 describe('app', () => {
   let tree: Tree;
@@ -24,6 +24,27 @@ describe('app', () => {
     expect(tree.exists(`${name}/tsconfig.server.json`)).toBeTruthy();
     expect(projectConfig.targets['build-custom-server']).toBeTruthy();
     expect(projectConfig.targets['serve-custom-server']).toBeTruthy();
+  });
+
+  it('should wait for the custom server to report it is ready', async () => {
+    const name = uniq('custom-server-ready');
+    await applicationGenerator(tree, {
+      directory: name,
+      style: 'css',
+      customServer: true,
+    });
+
+    const serve = readJson(tree, `${name}/project.json`).targets[
+      'serve-custom-server'
+    ];
+    expect(serve.continuous).toBe(true);
+    expect(serve.readyWhen).toEqual({ signal: true });
+    expect(tree.read(`${name}/server/main.ts`, 'utf-8')).toContain(
+      'emitReadySignal(server)'
+    );
+    expect(
+      readJson(tree, 'package.json').devDependencies['@nx/js']
+    ).toBeDefined();
   });
 
   it('should create a custom server with swc', async () => {

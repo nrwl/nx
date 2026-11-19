@@ -4,62 +4,32 @@ import * as jsoncEslintParser from 'jsonc-eslint-parser';
 export default [
   ...baseConfig,
   {
-    files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
+    // The import-boundary side of this rule (utils/output must be reached
+    // through run/agent-output) lives in this package's .oxlintrc.json.
+    files: ['src/command-line/migrate/run/**/*.ts'],
     rules: {
-      'no-restricted-imports': [
+      // console writes the two streams the agent reads, with nothing in
+      // between; see the utils/output restriction in .oxlintrc.json.
+      'no-console': 'error',
+      'no-restricted-syntax': [
         'error',
         {
-          paths: [
-            {
-              name: 'fs-extra',
-              message:
-                'Please use equivalent utilities from `node:fs` instead.',
-            },
-            {
-              name: 'chalk',
-              message:
-                'Please use `picocolors` instead. For an orange color, import `orange` from `utils/output`.',
-            },
-          ],
-          patterns: [
-            {
-              group: ['**/devkit-exports'],
-              message: 'Do not import from devkit-exports from the nx package',
-            },
-          ],
+          // Both spellings: `process.stdout.write(...)` and a `stdout` (or
+          // `stderr`) pulled off `process`/`node:process` and written to.
+          selector:
+            "MemberExpression[object.object.name='process'][object.property.name=/^(stdout|stderr)$/][property.name='write'], MemberExpression[object.name=/^(stdout|stderr)$/][property.name='write']",
+          message:
+            'Emit blocks through run/agent-output rather than writing to a stream directly, so framing and escaping stay in one place.',
+        },
+        {
+          selector:
+            'ImportDeclaration[source.value=/^(node:)?process$/] ImportSpecifier[imported.name=/^(stdout|stderr)$/]',
+          message:
+            'Importing a stream here is the same bypass as writing to process.stdout: go through run/agent-output.',
         },
       ],
     },
-  },
-  {
-    files: ['**/*.ts'],
-    rules: {
-      '@typescript-eslint/no-restricted-imports': [
-        'error',
-        {
-          paths: [
-            {
-              name: 'typescript',
-              message:
-                'TypeScript is an optional dependency for Nx. If you need to use it, make sure its installed first with ensureTypescript.',
-              allowTypeImports: true,
-            },
-          ],
-          patterns: [
-            {
-              group: ['nx/*'],
-              message: "Circular import in 'nx' found. Use relative path.",
-            },
-            {
-              group: ['**/native-bindings', '**/native-bindings.js'],
-              message:
-                'Direct imports from native-bindings.js are not allowed. Import from index.js instead.',
-            },
-          ],
-        },
-      ],
-    },
-    ignores: ['**/*.spec.ts'],
+    ignores: ['**/*.spec.ts', '**/run/agent-output.ts'],
   },
   {
     files: ['./package.json', './executors.json', './migrations.json'],
@@ -76,28 +46,16 @@ export default [
     },
   },
   {
+    // The builtins-only import boundary lives in this package's
+    // .oxlintrc.json; this covers the require() spelling.
     files: ['nxw.ts'],
     rules: {
-      '@typescript-eslint/no-restricted-imports': [
-        'error',
-        {
-          patterns: [
-            {
-              group: ['*', '!fs'],
-              message:
-                'The Nx wrapper is ran before packages are installed. It should only import node builtins.',
-              allowTypeImports: true,
-            },
-          ],
-        },
-      ],
       'no-restricted-modules': [
         'error',
         {
           patterns: ['*', '!fs', '!path', '!child_process', '!node:*'],
         },
       ],
-      'no-restricted-imports': 'off',
     },
   },
   {
@@ -126,6 +84,7 @@ export default [
             'events',
             'process',
             'prettier',
+            'oxfmt',
             'util',
             '@nx/nx-darwin-x64',
             '@nx/nx-darwin-arm64',
@@ -153,6 +112,6 @@ export default [
     },
   },
   {
-    ignores: ['**/__fixtures__/**/*', 'dist'],
+    ignores: ['**/__fixtures__/**/*', 'dist', 'native-packages/**/*'],
   },
 ];

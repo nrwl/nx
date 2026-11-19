@@ -36,5 +36,7 @@ export function processRunOptions(
     delete options[key];
   }
 
-  options.args = args;
+  if (args.length > 0) {
+    options.args = args;
+  }
 }

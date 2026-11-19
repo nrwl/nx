@@ -32,7 +32,7 @@ interface PnpmBehaviorRow {
   // Inclusive lower bound; the first row whose bound is <= the version wins
   // when iterating newest-bound-first.
   minVersion: string;
-  major: 10 | 11;
+  major: 10 | 11 | 12;
   // v10 is hardcoded strict; v11 defaults loose with optional auto-strict.
   strictMode: 'always' | 'default-loose';
   // >=11.0.4: window explicitly set on any surface auto-enables strict.
@@ -43,6 +43,14 @@ interface PnpmBehaviorRow {
 
 // Ordered newest-bound-first so the first matching row applies.
 const PNPM_BEHAVIOR_ROWS: PnpmBehaviorRow[] = [
+  {
+    minVersion: '12.0.0',
+    major: 12,
+    strictMode: 'default-loose',
+    strictAutoOnWhenExplicit: true,
+    excludeGrammar: 'v2-globs-unions',
+    writesExcludes: true,
+  },
   {
     minVersion: '11.1.3',
     major: 11,
@@ -133,18 +141,29 @@ function readPnpmConfigList(root: string): Record<string, unknown> | null {
   }
 }
 
-// Extracts the cooldown keys from pnpm's reported config. pnpm reports the
-// kebab-case keys; the exclude list comes back as a JSON array (set in a yaml
-// surface) or a comma-joined string (set via .npmrc / env).
+// Extracts the cooldown keys from pnpm's reported config. pnpm 11 reports them
+// camelCase; pnpm 10 reported them kebab-case, so read both forms. The exclude
+// list comes back as a JSON array (set in a yaml surface) or a comma-joined
+// string (set via .npmrc / env).
 function parseCooldownConfig(
   config: Record<string, unknown>
 ): PnpmCooldownConfig {
+  const read = (camelKey: string, kebabKey: string): unknown =>
+    config[camelKey] ?? config[kebabKey];
   return {
-    windowMinutes: toNumber(config['minimum-release-age']) ?? undefined,
-    excludes: parseExcludeValue(config['minimum-release-age-exclude']),
-    strictExplicit: toBoolean(config['minimum-release-age-strict']),
+    windowMinutes:
+      toNumber(read('minimumReleaseAge', 'minimum-release-age')) ?? undefined,
+    excludes: parseExcludeValue(
+      read('minimumReleaseAgeExclude', 'minimum-release-age-exclude')
+    ),
+    strictExplicit: toBoolean(
+      read('minimumReleaseAgeStrict', 'minimum-release-age-strict')
+    ),
     ignoreMissingTimeExplicit: toBoolean(
-      config['minimum-release-age-ignore-missing-time']
+      read(
+        'minimumReleaseAgeIgnoreMissingTime',
+        'minimum-release-age-ignore-missing-time'
+      )
     ),
   };
 }
@@ -187,7 +206,7 @@ export async function readPnpmPolicy(
 ): Promise<MinReleaseAgePolicyReadResult> {
   // A pnpm major newer than the table knows can behave differently; defer to a
   // real install rather than guessing.
-  if (gte(pmVersion, '12.0.0')) {
+  if (gte(pmVersion, '13.0.0')) {
     return {
       outcome: 'ambiguous',
       reason: `pnpm ${pmVersion} is newer than the known cooldown behavior table.`,
@@ -216,14 +235,14 @@ export async function readPnpmPolicy(
   } = parseCooldownConfig(config);
 
   // An explicitly configured window (from whatever surface pnpm honors) wins;
-  // otherwise v11 falls back to its built-in 1440-minute (1 day) default, while
-  // v10 has no default (no cooldown).
+  // otherwise v11 and v12 fall back to the built-in 1440-minute (1 day) default,
+  // while v10 has no default (no cooldown).
   let windowMinutes: number;
   let windowExplicit: boolean;
   if (explicitWindow !== undefined) {
     windowMinutes = explicitWindow;
     windowExplicit = true;
-  } else if (row.major === 11) {
+  } else if (row.major >= 11) {
     windowMinutes = 1440;
     windowExplicit = false;
   } else {
@@ -240,15 +259,15 @@ export async function readPnpmPolicy(
   const sourceDescription = `pnpm minimumReleaseAge (${windowMinutes} min)`;
 
   const strict = resolveStrict(row, strictExplicit, windowExplicit);
-  // v10 always errors on missing time; v11 defaults to skip unless a surface
-  // explicitly disabled it.
+  // v10 always errors on missing time; v11 and above default to skip unless a
+  // surface explicitly disabled it.
   const ignoreMissingTime =
-    row.major === 11 ? (ignoreMissingTimeExplicit ?? true) : false;
+    row.major >= 11 ? (ignoreMissingTimeExplicit ?? true) : false;
   const behavior: PmMinReleaseAgeBehavior = {
     packageManager: 'pnpm',
     strict,
-    // Loose fallback only exists on v11 when strict is off.
-    looseFallback: row.major === 11 && !strict,
+    // Loose fallback only exists from v11 onwards when strict is off.
+    looseFallback: row.major >= 11 && !strict,
     writesExcludes: row.writesExcludes,
     missingTimeMap:
       row.major === 10 ? 'error' : ignoreMissingTime ? 'skip' : 'error',
@@ -441,7 +460,7 @@ export function pickPnpmVersion(
 
   const wholeMapMissing = metadata.time === null;
   if (wholeMapMissing && behavior.missingTimeMap === 'error') {
-    throw missingTime(metadata, policy);
+    throw missingTime(metadata);
   }
 
   const type = classifySpec(spec);
@@ -472,7 +491,7 @@ function pickExact(
   behavior: PnpmBehavior
 ): PickOutcome {
   const unconstrained = spec;
-  if (mature(metadata, policy, spec, behavior)) {
+  if (mature(metadata, policy, spec)) {
     return { version: spec, unconstrained };
   }
   if (behavior.looseFallback) {
@@ -493,12 +512,12 @@ function pickTag(
     throw violation(metadata, policy, spec, 'tag', []);
   }
   const unconstrained = tagTarget;
-  if (mature(metadata, policy, tagTarget, behavior)) {
+  if (mature(metadata, policy, tagTarget)) {
     return { version: tagTarget, unconstrained };
   }
 
   const degraded = degradeTagToCompliant(tagTarget, metadata, (v) =>
-    mature(metadata, policy, v, behavior)
+    mature(metadata, policy, v)
   );
   if (degraded) {
     return { version: degraded, unconstrained };
@@ -521,7 +540,7 @@ function pickRange(
   behavior: PnpmBehavior,
   unconstrained: string
 ): PickOutcome {
-  const matureInRange = matureVersions(metadata, policy, behavior);
+  const matureInRange = matureVersions(metadata, policy);
   const newest = maxSatisfying(matureInRange, spec, {
     includePrerelease: false,
   });
@@ -549,10 +568,9 @@ function pickRange(
 
 function matureVersions(
   metadata: RegistryMetadata,
-  policy: MinReleaseAgePolicy,
-  behavior: PnpmBehavior
+  policy: MinReleaseAgePolicy
 ): string[] {
-  return metadata.versions.filter((v) => mature(metadata, policy, v, behavior));
+  return metadata.versions.filter((v) => mature(metadata, policy, v));
 }
 
 // pnpm blocks a version whose individual time entry is missing (treated too
@@ -560,8 +578,7 @@ function matureVersions(
 function mature(
   metadata: RegistryMetadata,
   policy: MinReleaseAgePolicy,
-  version: string,
-  behavior: PnpmBehavior
+  version: string
 ): boolean {
   if (policy.isExcluded(metadata.name, version)) {
     return true;
@@ -683,10 +700,7 @@ function failOnImmatureDetail(
   );
 }
 
-function missingTime(
-  metadata: RegistryMetadata,
-  policy: MinReleaseAgePolicy
-): MinReleaseAgeViolationError {
+function missingTime(metadata: RegistryMetadata): MinReleaseAgeViolationError {
   return new MinReleaseAgeViolationError({
     packageManager: 'pnpm',
     packageName: metadata.name,

@@ -29,7 +29,6 @@ export default [
             'nx',
             '@nx/jest',
             '@nx/rollup',
-            '@nx/web',
             '@nx/webpack',
             '@nx/cypress',
             '@nx/playwright',
@@ -37,33 +36,22 @@ export default [
             'typescript',
             'eslint',
             'expo',
+            // Resolved from the @expo/cli that `expo` runs
+            '@expo/env',
             'react',
             '@expo/cli',
             'eas-cli',
             'util',
+            // resolved dynamically (per-app) in plugins/with-nx-metro.ts and
+            // plugins/metro-resolver.ts
+            'metro-config',
+            'metro-resolver',
           ],
         },
       ],
     },
     languageOptions: {
       parser: jsoncEslintParser,
-    },
-  },
-  {
-    files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
-    rules: {
-      'no-restricted-imports': [
-        'error',
-        {
-          name: 'chalk',
-          message:
-            'Please use `picocolors` in place of `chalk` for rendering terminal colors',
-        },
-        {
-          name: 'fs-extra',
-          message: 'Please use equivalent utilities from `node:fs` instead.',
-        },
-      ],
     },
   },
 ];

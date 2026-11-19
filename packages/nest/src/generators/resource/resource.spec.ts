@@ -3,7 +3,7 @@ import { createTreeWithNestApplication } from '../utils/testing';
 import { resourceGenerator } from './resource';
 
 // TODO (nicolas) fix the tests current fails with Error: spawn /bin/sh ENOENT)... Also fails on master from utils/run-nest-schematic.spec.ts
-xdescribe('resource generator', () => {
+describe.skip('resource generator', () => {
   let tree: Tree;
 
   beforeEach(() => {

@@ -12,9 +12,8 @@ use napi::{Status, bindgen_prelude::Unknown};
 
 #[cfg(not(test))]
 use crate::native::ide::nx_console::messaging::NxConsoleMessageConnection;
-#[cfg(not(test))]
-use crate::native::logger::enable_logger;
-use crate::native::pseudo_terminal::pseudo_terminal::{ParserArc, WriterArc};
+use crate::native::pseudo_terminal::pseudo_terminal::{MasterArc, ParserArc, WriterArc};
+use crate::native::tasks::running_tasks_service::TaskReadiness;
 use crate::native::tasks::types::{Task, TaskGraph, TaskResult};
 
 #[cfg(not(test))]
@@ -323,6 +322,15 @@ fn with_shared_app<R>(shared: &SharedAppInstance, f: impl FnOnce(&mut dyn TuiApp
     f(&mut *guard)
 }
 
+/// Makes the first read of env vars that dependencies cache, so it happens on the
+/// JS thread: made first on a worker, it races JS adding a variable. Module load is
+/// too early, before root `.env` files apply.
+fn prime_env_caches() {
+    let _ = &*colored::control::SHOULD_COLORIZE;
+    let _ = std::backtrace::Backtrace::capture();
+    crossterm::style::Colored::ansi_color_disabled_memoized();
+}
+
 #[napi]
 #[derive(Clone)]
 pub struct AppLifeCycle {
@@ -357,6 +365,8 @@ impl AppLifeCycle {
         title_text: String,
         workspace_root: String,
         task_graph: TaskGraph,
+        ready_dependencies: std::collections::HashMap<String, Vec<String>>,
+        is_cloud_enabled: Option<bool>,
     ) -> Self {
         // Get the target names from nx_args.targets
         let rust_tui_cli_args = tui_cli_args.into();
@@ -368,7 +378,7 @@ impl AppLifeCycle {
         let tasks = tasks.into_iter().collect();
 
         // Create shared state first - this is the same regardless of mode
-        let shared_state = Arc::new(Mutex::new(TuiState::new(
+        let mut state = TuiState::new(
             tasks,
             initiating_tasks,
             run_mode,
@@ -378,7 +388,10 @@ impl AppLifeCycle {
             task_graph,
             std::collections::HashMap::new(), // estimated_task_timings - will be set later
             None,
-        )));
+        );
+        state.set_cloud_enabled(is_cloud_enabled.unwrap_or(false));
+        state.set_ready_dependencies(ready_dependencies);
+        let shared_state = Arc::new(Mutex::new(state));
 
         // Default to FullScreen mode for the constructor
         let tui_mode = TuiMode::FullScreen;
@@ -461,14 +474,13 @@ impl AppLifeCycle {
     ) -> napi::Result<()> {
         debug!("AppLifeCycle::__init called");
 
-        enable_logger();
-
         // Always start in FullScreen mode
         let initial_mode = TuiMode::FullScreen;
         debug!("Initializing Terminal UI - Mode: {:?}", initial_mode);
 
         let app = self.app.clone();
-        let workspace_root = self.workspace_root.clone();
+        let console_socket_paths = NxConsoleMessageConnection::socket_paths(&self.workspace_root);
+        prime_env_caches();
 
         // Create Tui with FullScreen viewport
         let mut tui = Tui::new().map_err(|e| napi::Error::from_reason(e.to_string()))?;
@@ -526,7 +538,7 @@ impl AppLifeCycle {
         spawn(async move {
             // Set up console messenger (identical for both modes)
             {
-                let connection = NxConsoleMessageConnection::new(&workspace_root).await;
+                let connection = NxConsoleMessageConnection::connect(console_socket_paths).await;
                 with_shared_app(&app, |a| a.set_console_messenger(connection));
             }
 
@@ -682,9 +694,9 @@ impl AppLifeCycle {
     pub fn register_running_task(
         &mut self,
         task_id: String,
-        parser_and_writer: &External<(ParserArc, WriterArc)>,
+        pty_handles: &External<(ParserArc, WriterArc, MasterArc)>,
     ) {
-        self.with_app(|app| app.register_running_interactive_task(task_id, &**parser_and_writer));
+        self.with_app(|app| app.register_running_interactive_task(task_id, &**pty_handles));
     }
 
     #[napi]
@@ -703,6 +715,11 @@ impl AppLifeCycle {
     #[napi]
     pub fn set_task_status(&mut self, task_id: String, status: TaskStatus) {
         self.with_app(|app| app.update_task_status(&task_id, status));
+    }
+
+    #[napi]
+    pub fn set_task_readiness(&mut self, task_id: String, readiness: TaskReadiness) {
+        self.with_app(|app| app.update_task_readiness(&task_id, readiness));
     }
 
     #[napi]
@@ -760,12 +777,25 @@ impl AppLifeCycle {
         self.with_app(|app| app.set_batch_status(batch_id, status));
         Ok(())
     }
+
+    /// Set a clickable Nx Cloud link in the TUI: `label` is the text shown,
+    /// `url` is opened when it's clicked. This is a `LifeCycle` method so the Nx
+    /// Cloud client can call it via the lifecycle it already receives.
+    #[napi]
+    pub fn set_cloud_link(&self, label: String, url: String) -> napi::Result<()> {
+        self.with_app(|app| app.set_cloud_link(label, url));
+        Ok(())
+    }
 }
 
 #[napi]
 pub fn restore_terminal() -> napi::Result<()> {
     // Clear terminal progress indicator
     App::clear_terminal_progress();
+
+    // Disable mouse capture (safe even if it was never enabled) so the terminal
+    // stops emitting mouse escape sequences once the TUI tears down.
+    let _ = super::tui::disable_mouse_capture();
 
     // Drain pending terminal responses (e.g., OSC color query responses)
     // to prevent escape sequences from leaking to the terminal on exit

@@ -138,6 +138,37 @@ export default defineMarkdocConfig({
         },
       },
     },
+    // Animated React figure, see src/components/interactive/README.md.
+    figure: {
+      render: component('./src/components/markdoc/InteractiveFigure.astro'),
+      selfClosing: true,
+      attributes: {
+        name: {
+          type: 'String',
+          required: true,
+          // Keep in sync with FIGURES in src/components/interactive/registry.ts.
+          matches: [
+            'task-affected',
+            'critical-path',
+            'task-profiles',
+            'task-packing',
+            'worker-scaling',
+            'ultracache',
+            'atomization',
+            'benchmarks',
+          ],
+          errorLevel: 'critical',
+        },
+        height: {
+          type: 'Number',
+          required: true,
+        },
+        caption: {
+          type: 'String',
+          required: true,
+        },
+      },
+    },
     github_repository: {
       render: component('./src/components/markdoc/GithubRepository.astro'),
       attributes: {
@@ -421,8 +452,9 @@ export default defineMarkdocConfig({
       render: component('./src/components/markdoc/LlmCopyPrompt.astro'),
       attributes: {
         title: { type: 'String', required: true },
+        previewLines: { type: 'Number', required: false },
       },
-      children: ['paragraph', 'tag', 'list'],
+      children: ['paragraph', 'tag', 'list', 'heading'],
       transform(node, config) {
         const attributes = node.transformAttributes(config);
         function extractText(n, listContext) {
@@ -444,6 +476,15 @@ export default defineMarkdocConfig({
             return (
               (n.children || []).map((c) => extractText(c)).join('') + '\n'
             );
+          if (n.type === 'heading') {
+            const level = n.attributes?.level ?? 2;
+            return (
+              '#'.repeat(level) +
+              ' ' +
+              (n.children || []).map((c) => extractText(c)).join('') +
+              '\n'
+            );
+          }
           if (n.type === 'list') {
             const ordered = n.attributes?.ordered === true;
             return (

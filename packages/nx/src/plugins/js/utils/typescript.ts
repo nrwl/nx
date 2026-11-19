@@ -1,3 +1,4 @@
+import { resolveFromWorkspace } from '../../../utils/installation-directory';
 import { workspaceRoot } from '../../../utils/workspace-root';
 import { existsSync } from 'fs';
 import { dirname, join } from 'path';
@@ -8,12 +9,21 @@ const normalizedAppRoot = workspaceRoot.replace(/\\/g, '/');
 
 let tsModule: typeof import('typescript');
 
+export function isTypeScriptResolvable(): boolean {
+  try {
+    resolveFromWorkspace('typescript');
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export function readTsConfig(
   tsConfigPath: string,
   sys?: ts.System
 ): ts.ParsedCommandLine {
   if (!tsModule) {
-    tsModule = require('typescript');
+    tsModule = require(resolveFromWorkspace('typescript'));
   }
 
   sys ??= tsModule.sys;
@@ -30,7 +40,7 @@ export function readTsConfigWithoutFiles(
   tsConfigPath: string
 ): ts.ParsedCommandLine {
   if (!tsModule) {
-    tsModule = require('typescript');
+    tsModule = require(resolveFromWorkspace('typescript'));
   }
 
   // We only care about options, so we don't need to scan source files, and thus
@@ -156,6 +166,23 @@ export function getRootTsConfigResolveExportsConditions(
   return conditions.includes('development')
     ? conditions
     : [...conditions, 'development'];
+}
+
+/**
+ * Node `--conditions <name>` CLI args for spawning a plugin worker or the daemon
+ * with the plugin-resolution conditions active at startup. Mirrors the set Nx
+ * uses to resolve the plugin entry (`getRootTsConfigResolveExportsConditions`)
+ * so the entry and the plugin's transitive workspace imports resolve the same
+ * way; Node's own resolver otherwise ignores TypeScript `customConditions` and a
+ * source-loaded plugin's imports land on their unbuilt `dist`.
+ */
+export function getPluginResolveConditionNodeArgs(
+  root: string = workspaceRoot
+): string[] {
+  return getRootTsConfigResolveExportsConditions(root).flatMap((c) => [
+    '--conditions',
+    c,
+  ]);
 }
 
 export function findNodes(

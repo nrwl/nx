@@ -4,7 +4,6 @@ import {
   getPackageManagerCommand,
   readNxJson,
 } from 'nx/src/devkit-exports';
-import type { PackageManagerCommands } from 'nx/src/utils/package-manager';
 import { readTargetDefaultsForTarget } from './target-defaults-utils';
 import { findPluginForConfigFile } from '../utils/find-plugin-for-config-file';
 
@@ -14,6 +13,12 @@ interface E2EWebServerDefaultValues {
   defaultE2EWebServerAddress: string;
   defaultE2ECiBaseUrl: string;
   defaultE2EPort: number;
+  /**
+   * Set when the port was explicitly requested rather than defaulted. The caller has
+   * already applied it to both URLs above, so this helper must not re-derive from
+   * targetDefaults — doing so overrides the request and desyncs the two URLs.
+   */
+  e2EPortIsExplicit?: boolean;
 }
 
 interface E2EWebServerPluginOptions {
@@ -35,36 +40,9 @@ export async function getE2EWebServerInfo(
   tree: Tree,
   projectName: string,
   pluginOptions: E2EWebServerPluginOptions,
-  defaultValues: E2EWebServerDefaultValues,
-  isPluginBeingAdded: boolean
+  defaultValues: E2EWebServerDefaultValues
 ): Promise<E2EWebServerDetails> {
   const pm = getPackageManagerCommand(detectPackageManager(tree.root));
-  if (isPluginBeingAdded) {
-    return await getE2EWebServerInfoForPlugin(
-      tree,
-      projectName,
-      pluginOptions,
-      defaultValues,
-      pm
-    );
-  } else {
-    return {
-      e2eWebServerAddress: defaultValues.defaultE2EWebServerAddress,
-      e2eWebServerCommand: `${pm.exec} nx run ${projectName}:${defaultValues.defaultServeTargetName}`,
-      e2eCiWebServerCommand: `${pm.exec} nx run ${projectName}:${defaultValues.defaultServeStaticTargetName}`,
-      e2eCiBaseUrl: defaultValues.defaultE2ECiBaseUrl,
-      e2eDevServerTarget: `${projectName}:${defaultValues.defaultServeTargetName}`,
-    };
-  }
-}
-
-async function getE2EWebServerInfoForPlugin(
-  tree: Tree,
-  projectName: string,
-  pluginOptions: E2EWebServerPluginOptions,
-  defaultValues: E2EWebServerDefaultValues,
-  pm: PackageManagerCommands
-): Promise<E2EWebServerDetails> {
   const foundPlugin = await findPluginForConfigFile(
     tree,
     pluginOptions.plugin,
@@ -90,14 +68,15 @@ async function getE2EWebServerInfoForPlugin(
     foundPlugin.options[pluginOptions.serveTargetName] ??
     defaultValues.defaultServeTargetName;
 
-  e2ePort =
-    readTargetDefaultsForTarget(serveTargetName, nxJson.targetDefaults)?.options
-      ?.port ?? e2ePort;
+  if (!defaultValues.e2EPortIsExplicit) {
+    e2ePort =
+      readTargetDefaultsForTarget(serveTargetName, nxJson.targetDefaults)
+        ?.options?.port ?? e2ePort;
+  }
 
-  const e2eWebServerAddress = defaultValues.defaultE2EWebServerAddress.replace(
-    /:\d+/,
-    `:${e2ePort}`
-  );
+  const e2eWebServerAddress = defaultValues.e2EPortIsExplicit
+    ? defaultValues.defaultE2EWebServerAddress
+    : defaultValues.defaultE2EWebServerAddress.replace(/:\d+/, `:${e2ePort}`);
 
   return {
     e2eWebServerAddress,

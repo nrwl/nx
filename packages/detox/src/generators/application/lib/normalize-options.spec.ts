@@ -24,7 +24,6 @@ describe('Normalize Options', () => {
     };
     const options = await normalizeOptions(appTree, schema);
     expect(options).toEqual({
-      addPlugin: true,
       framework: 'react-native',
       e2eDirectory: 'apps/my-app-e2e',
       e2eProjectName: 'my-app-e2e',
@@ -56,7 +55,6 @@ describe('Normalize Options', () => {
     };
     const options = await normalizeOptions(appTree, schema);
     expect(options).toEqual({
-      addPlugin: true,
       appDisplayName: 'app display name',
       appExpoName: 'appdisplayname',
       appClassName: 'MyApp',
@@ -69,6 +67,9 @@ describe('Normalize Options', () => {
       importPath: '@proj/my-app-e2e',
       framework: 'react-native',
       isUsingTsSolutionConfig: false,
+      // Resolved by `detectLinters`, which comes back empty for a workspace
+      // with no linter installed.
+      linter: 'none',
       js: false,
       useProjectJson: true,
     });
@@ -87,7 +88,6 @@ describe('Normalize Options', () => {
     };
     const options = await normalizeOptions(appTree, schema);
     expect(options).toEqual({
-      addPlugin: true,
       appProject: 'my-app',
       appClassName: 'MyApp',
       appDisplayName: 'MyApp',
@@ -101,6 +101,9 @@ describe('Normalize Options', () => {
       e2eProjectName: 'directory-my-app-e2e',
       framework: 'react-native',
       isUsingTsSolutionConfig: false,
+      // Resolved by `detectLinters`, which comes back empty for a workspace
+      // with no linter installed.
+      linter: 'none',
       js: false,
       useProjectJson: true,
     });

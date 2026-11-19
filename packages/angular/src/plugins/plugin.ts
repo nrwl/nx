@@ -1,7 +1,10 @@
 import {
   calculateHashesForCreateNodes,
   getNamedInputs,
+  getReadyCheckReadyWhen,
   PluginCache,
+  hashObject,
+  workspaceDataDirectory,
 } from '@nx/devkit/internal';
 import {
   AggregateCreateNodesError,
@@ -16,13 +19,13 @@ import {
   readJsonFile,
   type Target,
   type TargetConfiguration,
+  normalizePath,
 } from '@nx/devkit';
 import { getLockFileName } from '@nx/js';
 import { existsSync, readdirSync, statSync } from 'node:fs';
-import { dirname, isAbsolute, join, relative } from 'node:path';
+import { basename, dirname, isAbsolute, join, relative } from 'node:path';
 import * as posix from 'node:path/posix';
-import { hashObject } from 'nx/src/devkit-internals';
-import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
+import { pathToFileURL } from 'node:url';
 import { targetFromTargetString } from '../utils/targets';
 import { findVitestBaseConfig, loadVite } from './utils/vitest';
 
@@ -250,8 +253,15 @@ async function buildAngularProjects(
           project.root,
           namedInputs
         );
-      } else if (knownExecutors.devServer.has(angularTarget.builder)) {
+      } else if (
+        knownExecutors.devServer.has(angularTarget.builder) ||
+        knownExecutors.serveSsr.has(angularTarget.builder)
+      ) {
         targets[nxTargetName].continuous = true;
+        targets[nxTargetName].readyWhen = getReadyCheckReadyWhen(
+          '@nx/angular/ready-check',
+          basename(configFilePath)
+        );
         targets[nxTargetName].metadata.help.example.options = { port: 4201 };
       } else if (knownExecutors.extractI18n.has(angularTarget.builder)) {
         targets[nxTargetName].metadata.help.example.options = {
@@ -259,7 +269,6 @@ async function buildAngularProjects(
         };
       } else if (knownExecutors.test.has(angularTarget.builder)) {
         await updateTestTarget(
-          projectName,
           targets[nxTargetName],
           angularTarget,
           context,
@@ -277,9 +286,6 @@ async function buildAngularProjects(
           project.root,
           namedInputs
         );
-      } else if (knownExecutors.serveSsr.has(angularTarget.builder)) {
-        targets[nxTargetName].continuous = true;
-        targets[nxTargetName].metadata.help.example.options = { port: 4201 };
       } else if (knownExecutors.prerender.has(angularTarget.builder)) {
         prerenderTargets.push({ target: nxTargetName, project: projectName });
       }
@@ -453,7 +459,6 @@ async function updateBuildTarget(
 }
 
 async function updateTestTarget(
-  projectName: string,
   target: TargetConfiguration,
   angularTarget: AngularTargetConfiguration,
   context: CreateNodesContext,
@@ -586,7 +591,7 @@ async function getNgPackagrOutputs(
 
     try {
       if (configPath.endsWith('.js')) {
-        const result = await import(configPath);
+        const result = await import(pathToFileURL(configPath).href);
 
         return result['default'] ?? result;
       }
@@ -962,14 +967,15 @@ function getOutput(
   angularWorkspaceRoot: string,
   projectRoot: string
 ): string {
-  const relativePath = relative(
-    join(workspaceRoot, angularWorkspaceRoot, projectRoot),
-    path
+  const relativePath = normalizePath(
+    relative(join(workspaceRoot, angularWorkspaceRoot, projectRoot), path)
   );
   if (relativePath.startsWith('..')) {
     return posix.join(
       '{workspaceRoot}',
-      join(angularWorkspaceRoot, projectRoot, relativePath)
+      angularWorkspaceRoot,
+      projectRoot,
+      relativePath
     );
   } else {
     return posix.join('{projectRoot}', relativePath);

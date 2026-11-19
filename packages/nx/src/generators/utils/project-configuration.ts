@@ -17,7 +17,6 @@ import { output } from '../../utils/output';
 import { PackageJson } from '../../utils/package-json';
 import { joinPathFragments, normalizePath } from '../../utils/path';
 import { readJson, writeJson } from './json';
-import { readNxJson } from './nx-json';
 
 import type { Tree } from '../tree';
 import { toProjectName } from '../../config/to-project-name';
@@ -139,11 +138,17 @@ function updateProjectConfigurationInPackageJson(
     delete projectConfiguration.name;
   }
 
+  let removedTargets = false;
   if (
     projectConfiguration.targets &&
     !Object.keys(projectConfiguration.targets).length
   ) {
     delete projectConfiguration.targets;
+    // The spread below would otherwise keep the targets the caller removed
+    if (Object.keys(packageJson.nx?.targets ?? {}).length) {
+      delete packageJson.nx.targets;
+      removedTargets = true;
+    }
   }
 
   packageJson.nx = {
@@ -160,6 +165,9 @@ function updateProjectConfigurationInPackageJson(
     projectConfiguration.root === '.' ||
     Object.keys(packageJson.nx).length > 0
   ) {
+    writeJson(tree, packageJsonFile, packageJson);
+  } else if (removedTargets) {
+    delete packageJson.nx;
     writeJson(tree, packageJsonFile, packageJson);
   }
 }

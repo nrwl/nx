@@ -5,13 +5,14 @@ import {
   toJS,
   Tree,
 } from '@nx/devkit';
-import {
-  createNxCloudOnboardingURLForWelcomeApp,
-  getNxCloudAppOnBoardingUrl,
-} from 'nx/src/nx-cloud/utilities/onboarding';
 import { join } from 'path';
 import { NormalizedSchema } from './normalize-options';
 import { getInstalledExpoMajor } from '../../../utils/version-utils';
+import { getExtraEslintDependencies } from '@nx/react/internal';
+import {
+  createNxCloudOnboardingURLForWelcomeApp,
+  getNxCloudAppOnBoardingUrl,
+} from '@nx/devkit/internal';
 
 export async function createApplicationFiles(
   host: Tree,
@@ -33,6 +34,10 @@ export async function createApplicationFiles(
   const connectCloudUrl =
     onBoardingStatus === 'unclaimed' &&
     (await getNxCloudAppOnBoardingUrl(options.nxCloudToken));
+  const usesJsxA11y =
+    options.linter === 'eslint' &&
+    'eslint-plugin-jsx-a11y' in
+      getExtraEslintDependencies(host).devDependencies;
 
   generateFiles(
     host,
@@ -55,6 +60,7 @@ export async function createApplicationFiles(
       connectCloudUrl,
       offsetFromRoot: offsetFromRoot(options.appProjectRoot),
       packageManager,
+      usesJsxA11y,
     }
   );
 

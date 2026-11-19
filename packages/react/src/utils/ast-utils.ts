@@ -378,12 +378,12 @@ export function addInitialRoutes(
     <br/>
     <hr/>
     <br/>
-    <div role="navigation">
+    <nav>
       <ul>
         <li><Link to="/">Home</Link></li>
         <li><Link to="/page-2">Page 2</Link></li>
       </ul>
-    </div>
+    </nav>
     <Routes>
       <Route
         path="/"
@@ -491,36 +491,6 @@ export function addBrowserRouter(
   } else {
     logger.warn(
       `Could not find App component in ${sourcePath}; Skipping add <BrowserRouter>`
-    );
-    return [];
-  }
-}
-
-export function addStaticRouter(
-  sourcePath: string,
-  source: ts.SourceFile
-): StringChange[] {
-  const app = findElements(source, 'App')[0];
-  if (app) {
-    return [
-      ...addImport(
-        source,
-        `import { StaticRouter } from 'react-router-dom/server';`
-      ),
-      {
-        type: ChangeType.Insert,
-        index: app.getStart(),
-        text: `<StaticRouter location={req.originalUrl}>`,
-      },
-      {
-        type: ChangeType.Insert,
-        index: app.getEnd(),
-        text: `</StaticRouter>`,
-      },
-    ];
-  } else {
-    logger.warn(
-      `Could not find App component in ${sourcePath}; Skipping add <StaticRouter>`
     );
     return [];
   }

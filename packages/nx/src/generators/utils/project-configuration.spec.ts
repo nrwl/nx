@@ -137,6 +137,30 @@ describe('project configuration', () => {
     expect(tree.exists('test/project.json')).toBeFalsy();
   });
 
+  it('should round-trip spread tokens through read + update', () => {
+    // `'...'` only resolves during project-graph construction. Generators
+    // read the raw file, so the token must survive read → update unchanged.
+    writeJson(tree, 'libs/test/project.json', {
+      name: 'test',
+      targets: {
+        build: {
+          inputs: ['...', '{projectRoot}/extra.json'],
+        },
+      },
+    });
+
+    const config = readProjectConfiguration(tree, 'test');
+    expect(config.targets.build.inputs).toEqual([
+      '...',
+      '{projectRoot}/extra.json',
+    ]);
+
+    updateProjectConfiguration(tree, 'test', config);
+    expect(
+      readJson(tree, 'libs/test/project.json').targets.build.inputs
+    ).toEqual(['...', '{projectRoot}/extra.json']);
+  });
+
   describe('JSON schema', () => {
     it('should have JSON $schema in project configuration for standalone projects', () => {
       addProjectConfiguration(tree, 'test', projectConfiguration, true);
@@ -401,6 +425,73 @@ describe('project configuration', () => {
         }
         "
       `);
+    });
+
+    const build = { command: 'echo "building"' };
+    it.each<
+      [
+        string,
+        {
+          root: string;
+          nx: PackageJson['nx'];
+          targets: ProjectConfiguration['targets'];
+          expectedNx: PackageJson['nx'];
+        },
+      ]
+    >([
+      [
+        'remove the last target and keep the other nx properties',
+        {
+          root: 'proj',
+          nx: { tags: ['test'], targets: { build } },
+          targets: {},
+          expectedNx: { tags: ['test'] },
+        },
+      ],
+      [
+        'remove the nx property that removing the last target empties',
+        {
+          root: 'proj',
+          nx: { targets: { build } },
+          targets: {},
+          expectedNx: undefined,
+        },
+      ],
+      [
+        'keep the nx property of a root project when removing its last target',
+        {
+          root: '.',
+          nx: { targets: { build } },
+          targets: {},
+          expectedNx: {},
+        },
+      ],
+      [
+        'keep the targets when targets are omitted',
+        {
+          root: 'proj',
+          nx: { targets: { build } },
+          targets: undefined,
+          expectedNx: { targets: { build } },
+        },
+      ],
+      [
+        'not add an nx property when there are no targets to remove',
+        { root: 'proj', nx: undefined, targets: {}, expectedNx: undefined },
+      ],
+    ])('should %s', (_, { root, nx, targets, expectedNx }) => {
+      const packageJsonPath = joinPathFragments(root, 'package.json');
+      const packageJson: PackageJson = tree.exists(packageJsonPath)
+        ? readJson(tree, packageJsonPath)
+        : { name: 'proj' };
+      writeJson(tree, packageJsonPath, { ...packageJson, nx });
+
+      updateProjectConfiguration(tree, packageJson.name, {
+        root,
+        ...(targets && { targets }),
+      });
+
+      expect(readJson(tree, packageJsonPath).nx).toEqual(expectedNx);
     });
   });
 });

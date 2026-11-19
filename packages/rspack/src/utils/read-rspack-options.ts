@@ -1,7 +1,7 @@
 import { workspaceRoot } from '@nx/devkit';
 import type { Configuration } from '@rspack/core';
 import { isNxRspackComposablePlugin } from './config';
-import { readNxJsonFromDisk } from 'nx/src/devkit-internals';
+import { readNxJsonFromDisk } from '@nx/devkit/internal';
 
 /**
  * Reads the Rspack options from a give Rspack configuration. The configuration can be:
@@ -13,7 +13,10 @@ import { readNxJsonFromDisk } from 'nx/src/devkit-internals';
  * @param rspackConfig
  */
 export async function readRspackOptions(
-  rspackConfig: unknown
+  rspackConfig: unknown,
+  // A function config gets the production build's env unless told otherwise
+  env: Record<string, unknown> = { production: true },
+  argv: Record<string, unknown> = {}
 ): Promise<Configuration[]> {
   const configs: Configuration[] = [];
 
@@ -49,12 +52,7 @@ export async function readRspackOptions(
         }
       );
     } else if (typeof config === 'function') {
-      const resolved = await config(
-        {
-          production: true, // we want the production build options
-        },
-        {}
-      );
+      const resolved = await config(env, argv);
       // If the resolved configuration is an array, resolve each configuration
       return Array.isArray(resolved)
         ? (await Promise.all(resolved.map(resolveConfig))).flat()

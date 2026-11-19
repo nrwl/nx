@@ -1,5 +1,6 @@
 import {
   checkFilesExist,
+  configureTargetOptions,
   cleanupProject,
   reservePort,
   killPorts,
@@ -7,8 +8,8 @@ import {
   readFile,
   runCLI,
   runCLIAsync,
-  runE2ETests,
   uniq,
+  shouldRunPlaywrightTests,
 } from '@nx/e2e-utils';
 
 describe('Build React applications and libraries with Vite', () => {
@@ -74,20 +75,27 @@ describe('Build React applications and libraries with Vite', () => {
   it('should generate app with custom port', async () => {
     const viteApp = uniq('viteapp');
     const customPort = await reservePort();
+    const restoreServerOptions = configureTargetOptions(['dev', 'preview'], {
+      strictPort: true,
+    });
 
-    runCLI(
-      `generate @nx/react:app apps/${viteApp} --bundler=vite --port=${customPort} --unitTestRunner=vitest --no-interactive --linter=eslint --e2eTestRunner=playwright`
-    );
+    try {
+      runCLI(
+        `generate @nx/react:app apps/${viteApp} --bundler=vite --port=${customPort} --unitTestRunner=vitest --no-interactive --linter=eslint --e2eTestRunner=playwright`
+      );
 
-    const viteConfig = readFile(`apps/${viteApp}/vite.config.mts`);
-    expect(viteConfig).toContain(`port: ${customPort}`);
+      const viteConfig = readFile(`apps/${viteApp}/vite.config.mts`);
+      expect(viteConfig).toContain(`port: ${customPort}`);
 
-    if (runE2ETests()) {
-      const e2eResults = runCLI(`e2e ${viteApp}-e2e`, {
-        verbose: true,
-      });
-      expect(e2eResults).toContain('Successfully ran target e2e for project');
-      expect(await killPorts()).toBeTruthy();
+      if (await shouldRunPlaywrightTests()) {
+        const e2eResults = runCLI(`e2e ${viteApp}-e2e`, {
+          verbose: true,
+        });
+        expect(e2eResults).toContain('Successfully ran target e2e for project');
+        expect(await killPorts(customPort)).toBeTruthy();
+      }
+    } finally {
+      restoreServerOptions();
     }
   }, 300_000);
 

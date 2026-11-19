@@ -7,13 +7,14 @@ import {
   readNxJson,
 } from '../../config/nx-json';
 import { LARGE_BUFFER } from '../../executors/run-commands/run-commands.impl';
-import { formatChangedFilesWithPrettierIfAvailable } from '../../generators/internal-utils/format-changed-files-with-prettier-if-available';
+import { formatChangedFiles } from '../../generators/internal-utils/format-changed-files';
 import { FsTree, Tree, flushChanges } from '../../generators/tree';
 import { createProjectFileMapUsingProjectGraph } from '../../project-graph/file-map-utils';
 import { createProjectGraphAsync } from '../../project-graph/project-graph';
 import type { ProjectGraph } from '../../config/project-graph';
 import { handleErrors } from '../../utils/handle-errors';
 import { orange, output } from '../../utils/output';
+import { redactUrlCredentials } from '../../utils/redact-url-credentials';
 import { joinPathFragments } from '../../utils/path';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { VersionOptions } from './command-object';
@@ -21,6 +22,7 @@ import {
   createNxReleaseConfig,
   handleNxReleaseConfigError,
   type NxReleaseConfig,
+  validateCommitMessageTokens,
 } from './config/config';
 import { deepMergeJson } from './config/deep-merge-json';
 import { ReleaseGroupWithName } from './config/filter-release-groups';
@@ -94,6 +96,9 @@ export function createAPI(
     if (configError) {
       return await handleNxReleaseConfigError(configError);
     }
+    if (args.gitCommitMessage) {
+      validateCommitMessageTokens(args.gitCommitMessage);
+    }
     // --print-config exits directly as it is not designed to be combined with any other programmatic operations
     if (args.printConfig) {
       return printConfigAndExit({
@@ -155,7 +160,7 @@ export function createAPI(
       const rawVersionPlans = await readRawVersionPlans();
       await setResolvedVersionPlansOnGroups(
         rawVersionPlans,
-        releaseGraph.releaseGroups,
+        releaseGraph.allReleaseGroups,
         Object.keys(projectGraph.nodes),
         args.verbose
       );
@@ -163,7 +168,7 @@ export function createAPI(
       // Validate version plans against the filter after resolution
       const versionPlanValidationError =
         validateResolvedVersionPlansAgainstFilter(
-          releaseGraph.releaseGroups,
+          releaseGraph.allReleaseGroups,
           releaseGraph.releaseGroupToFilteredProjects
         );
       if (versionPlanValidationError) {
@@ -265,11 +270,22 @@ export function createAPI(
       throw err;
     }
 
-    /**
-     * Ensure that formatting is applied so that version bump diffs are as minimal as possible
-     * within the context of the user's workspace.
-     */
-    await formatChangedFilesWithPrettierIfAvailable(tree, { silent: true });
+    // A version actions implementation can opt its manifests out of this final
+    // pass when it already preserves their formatting while updating values.
+    const manifestsToExcludeFromFormatting = new Set(
+      Array.from(releaseGraph.projectsToVersionActions.values()).flatMap(
+        (versionActions) =>
+          versionActions.excludeManifestsFromFormatting
+            ? versionActions.manifestsToUpdate.map(
+                ({ manifestPath }) => manifestPath
+              )
+            : []
+      )
+    );
+    await formatChangedFiles(tree, {
+      silent: true,
+      excludePaths: manifestsToExcludeFromFormatting,
+    });
 
     printAndFlushChanges(tree, !!args.dryRun);
 
@@ -423,7 +439,7 @@ export function createAPI(
 
     if (args.gitPush ?? nxReleaseConfig.version.git.push) {
       output.logSingleLine(
-        `Pushing to git remote "${args.gitRemote ?? 'origin'}"`
+        `Pushing to git remote "${redactUrlCredentials(args.gitRemote ?? 'origin')}"`
       );
       await gitPush({
         gitRemote: args.gitRemote,

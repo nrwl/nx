@@ -1,7 +1,7 @@
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { type Tree, readNxJson, updateNxJson } from 'nx/src/devkit-exports';
-import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
 import { getRsbuildE2EWebServerInfo } from './e2e-web-server-info-utils';
+import { type Tree, readNxJson, updateNxJson } from '@nx/devkit';
+import { TempFs } from '@nx/devkit/internal-testing-utils';
 
 describe('getRsbuildE2EWebServerInfo', () => {
   let tree: Tree;
@@ -19,10 +19,10 @@ describe('getRsbuildE2EWebServerInfo', () => {
 
   afterEach(() => {
     tempFs.cleanup();
-    jest.resetModules();
+    vi.resetModules();
   });
 
-  it('should use map-shaped targetDefaults when no plugin is registered and plugins are not being used', async () => {
+  it('should use map-shaped targetDefaults when no plugin is registered', async () => {
     // ARRANGE
     const nxJson = readNxJson(tree);
     nxJson.plugins ??= [];
@@ -39,8 +39,7 @@ describe('getRsbuildE2EWebServerInfo', () => {
     const e2eWebServerInfo = await getRsbuildE2EWebServerInfo(
       tree,
       'app',
-      'app/rsbuild.config.ts',
-      false
+      'app/rsbuild.config.ts'
     );
 
     // ASSERT

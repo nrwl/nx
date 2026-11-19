@@ -175,12 +175,16 @@ class DevkitTreeFromAngularDevkitTree implements Tree {
     return relative(this.root, join(this.root, path));
   }
 
-  read(filePath: string): Buffer;
-  read(filePath: string, encoding: BufferEncoding): string;
+  read(filePath: string): Buffer | null;
+  read(filePath: string, encoding: BufferEncoding): string | null;
   read(filePath: string, encoding?: BufferEncoding) {
-    return encoding
-      ? this.tree.read(filePath).toString(encoding)
-      : this.tree.read(filePath);
+    // The schematics tree already returns null for a missing file, so honouring
+    // the `Tree` contract is a matter of not dereferencing it.
+    const content = this.tree.read(filePath);
+    if (content === null) {
+      return null;
+    }
+    return encoding ? content.toString(encoding) : content;
   }
 
   rename(from: string, to: string): void {

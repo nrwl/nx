@@ -1,5 +1,6 @@
-import Fastify, { FastifyInstance } from 'fastify';
-import { app } from './app';
+import Fastify from 'fastify';
+import type { FastifyInstance } from 'fastify';
+import { app } from './app<%= importExtension %>';
 
 describe('GET /', () => {
   let server: FastifyInstance;

@@ -31,5 +31,12 @@ export type TasksRunner<T = unknown> = (
     taskGraph?: TaskGraph;
     hasher?: TaskHasher;
     daemon?: DaemonClient;
+    /** Tasks hashed only once the tasks they read outputs from have run. */
+    hashingDeferredTaskIds?: ReadonlySet<string>;
+    /**
+     * Tasks hashed from an Ultracache configuration that `nx affected` selection
+     * dropped. Empty when nothing was, unset for commands that do not select.
+     */
+    ultracacheSkippedTaskIds?: ReadonlySet<string>;
   }
 ) => any | Promise<{ [id: string]: TaskStatus }>;

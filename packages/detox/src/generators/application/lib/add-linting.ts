@@ -1,12 +1,10 @@
-import { lintProjectGenerator } from '@nx/eslint';
 import {
-  addDependenciesToPackageJson,
   GeneratorCallback,
   joinPathFragments,
   runTasksInSerial,
   Tree,
 } from '@nx/devkit';
-import { extraEslintDependencies } from '@nx/react';
+import { addExtraEslintDependencies } from '@nx/react/internal';
 import { NormalizedSchema } from './normalize-options';
 import {
   addExtendsToLintConfig,
@@ -15,23 +13,28 @@ import {
   isEslintConfigSupported,
   useFlatConfig,
 } from '@nx/eslint/internal';
+import { addLintingToProject } from '@nx/js/internal';
 
 export async function addLinting(host: Tree, options: NormalizedSchema) {
-  if (options.linter === 'none') {
-    return () => {};
-  }
-
   const tasks: GeneratorCallback[] = [];
-  const lintTask = await lintProjectGenerator(host, {
-    linter: options.linter,
-    project: options.e2eProjectName,
-    tsConfigPaths: [
-      joinPathFragments(options.e2eProjectRoot, 'tsconfig.app.json'),
-    ],
-    skipFormat: true,
-    addPlugin: options.addPlugin,
-  });
-  tasks.push(lintTask);
+  tasks.push(
+    await addLintingToProject(host, {
+      linter: options.linter,
+      project: options.e2eProjectName,
+      tsConfigPaths: [
+        joinPathFragments(options.e2eProjectRoot, 'tsconfig.app.json'),
+      ],
+      enableTypedLinting: options.enableTypedLinting,
+      // Detox e2e specs are Jest; this is what enables the linter's Jest rules.
+      unitTestRunner: 'jest',
+    })
+  );
+
+  // Everything below configures ESLint — predefined configs, `extends`, ignore
+  // entries — which have no equivalent in other linters.
+  if (options.linter && options.linter !== 'eslint') {
+    return runTasksInSerial(...tasks);
+  }
 
   if (isEslintConfigSupported(host)) {
     if (useFlatConfig(host)) {
@@ -56,14 +59,7 @@ export async function addLinting(host: Tree, options: NormalizedSchema) {
     }
   }
 
-  const installTask = addDependenciesToPackageJson(
-    host,
-    extraEslintDependencies.dependencies,
-    extraEslintDependencies.devDependencies,
-    undefined,
-    true
-  );
-  tasks.push(installTask);
+  tasks.push(addExtraEslintDependencies(host));
 
   return runTasksInSerial(...tasks);
 }

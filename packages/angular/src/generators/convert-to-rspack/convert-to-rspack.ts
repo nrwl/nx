@@ -1,6 +1,13 @@
-import { forEachExecutorOptions, getNamedInputs } from '@nx/devkit/internal';
+import {
+  acknowledgeBuildScripts,
+  selectPrompt,
+  forEachExecutorOptions,
+  getNamedInputs,
+  readTargetDefaultsForTarget,
+} from '@nx/devkit/internal';
 import {
   addDependenciesToPackageJson,
+  detectPackageManager,
   ensurePackage,
   formatFiles,
   joinPathFragments,
@@ -18,15 +25,23 @@ import {
   type Tree,
 } from '@nx/devkit';
 import type { RspackPluginOptions } from '@nx/rspack/plugin';
-import { prompt } from 'enquirer';
+import { isDeepStrictEqual } from 'node:util';
 import { relative, resolve } from 'path';
 import { join } from 'path/posix';
 import { assertSupportedAngularVersion } from '../../utils/assert-supported-angular-version';
+import {
+  everyServerTarget,
+  isTargetAlsoInPackageJson,
+} from '../../utils/targets';
 import { nxVersion } from '../../utils/versions';
-import { versions } from '../utils/version-utils';
+import { acknowledgeAngularBuildScripts } from '../utils/acknowledge-build-scripts';
+import { supportsSsrAllowedHosts, versions } from '../utils/version-utils';
 import { createConfig } from './lib/create-config';
+import { exportsAngularRequestHandler } from './lib/exports-angular-request-handler';
 import { getCustomWebpackConfig } from './lib/get-custom-webpack-config';
+import { mergeServerTsConfig } from './lib/merge-server-tsconfig';
 import { updateTsconfig } from './lib/update-tsconfig';
+import { validateNoModuleFederation } from './lib/validate-no-module-federation';
 import { validateSupportedBuildExecutor } from './lib/validate-supported-executor';
 import type { ConvertToRspackSchema } from './schema';
 
@@ -39,7 +54,6 @@ const SUPPORTED_EXECUTORS = [
   '@nx/angular:webpack-browser',
   '@nx/angular:webpack-server',
   '@nx/angular:dev-server',
-  '@nx/angular:module-federation-dev-server',
 ];
 
 const RENAMED_OPTIONS = {
@@ -115,7 +129,7 @@ const PATH_NORMALIZER = {
         return;
       }
       try {
-        const resolvedPath = require.resolve(path, {
+        require.resolve(path, {
           paths: [join(workspaceRoot, 'node_modules')],
         });
         normalizedPaths.push(path);
@@ -319,14 +333,31 @@ async function getProjectToConvert(tree: Tree) {
       projects.add(project);
     });
   }
-  const { project } = await prompt<{ project: string }>({
-    type: 'select',
-    name: 'project',
+  return selectPrompt({
     message: 'Which project would you like to convert to rspack?',
     choices: Array.from(projects),
   });
+}
 
-  return project;
+// nx.json targetDefaults and the project's package.json can add configurations the graph merges in
+function mayHaveConfigurationsOutsideProjectJson(
+  tree: Tree,
+  projectRoot: string,
+  targetName: string,
+  executor: string
+): boolean {
+  // Emptied entries drop their filters, so every key that can reach the target matches
+  const targetDefaultKeys = Object.fromEntries(
+    Object.keys(readNxJson(tree)?.targetDefaults ?? {}).map((key) => [key, {}])
+  );
+  if (
+    readTargetDefaultsForTarget(targetName, targetDefaultKeys, executor) !==
+    null
+  ) {
+    return true;
+  }
+
+  return isTargetAlsoInPackageJson(tree, projectRoot, targetName);
 }
 
 export async function convertToRspack(
@@ -346,11 +377,14 @@ export async function convertToRspack(
   };
   const configurationOptions: Record<string, Record<string, any>> = {};
   let buildTarget: { name: string; config: TargetConfiguration } | undefined;
-  let serveTarget: { name: string; config: TargetConfiguration } | undefined;
+  let serveTarget: { config: TargetConfiguration } | undefined;
+  const buildTsConfigPaths = new Set<string>();
+  let serverTsConfigPath: string | undefined;
   const targetsToRemove: string[] = [];
   let customWebpackConfigPath: string | undefined;
 
   validateSupportedBuildExecutor(Object.values(project.targets));
+  validateNoModuleFederation(tree, project);
 
   let projectServePort = DEFAULT_PORT;
   const projectServeConfigurationOptions: Record<string, { port?: number }> =
@@ -367,6 +401,9 @@ export async function convertToRspack(
         createConfigOptions,
         project.root
       );
+      if (target.options?.tsConfig) {
+        buildTsConfigPaths.add(joinPathFragments(target.options.tsConfig));
+      }
       if (target.configurations) {
         for (const [configurationName, configuration] of Object.entries(
           target.configurations
@@ -378,6 +415,9 @@ export async function convertToRspack(
             configurationOptions[configurationName],
             project.root
           );
+          if (configuration.tsConfig) {
+            buildTsConfigPaths.add(joinPathFragments(configuration.tsConfig));
+          }
         }
       }
       buildTarget = { name: targetName, config: target };
@@ -393,11 +433,14 @@ export async function convertToRspack(
         project.root
       );
       createConfigOptions.server = './src/main.server.ts';
+      serverTsConfigPath = target.options?.tsConfig
+        ? // each target can spell the same path differently
+          joinPathFragments(target.options.tsConfig)
+        : undefined;
       targetsToRemove.push(targetName);
     } else if (
       target.executor === '@angular-devkit/build-angular:dev-server' ||
-      target.executor === '@nx/angular:dev-server' ||
-      target.executor === '@nx/angular:module-federation-dev-server'
+      target.executor === '@nx/angular:dev-server'
     ) {
       createConfigOptions.devServer = {};
       if (target.options) {
@@ -432,7 +475,7 @@ export async function convertToRspack(
           }
         }
       }
-      serveTarget = { name: targetName, config: target };
+      serveTarget = { config: target };
       targetsToRemove.push(targetName);
     } else if (target.executor === '@angular-devkit/build-angular:prerender') {
       if (target.options) {
@@ -462,6 +505,51 @@ export async function convertToRspack(
     }
   }
 
+  if (createConfigOptions.ssr) {
+    const replacements = [
+      createConfigOptions,
+      ...Object.values(configurationOptions),
+    ]
+      .flatMap(
+        (options): Array<{ replace: string; with: string }> =>
+          options.fileReplacements ?? []
+      )
+      .map((replacement) => ({
+        replace: joinPathFragments(project.root, replacement.replace),
+        with: joinPathFragments(project.root, replacement.with),
+      }));
+    // A configuration compiles the file that replaces the entry, so each
+    // replacement, and its own replacements, is a server entry too. Paths are
+    // compared normalized, as angular-rspack resolves them before aliasing.
+    const serverEntries = new Set([
+      joinPathFragments(project.root, createConfigOptions.ssr.entry),
+    ]);
+    for (const entry of serverEntries) {
+      for (const replacement of replacements) {
+        if (replacement.replace === entry) {
+          serverEntries.add(replacement.with);
+        }
+      }
+    }
+    // The dev server never calls an app() export, so servers without Angular's
+    // reqHandler keep the separate server that runs their routes.
+    if (
+      [...serverEntries].every((entry) =>
+        exportsAngularRequestHandler(tree, entry)
+      )
+    ) {
+      createConfigOptions.ssr.serveFromDevServer = true;
+    }
+  }
+
+  if (createConfigOptions.ssr && supportsSsrAllowedHosts(tree)) {
+    // The engine matches the request host against this list and an unset list
+    // matches nothing, so surface it for the deployment to fill in. Serving
+    // seeds its own hosts and does not read it.
+    createConfigOptions.security ??= {};
+    createConfigOptions.security.allowedHosts ??= [];
+  }
+
   const customWebpackConfigInfo = customWebpackConfigPath
     ? await getCustomWebpackConfig(tree, project.root, customWebpackConfigPath)
     : undefined;
@@ -474,12 +562,44 @@ export async function convertToRspack(
     customWebpackConfigInfo?.isWebpackConfigFunction
   );
   updateTsconfig(tree, project.root);
+  if (serverTsConfigPath) {
+    mergeServerTsConfig(
+      tree,
+      project.root,
+      serverTsConfigPath,
+      buildTsConfigPaths
+    );
+  }
+
+  const removedTargetNames = new Set(targetsToRemove);
+  for (const [targetName, target] of Object.entries(project.targets)) {
+    // A configuration whose server target survives the conversion may still run
+    if (
+      target.executor === '@angular-devkit/build-angular:ssr-dev-server' &&
+      everyServerTarget(
+        target,
+        (serverTarget) =>
+          serverTarget.project === projectName &&
+          removedTargetNames.has(serverTarget.target)
+      ) &&
+      !mayHaveConfigurationsOutsideProjectJson(
+        tree,
+        project.root,
+        targetName,
+        target.executor
+      )
+    ) {
+      targetsToRemove.push(targetName);
+    }
+  }
 
   for (const targetName of targetsToRemove) {
     delete project.targets[targetName];
   }
 
   updateProjectConfiguration(tree, projectName, project);
+  // Writing a package.json-based project deletes an empty `targets` from this object
+  project.targets ??= {};
 
   // ensure plugin is registered
   const { rspackInitGenerator } = ensurePackage<typeof import('@nx/rspack')>(
@@ -487,7 +607,6 @@ export async function convertToRspack(
     nxVersion
   );
   await rspackInitGenerator(tree, {
-    addPlugin: true,
     framework: 'angular',
   });
 
@@ -670,6 +789,11 @@ export async function convertToRspack(
     if (serveTarget.config.continuous) {
       delete serveTarget.config.continuous;
     }
+    // Nx writes it for the dev server builders, and it would override the
+    // readyWhen inferred for the Rspack serve target
+    if (isDeepStrictEqual(serveTarget.config.readyWhen, { signal: true })) {
+      delete serveTarget.config.readyWhen;
+    }
     if (
       serveTarget.config.syncGenerators?.length === 1 &&
       serveTarget.config.syncGenerators[0] === '@nx/js:typescript-sync'
@@ -715,6 +839,14 @@ export async function convertToRspack(
 
   if (!schema.skipInstall) {
     const { webpackMergeVersion, tsNodeVersion } = versions(tree);
+    acknowledgeAngularBuildScripts(tree);
+    // @nx/angular-rspack-compiler's install script patches `@angular/build`
+    // versions below 20.2.0, so it has to run. core-js only prints a funding
+    // message.
+    acknowledgeBuildScripts(tree, detectPackageManager(tree.root), {
+      '@nx/angular-rspack-compiler': true,
+      'core-js': false,
+    });
     const installTask = addDependenciesToPackageJson(
       tree,
       {},

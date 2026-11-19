@@ -8,6 +8,7 @@ use super::{
     action::Action,
     tui::{Event, Frame},
 };
+use link::LinkRegistry;
 
 pub mod countdown_popup;
 pub mod dependency_view;
@@ -15,6 +16,10 @@ pub mod help_popup;
 pub mod help_text;
 pub mod hint_popup;
 pub mod layout_manager;
+pub mod link;
+pub mod nx_paragraph;
+pub mod search_filter;
+pub mod status_bar;
 pub mod task_selection_manager;
 pub mod tasks_list;
 pub mod terminal_pane;
@@ -104,6 +109,36 @@ pub trait Component: Any + Send {
     /// * `Result<()>` - An Ok result or an error.
     fn draw(&mut self, frame: &mut Frame, area: Rect) -> Result<()>;
 
+    /// The component's clickable external links recorded during the last
+    /// `draw`, if it has any. The app hit-tests these on click. Components
+    /// without links use the default (`None`).
+    fn link_registry(&self) -> Option<&LinkRegistry> {
+        None
+    }
+
+    /// Mutable access to the link registry so the app can clear it at the start
+    /// of each draw pass (the component repopulates it while drawing).
+    fn link_registry_mut(&mut self) -> Option<&mut LinkRegistry> {
+        None
+    }
+
     fn as_any(&self) -> &dyn Any;
     fn as_any_mut(&mut self) -> &mut dyn Any;
+}
+
+/// A popup component that acts as a modal focus layer while focused: it
+/// records its rendered geometry for mouse hit-testing and reports whether it
+/// is currently shown. `Focus::modal` resolves the focused layer to the
+/// component behind it through this trait.
+pub trait ModalPopup: Component {
+    /// Whether the popup is currently shown.
+    fn is_visible(&self) -> bool;
+
+    /// The bordered popup box from the last render, used for
+    /// click-outside-to-dismiss hit-testing. `None` while hidden.
+    fn last_area(&self) -> Option<Rect>;
+
+    /// The inner text area (inside the border and padding) from the last
+    /// render, used to bound text selection. `None` while hidden.
+    fn content_area(&self) -> Option<Rect>;
 }
