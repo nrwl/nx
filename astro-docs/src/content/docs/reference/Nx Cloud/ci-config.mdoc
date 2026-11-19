@@ -204,7 +204,9 @@ Type: `integer`, minimum `0`. Default: `1`.
 
 Runs distributed tasks on a background worker on the machine of the main job.
 On Nx Cloud CI, it's on by default and uses the CPU and memory it detects on the machine.
-Set `cpu` and `memory` to limit what it uses, or set `main-job-worker: false` to run tasks only on the other workers.
+Set `cpu` and `memory` to have it plan for only part of the machine, for example to leave room for services the job starts, or set `main-job-worker: false` to run tasks only on the other workers.
+They don't change the machine's size, which comes from the job's `runs-on` launch template.
+With [dynamic task packing](/docs/features/ci-features/distribute-task-execution#packing-budgets), it runs tasks together up to these values times the packing budgets.
 On your own CI provider, `start-workers` doesn't start this worker from `ci.yaml`.
 To send tasks to it, use `agent: main` in [`assignment-rules`](#assignment-rules).
 The name `main` is reserved, so a launch template can't use it.
