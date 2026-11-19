@@ -1,2 +1,14 @@
+[plugins."nx@nx-plugins"]
+enabled = true
+
+[plugins."nx-cloud@nx-plugins"]
+enabled = true
+
+# Codex starts plugin MCP servers outside the workspace; this project entry
+# overrides the nx plugin's nx-mcp server to run it in the workspace.
+[mcp_servers.nx-mcp]
+command = "npx"
+args = ["nx", "mcp"]
+
 [mcp_servers.nx-cloud]
 url = "https://staging.nx.app/nx-cloud/mcp"
