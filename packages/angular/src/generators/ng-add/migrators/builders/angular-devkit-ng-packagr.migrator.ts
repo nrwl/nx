@@ -24,7 +24,11 @@ export class AngularDevkitNgPackagrMigrator extends BuilderMigrator {
   ) {
     super(
       tree,
-      ['@angular-devkit/build-angular:ng-packagr', '@angular/build:ng-packagr'],
+      [
+        '@angular-devkit/build-angular:ng-packagr',
+        '@angular/build:ng-packagr',
+        '@angular/build:library',
+      ],
       undefined,
       project,
       projectConfig,
@@ -49,12 +53,54 @@ export class AngularDevkitNgPackagrMigrator extends BuilderMigrator {
     }
 
     for (const [name, target] of this.targets) {
-      this.updateTargetConfiguration(name, target);
-      this.updateNgPackageJson(name, target);
+      const isLibraryBuilder = target.executor === '@angular/build:library';
+      if (isLibraryBuilder) {
+        this.updateLibraryBuilderTargetConfiguration(target);
+      } else {
+        this.updateTargetConfiguration(name, target);
+        this.updateNgPackageJson(name, target);
+      }
       this.updateTsConfigs(name, target);
       this.updateCacheableOperations([name]);
-      addBuildableLibrariesPostCssDependencies(this.tree);
+      if (!isLibraryBuilder) {
+        addBuildableLibrariesPostCssDependencies(this.tree);
+      }
     }
+  }
+
+  private updateLibraryBuilderTargetConfiguration(
+    target: TargetConfiguration
+  ): void {
+    target.options ??= {};
+    target.options.outputPath ??= joinPathFragments('dist', this.project.name);
+    target.outputs = ['{options.outputPath}'];
+
+    for (const options of [
+      target.options,
+      ...Object.values(target.configurations ?? {}),
+    ]) {
+      if (options.tsConfig) {
+        options.tsConfig = this.convertRootPath(options.tsConfig);
+      }
+      if (options.outputPath) {
+        options.outputPath = this.convertRootPath(options.outputPath);
+      }
+      if (Array.isArray(options.assets)) {
+        options.assets = options.assets.map((asset) =>
+          this.convertAsset(asset)
+        );
+      }
+      if (Array.isArray(options.stylePreprocessorOptions?.includePaths)) {
+        options.stylePreprocessorOptions.includePaths =
+          options.stylePreprocessorOptions.includePaths.map((includePath) =>
+            this.convertRootPath(includePath)
+          );
+      }
+    }
+
+    updateProjectConfiguration(this.tree, this.project.name, {
+      ...this.projectConfig,
+    });
   }
 
   private updateTargetConfiguration(

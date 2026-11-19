@@ -168,6 +168,10 @@ function updateProjectOutputs(
         target.options.outputPath = posix.join('dist', projectName);
         target.outputs = ['{options.outputPath}'];
       }
+    } else if (target.executor === '@angular/build:library') {
+      target.options ??= {};
+      target.options.outputPath ??= posix.join('dist', projectName);
+      target.outputs = ['{options.outputPath}'];
     } else if (
       [
         '@angular-devkit/build-angular:browser-esbuild',

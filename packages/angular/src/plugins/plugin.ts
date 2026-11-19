@@ -23,7 +23,14 @@ import {
 } from '@nx/devkit';
 import { getLockFileName } from '@nx/js';
 import { existsSync, readdirSync, statSync } from 'node:fs';
-import { basename, dirname, isAbsolute, join, relative } from 'node:path';
+import {
+  basename,
+  dirname,
+  isAbsolute,
+  join,
+  relative,
+  resolve,
+} from 'node:path';
 import * as posix from 'node:path/posix';
 import { pathToFileURL } from 'node:url';
 import { targetFromTargetString } from '../utils/targets';
@@ -62,6 +69,7 @@ const knownExecutors = {
     '@angular-devkit/build-angular:browser',
     '@angular-devkit/build-angular:ng-packagr',
     '@angular/build:ng-packagr',
+    '@angular/build:library',
   ]),
   devServer: new Set([
     '@angular-devkit/build-angular:dev-server',
@@ -424,19 +432,31 @@ async function updateBuildTarget(
       target.outputs = outputs;
     }
   } else {
-    const fullOutputPath = join(
-      context.workspaceRoot,
-      angularWorkspaceRoot,
-      angularTarget.options?.outputPath ?? posix.join('dist', projectName)
-    );
-    target.outputs = [
-      getOutput(
-        fullOutputPath,
+    const outputPath =
+      angularTarget.options?.outputPath ?? posix.join('dist', projectName);
+    if (
+      angularTarget.builder !== '@angular/build:library' ||
+      !hasConfigurationWithOtherOutputPath(
+        angularTarget,
+        outputPath,
+        context,
+        angularWorkspaceRoot
+      )
+    ) {
+      const fullOutputPath = join(
         context.workspaceRoot,
         angularWorkspaceRoot,
-        projectRoot
-      ),
-    ];
+        outputPath
+      );
+      target.outputs = [
+        getOutput(
+          fullOutputPath,
+          context.workspaceRoot,
+          angularWorkspaceRoot,
+          projectRoot
+        ),
+      ];
+    }
   }
 
   if (target.outputs?.length) {
@@ -450,7 +470,8 @@ async function updateBuildTarget(
 
   if (
     angularTarget.builder === '@angular-devkit/build-angular:ng-packagr' ||
-    angularTarget.builder === '@angular/build:ng-packagr'
+    angularTarget.builder === '@angular/build:ng-packagr' ||
+    angularTarget.builder === '@angular/build:library'
   ) {
     target.metadata.help.example.options = { watch: true };
   } else {
@@ -959,6 +980,28 @@ function mergeInputs(
       ? [{ externalDependencies: Array.from(externalDependencies) }]
       : []),
   ];
+}
+
+// Inferred outputs can't vary by configuration, so a target with a
+// configuration writing to another directory can't be cached.
+function hasConfigurationWithOtherOutputPath(
+  angularTarget: AngularTargetConfiguration,
+  outputPath: string,
+  context: CreateNodesContext,
+  angularWorkspaceRoot: string
+): boolean {
+  const angularWorkspacePath = join(
+    context.workspaceRoot,
+    angularWorkspaceRoot
+  );
+  const outputDirectory = resolve(angularWorkspacePath, outputPath);
+
+  return Object.values(angularTarget.configurations ?? {}).some(
+    (configuration) =>
+      configuration?.outputPath !== undefined &&
+      resolve(angularWorkspacePath, configuration.outputPath) !==
+        outputDirectory
+  );
 }
 
 function getOutput(
