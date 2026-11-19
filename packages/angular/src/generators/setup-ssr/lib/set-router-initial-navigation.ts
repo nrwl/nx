@@ -286,7 +286,7 @@ function getProvideRouterCallExpression(
   sourceFile: SourceFile
 ): CallExpression | null {
   const routerModuleForRootCalls = query(
-    sourceFile.getText(),
+    sourceFile,
     'PropertyAssignment:has(Identifier[name=providers]) > ArrayLiteralExpression CallExpression:has(Identifier[name=provideRouter])'
   ) as CallExpression[];
 
@@ -297,7 +297,7 @@ function getRouterModuleForRootCallExpression(
   sourceFile: SourceFile
 ): CallExpression | null {
   const routerModuleForRootCalls = query(
-    sourceFile.getText(),
+    sourceFile,
     'Decorator > CallExpression:has(Identifier[name=NgModule]) PropertyAssignment:has(Identifier[name=imports]) > ArrayLiteralExpression CallExpression:has(Identifier[name=forRoot])'
   ) as CallExpression[];
 
