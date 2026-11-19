@@ -1,6 +1,8 @@
 package dev.nx.gradle.utils
 
 import groovy.lang.Closure
+import java.lang.invoke.MethodHandle
+import java.lang.invoke.MethodHandles
 import java.util.Collections
 import java.util.IdentityHashMap
 import java.util.WeakHashMap
@@ -204,6 +206,25 @@ private fun immutableValuesOf(dep: DefaultTaskDependency): Set<*>? =
     }
 
 /**
+ * Gradle 9.9 narrowed [CachingTaskDependencyResolveContext.getDependencies]'s second parameter from
+ * `Object` to [TaskDependencyContainer]. Resolve the handle once at runtime so a single compiled
+ * jar works on both Gradle <= 9.8 and >= 9.9.
+ */
+internal fun findCachingContextGetDependencies(cls: Class<*>): MethodHandle {
+  val method =
+      try {
+        cls.getMethod("getDependencies", Task::class.java, TaskDependencyContainer::class.java)
+      } catch (_: NoSuchMethodException) {
+        cls.getMethod("getDependencies", Task::class.java, Any::class.java)
+      }
+  return MethodHandles.publicLookup().unreflect(method)
+}
+
+private val cachingContextGetDependencies: MethodHandle by lazy {
+  findCachingContextGetDependencies(CachingTaskDependencyResolveContext::class.java)
+}
+
+/**
  * Gradle's own resolve context, with one interception: a [DefaultTaskDependency] holding a
  * qualified path is swapped for a copy resolving through [SafeTaskResolver]. Only that class
  * resolves a path, and only a qualified one deadlocks (#36668); a container without one is passed
@@ -213,6 +234,10 @@ private class SafeResolveContext
 private constructor(private val owner: Project, private val task: Task, val lost: LostCounter) :
     CachingTaskDependencyResolveContext<Task>(listOf(WorkDependencyResolver.TASK_AS_TASK, lost)) {
   constructor(owner: Project, task: Task) : this(owner, task, LostCounter())
+
+  @Suppress("UNCHECKED_CAST")
+  fun resolveDependencies(task: Task, container: TaskDependencyContainer): Set<Task> =
+      cachingContextGetDependencies.invoke(this, task, container) as Set<Task>
 
   /** Counts what the engine cannot turn into a task, except the transform nodes Gradle ignores. */
   class LostCounter : WorkDependencyResolver<Task> {
@@ -280,11 +305,16 @@ private fun computeResolveDependsOn(task: Task): DependsOnResolution {
   return try {
     val root = context.screenedCopy(task.dependsOn)
     root.add(task.inputs)
-    DependsOnResolution(context.getDependencies(task, root), context.lost.count).also {
+    DependsOnResolution(context.resolveDependencies(task, root), context.lost.count).also {
       task.logger.info("Dependencies for ${task.path}: ${it.tasks.map { t -> t.path }}")
     }
   } catch (e: Throwable) {
-    task.logger.info("Safe dependency resolution failed for ${task.path}: ${e.message}")
+    if (e is LinkageError) {
+      task.logger.warn(
+          "Safe dependency resolution failed for ${task.path} due to Gradle API incompatibility: ${e.message}")
+    } else {
+      task.logger.info("Safe dependency resolution failed for ${task.path}: ${e.message}")
+    }
     val values = flattenDependsOn(task)
     // The whole inputs half is lost too, so this always fails open.
     DependsOnResolution(values.filterIsInstance<Task>().toSet(), 1 + values.count { it !is Task })

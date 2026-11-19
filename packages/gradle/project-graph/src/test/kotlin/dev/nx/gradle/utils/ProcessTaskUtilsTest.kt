@@ -7,6 +7,7 @@ import groovy.lang.Closure
 import kotlin.io.path.Path
 import org.gradle.api.Project
 import org.gradle.api.Task
+import org.gradle.api.internal.tasks.TaskDependencyContainer
 import org.gradle.testfixtures.ProjectBuilder
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
@@ -558,6 +559,23 @@ class ProcessTaskUtilsTest {
       // ":other:" names no task; a bare name resolves inside the declaring project.
       assertNull(lookupTask(project, ":other:"), "a trailing colon names no task")
       assertEquals(":classes", lookupTask(project, "classes")?.path)
+    }
+
+    @Test
+    fun `test findCachingContextGetDependencies dispatches Gradle 8 and Gradle 9_9 signatures`() {
+      val task = project.tasks.register("target").get()
+      val dep = project.tasks.register("upstream").get()
+      val container = TaskDependencyContainer { _ -> }
+
+      val gradle8Handle = findCachingContextGetDependencies(Gradle8ResolveContextStub::class.java)
+      val gradle8Result =
+          gradle8Handle.invoke(Gradle8ResolveContextStub(setOf(dep)), task, container) as Set<*>
+      assertEquals(setOf(dep), gradle8Result)
+
+      val gradle99Handle = findCachingContextGetDependencies(Gradle99ResolveContextStub::class.java)
+      val gradle99Result =
+          gradle99Handle.invoke(Gradle99ResolveContextStub(setOf(dep)), task, container) as Set<*>
+      assertEquals(setOf(dep), gradle99Result)
     }
 
     @Test
@@ -2226,4 +2244,12 @@ class ProcessTaskUtilsTest {
       }
     }
   }
+}
+
+class Gradle8ResolveContextStub(private val result: Set<Task>) {
+  fun getDependencies(task: Task?, dependencies: Any): Set<Task> = result
+}
+
+class Gradle99ResolveContextStub(private val result: Set<Task>) {
+  fun getDependencies(task: Task?, dependencies: TaskDependencyContainer): Set<Task> = result
 }
