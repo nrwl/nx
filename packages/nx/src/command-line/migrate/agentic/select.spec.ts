@@ -536,12 +536,16 @@ describe('resolveAgentic', () => {
       });
     });
 
-    it('keeps the error when an explicit --agentic leaves no usable agent', async () => {
+    it('keeps the error, naming the unusable binary, when an explicit --agentic leaves no usable agent', async () => {
       mockDetect.mockResolvedValue([detected('copilot-cli')]);
 
       await expect(
         resolveAgentic({ agentic: true, migrations: [{ prompt: 'x.md' }] })
       ).rejects.toThrow(/No installed AI agent/);
+      expect(mockOutputError.mock.calls[0][0]).toMatchObject({
+        title: expect.stringMatching(/no installed AI agent could be used/),
+        bodyLines: expect.arrayContaining([rejectedLine]),
+      });
     });
 
     it('names the unusable binary when --agentic=<id> requested it, then uses the installed agent', async () => {
