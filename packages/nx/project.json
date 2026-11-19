@@ -72,7 +72,10 @@
       "outputs": [
         "{projectRoot}/dist/**/*.{js,cjs,mjs,jsx,json,d.ts,d.cts,d.mts}{,.map}",
         "{projectRoot}/dist/tsconfig.tsbuildinfo"
-      ]
+      ],
+      "ultracache": {
+        "mode": "off"
+      }
     },
     "copy-assets": {
       "dependsOn": ["build-native", "^build-client"]
