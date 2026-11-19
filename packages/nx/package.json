@@ -71,7 +71,7 @@
     "npm-run-path": "^4.0.1",
     "resolve.exports": "2.0.3",
     "semver": "catalog:",
-    "string-width": "^7.2.0",
+    "string-width": "^8.2.1",
     "tar-stream": "~2.2.0",
     "tmp": "catalog:",
     "tsconfig-paths": "catalog:typescript",
