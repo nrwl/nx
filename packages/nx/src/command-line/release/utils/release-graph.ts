@@ -693,21 +693,11 @@ export class ReleaseGraph {
     const releaseTagPattern = releaseGroup.releaseTag.pattern;
 
     if (finalConfigForProject.currentVersionResolver === 'git-tag') {
-      latestMatchingGitTag = await getLatestGitTagForPattern(
-        releaseTagPattern,
-        {
-          projectName: sanitizeProjectNameForGitTag(projectGraphNode.name),
-          releaseGroupName: releaseGroup.name,
-        },
-        this.resolveRepositoryTags.bind(this),
-        {
-          checkAllBranchesWhen: releaseGroup.releaseTag.checkAllBranchesWhen,
-          preid: preid,
-          requireSemver: releaseGroup.releaseTag.requireSemver,
-          strictPreid: releaseGroup.releaseTag.strictPreid,
-        }
+      latestMatchingGitTag = await this.resolveLatestMatchingGitTag(
+        releaseGroup,
+        projectName,
+        preid
       );
-      this.cachedLatestMatchingGitTag.set(projectName, latestMatchingGitTag);
     }
 
     return resolveCurrentVersion(
@@ -721,6 +711,45 @@ export class ReleaseGraph {
       releaseTagPattern,
       latestMatchingGitTag
     );
+  }
+
+  /**
+   * Resolve and cache the latest git tag matching the release tag pattern of
+   * the given project's release group.
+   *
+   * @internal
+   */
+  async resolveLatestMatchingGitTag(
+    releaseGroup: ReleaseGroupWithName,
+    projectName: string,
+    preid: string
+  ): Promise<Awaited<ReturnType<typeof getLatestGitTagForPattern>>> {
+    const latestMatchingGitTag = await getLatestGitTagForPattern(
+      releaseGroup.releaseTag.pattern,
+      {
+        projectName: sanitizeProjectNameForGitTag(projectName),
+        releaseGroupName: releaseGroup.name,
+      },
+      this.resolveRepositoryTags.bind(this),
+      {
+        checkAllBranchesWhen: releaseGroup.releaseTag.checkAllBranchesWhen,
+        preid: preid,
+        requireSemver: releaseGroup.releaseTag.requireSemver,
+        strictPreid: releaseGroup.releaseTag.strictPreid,
+      }
+    );
+    this.cachedLatestMatchingGitTag.set(projectName, latestMatchingGitTag);
+    return latestMatchingGitTag;
+  }
+
+  /**
+   * The projects matched by the user's filters, before any dependents were
+   * added according to `updateDependents`.
+   *
+   * @internal
+   */
+  getOriginallyFilteredProjects(): ReadonlySet<string> {
+    return this.originalFilteredProjects;
   }
 
   /**

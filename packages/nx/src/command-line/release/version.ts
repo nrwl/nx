@@ -44,6 +44,12 @@ import {
 } from './utils/shared';
 import { validateResolvedVersionPlansAgainstFilter } from './utils/version-plan-utils';
 import { ReleaseGroupProcessor } from './version/release-group-processor';
+import {
+  ReleaseBoundaryCheckError,
+  ReleaseBoundaryFinding,
+  checkReleaseBoundary,
+  formatReleaseBoundaryFinding,
+} from './version/release-boundary-check';
 import { SemverBumpType } from './version/version-actions';
 
 export interface NxReleaseVersionResult {
@@ -64,6 +70,10 @@ export interface NxReleaseVersionResult {
    * This can be passed to subsequent operations (changelog, publish) to avoid recomputing.
    */
   releaseGraph: ReleaseGraph;
+  /**
+   * Findings of the release boundary check. Only present when `release.version.releaseBoundaryCheck` is not "off".
+   */
+  releaseBoundaryFindings?: ReleaseBoundaryFinding[];
 }
 
 export const releaseVersionCLIHandler = (args: VersionOptions) =>
@@ -256,8 +266,35 @@ export function createAPI(
       }
     );
 
+    const releaseBoundaryCheck =
+      nxReleaseConfig.version.releaseBoundaryCheck ?? 'off';
+    let releaseBoundaryFindings: ReleaseBoundaryFinding[] | undefined;
+
     try {
       await processor.processGroups();
+
+      if (releaseBoundaryCheck !== 'off') {
+        releaseBoundaryFindings = await checkReleaseBoundary({
+          tree,
+          projectGraph,
+          nxReleaseConfig,
+          releaseGraph,
+          versionData: processor.getVersionData(),
+          preid: args.preid ?? '',
+          userGivenSpecifier: args.specifier,
+        });
+        if (releaseBoundaryFindings.length) {
+          if (releaseBoundaryCheck === 'error') {
+            throw new ReleaseBoundaryCheckError(releaseBoundaryFindings);
+          }
+          output.warn({
+            title: `The release boundary check found ${releaseBoundaryFindings.length} issue(s)`,
+            bodyLines: releaseBoundaryFindings.map(
+              (f) => `- ${formatReleaseBoundaryFinding(f)}`
+            ),
+          });
+        }
+      }
 
       // Delete processed version plan files if applicable
       if (args.deleteVersionPlans) {
@@ -395,6 +432,7 @@ export function createAPI(
         workspaceVersion,
         projectsVersionData: versionData,
         releaseGraph,
+        ...(releaseBoundaryFindings && { releaseBoundaryFindings }),
       };
     }
 
@@ -454,6 +492,7 @@ export function createAPI(
       workspaceVersion,
       projectsVersionData: versionData,
       releaseGraph,
+      ...(releaseBoundaryFindings && { releaseBoundaryFindings }),
     };
   };
 }

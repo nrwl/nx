@@ -108,3 +108,30 @@ Enable `applyPreidToDependents` when:
 Leave it off (the default) when a stable `1.0.1` of `project-a` depending on an `rc` of `project-b` is a valid, intentional release for you. Prerelease dependencies shouldn't automatically promote their consumers into prereleases.
 
 The option can also be set per release group under `release.groups.<group>.version.applyPreidToDependents` to scope the behavior to only certain groups.
+
+### Check the release boundary
+
+When you release a subset of your workspace with `--groups` or `--projects`, dependency relationships can cross the edge of that subset.
+Set `version.releaseBoundaryCheck` to `"warn"` or `"error"` to have Nx report them after it determines the new versions and before it writes them:
+
+```json
+{
+  "release": {
+    "version": {
+      "releaseBoundaryCheck": "error"
+    }
+  }
+}
+```
+
+The check reports three types of finding, named by their `type` in the programmatic API result:
+
+- `added-by-dependents`: a project you didn't select is being released because `updateDependents` added it. With the default of `"always"`, releasing `group-a` also releases any project in `group-b` that depends on a released project.
+- `dependent-not-released`: a project depends on a released project but isn't released itself. Nx shows the version it declares and, for `package.json` projects where both are valid semver, whether that declared version admits the new version. If it does, consumers of the dependent can resolve the new version without the dependent being released or tested again.
+- `dependency-not-released`: a released project depends on a project that isn't being released but has pending changes. Nx estimates the pending bump with the conventional commits or version plans of that project's release group. When it can't, for example because the group uses the interactive prompt or has no matching git tag, it reports the pending changes as unknown.
+
+With `"error"`, any finding fails the release, so a release that `updateDependents: "always"` extends into another group fails too.
+To release one group at a time without `added-by-dependents` findings, set `updateDependents` to `"auto"` or `"never"`.
+Dependents in other groups are then reported as `dependent-not-released` instead.
+
+The check only covers projects that are in a release group, and it doesn't cover Docker versioning.

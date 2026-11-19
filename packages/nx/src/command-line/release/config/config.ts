@@ -606,10 +606,12 @@ export async function createNxReleaseConfig(
   } as DeepRequired<{
     git?: NxReleaseGitConfiguration;
     preVersionCommand?: string;
+    releaseBoundaryCheck?: 'off' | 'warn' | 'error';
   }> &
     NxReleaseVersionConfiguration;
   delete rootVersionWithoutGlobalOptions.git;
   delete rootVersionWithoutGlobalOptions.preVersionCommand;
+  delete rootVersionWithoutGlobalOptions.releaseBoundaryCheck;
 
   // Apply conventionalCommits shorthand to the final group defaults if explicitly configured in the original user config
   if (userConfig.version?.conventionalCommits === true) {

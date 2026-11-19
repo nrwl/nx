@@ -11,3 +11,4 @@ export {
   AfterAllProjectsVersioned,
   ResolveVersionForDependency,
 } from '../src/command-line/release';
+export type { ReleaseBoundaryFinding } from '../src/command-line/release';

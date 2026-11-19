@@ -673,6 +673,16 @@ export interface NxReleaseConfiguration {
   version?: NxReleaseVersionConfiguration & {
     git?: NxReleaseGitConfiguration;
     preVersionCommand?: string;
+    /**
+     * Whether to check, after the new versions are determined and before they are written, for dependency
+     * relationships that cross the boundary of what is being released: projects that were added to the release
+     * because they depend on something being released, dependents that are not being released, and dependencies
+     * with pending changes that are not being released.
+     * - 'off' is the default and skips the check entirely.
+     * - 'warn' prints any findings and continues.
+     * - 'error' prints any findings and fails before the new versions are written.
+     */
+    releaseBoundaryCheck?: 'off' | 'warn' | 'error';
   };
   /**
    * Configuration for release tag generation and matching.
