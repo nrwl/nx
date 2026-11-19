@@ -5,11 +5,15 @@ import {
   visitNotIgnoredFiles,
   type Tree,
 } from '@nx/devkit';
-import { getInstalledPackageVersion, ast, query } from '@nx/devkit/internal';
+import {
+  ast,
+  ensureTypescript,
+  getInstalledPackageVersion,
+  query,
+} from '@nx/devkit/internal';
 import { addVitestTempFilesToGitIgnore } from '../../utils/ignore-vitest-temp-files';
 import { major } from 'semver';
 import type {
-  CallExpression,
   ExportSpecifier,
   ImportSpecifier,
   PropertyAccessExpression,
@@ -288,10 +292,10 @@ function detectSequentialUsage(
     'PropertyAssignment > :matches(Identifier[name=sequential], StringLiteral[value=sequential])'
   ).filter((key) => {
     // PropertyAssignment < ObjectLiteralExpression < CallExpression.
-    const call = key.parent?.parent?.parent as CallExpression | undefined;
+    const call = key.parent?.parent?.parent;
     return (
       !!call &&
-      'arguments' in call &&
+      ensureTypescript().isCallExpression(call) &&
       TEST_CALLEES.has(call.expression.getText(sourceFile).split('.')[0])
     );
   });
