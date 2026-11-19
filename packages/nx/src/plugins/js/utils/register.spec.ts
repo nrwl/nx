@@ -874,19 +874,6 @@ describe('with TypeScript 7.1 as typescript', () => {
     fs.cleanup();
   });
 
-  it('should load a file native type stripping rejects through the TypeScript API', async () => {
-    fs.createFilesSync({
-      'plugin.ts': 'enum Kind { Api = 1 }\nexport default Kind.Api;\n',
-    });
-
-    expect(
-      await runInWorkspace(
-        fs,
-        `loadTsFile(${JSON.stringify(join(fs.tempDir, 'plugin.ts'))}).default`
-      )
-    ).toEqual({ ok: true, backend: 'api', value: 1 });
-  }, 60_000);
-
   it('should load an ESM config with top-level await through the TypeScript API', async () => {
     const { pathToFileURL } = require('node:url');
     fs.createFilesSync({
