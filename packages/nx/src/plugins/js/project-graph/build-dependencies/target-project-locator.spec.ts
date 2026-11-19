@@ -26,7 +26,10 @@ vi.mock('nx/src/plugins/js/utils/resolve-relative-to-dir', () => ({
     if (pathOrPackage.startsWith('@nx/nx-win32-x64-msvc')) {
       return null;
     }
-    if (pathOrPackage === 'exports-only/package.json' || pathOrPackage === 'exports-only') {
+    if (
+      pathOrPackage === 'exports-only/package.json' ||
+      pathOrPackage === 'exports-only'
+    ) {
       return null;
     }
     // We intentionally don't allow access to the package.json (emulating package exports)
@@ -1285,7 +1288,10 @@ describe('TargetProjectLocator', () => {
 
     it('should resolve a versioned package when exports block both Node resolution paths', () => {
       expect(
-        targetProjectLocator.findProjectFromImport('exports-only', 'libs/proj/index.ts')
+        targetProjectLocator.findProjectFromImport(
+          'exports-only',
+          'libs/proj/index.ts'
+        )
       ).toEqual('npm:exports-only@5.0.0');
     });
   });
