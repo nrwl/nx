@@ -5,6 +5,17 @@ import type { ApplicationExecutorOptions } from '../schema';
 export function validateOptions(options: ApplicationExecutorOptions): void {
   const { version: angularVersion } = getInstalledAngularVersionInfo();
 
+  if (lt(angularVersion, '22.3.0')) {
+    if (
+      typeof options.prerender === 'object' &&
+      options.prerender.format !== undefined
+    ) {
+      throw new Error(
+        `The "prerender.format" option requires Angular version 22.3.0 or greater. You are currently using version ${angularVersion}.`
+      );
+    }
+  }
+
   if (lt(angularVersion, '21.2.0')) {
     if (options.security?.allowedHosts) {
       throw new Error(

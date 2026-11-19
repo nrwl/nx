@@ -2524,6 +2524,76 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "24.1.0": {
+      "version": "24.1.0-beta.3",
+      "requires": {
+        "@angular/core": ">=22.2.0 <22.3.0"
+      },
+      "packages": {
+        "@angular/cli": {
+          "version": "~22.3.0",
+          "alwaysAddToPackageJson": false,
+          "ignorePackageGroup": true,
+          "ignoreMigrations": true
+        },
+        "@angular-devkit/build-angular": {
+          "version": "~22.3.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/core": {
+          "version": "~22.3.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/schematics": {
+          "version": "~22.3.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/build": {
+          "version": "~22.3.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/pwa": {
+          "version": "~22.3.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/ssr": {
+          "version": "~22.3.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@schematics/angular": {
+          "version": "~22.3.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/architect": {
+          "version": "~0.2203.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/build-webpack": {
+          "version": "~0.2203.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/core": {
+          "version": "~22.3.0",
+          "alwaysAddToPackageJson": true
+        },
+        "@angular/material": {
+          "version": "~22.3.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/cdk": {
+          "version": "~22.3.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/google-maps": {
+          "version": "~22.3.0",
+          "alwaysAddToPackageJson": false
+        },
+        "ng-packagr": {
+          "version": "~22.3.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }
