@@ -15,7 +15,7 @@ import {
   Logger,
 } from '../../utilities';
 import type { BuilderMigrator, BuilderMigratorClassType } from '../builders';
-import { Migrator } from '../migrator';
+import { Migrator, replacePathPrefix } from '../migrator';
 
 export class ProjectMigrator<
   TargetType extends string = string,
@@ -210,21 +210,19 @@ export class ProjectMigrator<
   }
 
   protected convertPath(originalPath: string): string {
-    if (originalPath?.startsWith(this.project.oldSourceRoot)) {
-      return joinPathFragments(
-        this.project.newSourceRoot,
-        originalPath.replace(this.project.oldSourceRoot, '')
-      );
-    }
-
-    if (originalPath?.startsWith(this.project.oldRoot)) {
-      return joinPathFragments(
-        this.project.newRoot,
-        originalPath.replace(this.project.oldRoot, '')
-      );
-    }
-
-    return originalPath;
+    return (
+      replacePathPrefix(
+        originalPath,
+        this.project.oldSourceRoot,
+        this.project.newSourceRoot
+      ) ??
+      replacePathPrefix(
+        originalPath,
+        this.project.oldRoot,
+        this.project.newRoot
+      ) ??
+      originalPath
+    );
   }
 
   protected moveDir(from: string, to: string): void {
