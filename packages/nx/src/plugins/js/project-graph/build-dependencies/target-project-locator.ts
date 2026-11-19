@@ -978,15 +978,16 @@ export class TargetProjectLocator {
       if (!pathOfFileInPackage) {
         // Node's resolver can reject both paths when a package exports only
         // types or subpaths. Its installed manifest is still available on disk.
-        let dir = relativeToDir;
-        while (true) {
+        for (let dir = relativeToDir; ; dir = dirname(dir)) {
           const installed = this.readCompletePackageJson(
             join(dir, 'node_modules', packageName, 'package.json')
           );
-          if (installed) return installed;
-          const parent = dirname(dir);
-          if (parent === dir) return null;
-          dir = parent;
+          if (installed) {
+            return installed;
+          }
+          if (dir === dirname(dir)) {
+            return null;
+          }
         }
       }
       const installedPackageJsonPath = installedPackageJsonFromResolvedFile(
