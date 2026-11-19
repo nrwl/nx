@@ -202,4 +202,79 @@ describe('releasePublish', () => {
       ['b', 'e'],
     ]);
   });
+
+  describe('private projects', () => {
+    const apps = group('apps', ['app-1', 'app-2']);
+
+    it('should skip a group pulled in by updateDependents whose selected projects cannot be published', async () => {
+      const result = await releasePublish({
+        groups: ['group-a'],
+        releaseGraph: releaseGraphFor(
+          [
+            { group: groupA, filtered: ['a', 'c'] },
+            { group: apps, filtered: ['app-1', 'app-2'] },
+          ],
+          ['apps']
+        ),
+      });
+
+      expect(publishedProjects()).toEqual([['a', 'c']]);
+      expect(Object.keys(result)).toEqual(['a', 'c']);
+    });
+
+    it('should skip such a group when filtering by projects too', async () => {
+      await releasePublish({
+        projects: ['c'],
+        releaseGraph: releaseGraphFor(
+          [
+            { group: groupA, filtered: ['c'] },
+            { group: apps, filtered: ['app-1'] },
+          ],
+          ['apps']
+        ),
+      });
+
+      expect(publishedProjects()).toEqual([['c']]);
+    });
+
+    it('should publish only the publishable dependents of a group pulled in by updateDependents', async () => {
+      const mixed = group('mixed', ['b', 'app-1', 'e']);
+
+      await releasePublish({
+        groups: ['group-a'],
+        releaseGraph: releaseGraphFor(
+          [
+            { group: groupA, filtered: ['a', 'c'] },
+            { group: mixed, filtered: ['b', 'app-1'] },
+          ],
+          ['mixed']
+        ),
+      });
+
+      expect(publishedProjects()).toEqual([['a', 'c'], ['b']]);
+    });
+
+    it('should still error when an explicitly selected group has no publishable projects', async () => {
+      await expect(
+        releasePublish({
+          groups: ['apps'],
+          releaseGraph: releaseGraphFor([
+            { group: apps, filtered: ['app-1', 'app-2'] },
+          ]),
+        })
+      ).rejects.toThrow(
+        /the following projects were matched for publishing but do not have the "nx-release-publish" target specified:\n- app-1\n- app-2/
+      );
+      expect(publishedProjects()).toEqual([]);
+    });
+
+    it('should still error when explicitly selected projects cannot be published', async () => {
+      await expect(
+        releasePublish({
+          projects: ['app-1'],
+          releaseGraph: releaseGraphFor([{ group: apps, filtered: ['app-1'] }]),
+        })
+      ).rejects.toThrow(/do not have the "nx-release-publish" target/);
+    });
+  });
 });

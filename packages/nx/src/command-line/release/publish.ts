@@ -157,8 +157,12 @@ export function createAPI(
       const projectNames = getProjectsToPublish(
         releaseGraph,
         releaseGroup,
+        projectGraph,
         args.projects?.length > 0
       );
+      if (projectNames.length === 0) {
+        continue;
+      }
       const publishProjectsResult = await runPublishOnProjects(
         _args,
         projectGraph,
@@ -182,16 +186,27 @@ export function createAPI(
 function getProjectsToPublish(
   releaseGraph: ReleaseGraph,
   releaseGroup: ReleaseGroupWithName,
+  projectGraph: ProjectGraph,
   isFilteredByProjects: boolean
 ): string[] {
   const isAddedForDependents = releaseGraph.releaseGroupsAddedForDependents.has(
     releaseGroup.name
   );
   // Versioning bumps every member of a fixed group, even one only pulled in for some of its dependents
-  return isFilteredByProjects ||
+  const projectNames =
+    isFilteredByProjects ||
     (isAddedForDependents && releaseGroup.projectsRelationship !== 'fixed')
-    ? Array.from(releaseGraph.releaseGroupToFilteredProjects.get(releaseGroup))
-    : releaseGroup.projects;
+      ? Array.from(
+          releaseGraph.releaseGroupToFilteredProjects.get(releaseGroup)
+        )
+      : releaseGroup.projects;
+  if (!isAddedForDependents) {
+    return projectNames;
+  }
+  // The user did not select this group, so private dependents in it are expected, not a misconfiguration
+  return projectNames.filter((projectName) =>
+    projectHasTarget(projectGraph.nodes[projectName], 'nx-release-publish')
+  );
 }
 
 async function runPublishOnProjects(
