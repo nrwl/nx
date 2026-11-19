@@ -121,9 +121,13 @@ export async function setupCompilation(
 
   const setupWarnings: string[] = [];
   if (ignoreTsProjectReferences) {
+    // From @angular/build 22.3 the compilation forces `noEmit` off.
+    const noEmitAdvice = isAngularBuildVersionAtLeast('22.3.0')
+      ? ''
+      : " If the TypeScript configuration sets 'noEmit', set 'isolatedModules' to 'true' or remove 'noEmit'.";
     setupWarnings.push(
-      "The 'useTsProjectReferences' option has no effect with Angular 22.2 and later. " +
-        "If the TypeScript configuration sets 'noEmit', set 'isolatedModules' to 'true' or remove 'noEmit'."
+      "The 'useTsProjectReferences' option has no effect with Angular 22.2 and later." +
+        noEmitAdvice
     );
   }
   const hasExplicitUseDefineForClassFields =
