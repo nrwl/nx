@@ -67,6 +67,14 @@ export interface InvocationSpec {
   args: string[];
   env?: NodeJS.ProcessEnv;
   cwd?: string;
+  /** Written before the agent starts, at paths relative to the run directory. */
+  files?: InvocationFile[];
+}
+
+export interface InvocationFile {
+  /** Forward slashes; every directory it names is created under the run directory. */
+  path: string;
+  content: string;
 }
 
 /**
@@ -79,6 +87,12 @@ export interface AgentDefinition {
   binaryNames: string[];
   /** Absolute paths to probe as a fallback when PATH lookup misses. */
   wellKnownPaths(): string[];
+  /**
+   * How `<binary> --version` output starts for this agent, set when another
+   * product installs a binary under the same name. Nx runs that check only
+   * after the user opts in to the agentic flow.
+   */
+  versionOutputPrefix?: string;
 }
 
 /**

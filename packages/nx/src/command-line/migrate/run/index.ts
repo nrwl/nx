@@ -49,6 +49,8 @@ export type {
 
 export { createRunId } from './run-id';
 
+export { publishFileAtomically } from './atomic-write';
+
 export { isHeld } from './state-lock';
 
 export { pmInstallCommand } from './util';
