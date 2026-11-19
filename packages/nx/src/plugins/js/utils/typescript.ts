@@ -297,11 +297,12 @@ function readTsConfigWithApi(
 ): ts.ParsedCommandLine {
   const cwd = host?.getCurrentDirectory?.() ?? process.cwd();
   const absolutePath = resolve(cwd, tsConfigPath);
-  const exists = host?.fileExists
-    ? host.fileExists(absolutePath)
+  // TypeScript 6 reads a tsconfig `readFile` can't read as an empty one; 7.1
+  // throws.
+  const readable = host?.readFile
+    ? typeof host.readFile(absolutePath) === 'string'
     : fileExists(absolutePath);
-  // TypeScript 6 reads a missing tsconfig as an empty one; 7.1 throws.
-  const parse = exists
+  const parse = readable
     ? (api: TypescriptApi) => api.parseConfigFile(absolutePath)
     : (api: TypescriptApi) =>
         api.parseJsonConfigFileContent(

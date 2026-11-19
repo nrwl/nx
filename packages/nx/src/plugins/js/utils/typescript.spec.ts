@@ -133,6 +133,26 @@ describe.each(typescriptInstalls)(
         ]);
       });
 
+      it.each([
+        ['a served', JSON.stringify({ compilerOptions: { strict: true } })],
+        ['an unserved', undefined],
+      ])(
+        'should read %s tsconfig from a host with only readFile',
+        (_, content) => {
+          const root = join(fs.tempDir, 'not-on-disk');
+
+          const parsed = typescript.readTsConfigWithoutFiles(
+            join(root, 'tsconfig.json'),
+            {
+              readFile: (path) =>
+                relative(root, path) === 'tsconfig.json' ? content : undefined,
+            }
+          );
+
+          expect(parsed.options.strict).toBe(content ? true : undefined);
+        }
+      );
+
       it.runIf(backendKind === 'api')(
         'should rethrow a host error and keep serving later reads',
         async () => {
