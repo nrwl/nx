@@ -1009,7 +1009,7 @@ describe.each([true, false])('@nx/jest/plugin', (disableJestRuntime) => {
     });
   });
 
-  describe('configToTargetName', () => {
+  describe('configFiles', () => {
     beforeEach(async () => {
       await tempFs.createFiles({
         'proj/jest.config.e2e.js': `module.exports = {}`,
@@ -1048,7 +1048,7 @@ describe.each([true, false])('@nx/jest/plugin', (disableJestRuntime) => {
         ['proj/jest.config.js', 'proj/jest.config.e2e.js'],
         {
           targetName: 'test',
-          configToTargetName: { 'jest.config.e2e.js': 'e2e' },
+          configFiles: { 'jest.config.e2e.js': 'e2e' },
           disableJestRuntime,
         },
         context
@@ -1078,7 +1078,9 @@ describe.each([true, false])('@nx/jest/plugin', (disableJestRuntime) => {
           targetName: 'test',
           ciTargetName: 'test-ci',
           ciGroupName: 'Unit (CI)',
-          configToTargetName: { 'jest.config.e2e.js': 'e2e' },
+          configFiles: {
+            'jest.config.e2e.js': { target: 'e2e', ci: 'e2e-ci' },
+          },
           disableJestRuntime,
         },
         context
@@ -1099,6 +1101,123 @@ describe.each([true, false])('@nx/jest/plugin', (disableJestRuntime) => {
       });
     });
 
+    it('infers no CI target for a string entry', async () => {
+      mockJestConfig(
+        { testMatch: ['**/*.spec.ts'] },
+        context,
+        'proj/jest.config.e2e.js'
+      );
+
+      const [[, result]] = await createNodesFunction(
+        ['proj/jest.config.e2e.js'],
+        {
+          targetName: 'test',
+          ciTargetName: 'test-ci',
+          configFiles: { 'jest.config.e2e.js': 'e2e' },
+          disableJestRuntime,
+        },
+        context
+      );
+
+      const { targets, metadata } = result.projects['proj'];
+      expect(Object.keys(targets)).toEqual(['e2e']);
+      expect(metadata).toBeUndefined();
+    });
+
+    it('overrides the top-level target names for the default config', async () => {
+      const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+      mockJestConfig(
+        { testMatch: ['**/*.spec.ts'], testPathIgnorePatterns: ['ignore'] },
+        context
+      );
+      const unit = `unit-${disableJestRuntime}`;
+      const options = {
+        targetName: 'test',
+        ciTargetName: 'test-ci',
+        configFiles: {
+          'jest.config.js': { target: unit, ci: `${unit}-ci` },
+        },
+        disableJestRuntime,
+      };
+
+      try {
+        await createNodesFunction(['proj/jest.config.js'], options, context);
+        const [[, result]] = await createNodesFunction(
+          ['proj/jest.config.js'],
+          options,
+          context
+        );
+
+        const { targets } = result.projects['proj'];
+        expect(Object.keys(targets).sort()).toEqual([
+          unit,
+          `${unit}-ci`,
+          `${unit}-ci--src/unit.spec.ts`,
+        ]);
+        expect(targets[unit].command).toBe('jest');
+        expect(
+          warn.mock.calls.filter(([message]) =>
+            String(message).includes(`target to "${unit}"`)
+          )
+        ).toEqual([
+          [
+            expect.stringContaining(
+              `@nx/jest/plugin: configFiles sets the "jest.config.js" target to "${unit}", overriding targetName "test".`
+            ),
+          ],
+        ]);
+        expect(warn).toHaveBeenCalledWith(
+          expect.stringContaining(
+            `@nx/jest/plugin: configFiles sets the "jest.config.js" ci target to "${unit}-ci", overriding ciTargetName "test-ci".`
+          )
+        );
+      } finally {
+        warn.mockRestore();
+      }
+    });
+
+    it('does not warn when the default config entry agrees with or replaces an unset option', async () => {
+      const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+      mockJestConfig(
+        { testMatch: ['**/*.spec.ts'], testPathIgnorePatterns: ['ignore'] },
+        context
+      );
+
+      try {
+        const [[, matching]] = await createNodesFunction(
+          ['proj/jest.config.js'],
+          {
+            targetName: 'unit',
+            configFiles: { 'jest.config.js': 'unit' },
+            disableJestRuntime,
+          },
+          context
+        );
+        const [[, unset]] = await createNodesFunction(
+          ['proj/jest.config.js'],
+          {
+            configFiles: {
+              'jest.config.js': { target: 'spec', ci: 'spec-ci' },
+            },
+            disableJestRuntime,
+          },
+          context
+        );
+
+        expect(Object.keys(matching.projects['proj'].targets)).toEqual([
+          'unit',
+        ]);
+        expect(Object.keys(unset.projects['proj'].targets).sort()).toEqual([
+          'spec',
+          'spec-ci',
+          'spec-ci--src/unit.spec.ts',
+        ]);
+        expect(warn).not.toHaveBeenCalled();
+      } finally {
+        warn.mockRestore();
+      }
+    });
+
     it('needs a project.json or package.json beside the mapped config', async () => {
       await tempFs.createFiles({
         'no-project/jest.config.e2e.js': `module.exports = {}`,
@@ -1108,7 +1227,7 @@ describe.each([true, false])('@nx/jest/plugin', (disableJestRuntime) => {
         ['no-project/jest.config.e2e.js'],
         {
           targetName: 'test',
-          configToTargetName: { 'jest.config.e2e.js': 'e2e' },
+          configFiles: { 'jest.config.e2e.js': 'e2e' },
           disableJestRuntime,
         },
         context
@@ -1124,7 +1243,7 @@ describe.each([true, false])('@nx/jest/plugin', (disableJestRuntime) => {
           ['proj/jest.config.js', 'proj/jest.config.e2e.js'],
           {
             targetName: 'test',
-            configToTargetName: { 'jest.config.e2e.js': 'test' },
+            configFiles: { 'jest.config.e2e.js': 'test' },
             disableJestRuntime,
           },
           context
@@ -1145,23 +1264,23 @@ describe.each([true, false])('@nx/jest/plugin', (disableJestRuntime) => {
       ]);
     });
 
-    it('warns about an entry the plugin can never read', async () => {
+    it('warns once about an entry the plugin can never read', async () => {
       const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+      const fileName = `jest.${disableJestRuntime}.config.js`;
+      const options = {
+        targetName: 'test',
+        configFiles: { [fileName]: 'e2e' },
+        disableJestRuntime,
+      };
 
       try {
-        await createNodesFunction(
-          ['proj/jest.config.js'],
-          {
-            targetName: 'test',
-            configToTargetName: { 'jest.e2e.config.js': 'e2e' },
-            disableJestRuntime,
-          },
-          context
-        );
+        await createNodesFunction(['proj/jest.config.js'], options, context);
+        await createNodesFunction(['proj/jest.config.js'], options, context);
 
+        expect(warn).toHaveBeenCalledTimes(1);
         expect(warn).toHaveBeenCalledWith(
           expect.stringContaining(
-            '@nx/jest/plugin: ignoring the "jest.e2e.config.js" entry of configToTargetName because the plugin only reads config files named jest.config*.{cjs,mjs,js,cts,mts,ts}.'
+            `@nx/jest/plugin: ignoring the "${fileName}" entry of configFiles because the plugin only reads config files named jest.config*.{cjs,mjs,js,cts,mts,ts}.`
           )
         );
       } finally {

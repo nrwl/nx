@@ -201,7 +201,7 @@ describe('Jest - Convert Executors To Plugin', () => {
     jest.resetModules();
   });
 
-  describe('configToTargetName', () => {
+  describe('configFiles', () => {
     it('infers the targets on other config files in the project root', async () => {
       const project = createTestProject(tree, {
         appName: 'api',
@@ -222,7 +222,7 @@ describe('Jest - Convert Executors To Plugin', () => {
           plugin: '@nx/jest/plugin',
           options: {
             targetName: 'test',
-            configToTargetName: {
+            configFiles: {
               'jest.config.e2e.ts': 'e2e',
               'jest.config.swagger.ts': 'generate-swagger-spec',
             },
@@ -250,7 +250,7 @@ describe('Jest - Convert Executors To Plugin', () => {
           plugin: '@nx/jest/plugin',
           options: {
             targetName: 'test',
-            configToTargetName: {
+            configFiles: {
               'jest.config.swagger.js': 'generate-swagger-spec',
             },
           },
@@ -260,7 +260,7 @@ describe('Jest - Convert Executors To Plugin', () => {
           plugin: '@nx/jest/plugin',
           options: {
             targetName: 'test',
-            configToTargetName: { 'jest.config.e2e.js': 'e2e' },
+            configFiles: { 'jest.config.e2e.js': 'e2e' },
           },
           include: ['apps/app2/**/*'],
         },
@@ -279,7 +279,7 @@ describe('Jest - Convert Executors To Plugin', () => {
           plugin: '@nx/jest/plugin',
           options: {
             targetName: 'test',
-            configToTargetName: {
+            configFiles: {
               'jest.config.swagger.js': 'generate-swagger-spec',
             },
           },

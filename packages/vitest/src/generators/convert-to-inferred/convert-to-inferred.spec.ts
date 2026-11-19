@@ -238,7 +238,7 @@ describe('@nx/vitest:convert-to-inferred', () => {
     fs.reset();
   });
 
-  describe('configToTargetName', () => {
+  describe('configFiles', () => {
     it('infers a target on another config file in the project root', async () => {
       createTestProject(tree);
       tree.write('myapp/vitest.config.e2e.mts', writeE2eConfig('myapp'));
@@ -265,7 +265,7 @@ describe('@nx/vitest:convert-to-inferred', () => {
             testTargetName: 'test',
             testMode: 'run',
             cwd: 'workspaceRoot',
-            configToTargetName: { 'vitest.config.e2e.mts': 'e2e-test' },
+            configFiles: { 'vitest.config.e2e.mts': 'e2e-test' },
           },
         },
       ]);

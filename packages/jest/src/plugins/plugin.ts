@@ -13,8 +13,10 @@ import {
   workspaceDataDirectory,
   applyTestFileDirectives,
   quoteShellArg,
-  readConfigToTargetName,
+  readConfigFiles,
+  resolveConfigFileTarget,
   assertUniqueConfigTargetNames,
+  type ConfigFileEntry,
   type ConfigFileTargets,
 } from '@nx/devkit/internal';
 import {
@@ -85,11 +87,14 @@ export interface JestPluginOptions {
    */
   useJestResolver?: boolean;
   /**
-   * Maps a config file name in a project root to the name of the target that
-   * runs it, e.g. `{ "jest.config.e2e.ts": "e2e" }`. Names must match
+   * Maps a config file name in a project root to the targets that run it,
+   * e.g. `{ "jest.config.e2e.ts": { "target": "e2e", "ci": "e2e-ci" } }`. A
+   * string value is shorthand for `{ "target": <value> }` and infers no CI
+   * target. An entry for `jest.config.<ext>` overrides `targetName` and
+   * `ciTargetName` for that file. Names must match
    * `jest.config*.{cjs,mjs,js,cts,mts,ts}`.
    */
-  configToTargetName?: Record<string, string>;
+  configFiles?: Record<string, string | ConfigFileEntry>;
 }
 
 type IsolatedModulesResult = {
@@ -119,10 +124,11 @@ export const createNodes: CreateNodes<JestPluginOptions> = [
       context.workspaceRoot
     );
 
+    const userOptions = options;
     options = normalizeOptions(options);
-    const configTargetNames = readConfigToTargetName(
+    const configFileEntries = readConfigFiles(
       '@nx/jest/plugin',
-      options.configToTargetName,
+      options.configFiles,
       jestConfigFileNamePatterns
     );
 
@@ -137,7 +143,8 @@ export const createNodes: CreateNodes<JestPluginOptions> = [
       const fileTargets = getConfigFileTargets(
         configFile,
         options,
-        configTargetNames
+        userOptions,
+        configFileEntries
       );
       const potentialRoot = dirname(configFile);
       if (
@@ -290,31 +297,46 @@ interface JestConfigFileTargets extends ConfigFileTargets {
 function getConfigFileTargets(
   configFile: string,
   options: JestPluginOptions,
-  configTargetNames: Map<string, string>
+  userOptions: JestPluginOptions | undefined,
+  configFileEntries: Map<string, ConfigFileEntry>
 ): JestConfigFileTargets | undefined {
   const fileName = posix.basename(configFile);
+  const entry = configFileEntries.get(fileName);
   if (jestConfigFileNamePatterns.defaultName.test(fileName)) {
+    const targetName =
+      resolveConfigFileTarget(
+        '@nx/jest/plugin',
+        fileName,
+        'target',
+        entry?.target,
+        { name: 'targetName', value: userOptions?.targetName }
+      ) ?? options.targetName;
+    const ciTargetName = resolveConfigFileTarget(
+      '@nx/jest/plugin',
+      fileName,
+      'ci',
+      entry?.ci,
+      { name: 'ciTargetName', value: options.ciTargetName }
+    );
     return {
       configFile,
       isDefault: true,
-      targetNames: [options.targetName, options.ciTargetName].filter(Boolean),
-      options,
+      targetNames: [targetName, ciTargetName].filter(Boolean),
+      options: { ...options, targetName, ciTargetName },
       jestCommand: 'jest',
     };
   }
-  const targetName = configTargetNames.get(fileName);
-  if (!targetName) {
+  if (!entry) {
     return undefined;
   }
-  const ciTargetName = options.ciTargetName ? `${targetName}-ci` : undefined;
   return {
     configFile,
     isDefault: false,
-    targetNames: [targetName, ciTargetName].filter(Boolean),
+    targetNames: [entry.target, entry.ci].filter(Boolean),
     options: {
       ...options,
-      targetName,
-      ciTargetName,
+      targetName: entry.target,
+      ciTargetName: entry.ci,
       ciGroupName: undefined,
     },
     jestCommand: `jest --config ${quoteShellArg(fileName)}`,
@@ -1044,9 +1066,7 @@ function isPathOutside(relativePath: string): boolean {
 }
 
 function normalizeOptions(options: JestPluginOptions): JestPluginOptions {
-  options ??= {};
-  options.targetName ??= 'test';
-  return options;
+  return { ...options, targetName: options?.targetName ?? 'test' };
 }
 
 let resolvedJestPaths: Record<string, string>;

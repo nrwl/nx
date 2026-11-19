@@ -361,7 +361,7 @@ describe('remove-deprecated-executors', () => {
         },
       },
     ])(
-      'infers the renamed config of a root project through configToTargetName $shape',
+      'infers the renamed config of a root project through configFiles $shape',
       async ({ targetDefaults, target, expected }) => {
         if (targetDefaults) {
           updateNxJson(tree, { ...readNxJson(tree), targetDefaults });
@@ -389,7 +389,7 @@ describe('remove-deprecated-executors', () => {
           plugin: '@nx/jest/plugin',
           options: {
             targetName: 'test',
-            configToTargetName: { 'jest.config.app.ts': 'test' },
+            configFiles: { 'jest.config.app.ts': 'test' },
           },
           include: ['*'],
         });

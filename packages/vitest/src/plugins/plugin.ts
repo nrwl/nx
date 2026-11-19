@@ -8,8 +8,10 @@ import {
   globWithWorkspaceContext,
   quoteShellArg,
   retryOnRequireEsmRace,
-  readConfigToTargetName,
+  readConfigFiles,
+  resolveConfigFileTarget,
   assertUniqueConfigTargetNames,
+  type ConfigFileEntry,
   type ConfigFileTargets,
 } from '@nx/devkit/internal';
 import {
@@ -88,11 +90,14 @@ export interface VitestPluginOptions {
    */
   cwd?: 'projectRoot' | 'workspaceRoot';
   /**
-   * Maps a config file name in a project root to the name of the target that
-   * runs it, e.g. `{ "vitest.config.e2e.mts": "e2e" }`. Names must match
-   * `{vite,vitest}.config*.{js,ts,mjs,mts,cjs,cts}`.
+   * Maps a config file name in a project root to the targets that run it,
+   * e.g. `{ "vitest.config.e2e.mts": { "target": "e2e", "ci": "e2e-ci" } }`. A
+   * string value is shorthand for `{ "target": <value> }` and infers no CI
+   * target. An entry for `vite.config.<ext>` or `vitest.config.<ext>`
+   * overrides `testTargetName` and `ciTargetName` for that file. Names must
+   * match `{vite,vitest}.config*.{js,ts,mjs,mts,cjs,cts}`.
    */
-  configToTargetName?: Record<string, string>;
+  configFiles?: Record<string, string | ConfigFileEntry>;
 }
 
 type VitestTargets = Pick<ProjectConfiguration, 'targets' | 'metadata'> & {
@@ -109,9 +114,9 @@ export const createNodes: CreateNodes<VitestPluginOptions> = [
     );
     const optionsHash = hashObject(options);
     const normalizedOptions = normalizeOptions(options);
-    const configTargetNames = readConfigToTargetName(
+    const configFileEntries = readConfigFiles(
       '@nx/vitest',
-      normalizedOptions.configToTargetName,
+      normalizedOptions.configFiles,
       vitestConfigFileNamePatterns
     );
     const cachePath = join(
@@ -128,7 +133,8 @@ export const createNodes: CreateNodes<VitestPluginOptions> = [
       const fileOptions = getConfigFileOptions(
         configFile,
         normalizedOptions,
-        configTargetNames
+        options,
+        configFileEntries
       );
       const potentialRoot = dirname(configFile);
       if (
@@ -279,24 +285,37 @@ interface VitestConfigFileOptions {
 function getConfigFileOptions(
   configFile: string,
   options: VitestPluginOptions,
-  configTargetNames: Map<string, string>
+  userOptions: VitestPluginOptions | undefined,
+  configFileEntries: Map<string, ConfigFileEntry>
 ): VitestConfigFileOptions | undefined {
   const fileName = posix.basename(configFile);
+  const entry = configFileEntries.get(fileName);
   if (vitestConfigFileNamePatterns.defaultName.test(fileName)) {
-    return { options, mapped: false };
+    const testTargetName =
+      resolveConfigFileTarget('@nx/vitest', fileName, 'target', entry?.target, {
+        name: 'testTargetName',
+        value: userOptions?.testTargetName,
+      }) ?? options.testTargetName;
+    const ciTargetName = resolveConfigFileTarget(
+      '@nx/vitest',
+      fileName,
+      'ci',
+      entry?.ci,
+      { name: 'ciTargetName', value: options.ciTargetName }
+    );
+    return {
+      options: { ...options, testTargetName, ciTargetName },
+      mapped: false,
+    };
   }
-  const testTargetName = configTargetNames.get(fileName);
-  if (!testTargetName) {
+  if (!entry) {
     return undefined;
   }
-  const ciTargetName = options.ciTargetName
-    ? `${testTargetName}-ci`
-    : undefined;
   return {
     options: {
       ...options,
-      testTargetName,
-      ciTargetName,
+      testTargetName: entry.target,
+      ciTargetName: entry.ci,
       ciGroupName: undefined,
     },
     mapped: true,
@@ -429,8 +448,6 @@ async function buildVitestTargets(
         },
       };
 
-      // Not normalizing in normalizeOptions since it also affects the options
-      // computed for convert-to-inferred.
       const useGlobDiscovery =
         (options.discoverTestFiles ?? 'glob') !== 'vitest';
       // Both discovery paths read the serve-resolved config: Vitest runs tests
@@ -848,10 +865,11 @@ function normalizeOutputPath(
 }
 
 function normalizeOptions(options: VitestPluginOptions): VitestPluginOptions {
-  options ??= {};
-  options.testTargetName ??= 'test';
-  options.testMode ??= 'watch';
-  return options;
+  return {
+    ...options,
+    testTargetName: options?.testTargetName ?? 'test',
+    testMode: options?.testMode ?? 'watch',
+  };
 }
 
 /**

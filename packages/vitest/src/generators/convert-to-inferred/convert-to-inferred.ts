@@ -62,7 +62,7 @@ export async function convertToInferred(tree: Tree, options: Schema) {
                 );
                 return fileName
                   ? {
-                      configToTargetName: { [fileName]: targetName },
+                      configFiles: { [fileName]: targetName },
                       ...runOptions,
                     }
                   : { testTargetName: targetName, ...runOptions };

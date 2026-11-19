@@ -60,7 +60,7 @@ export async function convertToInferred(tree: Tree, options: Schema) {
                   targetName
                 );
                 return fileName
-                  ? { configToTargetName: { [fileName]: targetName } }
+                  ? { configFiles: { [fileName]: targetName } }
                   : { targetName };
               },
             },
@@ -153,7 +153,7 @@ async function postTargetTransformer(
 export default convertToInferred;
 
 // A jestConfig other than jest.config.<ext> reaches the converter only when
-// configToTargetName infers it
+// configFiles infers it
 function toMappedJestConfig(jestConfig: unknown): string | undefined {
   if (typeof jestConfig !== 'string') {
     return undefined;

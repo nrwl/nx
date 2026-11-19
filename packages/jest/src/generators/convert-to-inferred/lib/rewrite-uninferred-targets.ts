@@ -54,7 +54,7 @@ const acceptedOptions = new Map<string, (value: unknown) => boolean>([
 
 /**
  * @nx/jest/plugin infers a project's target from `jest.config.<ext>` in its
- * root, or from another config in its root through `configToTargetName`. A
+ * root, or from another config in its root through `configFiles`. A
  * target running any other config becomes an explicit command.
  */
 export const jestConfigRewrite: UninferredTargetRewrite = {
@@ -77,7 +77,7 @@ export const jestConfigRewrite: UninferredTargetRewrite = {
 };
 
 /**
- * The file name to map to the target in `configToTargetName`, or undefined
+ * The file name to map to the target in `configFiles`, or undefined
  * when the plugin cannot infer the target that way.
  */
 export function mappedJestConfigFileName(
@@ -126,7 +126,7 @@ export function mappedJestConfigFileName(
   return fileName;
 }
 
-// configToTargetName maps each config file to one target
+// configFiles maps each config file to one target
 function isClaimedByEarlierTarget(
   project: ProjectConfiguration,
   targetName: string,

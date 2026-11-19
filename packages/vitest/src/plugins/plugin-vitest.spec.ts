@@ -347,7 +347,7 @@ describe('@nx/vitest', () => {
     });
   });
 
-  describe('configToTargetName', () => {
+  describe('configFiles', () => {
     beforeEach(() => {
       context = {
         nxJsonConfiguration: {
@@ -388,7 +388,7 @@ describe('@nx/vitest', () => {
         {
           testTargetName: 'test',
           testMode: 'run',
-          configToTargetName: { 'vitest.config.e2e.mts': 'e2e' },
+          configFiles: { 'vitest.config.e2e.mts': 'e2e' },
         },
         context
       );
@@ -408,7 +408,7 @@ describe('@nx/vitest', () => {
         ['vite.config.e2e.ts'],
         {
           testTargetName: 'test',
-          configToTargetName: { 'vite.config.e2e.ts': 'e2e' },
+          configFiles: { 'vite.config.e2e.ts': 'e2e' },
         },
         context
       );
@@ -425,7 +425,9 @@ describe('@nx/vitest', () => {
           testTargetName: 'test',
           ciTargetName: 'test-ci',
           ciGroupName: 'Unit (CI)',
-          configToTargetName: { 'vitest.config.e2e.mts': 'e2e' },
+          configFiles: {
+            'vitest.config.e2e.mts': { target: 'e2e', ci: 'e2e-ci' },
+          },
         },
         context
       );
@@ -450,6 +452,118 @@ describe('@nx/vitest', () => {
       });
     });
 
+    it('infers no CI target for a string entry', async () => {
+      const nodes = await createNodesFunction(
+        ['vitest.config.e2e.mts'],
+        {
+          testTargetName: 'test',
+          ciTargetName: 'test-ci',
+          configFiles: { 'vitest.config.e2e.mts': 'e2e' },
+        },
+        context
+      );
+
+      const { targets, metadata } = nodes[0][1].projects!['.'];
+      expect(Object.keys(targets)).toEqual(['e2e']);
+      expect(metadata).toEqual({});
+    });
+
+    it('overrides the top-level target names for the default config', async () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const options = {
+        testTargetName: 'test',
+        ciTargetName: 'test-ci',
+        configFiles: {
+          'vitest.config.ts': { target: 'unit', ci: 'unit-ci' },
+        },
+      };
+
+      try {
+        await createNodesFunction(['vitest.config.ts'], options, context);
+        const nodes = await createNodesFunction(
+          ['vitest.config.ts'],
+          options,
+          context
+        );
+
+        const { targets, metadata } = nodes[0][1].projects!['.'];
+        expect(Object.keys(targets).sort()).toEqual([
+          'unit',
+          'unit-ci',
+          'unit-ci--src/test-1.ts',
+          'unit-ci--src/test-2.ts',
+        ]);
+        expect(Object.keys(metadata.targetGroups)).toEqual(['UNIT (CI)']);
+        expect(warn.mock.calls).toEqual([
+          [
+            expect.stringContaining(
+              '@nx/vitest: configFiles sets the "vitest.config.ts" target to "unit", overriding testTargetName "test".'
+            ),
+          ],
+          [
+            expect.stringContaining(
+              '@nx/vitest: configFiles sets the "vitest.config.ts" ci target to "unit-ci", overriding ciTargetName "test-ci".'
+            ),
+          ],
+        ]);
+      } finally {
+        warn.mockRestore();
+      }
+    });
+
+    it('does not warn when the default config entry agrees with or replaces an unset option', async () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+      try {
+        const matching = await createNodesFunction(
+          ['vitest.config.ts'],
+          {
+            testTargetName: 'spec',
+            configFiles: { 'vitest.config.ts': 'spec' },
+          },
+          context
+        );
+        const unset = await createNodesFunction(
+          ['vitest.config.ts'],
+          { configFiles: { 'vitest.config.ts': 'check' } },
+          context
+        );
+
+        expect(Object.keys(matching[0][1].projects!['.'].targets)).toEqual([
+          'spec',
+        ]);
+        expect(Object.keys(unset[0][1].projects!['.'].targets)).toEqual([
+          'check',
+        ]);
+        expect(warn).not.toHaveBeenCalled();
+      } finally {
+        warn.mockRestore();
+      }
+    });
+
+    it('warns once about an entry the plugin can never read', async () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const options = {
+        testTargetName: 'test',
+        configFiles: { 'vitest.e2e.config.mts': 'e2e' },
+      };
+
+      try {
+        await createNodesFunction(['vitest.config.ts'], options, context);
+        await createNodesFunction(['vitest.config.ts'], options, context);
+
+        expect(warn.mock.calls).toEqual([
+          [
+            expect.stringContaining(
+              '@nx/vitest: ignoring the "vitest.e2e.config.mts" entry of configFiles because the plugin only reads config files named {vite,vitest}.config*.{js,ts,mjs,mts,cjs,cts}.'
+            ),
+          ],
+        ]);
+      } finally {
+        warn.mockRestore();
+      }
+    });
+
     it('boots Vitest with the mapped config to find its test files', async () => {
       const { createVitest } = await import('vitest/node');
       (createVitest as Mock).mockClear();
@@ -460,7 +574,9 @@ describe('@nx/vitest', () => {
           testTargetName: 'test',
           ciTargetName: 'test-ci',
           discoverTestFiles: 'vitest',
-          configToTargetName: { 'vitest.config.e2e.mts': 'e2e' },
+          configFiles: {
+            'vitest.config.e2e.mts': { target: 'e2e', ci: 'e2e-ci' },
+          },
         },
         context
       );
@@ -477,7 +593,7 @@ describe('@nx/vitest', () => {
           ['vitest.config.ts', 'vitest.config.e2e.mts'],
           {
             testTargetName: 'test',
-            configToTargetName: { 'vitest.config.e2e.mts': 'test' },
+            configFiles: { 'vitest.config.e2e.mts': 'test' },
           },
           context
         )
@@ -518,7 +634,7 @@ describe('@nx/vitest', () => {
         {
           testTargetName: 'test',
           testMode: 'run',
-          configToTargetName: { 'vitest.config.unit.mts': 'test' },
+          configFiles: { 'vitest.config.unit.mts': 'test' },
         },
         context
       );
@@ -537,7 +653,7 @@ describe('@nx/vitest', () => {
           ['vite.config.ts', 'vitest.config.unit.mts'],
           {
             testTargetName: 'test',
-            configToTargetName: { 'vitest.config.unit.mts': 'test' },
+            configFiles: { 'vitest.config.unit.mts': 'test' },
           },
           context
         )
@@ -560,7 +676,7 @@ describe('@nx/vitest', () => {
           ['vitest.config.ts', 'vitest.config.a.mts', 'vitest.config.b.mts'],
           {
             testTargetName: 'test',
-            configToTargetName: {
+            configFiles: {
               'vitest.config.a.mts': 'e2e',
               'vitest.config.b.mts': 'e2e',
             },

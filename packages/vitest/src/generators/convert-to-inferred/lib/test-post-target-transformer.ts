@@ -131,7 +131,7 @@ function removePropertiesFromTargetOptions(
 }
 
 // A configFile with another name reaches the converter only when
-// configToTargetName infers it, and the inferred command already passes it
+// configFiles infers it, and the inferred command already passes it
 function toMappedConfigFile(configFile: unknown): string | undefined {
   if (typeof configFile !== 'string') {
     return undefined;
