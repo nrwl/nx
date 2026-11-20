@@ -673,7 +673,10 @@ export function getSwcTranspiler(
   return typeof cleanupFn === 'function' ? cleanupFn : () => {};
 }
 
-export function getTsNodeTranspiler(
+// Deliberately not exported. Its `ts-node` parameter type would reach nx's
+// published declarations, and `ts-node` is an optional transpiler consumers
+// need not install.
+function getTsNodeTranspiler(
   compilerOptions: CompilerOptions,
   tsNodeOptions?: TsConfigOptions,
   preferTsNode?: boolean

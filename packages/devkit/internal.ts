@@ -83,6 +83,7 @@ export {
   determineProjectNameAndRootOptions,
   ensureRootProjectName,
   resolveImportPath,
+  type ProjectNameAndRootOptions,
 } from './src/generators/project-name-and-root-utils';
 export { isInteractive } from './src/generators/prompt';
 export {
