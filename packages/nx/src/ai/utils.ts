@@ -18,7 +18,7 @@ import {
   codexConfigTomlPath,
   geminiMdPath,
   geminiSettingsPath,
-  nxMcpTomlHeader,
+  hasNxMcpTomlServer,
   opencodeMcpPath,
   parseGeminiSettings,
 } from './constants';
@@ -208,7 +208,7 @@ async function getAgentConfiguration(
       let mcpConfigured: boolean;
       if (existsSync(mcpPath)) {
         const tomlContents = readFileSync(mcpPath, 'utf-8');
-        mcpConfigured = tomlContents.includes(nxMcpTomlHeader);
+        mcpConfigured = hasNxMcpTomlServer(tomlContents);
       } else {
         mcpConfigured = false;
       }

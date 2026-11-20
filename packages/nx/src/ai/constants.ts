@@ -1,5 +1,6 @@
 import { join } from 'path';
 import { major } from 'semver';
+import TOML from 'smol-toml';
 import { readJsonFile } from '../utils/fileutils';
 import { NX_TMP_DIR_POSIX } from '../utils/nx-tmp-dir';
 import {
@@ -72,6 +73,22 @@ export const getAgentRulesWrapped = (options: AgentRulesWrappedOptions) => {
 export const analyticsDomain = 'www.google-analytics.com';
 
 export const nxMcpTomlHeader = `[mcp_servers."nx-mcp"]`;
+
+/**
+ * Whether a Codex config.toml already declares the nx-mcp server. TOML allows
+ * the table key quoted or bare, so the contents are parsed rather than matched
+ * against {@link nxMcpTomlHeader}. Unparseable contents fall back to that match.
+ */
+export function hasNxMcpTomlServer(tomlContents: string): boolean {
+  try {
+    const config = TOML.parse(tomlContents) as {
+      mcp_servers?: Record<string, unknown>;
+    };
+    return !!config.mcp_servers?.['nx-mcp'];
+  } catch {
+    return tomlContents.includes(nxMcpTomlHeader);
+  }
+}
 
 /**
  * Get the MCP TOML configuration based on the Nx version.

@@ -31,7 +31,7 @@ import {
   geminiMdPath,
   getAgentRulesWrapped,
   getNxMcpTomlConfig,
-  nxMcpTomlHeader,
+  hasNxMcpTomlServer,
   nxRulesMarkerCommentDescription,
   nxRulesMarkerCommentEnd,
   nxRulesMarkerCommentStart,
@@ -626,7 +626,7 @@ function writeCodexConfig(
       tree.write(codexTomlPath, tomlConfig);
     } else {
       const existing = tree.read(codexTomlPath, 'utf-8');
-      if (!existing.includes(nxMcpTomlHeader)) {
+      if (!hasNxMcpTomlServer(existing)) {
         tree.write(codexTomlPath, existing + '\n' + tomlConfig);
       }
     }
