@@ -434,7 +434,7 @@ impl TaskHasher {
     }
 
     /// A recorded plan's group files, `(path, hash)` each, and the files its
-    /// `TaskOutput`s hash, for `fold_recorded_files`.
+    /// `TaskOutput`s and declared groups hash, for `fold_recorded_files`.
     fn recorded_file_lists(
         &self,
         ids: &[u32],
@@ -485,23 +485,45 @@ impl TaskHasher {
             .collect::<anyhow::Result<Vec<_>>>()?;
         let covered = ids
             .par_iter()
-            .filter_map(|&id| match pool.get(id).value() {
-                HashInstruction::TaskOutput(glob, outputs) => {
-                    Some((id, glob.clone(), outputs.clone()))
-                }
-                _ => None,
+            .filter(|&&id| {
+                matches!(
+                    pool.get(id).value(),
+                    HashInstruction::TaskOutput(..)
+                        | HashInstruction::IgnoredFileSet {
+                            from_ultracache: false,
+                            ..
+                        }
+                )
             })
-            .map(|(id, glob, outputs)| {
-                if let Some(cached) = caches.output_files.get(&id) {
+            .map(|&id| {
+                if let Some(cached) = caches.covered_files.get(&id) {
                     return Ok(Arc::clone(&cached));
                 }
-                let files: Arc<HashSet<String>> = Arc::new(
-                    expand_task_outputs(workspace_root, &glob, &outputs, files_expansion_cache)?
-                        .files
-                        .into_iter()
-                        .collect(),
-                );
-                caches.output_files.insert(id, Arc::clone(&files));
+                let expansion = match pool.get(id).value().clone() {
+                    HashInstruction::TaskOutput(glob, outputs) => Arc::new(expand_task_outputs(
+                        workspace_root,
+                        &glob,
+                        &outputs,
+                        files_expansion_cache,
+                    )?),
+                    HashInstruction::IgnoredFileSet {
+                        globs,
+                        project_roots,
+                        exact_extension_exclusions,
+                        ..
+                    } => self.expand_ignored_files(
+                        id,
+                        &globs,
+                        &project_roots,
+                        exact_extension_exclusions,
+                        files_expansion_cache,
+                        run_stage,
+                    )?,
+                    _ => unreachable!("filtered to covering instructions"),
+                };
+                let files: Arc<HashSet<String>> =
+                    Arc::new(expansion.files.iter().cloned().collect());
+                caches.covered_files.insert(id, Arc::clone(&files));
                 Ok(files)
             })
             .collect::<anyhow::Result<Vec<_>>>()?;
@@ -1206,9 +1228,9 @@ impl TaskHasher {
 type RecordedFileLists = (Vec<Arc<Vec<(String, String)>>>, Vec<Arc<HashSet<String>>>);
 
 /// One value for a recorded plan's group files: every file, by path, minus
-/// those its `TaskOutput`s hash. So whether a recording read a dependency
-/// output those already hash, and how the reads were grouped, leaves the hash
-/// alone. Also returns the paths kept.
+/// those its `TaskOutput`s and declared groups hash. So whether a recording
+/// read a file those already hash, and how the reads were grouped, leaves the
+/// hash alone. Also returns the paths kept.
 fn fold_recorded_files((groups, covered): &RecordedFileLists) -> (String, Vec<String>) {
     let kept: BTreeMap<&String, &String> = groups
         .iter()
@@ -1226,7 +1248,7 @@ fn fold_recorded_files((groups, covered): &RecordedFileLists) -> (String, Vec<St
 #[derive(Default)]
 struct RecordedCaches {
     group_files: DashMap<u32, Arc<Vec<(String, String)>>>,
-    output_files: DashMap<u32, Arc<HashSet<String>>>,
+    covered_files: DashMap<u32, Arc<HashSet<String>>>,
 }
 
 struct HashInstructionArgs<'a> {
@@ -1476,6 +1498,23 @@ mod tests {
         assert_ne!(
             hash_recorded(&DIST_FILES, &[("e2e:typecheck", plan)])["e2e:typecheck"],
             typecheck_hash(&DIST_FILES, groups)
+        );
+    }
+
+    #[test]
+    fn a_read_a_declared_group_hashes_leaves_the_hash_alone() {
+        let mut files = DIST_FILES.to_vec();
+        files.push(("libs/e2e/generated/api.json", "{}"));
+        let hash = |reads: &[&str]| {
+            let mut plan = typecheck_plan(&[reads]);
+            plan.push(HashInstruction::ignored_files(vec![
+                "libs/e2e/generated/**".into(),
+            ]));
+            hash_recorded(&files, &[("e2e:typecheck", plan)])["e2e:typecheck"].clone()
+        };
+        assert_eq!(
+            hash(&["libs/e2e/src/app.spec.ts", "libs/e2e/generated/api.json"]),
+            hash(&["libs/e2e/src/app.spec.ts"])
         );
     }
 
