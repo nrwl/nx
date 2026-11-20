@@ -1,4 +1,6 @@
 mod configurations;
+#[cfg(not(target_arch = "wasm32"))]
+mod files;
 pub(crate) mod set;
 #[cfg(not(target_arch = "wasm32"))]
 mod store;

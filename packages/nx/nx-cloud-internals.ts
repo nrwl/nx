@@ -3,6 +3,7 @@
 // so keep them stable.
 
 export {
+  importUltracacheConfigurationFiles,
   importUltracacheConfigurations,
   openUltracacheConfigurations,
 } from './src/ultracache/store';

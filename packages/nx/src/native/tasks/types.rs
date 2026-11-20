@@ -227,7 +227,7 @@ pub enum HashInstruction {
     /// `project_roots` keep each glob out of projects nested below the one it
     /// reads from; they follow from the globs, see `scope_roots`.
     IgnoredFileSet {
-        globs: Vec<String>,
+        globs: Arc<[Arc<str>]>,
         project_roots: Vec<String>,
         /// Learned exclusions use suffix categories; declared globs stay unchanged.
         ultracache: bool,
@@ -258,10 +258,10 @@ pub(crate) const ALWAYS_ON_WORKSPACE_FILES: [&str; 3] = [
 pub struct InstructionPool {
     ids: DashMap<HashInstruction, u32>,
     items: DashMap<u32, HashInstruction>,
-    // Display strings, rendered once per unique instruction at intern time so
-    // hashing can hand out shared keys instead of re-rendering per task.
-    keys: DashMap<u32, Arc<str>>,
-    /// `HashInstruction::label` per id, rendered once like `keys`.
+    /// Split brace alternatives, declared globs and records from different
+    /// handles can all produce the same text in otherwise distinct groups.
+    disk_globs: DashMap<Arc<str>, ()>,
+    /// Compact display labels shared by every task that references the instruction.
     labels: DashMap<u32, Arc<str>>,
     next_id: AtomicU32,
     // Id-indexed `HashInstruction::lists_ignored_files`. Grows only when such an
@@ -277,16 +277,25 @@ impl InstructionPool {
     /// Returns the id for the instruction, allocating one on first sight.
     /// Value-equal instructions always intern to the same id, so sorting a
     /// plan's ids and deduping is equivalent to value-level dedup.
-    pub fn intern(&self, instruction: HashInstruction) -> u32 {
+    pub fn intern(&self, mut instruction: HashInstruction) -> u32 {
         if let Some(id) = self.ids.get(&instruction) {
             return *id;
+        }
+        if let HashInstruction::IgnoredFileSet { globs, .. } = &mut instruction {
+            for glob in Arc::make_mut(globs) {
+                *glob = self
+                    .disk_globs
+                    .entry(glob.clone())
+                    .or_insert(())
+                    .key()
+                    .clone();
+            }
         }
         match self.ids.entry(instruction) {
             dashmap::mapref::entry::Entry::Occupied(existing) => *existing.get(),
             dashmap::mapref::entry::Entry::Vacant(vacant) => {
                 let id = self.next_id.fetch_add(1, Ordering::Relaxed);
                 self.items.insert(id, vacant.key().clone());
-                self.keys.insert(id, Arc::from(vacant.key().to_string()));
                 self.labels.insert(id, Arc::from(vacant.key().label()));
                 if vacant.key().lists_ignored_files() {
                     // Before the id is published below, so whoever holds it sees the mark.
@@ -328,17 +337,6 @@ impl InstructionPool {
             .expect("instruction ids are only handed out by intern()")
     }
 
-    /// The instruction's Display string, shared across all tasks that
-    /// reference the instruction.
-    pub fn key(&self, id: u32) -> Arc<str> {
-        self.keys
-            .get(&id)
-            .expect("instruction ids are only handed out by intern()")
-            .clone()
-    }
-
-    /// The instruction's label (see `HashInstruction::label`), shared across
-    /// all tasks that reference the instruction.
     pub fn label(&self, id: u32) -> Arc<str> {
         self.labels
             .get(&id)
@@ -375,7 +373,7 @@ impl HashInstruction {
     /// An `IgnoredFileSet` that no project scopes.
     pub fn ignored_files(globs: Vec<String>) -> Self {
         HashInstruction::IgnoredFileSet {
-            globs,
+            globs: globs.into_iter().map(Arc::from).collect(),
             project_roots: Vec::new(),
             ultracache: false,
         }
@@ -410,7 +408,7 @@ impl HashInstruction {
             HashInstruction::IgnoredFileSet { globs, .. }
                 if globs.len() > COMPACT_FILES_LABEL_ABOVE =>
             {
-                let (negations, positives): (Vec<&String>, Vec<&String>) =
+                let (negations, positives): (Vec<_>, Vec<_>) =
                     globs.iter().partition(|glob| glob.starts_with('!'));
                 let shown = positives.len().min(COMPACT_FILES_LABEL_ABOVE);
                 let mut counts = Vec::new();
@@ -420,7 +418,7 @@ impl HashInstruction {
                 if !negations.is_empty() {
                     counts.push(format!("+{} excluded", negations.len()));
                 }
-                let listed: Vec<&str> = positives[..shown].iter().map(|g| g.as_str()).collect();
+                let listed: Vec<&str> = positives[..shown].iter().map(|g| g.as_ref()).collect();
                 match counts.is_empty() {
                     true => format!("files:[{}]", listed.join(",")),
                     false => format!("files:[{} ({})]", listed.join(","), counts.join(", ")),
@@ -542,7 +540,7 @@ mod tests {
         let pool = InstructionPool::new();
         let id = pool.intern(big.clone());
         assert_eq!(&*pool.label(id), label.as_str());
-        assert_eq!(&*pool.key(id), big.to_string().as_str());
+        assert_eq!(pool.get(id).to_string(), big.to_string());
     }
 
     #[test]
@@ -553,7 +551,7 @@ mod tests {
         let c = pool.intern(HashInstruction::UltracacheConfiguration("def".into()));
         assert_eq!(a, b);
         assert_ne!(a, c);
-        assert_eq!(&*pool.key(a), "io-snapshot:abc");
+        assert_eq!(&*pool.label(a), "io-snapshot:abc");
         // Filesets, disk-backed ones included, are replaced by a configuration; the
         // digest is not.
         let fileset = pool.intern(HashInstruction::ProjectFileSet(
@@ -582,15 +580,33 @@ mod tests {
     }
 
     #[test]
-    fn pool_key_matches_display_and_is_shared() {
+    fn pool_label_matches_display_and_is_shared() {
         let pool = InstructionPool::new();
         let instruction = HashInstruction::ProjectConfiguration("proj".to_string());
         let id = pool.intern(instruction.clone());
 
-        let key = pool.key(id);
+        let key = pool.label(id);
         assert_eq!(&*key, instruction.to_string());
         // Every call hands out the same allocation, not a fresh string.
-        assert!(Arc::ptr_eq(&key, &pool.key(id)));
+        assert!(Arc::ptr_eq(&key, &pool.label(id)));
+    }
+
+    #[test]
+    fn overlapping_disk_groups_share_their_glob_strings() {
+        let pool = InstructionPool::new();
+        let group = |extra: &str| {
+            let id = pool.intern(HashInstruction::ignored_files(vec![
+                "shared/**".into(),
+                extra.into(),
+            ]));
+            let HashInstruction::IgnoredFileSet { globs, .. } = pool.get(id).value().clone() else {
+                unreachable!()
+            };
+            globs
+        };
+        let a = group("a/**");
+        let b = group("b/**");
+        assert!(Arc::ptr_eq(&a[0], &b[0]));
     }
 
     #[test]

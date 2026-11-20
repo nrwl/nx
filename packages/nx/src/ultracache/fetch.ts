@@ -25,6 +25,13 @@ export interface ReadUltracacheConfigurationsResult {
   configurations: Readonly<Record<string, ReadUltracacheConfiguration>>;
 }
 
+export interface ReadUltracacheConfigurationFilesResult {
+  commits: string[];
+  updatedAt: number;
+  manifestPath: string;
+  filesDirectory: string;
+}
+
 /**
  * Reads HEAD's Ultracache configurations from Nx Cloud. Throws with a `code`
  * saying why it could not: the client's own, or `NO_CLOUD_CLIENT`, `UNSUPPORTED_CLIENT` or
@@ -32,7 +39,10 @@ export interface ReadUltracacheConfigurationsResult {
  */
 export async function fetchUltracacheConfigurations(
   runnerOptions: UltracacheCloudOptions
-): Promise<ReadUltracacheConfigurationsResult> {
+): Promise<
+  | ReadUltracacheConfigurationsResult
+  | { files: ReadUltracacheConfigurationFilesResult }
+> {
   const client = await loadCloudClient(runnerOptions).catch((e) => {
     throw codedError(
       'NO_CLOUD_CLIENT',
@@ -45,26 +55,27 @@ export async function fetchUltracacheConfigurations(
       'The Nx Cloud client could not be loaded'
     );
   }
-  if (typeof client.readUltracacheConfigurations !== 'function') {
+  const options = {
+    workspaceRoot,
+    nxCloudOptions: runnerOptions,
+    timeoutMs: READ_TIMEOUT_MS,
+  };
+  if (typeof client.readUltracacheConfigurationFiles === 'function') {
+    const files = await client.readUltracacheConfigurationFiles(options);
+    if (files) return { files };
+  } else if (typeof client.readUltracacheConfigurations === 'function') {
+    const result = await client.readUltracacheConfigurations(options);
+    if (result) return result;
+  } else {
     throw codedError(
       'UNSUPPORTED_CLIENT',
       'The installed Nx Cloud client does not expose Ultracache configurations; update nx-cloud'
     );
   }
-  const result = await client.readUltracacheConfigurations({
-    workspaceRoot,
-    nxCloudOptions: runnerOptions,
-    timeoutMs: READ_TIMEOUT_MS,
-  });
-  if (!result) {
-    // The client returns `null` only for a `knownUpdatedAt` match, which nx
-    // never sends; treat it as nothing to serve rather than a broken reply.
-    throw codedError(
-      'NO_CONFIGURATIONS',
-      'Nx Cloud returned no Ultracache configurations'
-    );
-  }
-  return result;
+  throw codedError(
+    'NO_CONFIGURATIONS',
+    'Nx Cloud returned no Ultracache configurations'
+  );
 }
 
 export async function loadCloudClient(

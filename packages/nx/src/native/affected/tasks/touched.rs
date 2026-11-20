@@ -923,7 +923,7 @@ mod tests {
     fn ultracache_exclusions_keep_compound_suffix_changes_affected() {
         let g = graph(&[("a", "libs/a")]);
         let instruction = |negative: &str, ultracache| HashInstruction::IgnoredFileSet {
-            globs: strings(&["libs/a/**/*.ts", negative]),
+            globs: ["libs/a/**/*.ts", negative].map(Into::into).into(),
             project_roots: strings(&["libs/a"]),
             ultracache,
         };
@@ -976,7 +976,7 @@ mod tests {
             (false, "cat.spec.t!s", false),
         ] {
             let instruction = HashInstruction::IgnoredFileSet {
-                globs: strings(&["libs/a/**/*", "!libs/a/**/*.t!s"]),
+                globs: ["libs/a/**/*", "!libs/a/**/*.t!s"].map(Into::into).into(),
                 project_roots: strings(&["libs/a"]),
                 ultracache,
             };
@@ -993,7 +993,7 @@ mod tests {
     fn a_disk_backed_fileset_skips_a_project_nested_below_where_it_reads() {
         let g = graph(&[("a", "libs/a")]);
         let instruction = HashInstruction::IgnoredFileSet {
-            globs: strings(&["libs/a/**/*"]),
+            globs: ["libs/a/**/*"].map(Into::into).into(),
             project_roots: strings(&["libs/a", "libs/a/nested"]),
             ultracache: false,
         };

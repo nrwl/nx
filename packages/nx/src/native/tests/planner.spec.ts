@@ -1,5 +1,6 @@
 import { TempFs } from '../../internal-testing-utils/temp-fs';
-import { rmSync } from 'fs';
+import { rmSync, writeFileSync } from 'fs';
+import { createHash } from 'crypto';
 import { join } from 'path';
 import { tmpdir } from 'os';
 import {
@@ -2029,6 +2030,139 @@ describe('task planner', () => {
       });
       return new UltracacheConfigurationStore(configurationDb).get(commit);
     }
+
+    it('keeps task hashes, exclusions, diagnostics and deferral identical across import formats', async () => {
+      const { planner, taskGraph, projectGraph } = fixture();
+      const taskIds = ['parent:build', 'child:build'];
+      const parent = {
+        inputs: [
+          'libs/parent/src/**/*.ts',
+          '!libs/parent/src/**/*.spec.ts',
+          'dist/libs/child/report.json',
+          'libs/child/fileb.ts',
+        ],
+        outputs: ['dist/parent/log.txt'],
+      };
+      const child = {
+        inputs: ['libs/child/fileb.ts'],
+        outputs: ['dist/libs/child/report.json'],
+      };
+      const configs = { 'parent:build': parent, 'child:build': child };
+      const sha = (bytes: string) =>
+        createHash('sha256').update(bytes).digest('hex');
+      const writeObject = (value: unknown) => {
+        const bytes = JSON.stringify(value);
+        const id = sha(bytes);
+        writeFileSync(join(configurationDbDir, id + '.json'), bytes);
+        return { id, sizeBytes: Buffer.byteLength(bytes) };
+      };
+      const globs = [...parent.inputs, ...parent.outputs];
+      const page = writeObject(
+        Object.fromEntries(globs.map((glob, id) => [glob, id]))
+      );
+      const compact = writeObject({
+        inputs: parent.inputs.map((g) => globs.indexOf(g)),
+        outputs: parent.outputs.map((g) => globs.indexOf(g)),
+      });
+      const v2 = writeObject(child);
+      const parentId = sha(JSON.stringify(parent));
+      const manifestPath = join(configurationDbDir, 'manifest.json');
+      writeFileSync(
+        manifestPath,
+        JSON.stringify({
+          enabled: true,
+          updatedAt: 7,
+          tasks: {
+            'parent:build': {
+              commit: 'ancestor',
+              project: 'parent',
+              artifactId: parentId,
+            },
+            'child:build': {
+              commit: 'head',
+              project: 'child',
+              artifactId: v2.id,
+            },
+          },
+          artifacts: {
+            [parentId]: {
+              sizeBytes: compact.sizeBytes,
+              storageVersion: 3,
+              objectChecksum: compact.id,
+              dictionaryPageIds: [page.id],
+            },
+            [v2.id]: { sizeBytes: v2.sizeBytes },
+          },
+          dictionaryPages: { [page.id]: { sizeBytes: page.sizeBytes } },
+        })
+      );
+      const db = new UltracacheConfigurationStore(configurationDb);
+      const legacy = configurationsFor(configs);
+      const fromObject = db.importEntries(
+        'legacy-object',
+        Object.fromEntries(
+          Object.entries(configs).map(([id, config]) => [
+            id,
+            { commit: 'head', ...config },
+          ])
+        )
+      );
+      const imported = db.importFiles('head', manifestPath, configurationDbDir);
+      const pinned = db.getVersion('head', imported.resolution.fetchedAt);
+      await tempFs.createFiles({
+        'libs/parent/src/file.ts': 'included',
+        'libs/parent/src/ignored.spec.ts': 'excluded',
+        'libs/child/fileb.ts': 'shared',
+        'dist/libs/child/report.json': '{}',
+        'dist/parent/log.txt': 'recorded output',
+      });
+      const files = testOnlyTransferFileMap({ parent: [], child: [] }, []);
+      const hasher = new TaskHasher(
+        tempFs.tempDir,
+        transferProjectGraph(toRustProjectGraph(projectGraph)),
+        files.projectFiles,
+        files.allWorkspaceFiles,
+        Buffer.from('{}'),
+        {},
+        undefined,
+        { selectivelyHashTsConfig: false },
+        files.ignoredIndex
+      );
+      const hash = (handle: typeof legacy) =>
+        hasher.hashPlans(
+          planner.getPlansReference(taskIds, taskGraph, handle),
+          { 'parent:build': {}, 'child:build': {} },
+          tempFs.tempDir,
+          true
+        );
+      const expected = hash(legacy);
+      expect(expected['parent:build'].inputs.files).toContain(
+        'libs/parent/src/file.ts'
+      );
+      expect(expected['parent:build'].inputs.files).not.toContain(
+        'libs/parent/src/ignored.spec.ts'
+      );
+      expect(expected['parent:build'].inputs.files).not.toContain(
+        'dist/parent/log.txt'
+      );
+      for (const handle of [fromObject, imported, pinned]) {
+        expect(hash(handle)).toEqual(expected);
+        const report = getUltracacheReport(handle, {
+          ...getUltracacheSettings(taskGraph),
+          'missing:task': null,
+        });
+        expect(report.used).toEqual(['child:build', 'parent:build']);
+        expect(report.diagnostics).toEqual([
+          expect.objectContaining({
+            taskId: 'missing:task',
+            reason: 'missing',
+          }),
+        ]);
+        expect(getUltracacheDeferredTaskIds(handle, taskGraph)).toEqual([
+          'parent:build',
+        ]);
+      }
+    });
 
     it('leaves plans byte-identical when no task has an Ultracache configuration', () => {
       const { planner, taskGraph } = fixture();

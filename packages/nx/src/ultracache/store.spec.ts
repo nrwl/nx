@@ -1,11 +1,13 @@
 import {
   importUltracacheConfigurations,
+  importUltracacheConfigurationFiles,
   loadUltracacheConfigurationsForRun,
   openUltracacheConfigurations,
 } from './store';
 
 const store = vi.hoisted(() => ({
-  import: vi.fn(),
+  importEntries: vi.fn(),
+  importFiles: vi.fn(),
   get: vi.fn(),
   getVersion: vi.fn(),
 }));
@@ -68,7 +70,7 @@ describe('loadUltracacheConfigurationsForRun', () => {
     vi.stubEnv('CI', 'true');
     vi.clearAllMocks();
     store.get.mockReset();
-    store.import.mockReset();
+    store.importEntries.mockReset();
     store.get.mockReturnValue(null);
     cloud.fetchUltracacheConfigurations.mockResolvedValue({
       configurations: {},
@@ -116,7 +118,7 @@ describe('loadUltracacheConfigurationsForRun', () => {
       configurations,
     });
     const set = stored();
-    store.import.mockReturnValue(set);
+    store.importEntries.mockReturnValue(set);
     const result = await loadUltracacheConfigurationsForRun(
       nxJson,
       { accessToken: 't' },
@@ -125,13 +127,38 @@ describe('loadUltracacheConfigurationsForRun', () => {
     expect(cloud.fetchUltracacheConfigurations).toHaveBeenCalledWith({
       accessToken: 't',
     });
-    expect(store.import).toHaveBeenCalledWith(
-      expect.objectContaining({
-        requestedCommit: 'head',
-        configurationsJson: JSON.stringify(configurations),
-      })
-    );
+    expect(store.importEntries).toHaveBeenCalledWith('head', configurations);
     expect(result).toEqual({ status: 'fetched', configurations: set });
+  });
+
+  it('imports the bundle in place for a normal fetch and through the Cloud export', async () => {
+    const files = {
+      commits: ['head'],
+      updatedAt: 123,
+      manifestPath: '/bundle/manifest.json',
+      filesDirectory: '/bundle/files',
+    };
+    cloud.fetchUltracacheConfigurations.mockResolvedValue({ files });
+    const set = stored();
+    store.importFiles.mockReturnValue(set);
+    await expect(
+      loadUltracacheConfigurationsForRun(nxJson, {}, optedIn())
+    ).resolves.toEqual({
+      status: 'fetched',
+      configurations: set,
+    });
+    expect(
+      importUltracacheConfigurationFiles(
+        'head',
+        files.manifestPath,
+        files.filesDirectory
+      )
+    ).toBe(set);
+    expect(store.importFiles.mock.calls).toEqual([
+      ['head', files.manifestPath, files.filesDirectory],
+      ['head', files.manifestPath, files.filesDirectory],
+    ]);
+    expect(store.importEntries).not.toHaveBeenCalled();
   });
 
   it('fetches once under the lock, and uses a set another process stored meanwhile', async () => {
@@ -231,7 +258,7 @@ describe('loadUltracacheConfigurationsForRun', () => {
   });
 
   it('skips when the store cannot write what Nx Cloud read', async () => {
-    store.import.mockImplementation(() => {
+    store.importEntries.mockImplementation(() => {
       throw coded('WRITE_FAILED', 'disk full');
     });
     expect(
@@ -246,15 +273,12 @@ describe('loadUltracacheConfigurationsForRun', () => {
 describe('importUltracacheConfigurations', () => {
   it('stores what the Nx Cloud client read and returns the handle', () => {
     const handle = { commit: 'head' };
-    store.import.mockReturnValue(handle);
+    store.importEntries.mockReturnValue(handle);
     const configurations = {
       'web:build': { commit: 'head', inputs: ['apps/web/**'], outputs: [] },
     };
     expect(importUltracacheConfigurations('head', configurations)).toBe(handle);
-    expect(store.import).toHaveBeenCalledWith({
-      requestedCommit: 'head',
-      configurationsJson: JSON.stringify(configurations),
-    });
+    expect(store.importEntries).toHaveBeenCalledWith('head', configurations);
   });
 });
 

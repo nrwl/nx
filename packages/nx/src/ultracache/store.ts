@@ -71,10 +71,23 @@ export function importUltracacheConfigurations(
   requestedCommit: string,
   configurations: ReadUltracacheConfigurationsResult['configurations']
 ): UltracacheConfigurations {
-  return getUltracacheConfigurationStore().import({
+  return getUltracacheConfigurationStore().importEntries(
     requestedCommit,
-    configurationsJson: JSON.stringify(configurations),
-  });
+    configurations
+  );
+}
+
+/** Imports the immutable manifest and objects supplied by the Nx Cloud client. */
+export function importUltracacheConfigurationFiles(
+  requestedCommit: string,
+  manifestPath: string,
+  filesDirectory: string
+): UltracacheConfigurations {
+  return getUltracacheConfigurationStore().importFiles(
+    requestedCommit,
+    manifestPath,
+    filesDirectory
+  );
 }
 
 /**
@@ -133,10 +146,14 @@ export async function loadUltracacheConfigurationsForRun(
         const result = await fetchUltracacheConfigurations(runnerOptions);
         return reportUltracacheConfigurationResolution({
           status: 'fetched',
-          configurations: store.import({
-            requestedCommit: head,
-            configurationsJson: JSON.stringify(result.configurations),
-          }),
+          configurations:
+            'files' in result
+              ? store.importFiles(
+                  head,
+                  result.files.manifestPath,
+                  result.files.filesDirectory
+                )
+              : store.importEntries(head, result.configurations),
         });
       }))
     );

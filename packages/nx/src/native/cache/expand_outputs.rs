@@ -157,6 +157,13 @@ fn exists_below_no_link(directory: &Path, path: &str) -> bool {
 /// negated entries matches everything not excluded. An empty list matches
 /// nothing.
 pub fn match_output_paths(entries: Vec<String>, paths: Vec<String>) -> anyhow::Result<Vec<bool>> {
+    match_output_path_refs(&entries, &paths)
+}
+
+pub(crate) fn match_output_path_refs(
+    entries: &[String],
+    paths: &[impl AsRef<str>],
+) -> anyhow::Result<Vec<bool>> {
     if entries.is_empty() {
         return Ok(vec![false; paths.len()]);
     }
@@ -187,7 +194,10 @@ pub fn match_output_paths(entries: Vec<String>, paths: Vec<String>) -> anyhow::R
         .collect::<Vec<_>>();
 
     let glob_set = build_glob_set(&globs)?;
-    Ok(paths.iter().map(|path| glob_set.is_match(path)).collect())
+    Ok(paths
+        .iter()
+        .map(|path| glob_set.is_match(path.as_ref()))
+        .collect())
 }
 
 /// An output as the cache reads it: made workspace-relative if absolute. An

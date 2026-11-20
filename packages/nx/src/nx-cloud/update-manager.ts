@@ -17,6 +17,7 @@ import { HttpClient, HttpError, HttpResponse } from '../utils/http-client';
 import { debugLog } from './debug-logger';
 import type { CloudTaskRunnerOptions } from './nx-cloud-tasks-runner-shell';
 import type {
+  ReadUltracacheConfigurationFilesResult,
   ReadUltracacheConfigurationsOptions,
   ReadUltracacheConfigurationsResult,
 } from '../ultracache/fetch';
@@ -78,6 +79,9 @@ export interface NxCloudClient {
   commands: Record<string, () => Promise<void>>;
   nxCloudTasksRunner: TasksRunner<CloudTaskRunnerOptions>;
   getRemoteCache: () => RemoteCacheV2;
+  readUltracacheConfigurationFiles?: (
+    options: ReadUltracacheConfigurationsOptions
+  ) => Promise<ReadUltracacheConfigurationFilesResult | null>;
   /** Clients that expose Ultracache configurations; see `fetchUltracacheConfigurations`. */
   readUltracacheConfigurations?: (
     options: ReadUltracacheConfigurationsOptions
