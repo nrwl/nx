@@ -321,8 +321,8 @@ mod tests {
         let scoped = HashInstruction::IgnoredFileSet {
             globs: ["packages/gradle/**/*"].map(Into::into).into(),
             project_roots: strings(&["packages/gradle", "packages/gradle/runner"]),
-            ultracache: false,
-            recorded: false,
+            exact_extension_exclusions: false,
+            from_ultracache: false,
         };
         let e = edges(
             &[

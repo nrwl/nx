@@ -324,21 +324,22 @@ impl HashPlanner {
         self.disk_file_set(globs.into_iter().map(Arc::from).collect(), false)
     }
 
-    fn disk_file_set(&self, globs: Vec<Arc<str>>, recorded: bool) -> HashInstruction {
-        let (project_roots, ultracache) = match parse_group_with_exclusions(&globs, recorded) {
-            Ok((positives, negatives)) => (
-                scope_roots(&positives, self.project_roots()),
-                negatives
-                    .iter()
-                    .any(|negative| negative.has_suffix_category()),
-            ),
-            Err(_) => (Vec::new(), recorded),
-        };
+    fn disk_file_set(&self, globs: Vec<Arc<str>>, from_ultracache: bool) -> HashInstruction {
+        let (project_roots, exact_extension_exclusions) =
+            match parse_group_with_exclusions(&globs, from_ultracache) {
+                Ok((positives, negatives)) => (
+                    scope_roots(&positives, self.project_roots()),
+                    negatives
+                        .iter()
+                        .any(|negative| negative.has_suffix_category()),
+                ),
+                Err(_) => (Vec::new(), from_ultracache),
+            };
         HashInstruction::IgnoredFileSet {
             globs: globs.into(),
             project_roots,
-            ultracache,
-            recorded,
+            exact_extension_exclusions,
+            from_ultracache,
         }
     }
 
@@ -490,6 +491,9 @@ impl HashPlanner {
                     ids.extend(dep_ids);
                 }
 
+                if context.is_some() {
+                    drop_ultracache_duplicates(pool, &mut ids);
+                }
                 ids.sort_unstable();
                 ids.dedup();
 
@@ -1605,6 +1609,31 @@ fn prefixed_cache_key(dep: &str, kind: char, rest: &str) -> String {
     format!("{}:{dep}{kind}{rest}", dep.len())
 }
 
+/// Drops groups from the Ultracache configuration that a declared group in
+/// the same plan already hashes, so the files are walked once.
+fn drop_ultracache_duplicates(pool: &InstructionPool, ids: &mut Vec<u32>) {
+    type Key = (Arc<[Arc<str>]>, Vec<String>, bool);
+    let key = |id: &u32, from_configuration: bool| -> Option<Key> {
+        match pool.get(*id).value() {
+            HashInstruction::IgnoredFileSet {
+                globs,
+                project_roots,
+                exact_extension_exclusions,
+                from_ultracache,
+            } if *from_ultracache == from_configuration => Some((
+                Arc::clone(globs),
+                project_roots.clone(),
+                *exact_extension_exclusions,
+            )),
+            _ => None,
+        }
+    };
+    let declared: hashbrown::HashSet<Key> = ids.iter().filter_map(|id| key(id, false)).collect();
+    if !declared.is_empty() {
+        ids.retain(|id| key(id, true).is_none_or(|key| !declared.contains(&key)));
+    }
+}
+
 /// Tasks the up-front batch must leave out because they read what a task
 /// they depend on, directly or through the chain, writes: any task with a
 /// `dependentTasksOutputFiles` instruction, and any task with a disk-backed
@@ -2687,8 +2716,8 @@ mod tests {
         let scoped = pool.intern(HashInstruction::IgnoredFileSet {
             globs: vec!["packages/gradle/**/*".into()].into(),
             project_roots: vec!["packages/gradle".into(), "packages/gradle/runner".into()],
-            ultracache: false,
-            recorded: false,
+            exact_extension_exclusions: false,
+            from_ultracache: false,
         });
         let plans: HashMap<String, Vec<u32>> = [
             ("gradle:nested-output".to_string(), vec![scoped]),
@@ -3162,6 +3191,23 @@ mod always_tests {
     use napi::Either;
     use napi::bindgen_prelude::Either9;
 
+    #[test]
+    fn a_configuration_group_a_declared_group_matches_is_dropped() {
+        let pool = InstructionPool::new();
+        let group = |globs: &[&str], from_ultracache| HashInstruction::IgnoredFileSet {
+            globs: globs.iter().map(|glob| Arc::from(*glob)).collect(),
+            project_roots: vec!["libs/app".into()],
+            exact_extension_exclusions: false,
+            from_ultracache,
+        };
+        let declared = pool.intern(group(&["libs/app/fixtures/**"], false));
+        let duplicate = pool.intern(group(&["libs/app/fixtures/**"], true));
+        let other = pool.intern(group(&["libs/app/src/**"], true));
+        let mut ids = vec![declared, duplicate, other];
+        drop_ultracache_duplicates(&pool, &mut ids);
+        assert_eq!(ids, vec![declared, other]);
+    }
+
     fn named(input: &str, dependencies: bool, always: bool) -> JsInputs {
         Either9::A(InputsInput {
             input: input.into(),
@@ -3483,8 +3529,8 @@ mod always_tests {
                 ]
                 .into(),
                 project_roots: vec!["libs/app".into()],
-                ultracache: false,
-                recorded: false,
+                exact_extension_exclusions: false,
+                from_ultracache: false,
             }]
         );
         assert_eq!(retained(false, true), vec![]);
@@ -3597,7 +3643,7 @@ mod always_tests {
         )));
         assert!(plans.plans["e2e:e2e"].iter().any(|id| matches!(
             plans.pool.get(*id).value(),
-            HashInstruction::IgnoredFileSet { globs, recorded: true, .. }
+            HashInstruction::IgnoredFileSet { globs, from_ultracache: true, .. }
                 if globs.iter().any(|glob| &**glob == "libs/e2e/src/app.spec.ts")
         )));
     }
@@ -3978,7 +4024,7 @@ mod nested_project_tests {
                 HashInstruction::IgnoredFileSet {
                     globs,
                     project_roots,
-                    ultracache,
+                    exact_extension_exclusions,
                     ..
                 } => Some(
                     expand_globs_with_exclusions(
@@ -3986,7 +4032,7 @@ mod nested_project_tests {
                         globs,
                         project_roots,
                         &Source::fileset_from_disk(temp.path()),
-                        *ultracache,
+                        *exact_extension_exclusions,
                     )
                     .unwrap()
                     .files,

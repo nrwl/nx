@@ -160,7 +160,7 @@ impl HashPlanInspector {
             HashInstruction::IgnoredFileSet {
                 globs,
                 project_roots,
-                ultracache,
+                exact_extension_exclusions,
                 ..
             } => {
                 let workspace_root = std::path::Path::new(&self.workspace_root);
@@ -172,7 +172,7 @@ impl HashPlanInspector {
                         &|path| self.tracked.tracks(path),
                         workspace_root,
                     ),
-                    *ultracache,
+                    *exact_extension_exclusions,
                 )?
                 .files;
                 Ok(HashInputsBuilder {

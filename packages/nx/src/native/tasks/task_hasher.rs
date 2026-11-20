@@ -403,7 +403,7 @@ impl TaskHasher {
         id: u32,
         globs: &[Arc<str>],
         project_roots: &[String],
-        ultracache: bool,
+        exact_extension_exclusions: bool,
         files_expansion_cache: &FilesExpansionCache,
         run_stage: RunStage,
     ) -> anyhow::Result<Arc<FilesExpansion>> {
@@ -428,7 +428,7 @@ impl TaskHasher {
                     &|path| run_stage.nothing_ran() && self.workspace_tracks_file(path),
                     list_directory,
                 ),
-                ultracache,
+                exact_extension_exclusions,
             )
         })
     }
@@ -450,12 +450,17 @@ impl TaskHasher {
                 HashInstruction::IgnoredFileSet {
                     globs,
                     project_roots,
-                    ultracache,
-                    recorded: true,
-                } => Some((id, globs.clone(), project_roots.clone(), *ultracache)),
+                    exact_extension_exclusions,
+                    from_ultracache: true,
+                } => Some((
+                    id,
+                    globs.clone(),
+                    project_roots.clone(),
+                    *exact_extension_exclusions,
+                )),
                 _ => None,
             })
-            .map(|(id, globs, project_roots, ultracache)| {
+            .map(|(id, globs, project_roots, exact_extension_exclusions)| {
                 if let Some(cached) = caches.group_files.get(&id) {
                     return Ok(Arc::clone(&cached));
                 }
@@ -463,7 +468,7 @@ impl TaskHasher {
                     id,
                     &globs,
                     &project_roots,
-                    ultracache,
+                    exact_extension_exclusions,
                     files_expansion_cache,
                     run_stage,
                 )?;
@@ -743,7 +748,13 @@ impl TaskHasher {
             .collect();
         let is = |id: u32, kind: fn(&HashInstruction) -> bool| kind(pool.get(id).value());
         let is_recorded_group = |i: &HashInstruction| {
-            matches!(i, HashInstruction::IgnoredFileSet { recorded: true, .. })
+            matches!(
+                i,
+                HashInstruction::IgnoredFileSet {
+                    from_ultracache: true,
+                    ..
+                }
+            )
         };
         let is_ultracache_configuration =
             |i: &HashInstruction| matches!(i, HashInstruction::UltracacheConfiguration(_));
@@ -981,14 +992,14 @@ impl TaskHasher {
             HashInstruction::IgnoredFileSet {
                 globs,
                 project_roots,
-                ultracache,
+                exact_extension_exclusions,
                 ..
             } => {
                 let expansion = self.expand_ignored_files(
                     id,
                     globs,
                     project_roots,
-                    *ultracache,
+                    *exact_extension_exclusions,
                     files_expansion_cache,
                     run_stage,
                 )?;
@@ -1380,8 +1391,8 @@ mod tests {
         HashInstruction::IgnoredFileSet {
             globs: globs.iter().map(|glob| Arc::from(*glob)).collect(),
             project_roots: Vec::new(),
-            ultracache: false,
-            recorded: true,
+            exact_extension_exclusions: false,
+            from_ultracache: true,
         }
     }
 
