@@ -90,6 +90,9 @@ export async function setupCompilation(
     !!options.useTsProjectReferences && isAngularBuildVersionAtLeast('22.2.0');
 
   const { readConfiguration } = await loadCompilerCli();
+  // Collects the tsconfigs the project tsconfig extends. Older compiler CLI
+  // releases ignore the argument and leave it empty.
+  const extendedConfigCache = new Map<string, ts.ExtendedConfigCacheEntry>();
   const { options: tsCompilerOptions, rootNames } = readConfiguration(
     config.source?.tsconfigPath ?? options.tsConfig,
     {
@@ -114,7 +117,9 @@ export async function setupCompilation(
             isolatedModules: true,
           }
         : {}),
-    }
+    },
+    undefined,
+    extendedConfigCache
   );
 
   const compilerOptions = tsCompilerOptions;
@@ -228,6 +233,7 @@ export async function setupCompilation(
     compilerOptions,
     componentStylesheetBundler: COMPONENT_STYLESHEET_BUNDLER,
     setupWarnings,
+    extendedTsConfigFiles: [...extendedConfigCache.keys()],
   };
 }
 
