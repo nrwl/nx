@@ -91,7 +91,7 @@
       "default": false
     },
     "bundler": {
-      "description": "Bundler which is used to package the application. Defaults to `tsc` in TypeScript solution workspaces, otherwise `rolldown`. `tsc` requires a TypeScript solution workspace.",
+      "description": "Bundler which is used to package the application. Defaults to `tsc` in TypeScript solution workspaces, otherwise `rolldown`. `tsc` requires a TypeScript solution workspace. With `framework=nest`, it defaults to `webpack`, supports `webpack` and `rolldown`, and falls back to `webpack` with a warning for other bundlers.",
       "type": "string",
       "enum": ["tsc", "rolldown", "esbuild", "webpack"],
       "x-priority": "important"

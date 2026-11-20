@@ -57,6 +57,12 @@
       "description": "Test runner to use for end to end (e2e) tests",
       "default": "jest"
     },
+    "bundler": {
+      "description": "Bundler which is used to package the application. esbuild is not offered because it does not emit `emitDecoratorMetadata`, which Nest needs for constructor injection.",
+      "type": "string",
+      "enum": ["webpack", "rolldown"],
+      "default": "webpack"
+    },
     "tags": {
       "description": "Add tags to the application (used for linting).",
       "type": "string"
