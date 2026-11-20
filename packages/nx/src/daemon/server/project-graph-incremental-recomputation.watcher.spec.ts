@@ -232,4 +232,82 @@ describe('getCachedSerializedProjectGraphPromise — watcher race coverage', () 
       process.removeListener('unhandledRejection', onUnhandled);
     }
   });
+
+  it('serves the newer graph when an older plugin load fails', async () => {
+    fs.createFilesSync({
+      'nx.json': JSON.stringify({}),
+      'libs/foo/project.json': JSON.stringify({ name: 'before' }),
+    });
+
+    vi.resetModules();
+    const { setWorkspaceRoot } = await import('../../utils/workspace-root');
+    setWorkspaceRoot(fs.tempDir);
+
+    let releaseOlderLoad: () => void;
+    const heldLoad = new Promise<void>((resolve) => {
+      releaseOlderLoad = resolve;
+    });
+    let olderLoadStarted: () => void;
+    const olderLoad = new Promise<void>((resolve) => {
+      olderLoadStarted = resolve;
+    });
+    let holdNextLoad = false;
+    let loadError: Error | undefined;
+    vi.doMock('../../project-graph/plugins/get-plugins', async () => {
+      const actual = await vi.importActual<
+        typeof import('../../project-graph/plugins/get-plugins')
+      >('../../project-graph/plugins/get-plugins');
+      return {
+        ...actual,
+        getPluginsSeparated: async (
+          ...args: Parameters<typeof actual.getPluginsSeparated>
+        ) => {
+          if (holdNextLoad) {
+            holdNextLoad = false;
+            olderLoadStarted();
+            await heldLoad;
+            throw new Error('The older plugin load failed');
+          }
+          if (loadError) {
+            throw loadError;
+          }
+          return actual.getPluginsSeparated(...args);
+        },
+      };
+    });
+    const {
+      getCachedSerializedProjectGraphPromise,
+      invalidateGraphCache,
+      scheduleProjectGraphRecomputation,
+    } = await import('./project-graph-incremental-recomputation');
+
+    const before = await getCachedSerializedProjectGraphPromise();
+    expect(before.projectGraph.nodes.before).toBeDefined();
+
+    holdNextLoad = true;
+    invalidateGraphCache();
+    const early = getCachedSerializedProjectGraphPromise();
+    try {
+      await olderLoad;
+      fs.createFileSync(
+        'libs/foo/project.json',
+        JSON.stringify({ name: 'after' })
+      );
+      scheduleProjectGraphRecomputation([], ['libs/foo/project.json'], []);
+      const after = await getCachedSerializedProjectGraphPromise();
+      expect(after.projectGraph.nodes.after).toBeDefined();
+      loadError = new Error('The newer graph should still be cached');
+    } finally {
+      releaseOlderLoad();
+    }
+
+    for (const result of [
+      await early,
+      await getCachedSerializedProjectGraphPromise(),
+    ]) {
+      expect(result.error).toBeNull();
+      expect(result.projectGraph.nodes.after).toBeDefined();
+      expect(result.projectGraph.nodes.before).toBeUndefined();
+    }
+  });
 });

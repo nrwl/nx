@@ -101,6 +101,7 @@ const projectGraphRecomputationListeners = new Set<
 >();
 let storedWorkspaceConfigHash: string | undefined;
 let fileChangeCounter = 0;
+let inFlightRecomputation: { fileChangeVersion: number } | null = null;
 let recomputationGeneration = 0;
 
 // The graph the settled cached promise serves, with the generation its
@@ -133,11 +134,12 @@ function kickOffRecompute() {
   // The cached pointer is about to hold an unsettled promise, so whatever the
   // previous state described is no longer what the cache serves.
   servedGraphState = null;
+  const recomputation = { fileChangeVersion: fileChangeCounter };
+  inFlightRecomputation = recomputation;
   let myPromise: Promise<SerializedProjectGraph>;
   myPromise = (async () => {
-    // Must resolve, never reject: kickOffRecompute() runs fire-and-forget, so
-    // a rejected myPromise crashes the daemon (unhandled rejection). A throwing
-    // prologue (e.g. plugin load fails) becomes an errorResult the next requester surfaces.
+    // Resolve failures as error results. The file watcher can start a rebuild
+    // without a reader to handle a rejected promise.
     try {
       // Single read shared with getPluginsSeparated below. This collapses
       // what would otherwise be two independent nx.json reads (our snap +
@@ -182,6 +184,10 @@ function kickOffRecompute() {
       return result;
     } catch (e) {
       return errorResult(e);
+    } finally {
+      if (inFlightRecomputation === recomputation) {
+        inFlightRecomputation = null;
+      }
     }
   })();
   cachedSerializedProjectGraphPromise = myPromise;
@@ -228,6 +234,7 @@ export async function getCachedSerializedProjectGraphPromise(
   if (socket) {
     subscribeClientToTopic(socket, ProgressTopics.GraphConstruction);
   }
+  let graphPromise = cachedSerializedProjectGraphPromise;
   try {
     // Drain anything the native watcher has buffered before deciding
     // whether the cached graph is fresh. Without this, a file change
@@ -277,12 +284,11 @@ export async function getCachedSerializedProjectGraphPromise(
       invalidateGraphCache();
     }
 
-    // If no compute exists or events are still in collected*, kick one off.
-    // Otherwise reuse whatever is already in flight or cached.
+    // The queue can still contain edits the in-progress rebuild already covers.
     const needsRecompute =
       !cachedSerializedProjectGraphPromise ||
-      collectedUpdatedFiles.size > 0 ||
-      collectedDeletedFiles.size > 0;
+      (inFlightRecomputation?.fileChangeVersion !== fileChangeCounter &&
+        (collectedUpdatedFiles.size > 0 || collectedDeletedFiles.size > 0));
     if (needsRecompute) {
       serverLogger.log(
         cachedSerializedProjectGraphPromise
@@ -290,21 +296,31 @@ export async function getCachedSerializedProjectGraphPromise(
           : 'No in-memory cached project graph found. Recomputing it...'
       );
       kickOffRecompute();
+    } else if (inFlightRecomputation) {
+      serverLogger.log(
+        'Waiting for the in-progress project graph recomputation.'
+      );
     } else {
       serverLogger.log(
         'Reusing in-memory cached project graph because no files changed.'
       );
     }
 
-    // A stale compute returns cachedSerializedProjectGraphPromise (the
-    // newer compute that replaced it); promise unwrapping flattens the
-    // chain so we always end up with the latest real result.
-    const result = await cachedSerializedProjectGraphPromise;
+    graphPromise = cachedSerializedProjectGraphPromise;
+    let result = await graphPromise;
+    // A replaced rebuild can fail before checking whether it is stale.
+    // Follow its replacement to get the newer result.
+    while (
+      result.error &&
+      cachedSerializedProjectGraphPromise &&
+      cachedSerializedProjectGraphPromise !== graphPromise
+    ) {
+      graphPromise = cachedSerializedProjectGraphPromise;
+      result = await graphPromise;
+    }
 
-    // Even when the loop didn't recompute, write the cache if it's stale on
-    // disk relative to the in-memory result. This protects against
-    // non-daemon processes overwriting the daemon's valid graph with a
-    // stale/errored one.
+    // A non-daemon process can overwrite the disk cache while the daemon
+    // still holds a valid graph.
     if (
       !needsRecompute &&
       result.projectGraph &&
@@ -327,10 +343,11 @@ export async function getCachedSerializedProjectGraphPromise(
 
     return result;
   } catch (e) {
-    // We return the project graph, but we don't want to persist the cache to
-    // serve the same state, as it could cause issues if the error is caused by something
-    // transient
-    cachedSerializedProjectGraphPromise = null;
+    // Let the next reader retry a transient failure without dropping a newer
+    // rebuild that started while this reader was waiting.
+    if (cachedSerializedProjectGraphPromise === graphPromise) {
+      cachedSerializedProjectGraphPromise = null;
+    }
     return {
       error: e,
       serializedProjectGraph: null,
@@ -437,6 +454,11 @@ export function scheduleProjectGraphRecomputation(
  * created or updated file carries its hash.
  */
 function scheduleAppliedChanges(batch: ChangeBatch) {
+  if (isEmptyBatch(batch)) {
+    scheduleInitialProjectGraphComputation();
+    return;
+  }
+
   ++fileChangeCounter;
   const { createdFiles, updatedFiles, deletedFiles } = batch;
 
@@ -449,25 +471,17 @@ function scheduleAppliedChanges(batch: ChangeBatch) {
     collectedDeletedFiles.set(file, fileChangeCounter);
   }
 
-  if (!isEmptyBatch(batch)) {
-    const createdFileNames = fileNames(createdFiles);
-    const updatedFileNames = fileNames(updatedFiles);
-    notifyFileChangeListeners({
-      createdFiles: createdFileNames,
-      updatedFiles: updatedFileNames,
-      deletedFiles,
-    });
-    notifyFileWatcherSockets(createdFileNames, updatedFileNames, deletedFiles);
-    // Bump generation synchronously so any in-flight compute fails its
-    // next isStale() check and chains to the newer one. kickOffRecompute
-    // would also bump on first resume, but only after its first await —
-    // a window during which the old compute could falsely pass.
-    ++recomputationGeneration;
-    kickOffRecompute();
-  } else {
-    // Nothing changed, but a daemon with no graph yet still needs one.
-    scheduleInitialProjectGraphComputation();
-  }
+  const createdFileNames = fileNames(createdFiles);
+  const updatedFileNames = fileNames(updatedFiles);
+  notifyFileChangeListeners({
+    createdFiles: createdFileNames,
+    updatedFiles: updatedFileNames,
+    deletedFiles,
+  });
+  notifyFileWatcherSockets(createdFileNames, updatedFileNames, deletedFiles);
+  // Mark older builds stale before the new rebuild waits for plugins.
+  ++recomputationGeneration;
+  kickOffRecompute();
 }
 
 /** Computes the first project graph, unless one is already on its way. */

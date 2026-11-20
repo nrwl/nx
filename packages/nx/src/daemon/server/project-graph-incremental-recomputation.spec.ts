@@ -1988,10 +1988,8 @@ describe('pending dotenv replay before serving a graph', () => {
       });
       return { promise, release: () => release(), reached: false };
     };
-    // Park the workspace-scheduled compute B at its getPlugins await, past
-    // its file read and its collected-file cleanup, so a request races an
-    // in-flight computation deterministically.
-    const bPark = makeGate();
+    // Keep the edit queued even if a reader starts another rebuild.
+    const rebuildGate = makeGate();
     let retrieveCallCount = 0;
     vi.doMock(
       '../../project-graph/utils/retrieve-workspace-files',
@@ -2002,46 +2000,28 @@ describe('pending dotenv replay before serving a graph', () => {
         return {
           ...actual,
           retrieveProjectConfigurations: async (...args: unknown[]) => {
-            ++retrieveCallCount;
+            const call = ++retrieveCallCount;
             const result = await actual.retrieveProjectConfigurations(...args);
             const env = readFileSync(
               join(fs.tempDir, 'libs/foo/.env.e2e'),
               'utf-8'
             ).trim();
             result.projects['libs/foo'].tags = [`env:${env}`];
+            if (call > 1) {
+              rebuildGate.reached = true;
+              await rebuildGate.promise;
+            }
             return result;
           },
         };
       }
     );
-    // A plain factory: the module sits in a require cycle, so resolving
-    // the actual inside the factory recurses. getPluginsSeparated resolves
-    // it lazily at call time instead (project discovery needs the real
-    // default plugins); the faked getPlugins only skips dependency hooks
-    // these assertions never read.
-    let pluginsCallCount = 0;
-    vi.doMock('../../project-graph/plugins/get-plugins', async () => ({
-      __esModule: true,
-      getPlugins: async () => {
-        const call = ++pluginsCallCount;
-        if (call === 2) {
-          bPark.reached = true;
-          await bPark.promise;
-        }
-        return [];
-      },
-      getPluginsSeparated: async (...args: unknown[]) =>
-        (
-          await vi.importActual<
-            typeof import('../../project-graph/plugins/get-plugins')
-          >('../../project-graph/plugins/get-plugins')
-        ).getPluginsSeparated(...args),
-    }));
 
     const {
       getCachedSerializedProjectGraphPromise,
       scheduleProjectGraphRecomputation,
     } = await import('./project-graph-incremental-recomputation');
+    const { serverLogger } = await import('../logger');
     const { handleWatchEvents } = await import('./handle-watch-events');
     const { EventType } = await import('../../native');
 
@@ -2059,25 +2039,47 @@ describe('pending dotenv replay before serving a graph', () => {
       { path: 'libs/foo/.env.e2e', type: EventType.update },
     ]);
     scheduleProjectGraphRecomputation([], ['libs/foo/.env.e2e'], []);
-    await waitFor(() => bPark.reached, 'compute B to park');
-
-    // A request while B is parked mid-build must chain onto B, not start
-    // a competitor from the queued twin event. The yields let it run its
-    // reuse decision before B is released.
-    const second = getCachedSerializedProjectGraphPromise();
-    for (let i = 0; i < 5; i++) {
-      await new Promise((r) => setImmediate(r));
+    const decisions = vi.spyOn(serverLogger, 'log');
+    const decisionPrefixes = [
+      'Waiting for the in-progress project graph recomputation.',
+      'Reusing in-memory cached project graph',
+      'Recomputing project graph because of ',
+      'No in-memory cached project graph found.',
+    ];
+    let requests: ReturnType<typeof getCachedSerializedProjectGraphPromise>[];
+    try {
+      await waitFor(
+        () => rebuildGate.reached,
+        'watcher rebuild to read the edit'
+      );
+      requests = [
+        getCachedSerializedProjectGraphPromise(),
+        getCachedSerializedProjectGraphPromise(),
+      ];
+      await waitFor(
+        () =>
+          decisions.mock.calls.filter(
+            ([message]) =>
+              typeof message === 'string' &&
+              decisionPrefixes.some((prefix) => message.startsWith(prefix))
+          ).length >= requests.length,
+        'both graph requests to decide whether to rebuild'
+      );
+    } finally {
+      rebuildGate.release();
+      decisions.mockRestore();
     }
-    bPark.release();
 
-    const result = await second;
-    expect(result.error).toBeNull();
-    expect(result.projectGraph.nodes.foo.data.tags).toEqual(['env:PORT=4201']);
+    for (const result of await Promise.all(requests)) {
+      expect(result.error).toBeNull();
+      expect(result.projectGraph.nodes.foo.data.tags).toEqual([
+        'env:PORT=4201',
+      ]);
+    }
     expect(retrieveCallCount).toBe(2);
 
-    // After B settles, the drained queue holds no evidence against it.
-    const third = await getCachedSerializedProjectGraphPromise();
-    expect(third.projectGraph.nodes.foo.data.tags).toEqual(['env:PORT=4201']);
+    const later = await getCachedSerializedProjectGraphPromise();
+    expect(later.projectGraph.nodes.foo.data.tags).toEqual(['env:PORT=4201']);
     expect(retrieveCallCount).toBe(2);
   });
 
@@ -2221,9 +2223,8 @@ describe('computations claiming out of kickoff order', () => {
       });
       return { promise, release: () => release(), reached: false };
     };
-    // Park compute B (kicked by the file-change stream) while it loads
-    // plugins, before its generation claim, and compute C (kicked by the
-    // request) inside its read, after its claim.
+    // Hold B during plugin loading and C during its file read so B claims
+    // its generation after C.
     const bPlugins = makeGate();
     const cRead = makeGate();
     let pluginsCallCount = 0;
@@ -2279,7 +2280,11 @@ describe('computations claiming out of kickoff order', () => {
     scheduleProjectGraphRecomputation(['libs/bar/project.json'], [], []);
     await waitFor(() => bPlugins.reached, 'compute B to load plugins');
 
-    // The queued file makes the request kick C, which claims first.
+    writeFileSync(
+      join(fs.tempDir, 'libs/bar/project.json'),
+      JSON.stringify({ name: 'baz', root: 'libs/bar' })
+    );
+    scheduleProjectGraphRecomputation([], ['libs/bar/project.json'], []);
     const second = getCachedSerializedProjectGraphPromise();
     let settled = false;
     void second.then(() => {
@@ -2295,6 +2300,7 @@ describe('computations claiming out of kickoff order', () => {
     await waitFor(() => settled, 'the request to settle');
     const result = await second;
     expect(result.error).toBeNull();
-    expect(result.projectGraph.nodes.bar).toBeDefined();
+    expect(result.projectGraph.nodes.baz).toBeDefined();
+    expect(result.projectGraph.nodes.bar).toBeUndefined();
   });
 });
