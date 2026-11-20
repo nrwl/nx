@@ -36,8 +36,9 @@ import {
   handleNxReleaseConfigError,
 } from './config/config';
 import { deepMergeJson } from './config/deep-merge-json';
+import type { ReleaseGroupWithName } from './config/filter-release-groups';
 import { printConfigAndExit } from './utils/print-config';
-import { createReleaseGraph } from './utils/release-graph';
+import { createReleaseGraph, type ReleaseGraph } from './utils/release-graph';
 
 export interface PublishProjectsResult {
   [projectName: string]: {
@@ -142,42 +143,8 @@ export function createAPI(
 
     let overallPublishProjectsResult: PublishProjectsResult = {};
 
-    if (args.projects?.length) {
-      /**
-       * Run publishing for all remaining release groups and filtered projects within them
-       * in topological order
-       */
-      for (const releaseGroupName of releaseGraph.sortedReleaseGroups) {
-        const releaseGroup = releaseGraph.releaseGroups.find(
-          (g) => g.name === releaseGroupName
-        );
-        if (!releaseGroup) {
-          // Release group was filtered out, skip
-          continue;
-        }
-        const publishProjectsResult = await runPublishOnProjects(
-          _args,
-          projectGraph,
-          nxJson,
-          Array.from(
-            releaseGraph.releaseGroupToFilteredProjects.get(releaseGroup)
-          ),
-          {
-            excludeTaskDependencies: shouldExcludeTaskDependencies,
-            loadDotEnvFiles: process.env.NX_LOAD_DOT_ENV_FILES !== 'false',
-          }
-        );
-        overallPublishProjectsResult = {
-          ...overallPublishProjectsResult,
-          ...publishProjectsResult,
-        };
-      }
-
-      return overallPublishProjectsResult;
-    }
-
     /**
-     * Run publishing for all remaining release groups
+     * Run publishing for all remaining release groups in topological order
      */
     for (const releaseGroupName of releaseGraph.sortedReleaseGroups) {
       const releaseGroup = releaseGraph.releaseGroups.find(
@@ -187,11 +154,20 @@ export function createAPI(
         // Release group was filtered out, skip
         continue;
       }
+      const projectNames = getProjectsToPublish(
+        releaseGraph,
+        releaseGroup,
+        projectGraph,
+        args.projects?.length > 0
+      );
+      if (projectNames.length === 0) {
+        continue;
+      }
       const publishProjectsResult = await runPublishOnProjects(
         _args,
         projectGraph,
         nxJson,
-        releaseGroup.projects,
+        projectNames,
         {
           excludeTaskDependencies: shouldExcludeTaskDependencies,
           loadDotEnvFiles: process.env.NX_LOAD_DOT_ENV_FILES !== 'false',
@@ -205,6 +181,32 @@ export function createAPI(
 
     return overallPublishProjectsResult;
   };
+}
+
+function getProjectsToPublish(
+  releaseGraph: ReleaseGraph,
+  releaseGroup: ReleaseGroupWithName,
+  projectGraph: ProjectGraph,
+  isFilteredByProjects: boolean
+): string[] {
+  const isAddedForDependents = releaseGraph.releaseGroupsAddedForDependents.has(
+    releaseGroup.name
+  );
+  // Versioning bumps every member of a fixed group, even one only pulled in for some of its dependents
+  const projectNames =
+    isFilteredByProjects ||
+    (isAddedForDependents && releaseGroup.projectsRelationship !== 'fixed')
+      ? Array.from(
+          releaseGraph.releaseGroupToFilteredProjects.get(releaseGroup)
+        )
+      : releaseGroup.projects;
+  if (!isAddedForDependents) {
+    return projectNames;
+  }
+  // The user did not select this group, so private dependents in it are expected, not a misconfiguration
+  return projectNames.filter((projectName) =>
+    projectHasTarget(projectGraph.nodes[projectName], 'nx-release-publish')
+  );
 }
 
 async function runPublishOnProjects(
