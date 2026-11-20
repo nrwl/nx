@@ -15,7 +15,9 @@
   ],
   "main": "nx.linux-x64-gnu.node",
   "files": [
-    "nx.linux-x64-gnu.node"
+    "nx.linux-x64-gnu.node",
+    "fstrace.linux.so",
+    "fstrace-linux"
   ],
   "libc": [
     "glibc"

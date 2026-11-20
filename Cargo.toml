@@ -1,7 +1,7 @@
 
 [workspace]
 resolver = '2'
-members = ['packages/nx']
+members = ['packages/nx', 'packages/nx/src/native/fstrace/linux']
 
 # swc_ecma_lexer debug-asserts on the JSX stall that release builds loop on
 # (https://github.com/nrwl/nx/issues/37687), so tests would panic before the
