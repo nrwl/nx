@@ -768,28 +768,21 @@ impl TaskHasher {
                 | HashInstruction::UltracacheConfiguration(_) => Some(OnceCell::new()),
             })
             .collect();
-        let is = |id: u32, kind: fn(&HashInstruction) -> bool| kind(pool.get(id).value());
-        let is_recorded_group = |i: &HashInstruction| {
-            matches!(
-                i,
+        // Also classified once, for the same reason as `value_slots`.
+        let fold_kinds: Vec<FoldKind> = (0..pool.len() as u32)
+            .map(|id| match pool.get(id).value() {
+                HashInstruction::UltracacheConfiguration(_) => FoldKind::UltracacheConfiguration,
                 HashInstruction::IgnoredFileSet {
                     from_ultracache: true,
                     ..
+                } => FoldKind::UltracacheGroup,
+                HashInstruction::TaskOutput(..) | HashInstruction::IgnoredFileSet { .. } => {
+                    FoldKind::CoversReads
                 }
-            )
-        };
-        let is_ultracache_configuration =
-            |i: &HashInstruction| matches!(i, HashInstruction::UltracacheConfiguration(_));
-        let covers_reads = |i: &HashInstruction| {
-            matches!(
-                i,
-                HashInstruction::TaskOutput(..)
-                    | HashInstruction::IgnoredFileSet {
-                        from_ultracache: false,
-                        ..
-                    }
-            )
-        };
+                _ => FoldKind::Other,
+            })
+            .collect();
+        let is = |id: u32, kind: FoldKind| fold_kinds[id as usize] == kind;
         let recorded_caches = RecordedCaches::default();
         hash_plans.plans.par_iter().try_for_each(|(task_id, ids)| {
             if ids.is_empty() {
@@ -797,8 +790,10 @@ impl TaskHasher {
             }
             // A recorded plan with something that could cover its reads folds
             // them into its configuration entry, see `fold_recorded_files`.
-            let folds_recorded = ids.iter().any(|&id| is(id, is_ultracache_configuration))
-                && ids.iter().any(|&id| is(id, covers_reads));
+            let folds_recorded = ids
+                .iter()
+                .any(|&id| is(id, FoldKind::UltracacheConfiguration))
+                && ids.iter().any(|&id| is(id, FoldKind::CoversReads));
             let js_env = resolve_env(task_id);
             // Workers accumulate locally, then publish one result per task.
             // The inner parallel iterator also preserves concurrency when
@@ -809,7 +804,7 @@ impl TaskHasher {
             let mut entries = Vec::with_capacity(ids.len());
             let mut pending = Vec::new();
             for &id in ids {
-                if folds_recorded && is(id, is_recorded_group) {
+                if folds_recorded && is(id, FoldKind::UltracacheGroup) {
                     continue;
                 }
                 let cached = if should_collect_inputs {
@@ -914,7 +909,7 @@ impl TaskHasher {
                 let (recorded, files) = fold_recorded_files(&lists, should_collect_inputs);
                 if let Some((_, value)) = entries
                     .iter_mut()
-                    .find(|(id, _)| is(*id, is_ultracache_configuration))
+                    .find(|(id, _)| is(*id, FoldKind::UltracacheConfiguration))
                 {
                     *value = SharedStr::from(hash(format!("{value}{recorded}").as_bytes()));
                 }
@@ -1231,6 +1226,16 @@ impl TaskHasher {
         };
         Ok((hash, inputs))
     }
+}
+
+/// What an instruction is to the fold of a plan's Ultracache reads.
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum FoldKind {
+    UltracacheConfiguration,
+    UltracacheGroup,
+    /// Hashes files on its own, so Ultracache reads of them need not count.
+    CoversReads,
+    Other,
 }
 
 type RecordedFileLists = (Vec<Arc<Vec<(String, String)>>>, Vec<Arc<HashSet<String>>>);
