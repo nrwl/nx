@@ -266,9 +266,10 @@ export function createPackageJson(
     // npm throws EOVERRIDE when an override sets the version of a package that
     // is also a direct dependency (unless specs match). The pruned dist pins
     // exact versions and already resolved everything via the lockfile, so drop
-    // those redundant overrides. An object form without a `.` key sets no
-    // version for the package itself, only for its dependencies, so npm
-    // accepts it next to a direct dependency and it has to be kept.
+    // those redundant overrides. In the object form, only the `.` key sets the
+    // version of the package itself; the other keys only constrain its
+    // dependencies, which npm accepts next to a direct dependency, so they
+    // are kept.
     const mergedOverrides = {
       ...rootPackageJson.overrides,
       ...packageJson.overrides,
@@ -276,19 +277,28 @@ export function createPackageJson(
     const overrides: typeof mergedOverrides = {};
     let hasOverrides = false;
     for (const name in mergedOverrides) {
-      const override = mergedOverrides[name];
-      const constrainsDependenciesOnly =
-        typeof override === 'object' && override !== null && !('.' in override);
+      let override = mergedOverrides[name];
       if (
-        !constrainsDependenciesOnly &&
-        (packageJson.dependencies?.[name] ||
-          packageJson.devDependencies?.[name] ||
-          packageJson.peerDependencies?.[name] ||
-          packageJson.optionalDependencies?.[name])
+        packageJson.dependencies?.[name] ||
+        packageJson.devDependencies?.[name] ||
+        packageJson.peerDependencies?.[name] ||
+        packageJson.optionalDependencies?.[name]
       ) {
-        continue;
+        if (typeof override !== 'object' || override === null) {
+          continue;
+        }
+        const dependencyOverrides = { ...override };
+        delete dependencyOverrides['.'];
+        if (Object.keys(dependencyOverrides).length === 0) {
+          continue;
+        }
+        override = dependencyOverrides;
       }
-      overrides[name] = override;
+      overrides[name] = resolveNpmOverrideReferences(
+        override,
+        packageJson,
+        rootPackageJson
+      );
       hasOverrides = true;
     }
     if (hasOverrides) {
@@ -349,6 +359,46 @@ export function createPackageJson(
   // endregion Overrides/Resolutions
 
   return packageJson;
+}
+
+// The sections npm reads, in this order, to resolve a `$name` override value.
+const NPM_OVERRIDE_REFERENCE_SECTIONS: PackageJsonDependencySection[] = [
+  'devDependencies',
+  'optionalDependencies',
+  'dependencies',
+  'peerDependencies',
+];
+
+// npm fails on a `$name` override value that the installed package.json does
+// not declare, so such a value takes the root package.json's spec for `name`.
+function resolveNpmOverrideReferences<T extends string | object>(
+  override: T,
+  packageJson: PackageJson,
+  rootPackageJson: PackageJson
+): T {
+  if (typeof override === 'string') {
+    if (!override.startsWith('$')) {
+      return override;
+    }
+    const name = override.slice(1);
+    const findSpec = (manifest: PackageJson) =>
+      NPM_OVERRIDE_REFERENCE_SECTIONS.map(
+        (section) => manifest[section]?.[name]
+      ).find(Boolean);
+    if (findSpec(packageJson)) {
+      return override;
+    }
+    return (findSpec(rootPackageJson) ?? override) as T;
+  }
+  if (typeof override !== 'object' || override === null) {
+    return override;
+  }
+  return Object.fromEntries(
+    Object.entries(override).map(([key, value]) => [
+      key,
+      resolveNpmOverrideReferences(value, packageJson, rootPackageJson),
+    ])
+  ) as T;
 }
 
 const LOCAL_PATH_SPEC_SECTIONS: PackageJsonDependencySection[] = [
