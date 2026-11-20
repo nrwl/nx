@@ -2033,6 +2033,10 @@ describe('task planner', () => {
 
     it('keeps task hashes, exclusions, diagnostics and deferral identical across import formats', async () => {
       const { planner, taskGraph, projectGraph } = fixture();
+      // Deferral needs a task that hashes the dependency output it read.
+      taskGraph.tasks['parent:build'].ultracache = {
+        hashDependencyOutputs: true,
+      };
       const taskIds = ['parent:build', 'child:build'];
       const parent = {
         inputs: [
@@ -2714,8 +2718,32 @@ describe('task planner', () => {
       expect(markerWith({ ignoreWrites: ['tmp/**', 'cache/**'] })).toBe(none);
     });
 
-    it("hashes reads of a producer task's outputs from disk and defers the task", () => {
+    it("leaves reads of a producer task's outputs out and does not defer the task", () => {
       const { planner, taskGraph } = fixture();
+      const configurations = configurationsFor({
+        'parent:build': {
+          inputs: ['dist/libs/child/index.js', 'libs/parent/filea.ts'],
+        },
+      });
+      const plan = planner.getPlans(
+        ['parent:build'],
+        taskGraph,
+        configurations
+      )['parent:build'];
+      expect(plan).toContain('files:[libs/parent/filea.ts]');
+      expect(plan).not.toContainEqual(
+        expect.stringContaining('dist/libs/child/index.js')
+      );
+      expect(getUltracacheDeferredTaskIds(configurations, taskGraph)).toEqual(
+        []
+      );
+    });
+
+    it("hashes reads of a producer task's outputs from disk and defers the task with hashDependencyOutputs", () => {
+      const { planner, taskGraph } = fixture();
+      taskGraph.tasks['parent:build'].ultracache = {
+        hashDependencyOutputs: true,
+      };
       const configurations = configurationsFor({
         'parent:build': {
           inputs: ['dist/libs/child/index.js'],
@@ -2862,11 +2890,17 @@ describe('task planner', () => {
       expect(plan).not.toContainEqual(expect.stringMatching(/^child:libs\//));
     });
 
-    it("defers a task whose reads sit under a producer's declared outputs", () => {
+    it("defers a task whose reads sit under a producer's declared outputs with hashDependencyOutputs", () => {
       const { taskGraph } = fixture();
       const configurations = configurationsFor({
         'parent:build': { inputs: ['dist/libs/child/index.js'] },
       });
+      expect(getUltracacheDeferredTaskIds(configurations, taskGraph)).toEqual(
+        []
+      );
+      taskGraph.tasks['parent:build'].ultracache = {
+        hashDependencyOutputs: true,
+      };
       expect(getUltracacheDeferredTaskIds(configurations, taskGraph)).toEqual([
         'parent:build',
       ]);
