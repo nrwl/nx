@@ -131,6 +131,15 @@ afterEvaluate {
   }
 }
 
+tasks.named<org.gradle.plugin.devel.tasks.PluginUnderTestMetadata>("pluginUnderTestMetadata") {
+  // Replace loose main output dirs with the packaged plugin jar while keeping java-gradle-plugin's
+  // gradleApi()-filtered runtime dependencies, so cross-version GradleRunner tests execute the
+  // actual jar artifact compiled against Gradle 8.14.3 without leaking gradle-api-8.14.3.jar.
+  val mainOutputs = sourceSets.main.get().output.files
+  val filteredRuntimeDeps = pluginClasspath.filter { it !in mainOutputs }
+  pluginClasspath.setFrom(tasks.jar, filteredRuntimeDeps)
+}
+
 tasks.test { useJUnitPlatform() }
 
 java { toolchain.languageVersion.set(JavaLanguageVersion.of(17)) }
