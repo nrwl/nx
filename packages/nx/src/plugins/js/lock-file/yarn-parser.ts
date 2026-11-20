@@ -94,7 +94,7 @@ export function getYarnLockfileDependencies(
   // yarn classic splits keys when parsing so we need to stich them back together
   const groupedDependencies = groupDependencies(dependencies, isBerry);
 
-  return getDependencies(groupedDependencies, ctx, keyMap);
+  return getDependencies(groupedDependencies, ctx, keyMap, isBerry);
 }
 
 function getPackageNameKeyPairs(keys: string): Map<string, Set<string>> {
@@ -366,9 +366,21 @@ function getHoistedVersion(packageName: string): string {
 function getDependencies(
   dependencies: Record<string, YarnDependency>,
   ctx: CreateDependenciesContext,
-  keyMap: Map<string, ProjectGraphExternalNode>
+  keyMap: Map<string, ProjectGraphExternalNode>,
+  isBerry: boolean
 ) {
   const projectGraphDependencies: RawProjectGraphDependency[] = [];
+  const uniqueNodes = new Map<string, ProjectGraphExternalNode | null>();
+  if (isBerry) {
+    for (const node of keyMap.values()) {
+      const name = node.data.packageName;
+      if (!uniqueNodes.has(name)) {
+        uniqueNodes.set(name, node);
+      } else if (uniqueNodes.get(name) !== node) {
+        uniqueNodes.set(name, null);
+      }
+    }
+  }
   Object.keys(dependencies).forEach((keys) => {
     const snapshot = dependencies[keys];
     keys.split(', ').forEach((key) => {
@@ -401,6 +413,11 @@ function getDependencies(
                       );
                     })?.[1];
                   }
+                  // A bare-name resolution can replace every descriptor for a
+                  // package with a pinned key while retaining the original
+                  // range in its dependents. Only infer an edge when the
+                  // lockfile contains a single node for that package.
+                  target ??= uniqueNodes.get(name) ?? undefined;
                 }
                 if (target) {
                   const dep: RawProjectGraphDependency = {
