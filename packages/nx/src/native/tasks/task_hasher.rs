@@ -451,6 +451,7 @@ impl TaskHasher {
                     globs,
                     project_roots,
                     ultracache,
+                    recorded: true,
                 } => Some((id, globs.clone(), project_roots.clone(), *ultracache)),
                 _ => None,
             })
@@ -741,8 +742,10 @@ impl TaskHasher {
             })
             .collect();
         let is = |id: u32, kind: fn(&HashInstruction) -> bool| kind(pool.get(id).value());
-        let is_group = |i: &HashInstruction| matches!(i, HashInstruction::IgnoredFileSet { .. });
-        let is_configuration =
+        let is_recorded_group = |i: &HashInstruction| {
+            matches!(i, HashInstruction::IgnoredFileSet { recorded: true, .. })
+        };
+        let is_ultracache_configuration =
             |i: &HashInstruction| matches!(i, HashInstruction::UltracacheConfiguration(_));
         let recorded_caches = RecordedCaches::default();
         hash_plans.plans.par_iter().try_for_each(|(task_id, ids)| {
@@ -751,7 +754,7 @@ impl TaskHasher {
             }
             // A recorded plan's groups fold into its configuration entry,
             // see `fold_recorded_files`.
-            let folds_recorded = ids.iter().any(|&id| is(id, is_configuration))
+            let folds_recorded = ids.iter().any(|&id| is(id, is_ultracache_configuration))
                 && ids
                     .iter()
                     .any(|&id| is(id, |i| matches!(i, HashInstruction::TaskOutput(..))));
@@ -765,7 +768,7 @@ impl TaskHasher {
             let mut entries = Vec::with_capacity(ids.len());
             let mut pending = Vec::new();
             for &id in ids {
-                if folds_recorded && is(id, is_group) {
+                if folds_recorded && is(id, is_recorded_group) {
                     continue;
                 }
                 let cached = if should_collect_inputs {
@@ -868,8 +871,9 @@ impl TaskHasher {
             entries.extend(computed);
             if let Some(lists) = recorded_lists {
                 let (recorded, files) = fold_recorded_files(&lists);
-                if let Some((_, value)) =
-                    entries.iter_mut().find(|(id, _)| is(*id, is_configuration))
+                if let Some((_, value)) = entries
+                    .iter_mut()
+                    .find(|(id, _)| is(*id, is_ultracache_configuration))
                 {
                     *value = SharedStr::from(hash(format!("{value}{recorded}").as_bytes()));
                 }
@@ -978,6 +982,7 @@ impl TaskHasher {
                 globs,
                 project_roots,
                 ultracache,
+                ..
             } => {
                 let expansion = self.expand_ignored_files(
                     id,
@@ -1371,6 +1376,15 @@ mod tests {
         ("libs/app/dist/node_modules/pkg/types.d.ts", "export {};"),
     ];
 
+    fn recorded_files(globs: &[&str]) -> HashInstruction {
+        HashInstruction::IgnoredFileSet {
+            globs: globs.iter().map(|glob| Arc::from(*glob)).collect(),
+            project_roots: Vec::new(),
+            ultracache: false,
+            recorded: true,
+        }
+    }
+
     /// The inferred typecheck's shape: dependency declarations through a glob
     /// output, and a recording whose reads are grouped as `groups`.
     fn typecheck_plan(groups: &[&[&str]]) -> Vec<HashInstruction> {
@@ -1381,9 +1395,7 @@ mod tests {
                 vec!["libs/app/dist/**/*.{d.ts,d.cts,d.mts}".into()],
             ),
         ];
-        plan.extend(groups.iter().map(|globs| {
-            HashInstruction::ignored_files(globs.iter().map(|glob| glob.to_string()).collect())
-        }));
+        plan.extend(groups.iter().map(|globs| recorded_files(globs)));
         plan
     }
 
@@ -1443,11 +1455,25 @@ mod tests {
     }
 
     #[test]
+    fn a_declared_group_in_a_recorded_plan_keeps_its_own_entry() {
+        let groups: &[&[&str]] = &[&["libs/e2e/src/app.spec.ts"]];
+        let mut plan = typecheck_plan(groups);
+        plan.push(HashInstruction::ignored_files(vec![
+            "libs/app/dist/index.d.ts".into(),
+        ]));
+        // Declared, so not subtracted: it moves the hash although TaskOutput covers it.
+        assert_ne!(
+            hash_recorded(&DIST_FILES, &[("e2e:typecheck", plan)])["e2e:typecheck"],
+            typecheck_hash(&DIST_FILES, groups)
+        );
+    }
+
+    #[test]
     fn a_plan_without_dependency_outputs_hashes_each_group() {
         let plan = |reads: &[&str]| {
             vec![
                 HashInstruction::UltracacheConfiguration("digest".into()),
-                HashInstruction::ignored_files(reads.iter().map(|r| r.to_string()).collect()),
+                recorded_files(reads),
             ]
         };
         let hashes = hash_recorded(

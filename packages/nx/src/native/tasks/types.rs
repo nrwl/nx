@@ -231,6 +231,8 @@ pub enum HashInstruction {
         project_roots: Vec<String>,
         /// Learned exclusions use suffix categories; declared globs stay unchanged.
         ultracache: bool,
+        /// Read by the task per its Ultracache configuration, not declared.
+        recorded: bool,
     },
     ProjectConfiguration(String),
     TsConfiguration(String),
@@ -376,6 +378,7 @@ impl HashInstruction {
             globs: globs.into_iter().map(Arc::from).collect(),
             project_roots: Vec::new(),
             ultracache: false,
+            recorded: false,
         }
     }
 

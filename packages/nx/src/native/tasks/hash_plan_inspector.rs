@@ -161,6 +161,7 @@ impl HashPlanInspector {
                 globs,
                 project_roots,
                 ultracache,
+                ..
             } => {
                 let workspace_root = std::path::Path::new(&self.workspace_root);
                 let files = expand_globs_with_exclusions(

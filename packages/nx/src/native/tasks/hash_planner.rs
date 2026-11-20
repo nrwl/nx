@@ -324,21 +324,21 @@ impl HashPlanner {
         self.disk_file_set(globs.into_iter().map(Arc::from).collect(), false)
     }
 
-    fn disk_file_set(&self, globs: Vec<Arc<str>>, ultracache: bool) -> HashInstruction {
-        let (project_roots, ultracache) = match parse_group_with_exclusions(&globs, ultracache) {
+    fn disk_file_set(&self, globs: Vec<Arc<str>>, recorded: bool) -> HashInstruction {
+        let (project_roots, ultracache) = match parse_group_with_exclusions(&globs, recorded) {
             Ok((positives, negatives)) => (
                 scope_roots(&positives, self.project_roots()),
-                // Keep equivalent declared and learned groups interned together.
                 negatives
                     .iter()
                     .any(|negative| negative.has_suffix_category()),
             ),
-            Err(_) => (Vec::new(), ultracache),
+            Err(_) => (Vec::new(), recorded),
         };
         HashInstruction::IgnoredFileSet {
             globs: globs.into(),
             project_roots,
             ultracache,
+            recorded,
         }
     }
 
@@ -2688,6 +2688,7 @@ mod tests {
             globs: vec!["packages/gradle/**/*".into()].into(),
             project_roots: vec!["packages/gradle".into(), "packages/gradle/runner".into()],
             ultracache: false,
+            recorded: false,
         });
         let plans: HashMap<String, Vec<u32>> = [
             ("gradle:nested-output".to_string(), vec![scoped]),
@@ -3483,6 +3484,7 @@ mod always_tests {
                 .into(),
                 project_roots: vec!["libs/app".into()],
                 ultracache: false,
+                recorded: false,
             }]
         );
         assert_eq!(retained(false, true), vec![]);
@@ -3592,6 +3594,11 @@ mod always_tests {
             plans.pool.get(*id).value(),
             HashInstruction::TaskOutput(glob, outputs)
                 if glob == "**/*.d.ts" && outputs == &["libs/app/dist"]
+        )));
+        assert!(plans.plans["e2e:e2e"].iter().any(|id| matches!(
+            plans.pool.get(*id).value(),
+            HashInstruction::IgnoredFileSet { globs, recorded: true, .. }
+                if globs.iter().any(|glob| &**glob == "libs/e2e/src/app.spec.ts")
         )));
     }
 
@@ -3972,6 +3979,7 @@ mod nested_project_tests {
                     globs,
                     project_roots,
                     ultracache,
+                    ..
                 } => Some(
                     expand_globs_with_exclusions(
                         temp.path(),

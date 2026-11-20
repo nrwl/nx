@@ -437,6 +437,7 @@ fn instruction_matches_detail(
             globs,
             project_roots,
             ultracache,
+            ..
         } => {
             let globs: Vec<String> = globs.iter().map(|glob| normalize_glob(glob)).collect();
             collect(&globs, None, project_roots, *ultracache).map(of_files)
@@ -926,6 +927,7 @@ mod tests {
             globs: ["libs/a/**/*.ts", negative].map(Into::into).into(),
             project_roots: strings(&["libs/a"]),
             ultracache,
+            recorded: false,
         };
         for file in [
             "cat.spec.ts",
@@ -979,6 +981,7 @@ mod tests {
                 globs: ["libs/a/**/*", "!libs/a/**/*.t!s"].map(Into::into).into(),
                 project_roots: strings(&["libs/a"]),
                 ultracache,
+                recorded: false,
             };
             let changed = format!("libs/a/{file}");
             assert_eq!(
@@ -996,6 +999,7 @@ mod tests {
             globs: ["libs/a/**/*"].map(Into::into).into(),
             project_roots: strings(&["libs/a", "libs/a/nested"]),
             ultracache: false,
+            recorded: false,
         };
         assert_eq!(
             touched_for(&g, vec![instruction.clone()], &["libs/a/build/out.js"]),

@@ -322,6 +322,7 @@ mod tests {
             globs: ["packages/gradle/**/*"].map(Into::into).into(),
             project_roots: strings(&["packages/gradle", "packages/gradle/runner"]),
             ultracache: false,
+            recorded: false,
         };
         let e = edges(
             &[
