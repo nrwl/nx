@@ -70,6 +70,37 @@ describe('checkCompatibleWithPlugins', () => {
     });
   });
 
+  it('should skip AggregateCreateNodesError entries that have no file', async () => {
+    const error = new AggregateCreateNodesError(
+      [
+        [null, new Error('plugin failed as a whole')],
+        ['file1', new Error('failed to process file1')],
+      ],
+      []
+    );
+    error.pluginIndex = 0;
+    (createProjectGraphAsync as any).mockReturnValueOnce(
+      Promise.reject(new ProjectGraphError([error], undefined, undefined))
+    );
+    const result = await checkCompatibleWithPlugins();
+    expect(result).toEqual({
+      0: [{ file: 'file1', error: new Error('failed to process file1') }],
+    });
+  });
+
+  it('should return empty object if AggregateCreateNodesError has no files to exclude', async () => {
+    const error = new AggregateCreateNodesError(
+      [[null, new Error('plugin failed as a whole')]],
+      []
+    );
+    error.pluginIndex = 0;
+    (createProjectGraphAsync as any).mockReturnValueOnce(
+      Promise.reject(new ProjectGraphError([error], undefined, undefined))
+    );
+    const result = await checkCompatibleWithPlugins();
+    expect(result).toEqual({});
+  });
+
   it('should return true if error is MergeNodesError', async () => {
     let error = new MergeNodesError({
       file: 'file2',
