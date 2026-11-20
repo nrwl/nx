@@ -1,7 +1,7 @@
 import '../../../../internal-testing-utils/mock-fs';
 
 import { vol } from 'memfs';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import {
   ProjectGraphExternalNode,
   ProjectGraphProjectNode,
@@ -27,10 +27,7 @@ vi.mock('nx/src/plugins/js/utils/resolve-relative-to-dir', () => ({
     if (pathOrPackage.startsWith('@nx/nx-win32-x64-msvc')) {
       return null;
     }
-    if (
-      pathOrPackage === 'exports-only/package.json' ||
-      pathOrPackage === 'exports-only'
-    ) {
+    if (/^@?exports-only/.test(pathOrPackage)) {
       return null;
     }
     // We intentionally don't allow access to the package.json (emulating package exports)
@@ -126,11 +123,6 @@ describe('TargetProjectLocator', () => {
         './node_modules/npm-package/package.json': JSON.stringify({
           name: 'npm-package',
           version: '1.0.0',
-        }),
-        './node_modules/exports-only/package.json': JSON.stringify({
-          name: 'exports-only',
-          version: '5.0.0',
-          exports: { './*': './dist/*' },
         }),
         './node_modules/@proj/proj123-base/package.json': JSON.stringify({
           name: '@proj/proj123-base',
@@ -833,6 +825,11 @@ describe('TargetProjectLocator', () => {
             name: 'hidden-exports-internal',
             version: '9.9.9',
           }),
+        './node_modules/exports-only/package.json': JSON.stringify({
+          name: 'exports-only',
+          version: '5.0.0',
+          exports: { './*': './dist/*' },
+        }),
         '/opt/packages/@hidden-exports/linked/package.json': JSON.stringify({
           name: '@hidden-exports/linked',
           version: '5.0.0',
@@ -1294,6 +1291,220 @@ describe('TargetProjectLocator', () => {
           'libs/proj/index.ts'
         )
       ).toEqual('npm:exports-only@5.0.0');
+    });
+
+    it('should not resolve an exports-only package linked from outside node_modules to a registry node', () => {
+      const store = (name: string) =>
+        `/root/node_modules/.pnpm/${name}@1.0.0/node_modules/${name}`;
+      // memfs resolves a relative link target against the cwd, so the targets
+      // are absolute.
+      const installs: Record<
+        string,
+        { manifestDir: string; links: [link: string, target: string][] }
+      > = {
+        'exports-only-linked': {
+          manifestDir: '/root/packages/exports-only-linked',
+          links: [
+            [
+              '/root/node_modules/exports-only-linked',
+              '/root/packages/exports-only-linked',
+            ],
+          ],
+        },
+        'exports-only-chain-linked': {
+          manifestDir: '/root/packages/exports-only-chain-linked',
+          links: [
+            [
+              '/root/node_modules/exports-only-chain-linked',
+              '/root/node_modules/.pnpm/node_modules/exports-only-chain-linked',
+            ],
+            [
+              '/root/node_modules/.pnpm/node_modules/exports-only-chain-linked',
+              '/root/packages/exports-only-chain-linked',
+            ],
+          ],
+        },
+        '@exports-only-scope/pkg': {
+          manifestDir: '/root/packages/scope-dir/pkg',
+          links: [
+            [
+              '/root/node_modules/@exports-only-scope',
+              '/root/packages/scope-dir',
+            ],
+          ],
+        },
+        'exports-only-pnpm': {
+          manifestDir: store('exports-only-pnpm'),
+          links: [
+            [
+              '/root/node_modules/exports-only-pnpm',
+              store('exports-only-pnpm'),
+            ],
+          ],
+        },
+        'exports-only-chain-pnpm': {
+          manifestDir: store('exports-only-chain-pnpm'),
+          links: [
+            [
+              '/root/node_modules/exports-only-chain-pnpm',
+              '/root/links/exports-only-chain-pnpm',
+            ],
+            [
+              '/root/links/exports-only-chain-pnpm',
+              store('exports-only-chain-pnpm'),
+            ],
+          ],
+        },
+        'exports-only-shared': {
+          manifestDir: '/root/shared-deps/exports-only-shared',
+          links: [['/root/libs/proj/node_modules', '/root/shared-deps']],
+        },
+      };
+      for (const [name, { manifestDir, links }] of Object.entries(installs)) {
+        vol.fromJSON({
+          [`${manifestDir}/package.json`]: JSON.stringify({
+            name,
+            version: '1.0.0',
+          }),
+        });
+        for (const [link, target] of links) {
+          vol.mkdirSync(dirname(link), { recursive: true });
+          vol.symlinkSync(target, link);
+        }
+      }
+      const externalNodes = Object.fromEntries(
+        Object.keys(installs).map((packageName) => [
+          `npm:${packageName}@1.0.0`,
+          {
+            type: 'npm' as const,
+            name: `npm:${packageName}@1.0.0` as const,
+            data: { version: '1.0.0', packageName },
+          },
+        ])
+      );
+      const locator = new TargetProjectLocator(
+        projects,
+        externalNodes,
+        new Map()
+      );
+      const resolved = Object.fromEntries(
+        Object.keys(installs).map((name) => [
+          name,
+          locator.findNpmProjectFromImport(name, 'libs/proj/index.ts'),
+        ])
+      );
+
+      expect(resolved).toEqual({
+        'exports-only-linked': null,
+        'exports-only-chain-linked': null,
+        '@exports-only-scope/pkg': null,
+        'exports-only-pnpm': 'npm:exports-only-pnpm@1.0.0',
+        'exports-only-chain-pnpm': 'npm:exports-only-chain-pnpm@1.0.0',
+        'exports-only-shared': 'npm:exports-only-shared@1.0.0',
+      });
+    });
+
+    it('should read an exports-only manifest only from the nearest node_modules that Node searches', () => {
+      const manifest = (name: string, version?: string) =>
+        JSON.stringify({ name, version });
+      vol.fromJSON(
+        {
+          'libs/node_modules/exports-only-versionless/package.json': manifest(
+            'exports-only-versionless'
+          ),
+          'node_modules/exports-only-versionless/package.json': manifest(
+            'exports-only-versionless',
+            '1.0.0'
+          ),
+          'node_modules/node_modules/exports-only-nested/package.json':
+            manifest('exports-only-nested', '1.0.0'),
+          'node_modules/exports-only-nested/package.json': manifest(
+            'exports-only-nested',
+            '2.0.0'
+          ),
+        },
+        '/root'
+      );
+      const externalNodes = Object.fromEntries(
+        [
+          'exports-only-versionless@1.0.0',
+          'exports-only-nested@1.0.0',
+          'exports-only-nested@2.0.0',
+        ].map((nameAndVersion) => [
+          `npm:${nameAndVersion}`,
+          {
+            type: 'npm' as const,
+            name: `npm:${nameAndVersion}` as const,
+            data: {
+              version: nameAndVersion.split('@')[1],
+              packageName: nameAndVersion.split('@')[0],
+            },
+          },
+        ])
+      );
+      const locator = new TargetProjectLocator(
+        projects,
+        externalNodes,
+        new Map()
+      );
+
+      expect(
+        locator.findNpmProjectFromImport(
+          'exports-only-versionless',
+          'libs/proj/index.ts'
+        )
+      ).toBeNull();
+      expect(
+        locator.findNpmProjectFromImport(
+          'exports-only-nested',
+          'node_modules/src/index.ts'
+        )
+      ).toEqual('npm:exports-only-nested@2.0.0');
+    });
+
+    it('should read a relinked exports-only manifest again when locators share the manifest cache', () => {
+      const name = 'exports-only-relinked';
+      const manifestLink = `/root/node_modules/${name}/package.json`;
+      const versions = ['1.0.0', '2.0.0'];
+      vol.fromJSON(
+        Object.fromEntries(
+          versions.map((version) => [
+            `/root/manifests/${version}/package.json`,
+            JSON.stringify({ name, version }),
+          ])
+        )
+      );
+      vol.mkdirSync(dirname(manifestLink), { recursive: true });
+      const externalNodes = Object.fromEntries(
+        versions.map((version) => [
+          `npm:${name}@${version}`,
+          {
+            type: 'npm' as const,
+            name: `npm:${name}@${version}` as const,
+            data: { version, packageName: name },
+          },
+        ])
+      );
+      const packageJsonResolutionCache = new Map();
+
+      const resolved = versions.map((version, index) => {
+        if (index > 0) {
+          vol.unlinkSync(manifestLink);
+        }
+        // memfs resolves a relative link target against the cwd
+        vol.symlinkSync(
+          `/root/manifests/${version}/package.json`,
+          manifestLink
+        );
+        return new TargetProjectLocator(
+          projects,
+          externalNodes,
+          new Map(),
+          packageJsonResolutionCache
+        ).findNpmProjectFromImport(name, 'libs/proj/index.ts');
+      });
+
+      expect(resolved).toEqual([`npm:${name}@1.0.0`, `npm:${name}@2.0.0`]);
     });
 
     it('should remember a manifest that matches no external node only for its own graph and only when Node resolved neither lookup', () => {

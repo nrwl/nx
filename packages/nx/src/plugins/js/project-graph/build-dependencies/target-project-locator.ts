@@ -1,6 +1,14 @@
 import { existsSync, lstatSync, readlinkSync, realpathSync } from 'node:fs';
 import { isBuiltin } from 'node:module';
-import { dirname, join, posix, relative, isAbsolute, resolve } from 'node:path';
+import {
+  basename,
+  dirname,
+  join,
+  posix,
+  relative,
+  isAbsolute,
+  resolve,
+} from 'node:path';
 import { clean, satisfies } from 'semver';
 import type {
   ProjectGraphExternalNode,
@@ -134,6 +142,7 @@ export class TargetProjectLocator {
   // Imports whose manifest matched no node after Node resolved neither lookup.
   // A later graph can add the node, so they stay out of the shared cache
   private readonly unmatchedNodeModulesWalks = new Set<string>();
+  private readonly realPaths = new Map<string, string>();
   private tsConfig = this.getRootTsConfig();
   private paths = this.tsConfig.config?.compilerOptions?.paths;
   private parsedPathPatterns: ParsedPatterns | undefined;
@@ -998,13 +1007,34 @@ export class TargetProjectLocator {
             packageName,
             'package.json'
           );
-          const installed =
-            existsSync(candidatePath) &&
-            this.readCompletePackageJson(candidatePath);
-          if (installed) {
-            if (manifestSource) {
+          // Node never looks in node_modules/node_modules
+          if (basename(dir) !== 'node_modules' && existsSync(candidatePath)) {
+            // Keep a package whose real path stays in this node_modules or
+            // another one. Any other is a linked copy, not a registry package.
+            const realPackageDir = this.realPath(dirname(candidatePath));
+            if (
+              !isContainedRelativePath(
+                relative(
+                  this.realPath(join(dir, 'node_modules')),
+                  realPackageDir
+                )
+              ) &&
+              !isInNodeModules(
+                normalizePath(
+                  relative(this.realPath(workspaceRoot), realPackageDir)
+                )
+              )
+            ) {
+              return null;
+            }
+            // Key the shared manifest cache by the real file. A relink changes it.
+            const installed = this.readCompletePackageJson(
+              this.realPath(candidatePath)
+            );
+            if (installed && manifestSource) {
               manifestSource.nodeModulesWalk = true;
             }
+            // Node loads the nearest copy, so an unusable manifest ends the walk
             return installed;
           }
           if (dir === dirname(dir)) {
@@ -1071,6 +1101,15 @@ export class TargetProjectLocator {
     } catch {
       return null;
     }
+  }
+
+  private realPath(path: string): string {
+    let realPath = this.realPaths.get(path);
+    if (realPath === undefined) {
+      realPath = realpathSync(path);
+      this.realPaths.set(path, realPath);
+    }
+    return realPath;
   }
 
   private readCompletePackageJson(
