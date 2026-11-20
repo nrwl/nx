@@ -36,6 +36,8 @@ export class ProcessTasks {
   readonly continuousDependencies: { [k: string]: TaskGraphEdge[] } = {};
   readonly dependencyOverrides: DependencyOverrides = {};
   private readonly allTargetNames: string[];
+  /** Task ids whose dependency tasks were omitted. Empty unless some were. */
+  tasksRunWithoutDependencies: readonly string[] = [];
 
   constructor(
     private readonly extraTargetDependencies: TargetDependencies,
@@ -92,6 +94,12 @@ export class ProcessTasks {
     }
 
     if (excludeTaskDependencies) {
+      // The edges to excluded tasks are removed below, so record them first.
+      this.tasksRunWithoutDependencies = findTasksRunWithoutDependencies(
+        this.dependencies,
+        this.continuousDependencies,
+        new Set(Object.keys(initialTasks))
+      );
       for (let t of Object.keys(this.tasks)) {
         if (!initialTasks[t]) {
           delete this.tasks[t];
@@ -461,16 +469,22 @@ export function createTaskGraph(
   targets: string[],
   configuration: string | undefined,
   overrides: Record<string, unknown>,
-  excludeTaskDependencies: boolean = false
+  excludeTaskDependencies: boolean = false,
+  tasksRunWithoutDependencies?: string[]
 ): TaskGraph {
-  return buildTaskGraph(
-    new ProcessTasks(extraTargetDependencies, projectGraph),
+  const processor = new ProcessTasks(extraTargetDependencies, projectGraph);
+  const taskGraph = buildTaskGraph(
+    processor,
     projectNames,
     targets,
     configuration,
     overrides,
     excludeTaskDependencies
   );
+  if (tasksRunWithoutDependencies) {
+    tasksRunWithoutDependencies.push(...processor.tasksRunWithoutDependencies);
+  }
+  return taskGraph;
 }
 
 /** `createTaskGraph`, plus the overrides each dependency edge would give. */
@@ -646,6 +660,74 @@ export function filterDummyTasks(dependencies: {
       delete dependencies[key];
     }
   }
+}
+
+/**
+ * Tasks in `keep` that depend, directly or through another kept task, on a
+ * task outside `keep`. Dummy tasks are bridges to the real dependency.
+ */
+export function findTasksRunWithoutDependencies(
+  dependencies: Record<string, TaskGraphEdge[]>,
+  continuousDependencies: Record<string, TaskGraphEdge[]>,
+  keep: ReadonlySet<string>
+): string[] {
+  if (keep.size === 0) return [];
+  const cycles = findCycles({ dependencies });
+  const continuousCycles = findCycles({
+    dependencies: continuousDependencies,
+  });
+  const dependentsOf = new Map<string, string[]>();
+  const tainted = new Set<string>();
+
+  for (const id of keep) {
+    let missingDependency = false;
+    const depIds = new Set([
+      ...resolvedDependencyIds(id, dependencies, cycles),
+      ...resolvedDependencyIds(id, continuousDependencies, continuousCycles),
+    ]);
+    for (const depId of depIds) {
+      if (!keep.has(depId)) {
+        missingDependency = true;
+        continue;
+      }
+      const dependents = dependentsOf.get(depId);
+      if (dependents) dependents.push(id);
+      else dependentsOf.set(depId, [id]);
+    }
+    if (missingDependency) tainted.add(id);
+  }
+
+  const queue = [...tainted];
+  let id = queue.pop();
+  while (id !== undefined) {
+    for (const dependent of dependentsOf.get(id) ?? []) {
+      if (tainted.has(dependent)) continue;
+      tainted.add(dependent);
+      queue.push(dependent);
+    }
+    id = queue.pop();
+  }
+
+  return [...tainted].sort();
+}
+
+function resolvedDependencyIds(
+  taskId: string,
+  edges: Record<string, TaskGraphEdge[]>,
+  cycles: Set<string> | null
+): string[] {
+  const ids: string[] = [];
+  for (const edge of edges[taskId] ?? []) {
+    for (const resolved of getNonDummyDeps(
+      edge,
+      edges,
+      cycles ?? undefined,
+      new Set([taskId])
+    )) {
+      ids.push(resolved.id);
+    }
+  }
+  return ids;
 }
 
 /**

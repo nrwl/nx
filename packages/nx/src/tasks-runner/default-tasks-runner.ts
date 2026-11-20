@@ -166,6 +166,7 @@ async function runAllTasks(
     hasher: TaskHasher;
     daemon: DaemonClient;
     hashingDeferredTaskIds?: ReadonlySet<string>;
+    tasksRunWithoutDependencies?: ReadonlySet<string>;
   }
 ): Promise<{ [id: string]: TaskStatus }> {
   const orchestrator = new TaskOrchestrator(
@@ -181,7 +182,8 @@ async function runAllTasks(
     context.nxArgs?.specifiedOutputStyle,
     context.nxArgs?.resolvedOutputStyle ?? 'static-failures-only',
     context.taskGraph,
-    context.hashingDeferredTaskIds
+    context.hashingDeferredTaskIds,
+    context.tasksRunWithoutDependencies
   );
 
   return orchestrator.run();

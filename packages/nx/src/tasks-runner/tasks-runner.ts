@@ -34,6 +34,11 @@ export type TasksRunner<T = unknown> = (
     /** Tasks hashed only once the tasks they read outputs from have run. */
     hashingDeferredTaskIds?: ReadonlySet<string>;
     /**
+     * Tasks run with a dependency task omitted. Cache reads still apply;
+     * their results are not written.
+     */
+    tasksRunWithoutDependencies?: ReadonlySet<string>;
+    /**
      * Tasks hashed from an Ultracache configuration that `nx affected` selection
      * dropped. Empty when nothing was, unset for commands that do not select.
      */

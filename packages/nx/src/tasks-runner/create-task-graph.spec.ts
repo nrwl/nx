@@ -11,6 +11,7 @@ import {
   createTaskGraph,
   createTaskGraphWithDependencyOverrides,
   filterDummyTasks,
+  findTasksRunWithoutDependencies,
   getNonDummyDeps,
   filterTaskGraphToSelection,
 } from './create-task-graph';
@@ -5142,5 +5143,71 @@ describe('dependsOn with inputs: false', () => {
       { projects: ['app'], target: 'build', inputs: false },
     ]);
     expect(taskGraph.dependencies['e2e:e2e']).toEqual([{ id: 'app:build' }]);
+  });
+});
+
+describe('findTasksRunWithoutDependencies', () => {
+  const dummy = 'mid:bridge__nx_dummy_task__';
+
+  it('follows a dummy task to the real dependency', () => {
+    const dependencies = {
+      'app:build': [{ id: dummy }],
+      [dummy]: [{ id: 'lib:build' }],
+      'lib:build': [],
+    };
+    const continuous = {
+      'app:build': [{ id: dummy }],
+      [dummy]: [],
+      'lib:build': [],
+    };
+
+    expect(
+      findTasksRunWithoutDependencies(
+        dependencies,
+        continuous,
+        new Set(['app:build', 'lib:build'])
+      )
+    ).toEqual([]);
+    expect(
+      findTasksRunWithoutDependencies(
+        dependencies,
+        continuous,
+        new Set(['app:build'])
+      )
+    ).toEqual(['app:build']);
+  });
+
+  it('includes a task whose kept dependency ran without its own dependency', () => {
+    const dependencies = {
+      'app:build': [{ id: 'lib:build' }],
+      'lib:build': [{ id: 'utils:build' }],
+      'utils:build': [],
+    };
+    const continuous = {
+      'app:build': [],
+      'lib:build': [],
+      'utils:build': [],
+    };
+
+    expect(
+      findTasksRunWithoutDependencies(
+        dependencies,
+        continuous,
+        new Set(['app:build', 'lib:build'])
+      )
+    ).toEqual(['app:build', 'lib:build']);
+  });
+
+  it('includes a task whose continuous dependency was excluded', () => {
+    expect(
+      findTasksRunWithoutDependencies(
+        { 'app:e2e': [], 'app:serve': [] },
+        {
+          'app:e2e': [{ id: 'app:serve', inputs: false }],
+          'app:serve': [],
+        },
+        new Set(['app:e2e'])
+      )
+    ).toEqual(['app:e2e']);
   });
 });
