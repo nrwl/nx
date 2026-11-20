@@ -569,7 +569,7 @@ export function installPackageToTmp(
   packageManager: PackageManager
 ): {
   tempDir: string;
-  cleanup: () => void;
+  cleanup: () => Promise<void>;
 } {
   const { tempDir, cleanup, preInstallCommand, installCommand, execOptions } =
     preparePackageInstallation(pkg, requiredVersion, packageManager);
@@ -599,7 +599,7 @@ export async function installPackageToTmpAsync(
   options: { env?: () => NodeJS.ProcessEnv } = {}
 ): Promise<{
   tempDir: string;
-  cleanup: () => void;
+  cleanup: () => Promise<void>;
 }> {
   const {
     tempDir,
