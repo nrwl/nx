@@ -1,8 +1,7 @@
 import { LifeCycle, TaskMetadata, TaskResult } from '../life-cycle';
 import { TaskStatus } from '../tasks-runner';
 
-import { performance } from 'perf_hooks';
-import { join } from 'path';
+import { resolve } from 'path';
 import { Task } from '../../config/task-graph';
 import { writeJsonFile } from '../../utils/fileutils';
 
@@ -18,7 +17,7 @@ export class TaskProfilingLifeCycle implements LifeCycle {
   private registeredGroups = new Set();
 
   constructor(_profileFile: string) {
-    this.profileFile = join(process.cwd(), _profileFile);
+    this.profileFile = resolve(process.cwd(), _profileFile);
   }
 
   startTasks(tasks: Task[], { groupId }: TaskMetadata): void {
