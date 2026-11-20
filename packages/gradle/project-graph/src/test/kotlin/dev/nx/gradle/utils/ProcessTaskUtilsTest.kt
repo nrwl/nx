@@ -7,6 +7,7 @@ import groovy.lang.Closure
 import kotlin.io.path.Path
 import org.gradle.api.Project
 import org.gradle.api.Task
+import org.gradle.api.internal.tasks.TaskDependencyContainer
 import org.gradle.testfixtures.ProjectBuilder
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
@@ -558,6 +559,50 @@ class ProcessTaskUtilsTest {
       // ":other:" names no task; a bare name resolves inside the declaring project.
       assertNull(lookupTask(project, ":other:"), "a trailing colon names no task")
       assertEquals(":classes", lookupTask(project, "classes")?.path)
+    }
+
+    @Test
+    fun `test findCachingContextGetDependencies dispatches Gradle 8 and Gradle 9_9 signatures`() {
+      val task = project.tasks.register("target").get()
+      val dep = project.tasks.register("upstream").get()
+      val container = TaskDependencyContainer { _ -> }
+
+      // Non-public receiver subclasses extending public base classes mirror
+      // `private class SafeResolveContext : CachingTaskDependencyResolveContext`.
+      val gradle8Stub = PrivateGradle8ResolveContextStub(setOf(dep))
+      val gradle8Handle = findCachingContextGetDependencies(Gradle8ResolveContextStub::class.java)
+      val gradle8Result = gradle8Handle.invoke(gradle8Stub, task, container) as Set<*>
+      assertEquals(setOf(dep), gradle8Result)
+      assertSame(task, gradle8Stub.receivedTask)
+      assertSame(container, gradle8Stub.receivedDependencies)
+
+      val gradle99Stub = PrivateGradle99ResolveContextStub(setOf(dep))
+      val gradle99Handle = findCachingContextGetDependencies(Gradle99ResolveContextStub::class.java)
+      val gradle99Result = gradle99Handle.invoke(gradle99Stub, task, container) as Set<*>
+      assertEquals(setOf(dep), gradle99Result)
+      assertSame(task, gradle99Stub.receivedTask)
+      assertSame(container, gradle99Stub.receivedDependencies)
+    }
+
+    @Test
+    fun `test findCachingContextGetDependencies propagates exceptions directly without wrapping`() {
+      val task = project.tasks.register("target").get()
+      val container = TaskDependencyContainer { _ -> }
+      val handle = findCachingContextGetDependencies(ThrowingResolveContextStub::class.java)
+
+      val runtimeErr =
+          assertThrows(IllegalStateException::class.java) {
+            handle.invoke(
+                ThrowingResolveContextStub(IllegalStateException("boom")), task, container)
+          }
+      assertEquals("boom", runtimeErr.message)
+
+      val linkageErr =
+          assertThrows(NoSuchMethodError::class.java) {
+            handle.invoke(
+                ThrowingResolveContextStub(NoSuchMethodError("missing-internal")), task, container)
+          }
+      assertEquals("missing-internal", linkageErr.message)
     }
 
     @Test
@@ -2225,5 +2270,39 @@ class ProcessTaskUtilsTest {
         rootDir.deleteRecursively()
       }
     }
+  }
+}
+
+open class Gradle8ResolveContextStub(private val result: Set<Task>) {
+  var receivedTask: Task? = null
+  var receivedDependencies: Any? = null
+
+  fun getDependencies(task: Task?, dependencies: Any): Set<Task> {
+    receivedTask = task
+    receivedDependencies = dependencies
+    return result
+  }
+}
+
+private class PrivateGradle8ResolveContextStub(result: Set<Task>) :
+    Gradle8ResolveContextStub(result)
+
+open class Gradle99ResolveContextStub(private val result: Set<Task>) {
+  var receivedTask: Task? = null
+  var receivedDependencies: TaskDependencyContainer? = null
+
+  fun getDependencies(task: Task?, dependencies: TaskDependencyContainer): Set<Task> {
+    receivedTask = task
+    receivedDependencies = dependencies
+    return result
+  }
+}
+
+private class PrivateGradle99ResolveContextStub(result: Set<Task>) :
+    Gradle99ResolveContextStub(result)
+
+class ThrowingResolveContextStub(private val failure: Throwable) {
+  fun getDependencies(task: Task?, dependencies: TaskDependencyContainer): Set<Task> {
+    throw failure
   }
 }

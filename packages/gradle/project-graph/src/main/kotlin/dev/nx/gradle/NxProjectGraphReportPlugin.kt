@@ -60,6 +60,8 @@ class NxProjectGraphReportPlugin : Plugin<Project> {
 
           task.description = "Create Nx project report for ${project.name}"
           task.group = "Reporting"
+          task.notCompatibleWithConfigurationCache(
+              "NxProjectReportTask inspects the live Gradle project model at execution time.")
 
           task.doFirst { it.logger.info("${Date()} Running nxProjectReport for ${project.name}") }
         }
@@ -78,13 +80,14 @@ class NxProjectGraphReportPlugin : Plugin<Project> {
     }
 
     project.tasks.register("nxProjectGraph").configure { task ->
+      val projectName = project.name
       task.dependsOn(nxProjectReportTask)
-      task.description = "Create Nx project graph for ${project.name}"
+      task.description = "Create Nx project graph for $projectName"
       task.group = "Reporting"
 
       val outputFileProvider = nxProjectReportTask.map { it.outputFile }
 
-      task.doFirst { it.logger.info("${Date()} Running nxProjectGraph for ${project.name}") }
+      task.doFirst { it.logger.info("${Date()} Running nxProjectGraph for $projectName") }
 
       task.doLast { println(outputFileProvider.get().path) }
     }
