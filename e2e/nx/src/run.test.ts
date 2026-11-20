@@ -157,6 +157,86 @@ describe('Nx Running Tests', () => {
       );
     });
 
+    describe('(routing overrides to strict executor schemas)', () => {
+      const app = uniq('app');
+      beforeAll(() => {
+        const executorsRoot = `tools/${app}-executors`;
+        updateFile(
+          `${executorsRoot}/package.json`,
+          JSON.stringify({ executors: './executors.json' })
+        );
+        updateFile(
+          `${executorsRoot}/executors.json`,
+          JSON.stringify({
+            executors: {
+              fixer: { implementation: './fixer.js', schema: './fixer.json' },
+              check: { implementation: './check.js', schema: './check.json' },
+            },
+          })
+        );
+        updateFile(
+          `${executorsRoot}/fixer.json`,
+          JSON.stringify({
+            type: 'object',
+            additionalProperties: false,
+            properties: { fix: { type: 'boolean' } },
+          })
+        );
+        updateFile(
+          `${executorsRoot}/check.json`,
+          JSON.stringify({
+            type: 'object',
+            additionalProperties: false,
+            properties: {},
+          })
+        );
+        updateFile(
+          `${executorsRoot}/fixer.js`,
+          `module.exports = { default: async (options) => { console.log('LINT fix=' + options.fix); return { success: true }; } };`
+        );
+        updateFile(
+          `${executorsRoot}/check.js`,
+          `module.exports = { default: async (options) => { console.log('CHECK options=' + JSON.stringify(options)); return { success: true }; } };`
+        );
+        updateFile(
+          `apps/${app}/project.json`,
+          JSON.stringify({
+            name: app,
+            targets: {
+              lint: { executor: `./${executorsRoot}:fixer`, cache: false },
+              check: { executor: `./${executorsRoot}:check`, cache: false },
+            },
+          })
+        );
+      });
+
+      it('should send an override only to tasks whose executor accepts it', () => {
+        const output = runCLI(`run-many -t lint,check -p ${app} --fix`);
+        expect(output).toContain('LINT fix=true');
+        expect(output).toContain('CHECK options={}');
+      });
+
+      it('should fail when no task accepts an override', () => {
+        const output = runCLI(`run-many -t lint,check -p ${app} --fxi`, {
+          silenceError: true,
+        });
+        expect(runCLI.lastExitCode).not.toEqual(0);
+        expect(output).toContain(
+          `'fxi' is not in the schema of any task in this run`
+        );
+        expect(output).not.toContain('LINT fix=');
+      });
+
+      it('should list overrides not sent to a task with --verbose', () => {
+        const output = runCLI(`run-many -t lint,check -p ${app} --fix`, {
+          verbose: true,
+        });
+        expect(output).toContain(
+          `--fix not sent to ${app}:check (not in executor schema)`
+        );
+      });
+    });
+
     it('should execute long running tasks', () => {
       const myapp = uniq('myapp');
       runCLI(`generate @nx/web:app apps/${myapp}`);

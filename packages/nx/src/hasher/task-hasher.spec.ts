@@ -4,8 +4,18 @@ import {
   expandNamedInput,
   expandSingleProjectInputs,
   filterUsingGlobPatterns,
+  InProcessTaskHasher,
   splitInputsIntoSelfAndDependencies,
 } from './task-hasher';
+import type { Task } from '../config/task-graph';
+
+vi.mock('./native-task-hasher-impl', () => ({
+  NativeTaskHasherImpl: class {
+    async hashTask() {
+      return { value: 'inputs', details: {} };
+    }
+  },
+}));
 
 describe('TaskHasher', () => {
   describe('splitInputsIntoSelfAndDependencies', () => {
@@ -327,6 +337,35 @@ describe('TaskHasher', () => {
       );
 
       expect(filtered.map((f) => f.file)).toEqual(['a.ts', 'dir/a.ts']);
+    });
+  });
+
+  describe('overrides in the task hash', () => {
+    const hasher = new InProcessTaskHasher(
+      { nodes: {}, dependencies: {} },
+      {},
+      null,
+      {}
+    );
+    const hash = async (overrides: Record<string, unknown>) =>
+      (
+        await hasher.hashTask({
+          id: 'app:check',
+          target: { project: 'app', target: 'check' },
+          overrides,
+        } as Task)
+      ).value;
+
+    it('gives a task that did not get an override the hash of a run without it', async () => {
+      expect(await hash({ __overrides_unparsed__: ['--fix'] })).toBe(
+        await hash({ __overrides_unparsed__: [] })
+      );
+    });
+
+    it('gives a task that got an override a different hash', async () => {
+      expect(
+        await hash({ fix: true, __overrides_unparsed__: ['--fix'] })
+      ).not.toBe(await hash({ __overrides_unparsed__: [] }));
     });
   });
 });

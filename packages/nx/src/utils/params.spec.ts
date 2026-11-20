@@ -9,6 +9,7 @@ import {
   convertToCamelCase,
   getPromptsForSchema,
   Schema,
+  schemaAcceptsOption,
   setDefaults,
   validateOptsAgainstSchema,
   warnDeprecations,
@@ -2401,6 +2402,77 @@ describe('params', () => {
           validate: expect.any(Function),
         },
       ]);
+    });
+  });
+
+  describe('schemaAcceptsOption', () => {
+    const strict: Schema = {
+      additionalProperties: false,
+      properties: {
+        fix: { type: 'boolean' },
+        baseHref: { type: 'string', aliases: ['b'] },
+        outputPath: { type: 'string', alias: 'o' },
+      },
+      patternProperties: { '^env-': { type: 'string' } },
+    };
+
+    it('accepts listed properties of a strict schema', () => {
+      expect(schemaAcceptsOption('fix', strict)).toBe(true);
+    });
+
+    it('rejects unlisted properties of a strict schema', () => {
+      expect(schemaAcceptsOption('fxi', strict)).toBe(false);
+    });
+
+    it('accepts kebab-case names of listed properties', () => {
+      expect(schemaAcceptsOption('base-href', strict)).toBe(true);
+    });
+
+    it('accepts aliases of listed properties', () => {
+      expect(schemaAcceptsOption('b', strict)).toBe(true);
+      expect(schemaAcceptsOption('o', strict)).toBe(true);
+    });
+
+    it('accepts names that match patternProperties', () => {
+      expect(schemaAcceptsOption('env-foo', strict)).toBe(true);
+    });
+
+    it('accepts every name when additionalProperties is not false', () => {
+      const props = { fix: { type: 'boolean' } } as Schema['properties'];
+      expect(schemaAcceptsOption('x', { properties: props } as Schema)).toBe(
+        true
+      );
+      expect(
+        schemaAcceptsOption('x', {
+          properties: props,
+          additionalProperties: true,
+        })
+      ).toBe(true);
+      expect(
+        schemaAcceptsOption('x', {
+          properties: props,
+          additionalProperties: { type: 'string' },
+        })
+      ).toBe(true);
+    });
+
+    it('rejects inherited object properties', () => {
+      expect(schemaAcceptsOption('constructor', strict)).toBe(false);
+      expect(schemaAcceptsOption('to-string', strict)).toBe(false);
+    });
+
+    it('rejects names listed only in an anyOf or oneOf branch, as validation does', () => {
+      const schema: Schema = {
+        additionalProperties: false,
+        properties: {},
+        anyOf: [{ properties: { a: { type: 'string' } } }],
+        oneOf: [{ properties: { b: { type: 'string' } } }],
+      };
+      expect(schemaAcceptsOption('a', schema)).toBe(false);
+      expect(schemaAcceptsOption('b', schema)).toBe(false);
+      expect(() => validateOptsAgainstSchema({ a: 'x' }, schema)).toThrow(
+        "'a' is not found in schema"
+      );
     });
   });
 });

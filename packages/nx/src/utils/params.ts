@@ -97,7 +97,7 @@ export type Options = {
   [k: string]: string | number | boolean | string[] | Unmatched[] | undefined;
 };
 
-function camelCase(input: string): string {
+export function camelCase(input: string): string {
   if (input.indexOf('-') > 1) {
     return input
       .toLowerCase()
@@ -118,6 +118,27 @@ export function convertToCamelCase(
       return { ...m, [c]: parsed[c] };
     }
   }, {});
+}
+
+/**
+ * Whether `combineOptionsForExecutor` would keep the command-line option `name`
+ * rather than reject it as not in the schema. Like `validateObject`, only the
+ * schema's own top-level `properties` and `patternProperties` list a name;
+ * `anyOf` and `oneOf` branches do not.
+ */
+export function schemaAcceptsOption(name: string, schema: Schema): boolean {
+  if (schema.additionalProperties !== false) {
+    return true;
+  }
+  const properties = schema.properties ?? {};
+  const camelName = camelCase(name);
+  const normalized = Object.hasOwn(properties, camelName) ? camelName : name;
+  return (
+    !!findSchemaForProperty(normalized, { properties }) ||
+    Object.keys(schema.patternProperties ?? {}).some((pattern) =>
+      new RegExp(pattern).test(normalized)
+    )
+  );
 }
 
 /**
@@ -1068,7 +1089,7 @@ function findSchemaForProperty(
   propName: string,
   schema: Schema
 ): { name: string; description: PropertyDescription } | null {
-  if (propName in schema.properties) {
+  if (Object.hasOwn(schema.properties, propName)) {
     return {
       name: propName,
       description: schema.properties[propName],
