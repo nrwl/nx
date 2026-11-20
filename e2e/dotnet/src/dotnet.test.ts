@@ -71,6 +71,8 @@ describe('.NET Plugin', () => {
 
       expect(details.targets).toHaveProperty('build');
       expect(details.targets).toHaveProperty('test');
+      expect(details.targets).not.toHaveProperty('publish');
+      expect(details.targets).not.toHaveProperty('run');
     });
   });
 
