@@ -36,6 +36,7 @@ import {
   isGlobPattern,
   mergeTargetConfigurations,
   readTargetDefaultsForTarget,
+  resolveApplicableTargetDefaults,
   retrieveProjectConfigurations,
   globalSpinner,
 } from 'nx/src/devkit-internals';
@@ -61,10 +62,21 @@ import {
   takenOverTargetWarning,
   type PackageJsonIdentitySource,
   revertedTargetsWarning,
+  unexpressibleTargetDefaultsWarning,
   unverifiedPairsWarning,
   verificationErrorsWarning,
 } from './conversion-warnings';
-import { deleteMatchingProperties } from './plugin-migration-utils';
+import {
+  deleteMatchingProperties,
+  stableStringify,
+} from './plugin-migration-utils';
+import {
+  appendTargetDefaultEntry,
+  correctTargetDefaultsShift,
+  withCorrection,
+  type ShiftPair,
+  type TargetDefaultsShiftInputs,
+} from './target-defaults-shift';
 
 export type InferredTargetConfiguration = TargetConfiguration & {
   name: string;
@@ -156,24 +168,6 @@ export interface MigrationScope<T> {
   optionSetGroups: InferenceOptionSet<T>[];
   /** per (migration, executor) slice used to drive residual computation */
   executorScopes: ExecutorScope<T>[];
-}
-
-export function stableStringify(value: unknown): string {
-  if (value === null || typeof value !== 'object') {
-    return JSON.stringify(value) ?? 'undefined';
-  }
-  if (Array.isArray(value)) {
-    return `[${value.map(stableStringify).join(',')}]`;
-  }
-  const keys = Object.keys(value as Record<string, unknown>).sort();
-  return `{${keys
-    .map(
-      (k) =>
-        JSON.stringify(k) +
-        ':' +
-        stableStringify((value as Record<string, unknown>)[k])
-    )
-    .join(',')}}`;
 }
 
 /**
@@ -381,6 +375,8 @@ export interface ResidualEntry {
    * (see `writeResidualTarget`); the verification phase then leaves it alone.
    */
   keptPreMigration?: boolean;
+  /** Read once the final nx.json is written; see `correctTargetDefaultsShift`. */
+  targetDefaultsShift: TargetDefaultsShiftInputs;
 }
 
 /** project name -> (target name -> residual entry) */
@@ -439,6 +435,7 @@ export async function computeResidualByProject<T>(
   projectGraph: ProjectGraph,
   scope: MigrationScope<T>,
   inferredTargetsByOptionSet: InferredTargetsByOptionSet,
+  rawInferredTargetsByOptionSet: InferredTargetsByOptionSet,
   nxJson: NxJsonConfiguration,
   projectConfigsByName: Map<string, ProjectConfiguration> = getProjects(tree)
 ): Promise<ResidualByProject> {
@@ -484,6 +481,8 @@ export async function computeResidualByProject<T>(
           structuredClone(projectConfig.targets[targetName]),
           structuredClone(targetDefaultsForExecutor)
         );
+        const projectOwnedFields = Object.keys(projectTarget);
+        const projectOwnedOptions = Object.keys(projectTarget.options ?? {});
         delete projectTarget.executor;
 
         deleteMatchingProperties(projectTarget, strippedInferredTarget);
@@ -515,14 +514,71 @@ export async function computeResidualByProject<T>(
         if (!residualByProject.has(projectName)) {
           residualByProject.set(projectName, new Map());
         }
-        residualByProject
-          .get(projectName)
-          .set(targetName, { residual, baselineFinal, preMigrationTarget });
+        const rawInferredByName =
+          rawInferredTargetsByOptionSet.get(optionSetId)?.get(root) ??
+          new Map<string, TargetConfiguration>();
+        const siblingExecutors: Record<string, string | undefined> = {};
+        for (const [siblingName, sibling] of rawInferredByName) {
+          if (siblingName !== targetName) {
+            siblingExecutors[siblingName] = effectiveExecutor(sibling);
+          }
+        }
+        // Targets an earlier run converted are inferred under another
+        // registration, so only the graph shows them.
+        for (const [siblingName, sibling] of Object.entries(
+          projectGraph.nodes[projectName].data.targets ?? {}
+        )) {
+          const configured = projectConfig.targets?.[siblingName];
+          if (
+            siblingName !== targetName &&
+            !Object.hasOwn(siblingExecutors, siblingName) &&
+            configured?.executor === undefined &&
+            configured?.command === undefined
+          ) {
+            siblingExecutors[siblingName] = sibling.executor;
+          }
+        }
+        const targetDefaultsShift: TargetDefaultsShiftInputs = {
+          defaultsBefore:
+            resolveApplicableTargetDefaults(
+              targetName,
+              nxJson.targetDefaults,
+              preMigrationTarget.executor,
+              { projectName, projectNode: projectGraph.nodes[projectName] }
+            )?.config ?? {},
+          projectOwned: {
+            fields: [
+              ...new Set([...projectOwnedFields, ...Object.keys(residual)]),
+            ],
+            options: [
+              ...new Set([
+                ...projectOwnedOptions,
+                ...Object.keys(residual.options ?? {}),
+              ]),
+            ],
+          },
+          rawInferred: structuredClone(
+            rawInferredByName.get(targetName) ?? fullInferredTarget
+          ),
+          inferredExecutor: effectiveExecutor(fullInferredTarget),
+          siblingExecutors,
+        };
+
+        residualByProject.get(projectName).set(targetName, {
+          residual,
+          baselineFinal,
+          preMigrationTarget,
+          targetDefaultsShift,
+        });
       }
     }
   }
 
   return residualByProject;
+}
+
+function effectiveExecutor(target: TargetConfiguration): string | undefined {
+  return target.executor ?? (target.command ? 'nx:run-commands' : undefined);
 }
 
 /**
@@ -825,14 +881,7 @@ export function appendPluginScopedTargetDefault(
     filter: { plugin: pluginPath },
     ...structuredClone(common),
   };
-  nxJson.targetDefaults ??= {};
-  const existing = nxJson.targetDefaults[targetName];
-  nxJson.targetDefaults[targetName] =
-    existing === undefined
-      ? [entry]
-      : Array.isArray(existing)
-        ? [...existing, entry]
-        : [existing, entry];
+  appendTargetDefaultEntry(nxJson, targetName, entry);
   return entry;
 }
 
@@ -1005,12 +1054,9 @@ function computeInferredExecutorByPair<T>(
           root,
           targetName
         );
-        const inferredExecutor =
-          inferredTarget.executor ??
-          (inferredTarget.command ? 'nx:run-commands' : undefined);
         inferredExecutorByPair.set(
           `${projectName}\t${targetName}`,
-          inferredExecutor
+          effectiveExecutor(inferredTarget)
         );
       }
     }
@@ -1614,6 +1660,8 @@ export async function inferOncePerOptionSet<T>(
   scope: MigrationScope<T>
 ): Promise<{
   inferredTargetsByOptionSet: InferredTargetsByOptionSet;
+  /** The targets the plugin returned for each migrated root, before targetDefaults. */
+  rawInferredTargetsByOptionSet: InferredTargetsByOptionSet;
   matchedConfigFiles: string[];
   erroredConfigFiles: string[];
   rawMatchedConfigFiles: string[];
@@ -1624,6 +1672,7 @@ export async function inferOncePerOptionSet<T>(
 }> {
   const inferredTargetsByOptionSet: InferredTargetsByOptionSet = new Map();
   const nonMigratedInferredTargetNames = new Map<string, Set<string>>();
+  const rawInferredTargetsByOptionSet: InferredTargetsByOptionSet = new Map();
   const rawMatchedFiles = new Set<string>();
   const inferredRoots = new Set<string>();
   const erroredConfigFiles = new Set<string>();
@@ -1633,6 +1682,7 @@ export async function inferOncePerOptionSet<T>(
   if (scope.optionSetGroups.length === 0) {
     return {
       inferredTargetsByOptionSet,
+      rawInferredTargetsByOptionSet,
       rawMatchedConfigFiles: [],
       matchedConfigFiles: [],
       erroredConfigFiles: [],
@@ -1648,6 +1698,9 @@ export async function inferOncePerOptionSet<T>(
     for (const group of scope.optionSetGroups) {
       const inferredByRoot: InferredTargetsByRoot = new Map();
       inferredTargetsByOptionSet.set(group.id, inferredByRoot);
+      const pluginResults: CreateNodesResultArray = [];
+      const record = (results: CreateNodesResultArray) =>
+        pluginResults.push(...(results ?? []));
       const {
         result,
         erroredConfigFiles: groupErroredConfigFiles,
@@ -1656,9 +1709,13 @@ export async function inferOncePerOptionSet<T>(
         tree,
         { plugin: pluginPath, options: group.options },
         pluginPath,
-        createNodes,
-        createNodesV2,
+        recordingCreateNodes(createNodes, record),
+        recordingCreateNodes(createNodesV2, record),
         nxJson
+      );
+      rawInferredTargetsByOptionSet.set(
+        group.id,
+        rawTargetsByRoot(pluginResults, group.migratedRoots)
       );
       for (const file of groupErroredConfigFiles) {
         erroredConfigFiles.add(file);
@@ -1740,6 +1797,7 @@ export async function inferOncePerOptionSet<T>(
 
   return {
     inferredTargetsByOptionSet,
+    rawInferredTargetsByOptionSet,
     // Every config file the plugin's glob matched, independent of whether this
     // pass inferred a project from it. The registration step needs the full set
     // to decide include coverage against non-migrated PROJECT roots: a project
@@ -1761,6 +1819,65 @@ export async function inferOncePerOptionSet<T>(
     nonMigratedInferredTargetNames,
     createNodesErrors,
   };
+}
+
+type CreateNodesResultArray = Awaited<ReturnType<CreateNodes[1]>>;
+
+function recordingCreateNodes<T>(
+  createNodes: CreateNodes<T> | undefined,
+  record: (results: CreateNodesResultArray) => void
+): CreateNodes<T> | undefined {
+  if (!createNodes) {
+    return undefined;
+  }
+  const [pattern, fn] = createNodes;
+  return [
+    pattern,
+    async (...args) => {
+      try {
+        const results = await fn(...args);
+        record(results);
+        return results;
+      } catch (e) {
+        if (isAggregateCreateNodesError(e)) {
+          record(e.partialResults);
+        }
+        throw e;
+      }
+    },
+  ];
+}
+
+function rawTargetsByRoot(
+  pluginResults: CreateNodesResultArray,
+  roots: Set<string>
+): InferredTargetsByRoot {
+  const targetsByRoot: InferredTargetsByRoot = new Map();
+  for (const [, result] of pluginResults) {
+    for (const [root, project] of Object.entries(result?.projects ?? {})) {
+      if (!roots.has(root)) {
+        continue;
+      }
+      if (!targetsByRoot.has(root)) {
+        targetsByRoot.set(root, new Map());
+      }
+      const targets = targetsByRoot.get(root);
+      for (const [targetName, target] of Object.entries(
+        project.targets ?? {}
+      )) {
+        targets.set(
+          targetName,
+          targets.has(targetName)
+            ? mergeTargetConfigurations(
+                structuredClone(target),
+                targets.get(targetName)
+              )
+            : structuredClone(target)
+        );
+      }
+    }
+  }
+  return targetsByRoot;
 }
 
 /**
@@ -2274,6 +2391,70 @@ async function verifyAndFallback<T>(
 }
 
 /**
+ * Correct the targetDefaults resolution the conversion shifted for migrated
+ * targets. Runs after verification, the last writer of nx.json and of the
+ * residuals, so it sees both in their final state.
+ */
+function keepTargetDefaultsStable(
+  tree: Tree,
+  projectGraph: ProjectGraph,
+  pluginPath: string,
+  residualByProject: ResidualByProject,
+  projectConfigsByName: Map<string, ProjectConfiguration>,
+  logger: typeof devkitLogger | undefined
+): void {
+  const pairs: ShiftPair[] = [];
+  for (const [projectName, targetMap] of residualByProject) {
+    for (const [targetName, entry] of targetMap) {
+      if (entry.keptPreMigration) {
+        continue;
+      }
+      const projectConfig = readCachedProjectConfiguration(
+        tree,
+        projectConfigsByName,
+        projectName
+      );
+      pairs.push({
+        projectName,
+        targetName,
+        projectNode: projectGraph.nodes[projectName],
+        inputs: entry.targetDefaultsShift,
+        written: projectConfig.targets?.[targetName] ?? {},
+      });
+    }
+  }
+
+  const nxJson = readNxJson(tree);
+  const before = stableStringify(nxJson.targetDefaults);
+  const { projectCorrections, unexpressible } = correctTargetDefaultsShift(
+    nxJson,
+    pluginPath,
+    pairs
+  );
+  if (stableStringify(nxJson.targetDefaults) !== before) {
+    updateNxJson(tree, nxJson);
+  }
+  for (const { projectName, targetName, correction } of projectCorrections) {
+    const written =
+      readCachedProjectConfiguration(tree, projectConfigsByName, projectName)
+        .targets?.[targetName] ?? {};
+    writeResidualTarget(
+      tree,
+      projectConfigsByName,
+      projectName,
+      targetName,
+      withCorrection(written, correction),
+      logger
+    );
+  }
+  if (unexpressible.size > 0) {
+    (logger ?? devkitLogger).warn(
+      unexpressibleTargetDefaultsWarning(unexpressible)
+    );
+  }
+}
+
+/**
  * Recover the default option keys a plugin fills into its options object during
  * `createNodes` (Phase 1 mutated each option-set object in place if the plugin
  * does so). A key qualifies only if it is not one of our own
@@ -2435,6 +2616,7 @@ async function migrateProjects<T>(
   const nxJson = readNxJson(tree);
   const {
     inferredTargetsByOptionSet,
+    rawInferredTargetsByOptionSet,
     matchedConfigFiles,
     erroredConfigFiles: erroredConfigFilesFromInference,
     rawMatchedConfigFiles,
@@ -2467,6 +2649,7 @@ async function migrateProjects<T>(
     projectGraph,
     scope,
     inferredTargetsByOptionSet,
+    rawInferredTargetsByOptionSet,
     nxJson,
     projectConfigsByName
   );
@@ -2598,6 +2781,14 @@ async function migrateProjects<T>(
       hoistedByTarget,
       inferredRoots,
       Boolean(specificProjectToMigrate),
+      logger
+    );
+    keepTargetDefaultsStable(
+      tree,
+      projectGraph,
+      pluginPath,
+      residualByProject,
+      projectConfigsByName,
       logger
     );
   }
