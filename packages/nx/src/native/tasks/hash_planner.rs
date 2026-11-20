@@ -324,21 +324,22 @@ impl HashPlanner {
         self.disk_file_set(globs.into_iter().map(Arc::from).collect(), false)
     }
 
-    fn disk_file_set(&self, globs: Vec<Arc<str>>, ultracache: bool) -> HashInstruction {
-        let (project_roots, ultracache) = match parse_group_with_exclusions(&globs, ultracache) {
-            Ok((positives, negatives)) => (
-                scope_roots(&positives, self.project_roots()),
-                // Keep equivalent declared and learned groups interned together.
-                negatives
-                    .iter()
-                    .any(|negative| negative.has_suffix_category()),
-            ),
-            Err(_) => (Vec::new(), ultracache),
-        };
+    fn disk_file_set(&self, globs: Vec<Arc<str>>, from_ultracache: bool) -> HashInstruction {
+        let (project_roots, exact_extension_exclusions) =
+            match parse_group_with_exclusions(&globs, from_ultracache) {
+                Ok((positives, negatives)) => (
+                    scope_roots(&positives, self.project_roots()),
+                    negatives
+                        .iter()
+                        .any(|negative| negative.has_suffix_category()),
+                ),
+                Err(_) => (Vec::new(), from_ultracache),
+            };
         HashInstruction::IgnoredFileSet {
             globs: globs.into(),
             project_roots,
-            ultracache,
+            exact_extension_exclusions,
+            from_ultracache,
         }
     }
 
@@ -490,6 +491,9 @@ impl HashPlanner {
                     ids.extend(dep_ids);
                 }
 
+                if context.is_some() {
+                    drop_ultracache_duplicates(pool, &mut ids);
+                }
                 ids.sort_unstable();
                 ids.dedup();
 
@@ -890,14 +894,12 @@ impl HashPlanner {
                     }),
             );
         }
-        // With a configuration, reads of other tasks' outputs are observed reads.
-        if context.is_none() {
-            ids.extend(
-                self.gather_dependency_outputs(task, task_graph, &inputs.deps_outputs)?
-                    .into_iter()
-                    .map(|instruction| pool.intern(instruction)),
-            );
-        }
+        // Kept with a configuration too; the hasher drops recorded reads these hash.
+        ids.extend(
+            self.gather_dependency_outputs(task, task_graph, &inputs.deps_outputs)?
+                .into_iter()
+                .map(|instruction| pool.intern(instruction)),
+        );
         // Always gathered: a selected input can carry env, runtime or externals
         // too. Its filesets are dropped with the rest of the replaced set unless
         // it is `always`.
@@ -1605,6 +1607,31 @@ impl HashPlanner {
 /// unambiguous, including ones containing the kind character.
 fn prefixed_cache_key(dep: &str, kind: char, rest: &str) -> String {
     format!("{}:{dep}{kind}{rest}", dep.len())
+}
+
+/// Drops groups from the Ultracache configuration that a declared group in
+/// the same plan already hashes, so the files are walked once.
+fn drop_ultracache_duplicates(pool: &InstructionPool, ids: &mut Vec<u32>) {
+    type Key = (Arc<[Arc<str>]>, Vec<String>, bool);
+    let key = |id: &u32, from_configuration: bool| -> Option<Key> {
+        match pool.get(*id).value() {
+            HashInstruction::IgnoredFileSet {
+                globs,
+                project_roots,
+                exact_extension_exclusions,
+                from_ultracache,
+            } if *from_ultracache == from_configuration => Some((
+                Arc::clone(globs),
+                project_roots.clone(),
+                *exact_extension_exclusions,
+            )),
+            _ => None,
+        }
+    };
+    let declared: hashbrown::HashSet<Key> = ids.iter().filter_map(|id| key(id, false)).collect();
+    if !declared.is_empty() {
+        ids.retain(|id| key(id, true).is_none_or(|key| !declared.contains(&key)));
+    }
 }
 
 /// Tasks the up-front batch must leave out because they read what a task
@@ -2689,7 +2716,8 @@ mod tests {
         let scoped = pool.intern(HashInstruction::IgnoredFileSet {
             globs: vec!["packages/gradle/**/*".into()].into(),
             project_roots: vec!["packages/gradle".into(), "packages/gradle/runner".into()],
-            ultracache: false,
+            exact_extension_exclusions: false,
+            from_ultracache: false,
         });
         let plans: HashMap<String, Vec<u32>> = [
             ("gradle:nested-output".to_string(), vec![scoped]),
@@ -3159,9 +3187,26 @@ mod always_tests {
     use super::*;
     use crate::native::project_graph::types::{Project, Target};
     use crate::native::test_utils::{task_graph, ultracache_configurations};
-    use crate::native::types::{FileSetInput, InputsInput, JsInputs, JsonInput};
+    use crate::native::types::{DepsOutputsInput, FileSetInput, InputsInput, JsInputs, JsonInput};
     use napi::Either;
     use napi::bindgen_prelude::Either9;
+
+    #[test]
+    fn a_configuration_group_a_declared_group_matches_is_dropped() {
+        let pool = InstructionPool::new();
+        let group = |globs: &[&str], from_ultracache| HashInstruction::IgnoredFileSet {
+            globs: globs.iter().map(|glob| Arc::from(*glob)).collect(),
+            project_roots: vec!["libs/app".into()],
+            exact_extension_exclusions: false,
+            from_ultracache,
+        };
+        let declared = pool.intern(group(&["libs/app/fixtures/**"], false));
+        let duplicate = pool.intern(group(&["libs/app/fixtures/**"], true));
+        let other = pool.intern(group(&["libs/app/src/**"], true));
+        let mut ids = vec![declared, duplicate, other];
+        drop_ultracache_duplicates(&pool, &mut ids);
+        assert_eq!(ids, vec![declared, other]);
+    }
 
     fn named(input: &str, dependencies: bool, always: bool) -> JsInputs {
         Either9::A(InputsInput {
@@ -3455,6 +3500,38 @@ mod always_tests {
     }
 
     #[test]
+    fn a_recorded_group_an_always_fileset_matches_is_planned_once() {
+        let planner = planner(
+            vec![(
+                "e2e:e2e",
+                vec![ignored_fileset(
+                    "{projectRoot}/fixtures/a.json",
+                    false,
+                    true,
+                )],
+            )],
+            &[],
+        );
+        let groups: Vec<bool> = recorded_e2e_plan_reading(&planner, &["libs/e2e/fixtures/a.json"])
+            .into_iter()
+            .filter_map(|instruction| match instruction {
+                HashInstruction::IgnoredFileSet {
+                    globs,
+                    from_ultracache,
+                    ..
+                } if globs
+                    .iter()
+                    .any(|glob| &**glob == "libs/e2e/fixtures/a.json") =>
+                {
+                    Some(from_ultracache)
+                }
+                _ => None,
+            })
+            .collect();
+        assert_eq!(groups, vec![false]);
+    }
+
+    #[test]
     fn keeps_only_the_marked_part_of_a_dependency_include_ignored_group() {
         let retained = |fixtures: bool, exclusion: bool| -> Vec<HashInstruction> {
             recorded_e2e_plan(&planner(
@@ -3484,7 +3561,8 @@ mod always_tests {
                 ]
                 .into(),
                 project_roots: vec!["libs/app".into()],
-                ultracache: false,
+                exact_extension_exclusions: false,
+                from_ultracache: false,
             }]
         );
         assert_eq!(retained(false, true), vec![]);
@@ -3567,6 +3645,39 @@ mod always_tests {
             ),
             (vec!["node_modules/.gen/app/index.js".to_string()], true)
         );
+    }
+
+    #[test]
+    fn a_recording_keeps_dependent_tasks_output_files() {
+        let planner = planner(
+            vec![(
+                "e2e:e2e",
+                vec![Either9::G(DepsOutputsInput {
+                    dependent_tasks_output_files: "**/*.d.ts".into(),
+                    transitive: None,
+                })],
+            )],
+            &[("e2e", &["app"])],
+        );
+        let graph = task_graph(
+            &[("e2e:e2e", &[]), ("app:build", &["libs/app/dist"])],
+            &[("e2e:e2e", &["app:build"])],
+        );
+        let (_dir, configurations) =
+            ultracache_configurations(&[("e2e:e2e", &["libs/e2e/src/app.spec.ts"])]);
+        let plans = planner
+            .get_plans_internal(vec!["e2e:e2e"], graph, Some(&configurations), &[])
+            .unwrap();
+        assert!(plans.plans["e2e:e2e"].iter().any(|id| matches!(
+            plans.pool.get(*id).value(),
+            HashInstruction::TaskOutput(glob, outputs)
+                if glob == "**/*.d.ts" && outputs == &["libs/app/dist"]
+        )));
+        assert!(plans.plans["e2e:e2e"].iter().any(|id| matches!(
+            plans.pool.get(*id).value(),
+            HashInstruction::IgnoredFileSet { globs, from_ultracache: true, .. }
+                if globs.iter().any(|glob| &**glob == "libs/e2e/src/app.spec.ts")
+        )));
     }
 
     #[test]
@@ -3945,14 +4056,15 @@ mod nested_project_tests {
                 HashInstruction::IgnoredFileSet {
                     globs,
                     project_roots,
-                    ultracache,
+                    exact_extension_exclusions,
+                    ..
                 } => Some(
                     expand_globs_with_exclusions(
                         temp.path(),
                         globs,
                         project_roots,
                         &Source::fileset_from_disk(temp.path()),
-                        *ultracache,
+                        *exact_extension_exclusions,
                     )
                     .unwrap()
                     .files,
