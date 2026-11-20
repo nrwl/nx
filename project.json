@@ -41,6 +41,10 @@
           "input": "production",
           "projects": ["tag:maven:dev.nx.maven"]
         },
+        {
+          "input": "production",
+          "projects": ["MsbuildAnalyzer", ":gradle-batch-runner"]
+        },
         "{workspaceRoot}/scripts/local-registry",
         "native"
       ],
