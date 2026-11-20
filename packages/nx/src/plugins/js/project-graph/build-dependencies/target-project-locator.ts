@@ -1,6 +1,14 @@
 import { existsSync, lstatSync, readlinkSync, realpathSync } from 'node:fs';
 import { isBuiltin } from 'node:module';
-import { dirname, join, posix, relative, isAbsolute, resolve } from 'node:path';
+import {
+  basename,
+  dirname,
+  join,
+  posix,
+  relative,
+  isAbsolute,
+  resolve,
+} from 'node:path';
 import { clean, satisfies } from 'semver';
 import type {
   ProjectGraphExternalNode,
@@ -131,6 +139,10 @@ export class TargetProjectLocator {
   // Resolutions of packageNamesWithLocalPathNodes depend on this locator's
   // installedLocalPathNodes, so they stay out of the shared cache
   private localPathNpmResolutionCache: NpmResolutionCache = new Map();
+  // Imports whose manifest matched no node after Node resolved neither lookup.
+  // A later graph can add the node, so they stay out of the shared cache
+  private readonly unmatchedNodeModulesWalks = new Set<string>();
+  private readonly realPaths = new Map<string, string>();
   private tsConfig = this.getRootTsConfig();
   private paths = this.tsConfig.config?.compilerOptions?.paths;
   private parsedPathPatterns: ParsedPatterns | undefined;
@@ -312,17 +324,18 @@ export class TargetProjectLocator {
       return localProject;
     }
 
-    // nothing found, cache the negative result with the scoped key
+    // nothing found, cache the negative result with the scoped key. Walk misses
+    // stay on the locator (see unmatchedNodeModulesWalks)
     const packageName = getPackageNameFromImportPath(importExpr);
     const dirPath = dirname(
       filePath.startsWith(workspaceRoot)
         ? filePath.replace(workspaceRoot, '')
         : filePath
     );
-    this.getNpmResolutionCache(packageName).set(
-      `${packageName}__${dirPath}`,
-      null
-    );
+    const npmImportForProject = `${packageName}__${dirPath}`;
+    if (!this.unmatchedNodeModulesWalks.has(npmImportForProject)) {
+      this.getNpmResolutionCache(packageName).set(npmImportForProject, null);
+    }
     return null;
   }
 
@@ -355,12 +368,17 @@ export class TargetProjectLocator {
     if (npmResolutionCache.has(npmImportForProject)) {
       return npmResolutionCache.get(npmImportForProject);
     }
+    if (this.unmatchedNodeModulesWalks.has(npmImportForProject)) {
+      return null;
+    }
 
     try {
       // package.json refers to an external package, we do not match against the version found in there, we instead try and resolve the relevant package how node would
+      const manifestSource = { nodeModulesWalk: false };
       const externalPackageJson = this.readPackageJson(
         packageName,
-        fullDirPath
+        fullDirPath,
+        manifestSource
       );
       // The external package.json path might be not be resolvable, e.g. if a reference has been added to a project package.json, but the install command has not been run yet.
       if (!externalPackageJson) {
@@ -432,6 +450,9 @@ export class TargetProjectLocator {
       }
 
       if (!matchingExternalNode) {
+        if (manifestSource.nodeModulesWalk) {
+          this.unmatchedNodeModulesWalks.add(npmImportForProject);
+        }
         return null;
       }
 
@@ -949,7 +970,8 @@ export class TargetProjectLocator {
    */
   private readPackageJson(
     packageName: string,
-    relativeToDir: string
+    relativeToDir: string,
+    manifestSource?: { nodeModulesWalk: boolean }
   ): PackageJson | null {
     // Package specifiers use `/` on every OS. path.join() would use `\` on Windows.
     const packageJsonPath = resolveRelativeToDir(
@@ -975,6 +997,51 @@ export class TargetProjectLocator {
       // Resolve the main entry point of the package
       const pathOfFileInPackage =
         packageJsonPath ?? resolveRelativeToDir(packageName, relativeToDir);
+      if (!pathOfFileInPackage) {
+        // An installed package can fail both lookups (exports hide them, or the
+        // entry file is missing). Read its manifest from node_modules instead.
+        for (let dir = relativeToDir; ; dir = dirname(dir)) {
+          const candidatePath = join(
+            dir,
+            'node_modules',
+            packageName,
+            'package.json'
+          );
+          // Node never looks in node_modules/node_modules
+          if (basename(dir) !== 'node_modules' && existsSync(candidatePath)) {
+            // Keep a package whose real path stays in this node_modules or
+            // another one. Any other is a linked copy, not a registry package.
+            const realPackageDir = this.realPath(dirname(candidatePath));
+            if (
+              !isContainedRelativePath(
+                relative(
+                  this.realPath(join(dir, 'node_modules')),
+                  realPackageDir
+                )
+              ) &&
+              !isInNodeModules(
+                normalizePath(
+                  relative(this.realPath(workspaceRoot), realPackageDir)
+                )
+              )
+            ) {
+              return null;
+            }
+            // Key the shared manifest cache by the real file. A relink changes it.
+            const installed = this.readCompletePackageJson(
+              this.realPath(candidatePath)
+            );
+            if (installed && manifestSource) {
+              manifestSource.nodeModulesWalk = true;
+            }
+            // Node loads the nearest copy, so an unusable manifest ends the walk
+            return installed;
+          }
+          if (dir === dirname(dir)) {
+            return null;
+          }
+        }
+      }
       const installedPackageJsonPath = installedPackageJsonFromResolvedFile(
         pathOfFileInPackage,
         packageName
@@ -1034,6 +1101,15 @@ export class TargetProjectLocator {
     } catch {
       return null;
     }
+  }
+
+  private realPath(path: string): string {
+    let realPath = this.realPaths.get(path);
+    if (realPath === undefined) {
+      realPath = realpathSync(path);
+      this.realPaths.set(path, realPath);
+    }
+    return realPath;
   }
 
   private readCompletePackageJson(
