@@ -1,3 +1,4 @@
+import { updateJson } from 'nx/src/devkit-exports';
 import { createTreeWithEmptyWorkspace } from 'nx/src/generators/testing-utils/create-tree-with-empty-workspace';
 import { FsTree, type Tree } from 'nx/src/generators/tree';
 import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
@@ -287,6 +288,95 @@ describe('formatFiles', () => {
         // A deleted config reads back as null; treating it as the generated
         // seed would report an unreadable config and skip the whole batch.
         expect(fsTree.read('test.ts', 'utf-8')).toBe("const x = 'hi';\n");
+      } finally {
+        fs.cleanup();
+      }
+    });
+  });
+
+  describe('prettier config written by the generator', () => {
+    const unformatted = 'const   x   =   "hi"';
+    const singleQuoted = "const x = 'hi';\n";
+    const doubleQuoted = 'const x = "hi";\n';
+
+    let prettierTree: Tree;
+
+    beforeEach(() => {
+      prettierTree = createTreeWithEmptyWorkspace({ formatter: 'none' });
+      prettierTree.write('test.ts', unformatted);
+    });
+
+    it('should apply a .prettierrc', async () => {
+      prettierTree.write('.prettierrc', JSON.stringify({ singleQuote: true }));
+
+      await formatFiles(prettierTree);
+
+      expect(prettierTree.read('test.ts', 'utf-8')).toBe(singleQuoted);
+    });
+
+    it('should apply a .prettierrc.json', async () => {
+      prettierTree.write(
+        '.prettierrc.json',
+        JSON.stringify({ singleQuote: true })
+      );
+
+      await formatFiles(prettierTree);
+
+      expect(prettierTree.read('test.ts', 'utf-8')).toBe(singleQuoted);
+    });
+
+    it('should apply a .prettierrc.json containing comments', async () => {
+      prettierTree.write(
+        '.prettierrc.json',
+        '{\n  // quotes\n  "singleQuote": true\n}'
+      );
+
+      await formatFiles(prettierTree);
+
+      expect(prettierTree.read('test.ts', 'utf-8')).toBe(singleQuoted);
+    });
+
+    it('should use the options of the first config prettier would pick', async () => {
+      prettierTree.write(
+        '.prettierrc.json',
+        JSON.stringify({ singleQuote: false })
+      );
+      prettierTree.write('.prettierrc', JSON.stringify({ singleQuote: true }));
+
+      await formatFiles(prettierTree);
+
+      expect(prettierTree.read('test.ts', 'utf-8')).toBe(singleQuoted);
+    });
+
+    it('should format with the defaults when the config cannot be read', async () => {
+      prettierTree.write('.prettierrc.json', 'singleQuote: [');
+
+      await formatFiles(prettierTree);
+
+      expect(prettierTree.read('test.ts', 'utf-8')).toBe(doubleQuoted);
+    });
+
+    it('should not let a package.json edit override a nested prettier config', async () => {
+      const fs = new TempFs('format-files-prettier');
+      try {
+        fs.createFileSync(
+          'package.json',
+          JSON.stringify({ name: 'root', prettier: { singleQuote: true } })
+        );
+        fs.createFileSync(
+          'packages/foo/.prettierrc',
+          JSON.stringify({ singleQuote: false })
+        );
+        const fsTree = new FsTree(fs.tempDir, false);
+        updateJson(fsTree, 'package.json', (json) => ({
+          ...json,
+          dependencies: { a: '1.0.0' },
+        }));
+        fsTree.write('packages/foo/a.ts', unformatted);
+
+        await formatFiles(fsTree);
+
+        expect(fsTree.read('packages/foo/a.ts', 'utf-8')).toBe(doubleQuoted);
       } finally {
         fs.cleanup();
       }
