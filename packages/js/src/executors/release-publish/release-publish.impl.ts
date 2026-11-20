@@ -219,7 +219,12 @@ Please update the local dependency on "${depName}" to be a valid semantic versio
     pm === 'bun'
       ? {
           command: 'bun',
-          args: ['info', packageName, '--json', ...registryArgs],
+          args: [
+            'info',
+            packageName,
+            '--json',
+            ...(registry ? [`--registry=${registry}`] : []),
+          ],
         }
       : {
           command: 'npm',
