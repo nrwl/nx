@@ -133,13 +133,22 @@ export async function configurationGeneratorInternal(
   // Written before init so version selection sees it: analog peers vitest 4,
   // and init is what picks the vitest version.
   if (uiFramework === 'angular' && !schema.skipPackageJson) {
+    // If only one Analog package is present, install its companion on the
+    // same release channel, including workspaces opted into a v3 prerelease.
+    const analogVersion =
+      getDependencyVersionFromPackageJson(tree, '@analogjs/vitest-angular') ??
+      getDependencyVersionFromPackageJson(
+        tree,
+        '@analogjs/vite-plugin-angular'
+      ) ??
+      analogVitestAngular;
     tasks.push(
       addDependenciesToPackageJson(
         tree,
         {},
         {
-          '@analogjs/vitest-angular': analogVitestAngular,
-          '@analogjs/vite-plugin-angular': analogVitestAngular,
+          '@analogjs/vitest-angular': analogVersion,
+          '@analogjs/vite-plugin-angular': analogVersion,
         },
         undefined,
         true
