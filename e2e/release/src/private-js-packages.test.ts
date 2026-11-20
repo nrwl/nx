@@ -11,6 +11,9 @@ import { execSync } from 'child_process';
 
 expect.addSnapshotSerializer({
   serialize(str: string) {
+    const e2eRegistryUrl = execSync('npm config get registry')
+      .toString()
+      .trim();
     return (
       normalizePerformanceReport(str)
         // Remove all output unique to specific projects to ensure deterministic snapshots
@@ -30,6 +33,7 @@ expect.addSnapshotSerializer({
         .replaceAll(/\d*B package\.json/g, 'XXXB package.json')
         .replaceAll(/size:\s*\d*\s?B/g, 'size: XXXB')
         .replaceAll(/\d*\.\d*\s?kB/g, 'XXX.XXX kb')
+        .replaceAll(`${e2eRegistryUrl}/`, e2eRegistryUrl)
         // We trim each line to reduce the chances of snapshot flakiness
         .split('\n')
         .map((r) => r.trim())
