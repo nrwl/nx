@@ -74,6 +74,15 @@ public sealed class EvaluatedProperties
     public string? Configuration => Get(nameof(Configuration));
     public string? MSBuildProjectName => Get(nameof(MSBuildProjectName));
     public string? OutputType => Get(nameof(OutputType));
+    public string? AssemblyName => Get(nameof(AssemblyName));
+    public string? PackageId => Get(nameof(PackageId));
+    public string? TargetFramework => Get(nameof(TargetFramework));
+    public string? TargetFrameworkIdentifier => Get(nameof(TargetFrameworkIdentifier));
+    public string? TargetFrameworkVersion => Get(nameof(TargetFrameworkVersion));
+    public string? TargetPlatformIdentifier => Get(nameof(TargetPlatformIdentifier));
+    public string? TargetPlatformVersion => Get(nameof(TargetPlatformVersion));
+    public string? RuntimeIdentifier => Get(nameof(RuntimeIdentifier));
+    public string? RuntimeIdentifiers => Get(nameof(RuntimeIdentifiers));
 
     // Tooling.
     public string? OpenApiDocumentsDirectory => Get(nameof(OpenApiDocumentsDirectory));
@@ -96,6 +105,11 @@ public sealed class EvaluatedProperties
     public bool UsesArtifactsOutput => IsTrue(nameof(UseArtifactsOutput));
     public bool IsExecutable =>
         string.Equals(OutputType, "Exe", StringComparison.OrdinalIgnoreCase);
+    public bool PackAsTool => IsTrue(nameof(PackAsTool));
+    public bool IsPackable =>
+        string.IsNullOrEmpty(Get(nameof(IsPackable))) || IsTrue(nameof(IsPackable));
+    public bool IsPublishable =>
+        string.IsNullOrEmpty(Get(nameof(IsPublishable))) ? IsExecutable : IsTrue(nameof(IsPublishable));
 
     /// <summary>
     /// MSBuild compares booleans case-insensitively, so a project that writes
