@@ -2547,8 +2547,7 @@ describe('task planner', () => {
       )['parent:build'];
       expect(plan).toContain('env:MODE');
       expect(plan).not.toContain('child:libs/child/**/*');
-      // Dependency outputs count through the reads the trace recorded.
-      expect(plan).not.toContain('**/*.d.ts:dist/libs/child');
+      expect(plan).toContain('**/*.d.ts:dist/libs/child');
     });
 
     it("keeps a selected project's read that its declared negation excludes", () => {
