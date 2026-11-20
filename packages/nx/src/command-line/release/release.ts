@@ -133,6 +133,7 @@ export function createAPI(
       workspaceVersion,
       projectsVersionData,
       releaseGraph,
+      releaseBoundaryFindings,
     }: NxReleaseVersionResult = await releaseVersion({
       ...args,
       stageChanges: shouldStage,
@@ -441,6 +442,7 @@ export function createAPI(
       workspaceVersion,
       projectsVersionData,
       releaseGraph,
+      ...(releaseBoundaryFindings && { releaseBoundaryFindings }),
     };
   };
 }

@@ -45,6 +45,11 @@ export const releaseChangelog = defaultClient.releaseChangelog.bind(
 /**
  * @public
  */
+export type { ReleaseBoundaryFinding } from './version/release-boundary-check';
+
+/**
+ * @public
+ */
 export { PublishProjectsResult } from './publish';
 /**
  * @public
