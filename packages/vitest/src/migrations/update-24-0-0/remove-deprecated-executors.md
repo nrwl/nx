@@ -1,6 +1,6 @@
 #### Convert `@nx/vitest:test` targets to inferred tasks
 
-Nx 24 removes the `@nx/vitest:test` executor and its `@nrwl/vitest:test` alias. The migration registers `@nx/vitest` in `nx.json` and converts the targets that use those executors to inferred tasks. Options the plugin does not infer stay on the target. A target with nothing left to override is removed from project configuration. When several projects share the same remaining options, those options move to a `targetDefaults` entry scoped to the plugin. `targetDefaults` entries keyed by a removed executor are removed once no target uses that executor.
+Nx 24 removes the `@nx/vitest:test` executor and its `@nrwl/vitest:test` alias. The migration registers `@nx/vitest` in `nx.json` and converts the targets that use those executors to inferred tasks. The executor ran Vitest from the workspace root, so the registration sets `cwd: "workspaceRoot"` and the inferred tasks run `vitest --root <projectRoot>` from there. Paths the tests resolve from the working directory keep working. A root project runs from the workspace root either way and keeps the default. Options the plugin does not infer stay on the target. A target with nothing left to override is removed from project configuration. When several projects share the same remaining options, those options move to a `targetDefaults` entry scoped to the plugin. `targetDefaults` entries keyed by a removed executor are removed once no target uses that executor.
 
 The executor ran Vitest once unless you passed `--watch`, so the migration registers the plugin with `testMode: "run"`. Pass `--watch` to watch. A `test.watch` setting in the config file no longer applies.
 
@@ -67,6 +67,7 @@ Tooling that found Vitest targets by their executor can read `metadata.technolog
     {
       "plugin": "@nx/vitest",
       "options": {
+        "cwd": "workspaceRoot",
         "testMode": "run",
         "testTargetName": "test"
       }
