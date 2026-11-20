@@ -1,3 +1,4 @@
+using Microsoft.Build.Construction;
 using Microsoft.Build.Definition;
 using Microsoft.Build.Evaluation;
 using Microsoft.Build.Evaluation.Context;
@@ -90,18 +91,21 @@ public static class Analyzer
             };
             var evaluationContext = EvaluationContext.Create(EvaluationContext.SharingPolicy.Shared);
             using var projectCollection = new ProjectCollection();
+            // A dangling ProjectReference gets an empty stand-in so the graph still builds.
             projectGraph = new ProjectGraph(
                 absoluteProjectFiles.Select(p => new ProjectGraphEntryPoint(p, globalProperties)),
                 projectCollection,
-                (path, properties, collection) => ProjectInstance.FromFile(
-                    path,
-                    new ProjectOptions
-                    {
-                        GlobalProperties = properties,
-                        ProjectCollection = collection,
-                        EvaluationContext = evaluationContext,
-                        LoadSettings = ProjectLoadSettings.DoNotEvaluateElementsWithFalseCondition,
-                    }));
+                (path, properties, collection) => File.Exists(path)
+                    ? ProjectInstance.FromFile(
+                        path,
+                        new ProjectOptions
+                        {
+                            GlobalProperties = properties,
+                            ProjectCollection = collection,
+                            EvaluationContext = evaluationContext,
+                            LoadSettings = ProjectLoadSettings.DoNotEvaluateElementsWithFalseCondition,
+                        })
+                    : new ProjectInstance(ProjectRootElement.Create(path, collection), properties, null, collection));
         }
 
         var nodesByFile = new Dictionary<string, NxProjectGraphNode>();
@@ -125,7 +129,7 @@ public static class Analyzer
             // imported files (e.g. Directory.Build.props) can appear as graph nodes; treating one
             // as a project would emit a phantom project named after the file (e.g. "Directory.Build")
             // whose targets run dotnet against a directory with no project to build.
-            if (!ProjectUtilities.IsProjectFile(path))
+            if (!ProjectUtilities.IsProjectFile(path) || !File.Exists(path))
             {
                 continue;
             }
@@ -312,6 +316,14 @@ public static class Analyzer
             var absoluteRefPath = Path.IsPathRooted(refPath)
                 ? refPath
                 : Path.GetFullPath(Path.Combine(projectDir, refPath));
+
+            if (!File.Exists(absoluteRefPath))
+            {
+                Console.Error.WriteLine(
+                    $"Warning: {Path.GetRelativePath(workspaceRoot, projectPath)} has a ProjectReference to " +
+                    $"{Path.GetRelativePath(workspaceRoot, absoluteRefPath)}, which does not exist. Skipping it.");
+                continue;
+            }
 
             var relativeRefRoot = ProjectUtilities.GetRelativeProjectRoot(absoluteRefPath, workspaceRoot);
             projectRefs.Add(relativeRefRoot);
