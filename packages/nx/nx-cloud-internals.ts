@@ -14,3 +14,7 @@ export {
 //      when the export is absent)
 //   2: edges are objects (`{ id, waitFor?, inputs? }`)
 export const TASK_GRAPH_FORMAT = 2;
+
+// Nx Cloud keeps dependency-output reads in recordings for an nx without it,
+// since only this nx drops them unless a target sets `hashDependencyOutputs`.
+export const ULTRACACHE_DROPS_DEPENDENCY_OUTPUT_READS = true;
