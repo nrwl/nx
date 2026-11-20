@@ -1,0 +1,3 @@
+interface:
+  display_name: 'Nx Multi Repo Migrate'
+  short_description: 'Nx workflow: nx multi repo migrate'

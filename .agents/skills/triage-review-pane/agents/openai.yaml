@@ -1,0 +1,3 @@
+interface:
+  display_name: 'Triage Review Pane'
+  short_description: 'Nx workflow: triage review pane'

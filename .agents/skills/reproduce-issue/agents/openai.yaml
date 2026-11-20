@@ -1,0 +1,3 @@
+interface:
+  display_name: 'Reproduce Issue'
+  short_description: 'Nx workflow: reproduce issue'

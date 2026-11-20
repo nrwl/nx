@@ -1,0 +1,3 @@
+interface:
+  display_name: 'Triage Prs'
+  short_description: 'Triage Nx PRs into reviewable proposals'

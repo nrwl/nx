@@ -1,0 +1,3 @@
+interface:
+  display_name: 'Nx Gradle Plugin Version Bump'
+  short_description: 'Nx workflow: nx gradle plugin version bump'
