@@ -73,6 +73,15 @@ function addSecondExecutorTarget(
   ctx.projectGraph.nodes[projectName].data.targets = projectJson.targets;
 }
 
+function warningsOtherThanKeptInclude(warn: ReturnType<typeof vi.fn>) {
+  return warn.mock.calls
+    .map(([message]) => String(message))
+    .filter(
+      (message) =>
+        !message.startsWith('convert-to-inferred kept an explicit "include"')
+    );
+}
+
 function syntheticMigrations() {
   return [
     {
@@ -352,16 +361,20 @@ describe('collectMigrationScope (Phase 0)', () => {
       'The skiptest target on project "app1" cannot be migrated. The "targetName" plugin option is already set to "test" by another target of the project, and the plugin can only infer one target per option. The target keeps its current configuration; rerun the migration once the other target is inferred to convert it.'
     );
 
-    expect(() =>
-      collectMigrationScope(
-        ctx.tree,
-        ctx.projectGraph,
-        syntheticMigrations(),
-        { targetName: 'build' },
-        'app1',
-        undefined
-      )
-    ).toThrow('The skiptest target on project "app1" cannot be migrated.');
+    const projectWarn = vi.fn();
+    const projectScope = collectMigrationScope(
+      ctx.tree,
+      ctx.projectGraph,
+      syntheticMigrations(),
+      { targetName: 'build' },
+      'app1',
+      { warn: projectWarn } as any
+    );
+
+    expect(projectScope.executorScopes[0].targetAndProjects).toEqual(
+      new Map([['test', new Set(['app1'])]])
+    );
+    expect(projectWarn.mock.calls).toEqual(warn.mock.calls);
   });
 
   it('lets a second target overwrite a shared plugin option when the migration allows it', () => {
@@ -419,6 +432,294 @@ describe('collectMigrationScope (Phase 0)', () => {
         undefined
       )
     ).toThrow('The build target on project "app1" cannot be migrated. nope');
+  });
+});
+
+describe('per-project plugin options', () => {
+  let ctx: FixtureContext;
+
+  afterEach(() => {
+    if (ctx) {
+      teardownFixture(ctx.fs);
+      ctx = undefined;
+    }
+  });
+
+  function variantMigrations() {
+    return [
+      {
+        ...syntheticMigrations()[0],
+        targetPluginOptionMapper: (
+          targetName: string,
+          project: { root: string }
+        ): SyntheticPluginOptions =>
+          project.root === 'app3'
+            ? { targetName }
+            : { targetName, variant: 'ws' },
+      },
+    ];
+  }
+
+  function configMigrations(
+    mapper: (
+      targetName: string,
+      project: { name?: string }
+    ) => SyntheticPluginOptions
+  ) {
+    return [
+      {
+        executors: [SYNTHETIC_EXECUTOR],
+        targetPluginOptionMapper: mapper,
+        postTargetTransformer: (t: any) => t,
+      },
+    ];
+  }
+
+  async function migrateWithRegistrations(
+    plugins: ExpandedPluginConfiguration[],
+    migrations: Parameters<typeof migrateProjectExecutorsToPlugin>[5]
+  ) {
+    const nxJson = readNxJson(ctx.tree);
+    nxJson.plugins = plugins;
+    updateNxJson(ctx.tree, nxJson);
+    const plugin = createSyntheticPlugin();
+    await migrateProjectExecutorsToPlugin(
+      ctx.tree,
+      ctx.projectGraph,
+      plugin.pluginPath,
+      plugin.createNodes,
+      { targetName: 'build' },
+      migrations
+    );
+    return readNxJson(ctx.tree).plugins;
+  }
+
+  it('splits one target name into an option set per distinct mapper output', () => {
+    ctx = setupFixture('per-project-options-scope');
+    for (const name of ['app1', 'app2', 'app3']) {
+      addExecutorProject(ctx, { name, root: name, targetName: 'build' });
+    }
+
+    const scope = collectMigrationScope(
+      ctx.tree,
+      ctx.projectGraph,
+      variantMigrations(),
+      { targetName: 'build' },
+      undefined,
+      undefined
+    );
+
+    expect(scope.optionSetGroups.map((group) => group.options)).toEqual([
+      { targetName: 'build', variant: 'ws' },
+      { targetName: 'build' },
+    ]);
+    const optionSetIds =
+      scope.executorScopes[0].inferenceOptionSetIds.get('build');
+    expect(optionSetIds.get('app1')).toBe(optionSetIds.get('app2'));
+    expect(optionSetIds.get('app3')).not.toBe(optionSetIds.get('app1'));
+    expect(scope.pluginOptionsByProject.get('app3')).toEqual({
+      targetName: 'build',
+    });
+  });
+
+  it('passes the project name to the mapper', () => {
+    ctx = setupFixture('per-project-options-name');
+    addExecutorProject(ctx, { name: 'app1', root: 'app1', targetName: 'e2e' });
+    addExecutorProject(ctx, { name: 'app2', root: 'app2', targetName: 'e2e' });
+
+    const scope = collectMigrationScope(
+      ctx.tree,
+      ctx.projectGraph,
+      configMigrations((targetName, project) => ({
+        configToTargetName: { [`${project.name}.cfg`]: targetName },
+      })),
+      {},
+      undefined,
+      undefined
+    );
+
+    const ids = scope.executorScopes[0].inferenceOptionSetIds.get('e2e');
+    expect(scope.optionSetGroups.map((group) => group.options)).toEqual([
+      { configToTargetName: { 'app1.cfg': 'e2e' } },
+      { configToTargetName: { 'app2.cfg': 'e2e' } },
+    ]);
+    expect([ids.get('app1'), ids.get('app2')]).toEqual([0, 1]);
+    expect(scope.pluginOptionsByProject.get('app2')).toEqual({
+      configToTargetName: { 'app2.cfg': 'e2e' },
+    });
+  });
+
+  it("merges object-valued plugin options of a project's targets key by key", () => {
+    ctx = setupFixture('per-project-options-object-merge');
+    addExecutorProject(ctx, { name: 'app1', root: 'app1', targetName: 'test' });
+    addSecondExecutorTarget(ctx, 'app1', 'e2e');
+    const warn = vi.fn();
+
+    const scope = collectMigrationScope(
+      ctx.tree,
+      ctx.projectGraph,
+      configMigrations((targetName) => ({
+        configToTargetName: { [`${targetName}.cfg`]: targetName },
+      })),
+      {},
+      undefined,
+      { warn } as any
+    );
+
+    expect(scope.pluginOptionsByProject.get('app1')).toEqual({
+      configToTargetName: { 'test.cfg': 'test', 'e2e.cfg': 'e2e' },
+    });
+    expect(warn).not.toHaveBeenCalled();
+  });
+
+  it('keeps a second target that maps an object key to another value', () => {
+    ctx = setupFixture('per-project-options-object-conflict');
+    addExecutorProject(ctx, { name: 'app1', root: 'app1', targetName: 'test' });
+    addSecondExecutorTarget(ctx, 'app1', 'e2e');
+    const warn = vi.fn();
+
+    const scope = collectMigrationScope(
+      ctx.tree,
+      ctx.projectGraph,
+      configMigrations((targetName) => ({
+        configToTargetName: { 'shared.cfg': targetName },
+      })),
+      {},
+      undefined,
+      { warn } as any
+    );
+
+    expect(scope.executorScopes[0].targetAndProjects).toEqual(
+      new Map([['test', new Set(['app1'])]])
+    );
+    expect(scope.pluginOptionsByProject.get('app1')).toEqual({
+      configToTargetName: { 'shared.cfg': 'test' },
+    });
+    expect(warn.mock.calls[0][0]).toBe(
+      'The e2e target on project "app1" cannot be migrated. The "configToTargetName" plugin option is already set to {"shared.cfg":"test"} by another target of the project, and the plugin can only infer one target per option. The target keeps its current configuration; rerun the migration once the other target is inferred to convert it.'
+    );
+  });
+
+  it('does not fold a project into a registration that sets an option the project leaves unset', async () => {
+    ctx = setupFixture('per-project-options-registrations');
+    for (const name of ['app1', 'app2', 'app3']) {
+      addExecutorProject(ctx, { name, root: name, targetName: 'build' });
+    }
+
+    const plugins = await migrateWithRegistrations(
+      [
+        {
+          plugin: SYNTHETIC_PLUGIN_PATH,
+          include: ['other/**/*'],
+          options: { targetName: 'build', variant: 'ws' },
+        },
+      ],
+      variantMigrations()
+    );
+
+    expect(plugins).toStrictEqual([
+      {
+        plugin: SYNTHETIC_PLUGIN_PATH,
+        include: ['other/**/*', 'app1/**/*', 'app2/**/*'],
+        options: { targetName: 'build', variant: 'ws' },
+      },
+      {
+        plugin: SYNTHETIC_PLUGIN_PATH,
+        include: ['app3/**/*'],
+        options: { targetName: 'build' },
+      },
+    ]);
+  });
+
+  it('does not fold a project that sets an option into a registration that leaves it unset', async () => {
+    ctx = setupFixture('per-project-options-registrations-reverse');
+    for (const name of ['app1', 'app2', 'app3']) {
+      addExecutorProject(ctx, { name, root: name, targetName: 'build' });
+    }
+
+    const plugins = await migrateWithRegistrations(
+      [
+        {
+          plugin: SYNTHETIC_PLUGIN_PATH,
+          include: ['other/**/*'],
+          options: { targetName: 'build' },
+        },
+      ],
+      variantMigrations()
+    );
+
+    expect(plugins).toStrictEqual([
+      {
+        plugin: SYNTHETIC_PLUGIN_PATH,
+        include: ['other/**/*', 'app3/**/*'],
+        options: { targetName: 'build' },
+      },
+      {
+        plugin: SYNTHETIC_PLUGIN_PATH,
+        include: ['app1/**/*', 'app2/**/*'],
+        options: { targetName: 'build', variant: 'ws' },
+      },
+    ]);
+  });
+
+  it('folds projects into a registration that also sets an option the migration never sets', async () => {
+    ctx = setupFixture('per-project-options-registrations-extra-key');
+    for (const name of ['app1', 'app2']) {
+      addExecutorProject(ctx, { name, root: name, targetName: 'build' });
+    }
+
+    const plugins = await migrateWithRegistrations(
+      [
+        {
+          plugin: SYNTHETIC_PLUGIN_PATH,
+          options: { targetName: 'build', ciTargetName: 'build-ci' },
+        },
+      ],
+      syntheticMigrations()
+    );
+
+    expect(plugins).toStrictEqual([
+      {
+        plugin: SYNTHETIC_PLUGIN_PATH,
+        options: { targetName: 'build', ciTargetName: 'build-ci' },
+      },
+    ]);
+  });
+
+  it('folds a project into a registration with deeply equal object-valued options', async () => {
+    ctx = setupFixture('per-project-options-registrations-object');
+    addExecutorProject(ctx, {
+      name: 'app1',
+      root: 'app1',
+      targetName: 'build',
+    });
+
+    const plugins = await migrateWithRegistrations(
+      [
+        {
+          plugin: SYNTHETIC_PLUGIN_PATH,
+          include: ['other/**/*'],
+          options: {
+            targetName: 'build',
+            configToTargetName: { 'build.cfg': 'build' },
+          },
+        },
+      ],
+      configMigrations((targetName) => ({
+        targetName,
+        configToTargetName: { [`${targetName}.cfg`]: targetName },
+      }))
+    );
+
+    expect(plugins).toStrictEqual([
+      {
+        plugin: SYNTHETIC_PLUGIN_PATH,
+        options: {
+          targetName: 'build',
+          configToTargetName: { 'build.cfg': 'build' },
+        },
+      },
+    ]);
   });
 });
 
@@ -1469,7 +1770,7 @@ describe('Phase 3: strict-common hoist', () => {
     expect(
       readJson(ctx.tree, 'libs/pkg3/package.json').nx.targets
     ).toBeUndefined();
-    expect(warn).toHaveBeenCalledTimes(1);
+    expect(warningsOtherThanKeptInclude(warn)).toHaveLength(1);
   });
 
   it('keeps the nx.targets entry of a package-based project with a same-name included script when its residual is empty (--project)', async () => {
@@ -2733,8 +3034,9 @@ describe('Phase 3: strict-common hoist', () => {
       readJson(ctx.tree, 'app3/project.json').targets.build
     ).toBeUndefined();
     // the revert is surfaced once
-    expect(warn).toHaveBeenCalledTimes(1);
-    expect(warn.mock.calls[0][0]).toContain('build');
+    const warnings = warningsOtherThanKeptInclude(warn);
+    expect(warnings).toHaveLength(1);
+    expect(warnings[0]).toContain('build');
   });
 
   it('M: reverts the hoist when a non-migrated root errors during verification (fail-closed)', async () => {
@@ -4687,6 +4989,37 @@ describe('projects the plugin does not infer', () => {
     expect(warn.mock.calls.map(([message]) => message)).toMatchInlineSnapshot(`
       [
         "convert-to-inferred left target "build" in project "app3" on its executor because the plugin failed to infer it: app3/build.config.json: REMIX_SECRET is required. Fix the error, then rerun the migration to convert it.",
+        "convert-to-inferred kept an explicit "include" list on the @acme/tool/plugin registration in nx.json. Without it, the plugin would also apply to:
+        - config files the plugin fails to load: app3/build.config.json. Fix them to drop the "include".",
+      ]
+    `);
+  });
+
+  it('leaves an uninferred target on its executor when migrating a specific project', async () => {
+    ctx = setupFixture('uninferred-specific-project');
+    addProjects('build.app.config.json');
+    const plugin = createSyntheticPlugin();
+    const warn = vi.fn();
+
+    const migrated = await migrateProjectExecutorsToPlugin(
+      ctx.tree,
+      ctx.projectGraph,
+      plugin.pluginPath,
+      plugin.createNodes,
+      { targetName: 'build' },
+      syntheticMigrations(),
+      'app3',
+      { warn } as any
+    );
+
+    expect(migrated.size).toBe(0);
+    expect(readJson(ctx.tree, 'app3/project.json').targets.build.executor).toBe(
+      SYNTHETIC_EXECUTOR
+    );
+    expect(readNxJson(ctx.tree).plugins ?? []).toEqual([]);
+    expect(warn.mock.calls.map(([message]) => message)).toMatchInlineSnapshot(`
+      [
+        "convert-to-inferred left target "build" in project "app3" on its executor because the plugin found no config file it detects in app3. Rename the config file to one the plugin detects, then rerun the migration to convert it.",
       ]
     `);
   });
@@ -4742,7 +5075,908 @@ describe('projects the plugin does not infer', () => {
     expect(warn.mock.calls.map(([message]) => message)).toMatchInlineSnapshot(`
       [
         "convert-to-inferred left target "build" in project "app3" on its executor because the plugin failed to infer it: app3/nested/build.config.json: REMIX_SECRET is required. Fix the error, then rerun the migration to convert it.",
+        "convert-to-inferred kept an explicit "include" list on the @acme/tool/plugin registration in nx.json. Without it, the plugin would also apply to:
+        - config files the plugin fails to load: app3/nested/build.config.json. Fix them to drop the "include".",
       ]
     `);
+  });
+});
+
+describe('targets another source already provides', () => {
+  const GRADLE_PLUGIN_PATH = '@acme/gradle/plugin';
+  const gradleCreateNodes: CreateNodes<SyntheticPluginOptions> = [
+    '**/build.gradle',
+    (configFiles) =>
+      configFiles.map((file) => {
+        const root = dirname(file);
+        return [
+          file,
+          {
+            projects: {
+              [root]: { targets: { build: { command: './gradlew build' } } },
+            },
+          },
+        ] as const;
+      }),
+  ];
+  let ctx: FixtureContext;
+
+  afterEach(() => {
+    if (ctx) {
+      teardownFixture(ctx.fs);
+      ctx = undefined;
+    }
+  });
+
+  function registerGradlePlugin() {
+    const nxJson = readNxJson(ctx.tree);
+    nxJson.plugins = [GRADLE_PLUGIN_PATH, ...(nxJson.plugins ?? [])];
+    updateNxJson(ctx.tree, nxJson);
+  }
+
+  // A project whose `build` comes from the gradle plugin and which also has a
+  // config file the migrated plugin detects.
+  function addGradleProject(name: string, root: string) {
+    writeJson(ctx.tree, `${root}/project.json`, { name });
+    ctx.fs.createFileSync(`${root}/project.json`, JSON.stringify({ name }));
+    ctx.fs.createFileSync(`${root}/build.gradle`, '');
+    ctx.fs.createFileSync(`${root}/${SYNTHETIC_CONFIG_FILE}`, '{}');
+    ctx.projectGraph.nodes[name] = {
+      name,
+      type: 'lib',
+      data: {
+        root,
+        targets: {
+          build: {
+            executor: 'nx:run-commands',
+            options: { command: './gradlew build', cwd: root },
+          },
+        },
+      } as any,
+    };
+  }
+
+  function syntheticRegistrations() {
+    return (readNxJson(ctx.tree).plugins ?? []).filter(
+      (p): p is ExpandedPluginConfiguration =>
+        typeof p !== 'string' && p.plugin === SYNTHETIC_PLUGIN_PATH
+    );
+  }
+
+  async function migrate(warn = vi.fn(), project?: string) {
+    const plugin = createSyntheticPlugin();
+    await migrateProjectExecutorsToPlugin(
+      ctx.tree,
+      ctx.projectGraph,
+      plugin.pluginPath,
+      plugin.createNodes,
+      { targetName: 'build' },
+      syntheticMigrations(),
+      project,
+      { warn } as any
+    );
+    return { plugin, warn };
+  }
+
+  function resolve(plugin: ReturnType<typeof createSyntheticPlugin>) {
+    return resolveThroughRealPipeline(
+      ctx,
+      plugin.pluginPath,
+      plugin.createNodes,
+      { [GRADLE_PLUGIN_PATH]: gradleCreateNodes }
+    );
+  }
+
+  function warnings(warn: ReturnType<typeof vi.fn>): string[] {
+    return warn.mock.calls.map(([message]) => message);
+  }
+
+  it('keeps a sibling project out of the registration (include stays scoped)', async () => {
+    ctx = setupFixture('collision-sibling');
+    for (const name of ['app1', 'app2']) {
+      addExecutorProject(ctx, {
+        name,
+        root: `apps/${name}`,
+        target: uniformExecutorTarget(),
+      });
+    }
+    addGradleProject('proto', 'libs/proto');
+    registerGradlePlugin();
+
+    const { plugin } = await migrate();
+
+    const [registration] = syntheticRegistrations();
+    expect(registration.include).toEqual(['apps/app1/**/*', 'apps/app2/**/*']);
+    expect(registration.exclude).toBeUndefined();
+    const resolved = await resolveThroughRealPipeline(
+      ctx,
+      plugin.pluginPath,
+      plugin.createNodes,
+      { [GRADLE_PLUGIN_PATH]: gradleCreateNodes }
+    );
+    expect(resolved['libs/proto'].build.options.command).toBe(
+      './gradlew build'
+    );
+  });
+
+  it('excludes a nested project the include would reach and keeps the exclude when the include is dropped', async () => {
+    ctx = setupFixture('collision-nested');
+    addExecutorProject(ctx, {
+      name: 'libs',
+      root: 'libs',
+      target: uniformExecutorTarget(),
+    });
+    addExecutorProject(ctx, {
+      name: 'app1',
+      root: 'apps/app1',
+      target: uniformExecutorTarget(),
+    });
+    addGradleProject('proto', 'libs/proto');
+    registerGradlePlugin();
+
+    const { plugin, warn } = await migrate();
+
+    const [registration] = syntheticRegistrations();
+    expect(registration.include).toBeUndefined();
+    expect(registration.exclude).toEqual(['libs/proto/**/*']);
+    expect(warn.mock.calls.map(([message]) => message)).toContainEqual(
+      expect.stringContaining(
+        'did not apply @acme/tool/plugin to project "proto" (libs/proto)'
+      )
+    );
+    expect(warn.mock.calls.map(([message]) => message)).toContainEqual(
+      expect.stringContaining('./gradlew build')
+    );
+    const resolved = await resolveThroughRealPipeline(
+      ctx,
+      plugin.pluginPath,
+      plugin.createNodes,
+      { [GRADLE_PLUGIN_PATH]: gradleCreateNodes }
+    );
+    expect(resolved['libs/proto'].build.options.command).toBe(
+      './gradlew build'
+    );
+    // migrated projects still infer the target
+    expect(resolved['libs'].build.options.command).toBe('acme-build');
+    expect(resolved['apps/app1'].build.options.command).toBe('acme-build');
+  });
+
+  it('does not exclude a nested project without a target of that name', async () => {
+    ctx = setupFixture('collision-no-existing-target');
+    addExecutorProject(ctx, {
+      name: 'libs',
+      root: 'libs',
+      target: uniformExecutorTarget(),
+    });
+    addExecutorProject(ctx, {
+      name: 'nested',
+      root: 'libs/nested',
+      targetName: 'unrelated',
+      executor: '@other/tool:noop',
+    });
+
+    await migrate();
+
+    const [registration] = syntheticRegistrations();
+    expect(registration.exclude).toBeUndefined();
+  });
+
+  it('excludes a nested project the include would reach when an existing registration is extended', async () => {
+    ctx = setupFixture('collision-existing-registration');
+    addExecutorProject(ctx, {
+      name: 'libs',
+      root: 'libs',
+      target: uniformExecutorTarget(),
+    });
+    addExecutorProject(ctx, {
+      name: 'other',
+      root: 'other',
+      targetName: 'unrelated',
+      executor: '@other/tool:noop',
+    });
+    // keeps the include scoped
+    addExecutorProject(ctx, {
+      name: 'extra',
+      root: 'extra',
+      targetName: 'unrelated',
+      executor: '@other/tool:noop',
+    });
+    addGradleProject('proto', 'libs/proto');
+    const nxJson = readNxJson(ctx.tree);
+    nxJson.plugins = [
+      GRADLE_PLUGIN_PATH,
+      {
+        plugin: SYNTHETIC_PLUGIN_PATH,
+        options: { targetName: 'build' },
+        include: ['other/**/*'],
+      },
+    ];
+    updateNxJson(ctx.tree, nxJson);
+
+    await migrate();
+
+    const [registration] = syntheticRegistrations();
+    expect(registration.include).toEqual(['other/**/*', 'libs/**/*']);
+    expect(registration.exclude).toEqual(['libs/proto/**/*']);
+  });
+
+  it('leaves a project the existing registration already reaches', async () => {
+    ctx = setupFixture('collision-already-reached');
+    addExecutorProject(ctx, {
+      name: 'libs',
+      root: 'libs',
+      target: uniformExecutorTarget(),
+    });
+    addGradleProject('proto', 'libs/proto');
+    const nxJson = readNxJson(ctx.tree);
+    nxJson.plugins = [
+      GRADLE_PLUGIN_PATH,
+      {
+        plugin: SYNTHETIC_PLUGIN_PATH,
+        options: { targetName: 'build' },
+        include: ['libs/proto/**/*'],
+      },
+    ];
+    updateNxJson(ctx.tree, nxJson);
+
+    const { warn } = await migrate();
+
+    const [registration] = syntheticRegistrations();
+    expect(registration.exclude).toBeUndefined();
+    expect(warn.mock.calls.map(([message]) => message)).not.toContainEqual(
+      expect.stringContaining('did not apply')
+    );
+  });
+
+  it('does not exclude a non-migrated parent of a migrated project', async () => {
+    ctx = setupFixture('collision-parent');
+    addGradleProject('parent', 'a');
+    addExecutorProject(ctx, {
+      name: 'child',
+      root: 'a/b',
+      target: uniformExecutorTarget(),
+    });
+    // keeps the include scoped
+    addExecutorProject(ctx, {
+      name: 'other',
+      root: 'other',
+      targetName: 'unrelated',
+      executor: '@other/tool:noop',
+    });
+    registerGradlePlugin();
+
+    const { plugin, warn } = await migrate();
+
+    const [registration] = syntheticRegistrations();
+    expect(registration.include).toEqual(['a/b/**/*']);
+    expect(registration.exclude).toBeUndefined();
+    expect(warnings(warn)).not.toContainEqual(
+      expect.stringContaining('did not apply')
+    );
+    const resolved = await resolve(plugin);
+    expect(resolved['a/b'].build.options.command).toBe('acme-build');
+    expect(resolved['a'].build.options.command).toBe('./gradlew build');
+  });
+
+  it('re-admits a migrated project nested under an excluded one', async () => {
+    ctx = setupFixture('collision-migrated-below-excluded');
+    addExecutorProject(ctx, {
+      name: 'libs',
+      root: 'libs',
+      target: uniformExecutorTarget(),
+    });
+    addGradleProject('proto', 'libs/proto');
+    addExecutorProject(ctx, {
+      name: 'sub',
+      root: 'libs/proto/sub',
+      target: uniformExecutorTarget(),
+    });
+    registerGradlePlugin();
+
+    const { plugin } = await migrate();
+
+    const [registration] = syntheticRegistrations();
+    expect(registration.exclude).toEqual([
+      'libs/proto/**/*',
+      '!libs/proto/sub/**/*',
+    ]);
+    const resolved = await resolve(plugin);
+    expect(resolved['libs/proto/sub'].build.options.command).toBe('acme-build');
+    expect(resolved['libs/proto'].build.options.command).toBe(
+      './gradlew build'
+    );
+    expect(resolved['libs'].build.options.command).toBe('acme-build');
+  });
+
+  it('fences a colliding project nested under a re-admitted one', async () => {
+    ctx = setupFixture('collision-fence-under-readmit');
+    addExecutorProject(ctx, {
+      name: 'libs',
+      root: 'libs',
+      target: uniformExecutorTarget(),
+    });
+    addGradleProject('proto', 'libs/proto');
+    addExecutorProject(ctx, {
+      name: 'sub',
+      root: 'libs/proto/sub',
+      target: uniformExecutorTarget(),
+    });
+    addGradleProject('deep', 'libs/proto/sub/deep');
+    registerGradlePlugin();
+
+    const { plugin } = await migrate();
+
+    expect(syntheticRegistrations()[0].exclude).toEqual([
+      'libs/proto/**/*',
+      '!libs/proto/sub/**/*',
+      'libs/proto/sub/deep/**/*',
+    ]);
+    const resolved = await resolve(plugin);
+    expect(resolved['libs/proto/sub/deep'].build.options.command).toBe(
+      './gradlew build'
+    );
+    expect(resolved['libs/proto/sub'].build.options.command).toBe('acme-build');
+  });
+
+  it('keeps the fence when it also covers a nested project without a collision', async () => {
+    ctx = setupFixture('collision-fence-covers-nested');
+    addExecutorProject(ctx, {
+      name: 'libs',
+      root: 'libs',
+      target: uniformExecutorTarget(),
+    });
+    addGradleProject('proto', 'libs/proto');
+    addExecutorProject(ctx, {
+      name: 'sub',
+      root: 'libs/proto/sub',
+      target: uniformExecutorTarget(),
+    });
+    addExecutorProject(ctx, {
+      name: 'x',
+      root: 'libs/proto/x',
+      targetName: 'unrelated',
+      executor: '@other/tool:noop',
+    });
+    registerGradlePlugin();
+
+    await migrate();
+
+    expect(syntheticRegistrations()[0].exclude).toEqual([
+      'libs/proto/**/*',
+      '!libs/proto/sub/**/*',
+    ]);
+  });
+
+  it('keeps an existing exclude that a re-admit would reopen', async () => {
+    ctx = setupFixture('collision-readmit-reopens');
+    addExecutorProject(ctx, {
+      name: 'libs',
+      root: 'libs',
+      target: uniformExecutorTarget(),
+    });
+    addGradleProject('proto', 'libs/proto');
+    addExecutorProject(ctx, {
+      name: 'sub',
+      root: 'libs/proto/sub',
+      target: uniformExecutorTarget(),
+    });
+    addExecutorProject(ctx, {
+      name: 'legacy',
+      root: 'libs/proto/sub/legacy',
+      targetName: 'unrelated',
+      executor: '@other/tool:noop',
+    });
+    const nxJson = readNxJson(ctx.tree);
+    nxJson.plugins = [
+      GRADLE_PLUGIN_PATH,
+      {
+        plugin: SYNTHETIC_PLUGIN_PATH,
+        options: { targetName: 'build' },
+        include: ['other/**/*'],
+        exclude: ['libs/proto/sub/legacy/**/*'],
+      },
+    ];
+    updateNxJson(ctx.tree, nxJson);
+
+    const { plugin, warn } = await migrate();
+
+    expect(syntheticRegistrations()[0].exclude).toEqual([
+      'libs/proto/**/*',
+      '!libs/proto/sub/**/*',
+      'libs/proto/sub/legacy/**/*',
+    ]);
+    expect(warnings(warn)).toContainEqual(
+      expect.stringContaining(
+        'did not apply @acme/tool/plugin to project "proto" (libs/proto)'
+      )
+    );
+    const resolved = await resolve(plugin);
+    expect(resolved['libs/proto'].build.options.command).toBe(
+      './gradlew build'
+    );
+    expect(resolved['libs/proto/sub'].build.options.command).toBe('acme-build');
+    expect(resolved['libs/proto/sub/legacy']?.build).toBeUndefined();
+  });
+
+  it('only fences a project from the registration that infers the colliding target', async () => {
+    ctx = setupFixture('collision-other-option-set');
+    addExecutorProject(ctx, {
+      name: 'libs',
+      root: 'libs',
+      target: uniformExecutorTarget(),
+    });
+    addExecutorProject(ctx, {
+      name: 'app1',
+      root: 'apps/app1',
+      targetName: 'test',
+    });
+    addGradleProject('proto', 'libs/proto');
+    ctx.projectGraph.nodes.proto.data.targets = {
+      test: {
+        executor: 'nx:run-commands',
+        options: { command: 'gradle test' },
+      },
+    };
+
+    await migrate();
+
+    const registrations = syntheticRegistrations();
+    expect(registrations).toHaveLength(2);
+    for (const registration of registrations) {
+      expect(registration.exclude).toBeUndefined();
+    }
+  });
+
+  it('keeps both projects inferred when converting a parent and then its nested project', async () => {
+    ctx = setupFixture('collision-one-at-a-time');
+    addExecutorProject(ctx, {
+      name: 'libs',
+      root: 'libs',
+      target: uniformExecutorTarget(),
+    });
+    addExecutorProject(ctx, {
+      name: 'proto',
+      root: 'libs/proto',
+      target: uniformExecutorTarget(),
+    });
+
+    const first = await migrate(vi.fn(), 'libs');
+    expect(syntheticRegistrations()[0].exclude).toBeUndefined();
+    expect(warnings(first.warn)).not.toContainEqual(
+      expect.stringContaining('did not apply')
+    );
+    const { plugin } = await migrate(vi.fn(), 'proto');
+
+    expect(syntheticRegistrations()[0].exclude).toBeUndefined();
+    const resolved = await resolve(plugin);
+    expect(resolved['libs'].build.options.command).toBe('acme-build');
+    expect(resolved['libs/proto'].build.options.command).toBe('acme-build');
+  });
+
+  it('keeps a project converted in an earlier run reachable when a later run fences its parent', async () => {
+    ctx = setupFixture('collision-earlier-run-under-fence');
+    addExecutorProject(ctx, {
+      name: 'libs',
+      root: 'libs',
+      target: uniformExecutorTarget(),
+    });
+    addGradleProject('proto', 'libs/proto');
+    addExecutorProject(ctx, {
+      name: 'sub',
+      root: 'libs/proto/sub',
+      target: uniformExecutorTarget(),
+    });
+    registerGradlePlugin();
+
+    await migrate(vi.fn(), 'sub');
+    const { plugin, warn } = await migrate();
+
+    expect(syntheticRegistrations()[0].exclude).toEqual([
+      'libs/proto/**/*',
+      '!libs/proto/sub/**/*',
+    ]);
+    expect(warnings(warn)).toContainEqual(
+      expect.stringContaining(
+        'did not apply @acme/tool/plugin to project "proto" (libs/proto)'
+      )
+    );
+    const resolved = await resolve(plugin);
+    expect(resolved['libs/proto/sub'].build.options.command).toBe('acme-build');
+    expect(resolved['libs/proto'].build.options.command).toBe(
+      './gradlew build'
+    );
+    expect(resolved['libs'].build.options.command).toBe('acme-build');
+  });
+
+  it('does not re-admit a project an existing exclude keeps out when a later run fences its parent', async () => {
+    ctx = setupFixture('collision-excluded-under-new-fence');
+    addExecutorProject(ctx, {
+      name: 'libs',
+      root: 'libs',
+      target: uniformExecutorTarget(),
+    });
+    addGradleProject('proto', 'libs/proto');
+    addExecutorProject(ctx, {
+      name: 'sub',
+      root: 'libs/proto/sub',
+      targetName: 'unrelated',
+      executor: '@other/tool:noop',
+    });
+    // keeps the include scoped
+    addExecutorProject(ctx, {
+      name: 'other',
+      root: 'other',
+      targetName: 'unrelated',
+      executor: '@other/tool:noop',
+    });
+    const nxJson = readNxJson(ctx.tree);
+    nxJson.plugins = [
+      GRADLE_PLUGIN_PATH,
+      {
+        plugin: SYNTHETIC_PLUGIN_PATH,
+        options: { targetName: 'build' },
+        include: ['libs/proto/sub/**/*'],
+        exclude: ['libs/proto/sub/**/*'],
+      },
+    ];
+    updateNxJson(ctx.tree, nxJson);
+
+    const { plugin } = await migrate();
+
+    expect(syntheticRegistrations()[0].exclude).toEqual([
+      'libs/proto/sub/**/*',
+      'libs/proto/**/*',
+    ]);
+    const resolved = await resolve(plugin);
+    expect(resolved['libs/proto/sub']?.build).toBeUndefined();
+  });
+
+  it.each([
+    ['unscoped', undefined],
+    ['scoped', ['libs/**/*']],
+  ])(
+    'drops an exclude entry for a project being migrated (%s registration)',
+    async (_, include) => {
+      ctx = setupFixture('collision-stale-exclude');
+      addExecutorProject(ctx, {
+        name: 'proto',
+        root: 'libs/proto',
+        target: uniformExecutorTarget(),
+      });
+      const nxJson = readNxJson(ctx.tree);
+      nxJson.plugins = [
+        {
+          plugin: SYNTHETIC_PLUGIN_PATH,
+          options: { targetName: 'build' },
+          ...(include ? { include } : {}),
+          exclude: ['libs/proto/**/*'],
+        },
+      ];
+      updateNxJson(ctx.tree, nxJson);
+
+      const { plugin } = await migrate(vi.fn(), 'proto');
+
+      expect(syntheticRegistrations()[0].exclude).toBeUndefined();
+      const resolved = await resolve(plugin);
+      expect(resolved['libs/proto'].build.options.command).toBe('acme-build');
+    }
+  );
+
+  it('re-admits a project being migrated that an ancestor exclude fences off', async () => {
+    ctx = setupFixture('collision-ancestor-exclude');
+    addExecutorProject(ctx, {
+      name: 'sub',
+      root: 'libs/proto/sub',
+      target: uniformExecutorTarget(),
+    });
+    const nxJson = readNxJson(ctx.tree);
+    nxJson.plugins = [
+      {
+        plugin: SYNTHETIC_PLUGIN_PATH,
+        options: { targetName: 'build' },
+        exclude: ['libs/proto/**/*'],
+      },
+    ];
+    updateNxJson(ctx.tree, nxJson);
+
+    const { plugin } = await migrate(vi.fn(), 'sub');
+
+    expect(syntheticRegistrations()[0].exclude).toEqual([
+      'libs/proto/**/*',
+      '!libs/proto/sub/**/*',
+    ]);
+    const resolved = await resolve(plugin);
+    expect(resolved['libs/proto/sub'].build.options.command).toBe('acme-build');
+  });
+
+  it('does not exclude a nested project whose target project.json authors', async () => {
+    ctx = setupFixture('collision-authored-in-project-json');
+    addExecutorProject(ctx, {
+      name: 'libs',
+      root: 'libs',
+      target: uniformExecutorTarget(),
+    });
+    addExecutorProject(ctx, {
+      name: 'proto',
+      root: 'libs/proto',
+      executor: 'nx:noop',
+    });
+    registerGradlePlugin();
+
+    const { plugin, warn } = await migrate();
+
+    const [registration] = syntheticRegistrations();
+    expect(registration.exclude).toBeUndefined();
+    expect(warnings(warn)).not.toContainEqual(
+      expect.stringContaining('did not apply')
+    );
+    const resolved = await resolve(plugin);
+    expect(resolved['libs/proto'].build.executor).toBe('nx:noop');
+    expect(resolved['libs'].build.options.command).toBe('acme-build');
+  });
+
+  it('says the target may be replaced when another plugin is registered after the extended registration', async () => {
+    ctx = setupFixture('collision-later-plugin');
+    addExecutorProject(ctx, {
+      name: 'libs',
+      root: 'libs',
+      target: uniformExecutorTarget(),
+    });
+    addExecutorProject(ctx, {
+      name: 'other',
+      root: 'other',
+      targetName: 'unrelated',
+      executor: '@other/tool:noop',
+    });
+    addGradleProject('proto', 'libs/proto');
+    const nxJson = readNxJson(ctx.tree);
+    nxJson.plugins = [
+      {
+        plugin: SYNTHETIC_PLUGIN_PATH,
+        options: { targetName: 'build' },
+        include: ['other/**/*'],
+      },
+      GRADLE_PLUGIN_PATH,
+    ];
+    updateNxJson(ctx.tree, nxJson);
+
+    const { warn } = await migrate();
+
+    expect(syntheticRegistrations()[0].exclude).toEqual(['libs/proto/**/*']);
+    expect(warnings(warn)).toContainEqual(
+      expect.stringContaining(
+        'which the plugin\'s inferred "build" target may replace'
+      )
+    );
+  });
+
+  it('prints object-form commands in the warning', async () => {
+    ctx = setupFixture('collision-object-commands');
+    addExecutorProject(ctx, {
+      name: 'libs',
+      root: 'libs',
+      target: uniformExecutorTarget(),
+    });
+    addGradleProject('proto', 'libs/proto');
+    ctx.projectGraph.nodes.proto.data.targets.build = {
+      executor: 'nx:run-commands',
+      options: {
+        commands: ['a', { command: 'b', prefix: 'p' }],
+      },
+    };
+    registerGradlePlugin();
+
+    const { warn } = await migrate();
+
+    expect(warnings(warn)).toContainEqual(
+      expect.stringContaining('its "build" target runs "a && b"')
+    );
+  });
+});
+
+describe('kept include warning', () => {
+  let ctx: FixtureContext;
+
+  afterEach(() => {
+    if (ctx) {
+      teardownFixture(ctx.fs);
+      ctx = undefined;
+    }
+  });
+
+  const header = `convert-to-inferred kept an explicit "include" list on the ${SYNTHETIC_PLUGIN_PATH} registration in nx.json. Without it, the plugin would also apply to:`;
+
+  async function migrate(
+    createNodes: CreateNodes<SyntheticPluginOptions>,
+    specificProject?: string
+  ) {
+    const warn = vi.fn();
+    await migrateProjectExecutorsToPlugin(
+      ctx.tree,
+      ctx.projectGraph,
+      SYNTHETIC_PLUGIN_PATH,
+      createNodes,
+      { targetName: 'build' },
+      syntheticMigrations(),
+      specificProject,
+      { warn } as any
+    );
+    return warn.mock.calls
+      .map(([message]) => String(message))
+      .filter((message) => message.startsWith(header));
+  }
+
+  it('names the projects that were not migrated', async () => {
+    ctx = setupFixture('kept-include-not-migrated');
+    for (const name of ['app0', 'app1']) {
+      addExecutorProject(ctx, {
+        name,
+        root: `apps/${name}`,
+        target: uniformExecutorTarget(),
+      });
+    }
+
+    const messages = await migrate(createSyntheticPlugin().createNodes, 'app0');
+
+    expect(messages).toEqual([
+      `${header}\n  - projects that were not migrated: apps/app1. Migrate them too to drop the "include".`,
+    ]);
+  });
+
+  it('names the projects with no target to migrate, capped at five', async () => {
+    ctx = setupFixture('kept-include-nothing-to-migrate');
+    addExecutorProject(ctx, {
+      name: 'app0',
+      root: 'apps/app0',
+      target: uniformExecutorTarget(),
+    });
+    for (let i = 1; i <= 7; i++) {
+      addExecutorProject(ctx, {
+        name: `other${i}`,
+        root: `libs/other${i}`,
+        executor: '@other/tool:build',
+      });
+    }
+
+    const messages = await migrate(createSyntheticPlugin().createNodes);
+
+    expect(messages).toEqual([
+      `${header}\n  - projects with no target this conversion can migrate: libs/other1, libs/other2, libs/other3, libs/other4, libs/other5 and 2 more. The "include" keeps the plugin from adding targets to them.`,
+    ]);
+  });
+
+  it('names the config files where the plugin would create a new project', async () => {
+    ctx = setupFixture('kept-include-new-projects');
+    addExecutorProject(ctx, {
+      name: 'app0',
+      root: 'apps/app0',
+      target: uniformExecutorTarget(),
+    });
+    ctx.fs.createFileSync(`tools/rules/${SYNTHETIC_CONFIG_FILE}`, '{}');
+
+    const messages = await migrate(createSyntheticPlugin().createNodes);
+
+    expect(messages).toEqual([
+      `${header}\n  - config files outside any project, where the plugin would create a new project: tools/rules/${SYNTHETIC_CONFIG_FILE}.`,
+    ]);
+  });
+
+  it('names the config files the plugin fails to load', async () => {
+    ctx = setupFixture('kept-include-errored');
+    addExecutorProject(ctx, {
+      name: 'app0',
+      root: 'apps/app0',
+      target: uniformExecutorTarget(),
+    });
+    ctx.fs.createFileSync(`tools/rules/${SYNTHETIC_CONFIG_FILE}`, '{}');
+    const createNodes: CreateNodes<SyntheticPluginOptions> = [
+      SYNTHETIC_CONFIG_GLOB,
+      (configFiles, options) => {
+        const results: Array<readonly [string, any]> = [];
+        const errors: Array<[string, Error]> = [];
+        for (const file of configFiles) {
+          const root = dirname(file);
+          if (root === 'tools/rules') {
+            errors.push([file, new Error('cannot load')]);
+            continue;
+          }
+          results.push([
+            file,
+            {
+              projects: {
+                [root]: {
+                  targets: {
+                    [options.targetName]: defaultInferredTarget(root),
+                  },
+                },
+              },
+            },
+          ]);
+        }
+        if (errors.length > 0) {
+          throw new AggregateCreateNodesError(errors, results as any);
+        }
+        return results;
+      },
+    ];
+
+    const messages = await migrate(createNodes);
+
+    expect(messages).toEqual([
+      `${header}\n  - config files the plugin fails to load: tools/rules/${SYNTHETIC_CONFIG_FILE}. Fix them to drop the "include".`,
+    ]);
+  });
+
+  it('names the projects registered with different plugin options', async () => {
+    ctx = setupFixture('kept-include-other-options');
+    addExecutorProject(ctx, {
+      name: 'app1',
+      root: 'apps/app1',
+      targetName: 'build',
+      target: uniformExecutorTarget(),
+    });
+    addExecutorProject(ctx, {
+      name: 'app2',
+      root: 'apps/app2',
+      targetName: 'compile',
+      target: uniformExecutorTarget(),
+    });
+
+    const messages = await migrate(createSyntheticPlugin().createNodes);
+
+    expect(messages).toEqual([
+      `${header}\n  - projects migrated with different plugin options, which have their own registration: apps/app2. Give them the same plugin options to share one registration.`,
+      `${header}\n  - projects migrated with different plugin options, which have their own registration: apps/app1. Give them the same plugin options to share one registration.`,
+    ]);
+  });
+
+  it('warns when an existing scoped registration keeps its include', async () => {
+    ctx = setupFixture('kept-include-existing');
+    const nxJson = readNxJson(ctx.tree);
+    nxJson.plugins = [
+      {
+        plugin: SYNTHETIC_PLUGIN_PATH,
+        options: { targetName: 'build' },
+        include: ['apps/app0/**/*'],
+      },
+    ];
+    updateNxJson(ctx.tree, nxJson);
+    addExecutorProject(ctx, {
+      name: 'app1',
+      root: 'apps/app1',
+      target: uniformExecutorTarget(),
+    });
+    addExecutorProject(ctx, {
+      name: 'other',
+      root: 'libs/other',
+      executor: '@other/tool:build',
+    });
+
+    const messages = await migrate(createSyntheticPlugin().createNodes);
+
+    expect(messages).toEqual([
+      `${header}\n  - projects with no target this conversion can migrate: libs/other. The "include" keeps the plugin from adding targets to them.`,
+    ]);
+  });
+
+  it('does not warn when the include is dropped', async () => {
+    ctx = setupFixture('kept-include-collapsed');
+    for (const name of ['app1', 'app2']) {
+      addExecutorProject(ctx, {
+        name,
+        root: `apps/${name}`,
+        target: uniformExecutorTarget(),
+      });
+    }
+
+    const messages = await migrate(createSyntheticPlugin().createNodes);
+
+    const registration = readNxJson(ctx.tree).plugins?.find(
+      (p): p is ExpandedPluginConfiguration =>
+        typeof p !== 'string' && p.plugin === SYNTHETIC_PLUGIN_PATH
+    );
+    expect(registration).toBeTruthy();
+    expect(registration.include).toBeUndefined();
+    expect(messages).toEqual([]);
   });
 });

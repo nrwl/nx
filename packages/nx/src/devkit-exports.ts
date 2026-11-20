@@ -70,6 +70,8 @@ export type {
   ImplicitDependencyEntry,
   ImplicitJsonSubsetDependency,
   NxAffectedConfig,
+  NxConformanceConfiguration,
+  NxOwnersConfiguration,
   NxJsonConfiguration,
   PluginConfiguration,
   TargetDefaults,

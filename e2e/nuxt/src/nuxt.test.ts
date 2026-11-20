@@ -1,7 +1,6 @@
 import {
   checkFilesExist,
   cleanupProject,
-  killPorts,
   newProject,
   readJson,
   runCLI,
@@ -24,7 +23,6 @@ describe('Nuxt Plugin', () => {
   });
 
   afterAll(() => {
-    killPorts();
     cleanupProject();
   });
 

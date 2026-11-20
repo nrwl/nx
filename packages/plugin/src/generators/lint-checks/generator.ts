@@ -7,7 +7,6 @@ import {
   readJson,
   readProjectConfiguration,
   Tree,
-  updateJson,
   writeJson,
 } from '@nx/devkit';
 

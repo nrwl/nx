@@ -4,6 +4,8 @@ import { existsSync, promises as fsPromises } from 'node:fs';
 import { extname, posix, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import type { NormalizedAngularRspackPluginOptions } from '../../models';
+import { servesSsrFromDevServer } from '../../plugins/angular-ssr-dev-server';
+import { servesSsrFromForkedServer } from '../../plugins/angular-ssr-forked-server';
 import { getIndexOutputFile } from '../../utils/index-file/get-index-output-file';
 import { loadEsmModule } from '../../utils/misc-helpers';
 
@@ -14,25 +16,26 @@ export async function getDevServerConfig(
   const { root } = options;
 
   const servePath = buildServePath(options);
+  // The SSR middleware answers documents, as with `ng serve`.
+  const servesSsr = servesSsrFromDevServer(options);
 
   return {
     host: options.devServer.host,
     port: options.devServer.port,
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-      ...options.devServer.headers,
-    },
-    historyApiFallback: {
-      index: posix.join(servePath, getIndexOutputFile(options.index)),
-      disableDotRule: true,
-      htmlAcceptHeaders: ['text/html', 'application/xhtml+xml'],
-      rewrites: [
-        {
-          from: new RegExp(`^(?!${servePath})/.*`),
-          to: (context) => context.parsedUrl.href,
+    headers: options.devServer.headers,
+    historyApiFallback: servesSsr
+      ? false
+      : {
+          index: posix.join(servePath, getIndexOutputFile(options.index)),
+          disableDotRule: true,
+          htmlAcceptHeaders: ['text/html', 'application/xhtml+xml'],
+          rewrites: [
+            {
+              from: new RegExp(`^(?!${servePath})/.*`),
+              to: (context) => context.parsedUrl.href,
+            },
+          ],
         },
-      ],
-    },
     compress: false,
     static: false,
     server: getServerConfig(options),
@@ -42,19 +45,29 @@ export async function getDevServerConfig(
     ),
     devMiddleware: {
       publicPath: servePath,
+      ...(servesSsr ? { index: false } : {}),
       writeToDisk:
         platform === 'browser' && options.hasServer
           ? (file) => !file.includes('.hot-update.')
           : undefined,
     },
+    open: options.devServer.open
+      ? `${servePath === '/' ? '' : servePath}/`
+      : false,
     liveReload: options.devServer.liveReload,
     hot:
       options.devServer.hmr && !options.devServer.liveReload
         ? 'only'
         : options.devServer.hmr,
-    proxy: await getProxyConfig(root, options.devServer.proxyConfig),
+    proxy: options.projectGraphCreation
+      ? undefined
+      : await getProxyConfig(root, options.devServer.proxyConfig),
     ...getWebSocketSettings(options, servePath),
-    watchFiles: ['./src/**/*.*', './public/**/*.*'],
+    // Without DevServerReloads, a separate SSR server's app reloads on source
+    // changes.
+    ...(servesSsrFromForkedServer(options)
+      ? { watchFiles: ['./src/**/*.*', './public/**/*.*'] }
+      : {}),
     onListening:
       platform === 'browser'
         ? (devServer) => {
@@ -83,7 +96,7 @@ function buildServePath(options: NormalizedAngularRspackPluginOptions): string {
       options.baseHref,
       options.deployUrl
     );
-    if (defaultPath == null) {
+    if (defaultPath == null && !options.projectGraphCreation) {
       console.warn(
         `Warning: --deploy-url and/or --base-href contain unsupported values for ng serve. Default serve path of '/' used. Use --serve-path to override.`
       );
@@ -304,7 +317,7 @@ function getPublicHostOptions(
 ): string {
   let publicHost = options.devServer.publicHost;
 
-  if (publicHost) {
+  if (publicHost && !options.projectGraphCreation) {
     const hostWithProtocol = !/^\w+:\/\//.test(publicHost)
       ? `https://${publicHost}`
       : publicHost;

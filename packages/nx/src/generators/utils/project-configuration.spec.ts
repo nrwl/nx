@@ -426,5 +426,72 @@ describe('project configuration', () => {
         "
       `);
     });
+
+    const build = { command: 'echo "building"' };
+    it.each<
+      [
+        string,
+        {
+          root: string;
+          nx: PackageJson['nx'];
+          targets: ProjectConfiguration['targets'];
+          expectedNx: PackageJson['nx'];
+        },
+      ]
+    >([
+      [
+        'remove the last target and keep the other nx properties',
+        {
+          root: 'proj',
+          nx: { tags: ['test'], targets: { build } },
+          targets: {},
+          expectedNx: { tags: ['test'] },
+        },
+      ],
+      [
+        'remove the nx property that removing the last target empties',
+        {
+          root: 'proj',
+          nx: { targets: { build } },
+          targets: {},
+          expectedNx: undefined,
+        },
+      ],
+      [
+        'keep the nx property of a root project when removing its last target',
+        {
+          root: '.',
+          nx: { targets: { build } },
+          targets: {},
+          expectedNx: {},
+        },
+      ],
+      [
+        'keep the targets when targets are omitted',
+        {
+          root: 'proj',
+          nx: { targets: { build } },
+          targets: undefined,
+          expectedNx: { targets: { build } },
+        },
+      ],
+      [
+        'not add an nx property when there are no targets to remove',
+        { root: 'proj', nx: undefined, targets: {}, expectedNx: undefined },
+      ],
+    ])('should %s', (_, { root, nx, targets, expectedNx }) => {
+      const packageJsonPath = joinPathFragments(root, 'package.json');
+      const packageJson: PackageJson = tree.exists(packageJsonPath)
+        ? readJson(tree, packageJsonPath)
+        : { name: 'proj' };
+      writeJson(tree, packageJsonPath, { ...packageJson, nx });
+
+      updateProjectConfiguration(tree, packageJson.name, {
+        root,
+        ...(targets && { targets }),
+      });
+
+      expect(readJson(tree, packageJsonPath).nx).toEqual(expectedNx);
+    });
   });
 });

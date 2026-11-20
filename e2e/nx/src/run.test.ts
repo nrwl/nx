@@ -1624,8 +1624,8 @@ describe('Nx Running Tests', () => {
       console.log(`[sigint-test] sending SIGINT`);
       childProcess.kill('SIGINT');
 
-      // Nx should exit promptly. Without the fix, cleanup hangs
-      // waiting for unkilled discrete tasks.
+      // Nx should exit promptly. Cleanup hangs if discrete tasks are
+      // not killed.
       const exitTimeout = setTimeout(() => {
         console.log(`[sigint-test] TIMEOUT — sending SIGKILL`);
         childProcess.kill('SIGKILL');

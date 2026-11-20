@@ -1490,9 +1490,9 @@ describe('project-configuration-utils', () => {
       // overrides it with its own `nx:run-commands` `commands`. The two are
       // command-incompatible, so project.json replaces the inferred target —
       // but the target-name-keyed default's `dependsOn`/`cache`/`inputs`/
-      // `outputs` must still ride onto the winning project.json target. Before
-      // the fix, the synthetic defaults stayed pinned to the inferred command
-      // identity and were dropped when project.json replaced the base.
+      // `outputs` must still ride onto the winning project.json target.
+      // Synthetic defaults pinned to the inferred command identity would be
+      // dropped when project.json replaces the base.
       const specifiedResults = [
         [
           [

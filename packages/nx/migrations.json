@@ -204,6 +204,12 @@
       "description": "Renames the ultracache target options \"ignoredReads\" and \"ignoredWrites\" to \"ignoreReads\" and \"ignoreWrites\", and renames .nx/workflows/sandboxing-config.yaml to ultracache-config.yaml with its \"exclude-reads\" and \"exclude-writes\" keys renamed to \"ignore-reads\" and \"ignore-writes\".",
       "implementation": "./dist/src/migrations/update-24-0-0/rename-ultracache-ignore-options",
       "documentation": "./dist/src/migrations/update-24-0-0/rename-ultracache-ignore-options.md"
+    },
+    "24-1-0-replace-powerpack-conformance": {
+      "version": "24.1.0-beta.0",
+      "description": "Replaces @nx/powerpack-conformance with @nx/conformance, which nx conformance now loads. Rewrites its rule specifiers, executors and imports, points ensure-owners at @nx/owners, and adds esbuild for the bundle-rules executor.",
+      "implementation": "./dist/src/migrations/update-24-1-0/replace-powerpack-conformance",
+      "documentation": "./dist/src/migrations/update-24-1-0/replace-powerpack-conformance.md"
     }
   }
 }

@@ -39,7 +39,7 @@ export async function deriveSpecifierFromConventionalCommits(
   // In this case, use the first commit that touched this project rather than the repo's first commit,
   // to avoid scanning the entire git history for projects that were added after the repo was created.
   const previousVersionRef = latestMatchingGitTag
-    ? latestMatchingGitTag.tag
+    ? `refs/tags/${latestMatchingGitTag.tag}`
     : fallbackCurrentVersionResolver === 'disk'
       ? await getFirstProjectCommit(projectGraphNode.data.root)
       : undefined;

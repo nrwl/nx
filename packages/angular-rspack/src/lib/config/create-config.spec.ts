@@ -2,11 +2,26 @@ import type { Configuration } from '@rspack/core';
 import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import * as devkit from '@nx/devkit';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { AngularRspackPluginOptions } from '../models';
 import * as postcssConfiguration from '../utils/postcss-configuration';
+import { READY_SIGNAL_PLUGIN } from '../utils/dev-server-ready-signal';
+import { isRspackV2 } from '../utils/rspack-version';
 import { handleConfigurations } from './config-utils/user-defined-config-helpers';
 import { _createConfig, createConfig } from './create-config';
+
+vi.mock('../utils/rspack-version', async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import('../utils/rspack-version')>();
+  return { isRspackV2: vi.fn(actual.isRspackV2) };
+});
+
+vi.mock('@nx/devkit', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@nx/devkit')>()),
+  createProjectGraphAsync: async () => null,
+  readCachedProjectGraph: () => null,
+}));
 
 describe('createConfig', () => {
   const configBase: AngularRspackPluginOptions = {
@@ -500,6 +515,179 @@ describe('createConfig', () => {
     }
   }, 10000);
 
+  it('should reload on source changes only for SSR apps served by a separate server', async () => {
+    const root = await createSsrProjectRoot();
+    vi.stubEnv('WEBPACK_SERVE', 'true');
+    try {
+      const [forkedSsrConfig] = await _createConfig({
+        ...configBase,
+        root,
+        server: './src/main.server.ts',
+        ssr: { entry: './src/server.ts' },
+      });
+      expect((forkedSsrConfig.devServer || {}).watchFiles).toEqual([
+        './src/**/*.*',
+        './public/**/*.*',
+      ]);
+
+      const [devServerSsrConfig] = await _createConfig({
+        ...configBase,
+        root,
+        server: './src/main.server.ts',
+        ssr: { entry: './src/server.ts', serveFromDevServer: true },
+      });
+      const [browserOnlyConfig] = await _createConfig({ ...configBase, root });
+      for (const config of [devServerSsrConfig, browserOnlyConfig]) {
+        expect(config.devServer).not.toHaveProperty('watchFiles');
+      }
+    } finally {
+      vi.unstubAllEnvs();
+      await rm(root, { recursive: true, force: true });
+    }
+  }, 10000);
+
+  it('should keep devServer overrides off the server build while serving', async () => {
+    const root = await createSsrProjectRoot();
+    vi.stubEnv('WEBPACK_SERVE', 'true');
+    try {
+      const [browserConfig, serverConfig] = await _createConfig(
+        {
+          ...configBase,
+          root,
+          server: './src/main.server.ts',
+          ssr: { entry: './src/server.ts' },
+        },
+        { devServer: { headers: { 'x-override': '1' } } }
+      );
+
+      expect(browserConfig.devServer).toMatchObject({
+        headers: { 'x-override': '1' },
+      });
+      expect(serverConfig.devServer).toBe(false);
+    } finally {
+      vi.unstubAllEnvs();
+      await rm(root, { recursive: true, force: true });
+    }
+  }, 10000);
+
+  it('should warn once per process that serving SSR from a separate server is deprecated', async () => {
+    // A fresh module, since earlier tests already printed the warning.
+    vi.resetModules();
+    const { _createConfig: createFreshConfig } =
+      await import('./create-config.js');
+    const root = await createSsrProjectRoot();
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const deprecationWarnings = () =>
+      warnSpy.mock.calls.filter(([message]) =>
+        String(message).includes('Serving SSR from a separate server')
+      );
+    const options: AngularRspackPluginOptions = {
+      ...configBase,
+      root,
+      server: './src/main.server.ts',
+      ssr: { entry: './src/server.ts' },
+    };
+    try {
+      await createFreshConfig(options);
+      vi.stubEnv('WEBPACK_SERVE', 'true');
+      await createFreshConfig({
+        ...options,
+        ssr: { entry: './src/server.ts', serveFromDevServer: true },
+      });
+      await createFreshConfig({ ...configBase, root });
+      // Graph creation inside `rspack serve` inherits its environment.
+      global.NX_GRAPH_CREATION = true;
+      await createFreshConfig(options);
+      delete global.NX_GRAPH_CREATION;
+      expect(deprecationWarnings()).toHaveLength(0);
+
+      await createFreshConfig(options);
+      await createFreshConfig(options);
+      expect(deprecationWarnings()).toEqual([
+        [
+          'WARNING: Serving SSR from a separate server on PORT is deprecated and will be removed in Nx 25. Set "ssr.serveFromDevServer: true" in the createConfig options to serve SSR from the dev server.',
+        ],
+      ]);
+    } finally {
+      delete global.NX_GRAPH_CREATION;
+      vi.unstubAllEnvs();
+      warnSpy.mockRestore();
+      await rm(root, { recursive: true, force: true });
+    }
+  }, 20000);
+
+  it.each([
+    ['prerender', { prerender: { discoverRoutes: true } }],
+    ['appShell', { appShell: true }],
+  ])(
+    'should prerender with %s only outside the dev server',
+    async (_option, prerenderOptions) => {
+      const root = await createSsrProjectRoot();
+      const hasPrerenderPlugin = (config: Configuration) =>
+        config.plugins?.some(
+          (plugin) => plugin?.constructor.name === 'PrerenderPlugin'
+        );
+      const options: AngularRspackPluginOptions = {
+        ...configBase,
+        root,
+        server: './src/main.server.ts',
+        ssr: { entry: './src/server.ts' },
+        ...prerenderOptions,
+      };
+      try {
+        const [, buildServerConfig] = await _createConfig(options);
+        expect(hasPrerenderPlugin(buildServerConfig)).toBe(true);
+
+        vi.stubEnv('WEBPACK_SERVE', 'true');
+        const [, serveServerConfig] = await _createConfig(options);
+        expect(hasPrerenderPlugin(serveServerConfig)).toBe(false);
+      } finally {
+        vi.unstubAllEnvs();
+        await rm(root, { recursive: true, force: true });
+      }
+    },
+    10000
+  );
+
+  it('should leave documents to the SSR middleware only with ssr.serveFromDevServer while serving', async () => {
+    const root = await createSsrProjectRoot();
+    vi.stubEnv('WEBPACK_SERVE', 'true');
+    try {
+      const ssrOptions: AngularRspackPluginOptions = {
+        ...configBase,
+        root,
+        server: './src/main.server.ts',
+      };
+      const [devServerSsrConfig] = await _createConfig({
+        ...ssrOptions,
+        ssr: { entry: './src/server.ts', serveFromDevServer: true },
+      });
+      expect(devServerSsrConfig.devServer).toMatchObject({
+        historyApiFallback: false,
+        devMiddleware: { index: false },
+      });
+
+      const [forkedSsrConfig] = await _createConfig({
+        ...ssrOptions,
+        ssr: { entry: './src/server.ts' },
+      });
+      const [browserOnlyConfig] = await _createConfig({ ...configBase, root });
+      for (const config of [forkedSsrConfig, browserOnlyConfig]) {
+        expect(config.devServer).toMatchObject({
+          historyApiFallback: expect.objectContaining({
+            index: '/index.html',
+          }),
+        });
+        expect((config.devServer || {}).devMiddleware).not.toHaveProperty(
+          'index'
+        );
+      }
+    } finally {
+      vi.unstubAllEnvs();
+      await rm(root, { recursive: true, force: true });
+    }
+  }, 10000);
+
   it('should allow the dev-server hosts in the engine manifest while serving', async () => {
     const root = await createSsrProjectRoot();
     vi.stubEnv('WEBPACK_SERVE', 'true');
@@ -719,28 +907,115 @@ describe('createConfig', () => {
     }
   }, 10000);
 
-  it('should reject an output mode when @angular/ssr is not installed', async () => {
-    const root = await mkdtemp(join(tmpdir(), 'create-config-ssr-'));
-    try {
+  describe('option checks', () => {
+    let root: string;
+    let ssrOptions: AngularRspackPluginOptions;
+    let warnSpy: ReturnType<typeof vi.spyOn>;
+
+    beforeEach(async () => {
+      // No @angular/ssr package, so an output mode fails its install check.
+      root = await mkdtemp(join(tmpdir(), 'create-config-checks-'));
       await mkdir(join(root, 'src'), { recursive: true });
       await writeFile(join(root, 'src', 'main.server.ts'), '');
       await writeFile(join(root, 'src', 'server.ts'), '');
+      ssrOptions = {
+        ...configBase,
+        root,
+        server: './src/main.server.ts',
+        ssr: { entry: './src/server.ts' },
+      };
+      warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    });
 
-      await expect(
-        _createConfig({
-          ...configBase,
-          root,
-          server: './src/main.server.ts',
-          ssr: { entry: './src/server.ts' },
-          outputMode: 'server',
-        })
-      ).rejects.toThrow(
-        'The "outputMode" option requires the "@angular/ssr" package to be installed.'
-      );
-    } finally {
+    afterEach(async () => {
+      delete global.NX_GRAPH_CREATION;
+      vi.restoreAllMocks();
       await rm(root, { recursive: true, force: true });
-    }
-  }, 10000);
+    });
+
+    it.each<[string, Partial<AngularRspackPluginOptions>, string, string[]]>([
+      [
+        '"ssr" set to true',
+        { ssr: true },
+        'The "ssr" option should be an object or false.',
+        ['browser'],
+      ],
+      [
+        'the "static" output mode',
+        { outputMode: 'static' },
+        'The "static" value for the "outputMode" option is not supported.',
+        ['browser', 'server'],
+      ],
+      [
+        'an output mode with a missing server file',
+        { outputMode: 'server', server: './src/missing.server.ts' },
+        'The "outputMode" option is set to "server", but "./src/missing.server.ts" does not exist.',
+        ['browser', 'server'],
+      ],
+      [
+        'an output mode without @angular/ssr installed',
+        { outputMode: 'server' },
+        'The "outputMode" option requires the "@angular/ssr" package to be installed.',
+        ['browser', 'server'],
+      ],
+      [
+        'a missing proxy configuration file',
+        { devServer: { proxyConfig: './proxy.conf.json' } },
+        'proxy.conf.json does not exist.',
+        ['browser', 'server'],
+      ],
+      [
+        '"security.autoCsp"',
+        { security: { autoCsp: true } },
+        'The "security.autoCsp" option is not supported by @nx/angular-rspack yet.',
+        ['browser', 'server'],
+      ],
+    ])(
+      'should reject %s when a task loads the config, but not when the project graph does',
+      async (_, options, error, outputDirs) => {
+        await expect(
+          _createConfig({ ...ssrOptions, ...options })
+        ).rejects.toThrow(error);
+        warnSpy.mockClear();
+
+        global.NX_GRAPH_CREATION = true;
+        const configs = await _createConfig({ ...ssrOptions, ...options });
+
+        expect(configs.map((config) => config.output?.path)).toEqual(
+          outputDirs.map((dir) => join(root, 'dist', dir))
+        );
+        expect(
+          configs[0].plugins?.some((plugin) => plugin?.[READY_SIGNAL_PLUGIN])
+        ).toBe(true);
+        expect(warnSpy).not.toHaveBeenCalled();
+      },
+      10000
+    );
+
+    it('should check the options on every load when a failed project graph build leaves its flag set', async () => {
+      vi.spyOn(devkit, 'readCachedProjectGraph').mockImplementation(() => {
+        throw new Error('No cached ProjectGraph is available.');
+      });
+      vi.spyOn(devkit, 'createProjectGraphAsync').mockImplementation(
+        async () => {
+          global.NX_GRAPH_CREATION = true;
+          throw new Error('Failed to load 1 Nx plugin(s)');
+        }
+      );
+      const options = {
+        ...ssrOptions,
+        devServer: { proxyConfig: './proxy.conf.json' },
+      };
+
+      await expect(_createConfig(options)).rejects.toThrow(
+        'proxy.conf.json does not exist.'
+      );
+      await expect(_createConfig(options)).rejects.toThrow(
+        'proxy.conf.json does not exist.'
+      );
+      expect(global.NX_GRAPH_CREATION).toBeUndefined();
+    }, 10000);
+  });
 
   it('should reject locale inlining when an output mode is set', async () => {
     const root = await mkdtemp(join(tmpdir(), 'create-config-ssr-'));
@@ -807,6 +1082,50 @@ describe('createConfig', () => {
       (plugin) => plugin?.constructor.name === 'NgRspackPlugin'
     );
     expect(browserPlugin['sharedAngularPlugin']).toBeUndefined();
+  }, 10000);
+
+  it('should turn lazy compilation off on rspack 2 unless overridden, keep overrides off the server, and leave it unset on rspack 1', async () => {
+    const [browserConfig] = await _createConfig(configBase);
+    expect(browserConfig.lazyCompilation).toBe(false);
+
+    const root = await mkdtemp(join(tmpdir(), 'create-config-lazy-'));
+    try {
+      await mkdir(join(root, 'src'), { recursive: true });
+      await writeFile(join(root, 'src', 'main.server.ts'), '');
+      await writeFile(join(root, 'src', 'server.ts'), '');
+
+      const [overriddenBrowserConfig, overriddenServerConfig] =
+        await _createConfig(
+          {
+            ...configBase,
+            root,
+            server: './src/main.server.ts',
+            ssr: { entry: './src/server.ts' },
+          },
+          {
+            lazyCompilation: true,
+            // rspack 1.x shape, absent from the rspack 2 types
+            experiments: {
+              lazyCompilation: true,
+            } as Configuration['experiments'],
+          }
+        );
+      expect(overriddenBrowserConfig.lazyCompilation).toBe(true);
+      expect(overriddenServerConfig).not.toHaveProperty('lazyCompilation');
+      expect(overriddenServerConfig.experiments).not.toHaveProperty(
+        'lazyCompilation'
+      );
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+
+    vi.mocked(isRspackV2).mockReturnValue(false);
+    try {
+      const [rspackV1Config] = await _createConfig(configBase);
+      expect(rspackV1Config).not.toHaveProperty('lazyCompilation');
+    } finally {
+      vi.mocked(isRspackV2).mockReset();
+    }
   }, 10000);
 
   describe('createConfig', () => {

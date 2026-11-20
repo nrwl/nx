@@ -16,6 +16,7 @@ import type { IgnoredIndexReader } from '../native';
 import { transformProjectGraphForRust } from '../native/transform-objects';
 import type { TaskPlanningContext } from './task-planning-context';
 import { getRootTsConfigPath } from '../plugins/js/utils/typescript';
+import { pruneTaskGraph } from '../tasks-runner/prune-task-graph';
 import { getTaskIOService } from '../tasks-runner/task-io-service';
 import { readJsonFile } from '../utils/fileutils';
 import { ultracacheEligibilityOptions } from '../ultracache/overrides';
@@ -154,12 +155,14 @@ export class NativeTaskHasherImpl implements TaskHasherImpl {
     taskGraph: TaskGraph,
     ultracacheConfigurations?: UltracacheConfigurations
   ) {
+    // N-API converts each task's result fields too, which the planner never reads.
+    const prunedGraph = pruneTaskGraph(taskGraph);
     if (!ultracacheConfigurations) {
-      return this.planner.getPlansReference(taskIds, taskGraph);
+      return this.planner.getPlansReference(taskIds, prunedGraph);
     }
     return this.planner.getPlansReference(
       taskIds,
-      taskGraph,
+      prunedGraph,
       ultracacheConfigurations,
       ultracacheEligibilityOptions(this.projectGraph, taskGraph)
     );

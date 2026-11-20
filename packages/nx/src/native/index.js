@@ -1,5 +1,17 @@
+// Node passes a stand-in require, without a cache, require.extensions or
+// Module._load, when an ESM loader hook supplies this module's source, as
+// Yarn PnP does.
+if (!require.cache) require = require('module').createRequire(__filename);
+
 const { join, basename } = require('path');
-const { copyFileSync, renameSync, statSync, unlinkSync } = require('fs');
+const {
+  chmodSync,
+  copyFileSync,
+  lstatSync,
+  renameSync,
+  statSync,
+  unlinkSync,
+} = require('fs');
 const { createHash } = require('crypto');
 const Module = require('module');
 const { nxVersion } = require('../utils/versions');
@@ -69,6 +81,25 @@ function statsOrNull(path) {
   }
 }
 
+function lstatsOrNull(path) {
+  try {
+    return lstatSync(path);
+  } catch {
+    return null;
+  }
+}
+
+// A trusted entry is one only the current user could have written.
+function isTrustedCacheEntry(stats) {
+  if (!stats?.isFile()) {
+    return false;
+  }
+  if (typeof process.getuid !== 'function') {
+    return true;
+  }
+  return stats.uid === process.getuid() && (stats.mode & 0o022) === 0;
+}
+
 function removeIfPresent(path) {
   try {
     unlinkSync(path);
@@ -122,22 +153,26 @@ Module._load = function (request, parent, isMain) {
     const tmpFile = join(nativeFileCacheLocation, cacheKey + '-' + fileName);
     const sourceStats = statSync(nativeLocation);
     const expectedFileSize = sourceStats.size;
-    const existingFileStats = statsOrNull(tmpFile);
+    const existingFileStats = lstatsOrNull(tmpFile);
 
     // Size alone does not detect a rebuilt binding: a small Rust edit routinely
     // produces a byte-identical size. The copy is taken after the build, so a
     // cache entry older than the source means the source was rebuilt since.
     const isFresh =
-      existingFileStats?.size === expectedFileSize &&
+      isTrustedCacheEntry(existingFileStats) &&
+      existingFileStats.size === expectedFileSize &&
       existingFileStats.mtimeMs >= sourceStats.mtimeMs;
 
     const loadFromCache = () => {
       try {
         return originalLoad.apply(this, [tmpFile, parent, isMain]);
       } catch (e) {
+        // ENOENT: the resolver's realpath can lose the file to a concurrent
+        // `nx reset` after its stat found it.
         if (
           e.code === 'EACCES' ||
           e.code === 'EPERM' ||
+          e.code === 'ENOENT' ||
           e.code === 'MODULE_NOT_FOUND' ||
           e.code === 'ERR_DLOPEN_FAILED'
         ) {
@@ -156,14 +191,22 @@ Module._load = function (request, parent, isMain) {
     let cacheError = null;
     for (let attempt = 1; attempt <= MAX_COPY_RETRIES; attempt++) {
       attemptsMade = attempt;
+      // A concurrent `nx reset` or a tmp cleaner can remove the directory.
+      if (attempt > 1 && !ensureSecureNativeFileCacheLocation()) {
+        return originalLoad.apply(this, [nativeLocation, parent, isMain]);
+      }
       // First copy to a unique location for each process
       try {
         copyFileSync(nativeLocation, tmpTmpFile);
+        chmodSync(tmpTmpFile, sourceStats.mode & 0o755);
       } catch (e) {
         // Permission errors won't heal on retry, and a throwing copy can still
         // have left a partial file behind.
         cacheError = e;
         removeIfPresent(tmpTmpFile);
+        if (e.code === 'ENOENT') {
+          continue;
+        }
         break;
       }
 
@@ -178,6 +221,9 @@ Module._load = function (request, parent, isMain) {
           // reports it as a missing optional dependency, which it is not.
           cacheError = e;
           removeIfPresent(tmpTmpFile);
+          if (e.code === 'ENOENT') {
+            continue;
+          }
           break;
         }
         return loadFromCache();

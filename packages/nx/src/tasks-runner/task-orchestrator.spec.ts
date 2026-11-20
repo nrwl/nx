@@ -244,7 +244,10 @@ describe('TaskOrchestrator', () => {
 
       expect(orchestrator.runBatch).not.toHaveBeenCalled();
       expect(orchestrator.postRunSteps).not.toHaveBeenCalled();
-      expect(results).toEqual([]);
+      expect(results.map((r) => [r.task.id, r.status]).sort()).toEqual([
+        ['consumer:build', 'skipped'],
+        ['dep:build', 'skipped'],
+      ]);
     });
 
     it('should not re-hash tasks whose deps were all cache hits', async () => {
@@ -334,6 +337,7 @@ describe('TaskOrchestrator', () => {
         uncacheableCache?: false | undefined;
         failed?: string[];
         bail?: boolean;
+        skipDependents?: boolean;
       }
     ) {
       const tasks = Object.fromEntries(
@@ -388,6 +392,23 @@ describe('TaskOrchestrator', () => {
           }
         );
       }
+      if (opts.skipDependents) {
+        // What completeTasks does to a failed task's dependents.
+        const postRunSteps = orchestrator.postRunSteps;
+        orchestrator.postRunSteps = vi.fn(
+          async (results: TaskResult[], ...rest) => {
+            await postRunSteps(results, ...rest);
+            for (const { task, status } of results) {
+              if (status !== 'failure') continue;
+              for (const [id, ids] of Object.entries(deps)) {
+                if (ids.includes(task.id)) {
+                  orchestrator.completedTasks.set(id, 'skipped');
+                }
+              }
+            }
+          }
+        );
+      }
 
       const results: TaskResult[] = await orchestrator.applyFromCacheOrRunBatch(
         true,
@@ -420,6 +441,7 @@ describe('TaskOrchestrator', () => {
           .sort(([a], [b]) => a - b)
           .map(([, step]) => step),
         resultIds: results.map((r) => r.task.id),
+        statuses: Object.fromEntries(results.map((r) => [r.task.id, r.status])),
       };
     }
 
@@ -491,6 +513,24 @@ describe('TaskOrchestrator', () => {
 
       expect(lookups).toEqual([['dep:install']]);
       expect(runs).toEqual([['dep:install']]);
+    });
+
+    it('should return a result for a held-back task skipped by its failed dependency', async () => {
+      const { runs, statuses } = await runBatch(
+        { 'dep:install': [], 'reader:build': ['dep:install'] },
+        {
+          deferred: ['reader:build'],
+          uncacheable: ['dep:install'],
+          failed: ['dep:install'],
+          skipDependents: true,
+        }
+      );
+
+      expect(runs).toEqual([['dep:install']]);
+      expect(statuses).toEqual({
+        'dep:install': 'failure',
+        'reader:build': 'skipped',
+      });
     });
 
     it('should run a deferred task behind both a cache miss and a non-cacheable task in the first wave', async () => {
@@ -2082,6 +2122,113 @@ describe('TaskOrchestrator', () => {
     });
   });
 
+  describe('continuous task exit', () => {
+    function createOrchestrator({
+      initiating,
+      neededBy = [],
+    }: {
+      initiating: boolean;
+      neededBy?: string[];
+    }) {
+      const serve = {
+        id: 'app:serve',
+        target: { project: 'app', target: 'serve' },
+        overrides: {},
+        outputs: [],
+        projectRoot: 'app',
+        continuous: true,
+      } as Task;
+      const orchestrator: any = Object.create(TaskOrchestrator.prototype);
+      orchestrator.initializingTaskIds = new Set(
+        initiating ? ['app:serve'] : ['e2e:e2e']
+      );
+      orchestrator.taskGraph = {
+        continuousDependencies: {
+          'app:serve': [],
+          'e2e:e2e': [{ id: 'app:serve', waitFor: 'started' }],
+        },
+      };
+      orchestrator.tasksSchedule = {
+        getIncompleteTasks: () => neededBy.map((id) => ({ id })),
+      };
+      orchestrator.stopRequested = false;
+      orchestrator.cleanupPromise = null;
+      orchestrator.readiness = new Map();
+      orchestrator.readinessFailures = new Map();
+      orchestrator.completedTasks = new Map();
+      orchestrator.runningContinuousTasks = new Map([
+        ['app:serve', { groupId: 1 }],
+      ]);
+      orchestrator.runningTasksService = { removeRunningTask: vi.fn() };
+      orchestrator.complete = vi.fn(async (results: any[]) => {
+        for (const { task, status } of results) {
+          orchestrator.completedTasks.set(task.id, status);
+        }
+      });
+      orchestrator.abortReadiness = vi.fn();
+      orchestrator.releaseThreads = vi.fn();
+      const exit = (code: number) =>
+        orchestrator.handleContinuousTaskExit(code, serve, 1, true);
+      const status = () => orchestrator.completedTasks.get('app:serve');
+      return { orchestrator, exit, status };
+    }
+
+    let consoleError: ReturnType<typeof vi.spyOn>;
+    beforeEach(() => {
+      consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
+    });
+    afterEach(() => consoleError.mockRestore());
+
+    it('fails an initiating task that exits non-zero on its own', async () => {
+      const { exit, status } = createOrchestrator({ initiating: true });
+
+      await exit(1);
+
+      expect(status()).toBe('failure');
+      expect(consoleError).toHaveBeenCalledWith(
+        'Task "app:serve" is continuous but exited with code 1'
+      );
+    });
+
+    it('succeeds when an initiating task exits cleanly', async () => {
+      const { exit, status } = createOrchestrator({ initiating: true });
+
+      await exit(0);
+
+      expect(status()).toBe('success');
+    });
+
+    it('does not fail an initiating task that exits non-zero once the run is stopping', async () => {
+      const { orchestrator, exit, status } = createOrchestrator({
+        initiating: true,
+      });
+      orchestrator.stopRequested = true;
+
+      await exit(1);
+
+      expect(status()).toBe('success');
+    });
+
+    it('does not fail a dependency nothing needs any more when it exits non-zero', async () => {
+      const { exit, status } = createOrchestrator({ initiating: false });
+
+      await exit(1);
+
+      expect(status()).toBe('success');
+    });
+
+    it('fails a dependency that exits while a task still needs it', async () => {
+      const { exit, status } = createOrchestrator({
+        initiating: false,
+        neededBy: ['e2e:e2e'],
+      });
+
+      await exit(0);
+
+      expect(status()).toBe('failure');
+    });
+  });
+
   describe('continuous task readiness', () => {
     function createTask(id: string, continuous = false): Task {
       const [project, target] = id.split(':');
@@ -2159,6 +2306,7 @@ describe('TaskOrchestrator', () => {
       orchestrator.readiness = new Map();
       orchestrator.readinessFailures = new Map();
       orchestrator.readinessFailureReasons = new Map();
+      orchestrator.readinessProbes = new Set();
       orchestrator.readyUrls = new Map();
       orchestrator.waitingLogged = new Set();
       const outputPath = join(mkdtempSync(join(tmpdir(), 'readiness-')), 'out');
@@ -2948,6 +3096,34 @@ describe('TaskOrchestrator', () => {
       emit('listening');
       await expect(waiting).resolves.toBeUndefined();
     });
+
+    it.skipIf(process.platform === 'win32')(
+      'finishes cleanup only after a running command probe is killed',
+      async () => {
+        const pidFile = join(mkdtempSync(join(tmpdir(), 'readiness-')), 'pid');
+        const { orchestrator, serve, runningTask } = createOrchestrator({
+          readyWhen: { command: `echo $$ > "${pidFile}"; sleep 30` },
+        });
+        orchestrator.startReadinessProbe(
+          serve,
+          orchestrator.getReadyWhen(serve, { PATH: process.env.PATH }),
+          runningTask
+        );
+        let pid = 0;
+        await vi.waitFor(() => {
+          pid = Number(readFileSync(pidFile, 'utf8'));
+          expect(pid).toBeGreaterThan(0);
+        });
+        orchestrator.runningContinuousTasks = new Map();
+        orchestrator.runningDiscreteTasks = new Map();
+        orchestrator.runningRunCommandsTasks = new Map();
+        orchestrator.discreteTaskExitHandled = new Map();
+        orchestrator.forkedProcessTaskRunner = { cleanup: async () => {} };
+
+        await orchestrator.cleanup();
+        expect(() => process.kill(pid, 0)).toThrow('ESRCH');
+      }
+    );
 
     it('skips a task from runTaskDirectly when the row says the producer failed elsewhere', async () => {
       const { orchestrator, e2e } = createOrchestrator({
@@ -3789,6 +3965,32 @@ describe('TaskOrchestrator', () => {
         );
       }
     );
+
+    it('shows a dropped run-commands option in the TUI task output', async () => {
+      const { orchestrator, task } = createOrchestrator();
+      await useRealExecutorSchema();
+      orchestrator.tuiEnabled = true;
+      orchestrator.options.lifeCycle.registerRunningTask = vi.fn();
+      const build = orchestrator.projects.app.targets.build;
+      build.options = { command: 'echo hi', lintFilePatterns: ['a.ts'] };
+
+      const runningTask = await orchestrator.runTask(
+        task,
+        false,
+        process.env,
+        orchestrator.cache.temporaryOutputPath(),
+        false
+      );
+      await runningTask.getResults();
+
+      expect(
+        orchestrator.options.lifeCycle.appendTaskOutput.mock.calls
+      ).toContainEqual([
+        task.id,
+        expect.stringContaining('"lintFilePatterns" was not forwarded'),
+        false,
+      ]);
+    });
 
     it('prints a failure of the post-run steps once', async () => {
       const { orchestrator, task } = createOrchestrator();

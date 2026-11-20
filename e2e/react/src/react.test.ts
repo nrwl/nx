@@ -2,8 +2,8 @@ import {
   checkFilesDoNotExist,
   checkFilesExist,
   cleanupProject,
+  configureTargetOptions,
   createFile,
-  ensureCypressInstallation,
   killPorts,
   listFiles,
   newProject,
@@ -21,7 +21,7 @@ import { join } from 'path';
 describe('React Applications', () => {
   let proj: string;
   describe('Crystal Supported Tests', () => {
-    beforeAll(async () => {
+    beforeAll(() => {
       proj = newProject({
         keepBackup: true,
         packages: [
@@ -34,7 +34,6 @@ describe('React Applications', () => {
           '@nx/eslint',
         ],
       });
-      await ensureCypressInstallation();
     });
 
     afterAll(() => cleanupProject());
@@ -67,9 +66,21 @@ describe('React Applications', () => {
       checkFilesExist(`dist/apps/${appName}/index.html`);
 
       if (await shouldRunPlaywrightTests()) {
-        const e2eResults = runCLI(`e2e ${appName}-e2e`);
-        expect(e2eResults).toContain('Successfully ran target e2e for project');
-        expect(await killPorts(port)).toBeTruthy();
+        const restoreServerOptions = configureTargetOptions(
+          ['dev', 'preview'],
+          {
+            strictPort: true,
+          }
+        );
+        try {
+          const e2eResults = runCLI(`e2e ${appName}-e2e`);
+          expect(e2eResults).toContain(
+            'Successfully ran target e2e for project'
+          );
+          expect(await killPorts(port)).toBeTruthy();
+        } finally {
+          restoreServerOptions();
+        }
       }
     }, 250_000);
 
@@ -264,7 +275,7 @@ describe('React Applications', () => {
   });
 
   describe('Webpack apps', () => {
-    beforeAll(async () => {
+    beforeAll(() => {
       proj = newProject({
         keepBackup: true,
         packages: [
@@ -275,7 +286,6 @@ describe('React Applications', () => {
           '@nx/eslint',
         ],
       });
-      await ensureCypressInstallation();
     });
 
     afterAll(() => {
@@ -449,7 +459,6 @@ async function testGeneratedApp(
   if (opts.checkE2E && (await shouldRunPlaywrightTests())) {
     const e2eResults = runCLI(`e2e ${appName}-e2e`);
     expect(e2eResults).toContain('Successfully ran target e2e');
-    expect(await killPorts()).toBeTruthy();
   }
 }
 

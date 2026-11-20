@@ -1,3 +1,4 @@
+// TODO(v25): remove with the forked SSR server.
 // This function is serialized into HTML and cannot reference module-scoped values.
 export function connectSsrReload(port: number) {
   const socket = new WebSocket(`ws://${globalThis.location.hostname}:${port}`);

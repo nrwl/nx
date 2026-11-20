@@ -21,6 +21,12 @@ When working on Nx documentation, all documentation content lives in the `astro-
 - Development workflow and commands
 - Sidebar management
 
+**MANDATORY**: Before writing or editing a page in `astro-docs/src/content/`, read the persona it serves in `astro-docs/personas/`: `bob-beginner.md`, `casey-cloud-curious.md`, `priya-platform.md` or `dana-decision-maker.md`.
+
+**MANDATORY**: After editing any file in `astro-docs/src/content/`, follow `.claude/skills/check-docs-style/SKILL.md`. No exceptions.
+
+**MANDATORY**: All documentation content must follow `astro-docs/STYLE_GUIDE.md`. vale only enforces its mechanical rules, so check the structural and voice rules yourself.
+
 ### Quick Reference
 
 - Documentation content: `astro-docs/src/content/docs/`
@@ -97,6 +103,9 @@ pnpm copy-built-package --package nx --repo ../path/to/test-repo
 This builds the package and copies it into the target repo's `node_modules`. It works for all packages including native Rust code.
 
 ### Testing Changes
+
+Before adding or changing tests that start servers or allocate ports, read and follow
+[Test server ports](CONTRIBUTING.md#test-server-ports).
 
 After code changes are made, first test the specific project where the changes were made:
 

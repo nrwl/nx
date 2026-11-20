@@ -38,7 +38,6 @@ import {
 } from '@nx/js/internal';
 import { configureForSwc } from '../../utils/add-swc-to-custom-server';
 import { updateJestConfig } from '../../utils/jest-config-util';
-import { isNext14, isNext15 } from '../../utils/version-utils';
 
 export async function applicationGenerator(host: Tree, schema: Schema) {
   return await applicationGeneratorInternal(host, {

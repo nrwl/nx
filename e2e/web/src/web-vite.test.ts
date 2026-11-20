@@ -1,6 +1,7 @@
 import {
   checkFilesDoNotExist,
   checkFilesExist,
+  configureTargetOptions,
   cleanupProject,
   createFile,
   isNotWindows,
@@ -33,6 +34,7 @@ describe('Web Components Applications with bundler set as vite', () => {
   it('should be able to generate a web app', async () => {
     const appName = uniq('app');
     const port = await reservePort();
+    configureTargetOptions(['dev', 'preview'], { strictPort: true });
     runCLI(
       `generate @nx/web:app apps/${appName} --bundler=vite --no-interactive --linter=eslint --unitTestRunner=vitest --port=${port}`
     );

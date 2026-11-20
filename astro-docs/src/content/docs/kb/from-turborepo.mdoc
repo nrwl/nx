@@ -42,7 +42,7 @@ First-party plugins for [Maven](/docs/technologies/java/maven/introduction), [Gr
 
 Turborepo scales past one machine through manual binning, where you assign tasks to runners by hand and rebalance as the workspace grows, while Workers distribute at the task level using historical timings. On one workspace across four machines that was 9m 20s against Turborepo's 19m 18s. Nx Cloud also splits e2e suites by file, re-runs flaky tasks, and runs an agent that diagnoses and fixes broken tasks on CI.
 
-Task sandboxing surfaces the files a task read or wrote without declaring them, and Turborepo has no equivalent. Generators run as code against the project graph and do AST-level transforms rather than filling in templates.
+[Ultracache](/docs/features/ci-features/remote-cache#ultracache) records the files each task reads in CI and hashes the task from them, and Turborepo has no equivalent. Generators run as code against the project graph and do AST-level transforms rather than filling in templates.
 
 For the full comparison, see [Nx vs Turborepo](/docs/kb/nx-vs-turborepo).
 
@@ -391,7 +391,7 @@ Task configuration:
 | `--parallel`                 | N/A                                                                                                                                                                                                  |
 | `--preflight`                | N/A                                                                                                                                                                                                  |
 | `--summarize`                | N/A                                                                                                                                                                                                  |
-| `--token`                    | Set [Nx Cloud CI Access Token](/docs/kb/access-tokens#setting-ci-access-tokens)                                                                                                                      |
+| `--token`                    | Set [CI access token for Nx Cloud](/docs/kb/access-tokens#setting-ci-access-tokens)                                                                                                                  |
 | `--team`                     | See `--token` for Nx Cloud workspace selection                                                                                                                                                       |
 | `--trace`                    | N/A. Use [`--verbose`](/docs/reference/nx-commands#verbose)                                                                                                                                          |
 | `--verbosity`                | Use [`--verbose`](/docs/reference/nx-commands#verbose)                                                                                                                                               |

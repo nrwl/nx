@@ -174,7 +174,6 @@
     "postcss": "catalog:css",
     "postcss-import": "~14.1.0",
     "postcss-loader": "catalog:css",
-    "sass": "catalog:css",
     "sass-embedded": "catalog:css",
     "sass-loader": "catalog:css",
     "semver": "catalog:",

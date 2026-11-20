@@ -128,7 +128,7 @@ export default class JsVersionActions extends VersionActions {
             'view',
             packageName,
             'version',
-            `--${registryConfigKey}=${registry}`,
+            ...(registry ? [`--${registryConfigKey}=${registry}`] : []),
             `--tag=${tag}`,
           ],
           { stdio: ['ignore', 'pipe', 'pipe'] }
@@ -167,7 +167,9 @@ export default class JsVersionActions extends VersionActions {
     return {
       currentVersion,
       // Make troubleshooting easier by including the registry and tag data in the log text
-      logText: `"${registryConfigKey}=${registry}" tag=${tag}`,
+      logText: registry
+        ? `"${registryConfigKey}=${registry}" tag=${tag}`
+        : `the configured "${registryConfigKey}" tag=${tag}`,
     };
   }
 
@@ -323,6 +325,18 @@ export default class JsVersionActions extends VersionActions {
             let version = dependenciesToUpdate[targetProject.projectName];
             if (version !== undefined) {
               if (catalogManager?.isCatalogReference(currentVersion)) {
+                const catalogVersion = catalogManager.resolveCatalogReference(
+                  tree,
+                  dependencyName,
+                  currentVersion
+                );
+                if (
+                  manifestToUpdate.preserveLocalDependencyProtocols &&
+                  typeof catalogVersion === 'string' &&
+                  this.isLocalDependencyProtocol(catalogVersion)
+                ) {
+                  continue;
+                }
                 // collect the catalog updates so we can update the catalog definitions later
                 const catalogRef =
                   catalogManager.parseCatalogReference(currentVersion)!;

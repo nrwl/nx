@@ -33,6 +33,7 @@ import {
 } from './default-tasks-runner';
 import { getTaskIOService } from './task-io-service';
 import { handleImport } from '../utils/handle-import';
+import { resolveInstalledPackage } from '../utils/installation-directory';
 
 export type CachedResult = {
   terminalOutput: string;
@@ -193,14 +194,11 @@ export class DbCache {
         this.cache.cacheDirectory
       );
 
-      if (res) {
-        this.applyRemoteCacheResults(task.hash, res, task.outputs);
-
-        return {
-          ...res,
-          terminalOutput: res.terminalOutput ?? '',
-          remote: true,
-        };
+      const terminalOutput = res
+        ? this.applyRemoteCacheResults(task, res)
+        : null;
+      if (terminalOutput !== null) {
+        return { ...res, terminalOutput, remote: true };
       } else {
         return null;
       }
@@ -254,13 +252,11 @@ export class DbCache {
             task.hash,
             this.cache.cacheDirectory
           );
-          if (res) {
-            this.applyRemoteCacheResults(task.hash, res, task.outputs);
-            results.set(task.hash, {
-              ...res,
-              terminalOutput: res.terminalOutput ?? '',
-              remote: true,
-            });
+          const terminalOutput = res
+            ? this.applyRemoteCacheResults(task, res)
+            : null;
+          if (terminalOutput !== null) {
+            results.set(task.hash, { ...res, terminalOutput, remote: true });
           }
         }
       );
@@ -274,11 +270,23 @@ export class DbCache {
   }
 
   private applyRemoteCacheResults(
-    hash: string,
-    res: NativeCacheResult,
-    outputs: string[]
-  ) {
-    return this.cache.applyRemoteCacheResults(hash, res, outputs);
+    task: Task,
+    res: NativeCacheResult
+  ): string | null {
+    const terminalOutput = this.cache.applyRemoteCacheResults(
+      task.hash,
+      res,
+      task.outputs
+    );
+    if (terminalOutput === null) {
+      output.warn({
+        title: `Ignoring the remote cache result for ${task.id}`,
+        bodyLines: [
+          'Its outputs contain a symlink that points outside the output it is in.',
+        ],
+      });
+    }
+    return terminalOutput;
   }
 
   async put(
@@ -288,7 +296,7 @@ export class DbCache {
     code: number
   ) {
     return tryAndRetry(async () => {
-      const { expandedOutputs, files } = this.cache.put(
+      const { expandedOutputs, files, outputsBelowALink } = this.cache.put(
         task.hash,
         terminalOutput,
         outputs,
@@ -298,7 +306,15 @@ export class DbCache {
       // Notify TaskIOService of actual output files
       getTaskIOService().notifyTaskOutputs(task.id, expandedOutputs);
 
-      if (this.remoteCache) {
+      if (outputsBelowALink.length > 0) {
+        output.warn({
+          title: `Not caching ${task.id}`,
+          bodyLines: [
+            'These outputs are inside a symlinked directory, so they cannot be cached:',
+            ...outputsBelowALink.map((o) => `- ${o}`),
+          ],
+        });
+      } else if (this.remoteCache) {
         await this.remoteCache.store(
           task.hash,
           this.cache.cacheDirectory,
@@ -449,9 +465,11 @@ export class DbCache {
   }
 
   private resolvePackage(pkg: string) {
-    return require.resolve(pkg, {
-      paths: [process.cwd(), workspaceRoot, __dirname],
-    });
+    return resolveInstalledPackage(pkg, [
+      process.cwd(),
+      workspaceRoot,
+      __dirname,
+    ]);
   }
 
   private assertCacheIsValid() {

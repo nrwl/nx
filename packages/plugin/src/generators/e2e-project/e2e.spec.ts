@@ -362,7 +362,9 @@ describe('NxPlugin e2e-project Generator', () => {
       .toMatchInlineSnapshot(`
       "import baseConfig from '../eslint.config.mjs';
 
-      export default [...baseConfig];
+      const eslintConfig = [...baseConfig];
+
+      export default eslintConfig;
       "
     `);
   });

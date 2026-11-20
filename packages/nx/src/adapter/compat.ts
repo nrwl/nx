@@ -84,6 +84,7 @@ export const allowedWorkspaceExtensions = [
   'analytics',
   'sync',
   'migrate',
+  'conformance',
   'useLegacyCache',
   'maxCacheSize',
   'tui',

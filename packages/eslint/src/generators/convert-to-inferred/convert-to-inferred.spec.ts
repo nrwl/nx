@@ -1,7 +1,6 @@
 import {
   addProjectConfiguration as _addProjectConfiguration,
   joinPathFragments,
-  readJson,
   readNxJson,
   readProjectConfiguration,
   updateNxJson,
@@ -21,6 +20,9 @@ import { getRelativeProjectJsonSchemaPath } from '@nx/devkit/internal';
 let fs: TempFs;
 
 let projectGraph: ProjectGraph;
+// Covers the eslintrc path, which ESLint 10 removed.
+vi.mock('eslint', async () => vi.importActual('eslint-v9'));
+
 vi.mock('@nx/devkit', async () => ({
   ...(await vi.importActual<any>('@nx/devkit')),
   createProjectGraphAsync: vi.fn().mockImplementation(async () => {
@@ -297,7 +299,7 @@ describe('Eslint - Convert Executors To Plugin', () => {
 
     it('should setup a new Eslint plugin and only migrate one specific project', async () => {
       // ARRANGE
-      const existingProject = createTestProject(tree, {
+      createTestProject(tree, {
         appRoot: 'existing',
         appName: 'existing',
         targetName: 'lint',
@@ -305,12 +307,12 @@ describe('Eslint - Convert Executors To Plugin', () => {
       const project = createTestProject(tree, {
         targetName: 'eslint',
       });
-      const secondProject = createTestProject(tree, {
+      createTestProject(tree, {
         appRoot: 'second',
         appName: 'second',
         targetName: 'eslint',
       });
-      const thirdProject = createTestProject(tree, {
+      createTestProject(tree, {
         appRoot: 'third',
         appName: 'third',
         targetName: 'linter',
@@ -375,20 +377,20 @@ describe('Eslint - Convert Executors To Plugin', () => {
 
     it('should add project to existing plugins includes', async () => {
       // ARRANGE
-      const existingProject = createTestProject(tree, {
+      createTestProject(tree, {
         appRoot: 'existing',
         appName: 'existing',
         targetName: 'lint',
       });
-      const project = createTestProject(tree, {
+      createTestProject(tree, {
         targetName: 'lint',
       });
-      const secondProject = createTestProject(tree, {
+      createTestProject(tree, {
         appRoot: 'second',
         appName: 'second',
         targetName: 'lint',
       });
-      const thirdProject = createTestProject(tree, {
+      createTestProject(tree, {
         appRoot: 'third',
         appName: 'third',
         targetName: 'lint',
@@ -443,20 +445,20 @@ describe('Eslint - Convert Executors To Plugin', () => {
         JSON.stringify({ ignorePatterns: ['**/*'] })
       );
       // ARRANGE
-      const existingProject = createTestProject(tree, {
+      createTestProject(tree, {
         appRoot: 'existing',
         appName: 'existing',
         targetName: 'lint',
       });
-      const project = createTestProject(tree, {
+      createTestProject(tree, {
         targetName: 'lint',
       });
-      const secondProject = createTestProject(tree, {
+      createTestProject(tree, {
         appRoot: 'second',
         appName: 'second',
         targetName: 'lint',
       });
-      const thirdProject = createTestProject(tree, {
+      createTestProject(tree, {
         appRoot: 'third',
         appName: 'third',
         targetName: 'lint',
@@ -476,10 +478,6 @@ describe('Eslint - Convert Executors To Plugin', () => {
       await convertToInferred(tree, { project: 'myapp', skipFormat: true });
 
       // ASSERT
-      const projectJsonForProject = readJson(
-        tree,
-        `${project.root}/project.json`
-      );
       // nx.json modifications
       const nxJsonPlugins = readNxJson(tree).plugins;
       const addedTestEslintPlugin = nxJsonPlugins.find((plugin) => {
@@ -536,6 +534,24 @@ describe('Eslint - Convert Executors To Plugin', () => {
       );
       expect(eslintPluginRegistrations.length).toBe(1);
       expect(eslintPluginRegistrations[0].include).toBeUndefined();
+    });
+
+    it('should not exclude a nested project when converting it after its parent', async () => {
+      createTestProject(tree, { appRoot: 'libs', appName: 'libs' });
+      createTestProject(tree, { appRoot: 'libs/proto', appName: 'proto' });
+
+      await convertToInferred(tree, { project: 'libs', skipFormat: true });
+      await convertToInferred(tree, { project: 'proto', skipFormat: true });
+
+      const registrations = readNxJson(tree).plugins.filter(
+        (plugin): plugin is ExpandedPluginConfiguration =>
+          typeof plugin !== 'string' && plugin.plugin === '@nx/eslint/plugin'
+      );
+      expect(registrations).toHaveLength(1);
+      expect(registrations[0].exclude).toBeUndefined();
+      expect(
+        readProjectConfiguration(tree, 'proto').targets?.lint
+      ).toBeUndefined();
     });
 
     it('should remove inputs when they are inferred', async () => {
@@ -790,8 +806,32 @@ describe('Eslint - Convert Executors To Plugin', () => {
   });
 
   describe('--all', () => {
+    it('should not take over a lint target another plugin provides to a non-migrated project', async () => {
+      createTestProject(tree, { appRoot: 'libs', appName: 'libs' });
+      const proto = createTestProject(tree, {
+        appRoot: 'libs/proto',
+        appName: 'proto',
+      });
+      updateProjectConfiguration(tree, 'proto', { ...proto, targets: {} });
+      projectGraph.nodes.proto.data.targets = {
+        lint: {
+          executor: 'nx:run-commands',
+          options: { command: './gradlew :libs:proto:lint' },
+        },
+      };
+
+      await convertToInferred(tree, { skipFormat: true });
+
+      const registrations = readNxJson(tree).plugins.filter(
+        (plugin): plugin is ExpandedPluginConfiguration =>
+          typeof plugin !== 'string' && plugin.plugin === '@nx/eslint/plugin'
+      );
+      expect(registrations).toHaveLength(1);
+      expect(registrations[0].exclude).toEqual(['libs/proto/**/*']);
+    });
+
     it('should successfully migrate a project using Eslint executors to plugin', async () => {
-      const project = createTestProject(tree);
+      createTestProject(tree);
 
       // ACT
       await convertToInferred(tree, { skipFormat: true });
@@ -815,7 +855,7 @@ describe('Eslint - Convert Executors To Plugin', () => {
 
     it('should setup Eslint plugin to match projects', async () => {
       // ARRANGE
-      const project = createTestProject(tree, {
+      createTestProject(tree, {
         targetName: 'eslint',
       });
 
@@ -841,7 +881,7 @@ describe('Eslint - Convert Executors To Plugin', () => {
 
     it('should handle targets using legacy executor', async () => {
       // ARRANGE
-      const project = createTestProject(tree, {
+      createTestProject(tree, {
         targetName: 'eslint',
         legacyExecutor: true,
       });
@@ -868,20 +908,20 @@ describe('Eslint - Convert Executors To Plugin', () => {
 
     it('should setup a new Eslint plugin to match only projects migrated', async () => {
       // ARRANGE
-      const existingProject = createTestProject(tree, {
+      createTestProject(tree, {
         appRoot: 'existing',
         appName: 'existing',
         targetName: 'lint',
       });
-      const project = createTestProject(tree, {
+      createTestProject(tree, {
         targetName: 'eslint',
       });
-      const secondProject = createTestProject(tree, {
+      createTestProject(tree, {
         appRoot: 'second',
         appName: 'second',
         targetName: 'eslint',
       });
-      const thirdProject = createTestProject(tree, {
+      createTestProject(tree, {
         appRoot: 'third',
         appName: 'third',
         targetName: 'linter',
@@ -947,7 +987,7 @@ describe('Eslint - Convert Executors To Plugin', () => {
       expect(updatedProject.targets.lint).toMatchInlineSnapshot(`
         {
           "options": {
-            "cache-location": "cache-dir",
+            "cache-location": "../cache-dir/myapp",
           },
         }
       `);
@@ -967,6 +1007,30 @@ describe('Eslint - Convert Executors To Plugin', () => {
       }
     });
 
+    it('should keep one ESLint cache per project under cacheLocation', async () => {
+      const app1 = createTestProject(tree, {
+        appName: 'app1',
+        appRoot: 'apps/app1',
+      });
+      app1.targets.lint.options.cacheLocation = 'tmp/eslint';
+      updateProjectConfiguration(tree, app1.name, app1);
+      const app2 = createTestProject(tree, {
+        appName: 'app2',
+        appRoot: 'apps/app2',
+      });
+      app2.targets.lint.options.cacheLocation = 'tmp/eslint';
+      updateProjectConfiguration(tree, app2.name, app2);
+
+      await convertToInferred(tree, { skipFormat: true });
+
+      expect(
+        readProjectConfiguration(tree, 'app1').targets.lint.options
+      ).toEqual({ 'cache-location': '../../tmp/eslint/app1' });
+      expect(
+        readProjectConfiguration(tree, 'app2').targets.lint.options
+      ).toEqual({ 'cache-location': '../../tmp/eslint/app2' });
+    });
+
     it('centralizes shared lint config without changing the effective target (equivalence)', async () => {
       // Two projects share a non-inferred option, so it must be hoisted once
       // into targetDefaults and still resolve identically for each project.
@@ -974,13 +1038,13 @@ describe('Eslint - Convert Executors To Plugin', () => {
         appName: 'app1',
         appRoot: 'app1',
       });
-      app1.targets.lint.options.cacheLocation = 'cache-dir';
+      app1.targets.lint.options.quiet = true;
       updateProjectConfiguration(tree, app1.name, app1);
       const app2 = createTestProject(tree, {
         appName: 'app2',
         appRoot: 'app2',
       });
-      app2.targets.lint.options.cacheLocation = 'cache-dir';
+      app2.targets.lint.options.quiet = true;
       updateProjectConfiguration(tree, app2.name, app2);
 
       await convertToInferred(tree, { skipFormat: true });
@@ -991,7 +1055,7 @@ describe('Eslint - Convert Executors To Plugin', () => {
       const hoisted = (targetDefault as any[]).find(
         (entry) => entry?.filter?.plugin === '@nx/eslint/plugin'
       );
-      expect(hoisted?.options?.['cache-location']).toBe('cache-dir');
+      expect(hoisted?.options?.quiet).toBe(true);
       for (const name of ['app1', 'app2']) {
         const projectTarget =
           readProjectConfiguration(tree, name).targets?.lint ?? {};
@@ -1001,7 +1065,7 @@ describe('Eslint - Convert Executors To Plugin', () => {
         // resolveSourcePlugin gate) is verified in the engine spec's
         // "through the REAL Nx resolution pipeline" tests; a JS-spread merge
         // here could not observe that gate.
-        expect(projectTarget.options?.['cache-location']).toBeUndefined();
+        expect(projectTarget.options?.quiet).toBeUndefined();
       }
     });
 
@@ -1045,6 +1109,307 @@ describe('Eslint - Convert Executors To Plugin', () => {
         expect(projectTarget.configurations?.ci).toBeUndefined();
       }
     });
+
+    it('should rebase an executor-keyed outputFile default onto the project root', async () => {
+      const nxJson = readNxJson(tree);
+      nxJson.targetDefaults ??= {};
+      nxJson.targetDefaults['@nx/eslint:lint'] = {
+        configurations: {
+          ci: {
+            format: 'json',
+            outputFile:
+              '{workspaceRoot}/reports/lint/{projectRoot}/eslint.json',
+          },
+        },
+      };
+      updateNxJson(tree, nxJson);
+      const project = createTestProject(tree, {
+        appName: 'core',
+        appRoot: 'libs/core',
+      });
+
+      await convertToInferred(tree, { skipFormat: true });
+
+      const updatedProject = readProjectConfiguration(tree, project.name);
+      expect(updatedProject.targets.lint.configurations.ci).toStrictEqual({
+        format: 'json',
+        'output-file': '../../reports/lint/libs/core/eslint.json',
+      });
+    });
+
+    it.each`
+      key                  | targetDefault                                                                         | expectedOutputFile
+      ${'lint'}            | ${{ options: { cwd: '.', command: 'eslint {projectRoot}' } }}                         | ${'./reports/lint/libs/core/eslint.json'}
+      ${'lint'}            | ${[{ filter: { plugin: '@nx/eslint/plugin' }, options: { cwd: '{workspaceRoot}' } }]} | ${'./reports/lint/libs/core/eslint.json'}
+      ${'nx:run-commands'} | ${{ options: { cwd: 'tools' } }}                                                      | ${'../reports/lint/libs/core/eslint.json'}
+      ${'lint'}            | ${{ options: { command: 'eslint src' } }}                                             | ${'../../reports/lint/libs/core/eslint.json'}
+      ${'lint'}            | ${{ executor: 'nx:run-commands', options: { command: 'eslint src' } }}                | ${'./reports/lint/libs/core/eslint.json'}
+    `(
+      'should rebase outputFile onto the cwd Nx runs the target in with the $key target default $targetDefault',
+      async ({ key, targetDefault, expectedOutputFile }) => {
+        const nxJson = readNxJson(tree);
+        nxJson.targetDefaults = { [key]: targetDefault };
+        updateNxJson(tree, nxJson);
+        const project = createTestProject(tree, {
+          appName: 'core',
+          appRoot: 'libs/core',
+        });
+        project.targets.lint.options.outputFile =
+          '{workspaceRoot}/reports/lint/{projectRoot}/eslint.json';
+        updateProjectConfiguration(tree, project.name, project);
+
+        await convertToInferred(tree, { skipFormat: true });
+
+        const updatedProject = readProjectConfiguration(tree, project.name);
+        expect(updatedProject.targets.lint.options).toStrictEqual({
+          'output-file': expectedOutputFile,
+        });
+      }
+    );
+
+    it('should rebase inherited outputFile onto the cwd of a configuration', async () => {
+      const nxJson = readNxJson(tree);
+      nxJson.targetDefaults = {
+        lint: { configurations: { root: { cwd: '{workspaceRoot}' } } },
+      };
+      updateNxJson(tree, nxJson);
+      const project = createTestProject(tree, {
+        appName: 'core',
+        appRoot: 'libs/core',
+      });
+      project.targets.lint.options.outputFile = 'reports/x.json';
+      updateProjectConfiguration(tree, project.name, project);
+
+      await convertToInferred(tree, { skipFormat: true });
+
+      const updatedProject = readProjectConfiguration(tree, project.name);
+      expect(updatedProject.targets.lint.options).toStrictEqual({
+        'output-file': '../../reports/x.json',
+      });
+      expect(updatedProject.targets.lint.configurations).toStrictEqual({
+        root: { 'output-file': './reports/x.json' },
+      });
+    });
+
+    it('should keep a configuration value from target defaults over an inherited path', async () => {
+      const nxJson = readNxJson(tree);
+      nxJson.targetDefaults = {
+        lint: { configurations: { ci: { cwd: '.', format: 'json' } } },
+      };
+      updateNxJson(tree, nxJson);
+      const project = createTestProject(tree, {
+        appName: 'core',
+        appRoot: 'libs/core',
+      });
+      project.targets.lint.options.format = './tools/formatter.cjs';
+      updateProjectConfiguration(tree, project.name, project);
+
+      await convertToInferred(tree, { skipFormat: true });
+
+      const updatedProject = readProjectConfiguration(tree, project.name);
+      expect(updatedProject.targets.lint.options).toStrictEqual({
+        format: '../../tools/formatter.cjs',
+      });
+      expect(updatedProject.targets.lint.configurations).toBeUndefined();
+      expect(readNxJson(tree).targetDefaults.lint).toStrictEqual({
+        configurations: { ci: { cwd: '.', format: 'json' } },
+      });
+    });
+
+    it('should keep an empty outputFile in a configuration disabling the inherited report', async () => {
+      const project = createTestProject(tree, {
+        appName: 'core',
+        appRoot: 'libs/core',
+      });
+      project.targets.lint.options.outputFile = 'reports/x.json';
+      project.targets.lint.configurations = { dev: { outputFile: '' } };
+      updateProjectConfiguration(tree, project.name, project);
+
+      await convertToInferred(tree, { skipFormat: true });
+
+      const updatedProject = readProjectConfiguration(tree, project.name);
+      expect(updatedProject.targets.lint.configurations).toStrictEqual({
+        dev: { 'output-file': null },
+      });
+    });
+
+    it.each`
+      option                        | value                             | expectedOptions
+      ${'outputFile'}               | ${'./reports/x.json'}             | ${{ 'output-file': '../../reports/x.json' }}
+      ${'outputFile'}               | ${'reports/x.json'}               | ${{ 'output-file': '../../reports/x.json' }}
+      ${'outputFile'}               | ${'{projectRoot}/../report.json'} | ${{ 'output-file': '../report.json' }}
+      ${'outputFile'}               | ${'/abs/x.json'}                  | ${{ 'output-file': '../../abs/x.json' }}
+      ${'outputFile'}               | ${'../reports/x.json'}            | ${{ 'output-file': '../../../reports/x.json' }}
+      ${'outputFile'}               | ${''}                             | ${{ 'output-file': null }}
+      ${'ignorePath'}               | ${'.eslintignore'}                | ${{ 'ignore-path': '../../.eslintignore' }}
+      ${'ignorePath'}               | ${'/abs/.eslintignore'}           | ${{ 'ignore-path': '/abs/.eslintignore' }}
+      ${'resolvePluginsRelativeTo'} | ${'tools'}                        | ${{ 'resolve-plugins-relative-to': '../../tools' }}
+      ${'printConfig'}              | ${'{projectRoot}/src/foo.ts'}     | ${{ 'print-config': './src/foo.ts' }}
+      ${'rulesdir'}                 | ${['tools/eslint-rules']}         | ${{ rulesdir: ['../../tools/eslint-rules'] }}
+      ${'format'}                   | ${'./tools/formatter.js'}         | ${{ format: '../../tools/formatter.js' }}
+      ${'format'}                   | ${'{projectRoot}/.formatter.js'}  | ${{ format: './.formatter.js' }}
+      ${'format'}                   | ${'json'}                         | ${{ format: 'json' }}
+      ${'format'}                   | ${'@scope/eslint-formatter-x'}    | ${{ format: '@scope/eslint-formatter-x' }}
+    `(
+      'should keep the location the executor resolved for $option: $value',
+      async ({ option, value, expectedOptions }) => {
+        const project = createTestProject(tree, {
+          appName: 'core',
+          appRoot: 'libs/core',
+        });
+        project.targets.lint.options[option] = value;
+        updateProjectConfiguration(tree, project.name, project);
+
+        await convertToInferred(tree, { skipFormat: true });
+
+        const updatedProject = readProjectConfiguration(tree, project.name);
+        expect(updatedProject.targets?.lint?.options).toStrictEqual(
+          expectedOptions
+        );
+      }
+    );
+
+    it.each`
+      option             | value         | expectedOptions
+      ${'maxWarnings'}   | ${0}          | ${{ 'max-warnings': 0 }}
+      ${'maxWarnings'}   | ${-1}         | ${{ 'max-warnings': -1 }}
+      ${'fix'}           | ${true}       | ${{ fix: true }}
+      ${'fix'}           | ${false}      | ${{ fix: null }}
+      ${'cache'}         | ${false}      | ${{ cache: null }}
+      ${'quiet'}         | ${false}      | ${{ quiet: null }}
+      ${'noEslintrc'}    | ${false}      | ${{ 'no-eslintrc': null }}
+      ${'cacheLocation'} | ${''}         | ${{ 'cache-location': null }}
+      ${'cacheStrategy'} | ${''}         | ${{ 'cache-strategy': null }}
+      ${'cacheStrategy'} | ${'metadata'} | ${{ 'cache-strategy': 'metadata' }}
+    `(
+      'should convert $option: $value to its ESLint CLI flag',
+      async ({ option, value, expectedOptions }) => {
+        const project = createTestProject(tree, {
+          appName: 'core',
+          appRoot: 'libs/core',
+        });
+        project.targets.lint.options[option] = value;
+        updateProjectConfiguration(tree, project.name, project);
+
+        await convertToInferred(tree, { skipFormat: true });
+
+        const updatedProject = readProjectConfiguration(tree, project.name);
+        expect(updatedProject.targets?.lint?.options).toStrictEqual(
+          expectedOptions
+        );
+      }
+    );
+
+    it('should convert falsy options in a configuration and unset the disabled ones', async () => {
+      const project = createTestProject(tree, {
+        appName: 'core',
+        appRoot: 'libs/core',
+      });
+      project.targets.lint.options.fix = true;
+      project.targets.lint.options.cache = true;
+      project.targets.lint.configurations = {
+        ci: { maxWarnings: 0, fix: false, cache: false, cacheLocation: '' },
+      };
+      updateProjectConfiguration(tree, project.name, project);
+
+      await convertToInferred(tree, { skipFormat: true });
+
+      const updatedProject = readProjectConfiguration(tree, project.name);
+      expect(updatedProject.targets.lint.options).toStrictEqual({
+        fix: true,
+        cache: true,
+      });
+      expect(updatedProject.targets.lint.configurations).toStrictEqual({
+        ci: {
+          'max-warnings': 0,
+          fix: null,
+          cache: null,
+          'cache-location': null,
+        },
+      });
+    });
+
+    it('should keep a project opting out of options a target default enables', async () => {
+      const project = createTestProject(tree, {
+        appName: 'core',
+        appRoot: 'libs/core',
+      });
+      project.targets.lint.options.fix = false;
+      project.targets.lint.options.cache = false;
+      project.targets.lint.options.quiet = false;
+      updateProjectConfiguration(tree, project.name, project);
+      const nxJson = readNxJson(tree);
+      nxJson.targetDefaults ??= {};
+      nxJson.targetDefaults.lint = {
+        options: { fix: true, cache: true, quiet: true },
+      };
+      updateNxJson(tree, nxJson);
+
+      await convertToInferred(tree, { skipFormat: true });
+
+      const defaultOptions = (readNxJson(tree).targetDefaults.lint as any)
+        .options;
+      const projectOptions = readProjectConfiguration(tree, project.name)
+        .targets?.lint?.options;
+      expect({ ...defaultOptions, ...projectOptions }).toMatchObject({
+        fix: null,
+        cache: null,
+        quiet: null,
+      });
+    });
+
+    it.each`
+      outputs                                                 | expectedOutputs
+      ${['{options.outputFile}']}                             | ${undefined}
+      ${['{projectRoot}/other', '{options.outputFile}']}      | ${['{projectRoot}/other', '{options.cwd ?? .}/{options.o ?? options.output-file}']}
+      ${['{workspaceRoot}/reports', '!{options.outputFile}']} | ${['{workspaceRoot}/reports', '!{options.cwd ?? .}/{options.o ?? options.output-file}']}
+      ${['{options.outputFile}.meta']}                        | ${['{options.cwd ?? .}/{options.o ?? options.output-file}.meta']}
+      ${undefined}                                            | ${undefined}
+      ${[]}                                                   | ${[]}
+    `(
+      'should rewrite only a declared report output: $outputs',
+      async ({ outputs, expectedOutputs }) => {
+        const project = createTestProject(tree, {
+          appName: 'core',
+          appRoot: 'libs/core',
+        });
+        project.targets.lint.options.outputFile = 'reports/x.json';
+        project.targets.lint.outputs = outputs;
+        updateProjectConfiguration(tree, project.name, project);
+
+        await convertToInferred(tree, { skipFormat: true });
+
+        const updatedProject = readProjectConfiguration(tree, project.name);
+        expect(updatedProject.targets.lint.outputs).toStrictEqual(
+          expectedOutputs
+        );
+      }
+    );
+
+    it.each`
+      options                                | configurations                                 | outputs                    | expectedOutputs
+      ${{ outputFile: '../reports/x.json' }} | ${undefined}                                   | ${undefined}               | ${[]}
+      ${{ outputFile: 'reports/x.json' }}    | ${{ ci: { outputFile: '../reports/x.json' } }} | ${['{projectRoot}/other']} | ${['{projectRoot}/other']}
+    `(
+      'should leave a report outside the workspace out of the outputs: $options $configurations',
+      async ({ options, configurations, outputs, expectedOutputs }) => {
+        const project = createTestProject(tree, {
+          appName: 'core',
+          appRoot: 'libs/core',
+        });
+        Object.assign(project.targets.lint.options, options);
+        project.targets.lint.configurations = configurations;
+        project.targets.lint.outputs = outputs;
+        updateProjectConfiguration(tree, project.name, project);
+
+        await convertToInferred(tree, { skipFormat: true });
+
+        const updatedProject = readProjectConfiguration(tree, project.name);
+        expect(updatedProject.targets.lint.outputs).toStrictEqual(
+          expectedOutputs
+        );
+      }
+    );
 
     it('should add Eslint options found in targetDefaults for the executor to the project.json', async () => {
       // ARRANGE

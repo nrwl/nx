@@ -25,7 +25,10 @@ import { getLockFileName } from '@nx/js';
 import type { StorybookConfig } from 'storybook/internal/types';
 import { query } from '@phenomnomnominal/tsquery';
 import { addBuildAndWatchDepsTargets } from '@nx/js/internal';
-import { findStorybookAndBuildTargetsAndCompiler } from '../utils/utilities';
+import {
+  findStorybookAndBuildTargetsAndCompiler,
+  storybookFilePatterns,
+} from '../utils/utilities';
 import { getStartStorybookReadyWhen } from '../utils/dev-server-ready-check';
 
 export interface StorybookPluginOptions {
@@ -40,6 +43,15 @@ export interface StorybookPluginOptions {
 type StorybookTargets = Record<string, TargetConfiguration>;
 
 const storybookConfigGlob = '**/.storybook/main.{js,ts,mjs,mts,cjs,cts}';
+
+// `production` usually excludes these files. Its `!{projectRoot}/` exclusions
+// don't filter `{workspaceRoot}/` filesets, so these keep the files hashed.
+const storybookFileInputs = Object.values(storybookFilePatterns).map(
+  (pattern) => `{workspaceRoot}/{projectRoot}/${pattern}`
+);
+// `^production` drops dependencies' stories too, which a host Storybook loads
+// from the projects it depends on.
+const dependencyStoriesInput = `^{projectRoot}/${storybookFilePatterns.stories}`;
 
 // Vite-builder frameworks we infer the addon target for. The addon itself only
 // checks that the resolved builder is Vite, so this list is conservative rather
@@ -81,7 +93,10 @@ export const createNodes: CreateNodes<StorybookPluginOptions> = [
 
       const projectHashes = await calculateHashesForCreateNodes(
         entries.map((e) => e.projectRoot),
-        normalizedOptions,
+        {
+          ...normalizedOptions,
+          namedInputs: context.nxJsonConfiguration.namedInputs ?? {},
+        },
         context,
         entries.map(() => [lockFileName])
       );
@@ -288,7 +303,12 @@ function storybookInputs(
 ): TargetConfiguration['inputs'] {
   return [
     ...('production' in namedInputs
-      ? ['production', '^production']
+      ? [
+          'production',
+          ...storybookFileInputs,
+          '^production',
+          dependencyStoriesInput,
+        ]
       : ['default', '^default']),
     {
       externalDependencies: [

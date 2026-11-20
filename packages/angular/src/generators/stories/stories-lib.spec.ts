@@ -139,18 +139,14 @@ describe('angularStories generator: libraries', () => {
     });
 
     it('should run twice without errors', async () => {
-      try {
-        await angularStoriesGenerator(tree, {
-          name: libName,
-          skipFormat: true,
-        });
-        await angularStoriesGenerator(tree, {
-          name: libName,
-          skipFormat: true,
-        });
-      } catch {
-        fail('Should not fail when running it twice.');
-      }
+      await angularStoriesGenerator(tree, {
+        name: libName,
+        skipFormat: true,
+      });
+      await angularStoriesGenerator(tree, {
+        name: libName,
+        skipFormat: true,
+      });
     });
 
     it('should handle modules with variable declarations rather than literals', async () => {

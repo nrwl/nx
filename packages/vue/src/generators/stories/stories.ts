@@ -1,17 +1,12 @@
 import {
-  addDependenciesToPackageJson,
-  ensurePackage,
   formatFiles,
-  GeneratorCallback,
   getProjects,
   joinPathFragments,
   ProjectConfiguration,
-  runTasksInSerial,
   Tree,
   visitNotIgnoredFiles,
 } from '@nx/devkit';
 import { basename, join } from 'path';
-import { nxVersion } from '../../utils/versions';
 import { assertSupportedVueVersion } from '../../utils/assert-supported-vue-version';
 import { createComponentStories } from './lib/component-story';
 import picomatch = require('picomatch');

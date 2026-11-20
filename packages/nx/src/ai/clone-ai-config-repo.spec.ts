@@ -1,4 +1,11 @@
-import { mkdirSync, rmSync, writeFileSync } from 'fs';
+import {
+  chmodSync,
+  lstatSync,
+  mkdirSync,
+  rmSync,
+  symlinkSync,
+  writeFileSync,
+} from 'fs';
 import { join } from 'path';
 import { withEnvironmentVariables } from '../internal-testing-utils/with-environment';
 
@@ -8,6 +15,7 @@ const state = vi.hoisted(() => {
   const path = require('node:path') as typeof import('node:path');
   return {
     dir: fs.mkdtempSync(path.join(os.tmpdir(), 'nx-ai-clone-env-')),
+    home: undefined as string | undefined,
     execSync: vi.fn(),
   };
 });
@@ -16,6 +24,18 @@ vi.mock('os', async () => ({
   ...(await vi.importActual<typeof import('os')>('os')),
   tmpdir: () => state.dir,
 }));
+
+vi.mock('../utils/nx-tmp-dir', () => {
+  const path = require('node:path') as typeof import('node:path');
+  const shared = path.join(state.dir, '.nx');
+  return {
+    NX_TMP_DIR: shared,
+    NX_USER_TMP_DIR: path.join(shared, 'user'),
+    get NX_HOME_TMP_DIR() {
+      return state.home;
+    },
+  };
+});
 
 vi.mock('child_process', () => ({
   execSync: (...args: unknown[]) => state.execSync(...args),
@@ -52,11 +72,20 @@ const REPO_LOCAL_GIT_VARS = [
 describe('getAiConfigRepoPath', () => {
   const execSyncMock = state.execSync;
 
+  const sharedRoot = join(state.dir, '.nx');
+  const userRoot = join(sharedRoot, 'user');
+  const cacheDir = join(userRoot, 'nx-ai-agents-config');
+
   beforeEach(() => {
-    rmSync(join(state.dir, 'nx-ai-agents-config'), {
-      recursive: true,
-      force: true,
-    });
+    for (const dir of [
+      sharedRoot,
+      join(state.dir, 'nx-ai-agents-config'),
+      join(state.dir, 'home'),
+    ]) {
+      rmSync(dir, { recursive: true, force: true });
+    }
+    state.home = undefined;
+    state.execSync.mockReset();
     state.execSync.mockImplementation((command: string) => {
       const cmd = String(command);
       if (cmd.includes('ls-remote')) {
@@ -89,7 +118,7 @@ describe('getAiConfigRepoPath', () => {
       },
       () => {
         const cloned = getAiConfigRepoPath();
-        expect(cloned.startsWith(state.dir)).toBe(true);
+        expect(cloned).toBe(join(cacheDir, HEAD.slice(0, 10)));
         expectGitEnv(execSyncMock);
         expect(
           execSyncMock.mock.calls.map(([command]) => String(command))
@@ -109,6 +138,76 @@ describe('getAiConfigRepoPath', () => {
         expect(process.env.GIT_INDEX_FILE).toBe('/caller/GIT_INDEX_FILE');
       }
     );
+  });
+
+  describe.skipIf(process.platform === 'win32')('cache location', () => {
+    it('ignores a clone planted in the shared tmp dir', () => {
+      const planted = join(state.dir, 'nx-ai-agents-config', HEAD.slice(0, 10));
+      mkdirSync(planted, { recursive: true });
+      writeFileSync(join(planted, 'README.md'), '<% planted %>');
+
+      const cloned = getAiConfigRepoPath();
+
+      expect(cloned).toBe(join(cacheDir, HEAD.slice(0, 10)));
+      expect(
+        execSyncMock.mock.calls.some(([c]) => String(c).includes('git clone'))
+      ).toBe(true);
+    });
+
+    it('keeps the cache in owner-only directories', () => {
+      getAiConfigRepoPath();
+
+      for (const dir of [userRoot, cacheDir]) {
+        expect(lstatSync(dir).mode & 0o077).toBe(0);
+      }
+    });
+
+    it('refuses a symlinked user dir', () => {
+      const elsewhere = join(state.dir, 'elsewhere');
+      const plantedClone = join(
+        elsewhere,
+        'nx-ai-agents-config',
+        HEAD.slice(0, 10)
+      );
+      mkdirSync(plantedClone, { recursive: true });
+      writeFileSync(join(plantedClone, 'README.md'), '<% planted %>');
+      mkdirSync(sharedRoot);
+      symlinkSync(elsewhere, userRoot);
+
+      expect(() => getAiConfigRepoPath()).toThrow(/symlink/);
+      expect(execSyncMock).not.toHaveBeenCalled();
+    });
+
+    it('refuses a shared root other users can write to without the sticky bit', () => {
+      mkdirSync(sharedRoot);
+      chmodSync(sharedRoot, 0o777);
+
+      expect(() => getAiConfigRepoPath()).toThrow(/not sticky/);
+      expect(execSyncMock).not.toHaveBeenCalled();
+    });
+
+    it('falls back to an owner-only cache under the home dir when the shared root is refused', () => {
+      mkdirSync(sharedRoot);
+      chmodSync(sharedRoot, 0o777);
+      mkdirSync(join(state.dir, 'home'));
+      state.home = join(state.dir, 'home', '.nx');
+      const homeCache = join(state.home, 'nx-ai-agents-config');
+
+      expect(getAiConfigRepoPath()).toBe(join(homeCache, HEAD.slice(0, 10)));
+      for (const dir of [state.home, homeCache]) {
+        expect(lstatSync(dir).mode & 0o077).toBe(0);
+      }
+    });
+
+    it('does not fall back to a home dir that is the shared root', () => {
+      mkdirSync(sharedRoot);
+      chmodSync(sharedRoot, 0o777);
+      state.home = sharedRoot;
+
+      expect(() => getAiConfigRepoPath()).toThrow(/not sticky/);
+      expect(lstatSync(sharedRoot).mode & 0o777).toBe(0o777);
+      expect(execSyncMock).not.toHaveBeenCalled();
+    });
   });
 });
 

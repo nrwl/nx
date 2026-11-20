@@ -1388,8 +1388,6 @@ describe('app', () => {
         ssr: true,
       });
 
-      const project = readProjectConfiguration(appTree, 'app2');
-
       expect(appTree.exists('app2/rspack.config.ts')).toBeTruthy();
       expect(appTree.read('app2/rspack.config.ts', 'utf-8')).toMatchSnapshot();
       expect(appTree.read('app2/src/server.ts', 'utf-8')).toMatchSnapshot();
@@ -1419,6 +1417,22 @@ describe('app', () => {
       const { devDependencies } = readJson(appTree, 'package.json');
       expect(devDependencies['browser-sync']).toBeUndefined();
       expect(devDependencies['@nx/webpack']).toBeUndefined();
+    });
+
+    it('should not add a serve-ssr target when --bundler=rspack and ssr', async () => {
+      // A matching default makes the conversion keep the target, so only the ssr setup can leave it out
+      const nxJson = readNxJson(appTree);
+      nxJson.targetDefaults = {
+        ...nxJson.targetDefaults,
+        'serve-ssr': { cache: false },
+      };
+      updateNxJson(appTree, nxJson);
+
+      await generateApp(appTree, 'app1', { bundler: 'rspack', ssr: true });
+
+      expect(
+        readProjectConfiguration(appTree, 'app1').targets['serve-ssr']
+      ).toBeUndefined();
     });
 
     it('should scaffold the application engine when --bundler=rspack and ssr', async () => {

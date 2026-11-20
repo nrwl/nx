@@ -11,8 +11,22 @@ import {
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { libraryGenerator } from './library';
 
+const realNodeVersion = process.versions.node;
+const setNodeVersion = (version: string) =>
+  Object.defineProperty(process.versions, 'node', {
+    value: version,
+    configurable: true,
+  });
+
 describe('lib', () => {
   let tree: Tree;
+
+  // the generated jest setup can't load @nestjs/testing 12, so jest needs Nest <= 11
+  const useNest11 = () =>
+    updateJson(tree, 'package.json', (json) => {
+      json.dependencies = { ...json.dependencies, '@nestjs/core': '^11.0.0' };
+      return json;
+    });
   let envBackup: string | undefined;
 
   beforeEach(() => {
@@ -149,6 +163,7 @@ describe('lib', () => {
     });
 
     it('should extend the local tsconfig.json with tsconfig.lib.json', async () => {
+      useNest11();
       await libraryGenerator(tree, {
         directory: 'my-lib',
       });
@@ -164,6 +179,7 @@ describe('lib', () => {
     });
 
     it('should generate files', async () => {
+      useNest11();
       await libraryGenerator(tree, {
         linter: 'eslint',
         directory: 'my-lib',
@@ -176,6 +192,7 @@ describe('lib', () => {
     });
 
     it('should generate the .eslintrc.json file (eslintrc)', async () => {
+      useNest11();
       process.env.ESLINT_USE_FLAT_CONFIG = 'false';
       await libraryGenerator(tree, {
         linter: 'eslint',
@@ -202,6 +219,7 @@ describe('lib', () => {
     });
 
     it('should generate files', async () => {
+      useNest11();
       await libraryGenerator(tree, {
         linter: 'eslint',
         directory: 'my-dir/my-lib',
@@ -384,8 +402,51 @@ describe('lib', () => {
     });
   });
 
+  describe('unit test runner', () => {
+    it('should default to vitest on Nest 12', async () => {
+      await libraryGenerator(tree, { directory: 'my-lib' });
+
+      expect(tree.exists(`${'my-lib'}/vitest.config.mts`)).toBeTruthy();
+      expect(tree.exists(`${'my-lib'}/jest.config.cts`)).toBeFalsy();
+    });
+
+    afterEach(() => setNodeVersion(realNodeVersion));
+
+    it('should throw for jest on Nest 12 below Node 24.9', async () => {
+      setNodeVersion('22.12.0');
+
+      await expect(
+        libraryGenerator(tree, { directory: 'my-lib', unitTestRunner: 'jest' })
+      ).rejects.toThrow(/requires Node\.js 24\.9\.0 or later/);
+    });
+
+    it('should set up jest for Nest 12 on Node 24.9+', async () => {
+      setNodeVersion('24.9.0');
+
+      await libraryGenerator(tree, {
+        directory: 'my-lib',
+        unitTestRunner: 'jest',
+      });
+
+      expect(tree.exists('my-lib/jest.config.cts')).toBeTruthy();
+      expect(
+        readProjectConfiguration(tree, 'my-lib').targets.test.options.env
+      ).toEqual({ '...': true, NODE_OPTIONS: '--experimental-vm-modules' });
+    });
+
+    it('should default to jest on Nest 11', async () => {
+      useNest11();
+
+      await libraryGenerator(tree, { directory: 'my-lib' });
+
+      expect(tree.exists(`${'my-lib'}/jest.config.cts`)).toBeTruthy();
+      expect(tree.exists(`${'my-lib'}/vitest.config.mts`)).toBeFalsy();
+    });
+  });
+
   describe('--testEnvironment', () => {
     it('should set target jest testEnvironment to node by default', async () => {
+      useNest11();
       await libraryGenerator(tree, {
         directory: 'my-lib',
       });
@@ -394,6 +455,7 @@ describe('lib', () => {
     });
 
     it('should set target jest testEnvironment to jsdom', async () => {
+      useNest11();
       await libraryGenerator(tree, {
         directory: 'my-lib',
         testEnvironment: 'jsdom',
@@ -428,7 +490,6 @@ describe('lib', () => {
       await libraryGenerator(tree, {
         linter: 'eslint',
         directory: 'mylib',
-        unitTestRunner: 'jest',
         useProjectJson: false,
       });
 
@@ -498,10 +559,18 @@ describe('lib', () => {
             ],
           },
           "exclude": [
-            "jest.config.ts",
-            "jest.config.cts",
-            "src/**/*.spec.ts",
+            "vite.config.ts",
+            "vite.config.mts",
+            "vitest.config.ts",
+            "vitest.config.mts",
             "src/**/*.test.ts",
+            "src/**/*.spec.ts",
+            "src/**/*.test.tsx",
+            "src/**/*.spec.tsx",
+            "src/**/*.test.js",
+            "src/**/*.spec.js",
+            "src/**/*.test.jsx",
+            "src/**/*.spec.jsx",
           ],
           "extends": "../tsconfig.base.json",
           "include": [
@@ -520,19 +589,30 @@ describe('lib', () => {
             "noFallthroughCasesInSwitch": true,
             "noImplicitOverride": true,
             "noImplicitReturns": true,
-            "outDir": "./out-tsc/jest",
+            "outDir": "./out-tsc/vitest",
             "strict": true,
             "types": [
-              "jest",
+              "vitest/globals",
+              "vitest/importMeta",
+              "vite/client",
               "node",
+              "vitest",
             ],
           },
           "extends": "../tsconfig.base.json",
           "include": [
-            "jest.config.ts",
-            "jest.config.cts",
+            "vite.config.ts",
+            "vite.config.mts",
+            "vitest.config.ts",
+            "vitest.config.mts",
             "src/**/*.test.ts",
             "src/**/*.spec.ts",
+            "src/**/*.test.tsx",
+            "src/**/*.spec.tsx",
+            "src/**/*.test.js",
+            "src/**/*.spec.js",
+            "src/**/*.test.jsx",
+            "src/**/*.spec.jsx",
             "src/**/*.d.ts",
           ],
           "references": [
@@ -548,7 +628,6 @@ describe('lib', () => {
       await libraryGenerator(tree, {
         linter: 'eslint',
         directory: 'mylib',
-        unitTestRunner: 'jest',
         useProjectJson: false,
         buildable: true,
         skipFormat: true,
@@ -587,7 +666,6 @@ describe('lib', () => {
 
       await libraryGenerator(tree, {
         directory: 'mylib',
-        unitTestRunner: 'jest',
         useProjectJson: false,
         buildable: true,
         skipFormat: true,
@@ -642,7 +720,6 @@ describe('lib', () => {
       await libraryGenerator(tree, {
         linter: 'eslint',
         directory: 'mylib',
-        unitTestRunner: 'jest',
         useProjectJson: true,
         skipFormat: true,
       });

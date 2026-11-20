@@ -1,9 +1,6 @@
 import { names, Tree } from '@nx/devkit';
 import { NormalizedSchema } from './normalized-schema';
 import { addRoute } from '../../../utils/nx-devkit/route-utils';
-import { ensureTypescript } from '@nx/js/internal';
-
-let tsModule: typeof import('typescript');
 
 export function addLoadChildren(
   tree: Tree,
@@ -12,18 +9,6 @@ export function addLoadChildren(
   if (!tree.exists(options.parent)) {
     throw new Error(`Cannot find '${options.parent}'`);
   }
-  if (!tsModule) {
-    tsModule = ensureTypescript();
-  }
-
-  const moduleSource = tree.read(options.parent, 'utf-8');
-  const sourceFile = tsModule.createSourceFile(
-    options.parent,
-    moduleSource,
-    tsModule.ScriptTarget.Latest,
-    true
-  );
-
   const route = `{ path: '${
     names(options.fileName).fileName
   }', loadChildren: () => import('${options.importPath}').then(m => m.${

@@ -27,7 +27,7 @@ pub fn hash_runtime(
     env.iter().for_each(|(key, value)| {
         command_builder.env(key, value);
     });
-    trace!("executing: {:?}", command_builder);
+    trace!("executing: {:?} in {:?}", command, workspace_root);
     let output = command_builder
         .output()
         .map_err(|e| anyhow::anyhow!("Failed to execute: '{}'\n{}", command, e))?;
@@ -71,6 +71,8 @@ mod tests {
     use super::*;
     use dashmap::DashMap;
     use std::collections::HashMap;
+    use std::io::Write;
+    use std::sync::{Arc, Mutex};
 
     #[test]
     fn test_hash_runtime() {
@@ -92,6 +94,39 @@ mod tests {
 
         let result = hash_runtime(workspace_root, command, &env, &cache).unwrap();
         assert_eq!(result, hash(b"a b"));
+    }
+
+    #[test]
+    fn trace_log_omits_env_values() {
+        #[derive(Clone, Default)]
+        struct Logs(Arc<Mutex<Vec<u8>>>);
+        impl Write for Logs {
+            fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
+                self.0.lock().unwrap().write(buf)
+            }
+            fn flush(&mut self) -> std::io::Result<()> {
+                Ok(())
+            }
+        }
+
+        let workspace_root = if cfg!(windows) { "C:\\" } else { "/tmp" };
+        let command = "echo runtime";
+        let env = HashMap::from([("NPM_TOKEN".to_string(), "npm_s3cr3t".to_string())]);
+        let cache = DashMap::new();
+
+        let logs = Logs::default();
+        let writer = logs.clone();
+        let subscriber = tracing_subscriber::fmt()
+            .with_max_level(tracing::Level::TRACE)
+            .with_writer(move || writer.clone())
+            .finish();
+        tracing::subscriber::with_default(subscriber, || {
+            hash_runtime(workspace_root, command, &env, &cache).unwrap()
+        });
+
+        let logs = String::from_utf8(logs.0.lock().unwrap().clone()).unwrap();
+        assert!(logs.contains("echo runtime"), "{logs}");
+        assert!(!logs.contains("npm_s3cr3t"), "{logs}");
     }
 
     #[test]

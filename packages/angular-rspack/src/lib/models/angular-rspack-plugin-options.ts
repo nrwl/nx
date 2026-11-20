@@ -29,8 +29,10 @@ export interface DevServerOptions {
    */
   host?: string;
   /**
-   * @deprecated This is a no-op and can be safely removed.
-   * The `inspect` option is no longer supported.
+   * Opens the Node.js debugging inspector in the dev-server process and waits
+   * for a debugger to attach. Applies only to SSR apps that set
+   * `ssr.serveFromDevServer`. `true` uses the default host and port; a string
+   * sets them as `[[host:]port]`.
    */
   inspect?: string | boolean;
   /**
@@ -344,6 +346,15 @@ export interface AngularRspackPluginOptions {
         platform?: 'node' | 'neutral';
         /** @deprecated Use `platform` instead. */
         experimentalPlatform?: 'node' | 'neutral';
+        /**
+         * Serves SSR pages from the dev server's own URL during `rspack serve`.
+         * The dev-server process loads the server bundle and calls the
+         * `reqHandler` that `entry` exports. Without this option, `rspack serve`
+         * runs the server bundle as a separate server, which listens on the
+         * port `entry` sets. Serving from the dev server is the only behavior
+         * in Nx 25, which removes this option.
+         */
+        serveFromDevServer?: boolean;
       };
   /**
    * Generates a 'stats.json' file which can be analyzed using tools such as 'webpack-bundle-analyzer'.
@@ -407,6 +418,9 @@ export interface NormalizedAngularRspackPluginOptions extends Omit<
   outputMode: 'server' | undefined;
   outputPath: OutputPath;
   polyfills: string[];
+  // Set when the project graph loads the config to infer targets: option
+  // checks and warnings are skipped, and the proxy file isn't read.
+  projectGraphCreation?: boolean;
   projectName: string | undefined;
   progress: boolean;
   root: string;

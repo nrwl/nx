@@ -295,6 +295,8 @@ export class TaskOrchestrator {
   // report them again, and the saved log gets the reason after the transcript
   private readinessFailures = new Map<string, Promise<void>>();
   private readinessFailureReasons = new Map<string, string>();
+  // Cleanup awaits these, so an aborted command probe finishes its kill first
+  private readinessProbes = new Set<Promise<void>>();
   private readinessSettled = false;
   private readySignal: ReadySignalServer | undefined;
   // The url each producer reported with its readiness signal
@@ -1015,6 +1017,23 @@ export class TaskOrchestrator {
         taskGraph,
         Object.keys(taskGraph.tasks).filter((id) => this.completedTasks.has(id))
       );
+    }
+
+    // A member skipped outside a wave's run (a dependency failed) gets no result
+    // from it; agents expect one per task, as runTaskDirectly returns.
+    const returned = new Set(results.map((result) => result.task.id));
+    for (const taskId of taskIds) {
+      if (
+        !returned.has(taskId) &&
+        this.completedTasks.get(taskId) === 'skipped'
+      ) {
+        results.push({
+          task: batch.taskGraph.tasks[taskId],
+          code: 1,
+          status: 'skipped',
+          terminalOutput: '',
+        });
+      }
     }
 
     // Once, after every wave: an earlier status would end the batch in the TUI.
@@ -1771,6 +1790,8 @@ export class TaskOrchestrator {
           streamOutput: streamOutput && !shouldPrefix,
         };
 
+        // The TUI discards stderr, so run-commands warnings go to the task output
+        const warnings: string[] = [];
         // As in a forked run, run-commands builds its env on the task env
         const runningTask = await runCommands(
           runCommandsOptions,
@@ -1778,7 +1799,8 @@ export class TaskOrchestrator {
             root: workspaceRoot, // only root is needed in runCommands
           } as any,
           task,
-          env
+          env,
+          this.tuiEnabled ? (message) => warnings.push(message) : undefined
         );
 
         this.runningRunCommandsTasks.set(task.id, runningTask);
@@ -1807,6 +1829,13 @@ export class TaskOrchestrator {
             runningTask.onOutput((output) => {
               this.options.lifeCycle.appendTaskOutput(task.id, output, false);
             });
+          }
+          for (const warning of warnings) {
+            this.options.lifeCycle.appendTaskOutput(
+              task.id,
+              `${pc.yellow(warning)}\r\n`,
+              false
+            );
           }
         }
 
@@ -2280,7 +2309,7 @@ export class TaskOrchestrator {
         continue;
       }
       // A producer in this task graph is held by dispatch and settled by its
-      // probe or row poll; one outside it (an agent's flat graph) has only its row
+      // probe or row poll; one outside it (on an agent, another call's) has only its row
       if (this.taskGraph.tasks[producerId]) {
         await this.readinessOf(producerId).promise;
       } else {
@@ -2369,7 +2398,7 @@ export class TaskOrchestrator {
   ) {
     const state = this.armReadiness(task.id);
     this.options.lifeCycle.setTaskReadiness?.(task.id, TaskReadiness.Pending);
-    waitForReadiness(readyWhen, {
+    const probe = waitForReadiness(readyWhen, {
       taskId: task.id,
       runningTask,
       cwd: workspaceRoot,
@@ -2388,6 +2417,8 @@ export class TaskOrchestrator {
         this.failReadiness(task, state, e);
       }
     );
+    this.readinessProbes.add(probe);
+    probe.finally(() => this.readinessProbes.delete(probe));
   }
 
   // A verdict against a producer something in this run waits for fails the
@@ -2427,7 +2458,7 @@ export class TaskOrchestrator {
     state.reject(e);
   }
 
-  // On an agent the waiter runs in another process with its own flat graph
+  // On an agent the waiter may run in another process, outside this task graph
   private hasReadyWaiter(producerId: string): boolean {
     return Object.values(this.fullTaskGraph.tasks).some((task) =>
       getReadyProducerIds(task, this.fullTaskGraph).includes(producerId)
@@ -2967,9 +2998,12 @@ export class TaskOrchestrator {
         ownsRunningTasksService,
         reason
       );
-    } else if (!this.isContinuousTaskNeeded(task.id)) {
-      // No remaining tasks depend on this — the task was about to be
-      // killed by cleanUpUnneededContinuousTasks anyway.
+    } else if (
+      !this.isContinuousTaskNeeded(task.id) &&
+      !this.isInitiatingTaskFailure(task.id, code)
+    ) {
+      // No remaining tasks depend on this: a dependency was about to be killed
+      // by cleanUpUnneededContinuousTasks anyway, an initiating task exited cleanly.
       await this.completeContinuousTask(
         task,
         groupId,
@@ -2997,6 +3031,17 @@ export class TaskOrchestrator {
           (edge) => edge.id === taskId
         )
       );
+  }
+
+  // Nothing kills a task the user asked for, so a non-zero exit before the
+  // run stops is the task failing on its own.
+  private isInitiatingTaskFailure(taskId: string, code: number): boolean {
+    return (
+      code !== 0 &&
+      this.initializingTaskIds.has(taskId) &&
+      !this.stopRequested &&
+      !this.cleanupPromise
+    );
   }
 
   private async completeContinuousTask(
@@ -3051,6 +3096,7 @@ export class TaskOrchestrator {
   private async performCleanup() {
     // Waiters must not sit out a probe once the run is stopping
     this.abortAllReadiness();
+    const probesStopped = Promise.allSettled(this.readinessProbes);
     this.readySignal?.close();
 
     // Mark all running tasks for intentional stop
@@ -3091,6 +3137,7 @@ export class TaskOrchestrator {
     const continuousTaskIds = new Set(continuousSnapshot.map(([id]) => id));
     await Promise.all([
       forkedCleanup,
+      probesStopped,
       ...continuousSnapshot.map(async ([taskId, { runningTask }]) => {
         try {
           await runningTask.kill();

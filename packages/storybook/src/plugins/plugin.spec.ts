@@ -185,7 +185,11 @@ describe('@nx/storybook/plugin', () => {
                     "command": "storybook build",
                     "inputs": [
                       "production",
+                      "{workspaceRoot}/{projectRoot}/**/*.stories.@(js|jsx|ts|tsx|mdx)",
+                      "{workspaceRoot}/{projectRoot}/.storybook/**/*",
+                      "{workspaceRoot}/{projectRoot}/tsconfig.storybook.json",
                       "^production",
+                      "^{projectRoot}/**/*.stories.@(js|jsx|ts|tsx|mdx)",
                       {
                         "externalDependencies": [
                           "storybook",
@@ -207,7 +211,11 @@ describe('@nx/storybook/plugin', () => {
                     "continuous": true,
                     "inputs": [
                       "production",
+                      "{workspaceRoot}/{projectRoot}/**/*.stories.@(js|jsx|ts|tsx|mdx)",
+                      "{workspaceRoot}/{projectRoot}/.storybook/**/*",
+                      "{workspaceRoot}/{projectRoot}/tsconfig.storybook.json",
                       "^production",
+                      "^{projectRoot}/**/*.stories.@(js|jsx|ts|tsx|mdx)",
                       {
                         "externalDependencies": [
                           "storybook",
@@ -230,7 +238,11 @@ describe('@nx/storybook/plugin', () => {
                     "executor": "@nx/web:file-server",
                     "inputs": [
                       "production",
+                      "{workspaceRoot}/{projectRoot}/**/*.stories.@(js|jsx|ts|tsx|mdx)",
+                      "{workspaceRoot}/{projectRoot}/.storybook/**/*",
+                      "{workspaceRoot}/{projectRoot}/tsconfig.storybook.json",
                       "^production",
+                      "^{projectRoot}/**/*.stories.@(js|jsx|ts|tsx|mdx)",
                       {
                         "externalDependencies": [
                           "storybook",
@@ -307,7 +319,11 @@ export default config;
                     "executor": "@storybook/angular:build-storybook",
                     "inputs": [
                       "production",
+                      "{workspaceRoot}/{projectRoot}/**/*.stories.@(js|jsx|ts|tsx|mdx)",
+                      "{workspaceRoot}/{projectRoot}/.storybook/**/*",
+                      "{workspaceRoot}/{projectRoot}/tsconfig.storybook.json",
                       "^production",
+                      "^{projectRoot}/**/*.stories.@(js|jsx|ts|tsx|mdx)",
                       {
                         "externalDependencies": [
                           "storybook",
@@ -333,7 +349,11 @@ export default config;
                     "executor": "@storybook/angular:start-storybook",
                     "inputs": [
                       "production",
+                      "{workspaceRoot}/{projectRoot}/**/*.stories.@(js|jsx|ts|tsx|mdx)",
+                      "{workspaceRoot}/{projectRoot}/.storybook/**/*",
+                      "{workspaceRoot}/{projectRoot}/tsconfig.storybook.json",
                       "^production",
+                      "^{projectRoot}/**/*.stories.@(js|jsx|ts|tsx|mdx)",
                       {
                         "externalDependencies": [
                           "storybook",
@@ -360,7 +380,11 @@ export default config;
                     "executor": "@nx/web:file-server",
                     "inputs": [
                       "production",
+                      "{workspaceRoot}/{projectRoot}/**/*.stories.@(js|jsx|ts|tsx|mdx)",
+                      "{workspaceRoot}/{projectRoot}/.storybook/**/*",
+                      "{workspaceRoot}/{projectRoot}/tsconfig.storybook.json",
                       "^production",
+                      "^{projectRoot}/**/*.stories.@(js|jsx|ts|tsx|mdx)",
                       {
                         "externalDependencies": [
                           "storybook",
@@ -587,7 +611,11 @@ export default config;
                     "command": "storybook build",
                     "inputs": [
                       "production",
+                      "{workspaceRoot}/{projectRoot}/**/*.stories.@(js|jsx|ts|tsx|mdx)",
+                      "{workspaceRoot}/{projectRoot}/.storybook/**/*",
+                      "{workspaceRoot}/{projectRoot}/tsconfig.storybook.json",
                       "^production",
+                      "^{projectRoot}/**/*.stories.@(js|jsx|ts|tsx|mdx)",
                       {
                         "externalDependencies": [
                           "storybook",
@@ -609,7 +637,11 @@ export default config;
                     "continuous": true,
                     "inputs": [
                       "production",
+                      "{workspaceRoot}/{projectRoot}/**/*.stories.@(js|jsx|ts|tsx|mdx)",
+                      "{workspaceRoot}/{projectRoot}/.storybook/**/*",
+                      "{workspaceRoot}/{projectRoot}/tsconfig.storybook.json",
                       "^production",
+                      "^{projectRoot}/**/*.stories.@(js|jsx|ts|tsx|mdx)",
                       {
                         "externalDependencies": [
                           "storybook",
@@ -632,7 +664,11 @@ export default config;
                     "executor": "@nx/web:file-server",
                     "inputs": [
                       "production",
+                      "{workspaceRoot}/{projectRoot}/**/*.stories.@(js|jsx|ts|tsx|mdx)",
+                      "{workspaceRoot}/{projectRoot}/.storybook/**/*",
+                      "{workspaceRoot}/{projectRoot}/tsconfig.storybook.json",
                       "^production",
+                      "^{projectRoot}/**/*.stories.@(js|jsx|ts|tsx|mdx)",
                       {
                         "externalDependencies": [
                           "storybook",
@@ -661,6 +697,34 @@ export default config;
         ],
       ]
     `);
+  });
+
+  it('should stop using production once nx.json removes it', async () => {
+    tempFs.createFileSync('my-app/.storybook/main.ts', '');
+    mockStorybookMainConfig('my-app/.storybook/main.ts', {
+      stories: ['../src/**/*.stories.tsx'],
+      framework: { name: '@storybook/react-vite', options: {} },
+    });
+    await createNodesFunction(
+      ['my-app/.storybook/main.ts'],
+      targetNames,
+      context
+    );
+
+    const nodes = await createNodesFunction(
+      ['my-app/.storybook/main.ts'],
+      targetNames,
+      {
+        ...context,
+        nxJsonConfiguration: {
+          namedInputs: { default: ['{projectRoot}/**/*'] },
+        },
+      }
+    );
+
+    expect(
+      nodes[0][1].projects['my-app'].targets['build-storybook'].inputs
+    ).toEqual(['default', '^default', { externalDependencies: ['storybook'] }]);
   });
 
   it('should infer test-storybook from a generated Vite config with addon-vitest', async () => {

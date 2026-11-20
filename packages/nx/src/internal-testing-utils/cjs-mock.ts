@@ -3,6 +3,7 @@ import { createRequire } from 'node:module';
 const Module: any = require('node:module');
 
 const registry = new Map<string, any>();
+const virtualRegistry = new Map<string, any>();
 let installed = false;
 
 function install() {
@@ -10,6 +11,9 @@ function install() {
   installed = true;
   const origLoad = Module._load;
   Module._load = function (request: string, parent: any, isMain: boolean) {
+    if (virtualRegistry.has(request)) {
+      return virtualRegistry.get(request);
+    }
     if (registry.size) {
       try {
         const resolved = Module._resolveFilename(request, parent, isMain);
@@ -46,6 +50,15 @@ export function mockCjsModule(
 }
 
 /**
+ * Like `mockCjsModule`, for a specifier that need not be installed. Matches
+ * the bare specifier exactly, so it never shadows a relative or deep import.
+ */
+export function mockVirtualCjsModule(specifier: string, exportsObj: any): void {
+  install();
+  virtualRegistry.set(specifier, exportsObj);
+}
+
+/**
  * Undo a single `mockCjsModule` registration. `vi.unmock` cannot do this - it
  * knows nothing about this registry - so a spec that swaps a module for one
  * test must call this, or the swap leaks into every later test in the file.
@@ -65,4 +78,5 @@ export function unmockCjsModule(
 /** Undo every registration; convenient from an `afterEach`. */
 export function resetCjsMocks(): void {
   registry.clear();
+  virtualRegistry.clear();
 }

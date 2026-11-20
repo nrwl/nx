@@ -2,7 +2,7 @@ import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { buildPostTargetTransformer } from './build-post-target-transformer';
 
 describe('buildPostTargetTransformer', () => {
-  it('should remove the correct options and move the AST options to the vite config file correctly and remove outputs when they match inferred', () => {
+  it('should migrate build options and remove outputs that match inferred', () => {
     // ARRANGE
     const tree = createTreeWithEmptyWorkspace();
 
@@ -39,7 +39,7 @@ describe('buildPostTargetTransformer', () => {
 
     // ASSERT
     const configFile = tree.read('apps/myapp/vite.config.ts', 'utf-8');
-    expect(configFile).toMatchSnapshot();
+    expect(configFile).toBe(viteConfigFileV17);
     expect(target).toMatchInlineSnapshot(`
       {
         "options": {
@@ -51,7 +51,7 @@ describe('buildPostTargetTransformer', () => {
     `);
   });
 
-  it('should move the AST options to each vite config file correctly for configurations', () => {
+  it('should migrate configuration options without rewriting Vite configs', () => {
     // ARRANGE
     const tree = createTreeWithEmptyWorkspace();
 
@@ -94,9 +94,9 @@ describe('buildPostTargetTransformer', () => {
 
     // ASSERT
     const configFile = tree.read('apps/myapp/vite.config.ts', 'utf-8');
-    expect(configFile).toMatchSnapshot();
+    expect(configFile).toBe(viteConfigFileV17);
     const devConfigFile = tree.read('apps/myapp/vite.dev.config.ts', 'utf-8');
-    expect(devConfigFile).toMatchSnapshot();
+    expect(devConfigFile).toBe(viteConfigFileV17);
     expect(target).toMatchInlineSnapshot(`
       {
         "configurations": {
@@ -164,17 +164,15 @@ describe('buildPostTargetTransformer', () => {
     `);
   });
 
-  it('should not add configValues to a vite config file twice when rerun', () => {
+  it('should leave the Vite config unchanged when rerun', () => {
     const tree = createTreeWithEmptyWorkspace();
-    tree.write(
-      'libs/ui/vite.config.mts',
-      `import { defineConfig } from 'vite';
+    const viteConfig = `import { defineConfig } from 'vite';
 
 export default defineConfig(() => ({
   root: import.meta.dirname,
 }));
-`
-    );
+`;
+    tree.write('libs/ui/vite.config.mts', viteConfig);
     const createTarget = () => ({
       outputs: ['{options.outputPath}'],
       options: { outputPath: 'dist/libs/ui' },
@@ -203,34 +201,12 @@ export default defineConfig(() => ({
       inferredTargetConfiguration
     );
 
-    expect(tree.read('libs/ui/vite.config.mts', 'utf-8'))
-      .toMatchInlineSnapshot(`
-        "import { defineConfig } from 'vite';
-          
-          // These options were migrated by @nx/vite:convert-to-inferred from the project.json file.
-          const configValues = {"default":{},"development":{},"production":{}};
-          
-          // Determine the correct configValue to use based on the configuration
-          const nxConfiguration = process.env.NX_TASK_TARGET_CONFIGURATION ?? 'default';
-          
-          const options = {
-            ...configValues.default,
-            ...(configValues[nxConfiguration] ?? {})
-          }
-          
-
-        export default defineConfig(() => ({
-          root: import.meta.dirname,
-        }));
-        "
-      `);
+    expect(tree.read('libs/ui/vite.config.mts', 'utf-8')).toBe(viteConfig);
   });
 
-  it('should add configValues when the vite config declares its own configValues', () => {
+  it('should preserve user configValues declarations', () => {
     const tree = createTreeWithEmptyWorkspace();
-    tree.write(
-      'libs/ui/vite.config.mts',
-      `import { defineConfig } from 'vite';
+    const viteConfig = `import { defineConfig } from 'vite';
 
 function getDefines() {
   const configValues = { DEBUG: false };
@@ -241,8 +217,8 @@ export default defineConfig(() => ({
   root: import.meta.dirname,
   define: getDefines(),
 }));
-`
-    );
+`;
+    tree.write('libs/ui/vite.config.mts', viteConfig);
 
     buildPostTargetTransformer(
       {
@@ -254,9 +230,7 @@ export default defineConfig(() => ({
       { outputs: ['{projectRoot}/{options.outDir}'] }
     );
 
-    expect(tree.read('libs/ui/vite.config.mts', 'utf-8')).toContain(
-      'These options were migrated by @nx/vite:convert-to-inferred'
-    );
+    expect(tree.read('libs/ui/vite.config.mts', 'utf-8')).toBe(viteConfig);
   });
 });
 

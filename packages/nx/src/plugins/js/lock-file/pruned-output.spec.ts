@@ -182,6 +182,49 @@ describe('getPrunedPnpmInstallSettingsYaml', () => {
     });
   });
 
+  it('carries trustLockfile and trustPolicy settings on pnpm 11', () => {
+    mockPnpmVersion('11.2.2');
+    writeRootWorkspaceYaml(
+      [
+        'trustLockfile: true',
+        'trustPolicy: no-downgrade',
+        'trustPolicyExclude:',
+        "  - 'webpack@4.47.0'",
+        'trustPolicyIgnoreAfter: 43200',
+        'minimumReleaseAgeIgnoreMissingTime: true',
+        '',
+      ].join('\n')
+    );
+
+    const yaml = getPrunedPnpmInstallSettingsYaml(tempDir);
+
+    const { load } = require('@zkochan/js-yaml');
+    expect(load(yaml)).toEqual({
+      packages: [],
+      trustLockfile: true,
+      trustPolicy: 'no-downgrade',
+      trustPolicyExclude: ['webpack@4.47.0'],
+      trustPolicyIgnoreAfter: 43200,
+      minimumReleaseAgeIgnoreMissingTime: true,
+    });
+  });
+
+  // These only affect resolving or rewriting a fresh lockfile, which a pruned
+  // output's `--frozen-lockfile` install never does.
+  it('does not carry trustPolicyExcludePrune, minimumReleaseAgeExcludePrune, or blockExoticSubdeps', () => {
+    mockPnpmVersion('11.2.2');
+    writeRootWorkspaceYaml(
+      [
+        'trustPolicyExcludePrune: true',
+        'minimumReleaseAgeExcludePrune: true',
+        'blockExoticSubdeps: true',
+        '',
+      ].join('\n')
+    );
+
+    expectNoSettings(getPrunedPnpmInstallSettingsYaml(tempDir));
+  });
+
   it('carries no settings on pnpm 10 (those are read from package.json)', () => {
     mockPnpmVersion('10.5.0');
     writeRootWorkspaceYaml('allowBuilds:\n  esbuild: true\n');
@@ -422,6 +465,82 @@ describe('getPrunedPnpmInstallSettingsYaml', () => {
         prunedLockfileWith('lodash@4.17.21')
       )
     );
+  });
+
+  it('preserves versioned approvals and denials for retained package names', () => {
+    mockPnpmVersion('11.2.2');
+    writeRootWorkspaceYaml(
+      [
+        'allowBuilds:',
+        "  'canvas@3.0.0 || 3.1.0': true",
+        "  '@scope/native@2.0.1': false",
+        "  'absent@1.0.0': true",
+        '',
+      ].join('\n')
+    );
+
+    const yaml = getPrunedPnpmInstallSettingsYaml(
+      tempDir,
+      prunedLockfileWith('canvas@3.1.0', '@scope/native@2.0.1')
+    );
+
+    expect(require('@zkochan/js-yaml').load(yaml)).toEqual({
+      packages: [],
+      allowBuilds: {
+        'canvas@3.0.0 || 3.1.0': true,
+        '@scope/native@2.0.1': false,
+      },
+    });
+  });
+
+  it('relocates file and link approval selectors with the shipped packages', () => {
+    mockPnpmVersion('11.2.2');
+    writeRootWorkspaceYaml(
+      [
+        'allowBuilds:',
+        "  'native@file:./vendor/native.tgz': true",
+        "  '@scope/native@link:vendor/scoped': false",
+        '',
+      ].join('\n')
+    );
+
+    const yaml = getPrunedPnpmInstallSettingsYaml(
+      tempDir,
+      prunedLockfileWith(
+        'native@file:local_path_modules/vendor/native.tgz',
+        '@scope/native@link:local_path_modules/vendor/scoped'
+      )
+    );
+
+    expect(require('@zkochan/js-yaml').load(yaml)).toEqual({
+      packages: [],
+      allowBuilds: {
+        'native@file:local_path_modules/vendor/native.tgz': true,
+        '@scope/native@link:local_path_modules/vendor/scoped': false,
+      },
+    });
+  });
+
+  it('keeps a denial when local approval selectors normalize to the same path', () => {
+    mockPnpmVersion('11.2.2');
+    writeRootWorkspaceYaml(
+      [
+        'allowBuilds:',
+        "  'native@file:vendor/native': false",
+        "  'native@file:./vendor/native': true",
+        '',
+      ].join('\n')
+    );
+
+    const yaml = getPrunedPnpmInstallSettingsYaml(
+      tempDir,
+      prunedLockfileWith('native@file:local_path_modules/vendor/native')
+    );
+
+    expect(require('@zkochan/js-yaml').load(yaml)).toEqual({
+      packages: [],
+      allowBuilds: { 'native@file:local_path_modules/vendor/native': false },
+    });
   });
 
   // Valid YAML that is not a lockfile document. Each case needs its own content,
@@ -2411,7 +2530,7 @@ describe('rewritePrunedLocalPathSpecifiers', () => {
       dependencies: { vendored: 'file:./vendor/pkg' },
     };
 
-    rewritePrunedLocalPathSpecifiers(packageJson, 'apps/api', WS, new Set());
+    rewritePrunedLocalPathSpecifiers(packageJson, 'apps/api', WS, new Map());
 
     expect(packageJson.dependencies.vendored).toBe(
       'file:local_path_modules/apps/api/vendor/pkg'
@@ -2425,7 +2544,7 @@ describe('rewritePrunedLocalPathSpecifiers', () => {
       dependencies: { shared: 'link:../shared' },
     };
 
-    rewritePrunedLocalPathSpecifiers(packageJson, 'apps/api', WS, new Set());
+    rewritePrunedLocalPathSpecifiers(packageJson, 'apps/api', WS, new Map());
 
     expect(packageJson.dependencies.shared).toBe(
       'link:local_path_modules/apps/shared'
@@ -2443,7 +2562,7 @@ describe('rewritePrunedLocalPathSpecifiers', () => {
       packageJson,
       'apps/nested/api',
       WS,
-      new Set()
+      new Map()
     );
 
     expect(packageJson.dependencies.lib).toBe(
@@ -2459,7 +2578,7 @@ describe('rewritePrunedLocalPathSpecifiers', () => {
       peerDependenciesMeta: { shared: { optional: true } },
     };
 
-    rewritePrunedLocalPathSpecifiers(packageJson, 'apps/api', WS, new Set());
+    rewritePrunedLocalPathSpecifiers(packageJson, 'apps/api', WS, new Map());
 
     expect(packageJson.dependencies).toEqual({
       shared: 'link:local_path_modules/apps/shared',
@@ -2481,7 +2600,7 @@ describe('rewritePrunedLocalPathSpecifiers', () => {
       },
     };
 
-    rewritePrunedLocalPathSpecifiers(packageJson, 'apps/api', WS, new Set());
+    rewritePrunedLocalPathSpecifiers(packageJson, 'apps/api', WS, new Map());
 
     expect(packageJson.peerDependencies).toEqual({ react: '^18.0.0' });
     expect(packageJson.peerDependenciesMeta).toEqual({
@@ -2497,7 +2616,7 @@ describe('rewritePrunedLocalPathSpecifiers', () => {
       dependencies: { external: 'file:../../../outside/pkg' },
     };
 
-    rewritePrunedLocalPathSpecifiers(packageJson, 'apps/api', WS, new Set());
+    rewritePrunedLocalPathSpecifiers(packageJson, 'apps/api', WS, new Map());
 
     expect(packageJson.dependencies.external).toBe('file:../../../outside/pkg');
     expect(warn).toHaveBeenCalledWith(
@@ -2513,7 +2632,7 @@ describe('rewritePrunedLocalPathSpecifiers', () => {
       dependencies: { vendored: 'link:/opt/thing' },
     };
 
-    rewritePrunedLocalPathSpecifiers(packageJson, 'apps/api', WS, new Set());
+    rewritePrunedLocalPathSpecifiers(packageJson, 'apps/api', WS, new Map());
 
     expect(packageJson.dependencies.vendored).toBe('link:/opt/thing');
     expect(warn).toHaveBeenCalledWith(
@@ -2529,7 +2648,7 @@ describe('rewritePrunedLocalPathSpecifiers', () => {
       dependencies: { 'root-pkg': 'link:../..' },
     };
 
-    rewritePrunedLocalPathSpecifiers(packageJson, 'apps/api', WS, new Set());
+    rewritePrunedLocalPathSpecifiers(packageJson, 'apps/api', WS, new Map());
 
     expect(packageJson.dependencies['root-pkg']).toBe('link:../..');
     expect(warn).toHaveBeenCalledWith(
@@ -2548,7 +2667,7 @@ describe('rewritePrunedLocalPathSpecifiers', () => {
       peerDependenciesMeta: { external: { optional: true } },
     };
 
-    rewritePrunedLocalPathSpecifiers(packageJson, 'apps/api', WS, new Set());
+    rewritePrunedLocalPathSpecifiers(packageJson, 'apps/api', WS, new Map());
 
     expect(packageJson.dependencies).toEqual({
       external: 'link:../../../outside/shared',
@@ -2571,10 +2690,39 @@ describe('rewritePrunedLocalPathSpecifiers', () => {
       packageJson,
       'apps/api',
       WS,
-      new Set(['@scope/lib'])
+      new Map([
+        [
+          '@scope/lib',
+          { name: 'lib', type: 'lib', data: { root: 'libs/lib' } },
+        ],
+      ])
     );
 
     expect(packageJson.dependencies['@scope/lib']).toBe('link:../../libs/lib');
+  });
+
+  it('rewrites a vendored package named like a workspace package', () => {
+    const packageJson: PackageJson = {
+      name: 'api',
+      version: '0.0.1',
+      dependencies: { '@scope/lib': 'file:../../vendor/lib' },
+    };
+
+    rewritePrunedLocalPathSpecifiers(
+      packageJson,
+      'apps/api',
+      WS,
+      new Map([
+        [
+          '@scope/lib',
+          { name: 'lib', type: 'lib', data: { root: 'libs/lib' } },
+        ],
+      ])
+    );
+
+    expect(packageJson.dependencies['@scope/lib']).toBe(
+      'file:local_path_modules/vendor/lib'
+    );
   });
 
   it('leaves a registry specifier untouched', () => {
@@ -2584,7 +2732,7 @@ describe('rewritePrunedLocalPathSpecifiers', () => {
       dependencies: { lodash: '^4.17.21' },
     };
 
-    rewritePrunedLocalPathSpecifiers(packageJson, 'apps/api', WS, new Set());
+    rewritePrunedLocalPathSpecifiers(packageJson, 'apps/api', WS, new Map());
 
     expect(packageJson.dependencies.lodash).toBe('^4.17.21');
   });
@@ -2600,7 +2748,7 @@ describe('rewritePrunedLocalPathSpecifiers', () => {
       dependencies: { shared: 'catalog:' },
     };
 
-    rewritePrunedLocalPathSpecifiers(packageJson, 'apps/api', WS, new Set());
+    rewritePrunedLocalPathSpecifiers(packageJson, 'apps/api', WS, new Map());
 
     expect(packageJson.dependencies.shared).toBe(
       'link:local_path_modules/apps/shared'

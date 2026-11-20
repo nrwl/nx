@@ -1,16 +1,13 @@
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import {
   addProjectConfiguration as _addProjectConfiguration,
-  type ExpandedPluginConfiguration,
   joinPathFragments,
   type ProjectConfiguration,
   type ProjectGraph,
   readNxJson,
   readProjectConfiguration,
   type Tree,
-  updateNxJson,
   writeJson,
-  updateProjectConfiguration,
 } from '@nx/devkit';
 import {
   mockCjsModule,

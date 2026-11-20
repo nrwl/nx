@@ -209,6 +209,7 @@ suite('migrate registry configuration', () => {
   describe('pnpm', () => {
     const workspaceFile = 'pnpm-workspace.yaml';
     let restoreEnv: () => void;
+    let restoreStoreEnv: () => void;
     let pristineWorkspaceFile: string;
     let globalStore: string;
 
@@ -230,6 +231,8 @@ suite('migrate registry configuration', () => {
         workspaceFile,
         `${readPristine(workspaceFile)}enableGlobalVirtualStore: true\nstoreDir: ${globalStore}\n`
       );
+      // The harness's per-suite store env var would win over the storeDir above.
+      restoreStoreEnv = overrideEnv({ pnpm_config_store_dir: undefined });
       rmSync(tmpProjPath('node_modules'), { recursive: true, force: true });
       runCommand('pnpm install', { env: corepackEnv, failOnError: true });
       expect(realpathSync(tmpProjPath('node_modules/nx'))).toContain(
@@ -245,6 +248,7 @@ suite('migrate registry configuration', () => {
 
     afterAll(() => {
       restoreEnv?.();
+      restoreStoreEnv?.();
       cleanupProject();
       if (globalStore) {
         rmSync(globalStore, { recursive: true, force: true });

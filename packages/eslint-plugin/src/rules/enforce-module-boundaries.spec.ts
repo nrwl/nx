@@ -2047,7 +2047,17 @@ Violation detected in:
             root: 'apps/shop-e2e',
             tags: ['scope:e2e'],
             implicitDependencies: [],
-            targets: { 'e2e-ci--src/checkout.spec.ts': {} },
+            targets: {
+              'e2e-ci--src/checkout.spec.ts': {
+                metadata: {
+                  testFileDirectives: {
+                    file: 'apps/shop-e2e/src/checkout.spec.ts',
+                    'ignore-server-inputs': true,
+                  },
+                },
+              },
+              'test-ci--src/unit.spec.ts': {},
+            },
           },
         },
         myappName: {
@@ -2169,6 +2179,12 @@ Violation detected in:
         'checks a spec whose directive has a value',
         'src/checkout.spec.ts',
         `// @nx-ignore-server-inputs: false\n${imports}`,
+        allChecks,
+      ],
+      [
+        'checks a spec whose split task does not apply the directive',
+        'src/unit.spec.ts',
+        `// @nx-ignore-server-inputs\n${imports}`,
         allChecks,
       ],
       [

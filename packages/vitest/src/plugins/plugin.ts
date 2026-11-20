@@ -76,6 +76,12 @@ export interface VitestPluginOptions {
    * @default 'glob'
    */
   discoverTestFiles?: 'glob' | 'vitest';
+  /**
+   * Where Vitest runs from. `workspaceRoot` runs it from the workspace root
+   * with `--root <projectRoot>`.
+   * @default 'projectRoot'
+   */
+  cwd?: 'projectRoot' | 'workspaceRoot';
 }
 
 type VitestTargets = Pick<ProjectConfiguration, 'targets' | 'metadata'> & {
@@ -289,6 +295,7 @@ async function buildVitestTargets(
 
   const targets: Record<string, TargetConfiguration> = {};
   let setupFileCandidates: string[] = [];
+  const { cwd, rootArg } = getRunLocation(projectRoot, options.cwd);
 
   // if file is vitest.config or vite.config has definition for test, create targets for test and/or atomized tests
   if (configFilePath.includes('vitest.config') || hasTest) {
@@ -297,12 +304,15 @@ async function buildVitestTargets(
       viteBuildConfig,
       projectRoot,
       context.workspaceRoot,
-      authoredViteRoot
+      cwd,
+      // `--root` replaces an authored root.
+      rootArg ? undefined : authoredViteRoot
     );
     targets[options.testTargetName] = await testTarget(
       namedInputs,
       testOutputs,
-      projectRoot,
+      cwd,
+      rootArg,
       options.testMode,
       pmc,
       isTypecheckEnabled,
@@ -334,15 +344,19 @@ async function buildVitestTargets(
       // Capture the raw root after user hooks: graph construction and the
       // atom run resolve it against different cwds.
       let configuredViteRoot: string | undefined;
+      const fullProjectRoot = resolve(context.workspaceRoot, projectRoot);
+      const fullRunCwd = resolve(context.workspaceRoot, cwd);
       const viteServeConfig = await retryOnRequireEsmRace(() =>
         resolveConfig(
           {
             configFile: absoluteConfigFilePath,
             mode: 'test',
+            // Mirrors the atoms' `--root`, which replaces the config's `root`.
+            ...(rootArg ? { root: fullProjectRoot } : {}),
             plugins: [
               {
                 // Promotes test.root before user hooks as Vitest does, so a
-                // later hook can override it. No options.root: atoms pass no --root.
+                // later hook can override it.
                 name: 'nx-promote-vitest-root',
                 enforce: 'pre' as const,
                 config(config: { root?: string; test?: { root?: string } }) {
@@ -370,6 +384,7 @@ async function buildVitestTargets(
         await getTestPathsRelativeToProjectRoot(
           projectRoot,
           context.workspaceRoot,
+          fullRunCwd,
           // Only the glob path reads this config; the opt-out path forces the
           // runtime by receiving no config, and takes `test.dir` separately.
           useGlobDiscovery ? viteServeConfig : undefined,
@@ -383,24 +398,24 @@ async function buildVitestTargets(
       // Atom directories mirror spec paths. A shared base outside the project
       // gets a project-root prefix unless it already ends with it, as the
       // generated `<offset>/coverage/<projectRoot>` configs do.
-      const fullProjectRoot = resolve(context.workspaceRoot, projectRoot);
       // A relative reportsDirectory resolves against the Vitest root, mapped
-      // here as the atom run would (cwd is the project root). A root computed
-      // from runtime state such as `process.cwd()` cannot be mapped and is
-      // not supported.
+      // here as the atom run would from its cwd. A root computed from runtime
+      // state such as `process.cwd()` cannot be mapped and is not supported.
       const effectiveVitestRoot = !configuredViteRoot
         ? fullProjectRoot
         : isAbsolute(configuredViteRoot)
           ? configuredViteRoot
-          : resolve(fullProjectRoot, configuredViteRoot);
+          : resolve(fullRunCwd, configuredViteRoot);
       const resolvedReportsDirectory = resolve(
         effectiveVitestRoot,
         coverageReportsDirectory
       );
-      // Vitest refuses a reports directory equal to its root or cwd, and redirecting
-      // under it would point each atom at its own spec path for coverage to delete.
+      // Vitest refuses a reports directory equal to its root or cwd. Redirecting
+      // under one of those or the project root would point each atom at its own
+      // spec path for coverage to delete.
       const vitestRejectsReportsDirectory =
         relative(effectiveVitestRoot, resolvedReportsDirectory) === '' ||
+        relative(fullRunCwd, resolvedReportsDirectory) === '' ||
         relative(fullProjectRoot, resolvedReportsDirectory) === '';
       const atomSubfolderPrefix =
         isPathOutside(relative(fullProjectRoot, resolvedReportsDirectory)) &&
@@ -441,10 +456,14 @@ async function buildVitestTargets(
           ? join(coverageReportsDirectory, outputSubfolder)
           : joinPathFragments(coverageReportsDirectory, outputSubfolder);
         const targetName = `${options.ciTargetName}--${relativePath}`;
+        // A path from the cwd still matches under `test.dir` or `test.root`.
+        const testFileFilter = rootArg
+          ? joinPathFragments(projectRoot, relativePath)
+          : relativePath;
         dependsOn.push(targetName);
         targets[targetName] = {
           // It does not make sense to run atomized tests in watch mode as they are intended to be run in CI
-          command: `vitest run ${quoteShellArg(relativePath)}${
+          command: `vitest run${rootArg} ${quoteShellArg(testFileFilter)}${
             vitestRejectsReportsDirectory
               ? ''
               : ` --coverage.reportsDirectory=${quoteShellArg(
@@ -464,7 +483,7 @@ async function buildVitestTargets(
                 ]
               : [],
           options: {
-            cwd: projectRoot,
+            cwd,
             env: targets[options.testTargetName].options.env,
           },
           metadata: {
@@ -555,17 +574,18 @@ async function testTarget(
     [inputName: string]: any[];
   },
   outputs: string[],
-  projectRoot: string,
+  cwd: string,
+  rootArg: string,
   testMode: 'watch' | 'run' = 'watch',
   pmc: ReturnType<typeof getPackageManagerCommand>,
   isTypecheckEnabled: boolean,
   tsconfigInputs: string[]
 ) {
-  const command = testMode === 'run' ? 'vitest run' : 'vitest';
+  const command = `${testMode === 'run' ? 'vitest run' : 'vitest'}${rootArg}`;
   const depOutputsGlob = isTypecheckEnabled ? '**/*.{js,d.ts}' : '**/*.js';
   return {
     command,
-    options: { cwd: joinPathFragments(projectRoot) },
+    options: { cwd },
     cache: true,
     inputs: [
       // Vitest runs on Vite, which transforms a dependency's sources and
@@ -614,6 +634,16 @@ async function testTarget(
       },
     },
   };
+}
+
+function getRunLocation(
+  projectRoot: string,
+  cwdOption: VitestPluginOptions['cwd']
+): { cwd: string; rootArg: string } {
+  if (cwdOption !== 'workspaceRoot' || projectRoot === '.') {
+    return { cwd: joinPathFragments(projectRoot), rootArg: '' };
+  }
+  return { cwd: '.', rootArg: ` --root ${quoteShellArg(projectRoot)}` };
 }
 
 function getOutputs(
@@ -861,6 +891,7 @@ function checkIfConfigFileShouldBeProject(
 async function getTestPathsRelativeToProjectRoot(
   projectRoot: string,
   workspaceRoot: string,
+  fullRunCwd: string,
   viteConfig: ResolvedConfig | undefined,
   // Serve-resolved `test.dir` (the command Vitest runs under). Only used on the
   // opt-out path below, which receives no `viteConfig` to read it from.
@@ -877,27 +908,35 @@ async function getTestPathsRelativeToProjectRoot(
         test,
         workspaceRoot,
         projectRoot,
-        fullProjectRoot
+        fullRunCwd
       );
     }
 
-    return getTestPathsViaVitestRuntime(fullProjectRoot, projectRoot, test.dir);
+    return getTestPathsViaVitestRuntime(
+      fullProjectRoot,
+      projectRoot,
+      resolveTestDir(fullProjectRoot, fullRunCwd, test.dir)
+    );
   }
 
   return getTestPathsViaVitestRuntime(
     fullProjectRoot,
     projectRoot,
-    optOutTestDir
+    resolveTestDir(fullProjectRoot, fullRunCwd, optOutTestDir)
   );
 }
 
 /**
  * The directory Vitest enumerates from: `test.dir` when set, else the project
- * root. Vitest resolves a relative `test.dir` against the working directory,
- * which for both the `test` and atomized targets is the project root.
+ * root. Vitest resolves a relative `test.dir` against the working directory
+ * of the `test` and atomized targets.
  */
-function resolveTestDir(fullProjectRoot: string, testDir: string | undefined) {
-  return testDir ? resolve(fullProjectRoot, testDir) : fullProjectRoot;
+function resolveTestDir(
+  fullProjectRoot: string,
+  fullRunCwd: string,
+  testDir: string | undefined
+) {
+  return testDir ? resolve(fullRunCwd, testDir) : fullProjectRoot;
 }
 
 /**
@@ -916,7 +955,7 @@ async function globTestPathsRelativeToProjectRoot(
   test: InlineConfig,
   workspaceRoot: string,
   projectRoot: string,
-  fullProjectRoot: string
+  fullRunCwd: string
 ): Promise<string[]> {
   const { configDefaults } = await loadVitestConfigDynamicImport();
 
@@ -927,9 +966,7 @@ async function globTestPathsRelativeToProjectRoot(
   // patterns are relative to the directory Vitest enumerates from; anchor them
   // to it.
   const scanRoot = test.dir
-    ? normalizePath(
-        relative(workspaceRoot, resolveTestDir(fullProjectRoot, test.dir))
-      )
+    ? normalizePath(relative(workspaceRoot, resolve(fullRunCwd, test.dir)))
     : projectRoot;
   // The workspace context only reads `!` at index 0, so a negated pattern has
   // to be re-prefixed rather than anchored as-is.
@@ -1112,15 +1149,14 @@ function configRequiresVitestRuntime(
 async function getTestPathsViaVitestRuntime(
   fullProjectRoot: string,
   projectRoot: string,
-  testDir?: string
+  testDir: string
 ): Promise<string[]> {
   const { createVitest } = await import('vitest/node');
   const vitest = await createVitest('test', {
     root: fullProjectRoot,
-    // `dir` defaults to `root`, and a relative `test.dir` would resolve against
-    // the working directory, which during graph creation is the workspace root
-    // rather than the project root.
-    dir: resolveTestDir(fullProjectRoot, testDir),
+    // Passed absolute: a relative `dir` resolves against the graph process's
+    // cwd, not the task's.
+    dir: testDir,
     filesOnly: true,
     watch: false,
   });

@@ -1,5 +1,4 @@
-import { ProjectConfiguration, TargetConfiguration } from '@nx/devkit';
-import { mergeTargetConfigurations } from '@nx/devkit/internal';
+import { ProjectConfiguration } from '@nx/devkit';
 import { minimatch } from 'minimatch';
 import {
   createNodes,

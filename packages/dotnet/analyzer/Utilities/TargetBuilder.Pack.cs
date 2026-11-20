@@ -9,7 +9,6 @@ public static partial class TargetBuilder
 {
     private static void AddPackTarget(
         Dictionary<string, Target> targets,
-        string projectName,
         string fileName,
         EvaluatedProperties properties,
         string projectDirectory,

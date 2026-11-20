@@ -1,12 +1,17 @@
 import { execFileSync, spawnSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import {
   copyFileSync,
+  chmodSync,
+  existsSync,
+  lstatSync,
   mkdirSync,
   mkdtempSync,
   readFileSync,
   readdirSync,
   realpathSync,
   rmSync,
+  symlinkSync,
   writeFileSync,
 } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -108,6 +113,7 @@ describe('native loader', () => {
 
   it.each([
     ['remove-cache', 'stat'],
+    ['remove-cache', 'realpath'],
     ['remove-cache', 'dlopen'],
     ['restore-cache', 'dlopen'],
     ['corrupt-cache', 'dlopen'],
@@ -116,6 +122,35 @@ describe('native loader', () => {
     expect(result.status, result.stderr).toBe(0);
     expect(result.stdout.trim()).toBe('loaded');
     expect(result.stderr).toBe('');
+  });
+
+  it.each([
+    ['once', 'remove-cache', /^$/, 1],
+    [
+      'before every copy',
+      'remove-cache-always',
+      /^Warning: Failed to copy native module to cache after 3 attempts \(ENOENT\)\./,
+      0,
+    ],
+  ] as const)(
+    'retries the copy when the cache dir is removed %s',
+    (_, change, warning, cachedFiles) => {
+      const result = loadWithCacheChange('copy', change);
+      expect(result.status, result.stderr).toBe(0);
+      expect(result.stdout.trim()).toBe('loaded');
+      expect(result.stderr).toMatch(warning);
+      expect(
+        existsSync(result.cache) ? readdirSync(result.cache) : []
+      ).toHaveLength(cachedFiles);
+    }
+  );
+
+  it('loads the original binding when the removed cache dir comes back untrusted', () => {
+    const result = loadWithCacheChange('copy', 'plant-cache');
+    expect(result.status, result.stderr).toBe(0);
+    expect(result.stdout.trim()).toBe('loaded');
+    expect(result.stderr).toBe('');
+    expect(readdirSync(result.cache)).toEqual([]);
   });
 
   it.each([
@@ -153,7 +188,19 @@ describe('native loader', () => {
     mkdirSync(cache);
     writeFileSync(
       join(dir, 'native', 'native-file-cache-location.js'),
-      `module.exports = { ensureSecureNativeFileCacheLocation: () => ${JSON.stringify(cache)} };`
+      // Like the real helper, it recreates a removed directory, and refuses one
+      // that someone else recreated first.
+      `const { mkdirSync } = require('node:fs');
+module.exports = {
+  ensureSecureNativeFileCacheLocation: () => {
+    if (globalThis.plantCache) {
+      mkdirSync(${JSON.stringify(cache)});
+      return null;
+    }
+    mkdirSync(${JSON.stringify(cache)}, { recursive: true });
+    return ${JSON.stringify(cache)};
+  },
+};`
     );
     writeFileSync(
       join(dir, 'native', 'native-bindings.js'),
@@ -178,24 +225,38 @@ const phase = ${JSON.stringify(phase)};
 const change = ${JSON.stringify(change)};
 let changed = false;
 const changeCache = (file) => {
-  if (changed || !file.startsWith(cache + sep)) return;
+  if ((changed && change !== 'remove-cache-always') || !file.startsWith(cache + sep)) return;
   changed = true;
   if (change === 'corrupt-cache') {
     fs.writeFileSync(file, 'invalid native binding');
   } else {
     fs.rmSync(cache, { recursive: true });
-    if (change === 'remove-source') {
+    if (change === 'plant-cache') {
+      globalThis.plantCache = true;
+    } else if (change === 'remove-source') {
       fs.unlinkSync(source);
     } else if (change === 'corrupt-source') {
       fs.writeFileSync(source, 'invalid native binding');
     }
   }
 };
-const statSync = fs.statSync;
-fs.statSync = function(file, ...args) {
-  const result = statSync.call(this, file, ...args);
-  if (phase === 'stat') changeCache(file);
-  return result;
+for (const name of ['statSync', 'lstatSync']) {
+  const original = fs[name];
+  fs[name] = function(file, ...args) {
+    const result = original.call(this, file, ...args);
+    if (phase === 'stat') changeCache(file);
+    return result;
+  };
+}
+const realpathSync = fs.realpathSync;
+fs.realpathSync = Object.assign(function(file, ...args) {
+  if (phase === 'realpath') changeCache(String(file));
+  return realpathSync.call(this, file, ...args);
+}, { native: realpathSync.native });
+const copyFileSync = fs.copyFileSync;
+fs.copyFileSync = function(from, to, ...args) {
+  if (phase === 'copy') changeCache(String(to));
+  return copyFileSync.call(this, from, to, ...args);
 };
 const dlopen = process.dlopen;
 process.dlopen = function(module, file, ...args) {
@@ -224,6 +285,133 @@ try {
     return {
       ...spawnSync(process.execPath, [runner], { encoding: 'utf8', env }),
       source,
+      cache,
     };
   }
+});
+
+describe('native file cache entries', () => {
+  const bindingName = 'nx.linux-x64-gnu.node';
+  let dir: string;
+  let cacheDir: string;
+  let binding: string;
+  let cacheEntry: string;
+
+  beforeEach(() => {
+    dir = realpathSync(mkdtempSync(join(tmpdir(), 'nx-native-cache-')));
+    cacheDir = join(dir, 'cache');
+    mkdirSync(cacheDir, { mode: 0o700 });
+    mkdirSync(join(dir, 'native'));
+    mkdirSync(join(dir, 'utils'));
+    mkdirSync(join(dir, 'pkg'));
+    writeFileSync(
+      join(dir, 'native', 'index.js'),
+      readFileSync(join(__dirname, 'index.js'))
+    );
+    writeFileSync(
+      join(dir, 'native', 'native-bindings.js'),
+      'module.exports = require(process.env.TEST_BINDING);'
+    );
+    writeFileSync(
+      join(dir, 'native', 'native-file-cache-location.js'),
+      'module.exports = { ensureSecureNativeFileCacheLocation: () => process.env.TEST_CACHE_DIR };'
+    );
+    writeFileSync(
+      join(dir, 'utils', 'versions.js'),
+      "module.exports = { nxVersion: '0.0.0' };"
+    );
+    writeFileSync(
+      join(dir, 'runner.cjs'),
+      [
+        "const Module = require('node:module');",
+        "const { readFileSync } = require('node:fs');",
+        "Module._extensions['.node'] = (m, f) => { m.exports = { content: readFileSync(f, 'utf8') }; };",
+        // We cannot chown without root, so move our own uid instead.
+        'if (process.env.TEST_FOREIGN_OWNER) { const uid = process.getuid(); process.getuid = () => uid + 1; }',
+        'console.log(JSON.stringify(require(process.argv[2])));',
+      ].join('\n')
+    );
+
+    binding = join(dir, 'pkg', bindingName);
+    writeFileSync(binding, 'genuine');
+    const key = createHash('sha256')
+      .update(binding)
+      .digest('hex')
+      .substring(0, 12);
+    cacheEntry = join(cacheDir, `0.0.0-${key}-${bindingName}`);
+  });
+
+  afterEach(() => {
+    rmSync(dir, { recursive: true, force: true });
+  });
+
+  const load = (env: Record<string, string> = {}): string =>
+    JSON.parse(
+      execFileSync(
+        process.execPath,
+        [join(dir, 'runner.cjs'), join(dir, 'native', 'index.js')],
+        {
+          encoding: 'utf8',
+          stdio: ['ignore', 'pipe', 'pipe'],
+          env: {
+            ...process.env,
+            NX_SKIP_NATIVE_FILE_CACHE: 'false',
+            TEST_BINDING: binding,
+            TEST_CACHE_DIR: cacheDir,
+            ...env,
+          },
+        }
+      )
+    ).content;
+
+  it('reuses a fresh entry the current user owns', () => {
+    writeFileSync(cacheEntry, 'cached!', { mode: 0o644 });
+
+    expect(load()).toBe('cached!');
+  });
+
+  (process.platform === 'win32' ? it.skip : it)(
+    'replaces a fresh entry that others can write to',
+    () => {
+      writeFileSync(cacheEntry, 'planted', { mode: 0o666 });
+      chmodSync(cacheEntry, 0o666);
+
+      expect(load()).toBe('genuine');
+      expect(readFileSync(cacheEntry, 'utf8')).toBe('genuine');
+      expect(lstatSync(cacheEntry).mode & 0o022).toBe(0);
+    }
+  );
+
+  (process.platform === 'win32' ? it.skip : it)(
+    'replaces a fresh entry another user owns',
+    () => {
+      writeFileSync(cacheEntry, 'planted', { mode: 0o644 });
+
+      expect(load({ TEST_FOREIGN_OWNER: '1' })).toBe('genuine');
+      expect(readFileSync(cacheEntry, 'utf8')).toBe('genuine');
+    }
+  );
+
+  (process.platform === 'win32' ? it.skip : it)(
+    'replaces a fresh entry that is a symlink',
+    () => {
+      const planted = join(dir, 'planted.node');
+      writeFileSync(planted, 'planted', { mode: 0o644 });
+      symlinkSync(planted, cacheEntry);
+
+      expect(load()).toBe('genuine');
+      expect(lstatSync(cacheEntry).isSymbolicLink()).toBe(false);
+    }
+  );
+
+  (process.platform === 'win32' ? it.skip : it)(
+    'keeps its own copy owner-writable only',
+    () => {
+      chmodSync(binding, 0o666);
+
+      expect(load()).toBe('genuine');
+      expect(lstatSync(cacheEntry).mode & 0o022).toBe(0);
+      expect(load()).toBe('genuine');
+    }
+  );
 });

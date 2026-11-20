@@ -1,7 +1,14 @@
 const invoke = vi.fn();
 const rmSync = vi.fn();
 
-vi.mock('node:fs', () => ({ rmSync: (...args: unknown[]) => rmSync(...args) }));
+vi.mock('node:fs', () => ({
+  rmSync: (...args: unknown[]) => rmSync(...args),
+  lstatSync: () => {
+    const error = new Error('ENOENT') as NodeJS.ErrnoException;
+    error.code = 'ENOENT';
+    throw error;
+  },
+}));
 vi.mock('../../nx-cloud/utilities/client', () => ({
   getCloudClient: vi.fn(async () => ({ invoke })),
 }));
@@ -21,6 +28,9 @@ vi.mock('../../daemon/tmp-dir', () => ({
 }));
 vi.mock('../../native/native-file-cache-location', () => ({
   getNativeFileCacheLocationToDelete: () => null,
+}));
+vi.mock('../../utils/package-manager', () => ({
+  removeStaleTempInstallDirectories: () => {},
 }));
 vi.mock('../../utils/workspace-root', () => ({ workspaceRoot: '/ws' }));
 vi.mock('../../utils/cache-directory', () => ({
@@ -80,6 +90,7 @@ describe('nx reset', () => {
       'Removed the Nx Daemon workspace data',
       'Removed the cache directory',
       'Removed the workspace data directory',
+      'Removed stale temporary package installs',
       'Cleaned up the Nx Cloud client',
       'Removed the installed Nx Cloud client',
     ]);

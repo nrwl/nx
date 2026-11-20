@@ -17,7 +17,7 @@ import {
   getAssetOutputPath,
   NormalizedAssetEntry as AssetEntry,
 } from './normalize-assets';
-import { logger, workspaceRoot } from '@nx/devkit';
+import { logger } from '@nx/devkit';
 import { ChangedFile, daemonClient } from '@nx/devkit/internal';
 import { dim } from 'picocolors';
 

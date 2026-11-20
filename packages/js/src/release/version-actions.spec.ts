@@ -13,6 +13,10 @@ vi.mock('@nx/devkit/internal', async () => ({
   ...(await vi.importActual<any>('@nx/devkit/internal')),
   safeSpawn: vi.fn(),
 }));
+vi.mock('nx/src/utils/package-manager', async () => ({
+  ...(await vi.importActual<any>('nx/src/utils/package-manager')),
+  detectPackageManager: vi.fn(() => 'pnpm'),
+}));
 
 describe('readCurrentVersionFromRegistry', () => {
   // registry and tag come back from `npm config get`, i.e. verbatim from a
@@ -64,6 +68,46 @@ describe('readCurrentVersionFromRegistry', () => {
       ],
       expect.anything()
     );
+  });
+
+  it('omits the registry flag when no registry was resolved', async () => {
+    vi.spyOn(npmConfigModule, 'parseRegistryOptions').mockResolvedValue({
+      registry: undefined,
+      tag: 'latest',
+      registryConfigKey: '@scope:registry',
+    });
+    (safeSpawn as Mock).mockImplementation(() => {
+      const { EventEmitter } = require('events');
+      const { PassThrough } = require('stream');
+      const child: any = new EventEmitter();
+      child.stdout = new PassThrough();
+      child.stderr = new PassThrough();
+      process.nextTick(() => {
+        child.stdout.end('1.2.3\n');
+        child.stderr.end('');
+        setImmediate(() => child.emit('close', 0));
+      });
+      return child;
+    });
+
+    const tree = createTreeWithEmptyWorkspace();
+    writeJson(tree, 'packages/my-lib/package.json', {
+      name: '@scope/my-lib',
+      version: '1.0.0',
+    });
+    const versionActions = await createVersionActions(tree);
+
+    const { logText } = await versionActions.readCurrentVersionFromRegistry(
+      tree,
+      {} as any
+    );
+
+    expect(safeSpawn).toHaveBeenCalledWith(
+      'npm',
+      ['view', '@scope/my-lib', 'version', '--tag=latest'],
+      expect.anything()
+    );
+    expect(logText).toBe('the configured "@scope:registry" tag=latest');
   });
 });
 
@@ -284,6 +328,57 @@ describe('JsVersionActions', () => {
     });
     expect(resolveVersion).not.toHaveBeenCalled();
   });
+
+  it.each([
+    {
+      catalogVersion: 'workspace:*',
+      preserveLocalDependencyProtocols: true,
+      newVersion: '1.0.0',
+      expectedCatalogVersion: 'workspace:*',
+    },
+    {
+      catalogVersion: 'workspace:*',
+      preserveLocalDependencyProtocols: false,
+      newVersion: '1.0.0',
+      expectedCatalogVersion: '1.0.0',
+    },
+    {
+      catalogVersion: '^0.0.0',
+      preserveLocalDependencyProtocols: true,
+      newVersion: '^1.0.0',
+      expectedCatalogVersion: '^1.0.0',
+    },
+  ])(
+    'writes $expectedCatalogVersion to a $catalogVersion catalog entry when preserveLocalDependencyProtocols is $preserveLocalDependencyProtocols',
+    async ({
+      catalogVersion,
+      preserveLocalDependencyProtocols,
+      newVersion,
+      expectedCatalogVersion,
+    }) => {
+      const tree = createTreeWithEmptyWorkspace();
+      tree.write(
+        'pnpm-workspace.yaml',
+        `catalog:\n  dependency: ${catalogVersion}\n`
+      );
+      writeJson(tree, 'packages/my-lib/package.json', {
+        dependencies: { dependency: 'catalog:' },
+      });
+      const versionActions = await createVersionActions(tree, {
+        preserveLocalDependencyProtocols,
+      });
+
+      await versionActions.updateProjectDependencies(
+        tree,
+        createProjectGraph(),
+        { dependency: newVersion }
+      );
+
+      expect(tree.read('pnpm-workspace.yaml', 'utf-8')).toBe(
+        `catalog:\n  dependency: ${expectedCatalogVersion}\n`
+      );
+    }
+  );
 
   describe('local dependencies outside the release set', () => {
     const notConfiguredForReleaseError = () =>

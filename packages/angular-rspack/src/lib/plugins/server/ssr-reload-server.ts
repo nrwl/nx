@@ -2,6 +2,7 @@ import { once } from 'node:events';
 import type { AddressInfo } from 'node:net';
 import { WebSocket, WebSocketServer } from 'ws';
 
+// TODO(v25): remove with the forked SSR server, along with the `ws` dependency.
 export class SsrReloadServer {
   #server: WebSocketServer | undefined;
   #listening: Promise<unknown> | undefined;

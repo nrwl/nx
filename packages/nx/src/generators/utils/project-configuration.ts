@@ -138,11 +138,17 @@ function updateProjectConfigurationInPackageJson(
     delete projectConfiguration.name;
   }
 
+  let removedTargets = false;
   if (
     projectConfiguration.targets &&
     !Object.keys(projectConfiguration.targets).length
   ) {
     delete projectConfiguration.targets;
+    // The spread below would otherwise keep the targets the caller removed
+    if (Object.keys(packageJson.nx?.targets ?? {}).length) {
+      delete packageJson.nx.targets;
+      removedTargets = true;
+    }
   }
 
   packageJson.nx = {
@@ -159,6 +165,9 @@ function updateProjectConfigurationInPackageJson(
     projectConfiguration.root === '.' ||
     Object.keys(packageJson.nx).length > 0
   ) {
+    writeJson(tree, packageJsonFile, packageJson);
+  } else if (removedTargets) {
+    delete packageJson.nx;
     writeJson(tree, packageJsonFile, packageJson);
   }
 }

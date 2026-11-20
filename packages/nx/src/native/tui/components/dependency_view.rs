@@ -972,7 +972,7 @@ mod tests {
         let mut buf = Buffer::empty(outer_area);
         let style = Style::default();
 
-        // This was a problematic case that caused panics before the fix
+        // Should not panic
         DependencyView::render_scrollbar_padding(outer_area, &mut buf, style);
     }
 

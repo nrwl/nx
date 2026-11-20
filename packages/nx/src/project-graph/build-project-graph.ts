@@ -10,15 +10,21 @@ import {
   ProjectGraphExternalNode,
 } from '../config/project-graph';
 import { ProjectConfiguration } from '../config/workspace-json-project-json';
-import { hashObject } from '../hasher/file-hasher';
+import { hashFile, hashObject } from '../hasher/file-hasher';
 import { NxWorkspaceFilesExternals } from '../native';
-import { getRootTsConfigPath } from '../plugins/js/utils/typescript';
+import { LOCKFILES } from '../plugins/js/lock-file/lock-file-names';
+import {
+  getRootTsConfigPath,
+  isTypeScriptResolvable,
+} from '../plugins/js/utils/typescript';
 import { assertWorkspaceValidity } from '../utils/assert-workspace-validity';
+import { getCatalogManager } from '../utils/catalog';
 import { DelayedSpinner } from '../utils/delayed-spinner';
 import { readJsonFile } from '../utils/fileutils';
 import { PackageJson } from '../utils/package-json';
 import { formatPluginProgressText } from '../utils/plugin-progress-text';
 import { ProgressTopics } from '../utils/progress-topics';
+import { hashWithWorkspaceContext } from '../utils/workspace-context';
 import { workspaceRoot } from '../utils/workspace-root';
 import {
   AggregateProjectGraphError,
@@ -133,6 +139,9 @@ export async function buildProjectGraphUsingProjectFileMap(
   const packageJsonDeps = readCombinedDeps();
   const rootTsConfig = readRootTsConfig();
   const externalNodesHash = hashExternalNodes(externalNodes);
+  const lockFileHash = await hashWithWorkspaceContext(workspaceRoot, LOCKFILES);
+  const typescriptResolvable = isTypeScriptResolvable();
+  const catalogsHash = hashCatalogDefinitions();
 
   let filesToProcess: FileMap;
   let cachedFileData: CachedFileData;
@@ -144,7 +153,10 @@ export async function buildProjectGraphUsingProjectFileMap(
       projects,
       nxJson,
       rootTsConfig,
-      externalNodesHash
+      externalNodesHash,
+      lockFileHash,
+      typescriptResolvable,
+      catalogsHash
     );
   if (useCacheData) {
     const fromCache = extractCachedFileData(fileMap, fileMapCache);
@@ -181,7 +193,10 @@ export async function buildProjectGraphUsingProjectFileMap(
       packageJsonDeps,
       fileMap,
       rootTsConfig,
-      externalNodesHash
+      externalNodesHash,
+      lockFileHash,
+      typescriptResolvable,
+      catalogsHash
     );
   } catch (e) {
     // we need to include the workspace validity errors in the final error
@@ -506,6 +521,33 @@ export async function applyProjectMetadata(
   );
 
   return { errors, graph };
+}
+
+// The daemon rebuilds the graph on every file change, so it skips parsing the
+// catalogs while the contents of their files stay the same.
+let catalogsHashMemo: { filesKey: string; hash: string } | undefined;
+
+function hashCatalogDefinitions(): string {
+  const manager = getCatalogManager(workspaceRoot);
+  const filesKey = manager
+    ? [
+        manager.name,
+        ...manager
+          .getCatalogDefinitionFilePaths()
+          .map((file) => hashFile(join(workspaceRoot, file)) ?? ''),
+      ].join(':')
+    : '';
+  if (catalogsHashMemo?.filesKey !== filesKey) {
+    const definitions = manager?.getCatalogDefinitions(workspaceRoot);
+    catalogsHashMemo = {
+      filesKey,
+      hash: hashObject({
+        catalog: definitions?.catalog ?? null,
+        catalogs: definitions?.catalogs ?? null,
+      }),
+    };
+  }
+  return catalogsHashMemo.hash;
 }
 
 function hashExternalNodes(

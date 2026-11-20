@@ -1,6 +1,5 @@
 import type { BuilderOutput } from '@angular-devkit/architect';
 import type { ExecutorContext } from '@nx/devkit';
-import type { DependentBuildableProjectNode } from '@nx/js/internal';
 import { createTmpTsConfigForBuildableLibs } from '../utilities/buildable-libs';
 import { assertPackageIsInstalled } from '../utilities/builder-package';
 import {
@@ -25,15 +24,11 @@ export default async function* applicationExecutor(
     ...delegateExecutorOptions
   } = normalizeOptions(options);
 
-  let dependencies: DependentBuildableProjectNode[];
-
   if (!buildLibsFromSource) {
-    const { tsConfigPath, dependencies: foundDependencies } =
-      createTmpTsConfigForBuildableLibs(
-        delegateExecutorOptions.tsConfig,
-        context
-      );
-    dependencies = foundDependencies;
+    const { tsConfigPath } = createTmpTsConfigForBuildableLibs(
+      delegateExecutorOptions.tsConfig,
+      context
+    );
     delegateExecutorOptions.tsConfig = tsConfigPath;
   }
 

@@ -227,3 +227,104 @@ describe('task hash result conversion and assembly', () => {
     expect(hash(ids, false)).toEqual(hash([...ids].reverse(), false));
   });
 });
+
+describe('nx:run-script bodies', () => {
+  let tempFs: TempFs;
+
+  beforeEach(async () => {
+    tempFs = new TempFs('task-hash-script-body');
+    await tempFs.createFiles({});
+  });
+
+  afterEach(() => tempFs.cleanup());
+
+  function hashTarget(
+    executor: string,
+    scriptContent: string | undefined,
+    packageJsonHash = 'package-json-v1'
+  ) {
+    const builder = new ProjectGraphBuilder();
+    builder.addNode({
+      name: 'app',
+      type: 'lib',
+      data: {
+        root: 'app',
+        targets: {
+          build: {
+            executor,
+            options: { script: 'build' },
+            inputs: ['{projectRoot}/**/*.ts', '!{projectRoot}/package.json'],
+            metadata:
+              scriptContent === undefined ? undefined : { scriptContent },
+          },
+        },
+      },
+    });
+    const graph = builder.getUpdatedProjectGraph();
+    const tasks = createTaskGraph(graph, {}, ['app'], ['build'], undefined, {});
+    const graphRef = transferProjectGraph(toRustProjectGraph(graph));
+    const files = testOnlyTransferFileMap(
+      {
+        app: [
+          { file: 'app/src/index.ts', hash: 'source' },
+          { file: 'app/package.json', hash: packageJsonHash },
+        ],
+      },
+      []
+    );
+    const planner = new HashPlanner({}, graphRef);
+    const hasher = new TaskHasher(
+      tempFs.tempDir,
+      graphRef,
+      files.projectFiles,
+      files.allWorkspaceFiles,
+      Buffer.from('{}'),
+      {},
+      undefined,
+      { selectivelyHashTsConfig: false },
+      files.ignoredIndex
+    );
+    const id = 'app:build';
+    return hasher.hashPlans(
+      planner.getPlansReference([id], tasks),
+      { [id]: {} },
+      tempFs.tempDir,
+      true
+    )[id];
+  }
+
+  it('changes the hash when the script body changes and package.json is excluded from inputs', () => {
+    const original = hashTarget('nx:run-script', 'echo original');
+    expect(original.inputs.files).toContain('app/src/index.ts');
+    expect(original.inputs.files).not.toContain('app/package.json');
+
+    const packageJsonEdited = hashTarget(
+      'nx:run-script',
+      'echo original',
+      'package-json-v2'
+    );
+    expect(packageJsonEdited).toEqual(original);
+
+    const rewritten = hashTarget('nx:run-script', 'echo rewritten');
+    expect(rewritten.value).not.toBe(original.value);
+    expect(rewritten.details['app:ProjectConfiguration']).not.toBe(
+      original.details['app:ProjectConfiguration']
+    );
+    expect(rewritten.inputs.files).toEqual(original.inputs.files);
+
+    const empty = hashTarget('nx:run-script', '');
+    const missing = hashTarget('nx:run-script', undefined);
+    expect(empty.value).toBe(missing.value);
+    expect(empty.value).not.toBe(original.value);
+  });
+
+  it('leaves the hash unchanged when another executor carries metadata.scriptContent', () => {
+    const original = hashTarget('nx:run-commands', 'echo original');
+    const rewritten = hashTarget('nx:run-commands', 'echo rewritten');
+    const missing = hashTarget('nx:run-commands', undefined);
+
+    expect(rewritten).toEqual(original);
+    expect(missing.value).toBe(original.value);
+    expect(original.inputs.files).not.toContain('app/package.json');
+  });
+});

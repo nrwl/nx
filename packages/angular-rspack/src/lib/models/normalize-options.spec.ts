@@ -75,6 +75,7 @@ describe('normalizeOptions', () => {
 
   afterEach(() => {
     warnSpy.mockRestore();
+    vi.unstubAllEnvs();
   });
 
   it('should not consider the prerender and appShell options when an output mode is set', async () => {
@@ -107,6 +108,21 @@ describe('normalizeOptions', () => {
     });
 
     expect(warnSpy).toHaveBeenCalledWith(
+      expect.stringContaining('Build-time prerendering of server routes')
+    );
+  });
+
+  it('should not warn about build-time prerendering when serving', async () => {
+    vi.stubEnv('RSPACK_SERVE', 'true');
+
+    await normalizeOptions({
+      ...baseOptions,
+      outputMode: 'server',
+      server: './src/main.server.ts',
+      ssr: { entry: './src/server.ts' },
+    });
+
+    expect(warnSpy).not.toHaveBeenCalledWith(
       expect.stringContaining('Build-time prerendering of server routes')
     );
   });
@@ -154,6 +170,18 @@ describe('normalizeOptions', () => {
       normalizeOptions({ ...baseOptions, security: { autoCsp: true } })
     ).rejects.toThrow('The "security.autoCsp" option is not supported');
   });
+
+  it.each([
+    [true, false],
+    [{ hidden: true }, true],
+  ])(
+    'should normalize the source map option %j to hidden=%s',
+    async (sourceMap, hidden) => {
+      const normalized = await normalizeOptions({ ...baseOptions, sourceMap });
+
+      expect(normalized.sourceMap).toMatchObject({ scripts: true, hidden });
+    }
+  );
 
   it('should carry the "security.allowedHosts" option through', async () => {
     const normalized = await normalizeOptions({

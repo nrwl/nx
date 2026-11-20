@@ -659,5 +659,6 @@ module.exports.trackEvent = nativeBinding.trackEvent
 module.exports.trackPageView = nativeBinding.trackPageView
 module.exports.transferProjectGraph = nativeBinding.transferProjectGraph
 module.exports.UltracacheMode = nativeBinding.UltracacheMode
+module.exports.unmatchedProjectPatterns = nativeBinding.unmatchedProjectPatterns
 module.exports.validateOutputs = nativeBinding.validateOutputs
 module.exports.WorkspaceErrors = nativeBinding.WorkspaceErrors

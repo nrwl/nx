@@ -19,8 +19,8 @@ describe('ESM Loader', () => {
   });
 
   afterEach(() => {
-    tempFs.cleanup();
     process.chdir(cwd);
+    tempFs.cleanup();
     vi.resetModules();
   });
 

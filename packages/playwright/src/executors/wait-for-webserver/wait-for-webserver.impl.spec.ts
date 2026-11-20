@@ -1312,7 +1312,10 @@ function listen(server: AnyServer, port: number): Promise<void> {
 // the developer running the suite happens to have listening.
 async function closedPort(): Promise<number> {
   const server = createTcpServer();
-  await listen(server, 0);
+  const requestedPort = process.env.NX_E2E_PORT_POOL
+    ? await (await import('@nx/devkit/internal-testing-utils')).reservePort()
+    : 0;
+  await listen(server, requestedPort);
   const { port } = server.address() as AddressInfo;
   await close(server);
   return port;

@@ -1319,9 +1319,9 @@ describe('formatReportMarkdown', () => {
   it('renders multiple critical-path tasks as consecutive nested list items', () => {
     // The snapshot above only ever carries one task row, so it pins the per-row prefix
     // and the 2-space nesting indent but not what separates two rows. A blank line there
-    // makes GitHub render a "loose" list with paragraph spacing between the items, which
-    // is exactly the ragged rendering this PR set out to fix. Same chain as the
-    // formatReport snapshot: `c` is filtered out for being under the 20% threshold.
+    // makes GitHub render a "loose" list with paragraph spacing between the items.
+    // Same chain as the formatReport snapshot: `c` is filtered out for being under
+    // the 20% threshold.
     const a = makeTask('a', { start: 0, end: 10000 });
     const b = makeTask('b', { start: 10000, end: 40000 });
     const c = makeTask('c', { start: 40000, end: 45000 });

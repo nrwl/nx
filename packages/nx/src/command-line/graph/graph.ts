@@ -647,7 +647,7 @@ function findAvailablePort(
   });
 }
 
-async function startServer(
+export async function startServer(
   html: string,
   environmentJs: string,
   host: string,
@@ -688,7 +688,16 @@ async function startServer(
 
   isFilteredGraph = !!(focus || exclude.length > 0);
 
-  const app = http.createServer(async (req, res) => {
+  const handleRequest = async (
+    req: http.IncomingMessage,
+    res: http.ServerResponse
+  ) => {
+    if (!isSameOriginLocalRequest(req, host)) {
+      res.writeHead(403, { 'Content-Type': 'text/plain' });
+      res.end('Forbidden');
+      return;
+    }
+
     // parse URL
     const parsedUrl = new URL(req.url, `http://${host}:${port}`);
     // extract URL path
@@ -753,7 +762,11 @@ async function startServer(
       performance.mark('task input generation:start');
 
       const taskId = parsedUrl.searchParams.get('taskId');
-      res.writeHead(200, { 'Content-Type': 'application/json' });
+      if (!taskId) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Missing taskId' }));
+        return;
+      }
       const inputs = await getExpandedTaskInputs(
         currentProjectGraphClientResponse,
         expandedTaskInputsCache,
@@ -761,6 +774,7 @@ async function startServer(
       );
       performance.mark('task input generation:end');
 
+      res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ [taskId]: inputs }));
       performance.measure(
         'task input generation',
@@ -822,6 +836,19 @@ async function startServer(
       res.statusCode = 500;
       res.end(`Error getting the file: ${err}.`);
     }
+  };
+
+  const app = http.createServer((req, res) => {
+    handleRequest(req, res).catch((err) => {
+      output.error({
+        title: `Failed to handle graph request ${req.url}`,
+        bodyLines: [err?.stack ?? String(err)],
+      });
+      if (!res.headersSent) {
+        res.writeHead(500, { 'Content-Type': 'text/plain' });
+      }
+      res.end();
+    });
   });
 
   const handleTermination = async (exitCode: number) => {
@@ -850,6 +877,53 @@ async function startServer(
       res({ app, url: new URL(`http://${host}:${availablePort}`) });
     });
   });
+}
+
+export function isSameOriginLocalRequest(
+  req: Pick<http.IncomingMessage, 'headers'> & {
+    socket: Pick<net.Socket, 'localPort'>;
+  },
+  host: string
+): boolean {
+  const authority = parseHostHeader(req.headers.host);
+  if (
+    !authority ||
+    Number(authority.port || 80) !== req.socket.localPort ||
+    !isAllowedHostname(authority.hostname.replace(/^\[|\]$/g, ''), host)
+  ) {
+    return false;
+  }
+
+  const fetchSite = req.headers['sec-fetch-site'];
+  if (fetchSite && fetchSite !== 'same-origin' && fetchSite !== 'none') {
+    return false;
+  }
+
+  const origin = req.headers.origin;
+  return !origin || origin.toLowerCase() === authority.origin;
+}
+
+function parseHostHeader(hostHeader: string | undefined): URL | null {
+  if (!hostHeader || /[/\\@?#]/.test(hostHeader)) {
+    return null;
+  }
+  try {
+    return new URL(`http://${hostHeader}`);
+  } catch {
+    return null;
+  }
+}
+
+const loopbackHostnames = new Set(['localhost', '127.0.0.1', '::1']);
+
+function isAllowedHostname(hostname: string, boundHost: string): boolean {
+  const bound = boundHost.toLowerCase();
+  if (loopbackHostnames.has(hostname) || hostname === bound) {
+    return true;
+  }
+  // DNS rebinding needs a domain name, so an IP literal is safe to accept
+  // once the user binds a non-loopback interface.
+  return !loopbackHostnames.has(bound) && net.isIP(hostname) !== 0;
 }
 
 let currentProjectGraphClientResponse: ProjectGraphClientResponse = {

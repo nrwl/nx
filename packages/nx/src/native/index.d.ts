@@ -114,10 +114,6 @@ export declare class HttpRemoteCache {
   store(hash: string, cacheDirectory: string, terminalOutput: string, code: number): Promise<boolean>
 }
 
-/**
- * The hasher's handle on an index: lists only after catching up with the
- * watch behind it.
- */
 export declare class IgnoredIndexReader {
 
 }
@@ -148,7 +144,12 @@ export declare class NxCache {
    */
   getBatch(hashes: Array<string>): Array<CachedResult | undefined | null>
   put(hash: string, terminalOutput: string, outputs: Array<string>, code: number): CachedOutputs
-  applyRemoteCacheResults(hash: string, result: CachedResult, outputs?: Array<string> | undefined | null): void
+  /**
+   * Restores and records a result fetched from a remote cache, returning
+   * its terminal output as stored for replay. Returns `None`, discarding
+   * the artifact, when it holds a link that leaves the output it sits in.
+   */
+  applyRemoteCacheResults(hash: string, result: CachedResult, outputs?: Array<string> | undefined | null): string | null
   /**
    * Register terminal outputs that were written without a cache entry —
    * uncacheable tasks, and cacheable ones run with `--skip-nx-cache`.
@@ -614,6 +615,11 @@ export interface CachedOutputs {
   expandedOutputs: Array<string>
   /** Each file copied, stamped as it is in the workspace. */
   files: Array<OutputFile>
+  /**
+   * Outputs that exist only through a linked directory. When there are
+   * any, nothing is stored and the task is not cached.
+   */
+  outputsBelowALink: Array<string>
 }
 
 export interface CachedPluginCapabilities {
@@ -859,7 +865,7 @@ export declare function getTransformableOutputs(outputs: Array<string>): Array<s
  */
 export declare function getUltracacheDeferredTaskIds(configurations: UltracacheConfigurations, taskGraph: TaskGraph): Array<string>
 
-/** The eligibility report, for the run summary. */
+/** The eligibility report, for the run summary and the skipped task report. */
 export declare function getUltracacheReport(configurations: UltracacheConfigurations, tasks: Record<string, TaskUltracacheSettings | null>, options?: UltracacheEligibilityOptions | undefined | null): UltracacheReport
 
 /**
@@ -1599,6 +1605,8 @@ export interface UltracacheReport {
   diagnostics: Array<UltracacheDiagnostic>
   resolution: UltracacheConfigurationResolution
 }
+
+export declare function unmatchedProjectPatterns(projectGraph: ExternalObject<ProjectGraph>, patterns: Array<string>): Array<string>
 
 export interface UpdatedWorkspaceFiles {
   fileMap: FileMap

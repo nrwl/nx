@@ -1,5 +1,6 @@
 import { htmlRewritingStream } from './html-rewriting-stream';
 
+// TODO(v25): remove with the forked SSR server.
 export async function addBodyScript(
   html: string,
   bodyScriptContents: string,

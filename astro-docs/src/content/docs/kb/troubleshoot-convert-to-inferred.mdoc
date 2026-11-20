@@ -55,6 +55,77 @@ task, or migrate that target by hand.
 If the configuration already supports the task, open an issue on GitHub with details about your
 project structure.
 
+## Tasks miss the cache after conversion
+
+An inferred task that lost its plugin's `externalDependencies` input hashes every external
+dependency in the workspace, so any change to a resolved package invalidates it.
+This happens when `inputs` in `targetDefaults` or `project.json` replace the inferred inputs.
+Add `"..."` to those `inputs` to keep the inferred ones, as shown in
+[Keep cache inputs tight](/docs/kb/convert-to-inferred#keep-cache-inputs-tight).
+
+## ESLint and Vitest: tasks run from the project root
+
+Inferred `@nx/eslint` and `@nx/vitest` tasks run from the project root.
+The removed `@nx/eslint:lint` and `@nx/vitest:test` executors ran from the workspace root, so
+anything the tool resolves against the working directory can change after conversion:
+
+- ESLint in legacy eslintrc mode reads `.eslintignore` from the working directory, so a
+  `.eslintignore` at the workspace root no longer applies.
+- Code that resolves a relative path from a `.env` file against the working directory now gets a
+  path under the project root.
+
+For Vitest, `targetDefaults` entries scoped to the plugin restore the old working directory.
+They set `cwd` to the workspace root and pass the project root to Vitest as `--root`.
+If the plugin sets `ciTargetName`, add the same entry under a second key for the per-file CI
+tasks, because each of those sets its own `cwd`:
+
+```json
+// nx.json
+{
+  "targetDefaults": {
+    "test": [
+      {
+        "filter": { "plugin": "@nx/vitest" },
+        "options": {
+          "cwd": "{workspaceRoot}",
+          "args": ["--root={projectRoot}"]
+        }
+      }
+    ],
+    "test-ci--{*,*/**}": [
+      {
+        "filter": { "plugin": "@nx/vitest" },
+        "options": {
+          "cwd": "{workspaceRoot}",
+          "args": ["--root={projectRoot}"]
+        }
+      }
+    ]
+  }
+}
+```
+
+Replace `test` with your `testTargetName` and `test-ci` with your `ciTargetName`.
+Keep the `{*,*/**}` suffix, since the CI task names contain the spec file's path, and a plain `*`
+doesn't match across a `/`.
+Set `filter.plugin` to the plugin as it appears in the `plugins` array of `nx.json`.
+
+ESLint can't use the same entry, because the inferred command lints `.`, which from the workspace
+root is the whole workspace.
+Instead, copy each ignore pattern that applies to a project into an `.eslintignore` in that
+project's root:
+
+- A pattern that starts with the project's path loses that prefix.
+  For example, `libs/a/src/gen/**` becomes `src/gen/**` or `/src/gen/**`.
+- A pattern with no `/`, or with only a trailing `/`, such as `*.min.js` or `dist/`, matches at any
+  depth. Copy it unchanged.
+  A leading slash would anchor it to the project root and stop it from matching nested files.
+
+ESLint doesn't report a pattern that matches nothing, so a path pattern copied with its project
+prefix still in place silently stops applying.
+A project with its own ESLint configuration can use `ignorePatterns` there instead.
+The inferred lint task already tracks a project-root `.eslintignore` as an input.
+
 ## Next.js: unable to migrate `outputPath`, `generateLockfile` and `includeDevDependenciesInPackageJson` options
 
 The `outputPath` option from `@nx/next:build` is ignored because it

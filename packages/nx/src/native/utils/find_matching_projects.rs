@@ -1,6 +1,7 @@
 use crate::native::glob::{NxGlobSet, build_glob_set};
 use crate::native::project_graph::types::{Project, ProjectGraph};
 use hashbrown::HashSet;
+use napi::bindgen_prelude::External;
 use std::collections::HashMap;
 use std::sync::Arc;
 
@@ -111,6 +112,33 @@ pub fn find_matching_projects<'a>(
     }
 
     Ok(matched_projects.iter().copied().collect())
+}
+
+/// The patterns that select no project when matched alone, as the task hasher
+/// checks an `always` input. `!` patterns are skipped.
+pub fn find_unmatched_patterns<'a>(
+    patterns: &[&'a str],
+    project_graph: &ProjectGraph,
+) -> anyhow::Result<Vec<&'a str>> {
+    let mut unmatched = vec![];
+    for pattern in patterns.iter().filter(|p| !p.starts_with('!')) {
+        if find_matching_projects(&[*pattern], project_graph)?.is_empty() {
+            unmatched.push(*pattern);
+        }
+    }
+    Ok(unmatched)
+}
+
+#[napi]
+pub fn unmatched_project_patterns(
+    project_graph: &External<Arc<ProjectGraph>>,
+    patterns: Vec<String>,
+) -> anyhow::Result<Vec<String>> {
+    let patterns: Vec<&str> = patterns.iter().map(String::as_str).collect();
+    Ok(find_unmatched_patterns(&patterns, project_graph)?
+        .into_iter()
+        .map(String::from)
+        .collect())
 }
 
 fn parse_string_pattern<'a>(

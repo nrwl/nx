@@ -43,6 +43,51 @@ describe('@nx/vitest:configuration', () => {
     });
   }
 
+  it.each([
+    { packageName: 'react', expectsReact: true },
+    { packageName: 'react-dom', expectsReact: false },
+  ])(
+    'should add React SWC only for a React package dependency ($packageName)',
+    async ({ packageName, expectsReact }) => {
+      const target = `npm:${packageName}@18.3.1`;
+      projectGraph.externalNodes = {
+        [target]: {
+          name: target,
+          type: 'npm',
+          data: { packageName, version: '18.3.1' },
+        },
+      };
+      projectGraph.dependencies.mylib = [
+        { source: 'mylib', target, type: 'static' },
+      ];
+
+      expect(
+        readJson(tree, 'package.json').devDependencies?.[
+          '@vitejs/plugin-react-swc'
+        ]
+      ).toBeUndefined();
+
+      await configurationGenerator(tree, {
+        project: 'mylib',
+        compiler: 'swc',
+        skipFormat: true,
+      });
+
+      const config =
+        tree.read('libs/mylib/vite.config.mts', 'utf-8') ??
+        tree.read('libs/mylib/vitest.config.mts', 'utf-8');
+      expect(
+        config.includes("import react from '@vitejs/plugin-react-swc'")
+      ).toBe(expectsReact);
+      expect(config.includes('react()')).toBe(expectsReact);
+      expect(
+        readJson(tree, 'package.json').devDependencies?.[
+          '@vitejs/plugin-react-swc'
+        ]
+      ).toEqual(expectsReact ? expect.any(String) : undefined);
+    }
+  );
+
   // These go through the real generator flow rather than versions() directly,
   // so they catch the ordering the analog write depends on.
   describe('dependency selection', () => {

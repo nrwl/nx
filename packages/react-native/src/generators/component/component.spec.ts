@@ -95,7 +95,9 @@ describe('component', () => {
         path: 'my-lib/src/components/hello/hello',
       });
 
-      expect(appTree.exists('my-lib/src/components/hello/hello.tsx'));
+      expect(
+        appTree.exists('my-lib/src/components/hello/hello.tsx')
+      ).toBeTruthy();
     });
 
     it('should create with nested directories', async () => {
@@ -104,7 +106,9 @@ describe('component', () => {
         path: 'my-lib/src/lib/foo/hello-world/hello-world',
       });
 
-      expect(appTree.exists('my-lib/src/lib/foo/hello-world/hello-world.tsx'));
+      expect(
+        appTree.exists('my-lib/src/lib/foo/hello-world/hello-world.tsx')
+      ).toBeTruthy();
     });
   });
 });

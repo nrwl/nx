@@ -28,7 +28,8 @@ describe('collectSetupFileInputs', () => {
     {
       projectRoot = 'packages/lib',
       authoredRoot,
-    }: { projectRoot?: string; authoredRoot?: string } = {}
+      runCwd = projectRoot,
+    }: { projectRoot?: string; authoredRoot?: string; runCwd?: string } = {}
   ) =>
     collectSetupFileInputs(
       resolveSetupFileCandidates(
@@ -38,6 +39,7 @@ describe('collectSetupFileInputs', () => {
         } as unknown as ResolvedConfig,
         projectRoot,
         workspaceRoot,
+        runCwd,
         authoredRoot
       ),
       projectRoot,
@@ -167,6 +169,23 @@ describe('collectSetupFileInputs', () => {
         root: 'sub',
         setupFiles: ['../../../tools/vitest/setup.mts'],
       }).files
+    ).toEqual(['tools/vitest/setup.mts']);
+  });
+
+  it('should resolve a relative test.root against the workspace root when the task runs from there', async () => {
+    await tempFs.createFiles({
+      'packages/lib/test-root/x': '',
+      'tools/vitest/setup.mts': '',
+    });
+
+    expect(
+      collect(
+        {
+          root: 'packages/lib/test-root',
+          setupFiles: ['../../../tools/vitest/setup.mts'],
+        },
+        { runCwd: '.' }
+      ).files
     ).toEqual(['tools/vitest/setup.mts']);
   });
 

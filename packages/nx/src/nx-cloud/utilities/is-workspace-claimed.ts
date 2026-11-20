@@ -4,8 +4,8 @@ import { httpRequest } from '../../utils/http-client';
 export async function isWorkspaceClaimed(accessToken: string) {
   if (!accessToken) return false;
 
-  const apiUrl = getCloudUrl();
   try {
+    const apiUrl = getCloudUrl();
     const requestData = isNxCloudId(accessToken)
       ? { nxCloudId: accessToken }
       : { nxCloudAccessToken: accessToken };

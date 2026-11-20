@@ -18,7 +18,7 @@ export function typeDefinitions(options: { projectRoot: string }) {
   return {
     name: 'dts-bundle',
     async generateBundle(_opts: unknown, bundle: OutputBundle): Promise<void> {
-      for (const [name, file] of Object.entries(bundle)) {
+      for (const [, file] of Object.entries(bundle)) {
         if (
           file.type === 'asset' ||
           !file.isEntry ||

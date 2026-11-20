@@ -9,7 +9,6 @@ import { execSync } from 'child_process';
 import { PublishExecutorSchema } from './schema';
 import runExecutor from './release-publish.impl';
 import * as npmConfigModule from '../../utils/npm-config';
-import * as npmRunPath from 'npm-run-path';
 import * as extractModule from './extract-npm-publish-json-data';
 
 // `getPackageManagerVersion` still shells out through child_process, so pnpm
@@ -786,6 +785,54 @@ describe('release-publish executor', () => {
       const distTagArgs = argvFor('npm', 'dist-tag');
       expect(distTagArgs).toContain(TAG_PAYLOAD);
       expect(distTagArgs).toContain(`--registry=${REGISTRY_PAYLOAD}`);
+    });
+
+    it('should leave the registry to npm when none was resolved', async () => {
+      mockParseRegistryOptions.mockResolvedValue({
+        registry: undefined,
+        tag: 'latest',
+        registryConfigKey: '@scope:registry',
+      });
+      mockExec
+        .mockReturnValueOnce(
+          JSON.stringify({
+            name: '@scope/test-package',
+            version: '1.0.0',
+            'dist-tags[latest]': '0.9.0',
+          })
+        ) // npm view: the version already exists, so the dist-tag path runs
+        .mockReturnValueOnce(''); // npm dist-tag add
+
+      const result = await runExecutor(options, context);
+
+      expect(result.success).toBe(true);
+      for (const subcommand of ['view', 'dist-tag']) {
+        expect(argvFor('npm', subcommand)).not.toContainEqual(
+          expect.stringMatching(/registry=/)
+        );
+      }
+    });
+
+    it('should not pass a registry flag to publish when none was resolved', async () => {
+      mockParseRegistryOptions.mockResolvedValue({
+        registry: undefined,
+        tag: 'latest',
+        registryConfigKey: '@scope:registry',
+      });
+      mockExec
+        .mockImplementationOnce(() => {
+          throw npmViewNotFoundError();
+        }) // npm view: version not published yet
+        .mockReturnValueOnce('{}'); // npm publish
+      vi.spyOn(extractModule, 'extractNpmPublishJsonData').mockReturnValue(
+        null
+      );
+
+      await runExecutor(options, context);
+
+      expect(argvFor('npm', 'publish')).not.toContainEqual(
+        expect.stringMatching(/registry=/)
+      );
     });
 
     it('should pass otp and access through as single argv elements', async () => {

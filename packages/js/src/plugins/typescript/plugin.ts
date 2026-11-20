@@ -1,11 +1,14 @@
 import {
   FsTree,
+  getCatalogManager,
   getNamedInputs,
   hashFile,
   hashObject,
   getLockFileName,
   workspaceDataDirectory,
   getNxRequirePaths,
+  readLockFileSnapshot,
+  type PackageJson,
 } from '@nx/devkit/internal';
 import {
   createNodesFromFiles,
@@ -140,7 +143,7 @@ function resolveTypescriptPath(
   return resolvedTypescriptPaths[projectRoot];
 }
 
-const TSCONFIG_CACHE_VERSION = 2;
+const TSCONFIG_CACHE_VERSION = 3;
 const TS_CONFIG_CACHE_PATH = join(
   workspaceDataDirectory,
   'tsconfig-files.hash'
@@ -318,6 +321,14 @@ export const createNodesV2: CreateNodes<TscPluginOptions> = [
     const packageManager = detectPackageManager(context.workspaceRoot);
     const pmc = getPackageManagerCommand(packageManager);
     const lockFileName = getLockFileName(packageManager);
+    // Only the noEmit typecheck target lists its compiler packages as inputs
+    const typescriptAliasCandidates =
+      !isUsingTsSolutionSetup && normalizedOptions.typecheck
+        ? readRootTypeScriptAliases(context.workspaceRoot)
+        : [];
+    const lockFile = typescriptAliasCandidates.length
+      ? readLockFileSnapshot(context)
+      : undefined;
 
     const {
       configFilePaths: validConfigFilePaths,
@@ -326,7 +337,14 @@ export const createNodesV2: CreateNodes<TscPluginOptions> = [
     } = await resolveValidConfigFilesAndHashes(
       configFilePaths,
       normalizedOptions,
-      hashObject({ options, isUsingTsSolutionSetup }),
+      hashObject({
+        options,
+        isUsingTsSolutionSetup,
+        typescriptAliasCandidates,
+        // Missing when lockfile analysis is off. The per-file hashes read the
+        // lockfile separately, so they can't stand in for this read.
+        lockFileHash: lockFile?.lockFileHash,
+      }),
       context,
       cache,
       lockFileName,
@@ -334,11 +352,23 @@ export const createNodesV2: CreateNodes<TscPluginOptions> = [
     );
 
     try {
+      const targetsCacheKeys = validConfigFilePaths.map(
+        (configFilePath, idx) => `${hashes[idx]}_${configFilePath}`
+      );
+      // An input naming a package with no graph node fails the task, and a
+      // package manager can leave a declared alias uninstalled. Only targets
+      // missing from the cache need the lockfile's nodes.
+      const typescriptAliases =
+        lockFile && targetsCacheKeys.some((key) => !targetsCache[key])
+          ? typescriptAliasCandidates.filter((name) =>
+              lockFile.hasExternalDependency(name)
+            )
+          : [];
+
       return await createNodesFromFiles(
         (configFilePath, options, context, idx) => {
           const projectRoot = projectRoots[idx];
-          const hash = hashes[idx];
-          const targetsCacheKey = `${hash}_${configFilePath}`;
+          const targetsCacheKey = targetsCacheKeys[idx];
 
           const absolutePath = join(context.workspaceRoot, configFilePath);
           const configContext = getConfigContext(
@@ -354,7 +384,8 @@ export const createNodesV2: CreateNodes<TscPluginOptions> = [
             validConfigFilePaths,
             cache,
             pmc,
-            isUsingTsSolutionSetup
+            isUsingTsSolutionSetup,
+            typescriptAliases
           );
 
           const { targets } = targetsCache[targetsCacheKey];
@@ -574,7 +605,8 @@ function buildTscTargets(
   configFiles: readonly string[],
   cache: InvocationCache,
   pmc: ReturnType<typeof getPackageManagerCommand>,
-  isUsingTsSolutionSetup: boolean
+  isUsingTsSolutionSetup: boolean,
+  typescriptAliases: string[]
 ) {
   const targets: Record<string, TargetConfiguration> = {};
   const namedInputs = getNamedInputs(config.project.root, context);
@@ -622,6 +654,7 @@ function buildTscTargets(
             siblingFiles.filter((file) => /^tsconfig.*\.json$/.test(file))
           ),
           compiler,
+          typescriptAliases,
           // Like the framework targets it replaces: `{workspaceRoot}` inputs
           // would mark the project affected by any root tsconfig change.
           namedInputs,
@@ -1819,6 +1852,43 @@ function readTsConfig(
   );
 }
 
+/**
+ * Root package.json dependencies that install `typescript` under another name,
+ * such as `"@typescript/native": "npm:typescript@^7"`. Peer dependencies are
+ * left out. Yarn doesn't install the root's own peers, so a graph node with
+ * that name can come from another dependency.
+ */
+function readRootTypeScriptAliases(workspaceRoot: string): string[] {
+  const packageJsonPath = join(workspaceRoot, 'package.json');
+  if (!existsSync(packageJsonPath)) {
+    return [];
+  }
+  const packageJson = readJsonFile<PackageJson>(packageJsonPath);
+  const catalogManager = getCatalogManager(workspaceRoot);
+  const aliases = new Set<string>();
+  for (const section of [
+    'dependencies',
+    'devDependencies',
+    'optionalDependencies',
+  ] as const) {
+    for (const [name, specifier] of Object.entries(
+      packageJson[section] ?? {}
+    )) {
+      const resolvedSpecifier = catalogManager?.isCatalogReference(specifier)
+        ? catalogManager.resolveCatalogReference(workspaceRoot, name, specifier)
+        : specifier;
+      if (
+        name !== 'typescript' &&
+        resolvedSpecifier &&
+        /^npm:typescript(@|$)/.test(resolvedSpecifier)
+      ) {
+        aliases.add(name);
+      }
+    }
+  }
+  return [...aliases].sort();
+}
+
 function normalizePluginOptions(
   pluginOptions: TscPluginOptions = {}
 ): NormalizedPluginOptions {
@@ -1988,25 +2058,26 @@ function toAbsolutePaths(
       extendedFilesHash,
       hash,
     };
-    if (data.options.rootDir) {
+    // '' is a valid cached path (the workspace root), so check for undefined
+    if (data.options.rootDir !== undefined) {
       updatedCache[key].data.options.rootDir = join(
         workspaceRoot,
         data.options.rootDir
       );
     }
-    if (data.options.outDir) {
+    if (data.options.outDir !== undefined) {
       updatedCache[key].data.options.outDir = join(
         workspaceRoot,
         data.options.outDir
       );
     }
-    if (data.options.outFile) {
+    if (data.options.outFile !== undefined) {
       updatedCache[key].data.options.outFile = join(
         workspaceRoot,
         data.options.outFile
       );
     }
-    if (data.options.tsBuildInfoFile) {
+    if (data.options.tsBuildInfoFile !== undefined) {
       updatedCache[key].data.options.tsBuildInfoFile = join(
         workspaceRoot,
         data.options.tsBuildInfoFile
@@ -2063,25 +2134,25 @@ function toRelativePaths(
       hash,
     };
     if (data.options.rootDir) {
-      updatedCache[key].data.options.rootDir = posixRelative(
+      updatedCache[key].data.options.rootDir = toCachedPath(
         workspaceRoot,
         data.options.rootDir
       );
     }
     if (data.options.outDir) {
-      updatedCache[key].data.options.outDir = posixRelative(
+      updatedCache[key].data.options.outDir = toCachedPath(
         workspaceRoot,
         data.options.outDir
       );
     }
     if (data.options.outFile) {
-      updatedCache[key].data.options.outFile = posixRelative(
+      updatedCache[key].data.options.outFile = toCachedPath(
         workspaceRoot,
         data.options.outFile
       );
     }
     if (data.options.tsBuildInfoFile) {
-      updatedCache[key].data.options.tsBuildInfoFile = posixRelative(
+      updatedCache[key].data.options.tsBuildInfoFile = toCachedPath(
         workspaceRoot,
         data.options.tsBuildInfoFile
       );
@@ -2106,4 +2177,9 @@ function toRelativePaths(
 
 function posixRelative(workspaceRoot: string, path: string): string {
   return normalizePath(relative(workspaceRoot, path));
+}
+
+// relative() returns '' for the workspace root, which is falsy like an unset option
+function toCachedPath(workspaceRoot: string, path: string): string {
+  return posixRelative(workspaceRoot, path) || '.';
 }

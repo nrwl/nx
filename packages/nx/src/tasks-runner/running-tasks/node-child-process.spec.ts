@@ -23,8 +23,8 @@ describe('NodeChildProcessWithNonDirectOutput', () => {
 
     // Simulate the race reported in #35302: 'exit' fires synchronously,
     // then stdout 'data' arrives on a subsequent tick, then 'close' fires
-    // after stdio has drained. Before the fix the exit handler listened
-    // for 'exit', joined chunks early, and dropped the late output.
+    // after stdio has drained. A handler on 'exit' would join chunks early
+    // and drop the late output.
     proc.emit('exit', 0, null);
     proc.stdout!.emit('data', Buffer.from('late-output'));
     proc.emit('close', 0, null);

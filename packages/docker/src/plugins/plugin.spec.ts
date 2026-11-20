@@ -54,8 +54,8 @@ describe('@nx/docker', () => {
 
   afterEach(() => {
     vi.resetModules();
-    tempFs.cleanup();
     process.chdir(cwd);
+    tempFs.cleanup();
   });
 
   it('should create nodes based on Dockerfile', async () => {

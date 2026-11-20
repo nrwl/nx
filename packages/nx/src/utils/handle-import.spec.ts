@@ -1,3 +1,5 @@
+import { join } from 'path';
+import { TempFs } from '../internal-testing-utils/temp-fs';
 import { handleImport } from './handle-import';
 
 describe('handleImport', () => {
@@ -8,32 +10,20 @@ describe('handleImport', () => {
     expect(typeof result.join).toBe('function');
   });
 
-  it('should fall back to import() for ESM-only modules', async () => {
-    const esmError = new Error('require() of ES Module not supported');
-    (esmError as any).code = 'ERR_REQUIRE_ESM';
+  it('should fall back to import() for ES modules with top-level await', async () => {
+    const fs = new TempFs('handle-import', false);
+    try {
+      fs.createFileSync(
+        'tla.mjs',
+        'await Promise.resolve();\nexport const value = 42;\n'
+      );
 
-    await vi.importActual('./handle-import');
+      const result = await handleImport(join(fs.tempDir, 'tla.mjs'));
 
-    vi.resetModules();
-
-    // Mock require to throw ERR_REQUIRE_ESM for a specific module
-    const mockModule = { default: 'esm-value', named: 'named-value' };
-    vi.mock(
-      'fake-esm-package',
-      () => {
-        throw esmError;
-      },
-      { virtual: true }
-    );
-
-    // We can't easily mock dynamic import, so instead test with a real CJS module
-    // and verify the error-code branching logic directly
-    const handleImportModule = await import('./handle-import');
-
-    // Verify the function exists and returns from require for CJS
-    const result = await handleImportModule.handleImport('path');
-    expect(result).toBeDefined();
-    expect(typeof result.join).toBe('function');
+      expect(result.value).toBe(42);
+    } finally {
+      fs.cleanup();
+    }
   });
 
   it('should re-throw non-ESM errors', async () => {

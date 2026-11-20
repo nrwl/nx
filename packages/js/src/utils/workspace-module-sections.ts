@@ -9,15 +9,25 @@ import type { PackageJsonDependencySection } from '@nx/devkit/internal';
  * because pnpm rejects a `file:` spec under peerDependencies (a peer-declared
  * workspace module is installed as a regular dependency instead). A
  * `workspace:*` spec left in any of them fails `pnpm install --frozen-lockfile`
- * (#35425). Transitive copies recurse over dependencies, optionalDependencies,
- * and peerDependencies (TRANSITIVE_INSTALL_SECTIONS in copy-workspace-modules),
- * since pnpm installs a transitive dependency's optional and auto-installed peer
- * deps but never its devDependencies; a transitive workspace-module peer is
- * moved into dependencies the same way.
+ * (#35425). Transitive copies recurse over TRANSITIVE_INSTALL_SECTIONS; a
+ * transitive workspace-module peer is moved into dependencies the same way.
  */
 export const WORKSPACE_MODULE_INSTALL_SECTIONS = [
   'dependencies',
   'optionalDependencies',
   'devDependencies',
+  'peerDependencies',
+] as const satisfies readonly PackageJsonDependencySection[];
+
+/**
+ * Sections of a copied module's own manifest whose workspace-module deps are
+ * copied too. pnpm installs a transitive dependency's regular, optional, and
+ * auto-installed peer deps (a workspace peer is linked and recorded under the
+ * depending importer's dependencies in the lockfile), but never its
+ * devDependencies.
+ */
+export const TRANSITIVE_INSTALL_SECTIONS = [
+  'dependencies',
+  'optionalDependencies',
   'peerDependencies',
 ] as const satisfies readonly PackageJsonDependencySection[];

@@ -76,6 +76,8 @@ export interface TaskSelection {
   planningContext?: TaskPlanningContext;
   /** The Ultracache configurations selection planned with; the run hashes with the same ones. */
   ultracacheConfigurationOutcome?: UltracacheConfigurationOutcome | null;
+  /** What `nx affected` dropped from tasks hashed from a configuration. Unset for commands that do not select. */
+  ultracacheSkippedTaskIds?: string[];
 }
 import { isTuiEnabled, ORIGINAL_TUI_ENV_VALUE } from './is-tui-enabled';
 import {
@@ -112,6 +114,7 @@ import { TasksRunner, TaskStatus } from './tasks-runner';
 import { pruneToSelectedTasks, shouldStreamOutput } from './utils';
 import { didCommandComplete, getRunExitCode } from './run-outcome';
 import { handleImport } from '../utils/handle-import';
+import { resolveInstalledPackage } from '../utils/installation-directory';
 import * as pc from 'picocolors';
 
 const originalStdoutWrite = process.stdout.write.bind(process.stdout);
@@ -161,10 +164,6 @@ async function getTerminalOutputLifeCycle(
   delete overridesWithoutHidden['__overrides_unparsed__'];
 
   const isRunOne = initiatingProject != null;
-
-  if (tasks.length === 1 && !ORIGINAL_TUI_ENV_VALUE) {
-    process.env.NX_TUI = 'false';
-  }
 
   // Kick off in the background so the URL is ready by the exit report. A brief
   // sync preamble (git remote lookup) runs here; the network call does not.
@@ -623,6 +622,13 @@ export async function runTasksForCommand(
     ...new Set(initiatingTasks.map((t) => t.target.project)),
   ];
 
+  if (tasks.length === 1 && !ORIGINAL_TUI_ENV_VALUE) {
+    process.env.NX_TUI = 'false';
+  }
+  // Before the TUI starts: its worker threads read the environment, and JS
+  // adding a variable while they do can crash the process.
+  setEnvVarsBasedOnArgs(nxArgs, extraOptions.loadDotEnvFiles);
+
   const { lifeCycle, renderIsDone, printSummary, restoreTerminal } =
     await getTerminalOutputLifeCycle(
       initiatingProject,
@@ -644,12 +650,12 @@ export async function runTasksForCommand(
       lifeCycle,
       nxJson,
       nxArgs,
-      loadDotEnvFiles: extraOptions.loadDotEnvFiles,
       initiatingProject,
       initiatingTasks,
       planningContext: taskSelection.planningContext,
       ultracacheConfigurationOutcome:
         taskSelection.ultracacheConfigurationOutcome,
+      ultracacheSkippedTaskIds: taskSelection.ultracacheSkippedTaskIds,
     });
 
     await renderIsDone.finally(() => restoreTerminal?.());
@@ -1023,11 +1029,11 @@ export async function invokeTasksRunner({
   lifeCycle,
   nxJson,
   nxArgs,
-  loadDotEnvFiles,
   initiatingProject,
   initiatingTasks,
   planningContext,
   ultracacheConfigurationOutcome: loadedUltracacheConfigurationOutcome,
+  ultracacheSkippedTaskIds,
 }: {
   tasks: Task[];
   projectGraph: ProjectGraph;
@@ -1035,18 +1041,16 @@ export async function invokeTasksRunner({
   lifeCycle: LifeCycle;
   nxJson: NxJsonConfiguration;
   nxArgs: NxArgs;
-  loadDotEnvFiles: boolean;
   initiatingProject: string | null;
   initiatingTasks: Task[];
   planningContext?: TaskPlanningContext;
   /** Already loaded for this command; `undefined` loads it here. */
   ultracacheConfigurationOutcome?: UltracacheConfigurationOutcome | null;
+  ultracacheSkippedTaskIds?: string[];
 }): Promise<{
   taskResults: { [id: string]: TaskResult };
   taskStatuses?: Record<string, TaskStatus>;
 }> {
-  setEnvVarsBasedOnArgs(nxArgs, loadDotEnvFiles);
-
   // this needs to be done before we start to run the tasks
   const taskDetails = getTaskDetails();
 
@@ -1086,7 +1090,8 @@ export async function invokeTasksRunner({
     ultracacheConfigurationOutcome,
     projectGraph,
     taskGraph,
-    nxArgs
+    nxArgs,
+    ultracacheSkippedTaskIds
   );
   const taskResultsLifecycle = new TaskResultsLifeCycle();
   const compositedLifeCycle: LifeCycle = new CompositeLifeCycle([
@@ -1178,6 +1183,8 @@ export async function invokeTasksRunner({
       },
       daemon: daemonClient,
       hashingDeferredTaskIds,
+      ultracacheSkippedTaskIds:
+        ultracacheSkippedTaskIds && new Set(ultracacheSkippedTaskIds),
     }
   );
   if ((promiseOrObservable as any).subscribe) {
@@ -1266,19 +1273,20 @@ function shouldUseDynamicLifeCycle(tasks: Task[], outputStyle: string) {
 }
 
 function loadTasksRunner(modulePath: string): TasksRunner {
+  const isLegacyCloudPackage =
+    modulePath === 'nx-cloud' || modulePath === '@nrwl/nx-cloud';
   try {
-    const maybeTasksRunner = require(modulePath) as
-      | TasksRunner
-      | { default: TasksRunner };
+    const maybeTasksRunner = require(
+      isLegacyCloudPackage
+        ? resolveInstalledPackage(modulePath, [__dirname])
+        : modulePath
+    ) as TasksRunner | { default: TasksRunner };
     // to support both babel and ts formats
     return 'default' in maybeTasksRunner
       ? maybeTasksRunner.default
       : maybeTasksRunner;
   } catch (e) {
-    if (
-      e.code === 'MODULE_NOT_FOUND' &&
-      (modulePath === 'nx-cloud' || modulePath === '@nrwl/nx-cloud')
-    ) {
+    if (e.code === 'MODULE_NOT_FOUND' && isLegacyCloudPackage) {
       return require('../nx-cloud/nx-cloud-tasks-runner-shell')
         .nxCloudTasksRunnerShell;
     }
@@ -1290,13 +1298,15 @@ function reportUltracacheConfigurations(
   outcome: UltracacheConfigurationOutcome | null,
   projectGraph: ProjectGraph,
   taskGraph: TaskGraph,
-  nxArgs: NxArgs
+  nxArgs: NxArgs,
+  ultracacheSkippedTaskIds: string[] | undefined
 ): void {
   if (!outcome || outcome.status === 'skipped') return;
   if (!nxArgs.verbose && process.env.NX_VERBOSE_LOGGING !== 'true') return;
   const summary = formatUltracacheSummary(
     buildUltracacheOverrides(projectGraph, taskGraph, outcome.configurations),
-    outcome.status
+    outcome.status,
+    ultracacheSkippedTaskIds?.length
   );
   output.note({ title: summary.line, bodyLines: summary.bodyLines });
 }

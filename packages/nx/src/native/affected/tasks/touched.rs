@@ -12,7 +12,9 @@ use super::plan_ids::referenced_ids;
 use crate::native::affected::project_paths::ProjectRoots;
 use crate::native::glob::{build_glob_set, fileset_patterns, normalize_glob, partition_glob};
 use crate::native::project_graph::types::{ExternalNode, ProjectGraph};
-use crate::native::tasks::hashers::{ScopedMatcher, globs_from_workspace_globs};
+use crate::native::tasks::hashers::{
+    ScopedMatcher, globs_from_workspace_globs, parse_group_with_exclusions,
+};
 use crate::native::tasks::types::{HashInstruction, HashPlans, JsonFileSetInput};
 use crate::native::utils::path::normalize_js_path;
 
@@ -347,18 +349,35 @@ fn instruction_matches_detail(
     // `project_roots` is an `IgnoredFileSet`'s, see `ScopedMatcher`.
     let collect = |globs: &[String],
                    project: Option<&str>,
-                   project_roots: &[String]|
+                   project_roots: &[String],
+                   ultracache: bool|
      -> anyhow::Result<Vec<InputMatch>> {
         let candidates = under_literal_prefix(globs, changed, changed.candidates(project));
         if candidates.is_empty() {
             return Ok(vec![]);
         }
-        let full = build_glob_set(&fileset_patterns(globs))?;
+        // Learned negatives use the same category-aware matcher as disk expansion.
+        // Declared filesets keep the ordinary glob-set semantics.
+        let (patterns, exclusions) = if ultracache {
+            (
+                globs
+                    .iter()
+                    .filter(|g| !g.starts_with('!'))
+                    .cloned()
+                    .collect::<Vec<_>>(),
+                parse_group_with_exclusions(globs, true)?.1,
+            )
+        } else {
+            (globs.to_vec(), vec![])
+        };
+        let full = build_glob_set(&fileset_patterns(&patterns))?;
         let scoped = ScopedMatcher::new(globs, project_roots)?;
         // Scoped before `find`, so a nested-project match can't hide a later one.
         let matches = |i: usize| {
             let file = &changed.files[i];
-            full.is_match(file) && scoped.as_ref().is_none_or(|s| s.admits(file))
+            full.is_match(file)
+                && !exclusions.iter().any(|exclusion| exclusion.excludes(file))
+                && scoped.as_ref().is_none_or(|s| s.admits(file))
         };
         if !detail {
             return Ok(candidates
@@ -409,17 +428,18 @@ fn instruction_matches_detail(
 
     match instruction {
         HashInstruction::WorkspaceFileSet(file_sets) => {
-            collect(&globs_from_workspace_globs(file_sets), None, &[]).map(of_files)
+            collect(&globs_from_workspace_globs(file_sets), None, &[], false).map(of_files)
         }
         HashInstruction::ProjectFileSet(project, file_sets) => {
-            collect(file_sets, Some(project), &[]).map(of_files)
+            collect(file_sets, Some(project), &[], false).map(of_files)
         }
         HashInstruction::IgnoredFileSet {
             globs,
             project_roots,
+            ultracache,
         } => {
             let globs: Vec<String> = globs.iter().map(|glob| normalize_glob(glob)).collect();
-            collect(&globs, None, project_roots).map(of_files)
+            collect(&globs, None, project_roots, *ultracache).map(of_files)
         }
         HashInstruction::JsonFileSet(json)
             if json.fields.is_some() || json.exclude_fields.is_some() =>
@@ -436,11 +456,17 @@ fn instruction_matches_detail(
             ))
         }
         HashInstruction::JsonFileSet(json) => match json.project_name.as_deref() {
-            Some(project) => collect(std::slice::from_ref(&json.json_path), Some(project), &[]),
+            Some(project) => collect(
+                std::slice::from_ref(&json.json_path),
+                Some(project),
+                &[],
+                false,
+            ),
             None => collect(
                 &globs_from_workspace_globs(std::slice::from_ref(&json.json_path)),
                 None,
                 &[],
+                false,
             ),
         }
         .map(of_files),
@@ -894,11 +920,82 @@ mod tests {
     }
 
     #[test]
+    fn ultracache_exclusions_keep_compound_suffix_changes_affected() {
+        let g = graph(&[("a", "libs/a")]);
+        let instruction = |negative: &str, ultracache| HashInstruction::IgnoredFileSet {
+            globs: strings(&["libs/a/**/*.ts", negative]),
+            project_roots: strings(&["libs/a"]),
+            ultracache,
+        };
+        for file in [
+            "cat.spec.ts",
+            "cat.one.two.spec.ts",
+            "cat.d.ts",
+            "cat.impl.ts",
+        ] {
+            let changed = format!("libs/a/excluded/{file}");
+            assert_eq!(
+                touched_for(
+                    &g,
+                    vec![instruction("!libs/a/**/*.{ts,js}", true)],
+                    &[&changed]
+                ),
+                vec!["a:build"],
+            );
+            assert!(
+                touched_for(
+                    &g,
+                    vec![instruction("!libs/a/**/*.{ts,js}", false)],
+                    &[&changed]
+                )
+                .is_empty()
+            );
+        }
+        for (negative, file) in [
+            ("!libs/a/**/*.ts", "cat.ts"),
+            ("!libs/a/**/*.ts", ".hidden.ts"),
+            ("!libs/a/**/*.{spec.ts,d.ts}", "cat.one.two.spec.ts"),
+            ("!libs/a/**/*.{spec.ts,d.ts}", "cat.d.ts"),
+            ("!libs/a/excluded/cat.spec.ts", "cat.spec.ts"),
+            ("!libs/a/excluded/**", "cat.spec.ts"),
+        ] {
+            let changed = format!("libs/a/excluded/{file}");
+            assert!(
+                touched_for(&g, vec![instruction(negative, true)], &[&changed]).is_empty(),
+                "{negative}: {file}"
+            );
+        }
+    }
+
+    #[test]
+    fn ultracache_literal_bang_exclusions_keep_compound_suffix_changes_affected() {
+        let g = graph(&[("a", "libs/a")]);
+        for (ultracache, file, affected) in [
+            (true, "cat.spec.t!s", true),
+            (true, "cat.t!s", false),
+            (false, "cat.spec.t!s", false),
+        ] {
+            let instruction = HashInstruction::IgnoredFileSet {
+                globs: strings(&["libs/a/**/*", "!libs/a/**/*.t!s"]),
+                project_roots: strings(&["libs/a"]),
+                ultracache,
+            };
+            let changed = format!("libs/a/{file}");
+            assert_eq!(
+                !touched_for(&g, vec![instruction], &[&changed]).is_empty(),
+                affected,
+                "{file}, ultracache={ultracache}"
+            );
+        }
+    }
+
+    #[test]
     fn a_disk_backed_fileset_skips_a_project_nested_below_where_it_reads() {
         let g = graph(&[("a", "libs/a")]);
         let instruction = HashInstruction::IgnoredFileSet {
             globs: strings(&["libs/a/**/*"]),
             project_roots: strings(&["libs/a", "libs/a/nested"]),
+            ultracache: false,
         };
         assert_eq!(
             touched_for(&g, vec![instruction.clone()], &["libs/a/build/out.js"]),
