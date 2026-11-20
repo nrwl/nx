@@ -2,6 +2,7 @@ import {
   addProjectConfiguration,
   logger,
   readProjectConfiguration,
+  updateJson,
   type Tree,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
@@ -84,16 +85,115 @@ describe('convert-to-application-executor generator', () => {
     expect(project.targets.build.options.main).toBeUndefined();
   });
 
-  it('should rename "ngswConfigPath" to "serviceWorker"', async () => {
+  it.each([
+    [
+      { serviceWorker: true, ngswConfigPath: 'app1/custom-ngsw.json' },
+      undefined,
+      'app1/custom-ngsw.json',
+      undefined,
+    ],
+    [{ serviceWorker: true }, undefined, 'app1/ngsw-config.json', undefined],
+    [
+      { ngswConfigPath: 'app1/custom-ngsw.json' },
+      { serviceWorker: true },
+      undefined,
+      'app1/custom-ngsw.json',
+    ],
+    [
+      { serviceWorker: false, ngswConfigPath: 'app1/custom-ngsw.json' },
+      undefined,
+      false,
+      undefined,
+    ],
+    [
+      { serviceWorker: true },
+      { ngswConfigPath: 'app1/ngsw-config.prod.json' },
+      'app1/ngsw-config.json',
+      'app1/ngsw-config.prod.json',
+    ],
+  ])(
+    'should convert the service worker options %j with production %j to "serviceWorker" %j and %j',
+    async (
+      options,
+      production,
+      expectedServiceWorker,
+      expectedProductionServiceWorker
+    ) => {
+      addProjectConfiguration(tree, 'app1', {
+        root: 'app1',
+        projectType: 'application',
+        targets: {
+          build: {
+            executor: '@angular-devkit/build-angular:browser',
+            options,
+            ...(production ? { configurations: { production } } : {}),
+          },
+        },
+      });
+
+      await convertToApplicationExecutor(tree, {});
+
+      const { build } = readProjectConfiguration(tree, 'app1').targets;
+      expect(build.options.serviceWorker).toBe(expectedServiceWorker);
+      expect(build.options.ngswConfigPath).toBeUndefined();
+      expect(build.configurations?.production?.serviceWorker).toBe(
+        expectedProductionServiceWorker
+      );
+      expect(build.configurations?.production?.ngswConfigPath).toBeUndefined();
+    }
+  );
+
+  it.each(['@angular-devkit/build-angular:browser', 'build'])(
+    'should convert the service worker enabled by the "%s" target defaults',
+    async (targetDefaultsKey) => {
+      updateJson(tree, 'nx.json', (json) => {
+        json.targetDefaults = {
+          [targetDefaultsKey]: {
+            options: { serviceWorker: true },
+            configurations: {
+              development: { serviceWorker: false },
+              staging: { serviceWorker: true },
+            },
+          },
+        };
+        return json;
+      });
+      addProjectConfiguration(tree, 'app1', {
+        root: 'app1',
+        projectType: 'application',
+        targets: {
+          build: {
+            executor: '@angular-devkit/build-angular:browser',
+            options: { ngswConfigPath: 'app1/custom-ngsw.json' },
+            configurations: {
+              production: { ngswConfigPath: 'app1/ngsw-config.prod.json' },
+              development: { optimization: false },
+              staging: { serviceWorker: false },
+            },
+          },
+        },
+      });
+
+      await convertToApplicationExecutor(tree, {});
+
+      const { build } = readProjectConfiguration(tree, 'app1').targets;
+      expect(build.options.serviceWorker).toBe('app1/custom-ngsw.json');
+      expect(build.configurations.production.serviceWorker).toBe(
+        'app1/ngsw-config.prod.json'
+      );
+      expect(build.configurations.development.serviceWorker).toBe(false);
+      expect(build.configurations.staging.serviceWorker).toBe(false);
+    }
+  );
+
+  it('should keep the service worker disabled for browser-esbuild targets without a config path', async () => {
     addProjectConfiguration(tree, 'app1', {
       root: 'app1',
       projectType: 'application',
       targets: {
         build: {
-          executor: '@angular-devkit/build-angular:browser',
-          options: {
-            ngswConfigPath: 'app1/ngsw-config.json',
-          },
+          executor: '@angular-devkit/build-angular:browser-esbuild',
+          options: { serviceWorker: true },
         },
       },
     });
@@ -101,10 +201,7 @@ describe('convert-to-application-executor generator', () => {
     await convertToApplicationExecutor(tree, {});
 
     const project = readProjectConfiguration(tree, 'app1');
-    expect(project.targets.build.options.serviceWorker).toBe(
-      'app1/ngsw-config.json'
-    );
-    expect(project.targets.build.options.ngswConfigPath).toBeUndefined();
+    expect(project.targets.build.options.serviceWorker).toBe(false);
   });
 
   it('should convert a string value for "polyfills" to an array', async () => {
