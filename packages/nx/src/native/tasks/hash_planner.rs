@@ -3500,6 +3500,38 @@ mod always_tests {
     }
 
     #[test]
+    fn a_recorded_group_an_always_fileset_matches_is_planned_once() {
+        let planner = planner(
+            vec![(
+                "e2e:e2e",
+                vec![ignored_fileset(
+                    "{projectRoot}/fixtures/a.json",
+                    false,
+                    true,
+                )],
+            )],
+            &[],
+        );
+        let groups: Vec<bool> = recorded_e2e_plan_reading(&planner, &["libs/e2e/fixtures/a.json"])
+            .into_iter()
+            .filter_map(|instruction| match instruction {
+                HashInstruction::IgnoredFileSet {
+                    globs,
+                    from_ultracache,
+                    ..
+                } if globs
+                    .iter()
+                    .any(|glob| &**glob == "libs/e2e/fixtures/a.json") =>
+                {
+                    Some(from_ultracache)
+                }
+                _ => None,
+            })
+            .collect();
+        assert_eq!(groups, vec![false]);
+    }
+
+    #[test]
     fn keeps_only_the_marked_part_of_a_dependency_include_ignored_group() {
         let retained = |fixtures: bool, exclusion: bool| -> Vec<HashInstruction> {
             recorded_e2e_plan(&planner(

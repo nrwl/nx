@@ -911,7 +911,7 @@ impl TaskHasher {
             };
             entries.extend(computed);
             if let Some(lists) = recorded_lists {
-                let (recorded, files) = fold_recorded_files(&lists);
+                let (recorded, files) = fold_recorded_files(&lists, should_collect_inputs);
                 if let Some((_, value)) = entries
                     .iter_mut()
                     .find(|(id, _)| is(*id, is_ultracache_configuration))
@@ -1238,18 +1238,24 @@ type RecordedFileLists = (Vec<Arc<Vec<(String, String)>>>, Vec<Arc<HashSet<Strin
 /// One value for a recorded plan's group files: every file, by path, minus
 /// those its `TaskOutput`s and declared groups hash. So whether a recording
 /// read a file those already hash, and how the reads were grouped, leaves the
-/// hash alone. Also returns the paths kept.
-fn fold_recorded_files((groups, covered): &RecordedFileLists) -> (String, Vec<String>) {
+/// hash alone. Also returns the paths kept when `collect_inputs`.
+fn fold_recorded_files(
+    (groups, covered): &RecordedFileLists,
+    collect_inputs: bool,
+) -> (String, Vec<String>) {
     let kept: BTreeMap<&String, &String> = groups
         .iter()
         .flat_map(|group| group.iter())
         .filter(|(file, _)| !covered.iter().any(|files| files.contains(file)))
         .map(|(file, hash)| (file, hash))
         .collect();
-    (
-        fold_file_hashes(kept.iter().map(|(file, hash)| (*file, *hash))),
-        kept.into_keys().cloned().collect(),
-    )
+    let folded = fold_file_hashes(kept.iter().map(|(file, hash)| (*file, *hash)));
+    let paths = if collect_inputs {
+        kept.into_keys().cloned().collect()
+    } else {
+        Vec::new()
+    };
+    (folded, paths)
 }
 
 /// Per-id results `recorded_file_lists` shares across tasks in one call.
@@ -1382,6 +1388,17 @@ mod tests {
         files: &[(&str, &str)],
         plans: &[(&str, Vec<HashInstruction>)],
     ) -> HashMap<String, String> {
+        hash_recorded_details(files, plans, false)
+            .into_iter()
+            .map(|(task, (value, _))| (task, value))
+            .collect()
+    }
+
+    fn hash_recorded_details(
+        files: &[(&str, &str)],
+        plans: &[(&str, Vec<HashInstruction>)],
+        collect_inputs: bool,
+    ) -> HashMap<String, (String, HashInputs)> {
         let temp = assert_fs::TempDir::new().unwrap();
         for (path, content) in files {
             let path = temp.path().join(path);
@@ -1396,7 +1413,7 @@ mod tests {
             .hash_plans_impl(
                 &plans,
                 temp.path().to_string_lossy().to_string(),
-                None,
+                Some(collect_inputs),
                 RunStage::ATaskMayHaveWritten,
                 |_| &env,
             )
@@ -1404,7 +1421,13 @@ mod tests {
         hashes
             .0
             .iter()
-            .map(|entry| (entry.key().clone(), entry.value().value.clone()))
+            .map(|entry| {
+                let details = entry.value();
+                (
+                    entry.key().clone(),
+                    (details.value.clone(), details.inputs.clone()),
+                )
+            })
             .collect()
     }
 
@@ -1548,23 +1571,52 @@ mod tests {
 
     #[test]
     fn a_plan_with_nothing_covering_its_reads_hashes_each_group() {
-        let plan = |reads: &[&str]| {
-            vec![
-                HashInstruction::UltracacheConfiguration("digest".into()),
-                recorded_files(reads),
-            ]
+        let plan = |groups: &[&[&str]]| {
+            let mut plan = vec![HashInstruction::UltracacheConfiguration("digest".into())];
+            plan.extend(groups.iter().map(|reads| recorded_files(reads)));
+            plan
         };
         let hashes = hash_recorded(
             &DIST_FILES,
             &[
-                ("a:typecheck", plan(&["libs/e2e/src/app.spec.ts"])),
                 (
-                    "b:typecheck",
-                    plan(&["libs/e2e/src/app.spec.ts", "libs/app/dist/index.d.ts"]),
+                    "one:typecheck",
+                    plan(&[&["libs/e2e/src/app.spec.ts", "libs/app/package.json"]]),
+                ),
+                (
+                    "two:typecheck",
+                    plan(&[&["libs/e2e/src/app.spec.ts"], &["libs/app/package.json"]]),
                 ),
             ],
         );
-        assert_ne!(hashes["a:typecheck"], hashes["b:typecheck"]);
+        // Not folded, so how the reads are grouped still counts.
+        assert_ne!(hashes["one:typecheck"], hashes["two:typecheck"]);
+    }
+
+    #[test]
+    fn collected_inputs_list_kept_reads_and_leave_covered_ones_to_their_entry() {
+        let groups: &[&[&str]] = &[&["libs/e2e/src/app.spec.ts", "libs/app/dist/index.d.ts"]];
+        let details = hash_recorded_details(
+            &DIST_FILES,
+            &[("e2e:typecheck", typecheck_plan(groups))],
+            true,
+        );
+        let (_, inputs) = &details["e2e:typecheck"];
+        assert!(
+            inputs
+                .files
+                .contains(&"libs/e2e/src/app.spec.ts".to_string())
+        );
+        assert!(
+            !inputs
+                .files
+                .contains(&"libs/app/dist/index.d.ts".to_string())
+        );
+        assert!(
+            inputs
+                .dep_outputs
+                .contains(&"libs/app/dist/index.d.ts".to_string())
+        );
     }
 
     #[test]

@@ -229,7 +229,9 @@ pub enum HashInstruction {
     IgnoredFileSet {
         globs: Arc<[Arc<str>]>,
         project_roots: Vec<String>,
-        /// Learned exclusions use suffix categories; declared globs stay unchanged.
+        /// A `*.ext` exclusion matches only files whose whole suffix is `.ext`,
+        /// so `!**/*.ts` keeps `a.spec.ts` and `a.d.ts`. Set when a learned
+        /// exclusion has such a suffix category.
         exact_extension_exclusions: bool,
         /// Read by the task per its Ultracache configuration, not declared.
         from_ultracache: bool,
