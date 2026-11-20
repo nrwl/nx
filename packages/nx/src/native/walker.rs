@@ -8,7 +8,9 @@ use parking_lot::Mutex;
 
 use crate::native::glob::{NxGlobSet, build_glob_set};
 
-use crate::native::utils::{Normalize, get_mod_time, git::parent_gitignore_files};
+use crate::native::utils::{
+    Normalize, get_metadata_key, get_mod_time, git::parent_gitignore_files,
+};
 use walkdir::WalkDir;
 
 #[derive(PartialEq, Debug, Ord, PartialOrd, Eq, Clone)]
@@ -16,6 +18,7 @@ pub struct NxFile {
     pub full_path: String,
     pub normalized_path: String,
     pub mod_time: i64,
+    pub metadata_key: u64,
 }
 
 /// Walks the directory in a single thread and does not ignore any files
@@ -173,6 +176,7 @@ where
             full_path: String::from(dir_entry.path().to_string_lossy()),
             normalized_path: file_path.to_normalized_string(),
             mod_time: get_mod_time(&metadata),
+            metadata_key: get_metadata_key(&metadata),
         })
     })
 }
@@ -258,6 +262,7 @@ fn walk_and_find_ignore_files(
                 full_path: String::from(dir_entry.path().to_string_lossy()),
                 normalized_path: file_path.to_normalized_string(),
                 mod_time: get_mod_time(&metadata),
+                metadata_key: get_metadata_key(&metadata),
             })
             .ok();
 
