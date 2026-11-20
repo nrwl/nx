@@ -40,6 +40,15 @@ type TestPlugin = Pick<LoadedNxPlugin, 'name' | 'capabilities'> & {
 };
 
 describe('buildProjectGraphAndSourceMapsWithoutDaemon', () => {
+  beforeEach(() => {
+    // Keeps the build from overwriting this repo's cached project graph.
+    vi.stubEnv('NX_CACHE_PROJECT_GRAPH', 'false');
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
   it('should throw an error if called recursively', async () => {
     const testPlugin: TestPlugin = {
       name: 'test-plugin',
