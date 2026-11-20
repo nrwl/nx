@@ -2105,6 +2105,69 @@ describe('TaskOrchestrator', () => {
       expect(order).toEqual(['cleanup', 'removeProcessEventListeners']);
     });
 
+    it('should keep SIGTERM cleanup going when stdout emits EPIPE', async () => {
+      const orchestrator: any = Object.create(TaskOrchestrator.prototype);
+      orchestrator.signalHandlers = [];
+      orchestrator.stopRequested = false;
+      orchestrator.tuiEnabled = false;
+      orchestrator.runningContinuousTasks = new Map();
+      orchestrator.closedOutputErrorHandler = null;
+      const killed: string[] = [];
+      const epipe = Object.assign(new Error('write EPIPE'), {
+        code: 'EPIPE',
+      });
+      orchestrator.cleanup = vi.fn(async () => {
+        process.stdout.emit('error', epipe);
+        const destroyed = Object.assign(new Error('stream destroyed'), {
+          code: 'ERR_STREAM_DESTROYED',
+        });
+        process.stderr.emit('error', destroyed);
+        expect(() =>
+          process.stdout.emit(
+            'error',
+            Object.assign(new Error('write EIO'), { code: 'EIO' })
+          )
+        ).toThrow(/write EIO/);
+        killed.push('serve');
+      });
+      orchestrator.forkedProcessTaskRunner = {
+        cleanup: vi.fn(async () => {}),
+        removeProcessEventListeners: vi.fn(),
+      };
+      const stdoutListeners = process.stdout.listenerCount('error');
+      const stderrListeners = process.stderr.listenerCount('error');
+
+      const exit = vi
+        .spyOn(process, 'exit')
+        .mockImplementation((() => {}) as never);
+      try {
+        orchestrator.setupSignalHandlers();
+        process.emit('SIGTERM');
+        await vi.waitFor(() => {
+          expect(killed).toEqual(['serve']);
+        });
+        expect(exit).toHaveBeenCalledWith(143);
+        await orchestrator.dispose();
+        process.stdout.emit('error', epipe);
+        process.stderr.emit(
+          'error',
+          Object.assign(new Error('stream destroyed'), {
+            code: 'ERR_STREAM_DESTROYED',
+          })
+        );
+      } finally {
+        exit.mockRestore();
+        const handler = orchestrator.closedOutputErrorHandler;
+        if (handler) {
+          process.stdout.off('error', handler);
+          process.stderr.off('error', handler);
+        }
+      }
+
+      expect(process.stdout.listenerCount('error')).toBe(stdoutListeners);
+      expect(process.stderr.listenerCount('error')).toBe(stderrListeners);
+    });
+
     it('should resolve waitForContinuousTaskExit even for an exit that already happened', async () => {
       const orchestrator: any = Object.create(TaskOrchestrator.prototype);
       const exitHandled = Promise.resolve();
