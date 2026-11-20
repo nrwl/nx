@@ -19,6 +19,7 @@ import { normalizePath } from '../../../utils/path';
 import { workspaceRoot } from '../../../utils/workspace-root';
 import { listLocalPathFiles } from './utils/local-path-hashes';
 import { extractMainLockfileDocument } from './utils/pnpm-normalizer';
+import { isPnpmLockfileV13, normalizePnpmLockfileV13 } from './utils/pnpm-v13';
 
 type PnpmManifestConfigField = keyof NonNullable<PackageJson['pnpm']>;
 export type PnpmLockfileConfigField = keyof Lockfile | 'catalogs';
@@ -109,6 +110,7 @@ export function dropInheritedPnpmPatchedDependencies(
 type PrunedPnpmConfig = {
   pnpmMajor: number | null;
   patchedDependencies: Record<string, string>;
+  standaloneLockfileFormat?: 'v13';
 };
 
 /**
@@ -132,6 +134,8 @@ type PrunedPnpmConfig = {
  *
  * Settings encoded in the pruned resolution, such as `overrides` and
  * `packageExtensions`, are not copied (`stripPrunedLockfilePnpmConfig`).
+ * When the emitted standalone lockfile is v13, declare the format so later
+ * installs continue to write v13.
  *
  * The major is the build machine's pnpm, which is all that is knowable at
  * build time: an output built on pnpm <=10 but deployed on pnpm 11+ will not
@@ -149,6 +153,9 @@ export function getPrunedPnpmInstallSettingsYaml(
       prunedLockfileContent,
       precomputed
     ) ?? {};
+  if (precomputed?.standaloneLockfileFormat === 'v13') {
+    settings.lockfile = { format: 'v13' };
+  }
   const { dump } = require('@zkochan/js-yaml');
   // pnpm 9 rejects a pnpm-workspace.yaml without a `packages` field; an empty
   // list is accepted by pnpm 9-11 without pulling any importer into the install.
@@ -386,9 +393,9 @@ let lastParsedPnpmLockfile: {
  * rebuild re-reads an unchanged lockfile. The fallback path passes the root
  * lockfile in, which pnpm 11 writes as two YAML documents for a package manager
  * it persists (see `shouldPersistLockfile`), so the workspace document is
- * extracted the way the pnpm lockfile parser does. Returns null when the content is not
- * valid YAML or does not parse to an object. Consumers must not mutate the
- * returned document.
+ * extracted the way the pnpm lockfile parser does. Returns null when the content
+ * cannot be read as a lockfile mapping, including a v13 normalization failure.
+ * Consumers must not mutate the returned document.
  */
 function parsePnpmLockfileYaml(content: string): object | null {
   if (lastParsedPnpmLockfile?.content !== content) {
@@ -410,6 +417,9 @@ function parsePnpmLockfileYaml(content: string): object | null {
     } else {
       try {
         parsed = require('@zkochan/js-yaml').load(document) ?? {};
+        if (isPnpmLockfileV13(parsed)) {
+          parsed = normalizePnpmLockfileV13(parsed);
+        }
       } catch (e) {
         warnUnusable(e instanceof Error ? e.message : String(e));
         parsed = null;
@@ -1959,6 +1969,12 @@ export function getPrunedPnpmInstallArtifacts(
       workspaceRootPath,
       prunedLockfileContent
     ),
+    standaloneLockfileFormat:
+      options?.includeLocalPathArtifacts !== false &&
+      prunedLockfileContent &&
+      isPnpmLockfileV13(parsePnpmLockfileYaml(prunedLockfileContent))
+        ? 'v13'
+        : undefined,
   };
   const { patchFiles, packageJsonPatchedDependencies } =
     getPrunedPnpmPatchArtifacts(
