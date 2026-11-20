@@ -404,6 +404,38 @@ describe('release-publish executor', () => {
       );
     });
 
+    it('passes a plain --registry to bun info for scoped packages', async () => {
+      mockDetectPackageManager.mockReturnValue('bun');
+      mockParseRegistryOptions.mockResolvedValue({
+        registry: 'https://registry.example.com/',
+        tag: 'latest',
+        registryConfigKey: '@scope:registry',
+      });
+      mockExec
+        .mockReturnValueOnce(
+          JSON.stringify({
+            versions: ['0.9.0'],
+            'dist-tags': { latest: '0.9.0' },
+          })
+        )
+        .mockReturnValueOnce('bun publish output');
+
+      const result = await runExecutor(options, context);
+
+      expect(result.success).toBe(true);
+      expect(mockExec).toHaveBeenNthCalledWith(
+        2,
+        'bun',
+        [
+          'info',
+          '@scope/test-package',
+          '--json',
+          '--registry=https://registry.example.com/',
+        ],
+        expect.anything()
+      );
+    });
+
     it('publishes when npm reports the exact version is missing', async () => {
       mockExec
         .mockImplementationOnce(() => {
