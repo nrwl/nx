@@ -15,6 +15,8 @@ import {
   filterTaskGraphToSelection,
 } from './create-task-graph';
 import { pruneToSelectedTasks } from './utils';
+import { output } from '../utils/output';
+import type { MockInstance } from 'vitest';
 
 describe('createTaskGraph', () => {
   let projectGraph: ProjectGraph;
@@ -3723,6 +3725,137 @@ describe('createTaskGraph', () => {
       { id: 'lib1:build' },
       { id: 'lib2:build' },
     ]);
+  });
+
+  describe('dependsOn entries that match nothing', () => {
+    function graphWithDependsOn(
+      dependsOn: TargetConfiguration['dependsOn']
+    ): ProjectGraph {
+      return {
+        nodes: {
+          app1: {
+            name: 'app1',
+            type: 'app',
+            data: {
+              root: 'app1-root',
+              targets: {
+                build: { executor: 'nx:run-commands', dependsOn },
+              },
+            },
+          },
+          lib1: {
+            name: 'lib1',
+            type: 'lib',
+            data: {
+              root: 'lib1-root',
+              targets: {
+                'build:prod': { executor: 'nx:run-commands' },
+              },
+            },
+          },
+          lib2: {
+            name: 'lib2',
+            type: 'lib',
+            data: {
+              root: 'lib2-root',
+              targets: {
+                'build:dev': { executor: 'nx:run-commands' },
+              },
+            },
+          },
+        },
+        dependencies: { app1: [], lib1: [], lib2: [] },
+      };
+    }
+
+    function buildApp1(graph: ProjectGraph) {
+      createTaskGraph(graph, {}, ['app1'], ['build'], null, {});
+    }
+
+    function warning(entry: string) {
+      return {
+        title: '`dependsOn` is misconfigured for app1:build',
+        bodyLines: [`${entry} does not match any task.`],
+      };
+    }
+
+    let warnSpy: MockInstance<typeof output.warn>;
+
+    beforeEach(() => {
+      warnSpy = vi.spyOn(output, 'warn').mockImplementation(() => {});
+    });
+
+    afterEach(() => {
+      warnSpy.mockRestore();
+    });
+
+    it('should warn when a project:target string names no project and no target', () => {
+      buildApp1(graphWithDependsOn(['missing-project:dependency']));
+
+      expect(warnSpy).toHaveBeenCalledWith(
+        warning('"missing-project:dependency"')
+      );
+    });
+
+    it('should warn when a project:target string names a project without the target', () => {
+      buildApp1(graphWithDependsOn(['lib1:typo']));
+
+      expect(warnSpy).toHaveBeenCalledWith(warning('"lib1:typo"'));
+    });
+
+    it('should warn when a projects filter matches no project', () => {
+      buildApp1(
+        graphWithDependsOn([{ projects: 'missing-project', target: 'build' }])
+      );
+
+      expect(warnSpy).toHaveBeenCalledWith(
+        warning('{"projects":"missing-project","target":"build"}')
+      );
+    });
+
+    it('should warn when no project in a projects filter has the target', () => {
+      buildApp1(graphWithDependsOn([{ projects: 'lib*', target: 'typo' }]));
+
+      expect(warnSpy).toHaveBeenCalledWith(
+        warning('{"projects":"lib*","target":"typo"}')
+      );
+    });
+
+    it('should not warn when one project in a projects filter has a target the glob matches', () => {
+      buildApp1(graphWithDependsOn([{ projects: 'lib1', target: 'build:*' }]));
+
+      expect(warnSpy).not.toHaveBeenCalled();
+    });
+
+    it('should not warn for a target with colons that some other project has', () => {
+      buildApp1(graphWithDependsOn(['build:prod']));
+
+      expect(warnSpy).not.toHaveBeenCalled();
+    });
+
+    it('should not warn for a plain target the project lacks', () => {
+      buildApp1(graphWithDependsOn(['codegen']));
+
+      expect(warnSpy).not.toHaveBeenCalled();
+    });
+
+    it('should not warn for a dependencies entry no dependency can run', () => {
+      buildApp1(graphWithDependsOn(['^typo:target']));
+
+      expect(warnSpy).not.toHaveBeenCalled();
+    });
+
+    it('should leave the project graph entries untouched', () => {
+      const graph = graphWithDependsOn([{ target: 'codegen' }]);
+
+      buildApp1(graph);
+      buildApp1(graph);
+
+      expect(graph.nodes.app1.data.targets.build.dependsOn).toEqual([
+        { target: 'codegen' },
+      ]);
+      expect(warnSpy).not.toHaveBeenCalled();
+    });
   });
 
   it('should handle negative patterns in dependsOn', () => {
