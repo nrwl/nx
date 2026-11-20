@@ -12,9 +12,9 @@ import {
   type UninferredTargetRewrite,
 } from '@nx/devkit/internal';
 import { posix } from 'node:path';
+import { vitestConfigFileNamePatterns } from '../../../utils/config-file-names';
 
-// Matches the config files @nx/vitest infers a project from
-const inferredConfigName = /^(vite|vitest)\.config\.(js|ts|mjs|mts|cjs|cts)$/;
+const executors = ['@nx/vitest:test', '@nrwl/vitest:test'];
 
 const isBoolean = (value: unknown) => typeof value === 'boolean';
 const isPlainPathList = (value: unknown) =>
@@ -37,11 +37,12 @@ const acceptedOptions = new Map<string, (value: unknown) => boolean>([
 ]);
 
 /**
- * @nx/vitest infers a project's target only from a vite or vitest config in its
- * root, so a target running another config becomes an explicit command.
+ * @nx/vitest infers a project's target from a vite or vitest config in its
+ * root, or from another config in its root through `configToTargetName`. A
+ * target running any other config becomes an explicit command.
  */
 export const vitestConfigRewrite: UninferredTargetRewrite = {
-  executors: ['@nx/vitest:test', '@nrwl/vitest:test'],
+  executors,
   tool: 'Vitest',
   isInferred,
   toRunCommandsTarget,
@@ -50,22 +51,99 @@ export const vitestConfigRewrite: UninferredTargetRewrite = {
 function isInferred(
   tree: Tree,
   target: TargetConfiguration,
-  project: ProjectConfiguration
+  project: ProjectConfiguration,
+  targetName: string
 ) {
   const configFile = target.options?.configFile;
   if (configFile) {
-    return isInferredConfig(posix.normalize(configFile), project.root);
+    return (
+      isDefaultConfig(posix.normalize(configFile), project.root) ||
+      mappedVitestConfigFileName(tree, target, project, targetName) !==
+        undefined
+    );
   }
-  return tree
-    .children(project.root)
-    .some((file) => inferredConfigName.test(file));
+  return hasDefaultConfig(tree, project.root);
 }
 
-function isInferredConfig(configFile: string, projectRoot: string) {
+function isDefaultConfig(configFile: string, projectRoot: string) {
   return (
     posix.dirname(configFile) === posix.normalize(projectRoot) &&
-    inferredConfigName.test(posix.basename(configFile))
+    vitestConfigFileNamePatterns.defaultName.test(posix.basename(configFile))
   );
+}
+
+function hasDefaultConfig(tree: Tree, projectRoot: string) {
+  return tree
+    .children(projectRoot)
+    .some((file) => vitestConfigFileNamePatterns.defaultName.test(file));
+}
+
+/**
+ * The file name to map to the target in `configToTargetName`, or undefined
+ * when the plugin cannot infer the target that way.
+ */
+export function mappedVitestConfigFileName(
+  tree: Tree,
+  target: TargetConfiguration,
+  project: ProjectConfiguration,
+  targetName: string
+): string | undefined {
+  const configFile = target.options?.configFile;
+  if (typeof configFile !== 'string') {
+    return undefined;
+  }
+  const path = posix.normalize(configFile);
+  const fileName = posix.basename(path);
+  if (
+    posix.dirname(path) !== posix.normalize(project.root) ||
+    vitestConfigFileNamePatterns.defaultName.test(fileName) ||
+    !vitestConfigFileNamePatterns.mappableName.test(fileName) ||
+    !tree.exists(path)
+  ) {
+    return undefined;
+  }
+  // The inferred command names the config, so a configuration can't switch it
+  const switchesConfig = Object.values(target.configurations ?? {}).some(
+    ({ configFile: configured }) =>
+      configured !== undefined && posix.normalize(configured) !== path
+  );
+  // The registration's default testTargetName infers `test` from the default config
+  const collidesWithDefault =
+    targetName === 'test' && hasDefaultConfig(tree, project.root);
+  if (
+    switchesConfig ||
+    collidesWithDefault ||
+    isClaimedByEarlierTarget(project, targetName, path)
+  ) {
+    return undefined;
+  }
+  return fileName;
+}
+
+// configToTargetName maps each config file to one target
+function isClaimedByEarlierTarget(
+  project: ProjectConfiguration,
+  targetName: string,
+  path: string
+): boolean {
+  for (const [name, target] of Object.entries(project.targets ?? {})) {
+    if (name === targetName) {
+      return false;
+    }
+    const configFile = target.options?.configFile;
+    if (
+      executors.includes(target.executor) &&
+      typeof configFile === 'string' &&
+      posix.normalize(
+        configFile
+          .replace('{workspaceRoot}/', '')
+          .replace('{projectRoot}', project.root)
+      ) === path
+    ) {
+      return true;
+    }
+  }
+  return false;
 }
 
 // The executor loaded the config with root set to the project, and Vitest

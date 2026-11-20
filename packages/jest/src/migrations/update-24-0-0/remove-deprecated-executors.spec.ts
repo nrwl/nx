@@ -90,6 +90,7 @@ function addProject(tree: Tree, name: string, project: ProjectConfiguration) {
     name: name,
     type: project.projectType === 'application' ? 'app' : 'lib',
     data: {
+      name,
       projectType: project.projectType,
       root: project.root,
       targets: project.targets,
@@ -303,7 +304,7 @@ describe('remove-deprecated-executors', () => {
       shape: string;
       targetDefaults?: NxJsonConfiguration['targetDefaults'];
       target: TargetConfiguration;
-      expected?: Partial<TargetConfiguration>;
+      expected: TargetConfiguration;
     }>([
       {
         shape: 'with its test settings in target defaults',
@@ -326,7 +327,7 @@ describe('remove-deprecated-executors', () => {
         },
         expected: {
           cache: true,
-          inputs: ['default', '^production', '{workspaceRoot}/jest.preset.js'],
+          outputs: ['{workspaceRoot}/coverage/{projectName}'],
         },
       },
       {
@@ -341,9 +342,26 @@ describe('remove-deprecated-executors', () => {
           },
           configurations: { ci: { ci: true, codeCoverage: true } },
         },
+        expected: {
+          outputs: ['{workspaceRoot}/coverage/{projectName}'],
+          options: { passWithNoTests: true },
+          configurations: { ci: { ci: true, coverage: true } },
+        },
+      },
+      {
+        shape: 'with a target-name default a rewrite would be held back for',
+        targetDefaults: { test: { options: { codeCoverage: true } } },
+        target: {
+          executor: '@nx/jest:jest',
+          outputs: ['{workspaceRoot}/coverage/{projectName}'],
+          options: { jestConfig: 'jest.config.app.ts' },
+        },
+        expected: {
+          outputs: ['{workspaceRoot}/coverage/{projectName}'],
+        },
       },
     ])(
-      'runs Jest with the renamed config of a root project $shape',
+      'infers the renamed config of a root project through configToTargetName $shape',
       async ({ targetDefaults, target, expected }) => {
         if (targetDefaults) {
           updateNxJson(tree, { ...readNxJson(tree), targetDefaults });
@@ -364,17 +382,16 @@ describe('remove-deprecated-executors', () => {
 
         const result = await update(tree);
 
-        expect(readProjectConfiguration(tree, 'my-app').targets.test).toEqual({
-          ...expected,
-          executor: 'nx:run-commands',
-          outputs: ['{workspaceRoot}/coverage/{projectName}'],
+        expect(readProjectConfiguration(tree, 'my-app').targets.test).toEqual(
+          expected
+        );
+        expect(readNxJson(tree).plugins).toContainEqual({
+          plugin: '@nx/jest/plugin',
           options: {
-            command: 'jest --config ./jest.config.app.ts',
-            cwd: '.',
-            env: tsNodeEnv,
-            passWithNoTests: true,
+            targetName: 'test',
+            configToTargetName: { 'jest.config.app.ts': 'test' },
           },
-          configurations: { ci: { ci: true, coverage: true } },
+          include: ['*'],
         });
         expect(
           readProjectConfiguration(tree, 'lib1').targets.test?.executor
@@ -626,7 +643,7 @@ describe('remove-deprecated-executors', () => {
     projectGraph.nodes.pkg = {
       name: 'pkg',
       type: 'lib',
-      data: { root: 'libs/pkg', targets },
+      data: { name: 'pkg', root: 'libs/pkg', targets },
     };
 
     await update(tree);

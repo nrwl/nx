@@ -152,7 +152,7 @@ The configuration directory must also contain a `project.json` or a workspace-pa
 
 A root project with its own `jest.config.<ext>` keeps that file when you add Jest to another project. The `@nx/jest:configuration` generator does not create a workspace-level Jest configuration in that case. Run `nx run-many -t test` to run the tests of every project.
 
-Workspaces created before Nx 24 can keep a root project configuration named `jest.config.app.<ext>` or `jest.config.lib.<ext>` next to a workspace `jest.config.<ext>`. The plugin doesn't infer tasks from those file names, so the Nx 24 migration gives that root project an explicit `jest --config` target. When the migration can't carry a target over unchanged, the target keeps the removed executor and the migration lists it for you to replace.
+Workspaces created before Nx 24 can keep a root project configuration named `jest.config.app.<ext>` or `jest.config.lib.<ext>` next to a workspace `jest.config.<ext>`. The Nx 24 migration infers the root project's task from that file through [`configToTargetName`](#other-configuration-files). A target on a config file outside its project root, or on a file whose name doesn't start with `jest.config`, becomes an explicit `jest --config` target instead. When the migration can't carry a target over unchanged, the target keeps the removed executor and the migration lists it for you to replace.
 
 ### Plugin options
 
@@ -179,11 +179,39 @@ Configure the plugin in `nx.json`:
 | `ciGroupName`        | string  | none                           | Custom group name for atomized tasks in Nx Cloud/UI.                                                                                                                                                             |
 | `disableJestRuntime` | boolean | `true`                         | When `true`, Nx skips creating the Jest runtime and computes inputs/outputs itself. Set to `false` to enable the Jest runtime.                                                                                   |
 | `useJestResolver`    | boolean | `true` when runtime is enabled | Whether to use Jest's resolver for resolving config file references as task inputs. Follows symlinks and honors custom `moduleDirectories`/`modulePaths`. Faster path-based classification is used when `false`. |
+| `configToTargetName` | object  | none                           | Maps a config file name in a project root to a task name, such as `{ "jest.config.e2e.ts": "e2e" }`. See [other configuration files](#other-configuration-files).                                                |
 
 `disableJestRuntime` defaults to `true` because the plugin treats it as enabled only when `options.disableJestRuntime !== false`. This reduces computation time for inferred tasks; set it to `false` if you need Jest runtime inference.
 
 The test task is cached, with inputs and outputs based on your Jest configuration.
 Set `ciTargetName` to enable [task splitting (Atomizer)](/docs/kb/split-e2e-tasks).
+
+### Other configuration files
+
+A project can keep more than one Jest configuration, such as `jest.config.e2e.ts` next to `jest.config.ts`. Map each extra file name to a task name with `configToTargetName`:
+
+```json
+// nx.json
+{
+  "plugins": [
+    {
+      "plugin": "@nx/jest/plugin",
+      "options": {
+        "targetName": "test",
+        "configToTargetName": {
+          "jest.config.e2e.ts": "e2e"
+        }
+      }
+    }
+  ]
+}
+```
+
+Every project with `jest.config.e2e.ts` in its root gets an `e2e` task that runs `jest --config jest.config.e2e.ts`. It's cached and gets its inputs and outputs the same way the `test` task does. With `ciTargetName` set, the plugin also splits it into an `e2e-ci` task, grouped as `E2E (CI)`.
+
+- Keys are file names, not paths, and must match `jest.config*.{js,ts,mjs,mts,cjs,cts}`. The plugin warns about any other key and ignores it.
+- The directory needs a `project.json` or a workspace-package `package.json`, as it does for `jest.config.<ext>`.
+- Two config files in one project root can't infer the same task name. The plugin reports an error for each mapped file whose task another config file in that root also infers, and infers no tasks from it. A default `jest.config.<ext>` file keeps its tasks.
 
 ### Unit and e2e configurations
 
