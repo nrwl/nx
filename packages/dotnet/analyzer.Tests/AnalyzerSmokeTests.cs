@@ -62,7 +62,7 @@ public class AnalyzerSmokeTests : IDisposable
     /// process - registering in the test host would fight the runner over which
     /// MSBuild assemblies get loaded.
     /// </summary>
-    private JsonElement AnalyzeWorkspace(string projectFile)
+    private JsonElement AnalyzeWorkspace(params string[] projectFiles)
     {
         // Both MsbuildAnalyzer.dll and its runtimeconfig.json land next to the
         // test assembly via the project reference.
@@ -80,7 +80,10 @@ public class AnalyzerSmokeTests : IDisposable
         using var process = Process.Start(startInfo)!;
         // First stdin line is the plugin-options slot; empty means defaults.
         process.StandardInput.WriteLine(string.Empty);
-        process.StandardInput.WriteLine(projectFile);
+        foreach (var projectFile in projectFiles)
+        {
+            process.StandardInput.WriteLine(projectFile);
+        }
         process.StandardInput.Close();
 
         var stdout = process.StandardOutput.ReadToEnd();
@@ -303,5 +306,32 @@ public class AnalyzerSmokeTests : IDisposable
         Assert.Contains("apps/MyLib/MyLib.csproj", evaluationInputs);
         Assert.DoesNotContain(evaluationInputs, i => i.Contains("nuget.g.props", StringComparison.Ordinal));
         Assert.DoesNotContain(buildInputs, i => i.Contains("nuget.g.props", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void MissingProjectReference_IsSkippedWithoutFailingTheWorkspace()
+    {
+        var core = WriteProject("Shop.Core", "");
+        var tests = WriteProject("Shop.Tests", "");
+        File.WriteAllText(tests, """
+            <Project Sdk="Microsoft.NET.Sdk">
+              <PropertyGroup>
+                <TargetFramework>net8.0</TargetFramework>
+              </PropertyGroup>
+              <ItemGroup>
+                <ProjectReference Include="..\Shop.Core\Shop.Core.csproj" />
+                <ProjectReference Include="..\..\src\Shop.Missing\Shop.Missing.csproj" />
+              </ItemGroup>
+            </Project>
+            """);
+
+        var result = AnalyzeWorkspace(core, tests);
+
+        var projects = result.GetProperty("nodesByFile").EnumerateObject().Select(p => p.Name).Order().ToArray();
+        Assert.Equal(new[] { "apps/Shop.Core/Shop.Core.csproj", "apps/Shop.Tests/Shop.Tests.csproj" }, projects);
+
+        var refs = result.GetProperty("referencesByRoot").GetProperty("apps/Shop.Tests").GetProperty("refs")
+            .EnumerateArray().Select(r => r.GetString()!).ToArray();
+        Assert.Equal(new[] { "apps/Shop.Core" }, refs);
     }
 }
