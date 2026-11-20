@@ -266,8 +266,7 @@ function projectTargetNames(
   try {
     return (
       normalizeDependencyConfigDefinition(
-        // The normalizer writes `projects` onto the object it gets.
-        typeof dependency === 'string' ? dependency : { ...dependency },
+        dependency,
         project,
         graph,
         targetNames

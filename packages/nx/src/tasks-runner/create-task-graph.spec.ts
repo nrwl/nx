@@ -3753,8 +3753,29 @@ describe('createTaskGraph', () => {
               },
             },
           },
+          lib2: {
+            name: 'lib2',
+            type: 'lib',
+            data: {
+              root: 'lib2-root',
+              targets: {
+                'build:dev': { executor: 'nx:run-commands' },
+              },
+            },
+          },
         },
-        dependencies: { app1: [], lib1: [] },
+        dependencies: { app1: [], lib1: [], lib2: [] },
+      };
+    }
+
+    function buildApp1(graph: ProjectGraph) {
+      createTaskGraph(graph, {}, ['app1'], ['build'], null, {});
+    }
+
+    function warning(entry: string) {
+      return {
+        title: '`dependsOn` is misconfigured for app1:build',
+        bodyLines: [`${entry} does not match any task.`],
       };
     }
 
@@ -3769,59 +3790,70 @@ describe('createTaskGraph', () => {
     });
 
     it('should warn when a project:target string names no project and no target', () => {
-      createTaskGraph(
-        graphWithDependsOn(['missing-project:dependency']),
-        {},
-        ['app1'],
-        ['build'],
-        null,
-        {}
-      );
+      buildApp1(graphWithDependsOn(['missing-project:dependency']));
 
-      expect(warnSpy).toHaveBeenCalledWith({
-        title: '`dependsOn` is misconfigured for app1:build',
-        bodyLines: [
-          '"missing-project:dependency" does not match any project or target.',
-        ],
-      });
+      expect(warnSpy).toHaveBeenCalledWith(
+        warning('"missing-project:dependency"')
+      );
+    });
+
+    it('should warn when a project:target string names a project without the target', () => {
+      buildApp1(graphWithDependsOn(['lib1:typo']));
+
+      expect(warnSpy).toHaveBeenCalledWith(warning('"lib1:typo"'));
     });
 
     it('should warn when a projects filter matches no project', () => {
-      createTaskGraph(
-        graphWithDependsOn([{ projects: 'missing-project', target: 'build' }]),
-        {},
-        ['app1'],
-        ['build'],
-        null,
-        {}
+      buildApp1(
+        graphWithDependsOn([{ projects: 'missing-project', target: 'build' }])
       );
 
-      expect(warnSpy).toHaveBeenCalledTimes(1);
+      expect(warnSpy).toHaveBeenCalledWith(
+        warning('{"projects":"missing-project","target":"build"}')
+      );
+    });
+
+    it('should warn when no project in a projects filter has the target', () => {
+      buildApp1(graphWithDependsOn([{ projects: 'lib*', target: 'typo' }]));
+
+      expect(warnSpy).toHaveBeenCalledWith(
+        warning('{"projects":"lib*","target":"typo"}')
+      );
+    });
+
+    it('should not warn when one project in a projects filter has a target the glob matches', () => {
+      buildApp1(graphWithDependsOn([{ projects: 'lib1', target: 'build:*' }]));
+
+      expect(warnSpy).not.toHaveBeenCalled();
     });
 
     it('should not warn for a target with colons that some other project has', () => {
-      createTaskGraph(
-        graphWithDependsOn(['build:prod']),
-        {},
-        ['app1'],
-        ['build'],
-        null,
-        {}
-      );
+      buildApp1(graphWithDependsOn(['build:prod']));
 
       expect(warnSpy).not.toHaveBeenCalled();
     });
 
     it('should not warn for a plain target the project lacks', () => {
-      createTaskGraph(
-        graphWithDependsOn(['codegen']),
-        {},
-        ['app1'],
-        ['build'],
-        null,
-        {}
-      );
+      buildApp1(graphWithDependsOn(['codegen']));
 
+      expect(warnSpy).not.toHaveBeenCalled();
+    });
+
+    it('should not warn for a dependencies entry no dependency can run', () => {
+      buildApp1(graphWithDependsOn(['^typo:target']));
+
+      expect(warnSpy).not.toHaveBeenCalled();
+    });
+
+    it('should leave the project graph entries untouched', () => {
+      const graph = graphWithDependsOn([{ target: 'codegen' }]);
+
+      buildApp1(graph);
+      buildApp1(graph);
+
+      expect(graph.nodes.app1.data.targets.build.dependsOn).toEqual([
+        { target: 'codegen' },
+      ]);
       expect(warnSpy).not.toHaveBeenCalled();
     });
   });
