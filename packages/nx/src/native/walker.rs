@@ -18,45 +18,59 @@ pub struct NxFile {
     pub mod_time: i64,
 }
 
-/// Walks the directory in a single thread and does not ignore any files
-/// Should only be used for small directories, and not traversing the whole workspace
+/// Walks `directory` in a single thread. `ignores` apply at any depth, on top
+/// of the hardcoded ignores. `workspace_root` anchors the root-only ones;
+/// pass `directory` when that directory is the workspace.
 ///
-/// The `ignores` argument is used to filter entries. This is important to make sure that any ignore globs are applied on the `filter_entry` function
-pub fn nx_walker_sync<'a, P>(
+/// Should only be used for small directories, and not traversing the whole
+/// workspace.
+pub fn nx_walker_sync<P, R>(
     directory: P,
+    workspace_root: R,
     ignores: Option<&[String]>,
-) -> impl Iterator<Item = PathBuf>
+) -> impl Iterator<Item = PathBuf> + use<P, R>
 where
-    P: AsRef<Path> + 'a,
+    P: AsRef<Path>,
+    R: AsRef<Path>,
 {
     let directory: PathBuf = directory.as_ref().into();
-    walk_from(directory.clone(), directory, sync_ignores(ignores))
+    let workspace_root: PathBuf = workspace_root.as_ref().into();
+    walk_from(
+        directory.clone(),
+        directory,
+        workspace_root,
+        sync_extra_ignores(ignores),
+    )
 }
 
-/// The hardcoded ignores plus `ignores` at any depth, as `nx_walker_sync`
-/// applies them.
-fn sync_ignores(ignores: Option<&[String]>) -> Arc<NxGlobSet> {
-    let mut patterns: Vec<String> = HARDCODED_IGNORE_PATTERNS
-        .iter()
-        .map(|s| (*s).to_string())
-        .collect();
-    if let Some(ignores) = ignores {
-        patterns.extend(ignores.iter().map(|s| format!("**/{}", s)));
+/// `ignores` at any depth. The hardcoded ignores are applied separately: the
+/// root-anchored ones need `workspace_root`, which a glob on the absolute
+/// path does not have.
+fn sync_extra_ignores(ignores: Option<&[String]>) -> Option<Arc<NxGlobSet>> {
+    let ignores = ignores?;
+    if ignores.is_empty() {
+        return None;
     }
-    build_glob_set(&patterns).expect("Should be valid globs")
+    let patterns: Vec<String> = ignores.iter().map(|s| format!("**/{}", s)).collect();
+    Some(build_glob_set(&patterns).expect("Should be valid globs"))
 }
 
-/// Every entry from `start` down that `ignored` does not prune, relative to
+/// Every entry from `start` down that the ignores do not prune, relative to
 /// `base`. `start` itself is left out when it is `base`.
 fn walk_from(
     base: PathBuf,
     start: PathBuf,
-    ignored: Arc<NxGlobSet>,
+    workspace_root: PathBuf,
+    extra: Option<Arc<NxGlobSet>>,
 ) -> impl Iterator<Item = PathBuf> {
     // Use WalkDir instead of ignore::WalkBuilder because it's faster
     WalkDir::new(start)
         .into_iter()
-        .filter_entry(move |entry| !ignored.is_match(entry.path().to_string_lossy().as_ref()))
+        .filter_entry(move |entry| {
+            let path = entry.path();
+            !is_hardcoded_ignored(path, &workspace_root)
+                && extra.as_ref().is_none_or(|set| !set.is_match(path))
+        })
         .filter_map(move |entry| {
             let path = entry.ok()?.path().strip_prefix(&base).ok()?.to_owned();
             (!path.as_os_str().is_empty()).then_some(path)
@@ -65,15 +79,16 @@ fn walk_from(
 
 /// The path of `root` under `directory`, if the full walk from `directory`
 /// would reach it: no part of it is pruned, and no part above it is a link or
-/// a file.
-fn reachable_root(directory: &Path, root: &str, ignored: &NxGlobSet) -> Option<PathBuf> {
+/// a file. `directory` is the workspace root.
+fn reachable_root(directory: &Path, root: &str, extra: &Option<Arc<NxGlobSet>>) -> Option<PathBuf> {
     let mut path = directory.to_path_buf();
     let parts: Vec<&str> = root.split('/').collect();
     for (depth, part) in parts.iter().enumerate() {
         path.push(part);
         let link = std::fs::symlink_metadata(&path).ok()?;
         let is_root = depth == parts.len() - 1;
-        if ignored.is_match(path.to_string_lossy().as_ref())
+        if is_hardcoded_ignored(&path, directory)
+            || extra.as_ref().is_some_and(|set| set.is_match(&path))
             || (!is_root && (!link.is_dir() || link.file_type().is_symlink()))
         {
             return None;
@@ -102,7 +117,7 @@ pub fn nx_walker_sync_under(
         .map(|root| if root == "." { "" } else { root })
         .collect();
     if roots.contains(&"") {
-        return nx_walker_sync(directory, ignores).collect();
+        return nx_walker_sync(directory, directory, ignores).collect();
     }
     roots.sort();
     roots.dedup();
@@ -114,13 +129,15 @@ pub fn nx_walker_sync_under(
     };
     let roots: Vec<&str> = roots.iter().copied().filter(|root| !nested(root)).collect();
 
-    let ignored = sync_ignores(ignores);
-    if ignored.is_match(directory.to_string_lossy().as_ref()) {
+    let extra = sync_extra_ignores(ignores);
+    if is_hardcoded_ignored(directory, directory)
+        || extra.as_ref().is_some_and(|set| set.is_match(directory))
+    {
         return vec![];
     }
     let mut found = vec![];
     for root in roots {
-        let Some(path) = reachable_root(directory, root, &ignored) else {
+        let Some(path) = reachable_root(directory, root, &extra) else {
             continue;
         };
         // WalkDir would follow a linked start; the full walk never enters a link.
@@ -131,7 +148,8 @@ pub fn nx_walker_sync_under(
         found.extend(walk_from(
             directory.to_path_buf(),
             path,
-            Arc::clone(&ignored),
+            directory.to_path_buf(),
+            extra.clone(),
         ));
     }
     found
@@ -291,13 +309,65 @@ pub(crate) const TRANSIENT_FILE_GLOBS: &[&str] = &[
 ];
 
 /// Directories the walker and the watcher never enter.
+///
+/// `node_modules` and `.git` match at any depth. The rest are anchored to the
+/// workspace root (a leading `/`, gitignore-style): Nx and Yarn write those
+/// only there, and a nested copy is project content.
 pub(crate) const HARDCODED_IGNORE_PATTERNS: &[&str] = &[
     "**/node_modules",
     "**/.git",
-    "**/.nx/cache",
-    "**/.nx/workspace-data",
-    "**/.yarn/cache",
+    "/.nx/cache",
+    "/.nx/workspace-data",
+    "/.yarn/cache",
 ];
+
+struct HardcodedGlobs {
+    /// `**/node_modules` and `**/.git`, matched against the path as given.
+    anywhere: Arc<NxGlobSet>,
+    /// The `/`-anchored patterns with the anchor removed, plus `/**`, matched
+    /// against the workspace-relative path.
+    rooted: Arc<NxGlobSet>,
+}
+
+fn hardcoded_globs() -> &'static HardcodedGlobs {
+    static GLOBS: OnceLock<HardcodedGlobs> = OnceLock::new();
+    GLOBS.get_or_init(|| {
+        let anywhere: Vec<&str> = HARDCODED_IGNORE_PATTERNS
+            .iter()
+            .copied()
+            .filter(|pattern| !pattern.starts_with('/'))
+            .collect();
+        let rooted: Vec<String> = HARDCODED_IGNORE_PATTERNS
+            .iter()
+            .filter_map(|pattern| pattern.strip_prefix('/'))
+            .flat_map(|pattern| [pattern.to_string(), format!("{pattern}/**")])
+            .collect();
+        HardcodedGlobs {
+            anywhere: build_glob_set(&anywhere).expect("These static ignores always build"),
+            rooted: build_glob_set(&rooted).expect("These static ignores always build"),
+        }
+    })
+}
+
+/// True when `path` sits in a [`HARDCODED_IGNORE_PATTERNS`] directory.
+///
+/// Patterns without a leading `/` match `path` as given. Patterns with one
+/// match only `path.strip_prefix(workspace_root)`, so a nested `.nx/cache`,
+/// `.nx/workspace-data` or `.yarn/cache` is kept.
+pub(crate) fn is_hardcoded_ignored(path: &Path, workspace_root: &Path) -> bool {
+    let globs = hardcoded_globs();
+    if globs.anywhere.is_match(path.to_string_lossy().as_ref()) {
+        return true;
+    }
+    let Ok(relative) = path.strip_prefix(workspace_root) else {
+        return false;
+    };
+    if relative.as_os_str().is_empty() {
+        return false;
+    }
+    let relative = relative.to_string_lossy().replace('\\', "/");
+    globs.rooted.is_match(relative.as_str())
+}
 
 /// The same list, for JavaScript callers that walk a tree rather than the
 /// filesystem - `visitNotIgnoredFiles` - so both sides apply one baseline
@@ -317,26 +387,30 @@ pub(crate) fn create_walker<P>(directory: P, use_ignores: bool) -> WalkBuilder
 where
     P: AsRef<Path>,
 {
-    create_walker_vetoing(directory, use_ignores, None, Vec::new())
+    let directory = directory.as_ref();
+    create_walker_vetoing(directory, directory, use_ignores, None, Vec::new())
 }
 
 /// `create_walker` with `extra` and the `skip` directories (absolute) vetoed
 /// on top of the hardcoded ignores. The ignore crate keeps one filter
 /// predicate, so a caller that needs more has to have them composed here
 /// rather than add its own.
-pub(crate) fn create_walker_vetoing<P>(
+///
+/// `workspace_root` anchors `.nx/cache`, `.nx/workspace-data` and
+/// `.yarn/cache`. `directory` is where the walk starts and may sit deeper.
+pub(crate) fn create_walker_vetoing<P, R>(
     directory: P,
+    workspace_root: R,
     use_ignores: bool,
     extra: Option<Arc<NxGlobSet>>,
     skip: Vec<PathBuf>,
 ) -> WalkBuilder
 where
     P: AsRef<Path>,
+    R: AsRef<Path>,
 {
     let directory: PathBuf = directory.as_ref().into();
-
-    let ignore_glob_set =
-        build_glob_set(HARDCODED_IGNORE_PATTERNS).expect("These static ignores always build");
+    let workspace_root = workspace_root.as_ref().to_path_buf();
 
     let mut walker = WalkBuilder::new(&directory);
     walker.require_git(false);
@@ -366,14 +440,16 @@ where
         walker.standard_filters(false);
     }
 
-    // We should make sure to always ignore node_modules and the .git folder
     walker.filter_entry(move |entry| {
-        let path = entry.path().to_string_lossy();
-        !ignore_glob_set.is_match(path.as_ref())
-            && extra
-                .as_ref()
-                .is_none_or(|set| !set.is_match(path.as_ref()))
-            && !skip.iter().any(|dir| entry.path() == dir)
+        let path = entry.path();
+        if is_hardcoded_ignored(path, &workspace_root) {
+            return false;
+        }
+        let lossy = path.to_string_lossy();
+        extra
+            .as_ref()
+            .is_none_or(|set| !set.is_match(lossy.as_ref()))
+            && !skip.iter().any(|dir| path == dir)
     });
     walker
 }
@@ -437,7 +513,7 @@ pub(crate) fn walk_files(
 
     let found = Mutex::new(Vec::new());
     let skip = skip.iter().map(|dir| workspace_root.join(dir)).collect();
-    create_walker_vetoing(start, false, Some(transient_skips()?), skip)
+    create_walker_vetoing(start, workspace_root, false, Some(transient_skips()?), skip)
         .follow_links(false)
         .build_parallel()
         .run(|| {
@@ -789,6 +865,81 @@ nested/child-two/
     }
 
     #[test]
+    fn root_cache_directories_are_skipped_but_nested_copies_are_not() {
+        let temp = TempDir::new().unwrap();
+        for file in [
+            ".nx/cache/root.txt",
+            ".nx/workspace-data/root.txt",
+            ".yarn/cache/root.zip",
+            "node_modules/pkg/index.js",
+            ".git/config",
+            "proj/src/.nx/cache/nested.txt",
+            "proj/src/.nx/workspace-data/nested.txt",
+            "proj/src/.yarn/cache/nested.zip",
+            "proj/node_modules/pkg/index.js",
+            "proj/.git/config",
+            "proj/src/a.txt",
+        ] {
+            temp.child(file).write_str("x").unwrap();
+        }
+
+        let nested = [
+            "proj/src/.nx/cache/nested.txt",
+            "proj/src/.nx/workspace-data/nested.txt",
+            "proj/src/.yarn/cache/nested.zip",
+            "proj/src/a.txt",
+        ];
+
+        let mut walked: Vec<_> = nx_walker(temp.path(), false)
+            .map(|file| file.normalized_path)
+            .collect();
+        walked.sort();
+        assert_eq!(walked, nested);
+
+        // A fileset walk starts inside the project, not at the workspace root.
+        let mut hashed = read_directory(temp.path(), "proj/src", &|_| true, &[]).unwrap();
+        hashed.sort();
+        assert_eq!(hashed, nested);
+
+        // The watcher stores its origin with a trailing separator.
+        let mut anchored = temp.path().to_path_buf();
+        anchored.push("");
+        assert!(is_hardcoded_ignored(
+            &temp.path().join(".nx/cache/root.txt"),
+            &anchored
+        ));
+        assert!(!is_hardcoded_ignored(
+            &temp.path().join("proj/src/.yarn/cache/nested.zip"),
+            &anchored
+        ));
+        assert!(is_hardcoded_ignored(
+            &temp.path().join("proj/node_modules"),
+            &anchored
+        ));
+
+        // Backfill walks the directory that appeared, anchored at the workspace.
+        let mut from_project: Vec<_> = nx_walker_sync(temp.path().join("proj"), temp.path(), None)
+            .map(|path| path.to_string_lossy().replace('\\', "/"))
+            .collect();
+        from_project.sort();
+        assert_eq!(
+            from_project,
+            vec![
+                "src",
+                "src/.nx",
+                "src/.nx/cache",
+                "src/.nx/cache/nested.txt",
+                "src/.nx/workspace-data",
+                "src/.nx/workspace-data/nested.txt",
+                "src/.yarn",
+                "src/.yarn/cache",
+                "src/.yarn/cache/nested.zip",
+                "src/a.txt",
+            ]
+        );
+    }
+
+    #[test]
     fn read_directory_does_not_enter_a_skipped_directory() {
         let temp = TempDir::new().unwrap();
         for path in ["pkg/src/a.ts", "pkg/nested/src/b.ts", "pkg/nested-two/c.ts"] {
@@ -882,9 +1033,10 @@ nested/child-two/
                         root.is_empty() || path == Path::new(root) || path.starts_with(root)
                     })
                 };
-                let mut expected: Vec<_> = nx_walker_sync(temp.path(), ignores.as_deref())
-                    .filter(under)
-                    .collect();
+                let mut expected: Vec<_> =
+                    nx_walker_sync(temp.path(), temp.path(), ignores.as_deref())
+                        .filter(under)
+                        .collect();
                 let mut actual = nx_walker_sync_under(temp.path(), &roots, ignores.as_deref());
                 expected.sort();
                 actual.sort();

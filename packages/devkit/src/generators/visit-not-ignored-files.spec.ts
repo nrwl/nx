@@ -224,6 +224,30 @@ describe('visitNotIgnoredFiles', () => {
       expect(visited).toContain('apps/foo/src/b.ts');
     });
 
+    it('should visit a nested copy of a root-only cache directory', () => {
+      tree.write('.nx/cache/x.js', '');
+      tree.write('.nx/workspace-data/y.js', '');
+      tree.write('.yarn/cache/z.zip', '');
+      tree.write('proj/src/.nx/cache/x.js', '');
+      tree.write('proj/src/.nx/workspace-data/y.js', '');
+      tree.write('proj/src/.yarn/cache/z.zip', '');
+      tree.write('proj/node_modules/pkg/index.js', '');
+      tree.write('proj/.git/config', '');
+      tree.write('proj/src/a.ts', '');
+
+      const visited = visitAll();
+
+      expect(visited).not.toContain('.nx/cache/x.js');
+      expect(visited).not.toContain('.nx/workspace-data/y.js');
+      expect(visited).not.toContain('.yarn/cache/z.zip');
+      expect(visited).toContain('proj/src/.nx/cache/x.js');
+      expect(visited).toContain('proj/src/.nx/workspace-data/y.js');
+      expect(visited).toContain('proj/src/.yarn/cache/z.zip');
+      expect(visited).not.toContain('proj/node_modules/pkg/index.js');
+      expect(visited).not.toContain('proj/.git/config');
+      expect(visited).toContain('proj/src/a.ts');
+    });
+
     it('should never visit the hardcoded directories, with no ignore file present', () => {
       // Shared with the native walker, so a tree walk and a filesystem walk
       // agree on what is never worth visiting.

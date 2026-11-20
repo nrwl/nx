@@ -192,7 +192,8 @@ let alwaysIgnored: ReturnType<typeof ignore> | undefined;
 
 /**
  * Directories that should never be walked, whatever the workspace's own ignore
- * files say - `node_modules`, `.git`, the nx caches.
+ * files say. `node_modules` and `.git` at any depth; `.nx/cache`,
+ * `.nx/workspace-data` and `.yarn/cache` only at the workspace root.
  *
  * The list comes from the native walker rather than a second copy here, so a
  * filesystem walk and a tree walk cannot drift apart.

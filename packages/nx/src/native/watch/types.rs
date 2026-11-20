@@ -264,12 +264,9 @@ pub(super) fn transform_event_to_watch_events(
 /// daemon, so the rules never go stale under it.
 struct FolderEventRules {
     nxignore: ignore::gitignore::Gitignore,
-    hardcoded: std::sync::Arc<crate::native::glob::NxGlobSet>,
 }
 
 fn folder_event_rules(origin: &str) -> anyhow::Result<Arc<FolderEventRules>> {
-    use crate::native::glob::build_glob_set;
-    use crate::native::walker::HARDCODED_IGNORE_PATTERNS;
     use ignore::gitignore::GitignoreBuilder;
 
     static RULES: OnceLock<RwLock<HashMap<String, Arc<FolderEventRules>>>> = OnceLock::new();
@@ -283,7 +280,6 @@ fn folder_event_rules(origin: &str) -> anyhow::Result<Arc<FolderEventRules>> {
     builder.add(origin_path.join(".nxignore"));
     let rules = Arc::new(FolderEventRules {
         nxignore: builder.build()?,
-        hardcoded: build_glob_set(HARDCODED_IGNORE_PATTERNS)?,
     });
     cache.write().insert(origin.to_string(), Arc::clone(&rules));
     Ok(rules)
@@ -303,17 +299,18 @@ fn folder_events(path_ref: &Path, origin: &str) -> anyhow::Result<Vec<WatchEvent
     }
 
     // A checkout creates directories in bursts, and this runs on the watch
-    // thread: rereading .nxignore and recompiling the globs per event would
-    // hold up delivery.
+    // thread: rereading .nxignore per event would hold up delivery.
     let rules = folder_event_rules(origin)?;
     let ignore = &rules.nxignore;
-    let hardcoded = &rules.hardcoded;
+    let workspace_root = Path::new(origin);
 
     let result = WalkDir::new(path_ref)
         .follow_links(false)
         .follow_root_links(false)
         .into_iter()
-        .filter_entry(|entry| !hardcoded.is_match(entry.path()))
+        .filter_entry(|entry| {
+            !crate::native::walker::is_hardcoded_ignored(entry.path(), workspace_root)
+        })
         .flatten()
         .filter(|entry| !entry.file_type().is_dir())
         .filter(|entry| {
