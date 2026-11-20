@@ -127,6 +127,48 @@ describe('normalizeOptions', () => {
     );
   });
 
+  it.each([
+    [{ format: 'file' as const }, true],
+    [{ discoverRoutes: false }, false],
+    [{ routes: ['/legal'] }, false],
+    [{ routes: [] }, false],
+    [{ routesFile: './routes.txt' }, false],
+    [{ routes: ['/legal'], discoverRoutes: true }, true],
+  ])(
+    'should normalize the %o prerender option to discoverRoutes %s',
+    async (prerender, discoverRoutes) => {
+      const normalized = await normalizeOptions({
+        ...baseOptions,
+        prerender,
+      });
+
+      expect(normalized.prerender).toEqual({ ...prerender, discoverRoutes });
+    }
+  );
+
+  it.each([
+    ['file', true],
+    ['directory', false],
+  ] as const)(
+    'should warn that the "%s" prerender format is not considered with a server: %s',
+    async (format, warns) => {
+      await normalizeOptions({
+        ...baseOptions,
+        server: './src/main.server.ts',
+        ssr: { entry: './src/server.ts' },
+        prerender: { format },
+      });
+
+      expect(
+        warnSpy.mock.calls.some(
+          ([message]) =>
+            message ===
+            'The "prerender.format" option is not considered when the build produces a server.'
+        )
+      ).toBe(warns);
+    }
+  );
+
   it('should reject an output mode when the server file is missing', async () => {
     await expect(
       normalizeOptions({
