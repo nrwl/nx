@@ -1,7 +1,9 @@
 import { CreateDependenciesContext, CreateNodesContext } from '@nx/devkit';
 import { minimatch } from 'minimatch';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
-import { mkdirSync, rmSync } from 'node:fs';
+import { mkdirSync, rmSync, symlinkSync } from 'node:fs';
+import { createRequire } from 'node:module';
+import { dirname, join } from 'node:path';
 import {
   createDependencies,
   createNodesV2,
@@ -125,6 +127,7 @@ describe('@nx/oxlint plugin', () => {
   });
 
   it('should declare the config and its extends chain as inputs', async () => {
+    linkOxlint();
     createFiles({
       '.oxlintrc.json': `{"extends":["./configs/base.json"],"rules":{}}`,
       'configs/base.json': `{"rules":{}}`,
@@ -162,6 +165,7 @@ describe('@nx/oxlint plugin', () => {
       'default'
     );
     expect(inputs).not.toContain('^default');
+    expect(inputs).not.toContain('{workspaceRoot}/package-lock.json');
     expect(inputs).toContainEqual({ fileset: LINTABLE_FILES });
     expect(inputs).toContainEqual({
       fileset:
@@ -169,8 +173,51 @@ describe('@nx/oxlint plugin', () => {
     });
   });
 
-  // Only the boundaries bridge reads other projects, so without it a change
-  // in a dependency must not re-lint the dependents.
+  it.each(['typeAware', 'typeCheck'])(
+    'should hash dependency sources, metadata and installed packages for %s',
+    async (option) => {
+      createFiles({
+        '.oxlintrc.json': JSON.stringify({ options: { [option]: true } }),
+        'libs/a/project.json': '{"name":"a"}',
+        'libs/a/src/index.ts': 'export const a = 1;',
+      });
+      const { projects } = await invokeCreateNodesOnMatchingFiles(context);
+      const inputs = projects['libs/a'].targets.lint.inputs;
+      expect(inputs).toContainEqual({
+        fileset: LINTABLE_FILES,
+        dependencies: true,
+      });
+      expect(inputs).toContainEqual({
+        fileset: '{projectRoot}/**/*.json',
+        dependencies: true,
+      });
+      expect(inputs).toContain('{workspaceRoot}/package-lock.json');
+    }
+  );
+
+  it.each([true, false])(
+    'should use the resolved typed mode for extended configs (typeAware: %s)',
+    async (typeAware) => {
+      linkOxlint();
+      createFiles({
+        '.oxlintrc.json': JSON.stringify({
+          extends: ['./base.json'],
+          options: { typeAware },
+        }),
+        'base.json': JSON.stringify({ options: { typeAware: true } }),
+        'libs/a/project.json': '{"name":"a"}',
+        'libs/a/src/index.ts': 'export const a = 1;',
+      });
+      const { projects } = await invokeCreateNodesOnMatchingFiles(context);
+      expect(
+        projects['libs/a'].targets.lint.inputs.some(
+          (input) => input.dependencies === true
+        )
+      ).toBe(typeAware);
+    }
+  );
+
+  // A syntax-only lint run without the bridge reads no dependency sources.
   it('should not hash dependencies without the boundaries bridge', async () => {
     createFiles({
       '.oxlintrc.json': `{"rules":{}}`,
@@ -780,6 +827,15 @@ describe('@nx/oxlint plugin', () => {
       expect(await createDependencies({}, ctx)).toEqual([]);
     });
   });
+
+  function linkOxlint() {
+    tempFs.createDirSync('node_modules');
+    symlinkSync(
+      dirname(createRequire(import.meta.url).resolve('oxlint/package.json')),
+      join(tempFs.tempDir, 'node_modules', 'oxlint'),
+      'junction'
+    );
+  }
 
   function createFiles(fileSys: Record<string, string>) {
     tempFs.createFilesSync(fileSys);
