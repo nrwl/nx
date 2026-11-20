@@ -90,13 +90,17 @@
   "peerDependencies": {
     "@typescript-eslint/parser": "^8.0.0",
     "eslint": "^9.0.0 || ^10.0.0",
-    "eslint-config-prettier": "catalog:eslint"
+    "eslint-config-prettier": "catalog:eslint",
+    "typescript": "^5.8.0 || ^6.0.0"
   },
   "peerDependenciesMeta": {
     "@typescript-eslint/parser": {
       "optional": true
     },
     "eslint-config-prettier": {
+      "optional": true
+    },
+    "typescript": {
       "optional": true
     }
   },
