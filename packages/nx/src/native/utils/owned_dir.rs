@@ -381,7 +381,7 @@ fn is_safe_shared_root(dir: &Path) -> GuardResult<()> {
     }
 
     let uid = uid_of(&metadata);
-    if uid != current_uid() && uid != 0 {
+    if uid != current_uid() && !is_root_owner(uid) {
         return Err(DirRefusal::ForeignSharedContainer {
             dir: dir.to_path_buf(),
             uid,
@@ -464,12 +464,50 @@ pub fn ensure_safe_shared_root(dir: &Path) -> GuardResult<()> {
 /// The kernel's own limit on links followed in one lookup.
 const MAX_LINKS: usize = 40;
 
+#[cfg(target_os = "linux")]
+fn unmapped_root_uid(uid_map: Option<&str>, overflow_uid: Option<&str>) -> Option<u32> {
+    let mut has_mapping = false;
+    for line in uid_map?.lines() {
+        let mut fields = line.split_whitespace();
+        let inside = fields.next()?.parse::<u32>().ok()?;
+        let outside = fields.next()?.parse::<u32>().ok()?;
+        let count = fields.next()?.parse::<u32>().ok()?;
+        if fields.next().is_some()
+            || count == 0
+            || inside.checked_add(count - 1).is_none()
+            || outside.checked_add(count - 1).is_none()
+            || inside == 0
+        {
+            return None;
+        }
+        has_mapping = true;
+    }
+    has_mapping.then_some(())?;
+    overflow_uid?.trim().parse().ok()
+}
+
+fn is_root_owner(uid: u32) -> bool {
+    if uid == 0 {
+        return true;
+    }
+    #[cfg(target_os = "linux")]
+    {
+        let uid_map = std::fs::read_to_string("/proc/self/uid_map").ok();
+        let overflow_uid = std::fs::read_to_string("/proc/sys/kernel/overflowuid").ok();
+        unmapped_root_uid(uid_map.as_deref(), overflow_uid.as_deref()) == Some(uid)
+    }
+    #[cfg(not(target_os = "linux"))]
+    {
+        false
+    }
+}
+
 /// Whether a level above a configured directory is safe to look the next name
 /// up in. Owned by us or root, and not writable by other users unless sticky.
 /// Group write on a level of ours is the user's own grant and is accepted.
 fn is_safe_ancestor(dir: &Path, uid: u32, mode: u32) -> GuardResult<()> {
     let ours = uid == current_uid();
-    if !ours && uid != 0 {
+    if !ours && !is_root_owner(uid) {
         return Err(DirRefusal::ForeignAncestor {
             dir: dir.to_path_buf(),
             uid,
@@ -551,7 +589,7 @@ pub fn ensure_safe_ancestry(dir: &Path) -> GuardResult<()> {
 
             let uid = uid_of(&metadata);
             links += 1;
-            if (uid != current_uid() && uid != 0) || links > MAX_LINKS {
+            if (uid != current_uid() && !is_root_owner(uid)) || links > MAX_LINKS {
                 return Err(not_a_directory(&next, &metadata));
             }
             pending = std::fs::read_link(&next)
@@ -634,6 +672,52 @@ pub fn ensure_owned_private_dir(dir: &Path) -> GuardResult<()> {
 mod tests {
     use super::*;
     use tempfile::TempDir;
+
+    #[cfg(target_os = "linux")]
+    #[test]
+    fn unmapped_root_uid_accepts_maps_without_namespace_root() {
+        for map in [
+            "1000 1000 1\n",
+            "  1000  1000  1\n  2000  100000  65536\n",
+            "1 0 1000\n",
+        ] {
+            assert_eq!(unmapped_root_uid(Some(map), Some("65534\n")), Some(65534));
+            assert_eq!(unmapped_root_uid(Some(map), Some("12345\n")), Some(12345));
+        }
+    }
+
+    #[cfg(target_os = "linux")]
+    #[test]
+    fn unmapped_root_uid_rejects_maps_with_namespace_root() {
+        for map in [
+            "0 0 4294967295\n",
+            "0 1000 1\n",
+            "1000 1000 1\n0 100000 1000\n",
+        ] {
+            assert_eq!(unmapped_root_uid(Some(map), Some("65534")), None);
+        }
+    }
+
+    #[cfg(target_os = "linux")]
+    #[test]
+    fn unmapped_root_uid_fails_closed_on_missing_or_invalid_proc_files() {
+        for map in [
+            None,
+            Some(""),
+            Some("1000 1000"),
+            Some("1000 invalid 1"),
+            Some("1000 1000 0"),
+            Some("1000 1000 1 extra"),
+            Some("4294967295 1000 2"),
+            Some("1000 4294967295 2"),
+            Some("1000 1000 1\ninvalid"),
+        ] {
+            assert_eq!(unmapped_root_uid(map, Some("65534")), None);
+        }
+        for overflow in [None, Some(""), Some("invalid"), Some("4294967296")] {
+            assert_eq!(unmapped_root_uid(Some("1000 1000 1"), overflow), None);
+        }
+    }
 
     #[cfg(all(not(windows), not(target_family = "wasm")))]
     fn mode_bits(dir: &Path) -> u32 {
