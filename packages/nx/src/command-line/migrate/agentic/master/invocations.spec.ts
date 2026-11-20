@@ -77,4 +77,51 @@ describe('buildMasterInvocation', () => {
       agent: { 'nx-migrate': { prompt: masterInvariant(ctx) } },
     });
   });
+
+  describe('copilot-cli', () => {
+    const originalDirs = process.env.COPILOT_CUSTOM_INSTRUCTIONS_DIRS;
+
+    afterEach(() => {
+      if (originalDirs === undefined) {
+        delete process.env.COPILOT_CUSTOM_INSTRUCTIONS_DIRS;
+      } else {
+        process.env.COPILOT_CUSTOM_INSTRUCTIONS_DIRS = originalDirs;
+      }
+    });
+
+    it('pre-allows the run-scoped handoff write and pins the invariant through a run-scoped instructions file', () => {
+      delete process.env.COPILOT_CUSTOM_INSTRUCTIONS_DIRS;
+
+      const spec = buildMasterInvocation('copilot-cli', ctx);
+
+      expect(spec).toEqual({
+        args: [
+          `--allow-tool=write(.nx/migrate-runs/${runId}/handoffs/**)`,
+          '--interactive',
+          masterBootstrapPrompt(ctx),
+        ],
+        env: {
+          COPILOT_CUSTOM_INSTRUCTIONS_DIRS: `.nx/migrate-runs/${runId}/copilot`,
+        },
+        files: [
+          {
+            path: 'copilot/.github/instructions/nx-migrate.instructions.md',
+            content: expect.stringContaining(masterInvariant(ctx)),
+          },
+        ],
+      });
+      expect(spec.files[0].content).toContain(
+        'subagent, do not run nx migrate commands'
+      );
+      expect(spec.files[0].content).toContain('its latest [nx] line says');
+    });
+
+    it('keeps the instruction directories the user configured', () => {
+      process.env.COPILOT_CUSTOM_INSTRUCTIONS_DIRS = '/home/me/instructions';
+
+      expect(buildMasterInvocation('copilot-cli', ctx).env).toEqual({
+        COPILOT_CUSTOM_INSTRUCTIONS_DIRS: `/home/me/instructions,.nx/migrate-runs/${runId}/copilot`,
+      });
+    });
+  });
 });

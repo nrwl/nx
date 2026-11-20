@@ -1,6 +1,6 @@
 import { type ChildProcess, spawn } from 'child_process';
 import { EventEmitter } from 'events';
-import { existsSync, rmSync } from 'fs';
+import { existsSync, rmSync, writeFileSync } from 'fs';
 import { dirname, join, relative, sep } from 'path';
 import { signalToCode } from '../../../../utils/exit-codes';
 import { logger } from '../../../../utils/logger';
@@ -14,6 +14,7 @@ import {
   formatElapsed,
   MigrateCommitBroker,
   type MigrateRunPolicy,
+  publishFileAtomically,
   runDir,
   runHandoffsDir,
   treeOperationLabel,
@@ -28,7 +29,7 @@ import {
 } from '../close-agent-session';
 import { ensureRunSubdir } from '../handoff';
 import { restoreTermiosAfterAgent } from '../terminal-repair';
-import type { DetectedInstalledAgent } from '../types';
+import type { DetectedInstalledAgent, InvocationFile } from '../types';
 import {
   type AdaptedSpawn,
   adaptSpawnForWindowsShim,
@@ -149,13 +150,8 @@ export async function spawnMasterSession(
     assertWithinWindowsCommandLineBudget(adapted, agent, runId);
     // A symlink here would send the agent's write and the poll below elsewhere.
     const handoffsDir = dirname(sentinelPath);
-    ensureRunSubdir(
-      handoffsDir,
-      () =>
-        new Error(
-          `Migrate run ${runId} has something other than a directory at ${handoffsDir}; remove it and try again.`
-        )
-    );
+    ensureRunSubdir(handoffsDir, () => notADirectoryError(runId, handoffsDir));
+    writeRunFiles(runDir(runRoot, runId), runId, spec.files ?? []);
     // Local alias so `@nx/workspace-require-windows-hide` can track the
     // options as an Identifier.
     const spawnOptions = adapted.options;
@@ -287,6 +283,34 @@ export async function spawnMasterSession(
   return brokerFailure
     ? { kind: 'broker-failed', error: brokerFailure }
     : { kind: 'exited' };
+}
+
+function notADirectoryError(runId: string, dir: string): Error {
+  return new Error(
+    `Migrate run ${runId} has something other than a directory at ${dir}; remove it and try again.`
+  );
+}
+
+// Each directory is checked like handoffs/, and the rename replaces a file or
+// symlink at the file's path rather than writing through it.
+function writeRunFiles(
+  runDirPath: string,
+  runId: string,
+  files: InvocationFile[]
+): void {
+  for (const file of files) {
+    const segments = file.path.split('/');
+    const name = segments.pop()!;
+    let dir = runDirPath;
+    for (const segment of segments) {
+      const subdir = join(dir, segment);
+      ensureRunSubdir(subdir, () => notADirectoryError(runId, subdir));
+      dir = subdir;
+    }
+    publishFileAtomically(join(dir, name), (tmpPath) =>
+      writeFileSync(tmpPath, file.content)
+    );
+  }
 }
 
 function restoreTerminal(): void {
