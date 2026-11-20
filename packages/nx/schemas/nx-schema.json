@@ -1255,6 +1255,11 @@
               "default": false,
               "description": "Collect successful stat metadata accesses as inputs. Missing-path probes are tracked independently of this setting."
             },
+            "hashDependencyOutputs": {
+              "type": "boolean",
+              "default": false,
+              "description": "Hash recorded reads of files that a dependency task outputs. The task then waits for that dependency to run before it is hashed. By default those reads are left out of the hash."
+            },
             "ignoreReads": {
               "type": "array",
               "items": {

@@ -282,6 +282,24 @@ describe('validateAndNormalizeProjectRootMap', () => {
       }
     );
 
+    it.each([true, false, undefined])(
+      'should accept hashDependencyOutputs %s',
+      (hashDependencyOutputs) => {
+        expect(ultracacheErrors({ hashDependencyOutputs })).toEqual([]);
+      }
+    );
+
+    it.each(['true', 0, null, []])(
+      'should reject hashDependencyOutputs %j',
+      (hashDependencyOutputs) => {
+        expect(ultracacheErrors({ hashDependencyOutputs })).toEqual([
+          expect.stringMatching(
+            /"ultracache.hashDependencyOutputs" for target "build" in project "a-ui" must be a boolean/
+          ),
+        ]);
+      }
+    );
+
     it('should reject a key that is not an ultracache option', () => {
       expect(ultracacheErrors({ ignoredReads: ['tmp/**'] })).toEqual([
         expect.stringMatching(

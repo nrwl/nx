@@ -843,8 +843,9 @@ export declare function getMainWorktreeRoot(workspaceRoot: string): string | nul
 export declare function getTransformableOutputs(outputs: Array<string>): Array<string>
 
 /**
- * Tasks whose Ultracache configuration read another task's outputs: they
- * hash after their producers ran, because those files only exist then. Needs
+ * Tasks with `hashDependencyOutputs` whose Ultracache configuration read
+ * another task's outputs: they hash after their producers ran, because those
+ * files only exist then. Other tasks drop those reads from the plan. Needs
  * no project graph, so the client can call it before the first hashing wave
  * on the daemon path.
  * Opted-out and custom-hasher tasks are not excluded: deferring a task that
@@ -1494,6 +1495,11 @@ export interface TaskUltracacheSettings {
    * pattern to a directory instead of leading with `**`.
    */
   ignoreWrites?: Array<string>
+  /**
+   * Hash recorded reads of files a dependency task outputs, waiting for
+   * that task to run first. Defaults to `false`: those reads are dropped.
+   */
+  hashDependencyOutputs?: boolean
 }
 
 export interface TerminalOutputRecord {

@@ -20,7 +20,7 @@ use crate::native::glob::{
     NxGlobSet, NxGlobSetBuilder, expand_literal_braces, normalize_glob, partition_glob,
 };
 use crate::native::tasks::hashers::{
-    OnceCache, Positive, ProjectScope, parse_group_with_exclusions, scope_roots,
+    Negation, OnceCache, Positive, ProjectScope, parse_group_with_exclusions, scope_roots,
     validate_files_globs,
 };
 use crate::native::tasks::inputs::{
@@ -618,9 +618,18 @@ impl HashPlanner {
     ) {
         let pool = &self.instruction_pool;
         let keep_tsconfig = context.root_tsconfig_read();
-        // Files under node_modules that no external hashes: upstream outputs,
-        // and what a declared `includeIgnored` group walks into there.
-        let mut not_installed = upstream_output_roots(task_graph, &task.id);
+        let hash_dependency_outputs = task
+            .ultracache
+            .as_ref()
+            .and_then(|settings| settings.hash_dependency_outputs)
+            .unwrap_or(false);
+        // Files under node_modules that no external hashes: upstream outputs
+        // when they are hashed, and what a declared `includeIgnored` group
+        // walks into there.
+        let (mut not_installed, dependency_outputs) = match hash_dependency_outputs {
+            true => (upstream_output_roots(task_graph, &task.id), Vec::new()),
+            false => (Vec::new(), dependency_outputs(task_graph, &task.id)),
+        };
         for id in ids.iter() {
             if let HashInstruction::IgnoredFileSet { globs, .. } = &*pool.get(*id) {
                 not_installed.extend(
@@ -634,7 +643,7 @@ impl HashPlanner {
         }
         not_installed.sort_unstable();
         let own: hashbrown::HashSet<u32> = self
-            .configuration_file_instructions(task, context, &not_installed)
+            .configuration_file_instructions(task, context, &not_installed, &dependency_outputs)
             .into_iter()
             .map(|instruction| pool.intern(instruction))
             .collect();
@@ -648,11 +657,14 @@ impl HashPlanner {
         ids.extend(always.into_sorted_vec());
     }
 
+    /// `dependency_outputs` are dropped from the reads: a literal read one
+    /// matches is left out, and a group that could match one excludes it.
     fn configuration_file_instructions(
         &self,
         task: &Task,
         context: &UltracacheContext,
         not_installed: &[String],
+        dependency_outputs: &[DependencyOutput],
     ) -> Vec<HashInstruction> {
         let entry = context.entry;
         let self_project = task.target.project.as_str();
@@ -674,12 +686,22 @@ impl HashPlanner {
         };
 
         // A recorded glob stays whole unless its brace alternatives belong to
-        // different projects or name a file the always-on set hashes.
+        // different projects or name a file the always-on set hashes or a
+        // dependency output holds.
+        let in_dependency_output = |glob: &str| {
+            !glob.starts_with('!')
+                && ultracache_eligibility::is_literal_path(glob)
+                && dependency_outputs
+                    .iter()
+                    .any(|output| output.excludes(glob))
+        };
         let mut buckets: BTreeMap<&str, Vec<Arc<str>>> = BTreeMap::new();
         let mut exclusions: Vec<Arc<str>> = Vec::new();
         for glob in entry.files.iter() {
             if !glob.contains('{') {
-                if !covered_by_native_instruction(glob, not_installed) {
+                if !covered_by_native_instruction(glob, not_installed)
+                    && !in_dependency_output(glob)
+                {
                     if glob.starts_with('!') {
                         exclusions.push(glob.clone());
                     } else {
@@ -692,6 +714,7 @@ impl HashPlanner {
             let kept: Vec<String> = expanded
                 .iter()
                 .filter(|glob| !covered_by_native_instruction(glob, not_installed))
+                .filter(|alternative| glob.starts_with('!') || !in_dependency_output(alternative))
                 .cloned()
                 .collect();
             let whole = kept.len() == expanded.len();
@@ -734,6 +757,18 @@ impl HashPlanner {
                         .map(|(exclusion, _)| exclusion.clone()),
                 );
             }
+            let pattern_roots: Vec<String> = group
+                .iter()
+                .filter(|glob| !ultracache_eligibility::is_literal_path(glob))
+                .map(|glob| walk_root(glob))
+                .collect();
+            group_exclusions.extend(dependency_outputs.iter().filter_map(|output| {
+                let exclusion = output.exclusion.as_ref()?;
+                pattern_roots
+                    .iter()
+                    .any(|root| paths_overlap(root, &output.root))
+                    .then(|| Arc::from(exclusion.0.as_str()))
+            }));
             group_exclusions.sort();
             group_exclusions.dedup();
             group.extend(group_exclusions);
@@ -1639,8 +1674,9 @@ fn drop_ultracache_duplicates(pool: &InstructionPool, ids: &mut Vec<u32>) {
 /// `dependentTasksOutputFiles` instruction, and any task with a disk-backed
 /// fileset that reads from a directory containing, or sitting inside, an
 /// output an upstream task declares. An output inside a project nested below
-/// the glob's own is not read by it, so it does not count. Any other
-/// disk-backed fileset hashes up front like a tracked one.
+/// the glob's own is not read by it, and neither is one its group excludes
+/// as `DependencyOutput::exclusion` spells it. Any other disk-backed fileset
+/// hashes up front like a tracked one.
 fn deferred_tasks(
     plans: &HashMap<String, Vec<u32>>,
     pool: &InstructionPool,
@@ -1649,8 +1685,9 @@ fn deferred_tasks(
     plans
         .par_iter()
         .filter(|(task_id, ids)| {
-            // Each read root with the nested project roots its glob skips.
-            let mut disk_roots: Vec<(String, Vec<String>)> = Vec::new();
+            // Each read root with the nested project roots its glob skips and
+            // the exclusions of its group.
+            let mut disk_roots: Vec<(String, Vec<String>, Arc<HashSet<Arc<str>>>)> = Vec::new();
             for id in ids.iter() {
                 match &*pool.get(*id) {
                     HashInstruction::TaskOutput(_, _) => return true,
@@ -1660,12 +1697,19 @@ fn deferred_tasks(
                         ..
                     } => {
                         let scope = ProjectScope::new(project_roots);
+                        let excluded: Arc<HashSet<Arc<str>>> = Arc::new(
+                            globs
+                                .iter()
+                                .filter(|glob| glob.starts_with('!'))
+                                .cloned()
+                                .collect(),
+                        );
                         disk_roots.extend(globs.iter().filter(|glob| !glob.starts_with('!')).map(
                             |glob| {
                                 let skipped = Positive::parse(glob)
                                     .map(|entry| scope.nested_below(&entry))
                                     .unwrap_or_default();
-                                (walk_root(glob), skipped)
+                                (walk_root(glob), skipped, Arc::clone(&excluded))
                             },
                         ))
                     }
@@ -1675,14 +1719,19 @@ fn deferred_tasks(
             if disk_roots.is_empty() {
                 return false;
             }
-            let output_roots = upstream_output_roots(task_graph, task_id);
-            disk_roots.iter().any(|(disk, skipped)| {
-                output_roots.iter().any(|output| {
-                    paths_overlap(disk, output)
-                        && !skipped.iter().any(|root| {
-                            output == root
-                                || output
-                                    .strip_prefix(root.as_str())
+            let outputs = dependency_outputs(task_graph, task_id);
+            disk_roots.iter().any(|(disk, skipped, excluded)| {
+                outputs.iter().any(|output| {
+                    let root = &output.root;
+                    paths_overlap(disk, root)
+                        && !output
+                            .exclusion
+                            .as_ref()
+                            .is_some_and(|(exclusion, _)| excluded.contains(exclusion.as_str()))
+                        && !skipped.iter().any(|nested| {
+                            root == nested
+                                || root
+                                    .strip_prefix(nested.as_str())
                                     .is_some_and(|rest| rest.starts_with('/'))
                         })
                 })
@@ -1709,6 +1758,70 @@ pub(crate) fn walk_root(glob: &str) -> String {
 /// Walk roots of every output declared by the tasks `task_id` depends on,
 /// directly or through the chain, continuous dependencies included.
 fn upstream_output_roots(task_graph: &TaskGraph, task_id: &str) -> Vec<String> {
+    upstream_outputs(task_graph, task_id)
+        .into_iter()
+        .map(walk_root)
+        .collect()
+}
+
+/// An output a dependency task declares, as a recorded read sees it.
+struct DependencyOutput {
+    root: String,
+    /// The `!` glob a recorded group excludes it with, and its matcher. `None`
+    /// when it reads from the workspace root or doesn't parse: then it is
+    /// hashed and defers the task, as with `hashDependencyOutputs`.
+    exclusion: Option<(String, Negation)>,
+}
+
+impl DependencyOutput {
+    fn new(output: &str) -> Self {
+        let root = walk_root(output);
+        let exclusion = (!root.is_empty())
+            .then(|| output_exclusion(output))
+            .and_then(|exclusion| {
+                let matcher = Negation::parse(&exclusion).ok()?;
+                Some((exclusion, matcher))
+            });
+        Self { root, exclusion }
+    }
+
+    fn excludes(&self, path: &str) -> bool {
+        self.exclusion
+            .as_ref()
+            .is_some_and(|(_, matcher)| matcher.excludes(path))
+    }
+}
+
+fn dependency_outputs(task_graph: &TaskGraph, task_id: &str) -> Vec<DependencyOutput> {
+    let mut outputs = upstream_outputs(task_graph, task_id);
+    outputs.sort_unstable();
+    outputs.dedup();
+    outputs.into_iter().map(DependencyOutput::new).collect()
+}
+
+/// `!<output>`, with a last segment of `*.ext` spelled `*[.]ext`: a learned
+/// group reads `*.ext` as one suffix category, which would skip `a.min.ext`.
+fn output_exclusion(output: &str) -> String {
+    let output = output.strip_prefix("./").unwrap_or(output);
+    let output = output.strip_suffix("/.").unwrap_or(output);
+    let output = normalize_glob(output);
+    let (dir, name) = match output.rsplit_once('/') {
+        Some((dir, name)) => (Some(dir), name),
+        None => (None, output.as_str()),
+    };
+    let name = match name.strip_prefix("*.") {
+        Some(extension) => format!("*[.]{extension}"),
+        None => name.to_string(),
+    };
+    match dir {
+        Some(dir) => format!("!{dir}/{name}"),
+        None => format!("!{name}"),
+    }
+}
+
+/// Every output declared by the tasks `task_id` depends on, directly or
+/// through the chain, continuous dependencies included.
+fn upstream_outputs<'a>(task_graph: &'a TaskGraph, task_id: &str) -> Vec<&'a str> {
     let dependencies_of = |id: &str| {
         [
             task_graph.dependencies.get(id),
@@ -1719,7 +1832,7 @@ fn upstream_output_roots(task_graph: &TaskGraph, task_id: &str) -> Vec<String> {
         .flat_map(|deps| deps.iter().map(|edge| edge.id.as_str()))
         .collect::<Vec<&str>>()
     };
-    let mut roots = Vec::new();
+    let mut outputs = Vec::new();
     let mut visited: HashSet<&str> = HashSet::new();
     let mut stack = dependencies_of(task_id);
     while let Some(id) = stack.pop() {
@@ -1727,16 +1840,16 @@ fn upstream_output_roots(task_graph: &TaskGraph, task_id: &str) -> Vec<String> {
             continue;
         }
         if let Some(task) = task_graph.tasks.get(id) {
-            roots.extend(
+            outputs.extend(
                 task.outputs
                     .iter()
                     .filter(|output| !output.starts_with('!'))
-                    .map(|output| walk_root(output)),
+                    .map(String::as_str),
             );
         }
         stack.extend(dependencies_of(id));
     }
-    roots
+    outputs
 }
 
 /// `paths_overlap` against each of `sorted_roots`, by lookup instead of a scan.
@@ -3186,6 +3299,7 @@ mod continuous_inputs_tests {
 mod always_tests {
     use super::*;
     use crate::native::project_graph::types::{Project, Target};
+    use crate::native::tasks::types::TaskUltracacheSettings;
     use crate::native::test_utils::{task_graph, ultracache_configurations};
     use crate::native::types::{DepsOutputsInput, FileSetInput, InputsInput, JsInputs, JsonInput};
     use napi::Either;
@@ -3626,8 +3740,16 @@ mod always_tests {
         (hashed, plans.deferred.contains("e2e:e2e"))
     }
 
+    fn hash_dependency_outputs(mut graph: TaskGraph, task_id: &str) -> TaskGraph {
+        graph.tasks.get_mut(task_id).unwrap().ultracache = Some(TaskUltracacheSettings {
+            hash_dependency_outputs: Some(true),
+            ..Default::default()
+        });
+        graph
+    }
+
     #[test]
-    fn hashes_a_node_modules_read_inside_an_upstream_output() {
+    fn hashes_a_node_modules_read_inside_an_upstream_output_when_opted_in() {
         let planner = planner(vec![("e2e:e2e", vec![])], &[("e2e", &["app"])]);
         let graph = task_graph(
             &[("e2e:e2e", &[]), ("app:build", &["node_modules/.gen/app"])],
@@ -3636,7 +3758,7 @@ mod always_tests {
         assert_eq!(
             hashed_node_modules_reads(
                 &planner,
-                graph,
+                hash_dependency_outputs(graph, "e2e:e2e"),
                 &[
                     "node_modules/.gen/app/index.js",
                     "node_modules/foo/index.js",
@@ -3645,6 +3767,113 @@ mod always_tests {
             ),
             (vec!["node_modules/.gen/app/index.js".to_string()], true)
         );
+    }
+
+    /// Every glob `e2e:e2e`'s disk-backed groups hold, and whether it is deferred.
+    fn recorded_globs(
+        planner: &HashPlanner,
+        graph: TaskGraph,
+        reads: &[&str],
+    ) -> (Vec<String>, bool) {
+        let (_dir, configurations) = ultracache_configurations(&[("e2e:e2e", reads)]);
+        let plans = planner
+            .get_plans_internal(vec!["e2e:e2e"], graph, Some(&configurations), &[])
+            .unwrap();
+        let mut globs: Vec<String> = plans.plans["e2e:e2e"]
+            .iter()
+            .filter_map(|id| match plans.pool.get(*id).value() {
+                HashInstruction::IgnoredFileSet { globs, .. } => Some(globs.to_vec()),
+                _ => None,
+            })
+            .flatten()
+            .map(|glob| glob.to_string())
+            .collect();
+        globs.sort();
+        (globs, plans.deferred.contains("e2e:e2e"))
+    }
+
+    #[test]
+    fn drops_reads_of_dependency_outputs_without_deferring() {
+        let planner = planner(vec![("e2e:e2e", vec![])], &[("e2e", &["app"])]);
+        let graph = || {
+            task_graph(
+                &[
+                    ("e2e:e2e", &[]),
+                    ("app:build", &["libs/app/dist", "node_modules/.gen/app"]),
+                ],
+                &[("e2e:e2e", &["app:build"])],
+            )
+        };
+        let reads = [
+            "libs/e2e/src/app.spec.ts",
+            "libs/app/dist/index.d.ts",
+            "libs/app/src/index.ts",
+            "node_modules/.gen/app/index.js",
+        ];
+        assert_eq!(
+            recorded_globs(&planner, graph(), &reads),
+            (
+                vec![
+                    "libs/app/src/index.ts".to_string(),
+                    "libs/e2e/src/app.spec.ts".to_string(),
+                ],
+                false
+            )
+        );
+        let (opted_in, deferred) = recorded_globs(
+            &planner,
+            hash_dependency_outputs(graph(), "e2e:e2e"),
+            &reads,
+        );
+        assert!(opted_in.contains(&"libs/app/dist/index.d.ts".to_string()));
+        assert!(opted_in.contains(&"node_modules/.gen/app/index.js".to_string()));
+        assert!(deferred);
+    }
+
+    #[test]
+    fn a_recorded_glob_excludes_the_dependency_outputs_it_spans() {
+        let planner = planner(vec![("e2e:e2e", vec![])], &[("e2e", &["app"])]);
+        let graph = task_graph(
+            &[
+                ("e2e:e2e", &[]),
+                ("app:build", &["libs/app/dist", "libs/app/src/**/*.js"]),
+            ],
+            &[("e2e:e2e", &["app:build"])],
+        );
+        assert_eq!(
+            recorded_globs(&planner, graph, &["libs/app/**/*.ts", "libs/app/src/a.js"]),
+            (
+                vec![
+                    "!libs/app/dist".to_string(),
+                    "!libs/app/src/**/*[.]js".to_string(),
+                    "libs/app/**/*.ts".to_string(),
+                ],
+                false
+            )
+        );
+    }
+
+    #[test]
+    fn spells_an_output_exclusion_without_a_suffix_category() {
+        assert_eq!(output_exclusion("dist/libs/app"), "!dist/libs/app");
+        assert_eq!(output_exclusion("./dist/libs/app/."), "!dist/libs/app");
+        assert_eq!(
+            output_exclusion("libs/app/src/**/*.js"),
+            "!libs/app/src/**/*[.]js"
+        );
+        assert_eq!(output_exclusion("libs/app/*.d.ts"), "!libs/app/*[.]d.ts");
+        let output = DependencyOutput::new("libs/app/src/**/*.js");
+        assert!(output.excludes("libs/app/src/a.js"));
+        assert!(output.excludes("libs/app/src/nested/a.min.js"));
+        assert!(!output.excludes("libs/app/src/a.ts"));
+        assert!(
+            !Negation::parse_with_categories("!libs/app/src/**/*[.]js", true)
+                .unwrap()
+                .has_suffix_category()
+        );
+        // Reading from the workspace root, it can't be excluded without
+        // excluding everything else.
+        assert!(DependencyOutput::new("**/*.js").exclusion.is_none());
     }
 
     #[test]

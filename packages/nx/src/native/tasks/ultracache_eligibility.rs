@@ -248,12 +248,14 @@ fn configuration_digest(ultracache: Option<&TaskUltracacheSettings>) -> String {
     // would never re-run a task that keeps hitting. Any mode but `on` means no
     // marker, since the task never reaches here. Recorded writes are never
     // used, so `ignoreWrites` can't change what the task caches.
+    // `hashDependencyOutputs` changes the plan, not what gets recorded.
     let (mut reads, collect_stats) = match ultracache {
         Some(TaskUltracacheSettings {
             ignore_reads,
             ignore_writes: _,
             mode: _,
             collect_stats,
+            hash_dependency_outputs: _,
         }) => (
             ignore_reads.clone().unwrap_or_default(),
             collect_stats.unwrap_or(false),
@@ -370,8 +372,9 @@ fn reads_dependency_outputs(task_id: &str, files: &SharedInputs, task_graph: &Ta
     false
 }
 
-/// Tasks whose Ultracache configuration read another task's outputs: they
-/// hash after their producers ran, because those files only exist then. Needs
+/// Tasks with `hashDependencyOutputs` whose Ultracache configuration read
+/// another task's outputs: they hash after their producers ran, because those
+/// files only exist then. Other tasks drop those reads from the plan. Needs
 /// no project graph, so the client can call it before the first hashing wave
 /// on the daemon path.
 /// Opted-out and custom-hasher tasks are not excluded: deferring a task that
@@ -385,13 +388,16 @@ pub fn get_ultracache_deferred_task_ids(
     let entries = configurations.entries_for(&ids).unwrap_or_default();
     let mut deferred: Vec<String> = task_graph
         .tasks
-        .keys()
-        .filter(|task_id| {
-            entries
-                .get(*task_id)
-                .is_some_and(|stored| reads_dependency_outputs(task_id, stored, &task_graph))
+        .iter()
+        .filter(|(task_id, task)| {
+            task.ultracache
+                .as_ref()
+                .is_some_and(|settings| settings.hash_dependency_outputs == Some(true))
+                && entries
+                    .get(*task_id)
+                    .is_some_and(|stored| reads_dependency_outputs(task_id, stored, &task_graph))
         })
-        .cloned()
+        .map(|(task_id, _)| task_id.clone())
         .collect();
     deferred.sort();
     deferred
