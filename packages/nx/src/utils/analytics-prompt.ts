@@ -13,11 +13,17 @@ import { workspaceRoot } from './workspace-root';
  * answer so later commands don't re-ask, and returns it for telemetry. Returns
  * 'unset' when not prompted (CI / non-interactive / no nx.json). `nx init`
  * passes its own root + interactive flag; the default call (bin/nx.ts) derives
- * interactive from the TTY.
+ * interactive from the TTY. A 0x0 TTY counts as non-interactive: hook runners
+ * like lefthook allocate one with nobody there to answer.
  */
 export async function ensureAnalyticsPreferenceSet(
   root: string = workspaceRoot,
-  interactive: boolean = !!(process.stdin.isTTY && process.stdout.isTTY)
+  interactive: boolean = !!(
+    process.stdin.isTTY &&
+    process.stdout.isTTY &&
+    process.stdout.columns > 0 &&
+    process.stdout.rows > 0
+  )
 ): Promise<'yes' | 'no' | 'unset'> {
   if (!interactive || isCI()) {
     return 'unset';
