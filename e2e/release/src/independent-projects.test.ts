@@ -1017,7 +1017,7 @@ describe('nx release - independent projects', () => {
 
       `);
 
-      // Should only contain the 1 project from group2
+      // Should contain the 1 project from group2, then only pkg2 from group1 because it depends on pkg3
       expect(runCLI(`release publish -g group2 -d`)).toMatchInlineSnapshot(`
 
         NX   Running target nx-release-publish for project {project-name}:
@@ -1061,9 +1061,8 @@ describe('nx release - independent projects', () => {
         Critical path: {DURATION} (1 task)
         Recoverable time: {DURATION}
 
-        NX   Running target nx-release-publish for 2 projects:
+        NX   Running target nx-release-publish for project {project-name}:
 
-        - {project-name}
         - {project-name}
 
         With additional flags:
@@ -1093,35 +1092,13 @@ describe('nx release - independent projects', () => {
 
         Would publish to {registryUrl} with tag "latest", but [dry-run] was set
 
-        > nx run {project-name}:nx-release-publish
 
 
-        📦  @proj/{project-name}@X.X.X-dry-run
-        === Tarball Contents ===
-
-        XXXB CHANGELOG.md
-        XXB  index.js
-        XXXB package.json
-        XXB  project.json
-        === Tarball Details ===
-        name:          @proj/{project-name}
-        version:       X.X.X-dry-run
-        filename:      proj-{project-name}-X.X.X-dry-run.tgz
-        package size: XXXB
-        unpacked size: XXXB
-        shasum:        {SHASUM}
-        integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-        total files:   4
-
-        Would publish to {registryUrl} with tag "latest", but [dry-run] was set
-
-
-
-        NX   Successfully ran target nx-release-publish for 2 projects
+        NX   Successfully ran target nx-release-publish for project {project-name}
 
 
         Run duration: {DURATION}
-        Cache: 0/2 hit (0%)
+        Cache: 0/1 hit (0%)
         Critical path: {DURATION} (1 task)
         Recoverable time: {DURATION}
 

@@ -469,6 +469,8 @@ describe('ReleaseGraph', () => {
         expect(graph.allProjectsToProcess.size).toBe(2);
         expect(graph.isProjectToProcess('projectB')).toBe(true);
         expect(graph.isProjectToProcess('projectA')).toBe(true);
+        // projectA's group was already selected, so no group is added for it
+        expect(graph.releaseGroupsAddedForDependents).toEqual(new Set());
       });
     });
 
@@ -786,6 +788,9 @@ describe('ReleaseGraph', () => {
         expect(graph.isProjectToProcess('pkg-b')).toBe(false); // No dependency chain
         expect(graph.isProjectToProcess('pkg-d')).toBe(false); // No dependency chain
         expect(graph.isProjectToProcess('pkg-f')).toBe(false); // Not included in projects filter and the group is independent
+        expect(graph.releaseGroupsAddedForDependents).toEqual(
+          new Set(['group1', 'group2'])
+        );
       });
     });
 
@@ -961,6 +966,13 @@ describe('ReleaseGraph', () => {
         expect(graph.isProjectToProcess('pkg-d')).toBe(true);
         expect(graph.isProjectToProcess('pkg-a')).toBe(true); // Included via updateDependents=always
         expect(graph.isProjectToProcess('pkg-b')).toBe(false); // No dependency
+        expect(graph.releaseGroupsAddedForDependents).toEqual(
+          new Set(['group1'])
+        );
+        const group1 = graph.releaseGroups.find((g) => g.name === 'group1');
+        expect(graph.releaseGroupToFilteredProjects.get(group1)).toEqual(
+          new Set(['pkg-a'])
+        );
       });
 
       it('should NOT include dependent groups when filtering by group with updateDependents=never (group1 -> group2, filter group2)', async () => {
