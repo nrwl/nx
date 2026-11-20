@@ -70,6 +70,8 @@ jobs:
     steps:
       # Default checkout on the triggering branch so that the latest publish-resolve-data.js script is available
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          persist-credentials: false
 
       - name: Setup node
         uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
@@ -94,6 +96,7 @@ jobs:
         if: ${{ steps.script.outputs.ref != '' }}
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
+          persist-credentials: false
           # Check out the latest master branch to get its copy of nx-release.ts
           repository: nrwl/nx
           ref: master
@@ -103,6 +106,7 @@ jobs:
         if: ${{ steps.script.outputs.ref != '' }}
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
+          persist-credentials: false
           # Check out the PR branch to get its copy of nx-release.ts
           repository: ${{ steps.script.outputs.repo }}
           ref: ${{ steps.script.outputs.ref }}
@@ -343,6 +347,7 @@ jobs:
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
+          persist-credentials: false
           repository: ${{ needs.resolve-required-data.outputs.repo || github.repository }}
           ref: ${{ needs.resolve-required-data.outputs.ref || github.ref }}
 
@@ -460,6 +465,7 @@ jobs:
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
+          persist-credentials: false
           repository: ${{ needs.resolve-required-data.outputs.repo || github.repository }}
           ref: ${{ needs.resolve-required-data.outputs.ref || github.ref }}
 
@@ -617,6 +623,7 @@ jobs:
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
+          persist-credentials: false
           repository: ${{ needs.resolve-required-data.outputs.repo || github.repository }}
           ref: ${{ needs.resolve-required-data.outputs.ref || github.ref }}
 
