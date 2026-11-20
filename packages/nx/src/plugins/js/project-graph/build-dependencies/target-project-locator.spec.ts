@@ -12,6 +12,7 @@ import {
 } from './target-project-locator';
 
 import { builtinModules } from 'node:module';
+import { resolveRelativeToDir } from '../../utils/resolve-relative-to-dir';
 
 const mockedWorkspaceRoot = vi.hoisted(() => ({ path: '/root' }));
 vi.mock('nx/src/utils/workspace-root', () => ({
@@ -1293,6 +1294,52 @@ describe('TargetProjectLocator', () => {
           'libs/proj/index.ts'
         )
       ).toEqual('npm:exports-only@5.0.0');
+    });
+
+    it('should remember a manifest that matches no external node only for its own graph and only when Node resolved neither lookup', () => {
+      const npmResolutionCache = new Map();
+      const locator = new TargetProjectLocator(
+        projects,
+        {},
+        npmResolutionCache
+      );
+      const resolveTwice = (packageName: string) => {
+        expect(
+          locator.findNpmProjectFromImport(packageName, 'libs/proj/index.ts')
+        ).toBeNull();
+        vi.mocked(resolveRelativeToDir).mockClear();
+        expect(
+          locator.findNpmProjectFromImport(packageName, 'libs/proj/index.ts')
+        ).toBeNull();
+      };
+
+      resolveTwice('exports-only');
+      expect(resolveRelativeToDir).not.toHaveBeenCalled();
+      // A source import also reaches the fallback that caches unresolved imports
+      expect(
+        locator.findProjectFromImport('exports-only', 'libs/proj/index.ts')
+      ).toBeNull();
+
+      const locatorOfLaterGraph = new TargetProjectLocator(
+        projects,
+        {
+          'npm:exports-only@5.0.0': {
+            type: 'npm',
+            name: 'npm:exports-only@5.0.0',
+            data: { version: '5.0.0', packageName: 'exports-only' },
+          },
+        },
+        npmResolutionCache
+      );
+      expect(
+        locatorOfLaterGraph.findProjectFromImport(
+          'exports-only',
+          'libs/proj/index.ts'
+        )
+      ).toEqual('npm:exports-only@5.0.0');
+
+      resolveTwice('npm-package');
+      expect(resolveRelativeToDir).toHaveBeenCalled();
     });
   });
 
