@@ -440,30 +440,26 @@ impl TaskHasher {
     fn fold_recorded_files(
         &self,
         ids: &[u32],
-        roles: &[RecordedRole],
         pool: &InstructionPool,
         caches: &RecordedCaches,
         files_expansion_cache: &FilesExpansionCache,
         run_stage: RunStage,
     ) -> anyhow::Result<(String, Vec<String>)> {
         let workspace_root = Path::new(&self.workspace_root);
-        let with_role = |role: RecordedRole| {
-            ids.par_iter()
-                .filter(move |id| roles[**id as usize] == role)
-        };
-        let groups = with_role(RecordedRole::Group)
-            .map(|&id| {
-                if let Some(cached) = caches.group_files.get(&id) {
-                    return Ok(Arc::clone(&cached));
-                }
-                let HashInstruction::IgnoredFileSet {
+        let groups = ids
+            .par_iter()
+            .filter_map(|&id| match pool.get(id).value() {
+                HashInstruction::IgnoredFileSet {
                     globs,
                     project_roots,
                     ultracache,
-                } = pool.get(id).value().clone()
-                else {
-                    unreachable!("roles mark only disk-backed groups");
-                };
+                } => Some((id, globs.clone(), project_roots.clone(), *ultracache)),
+                _ => None,
+            })
+            .map(|(id, globs, project_roots, ultracache)| {
+                if let Some(cached) = caches.group_files.get(&id) {
+                    return Ok(Arc::clone(&cached));
+                }
                 let expansion = self.expand_ignored_files(
                     id,
                     &globs,
@@ -483,15 +479,18 @@ impl TaskHasher {
                 Ok(hashed)
             })
             .collect::<anyhow::Result<Vec<_>>>()?;
-        let covered = with_role(RecordedRole::Output)
-            .map(|&id| {
+        let covered = ids
+            .par_iter()
+            .filter_map(|&id| match pool.get(id).value() {
+                HashInstruction::TaskOutput(glob, outputs) => {
+                    Some((id, glob.clone(), outputs.clone()))
+                }
+                _ => None,
+            })
+            .map(|(id, glob, outputs)| {
                 if let Some(cached) = caches.output_files.get(&id) {
                     return Ok(Arc::clone(&cached));
                 }
-                let HashInstruction::TaskOutput(glob, outputs) = pool.get(id).value().clone()
-                else {
-                    unreachable!("roles mark only task outputs");
-                };
                 let files: Arc<HashSet<String>> = Arc::new(
                     expand_task_outputs(workspace_root, &glob, &outputs, files_expansion_cache)?
                         .files
@@ -752,23 +751,21 @@ impl TaskHasher {
                 | HashInstruction::UltracacheConfiguration(_) => Some(OnceCell::new()),
             })
             .collect();
-        let roles: Vec<RecordedRole> = (0..pool.len() as u32)
-            .map(|id| match pool.get(id).value() {
-                HashInstruction::IgnoredFileSet { .. } => RecordedRole::Group,
-                HashInstruction::TaskOutput(_, _) => RecordedRole::Output,
-                HashInstruction::UltracacheConfiguration(_) => RecordedRole::Configuration,
-                _ => RecordedRole::Other,
-            })
-            .collect();
+        let is = |id: u32, kind: fn(&HashInstruction) -> bool| kind(pool.get(id).value());
+        let is_group = |i: &HashInstruction| matches!(i, HashInstruction::IgnoredFileSet { .. });
+        let is_configuration =
+            |i: &HashInstruction| matches!(i, HashInstruction::UltracacheConfiguration(_));
         let recorded_caches = RecordedCaches::default();
         hash_plans.plans.par_iter().try_for_each(|(task_id, ids)| {
             if ids.is_empty() {
                 return Ok(());
             }
-            let has = |role| ids.iter().any(|id| roles[*id as usize] == role);
             // A recorded plan's groups fold into its configuration entry,
             // see `fold_recorded_files`.
-            let folds_recorded = has(RecordedRole::Configuration) && has(RecordedRole::Output);
+            let folds_recorded = ids.iter().any(|&id| is(id, is_configuration))
+                && ids
+                    .iter()
+                    .any(|&id| is(id, |i| matches!(i, HashInstruction::TaskOutput(..))));
             let js_env = resolve_env(task_id);
             // Workers accumulate locally, then publish one result per task.
             // The inner parallel iterator also preserves concurrency when
@@ -779,7 +776,7 @@ impl TaskHasher {
             let mut entries = Vec::with_capacity(ids.len());
             let mut pending = Vec::new();
             for &id in ids {
-                if folds_recorded && roles[id as usize] == RecordedRole::Group {
+                if folds_recorded && is(id, is_group) {
                     continue;
                 }
                 let cached = if should_collect_inputs {
@@ -866,15 +863,13 @@ impl TaskHasher {
             if folds_recorded {
                 let (recorded, files) = self.fold_recorded_files(
                     ids,
-                    &roles,
                     pool,
                     &recorded_caches,
                     &files_expansion_cache,
                     run_stage,
                 )?;
-                if let Some((_, value)) = entries
-                    .iter_mut()
-                    .find(|(id, _)| roles[*id as usize] == RecordedRole::Configuration)
+                if let Some((_, value)) =
+                    entries.iter_mut().find(|(id, _)| is(*id, is_configuration))
                 {
                     *value = SharedStr::from(hash(format!("{value}{recorded}").as_bytes()));
                 }
@@ -1190,15 +1185,6 @@ impl TaskHasher {
         };
         Ok((hash, inputs))
     }
-}
-
-/// How an instruction takes part in folding a recorded plan's groups.
-#[derive(Clone, Copy, PartialEq, Eq)]
-enum RecordedRole {
-    Group,
-    Output,
-    Configuration,
-    Other,
 }
 
 /// Per-id results `fold_recorded_files` shares across tasks in one call.
