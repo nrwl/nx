@@ -233,6 +233,12 @@ public static class Analyzer
                     {
                         Name = projectName,
                         Root = projectRoot,
+                        ProjectType = ProjectUtilities.InferProjectType(
+                            instances
+                                .Where(instance => !string.IsNullOrEmpty(instance.GetPropertyValue("TargetFramework")))
+                                .DefaultIfEmpty(primaryNode.ProjectInstance)
+                                .Select(CollectProperties),
+                            isTest),
                         Targets = targets,
                         Metadata = new Models.ProjectMetadata
                         {
