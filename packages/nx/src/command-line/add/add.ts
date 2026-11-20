@@ -179,7 +179,9 @@ async function initializePlugin(
       pkgName,
       workspaceRoot,
       updatePackageScripts,
-      options.verbose
+      options.verbose,
+      undefined,
+      options.__overrides_unparsed__ ?? []
     );
   } catch (e) {
     spinner.fail();
