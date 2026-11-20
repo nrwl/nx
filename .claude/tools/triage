@@ -600,6 +600,40 @@ function livePr(n, tries = 4) {
   return s;
 }
 
+/**
+ * One aliased query for the whole queue. Every `gh` call is a separate manual
+ * approval, so looping `liveState` over a sweep asks the reviewer thirty times.
+ * Returns null when the query fails, so callers can refuse rather than read an
+ * empty result as "nothing is closed".
+ *
+ * `issueOrPullRequest` because issue and PR records share one state directory,
+ * and `issue(number:)` resolves to null on a PR number rather than erroring.
+ */
+function liveRecordStates(numbers) {
+  if (!numbers.length) return {};
+  const [owner, name] = REPO.split('/');
+  const q = `query { repository(owner:"${owner}", name:"${name}"){ ${numbers
+    .map(
+      (n) => `i${n}: issueOrPullRequest(number:${n}){
+        __typename
+        ... on Issue { number state stateReason closedByPullRequestsReferences(first:10, includeClosedPrs:true){ nodes{ number state } } }
+        ... on PullRequest { number state }
+      }`
+    )
+    .join(' ')} } }`;
+  const r = spawnSync('gh', ['api', 'graphql', '-f', `query=${q}`], { encoding: 'utf8', maxBuffer: 32 * 1024 * 1024 });
+  if (r.status !== 0) return null;
+  try {
+    const out = {};
+    for (const v of Object.values(JSON.parse(r.stdout).data.repository)) {
+      if (v && v.number) out[v.number] = v;
+    }
+    return out;
+  } catch {
+    return null;
+  }
+}
+
 function preflight(front) {
   const n = Number(front.issue);
   const kind = front.kind === 'pr' ? 'pr' : 'issue';
@@ -684,51 +718,49 @@ function nxJsonField(name) {
 }
 
 /**
- * The PAT from ~/.config/nxcloud/nxcloud.ini.
+ * One read through `nx-cloud api`, which resolves the server and the credential
+ * itself. A 404 comes back as `{ notFound: true }` so callers can tell retention
+ * from failure.
  *
- * Section headers are the server URL with the dots ESCAPED —
- * `[https://staging\.nx\.app]` — so a naive equality check never matches and the
- * caller silently concludes there is no credential.
+ * Going through the client rather than `fetch` is what makes an OAuth login
+ * work. The public API accepts only a CI token or a PAT plus an Nx-Cloud-Id, so
+ * a hand-rolled request sees `nx login` as no credential at all and reports
+ * "nothing failed" on a pipeline it was never allowed to read.
  */
-function cloudPat(url) {
-  let raw;
-  try {
-    raw = fs.readFileSync(path.join(os.homedir(), '.config', 'nxcloud', 'nxcloud.ini'), 'utf8');
-  } catch {
-    return null;
+function cloudApi(rel) {
+  const r = spawnSync('npx', ['nx-cloud', 'api', rel], {
+    encoding: 'utf8',
+    maxBuffer: 64 * 1024 * 1024,
+  });
+  if (r.error) fail(`could not run \`nx-cloud api\`: ${r.error.message}`);
+  if (r.status === 0) {
+    try {
+      return JSON.parse(r.stdout);
+    } catch {
+      fail(`\`nx-cloud api ${rel}\` returned output that is not JSON`);
+    }
   }
-  const want = url.replace(/\/+$/, '');
-  let section = null;
-  for (const line of raw.split('\n')) {
-    const head = line.match(/^\s*\[(.+?)\]\s*$/);
-    if (head) {
-      section = head[1].replace(/\\/g, '').replace(/\/+$/, '');
+  // Errors arrive as one JSON object per stderr line.
+  for (const line of String(r.stderr || '').split('\n')) {
+    let parsed;
+    try {
+      parsed = JSON.parse(line);
+    } catch {
       continue;
     }
-    const kv = line.match(/^\s*personalAccessToken\s*=\s*(.+?)\s*$/);
-    if (kv && section === want) return kv[1];
+    const err = parsed && parsed.error;
+    if (!err) continue;
+    if (err.status === 404) return { notFound: true };
+    if (err.status === 401 || err.status === 403) {
+      fail(
+        `Nx Cloud refused the read (HTTP ${err.status}).\n` +
+          '  Run `nx login --status` from the workspace root, and `nx login` if it reports none.\n' +
+          '  Never pass a token on the command line.'
+      );
+    }
+    fail(`\`nx-cloud api ${rel}\` failed: ${err.message || JSON.stringify(err)}`);
   }
-  return null;
-}
-
-function cloudAuth() {
-  const url = (process.env.NX_CLOUD_URL || nxJsonField('nxCloudUrl') || 'https://cloud.nx.app')
-    .replace(/\/+$/, '');
-  const bearer = process.env.NX_CLOUD_ACCESS_TOKEN || process.env.NX_CLOUD_AUTH_TOKEN;
-  if (bearer) return { url, headers: { Authorization: `Bearer ${bearer}` } };
-  const id = process.env.NX_CLOUD_ID || nxJsonField('nxCloudId');
-  const pat = process.env.NX_CLOUD_PERSONAL_ACCESS_TOKEN || cloudPat(url);
-  if (pat && id) {
-    return { url, headers: { 'Nx-Cloud-Personal-Access-Token': pat, 'Nx-Cloud-Id': id } };
-  }
-  return null;
-}
-
-async function cloudGet(auth, rel) {
-  const res = await fetch(auth.url + rel, { headers: auth.headers });
-  if (res.status === 404) return { notFound: true };
-  if (!res.ok) throw new Error(`${rel} returned HTTP ${res.status}`);
-  return res.json();
+  fail(`\`nx-cloud api ${rel}\` exited ${r.status} with no error to report`);
 }
 
 function ghJson(args) {
@@ -744,15 +776,6 @@ function ghJson(args) {
 async function cmdCiTasks(args) {
   const pr = args[0];
   if (!/^\d+$/.test(pr || '')) fail('usage: triage ci-tasks <pr-number>');
-  const auth = cloudAuth();
-  if (!auth) {
-    fail(
-      'no Nx Cloud credential.\n' +
-        '  Run `nx login` from the workspace root, or set NX_CLOUD_ACCESS_TOKEN.\n' +
-        '  Never pass a token on the command line.'
-    );
-  }
-
   const sha = ghJson(['pr', 'view', pr, '--repo', REPO, '--json', 'headRefOid', '-q', '.headRefOid']);
   if (!sha) fail(`could not read the head commit for #${pr}`);
 
@@ -764,7 +787,7 @@ async function cmdCiTasks(args) {
   const cipeId = (runs || []).map((u) => (u.match(/\/cipes\/([0-9a-f]{24})/) || [])[1]).find(Boolean);
   if (!cipeId) fail(`no Nx Cloud check on ${sha.slice(0, 8)}, so there is no pipeline to read`);
 
-  const cipe = await cloudGet(auth, `/nx-cloud/data/v0-beta/cipes/${cipeId}`);
+  const cipe = cloudApi(`/nx-cloud/data/v0-beta/cipes/${cipeId}`);
   if (cipe.notFound) {
     fail(
       `Nx Cloud no longer has CIPE ${cipeId}.\n` +
@@ -777,7 +800,7 @@ async function cmdCiTasks(args) {
     process.stderr.write(`warning: this pipeline ran on ${head.slice(0, 8)}, not the current head ${sha.slice(0, 8)}\n`);
   }
 
-  const groups = await cloudGet(auth, `/nx-cloud/data/v0-beta/run-groups?cipeId=${cipeId}`);
+  const groups = cloudApi(`/nx-cloud/data/v0-beta/run-groups?cipeId=${cipeId}`);
   for (const g of groups.items || []) {
     // A critical error means the pipeline itself broke. Reporting task names
     // then would blame a contributor for our infrastructure.
@@ -789,12 +812,12 @@ async function cmdCiTasks(args) {
   const seen = new Set();
   const failed = [];
   for (const g of groups.items || []) {
-    const rs = await cloudGet(auth, `/nx-cloud/data/v0-beta/runs?runGroup=${encodeURIComponent(g.id)}`);
+    const rs = cloudApi(`/nx-cloud/data/v0-beta/runs?runGroup=${encodeURIComponent(g.id)}`);
     for (const run of rs.items || []) {
       const id = (run.links?.tasks || '').match(/runs\/([^/]+)\/tasks/)?.[1];
       if (!id || seen.has(id)) continue;
       seen.add(id);
-      const ts = await cloudGet(auth, `/nx-cloud/data/v0-beta/runs/${id}/tasks?statuses=FAILED`);
+      const ts = cloudApi(`/nx-cloud/data/v0-beta/runs/${id}/tasks?statuses=FAILED`);
       for (const task of ts.items || []) failed.push({ id: task.id, cache: task.cacheStatus, run: run.status });
     }
   }
@@ -1920,6 +1943,47 @@ function cmdPrune() {
   notifyReload();
 }
 
+/**
+ * A record is a snapshot taken when it was staged, and carries no link back to
+ * the live issue, so `list` renders one for a closed issue exactly like one for
+ * an open issue. Applying it then comments on a settled thread and assigns it.
+ *
+ * Archiving rather than removing: `rm` deletes a record that has not settled,
+ * and the analysis in a stale record is still worth reading.
+ */
+function cmdArchiveClosed(args) {
+  const dry = args.includes('--dry-run');
+  const records = listRecords();
+  if (!records.length) {
+    console.log('no records staged');
+    return;
+  }
+  const live = liveRecordStates(records.map((r) => Number(r.front.issue)));
+  if (!live) fail('could not read live states from GitHub; not archiving blind');
+
+  let n = 0;
+  for (const { front } of records) {
+    const item = live[Number(front.issue)];
+    // A merged PR is settled too, so the test is "no longer open" rather than CLOSED.
+    if (!item || item.state === 'OPEN') continue;
+    const merged = (item.closedByPullRequestsReferences?.nodes || []).find((p) => p.state === 'MERGED');
+    const why = [
+      item.stateReason ? item.stateReason.toLowerCase() : item.state.toLowerCase(),
+      merged && `fixed by #${merged.number}`,
+    ]
+      .filter(Boolean)
+      .join(', ');
+    console.log(`${dry ? 'would archive' : 'archived'} #${front.issue} (${why}) — ${truncate(front.title || '', 60)}`);
+    if (!dry) {
+      emitRemoved(front);
+      archiveRecord(front.issue);
+    }
+    n += 1;
+  }
+  console.log(`${n} record${n === 1 ? '' : 's'} no longer open, ${records.length} checked`);
+  if (n && !dry) notifyReload();
+}
+
 // ----------------------------------------------------------------------- utils
 
 function flag(args, name) {
@@ -1988,6 +2052,7 @@ const HELP = `triage — stage issue mutations, review them, then apply.
   recover [--list]   restore records the state dir lost (journal is outside it)
   notify <action>    push to a live TUI: reload [N] | select <N> | message "..."
   rm <N> | prune     take one record, or all settled ones, out of the review list
+  archive-closed     archive records GitHub now reports closed or merged   [--dry-run]
   ci-tasks <pr>      failing TASK names from Nx Cloud, not just the workflow name
 
 Records live in ${rel(STATE_DIR)}/<N>.md — markdown, hand-editable. Every write is
@@ -2023,6 +2088,7 @@ async function main() {
     notify: cmdNotify,
     rm: cmdRm,
     prune: cmdPrune,
+    'archive-closed': cmdArchiveClosed,
     'ci-tasks': cmdCiTasks,
     watch: cmdWatch,
     monitor: cmdMonitor,

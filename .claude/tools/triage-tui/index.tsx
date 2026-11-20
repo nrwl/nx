@@ -379,6 +379,17 @@ function siblingUrl(url: string, n: number | string): string {
 }
 
 /**
+ * The bare number from a reference written as `123`, `#123`, or a full
+ * `.../pull/123` URL. Records carry all three, and concatenating a URL onto
+ * `/issues/` produced a link to `/issues/https://...`.
+ */
+function refNumber(v: unknown): string | null {
+  const s = String(v ?? '').trim();
+  const m = s.match(/^#?(\d+)$/) || s.match(/\/(?:issues|pull)\/(\d+)/);
+  return m ? m[1] : null;
+}
+
+/**
  * Split prose into segments, marking URLs and `#123` references as links.
  *
  * Runs BEFORE wrapping, not after. wrapText hard-splits a token longer than the
@@ -527,17 +538,17 @@ function detailLines(record: Record_, width: number, notes: string[]): Line[] {
   }
 
   if (front.linked_pr) {
+    const pr = refNumber(front.linked_pr);
     out.push(
       ln(
         { t: 'PR ', dim: true },
-        {
-          t: `#${String(front.linked_pr).replace(/^#/, '')}`,
-          color: 'yellow',
-          open: siblingUrl(
-            front.url,
-            String(front.linked_pr).replace(/^#/, '')
-          ),
-        },
+        pr
+          ? {
+              t: `#${pr}`,
+              color: 'yellow',
+              open: siblingUrl(front.url, pr),
+            }
+          : { t: String(front.linked_pr), color: 'yellow' },
         { t: ' already targets this', color: 'yellow' }
       )
     );
@@ -779,8 +790,9 @@ function App() {
   // (23 dismissed and 20 posted against 17 live at the time of writing), so
   // opening on everything buries the work. Triage leaves it off as before.
   // The detail pane is windowed here rather than left to the scrollbox's own
-  // scrolling, so the keyboard can drive it. opentui scrolls a scrollbox on the
-  // mouse wheel only, and an uncapped body is otherwise reachable only by mouse.
+  // scrolling, so both the keyboard and the wheel drive one offset. Pre-slicing
+  // the body leaves the scrollbox no overflow, so its built-in wheel handling
+  // cannot move anything.
   const [detailOffset, setDetailOffset] = useState(0);
   const [pendingOnly, setPendingOnly] = useState(
     triage.DEFAULT_PENDING_ONLY ?? false
@@ -1259,8 +1271,8 @@ function App() {
   }
 
   // The list stays windowed around the cursor so it cannot crowd out the detail
-  // pane. The detail pane itself is a scrollbox — the renderer handles overflow
-  // and the mouse wheel, so there is no height arithmetic here any more.
+  // pane, which is sized from the terminal below and scrolled through
+  // `detailOffset` rather than by the scrollbox itself.
   // Lines the whole list block may occupy, overflow markers included — they are
   // rows in the list, not something drawn beside it.
   const LIST_H = Math.max(3, Math.min(9, size.rows - 12));
@@ -1491,6 +1503,24 @@ function App() {
         borderColor={DIM}
         paddingLeft={1}
         paddingRight={1}
+        // The body is pre-sliced to `contentH` above, so the scrollbox holds no
+        // overflow of its own and its built-in wheel handling has nothing to move.
+        // The wheel drives the same `detailOffset` the keyboard does.
+        onMouseScroll={(e: {
+          scroll?: {
+            direction: 'up' | 'down' | 'left' | 'right';
+            delta: number;
+          };
+        }) => {
+          const sc = e.scroll;
+          if (!sc || (sc.direction !== 'up' && sc.direction !== 'down')) return;
+          const step = Math.max(1, Math.min(3, sc.delta || 1));
+          setDetailOffset((o) =>
+            sc.direction === 'down'
+              ? Math.min(maxOffset, o + step)
+              : Math.max(0, o - step)
+          );
+        }}
       >
         {mode === 'help' ? (
           HELP.map((l, i) => (

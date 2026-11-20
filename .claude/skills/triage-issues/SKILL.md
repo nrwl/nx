@@ -92,6 +92,26 @@ no owner or priority.
 return everything. Do **not** cap the enumeration: a truncated list is indistinguishable from a short
 one, and the sweep then reports done having seen a fraction of the queue.
 
+**A sweep starts by clearing what is already settled, not by staging.** Records left from an earlier
+sweep are snapshots, and some of their issues have been closed and fixed since. Retire those first,
+so the queue you diff against is the queue that still needs work:
+
+```bash
+.claude/tools/triage archive-closed      # --dry-run first if you want to read it before it acts
+```
+
+Then subtract what is already staged, because the query returns those too. An issue with a pending
+record is not a new target, and re-staging it overwrites the reproduction behind the old record:
+
+```bash
+.claude/tools/triage list --json | jq -r '.[].issue' | sort -n > /tmp/staged.txt
+comm -23 <(sort -n /tmp/untriaged.txt) /tmp/staged.txt > /tmp/new-targets.txt
+```
+
+The count that matters for "am I done" is the untriaged query in full, not `/tmp/new-targets.txt`.
+Those differ by exactly the records already waiting on a reviewer, and reporting the smaller number
+is how a sweep reads as finished while half the backlog has never been looked at.
+
 **Stage a record for every issue the query returns.** Staging is cheap — reading an issue and choosing
 labels, a priority and an owner costs no container and no network beyond the fetch. The expensive step
 is reproduction, and that is a _separate_ decision (Step 7): a record stages fine with `repro: not
@@ -193,6 +213,14 @@ gh pr view <PR> --repo nrwl/nx --json state,mergedAt,title
 If no PR is linked but you suspect one exists, search before concluding there isn't:
 `gh pr list --repo nrwl/nx --state open --search "<key terms>"`.
 
+**An empty `closedByPullRequestsReferences` does not mean nobody is working on it.** The field only
+populates from a closing keyword that names a GitHub issue, so a PR whose body references a Linear
+ticket instead is invisible to it. That is not rare here, and the issue then gets staged as unclaimed
+work with an owner who is not the person already fixing it. Measured case: #37830 was staged
+unassigned and unlinked while #37770 was open against the same symptom, because that PR said only
+`Fixes NXC-5199`. Search by the failing symbol or error string on anything you are about to assign
+as fresh work, and see the subagent warning under "Is it a duplicate".
+
 ### Has a fix already landed, unlinked?
 
 `closedByPullRequestsReferences` only finds PRs that used a closing keyword. A fix that landed while
@@ -242,6 +270,23 @@ gh search issues --repo nrwl/nx --limit 15 "<3-5 distinctive terms from the titl
   comment carries its own `authorAssociation` in the Step 2 payload, and so does the issue itself. If
   a maintainer (`OWNER`, `MEMBER`, `COLLABORATOR`) asked a question and nobody answered, the issue is
   waiting on them — leave it alone. If the reporter _did_ answer, remove the `blocked:` label.
+
+**When you hand a batch to subagents, do not let the brief suppress the searches.** "Work from the
+payload I already fetched, do not re-fetch from GitHub" is the right instruction for the issue bodies,
+because each `gh` call costs a manual approval. Applied wholesale it silently removes both the
+duplicate search here and the unlinked-PR search in Step 3, and the gap is invisible in the returned
+records: a missed duplicate looks exactly like a fresh issue, and an unfound PR looks exactly like
+unclaimed work. Both happened on one sweep from a single over-broad line in the brief.
+
+Say which calls the brief forbids and which it still expects. Both searches batch, so the cheap fix
+is one aliased GraphQL `search` query per batch, run by whoever wrote the brief:
+
+```graphql
+query {
+  d1: search(query: "repo:nrwl/nx <terms for issue 1>", type: ISSUE, first: 8) { nodes { ... } }
+  d2: search(query: "repo:nrwl/nx <terms for issue 2>", type: ISSUE, first: 8) { nodes { ... } }
+}
+```
 
 ### Other grounds for proposing a close
 

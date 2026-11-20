@@ -138,12 +138,12 @@ for_. Two consequences, both verified here:
 
 So the draft on disk is authoritative and herdr state only corroborates it:
 
-| herdr state                            | draft written? | driver does                                                     |
-| -------------------------------------- | -------------- | --------------------------------------------------------------- |
-| settled (`blocked`/`idle`/`done`/gone) | yes            | release slot → `awaiting-grill`, **permanently**                |
-| `blocked`                              | no             | **hold** slot, print `NEEDS INPUT`; resume on `--until working` |
+| herdr state                            | draft written? | driver does                                                       |
+| -------------------------------------- | -------------- | ----------------------------------------------------------------- |
+| settled (`blocked`/`idle`/`done`/gone) | yes            | release slot → `awaiting-grill`, **permanently**                  |
+| `blocked`                              | no             | **hold** slot, print `NEEDS INPUT`; resume on `--until working`   |
 | `idle` / `done`, shell still running   | no             | **hold** slot and poll — it is waiting on its own background work |
-| `idle` / `done` / gone                 | no             | **only past the startup floor** → `failed`, ready to re-run     |
+| `idle` / `done` / gone                 | no             | **only past the startup floor** → `failed`, ready to re-run       |
 
 The `idle`-with-no-draft row is load-bearing: a review can die mid-run (session limit)
 and review-pr writes **no partial draft**, so without it the scheduler waits on a corpse.

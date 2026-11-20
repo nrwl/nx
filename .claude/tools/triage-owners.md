@@ -22,16 +22,16 @@ names anyone else, so removing someone here is all it takes to get them out of e
 and a stale name can never quietly keep receiving issues. Add a row when someone joins; delete
 theirs when they leave.
 
-| Handle             | Name                   | Area                                                          |
-| ------------------ | ---------------------- | ------------------------------------------------------------- |
-| `FrozenPandaz`     | Jason Jean             | Core CLI, e2e, native, tasks-runner, daemon                   |
-| `leosvelperez`     | Leosvel Pérez Espinosa | Core internals, Angular, JS, TS solution setup                |
-| `jaysoo`           | Jack Hsu               | Docs and web surface, onboarding, React and framework plugins |
-| `AgentEnder`       | Craigory Coppola       | Core, devkit, plugins, dotnet, Windows                        |
-| `meeroslav`        | Miroslav Jonaš         | Release. NOT hashing - see note below                         |
-| `lourw`            | Louie Weng             | Java: gradle and maven                                        |
-| `barbados-clemens` | Caleb Ukle             | Docs                                                          |
-| `JamesHenry`       | James Henry            | Release internals, linting                                    |
+| Handle         | Name                   | Area                                                          |
+| -------------- | ---------------------- | ------------------------------------------------------------- |
+| `FrozenPandaz` | Jason Jean             | Core CLI, e2e, native, tasks-runner, daemon                   |
+| `leosvelperez` | Leosvel Pérez Espinosa | Core internals, Angular, JS, TS solution setup                |
+| `jaysoo`       | Jack Hsu               | Docs and web surface, onboarding, React and framework plugins |
+| `AgentEnder`   | Craigory Coppola       | Core, devkit, plugins, dotnet, Windows                        |
+| `meeroslav`    | Miroslav Jonaš         | Release. NOT hashing - see note below                         |
+| `lourw`        | Louie Weng             | Java: gradle and maven                                        |
+| `JamesHenry`   | James Henry            | Release internals, linting                                    |
+| `MaxKless`     | Max Kless              | AI agent config surface, nx-dev, repo CI                      |
 
 **The Area column is a description, not routing.** `triage owner` reads the Areas tables further
 down and nothing else, so a handle that appears only here can never be suggested by the tool - but it
@@ -60,7 +60,7 @@ Deepest knowledge of nx release, but his bandwidth is currently spent outside th
 
 weight: 1
 
-**Primarily a docs reviewer now, alongside barbados-clemens.** Director of Engineering rather than an
+**Primarily a docs reviewer now** Director of Engineering rather than an
 IC on the CLI team, so his commit counts in packages/react, packages/next and packages/module-federation
 are history rather than current capacity. Weight him down everywhere outside docs, and do not route
 core daemon, tasks-runner or hashing internals to him at all.
@@ -255,10 +255,9 @@ Near-parity on packages/nx over 14 months - FrozenPandaz 1162 files touched, leo
 Caleb and Jack are the two docs reviewers. This is Jack's primary surface now, so weight him here and
 down everywhere else.
 
-| Handle             | Weight | Note |
-| ------------------ | ------ | ---- |
-| `barbados-clemens` | 2      |      |
-| `jaysoo`           | 2      |      |
+| Handle   | Weight | Note |
+| -------- | ------ | ---- |
+| `jaysoo` | 2      |      |
 
 ### scope: java
 
@@ -284,20 +283,31 @@ Cross-cutting by definition, so there is no standing rotation. Derive a candidat
 
 _No configured owner - derive one from recent commits._
 
+One surface under this label has been measured, so do not re-derive it. `configure-ai-agents` and `packages/nx/src/ai` are MaxKless: 11 commits to `configure-ai-agents` over 14 months against 3 each for FrozenPandaz and AgentEnder, and 22 against 8 across both directories. He is current, with commits through 2026-10-07. Earlier sweeps derived this twice and skipped him both times, because he was missing from the roster above and the roster is a hard gate.
+
 ### scope: nx-cloud
 
-_No configured owner - derive one from recent commits._
+| Handle       | Weight | Note |
+| ------------ | ------ | ---- |
+| `AgentEnder` |        |      |
 
 ### scope: powerpack
 
-_No configured owner - derive one from recent commits._
+| Handle       | Weight | Note |
+| ------------ | ------ | ---- |
+| `AgentEnder` |        |      |
+| `lourw`      |        |      |
 
 ### scope: self-hosted cache
 
-_No configured owner - derive one from recent commits._
+| Handle       | Weight | Note |
+| ------------ | ------ | ---- |
+| `AgentEnder` |        |      |
 
 ### scope: console
 
 Nx Console lives in nrwl/nx-console. Redirect the reporter rather than assigning anyone here.
 
-_No configured owner - derive one from recent commits._
+| Handle     | Weight | Note |
+| ---------- | ------ | ---- |
+| `MaxKless` |        |      |

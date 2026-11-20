@@ -158,6 +158,17 @@ rather than only on the ones that feel like yours. Routing on continuity, on an 
 single-owner scope such as `scope: repo` or `scope: devkit` all land on the same person often enough
 that the third-person phrasing slips through unnoticed.
 
+**Re-read the comment whenever you change the assignee.** This is where it actually breaks. A record
+authored correctly for one owner becomes wrong the moment a reviewer reassigns it, because the prose
+still names the old one. "Jason will review it" and "someone will take a look as time allows" both
+read fine until the record is handed to the account the comment posts from, and then they have a
+maintainer talking about themselves in the third person. A `reassign me` note is therefore a two part
+edit, the `assign` field and the sentence that refers to it, and only the second part is easy to
+forget. It came up seven times in one sweep.
+
+Grep the comment for the outgoing owner's name and for `someone`, `the team` and `as time allows`
+before restaging.
+
 **Never leave the block alone with no prose above it.** Someone opening the issue then sees a single
 summary line and nothing else, which reads as a bot dropping an artifact on their thread. That is the
 exact impression the attribution split exists to avoid.
@@ -325,6 +336,12 @@ Newlines go in the JSON as `\n`; the tool writes them into the body verbatim.
 `close_reason` is empty for most records. Set it to `completed`, `not planned` or `duplicate` to
 propose a close; `linked_pr` records a PR already targeting the issue (Step 3).
 
+**`linked_pr` is a bare number.** Write `"linked_pr": "37777"`, not `#37777` and not a URL. The
+review TUI builds the clickable reference from that value, so a URL produced a link to
+`/issues/https://github.com/nrwl/nx/pull/37777` and a label reading `PR #https://…`. The TUI now
+extracts the number from any of the three forms, but it only renders a usable reference when the
+field holds what it claims to.
+
 The tool refuses to stage a record that sets `stale` or `outdated`, that starts two stale countdowns
 at once, that adds and removes the same label, that closes an issue without a comment, or whose
 comment contains an em or en dash. Those guardrails hold even when this document is only skimmed,
@@ -386,6 +403,34 @@ review list, so the pending count keeps shrinking as you go.
 
 `apply --dry-run` prints the exact `gh` commands without running them. Use it whenever you are unsure
 what a record resolves to.
+
+#### Retire the records the world has already settled
+
+A record is a snapshot taken when it was staged, and it holds no link back to the live thread. `list`
+renders a record for an issue that got fixed last week exactly like one for an issue nobody has
+touched, so staleness is invisible from inside the state directory. Applying one posts a triage
+comment on a settled thread and assigns someone to work that is already done.
+
+Run this before you open the review pane, and again before any apply that follows a pause:
+
+```bash
+.claude/tools/triage archive-closed --dry-run   # what it would retire, and why
+.claude/tools/triage archive-closed
+```
+
+It covers the whole queue in one aliased GraphQL call, so it costs a single approval however many
+records are staged, and it reads PR records as well as issue records. A merged PR counts as settled,
+not only a closed one.
+
+It archives rather than deletes, which is why `rm` is the wrong tool here. `rm` deletes outright any
+record that has not already reached applied, rejected or failed, so on a pending record it throws
+away the reproduction behind it. After `archive-closed`, `show <N>` and `list --all` still reach
+everything it retired.
+
+**The gap this closes is measured, not hypothetical.** A sweep that stages records and waits
+overnight for a reviewer is the normal case, and a queue can sit for weeks. On one real queue of
+thirty, seven issues had been closed and fixed by the time the reviewer returned to them, and three
+of those seven were staged `priority: high`.
 
 #### Answer feedback in subagents, one per issue
 

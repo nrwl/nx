@@ -74,6 +74,6 @@ RUN awk '/^minimumReleaseAge/ { skip=1; next } skip && /^[[:space:]]/ { next } {
 # own numeric validation ("Expected `concurrency` to be a number ... got `8` (string)").
 RUN corepack prepare --activate \
     && NPM_CONFIG_FETCH_TIMEOUT=600000 NPM_CONFIG_NETWORK_CONCURRENCY=8 \
-       pnpm fetch --lockfile-dir /work \
+       pnpm fetch \
     && rm -rf /work/node_modules \
     && pnpm store path
