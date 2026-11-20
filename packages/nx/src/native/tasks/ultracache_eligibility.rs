@@ -248,12 +248,14 @@ fn configuration_digest(ultracache: Option<&TaskUltracacheSettings>) -> String {
     // would never re-run a task that keeps hitting. Any mode but `on` means no
     // marker, since the task never reaches here. Recorded writes are never
     // used, so `ignoreWrites` can't change what the task caches.
+    // `hashDependencyOutputs` changes the plan, not what gets recorded.
     let (mut reads, collect_stats) = match ultracache {
         Some(TaskUltracacheSettings {
             ignore_reads,
             ignore_writes: _,
             mode: _,
             collect_stats,
+            hash_dependency_outputs: _,
         }) => (
             ignore_reads.clone().unwrap_or_default(),
             collect_stats.unwrap_or(false),

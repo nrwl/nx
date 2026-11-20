@@ -83,6 +83,9 @@ pub struct TaskUltracacheSettings {
     /// and `?`, `!`, `[`, `]` and extglobs are not supported; anchor the
     /// pattern to a directory instead of leading with `**`.
     pub ignore_writes: Option<Vec<String>>,
+    /// Hash recorded reads of files a dependency task outputs, waiting for
+    /// that task to run first. Defaults to `false`: those reads are dropped.
+    pub hash_dependency_outputs: Option<bool>,
 }
 
 impl Task {
