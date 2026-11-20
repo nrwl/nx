@@ -2,14 +2,14 @@ import type { Tree } from '@nx/devkit';
 import { joinPathFragments, stripIndents } from '@nx/devkit';
 
 export function addSnippet(tree: Tree, name: string, path: string) {
-  const fileRegExp = new RegExp(`^${name}.*\\.ts`);
+  const fileRegExp = new RegExp(`^${name}(?:\\..+)?\\.ts$`);
 
   const siblingModules = tree
     .children(path)
     .filter(
       (f) =>
         fileRegExp.test(f) &&
-        !/\.(module|spec|config|routes)\.ts$/.test(f) &&
+        !/\.(module|spec|config|routes|server|d)\.ts$/.test(f) &&
         !f.endsWith('.worker.ts')
     )
     .sort();
