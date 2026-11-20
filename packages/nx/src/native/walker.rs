@@ -16,6 +16,9 @@ pub struct NxFile {
     pub full_path: String,
     pub normalized_path: String,
     pub mod_time: i64,
+    /// mtime of the symlink target. `0` when this is not a symlink, or the
+    /// target cannot be stat'd.
+    pub target_mod_time: i64,
 }
 
 /// Walks the directory in a single thread and does not ignore any files
@@ -169,10 +172,12 @@ where
             return None;
         }
 
+        let (mod_time, target_mod_time) = file_timestamps(dir_entry.path(), &metadata);
         Some(NxFile {
             full_path: String::from(dir_entry.path().to_string_lossy()),
             normalized_path: file_path.to_normalized_string(),
-            mod_time: get_mod_time(&metadata),
+            mod_time,
+            target_mod_time,
         })
     })
 }
@@ -254,10 +259,12 @@ fn walk_and_find_ignore_files(
                 return Continue;
             }
 
+            let (mod_time, target_mod_time) = file_timestamps(dir_entry.path(), &metadata);
             tx.send(NxFile {
                 full_path: String::from(dir_entry.path().to_string_lossy()),
                 normalized_path: file_path.to_normalized_string(),
-                mod_time: get_mod_time(&metadata),
+                mod_time,
+                target_mod_time,
             })
             .ok();
 
@@ -276,6 +283,20 @@ fn walk_and_find_ignore_files(
 /// block indefinitely on such paths (FIFOs wait for a writer).
 fn is_hashable_file(file_type: &std::fs::FileType) -> bool {
     file_type.is_file() || file_type.is_symlink()
+}
+
+/// Own mtime, plus the target's mtime when `metadata` is a symlink that
+/// resolves. The target mtime is 0 when there is no target to stat.
+fn file_timestamps(path: &Path, metadata: &std::fs::Metadata) -> (i64, i64) {
+    let mod_time = get_mod_time(metadata);
+    let target_mod_time = if metadata.file_type().is_symlink()
+        && let Ok(target) = std::fs::metadata(path)
+    {
+        get_mod_time(&target)
+    } else {
+        0
+    };
+    (mod_time, target_mod_time)
 }
 
 /// Files tools write and remove moments later. Vite and vitest write them
