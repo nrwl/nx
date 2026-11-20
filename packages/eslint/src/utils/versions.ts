@@ -23,6 +23,10 @@ export const eslintVersion = '^10.0.0';
 export const eslintV9Version = '^9.8.0';
 export const typescriptESLintVersion = '^8.58.0';
 
+// Oxlint bridge (ESLint ↔ Oxlint coexistence)
+export const eslintPluginOxlintVersion = '^1.78.0';
+export const jitiVersion = '^2.6.1';
+
 type EslintVersions = {
   eslintVersion: string;
   typescriptESLintVersion: string;
