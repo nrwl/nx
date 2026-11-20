@@ -572,9 +572,6 @@ impl TaskHasher {
         let ts_config_hash = hash(&self.ts_config);
         let project_root_mappings = create_project_root_mappings(&self.project_graph.nodes);
 
-        let mut sorted_externals = self.project_graph.external_nodes.keys().collect::<Vec<_>>();
-        sorted_externals.par_sort();
-
         let selectively_hash_tsconfig = self
             .options
             .as_ref()
@@ -681,7 +678,6 @@ impl TaskHasher {
                                         js_env,
                                         ts_config_hash: &ts_config_hash,
                                         project_root_mappings: &project_root_mappings,
-                                        sorted_externals: &sorted_externals,
                                         selectively_hash_tsconfig,
                                         runtime_cache: &runtime_cache,
                                         project_file_set_cache: &self.project_file_set_cache,
@@ -752,7 +748,6 @@ impl TaskHasher {
             js_env,
             ts_config_hash,
             project_root_mappings,
-            sorted_externals,
             selectively_hash_tsconfig,
             runtime_cache,
             project_file_set_cache,
@@ -1005,7 +1000,6 @@ impl TaskHasher {
                     .all_externals_hash
                     .get_or_try_init(|| {
                         hash_all_externals(
-                            sorted_externals,
                             &self.project_graph.external_nodes,
                             Arc::clone(&self.external_cache),
                         )
@@ -1061,7 +1055,6 @@ struct HashInstructionArgs<'a> {
     js_env: &'a HashMap<String, String>,
     ts_config_hash: &'a str,
     project_root_mappings: &'a ProjectRootMappings,
-    sorted_externals: &'a [&'a String],
     selectively_hash_tsconfig: bool,
     runtime_cache: &'a DashMap<String, String>,
     project_file_set_cache: &'a ProjectFileSetCache,
