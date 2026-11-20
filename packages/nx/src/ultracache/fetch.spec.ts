@@ -36,6 +36,40 @@ describe('fetchUltracacheConfigurations', () => {
     );
   });
 
+  it('prefers immutable files and preserves errors and empty results from that hook', async () => {
+    const files = {
+      commits: ['head'],
+      updatedAt: 42,
+      manifestPath: '/m',
+      filesDirectory: '/f',
+    };
+    const readFiles = vi
+      .fn()
+      .mockResolvedValueOnce(files)
+      .mockResolvedValueOnce(null);
+    withClient({
+      readUltracacheConfigurationFiles: readFiles,
+      readUltracacheConfigurations: cloud.readUltracacheConfigurations,
+    });
+    await expect(
+      fetchUltracacheConfigurations({ accessToken: 't' })
+    ).resolves.toEqual({ files });
+    expect(readFiles).toHaveBeenCalledWith({
+      nxCloudOptions: { accessToken: 't' },
+      workspaceRoot: expect.any(String),
+      timeoutMs: 10_000,
+    });
+    await expect(fetchUltracacheConfigurations({})).rejects.toMatchObject({
+      code: 'NO_CONFIGURATIONS',
+    });
+    const error = Object.assign(new Error('corrupt'), {
+      code: 'INVALID_RESPONSE',
+    });
+    readFiles.mockRejectedValueOnce(error);
+    await expect(fetchUltracacheConfigurations({})).rejects.toBe(error);
+    expect(cloud.readUltracacheConfigurations).not.toHaveBeenCalled();
+  });
+
   it('passes the client error through with its code', async () => {
     const offline = Object.assign(new Error('getaddrinfo'), {
       code: 'ENOTFOUND',

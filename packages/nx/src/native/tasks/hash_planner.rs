@@ -90,7 +90,7 @@ impl<'a> UltracacheContext<'a> {
     fn new(entry: &'a UltracacheTask) -> Self {
         let mut literal = HashSet::new();
         let mut patterns: Vec<&str> = Vec::new();
-        for glob in entry.files.iter().map(String::as_str) {
+        for glob in entry.files.iter().map(AsRef::as_ref) {
             if glob.starts_with('!') {
                 continue;
             }
@@ -321,10 +321,10 @@ impl HashPlanner {
     /// A disk-backed group whose globs stay out of nested projects. A group
     /// that does not parse is left unscoped: expanding it reports the error.
     fn ignored_file_set(&self, globs: Vec<String>) -> HashInstruction {
-        self.disk_file_set(globs, false)
+        self.disk_file_set(globs.into_iter().map(Arc::from).collect(), false)
     }
 
-    fn disk_file_set(&self, globs: Vec<String>, ultracache: bool) -> HashInstruction {
+    fn disk_file_set(&self, globs: Vec<Arc<str>>, ultracache: bool) -> HashInstruction {
         let (project_roots, ultracache) = match parse_group_with_exclusions(&globs, ultracache) {
             Ok((positives, negatives)) => (
                 scope_roots(&positives, self.project_roots()),
@@ -336,7 +336,7 @@ impl HashPlanner {
             Err(_) => (Vec::new(), ultracache),
         };
         HashInstruction::IgnoredFileSet {
-            globs,
+            globs: globs.into(),
             project_roots,
             ultracache,
         }
@@ -671,9 +671,19 @@ impl HashPlanner {
 
         // A recorded glob stays whole unless its brace alternatives belong to
         // different projects or name a file the always-on set hashes.
-        let mut buckets: BTreeMap<&str, Vec<String>> = BTreeMap::new();
-        let mut exclusions: Vec<String> = Vec::new();
-        for glob in &entry.files {
+        let mut buckets: BTreeMap<&str, Vec<Arc<str>>> = BTreeMap::new();
+        let mut exclusions: Vec<Arc<str>> = Vec::new();
+        for glob in entry.files.iter() {
+            if !glob.contains('{') {
+                if !covered_by_native_instruction(glob, not_installed) {
+                    if glob.starts_with('!') {
+                        exclusions.push(glob.clone());
+                    } else {
+                        buckets.entry(owner(glob)).or_default().push(glob.clone());
+                    }
+                }
+                continue;
+            }
             let expanded = expand_literal_braces(glob);
             let kept: Vec<String> = expanded
                 .iter()
@@ -684,7 +694,7 @@ impl HashPlanner {
             if glob.starts_with('!') {
                 match whole {
                     true => exclusions.push(glob.clone()),
-                    false => exclusions.extend(kept),
+                    false => exclusions.extend(kept.into_iter().map(Arc::from)),
                 }
             } else {
                 let owners: Vec<&str> = kept.iter().map(|g| owner(g)).collect();
@@ -692,7 +702,7 @@ impl HashPlanner {
                     buckets.entry(owners[0]).or_default().push(glob.clone());
                 } else {
                     for (glob, project) in kept.into_iter().zip(owners) {
-                        buckets.entry(project).or_default().push(glob);
+                        buckets.entry(project).or_default().push(glob.into());
                     }
                 }
             }
@@ -708,7 +718,7 @@ impl HashPlanner {
             group.dedup();
             // Exclusions apply to every recorded positive, so each group takes
             // the ones that could remove its files.
-            let mut group_exclusions: Vec<String> = Vec::new();
+            let mut group_exclusions: Vec<Arc<str>> = Vec::new();
             if !exclusions.is_empty() {
                 let mut roots: Vec<String> = group.iter().map(|glob| walk_root(glob)).collect();
                 roots.sort_unstable();
@@ -2677,7 +2687,7 @@ mod tests {
     fn does_not_defer_for_an_output_in_a_nested_project_the_glob_skips() {
         let pool = InstructionPool::new();
         let scoped = pool.intern(HashInstruction::IgnoredFileSet {
-            globs: vec!["packages/gradle/**/*".into()],
+            globs: vec!["packages/gradle/**/*".into()].into(),
             project_roots: vec!["packages/gradle".into(), "packages/gradle/runner".into()],
             ultracache: false,
         });
@@ -3335,9 +3345,9 @@ mod always_tests {
             let plans = planner
                 .get_plans_internal(vec!["e2e:e2e"], graph, None, &[])
                 .unwrap();
-            let mut keys: Vec<Arc<str>> = plans.plans["e2e:e2e"]
+            let mut keys: Vec<String> = plans.plans["e2e:e2e"]
                 .iter()
-                .map(|id| plans.pool.key(*id))
+                .map(|id| plans.pool.get(*id).to_string())
                 .collect();
             keys.sort();
             keys
@@ -3471,7 +3481,8 @@ mod always_tests {
                 globs: vec![
                     "libs/app/fixtures/**".into(),
                     "!libs/app/fixtures/large/**".into()
-                ],
+                ]
+                .into(),
                 project_roots: vec!["libs/app".into()],
                 ultracache: false,
             }]
@@ -3526,11 +3537,12 @@ mod always_tests {
         let mut hashed: Vec<String> = plans.plans["e2e:e2e"]
             .iter()
             .filter_map(|id| match plans.pool.get(*id).value() {
-                HashInstruction::IgnoredFileSet { globs, .. } => Some(globs.clone()),
+                HashInstruction::IgnoredFileSet { globs, .. } => Some(globs.to_vec()),
                 _ => None,
             })
             .flatten()
             .filter(|glob| glob.contains("node_modules"))
+            .map(|glob| glob.to_string())
             .collect();
         hashed.sort();
         (hashed, plans.deferred.contains("e2e:e2e"))

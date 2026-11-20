@@ -105,7 +105,7 @@ pub(crate) fn expand_globs(
 
 pub(crate) fn expand_globs_with_exclusions(
     workspace_root: &Path,
-    globs: &[String],
+    globs: &[impl AsRef<str>],
     project_roots: &[String],
     source: &Source,
     ultracache: bool,
@@ -118,17 +118,18 @@ pub(crate) fn expand_globs_with_exclusions(
 /// A group's entries split at their literal prefixes, positives then
 /// negations. Each brace group becomes one entry per alternative first, so
 /// what a parser sees never holds a `{a,b}`.
-pub(crate) fn parse_group(globs: &[String]) -> Result<(Vec<Positive>, Vec<Negation>)> {
+pub(crate) fn parse_group(globs: &[impl AsRef<str>]) -> Result<(Vec<Positive>, Vec<Negation>)> {
     parse_group_with_exclusions(globs, false)
 }
 
 pub(crate) fn parse_group_with_exclusions(
-    globs: &[String],
+    globs: &[impl AsRef<str>],
     ultracache: bool,
 ) -> Result<(Vec<Positive>, Vec<Negation>)> {
     let mut positives = Vec::new();
     let mut negations = Vec::new();
     for glob in globs {
+        let glob = glob.as_ref();
         // Decided before the braces expand, so an alternative that begins
         // with `!` cannot turn a positive entry into an exclusion.
         let negated = glob.starts_with('!');

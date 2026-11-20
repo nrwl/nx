@@ -1,28 +1,36 @@
-use std::collections::{BTreeMap, HashMap};
+use std::collections::{HashMap, HashSet};
+use std::path::Path;
 use std::rc::Rc;
 use std::sync::{Arc, Mutex};
 
-use anyhow::{Context, Result};
-use napi::bindgen_prelude::External;
-use rusqlite::params;
-use rusqlite::types::Value;
+use anyhow::{Context, Result, ensure};
+use napi::bindgen_prelude::{External, JsObjectValue, Object};
+use rusqlite::{params, types::Value};
 use tracing::debug;
 
-use super::set::{ImportedSet, UltracacheConfiguration};
+use super::configurations::EntryCache;
+use super::set::{CompactSet, LegacyEntry};
 use super::{
     UltracacheConfigurationImportOptions, UltracacheConfigurationResolution,
-    UltracacheConfigurations,
+    UltracacheConfigurations, files,
 };
 use crate::native::db::connection::NxDbConnection;
+use crate::native::utils::time::current_timestamp_millis;
 
-/// The workspace database's Ultracache configurations. Each import is its own version,
-/// keyed by commit and fetch time, so a run that pinned one keeps reading it
-/// while a newer one is imported. Failures throw with a `code` JS maps to a
-/// skip reason: `STORE_UNAVAILABLE`, `INVALID_RESPONSE` or `WRITE_FAILED`.
+pub type Db = Arc<Mutex<NxDbConnection>>;
+
+/// The workspace database's Ultracache configurations, pinned by commit and fetch time.
 #[napi]
 #[derive(Clone)]
 pub struct UltracacheConfigurationStore {
     db: Db,
+}
+
+fn invalid_response(error: impl std::fmt::Display) -> napi::Error<String> {
+    napi::Error::new(
+        "INVALID_RESPONSE".into(),
+        format!("Nx Cloud returned unreadable Ultracache configurations: {error}"),
+    )
 }
 
 #[napi]
@@ -31,421 +39,304 @@ impl UltracacheConfigurationStore {
     pub fn new(
         #[napi(ts_arg_type = "ExternalObject<NxDbConnection>")] db: &External<Db>,
     ) -> napi::Result<Self, String> {
-        // Created here because `create_all_tables` only runs for a new database file.
+        // Existing workspace databases acquire the new tables on first use.
         db.lock()
             .unwrap()
             .execute_batch(SCHEMA)
-            .map_err(|err| napi::Error::new("STORE_UNAVAILABLE".to_string(), err.to_string()))?;
+            .map_err(|err| napi::Error::new("STORE_UNAVAILABLE".into(), err.to_string()))?;
         Ok(Self { db: Arc::clone(db) })
     }
 
-    /// Stores the set the Nx Cloud client read for `requested_commit` as a new
-    /// version, and returns it with every entry in hand.
+    /// Compatibility with consumers of the original native JSON importer.
     #[napi(js_name = "import")]
     pub fn import_set(
         &self,
         options: UltracacheConfigurationImportOptions,
     ) -> napi::Result<UltracacheConfigurations, String> {
-        let entries: BTreeMap<String, UltracacheConfiguration> =
-            serde_json::from_str(&options.configurations_json).map_err(|err| {
-                napi::Error::new(
-                    "INVALID_RESPONSE".to_string(),
-                    format!("Nx Cloud returned Ultracache configurations nx cannot read: {err}"),
-                )
-            })?;
-        let set = ImportedSet::new(options.requested_commit, entries);
-        self.write(&set)
-            .map_err(|err| napi::Error::new("WRITE_FAILED".to_string(), err.to_string()))?;
-        let ImportedSet {
-            resolution,
-            entries,
-        } = set;
-        // The importing process keeps what it just parsed; nothing to re-read.
-        let entries = entries
-            .into_iter()
-            .map(|(id, entry)| (id, Some(Arc::new(entry))))
-            .collect();
-        Ok(UltracacheConfigurations::new(
-            resolution,
-            self.clone(),
-            entries,
-        ))
+        let entries: HashMap<String, LegacyEntry> =
+            serde_json::from_str(&options.configurations_json).map_err(invalid_response)?;
+        let mut set = CompactSet::default();
+        for (id, entry) in entries {
+            set.add_legacy(id, entry.inputs);
+        }
+        self.publish(options.requested_commit, set)
     }
 
-    /// The newest stored set for `commit`, without touching the network;
-    /// `null` when none is stored or its row cannot be read. Reads only the
-    /// version's summary row.
+    /// Imports the older Cloud API one JS property at a time.
+    #[napi]
+    pub fn import_entries(
+        &self,
+        requested_commit: String,
+        #[napi(
+            ts_arg_type = "Readonly<Record<string, { commit: string; inputs: readonly string[] }>>"
+        )]
+        configurations: Object<'_>,
+    ) -> napi::Result<UltracacheConfigurations, String> {
+        let mut set = CompactSet::default();
+        for id in Object::keys(&configurations).map_err(invalid_response)? {
+            if !configurations
+                .has_own_property(&id)
+                .map_err(invalid_response)?
+            {
+                continue;
+            }
+            let entry = configurations
+                .get::<Object>(&id)
+                .map_err(invalid_response)?
+                .ok_or_else(|| invalid_response("missing task configuration"))?;
+            entry
+                .get::<String>("commit")
+                .map_err(invalid_response)?
+                .ok_or_else(|| invalid_response("missing commit"))?;
+            let inputs = entry
+                .get::<Vec<String>>("inputs")
+                .map_err(invalid_response)?
+                .ok_or_else(|| invalid_response("missing inputs"))?;
+            set.add_legacy(id, inputs);
+        }
+        self.publish(requested_commit, set)
+    }
+
+    /// Verifies and imports the immutable manifest and its referenced objects.
+    #[napi]
+    pub fn import_files(
+        &self,
+        requested_commit: String,
+        manifest_path: String,
+        files_directory: String,
+    ) -> napi::Result<UltracacheConfigurations, String> {
+        let set = files::read(Path::new(&manifest_path), Path::new(&files_directory))
+            .map_err(invalid_response)?;
+        self.publish(requested_commit, set)
+    }
+
+    /// The newest stored set for this commit, reading only its summary.
     #[napi]
     pub fn get(&self, commit: String) -> Option<UltracacheConfigurations> {
-        let resolution = readable(&commit, self.read_resolution(&commit, None))?;
-        Some(UltracacheConfigurations::new(
-            resolution,
-            self.clone(),
-            HashMap::new(),
-        ))
+        self.open(commit, None)
     }
 
-    /// Exactly the version of `commit` fetched at `fetched_at`; `null` when it
-    /// is not stored or its row cannot be read.
+    /// The exact version handed to the worker by its coordinator.
     #[napi]
     pub fn get_version(&self, commit: String, fetched_at: i64) -> Option<UltracacheConfigurations> {
-        let resolution = readable(&commit, self.read_resolution(&commit, Some(fetched_at)))?;
-        Some(UltracacheConfigurations::new(
-            resolution,
-            self.clone(),
-            HashMap::new(),
-        ))
+        self.open(commit, Some(fetched_at))
     }
 }
 
-/// An unreadable row reads as nothing stored.
-fn readable(
-    commit: &str,
-    read: Result<Option<UltracacheConfigurationResolution>>,
-) -> Option<UltracacheConfigurationResolution> {
-    read.unwrap_or_else(|err| {
-        debug!("ultracache: the stored configurations for {commit} are unreadable: {err}");
-        None
-    })
-}
-
-pub type Db = Arc<Mutex<NxDbConnection>>;
-
-/// One row per version for the set, one row per task for its entry, so a run
-/// reads the tasks it plans instead of the workspace's whole set.
+// Older Nx clients keep reading and writing the two original tables. Keeping
+// compact versions separate prevents those clients from opening a partial set.
 const SCHEMA: &str = "
 CREATE TABLE IF NOT EXISTS io_snapshot_versions (
-    commit_sha TEXT NOT NULL,
-    fetched_at INTEGER NOT NULL,
-    tasks INTEGER NOT NULL,
+    commit_sha TEXT NOT NULL, fetched_at INTEGER NOT NULL, tasks INTEGER NOT NULL,
     PRIMARY KEY (commit_sha, fetched_at)
 ) WITHOUT ROWID;
 CREATE TABLE IF NOT EXISTS io_snapshot_entries (
-    commit_sha TEXT NOT NULL,
-    fetched_at INTEGER NOT NULL,
-    task_id TEXT NOT NULL,
-    entry TEXT NOT NULL,
+    commit_sha TEXT NOT NULL, fetched_at INTEGER NOT NULL, task_id TEXT NOT NULL, entry TEXT NOT NULL,
     PRIMARY KEY (commit_sha, fetched_at, task_id)
+) WITHOUT ROWID;
+CREATE TABLE IF NOT EXISTS io_snapshot_compact_versions (
+    id INTEGER PRIMARY KEY, commit_sha TEXT NOT NULL, fetched_at INTEGER NOT NULL, tasks INTEGER NOT NULL,
+    UNIQUE (commit_sha, fetched_at)
+);
+CREATE TABLE IF NOT EXISTS io_snapshot_compact_tasks (
+    version INTEGER NOT NULL, task_id TEXT NOT NULL, artifact INTEGER NOT NULL,
+    PRIMARY KEY (version, task_id)
+) WITHOUT ROWID;
+CREATE TABLE IF NOT EXISTS io_snapshot_compact_artifacts (
+    version INTEGER NOT NULL, id INTEGER NOT NULL, inputs BLOB NOT NULL,
+    PRIMARY KEY (version, id)
+) WITHOUT ROWID;
+CREATE TABLE IF NOT EXISTS io_snapshot_compact_globs (
+    version INTEGER NOT NULL, id INTEGER NOT NULL, glob TEXT NOT NULL,
+    PRIMARY KEY (version, id)
 ) WITHOUT ROWID;
 ";
 
-/// The SQL behind the store; not exposed to JS.
+fn integers(ids: impl Iterator<Item = u32>) -> Rc<Vec<Value>> {
+    Rc::new(ids.map(|id| Value::Integer(id.into())).collect())
+}
+
 impl UltracacheConfigurationStore {
-    /// Adds the set as a version of its commit. Versions are never pruned, so a
-    /// pinned run can always read its own; `nx reset` clears them. One
-    /// transaction, so a reader sees the previous set or the new one, never a gap.
-    pub(super) fn write(&self, set: &ImportedSet) -> Result<()> {
-        let entries: Vec<(&String, String)> = set
-            .entries
-            .iter()
-            .map(|(task_id, entry)| Ok((task_id, serde_json::to_string(entry)?)))
-            .collect::<Result<_>>()
-            .context("serializing Ultracache configurations")?;
-        let resolution = &set.resolution;
-        let commit = &resolution.requested_commit;
-        let fetched_at = resolution.fetched_at;
-        self.db.lock().unwrap().transaction(|conn| {
-            conn.execute(
-                "INSERT OR REPLACE INTO io_snapshot_versions (commit_sha, fetched_at, tasks) \
-                 VALUES (?1, ?2, ?3)",
-                params![commit, fetched_at, resolution.tasks],
-            )?;
-            // A version rewritten at the same instant.
-            conn.execute(
-                "DELETE FROM io_snapshot_entries WHERE commit_sha = ?1 AND fetched_at = ?2",
-                params![commit, fetched_at],
-            )?;
-            let mut insert = conn.prepare(
-                "INSERT INTO io_snapshot_entries (commit_sha, fetched_at, task_id, entry) \
-                 VALUES (?1, ?2, ?3, ?4)",
-            )?;
-            for (task_id, entry) in &entries {
-                insert.execute(params![commit, fetched_at, task_id, entry])?;
-            }
-            Ok(())
-        })
-    }
-
-    /// `commit`'s version fetched at `fetched_at`, or its newest without one.
-    pub(super) fn read_resolution(
+    fn publish(
         &self,
-        commit: &str,
-        fetched_at: Option<i64>,
-    ) -> Result<Option<UltracacheConfigurationResolution>> {
-        self.db.lock().unwrap().query_row(
-            "SELECT fetched_at, tasks FROM io_snapshot_versions \
-             WHERE commit_sha = ?1 AND (?2 IS NULL OR fetched_at = ?2) \
-             ORDER BY fetched_at DESC LIMIT 1",
-            params![commit, fetched_at],
-            |row| {
-                Ok(UltracacheConfigurationResolution {
-                    requested_commit: commit.to_string(),
-                    fetched_at: row.get(0)?,
-                    tasks: row.get(1)?,
-                })
+        commit: String,
+        set: CompactSet,
+    ) -> napi::Result<UltracacheConfigurations, String> {
+        let tasks = set.tasks.len() as u32;
+        // A page can also describe recorded outputs and other tasks in the workspace.
+        // Persist only the strings this snapshot needs for hashing.
+        let mut used = vec![false; set.globs.len()];
+        for &glob in set.inputs.keys().flatten() {
+            used[glob as usize] = true;
+        }
+        let (version, fetched_at) = self.db.lock().unwrap().transaction_immediate(|conn| {
+            // Serialize allocation across processes, including two imports in the same millisecond.
+            let fetched_at: i64 = conn.query_row(
+                "SELECT MAX(?2, COALESCE(MAX(fetched_at) + 1, 0)) FROM (
+                    SELECT MAX(fetched_at) AS fetched_at FROM io_snapshot_versions WHERE commit_sha = ?1
+                    UNION ALL SELECT MAX(fetched_at) FROM io_snapshot_compact_versions WHERE commit_sha = ?1)",
+                params![commit, current_timestamp_millis()],
+                |row| row.get(0),
+            )?;
+            conn.execute(
+                "INSERT INTO io_snapshot_compact_versions (commit_sha, fetched_at, tasks) VALUES (?1, ?2, ?3)",
+                params![commit, fetched_at, tasks],
+            )?;
+            let version = conn.last_insert_rowid();
+            let mut globs = conn.prepare("INSERT INTO io_snapshot_compact_globs VALUES (?1, ?2, ?3)")?;
+            for (id, glob) in set.globs.iter().enumerate() {
+                if used[id] {
+                    globs.execute(params![version, id, glob.as_ref()])?;
+                }
+            }
+            let mut artifacts = conn.prepare("INSERT INTO io_snapshot_compact_artifacts VALUES (?1, ?2, ?3)")?;
+            for (inputs, id) in &set.inputs {
+                let bytes: Vec<u8> = inputs.iter().flat_map(|id| id.to_le_bytes()).collect();
+                artifacts.execute(params![version, id, bytes])?;
+            }
+            let mut insert_task = conn.prepare("INSERT INTO io_snapshot_compact_tasks VALUES (?1, ?2, ?3)")?;
+            for (task, artifact) in &set.tasks {
+                insert_task.execute(params![version, task, artifact])?;
+            }
+            Ok((version, fetched_at))
+        }).map_err(|err| napi::Error::new("WRITE_FAILED".into(), err.to_string()))?;
+        Ok(UltracacheConfigurations::new(
+            UltracacheConfigurationResolution {
+                requested_commit: commit,
+                fetched_at,
+                tasks,
             },
-        )
+            self.clone(),
+            Some(version),
+        ))
     }
 
-    /// The stored entries among `task_ids` for one version of `commit`; an id
-    /// with no entry is simply absent from the result.
+    fn open(&self, commit: String, fetched_at: Option<i64>) -> Option<UltracacheConfigurations> {
+        let (version, fetched_at, tasks, ambiguous) = self.db.lock().unwrap().query_row(
+            "WITH newest AS (
+                SELECT id, fetched_at, tasks FROM (
+                    SELECT id, fetched_at, tasks FROM io_snapshot_compact_versions WHERE commit_sha = ?1
+                    UNION ALL SELECT NULL, fetched_at, tasks FROM io_snapshot_versions WHERE commit_sha = ?1)
+                WHERE ?2 IS NULL OR fetched_at = ?2 ORDER BY fetched_at DESC, id DESC LIMIT 1
+             )
+             SELECT id, fetched_at, tasks, id IS NOT NULL AND EXISTS (
+                SELECT 1 FROM io_snapshot_versions WHERE commit_sha = ?1 AND fetched_at = newest.fetched_at
+             ) FROM newest",
+            params![commit, fetched_at],
+            |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?, row.get::<_, bool>(3)?)),
+        ).inspect_err(|err| debug!("ultracache: unreadable configurations for {commit}: {err}")).ok()??;
+        // An older writer can still pick its own timestamp. A worker cannot
+        // distinguish two versions with the same public pin.
+        if ambiguous {
+            debug!("ultracache: ambiguous configuration version for {commit} at {fetched_at}");
+            return None;
+        }
+        Some(UltracacheConfigurations::new(
+            UltracacheConfigurationResolution {
+                requested_commit: commit,
+                fetched_at,
+                tasks,
+            },
+            self.clone(),
+            version,
+        ))
+    }
+
     pub(super) fn read_entries(
         &self,
-        commit: &str,
-        fetched_at: i64,
+        version: Option<i64>,
+        resolution: &UltracacheConfigurationResolution,
         task_ids: &[&str],
-    ) -> Result<Vec<(String, UltracacheConfiguration)>> {
+        cache: &mut EntryCache,
+    ) -> Result<()> {
         let ids = Rc::new(
             task_ids
                 .iter()
                 .map(|id| Value::from(id.to_string()))
-                .collect::<Vec<Value>>(),
+                .collect::<Vec<_>>(),
         );
-        let rows: Vec<(String, String)> = self.db.lock().unwrap().query_map(
-            "SELECT task_id, entry FROM io_snapshot_entries \
-             WHERE commit_sha = ?1 AND fetched_at = ?2 AND task_id IN rarray(?3)",
-            (commit, fetched_at, ids),
-            |row| Ok((row.get(0)?, row.get(1)?)),
-        )?;
-        rows.into_iter()
-            .map(|(task_id, json)| {
-                let entry = serde_json::from_str(&json).with_context(|| {
-                    format!("parsing the stored Ultracache configuration of {task_id}")
+        let Some(version) = version else {
+            let rows: Vec<(String, String)> = self.db.lock().unwrap().query_map(
+                "SELECT task_id, entry FROM io_snapshot_entries WHERE commit_sha = ?1 AND fetched_at = ?2 AND task_id IN rarray(?3)",
+                (&resolution.requested_commit, resolution.fetched_at, ids), |row| Ok((row.get(0)?, row.get(1)?)))?;
+            for (id, json) in rows {
+                let entry: LegacyEntry = serde_json::from_str(&json).with_context(|| {
+                    format!("parsing the stored Ultracache configuration of {id}")
                 })?;
-                Ok((task_id, entry))
-            })
-            .collect()
+                let mut inputs: Vec<Arc<str>> = entry
+                    .inputs
+                    .into_iter()
+                    .map(|glob| {
+                        if let Some(shared) = cache.legacy_globs.get(glob.as_str()) {
+                            return shared.clone();
+                        }
+                        let shared: Arc<str> = glob.into();
+                        cache.legacy_globs.insert(shared.clone());
+                        shared
+                    })
+                    .collect();
+                inputs.sort_unstable();
+                inputs.dedup();
+                cache.tasks.insert(id, Some(inputs.into()));
+            }
+            return Ok(());
+        };
+        let tasks: Vec<(String, u32)> = self.db.lock().unwrap().query_map(
+            "SELECT task_id, artifact FROM io_snapshot_compact_tasks WHERE version = ?1 AND task_id IN rarray(?2)",
+            (version, ids), |row| Ok((row.get(0)?, row.get(1)?)))?;
+        let needed: HashSet<u32> = tasks
+            .iter()
+            .map(|(_, id)| *id)
+            .filter(|id| !cache.artifacts.contains_key(id))
+            .collect();
+        if !needed.is_empty() {
+            let rows: Vec<(u32, Vec<u8>)> = self.db.lock().unwrap().query_map(
+                "SELECT id, inputs FROM io_snapshot_compact_artifacts WHERE version = ?1 AND id IN rarray(?2)",
+                (version, integers(needed.iter().copied())), |row| Ok((row.get(0)?, row.get(1)?)))?;
+            ensure!(
+                rows.len() == needed.len(),
+                "missing stored Ultracache artifact"
+            );
+            let mut glob_ids = HashSet::new();
+            let mut artifacts = Vec::with_capacity(rows.len());
+            for (id, bytes) in rows {
+                let (words, trailing) = bytes.as_chunks::<4>();
+                ensure!(trailing.is_empty(), "invalid stored Ultracache input ids");
+                let inputs: Vec<u32> = words.iter().copied().map(u32::from_le_bytes).collect();
+                glob_ids.extend(
+                    inputs
+                        .iter()
+                        .copied()
+                        .filter(|g| !cache.globs.contains_key(g)),
+                );
+                artifacts.push((id, inputs));
+            }
+            if !glob_ids.is_empty() {
+                let rows: Vec<(u32, String)> = self.db.lock().unwrap().query_map(
+                    "SELECT id, glob FROM io_snapshot_compact_globs WHERE version = ?1 AND id IN rarray(?2)",
+                    (version, integers(glob_ids.iter().copied())), |row| Ok((row.get(0)?, row.get(1)?)))?;
+                ensure!(
+                    rows.len() == glob_ids.len(),
+                    "missing stored Ultracache glob"
+                );
+                cache
+                    .globs
+                    .extend(rows.into_iter().map(|(id, glob)| (id, glob.into())));
+            }
+            for (id, ids) in artifacts {
+                let mut inputs: Vec<_> = ids.iter().map(|glob| cache.globs[glob].clone()).collect();
+                inputs.sort_unstable();
+                cache.artifacts.insert(id, inputs.into());
+            }
+        }
+        for (id, artifact) in tasks {
+            cache
+                .tasks
+                .insert(id, Some(cache.artifacts[&artifact].clone()));
+        }
+        Ok(())
     }
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::native::db::initialize::initialize_db;
-
-    fn temp_store() -> (tempfile::TempDir, UltracacheConfigurationStore) {
-        let dir = tempfile::tempdir().unwrap();
-        let conn = initialize_db(&dir.path().join("test.db")).unwrap();
-        let db = External::new(Arc::new(Mutex::new(conn)));
-        (dir, UltracacheConfigurationStore::new(&db).unwrap())
-    }
-
-    fn import(
-        store: &UltracacheConfigurationStore,
-        json: &str,
-    ) -> napi::Result<UltracacheConfigurations, String> {
-        store.import_set(UltracacheConfigurationImportOptions {
-            requested_commit: "head".into(),
-            configurations_json: json.into(),
-        })
-    }
-
-    #[test]
-    fn imports_a_payload_and_gets_it_back_per_task() {
-        let (_dir, store) = temp_store();
-        let json = r#"{
-          "web:build": { "commit": "parent", "inputs": ["apps/web/src/**/*.ts"], "outputs": ["dist/web/b", "dist/web/a", "dist/web/b"] },
-          "ui:test": { "commit": "head", "inputs": ["libs/ui/**/*.ts"], "outputs": [] }
-        }"#;
-        let imported = import(&store, json).unwrap();
-        let resolution = imported.resolution();
-        assert_eq!(resolution.tasks, 2);
-        assert_eq!(imported.commit(), "head");
-
-        let stored = store.get("head".into()).unwrap();
-        assert_eq!(stored.resolution().fetched_at, resolution.fetched_at);
-        // Read per task; the recorded `outputs` Nx Cloud sends are dropped.
-        let entries = stored.entries_for(&["web:build", "gone:build"]).unwrap();
-        assert_eq!(entries.len(), 1);
-        assert_eq!(
-            entries["web:build"].inputs,
-            vec!["apps/web/src/**/*.ts".to_string()]
-        );
-        // A second ask does not go back to the database: rewrite the version
-        // without the entry and the handle still answers from memory.
-        let fetched_at = stored.resolution().fetched_at;
-        store
-            .write(&ImportedSet {
-                resolution: stored.resolution(),
-                entries: BTreeMap::new(),
-            })
-            .unwrap();
-        assert!(
-            store
-                .read_entries("head", fetched_at, &["web:build"])
-                .unwrap()
-                .is_empty()
-        );
-        assert_eq!(
-            stored.entries_for(&["web:build", "ui:test"]).unwrap().len(),
-            1
-        );
-        assert_eq!(stored.entries_for(&["web:build"]).unwrap().len(), 1);
-    }
-
-    #[test]
-    fn rejects_a_payload_it_cannot_read_and_stores_nothing() {
-        let (_dir, store) = temp_store();
-        let err = import(&store, "{ not json").err().unwrap();
-        assert_eq!(err.status, "INVALID_RESPONSE");
-        assert!(store.get("head".into()).is_none());
-    }
-
-    // Unknown fields are ignored so Nx Cloud can add some; an `inputs` shape
-    // nx does not model is refused rather than half-read.
-    #[test]
-    fn ignores_unknown_fields_and_rejects_structured_inputs() {
-        let (_dir, store) = temp_store();
-        let extra =
-            r#"{ "a:build": { "commit": "head", "inputs": [], "outputs": [], "recordedAt": 1 } }"#;
-        assert!(import(&store, extra).is_ok());
-        let structured = r#"{ "a:build": { "commit": "head", "inputs": { "projects": {}, "workspace": [] }, "outputs": [] } }"#;
-        assert_eq!(
-            import(&store, structured).err().unwrap().status,
-            "INVALID_RESPONSE"
-        );
-    }
-
-    #[test]
-    fn treats_an_unreadable_row_as_nothing_stored() {
-        let (_dir, store) = temp_store();
-        import(&store, "{}").unwrap();
-        store
-            .db
-            .lock()
-            .unwrap()
-            .execute("UPDATE io_snapshot_versions SET tasks = 'not a number'", [])
-            .unwrap();
-        assert!(store.get("head".into()).is_none());
-    }
-
-    fn resolution_of(
-        db: &UltracacheConfigurationStore,
-        commit: &str,
-    ) -> Option<UltracacheConfigurationResolution> {
-        db.read_resolution(commit, None).unwrap()
-    }
-
-    fn imported(commit: &str, fetched_at: i64, tasks: &[&str]) -> ImportedSet {
-        let entries: BTreeMap<String, UltracacheConfiguration> = tasks
-            .iter()
-            .map(|id| {
-                (
-                    id.to_string(),
-                    UltracacheConfiguration {
-                        commit: commit.into(),
-                        inputs: vec![format!("libs/{id}/a.ts"), "b.ts".into()],
-                    },
-                )
-            })
-            .collect();
-        let mut set = ImportedSet::new(commit.into(), entries);
-        set.resolution.fetched_at = fetched_at;
-        set
-    }
-
-    #[test]
-    fn reads_only_the_requested_tasks_and_keeps_every_commit() {
-        let (_dir, db) = temp_store();
-        assert!(resolution_of(&db, "c0").is_none());
-        assert!(db.read_entries("c0", 0, &["a:build"]).unwrap().is_empty());
-
-        db.write(&imported("c0", 0, &["a:build", "b:build", "c:build"]))
-            .unwrap();
-        for i in 1..=5 {
-            db.write(&imported(&format!("c{i}"), i, &["a:build"]))
-                .unwrap();
-        }
-
-        let entries = db.read_entries("c5", 5, &["a:build", "zzz:build"]).unwrap();
-        assert_eq!(entries.len(), 1);
-        assert_eq!(entries[0].0, "a:build");
-        assert_eq!(
-            entries[0].1.inputs,
-            vec!["libs/a:build/a.ts".to_string(), "b.ts".into()]
-        );
-        assert_eq!(resolution_of(&db, "c5").unwrap().tasks, 1);
-        assert_eq!(db.read_entries("c0", 0, &["c:build"]).unwrap().len(), 1);
-    }
-
-    #[test]
-    fn a_reimport_adds_a_version_and_a_pinned_handle_keeps_reading_its_own() {
-        let (_dir, store) = temp_store();
-        store
-            .write(&imported("c1", 1, &["a:build", "b:build"]))
-            .unwrap();
-        let pinned = store.get("c1".into()).unwrap();
-        store.write(&imported("c1", 2, &["a:build"])).unwrap();
-
-        // `get` serves the newest version; `get_version` the one asked for.
-        assert_eq!(store.get("c1".into()).unwrap().resolution().fetched_at, 2);
-        let old = store.get_version("c1".into(), 1).unwrap();
-        assert_eq!(old.resolution().tasks, 2);
-        // The handle loaded before the re-import still reads its version's entries.
-        assert_eq!(
-            pinned.entries_for(&["a:build", "b:build"]).unwrap().len(),
-            2
-        );
-        assert_eq!(
-            store
-                .get("c1".into())
-                .unwrap()
-                .entries_for(&["a:build", "b:build"])
-                .unwrap()
-                .len(),
-            1
-        );
-        assert!(store.get_version("c1".into(), 7).is_none());
-    }
-
-    #[test]
-    fn keeps_every_version_of_a_commit() {
-        let (_dir, db) = temp_store();
-        for fetched_at in 1..=3 {
-            db.write(&imported("c1", fetched_at, &["a:build"])).unwrap();
-        }
-        for fetched_at in 1..=3 {
-            assert!(
-                db.read_resolution("c1", Some(fetched_at))
-                    .unwrap()
-                    .is_some()
-            );
-            assert_eq!(
-                db.read_entries("c1", fetched_at, &["a:build"])
-                    .unwrap()
-                    .len(),
-                1
-            );
-        }
-    }
-
-    #[test]
-    fn rewriting_a_version_replaces_its_entries() {
-        let (_dir, db) = temp_store();
-        db.write(&imported("c1", 1, &["a:build", "b:build"]))
-            .unwrap();
-        db.write(&imported("c1", 1, &["a:build"])).unwrap();
-        assert!(db.read_entries("c1", 1, &["b:build"]).unwrap().is_empty());
-        assert_eq!(db.read_entries("c1", 1, &["a:build"]).unwrap().len(), 1);
-    }
-
-    #[test]
-    fn reads_no_ids_and_one_id() {
-        let (_dir, db) = temp_store();
-        db.write(&imported("c1", 1, &["a:build", "b:build"]))
-            .unwrap();
-        assert!(db.read_entries("c1", 1, &[]).unwrap().is_empty());
-        let one = db.read_entries("c1", 1, &["b:build"]).unwrap();
-        assert_eq!(one.len(), 1);
-        assert_eq!(one[0].0, "b:build");
-    }
-
-    #[test]
-    fn reads_more_ids_than_sqlite_allows_parameters_in_one_query() {
-        let (_dir, db) = temp_store();
-        let ids: Vec<String> = (0..40_000).map(|i| format!("p{i}:build")).collect();
-        let refs: Vec<&str> = ids.iter().map(String::as_str).collect();
-        db.write(&imported("c1", 1, &refs)).unwrap();
-        assert_eq!(db.read_entries("c1", 1, &refs).unwrap().len(), 40_000);
-    }
-}
+mod tests;

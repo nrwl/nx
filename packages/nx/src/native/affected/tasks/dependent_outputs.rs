@@ -318,7 +318,7 @@ mod tests {
     #[test]
     fn a_read_does_not_reach_an_output_in_a_nested_project_it_skips() {
         let scoped = HashInstruction::IgnoredFileSet {
-            globs: strings(&["packages/gradle/**/*"]),
+            globs: ["packages/gradle/**/*"].map(Into::into).into(),
             project_roots: strings(&["packages/gradle", "packages/gradle/runner"]),
             ultracache: false,
         };

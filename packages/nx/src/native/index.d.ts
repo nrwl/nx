@@ -361,39 +361,26 @@ export declare class TaskInvocationTracker {
 }
 
 /**
- * One stored version of a commit's Ultracache configurations. Handed to the hash planner as-is.
- * A fresh import holds every entry; a handle reopened from storage reads
- * them per task as they are asked for and remembers them, so it costs the
- * tasks it plans rather than the workspace's whole set.
+ * One pinned version of a commit's configurations. Reads and caches only the
+ * requested tasks, their distinct input lists, and the globs those lists use.
  */
 export declare class UltracacheConfigurations {
   get commit(): string
   get resolution(): UltracacheConfigurationResolution
 }
 
-/**
- * The workspace database's Ultracache configurations. Each import is its own version,
- * keyed by commit and fetch time, so a run that pinned one keeps reading it
- * while a newer one is imported. Failures throw with a `code` JS maps to a
- * skip reason: `STORE_UNAVAILABLE`, `INVALID_RESPONSE` or `WRITE_FAILED`.
- */
+/** The workspace database's Ultracache configurations, pinned by commit and fetch time. */
 export declare class UltracacheConfigurationStore {
   constructor(db: ExternalObject<NxDbConnection>)
-  /**
-   * Stores the set the Nx Cloud client read for `requested_commit` as a new
-   * version, and returns it with every entry in hand.
-   */
+  /** Compatibility with consumers of the original native JSON importer. */
   import(options: UltracacheConfigurationImportOptions): UltracacheConfigurations
-  /**
-   * The newest stored set for `commit`, without touching the network;
-   * `null` when none is stored or its row cannot be read. Reads only the
-   * version's summary row.
-   */
+  /** Imports the older Cloud API one JS property at a time. */
+  importEntries(requestedCommit: string, configurations: Readonly<Record<string, { commit: string; inputs: readonly string[] }>>): UltracacheConfigurations
+  /** Verifies and imports the immutable manifest and its referenced objects. */
+  importFiles(requestedCommit: string, manifestPath: string, filesDirectory: string): UltracacheConfigurations
+  /** The newest stored set for this commit, reading only its summary. */
   get(commit: string): UltracacheConfigurations | null
-  /**
-   * Exactly the version of `commit` fetched at `fetched_at`; `null` when it
-   * is not stored or its row cannot be read.
-   */
+  /** The exact version handed to the worker by its coordinator. */
   getVersion(commit: string, fetchedAt: number): UltracacheConfigurations | null
 }
 

@@ -1,10 +1,11 @@
 use std::collections::{HashMap, HashSet};
 
-use crate::native::cache::expand_outputs::match_output_paths;
+use crate::native::cache::expand_outputs::match_output_path_refs;
 use crate::native::glob::expand_literal_braces;
 use crate::native::tasks::hash_planner::walk_root;
 use crate::native::tasks::hashers::{parse_group, validate_files_glob};
 use crate::native::tasks::types::{TaskGraph, TaskUltracacheSettings, UltracacheMode};
+use crate::native::ultracache::set::SharedInputs;
 use crate::native::ultracache::{UltracacheConfigurationResolution, UltracacheConfigurations};
 use xxhash_rust::xxh3::Xxh3;
 
@@ -49,7 +50,7 @@ impl From<UltracacheEligibilityOptions> for EligibilityInputs {
 /// marks the plan.
 #[derive(Clone, Debug)]
 pub(crate) struct UltracacheTask {
-    pub files: Vec<String>,
+    pub files: SharedInputs,
     pub digest: String,
 }
 
@@ -144,6 +145,10 @@ pub(crate) fn resolve<'a>(
         }
     };
 
+    // Tasks commonly share most of their recorded globs, even when their
+    // complete input lists differ. Validate each distinct string once.
+    let mut escaping_globs = HashMap::new();
+    let mut invalid_globs = HashMap::new();
     for (task_id, ultracache) in ultracache_settings {
         // `On` is the only mode that lets a recording stand in for what the
         // target declared; `Warn` and `Error` still record, but report against
@@ -167,35 +172,34 @@ pub(crate) fn resolve<'a>(
             diagnostics.push(UltracacheDiagnostic::task("continuous", task_id));
             continue;
         }
-        let Some(stored) = entries.get(task_id) else {
+        let Some(files) = entries.get(task_id) else {
             diagnostics.push(UltracacheDiagnostic::task("missing", task_id));
             continue;
         };
-        let entry = stored.as_ref();
-
-        let mut files = entry.inputs.clone();
-        files.sort();
-        files.dedup();
-        if let Some(glob) = files.iter().find(|g| {
-            if g.contains('{') {
-                expand_literal_braces(g)
-                    .iter()
-                    .any(|e| escapes_workspace(e))
-            } else {
-                escapes_workspace(g)
-            }
+        if let Some(glob) = files.iter().find(|&g| {
+            *escaping_globs.entry(g.as_ref()).or_insert_with(|| {
+                if g.contains('{') {
+                    expand_literal_braces(g)
+                        .iter()
+                        .any(|e| escapes_workspace(e))
+                } else {
+                    escapes_workspace(g)
+                }
+            })
         }) {
             let mut diagnostic = UltracacheDiagnostic::task("escapes-workspace", task_id);
-            diagnostic.glob = Some(glob.clone());
+            diagnostic.glob = Some(glob.to_string());
             diagnostics.push(diagnostic);
             continue;
         }
         // A read the hasher would reject fails the whole hash; fall back instead.
-        if let Some(glob) = files.iter().find(|g| {
-            validate_files_glob(g).is_err() || parse_group(std::slice::from_ref(*g)).is_err()
+        if let Some(glob) = files.iter().find(|&g| {
+            *invalid_globs.entry(g.as_ref()).or_insert_with(|| {
+                validate_files_glob(g).is_err() || parse_group(std::slice::from_ref(g)).is_err()
+            })
         }) {
             let mut diagnostic = UltracacheDiagnostic::task("invalid-glob", task_id);
-            diagnostic.glob = Some(glob.clone());
+            diagnostic.glob = Some(glob.to_string());
             diagnostics.push(diagnostic);
             continue;
         }
@@ -203,7 +207,7 @@ pub(crate) fn resolve<'a>(
         tasks.insert(
             task_id.to_string(),
             UltracacheTask {
-                files,
+                files: files.clone(),
                 digest: configuration_digest(ultracache),
             },
         );
@@ -285,16 +289,16 @@ pub(crate) fn is_literal_path(glob: &str) -> bool {
 
 /// The candidates equal to `root` or below it, from a sorted list. An empty
 /// root is the workspace itself and holds every candidate.
-fn candidates_under(sorted: &[String], root: &str) -> Vec<String> {
+fn candidates_under<'a>(sorted: &[&'a str], root: &str) -> Vec<&'a str> {
     if root.is_empty() {
         return sorted.to_vec();
     }
     let prefix = format!("{root}/");
-    let start = sorted.partition_point(|c| c.as_str() < prefix.as_str());
+    let start = sorted.partition_point(|c| *c < prefix.as_str());
     let end = start + sorted[start..].partition_point(|c| c.starts_with(&prefix));
-    let mut hits: Vec<String> = sorted[start..end].to_vec();
-    if let Ok(i) = sorted.binary_search_by(|c| c.as_str().cmp(root)) {
-        hits.push(sorted[i].clone());
+    let mut hits: Vec<&str> = sorted[start..end].to_vec();
+    if let Ok(i) = sorted.binary_search(&root) {
+        hits.push(sorted[i]);
     }
     hits
 }
@@ -323,16 +327,15 @@ fn escapes_workspace(glob: &str) -> bool {
 
 /// Whether an observed read falls under a declared output of one of the task's
 /// direct or transitive dependencies.
-fn reads_dependency_outputs(task_id: &str, files: &[String], task_graph: &TaskGraph) -> bool {
-    let mut candidates: Vec<String> = files
+fn reads_dependency_outputs(task_id: &str, files: &SharedInputs, task_graph: &TaskGraph) -> bool {
+    let candidates: Vec<&str> = files
         .iter()
         .filter(|f| !f.starts_with('!'))
-        .cloned()
+        .map(AsRef::as_ref)
         .collect();
     if candidates.is_empty() {
         return false;
     }
-    candidates.sort();
     let mut visited: HashSet<&str> = HashSet::new();
     let mut queue: Vec<&str> = vec![task_id];
     while let Some(current) = queue.pop() {
@@ -346,7 +349,7 @@ fn reads_dependency_outputs(task_id: &str, files: &[String], task_graph: &TaskGr
             };
             // Only reads under an output's walk root can match it; glob
             // semantics (negations included) are settled on those few.
-            let mut under: Vec<String> = producer
+            let mut under: Vec<&str> = producer
                 .outputs
                 .iter()
                 .filter(|output| !output.starts_with('!'))
@@ -357,7 +360,7 @@ fn reads_dependency_outputs(task_id: &str, files: &[String], task_graph: &TaskGr
             }
             under.sort();
             under.dedup();
-            if match_output_paths(producer.outputs.clone(), under)
+            if match_output_path_refs(&producer.outputs, &under)
                 .is_ok_and(|matched| matched.into_iter().any(|hit| hit))
             {
                 return true;
@@ -384,9 +387,9 @@ pub fn get_ultracache_deferred_task_ids(
         .tasks
         .keys()
         .filter(|task_id| {
-            entries.get(*task_id).is_some_and(|stored| {
-                reads_dependency_outputs(task_id, &stored.inputs, &task_graph)
-            })
+            entries
+                .get(*task_id)
+                .is_some_and(|stored| reads_dependency_outputs(task_id, stored, &task_graph))
         })
         .cloned()
         .collect();
@@ -400,16 +403,13 @@ mod tests {
 
     #[test]
     fn candidates_under_a_root_ignores_siblings_that_share_its_prefix() {
-        let sorted: Vec<String> = [
+        let sorted = [
             "dist/a",
             "dist/a-b/x.js",
             "dist/a/x.js",
             "dist/a/y/z.js",
             "dist/b/x.js",
-        ]
-        .into_iter()
-        .map(String::from)
-        .collect();
+        ];
         assert_eq!(
             candidates_under(&sorted, "dist/a"),
             vec![

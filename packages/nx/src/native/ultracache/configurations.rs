@@ -1,42 +1,51 @@
 use std::collections::HashMap;
-use std::sync::{Arc, Mutex};
+use std::sync::Mutex;
 
 use super::UltracacheConfigurationResolution;
-use super::set;
-#[cfg(not(target_arch = "wasm32"))]
-use super::store;
+use super::set::SharedInputs;
 
-/// The store the entries are read from. The wasm build has no database, so it
-/// has no store and never holds a set.
-#[cfg(not(target_arch = "wasm32"))]
-type Db = store::UltracacheConfigurationStore;
-#[cfg(target_arch = "wasm32")]
-type Db = ();
-
-/// One stored version of a commit's Ultracache configurations. Handed to the hash planner as-is.
-/// A fresh import holds every entry; a handle reopened from storage reads
-/// them per task as they are asked for and remembers them, so it costs the
-/// tasks it plans rather than the workspace's whole set.
+/// One pinned version of a commit's configurations. Reads and caches only the
+/// requested tasks, their distinct input lists, and the globs those lists use.
 #[napi]
-#[cfg_attr(target_arch = "wasm32", allow(dead_code))]
 pub struct UltracacheConfigurations {
     resolution: UltracacheConfigurationResolution,
-    db: Db,
-    entries: Mutex<HashMap<String, Option<Arc<set::UltracacheConfiguration>>>>,
+    #[cfg(not(target_arch = "wasm32"))]
+    db: super::store::UltracacheConfigurationStore,
+    #[cfg(not(target_arch = "wasm32"))]
+    version: Option<i64>,
+    cache: Mutex<EntryCache>,
+}
+
+#[derive(Default)]
+pub(super) struct EntryCache {
+    pub tasks: HashMap<String, Option<SharedInputs>>,
+    #[cfg(not(target_arch = "wasm32"))]
+    pub artifacts: HashMap<u32, SharedInputs>,
+    #[cfg(not(target_arch = "wasm32"))]
+    pub globs: HashMap<u32, std::sync::Arc<str>>,
+    #[cfg(not(target_arch = "wasm32"))]
+    pub legacy_globs: std::collections::HashSet<std::sync::Arc<str>>,
 }
 
 impl UltracacheConfigurations {
     #[cfg(not(target_arch = "wasm32"))]
     pub(super) fn new(
         resolution: UltracacheConfigurationResolution,
-        db: Db,
-        entries: HashMap<String, Option<Arc<set::UltracacheConfiguration>>>,
+        db: super::store::UltracacheConfigurationStore,
+        version: Option<i64>,
     ) -> Self {
         Self {
             resolution,
             db,
-            entries: Mutex::new(entries),
+            version,
+            cache: Mutex::default(),
         }
+    }
+
+    #[cfg(all(test, not(target_arch = "wasm32")))]
+    pub(super) fn cached_counts(&self) -> (usize, usize, usize) {
+        let cache = self.cache.lock().unwrap();
+        (cache.tasks.len(), cache.artifacts.len(), cache.globs.len())
     }
 }
 
@@ -56,41 +65,32 @@ impl UltracacheConfigurations {
         &self.resolution
     }
 
-    /// The stored entries among `task_ids`; an id without one is absent.
-    /// Reads each id from the database once per handle.
     pub(crate) fn entries_for(
         &self,
         task_ids: &[&str],
-    ) -> anyhow::Result<HashMap<String, Arc<set::UltracacheConfiguration>>> {
-        let mut entries = self.entries.lock().unwrap();
+    ) -> anyhow::Result<HashMap<String, SharedInputs>> {
+        let mut cache = self.cache.lock().unwrap();
         let missing: Vec<&str> = task_ids
             .iter()
             .copied()
-            .filter(|id| !entries.contains_key(*id))
+            .filter(|id| !cache.tasks.contains_key(*id))
             .collect();
         if !missing.is_empty() {
             #[cfg(not(target_arch = "wasm32"))]
-            let read = self.db.read_entries(
-                &self.resolution.requested_commit,
-                self.resolution.fetched_at,
-                &missing,
-            )?;
-            #[cfg(target_arch = "wasm32")]
-            let read: Vec<(String, set::UltracacheConfiguration)> = Vec::new();
-            for id in &missing {
-                entries.insert((*id).to_string(), None);
-            }
-            for (id, entry) in read {
-                entries.insert(id, Some(Arc::new(entry)));
+            self.db
+                .read_entries(self.version, &self.resolution, &missing, &mut cache)?;
+            for id in missing {
+                cache.tasks.entry(id.to_string()).or_insert(None);
             }
         }
         Ok(task_ids
             .iter()
             .filter_map(|id| {
-                entries
-                    .get(*id)
-                    .and_then(|entry| entry.as_ref())
-                    .map(|entry| ((*id).to_string(), Arc::clone(entry)))
+                cache
+                    .tasks
+                    .get(*id)?
+                    .as_ref()
+                    .map(|inputs| ((*id).to_string(), inputs.clone()))
             })
             .collect())
     }
