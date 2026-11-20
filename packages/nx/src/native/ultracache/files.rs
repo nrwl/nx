@@ -14,10 +14,11 @@ use sha2::{Digest, Sha256};
 
 use super::set::CompactSet;
 
-// Bound bytes read from disk for the whole import. Each reconstructed v3
-// object has the same individual limit as a v2 object. Its text is streamed.
+// The bundle budget covers the manifest, objects and dictionary pages on disk.
 const MAX_FILE_BYTES: u64 = 64 * 1024 * 1024;
 const MAX_BUNDLE_BYTES: u64 = 512 * 1024 * 1024;
+// Ocean's limit for one string configuration, including its JSON encoding.
+const MAX_CONFIGURATION_BYTES: u64 = 8 * 1024 * 1024;
 
 // Reject duplicate JSON keys: serde's default map keeps only the last value.
 fn unique_map<'de, D, V>(de: D) -> Result<HashMap<String, V>, D::Error>
@@ -253,7 +254,7 @@ impl Reader<'_> {
         }
         let mut logical = LogicalChecksum {
             hash: Sha256::new(),
-            remaining: MAX_FILE_BYTES,
+            remaining: MAX_CONFIGURATION_BYTES,
         };
         let strings = |ids| GlobList {
             ids,
@@ -278,6 +279,10 @@ impl Reader<'_> {
         let inputs = match artifact.storage_version {
             2 => {
                 ensure!(
+                    artifact.size_bytes <= MAX_CONFIGURATION_BYTES,
+                    "expanded Ultracache configuration exceeds size limit"
+                );
+                ensure!(
                     artifact
                         .object_checksum
                         .as_deref()
@@ -301,7 +306,10 @@ impl Reader<'_> {
 }
 
 pub(super) fn read(manifest_path: &Path, dir: &Path) -> Result<CompactSet> {
-    let mut budget = MAX_BUNDLE_BYTES;
+    read_with_budget(manifest_path, dir, MAX_BUNDLE_BYTES)
+}
+
+fn read_with_budget(manifest_path: &Path, dir: &Path, mut budget: u64) -> Result<CompactSet> {
     let manifest: Manifest = serde_json::from_slice(&read_file(manifest_path, None, &mut budget)?)?;
     if !manifest.enabled {
         ensure!(
@@ -340,6 +348,93 @@ pub(super) fn read(manifest_path: &Path, dir: &Path) -> Result<CompactSet> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use serde_json::json;
+    use std::fs;
+
+    fn write_object(dir: &Path, bytes: &[u8]) -> String {
+        let id = format!("{:x}", Sha256::digest(bytes));
+        fs::write(dir.join(format!("{id}.json")), bytes).unwrap();
+        id
+    }
+
+    #[test]
+    fn combined_expanded_configurations_can_exceed_the_physical_bundle_budget() {
+        let dir = tempfile::tempdir().unwrap();
+        let dir = dir.path();
+        let common = "shared/".repeat(300);
+        let page = serde_json::to_vec(&json!({&common: 0, "a": 1, "b": 2, "c": 3})).unwrap();
+        let page_sha = write_object(dir, &page);
+        let mut manifest = json!({
+            "enabled": true, "updatedAt": 1, "tasks": {}, "artifacts": {},
+            "dictionaryPages": {&page_sha: {"sizeBytes": page.len()}}
+        });
+        let mut physical_bytes = page.len();
+        let mut logical_sizes = Vec::new();
+        for (i, unique) in ["a", "b", "c"].into_iter().enumerate() {
+            let expanded =
+                serde_json::to_vec(&json!({"inputs": [&common, unique], "outputs": []})).unwrap();
+            let logical_id = format!("{:x}", Sha256::digest(&expanded));
+            logical_sizes.push(expanded.len());
+            let compact = serde_json::to_vec(&json!({"inputs": [0, i+1], "outputs": []})).unwrap();
+            let checksum = write_object(dir, &compact);
+            physical_bytes += compact.len();
+            manifest["tasks"][unique] =
+                json!({"project": unique, "commit": "head", "artifactId": logical_id});
+            manifest["artifacts"][&logical_id] = json!({
+                "storageVersion": 3, "sizeBytes": compact.len(),
+                "objectChecksum": checksum, "dictionaryPageIds": [&page_sha]
+            });
+        }
+        let manifest_path = dir.join("manifest.json");
+        let bytes = serde_json::to_vec(&manifest).unwrap();
+        physical_bytes += bytes.len();
+        fs::write(&manifest_path, bytes).unwrap();
+        assert!(logical_sizes.iter().all(|&size| size < physical_bytes));
+        assert!(logical_sizes.iter().sum::<usize>() > physical_bytes);
+
+        let set = read_with_budget(&manifest_path, dir, physical_bytes as u64).unwrap();
+        assert_eq!(set.tasks.len(), 3);
+        assert_eq!(set.globs.len(), 4);
+        assert!(read_with_budget(&manifest_path, dir, physical_bytes as u64 - 1).is_err());
+    }
+
+    #[test]
+    fn both_storage_versions_enforce_oceans_eight_mib_limit_per_configuration() {
+        let dir = tempfile::tempdir().unwrap();
+        let dir = dir.path();
+        // Each occurrence adds 1024 encoded bytes including quotes and the separator.
+        let glob = "g".repeat(1021);
+        let count = 8192;
+        let expanded = serde_json::to_vec(&Config {
+            inputs: vec![glob.as_str(); count],
+            outputs: Vec::<&str>::new(),
+        })
+        .unwrap();
+        assert!(expanded.len() > 8 * 1024 * 1024);
+        let logical_id = write_object(dir, &expanded);
+        let page = serde_json::to_vec(&json!({&glob: 0})).unwrap();
+        let page_sha = write_object(dir, &page);
+        let compact = serde_json::to_vec(&json!({"inputs": vec![0;count], "outputs": []})).unwrap();
+        let checksum = write_object(dir, &compact);
+        let path = dir.join("manifest.json");
+        for artifact in [
+            json!({"sizeBytes": expanded.len()}),
+            json!({"sizeBytes": compact.len(), "storageVersion": 3, "objectChecksum": checksum, "dictionaryPageIds": [&page_sha]}),
+        ] {
+            let manifest = json!({
+                "enabled": true, "updatedAt": 1,
+                "tasks": {"a": {"commit": "head", "project": "a", "artifactId": logical_id}},
+                "artifacts": {&logical_id: artifact}, "dictionaryPages": {&page_sha: {"sizeBytes": page.len()}}
+            });
+            fs::write(&path, serde_json::to_vec(&manifest).unwrap()).unwrap();
+            let err = read(&path, dir).err().unwrap();
+            assert!(
+                err.to_string()
+                    .contains("expanded Ultracache configuration exceeds size limit"),
+                "{err}"
+            );
+        }
+    }
 
     #[test]
     fn bounds_both_the_file_read_and_the_reconstructed_object() {
