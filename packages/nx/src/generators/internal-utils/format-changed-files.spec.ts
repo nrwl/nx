@@ -2,7 +2,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import type { Tree } from '../tree';
-import { formatChangedFiles } from './format-changed-files';
+import { formatChangedFiles, formatFileContents } from './format-changed-files';
 
 describe('formatChangedFiles', () => {
   let originalSkipFormat: string | undefined;
@@ -113,5 +113,65 @@ describe('formatChangedFiles', () => {
     // Prettier's own defaults, with no config anywhere - the same single-line to
     // multi-line expansion #30403 reported.
     expect(write.mock.calls[0][1]).toEqual('{\n  "version": "1.1.0"\n}\n');
+  });
+
+  // The prettier backend's `getFileInfo` call carries no `ignorePath`, so
+  // its only built-in skip is `node_modules`: a file `.prettierignore`
+  // excludes was rewritten anyway, while devkit's `formatFiles` - which
+  // filters through the tree checker first - left it alone.
+  it('does not format files covered by .prettierignore', async () => {
+    const packageJson = JSON.stringify({
+      devDependencies: { prettier: '^3.6.2' },
+    });
+    const write = vi.fn();
+    const tree = {
+      root,
+      exists: (path: string) => path === 'package.json',
+      read: (path: string) => {
+        if (path === 'package.json') return Buffer.from(packageJson);
+        if (path === '.prettierignore') return 'packages/my-lib/package.json\n';
+        return null;
+      },
+      listChanges: vi.fn(() => [
+        {
+          path: 'packages/my-lib/package.json',
+          type: 'UPDATE' as const,
+          content: Buffer.from('{"version":"1.1.0"}'),
+        },
+        {
+          path: 'packages/my-lib/other.json',
+          type: 'UPDATE' as const,
+          content: Buffer.from('{"version":"2.0.0"}'),
+        },
+      ]),
+      write,
+    } as unknown as Tree;
+
+    await formatChangedFiles(tree);
+
+    expect(write).toHaveBeenCalledTimes(1);
+    expect(write.mock.calls[0][0]).toEqual('packages/my-lib/other.json');
+  });
+
+  // Direct callers have no tree, so the ignore file reaches prettier as an
+  // `ignorePath` instead of through a checker.
+  it('formatFileContents does not format files covered by .prettierignore', async () => {
+    rmSync(join(root, '.oxfmtrc.json'));
+    writeFileSync(
+      join(root, 'package.json'),
+      JSON.stringify({ devDependencies: { prettier: '^3.6.2' } })
+    );
+    writeFileSync(join(root, '.prettierignore'), 'ignored.json\n');
+
+    const results = await formatFileContents(
+      [
+        { path: 'ignored.json', content: '{"a":1}' },
+        { path: 'kept.json', content: '{"b":2}' },
+      ],
+      root
+    );
+
+    expect(Array.from(results.keys())).toEqual(['kept.json']);
+    expect(results.get('kept.json')).toEqual('{ "b": 2 }\n');
   });
 });
