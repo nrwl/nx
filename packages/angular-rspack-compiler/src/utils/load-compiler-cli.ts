@@ -9,7 +9,9 @@ import type * as ts from 'typescript';
 interface AngularCompilerCli {
   readConfiguration(
     project: string,
-    existingOptions?: ts.CompilerOptions
+    existingOptions?: ts.CompilerOptions,
+    host?: unknown,
+    extendedConfigCache?: Map<string, ts.ExtendedConfigCacheEntry>
   ): { options: ts.CompilerOptions; rootNames: readonly string[] };
 }
 
