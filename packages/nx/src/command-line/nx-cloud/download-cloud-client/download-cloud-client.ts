@@ -15,7 +15,11 @@ export function downloadCloudClientHandler(
   return handleErrors(args.verbose, async () => {
     // Try to get cloud options from nx.json if available, otherwise
     // fall back to defaults (env vars / https://cloud.nx.app).
-    let options: { url?: string; customProxyConfigPath?: string } = {};
+    let options: {
+      url?: string;
+      customProxyConfigPath?: string;
+      useSystemCa?: boolean;
+    } = {};
     try {
       const nxJson = readNxJson();
       if (isNxCloudUsed(nxJson)) {
