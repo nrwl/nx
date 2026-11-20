@@ -4,8 +4,8 @@ use std::sync::Arc;
 use anyhow::*;
 use tracing::{trace, trace_span};
 
+use super::disk_expansion::{PathIndex, fold_files, match_file_map};
 use super::once_cache::OnceCache;
-use crate::native::glob::{build_glob_set, fileset_patterns};
 use crate::native::types::FileData;
 
 /// Compute-once cache for project fileset hashes. Holds only the hash, so
@@ -30,7 +30,17 @@ fn project_file_set_cache_key(project_name: &str, file_sets: &[String]) -> Strin
     )
 }
 
-/// Hashes project files without materializing the matched file list.
+fn project_files<'a>(
+    project_name: &str,
+    project_file_map: &'a HashMap<String, Vec<FileData>>,
+) -> Result<&'a [FileData]> {
+    project_file_map
+        .get(project_name)
+        .map(Vec::as_slice)
+        .ok_or_else(|| anyhow!("project {} not found", project_name))
+}
+
+/// Hashes the files a project fileset matches, in path order.
 /// Token resolution ({projectRoot}, {projectName}) is handled upstream by the HashPlanner,
 /// so file_sets are expected to contain already-resolved paths.
 pub fn hash_project_files(
@@ -39,17 +49,10 @@ pub fn hash_project_files(
     project_file_map: &HashMap<String, Vec<FileData>>,
 ) -> Result<String> {
     let _span = trace_span!("hash_project_files", project_name).entered();
-    let collected_files = collect_project_files(project_name, file_sets, project_file_map)?;
-    trace!("collected_files: {:?}", collected_files.len());
-
-    let mut hasher = xxhash_rust::xxh3::Xxh3::new();
-
-    for file in collected_files {
-        hasher.update(file.hash.as_bytes());
-        hasher.update(file.file.as_bytes());
-    }
-
-    Ok(hasher.digest().to_string())
+    let indices = collect_project_file_indices(project_name, file_sets, project_file_map)?;
+    trace!("collected_files: {:?}", indices.len());
+    let files = project_files(project_name, project_file_map)?;
+    Ok(fold_files(indices.iter().map(|&i| &files[i as usize])))
 }
 
 pub(crate) fn hash_project_files_cached(
@@ -63,40 +66,31 @@ pub(crate) fn hash_project_files_cached(
     })
 }
 
-/// The matched file paths of a project fileset, in project-file-map order
-/// (the same order hashing folds them).
+/// The matched file paths of a project fileset, in path order (the same
+/// order hashing folds them).
 pub fn collect_project_file_paths(
     project_name: &str,
     file_sets: &[String],
     project_file_map: &HashMap<String, Vec<FileData>>,
 ) -> Result<Vec<String>> {
+    let files = project_files(project_name, project_file_map)?;
     Ok(
-        collect_project_files(project_name, file_sets, project_file_map)?
+        collect_project_file_indices(project_name, file_sets, project_file_map)?
             .into_iter()
-            .map(|file| file.file.clone())
+            .map(|i| files[i as usize].file.clone())
             .collect(),
     )
 }
 
 /// The matched file indices of a project fileset, into `project_file_map[project_name]`,
-/// in the same project-file-map order `collect_project_file_paths` yields.
+/// in the path order `collect_project_file_paths` yields.
 fn collect_project_file_indices(
     project_name: &str,
     file_sets: &[String],
     project_file_map: &HashMap<String, Vec<FileData>>,
 ) -> Result<Vec<u32>> {
-    let glob_set = build_glob_set(&fileset_patterns(file_sets))?;
-    project_file_map.get(project_name).map_or_else(
-        || Err(anyhow!("project {} not found", project_name)),
-        |files| {
-            Ok(files
-                .iter()
-                .enumerate()
-                .filter(|(_, file)| glob_set.is_match(&file.file))
-                .map(|(i, _)| i as u32)
-                .collect())
-        },
-    )
+    let files = project_files(project_name, project_file_map)?;
+    match_file_map(file_sets, files, &PathIndex::new(files))
 }
 
 fn collect_project_file_indices_cached(
@@ -121,39 +115,13 @@ pub(crate) fn collect_project_file_paths_cached(
 ) -> Result<Vec<String>> {
     let indices =
         collect_project_file_indices_cached(project_name, file_sets, project_file_map, cache)?;
-    let files = project_file_map
-        .get(project_name)
-        .ok_or_else(|| anyhow!("project {} not found", project_name))?;
+    let files = project_files(project_name, project_file_map)?;
     Ok(indices
         .iter()
         .map(|&i| files[i as usize].file.clone())
         .collect())
 }
 
-/// base function that should be testable (to make sure that we're getting the proper files back)
-pub fn collect_project_files<'a>(
-    project_name: &str,
-    file_sets: &[String],
-    project_file_map: &'a HashMap<String, Vec<FileData>>,
-) -> Result<Vec<&'a FileData>> {
-    let now = std::time::Instant::now();
-    let glob_set = build_glob_set(&fileset_patterns(file_sets))?;
-    trace!("build_glob_set for {:?}", now.elapsed());
-
-    project_file_map.get(project_name).map_or_else(
-        || Err(anyhow!("project {} not found", project_name)),
-        |files| {
-            trace!("files: {:?}", files.len());
-            let now = std::time::Instant::now();
-            let hashes = files
-                .iter()
-                .filter(|file| glob_set.is_match(&file.file))
-                .collect::<Vec<_>>();
-            trace!("hash_files for {}: {:?}", project_name, now.elapsed());
-            Ok(hashes)
-        },
-    )
-}
 #[cfg(test)]
 mod tests {
     use crate::native::hasher::hash;
@@ -161,10 +129,10 @@ mod tests {
     use super::*;
     use std::collections::HashMap;
 
-    // The rule that a path with no glob pattern means that file, or that
-    // directory and everything under it, is implemented twice: here against
-    // the file map, and in the expansion against the disk. Neither knows
-    // about the other, so this is what stops them drifting apart.
+    // A path with no glob pattern means that file, or that directory and
+    // everything under it, whether the entries are expanded from the file map
+    // or from the disk. The two sources answer "is this a file" differently,
+    // so this is what stops them drifting apart.
     #[test]
     fn a_directory_entry_means_the_same_on_both_roads() {
         use crate::native::tasks::hashers::disk_expansion::tests::expand_files;
@@ -218,12 +186,7 @@ mod tests {
         ];
         for group in groups {
             let entries: Vec<String> = group.iter().map(|g| (*g).to_string()).collect();
-            let mut tracked: Vec<String> = collect_project_files("x", &entries, &file_map)
-                .unwrap()
-                .into_iter()
-                .map(|data| data.file.clone())
-                .collect();
-            tracked.sort();
+            let tracked = collect_project_file_paths("x", &entries, &file_map).unwrap();
             let from_disk = expand_files(temp.path(), &entries).unwrap().files;
             assert_eq!(tracked, from_disk, "{group:?}");
             assert!(!tracked.is_empty(), "{group:?} matched nothing at all");
@@ -234,7 +197,7 @@ mod tests {
         for missing in ["libs/x/src/absent", "libs/x/absent.ts"] {
             let entries = vec![missing.to_string()];
             assert!(
-                collect_project_files("x", &entries, &file_map)
+                collect_project_file_paths("x", &entries, &file_map)
                     .unwrap()
                     .is_empty(),
                 "{missing}"
@@ -284,19 +247,20 @@ mod tests {
             ],
         );
 
-        let result = collect_project_files(proj_name, file_sets, &file_map).unwrap();
+        let result = collect_project_file_paths(proj_name, file_sets, &file_map).unwrap();
 
-        assert_eq!(result, vec![&tsfile_1, &tsfile_2]);
+        assert_eq!(result, vec![tsfile_2.file.clone(), tsfile_1.file.clone()]);
 
         let result =
-            collect_project_files(proj_name, &["!test/root/**/*.spec.ts".into()], &file_map)
+            collect_project_file_paths(proj_name, &["!test/root/**/*.spec.ts".into()], &file_map)
                 .unwrap();
         assert_eq!(
             result,
             vec![
-                &tsfile_1,
-                &tsfile_2,
-                /* testfile_2 is included because it ends with spectsx.snap */ &testfile_2
+                tsfile_2.file.clone(),
+                /* testfile_2 is included because it ends with spectsx.snap */
+                testfile_2.file.clone(),
+                tsfile_1.file.clone(),
             ]
         );
     }
@@ -339,10 +303,10 @@ mod tests {
             result,
             hash(
                 &[
-                    file_data1.hash.as_bytes(),
                     file_data1.file.as_bytes(),
-                    file_data3.hash.as_bytes(),
-                    file_data3.file.as_bytes()
+                    file_data1.hash.as_bytes(),
+                    file_data3.file.as_bytes(),
+                    file_data3.hash.as_bytes()
                 ]
                 .concat()
             )
@@ -390,10 +354,10 @@ mod tests {
             result,
             hash(
                 &[
-                    file_data1.hash.as_bytes(),
                     file_data1.file.as_bytes(),
-                    file_data3.hash.as_bytes(),
+                    file_data1.hash.as_bytes(),
                     file_data3.file.as_bytes(),
+                    file_data3.hash.as_bytes(),
                 ]
                 .concat()
             )
@@ -401,7 +365,7 @@ mod tests {
     }
 
     #[test]
-    fn should_collect_file_paths_in_file_map_order() {
+    fn should_collect_file_paths_in_path_order() {
         let proj_name = "test_project";
         let file_sets = &["!test/root/**/*.spec.ts".to_string()];
         let mut file_map = HashMap::new();
@@ -409,16 +373,16 @@ mod tests {
             String::from(proj_name),
             vec![
                 FileData {
-                    file: "test/root/test1.ts".into(),
-                    hash: "file_data1".into(),
+                    file: "test/root/test3.ts".into(),
+                    hash: "file_data3".into(),
                 },
                 FileData {
                     file: "test/root/test.spec.ts".into(),
                     hash: "file_data2".into(),
                 },
                 FileData {
-                    file: "test/root/test3.ts".into(),
-                    hash: "file_data3".into(),
+                    file: "test/root/test1.ts".into(),
+                    hash: "file_data1".into(),
                 },
             ],
         );

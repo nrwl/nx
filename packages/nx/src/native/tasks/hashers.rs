@@ -12,6 +12,9 @@ mod hash_tsconfig;
 mod hash_workspace_files;
 mod once_cache;
 
+#[cfg(test)]
+mod fileset_characterization;
+
 pub use disk_expansion::*;
 pub use hash_cwd::*;
 pub use hash_env::*;
@@ -23,9 +26,7 @@ pub(crate) use hash_project_files::{
     ProjectFileIndicesCache, ProjectFileSetCache, collect_project_file_paths_cached,
     hash_project_files_cached,
 };
-pub use hash_project_files::{
-    collect_project_file_paths, collect_project_files, hash_project_files,
-};
+pub use hash_project_files::{collect_project_file_paths, hash_project_files};
 pub use hash_runtime::*;
 pub use hash_task_output::*;
 pub use hash_tsconfig::*;
