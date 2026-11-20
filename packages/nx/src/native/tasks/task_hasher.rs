@@ -780,17 +780,25 @@ impl TaskHasher {
         };
         let is_ultracache_configuration =
             |i: &HashInstruction| matches!(i, HashInstruction::UltracacheConfiguration(_));
+        let covers_reads = |i: &HashInstruction| {
+            matches!(
+                i,
+                HashInstruction::TaskOutput(..)
+                    | HashInstruction::IgnoredFileSet {
+                        from_ultracache: false,
+                        ..
+                    }
+            )
+        };
         let recorded_caches = RecordedCaches::default();
         hash_plans.plans.par_iter().try_for_each(|(task_id, ids)| {
             if ids.is_empty() {
                 return Ok(());
             }
-            // A recorded plan's groups fold into its configuration entry,
-            // see `fold_recorded_files`.
+            // A recorded plan with something that could cover its reads folds
+            // them into its configuration entry, see `fold_recorded_files`.
             let folds_recorded = ids.iter().any(|&id| is(id, is_ultracache_configuration))
-                && ids
-                    .iter()
-                    .any(|&id| is(id, |i| matches!(i, HashInstruction::TaskOutput(..))));
+                && ids.iter().any(|&id| is(id, covers_reads));
             let js_env = resolve_env(task_id);
             // Workers accumulate locally, then publish one result per task.
             // The inner parallel iterator also preserves concurrency when
@@ -1519,7 +1527,27 @@ mod tests {
     }
 
     #[test]
-    fn a_plan_without_dependency_outputs_hashes_each_group() {
+    fn a_read_a_declared_group_hashes_leaves_the_hash_alone_without_dependency_outputs() {
+        let files = [
+            ("libs/e2e/src/app.spec.ts", "spec"),
+            ("libs/e2e/generated/api.json", "{}"),
+        ];
+        let hash = |reads: &[&str]| {
+            let plan = vec![
+                HashInstruction::UltracacheConfiguration("digest".into()),
+                recorded_files(reads),
+                HashInstruction::ignored_files(vec!["libs/e2e/generated/**".into()]),
+            ];
+            hash_recorded(&files, &[("e2e:test", plan)])["e2e:test"].clone()
+        };
+        assert_eq!(
+            hash(&["libs/e2e/src/app.spec.ts", "libs/e2e/generated/api.json"]),
+            hash(&["libs/e2e/src/app.spec.ts"])
+        );
+    }
+
+    #[test]
+    fn a_plan_with_nothing_covering_its_reads_hashes_each_group() {
         let plan = |reads: &[&str]| {
             vec![
                 HashInstruction::UltracacheConfiguration("digest".into()),
