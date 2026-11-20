@@ -97,7 +97,7 @@
     "@nx/webpack": "workspace:*",
     "ng-packagr": "catalog:angular-supported-versions",
     "rxjs": "catalog:angular-supported-versions",
-    "webpack-merge": "^5.8.0"
+    "webpack-merge": "^5.8.0 || ^6.0.0"
   },
   "peerDependenciesMeta": {
     "@angular/build": {

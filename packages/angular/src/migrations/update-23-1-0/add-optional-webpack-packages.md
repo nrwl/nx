@@ -35,7 +35,7 @@ For a workspace with an `@nx/angular:webpack-browser` build target, the migratio
   "devDependencies": {
     "@nx/angular": "23.1.0",
     "@nx/webpack": "23.1.0",
-    "webpack-merge": "^5.8.0",
+    "webpack-merge": "^6.0.1",
   },
 }
 ```

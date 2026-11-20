@@ -2166,7 +2166,7 @@ importers:
         specifier: catalog:typescript
         version: 2.8.1
       webpack-merge:
-        specifier: ^5.8.0
+        specifier: ^5.8.0 || ^6.0.0
         version: 5.10.0
     devDependencies:
       '@nx/storybook':
