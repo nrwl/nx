@@ -2,8 +2,10 @@
   "name": "dev.nx.maven:nx-maven-shared",
   "projectType": "library",
   "targets": {
-    "maven:test": {
-      "command": "./mvnw clean verify -am -pl dev.nx.maven:maven-shared"
+    "mvn:test-ci": {
+      "options": {
+        "args": ["-DfailIfNoTests=true"]
+      }
     }
   }
 }
