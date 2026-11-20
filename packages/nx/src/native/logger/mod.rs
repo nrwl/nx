@@ -106,6 +106,11 @@ where
 /// Runs once when the native module is loaded, so nothing else has to call it.
 #[module_init]
 fn enable_logger() {
+    // `tui_logger::init_logger` spawns a thread that never exits. Node unloads
+    // this module when the last environment that loaded it exits (for example
+    // a `worker_threads` worker); on Windows that thread then runs unmapped code.
+    #[cfg(not(target_family = "wasm"))]
+    napi::bindgen_prelude::retain_current_module_for_unload_safety();
     initialize_logger();
 }
 
