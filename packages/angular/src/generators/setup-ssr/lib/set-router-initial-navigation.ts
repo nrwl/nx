@@ -7,19 +7,28 @@ import { insertImport } from '@nx/js';
 import { ast, query } from '@phenomnomnominal/tsquery';
 import type {
   CallExpression,
+  Expression,
   ImportSpecifier,
   ObjectLiteralElementLike,
   ObjectLiteralExpression,
   Printer,
   SourceFile,
+  SpreadAssignment,
 } from 'typescript';
 import {
   EmitHint,
+  SyntaxKind,
   createPrinter,
   factory,
+  isAsExpression,
   isCallExpression,
+  isElementAccessExpression,
   isIdentifier,
+  isNonNullExpression,
+  isParenthesizedExpression,
+  isPropertyAccessExpression,
   isPropertyAssignment,
+  isSatisfiesExpression,
 } from 'typescript';
 import type { NormalizedGeneratorOptions } from '../schema';
 
@@ -204,6 +213,7 @@ function updateRouterModuleForRootCallExpression(
     ? factory.updateObjectLiteralExpression(
         existingOptions,
         factory.createNodeArray([
+          ...getSpreadOptions(node.arguments[1]),
           ...existingProperties,
           initialNavigationProperty,
         ])
@@ -220,11 +230,54 @@ function updateRouterModuleForRootCallExpression(
   );
 }
 
+// `?? {}` lets a value typed `undefined` be spread (TS2698). Other expressions
+// aren't spread, since TypeScript rejects `??` after some of them (TS2869).
+function getSpreadOptions(optionsArgument: Expression): SpreadAssignment[] {
+  const value = skipWrappers(optionsArgument);
+  if (
+    !(isIdentifier(value) && value.text !== 'undefined') &&
+    !isPropertyAccessExpression(value) &&
+    !isElementAccessExpression(value) &&
+    !isCallExpression(value)
+  ) {
+    return [];
+  }
+  let operand = optionsArgument;
+  while (isParenthesizedExpression(operand)) {
+    operand = operand.expression;
+  }
+  return [
+    factory.createSpreadAssignment(
+      factory.createParenthesizedExpression(
+        factory.createBinaryExpression(
+          isAsExpression(operand) || isSatisfiesExpression(operand)
+            ? factory.createParenthesizedExpression(operand)
+            : operand,
+          SyntaxKind.QuestionQuestionToken,
+          factory.createObjectLiteralExpression()
+        )
+      )
+    ),
+  ];
+}
+
+function skipWrappers(expression: Expression): Expression {
+  while (
+    isParenthesizedExpression(expression) ||
+    isAsExpression(expression) ||
+    isNonNullExpression(expression) ||
+    isSatisfiesExpression(expression)
+  ) {
+    expression = expression.expression;
+  }
+  return expression;
+}
+
 function getProvideRouterCallExpression(
   sourceFile: SourceFile
 ): CallExpression | null {
   const routerModuleForRootCalls = query(
-    sourceFile.getText(),
+    sourceFile,
     'PropertyAssignment:has(Identifier[name=providers]) > ArrayLiteralExpression CallExpression:has(Identifier[name=provideRouter])'
   ) as CallExpression[];
 
@@ -235,7 +288,7 @@ function getRouterModuleForRootCallExpression(
   sourceFile: SourceFile
 ): CallExpression | null {
   const routerModuleForRootCalls = query(
-    sourceFile.getText(),
+    sourceFile,
     'Decorator > CallExpression:has(Identifier[name=NgModule]) PropertyAssignment:has(Identifier[name=imports]) > ArrayLiteralExpression CallExpression:has(Identifier[name=forRoot])'
   ) as CallExpression[];
 
