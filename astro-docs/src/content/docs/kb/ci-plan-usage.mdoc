@@ -11,13 +11,13 @@ topics:
 
 The CI Plan starts at $99 a month, and is $0 during the beta. You pay for what your organization uses, billed to your card at the end of each month.
 
-Your organization's [usage page](https://cloud.nx.app/go/organization/usage) shows the counts for the month so far, updated once a day. This page lists what each count costs.
+Your organization's [usage page](https://cloud.nx.app/go/organization/usage) shows each count for the month so far, its price and what it adds to your bill, updated once a day. This page lists the prices.
 
 ## Rates
 
 | Usage           | What is counted                                                                                             | Rate                                                                         |
 | --------------- | ----------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
-| Compute         | Minutes each worker ran, by machine size                                                                    | See [compute](#compute)                                                      |
+| Compute         | Minutes each worker ran, by machine size                                                                    | $0.00198 to $0.01601 a minute. See [compute](#compute)                       |
 | Distribution    | Tasks run in a CI run that used two or more [workers](/docs/features/ci-features/distribute-task-execution) | $0.0006 a task, or $0.0008 with dynamic task packing on. $0.50 a run at most |
 | Remote cache    | Tasks restored from the [remote cache](/docs/features/ci-features/remote-cache)                             | $0.0001 a task                                                               |
 | Ultracache      | Tasks skipped by [Ultracache](/docs/features/ci-features/remote-cache#ultracache)                           | $0.00036 a task                                                              |
@@ -27,16 +27,16 @@ No task is counted twice. Runs and active contributors appear on the usage page 
 
 ## Compute
 
-Compute is billed in credits, at $5.50 per 10,000.
+Compute is billed by the worker minute, at a price for each machine size.
 
-| Machine size | Credits a minute | About        |
-| ------------ | ---------------- | ------------ |
-| Small        | 3.6              | $0.002 a min |
-| Medium       | 7.3              | $0.004 a min |
-| Large        | 14.5             | $0.008 a min |
-| XL           | 29.1             | $0.016 a min |
+| Machine size | Price a minute |
+| ------------ | -------------- |
+| Small        | $0.00198       |
+| Medium       | $0.00402       |
+| Large        | $0.00798       |
+| XL           | $0.01601       |
 
-ARM machines bill at the rate of their size.
+ARM machines bill at the price of their size. Each size's minutes for the month round up to a whole minute.
 
 ## Concurrent workers
 
