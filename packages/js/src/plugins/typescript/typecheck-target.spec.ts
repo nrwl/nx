@@ -6,6 +6,19 @@ import {
 const pmc = { exec: 'npx' } as any;
 
 describe('createTypecheckTarget', () => {
+  it.each(['build', 'noEmit'] as const)(
+    'should turn ultracache off in %s mode',
+    (mode) => {
+      const target = createTypecheckTarget({
+        mode,
+        projectRoot: 'apps/app',
+        pmc,
+      });
+
+      expect(target.ultracache).toEqual({ mode: 'off' });
+    }
+  );
+
   describe('build mode', () => {
     it('should leave the default tsconfig.json out of the command', () => {
       const target = createTypecheckTarget({

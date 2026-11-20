@@ -136,6 +136,9 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "syncGenerators": [
                     "@nx/js:typescript-sync",
                   ],
+                  "ultracache": {
+                    "mode": "off",
+                  },
                 },
               },
             },
@@ -194,6 +197,9 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "syncGenerators": [
                     "@nx/js:typescript-sync",
                   ],
+                  "ultracache": {
+                    "mode": "off",
+                  },
                 },
               },
             },
@@ -255,6 +261,9 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "syncGenerators": [
                     "@nx/js:typescript-sync",
                   ],
+                  "ultracache": {
+                    "mode": "off",
+                  },
                 },
               },
             },
@@ -318,6 +327,9 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "syncGenerators": [
                     "@nx/js:typescript-sync",
                   ],
+                  "ultracache": {
+                    "mode": "off",
+                  },
                 },
               },
             },
@@ -379,6 +391,9 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "syncGenerators": [
                     "@nx/js:typescript-sync",
                   ],
+                  "ultracache": {
+                    "mode": "off",
+                  },
                 },
               },
             },
@@ -443,6 +458,9 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "syncGenerators": [
                     "@nx/js:typescript-sync",
                   ],
+                  "ultracache": {
+                    "mode": "off",
+                  },
                 },
               },
             },
@@ -533,6 +551,9 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "syncGenerators": [
                     "@nx/js:typescript-sync",
                   ],
+                  "ultracache": {
+                    "mode": "off",
+                  },
                 },
               },
             },
@@ -596,6 +617,9 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "syncGenerators": [
                     "@nx/js:typescript-sync",
                   ],
+                  "ultracache": {
+                    "mode": "off",
+                  },
                 },
               },
             },
@@ -661,6 +685,9 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "syncGenerators": [
                     "@nx/js:typescript-sync",
                   ],
+                  "ultracache": {
+                    "mode": "off",
+                  },
                 },
               },
             },
@@ -723,6 +750,9 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "syncGenerators": [
                     "@nx/js:typescript-sync",
                   ],
+                  "ultracache": {
+                    "mode": "off",
+                  },
                 },
               },
             },
@@ -832,6 +862,9 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "syncGenerators": [
                     "@nx/js:typescript-sync",
                   ],
+                  "ultracache": {
+                    "mode": "off",
+                  },
                 },
               },
             },
@@ -935,6 +968,9 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "syncGenerators": [
                     "@nx/js:typescript-sync",
                   ],
+                  "ultracache": {
+                    "mode": "off",
+                  },
                 },
               },
             },
@@ -999,6 +1035,9 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "syncGenerators": [
                     "@nx/js:typescript-sync",
                   ],
+                  "ultracache": {
+                    "mode": "off",
+                  },
                 },
               },
             },
@@ -1066,6 +1105,9 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "syncGenerators": [
                     "@nx/js:typescript-sync",
                   ],
+                  "ultracache": {
+                    "mode": "off",
+                  },
                 },
               },
             },
@@ -1220,6 +1262,9 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
                     ],
+                    "ultracache": {
+                      "mode": "off",
+                    },
                   },
                 },
               },
@@ -1288,6 +1333,9 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
                     ],
+                    "ultracache": {
+                      "mode": "off",
+                    },
                   },
                 },
               },
@@ -1361,6 +1409,9 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
                     ],
+                    "ultracache": {
+                      "mode": "off",
+                    },
                   },
                 },
               },
@@ -1434,6 +1485,9 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
                     ],
+                    "ultracache": {
+                      "mode": "off",
+                    },
                   },
                 },
               },
@@ -1674,6 +1728,9 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
                     ],
+                    "ultracache": {
+                      "mode": "off",
+                    },
                   },
                 },
               },
@@ -1751,6 +1808,9 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
                     ],
+                    "ultracache": {
+                      "mode": "off",
+                    },
                   },
                 },
               },
@@ -1833,6 +1893,9 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
                     ],
+                    "ultracache": {
+                      "mode": "off",
+                    },
                   },
                 },
               },
@@ -1910,6 +1973,9 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
                     ],
+                    "ultracache": {
+                      "mode": "off",
+                    },
                   },
                 },
               },
@@ -1990,6 +2056,9 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
                     ],
+                    "ultracache": {
+                      "mode": "off",
+                    },
                   },
                 },
               },
@@ -2083,6 +2152,9 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
                     ],
+                    "ultracache": {
+                      "mode": "off",
+                    },
                   },
                 },
               },
@@ -2196,6 +2268,9 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
                     ],
+                    "ultracache": {
+                      "mode": "off",
+                    },
                   },
                 },
               },
@@ -2244,6 +2319,9 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
                     ],
+                    "ultracache": {
+                      "mode": "off",
+                    },
                   },
                 },
               },
@@ -2599,6 +2677,9 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
                     ],
+                    "ultracache": {
+                      "mode": "off",
+                    },
                   },
                 },
               },
@@ -2892,6 +2973,9 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
                     ],
+                    "ultracache": {
+                      "mode": "off",
+                    },
                   },
                 },
               },
@@ -2960,6 +3044,9 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
                     ],
+                    "ultracache": {
+                      "mode": "off",
+                    },
                   },
                 },
               },
@@ -3023,6 +3110,9 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
                     ],
+                    "ultracache": {
+                      "mode": "off",
+                    },
                   },
                 },
               },
@@ -3140,6 +3230,9 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
                     ],
+                    "ultracache": {
+                      "mode": "off",
+                    },
                   },
                 },
               },
@@ -3292,6 +3385,9 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
                     ],
+                    "ultracache": {
+                      "mode": "off",
+                    },
                   },
                 },
               },
@@ -3401,6 +3497,9 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
                     ],
+                    "ultracache": {
+                      "mode": "off",
+                    },
                   },
                 },
               },
@@ -3447,6 +3546,9 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
                     ],
+                    "ultracache": {
+                      "mode": "off",
+                    },
                   },
                 },
               },
@@ -3517,6 +3619,9 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
                     ],
+                    "ultracache": {
+                      "mode": "off",
+                    },
                   },
                 },
               },
@@ -3592,6 +3697,9 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
                     ],
+                    "ultracache": {
+                      "mode": "off",
+                    },
                   },
                 },
               },
@@ -3659,6 +3767,9 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
                     ],
+                    "ultracache": {
+                      "mode": "off",
+                    },
                   },
                 },
               },
@@ -3726,6 +3837,9 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
                     ],
+                    "ultracache": {
+                      "mode": "off",
+                    },
                   },
                 },
               },
@@ -3789,6 +3903,9 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
                     ],
+                    "ultracache": {
+                      "mode": "off",
+                    },
                   },
                 },
               },
