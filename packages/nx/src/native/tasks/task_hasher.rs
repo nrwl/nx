@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 use std::path::Path;
 use std::sync::Arc;
 
@@ -8,7 +8,7 @@ use crate::native::glob::{normalize_glob, partition_glob};
 use crate::native::{
     hasher::hash,
     project_graph::{types::ProjectGraph, utils::create_project_root_mappings},
-    tasks::types::{HashInstruction, HashPlans},
+    tasks::types::{HashInstruction, HashPlans, InstructionPool},
     types::{NapiDashMap, SharedStr, SharedStrMap},
 };
 use crate::native::{
@@ -17,12 +17,13 @@ use crate::native::{
 };
 use crate::native::{
     tasks::hashers::{
-        FilesExpansionCache, JsonHashResult, ProjectFileIndicesCache, ProjectFileSetCache, Source,
-        WorkspaceFileIndex, WorkspaceFileIndicesCache, WorkspaceFileSetCache,
-        collect_project_file_paths_cached, collect_workspace_file_paths_cached, expand_cached,
-        expand_globs_with_exclusions, hash_all_externals, hash_external, hash_files,
-        hash_json_files, hash_project_config, hash_project_files_cached, hash_task_output,
-        hash_tsconfig_selectively, hash_workspace_files_cached, output_prefixes,
+        FilesExpansion, FilesExpansionCache, JsonHashResult, ProjectFileIndicesCache,
+        ProjectFileSetCache, Source, WorkspaceFileIndex, WorkspaceFileIndicesCache,
+        WorkspaceFileSetCache, collect_project_file_paths_cached,
+        collect_workspace_file_paths_cached, expand_cached, expand_globs_with_exclusions,
+        expand_task_outputs, file_hashes, fold_file_hashes, hash_all_externals, hash_external,
+        hash_files, hash_json_files, hash_project_config, hash_project_files_cached,
+        hash_task_output, hash_tsconfig_selectively, hash_workspace_files_cached, output_prefixes,
     },
     types::FileData,
     walker::PathPredicate,
@@ -387,6 +388,132 @@ impl TaskHasher {
         }
     }
 
+    /// The file map's hash for `path`, trusted only while nothing has run.
+    fn known_file_hash(&self, path: &str, run_stage: RunStage) -> Option<String> {
+        if run_stage.nothing_ran() {
+            self.workspace_file_hash(path)
+        } else {
+            None
+        }
+    }
+
+    /// The files a disk-backed group matches, shared under its pool id.
+    fn expand_ignored_files(
+        &self,
+        id: u32,
+        globs: &[Arc<str>],
+        project_roots: &[String],
+        ultracache: bool,
+        files_expansion_cache: &FilesExpansionCache,
+        run_stage: RunStage,
+    ) -> anyhow::Result<Arc<FilesExpansion>> {
+        let workspace_root = Path::new(&self.workspace_root);
+        // The index answers from a listing it keeps only while nothing has
+        // run, like the file map; afterwards it reads the disk for us.
+        let list_directory = |dir: &str, accept: PathPredicate, skip: &[String]| {
+            self.ignored_index.index().files_under(
+                workspace_root,
+                dir,
+                run_stage.nothing_ran(),
+                accept,
+                skip,
+            )
+        };
+        expand_cached(&format!("files#{id}"), files_expansion_cache, || {
+            expand_globs_with_exclusions(
+                workspace_root,
+                globs,
+                project_roots,
+                &Source::fileset(
+                    &|path| run_stage.nothing_ran() && self.workspace_tracks_file(path),
+                    list_directory,
+                ),
+                ultracache,
+            )
+        })
+    }
+
+    /// One value for a recorded plan's disk-backed groups: every file they
+    /// match, by path, minus the files its `TaskOutput`s hash. So whether a
+    /// recording read a dependency output those already hash, and how the
+    /// reads were grouped, leaves the hash alone. Also returns the paths kept.
+    fn fold_recorded_files(
+        &self,
+        ids: &[u32],
+        roles: &[RecordedRole],
+        pool: &InstructionPool,
+        caches: &RecordedCaches,
+        files_expansion_cache: &FilesExpansionCache,
+        run_stage: RunStage,
+    ) -> anyhow::Result<(String, Vec<String>)> {
+        let workspace_root = Path::new(&self.workspace_root);
+        let with_role = |role: RecordedRole| {
+            ids.par_iter()
+                .filter(move |id| roles[**id as usize] == role)
+        };
+        let groups = with_role(RecordedRole::Group)
+            .map(|&id| {
+                if let Some(cached) = caches.group_files.get(&id) {
+                    return Ok(Arc::clone(&cached));
+                }
+                let HashInstruction::IgnoredFileSet {
+                    globs,
+                    project_roots,
+                    ultracache,
+                } = pool.get(id).value().clone()
+                else {
+                    unreachable!("roles mark only disk-backed groups");
+                };
+                let expansion = self.expand_ignored_files(
+                    id,
+                    &globs,
+                    &project_roots,
+                    ultracache,
+                    files_expansion_cache,
+                    run_stage,
+                )?;
+                let hashed = Arc::new(file_hashes(
+                    workspace_root,
+                    &expansion,
+                    |path| self.known_file_hash(path, run_stage),
+                    self.ignored_index.index(),
+                    run_stage,
+                ));
+                caches.group_files.insert(id, Arc::clone(&hashed));
+                Ok(hashed)
+            })
+            .collect::<anyhow::Result<Vec<_>>>()?;
+        let covered = with_role(RecordedRole::Output)
+            .map(|&id| {
+                if let Some(cached) = caches.output_files.get(&id) {
+                    return Ok(Arc::clone(&cached));
+                }
+                let HashInstruction::TaskOutput(glob, outputs) = pool.get(id).value().clone()
+                else {
+                    unreachable!("roles mark only task outputs");
+                };
+                let files: Arc<HashSet<String>> = Arc::new(
+                    expand_task_outputs(workspace_root, &glob, &outputs, files_expansion_cache)?
+                        .files
+                        .into_iter()
+                        .collect(),
+                );
+                caches.output_files.insert(id, Arc::clone(&files));
+                Ok(files)
+            })
+            .collect::<anyhow::Result<Vec<_>>>()?;
+        let kept: BTreeMap<&String, &String> = groups
+            .iter()
+            .flat_map(|group| group.iter())
+            .filter(|(file, _)| !covered.iter().any(|files| files.contains(file)))
+            .map(|(file, hash)| (file, hash))
+            .collect();
+        Ok((
+            fold_file_hashes(kept.iter().map(|(file, hash)| (*file, *hash))),
+            kept.into_keys().cloned().collect(),
+        ))
+    }
+
     fn workspace_tracks_file(&self, path: &str) -> bool {
         self.workspace_file_index.tracks(path)
     }
@@ -625,10 +752,23 @@ impl TaskHasher {
                 | HashInstruction::UltracacheConfiguration(_) => Some(OnceCell::new()),
             })
             .collect();
+        let roles: Vec<RecordedRole> = (0..pool.len() as u32)
+            .map(|id| match pool.get(id).value() {
+                HashInstruction::IgnoredFileSet { .. } => RecordedRole::Group,
+                HashInstruction::TaskOutput(_, _) => RecordedRole::Output,
+                HashInstruction::UltracacheConfiguration(_) => RecordedRole::Configuration,
+                _ => RecordedRole::Other,
+            })
+            .collect();
+        let recorded_caches = RecordedCaches::default();
         hash_plans.plans.par_iter().try_for_each(|(task_id, ids)| {
             if ids.is_empty() {
                 return Ok(());
             }
+            let has = |role| ids.iter().any(|id| roles[*id as usize] == role);
+            // A recorded plan's groups fold into its configuration entry,
+            // see `fold_recorded_files`.
+            let folds_recorded = has(RecordedRole::Configuration) && has(RecordedRole::Output);
             let js_env = resolve_env(task_id);
             // Workers accumulate locally, then publish one result per task.
             // The inner parallel iterator also preserves concurrency when
@@ -639,6 +779,9 @@ impl TaskHasher {
             let mut entries = Vec::with_capacity(ids.len());
             let mut pending = Vec::new();
             for &id in ids {
+                if folds_recorded && roles[id as usize] == RecordedRole::Group {
+                    continue;
+                }
                 let cached = if should_collect_inputs {
                     None
                 } else {
@@ -650,7 +793,7 @@ impl TaskHasher {
                     pending.push(id);
                 }
             }
-            let (computed, inputs) = pending
+            let (computed, mut inputs) = pending
                 .par_iter()
                 .try_fold(
                     || (Vec::new(), HashInputsBuilder::default()),
@@ -720,6 +863,25 @@ impl TaskHasher {
                     },
                 )?;
             entries.extend(computed);
+            if folds_recorded {
+                let (recorded, files) = self.fold_recorded_files(
+                    ids,
+                    &roles,
+                    pool,
+                    &recorded_caches,
+                    &files_expansion_cache,
+                    run_stage,
+                )?;
+                if let Some((_, value)) = entries
+                    .iter_mut()
+                    .find(|(id, _)| roles[*id as usize] == RecordedRole::Configuration)
+                {
+                    *value = SharedStr::from(hash(format!("{value}{recorded}").as_bytes()));
+                }
+                if should_collect_inputs {
+                    inputs.files.extend(files);
+                }
+            }
             hashes.insert(
                 task_id.clone(),
                 trace_span!("Assembling hash", hash_id = task_id).in_scope(|| {
@@ -822,42 +984,18 @@ impl TaskHasher {
                 project_roots,
                 ultracache,
             } => {
-                let workspace_root = Path::new(&self.workspace_root);
-                // The index answers from a listing it keeps only while
-                // nothing has run, like the file map; afterwards it reads the
-                // disk for us.
-                let list_directory = |dir: &str, accept: PathPredicate, skip: &[String]| {
-                    self.ignored_index.index().files_under(
-                        workspace_root,
-                        dir,
-                        run_stage.nothing_ran(),
-                        accept,
-                        skip,
-                    )
-                };
-                let key = format!("files#{id}");
-                let expansion = expand_cached(&key, files_expansion_cache, || {
-                    expand_globs_with_exclusions(
-                        workspace_root,
-                        globs,
-                        project_roots,
-                        &Source::fileset(
-                            &|path| run_stage.nothing_ran() && self.workspace_tracks_file(path),
-                            &list_directory,
-                        ),
-                        *ultracache,
-                    )
-                })?;
+                let expansion = self.expand_ignored_files(
+                    id,
+                    globs,
+                    project_roots,
+                    *ultracache,
+                    files_expansion_cache,
+                    run_stage,
+                )?;
                 let hashed = hash_files(
-                    workspace_root,
+                    Path::new(&self.workspace_root),
                     &expansion,
-                    |path| {
-                        if run_stage.nothing_ran() {
-                            self.workspace_file_hash(path)
-                        } else {
-                            None
-                        }
-                    },
+                    |path| self.known_file_hash(path, run_stage),
                     self.ignored_index.index(),
                     run_stage,
                 );
@@ -1054,6 +1192,22 @@ impl TaskHasher {
     }
 }
 
+/// How an instruction takes part in folding a recorded plan's groups.
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum RecordedRole {
+    Group,
+    Output,
+    Configuration,
+    Other,
+}
+
+/// Per-id results `fold_recorded_files` shares across tasks in one call.
+#[derive(Default)]
+struct RecordedCaches {
+    group_files: DashMap<u32, Arc<Vec<(String, String)>>>,
+    output_files: DashMap<u32, Arc<HashSet<String>>>,
+}
+
 struct HashInstructionArgs<'a> {
     /// The instruction's pool id: the key disk-backed group expansions and
     /// JSON results are shared under within one call. Labels can repeat.
@@ -1169,6 +1323,139 @@ mod tests {
             catch_ups(|_| HashInstruction::Environment("NX_TEST".to_string())),
             (0, 0)
         );
+    }
+
+    /// Hashes each `(task, instructions)` plan over a workspace holding
+    /// `files`, after nothing has run.
+    fn hash_recorded(
+        files: &[(&str, &str)],
+        plans: &[(&str, Vec<HashInstruction>)],
+    ) -> HashMap<String, String> {
+        let temp = assert_fs::TempDir::new().unwrap();
+        for (path, content) in files {
+            let path = temp.path().join(path);
+            std::fs::create_dir_all(path.parent().unwrap()).unwrap();
+            std::fs::write(path, content).unwrap();
+        }
+        let reader = IgnoredIndexReader::new(Arc::new(IgnoredIndex::new(None)), Arc::new(|| {}));
+        let hasher = hasher(temp.path(), reader);
+        let plans = crate::native::test_utils::hash_plans(plans);
+        let env = HashMap::new();
+        let hashes = hasher
+            .hash_plans_impl(
+                &plans,
+                temp.path().to_string_lossy().to_string(),
+                None,
+                RunStage::ATaskMayHaveWritten,
+                |_| &env,
+            )
+            .unwrap();
+        hashes
+            .0
+            .iter()
+            .map(|entry| (entry.key().clone(), entry.value().value.clone()))
+            .collect()
+    }
+
+    const DIST_FILES: [(&str, &str); 6] = [
+        ("libs/e2e/src/app.spec.ts", "spec"),
+        ("libs/app/package.json", "{}"),
+        ("libs/app/dist/index.d.ts", "export {};"),
+        ("libs/app/dist/lib/util.d.ts", "export {};"),
+        ("libs/app/dist/index.js", "export {};"),
+        ("libs/app/dist/node_modules/pkg/types.d.ts", "export {};"),
+    ];
+
+    /// The inferred typecheck's shape: dependency declarations through a glob
+    /// output, and a recording whose reads are grouped as `groups`.
+    fn typecheck_plan(groups: &[&[&str]]) -> Vec<HashInstruction> {
+        let mut plan = vec![
+            HashInstruction::UltracacheConfiguration("digest".into()),
+            HashInstruction::TaskOutput(
+                "**/*.{d.ts,d.cts,d.mts}".into(),
+                vec!["libs/app/dist/**/*.{d.ts,d.cts,d.mts}".into()],
+            ),
+        ];
+        plan.extend(groups.iter().map(|globs| {
+            HashInstruction::ignored_files(globs.iter().map(|glob| glob.to_string()).collect())
+        }));
+        plan
+    }
+
+    fn typecheck_hash(files: &[(&str, &str)], groups: &[&[&str]]) -> String {
+        hash_recorded(files, &[("e2e:typecheck", typecheck_plan(groups))])["e2e:typecheck"].clone()
+    }
+
+    #[test]
+    fn a_read_dependency_output_files_hash_leaves_the_hash_alone() {
+        let base: &[&str] = &["libs/e2e/src/app.spec.ts", "libs/app/package.json"];
+        let unread = typecheck_hash(&DIST_FILES, &[base]);
+        for groups in [
+            &[&[
+                "libs/e2e/src/app.spec.ts",
+                "libs/app/package.json",
+                "libs/app/dist/index.d.ts",
+            ][..]][..],
+            &[base, &["libs/app/dist/**/*.d.ts"]],
+            &[
+                &["libs/e2e/src/app.spec.ts"],
+                &["libs/app/package.json", "libs/app/dist/lib/util.d.ts"],
+            ],
+        ] {
+            assert_eq!(typecheck_hash(&DIST_FILES, groups), unread, "{groups:?}");
+        }
+    }
+
+    #[test]
+    fn a_read_dependency_outputs_do_not_hash_still_counts() {
+        let base: &[&str] = &["libs/e2e/src/app.spec.ts", "libs/app/package.json"];
+        let unread = typecheck_hash(&DIST_FILES, &[base]);
+        for read in [
+            "libs/app/dist/index.js",
+            "libs/app/dist/node_modules/pkg/types.d.ts",
+        ] {
+            let with_read = |files: &[(&str, &str)]| typecheck_hash(files, &[base, &[read]]);
+            assert_ne!(with_read(&DIST_FILES), unread, "{read}");
+            let mut changed = DIST_FILES.to_vec();
+            changed
+                .iter_mut()
+                .find(|(path, _)| *path == read)
+                .unwrap()
+                .1 = "changed";
+            assert_ne!(with_read(&changed), with_read(&DIST_FILES), "{read}");
+        }
+    }
+
+    #[test]
+    fn an_unread_dependency_declaration_still_counts() {
+        let groups: &[&[&str]] = &[&["libs/e2e/src/app.spec.ts"]];
+        let mut changed = DIST_FILES.to_vec();
+        changed[3].1 = "export const changed = 1;";
+        assert_ne!(
+            typecheck_hash(&changed, groups),
+            typecheck_hash(&DIST_FILES, groups)
+        );
+    }
+
+    #[test]
+    fn a_plan_without_dependency_outputs_hashes_each_group() {
+        let plan = |reads: &[&str]| {
+            vec![
+                HashInstruction::UltracacheConfiguration("digest".into()),
+                HashInstruction::ignored_files(reads.iter().map(|r| r.to_string()).collect()),
+            ]
+        };
+        let hashes = hash_recorded(
+            &DIST_FILES,
+            &[
+                ("a:typecheck", plan(&["libs/e2e/src/app.spec.ts"])),
+                (
+                    "b:typecheck",
+                    plan(&["libs/e2e/src/app.spec.ts", "libs/app/dist/index.d.ts"]),
+                ),
+            ],
+        );
+        assert_ne!(hashes["a:typecheck"], hashes["b:typecheck"]);
     }
 
     #[test]

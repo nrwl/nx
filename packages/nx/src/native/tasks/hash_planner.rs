@@ -890,14 +890,12 @@ impl HashPlanner {
                     }),
             );
         }
-        // With a configuration, reads of other tasks' outputs are observed reads.
-        if context.is_none() {
-            ids.extend(
-                self.gather_dependency_outputs(task, task_graph, &inputs.deps_outputs)?
-                    .into_iter()
-                    .map(|instruction| pool.intern(instruction)),
-            );
-        }
+        // Kept with a configuration too; the hasher drops recorded reads these hash.
+        ids.extend(
+            self.gather_dependency_outputs(task, task_graph, &inputs.deps_outputs)?
+                .into_iter()
+                .map(|instruction| pool.intern(instruction)),
+        );
         // Always gathered: a selected input can carry env, runtime or externals
         // too. Its filesets are dropped with the rest of the replaced set unless
         // it is `always`.
@@ -3159,7 +3157,7 @@ mod always_tests {
     use super::*;
     use crate::native::project_graph::types::{Project, Target};
     use crate::native::test_utils::{task_graph, ultracache_configurations};
-    use crate::native::types::{FileSetInput, InputsInput, JsInputs, JsonInput};
+    use crate::native::types::{DepsOutputsInput, FileSetInput, InputsInput, JsInputs, JsonInput};
     use napi::Either;
     use napi::bindgen_prelude::Either9;
 
@@ -3567,6 +3565,34 @@ mod always_tests {
             ),
             (vec!["node_modules/.gen/app/index.js".to_string()], true)
         );
+    }
+
+    #[test]
+    fn a_recording_keeps_dependent_tasks_output_files() {
+        let planner = planner(
+            vec![(
+                "e2e:e2e",
+                vec![Either9::G(DepsOutputsInput {
+                    dependent_tasks_output_files: "**/*.d.ts".into(),
+                    transitive: None,
+                })],
+            )],
+            &[("e2e", &["app"])],
+        );
+        let graph = task_graph(
+            &[("e2e:e2e", &[]), ("app:build", &["libs/app/dist"])],
+            &[("e2e:e2e", &["app:build"])],
+        );
+        let (_dir, configurations) =
+            ultracache_configurations(&[("e2e:e2e", &["libs/e2e/src/app.spec.ts"])]);
+        let plans = planner
+            .get_plans_internal(vec!["e2e:e2e"], graph, Some(&configurations), &[])
+            .unwrap();
+        assert!(plans.plans["e2e:e2e"].iter().any(|id| matches!(
+            plans.pool.get(*id).value(),
+            HashInstruction::TaskOutput(glob, outputs)
+                if glob == "**/*.d.ts" && outputs == &["libs/app/dist"]
+        )));
     }
 
     #[test]

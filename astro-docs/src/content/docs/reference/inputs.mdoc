@@ -377,7 +377,8 @@ Add `"always": true` to an input to keep the files it resolves to:
 }
 ```
 
-The task's hash covers the files it read plus the files of every `always` input.
+The task's hash covers the files it read, the files of every `always` input, and the [outputs of dependent tasks](#outputs-of-dependent-tasks) its `dependentTasksOutputFiles` inputs select.
+Those outputs count whether or not the recording read them.
 To hash a target from its declared inputs alone, set its [`ultracache` mode](/docs/reference/project-configuration#ultracache) to `warn` or `off` instead.
 
 The `fileset`, `json`, and `input` forms accept `always`, including `{ "input": "production", "dependencies": true, "always": true }`, which keeps every dependency in the chain.

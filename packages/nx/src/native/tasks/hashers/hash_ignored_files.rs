@@ -33,18 +33,37 @@ pub(crate) fn hash_files(
     index: &IgnoredIndex,
     stage: RunStage,
 ) -> String {
-    let hashes: Vec<Option<String>> = expansion
+    let files = file_hashes(workspace_root, expansion, known, index, stage);
+    fold_file_hashes(files.iter().map(|(file, hash)| (file, hash)))
+}
+
+/// `hash_files` before the fold: each existing file with its content hash, in
+/// path order.
+pub(crate) fn file_hashes(
+    workspace_root: &Path,
+    expansion: &FilesExpansion,
+    known: impl Fn(&str) -> Option<String> + Sync,
+    index: &IgnoredIndex,
+    stage: RunStage,
+) -> Vec<(String, String)> {
+    expansion
         .files
         .par_iter()
-        .map(|file| known(file).or_else(|| index.hash_file(workspace_root, file, None, stage)))
-        .collect();
+        .filter_map(|file| {
+            known(file)
+                .or_else(|| index.hash_file(workspace_root, file, None, stage))
+                .map(|hash| (file.clone(), hash))
+        })
+        .collect()
+}
 
+pub(crate) fn fold_file_hashes<'a>(
+    files: impl IntoIterator<Item = (&'a String, &'a String)>,
+) -> String {
     let mut hasher = xxh3::Xxh3::new();
-    for (file, hash) in expansion.files.iter().zip(&hashes) {
-        if let Some(hash) = hash {
-            hasher.update(file.as_bytes());
-            hasher.update(hash.as_bytes());
-        }
+    for (file, hash) in files {
+        hasher.update(file.as_bytes());
+        hasher.update(hash.as_bytes());
     }
     hasher.digest().to_string()
 }
