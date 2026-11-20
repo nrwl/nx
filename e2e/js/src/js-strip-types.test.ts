@@ -212,7 +212,7 @@ module.exports = { displayName };
         removeFile(`${lib}/jest-helpers.ts`);
 
         expect(result).toContain(
-          'Module not found after tsconfig-paths; falling back to swc/ts-node'
+          'Module not found after tsconfig-paths; falling back to a transpiler'
         );
         expect(graph.graph.nodes[lib]).toBeDefined();
       },
@@ -250,7 +250,7 @@ module.exports = { displayName };
         );
 
         expect(result).toContain(
-          'ESM syntax in forced-CJS file; falling back to swc/ts-node'
+          'ESM syntax in forced-CJS file; falling back to a transpiler'
         );
         expect(graph.graph.nodes[lib]).toBeDefined();
       },

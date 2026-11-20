@@ -1,5 +1,5 @@
 import { formatFiles, Tree, visitNotIgnoredFiles } from '@nx/devkit';
-import { ast, query } from '@phenomnomnominal/tsquery';
+import { ast, query } from '@nx/devkit/internal';
 
 const DEPRECATED_SYMBOL = 'NxTsconfigPathsWebpackPlugin';
 const DEPRECATED_PACKAGE = '@nx/webpack';

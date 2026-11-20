@@ -1,5 +1,5 @@
 import { formatFiles, type Tree } from '@nx/devkit';
-import { ast, query } from '@phenomnomnominal/tsquery';
+import { ast, query } from '@nx/devkit/internal';
 import type { PropertyAssignment } from 'typescript';
 import { cypressProjectConfigs } from '../../utils/migrations';
 

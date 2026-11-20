@@ -147,6 +147,11 @@ export {
   type TestFileDirective,
 } from './src/utils/test-file-directives';
 export { dependsOnProjects } from './src/utils/test-file-depends-on';
+export {
+  ensureClassicTypescript,
+  ensureTypescript,
+} from './src/utils/ensure-typescript';
+export { ast, query, replace, tsquery } from './src/utils/tsquery';
 export { hasIgnoreServerInputsDirective } from './src/utils/ignore-server-inputs-directive';
 export { logShowProjectCommand } from './src/utils/log-show-project-command';
 export { eachValueFrom } from './src/utils/rxjs-for-await';
@@ -194,6 +199,8 @@ export {
   LARGE_BUFFER,
   type LifeCycle,
   LockFileChange,
+  ModuleKind,
+  ModuleResolutionKind,
   NX_PREFIX,
   type NormalizedTargetDependencyConfig,
   type NxCloudOnBoardingStatus,
@@ -205,6 +212,7 @@ export {
   type ProjectRootMappings,
   RemoteCacheV2,
   type RunCommandsOptions,
+  ScriptTarget,
   SyncError,
   type SyncGeneratorResult,
   TEN_MEGABYTES,
@@ -237,6 +245,7 @@ export {
   createRunManyDynamicOutputRenderer,
   createTargetDefaultsResults,
   createTaskId,
+  createTsModuleResolver,
   daemonClient,
   deduceDefaultBase,
   defaultFileRead,
@@ -261,6 +270,7 @@ export {
   findMatchingTargetNames,
   findProjectForPath,
   findProjectsNpmDependencies,
+  flattenApiDiagnosticMessage,
   flushChanges,
   forceRegisterEsmLoader,
   generatePrunedDeployOutput,
@@ -286,9 +296,12 @@ export {
   getRelativeProjectJsonSchemaPath,
   getSerializedArgsForTask,
   getSourceDirOfDependentProjects,
+  getSyntaxErrors,
   getTargetConfigurationForTask,
   getTargetInputs,
   getPath,
+  getTypescriptAst,
+  getTypescriptBackend,
   getUnparsedOverrideArgs,
   getVcsRemoteInfo,
   getWorkspacePackagesFromGraph,
@@ -299,6 +312,7 @@ export {
   hashFile,
   hashObject,
   hashWithWorkspaceContext,
+  hasParseErrors,
   interpolate,
   isBuiltinModuleImport,
   isCI,
@@ -323,9 +337,11 @@ export {
   nxVersion,
   orange,
   parseExecutor,
+  parseTsConfigContent,
   parseVersionFromPackageManagerField,
   pathExists,
   preventRecursionInGraphConstruction,
+  printNode,
   quoteShellArg,
   readCachedProjectConfiguration,
   readFileIfExisting,
@@ -335,10 +351,13 @@ export {
   readNxMigrateConfig,
   readPackageJson,
   readProjectAndTargetFromTargetString,
+  readTsConfig,
+  readTsConfigWithoutFiles,
   registerTsConfigPaths,
   registerTsProject,
   relocatePrunedLocalPathSpec,
   removeTasksFromTaskGraph,
+  requireClassicTypescript,
   requireWithTsconfigFallback,
   resetWorkspaceContext,
   resolveCommandSyntacticSugar,
@@ -360,8 +379,18 @@ export {
   hasTextBunLockfile,
   validateOutputs,
   warnUnshippableLocalPathSpec,
+  unhandledTypescriptBackend,
+  withSourceFileChecker,
+  withTypescriptApi,
   workspaceDataDirectory,
   workspaceRootInner,
+} from 'nx/src/devkit-internals';
+export type {
+  ApiTypescriptBackend,
+  SourceFileChecker,
+  SourceFileSymbol,
+  TsConfigHost,
+  TypescriptAst,
 } from 'nx/src/devkit-internals';
 
 // Release runtime values (releasePublish, releaseVersion, VersionActions) are

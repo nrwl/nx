@@ -7,6 +7,7 @@ import {
 import { ensureTypescript } from '@nx/js/internal';
 import { dirname } from 'path';
 import { coerce } from 'semver';
+import type { TypescriptAst } from '@nx/devkit/internal';
 import type * as ts from 'typescript';
 import {
   getLoadedModuleSpecifier,
@@ -34,7 +35,7 @@ const CONFLICTING_CONFIG_REFERENCE_BELOW_ESLINT_10 =
 const CONFLICTING_CONFIG_REFERENCE =
   /^(?:flat\/react(?:-jsx)?|plugin:(?:react|react-hooks|import|jsx-a11y)\/.+)$/;
 
-let tsModule: typeof import('typescript');
+let tsModule: TypescriptAst;
 
 // Without a declared ESLint, the version the linting generators would install.
 export function getEslintMajorVersion(tree: Tree): number {

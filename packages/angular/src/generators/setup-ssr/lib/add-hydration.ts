@@ -11,9 +11,10 @@ import {
   addProviderToModule,
 } from '../../../utils/nx-devkit/ast-utils';
 import type { NormalizedGeneratorOptions } from '../schema';
+import type { TypescriptAst } from '@nx/devkit/internal';
 
-let tsModule: typeof import('typescript');
-let tsquery: typeof import('@phenomnomnominal/tsquery').tsquery;
+let tsModule: TypescriptAst;
+let tsquery: typeof import('@nx/devkit/internal').tsquery;
 
 export function addHydration(tree: Tree, options: NormalizedGeneratorOptions) {
   const projectConfig = readProjectConfiguration(tree, options.project);
@@ -21,7 +22,7 @@ export function addHydration(tree: Tree, options: NormalizedGeneratorOptions) {
 
   if (!tsModule) {
     tsModule = ensureTypescript();
-    tsquery = require('@phenomnomnominal/tsquery').tsquery;
+    tsquery = require('@nx/devkit/internal').tsquery;
   }
 
   let pathToClientConfigFile: string;
@@ -45,7 +46,7 @@ export function addHydration(tree: Tree, options: NormalizedGeneratorOptions) {
     true
   );
 
-  const provideClientHydrationCallExpression = tsquery<CallExpression>(
+  const provideClientHydrationCallExpression = tsquery.query<CallExpression>(
     sourceFile,
     'ObjectLiteralExpression PropertyAssignment:has(Identifier[name=providers]) ArrayLiteralExpression CallExpression:has(Identifier[name=provideClientHydration])'
   )[0];

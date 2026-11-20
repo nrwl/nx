@@ -4,7 +4,7 @@ import {
   formatFiles,
   visitNotIgnoredFiles,
 } from '@nx/devkit';
-import { ast, query } from '@phenomnomnominal/tsquery';
+import { ast, query } from '@nx/devkit/internal';
 
 const MF_IMPORT_TO_UPDATE = 'ModuleFederationConfig';
 const MF_CONFIG_IMPORT_SELECTOR = `ImportDeclaration:has(StringLiteral[value=@nx/webpack]):has(Identifier[name=ModuleFederationConfig])`;

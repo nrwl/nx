@@ -1,13 +1,13 @@
 import {
   applyChangesToString,
   ChangeType,
-  ensurePackage,
   formatFiles,
   logger,
   type StringChange,
   type Tree,
   visitNotIgnoredFiles,
 } from '@nx/devkit';
+import { ensureTypescript, type TypescriptAst } from '@nx/devkit/internal';
 import type {
   ExportDeclaration,
   ExportSpecifier,
@@ -32,7 +32,7 @@ const TARGET_SPECIFIERS: ReadonlySet<string> = new Set([
   '@nx/gradle/plugin-v1',
 ]);
 
-let ts: typeof import('typescript') | undefined;
+let ts: TypescriptAst | undefined;
 
 export default async function migrateCreateNodesV2ToCreateNodes(
   tree: Tree
@@ -73,7 +73,7 @@ export function rewriteCreateNodesV2Imports(
   source: string,
   specifiers: ReadonlySet<string>
 ): string {
-  ts ??= ensurePackage<typeof import('typescript')>('typescript', '*');
+  ts ??= ensureTypescript();
   const sourceFile = ts.createSourceFile(
     'tmp.ts',
     source,

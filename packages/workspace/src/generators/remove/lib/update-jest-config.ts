@@ -17,8 +17,9 @@ import {
   findRootJestConfig,
   findProjectJestConfig,
 } from '../../utils/jest-config';
+import type { TypescriptAst } from '@nx/devkit/internal';
 
-let tsModule: typeof import('typescript');
+let tsModule: TypescriptAst;
 
 function isUsingUtilityFunction(host: Tree) {
   const rootConfigPath = findRootJestConfig(host);

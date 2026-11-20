@@ -12,9 +12,15 @@ import {
 import ignore from 'ignore';
 import { applyEdits, modify } from 'jsonc-parser';
 import { dirname, normalize, relative } from 'node:path/posix';
-import * as ts from 'typescript';
+import type { ExtendedConfigCacheEntry } from 'typescript';
 import { assertSupportedTypescriptVersion } from '../../utils/assert-supported-typescript-version';
-import { SyncError, type SyncGeneratorResult } from '@nx/devkit/internal';
+import {
+  readTsConfig,
+  readTsConfigWithoutFiles,
+  SyncError,
+  type SyncGeneratorResult,
+  type TsConfigHost,
+} from '@nx/devkit/internal';
 
 interface Tsconfig {
   references?: Array<{ path: string }>;
@@ -49,7 +55,7 @@ type TsconfigInfoCaches = {
   composite: Map<string, boolean>;
   content: Map<string, string>;
   exists: Map<string, boolean>;
-  extendedConfigs: Map<string, ts.ExtendedConfigCacheEntry>;
+  extendedConfigs: Map<string, ExtendedConfigCacheEntry>;
   ignore?: ReturnType<typeof ignore>;
 };
 type ChangedFileDetails = {
@@ -99,8 +105,8 @@ export async function syncGenerator(tree: Tree): Promise<SyncGeneratorResult> {
     }
   );
 
-  const tsSysFromTree: ts.System = {
-    ...ts.sys,
+  const tsSysFromTree: TsConfigHost = {
+    getCurrentDirectory: () => tree.root,
     fileExists(path) {
       // Given ts.System.resolve resolve full path for tsconfig within node_modules
       // We need to remove the workspace root to ensure we don't have double workspace root within the Tree
@@ -277,10 +283,10 @@ export async function syncGenerator(tree: Tree): Promise<SyncGeneratorResult> {
     // duplicate the project references in the tsconfig.json file
     let keepReferencesInTsconfigJson = true;
     if (foundRuntimeTsConfig) {
-      const sourceProjectTsconfig = parseTsconfig(
+      const sourceProjectTsconfig = readTsConfig(
         sourceProjectTsconfigPath,
         tsSysFromTree,
-        tsconfigInfoCaches
+        tsconfigInfoCaches.extendedConfigs
       );
       keepReferencesInTsconfigJson = sourceProjectTsconfig.fileNames.length > 0;
     }
@@ -351,23 +357,6 @@ function readRawTsconfigContents(
   return tsconfigInfoCaches.content.get(tsconfigPath);
 }
 
-function parseTsconfig(
-  tsconfigPath: string,
-  sys: ts.System,
-  tsconfigInfoCaches: TsconfigInfoCaches
-): ts.ParsedCommandLine {
-  return ts.parseJsonConfigFileContent(
-    ts.readConfigFile(tsconfigPath, sys.readFile).config,
-    sys,
-    dirname(tsconfigPath),
-    undefined,
-    undefined,
-    undefined,
-    undefined,
-    tsconfigInfoCaches.extendedConfigs
-  );
-}
-
 /**
  * Within the context of a sync generator, performance is a key concern,
  * so avoid FS interactions whenever possible.
@@ -386,7 +375,7 @@ function tsconfigExists(
 
 function updateTsConfigReferences(
   tree: Tree,
-  tsSysFromTree: ts.System,
+  tsSysFromTree: TsConfigHost,
   tsconfigInfoCaches: TsconfigInfoCaches,
   tsConfigPath: string,
   dependencies: ProjectGraphProjectNode[],
@@ -745,15 +734,15 @@ function patchTsconfigJsonReferences(
 }
 
 function hasCompositeEnabled(
-  tsSysFromTree: ts.System,
+  tsSysFromTree: TsConfigHost,
   tsconfigInfoCaches: TsconfigInfoCaches,
   tsconfigPath: string
 ): boolean {
   if (!tsconfigInfoCaches.composite.has(tsconfigPath)) {
-    const parsed = parseTsconfig(
+    const parsed = readTsConfigWithoutFiles(
       tsconfigPath,
-      { ...tsSysFromTree, readDirectory: () => [] },
-      tsconfigInfoCaches
+      tsSysFromTree,
+      tsconfigInfoCaches.extendedConfigs
     );
     tsconfigInfoCaches.composite.set(
       tsconfigPath,

@@ -1,5 +1,5 @@
-import { query, replace } from '@phenomnomnominal/tsquery';
-import { ObjectLiteralExpression, PropertyAssignment } from 'typescript';
+import { query, replace } from '@nx/devkit/internal';
+import type { ObjectLiteralExpression, PropertyAssignment } from 'typescript';
 
 /**
  * match testing file based on their name file

@@ -1,6 +1,6 @@
 import { type Tree, formatFiles, visitNotIgnoredFiles } from '@nx/devkit';
 import picomatch = require('picomatch');
-import { ast, query } from '@phenomnomnominal/tsquery';
+import { ast, query } from '@nx/devkit/internal';
 
 export default async function (tree: Tree) {
   visitNotIgnoredFiles(tree, '', (path) => {

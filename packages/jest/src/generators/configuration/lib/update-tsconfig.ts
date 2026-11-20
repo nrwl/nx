@@ -5,13 +5,10 @@ import {
   updateJson,
   type Tree,
 } from '@nx/devkit';
+import { readTsConfig } from '@nx/js';
 import { posix } from 'path';
 import type { NormalizedJestProjectSchema } from '../schema';
-import {
-  createTreeParseConfigHost,
-  ensureTypescript,
-  getProjectType,
-} from '@nx/js/internal';
+import { createTreeParseConfigHost, getProjectType } from '@nx/js/internal';
 
 export function updateTsConfig(
   host: Tree,
@@ -125,18 +122,19 @@ function canBeReferencedBy(
   tsconfigPath: string,
   referrerPath: string
 ): boolean {
-  const ts = ensureTypescript();
-  const host = createTreeParseConfigHost(tree);
-  const { options, projectReferences } = ts.parseJsonConfigFileContent(
-    ts.readConfigFile(tsconfigPath, host.readFile).config,
-    host,
-    posix.dirname(tsconfigPath)
+  const { options, projectReferences } = readTsConfig(
+    tsconfigPath,
+    createTreeParseConfigHost(tree)
   );
   return (
     options.composite === true &&
     !options.noEmit &&
     !projectReferences?.some(
-      (r) => ts.resolveProjectReferencePath(r) === referrerPath
+      // TypeScript's `resolveProjectReferencePath` for the normalized path a
+      // parse returns.
+      (r) =>
+        (r.path.endsWith('.json') ? r.path : `${r.path}/tsconfig.json`) ===
+        referrerPath
     )
   );
 }

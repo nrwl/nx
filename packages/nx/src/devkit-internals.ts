@@ -92,6 +92,39 @@ export {
   isTsEsmNamedExportLinkageError,
   requireWithTsconfigFallback,
 } from './plugins/js/utils/register';
+export {
+  getTypescriptBackend,
+  requireClassicTypescript,
+  unhandledTypescriptBackend,
+  withTypescriptApi,
+} from './plugins/js/utils/typescript-backend';
+export type { ApiTypescriptBackend } from './plugins/js/utils/typescript-backend';
+export {
+  flattenApiDiagnosticMessage,
+  getSyntaxErrors,
+  getTypescriptAst,
+  hasParseErrors,
+  printNode,
+  withSourceFileChecker,
+} from './plugins/js/utils/typescript-ast';
+export type {
+  SourceFileChecker,
+  SourceFileSymbol,
+  TypescriptAst,
+} from './plugins/js/utils/typescript-ast';
+export {
+  createTsModuleResolver,
+  parseTsConfigContent,
+  readTsConfig,
+  readTsConfigWithoutFiles,
+  transpileTypescript,
+} from './plugins/js/utils/typescript';
+export {
+  ModuleKind,
+  ModuleResolutionKind,
+  ScriptTarget,
+} from './plugins/js/utils/typescript-enums';
+export type { TsConfigHost } from './plugins/js/utils/typescript';
 export { interpolate } from './tasks-runner/utils';
 export {
   getEnvFilesForTask,

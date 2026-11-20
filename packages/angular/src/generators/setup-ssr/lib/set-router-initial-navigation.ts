@@ -4,30 +4,33 @@ import {
   type Tree,
 } from '@nx/devkit';
 import { insertImport } from '@nx/js';
-import { ast, query } from '@phenomnomnominal/tsquery';
+import {
+  ensureTypescript,
+  ast,
+  query,
+  type TypescriptAst,
+} from '@nx/devkit/internal';
 import type {
   CallExpression,
   ImportSpecifier,
-  ObjectLiteralElementLike,
-  ObjectLiteralExpression,
-  Printer,
+  Node,
   SourceFile,
 } from 'typescript';
 import {
-  EmitHint,
-  createPrinter,
-  factory,
-  isCallExpression,
-  isIdentifier,
-  isPropertyAssignment,
-} from 'typescript';
+  FileChangeRecorder,
+  spliceListElements,
+} from '../../../utils/file-change-recorder';
 import type { NormalizedGeneratorOptions } from '../schema';
+
+let ts: TypescriptAst;
+
+const INITIAL_NAVIGATION_PROPERTY = `initialNavigation: 'enabledBlocking'`;
 
 export function setRouterInitialNavigation(
   tree: Tree,
   options: NormalizedGeneratorOptions
 ): void {
-  const printer = createPrinter();
+  ts ??= ensureTypescript();
   const project = readProjectConfiguration(tree, options.project);
 
   visitNotIgnoredFiles(tree, project.root, (filePath) => {
@@ -37,18 +40,14 @@ export function setRouterInitialNavigation(
     }
 
     if (options.standalone) {
-      processFileWithStandaloneSetup(tree, filePath, printer);
+      processFileWithStandaloneSetup(tree, filePath);
     } else {
-      processFileWithNgModuleSetup(tree, filePath, printer);
+      processFileWithNgModuleSetup(tree, filePath);
     }
   });
 }
 
-function processFileWithStandaloneSetup(
-  tree: Tree,
-  filePath: string,
-  printer: Printer
-) {
+function processFileWithStandaloneSetup(tree: Tree, filePath: string) {
   let content = tree.read(filePath, 'utf-8');
   let sourceFile = ast(content);
 
@@ -59,32 +58,24 @@ function processFileWithStandaloneSetup(
   }
 
   if (
-    provideRouterCallExpression.arguments.some(
-      (arg) =>
-        isCallExpression(arg) &&
-        isIdentifier(arg.expression) &&
-        arg.expression.text === 'withEnabledBlockingInitialNavigation'
+    provideRouterCallExpression.arguments.some((arg) =>
+      isCallTo(arg, 'withEnabledBlockingInitialNavigation')
     )
   ) {
     return;
   }
 
-  const updatedProvideRouterCallExpression = printer.printNode(
-    EmitHint.Unspecified,
-    updateProvideRouterCallExpression(provideRouterCallExpression),
-    sourceFile
+  const recorder = new FileChangeRecorder(tree, filePath);
+  spliceListElements(
+    recorder,
+    provideRouterCallExpression.arguments,
+    provideRouterCallExpression.getEnd() - 1,
+    (arg) => isCallTo(arg, 'withDisabledInitialNavigation'),
+    'withEnabledBlockingInitialNavigation()'
   );
+  recorder.applyChanges();
 
-  content = `${content.slice(
-    0,
-    provideRouterCallExpression.getStart()
-  )}${updatedProvideRouterCallExpression}${content.slice(
-    provideRouterCallExpression.getEnd()
-  )}`;
-
-  tree.write(filePath, content);
-
-  sourceFile = ast(content);
+  sourceFile = ast(recorder.content);
   sourceFile = insertImport(
     tree,
     sourceFile,
@@ -117,39 +108,8 @@ function processFileWithStandaloneSetup(
   );
 }
 
-function updateProvideRouterCallExpression(
-  node: CallExpression
-): CallExpression {
-  const filteredArgs = node.arguments.filter(
-    (arg) =>
-      !(
-        isCallExpression(arg) &&
-        isIdentifier(arg.expression) &&
-        arg.expression.text === 'withDisabledInitialNavigation'
-      )
-  );
-
-  const initialNavigationFeatureArg = factory.createCallExpression(
-    factory.createIdentifier('withEnabledBlockingInitialNavigation'),
-    [],
-    []
-  );
-
-  return factory.updateCallExpression(
-    node,
-    node.expression,
-    node.typeArguments,
-    [...filteredArgs, initialNavigationFeatureArg]
-  );
-}
-
-function processFileWithNgModuleSetup(
-  tree: Tree,
-  filePath: string,
-  printer: Printer
-) {
-  const content = tree.read(filePath, 'utf-8');
-  const sourceFile = ast(content);
+function processFileWithNgModuleSetup(tree: Tree, filePath: string) {
+  const sourceFile = ast(tree.read(filePath, 'utf-8'));
 
   const routerModuleForRootCallExpression =
     getRouterModuleForRootCallExpression(sourceFile);
@@ -157,66 +117,35 @@ function processFileWithNgModuleSetup(
     return;
   }
 
-  const updatedRouterModuleForRootCallExpression = printer.printNode(
-    EmitHint.Unspecified,
-    updateRouterModuleForRootCallExpression(routerModuleForRootCallExpression),
-    sourceFile
-  );
-
-  tree.write(
-    filePath,
-    `${content.slice(
-      0,
-      routerModuleForRootCallExpression.getStart()
-    )}${updatedRouterModuleForRootCallExpression}${content.slice(
-      routerModuleForRootCallExpression.getEnd()
-    )}`
-  );
+  const recorder = new FileChangeRecorder(tree, filePath);
+  const [routes, routerOptions] = routerModuleForRootCallExpression.arguments;
+  if (!routerOptions) {
+    recorder.insertLeft(
+      routes.getEnd(),
+      `, { ${INITIAL_NAVIGATION_PROPERTY} }`
+    );
+  } else if (ts.isObjectLiteralExpression(routerOptions)) {
+    spliceListElements(
+      recorder,
+      routerOptions.properties,
+      routerOptions.getEnd() - 1,
+      (property) =>
+        ts.isPropertyAssignment(property) &&
+        ts.isIdentifier(property.name) &&
+        property.name.text === 'initialNavigation',
+      INITIAL_NAVIGATION_PROPERTY
+    );
+  } else {
+    recorder.replace(routerOptions, `{ ${INITIAL_NAVIGATION_PROPERTY} }`);
+  }
+  recorder.applyChanges();
 }
 
-function updateRouterModuleForRootCallExpression(
-  node: CallExpression
-): CallExpression {
-  const existingOptions = node.arguments[1] as
-    | ObjectLiteralExpression
-    | undefined;
-
-  const existingProperties = existingOptions?.properties
-    ? factory.createNodeArray(
-        existingOptions.properties.filter(
-          (exp) =>
-            !(
-              isPropertyAssignment(exp) &&
-              isIdentifier(exp.name) &&
-              exp.name.text === 'initialNavigation'
-            )
-        )
-      )
-    : factory.createNodeArray<ObjectLiteralElementLike>();
-
-  const enabledLiteral = factory.createStringLiteral('enabledBlocking', true);
-  const initialNavigationProperty = factory.createPropertyAssignment(
-    'initialNavigation',
-    enabledLiteral
-  );
-
-  const routerOptions = existingOptions
-    ? factory.updateObjectLiteralExpression(
-        existingOptions,
-        factory.createNodeArray([
-          ...existingProperties,
-          initialNavigationProperty,
-        ])
-      )
-    : factory.createObjectLiteralExpression(
-        factory.createNodeArray([initialNavigationProperty])
-      );
-  const args = [node.arguments[0], routerOptions];
-
-  return factory.createCallExpression(
-    node.expression,
-    node.typeArguments,
-    args
+function isCallTo(node: Node, name: string): boolean {
+  return (
+    ts.isCallExpression(node) &&
+    ts.isIdentifier(node.expression) &&
+    node.expression.text === name
   );
 }
 

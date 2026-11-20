@@ -6,6 +6,7 @@ import {
   workspaceDataDirectory,
   hashObject,
   getReadyCheckReadyWhen,
+  query,
 } from '@nx/devkit/internal';
 import {
   AggregateCreateNodesError,
@@ -23,7 +24,6 @@ import { dirname, join } from 'path';
 import { existsSync, readdirSync, readFileSync } from 'fs';
 import { getLockFileName } from '@nx/js';
 import type { StorybookConfig } from 'storybook/internal/types';
-import { query } from '@phenomnomnominal/tsquery';
 import { addBuildAndWatchDepsTargets } from '@nx/js/internal';
 import {
   findStorybookAndBuildTargetsAndCompiler,

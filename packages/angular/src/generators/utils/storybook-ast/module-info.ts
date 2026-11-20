@@ -16,8 +16,9 @@ import type {
 import { getDecoratorMetadata } from '../../../utils/nx-devkit/ast-utils';
 import type { EntryPoint } from './entry-point';
 import { ensureTypescript } from '@nx/js/internal';
+import type { TypescriptAst } from '@nx/devkit/internal';
 
-let tsModule: typeof import('typescript');
+let tsModule: TypescriptAst;
 
 export function getModuleDeclarations(
   file: SourceFile,
@@ -83,7 +84,7 @@ export function getModuleFilePaths(
 
 function hasNgModule(tree: Tree, filePath: string): boolean {
   ensureTypescript();
-  const { ast, query } = require('@phenomnomnominal/tsquery');
+  const { ast, query } = require('@nx/devkit/internal');
   const fileContent = tree.read(filePath, 'utf-8');
   const sourceFile = ast(fileContent);
   const ngModule = query(

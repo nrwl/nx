@@ -543,20 +543,21 @@ export default defineConfig({
 
     expect(tree.read('libs/my-lib/cypress.config.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
-      "import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
-      import { defineConfig } from 'cypress';
-      import { nxComponentTestingPreset } from '@nx/angular/plugins/component-testing';
-      export default defineConfig({
-        component: nxComponentTestingPreset(__filename),
-        e2e: {
-          ...nxE2EPreset(import.meta.url, {
-            cypressDir: 'src',
-          }),
-          baseUrl: 'http://localhost:4200',
-        },
-      });
-      "
-    `);
+        "import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
+        import { defineConfig } from 'cypress';
+        import { nxComponentTestingPreset } from '@nx/angular/plugins/component-testing';
+
+        export default defineConfig({
+          component: nxComponentTestingPreset(__filename),
+          e2e: {
+            ...nxE2EPreset(import.meta.url, {
+              cypressDir: 'src',
+            }),
+            baseUrl: 'http://localhost:4200',
+          },
+        });
+        "
+      `);
     // these files are only added when there isn't already a cypress config
     expect(
       tree.exists('libs/my-lib/cypress/fixtures/example.json')

@@ -82,6 +82,7 @@ export const baseConfig = [
       // oxlint targets via the @nx/oxlint/boundaries-plugin bridge).
       '@nx/workspace-valid-command-object': 'error',
       '@nx/workspace-require-windows-hide': 'error',
+      '@nx/workspace-no-runtime-typescript-import': 'error',
     },
   },
   {

@@ -1,6 +1,6 @@
 import { Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { ast, query } from '@phenomnomnominal/tsquery';
+import { ast, query } from '@nx/devkit/internal';
 import {
   buildOption,
   buildOptionObject,
@@ -51,33 +51,38 @@ describe('ensureViteConfigIsCorrect', () => {
       "import dts from 'vite-plugin-dts';
       import { joinPathFragments } from '@nx/devkit'
       import { defineConfig } from 'vite';
-      import react from '@vitejs/plugin-react';
-      import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
-      export default defineConfig({
+          import react from '@vitejs/plugin-react';
+          import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+
+          export default defineConfig({
+            
           // Configuration for building your library.
           // See: https://vite.dev/guide/build.html#library-mode
           build: {
-              lib: {
-                  // Could also be a dictionary or array of multiple entry points.
-                  entry: 'src/index.ts',
-                  name: 'my-app',
-                  fileName: 'index',
-                  // Change this to the formats you want to support.
-                  // Don't forget to update your package.json as well.
-                  formats: ['es']
-              },
-              rolldownOptions: {
-                  // External packages that should not be bundled into your library.
-                  external: ['react', 'react-dom', 'react/jsx-runtime']
-              }
-          }, cacheDir: '../../node_modules/.vitest',
-          plugins: [react(), nxViteTsPaths(),],
-          test: {
+            lib: {
+              // Could also be a dictionary or array of multiple entry points.
+              entry: 'src/index.ts',
+              name: 'my-app',
+              fileName: 'index',
+              // Change this to the formats you want to support.
+              // Don't forget to update your package.json as well.
+              formats: ['es']
+            },
+            rolldownOptions: {
+              // External packages that should not be bundled into your library.
+              external: ['react', 'react-dom', 'react/jsx-runtime']
+            }
+          },cacheDir: '../../node_modules/.vitest',
+            plugins: [react(), nxViteTsPaths(), ],
+
+            test: {
               globals: true,
               environment: 'jsdom',
               include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-          },
-      });"
+            },
+
+          });
+          "
     `);
   });
 
@@ -106,27 +111,32 @@ describe('ensureViteConfigIsCorrect', () => {
       "import dts from 'vite-plugin-dts';
       import { joinPathFragments } from '@nx/devkit'
       import { defineConfig } from 'vite';
-      import react from '@vitejs/plugin-react';
-      import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
-      export default defineConfig({
-          cacheDir: '../../node_modules/.vitest',
-          plugins: [react(), nxViteTsPaths(),],
-          test: {
+          import react from '@vitejs/plugin-react';
+          import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+
+          export default defineConfig({
+            cacheDir: '../../node_modules/.vitest',
+            plugins: [react(), nxViteTsPaths(), ],
+
+            test: {
               globals: true,
               environment: 'jsdom',
               include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+            },
+
+            build: {
+          'my': 'option',
+          'lib': {
+            'entry': "src/index.ts",
+            'name': "my-app",
+            'fileName': "index",
+            'formats': ['es' as const],
           },
-          build: {
-              'my': 'option',
-              'lib': {
-                  'entry': "src/index.ts",
-                  'name': "my-app",
-                  'fileName': "index",
-                  'formats': ['es' as const],
-              },
-              'rolldownOptions': { "external": ["react", "react-dom", "react/jsx-runtime"] },
-          }
-      });"
+          'rolldownOptions': {"external":["react","react-dom","react/jsx-runtime"]},
+        }
+
+          });
+          "
     `);
   });
 
@@ -235,32 +245,34 @@ describe('ensureViteConfigIsCorrect', () => {
       "import dts from 'vite-plugin-dts';
       import { joinPathFragments } from '@nx/devkit'
       import { defineConfig } from 'vite';
-      import react from '@vitejs/plugin-react';
-      import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
-      export default {
+          import react from '@vitejs/plugin-react';
+          import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+
+          export default {
           // Configuration for building your library.
           // See: https://vite.dev/guide/build.html#library-mode
           build: {
-              lib: {
-                  // Could also be a dictionary or array of multiple entry points.
-                  entry: 'src/index.ts',
-                  name: 'my-app',
-                  fileName: 'index',
-                  // Change this to the formats you want to support.
-                  // Don't forget to update your package.json as well.
-                  formats: ['es']
-              },
-              rolldownOptions: {
-                  // External packages that should not be bundled into your library.
-                  external: ['react', 'react-dom', 'react/jsx-runtime']
-              }
-          }, test: {
+            lib: {
+              // Could also be a dictionary or array of multiple entry points.
+              entry: 'src/index.ts',
+              name: 'my-app',
+              fileName: 'index',
+              // Change this to the formats you want to support.
+              // Don't forget to update your package.json as well.
+              formats: ['es']
+            },
+            rolldownOptions: {
+              // External packages that should not be bundled into your library.
+              external: ['react', 'react-dom', 'react/jsx-runtime']
+            }
+          },test: {
               globals: true,
               environment: 'jsdom',
               include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
           },
-          plugins: [react(), nxViteTsPaths(),],
-      };"
+            plugins: [react(), nxViteTsPaths(), ],
+          };
+          "
     `);
   });
 
@@ -300,36 +312,40 @@ describe('ensureViteConfigIsCorrect', () => {
     expect(appFileContent).toMatchInlineSnapshot(`
       "
       import { defineConfig } from 'vite';
-      import react from '@vitejs/plugin-react';
-      import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
-      import dts from 'vite-plugin-dts';
-      import { joinPathFragments } from '@nx/devkit';
-      export default defineConfig({
-          cacheDir: '../../node_modules/.vitest',
-          plugins: [dts({ entryRoot: 'src', tsConfigFilePath: joinPathFragments(__dirname, 'tsconfig.lib.json'), skipDiagnostics: true }), react(), nxViteTsPaths(),],
-          // Configuration for building your library.
-          // See: https://vite.dev/guide/build.html#library-mode
-          build: {
+          import react from '@vitejs/plugin-react';
+          import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+          import dts from 'vite-plugin-dts';
+          import { joinPathFragments } from '@nx/devkit';
+
+          export default defineConfig({
+            cacheDir: '../../node_modules/.vitest',
+            plugins: [dts({ entryRoot: 'src', tsConfigFilePath: joinPathFragments(__dirname, 'tsconfig.lib.json'), skipDiagnostics: true }), react(), nxViteTsPaths(), ],
+          
+            // Configuration for building your library.
+            // See: https://vite.dev/guide/build.html#library-mode
+            build: {
               lib: {
-                  // Could also be a dictionary or array of multiple entry points.
-                  entry: 'src/index.ts',
-                  name: 'pure-libs-react-vite',
-                  fileName: 'index',
-                  // Change this to the formats you want to support.
-                  // Don't forget to update your package.json as well.
-                  formats: ['es'],
+                // Could also be a dictionary or array of multiple entry points.
+                entry: 'src/index.ts',
+                name: 'pure-libs-react-vite',
+                fileName: 'index',
+                // Change this to the formats you want to support.
+                // Don't forget to update your package.json as well.
+                formats: ['es'],
               },
               rolldownOptions: {
-                  // External packages that should not be bundled into your library.
-                  external: ['react', 'react-dom', 'react/jsx-runtime'],
+                // External packages that should not be bundled into your library.
+                external: ['react', 'react-dom', 'react/jsx-runtime'],
               },
-          },
-          test: {
+            },
+          
+            test: {
               globals: true,
               environment: 'jsdom',
               include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-          },
-      });"
+            },
+          });
+          "
     `);
   });
 
@@ -352,33 +368,39 @@ describe('ensureViteConfigIsCorrect', () => {
       "import dts from 'vite-plugin-dts';
       import { joinPathFragments } from '@nx/devkit'
       import { defineConfig } from 'vite';
-      import react from '@vitejs/plugin-react';
-      import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
-      export default defineConfig({
+          import react from '@vitejs/plugin-react';
+          import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+
+          export default defineConfig({
+          
+            
           // Configuration for building your library.
           // See: https://vite.dev/guide/build.html#library-mode
           build: {
-              lib: {
-                  // Could also be a dictionary or array of multiple entry points.
-                  entry: 'src/index.ts',
-                  name: 'my-app',
-                  fileName: 'index',
-                  // Change this to the formats you want to support.
-                  // Don't forget to update your package.json as well.
-                  formats: ['es']
-              },
-              rolldownOptions: {
-                  // External packages that should not be bundled into your library.
-                  external: ['react', 'react-dom', 'react/jsx-runtime']
-              }
-          }, cacheDir: '../../node_modules/.vitest',
-          plugins: [react(), nxViteTsPaths(),],
-          test: {
+            lib: {
+              // Could also be a dictionary or array of multiple entry points.
+              entry: 'src/index.ts',
+              name: 'my-app',
+              fileName: 'index',
+              // Change this to the formats you want to support.
+              // Don't forget to update your package.json as well.
+              formats: ['es']
+            },
+            rolldownOptions: {
+              // External packages that should not be bundled into your library.
+              external: ['react', 'react-dom', 'react/jsx-runtime']
+            }
+          },cacheDir: '../../node_modules/.vitest',
+            plugins: [react(), nxViteTsPaths(), ],
+
+            test: {
               globals: true,
               environment: 'jsdom',
               include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-          },
-      });"
+            },
+
+          });
+          "
     `);
   });
 
@@ -401,27 +423,32 @@ describe('ensureViteConfigIsCorrect', () => {
       "import dts from 'vite-plugin-dts';
       import { joinPathFragments } from '@nx/devkit'
       import { defineConfig } from 'vite';
-      import react from '@vitejs/plugin-react';
-      import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
-      export default defineConfig({
-          plugins: [react(), nxViteTsPaths(),],
-          test: {
-              'my': 'option',
-              'globals': true,
-              'environment': "jsdom",
-              'include': ["src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}"],
+          import react from '@vitejs/plugin-react';
+          import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+
+          export default defineConfig({
+            plugins: [react(), nxViteTsPaths(), ],
+
+            test: {
+          'my': 'option',
+          'globals': true,
+          'environment': "jsdom",
+          'include': ["src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}"],
+        },
+
+            build: {
+          'my': 'option',
+          'lib': {
+            'entry': "src/index.ts",
+            'name': "my-app",
+            'fileName': "index",
+            'formats': ['es' as const],
           },
-          build: {
-              'my': 'option',
-              'lib': {
-                  'entry': "src/index.ts",
-                  'name': "my-app",
-                  'fileName': "index",
-                  'formats': ['es' as const],
-              },
-              'rolldownOptions': { "external": ["react", "react-dom", "react/jsx-runtime"] },
-          }
-      });"
+          'rolldownOptions': {"external":["react","react-dom","react/jsx-runtime"]},
+        }
+
+          });
+          "
     `);
   });
 });

@@ -5,55 +5,82 @@ import {
   updateJson,
   workspaceRoot,
 } from '@nx/devkit';
-import { existsSync, readFileSync, statSync } from 'fs';
+import {
+  getTypescriptBackend,
+  readTsConfig as readTsConfigWithBackend,
+  readTsConfigWithoutFiles,
+  unhandledTypescriptBackend,
+} from '@nx/devkit/internal';
+import { existsSync, readFileSync, realpathSync, statSync } from 'fs';
 import { dirname, isAbsolute, join, relative, resolve, sep } from 'path';
 import type * as ts from 'typescript';
 import { ensureTypescript } from './ensure-typescript';
+import { isFileSystemCaseSensitive } from './file-system-case';
 
-let tsModule: typeof import('typescript');
-
+/**
+ * Reads a tsconfig with its `extends` chain applied. When the workspace's
+ * `typescript` is 7.1, `sys` supplies only the file reads and existence checks,
+ * and the source-file scan reads the disk.
+ */
 export function readTsConfig(
   tsConfigPath: string,
   sys?: ts.ParseConfigHost
 ): ts.ParsedCommandLine {
-  if (!tsModule) {
-    tsModule = require('typescript');
+  const backend = getTypescriptBackend();
+  switch (backend.kind) {
+    case 'classic': {
+      const tsModule = backend.ts;
+      // A tree-backed `sys` (readTsConfigFromTree) reads via `FsTree.read`,
+      // which re-roots an absolute path and breaks, so only absolutize the
+      // default sys.
+      const usingDefaultSys = !sys || sys === tsModule.sys;
+      sys ??= tsModule.sys;
+
+      // Resolve to absolute so `${configDir}` in `paths` expands to absolute
+      // values. A relative basePath produces the TS5090 "no baseUrl" error.
+      //
+      // Don't also pass `configPath` as `configFileName` (5th arg). It doesn't
+      // affect `${configDir}`, only shifts emit output paths (dist/src vs dist).
+      const configPath = usingDefaultSys ? resolve(tsConfigPath) : tsConfigPath;
+
+      const readResult = tsModule.readConfigFile(configPath, sys.readFile);
+      return tsModule.parseJsonConfigFileContent(
+        readResult.config,
+        sys,
+        dirname(configPath)
+      );
+    }
+    case 'api':
+      return sys
+        ? readTsConfigWithBackend(tsConfigPath, sys)
+        : readTsConfigWithBackend(resolve(tsConfigPath));
+    default:
+      return unhandledTypescriptBackend(backend);
   }
-
-  // A tree-backed `sys` (readTsConfigFromTree) reads via `FsTree.read`, which
-  // re-roots an absolute path and breaks, so only absolutize the default sys.
-  const usingDefaultSys = !sys || sys === tsModule.sys;
-  sys ??= tsModule.sys;
-
-  // Resolve to absolute so `${configDir}` in `paths` expands to absolute
-  // values. A relative basePath produces the TS5090 "no baseUrl" error.
-  //
-  // Don't also pass `configPath` as `configFileName` (5th arg). It doesn't
-  // affect `${configDir}`, only shifts emit output paths (dist/src vs dist).
-  const configPath = usingDefaultSys ? resolve(tsConfigPath) : tsConfigPath;
-
-  const readResult = tsModule.readConfigFile(configPath, sys.readFile);
-  return tsModule.parseJsonConfigFileContent(
-    readResult.config,
-    sys,
-    dirname(configPath)
-  );
 }
 
 export function readTsConfigFromTree(
   tree: Tree,
   tsConfigPath: string
 ): ts.ParsedCommandLine {
-  if (!tsModule) {
-    tsModule = ensureTypescript();
+  // Installs a temporary TypeScript when the workspace has none.
+  ensureTypescript();
+  const backend = getTypescriptBackend();
+  switch (backend.kind) {
+    case 'classic':
+      return readTsConfig(tsConfigPath, {
+        ...backend.ts.sys,
+        readFile: (path) => tree.read(path, 'utf-8'),
+      });
+    case 'api':
+      // The 7.1 API hands the host absolute paths, which `Tree.read` re-roots.
+      return readTsConfigWithBackend(
+        tsConfigPath,
+        createTreeParseConfigHost(tree)
+      );
+    default:
+      return unhandledTypescriptBackend(backend);
   }
-
-  const tsSysFromTree: ts.System = {
-    ...tsModule.sys,
-    readFile: (path) => tree.read(path, 'utf-8'),
-  };
-
-  return readTsConfig(tsConfigPath, tsSysFromTree);
 }
 
 /**
@@ -107,9 +134,9 @@ export type TreeParseConfigHost = Required<
  * a usable signal; match specific codes (TS5083/TS6053) instead.
  */
 export function createTreeParseConfigHost(tree: Tree): TreeParseConfigHost {
-  if (!tsModule) {
-    tsModule = ensureTypescript();
-  }
+  // Installs a temporary TypeScript when the workspace has none.
+  ensureTypescript();
+  const sys = getClassicSys();
 
   // Classify with `relative` rather than a string prefix: it normalizes
   // separators, so an absolute path TypeScript hands over with forward slashes
@@ -149,14 +176,18 @@ export function createTreeParseConfigHost(tree: Tree): TreeParseConfigHost {
   };
 
   return {
-    ...tsModule.sys,
+    ...sys,
+    useCaseSensitiveFileNames:
+      sys?.useCaseSensitiveFileNames ?? isFileSystemCaseSensitive(),
     readDirectory: () => [],
     getCurrentDirectory: () => tree.root,
     // A relative path anchored to the workspace instead of `process.cwd()`; an
     // absolute one still goes through `ts.sys` so a symlinked in-root
     // `node_modules` entry resolves to its real (out-of-root) target.
-    realpath: (path) =>
-      tsModule.sys.realpath(isAbsolute(path) ? path : join(tree.root, path)),
+    realpath: (path) => {
+      const absolutePath = isAbsolute(path) ? path : join(tree.root, path);
+      return sys ? sys.realpath(absolutePath) : realpathOnDisk(absolutePath);
+    },
     readFile: (path) =>
       isOutsideRoot(path)
         ? isFileOnDisk(path)
@@ -178,6 +209,28 @@ export function createTreeParseConfigHost(tree: Tree): TreeParseConfigHost {
       return tree.exists(treePath) && !tree.isFile(treePath);
     },
   };
+}
+
+// TypeScript 7.1 has no `ts.sys`.
+function getClassicSys(): ts.System | undefined {
+  const backend = getTypescriptBackend();
+  switch (backend.kind) {
+    case 'classic':
+      return backend.ts.sys;
+    case 'api':
+      return undefined;
+    default:
+      return unhandledTypescriptBackend(backend);
+  }
+}
+
+// `ts.sys.realpath` of TypeScript 6.
+function realpathOnDisk(path: string): string {
+  try {
+    return realpathSync.native(path);
+  } catch {
+    return path;
+  }
 }
 
 /**
@@ -365,24 +418,9 @@ export function readTsConfigPaths(tsConfig?: string | ts.ParsedCommandLine) {
     let config: ts.ParsedCommandLine;
 
     if (typeof tsConfig === 'string') {
-      if (!tsModule) {
-        tsModule = ensureTypescript();
-      }
-
-      const configFile = tsModule.readConfigFile(
-        tsConfig,
-        tsModule.sys.readFile
-      );
-      // Stub `readDirectory` to skip the source-file scan — only `paths` is consumed.
-      const parseConfigHost: ts.ParseConfigHost = {
-        ...tsModule.sys,
-        readDirectory: () => [],
-      };
-      config = tsModule.parseJsonConfigFileContent(
-        configFile.config,
-        parseConfigHost,
-        dirname(tsConfig)
-      );
+      // Installs a temporary TypeScript when the workspace has none.
+      ensureTypescript();
+      config = readTsConfigWithoutFiles(tsConfig);
     } else {
       config = tsConfig;
     }

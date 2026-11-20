@@ -1,4 +1,3 @@
-import * as ts from 'typescript';
 import {
   ExecutorContext,
   isDaemonEnabled,
@@ -6,6 +5,7 @@ import {
   output,
   readJsonFile,
 } from '@nx/devkit';
+import { ModuleKind } from '@nx/devkit/internal';
 import { existsSync } from 'fs';
 import { join } from 'path';
 import type { TypeScriptCompilationOptions } from '../../utils/typescript/compilation';
@@ -33,7 +33,7 @@ export function determineModuleFormatFromTsConfig(
   // NodeNext is context-dependent - check package.json type field
   // NodeNext outputs ESM only when package.json has "type": "module"
   // Otherwise it outputs CJS (when "type": "commonjs" or no type field)
-  if (tsConfig.options.module === ts.ModuleKind.NodeNext) {
+  if (tsConfig.options.module === ModuleKind.NodeNext) {
     if (projectRoot && workspaceRoot) {
       const packageJsonPath = join(workspaceRoot, projectRoot, 'package.json');
       if (existsSync(packageJsonPath)) {
@@ -52,10 +52,10 @@ export function determineModuleFormatFromTsConfig(
   }
 
   if (
-    tsConfig.options.module === ts.ModuleKind.ES2015 ||
-    tsConfig.options.module === ts.ModuleKind.ES2020 ||
-    tsConfig.options.module === ts.ModuleKind.ES2022 ||
-    tsConfig.options.module === ts.ModuleKind.ESNext
+    tsConfig.options.module === ModuleKind.ES2015 ||
+    tsConfig.options.module === ModuleKind.ES2020 ||
+    tsConfig.options.module === ModuleKind.ES2022 ||
+    tsConfig.options.module === ModuleKind.ESNext
   ) {
     return 'esm';
   } else {
@@ -79,9 +79,9 @@ export function createTypeScriptCompilationOptions(
     tsConfig: normalizedOptions.tsConfig.replace(/\\/g, '/'),
     watch: normalizedOptions.watch,
     deleteOutputPath: normalizedOptions.clean,
-    getCustomTransformers: getCustomTrasformersFactory(
-      normalizedOptions.transformers
-    ),
+    getCustomTransformers: normalizedOptions.transformers?.length
+      ? getCustomTrasformersFactory(normalizedOptions.transformers)
+      : undefined,
   };
 }
 

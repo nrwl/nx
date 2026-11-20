@@ -1,8 +1,9 @@
 import { ensureTypescript } from '@nx/js/internal';
+import type { TypescriptAst } from '@nx/devkit/internal';
 import type * as ts from 'typescript';
 
 // Loaded by parseFlatConfig. The other helpers only take nodes it produced.
-let tsModule: typeof import('typescript');
+let tsModule: TypescriptAst;
 
 export function parseFlatConfig(content: string): ts.SourceFile {
   tsModule ??= ensureTypescript();

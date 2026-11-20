@@ -5,9 +5,25 @@ import {
   parseJson,
   StringChange,
 } from '@nx/devkit';
+import { ensureTypescript, type TypescriptAst } from '@nx/devkit/internal';
 import { Linter } from 'eslint';
-import * as ts from 'typescript';
+import type {
+  ArrayLiteralExpression,
+  BindingElement,
+  ExportAssignment,
+  Identifier,
+  ImportDeclaration,
+  NamedImports,
+  Node,
+  NodeArray,
+  ObjectLiteralExpression,
+  PropertyAssignment,
+  SourceFile,
+  VariableDeclaration,
+} from 'typescript';
 import { mapFilePath } from './path-utils';
+
+let ts: TypescriptAst;
 
 /**
  * Supports direct identifiers, and those nested within an object (of arbitrary depth)
@@ -19,6 +35,7 @@ const SPREAD_ELEMENTS_REGEXP = /\s*\.\.\.[a-zA-Z0-9_]+(\.[a-zA-Z0-9_]+)*,?\n?/g;
  * Remove all overrides from the config file
  */
 export function removeOverridesFromLintConfig(content: string): string {
+  ts ??= ensureTypescript();
   const source = ts.createSourceFile(
     '',
     content,
@@ -52,9 +69,7 @@ export function removeOverridesFromLintConfig(content: string): string {
 }
 
 // TODO Change name
-export function findExportDefault(
-  source: ts.SourceFile
-): ts.NodeArray<ts.Node> {
+export function findExportDefault(source: SourceFile): NodeArray<Node> {
   return findExportedArray(source)?.elements;
 }
 
@@ -63,8 +78,8 @@ export function findExportDefault(
  * or through a top-level `const` (`const eslintConfig = [...]; export default eslintConfig;`).
  */
 function findExportedArray(
-  source: ts.SourceFile
-): ts.ArrayLiteralExpression | undefined {
+  source: SourceFile
+): ArrayLiteralExpression | undefined {
   const exportDefault = findExportDefaultStatement(source);
   if (!exportDefault) {
     return undefined;
@@ -77,10 +92,10 @@ function findExportedArray(
 }
 
 function findExportDefaultStatement(
-  source: ts.SourceFile
-): ts.ExportAssignment | undefined {
+  source: SourceFile
+): ExportAssignment | undefined {
   return source.statements.find(
-    (statement): statement is ts.ExportAssignment =>
+    (statement): statement is ExportAssignment =>
       ts.isExportAssignment(statement) && !statement.isExportEquals
   );
 }
@@ -90,9 +105,9 @@ function findExportDefaultStatement(
  * A `let` or `var` is skipped because a later assignment can replace its value.
  */
 function findExportedDeclaration(
-  source: ts.SourceFile,
-  exportDefault: ts.ExportAssignment
-): ts.VariableDeclaration | undefined {
+  source: SourceFile,
+  exportDefault: ExportAssignment
+): VariableDeclaration | undefined {
   if (!ts.isIdentifier(exportDefault.expression)) {
     return undefined;
   }
@@ -116,9 +131,7 @@ function findExportedDeclaration(
   return undefined;
 }
 
-export function findModuleExports(
-  source: ts.SourceFile
-): ts.NodeArray<ts.Node> {
+export function findModuleExports(source: SourceFile): NodeArray<Node> {
   return ts.forEachChild(source, function analyze(node) {
     if (
       ts.isExpressionStatement(node) &&
@@ -135,6 +148,7 @@ export function addPatternsToFlatConfigIgnoresBlock(
   content: string,
   ignorePatterns: string[]
 ): string {
+  ts ??= ensureTypescript();
   const source = ts.createSourceFile(
     '',
     content,
@@ -179,6 +193,7 @@ export function addPatternsToFlatConfigIgnoresBlock(
 }
 
 export function hasFlatConfigIgnoresBlock(content: string): boolean {
+  ts ??= ensureTypescript();
   const source = ts.createSourceFile(
     '',
     content,
@@ -196,9 +211,7 @@ export function hasFlatConfigIgnoresBlock(content: string): boolean {
   return exportsArray.some(isFlatConfigIgnoresBlock);
 }
 
-function isFlatConfigIgnoresBlock(
-  node: ts.Node
-): node is ts.ObjectLiteralExpression {
+function isFlatConfigIgnoresBlock(node: Node): node is ObjectLiteralExpression {
   return (
     ts.isObjectLiteralExpression(node) &&
     node.properties.length === 1 &&
@@ -209,7 +222,7 @@ function isFlatConfigIgnoresBlock(
   );
 }
 
-function isOverride(node: ts.Node): boolean {
+function isOverride(node: Node): boolean {
   return (
     (ts.isObjectLiteralExpression(node) &&
       node.properties.some(
@@ -228,6 +241,7 @@ export function hasOverride(
   content: string,
   lookup: (override: Linter.ConfigOverride<Linter.RulesRecord>) => boolean
 ): boolean {
+  ts ??= ensureTypescript();
   const source = ts.createSourceFile(
     '',
     content,
@@ -281,7 +295,7 @@ function parseTextToJson(text: string): any {
  * Extracts literal values from AST nodes.
  * Returns undefined for complex expressions that can't be statically evaluated.
  */
-function extractLiteralValue(node: ts.Node): unknown {
+function extractLiteralValue(node: Node): unknown {
   if (ts.isStringLiteral(node)) {
     return node.text;
   }
@@ -334,7 +348,7 @@ function extractLiteralValue(node: ts.Node): unknown {
  * Returns a partial object suitable for the lookup function.
  */
 function extractPropertiesFromObjectLiteral(
-  node: ts.ObjectLiteralExpression
+  node: ObjectLiteralExpression
 ): Partial<Linter.ConfigOverride<Linter.RulesRecord>> {
   const result: Record<string, unknown> = {};
   for (const prop of node.properties) {
@@ -354,9 +368,9 @@ function extractPropertiesFromObjectLiteral(
  * Find a property assignment node by name in an object literal.
  */
 function findPropertyNode(
-  node: ts.ObjectLiteralExpression,
+  node: ObjectLiteralExpression,
   propertyName: string
-): ts.PropertyAssignment | undefined {
+): PropertyAssignment | undefined {
   for (const prop of node.properties) {
     if (ts.isPropertyAssignment(prop)) {
       const name = prop.name.getText().replace(/['"]/g, '');
@@ -420,6 +434,7 @@ export function replaceOverride(
     override: Partial<Linter.ConfigOverride<Linter.RulesRecord>>
   ) => Partial<Linter.ConfigOverride<Linter.RulesRecord>>
 ): string {
+  ts ??= ensureTypescript();
   const source = ts.createSourceFile(
     '',
     content,
@@ -439,7 +454,7 @@ export function replaceOverride(
       return;
     }
 
-    let objectLiteralNode: ts.ObjectLiteralExpression;
+    let objectLiteralNode: ObjectLiteralExpression;
     if (ts.isObjectLiteralExpression(node)) {
       objectLiteralNode = node;
     } else {
@@ -536,7 +551,7 @@ export function addImportToFlatConfig(
   variable: string | string[],
   imp: string
 ): string {
-  const printer = ts.createPrinter({ newLine: ts.NewLineKind.LineFeed });
+  ts ??= ensureTypescript();
   const source = ts.createSourceFile(
     '',
     content,
@@ -548,19 +563,18 @@ export function addImportToFlatConfig(
   const format = isEsmExport(source) ? 'mjs' : 'cjs';
 
   if (format === 'mjs') {
-    return addESMImportToFlatConfig(source, printer, content, variable, imp);
+    return addESMImportToFlatConfig(source, content, variable, imp);
   }
-  return addCJSImportToFlatConfig(source, printer, content, variable, imp);
+  return addCJSImportToFlatConfig(source, content, variable, imp);
 }
 
 function addESMImportToFlatConfig(
-  source: ts.SourceFile,
-  printer: ts.Printer,
+  source: SourceFile,
   content: string,
   variable: string | string[],
   imp: string
 ): string {
-  let existingImport: ts.ImportDeclaration | undefined;
+  let existingImport: ImportDeclaration | undefined;
 
   ts.forEachChild(source, (node) => {
     if (
@@ -588,7 +602,7 @@ function addESMImportToFlatConfig(
     Array.isArray(variable)
   ) {
     const namedImports = existingImport.importClause
-      .namedBindings as ts.NamedImports;
+      .namedBindings as NamedImports;
     const existingElements = namedImports.elements;
 
     // Filter out variables that are already imported
@@ -600,105 +614,50 @@ function addESMImportToFlatConfig(
       return content;
     }
 
-    const newImportSpecifiers = newVariables.map((v) =>
-      ts.factory.createImportSpecifier(
-        false,
-        undefined,
-        ts.factory.createIdentifier(v)
-      )
-    );
-
     const lastElement = existingElements[existingElements.length - 1];
     const insertIndex = lastElement
       ? lastElement.getEnd()
       : namedImports.getEnd();
 
-    const insertText = printer.printList(
-      ts.ListFormat.NamedImportsOrExportsElements,
-      ts.factory.createNodeArray(newImportSpecifiers),
-      source
-    );
-
     return applyChangesToString(content, [
       {
         type: ChangeType.Insert,
         index: insertIndex,
-        text: `, ${insertText}`,
+        text: `, ${generateBracesContent(newVariables)}`,
       },
     ]);
   }
 
   // Rule 3:
   if (!existingImport && typeof variable === 'string') {
-    const defaultImport = ts.factory.createImportDeclaration(
-      undefined,
-      ts.factory.createImportClause(
-        false,
-        ts.factory.createIdentifier(variable),
-        undefined
-      ),
-      ts.factory.createStringLiteral(imp)
-    );
-
-    const insert = printer.printNode(
-      ts.EmitHint.Unspecified,
-      defaultImport,
-      source
-    );
-
     return applyChangesToString(content, [
       {
         type: ChangeType.Insert,
         index: 0,
-        text: `${insert}\n`,
+        text: `${generateESMImport(variable, imp)}\n`,
       },
     ]);
   }
 
   // Rule 4:
   if (!existingImport && Array.isArray(variable)) {
-    const objectImport = ts.factory.createImportDeclaration(
-      undefined,
-      ts.factory.createImportClause(
-        false,
-        undefined,
-        ts.factory.createNamedImports(
-          variable.map((v) =>
-            ts.factory.createImportSpecifier(
-              false,
-              undefined,
-              ts.factory.createIdentifier(v)
-            )
-          )
-        )
-      ),
-      ts.factory.createStringLiteral(imp)
-    );
-
-    const insert = printer.printNode(
-      ts.EmitHint.Unspecified,
-      objectImport,
-      source
-    );
-
     return applyChangesToString(content, [
       {
         type: ChangeType.Insert,
         index: 0,
-        text: `${insert}\n`,
+        text: `${generateESMImport(variable, imp)}\n`,
       },
     ]);
   }
 }
 
 function addCJSImportToFlatConfig(
-  source: ts.SourceFile,
-  printer: ts.Printer,
+  source: SourceFile,
   content: string,
   variable: string | string[],
   imp: string
 ): string {
-  const foundBindingVars: ts.NodeArray<ts.BindingElement> = ts.forEachChild(
+  const foundBindingVars: NodeArray<BindingElement> = ts.forEachChild(
     source,
     function analyze(node) {
       // we can only combine object binding patterns
@@ -732,16 +691,7 @@ function addCJSImportToFlatConfig(
     }
     const isMultiLine = foundBindingVars.hasTrailingComma;
     const pos = foundBindingVars.end;
-    const nodes = ts.factory.createNodeArray(
-      newVariables.map((v) =>
-        ts.factory.createBindingElement(undefined, undefined, v)
-      )
-    );
-    const insert = printer.printList(
-      ts.ListFormat.ObjectBindingPatternElements,
-      nodes,
-      source
-    );
+    const insert = generateBracesContent(newVariables);
     return applyChangesToString(content, [
       {
         type: ChangeType.Insert,
@@ -782,32 +732,17 @@ function addCJSImportToFlatConfig(
   }
 
   // the import was not found, create a new one
-  const requireStatement = generateRequire(
-    typeof variable === 'string'
-      ? variable
-      : ts.factory.createObjectBindingPattern(
-          variable.map((v) =>
-            ts.factory.createBindingElement(undefined, undefined, v)
-          )
-        ),
-    imp
-  );
-  const insert = printer.printNode(
-    ts.EmitHint.Unspecified,
-    requireStatement,
-    source
-  );
   return applyChangesToString(content, [
     {
       type: ChangeType.Insert,
       index: 0,
-      text: `${insert}\n`,
+      text: `${generateRequire(variable, imp)}\n`,
     },
   ]);
 }
 
 function existsAsNamedOrDefaultImport(
-  node: ts.ImportDeclaration,
+  node: ImportDeclaration,
   variable: string | string[]
 ) {
   const isNamed =
@@ -830,6 +765,7 @@ export function removeImportFromFlatConfig(
   variable: string,
   imp: string
 ): string {
+  ts ??= ensureTypescript();
   const source = ts.createSourceFile(
     '',
     content,
@@ -847,7 +783,7 @@ export function removeImportFromFlatConfig(
 }
 
 function removeImportFromFlatConfigESM(
-  source: ts.SourceFile,
+  source: SourceFile,
   content: string,
   variable: string,
   imp: string
@@ -875,7 +811,7 @@ function removeImportFromFlatConfigESM(
 }
 
 function removeImportFromFlatConfigCJS(
-  source: ts.SourceFile,
+  source: SourceFile,
   content: string,
   variable: string,
   imp: string
@@ -919,7 +855,8 @@ function removeImportFromFlatConfigCJS(
  * Whether a flat config uses an ESM `export default` (vs CJS `module.exports`).
  * AST-based so a commented-out `export default` in a CJS file isn't misdetected.
  */
-export function isEsmExport(source: ts.SourceFile): boolean {
+export function isEsmExport(source: SourceFile): boolean {
+  ts ??= ensureTypescript();
   return findExportDefaultStatement(source) !== undefined;
 }
 
@@ -928,6 +865,7 @@ export function isEsmExport(source: ts.SourceFile): boolean {
  * `addBlockToFlatConfigExport` adds to.
  */
 export function exportsFlatConfigArray(content: string): boolean {
+  ts ??= ensureTypescript();
   const source = ts.createSourceFile(
     '',
     content,
@@ -941,6 +879,7 @@ export function exportsFlatConfigArray(content: string): boolean {
 }
 
 export function flatConfigUsesVariable(content: string, name: string): boolean {
+  ts ??= ensureTypescript();
   const source = ts.createSourceFile(
     '',
     content,
@@ -948,7 +887,7 @@ export function flatConfigUsesVariable(content: string, name: string): boolean {
     true,
     ts.ScriptKind.JS
   );
-  const visit = (node: ts.Node): boolean =>
+  const visit = (node: Node): boolean =>
     (ts.isIdentifier(node) &&
       node.text === name &&
       !isPropertyKeyOrMemberName(node)) ||
@@ -957,7 +896,7 @@ export function flatConfigUsesVariable(content: string, name: string): boolean {
 }
 
 // These names neither declare nor reference a variable.
-function isPropertyKeyOrMemberName(node: ts.Identifier): boolean {
+function isPropertyKeyOrMemberName(node: Identifier): boolean {
   const { parent } = node;
   return (
     ((ts.isPropertyAssignment(parent) ||
@@ -972,16 +911,16 @@ function isPropertyKeyOrMemberName(node: ts.Identifier): boolean {
 }
 
 /**
- * Injects new ts.expression to the end of the module.exports or export default array.
+ * Injects a generated config block into the module.exports or export default array.
  */
 export function addBlockToFlatConfigExport(
   content: string,
-  config: ts.Expression | ts.SpreadElement,
+  config: string,
   options: { insertAtTheEnd?: boolean; checkBaseConfig?: boolean } = {
     insertAtTheEnd: true,
   }
 ): string {
-  const printer = ts.createPrinter({ newLine: ts.NewLineKind.LineFeed });
+  ts ??= ensureTypescript();
   const source = ts.createSourceFile(
     '',
     content,
@@ -996,29 +935,16 @@ export function addBlockToFlatConfigExport(
 
   // find the export default array statement
   if (format === 'mjs') {
-    return addBlockToFlatConfigExportESM(
-      content,
-      config,
-      source,
-      printer,
-      options
-    );
+    return addBlockToFlatConfigExportESM(content, config, source, options);
   } else {
-    return addBlockToFlatConfigExportCJS(
-      content,
-      config,
-      source,
-      printer,
-      options
-    );
+    return addBlockToFlatConfigExportCJS(content, config, source, options);
   }
 }
 
 function addBlockToFlatConfigExportESM(
   content: string,
-  config: ts.Expression | ts.SpreadElement,
-  source: ts.SourceFile,
-  printer: ts.Printer,
+  config: string,
+  source: SourceFile,
   options: { insertAtTheEnd?: boolean; checkBaseConfig?: boolean } = {
     insertAtTheEnd: true,
   }
@@ -1027,75 +953,67 @@ function addBlockToFlatConfigExportESM(
 
   if (!exportArrayLiteral) return content;
 
-  let updatedArrayElements: ts.Expression[];
+  const elements = exportArrayLiteral.elements;
+
+  if (elements.length === 0) {
+    const closingLineBreak = content
+      .slice(elements.pos, elements.end)
+      .includes('\n')
+      ? ''
+      : '\n';
+    return applyChangesToString(content, [
+      {
+        type: ChangeType.Insert,
+        index: elements.pos,
+        text: `\n${INDENTATION}${indentLines(config, INDENTATION)}${closingLineBreak}`,
+      },
+    ]);
+  }
+
+  let anchor: Node | undefined;
   if (options.checkBaseConfig) {
-    const baseConfigIndex = exportArrayLiteral.elements.findIndex(
+    anchor = elements.find(
       (el) =>
         ts.isSpreadElement(el) &&
         ts.isIdentifier(el.expression) &&
         el.expression.text === 'baseConfig'
     );
-    if (baseConfigIndex >= 0) {
-      const before = exportArrayLiteral.elements.slice(0, baseConfigIndex);
-      const after = exportArrayLiteral.elements.slice(baseConfigIndex);
-      updatedArrayElements = [...before, config, ...after];
-    } else {
-      updatedArrayElements = [...exportArrayLiteral.elements, config];
-    }
-  } else {
-    updatedArrayElements = options.insertAtTheEnd
-      ? [...exportArrayLiteral.elements, config]
-      : [config, ...exportArrayLiteral.elements];
+  } else if (!options.insertAtTheEnd) {
+    anchor = elements[0];
   }
 
-  const updatedArrayLiteral = ts.factory.createArrayLiteralExpression(
-    updatedArrayElements,
-    true
-  );
-
-  if (!ts.isExportAssignment(exportArrayLiteral.parent)) {
+  if (anchor) {
+    const indentation = getLineIndentation(content, anchor);
     return applyChangesToString(content, [
       {
-        type: ChangeType.Delete,
-        start: exportArrayLiteral.getStart(),
-        length: exportArrayLiteral.end - exportArrayLiteral.getStart(),
-      },
-      {
         type: ChangeType.Insert,
-        index: exportArrayLiteral.getStart(),
-        text: printer.printNode(
-          ts.EmitHint.Expression,
-          updatedArrayLiteral,
-          source
-        ),
+        index: anchor.getStart(),
+        text: `${indentLines(config, indentation)},\n${indentation}`,
       },
     ]);
   }
 
-  const exportDefaultStatement = exportArrayLiteral.parent;
-  const updatedExportDefault = ts.factory.createExportAssignment(
-    undefined,
-    false,
-    updatedArrayLiteral
-  );
+  const lastElement = elements[elements.length - 1];
+  const indentation = getLineIndentation(content, lastElement);
+  return applyChangesToString(content, [
+    {
+      type: ChangeType.Insert,
+      index: lastElement.end,
+      text: `,\n${indentation}${indentLines(config, indentation)}`,
+    },
+  ]);
+}
 
-  // update the existing export default array
-  const updatedStatements = source.statements.map((statement) =>
-    statement === exportDefaultStatement ? updatedExportDefault : statement
-  );
-
-  const updatedSource = ts.factory.updateSourceFile(source, updatedStatements);
-
-  return printer
-    .printFile(updatedSource)
-    .replace(/export default/, '\nexport default');
+function getLineIndentation(content: string, node: Node): string {
+  const start = node.getStart();
+  const linePrefix = content.slice(content.lastIndexOf('\n', start) + 1, start);
+  return /^[ \t]*$/.test(linePrefix) ? linePrefix : INDENTATION;
 }
 
 function addBlockToFlatConfigExportCJS(
   content: string,
-  config: ts.Expression | ts.SpreadElement,
-  source: ts.SourceFile,
-  printer: ts.Printer,
+  config: string,
+  source: SourceFile,
   options: { insertAtTheEnd?: boolean; checkBaseConfig?: boolean } = {
     insertAtTheEnd: true,
   }
@@ -1116,11 +1034,7 @@ function addBlockToFlatConfigExportCJS(
   // base config was not generated by Nx.
   if (!exportsArray) return content;
 
-  const insert =
-    '    ' +
-    printer
-      .printNode(ts.EmitHint.Expression, config, source)
-      .replaceAll(/\n/g, '\n    ');
+  const insert = '    ' + config.replaceAll(/\n/g, '\n    ');
 
   if (options.checkBaseConfig) {
     const baseConfigElement = exportsArray.find(
@@ -1134,9 +1048,7 @@ function addBlockToFlatConfigExportCJS(
       const baseConfigStart = baseConfigElement.getStart();
       const lineStart = content.lastIndexOf('\n', baseConfigStart) + 1;
       const indentation = content.substring(lineStart, baseConfigStart);
-      const configText = printer
-        .printNode(ts.EmitHint.Expression, config, source)
-        .replaceAll(/\n/g, `\n${indentation}`);
+      const configText = config.replaceAll(/\n/g, `\n${indentation}`);
       return applyChangesToString(content, [
         {
           type: ChangeType.Insert,
@@ -1178,6 +1090,7 @@ export function removePlugin(
   pluginName: string,
   pluginImport: string
 ) {
+  ts ??= ensureTypescript();
   const source = ts.createSourceFile(
     '',
     content,
@@ -1235,7 +1148,7 @@ export function removePlugin(
     if (ts.isObjectLiteralExpression(element)) {
       const pluginsElem = element.properties.find(
         (prop) => prop.name?.getText() === 'plugins'
-      ) as ts.PropertyAssignment;
+      ) as PropertyAssignment;
       if (!pluginsElem) {
         return;
       }
@@ -1331,6 +1244,7 @@ export function removeCompatExtends(
   content: string,
   compatExtends: string[]
 ): string {
+  ts ??= ensureTypescript();
   const source = ts.createSourceFile(
     '',
     content,
@@ -1401,6 +1315,7 @@ export function removePredefinedConfigs(
   moduleVariable: string,
   configs: string[]
 ): string {
+  ts ??= ensureTypescript();
   const source = ts.createSourceFile(
     '',
     content,
@@ -1455,19 +1370,14 @@ export function addPluginsToExportsBlock(
   content: string,
   plugins: { name: string; varName: string; imp: string }[]
 ): string {
-  const pluginsBlock = ts.factory.createObjectLiteralExpression(
+  const pluginsBlock = generateObjectLiteral(
     [
-      ts.factory.createPropertyAssignment(
-        'plugins',
-        ts.factory.createObjectLiteralExpression(
-          plugins.map(({ name, varName }) => {
-            return ts.factory.createPropertyAssignment(
-              ts.factory.createStringLiteral(name),
-              ts.factory.createIdentifier(varName)
-            );
-          })
-        )
-      ),
+      `plugins: ${generateObjectLiteral(
+        plugins.map(
+          ({ name, varName }) => `${generateStringLiteral(name)}: ${varName}`
+        ),
+        false
+      )}`,
     ],
     false
   );
@@ -1481,6 +1391,7 @@ export function addPluginsToExportsBlock(
  */
 export function addFlatCompatToFlatConfig(content: string) {
   const result = addImportToFlatConfig(content, 'js', '@eslint/js');
+  ts ??= ensureTypescript();
   const source = ts.createSourceFile(
     '',
     content,
@@ -1556,17 +1467,14 @@ const compat = new FlatCompat({
 }
 
 /**
- * Generate node list representing the imports and the exports blocks
- * Optionally add flat compat initialization
+ * Generate the import statements and the exports block of a new config file
  */
 export function createNodeList(
   importsMap: Map<string, string>,
-  exportElements: ts.Expression[],
+  exportElements: string[],
   format: 'mjs' | 'cjs'
-): ts.NodeArray<
-  ts.VariableStatement | ts.Identifier | ts.ExpressionStatement | ts.SourceFile
-> {
-  const importsList = [];
+): string[] {
+  const importsList: string[] = [];
 
   Array.from(importsMap.entries()).forEach(([imp, varName]) => {
     if (format === 'mjs') {
@@ -1581,129 +1489,53 @@ export function createNodeList(
       ? generateESMExport(exportElements, new Set(importsMap.values()))
       : [generateCJSExport(exportElements)];
 
-  return ts.factory.createNodeArray([
+  return [
     // add plugin imports
     ...importsList,
-    ts.createSourceFile(
-      '',
-      '',
-      ts.ScriptTarget.Latest,
-      false,
-      ts.ScriptKind.JS
-    ),
     ...exports,
-  ]);
+  ];
 }
 
 const ESM_CONFIG_VARIABLE = 'eslintConfig';
 
 function generateESMExport(
-  elements: ts.Expression[],
+  elements: string[],
   importedNames: ReadonlySet<string>
-): [ts.VariableStatement, ts.ExportAssignment] {
+): [string, string] {
   let name = ESM_CONFIG_VARIABLE;
   for (let suffix = 2; importedNames.has(name); suffix++) {
     name = `${ESM_CONFIG_VARIABLE}${suffix}`;
   }
   // eslint-config-next turns on `import/no-anonymous-default-export`, which reports `export default [...]`.
   return [
-    ts.factory.createVariableStatement(
-      undefined,
-      ts.factory.createVariableDeclarationList(
-        [
-          ts.factory.createVariableDeclaration(
-            name,
-            undefined,
-            undefined,
-            ts.factory.createArrayLiteralExpression(elements, true)
-          ),
-        ],
-        ts.NodeFlags.Const
-      )
-    ),
-    ts.factory.createExportAssignment(
-      undefined,
-      false,
-      ts.factory.createIdentifier(name)
-    ),
+    `const ${name} = ${generateArrayLiteral(elements)};`,
+    `export default ${name};`,
   ];
 }
 
-function generateCJSExport(elements: ts.Expression[]): ts.ExpressionStatement {
-  // creates: module.exports = [...]
-  return ts.factory.createExpressionStatement(
-    ts.factory.createBinaryExpression(
-      ts.factory.createPropertyAccessExpression(
-        ts.factory.createIdentifier('module'),
-        ts.factory.createIdentifier('exports')
-      ),
-      ts.factory.createToken(ts.SyntaxKind.EqualsToken),
-      ts.factory.createArrayLiteralExpression(elements, true)
-    )
-  );
+function generateCJSExport(elements: string[]): string {
+  return `module.exports = ${generateArrayLiteral(elements)};`;
 }
 
-export function generateSpreadElement(name: string): ts.SpreadElement {
-  return ts.factory.createSpreadElement(ts.factory.createIdentifier(name));
+export function generateSpreadElement(name: string): string {
+  return `...${name}`;
 }
 
-export function generatePluginExtendsElement(
-  plugins: string[]
-): ts.SpreadElement {
-  return ts.factory.createSpreadElement(
-    ts.factory.createCallExpression(
-      ts.factory.createPropertyAccessExpression(
-        ts.factory.createIdentifier('compat'),
-        ts.factory.createIdentifier('extends')
-      ),
-      undefined,
-      plugins.map((plugin) => ts.factory.createStringLiteral(plugin))
-    )
-  );
+export function generatePluginExtendsElement(plugins: string[]): string {
+  return `...compat.extends(${plugins.map(generateStringLiteral).join(', ')})`;
 }
 
 export function generatePluginExtendsElementWithCompatFixup(
   plugin: string
-): ts.SpreadElement {
-  return ts.factory.createSpreadElement(
-    ts.factory.createCallExpression(
-      ts.factory.createIdentifier('fixupConfigRules'),
-      undefined,
-      [
-        ts.factory.createCallExpression(
-          ts.factory.createPropertyAccessExpression(
-            ts.factory.createIdentifier('compat'),
-            ts.factory.createIdentifier('extends')
-          ),
-          undefined,
-          [ts.factory.createStringLiteral(plugin)]
-        ),
-      ]
-    )
-  );
+): string {
+  return `...fixupConfigRules(compat.extends(${generateStringLiteral(plugin)}))`;
 }
 
 /**
- * Stringifies TS nodes to file content string
+ * Joins the statements from `createNodeList` into file content
  */
-export function stringifyNodeList(
-  nodes: ts.NodeArray<
-    | ts.VariableStatement
-    | ts.Identifier
-    | ts.ExpressionStatement
-    | ts.SourceFile
-  >
-): string {
-  const printer = ts.createPrinter({ newLine: ts.NewLineKind.LineFeed });
-  const resultFile = ts.createSourceFile(
-    '',
-    '',
-    ts.ScriptTarget.Latest,
-    true,
-    ts.ScriptKind.JS
-  );
-  const result = printer
-    .printList(ts.ListFormat.MultiLine, nodes, resultFile)
+export function stringifyNodeList(nodes: string[]): string {
+  const result = `${nodes.join('\n')}\n`
     // add new line before compat initialization
     .replace(
       /const compat = new FlatCompat/,
@@ -1720,74 +1552,29 @@ export function stringifyNodeList(
 }
 
 /**
- * generates AST require statement
+ * generates a require statement
  */
 export function generateRequire(
-  variableName: string | ts.ObjectBindingPattern,
+  variableName: string | string[],
   imp: string
-): ts.VariableStatement {
-  return ts.factory.createVariableStatement(
-    undefined,
-    ts.factory.createVariableDeclarationList(
-      [
-        ts.factory.createVariableDeclaration(
-          variableName,
-          undefined,
-          undefined,
-          ts.factory.createCallExpression(
-            ts.factory.createIdentifier('require'),
-            undefined,
-            [ts.factory.createStringLiteral(imp)]
-          )
-        ),
-      ],
-      ts.NodeFlags.Const
-    )
-  );
+): string {
+  const binding =
+    typeof variableName === 'string'
+      ? variableName
+      : `{${generateBracesContent(variableName)}}`;
+  return `const ${binding} = require(${generateStringLiteral(imp)});`;
 }
 
 // Top level imports
 export function generateESMImport(
-  variableName: string | ts.ObjectBindingPattern,
+  variableName: string | string[],
   imp: string
-): ts.ImportDeclaration {
-  let importClause;
-
-  if (typeof variableName === 'string') {
-    // For single variable import e.g import foo from 'module';
-    importClause = ts.factory.createImportClause(
-      false,
-      ts.factory.createIdentifier(variableName),
-      undefined
-    );
-  } else {
-    // For object binding pattern import e.g import { a, b, c } from 'module';
-    importClause = ts.factory.createImportClause(
-      false,
-      undefined,
-      ts.factory.createNamedImports(
-        variableName.elements.map((element) => {
-          const propertyName = element.propertyName
-            ? ts.isIdentifier(element.propertyName)
-              ? element.propertyName
-              : ts.factory.createIdentifier(element.propertyName.getText())
-            : undefined;
-
-          return ts.factory.createImportSpecifier(
-            false,
-            propertyName,
-            element.name as ts.Identifier
-          );
-        })
-      )
-    );
-  }
-
-  return ts.factory.createImportDeclaration(
-    undefined,
-    importClause,
-    ts.factory.createStringLiteral(imp)
-  );
+): string {
+  const importClause =
+    typeof variableName === 'string'
+      ? variableName
+      : `{${generateBracesContent(variableName)}}`;
+  return `import ${importClause} from ${generateStringLiteral(imp)};`;
 }
 
 /**
@@ -1817,7 +1604,7 @@ export function overrideNeedsCompat(
 }
 
 /**
- * Generates an AST object or spread element representing a modern flat config entry,
+ * Generates the code of an object or spread element representing a modern flat config entry,
  * based on a given legacy eslintrc JSON override object
  */
 export function generateFlatOverride(
@@ -1826,8 +1613,8 @@ export function generateFlatOverride(
   },
   format: 'mjs' | 'cjs',
   importsMap?: Map<string, string>,
-  pluginEnvironmentGlobals: ts.Expression[] = []
-): ts.ObjectLiteralExpression | ts.SpreadElement {
+  pluginEnvironmentGlobals: string[] = []
+): string {
   const override = mapFilePaths(_override);
 
   // We do not need the compat tooling for this override
@@ -1887,19 +1674,8 @@ export function generateFlatOverride(
       replacer: (propertyAssignment, propertyName) => {
         if (propertyName === 'rules') {
           // Add comment that user can override rules if there are no overrides.
-          if (
-            ts.isObjectLiteralExpression(propertyAssignment.initializer) &&
-            propertyAssignment.initializer.properties.length === 0
-          ) {
-            return ts.addSyntheticLeadingComment(
-              ts.factory.createPropertyAssignment(
-                propertyAssignment.name,
-                ts.factory.createObjectLiteralExpression([])
-              ),
-
-              ts.SyntaxKind.SingleLineCommentTrivia,
-              ' Override or add rules here'
-            );
+          if (propertyAssignment === 'rules: {}') {
+            return `// Override or add rules here\n${propertyAssignment}`;
           }
           return propertyAssignment;
         } else {
@@ -1925,9 +1701,7 @@ export function generateFlatOverride(
     delete rest.parser;
   }
 
-  const objectLiteralElements: ts.ObjectLiteralElementLike[] = [
-    ts.factory.createSpreadAssignment(ts.factory.createIdentifier('config')),
-  ];
+  const objectLiteralElements: string[] = ['...config'];
 
   // If converting the JS rule, then we need to match ESLint default and also include .cjs and .mjs files.
   if (
@@ -1960,100 +1734,46 @@ export function generateFlatOverride(
   addTSObjectProperty(objectLiteralElements, 'excludedFiles', excludedFiles);
 
   // Apply rules (and spread ...config.rules into it as the first assignment)
-  addTSObjectProperty(objectLiteralElements, 'rules', rules || {});
-  const rulesObjectAST = objectLiteralElements.pop() as ts.PropertyAssignment;
-  const rulesObjectInitializer =
-    rulesObjectAST.initializer as ts.ObjectLiteralExpression;
-  const spreadAssignment = ts.factory.createSpreadAssignment(
-    ts.factory.createIdentifier('config.rules')
-  );
-  const updatedRulesProperties = [
-    spreadAssignment,
-    ...rulesObjectInitializer.properties,
-  ];
   objectLiteralElements.push(
-    ts.factory.createPropertyAssignment(
-      'rules',
-      ts.factory.createObjectLiteralExpression(updatedRulesProperties, true)
-    )
+    `rules: ${generateObjectLiteral(
+      [
+        '...config.rules',
+        ...generatePropertyAssignmentsFromObjectEntries(rules || {}),
+      ],
+      true
+    )}`
   );
 
-  return ts.factory.createSpreadElement(
-    ts.factory.createCallExpression(
-      ts.factory.createPropertyAccessExpression(
-        ts.factory.createCallExpression(
-          ts.factory.createPropertyAccessExpression(
-            ts.factory.createIdentifier('compat'),
-            ts.factory.createIdentifier('config')
-          ),
-          undefined,
-          [
-            addSpreadGlobals(
-              generateAst<ts.ObjectLiteralExpression>(rest),
-              pluginEnvironmentGlobals
-            ),
-          ]
-        ),
-        ts.factory.createIdentifier('map')
-      ),
-      undefined,
-      [
-        ts.factory.createArrowFunction(
-          undefined,
-          undefined,
-          [
-            ts.factory.createParameterDeclaration(
-              undefined,
-              undefined,
-              'config'
-            ),
-          ],
-          undefined,
-          ts.factory.createToken(ts.SyntaxKind.EqualsGreaterThanToken),
-          ts.factory.createParenthesizedExpression(
-            ts.factory.createObjectLiteralExpression(
-              objectLiteralElements,
-              true
-            )
-          )
-        ),
-      ]
-    )
-  );
+  return `...compat.config(${generateAstWithSpreadGlobals(
+    rest,
+    pluginEnvironmentGlobals
+  )}).map(config => (${generateObjectLiteral(objectLiteralElements, true)}))`;
 }
 
 // FlatCompat drops a `<plugin>/<name>` environment unless the override itself loads the plugin.
 // It turns `globals` into `languageOptions.globals` for the override's files.
-function addSpreadGlobals(
-  config: ts.ObjectLiteralExpression,
-  spreads: ts.Expression[]
-): ts.ObjectLiteralExpression {
+function generateAstWithSpreadGlobals(
+  config: { globals?: unknown },
+  spreads: string[]
+): string {
   if (spreads.length === 0) {
-    return config;
+    return generateAst(config);
   }
-  const globals = config.properties.find(
-    (property): property is ts.PropertyAssignment =>
-      ts.isPropertyAssignment(property) &&
-      ts.isIdentifier(property.name) &&
-      property.name.text === 'globals'
-  );
+  const { globals, ...rest } = config;
   const declared =
-    globals && ts.isObjectLiteralExpression(globals.initializer)
-      ? globals.initializer.properties
+    globals !== null && typeof globals === 'object' && !Array.isArray(globals)
+      ? generatePropertyAssignmentsFromObjectEntries(globals)
       : [];
-  return ts.factory.updateObjectLiteralExpression(config, [
-    ...config.properties.filter((property) => property !== globals),
-    ts.factory.createPropertyAssignment(
-      'globals',
-      ts.factory.createObjectLiteralExpression(
-        [
-          ...spreads.map((spread) => ts.factory.createSpreadAssignment(spread)),
-          ...declared,
-        ],
+  return generateObjectLiteral(
+    [
+      ...generatePropertyAssignmentsFromObjectEntries(rest),
+      `globals: ${generateObjectLiteral(
+        [...spreads.map(generateSpreadElement), ...declared],
         true
-      )
-    ),
-  ]);
+      )}`,
+    ],
+    true
+  );
 }
 
 function generateESMParserImport(
@@ -2061,7 +1781,7 @@ function generateESMParserImport(
     ignores?: Linter.FlatConfig['ignores'];
   },
   importsMap?: Map<string, string>
-): ts.PropertyAssignment {
+): string {
   const parser =
     override['languageOptions']?.['parserOptions']?.parser ??
     override['languageOptions']?.parser ??
@@ -2072,58 +1792,31 @@ function generateESMParserImport(
   if (importsMap) {
     const parserName = importsMap.get(parser) ?? names(parser).propertyName;
     importsMap.set(parser, parserName);
-    return ts.factory.createPropertyAssignment(
-      'parser',
-      ts.factory.createIdentifier(parserName)
-    );
+    return `parser: ${parserName}`;
   }
-  return ts.factory.createPropertyAssignment(
-    'parser',
-    ts.factory.createAwaitExpression(
-      ts.factory.createCallExpression(
-        ts.factory.createIdentifier('import'),
-        undefined,
-        [ts.factory.createStringLiteral(parser)]
-      )
-    )
-  );
+  return `parser: await import(${generateStringLiteral(parser)})`;
 }
 
 function generateCJSParserImport(
   override: Partial<Linter.ConfigOverride<Linter.RulesRecord>> & {
     ignores?: Linter.FlatConfig['ignores'];
   }
-): ts.PropertyAssignment {
-  return ts.factory.createPropertyAssignment(
-    'parser',
-    ts.factory.createCallExpression(
-      ts.factory.createIdentifier('require'),
-      undefined,
-      [
-        ts.factory.createStringLiteral(
-          override['languageOptions']?.['parserOptions']?.parser ??
-            override['languageOptions']?.parser ??
-            override.parser
-        ),
-      ]
-    )
-  );
+): string {
+  return `parser: require(${generateStringLiteral(
+    override['languageOptions']?.['parserOptions']?.parser ??
+      override['languageOptions']?.parser ??
+      override.parser
+  )})`;
 }
 
 export function generateFlatPredefinedConfig(
   predefinedConfigName: string,
   moduleName = 'nx',
   spread = true
-): ts.ObjectLiteralExpression | ts.SpreadElement | ts.ElementAccessExpression {
-  const node = ts.factory.createElementAccessExpression(
-    ts.factory.createPropertyAccessExpression(
-      ts.factory.createIdentifier(moduleName),
-      ts.factory.createIdentifier('configs')
-    ),
-    ts.factory.createStringLiteral(predefinedConfigName)
-  );
+): string {
+  const node = `${moduleName}.configs[${generateStringLiteral(predefinedConfigName)}]`;
 
-  return spread ? ts.factory.createSpreadElement(node) : node;
+  return spread ? `...${node}` : node;
 }
 
 const DEFAULT_TYPED_LINTING_FILES = [
@@ -2134,35 +1827,19 @@ const DEFAULT_TYPED_LINTING_FILES = [
 ];
 
 /**
- * Generates the AST for a `parserOptions` object that enables typed linting
+ * Generates the code for a `parserOptions` object that enables typed linting
  * via typescript-eslint's project service (the recommended approach since
  * typescript-eslint v8).
  *
  * Emits `tsconfigRootDir: import.meta.dirname` for `mjs` and
  * `tsconfigRootDir: __dirname` for `cjs`.
  */
-function generateProjectServiceParserOptions(
-  format: 'mjs' | 'cjs'
-): ts.ObjectLiteralExpression {
-  return ts.factory.createObjectLiteralExpression(
+function generateProjectServiceParserOptions(format: 'mjs' | 'cjs'): string {
+  return generateObjectLiteral(
     [
-      ts.factory.createPropertyAssignment(
-        'projectService',
-        ts.factory.createTrue()
-      ),
+      'projectService: true',
       generateProjectDefusingAssignment(),
-      ts.factory.createPropertyAssignment(
-        'tsconfigRootDir',
-        format === 'mjs'
-          ? ts.factory.createPropertyAccessExpression(
-              ts.factory.createMetaProperty(
-                ts.SyntaxKind.ImportKeyword,
-                ts.factory.createIdentifier('meta')
-              ),
-              ts.factory.createIdentifier('dirname')
-            )
-          : ts.factory.createIdentifier('__dirname')
-      ),
+      `tsconfigRootDir: ${format === 'mjs' ? 'import.meta.dirname' : '__dirname'}`,
     ],
     true
   );
@@ -2176,25 +1853,12 @@ function generateProjectServiceParserOptions(
  * neutralizes it outright. The comment carries the condition for dropping it,
  * since only the user can check what the configs they pull in set.
  */
-function generateProjectDefusingAssignment(): ts.PropertyAssignment {
-  const assignment = ts.factory.createPropertyAssignment(
-    'project',
-    ts.factory.createNull()
-  );
-  ts.addSyntheticLeadingComment(
-    assignment,
-    ts.SyntaxKind.SingleLineCommentTrivia,
-    ' `projectService` conflicts with a `parserOptions.project` set by any config',
-    true
-  );
-  ts.addSyntheticLeadingComment(
-    assignment,
-    ts.SyntaxKind.SingleLineCommentTrivia,
-    ' merged into this one. Remove this once you know none of them set it.',
-    true
-  );
-
-  return assignment;
+function generateProjectDefusingAssignment(): string {
+  return [
+    '// `projectService` conflicts with a `parserOptions.project` set by any config',
+    '// merged into this one. Remove this once you know none of them set it.',
+    'project: null',
+  ].join('\n');
 }
 
 /**
@@ -2205,28 +1869,14 @@ function generateProjectDefusingAssignment(): ts.PropertyAssignment {
 export function generateTypedLintingFlatConfigOverride(
   format: 'mjs' | 'cjs',
   files: string[] = DEFAULT_TYPED_LINTING_FILES
-): ts.ObjectLiteralExpression {
-  return ts.factory.createObjectLiteralExpression(
+): string {
+  return generateObjectLiteral(
     [
-      ts.factory.createPropertyAssignment(
-        'files',
-        ts.factory.createArrayLiteralExpression(
-          files.map((f) => ts.factory.createStringLiteral(f)),
-          true
-        )
-      ),
-      ts.factory.createPropertyAssignment(
-        'languageOptions',
-        ts.factory.createObjectLiteralExpression(
-          [
-            ts.factory.createPropertyAssignment(
-              'parserOptions',
-              generateProjectServiceParserOptions(format)
-            ),
-          ],
-          true
-        )
-      ),
+      `files: ${generateArrayLiteral(files.map(generateStringLiteral))}`,
+      `languageOptions: ${generateObjectLiteral(
+        [`parserOptions: ${generateProjectServiceParserOptions(format)}`],
+        true
+      )}`,
     ],
     true
   );
@@ -2252,64 +1902,47 @@ export function mapFilePaths<
   return override;
 }
 
-function addTSObjectProperty(
-  elements: ts.ObjectLiteralElementLike[],
-  key: string,
-  value: unknown
-) {
+function addTSObjectProperty(elements: string[], key: string, value: unknown) {
   if (value) {
-    elements.push(ts.factory.createPropertyAssignment(key, generateAst(value)));
+    elements.push(`${key}: ${generateAst(value)}`);
   }
 }
 
 /**
- * Generates an AST from a JSON-type input
+ * Generates the code of a JSON-type input
  */
-export function generateAst<T>(
+export function generateAst(
   input: unknown,
   propertyAssignmentReplacer?: {
     keyToMatch: RegExp | string;
-    replacer: (
-      propertyAssignment: ts.PropertyAssignment,
-      propertyName: string
-    ) => ts.PropertyAssignment;
+    replacer: (propertyAssignment: string, propertyName: string) => string;
   }
-): T {
+): string {
   if (Array.isArray(input)) {
-    return ts.factory.createArrayLiteralExpression(
-      input.map((item) =>
-        generateAst<ts.Expression>(item, propertyAssignmentReplacer)
-      ),
-      true // Always treat as multiline, using item.length does not work in all cases
-    ) as T;
+    return generateArrayLiteral(
+      input.map((item) => generateAst(item, propertyAssignmentReplacer))
+    );
   }
   if (input === null) {
-    return ts.factory.createNull() as T;
+    return 'null';
   }
   if (typeof input === 'object') {
-    return ts.factory.createObjectLiteralExpression(
+    return generateObjectLiteral(
       generatePropertyAssignmentsFromObjectEntries(
         input,
         propertyAssignmentReplacer
       ),
       true // Always treat as multiline, using  Object.keys(input).length > 1 does not work in all cases
-    ) as T;
+    );
   }
   if (typeof input === 'string') {
-    return ts.factory.createStringLiteral(input) as T;
+    return generateStringLiteral(input);
   }
   if (typeof input === 'number') {
-    if (input < 0) {
-      return ts.factory.createPrefixUnaryExpression(
-        ts.SyntaxKind.MinusToken,
-        ts.factory.createNumericLiteral(Math.abs(input))
-      ) as T;
-    } else {
-      return ts.factory.createNumericLiteral(input) as T;
-    }
+    return input < 0 ? `-${Math.abs(input)}` : `${input}`;
   }
   if (typeof input === 'boolean') {
-    return (input ? ts.factory.createTrue() : ts.factory.createFalse()) as T;
+    return input ? 'true' : 'false';
   }
   // since we are parsing JSON, this should never happen
   throw new Error(`Unknown type: ${typeof input} `);
@@ -2319,19 +1952,15 @@ function generatePropertyAssignmentsFromObjectEntries(
   input: object,
   propertyAssignmentReplacer?: {
     keyToMatch: RegExp | string;
-    replacer: (
-      propertyAssignment: ts.PropertyAssignment,
-      propertyName: string
-    ) => ts.PropertyAssignment;
+    replacer: (propertyAssignment: string, propertyName: string) => string;
   }
-): ts.PropertyAssignment[] {
+): string[] {
   return Object.entries(input)
     .filter(([_, value]) => value !== undefined)
     .map(([key, value]) => {
-      const original = ts.factory.createPropertyAssignment(
-        isValidKey(key) ? key : ts.factory.createStringLiteral(key),
-        generateAst<ts.Expression>(value, propertyAssignmentReplacer)
-      );
+      const original = `${
+        isValidKey(key) ? key : generateStringLiteral(key)
+      }: ${generateAst(value, propertyAssignmentReplacer)}`;
       if (
         propertyAssignmentReplacer &&
         (typeof propertyAssignmentReplacer.keyToMatch === 'string'
@@ -2346,4 +1975,66 @@ function generatePropertyAssignmentsFromObjectEntries(
 
 function isValidKey(key: string): boolean {
   return /^[a-zA-Z0-9_]+$/.test(key);
+}
+
+const INDENTATION = '    ';
+
+function indentLines(text: string, indentation: string): string {
+  return text.replaceAll('\n', `\n${indentation}`);
+}
+
+export function generateObjectLiteral(
+  properties: string[],
+  multiLine: boolean
+): string {
+  if (properties.length === 0) {
+    return '{}';
+  }
+  return multiLine
+    ? `{\n${generateMultiLineList(properties)}\n}`
+    : `{ ${properties.map((p) => indentLines(p, INDENTATION)).join(', ')} }`;
+}
+
+function generateArrayLiteral(elements: string[]): string {
+  return elements.length === 0
+    ? '[]'
+    : `[\n${generateMultiLineList(elements)}\n]`;
+}
+
+function generateMultiLineList(items: string[]): string {
+  return items
+    .map((item) => INDENTATION + indentLines(item, INDENTATION))
+    .join(',\n');
+}
+
+function generateBracesContent(items: string[]): string {
+  return items.length === 0 ? '' : ` ${items.join(', ')} `;
+}
+
+// Escapes as TypeScript's printer does, non-ASCII characters included.
+export function generateStringLiteral(text: string): string {
+  const escaped = text
+    .replace(/[\\"\u0000-\u001f\u2028\u2029\u0085]/g, (char, offset) => {
+      if (char === '\0') {
+        return /[0-9]/.test(text.charAt(offset + 1)) ? '\\x00' : '\\0';
+      }
+      return escapedCharacters[char] ?? toUnicodeEscape(char);
+    })
+    .replace(/[^\u0000-\u007f]/g, toUnicodeEscape);
+  return `"${escaped}"`;
+}
+
+const escapedCharacters: Record<string, string> = {
+  '\t': '\\t',
+  '\v': '\\v',
+  '\f': '\\f',
+  '\b': '\\b',
+  '\r': '\\r',
+  '\n': '\\n',
+  '\\': '\\\\',
+  '"': '\\"',
+};
+
+function toUnicodeEscape(char: string): string {
+  return `\\u${char.charCodeAt(0).toString(16).toUpperCase().padStart(4, '0')}`;
 }

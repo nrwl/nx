@@ -1,13 +1,13 @@
 import {
   applyChangesToString,
   ChangeType,
-  ensurePackage,
   formatFiles,
   logger,
   type StringChange,
   type Tree,
   visitNotIgnoredFiles,
 } from '@nx/devkit';
+import { ensureTypescript, type TypescriptAst } from '@nx/devkit/internal';
 import type { Identifier, ImportSpecifier, Node, SourceFile } from 'typescript';
 
 const TS_EXTENSIONS = ['.ts', '.tsx', '.cts', '.mts'] as const;
@@ -15,7 +15,7 @@ const PACKAGE = '@nx/jest';
 const OLD_NAME = 'jestProjectGenerator';
 const NEW_NAME = 'configurationGenerator';
 
-let ts: typeof import('typescript') | undefined;
+let ts: TypescriptAst | undefined;
 
 export default async function rewriteJestProjectGenerator(
   tree: Tree
@@ -51,7 +51,7 @@ export default async function rewriteJestProjectGenerator(
 }
 
 export function rewriteJestProjectGeneratorUsage(source: string): string {
-  ts ??= ensurePackage<typeof import('typescript')>('typescript', '*');
+  ts ??= ensureTypescript();
   const sourceFile = ts.createSourceFile(
     'tmp.ts',
     source,

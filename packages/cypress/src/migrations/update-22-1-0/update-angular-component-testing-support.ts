@@ -1,16 +1,23 @@
 import {
   addDependenciesToPackageJson,
+  applyChangesToString,
+  ChangeType,
   createProjectGraphAsync,
   formatFiles,
   visitNotIgnoredFiles,
   type ProjectConfiguration,
   type ProjectGraph,
+  type StringChange,
   type Tree,
 } from '@nx/devkit';
-import { ensureTypescript } from '@nx/js/internal';
-import { ast, query, replace } from '@phenomnomnominal/tsquery';
+import {
+  ensureTypescript,
+  ast,
+  query,
+  type TypescriptAst,
+} from '@nx/devkit/internal';
 import { lt, valid } from 'semver';
-import type { ImportDeclaration, Printer } from 'typescript';
+import type { ImportDeclaration } from 'typescript';
 import { resolveCypressConfigObject } from '../../utils/config';
 import {
   cypressProjectConfigs,
@@ -20,8 +27,7 @@ import {
 const DEPRECATED_MAX_ANGULAR_VERSION = '18.0.0';
 const CYPRESS_ANGULAR_FALLBACK_VERSION = '^3.0.0';
 
-let printer: Printer;
-let ts: typeof import('typescript');
+let ts: TypescriptAst;
 
 export default async function updateAngularComponentTestingSupport(tree: Tree) {
   const projectGraph = await createProjectGraphAsync();
@@ -106,7 +112,6 @@ async function getMigrationInfo(
 
 function migrateProject(tree: Tree, projectConfig: ProjectConfiguration) {
   ts ??= ensureTypescript();
-  printer ??= ts.createPrinter();
 
   visitNotIgnoredFiles(tree, projectConfig.root, (filePath) => {
     if (!isJsTsFile(filePath) || !tree.exists(filePath)) {
@@ -114,36 +119,34 @@ function migrateProject(tree: Tree, projectConfig: ProjectConfiguration) {
     }
 
     const originalContent = tree.read(filePath, 'utf-8');
-    const sourceFile = ast(originalContent);
-    const updatedContent = replace(
+    const changes = query<ImportDeclaration>(
       originalContent,
-      'ImportDeclaration',
-      (node: ImportDeclaration) => {
-        if (
-          !ts.isStringLiteral(node.moduleSpecifier) ||
-          node.moduleSpecifier.text !== 'cypress/angular'
-        ) {
-          return node.getText();
-        }
+      'ImportDeclaration'
+    )
+      .filter(
+        ({ moduleSpecifier }) =>
+          ts.isStringLiteral(moduleSpecifier) &&
+          moduleSpecifier.text === 'cypress/angular'
+      )
+      .flatMap(({ moduleSpecifier }): StringChange[] => {
+        const quote = moduleSpecifier.getText()[0];
+        const start = moduleSpecifier.getStart();
+        return [
+          {
+            type: ChangeType.Delete,
+            start,
+            length: moduleSpecifier.getEnd() - start,
+          },
+          {
+            type: ChangeType.Insert,
+            index: start,
+            text: `${quote}@cypress/angular${quote}`,
+          },
+        ];
+      });
 
-        const updatedImport = ts.factory.updateImportDeclaration(
-          node,
-          node.modifiers,
-          node.importClause,
-          ts.factory.createStringLiteral('@cypress/angular'),
-          node.attributes
-        );
-
-        return printer.printNode(
-          ts.EmitHint.Unspecified,
-          updatedImport,
-          sourceFile
-        );
-      }
-    );
-
-    if (updatedContent !== originalContent) {
-      tree.write(filePath, updatedContent);
+    if (changes.length > 0) {
+      tree.write(filePath, applyChangesToString(originalContent, changes));
     }
   });
 }

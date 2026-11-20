@@ -2,6 +2,8 @@ import {
   AggregatedLog,
   migrateProjectExecutorsToPlugin,
   NoTargetsToMigrateError,
+  ast,
+  query,
 } from '@nx/devkit/internal';
 import {
   addDependenciesToPackageJson,
@@ -11,8 +13,7 @@ import {
   type Tree,
   logger as devkitLogger,
 } from '@nx/devkit';
-import { ast, query } from '@phenomnomnominal/tsquery';
-import * as ts from 'typescript';
+import type * as ts from 'typescript';
 import { createNodesV2, type WebpackPluginOptions } from '../../plugins/plugin';
 import {
   webpackCliVersion,

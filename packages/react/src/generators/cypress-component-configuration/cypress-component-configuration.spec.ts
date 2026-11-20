@@ -648,6 +648,7 @@ describe('React:CypressComponentTestConfiguration', () => {
     expect(config).toMatchInlineSnapshot(`
       "const { nxComponentTestingPreset } = require('@nx/react/plugins/component-testing');
       const { defineConfig } = require('cypress');
+
       module.exports = defineConfig({
         component: nxComponentTestingPreset(__filename, { bundler: 'vite', buildTarget: 'my-app:build' }),
       });
@@ -655,36 +656,39 @@ describe('React:CypressComponentTestConfiguration', () => {
     `);
     expect(tree.read('some-lib/cypress/support/component.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
-      "import { mount } from 'cypress/react';
-      // ***********************************************************
-      // This example support/component.ts is processed and
-      // loaded automatically before your test files.
-      //
-      // This is a great place to put global configuration and
-      // behavior that modifies Cypress.
-      //
-      // You can change the location of this file or turn off
-      // automatically serving support files with the
-      // 'supportFile' configuration option.
-      //
-      // You can read more here:
-      // https://on.cypress.io/configuration
-      // ***********************************************************
-      // Import commands.ts using ES2015 syntax:
-      import './commands';
-      // add component testing only related command here, such as mount
-      declare global {
-        // eslint-disable-next-line @typescript-eslint/no-namespace
-        namespace Cypress {
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          interface Chainable<Subject> {
-            mount: typeof mount;
+        "import { mount } from 'cypress/react';
+        // ***********************************************************
+        // This example support/component.ts is processed and
+        // loaded automatically before your test files.
+        //
+        // This is a great place to put global configuration and
+        // behavior that modifies Cypress.
+        //
+        // You can change the location of this file or turn off
+        // automatically serving support files with the
+        // 'supportFile' configuration option.
+        //
+        // You can read more here:
+        // https://on.cypress.io/configuration
+        // ***********************************************************
+
+        // Import commands.ts using ES2015 syntax:
+        import './commands';
+
+        // add component testing only related command here, such as mount
+        declare global {
+          // eslint-disable-next-line @typescript-eslint/no-namespace
+          namespace Cypress {
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            interface Chainable<Subject> {
+              mount: typeof mount;
+            }
           }
         }
-      }
-      Cypress.Commands.add('mount', mount);
-      "
-    `);
+
+        Cypress.Commands.add('mount', mount);
+        "
+      `);
   });
 
   it('should import "mount" from "cypress/react18" when cypress version is lower than v14', async () => {
@@ -741,35 +745,38 @@ describe('React:CypressComponentTestConfiguration', () => {
 
     expect(tree.read('some-lib/cypress/support/component.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
-      "import { mount } from 'cypress/react18';
-      // ***********************************************************
-      // This example support/component.ts is processed and
-      // loaded automatically before your test files.
-      //
-      // This is a great place to put global configuration and
-      // behavior that modifies Cypress.
-      //
-      // You can change the location of this file or turn off
-      // automatically serving support files with the
-      // 'supportFile' configuration option.
-      //
-      // You can read more here:
-      // https://on.cypress.io/configuration
-      // ***********************************************************
-      // Import commands.ts using ES2015 syntax:
-      import './commands';
-      // add component testing only related command here, such as mount
-      declare global {
-        // eslint-disable-next-line @typescript-eslint/no-namespace
-        namespace Cypress {
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          interface Chainable<Subject> {
-            mount: typeof mount;
+        "import { mount } from 'cypress/react18';
+        // ***********************************************************
+        // This example support/component.ts is processed and
+        // loaded automatically before your test files.
+        //
+        // This is a great place to put global configuration and
+        // behavior that modifies Cypress.
+        //
+        // You can change the location of this file or turn off
+        // automatically serving support files with the
+        // 'supportFile' configuration option.
+        //
+        // You can read more here:
+        // https://on.cypress.io/configuration
+        // ***********************************************************
+
+        // Import commands.ts using ES2015 syntax:
+        import './commands';
+
+        // add component testing only related command here, such as mount
+        declare global {
+          // eslint-disable-next-line @typescript-eslint/no-namespace
+          namespace Cypress {
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            interface Chainable<Subject> {
+              mount: typeof mount;
+            }
           }
         }
-      }
-      Cypress.Commands.add('mount', mount);
-      "
-    `);
+
+        Cypress.Commands.add('mount', mount);
+        "
+      `);
   });
 });

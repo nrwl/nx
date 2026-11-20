@@ -1,7 +1,10 @@
 import * as utils from './ast-utils';
-import * as ts from 'typescript';
+import { ensureTypescript } from '@nx/devkit/internal';
+import type * as ts from 'typescript';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { applyChangesToString, Tree } from '@nx/devkit';
+
+const tsModule = ensureTypescript();
 
 describe('findDefaultExport', () => {
   it('should find exported variable', () => {
@@ -9,10 +12,10 @@ describe('findDefaultExport', () => {
         const main = () => {}; 
         export default main;
       `;
-    const source = ts.createSourceFile(
+    const source = tsModule.createSourceFile(
       'test.ts',
       sourceCode,
-      ts.ScriptTarget.Latest,
+      tsModule.ScriptTarget.Latest,
       true
     );
 
@@ -27,10 +30,10 @@ describe('findDefaultExport', () => {
         function main() {} 
         export default main;
       `;
-    const source = ts.createSourceFile(
+    const source = tsModule.createSourceFile(
       'test.ts',
       sourceCode,
-      ts.ScriptTarget.Latest,
+      tsModule.ScriptTarget.Latest,
       true
     );
 
@@ -44,10 +47,10 @@ describe('findDefaultExport', () => {
     const sourceCode = `
         export default function main() {};
       `;
-    const source = ts.createSourceFile(
+    const source = tsModule.createSourceFile(
       'test.ts',
       sourceCode,
-      ts.ScriptTarget.Latest,
+      tsModule.ScriptTarget.Latest,
       true
     );
 
@@ -61,10 +64,10 @@ describe('findDefaultExport', () => {
     const sourceCode = `
         export default class Main {};
       `;
-    const source = ts.createSourceFile(
+    const source = tsModule.createSourceFile(
       'test.ts',
       sourceCode,
-      ts.ScriptTarget.Latest,
+      tsModule.ScriptTarget.Latest,
       true
     );
 
@@ -79,10 +82,10 @@ describe('findDefaultExport', () => {
         class Main {};
         export default Main;
       `;
-    const source = ts.createSourceFile(
+    const source = tsModule.createSourceFile(
       'test.ts',
       sourceCode,
-      ts.ScriptTarget.Latest,
+      tsModule.ScriptTarget.Latest,
       true
     );
 
@@ -115,10 +118,10 @@ const App = () => (
 export default App; 
       `;
     tree.write('/app.tsx', sourceCode);
-    const source = ts.createSourceFile(
+    const source = tsModule.createSourceFile(
       '/app.tsx',
       sourceCode,
-      ts.ScriptTarget.Latest,
+      tsModule.ScriptTarget.Latest,
       true
     );
 
@@ -153,10 +156,10 @@ const App = () => (
 export default App; 
       `;
     tree.write('/app.tsx', sourceCode);
-    const source = ts.createSourceFile(
+    const source = tsModule.createSourceFile(
       '/app.tsx',
       sourceCode,
-      ts.ScriptTarget.Latest,
+      tsModule.ScriptTarget.Latest,
       true
     );
 
@@ -193,10 +196,10 @@ import { App } from '@example/my-app';
 ReactDOM.render(<App/>, document.getElementById('root'));
       `;
     tree.write('/main.tsx', sourceCode);
-    const source = ts.createSourceFile(
+    const source = tsModule.createSourceFile(
       '/main.tsx',
       sourceCode,
-      ts.ScriptTarget.Latest,
+      tsModule.ScriptTarget.Latest,
       true
     );
 
@@ -226,10 +229,10 @@ import ReactDOM from 'react-dom';
 ReactDOM.render(<div/>, document.getElementById('root'));
       `;
     tree.write('/main.tsx', sourceCode);
-    const source = ts.createSourceFile(
+    const source = tsModule.createSourceFile(
       '/main.tsx',
       sourceCode,
-      ts.ScriptTarget.Latest,
+      tsModule.ScriptTarget.Latest,
       true
     );
 
@@ -245,10 +248,10 @@ const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(<div/>);
       `;
     tree.write('/main.tsx', sourceCode);
-    const source = ts.createSourceFile(
+    const source = tsModule.createSourceFile(
       '/main.tsx',
       sourceCode,
-      ts.ScriptTarget.Latest,
+      tsModule.ScriptTarget.Latest,
       true
     );
 
@@ -263,10 +266,10 @@ import { render } from 'react-dom';
 render(<div/>, document.getElementById('root'));
       `;
     tree.write('/main.tsx', sourceCode);
-    const source = ts.createSourceFile(
+    const source = tsModule.createSourceFile(
       '/main.tsx',
       sourceCode,
-      ts.ScriptTarget.Latest,
+      tsModule.ScriptTarget.Latest,
       true
     );
 
@@ -277,10 +280,10 @@ render(<div/>, document.getElementById('root'));
   it('should return null when not found', () => {
     const sourceCode = ``;
     tree.write('/main.tsx', sourceCode);
-    const source = ts.createSourceFile(
+    const source = tsModule.createSourceFile(
       '/main.tsx',
       sourceCode,
-      ts.ScriptTarget.Latest,
+      tsModule.ScriptTarget.Latest,
       true
     );
 
@@ -308,10 +311,10 @@ import { App } from '@example/my-app';
 ReactDOM.render(<App/>, document.getElementById('root'));
       `;
     tree.write('/main.tsx', sourceCode);
-    const source = ts.createSourceFile(
+    const source = tsModule.createSourceFile(
       '/main.tsx',
       sourceCode,
-      ts.ScriptTarget.Latest,
+      tsModule.ScriptTarget.Latest,
       true
     );
 
@@ -344,10 +347,10 @@ const store = configureStore({
 });
       `;
     tree.write('/main.tsx', sourceCode);
-    const source = ts.createSourceFile(
+    const source = tsModule.createSourceFile(
       '/main.tsx',
       sourceCode,
-      ts.ScriptTarget.Latest,
+      tsModule.ScriptTarget.Latest,
       true
     );
 
@@ -371,10 +374,10 @@ import { createStore, combineReducer } from 'redux';
 const store = createStore(combineReducer({}));
       `;
     tree.write('/main.tsx', sourceCode);
-    const source = ts.createSourceFile(
+    const source = tsModule.createSourceFile(
       '/main.tsx',
       sourceCode,
-      ts.ScriptTarget.Latest,
+      tsModule.ScriptTarget.Latest,
       true
     );
 
@@ -463,10 +466,10 @@ describe('findExportDeclarationsForJsx', () => {
   it.each(testConfigs)(
     'should find the component when: $testName',
     ({ src, expectedName }) => {
-      const source = ts.createSourceFile(
+      const source = tsModule.createSourceFile(
         'some-component.tsx',
         src,
-        ts.ScriptTarget.Latest,
+        tsModule.ScriptTarget.Latest,
         true
       );
 
@@ -565,10 +568,10 @@ describe('getComponentNode', () => {
   it.each(testConfigs)(
     'should find the component when: $testName',
     ({ src, expectedName }) => {
-      const source = ts.createSourceFile(
+      const source = tsModule.createSourceFile(
         'some-component.tsx',
         src,
-        ts.ScriptTarget.Latest,
+        tsModule.ScriptTarget.Latest,
         true
       );
 
@@ -580,10 +583,10 @@ describe('getComponentNode', () => {
   );
 
   it('should return null if there is no component', () => {
-    const source = ts.createSourceFile(
+    const source = tsModule.createSourceFile(
       'some-component.tsx',
       `console.log('hi there');`,
-      ts.ScriptTarget.Latest,
+      tsModule.ScriptTarget.Latest,
       true
     );
 
@@ -600,10 +603,10 @@ describe('parseComponentPropsInfo', () => {
       age: number;
     }
     export function Test(props: TestProps) {}`;
-    const source = ts.createSourceFile(
+    const source = tsModule.createSourceFile(
       'some-component.tsx',
       sourceCode,
-      ts.ScriptTarget.Latest,
+      tsModule.ScriptTarget.Latest,
       true
     );
 
@@ -628,10 +631,10 @@ describe('parseComponentPropsInfo', () => {
       age: number;
     }
     export function Test({ name, age }: TestProps) {}`;
-    const source = ts.createSourceFile(
+    const source = tsModule.createSourceFile(
       'some-component.tsx',
       sourceCode,
-      ts.ScriptTarget.Latest,
+      tsModule.ScriptTarget.Latest,
       true
     );
 
@@ -656,10 +659,10 @@ describe('parseComponentPropsInfo', () => {
       age: number;
     }
     export function Test(props: TestProps) {}`;
-    const source = ts.createSourceFile(
+    const source = tsModule.createSourceFile(
       'some-component.tsx',
       sourceCode,
-      ts.ScriptTarget.Latest,
+      tsModule.ScriptTarget.Latest,
       true
     );
 
@@ -684,10 +687,10 @@ describe('parseComponentPropsInfo', () => {
       age: number;
     }
     export function Test({ name, age }: TestProps) {}`;
-    const source = ts.createSourceFile(
+    const source = tsModule.createSourceFile(
       'some-component.tsx',
       sourceCode,
-      ts.ScriptTarget.Latest,
+      tsModule.ScriptTarget.Latest,
       true
     );
 
@@ -708,10 +711,10 @@ describe('parseComponentPropsInfo', () => {
 
   it('should parse props from a function with typed props using an inline type', () => {
     const sourceCode = `export function Test(props: { name: string; age: number }) {}`;
-    const source = ts.createSourceFile(
+    const source = tsModule.createSourceFile(
       'some-component.tsx',
       sourceCode,
-      ts.ScriptTarget.Latest,
+      tsModule.ScriptTarget.Latest,
       true
     );
 
@@ -735,10 +738,10 @@ describe('parseComponentPropsInfo', () => {
 
   it('should parse props from a function with destructured typed props using an inline type', () => {
     const sourceCode = `export function Test({ name, age }: { name: string; age: number }) {}`;
-    const source = ts.createSourceFile(
+    const source = tsModule.createSourceFile(
       'some-component.tsx',
       sourceCode,
-      ts.ScriptTarget.Latest,
+      tsModule.ScriptTarget.Latest,
       true
     );
 
@@ -761,10 +764,10 @@ describe('parseComponentPropsInfo', () => {
 
   it('should parse props from a function with no type', () => {
     const sourceCode = `export function Test({ name, age }) {}`;
-    const source = ts.createSourceFile(
+    const source = tsModule.createSourceFile(
       'some-component.tsx',
       sourceCode,
-      ts.ScriptTarget.Latest,
+      tsModule.ScriptTarget.Latest,
       true
     );
 
@@ -784,10 +787,10 @@ describe('parseComponentPropsInfo', () => {
 
   it('should return null when the props are not destructured and have not type', () => {
     const sourceCode = `export function Test(props) {}`;
-    const source = ts.createSourceFile(
+    const source = tsModule.createSourceFile(
       'some-component.tsx',
       sourceCode,
-      ts.ScriptTarget.Latest,
+      tsModule.ScriptTarget.Latest,
       true
     );
 
@@ -798,10 +801,10 @@ describe('parseComponentPropsInfo', () => {
 
   it('should return null when there are no props', () => {
     const sourceCode = `export function Test() {}`;
-    const source = ts.createSourceFile(
+    const source = tsModule.createSourceFile(
       'some-component.tsx',
       sourceCode,
-      ts.ScriptTarget.Latest,
+      tsModule.ScriptTarget.Latest,
       true
     );
 

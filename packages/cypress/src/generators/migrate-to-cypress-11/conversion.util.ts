@@ -11,9 +11,10 @@ import {
 import { ensureTypescript, getProjectSourceRoot } from '@nx/js/internal';
 import { basename, dirname, extname, relative } from 'path';
 import type { StringLiteral } from 'typescript';
+import type { TypescriptAst } from '@nx/devkit/internal';
 
-let tsModule: typeof import('typescript');
-let tsquery: typeof import('@phenomnomnominal/tsquery').tsquery;
+let tsModule: TypescriptAst;
+let tsquery: typeof import('@nx/devkit/internal').tsquery;
 
 const validFilesEndingsToUpdate = [
   '.js',
@@ -273,7 +274,7 @@ export function updateImports(
   }
   if (!tsquery) {
     ensureTypescript();
-    tsquery = require('@phenomnomnominal/tsquery').tsquery;
+    tsquery = require('@nx/devkit/internal').tsquery;
   }
   const { isCallExpression, isExportDeclaration, isImportDeclaration } =
     tsModule;

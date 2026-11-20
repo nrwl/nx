@@ -1,4 +1,10 @@
-import { forEachExecutorOptions } from '@nx/devkit/internal';
+import {
+  ensureTypescript,
+  forEachExecutorOptions,
+  ast,
+  query,
+  type TypescriptAst,
+} from '@nx/devkit/internal';
 import {
   type Tree,
   formatFiles,
@@ -6,8 +12,9 @@ import {
   ChangeType,
   type StringChange,
 } from '@nx/devkit';
-import { ast, query } from '@phenomnomnominal/tsquery';
-import * as ts from 'typescript';
+import type * as ts from 'typescript';
+
+let tsModule: TypescriptAst;
 
 const withSvgrFunctionForWithReact = `
 
@@ -118,6 +125,7 @@ function withSvgr(svgrOptions = {}) {
 `;
 
 export default async function addSvgrToWebpackConfig(tree: Tree) {
+  tsModule ??= ensureTypescript();
   const projects = new Map<
     string,
     { svgrOptions?: any; isWithReact: boolean }
@@ -149,35 +157,35 @@ export default async function addSvgrToWebpackConfig(tree: Tree) {
           if (callExpr.arguments.length === 0) return;
 
           const arg = callExpr.arguments[0];
-          if (!ts.isObjectLiteralExpression(arg)) return;
+          if (!tsModule.isObjectLiteralExpression(arg)) return;
 
           const svgrProp = arg.properties.find(
             (prop) =>
-              ts.isPropertyAssignment(prop) &&
-              ts.isIdentifier(prop.name) &&
+              tsModule.isPropertyAssignment(prop) &&
+              tsModule.isIdentifier(prop.name) &&
               prop.name.text === 'svgr'
           ) as ts.PropertyAssignment | undefined;
 
           if (svgrProp) {
             let svgrValue: boolean | Record<string, unknown> | undefined;
-            if (ts.isObjectLiteralExpression(svgrProp.initializer)) {
+            if (tsModule.isObjectLiteralExpression(svgrProp.initializer)) {
               svgrValue = {};
               for (const prop of svgrProp.initializer.properties) {
-                if (!ts.isPropertyAssignment(prop)) continue;
-                if (!ts.isIdentifier(prop.name)) continue;
+                if (!tsModule.isPropertyAssignment(prop)) continue;
+                if (!tsModule.isIdentifier(prop.name)) continue;
 
                 const key = prop.name.text;
-                if (prop.initializer.kind === ts.SyntaxKind.TrueKeyword) {
+                if (prop.initializer.kind === tsModule.SyntaxKind.TrueKeyword) {
                   svgrValue[key] = true;
                 } else if (
-                  prop.initializer.kind === ts.SyntaxKind.FalseKeyword
+                  prop.initializer.kind === tsModule.SyntaxKind.FalseKeyword
                 ) {
                   svgrValue[key] = false;
                 }
               }
             } else {
               svgrValue =
-                svgrProp.initializer.kind === ts.SyntaxKind.TrueKeyword;
+                svgrProp.initializer.kind === tsModule.SyntaxKind.TrueKeyword;
             }
 
             projects.set(webpackConfigPath, {
@@ -199,38 +207,38 @@ export default async function addSvgrToWebpackConfig(tree: Tree) {
           if (!newExpr.arguments || newExpr.arguments.length === 0) return;
 
           const arg = newExpr.arguments[0];
-          if (!ts.isObjectLiteralExpression(arg)) return;
+          if (!tsModule.isObjectLiteralExpression(arg)) return;
 
           const svgrProp = arg.properties.find(
             (prop) =>
-              ts.isPropertyAssignment(prop) &&
-              ts.isIdentifier(prop.name) &&
+              tsModule.isPropertyAssignment(prop) &&
+              tsModule.isIdentifier(prop.name) &&
               prop.name.text === 'svgr'
           ) as ts.PropertyAssignment | undefined;
 
           if (svgrProp) {
             let svgrValue: boolean | Record<string, unknown> | undefined;
-            if (ts.isObjectLiteralExpression(svgrProp.initializer)) {
+            if (tsModule.isObjectLiteralExpression(svgrProp.initializer)) {
               svgrValue = {};
               for (const prop of svgrProp.initializer.properties) {
-                if (!ts.isPropertyAssignment(prop)) continue;
-                if (!ts.isIdentifier(prop.name)) continue;
+                if (!tsModule.isPropertyAssignment(prop)) continue;
+                if (!tsModule.isIdentifier(prop.name)) continue;
 
                 const key = prop.name.text;
-                if (prop.initializer.kind === ts.SyntaxKind.TrueKeyword) {
+                if (prop.initializer.kind === tsModule.SyntaxKind.TrueKeyword) {
                   svgrValue[key] = true;
                 } else if (
-                  prop.initializer.kind === ts.SyntaxKind.FalseKeyword
+                  prop.initializer.kind === tsModule.SyntaxKind.FalseKeyword
                 ) {
                   svgrValue[key] = false;
                 }
               }
             } else if (
-              svgrProp.initializer.kind === ts.SyntaxKind.TrueKeyword
+              svgrProp.initializer.kind === tsModule.SyntaxKind.TrueKeyword
             ) {
               svgrValue = true;
             } else if (
-              svgrProp.initializer.kind === ts.SyntaxKind.FalseKeyword
+              svgrProp.initializer.kind === tsModule.SyntaxKind.FalseKeyword
             ) {
               svgrValue = false;
             }
@@ -313,11 +321,11 @@ export default async function addSvgrToWebpackConfig(tree: Tree) {
         const callExpr = withReactCalls[0] as ts.CallExpression;
         if (callExpr.arguments.length > 0) {
           const arg = callExpr.arguments[0];
-          if (ts.isObjectLiteralExpression(arg)) {
+          if (tsModule.isObjectLiteralExpression(arg)) {
             const svgrProp = arg.properties.find(
               (prop) =>
-                ts.isPropertyAssignment(prop) &&
-                ts.isIdentifier(prop.name) &&
+                tsModule.isPropertyAssignment(prop) &&
+                tsModule.isIdentifier(prop.name) &&
                 prop.name.text === 'svgr'
             ) as ts.PropertyAssignment | undefined;
 
@@ -406,11 +414,11 @@ export default async function addSvgrToWebpackConfig(tree: Tree) {
         const newExpr = pluginCalls[0] as ts.NewExpression;
         if (newExpr.arguments && newExpr.arguments.length > 0) {
           const arg = newExpr.arguments[0];
-          if (ts.isObjectLiteralExpression(arg)) {
+          if (tsModule.isObjectLiteralExpression(arg)) {
             const svgrProp = arg.properties.find(
               (prop) =>
-                ts.isPropertyAssignment(prop) &&
-                ts.isIdentifier(prop.name) &&
+                tsModule.isPropertyAssignment(prop) &&
+                tsModule.isIdentifier(prop.name) &&
                 prop.name.text === 'svgr'
             ) as ts.PropertyAssignment | undefined;
 
@@ -469,10 +477,10 @@ export default async function addSvgrToWebpackConfig(tree: Tree) {
           const binaryExpr = node as ts.BinaryExpression;
           const left = binaryExpr.left;
           return (
-            ts.isPropertyAccessExpression(left) &&
-            ts.isIdentifier(left.expression) &&
+            tsModule.isPropertyAccessExpression(left) &&
+            tsModule.isIdentifier(left.expression) &&
             left.expression.text === 'module' &&
-            ts.isIdentifier(left.name) &&
+            tsModule.isIdentifier(left.name) &&
             left.name.text === 'exports'
           );
         }) as ts.BinaryExpression | undefined;

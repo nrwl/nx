@@ -16,8 +16,9 @@ import {
 import { getComponentPropDefaults } from '../../utils/component-props';
 import { getUiFramework } from '../../utils/framework';
 import { join } from 'path';
+import type { TypescriptAst } from '@nx/devkit/internal';
 
-let tsModule: typeof import('typescript');
+let tsModule: TypescriptAst;
 
 export interface CreateComponentStoriesFileSchema {
   project: string;

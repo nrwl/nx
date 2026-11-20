@@ -4,7 +4,7 @@ import {
   formatFiles,
   visitNotIgnoredFiles,
 } from '@nx/devkit';
-import { ast, query } from '@phenomnomnominal/tsquery';
+import { ast, query } from '@nx/devkit/internal';
 import { getProjectsFilteredByDependencies } from '../utils/projects';
 import { nxVersion } from '../../utils/versions';
 

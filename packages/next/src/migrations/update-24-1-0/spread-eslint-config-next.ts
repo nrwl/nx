@@ -9,6 +9,7 @@ import {
 } from '@nx/devkit';
 import { addImportToFlatConfig, isFlatConfig } from '@nx/eslint/internal';
 import { ensureTypescript } from '@nx/js/internal';
+import type { TypescriptAst } from '@nx/devkit/internal';
 import type * as ts from 'typescript';
 import {
   findConfigWithConflictingPlugin,
@@ -42,7 +43,7 @@ const SETUP_MODULES = new Set([
 ]);
 const RULE_FROM_NEXT_REGISTERED_PLUGIN = /^(?:react|jsx-a11y|import)\/[\w-]+$/;
 
-let tsModule: typeof import('typescript');
+let tsModule: TypescriptAst;
 
 export default async function update(
   tree: Tree

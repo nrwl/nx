@@ -1,20 +1,35 @@
 import {
+  ensureTypescript,
+  printNode,
   processTargetOutputs,
   toProjectRelativePath,
+  ast,
+  query,
+  type TypescriptAst,
 } from '@nx/devkit/internal';
 import {
   parseTargetString,
   type TargetConfiguration,
   type Tree,
 } from '@nx/devkit';
-import { ast, query } from '@phenomnomnominal/tsquery';
 import { basename, resolve } from 'path';
-import * as ts from 'typescript';
+import type {
+  ObjectLiteralExpression,
+  PropertyAssignment,
+  SourceFile,
+  VariableStatement,
+} from 'typescript';
 import type { RspackOptionsNormalized } from '@rspack/core';
 import { buildServePath } from '../../../executors/dev-server/lib/serve-path';
 import type { DevServerExecutorSchema as DevServerExecutorOptions } from '../../../executors/dev-server/schema';
-import { hasMigratedConfigValues, toPropertyAssignment } from './ast';
+import {
+  appendProperties,
+  hasMigratedConfigValues,
+  toPropertyAssignment,
+} from './ast';
 import type { MigrationContext, TransformerContext } from './types';
+
+let ts: TypescriptAst;
 
 export function servePostTargetTransformerFactory(
   migrationContext: MigrationContext
@@ -193,7 +208,7 @@ function updateRspackConfig(
   devServerOptions: ExtractedOptions,
   context: TransformerContext
 ): void {
-  let sourceFile: ts.SourceFile;
+  let sourceFile: SourceFile;
   let rspackConfigText: string;
 
   const updateSources = () => {
@@ -229,15 +244,16 @@ function updateRspackConfig(
 function setOptionsInRspackConfig(
   tree: Tree,
   text: string,
-  sourceFile: ts.SourceFile,
+  sourceFile: SourceFile,
   rspackConfigPath: string,
   devServerOptions: ExtractedOptions
 ) {
+  ts ??= ensureTypescript();
   const { default: defaultOptions, ...configurationOptions } = devServerOptions;
 
   const configValuesSelector =
     'VariableDeclaration:has(Identifier[name=configValues]) ObjectLiteralExpression';
-  const configValuesObject = query<ts.ObjectLiteralExpression>(
+  const configValuesObject = query<ObjectLiteralExpression>(
     sourceFile,
     configValuesSelector
   )[0];
@@ -253,52 +269,43 @@ function setOptionsInRspackConfig(
    *    ...
    *  },
    */
-  const updatedConfigValuesObject = ts.factory.updateObjectLiteralExpression(
-    configValuesObject,
-    [
-      ...configValuesObject.properties,
-      ts.factory.createPropertyAssignment(
-        'serve',
-        ts.factory.createObjectLiteralExpression([
+  const serveProperty = printNode(
+    ts.factory.createPropertyAssignment(
+      'serve',
+      ts.factory.createObjectLiteralExpression([
+        ts.factory.createPropertyAssignment(
+          'default',
+          ts.factory.createObjectLiteralExpression(
+            Object.entries(defaultOptions).map(([key, value]) =>
+              toPropertyAssignment(key, value)
+            )
+          )
+        ),
+        ...Object.entries(configurationOptions).map(([key, value]) =>
           ts.factory.createPropertyAssignment(
-            'default',
+            key,
             ts.factory.createObjectLiteralExpression(
-              Object.entries(defaultOptions).map(([key, value]) =>
+              Object.entries(value).map(([key, value]) =>
                 toPropertyAssignment(key, value)
               )
             )
-          ),
-          ...(configurationOptions
-            ? Object.entries(configurationOptions).map(([key, value]) =>
-                ts.factory.createPropertyAssignment(
-                  key,
-                  ts.factory.createObjectLiteralExpression(
-                    Object.entries(value).map(([key, value]) =>
-                      toPropertyAssignment(key, value)
-                    )
-                  )
-                )
-              )
-            : []),
-        ])
-      ),
-    ]
+          )
+        ),
+      ])
+    )
   );
 
-  text = `${text.slice(0, configValuesObject.getStart())}${ts
-    .createPrinter()
-    .printNode(
-      ts.EmitHint.Unspecified,
-      updatedConfigValuesObject,
-      sourceFile
-    )}${text.slice(configValuesObject.getEnd())}`;
+  text = `${text.slice(0, configValuesObject.getStart())}${appendProperties(
+    configValuesObject,
+    [serveProperty]
+  )}${text.slice(configValuesObject.getEnd())}`;
 
   tree.write(rspackConfigPath, text);
 
   sourceFile = ast(text);
   const buildOptionsSelector =
     'VariableStatement:has(VariableDeclaration:has(Identifier[name=buildOptions]))';
-  const buildOptionsStatement = query<ts.VariableStatement>(
+  const buildOptionsStatement = query<VariableStatement>(
     sourceFile,
     buildOptionsSelector
   )[0];
@@ -315,13 +322,13 @@ function setOptionsInRspackConfig(
 function setDevServerOptionsInRspackConfig(
   tree: Tree,
   text: string,
-  sourceFile: ts.SourceFile,
+  sourceFile: SourceFile,
   rspackConfigPath: string,
   context: TransformerContext
 ) {
   const rspackConfigDevServerSelector =
     'ObjectLiteralExpression > PropertyAssignment:has(Identifier[name=devServer])';
-  const rspackConfigDevServer = query<ts.PropertyAssignment>(
+  const rspackConfigDevServer = query<PropertyAssignment>(
     sourceFile,
     rspackConfigDevServerSelector
   )[0];
@@ -347,29 +354,14 @@ function setDevServerOptionsInRspackConfig(
 
   const rspackConfigSelector =
     'ObjectLiteralExpression:has(PropertyAssignment:has(Identifier[name=plugins]))';
-  const rspackConfig = query<ts.ObjectLiteralExpression>(
+  const rspackConfig = query<ObjectLiteralExpression>(
     sourceFile,
     rspackConfigSelector
   )[0];
 
-  const updatedRspackConfig = ts.factory.updateObjectLiteralExpression(
-    rspackConfig,
-    [
-      ts.factory.createPropertyAssignment(
-        'devServer',
-        ts.factory.createIdentifier('devServerOptions')
-      ),
-      ...rspackConfig.properties,
-    ]
-  );
-
-  text = `${text.slice(0, rspackConfig.getStart())}${ts
-    .createPrinter()
-    .printNode(
-      ts.EmitHint.Unspecified,
-      updatedRspackConfig,
-      sourceFile
-    )}${text.slice(rspackConfig.getEnd())}`;
+  const afterBrace = rspackConfig.getStart() + 1;
+  const whitespace = text.slice(afterBrace).match(/^\s*/)[0];
+  text = `${text.slice(0, afterBrace)}${whitespace}devServer: devServerOptions,${text.slice(afterBrace)}`;
 
   tree.write(rspackConfigPath, text);
 }

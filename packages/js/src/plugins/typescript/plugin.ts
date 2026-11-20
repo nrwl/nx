@@ -6,9 +6,9 @@ import {
   hashObject,
   getLockFileName,
   workspaceDataDirectory,
-  getNxRequirePaths,
   readLockFileSnapshot,
   type PackageJson,
+  readTsConfigWithoutFiles,
 } from '@nx/devkit/internal';
 import {
   createNodesFromFiles,
@@ -42,7 +42,7 @@ import {
   resolve,
 } from 'node:path';
 import picomatch = require('picomatch');
-import type { Extension, ParsedCommandLine, System } from 'typescript';
+import type { ParsedCommandLine } from 'typescript';
 import {
   addBuildAndWatchDepsTargets,
   isValidPackageJsonBuildConfig,
@@ -124,23 +124,6 @@ interface ConfigContext {
   basenameNoExt: string;
   dirname: string;
   project: ProjectContext;
-}
-
-let ts: typeof import('typescript');
-const resolvedTypescriptPaths: Record<string, string> = {};
-
-function resolveTypescriptPath(
-  projectRoot: string,
-  workspaceRoot: string
-): string {
-  // Resolve from projectRoot first, then workspace paths, with __dirname as a
-  // last resort. Required so the lookup works under layouts where @nx/js's real
-  // path is outside the workspace tree (e.g. pnpm's enableGlobalVirtualStore),
-  // since typescript is not a declared dep.
-  resolvedTypescriptPaths[projectRoot] ??= require.resolve('typescript', {
-    paths: [projectRoot, ...getNxRequirePaths(workspaceRoot), __dirname],
-  });
-  return resolvedTypescriptPaths[projectRoot];
 }
 
 const TSCONFIG_CACHE_VERSION = 3;
@@ -908,32 +891,29 @@ function getInputs(
   ];
   const absoluteProjectRoot = config.project.absolute;
 
-  if (!ts) {
-    ts = require(resolveTypescriptPath(absoluteProjectRoot, workspaceRoot));
-  }
   // https://github.com/microsoft/TypeScript/blob/19b777260b26aac5707b1efd34202054164d4a9d/src/compiler/utilities.ts#L9869
-  const supportedTSExtensions: readonly Extension[] = [
-    ts.Extension.Ts,
-    ts.Extension.Tsx,
-    ts.Extension.Dts,
-    ts.Extension.Cts,
-    ts.Extension.Dcts,
-    ts.Extension.Mts,
-    ts.Extension.Dmts,
+  const supportedTSExtensions: readonly string[] = [
+    '.ts',
+    '.tsx',
+    '.d.ts',
+    '.cts',
+    '.d.cts',
+    '.mts',
+    '.d.mts',
   ];
   // https://github.com/microsoft/TypeScript/blob/19b777260b26aac5707b1efd34202054164d4a9d/src/compiler/utilities.ts#L9878
-  const allSupportedExtensions: readonly Extension[] = [
-    ts.Extension.Ts,
-    ts.Extension.Tsx,
-    ts.Extension.Dts,
-    ts.Extension.Js,
-    ts.Extension.Jsx,
-    ts.Extension.Cts,
-    ts.Extension.Dcts,
-    ts.Extension.Cjs,
-    ts.Extension.Mts,
-    ts.Extension.Dmts,
-    ts.Extension.Mjs,
+  const allSupportedExtensions: readonly string[] = [
+    '.ts',
+    '.tsx',
+    '.d.ts',
+    '.js',
+    '.jsx',
+    '.cts',
+    '.d.cts',
+    '.cjs',
+    '.mts',
+    '.d.mts',
+    '.mjs',
   ];
 
   // A spec is an implicit glob over a directory if its last component has no
@@ -952,7 +932,7 @@ function getInputs(
       ? [...allSupportedExtensions]
       : [...supportedTSExtensions];
     if (config.options.resolveJsonModule) {
-      extensions.push(ts.Extension.Json);
+      extensions.push('.json');
     }
 
     // An "includes" path "foo" is implicitly a glob "foo/**/*"
@@ -1826,30 +1806,16 @@ function readTsConfig(
   workspaceRoot: string,
   cache: InvocationCache
 ): ParsedCommandLine {
-  if (!ts) {
-    ts = require(resolveTypescriptPath(workspaceRoot, workspaceRoot));
-  }
-
   // Normalize to forward slashes for TypeScript compatibility on Windows.
   // TypeScript's parser normalizes paths inconsistently — diagnostics use
   // normalized paths but the source file retains the original, causing
   // assertion failures when backslashes are present.
   tsConfigPath = tsConfigPath.replaceAll('\\', '/');
 
-  const tsSys: System = {
-    ...ts.sys,
+  // The file names are never used, so the source-file scan is skipped.
+  return readTsConfigWithoutFiles(tsConfigPath, {
     readFile: (path) => readFile(path, workspaceRoot, cache),
-    readDirectory: () => [],
-  };
-  const readResult = ts.readConfigFile(tsConfigPath, tsSys.readFile);
-
-  // read with a custom host that won't read directories which is only used
-  // to identify the filenames included in the program, which we won't use
-  return ts.parseJsonConfigFileContent(
-    readResult.config,
-    tsSys,
-    dirname(tsConfigPath)
-  );
+  });
 }
 
 /**

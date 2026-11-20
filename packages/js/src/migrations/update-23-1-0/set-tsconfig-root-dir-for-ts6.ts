@@ -7,7 +7,7 @@ import {
 import { basename, dirname, join, posix } from 'node:path';
 import { applyEdits, modify } from 'jsonc-parser';
 import type * as ts from 'typescript';
-import { ensureTypescript } from '../../utils/typescript/ensure-typescript';
+import { ensureClassicTypescript } from '../../utils/typescript/ensure-typescript';
 
 const FORMATTING_OPTIONS = {
   formattingOptions: { keepLines: true, insertSpaces: true, tabSize: 2 },
@@ -67,7 +67,9 @@ interface Candidate {
  * (gated by `requires`).
  */
 export default async function (tree: Tree): Promise<void> {
-  tsModule ??= ensureTypescript();
+  tsModule ??= ensureClassicTypescript(
+    'The "set-tsconfig-root-dir-for-ts6" migration'
+  );
   const ts = tsModule;
 
   const parseConfigHost: ts.ParseConfigFileHost = {

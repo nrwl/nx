@@ -1,11 +1,18 @@
-import { formatFiles, visitNotIgnoredFiles, type Tree } from '@nx/devkit';
-import { ensureTypescript } from '@nx/js/internal';
-import { ast, replace } from '@phenomnomnominal/tsquery';
-import type { CallExpression, Printer, PropertyName } from 'typescript';
-import { cypressProjectConfigs } from '../../utils/migrations';
+import {
+  applyChangesToString,
+  formatFiles,
+  visitNotIgnoredFiles,
+  type Tree,
+} from '@nx/devkit';
+import {
+  ensureTypescript,
+  query,
+  type TypescriptAst,
+} from '@nx/devkit/internal';
+import type { CallExpression, PropertyName } from 'typescript';
+import { cypressProjectConfigs, removeProperty } from '../../utils/migrations';
 
-let printer: Printer;
-let ts: typeof import('typescript');
+let ts: TypescriptAst;
 
 export default async function updateSelectorPlaygroundApi(tree: Tree) {
   for await (const { projectConfig } of cypressProjectConfigs(tree)) {
@@ -44,94 +51,63 @@ function migrateSelectorPlaygroundApi(fileContent: string): string {
   }
 
   ts ??= ensureTypescript();
-  printer ??= ts.createPrinter();
 
-  const sourceFile = ast(updated);
-  let hasChanges = false;
-
-  const result = replace(
+  const changes = query<CallExpression>(
     updated,
-    'CallExpression:has(Identifier[name="defaults"])',
-    (node: CallExpression) => {
-      if (!ts.isPropertyAccessExpression(node.expression)) {
-        return node.getText();
-      }
-
-      if (node.expression.name.getText() !== 'defaults') {
-        return node.getText();
-      }
-
-      const selectorExpr = node.expression.expression;
-      if (!ts.isPropertyAccessExpression(selectorExpr)) {
-        return node.getText();
-      }
-
-      if (!ts.isIdentifier(selectorExpr.expression)) {
-        return node.getText();
-      }
-
-      if (selectorExpr.expression.text !== 'Cypress') {
-        return node.getText();
-      }
-
-      const selectorName = selectorExpr.name.getText();
-      if (
-        selectorName !== 'ElementSelector' &&
-        selectorName !== 'SelectorPlayground'
-      ) {
-        return node.getText();
-      }
-
-      if (!node.arguments.length) {
-        return node.getText();
-      }
-
-      const [firstArg, ...restArgs] = node.arguments;
-      if (!ts.isObjectLiteralExpression(firstArg)) {
-        return node.getText();
-      }
-
-      const filteredProperties = firstArg.properties.filter((prop) => {
-        if (
-          ts.isPropertyAssignment(prop) ||
-          ts.isShorthandPropertyAssignment(prop) ||
-          ts.isMethodDeclaration(prop) ||
-          ts.isGetAccessorDeclaration(prop) ||
-          ts.isSetAccessorDeclaration(prop)
-        ) {
-          return !isOnElementProperty(prop.name);
-        }
-
-        return true;
-      });
-
-      if (filteredProperties.length === firstArg.properties.length) {
-        return node.getText();
-      }
-
-      hasChanges = true;
-
-      const updatedObjectLiteral = ts.factory.updateObjectLiteralExpression(
-        firstArg,
-        filteredProperties
-      );
-
-      const updatedCall = ts.factory.updateCallExpression(
-        node,
-        node.expression,
-        node.typeArguments,
-        [updatedObjectLiteral, ...restArgs]
-      );
-
-      return printer.printNode(
-        ts.EmitHint.Unspecified,
-        updatedCall,
-        sourceFile
-      );
+    'CallExpression:has(Identifier[name="defaults"])'
+  ).flatMap((node) => {
+    if (!ts.isPropertyAccessExpression(node.expression)) {
+      return [];
     }
-  );
 
-  return hasChanges ? result : updated;
+    if (node.expression.name.getText() !== 'defaults') {
+      return [];
+    }
+
+    const selectorExpr = node.expression.expression;
+    if (!ts.isPropertyAccessExpression(selectorExpr)) {
+      return [];
+    }
+
+    if (!ts.isIdentifier(selectorExpr.expression)) {
+      return [];
+    }
+
+    if (selectorExpr.expression.text !== 'Cypress') {
+      return [];
+    }
+
+    const selectorName = selectorExpr.name.getText();
+    if (
+      selectorName !== 'ElementSelector' &&
+      selectorName !== 'SelectorPlayground'
+    ) {
+      return [];
+    }
+
+    if (!node.arguments.length) {
+      return [];
+    }
+
+    const [firstArg] = node.arguments;
+    if (!ts.isObjectLiteralExpression(firstArg)) {
+      return [];
+    }
+
+    return firstArg.properties
+      .filter(
+        (prop) =>
+          (ts.isPropertyAssignment(prop) ||
+            ts.isShorthandPropertyAssignment(prop) ||
+            ts.isMethodDeclaration(prop) ||
+            ts.isGetAccessorDeclaration(prop) ||
+            ts.isSetAccessorDeclaration(prop)) &&
+          isOnElementProperty(prop.name)
+      )
+      .flatMap((prop) => removeProperty(updated, prop));
+  });
+
+  return applyChangesToString(updated, changes);
 }
 
 function isOnElementProperty(name: PropertyName): boolean {

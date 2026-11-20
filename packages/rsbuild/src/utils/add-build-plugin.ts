@@ -1,6 +1,6 @@
 import { type Tree } from '@nx/devkit';
 import { ensureTypescript } from '@nx/js/internal';
-import { ast, query } from '@phenomnomnominal/tsquery';
+import { ast, query, type TypescriptAst } from '@nx/devkit/internal';
 import type * as ts from 'typescript';
 import { indentBy } from './indent-by';
 
@@ -107,7 +107,10 @@ export function findConfigObject(
 }
 
 // Return statements of this function, not of functions nested in it
-function findReturns(tsModule: typeof ts, node: ts.Node): ts.ReturnStatement[] {
+function findReturns(
+  tsModule: TypescriptAst,
+  node: ts.Node
+): ts.ReturnStatement[] {
   const returns: ts.ReturnStatement[] = [];
   const visit = (child: ts.Node) => {
     if (tsModule.isReturnStatement(child)) returns.push(child);

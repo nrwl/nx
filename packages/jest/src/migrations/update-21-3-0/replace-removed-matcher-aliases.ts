@@ -1,5 +1,5 @@
 import { formatFiles, globAsync, logger, type Tree } from '@nx/devkit';
-import { ast, query } from '@phenomnomnominal/tsquery';
+import { ast, query } from '@nx/devkit/internal';
 import { SearchSource } from 'jest';
 import { readConfig } from 'jest-config';
 import Runtime from 'jest-runtime';

@@ -7,14 +7,15 @@
  * to be the original tsconfig file.
  */
 
+import { ScriptTarget } from '@nx/devkit/internal';
 import { resolve } from 'path';
-import * as ts from 'typescript';
+import type * as ts from 'typescript';
 import { loadEsmModule } from './module-loader';
 
 async function readDefaultTsConfig(fileName: string) {
   // these options are mandatory
   const extraOptions: ts.CompilerOptions = {
-    target: ts.ScriptTarget.ES2022,
+    target: ScriptTarget.ES2022,
 
     composite: false,
     // sourcemaps

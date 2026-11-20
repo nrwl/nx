@@ -1,10 +1,10 @@
 import { formatFiles, visitNotIgnoredFiles, type Tree } from '@nx/devkit';
 import { ensureTypescript } from '@nx/js/internal';
-import { ast, query } from '@phenomnomnominal/tsquery';
+import { ast, query, type TypescriptAst } from '@nx/devkit/internal';
 import type { CallExpression } from 'typescript';
 import { cypressProjectConfigs } from '../../utils/migrations';
 
-let ts: typeof import('typescript');
+let ts: TypescriptAst;
 
 export default async function renameCyExecCodeProperty(tree: Tree) {
   for await (const { projectConfig } of cypressProjectConfigs(tree)) {

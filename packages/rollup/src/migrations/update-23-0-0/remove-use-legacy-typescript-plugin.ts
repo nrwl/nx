@@ -9,7 +9,7 @@ import {
   updateProjectConfiguration,
   visitNotIgnoredFiles,
 } from '@nx/devkit';
-import { ast, query } from '@phenomnomnominal/tsquery';
+import { ast, query } from '@nx/devkit/internal';
 import type {
   PropertyAssignment,
   ShorthandPropertyAssignment,

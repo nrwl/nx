@@ -1,6 +1,6 @@
 import { joinPathFragments, type Tree, visitNotIgnoredFiles } from '@nx/devkit';
 import { ensureTypescript } from '@nx/js/internal';
-import { ast } from '@phenomnomnominal/tsquery';
+import { ast, type TypescriptAst } from '@nx/devkit/internal';
 import picomatch = require('picomatch');
 import type {
   Expression,
@@ -12,7 +12,7 @@ import type {
 import { applyTextEdits } from './ast-edits';
 import { isVitestWorkspaceFile } from './vitest-config-files';
 
-let ts: typeof import('typescript');
+let ts: TypescriptAst;
 
 // Mirrors vitest's own config lookup (CONFIG_NAMES x CONFIG_EXTENSIONS),
 // including its vitest-over-vite preference order.

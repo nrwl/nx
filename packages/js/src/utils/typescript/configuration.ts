@@ -1,32 +1,21 @@
 import type { Tree } from '@nx/devkit';
+import {
+  parseTsConfigContent,
+  readTsConfigWithoutFiles,
+} from '@nx/devkit/internal';
 import { dirname } from 'path';
 import type { CompilerOptions } from 'typescript';
-import { ensureTypescript } from './ensure-typescript';
 import { createTreeParseConfigHost } from './ts-config';
 
-type CompilerOptionsEnumProps = Pick<
-  CompilerOptions,
-  | 'importsNotUsedAsValues'
-  | 'jsx'
-  | 'module'
-  | 'moduleDetection'
-  | 'moduleResolution'
-  | 'newLine'
-  | 'target'
->;
-const optionEnumTypeMap: {
-  [key in keyof CompilerOptionsEnumProps]: keyof typeof ts;
-} = {
-  importsNotUsedAsValues: 'ImportsNotUsedAsValues',
-  jsx: 'JsxEmit',
-  module: 'ModuleKind',
-  moduleDetection: 'ModuleDetectionKind',
-  moduleResolution: 'ModuleResolutionKind',
-  newLine: 'NewLineKind',
-  target: 'ScriptTarget',
-};
-
-let ts: typeof import('typescript');
+const enumOptions = new Set<string>([
+  'importsNotUsedAsValues',
+  'jsx',
+  'module',
+  'moduleDetection',
+  'moduleResolution',
+  'newLine',
+  'target',
+]);
 
 /**
  * Cleans up the provided compiler options to only include the options that are
@@ -37,45 +26,23 @@ export function getNeededCompilerOptionOverrides(
   compilerOptions: Record<keyof CompilerOptions, any>,
   tsConfigPath: string
 ): Record<keyof CompilerOptions, any> {
-  if (!ts) {
-    ts = ensureTypescript();
-  }
-
   const host = createTreeParseConfigHost(tree);
-
-  const parsed = ts.parseJsonConfigFileContent(
-    ts.readConfigFile(tsConfigPath, host.readFile).config,
-    host,
-    dirname(tsConfigPath)
+  const parsed = readTsConfigWithoutFiles(tsConfigPath, host);
+  // TypeScript accepts several spellings of an enum value and numbers some
+  // enums differently between versions, so it parses the given values too.
+  const given = parseTsConfigContent(
+    { compilerOptions, files: [] },
+    dirname(tsConfigPath),
+    host
   );
-
-  // ModuleKind: { CommonJS: 'commonjs', ... } => ModuleKind: { commonjs: 'CommonJS', ... }
-  const reversedCompilerOptionsEnumValues = {
-    JsxEmit: reverseEnum(ts.server.protocol.JsxEmit),
-    ModuleKind: reverseEnum(ts.server.protocol.ModuleKind),
-    ModuleResolutionKind: reverseEnum(ts.server.protocol.ModuleResolutionKind),
-    NewLineKind: reverseEnum(ts.server.protocol.NewLineKind),
-    ScriptTarget: reverseEnum(ts.server.protocol.ScriptTarget),
-  };
-  const matchesValue = (key: keyof CompilerOptions) => {
-    return (
-      parsed.options[key] ===
-        ts[optionEnumTypeMap[key]][compilerOptions[key]] ||
-      parsed.options[key] ===
-        ts[optionEnumTypeMap[key]][
-          reversedCompilerOptionsEnumValues[optionEnumTypeMap[key]][
-            compilerOptions[key]
-          ]
-        ]
-    );
-  };
 
   let result = {};
   for (const key of Object.keys(compilerOptions)) {
-    if (optionEnumTypeMap[key]) {
-      if (parsed.options[key] === undefined) {
-        result[key] = compilerOptions[key];
-      } else if (!matchesValue(key)) {
+    if (enumOptions.has(key)) {
+      if (
+        parsed.options[key] === undefined ||
+        parsed.options[key] !== given.options[key]
+      ) {
         result[key] = compilerOptions[key];
       }
     } else if (parsed.options[key] !== compilerOptions[key]) {
@@ -84,17 +51,4 @@ export function getNeededCompilerOptionOverrides(
   }
 
   return result;
-}
-
-type Entries<T extends object> = { [K in keyof T]: [K, T[K]] }[keyof T];
-function reverseEnum<
-  EnumObj extends Record<keyof EnumObj, string>,
-  Result = {
-    [K in EnumObj[keyof EnumObj]]: Extract<Entries<EnumObj>, [any, K]>[0];
-  },
->(enumObj: EnumObj): Result {
-  return Object.keys(enumObj).reduce((acc, key) => {
-    acc[enumObj[key]] = key;
-    return acc;
-  }, {} as Result);
 }

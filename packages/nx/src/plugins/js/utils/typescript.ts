@@ -1,13 +1,42 @@
+import { fileExists } from '../../../utils/fileutils';
 import { resolveFromWorkspace } from '../../../utils/installation-directory';
 import { workspaceRoot } from '../../../utils/workspace-root';
 import { existsSync } from 'fs';
-import { dirname, join } from 'path';
+import { dirname, isAbsolute, join, relative, resolve } from 'path';
 import type * as ts from 'typescript';
 import type { Node, SyntaxKind } from 'typescript';
+import {
+  getTypescriptBackend,
+  unhandledTypescriptBackend,
+  withHostedTypescriptApi,
+  withTypescriptApi,
+  type ApiCompilerOptions,
+  type ApiTypescriptBackend,
+  type TypescriptApi,
+  type TypescriptApiFileSystem,
+} from './typescript-backend';
 
 const normalizedAppRoot = workspaceRoot.replace(/\\/g, '/');
 
-let tsModule: typeof import('typescript');
+/** @ts-ignore resolves only when `typescript` is >= 7.1 */
+type ApiParsedCommandLine = import('typescript/sync').ParsedCommandLine;
+/** @ts-ignore resolves only when `typescript` is >= 7.1 */
+type ApiDiagnostic = import('typescript/sync').Diagnostic;
+/** @ts-ignore resolves only when `typescript` is >= 7.1 */
+type ApiModuleResolver = import('typescript/sync').ModuleResolver;
+
+/**
+ * Where a tsconfig read finds files instead of the disk, such as a generator's
+ * `Tree`. A member left out uses the disk. Paths reach the members absolute or
+ * relative to `getCurrentDirectory()`.
+ */
+export interface TsConfigHost extends TypescriptApiFileSystem {
+  /**
+   * Resolves relative paths, `tsConfigPath` included, and the paths read from
+   * a relative `tsConfigPath` stay relative to it. Defaults to `process.cwd()`.
+   */
+  getCurrentDirectory?(): string;
+}
 
 export function isTypeScriptResolvable(): boolean {
   try {
@@ -18,39 +47,89 @@ export function isTypeScriptResolvable(): boolean {
   }
 }
 
+/**
+ * @param extendedConfigCache Shared across reads so each extended tsconfig is
+ * parsed once. TypeScript 7.1 doesn't use it.
+ */
 export function readTsConfig(
   tsConfigPath: string,
-  sys?: ts.System
+  host?: TsConfigHost,
+  extendedConfigCache?: Map<string, ts.ExtendedConfigCacheEntry>
 ): ts.ParsedCommandLine {
-  if (!tsModule) {
-    tsModule = require(resolveFromWorkspace('typescript'));
-  }
-
-  sys ??= tsModule.sys;
-
-  const readResult = tsModule.readConfigFile(tsConfigPath, sys.readFile);
-  return tsModule.parseJsonConfigFileContent(
-    readResult.config,
-    sys,
-    dirname(tsConfigPath)
-  );
+  return parseTsConfig(tsConfigPath, host, true, extendedConfigCache);
 }
 
+/**
+ * Reads a tsconfig without scanning for its source files, for callers that
+ * only need its options. `fileNames` can come back empty.
+ *
+ * @param extendedConfigCache Shared across reads so each extended tsconfig is
+ * parsed once. TypeScript 7.1 doesn't use it.
+ */
 export function readTsConfigWithoutFiles(
-  tsConfigPath: string
+  tsConfigPath: string,
+  host?: TsConfigHost,
+  extendedConfigCache?: Map<string, ts.ExtendedConfigCacheEntry>
 ): ts.ParsedCommandLine {
-  if (!tsModule) {
-    tsModule = require(resolveFromWorkspace('typescript'));
+  return parseTsConfig(tsConfigPath, host, false, extendedConfigCache);
+}
+
+function parseTsConfig(
+  tsConfigPath: string,
+  host: TsConfigHost | undefined,
+  scanFiles: boolean,
+  extendedConfigCache: Map<string, ts.ExtendedConfigCacheEntry> | undefined
+): ts.ParsedCommandLine {
+  const backend = getTypescriptBackend();
+  switch (backend.kind) {
+    case 'classic': {
+      const tsModule = backend.ts;
+      const parseHost = toParseConfigHost(tsModule.sys, host, scanFiles);
+      const readResult = tsModule.readConfigFile(
+        tsConfigPath,
+        parseHost.readFile
+      );
+      return tsModule.parseJsonConfigFileContent(
+        readResult.config,
+        parseHost,
+        dirname(tsConfigPath),
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        extendedConfigCache
+      );
+    }
+    case 'api':
+      return readTsConfigWithApi(backend, tsConfigPath, host, scanFiles);
+    default:
+      return unhandledTypescriptBackend(backend);
   }
+}
 
-  // We only care about options, so we don't need to scan source files, and thus
-  // `readDirectory` is stubbed for performance.
-  const sys = {
-    ...tsModule.sys,
-    readDirectory: () => [],
+function toParseConfigHost(
+  sys: ts.System,
+  host: TsConfigHost | undefined,
+  scanFiles: boolean
+): ts.ParseConfigHost & ts.System {
+  if (!host) {
+    return scanFiles ? sys : { ...sys, readDirectory: () => [] };
+  }
+  const cwd = host.getCurrentDirectory?.() ?? sys.getCurrentDirectory();
+  return {
+    ...sys,
+    getCurrentDirectory: () => cwd,
+    readFile: (path) =>
+      host.readFile ? host.readFile(path) : sys.readFile(path),
+    fileExists: (path) =>
+      host.fileExists ? host.fileExists(path) : sys.fileExists(path),
+    directoryExists: (path) =>
+      host.directoryExists
+        ? host.directoryExists(path)
+        : sys.directoryExists(path),
+    realpath: (path) => sys.realpath(resolve(cwd, path)),
+    readDirectory: scanFiles ? sys.readDirectory : () => [],
   };
-
-  return readTsConfig(tsConfigPath, sys);
 }
 
 export function readTsConfigOptions(tsConfigPath: string): ts.CompilerOptions {
@@ -59,11 +138,7 @@ export function readTsConfigOptions(tsConfigPath: string): ts.CompilerOptions {
   return options;
 }
 
-let compilerHost: {
-  host: ts.CompilerHost;
-  options: ts.CompilerOptions;
-  moduleResolutionCache: ts.ModuleResolutionCache;
-};
+let moduleResolver: TsModuleResolver | undefined;
 
 /**
  * Find a module based on its import
@@ -77,32 +152,246 @@ export function resolveModuleByImport(
   filePath: string,
   tsConfigPath: string
 ) {
-  compilerHost = compilerHost || getCompilerHost(tsConfigPath);
-  const { options, host, moduleResolutionCache } = compilerHost;
+  moduleResolver ??= createTsModuleResolver(readTsConfigOptions(tsConfigPath));
 
-  const { resolvedModule } = tsModule.resolveModuleName(
-    importExpr,
-    filePath,
-    options,
-    host,
-    moduleResolutionCache
-  );
-
-  if (!resolvedModule) {
+  const resolvedFileName = moduleResolver(importExpr, filePath);
+  if (!resolvedFileName) {
     return;
   } else {
-    return resolvedModule.resolvedFileName.replace(`${normalizedAppRoot}/`, '');
+    return resolvedFileName.replace(`${normalizedAppRoot}/`, '');
   }
 }
 
-function getCompilerHost(tsConfigPath: string) {
-  const options = readTsConfigOptions(tsConfigPath);
-  const host = tsModule.createCompilerHost(options, true);
-  const moduleResolutionCache = tsModule.createModuleResolutionCache(
-    workspaceRoot,
-    host.getCanonicalFileName
-  );
-  return { options, host, moduleResolutionCache };
+type TsModuleResolver = (
+  moduleName: string,
+  containingFile: string
+) => string | undefined;
+
+/**
+ * Creates a function that resolves module names the way TypeScript does with
+ * `compilerOptions` and returns the resolved file name. TypeScript 7.1 removed
+ * `baseUrl` and ignores it.
+ */
+export function createTsModuleResolver(
+  compilerOptions: ts.CompilerOptions
+): TsModuleResolver {
+  const backend = getTypescriptBackend();
+  switch (backend.kind) {
+    case 'classic': {
+      const tsModule = backend.ts;
+      const host = tsModule.createCompilerHost(compilerOptions, true);
+      const moduleResolutionCache = tsModule.createModuleResolutionCache(
+        workspaceRoot,
+        host.getCanonicalFileName
+      );
+      return (moduleName, containingFile) =>
+        tsModule.resolveModuleName(
+          moduleName,
+          containingFile,
+          compilerOptions,
+          host,
+          moduleResolutionCache
+        ).resolvedModule?.resolvedFileName;
+    }
+    case 'api': {
+      // TypeScript 6 resolves a relative `pathsBasePath` against the working
+      // directory, the 7.1 server against the workspace root.
+      const { pathsBasePath } = compilerOptions;
+      const options = {
+        ...compilerOptions,
+        pathsBasePath:
+          typeof pathsBasePath === 'string'
+            ? resolve(pathsBasePath)
+            : pathsBasePath,
+      } as unknown as ApiCompilerOptions;
+      let api: TypescriptApi | undefined;
+      let resolver: ApiModuleResolver | undefined;
+      return (moduleName, containingFile) =>
+        withTypescriptApi(backend, (current) => {
+          // The resolver lives in the API's server process, so a replaced
+          // instance needs a new one.
+          if (current !== api) {
+            api = current;
+            resolver = current.createModuleResolver(options);
+          }
+          // The 7.1 resolver takes the containing directory, not a file.
+          return resolver.resolveModuleName(moduleName, dirname(containingFile))
+            .resolvedModule?.resolvedFileName;
+        });
+    }
+    default:
+      return unhandledTypescriptBackend(backend);
+  }
+}
+
+/**
+ * Parses tsconfig JSON as if read from a file in `configDirectory`, with its
+ * `extends` chain applied. Enum-valued options come back as the workspace's
+ * TypeScript numbers them.
+ */
+export function parseTsConfigContent(
+  json: object,
+  configDirectory: string,
+  host?: TsConfigHost
+): ts.ParsedCommandLine {
+  const backend = getTypescriptBackend();
+  switch (backend.kind) {
+    case 'classic': {
+      const tsModule = backend.ts;
+      return tsModule.parseJsonConfigFileContent(
+        json,
+        toParseConfigHost(tsModule.sys, host, true),
+        configDirectory
+      );
+    }
+    case 'api': {
+      const cwd = host?.getCurrentDirectory?.() ?? process.cwd();
+      const parse = (api: TypescriptApi) =>
+        api.parseJsonConfigFileContent(json, {
+          configDirectory: resolve(cwd, configDirectory),
+        });
+      const parsed = host
+        ? withHostedTypescriptApi(backend, host, true, parse)
+        : withTypescriptApi(backend, parse);
+      return toClassicParsedCommandLine(
+        parsed,
+        cwd,
+        isAbsolute(configDirectory)
+      );
+    }
+    default:
+      return unhandledTypescriptBackend(backend);
+  }
+}
+
+/**
+ * Transpiles one module to JavaScript without type checking, as `ts.transpile`
+ * does.
+ */
+export function transpileTypescript(
+  input: string,
+  compilerOptions: ts.CompilerOptions
+): string {
+  const backend = getTypescriptBackend();
+  switch (backend.kind) {
+    case 'classic':
+      return backend.ts.transpile(input, compilerOptions);
+    case 'api':
+      return withTypescriptApi(
+        backend,
+        (api) =>
+          api.transpileModule(input, {
+            compilerOptions: compilerOptions as unknown as ApiCompilerOptions,
+          }).outputText
+      );
+    default:
+      return unhandledTypescriptBackend(backend);
+  }
+}
+
+function readTsConfigWithApi(
+  backend: ApiTypescriptBackend,
+  tsConfigPath: string,
+  host: TsConfigHost | undefined,
+  scanFiles: boolean
+): ts.ParsedCommandLine {
+  const cwd = host?.getCurrentDirectory?.() ?? process.cwd();
+  const absolutePath = resolve(cwd, tsConfigPath);
+  // TypeScript 6 reads a tsconfig `readFile` can't read as an empty one; 7.1
+  // throws.
+  const readable = host?.readFile
+    ? typeof host.readFile(absolutePath) === 'string'
+    : fileExists(absolutePath);
+  const parse = readable
+    ? (api: TypescriptApi) => api.parseConfigFile(absolutePath)
+    : (api: TypescriptApi) =>
+        api.parseJsonConfigFileContent(
+          {},
+          { configDirectory: dirname(absolutePath) }
+        );
+  // Only the hosted instance can skip the source-file scan.
+  const parsed =
+    host || !scanFiles
+      ? withHostedTypescriptApi(backend, host ?? {}, scanFiles, parse)
+      : withTypescriptApi(backend, parse);
+  return toClassicParsedCommandLine(parsed, cwd, isAbsolute(tsConfigPath));
+}
+
+function toClassicParsedCommandLine(
+  parsed: ApiParsedCommandLine,
+  cwd: string,
+  keepAbsolutePaths: boolean
+): ts.ParsedCommandLine {
+  // TypeScript 6 keeps the paths read from a relative tsconfig path relative;
+  // the 7.1 API makes them absolute.
+  const toResultPath = keepAbsolutePaths
+    ? (path: string) => path
+    : (path: string) => relative(cwd, path).replace(/\\/g, '/') || '.';
+  const options = { ...parsed.options } as unknown as ts.CompilerOptions;
+  for (const key of PATH_OPTIONS) {
+    if (typeof options[key] === 'string') {
+      options[key] = toResultPath(options[key] as string);
+    }
+  }
+  for (const key of PATH_LIST_OPTIONS) {
+    options[key] = options[key]?.map(toResultPath);
+  }
+
+  // `module`, `moduleResolution`, `target` and `jsx` values match TypeScript
+  // 6's where both have the member; `newLine` and `moduleDetection` differ.
+  return {
+    options,
+    fileNames: parsed.fileNames.map(toResultPath),
+    projectReferences: parsed.projectReferences?.map((reference) => ({
+      ...reference,
+      path: toResultPath(reference.path),
+    })),
+    typeAcquisition: parsed.typeAcquisition as ts.TypeAcquisition,
+    compileOnSave: parsed.compileOnSave,
+    raw: parsed.raw,
+    errors: parsed.errors.map(toClassicDiagnostic),
+  };
+}
+
+// The path-valued options the 7.1 API resolves to absolute paths.
+const PATH_OPTIONS = [
+  'baseUrl',
+  'configFilePath',
+  'declarationDir',
+  'generateCpuProfile',
+  'generateTrace',
+  'outDir',
+  'outFile',
+  'pathsBasePath',
+  'pprofDir',
+  'project',
+  'rootDir',
+  'tsBuildInfoFile',
+] as const;
+const PATH_LIST_OPTIONS = ['rootDirs', 'typeRoots'] as const;
+
+function toClassicDiagnostic(diagnostic: ApiDiagnostic): ts.Diagnostic {
+  return {
+    category: diagnostic.category as ts.DiagnosticCategory,
+    code: diagnostic.code,
+    file: undefined,
+    start: diagnostic.pos,
+    length: diagnostic.end - diagnostic.pos,
+    messageText: diagnostic.messageChain?.length
+      ? toClassicMessageChain(diagnostic)
+      : diagnostic.text,
+  };
+}
+
+function toClassicMessageChain(
+  diagnostic: ApiDiagnostic
+): ts.DiagnosticMessageChain {
+  return {
+    messageText: diagnostic.text,
+    category: diagnostic.category as ts.DiagnosticCategory,
+    code: diagnostic.code,
+    next: diagnostic.messageChain?.map(toClassicMessageChain),
+  };
 }
 
 export function getRootTsConfigFileName(): string | null {

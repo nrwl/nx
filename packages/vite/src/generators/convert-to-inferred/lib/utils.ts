@@ -1,6 +1,6 @@
 import { relative, resolve } from 'path/posix';
 import { workspaceRoot, type Tree, joinPathFragments } from '@nx/devkit';
-import { ast, query } from '@phenomnomnominal/tsquery';
+import { ast, query } from '@nx/devkit/internal';
 
 export function toProjectRelativePath(
   path: string,

@@ -7,6 +7,16 @@ export default [
     ignores: ['dist'],
   },
   {
+    // Batch builds use the TypeScript 6 solution builder API.
+    files: [
+      'src/executors/tsc/lib/typescript-compilation.ts',
+      'src/executors/tsc/lib/typescript-diagnostic-reporters.ts',
+    ],
+    rules: {
+      '@nx/workspace-no-runtime-typescript-import': 'off',
+    },
+  },
+  {
     files: [
       './package.json',
       './generators.json',

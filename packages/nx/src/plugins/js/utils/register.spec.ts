@@ -1,7 +1,8 @@
 import type { Mock, MockInstance } from 'vitest';
 import type { CompilerOptions } from 'typescript';
 import { JsxEmit, ModuleKind, ScriptTarget } from 'typescript';
-import { join } from 'path';
+import { dirname, join } from 'path';
+import { symlinkSync } from 'fs';
 import { TempFs } from '../../../internal-testing-utils/temp-fs';
 import {
   loadTsFile,
@@ -23,7 +24,6 @@ import {
 import { createRequire, Module } from 'node:module';
 import {
   mockCjsModule,
-  resetCjsMocks,
   unmockCjsModule,
 } from '../../../internal-testing-utils/cjs-mock';
 {
@@ -127,39 +127,70 @@ describe('isNativeStripPreferred', () => {
   });
 });
 
+/**
+ * Imports a fresh `./register` for a workspace whose `typescript` is the
+ * given install.
+ */
+async function importRegisterInWorkspace(
+  fs: TempFs,
+  typescriptDir: string
+): Promise<typeof import('./register')> {
+  fs.createDirSync('node_modules');
+  symlinkSync(
+    typescriptDir,
+    join(fs.tempDir, 'node_modules/typescript'),
+    'dir'
+  );
+  vi.resetModules();
+  (await import('../../../utils/workspace-root')).setWorkspaceRoot(fs.tempDir);
+  return import('./register');
+}
+
 describe('getTranspiler', () => {
-  // Each case swaps the lazily-required `typescript`; drop the swap afterwards
-  // so the doctored version does not leak into later tests in this file.
-  afterEach(() => {
-    resetCjsMocks();
+  let fs: TempFs;
+
+  beforeEach(() => {
+    fs = new TempFs('nx-get-transpiler');
   });
+
+  afterEach(() => {
+    fs.cleanup();
+  });
+
+  // The classic API under a given version label.
+  function createTypescriptInstall(version: string): string {
+    fs.createFilesSync({
+      'typescript-install/package.json': JSON.stringify({
+        name: 'typescript',
+        version,
+        main: 'index.js',
+      }),
+      'typescript-install/index.js': `module.exports = require(${JSON.stringify(
+        require.resolve('typescript')
+      )});`,
+    });
+    return join(fs.tempDir, 'typescript-install');
+  }
 
   // TS6 requires the suppression flag to avoid hard-erroring on deprecated options.
   it('sets ignoreDeprecations to "6.0" on TypeScript >= 6', async () => {
-    vi.resetModules();
-    // register.ts lazy-requires typescript (CJS channel); replace it there.
-    mockCjsModule(import.meta.url, 'typescript', {
-      ...require('typescript'),
-      versionMajorMinor: '6.0',
-    });
-    const { getTranspiler: fresh } =
-      (await import('./register')) as typeof import('./register');
+    const { getTranspiler } = await importRegisterInWorkspace(
+      fs,
+      createTypescriptInstall('6.0.3')
+    );
     const opts: CompilerOptions = {};
-    fresh(opts);
+    getTranspiler(opts);
     expect(opts.ignoreDeprecations).toEqual('6.0');
   });
 
   // TS5 rejects the '6.0' value (TS5103) so the option must stay absent.
   it('leaves ignoreDeprecations unset on TypeScript < 6', async () => {
-    vi.resetModules();
-    mockCjsModule(import.meta.url, 'typescript', {
-      ...require('typescript'),
-      versionMajorMinor: '5.9',
-    });
-    const { getTranspiler: fresh } =
-      (await import('./register')) as typeof import('./register');
+    const { getTranspiler } = await importRegisterInWorkspace(
+      fs,
+      createTypescriptInstall('5.9.3')
+    );
     const opts: CompilerOptions = {};
-    fresh(opts);
+    getTranspiler(opts);
     expect(opts.ignoreDeprecations).toBeUndefined();
   });
 });
@@ -824,3 +855,139 @@ describe('loadTsFile', () => {
     }
   });
 });
+
+describe('with TypeScript 7.1 as typescript', () => {
+  let fs: TempFs;
+
+  beforeEach(() => {
+    fs = new TempFs('nx-register-ts-api');
+    fs.createFilesSync({ 'tsconfig.json': '{}' });
+    fs.createDirSync('node_modules');
+    symlinkSync(
+      dirname(require.resolve('@typescript/native/package.json')),
+      join(fs.tempDir, 'node_modules/typescript'),
+      'dir'
+    );
+  });
+
+  afterEach(() => {
+    fs.cleanup();
+  });
+
+  it('should load an ESM config with top-level await through the TypeScript API', async () => {
+    const { pathToFileURL } = require('node:url');
+    fs.createFilesSync({
+      'config.mts':
+        'enum Kind { Esm = 1 }\nexport const kind = await Promise.resolve(Kind.Esm);\nexport const url = import.meta.url;\n',
+    });
+    const configUrl = pathToFileURL(join(fs.tempDir, 'config.mts')).href;
+
+    // Kept out of the entry's source text as an import: the entry is CommonJS.
+    expect(
+      await runInWorkspace(
+        fs,
+        `(forceRegisterEsmLoader(), new Function('s', 'return import(s)')(${JSON.stringify(
+          configUrl
+        )})).then((m) => ({ kind: m.kind, url: m.url }))`
+      )
+    ).toEqual({
+      ok: true,
+      backend: 'api',
+      value: { kind: 1, url: configUrl },
+    });
+  }, 60_000);
+});
+
+describe('without TypeScript', () => {
+  let fs: TempFs;
+
+  beforeEach(() => {
+    fs = new TempFs('nx-register-no-ts');
+    fs.createFilesSync({ 'tsconfig.json': '{}' });
+  });
+
+  afterEach(() => {
+    fs.cleanup();
+  });
+
+  it('should ask for a transpiler when native type stripping rejects a file', async () => {
+    fs.createFilesSync({
+      'plugin.ts': 'enum Kind { Strip = 1 }\nexport default Kind.Strip;\n',
+    });
+
+    expect(
+      await runInWorkspace(
+        fs,
+        `loadTsFile(${JSON.stringify(join(fs.tempDir, 'plugin.ts'))}).default`,
+        { hideTypescript: true }
+      )
+    ).toEqual({
+      ok: false,
+      message: expect.stringContaining(
+        'Install @swc-node/register and @swc/core (or ts-node)'
+      ),
+    });
+  }, 60_000);
+});
+
+// The vitest setup compiles every required .ts file with swc-node, so the
+// loads under test run in a child that drops swc-node once nx is loaded.
+async function runInWorkspace(
+  fs: TempFs,
+  load: string,
+  { hideTypescript = false } = {}
+): Promise<unknown> {
+  const { fork } = require('node:child_process');
+  fs.createFilesSync({
+    'entry.cjs': `
+const Module = require('node:module');
+const findPath = Module._findPath;
+// Nx looks packages up with Module._findPath, which require() also uses.
+// These loaders resolve the repo's TypeScript 6, which a workspace with only
+// TypeScript 7.1 does not have.
+let hidden = /^(@swc-node\\/register|ts-node)(\\/|$)/;
+Module._findPath = function (request, ...rest) {
+  return hidden.test(request) ? false : findPath.call(this, request, ...rest);
+};
+const revert = require(process.argv[2]).register();
+const { loadTsFile, forceRegisterEsmLoader } = require(process.argv[3]);
+const { getTypescriptBackend } = require(process.argv[4]);
+revert();
+if (process.argv[5] === 'hide-typescript') {
+  hidden = /^(@swc-node\\/register|ts-node|typescript)(\\/|$)/;
+}
+Promise.resolve()
+  .then(() => ${load})
+  .then(
+    (value) => process.send({ ok: true, backend: getTypescriptBackend().kind, value }),
+    (e) => process.send({ ok: false, message: String(e) })
+  );
+`,
+  });
+  const { NODE_OPTIONS, ...env } = process.env;
+  const child = fork(
+    join(fs.tempDir, 'entry.cjs'),
+    [
+      require.resolve('@swc-node/register/register'),
+      require.resolve('./register'),
+      require.resolve('./typescript-backend'),
+      ...(hideTypescript ? ['hide-typescript'] : []),
+    ],
+    {
+      cwd: process.cwd(),
+      env: { ...env, NX_WORKSPACE_ROOT_PATH: fs.tempDir },
+      stdio: ['ignore', 'ignore', 'pipe', 'ipc'],
+    }
+  );
+  let stderr = '';
+  child.stderr.on('data', (chunk) => (stderr += chunk));
+  const result = await new Promise<unknown>((resolve, reject) => {
+    child.once('message', resolve);
+    child.once('error', reject);
+    child.once('exit', (code) =>
+      reject(new Error(`exited with ${code} before replying:\n${stderr}`))
+    );
+  });
+  child.kill();
+  return result;
+}

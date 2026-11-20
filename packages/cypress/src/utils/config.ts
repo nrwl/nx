@@ -100,7 +100,7 @@ export async function addDefaultE2EConfig(
   if (!cyConfigContents) {
     throw new Error('The passed in cypress config file is empty!');
   }
-  const { tsquery } = await import('@phenomnomnominal/tsquery');
+  const { tsquery } = await import('@nx/devkit/internal');
 
   const isCommonJS =
     tsquery.query(cyConfigContents, TS_QUERY_COMMON_JS_EXPORT_SELECTOR).length >
@@ -188,7 +188,7 @@ export async function addDefaultCTConfig(
   if (!cyConfigContents) {
     throw new Error('The passed in cypress config file is empty!');
   }
-  const { tsquery } = await import('@phenomnomnominal/tsquery');
+  const { tsquery } = await import('@nx/devkit/internal');
 
   const isCommonJS =
     tsquery.query(cyConfigContents, TS_QUERY_COMMON_JS_EXPORT_SELECTOR).length >
@@ -286,7 +286,7 @@ export async function addMountDefinition(cmpCommandFileContents: string) {
   if (!cmpCommandFileContents) {
     throw new Error('The passed in cypress component file is empty!');
   }
-  const { tsquery } = await import('@phenomnomnominal/tsquery');
+  const { tsquery } = await import('@nx/devkit/internal');
   const hasMountCommand =
     tsquery.query<MethodSignature | PropertySignature>(
       cmpCommandFileContents,
@@ -335,8 +335,8 @@ export function resolveCypressConfigObject(
 ): ObjectLiteralExpression | null {
   const ts = ensureTypescript();
 
-  const { tsquery } = <typeof import('@phenomnomnominal/tsquery')>(
-    require('@phenomnomnominal/tsquery')
+  const { tsquery } = <typeof import('@nx/devkit/internal')>(
+    require('@nx/devkit/internal')
   );
   const sourceFile = tsquery.ast(cypressConfigContents);
 

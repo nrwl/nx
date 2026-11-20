@@ -19,6 +19,7 @@ import { NormalizedSchema, Schema } from './schema';
 import { normalizeOptions } from './lib/normalize-options';
 import { reactRouterDomVersion } from '../../utils/versions';
 import { assertSupportedReactVersion } from '../../utils/assert-supported-react-version';
+import type { TypescriptAst } from '@nx/devkit/internal';
 
 export async function componentGenerator(host: Tree, schema: Schema) {
   assertSupportedReactVersion(host);
@@ -80,7 +81,7 @@ function createComponentFiles(host: Tree, options: NormalizedSchema) {
   }
 }
 
-let tsModule: typeof import('typescript');
+let tsModule: TypescriptAst;
 
 function addExportsToBarrel(host: Tree, options: NormalizedSchema) {
   if (!tsModule) {

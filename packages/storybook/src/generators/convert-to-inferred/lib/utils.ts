@@ -1,10 +1,14 @@
-import { ast, query } from '@phenomnomnominal/tsquery';
 import {
   getDependencyVersionFromPackageJson,
   joinPathFragments,
   type Tree,
 } from '@nx/devkit';
-import { AggregatedLog, toProjectRelativePath } from '@nx/devkit/internal';
+import {
+  AggregatedLog,
+  toProjectRelativePath,
+  ast,
+  query,
+} from '@nx/devkit/internal';
 import { coerce, major } from 'semver';
 
 export function getConfigFilePath(tree: Tree, configDir: string) {

@@ -6,7 +6,10 @@ import {
   readJson,
   type Tree,
 } from '@nx/devkit';
-import { getInstalledPackageVersion } from '@nx/devkit/internal';
+import {
+  getInstalledPackageVersion,
+  type TypescriptAst,
+} from '@nx/devkit/internal';
 import { ensureTypescript } from '@nx/js/internal';
 import { dirname, resolve } from 'path';
 import { lt, validRange } from 'semver';
@@ -61,7 +64,7 @@ type MigrationResult = {
   skipAgentic?: boolean;
 };
 
-let ts: typeof import('typescript');
+let ts: TypescriptAst;
 
 export default async function upgradeToCypress16(
   tree: Tree

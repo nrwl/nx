@@ -8,6 +8,7 @@ import {
   type StringChange,
   type Tree,
 } from '@nx/devkit';
+import type { TypescriptAst } from '@nx/devkit/internal';
 import type {
   ObjectLiteralExpression,
   ObjectLiteralElementLike,
@@ -83,8 +84,12 @@ export default async function addReadySignalPlugin(tree: Tree) {
 }
 
 function addPlugin(content: string, configPath: string): EditResult {
-  const { tsquery } = require('@phenomnomnominal/tsquery');
-  const ts: typeof import('typescript') = require('typescript');
+  const {
+    tsquery,
+    ensureTypescript,
+    hasParseErrors,
+  } = require('@nx/devkit/internal');
+  const ts: TypescriptAst = ensureTypescript();
   const file: SourceFile = tsquery.ast(
     content,
     configPath,
@@ -93,7 +98,7 @@ function addPlugin(content: string, configPath: string): EditResult {
 
   // The parser recovers from syntax errors, so the edit would land in a
   // guessed tree.
-  if ((file as { parseDiagnostics?: unknown[] }).parseDiagnostics?.length) {
+  if (hasParseErrors(file)) {
     return { kind: 'skipped', reason: 'it has syntax errors' };
   }
 
@@ -169,7 +174,7 @@ function addPlugin(content: string, configPath: string): EditResult {
 }
 
 function findProperty(
-  ts: typeof import('typescript'),
+  ts: TypescriptAst,
   object: ObjectLiteralExpression,
   name: string
 ): ObjectLiteralElementLike | undefined {
@@ -183,10 +188,7 @@ function findProperty(
   );
 }
 
-function importChange(
-  ts: typeof import('typescript'),
-  file: SourceFile
-): StringChange {
+function importChange(ts: TypescriptAst, file: SourceFile): StringChange {
   const imports = file.statements.filter(ts.isImportDeclaration);
   const requires = file.statements.filter(
     (statement) =>

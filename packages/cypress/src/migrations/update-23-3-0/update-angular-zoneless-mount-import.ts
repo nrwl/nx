@@ -9,7 +9,7 @@ import {
   type Tree,
 } from '@nx/devkit';
 import { ensureTypescript } from '@nx/js/internal';
-import { query } from '@phenomnomnominal/tsquery';
+import { query, type TypescriptAst } from '@nx/devkit/internal';
 import type { SourceFile, StringLiteralLike } from 'typescript';
 import { hasLocalValueBinding, parseSourceFile } from '../../utils/migrations';
 
@@ -22,7 +22,7 @@ const OLD_SPECIFIERS = new Set([
 const DEPRECATED_PACKAGE = '@cypress/angular-zoneless';
 const NEW_SPECIFIER = 'cypress/angular';
 
-let ts: typeof import('typescript');
+let ts: TypescriptAst;
 
 export default async function updateAngularZonelessMountImport(tree: Tree) {
   let wereFilesMigrated = false;

@@ -372,6 +372,48 @@ describe('convert-to-inferred', () => {
       expect(content).not.toContain('useLegacyNxPlugin');
     });
 
+    it('should convert a config whose options already set every build option and whose plugin has no arguments', async () => {
+      const project: ProjectConfiguration = {
+        name: 'app1',
+        root: 'apps/app1',
+        projectType: 'application',
+        targets: {
+          build: {
+            executor: '@nx/rspack:rspack',
+            options: {
+              rspackConfig: 'apps/app1/rspack.config.js',
+              main: 'apps/app1/src/main.ts',
+            },
+          },
+        },
+      };
+      addProject(tree, project.name, project);
+      fs.createFileSync(
+        `${project.root}/project.json`,
+        JSON.stringify(project)
+      );
+      writeRspackConfig(
+        tree,
+        project.root,
+        `const { NxAppRspackPlugin } = require('@nx/rspack/app-plugin');
+const options = {
+  main: './src/main.ts',
+};
+module.exports = { plugins: [new NxAppRspackPlugin] };
+`
+      );
+
+      await convertToInferred(tree, { project: project.name });
+
+      const config = tree.read(`${project.root}/rspack.config.js`, 'utf-8');
+      expect(config).toContain(
+        `build: {\n    default: {\n      main: './src/main.ts',\n    },\n  },`
+      );
+      expect(config).toContain(
+        'module.exports = { plugins: [new NxAppRspackPlugin(buildOptions)] };'
+      );
+    });
+
     it('should register plugin in nx.json', async () => {
       const project = createProject(tree);
       writeRspackConfig(tree, project.root);

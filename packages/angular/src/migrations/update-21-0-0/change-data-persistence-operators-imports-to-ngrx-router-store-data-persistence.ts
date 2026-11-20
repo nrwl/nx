@@ -12,8 +12,8 @@ import { versions } from '../../generators/utils/version-utils';
 import { FileChangeRecorder } from '../../utils/file-change-recorder';
 import { getProjectsFilteredByDependencies } from '../utils/projects';
 
-let tsqueryAst: typeof import('@phenomnomnominal/tsquery').ast;
-let tsqueryQuery: typeof import('@phenomnomnominal/tsquery').query;
+let tsqueryAst: typeof import('@nx/devkit/internal').ast;
+let tsqueryQuery: typeof import('@nx/devkit/internal').query;
 
 const angularPluginTargetNames = ['npm:@nx/angular', 'npm:@nrwl/angular'];
 const dataPersistenceOperators = [
@@ -34,7 +34,7 @@ export default async function (tree: Tree): Promise<void> {
   }
 
   ensureTypescript();
-  const tsqueryModule = require('@phenomnomnominal/tsquery');
+  const tsqueryModule = require('@nx/devkit/internal');
   tsqueryAst = tsqueryModule.ast;
   tsqueryQuery = tsqueryModule.query;
   const cachedFileMap = readFileMapCache().fileMap.projectFileMap;
