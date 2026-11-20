@@ -1,4 +1,4 @@
-import { execSync } from 'node:child_process';
+import { execSync, spawnSync } from 'node:child_process';
 import { homedir } from 'os';
 import { join } from 'path';
 import { FileLock } from 'nx/src/native';
@@ -9,8 +9,8 @@ import { isVerbose } from './get-env-info';
 // Locks that keep one user's `npx playwright install` runs from overlapping.
 // With `--with-deps`, overlapping runs make `apt` fail on Linux. They live in
 // the home directory so another user can't block or hold them.
+// scripts/e2e-browser-install.mjs takes the same locks.
 const LOCK_DIR = join(homedir(), '.cache', 'nx-e2e-locks');
-// scripts/playwright-install-e2e.mjs takes the same lock.
 const PLAYWRIGHT_LOCK_FILE = join(LOCK_DIR, 'playwright-install.lock');
 // Cypress needs the same treatment: it unzips into one cache directory per user,
 // and a second install clears that directory while the first is still unzipping
@@ -37,9 +37,8 @@ function withInstallLock(lockFile: string, toolName: string, fn: () => void) {
 }
 
 export async function ensureCypressInstallation() {
-  // Nothing runs Cypress unless e2e tests are enabled, and the binary is not
-  // fetched while workspaces install in that case, so pulling it here would
-  // download and unzip ~100MB that no test is going to use.
+  // Nothing runs Cypress unless e2e tests are enabled, so pulling the binary
+  // here would download and unzip ~100MB that no test is going to use.
   if (process.env.NX_E2E_RUN_E2E !== 'true') {
     return;
   }
@@ -47,22 +46,40 @@ export async function ensureCypressInstallation() {
   // Only one process may unzip into the user's Cypress cache at a time,
   // for the same reason Playwright installs are serialized below.
   withInstallLock(CYPRESS_LOCK_FILE, 'Cypress', () => {
-    try {
-      // No-op when the binary is installed. `cypress run` smoke-tests it on first
-      // use, so this skips `cypress verify`, which always reruns that test.
-      execSync('npx cypress install', {
-        stdio: isVerbose() ? 'inherit' : 'pipe',
+    // No-op when the binary is installed. `cypress run` smoke-tests it on first
+    // use, so this skips `cypress verify`, which always reruns that test.
+    // One pipe for both streams keeps the output in the order it was printed.
+    const { status, signal, error, stdout } = spawnSync(
+      'npx cypress install 2>&1',
+      {
+        shell: true,
         encoding: 'utf-8',
         cwd: tmpProjPath(),
-        // The binary is skipped while workspaces are installed, so this call
-        // has to be allowed to fetch it.
-        env: { ...process.env, CYPRESS_INSTALL_BINARY: undefined },
-      });
-    } catch (error) {
-      e2eConsoleLogger('Failed to install Cypress:', error);
-      throw error;
+        // Workspace installs skip the binary, so this call installs it from the
+        // developer's source that global-setup.ts saved, or from the default.
+        env: {
+          ...process.env,
+          CYPRESS_INSTALL_BINARY: process.env.NX_E2E_CYPRESS_INSTALL_BINARY,
+        },
+      }
+    );
+    // Cypress prints its binary source, which can be a URL with credentials.
+    const output = redactUrlCredentials(stdout ?? '');
+    if (status !== 0) {
+      const reason = error?.message ?? `exit code ${status ?? signal}`;
+      e2eConsoleLogger(`Failed to install Cypress (${reason}):`, output);
+      throw new Error(`Failed to install Cypress (${reason}).`);
+    }
+    if (isVerbose()) {
+      process.stdout.write(output);
     }
   });
+}
+
+function redactUrlCredentials(text: string) {
+  return text
+    .replace(/(https?:\/\/)[^\s/?#]*@/gi, '$1***@')
+    .replace(/(https?:\/\/[^\s?#]*)\?[^\s#]*/gi, '$1?***');
 }
 
 export function ensurePlaywrightBrowsersInstallation() {
@@ -71,7 +88,7 @@ export function ensurePlaywrightBrowsersInstallation() {
       `Process ${process.pid} acquired lock, installing Playwright browsers...`
     );
 
-    // scripts/playwright-install-e2e.mjs, a dependency of these specs, installs
+    // scripts/e2e-browser-install.mjs, a dependency of these specs, installs
     // the system packages first, but only when NX_E2E_RUN_E2E is 'true'. Both
     // skip full Chromium, since headless runs use its headless shell.
     const playwrightInstallArgs =

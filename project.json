@@ -87,7 +87,11 @@
     },
     "playwright-install-e2e": {
       "cache": false,
-      "command": "node ./scripts/playwright-install-e2e.mjs"
+      "command": "node ./scripts/e2e-browser-install.mjs playwright"
+    },
+    "cypress-install-e2e": {
+      "cache": false,
+      "command": "node ./scripts/e2e-browser-install.mjs cypress"
     },
     "check-format:quick": {
       "parallelism": false

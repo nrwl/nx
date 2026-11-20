@@ -219,8 +219,8 @@ export async function shouldRunCypressTests(): Promise<boolean> {
     return false;
   }
   const startTime = performance.now();
-  // Cypress unzips into a cache shared by the whole machine, so this has to
-  // finish before the suite starts running tests.
+  // Workspace installs skip the Cypress binary, so install it before the suite
+  // runs Cypress.
   await ensureCypressInstallation();
   logInfo(`Cypress ready (${secondsSince(startTime)}s)`);
   return true;
