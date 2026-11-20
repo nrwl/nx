@@ -1,12 +1,13 @@
 use std::cmp;
-use std::collections::HashSet;
-use std::path::{Path, PathBuf};
+use std::collections::{HashMap, HashSet};
+use std::path::{Component, Path, PathBuf};
 use std::sync::LazyLock;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::thread::available_parallelism;
 use std::{fs, io};
 
 use fs_extra::error::ErrorKind;
+use itertools::Either;
 use rayon::prelude::*;
 use tracing::{debug, trace};
 
@@ -171,6 +172,58 @@ fn remove_path(path: &Path) -> io::Result<()> {
     }
 }
 
+#[derive(Default)]
+struct OutputMatch {
+    seen: bool,
+    is_directory: Option<bool>,
+}
+
+pub(super) fn outputs_to_copy<'a>(
+    source: &'a Path,
+    expanded: &'a [String],
+) -> impl Iterator<Item = &'a str> {
+    if expanded.len() < 2 {
+        return Either::Left(expanded.iter().map(String::as_str));
+    }
+
+    let paths = expanded.iter().map(|output| {
+        let path = Path::new(output);
+        path.strip_prefix(".").unwrap_or(path)
+    });
+    let mut matches: HashMap<&Path, OutputMatch> = paths
+        .clone()
+        .map(|path| (path, OutputMatch::default()))
+        .collect();
+
+    let filtered = expanded
+        .iter()
+        .zip(paths)
+        .filter_map(move |(output, path)| {
+            let output_match = matches.entry(path).or_default();
+            if output_match.seen {
+                return None;
+            }
+            output_match.seen = true;
+
+            // `..` can lead outside a directory that prefixes the path.
+            if path.components().any(|part| part == Component::ParentDir) {
+                return Some(output.as_str());
+            }
+
+            // Only a real source directory copies its children. Expansion does
+            // not list directories when exclusions apply, or descend into links.
+            let covered = path.ancestors().skip(1).any(|parent| {
+                matches.get_mut(parent).is_some_and(|entry| {
+                    *entry.is_directory.get_or_insert_with(|| {
+                        fs::symlink_metadata(source.join(parent)).is_ok_and(|meta| meta.is_dir())
+                    })
+                })
+            });
+            (!covered).then_some(output.as_str())
+        });
+    Either::Right(filtered)
+}
+
 /// Restore the given expanded outputs from `outputs_path` into `workspace_root`.
 /// Only the listed outputs are copied (never the whole cache dir) and each copy
 /// is confined to `workspace_root`, so a malicious artifact can't write beyond
@@ -207,7 +260,7 @@ pub fn copy_outputs_into_workspace(
 
     let mut size = 0;
     let mut written = vec![];
-    for output in expanded_outputs {
+    for output in outputs_to_copy(outputs_path, expanded_outputs) {
         let from = outputs_path.join(output);
         // Only restore entries the artifact actually contains.
         if fs::symlink_metadata(&from).is_err() {
@@ -302,8 +355,6 @@ fn find_link_leaving_dir(dir: &Path, depth: usize) -> io::Result<Option<PathBuf>
 /// root, resolves strictly inside that root. A `..` after a named component
 /// is refused, because that component may itself be a link.
 fn link_target_stays_inside(mut depth: usize, target: &Path) -> bool {
-    use std::path::Component;
-
     let mut named = false;
     for component in target.components() {
         match component {
