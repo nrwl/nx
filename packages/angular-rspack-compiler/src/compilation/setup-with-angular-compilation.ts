@@ -8,6 +8,7 @@ import {
 } from '../models';
 import { resetAngularBuildSassCaches } from '../utils/angular-build-sass';
 import { isAngularBuildVersionAtLeast } from '../utils/angular-build-version';
+import { isUsingWindows } from '../utils/utils';
 import {
   setupCompilation,
   styleTransform,
@@ -57,6 +58,7 @@ export async function setupCompilationWithAngularCompilation(
     compilerOptions,
     componentStylesheetBundler,
     setupWarnings,
+    extendedTsConfigFiles,
   } = await setupCompilation(config, options);
 
   // Mirrors @angular/build's NG_BUILD_PARALLEL_TS switch: anything but
@@ -83,6 +85,21 @@ export async function setupCompilationWithAngularCompilation(
   if (modifiedFiles) {
     componentStylesheetBundler.invalidate(modifiedFiles);
     resetAngularBuildSassCaches(modifiedFiles);
+    // @angular/build 22.3 caches each extended tsconfig with its bases merged
+    // in, but drops only the changed file. Drop the whole chain instead.
+    const tsConfigChain = new Set(extendedTsConfigFiles);
+    const tsConfigChainChanged = [...modifiedFiles].some((file) => {
+      // Cache keys use posix separators, lowercased on case-insensitive
+      // file systems.
+      const posixFile = isUsingWindows() ? file.replace(/\\/g, '/') : file;
+      return (
+        tsConfigChain.has(posixFile) ||
+        tsConfigChain.has(posixFile.toLowerCase())
+      );
+    });
+    if (tsConfigChainChanged) {
+      await angularCompilation.update?.(tsConfigChain);
+    }
   }
 
   modifiedFiles ??= new Set(rootNames);

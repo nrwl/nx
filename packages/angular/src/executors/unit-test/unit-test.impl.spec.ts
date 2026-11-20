@@ -126,4 +126,26 @@ describe('unitTestExecutor option validation', () => {
 
     expect(value).toEqual({ success: true });
   });
+
+  it('throws when "polyfills" is set on Angular < 22.3.0', async () => {
+    getInstalledAngularVersionInfoSpy.mockReturnValue({
+      major: 22,
+      version: '22.2.0',
+    });
+
+    await expect(run({ polyfills: ['zone.js'] })).rejects.toThrow(
+      'The "polyfills" option requires Angular version 22.3.0 or greater. You are currently using version 22.2.0.'
+    );
+  });
+
+  it('allows "polyfills" on Angular >= 22.3.0', async () => {
+    getInstalledAngularVersionInfoSpy.mockReturnValue({
+      major: 22,
+      version: '22.3.0',
+    });
+
+    const { value } = await run({ polyfills: ['zone.js'] });
+
+    expect(value).toEqual({ success: true });
+  });
 });

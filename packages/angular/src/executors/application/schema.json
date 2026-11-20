@@ -570,7 +570,7 @@
       "oneOf": [
         {
           "type": "boolean",
-          "description": "Enable prerending of pages of your application during build time."
+          "description": "Enable prerendering of pages of your application during build time."
         },
         {
           "type": "object",
@@ -586,6 +586,18 @@
             }
           },
           "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "format": {
+              "type": "string",
+              "description": "Defines the file layout of prerendered pages. 'directory': '/foo' is written to 'foo/index.html'. 'file': '/foo' is written to 'foo.html', which some hosting services serve for '/foo' without a redirect to '/foo/'. The root route of the application and of each locale is always written to 'index.html'. Only considered when the build does not produce a server. _Note: this is only supported in Angular versions >= 22.3.0_.",
+              "enum": ["directory", "file"]
+            }
+          },
+          "additionalProperties": false,
+          "required": ["format"]
         }
       ]
     },

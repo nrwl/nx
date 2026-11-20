@@ -301,9 +301,13 @@ export interface AngularRspackPluginOptions {
          */
         routesFile?: string;
         /**
-         * Whether the builder should process the Angular Router configuration to find all unparameterized routes and prerender them.
+         * Whether the builder should process the Angular Router configuration to find all unparameterized routes and prerender them. Defaults to `true` unless `routes` or `routesFile` is set.
          */
         discoverRoutes?: boolean;
+        /**
+         * The file layout of prerendered pages. 'directory' writes '/foo' to 'foo/index.html' and 'file' writes it to 'foo.html'. Angular honors it only for builds without a server, and @nx/angular-rspack prerenders only builds with one, so the option has no effect.
+         */
+        format?: 'directory' | 'file';
       };
   /**
    * Do not use the real path when resolving modules. If unset then will default to `true` if NodeJS option --preserve-symlinks is set.

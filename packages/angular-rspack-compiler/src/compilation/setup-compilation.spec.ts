@@ -113,7 +113,7 @@ describe('setupCompilation', () => {
     );
   });
 
-  it('should ignore TS project references and warn with @angular/build >= 22.2', async () => {
+  it('should ignore TS project references and warn with @angular/build >= 22.3', async () => {
     const { compilerOptions, setupWarnings } = await setupCompilation(
       { source: { tsconfigPath: '/root/tsconfig.json' } },
       { ...options, sourceMap: true, useTsProjectReferences: true }
@@ -124,9 +124,22 @@ describe('setupCompilation', () => {
     expect(compilerOptions.sourceMap).toBeUndefined();
     expect(compilerOptions.isolatedModules).toBeUndefined();
     expect(setupWarnings).toContainEqual(
-      expect.stringContaining(
-        "The 'useTsProjectReferences' option has no effect with Angular 22.2 and later."
-      )
+      "The 'useTsProjectReferences' option has no effect with Angular 22.2 and later."
+    );
+  });
+
+  it('should advise on noEmit when ignoring TS project references with @angular/build 22.2', async () => {
+    isAngularBuildVersionAtLeastMock.mockImplementation(
+      (version) => version !== '22.3.0'
+    );
+
+    const { setupWarnings } = await setupCompilation(
+      { source: { tsconfigPath: '/root/tsconfig.json' } },
+      { ...options, useTsProjectReferences: true }
+    );
+
+    expect(setupWarnings).toContainEqual(
+      "The 'useTsProjectReferences' option has no effect with Angular 22.2 and later. If the TypeScript configuration sets 'noEmit', set 'isolatedModules' to 'true' or remove 'noEmit'."
     );
   });
 
