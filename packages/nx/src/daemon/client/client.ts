@@ -20,6 +20,7 @@ import { Hash } from '../../hasher/task-hasher';
 import {
   IS_WASM,
   NxWorkspaceFiles,
+  ShebangFile,
   TaskOutputs,
   TaskRun,
   TaskTarget,
@@ -100,6 +101,7 @@ import {
 import {
   HandleGlobMessage,
   HandleMultiGlobMessage,
+  HandleShebangFilesMessage,
 } from '../message-types/glob';
 import {
   HandleHashGlobMessage,
@@ -1028,6 +1030,15 @@ export class DaemonClient {
   multiGlob(globs: string[], exclude?: string[]): Promise<string[][]> {
     const message: HandleMultiGlobMessage = {
       type: 'MULTI_GLOB',
+      globs,
+      exclude,
+    };
+    return this.sendToDaemonViaQueue(message);
+  }
+
+  shebangFiles(globs: string[], exclude?: string[]): Promise<ShebangFile[]> {
+    const message: HandleShebangFilesMessage = {
+      type: 'SHEBANG_FILES',
       globs,
       exclude,
     };

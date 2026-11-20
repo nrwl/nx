@@ -285,6 +285,7 @@ export {
   getPrintableCommandArgsForTask,
   getRelativeProjectJsonSchemaPath,
   getSerializedArgsForTask,
+  getShebangFilesInContext,
   getSourceDirOfDependentProjects,
   getTargetConfigurationForTask,
   getTargetInputs,

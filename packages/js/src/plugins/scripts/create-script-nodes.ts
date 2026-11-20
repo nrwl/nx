@@ -10,9 +10,9 @@ import {
   calculateHashesForCreateNodes,
   combineGlobPatterns,
   emitPluginWorkerLog,
+  getShebangFilesInContext,
   hashObject,
   PluginCache,
-  readShebangHeaders,
   workspaceDataDirectory,
 } from '@nx/devkit/internal';
 import { basename, dirname, extname, join, posix } from 'node:path';
@@ -64,6 +64,7 @@ export function createScriptNodes<T extends ScriptPluginOptions>(
       if (!projectRoots.length) {
         return [];
       }
+      const claimed = await claimedShebangs(definition, context.workspaceRoot);
 
       const cache = new PluginCache<ScriptTargets>(
         join(
@@ -79,7 +80,8 @@ export function createScriptNodes<T extends ScriptPluginOptions>(
         );
         const results: CreateNodesResultArray = [];
         for (const [i, projectRoot] of projectRoots.entries()) {
-          const { marker, scripts } = scriptsByRoot.get(projectRoot);
+          const { marker, scripts: handed } = scriptsByRoot.get(projectRoot);
+          const scripts = handed.filter((file) => claimed.has(file));
           // include/exclude can change which scripts a project gets without
           // changing its contents.
           const key = hashObject([hashes[i], [...scripts].sort()]);
@@ -92,9 +94,9 @@ export function createScriptNodes<T extends ScriptPluginOptions>(
               )),
               ...createTargets(
                 definition,
-                context.workspaceRoot,
                 projectRoot,
                 scripts,
+                claimed,
                 options?.watch !== false
               ),
             });
@@ -102,7 +104,7 @@ export function createScriptNodes<T extends ScriptPluginOptions>(
           const targets = cache.get(key);
           if (Object.keys(targets).length) {
             results.push([
-              scripts[0] ?? marker,
+              handed[0] ?? marker,
               { projects: { [projectRoot]: { root: projectRoot, targets } } },
             ]);
           }
@@ -191,6 +193,31 @@ function isInPackageManagerWorkspaces(
   );
 }
 
+interface ClaimedHeader {
+  header: string;
+  shebang: Shebang;
+}
+
+/**
+ * Headers of the scripts the plugin claims, by workspace-relative path. The
+ * workspace walk recorded them, so no file is opened here.
+ */
+async function claimedShebangs<T extends ScriptPluginOptions>(
+  definition: ScriptPluginDefinition<T>,
+  workspaceRoot: string
+): Promise<Map<string, ClaimedHeader>> {
+  const claimed = new Map<string, ClaimedHeader>();
+  for (const { file, header } of await getShebangFilesInContext(workspaceRoot, [
+    SCRIPT_GLOB,
+  ])) {
+    const shebang = parseShebang(getShebangLine(header));
+    if (shebang && definition.claims(shebang)) {
+      claimed.set(file, { header, shebang });
+    }
+  }
+  return claimed;
+}
+
 interface ClaimedScript {
   path: string;
   relativePath: string;
@@ -200,17 +227,14 @@ interface ClaimedScript {
 
 function createTargets<T extends ScriptPluginOptions>(
   definition: ScriptPluginDefinition<T>,
-  workspaceRoot: string,
   projectRoot: string,
   scripts: string[],
+  headers: ReadonlyMap<string, ClaimedHeader>,
   watch: boolean
 ): ScriptTargets {
   const claimed: ClaimedScript[] = [];
-  for (const { file, header } of readShebangHeaders(workspaceRoot, scripts)) {
-    const shebang = parseShebang(getShebangLine(header));
-    if (!shebang || !definition.claims(shebang)) {
-      continue;
-    }
+  for (const file of scripts) {
+    const { header, shebang } = headers.get(file);
     const { name, warnings } = parseTargetName(header);
     for (const warning of warnings) {
       emitPluginWorkerLog('warn', `${file}: ${warning}.`);

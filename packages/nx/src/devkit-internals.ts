@@ -358,6 +358,7 @@ export { SyncError } from './utils/sync-generators';
 export { nxVersion } from './utils/versions';
 export {
   getFilesInDirectoryUsingContext,
+  getShebangFilesInContext,
   globWithWorkspaceContext,
   resetWorkspaceContext,
   setupWorkspaceContext,
