@@ -493,7 +493,7 @@ fn instruction_matches_detail(
             all_externals: externals.any(),
             ..Default::default()
         }),
-        HashInstruction::ProjectConfiguration(project) => Ok(TaskInputMatches {
+        HashInstruction::ProjectConfiguration(project, _) => Ok(TaskInputMatches {
             project_configs: reconfigured
                 .get(project.as_str())
                 .cloned()
@@ -1035,7 +1035,7 @@ mod tests {
         let g = graph(&[("a", "libs/a"), ("b", "libs/b")]);
         let p = plans(
             "consumer:build",
-            vec![HashInstruction::ProjectConfiguration("a".into())],
+            vec![HashInstruction::ProjectConfiguration("a".into(), None)],
         );
         let config_a = strings(&["libs/a/project.json"]);
         let config_b = strings(&["libs/b/project.json"]);
