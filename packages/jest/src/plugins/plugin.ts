@@ -15,6 +15,7 @@ import {
   quoteShellArg,
 } from '@nx/devkit/internal';
 import {
+  escapeGlob,
   CreateNodesContext,
   createNodesFromFiles,
   CreateNodes,
@@ -837,9 +838,9 @@ function classifyResolvedPath(
     relative(absoluteProjectRoot, absolutePath)
   );
   if (relToProject.startsWith('..')) {
-    return joinPathFragments('{workspaceRoot}', relToWorkspace);
+    return `{workspaceRoot}/${escapeGlob(relToWorkspace)}`;
   }
-  return joinPathFragments('{projectRoot}', relToProject);
+  return `{projectRoot}/${escapeGlob(relToProject)}`;
 }
 
 function extractPackageName(value: string): string {
