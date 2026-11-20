@@ -596,7 +596,7 @@ class NxTargetFactory(
       ?: return emptyMap()
 
     testClasses.forEach { testClass ->
-      val targetName = applyPrefix("${goalDescriptor.goalSpecifier}--${testClass.packagePath}.${testClass.className}")
+      val targetName = applyPrefix("${goalDescriptor.goalSpecifier}--${testClass.packagePath}")
 
       log.info("Generating target for test class: $targetName'")
 
@@ -609,7 +609,7 @@ class NxTargetFactory(
 
       // Add test class filtering arguments
       val argsArray = JsonArray()
-      argsArray.add("-Dtest=${testClass.packagePath}.${testClass.className}")
+      argsArray.add("-Dtest=${testClass.packagePath}")
       argsArray.add("-Dsurefire.failIfNoSpecifiedTests=false")
       options.add("args", argsArray)
 

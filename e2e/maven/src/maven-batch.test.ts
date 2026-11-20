@@ -71,6 +71,16 @@ class AppApplicationTests {
     }
     expect(error).toBeDefined();
     expect(error.stdout || error.stderr).toContain('thisTestShouldFail');
+
+    // test-ci runs the same tests through one target per test class.
+    let ciError: any;
+    try {
+      runBatchCLI('run app:test-ci');
+    } catch (e) {
+      ciError = e;
+    }
+    expect(ciError).toBeDefined();
+    expect(ciError.stdout || ciError.stderr).toContain('thisTestShouldFail');
   });
 
   it('should clean multiple projects with run-many in batch mode', () => {
