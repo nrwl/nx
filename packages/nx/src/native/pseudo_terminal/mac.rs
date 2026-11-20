@@ -72,4 +72,11 @@ impl RustPseudoTerminal {
             command_label,
         )
     }
+
+    /// Release the pty master and slave file descriptors. Idempotent, and a
+    /// no-op while a command is still running.
+    #[napi]
+    pub fn shutdown(&mut self) {
+        self.pseudo_terminal.shutdown();
+    }
 }
