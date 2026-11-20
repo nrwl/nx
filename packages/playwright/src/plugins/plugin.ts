@@ -34,7 +34,15 @@ import { walkTsconfigExtendsChain } from '@nx/js/internal';
 import type { PlaywrightTestConfig } from '@playwright/test';
 import { minimatch } from 'minimatch';
 import { existsSync, readdirSync } from 'node:fs';
-import { dirname, join, parse, relative, resolve, sep } from 'node:path';
+import {
+  dirname,
+  isAbsolute,
+  join,
+  parse,
+  relative,
+  resolve,
+  sep,
+} from 'node:path';
 import type { Schema as WaitForWebserverSchema } from '../executors/wait-for-webserver/schema';
 import { installedPlaywrightVersion } from '../utils/installed-playwright';
 import { installedPlaywrightReadsNpmConfigProxy } from '../utils/npm-config-proxy';
@@ -590,7 +598,12 @@ async function buildPlaywrightTargets(
           ...ciBaseTargetConfig,
           options: {
             ...ciBaseTargetConfig.options,
-            env: getAtomizedTaskEnvVars(reporterOutputs, outputSubfolder),
+            env: getAtomizedTaskEnvVars(
+              reporterOutputs,
+              outputSubfolder,
+              context.workspaceRoot,
+              projectRoot
+            ),
           },
           outputs: getAtomizedTaskOutputs(
             testOutput,
@@ -602,7 +615,11 @@ async function buildPlaywrightTargets(
           command: `${baseTargetConfig.command} ${quoteShellArg(
             relativeSpecFilePath
           )} --output=${quoteShellArg(
-            joinPathFragments(testOutput, outputSubfolder)
+            normalizeAtomizedTaskPath(
+              joinPathFragments(testOutput, outputSubfolder),
+              context.workspaceRoot,
+              projectRoot
+            )
           )}`,
           metadata: {
             technologies: ['playwright'],
@@ -1261,9 +1278,29 @@ function normalizeOutput(
   return joinPathFragments('{projectRoot}', pathRelativeToProjectRoot);
 }
 
+function normalizeAtomizedTaskPath(
+  path: string,
+  workspaceRoot: string,
+  projectRoot: string
+): string {
+  const fullProjectRoot = resolve(workspaceRoot, projectRoot);
+  const fullPath = resolve(fullProjectRoot, path);
+  const pathRelativeToWorkspace = relative(workspaceRoot, fullPath);
+  if (
+    pathRelativeToWorkspace === '..' ||
+    pathRelativeToWorkspace.startsWith(`..${sep}`) ||
+    isAbsolute(pathRelativeToWorkspace)
+  ) {
+    return path;
+  }
+  return normalizePath(relative(fullProjectRoot, fullPath));
+}
+
 function getAtomizedTaskEnvVars(
   reporterOutputs: Array<ReporterOutput>,
-  outputSubfolder: string
+  outputSubfolder: string,
+  workspaceRoot: string,
+  projectRoot: string
 ): Record<string, string> {
   const env: Record<string, string> = {};
   for (let [reporter, output] of reporterOutputs) {
@@ -1277,6 +1314,8 @@ function getAtomizedTaskEnvVars(
       // add subfolder to the output to make them unique
       output = addSubfolderToOutput(output, outputSubfolder);
     }
+
+    output = normalizeAtomizedTaskPath(output, workspaceRoot, projectRoot);
 
     const outputExtname = parse(output).ext;
     const isFile = outputExtname !== '';
