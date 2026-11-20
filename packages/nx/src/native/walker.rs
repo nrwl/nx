@@ -8,13 +8,14 @@ use parking_lot::Mutex;
 
 use crate::native::glob::{NxGlobSet, build_glob_set};
 
-use crate::native::utils::{Normalize, get_mod_time, git::parent_gitignore_files};
+use crate::native::utils::{Normalize, git::parent_gitignore_files, hash_stamp};
 use walkdir::WalkDir;
 
 #[derive(PartialEq, Debug, Ord, PartialOrd, Eq, Clone)]
 pub struct NxFile {
     pub full_path: String,
     pub normalized_path: String,
+    /// Mtime from `hash_stamp`. On unix the high bit is the executable bit.
     pub mod_time: i64,
 }
 
@@ -172,7 +173,7 @@ where
         Some(NxFile {
             full_path: String::from(dir_entry.path().to_string_lossy()),
             normalized_path: file_path.to_normalized_string(),
-            mod_time: get_mod_time(&metadata),
+            mod_time: hash_stamp(&metadata),
         })
     })
 }
@@ -257,7 +258,7 @@ fn walk_and_find_ignore_files(
             tx.send(NxFile {
                 full_path: String::from(dir_entry.path().to_string_lossy()),
                 normalized_path: file_path.to_normalized_string(),
-                mod_time: get_mod_time(&metadata),
+                mod_time: hash_stamp(&metadata),
             })
             .ok();
 

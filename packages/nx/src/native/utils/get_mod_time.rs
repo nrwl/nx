@@ -59,3 +59,28 @@ pub fn gather_stamp() -> i64 {
         .map(|d| d.as_secs() as i64)
         .unwrap_or(0)
 }
+
+/// Above any unix mtime, which `get_mod_time` reports in seconds.
+#[cfg(unix)]
+const EXEC_STAMP_BIT: i64 = 1 << 62;
+
+/// `get_mod_time`, with the executable bit in the high bit on unix.
+/// `chmod` leaves mtime unchanged, so the archive would reuse the other mode's hash.
+pub fn hash_stamp(metadata: &Metadata) -> i64 {
+    let mtime = get_mod_time(metadata);
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        if metadata.permissions().mode() & 0o111 != 0 {
+            return mtime | EXEC_STAMP_BIT;
+        }
+    }
+    mtime
+}
+
+/// The mtime half of [`hash_stamp`], comparable with [`gather_stamp`].
+pub fn hash_stamp_mtime(stamp: i64) -> i64 {
+    #[cfg(unix)]
+    let stamp = stamp & !EXEC_STAMP_BIT;
+    stamp
+}

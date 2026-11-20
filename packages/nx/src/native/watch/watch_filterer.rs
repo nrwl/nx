@@ -119,6 +119,22 @@ impl WatchFilterer {
             | EventKind::Remove(RemoveKind::Any)
             | EventKind::Modify(ModifyKind::Any) => {}
 
+            // `chmod` is a metadata event. inotify does not say which attribute
+            // changed, and a directory's mode is not part of a file hash.
+            #[cfg(target_os = "linux")]
+            EventKind::Modify(ModifyKind::Metadata(_)) => {
+                if event
+                    .event
+                    .paths
+                    .iter()
+                    .enumerate()
+                    .any(|(index, _)| event.is_dir_at(index))
+                {
+                    trace!("directory metadata event rejected");
+                    return false;
+                }
+            }
+
             #[cfg(target_os = "macos")]
             EventKind::Create(CreateKind::Folder) | EventKind::Modify(ModifyKind::Metadata(_)) => {}
 
@@ -257,4 +273,35 @@ pub(crate) fn create_filter(
         hardcoded,
         additional_globs,
     })
+}
+
+#[cfg(all(test, target_os = "linux"))]
+mod tests {
+    use std::fs;
+
+    use notify::EventKind;
+    use notify::event::{MetadataKind, ModifyKind};
+
+    use super::create_filter;
+    use crate::native::watch::types::RawWatchEvent;
+
+    #[test]
+    fn chmod_on_a_file_is_admitted_and_chmod_on_a_directory_is_not() {
+        let temp = assert_fs::TempDir::new().unwrap();
+        let origin = dunce::canonicalize(temp.path()).unwrap();
+        let file = origin.join("tool.sh");
+        let dir = origin.join("pkg");
+        fs::write(&file, "echo").unwrap();
+        fs::create_dir(&dir).unwrap();
+        let filter = create_filter(origin.to_str().unwrap(), &[], None).unwrap();
+
+        let metadata = |path| {
+            RawWatchEvent::new(
+                notify::Event::new(EventKind::Modify(ModifyKind::Metadata(MetadataKind::Any)))
+                    .add_path(path),
+            )
+        };
+        assert!(filter.check_event(&metadata(file)));
+        assert!(!filter.check_event(&metadata(dir)));
+    }
 }
