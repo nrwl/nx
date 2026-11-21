@@ -112,3 +112,51 @@ describe('success output', () => {
     );
   });
 });
+
+describe('Antigravity detection', () => {
+  const aiEnvVars = [
+    'CLAUDECODE',
+    'CLAUDE_CODE',
+    'OPENCODE',
+    'CODEX_THREAD_ID',
+    'SUPERSET_AGENT_ID',
+    'COPILOT_CLI',
+    'REPL_ID',
+    'PAGER',
+    'CURSOR_TRACE_ID',
+    'COMPOSER_NO_INTERACTION',
+    'GEMINI_CLI',
+    'ANTIGRAVITY_AGENT',
+  ];
+
+  beforeEach(() => {
+    vi.resetModules();
+    for (const key of aiEnvVars) {
+      vi.stubEnv(key, '');
+    }
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    vi.resetModules();
+  });
+
+  it('does not detect Antigravity when ANTIGRAVITY_AGENT is unset', async () => {
+    const { isAntigravity, isAiAgent, detectAiAgentName } =
+      await import('./ai-output');
+
+    expect(isAntigravity()).toBe(false);
+    expect(isAiAgent()).toBe(false);
+    expect(detectAiAgentName()).toBeNull();
+  });
+
+  it('detects Antigravity when ANTIGRAVITY_AGENT is set', async () => {
+    vi.stubEnv('ANTIGRAVITY_AGENT', '1');
+    const { isAntigravity, isAiAgent, detectAiAgentName } =
+      await import('./ai-output');
+
+    expect(isAntigravity()).toBe(true);
+    expect(isAiAgent()).toBe(true);
+    expect(detectAiAgentName()).toBe('antigravity');
+  });
+});

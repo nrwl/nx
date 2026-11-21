@@ -19,6 +19,7 @@ export function isAiAgent(): boolean {
       isOpenCode() ||
       isCodex() ||
       isCopilotCli() ||
+      isAntigravity() ||
       isReplitAi() ||
       isCursorAi() ||
       isGeminiCli();
@@ -64,6 +65,10 @@ export function isGeminiCli(): boolean {
   return !!process.env.GEMINI_CLI;
 }
 
+export function isAntigravity(): boolean {
+  return !!process.env.ANTIGRAVITY_AGENT;
+}
+
 export function detectAiAgentName(): string | null {
   if (isClaudeCode()) return 'claude';
   if (isCursorAi()) return 'cursor';
@@ -71,6 +76,7 @@ export function detectAiAgentName(): string | null {
   if (isCodex()) return 'codex';
   if (isCopilotCli()) return 'copilot-cli';
   if (isGeminiCli()) return 'gemini';
+  if (isAntigravity()) return 'antigravity';
   return null;
 }
 

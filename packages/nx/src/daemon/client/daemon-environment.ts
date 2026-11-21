@@ -84,10 +84,12 @@ const DAEMON_ENV_VARS_EXCLUSIONS = new Set([
   // Set per session or per release alongside the detection vars above, so they
   // churn the daemon's environment across sessions of the same agent. Named
   // rather than prefix-matched: COPILOT_HOME and COPILOT_GITHUB_TOKEN share the
-  // prefix and are kept on purpose, and CLAUDE_PID is not under CLAUDE_CODE_.
+  // prefix and are kept on purpose, CLAUDE_PID is not under CLAUDE_CODE_, and
+  // an AGY_ prefix could collide with unrelated user vars.
   'COPILOT_AGENT_SESSION_ID',
   'COPILOT_CLI_BINARY_VERSION',
   'CLAUDE_PID',
+  'AGY_REQUIRE_AUTHENTICATED_UI_BOOTSTRAP',
 
   // Editors / IDEs
   'NX_CONSOLE',
@@ -220,9 +222,10 @@ const DAEMON_ENV_PREFIX_EXCLUSIONS = [
   'JETBRAINS_',
   'ELECTRON_',
 
-  // AI agent harnesses (per-session ids; the bare CLAUDECODE/CLAUDE_CODE
-  // detection vars are excluded above)
+  // AI agent harnesses (per-session ids and runtime vars; the bare
+  // CLAUDECODE/CLAUDE_CODE detection vars are excluded above)
   'CLAUDE_CODE_',
+  'ANTIGRAVITY_',
 
   // Shell prompts / integrations (per-command and per-session state)
   'ATUIN_',
