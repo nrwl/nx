@@ -1,9 +1,15 @@
+import '../internal-testing-utils/mock-fs';
+import { vol } from 'memfs';
 import {
   createProjectFileMapCache as _createCache,
   extractCachedFileData,
   FileMapCache,
+  nxFileMap,
+  nxProjectGraph,
   parseFileMapCache,
   parseProjectGraphCache,
+  readFileMapCache,
+  readProjectGraphCache,
   shouldRecomputeWholeGraph,
 } from './nx-deps-cache';
 import { ProjectGraphError, StaleProjectGraphCacheError } from './error-types';
@@ -543,7 +549,9 @@ describe('nx deps utils', () => {
     });
 
     it('should accept a BOM and comments', () => {
-      expect(parseProjectGraphCache('﻿// c\n' + JSON.stringify(graph))).toEqual({
+      expect(
+        parseProjectGraphCache('\uFEFF// c\n' + JSON.stringify(graph))
+      ).toEqual({
         projectGraph: graph,
         computedAt: undefined,
       });
@@ -590,12 +598,68 @@ describe('nx deps utils', () => {
       expect(parseFileMapCache(JSON.stringify(cache))).toEqual(cache);
     });
 
+    it('should accept a BOM and comments', () => {
+      const cache = { version: '6.0', fileMap: { projectFileMap: {} } };
+      expect(parseFileMapCache('\uFEFF// c\n' + JSON.stringify(cache))).toEqual(
+        cache
+      );
+    });
+
     it('should return null for null content', () => {
       expect(parseFileMapCache('null')).toBeNull();
     });
 
     it('should throw on invalid JSON', () => {
       expect(() => parseFileMapCache('{')).toThrow();
+    });
+  });
+
+  describe('cache readers', () => {
+    const graph = { nodes: {}, dependencies: {} };
+
+    beforeEach(() => {
+      vol.reset();
+    });
+
+    it('should return null when the project graph file is missing', () => {
+      expect(readProjectGraphCache()).toBeNull();
+    });
+
+    it('should return null when the file map is missing', () => {
+      expect(readFileMapCache()).toBeNull();
+    });
+
+    it('should log and return null when the file map is not valid JSON', () => {
+      const log = vi.spyOn(console, 'log').mockImplementation(() => {});
+      vol.fromJSON({ [nxFileMap]: '{' });
+
+      expect(readFileMapCache()).toBeNull();
+      expect(log).toHaveBeenCalledWith(
+        `Error reading '${nxFileMap}'. Continue the process without the cache.`
+      );
+      log.mockRestore();
+    });
+
+    it('should rethrow a StaleProjectGraphCacheError', () => {
+      vol.fromJSON({
+        [nxProjectGraph]: JSON.stringify({ ...graph, computedAt: 1 }),
+      });
+
+      expect(() => readProjectGraphCache(2)).toThrow(
+        StaleProjectGraphCacheError
+      );
+    });
+
+    it('should rethrow a ProjectGraphError', () => {
+      vol.fromJSON({
+        [nxProjectGraph]: JSON.stringify({
+          ...graph,
+          computedAt: 5,
+          errors: [{ message: 'x' }],
+        }),
+      });
+
+      expect(() => readProjectGraphCache(2)).toThrow(ProjectGraphError);
     });
   });
 });

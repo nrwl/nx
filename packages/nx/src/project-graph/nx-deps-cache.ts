@@ -22,10 +22,10 @@ import { workspaceDataDirectory } from '../utils/cache-directory';
 import {
   directoryExists,
   fileExists,
+  parseJsonAtPath,
   readJsonFile,
   writeJsonFile,
 } from '../utils/fileutils';
-import { parseJson } from '../utils/json';
 import { logger } from '../utils/logger';
 import { nxVersion } from '../utils/versions';
 import {
@@ -79,7 +79,7 @@ export function ensureCacheDirectory(): void {
 }
 
 export function parseFileMapCache(content: string): null | FileMapCache {
-  return parseCacheJson(content, nxFileMap) ?? null;
+  return parseJsonAtPath(content, nxFileMap) ?? null;
 }
 
 export function parseProjectGraphCache(
@@ -93,7 +93,7 @@ export function parseProjectGraphCache(
   }: ProjectGraph & {
     errors?: Error[];
     computedAt?: number;
-  } = parseCacheJson(content, nxProjectGraph);
+  } = parseJsonAtPath(content, nxProjectGraph);
 
   if (minimumComputedAt && (!computedAt || computedAt < minimumComputedAt)) {
     throw new StaleProjectGraphCacheError();
@@ -116,15 +116,6 @@ export function parseProjectGraphCache(
   }
 
   return { projectGraph: projectGraphCache, computedAt };
-}
-
-function parseCacheJson(content: string, path: string) {
-  try {
-    return parseJson(content);
-  } catch (e) {
-    e.message = e.message.replace('JSON', path);
-    throw e;
-  }
 }
 
 export function readFileMapCache(): null | FileMapCache {
