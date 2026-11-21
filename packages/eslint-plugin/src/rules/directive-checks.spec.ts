@@ -4,6 +4,11 @@ import * as parser from '@typescript-eslint/parser';
 import { TSESLint } from '@typescript-eslint/utils';
 import directiveChecks, { RULE_NAME } from './directive-checks';
 
+vi.mock('../utils/runtime-lint-utils', async () => ({
+  ...(await vi.importActual<any>('../utils/runtime-lint-utils')),
+  isTerminalRun: () => true,
+}));
+
 const linter = new TSESLint.Linter();
 const projectPath = `${process.cwd()}/proj`;
 

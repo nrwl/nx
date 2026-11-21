@@ -23,6 +23,11 @@ import enforceModuleBoundaries, {
   RULE_NAME as enforceModuleBoundariesRuleName,
 } from '../../src/rules/enforce-module-boundaries';
 
+vi.mock('../utils/runtime-lint-utils', async () => ({
+  ...(await vi.importActual<any>('../utils/runtime-lint-utils')),
+  isTerminalRun: () => true,
+}));
+
 vi.mock('@nx/devkit', async () => ({
   ...(await vi.importActual<any>('@nx/devkit')),
   workspaceRoot: '/root',

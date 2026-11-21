@@ -42,6 +42,14 @@ export function readJsonFile<T extends object = any>(
   if (options) {
     options.endsWithNewline = content.charCodeAt(content.length - 1) === 10;
   }
+  return parseJsonAtPath<T>(content, path, options);
+}
+
+export function parseJsonAtPath<T extends object = any>(
+  content: string,
+  path: string,
+  options?: JsonParseOptions
+): T {
   try {
     return parseJson<T>(content, options);
   } catch (e) {
