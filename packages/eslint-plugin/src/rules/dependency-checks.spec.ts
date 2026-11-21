@@ -26,6 +26,11 @@ import dependencyChecks, {
   RULE_NAME as dependencyChecksRuleName,
 } from './dependency-checks';
 
+vi.mock('../utils/runtime-lint-utils', async () => ({
+  ...(await vi.importActual<any>('../utils/runtime-lint-utils')),
+  isTerminalRun: () => true,
+}));
+
 vi.mock('@nx/devkit', async () => ({
   ...(await vi.importActual<any>('@nx/devkit')),
   workspaceRoot: '/root',

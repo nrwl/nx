@@ -142,6 +142,9 @@ export default ESLintUtils.RuleCreator(() => ``)<Options, MessageIds>({
     }
 
     const { projectGraph, projectRootMappings } = readProjectGraph(RULE_NAME);
+    if (!projectGraph) {
+      return {};
+    }
 
     const projects: Record<string, ProjectConfiguration> = {};
     for (const [projectName, node] of Object.entries(projectGraph.nodes)) {
