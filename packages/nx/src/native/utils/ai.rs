@@ -120,6 +120,17 @@ fn is_copilot_cli_ai() -> bool {
     }
 }
 
+/// Detects if the current process is being run by Google Antigravity
+fn is_antigravity_ai() -> bool {
+    match env::var("ANTIGRAVITY_AGENT") {
+        Ok(_) => {
+            debug!("Antigravity AI detected via ANTIGRAVITY_AGENT environment variable");
+            true
+        }
+        Err(_) => false,
+    }
+}
+
 /// Detects which AI agent is running and returns its name.
 /// Returns None if no agent is detected or when running inside the Nx daemon.
 /// Filtering against supported agents should be done on the TypeScript side.
@@ -141,6 +152,8 @@ pub fn detect_ai_agent() -> Option<String> {
         Some("gemini".to_string())
     } else if is_copilot_cli_ai() {
         Some("copilot-cli".to_string())
+    } else if is_antigravity_ai() {
+        Some("antigravity".to_string())
     } else if is_vscode_ai() {
         Some("copilot".to_string())
     } else if is_replit_ai() {
@@ -167,6 +180,7 @@ pub fn is_ai_agent() -> bool {
         || is_codex_ai()
         || is_gemini_ai()
         || is_copilot_cli_ai()
+        || is_antigravity_ai()
         || is_vscode_ai();
 
     if is_ai {
@@ -192,6 +206,7 @@ mod tests {
             "CODEX_THREAD_ID",
             "SUPERSET_AGENT_ID",
             "GEMINI_CLI",
+            "ANTIGRAVITY_AGENT",
             "VSCODE_AGENT",
         ];
         for var in &ai_vars {
@@ -214,6 +229,7 @@ mod tests {
         let original_codex_thread_id = env::var("CODEX_THREAD_ID").ok();
         let original_superset_agent_id = env::var("SUPERSET_AGENT_ID").ok();
         let original_gemini_cli = env::var("GEMINI_CLI").ok();
+        let original_antigravity_agent = env::var("ANTIGRAVITY_AGENT").ok();
         let original_vscode_agent = env::var("VSCODE_AGENT").ok();
 
         // Start with clean environment
@@ -243,6 +259,10 @@ mod tests {
         assert!(
             !is_gemini_ai(),
             "Should not detect Gemini CLI without GEMINI_CLI"
+        );
+        assert!(
+            !is_antigravity_ai(),
+            "Should not detect Antigravity AI without ANTIGRAVITY_AGENT"
         );
         assert!(
             !is_vscode_ai(),
@@ -430,6 +450,40 @@ mod tests {
             env::remove_var("VSCODE_AGENT");
         }
 
+        // Test Antigravity AI detection
+        unsafe {
+            env::set_var("ANTIGRAVITY_AGENT", "1");
+        }
+        assert!(
+            is_antigravity_ai(),
+            "Should detect Antigravity AI with ANTIGRAVITY_AGENT"
+        );
+        assert!(is_ai_agent(), "Main function should detect Antigravity AI");
+        assert_eq!(
+            detect_ai_agent(),
+            Some("antigravity".to_string()),
+            "detect_ai_agent should return antigravity"
+        );
+        unsafe {
+            env::remove_var("ANTIGRAVITY_AGENT");
+        }
+
+        // Antigravity is a VS Code fork, so ANTIGRAVITY_AGENT must win over
+        // VSCODE_AGENT if both are present.
+        unsafe {
+            env::set_var("ANTIGRAVITY_AGENT", "1");
+            env::set_var("VSCODE_AGENT", "1");
+        }
+        assert_eq!(
+            detect_ai_agent(),
+            Some("antigravity".to_string()),
+            "Antigravity should take precedence over VS Code AI"
+        );
+        unsafe {
+            env::remove_var("ANTIGRAVITY_AGENT");
+            env::remove_var("VSCODE_AGENT");
+        }
+
         // Test VS Code AI detection
         unsafe {
             env::set_var("VSCODE_AGENT", "1");
@@ -513,6 +567,11 @@ mod tests {
         if let Some(val) = original_gemini_cli {
             unsafe {
                 env::set_var("GEMINI_CLI", val);
+            }
+        }
+        if let Some(val) = original_antigravity_agent {
+            unsafe {
+                env::set_var("ANTIGRAVITY_AGENT", val);
             }
         }
         if let Some(val) = original_vscode_agent {

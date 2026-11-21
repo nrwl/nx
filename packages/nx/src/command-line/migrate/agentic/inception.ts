@@ -6,7 +6,7 @@ import { isAiAgent } from '../../../native';
  * spawn an inner agent inside an outer agent.
  *
  * Native `isAiAgent()` covers all supported agents (Claude Code, Cursor,
- * OpenCode, Codex, Gemini, Replit) via parent-process env-var sniffing.
+ * OpenCode, Codex, Gemini, Antigravity, Replit) via parent-process env-var sniffing.
  */
 export function isInsideAgent(): boolean {
   return isAiAgent();

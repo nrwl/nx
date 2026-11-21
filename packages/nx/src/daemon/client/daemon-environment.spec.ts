@@ -228,6 +228,28 @@ describe('daemon environment', () => {
       expect(env.CLAUDE_CODE_SESSION_ID).toBeUndefined();
     });
 
+    it('should exclude Antigravity harness vars while preserving other AGY_ vars', () => {
+      process.env.ANTIGRAVITY_AGENT = '1';
+      process.env.ANTIGRAVITY_CONVERSATION_ID = 'per-session-uuid';
+      process.env.ANTIGRAVITY_TRAJECTORY_ID = 'per-session-trajectory';
+      process.env.ANTIGRAVITY_CSRF_TOKEN = 'per-session-token';
+      process.env.ANTIGRAVITY_LS_ADDRESS = '127.0.0.1:12345';
+      process.env.ANTIGRAVITY_LS_VERSION = '1.0.0';
+      process.env.AGY_REQUIRE_AUTHENTICATED_UI_BOOTSTRAP = '1';
+      process.env.AGY_CUSTOM_SETTING = 'keep-me';
+
+      const env = getDaemonEnv();
+
+      expect(env.ANTIGRAVITY_AGENT).toBeUndefined();
+      expect(env.ANTIGRAVITY_CONVERSATION_ID).toBeUndefined();
+      expect(env.ANTIGRAVITY_TRAJECTORY_ID).toBeUndefined();
+      expect(env.ANTIGRAVITY_CSRF_TOKEN).toBeUndefined();
+      expect(env.ANTIGRAVITY_LS_ADDRESS).toBeUndefined();
+      expect(env.ANTIGRAVITY_LS_VERSION).toBeUndefined();
+      expect(env.AGY_REQUIRE_AUTHENTICATED_UI_BOOTSTRAP).toBeUndefined();
+      expect(env.AGY_CUSTOM_SETTING).toBe('keep-me');
+    });
+
     it('should exclude Nx CLI mechanics vars', () => {
       process.env.NX_CLI_SET = 'true';
       process.env.NX_WORKSPACE_ROOT_PATH = '/workspace/root';
