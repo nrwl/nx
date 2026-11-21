@@ -2,6 +2,13 @@ import type { ProjectGraph } from '@nx/devkit';
 
 const mocks = vi.hoisted(() => ({
   files: new Map<string, Buffer>(),
+  readFileSync: vi.fn((path: string) => {
+    const file = mocks.files.get(path);
+    if (!file) {
+      throw Object.assign(new Error(`ENOENT: ${path}`), { code: 'ENOENT' });
+    }
+    return file;
+  }),
   isTerminalRun: vi.fn(() => false),
   readCachedProjectGraph: vi.fn(),
   readFileMapCache: vi.fn(),
@@ -13,13 +20,7 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock('node:fs', async () => ({
   ...(await vi.importActual<any>('node:fs')),
-  readFileSync: vi.fn((path: string) => {
-    const file = mocks.files.get(path);
-    if (!file) {
-      throw Object.assign(new Error(`ENOENT: ${path}`), { code: 'ENOENT' });
-    }
-    return file;
-  }),
+  readFileSync: mocks.readFileSync,
 }));
 
 vi.mock('./runtime-lint-utils', () => ({
@@ -56,11 +57,8 @@ vi.mock('@nx/js/internal', () => ({
   },
 }));
 
-import { readFileSync } from 'node:fs';
-import {
-  ensureGlobalProjectGraph,
-  readProjectGraph,
-} from './project-graph-utils';
+let ensureGlobalProjectGraph: typeof import('./project-graph-utils').ensureGlobalProjectGraph;
+let readProjectGraph: typeof import('./project-graph-utils').readProjectGraph;
 
 const GRAPH_PATH = '/ws/project-graph.json';
 const MAP_PATH = '/ws/file-map.json';
@@ -101,17 +99,15 @@ function clearGlobals() {
 describe('ensureGlobalProjectGraph', () => {
   let stdout: ReturnType<typeof vi.spyOn>;
 
-  beforeEach(() => {
+  beforeEach(async () => {
+    vi.resetModules();
+    ({ ensureGlobalProjectGraph, readProjectGraph } =
+      await import('./project-graph-utils'));
     mocks.files.clear();
     vi.clearAllMocks();
     mocks.isTerminalRun.mockReturnValue(false);
     clearGlobals();
     stdout = vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
-    // Drop the cache entry the previous test left in the module.
-    writeGraph('{');
-    ensureGlobalProjectGraph('rule');
-    vi.clearAllMocks();
-    mocks.files.clear();
   });
 
   afterEach(() => {
@@ -119,7 +115,7 @@ describe('ensureGlobalProjectGraph', () => {
   });
 
   describe('outside a terminal run', () => {
-    it('parses the same bytes once and reuses the values', () => {
+    it('should parse the same bytes once and reuse the values', () => {
       writeGraph(graphJson('a'));
       writeMap(mapJson('x.ts'));
 
@@ -145,7 +141,7 @@ describe('ensureGlobalProjectGraph', () => {
       expect(mocks.readFileMapCache).not.toHaveBeenCalled();
     });
 
-    it('parses only the graph again when only the graph bytes change', () => {
+    it('should parse only the graph again when only the graph bytes change', () => {
       writeGraph(graphJson('a'));
       writeMap(mapJson('x.ts'));
       const first = readProjectGraph('rule');
@@ -160,7 +156,7 @@ describe('ensureGlobalProjectGraph', () => {
       expect(second.projectFileMap).toBe(first.projectFileMap);
     });
 
-    it('parses only the file map again when only the file map bytes change', () => {
+    it('should parse only the file map again when only the file map bytes change', () => {
       writeGraph(graphJson('a'));
       writeMap(mapJson('x.ts'));
       const first = readProjectGraph('rule');
@@ -176,7 +172,7 @@ describe('ensureGlobalProjectGraph', () => {
       });
     });
 
-    it('parses the buffer that it keeps as the key', () => {
+    it('should parse the buffer that it keeps as the key', () => {
       const graph = graphJson('a');
       const map = mapJson('x.ts');
       writeGraph(graph);
@@ -186,10 +182,10 @@ describe('ensureGlobalProjectGraph', () => {
 
       expect(mocks.parseProjectGraphCache).toHaveBeenCalledWith(graph);
       expect(mocks.parseFileMapCache).toHaveBeenCalledWith(map);
-      expect(vi.mocked(readFileSync)).toHaveBeenCalledTimes(2);
+      expect(mocks.readFileSync).toHaveBeenCalledTimes(2);
     });
 
-    it('returns the cached values when another plugin replaced the globals', () => {
+    it('should return the cached values when another plugin replaced the globals', () => {
       writeGraph(graphJson('a'));
       writeMap(mapJson('x.ts'));
       const first = readProjectGraph('rule');
@@ -233,7 +229,7 @@ describe('ensureGlobalProjectGraph', () => {
           writeMap(mapJson('x.ts'));
         },
       ],
-    ])('warns, clears and retries when %s', (_, breakFiles) => {
+    ])('should warn, clear and retry when %s', (_, breakFiles) => {
       writeGraph(graphJson('a'));
       writeMap(mapJson('x.ts'));
       readProjectGraph('rule');
@@ -269,19 +265,19 @@ describe('ensureGlobalProjectGraph', () => {
       mocks.isTerminalRun.mockReturnValue(true);
     });
 
-    it('reuses warm globals without reading files', () => {
+    it('should reuse warm globals without reading files', () => {
       globalThis.projectGraph = { nodes: {}, dependencies: {} } as ProjectGraph;
       globalThis.projectRootMappings = new Map();
       globalThis.projectFileMap = {};
 
       ensureGlobalProjectGraph('rule');
 
-      expect(readFileSync).not.toHaveBeenCalled();
+      expect(mocks.readFileSync).not.toHaveBeenCalled();
       expect(mocks.readNxJsonFromDisk).not.toHaveBeenCalled();
       expect(mocks.readCachedProjectGraph).not.toHaveBeenCalled();
     });
 
-    it('loads cold globals with the existing readers', () => {
+    it('should load cold globals with the existing readers', () => {
       const graph = JSON.parse(graphJson('a'));
       mocks.readCachedProjectGraph.mockReturnValue(graph);
       mocks.readFileMapCache.mockReturnValue({
@@ -294,7 +290,7 @@ describe('ensureGlobalProjectGraph', () => {
       expect(globalThis.projectFileMap).toEqual({ a: [] });
       expect(globalThis.projectRootMappings.get('libs/a')).toBe('a');
       expect(mocks.locator).toHaveBeenCalledTimes(1);
-      expect(readFileSync).not.toHaveBeenCalled();
+      expect(mocks.readFileSync).not.toHaveBeenCalled();
       expect(mocks.parseProjectGraphCache).not.toHaveBeenCalled();
     });
   });

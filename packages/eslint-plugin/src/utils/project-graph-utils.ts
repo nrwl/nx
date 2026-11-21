@@ -18,14 +18,20 @@ import {
   readFileMapCache,
 } from '@nx/devkit/internal';
 
-let graphCache:
+interface GraphValues {
+  projectGraph: ProjectGraph;
+  projectRootMappings: ProjectRootMappings;
+  projectFileMap: ProjectFileMap;
+}
+
+let lastParsedGraph:
   | {
       graphBytes: Buffer;
       projectGraph: ProjectGraph;
       projectRootMappings: ProjectRootMappings;
     }
   | undefined;
-let fileMapCache:
+let lastParsedFileMap:
   | { mapBytes: Buffer; projectFileMap: ProjectFileMap }
   | undefined;
 
@@ -51,33 +57,39 @@ export function ensureGlobalProjectGraph(
     const graphBytes = readFileSync(nxProjectGraph);
     const mapBytes = readFileSync(nxFileMap);
 
-    const graph = graphCache?.graphBytes.equals(graphBytes)
-      ? graphCache
+    const graph = lastParsedGraph?.graphBytes.equals(graphBytes)
+      ? lastParsedGraph
       : parseGraph(graphBytes);
-    const fileMap = fileMapCache?.mapBytes.equals(mapBytes)
-      ? fileMapCache
+    const fileMap = lastParsedFileMap?.mapBytes.equals(mapBytes)
+      ? lastParsedFileMap
       : parseFileMap(mapBytes);
-    // A new locator on every call: it caches tsconfig paths and misses.
-    const targetProjectLocator = new TargetProjectLocator(
-      graph.projectGraph.nodes,
-      graph.projectGraph.externalNodes
-    );
 
-    graphCache = graph;
-    fileMapCache = fileMap;
-    globalThis.projectGraph = graph.projectGraph;
-    globalThis.projectRootMappings = graph.projectRootMappings;
-    globalThis.projectFileMap = fileMap.projectFileMap;
-    globalThis.targetProjectLocator = targetProjectLocator;
+    lastParsedGraph = graph;
+    lastParsedFileMap = fileMap;
+    setGlobals({
+      projectGraph: graph.projectGraph,
+      projectRootMappings: graph.projectRootMappings,
+      projectFileMap: fileMap.projectFileMap,
+    });
   } catch {
-    graphCache = undefined;
-    fileMapCache = undefined;
-    globalThis.projectGraph = undefined;
-    globalThis.projectRootMappings = undefined;
-    globalThis.projectFileMap = undefined;
-    globalThis.targetProjectLocator = undefined;
+    lastParsedGraph = undefined;
+    lastParsedFileMap = undefined;
+    setGlobals(undefined);
     warnNoProjectGraph(ruleName, skipped);
   }
+}
+
+function setGlobals(values: GraphValues | undefined) {
+  globalThis.projectGraph = values?.projectGraph;
+  globalThis.projectRootMappings = values?.projectRootMappings;
+  globalThis.projectFileMap = values?.projectFileMap;
+  // A new locator on every call: it caches tsconfig paths and misses.
+  globalThis.targetProjectLocator = values
+    ? new TargetProjectLocator(
+        values.projectGraph.nodes,
+        values.projectGraph.externalNodes
+      )
+    : undefined;
 }
 
 function parseGraph(graphBytes: Buffer) {
@@ -110,15 +122,11 @@ function loadFromReaders(ruleName: string, skipped: string) {
    */
   try {
     const projectGraph = readCachedProjectGraph();
-    globalThis.projectGraph = projectGraph;
-    globalThis.projectRootMappings = createProjectRootMappings(
-      projectGraph.nodes
-    );
-    globalThis.projectFileMap = readFileMapCache().fileMap.projectFileMap;
-    globalThis.targetProjectLocator = new TargetProjectLocator(
-      projectGraph.nodes,
-      projectGraph.externalNodes
-    );
+    setGlobals({
+      projectGraph,
+      projectRootMappings: createProjectRootMappings(projectGraph.nodes),
+      projectFileMap: readFileMapCache().fileMap.projectFileMap,
+    });
   } catch {
     warnNoProjectGraph(ruleName, skipped);
   }
