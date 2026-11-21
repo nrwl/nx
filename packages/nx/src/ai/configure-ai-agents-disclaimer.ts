@@ -1,14 +1,12 @@
-import { existsSync, readFileSync } from 'fs';
 import { AgentStatusInfo } from '../daemon/message-types/configure-ai-agents';
+import { isAiAgent } from '../native';
 import { detectAiAgent } from './detect-ai-agent';
-import { agentsMdPath, rulesRegex } from './constants';
 
 /**
  * Whether to show the "configure-ai-agents is outdated" banner after a task run.
  */
 export function shouldPrintConfigureAiAgentsDisclaimer(
-  outdatedAgents: AgentStatusInfo[],
-  workspaceRoot: string
+  outdatedAgents: AgentStatusInfo[]
 ): boolean {
   if (outdatedAgents.length === 0) {
     return false;
@@ -19,17 +17,7 @@ export function shouldPrintConfigureAiAgentsDisclaimer(
     return outdatedAgents.some((agent) => agent.name === detectedAgent);
   }
 
-  // Unsupported agents (e.g. qwen) cannot be configured via `nx configure-ai-agents`.
-  // If the repo already has Nx rules in AGENTS.md, skip the misleading warning.
-  const agentsMd = agentsMdPath(workspaceRoot);
-  if (!existsSync(agentsMd)) {
-    return true;
-  }
-
-  try {
-    const content = readFileSync(agentsMd, 'utf-8');
-    return !rulesRegex.test(content);
-  } catch {
-    return true;
-  }
+  // Unsupported agents (e.g. qwen) cannot be configured via
+  // `nx configure-ai-agents`, so the banner would only mislead them.
+  return !isAiAgent();
 }

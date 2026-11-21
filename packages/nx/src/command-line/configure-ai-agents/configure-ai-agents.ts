@@ -96,12 +96,8 @@ export async function configureAiAgentsHandlerImpl(
 ): Promise<void> {
   const normalizedOptions = normalizeOptions(options);
 
-  const {
-    nonConfiguredAgents,
-    partiallyConfiguredAgents,
-    fullyConfiguredAgents,
-    disabledAgents,
-  } = await getAgentConfigurations(normalizedOptions.agents, workspaceRoot);
+  const { nonConfiguredAgents, fullyConfiguredAgents, disabledAgents } =
+    await getAgentConfigurations(normalizedOptions.agents, workspaceRoot);
 
   if (disabledAgents.length > 0) {
     const commandNames = disabledAgents.map((a) => {
@@ -168,10 +164,12 @@ export async function configureAiAgentsHandlerImpl(
           title: 'The following AI agents are out of date:',
           bodyLines: [
             ...outOfDateAgents.map((a) => {
-              const rulesPath = a.rulesPath;
-              const displayPath = rulesPath.startsWith(workspaceRoot)
-                ? relative(workspaceRoot, rulesPath)
-                : rulesPath;
+              if (!a.configPath) {
+                return `- ${a.displayName}`;
+              }
+              const displayPath = a.configPath.startsWith(workspaceRoot)
+                ? relative(workspaceRoot, a.configPath)
+                : a.configPath;
               return `- ${a.displayName} (${displayPath})`;
             }),
             '',
@@ -180,13 +178,9 @@ export async function configureAiAgentsHandlerImpl(
         });
         process.exit(1);
       }
-      // error on any partial, outdated or non-configured agent
+      // error on any outdated or non-configured agent
     } else if (normalizedOptions.check === 'all') {
-      if (
-        partiallyConfiguredAgents.length === 0 &&
-        outOfDateAgents.length === 0 &&
-        nonConfiguredAgents.length === 0
-      ) {
+      if (outOfDateAgents.length === 0 && nonConfiguredAgents.length === 0) {
         output.success({
           title: `All ${
             !usingAllAgents ? 'selected' : 'supported'
@@ -198,11 +192,9 @@ export async function configureAiAgentsHandlerImpl(
 
       output.error({
         title: 'The following agents are not fully configured or up to date:',
-        bodyLines: [
-          ...partiallyConfiguredAgents,
-          ...outOfDateAgents,
-          ...nonConfiguredAgents,
-        ].map((a) => getAgentChoiceForPrompt(a).label),
+        bodyLines: [...outOfDateAgents, ...nonConfiguredAgents].map(
+          (a) => getAgentChoiceForPrompt(a).label
+        ),
       });
       process.exit(1);
     }
@@ -210,7 +202,7 @@ export async function configureAiAgentsHandlerImpl(
 
   // Automatic mode (no explicit --agents): update outdated agents and report
   // non-configured ones. When an AI agent is detected, also configure the
-  // detected agent itself (even if non-configured or partial).
+  // detected agent itself (even if non-configured).
   const detectedAgent = detectAiAgent();
   const agentsExplicitlyPassed = options.agents !== undefined;
   const isAutoMode =
@@ -218,17 +210,12 @@ export async function configureAiAgentsHandlerImpl(
 
   if (isAutoMode) {
     const agentsToConfig: Agent[] = [];
-    const allConfigs = [
-      ...nonConfiguredAgents,
-      ...partiallyConfiguredAgents,
-      ...fullyConfiguredAgents,
-    ];
+    const allConfigs = [...nonConfiguredAgents, ...fullyConfiguredAgents];
 
     // When an AI agent is detected, configure it if it needs it
     if (detectedAgent) {
       const detectedNeedsConfig =
         nonConfiguredAgents.some((a) => a.name === detectedAgent) ||
-        partiallyConfiguredAgents.some((a) => a.name === detectedAgent) ||
         fullyConfiguredAgents.some(
           (a) => a.name === detectedAgent && a.outdated
         );
@@ -310,13 +297,7 @@ export async function configureAiAgentsHandlerImpl(
   const allAgentChoices: AgentPromptChoice[] = [];
   const preselectedAgents: Agent[] = [];
 
-  // Partially configured agents first (highest priority)
-  partiallyConfiguredAgents.forEach((a) => {
-    allAgentChoices.push(getAgentChoiceForPrompt(a));
-    preselectedAgents.push(a.name);
-  });
-
-  // Outdated agents second
+  // Outdated agents first
   for (const a of fullyConfiguredAgents) {
     if (a.outdated) {
       allAgentChoices.push(getAgentChoiceForPrompt(a));
@@ -370,11 +351,7 @@ export async function configureAiAgentsHandlerImpl(
     await configureAgents(selectedAgents, workspaceRoot, false);
 
     // Combine all agent configurations for display
-    const allAgentConfigs = [
-      ...nonConfiguredAgents,
-      ...partiallyConfiguredAgents,
-      ...fullyConfiguredAgents,
-    ];
+    const allAgentConfigs = [...nonConfiguredAgents, ...fullyConfiguredAgents];
     const configuredOrUpdatedAgents = allAgentConfigs.filter(
       (a) =>
         selectedAgents.includes(a.name) ||
@@ -420,12 +397,9 @@ type AgentPromptChoice = {
  * Describes the end state per agent type.
  */
 function getAgentFooterDescription(agent: AgentConfiguration): string {
-  // Extract filename from rulesPath
-  const rulesFile = agent.rulesPath.split('/').pop() || 'AGENTS.md';
-
   switch (agent.name) {
     case 'claude': {
-      let description = `Installs Nx plugin (MCP + skills + agents). Updates ${rulesFile}.`;
+      let description = `Installs Nx plugin (MCP + skills + agents).`;
       // Check if .mcp.json exists with nx-mcp - if so, mention cleanup
       const mcpJsonPath = claudeMcpJsonPath(workspaceRoot);
       if (existsSync(mcpJsonPath)) {
@@ -445,12 +419,12 @@ function getAgentFooterDescription(agent: AgentConfiguration): string {
     }
     case 'cursor':
     case 'copilot':
-      return `Installs Nx Console (MCP). Adds skills and agents. Updates ${rulesFile}.`;
+      return `Installs Nx Console (MCP). Adds skills and agents.`;
     case 'gemini':
     case 'opencode':
-      return `Configures MCP server. Adds skills and agents. Updates ${rulesFile}.`;
+      return `Configures MCP server. Adds skills and agents.`;
     case 'codex':
-      return `Configures MCP server. Adds skills. Updates ${rulesFile}.`;
+      return `Configures MCP server. Adds skills.`;
     default:
       return '';
   }
@@ -461,32 +435,25 @@ function getAgentFooterDescription(agent: AgentConfiguration): string {
  * Used in the post-configuration output.
  */
 function getAgentConfiguredDescription(agent: AgentConfiguration): string {
-  // Extract filename from rulesPath
-  const rulesFile = agent.rulesPath.split('/').pop() || 'AGENTS.md';
-
   switch (agent.name) {
     case 'claude':
-      return `Nx plugin (MCP + skills + agents) + ${rulesFile}`;
+      return `Nx plugin (MCP + skills + agents)`;
     case 'cursor':
     case 'copilot':
-      return `Nx Console (MCP) + skills + ${rulesFile}`;
+      return `Nx Console (MCP) + skills`;
     case 'gemini':
     case 'opencode':
-      return `MCP + skills + ${rulesFile}`;
     case 'codex':
-      return `MCP + skills + ${rulesFile}`;
+      return `MCP + skills`;
     default:
       return '';
   }
 }
 
 function getAgentChoiceForPrompt(agent: AgentConfiguration): AgentPromptChoice {
-  const partiallyConfigured = agent.mcp !== agent.rules;
-  const needsUpdate = partiallyConfigured || agent.outdated;
-
   return {
     value: agent.name,
-    label: needsUpdate
+    label: agent.outdated
       ? `${agent.displayName} (update available)`
       : agent.displayName,
     hint: getAgentFooterDescription(agent),
