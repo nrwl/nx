@@ -1,4 +1,11 @@
-import { existsSync, mkdirSync, renameSync, rmSync, statSync } from 'node:fs';
+import {
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  renameSync,
+  rmSync,
+  statSync,
+} from 'node:fs';
 import { join } from 'path';
 import { performance } from 'perf_hooks';
 import { NxJsonConfiguration } from '../config/nx-json';
@@ -18,6 +25,7 @@ import {
   readJsonFile,
   writeJsonFile,
 } from '../utils/fileutils';
+import { parseJson } from '../utils/json';
 import { logger } from '../utils/logger';
 import { nxVersion } from '../utils/versions';
 import {
@@ -70,6 +78,55 @@ export function ensureCacheDirectory(): void {
   }
 }
 
+export function parseFileMapCache(content: string): null | FileMapCache {
+  return parseCacheJson(content, nxFileMap) ?? null;
+}
+
+export function parseProjectGraphCache(
+  content: string,
+  minimumComputedAt?: number
+): null | { projectGraph: ProjectGraph; computedAt: number | undefined } {
+  const {
+    computedAt,
+    errors,
+    ...projectGraphCache
+  }: ProjectGraph & {
+    errors?: Error[];
+    computedAt?: number;
+  } = parseCacheJson(content, nxProjectGraph);
+
+  if (minimumComputedAt && (!computedAt || computedAt < minimumComputedAt)) {
+    throw new StaleProjectGraphCacheError();
+  }
+
+  if (errors && errors.length > 0) {
+    if (!minimumComputedAt) {
+      // If you didn't pass minimum computed at, we do not know if
+      // the errors on the cached graph would be relevant to what you
+      // are running. Prior to adding error handling here, the graph
+      // would not have been written to the cache. As such, this matches
+      // existing behavior of the public API.
+      return null;
+    }
+    throw new ProjectGraphError(
+      errors,
+      projectGraphCache,
+      readSourceMapsCache()
+    );
+  }
+
+  return { projectGraph: projectGraphCache, computedAt };
+}
+
+function parseCacheJson(content: string, path: string) {
+  try {
+    return parseJson(content);
+  } catch (e) {
+    e.message = e.message.replace('JSON', path);
+    throw e;
+  }
+}
+
 export function readFileMapCache(): null | FileMapCache {
   performance.mark('read cache:start');
   ensureCacheDirectory();
@@ -77,7 +134,7 @@ export function readFileMapCache(): null | FileMapCache {
   let data = null;
   try {
     if (fileExists(nxFileMap)) {
-      data = readJsonFile(nxFileMap);
+      data = parseFileMapCache(readFileSync(nxFileMap, 'utf-8'));
     }
   } catch (error) {
     console.log(
@@ -99,39 +156,10 @@ export function readProjectGraphCache(
 
   try {
     if (fileExists(nxProjectGraph)) {
-      const {
-        computedAt,
-        errors,
-        ...projectGraphCache
-      }: ProjectGraph & {
-        errors?: Error[];
-        computedAt?: number;
-      } = readJsonFile(nxProjectGraph);
-
-      if (
-        minimumComputedAt &&
-        (!computedAt || computedAt < minimumComputedAt)
-      ) {
-        throw new StaleProjectGraphCacheError();
-      }
-
-      if (errors && errors.length > 0) {
-        if (!minimumComputedAt) {
-          // If you didn't pass minimum computed at, we do not know if
-          // the errors on the cached graph would be relevant to what you
-          // are running. Prior to adding error handling here, the graph
-          // would not have been written to the cache. As such, this matches
-          // existing behavior of the public API.
-          return null;
-        }
-        throw new ProjectGraphError(
-          errors,
-          projectGraphCache,
-          readSourceMapsCache()
-        );
-      }
-
-      return { projectGraph: projectGraphCache, computedAt };
+      return parseProjectGraphCache(
+        readFileSync(nxProjectGraph, 'utf-8'),
+        minimumComputedAt
+      );
     } else {
       return null;
     }

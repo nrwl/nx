@@ -2,8 +2,11 @@ import {
   createProjectFileMapCache as _createCache,
   extractCachedFileData,
   FileMapCache,
+  parseFileMapCache,
+  parseProjectGraphCache,
   shouldRecomputeWholeGraph,
 } from './nx-deps-cache';
+import { ProjectGraphError, StaleProjectGraphCacheError } from './error-types';
 import { ProjectConfiguration } from '../config/workspace-json-project-json';
 import { NxJsonConfiguration } from '../config/nx-json';
 import { nxVersion } from '../utils/versions';
@@ -529,4 +532,70 @@ describe('nx deps utils', () => {
     }
     return r;
   }
+
+  describe('parseProjectGraphCache', () => {
+    const graph = { nodes: {}, dependencies: {} };
+
+    it('should return the graph and computedAt', () => {
+      expect(
+        parseProjectGraphCache(JSON.stringify({ ...graph, computedAt: 5 }))
+      ).toEqual({ projectGraph: graph, computedAt: 5 });
+    });
+
+    it('should accept a BOM and comments', () => {
+      expect(parseProjectGraphCache('﻿// c\n' + JSON.stringify(graph))).toEqual({
+        projectGraph: graph,
+        computedAt: undefined,
+      });
+    });
+
+    it('should throw when computedAt is below the minimum', () => {
+      expect(() =>
+        parseProjectGraphCache(JSON.stringify({ ...graph, computedAt: 1 }), 2)
+      ).toThrow(StaleProjectGraphCacheError);
+      expect(() => parseProjectGraphCache(JSON.stringify(graph), 2)).toThrow(
+        StaleProjectGraphCacheError
+      );
+    });
+
+    it('should return null for a graph with errors and no minimum', () => {
+      expect(
+        parseProjectGraphCache(
+          JSON.stringify({ ...graph, errors: [{ message: 'x' }] })
+        )
+      ).toBeNull();
+    });
+
+    it('should throw a ProjectGraphError for a graph with errors and a minimum', () => {
+      expect(() =>
+        parseProjectGraphCache(
+          JSON.stringify({
+            ...graph,
+            computedAt: 5,
+            errors: [{ message: 'x' }],
+          }),
+          2
+        )
+      ).toThrow(ProjectGraphError);
+    });
+
+    it('should throw on invalid JSON', () => {
+      expect(() => parseProjectGraphCache('{')).toThrow();
+    });
+  });
+
+  describe('parseFileMapCache', () => {
+    it('should return the parsed file map cache', () => {
+      const cache = { version: '6.0', fileMap: { projectFileMap: {} } };
+      expect(parseFileMapCache(JSON.stringify(cache))).toEqual(cache);
+    });
+
+    it('should return null for null content', () => {
+      expect(parseFileMapCache('null')).toBeNull();
+    });
+
+    it('should throw on invalid JSON', () => {
+      expect(() => parseFileMapCache('{')).toThrow();
+    });
+  });
 });
