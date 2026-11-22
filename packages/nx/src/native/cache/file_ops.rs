@@ -74,8 +74,17 @@ pub(crate) fn copy_and_list(
     match boundary {
         Some(root) => {
             create_dir_all_within(root, dest_parent)?;
-            // Never follow or merge into a stale entry at the destination.
-            remove_path(&dest)?;
+            // Never follow or merge through a non-directory at the
+            // destination: a symlink would be written through, a file would
+            // block the copy. A real directory is merged into instead, so
+            // entries the artifact does not hold (e.g. committed files under
+            // the output) survive the restore.
+            let dest_is_dir = fs::symlink_metadata(&dest)
+                .map(|meta| meta.is_dir())
+                .unwrap_or(false);
+            if !dest_is_dir {
+                remove_path(&dest)?;
+            }
         }
         None => {
             if !dest_parent.exists() {
@@ -92,7 +101,11 @@ pub(crate) fn copy_and_list(
     // a symlink (create_dir_all_within realizes parents as real directories).
     let (size, written) = if src.is_symlink() {
         trace!("Copying symlink: {:?}", &src);
-        remove_existing_symlink(&dest)?;
+        if boundary.is_some() {
+            remove_path(&dest)?;
+        } else {
+            remove_existing_symlink(&dest)?;
+        }
         symlink(fs::read_link(&src)?, &dest)?;
         (0, vec![(src.clone(), dest.clone())])
     } else if src.is_dir() {
@@ -100,6 +113,9 @@ pub(crate) fn copy_and_list(
         copy_dir_all(&src, &dest, boundary).map_err(anyhow::Error::new)?
     } else {
         trace!("Copying file: {:?}", &src);
+        if boundary.is_some() {
+            remove_path(&dest)?;
+        }
         let size = copy_file(&src, &dest)?;
         (size, vec![(src.clone(), dest.clone())])
     };
@@ -398,15 +414,24 @@ fn copy_dir_all(
                     Ok(subdir)
                 } else if ty.is_symlink() {
                     trace!("Copying symlink: {:?}", entry.path());
-                    remove_existing_symlink(&dest_path)?;
+                    // On restore, replace whatever occupies the exact
+                    // destination (a symlink, or a directory the artifact
+                    // holds as a link) without touching sibling entries.
+                    if boundary.is_some() {
+                        remove_path(&dest_path)?;
+                    } else {
+                        remove_existing_symlink(&dest_path)?;
+                    }
                     symlink(fs::read_link(entry.path())?, &dest_path)?;
                     symlinks_copied.fetch_add(1, Ordering::Relaxed);
                     Ok((0, vec![(entry.path(), dest_path)]))
                 } else {
                     trace!("Copying file: {:?}", entry.path());
-                    // On restore, don't follow a pre-existing dest symlink.
+                    // On restore, replace whatever occupies the exact
+                    // destination (a symlink, or a directory the artifact
+                    // holds as a file) without touching sibling entries.
                     if boundary.is_some() {
-                        remove_existing_symlink(&dest_path)?;
+                        remove_path(&dest_path)?;
                     }
                     let file_size = copy_file(&entry.path(), &dest_path)?;
                     files_copied.fetch_add(1, Ordering::Relaxed);
@@ -737,6 +762,50 @@ mod test {
         );
     }
 
+    #[test]
+    fn restore_keeps_files_the_artifact_does_not_hold() {
+        let cache = TempDir::new().unwrap();
+        cache.child("dist/out.txt").write_str("ok").unwrap();
+        let workspace = TempDir::new().unwrap();
+        workspace.child("dist/out.txt").write_str("stale").unwrap();
+        workspace
+            .child("dist/LICENSE")
+            .write_str("license text")
+            .unwrap();
+
+        restore_outputs(&workspace, &cache, &["dist"]).unwrap();
+
+        assert_eq!(
+            fs::read_to_string(workspace.join("dist/out.txt")).unwrap(),
+            "ok",
+            "the held output is still restored"
+        );
+        assert_eq!(
+            fs::read_to_string(workspace.join("dist/LICENSE")).unwrap(),
+            "license text",
+            "an entry the artifact does not hold must survive the restore"
+        );
+    }
+
+    #[test]
+    fn restore_replaces_a_directory_where_the_artifact_holds_a_file() {
+        let cache = TempDir::new().unwrap();
+        cache.child("dist/report").write_str("ok").unwrap();
+        let workspace = TempDir::new().unwrap();
+        workspace
+            .child("dist/report/old.txt")
+            .write_str("old")
+            .unwrap();
+
+        restore_outputs(&workspace, &cache, &["dist"]).unwrap();
+
+        assert_eq!(
+            fs::read_to_string(workspace.join("dist/report")).unwrap(),
+            "ok",
+            "a directory occupying a held output path is replaced"
+        );
+    }
+
     #[cfg(unix)]
     #[test]
     fn remove_path_unlinks_symlink_without_following() {
@@ -878,7 +947,7 @@ mod test {
     }
 
     #[test]
-    fn restore_replaces_stale_outputs_with_wide_tree() {
+    fn restore_replaces_held_outputs_and_keeps_the_rest_with_wide_tree() {
         let cache = TempDir::new().unwrap();
         let workspace = TempDir::new().unwrap();
         let bytes = write_wide_tree(&cache.child("dist"));
@@ -900,9 +969,14 @@ mod test {
                 .unwrap();
 
         assert_eq!(size as u64, bytes);
+        // Held paths are replaced by the artifact; an entry the artifact does
+        // not hold survives (nrwl/nx#37466: it may be a committed file).
+        let mut manifest = tree_manifest(&workspace.join("dist"));
+        manifest.retain(|(path, _)| !path.starts_with("stale"));
+        assert_eq!(manifest, tree_manifest(&cache.join("dist")));
         assert_eq!(
-            tree_manifest(&workspace.join("dist")),
-            tree_manifest(&cache.join("dist"))
+            fs::read_to_string(workspace.join("dist/stale/old.txt")).unwrap(),
+            "old"
         );
     }
 
