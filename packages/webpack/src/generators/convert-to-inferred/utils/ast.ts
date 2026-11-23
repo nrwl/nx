@@ -1,9 +1,9 @@
 import { ensureTypescript, type TypescriptAst } from '@nx/devkit/internal';
 import type {
   Expression,
-  ObjectLiteralExpression,
   PropertyAssignment,
   SourceFile,
+  StringLiteral,
 } from 'typescript';
 
 let ts: TypescriptAst;
@@ -47,6 +47,13 @@ export function toPropertyAssignment(
   }
 }
 
+export function toPropertyName(key: string): string | StringLiteral {
+  ts ??= ensureTypescript();
+  return /^[A-Za-z_$][\w$]*$/.test(key)
+    ? key
+    : ts.factory.createStringLiteral(key);
+}
+
 export function toExpression(value: unknown): Expression {
   ts ??= ensureTypescript();
   if (typeof value === 'string') {
@@ -66,22 +73,6 @@ export function toExpression(value: unknown): Expression {
       )
     );
   }
-}
-
-export function appendProperties(
-  object: ObjectLiteralExpression,
-  properties: string[]
-): string {
-  const objectText = object.getText();
-  if (!properties.length) {
-    return objectText;
-  }
-  const lastProperty = object.properties[object.properties.length - 1];
-  if (!lastProperty) {
-    return `{ ${properties.join(', ')} ${objectText.slice(1)}`;
-  }
-  const index = lastProperty.getEnd() - object.getStart();
-  return `${objectText.slice(0, index)}, ${properties.join(', ')}${objectText.slice(index)}`;
 }
 
 /** Whether a top-level `configValues` object written by convert-to-inferred has `key`. */

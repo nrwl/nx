@@ -1,6 +1,6 @@
 import {
   ensureTypescript,
-  printNode,
+  printNodeUpdate,
   processTargetOutputs,
   toProjectRelativePath,
   ast,
@@ -23,9 +23,9 @@ import type { WebpackOptionsNormalized } from 'webpack';
 import { buildServePath } from '../../../executors/dev-server/lib/serve-path';
 import type { WebDevServerOptions as DevServerExecutorOptions } from '../../../executors/dev-server/schema';
 import {
-  appendProperties,
   hasMigratedConfigValues,
   toPropertyAssignment,
+  toPropertyName,
 } from './ast';
 import type { MigrationContext, TransformerContext } from './types';
 
@@ -307,35 +307,41 @@ function setOptionsInWebpackConfig(
    *    ...
    *  },
    */
-  const serveProperty = printNode(
-    ts.factory.createPropertyAssignment(
-      'serve',
-      ts.factory.createObjectLiteralExpression([
-        ts.factory.createPropertyAssignment(
-          'default',
-          ts.factory.createObjectLiteralExpression(
-            Object.entries(defaultOptions).map(([key, value]) =>
-              toPropertyAssignment(key, value)
-            )
-          )
-        ),
-        ...Object.entries(configurationOptions).map(([key, value]) =>
+  const updatedConfigValuesObject = ts.factory.updateObjectLiteralExpression(
+    configValuesObject,
+    [
+      ...configValuesObject.properties,
+      ts.factory.createPropertyAssignment(
+        'serve',
+        ts.factory.createObjectLiteralExpression([
           ts.factory.createPropertyAssignment(
-            key,
+            'default',
             ts.factory.createObjectLiteralExpression(
-              Object.entries(value).map(([key, value]) =>
+              Object.entries(defaultOptions).map(([key, value]) =>
                 toPropertyAssignment(key, value)
               )
             )
-          )
-        ),
-      ])
-    )
+          ),
+          ...(configurationOptions
+            ? Object.entries(configurationOptions).map(([key, value]) =>
+                ts.factory.createPropertyAssignment(
+                  toPropertyName(key),
+                  ts.factory.createObjectLiteralExpression(
+                    Object.entries(value).map(([key, value]) =>
+                      toPropertyAssignment(key, value)
+                    )
+                  )
+                )
+              )
+            : []),
+        ])
+      ),
+    ]
   );
 
-  text = `${text.slice(0, configValuesObject.getStart())}${appendProperties(
+  text = `${text.slice(0, configValuesObject.getStart())}${printNodeUpdate(
     configValuesObject,
-    [serveProperty]
+    updatedConfigValuesObject
   )}${text.slice(configValuesObject.getEnd())}`;
 
   tree.write(webpackConfigPath, text);
@@ -364,6 +370,7 @@ function setDevServerOptionsInWebpackConfig(
   webpackConfigPath: string,
   context: TransformerContext
 ) {
+  ts ??= ensureTypescript();
   const webpackConfigDevServerSelector =
     'ObjectLiteralExpression > PropertyAssignment:has(Identifier[name=devServer])';
   const webpackConfigDevServer = query<PropertyAssignment>(
@@ -397,9 +404,21 @@ function setDevServerOptionsInWebpackConfig(
     webpackConfigSelector
   )[0];
 
-  const afterBrace = webpackConfig.getStart() + 1;
-  const whitespace = text.slice(afterBrace).match(/^\s*/)[0];
-  text = `${text.slice(0, afterBrace)}${whitespace}devServer: devServerOptions,${text.slice(afterBrace)}`;
+  const updatedWebpackConfig = ts.factory.updateObjectLiteralExpression(
+    webpackConfig,
+    [
+      ts.factory.createPropertyAssignment(
+        'devServer',
+        ts.factory.createIdentifier('devServerOptions')
+      ),
+      ...webpackConfig.properties,
+    ]
+  );
+
+  text = `${text.slice(0, webpackConfig.getStart())}${printNodeUpdate(
+    webpackConfig,
+    updatedWebpackConfig
+  )}${text.slice(webpackConfig.getEnd())}`;
 
   tree.write(webpackConfigPath, text);
 }
