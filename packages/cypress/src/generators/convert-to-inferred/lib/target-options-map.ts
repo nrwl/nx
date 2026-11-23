@@ -1,3 +1,34 @@
+// The option surface of the `@nx/cypress:cypress` schema. The removed executor
+// no longer ships a schema.json to read it from, and the converter drops
+// anything outside this set rather than forwarding it to run-commands.
+export const executorOptions = new Set([
+  'autoCancelAfterFailures',
+  'baseUrl',
+  'browser',
+  'ciBuildId',
+  'cypressConfig',
+  'devServerTarget',
+  'env',
+  'exit',
+  'group',
+  'headed',
+  'headless',
+  'ignoreTestFiles',
+  'key',
+  'parallel',
+  'port',
+  'quiet',
+  'record',
+  'reporter',
+  'reporterOptions',
+  'runnerUi',
+  'skipServe',
+  'spec',
+  'tag',
+  'testingType',
+  'watch',
+]);
+
 export const targetOptionsToCliMap = {
   headed: 'headed',
   headless: 'headless',
