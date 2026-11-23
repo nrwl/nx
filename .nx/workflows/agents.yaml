@@ -82,10 +82,9 @@ common-init-steps: &common-init-steps
   - group-name: Install dependencies
     parallel: true
     steps:
-      - name: Pnpm install and browsers
+      - name: Pnpm install
         script: |
           pnpm install --frozen-lockfile
-          pnpm exec cypress install
 
       # cargo's built-in git client has no stall timeout and has hung cloning git dependencies.
       - name: Install rust deps and hyperfine
