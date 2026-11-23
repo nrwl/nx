@@ -5992,31 +5992,7 @@ snapshots:
               },
               {
                 "always": true,
-                "fileset": "{workspaceRoot}/libs/source-lib/src/**/*.ts",
-              },
-              {
-                "always": true,
-                "fileset": "{workspaceRoot}/libs/source-lib/src/**/*.tsx",
-              },
-              {
-                "always": true,
-                "fileset": "{workspaceRoot}/libs/source-lib/src/**/*.d.ts",
-              },
-              {
-                "always": true,
-                "fileset": "{workspaceRoot}/libs/source-lib/src/**/*.cts",
-              },
-              {
-                "always": true,
-                "fileset": "{workspaceRoot}/libs/source-lib/src/**/*.d.cts",
-              },
-              {
-                "always": true,
-                "fileset": "{workspaceRoot}/libs/source-lib/src/**/*.mts",
-              },
-              {
-                "always": true,
-                "fileset": "{workspaceRoot}/libs/source-lib/src/**/*.d.mts",
+                "fileset": "{workspaceRoot}/libs/source-lib/src/**/*.{ts,tsx,cts,mts}",
               },
               {
                 "always": true,
@@ -6028,31 +6004,7 @@ snapshots:
               },
               {
                 "always": true,
-                "fileset": "{workspaceRoot}/libs/nested-source-lib/**/*.ts",
-              },
-              {
-                "always": true,
-                "fileset": "{workspaceRoot}/libs/nested-source-lib/**/*.tsx",
-              },
-              {
-                "always": true,
-                "fileset": "{workspaceRoot}/libs/nested-source-lib/**/*.d.ts",
-              },
-              {
-                "always": true,
-                "fileset": "{workspaceRoot}/libs/nested-source-lib/**/*.cts",
-              },
-              {
-                "always": true,
-                "fileset": "{workspaceRoot}/libs/nested-source-lib/**/*.d.cts",
-              },
-              {
-                "always": true,
-                "fileset": "{workspaceRoot}/libs/nested-source-lib/**/*.mts",
-              },
-              {
-                "always": true,
-                "fileset": "{workspaceRoot}/libs/nested-source-lib/**/*.d.mts",
+                "fileset": "{workspaceRoot}/libs/nested-source-lib/**/*.{ts,tsx,cts,mts}",
               },
               {
                 "always": true,
@@ -6139,29 +6091,33 @@ snapshots:
           }),
           'libs/b/package.json': `{"main": "src/index.ts"}`,
         });
-        const jsSourcesOfB = async () => {
+        const sourcesOfB = async () => {
           const result = await invokeCreateNodesOnMatchingFiles(
             configFiles,
             context,
             { typecheck: false, build: true }
           );
-          return result.projects['libs/a'].targets.build.inputs.filter(
-            (input) =>
-              typeof input !== 'string' &&
-              'fileset' in input &&
-              input.fileset === '{workspaceRoot}/libs/b/src/**/*.js'
-          );
+          return result.projects['libs/a'].targets.build.inputs
+            .filter(
+              (input) =>
+                typeof input !== 'string' &&
+                'fileset' in input &&
+                input.fileset.startsWith('{workspaceRoot}/libs/b/src/')
+            )
+            .map((input) => input.fileset);
         };
 
         configFiles = await applyFilesToTempFsAndContext(tempFs, files({}));
-        expect(await jsSourcesOfB()).toEqual([]);
+        expect(await sourcesOfB()).toEqual([
+          '{workspaceRoot}/libs/b/src/**/*.{ts,tsx,cts,mts}',
+        ]);
 
         configFiles = await applyFilesToTempFsAndContext(
           tempFs,
           files({ allowJs: true })
         );
-        expect(await jsSourcesOfB()).toEqual([
-          { fileset: '{workspaceRoot}/libs/b/src/**/*.js', always: true },
+        expect(await sourcesOfB()).toEqual([
+          '{workspaceRoot}/libs/b/src/**/*.{ts,tsx,js,jsx,cts,cjs,mts,mjs}',
         ]);
       });
 
