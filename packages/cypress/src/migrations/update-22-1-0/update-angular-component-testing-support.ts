@@ -1,19 +1,18 @@
 import {
   addDependenciesToPackageJson,
-  applyChangesToString,
-  ChangeType,
   createProjectGraphAsync,
   formatFiles,
   visitNotIgnoredFiles,
   type ProjectConfiguration,
   type ProjectGraph,
-  type StringChange,
   type Tree,
 } from '@nx/devkit';
 import {
   ensureTypescript,
   ast,
   query,
+  replace,
+  printNodeUpdate,
   type TypescriptAst,
 } from '@nx/devkit/internal';
 import { lt, valid } from 'semver';
@@ -119,34 +118,31 @@ function migrateProject(tree: Tree, projectConfig: ProjectConfiguration) {
     }
 
     const originalContent = tree.read(filePath, 'utf-8');
-    const changes = query<ImportDeclaration>(
+    const updatedContent = replace(
       originalContent,
-      'ImportDeclaration'
-    )
-      .filter(
-        ({ moduleSpecifier }) =>
-          ts.isStringLiteral(moduleSpecifier) &&
-          moduleSpecifier.text === 'cypress/angular'
-      )
-      .flatMap(({ moduleSpecifier }): StringChange[] => {
-        const quote = moduleSpecifier.getText()[0];
-        const start = moduleSpecifier.getStart();
-        return [
-          {
-            type: ChangeType.Delete,
-            start,
-            length: moduleSpecifier.getEnd() - start,
-          },
-          {
-            type: ChangeType.Insert,
-            index: start,
-            text: `${quote}@cypress/angular${quote}`,
-          },
-        ];
-      });
+      'ImportDeclaration',
+      (node: ImportDeclaration) => {
+        if (
+          !ts.isStringLiteral(node.moduleSpecifier) ||
+          node.moduleSpecifier.text !== 'cypress/angular'
+        ) {
+          return node.getText();
+        }
 
-    if (changes.length > 0) {
-      tree.write(filePath, applyChangesToString(originalContent, changes));
+        const updatedImport = ts.factory.updateImportDeclaration(
+          node,
+          node.modifiers,
+          node.importClause,
+          ts.factory.createStringLiteral('@cypress/angular'),
+          node.attributes
+        );
+
+        return printNodeUpdate(node, updatedImport);
+      }
+    );
+
+    if (updatedContent !== originalContent) {
+      tree.write(filePath, updatedContent);
     }
   });
 }
