@@ -100,9 +100,11 @@ impl OutputReads {
                 HashInstruction::TaskOutput(_, outputs) => {
                     declared.insert(id, outputs.clone());
                 }
+                // A tracked-only group never reads an output.
                 HashInstruction::IgnoredFileSet {
                     globs: patterns,
                     project_roots,
+                    tracked_only: false,
                     ..
                 } => {
                     let scope = ProjectScope::new(project_roots);
@@ -323,6 +325,7 @@ mod tests {
             project_roots: strings(&["packages/gradle", "packages/gradle/runner"]),
             exact_extension_exclusions: false,
             from_ultracache: false,
+            tracked_only: false,
         };
         let e = edges(
             &[

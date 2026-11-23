@@ -1416,7 +1416,9 @@ describe('native task hasher', () => {
 
   // parent:compile -> child:compile (no outputs); app:serve reads app:build's
   // outputs and serves e2e:e2e, so those two wait for the up-front batch.
-  async function upfrontFixture() {
+  // `includeUnstableFiles` reads the disk, for tests that write files after the
+  // file map is built.
+  async function upfrontFixture({ includeUnstableFiles = false } = {}) {
     await tempFs.createFiles({
       'apps/app/project.json': JSON.stringify({ name: 'app' }),
       'apps/app/main.ts': 'app',
@@ -1507,6 +1509,11 @@ describe('native task hasher', () => {
       workspaceFiles.rustReferences,
       { selectivelyHashTsConfig: false }
     );
+    if (includeUnstableFiles) {
+      for (const task of Object.values(taskGraph.tasks)) {
+        task.ultracache = { includeUnstableFiles: true };
+      }
+    }
     return { taskGraph, impl };
   }
 
@@ -1601,7 +1608,9 @@ describe('native task hasher', () => {
   // rather than by reading the planner: two entries differing in one read
   // must hash differently, with the digest identical.
   it('moves a task hash by a changed read while the entry digest holds', async () => {
-    const { taskGraph, impl } = await upfrontFixture();
+    const { taskGraph, impl } = await upfrontFixture({
+      includeUnstableFiles: true,
+    });
     await tempFs.createFiles({
       'libs/child/one.txt': 'one',
       'libs/child/two.txt': 'two',
@@ -1654,7 +1663,9 @@ describe('native task hasher', () => {
   });
 
   it('applies an Ultracache exclusion to the group of the positive it trims', async () => {
-    const { taskGraph, impl } = await upfrontFixture();
+    const { taskGraph, impl } = await upfrontFixture({
+      includeUnstableFiles: true,
+    });
     await tempFs.createFiles({
       'libs/child/doc.md': 'child',
       'libs/parent/doc.md': 'parent',
@@ -1693,7 +1704,9 @@ describe('native task hasher', () => {
 
   it('hashes new compound suffixes despite a learned simple-extension exclusion', async () => {
     await tempFs.createFiles({ '.gitignore': 'libs/child/excluded/\n' });
-    const { taskGraph, impl } = await upfrontFixture();
+    const { taskGraph, impl } = await upfrontFixture({
+      includeUnstableFiles: true,
+    });
     await tempFs.createFiles({ 'libs/child/excluded/cat.ts': 'unread' });
     const db = connectToNxDb(
       join(tempFs.tempDir, 'ultracache-category-db'),
@@ -1801,7 +1814,9 @@ describe('native task hasher', () => {
   it.each(['libs/child/[(]group[)]/page.md', 'libs/child/\\(group\\)/page.md'])(
     'hashes an Ultracache read of a parenthesized directory (%s)',
     async (input) => {
-      const { taskGraph, impl } = await upfrontFixture();
+      const { taskGraph, impl } = await upfrontFixture({
+        includeUnstableFiles: true,
+      });
       await tempFs.createFiles({
         'libs/child/(group)/page.md': 'paren',
         'libs/child/xgroupx/page.md': 'lookalike',
@@ -1842,7 +1857,9 @@ describe('native task hasher', () => {
     ['\\[id\\].md', '[id].md'],
     ['\\{a,b\\}.md', '{a,b}.md'],
   ])('hashes an Ultracache read of a root-level %s', async (input, file) => {
-    const { taskGraph, impl } = await upfrontFixture();
+    const { taskGraph, impl } = await upfrontFixture({
+      includeUnstableFiles: true,
+    });
     await tempFs.createFiles({ [file]: 'root' });
     const commit = 'head'.padEnd(40, '0');
     const configurationDb = connectToNxDb(
@@ -1867,8 +1884,57 @@ describe('native task hasher', () => {
     expect(hash.inputs.files).toContain(file);
   });
 
+  it('hashes only the tracked files an Ultracache configuration matches by default', async () => {
+    await tempFs.createFiles({
+      '.gitignore': 'libs/child/dist/\n',
+      'libs/child/src/kept.ts': 'tracked',
+    });
+    const hashWith = async (includeUnstableFiles: boolean) => {
+      const { taskGraph, impl } = await upfrontFixture({
+        includeUnstableFiles,
+      });
+      // Written by another task as a side effect; nothing declares it.
+      await tempFs.createFiles({ 'libs/child/dist/kept.d.ts': 'emitted' });
+      const commit = 'head'.padEnd(40, '0');
+      const db = connectToNxDb(
+        join(tempFs.tempDir, `ultracache-tracked-db-${includeUnstableFiles}`),
+        'ultracache'
+      );
+      new UltracacheConfigurationStore(db).import({
+        requestedCommit: commit,
+        configurationsJson: JSON.stringify({
+          'child:compile': {
+            commit,
+            inputs: ['libs/child/**/*.ts'],
+            outputs: [],
+          },
+        }),
+      });
+      const hashed = await impl.hashTask(
+        taskGraph.tasks['child:compile'],
+        taskGraph,
+        {},
+        tempFs.tempDir,
+        true,
+        new UltracacheConfigurationStore(db).get(commit)
+      );
+      closeDbConnection(db);
+      return hashed.inputs.files.filter(
+        (f) => f.endsWith('/kept.ts') || f.endsWith('/kept.d.ts')
+      );
+    };
+
+    expect(await hashWith(false)).toEqual(['libs/child/src/kept.ts']);
+    expect(await hashWith(true)).toEqual([
+      'libs/child/dist/kept.d.ts',
+      'libs/child/src/kept.ts',
+    ]);
+  });
+
   it('hashes a task from its Ultracache configuration instead of its declared fileset', async () => {
-    const { taskGraph, impl } = await upfrontFixture();
+    const { taskGraph, impl } = await upfrontFixture({
+      includeUnstableFiles: true,
+    });
     await tempFs.createFiles({ 'libs/child/observed.txt': 'observed' });
     const commit = 'head'.padEnd(40, '0');
     const configurationDb = connectToNxDb(
@@ -1932,7 +1998,9 @@ describe('native task hasher', () => {
   });
 
   it('keeps hashing from its own version after the commit is re-imported', async () => {
-    const { taskGraph, impl } = await upfrontFixture();
+    const { taskGraph, impl } = await upfrontFixture({
+      includeUnstableFiles: true,
+    });
     await tempFs.createFiles({
       'libs/child/one.txt': 'one',
       'libs/child/two.txt': 'two',
@@ -1969,7 +2037,9 @@ describe('native task hasher', () => {
   });
 
   it('moves a task hash by a lockfile-only edit when its configuration read the lockfile', async () => {
-    const { taskGraph, impl } = await upfrontFixture();
+    const { taskGraph, impl } = await upfrontFixture({
+      includeUnstableFiles: true,
+    });
     await tempFs.createFiles({ 'package-lock.json': '{"lodash":"4.17.20"}' });
     const commit = 'head'.padEnd(40, '0');
     const configurationDb = connectToNxDb(

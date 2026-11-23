@@ -6,6 +6,7 @@ use std::sync::Arc;
 use crate::native::project_graph::types::{Project, ProjectGraph};
 use crate::native::tasks::types::{
     HashInstruction, HashPlans, InstructionPool, Task, TaskGraph, TaskGraphEdge, TaskTarget,
+    TaskUltracacheSettings,
 };
 
 pub(crate) fn project(root: &str) -> Project {
@@ -71,6 +72,17 @@ pub(crate) fn hash_plans(entries: &[(&str, Vec<HashInstruction>)]) -> HashPlans 
         pool,
         deferred: Default::default(),
     }
+}
+
+/// The graph with every target setting `ultracache.includeUnstableFiles`.
+pub(crate) fn including_unstable_files(mut graph: TaskGraph) -> TaskGraph {
+    for task in graph.tasks.values_mut() {
+        task.ultracache = Some(TaskUltracacheSettings {
+            include_unstable_files: Some(true),
+            ..Default::default()
+        });
+    }
+    graph
 }
 
 /// Tasks `project:target` with their outputs, and their `dependsOn` edges.

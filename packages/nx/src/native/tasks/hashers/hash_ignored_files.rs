@@ -18,6 +18,7 @@ use xxhash_rust::xxh3;
 
 use super::disk_expansion::{FilesExpansion, Source, expand_globs, parse_group, scope_roots};
 use crate::native::types::FileData;
+use crate::native::walker::PathPredicate;
 use crate::native::workspace::ignored_index::{IgnoredIndex, RunStage};
 
 /// Folds `(path, content hash)` pairs in path order, like a fileset; a file
@@ -74,6 +75,7 @@ pub(crate) fn fold_file_hashes<'a>(
 pub(crate) struct WorkspaceFileIndex {
     files: Arc<Vec<FileData>>,
     by_path: OnceLock<HashMap<String, u32>>,
+    sorted_paths: OnceLock<Vec<u32>>,
 }
 
 impl WorkspaceFileIndex {
@@ -81,6 +83,7 @@ impl WorkspaceFileIndex {
         Self {
             files,
             by_path: OnceLock::new(),
+            sorted_paths: OnceLock::new(),
         }
     }
 
@@ -97,6 +100,28 @@ impl WorkspaceFileIndex {
     /// Whether the file map holds this exact path, so it needs no stat.
     pub(crate) fn tracks(&self, path: &str) -> bool {
         self.by_path().contains_key(path)
+    }
+
+    /// The tracked files under `dir` that `accept` admits, in path order.
+    pub(crate) fn files_under(&self, dir: &str, accept: PathPredicate) -> Vec<String> {
+        let path = |i: &u32| self.files[*i as usize].file.as_str();
+        let sorted = self.sorted_paths.get_or_init(|| {
+            let mut ids: Vec<u32> = (0..self.files.len() as u32).collect();
+            ids.sort_unstable_by(|a, b| path(a).cmp(path(b)));
+            ids
+        });
+        let prefix = match dir {
+            "" => String::new(),
+            dir => format!("{dir}/"),
+        };
+        let start = sorted.partition_point(|i| path(i) < prefix.as_str());
+        sorted[start..]
+            .iter()
+            .map(path)
+            .take_while(|file| file.starts_with(&prefix))
+            .filter(|file| accept(file))
+            .map(str::to_string)
+            .collect()
     }
 
     /// The hash the file map already holds for `path`.
@@ -153,6 +178,37 @@ mod tests {
     use super::super::disk_expansion::tests::{expand_files, globs, workspace};
     use super::*;
     use assert_fs::prelude::*;
+
+    #[test]
+    fn a_tracked_fileset_never_matches_a_file_that_is_only_on_disk() {
+        let temp = workspace();
+        for path in ["libs/models/src/a.ts", "libs/models/dist/a.d.ts"] {
+            temp.child(path).write_str("x").unwrap();
+        }
+        let tracked = WorkspaceFileIndex::new(Arc::new(
+            ["libs/models-ui/src/b.ts", "libs/models/src/a.ts"]
+                .map(|file| FileData {
+                    file: file.into(),
+                    hash: "h".into(),
+                })
+                .into(),
+        ));
+        let expand = |input: &[&str]| {
+            expand_globs(
+                temp.path(),
+                &globs(input),
+                &[],
+                &Source::tracked_fileset(&|path| tracked.tracks(path), |dir, accept, _| {
+                    Some(tracked.files_under(dir, accept))
+                }),
+            )
+            .unwrap()
+            .files
+        };
+        assert_eq!(expand(&["libs/models/**/*.ts"]), ["libs/models/src/a.ts"]);
+        assert_eq!(expand(&["libs/models"]), ["libs/models/src/a.ts"]);
+        assert!(expand(&["libs/models/dist/a.d.ts"]).is_empty());
+    }
 
     #[test]
     fn an_exact_path_changes_the_hash_when_the_file_appears_and_when_it_goes() {

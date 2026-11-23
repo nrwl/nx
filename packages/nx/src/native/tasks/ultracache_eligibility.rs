@@ -240,31 +240,33 @@ pub fn get_ultracache_report(
     .report()
 }
 
-/// The marker's digest: the task's `ignoreReads` and `collectStats`, which
-/// shape the reads its recording holds, so editing them re-runs the task and
+/// The marker's digest: the task's `ignoreReads`, `collectStats` and
+/// `includeUnstableFiles`, which shape the reads its recording holds, so editing them re-runs the task and
 /// records it afresh. Sorted, since glob order means nothing.
 fn configuration_digest(ultracache: Option<&TaskUltracacheSettings>) -> String {
     // Destructured so a new ultracache key must be placed here: one left out
     // would never re-run a task that keeps hitting. Any mode but `on` means no
     // marker, since the task never reaches here. Recorded writes are never
     // used, so `ignoreWrites` can't change what the task caches.
-    let (mut reads, collect_stats) = match ultracache {
+    let (mut reads, collect_stats, include_unstable_files) = match ultracache {
         Some(TaskUltracacheSettings {
             ignore_reads,
             ignore_writes: _,
             mode: _,
             collect_stats,
+            include_unstable_files,
         }) => (
             ignore_reads.clone().unwrap_or_default(),
             collect_stats.unwrap_or(false),
+            include_unstable_files.unwrap_or(false),
         ),
-        None => (Vec::new(), false),
+        None => (Vec::new(), false, false),
     };
     reads.sort();
     reads.dedup();
     // Equals the old marker of a task with no exclusions that recorded no writes.
     let base = Xxh3::new().digest().to_string();
-    if reads.is_empty() && !collect_stats {
+    if reads.is_empty() && !collect_stats && !include_unstable_files {
         return base;
     }
     let mut hasher = Xxh3::new();
@@ -273,6 +275,9 @@ fn configuration_digest(ultracache: Option<&TaskUltracacheSettings>) -> String {
     // 0xFF never occurs in UTF-8, so no glob can produce this tag.
     if collect_stats {
         hasher.update(b"\xFFcollectStats\0");
+    }
+    if include_unstable_files {
+        hasher.update(b"\xFFincludeUnstableFiles\0");
     }
     // NUL after each glob, so adjacent globs cannot run together.
     for glob in reads {
@@ -370,8 +375,9 @@ fn reads_dependency_outputs(task_id: &str, files: &SharedInputs, task_graph: &Ta
     false
 }
 
-/// Tasks whose Ultracache configuration read another task's outputs: they
-/// hash after their producers ran, because those files only exist then. Needs
+/// Tasks with `includeUnstableFiles` whose Ultracache configuration read another
+/// task's outputs: they hash after their producers ran, because those files
+/// only exist then. Any other task hashes its tracked reads alone. Needs
 /// no project graph, so the client can call it before the first hashing wave
 /// on the daemon path.
 /// Opted-out and custom-hasher tasks are not excluded: deferring a task that
@@ -385,7 +391,13 @@ pub fn get_ultracache_deferred_task_ids(
     let entries = configurations.entries_for(&ids).unwrap_or_default();
     let mut deferred: Vec<String> = task_graph
         .tasks
-        .keys()
+        .iter()
+        .filter(|(_, task)| {
+            task.ultracache
+                .as_ref()
+                .is_some_and(|ultracache| ultracache.include_unstable_files == Some(true))
+        })
+        .map(|(task_id, _)| task_id)
         .filter(|task_id| {
             entries
                 .get(*task_id)

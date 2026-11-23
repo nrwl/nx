@@ -2033,6 +2033,10 @@ describe('task planner', () => {
 
     it('keeps task hashes, exclusions, diagnostics and deferral identical across import formats', async () => {
       const { planner, taskGraph, projectGraph } = fixture();
+      // The files are written after the file map is built, so read the disk.
+      taskGraph.tasks['parent:build'].ultracache = {
+        includeUnstableFiles: true,
+      };
       const taskIds = ['parent:build', 'child:build'];
       const parent = {
         inputs: [
@@ -2661,7 +2665,7 @@ describe('task planner', () => {
         },
       ],
     ])(
-      'replaces a declared includeIgnored group from a %s input with the reads',
+      'replaces a declared includeIgnored group from a %s input with the reads when the target includes unstable files',
       (_, declare) => {
         const { taskGraph, projectGraph } = fixture();
         declare(projectGraph);
@@ -2676,12 +2680,23 @@ describe('task planner', () => {
           ['parent:build'].find((entry) => entry.includes('libs/child/gen/**'));
         expect(declared).toBeDefined();
 
+        const configurations = configurationsFor({
+          'parent:build': { inputs: ['libs/child/gen/used.json'] },
+        });
+        // Recorded reads match tracked files only, so the declared group stays.
+        expect(
+          planner.getPlans(['parent:build'], taskGraph, configurations)[
+            'parent:build'
+          ]
+        ).toContain(declared);
+
+        taskGraph.tasks['parent:build'].ultracache = {
+          includeUnstableFiles: true,
+        };
         const plan = planner.getPlans(
           ['parent:build'],
           taskGraph,
-          configurationsFor({
-            'parent:build': { inputs: ['libs/child/gen/used.json'] },
-          })
+          configurations
         )['parent:build'];
         // An unread ignored file no longer reaches the hash; a read one does.
         expect(plan).not.toContain(declared);
@@ -2711,10 +2726,28 @@ describe('task planner', () => {
       expect(markerWith({ ignoreReads: [] })).toBe(none);
       // Recorded writes are never used, so their exclusions don't count.
       expect(markerWith({ ignoreWrites: ['tmp/**', 'cache/**'] })).toBe(none);
+      // It decides whether the recording holds unstable files.
+      expect(markerWith({ includeUnstableFiles: true })).not.toBe(none);
+      expect(markerWith({ includeUnstableFiles: false })).toBe(none);
     });
 
-    it("hashes reads of a producer task's outputs from disk and defers the task", () => {
+    it("leaves a task that read a producer's outputs undeferred by default", () => {
+      const { taskGraph } = fixture();
+      const configurations = configurationsFor({
+        'parent:build': {
+          inputs: ['dist/libs/child/index.js'],
+        },
+      });
+      expect(getUltracacheDeferredTaskIds(configurations, taskGraph)).toEqual(
+        []
+      );
+    });
+
+    it("hashes reads of a producer task's outputs from disk and defers the task when the target includes unstable files", () => {
       const { planner, taskGraph } = fixture();
+      taskGraph.tasks['parent:build'].ultracache = {
+        includeUnstableFiles: true,
+      };
       const configurations = configurationsFor({
         'parent:build': {
           inputs: ['dist/libs/child/index.js'],
@@ -2844,8 +2877,10 @@ describe('task planner', () => {
         expect.stringMatching(/^(parent|child):libs\//)
       );
       expect(plan).not.toContainEqual(expect.stringMatching(/TsConfig$/));
-      // Nothing read, so no file group at all, declared includeIgnored included.
-      expect(plan.filter((i) => i.startsWith('files:'))).toEqual([]);
+      // Nothing read, so the declared includeIgnored fileset is the only group.
+      expect(plan.filter((i) => i.startsWith('files:'))).toEqual([
+        'files:[libs/parent/generated]',
+      ]);
     });
 
     it('replaces dependency filesets on cyclic graphs too (non-memo traversal)', () => {
@@ -2861,8 +2896,11 @@ describe('task planner', () => {
       expect(plan).not.toContainEqual(expect.stringMatching(/^child:libs\//));
     });
 
-    it("defers a task whose reads sit under a producer's declared outputs", () => {
+    it("defers a task that includes unstable files when its reads sit under a producer's declared outputs", () => {
       const { taskGraph } = fixture();
+      taskGraph.tasks['parent:build'].ultracache = {
+        includeUnstableFiles: true,
+      };
       const configurations = configurationsFor({
         'parent:build': { inputs: ['dist/libs/child/index.js'] },
       });
@@ -2946,9 +2984,9 @@ describe('task planner', () => {
         taskGraph,
         configurations
       )['parent:build'];
-      // Validated, then replaced by the reads like any declared fileset.
+      // Validated, and kept: the reads match tracked files only.
       expect(plan).toContainEqual(expect.stringMatching(/^io-snapshot:\d+$/));
-      expect(plan).not.toContain(
+      expect(plan).toContain(
         'files:[libs/parent/dist/**,!libs/parent/dist/**/*.map]'
       );
     });

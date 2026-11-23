@@ -83,6 +83,9 @@ pub struct TaskUltracacheSettings {
     /// and `?`, `!`, `[`, `]` and extglobs are not supported; anchor the
     /// pattern to a directory instead of leading with `**`.
     pub ignore_writes: Option<Vec<String>>,
+    /// Hash recorded reads of unstable files too: those `.gitignore` or
+    /// `.nxignore` exclude, such as dependency outputs. Defaults to `false`.
+    pub include_unstable_files: Option<bool>,
 }
 
 impl Task {
@@ -235,6 +238,9 @@ pub enum HashInstruction {
         exact_extension_exclusions: bool,
         /// Read by the task per its Ultracache configuration, not declared.
         from_ultracache: bool,
+        /// Only files the workspace tracks match, and the disk is not read.
+        /// Set for a recording unless its target sets `includeUnstableFiles`.
+        tracked_only: bool,
     },
     ProjectConfiguration(String),
     TsConfiguration(String),
@@ -381,6 +387,7 @@ impl HashInstruction {
             project_roots: Vec::new(),
             exact_extension_exclusions: false,
             from_ultracache: false,
+            tracked_only: false,
         }
     }
 
@@ -388,7 +395,7 @@ impl HashInstruction {
     /// which then has to catch up before the parallel section.
     pub fn lists_ignored_files(&self) -> bool {
         match self {
-            HashInstruction::IgnoredFileSet { .. } => true,
+            HashInstruction::IgnoredFileSet { tracked_only, .. } => !tracked_only,
             HashInstruction::WorkspaceFileSet(_)
             | HashInstruction::Runtime(_)
             | HashInstruction::Environment(_)

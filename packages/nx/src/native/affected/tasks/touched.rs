@@ -928,6 +928,7 @@ mod tests {
             project_roots: strings(&["libs/a"]),
             exact_extension_exclusions: ultracache,
             from_ultracache: false,
+            tracked_only: false,
         };
         for file in [
             "cat.spec.ts",
@@ -982,6 +983,7 @@ mod tests {
                 project_roots: strings(&["libs/a"]),
                 exact_extension_exclusions: ultracache,
                 from_ultracache: false,
+                tracked_only: false,
             };
             let changed = format!("libs/a/{file}");
             assert_eq!(
@@ -1000,6 +1002,7 @@ mod tests {
             project_roots: strings(&["libs/a", "libs/a/nested"]),
             exact_extension_exclusions: false,
             from_ultracache: false,
+            tracked_only: false,
         };
         assert_eq!(
             touched_for(&g, vec![instruction.clone()], &["libs/a/build/out.js"]),

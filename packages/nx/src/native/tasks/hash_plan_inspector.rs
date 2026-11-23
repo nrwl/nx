@@ -161,17 +161,22 @@ impl HashPlanInspector {
                 globs,
                 project_roots,
                 exact_extension_exclusions,
+                tracked_only,
                 ..
             } => {
                 let workspace_root = std::path::Path::new(&self.workspace_root);
+                let tracked_file = |path: &str| self.tracked.tracks(path);
+                let source = match tracked_only {
+                    true => Source::tracked_fileset(&tracked_file, |dir, accept, _| {
+                        Some(self.tracked.files_under(dir, accept))
+                    }),
+                    false => Source::fileset_reading_disk(&tracked_file, workspace_root),
+                };
                 let files = expand_globs_with_exclusions(
                     workspace_root,
                     globs,
                     project_roots,
-                    &Source::fileset_reading_disk(
-                        &|path| self.tracked.tracks(path),
-                        workspace_root,
-                    ),
+                    &source,
                     *exact_extension_exclusions,
                 )?
                 .files;
