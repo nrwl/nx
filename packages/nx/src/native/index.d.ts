@@ -345,19 +345,19 @@ export declare class TaskHasher {
  * imply a parent/child relationship: sibling Nx processes are common and
  * legitimate (N atomized e2e specs each spawning the same `serve-static` web
  * server, or two parallel tasks that each shell out to `nx run lib:build`).
- * Only an invocation belonging to an actual *ancestor* of this process is a
- * loop, so the check is scoped to `ancestor_pids` rather than to the whole
- * tree.
+ * An ancestor process can also run sibling tasks of the one that started this
+ * process. Only an invocation by an actual *ancestor task* is a loop, so the
+ * check is scoped to `ancestors` rather than to the whole tree.
  */
 export declare class TaskInvocationTracker {
-  constructor(db: ExternalObject<NxDbConnection>, rootPid: number, ancestorPids: Array<number>)
+  constructor(db: ExternalObject<NxDbConnection>, rootPid: number, ancestors: Array<InvocationAncestor>)
   /**
    * Register a task as invoked by the process identified by `pid`.
    *
-   * Returns the invocation chain when an ancestor process is already running
-   * this task, which is a genuine loop. The chain lists every task invoked
-   * along the ancestry path, outermost first. Returns `null` when the task
-   * was registered, including when a *sibling* process is already running it.
+   * Returns the invocation chain when an ancestor task is this task, which is
+   * a genuine loop. The chain lists every task invoked along the ancestry
+   * path, outermost first. Returns `null` when the task was registered,
+   * including when a *sibling* task or process is already running it.
    *
    * An ancestor running this task with the *same* overrides is a loop
    * immediately. An ancestor running it with different overrides is allowed
@@ -976,6 +976,17 @@ export interface InputsInput {
 export declare function installNxConsole(): Promise<boolean>
 
 export declare function installNxConsoleForEditor(editor: SupportedEditor): Promise<boolean>
+
+/**
+ * One hop of the nested Nx process tree: an ancestor process, and the task in
+ * it whose command started the next process down. `task_id` is `None` for a
+ * batch worker, which runs several tasks under one environment, so every task
+ * that process holds counts as an ancestor.
+ */
+export interface InvocationAncestor {
+  pid: number
+  taskId?: string
+}
 
 export interface InvocationRecord {
   pid: number

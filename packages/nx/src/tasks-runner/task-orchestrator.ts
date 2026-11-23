@@ -83,7 +83,7 @@ import {
   getEnvVariablesForBatchProcess,
   getEnvVariablesForTask,
   getForceColorForChild,
-  getInvocationAncestorPids,
+  getInvocationAncestors,
   getInvocationRootPid,
   getTaskSpecificEnv,
 } from './task-env';
@@ -204,7 +204,7 @@ export class TaskOrchestrator {
     ? new TaskInvocationTracker(
         getLocalDbConnection(),
         getInvocationRootPid(),
-        getInvocationAncestorPids()
+        getInvocationAncestors()
       )
     : null;
   // Task ids this process has already registered. Recursive code paths (e.g.
@@ -640,9 +640,9 @@ export class TaskOrchestrator {
   /**
    * Registers a task invocation and checks for loops across nested Nx
    * processes. registerTask() returns the invocation chain only when an
-   * *ancestor* Nx process is already running this task — a genuine loop.
-   * Sibling processes running the same task are legitimate and register
-   * without complaint.
+   * *ancestor* task is this task — a genuine loop. Sibling tasks and
+   * processes running the same task are legitimate and register without
+   * complaint.
    *
    * The overrides hash rides along with the task id so the tracker can tell an
    * ancestor re-invoking a task with different arguments from one repeating

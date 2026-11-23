@@ -26,6 +26,23 @@ pub struct InvocationRecord {
     pub task_id: String,
 }
 
+/// One hop of the nested Nx process tree: an ancestor process, and the task in
+/// it whose command started the next process down. `task_id` is `None` for a
+/// batch worker, which runs several tasks under one environment, so every task
+/// that process holds counts as an ancestor.
+#[napi(object)]
+#[derive(Clone, Debug)]
+pub struct InvocationAncestor {
+    pub pid: u32,
+    pub task_id: Option<String>,
+}
+
+impl InvocationAncestor {
+    fn matches(&self, row: &InvocationRow) -> bool {
+        self.pid == row.pid && self.task_id.as_ref().is_none_or(|id| *id == row.task_id)
+    }
+}
+
 /// A stored invocation. `task_id` is `project:target:configuration`, so two
 /// rows can share one and still be different invocations of it. The overrides
 /// hash is what tells them apart.
@@ -44,16 +61,15 @@ struct InvocationRow {
 /// imply a parent/child relationship: sibling Nx processes are common and
 /// legitimate (N atomized e2e specs each spawning the same `serve-static` web
 /// server, or two parallel tasks that each shell out to `nx run lib:build`).
-/// Only an invocation belonging to an actual *ancestor* of this process is a
-/// loop, so the check is scoped to `ancestor_pids` rather than to the whole
-/// tree.
+/// An ancestor process can also run sibling tasks of the one that started this
+/// process. Only an invocation by an actual *ancestor task* is a loop, so the
+/// check is scoped to `ancestors` rather than to the whole tree.
 #[napi]
 pub struct TaskInvocationTracker {
     db: Arc<Mutex<NxDbConnection>>,
     root_pid: u32,
-    /// Pids of the ancestor Nx processes, outermost first. Does not include
-    /// this process.
-    ancestor_pids: Vec<u32>,
+    /// Outermost first. Does not include this process.
+    ancestors: Vec<InvocationAncestor>,
 }
 
 #[napi]
@@ -64,21 +80,21 @@ impl TaskInvocationTracker {
             Arc<Mutex<NxDbConnection>>,
         >,
         root_pid: u32,
-        ancestor_pids: Vec<u32>,
+        ancestors: Vec<InvocationAncestor>,
     ) -> anyhow::Result<Self> {
         Ok(Self {
             db: Arc::clone(db),
             root_pid,
-            ancestor_pids,
+            ancestors,
         })
     }
 
     /// Register a task as invoked by the process identified by `pid`.
     ///
-    /// Returns the invocation chain when an ancestor process is already running
-    /// this task, which is a genuine loop. The chain lists every task invoked
-    /// along the ancestry path, outermost first. Returns `null` when the task
-    /// was registered, including when a *sibling* process is already running it.
+    /// Returns the invocation chain when an ancestor task is this task, which is
+    /// a genuine loop. The chain lists every task invoked along the ancestry
+    /// path, outermost first. Returns `null` when the task was registered,
+    /// including when a *sibling* task or process is already running it.
     ///
     /// An ancestor running this task with the *same* overrides is a loop
     /// immediately. An ancestor running it with different overrides is allowed
@@ -92,14 +108,14 @@ impl TaskInvocationTracker {
         task_id: String,
         overrides_hash: String,
     ) -> anyhow::Result<Option<Vec<InvocationRecord>>> {
-        if !self.ancestor_pids.is_empty() {
+        if !self.ancestors.is_empty() {
             // One read: the chain is rendered from the same snapshot the loop
             // check ran against, so an ancestor unregistering in between
             // cannot leave the reported chain empty.
             let rows = self.invocations_for_root()?;
             let ancestors_running_task: Vec<&InvocationRow> = rows
                 .iter()
-                .filter(|row| row.task_id == task_id && self.ancestor_pids.contains(&row.pid))
+                .filter(|row| row.task_id == task_id && self.is_ancestor(row))
                 .collect();
 
             let repeats_an_ancestor_invocation = ancestors_running_task
@@ -167,9 +183,9 @@ impl TaskInvocationTracker {
     /// written within the same second.
     fn ancestor_invocation_chain(&self, rows: &[InvocationRow]) -> Vec<InvocationRecord> {
         let mut chain = Vec::new();
-        for ancestor_pid in &self.ancestor_pids {
+        for ancestor in &self.ancestors {
             for row in rows {
-                if row.pid == *ancestor_pid {
+                if ancestor.matches(row) {
                     chain.push(InvocationRecord {
                         pid: row.pid,
                         task_id: row.task_id.clone(),
@@ -178,6 +194,10 @@ impl TaskInvocationTracker {
             }
         }
         chain
+    }
+
+    fn is_ancestor(&self, row: &InvocationRow) -> bool {
+        self.ancestors.iter().any(|ancestor| ancestor.matches(row))
     }
 
     fn invocations_for_root(&self) -> anyhow::Result<Vec<InvocationRow>> {
@@ -209,12 +229,26 @@ mod tests {
     /// the key as opaque, so any stable string stands in for a real hash.
     const NO_OVERRIDES: &str = "0";
 
-    fn tracker(db: &Arc<Mutex<NxDbConnection>>, ancestor_pids: Vec<u32>) -> TaskInvocationTracker {
+    fn tracker(
+        db: &Arc<Mutex<NxDbConnection>>,
+        ancestors: Vec<InvocationAncestor>,
+    ) -> TaskInvocationTracker {
         TaskInvocationTracker {
             db: Arc::clone(db),
             root_pid: ROOT_PID,
-            ancestor_pids,
+            ancestors,
         }
+    }
+
+    fn spawned_by(pid: u32, task_id: &str) -> InvocationAncestor {
+        InvocationAncestor {
+            pid,
+            task_id: Some(task_id.into()),
+        }
+    }
+
+    fn batch(pid: u32) -> InvocationAncestor {
+        InvocationAncestor { pid, task_id: None }
     }
 
     fn in_memory_db() -> Arc<Mutex<NxDbConnection>> {
@@ -227,8 +261,8 @@ mod tests {
     fn allows_sibling_processes_to_run_the_same_task() {
         let db = in_memory_db();
         // Two children of the root. Neither is an ancestor of the other.
-        let sibling_a = tracker(&db, vec![ROOT_PID]);
-        let sibling_b = tracker(&db, vec![ROOT_PID]);
+        let sibling_a = tracker(&db, vec![spawned_by(ROOT_PID, "app-e2e:e2e-ci--a.cy.ts")]);
+        let sibling_b = tracker(&db, vec![spawned_by(ROOT_PID, "app-e2e:e2e-ci--b.cy.ts")]);
 
         assert!(
             sibling_a
@@ -249,7 +283,7 @@ mod tests {
     fn reports_a_loop_when_an_ancestor_is_running_the_task() {
         let db = in_memory_db();
         let root = tracker(&db, vec![]);
-        let child = tracker(&db, vec![ROOT_PID]);
+        let child = tracker(&db, vec![spawned_by(ROOT_PID, "app-e2e:serve-static")]);
 
         root.register_task(ROOT_PID, "app-e2e:serve-static".into(), NO_OVERRIDES.into())
             .unwrap();
@@ -267,8 +301,14 @@ mod tests {
     fn reports_a_loop_through_an_intermediate_process() {
         let db = in_memory_db();
         let root = tracker(&db, vec![]);
-        let middle = tracker(&db, vec![ROOT_PID]);
-        let leaf = tracker(&db, vec![ROOT_PID, 200]);
+        let middle = tracker(&db, vec![spawned_by(ROOT_PID, "app-e2e:e2e-ci--a.cy.ts")]);
+        let leaf = tracker(
+            &db,
+            vec![
+                spawned_by(ROOT_PID, "app-e2e:e2e-ci--a.cy.ts"),
+                spawned_by(200, "app-e2e:serve-static"),
+            ],
+        );
 
         root.register_task(
             ROOT_PID,
@@ -296,8 +336,14 @@ mod tests {
     fn chain_order_follows_ancestry_not_created_at() {
         let db = in_memory_db();
         let root = tracker(&db, vec![]);
-        let middle = tracker(&db, vec![ROOT_PID]);
-        let leaf = tracker(&db, vec![ROOT_PID, 200]);
+        let middle = tracker(&db, vec![spawned_by(ROOT_PID, "root:task")]);
+        let leaf = tracker(
+            &db,
+            vec![
+                spawned_by(ROOT_PID, "root:task"),
+                spawned_by(200, "mid:task"),
+            ],
+        );
 
         root.register_task(ROOT_PID, "root:task".into(), NO_OVERRIDES.into())
             .unwrap();
@@ -326,9 +372,15 @@ mod tests {
     #[test]
     fn unregistering_does_not_drop_a_sibling_record() {
         let db = in_memory_db();
-        let sibling_a = tracker(&db, vec![ROOT_PID]);
-        let sibling_b = tracker(&db, vec![ROOT_PID]);
-        let child_of_b = tracker(&db, vec![ROOT_PID, 300]);
+        let sibling_a = tracker(&db, vec![spawned_by(ROOT_PID, "app-e2e:e2e-ci--a.cy.ts")]);
+        let sibling_b = tracker(&db, vec![spawned_by(ROOT_PID, "app-e2e:e2e-ci--b.cy.ts")]);
+        let child_of_b = tracker(
+            &db,
+            vec![
+                spawned_by(ROOT_PID, "app-e2e:e2e-ci--b.cy.ts"),
+                spawned_by(300, "app-e2e:serve-static"),
+            ],
+        );
 
         sibling_a
             .register_task(200, "app-e2e:serve-static".into(), NO_OVERRIDES.into())
@@ -353,7 +405,7 @@ mod tests {
     fn a_task_can_be_re_registered_after_it_completes() {
         let db = in_memory_db();
         let root = tracker(&db, vec![]);
-        let child = tracker(&db, vec![ROOT_PID]);
+        let child = tracker(&db, vec![spawned_by(ROOT_PID, "app-e2e:e2e")]);
 
         root.register_task(ROOT_PID, "app-e2e:build".into(), NO_OVERRIDES.into())
             .unwrap();
@@ -371,7 +423,7 @@ mod tests {
     fn allows_an_ancestor_to_re_invoke_a_task_with_different_overrides() {
         let db = in_memory_db();
         let root = tracker(&db, vec![]);
-        let child = tracker(&db, vec![ROOT_PID]);
+        let child = tracker(&db, vec![spawned_by(ROOT_PID, "app:build")]);
 
         root.register_task(ROOT_PID, "app:build".into(), NO_OVERRIDES.into())
             .unwrap();
@@ -392,8 +444,14 @@ mod tests {
         // arguments, so the positional array grows on every hop and no two
         // overrides hashes match.
         let root = tracker(&db, vec![]);
-        let middle = tracker(&db, vec![ROOT_PID]);
-        let leaf = tracker(&db, vec![ROOT_PID, 200]);
+        let middle = tracker(&db, vec![spawned_by(ROOT_PID, "app:build")]);
+        let leaf = tracker(
+            &db,
+            vec![
+                spawned_by(ROOT_PID, "app:build"),
+                spawned_by(200, "app:build"),
+            ],
+        );
 
         root.register_task(ROOT_PID, "app:build".into(), NO_OVERRIDES.into())
             .unwrap();
@@ -417,9 +475,15 @@ mod tests {
     #[test]
     fn the_accumulation_bound_counts_ancestors_not_siblings() {
         let db = in_memory_db();
-        let sibling_a = tracker(&db, vec![ROOT_PID]);
-        let sibling_b = tracker(&db, vec![ROOT_PID]);
-        let child_of_b = tracker(&db, vec![ROOT_PID, 300]);
+        let sibling_a = tracker(&db, vec![spawned_by(ROOT_PID, "a:deploy")]);
+        let sibling_b = tracker(&db, vec![spawned_by(ROOT_PID, "b:deploy")]);
+        let child_of_b = tracker(
+            &db,
+            vec![
+                spawned_by(ROOT_PID, "b:deploy"),
+                spawned_by(300, "app:build"),
+            ],
+        );
 
         // Two siblings hold app:build under different overrides. Neither is an
         // ancestor of child_of_b, so only sibling B's row counts against it.
@@ -436,6 +500,50 @@ mod tests {
                 .unwrap()
                 .is_none(),
             "a sibling's invocation must not push a descendant over the bound"
+        );
+    }
+
+    #[test]
+    fn allows_a_task_an_ancestor_process_runs_beside_the_spawning_task() {
+        let db = in_memory_db();
+        // `run-many -t slow nested`: the root runs a:slow and b:nested in
+        // parallel, and b:nested shells out to `nx run a:slow`.
+        let root = tracker(&db, vec![]);
+        let child_of_nested = tracker(&db, vec![spawned_by(ROOT_PID, "b:nested")]);
+
+        root.register_task(ROOT_PID, "a:slow".into(), NO_OVERRIDES.into())
+            .unwrap();
+        root.register_task(ROOT_PID, "b:nested".into(), NO_OVERRIDES.into())
+            .unwrap();
+
+        assert!(
+            child_of_nested
+                .register_task(200, "a:slow".into(), NO_OVERRIDES.into())
+                .unwrap()
+                .is_none(),
+            "a:slow is a sibling of b:nested in the root, not its ancestor"
+        );
+    }
+
+    #[test]
+    fn counts_every_task_of_a_batch_ancestor() {
+        let db = in_memory_db();
+        let batch_worker = tracker(&db, vec![]);
+        let child_of_batch = tracker(&db, vec![batch(ROOT_PID)]);
+
+        batch_worker
+            .register_task(ROOT_PID, "a:build".into(), NO_OVERRIDES.into())
+            .unwrap();
+        batch_worker
+            .register_task(ROOT_PID, "b:build".into(), NO_OVERRIDES.into())
+            .unwrap();
+
+        assert!(
+            child_of_batch
+                .register_task(200, "a:build".into(), NO_OVERRIDES.into())
+                .unwrap()
+                .is_some(),
+            "a batch hop does not say which task spawned it, so any of its tasks may have"
         );
     }
 }

@@ -7,6 +7,7 @@ import { config as loadDotEnvFile } from 'dotenv';
 import { expand } from 'dotenv-expand';
 import { join } from 'node:path';
 import { ProjectGraph } from '../config/project-graph';
+import type { InvocationAncestor } from '../native';
 import { Task } from '../config/task-graph';
 import { workspaceRoot } from '../utils/workspace-root';
 import { getEnvPathsForTask } from './task-env-paths';
@@ -33,7 +34,7 @@ export function getEnvVariablesForBatchProcess(
   skipNxCache: boolean,
   captureStderr: boolean
 ): NodeJS.ProcessEnv {
-  const res = {
+  const res: NodeJS.ProcessEnv = {
     // User Process Env Variables override Dotenv Variables
     ...process.env,
     // Nx Env Variables overrides everything
@@ -42,6 +43,8 @@ export function getEnvVariablesForBatchProcess(
       skipNxCache,
       captureStderr
     ),
+    // A batch worker runs several tasks under this one env.
+    NX_INVOCATION_ANCESTORS: appendInvocationAncestor(),
   };
   // NX_ORIGINAL_FORCE_COLOR is an internal signal and should not leak into child processes
   delete res.NX_ORIGINAL_FORCE_COLOR;
@@ -188,12 +191,6 @@ function getNxEnvVariablesForForkedProcess(
     FORCE_COLOR: forceColor,
     NX_WORKSPACE_ROOT: workspaceRoot,
     NX_SKIP_NX_CACHE: skipNxCache ? 'true' : undefined,
-    // pids of the forked process's ancestor nx processes, outermost first.
-    // Only an ancestor re-invoking a task is a loop — sibling nx processes
-    // running the same task are legitimate.
-    NX_INVOCATION_ANCESTOR_PIDS: appendAncestorPid(
-      process.env.NX_INVOCATION_ANCESTOR_PIDS
-    ),
   };
 
   if (outputPath) {
@@ -208,19 +205,32 @@ function getNxEnvVariablesForForkedProcess(
   return env;
 }
 
-function appendAncestorPid(inherited: string | undefined): string {
-  return inherited ? `${inherited},${process.pid}` : String(process.pid);
+function appendInvocationAncestor(taskId?: string): string {
+  const ancestors: InvocationAncestor[] = [
+    ...getInvocationAncestors(),
+    { pid: process.pid, taskId },
+  ];
+  return JSON.stringify(ancestors);
 }
 
 /**
- * Pids of the nx processes this one is nested inside, outermost first. Empty
- * for a root invocation.
+ * The nx processes this one is nested inside, each with the task that started
+ * the next process down, outermost first. Empty for a root invocation.
  */
-export function getInvocationAncestorPids(): number[] {
-  return (process.env.NX_INVOCATION_ANCESTOR_PIDS ?? '')
-    .split(',')
-    .map((pid) => Number(pid))
-    .filter((pid) => Number.isInteger(pid) && pid > 0);
+export function getInvocationAncestors(): InvocationAncestor[] {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(process.env.NX_INVOCATION_ANCESTORS ?? '[]');
+  } catch {
+    return [];
+  }
+  if (!Array.isArray(parsed)) return [];
+  return parsed.filter(
+    (ancestor): ancestor is InvocationAncestor =>
+      Number.isInteger(ancestor?.pid) &&
+      ancestor.pid > 0 &&
+      (ancestor.taskId === undefined || typeof ancestor.taskId === 'string')
+  );
 }
 
 /**
@@ -228,7 +238,7 @@ export function getInvocationAncestorPids(): number[] {
  * is the root.
  */
 export function getInvocationRootPid(): number {
-  return getInvocationAncestorPids()[0] ?? process.pid;
+  return getInvocationAncestors()[0]?.pid ?? process.pid;
 }
 
 function getNxEnvVariablesForTask(
@@ -244,6 +254,7 @@ function getNxEnvVariablesForTask(
     NX_TASK_TARGET_TARGET: task.target.target,
     NX_TASK_TARGET_CONFIGURATION: task.target.configuration ?? undefined,
     NX_TASK_HASH: task.hash,
+    NX_INVOCATION_ANCESTORS: appendInvocationAncestor(task.id),
     // used when Nx is invoked via Lerna
     LERNA_PACKAGE_NAME: task.target.project,
   };
