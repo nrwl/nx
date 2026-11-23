@@ -23,7 +23,7 @@ export function updateDependencies(tree: Tree, schema: InitGeneratorSchema) {
   );
 }
 
-function addPluginToNxJson(tree: Tree, updatePackageScripts: boolean) {
+function addPluginToNxJson(tree: Tree, updatePackageScripts?: boolean) {
   if (!tree.exists('nx.json')) {
     logger.warn(
       '"nx.json" not found. Skipping "@nx/docker" plugin registration.'

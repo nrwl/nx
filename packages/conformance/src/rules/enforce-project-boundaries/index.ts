@@ -323,10 +323,8 @@ function hasTag(proj: ProjectGraphProjectNode, tag: string): boolean {
 
   // if the tag is a regex, check if the project matches the regex
   if (tag.startsWith('/') && tag.endsWith('/')) {
-    let regex;
-    if (regexMap.has(tag)) {
-      regex = regexMap.get(tag);
-    } else {
+    let regex = regexMap.get(tag);
+    if (!regex) {
       regex = new RegExp(tag.substring(1, tag.length - 1));
       regexMap.set(tag, regex);
     }

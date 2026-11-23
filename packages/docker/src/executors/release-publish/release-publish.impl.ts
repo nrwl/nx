@@ -22,17 +22,21 @@ export default async function dockerReleasePublish(
   schema: DockerReleasePublishSchema,
   context: ExecutorContext
 ) {
-  const projectVersionData = schema.nxReleaseVersionData?.[context.projectName];
+  const projectName = context.projectName;
+  if (!projectName) {
+    throw new Error('The Docker release-publish executor requires a project.');
+  }
+  const projectVersionData = schema.nxReleaseVersionData?.[projectName];
   if (projectVersionData?.dockerVersion === null) {
     console.warn(
-      `Skipped Docker image for project "${context.projectName}", because no new Docker version was resolved for this project.`
+      `Skipped Docker image for project "${projectName}", because no new Docker version was resolved for this project.`
     );
     return {
       success: true,
     };
   }
 
-  const projectConfig = context.projectGraph.nodes[context.projectName];
+  const projectConfig = context.projectGraph.nodes[projectName];
   const options = await normalizeOptions(projectConfig, schema);
   if (!options.dryRun) {
     const digest = await dockerPush(options.imageReference, options.quiet);
@@ -72,6 +76,9 @@ async function findImageReference(projectConfig: ProjectGraphProjectNode) {
       `Could not find Docker Image ${imageRef}. Did you run 'nx release version'?`
     );
   }
+  throw new Error(
+    `No Docker image reference found for ${projectConfig.name}. Did you run 'nx release version'?`
+  );
 }
 
 function readVersionFromFile(projectRoot: string) {

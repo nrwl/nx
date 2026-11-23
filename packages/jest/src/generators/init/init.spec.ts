@@ -36,7 +36,7 @@ describe('jest', () => {
     await jestInitGenerator(tree, options);
 
     const productionFileSet = readJson<NxJsonConfiguration>(tree, 'nx.json')
-      .namedInputs.production;
+      .namedInputs?.production;
     expect(productionFileSet).toContain(
       '!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)'
     );
@@ -56,10 +56,10 @@ describe('jest', () => {
       return json;
     });
 
-    await jestInitGenerator(tree, { ...options, addPlugin: false });
+    await jestInitGenerator(tree, options);
 
     const productionFileSet = readJson<NxJsonConfiguration>(tree, 'nx.json')
-      .namedInputs.production as string[];
+      .namedInputs?.production as string[];
     const jestConfigs = jestConfigExtensions.map((ext) => ({
       file: `libs/my-lib/jest.config.${ext}`,
       hash: '',
@@ -77,7 +77,7 @@ describe('jest', () => {
       return json;
     });
     await jestInitGenerator(tree, options);
-    let nxJson: NxJsonConfiguration;
+    let nxJson: NxJsonConfiguration | undefined;
     updateJson<NxJsonConfiguration>(tree, 'nx.json', (json) => {
       json.namedInputs ??= {};
       json.namedInputs.production = [
@@ -143,8 +143,8 @@ describe('jest', () => {
     );
     const td = readJson<NxJsonConfiguration>(tree, 'nx.json').targetDefaults;
     // The target-scoped and filtered entries the user authored are left as-is.
-    expect(td['test']).toEqual({ executor: '@nx/jest:jest' });
-    expect(td['@nx/jest:jest']).toEqual([
+    expect(td?.['test']).toEqual({ executor: '@nx/jest:jest' });
+    expect(td?.['@nx/jest:jest']).toEqual([
       { filter: { projects: ['tag:unit'] }, cache: false },
     ]);
   });

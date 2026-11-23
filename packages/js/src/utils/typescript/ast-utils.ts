@@ -84,12 +84,20 @@ function nodesByPosition(first: ts.Node, second: ts.Node): number {
   return first.getStart() - second.getStart();
 }
 
+function readFile(host: Tree, filePath: string): string {
+  const content = host.read(filePath, 'utf-8');
+  if (content === null) {
+    throw new Error(`Cannot read ${filePath}: file does not exist.`);
+  }
+  return content;
+}
+
 function updateTsSourceFile(
   host: Tree,
   sourceFile: ts.SourceFile,
   filePath: string
 ): ts.SourceFile {
-  const newFileContents = host.read(filePath).toString('utf-8');
+  const newFileContents = readFile(host, filePath);
   return sourceFile.update(newFileContents, {
     newLength: newFileContents.length,
     span: {
@@ -106,7 +114,7 @@ export function insertChange(
   insertPosition: number,
   contentToInsert: string
 ): ts.SourceFile {
-  const content = host.read(filePath).toString();
+  const content = readFile(host, filePath);
   const prefix = content.substring(0, insertPosition);
   const suffix = content.substring(insertPosition);
 
@@ -123,7 +131,7 @@ export function replaceChange(
   contentToInsert: string,
   oldContent: string
 ) {
-  const content = host.read(filePath, 'utf-8');
+  const content = readFile(host, filePath);
 
   const prefix = content.substring(0, insertPosition);
   const suffix = content.substring(insertPosition + oldContent.length);
@@ -147,7 +155,7 @@ export function removeChange(
   removePosition: number,
   contentToRemove: string
 ): ts.SourceFile {
-  const content = host.read(filePath).toString();
+  const content = readFile(host, filePath);
   const prefix = content.substring(0, removePosition);
   const suffix = content.substring(removePosition + contentToRemove.length);
   host.write(filePath, `${prefix}${suffix}`);
@@ -232,7 +240,7 @@ export function insertImport(
   const useStrict = findNodes(
     rootNode,
     tsModule.SyntaxKind.StringLiteral
-  ).filter((n: ts.StringLiteral) => n.text === 'use strict');
+  ).filter((n) => tsModule.isStringLiteral(n) && n.text === 'use strict');
   let fallbackPos = 0;
   if (useStrict.length > 0) {
     fallbackPos = useStrict[0].end;
@@ -315,16 +323,25 @@ export function getImport(
   if (!tsModule) {
     tsModule = ensureTypescript();
   }
-  const allImports = findNodes(source, tsModule.SyntaxKind.ImportDeclaration);
-  const matching = allImports.filter((i: ts.ImportDeclaration) =>
+  const allImports = findNodes(
+    source,
+    tsModule.SyntaxKind.ImportDeclaration
+  ).filter(tsModule.isImportDeclaration);
+  const matching = allImports.filter((i) =>
     predicate(i.moduleSpecifier.getText())
   );
 
-  return matching.map((i: ts.ImportDeclaration) => {
+  return matching.map((i) => {
     const moduleSpec = i.moduleSpecifier
       .getText()
       .substring(1, i.moduleSpecifier.getText().length - 1);
-    const t = i.importClause.namedBindings.getText();
+    const namedBindings = i.importClause?.namedBindings;
+    if (!namedBindings) {
+      throw new Error(
+        `Import of "${moduleSpec}" in ${source.fileName} has no named bindings.`
+      );
+    }
+    const t = namedBindings.getText();
     const bindings = t
       .replace('{', '')
       .replace('}', '')

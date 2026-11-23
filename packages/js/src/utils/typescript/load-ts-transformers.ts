@@ -170,7 +170,7 @@ export function loadTsTransformers(
         beforeHooks.push((program) => before(pluginOptions, program));
       } catch (error) {
         logger.error(
-          `Failed to register 'before' transformer for ${pluginName}: ${error.message}`
+          `Failed to register 'before' transformer for ${pluginName}: ${error instanceof Error ? error.message : error}`
         );
       }
     }
@@ -180,7 +180,7 @@ export function loadTsTransformers(
         afterHooks.push((program) => after(pluginOptions, program));
       } catch (error) {
         logger.error(
-          `Failed to register 'after' transformer for ${pluginName}: ${error.message}`
+          `Failed to register 'after' transformer for ${pluginName}: ${error instanceof Error ? error.message : error}`
         );
       }
     }
@@ -192,7 +192,7 @@ export function loadTsTransformers(
         );
       } catch (error) {
         logger.error(
-          `Failed to register 'afterDeclarations' transformer for ${pluginName}: ${error.message}`
+          `Failed to register 'afterDeclarations' transformer for ${pluginName}: ${error instanceof Error ? error.message : error}`
         );
       }
     }

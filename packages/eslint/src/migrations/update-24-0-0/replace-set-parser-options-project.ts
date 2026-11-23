@@ -150,7 +150,10 @@ function migrateGenerators(
       // A later owner's nested entry replaces an earlier one's entirely.
       let resolution = beneath;
       for (const [i, generators] of sources.entries()) {
-        const nested = generators?.[collection];
+        if (!generators) {
+          continue;
+        }
+        const nested = generators[collection];
         if (!isRecord(nested) || !(name in nested)) {
           continue;
         }
@@ -179,7 +182,8 @@ function migrateGenerators(
   }
 
   for (const [i, owner] of owners.entries()) {
-    if (changed[i] && isEmpty(owner.generators)) {
+    const generators = sources[i];
+    if (changed[i] && generators && isEmpty(generators)) {
       delete owner.generators;
     }
   }

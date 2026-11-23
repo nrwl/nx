@@ -95,8 +95,8 @@ function collectDependenciesFromFileMap(
   projectGraph: ProjectGraph,
   projectFileMap: ProjectFileMap,
   buildTarget: string,
-  ignoredFiles: string[],
-  useLocalPathsForWorkspaceDependencies: boolean,
+  ignoredFiles: string[] | undefined,
+  useLocalPathsForWorkspaceDependencies: boolean | undefined,
   npmDeps: Record<string, string>
 ): void {
   const rawFiles = projectFileMap[sourceProject.name];
@@ -104,7 +104,7 @@ function collectDependenciesFromFileMap(
 
   // If build target does not exist in project, use all files as input.
   // This is needed for transitive dependencies for apps -- where libs may not be buildable.
-  const inputs = sourceProject.data.targets[buildTarget]
+  const inputs = sourceProject.data.targets?.[buildTarget]
     ? getTargetInputs(readNxJson(), sourceProject, buildTarget).selfInputs
     : ['{projectRoot}/**/*'];
   if (ignoredFiles) {
@@ -131,7 +131,7 @@ function collectDependenciesFromFileMap(
       const target = fileDataDepTarget(dep);
 
       // If the node is external, then read package info from `data`.
-      const externalDep = projectGraph.externalNodes[target];
+      const externalDep = projectGraph.externalNodes?.[target];
       if (externalDep?.type === 'npm') {
         npmDeps[externalDep.data.packageName] = externalDep.data.version;
         continue;
@@ -147,7 +147,7 @@ function collectDependenciesFromFileMap(
         const packageJson = readPackageJson(workspaceDep, workspaceRoot);
         if (
           // Check that this is a buildable project, otherwise it cannot be a dependency in package.json.
-          workspaceDep.data.targets[buildTarget] &&
+          workspaceDep.data.targets?.[buildTarget] &&
           // Make sure package.json exists and has a valid name.
           packageJson?.name
         ) {
@@ -205,7 +205,7 @@ function collectHelperDependencies(
   runtimeHelpers: string[] | undefined,
   npmDeps: Record<string, string>
 ): void {
-  if (runtimeHelpers?.length > 0) {
+  if (runtimeHelpers && runtimeHelpers.length > 0) {
     for (const helper of runtimeHelpers) {
       if (npmDeps[helper]) continue;
       const version = findHelperVersion(projectGraph, sourceProject, helper);
@@ -217,7 +217,7 @@ function collectHelperDependencies(
     return;
   }
 
-  const target = sourceProject.data.targets[buildTarget];
+  const target = sourceProject.data.targets?.[buildTarget];
   if (!target) return;
 
   if (target.executor === '@nx/js:tsc' && target.options?.tsConfig) {
@@ -271,7 +271,11 @@ function findHelperVersion(
   sourceProject: ProjectGraphProjectNode,
   helper: string
 ): string | undefined {
-  const bareNode = projectGraph.externalNodes[`npm:${helper}`];
+  const externalNodes = projectGraph.externalNodes;
+  if (!externalNodes) {
+    return undefined;
+  }
+  const bareNode = externalNodes[`npm:${helper}`];
   const bareLinkVersion = bareNode?.data.version.startsWith('link:')
     ? bareNode.data.version
     : undefined;
@@ -283,23 +287,23 @@ function findHelperVersion(
   // `link:` can then hold the bare name. Prefer the version that the project
   // depends on, else the highest registry version, else the link.
   const isHelperNode = (name: string) =>
-    projectGraph.externalNodes[name]?.type === 'npm' &&
-    projectGraph.externalNodes[name].data.packageName === helper;
+    externalNodes[name]?.type === 'npm' &&
+    externalNodes[name].data.packageName === helper;
   const projectDependency = projectGraph.dependencies[sourceProject.name]?.find(
     (dependency) => isHelperNode(dependency.target)
   );
   if (projectDependency) {
-    return projectGraph.externalNodes[projectDependency.target].data.version;
+    return externalNodes[projectDependency.target].data.version;
   }
-  let versions = highestHelperVersions.get(projectGraph.externalNodes);
+  let versions = highestHelperVersions.get(externalNodes);
   if (!versions) {
     versions = new Map();
-    highestHelperVersions.set(projectGraph.externalNodes, versions);
+    highestHelperVersions.set(externalNodes, versions);
   }
   if (!versions.has(helper)) {
-    const candidates = Object.keys(projectGraph.externalNodes)
+    const candidates = Object.keys(externalNodes)
       .filter(isHelperNode)
-      .map((name) => projectGraph.externalNodes[name].data.version)
+      .map((name) => externalNodes[name].data.version)
       .filter((version) => valid(version) !== null)
       .sort(rcompare);
     // A stable version wins over a prerelease.

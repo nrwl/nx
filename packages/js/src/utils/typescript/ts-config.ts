@@ -50,7 +50,7 @@ export function readTsConfigFromTree(
 
   const tsSysFromTree: ts.System = {
     ...tsModule.sys,
-    readFile: (path) => tree.read(path, 'utf-8'),
+    readFile: (path) => tree.read(path, 'utf-8') ?? undefined,
   };
 
   return readTsConfig(tsConfigPath, tsSysFromTree);
@@ -155,8 +155,12 @@ export function createTreeParseConfigHost(tree: Tree): TreeParseConfigHost {
     // A relative path anchored to the workspace instead of `process.cwd()`; an
     // absolute one still goes through `ts.sys` so a symlinked in-root
     // `node_modules` entry resolves to its real (out-of-root) target.
-    realpath: (path) =>
-      tsModule.sys.realpath(isAbsolute(path) ? path : join(tree.root, path)),
+    realpath: (path) => {
+      const absolutePath = isAbsolute(path) ? path : join(tree.root, path);
+      return tsModule.sys.realpath
+        ? tsModule.sys.realpath(absolutePath)
+        : absolutePath;
+    },
     readFile: (path) =>
       isOutsideRoot(path)
         ? isFileOnDisk(path)
@@ -239,7 +243,13 @@ export function addTsConfigPath(
   importPath: string,
   lookupPaths: string[]
 ) {
-  updateJson(tree, getRootTsConfigPathInTree(tree), (json) => {
+  const rootTsConfigPath = getRootTsConfigPathInTree(tree);
+  if (!rootTsConfigPath) {
+    throw new Error(
+      'Could not find a root tsconfig file (tsconfig.base.json or tsconfig.json).'
+    );
+  }
+  updateJson(tree, rootTsConfigPath, (json) => {
     json.compilerOptions ??= {};
     const c = json.compilerOptions;
     c.paths ??= {};
@@ -359,8 +369,13 @@ function resolveExtendsPath(ext: string, fromDir: string): string | null {
   }
 }
 
-export function readTsConfigPaths(tsConfig?: string | ts.ParsedCommandLine) {
-  tsConfig ??= getRootTsConfigPath();
+export function readTsConfigPaths(
+  tsConfigOrPath?: string | ts.ParsedCommandLine
+) {
+  const tsConfig = tsConfigOrPath ?? getRootTsConfigPath();
+  if (!tsConfig) {
+    return null;
+  }
   try {
     let config: ts.ParsedCommandLine;
 

@@ -109,7 +109,7 @@ describe('getJestProjectsAsync', () => {
         },
       },
     });
-    const expectedResults = [];
+    const expectedResults: string[] = [];
     expect(await getJestProjectsAsync()).toEqual(expectedResults);
   });
 

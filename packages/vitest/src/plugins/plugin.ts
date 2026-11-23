@@ -84,9 +84,13 @@ export interface VitestPluginOptions {
   cwd?: 'projectRoot' | 'workspaceRoot';
 }
 
-type VitestTargets = Pick<ProjectConfiguration, 'targets' | 'metadata'> & {
+type VitestTargets = Pick<ProjectConfiguration, 'metadata'> & {
+  targets: Record<string, TargetConfiguration>;
   setupFileCandidates: string[];
 };
+
+type NormalizedVitestPluginOptions = VitestPluginOptions &
+  Required<Pick<VitestPluginOptions, 'testTargetName' | 'testMode'>>;
 
 const vitestConfigGlob = '**/{vite,vitest}.config.{js,ts,mjs,mts,cjs,cts}';
 
@@ -214,7 +218,7 @@ export const createNodesV2 = createNodes;
 async function buildVitestTargets(
   configFilePath: string,
   projectRoot: string,
-  options: VitestPluginOptions,
+  options: NormalizedVitestPluginOptions,
   context: CreateNodesContext,
   pmc: ReturnType<typeof getPackageManagerCommand>,
   tsconfigInputs: string[]
@@ -322,7 +326,12 @@ async function buildVitestTargets(
     if (options.ciTargetName) {
       const groupName =
         options.ciGroupName ?? deriveGroupNameFromTarget(options.ciTargetName);
-      const targetGroup = [];
+      if (groupName === null) {
+        throw new Error(
+          `Could not derive a CI group name from "${options.ciTargetName}".`
+        );
+      }
+      const targetGroup: string[] = [];
       const dependsOn: string[] = [];
       metadata = {
         targetGroups: {
@@ -461,6 +470,16 @@ async function buildVitestTargets(
           ? joinPathFragments(projectRoot, relativePath)
           : relativePath;
         dependsOn.push(targetName);
+        const outputs =
+          isCoverageCacheable && !vitestRejectsReportsDirectory
+            ? [
+                normalizeAtomOutputPath(
+                  join(resolvedReportsDirectory, outputSubfolder),
+                  fullProjectRoot,
+                  context.workspaceRoot
+                ),
+              ]
+            : [];
         targets[targetName] = {
           // It does not make sense to run atomized tests in watch mode as they are intended to be run in CI
           command: `vitest run${rootArg} ${quoteShellArg(testFileFilter)}${
@@ -472,16 +491,7 @@ async function buildVitestTargets(
           }`,
           cache: isCoverageCacheable && targets[options.testTargetName].cache,
           inputs: targets[options.testTargetName].inputs,
-          outputs:
-            isCoverageCacheable && !vitestRejectsReportsDirectory
-              ? [
-                  normalizeAtomOutputPath(
-                    join(resolvedReportsDirectory, outputSubfolder),
-                    fullProjectRoot,
-                    context.workspaceRoot
-                  ),
-                ]
-              : [],
+          outputs,
           options: {
             cwd,
             env: targets[options.testTargetName].options.env,
@@ -499,7 +509,7 @@ async function buildVitestTargets(
             },
           },
         };
-        atomOutputs.push(...targets[targetName].outputs);
+        atomOutputs.push(...outputs);
         targetGroup.push(targetName);
       }
 
@@ -560,7 +570,7 @@ function withSetupFileInputs(
     // executes, so any change to them changes the run.
     ...files.map((f) => `{workspaceRoot}/${f}`),
   ];
-  const inputs = [...targets[testTargetName].inputs, ...setupInputs];
+  const inputs = [...(targets[testTargetName].inputs ?? []), ...setupInputs];
   return Object.fromEntries(
     Object.entries(targets).map(([name, target]) => [
       name,
@@ -647,7 +657,7 @@ function getRunLocation(
 }
 
 function getOutputs(
-  viteBuildConfig: Record<string, any> | undefined,
+  viteBuildConfig: Record<string, any>,
   projectRoot: string,
   workspaceRoot: string
 ): {
@@ -726,7 +736,7 @@ function normalizeOutputPath(
   projectRoot: string,
   workspaceRoot: string,
   path: 'coverage'
-): string | undefined {
+): string {
   if (!outputPath) {
     if (projectRoot === '.') {
       return `{projectRoot}/${path}`;
@@ -746,11 +756,13 @@ function normalizeOutputPath(
   }
 }
 
-function normalizeOptions(options: VitestPluginOptions): VitestPluginOptions {
+function normalizeOptions(
+  options: VitestPluginOptions | undefined
+): NormalizedVitestPluginOptions {
   options ??= {};
-  options.testTargetName ??= 'test';
-  options.testMode ??= 'watch';
-  return options;
+  const testTargetName = (options.testTargetName ??= 'test');
+  const testMode = (options.testMode ??= 'watch');
+  return { ...options, testTargetName, testMode };
 }
 
 /**

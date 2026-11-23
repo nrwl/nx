@@ -41,13 +41,13 @@ describe('convert to swc', () => {
     });
 
     expect(
-      readProjectConfiguration(tree, 'tsc-lib').targets['build']['executor']
+      readProjectConfiguration(tree, 'tsc-lib').targets?.['build']?.['executor']
     ).toEqual('@nx/js:tsc');
 
     await convertToSwcGenerator(tree, { project: 'tsc-lib' });
 
     expect(
-      readProjectConfiguration(tree, 'tsc-lib').targets['build']['executor']
+      readProjectConfiguration(tree, 'tsc-lib').targets?.['build']?.['executor']
     ).toEqual('@nx/js:swc');
     expect(
       tree.exists(

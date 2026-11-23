@@ -43,7 +43,7 @@ export function startLocalRegistry({
       { stdio: 'pipe' }
     );
 
-    const listener = (data) => {
+    const listener = (data: Buffer) => {
       if (verbose) {
         process.stdout.write(data);
         console.log('Waiting for local registry to start...');

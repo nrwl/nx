@@ -30,7 +30,9 @@ export function getSwcCmd(
   } else {
     // If sourceRoot is not provided, check if `src` exists and use that instead.
     // This is important for root projects to avoid compiling too many directories.
-    inputDir = existsSync(join(root, projectRoot, 'src')) ? 'src' : '.';
+    inputDir = existsSync(join(requireRoot(root), projectRoot, 'src'))
+      ? 'src'
+      : '.';
   }
 
   let swcCmd = `node ${swcCLI} ${
@@ -44,8 +46,9 @@ export function getSwcCmd(
 export function getTypeCheckOptions(
   normalizedOptions: NormalizedSwcExecutorOptions
 ): TypeCheckOptions {
-  const { sourceRoot, projectRoot, watch, tsConfig, root, outputPath } =
+  const { sourceRoot, projectRoot, watch, tsConfig, outputPath } =
     normalizedOptions;
+  const root = requireRoot(normalizedOptions.root);
   const inputDir =
     // If `--strip-leading-paths` SWC option is used, we need to transpile from `src` directory.
     !normalizedOptions.swcCliOptions.stripLeadingPaths
@@ -99,12 +102,24 @@ export async function compileSwc(
     });
     logger.log(swcCmdLog.replace(/\n/, ''));
   } catch (error) {
-    logger.error(`SWC compilation failed: ${error?.message ?? error}`);
-    if (error?.stderr) {
-      logger.error(error.stderr.toString());
+    logger.error(
+      `SWC compilation failed: ${error instanceof Error ? error.message : error}`
+    );
+    if (
+      typeof error === 'object' &&
+      error !== null &&
+      'stderr' in error &&
+      error.stderr
+    ) {
+      logger.error(String(error.stderr));
     }
-    if (error?.stdout) {
-      logger.error(error.stdout.toString());
+    if (
+      typeof error === 'object' &&
+      error !== null &&
+      'stdout' in error &&
+      error.stdout
+    ) {
+      logger.error(String(error.stdout));
     }
     return { success: false };
   }
@@ -141,7 +156,7 @@ export async function* compileSwcWatch(
     outfile: normalizedOptions.mainOutputPath,
   });
 
-  let typeCheckOptions: TypeCheckOptions;
+  let typeCheckOptions: TypeCheckOptions | undefined;
   let initialPostCompile = true;
 
   if (normalizedOptions.clean) {
@@ -151,9 +166,9 @@ export async function* compileSwcWatch(
   return yield* createAsyncIterable<{ success: boolean; outfile: string }>(
     async ({ next, done }) => {
       let processOnExit: () => void;
-      let handleCallback: (type: string, data?: string) => void;
-      let stdoutOnData: () => void;
-      let stderrOnData: () => void;
+      let handleCallback: (type: string, data: string) => void;
+      let stdoutOnData: (data: string) => void;
+      let stderrOnData: (err: string) => void;
       let watcherOnExit: () => void;
 
       const swcWatcher = exec(getSwcCmd(normalizedOptions, true), {
@@ -169,7 +184,7 @@ export async function* compileSwcWatch(
         process.off('exit', processOnExit);
       };
 
-      handleCallback = async (type: string, data?: string) => {
+      handleCallback = async (type: string, data: string) => {
         if (type === 'stdout' || data.includes('Successfully')) {
           process.stdout.write(data);
           if (!data.startsWith('Watching')) {
@@ -231,11 +246,11 @@ export async function* compileSwcWatch(
         }
       };
 
-      stdoutOnData = async (data?: string) => {
+      stdoutOnData = async (data: string) => {
         handleCallback('stdout', data);
       };
 
-      stderrOnData = (err?: any) => {
+      stderrOnData = (err: string) => {
         handleCallback('stderr', err);
       };
 
@@ -244,6 +259,9 @@ export async function* compileSwcWatch(
         swcWatcher.off('exit', watcherOnExit);
       };
 
+      if (!swcWatcher.stdout || !swcWatcher.stderr) {
+        throw new Error('swc was spawned without piped stdout/stderr');
+      }
       swcWatcher.stdout.on('data', stdoutOnData);
       swcWatcher.stderr.on('data', stderrOnData);
 
@@ -257,7 +275,7 @@ export async function* compileSwcWatch(
 }
 
 function delay(ms: number): { start: () => Promise<void>; cancel: () => void } {
-  let timerId: ReturnType<typeof setTimeout> = undefined;
+  let timerId: ReturnType<typeof setTimeout> | undefined;
   return {
     start() {
       return new Promise<void>((resolve) => {
@@ -273,4 +291,11 @@ function delay(ms: number): { start: () => Promise<void>; cancel: () => void } {
       }
     },
   };
+}
+
+function requireRoot(root: string | undefined): string {
+  if (!root) {
+    throw new Error('The workspace root is missing from the SWC options.');
+  }
+  return root;
 }

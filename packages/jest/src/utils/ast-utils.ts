@@ -1,5 +1,9 @@
 import { query, replace } from '@phenomnomnominal/tsquery';
-import { ObjectLiteralExpression, PropertyAssignment } from 'typescript';
+import type {
+  Node,
+  ObjectLiteralExpression,
+  PropertyAssignment,
+} from 'typescript';
 
 /**
  * match testing file based on their name file
@@ -25,9 +29,9 @@ export function addTransformerToConfig(
     return replace(
       configContents,
       `${TS_QUERY_JEST_CONFIG_PREFIX} > ObjectLiteralExpression`,
-      (node: ObjectLiteralExpression) => {
+      (node: Node) => {
         return `{
-${node.properties.map((p) => p.getText()).join(',\n')},
+${(node as ObjectLiteralExpression).properties.map((p) => p.getText()).join(',\n')},
 transform: { ${transformer} }
 }`;
       }
@@ -36,8 +40,9 @@ transform: { ${transformer} }
   return replace(
     configContents,
     `${TS_QUERY_JEST_CONFIG_PREFIX} > ObjectLiteralExpression PropertyAssignment:has(Identifier[name="transform"])`,
-    (node: PropertyAssignment) => {
-      const transformObject = node.initializer as ObjectLiteralExpression;
+    (node: Node) => {
+      const transformObject = (node as PropertyAssignment)
+        .initializer as ObjectLiteralExpression;
       const transformProperties = transformObject.properties
         .map((p) => p.getText())
         .join(',\n');

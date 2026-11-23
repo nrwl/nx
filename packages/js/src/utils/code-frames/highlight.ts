@@ -1,12 +1,12 @@
 // Adapted from https://raw.githubusercontent.com/babel/babel/4108524/packages/babel-highlight/src/index.js
 import * as jsTokens from 'js-tokens';
-import chalk from 'chalk';
+import chalk, { type Chalk } from 'chalk';
 import { isKeyword, isReservedWord } from './identifiers';
 
 /**
  * Chalk styles for token types.
  */
-function getDefs(chalk) {
+function getDefs(chalk: Chalk) {
   return {
     keyword: chalk.cyan,
     capitalized: chalk.yellow,
@@ -39,8 +39,7 @@ const BRACKET = /^[()[\]{}]$/;
 /**
  * Get the type of token, specifying punctuator type.
  */
-function getTokenType(match) {
-  const [offset, text] = match.slice(-2);
+function getTokenType(match: string[], offset: number, text: string) {
   const token = jsTokens.matchToToken(match);
 
   if (token.type === 'name') {
@@ -77,9 +76,13 @@ function getTokenType(match) {
 /**
  * Highlight `text` using the token definitions in `defs`.
  */
-function highlightTokens(defs: Object, text: string) {
+function highlightTokens(
+  defs: Record<string, (str: string) => string>,
+  text: string
+) {
   return text.replace(jsTokens.default, function (...args) {
-    const type = getTokenType(args);
+    const [offset, source] = args.slice(-2);
+    const type = getTokenType(args, offset, source);
     const colorize = defs[type];
     if (colorize) {
       return args[0]

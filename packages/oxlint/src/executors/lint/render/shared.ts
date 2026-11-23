@@ -48,17 +48,18 @@ export class SourceCache {
   }
 
   lines(file: string): string[] | null {
-    if (!this.cache.has(file)) {
+    let lines = this.cache.get(file);
+    if (lines === undefined) {
       try {
-        this.cache.set(
-          file,
-          readFileSync(join(this.workspaceRoot, file), 'utf-8').split('\n')
+        lines = readFileSync(join(this.workspaceRoot, file), 'utf-8').split(
+          '\n'
         );
       } catch {
-        this.cache.set(file, null);
+        lines = null;
       }
+      this.cache.set(file, lines);
     }
-    return this.cache.get(file);
+    return lines;
   }
 
   endOf(file: string, span: OxlintSpan): { line: number; column: number } {

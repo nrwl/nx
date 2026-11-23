@@ -3,6 +3,7 @@ import '@nx/devkit/internal-testing-utils/mock-project-graph';
 import {
   getPackageManagerCommand,
   getProjects,
+  type NxJsonConfiguration,
   output,
   readJson,
   readProjectConfiguration,
@@ -130,8 +131,8 @@ describe('lib', () => {
     });
 
     expect(
-      readJson(tree, 'nx.json').plugins.filter(
-        (p) => p.plugin === '@nx/js/typescript'
+      readJson<NxJsonConfiguration>(tree, 'nx.json').plugins?.filter(
+        (p) => typeof p !== 'string' && p.plugin === '@nx/js/typescript'
       )
     ).toEqual([
       {
@@ -140,7 +141,7 @@ describe('lib', () => {
       },
     ]);
     expect(
-      readProjectConfiguration(tree, 'my-lib').targets.build.executor
+      readProjectConfiguration(tree, 'my-lib').targets?.build?.executor
     ).toBe('@nx/js:tsc');
   });
 
@@ -504,8 +505,11 @@ describe('lib', () => {
             importPath: '@myorg/lib',
           });
         } catch (e) {
-          expect(e.message).toContain(
-            'You already have a library using the import path'
+          expect(e).toHaveProperty(
+            'message',
+            expect.stringContaining(
+              'You already have a library using the import path'
+            )
           );
         }
 
@@ -1054,7 +1058,7 @@ describe('lib', () => {
         });
 
         const config = readProjectConfiguration(tree, 'my-lib');
-        expect(config.targets.build).not.toBeDefined();
+        expect(config.targets?.build).not.toBeDefined();
       });
 
       it('should still generate the build target if bundler is undefined', async () => {
@@ -1064,7 +1068,7 @@ describe('lib', () => {
         });
 
         const config = readProjectConfiguration(tree, 'my-lib');
-        expect(config.targets.build).toBeDefined();
+        expect(config.targets?.build).toBeDefined();
       });
 
       it('should generate the build target', async () => {
@@ -1075,7 +1079,7 @@ describe('lib', () => {
         });
 
         const config = readProjectConfiguration(tree, 'my-lib');
-        expect(config.targets.build).toEqual({
+        expect(config.targets?.build).toEqual({
           executor: '@nx/js:tsc',
           options: {
             assets: ['my-lib/*.md'],
@@ -1095,7 +1099,7 @@ describe('lib', () => {
         });
 
         const config = readProjectConfiguration(tree, 'my-lib');
-        expect(config.targets.build).toEqual({
+        expect(config.targets?.build).toEqual({
           executor: '@nx/js:swc',
           options: {
             assets: ['my-lib/*.md'],
@@ -1124,7 +1128,7 @@ describe('lib', () => {
           bundler: 'swc',
         });
 
-        const jestConfig = tree.read('my-lib/jest.config.cts').toString();
+        const jestConfig = tree.read('my-lib/jest.config.cts', 'utf-8');
         expect(jestConfig).toContain('@swc/jest');
       });
 
@@ -1149,7 +1153,7 @@ describe('lib', () => {
         });
 
         const config = readProjectConfiguration(tree, 'my-lib');
-        expect(config.targets.build).toEqual({
+        expect(config.targets?.build).toEqual({
           executor: '@nx/js:tsc',
           options: {
             assets: ['my-lib/*.md'],
@@ -1170,7 +1174,7 @@ describe('lib', () => {
         });
 
         const config = readProjectConfiguration(tree, 'my-lib');
-        expect(config.targets.build).toEqual({
+        expect(config.targets?.build).toEqual({
           executor: '@nx/js:swc',
           options: {
             assets: ['my-lib/*.md'],
@@ -1201,7 +1205,7 @@ describe('lib', () => {
           compiler: 'swc',
         });
 
-        const jestConfig = tree.read('my-lib/jest.config.cts').toString();
+        const jestConfig = tree.read('my-lib/jest.config.cts', 'utf-8');
         expect(jestConfig).toContain('@swc/jest');
       });
 
@@ -1249,7 +1253,7 @@ describe('lib', () => {
         });
 
         const config = readProjectConfiguration(tree, 'my-lib');
-        expect(config.targets.build).toEqual({
+        expect(config.targets?.build).toEqual({
           executor: '@nx/js:tsc',
           options: {
             assets: ['my-lib/*.md'],
@@ -1271,7 +1275,7 @@ describe('lib', () => {
         });
 
         const config = readProjectConfiguration(tree, 'my-lib');
-        expect(config.targets['nx-release-publish']).toEqual({
+        expect(config.targets?.['nx-release-publish']).toEqual({
           options: {
             packageRoot: 'dist/{projectRoot}',
           },
@@ -1726,7 +1730,7 @@ describe('lib', () => {
       });
 
       const project = readProjectConfiguration(tree, 'my-lib');
-      expect(project.targets.build).toMatchObject({
+      expect(project.targets?.build).toMatchObject({
         executor: '@nx/esbuild:esbuild',
       });
       expect(readJson(tree, 'my-lib/.eslintrc.json').overrides).toContainEqual({
@@ -1882,7 +1886,7 @@ describe('lib', () => {
       expect(tree.exists('my-lib/README.md')).toBeTruthy();
 
       const project = readProjectConfiguration(tree, 'my-lib');
-      expect(project.targets.build.options.assets).toStrictEqual([
+      expect(project.targets?.build?.options.assets).toStrictEqual([
         'my-lib/*.md',
       ]);
     });
@@ -1898,7 +1902,7 @@ describe('lib', () => {
       expect(tree.exists('my-lib/README.md')).toBeFalsy();
 
       const project = readProjectConfiguration(tree, 'my-lib');
-      expect(project.targets.build.options.assets).toEqual([]);
+      expect(project.targets?.build?.options.assets).toEqual([]);
     });
   });
 

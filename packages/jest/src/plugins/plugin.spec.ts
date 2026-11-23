@@ -146,7 +146,7 @@ describe.each([true, false])('@nx/jest/plugin', (disableJestRuntime) => {
       'broken/project.json': '{}',
     });
 
-    let error: AggregateCreateNodesError;
+    let error: unknown;
     try {
       await createNodesFunction(
         ['proj/jest.config.js', 'broken/jest.config.js'],
@@ -158,6 +158,9 @@ describe.each([true, false])('@nx/jest/plugin', (disableJestRuntime) => {
     }
 
     expect(error).toBeInstanceOf(AggregateCreateNodesError);
+    if (!(error instanceof AggregateCreateNodesError)) {
+      throw error;
+    }
     expect(error.errors.map(([file, e]) => [file, e.message])).toEqual([
       ['broken/jest.config.js', 'cannot load preset'],
     ]);
@@ -395,6 +398,9 @@ describe.each([true, false])('@nx/jest/plugin', (disableJestRuntime) => {
       );
       const { command, options } =
         results[0][1].projects!['proj'].targets![`test-ci--${testFile}`];
+      if (command === undefined) {
+        throw new Error(`test-ci--${testFile} has no command`);
+      }
       const jestCli = `"${process.execPath}" "${require.resolve('jest/bin/jest')}"`;
       const run = spawnSync(
         `${command.replace(/^jest /, `${jestCli} `)} --listTests --no-watchman`,
@@ -810,10 +816,13 @@ describe.each([true, false])('@nx/jest/plugin', (disableJestRuntime) => {
 
     try {
       // A fresh plugin module has no cached find probe result
-      let isolatedCreateNodes: typeof createNodesFunction;
+      let isolatedCreateNodes: typeof createNodesFunction | undefined;
       jest.isolateModules(() => {
         isolatedCreateNodes = require('./plugin').createNodesV2[1];
       });
+      if (!isolatedCreateNodes) {
+        throw new Error('plugin module did not load');
+      }
       const results = await isolatedCreateNodes(
         ['proj/jest.config.js'],
         { targetName: 'test', ciTargetName: 'test-ci', disableJestRuntime },

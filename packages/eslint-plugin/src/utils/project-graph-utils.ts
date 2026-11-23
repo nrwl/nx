@@ -1,4 +1,5 @@
 import {
+  NxJsonConfiguration,
   ProjectFileMap,
   ProjectGraph,
   readCachedProjectGraph,
@@ -13,6 +14,16 @@ import {
   readFileMapCache,
 } from '@nx/devkit/internal';
 
+interface ProjectGraphGlobals {
+  projectGraph: ProjectGraph;
+  projectFileMap: ProjectFileMap;
+  projectRootMappings: ProjectRootMappings;
+  targetProjectLocator: TargetProjectLocator;
+  workspaceLayout: NxJsonConfiguration['workspaceLayout'];
+}
+
+const globals = globalThis as typeof globalThis & ProjectGraphGlobals;
+
 export function ensureGlobalProjectGraph(
   ruleName: string,
   skipped = 'The rule will be skipped.'
@@ -22,13 +33,13 @@ export function ensureGlobalProjectGraph(
    * Enforce every IDE change to get a fresh nxdeps.json
    */
   if (
-    !globalThis.projectGraph ||
-    !globalThis.projectRootMappings ||
-    !globalThis.projectFileMap ||
+    !globals.projectGraph ||
+    !globals.projectRootMappings ||
+    !globals.projectFileMap ||
     !isTerminalRun()
   ) {
     const nxJson = readNxJson();
-    globalThis.workspaceLayout = nxJson.workspaceLayout;
+    globals.workspaceLayout = nxJson.workspaceLayout;
 
     /**
      * Because there are a number of ways in which the rule can be invoked (executor vs ESLint CLI vs IDE Plugin),
@@ -36,12 +47,16 @@ export function ensureGlobalProjectGraph(
      */
     try {
       const projectGraph = readCachedProjectGraph();
-      globalThis.projectGraph = projectGraph;
-      globalThis.projectRootMappings = createProjectRootMappings(
+      globals.projectGraph = projectGraph;
+      globals.projectRootMappings = createProjectRootMappings(
         projectGraph.nodes
       );
-      globalThis.projectFileMap = readFileMapCache().fileMap.projectFileMap;
-      globalThis.targetProjectLocator = new TargetProjectLocator(
+      const fileMapCache = readFileMapCache();
+      if (!fileMapCache) {
+        throw new Error('No cached file map is available.');
+      }
+      globals.projectFileMap = fileMapCache.fileMap.projectFileMap;
+      globals.targetProjectLocator = new TargetProjectLocator(
         projectGraph.nodes,
         projectGraph.externalNodes
       );
@@ -59,17 +74,12 @@ export function ensureGlobalProjectGraph(
 export function readProjectGraph(
   ruleName: string,
   skipped?: string
-): {
-  projectGraph: ProjectGraph;
-  projectFileMap: ProjectFileMap;
-  projectRootMappings: ProjectRootMappings;
-  targetProjectLocator: TargetProjectLocator;
-} {
+): Omit<ProjectGraphGlobals, 'workspaceLayout'> {
   ensureGlobalProjectGraph(ruleName, skipped);
   return {
-    projectGraph: globalThis.projectGraph,
-    projectFileMap: globalThis.projectFileMap,
-    projectRootMappings: globalThis.projectRootMappings,
-    targetProjectLocator: globalThis.targetProjectLocator,
+    projectGraph: globals.projectGraph,
+    projectFileMap: globals.projectFileMap,
+    projectRootMappings: globals.projectRootMappings,
+    targetProjectLocator: globals.targetProjectLocator,
   };
 }

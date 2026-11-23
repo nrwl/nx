@@ -1,4 +1,4 @@
-import { readNxJson, updateNxJson, type Tree } from '@nx/devkit';
+import { readJson, readNxJson, updateNxJson, type Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { detectLinters } from './linter';
 
@@ -10,13 +10,13 @@ describe('detectLinters', () => {
   });
 
   function addPlugin(plugin: string) {
-    const nxJson = readNxJson(tree);
+    const nxJson = readNxJson(tree) ?? {};
     nxJson.plugins = [...(nxJson.plugins ?? []), plugin];
     updateNxJson(tree, nxJson);
   }
 
   function addDevDependency(pkg: string, version = '1.0.0') {
-    const packageJson = JSON.parse(tree.read('package.json', 'utf-8'));
+    const packageJson = readJson(tree, 'package.json');
     packageJson.devDependencies = {
       ...packageJson.devDependencies,
       [pkg]: version,
@@ -69,7 +69,7 @@ describe('detectLinters', () => {
   });
 
   it('should read expanded plugin registrations', () => {
-    const nxJson = readNxJson(tree);
+    const nxJson = readNxJson(tree) ?? {};
     nxJson.plugins = [
       { plugin: '@nx/oxlint', options: { targetName: 'lint' } },
     ];

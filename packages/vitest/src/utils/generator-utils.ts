@@ -36,7 +36,7 @@ export function addOrChangeTestTarget(
   options: VitestGeneratorSchema,
   hasPlugin: boolean
 ) {
-  const nxJson = readNxJson(tree);
+  const nxJson = readNxJson(tree) ?? {};
   const target = options.testTarget ?? 'test';
 
   // The plugin only infers the target names it is registered for, so any other

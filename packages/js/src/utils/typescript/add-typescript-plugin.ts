@@ -41,7 +41,7 @@ export async function addTypescriptPlugin(
         },
       ],
     },
-    updatePackageScripts
+    updatePackageScripts ?? false
   );
 }
 
@@ -88,12 +88,15 @@ export async function ensureTypescriptPlugin(
       '@nx/js/typescript',
       createNodesV2,
       { typecheck: TYPECHECK_OPTIONS },
-      updatePackageScripts
+      updatePackageScripts ?? false
     );
   }
   if (frameworkPlugin) {
     const updated = readNxJson(tree);
-    if (moveTypescriptPluginBefore(updated.plugins, frameworkPlugin)) {
+    if (
+      updated?.plugins &&
+      moveTypescriptPluginBefore(updated.plugins, frameworkPlugin)
+    ) {
       updateNxJson(tree, updated);
     }
   }
@@ -153,7 +156,7 @@ export function registerTypescriptPluginForTypecheck(
       plugin: '@nx/js/typescript',
       options: {
         typecheck: { targetName },
-        ...(typecheckOptions.compiler === 'tsgo' ? { compiler: 'tsgo' } : {}),
+        ...(typecheckOptions?.compiler === 'tsgo' ? { compiler: 'tsgo' } : {}),
       },
     });
     moveTypescriptPluginBefore(nxJson.plugins, frameworkPlugin);

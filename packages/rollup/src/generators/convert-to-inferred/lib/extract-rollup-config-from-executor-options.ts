@@ -2,7 +2,7 @@ import { joinPathFragments, stripIndents, Tree } from '@nx/devkit';
 import { RollupExecutorOptions } from '../../../executors/rollup/schema';
 import { normalizePathOptions } from './normalize-path-options';
 
-const aliases = {
+const aliases: Record<string, string> = {
   entryFile: 'main',
   exports: 'generateExportsField',
   f: 'format',
@@ -10,8 +10,10 @@ const aliases = {
 
 export function extractRollupConfigFromExecutorOptions(
   tree: Tree,
-  options: RollupExecutorOptions,
-  configurations: Record<string, Partial<RollupExecutorOptions>>,
+  options: RollupExecutorOptions & Record<string, unknown>,
+  configurations:
+    | Record<string, Partial<RollupExecutorOptions> & Record<string, unknown>>
+    | undefined,
   projectRoot: string
 ) {
   normalizePathOptions(projectRoot, options);
@@ -55,12 +57,12 @@ export function extractRollupConfigFromExecutorOptions(
       defaultOptions[key] = value;
     }
   }
-  let configurationOptions: Record<string, Record<string, unknown>>;
+  let configurationOptions: Record<string, Record<string, unknown>> | undefined;
   if (hasConfigurations) {
     configurationOptions = {};
     for (const [key, value] of Object.entries(configurations)) {
-      let newConfigFileName: string;
-      let oldRollupConfigForConfiguration: string[];
+      let newConfigFileName: string | undefined;
+      let oldRollupConfigForConfiguration: string[] = [];
       for (const [optionKey, optionValue] of Object.entries(value)) {
         if (optionKey === 'watch') continue;
 
@@ -70,10 +72,11 @@ export function extractRollupConfigFromExecutorOptions(
          * Set the `--config` option to the new file
          */
         if (optionKey === 'rollupConfig') {
-          oldRollupConfigForConfiguration = Array.isArray(optionValue)
-            ? optionValue
-            : optionValue
-              ? [optionValue]
+          const rollupConfig = value.rollupConfig;
+          oldRollupConfigForConfiguration = Array.isArray(rollupConfig)
+            ? rollupConfig
+            : rollupConfig
+              ? [rollupConfig]
               : [];
           newConfigFileName = `rollup.${key}.config.js`;
           for (let i = 0; i < oldRollupConfigForConfiguration.length; i++) {

@@ -115,7 +115,9 @@ export async function syncGenerator(tree: Tree): Promise<SyncGeneratorResult> {
       const correctPath = path.startsWith(tree.root)
         ? relative(tree.root, path)
         : path;
-      return readRawTsconfigContents(tree, tsconfigInfoCaches, correctPath);
+      return tsconfigExists(tree, tsconfigInfoCaches, correctPath)
+        ? readRawTsconfigContents(tree, tsconfigInfoCaches, correctPath)
+        : undefined;
     },
   };
 
@@ -203,6 +205,9 @@ export async function syncGenerator(tree: Tree): Promise<SyncGeneratorResult> {
     }
   }
 
+  if (!nxJson) {
+    throw new Error('Cannot find nx.json');
+  }
   const userOptions = nxJson.sync?.generatorOptions?.[
     '@nx/js:typescript-sync'
   ] as GeneratorOptions | undefined;
@@ -341,14 +346,18 @@ function readRawTsconfigContents(
   tsconfigInfoCaches: TsconfigInfoCaches,
   tsconfigPath: string
 ): string {
-  if (!tsconfigInfoCaches.content.has(tsconfigPath)) {
-    tsconfigInfoCaches.content.set(
-      tsconfigPath,
-      tree.read(tsconfigPath, 'utf-8')
-    );
+  const cached = tsconfigInfoCaches.content.get(tsconfigPath);
+  if (cached !== undefined) {
+    return cached;
   }
 
-  return tsconfigInfoCaches.content.get(tsconfigPath);
+  const content = tree.read(tsconfigPath, 'utf-8');
+  if (content === null) {
+    throw new Error(`Cannot find "${tsconfigPath}".`);
+  }
+  tsconfigInfoCaches.content.set(tsconfigPath, content);
+
+  return content;
 }
 
 function parseTsconfig(
@@ -377,11 +386,13 @@ function tsconfigExists(
   tsconfigInfoCaches: TsconfigInfoCaches,
   tsconfigPath: string
 ): boolean {
-  if (!tsconfigInfoCaches.exists.has(tsconfigPath)) {
-    tsconfigInfoCaches.exists.set(tsconfigPath, tree.exists(tsconfigPath));
+  let exists = tsconfigInfoCaches.exists.get(tsconfigPath);
+  if (exists === undefined) {
+    exists = tree.exists(tsconfigPath);
+    tsconfigInfoCaches.exists.set(tsconfigPath, exists);
   }
 
-  return tsconfigInfoCaches.exists.get(tsconfigPath);
+  return exists;
 }
 
 function updateTsConfigReferences(
@@ -470,7 +481,7 @@ function updateTsConfigReferences(
     }
     // Ensure the project reference for the target is set if we can find the
     // relevant tsconfig file
-    let referencePath: string;
+    let referencePath: string | undefined;
     if (runtimeTsConfigFileName) {
       const runtimeTsConfigPath = joinPathFragments(
         dep.data.root,
@@ -592,12 +603,14 @@ function collectProjectDependencies(
   projectGraph: ProjectGraph,
   collectedDependencies: Map<string, ProjectGraphProjectNode[]>
 ): ProjectGraphProjectNode[] {
-  if (collectedDependencies.has(projectName)) {
+  const collected = collectedDependencies.get(projectName);
+  if (collected) {
     // We've already collected the dependencies for this project
-    return collectedDependencies.get(projectName);
+    return collected;
   }
 
-  collectedDependencies.set(projectName, []);
+  const dependencies: ProjectGraphProjectNode[] = [];
+  collectedDependencies.set(projectName, dependencies);
 
   for (const dep of projectGraph.dependencies[projectName]) {
     const targetProjectNode = projectGraph.nodes[dep.target];
@@ -607,12 +620,8 @@ function collectProjectDependencies(
     }
 
     // Add the target project node to the list of dependencies for the current project
-    if (
-      !collectedDependencies
-        .get(projectName)
-        .some((d) => d.name === targetProjectNode.name)
-    ) {
-      collectedDependencies.get(projectName).push(targetProjectNode);
+    if (!dependencies.some((d) => d.name === targetProjectNode.name)) {
+      dependencies.push(targetProjectNode);
     }
 
     if (process.env.NX_ENABLE_TS_SYNC_TRANSITIVE_DEPENDENCIES !== 'true') {
@@ -626,17 +635,13 @@ function collectProjectDependencies(
       collectedDependencies
     );
     for (const transitiveDep of transitiveDependencies) {
-      if (
-        !collectedDependencies
-          .get(projectName)
-          .some((d) => d.name === transitiveDep.name)
-      ) {
-        collectedDependencies.get(projectName).push(transitiveDep);
+      if (!dependencies.some((d) => d.name === transitiveDep.name)) {
+        dependencies.push(transitiveDep);
       }
     }
   }
 
-  return collectedDependencies.get(projectName);
+  return dependencies;
 }
 
 // Normalize the paths to strip leading `./` and trailing `/tsconfig.json`
@@ -685,12 +690,14 @@ function isProjectReferenceIgnored(
 ): boolean {
   if (!tsconfigInfoCaches.ignore) {
     const ig = ignore();
-    if (tree.exists('.gitignore')) {
+    const gitignore = tree.read('.gitignore', 'utf-8');
+    if (gitignore !== null) {
       ig.add('.git');
-      ig.add(tree.read('.gitignore', 'utf-8'));
+      ig.add(gitignore);
     }
-    if (tree.exists('.nxignore')) {
-      ig.add(tree.read('.nxignore', 'utf-8'));
+    const nxignore = tree.read('.nxignore', 'utf-8');
+    if (nxignore !== null) {
+      ig.add(nxignore);
     }
     tsconfigInfoCaches.ignore = ig;
   }
@@ -749,19 +756,18 @@ function hasCompositeEnabled(
   tsconfigInfoCaches: TsconfigInfoCaches,
   tsconfigPath: string
 ): boolean {
-  if (!tsconfigInfoCaches.composite.has(tsconfigPath)) {
+  let composite = tsconfigInfoCaches.composite.get(tsconfigPath);
+  if (composite === undefined) {
     const parsed = parseTsconfig(
       tsconfigPath,
       { ...tsSysFromTree, readDirectory: () => [] },
       tsconfigInfoCaches
     );
-    tsconfigInfoCaches.composite.set(
-      tsconfigPath,
-      parsed.options.composite === true
-    );
+    composite = parsed.options.composite === true;
+    tsconfigInfoCaches.composite.set(tsconfigPath, composite);
   }
 
-  return tsconfigInfoCaches.composite.get(tsconfigPath);
+  return composite;
 }
 
 function addChangedFile(
@@ -770,13 +776,15 @@ function addChangedFile(
   referencePath: string,
   type: ChangeType
 ) {
-  if (!changedFiles.has(filePath)) {
-    changedFiles.set(filePath, {
+  let details = changedFiles.get(filePath);
+  if (!details) {
+    details = {
       duplicates: new Set(),
       missing: new Set(),
       stale: new Set(),
-    });
+    };
+    changedFiles.set(filePath, details);
   }
 
-  changedFiles.get(filePath)[type].add(referencePath);
+  details[type].add(referencePath);
 }

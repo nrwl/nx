@@ -14,12 +14,16 @@ export function checkDependencies(
   target: ProjectGraphProjectNode;
   dependencies: DependentBuildableProjectNode[];
 } {
+  const { projectName, targetName } = context;
+  if (!projectName || !targetName) {
+    throw new Error('checkDependencies requires a project and target name.');
+  }
   const { target, dependencies } = calculateProjectBuildableDependencies(
     context.taskGraph,
     context.projectGraph,
     context.root,
-    context.projectName,
-    context.targetName,
+    projectName,
+    targetName,
     context.configurationName
   );
   const projectRoot = target.data.root;

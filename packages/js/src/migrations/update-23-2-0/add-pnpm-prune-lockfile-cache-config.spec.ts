@@ -55,6 +55,22 @@ function resolveEffective(
   return mergeTargetConfigurations(target, accumulated);
 }
 
+function readExistingNxJson(tree: Tree): NxJsonConfiguration {
+  const nxJson = readNxJson(tree);
+  if (!nxJson) {
+    throw new Error('nx.json not found');
+  }
+  return nxJson;
+}
+
+function readObjectTargetDefault(
+  tree: Tree,
+  key: string
+): Partial<TargetConfiguration> | undefined {
+  const value = readNxJson(tree)?.targetDefaults?.[key];
+  return Array.isArray(value) ? undefined : value;
+}
+
 describe('add-pnpm-prune-lockfile-cache-config migration', () => {
   let tree: Tree;
 
@@ -79,7 +95,8 @@ describe('add-pnpm-prune-lockfile-cache-config migration', () => {
     await update(tree);
 
     expect(
-      readProjectConfiguration(tree, 'app1').targets['prune-lockfile'].outputs
+      readProjectConfiguration(tree, 'app1').targets?.['prune-lockfile']
+        ?.outputs
     ).toEqual([
       '{workspaceRoot}/dist/apps/app1/package.json',
       '{workspaceRoot}/dist/apps/app1/pnpm-lock.yaml',
@@ -103,7 +120,8 @@ describe('add-pnpm-prune-lockfile-cache-config migration', () => {
     await update(tree);
 
     expect(
-      readProjectConfiguration(tree, 'app1').targets['prune-lockfile'].outputs
+      readProjectConfiguration(tree, 'app1').targets?.['prune-lockfile']
+        ?.outputs
     ).toEqual([
       'dist/apps/app1/pnpm-lock.yaml',
       'dist/apps/app1/pnpm-workspace.yaml',
@@ -143,7 +161,7 @@ describe('add-pnpm-prune-lockfile-cache-config migration', () => {
   });
 
   it('updates targetDefaults keyed by the executor, declaring it, or filtering on it', async () => {
-    const nxJson = readNxJson(tree);
+    const nxJson = readExistingNxJson(tree);
     nxJson.targetDefaults = {
       '@nx/js:prune-lockfile': {
         outputs: ['{workspaceRoot}/dist/{projectRoot}/pnpm-lock.yaml'],
@@ -167,7 +185,7 @@ describe('add-pnpm-prune-lockfile-cache-config migration', () => {
 
     await update(tree);
 
-    expect(readNxJson(tree).targetDefaults).toEqual({
+    expect(readNxJson(tree)?.targetDefaults).toEqual({
       '@nx/js:prune-lockfile': {
         outputs: [
           '{workspaceRoot}/dist/{projectRoot}/pnpm-lock.yaml',
@@ -209,7 +227,7 @@ describe('add-pnpm-prune-lockfile-cache-config migration', () => {
   });
 
   it('does not dedupe against a project-filtered sibling in a defaults-only workspace', async () => {
-    const nxJson = readNxJson(tree);
+    const nxJson = readExistingNxJson(tree);
     nxJson.targetDefaults = {
       '@nx/js:prune-lockfile': [
         {
@@ -232,7 +250,7 @@ describe('add-pnpm-prune-lockfile-cache-config migration', () => {
     // the prepended fallback carries every source; and the sibling's own
     // array replaces it for the projects its filter selects, so it is
     // completed too.
-    const entries = readNxJson(tree).targetDefaults[
+    const entries = readNxJson(tree)?.targetDefaults?.[
       '@nx/js:prune-lockfile'
     ] as any[];
     expect(entries[0]).toEqual({ inputs: PRUNE_INPUTS });
@@ -245,7 +263,7 @@ describe('add-pnpm-prune-lockfile-cache-config migration', () => {
   });
 
   it('updates an identity-neutral supplier following the locating entry in a defaults-only workspace', async () => {
-    const nxJson = readNxJson(tree);
+    const nxJson = readExistingNxJson(tree);
     nxJson.targetDefaults = {
       'prune-lockfile': [
         {
@@ -262,7 +280,9 @@ describe('add-pnpm-prune-lockfile-cache-config migration', () => {
     // The neutral entry's array replaces the locating entry's for a future
     // target, so it must carry the sources itself; the locating entry stays
     // input-less rather than authoring an array the neutral one would fight.
-    const entries = readNxJson(tree).targetDefaults['prune-lockfile'] as any[];
+    const entries = readNxJson(tree)?.targetDefaults?.[
+      'prune-lockfile'
+    ] as any[];
     expect(entries[0].inputs).toBeUndefined();
     expect(entries[1].inputs).toEqual([
       'production',
@@ -273,7 +293,7 @@ describe('add-pnpm-prune-lockfile-cache-config migration', () => {
   });
 
   it('updates an identity-neutral supplier preceding the locating entry in a defaults-only workspace', async () => {
-    const nxJson = readNxJson(tree);
+    const nxJson = readExistingNxJson(tree);
     nxJson.targetDefaults = {
       'prune-lockfile': [
         { inputs: ['production'] },
@@ -287,7 +307,9 @@ describe('add-pnpm-prune-lockfile-cache-config migration', () => {
 
     await update(tree);
 
-    const entries = readNxJson(tree).targetDefaults['prune-lockfile'] as any[];
+    const entries = readNxJson(tree)?.targetDefaults?.[
+      'prune-lockfile'
+    ] as any[];
     expect(entries[0].inputs).toEqual([
       'production',
       '{workspaceRoot}/pnpm-workspace.yaml',
@@ -299,7 +321,7 @@ describe('add-pnpm-prune-lockfile-cache-config migration', () => {
   });
 
   it('prepends the fallback instead of replacing an earlier filtered supplier in a defaults-only workspace', async () => {
-    const nxJson = readNxJson(tree);
+    const nxJson = readExistingNxJson(tree);
     nxJson.targetDefaults = {
       '@nx/js:prune-lockfile': [
         {
@@ -320,7 +342,7 @@ describe('add-pnpm-prune-lockfile-cache-config migration', () => {
     // An array authored on the output entry would come after the filtered
     // supplier and replace its custom inputs for the projects it selects, so
     // the fallback lands on a new first entry instead.
-    const entries = readNxJson(tree).targetDefaults[
+    const entries = readNxJson(tree)?.targetDefaults?.[
       '@nx/js:prune-lockfile'
     ] as any[];
     expect(entries).toEqual([
@@ -344,7 +366,7 @@ describe('add-pnpm-prune-lockfile-cache-config migration', () => {
       },
     ]);
     // The supplier's array wins for its project; the fallback covers the rest.
-    const defaults = readNxJson(tree).targetDefaults;
+    const defaults = readNxJson(tree)?.targetDefaults;
     expect(
       resolveEffective(
         defaults,
@@ -366,7 +388,7 @@ describe('add-pnpm-prune-lockfile-cache-config migration', () => {
   });
 
   it('does not count a project-filtered output entry as the universal fallback', async () => {
-    const nxJson = readNxJson(tree);
+    const nxJson = readExistingNxJson(tree);
     nxJson.targetDefaults = {
       '@nx/js:prune-lockfile': [
         {
@@ -391,7 +413,7 @@ describe('add-pnpm-prune-lockfile-cache-config migration', () => {
     // A project outside both filters must still get the sources, so the
     // fallback is prepended rather than counted as covered by the filtered
     // output entry.
-    const entries = readNxJson(tree).targetDefaults[
+    const entries = readNxJson(tree)?.targetDefaults?.[
       '@nx/js:prune-lockfile'
     ] as any[];
     expect(entries).toEqual([
@@ -421,7 +443,7 @@ describe('add-pnpm-prune-lockfile-cache-config migration', () => {
   });
 
   it('does not treat an incompatible unfiltered sibling as coverage in a defaults-only workspace', async () => {
-    const nxJson = readNxJson(tree);
+    const nxJson = readExistingNxJson(tree);
     nxJson.targetDefaults = {
       '@nx/js:prune-lockfile': [
         {
@@ -442,7 +464,7 @@ describe('add-pnpm-prune-lockfile-cache-config migration', () => {
 
     // nx discards the foreign-executor entry before merging a prune target,
     // so its array covers nothing here and the fallback is prepended.
-    const entries = readNxJson(tree).targetDefaults[
+    const entries = readNxJson(tree)?.targetDefaults?.[
       '@nx/js:prune-lockfile'
     ] as any[];
     expect(entries[0]).toEqual({ inputs: PRUNE_INPUTS });
@@ -454,7 +476,7 @@ describe('add-pnpm-prune-lockfile-cache-config migration', () => {
   });
 
   it('does not leak the fallback onto a same-name target of another executor', async () => {
-    const nxJson = readNxJson(tree);
+    const nxJson = readExistingNxJson(tree);
     nxJson.targetDefaults = {
       'prune-lockfile': [
         {
@@ -469,8 +491,8 @@ describe('add-pnpm-prune-lockfile-cache-config migration', () => {
     // second run must change nothing
     await update(tree);
 
-    const defaults = readNxJson(tree).targetDefaults;
-    expect(defaults['prune-lockfile']).toEqual([
+    const defaults = readNxJson(tree)?.targetDefaults;
+    expect(defaults?.['prune-lockfile']).toEqual([
       { executor: '@nx/js:prune-lockfile', inputs: PRUNE_INPUTS },
       {
         executor: '@nx/js:prune-lockfile',
@@ -500,7 +522,7 @@ describe('add-pnpm-prune-lockfile-cache-config migration', () => {
   });
 
   it('keeps a neutral sibling for a foreign-executor target when the pinned fallback is prepended', async () => {
-    const nxJson = readNxJson(tree);
+    const nxJson = readExistingNxJson(tree);
     nxJson.targetDefaults = {
       'prune-lockfile': [
         { cache: false, options: { retained: true } },
@@ -518,7 +540,7 @@ describe('add-pnpm-prune-lockfile-cache-config migration', () => {
 
     // nx drops the pinned entries individually for the foreign target, so the
     // neutral sibling's fields survive while the added inputs do not leak.
-    const defaults = readNxJson(tree).targetDefaults;
+    const defaults = readNxJson(tree)?.targetDefaults;
     const foreign = resolveEffective(defaults, 'prune-lockfile', {
       executor: 'other-plugin:prune',
     });
@@ -533,7 +555,7 @@ describe('add-pnpm-prune-lockfile-cache-config migration', () => {
   });
 
   it('authors no fallback when a name key pairs a neutral entry with a filtered locator', async () => {
-    const nxJson = readNxJson(tree);
+    const nxJson = readExistingNxJson(tree);
     nxJson.targetDefaults = {
       build: [
         { cache: true },
@@ -552,8 +574,8 @@ describe('add-pnpm-prune-lockfile-cache-config migration', () => {
     // The filter-less entry does not pin the executor, so a pinned carrier
     // would introduce the prune identity to targets that never had it here;
     // the key keeps its entries and the input gap is intentional.
-    const defaults = readNxJson(tree).targetDefaults;
-    expect(defaults['build']).toEqual([
+    const defaults = readNxJson(tree)?.targetDefaults;
+    expect(defaults?.['build']).toEqual([
       { cache: true },
       {
         filter: { executor: '@nx/js:prune-lockfile' },
@@ -576,7 +598,7 @@ describe('add-pnpm-prune-lockfile-cache-config migration', () => {
   });
 
   it('supplies an executor-less future target past an executor-filtered supplier', async () => {
-    const nxJson = readNxJson(tree);
+    const nxJson = readExistingNxJson(tree);
     nxJson.targetDefaults = {
       'prune-lockfile': [
         {
@@ -595,8 +617,8 @@ describe('add-pnpm-prune-lockfile-cache-config migration', () => {
     // second run must change nothing
     await update(tree);
 
-    const defaults = readNxJson(tree).targetDefaults;
-    expect(defaults['prune-lockfile']).toEqual([
+    const defaults = readNxJson(tree)?.targetDefaults;
+    expect(defaults?.['prune-lockfile']).toEqual([
       { executor: '@nx/js:prune-lockfile', inputs: PRUNE_INPUTS },
       {
         filter: { executor: '@nx/js:prune-lockfile' },
@@ -636,7 +658,7 @@ describe('add-pnpm-prune-lockfile-cache-config migration', () => {
   });
 
   it('does not use an executor-filtered entry as the base of a later spread supplier', async () => {
-    const nxJson = readNxJson(tree);
+    const nxJson = readExistingNxJson(tree);
     nxJson.targetDefaults = {
       '@nx/js:prune-lockfile': [
         {
@@ -659,7 +681,7 @@ describe('add-pnpm-prune-lockfile-cache-config migration', () => {
 
     // The filtered entry supplies nothing to a target its filter excludes, so
     // its sources cannot satisfy the spread supplier's base.
-    const entries = readNxJson(tree).targetDefaults[
+    const entries = readNxJson(tree)?.targetDefaults?.[
       '@nx/js:prune-lockfile'
     ] as any[];
     expect(entries[0].inputs).toEqual([
@@ -678,7 +700,7 @@ describe('add-pnpm-prune-lockfile-cache-config migration', () => {
   });
 
   it('does not widen an all-filtered executor key with a fallback', async () => {
-    const nxJson = readNxJson(tree);
+    const nxJson = readExistingNxJson(tree);
     nxJson.targetDefaults = {
       '@nx/js:prune-lockfile': [
         {
@@ -689,7 +711,7 @@ describe('add-pnpm-prune-lockfile-cache-config migration', () => {
       build: { cache: false, options: { buildTarget: 'compile' } },
     };
     updateNxJson(tree, nxJson);
-    const before = JSON.stringify(readNxJson(tree).targetDefaults);
+    const before = JSON.stringify(readNxJson(tree)?.targetDefaults);
 
     await update(tree);
     // second run must change nothing
@@ -697,7 +719,7 @@ describe('add-pnpm-prune-lockfile-cache-config migration', () => {
 
     // A carrier here would make the executor key win for the excluded
     // project's prune target, shadowing the name key it resolves today.
-    const defaults = readNxJson(tree).targetDefaults;
+    const defaults = readNxJson(tree)?.targetDefaults;
     expect(JSON.stringify(defaults)).toEqual(before);
     const excluded = resolveEffective(defaults, 'build', {
       executor: '@nx/js:prune-lockfile',
@@ -715,7 +737,7 @@ describe('add-pnpm-prune-lockfile-cache-config migration', () => {
   });
 
   it('does not widen a name key located only through an executor filter', async () => {
-    const nxJson = readNxJson(tree);
+    const nxJson = readExistingNxJson(tree);
     nxJson.targetDefaults = {
       build: [
         {
@@ -731,8 +753,8 @@ describe('add-pnpm-prune-lockfile-cache-config migration', () => {
     // second run must change nothing
     await update(tree);
 
-    const defaults = readNxJson(tree).targetDefaults;
-    expect(defaults['build']).toEqual([
+    const defaults = readNxJson(tree)?.targetDefaults;
+    expect(defaults?.['build']).toEqual([
       {
         filter: { executor: '@nx/js:prune-lockfile' },
         outputs: [
@@ -769,7 +791,7 @@ describe('add-pnpm-prune-lockfile-cache-config migration', () => {
         'prune-app': { executor: '@nx/js:prune-lockfile' },
       },
     });
-    const nxJson = readNxJson(tree);
+    const nxJson = readExistingNxJson(tree);
     nxJson.targetDefaults = {
       'prune-lockfile': [
         { outputs: ['{workspaceRoot}/dist/{projectRoot}/pnpm-lock.yaml'] },
@@ -791,7 +813,7 @@ describe('add-pnpm-prune-lockfile-cache-config migration', () => {
 
     await update(tree);
 
-    expect(readNxJson(tree).targetDefaults).toEqual({
+    expect(readNxJson(tree)?.targetDefaults).toEqual({
       'prune-lockfile': [
         {
           outputs: [
@@ -827,7 +849,7 @@ describe('add-pnpm-prune-lockfile-cache-config migration', () => {
         'prune-lockfile': { executor: '@nx/js:prune-lockfile' },
       },
     });
-    const nxJson = readNxJson(tree);
+    const nxJson = readExistingNxJson(tree);
     nxJson.targetDefaults = {
       '@nx/js:prune-lockfile': {
         outputs: ['{workspaceRoot}/dist/{projectRoot}/pnpm-lock.yaml'],
@@ -842,7 +864,7 @@ describe('add-pnpm-prune-lockfile-cache-config migration', () => {
 
     await update(tree);
 
-    expect(readNxJson(tree).targetDefaults).toEqual({
+    expect(readNxJson(tree)?.targetDefaults).toEqual({
       '@nx/js:prune-lockfile': {
         outputs: [
           '{workspaceRoot}/dist/{projectRoot}/pnpm-lock.yaml',
@@ -864,7 +886,7 @@ describe('add-pnpm-prune-lockfile-cache-config migration', () => {
         'prune-lockfile': { executor: '@nx/js:prune-lockfile' },
       },
     });
-    const nxJson = readNxJson(tree);
+    const nxJson = readExistingNxJson(tree);
     nxJson.targetDefaults = {
       'prune-*': {
         outputs: ['{workspaceRoot}/out/{projectRoot}/pnpm-lock.yaml'],
@@ -877,7 +899,7 @@ describe('add-pnpm-prune-lockfile-cache-config migration', () => {
 
     await update(tree);
 
-    expect(readNxJson(tree).targetDefaults).toEqual({
+    expect(readNxJson(tree)?.targetDefaults).toEqual({
       'prune-*': {
         outputs: ['{workspaceRoot}/out/{projectRoot}/pnpm-lock.yaml'],
       },
@@ -899,7 +921,7 @@ describe('add-pnpm-prune-lockfile-cache-config migration', () => {
         'prune-lockfile': { executor: '@nx/js:prune-lockfile' },
       },
     });
-    const nxJson = readNxJson(tree);
+    const nxJson = readExistingNxJson(tree);
     nxJson.targetDefaults = {
       '@nx/js:prune-lockfile': [
         // prune-lockfile targets are never plugin-inferred, so a plugin
@@ -931,7 +953,7 @@ describe('add-pnpm-prune-lockfile-cache-config migration', () => {
 
     await update(tree);
 
-    expect(readNxJson(tree).targetDefaults).toEqual({
+    expect(readNxJson(tree)?.targetDefaults).toEqual({
       '@nx/js:prune-lockfile': [
         {
           filter: { plugin: '@nx/some-plugin' },
@@ -970,7 +992,7 @@ describe('add-pnpm-prune-lockfile-cache-config migration', () => {
         'prune-lockfile': {},
       },
     });
-    const nxJson = readNxJson(tree);
+    const nxJson = readExistingNxJson(tree);
     nxJson.targetDefaults = {
       // the runtime reads defaults with the pre-default executor (undefined
       // here), so neither the executor key nor an executor-filtered entry can
@@ -994,7 +1016,7 @@ describe('add-pnpm-prune-lockfile-cache-config migration', () => {
 
     await update(tree);
 
-    expect(readNxJson(tree).targetDefaults).toEqual({
+    expect(readNxJson(tree)?.targetDefaults).toEqual({
       '@nx/js:prune-lockfile': {
         outputs: ['{workspaceRoot}/exec/{projectRoot}/pnpm-lock.yaml'],
       },
@@ -1017,7 +1039,8 @@ describe('add-pnpm-prune-lockfile-cache-config migration', () => {
     });
     // the target has no outputs of its own; nothing is invented on it
     expect(
-      readProjectConfiguration(tree, 'app1').targets['prune-lockfile'].outputs
+      readProjectConfiguration(tree, 'app1').targets?.['prune-lockfile']
+        ?.outputs
     ).toBeUndefined();
   });
 
@@ -1031,7 +1054,7 @@ describe('add-pnpm-prune-lockfile-cache-config migration', () => {
         },
       },
     });
-    const nxJson = readNxJson(tree);
+    const nxJson = readExistingNxJson(tree);
     nxJson.targetDefaults = {
       'prune-lockfile': { executor: '@nx/js:prune-lockfile' },
     };
@@ -1042,7 +1065,8 @@ describe('add-pnpm-prune-lockfile-cache-config migration', () => {
     // command sugar resolves to nx:run-commands before defaults apply, so the
     // default's executor never reaches this target
     expect(
-      readProjectConfiguration(tree, 'app1').targets['prune-lockfile'].outputs
+      readProjectConfiguration(tree, 'app1').targets?.['prune-lockfile']
+        ?.outputs
     ).toEqual(['{workspaceRoot}/dist/apps/app1/pnpm-lock.yaml']);
   });
 
@@ -1058,7 +1082,7 @@ describe('add-pnpm-prune-lockfile-cache-config migration', () => {
         },
       },
     });
-    const nxJson = readNxJson(tree);
+    const nxJson = readExistingNxJson(tree);
     nxJson.targetDefaults = {
       'prune-lockfile': [
         { outputs: ['{workspaceRoot}/first/{projectRoot}/pnpm-lock.yaml'] },
@@ -1070,7 +1094,7 @@ describe('add-pnpm-prune-lockfile-cache-config migration', () => {
 
     await update(tree);
 
-    expect(readNxJson(tree).targetDefaults).toEqual({
+    expect(readNxJson(tree)?.targetDefaults).toEqual({
       'prune-lockfile': [
         {
           outputs: [
@@ -1086,7 +1110,8 @@ describe('add-pnpm-prune-lockfile-cache-config migration', () => {
     });
     // no pnpm-lock.yaml anchor on the target itself
     expect(
-      readProjectConfiguration(tree, 'app1').targets['prune-lockfile'].outputs
+      readProjectConfiguration(tree, 'app1').targets?.['prune-lockfile']
+        ?.outputs
     ).toEqual(['...', '{workspaceRoot}/dist/apps/app1/extra']);
   });
 
@@ -1099,7 +1124,7 @@ describe('add-pnpm-prune-lockfile-cache-config migration', () => {
         },
       },
     });
-    const nxJson = readNxJson(tree);
+    const nxJson = readExistingNxJson(tree);
     nxJson.targetDefaults = {
       // at merge time the later command identity replaces the prune executor,
       // so the target ends up running nx:run-commands
@@ -1113,7 +1138,8 @@ describe('add-pnpm-prune-lockfile-cache-config migration', () => {
     await update(tree);
 
     expect(
-      readProjectConfiguration(tree, 'app1').targets['prune-lockfile'].outputs
+      readProjectConfiguration(tree, 'app1').targets?.['prune-lockfile']
+        ?.outputs
     ).toEqual(['{workspaceRoot}/dist/apps/app1/pnpm-lock.yaml']);
   });
 
@@ -1124,7 +1150,7 @@ describe('add-pnpm-prune-lockfile-cache-config migration', () => {
         'prune-lockfile': { executor: '@nx/js:prune-lockfile' },
       },
     });
-    const nxJson = readNxJson(tree);
+    const nxJson = readExistingNxJson(tree);
     nxJson.targetDefaults = {
       // the target's executor is fixed, so the runtime drops only the foreign
       // payload entry and the catch-all sibling still applies
@@ -1140,7 +1166,7 @@ describe('add-pnpm-prune-lockfile-cache-config migration', () => {
 
     await update(tree);
 
-    expect(readNxJson(tree).targetDefaults).toEqual({
+    expect(readNxJson(tree)?.targetDefaults).toEqual({
       'prune-lockfile': [
         {
           outputs: [
@@ -1165,7 +1191,7 @@ describe('add-pnpm-prune-lockfile-cache-config migration', () => {
         'prune-lockfile': { executor: '@nx/js:prune-lockfile' },
       },
     });
-    const nxJson = readNxJson(tree);
+    const nxJson = readExistingNxJson(tree);
     nxJson.targetDefaults = {
       // no project has a prune-lockfile-executor target with this name
       'other-prune': {
@@ -1173,11 +1199,11 @@ describe('add-pnpm-prune-lockfile-cache-config migration', () => {
       },
     };
     updateNxJson(tree, nxJson);
-    const before = structuredClone(readNxJson(tree).targetDefaults);
+    const before = structuredClone(readNxJson(tree)?.targetDefaults);
 
     await update(tree);
 
-    expect(readNxJson(tree).targetDefaults).toEqual(before);
+    expect(readNxJson(tree)?.targetDefaults).toEqual(before);
   });
 
   it('spells out the default inputs before adding the root settings sources', async () => {
@@ -1196,7 +1222,7 @@ describe('add-pnpm-prune-lockfile-cache-config migration', () => {
     // An absent `inputs` means nx's own default, so it has to be written out
     // rather than replaced by the two root files alone.
     expect(
-      readProjectConfiguration(tree, 'app1').targets['prune-lockfile'].inputs
+      readProjectConfiguration(tree, 'app1').targets?.['prune-lockfile']?.inputs
     ).toEqual([
       'default',
       '^default',
@@ -1223,7 +1249,7 @@ describe('add-pnpm-prune-lockfile-cache-config migration', () => {
     await update(tree);
 
     expect(
-      readProjectConfiguration(tree, 'app1').targets['prune-lockfile'].inputs
+      readProjectConfiguration(tree, 'app1').targets?.['prune-lockfile']?.inputs
     ).toEqual([
       'production',
       { externalDependencies: ['pnpm'] },
@@ -1237,7 +1263,7 @@ describe('add-pnpm-prune-lockfile-cache-config migration', () => {
   // with it, so the two arrangements below decide which layer the root sources
   // have to land on.
   it('adds the root sources to the defaults entry the target inherits its inputs from', async () => {
-    const nxJson = readNxJson(tree);
+    const nxJson = readExistingNxJson(tree);
     nxJson.targetDefaults = {
       '@nx/js:prune-lockfile': { inputs: ['production'] },
     };
@@ -1258,10 +1284,10 @@ describe('add-pnpm-prune-lockfile-cache-config migration', () => {
 
     // Writing nx's default onto the target would have replaced `production`.
     expect(
-      readProjectConfiguration(tree, 'app1').targets['prune-lockfile'].inputs
+      readProjectConfiguration(tree, 'app1').targets?.['prune-lockfile']?.inputs
     ).toBeUndefined();
     expect(
-      readNxJson(tree).targetDefaults['@nx/js:prune-lockfile'].inputs
+      readObjectTargetDefault(tree, '@nx/js:prune-lockfile')?.inputs
     ).toEqual([
       'production',
       '{workspaceRoot}/pnpm-workspace.yaml',
@@ -1271,7 +1297,7 @@ describe('add-pnpm-prune-lockfile-cache-config migration', () => {
   });
 
   it('adds the root sources to the matching defaults entry, not a later filtered one', async () => {
-    const nxJson = readNxJson(tree);
+    const nxJson = readExistingNxJson(tree);
     nxJson.targetDefaults = {
       '@nx/js:prune-lockfile': [
         {
@@ -1297,7 +1323,7 @@ describe('add-pnpm-prune-lockfile-cache-config migration', () => {
 
     await update(tree);
 
-    const entries = readNxJson(tree).targetDefaults[
+    const entries = readNxJson(tree)?.targetDefaults?.[
       '@nx/js:prune-lockfile'
     ] as any[];
     // The app2-filtered entry supplies some other target's array; appending
@@ -1312,7 +1338,7 @@ describe('add-pnpm-prune-lockfile-cache-config migration', () => {
   });
 
   it('adds the root sources to the target when it owns inputs and the defaults own outputs', async () => {
-    const nxJson = readNxJson(tree);
+    const nxJson = readExistingNxJson(tree);
     nxJson.targetDefaults = {
       '@nx/js:prune-lockfile': {
         outputs: ['{workspaceRoot}/dist/{projectRoot}/pnpm-lock.yaml'],
@@ -1333,7 +1359,7 @@ describe('add-pnpm-prune-lockfile-cache-config migration', () => {
 
     // The target's own array wins, so the sources are useless anywhere else.
     expect(
-      readProjectConfiguration(tree, 'app1').targets['prune-lockfile'].inputs
+      readProjectConfiguration(tree, 'app1').targets?.['prune-lockfile']?.inputs
     ).toEqual([
       'production',
       '{workspaceRoot}/pnpm-workspace.yaml',
@@ -1343,7 +1369,7 @@ describe('add-pnpm-prune-lockfile-cache-config migration', () => {
   });
 
   it('classifies a target that spreads the defaults outputs into its own', async () => {
-    const nxJson = readNxJson(tree);
+    const nxJson = readExistingNxJson(tree);
     nxJson.targetDefaults = {
       'prune-lockfile': [
         {
@@ -1369,7 +1395,7 @@ describe('add-pnpm-prune-lockfile-cache-config migration', () => {
     await update(tree);
 
     expect(
-      readProjectConfiguration(tree, 'app1').targets['prune-lockfile'].inputs
+      readProjectConfiguration(tree, 'app1').targets?.['prune-lockfile']?.inputs
     ).toEqual([
       'production',
       '{workspaceRoot}/pnpm-workspace.yaml',
@@ -1379,7 +1405,7 @@ describe('add-pnpm-prune-lockfile-cache-config migration', () => {
   });
 
   it('adds each root source once when a later defaults entry spreads an earlier one', async () => {
-    const nxJson = readNxJson(tree);
+    const nxJson = readExistingNxJson(tree);
     nxJson.targetDefaults = {
       'prune-lockfile': [
         {
@@ -1398,7 +1424,9 @@ describe('add-pnpm-prune-lockfile-cache-config migration', () => {
     // No concrete target, so the entries own the decision. Only the entry
     // declaring the lockfile output takes the sources, and the later entry's
     // spread carries them through exactly once.
-    const entries = readNxJson(tree).targetDefaults['prune-lockfile'] as any[];
+    const entries = readNxJson(tree)?.targetDefaults?.[
+      'prune-lockfile'
+    ] as any[];
     expect(entries[0].inputs).toEqual([
       'production',
       '{workspaceRoot}/pnpm-workspace.yaml',
@@ -1412,7 +1440,7 @@ describe('add-pnpm-prune-lockfile-cache-config migration', () => {
   // and keeps its compatible siblings, so neither the outputs it would have
   // replaced nor the inputs it declares belong to the target.
   it('classifies against the compatible sibling a foreign-executor entry follows', async () => {
-    const nxJson = readNxJson(tree);
+    const nxJson = readExistingNxJson(tree);
     nxJson.targetDefaults = {
       'prune-lockfile': [
         { outputs: ['{workspaceRoot}/dist/{projectRoot}/pnpm-lock.yaml'] },
@@ -1431,7 +1459,7 @@ describe('add-pnpm-prune-lockfile-cache-config migration', () => {
     // The foreign entry hides the inherited lockfile output from an unfiltered
     // read, which would skip this target entirely.
     expect(
-      readProjectConfiguration(tree, 'app1').targets['prune-lockfile'].inputs
+      readProjectConfiguration(tree, 'app1').targets?.['prune-lockfile']?.inputs
     ).toEqual([
       'default',
       '^default',
@@ -1442,7 +1470,7 @@ describe('add-pnpm-prune-lockfile-cache-config migration', () => {
   });
 
   it('does not spread against inputs only a foreign-executor entry declares', async () => {
-    const nxJson = readNxJson(tree);
+    const nxJson = readExistingNxJson(tree);
     nxJson.targetDefaults = {
       'prune-lockfile': [
         { cache: true },
@@ -1466,7 +1494,7 @@ describe('add-pnpm-prune-lockfile-cache-config migration', () => {
     // A `'...'` here would expand against nothing at runtime, narrowing the
     // target from nx's default to just the two root files.
     expect(
-      readProjectConfiguration(tree, 'app1').targets['prune-lockfile'].inputs
+      readProjectConfiguration(tree, 'app1').targets?.['prune-lockfile']?.inputs
     ).toEqual([
       'default',
       '^default',
@@ -1483,7 +1511,7 @@ describe('add-pnpm-prune-lockfile-cache-config migration', () => {
     ['command', { command: '' }],
     ['executor', { executor: '' }],
   ])('applies a defaults entry with an empty %s', async (_field, identity) => {
-    const nxJson = readNxJson(tree);
+    const nxJson = readExistingNxJson(tree);
     nxJson.targetDefaults = {
       'prune-lockfile': {
         ...identity,
@@ -1500,21 +1528,21 @@ describe('add-pnpm-prune-lockfile-cache-config migration', () => {
     await update(tree);
     await update(tree);
 
-    const migrated = readNxJson(tree).targetDefaults['prune-lockfile'];
-    expect(migrated.outputs).toEqual([
+    const migrated = readObjectTargetDefault(tree, 'prune-lockfile');
+    expect(migrated?.outputs).toEqual([
       '{workspaceRoot}/dist/{projectRoot}/pnpm-lock.yaml',
       '{workspaceRoot}/dist/{projectRoot}/pnpm-workspace.yaml',
       '{workspaceRoot}/dist/{projectRoot}/patches',
       '{workspaceRoot}/dist/{projectRoot}/local_path_modules',
     ]);
-    expect(migrated.inputs).toEqual([
+    expect(migrated?.inputs).toEqual([
       'from-empty-identity',
       '{workspaceRoot}/pnpm-workspace.yaml',
       '{workspaceRoot}/package.json',
       PNPM_MAJOR_RUNTIME_INPUT,
     ]);
     expect(
-      readProjectConfiguration(tree, 'app1').targets['prune-lockfile'].inputs
+      readProjectConfiguration(tree, 'app1').targets?.['prune-lockfile']?.inputs
     ).toBeUndefined();
   });
 
@@ -1524,7 +1552,7 @@ describe('add-pnpm-prune-lockfile-cache-config migration', () => {
   // document-order resets in nx's own merge. Writing a `'...'` on the target
   // would bet on that and narrow it to the two root files when the bet is lost.
   it('never writes a spread onto a target whose executor comes from the defaults', async () => {
-    const nxJson = readNxJson(tree);
+    const nxJson = readExistingNxJson(tree);
     nxJson.targetDefaults = {
       'prune-lockfile': [
         { executor: 'other-plugin:prune', cache: true },
@@ -1544,11 +1572,13 @@ describe('add-pnpm-prune-lockfile-cache-config migration', () => {
     await update(tree);
     await update(tree);
 
-    const target = readProjectConfiguration(tree, 'app1').targets[
+    const target = readProjectConfiguration(tree, 'app1').targets?.[
       'prune-lockfile'
     ];
-    expect(target.inputs).toBeUndefined();
-    const entries = readNxJson(tree).targetDefaults['prune-lockfile'] as any[];
+    expect(target?.inputs).toBeUndefined();
+    const entries = readNxJson(tree)?.targetDefaults?.[
+      'prune-lockfile'
+    ] as any[];
     expect(entries[1].inputs).toEqual([
       'middle',
       '{workspaceRoot}/pnpm-workspace.yaml',
@@ -1574,7 +1604,7 @@ describe('add-pnpm-prune-lockfile-cache-config migration', () => {
   ])(
     'skips a root source the spread base already supplies (%s owns the spread)',
     async (owner, base, spread) => {
-      const nxJson = readNxJson(tree);
+      const nxJson = readExistingNxJson(tree);
       nxJson.targetDefaults = {
         'prune-lockfile':
           owner === 'target'
@@ -1601,9 +1631,9 @@ describe('add-pnpm-prune-lockfile-cache-config migration', () => {
 
       const written =
         owner === 'target'
-          ? readProjectConfiguration(tree, 'app1').targets['prune-lockfile']
-              .inputs
-          : (readNxJson(tree).targetDefaults['prune-lockfile'] as any[])[1]
+          ? readProjectConfiguration(tree, 'app1').targets?.['prune-lockfile']
+              ?.inputs
+          : (readNxJson(tree)?.targetDefaults?.['prune-lockfile'] as any[])[1]
               .inputs;
       expect(written).toEqual([
         '...',
@@ -1633,7 +1663,8 @@ describe('add-pnpm-prune-lockfile-cache-config migration', () => {
     await update(tree);
 
     expect(
-      readProjectConfiguration(tree, 'app1').targets['prune-lockfile'].outputs
+      readProjectConfiguration(tree, 'app1').targets?.['prune-lockfile']
+        ?.outputs
     ).toEqual([
       '{workspaceRoot}/dist/apps/app1/pnpm-lock.yaml',
       '{workspaceRoot}/dist/apps/app1/patches',

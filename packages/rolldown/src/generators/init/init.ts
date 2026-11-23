@@ -35,7 +35,7 @@ export async function rolldownInitGenerator(tree: Tree, schema: Schema) {
     '@nx/rolldown/plugin',
     createNodesV2,
     { buildTargetName: ['build', 'rolldown:build', 'rolldown-build'] },
-    schema.updatePackageScripts
+    schema.updatePackageScripts ?? false
   );
   await ensureTypescriptPlugin(tree, schema.updatePackageScripts);
 

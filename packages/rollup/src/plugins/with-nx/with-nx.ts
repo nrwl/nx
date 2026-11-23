@@ -78,13 +78,17 @@ export function withNx(
     : readCachedProjectGraph();
 
   // If dependencies are not passed from executor, calculate them from project graph.
-  if (!dependencies && !global.NX_GRAPH_CREATION) {
+  if (!dependencies && projectGraph) {
+    const targetName = process.env.NX_TASK_TARGET_TARGET;
+    if (!targetName) {
+      throw new Error('Cannot determine the target being run.');
+    }
     const result = calculateProjectBuildableDependencies(
       undefined,
       projectGraph,
       workspaceRoot,
       projectNode.name,
-      process.env.NX_TASK_TARGET_TARGET,
+      targetName,
       process.env.NX_TASK_TARGET_CONFIGURATION,
       true
     );
@@ -108,12 +112,12 @@ export function withNx(
           options.tsConfig,
           workspaceRoot,
           projectNode.data.root,
-          dependencies
+          dependencies ?? []
         );
 
   // Graph creation only reads output dirs. Its unnormalized tsConfig path
   // usually doesn't exist, and parsing that scans the whole workspace.
-  let tsConfig: ReturnType<typeof ts.parseJsonConfigFileContent>;
+  let tsConfig: ReturnType<typeof ts.parseJsonConfigFileContent> | undefined;
   if (!global.NX_GRAPH_CREATION) {
     ensureTypeScript();
     const tsConfigFile = ts.readConfigFile(tsConfigPath, ts.sys.readFile);
@@ -125,9 +129,7 @@ export function withNx(
   }
 
   if (!options.format || !options.format.length) {
-    options.format = global.NX_GRAPH_CREATION
-      ? ['esm']
-      : readCompatibleFormats(tsConfig);
+    options.format = tsConfig ? readCompatibleFormats(tsConfig) : ['esm'];
   }
 
   if (
@@ -170,7 +172,7 @@ export function withNx(
     }));
   }
 
-  let packageJson: PackageJson;
+  let packageJson: PackageJson | undefined;
   if (!global.NX_GRAPH_CREATION) {
     const packageJsonPath = options.project
       ? join(workspaceRoot, options.project)
@@ -199,7 +201,7 @@ export function withNx(
   }
 
   // User may wish to customize how external behaves by overriding our default.
-  if (!rollupConfig.external && !global.NX_GRAPH_CREATION) {
+  if (!rollupConfig.external && projectGraph && packageJson) {
     const npmDeps = (projectGraph.dependencies[projectNode.name] ?? [])
       .filter((d) => d.target.startsWith('npm:'))
       .map((d) => d.target.slice(4));
@@ -220,7 +222,7 @@ export function withNx(
     };
   }
 
-  if (!global.NX_GRAPH_CREATION) {
+  if (tsConfig && packageJson) {
     // Ensure TypeScript is available before any plugin initialization
     ensureTypeScript();
 
@@ -250,7 +252,7 @@ export function withNx(
     );
     compilerOptions.outDir = Array.isArray(finalConfig.output)
       ? finalConfig.output[0].dir
-      : finalConfig.output.dir;
+      : finalConfig.output?.dir;
 
     finalConfig.plugins = [
       nxCopyAssetsPlugin({
@@ -266,7 +268,7 @@ export function withNx(
           compilerOptions;
         const rollupOutputDir = Array.isArray(finalConfig.output)
           ? finalConfig.output[0].dir
-          : finalConfig.output.dir;
+          : finalConfig.output?.dir;
         return require('@rollup/plugin-typescript')({
           tsconfig: tsConfigPath,
           typescript: clearTimersOnClose(ts),
@@ -319,7 +321,11 @@ export function withNx(
         }),
       commonjs(),
       analyze(),
-      options.generatePackageJson && generatePackageJson(options, packageJson),
+      options.generatePackageJson &&
+        generatePackageJson(
+          { ...options, format: options.format },
+          packageJson
+        ),
     ].filter(Boolean);
     if (Array.isArray(rollupConfig.plugins)) {
       finalConfig.plugins.push(...rollupConfig.plugins);
@@ -327,9 +333,10 @@ export function withNx(
     if (options.deleteOutputPath) {
       finalConfig.plugins.push(
         deleteOutput({
-          dirs: Array.isArray(finalConfig.output)
+          dirs: (Array.isArray(finalConfig.output)
             ? finalConfig.output.map((o) => o.dir)
-            : [finalConfig.output.dir],
+            : [finalConfig.output?.dir]
+          ).filter((dir) => dir !== undefined),
         })
       );
     }
@@ -378,7 +385,7 @@ function createTsCompilerOptions(
       return resolve(pathsBase, stripped).replace(/\\/g, '/');
     });
   }
-  const compilerOptions = {
+  const compilerOptions: Record<string, unknown> = {
     rootDir: projectRoot,
     allowJs: options.allowJs,
     declaration: true,

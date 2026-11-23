@@ -36,7 +36,7 @@ export function clearTimersOnClose(ts: typeof TypeScript): typeof TypeScript {
         const close = program.close;
         program.close = () => {
           close.call(program);
-          pending.forEach((timer) => cancel(timer));
+          pending.forEach((timer) => cancel?.(timer));
           pending.clear();
         };
         return program;

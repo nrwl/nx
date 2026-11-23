@@ -10,7 +10,7 @@ import {
   updateNxJson,
   createProjectGraphAsync,
 } from '@nx/devkit';
-import { coerce, major } from 'semver';
+import { coerce } from 'semver';
 import { InitGeneratorSchema } from './schema';
 import {
   nxVersion,
@@ -44,7 +44,8 @@ export function updateDependencies(tree: Tree, schema: InitGeneratorSchema) {
   // Vite below 8 depends on esbuild (8 bundles rolldown instead), whose install
   // script only validates the prebuilt binary that ships as an optional
   // dependency.
-  if (major(coerce(viteVersionToUse)) < 8) {
+  const viteSemver = coerce(viteVersionToUse);
+  if (viteSemver && viteSemver.major < 8) {
     acknowledgeBuildScripts(tree, detectPackageManager(tree.root), {
       esbuild: false,
     });
@@ -68,14 +69,15 @@ export function updateDependencies(tree: Tree, schema: InitGeneratorSchema) {
 export function updateNxJsonSettings(tree: Tree) {
   const nxJson = readNxJson(tree) ?? {};
 
-  const productionFileSet = nxJson.namedInputs?.production;
-  if (productionFileSet) {
+  const { namedInputs } = nxJson;
+  const productionFileSet = namedInputs?.production;
+  if (namedInputs && productionFileSet) {
     productionFileSet.push(
       '!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)',
       '!{projectRoot}/tsconfig.spec.json'
     );
 
-    nxJson.namedInputs.production = Array.from(new Set(productionFileSet));
+    namedInputs.production = Array.from(new Set(productionFileSet));
   }
 
   updateNxJson(tree, nxJson);
@@ -93,7 +95,7 @@ export async function initGenerator(tree: Tree, schema: InitGeneratorSchema) {
       testTargetName: ['test', 'vitest:test', 'vitest-test'],
       ciTargetName: ['test-ci', 'vitest:test-ci', 'vitest-test-ci'],
     },
-    schema.updatePackageScripts
+    schema.updatePackageScripts ?? false
   );
 
   updateNxJsonSettings(tree);

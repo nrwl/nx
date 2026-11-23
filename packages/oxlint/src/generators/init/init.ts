@@ -87,7 +87,7 @@ export async function initGenerator(tree: Tree, options: InitGeneratorSchema) {
     '@nx/oxlint',
     createNodes,
     { targetName: resolveTargetNames(graph) },
-    options.updatePackageScripts
+    options.updatePackageScripts ?? false
   );
 
   ensureRootConfig(tree);

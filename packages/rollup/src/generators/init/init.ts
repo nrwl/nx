@@ -52,7 +52,7 @@ export async function rollupInitGenerator(tree: Tree, schema: Schema) {
         'rollup-watch-deps',
       ],
     },
-    schema.updatePackageScripts
+    schema.updatePackageScripts ?? false
   );
 
   if (!schema.skipFormat) {

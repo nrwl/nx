@@ -37,11 +37,12 @@ export async function lintWorkspaceRuleGenerator(
   const { typescriptESLintVersion } = versions(tree);
 
   // Ensure that the workspace rules project has been created
-  tasks.push(
-    await lintWorkspaceRulesProjectGenerator(tree, {
-      skipFormat: true,
-    })
-  );
+  const rulesProjectTask = await lintWorkspaceRulesProjectGenerator(tree, {
+    skipFormat: true,
+  });
+  if (rulesProjectTask) {
+    tasks.push(rulesProjectTask);
+  }
 
   tasks.push(
     addDependenciesToPackageJson(
@@ -72,6 +73,9 @@ export async function lintWorkspaceRuleGenerator(
    */
   const pluginIndexPath = joinPathFragments(workspaceLintPluginDir, 'index.ts');
   const existingPluginIndexContents = tree.read(pluginIndexPath, 'utf-8');
+  if (existingPluginIndexContents === null) {
+    throw new Error(`Cannot find ${pluginIndexPath}`);
+  }
   const pluginIndexSourceFile = ts.createSourceFile(
     pluginIndexPath,
     existingPluginIndexContents,
@@ -79,7 +83,9 @@ export async function lintWorkspaceRuleGenerator(
     true
   );
 
-  function findRulesObject(node: ts.Node): ts.ObjectLiteralExpression {
+  function findRulesObject(
+    node: ts.Node
+  ): ts.ObjectLiteralExpression | undefined {
     if (
       ts.isPropertyAssignment(node) &&
       ts.isIdentifier(node.name) &&

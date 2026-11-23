@@ -14,7 +14,7 @@ import {
   getGlobalEsLintConfiguration,
   getGlobalFlatEslintConfiguration,
 } from '../init/global-eslint-config';
-import { findEslintFile } from '../utils/eslint-file';
+import { findEslintFile, readFileOrThrow } from '../utils/eslint-file';
 
 export type SetupRootEsLintOptions = {
   unitTestRunner?: string;
@@ -36,7 +36,7 @@ export function setupRootEsLint(
   if (!useFlatConfig(tree)) {
     return setUpLegacyRootEslintRc(tree, options);
   }
-  return setUpRootFlatConfig(tree, options);
+  return setUpRootFlatConfig(tree, options, options.eslintConfigFormat);
 }
 
 function setUpLegacyRootEslintRc(tree: Tree, options: SetupRootEsLintOptions) {
@@ -47,7 +47,7 @@ function setUpLegacyRootEslintRc(tree: Tree, options: SetupRootEsLintOptions) {
   );
 
   if (tree.exists('.eslintignore')) {
-    let content = tree.read('.eslintignore', 'utf-8');
+    let content = readFileOrThrow(tree, '.eslintignore');
     if (!/^node_modules$/gm.test(content)) {
       content = `${content}\nnode_modules\n`;
       tree.write('.eslintignore', content);
@@ -75,13 +75,14 @@ function setUpLegacyRootEslintRc(tree: Tree, options: SetupRootEsLintOptions) {
   );
 }
 
-function setUpRootFlatConfig(tree: Tree, options: SetupRootEsLintOptions) {
+function setUpRootFlatConfig(
+  tree: Tree,
+  options: SetupRootEsLintOptions,
+  eslintConfigFormat: 'mjs' | 'cjs'
+) {
   tree.write(
-    `eslint.config.${options.eslintConfigFormat}`,
-    getGlobalFlatEslintConfiguration(
-      options.eslintConfigFormat,
-      options.rootProject
-    )
+    `eslint.config.${eslintConfigFormat}`,
+    getGlobalFlatEslintConfiguration(eslintConfigFormat, options.rootProject)
   );
 
   if (options.skipPackageJson) {

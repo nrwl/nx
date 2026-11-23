@@ -120,14 +120,15 @@ export function addPruneLockfileCacheConfig(
   // ends up with nothing to expand narrows the target to the root sources.
   for (const { ref, selectedKey } of keyedPruneTargets) {
     const entries = compatibleDefaultsEntries(ref, selectedKey, targetDefaults);
-    const defaults = entries.length
-      ? readTargetDefaultsForTarget(
-          ref.targetName,
-          { [selectedKey]: entries },
-          ref.matcherExecutor,
-          { projectName: ref.projectName, projectNode: ref.projectNode }
-        )
-      : null;
+    const defaults =
+      entries.length && selectedKey !== null
+        ? readTargetDefaultsForTarget(
+            ref.targetName,
+            { [selectedKey]: entries },
+            ref.matcherExecutor,
+            { projectName: ref.projectName, projectNode: ref.projectNode }
+          )
+        : null;
     // The effective outputs, not the target's own array: a target inheriting
     // its lockfile entry, or spreading the defaults' outputs into its own, is
     // still this package manager's prune target.
@@ -251,9 +252,12 @@ export function addPruneLockfileCacheConfig(
   }
 
   for (const projectName of changedProjects) {
-    updateProjectConfiguration(tree, projectName, projects.get(projectName));
+    const project = projects.get(projectName);
+    if (project) {
+      updateProjectConfiguration(tree, projectName, project);
+    }
   }
-  if (defaultsChanged) {
+  if (defaultsChanged && nxJson) {
     updateNxJson(tree, nxJson);
   }
 }
@@ -376,16 +380,17 @@ function appendPruneOutputs(
   target: TargetConfiguration,
   config: PruneLockfileCacheConfig
 ): boolean {
-  const entry = lockfileEntry(target.outputs, config.lockFile);
-  if (!entry) {
+  const { outputs } = target;
+  const entry = lockfileEntry(outputs, config.lockFile);
+  if (!outputs || !entry) {
     return false;
   }
   const prefix = entry.slice(0, -config.lockFile.length);
   let changed = false;
   for (const artifact of config.artifacts) {
     const output = `${prefix}${artifact}`;
-    if (!target.outputs.includes(output)) {
-      target.outputs.push(output);
+    if (!outputs.includes(output)) {
+      outputs.push(output);
       changed = true;
     }
   }

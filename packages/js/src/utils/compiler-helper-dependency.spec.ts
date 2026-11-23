@@ -3,12 +3,13 @@ import {
   HelperDependency,
 } from './compiler-helper-dependency';
 import { join } from 'path';
+import type { DependentBuildableProjectNode } from './buildable-libs-utils';
 
 describe('getHelperDependency', () => {
   it('should support pnpm external nodes where the name is suffixed with the version', () => {
     const helperDependency = HelperDependency.tsc;
     const configPath = join(__dirname, 'test-fixtures', 'tsconfig.json');
-    const dependencies = [];
+    const dependencies: DependentBuildableProjectNode[] = [];
     const projectGraph = {
       nodes: {},
       externalNodes: {

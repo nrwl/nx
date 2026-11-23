@@ -6,6 +6,7 @@ import {
 import {
   formatFiles,
   getProjects,
+  type TargetConfiguration,
   readNxJson,
   updateProjectConfiguration,
   type Tree,
@@ -34,7 +35,8 @@ export async function convertToInferred(tree: Tree, options: Schema) {
       if (options.project && projectName !== options.project) return;
 
       const project = projects.get(projectName);
-      const target = project.targets[targetName];
+      const target = project?.targets?.[targetName];
+      if (!project?.targets || !target) return;
 
       // We'll handle configurations when dealing with default options.
       if (configurationName) return;
@@ -53,7 +55,7 @@ export async function convertToInferred(tree: Tree, options: Schema) {
           ...rest
         } = defaults;
         for (const [key, value] of Object.entries(rest)) {
-          target[key] ??= value;
+          (target as Record<string, unknown>)[key] ??= value;
         }
       }
 
@@ -69,17 +71,15 @@ export async function convertToInferred(tree: Tree, options: Schema) {
         target.inputs &&
         !target.inputs.some(
           (i) =>
-            Array.isArray(i['externalDependencies']) &&
-            i['externalDependencies'].includes('rollup')
+            hasExternalDependencies(i) &&
+            i.externalDependencies.includes('rollup')
         )
       ) {
-        const idx = target.inputs.findIndex((i) =>
-          Array.isArray(i['externalDependencies'])
-        );
-        if (idx === -1) {
-          target.inputs.push({ externalDependencies: ['rollup'] });
+        const existing = target.inputs.find(hasExternalDependencies);
+        if (existing) {
+          existing.externalDependencies.push('rollup');
         } else {
-          target.inputs[idx]['externalDependencies'].push('rollup');
+          target.inputs.push({ externalDependencies: ['rollup'] });
         }
       }
 
@@ -96,7 +96,7 @@ export async function convertToInferred(tree: Tree, options: Schema) {
       ) {
         // If only the default `options.outputPath` is set as output, remove it and use path inferred from `rollup.config.cjs`.
         delete target.outputs;
-      } else {
+      } else if (target.outputs) {
         // Otherwise, replace `options.outputPath` with what is inferred from `rollup.config.cjs`.
         target.outputs = target.outputs.map((output) =>
           // Again, "{projectRoot}/{options.outputPath}" is an invalid output for Rollup.
@@ -130,6 +130,16 @@ export async function convertToInferred(tree: Tree, options: Schema) {
   if (!options.skipFormat) {
     await formatFiles(tree);
   }
+}
+
+function hasExternalDependencies(
+  input: NonNullable<TargetConfiguration['inputs']>[number]
+): input is { externalDependencies: string[] } {
+  return (
+    typeof input === 'object' &&
+    'externalDependencies' in input &&
+    Array.isArray(input.externalDependencies)
+  );
 }
 
 export default convertToInferred;

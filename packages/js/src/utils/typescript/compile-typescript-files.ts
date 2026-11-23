@@ -13,7 +13,11 @@ const TYPESCRIPT_FOUND_N_ERRORS_WATCHING_FOR_FILE_CHANGES = 6194;
 const ERROR_COUNT_REGEX = /Found (\d+) errors/;
 
 function getErrorCountFromMessage(messageText: string) {
-  return Number.parseInt(ERROR_COUNT_REGEX.exec(messageText)[1]);
+  const match = ERROR_COUNT_REGEX.exec(messageText);
+  if (!match) {
+    throw new Error(`Unexpected TypeScript watch status: ${messageText}`);
+  }
+  return Number.parseInt(match[1]);
 }
 
 export interface TypescriptCompilationResult {

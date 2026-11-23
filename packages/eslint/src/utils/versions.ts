@@ -119,7 +119,7 @@ export function assertEslintrcFormatSupported(tree: Tree): void {
   const eslintMajorVersion = installedEslintVersion
     ? major(installedEslintVersion)
     : undefined;
-  if (eslintMajorVersion >= 10) {
+  if (eslintMajorVersion !== undefined && eslintMajorVersion >= 10) {
     throw new Error(
       `ESLint v${eslintMajorVersion} does not support the legacy "eslintrc" configuration format, but ESLINT_USE_FLAT_CONFIG=false was set. ` +
         `Unset the environment variable to scaffold a flat config, or downgrade ESLint to v9.`

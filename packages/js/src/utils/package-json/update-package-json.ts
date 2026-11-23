@@ -54,8 +54,14 @@ export function updatePackageJson(
   context: ExecutorContext,
   target: ProjectGraphProjectNode,
   dependencies: DependentBuildableProjectNode[],
-  fileMap: ProjectFileMap = null
+  fileMap: ProjectFileMap | null = null
 ): void {
+  const { projectName } = context;
+  if (!projectName) {
+    throw new Error(
+      'updatePackageJson requires an executor context with a projectName.'
+    );
+  }
   let packageJson: PackageJson;
   if (fileMap == null) {
     fileMap = readFileMapCache()?.fileMap?.projectFileMap || {};
@@ -63,7 +69,7 @@ export function updatePackageJson(
 
   if (options.updateBuildableProjectDepsInPackageJson) {
     packageJson = createPackageJson(
-      context.projectName,
+      projectName,
       context.projectGraph,
       {
         target: context.targetName,
@@ -92,7 +98,7 @@ export function updatePackageJson(
     );
     packageJson = fileExists(pathToPackageJson)
       ? readJsonFile(pathToPackageJson)
-      : { name: context.projectName, version: '0.0.1' };
+      : { name: projectName, version: '0.0.1' };
   }
 
   if (packageJson.type === 'module') {
@@ -134,7 +140,7 @@ function isNpmNode(
   node: ProjectGraphProjectNode | ProjectGraphExternalNode,
   graph: ProjectGraph
 ): node is ProjectGraphExternalNode {
-  return !!(graph.externalNodes[node.name]?.type === 'npm');
+  return !!(graph.externalNodes?.[node.name]?.type === 'npm');
 }
 
 function isWorkspaceProject(
@@ -186,6 +192,11 @@ function addMissingDependencies(
         !packageJson.devDependencies?.[packageName] &&
         !packageJson.peerDependencies?.[packageName]
       ) {
+        if (!projectName || !targetName) {
+          throw new Error(
+            'Cannot resolve dependency outputs without a projectName and targetName in the executor context.'
+          );
+        }
         const outputs = getOutputsForTargetAndConfiguration(
           {
             project: projectName,
@@ -212,6 +223,8 @@ function addMissingDependencies(
     }
   });
 }
+
+type ExportsField = Record<string, string | Record<string, string | undefined>>;
 
 interface Exports {
   '.': string;
@@ -275,23 +288,29 @@ export function getUpdatedPackageJsonContent(
   const hasEsmFormat = options.format?.includes('esm');
 
   if (options.generateExportsField) {
-    packageJson.exports ??=
-      typeof packageJson.exports === 'string' ? {} : { ...packageJson.exports };
-    packageJson.exports['./package.json'] ??= './package.json';
+    packageJson.exports ??= {};
+  }
+  const exports: ExportsField | undefined =
+    options.generateExportsField && typeof packageJson.exports === 'object'
+      ? packageJson.exports
+      : undefined;
+
+  if (exports) {
+    exports['./package.json'] ??= './package.json';
 
     if (options.developmentConditionName && (hasCjsFormat || hasEsmFormat)) {
-      packageJson.exports['.'] ??= {};
+      exports['.'] ??= {};
       const developmentExports = getDevelopmentExports(options);
       for (const [exportEntry, filePath] of Object.entries(
         developmentExports
       )) {
-        if (!packageJson.exports[exportEntry]) {
-          packageJson.exports[exportEntry] ??= {};
-          packageJson.exports[exportEntry][options.developmentConditionName] ??=
-            filePath;
-        } else if (typeof packageJson.exports[exportEntry] === 'object') {
-          packageJson.exports[exportEntry][options.developmentConditionName] ??=
-            filePath;
+        const entry = exports[exportEntry];
+        if (entry == null) {
+          exports[exportEntry] = {
+            [options.developmentConditionName]: filePath,
+          };
+        } else if (typeof entry === 'object') {
+          entry[options.developmentConditionName] ??= filePath;
         }
       }
     }
@@ -303,14 +322,12 @@ export function getUpdatedPackageJsonContent(
     const typingsFile = `${outputDir}${mainFile}.d.ts`;
     packageJson.types ??= typingsFile;
 
-    if (options.generateExportsField) {
-      if (!packageJson.exports['.']) {
-        packageJson.exports['.'] = { types: typingsFile };
-      } else if (
-        typeof packageJson.exports['.'] === 'object' &&
-        !packageJson.exports['.'].types
-      ) {
-        packageJson.exports['.'].types = typingsFile;
+    if (exports) {
+      const rootEntry = exports['.'];
+      if (!rootEntry) {
+        exports['.'] = { types: typingsFile };
+      } else if (typeof rootEntry === 'object' && !rootEntry.types) {
+        rootEntry.types = typingsFile;
       }
     }
   }
@@ -328,16 +345,15 @@ export function getUpdatedPackageJsonContent(
       packageJson.main ??= esmExports['.'];
     }
 
-    if (options.generateExportsField) {
+    if (exports) {
       for (const [exportEntry, filePath] of Object.entries(esmExports)) {
-        if (!packageJson.exports[exportEntry]) {
-          packageJson.exports[exportEntry] ??= hasCjsFormat
-            ? { import: filePath }
-            : filePath;
-        } else if (typeof packageJson.exports[exportEntry] === 'object') {
-          packageJson.exports[exportEntry].import ??= filePath;
+        const entry = exports[exportEntry];
+        if (entry == null) {
+          exports[exportEntry] = hasCjsFormat ? { import: filePath } : filePath;
+        } else if (typeof entry === 'object') {
+          entry.import ??= filePath;
           if (!hasCjsFormat) {
-            packageJson.exports[exportEntry].default ??= filePath;
+            entry.default ??= filePath;
           }
         }
       }
@@ -358,14 +374,15 @@ export function getUpdatedPackageJsonContent(
       packageJson.type ??= 'commonjs';
     }
 
-    if (options.generateExportsField) {
+    if (exports) {
       for (const [exportEntry, filePath] of Object.entries(cjsExports)) {
-        if (!packageJson.exports[exportEntry]) {
-          packageJson.exports[exportEntry] ??= hasEsmFormat
+        const entry = exports[exportEntry];
+        if (entry == null) {
+          exports[exportEntry] = hasEsmFormat
             ? { default: filePath }
             : filePath;
-        } else if (typeof packageJson.exports[exportEntry] === 'object') {
-          packageJson.exports[exportEntry].default ??= filePath;
+        } else if (typeof entry === 'object') {
+          entry.default ??= filePath;
         }
       }
     }

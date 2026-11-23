@@ -3,6 +3,7 @@ import {
   ensurePackage,
   formatFiles,
   GeneratorCallback,
+  PluginConfiguration,
   readProjectConfiguration,
   runTasksInSerial,
   Tree,
@@ -47,8 +48,8 @@ export default async function preset(tree: Tree): Promise<GeneratorCallback> {
 
   // Clean up the extra TS plugin config
   updateJson(tree, 'nx.json', (json) => {
-    json.plugins = json.plugins.filter((plugin) => {
-      if (plugin.plugin !== '@nx/js/typescript') {
+    json.plugins = json.plugins.filter((plugin: PluginConfiguration) => {
+      if (typeof plugin === 'string' || plugin.plugin !== '@nx/js/typescript') {
         return true;
       }
       if (Array.isArray(plugin.exclude)) {

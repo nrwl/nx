@@ -62,7 +62,7 @@ export function addLocalRegistryScripts(tree: Tree) {
   const stopLocalRegistryPath = 'tools/scripts/stop-local-registry.ts';
   const registryDeclarationPath = 'tools/scripts/registry.d.ts';
 
-  let projectName: string;
+  let projectName: string | undefined;
   try {
     ({ name: projectName } = readJson<ProjectConfiguration>(
       tree,
@@ -75,15 +75,16 @@ export function addLocalRegistryScripts(tree: Tree) {
   }
 
   const localRegistryTarget = `${projectName}:local-registry`;
-  if (!tree.exists(startLocalRegistryPath)) {
+  const existingStartLocalRegistryScript = tree.read(
+    startLocalRegistryPath,
+    'utf-8'
+  );
+  if (existingStartLocalRegistryScript === null) {
     tree.write(
       startLocalRegistryPath,
       startLocalRegistryScript(localRegistryTarget)
     );
   } else {
-    const existingStartLocalRegistryScript = tree
-      .read(startLocalRegistryPath)
-      .toString();
     if (!existingStartLocalRegistryScript.includes('nx/release')) {
       output.warn({
         title:

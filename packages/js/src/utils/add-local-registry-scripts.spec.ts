@@ -28,6 +28,6 @@ describe('addLocalRegistryScripts', () => {
     addLocalRegistryScripts(tree);
 
     const startLocalRegistry = tree.read(startLocalRegistryPath, 'utf-8');
-    expect(/'0\.0\.0-e2e'/.test(startLocalRegistry)).toBe(true);
+    expect(startLocalRegistry).toMatch(/'0\.0\.0-e2e'/);
   });
 });

@@ -145,9 +145,14 @@ export function checkDirectiveHeader(
       }
       // After code, only a name close to a known one marks a line meant for Nx.
       const unknownName = matchNxDirective(line.text)?.name;
-      const [suggestion] = unknownName
-        ? findClosestMatches(unknownName, NX_DIRECTIVE_NAMES, 1)
-        : [];
+      if (!unknownName) {
+        continue;
+      }
+      const [suggestion] = findClosestMatches(
+        unknownName,
+        NX_DIRECTIVE_NAMES,
+        1
+      );
       if (suggestion) {
         problems.push({
           ...lineSpan(line),

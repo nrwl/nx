@@ -31,7 +31,9 @@ describe('@nx/js/tsx', () => {
       createNodes[0],
     ]);
     const [[, result]] = await createNodesFunction(matched, options, context);
-    return result.projects['.'].targets;
+    const targets = result.projects?.['.']?.targets;
+    if (!targets) throw new Error('No targets inferred for the root project');
+    return targets;
   }
 
   it('should only claim tsx shebangs', async () => {
@@ -47,7 +49,7 @@ describe('@nx/js/tsx', () => {
 
     expect(Object.keys(targets)).toEqual(['gen']);
     expect(targets.gen.command).toBe('tsx watch scripts/gen.ts');
-    expect(targets.gen.metadata.technologies).toEqual(['tsx']);
+    expect(targets.gen.metadata?.technologies).toEqual(['tsx']);
   });
 
   it('should put watch before shebang flags', async () => {

@@ -28,11 +28,12 @@ export async function watchTaskProjectsPackageJsonFileChanges(
         process.exit(1);
       } else if (err) {
         logger.error(`Watch error: ${err?.message ?? 'Unknown'}`);
-      } else {
-        const changedTasks = [];
+      } else if (data) {
+        const changedTasks: TaskInfo[] = [];
         data.changedFiles.forEach((file) => {
-          if (packageJsonTaskInfoMap.has(file.path)) {
-            changedTasks.push(packageJsonTaskInfoMap.get(file.path));
+          const taskInfo = packageJsonTaskInfoMap.get(file.path);
+          if (taskInfo) {
+            changedTasks.push(taskInfo);
           }
         });
 
@@ -67,7 +68,7 @@ export async function watchTaskProjectsFileChangesForAssets(
         process.exit(1);
       } else if (err) {
         logger.error(`Watch error: ${err?.message ?? 'Unknown'}`);
-      } else {
+      } else if (data) {
         taskInfos.forEach((t) =>
           t.assetsHandler.processWatchEvents(data.changedFiles)
         );

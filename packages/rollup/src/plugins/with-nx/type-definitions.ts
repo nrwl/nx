@@ -1,5 +1,5 @@
 // nx-ignore-next-line
-import type { OutputBundle } from 'rollup'; // only used  for types
+import type { OutputBundle, PluginContext } from 'rollup'; // only used  for types
 import { relative } from 'path';
 import { stripIndents } from '@nx/devkit';
 
@@ -17,7 +17,11 @@ import { stripIndents } from '@nx/devkit';
 export function typeDefinitions(options: { projectRoot: string }) {
   return {
     name: 'dts-bundle',
-    async generateBundle(_opts: unknown, bundle: OutputBundle): Promise<void> {
+    async generateBundle(
+      this: PluginContext,
+      _opts: unknown,
+      bundle: OutputBundle
+    ): Promise<void> {
       for (const [, file] of Object.entries(bundle)) {
         if (
           file.type === 'asset' ||

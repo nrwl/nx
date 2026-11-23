@@ -85,7 +85,7 @@ export default class JsVersionActions extends VersionActions {
     tree: Tree,
     currentVersionResolverMetadata: NxReleaseVersionConfiguration['currentVersionResolverMetadata']
   ): Promise<{
-    currentVersion: string;
+    currentVersion: string | null;
     logText: string;
   }> {
     const sourcePackageJsonPath = join(
@@ -116,7 +116,7 @@ export default class JsVersionActions extends VersionActions {
       warnFn
     );
 
-    let currentVersion = null;
+    let currentVersion: string | null = null;
     try {
       // Must be non-blocking async to allow spinner to render
       currentVersion = await new Promise<string>((resolve, reject) => {
@@ -133,6 +133,9 @@ export default class JsVersionActions extends VersionActions {
           ],
           { stdio: ['ignore', 'pipe', 'pipe'] }
         );
+        if (!child.stdout || !child.stderr) {
+          throw new Error('npm view was spawned without piped stdout/stderr');
+        }
         let stdout = '';
         let stderr = '';
         child.stdout
@@ -613,12 +616,17 @@ export default class JsVersionActions extends VersionActions {
 
   private readAndValidateManifest(tree: Tree, manifestPath: string): string {
     const content = tree.read(manifestPath, 'utf-8');
+    if (content === null) {
+      throw new Error(`Cannot find ${manifestPath}`);
+    }
     try {
       // Match readJson's support for comments and trailing commas while
       // retaining the original text for targeted edits.
       parseJson(content);
     } catch (error) {
-      throw new Error(`Cannot parse ${manifestPath}: ${error.message}`);
+      throw new Error(
+        `Cannot parse ${manifestPath}: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
     return content;
   }

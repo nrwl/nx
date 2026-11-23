@@ -35,6 +35,7 @@ export default async function replaceBabelClassPropertiesLoose(tree: Tree) {
     const isJson = JSON_CONFIG_FILES.has(name);
     if (!isJson && !JS_CONFIG_FILE.test(name)) return;
     const content = tree.read(path, 'utf-8');
+    if (content === null) return;
     if (!isJson) {
       // Preset options may be imported from another file, so flag every JS
       // config that uses an Nx preset.
@@ -98,8 +99,8 @@ export default async function replaceBabelClassPropertiesLoose(tree: Tree) {
 // and under `overrides[].env.<name>`.
 function findNxPresetOptions(config: any): JSONPath[] {
   const scopes: JSONPath[] = [[]];
-  (Array.isArray(config.overrides) ? config.overrides : []).forEach((_, i) =>
-    scopes.push(['overrides', i])
+  (Array.isArray(config.overrides) ? config.overrides : []).forEach(
+    (_: unknown, i: number) => scopes.push(['overrides', i])
   );
   for (const scope of [...scopes]) {
     for (const env of Object.keys(getAt(config, [...scope, 'env']) ?? {})) {

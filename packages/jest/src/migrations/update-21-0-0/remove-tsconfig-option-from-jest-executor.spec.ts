@@ -38,7 +38,7 @@ describe('remove-tsconfig-option-from-jest-executor', () => {
     await migration(tree);
 
     const updatedConfig = readProjectConfiguration(tree, 'app1');
-    expect(updatedConfig.targets.test.options).toStrictEqual({
+    expect(updatedConfig.targets?.test.options).toStrictEqual({
       jestConfig: 'apps/app1/jest.config.ts',
     });
   });
@@ -67,7 +67,9 @@ describe('remove-tsconfig-option-from-jest-executor', () => {
     await migration(tree);
 
     const updatedConfig = readProjectConfiguration(tree, 'app1');
-    expect(updatedConfig.targets.test.configurations.production).toStrictEqual({
+    expect(
+      updatedConfig.targets?.test.configurations?.production
+    ).toStrictEqual({
       codeCoverage: true,
     });
   });
@@ -91,8 +93,8 @@ describe('remove-tsconfig-option-from-jest-executor', () => {
     await migration(tree);
 
     const updatedConfig = readProjectConfiguration(tree, 'app1');
-    expect(updatedConfig.targets.test).toStrictEqual(
-      intialProjectConfig.targets.test
+    expect(updatedConfig.targets?.test).toStrictEqual(
+      intialProjectConfig.targets?.test
     );
   });
 
@@ -122,10 +124,10 @@ describe('remove-tsconfig-option-from-jest-executor', () => {
     await migration(tree);
 
     const updatedConfig = readProjectConfiguration(tree, 'app1');
-    expect(updatedConfig.targets.test.options).toStrictEqual({
+    expect(updatedConfig.targets?.test.options).toStrictEqual({
       jestConfig: 'apps/app1/jest.config.ts',
     });
-    expect(updatedConfig.targets.test2.options).toStrictEqual({
+    expect(updatedConfig.targets?.test2.options).toStrictEqual({
       jestConfig: 'apps/app1/jest.config.ts',
     });
   });
@@ -215,8 +217,8 @@ describe('remove-tsconfig-option-from-jest-executor', () => {
     await migration(tree);
 
     const updatedConfig = readProjectConfiguration(tree, 'app1');
-    expect(updatedConfig.targets.test.options).toBeUndefined();
-    expect(updatedConfig.targets.test.configurations).toBeUndefined();
+    expect(updatedConfig.targets?.test.options).toBeUndefined();
+    expect(updatedConfig.targets?.test.configurations).toBeUndefined();
   });
 
   it('should remove empty targetDefault object from nx.json when using a target name as the key', async () => {

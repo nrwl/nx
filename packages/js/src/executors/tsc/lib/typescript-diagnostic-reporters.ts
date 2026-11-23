@@ -5,15 +5,11 @@ export function formatDiagnosticReport(
   diagnostic: ts.Diagnostic,
   host: ts.FormatDiagnosticsHost
 ): string {
-  const diagnostics: ts.Diagnostic[] = new Array(1);
-  diagnostics[0] = diagnostic;
-  const formattedDiagnostic =
+  return (
     '\n' +
-    ts.formatDiagnosticsWithColorAndContext(diagnostics, host) +
-    host.getNewLine();
-  diagnostics[0] = undefined;
-
-  return formattedDiagnostic;
+    ts.formatDiagnosticsWithColorAndContext([diagnostic], host) +
+    host.getNewLine()
+  );
 }
 
 // adapted from TS default solution builder status reporter

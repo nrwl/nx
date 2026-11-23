@@ -46,11 +46,13 @@ describe('isTypescriptVersionAtLeast', () => {
 
   it('assumes the default install version when typescript is not declared', () => {
     const tree = createTreeWithEmptyWorkspace();
+    const defaultVersion = coerce(typescriptVersion);
+    if (!defaultVersion) {
+      throw new Error(`Cannot coerce ${typescriptVersion}`);
+    }
 
     // at-least its own default is always true; an impossible version is not
-    expect(
-      isTypescriptVersionAtLeast(tree, coerce(typescriptVersion).version)
-    ).toBe(true);
+    expect(isTypescriptVersionAtLeast(tree, defaultVersion.version)).toBe(true);
     expect(isTypescriptVersionAtLeast(tree, '99.0.0')).toBe(false);
   });
 

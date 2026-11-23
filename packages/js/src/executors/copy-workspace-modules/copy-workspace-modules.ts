@@ -197,7 +197,9 @@ function handleWorkspaceModules(
         readFileSync(copiedPackageJsonPath, 'utf-8')
       );
     } catch (e) {
-      logger.warn(`Could not read package.json for ${pkgName}: ${e.message}`);
+      logger.warn(
+        `Could not read package.json for ${pkgName}: ${e instanceof Error ? e.message : String(e)}`
+      );
       return;
     }
 
@@ -345,7 +347,12 @@ function getOutputDir(
   }
   const target = parseTargetString(schema.buildTarget, context);
   const project = context.projectGraph.nodes[target.project].data;
-  const buildTarget = project.targets[target.target];
+  const buildTarget = project.targets?.[target.target];
+  if (!buildTarget) {
+    throw new Error(
+      `Cannot find target '${target.target}' for project '${target.project}'.`
+    );
+  }
   let maybeOutputPath =
     buildTarget.outputs?.[0] ??
     buildTarget.options.outputPath ??

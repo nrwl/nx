@@ -14,19 +14,32 @@ export interface NxWebBabelPresetOptions {
   loose?: boolean;
 }
 
+interface NxBabelCaller {
+  isModern?: boolean;
+  isTest?: boolean;
+  isNxPackage?: boolean;
+  emitDecoratorMetadata?: boolean;
+}
+
 module.exports = function (api: any, options: NxWebBabelPresetOptions = {}) {
   api.assertVersion(7);
 
-  const isModern = api.caller((caller) => caller?.isModern);
+  const isModern = api.caller(
+    (caller: NxBabelCaller | undefined) => caller?.isModern
+  );
 
   // use by @nx/cypress react component testing to prevent core js build issues
-  const isTest = api.caller((caller) => caller?.isTest);
+  const isTest = api.caller(
+    (caller: NxBabelCaller | undefined) => caller?.isTest
+  );
 
   // This is set by `@nx/rollup:rollup` executor
-  const isNxPackage = api.caller((caller) => caller?.isNxPackage);
+  const isNxPackage = api.caller(
+    (caller: NxBabelCaller | undefined) => caller?.isNxPackage
+  );
 
   const emitDecoratorMetadata = api.caller(
-    (caller) => caller?.emitDecoratorMetadata ?? true
+    (caller: NxBabelCaller | undefined) => caller?.emitDecoratorMetadata ?? true
   );
 
   const loose = options.loose ?? true;
@@ -108,7 +121,7 @@ module.exports = function (api: any, options: NxWebBabelPresetOptions = {}) {
 };
 
 function createBabelPresetEnvOptions(
-  useBuiltIns: string | boolean,
+  useBuiltIns: string | boolean | undefined,
   isModern: boolean,
   loose: boolean
 ) {
@@ -138,7 +151,11 @@ function findCoreJsVersion(): string | null {
   try {
     // nx-ignore-next-line
     const v = require('core-js/package.json').version;
-    const { major, minor } = parse(v);
+    const parsed = parse(v);
+    if (!parsed) {
+      return null;
+    }
+    const { major, minor } = parsed;
     return `${major}.${minor}`;
   } catch (e) {
     return null;

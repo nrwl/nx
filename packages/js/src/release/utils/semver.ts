@@ -8,5 +8,9 @@ export function isValidRange(range: string) {
 
 export function isMatchingDependencyRange(version: string, range: string) {
   const coercedVersion = coerce(version, { includePrerelease: true })?.version;
-  return isValidRange(range) && satisfies(coercedVersion, range);
+  return (
+    isValidRange(range) &&
+    coercedVersion !== undefined &&
+    satisfies(coercedVersion, range)
+  );
 }

@@ -24,20 +24,26 @@ export function partitionDiagnostics(
   const byTask = new Map<string, OxlintDiagnostic[]>(
     tasks.map(({ taskId }) => [taskId, []])
   );
+  const diagnosticsFor = (taskId: string): OxlintDiagnostic[] => {
+    const taskDiagnostics = byTask.get(taskId);
+    if (!taskDiagnostics) {
+      throw new Error(`Unknown lint task "${taskId}"`);
+    }
+    return taskDiagnostics;
+  };
   for (const diagnostic of diagnostics) {
+    const filename = diagnostic.filename;
     for (const task of tasks) {
-      if (diagnostic.filename && lintsFile(task, diagnostic.filename)) {
-        byTask.get(task.taskId).push(diagnostic);
+      if (filename && lintsFile(task, filename)) {
+        diagnosticsFor(task.taskId).push(diagnostic);
       }
     }
     if (
-      !diagnostic.filename ||
-      !tasks.some((task) =>
-        task.paths.some((path) => contains(path, diagnostic.filename))
-      )
+      !filename ||
+      !tasks.some((task) => task.paths.some((path) => contains(path, filename)))
     ) {
       for (const taskId of outsideOwners) {
-        byTask.get(taskId).push(diagnostic);
+        diagnosticsFor(taskId).push(diagnostic);
       }
     }
   }

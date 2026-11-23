@@ -374,7 +374,7 @@ describe('js init generator', () => {
     await init(tree, { addTsPlugin: true });
 
     const nxJson = readNxJson(tree);
-    const typescriptPlugin = nxJson.plugins.find(
+    const typescriptPlugin = nxJson?.plugins?.find(
       (plugin) =>
         typeof plugin === 'object' && plugin.plugin === '@nx/js/typescript'
     );

@@ -22,6 +22,7 @@ import {
   names,
   offsetFromRoot,
   ProjectConfiguration,
+  TargetConfiguration,
   readNxJson,
   readProjectConfiguration,
   runTasksInSerial,
@@ -214,7 +215,11 @@ export async function libraryGeneratorInternal(
       (json) => {
         // add project reference to the runtime tsconfig.lib.json file
         json.references ??= [];
-        if (!json.references.some((r) => r.path === './tsconfig.lib.json')) {
+        if (
+          !json.references.some(
+            (r: { path: string }) => r.path === './tsconfig.lib.json'
+          )
+        ) {
           json.references.push({ path: './tsconfig.lib.json' });
         }
 
@@ -269,7 +274,7 @@ async function configureProject(
 ) {
   const nxJson = readNxJson(tree);
 
-  if (options.hasPlugin) {
+  if (options.hasPlugin && nxJson) {
     ensureProjectIsIncludedInPluginRegistrations(
       nxJson,
       options.projectRoot,
@@ -278,7 +283,9 @@ async function configureProject(
     updateNxJson(tree, nxJson);
   }
 
-  const projectConfiguration: ProjectConfiguration = {
+  const projectConfiguration: ProjectConfiguration & {
+    targets: Record<string, TargetConfiguration>;
+  } = {
     root: options.projectRoot,
     sourceRoot: joinPathFragments(options.projectRoot, 'src'),
     projectType: 'library',
@@ -466,7 +473,7 @@ export async function addLint(
     lintConfigHasOverride(
       tree,
       projectConfiguration.root,
-      (o) =>
+      (o: { files?: string | string[] }) =>
         Array.isArray(o.files)
           ? o.files.some((f) => f.match(/\.json$/))
           : !!o.files?.match(/\.json$/),
@@ -476,10 +483,11 @@ export async function addLint(
     updateOverrideInLintConfig(
       tree,
       projectConfiguration.root,
-      (o) => o.rules?.['@nx/dependency-checks'],
-      (o) => {
+      (o: { rules?: Record<string, unknown> }) =>
+        o.rules?.['@nx/dependency-checks'],
+      (o: { rules: Record<string, unknown> }) => {
         const value = o.rules['@nx/dependency-checks'];
-        let ruleSeverity: string;
+        let ruleSeverity: unknown;
         let ruleOptions: any;
         if (Array.isArray(value)) {
           ruleSeverity = value[0];
@@ -914,6 +922,7 @@ async function normalizeOptions(
     // it to 'none' after `normalizeLinterOption` runs. Naming the key also
     // satisfies the normalized type, since the spread carries `linter?`.
     linter: options.linter,
+    bundler: options.bundler,
     fileName,
     name: isUsingTsSolutionConfig && !options.name ? importPath : projectName,
     projectNames,
@@ -995,15 +1004,13 @@ function addProjectDependencies(
   return () => {};
 }
 
-function getBuildExecutor(bundler: Bundler) {
+function getBuildExecutor(bundler: 'esbuild' | 'swc' | 'tsc') {
   switch (bundler) {
     case 'esbuild':
       return `@nx/esbuild:esbuild`;
     case 'swc':
     case 'tsc':
       return `@nx/js:${bundler}`;
-    default:
-      return undefined;
   }
 }
 
@@ -1178,7 +1185,7 @@ function determineDependencies(
   }
 }
 
-type EntryField = string | { [key: string]: EntryField };
+type EntryField = string | undefined | { [key: string]: EntryField };
 
 function determineEntryFields(
   options: NormalizedLibraryGeneratorOptions

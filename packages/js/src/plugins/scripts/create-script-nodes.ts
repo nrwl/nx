@@ -36,7 +36,7 @@ export interface ScriptPluginDefinition<T extends ScriptPluginOptions> {
   extraTargets?(
     projectRoot: string,
     workspaceRoot: string,
-    options: T
+    options: T | undefined
   ): Promise<ScriptTargets>;
 }
 
@@ -78,8 +78,9 @@ export function createScriptNodes<T extends ScriptPluginOptions>(
           context
         );
         const results: CreateNodesResultArray = [];
-        for (const [i, projectRoot] of projectRoots.entries()) {
-          const { marker, scripts } = scriptsByRoot.get(projectRoot);
+        for (const [i, [projectRoot, { marker, scripts }]] of [
+          ...scriptsByRoot,
+        ].entries()) {
           // include/exclude can change which scripts a project gets without
           // changing its contents.
           const key = hashObject([hashes[i], [...scripts].sort()]);
@@ -100,7 +101,7 @@ export function createScriptNodes<T extends ScriptPluginOptions>(
             });
           }
           const targets = cache.get(key);
-          if (Object.keys(targets).length) {
+          if (targets && Object.keys(targets).length) {
             results.push([
               scripts[0] ?? marker,
               { projects: { [projectRoot]: { root: projectRoot, targets } } },
@@ -154,7 +155,7 @@ function groupScriptsByProjectRoot(
   for (const [dir, { packageJson, projectJson }] of handed) {
     if (projectJson) {
       markers.set(dir, projectJson);
-    } else if (inWorkspaces(packageJson)) {
+    } else if (packageJson && inWorkspaces(packageJson)) {
       markers.set(dir, packageJson);
     }
   }
@@ -170,13 +171,16 @@ function groupScriptsByProjectRoot(
     while (!markers.has(dir) && dir !== '.') {
       dir = dirname(dir);
     }
-    if (!markers.has(dir)) {
+    const marker = markers.get(dir);
+    if (marker === undefined) {
       continue;
     }
-    if (!byRoot.has(dir)) {
-      byRoot.set(dir, { marker: markers.get(dir), scripts: [] });
+    let entry = byRoot.get(dir);
+    if (!entry) {
+      entry = { marker, scripts: [] };
+      byRoot.set(dir, entry);
     }
-    byRoot.get(dir).scripts.push(script);
+    entry.scripts.push(script);
   }
   return byRoot;
 }
@@ -234,7 +238,7 @@ function createTargets<T extends ScriptPluginOptions>(
     const baseName = withoutExtension(basename(script.relativePath));
     const name =
       script.targetName ??
-      (baseNameCounts.get(baseName) > 1
+      ((baseNameCounts.get(baseName) ?? 0) > 1
         ? withoutExtension(script.relativePath)
         : baseName);
     targets[name] = createTarget(definition, projectRoot, script, watch);

@@ -6,7 +6,7 @@ import {
 } from '@nx/devkit';
 import { join } from 'path';
 import type { NormalizedExecutorOptions } from '../../../utils/schema';
-import { getTaskOptions } from './get-task-options';
+import { getTaskGraph, getTaskOptions } from './get-task-options';
 import type { TypescriptInMemoryTsConfig } from './typescript-compilation';
 
 export function getProcessedTaskTsConfigs(
@@ -40,10 +40,10 @@ function generateTaskProjectTsConfig(
   taskInMemoryTsConfigMap: Record<string, TypescriptInMemoryTsConfig>
 ): string {
   const { project } = parseTargetString(task, context);
-  if (projectTsConfigCache.has(project)) {
-    const { tsConfig, tsConfigPath } = projectTsConfigCache.get(project);
-    taskInMemoryTsConfigMap[task] = tsConfig;
-    return tsConfigPath;
+  const cachedTsConfig = projectTsConfigCache.get(project);
+  if (cachedTsConfig) {
+    taskInMemoryTsConfigMap[task] = cachedTsConfig.tsConfig;
+    return cachedTsConfig.tsConfigPath;
   }
 
   const tasksInProject = [
@@ -106,8 +106,8 @@ function getDependencyTasksInOtherProjects(
   const implicitDependencies = new Set(
     context.projectGraph.nodes[project].data.implicitDependencies ?? []
   );
-  return context.taskGraph.dependencies[task]
-    .map((edge) => edge.id)
+  return getTaskGraph(context)
+    .dependencies[task].map((edge) => edge.id)
     .filter((t) => {
       const { project: dependencyProject } = parseTargetString(t, context);
       // Tasks for implicit dependencies are skipped since incremental builds only apply to explicit dependencies
@@ -125,7 +125,7 @@ function getDependencyTasksInSameProject(
 ): string[] {
   const { project: taskProject } = parseTargetString(task, context);
 
-  return Object.keys(context.taskGraph.tasks).filter(
+  return Object.keys(getTaskGraph(context).tasks).filter(
     (t) => t !== task && parseTargetString(t, context).project === taskProject
   );
 }
@@ -172,9 +172,10 @@ function getInMemoryTsConfig(
 
 function hasTscExecutor(task: string, context: ExecutorContext): boolean {
   const { project, target } = parseTargetString(task, context);
+  const targets = context.projectGraph.nodes[project].data.targets;
+  if (!targets) {
+    throw new Error(`Cannot find targets for project "${project}".`);
+  }
 
-  return (
-    context.projectGraph.nodes[project].data.targets[target].executor ===
-    '@nx/js:tsc'
-  );
+  return targets[target].executor === '@nx/js:tsc';
 }

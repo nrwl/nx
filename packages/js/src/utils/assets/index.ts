@@ -23,9 +23,14 @@ export async function copyAssets(
   options: CopyAssetsOptions,
   context: ExecutorContext
 ): Promise<CopyAssetsResult> {
+  const { projectName } = context;
+  if (!projectName) {
+    throw new Error(
+      'copyAssets requires an executor context with a projectName.'
+    );
+  }
   const assetHandler = new CopyAssetsHandler({
-    projectDir:
-      context.projectsConfigurations.projects[context.projectName].root,
+    projectDir: context.projectsConfigurations.projects[projectName].root,
     rootDir: context.root,
     outputDir: options.outputPath,
     assets: options.assets,

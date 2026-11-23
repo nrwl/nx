@@ -3,6 +3,7 @@ import {
   formatFiles,
   type GeneratorCallback,
   logger,
+  type NxJsonConfiguration,
   runTasksInSerial,
   type Tree,
   updateJson,
@@ -18,7 +19,7 @@ export async function initGenerator(
   tree: Tree,
   options: InitGeneratorSchema = {}
 ): Promise<GeneratorCallback> {
-  updateJson(tree, 'nx.json', (json) => {
+  updateJson<NxJsonConfiguration>(tree, 'nx.json', (json) => {
     json.plugins ??= [];
     if (
       !json.plugins.some((p) =>

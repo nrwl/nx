@@ -3,11 +3,16 @@ import {
   updateJson,
   updateNxJson,
   readNxJson,
+  type NxJsonConfiguration,
+  type TargetDefaultValue,
   type Tree,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { load } from '@zkochan/js-yaml';
+import { createRequire } from 'node:module';
 import migration from './add-verdaccio-jwt-security';
+
+const { load }: { load: (content: string) => unknown } =
+  createRequire(__filename)('@zkochan/js-yaml');
 
 const CONFIG = `storage: ../tmp/local-registry/storage
 packages:
@@ -15,6 +20,14 @@ packages:
     access: $all
     publish: $all
 `;
+
+function readExistingNxJson(tree: Tree): NxJsonConfiguration {
+  const nxJson = readNxJson(tree);
+  if (!nxJson) {
+    throw new Error('nx.json not found');
+  }
+  return nxJson;
+}
 
 describe('add-verdaccio-jwt-security migration', () => {
   let tree: Tree;
@@ -36,8 +49,19 @@ describe('add-verdaccio-jwt-security migration', () => {
     });
   }
 
-  function readConfig(path = '.verdaccio/config.yml') {
-    return load(tree.read(path, 'utf-8')) as any;
+  function readConfig(path = '.verdaccio/config.yml'): unknown {
+    const content = tree.read(path, 'utf-8');
+    if (content === null) {
+      throw new Error(`${path} not found`);
+    }
+    return load(content);
+  }
+
+  function readSecurity(path?: string): unknown {
+    const config = readConfig(path);
+    return typeof config === 'object' && config !== null && 'security' in config
+      ? config.security
+      : undefined;
   }
 
   it('should append the jwt security section and keep the existing content', async () => {
@@ -47,7 +71,7 @@ describe('add-verdaccio-jwt-security migration', () => {
     const result = await migration(tree);
 
     const content = tree.read('.verdaccio/config.yml', 'utf-8');
-    expect(content.startsWith(CONFIG)).toBe(true);
+    expect(content?.startsWith(CONFIG)).toBe(true);
     expect(readConfig()).toEqual({
       ...(load(CONFIG) as object),
       security: { api: { jwt: { sign: { expiresIn: '7d' } } } },
@@ -86,7 +110,7 @@ describe('add-verdaccio-jwt-security migration', () => {
     [
       'an executor target default',
       () => {
-        const nxJson = readNxJson(tree);
+        const nxJson = readExistingNxJson(tree);
         nxJson.targetDefaults = {
           '@nx/js:verdaccio': { options: { config: 'registry/config.yml' } },
         };
@@ -97,7 +121,7 @@ describe('add-verdaccio-jwt-security migration', () => {
     [
       'a target name default that sets the executor',
       () => {
-        const nxJson = readNxJson(tree);
+        const nxJson = readExistingNxJson(tree);
         nxJson.targetDefaults = {
           'local-registry': [
             {
@@ -117,12 +141,12 @@ describe('add-verdaccio-jwt-security migration', () => {
 
     await migration(tree);
 
-    expect(readConfig('registry/config.yml').security).toEqual({
+    expect(readSecurity('registry/config.yml')).toEqual({
       api: { jwt: { sign: { expiresIn: '7d' } } },
     });
   });
 
-  it.each([
+  it.each<[string, TargetDefaultValue, Record<string, unknown>, string[]]>([
     [
       'a command target sharing a name with a Verdaccio target default',
       { executor: '@nx/js:verdaccio', options: { config: 'unrelated.yml' } },
@@ -158,7 +182,7 @@ describe('add-verdaccio-jwt-security migration', () => {
     async (_, targetDefault, target, updated) => {
       tree.write('actual.yml', CONFIG);
       tree.write('unrelated.yml', CONFIG);
-      const nxJson = readNxJson(tree);
+      const nxJson = readExistingNxJson(tree);
       nxJson.targetDefaults = { 'local-registry': targetDefault };
       updateNxJson(tree, nxJson);
       addVerdaccioProject(undefined, target);
@@ -166,9 +190,7 @@ describe('add-verdaccio-jwt-security migration', () => {
       await migration(tree);
 
       for (const path of ['actual.yml', 'unrelated.yml']) {
-        expect(readConfig(path).security !== undefined).toBe(
-          updated.includes(path)
-        );
+        expect(readSecurity(path) !== undefined).toBe(updated.includes(path));
       }
     }
   );
@@ -184,7 +206,7 @@ describe('add-verdaccio-jwt-security migration', () => {
     await migration(tree);
 
     expect(
-      tree.read('.verdaccio/config.yml', 'utf-8').match(/^security:/gm)
+      tree.read('.verdaccio/config.yml', 'utf-8')?.match(/^security:/gm)
     ).toHaveLength(1);
   });
 
@@ -240,7 +262,7 @@ packages:
 
     const result = await migration(tree);
 
-    expect(readConfig().security).toEqual({
+    expect(readSecurity()).toEqual({
       api: { jwt: { sign: { expiresIn: '7d' } } },
     });
     expect(result).toEqual({ skipAgentic: true });
@@ -296,7 +318,7 @@ packages:
       expect(result.nextSteps).toEqual([
         expect.stringContaining('.verdaccio/config.yml'),
       ]);
-      expect(result.nextSteps[0]).toContain(message);
+      expect(result.nextSteps?.[0]).toContain(message);
       expect(result.agentContext).toEqual(result.nextSteps);
     }
   );

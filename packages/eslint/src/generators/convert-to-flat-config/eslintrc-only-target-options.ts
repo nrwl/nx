@@ -31,7 +31,7 @@ export function isEslintTarget(target: {
 }): boolean {
   return (
     target.executor === ESLINT_LINT_EXECUTOR ||
-    target.command?.includes('eslint')
+    (target.command?.includes('eslint') ?? false)
   );
 }
 

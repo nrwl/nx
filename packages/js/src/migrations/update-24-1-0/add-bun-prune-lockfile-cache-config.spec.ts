@@ -3,10 +3,28 @@ import {
   readNxJson,
   readProjectConfiguration,
   updateNxJson,
+  type NxJsonConfiguration,
+  type TargetConfiguration,
   type Tree,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import update from './add-bun-prune-lockfile-cache-config';
+
+function readExistingNxJson(tree: Tree): NxJsonConfiguration {
+  const nxJson = readNxJson(tree);
+  if (!nxJson) {
+    throw new Error('nx.json not found');
+  }
+  return nxJson;
+}
+
+function readObjectTargetDefault(
+  tree: Tree,
+  key: string
+): Partial<TargetConfiguration> | undefined {
+  const value = readNxJson(tree)?.targetDefaults?.[key];
+  return Array.isArray(value) ? undefined : value;
+}
 
 describe('add-bun-prune-lockfile-cache-config migration', () => {
   let tree: Tree;
@@ -32,16 +50,16 @@ describe('add-bun-prune-lockfile-cache-config migration', () => {
     await update(tree);
     await update(tree);
 
-    const target = readProjectConfiguration(tree, 'app1').targets[
+    const target = readProjectConfiguration(tree, 'app1').targets?.[
       'prune-lockfile'
     ];
-    expect(target.outputs).toEqual([
+    expect(target?.outputs).toEqual([
       '{workspaceRoot}/dist/apps/app1/package.json',
       '{workspaceRoot}/dist/apps/app1/bun.lock',
       '{workspaceRoot}/dist/apps/app1/patches',
       '{workspaceRoot}/dist/apps/app1/local_path_modules',
     ]);
-    expect(target.inputs).toEqual([
+    expect(target?.inputs).toEqual([
       'default',
       '^default',
       '{workspaceRoot}/package.json',
@@ -49,7 +67,7 @@ describe('add-bun-prune-lockfile-cache-config migration', () => {
   });
 
   it('adds the root package.json to the targetDefaults entry supplying the inherited inputs', async () => {
-    const nxJson = readNxJson(tree);
+    const nxJson = readExistingNxJson(tree);
     nxJson.targetDefaults = {
       '@nx/js:prune-lockfile': { inputs: ['production', '^production'] },
     };
@@ -67,10 +85,10 @@ describe('add-bun-prune-lockfile-cache-config migration', () => {
     await update(tree);
 
     expect(
-      readNxJson(tree).targetDefaults['@nx/js:prune-lockfile'].inputs
+      readObjectTargetDefault(tree, '@nx/js:prune-lockfile')?.inputs
     ).toEqual(['production', '^production', '{workspaceRoot}/package.json']);
     expect(
-      readProjectConfiguration(tree, 'app1').targets['prune-lockfile'].inputs
+      readProjectConfiguration(tree, 'app1').targets?.['prune-lockfile']?.inputs
     ).toBeUndefined();
   });
 
@@ -91,17 +109,17 @@ describe('add-bun-prune-lockfile-cache-config migration', () => {
     await update(tree);
     await update(tree);
 
-    const target = readProjectConfiguration(tree, 'app1').targets[
+    const target = readProjectConfiguration(tree, 'app1').targets?.[
       'prune-lockfile'
     ];
-    expect(target.outputs).toEqual([
+    expect(target?.outputs).toEqual([
       '{workspaceRoot}/dist/apps/app1/package.json',
       '{workspaceRoot}/dist/apps/app1/bun.lockb',
       '{workspaceRoot}/dist/apps/app1/bun.lock',
       '{workspaceRoot}/dist/apps/app1/patches',
       '{workspaceRoot}/dist/apps/app1/local_path_modules',
     ]);
-    expect(target.inputs).toEqual([
+    expect(target?.inputs).toEqual([
       'default',
       '^default',
       '{workspaceRoot}/package.json',
@@ -130,10 +148,10 @@ describe('add-bun-prune-lockfile-cache-config migration', () => {
 
     await update(tree);
 
-    const target = readProjectConfiguration(tree, 'app1').targets[
+    const target = readProjectConfiguration(tree, 'app1').targets?.[
       'prune-lockfile'
     ];
-    expect(target.outputs).toEqual(outputs);
-    expect(target.inputs).toBeUndefined();
+    expect(target?.outputs).toEqual(outputs);
+    expect(target?.inputs).toBeUndefined();
   });
 });

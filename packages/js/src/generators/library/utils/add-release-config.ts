@@ -22,6 +22,9 @@ export async function addReleaseConfigForTsSolution(
   projectConfiguration: ProjectConfiguration
 ): Promise<void> {
   const nxJson = readNxJson(tree);
+  if (!nxJson) {
+    throw new Error('Cannot find nx.json');
+  }
 
   const addPreVersionCommand = () => {
     const pmc = getPackageManagerCommand();

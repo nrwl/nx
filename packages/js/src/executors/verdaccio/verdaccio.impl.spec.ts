@@ -12,7 +12,7 @@ const devkit = vi.hoisted(() => ({
   emitReadySignal: vi.fn((_url?: string) => true),
 }));
 // The signal API is required lazily, which `vi.mock` cannot reach
-mockCjsModule(import.meta.url, '@nx/devkit', devkit);
+mockCjsModule(__filename, '@nx/devkit', devkit);
 
 const verdaccio = vi.hoisted(() => ({
   children: [] as Array<EventEmitter & { kill: ReturnType<typeof vi.fn> }>,
@@ -55,11 +55,11 @@ const processEvents = ['exit', 'SIGTERM', 'SIGINT', 'SIGHUP'];
 const processEmitter: EventEmitter = process;
 
 describe('Verdaccio readiness', () => {
-  let existingListeners: Map<string, Function[]>;
+  let existingListeners: Record<string, Function[]>;
   let run: Promise<unknown> | undefined;
 
   beforeEach(() => {
-    existingListeners = new Map(
+    existingListeners = Object.fromEntries(
       processEvents.map((event) => [event, processEmitter.listeners(event)])
     );
   });
@@ -82,7 +82,7 @@ describe('Verdaccio readiness', () => {
   function addedListeners(event: string) {
     return processEmitter
       .listeners(event)
-      .filter((existing) => !existingListeners.get(event).includes(existing));
+      .filter((existing) => !existingListeners[event].includes(existing));
   }
 
   const settle = () => new Promise((resolve) => setImmediate(resolve));

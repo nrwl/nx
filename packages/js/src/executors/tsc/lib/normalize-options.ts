@@ -11,7 +11,7 @@ import {
 export function normalizeOptions(
   options: ExecutorOptions,
   contextRoot: string,
-  sourceRoot: string,
+  sourceRoot: string | undefined,
   projectRoot: string
 ): NormalizedExecutorOptions {
   const outputPath = join(contextRoot, options.outputPath);

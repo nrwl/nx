@@ -67,6 +67,9 @@ export function createTypeScriptCompilationOptions(
   normalizedOptions: NormalizedExecutorOptions,
   context: ExecutorContext
 ): TypeScriptCompilationOptions {
+  if (!context.projectName) {
+    throw new Error('The tsc executor requires a project name.');
+  }
   return {
     outputPath: joinPathFragments(normalizedOptions.outputPath),
     projectName: context.projectName,
@@ -89,8 +92,12 @@ export async function* tscExecutor(
   _options: ExecutorOptions,
   context: ExecutorContext
 ) {
+  const projectName = context.projectName;
+  if (!projectName) {
+    throw new Error('The tsc executor requires a project name.');
+  }
   const { sourceRoot, root } =
-    context.projectsConfigurations.projects[context.projectName];
+    context.projectsConfigurations.projects[projectName];
   const options = normalizeOptions(_options, context.root, sourceRoot, root);
 
   const { projectRoot, tmpTsConfig, target, dependencies } = checkDependencies(
@@ -168,7 +175,7 @@ export async function* tscExecutor(
     let disposePackageJsonChanges: undefined | (() => void);
     if (options.generatePackageJson) {
       disposePackageJsonChanges = await watchForSingleFileChanges(
-        context.projectName,
+        projectName,
         options.projectRoot,
         'package.json',
         () =>

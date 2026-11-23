@@ -15,6 +15,7 @@ import { nxVersion, versions } from '../../utils/versions';
 import {
   determineEslintConfigFormat,
   findEslintFile,
+  readFileOrThrow,
 } from '../utils/eslint-file';
 import { createNodes } from '../../plugins/plugin';
 import { hasEslintPlugin } from '../utils/plugin';
@@ -30,9 +31,12 @@ export interface LinterInitOptions {
 
 function updateProductionFileset(tree: Tree, format: 'mjs' | 'cjs' = 'mjs') {
   const nxJson = readNxJson(tree);
+  if (!nxJson) {
+    throw new Error('Cannot find nx.json');
+  }
 
-  const productionFileSet = nxJson.namedInputs?.production;
-  if (productionFileSet) {
+  if (nxJson.namedInputs?.production) {
+    const productionFileSet = nxJson.namedInputs.production;
     productionFileSet.push('!{projectRoot}/.eslintrc.json');
     productionFileSet.push(`!{projectRoot}/eslint.config.${format}`);
     // Dedupe and set
@@ -72,7 +76,7 @@ export async function initEsLint(
       options.eslintConfigFormat = fileExtension.slice(1) as 'mjs' | 'cjs';
     } else {
       options.eslintConfigFormat = determineEslintConfigFormat(
-        tree.read(rootEslintFile, 'utf-8')
+        readFileOrThrow(tree, rootEslintFile)
       );
     }
   }
@@ -97,7 +101,7 @@ export async function initEsLint(
       {
         targetName: lintTargetNames,
       },
-      options.updatePackageScripts
+      options.updatePackageScripts ?? false
     );
 
     return () => {};
@@ -119,7 +123,7 @@ export async function initEsLint(
     {
       targetName: lintTargetNames,
     },
-    options.updatePackageScripts
+    options.updatePackageScripts ?? false
   );
 
   const tasks: GeneratorCallback[] = [];

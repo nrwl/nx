@@ -6,8 +6,8 @@ import { readTsConfig } from '../../utils/typescript/ts-config';
 import { codeFrameColumns } from '@nx/devkit/internal';
 
 export interface TypeCheckResult {
-  warnings?: string[];
-  errors?: string[];
+  warnings: string[];
+  errors: string[];
   inputFilesCount: number;
   totalFilesCount: number;
   incremental: boolean;
@@ -140,7 +140,7 @@ async function setupTypeScript(options: TypeCheckOptions) {
           declaration: true,
           outDir: options.outDir,
           declarationDir:
-            options.projectRoot && options.outDir.indexOf(projectRoot)
+            projectRoot && options.outDir.indexOf(projectRoot)
               ? options.outDir.replace(projectRoot, '')
               : undefined,
         }

@@ -20,6 +20,7 @@ import { Linter as LinterEnum, LinterType } from '../utils/linter';
 import {
   determineEslintConfigFormat,
   findEslintFile,
+  readFileOrThrow,
 } from '../utils/eslint-file';
 import { extname, join } from 'path';
 import { lintInitGenerator } from '../init/init';
@@ -197,8 +198,8 @@ function createEsLintConfiguration(
   tree: Tree,
   options: LintProjectOptions,
   projectConfig: ProjectConfiguration,
-  enableTypedLinting: boolean,
-  rootProject: boolean,
+  enableTypedLinting: boolean | undefined,
+  rootProject: boolean | undefined,
   addDependencyChecks: boolean
 ) {
   // we are only extending root for non-standalone projects or their complementary e2e apps
@@ -217,7 +218,7 @@ function createEsLintConfiguration(
       options.eslintConfigFormat = fileExtension.slice(1) as 'mjs' | 'cjs';
     } else {
       options.eslintConfigFormat = determineEslintConfigFormat(
-        tree.read(extendedRootConfig, 'utf-8')
+        readFileOrThrow(tree, extendedRootConfig)
       );
     }
   }
@@ -285,6 +286,7 @@ function createEsLintConfiguration(
   }
 
   if (useFlatConfig(tree)) {
+    const eslintConfigFormat = options.eslintConfigFormat ?? 'mjs';
     const nodes = [];
     const importMap = new Map();
     if (extendedRootConfig) {
@@ -295,21 +297,15 @@ function createEsLintConfiguration(
     // across entries and the last one wins, so this block's `project: null` only
     // neutralizes a `project` the base config sets while it comes later.
     if (enableTypedLinting) {
-      nodes.push(
-        generateTypedLintingFlatConfigOverride(options.eslintConfigFormat)
-      );
+      nodes.push(generateTypedLintingFlatConfigOverride(eslintConfigFormat));
     }
     overrides.forEach((override) => {
-      nodes.push(generateFlatOverride(override, options.eslintConfigFormat));
+      nodes.push(generateFlatOverride(override, eslintConfigFormat));
     });
-    const nodeList = createNodeList(
-      importMap,
-      nodes,
-      options.eslintConfigFormat
-    );
+    const nodeList = createNodeList(importMap, nodes, eslintConfigFormat);
     const content = stringifyNodeList(nodeList);
     tree.write(
-      join(projectConfig.root, `eslint.config.${options.eslintConfigFormat}`),
+      join(projectConfig.root, `eslint.config.${eslintConfigFormat}`),
       content
     );
   } else {
@@ -340,9 +336,7 @@ function isBuildableLibraryProject(
 ): boolean {
   return (
     getProjectType(tree, projectConfig.root, projectConfig.projectType) ===
-      'library' &&
-    projectConfig.targets?.build &&
-    !!projectConfig.targets.build
+      'library' && !!projectConfig.targets?.build
   );
 }
 

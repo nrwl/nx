@@ -7,8 +7,10 @@ import {
   updateNxJson,
   writeJson,
   type ExpandedPluginConfiguration,
+  type NxJsonConfiguration,
   type ProjectConfiguration,
   type ProjectGraph,
+  type TargetConfiguration,
   type Tree,
   updateProjectConfiguration,
 } from '@nx/devkit';
@@ -31,7 +33,7 @@ jest.mock('@nx/devkit', () => ({
     .mockImplementation((tree, projectName, projectConfiguration) => {
       function handleEmptyTargets(
         projectName: string,
-        projectConfiguration: ProjectConfiguration
+        projectConfiguration: ProjectConfiguration & { '// targets'?: string }
       ): void {
         if (
           projectConfiguration.targets &&
@@ -67,6 +69,19 @@ jest.mock('@nx/devkit', () => ({
       projectGraph.nodes[projectName].data = projectConfiguration;
     }),
 }));
+
+type TestProject = ProjectConfiguration & {
+  name: string;
+  targets: Record<string, TargetConfiguration>;
+};
+
+function readExistingNxJson(tree: Tree): NxJsonConfiguration {
+  const nxJson = readNxJson(tree);
+  if (!nxJson) {
+    throw new Error('nx.json not found');
+  }
+  return nxJson;
+}
 
 function addProject(tree: Tree, name: string, project: ProjectConfiguration) {
   addProjectConfiguration(tree, name, project);
@@ -120,7 +135,7 @@ function createTestProject(
   jestConfig?: any
 ) {
   let projectOpts = { ...defaultTestProjectOptions, ...opts };
-  const project: ProjectConfiguration = {
+  const project: TestProject = {
     name: projectOpts.appName,
     root: projectOpts.appRoot,
     projectType: 'application',
@@ -158,12 +173,16 @@ function createTestProject(
 }
 
 function addSwaggerTarget(tree: Tree, project: ProjectConfiguration) {
+  const { name, targets } = project;
+  if (!name || !targets) {
+    throw new Error(`Project at ${project.root} needs a name and targets`);
+  }
   writeJestConfig(tree, project.root, undefined, 'jest.config.swagger.js');
-  project.targets['generate-swagger-spec'] = {
+  targets['generate-swagger-spec'] = {
     executor: '@nx/jest:jest',
     options: { jestConfig: `${project.root}/jest.config.swagger.js` },
   };
-  updateProjectConfiguration(tree, project.name, project);
+  updateProjectConfiguration(tree, name, project);
   fs.createFileSync(`${project.root}/project.json`, JSON.stringify(project));
 }
 
@@ -215,7 +234,7 @@ describe('Jest - Convert Executors To Plugin', () => {
       });
 
       expect(
-        readProjectConfiguration(tree, project.name).targets[
+        readProjectConfiguration(tree, project.name).targets?.[
           'generate-swagger-spec'
         ]
       ).toEqual({
@@ -249,9 +268,9 @@ describe('Jest - Convert Executors To Plugin', () => {
 
       // target only had options that are removed, assert no test target in converted project
       const updatedProject = readProjectConfiguration(tree, project.name);
-      expect(updatedProject.targets.test).toBeUndefined();
+      expect(updatedProject.targets?.test).toBeUndefined();
       // assert plugin was added to nx.json
-      const nxJsonPlugins = readNxJson(tree).plugins;
+      const nxJsonPlugins = readNxJson(tree)?.plugins ?? [];
       const jestPlugin = nxJsonPlugins.find(
         (plugin): plugin is ExpandedPluginConfiguration =>
           typeof plugin !== 'string' &&
@@ -259,10 +278,10 @@ describe('Jest - Convert Executors To Plugin', () => {
           plugin.include?.length === 1
       );
       expect(jestPlugin).toBeTruthy();
-      expect(jestPlugin.include).toEqual([`${project.root}/**/*`]);
+      expect(jestPlugin?.include).toEqual([`${project.root}/**/*`]);
       // assert other projects were not modified
       const updatedProject2 = readProjectConfiguration(tree, project2.name);
-      expect(updatedProject2.targets.test).toStrictEqual(project2TestTarget);
+      expect(updatedProject2.targets?.test).toStrictEqual(project2TestTarget);
     });
 
     it('should handle targets using the legacy package executor', async () => {
@@ -287,9 +306,9 @@ describe('Jest - Convert Executors To Plugin', () => {
 
       // target only had options that are removed, assert no test target in converted project
       const updatedProject = readProjectConfiguration(tree, project.name);
-      expect(updatedProject.targets.test).toBeUndefined();
+      expect(updatedProject.targets?.test).toBeUndefined();
       // assert plugin was added to nx.json
-      const nxJsonPlugins = readNxJson(tree).plugins;
+      const nxJsonPlugins = readNxJson(tree)?.plugins ?? [];
       const jestPlugin = nxJsonPlugins.find(
         (plugin): plugin is ExpandedPluginConfiguration =>
           typeof plugin !== 'string' &&
@@ -297,10 +316,10 @@ describe('Jest - Convert Executors To Plugin', () => {
           plugin.include?.length === 1
       );
       expect(jestPlugin).toBeTruthy();
-      expect(jestPlugin.include).toEqual([`${project.root}/**/*`]);
+      expect(jestPlugin?.include).toEqual([`${project.root}/**/*`]);
       // assert other projects were not modified
       const updatedProject2 = readProjectConfiguration(tree, project2.name);
-      expect(updatedProject2.targets.test).toStrictEqual(project2TestTarget);
+      expect(updatedProject2.targets?.test).toStrictEqual(project2TestTarget);
     });
 
     it('should reuse existing plugin registration when the target name matches', async () => {
@@ -313,7 +332,7 @@ describe('Jest - Convert Executors To Plugin', () => {
         appName: 'project2',
       });
       const project2TestTarget = project2.targets.test;
-      const nxJson = readNxJson(tree);
+      const nxJson = readExistingNxJson(tree);
       nxJson.plugins ??= [];
       nxJson.plugins.push({
         plugin: '@nx/jest/plugin',
@@ -328,9 +347,9 @@ describe('Jest - Convert Executors To Plugin', () => {
 
       // target only had options that are removed, assert no test target in converted project
       const updatedProject = readProjectConfiguration(tree, project.name);
-      expect(updatedProject.targets.test).toBeUndefined();
+      expect(updatedProject.targets?.test).toBeUndefined();
       // assert plugin was added to nx.json
-      const nxJsonPlugins = readNxJson(tree).plugins;
+      const nxJsonPlugins = readNxJson(tree)?.plugins ?? [];
       const jestPluginRegistrations = nxJsonPlugins.filter(
         (plugin): plugin is ExpandedPluginConfiguration =>
           typeof plugin !== 'string' && plugin.plugin === '@nx/jest/plugin'
@@ -339,7 +358,7 @@ describe('Jest - Convert Executors To Plugin', () => {
       expect(jestPluginRegistrations[0].include).toBeUndefined();
       // assert other projects were not modified
       const updatedProject2 = readProjectConfiguration(tree, project2.name);
-      expect(updatedProject2.targets.test).toStrictEqual(project2TestTarget);
+      expect(updatedProject2.targets?.test).toStrictEqual(project2TestTarget);
     });
 
     it('should add a new plugin registration including the migrated project when the target name is different than the existing registration', async () => {
@@ -356,7 +375,7 @@ describe('Jest - Convert Executors To Plugin', () => {
         appName: 'project2',
       });
       const project2TestTarget = project2.targets.test;
-      const nxJson = readNxJson(tree);
+      const nxJson = readExistingNxJson(tree);
       nxJson.plugins ??= [];
       nxJson.plugins.push({
         plugin: '@nx/jest/plugin',
@@ -371,23 +390,23 @@ describe('Jest - Convert Executors To Plugin', () => {
 
       // target only had options that are removed, assert no test target in converted project
       const updatedProject = readProjectConfiguration(tree, project.name);
-      expect(updatedProject.targets.test).toBeUndefined();
+      expect(updatedProject.targets?.test).toBeUndefined();
       // assert plugin was added to nx.json
-      const nxJsonPlugins = readNxJson(tree).plugins;
+      const nxJsonPlugins = readNxJson(tree)?.plugins ?? [];
       const jestPluginRegistrations = nxJsonPlugins.filter(
         (plugin): plugin is ExpandedPluginConfiguration<JestPluginOptions> =>
           typeof plugin !== 'string' && plugin.plugin === '@nx/jest/plugin'
       );
       expect(jestPluginRegistrations.length).toBe(2);
-      expect(jestPluginRegistrations[0].options.targetName).toBe('test');
+      expect(jestPluginRegistrations[0].options?.targetName).toBe('test');
       expect(jestPluginRegistrations[0].include).toBeUndefined();
-      expect(jestPluginRegistrations[1].options.targetName).toBe('jest');
+      expect(jestPluginRegistrations[1].options?.targetName).toBe('jest');
       expect(jestPluginRegistrations[1].include).toEqual([
         `${project.root}/**/*`,
       ]);
       // assert other projects were not modified
       const updatedProject2 = readProjectConfiguration(tree, project2.name);
-      expect(updatedProject2.targets.test).toStrictEqual(project2TestTarget);
+      expect(updatedProject2.targets?.test).toStrictEqual(project2TestTarget);
     });
 
     it('should merge target default options for the executor to the project target options', async () => {
@@ -400,7 +419,7 @@ describe('Jest - Convert Executors To Plugin', () => {
         appName: 'project2',
       });
       const project2TestTarget = project2.targets.test;
-      const nxJson = readNxJson(tree);
+      const nxJson = readExistingNxJson(tree);
       nxJson.targetDefaults ??= {};
       nxJson.targetDefaults['@nx/jest:jest'] = {
         options: { passWithNoTests: true },
@@ -414,12 +433,12 @@ describe('Jest - Convert Executors To Plugin', () => {
 
       // assert passWithNoTests was merged into the project target options
       const updatedProject = readProjectConfiguration(tree, project.name);
-      expect(updatedProject.targets.test.options).toStrictEqual({
+      expect(updatedProject.targets?.test.options).toStrictEqual({
         passWithNoTests: true,
       });
       // assert other projects were not modified
       const updatedProject2 = readProjectConfiguration(tree, project2.name);
-      expect(updatedProject2.targets.test).toStrictEqual(project2TestTarget);
+      expect(updatedProject2.targets?.test).toStrictEqual(project2TestTarget);
     });
 
     it('should rename "codeCoverage" to "coverage"', async () => {
@@ -439,12 +458,12 @@ describe('Jest - Convert Executors To Plugin', () => {
 
       // assert updated project configuration
       const updatedProject = readProjectConfiguration(tree, project.name);
-      expect(updatedProject.targets.test.options).toStrictEqual({
+      expect(updatedProject.targets?.test.options).toStrictEqual({
         coverage: true,
       });
       // assert other projects were not modified
       const updatedProject2 = readProjectConfiguration(tree, project2.name);
-      expect(updatedProject2.targets.test).toStrictEqual(project2TestTarget);
+      expect(updatedProject2.targets?.test).toStrictEqual(project2TestTarget);
     });
 
     it('should make "testFile" relative to the project root and turn it into "testPathPatterns"', async () => {
@@ -464,12 +483,12 @@ describe('Jest - Convert Executors To Plugin', () => {
 
       // assert updated project configuration
       const updatedProject = readProjectConfiguration(tree, project.name);
-      expect(updatedProject.targets.test.options).toStrictEqual({
+      expect(updatedProject.targets?.test.options).toStrictEqual({
         testPathPatterns: 'src/app/test.spec.ts',
       });
       // assert other projects were not modified
       const updatedProject2 = readProjectConfiguration(tree, project2.name);
-      expect(updatedProject2.targets.test).toStrictEqual(project2TestTarget);
+      expect(updatedProject2.targets?.test).toStrictEqual(project2TestTarget);
     });
 
     it.each([
@@ -494,12 +513,12 @@ describe('Jest - Convert Executors To Plugin', () => {
 
         // assert updated project configuration
         const updatedProject = readProjectConfiguration(tree, project.name);
-        expect(updatedProject.targets.test.options).toStrictEqual({
+        expect(updatedProject.targets?.test.options).toStrictEqual({
           testPathPatterns: '.*',
         });
         // assert other projects were not modified
         const updatedProject2 = readProjectConfiguration(tree, project2.name);
-        expect(updatedProject2.targets.test).toStrictEqual(project2TestTarget);
+        expect(updatedProject2.targets?.test).toStrictEqual(project2TestTarget);
       }
     );
 
@@ -523,12 +542,12 @@ describe('Jest - Convert Executors To Plugin', () => {
 
       // assert updated project configuration
       const updatedProject = readProjectConfiguration(tree, project.name);
-      expect(updatedProject.targets.test.options).toStrictEqual({
+      expect(updatedProject.targets?.test.options).toStrictEqual({
         testPathPatterns: '"src/app/test1.spec.ts|src/app/test2.spec.ts"',
       });
       // assert other projects were not modified
       const updatedProject2 = readProjectConfiguration(tree, project2.name);
-      expect(updatedProject2.targets.test).toStrictEqual(project2TestTarget);
+      expect(updatedProject2.targets?.test).toStrictEqual(project2TestTarget);
     });
 
     it('should handle "testPathPattern"', async () => {
@@ -551,12 +570,12 @@ describe('Jest - Convert Executors To Plugin', () => {
 
       // assert updated project configuration
       const updatedProject = readProjectConfiguration(tree, project.name);
-      expect(updatedProject.targets.test.options).toStrictEqual({
+      expect(updatedProject.targets?.test.options).toStrictEqual({
         testPathPattern: '"src/app/test1.spec.ts|src/app/test2.spec.ts"',
       });
       // assert other projects were not modified
       const updatedProject2 = readProjectConfiguration(tree, project2.name);
-      expect(updatedProject2.targets.test).toStrictEqual(project2TestTarget);
+      expect(updatedProject2.targets?.test).toStrictEqual(project2TestTarget);
     });
 
     it.each([
@@ -583,12 +602,12 @@ describe('Jest - Convert Executors To Plugin', () => {
 
         // assert updated project configuration
         const updatedProject = readProjectConfiguration(tree, project.name);
-        expect(updatedProject.targets.test.options).toStrictEqual({
+        expect(updatedProject.targets?.test.options).toStrictEqual({
           testPathPatterns: '.*',
         });
         // assert other projects were not modified
         const updatedProject2 = readProjectConfiguration(tree, project2.name);
-        expect(updatedProject2.targets.test).toStrictEqual(project2TestTarget);
+        expect(updatedProject2.targets?.test).toStrictEqual(project2TestTarget);
       }
     );
 
@@ -613,13 +632,13 @@ describe('Jest - Convert Executors To Plugin', () => {
 
       // assert updated project configuration
       const updatedProject = readProjectConfiguration(tree, project.name);
-      expect(updatedProject.targets.test.options).toStrictEqual({
+      expect(updatedProject.targets?.test.options).toStrictEqual({
         testPathPatterns:
           '"src/app/test1.spec.ts|src/app/test2.spec.ts|src/app/test3.spec.ts"',
       });
       // assert other projects were not modified
       const updatedProject2 = readProjectConfiguration(tree, project2.name);
-      expect(updatedProject2.targets.test).toStrictEqual(project2TestTarget);
+      expect(updatedProject2.targets?.test).toStrictEqual(project2TestTarget);
     });
 
     it('should make "testPathIgnorePatterns" paths relative to the project root', async () => {
@@ -642,12 +661,12 @@ describe('Jest - Convert Executors To Plugin', () => {
 
       // assert updated project configuration
       const updatedProject = readProjectConfiguration(tree, project.name);
-      expect(updatedProject.targets.test.options).toStrictEqual({
+      expect(updatedProject.targets?.test.options).toStrictEqual({
         testPathIgnorePatterns: '"node_modules|src/app/ignore-me/test.spec.ts"',
       });
       // assert other projects were not modified
       const updatedProject2 = readProjectConfiguration(tree, project2.name);
-      expect(updatedProject2.targets.test).toStrictEqual(project2TestTarget);
+      expect(updatedProject2.targets?.test).toStrictEqual(project2TestTarget);
     });
 
     it.each([
@@ -674,12 +693,12 @@ describe('Jest - Convert Executors To Plugin', () => {
 
         // assert updated project configuration
         const updatedProject = readProjectConfiguration(tree, project.name);
-        expect(updatedProject.targets.test.options).toStrictEqual({
+        expect(updatedProject.targets?.test.options).toStrictEqual({
           testPathIgnorePatterns: '.*',
         });
         // assert other projects were not modified
         const updatedProject2 = readProjectConfiguration(tree, project2.name);
-        expect(updatedProject2.targets.test).toStrictEqual(project2TestTarget);
+        expect(updatedProject2.targets?.test).toStrictEqual(project2TestTarget);
       }
     );
 
@@ -703,13 +722,13 @@ describe('Jest - Convert Executors To Plugin', () => {
 
       // assert updated project configuration
       const updatedProject = readProjectConfiguration(tree, project.name);
-      expect(updatedProject.targets.test.options).toStrictEqual({
+      expect(updatedProject.targets?.test.options).toStrictEqual({
         testMatch:
           '"**/?(*.)+(module.)(spec|test).[jt]s?(x)" "**/src/__tests__/**/*.[jt]s?(x)"',
       });
       // assert other projects were not modified
       const updatedProject2 = readProjectConfiguration(tree, project2.name);
-      expect(updatedProject2.targets.test).toStrictEqual(project2TestTarget);
+      expect(updatedProject2.targets?.test).toStrictEqual(project2TestTarget);
     });
 
     it('should make "findRelatedTests" paths relative to the project root and a space separated list', async () => {
@@ -732,14 +751,14 @@ describe('Jest - Convert Executors To Plugin', () => {
 
       // assert updated project configuration
       const updatedProject = readProjectConfiguration(tree, project.name);
-      expect(updatedProject.targets.test.options).toStrictEqual({
+      expect(updatedProject.targets?.test.options).toStrictEqual({
         args: [
           '--findRelatedTests ./src/app/test1.spec.ts ./src/app/test2.spec.ts',
         ],
       });
       // assert other projects were not modified
       const updatedProject2 = readProjectConfiguration(tree, project2.name);
-      expect(updatedProject2.targets.test).toStrictEqual(project2TestTarget);
+      expect(updatedProject2.targets?.test).toStrictEqual(project2TestTarget);
     });
 
     it('should merge "setupFile" with the "setupFilesAfterEnv" option values', async () => {
@@ -768,13 +787,13 @@ describe('Jest - Convert Executors To Plugin', () => {
 
       // assert updated project configuration
       const updatedProject = readProjectConfiguration(tree, project.name);
-      expect(updatedProject.targets.test.options).toStrictEqual({
+      expect(updatedProject.targets?.test.options).toStrictEqual({
         setupFilesAfterEnv:
           '"./src/test-setup2.ts" "./src/test-setup3.ts" "./src/test-setup.ts"',
       });
       // assert other projects were not modified
       const updatedProject2 = readProjectConfiguration(tree, project2.name);
-      expect(updatedProject2.targets.test).toStrictEqual(project2TestTarget);
+      expect(updatedProject2.targets?.test).toStrictEqual(project2TestTarget);
     });
 
     it('should merge "setupFile" with the "setupFilesAfterEnv" config value', async () => {
@@ -809,13 +828,13 @@ describe('Jest - Convert Executors To Plugin', () => {
 
       // assert updated project configuration
       const updatedProject = readProjectConfiguration(tree, project.name);
-      expect(updatedProject.targets.test.options).toStrictEqual({
+      expect(updatedProject.targets?.test.options).toStrictEqual({
         setupFilesAfterEnv:
           '"./src/test-setup2.ts" "./src/test-setup3.ts" "./src/test-setup.ts"',
       });
       // assert other projects were not modified
       const updatedProject2 = readProjectConfiguration(tree, project2.name);
-      expect(updatedProject2.targets.test).toStrictEqual(project2TestTarget);
+      expect(updatedProject2.targets?.test).toStrictEqual(project2TestTarget);
     });
 
     it('should delete "setupFile" when it is already set in the jest config', async () => {
@@ -849,10 +868,10 @@ describe('Jest - Convert Executors To Plugin', () => {
 
       // assert updated project configuration
       const updatedProject = readProjectConfiguration(tree, project.name);
-      expect(updatedProject.targets.test).toBeUndefined(); // setupFile was removed and there are no other options, so the target is removed
+      expect(updatedProject.targets?.test).toBeUndefined(); // setupFile was removed and there are no other options, so the target is removed
       // assert other projects were not modified
       const updatedProject2 = readProjectConfiguration(tree, project2.name);
-      expect(updatedProject2.targets.test).toStrictEqual(project2TestTarget);
+      expect(updatedProject2.targets?.test).toStrictEqual(project2TestTarget);
     });
 
     it('should make "ouputFile" relative to the project root', async () => {
@@ -872,12 +891,12 @@ describe('Jest - Convert Executors To Plugin', () => {
 
       // assert updated project configuration
       const updatedProject = readProjectConfiguration(tree, project.name);
-      expect(updatedProject.targets.test.options.outputFile).toBe(
+      expect(updatedProject.targets?.test.options.outputFile).toBe(
         `../../test-results/${project.root}/test-results.json`
       );
       // assert other projects were not modified
       const updatedProject2 = readProjectConfiguration(tree, project2.name);
-      expect(updatedProject2.targets.test).toStrictEqual(project2TestTarget);
+      expect(updatedProject2.targets?.test).toStrictEqual(project2TestTarget);
     });
 
     it('should make "coverageDirectory" relative to the project root', async () => {
@@ -897,12 +916,12 @@ describe('Jest - Convert Executors To Plugin', () => {
 
       // assert updated project configuration
       const updatedProject = readProjectConfiguration(tree, project.name);
-      expect(updatedProject.targets.test.options.coverageDirectory).toBe(
+      expect(updatedProject.targets?.test.options.coverageDirectory).toBe(
         `../../coverage/${project.root}`
       );
       // assert other projects were not modified
       const updatedProject2 = readProjectConfiguration(tree, project2.name);
-      expect(updatedProject2.targets.test).toStrictEqual(project2TestTarget);
+      expect(updatedProject2.targets?.test).toStrictEqual(project2TestTarget);
     });
 
     it('should remove inputs when they are inferred', async () => {
@@ -924,10 +943,10 @@ describe('Jest - Convert Executors To Plugin', () => {
 
       // target only had options that are removed, assert no test target in converted project
       const updatedProject = readProjectConfiguration(tree, project.name);
-      expect(updatedProject.targets.test.inputs).toBeUndefined();
+      expect(updatedProject.targets?.test.inputs).toBeUndefined();
       // assert other projects were not modified
       const updatedProject2 = readProjectConfiguration(tree, project2.name);
-      expect(updatedProject2.targets.test).toStrictEqual(project2TestTarget);
+      expect(updatedProject2.targets?.test).toStrictEqual(project2TestTarget);
     });
 
     it('should add external dependencies input from inferred task', async () => {
@@ -953,7 +972,7 @@ describe('Jest - Convert Executors To Plugin', () => {
 
       // target only had options that are removed, assert no test target in converted project
       const updatedProject = readProjectConfiguration(tree, project.name);
-      expect(updatedProject.targets.test.inputs).toStrictEqual([
+      expect(updatedProject.targets?.test.inputs).toStrictEqual([
         'default',
         '^default',
         '{workspaceRoot}/some-file.ts',
@@ -961,7 +980,7 @@ describe('Jest - Convert Executors To Plugin', () => {
       ]);
       // assert other projects were not modified
       const updatedProject2 = readProjectConfiguration(tree, project2.name);
-      expect(updatedProject2.targets.test).toStrictEqual(project2TestTarget);
+      expect(updatedProject2.targets?.test).toStrictEqual(project2TestTarget);
     });
 
     it('should merge external dependencies input from inferred task', async () => {
@@ -988,7 +1007,7 @@ describe('Jest - Convert Executors To Plugin', () => {
 
       // target only had options that are removed, assert no test target in converted project
       const updatedProject = readProjectConfiguration(tree, project.name);
-      expect(updatedProject.targets.test.inputs).toStrictEqual([
+      expect(updatedProject.targets?.test.inputs).toStrictEqual([
         'default',
         '^default',
         '{workspaceRoot}/some-file.ts',
@@ -996,7 +1015,7 @@ describe('Jest - Convert Executors To Plugin', () => {
       ]);
       // assert other projects were not modified
       const updatedProject2 = readProjectConfiguration(tree, project2.name);
-      expect(updatedProject2.targets.test).toStrictEqual(project2TestTarget);
+      expect(updatedProject2.targets?.test).toStrictEqual(project2TestTarget);
     });
 
     it('should not duplicate already existing external dependencies input', async () => {
@@ -1023,7 +1042,7 @@ describe('Jest - Convert Executors To Plugin', () => {
 
       // target only had options that are removed, assert no test target in converted project
       const updatedProject = readProjectConfiguration(tree, project.name);
-      expect(updatedProject.targets.test.inputs).toStrictEqual([
+      expect(updatedProject.targets?.test.inputs).toStrictEqual([
         'default',
         '^default',
         '{workspaceRoot}/some-file.ts',
@@ -1031,7 +1050,7 @@ describe('Jest - Convert Executors To Plugin', () => {
       ]);
       // assert other projects were not modified
       const updatedProject2 = readProjectConfiguration(tree, project2.name);
-      expect(updatedProject2.targets.test).toStrictEqual(project2TestTarget);
+      expect(updatedProject2.targets?.test).toStrictEqual(project2TestTarget);
     });
 
     it('should delete outputs when they are inferred', async () => {
@@ -1060,10 +1079,10 @@ describe('Jest - Convert Executors To Plugin', () => {
 
       // assert updated project configuration
       const updatedProject = readProjectConfiguration(tree, project.name);
-      expect(updatedProject.targets.test.outputs).toBeUndefined();
+      expect(updatedProject.targets?.test.outputs).toBeUndefined();
       // assert other projects were not modified
       const updatedProject2 = readProjectConfiguration(tree, project2.name);
-      expect(updatedProject2.targets.test).toStrictEqual(project2TestTarget);
+      expect(updatedProject2.targets?.test).toStrictEqual(project2TestTarget);
     });
 
     it('should keep outputs adding any extra inferred outputs', async () => {
@@ -1092,13 +1111,13 @@ describe('Jest - Convert Executors To Plugin', () => {
 
       // assert updated project configuration
       const updatedProject = readProjectConfiguration(tree, project.name);
-      expect(updatedProject.targets.test.outputs).toStrictEqual([
+      expect(updatedProject.targets?.test.outputs).toStrictEqual([
         `{projectRoot}/{options.outputFile}`, // updated to be relative to the project root
         `{workspaceRoot}/coverage/${project.root}`, // added from the inferred outputs
       ]);
       // assert other projects were not modified
       const updatedProject2 = readProjectConfiguration(tree, project2.name);
-      expect(updatedProject2.targets.test).toStrictEqual(project2TestTarget);
+      expect(updatedProject2.targets?.test).toStrictEqual(project2TestTarget);
     });
 
     it('should keep the "jestConfig" and set it to "config" when present in configurations', async () => {
@@ -1129,20 +1148,20 @@ describe('Jest - Convert Executors To Plugin', () => {
       // assert updated project configuration
       const updatedProject = readProjectConfiguration(tree, project.name);
       expect(
-        updatedProject.targets.test.configurations.production
+        updatedProject.targets?.test.configurations?.production
       ).toStrictEqual({
         config: `./jest.config.prod.js`,
       });
       // assert other projects were not modified
       const updatedProject2 = readProjectConfiguration(tree, project2.name);
-      expect(updatedProject2.targets.test).toStrictEqual(project2TestTarget);
+      expect(updatedProject2.targets?.test).toStrictEqual(project2TestTarget);
     });
   });
 
   describe('all projects', () => {
     it('runs a target on a config file the plugin does not infer when it is the only jest target', async () => {
       const root = 'apps/swagger-only';
-      const project: ProjectConfiguration = {
+      const project: TestProject = {
         name: 'swagger-only',
         root,
         projectType: 'application',
@@ -1184,7 +1203,7 @@ describe('Jest - Convert Executors To Plugin', () => {
       await convertToInferred(tree, { skipFormat: true });
 
       // present exactly once, centrally, scoped to the jest plugin's targets
-      const targetDefault = readNxJson(tree).targetDefaults?.test;
+      const targetDefault = readNxJson(tree)?.targetDefaults?.test;
       expect(Array.isArray(targetDefault)).toBe(true);
       const hoisted = (targetDefault as any[]).find(
         (entry) => entry?.filter?.plugin === '@nx/jest/plugin'
@@ -1220,19 +1239,19 @@ describe('Jest - Convert Executors To Plugin', () => {
 
       // target only had options that are removed, assert no test target in converted project
       const updatedProject1 = readProjectConfiguration(tree, project1.name);
-      expect(updatedProject1.targets.test).toBeUndefined();
+      expect(updatedProject1.targets?.test).toBeUndefined();
       const updatedProject2 = readProjectConfiguration(tree, project2.name);
-      expect(updatedProject2.targets.test).toBeUndefined();
+      expect(updatedProject2.targets?.test).toBeUndefined();
       const updatedProject3 = readProjectConfiguration(tree, project3.name);
-      expect(updatedProject3.targets.test).toBeUndefined();
+      expect(updatedProject3.targets?.test).toBeUndefined();
       // assert plugin was added to nx.json
-      const nxJsonPlugins = readNxJson(tree).plugins;
+      const nxJsonPlugins = readNxJson(tree)?.plugins ?? [];
       const jestPlugin = nxJsonPlugins.find(
         (plugin): plugin is ExpandedPluginConfiguration =>
           typeof plugin !== 'string' && plugin.plugin === '@nx/jest/plugin'
       );
       expect(jestPlugin).toBeTruthy();
-      expect(jestPlugin.include).toBeUndefined();
+      expect(jestPlugin?.include).toBeUndefined();
     });
 
     it('should add new plugin registrations with "includes" set to the migrated projects grouped by different target names', async () => {
@@ -1255,24 +1274,24 @@ describe('Jest - Convert Executors To Plugin', () => {
 
       // target only had options that are removed, assert no test target in converted project
       const updatedProject1 = readProjectConfiguration(tree, project1.name);
-      expect(updatedProject1.targets.test).toBeUndefined();
+      expect(updatedProject1.targets?.test).toBeUndefined();
       const updatedProject2 = readProjectConfiguration(tree, project2.name);
-      expect(updatedProject2.targets.test).toBeUndefined();
+      expect(updatedProject2.targets?.test).toBeUndefined();
       const updatedProject3 = readProjectConfiguration(tree, project3.name);
-      expect(updatedProject3.targets.test).toBeUndefined();
+      expect(updatedProject3.targets?.test).toBeUndefined();
       // assert plugin was added to nx.json
-      const nxJsonPlugins = readNxJson(tree).plugins;
+      const nxJsonPlugins = readNxJson(tree)?.plugins ?? [];
       const jestPluginRegistrations = nxJsonPlugins.filter(
         (plugin): plugin is ExpandedPluginConfiguration<JestPluginOptions> =>
           typeof plugin !== 'string' && plugin.plugin === '@nx/jest/plugin'
       );
       expect(jestPluginRegistrations.length).toBe(2);
-      expect(jestPluginRegistrations[0].options.targetName).toBe('test');
+      expect(jestPluginRegistrations[0].options?.targetName).toBe('test');
       expect(jestPluginRegistrations[0].include).toEqual([
         `${project1.root}/**/*`,
         `${project2.root}/**/*`,
       ]);
-      expect(jestPluginRegistrations[1].options.targetName).toBe('jest');
+      expect(jestPluginRegistrations[1].options?.targetName).toBe('jest');
       expect(jestPluginRegistrations[1].include).toEqual([
         `${project3.root}/**/*`,
       ]);

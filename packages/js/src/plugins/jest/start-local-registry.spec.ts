@@ -79,7 +79,8 @@ describe('startLocalRegistry', () => {
         );
       } catch (e) {
         // Some CI kernels have no IPv6 loopback
-        if (e.code === 'EADDRNOTAVAIL') return skip();
+        if (e instanceof Error && 'code' in e && e.code === 'EADDRNOTAVAIL')
+          return skip();
         throw e;
       }
       const { port } = registry.address() as { port: number };
@@ -102,7 +103,9 @@ describe('startLocalRegistry', () => {
         localRegistryTarget: 'workspace:local-registry',
         listenAddress,
       });
-      registryProcess.child.stdout.emit(
+      const child = registryProcess.child;
+      if (!child) throw new Error('Registry process was not forked');
+      child.stdout.emit(
         'data',
         Buffer.from(`Verdaccio is listening on ${registryUrl}/\n`)
       );
@@ -124,7 +127,7 @@ describe('startLocalRegistry', () => {
 
       stop();
 
-      expect(registryProcess.child.kill).toHaveBeenCalled();
+      expect(child.kill).toHaveBeenCalled();
       expect(tokenCommands()).toEqual(
         token ? [setToken, `npm config delete ${tokenKey} --ws=false`] : []
       );

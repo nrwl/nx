@@ -29,6 +29,10 @@ import { assertSupportedEsbuildVersion } from '../../utils/assert-supported-esbu
 import { esbuildInitGenerator } from '../init/init';
 import { EsBuildProjectSchema } from './schema';
 
+type NormalizedEsBuildProjectSchema = EsBuildProjectSchema & {
+  buildTarget: string;
+};
+
 export async function configurationGenerator(
   tree: Tree,
   options: EsBuildProjectSchema
@@ -39,16 +43,20 @@ export async function configurationGenerator(
     ...options,
     skipFormat: true,
   });
-  options.buildTarget ??= 'build';
+  const buildTarget = (options.buildTarget ??= 'build');
+  const normalizedOptions = { ...options, buildTarget };
   const isTsSolutionSetup = isUsingTsSolutionSetup(tree);
-  checkForTargetConflicts(tree, options);
-  addBuildTarget(tree, options, isTsSolutionSetup);
-  updatePackageJson(tree, options, isTsSolutionSetup);
+  checkForTargetConflicts(tree, normalizedOptions);
+  addBuildTarget(tree, normalizedOptions, isTsSolutionSetup);
+  updatePackageJson(tree, normalizedOptions, isTsSolutionSetup);
   await formatFiles(tree);
   return task;
 }
 
-function checkForTargetConflicts(tree: Tree, options: EsBuildProjectSchema) {
+function checkForTargetConflicts(
+  tree: Tree,
+  options: NormalizedEsBuildProjectSchema
+) {
   if (options.skipValidation) return;
   const project = readProjectConfiguration(tree, options.project);
   if (project.targets?.[options.buildTarget]) {
@@ -60,7 +68,7 @@ function checkForTargetConflicts(tree: Tree, options: EsBuildProjectSchema) {
 
 function addBuildTarget(
   tree: Tree,
-  options: EsBuildProjectSchema,
+  options: NormalizedEsBuildProjectSchema,
   isTsSolutionSetup: boolean
 ) {
   addBuildTargetDefaults(tree, '@nx/esbuild:esbuild', options.buildTarget, [
@@ -133,7 +141,7 @@ function addBuildTarget(
 
 function updatePackageJson(
   tree: Tree,
-  options: EsBuildProjectSchema,
+  options: NormalizedEsBuildProjectSchema,
   isTsSolutionSetup: boolean
 ) {
   const project = readProjectConfiguration(tree, options.project);
@@ -155,14 +163,19 @@ function updatePackageJson(
 
   if (isTsSolutionSetup) {
     const nxJson = readNxJson(tree);
-    const projectTarget = project.targets[options.buildTarget];
+    const projectTarget = project.targets?.[options.buildTarget];
+    if (!projectTarget) {
+      throw new Error(
+        `Project "${options.project}" does not have a ${options.buildTarget} target.`
+      );
+    }
     const mergedTarget = mergeTargetConfigurations(
       projectTarget,
       readTargetDefaultsForTarget(
         options.buildTarget,
-        nxJson.targetDefaults,
+        nxJson?.targetDefaults,
         projectTarget.executor
-      )
+      ) ?? undefined
     );
 
     const {
@@ -207,10 +220,20 @@ function updatePackageJson(
         packageJsonPath,
         rootDir: declarationRootDir,
       });
+      if (!options.main) {
+        throw new Error('The "main" option is required.');
+      }
       const mainFile = basename(options.main).replace(/\.[tj]s$/, '');
       const typingsFile = `${outputDir}${mainFile}.d.ts`;
       packageJson.types = typingsFile;
-      packageJson.exports['.'].types = typingsFile;
+      const rootExport =
+        typeof packageJson.exports === 'object'
+          ? packageJson.exports['.']
+          : undefined;
+      if (typeof rootExport !== 'object') {
+        throw new Error(`Expected an object "." export in ${packageJsonPath}.`);
+      }
+      rootExport.types = typingsFile;
     }
   }
 

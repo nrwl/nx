@@ -70,6 +70,9 @@ export async function lintWorkspaceRulesProjectGenerator(
    * TODO: Explore writing a ProjectGraph plugin to make this more surgical.
    */
   const nxJson = readNxJson(tree);
+  if (!nxJson) {
+    throw new Error('Cannot find nx.json');
+  }
 
   const lintEntry = findLintTargetDefault(nxJson.targetDefaults);
   if (lintEntry?.inputs) {
@@ -107,7 +110,7 @@ export async function lintWorkspaceRulesProjectGenerator(
       };
 
       if (json.include) {
-        json.include = json.include.map((v) => {
+        json.include = json.include.map((v: string) => {
           if (v.startsWith('src/**')) {
             return v.replace('src/', '');
           }
@@ -115,7 +118,7 @@ export async function lintWorkspaceRulesProjectGenerator(
         });
       }
       if (json.exclude) {
-        json.exclude = json.exclude.map((v) => {
+        json.exclude = json.exclude.map((v: string) => {
           if (v.startsWith('src/**')) {
             return v.replace('src/', '');
           }

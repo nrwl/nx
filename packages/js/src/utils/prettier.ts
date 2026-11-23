@@ -144,9 +144,14 @@ export async function resolvePrettierConfigPath(
   }
 
   // check the package.yaml file
-  if (tree.exists('package.yaml')) {
-    const { load } = await import('@zkochan/js-yaml');
-    const packageYaml = load(tree.read('package.yaml', 'utf-8'));
+  const packageYamlContent = tree.read('package.yaml', 'utf-8');
+  if (packageYamlContent !== null) {
+    const {
+      load,
+    }: {
+      load: (content: string) => { prettier?: unknown };
+    } = require('@zkochan/js-yaml');
+    const packageYaml = load(packageYamlContent);
     if (packageYaml.prettier) {
       return 'package.yaml';
     }

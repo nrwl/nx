@@ -12,7 +12,7 @@ export async function ignoreVitestTempFiles(
 
 export function addVitestTempFilesToGitIgnore(tree: Tree): void {
   const contents = tree.exists('.gitignore')
-    ? tree.read('.gitignore', 'utf-8')
+    ? (tree.read('.gitignore', 'utf-8') ?? '')
     : '';
   // Vitest 5 writes attachments, blob reports, failure screenshots and the
   // json/junit reporter output to `.vitest`.

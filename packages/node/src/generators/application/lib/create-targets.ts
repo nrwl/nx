@@ -16,7 +16,7 @@ export function getEsBuildConfig(
   tree: Tree,
   project: ProjectConfiguration,
   options: NormalizedSchema
-): TargetConfiguration {
+): TargetConfiguration & { executor: string } {
   const sourceRoot = getProjectSourceRoot(project, tree);
   return {
     executor: '@nx/esbuild:esbuild',

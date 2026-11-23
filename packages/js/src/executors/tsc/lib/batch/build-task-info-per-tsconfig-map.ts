@@ -4,12 +4,11 @@ import { join, relative } from 'path';
 import { CopyAssetsHandler } from '../../../../utils/assets/copy-assets-handler';
 import { calculateProjectBuildableDependencies } from '../../../../utils/buildable-libs-utils';
 import type { NormalizedExecutorOptions } from '../../../../utils/schema';
-import { getTaskOptions } from '../get-task-options';
+import { getTaskGraph, getTaskOptions } from '../get-task-options';
 import type { TypescriptInMemoryTsConfig } from '../typescript-compilation';
 import type { TaskInfo } from './types';
 
 const taskTsConfigCache = new Set<string>();
-
 export function createTaskInfoPerTsConfigMap(
   tasksOptions: Record<string, NormalizedExecutorOptions>,
   context: ExecutorContext,
@@ -63,7 +62,7 @@ function processTasksAndPopulateTsConfigTaskInfoMap(
       tsConfigTaskInfoMap,
       tasksOptions,
       context,
-      context.taskGraph.dependencies[taskName].map((edge) => edge.id),
+      getTaskGraph(context).dependencies[taskName].map((edge) => edge.id),
       taskInMemoryTsConfigMap
     );
   }
@@ -94,16 +93,17 @@ function createTaskInfo(
     includeIgnoredFiles: taskOptions.includeIgnoredAssetFiles,
   });
 
+  const taskGraph = getTaskGraph(context);
   const {
     target: projectGraphNode,
     dependencies: buildableProjectNodeDependencies,
   } = calculateProjectBuildableDependencies(
-    context.taskGraph,
+    taskGraph,
     context.projectGraph,
     context.root,
-    context.taskGraph.tasks[taskName].target.project,
-    context.taskGraph.tasks[taskName].target.target,
-    context.taskGraph.tasks[taskName].target.configuration
+    taskGraph.tasks[taskName].target.project,
+    taskGraph.tasks[taskName].target.target,
+    taskGraph.tasks[taskName].target.configuration
   );
 
   return {

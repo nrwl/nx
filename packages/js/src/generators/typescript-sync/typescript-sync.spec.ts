@@ -1,4 +1,5 @@
 import {
+  type NxJsonConfiguration,
   readJson,
   readNxJson,
   updateJson,
@@ -10,6 +11,12 @@ import {
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import * as ts from 'typescript';
 import { syncGenerator } from './typescript-sync';
+
+function readNxJsonOrThrow(tree: Tree): NxJsonConfiguration {
+  const nxJson = readNxJson(tree);
+  if (!nxJson) throw new Error('nx.json not found');
+  return nxJson;
+}
 
 let projectGraph: ProjectGraph;
 vi.mock('@nx/devkit', async () => ({
@@ -161,14 +168,14 @@ describe('syncGenerator()', () => {
     });
     const changesBeforeSyncing = tree
       .listChanges()
-      .map((c) => [c.path, c.type, c.content.toString('utf-8')]);
+      .map((c) => [c.path, c.type, c.content?.toString('utf-8')]);
 
     await syncGenerator(tree);
 
     expect(
       tree
         .listChanges()
-        .map((c) => [c.path, c.type, c.content.toString('utf-8')])
+        .map((c) => [c.path, c.type, c.content?.toString('utf-8')])
     ).toStrictEqual(changesBeforeSyncing);
   });
 
@@ -314,8 +321,7 @@ describe('syncGenerator()', () => {
 
       await syncGenerator(tree);
 
-      expect(tree.read('tsconfig.json').toString('utf-8'))
-        .toMatchInlineSnapshot(`
+      expect(tree.read('tsconfig.json', 'utf-8')).toMatchInlineSnapshot(`
         "{
           // This is a top level comment
           "compilerOptions": {
@@ -344,8 +350,7 @@ describe('syncGenerator()', () => {
 
       await syncGenerator(tree);
 
-      expect(tree.read('tsconfig.json').toString('utf-8'))
-        .toMatchInlineSnapshot(`
+      expect(tree.read('tsconfig.json', 'utf-8')).toMatchInlineSnapshot(`
         "{
           "compilerOptions": {
             "composite": true
@@ -732,7 +737,7 @@ describe('syncGenerator()', () => {
 
       await syncGenerator(tree);
 
-      expect(tree.read('packages/foo/tsconfig.build.json').toString('utf-8'))
+      expect(tree.read('packages/foo/tsconfig.build.json', 'utf-8'))
         .toMatchInlineSnapshot(`
         "{
           // This is a top level comment
@@ -762,8 +767,7 @@ describe('syncGenerator()', () => {
 
       await syncGenerator(tree);
 
-      expect(tree.read('tsconfig.json').toString('utf-8'))
-        .toMatchInlineSnapshot(`
+      expect(tree.read('tsconfig.json', 'utf-8')).toMatchInlineSnapshot(`
         "{
           "compilerOptions": {
             "composite": true
@@ -783,7 +787,7 @@ describe('syncGenerator()', () => {
         "
       `);
 
-      expect(tree.read('packages/foo/tsconfig.json').toString('utf-8'))
+      expect(tree.read('packages/foo/tsconfig.json', 'utf-8'))
         .toMatchInlineSnapshot(`
         "{
           "compilerOptions": {
@@ -833,7 +837,7 @@ describe('syncGenerator()', () => {
 
       await syncGenerator(tree);
 
-      expect(tree.read('packages/foo/tsconfig.json').toString('utf-8'))
+      expect(tree.read('packages/foo/tsconfig.json', 'utf-8'))
         .toMatchInlineSnapshot(`
         "{
           "compilerOptions": {
@@ -851,8 +855,7 @@ describe('syncGenerator()', () => {
 
       await syncGenerator(tree);
 
-      expect(tree.read('tsconfig.json').toString('utf-8'))
-        .toMatchInlineSnapshot(`
+      expect(tree.read('tsconfig.json', 'utf-8')).toMatchInlineSnapshot(`
         "{
           "compilerOptions": {
             "composite": true
@@ -871,7 +874,7 @@ describe('syncGenerator()', () => {
         }
         "
       `);
-      expect(tree.read('packages/foo/tsconfig.json').toString('utf-8'))
+      expect(tree.read('packages/foo/tsconfig.json', 'utf-8'))
         .toMatchInlineSnapshot(`
         "{
           "compilerOptions": {
@@ -880,7 +883,7 @@ describe('syncGenerator()', () => {
         }
         "
       `);
-      expect(tree.read('packages/foo/tsconfig.lib.json').toString('utf-8'))
+      expect(tree.read('packages/foo/tsconfig.lib.json', 'utf-8'))
         .toMatchInlineSnapshot(`
         "{
           "compilerOptions": {
@@ -1317,7 +1320,7 @@ describe('syncGenerator()', () => {
 
     describe('with custom sync generator options', () => {
       it('should sync project references to configured tsconfig.custom.json files', async () => {
-        const nxJson = readNxJson(tree);
+        const nxJson = readNxJsonOrThrow(tree);
         nxJson.sync = {
           generatorOptions: {
             '@nx/js:typescript-sync': {
@@ -1353,7 +1356,7 @@ describe('syncGenerator()', () => {
       });
 
       it('should sync project references to multiple configured runtime tsconfig files', async () => {
-        const nxJson = readNxJson(tree);
+        const nxJson = readNxJsonOrThrow(tree);
         nxJson.sync = {
           generatorOptions: {
             '@nx/js:typescript-sync': {
@@ -1406,7 +1409,7 @@ describe('syncGenerator()', () => {
       });
 
       it('should sync project references to different configured runtime tsconfig files', async () => {
-        const nxJson = readNxJson(tree);
+        const nxJson = readNxJsonOrThrow(tree);
         nxJson.sync = {
           generatorOptions: {
             '@nx/js:typescript-sync': {
@@ -1532,7 +1535,7 @@ describe('syncGenerator()', () => {
       });
 
       it('should collect transitive dependencies and sync project references to configured tsconfig.custom.json files', async () => {
-        const nxJson = readNxJson(tree);
+        const nxJson = readNxJsonOrThrow(tree);
         nxJson.sync = {
           generatorOptions: {
             '@nx/js:typescript-sync': {
@@ -1617,7 +1620,7 @@ describe('syncGenerator()', () => {
       });
 
       it('should not make changes to tsconfig files not configured as runtime', async () => {
-        const nxJson = readNxJson(tree);
+        const nxJson = readNxJsonOrThrow(tree);
         nxJson.sync = {
           generatorOptions: {
             '@nx/js:typescript-sync': {

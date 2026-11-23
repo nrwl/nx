@@ -19,7 +19,11 @@ export enum HelperDependency {
 type IJSExecutors = {
   [K: string]: {
     helperDependency: HelperDependency;
-    getConfigPath: (...args: unknown[]) => string;
+    getConfigPath: (
+      options: never,
+      contextRoot: string,
+      projectRoot: string
+    ) => string;
   };
 };
 const jsExecutors = {
@@ -37,6 +41,12 @@ const jsExecutors = {
     ) => getSwcrcPath(options, contextRoot, projectRoot).swcrcPath,
   } as const,
 } as const satisfies IJSExecutors;
+
+function isJsExecutor(
+  executor: string | undefined
+): executor is keyof typeof jsExecutors {
+  return executor !== undefined && executor in jsExecutors;
+}
 
 /**
  * Check and return a DependencyNode for the compiler's external helpers npm package. Return "null"
@@ -79,12 +89,13 @@ export function getHelperDependency(
 
   if (!isHelperNeeded) return null;
 
-  let libNode: ProjectGraphExternalNode | null = projectGraph[helperDependency];
+  const externalNodes = projectGraph.externalNodes ?? {};
+  let libNode: ProjectGraphExternalNode | null =
+    externalNodes[helperDependency] ?? null;
 
   // If libNode is not found due to the version suffix from pnpm lockfile, try to match it by package name.
   if (!libNode) {
-    for (const nodeName of Object.keys(projectGraph.externalNodes)) {
-      const node = projectGraph.externalNodes[nodeName];
+    for (const node of Object.values(externalNodes)) {
       if (`npm:${node.data.packageName}` === helperDependency) {
         libNode = node;
         break;
@@ -124,52 +135,49 @@ export function getHelperDependenciesFromProjectGraph(
     return [];
 
   const sourceDependencies = projectGraph.dependencies[sourceProject];
-  const internalDependencies = sourceDependencies.reduce(
-    (result, dependency) => {
-      // we check if a dependency is part of the workspace and if it's a library
-      // because we wouldn't want to include external dependencies (npm packages)
-      if (
-        projectGraph.nodes[dependency.target] &&
-        projectGraph.nodes[dependency.target].type === 'lib'
-      ) {
-        const targetData = projectGraph.nodes[dependency.target].data;
+  const internalDependencies = sourceDependencies.reduce<
+    Array<{ helperDependency: HelperDependency; configPath: string }>
+  >((result, dependency) => {
+    // we check if a dependency is part of the workspace and if it's a library
+    // because we wouldn't want to include external dependencies (npm packages)
+    if (
+      projectGraph.nodes[dependency.target] &&
+      projectGraph.nodes[dependency.target].type === 'lib'
+    ) {
+      const targetData = projectGraph.nodes[dependency.target].data;
 
-        // check if the dependency has a buildable target with one of the jsExecutors
-        const targetExecutor = Object.values(targetData.targets).find(
-          ({ executor }) => !!jsExecutors[executor]
+      // check if the dependency has a buildable target with one of the jsExecutors
+      const targetExecutor = Object.values(targetData.targets ?? {}).find(
+        ({ executor }) => isJsExecutor(executor)
+      );
+      if (targetExecutor && isJsExecutor(targetExecutor.executor)) {
+        const jsExecutor = jsExecutors[targetExecutor.executor];
+
+        const { root: projectRoot } = targetData;
+        const configPath = jsExecutor.getConfigPath(
+          targetExecutor['options'],
+          contextRoot,
+          projectRoot
         );
-        if (targetExecutor) {
-          const jsExecutor = jsExecutors[targetExecutor['executor']];
 
-          const { root: projectRoot } = targetData;
-          const configPath = jsExecutor.getConfigPath(
-            targetExecutor['options'],
-            contextRoot,
-            projectRoot
-          );
-
-          // construct the correct helperDependency configurations
-          // so we can compute the ProjectGraphDependency later
-          result.push({
-            helperDependency:
-              jsExecutors[targetExecutor['executor']].helperDependency,
-            dependencies: projectGraph.dependencies[dependency.target],
-            configPath,
-          });
-        }
+        // construct the correct helperDependency configurations
+        // so we can compute the ProjectGraphDependency later
+        result.push({
+          helperDependency: jsExecutor.helperDependency,
+          configPath,
+        });
       }
+    }
 
-      return result;
-    },
-    []
-  );
+    return result;
+  }, []);
 
   return internalDependencies.reduce(
-    (result, { helperDependency, configPath, dependencies }) => {
+    (result, { helperDependency, configPath }) => {
       const dependency = getHelperDependency(
         helperDependency,
         configPath,
-        dependencies,
+        [],
         projectGraph,
         true
       );

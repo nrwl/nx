@@ -27,7 +27,7 @@ export const executorOptions = new Set([
   'suppressionsLocation',
 ]);
 
-export const targetOptionsToCliMap = {
+export const targetOptionsToCliMap: Record<string, string> = {
   fix: 'fix',
   format: 'format',
   cache: 'cache',

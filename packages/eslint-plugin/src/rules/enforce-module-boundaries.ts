@@ -268,11 +268,11 @@ export default ESLintUtils.RuleCreator(
       sourceProject: ProjectGraphProjectNode,
       sourceFilePath: string
     ): boolean {
-      if (
-        node.type !== AST_NODE_TYPES.ImportDeclaration ||
-        context.sourceCode.getFirstToken(node, 1).range[0] !==
-          node.source.range[0]
-      ) {
+      if (node.type !== AST_NODE_TYPES.ImportDeclaration) {
+        return false;
+      }
+      const secondToken = context.sourceCode.getFirstToken(node, 1);
+      if (!secondToken || secondToken.range[0] !== node.source.range[0]) {
         return false;
       }
       if (ignoreServerInputsSpec === undefined) {
@@ -315,7 +315,10 @@ export default ESLintUtils.RuleCreator(
       // check for relative and absolute imports
       const isAbsoluteImportIntoAnotherProj =
         isAbsoluteImportIntoAnotherProject(imp, workspaceLayout);
-      let targetProject: ProjectGraphProjectNode | ProjectGraphExternalNode;
+      let targetProject:
+        | ProjectGraphProjectNode
+        | ProjectGraphExternalNode
+        | undefined;
 
       if (isAbsoluteImportIntoAnotherProj) {
         targetProject = findProject(projectGraph, projectRootMappings, imp);
@@ -344,14 +347,17 @@ export default ESLintUtils.RuleCreator(
               );
 
               if (indexTsPaths && indexTsPaths.length > 0) {
-                const specifiers = (node as any).specifiers;
-                if (!specifiers || specifiers.length === 0) {
-                  return;
+                const specifiers = 'specifiers' in node ? node.specifiers : [];
+                if (specifiers.length === 0) {
+                  return null;
                 }
 
-                const imports = specifiers
-                  .filter((s) => s.type === 'ImportSpecifier')
-                  .map((s) => s.imported.name);
+                const imports = specifiers.flatMap((s) =>
+                  s.type === AST_NODE_TYPES.ImportSpecifier &&
+                  s.imported.type === AST_NODE_TYPES.Identifier
+                    ? [s.imported.name]
+                    : []
+                );
 
                 // process each potential entry point and try to find the imports
                 const importsToRemap = [];
@@ -416,6 +422,7 @@ export default ESLintUtils.RuleCreator(
                 }
               }
             }
+            return null;
           },
         });
         return;
@@ -484,14 +491,17 @@ export default ESLintUtils.RuleCreator(
               // imp has form of @myorg/someproject/some/path
               const indexTsPaths = getBarrelEntryPointByImportScope(imp);
               if (indexTsPaths.length > 0) {
-                const specifiers = (node as any).specifiers;
-                if (!specifiers || specifiers.length === 0) {
-                  return;
+                const specifiers = 'specifiers' in node ? node.specifiers : [];
+                if (specifiers.length === 0) {
+                  return null;
                 }
                 // imported JS functions to remap
-                const imports = specifiers
-                  .filter((s) => s.type === 'ImportSpecifier')
-                  .map((s) => s.imported.name);
+                const imports = specifiers.flatMap((s) =>
+                  s.type === AST_NODE_TYPES.ImportSpecifier &&
+                  s.imported.type === AST_NODE_TYPES.Identifier
+                    ? [s.imported.name]
+                    : []
+                );
 
                 // process each potential entry point and try to find the imports
                 const importsToRemap = [];
@@ -544,6 +554,7 @@ export default ESLintUtils.RuleCreator(
                   );
                 }
               }
+              return null;
             },
           });
         }
@@ -752,7 +763,7 @@ export default ESLintUtils.RuleCreator(
           if (
             constraint.onlyDependOnLibsWithTags &&
             constraint.onlyDependOnLibsWithTags.length === 0 &&
-            targetProject.data.tags.length !== 0
+            (targetProject.data.tags ?? []).length !== 0
           ) {
             context.report({
               node,

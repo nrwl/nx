@@ -13,6 +13,7 @@ import {
   determineEslintConfigFormat,
   findEslintFile,
   isEslintConfigSupported,
+  readFileOrThrow,
 } from '../utils/eslint-file';
 import {
   getGlobalEsLintConfiguration,
@@ -34,7 +35,7 @@ import { ESLINT_CONFIG_FILENAMES } from '../../utils/config-file';
 export function migrateConfigToMonorepoStyle(
   projects: ProjectConfiguration[],
   tree: Tree,
-  unitTestRunner: string,
+  unitTestRunner: string | undefined,
   eslintConfigFormat: 'mjs' | 'cjs',
   keepExistingVersions?: boolean
 ): GeneratorCallback {
@@ -48,7 +49,7 @@ export function migrateConfigToMonorepoStyle(
       eslintConfigFormat = fileExtension.slice(1) as 'mjs' | 'cjs';
     } else {
       eslintConfigFormat = determineEslintConfigFormat(
-        tree.read(rootEslintConfig, 'utf-8')
+        readFileOrThrow(tree, rootEslintConfig)
       );
     }
   }
@@ -92,7 +93,7 @@ export function migrateConfigToMonorepoStyle(
 
   // update extends in all projects' eslint configs
   projects.forEach((project) => {
-    let eslintFile: string;
+    let eslintFile: string | undefined;
 
     if (hasEslintPlugin(tree)) {
       // If `@nx/eslint/plugin` is used, match any of the known config files.
@@ -106,8 +107,8 @@ export function migrateConfigToMonorepoStyle(
 
     if (eslintFile) {
       const projectEslintPath = joinPathFragments(project.root, eslintFile);
-      if (skipCleanup) {
-        const content = tree.read(projectEslintPath, 'utf-8');
+      if (skipCleanup && rootEslintConfig) {
+        const content = readFileOrThrow(tree, projectEslintPath);
         tree.write(
           projectEslintPath,
           content.replace(
@@ -136,7 +137,7 @@ function migrateEslintFile(projectEslintPath: string, tree: Tree) {
   const baseFile = findEslintFile(tree);
   if (isEslintConfigSupported(tree)) {
     if (useFlatConfig(tree)) {
-      let config = tree.read(projectEslintPath, 'utf-8');
+      let config = readFileOrThrow(tree, projectEslintPath);
       // remove @nx plugin
       config = removePlugin(config, '@nx', '@nx/eslint-plugin-nx');
 
@@ -169,7 +170,7 @@ function migrateEslintFile(projectEslintPath: string, tree: Tree) {
         delete json.root;
         // remove nrwl/nx plugins
         if (json.plugins) {
-          json.plugins = json.plugins.filter((p) => p !== '@nx');
+          json.plugins = json.plugins.filter((p: string) => p !== '@nx');
           if (json.plugins.length === 0) {
             delete json.plugins;
           }
@@ -190,10 +191,10 @@ function migrateEslintFile(projectEslintPath: string, tree: Tree) {
         }
         // cleanup overrides
         if (json.overrides) {
-          json.overrides.forEach((override) => {
+          json.overrides.forEach((override: { extends?: string[] }) => {
             if (override.extends) {
               override.extends = override.extends.filter(
-                (ext) =>
+                (ext: string) =>
                   ext !== 'plugin:@nx/typescript' &&
                   ext !== 'plugin:@nx/javascript'
               );

@@ -7,8 +7,8 @@ import { findNpmDependencies } from './find-npm-dependencies';
 
 // typescript reads tsconfigs through the CJS `fs` it captured on load, and the
 // import graph has loaded it already: evict it so it reloads onto memfs.
-mockCjsModule(import.meta.url, 'fs', memfs);
-const cjsRequire = createRequire(import.meta.url);
+mockCjsModule(__filename, 'fs', memfs);
+const cjsRequire = createRequire(__filename);
 delete cjsRequire.cache[cjsRequire.resolve('typescript')];
 
 vi.mock('@nx/devkit', async () => ({

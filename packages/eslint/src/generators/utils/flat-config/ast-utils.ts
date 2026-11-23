@@ -54,7 +54,7 @@ export function removeOverridesFromLintConfig(content: string): string {
 // TODO Change name
 export function findExportDefault(
   source: ts.SourceFile
-): ts.NodeArray<ts.Node> {
+): ts.NodeArray<ts.Node> | undefined {
   return findExportedArray(source)?.elements;
 }
 
@@ -118,7 +118,7 @@ function findExportedDeclaration(
 
 export function findModuleExports(
   source: ts.SourceFile
-): ts.NodeArray<ts.Node> {
+): ts.NodeArray<ts.Node> | undefined {
   return ts.forEachChild(source, function analyze(node) {
     if (
       ts.isExpressionStatement(node) &&
@@ -202,9 +202,9 @@ function isFlatConfigIgnoresBlock(
   return (
     ts.isObjectLiteralExpression(node) &&
     node.properties.length === 1 &&
+    ts.isPropertyAssignment(node.properties[0]) &&
     (node.properties[0].name.getText() === 'ignores' ||
       node.properties[0].name.getText() === '"ignores"') &&
-    ts.isPropertyAssignment(node.properties[0]) &&
     ts.isArrayLiteralExpression(node.properties[0].initializer)
   );
 }
@@ -213,15 +213,26 @@ function isOverride(node: ts.Node): boolean {
   return (
     (ts.isObjectLiteralExpression(node) &&
       node.properties.some(
-        (p) => p.name.getText() === 'files' || p.name.getText() === '"files"'
+        (p) =>
+          p.name !== undefined &&
+          (p.name.getText() === 'files' || p.name.getText() === '"files"')
       )) ||
     // detect ...compat.config(...).map(...)
-    (ts.isSpreadElement(node) &&
-      ts.isCallExpression(node.expression) &&
-      ts.isPropertyAccessExpression(node.expression.expression) &&
-      ts.isArrowFunction(node.expression.arguments[0]) &&
-      ts.isParenthesizedExpression(node.expression.arguments[0].body))
+    getCompatConfigMapBody(node) !== undefined
   );
+}
+
+function getCompatConfigMapBody(node: ts.Node): ts.Expression | undefined {
+  if (
+    ts.isSpreadElement(node) &&
+    ts.isCallExpression(node.expression) &&
+    ts.isPropertyAccessExpression(node.expression.expression) &&
+    ts.isArrowFunction(node.expression.arguments[0]) &&
+    ts.isParenthesizedExpression(node.expression.arguments[0].body)
+  ) {
+    return node.expression.arguments[0].body.expression;
+  }
+  return undefined;
 }
 
 export function hasOverride(
@@ -249,8 +260,8 @@ export function hasOverride(
         data = extractPropertiesFromObjectLiteral(node);
       } else {
         // Handle compat.config(...).map(...) pattern
-        const arrowBody = node['expression'].arguments[0].body.expression;
-        if (ts.isObjectLiteralExpression(arrowBody)) {
+        const arrowBody = getCompatConfigMapBody(node);
+        if (arrowBody && ts.isObjectLiteralExpression(arrowBody)) {
           data = extractPropertiesFromObjectLiteral(arrowBody);
         } else {
           continue;
@@ -417,8 +428,8 @@ export function replaceOverride(
   root: string,
   lookup: (override: Linter.ConfigOverride<Linter.RulesRecord>) => boolean,
   update?: (
-    override: Partial<Linter.ConfigOverride<Linter.RulesRecord>>
-  ) => Partial<Linter.ConfigOverride<Linter.RulesRecord>>
+    override: Linter.ConfigOverride<Linter.RulesRecord>
+  ) => Linter.ConfigOverride<Linter.RulesRecord> | undefined
 ): string {
   const source = ts.createSourceFile(
     '',
@@ -444,8 +455,8 @@ export function replaceOverride(
       objectLiteralNode = node;
     } else {
       // Handle compat.config(...).map(...) pattern
-      const arrowBody = node['expression'].arguments[0].body.expression;
-      if (ts.isObjectLiteralExpression(arrowBody)) {
+      const arrowBody = getCompatConfigMapBody(node);
+      if (arrowBody && ts.isObjectLiteralExpression(arrowBody)) {
         objectLiteralNode = arrowBody;
       } else {
         return;
@@ -458,7 +469,9 @@ export function replaceOverride(
       // Deep clone before update (update functions may mutate nested objects)
       const originalData = structuredClone(data);
 
-      const updatedData = update?.(data);
+      const updatedData = update?.(
+        data as Linter.ConfigOverride<Linter.RulesRecord>
+      );
 
       // If update function was provided and returns undefined, delete the entire override block
       if (update && updatedData === undefined) {
@@ -468,11 +481,14 @@ export function replaceOverride(
           length: node.end - node.pos + 1, // +1 for trailing comma
         });
       } else if (updatedData) {
-        const mappedData = mapFilePaths(updatedData);
+        const mappedData: Record<string, unknown> =
+          mapFilePaths<Partial<Linter.ConfigOverride<Linter.RulesRecord>>>(
+            updatedData
+          );
 
         const changedProps = findChangedProperties(
           originalData as Record<string, unknown>,
-          mappedData as Record<string, unknown>
+          mappedData
         );
 
         for (const propName of changedProps) {
@@ -689,6 +705,8 @@ function addESMImportToFlatConfig(
       },
     ]);
   }
+
+  return content;
 }
 
 function addCJSImportToFlatConfig(
@@ -698,9 +716,8 @@ function addCJSImportToFlatConfig(
   variable: string | string[],
   imp: string
 ): string {
-  const foundBindingVars: ts.NodeArray<ts.BindingElement> = ts.forEachChild(
-    source,
-    function analyze(node) {
+  const foundBindingVars: ts.NodeArray<ts.BindingElement> | undefined =
+    ts.forEachChild(source, function analyze(node) {
       // we can only combine object binding patterns
       if (!Array.isArray(variable)) {
         return;
@@ -709,6 +726,7 @@ function addCJSImportToFlatConfig(
         ts.isVariableStatement(node) &&
         ts.isVariableDeclaration(node.declarationList.declarations[0]) &&
         ts.isObjectBindingPattern(node.declarationList.declarations[0].name) &&
+        node.declarationList.declarations[0].initializer !== undefined &&
         ts.isCallExpression(node.declarationList.declarations[0].initializer) &&
         node.declarationList.declarations[0].initializer.expression.getText() ===
           'require' &&
@@ -720,8 +738,7 @@ function addCJSImportToFlatConfig(
       ) {
         return node.declarationList.declarations[0].name.elements;
       }
-    }
-  );
+    });
 
   if (foundBindingVars && Array.isArray(variable)) {
     const newVariables = variable.filter(
@@ -751,7 +768,7 @@ function addCJSImportToFlatConfig(
     ]);
   }
 
-  const hasSameIdentifierVar: boolean = ts.forEachChild(
+  const hasSameIdentifierVar: boolean | undefined = ts.forEachChild(
     source,
     function analyze(node) {
       // we are searching for a single variable
@@ -763,6 +780,7 @@ function addCJSImportToFlatConfig(
         ts.isVariableDeclaration(node.declarationList.declarations[0]) &&
         ts.isIdentifier(node.declarationList.declarations[0].name) &&
         node.declarationList.declarations[0].name.getText() === variable &&
+        node.declarationList.declarations[0].initializer !== undefined &&
         ts.isCallExpression(node.declarationList.declarations[0].initializer) &&
         node.declarationList.declarations[0].initializer.expression.getText() ===
           'require' &&
@@ -807,20 +825,16 @@ function addCJSImportToFlatConfig(
 }
 
 function existsAsNamedOrDefaultImport(
-  node: ts.ImportDeclaration,
+  importClause: ts.ImportClause,
   variable: string | string[]
 ) {
   const isNamed =
-    node.importClause.namedBindings &&
-    ts.isNamedImports(node.importClause.namedBindings);
+    importClause.namedBindings && ts.isNamedImports(importClause.namedBindings);
+  const name = importClause.name?.getText();
   if (Array.isArray(variable)) {
-    return isNamed || variable.includes(node.importClause?.name?.getText());
+    return isNamed || (name !== undefined && variable.includes(name));
   }
-  return (
-    (node.importClause.namedBindings &&
-      ts.isNamedImports(node.importClause.namedBindings)) ||
-    node.importClause?.name?.getText() === variable
-  );
+  return isNamed || name === variable;
 }
 /**
  * Remove an import from flat config
@@ -861,7 +875,7 @@ function removeImportFromFlatConfigESM(
       ts.isStringLiteral(node.moduleSpecifier) &&
       node.moduleSpecifier.text === imp &&
       node.importClause &&
-      existsAsNamedOrDefaultImport(node, variable)
+      existsAsNamedOrDefaultImport(node.importClause, variable)
     ) {
       changes.push({
         type: ChangeType.Delete,
@@ -899,6 +913,7 @@ function removeImportFromFlatConfigCJS(
         name.elements[0].name.getText() === variable);
     if (
       bindsVariable &&
+      declaration.initializer !== undefined &&
       ts.isCallExpression(declaration.initializer) &&
       declaration.initializer.expression.getText() === 'require' &&
       ts.isStringLiteral(declaration.initializer.arguments[0]) &&
@@ -1151,7 +1166,7 @@ function addBlockToFlatConfigExportCJS(
   if (options.insertAtTheEnd) {
     const index =
       exportsArray.length > 0
-        ? exportsArray.at(exportsArray.length - 1).end
+        ? exportsArray[exportsArray.length - 1].end
         : exportsArray.pos;
     return applyChangesToString(content, [
       {
@@ -1162,7 +1177,7 @@ function addBlockToFlatConfigExportCJS(
     ]);
   } else {
     const index =
-      exportsArray.length > 0 ? exportsArray.at(0).pos : exportsArray.pos;
+      exportsArray.length > 0 ? exportsArray[0].pos : exportsArray.pos;
     return applyChangesToString(content, [
       {
         type: ChangeType.Insert,
@@ -1197,9 +1212,10 @@ export function removePlugin(
         const importClause = node.importClause;
 
         if (
-          (importClause && importClause.name) ||
-          (importClause.namedBindings &&
-            ts.isNamedImports(importClause.namedBindings))
+          importClause &&
+          (importClause.name ||
+            (importClause.namedBindings &&
+              ts.isNamedImports(importClause.namedBindings)))
         ) {
           changes.push({
             type: ChangeType.Delete,
@@ -1214,6 +1230,7 @@ export function removePlugin(
       if (
         ts.isVariableStatement(node) &&
         ts.isVariableDeclaration(node.declarationList.declarations[0]) &&
+        node.declarationList.declarations[0].initializer !== undefined &&
         ts.isCallExpression(node.declarationList.declarations[0].initializer) &&
         node.declarationList.declarations[0].initializer.arguments.length &&
         ts.isStringLiteral(
@@ -1257,7 +1274,9 @@ export function removePlugin(
           changes.push({
             type: ChangeType.Insert,
             index: pluginsArray.pos,
-            text: JSON.stringify(plugins.filter((p) => p !== pluginName)),
+            text: JSON.stringify(
+              plugins.filter((p: string) => p !== pluginName)
+            ),
           });
         } else {
           const keys = element.properties.map((prop) => prop.name?.getText());
@@ -1284,7 +1303,10 @@ export function removePlugin(
       } else if (ts.isObjectLiteralExpression(pluginsElem.initializer)) {
         const pluginsObj = pluginsElem.initializer;
         const plugin = pluginsObj.properties.find(
-          (prop) => prop.name?.['text'] === pluginName
+          (prop) =>
+            prop.name !== undefined &&
+            'text' in prop.name &&
+            prop.name.text === pluginName
         );
         if (!plugin) {
           return;
@@ -1536,6 +1558,9 @@ function addFlatCompatToFlatConfigESM(content: string) {
     ts.ScriptKind.JS
   );
   const exportDefault = findExportDefaultStatement(source);
+  if (!exportDefault) {
+    throw new Error('Could not find the default export of the flat config.');
+  }
   // `compat` must precede the array that uses it, which a top-level `const` declares above `export default`.
   const configStatement =
     findExportedDeclaration(source, exportDefault)?.parent.parent ??
@@ -1564,9 +1589,13 @@ export function createNodeList(
   exportElements: ts.Expression[],
   format: 'mjs' | 'cjs'
 ): ts.NodeArray<
-  ts.VariableStatement | ts.Identifier | ts.ExpressionStatement | ts.SourceFile
+  | ts.ImportDeclaration
+  | ts.VariableStatement
+  | ts.ExpressionStatement
+  | ts.ExportAssignment
+  | ts.SourceFile
 > {
-  const importsList = [];
+  const importsList: (ts.ImportDeclaration | ts.VariableStatement)[] = [];
 
   Array.from(importsMap.entries()).forEach(([imp, varName]) => {
     if (format === 'mjs') {
@@ -1686,14 +1715,7 @@ export function generatePluginExtendsElementWithCompatFixup(
 /**
  * Stringifies TS nodes to file content string
  */
-export function stringifyNodeList(
-  nodes: ts.NodeArray<
-    | ts.VariableStatement
-    | ts.Identifier
-    | ts.ExpressionStatement
-    | ts.SourceFile
-  >
-): string {
+export function stringifyNodeList(nodes: ts.NodeArray<ts.Node>): string {
   const printer = ts.createPrinter({ newLine: ts.NewLineKind.LineFeed });
   const resultFile = ts.createSourceFile(
     '',
@@ -1807,9 +1829,6 @@ function convertGlobPattern(pattern: string): string {
   return `${isNegated ? '!' : ''}**/${patternToTest}`;
 }
 
-// FROM: https://github.com/eslint/rewrite/blob/e2a7ec809db20e638abbad250d105ddbde88a8d5/packages/migrate-config/src/migrate-config.js#L38
-const keysToCopy = ['settings', 'rules', 'processor'];
-
 export function overrideNeedsCompat(
   override: Partial<Linter.ConfigOverride<Linter.RulesRecord>>
 ) {
@@ -1823,6 +1842,7 @@ export function overrideNeedsCompat(
 export function generateFlatOverride(
   _override: Partial<Linter.ConfigOverride<Linter.RulesRecord>> & {
     ignores?: Linter.FlatConfig['ignores'];
+    languageOptions?: Linter.LanguageOptions;
   },
   format: 'mjs' | 'cjs',
   importsMap?: Map<string, string>,
@@ -1851,14 +1871,19 @@ export function generateFlatOverride(
     }
 
     // Copy over everything that stays the same
-    keysToCopy.forEach((key) => {
-      if (override[key]) {
-        flatConfigOverride[key] = override[key];
-      }
-    });
+    // FROM: https://github.com/eslint/rewrite/blob/e2a7ec809db20e638abbad250d105ddbde88a8d5/packages/migrate-config/src/migrate-config.js#L38
+    if (override.settings) {
+      flatConfigOverride.settings = override.settings;
+    }
+    if (override.rules) {
+      flatConfigOverride.rules = override.rules;
+    }
+    if (override.processor) {
+      flatConfigOverride.processor = override.processor;
+    }
 
     if (override.parser || override.parserOptions) {
-      const languageOptions = {};
+      const languageOptions: Record<string, unknown> = {};
       if (override.parser) {
         languageOptions['parser'] = override.parser;
       }
@@ -2059,6 +2084,7 @@ function addSpreadGlobals(
 function generateESMParserImport(
   override: Partial<Linter.ConfigOverride<Linter.RulesRecord>> & {
     ignores?: Linter.FlatConfig['ignores'];
+    languageOptions?: Linter.LanguageOptions;
   },
   importsMap?: Map<string, string>
 ): ts.PropertyAssignment {
@@ -2092,6 +2118,7 @@ function generateESMParserImport(
 function generateCJSParserImport(
   override: Partial<Linter.ConfigOverride<Linter.RulesRecord>> & {
     ignores?: Linter.FlatConfig['ignores'];
+    languageOptions?: Linter.LanguageOptions;
   }
 ): ts.PropertyAssignment {
   return ts.factory.createPropertyAssignment(

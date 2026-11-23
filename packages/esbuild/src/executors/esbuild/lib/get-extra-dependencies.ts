@@ -1,4 +1,8 @@
-import { ProjectGraph } from '@nx/devkit';
+import type {
+  ProjectGraph,
+  ProjectGraphExternalNode,
+  ProjectGraphProjectNode,
+} from '@nx/devkit';
 import { DependentBuildableProjectNode } from '@nx/js/internal';
 
 export function getExtraDependencies(
@@ -10,21 +14,27 @@ export function getExtraDependencies(
 
   recur(projectName);
 
-  function recur(currProjectName) {
+  function recur(currProjectName: string) {
     if (visited.has(currProjectName)) return; // Check if project already visited
     visited.add(currProjectName); // Mark project as visited
 
     const allDeps = graph.dependencies[currProjectName];
-    const externalDeps = allDeps.reduce((acc, node) => {
-      const found = graph.externalNodes[node.target];
-      if (found) acc.push(found);
-      return acc;
-    }, []);
-    const internalDeps = allDeps.reduce((acc, node) => {
-      const found = graph.nodes[node.target];
-      if (found) acc.push(found);
-      return acc;
-    }, []);
+    const externalDeps = allDeps.reduce<ProjectGraphExternalNode[]>(
+      (acc, node) => {
+        const found = graph.externalNodes?.[node.target];
+        if (found) acc.push(found);
+        return acc;
+      },
+      []
+    );
+    const internalDeps = allDeps.reduce<ProjectGraphProjectNode[]>(
+      (acc, node) => {
+        const found = graph.nodes[node.target];
+        if (found) acc.push(found);
+        return acc;
+      },
+      []
+    );
 
     for (const externalDep of externalDeps) {
       deps.set(externalDep.name, {

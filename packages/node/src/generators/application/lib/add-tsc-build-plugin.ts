@@ -41,7 +41,7 @@ export function addTscAppBuildPlugin(tree: Tree, projectRoot: string): string {
   );
   if (!registration) {
     registration = registrations.find((p) => p.include && !p.exclude);
-    registration?.include.push(pattern);
+    registration?.include?.push(pattern);
   }
 
   if (!registration) {

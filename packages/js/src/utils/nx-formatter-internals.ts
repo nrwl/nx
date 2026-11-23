@@ -12,7 +12,11 @@ import {
  * cause.
  */
 export function assertNxSupportsFormatters(): void {
-  if (detectFormatterInTree && oxfmtConfigFiles && prettierConfigFiles) {
+  if (
+    typeof detectFormatterInTree === 'function' &&
+    oxfmtConfigFiles &&
+    prettierConfigFiles
+  ) {
     return;
   }
 

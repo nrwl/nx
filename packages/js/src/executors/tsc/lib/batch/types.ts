@@ -7,7 +7,7 @@ import type { TypescriptInMemoryTsConfig } from '../typescript-compilation';
 export interface TaskInfo {
   task: string;
   options: NormalizedExecutorOptions;
-  context: ExecutorContext;
+  context: ExecutorContext & { projectName: string };
   assetsHandler: CopyAssetsHandler;
   buildableProjectNodeDependencies: DependentBuildableProjectNode[];
   projectGraphNode: ProjectGraphProjectNode;

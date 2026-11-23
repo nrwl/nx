@@ -147,10 +147,11 @@ function* compileTS(
   );
 
   while (true) {
-    project = solutionBuilder.getNextInvalidatedProject();
-    if (!project) {
+    const nextProject = solutionBuilder.getNextInvalidatedProject();
+    if (!nextProject) {
       break;
     }
+    project = nextProject;
 
     const projectContext = context[project.project];
     const projectName = projectContext?.project;
@@ -244,27 +245,32 @@ function compileTSWithWatch(
     watchStatusReporter?: ReporterWithTsConfig<ts.WatchStatusReporter>;
   }
 ): void {
-  let project: ts.InvalidatedProject<ts.EmitAndSemanticDiagnosticsBuilderProgram>;
+  let project:
+    | ts.InvalidatedProject<ts.EmitAndSemanticDiagnosticsBuilderProgram>
+    | undefined;
 
   const solutionHost = ts.createSolutionBuilderWithWatchHost(
     getSystem(context),
     /*createProgram*/ undefined
   );
 
-  if (reporters?.diagnosticReporter) {
+  const diagnosticReporter = reporters?.diagnosticReporter;
+  if (diagnosticReporter) {
     const originalDiagnosticReporter = solutionHost.reportDiagnostic;
     solutionHost.reportDiagnostic = (diagnostic) => {
       originalDiagnosticReporter(diagnostic);
-      reporters.diagnosticReporter(project.project, diagnostic);
+      diagnosticReporter(project?.project, diagnostic);
     };
   }
 
-  if (reporters?.solutionBuilderStatusReporter) {
+  const solutionBuilderStatusReporter =
+    reporters?.solutionBuilderStatusReporter;
+  if (solutionBuilderStatusReporter) {
     const originalSolutionBuilderStatusReporter =
       solutionHost.reportSolutionBuilderStatus;
     solutionHost.reportDiagnostic = (diagnostic) => {
       originalSolutionBuilderStatusReporter(diagnostic);
-      reporters.solutionBuilderStatusReporter(project.project, diagnostic);
+      solutionBuilderStatusReporter(project?.project, diagnostic);
     };
   }
 
@@ -275,7 +281,7 @@ function compileTSWithWatch(
     options,
     errorCount
   ) => {
-    originalWatchStatusReporter(diagnostic, newLine, options, errorCount);
+    originalWatchStatusReporter?.(diagnostic, newLine, options, errorCount);
 
     if (
       diagnostic.code ===
@@ -329,7 +335,7 @@ function compileTSWithWatch(
         continue;
       }
 
-      hooks?.beforeProjectCompilationCallback(project.project);
+      hooks?.beforeProjectCompilationCallback?.(project.project);
 
       if (project.kind === ts.InvalidatedProjectKind.UpdateOutputFileStamps) {
         if (projectName) {

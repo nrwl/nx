@@ -725,7 +725,7 @@ describe('jestProject', () => {
       });
 
       const nxJson = readNxJson(tree);
-      expect(nxJson.targetDefaults['test']).toEqual({
+      expect(nxJson?.targetDefaults?.['test']).toEqual({
         dependsOn: ['^build'],
       });
     });

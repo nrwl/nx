@@ -4,7 +4,7 @@
 // Only supports up to GB because that's way larger than anything the registry
 // supports anyways.
 
-export const formatBytes = (bytes, space = true) => {
+export const formatBytes = (bytes: number, space = true) => {
   let spacer = '';
   if (space) {
     spacer = ' ';

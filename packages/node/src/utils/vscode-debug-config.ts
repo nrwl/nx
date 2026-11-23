@@ -13,7 +13,7 @@ function findFreeDebugPort(tree: Tree): number {
   if (tree.exists('.vscode/launch.json')) {
     try {
       const launchConfig = JSON.parse(
-        tree.read('.vscode/launch.json', 'utf-8')
+        tree.read('.vscode/launch.json', 'utf-8') ?? ''
       );
       if (launchConfig.configurations) {
         for (const config of launchConfig.configurations) {
@@ -56,7 +56,7 @@ export function addVSCodeDebugConfiguration(
   const extraExecArgs = pmCommandTokens.slice(1);
 
   // Determine the output path based on project configuration
-  let outputPath: string;
+  let outputPath: string | undefined;
 
   try {
     const projectConfig = readProjectConfiguration(tree, options.projectName);

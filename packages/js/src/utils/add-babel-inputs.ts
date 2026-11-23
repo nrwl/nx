@@ -21,6 +21,10 @@ export function addBabelInputs(tree: Tree) {
     globalBabelFile = 'babel.config.json';
   }
 
+  if (!nxJson) {
+    throw new Error('Unable to read nx.json.');
+  }
+
   if (nxJson.namedInputs?.sharedGlobals) {
     const sharedGlobalFileset = new Set(nxJson.namedInputs.sharedGlobals);
     sharedGlobalFileset.add(

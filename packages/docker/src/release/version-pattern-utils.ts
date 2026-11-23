@@ -24,6 +24,9 @@ export function interpolateVersionPattern(
   data: Partial<PatternTokens>
 ) {
   const commitSha = getLatestCommitSha();
+  if (commitSha === null) {
+    throw new Error('Could not determine the latest commit SHA.');
+  }
   const substitutions: PatternTokens = {
     projectName: data.projectName ?? '',
     currentDate: data.currentDate ?? new Date(),

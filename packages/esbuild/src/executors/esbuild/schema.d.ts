@@ -39,6 +39,7 @@ export interface NormalizedEsBuildExecutorOptions extends Omit<
   singleEntry: boolean;
   external: string[];
   excludeFromExternal: string[];
+  outputFileName: string;
   userDefinedBuildOptions: esbuild.BuildOptions | undefined;
   isTsSolutionSetup?: boolean;
 }

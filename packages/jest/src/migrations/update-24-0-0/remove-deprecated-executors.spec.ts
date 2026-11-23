@@ -32,7 +32,7 @@ jest.mock('@nx/devkit', () => ({
     .mockImplementation((tree, projectName, projectConfiguration) => {
       function handleEmptyTargets(
         projectName: string,
-        projectConfiguration: ProjectConfiguration
+        projectConfiguration: ProjectConfiguration & { '// targets'?: string }
       ): void {
         if (
           projectConfiguration.targets &&
@@ -83,6 +83,28 @@ jest.mock('@nx/devkit', () => ({
       projectGraph.nodes[projectName].data = projectConfiguration;
     }),
 }));
+
+type TestProject = ProjectConfiguration & {
+  name: string;
+  targets: Record<string, TargetConfiguration>;
+};
+
+function readTestProject(tree: Tree, name: string): TestProject {
+  const project = readProjectConfiguration(tree, name);
+  const { targets } = project;
+  if (!targets) {
+    throw new Error(`${name} has no targets`);
+  }
+  return { ...project, name, targets };
+}
+
+function readFile(tree: Tree, path: string): string {
+  const contents = tree.read(path, 'utf-8');
+  if (contents === null) {
+    throw new Error(`${path} not found`);
+  }
+  return contents;
+}
 
 function addProject(tree: Tree, name: string, project: ProjectConfiguration) {
   addProjectConfiguration(tree, name, project);
@@ -136,7 +158,7 @@ function createTestProject(
   jestConfig?: any
 ) {
   let projectOpts = { ...defaultTestProjectOptions, ...opts };
-  const project: ProjectConfiguration = {
+  const project: TestProject = {
     name: projectOpts.appName,
     root: projectOpts.appRoot,
     projectType: 'application',
@@ -202,7 +224,7 @@ describe('remove-deprecated-executors', () => {
     await update(tree);
 
     expect(
-      readNxJson(tree).plugins.find(
+      readNxJson(tree)?.plugins?.find(
         (plugin) =>
           typeof plugin !== 'string' && plugin.plugin === '@nx/jest/plugin'
       )
@@ -364,7 +386,7 @@ describe('remove-deprecated-executors', () => {
 
         const result = await update(tree);
 
-        expect(readProjectConfiguration(tree, 'my-app').targets.test).toEqual({
+        expect(readProjectConfiguration(tree, 'my-app').targets?.test).toEqual({
           ...expected,
           executor: 'nx:run-commands',
           outputs: ['{workspaceRoot}/coverage/{projectName}'],
@@ -377,7 +399,7 @@ describe('remove-deprecated-executors', () => {
           configurations: { ci: { ci: true, coverage: true } },
         });
         expect(
-          readProjectConfiguration(tree, 'lib1').targets.test?.executor
+          readProjectConfiguration(tree, 'lib1').targets?.test?.executor
         ).toBeUndefined();
         expect(result.nextSteps).toBeUndefined();
       }
@@ -427,9 +449,9 @@ describe('remove-deprecated-executors', () => {
 
       const { app2 } = await runUpdate();
 
-      expect(app2.test.options).toMatchObject({ maxWorkers: 1 });
-      expect(app2.test.options).not.toHaveProperty('silent');
-      expect(app2.test.configurations).toEqual({ ci: { ci: true } });
+      expect(app2?.test.options).toMatchObject({ maxWorkers: 1 });
+      expect(app2?.test.options).not.toHaveProperty('silent');
+      expect(app2?.test.configurations).toEqual({ ci: { ci: true } });
     });
 
     it('applies the target-name defaults the executor received', async () => {
@@ -444,7 +466,7 @@ describe('remove-deprecated-executors', () => {
       });
       createTestProject(tree);
       addApp2('jest.app.config.js');
-      const project = readProjectConfiguration(tree, 'app2');
+      const project = readTestProject(tree, 'app2');
       project.targets.test.configurations = {
         ci: { jestConfig: 'apps/app2/jest.ci.config.js' },
       };
@@ -452,8 +474,8 @@ describe('remove-deprecated-executors', () => {
 
       const { app2 } = await runUpdate();
 
-      expect(app2.test.options).toMatchObject({ passWithNoTests: true });
-      expect(app2.test.configurations).toEqual({
+      expect(app2?.test.options).toMatchObject({ passWithNoTests: true });
+      expect(app2?.test.configurations).toEqual({
         ci: {
           command: 'jest --config ./apps/app2/jest.ci.config.js',
           ci: true,
@@ -485,14 +507,14 @@ describe('remove-deprecated-executors', () => {
         maxWorkers: 2,
         testTimeout: 10000,
       };
-      const project = readProjectConfiguration(tree, 'app2');
+      const project = readTestProject(tree, 'app2');
       project.targets.test.outputs = ['{workspaceRoot}/coverage/{projectRoot}'];
       Object.assign(project.targets.test.options, flags);
       updateProjectConfiguration(tree, 'app2', project);
 
       const { app2 } = await runUpdate();
 
-      expect(app2.test).toEqual({
+      expect(app2?.test).toEqual({
         executor: 'nx:run-commands',
         outputs: ['{workspaceRoot}/coverage/{projectRoot}'],
         options: {
@@ -578,7 +600,7 @@ describe('remove-deprecated-executors', () => {
         // The plugin infers from this file, so the converter would switch to it
         writeJestConfig(tree, 'apps/app2', undefined);
         addApp2(configFileName ?? 'jest.app.config.js');
-        const project = readProjectConfiguration(tree, 'app2');
+        const project = readTestProject(tree, 'app2');
         const { options, ...fields } = overrides ?? {};
         Object.assign(project.targets.test, fields);
         Object.assign(project.targets.test.options, options);
@@ -587,7 +609,7 @@ describe('remove-deprecated-executors', () => {
 
         const { app2, nextSteps } = await runUpdate();
 
-        expect(app2.test).toEqual(target);
+        expect(app2?.test).toEqual(target);
         expect(nextSteps).toContain(
           'These targets still use removed executors: app2:test (@nx/jest:jest). Replace each one before running them.'
         );
@@ -614,7 +636,7 @@ describe('remove-deprecated-executors', () => {
       json.devDependencies = { jest: '^30.0.0' };
       return json;
     });
-    fs.createFileSync('package.json', tree.read('package.json', 'utf-8'));
+    fs.createFileSync('package.json', readFile(tree, 'package.json'));
     writeJson(tree, 'libs/pkg/package.json', { name: 'pkg', nx: { targets } });
     fs.createFileSync(
       'libs/pkg/package.json',

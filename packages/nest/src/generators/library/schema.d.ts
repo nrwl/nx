@@ -37,7 +37,7 @@ export interface LibraryGeneratorOptions {
 export interface NormalizedOptions extends LibraryGeneratorOptions {
   fileName: string;
   parsedTags: string[];
-  prefix: string;
+  prefix?: string;
   projectName: string;
   projectRoot: string;
 }

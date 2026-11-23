@@ -143,7 +143,7 @@ export function convertEslintJsonToFlatConfig(
       root,
       importsMap,
       exportElements,
-      config,
+      config.extends,
       format,
       convertedEslintrcFiles
     );
@@ -152,7 +152,7 @@ export function convertEslintJsonToFlatConfig(
   }
 
   if (config.plugins) {
-    addPlugins(importsMap, exportElements, config);
+    addPlugins(importsMap, exportElements, config.plugins, config.processor);
   }
 
   if (config.parser) {
@@ -179,9 +179,10 @@ export function convertEslintJsonToFlatConfig(
 
   // Like FlatCompat, add only enabled environments. Setting a disabled one's globals
   // to "off" would also turn off the ones that other enabled environments define.
-  const envs = Object.keys(config.env ?? {});
-  const enabledEnvs = envs.filter((env) => config.env[env]);
-  for (const env of envs.filter((env) => !config.env[env])) {
+  const envConfig = config.env ?? {};
+  const envs = Object.keys(envConfig);
+  const enabledEnvs = envs.filter((env) => envConfig[env]);
+  for (const env of envs.filter((env) => !envConfig[env])) {
     logger.warn(
       `The ESLint config in "${root || '.'}" disables the "${env}" environment. ` +
         `The flat config does not add its globals, but keeps the ones that extended configs define. ` +
@@ -207,11 +208,8 @@ export function convertEslintJsonToFlatConfig(
           ...getPluginEnvironmentGlobals(config.env, importsMap).map((env) =>
             ts.factory.createSpreadAssignment(env)
           ),
-          ...Object.keys(config.globals || {}).map((key) =>
-            ts.factory.createPropertyAssignment(
-              key,
-              generateAst(config.globals[key])
-            )
+          ...Object.entries(config.globals || {}).map(([key, value]) =>
+            ts.factory.createPropertyAssignment(key, generateAst(value))
           ),
         ])
       )
@@ -277,17 +275,19 @@ export function convertEslintJsonToFlatConfig(
           original: e,
           flatConfig: mapNxPluginToFlatConfig(e),
         }));
-        const nxExtends = mapped.filter((m) => m.flatConfig);
+        const nxFlatConfigs = mapped.flatMap((m) =>
+          m.flatConfig ? [m.flatConfig] : []
+        );
         const nonNxExtends = mapped
           .filter((m) => !m.flatConfig)
           .map((m) => m.original);
 
-        if (nxExtends.length > 0) {
+        if (nxFlatConfigs.length > 0) {
           const nxVar = (importsMap.get('@nx/eslint-plugin') as string) ?? 'nx';
           importsMap.set('@nx/eslint-plugin', nxVar);
-          nxExtends.forEach((ext) => {
+          nxFlatConfigs.forEach((flatConfig) => {
             exportElements.push(
-              generateFlatPredefinedConfig(ext.flatConfig, nxVar, true)
+              generateFlatPredefinedConfig(flatConfig, nxVar, true)
             );
           });
 
@@ -366,9 +366,9 @@ export function convertEslintJsonToFlatConfig(
   }
 
   for (const ignorePath of ignorePaths) {
-    if (tree.exists(ignorePath)) {
-      const patterns = tree
-        .read(ignorePath, 'utf-8')
+    const ignoreContent = tree.read(ignorePath, 'utf-8');
+    if (ignoreContent !== null) {
+      const patterns = ignoreContent
         .split(/\r\n|\r|\n/)
         .filter((line) => line.length > 0 && line !== 'node_modules')
         .map((path) => mapFilePath(path));
@@ -419,17 +419,17 @@ function addExtends(
   root: string,
   importsMap: Map<string, string | string[]>,
   configBlocks: ts.Expression[],
-  config: ESLint.ConfigData,
+  extendsValue: string | string[],
   format: 'mjs' | 'cjs',
   convertedEslintrcFiles: ReadonlySet<string>
 ): { isFlatCompatNeeded: boolean; isESLintJSNeeded: boolean } {
   let isFlatCompatNeeded = false;
   let isESLintJSNeeded = false;
-  const extendsConfig = Array.isArray(config.extends)
-    ? config.extends
-    : [config.extends];
+  const extendsConfig = Array.isArray(extendsValue)
+    ? extendsValue
+    : [extendsValue];
 
-  const eslintrcConfigs = [];
+  const eslintrcConfigs: string[] = [];
 
   // add base extends
   extendsConfig
@@ -505,18 +505,19 @@ function addExtends(
 function addPlugins(
   importsMap: Map<string, string | string[]>,
   configBlocks: ts.Expression[],
-  config: ESLint.ConfigData
+  plugins: string[],
+  processor: string | undefined
 ) {
   // Replace @nx plugin with flat/base predefined config to match fresh generation.
   // flat/base registers the @nx plugin and ignores .nx directory.
   // This runs before overrides are processed, so we set the import name here
   // for Nx extends that may appear in overrides later.
-  if (config.plugins.includes('@nx')) {
+  if (plugins.includes('@nx')) {
     importsMap.set('@nx/eslint-plugin', 'nx');
     configBlocks.push(generateFlatPredefinedConfig('flat/base', 'nx', true));
   }
 
-  const remainingPlugins = config.plugins.filter((name) => name !== '@nx');
+  const remainingPlugins = plugins.filter((name) => name !== '@nx');
   if (remainingPlugins.length === 0) {
     return;
   }
@@ -544,11 +545,11 @@ function addPlugins(
           mappedPlugins.length > 1
         )
       ),
-      ...(config.processor
+      ...(processor
         ? [
             ts.factory.createPropertyAssignment(
               'processor',
-              ts.factory.createStringLiteral(config.processor)
+              ts.factory.createStringLiteral(processor)
             ),
           ]
         : []),
@@ -571,8 +572,9 @@ function getPluginEnvironmentGlobals(
   env: ESLint.ConfigData['env'],
   importsMap: Map<string, string | string[]>
 ): ts.Expression[] {
-  return Object.keys(env ?? {})
-    .filter((name) => env[name] && isPluginEnvironment(name))
+  const envConfig = env ?? {};
+  return Object.keys(envConfig)
+    .filter((name) => envConfig[name] && isPluginEnvironment(name))
     .map((name) => {
       const separator = name.lastIndexOf('/');
       const imp = getPluginImport(name.slice(0, separator));

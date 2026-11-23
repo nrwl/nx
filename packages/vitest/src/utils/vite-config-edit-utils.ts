@@ -12,16 +12,19 @@ export function ensureViteConfigIsCorrect(
   tree: Tree,
   path: string,
   buildConfigString: string,
-  buildConfigObject: {},
+  buildConfigObject: Record<string, unknown>,
   imports: string[],
   plugins: string[],
   testConfigString: string,
-  testConfigObject: {},
+  testConfigObject: Record<string, unknown>,
   cacheDir: string,
   projectAlreadyHasViteTargets?: TargetFlags,
   resolveTsconfigPaths?: boolean
 ): boolean {
   const fileContent = tree.read(path, 'utf-8');
+  if (fileContent === null) {
+    throw new Error(`Cannot find ${path}.`);
+  }
 
   let updatedContent = undefined;
 
@@ -69,7 +72,7 @@ export function ensureViteConfigIsCorrect(
 function handleBuildOrTestNode(
   updatedFileContent: string,
   configContentString: string,
-  configContentObject: {},
+  configContentObject: Record<string, unknown>,
   name: 'build' | 'test'
 ): string | undefined {
   const { tsquery } = require('@phenomnomnominal/tsquery');
@@ -104,7 +107,7 @@ function handleBuildOrTestNode(
           configContentObject
         )) {
           // NOTE: Watch for formatting.
-          if (propName === 'coverage') {
+          if (propName === 'coverage' && isRecord(propValue)) {
             let propString = `    '${propName}': {\n`;
             for (const [pName, pValue] of Object.entries(propValue)) {
               if (pName === 'provider') {
@@ -115,10 +118,10 @@ function handleBuildOrTestNode(
             }
             propString += `}`;
             updatedPropsString += `${propString}\n`;
-          } else if (propName === 'lib') {
+          } else if (propName === 'lib' && isRecord(propValue)) {
             let propString = `    '${propName}': {\n`;
             for (const [pName, pValue] of Object.entries(propValue)) {
-              if (pName === 'formats') {
+              if (pName === 'formats' && Array.isArray(pValue)) {
                 propString += `      '${pName}': [${pValue
                   .map((format: string) => `'${format}' as const`)
                   .join(', ')}],\n`;
@@ -216,7 +219,7 @@ function transformCurrentBuildObject(
   index: number,
   returnStatements: ReturnStatement[],
   appFileContent: string,
-  buildConfigObject: {}
+  buildConfigObject: string
 ): string | undefined {
   if (!returnStatements?.[index]) {
     return undefined;
@@ -258,7 +261,7 @@ function transformCurrentBuildObject(
 function transformConditionalConfig(
   conditionalConfig: Node[],
   appFileContent: string,
-  buildConfigObject: {}
+  buildConfigObject: string
 ): string | undefined {
   const { tsquery } = require('@phenomnomnominal/tsquery');
   const { SyntaxKind } = require('typescript');
@@ -268,15 +271,18 @@ function transformConditionalConfig(
   const binaryExpressions = tsquery.query(ifStatement?.[0], 'BinaryExpression');
 
   const buildExists = binaryExpressions?.find(
-    (binaryExpression) => binaryExpression.getText() === `command === 'build'`
+    (binaryExpression: Node) =>
+      binaryExpression.getText() === `command === 'build'`
   );
 
   const buildExistsExpressionIndex = binaryExpressions?.findIndex(
-    (binaryExpression) => binaryExpression.getText() === `command === 'build'`
+    (binaryExpression: Node) =>
+      binaryExpression.getText() === `command === 'build'`
   );
 
   const serveExists = binaryExpressions?.find(
-    (binaryExpression) => binaryExpression.getText() === `command === 'serve'`
+    (binaryExpression: Node) =>
+      binaryExpression.getText() === `command === 'serve'`
   );
 
   const elseKeywordExists = findNodes(ifStatement?.[0], SyntaxKind.ElseKeyword);
@@ -455,7 +461,7 @@ function filterImport(appFileContent: string, imports: string[]): string[] {
     ':matches(ImportDeclaration, VariableStatement)'
   );
 
-  const importsArrayExisting = importNodes?.map((node) => {
+  const importsArrayExisting = importNodes?.map((node: Node) => {
     return node.getText().slice(0, -1);
   });
 
@@ -663,4 +669,8 @@ function handleCacheDirNode(appFileContent: string, cacheDir: string): string {
   }
 
   return appFileContent;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
 }

@@ -39,6 +39,11 @@ export interface EslintPluginOptions {
   cwd?: 'projectRoot' | 'workspaceRoot';
 }
 
+type NormalizedEslintPluginOptions = EslintPluginOptions & {
+  targetName: string;
+  extensions: string[];
+};
+
 const DEFAULT_EXTENSIONS = [
   'ts',
   'cts',
@@ -62,7 +67,7 @@ type EslintProjects = CreateNodesResult['projects'];
 const internalCreateNodesV2 = async (
   ESLint: typeof ESLintType,
   configFilePath: string,
-  options: EslintPluginOptions,
+  options: NormalizedEslintPluginOptions,
   context: CreateNodesContext,
   projectRootsByEslintRoots: Map<string, string[]>,
   lintableFilesPerProjectRoot: Map<string, string[]>,
@@ -111,6 +116,9 @@ const internalCreateNodesV2 = async (
   const contributions = await Promise.all(
     orderedProjectRoots.map(async (projectRoot) => {
       const hash = hashByRoot.get(projectRoot);
+      if (hash === undefined) {
+        throw new Error(`No hash was computed for "${projectRoot}".`);
+      }
 
       const cached = projectsCache.get(hash);
       if (cached) {
@@ -180,8 +188,8 @@ const internalCreateNodesV2 = async (
 
 export const createNodes: CreateNodes<EslintPluginOptions> = [
   ESLINT_CONFIG_GLOB_V2,
-  async (configFiles, options, context) => {
-    options = normalizeOptions(options);
+  async (configFiles, rawOptions, context) => {
+    const options = normalizeOptions(rawOptions);
     const pmc = getPackageManagerCommand(
       detectPackageManager(context.workspaceRoot)
     );
@@ -255,7 +263,7 @@ export const createNodes: CreateNodes<EslintPluginOptions> = [
         ),
       });
       return await createNodesFromFiles(
-        (configFile, options, context) =>
+        (configFile, _, context) =>
           internalCreateNodesV2(
             ESLint,
             configFile,
@@ -379,8 +387,10 @@ function groupProjectRootsByEslintRoots(
       projectRoot,
       projectRootsByEslintRoots
     );
-    if (eslintRoot) {
-      projectRootsByEslintRoots.get(eslintRoot).push(projectRoot);
+    const eslintRootProjects =
+      eslintRoot && projectRootsByEslintRoots.get(eslintRoot);
+    if (eslintRootProjects) {
+      eslintRootProjects.push(projectRoot);
     }
   }
 
@@ -455,7 +465,7 @@ function collectTsconfigChainsByProjectRoot(
 
 async function collectLintableFilesByProjectRoot(
   projectRoots: string[],
-  options: EslintPluginOptions,
+  options: NormalizedEslintPluginOptions,
   context: CreateNodesContext
 ): Promise<Map<string, string[]>> {
   const lintableFilesPerProjectRoot = new Map<string, string[]>();
@@ -473,8 +483,10 @@ async function collectLintableFilesByProjectRoot(
       dirname(file),
       lintableFilesPerProjectRoot
     );
-    if (projectRoot) {
-      lintableFilesPerProjectRoot.get(projectRoot).push(file);
+    const projectFiles =
+      projectRoot && lintableFilesPerProjectRoot.get(projectRoot);
+    if (projectFiles) {
+      projectFiles.push(file);
     }
   }
 
@@ -484,7 +496,7 @@ async function collectLintableFilesByProjectRoot(
 function getRootForDirectory(
   directory: string,
   roots: Map<string, string[]>
-): string {
+): string | null {
   let currentPath = normalize(directory);
 
   while (currentPath !== dirname(currentPath)) {
@@ -519,11 +531,11 @@ function getProjectUsingESLintConfig(
   projectRoot: string,
   lintCwd: string,
   lintConfigFile: string | undefined,
-  options: EslintPluginOptions,
+  options: NormalizedEslintPluginOptions,
   context: CreateNodesContext,
   pmc: ReturnType<typeof getPackageManagerCommand>,
   tsconfigChainOutsideProjectRoot: string[]
-): CreateNodesResult['projects'][string] | null {
+): NonNullable<CreateNodesResult['projects']>[string] | null {
   // Add a lint target for each child project without an eslint config, with the root level config as an input
   const standaloneSrcPath = getStandaloneSrcPath(
     projectRoot,
@@ -596,7 +608,7 @@ function buildEslintTargets(
   lintCwd: string,
   lintConfigFile: string | undefined,
   workspaceRoot: string,
-  options: EslintPluginOptions,
+  options: NormalizedEslintPluginOptions,
   pmc: ReturnType<typeof getPackageManagerCommand>,
   standaloneSrcPath?: string,
   tsconfigChainOutsideProjectRoot: string[] = []
@@ -659,9 +671,12 @@ function buildEslintTargets(
   return targets;
 }
 
-function normalizeOptions(options: EslintPluginOptions): EslintPluginOptions {
-  const normalizedOptions: EslintPluginOptions = {
+function normalizeOptions(
+  options: EslintPluginOptions | undefined
+): NormalizedEslintPluginOptions {
+  const normalizedOptions: NormalizedEslintPluginOptions = {
     targetName: options?.targetName ?? 'lint',
+    extensions: DEFAULT_EXTENSIONS,
   };
   if (options?.cwd) {
     normalizedOptions.cwd = options.cwd;
@@ -672,8 +687,6 @@ function normalizeOptions(options: EslintPluginOptions): EslintPluginOptions {
     normalizedOptions.extensions = options.extensions.map((f) =>
       f.replace(/^\.+/, '')
     );
-  } else {
-    normalizedOptions.extensions = DEFAULT_EXTENSIONS;
   }
 
   return normalizedOptions;

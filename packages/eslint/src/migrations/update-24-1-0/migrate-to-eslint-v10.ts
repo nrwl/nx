@@ -464,7 +464,10 @@ function replaceV9OnlyPlugins(
   }
   // v7 added the React Compiler rules to the preset, so a 7.0 install has them.
   const reactHooksGainsCompilerRules =
-    reactHooksUpdated && major(reactHooks.version) < 7;
+    reactHooksUpdated &&
+    reactHooks !== null &&
+    reactHooks.version !== null &&
+    major(reactHooks.version) < 7;
   if (reactHooksUpdated) {
     changes.push(
       `updated eslint-plugin-react-hooks to ${ESLINT_PLUGIN_REACT_HOOKS_V7_VERSION}${
@@ -740,6 +743,9 @@ function fixAndCollectFileReferences(
       // A JSON or YAML eslintrc that stays, so any mention of a plugin's package
       // or a quoted rule id counts. ESLint parses a bare `.eslintrc` as YAML too.
       const content = tree.read(path, 'utf-8');
+      if (content === null) {
+        throw new Error(`Could not read "${path}".`);
+      }
       const isYaml = /\.ya?ml$/.test(path) || basename(path) === '.eslintrc';
       const matched = matchers
         .filter(
@@ -1082,7 +1088,8 @@ function isInstallBehindDeclaredRange(
   installed: SemVer
 ): boolean {
   const declared = getDependencyVersionFromPackageJson(tree, name);
-  const floor = validRange(declared) ? minVersion(declared) : null;
+  const floor =
+    declared !== null && validRange(declared) ? minVersion(declared) : null;
   return floor !== null && gt(floor, installed);
 }
 

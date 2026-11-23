@@ -28,9 +28,11 @@ import {
 export function addProject(
   tree: Tree,
   options: NormalizedSchema,
-  frameworkDependencies: Record<string, string>
+  frameworkDependencies: Record<string, string> | undefined
 ) {
-  const project: ProjectConfiguration = {
+  const project: ProjectConfiguration & {
+    targets: Record<string, TargetConfiguration>;
+  } = {
     root: options.appProjectRoot,
     sourceRoot: joinPathFragments(options.appProjectRoot, 'src'),
     projectType: 'application',
@@ -55,8 +57,9 @@ export function addProject(
       TS_SOLUTION_SETUP_TSCONFIG_INPUT,
       ...deployInputs,
     ]);
-    project.targets.build = getEsBuildConfig(tree, project, options);
-    ensureDeployInputs(tree, options, project.targets.build, deployInputs);
+    const buildTarget = getEsBuildConfig(tree, project, options);
+    project.targets.build = buildTarget;
+    ensureDeployInputs(tree, options, buildTarget, deployInputs);
   } else if (options.bundler === 'tsc') {
     options.buildTargetName = addTscAppBuildPlugin(
       tree,
@@ -123,7 +126,7 @@ export function addProject(
 function ensureDeployInputs(
   tree: Tree,
   options: NormalizedSchema,
-  buildTarget: TargetConfiguration,
+  buildTarget: TargetConfiguration & { executor: string },
   deployInputs: readonly DeployOutputSettingsInput[]
 ): void {
   if (deployInputs.length === 0) {
@@ -147,7 +150,7 @@ function ensureDeployInputs(
     buildTarget.executor,
     deployInputs
   );
-  if (changed === 'defaults') {
+  if (changed === 'defaults' && nxJson) {
     updateNxJson(tree, nxJson);
   }
 }

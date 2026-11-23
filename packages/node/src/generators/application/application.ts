@@ -49,7 +49,7 @@ import {
  */
 function ensureRolldownBuildTarget(tree: Tree, projectRoot: string): string {
   const configFile = joinPathFragments(projectRoot, 'rolldown.config.ts');
-  const nxJson = readNxJson(tree);
+  const nxJson = readNxJson(tree) ?? {};
   nxJson.plugins ??= [];
   const registration = nxJson.plugins.find((p) =>
     typeof p === 'string'
@@ -82,7 +82,7 @@ function allowJestToTransformCookie(tree: Tree, projectRoot: string) {
   if (!configFile) {
     return;
   }
-  const config = tree.read(configFile, 'utf-8');
+  const config = tree.read(configFile, 'utf-8') ?? '';
   tree.write(
     configFile,
     config.replace(

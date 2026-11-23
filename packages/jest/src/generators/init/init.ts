@@ -19,9 +19,12 @@ import type { JestInitSchema } from './schema';
 
 function updateProductionFileSet(tree: Tree) {
   const nxJson = readNxJson(tree);
+  if (!nxJson) {
+    throw new Error('Could not read nx.json');
+  }
 
   const productionFileSet = nxJson.namedInputs?.production;
-  if (productionFileSet) {
+  if (nxJson.namedInputs && productionFileSet) {
     // This is one of the patterns in the default jest patterns
     productionFileSet.push(
       // Remove spec, test, and snapshots from the production fileset
@@ -89,7 +92,7 @@ export async function jestInitGeneratorInternal(
     {
       targetName: ['test', 'jest:test', 'jest-test'],
     },
-    options.updatePackageScripts
+    options.updatePackageScripts ?? false
   );
 
   const tasks: GeneratorCallback[] = [];

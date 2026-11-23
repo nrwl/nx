@@ -154,7 +154,9 @@ function findNodeVersionsBelowJestFloor(tree: Tree): string[] {
   }
   // Version managers resolve a partial version like `24` to the latest match.
   for (const file of ['.nvmrc', '.node-version']) {
-    const pinned = tree.exists(file) ? tree.read(file, 'utf-8').trim() : '';
+    const pinned = tree.exists(file)
+      ? (tree.read(file, 'utf-8') ?? '').trim()
+      : '';
     if (
       validRange(pinned) &&
       !intersects(pinned, `>=${jestNodeFloor}`, { includePrerelease: true })

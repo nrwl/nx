@@ -43,6 +43,11 @@ describe('release-publish executor', () => {
       typeof npmConfigModule.parseRegistryOptions
     >;
   const mockReadJsonFile = readJsonFile as MockedFunction<typeof readJsonFile>;
+  const noPublishJsonData = {
+    beforeJsonData: '',
+    jsonData: null,
+    afterJsonData: '',
+  };
 
   function npmViewNotFoundError() {
     const error: any = new Error('npm view failed');
@@ -60,9 +65,9 @@ describe('release-publish executor', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockDetectPackageManager.mockReturnValue('npm');
-    vi.spyOn(console, 'log').mockImplementation();
-    vi.spyOn(console, 'warn').mockImplementation();
-    vi.spyOn(console, 'error').mockImplementation();
+    vi.spyOn(console, 'log').mockImplementation(() => {});
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    vi.spyOn(console, 'error').mockImplementation(() => {});
 
     context = {
       root: '/root',
@@ -583,7 +588,7 @@ describe('release-publish executor', () => {
         .mockReturnValueOnce('bun publish output');
 
       vi.spyOn(extractModule, 'extractNpmPublishJsonData').mockReturnValue(
-        null
+        noPublishJsonData
       );
 
       const result = await runExecutor(options, context);
@@ -785,7 +790,7 @@ describe('release-publish executor', () => {
         }) // npm view: version not published yet
         .mockReturnValueOnce('{}'); // npm publish
       vi.spyOn(extractModule, 'extractNpmPublishJsonData').mockReturnValue(
-        null
+        noPublishJsonData
       );
 
       await runExecutor(options, context);
@@ -857,7 +862,7 @@ describe('release-publish executor', () => {
         }) // npm view: version not published yet
         .mockReturnValueOnce('{}'); // npm publish
       vi.spyOn(extractModule, 'extractNpmPublishJsonData').mockReturnValue(
-        null
+        noPublishJsonData
       );
 
       await runExecutor(options, context);
@@ -874,7 +879,7 @@ describe('release-publish executor', () => {
         }) // npm view: version not published yet
         .mockReturnValueOnce('{}'); // npm publish
       vi.spyOn(extractModule, 'extractNpmPublishJsonData').mockReturnValue(
-        null
+        noPublishJsonData
       );
 
       await runExecutor(
