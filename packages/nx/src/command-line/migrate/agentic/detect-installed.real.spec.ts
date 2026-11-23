@@ -14,7 +14,7 @@ import { AGENT_DEFINITIONS } from './definitions';
 import { confirmAgentIdentity } from './detect-installed';
 import type { DetectedInstalledAgent } from './types';
 
-const copilot = AGENT_DEFINITIONS.find((d) => d.id === 'copilot-cli')!;
+const copilot = AGENT_DEFINITIONS.find((d) => d.id === 'copilot')!;
 
 const GITHUB = '#!/bin/sh\necho "GitHub Copilot CLI 1.0.114."\n';
 const AWS = '#!/bin/sh\necho "copilot version: v1.34.1"\n';
@@ -74,7 +74,7 @@ describe.skipIf(process.platform === 'win32')(
     // Detection matches by name, so it hands over the first `copilot` found.
     function detectedAt(binary: string): DetectedInstalledAgent {
       return {
-        id: 'copilot-cli',
+        id: 'copilot',
         displayName: copilot.displayName,
         binary,
         source: 'path',

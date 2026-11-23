@@ -942,7 +942,7 @@ export interface NxMigrateConfiguration {
    * Equivalent to the `--agentic` flag.
    * - `false`: never use the agentic flow.
    * - `true`: use the agentic flow and resolve the installed agent.
-   * - an agent id (`"claude-code"`, `"codex"`, `"opencode"`, `"copilot-cli"`): use that agent.
+   * - an agent id (`"claude-code"`, `"codex"`, `"opencode"`, `"copilot"`): use that agent.
    *   If Nx can't find or identify it, Nx warns and selects from the other
    *   usable agents, or exits with an error when none is usable.
    *

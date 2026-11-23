@@ -91,7 +91,7 @@ const builders: Record<
       }),
     },
   }),
-  'copilot-cli': (ctx) => {
+  copilot: (ctx) => {
     const allowTool = copilotCliHandoffAllowTool(ctx.runId);
     return {
       args: [

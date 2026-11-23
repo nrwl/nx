@@ -157,7 +157,7 @@ export function copilotCliHandoffAllowTool(runDirName: string): string | null {
 }
 
 const copilotCliDefinition: AgentDefinition = {
-  id: 'copilot-cli',
+  id: 'copilot',
   displayName: 'GitHub Copilot CLI',
   binaryNames: ['copilot'],
   wellKnownPaths: copilotCliWellKnownPaths,

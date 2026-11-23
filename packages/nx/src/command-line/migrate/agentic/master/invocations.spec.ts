@@ -78,7 +78,7 @@ describe('buildMasterInvocation', () => {
     });
   });
 
-  describe('copilot-cli', () => {
+  describe('copilot', () => {
     const originalDirs = process.env.COPILOT_CUSTOM_INSTRUCTIONS_DIRS;
 
     afterEach(() => {
@@ -92,7 +92,7 @@ describe('buildMasterInvocation', () => {
     it('pre-allows the run-scoped handoff write and pins the invariant through a run-scoped instructions file', () => {
       delete process.env.COPILOT_CUSTOM_INSTRUCTIONS_DIRS;
 
-      const spec = buildMasterInvocation('copilot-cli', ctx);
+      const spec = buildMasterInvocation('copilot', ctx);
 
       expect(spec).toEqual({
         args: [
@@ -119,7 +119,7 @@ describe('buildMasterInvocation', () => {
     it('keeps the instruction directories the user configured', () => {
       process.env.COPILOT_CUSTOM_INSTRUCTIONS_DIRS = '/home/me/instructions';
 
-      expect(buildMasterInvocation('copilot-cli', ctx).env).toEqual({
+      expect(buildMasterInvocation('copilot', ctx).env).toEqual({
         COPILOT_CUSTOM_INSTRUCTIONS_DIRS: `/home/me/instructions,.nx/migrate-runs/${runId}/copilot`,
       });
     });

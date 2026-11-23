@@ -181,7 +181,7 @@ describe('detectInstalledAgents', () => {
     const cwd = resolve('workspace');
     const binDir = resolve('bin');
     const copilotLike = makeDefinition({
-      id: 'copilot-cli',
+      id: 'copilot',
       binaryNames: ['copilot'],
       versionOutputPrefix: 'GitHub Copilot CLI ',
     });
@@ -219,7 +219,7 @@ describe('detectInstalledAgents', () => {
         process.env.PATH = pathEntries.join(delimiter);
 
         const identity = await confirmAgentIdentity(copilotLike, {
-          id: 'copilot-cli',
+          id: 'copilot',
           displayName: copilotLike.displayName,
           binary: join(expectedDirs[0], 'copilot.CMD'),
           source: 'path',

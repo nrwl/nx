@@ -10,7 +10,7 @@ export const AGENT_IDS = [
   'claude-code',
   'codex',
   'opencode',
-  'copilot-cli',
+  'copilot',
 ] as const;
 
 export type AgentId = (typeof AGENT_IDS)[number];

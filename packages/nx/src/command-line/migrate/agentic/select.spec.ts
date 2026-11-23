@@ -40,7 +40,7 @@ const mockOutputError = output.error as unknown as Mock;
 const mockOutputWarn = output.warn as unknown as Mock;
 
 function detected(
-  id: 'claude-code' | 'codex' | 'opencode' | 'copilot-cli'
+  id: 'claude-code' | 'codex' | 'opencode' | 'copilot'
 ): DetectedInstalledAgent {
   return {
     id,
@@ -488,11 +488,11 @@ describe('resolveAgentic', () => {
 
   describe('checking agent identity after opt-in', () => {
     const rejectedLine =
-      '  - /usr/local/bin/copilot-cli is not copilot-cli: `--version` printed "copilot version: v1.34.1"';
+      '  - /usr/local/bin/copilot is not copilot: `--version` printed "copilot version: v1.34.1"';
 
     beforeEach(() => {
       mockConfirm.mockImplementation(async (_definition, agent) =>
-        agent.id === 'copilot-cli'
+        agent.id === 'copilot'
           ? {
               kind: 'rejected',
               binaries: [
@@ -507,7 +507,7 @@ describe('resolveAgentic', () => {
     });
 
     it('runs no identity check when the up-front prompt is declined', async () => {
-      mockDetect.mockResolvedValue([detected('copilot-cli')]);
+      mockDetect.mockResolvedValue([detected('copilot')]);
       mockPrompt.mockResolvedValueOnce('no-once');
 
       await resolveAgentic({
@@ -520,7 +520,7 @@ describe('resolveAgentic', () => {
 
     it('continues without the agentic flow, saving nothing, when the up-front prompt is accepted and no agent is usable', async () => {
       tempFs.createFileSync('nx.json', '{}\n');
-      mockDetect.mockResolvedValue([detected('copilot-cli')]);
+      mockDetect.mockResolvedValue([detected('copilot')]);
       mockPrompt.mockResolvedValueOnce('yes-flex');
 
       const result = await resolveAgentic({
@@ -537,7 +537,7 @@ describe('resolveAgentic', () => {
     });
 
     it('keeps the error, naming the unusable binary, when an explicit --agentic leaves no usable agent', async () => {
-      mockDetect.mockResolvedValue([detected('copilot-cli')]);
+      mockDetect.mockResolvedValue([detected('copilot')]);
 
       await expect(
         resolveAgentic({ agentic: true, migrations: [{ prompt: 'x.md' }] })
@@ -551,11 +551,11 @@ describe('resolveAgentic', () => {
     it('names the unusable binary when --agentic=<id> requested it, then uses the installed agent', async () => {
       mockDetect.mockResolvedValue([
         detected('claude-code'),
-        detected('copilot-cli'),
+        detected('copilot'),
       ]);
 
       const result = await resolveAgentic({
-        agentic: 'copilot-cli',
+        agentic: 'copilot',
         migrations: [{ prompt: 'x.md' }],
       });
 
@@ -566,7 +566,7 @@ describe('resolveAgentic', () => {
       expect(mockOutputWarn).toHaveBeenCalledTimes(1);
       expect(mockOutputWarn.mock.calls[0][0]).toMatchObject({
         title:
-          'The requested agent "copilot-cli" could not be used; using the installed agent(s) instead.',
+          'The requested agent "copilot" could not be used; using the installed agent(s) instead.',
         bodyLines: expect.arrayContaining([rejectedLine]),
       });
     });
@@ -574,7 +574,7 @@ describe('resolveAgentic', () => {
     it('checks only the requested agent when it is usable', async () => {
       mockDetect.mockResolvedValue([
         detected('claude-code'),
-        detected('copilot-cli'),
+        detected('copilot'),
       ]);
 
       await resolveAgentic({

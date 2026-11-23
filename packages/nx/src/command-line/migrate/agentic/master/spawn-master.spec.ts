@@ -725,7 +725,7 @@ describe('spawnMasterSession', () => {
     });
 
     const copilot = agent({
-      id: 'copilot-cli',
+      id: 'copilot',
       displayName: 'GitHub Copilot CLI',
       binary: '/usr/local/bin/copilot',
     });

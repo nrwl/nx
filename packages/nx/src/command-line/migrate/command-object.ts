@@ -188,7 +188,7 @@ function withMigrationOptions(yargs: Argv) {
     })
     .option('agentic', {
       describe:
-        'Use an AI agent to apply prompt-based migrations and review the results. With --run-migrations, one agent session drives the whole run. With --run-migration, the session covers that one migration. Pass `--agentic=<agent>` to pin a specific agent (claude-code, codex, opencode, or copilot-cli). Pass `--agentic=false` or `--no-agentic` to disable it. Inside an AI agent, disabling it stops nx from asking that agent to review the changes of generator-only migrations. Migration prompts still go to that agent.',
+        'Use an AI agent to apply prompt-based migrations and review the results. With --run-migrations, one agent session drives the whole run. With --run-migration, the session covers that one migration. Pass `--agentic=<agent>` to pin a specific agent (claude-code, codex, opencode, or copilot). Pass `--agentic=false` or `--no-agentic` to disable it. Inside an AI agent, disabling it stops nx from asking that agent to review the changes of generator-only migrations. Migration prompts still go to that agent.',
       coerce: coerceAgenticArg,
     })
     .option('validate', {
