@@ -2,6 +2,7 @@ pub mod glob_files;
 mod glob_group;
 mod glob_parser;
 pub mod glob_transform;
+pub mod plugin_globs;
 
 pub(crate) use crate::native::glob::glob_parser::{literal_segment, parse_glob};
 use crate::native::glob::glob_transform::convert_glob;

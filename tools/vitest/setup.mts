@@ -316,9 +316,9 @@ vi.doMock(workspaceContextPath, async () => {
     (...args: any[]) =>
       actual[name](...args);
   const guarded =
-    (name: string, fallback: () => any) =>
+    (name: string, fallback: (...rest: any[]) => any) =>
     (root: string, ...rest: any[]) => {
-      if (root === realWorkspaceRoot) return fallback();
+      if (root === realWorkspaceRoot) return fallback(...rest);
       return actual[name](root, ...rest);
     };
   return {
@@ -345,6 +345,10 @@ vi.doMock(workspaceContextPath, async () => {
     multiGlobWithWorkspaceContext: guarded(
       'multiGlobWithWorkspaceContext',
       () => Promise.resolve([])
+    ),
+    globPluginFilesWithWorkspaceContext: guarded(
+      'globPluginFilesWithWorkspaceContext',
+      (plugins: unknown[]) => Promise.resolve(plugins.map(() => []))
     ),
     hashWithWorkspaceContext: guarded('hashWithWorkspaceContext', () =>
       Promise.resolve('0')

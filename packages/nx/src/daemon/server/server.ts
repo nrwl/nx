@@ -64,7 +64,9 @@ import {
 } from '../message-types/get-sync-generator-changes';
 import {
   GLOB,
+  GLOB_PLUGIN_FILES,
   isHandleGlobMessage,
+  isHandleGlobPluginFilesMessage,
   isHandleMultiGlobMessage,
   MULTI_GLOB,
 } from '../message-types/glob';
@@ -124,7 +126,11 @@ import { handleGetRegisteredSyncGenerators } from './handle-get-registered-sync-
 import { handleGetPluginCapabilities } from './handle-get-plugin-capabilities';
 import { handleSelectAffectedTasks } from './handle-select-affected-tasks';
 import { handleGetSyncGeneratorChanges } from './handle-get-sync-generator-changes';
-import { handleGlob, handleMultiGlob } from './handle-glob';
+import {
+  handleGlob,
+  handleGlobPluginFiles,
+  handleMultiGlob,
+} from './handle-glob';
 import { handleHashGlob, handleHashMultiGlob } from './handle-hash-glob';
 import { handleHashTasks, handleHashTasksUpfront } from './handle-hash-tasks';
 import {
@@ -401,6 +407,13 @@ export async function handleMessage(socket: Socket, data: Buffer) {
       socket,
       MULTI_GLOB,
       () => handleMultiGlob(payload.globs, payload.exclude),
+      mode
+    );
+  } else if (isHandleGlobPluginFilesMessage(payload)) {
+    await handleResult(
+      socket,
+      GLOB_PLUGIN_FILES,
+      () => handleGlobPluginFiles(payload.plugins),
       mode
     );
   } else if (isHandleNxWorkspaceFilesMessage(payload)) {

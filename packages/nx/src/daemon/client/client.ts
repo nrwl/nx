@@ -20,6 +20,7 @@ import { Hash } from '../../hasher/task-hasher';
 import {
   IS_WASM,
   NxWorkspaceFiles,
+  PluginGlobs,
   TaskOutputs,
   TaskRun,
   TaskTarget,
@@ -98,7 +99,9 @@ import {
   type HandleGetSyncGeneratorChangesMessage,
 } from '../message-types/get-sync-generator-changes';
 import {
+  GLOB_PLUGIN_FILES,
   HandleGlobMessage,
+  HandleGlobPluginFilesMessage,
   HandleMultiGlobMessage,
 } from '../message-types/glob';
 import {
@@ -1030,6 +1033,14 @@ export class DaemonClient {
       type: 'MULTI_GLOB',
       globs,
       exclude,
+    };
+    return this.sendToDaemonViaQueue(message);
+  }
+
+  globPluginFiles(plugins: PluginGlobs[]): Promise<string[][]> {
+    const message: HandleGlobPluginFilesMessage = {
+      type: GLOB_PLUGIN_FILES,
+      plugins,
     };
     return this.sendToDaemonViaQueue(message);
   }

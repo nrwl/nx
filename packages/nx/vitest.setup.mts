@@ -128,6 +128,10 @@ vi.doMock(workspaceContextPath, async () => {
       'multiGlobWithWorkspaceContext',
       () => Promise.resolve([])
     ),
+    globPluginFilesWithWorkspaceContext: guarded(
+      'globPluginFilesWithWorkspaceContext',
+      (plugins: unknown[]) => Promise.resolve(plugins.map(() => []))
+    ),
     hashWithWorkspaceContext: guarded('hashWithWorkspaceContext', () =>
       Promise.resolve('0')
     ),

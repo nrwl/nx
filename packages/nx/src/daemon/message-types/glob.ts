@@ -1,3 +1,5 @@
+import type { PluginGlobs } from '../../native';
+
 export const GLOB = 'GLOB' as const;
 
 export type HandleGlobMessage = {
@@ -14,6 +16,23 @@ export function isHandleGlobMessage(
     message !== null &&
     'type' in message &&
     message['type'] === GLOB
+  );
+}
+
+export const GLOB_PLUGIN_FILES = 'GLOB_PLUGIN_FILES' as const;
+export type HandleGlobPluginFilesMessage = {
+  type: typeof GLOB_PLUGIN_FILES;
+  plugins: PluginGlobs[];
+};
+
+export function isHandleGlobPluginFilesMessage(
+  message: unknown
+): message is HandleGlobPluginFilesMessage {
+  return (
+    typeof message === 'object' &&
+    message !== null &&
+    'type' in message &&
+    message['type'] === GLOB_PLUGIN_FILES
   );
 }
 

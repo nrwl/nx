@@ -640,6 +640,7 @@ module.exports.locateTouchedProjects = nativeBinding.locateTouchedProjects
 module.exports.logDebug = nativeBinding.logDebug
 module.exports.matchGlobPaths = nativeBinding.matchGlobPaths
 module.exports.matchOutputPaths = nativeBinding.matchOutputPaths
+module.exports.matchPluginFiles = nativeBinding.matchPluginFiles
 module.exports.openUrl = nativeBinding.openUrl
 module.exports.parseTaskStatus = nativeBinding.parseTaskStatus
 module.exports.readShebangHeaders = nativeBinding.readShebangHeaders

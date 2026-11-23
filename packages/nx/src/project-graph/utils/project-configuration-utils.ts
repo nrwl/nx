@@ -9,8 +9,8 @@ import {
 } from './project-configuration/project-nodes-manager';
 import { validateAndNormalizeProjectRootMap } from './project-configuration/target-normalization';
 
-import { Minimatch } from 'minimatch';
 import { performance } from 'perf_hooks';
+import { matchPluginFiles } from '../../native';
 
 import { DelayedSpinner } from '../../utils/delayed-spinner';
 import { formatPluginProgressText } from '../../utils/plugin-progress-text';
@@ -146,21 +146,10 @@ export async function createProjectConfigurationsWithPlugins(
   // We iterate over plugins first - this ensures that plugins specified first take precedence.
   for (const [
     index,
-    {
-      index: pluginIndex,
-      createNodes: createNodesTuple,
-      include,
-      exclude,
-      name: pluginName,
-    },
+    { index: pluginIndex, createNodes: createNodesTuple, name: pluginName },
   ] of allCreateNodesPlugins.entries()) {
     const [, createNodes] = createNodesTuple;
-
-    const matchingConfigFiles: string[] = findMatchingConfigFiles(
-      allProjectFiles[index],
-      include,
-      exclude
-    );
+    const matchingConfigFiles = allProjectFiles[index];
 
     inProgressPlugins.add(pluginName);
     let r = createNodes(matchingConfigFiles, {
@@ -506,61 +495,13 @@ export function mergeCreateNodesResults(
 }
 
 /**
- * Creates a matcher function for the given patterns. Globs are compiled once
- * here so matching a file list only runs the pre-parsed regex per file, instead
- * of recompiling every pattern on each call.
- * @param patterns Array of glob patterns (can include negation patterns starting with '!')
- * @param emptyValue Value to return when patterns array is empty
- * @returns A function that checks if a file matches the patterns
+ * The `projectFiles` a plugin's `include` and `exclude` select. Patterns apply
+ * in order, so a later `!` pattern can re-include an excluded file.
  */
-function createMatcher(
-  patterns: string[],
-  emptyValue: boolean
-): (file: string) => boolean {
-  if (!patterns || patterns.length === 0) {
-    return () => emptyValue;
-  }
-
-  const hasNegationPattern = patterns.some((p) => p.startsWith('!'));
-
-  if (hasNegationPattern) {
-    // Patterns are processed in order, with later matches overriding earlier
-    // ones; a leading negation starts from "matches everything".
-    const compiled = patterns.map((pattern) => {
-      const isNegation = pattern.startsWith('!');
-      return {
-        isNegation,
-        matcher: new Minimatch(isNegation ? pattern.substring(1) : pattern, {
-          dot: true,
-        }),
-      };
-    });
-    const initialMatch = patterns[0].startsWith('!');
-    return (file: string) => {
-      let isMatch = initialMatch;
-      for (const { isNegation, matcher } of compiled) {
-        if (matcher.match(file)) {
-          isMatch = !isNegation;
-        }
-      }
-      return isMatch;
-    };
-  }
-
-  const compiled = patterns.map((p) => new Minimatch(p, { dot: true }));
-  return (file: string) => compiled.some((m) => m.match(file));
-}
-
 export function findMatchingConfigFiles(
   projectFiles: string[],
-  include: string[],
-  exclude: string[]
+  include: string[] | undefined,
+  exclude: string[] | undefined
 ): string[] {
-  // Callers pass files that already match the plugin's createNodes pattern,
-  // so only include/exclude filters remain here.
-  // Empty include means include everything, empty exclude means exclude nothing
-  const includes = createMatcher(include, true);
-  const excludes = createMatcher(exclude, false);
-
-  return projectFiles.filter((file) => includes(file) && !excludes(file));
+  return matchPluginFiles(projectFiles, { include, exclude });
 }

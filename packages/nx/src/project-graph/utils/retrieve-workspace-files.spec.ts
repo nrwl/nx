@@ -55,7 +55,7 @@ describe('retrieve-workspace-files', () => {
       expect(configPaths).toContain('projects/project.json');
     });
 
-    it('should glob only the include patterns of a scoped plugin', async () => {
+    it("should apply each plugin's include patterns natively", async () => {
       // Own workspace: the shared one's file context predates these files.
       const scopedFs = new TempFs('retrieveProjectConfigurationPaths-scoped');
       await scopedFs.createFiles({
@@ -90,13 +90,13 @@ describe('retrieve-workspace-files', () => {
         ]
       );
 
-      expect(configPaths.sort()).toEqual([
-        // scoped: include results that also match the plugin pattern
+      expect(configPaths).toEqual([
+        // scoped
         'apps/api/package.json',
         'apps/api/src/main.ts',
-        // negated and broad: plugin pattern only; include is applied later
-        'apps/api/src/main.ts',
+        // negated
         'apps/web/src/main.ts',
+        // broad
         'libs/a/src/index.ts',
       ]);
       scopedFs.cleanup();

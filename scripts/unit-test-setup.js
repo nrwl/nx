@@ -167,7 +167,7 @@ module.exports = () => {
     const guarded =
       (name, fallback) =>
       (root, ...rest) => {
-        if (root === realWorkspaceRoot) return fallback();
+        if (root === realWorkspaceRoot) return fallback(...rest);
         return jest.requireActual(workspaceContextPath)[name](root, ...rest);
       };
     return {
@@ -197,6 +197,10 @@ module.exports = () => {
       multiGlobWithWorkspaceContext: guarded(
         'multiGlobWithWorkspaceContext',
         () => Promise.resolve([])
+      ),
+      globPluginFilesWithWorkspaceContext: guarded(
+        'globPluginFilesWithWorkspaceContext',
+        (plugins) => Promise.resolve(plugins.map(() => []))
       ),
       hashWithWorkspaceContext: guarded('hashWithWorkspaceContext', () =>
         Promise.resolve('0')

@@ -10,12 +10,11 @@ import {
   createProjectConfigurationsWithPlugins,
 } from './project-configuration-utils';
 import type { LoadedNxPlugin } from '../plugins/loaded-nx-plugin';
+import type { PluginGlobs } from '../../native';
 import {
   getNxWorkspaceFilesFromContext,
-  globWithWorkspaceContext,
-  multiGlobWithWorkspaceContext,
+  globPluginFilesWithWorkspaceContext,
 } from '../../utils/workspace-context';
-import { Minimatch } from 'minimatch';
 import { join } from 'path';
 import {
   getOnlyDefaultPlugins,
@@ -148,15 +147,14 @@ export async function retrieveProjectConfigurationsWithoutPluginInference(
   const nxJson = readNxJson(root);
   const defaultPlugins = await getOnlyDefaultPlugins(); // only load default plugins
   const pluginsWithCreateNodes = defaultPlugins.filter((p) => !!p.createNodes);
-  const projectGlobPatterns = getGlobPatternsOfPlugins(pluginsWithCreateNodes);
-  const cacheKey = root + ',' + projectGlobPatterns.join(',');
+  const cacheKey =
+    root + ',' + JSON.stringify(pluginsWithCreateNodes.map(toPluginGlobs));
 
   if (projectsWithoutPluginCache.has(cacheKey)) {
     return projectsWithoutPluginCache.get(cacheKey);
   }
 
-  const projectFiles =
-    (await multiGlobWithWorkspaceContext(root, projectGlobPatterns)) ?? [];
+  const projectFiles = await globPluginFiles(root, pluginsWithCreateNodes);
   const { projects } = await createProjectConfigurationsWithPlugins(
     root,
     nxJson,
@@ -184,46 +182,24 @@ export function clearProjectsWithoutPluginInferenceCache(): void {
   projectsWithoutPluginCache.clear();
 }
 
-/**
- * Files each plugin's createNodes pattern matches, in plugin order. A plugin
- * scoped by `include` globs only those patterns natively, so a broad pattern
- * (every `.ts` file, say) is never matched against the whole workspace in JS.
- */
 async function globPluginFiles(
   root: string,
   plugins: Array<LoadedNxPlugin>
 ): Promise<string[][]> {
-  const unscoped = plugins.filter((p) => !canGlobInclude(p));
-  const unscopedFiles =
-    (await multiGlobWithWorkspaceContext(
-      root,
-      unscoped.map((p) => p.createNodes[0])
-    )) ?? [];
-  return Promise.all(
-    plugins.map(async (plugin) => {
-      if (!canGlobInclude(plugin)) {
-        return unscopedFiles[unscoped.indexOf(plugin)] ?? [];
-      }
-      const pattern = new Minimatch(plugin.createNodes[0], { dot: true });
-      const included = await globWithWorkspaceContext(root, plugin.include);
-      return included.filter((file) => pattern.match(file));
-    })
-  );
-}
-
-// Only narrow includes: a `**` scope can return more files than the plugin
-// pattern does. Negations and extglobs keep the JS matcher's semantics.
-function canGlobInclude(plugin: LoadedNxPlugin): boolean {
   return (
-    plugin.include?.length > 0 &&
-    plugin.include.every(
-      (pattern) => !pattern.includes('**') && !/[!()]/.test(pattern)
-    )
+    (await globPluginFilesWithWorkspaceContext(
+      root,
+      plugins.map(toPluginGlobs)
+    )) ?? []
   );
 }
 
-export function getGlobPatternsOfPlugins(
-  plugins: Array<LoadedNxPlugin>
-): string[] {
-  return plugins.map((p) => p.createNodes[0]);
+function toPluginGlobs(plugin: LoadedNxPlugin): PluginGlobs {
+  return {
+    pattern: plugin.createNodes[0],
+    include: plugin.include,
+    exclude: plugin.exclude,
+    name: plugin.name,
+    index: plugin.index,
+  };
 }

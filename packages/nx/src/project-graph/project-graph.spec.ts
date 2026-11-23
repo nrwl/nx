@@ -16,9 +16,7 @@ import type { LoadedNxPlugin } from './plugins/loaded-nx-plugin';
 vi.mock('../utils/workspace-context', () => {
   return {
     refreshWorkspaceContext: vi.fn(),
-    globWithWorkspaceContext: vi.fn().mockReturnValue(['file']),
-    // multiGlob returns one file list per glob group (string[][]).
-    multiGlobWithWorkspaceContext: vi.fn().mockReturnValue([['file']]),
+    globPluginFilesWithWorkspaceContext: vi.fn().mockReturnValue([['file']]),
     getNxWorkspaceFilesFromContext: vi.fn().mockReturnValue({
       projectFileMap: {},
       globalFiles: [],

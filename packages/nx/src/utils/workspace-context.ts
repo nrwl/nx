@@ -1,6 +1,7 @@
 import type {
   ChangeBatch,
   NxWorkspaceFilesExternals,
+  PluginGlobs,
   TaskOutputs,
   WorkspaceContext,
   WorkspaceContextOptions,
@@ -109,6 +110,18 @@ export async function multiGlobWithWorkspaceContext(
     return workspaceContext.multiGlob(globs, exclude);
   }
   return daemonClient.multiGlob(globs, exclude);
+}
+
+/** The files each plugin's createNodes pattern, include and exclude select. */
+export async function globPluginFilesWithWorkspaceContext(
+  workspaceRoot: string,
+  plugins: PluginGlobs[]
+): Promise<string[][]> {
+  if (workspaceRoot === '/virtual' || isOnDaemon() || !daemonClient.enabled()) {
+    await ensureFilesReady(workspaceRoot);
+    return workspaceContext.globPluginFiles(plugins);
+  }
+  return daemonClient.globPluginFiles(plugins);
 }
 
 export async function hashWithWorkspaceContext(

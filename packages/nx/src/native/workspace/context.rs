@@ -5,6 +5,7 @@ use std::sync::Arc;
 #[cfg(not(target_arch = "wasm32"))]
 use std::time::{Duration, Instant, SystemTime};
 
+use crate::native::glob::plugin_globs::{PluginGlobMatcher, PluginGlobs};
 use crate::native::glob::{build_glob_set, glob_files::glob_files};
 use crate::native::hasher::hash;
 use crate::native::project_graph::utils::{ProjectRootMappings, find_project_for_path};
@@ -1503,6 +1504,33 @@ impl WorkspaceContext {
             .collect()
     }
 
+    /// The files each plugin's `createNodes` pattern, `include` and `exclude`
+    /// select, one list per plugin in input order.
+    #[napi]
+    pub fn glob_plugin_files(&self, plugins: Vec<PluginGlobs>) -> napi::Result<Vec<Vec<String>>> {
+        let matchers = plugins
+            .iter()
+            .map(PluginGlobMatcher::new)
+            .collect::<anyhow::Result<Vec<_>>>()?;
+        Ok(self
+            .with_current_files(|files| {
+                matchers
+                    .par_iter()
+                    .map(|matcher| {
+                        let candidates = match matcher.literal_prefix() {
+                            Some(directory) => Either::Left(get_child_files(directory, files)),
+                            None => Either::Right(files.iter()),
+                        };
+                        candidates
+                            .filter(|(path, _)| matcher.is_match(path))
+                            .map(|(path, _)| path.to_normalized_string())
+                            .collect()
+                    })
+                    .collect()
+            })
+            .unwrap_or_else(|| vec![Vec::new(); matchers.len()]))
+    }
+
     #[napi]
     pub fn hash_files_matching_globs(
         &self,
@@ -2400,6 +2428,45 @@ mod tests {
                 "multi_glob group {i} must be sorted regardless of file creation order"
             );
         }
+    }
+
+    #[test]
+    fn glob_plugin_files_matches_each_plugin_in_path_order() {
+        let temp = workspace_with(&[
+            "apps/web/src/main.ts",
+            "apps/api/src/z.ts",
+            "apps/api/src/a.ts",
+            "apps/api/project.json",
+            "libs/a/project.json",
+            "libs/a-e2e/project.json",
+            "project.json",
+        ]);
+        let cache = TempDir::new().unwrap();
+        let ctx = context(&temp, &cache);
+        let list = |l: &[&str]| Some(l.iter().map(|s| s.to_string()).collect());
+
+        let matched = ctx
+            .glob_plugin_files(vec![
+                PluginGlobs {
+                    pattern: Some("**/*.ts".into()),
+                    include: list(&["apps/api/src/*"]),
+                    ..Default::default()
+                },
+                PluginGlobs {
+                    pattern: Some("**/project.json".into()),
+                    exclude: list(&["**/*-e2e/**", "project.json"]),
+                    ..Default::default()
+                },
+            ])
+            .unwrap();
+
+        assert_eq!(
+            matched,
+            vec![
+                vec!["apps/api/src/a.ts", "apps/api/src/z.ts"],
+                vec!["apps/api/project.json", "libs/a/project.json"],
+            ]
+        );
     }
 
     /// Restoring a cached task output rewrites a file with identical bytes

@@ -442,6 +442,11 @@ export declare class WorkspaceContext {
    * as the input globs.
    */
   multiGlob(globs: Array<string>, exclude?: Array<string> | undefined | null): Array<Array<string>>
+  /**
+   * The files each plugin's `createNodes` pattern, `include` and `exclude`
+   * select, one list per plugin in input order.
+   */
+  globPluginFiles(plugins: Array<PluginGlobs>): Array<Array<string>>
   hashFilesMatchingGlobs(globGroups: Array<Array<string>>): Array<string>
   hashFilesMatchingGlob(globs: Array<string>, exclude?: Array<string> | undefined | null): string
   /**
@@ -1073,6 +1078,13 @@ export declare function matchGlobPaths(globs: Array<string>, paths: Array<string
  */
 export declare function matchOutputPaths(entries: Array<string>, paths: Array<string>): Array<boolean>
 
+/**
+ * The `files` that pass a plugin's `createNodes` pattern, `include` and
+ * `exclude`, in input order. Matches the way the project graph finds each
+ * plugin's config files.
+ */
+export declare function matchPluginFiles(files: Array<string>, globs: PluginGlobs): Array<string>
+
 /** Combined metadata for groups and processes */
 export interface Metadata {
   /** Group-level metadata */
@@ -1148,6 +1160,18 @@ export interface PerformanceSummaryPayload {
    * remote-cache CTA); empty when none apply.
    */
   links: Array<Link>
+}
+
+/** The globs that decide which files a plugin's `createNodes` receives. */
+export interface PluginGlobs {
+  /** The plugin's `createNodes` pattern. Omitted, every file passes it. */
+  pattern?: string
+  include?: Array<string>
+  exclude?: Array<string>
+  /** Names the plugin in pattern errors. */
+  name?: string
+  /** The plugin's position in `nx.json` `plugins`, for pattern errors. */
+  index?: number
 }
 
 /** Process metadata (static, doesn't change during process lifetime) */
