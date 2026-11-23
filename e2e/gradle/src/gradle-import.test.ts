@@ -1,3 +1,4 @@
+import type { ExpandedPluginConfiguration } from '@nx/devkit';
 import {
   checkFilesExist,
   cleanupProject,
@@ -92,7 +93,7 @@ describe('Nx Import Gradle', () => {
       );
       const nxJson = readJson('nx.json');
       const gradlePlugin = nxJson.plugins.find(
-        (plugin) => plugin.plugin === '@nx/gradle'
+        (plugin: ExpandedPluginConfiguration) => plugin.plugin === '@nx/gradle'
       );
       expect(gradlePlugin).toBeDefined();
       expect(() => {
@@ -148,7 +149,7 @@ describe('Nx Import Gradle', () => {
       );
       const nxJson = readJson('nx.json');
       const gradlePlugin = nxJson.plugins.find(
-        (plugin) => plugin.plugin === '@nx/gradle'
+        (plugin: ExpandedPluginConfiguration) => plugin.plugin === '@nx/gradle'
       );
       gradlePlugin.exclude = [];
       updateJson('nx.json', () => nxJson);

@@ -8,6 +8,9 @@
   "files": [],
   "references": [
     {
+      "path": "../../packages/angular"
+    },
+    {
       "path": "../utils"
     },
     {

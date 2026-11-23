@@ -34,6 +34,14 @@ export async function expectJestTestsToPass(
   expect(results.combinedOutput).toContain('Test Suites: 1 passed, 1 total');
 }
 
+/** Returns `value`, throwing when it is `null` or `undefined`. */
+export function ensureDefined<T>(value: T | null | undefined, what: string): T {
+  if (value === null || value === undefined) {
+    throw new Error(`Expected ${what} to be defined`);
+  }
+  return value;
+}
+
 export function expectTestsPass(v: { stdout: string; stderr: string }) {
   expect(v.stderr).toContain('Ran all test suites');
   expect(v.stderr).not.toContain('fail');
@@ -53,7 +61,7 @@ export function expectNoTsJestInJestConfig(appName: string) {
     tmpProjPath(join('apps', appName, 'jest.config.ts')),
     tmpProjPath(join('apps', appName, 'jest.config.cts')),
   ];
-  let jestConfig: string;
+  let jestConfig: string | undefined;
   for (const c of candidates) {
     if (fileExists(c)) {
       jestConfig = readFile(c);

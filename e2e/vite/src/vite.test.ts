@@ -15,7 +15,11 @@ import {
   updateJson,
 } from '@nx/e2e-utils';
 import { ChildProcess } from 'child_process';
-import { joinPathFragments, names } from '@nx/devkit';
+import {
+  type ExpandedPluginConfiguration,
+  joinPathFragments,
+  names,
+} from '@nx/devkit';
 
 const myApp = uniq('my-app');
 const myVueApp = uniq('my-vue-app');
@@ -131,7 +135,7 @@ describe('@nx/vite/plugin', () => {
     });
 
     it('should run serve-static', async () => {
-      let process: ChildProcess;
+      let process: ChildProcess | undefined;
       const port = await reservePort();
 
       try {
@@ -495,7 +499,9 @@ export default defineConfig({
     it('should contain targets test', () => {
       const nxJson = readJson('nx.json');
 
-      const vitePlugin = nxJson.plugins.find((p) => p.plugin === '@nx/vitest');
+      const vitePlugin = nxJson.plugins.find(
+        (p: ExpandedPluginConfiguration) => p.plugin === '@nx/vitest'
+      );
       expect(vitePlugin).toBeDefined();
       expect(vitePlugin.options.testTargetName).toEqual('test');
       expect(vitePlugin.options.ciTargetName).toEqual('test-ci');
@@ -507,7 +513,9 @@ export default defineConfig({
     });
 
     it('should atomize the ci target identically with and without the vitest runtime', () => {
-      const collectAtomized = (details) =>
+      const collectAtomized = (details: {
+        targets: Record<string, { options?: { command?: string } }>;
+      }) =>
         Object.keys(details.targets)
           .filter((t) => t.startsWith('test-ci--'))
           .sort()
@@ -526,9 +534,15 @@ export default defineConfig({
       expect(parent.metadata.nonAtomizedTarget).toEqual('test');
 
       // The AST edit path used for webpack-bundled apps quotes the key.
-      const reportsDirectory = readFile(`${reactVitest}/vite.config.mts`).match(
-        /'?reportsDirectory'?: '([^']+)'/
-      )[1];
+      const reportsDirectoryMatch = readFile(
+        `${reactVitest}/vite.config.mts`
+      ).match(/'?reportsDirectory'?: '([^']+)'/);
+      if (!reportsDirectoryMatch) {
+        throw new Error(
+          `reportsDirectory not found in ${reactVitest}/vite.config.mts`
+        );
+      }
+      const reportsDirectory = reportsDirectoryMatch[1];
       // The generated reportsDirectory ends with the project root, so the
       // plugin appends each spec path without a project-root prefix.
       expect(reportsDirectory).toEqual(`../coverage/${globDetails.root}`);
@@ -548,7 +562,9 @@ export default defineConfig({
       // force the vitest runtime to enumerate the specs; atomization must match
       // the glob path exactly so the OOM-avoiding default preserves behavior
       updateJson('nx.json', (json) => {
-        const vitest = json.plugins.find((p) => p.plugin === '@nx/vitest');
+        const vitest = json.plugins.find(
+          (p: ExpandedPluginConfiguration) => p.plugin === '@nx/vitest'
+        );
         vitest.options.discoverTestFiles = 'vitest';
         return json;
       });
@@ -562,7 +578,9 @@ export default defineConfig({
     it('should discover atomized specs under the vitest test mode', () => {
       // Restore the glob path (the parity test above forced the runtime).
       updateJson('nx.json', (json) => {
-        const vitest = json.plugins.find((p) => p.plugin === '@nx/vitest');
+        const vitest = json.plugins.find(
+          (p: ExpandedPluginConfiguration) => p.plugin === '@nx/vitest'
+        );
         vitest.options.discoverTestFiles = 'glob';
         return json;
       });

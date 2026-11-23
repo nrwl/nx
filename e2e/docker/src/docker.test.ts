@@ -1,3 +1,4 @@
+import type { ExpandedPluginConfiguration } from '@nx/devkit';
 import {
   checkFilesDoNotExist,
   checkFilesExist,
@@ -103,7 +104,7 @@ describe('Docker E2Es', () => {
         updateJson('nx.json', (nxJson) => {
           nxJson.plugins = nxJson.plugins || [];
           const dockerPlugin = nxJson.plugins.find(
-            (p) => p.plugin === '@nx/docker'
+            (p: ExpandedPluginConfiguration) => p.plugin === '@nx/docker'
           );
           if (dockerPlugin) {
             dockerPlugin.options = {
@@ -166,7 +167,7 @@ function addDockerPluginIfNotExists() {
   updateJson('nx.json', (nxJson) => {
     nxJson.plugins ??= [];
     if (
-      !nxJson.plugins.some((p) =>
+      !nxJson.plugins.some((p: string | ExpandedPluginConfiguration) =>
         typeof p === 'string' ? p === '@nx/docker' : p.plugin === '@nx/docker'
       )
     ) {

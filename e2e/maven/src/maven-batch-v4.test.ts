@@ -109,7 +109,7 @@ wrapperUrl=https://repo.maven.apache.org/maven2/org/apache/maven/wrapper/maven-w
       <artifactId>logging-parent</artifactId><version>1.0</version><packaging>pom</packaging>
       <!-- ${bodyMarker} -->
     </project>`;
-    const requests: string[] = [];
+    const requests: (string | undefined)[] = [];
     let responseStatus = 200;
     const server = createServer((request, response) => {
       const body =
@@ -227,11 +227,16 @@ wrapperUrl=https://repo.maven.apache.org/maven2/org/apache/maven/wrapper/maven-w
                 else resolve(error ? 1 : 0);
               }
             );
-            child.stdin.on('error', (error) => {
+            const { stdin } = child;
+            if (!stdin) {
+              reject(new Error('java process has no stdin pipe'));
+              return;
+            }
+            stdin.on('error', (error) => {
               child.kill('SIGKILL');
               reject(error);
             });
-            child.stdin.end(JSON.stringify(payload));
+            stdin.end(JSON.stringify(payload));
           });
           expect(exitCode).toBe(status === 200 ? 0 : 1);
           const results = output

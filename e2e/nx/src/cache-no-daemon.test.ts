@@ -800,7 +800,7 @@ console.log('Build complete');
     expectedProjects: string[],
     cacheStatus: string = 'local cache'
   ) {
-    const matchingProjects = [];
+    const matchingProjects: string[] = [];
     const lines = actualOutput.split('\n');
     lines.forEach((line) => {
       // GitHub log groups prefix the task header with a cache-status icon.
@@ -823,7 +823,7 @@ console.log('Build complete');
   }
 });
 
-const dirSize = async (dir) => {
+const dirSize = async (dir: string): Promise<number> => {
   const files = await readdir(dir, { withFileTypes: true });
 
   const paths = files.map(async (file) => {

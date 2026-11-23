@@ -80,7 +80,11 @@ describe('Node Applications + webpack', () => {
     );
 
     const terminalOutputs: string[] = [];
-    serveProcess.stdout.on('data', (chunk) => {
+    const { stdout } = serveProcess;
+    if (!stdout) {
+      throw new Error('serve process has no stdout pipe');
+    }
+    stdout.on('data', (chunk) => {
       terminalOutputs.push(chunk.toString());
     });
 

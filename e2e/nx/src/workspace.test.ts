@@ -806,8 +806,6 @@ describe('Workspace Tests', () => {
       expect(projects).not.toContain(lib1);
       const lib2Config = readJson(join('libs', lib2, 'project.json'));
       expect(lib2Config.implicitDependencies).toEqual([]);
-
-      expect(projects[`${lib1}`]).toBeUndefined();
     });
   });
 });

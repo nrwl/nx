@@ -12,10 +12,10 @@ import {
   updateJson,
 } from '@nx/e2e-utils';
 
-let originalEnvPort;
+let originalEnvPort: string | undefined;
 describe('Node Docker Applications', () => {
   if (isDockerAvailable()) {
-    describe.each(['npm', 'yarn', 'pnpm'])(
+    describe.each<'npm' | 'yarn' | 'pnpm'>(['npm', 'yarn', 'pnpm'])(
       '%s',
       (packageManager: 'npm' | 'yarn' | 'pnpm') => {
         beforeEach(() => {

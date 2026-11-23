@@ -1,3 +1,4 @@
+import type { ExpandedPluginConfiguration } from '@nx/devkit';
 import { stripIndents } from '@angular-devkit/core/src/utils/literals';
 import {
   cleanupProject,
@@ -175,7 +176,8 @@ describe('Jest', () => {
     runCLI(`generate @nx/js:lib libs/${libName} --unitTestRunner=jest`);
     updateJson('nx.json', (json) => {
       const jestPlugin = json.plugins.find(
-        (plugin) => plugin.plugin === '@nx/jest/plugin'
+        (plugin: ExpandedPluginConfiguration) =>
+          plugin.plugin === '@nx/jest/plugin'
       );
 
       jestPlugin.options.ciTargetName = 'e2e-ci';

@@ -26,6 +26,19 @@ import {
 import { logError, logInfo, secondsSince } from './log-utils';
 import { promisifiedTreeKill } from './process-utils';
 
+/** The error `execSync` throws on a non-zero exit or timeout. */
+export interface ExecSyncError extends Error {
+  stdout: string;
+  stderr: string;
+  status: number | null;
+  signal: NodeJS.Signals | null;
+  killed?: boolean;
+}
+
+export function isExecSyncError(e: unknown): e is ExecSyncError {
+  return typeof e === 'object' && e !== null && 'stdout' in e && 'stderr' in e;
+}
+
 export interface RunCmdOpts {
   silenceError?: boolean;
   env?: Record<string, string | undefined>;
@@ -100,6 +113,7 @@ export function runCommand(
 
     return stripVTControlCharacters(r as string);
   } catch (e) {
+    if (!isExecSyncError(e)) throw e;
     // Intentional: some commands (e.g. `npm ls`) exit non-zero but still produce useful output.
     logError(`Original command: ${command}`, `${e.stdout}\n\n${e.stderr}`);
     if (!failOnError && (e.stdout || e.stderr)) {
@@ -355,7 +369,7 @@ export function runCommandUntil(
       }
     }, timeout);
 
-    function checkCriteria(c) {
+    function checkCriteria(c: Buffer | string) {
       if (complete) return;
       output += c.toString();
       const strippedOutput = stripVTControlCharacters(output);
@@ -434,6 +448,7 @@ export function runNgAdd(
 
     return r;
   } catch (e) {
+    if (!isExecSyncError(e)) throw e;
     if (opts.silenceError) {
       return e.stdout;
     } else {
@@ -524,6 +539,7 @@ export function runCLI(
     runCLI.lastExitCode = 0;
     return r;
   } catch (e) {
+    if (!isExecSyncError(e)) throw e;
     if (e.killed || e.signal) {
       const timeoutSec = Math.round(timeoutMs / 1000);
       const processOutput = stripVTControlCharacters(
@@ -580,6 +596,7 @@ export function runLernaCLI(
 
     return r;
   } catch (e) {
+    if (!isExecSyncError(e)) throw e;
     if (e.killed || e.signal) {
       const timeoutSec = Math.round(timeoutMs / 1000);
       const processOutput = stripVTControlCharacters(

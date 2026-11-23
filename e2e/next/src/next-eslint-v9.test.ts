@@ -11,7 +11,7 @@ import {
 describe('Next.js linting on ESLint v9', () => {
   beforeAll(() => {
     newProject({ packages: ['@nx/next', '@nx/react', '@nx/eslint', '@nx/js'] });
-    packageInstall('eslint', null, '^9.8.0');
+    packageInstall('eslint', undefined, '^9.8.0');
   });
 
   afterAll(() => cleanupProject());

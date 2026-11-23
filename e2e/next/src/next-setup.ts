@@ -2,7 +2,7 @@ import { cleanupProject, newProject } from '@nx/e2e-utils';
 
 export interface NextTestSetup {
   proj: string;
-  originalEnv: string;
+  originalEnv: string | undefined;
 }
 
 export function setupNextTest(): NextTestSetup {

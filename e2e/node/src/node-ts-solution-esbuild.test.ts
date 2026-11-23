@@ -12,7 +12,7 @@ import {
   updateJson,
 } from '@nx/e2e-utils';
 
-let originalEnvPort;
+let originalEnvPort: string | undefined;
 
 describe('Node Esbuild Applications', () => {
   beforeAll(() => {

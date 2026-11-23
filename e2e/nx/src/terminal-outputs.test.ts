@@ -1,6 +1,7 @@
 import { existsSync, readFileSync } from 'fs';
 import {
   cleanupProject,
+  ensureDefined,
   listFiles,
   newProject,
   readFile,
@@ -228,8 +229,10 @@ describe('terminal outputs on disk', () => {
       expect(nonEmptyLines(results).length).toBeLessThanOrEqual(30);
 
       // The path it prints has to be real, and hold the output it stands in for.
-      const logPath = results.match(/full log: (\S+)/)?.[1];
-      expect(logPath).toBeDefined();
+      const logPath = ensureDefined(
+        results.match(/full log: (\S+)/)?.[1],
+        'full log path'
+      );
       expect(existsSync(logPath)).toBe(true);
       expect(readFileSync(logPath, 'utf-8')).toContain(marker);
     }, 120000);

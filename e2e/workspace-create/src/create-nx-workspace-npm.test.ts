@@ -13,7 +13,7 @@ import { typescriptVersion } from '@nx/js/src/utils/versions';
 describe('create-nx-workspace --preset=npm', () => {
   let wsName: string;
 
-  let orginalGlobCache;
+  let orginalGlobCache: string | undefined;
 
   beforeAll(() => {
     orginalGlobCache = process.env.NX_PROJECT_GLOB_CACHE;

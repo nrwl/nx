@@ -9,7 +9,7 @@ import {
 
 describe('Next.js Webpack', () => {
   let proj: string;
-  let originalEnv: string;
+  let originalEnv: string | undefined;
 
   beforeEach(() => {
     proj = newProject({

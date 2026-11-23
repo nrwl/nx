@@ -21,7 +21,7 @@ describe('Spread Token Merging', () => {
   afterAll(() => cleanupProject());
 
   // Ensures that nx.json is restored to its original state after each test
-  let existingNxJson;
+  let existingNxJson: unknown;
   beforeEach(() => {
     existingNxJson = readJson('nx.json');
   });

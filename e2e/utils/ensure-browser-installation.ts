@@ -114,7 +114,7 @@ export function ensurePlaywrightBrowsersInstallation() {
         `Playwright browsers ${version} installed successfully.`
       );
     } catch (error) {
-      e2eConsoleLogger('Failed to install Playwright browsers:', error);
+      e2eConsoleLogger('Failed to install Playwright browsers:', String(error));
       throw error;
     }
   });

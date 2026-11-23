@@ -1,3 +1,4 @@
+import type { ExpandedPluginConfiguration } from '@nx/devkit';
 import {
   cleanupProject,
   newProject,
@@ -19,7 +20,8 @@ describe('@nx/js/typescript typecheck outside TS solution setups', () => {
     updateJson('nx.json', (json) => {
       json.plugins = [
         ...(json.plugins ?? []).filter(
-          (p) => (typeof p === 'string' ? p : p.plugin) !== '@nx/js/typescript'
+          (p: string | ExpandedPluginConfiguration) =>
+            (typeof p === 'string' ? p : p.plugin) !== '@nx/js/typescript'
         ),
         '@nx/js/typescript',
       ];

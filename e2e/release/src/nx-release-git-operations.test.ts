@@ -92,16 +92,14 @@ describe('nx release git operations', () => {
     expect(
       releaseOutput1.match(
         new RegExp('NX   Staging changed files with git', 'g')
-      ).length
-    ).toEqual(2);
+      )
+    ).toHaveLength(2);
     expect(
       releaseOutput1.match(new RegExp('NX   Committing changes with git', 'g'))
-        .length
-    ).toEqual(1);
+    ).toHaveLength(1);
     expect(
       releaseOutput1.match(new RegExp('NX   Tagging commit with git', 'g'))
-        .length
-    ).toEqual(1);
+    ).toHaveLength(1);
   });
 
   it('should error when granular config is set and top level command is run', async () => {
@@ -134,8 +132,8 @@ describe('nx release git operations', () => {
           `The "release" top level command cannot be used with granular git configuration. Instead, configure git options in the "release.git" property in nx.json, or use the version, changelog, and publish subcommands or programmatic API directly.`,
           'g'
         )
-      ).length
-    ).toEqual(1);
+      )
+    ).toHaveLength(1);
   });
 
   it('should error when top level git config is set and subcommands are run', async () => {
@@ -164,8 +162,8 @@ describe('nx release git operations', () => {
           `The "release.git" property in nx.json may not be used with the "nx release version" subcommand or programmatic API. Instead, configure git options for subcommands directly with "release.version.git" and "release.changelog.git".`,
           'g'
         )
-      ).length
-    ).toEqual(1);
+      )
+    ).toHaveLength(1);
 
     const releaseChangelogOutput = runCLI(
       `release changelog 1.0.0 --first-release -d`,
@@ -180,8 +178,8 @@ describe('nx release git operations', () => {
           `The "release.git" property in nx.json may not be used with the "nx release changelog" subcommand or programmatic API. Instead, configure git options for subcommands directly with "release.version.git" and "release.changelog.git".`,
           'g'
         )
-      ).length
-    ).toEqual(1);
+      )
+    ).toHaveLength(1);
   });
 
   it('should stage, but not commit or tag, if stageChanges is true but commit and tag are false', () => {
@@ -202,8 +200,8 @@ describe('nx release git operations', () => {
     expect(
       releaseOutput1.match(
         new RegExp('NX   Staging changed files with git', 'g')
-      ).length
-    ).toEqual(2);
+      )
+    ).toHaveLength(2);
     expect(
       releaseOutput1.match(new RegExp('NX   Committing changes with git', 'g'))
     ).toBeNull();

@@ -143,12 +143,12 @@ describe('Angular Projects - Build and Test', () => {
         source,
         content: bundleMap.sourcesContent?.[index],
       }))
-      .filter(({ source }) => source.endsWith('.ts'));
+      .filter(({ source }: { source: string }) => source.endsWith('.ts'));
     expect(tsSources.length).toBeGreaterThan(0);
     // The original TypeScript contains the `@Component` decorator, while the
     // intermediate Ivy JS has it compiled away into `ɵcmp`.
-    const componentSource = tsSources.find(({ content }) =>
-      content?.includes('@Component')
+    const componentSource = tsSources.find(
+      ({ content }: { content?: string }) => content?.includes('@Component')
     );
     expect(componentSource).toBeDefined();
     expect(componentSource.content).not.toContain('ɵcmp');

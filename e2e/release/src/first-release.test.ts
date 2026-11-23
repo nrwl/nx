@@ -91,8 +91,8 @@ describe('nx release first run', () => {
             `NX   Unable to determine the previous git tag. If this is the first release of your workspace, use the --first-release option or set the "release.changelog.automaticFromRef" config property in nx.json to generate a changelog from the first commit. Otherwise, be sure to configure the "release.releaseTag.pattern" property in nx.json to match the structure of your repository's git tags.`,
             'g'
           )
-        ).length
-      ).toEqual(1);
+        )
+      ).toHaveLength(1);
     });
   });
 
@@ -112,22 +112,21 @@ describe('nx release first run', () => {
       expect(
         releaseOutput1.match(
           new RegExp('NX   Staging changed files with git', 'g')
-        ).length
-      ).toEqual(2);
+        )
+      ).toHaveLength(2);
       expect(
         releaseOutput1.match(
           new RegExp('NX   Committing changes with git', 'g')
-        ).length
-      ).toEqual(1);
+        )
+      ).toHaveLength(1);
       expect(
         releaseOutput1.match(new RegExp('NX   Tagging commit with git', 'g'))
-          .length
-      ).toEqual(1);
+      ).toHaveLength(1);
       expect(
         releaseOutput1.match(
           new RegExp('Skipped npm view because --first-release was set', 'g')
-        ).length
-      ).toEqual(3);
+        )
+      ).toHaveLength(3);
 
       updateJson<NxJsonConfiguration>('nx.json', (nxJson) => {
         nxJson.release = {
@@ -147,22 +146,21 @@ describe('nx release first run', () => {
       expect(
         releaseOutput2.match(
           new RegExp('NX   Staging changed files with git', 'g')
-        ).length
-      ).toEqual(2);
+        )
+      ).toHaveLength(2);
       expect(
         releaseOutput2.match(
           new RegExp('NX   Committing changes with git', 'g')
-        ).length
-      ).toEqual(1);
+        )
+      ).toHaveLength(1);
       expect(
         releaseOutput2.match(new RegExp('NX   Tagging commit with git', 'g'))
-          .length
-      ).toEqual(1);
+      ).toHaveLength(1);
       expect(
         releaseOutput2.match(
           new RegExp('Skipped npm view because --first-release was set', 'g')
-        ).length
-      ).toEqual(3);
+        )
+      ).toHaveLength(3);
     });
 
     it('should not error when changelog is disabled', async () => {
@@ -183,22 +181,21 @@ describe('nx release first run', () => {
       expect(
         releaseOutput1.match(
           new RegExp('NX   Staging changed files with git', 'g')
-        ).length
-      ).toEqual(1);
+        )
+      ).toHaveLength(1);
       expect(
         releaseOutput1.match(
           new RegExp('NX   Committing changes with git', 'g')
-        ).length
-      ).toEqual(1);
+        )
+      ).toHaveLength(1);
       expect(
         releaseOutput1.match(new RegExp('NX   Tagging commit with git', 'g'))
-          .length
-      ).toEqual(1);
+      ).toHaveLength(1);
       expect(
         releaseOutput1.match(
           new RegExp('Skipped npm view because --first-release was set', 'g')
-        ).length
-      ).toEqual(3);
+        )
+      ).toHaveLength(3);
 
       updateJson<NxJsonConfiguration>('nx.json', (nxJson) => {
         nxJson.release = {
@@ -218,22 +215,21 @@ describe('nx release first run', () => {
       expect(
         releaseOutput2.match(
           new RegExp('NX   Staging changed files with git', 'g')
-        ).length
-      ).toEqual(1);
+        )
+      ).toHaveLength(1);
       expect(
         releaseOutput2.match(
           new RegExp('NX   Committing changes with git', 'g')
-        ).length
-      ).toEqual(1);
+        )
+      ).toHaveLength(1);
       expect(
         releaseOutput2.match(new RegExp('NX   Tagging commit with git', 'g'))
-          .length
-      ).toEqual(1);
+      ).toHaveLength(1);
       expect(
         releaseOutput2.match(
           new RegExp('Skipped npm view because --first-release was set', 'g')
-        ).length
-      ).toEqual(3);
+        )
+      ).toHaveLength(3);
     });
   });
 
@@ -260,8 +256,8 @@ describe('nx release first run', () => {
             `NX   Unable to determine the previous git tag. If this is the first release of your workspace, use the --first-release option or set the "release.changelog.automaticFromRef" config property in nx.json to generate a changelog from the first commit. Otherwise, be sure to configure the "release.releaseTag.pattern" property in nx.json to match the structure of your repository's git tags.`,
             'g'
           )
-        ).length
-      ).toEqual(1);
+        )
+      ).toHaveLength(1);
 
       updateJson<NxJsonConfiguration>('nx.json', (nxJson) => {
         nxJson.release = {
@@ -282,17 +278,16 @@ describe('nx release first run', () => {
       expect(
         releaseOutput2.match(
           new RegExp('NX   Staging changed files with git', 'g')
-        ).length
-      ).toEqual(2);
+        )
+      ).toHaveLength(2);
       expect(
         releaseOutput2.match(
           new RegExp('NX   Committing changes with git', 'g')
-        ).length
-      ).toEqual(1);
+        )
+      ).toHaveLength(1);
       expect(
         releaseOutput2.match(new RegExp('NX   Tagging commit with git', 'g'))
-          .length
-      ).toEqual(1);
+      ).toHaveLength(1);
 
       updateJson<NxJsonConfiguration>('nx.json', (nxJson) => {
         nxJson.release = {
@@ -319,8 +314,8 @@ describe('nx release first run', () => {
             `NX   Unable to determine the previous git tag. If this is the first release of your workspace, use the --first-release option or set the "release.changelog.automaticFromRef" config property in nx.json to generate a changelog from the first commit. Otherwise, be sure to configure the "release.releaseTag.pattern" property in nx.json to match the structure of your repository's git tags.`,
             'g'
           )
-        ).length
-      ).toEqual(1);
+        )
+      ).toHaveLength(1);
 
       updateJson<NxJsonConfiguration>('nx.json', (nxJson) => {
         nxJson.release = {
@@ -343,17 +338,16 @@ describe('nx release first run', () => {
       expect(
         releaseOutput4.match(
           new RegExp('NX   Staging changed files with git', 'g')
-        ).length
-      ).toEqual(2);
+        )
+      ).toHaveLength(2);
       expect(
         releaseOutput4.match(
           new RegExp('NX   Committing changes with git', 'g')
-        ).length
-      ).toEqual(1);
+        )
+      ).toHaveLength(1);
       expect(
         releaseOutput4.match(new RegExp('NX   Tagging commit with git', 'g'))
-          .length
-      ).toEqual(1);
+      ).toHaveLength(1);
     });
   });
 });

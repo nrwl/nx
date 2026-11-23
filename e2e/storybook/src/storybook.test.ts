@@ -15,7 +15,7 @@ import { createFileSync } from 'fs-extra';
 
 describe('Storybook generators and executors for monorepos', () => {
   const reactStorybookApp = uniq('react-app');
-  let proj;
+  let proj: string;
   beforeAll(async () => {
     proj = newProject({
       packages: ['@nx/react', '@nx/webpack'],

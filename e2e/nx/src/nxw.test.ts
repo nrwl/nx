@@ -6,6 +6,7 @@ import {
   checkFilesDoNotExist,
   checkFilesExist,
   cleanupProject,
+  ensureDefined,
   getPublishedVersion,
   uniq,
   readJson,
@@ -20,7 +21,7 @@ describe('nx wrapper / .nx installation', () => {
     updateJson<NxJsonConfiguration>('nx.json', (json) => {
       json.targetDefaults ??= {};
       json.targetDefaults.echo = { cache: true };
-      json.installation.plugins = {
+      ensureDefined(json.installation, 'nx.json installation').plugins = {
         '@nx/js': getPublishedVersion(),
       };
       return json;
@@ -97,8 +98,12 @@ describe('nx wrapper / .nx installation', () => {
 
   it('should work with basic generators', () => {
     updateJson<NxJsonConfiguration>('nx.json', (j) => {
-      j.installation.plugins ??= {};
-      j.installation.plugins['@nx/workspace'] = getPublishedVersion();
+      const installation = ensureDefined(
+        j.installation,
+        'nx.json installation'
+      );
+      installation.plugins ??= {};
+      installation.plugins['@nx/workspace'] = getPublishedVersion();
       return j;
     });
     const pkg = uniq('pkg');
@@ -210,9 +215,12 @@ describe('nx wrapper / .nx installation', () => {
     );
 
     const nxJson: NxJsonConfiguration = readJson(`nx.json`);
-    expect(nxJson.installation.plugins['migrate-child-package']).toEqual(
-      '9.0.0'
-    );
+    expect(
+      ensureDefined(
+        nxJson.installation?.plugins,
+        'nx.json installation plugins'
+      )['migrate-child-package']
+    ).toEqual('9.0.0');
     // creates migrations.json
     const migrationsJson = readJson(`migrations.json`);
     expect(migrationsJson).toEqual({
