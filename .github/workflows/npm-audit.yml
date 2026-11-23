@@ -14,10 +14,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        uses: actions/checkout@v5.0.0
+        with:
+          persist-credentials: false
 
       - name: Setup dev tools with mise
-        uses: jdx/mise-action@146a28175021df8ca24f8ee1828cc2a60f980bd5 # v3
+        uses: jdx/mise-action@v3.5.1
 
       - name: Enable corepack and install pnpm
         run: |
@@ -34,7 +36,7 @@ jobs:
     name: Report status
     steps:
       - name: Send notification
-        uses: ravsamhq/notify-slack-action@be814b201e233b2dc673608aa46e5447c8ab13f2 # v11
+        uses: ravsamhq/notify-slack-action@2.5.0
         with:
           status: ${{ needs.audit.result }}
           message_format: '{emoji} Audit has {status_message}'

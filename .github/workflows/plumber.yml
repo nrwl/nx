@@ -1,0 +1,30 @@
+name: Plumber
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+
+permissions: {}
+jobs:
+  plumber:
+    permissions:
+      contents: read # to fetch code (actions/checkout)
+      actions: read # to read the workflow states and one run log, which proves the token scope
+      security-events: write # to upload the SARIF report to code scanning
+      id-token: write # to publish the score badge, no secret involved
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5.1.0
+        with:
+          persist-credentials: false
+
+      - name: Plumber Score
+        uses: getplumber/plumber@v0.7.23
+        with:
+          min-points: 85
+          score-push: true
+          # the code scanning upload needs a write token, which pull requests from forks do not get
+          upload-sarif: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
