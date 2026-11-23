@@ -6121,6 +6121,47 @@ snapshots:
         ]);
       });
 
+      it('should add the sources of unbuilt projects that reference each other', async () => {
+        const lib = (reference: string) => ({
+          tsconfig: JSON.stringify({
+            compilerOptions: { outDir: 'dist' },
+            include: ['src/**/*.ts'],
+            references: [{ path: reference }],
+          }),
+        });
+        configFiles = await applyFilesToTempFsAndContext(tempFs, {
+          'libs/a/tsconfig.json': '{}',
+          'libs/a/tsconfig.lib.json': lib('../b/tsconfig.lib.json').tsconfig,
+          'libs/a/package.json': `{"main": "dist/index.js"}`,
+          'libs/b/tsconfig.json': '{}',
+          'libs/b/tsconfig.lib.json': lib('../c/tsconfig.lib.json').tsconfig,
+          'libs/b/package.json': `{"main": "src/index.ts"}`,
+          'libs/c/tsconfig.json': '{}',
+          'libs/c/tsconfig.lib.json': lib('../b/tsconfig.lib.json').tsconfig,
+          'libs/c/package.json': `{"main": "src/index.ts"}`,
+        });
+        const result = await invokeCreateNodesOnMatchingFiles(
+          configFiles,
+          context,
+          { typecheck: false, build: true }
+        );
+
+        expect(
+          result.projects['libs/a'].targets.build.inputs.filter(
+            (input) => typeof input !== 'string' && 'fileset' in input
+          )
+        ).toEqual([
+          {
+            dependencies: true,
+            fileset: '{projectRoot}/**/*.{d.ts,d.cts,d.mts}',
+          },
+          { always: true, fileset: '{workspaceRoot}/libs/b/src/**/*.ts' },
+          { always: true, fileset: '!{workspaceRoot}/libs/b/dist/**/*' },
+          { always: true, fileset: '{workspaceRoot}/libs/c/src/**/*.ts' },
+          { always: true, fileset: '!{workspaceRoot}/libs/c/dist/**/*' },
+        ]);
+      });
+
       it('should only collect tsconfig patterns from the build reference chain', async () => {
         configFiles = await applyFilesToTempFsAndContext(tempFs, {
           'libs/my-lib/tsconfig.json': '{}',
