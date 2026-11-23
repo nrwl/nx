@@ -62,6 +62,8 @@ The following are known limitations and missing features of Angular Rspack:
 - The server route configuration is extracted at runtime, not at build time.
   Each server process extracts it while handling its first application request.
   Route configuration errors therefore surface on that request.
+  With `prerender: true` or `prerender: { discoverRoutes: true }`, the build also checks the
+  configuration and fails on these errors.
 - Automatic content security policy generation (`security.autoCsp`) is not supported.
 - Locale inlining (`localize`) disables the `@angular/ssr` application engine wiring.
   Server entries that rely on the engine wiring fail at startup.

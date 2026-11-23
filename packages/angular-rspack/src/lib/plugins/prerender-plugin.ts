@@ -19,6 +19,7 @@ import type {
   RenderResult,
   RenderWorkerData,
 } from './tools/render-worker';
+import type { RoutesExtractorResult } from './tools/routes-extractor-worker';
 import { addError, addWarning } from '../utils/rspack-diagnostics';
 import { assertIsError } from '../utils/misc-helpers';
 import {
@@ -26,6 +27,17 @@ import {
   type ServerRenderingInputs,
   type SharedServerRenderingInputs,
 } from './index-html-plugin';
+
+function getErrorMessage(error: unknown): string {
+  // A message getter can throw, and so can String() on { toString: null }.
+  try {
+    const message = (error as { message?: unknown } | null | undefined)
+      ?.message;
+    return typeof message === 'string' ? message : String(error);
+  } catch {
+    return 'Prerendering failed with a value that cannot be converted to a string.';
+  }
+}
 
 class RoutesSet extends Set<string> {
   override add(value: string): this {
@@ -52,36 +64,40 @@ export class PrerenderPlugin implements RspackPluginInstance {
     compiler.hooks.afterEmit.tapAsync(
       'Angular Rspack',
       async (compilation, callback) => {
-        const inputs = this.#serverRenderingInputs?.current;
-        if (!inputs) {
-          addError(
-            compilation,
-            'Could not prerender because the browser build did not generate the index html.'
-          );
-          callback();
-          return;
-        }
-
-        const prerenderedRoutes = new Set<string>();
-        if (this.#_options.appShell) {
-          await this.#prerenderAppShell(compilation, inputs);
-          prerenderedRoutes.add('/');
-        }
-        if (this.#_options.prerender) {
-          for (const route of await this.#prerenderSSGUniversal(
-            compilation,
-            inputs
-          )) {
-            // RoutesSet stores routes without the leading slash; the manifest
-            // keys carry it, matching the esbuild application builder.
-            prerenderedRoutes.add(`/${route}`);
+        try {
+          const inputs = this.#serverRenderingInputs?.current;
+          if (!inputs) {
+            addError(
+              compilation,
+              'Could not prerender because the browser build did not generate the index html.'
+            );
+            return;
           }
+
+          const prerenderedRoutes = new Set<string>();
+          if (this.#_options.appShell) {
+            await this.#prerenderAppShell(compilation, inputs);
+            prerenderedRoutes.add('/');
+          }
+          if (this.#_options.prerender) {
+            for (const route of await this.#prerenderSSGUniversal(
+              compilation,
+              inputs
+            )) {
+              // RoutesSet stores routes without the leading slash; the manifest
+              // keys carry it, matching the esbuild application builder.
+              prerenderedRoutes.add(`/${route}`);
+            }
+          }
+          await this.#writePrerenderedRoutesManifest(
+            compilation,
+            prerenderedRoutes
+          );
+        } catch (error) {
+          addError(compilation, getErrorMessage(error));
+        } finally {
+          callback();
         }
-        await this.#writePrerenderedRoutesManifest(
-          compilation,
-          prerenderedRoutes
-        );
-        callback();
       }
     );
   }
@@ -236,6 +252,7 @@ export class PrerenderPlugin implements RspackPluginInstance {
         }
 
         routes ??= await this.#getRoutes(
+          compilation,
           indexFile,
           normalizedOutputPath,
           serverBundlePath,
@@ -303,6 +320,7 @@ export class PrerenderPlugin implements RspackPluginInstance {
   }
 
   async #getRoutes(
+    compilation: Compilation,
     indexFile: string,
     outputPath: string,
     serverBundlePath: string,
@@ -337,17 +355,17 @@ export class PrerenderPlugin implements RspackPluginInstance {
         recordTiming: false,
       });
 
-      const extractedRoutes: string[] = await renderWorker
-        .run({})
-        .finally(() => void renderWorker.destroy());
+      const { routes: extractedRoutes, errors }: RoutesExtractorResult =
+        await renderWorker.run({}).finally(() => void renderWorker.destroy());
+
+      if (errors.length > 0) {
+        errors.forEach((error) => addError(compilation, error));
+        return [];
+      }
 
       for (const route of extractedRoutes) {
         routes.add(route);
       }
-    }
-
-    if (routes.size === 0) {
-      throw new Error('Could not find any routes to prerender.');
     }
 
     return [...routes];

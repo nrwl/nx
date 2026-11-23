@@ -41,10 +41,15 @@ interface ServerBundleExports {
   ɵgetRoutesFromAngularRouterConfig: typeof ɵgetRoutesFromAngularRouterConfig;
 }
 
+export interface RoutesExtractorResult {
+  routes: string[];
+  errors: string[];
+}
+
 const { zonePackage, serverBundlePath, outputPath, indexFile } =
   workerData as RoutesExtractorWorkerData;
 
-async function extract(): Promise<string[]> {
+async function extract(): Promise<RoutesExtractorResult> {
   // rspack emits a CommonJS server bundle; load with `require` so its named
   // exports resolve (a nodenext `import()` would leave them undefined).
   const {
@@ -65,11 +70,12 @@ async function extract(): Promise<string[]> {
   );
 
   const routes: string[] = [];
-  const { routes: extractRoutes } = await getRoutesFromAngularRouterConfig(
-    bootstrapAppFnOrModule,
-    document,
-    new URL('http://localhost')
-  );
+  const { routes: extractRoutes, errors } =
+    await getRoutesFromAngularRouterConfig(
+      bootstrapAppFnOrModule,
+      document,
+      new URL('http://localhost')
+    );
 
   for (const { route, redirectTo } of extractRoutes) {
     if (redirectTo === undefined && !/[:*]/.test(route)) {
@@ -77,7 +83,7 @@ async function extract(): Promise<string[]> {
     }
   }
 
-  return routes;
+  return { routes, errors };
 }
 
 /**
