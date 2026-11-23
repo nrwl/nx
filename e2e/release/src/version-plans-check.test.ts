@@ -4,6 +4,7 @@ import {
   cleanupProject,
   newProject,
   runCLI,
+  runCommand,
   runCommandAsync,
   tmpProjPath,
   uniq,
@@ -52,10 +53,10 @@ describe('nx release version plans check command', () => {
   let pkg3: string;
   let pkg4: string;
   let pkg5: string;
+  let initialCommit: string;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     newProject({
-      keepBackup: true,
       packages: ['@nx/js'],
     });
 
@@ -74,15 +75,28 @@ describe('nx release version plans check command', () => {
     pkg5 = uniq('my-pkg-5');
     runCLI(`generate @nx/workspace:npm-package ${pkg5}`);
 
-    await runCommandAsync(`git add .`);
-    await runCommandAsync(`git commit -m "chore: initial commit"`);
-    await runCommandAsync(`git tag -a v0.0.0 -m "v0.0.0"`);
-    await runCommandAsync(`git tag -a ${pkg3}@0.0.0 -m "${pkg3}@0.0.0"`);
-    await runCommandAsync(`git tag -a ${pkg4}@0.0.0 -m "${pkg4}@0.0.0"`);
-    await runCommandAsync(`git tag -a ${pkg5}@0.0.0 -m "${pkg5}@0.0.0"`);
+    await runCommandAsync(
+      [
+        'git add .',
+        'git commit -m "chore: initial commit"',
+        'git tag -a v0.0.0 -m "v0.0.0"',
+        `git tag -a ${pkg3}@0.0.0 -m "${pkg3}@0.0.0"`,
+        `git tag -a ${pkg4}@0.0.0 -m "${pkg4}@0.0.0"`,
+        `git tag -a ${pkg5}@0.0.0 -m "${pkg5}@0.0.0"`,
+      ].join(' && ')
+    );
+    initialCommit = runCommand('git rev-parse HEAD', {
+      failOnError: true,
+    }).trim();
   });
 
-  afterEach(() => cleanupProject());
+  beforeEach(() => {
+    runCommand(`git reset --hard ${initialCommit} && git clean -fd`, {
+      failOnError: true,
+    });
+  });
+
+  afterAll(() => cleanupProject());
 
   it('should work as expected when there are no version plan files on disk', async () => {
     // it should error if version plans are not yet enabled
