@@ -96,16 +96,7 @@ public static partial class TargetBuilder
             ? "PublishOutputs.*.txt"
             : properties.PublishCleanFile;
 
-        var buildOutputDir = ApplyConfiguration(
-            ResolvePath(properties.OutputPath ?? properties.OutDir ?? "bin", projectDirectory, workspaceRoot),
-            properties.Configuration,
-            "*");
-        // A publish dir that holds the build output would exclude the compiled
-        // assemblies publish copies, so the hash would miss a changed build.
-        var holdsBuildOutput = publishDir is not null
-            && (Covers(publishDir, buildOutputDir) || Covers(publishDir, intermediatePath));
-
-        var dir = holdsBuildOutput ? null : ToWorkspaceRelative(publishDir, projectDirectory, workspaceRoot);
+        var dir = ToWorkspaceRelative(publishDir, projectDirectory, workspaceRoot);
         var obj = ToWorkspaceRelative(intermediatePath, projectDirectory, workspaceRoot);
 
         // A path with glob syntax of its own cannot be embedded in the pattern.
@@ -153,25 +144,6 @@ public static partial class TargetBuilder
         }
 
         return string.IsNullOrEmpty(relative) ? null : relative;
-    }
-
-    /// <summary>
-    /// Whether <paramref name="child"/> is <paramref name="parent"/> or lies under it.
-    /// A <c>*</c> segment on either side matches any one segment.
-    /// </summary>
-    private static bool Covers(string parent, string? child)
-    {
-        if (child is null)
-        {
-            return false;
-        }
-
-        var parentSegments = parent.TrimEnd('/').Split('/');
-        var childSegments = child.TrimEnd('/').Split('/');
-        return parentSegments.Length <= childSegments.Length
-            && parentSegments.Zip(childSegments).All(pair =>
-                pair.First == "*" || pair.Second == "*"
-                || pair.First.Equals(pair.Second, StringComparison.OrdinalIgnoreCase));
     }
 
     private static bool HasGlobSyntax(string value) =>

@@ -108,39 +108,6 @@ public class TargetBuilderPublishInputsTests
             DependencyOutputsGlob(properties, ProjectDir("apps", "foo")));
     }
 
-    [Theory]
-    [InlineData("bin\\Debug\\net8.0\\")]
-    [InlineData("bin\\Debug\\")]
-    [InlineData("bin\\")]
-    public void KeepsThePublishDirWhenItHoldsTheBuildOutput(string publishDir)
-    {
-        var properties = new Dictionary<string, string>
-        {
-            ["Configuration"] = "Debug",
-            ["OutputPath"] = "bin\\Debug\\net8.0\\",
-            ["PublishDir"] = publishDir,
-        };
-
-        Assert.Equal(
-            "!apps/foo/obj/**/PublishOutputs.*.txt",
-            DependencyOutputsGlob(properties, ProjectDir("apps", "foo")));
-    }
-
-    [Fact]
-    public void ExcludesAPublishDirNestedUnderTheBuildOutput()
-    {
-        var properties = new Dictionary<string, string>
-        {
-            ["Configuration"] = "Debug",
-            ["OutputPath"] = "bin\\Debug\\net8.0\\",
-            ["PublishDir"] = "bin\\Debug\\net8.0\\publish\\",
-        };
-
-        Assert.Equal(
-            "!{apps/foo/bin/*/net8.0/publish/**,apps/foo/obj/**/PublishOutputs.*.txt}",
-            DependencyOutputsGlob(properties, ProjectDir("apps", "foo")));
-    }
-
     [Fact]
     public void DropsAPathThatContainsGlobSyntax()
     {
