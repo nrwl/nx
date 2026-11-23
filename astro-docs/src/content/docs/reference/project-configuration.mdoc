@@ -835,7 +835,7 @@ If you change an inferred dev target's command to something that doesn't report,
 
 ### Ultracache
 
-Nx Cloud records the files each task reads and writes. From the reads it builds each task's Ultracache configuration, which Nx hashes the task from in place of the target's declared `inputs`. Only reads of stable files count, meaning files that `.gitignore` and `.nxignore` don't exclude, unless the target sets [`includeUnstableFiles`](#include-unstable-files). Inputs with `"always": true` and [`dependentTasksOutputFiles`](/docs/reference/inputs#outputs-of-dependent-tasks) inputs stay in the hash. Nx still caches the target's declared `outputs`. The `ultracache` property adjusts that for a single target.
+Nx Cloud records the files each task reads and writes. From the reads it builds each task's Ultracache configuration, which Nx hashes the task from in place of the target's declared `inputs`. A read counts when the file is stable, meaning `.gitignore` and `.nxignore` don't exclude it, or when it's an output of a task this one depends on. Other reads don't count unless the target sets [`includeUnstableFiles`](#include-unstable-files). Inputs with `"always": true` and [`dependentTasksOutputFiles`](/docs/reference/inputs#outputs-of-dependent-tasks) inputs stay in the hash. Nx still caches the target's declared `outputs`. The `ultracache` property adjusts that for a single target.
 
 Set `mode` to choose how a target participates:
 
@@ -904,7 +904,7 @@ The first path segment cannot contain `*`, so `**/generated/**` is not supported
 
 #### Include unstable files
 
-A file that `.gitignore` or `.nxignore` excludes is unstable: it can differ between two runs on the same commit. Set `includeUnstableFiles: true` to also hash the recorded reads of such files, such as `dist/libs/ui/index.d.ts`. It defaults to `false`.
+A file that `.gitignore` or `.nxignore` excludes is unstable: it can differ between two runs on the same commit. Nx hashes a recorded read of one only when the file sits inside an output of a task this one depends on, because that task always runs first. Set `includeUnstableFiles: true` to hash the other recorded reads of unstable files too, such as a generated file that no task declares as an output. It defaults to `false`.
 
 ```json
 {
@@ -922,7 +922,6 @@ With it on:
 
 - Nx matches the recorded reads against the files on disk, so a gitignored file counts whenever it is present.
 - The reads replace the target's declared `includeIgnored` filesets.
-- Nx hashes the task only after the tasks it depends on run, because their outputs exist only then.
 
 Changing `includeUnstableFiles` re-runs the task, so its next recording follows the new setting.
 

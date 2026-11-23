@@ -1258,7 +1258,7 @@
             "includeUnstableFiles": {
               "type": "boolean",
               "default": false,
-              "description": "Also hash recorded reads of unstable files: files that `.gitignore` or `.nxignore` exclude, such as the outputs of a dependency task. The task then waits for the tasks it depends on before it is hashed. By default only reads of stable files are hashed."
+              "description": "Also hash recorded reads of unstable files that no task this one depends on outputs. Unstable files are those `.gitignore` or `.nxignore` exclude. By default only reads of stable files and of the outputs of tasks this one depends on are hashed."
             },
             "ignoreReads": {
               "type": "array",

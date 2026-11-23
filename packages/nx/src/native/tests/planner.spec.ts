@@ -2731,23 +2731,8 @@ describe('task planner', () => {
       expect(markerWith({ includeUnstableFiles: false })).toBe(none);
     });
 
-    it("leaves a task that read a producer's outputs undeferred by default", () => {
-      const { taskGraph } = fixture();
-      const configurations = configurationsFor({
-        'parent:build': {
-          inputs: ['dist/libs/child/index.js'],
-        },
-      });
-      expect(getUltracacheDeferredTaskIds(configurations, taskGraph)).toEqual(
-        []
-      );
-    });
-
-    it("hashes reads of a producer task's outputs from disk and defers the task when the target includes unstable files", () => {
+    it("hashes reads of a producer task's outputs from disk and defers the task", () => {
       const { planner, taskGraph } = fixture();
-      taskGraph.tasks['parent:build'].ultracache = {
-        includeUnstableFiles: true,
-      };
       const configurations = configurationsFor({
         'parent:build': {
           inputs: ['dist/libs/child/index.js'],
@@ -2896,11 +2881,8 @@ describe('task planner', () => {
       expect(plan).not.toContainEqual(expect.stringMatching(/^child:libs\//));
     });
 
-    it("defers a task that includes unstable files when its reads sit under a producer's declared outputs", () => {
+    it("defers a task whose reads sit under a producer's declared outputs", () => {
       const { taskGraph } = fixture();
-      taskGraph.tasks['parent:build'].ultracache = {
-        includeUnstableFiles: true,
-      };
       const configurations = configurationsFor({
         'parent:build': { inputs: ['dist/libs/child/index.js'] },
       });

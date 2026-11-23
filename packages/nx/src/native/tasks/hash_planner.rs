@@ -613,8 +613,9 @@ impl HashPlanner {
     /// with `task`'s observed reads; TsConfiguration and JSON inputs survive
     /// only if read. `always` is kept, and added where the configuration path never
     /// gathered it (the task's own filesets). Unless the target sets
-    /// `includeUnstableFiles`, the reads match tracked files only, so declared
-    /// `includeIgnored` filesets are kept too.
+    /// `includeUnstableFiles`, a read matches tracked files only, except one
+    /// inside an upstream task's output, which is read from disk. Declared
+    /// `includeIgnored` filesets are kept then, since nothing else reads them.
     fn replace_with_configuration(
         &self,
         task: &Task,
@@ -631,12 +632,14 @@ impl HashPlanner {
             .as_ref()
             .and_then(|ultracache| ultracache.include_unstable_files)
             .unwrap_or(false);
+        let mut upstream_outputs = upstream_output_roots(task_graph, &task.id);
+        upstream_outputs.sort_unstable();
+        upstream_outputs.dedup();
         // Files under node_modules that no external hashes: upstream outputs,
-        // and what a declared `includeIgnored` group walks into there. None
-        // of them is tracked.
-        let mut not_installed = Vec::new();
+        // and what a declared `includeIgnored` group walks into there. Such a
+        // group is kept as declared when the reads match tracked files only.
+        let mut not_installed = upstream_outputs.clone();
         if !tracked_only {
-            not_installed = upstream_output_roots(task_graph, &task.id);
             for id in ids.iter() {
                 if let HashInstruction::IgnoredFileSet { globs, .. } = &*pool.get(*id) {
                     not_installed.extend(
@@ -653,7 +656,12 @@ impl HashPlanner {
             not_installed.sort_unstable();
         }
         let own: hashbrown::HashSet<u32> = self
-            .configuration_file_instructions(task, context, &not_installed, tracked_only)
+            .configuration_file_instructions(
+                task,
+                context,
+                &not_installed,
+                tracked_only.then_some(upstream_outputs.as_slice()),
+            )
             .into_iter()
             .map(|instruction| pool.intern(instruction))
             .collect();
@@ -674,7 +682,9 @@ impl HashPlanner {
         task: &Task,
         context: &UltracacheContext,
         not_installed: &[String],
-        tracked_only: bool,
+        // Sorted. Set when reads match tracked files only: a read inside one
+        // of these outputs is the exception, read from disk.
+        upstream_outputs: Option<&[String]>,
     ) -> Vec<HashInstruction> {
         let entry = context.entry;
         let self_project = task.target.project.as_str();
@@ -694,10 +704,16 @@ impl HashPlanner {
                 .find_map(|dir| project_by_root.get(dir))
                 .map_or(unowned, String::as_str)
         };
+        // A group per project and per source, the file map or the disk.
+        let bucket = |glob: &str| -> (&str, bool) {
+            let tracked_only =
+                upstream_outputs.is_some_and(|outputs| !inside_any(outputs, &walk_root(glob)));
+            (owner(glob), tracked_only)
+        };
 
         // A recorded glob stays whole unless its brace alternatives belong to
-        // different projects or name a file the always-on set hashes.
-        let mut buckets: BTreeMap<&str, Vec<Arc<str>>> = BTreeMap::new();
+        // different groups or name a file the always-on set hashes.
+        let mut buckets: BTreeMap<(&str, bool), Vec<Arc<str>>> = BTreeMap::new();
         let mut exclusions: Vec<Arc<str>> = Vec::new();
         for glob in entry.files.iter() {
             if !glob.contains('{') {
@@ -705,7 +721,7 @@ impl HashPlanner {
                     if glob.starts_with('!') {
                         exclusions.push(glob.clone());
                     } else {
-                        buckets.entry(owner(glob)).or_default().push(glob.clone());
+                        buckets.entry(bucket(glob)).or_default().push(glob.clone());
                     }
                 }
                 continue;
@@ -723,12 +739,12 @@ impl HashPlanner {
                     false => exclusions.extend(kept.into_iter().map(Arc::from)),
                 }
             } else {
-                let owners: Vec<&str> = kept.iter().map(|g| owner(g)).collect();
-                if whole && owners.iter().all(|o| *o == owners[0]) {
-                    buckets.entry(owners[0]).or_default().push(glob.clone());
+                let groups: Vec<(&str, bool)> = kept.iter().map(|g| bucket(g)).collect();
+                if whole && groups.iter().all(|group| *group == groups[0]) {
+                    buckets.entry(groups[0]).or_default().push(glob.clone());
                 } else {
-                    for (glob, project) in kept.into_iter().zip(owners) {
-                        buckets.entry(project).or_default().push(glob.into());
+                    for (glob, group) in kept.into_iter().zip(groups) {
+                        buckets.entry(group).or_default().push(glob.into());
                     }
                 }
             }
@@ -739,7 +755,7 @@ impl HashPlanner {
             .collect();
 
         let mut instructions = Vec::new();
-        for mut group in buckets.into_values() {
+        for ((_, tracked_only), mut group) in buckets {
             group.sort();
             group.dedup();
             // Exclusions apply to every recorded positive, so each group takes
@@ -1761,6 +1777,19 @@ fn upstream_output_roots(task_graph: &TaskGraph, task_id: &str) -> Vec<String> {
         stack.extend(dependencies_of(id));
     }
     roots
+}
+
+/// Whether `root` is one of `sorted_roots` or sits inside one. The workspace
+/// root holds everything, so it never counts.
+fn inside_any(sorted_roots: &[String], root: &str) -> bool {
+    std::iter::once(root)
+        .chain(parent_dirs(root))
+        .filter(|ancestor| !ancestor.is_empty())
+        .any(|ancestor| {
+            sorted_roots
+                .binary_search_by(|r| r.as_str().cmp(ancestor))
+                .is_ok()
+        })
 }
 
 /// `paths_overlap` against each of `sorted_roots`, by lookup instead of a scan.
@@ -3716,15 +3745,63 @@ mod always_tests {
             "node_modules/foo/index.js",
             "dist/libs/app/node_modules/dep/index.js",
         ];
-        assert_eq!(
-            hashed_node_modules_reads(&planner, including_unstable_files(graph()), &reads),
-            (vec!["node_modules/.gen/app/index.js".to_string()], true)
+        // An upstream output is read from disk with or without `includeUnstableFiles`.
+        for graph in [graph(), including_unstable_files(graph())] {
+            assert_eq!(
+                hashed_node_modules_reads(&planner, graph, &reads),
+                (vec!["node_modules/.gen/app/index.js".to_string()], true)
+            );
+        }
+    }
+
+    #[test]
+    fn a_recording_reads_only_upstream_outputs_from_disk() {
+        let planner = planner(vec![("e2e:e2e", vec![])], &[("e2e", &["app"])]);
+        let graph = task_graph(
+            &[
+                ("e2e:e2e", &[]),
+                ("app:build", &["libs/app/dist"]),
+                // Not a dependency of `e2e:e2e`, so nothing orders it first.
+                ("app:typecheck", &["libs/app/out-tsc"]),
+            ],
+            &[("e2e:e2e", &["app:build"])],
         );
-        // Without `includeUnstableFiles` nothing under node_modules is tracked.
+        let (_dir, configurations) = ultracache_configurations(&[(
+            "e2e:e2e",
+            &[
+                "libs/e2e/src/app.spec.ts",
+                "libs/app/**/*.ts",
+                "libs/app/dist/**/*.js",
+                "libs/app/out-tsc/index.d.ts",
+            ],
+        )]);
+        let plans = planner
+            .get_plans_internal(vec!["e2e:e2e"], graph, Some(&configurations), &[])
+            .unwrap();
+        let mut groups: Vec<(String, bool)> = plans.plans["e2e:e2e"]
+            .iter()
+            .filter_map(|id| match plans.pool.get(*id).value() {
+                HashInstruction::IgnoredFileSet {
+                    globs,
+                    tracked_only,
+                    ..
+                } => Some((globs.join(","), *tracked_only)),
+                _ => None,
+            })
+            .collect();
+        groups.sort();
         assert_eq!(
-            hashed_node_modules_reads(&planner, graph(), &reads),
-            (vec![], false)
+            groups,
+            vec![
+                (
+                    "libs/app/**/*.ts,libs/app/out-tsc/index.d.ts".to_string(),
+                    true
+                ),
+                ("libs/app/dist/**/*.js".to_string(), false),
+                ("libs/e2e/src/app.spec.ts".to_string(), true),
+            ]
         );
+        assert!(plans.deferred.contains("e2e:e2e"));
     }
 
     #[test]

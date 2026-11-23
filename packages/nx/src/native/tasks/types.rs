@@ -83,8 +83,9 @@ pub struct TaskUltracacheSettings {
     /// and `?`, `!`, `[`, `]` and extglobs are not supported; anchor the
     /// pattern to a directory instead of leading with `**`.
     pub ignore_writes: Option<Vec<String>>,
-    /// Hash recorded reads of unstable files too: those `.gitignore` or
-    /// `.nxignore` exclude, such as dependency outputs. Defaults to `false`.
+    /// Hash every recorded read of an unstable file, one `.gitignore` or
+    /// `.nxignore` excludes. Defaults to `false`: only the ones inside an
+    /// output of a task this one depends on are hashed.
     pub include_unstable_files: Option<bool>,
 }
 
@@ -239,7 +240,8 @@ pub enum HashInstruction {
         /// Read by the task per its Ultracache configuration, not declared.
         from_ultracache: bool,
         /// Only files the workspace tracks match, and the disk is not read.
-        /// Set for a recording unless its target sets `includeUnstableFiles`.
+        /// Set for a recording's reads outside upstream outputs, unless its
+        /// target sets `includeUnstableFiles`.
         tracked_only: bool,
     },
     ProjectConfiguration(String),
