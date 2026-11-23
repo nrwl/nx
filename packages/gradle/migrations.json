@@ -198,6 +198,12 @@
       "description": "Change dev.nx.gradle.project-graph to version 0.1.26 in build file",
       "implementation": "./dist/src/migrations/24-0-0/change-plugin-version-0-1-26",
       "documentation": "./dist/src/migrations/24-0-0/change-plugin-version-0-1-26.md"
+    },
+    "change-plugin-version-0-1-27": {
+      "version": "24.0.7",
+      "description": "Change dev.nx.gradle.project-graph to version 0.1.27 in build file",
+      "implementation": "./dist/src/migrations/24-1-0/change-plugin-version-0-1-27",
+      "documentation": "./dist/src/migrations/24-1-0/change-plugin-version-0-1-27.md"
     }
   },
   "packageJsonUpdates": {}
