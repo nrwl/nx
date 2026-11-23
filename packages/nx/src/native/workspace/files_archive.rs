@@ -8,25 +8,27 @@ use std::time::{Duration, SystemTime};
 
 use tracing::trace;
 
-// v3 keys each entry on `get_metadata_key` where v2 keyed it on the mtime
-// alone. The filename is the format key, and here it is the only one, because
-// the two entry layouts are identical and rkyv's check cannot separate them.
-const NX_FILES_ARCHIVE: &str = "nx_files_v3.nxt";
+// v4 adds a symlink target's `get_metadata_key` beside the entry's own; v3
+// keyed each entry on its own metadata key, v2 on the mtime alone. The
+// filename is the format key, so an older archive is never read as this one.
+const NX_FILES_ARCHIVE: &str = "nx_files_v4.nxt";
 
-/// A file's content hash and the `get_metadata_key` of the file it was read
-/// from. Reusing the hash means finding that same key on disk again.
+/// A file's content hash, the `get_metadata_key` of the entry it was read
+/// from, and that of its symlink target (`0` when it is not a symlink).
+/// Reusing the hash means finding both keys on disk again.
 #[derive(Archive, Serialize, Deserialize, PartialEq, Debug)]
 #[archive(check_bytes)]
-pub struct NxFileHashed(pub String, pub u64);
+pub struct NxFileHashed(pub String, pub u64, pub u64);
 
 #[derive(Archive, Deserialize, Serialize, Debug, PartialEq)]
 #[archive(check_bytes)]
 pub struct NxFileHashes {
     files: HashMap<String, NxFileHashed>,
     /// The value `gather_stamp()` returned when the gather that wrote this
-    /// archive began. An entry whose mtime is at or after it was read while the
-    /// workspace could still change within the same mtime tick, so its hash may
-    /// already be stale and must not be reused. See `selective_files_hash`.
+    /// archive began. An entry whose mtime, or whose symlink target's mtime, is
+    /// at or after it was read while the workspace could still change within
+    /// the same mtime tick, so its hash may already be stale and must not be
+    /// reused. See `selective_files_hash`.
     gathered_at: i64,
 }
 
@@ -116,12 +118,13 @@ impl FilesArchive {
         self.archived().files.len()
     }
 
-    /// The recorded hash and metadata key for a workspace-relative path.
-    pub fn get(&self, path: &str) -> Option<(&str, u64)> {
+    /// The recorded hash, metadata key, and symlink target metadata key for a
+    /// workspace-relative path.
+    pub fn get(&self, path: &str) -> Option<(&str, u64, u64)> {
         self.archived()
             .files
             .get(path)
-            .map(|hashed| (hashed.0.as_str(), hashed.1))
+            .map(|hashed| (hashed.0.as_str(), hashed.1, hashed.2))
     }
 
     /// The stamp the gather that wrote this archive began at. See
@@ -265,11 +268,26 @@ mod tests {
 
     const V2_NX_FILES_ARCHIVE: &str = "nx_files_v2.nxt";
 
+    // The shape and name an archive had before entries carried a symlink
+    // target's metadata key.
+    #[derive(RkyvArchive, Serialize)]
+    #[archive(check_bytes)]
+    struct V3NxFileHashed(String, u64);
+
+    #[derive(RkyvArchive, Serialize)]
+    #[archive(check_bytes)]
+    struct V3NxFileHashes {
+        files: HashMap<String, V3NxFileHashed>,
+        gathered_at: i64,
+    }
+
+    const V3_NX_FILES_ARCHIVE: &str = "nx_files_v3.nxt";
+
     use assert_fs::TempDir;
     use assert_fs::prelude::*;
 
     fn one_file() -> NxFileHashes {
-        [("a.ts".to_string(), NxFileHashed("h".to_string(), 1))]
+        [("a.ts".to_string(), NxFileHashed("h".to_string(), 1, 0))]
             .into_iter()
             .collect()
     }
@@ -286,7 +304,7 @@ mod tests {
     #[test]
     fn a_write_sweeps_orphaned_staging_files_and_keeps_live_ones() {
         let cache = TempDir::new().unwrap();
-        let orphan = cache.child("nx_files_v3.nxt.1.deadbeef.tmp");
+        let orphan = cache.child("nx_files_v4.nxt.1.deadbeef.tmp");
         orphan.write_str("x").unwrap();
         std::fs::File::options()
             .write(true)
@@ -294,10 +312,10 @@ mod tests {
             .unwrap()
             .set_modified(SystemTime::now() - STAGING_ORPHAN_AGE * 2)
             .unwrap();
-        let live = cache.child("nx_files_v3.nxt.2.cafebabe.tmp");
+        let live = cache.child("nx_files_v4.nxt.2.cafebabe.tmp");
         live.write_str("x").unwrap();
         // Old neighbours that are not staging files stay, whatever their age.
-        for name in ["other.tmp", "nx_files_v3.nxt.bak"] {
+        for name in ["other.tmp", "nx_files_v4.nxt.bak"] {
             let neighbour = cache.child(name);
             neighbour.write_str("x").unwrap();
             std::fs::File::options()
@@ -313,9 +331,9 @@ mod tests {
         assert_eq!(
             names_in(cache.path()),
             vec![
-                "nx_files_v3.nxt",
-                "nx_files_v3.nxt.2.cafebabe.tmp",
-                "nx_files_v3.nxt.bak",
+                "nx_files_v4.nxt",
+                "nx_files_v4.nxt.2.cafebabe.tmp",
+                "nx_files_v4.nxt.bak",
                 "other.tmp"
             ]
         );
@@ -326,26 +344,26 @@ mod tests {
         let cache = TempDir::new().unwrap();
         write_files_archive(cache.path(), &one_file());
         let two_files: NxFileHashes = [
-            ("a.ts".to_string(), NxFileHashed("h".to_string(), 1)),
-            ("b.ts".to_string(), NxFileHashed("i".to_string(), 2)),
+            ("a.ts".to_string(), NxFileHashed("h".to_string(), 1, 0)),
+            ("b.ts".to_string(), NxFileHashed("i".to_string(), 2, 0)),
         ]
         .into_iter()
         .collect();
         write_files_archive(cache.path(), &two_files);
-        assert_eq!(names_in(cache.path()), vec!["nx_files_v3.nxt"]);
+        assert_eq!(names_in(cache.path()), vec!["nx_files_v4.nxt"]);
         assert_eq!(read_files_archive(cache.path()).unwrap().len(), 2);
     }
 
     #[test]
     fn staging_paths_differ_between_writes_of_one_process() {
-        let archive = Path::new("/cache/nx_files_v3.nxt");
+        let archive = Path::new("/cache/nx_files_v4.nxt");
         let first = staging_path(archive);
         let second = staging_path(archive);
         assert_ne!(first, second);
         for path in [&first, &second] {
             let name = path.file_name().unwrap().to_string_lossy();
             assert!(
-                name.starts_with("nx_files_v3.nxt.") && name.ends_with(".tmp"),
+                name.starts_with("nx_files_v4.nxt.") && name.ends_with(".tmp"),
                 "{name}"
             );
             assert_eq!(path.parent(), archive.parent());
@@ -356,7 +374,7 @@ mod tests {
     fn a_write_refuses_a_staging_path_something_already_occupies() {
         let cache = TempDir::new().unwrap();
         let archive = archive_path(cache.path());
-        let planted = cache.child("nx_files_v3.nxt.7.0000000000000001.tmp");
+        let planted = cache.child("nx_files_v4.nxt.7.0000000000000001.tmp");
         planted.write_str("planted").unwrap();
 
         let err = write_files_archive_at(&archive, planted.path(), &one_file()).unwrap_err();
@@ -393,11 +411,34 @@ mod tests {
     }
 
     #[test]
+    fn an_archive_written_before_entries_carried_a_target_metadata_key_is_not_read() {
+        // Its symlink entries never recorded their targets, so reusing them
+        // would miss a target edit. It has to drop out and cost a full re-hash.
+        let dir = tempfile::tempdir().expect("tempdir");
+        let mut files = HashMap::with_hasher(Default::default());
+        files.insert(
+            String::from("a.ts"),
+            V3NxFileHashed(String::from("hash-a"), 1234),
+        );
+        let bytes = rkyv::to_bytes::<_, 2048>(&V3NxFileHashes {
+            files,
+            gathered_at: 1234,
+        })
+        .expect("serialize");
+        std::fs::write(dir.path().join(V3_NX_FILES_ARCHIVE), &bytes).expect("write v3 archive");
+
+        assert!(
+            read_files_archive(dir.path()).is_none(),
+            "an archive without target metadata keys must not be read"
+        );
+    }
+
+    #[test]
     fn a_current_format_archive_round_trips_with_its_stamp() {
         let dir = tempfile::tempdir().expect("tempdir");
         let hashes: NxFileHashes = vec![(
             String::from("a.ts"),
-            NxFileHashed(String::from("hash-a"), 1234),
+            NxFileHashed(String::from("hash-a"), 1234, 0),
         )]
         .into_iter()
         .collect::<NxFileHashes>()
