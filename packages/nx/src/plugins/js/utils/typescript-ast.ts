@@ -47,12 +47,48 @@ type AbsentSyntaxKind =
 type TypescriptFactory = Pick<
   ts.NodeFactory,
   | 'createArrayLiteralExpression'
+  | 'createArrowFunction'
+  | 'createAwaitExpression'
+  | 'createBinaryExpression'
+  | 'createBindingElement'
+  | 'createCallExpression'
+  | 'createElementAccessChain'
+  | 'createElementAccessExpression'
+  | 'createExportAssignment'
+  | 'createExpressionStatement'
   | 'createFalse'
+  | 'createIdentifier'
+  | 'createImportClause'
+  | 'createImportDeclaration'
+  | 'createImportSpecifier'
+  | 'createMetaProperty'
+  | 'createNamedImports'
+  | 'createNull'
+  | 'createObjectBindingPattern'
   | 'createObjectLiteralExpression'
+  | 'createParameterDeclaration'
+  | 'createParenthesizedExpression'
+  | 'createPrefixUnaryExpression'
+  | 'createPropertyAccessChain'
+  | 'createPropertyAccessExpression'
   | 'createPropertyAssignment'
+  | 'createSpreadAssignment'
+  | 'createSpreadElement'
   | 'createStringLiteral'
+  | 'createToken'
   | 'createTrue'
+  | 'createVariableDeclaration'
+  | 'createVariableDeclarationList'
+  | 'createVariableStatement'
+  | 'updateArrayLiteralExpression'
+  | 'updateCallExpression'
+  | 'updateImportDeclaration'
+  | 'updateNamedImports'
+  | 'updateNewExpression'
+  | 'updateObjectLiteralExpression'
 > & {
+  // TypeScript 7.1 takes positions after the elements, not a trailing comma.
+  createNodeArray<T extends ts.Node>(elements?: readonly T[]): ts.NodeArray<T>;
   // TypeScript 7.1's token flags have other values.
   createNumericLiteral(value: string | number): ts.NumericLiteral;
 };
@@ -497,16 +533,132 @@ function createApiAst(backend: ApiTypescriptBackend): TypescriptAst {
   // TypeScript 6 builders also take a name as a string.
   const asIdentifier = (name: unknown) =>
     (typeof name === 'string' ? f.createIdentifier(name) : name) as never;
+  // TypeScript 6 element access builders also take the index as a number.
+  const asExpression = (index: unknown) =>
+    (typeof index === 'number'
+      ? f.createNumericLiteral(String(index), TokenFlags.None)
+      : index) as never;
   const factory = {
     createArrayLiteralExpression: (elements?: never[], multiLine?: boolean) =>
       f.createArrayLiteralExpression(elements ?? [], multiLine),
+    createArrowFunction: f.createArrowFunction,
+    createAwaitExpression: f.createAwaitExpression,
+    createBinaryExpression: (left: never, operator: unknown, right: never) =>
+      f.createBinaryExpression(
+        undefined,
+        left,
+        undefined,
+        (typeof operator === 'number'
+          ? f.createToken(operator as never)
+          : operator) as never,
+        right
+      ),
+    createBindingElement: (
+      dotDotDotToken: never,
+      propertyName: unknown,
+      name: unknown,
+      initializer?: never
+    ) =>
+      f.createBindingElement(
+        dotDotDotToken,
+        asIdentifier(propertyName),
+        asIdentifier(name),
+        initializer
+      ),
+    createCallExpression: (
+      expression: never,
+      typeArguments: never,
+      args?: never[]
+    ) =>
+      f.createCallExpression(
+        expression,
+        undefined,
+        typeArguments,
+        args ?? [],
+        NodeFlags.None
+      ),
+    createElementAccessChain: (
+      expression: never,
+      questionDotToken: never,
+      index: unknown
+    ) =>
+      f.createElementAccessExpression(
+        expression,
+        questionDotToken,
+        asExpression(index),
+        NodeFlags.OptionalChain
+      ),
+    createElementAccessExpression: (expression: never, index: unknown) =>
+      f.createElementAccessExpression(
+        expression,
+        undefined,
+        asExpression(index),
+        NodeFlags.None
+      ),
+    createExportAssignment: (
+      modifiers: never,
+      isExportEquals: boolean | undefined,
+      expression: never
+    ) =>
+      f.createExportAssignment(
+        modifiers,
+        isExportEquals,
+        undefined,
+        expression
+      ),
+    createExpressionStatement: f.createExpressionStatement,
     createFalse: () => f.createKeywordExpression(SyntaxKind.FalseKeyword),
+    createIdentifier: f.createIdentifier,
+    createImportClause: f.createImportClause,
+    createImportDeclaration: f.createImportDeclaration,
+    createImportSpecifier: f.createImportSpecifier,
+    createMetaProperty: f.createMetaProperty,
+    createNamedImports: f.createNamedImports,
+    createNodeArray: (elements?: never[]) => f.createNodeArray(elements ?? []),
+    createNull: () => f.createKeywordExpression(SyntaxKind.NullKeyword),
     createNumericLiteral: (value: string | number) =>
       f.createNumericLiteral(String(value), TokenFlags.None),
+    createObjectBindingPattern: f.createObjectBindingPattern,
     createObjectLiteralExpression: (
       properties?: never[],
       multiLine?: boolean
     ) => f.createObjectLiteralExpression(properties ?? [], multiLine),
+    createParameterDeclaration: (
+      modifiers: never,
+      dotDotDotToken: never,
+      name: unknown,
+      questionToken?: never,
+      type?: never,
+      initializer?: never
+    ) =>
+      f.createParameterDeclaration(
+        modifiers,
+        dotDotDotToken,
+        asIdentifier(name),
+        questionToken,
+        type,
+        initializer
+      ),
+    createParenthesizedExpression: f.createParenthesizedExpression,
+    createPrefixUnaryExpression: f.createPrefixUnaryExpression,
+    createPropertyAccessChain: (
+      expression: never,
+      questionDotToken: never,
+      name: unknown
+    ) =>
+      f.createPropertyAccessExpression(
+        expression,
+        questionDotToken,
+        asIdentifier(name),
+        NodeFlags.OptionalChain
+      ),
+    createPropertyAccessExpression: (expression: never, name: unknown) =>
+      f.createPropertyAccessExpression(
+        expression,
+        undefined,
+        asIdentifier(name),
+        NodeFlags.None
+      ),
     createPropertyAssignment: (name: unknown, initializer: never) =>
       f.createPropertyAssignment(
         undefined,
@@ -515,12 +667,51 @@ function createApiAst(backend: ApiTypescriptBackend): TypescriptAst {
         undefined,
         initializer
       ),
+    createSpreadAssignment: f.createSpreadAssignment,
+    createSpreadElement: f.createSpreadElement,
     createStringLiteral: (text: string, isSingleQuote?: boolean) =>
       f.createStringLiteral(
         text,
         isSingleQuote ? TokenFlags.SingleQuote : TokenFlags.None
       ),
+    createToken: f.createToken,
     createTrue: () => f.createKeywordExpression(SyntaxKind.TrueKeyword),
+    createVariableDeclaration: (
+      name: unknown,
+      exclamationToken?: never,
+      type?: never,
+      initializer?: never
+    ) =>
+      f.createVariableDeclaration(
+        asIdentifier(name),
+        exclamationToken,
+        type,
+        initializer
+      ),
+    createVariableDeclarationList: (declarations: never[], flags?: number) =>
+      f.createVariableDeclarationList(
+        declarations,
+        (flags ?? NodeFlags.None) as never
+      ),
+    createVariableStatement: f.createVariableStatement,
+    updateArrayLiteralExpression: f.updateArrayLiteralExpression,
+    updateCallExpression: (
+      node: { questionDotToken?: unknown },
+      expression: never,
+      typeArguments: never,
+      args: never[]
+    ) =>
+      f.updateCallExpression(
+        node as never,
+        expression,
+        node.questionDotToken as never,
+        typeArguments,
+        args
+      ),
+    updateImportDeclaration: f.updateImportDeclaration,
+    updateNamedImports: f.updateNamedImports,
+    updateNewExpression: f.updateNewExpression,
+    updateObjectLiteralExpression: f.updateObjectLiteralExpression,
   };
 
   // 7.1 nodes have TypeScript 6's shape for what Nx reads, but not its
