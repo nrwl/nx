@@ -32,6 +32,9 @@ import {
   isLocalPathSpecifier,
 } from '../lock-file/project-graph-pruning';
 import { logger } from '../../../utils/logger';
+import { satisfies, validRange } from 'semver';
+import { getWorkspacePackagesFromGraph } from '../utils/get-workspace-packages-from-graph';
+import { NPM_LOCK_FILE } from '../lock-file/lock-file-names';
 
 interface NpmDeps {
   readonly dependencies: Record<string, string>;
@@ -269,36 +272,93 @@ export function createPackageJson(
     // those redundant overrides. In the object form, only the `.` key sets the
     // version of the package itself; the other keys only constrain its
     // dependencies, which npm accepts next to a direct dependency, so they
-    // are kept.
+    // can be kept.
     const mergedOverrides = {
       ...rootPackageJson.overrides,
       ...packageJson.overrides,
+    };
+    const isDirectDependency = (name: string) =>
+      packageJson.dependencies?.[name] ||
+      packageJson.devDependencies?.[name] ||
+      packageJson.peerDependencies?.[name] ||
+      packageJson.optionalDependencies?.[name];
+    // A kept rule changes which override's rules npm picks at a package that
+    // several paths reach. That pick can hide another override's nested rules,
+    // and decides whether npm applies a ranged rule's value outside its range.
+    const canKeepDependencyOverrides = Object.entries(mergedOverrides).every(
+      ([name, override]) =>
+        getOverridePackageName(name) === name &&
+        (typeof override !== 'object' ||
+          override === null ||
+          Object.keys(override).every((key) => key === '.') ||
+          ('.' in override && !!isDirectDependency(name)))
+    );
+    // The workspace lockfile was resolved with the values of these overrides,
+    // which the output drops, keeping only the nested rules below.
+    const droppedOverrides = Object.keys(mergedOverrides).filter(
+      (name) =>
+        isDirectDependency(name) &&
+        (typeof mergedOverrides[name] !== 'object' ||
+          mergedOverrides[name] === null ||
+          '.' in mergedOverrides[name])
+    );
+    let lockFilePackages: NpmLockFilePackages | null | undefined;
+    let dependentsAcceptDroppedOverrides = false;
+    const matchesLockFile = (packageName: string) => {
+      if (lockFilePackages === undefined) {
+        lockFilePackages = readNpmLockFilePackages(root);
+        dependentsAcceptDroppedOverrides =
+          !!lockFilePackages &&
+          dependentsAcceptInstalledCopies(droppedOverrides, lockFilePackages);
+      }
+      return (
+        dependentsAcceptDroppedOverrides &&
+        hasOnlyRegistryCopies(packageName, lockFilePackages)
+      );
     };
     const overrides: typeof mergedOverrides = {};
     let hasOverrides = false;
     for (const name in mergedOverrides) {
       let override = mergedOverrides[name];
-      if (
-        packageJson.dependencies?.[name] ||
-        packageJson.devDependencies?.[name] ||
-        packageJson.peerDependencies?.[name] ||
-        packageJson.optionalDependencies?.[name]
-      ) {
+      if (isDirectDependency(name)) {
         if (typeof override !== 'object' || override === null) {
           continue;
         }
-        const dependencyOverrides = { ...override };
-        delete dependencyOverrides['.'];
-        if (Object.keys(dependencyOverrides).length === 0) {
-          continue;
+        if ('.' in override) {
+          // npm applies only the root package.json's overrides, so the workspace
+          // lockfile reflects the root's entry, not a project package.json's.
+          const rootOverride = rootPackageJson.overrides?.[name];
+          if (
+            !canKeepDependencyOverrides ||
+            typeof rootOverride !== 'object' ||
+            rootOverride === null
+          ) {
+            continue;
+          }
+          const dependencyOverrides = { ...rootOverride };
+          delete dependencyOverrides['.'];
+          const resolvedOverrides = resolveNpmOverrideSpecs(
+            dependencyOverrides,
+            rootPackageJson
+          );
+          if (
+            !resolvedOverrides ||
+            Object.keys(resolvedOverrides).length === 0 ||
+            namesAPackageTwice(
+              name,
+              resolvedOverrides,
+              mergedOverrides,
+              rootPackageJson.overrides
+            ) ||
+            !matchesInstalledPackages(resolvedOverrides, graph) ||
+            !matchesLockFile(name)
+          ) {
+            continue;
+          }
+          override = resolvedOverrides;
         }
-        override = dependencyOverrides;
       }
-      overrides[name] = resolveNpmOverrideReferences(
-        override,
-        packageJson,
-        rootPackageJson
-      );
+      overrides[name] = override;
       hasOverrides = true;
     }
     if (hasOverrides) {
@@ -369,36 +429,180 @@ const NPM_OVERRIDE_REFERENCE_SECTIONS: PackageJsonDependencySection[] = [
   'peerDependencies',
 ];
 
-// npm fails on a `$name` override value that the installed package.json does
-// not declare, so such a value takes the root package.json's spec for `name`.
-function resolveNpmOverrideReferences<T extends string | object>(
-  override: T,
-  packageJson: PackageJson,
+function getRootDependencySpec(
+  rootPackageJson: PackageJson,
+  name: string
+): string | undefined {
+  return NPM_OVERRIDE_REFERENCE_SECTIONS.map(
+    (section) => rootPackageJson[section]?.[name]
+  ).find(Boolean);
+}
+
+// The dist resolves `$name` against the generated package.json, so pin it to
+// the root spec. Anything else that is not a version range, such as a path, a
+// nested object or an undeclared `$name`, may apply differently there.
+function resolveNpmOverrideSpecs(
+  override: PackageJson['overrides'],
   rootPackageJson: PackageJson
-): T {
-  if (typeof override === 'string') {
-    if (!override.startsWith('$')) {
-      return override;
+): Record<string, string> | undefined {
+  const resolved: Record<string, string> = {};
+  for (const [key, value] of Object.entries(override)) {
+    const isReference = typeof value === 'string' && value.startsWith('$');
+    const spec = isReference
+      ? getRootDependencySpec(rootPackageJson, value.slice(1))
+      : value;
+    // npm reads a literal `*` as no override, but a `$name` that resolves to
+    // `*` as any version.
+    if (
+      typeof spec !== 'string' ||
+      !validRange(spec) ||
+      (isReference && spec === '*')
+    ) {
+      return undefined;
     }
-    const name = override.slice(1);
-    const findSpec = (manifest: PackageJson) =>
-      NPM_OVERRIDE_REFERENCE_SECTIONS.map(
-        (section) => manifest[section]?.[name]
-      ).find(Boolean);
-    if (findSpec(packageJson)) {
-      return override;
+    resolved[key] = spec;
+  }
+  return resolved;
+}
+
+// npm takes the first rule that names a package, in an order that depends on the
+// override set, and rejects two rules for one package with disjoint ranges.
+function namesAPackageTwice(
+  name: string,
+  dependencyOverrides: Record<string, string>,
+  mergedOverrides: PackageJson['overrides'],
+  rootOverrides: PackageJson['overrides']
+): boolean {
+  const packageNames = [
+    ...Object.keys(mergedOverrides),
+    ...Object.entries(rootOverrides).flatMap(([otherName, override]) =>
+      otherName !== name && typeof override === 'object' && override !== null
+        ? Object.keys(override)
+        : []
+    ),
+    ...Object.keys(dependencyOverrides),
+  ].map(getOverridePackageName);
+  return Object.keys(dependencyOverrides).some((key) => {
+    const packageName = getOverridePackageName(key);
+    return (
+      packageNames.indexOf(packageName) !==
+      packageNames.lastIndexOf(packageName)
+    );
+  });
+}
+
+function getOverridePackageName(key: string): string {
+  const versionAt = key.indexOf('@', 1);
+  return versionAt === -1 ? key : key.slice(0, versionAt);
+}
+
+type NpmLockFilePackages = Record<
+  string,
+  {
+    version?: string;
+    link?: boolean;
+    resolved?: string;
+  } & Pick<PackageJson, PackageJsonDependencySection>
+>;
+
+// Returns null when the npm lockfile is missing or can't be read.
+function readNpmLockFilePackages(root: string): NpmLockFilePackages | null {
+  const lockFilePath = join(root, NPM_LOCK_FILE);
+  if (!existsSync(lockFilePath)) {
+    return null;
+  }
+  try {
+    return readJsonFile(lockFilePath).packages ?? null;
+  } catch {
+    // createLockFile reports a malformed lockfile, so here the rules are only
+    // dropped.
+    return null;
+  }
+}
+
+// Once a rule names a package, npm resolves `file:` specs to it from the root.
+// The graph records linked and local tarball copies like registry copies.
+function hasOnlyRegistryCopies(
+  packageName: string,
+  packages: NpmLockFilePackages
+): boolean {
+  let hasCopy = false;
+  for (const [path, entry] of Object.entries(packages)) {
+    if (getLockFilePackageName(path) !== packageName) {
+      continue;
     }
-    return (findSpec(rootPackageJson) ?? override) as T;
+    if (entry.link || entry.resolved?.startsWith('file:')) {
+      return false;
+    }
+    hasCopy = true;
   }
-  if (typeof override !== 'object' || override === null) {
-    return override;
+  return hasCopy;
+}
+
+// Without an override's value, npm checks each dependency on the package
+// against the dependent's own spec and re-resolves those that fail. A kept rule
+// changes the outcome when it fixes another dependency, so no dependency may
+// fail. The output can place copies differently, so each must satisfy it.
+function dependentsAcceptInstalledCopies(
+  packageNames: string[],
+  packages: NpmLockFilePackages
+): boolean {
+  const versions = new Map<string, string[]>(
+    packageNames.map((packageName) => [packageName, []])
+  );
+  for (const [path, entry] of Object.entries(packages)) {
+    versions.get(getLockFilePackageName(path))?.push(entry.version);
   }
-  return Object.fromEntries(
-    Object.entries(override).map(([key, value]) => [
-      key,
-      resolveNpmOverrideReferences(value, packageJson, rootPackageJson),
-    ])
-  ) as T;
+  return Object.values(packages).every((entry) =>
+    [
+      entry.dependencies,
+      entry.optionalDependencies,
+      entry.peerDependencies,
+      entry.devDependencies,
+    ].every((dependencies) =>
+      Object.entries(dependencies ?? {}).every(
+        ([packageName, spec]) =>
+          versions
+            .get(packageName)
+            ?.every((version) => npmAcceptsVersion(version, spec)) ?? true
+      )
+    )
+  );
+}
+
+function getLockFilePackageName(path: string): string | undefined {
+  return path.includes('node_modules/')
+    ? path.split('node_modules/').pop()
+    : undefined;
+}
+
+// npm accepts any version for an empty spec or `*`, and loosely matches others.
+function npmAcceptsVersion(version: string, spec: string): boolean {
+  return spec === '' || spec === '*' || satisfies(version, spec, true);
+}
+
+// The graph can't show which installed copies npm applies a kept rule to, so
+// every copy has to satisfy it. Workspace packages are linked, so none is checked.
+function matchesInstalledPackages(
+  dependencyOverrides: Record<string, string>,
+  graph: ProjectGraph
+): boolean {
+  const workspacePackages = getWorkspacePackagesFromGraph(graph);
+  const installedVersions = new Map<string, string[]>();
+  for (const node of Object.values(graph.externalNodes ?? {})) {
+    const versions = installedVersions.get(node.data.packageName) ?? [];
+    versions.push(node.data.version);
+    installedVersions.set(node.data.packageName, versions);
+  }
+  return Object.entries(dependencyOverrides).every(([key, spec]) => {
+    const packageName = getOverridePackageName(key);
+    const versions = installedVersions.get(packageName);
+    return (
+      !workspacePackages.has(packageName) &&
+      versions !== undefined &&
+      versions.every((version) => satisfies(version, spec))
+    );
+  });
 }
 
 const LOCAL_PATH_SPEC_SECTIONS: PackageJsonDependencySection[] = [
