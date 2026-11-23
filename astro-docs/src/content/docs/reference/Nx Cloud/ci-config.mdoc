@@ -539,13 +539,13 @@ Check `NX_CLOUD_CI` instead.
 
 A step can write to these files to affect later steps:
 
-| File                     | Write                | Effect                                                 | GitHub Actions name    |
-| ------------------------ | -------------------- | ------------------------------------------------------ | ---------------------- |
-| `$NX_CLOUD_ENV`          | `NAME=value`         | Sets `NAME` for the following steps of the job         | `$GITHUB_ENV`          |
-| `$NX_CLOUD_PATH`         | A directory per line | Adds it to the front of `PATH` for the following steps | `$GITHUB_PATH`         |
-| `$NX_CLOUD_OUTPUT`       | `name=value`         | Sets `steps.<id>.outputs.<name>`                       | `$GITHUB_OUTPUT`       |
-| `$NX_CLOUD_STEP_SUMMARY` | Text                 | Saved as the step's summary                            | `$GITHUB_STEP_SUMMARY` |
-| `$NX_CLOUD_STATE`        | `name=value`         | State a step template reads back later                 | `$GITHUB_STATE`        |
+| File                     | Write                | Effect                                                          | GitHub Actions name    |
+| ------------------------ | -------------------- | --------------------------------------------------------------- | ---------------------- |
+| `$NX_CLOUD_ENV`          | `NAME=value`         | Sets `NAME` for the following steps of the job                  | `$GITHUB_ENV`          |
+| `$NX_CLOUD_PATH`         | A directory per line | Adds it to the front of `PATH` for the following steps          | `$GITHUB_PATH`         |
+| `$NX_CLOUD_OUTPUT`       | `name=value`         | Sets `steps.<id>.outputs.<name>`                                | `$GITHUB_OUTPUT`       |
+| `$NX_CLOUD_STEP_SUMMARY` | Markdown             | Shown on the job's check, see [step summaries](#step-summaries) | `$GITHUB_STEP_SUMMARY` |
+| `$NX_CLOUD_STATE`        | `name=value`         | State a step template reads back later                          | `$GITHUB_STATE`        |
 
 ```yaml
 # .nx/pipelines/ci.yaml
@@ -579,6 +579,55 @@ For a multi-line value, write to `$GITHUB_ENV` with `NAME<<EOF`.
 
 On your own CI provider, [`start-workers --forward-secrets`](/docs/reference/nx-cloud-cli#nx-cloud-start-workers) forwards whatever the main job has, fork runs included, so your CI provider's settings decide whether forks get secrets.
 
+## Checks on GitHub
+
+Nx Cloud CI posts one `Nx Cloud: <name>` status for each pipeline file, and you can't turn it off while Nx Cloud CI is on.
+Checks for each job, named `<name> / <job>`, are off by default.
+Turn on **Show check runs for individual Nx Cloud CI jobs** in the VCS integration settings of your workspace to get them.
+The **Re-run** button and step summaries both live on these per-job checks.
+A configuration error in a pipeline file shows as a failed `<file> / configuration` check, with or without the setting.
+
+### Re-run from GitHub
+
+| GitHub button                      | What Nx Cloud CI does                                                                                       |
+| ---------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| **Re-run** on a job's check        | Starts a new attempt of the pipeline file's run. Every job in that file runs again, not only that job.      |
+| **Re-run all checks** on the suite | Starts a new attempt of each Nx Cloud CI run on the commit, except runs that failed on their configuration. |
+
+The **Re-run** button is on per-job checks, so it needs **Show check runs for individual Nx Cloud CI jobs**.
+A new attempt gets new checks, and the checks of earlier attempts stay as they are.
+A run with a job that is still running can't be rerun, and pressing **Re-run** on it does nothing.
+
+Rerunning needs the Nx Cloud GitHub App to receive the **Check run** and **Check suite** events.
+
+### Step summaries
+
+A step can write Markdown to `$NX_CLOUD_STEP_SUMMARY`, and `$GITHUB_STEP_SUMMARY` points to the same file.
+When the job finishes, Nx Cloud CI joins the summaries of its steps in step order and shows them on the job's check under **Details**.
+A job gets a check only with **Show check runs for individual Nx Cloud CI jobs** on.
+
+```yaml
+# .nx/pipelines/ci.yaml
+jobs:
+  main:
+    runs-on: linux-medium-js
+    steps:
+      - name: Affected tasks
+        run: npx nx affected -t lint test build
+      - name: Summarize affected projects
+        run: |
+          echo "## Affected projects" >> "$NX_CLOUD_STEP_SUMMARY"
+          npx nx show projects --affected | sed 's/^/- /' >> "$NX_CLOUD_STEP_SUMMARY"
+```
+
+Step summaries work differently from GitHub Actions in these ways:
+
+- The summary shows once the job finishes, not while it runs.
+- A job's summary is capped at 65,535 characters, and a cut summary ends with `Step summary truncated.`
+- Room goes to steps in the order they finish. When steps run in parallel, a later step can fill the limit and drop an earlier step's summary.
+- Secrets are masked.
+- `::error`, `::warning`, and `::notice` commands don't create annotations.
+
 ## Nx Cloud CI limits
 
 Nx Cloud CI doesn't support these yet:
@@ -591,6 +640,3 @@ Nx Cloud CI doesn't support these yet:
 - Git LFS. The job image doesn't include it, so a repository that uses LFS checks out pointer files.
 
 A job runs for at most 60 minutes, and that is also the default for `timeout-minutes`.
-You can't turn off the `Nx Cloud: <name>` status while Nx Cloud CI is on.
-Checks for each job, named `<name> / <job>`, are off by default. Turn on **Show check runs for individual Nx Cloud CI jobs** in the VCS integration settings of your workspace.
-A configuration error in a pipeline file shows as a failed `<file> / configuration` check.
