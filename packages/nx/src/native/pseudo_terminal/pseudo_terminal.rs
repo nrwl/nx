@@ -441,20 +441,23 @@ fn create_open_pty(
 }
 
 fn close_open_pty(open: OpenPty, live_writer: &LiveWriter) {
-    // Dropping the slave unblocks the reader (EOF / EIO). The reader owns a
-    // cloned master fd, so it has to exit before every master fd is closed.
+    // ConPTY closes the console, and so ends the reader, only once both the
+    // slave and master are dropped. The reader keeps its own fd on unix.
     drop(open.slave);
+    *open.master.lock() = None;
     if open
         .reader_finished
         .recv_timeout(Duration::from_millis(500))
         .is_err()
     {
-        trace!("pty reader thread did not exit before the master fd was closed");
+        trace!("pty reader thread did not exit before the writer was closed");
     }
+    // On unix, dropping the writer sends a newline and EOF into the tty. Close
+    // it after the reader so a process still holding the tty does not echo
+    // that newline into the task's output.
     *live_writer.write() = None;
     let closed: Box<dyn Write + Send> = Box::new(std::io::sink());
     *open.writer.lock() = closed;
-    *open.master.lock() = None;
 }
 
 fn spawn_output_reader(
