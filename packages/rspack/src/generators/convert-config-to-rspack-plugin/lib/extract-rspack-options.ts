@@ -229,13 +229,21 @@ function listElementRange(
     : [element.getStart(), elements.end];
 }
 
-// Also removes the line when nothing else is left on it.
+// Also removes the line when nothing else is left on it, and the blank line
+// after it when that would open the file or follow another blank line.
 function removeRange(source: string, [start, end]: [number, number]): string {
   const lineStart = source.lastIndexOf('\n', start - 1) + 1;
   const lineBreak = source.indexOf('\n', end);
   const lineEnd = lineBreak === -1 ? source.length : lineBreak + 1;
-  return source.slice(lineStart, start).trim() ||
+  if (
+    source.slice(lineStart, start).trim() ||
     source.slice(end, lineEnd).trim()
-    ? source.slice(0, start) + source.slice(end)
-    : source.slice(0, lineStart) + source.slice(lineEnd);
+  ) {
+    return source.slice(0, start) + source.slice(end);
+  }
+  const before = source.slice(0, lineStart);
+  const after = source.slice(lineEnd);
+  return lineStart === 0 || /(?:^|\n)[ \t]*\n$/.test(before)
+    ? before + after.replace(/^[ \t]*\n/, '')
+    : before + after;
 }
