@@ -42,6 +42,7 @@ exports['\\u0275getRoutesFromAngularRouterConfig'] = (received) => {
       { route: '/redirected', redirectTo: '/' },
       { route: '/product/:id' },
     ],
+    errors: ['server route error'],
   });
 };`
     );
@@ -49,7 +50,10 @@ exports['\\u0275getRoutesFromAngularRouterConfig'] = (received) => {
     const worker: any = await import('./routes-extractor-worker.js');
     const extract = await worker.default;
 
-    await expect(extract()).resolves.toStrictEqual(['/']);
+    await expect(extract()).resolves.toStrictEqual({
+      routes: ['/'],
+      errors: ['server route error'],
+    });
     expect((globalThis as any).__ngRspackReceivedBootstrap).toBe(
       require(serverBundlePath).__ngRspackMainServerBootstrap
     );
