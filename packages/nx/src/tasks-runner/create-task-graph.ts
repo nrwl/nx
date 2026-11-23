@@ -1,9 +1,11 @@
 import { ProjectGraph, ProjectGraphProjectNode } from '../config/project-graph';
 import {
-  getDependencyConfigs,
+  expandDependencyConfigSyntaxSugar,
+  getDependsOnEntries,
   getOutputs,
   interpolate,
   createTaskId,
+  normalizeDependencyConfigDefinition,
   removeTasksFromTaskGraph,
 } from './utils';
 import {
@@ -133,45 +135,81 @@ export class ProcessTasks {
     }
     this.seen.add(seenKey);
 
-    const dependencyConfigs = getDependencyConfigs(
+    const dependsOn = getDependsOnEntries(
       { project: task.target.project, target: task.target.target },
       this.extraTargetDependencies,
-      this.projectGraph,
-      this.allTargetNames
+      this.projectGraph
     );
-    for (const dependencyConfig of dependencyConfigs) {
-      const taskOverrides = createTaskOverrides(
-        dependencyConfig,
-        overrides,
-        task,
-        this.projectGraph
+    for (const entry of dependsOn) {
+      const expandedEntry = expandDependencyConfigSyntaxSugar(
+        entry,
+        this.projectGraph,
+        task.target.project
       );
-      if (dependencyConfig.projects) {
-        this.processTasksForMultipleProjects(
+      const dependencyConfigs = normalizeDependencyConfigDefinition(
+        expandedEntry,
+        task.target.project,
+        this.projectGraph,
+        this.allTargetNames
+      );
+      let matchedTask = false;
+      for (const dependencyConfig of dependencyConfigs) {
+        const taskOverrides = createTaskOverrides(
           dependencyConfig,
-          configuration,
+          overrides,
           task,
-          taskOverrides,
-          overrides
+          this.projectGraph
         );
-      } else if (dependencyConfig.dependencies) {
-        this.processTasksForDependencies(
-          projectUsedToDeriveDependencies,
-          dependencyConfig,
-          configuration,
-          task,
-          taskOverrides,
-          overrides
-        );
-      } else {
-        this.processTasksForSingleProject(
-          task,
-          task.target.project,
-          dependencyConfig,
-          configuration,
-          taskOverrides,
-          overrides
-        );
+        if (dependencyConfig.projects) {
+          matchedTask =
+            this.processTasksForMultipleProjects(
+              dependencyConfig,
+              configuration,
+              task,
+              taskOverrides,
+              overrides
+            ) || matchedTask;
+        } else if (dependencyConfig.dependencies) {
+          this.processTasksForDependencies(
+            projectUsedToDeriveDependencies,
+            dependencyConfig,
+            configuration,
+            task,
+            taskOverrides,
+            overrides
+          );
+        } else {
+          this.processTasksForSingleProject(
+            task,
+            task.target.project,
+            dependencyConfig,
+            configuration,
+            taskOverrides,
+            overrides
+          );
+        }
+      }
+
+      // The parser fills in the current project for strings like "build:prod".
+      const namesProjects =
+        typeof entry === 'string'
+          ? !!expandedEntry.projects &&
+            entry.startsWith(`${expandedEntry.projects[0]}:`)
+          : entry.projects !== undefined;
+      const misconfigured = namesProjects
+        ? !matchedTask
+        : !expandedEntry.dependencies &&
+          expandedEntry.target.includes(':') &&
+          !dependencyConfigs.some((c) =>
+            this.allTargetNames.includes(c.target)
+          );
+      if (misconfigured) {
+        output.warn({
+          title: `\`dependsOn\` is misconfigured for ${task.target.project}:${task.target.target}`,
+          bodyLines: [
+            `${typeof entry === 'string' ? `"${entry}"` : JSON.stringify(entry)} does not match any task.`,
+          ],
+        });
       }
     }
   }
@@ -184,25 +222,20 @@ export class ProcessTasks {
       | Record<string, unknown>
       | { __overrides_unparsed__: string[] },
     overrides: Record<string, unknown>
-  ) {
-    if (dependencyConfig.projects.length === 0) {
-      output.warn({
-        title: `\`dependsOn\` is misconfigured for ${task.target.project}:${task.target.target}`,
-        bodyLines: [
-          `Project patterns "${dependencyConfig.projects}" does not match any projects.`,
-        ],
-      });
-    }
+  ): boolean {
+    let matchedTask = false;
     for (const projectName of dependencyConfig.projects) {
-      this.processTasksForSingleProject(
-        task,
-        projectName,
-        dependencyConfig,
-        configuration,
-        taskOverrides,
-        overrides
-      );
+      matchedTask =
+        this.processTasksForSingleProject(
+          task,
+          projectName,
+          dependencyConfig,
+          configuration,
+          taskOverrides,
+          overrides
+        ) || matchedTask;
     }
+    return matchedTask;
   }
 
   private processTasksForSingleProject(
@@ -214,7 +247,7 @@ export class ProcessTasks {
       | Record<string, unknown>
       | { __overrides_unparsed__: string[] },
     overrides: Record<string, unknown>
-  ) {
+  ): boolean {
     const selfProject = this.projectGraph.nodes[
       projectName
     ] as ProjectGraphProjectNode;
@@ -256,7 +289,9 @@ export class ProcessTasks {
           this.dependencies[task.id].push({ id: selfTaskId });
         }
       }
+      return true;
     }
+    return false;
   }
 
   private processTasksForDependencies(
