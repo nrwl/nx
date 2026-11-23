@@ -28,7 +28,7 @@ export function ProjectDetailsPage() {
     connectedToCloud,
     disabledTaskSyncGenerators,
   } = useRouteLoaderData('selectedProjectDetails') as {
-    hash: string;
+    hash: string | null;
     project: ProjectGraphProjectNode;
     sourceMap: Record<string, string[]>;
     errors?: GraphError[];
@@ -70,7 +70,7 @@ export function ProjectDetailsPage() {
         <div className="mx-auto mb-8 w-full max-w-6xl flex-grow px-8">
           <ProjectDetailsWrapper
             project={project}
-            projectId={projectId}
+            projectId={projectId ?? undefined}
             sourceMap={sourceMap}
             errors={errors}
             connectedToCloud={connectedToCloud}

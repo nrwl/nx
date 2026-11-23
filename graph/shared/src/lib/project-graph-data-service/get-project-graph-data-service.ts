@@ -19,7 +19,7 @@ export interface ProjectGraphService {
   getTaskGraph: (url: string) => Promise<TaskGraphClientResponse>;
   getSpecificTaskGraph?: (
     url: string,
-    projects: string | string[] | null,
+    projects: string[] | null | undefined,
     targets: string[],
     configuration?: string
   ) => Promise<TaskGraphClientResponse>;

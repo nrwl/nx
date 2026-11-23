@@ -25,6 +25,11 @@ import * as affectedJson from '../fixtures/affected.json';
 import { testProjectsRoutes, testTaskRoutes } from '../support/routing-tests';
 import * as nxExamplesTaskInputs from '../fixtures/nx-examples-task-inputs.json';
 
+const taskInputs: Record<
+  string,
+  Record<string, string[]>
+> = nxExamplesTaskInputs;
+
 describe('dev mode - task graph', () => {
   before(() => {
     cy.intercept('/assets/project-graphs/e2e.json', {
@@ -197,7 +202,7 @@ describe('dev mode - task graph', () => {
           const taskId = req.url.split('taskId=')[1];
           // Load the fixture data and find the property based on the query parameter
 
-          const expandedInputs = nxExamplesTaskInputs[taskId];
+          const expandedInputs = taskInputs[taskId];
 
           // Reply with the selected property
           req.reply({

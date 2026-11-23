@@ -52,7 +52,7 @@ export const ErrorToastUI = forwardRef(
             <ExclamationCircleIcon className="mr-2 inline-block h-6 w-6" />
             Some project information might be missing. Click to see errors.
           </div>
-          {errors?.length > 0 && (
+          {!!errors && errors.length > 0 && (
             <Modal
               title={`Project Graph Errors`}
               ref={inputsModalRef}

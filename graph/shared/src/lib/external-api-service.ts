@@ -22,7 +22,7 @@ export class ExternalApiService {
     });
   }
 
-  subscribe(callback: (event: { type: string; payload: any }) => void) {
+  subscribe(callback: (event: { type: string; payload?: any }) => void) {
     this.subscribers.add(callback);
   }
 }

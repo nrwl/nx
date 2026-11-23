@@ -45,7 +45,8 @@ function checkSelectedProjects(
   getProjectItems().should((projects) => {
     expect(projects.length).to.equal(expectedNumberOfProjects);
     projects.each(function () {
-      if (!excludedProjects.includes(this.dataset.project)) {
+      const project = this.dataset.project;
+      if (!project || !excludedProjects.includes(project)) {
         expect(this.dataset.active).to.eq('true');
       }
     });

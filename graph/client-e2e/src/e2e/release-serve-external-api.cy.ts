@@ -89,9 +89,11 @@ describe('external API project graph reset', () => {
     cy.get('button[title^="Select rank direction for graph layout:"]').click();
     cy.contains('button', 'Left-Right').click();
     cy.location('search').should((search) => {
-      const state = JSON.parse(
-        decodeURIComponent(atob(new URLSearchParams(search).get('graph')))
-      );
+      const graph = new URLSearchParams(search).get('graph');
+      if (graph === null) {
+        throw new Error('graph search param is missing');
+      }
+      const state = JSON.parse(decodeURIComponent(atob(graph)));
       expect(state.c.rankDir).to.equal('LR');
     });
     expectVisible(['core', 'demo', 'ui']);

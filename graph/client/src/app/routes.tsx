@@ -74,6 +74,10 @@ const sourceMapsLoader = async (selectedWorkspaceId: string) => {
     throw new Error(`Workspace ${selectedWorkspaceId} not found`);
   }
 
+  if (!projectGraphDataService.getSourceMaps) {
+    throw new Error('Project graph service does not support source maps');
+  }
+
   return await projectGraphDataService.getSourceMaps(
     workspaceInfo.sourceMapsUrl
   );
@@ -140,6 +144,10 @@ const tasksLoader: LoaderFunction = async ({ params, request }) => {
 
   if (cached) return cached;
 
+  if (!projectGraphDataService.getSpecificTaskGraph) {
+    throw new Error('Project graph service does not support task graphs');
+  }
+
   const response = await projectGraphDataService.getSpecificTaskGraph(
     workspaceInfo.taskGraphUrl,
     missingProjects,
@@ -158,9 +166,9 @@ const tasksLoader: LoaderFunction = async ({ params, request }) => {
 
 const projectDetailsLoader = async (
   selectedWorkspaceId: string,
-  projectName: string
+  projectName: string | undefined
 ): Promise<{
-  hash: string;
+  hash: string | null;
   project: ProjectGraphProjectNode;
   sourceMap: Record<string, string[]>;
   errors?: GraphError[];
@@ -304,8 +312,11 @@ export const devRoutes: RouteObject[] = [
         id: 'selectedProjectDetails',
         element: <ProjectDetailsPage />,
         loader: async ({ params }) => {
-          const projectName = params.projectName;
-          return projectDetailsLoader(params.selectedWorkspaceId, projectName);
+          const { selectedWorkspaceId, projectName } = params;
+          if (!selectedWorkspaceId) {
+            throw new Error(`Workspace ${selectedWorkspaceId} not found`);
+          }
+          return projectDetailsLoader(selectedWorkspaceId, projectName);
         },
       },
     ],

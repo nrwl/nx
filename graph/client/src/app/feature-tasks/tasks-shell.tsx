@@ -488,7 +488,7 @@ function TaskNodeDetails({ element, platform }: TaskNodeDetailsProps) {
   const routeConstructor = useRouteConstructor();
   const navigate = useNavigate();
 
-  const [inputs, setInputs] = useState<Record<string, string[]> | null>(null);
+  const [inputs, setInputs] = useState<Record<string, string[]>>();
   const [isLoadingInputs, setIsLoadingInputs] = useState(true);
 
   useEffect(() => {
@@ -585,7 +585,7 @@ interface TaskGraphControlsPanelProps {
 
   allProjects: ProjectGraphProjectNode[];
   closable?: boolean;
-  error?: string;
+  error?: string | null;
 
   onTargetsSelectionChange: (selectedIds: string[]) => void;
   onToggleProject: (projectName: string, isSelected: boolean) => void;
@@ -636,8 +636,8 @@ function TaskGraphControlsPanel({
       <NxGraphProjectListControl
         projects={allProjects.map((p) => ({
           type: p.type,
-          id: p.data.name,
-          name: p.data.name,
+          id: p.name,
+          name: p.name,
           selected: selectedProjects.includes(p.name),
           rendered: false,
           affected: false,
@@ -651,7 +651,10 @@ function TaskGraphControlsPanel({
             project={props.project}
             error={error}
             onToggle={() => {
-              onToggleProject(props.project.name, props.project.selected);
+              onToggleProject(
+                props.project.name,
+                props.project.selected ?? false
+              );
             }}
             projectItemClassName={({ selected }) =>
               classNames(

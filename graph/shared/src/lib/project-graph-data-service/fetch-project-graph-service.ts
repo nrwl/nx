@@ -6,7 +6,7 @@ import type {
 import { ProjectGraphService } from './get-project-graph-data-service';
 
 export class FetchProjectGraphService implements ProjectGraphService {
-  private taskInputsUrl: string;
+  private taskInputsUrl?: string;
 
   async getHash(): Promise<string> {
     const request = new Request('currentHash', { mode: 'no-cors' });
@@ -52,7 +52,7 @@ export class FetchProjectGraphService implements ProjectGraphService {
 
   async getSpecificTaskGraph(
     url: string,
-    projects: string[] | null,
+    projects: string[] | null | undefined,
     targets: string[],
     configuration?: string
   ): Promise<TaskGraphClientResponse> {

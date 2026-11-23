@@ -2,9 +2,11 @@ import { createBrowserRouter, createHashRouter } from 'react-router-dom';
 import { getRoutesForEnvironment } from './routes';
 import { getEnvironmentConfig } from '@nx/graph-shared';
 
-let router;
+export type AppRouter = ReturnType<typeof createBrowserRouter>;
 
-export function getRouter() {
+let router: AppRouter | undefined;
+
+export function getRouter(): AppRouter {
   if (!router) {
     const environmentConfig = getEnvironmentConfig();
     let routerCreate = createBrowserRouter;

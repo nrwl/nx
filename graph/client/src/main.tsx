@@ -27,6 +27,14 @@ import { MigrateApp } from './app/console-migrate/migrate.app';
 import { migrateMachine } from './app/console-migrate/migrate.machine';
 import { ThemeProvider } from '@nx/graph-internal-ui-render-config';
 
+function getAppContainer(): HTMLElement {
+  const container = document.getElementById('app');
+  if (!container) {
+    throw new Error('Could not find #app element');
+  }
+  return container;
+}
+
 if (window.__NX_RENDER_GRAPH__ === false) {
   window.externalApi = new ExternalApiImpl();
 
@@ -49,7 +57,7 @@ if (window.__NX_RENDER_GRAPH__ === false) {
           <ProjectDetailsApp service={service} />
         </ThemeProvider>
       </StrictMode>,
-      document.getElementById('app')
+      getAppContainer()
     );
 
     return service;
@@ -66,7 +74,7 @@ if (window.__NX_RENDER_GRAPH__ === false) {
           <ErrorPage {...data} />
         </ThemeProvider>
       </StrictMode>,
-      document.getElementById('app')
+      getAppContainer()
     );
   };
 
@@ -87,7 +95,7 @@ if (window.__NX_RENDER_GRAPH__ === false) {
           <MigrateApp service={service} />
         </ThemeProvider>
       </StrictMode>,
-      document.getElementById('app')
+      getAppContainer()
     );
 
     return service;
@@ -101,7 +109,7 @@ if (window.__NX_RENDER_GRAPH__ === false) {
   }
 
   window.externalApi = new ExternalApiImpl();
-  const container = document.getElementById('app');
+  const container = getAppContainer();
 
   if (!window.appConfig) {
     render(

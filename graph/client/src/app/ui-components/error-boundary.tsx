@@ -43,7 +43,7 @@ export function ErrorBoundary() {
   );
 
   let message: string | JSX.Element;
-  let stack: string;
+  let stack: string | undefined;
   if (isRouteErrorResponse(error) && error.data.id === 'project-not-found') {
     message = (
       <p>
@@ -57,7 +57,7 @@ export function ErrorBoundary() {
     } else {
       message += 'Please rerun your command and refresh the page.';
     }
-    stack = error.toString();
+    stack = String(error);
   }
 
   return (
