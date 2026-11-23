@@ -320,6 +320,18 @@ describe('project configuration', () => {
       });
     });
 
+    it('should not read packages a negated workspace pattern excludes', () => {
+      writeJson<PackageJson>(tree, 'package.json', {
+        name: '@testing/root',
+        version: '0.0.1',
+        workspaces: ['packages/*', '!packages/legacy'],
+      });
+      writeJson(tree, 'packages/a/package.json', { name: 'a' });
+      writeJson(tree, 'packages/legacy/package.json', { name: 'legacy' });
+
+      expect([...getProjects(tree).keys()]).toEqual(['a']);
+    });
+
     it('should get a map of projects', () => {
       writeJson(tree, 'proj/package.json', {
         name: 'proj',
