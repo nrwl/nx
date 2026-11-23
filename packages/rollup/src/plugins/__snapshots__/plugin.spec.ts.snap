@@ -31,6 +31,10 @@ exports[`@nx/rollup/plugin > non-root project > should create nodes 1`] = `
                   ],
                   "json": "{workspaceRoot}/tsconfig.json",
                 },
+                {
+                  "dependentTasksOutputFiles": "**/*",
+                  "transitive": true,
+                },
               ],
               "metadata": {
                 "description": "Run Rollup",
@@ -105,6 +109,10 @@ exports[`@nx/rollup/plugin > non-root project > should create nodes 2`] = `
                     "include",
                   ],
                   "json": "{workspaceRoot}/tsconfig.json",
+                },
+                {
+                  "dependentTasksOutputFiles": "**/*",
+                  "transitive": true,
                 },
               ],
               "metadata": {
@@ -181,6 +189,10 @@ exports[`@nx/rollup/plugin > root project > should create nodes 1`] = `
                   ],
                   "json": "{workspaceRoot}/tsconfig.json",
                 },
+                {
+                  "dependentTasksOutputFiles": "**/*",
+                  "transitive": true,
+                },
               ],
               "metadata": {
                 "description": "Run Rollup",
@@ -254,6 +266,10 @@ exports[`@nx/rollup/plugin > root project > should create nodes 2`] = `
                     "include",
                   ],
                   "json": "{workspaceRoot}/tsconfig.json",
+                },
+                {
+                  "dependentTasksOutputFiles": "**/*",
+                  "transitive": true,
                 },
               ],
               "metadata": {

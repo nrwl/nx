@@ -230,6 +230,8 @@ async function createWebpackTargets(
     dependsOn: [`^${options.buildTargetName}`],
     inputs: [
       ...buildInputs,
+      // A dependency consumed as built is read from its build's outputs.
+      { dependentTasksOutputFiles: '**/*', transitive: true },
       // The build can emit a pruned pnpm or Bun deploy output
       // (NxAppWebpackPlugin with generatePackageJson), whose install settings
       // come from these otherwise-unhashed root sources.

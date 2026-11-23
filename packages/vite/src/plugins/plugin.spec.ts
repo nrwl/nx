@@ -612,6 +612,10 @@ describe('@nx/vite/plugin', () => {
                             "vite",
                           ],
                         },
+                        {
+                          "dependentTasksOutputFiles": "**/*",
+                          "transitive": true,
+                        },
                       ],
                       "metadata": {
                         "description": "Run Vite build",

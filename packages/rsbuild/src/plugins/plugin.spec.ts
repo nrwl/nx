@@ -81,6 +81,10 @@ describe('@nx/rsbuild', () => {
                           "@rsbuild/core",
                         ],
                       },
+                      {
+                        "dependentTasksOutputFiles": "**/*",
+                        "transitive": true,
+                      },
                     ],
                     "metadata": {
                       "description": "Run Rsbuild build",

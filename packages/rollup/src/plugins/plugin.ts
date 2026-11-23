@@ -198,6 +198,8 @@ async function buildRollupTarget(
         : ['default', '^default']),
       { externalDependencies: ['rollup'] },
       TS_SOLUTION_SETUP_TSCONFIG_INPUT,
+      // A dependency consumed as built is read from its build's outputs.
+      { dependentTasksOutputFiles: '**/*', transitive: true },
     ],
     outputs,
     metadata: {

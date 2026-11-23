@@ -131,6 +131,10 @@ describe('@nx/webpack/plugin', () => {
                         ],
                         "json": "{workspaceRoot}/tsconfig.json",
                       },
+                      {
+                        "dependentTasksOutputFiles": "**/*",
+                        "transitive": true,
+                      },
                     ],
                     "metadata": {
                       "description": "Runs Webpack build",

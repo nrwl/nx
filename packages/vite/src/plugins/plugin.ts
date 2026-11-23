@@ -388,7 +388,11 @@ async function buildTarget(
     options: { cwd: joinPathFragments(projectRoot) },
     cache: true,
     dependsOn: [`^${buildTargetName}`],
-    inputs: buildInputs(namedInputs),
+    inputs: [
+      ...buildInputs(namedInputs),
+      // A dependency consumed as built is read from its build's outputs.
+      { dependentTasksOutputFiles: '**/*', transitive: true },
+    ],
     outputs,
     metadata: {
       technologies: ['vite'],

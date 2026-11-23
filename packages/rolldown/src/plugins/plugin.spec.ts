@@ -98,6 +98,10 @@ export default defineConfig([
                         ],
                         "json": "{workspaceRoot}/tsconfig.json",
                       },
+                      {
+                        "dependentTasksOutputFiles": "**/*",
+                        "transitive": true,
+                      },
                     ],
                     "metadata": {
                       "description": "Run Rolldown",

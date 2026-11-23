@@ -119,6 +119,8 @@ async function buildRolldownTargets(
           : ['default', '^default']),
         { externalDependencies: ['rolldown'] },
         TS_SOLUTION_SETUP_TSCONFIG_INPUT,
+        // A dependency consumed as built is read from its build's outputs.
+        { dependentTasksOutputFiles: '**/*', transitive: true },
       ],
       outputs: getOutputs(configs, context.workspaceRoot, projectRoot),
       metadata: {

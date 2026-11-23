@@ -99,6 +99,10 @@ describe('@nx/rspack', () => {
                           "@rspack/cli",
                         ],
                       },
+                      {
+                        "dependentTasksOutputFiles": "**/*",
+                        "transitive": true,
+                      },
                     ],
                     "options": {
                       "args": [
