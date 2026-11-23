@@ -902,3 +902,217 @@ describe('update-manager download lock', () => {
     expect(Date.now() - start).toBeGreaterThanOrEqual(400);
   });
 });
+
+describe('update-manager client loading', () => {
+  const VERSION = '2611.09.0031';
+  // A loadable bundle needs `commands`, which the outdated-image check looks
+  // for. `marker` is how a test tells which bundle ran.
+  const clientSource = (marker: string) =>
+    `module.exports = { commands: {}, marker: '${marker}' };`;
+
+  let workspace: string;
+  let installDir: string;
+  let stateDir: string;
+  let updateManager: UpdateManager;
+  let apiClient: HttpClient;
+  let consoleError: ReturnType<typeof vi.spyOn>;
+
+  /**
+   * A stand-in cloud api. `verify` is handed the query params the code sent,
+   * so a response can depend on whether a bundle was reported at all. Either
+   * hook returns an Error to fail that request.
+   */
+  function cloudApi(options: {
+    verify: (params: Record<string, unknown>) => unknown;
+    bundle?: () => Readable | Error;
+  }): HttpClient {
+    return {
+      get: vi.fn(async (path: string, config?: any) => {
+        if (path === '/nx-cloud/client/verify') {
+          const data = options.verify(config?.params ?? {});
+          if (data instanceof Error) throw data;
+          return { data };
+        }
+        const bundle = options.bundle
+          ? options.bundle()
+          : bundleTarball({ 'index.js': clientSource('downloaded') });
+        if (bundle instanceof Error) throw bundle;
+        return { data: bundle };
+      }),
+    } as unknown as HttpClient;
+  }
+
+  const servesFreshBundle = {
+    verify: () => ({ valid: false, url: '/bundle.tar.gz', version: VERSION }),
+  };
+
+  /** A bundle directory at the bare version, as an older nx named them. */
+  function seedBundle(files: Record<string, string>): string {
+    const dir = join(installDir, VERSION);
+    mkdirSync(dir, { recursive: true });
+    for (const [name, content] of Object.entries(files)) {
+      writeFileSync(join(dir, name), content);
+    }
+    return dir;
+  }
+
+  /** The lock an earlier nx command in the same job leaves behind. */
+  function skipVerification(): void {
+    writeFileSync(join(stateDir, 'verify.lock'), Date.now().toString());
+  }
+
+  const marker = (result: { nxCloudClient: unknown }) =>
+    (result.nxCloudClient as { marker: string }).marker;
+
+  beforeAll(() => {
+    originalCacheDirEnv = process.env[CACHE_DIR_ENV];
+  });
+
+  beforeEach(async () => {
+    workspace = mkdtempSync(join(tmpdir(), 'nx-update-manager-load-'));
+    writeFileSync(join(workspace, 'nx.json'), '{}');
+
+    // Before resetModules: the module graph reads this at import time.
+    pinCacheDirTo(workspace);
+
+    vi.resetModules();
+    vi.doMock('./utilities/nx-cloud-http-client', () => ({
+      createApiHttpClient: () => apiClient,
+    }));
+    const { setWorkspaceRoot } = await import('../utils/workspace-root');
+    setWorkspaceRoot(workspace);
+    const { resetSharedRootCacheForTesting, workspaceDataDirectory } =
+      await import('../utils/cache-directory');
+    resetSharedRootCacheForTesting();
+
+    updateManager = await import('./update-manager');
+    installDir = updateManager.getBundleInstallDefaultLocation();
+    assertContainedInFixture(installDir, workspace);
+    stateDir = join(workspaceDataDirectory, 'nx-cloud');
+    assertContainedInFixture(stateDir, workspace);
+    mkdirSync(installDir, { recursive: true });
+    mkdirSync(stateDir, { recursive: true });
+
+    consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    consoleError?.mockRestore();
+    vi.doUnmock('./utilities/nx-cloud-http-client');
+    vi.resetModules();
+    removeFixtureDir(workspace, workspace);
+    removeFixtureDir(installDir, workspace);
+  });
+
+  afterAll(restoreCacheDirEnv);
+
+  it.each([
+    ['nothing in it', {}],
+    ['no entry point', { 'stray.js': 'module.exports = 1;' }],
+    ['an entry point missing a chunk', { 'index.js': "require('./chunk');" }],
+    ['a truncated entry point', { 'index.js': 'module.exports = {' }],
+  ])(
+    'replaces a bundle with %s rather than failing the command',
+    async (_shape, files) => {
+      // The reported failure. A verification skipped for 30 minutes never asks
+      // the server about the bundle, so nothing else replaces a damaged one.
+      const damaged = seedBundle(files);
+      skipVerification();
+      apiClient = cloudApi(servesFreshBundle);
+
+      const result = await updateManager.verifyOrUpdateNxCloudClient({});
+
+      expect(result.version).toBe(VERSION);
+      expect(marker(result)).toBe('downloaded');
+      expect(existsSync(damaged)).toBe(false);
+    }
+  );
+
+  it('loads the installed bundle without asking the server when verification is skipped', async () => {
+    seedBundle({ 'index.js': clientSource('installed') });
+    skipVerification();
+    apiClient = cloudApi({
+      verify: () => new Error('the server must not be asked'),
+    });
+
+    const result = await updateManager.verifyOrUpdateNxCloudClient({});
+
+    expect(marker(result)).toBe('installed');
+    expect(apiClient.get).not.toHaveBeenCalled();
+  });
+
+  it('replaces a bundle the server calls valid but which does not load', async () => {
+    const damaged = seedBundle({});
+    apiClient = cloudApi({
+      // Valid while a bundle is reported, and the fresh one once the retry
+      // reports none - which is what a server answers with no hash to check.
+      verify: (params) =>
+        params.version
+          ? { valid: true, url: null, version: null }
+          : servesFreshBundle.verify(),
+    });
+
+    const result = await updateManager.verifyOrUpdateNxCloudClient({});
+
+    expect(marker(result)).toBe('downloaded');
+    expect(existsSync(damaged)).toBe(false);
+  });
+
+  it('leaves no verification lock behind when the bundle it approved did not load', async () => {
+    // A lock here would park the damaged bundle behind the 30 minute skip, so
+    // the next command would fail the way this one just did.
+    seedBundle({});
+    apiClient = cloudApi({
+      verify: (params) =>
+        params.version
+          ? { valid: true, url: null, version: null }
+          : servesFreshBundle.verify(),
+      bundle: () => new Error('connection reset'),
+    });
+
+    await expect(updateManager.verifyOrUpdateNxCloudClient({})).rejects.toThrow(
+      'connection reset'
+    );
+
+    expect(existsSync(join(stateDir, 'verify.lock'))).toBe(false);
+  });
+
+  it('downloads once and reports the failure when the fresh bundle does not load either', async () => {
+    seedBundle({});
+    skipVerification();
+    apiClient = cloudApi({
+      ...servesFreshBundle,
+      bundle: () => bundleTarball({ 'stray.js': 'module.exports = 1;' }),
+    });
+
+    // The error names the directory just downloaded into, not the seeded one,
+    // and one verify plus one download is the whole of it, because a server
+    // that keeps serving an unloadable bundle must not be asked in a loop.
+    await expect(updateManager.verifyOrUpdateNxCloudClient({})).rejects.toThrow(
+      new RegExp(`${VERSION}-[0-9a-f-]{36}`)
+    );
+    expect(apiClient.get).toHaveBeenCalledTimes(2);
+  });
+
+  it('reports the client unavailable when the server is unreachable and the bundle does not load', async () => {
+    seedBundle({});
+    skipVerification();
+    apiClient = cloudApi({ verify: () => new Error('ECONNREFUSED') });
+
+    // Nothing to run and nowhere to download from, which callers already treat
+    // as "carry on without Nx Cloud". One attempt at the unreachable server.
+    await expect(updateManager.verifyOrUpdateNxCloudClient({})).rejects.toThrow(
+      updateManager.NxCloudClientUnavailableError
+    );
+    expect(apiClient.get).toHaveBeenCalledTimes(1);
+  });
+
+  it('falls back to a loadable installed bundle when the server is unreachable', async () => {
+    seedBundle({ 'index.js': clientSource('installed') });
+    apiClient = cloudApi({ verify: () => new Error('ECONNREFUSED') });
+
+    const result = await updateManager.verifyOrUpdateNxCloudClient({});
+
+    expect(marker(result)).toBe('installed');
+  });
+});
