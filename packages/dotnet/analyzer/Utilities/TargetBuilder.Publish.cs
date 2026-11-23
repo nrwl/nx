@@ -57,7 +57,11 @@ public static partial class TargetBuilder
                 "default",
                 $"^{productionInput}",
                 new { workingDirectory = "absolute" },
-                new { dependentTasksOutputFiles = "**/*" },
+                new
+                {
+                    dependentTasksOutputFiles = GetPublishDependencyOutputsGlob(
+                        properties, projectDirectory, workspaceRoot, intermediatePath)
+                },
                 new { env = "NUGET_PACKAGES" },
                 .. directoryBuildInputs
             ],
@@ -72,4 +76,76 @@ public static partial class TargetBuilder
             }
         };
     }
+
+    /// <summary>
+    /// The build outputs publish hashes. Build's bin and obj outputs also cover
+    /// the files publish writes, so a publish on a warm tree would otherwise hash
+    /// its own previous run. Excludes the publish directory at every
+    /// configuration and the publish file list MSBuild keeps in obj.
+    /// Paths are workspace-relative: Nx does not resolve tokens in this glob.
+    /// </summary>
+    private static string GetPublishDependencyOutputsGlob(
+        EvaluatedProperties properties,
+        string projectDirectory,
+        string workspaceRoot,
+        string? intermediatePath)
+    {
+        var publishDir = GetPublishDir(
+            properties.WithConfiguration("*"), properties.Configuration, projectDirectory, workspaceRoot);
+        var cleanFile = string.IsNullOrEmpty(properties.PublishCleanFile)
+            ? "PublishOutputs.*.txt"
+            : properties.PublishCleanFile;
+
+        var dir = ToWorkspaceRelative(publishDir, projectDirectory, workspaceRoot);
+        var obj = ToWorkspaceRelative(intermediatePath, projectDirectory, workspaceRoot);
+
+        // A path with glob syntax of its own cannot be embedded in the pattern.
+        var excluded = new[]
+            {
+                dir is not null && dir.Split('/').All(s => s == "*" || !HasGlobSyntax(s))
+                    ? $"{dir}/**"
+                    : null,
+                obj is not null && !HasGlobSyntax(obj)
+                    && (cleanFile == "PublishOutputs.*.txt" || !HasGlobSyntax(cleanFile))
+                    ? $"{obj}/**/{cleanFile}"
+                    : null,
+            }
+            .OfType<string>()
+            .ToArray();
+
+        return excluded.Length switch
+        {
+            0 => "**/*",
+            1 => $"!{excluded[0]}",
+            _ => $"!{{{string.Join(',', excluded)}}}",
+        };
+    }
+
+    /// <summary>
+    /// Rewrites a <c>{workspaceRoot}</c>/<c>{projectRoot}</c> path as
+    /// workspace-relative. Returns <c>null</c> for any other path.
+    /// </summary>
+    private static string? ToWorkspaceRelative(string? path, string projectDirectory, string workspaceRoot)
+    {
+        const string workspaceToken = "{workspaceRoot}";
+        const string projectToken = "{projectRoot}";
+
+        string? relative = null;
+        if (path?.StartsWith(workspaceToken) == true)
+        {
+            relative = path[workspaceToken.Length..].TrimStart('/');
+        }
+        else if (path?.StartsWith(projectToken) == true)
+        {
+            var projectRoot = Path.GetRelativePath(Path.GetFullPath(workspaceRoot), Path.GetFullPath(projectDirectory))
+                .Replace('\\', '/');
+            var rest = path[projectToken.Length..].TrimStart('/');
+            relative = projectRoot == "." ? rest : $"{projectRoot}/{rest}".TrimEnd('/');
+        }
+
+        return string.IsNullOrEmpty(relative) ? null : relative;
+    }
+
+    private static bool HasGlobSyntax(string value) =>
+        value.IndexOfAny(['*', '?', '[', ']', '{', '}', '(', ')', ',', '!']) >= 0;
 }
