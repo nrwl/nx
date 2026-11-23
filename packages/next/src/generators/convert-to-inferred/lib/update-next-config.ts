@@ -1,14 +1,10 @@
-import {
-  applyChangesToString,
-  ChangeType,
-  type StringChange,
-  type Tree,
-} from '@nx/devkit';
+import { Tree } from '@nx/devkit';
 import {
   AggregatedLog,
   ensureTypescript,
   ast,
   query,
+  printNodeUpdate,
   type TypescriptAst,
 } from '@nx/devkit/internal';
 import type { Node, ObjectLiteralExpression } from 'typescript';
@@ -81,7 +77,7 @@ export function updateNextConfig(
 
   findLastRequire(sourceFile);
 
-  const updatedCode = `${nextConfigContents.slice(0, lastRequireEndPosition)}\n\n${updatedConfigFileContents}\n\n${nextConfigContents.slice(lastRequireEndPosition)}`;
+  let updatedCode = `${nextConfigContents.slice(0, lastRequireEndPosition)}\n\n${updatedConfigFileContents}\n\n${nextConfigContents.slice(lastRequireEndPosition)}`;
   sourceFile = ast(updatedCode);
 
   const nextConfigNode = query(
@@ -95,75 +91,22 @@ export function updateNextConfig(
       'PropertyAssignment:has(Identifier[name=nx]) ObjectLiteralExpression'
     )[0];
 
-    tree.write(
-      nextConfigPath,
-      nxNode
-        ? applyChangesToString(
-            updatedCode,
-            addOptionsSpread(updatedCode, nxNode)
-          )
-        : updatedCode
-    );
-  }
-}
+    if (nxNode) {
+      const spread = ts.factory.createSpreadAssignment(
+        ts.factory.createIdentifier('options')
+      );
 
-function addOptionsSpread(
-  code: string,
-  object: ObjectLiteralExpression
-): StringChange[] {
-  const closeBrace = object.getEnd() - 1;
-  const properties = object.properties;
-  if (properties.length === 0) {
-    const padding = /\s/.test(code[closeBrace - 1]) ? '' : ' ';
-    return [
-      {
-        type: ChangeType.Insert,
-        index: closeBrace,
-        text: `${padding}...options `,
-      },
-    ];
-  }
+      const updatedNxNode = ts.factory.updateObjectLiteralExpression(
+        nxNode,
+        ts.factory.createNodeArray([...nxNode.properties, spread])
+      );
 
-  const lastProperty = properties[properties.length - 1];
-  const scanner = ts.createScanner(
-    ts.ScriptTarget.Latest,
-    true,
-    ts.LanguageVariant.Standard,
-    code,
-    undefined,
-    lastProperty.getEnd()
-  );
-  const hasTrailingComma = scanner.scan() === ts.SyntaxKind.CommaToken;
-  const lastEntryEnd = hasTrailingComma
-    ? scanner.getTokenEnd()
-    : lastProperty.getEnd();
-  const closeBraceLineStart = code.lastIndexOf('\n', closeBrace) + 1;
-  if (closeBraceLineStart <= lastEntryEnd) {
-    return [
-      {
-        type: ChangeType.Insert,
-        index: lastProperty.getEnd(),
-        text: ', ...options',
-      },
-    ];
-  }
+      updatedCode =
+        updatedCode.slice(0, nxNode.getStart()) +
+        printNodeUpdate(nxNode, updatedNxNode) +
+        updatedCode.slice(nxNode.getEnd());
+    }
 
-  const lastPropertyLineStart =
-    code.lastIndexOf('\n', lastProperty.getStart()) + 1;
-  const indent = code.slice(lastPropertyLineStart).match(/^[ \t]*/)[0];
-  const changes: StringChange[] = [
-    {
-      type: ChangeType.Insert,
-      index: closeBraceLineStart,
-      text: `${indent}...options${hasTrailingComma ? ',' : ''}\n`,
-    },
-  ];
-  if (!hasTrailingComma) {
-    changes.push({
-      type: ChangeType.Insert,
-      index: lastProperty.getEnd(),
-      text: ',',
-    });
+    tree.write(nextConfigPath, updatedCode);
   }
-  return changes;
 }
