@@ -61,18 +61,15 @@ export function buildPostTargetTransformer(migrationLogs: AggregatedLog) {
         projectRoot: projectDetails.root,
       });
     }
-    const partialNextConfig = `
-    
-    const configValues = ${JSON.stringify(configValues, null, 2)};
+    const partialNextConfig = `const configValues = ${JSON.stringify(configValues, null, 2)};
 
-    const configuration = process.env.NX_TASK_TARGET_CONFIGURATION || 'default';
+const configuration = process.env.NX_TASK_TARGET_CONFIGURATION || 'default';
 
-    const options = {
-      ...configValues.default,
-      // @ts-expect-error: Ignore TypeScript error for indexing configValues with a dynamic key
-      ...configValues[configuration],
-    };
-    `;
+const options = {
+  ...configValues.default,
+  // @ts-expect-error: Ignore TypeScript error for indexing configValues with a dynamic key
+  ...configValues[configuration],
+};`;
     updateNextConfig(tree, partialNextConfig, projectDetails, migrationLogs);
     return target;
   };

@@ -62,22 +62,37 @@ export function updateNextConfig(
 
   ts ??= ensureTypescript();
 
-  let lastRequireEndPosition = -1;
-
-  const findLastRequire = (node: Node) => {
-    if (
-      ts.isCallExpression(node) &&
+  const callsRequire = (node: Node): boolean =>
+    (ts.isCallExpression(node) &&
       ts.isIdentifier(node.expression) &&
-      node.expression.text === 'require'
-    ) {
-      lastRequireEndPosition = node.end;
+      node.expression.text === 'require') ||
+    ts.forEachChild(node, callsRequire) === true;
+
+  // Insert after the `;` only when spaces alone precede it. Otherwise insert at
+  // the code's end, so comments move down with the `;` and the code they cover.
+  let insertAt = -1;
+  for (const statement of sourceFile.statements) {
+    if (callsRequire(statement)) {
+      const codeEnd = ts.isVariableStatement(statement)
+        ? statement.declarationList.end
+        : ts.isExpressionStatement(statement)
+          ? statement.expression.end
+          : statement.end;
+      insertAt = /^[ \t]*;?$/.test(
+        nextConfigContents.slice(codeEnd, statement.end)
+      )
+        ? statement.end
+        : codeEnd;
     }
-    ts.forEachChild(node, findLastRequire);
-  };
+  }
 
-  findLastRequire(sourceFile);
-
-  let updatedCode = `${nextConfigContents.slice(0, lastRequireEndPosition)}\n\n${updatedConfigFileContents}\n\n${nextConfigContents.slice(lastRequireEndPosition)}`;
+  // What is left on the line moves to its own line. A blank line below the
+  // statement becomes the gap after the block.
+  let rest = nextConfigContents.slice(insertAt).replace(/^[ \t]+/, '');
+  rest = rest.startsWith('\n')
+    ? rest.replace(/^\n(?=[ \t]*\n)/, '')
+    : `\n${rest}`;
+  let updatedCode = `${nextConfigContents.slice(0, insertAt)}\n\n${updatedConfigFileContents}\n${rest}`;
   sourceFile = ast(updatedCode);
 
   const nextConfigNode = query(
