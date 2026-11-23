@@ -200,6 +200,7 @@ export {
   isAiAgent,
   killProcessTreeGraceful,
   matchGlobPaths,
+  matchPluginFiles,
   readShebangHeaders,
   unmatchedProjectPatterns,
 } from './native';
