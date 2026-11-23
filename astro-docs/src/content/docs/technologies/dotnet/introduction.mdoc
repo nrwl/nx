@@ -463,6 +463,7 @@ shared reference outputs.
 A non-empty `RuntimeIdentifiers` list takes precedence over `RuntimeIdentifier`.
 Otherwise, the evaluated singular value supplies the RID, which can be an SDK default.
 Each framework must be executable (`OutputType` is `Exe` or `WinExe`) in both Debug and Release.
+Test projects don't get RID build or publish targets.
 
 Set `ridVariants: false` in the plugin options to keep target-framework variants without RID tasks.
 Setting `tfmVariants: false` disables both families, even with `ridVariants: true`.

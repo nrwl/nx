@@ -128,6 +128,22 @@ public class RidAnalyzerIntegrationTests : IDisposable
     }
 
     [Theory]
+    [InlineData("IsTestProject")]
+    [InlineData("IsTestingPlatformApplication")]
+    public void ExecutableTestProject_DoesNotGetRidDistributionTargets(string testProperty)
+    {
+        var (project, _) = Analyze($"<{testProperty}>true</{testProperty}>");
+        var targets = project.GetProperty("targets");
+
+        Assert.True(targets.TryGetProperty("test", out _));
+        Assert.True(targets.TryGetProperty("build:net8.0", out _));
+        Assert.DoesNotContain(targets.EnumerateObject(),
+            target => target.Name.Contains("linux-x64") || target.Name.Contains("win-x64"));
+        Assert.False(targets.TryGetProperty("publish", out _));
+        Assert.False(targets.TryGetProperty("run", out _));
+    }
+
+    [Theory]
     [InlineData("Exe")]
     [InlineData("WinExe")]
     public void Executability_IsEvaluatedPerFrameworkWithTheSharedPredicate(string outputType)

@@ -218,7 +218,7 @@ public static partial class Analyzer
                     var frameworkVariants = pluginOptions.TfmVariants
                         ? CollectFrameworkVariants(nodes, projectPath, workspaceRoot, nxJson, directoryFilesByDir, evaluationInputs)
                         : null;
-                    if (pluginOptions.RidVariants && frameworkVariants is not null)
+                    if (!isTest && pluginOptions.RidVariants && frameworkVariants is not null)
                     {
                         frameworkVariants = CollectRidVariants(nodes, frameworkVariants, projectPath, workspaceRoot,
                             nxJson, directoryFilesByDir, evaluationInputs);

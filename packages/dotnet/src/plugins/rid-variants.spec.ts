@@ -3,11 +3,11 @@ import type {
   ProjectGraph,
   TargetConfiguration,
 } from '@nx/devkit';
-import { createTaskGraph } from '../../../nx/src/tasks-runner/create-task-graph';
+import { createTaskGraph } from '@nx/devkit/internal-testing-utils';
 import {
   interpolateArgsIntoCommand,
-  normalizeArgs,
-} from '../../../nx/src/executors/run-commands/run-commands.impl';
+  normalizeRunCommandsArgs,
+} from '@nx/devkit/internal';
 import {
   DotNetPluginOptions,
   mergeUserTargetConfigurations,
@@ -128,7 +128,7 @@ describe('RID configuration and plugin merge contract', () => {
     const options = { ...leaf.options, ...leaf.configurations!.debug };
     const command = interpolateArgsIntoCommand(
       leaf.command!,
-      normalizeArgs({ ...options, __unparsed__: [] }),
+      normalizeRunCommandsArgs({ ...options, __unparsed__: [] }),
       false
     );
 
