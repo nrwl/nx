@@ -9,6 +9,11 @@ import {
   type ClassicTypescriptBackend,
   type TypescriptAstGuardsModule,
 } from './typescript-backend';
+import {
+  createTypescriptPrinter,
+  recordUpdateOrigin,
+  type TypescriptPrinter,
+} from './typescript-printer';
 
 /** @ts-ignore resolves only when `typescript` is >= 7.1 */
 type ApiDiagnostic = import('typescript/sync').Diagnostic;
@@ -212,40 +217,122 @@ export function hasParseErrors(sourceFile: ts.SourceFile): boolean {
   }
 }
 
+const printerByPackageJsonPath = new Map<string, TypescriptPrinter>();
+
+function getTypescriptPrinter(): TypescriptPrinter {
+  const backend = getTypescriptBackend();
+  let printer = printerByPackageJsonPath.get(backend.packageJsonPath);
+  if (!printer) {
+    printer = createTypescriptPrinter(backend, {
+      ast: getTypescriptAst(),
+      hasParseErrors,
+    });
+    printerByPackageJsonPath.set(backend.packageJsonPath, printer);
+  }
+  return printer;
+}
+
 /**
- * Prints a node built with {@link TypescriptAst}'s `factory`. Throws for a
- * node that holds parsed code, which TypeScript 7.1 reprints without its
- * comments: insert the printed text into the source instead.
+ * Prints a node built with {@link TypescriptAst}'s `factory`, with the
+ * comments {@link addSyntheticLeadingComment} put on it. Throws for a node
+ * that holds parsed code, which TypeScript 7.1 reprints without its comments:
+ * use {@link printNodeUpdate} for an edit of parsed code.
  */
 export function printNode(node: ts.Node): string {
-  const backend = getTypescriptBackend();
-  switch (backend.kind) {
-    case 'classic':
-      assertBuiltNode(node, backend.ts.forEachChild);
-      return backend.ts
-        .createPrinter()
-        .printNode(backend.ts.EmitHint.Unspecified, node, undefined);
-    case 'api':
-      assertBuiltNode(node, (parent, visit) => parent.forEachChild(visit));
-      return withTypescriptApi(backend, (api) =>
-        api.printer.printNode(node as never)
-      );
+  assertBuiltNode(node);
+  return getTypescriptPrinter().printBuiltNode(node);
+}
+
+export type PrintListFormat =
+  | 'namedImportsOrExportsElements'
+  | 'objectBindingPatternElements'
+  | 'multiLine';
+
+/**
+ * Prints built nodes the way TypeScript 6's `printer.printList` prints them
+ * for the matching `ListFormat`. In `multiLine`, an empty source file among
+ * the nodes prints nothing, as it does there.
+ */
+export function printList(
+  format: PrintListFormat,
+  nodes: readonly ts.Node[]
+): string {
+  const printer = getTypescriptPrinter();
+  switch (format) {
+    case 'namedImportsOrExportsElements':
+    case 'objectBindingPatternElements': {
+      const printed = nodes.map((node) => {
+        assertBuiltNode(node);
+        return printer.printBuiltNode(node);
+      });
+      return printed.length > 0 ? ` ${printed.join(', ')} ` : '';
+    }
+    case 'multiLine':
+      return nodes
+        .map((node) => {
+          if (isEmptySourceFile(node)) return '';
+          assertBuiltNode(node);
+          return `${printer.printBuiltNode(node)}\n`;
+        })
+        .join('');
     default:
-      return unhandledTypescriptBackend(backend);
+      return unhandledPrintListFormat(format);
   }
 }
 
+function unhandledPrintListFormat(format: never): never {
+  throw new Error(`Unhandled list format: ${String(format)}`);
+}
+
+function isEmptySourceFile(node: ts.Node): boolean {
+  return (
+    node.kind === getTypescriptAst().SyntaxKind.SourceFile &&
+    (node as ts.SourceFile).text === '' &&
+    (node as ts.SourceFile).statements.length === 0
+  );
+}
+
+/**
+ * The text for `[original.getStart(), original.end)` after the edit that
+ * turned the parsed node `original` into `updated`, built from it with
+ * `factory.update*` or `factory.create*`. Parsed code keeps its text,
+ * comments and layout. Supports the edits Nx's generators and migrations make
+ * and throws `Unsupported node update: ...` for every other.
+ */
+export function printNodeUpdate(original: ts.Node, updated: ts.Node): string {
+  return getTypescriptPrinter().printNodeUpdate(original, updated);
+}
+
+/**
+ * Stands in for `ts.addSyntheticLeadingComment`, which TypeScript 7.1 lacks.
+ * Pass the adapter's `SyntaxKind.SingleLineCommentTrivia`. The comment prints
+ * on its own line above `node`, which has to be an element of a built
+ * multi-line object or array literal.
+ */
+export function addSyntheticLeadingComment<T extends ts.Node>(
+  node: T,
+  kind: ts.SyntaxKind,
+  text: string,
+  hasTrailingNewLine?: boolean
+): T {
+  return getTypescriptPrinter().addSyntheticLeadingComment(
+    node,
+    kind,
+    text,
+    hasTrailingNewLine
+  );
+}
+
 // Built nodes have no position in a source file.
-function assertBuiltNode(
-  node: ts.Node,
-  forEachChild: (node: ts.Node, visit: (child: ts.Node) => void) => void
-): void {
+function assertBuiltNode(node: ts.Node): void {
   if (node.pos >= 0) {
     throw new Error(
       'printNode only prints nodes built with the TypeScript factory, but the node holds code parsed from a file. Insert the printed nodes into the file text instead.'
     );
   }
-  forEachChild(node, (child) => assertBuiltNode(child, forEachChild));
+  getTypescriptAst().forEachChild(node, assertBuiltNode, (children) =>
+    children.forEach(assertBuiltNode)
+  );
 }
 
 // A TypeScript 7.1 source file carries no parse diagnostics, and some syntax
@@ -538,6 +625,13 @@ function createApiAst(backend: ApiTypescriptBackend): TypescriptAst {
     (typeof index === 'number'
       ? f.createNumericLiteral(String(index), TokenFlags.None)
       : index) as never;
+  const recordingOrigin =
+    <A extends unknown[]>(update: (node: never, ...args: A) => unknown) =>
+    (node: never, ...args: A) => {
+      const updated = update(node, ...args);
+      recordUpdateOrigin(updated as ts.Node, node);
+      return updated;
+    };
   const factory = {
     createArrayLiteralExpression: (elements?: never[], multiLine?: boolean) =>
       f.createArrayLiteralExpression(elements ?? [], multiLine),
@@ -694,24 +788,30 @@ function createApiAst(backend: ApiTypescriptBackend): TypescriptAst {
         (flags ?? NodeFlags.None) as never
       ),
     createVariableStatement: f.createVariableStatement,
-    updateArrayLiteralExpression: f.updateArrayLiteralExpression,
-    updateCallExpression: (
-      node: { questionDotToken?: unknown },
-      expression: never,
-      typeArguments: never,
-      args: never[]
-    ) =>
-      f.updateCallExpression(
-        node as never,
-        expression,
-        node.questionDotToken as never,
-        typeArguments,
-        args
-      ),
-    updateImportDeclaration: f.updateImportDeclaration,
-    updateNamedImports: f.updateNamedImports,
-    updateNewExpression: f.updateNewExpression,
-    updateObjectLiteralExpression: f.updateObjectLiteralExpression,
+    updateArrayLiteralExpression: recordingOrigin(
+      f.updateArrayLiteralExpression
+    ),
+    updateCallExpression: recordingOrigin(
+      (
+        node: { questionDotToken?: unknown },
+        expression: never,
+        typeArguments: never,
+        args: never[]
+      ) =>
+        f.updateCallExpression(
+          node as never,
+          expression,
+          node.questionDotToken as never,
+          typeArguments,
+          args
+        )
+    ),
+    updateImportDeclaration: recordingOrigin(f.updateImportDeclaration),
+    updateNamedImports: recordingOrigin(f.updateNamedImports),
+    updateNewExpression: recordingOrigin(f.updateNewExpression),
+    updateObjectLiteralExpression: recordingOrigin(
+      f.updateObjectLiteralExpression
+    ),
   };
 
   // 7.1 nodes have TypeScript 6's shape for what Nx reads, but not its
