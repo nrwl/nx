@@ -24,6 +24,7 @@ import {
   isVerboseE2ERun,
 } from './get-env-info';
 import { logError, logInfo, secondsSince } from './log-utils';
+import { probeCommandEnd, probeCommandStart } from './pressure-probe';
 import { promisifiedTreeKill } from './process-utils';
 
 export interface RunCmdOpts {
@@ -75,7 +76,14 @@ export function runCommand(
     env: optionsEnv,
     ...childProcessOptions
   } = options ?? {};
+  let probe: ReturnType<typeof probeCommandStart> = null;
   try {
+    probe = probeCommandStart(
+      'runCommand',
+      command,
+      String(childProcessOptions.cwd ?? tmpProjPath()),
+      childProcessOptions.timeout
+    );
     const r = execSync(command, {
       cwd: tmpProjPath(),
       stdio: 'pipe',
@@ -89,6 +97,7 @@ export function runCommand(
       encoding: 'utf-8',
       ...childProcessOptions,
     });
+    probeCommandEnd(probe, undefined, undefined, r);
 
     if (isVerboseE2ERun()) {
       output.log({
@@ -103,8 +112,10 @@ export function runCommand(
     // Intentional: some commands (e.g. `npm ls`) exit non-zero but still produce useful output.
     logError(`Original command: ${command}`, `${e.stdout}\n\n${e.stderr}`);
     if (!failOnError && (e.stdout || e.stderr)) {
+      probeCommandEnd(probe, e);
       return stripVTControlCharacters(e.stdout + e.stderr);
     }
+    probeCommandEnd(probe, e, `${e.stdout}\n\n${e.stderr}`);
     throw e;
   }
 }
@@ -261,6 +272,11 @@ export function runCommandAsync(
   }
 ): Promise<{ stdout: string; stderr: string; combinedOutput: string }> {
   return new Promise((resolve, reject) => {
+    const probe = probeCommandStart(
+      'runCommandAsync',
+      command,
+      opts.cwd || tmpProjPath()
+    );
     exec(
       command,
       {
@@ -277,6 +293,12 @@ export function runCommandAsync(
         encoding: 'utf-8',
       },
       (err, stdout, stderr) => {
+        probeCommandEnd(
+          probe,
+          err,
+          !opts.silenceError && err ? `${stdout}\n\n${stderr}` : undefined,
+          stdout
+        );
         if (!opts.silenceError && err) {
           logError(`Original command: ${command}`, `${stdout}\n\n${stderr}`);
           reject(err);
@@ -485,6 +507,7 @@ export function runCLI(
   }
 ): string {
   const timeoutMs = opts.timeout ?? 5 * 60 * 1000;
+  let probe: ReturnType<typeof probeCommandStart> = null;
   try {
     const pm = getPackageManagerCommand();
     const commandToRun = `${pm.runNxSilent} ${command} ${
@@ -492,6 +515,12 @@ export function runCLI(
     }${opts.redirectStderr ? ' 2>&1' : ''}`;
     logInfo(`Run Command: ${command}`);
     const startTime = performance.now();
+    probe = probeCommandStart(
+      'runCLI',
+      command,
+      opts.cwd || tmpProjPath(),
+      timeoutMs
+    );
     const result = execSync(commandToRun, {
       cwd: opts.cwd || tmpProjPath(),
       env: {
@@ -509,6 +538,7 @@ export function runCLI(
       maxBuffer: 50 * 1024 * 1024,
       timeout: timeoutMs,
     });
+    probeCommandEnd(probe, undefined, undefined, result);
     logInfo(`Run Command: ${command} (${secondsSince(startTime)}s)`);
 
     if (opts.verbose ?? isVerboseE2ERun()) {
@@ -531,15 +561,18 @@ export function runCLI(
       ).trim();
       const msg = `Command timed out after ${timeoutSec}s: ${command}\n\nProcess output:\n${processOutput}`;
       logError(`Command timed out`, msg);
+      probeCommandEnd(probe, e, msg);
       throw new Error(msg);
     }
     if (opts.silenceError) {
+      probeCommandEnd(probe, e);
       runCLI.lastExitCode = (e.status ?? 1) as number;
       // Without redirectStderr the shell didn't merge stderr into stdout, so concat both.
       const output = opts.redirectStderr ? e.stdout : e.stdout + e.stderr;
       return stripVTControlCharacters(output);
     } else {
       logError(`Original command: ${command}`, `${e.stdout}\n\n${e.stderr}`);
+      probeCommandEnd(probe, e, `${e.stdout}\n\n${e.stderr}`);
       throw e;
     }
   }
