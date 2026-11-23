@@ -77,7 +77,10 @@ impl FileLock {
     pub fn check(&mut self) -> Result<bool> {
         // Own description: flock re-locks one that already holds the lock, and
         // the unlock below would then release the caller's.
-        let probe = open_lock_file(&self.lock_file_path)?;
+        let Some(probe) = open_existing_lock_file(&self.lock_file_path)? else {
+            self.locked = false;
+            return Ok(false);
+        };
         let probed = probe.try_lock_exclusive();
 
         if probed.is_ok() {
@@ -95,9 +98,10 @@ impl FileLock {
             let lock_file_path = self.lock_file_path.clone();
             self.locked = false;
             let promise = env.spawn_future(async move {
-                let file = open_lock_file(&lock_file_path)?;
-                fs4::fs_std::FileExt::lock_shared(&file)?;
-                fs4::fs_std::FileExt::unlock(&file)?;
+                if let Some(file) = open_existing_lock_file(&lock_file_path)? {
+                    fs4::fs_std::FileExt::lock_shared(&file)?;
+                    fs4::fs_std::FileExt::unlock(&file)?;
+                }
                 Ok(())
             })?;
             // SAFETY: PromiseRaw's inner napi_value is GC-managed by V8
@@ -233,12 +237,25 @@ fn open_lock_file(path: &str) -> std::io::Result<fs::File> {
         .open(path)
 }
 
+/// Probes never create the file: a removed lock file has no holder, and
+/// recreating it would leave a stray file behind its owner's cleanup.
+#[cfg(not(target_arch = "wasm32"))]
+fn open_existing_lock_file(path: &str) -> std::io::Result<Option<fs::File>> {
+    match OpenOptions::new().read(true).write(true).open(path) {
+        Ok(file) => Ok(Some(file)),
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => Ok(None),
+        Err(e) => Err(e),
+    }
+}
+
 /// Waits until the exclusive lock is free, or `timeout` passes; `None` has no
 /// deadline. Probes on a description of its own: flock grants a shared lock to
 /// a description that already holds the exclusive one.
 #[cfg(not(target_arch = "wasm32"))]
 fn wait_for_release(lock_file_path: &str, timeout: Option<Duration>) -> std::io::Result<bool> {
-    let file = open_lock_file(lock_file_path)?;
+    let Some(file) = open_existing_lock_file(lock_file_path)? else {
+        return Ok(true);
+    };
     let Some(timeout) = timeout else {
         fs4::fs_std::FileExt::lock_shared(&file)?;
         fs4::fs_std::FileExt::unlock(&file)?;
@@ -594,8 +611,7 @@ mod test {
     }
 
     #[test]
-    fn an_absurdly_large_finite_timeout_is_not_a_deadline() {
-        // Saturates to a Duration that must take the unbounded path.
+    fn an_absurdly_large_finite_timeout_is_accepted() {
         let tmp_dir = TempDir::new().unwrap();
         let path = lock_path(&tmp_dir);
 
@@ -616,6 +632,7 @@ mod test {
     fn wait_for_release_treats_a_budget_no_clock_can_hold_as_unbounded() {
         let tmp_dir = TempDir::new().unwrap();
         let path = lock_path(&tmp_dir);
+        FileLock::new(path.clone()).unwrap();
         assert!(wait_for_release(&path, Some(Duration::MAX)).unwrap());
     }
 
@@ -683,5 +700,33 @@ mod test {
             FileLock::new(path).unwrap().locked,
             "and must not release it"
         );
+    }
+
+    #[test]
+    fn check_after_the_holder_removes_the_file_reports_free_and_recreates_nothing() {
+        let tmp_dir = TempDir::new().unwrap();
+        let path = lock_path(&tmp_dir);
+
+        let mut a = FileLock::new(path.clone()).unwrap();
+        a.lock().unwrap();
+        let mut b = FileLock::new(path.clone()).unwrap();
+        assert!(b.check().unwrap());
+
+        a.unlock().unwrap();
+        fs::remove_file(&path).unwrap();
+
+        assert!(!b.check().unwrap());
+        assert!(!b.locked);
+        assert!(!Path::new(&path).exists());
+    }
+
+    #[test]
+    fn wait_for_release_on_a_removed_file_returns_at_once_and_recreates_nothing() {
+        let tmp_dir = TempDir::new().unwrap();
+        let path = lock_path(&tmp_dir);
+
+        assert!(wait_for_release(&path, Some(Duration::from_secs(5))).unwrap());
+        assert!(wait_for_release(&path, None).unwrap());
+        assert!(!Path::new(&path).exists());
     }
 }
