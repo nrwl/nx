@@ -58,6 +58,7 @@ public sealed class EvaluatedProperties
     public string? OutputPath => Get(nameof(OutputPath));
     public string? OutDir => Get(nameof(OutDir));
     public string? PublishDir => Get(nameof(PublishDir));
+    public string? PublishCleanFile => Get(nameof(PublishCleanFile));
     public string? PackageOutputPath => Get(nameof(PackageOutputPath));
     public string? BaseIntermediateOutputPath => Get(nameof(BaseIntermediateOutputPath));
     public string? IntermediateOutputPath => Get(nameof(IntermediateOutputPath));
