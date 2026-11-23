@@ -4,6 +4,10 @@ import { afterAll, beforeAll, expect, it, vi } from 'vitest';
 import { DiagnosticModes, type AngularCompilation } from '../models';
 import { setupCompilationWithAngularCompilation } from './setup-with-angular-compilation';
 
+vi.mock('../utils/assert-supported-versions', () => ({
+  assertSupportedAngularRspackCompilerVersions: vi.fn(),
+}));
+
 // The loader's `new Function` import has no dynamic import callback under
 // vitest; load the same package through the test runner instead.
 vi.mock('../utils/load-compiler-cli', () => ({
