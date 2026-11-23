@@ -75,9 +75,8 @@ export class PseudoTerminal {
     this.childProcesses.delete(cp);
     if (this.childProcesses.size === 0) {
       activePseudoTerminals.delete(this);
-      // The native reaper closes the pty when the child is waited. This also
-      // runs for a terminal that went idle without that, and does nothing if
-      // a newer command has already taken the pty.
+      // Defensive: the native reaper closes the pty before the exit reaches
+      // here, so this normally finds it closed already.
       this.rustPseudoTerminal.shutdown();
       if (this.initialized) {
         this.pseudoIPC.close();
