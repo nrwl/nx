@@ -17,6 +17,7 @@
     },
     "local-registry-e2e": {
       "executor": "@nx/js:verdaccio",
+      "readyWhen": { "signal": true },
       "inputs": [
         "{workspaceRoot}/.verdaccio/**/*",
         { "externalDependencies": ["verdaccio"] }
@@ -49,7 +50,7 @@
         "native"
       ],
       "dependsOn": [
-        "local-registry-e2e",
+        { "target": "local-registry-e2e", "waitFor": "ready" },
         {
           "target": "build",
           "projects": ["tag:npm:public"]
@@ -68,7 +69,10 @@
         },
         { "dependentTasksOutputFiles": "**/*" }
       ],
-      "dependsOn": ["local-registry-e2e", "populate-local-registry-storage"],
+      "dependsOn": [
+        { "target": "local-registry-e2e", "waitFor": "ready" },
+        "populate-local-registry-storage"
+      ],
       "command": "node ./scripts/local-registry/build-e2e-base-workspace.mjs",
       "outputs": ["{workspaceRoot}/dist/local-registry/proj-backup/*.tar"]
     },

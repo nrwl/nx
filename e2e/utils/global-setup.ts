@@ -45,16 +45,6 @@ export default async function (globalConfig: Config.ConfigGlobals) {
     const registry = `http://${listenAddress}:${port}`;
     const authToken = 'secretVerdaccioToken';
 
-    while (true) {
-      await new Promise((resolve) => setTimeout(resolve, 250));
-      try {
-        await assertLocalRegistryIsRunning(registry);
-        break;
-      } catch {
-        console.log(`Waiting for Local registry to start on ${registry}...`);
-      }
-    }
-
     process.env.npm_config_registry = registry;
     // Use environment variable instead of npm config command to avoid polluting other tests
     process.env[`npm_config_//${listenAddress}:${port}/:_authToken`] =
@@ -213,11 +203,4 @@ function getPublishedVersion(): Promise<string | undefined> {
       }
     );
   });
-}
-
-async function assertLocalRegistryIsRunning(url) {
-  const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status}`);
-  }
 }

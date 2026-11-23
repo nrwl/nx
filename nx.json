@@ -224,7 +224,11 @@
         "...",
         "@nx/nx-source:populate-local-registry-storage",
         "@nx/nx-source:populate-e2e-base-workspace",
-        "@nx/nx-source:local-registry-e2e"
+        {
+          "projects": ["@nx/nx-source"],
+          "target": "local-registry-e2e",
+          "waitFor": "ready"
+        }
       ]
     },
     "e2e-ci": {
@@ -236,7 +240,11 @@
       "dependsOn": [
         "@nx/nx-source:populate-local-registry-storage",
         "@nx/nx-source:populate-e2e-base-workspace",
-        "@nx/nx-source:local-registry-e2e"
+        {
+          "projects": ["@nx/nx-source"],
+          "target": "local-registry-e2e",
+          "waitFor": "ready"
+        }
       ]
     },
     "e2e-macos-ci": {
@@ -248,7 +256,11 @@
         "...",
         "@nx/nx-source:populate-local-registry-storage",
         "@nx/nx-source:populate-e2e-base-workspace",
-        "@nx/nx-source:local-registry-e2e"
+        {
+          "projects": ["@nx/nx-source"],
+          "target": "local-registry-e2e",
+          "waitFor": "ready"
+        }
       ],
       "options": {
         "args": ["--forceExit"]
@@ -259,7 +271,11 @@
       "dependsOn": [
         "@nx/nx-source:populate-local-registry-storage",
         "@nx/nx-source:populate-e2e-base-workspace",
-        "@nx/nx-source:local-registry-e2e"
+        {
+          "projects": ["@nx/nx-source"],
+          "target": "local-registry-e2e",
+          "waitFor": "ready"
+        }
       ]
     },
     "e2e-base": {

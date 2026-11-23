@@ -50,8 +50,6 @@ const registry = `http://${listenAddress}:${port}`;
 const authToken = 'secretVerdaccioToken';
 const outputRoot = resolve(process.cwd(), 'dist/local-registry/proj-backup');
 
-await waitForRegistry();
-
 // Must resolve to exactly what the specs will install. getPublishedVersion() in
 // e2e/utils/get-env-info.ts reads the built nx package; asking the registry for
 // `nx@latest` instead returns npmjs' latest, because verdaccio merges upstream
@@ -288,20 +286,5 @@ function readBuiltNxVersion() {
     ).version;
   } catch {
     return undefined;
-  }
-}
-
-async function waitForRegistry() {
-  for (;;) {
-    try {
-      const response = await fetch(registry);
-      if (response.ok) {
-        return;
-      }
-    } catch {
-      // not up yet
-    }
-    console.log(`Waiting for local registry on ${registry}...`);
-    await new Promise((res) => setTimeout(res, 250));
   }
 }
