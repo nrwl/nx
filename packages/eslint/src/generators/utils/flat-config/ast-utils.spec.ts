@@ -1,3 +1,4 @@
+import { ensureTypescript, printNode } from '@nx/devkit/internal';
 import {
   addBlockToFlatConfigExport,
   addFlatCompatToFlatConfig,
@@ -16,10 +17,16 @@ import {
 } from './ast-utils';
 import { stripIndents } from '@nx/devkit';
 
+const ts = ensureTypescript();
+
 describe('ast-utils', () => {
   describe('generateFlatOverride', () => {
     it('should create appropriate ASTs for a flat config entries based on the provided legacy eslintrc JSON override data', () => {
-      const getOutput = (input: any) => generateFlatOverride(input, 'mjs');
+      // It's easier to review the stringified result of the AST than the AST itself
+      const getOutput = (input: any) => {
+        const ast = generateFlatOverride(input, 'mjs');
+        return printNode(ast);
+      };
 
       expect(getOutput({})).toMatchInlineSnapshot(`"{}"`);
 
@@ -326,9 +333,11 @@ describe('ast-utils', () => {
         },
         { ignores: ["my-lib/.cache/**/*"] },
     ];`;
-      const result = addBlockToFlatConfigExport(content, '...config', {
-        insertAtTheEnd: false,
-      });
+      const result = addBlockToFlatConfigExport(
+        content,
+        ts.factory.createSpreadElement(ts.factory.createIdentifier('config')),
+        { insertAtTheEnd: false }
+      );
       expect(result).toMatchInlineSnapshot(`
         "import baseConfig from "../../eslint.config.mjs";
             export default [
@@ -1758,7 +1767,7 @@ export default [
     it('should return spread element with fixupConfigRules call wrapping the extended plugin', () => {
       const result = generatePluginExtendsElementWithCompatFixup('my-plugin');
 
-      expect(result).toMatchInlineSnapshot(
+      expect(printNode(result)).toMatchInlineSnapshot(
         `"...fixupConfigRules(compat.extends("my-plugin"))"`
       );
     });

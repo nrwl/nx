@@ -42,7 +42,6 @@ import {
   generatePluginExtendsElement,
   generatePluginExtendsElementWithCompatFixup,
   generateSpreadElement,
-  generateStringLiteral,
   generateTypedLintingFlatConfigOverride,
   hasFlatConfigIgnoresBlock,
   hasOverride,
@@ -66,6 +65,7 @@ import type {
   PropertyName,
   ShorthandPropertyAssignment,
   SourceFile,
+  SpreadElement,
 } from 'typescript';
 
 let ts: TypescriptAst;
@@ -1341,7 +1341,7 @@ export function addExtendsToLintConfig(
   insertAtTheEnd = false
 ): GeneratorCallback {
   if (useFlatConfig(tree)) {
-    const pluginExtends: string[] = [];
+    const pluginExtends: SpreadElement[] = [];
     let fileName: string | undefined;
     for (const f of eslintFlatConfigFilenames) {
       if (tree.exists(joinPathFragments(root, f))) {
@@ -1521,12 +1521,19 @@ export function addPluginConfigToFlatLintConfig(
   configName: string,
   options: { insertAtTheEnd?: boolean; checkBaseConfig?: boolean } = {}
 ): boolean {
+  ts ??= ensureTypescript();
   return addImportedConfigToFlatLintConfig(
     tree,
     root,
     variableName,
     importPath,
-    `${variableName}.configs[${generateStringLiteral(configName)}]`,
+    ts.factory.createElementAccessExpression(
+      ts.factory.createPropertyAccessExpression(
+        ts.factory.createIdentifier(variableName),
+        'configs'
+      ),
+      ts.factory.createStringLiteral(configName)
+    ),
     options
   );
 }
@@ -1536,7 +1543,7 @@ function addImportedConfigToFlatLintConfig(
   root: string,
   variableName: string,
   importPath: string,
-  element: string,
+  element: Expression,
   options: { insertAtTheEnd?: boolean; checkBaseConfig?: boolean }
 ): boolean {
   const { insertAtTheEnd = true, checkBaseConfig = false } = options;
@@ -1630,7 +1637,7 @@ export function addIgnoresToLintConfig(
       content = addPatternsToFlatConfigIgnoresBlock(content, ignorePatterns);
       tree.write(fileName, content);
     } else {
-      const block = generateAst({
+      const block = generateAst<ObjectLiteralExpression>({
         ignores: ignorePatterns.map((path) => mapFilePath(path)),
       });
       tree.write(fileName, addBlockToFlatConfigExport(content, block));
