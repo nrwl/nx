@@ -125,9 +125,10 @@ function isComplete(tracer: string): boolean {
   }
 }
 
+/** Opt-in with `NX_CREATE_NODES_CACHE=true` while the cache is dogfooded. */
 export function isReadTracingEnabled(): boolean {
   return (
-    process.env.NX_PLUGIN_READ_TRACING !== 'false' &&
+    process.env.NX_CREATE_NODES_CACHE === 'true' &&
     process.env.NX_CACHE_PROJECT_GRAPH !== 'false' &&
     findTracer() !== null
   );
