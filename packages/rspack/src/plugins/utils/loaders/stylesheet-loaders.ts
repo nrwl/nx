@@ -1,4 +1,5 @@
 import * as path from 'path';
+import type { LoaderContext } from '@rspack/core';
 import autoprefixer = require('autoprefixer');
 import postcssImports = require('postcss-import');
 
@@ -30,7 +31,12 @@ export function getCommonLoadersForCssModules(
       options: {
         modules: {
           mode: 'local',
-          getLocalIdent: (ctx, localIdentName, localName, loaderOptions) =>
+          getLocalIdent: (
+            ctx: LoaderContext<unknown>,
+            localIdentName: string,
+            localName: string,
+            loaderOptions: { context?: string; regExp?: string | RegExp }
+          ) =>
             getCSSModuleLocalIdent(
               ctx,
               localIdentName,

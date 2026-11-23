@@ -5,7 +5,7 @@ export function getClientEnvironment(mode?: string) {
 
   const raw = Object.keys(process.env)
     .filter((key) => nxPublicKeyRegex.test(key))
-    .reduce(
+    .reduce<Record<string, string | undefined>>(
       (env, key) => {
         env[key] = process.env[key];
         return env;
@@ -19,7 +19,9 @@ export function getClientEnvironment(mode?: string) {
     );
 
   // Stringify all values so we can feed into webpack DefinePlugin
-  const stringified = Object.keys(raw).reduce(
+  const stringified = Object.keys(raw).reduce<
+    Record<string, string | Record<string, string>>
+  >(
     (env, key) => {
       env[`process.env.${key}`] = JSON.stringify(raw[key]);
       return env;
@@ -27,10 +29,13 @@ export function getClientEnvironment(mode?: string) {
     // Provide a fallback for process.env itself to handle cases where code
     // accesses process.env directly (e.g., in Cypress component testing)
     {
-      'process.env': Object.keys(raw).reduce((env, key) => {
-        env[key] = JSON.stringify(raw[key]);
-        return env;
-      }, {}),
+      'process.env': Object.keys(raw).reduce<Record<string, string>>(
+        (env, key) => {
+          env[key] = JSON.stringify(raw[key]);
+          return env;
+        },
+        {}
+      ),
     }
   );
 

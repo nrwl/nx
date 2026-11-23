@@ -116,6 +116,7 @@ export default async function addSvgrToRspackConfig(tree: Tree) {
       if (!tree.exists(rspackConfigPath)) return;
 
       const content = tree.read(rspackConfigPath, 'utf-8');
+      if (content === null) return;
 
       const sourceFile = ast(content);
 
@@ -235,6 +236,7 @@ export default async function addSvgrToRspackConfig(tree: Tree) {
   // Update rspack configs to add withSvgr function inline
   for (const [rspackConfigPath, config] of projects.entries()) {
     let content = tree.read(rspackConfigPath, 'utf-8');
+    if (content === null) continue;
     const sourceFile = ast(content);
     const changes: StringChange[] = [];
 

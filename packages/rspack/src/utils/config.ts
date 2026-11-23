@@ -8,7 +8,12 @@ export const nxRspackComposablePlugin = 'nxRspackComposablePlugin';
 export function isNxRspackComposablePlugin(
   a: unknown
 ): a is AsyncNxComposableRspackPlugin {
-  return a?.[nxRspackComposablePlugin] === true;
+  return (
+    (typeof a === 'object' || typeof a === 'function') &&
+    a !== null &&
+    nxRspackComposablePlugin in a &&
+    a[nxRspackComposablePlugin] === true
+  );
 }
 
 export interface NxRspackExecutionContext {

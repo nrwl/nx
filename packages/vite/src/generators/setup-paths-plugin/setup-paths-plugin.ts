@@ -26,6 +26,7 @@ export async function setupPathsPlugin(
   let addedPlugin = false;
   for (const file of files) {
     const content = tree.read(file, 'utf-8');
+    if (content === null) continue;
     const updated = useNativePaths
       ? addTsconfigPathsResolution(content)
       : addTsconfigPathsPlugin(content, /\.c[jt]s$/.test(file));

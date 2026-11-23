@@ -5,6 +5,14 @@ import { ast, query } from '@phenomnomnominal/tsquery';
 const DEFINE_CONFIG_SELECTOR =
   'CallExpression:has(Identifier[name=defineConfig]) > ObjectLiteralExpression';
 
+function readConfigFile(tree: Tree, configFilePath: string): string {
+  const contents = tree.read(configFilePath, 'utf-8');
+  if (contents === null) {
+    throw new Error(`Could not read the config file at ${configFilePath}.`);
+  }
+  return contents;
+}
+
 export function addHtmlTemplatePath(
   tree: Tree,
   configFilePath: string,
@@ -15,7 +23,7 @@ export function addHtmlTemplatePath(
   const TEMPLATE_STRING_SELECTOR =
     'PropertyAssignment:has(Identifier[name=template]) > StringLiteral';
 
-  let configContents = tree.read(configFilePath, 'utf-8');
+  let configContents = readConfigFile(tree, configFilePath);
   const sourceFile = ast(configContents);
 
   const htmlConfigNodes = query(sourceFile, HTML_CONFIG_SELECTOR);
@@ -66,7 +74,7 @@ export function addCopyAssets(
     'PropertyAssignment:has(Identifier[name=copy]) > ArrayLiteralExpression';
 
   const copyAssetArrayElement = `{ from: '${from}' }`;
-  let configContents = tree.read(configFilePath, 'utf-8');
+  let configContents = readConfigFile(tree, configFilePath);
   const sourceFile = ast(configContents);
 
   const outputConfigNodes = query(sourceFile, OUTPUT_CONFIG_SELECTOR);
@@ -124,7 +132,7 @@ export function addExperimentalSwcPlugin(
   const TOOLS_SELECTOR =
     'CallExpression:has(Identifier[name=defineConfig]) ObjectLiteralExpression PropertyAssignment:has(Identifier[name=tools]) > ObjectLiteralExpression';
 
-  let configContents = tree.read(configFilePath, 'utf-8');
+  let configContents = readConfigFile(tree, configFilePath);
   const sourceFile = ast(configContents);
 
   const pluginToAdd = indentBy(1)(`['${pluginName}', {}],`);
@@ -227,7 +235,7 @@ export function addSourceDefine(
   const DEFINE_OBJECT_SELECTOR =
     'CallExpression:has(Identifier[name=defineConfig]) ObjectLiteralExpression PropertyAssignment:has(Identifier[name=source]) ObjectLiteralExpression PropertyAssignment:has(Identifier[name=define]) > ObjectLiteralExpression';
 
-  let configContents = tree.read(configFilePath, 'utf-8');
+  let configContents = readConfigFile(tree, configFilePath);
   const sourceFile = ast(configContents);
 
   const defineProperty = `'${key}': '${value}'`;

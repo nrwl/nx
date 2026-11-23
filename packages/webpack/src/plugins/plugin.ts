@@ -95,10 +95,10 @@ export const createNodes: CreateNodes<WebpackPluginOptions> = [
       let nodeErrors: Array<[string | null, Error]> = [];
       try {
         results = await createNodesFromFiles(
-          (configFile, opts, ctx, idx) =>
+          (configFile, _opts, ctx, idx) =>
             createNodesInternal(
               configFile,
-              opts,
+              normalizedOptions,
               ctx,
               targetsCache,
               isTsSolutionSetup,
@@ -148,24 +148,23 @@ async function createNodesInternal(
 ): Promise<CreateNodesResult> {
   const projectRoot = dirname(configFilePath);
 
-  if (!targetsCache.has(hash)) {
-    targetsCache.set(
-      hash,
-      await createWebpackTargets(
-        configFilePath,
-        projectRoot,
-        options,
-        context,
-        isTsSolutionSetup,
-        packageManager,
-        pmc,
-        includePnpmMajorRuntimeInput,
-        includeBunInstallSettingsInputs
-      )
+  let webpackTargets = targetsCache.get(hash);
+  if (!webpackTargets) {
+    webpackTargets = await createWebpackTargets(
+      configFilePath,
+      projectRoot,
+      options,
+      context,
+      isTsSolutionSetup,
+      packageManager,
+      pmc,
+      includePnpmMajorRuntimeInput,
+      includeBunInstallSettingsInputs
     );
+    targetsCache.set(hash, webpackTargets);
   }
 
-  const { targets, metadata } = targetsCache.get(hash);
+  const { targets, metadata } = webpackTargets;
 
   return {
     projects: {
@@ -356,7 +355,7 @@ async function createWebpackTargets(
 function normalizeOutputPath(
   outputPath: string | undefined,
   projectRoot: string
-): string | undefined {
+): string {
   if (!outputPath) {
     // If outputPath is undefined, use webpack's default `dist` directory.
     if (projectRoot === '.') {
@@ -423,7 +422,7 @@ async function filterWebpackConfigs(
 }
 
 function normalizeOptions(
-  options: WebpackPluginOptions
+  options: WebpackPluginOptions | undefined
 ): Required<WebpackPluginOptions> {
   return {
     buildTargetName: options?.buildTargetName ?? 'build',

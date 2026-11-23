@@ -33,6 +33,17 @@ export interface RsbuildPluginOptions {
   watchDepsTargetName?: string;
 }
 
+type NormalizedRsbuildPluginOptions = RsbuildPluginOptions &
+  Required<
+    Pick<
+      RsbuildPluginOptions,
+      | 'buildTargetName'
+      | 'devTargetName'
+      | 'previewTargetName'
+      | 'inspectTargetName'
+    >
+  >;
+
 type RsbuildTargets = Pick<ProjectConfiguration, 'targets' | 'metadata'>;
 
 const rsbuildConfigGlob = '**/rsbuild.config.{js,ts,mjs,mts,cjs,cts}';
@@ -108,7 +119,7 @@ export const createNodesV2 = createNodes;
 
 async function createNodesInternal(
   configFilePath: string,
-  normalizedOptions: RsbuildPluginOptions,
+  normalizedOptions: NormalizedRsbuildPluginOptions,
   context: CreateNodesContext,
   targetsCache: PluginCache<RsbuildTargets>,
   pmc: ReturnType<typeof getPackageManagerCommand>,
@@ -116,20 +127,19 @@ async function createNodesInternal(
 ) {
   const projectRoot = dirname(configFilePath);
 
-  if (!targetsCache.has(hash)) {
-    targetsCache.set(
-      hash,
-      await createRsbuildTargets(
-        configFilePath,
-        projectRoot,
-        normalizedOptions,
-        context,
-        pmc
-      )
+  let cached = targetsCache.get(hash);
+  if (!cached) {
+    cached = await createRsbuildTargets(
+      configFilePath,
+      projectRoot,
+      normalizedOptions,
+      context,
+      pmc
     );
+    targetsCache.set(hash, cached);
   }
 
-  const { targets, metadata } = targetsCache.get(hash);
+  const { targets, metadata } = cached;
 
   return {
     projects: {
@@ -145,7 +155,7 @@ async function createNodesInternal(
 async function createRsbuildTargets(
   configFilePath: string,
   projectRoot: string,
-  options: RsbuildPluginOptions,
+  options: NormalizedRsbuildPluginOptions,
   context: CreateNodesContext,
   pmc: ReturnType<typeof getPackageManagerCommand>
 ): Promise<RsbuildTargets> {
@@ -281,7 +291,7 @@ function normalizeOutputPath(
   projectRoot: string,
   workspaceRoot: string,
   path: 'dist'
-): string | undefined {
+): string {
   if (!outputPath) {
     if (projectRoot === '.') {
       return `{projectRoot}/${path}`;
@@ -340,13 +350,16 @@ async function filterRsbuildConfigs(
   };
 }
 
-function normalizeOptions(options: RsbuildPluginOptions): RsbuildPluginOptions {
-  options ??= {};
-  options.buildTargetName ??= 'build';
-  options.devTargetName ??= 'dev';
-  options.previewTargetName ??= 'preview';
-  options.inspectTargetName ??= 'inspect';
-  return options;
+function normalizeOptions(
+  options: RsbuildPluginOptions | undefined
+): NormalizedRsbuildPluginOptions {
+  return {
+    ...options,
+    buildTargetName: options?.buildTargetName ?? 'build',
+    devTargetName: options?.devTargetName ?? 'dev',
+    previewTargetName: options?.previewTargetName ?? 'preview',
+    inspectTargetName: options?.inspectTargetName ?? 'inspect',
+  };
 }
 
 // A config that loads pluginNxReadySignal() reports when the server listens.

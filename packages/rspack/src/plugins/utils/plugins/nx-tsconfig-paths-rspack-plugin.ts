@@ -14,13 +14,18 @@ import { RspackNxBuildCoordinationPlugin } from './rspack-nx-build-coordination-
 import { unlinkSync } from 'fs';
 
 export class NxTsconfigPathsRspackPlugin {
-  private tmpTsConfigPath: string;
+  private tmpTsConfigPath?: string;
 
   constructor(private options: NormalizedNxAppRspackPluginOptions) {
+    this.getTsConfig();
+  }
+
+  private getTsConfig(): string {
     if (!this.options.tsConfig)
       throw new Error(
         `Missing "tsConfig" option. Set this option in your Nx rspack plugin.`
       );
+    return this.options.tsConfig;
   }
 
   apply(compiler: Compiler): void {
@@ -28,9 +33,10 @@ export class NxTsconfigPathsRspackPlugin {
     // // If we are not building libs from source, we need to remap paths so tsconfig may be updated.
     this.handleBuildLibsFromSource(compiler.options, this.options);
 
-    const pathToTsconfig = !path.isAbsolute(this.options.tsConfig)
-      ? path.join(workspaceRoot, this.options.tsConfig)
-      : this.options.tsConfig;
+    const tsConfig = this.getTsConfig();
+    const pathToTsconfig = !path.isAbsolute(tsConfig)
+      ? path.join(workspaceRoot, tsConfig)
+      : tsConfig;
 
     const extensions = new Set([
       ...['.ts', '.tsx', '.mjs', '.js', '.jsx'],
@@ -56,7 +62,7 @@ export class NxTsconfigPathsRspackPlugin {
 
   handleBuildLibsFromSource(
     config: Partial<RspackOptionsNormalized | Configuration>,
-    options
+    options: NormalizedNxAppRspackPluginOptions
   ): void {
     if (!options.buildLibsFromSource && options.targetName) {
       const remappedTarget =
@@ -72,7 +78,7 @@ export class NxTsconfigPathsRspackPlugin {
       );
 
       options.tsConfig = createTmpTsConfig(
-        options.tsConfig,
+        this.getTsConfig(),
         options.root,
         target.data.root,
         dependencies
@@ -88,6 +94,7 @@ export class NxTsconfigPathsRspackPlugin {
         const buildCommand = `nx run-many --target=build --projects=${buildableDependencies}`;
 
         if (buildableDependencies && buildableDependencies.length > 0) {
+          config.plugins ??= [];
           config.plugins.push(
             new RspackNxBuildCoordinationPlugin(buildCommand)
           );

@@ -129,6 +129,7 @@ function processVitestConfig(
   unhandled: string[]
 ): void {
   const contents = tree.read(filePath, 'utf-8');
+  if (contents === null) return;
 
   // Cheap precheck: skip files that don't mention any v4 target.
   if (!mightContainV4Targets(contents)) return;
@@ -562,6 +563,7 @@ function processImportsAndCustomCode(
   unhandled: string[]
 ): void {
   const contents = tree.read(filePath, 'utf-8');
+  if (contents === null) return;
   const hasBrowserPackage = contents.includes('@vitest/browser');
   const hasDefineWorkspace = contents.includes('defineWorkspace');
   const hasJestSnapshot = contents.includes('jest-snapshot');
@@ -633,6 +635,7 @@ function processPackageJson(
   unhandled: string[]
 ): void {
   const contents = tree.read(filePath, 'utf-8');
+  if (contents === null) return;
   let parsed: any;
   try {
     parsed = JSON.parse(contents);
@@ -698,6 +701,7 @@ function processEnvFile(
   unhandled: string[]
 ): void {
   const contents = tree.read(filePath, 'utf-8');
+  if (contents === null) return;
   if (
     !/(?:VITEST_MAX_THREADS|VITEST_MAX_FORKS|VITE_NODE_DEPS_MODULE_DIRECTORIES)\b/.test(
       contents
@@ -751,6 +755,7 @@ function processProjectJson(
   unhandled: string[]
 ): void {
   const contents = tree.read(filePath, 'utf-8');
+  if (contents === null) return;
   let parsed: any;
   try {
     parsed = JSON.parse(contents);

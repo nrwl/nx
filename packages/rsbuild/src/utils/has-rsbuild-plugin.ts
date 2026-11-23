@@ -2,7 +2,7 @@ import { type Tree, readNxJson } from '@nx/devkit';
 import { minimatch } from 'minimatch';
 
 export function hasRsbuildPlugin(tree: Tree, projectPath?: string) {
-  const nxJson = readNxJson(tree);
+  const nxJson = readNxJson(tree) ?? {};
   if (!projectPath) {
     return !!nxJson.plugins?.some((p) =>
       typeof p === 'string' ? p === '@nx/rsbuild' : p.plugin === '@nx/rsbuild'

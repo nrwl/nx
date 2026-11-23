@@ -1,11 +1,12 @@
 import { posix } from 'path';
 import { getHashDigest, interpolateName } from 'loader-utils';
+import type { LoaderContext } from 'webpack';
 
 export function getCSSModuleLocalIdent(
-  ctx,
-  localIdentName,
-  localName,
-  options,
+  ctx: LoaderContext<unknown>,
+  localIdentName: string,
+  localName: string,
+  options: { context?: string; regExp?: string | RegExp },
   hashFunction?: string
 ) {
   // Use the filename or folder name, based on some uses the index.js / index.module.(css|scss|sass) project style

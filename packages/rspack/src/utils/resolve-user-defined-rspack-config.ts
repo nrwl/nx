@@ -2,7 +2,7 @@ import { loadConfigFile } from '@nx/devkit/internal';
 
 export async function resolveUserDefinedRspackConfig(
   path: string,
-  tsConfig: string,
+  tsConfig?: string | null,
   /** Skip require cache and return latest content */
   reload = false
 ) {

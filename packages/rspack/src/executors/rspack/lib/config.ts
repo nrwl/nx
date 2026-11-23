@@ -10,6 +10,9 @@ export async function getRspackConfigs(
   options: NormalizedRspackExecutorSchema & { devServer?: any },
   context: ExecutorContext
 ): Promise<Configuration | Configuration[]> {
+  if (!options.rspackConfig) {
+    throw new Error('The "rspackConfig" option is required.');
+  }
   let maybeUserDefinedConfig = await resolveUserDefinedRspackConfig(
     options.rspackConfig,
     options.tsConfig
@@ -25,14 +28,21 @@ export async function getRspackConfigs(
     userDefinedConfig = await userDefinedConfig;
   }
 
+  const { projectName, targetName } = context;
+  if (!projectName || !targetName) {
+    throw new Error(
+      'Cannot resolve the rspack config without a project and target.'
+    );
+  }
+
   const config: Configuration = {};
   const configOptions = {
     ...options,
     target: options.target ?? 'web',
     assets: options.assets ?? [],
     root: context.root,
-    projectName: context.projectName,
-    targetName: context.targetName,
+    projectName,
+    targetName,
     configurationName: context.configurationName,
     projectGraph: context.projectGraph,
     useLegacyHtmlPlugin: false,

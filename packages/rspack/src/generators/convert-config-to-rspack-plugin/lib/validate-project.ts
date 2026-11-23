@@ -8,7 +8,7 @@ function hasAnotherRspackConfig(tree: Tree, projectRoot: string) {
       file !== 'rspack.config.js' &&
       file.endsWith('.js') &&
       file.includes('rspack.config') &&
-      projectJsonString.includes(file) &&
+      projectJsonString?.includes(file) &&
       tree.exists(`${projectRoot}/rspack.config.js`)
     ) {
       return 'Cannot convert a project with multiple rspack config files. Please consolidate them into a single rspack.config.js file.';
@@ -18,7 +18,7 @@ function hasAnotherRspackConfig(tree: Tree, projectRoot: string) {
 
 function isNestProject(project: ProjectConfiguration) {
   for (const target in project.targets) {
-    if (project.targets[target].executor === '@nx/js:node') {
+    if (project.targets?.[target].executor === '@nx/js:node') {
       return `The project ${project.name} is using the '@nx/js:node' executor. At the moment, we do not support migrating such projects.`;
     }
   }
@@ -32,11 +32,9 @@ function isNestProject(project: ProjectConfiguration) {
  * @returns A string if there is an error, otherwise undefined
  */
 export function validateProject(tree: Tree, project: ProjectConfiguration) {
-  const containsMfeExecutor = Object.keys(project.targets).some((target) => {
-    return ['@nx/rspack:module-federation-dev-server'].includes(
-      project.targets[target].executor
-    );
-  });
+  const containsMfeExecutor = Object.values(project.targets ?? {}).some(
+    (target) => target.executor === '@nx/rspack:module-federation-dev-server'
+  );
 
   if (containsMfeExecutor) {
     return `The project ${project.name} is using Module Federation. At the moment, we don't support migrating projects that use Module Federation.`;

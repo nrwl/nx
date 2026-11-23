@@ -69,7 +69,7 @@ export async function webpackInitGeneratorInternal(tree: Tree, schema: Schema) {
         'serve-static-webpack',
       ],
     },
-    schema.updatePackageScripts
+    schema.updatePackageScripts ?? false
   );
 
   let installTask: GeneratorCallback = () => {};

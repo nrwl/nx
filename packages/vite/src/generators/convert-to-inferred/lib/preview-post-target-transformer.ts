@@ -35,7 +35,10 @@ export function previewPostTargetTransformer(migrationLogs: AggregatedLog) {
 
       if (
         'defaultConfiguration' in target &&
-        !target.configurations[target.defaultConfiguration]
+        !(
+          target.defaultConfiguration &&
+          target.configurations?.[target.defaultConfiguration]
+        )
       ) {
         delete target.defaultConfiguration;
       }

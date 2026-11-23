@@ -22,7 +22,11 @@ export function waitUntilServerIsListening(port: number): Promise<void> {
       client.on('error', (err) => {
         if (
           attempts > maxAttempts ||
-          !allowedErrorCodes.includes(err['code'])
+          !(
+            'code' in err &&
+            typeof err.code === 'string' &&
+            allowedErrorCodes.includes(err.code)
+          )
         ) {
           cleanup();
           reject(err);

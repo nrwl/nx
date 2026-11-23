@@ -15,7 +15,7 @@ function isNxEnvironmentKey(x: string): boolean {
 function getClientEnvironment(deployUrl: string) {
   return Object.keys(process.env)
     .filter(isNxEnvironmentKey)
-    .reduce(
+    .reduce<Record<string, string | undefined>>(
       (env, key) => {
         env[key] = process.env[key];
         return env;

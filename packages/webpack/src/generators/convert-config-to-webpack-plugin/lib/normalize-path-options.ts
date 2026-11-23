@@ -17,6 +17,9 @@ const executorFieldsToNormalize: Array<keyof WebpackExecutorOptions> = [
   'publicPath',
 ];
 
+type ArrayItem<K extends keyof WebpackExecutorOptions> =
+  NonNullable<WebpackExecutorOptions[K]> extends Array<infer T> ? T : never;
+
 export function normalizePathOptions(
   projectRoot: string,
   options: Partial<WebpackExecutorOptions>
@@ -27,11 +30,13 @@ export function normalizePathOptions(
     ) {
       continue;
     }
-    options[key] = normalizePath(
-      projectRoot,
-      key as keyof WebpackExecutorOptions,
-      value
-    );
+    Object.assign(options, {
+      [key]: normalizePath(
+        projectRoot,
+        key as keyof WebpackExecutorOptions,
+        value
+      ),
+    });
   }
   return options;
 }
@@ -45,7 +50,7 @@ function normalizePath<K extends keyof WebpackExecutorOptions>(
 
   switch (key) {
     case 'assets':
-      return value.map((asset) => {
+      return value.map((asset: ArrayItem<'assets'>) => {
         if (typeof asset === 'string') {
           return toProjectRelativePath(asset, projectRoot);
         }
@@ -58,7 +63,7 @@ function normalizePath<K extends keyof WebpackExecutorOptions>(
 
     case 'styles':
     case 'scripts':
-      return value.map((item) => {
+      return value.map((item: ArrayItem<'styles' | 'scripts'>) => {
         if (typeof item === 'string') {
           return toProjectRelativePath(item, projectRoot);
         }
@@ -69,7 +74,7 @@ function normalizePath<K extends keyof WebpackExecutorOptions>(
       });
 
     case 'additionalEntryPoints':
-      return value.map((entry) => {
+      return value.map((entry: ArrayItem<'additionalEntryPoints'>) => {
         return {
           ...entry,
           entryPath: toProjectRelativePath(entry.entryPath, projectRoot),
@@ -77,7 +82,7 @@ function normalizePath<K extends keyof WebpackExecutorOptions>(
       });
 
     case 'fileReplacements':
-      return value.map((replacement) => {
+      return value.map((replacement: ArrayItem<'fileReplacements'>) => {
         return {
           replace: toProjectRelativePath(replacement.replace, projectRoot),
           with: toProjectRelativePath(replacement.with, projectRoot),
@@ -86,7 +91,7 @@ function normalizePath<K extends keyof WebpackExecutorOptions>(
 
     default:
       return Array.isArray(value)
-        ? value.map((item) => toProjectRelativePath(item, projectRoot))
+        ? value.map((item: string) => toProjectRelativePath(item, projectRoot))
         : toProjectRelativePath(value, projectRoot);
   }
 }

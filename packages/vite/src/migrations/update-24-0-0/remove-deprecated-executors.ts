@@ -25,7 +25,12 @@ export default function update(tree: Tree) {
         Object.values(project.targets ?? {}).map((target) => target.executor)
       );
 
-      if (executors.some((executor) => viteExecutors.includes(executor))) {
+      if (
+        executors.some(
+          (executor) =>
+            executor !== undefined && viteExecutors.includes(executor)
+        )
+      ) {
         const { convertToInferred } =
           require('../../generators/convert-to-inferred/convert-to-inferred') as typeof import('../../generators/convert-to-inferred/convert-to-inferred');
         // The callback only prints the options the converter could not carry

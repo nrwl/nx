@@ -13,7 +13,13 @@ export function sendsReadySignal(config: {
   return (
     typeof config.devServer === 'object' &&
     !!config.devServer &&
-    !!config.plugins?.some((plugin) => plugin?.[READY_SIGNAL_PLUGIN])
+    !!config.plugins?.some(
+      (plugin) =>
+        (typeof plugin === 'object' || typeof plugin === 'function') &&
+        plugin !== null &&
+        READY_SIGNAL_PLUGIN in plugin &&
+        !!plugin[READY_SIGNAL_PLUGIN]
+    )
   );
 }
 

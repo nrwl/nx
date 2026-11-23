@@ -86,6 +86,9 @@ export default async function removeDeprecatedOptions(tree: Tree) {
 
   for (const configFile of rspackConfigFiles) {
     let contents = tree.read(configFile, 'utf-8');
+    if (contents === null) {
+      continue;
+    }
     let hasChanges = false;
 
     // Check if the file contains deleteOutputPath

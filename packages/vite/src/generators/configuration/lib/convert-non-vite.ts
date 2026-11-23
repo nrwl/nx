@@ -19,9 +19,11 @@ export async function convertNonVite(
   schema: ViteConfigurationGeneratorSchema,
   projectRoot: string,
   _projectType: string,
-  targets: {
-    [targetName: string]: TargetConfiguration<any>;
-  }
+  targets:
+    | {
+        [targetName: string]: TargetConfiguration<any>;
+      }
+    | undefined
 ) {
   assertNoRemovedExecutorTargets(schema.project, targets);
 

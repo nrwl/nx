@@ -9,7 +9,7 @@ if (!require.cache) require = createRequire(__filename);
 
 export function resolveUserDefinedWebpackConfig(
   path: string,
-  tsConfig: string,
+  tsConfig: string | null,
   /** Skip require cache and return latest content */
   reload = false
 ) {
@@ -27,7 +27,7 @@ export function resolveUserDefinedWebpackConfig(
     return require(path);
   }
 
-  const maybeCustomWebpackConfig = loadTsFile(path, tsConfig);
+  const maybeCustomWebpackConfig = loadTsFile(path, tsConfig ?? undefined);
 
   // If the user provides a configuration in TS file
   // then there are 3 cases for exporing an object. The first one is:

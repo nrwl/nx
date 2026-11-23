@@ -271,7 +271,7 @@ function mergeExtendedConfig(base: Configuration, config: Configuration) {
 function mergeDefined<T extends object>(base: T, value: T): T {
   const merged = { ...base };
   for (const [key, entry] of Object.entries(value)) {
-    if (entry !== undefined) merged[key] = entry;
+    if (entry !== undefined) Object.assign(merged, { [key]: entry });
   }
   return merged;
 }
@@ -348,7 +348,7 @@ export async function waitForRspackDevServer(configPath: string) {
     if (flags.configNames.length > 0) {
       configs = flags.configNames
         .map((name) => configs.find((config) => config.name === name))
-        .filter(Boolean);
+        .filter((config) => config !== undefined);
     }
 
     // `rspack serve` starts one dev server, for the first config with devServer,

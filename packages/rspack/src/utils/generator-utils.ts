@@ -21,6 +21,10 @@ type ConfigurationWithStylePreprocessorOptions = ConfigurationSchema & {
   stylePreprocessorOptions?: { includePaths?: string[] };
 };
 
+function usesExecutor(executors: string[], executor: string | undefined) {
+  return executor !== undefined && executors.includes(executor);
+}
+
 export function findExistingTargetsInProject(
   targets: {
     [targetName: string]: TargetConfiguration;
@@ -88,7 +92,8 @@ export function findExistingTargetsInProject(
   function checkUserProvidedTarget(target: Target) {
     if (userProvidedTargets?.[target]) {
       if (
-        supportedExecutors[target].includes(
+        usesExecutor(
+          supportedExecutors[target],
           targets[userProvidedTargets[target]]?.executor
         )
       ) {
@@ -119,19 +124,21 @@ export function findExistingTargetsInProject(
     const foundTargets = output.validFoundTargetName;
     if (
       !foundTargets.build &&
-      supportedExecutors.build.includes(executorName)
+      usesExecutor(supportedExecutors.build, executorName)
     ) {
       foundTargets.build = target;
     }
     if (
       !foundTargets.serve &&
-      supportedExecutors.serve.includes(executorName)
+      usesExecutor(supportedExecutors.serve, executorName)
     ) {
       foundTargets.serve = target;
     }
 
-    output.projectContainsUnsupportedExecutor ||=
-      unsupportedExecutors.includes(executorName);
+    output.projectContainsUnsupportedExecutor ||= usesExecutor(
+      unsupportedExecutors,
+      executorName
+    );
   }
 
   return output;
@@ -158,7 +165,7 @@ export function assertNoRemovedExecutorTargets(
 ) {
   const removedTargets = Object.entries(targets ?? {})
     .filter(([, target]) =>
-      removedConvertibleExecutors.includes(target.executor)
+      usesExecutor(removedConvertibleExecutors, target.executor)
     )
     .map(([targetName, target]) => `${targetName} (${target.executor})`);
   if (removedTargets.length) {
@@ -208,7 +215,7 @@ function createBuildOptions(
     target: options.target ?? 'web',
     outputPath: joinPathFragments(
       'dist',
-      project.root === '.' ? project.name : project.root
+      project.root === '.' ? options.project : project.root
     ),
     main: determineMain(tree, options),
     tsConfig: determineTsConfig(tree, options),
@@ -379,8 +386,10 @@ export function moveAndEditIndexHtml(
     indexHtmlPath = `${projectConfig.root}/index.html`;
   }
 
-  if (tree.exists(indexHtmlPath)) {
-    const indexHtmlContent = tree.read(indexHtmlPath, 'utf8');
+  const indexHtmlContent = tree.exists(indexHtmlPath)
+    ? tree.read(indexHtmlPath, 'utf8')
+    : null;
+  if (indexHtmlContent !== null) {
     if (
       !indexHtmlContent.includes(
         `<script type="module" src="${mainPath}"></script>`
@@ -423,7 +432,7 @@ export function normalizeViteConfigFilePathWithTree(
   tree: Tree,
   projectRoot: string,
   configFile?: string
-): string {
+): string | undefined {
   return configFile && tree.exists(configFile)
     ? configFile
     : tree.exists(joinPathFragments(`${projectRoot}/rspack.config.ts`))
@@ -443,7 +452,7 @@ export function getViteConfigPathForProject(
   if (target) {
     viteConfigPath = targets?.[target]?.options?.configFile;
   } else {
-    const config = Object.values(targets).find(
+    const config = Object.values(targets ?? {}).find(
       (config) => config.executor === '@nx/rspack:build'
     );
     viteConfigPath = config?.options?.configFile;
@@ -456,7 +465,7 @@ export async function handleUnsupportedUserProvidedTargets(
   userProvidedTargetIsUnsupported: TargetFlags,
   userProvidedTargetName: UserProvidedTargetName,
   validFoundTargetName: ValidFoundTargetName,
-  framework: Framework
+  framework: Framework | undefined
 ) {
   if (userProvidedTargetIsUnsupported.build && validFoundTargetName.build) {
     await handleUnsupportedUserProvidedTargetsErrors(
@@ -480,7 +489,7 @@ export async function handleUnsupportedUserProvidedTargets(
 }
 
 async function handleUnsupportedUserProvidedTargetsErrors(
-  userProvidedTargetName: string,
+  userProvidedTargetName: string | undefined,
   validFoundTargetName: string,
   target: Target
 ) {
@@ -539,10 +548,12 @@ export function determineFrameworkAndTarget(
   tree: Tree,
   options: ConfigurationSchema,
   projectRoot: string,
-  targets: {
-    [targetName: string]: TargetConfiguration<any>;
-  }
-): { target: 'node' | 'web'; framework?: Framework } {
+  targets:
+    | {
+        [targetName: string]: TargetConfiguration<any>;
+      }
+    | undefined
+): { target?: 'node' | 'web'; framework?: Framework } {
   ensureTypescript();
 
   const { ast, query } = require('@phenomnomnominal/tsquery');
@@ -597,7 +608,11 @@ export function determineFrameworkAndTarget(
     if (!tree.exists(tsConfigPath)) {
       tsConfigPath = determineTsConfig(tree, options);
     }
-    const tsConfig = JSON.parse(tree.read(tsConfigPath).toString());
+    const tsConfigContent = tree.read(tsConfigPath);
+    if (!tsConfigContent) {
+      throw new Error(`Cannot read ${tsConfigPath}`);
+    }
+    const tsConfig = JSON.parse(tsConfigContent.toString());
     if (tsConfig?.compilerOptions?.jsx?.includes('react')) {
       return { target: 'web', framework: 'react' };
     } else {

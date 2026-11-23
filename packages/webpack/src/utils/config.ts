@@ -8,7 +8,11 @@ export const nxWebpackComposablePlugin = 'nxWebpackComposablePlugin';
 export function isNxWebpackComposablePlugin(
   a: unknown
 ): a is AsyncNxComposableWebpackPlugin {
-  return a?.[nxWebpackComposablePlugin] === true;
+  return (
+    (typeof a === 'function' || (typeof a === 'object' && a !== null)) &&
+    nxWebpackComposablePlugin in a &&
+    a[nxWebpackComposablePlugin] === true
+  );
 }
 
 export interface NxWebpackExecutionContext {

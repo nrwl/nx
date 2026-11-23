@@ -28,8 +28,12 @@ export async function* devServerExecutor(
   // Default to dev mode so builds are faster and HMR mode works better.
   (process.env as any).NODE_ENV ??= 'development';
 
+  const { projectName } = context;
+  if (!projectName) {
+    throw new Error('The dev-server executor requires a project name.');
+  }
   const { root: projectRoot, sourceRoot } =
-    context.projectsConfigurations.projects[context.projectName];
+    context.projectsConfigurations.projects[projectName];
   const executorOptions = getBuildOptions(serveOptions, context);
   const buildOptions = normalizeOptions(
     executorOptions,
@@ -52,7 +56,7 @@ export async function* devServerExecutor(
       context.taskGraph,
       context.projectGraph,
       context.root,
-      context.projectName,
+      projectName,
       'build', // should be generalized
       context.configurationName
     );

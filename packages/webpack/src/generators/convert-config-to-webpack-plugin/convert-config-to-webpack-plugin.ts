@@ -49,7 +49,12 @@ export async function convertConfigToWebpackPluginGenerator(
         }
         if (!configurationName) {
           const project = projects.get(projectName);
-          const target = project.targets[targetName];
+          const target = project?.targets?.[targetName];
+          if (!project || !target) {
+            throw new Error(
+              `Cannot find target "${targetName}" for project "${projectName}".`
+            );
+          }
 
           const hasError = validateProject(tree, project);
           if (hasError) {
@@ -79,8 +84,10 @@ export async function convertConfigToWebpackPluginGenerator(
       continue;
     }
     if (
-      Object.values(project.targets ?? {}).some((target) =>
-        buildExecutors.includes(target.executor)
+      Object.values(project.targets ?? {}).some(
+        (target) =>
+          target.executor !== undefined &&
+          buildExecutors.includes(target.executor)
       )
     ) {
       continue;

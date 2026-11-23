@@ -31,7 +31,7 @@ function projectIsRootProjectInStandaloneWorkspace(projectRoot: string) {
 function editTsConfig(
   tree: Tree,
   projectRoot: string,
-  framework: Framework,
+  framework: Framework | undefined,
   relativePathToRootTsConfig: string
 ) {
   if (framework === 'react') {
@@ -103,7 +103,7 @@ export async function configurationGenerator(
       projectContainsUnsupportedExecutor,
       userProvidedTargetIsUnsupported,
       alreadyHasNxRspackTargets,
-    } = findExistingTargetsInProject(targets, userProvidedTargetName);
+    } = findExistingTargetsInProject(targets ?? {}, userProvidedTargetName);
 
     if (alreadyHasNxRspackTargets.build || alreadyHasNxRspackTargets.serve) {
       throw new Error(

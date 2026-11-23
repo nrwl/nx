@@ -23,8 +23,8 @@ export function nxViteBuildCoordinationPlugin(
     activeBuildProcess = buildProcess;
     try {
       await new Promise<void>((res, rej) => {
-        buildProcess.stdout.pipe(process.stdout);
-        buildProcess.stderr.pipe(process.stderr);
+        buildProcess.stdout?.pipe(process.stdout);
+        buildProcess.stderr?.pipe(process.stderr);
         buildProcess.on('exit', (code, signal) => {
           // A build killed by the file watcher (new changes arrived) is not a failure.
           if (buildProcess.killed || signal || code === 0) {
@@ -97,8 +97,9 @@ export function nxViteBuildCoordinationPlugin(
         firstBuildStart = false;
         await buildChangedProjects();
         if (daemonClient.enabled()) {
-          unregisterFileWatcher = await createFileWatcher();
-          process.on('exit', () => unregisterFileWatcher());
+          const unregister = await createFileWatcher();
+          unregisterFileWatcher = unregister;
+          process.on('exit', () => unregister());
           process.on('SIGINT', () => process.exit());
         } else {
           output.warn({

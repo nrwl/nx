@@ -46,8 +46,18 @@ export function normalizeOptions(
     ? taskDetailsFromBuildTarget.configuration
     : process.env.NX_TASK_TARGET_CONFIGURATION;
 
+  if (projectName === undefined || targetName === undefined) {
+    throw new Error(
+      'Cannot determine the project and target the Nx webpack plugin runs for.'
+    );
+  }
   const projectNode = projectGraph.nodes[projectName];
-  const targetConfig = projectNode.data.targets[targetName];
+  const targetConfig = projectNode.data.targets?.[targetName];
+  if (!targetConfig) {
+    throw new Error(
+      `Cannot find target "${targetName}" for project "${projectName}".`
+    );
+  }
 
   normalizeRelativePaths(projectNode.data.root, options);
 
@@ -131,7 +141,7 @@ export function normalizeOptions(
 export function normalizeAssets(
   assets: any[],
   root: string,
-  sourceRoot: string,
+  sourceRoot: string | undefined,
   projectRoot: string,
   resolveRelativePathsToProjectRoot = true
 ): AssetGlobPattern[] {
@@ -139,6 +149,11 @@ export function normalizeAssets(
     if (typeof asset === 'string') {
       const assetPath = normalizePath(asset);
       const resolvedAssetPath = resolve(root, assetPath);
+      if (sourceRoot === undefined) {
+        throw new TypeError(
+          `Cannot resolve the ${resolvedAssetPath} asset path without a project source root.`
+        );
+      }
       const resolvedSourceRoot = resolve(root, sourceRoot);
 
       if (!resolvedAssetPath.startsWith(resolvedSourceRoot)) {
@@ -184,7 +199,7 @@ export function normalizeAssets(
 
 export function normalizeFileReplacements(
   root: string,
-  fileReplacements: FileReplacement[]
+  fileReplacements: FileReplacement[] | undefined
 ): FileReplacement[] {
   return fileReplacements
     ? fileReplacements.map((fileReplacement) => ({
@@ -200,7 +215,7 @@ function normalizeRelativePaths(
 ): void {
   for (const [fieldName, fieldValue] of Object.entries(options)) {
     if (isRelativePath(fieldValue)) {
-      options[fieldName] = join(projectRoot, fieldValue);
+      Object.assign(options, { [fieldName]: join(projectRoot, fieldValue) });
     } else if (fieldName === 'additionalEntryPoints') {
       for (let i = 0; i < fieldValue.length; i++) {
         const v = fieldValue[i];

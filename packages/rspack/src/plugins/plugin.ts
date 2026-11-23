@@ -52,6 +52,17 @@ export interface RspackPluginOptions {
   watchDepsTargetName?: string;
 }
 
+type NormalizedRspackPluginOptions = RspackPluginOptions &
+  Required<
+    Pick<
+      RspackPluginOptions,
+      | 'buildTargetName'
+      | 'serveTargetName'
+      | 'previewTargetName'
+      | 'serveStaticTargetName'
+    >
+  >;
+
 type RspackTargets = Pick<ProjectConfiguration, 'targets' | 'metadata'>;
 
 const rspackConfigGlob = '**/rspack.config.{js,ts,mjs,mts,cjs,cts}';
@@ -110,7 +121,7 @@ export const createNodesV2 = createNodes;
 
 async function createNodesInternal(
   configFilePath: string,
-  options: RspackPluginOptions,
+  options: RspackPluginOptions | undefined,
   context: CreateNodesContext,
   targetsCache: PluginCache<RspackTargets>,
   isTsSolutionSetup: boolean,
@@ -157,24 +168,23 @@ async function createNodesInternal(
   // to prevent vite/vitest files overwriting the target cache created by the other
   const hash = `${nodeHash}_${configFilePath}`;
 
-  if (!targetsCache.has(hash)) {
-    targetsCache.set(
-      hash,
-      await createRspackTargets(
-        configFilePath,
-        projectRoot,
-        normalizedOptions,
-        context,
-        isTsSolutionSetup,
-        packageManager,
-        pmc,
-        includePnpmMajorRuntimeInput,
-        includeBunInstallSettingsInputs
-      )
+  let rspackTargets = targetsCache.get(hash);
+  if (!rspackTargets) {
+    rspackTargets = await createRspackTargets(
+      configFilePath,
+      projectRoot,
+      normalizedOptions,
+      context,
+      isTsSolutionSetup,
+      packageManager,
+      pmc,
+      includePnpmMajorRuntimeInput,
+      includeBunInstallSettingsInputs
     );
+    targetsCache.set(hash, rspackTargets);
   }
 
-  const { targets, metadata } = targetsCache.get(hash);
+  const { targets, metadata } = rspackTargets;
 
   return {
     projects: {
@@ -190,7 +200,7 @@ async function createNodesInternal(
 async function createRspackTargets(
   configFilePath: string,
   projectRoot: string,
-  options: RspackPluginOptions,
+  options: NormalizedRspackPluginOptions,
   context: CreateNodesContext,
   isTsSolutionSetup: boolean,
   packageManager: PackageManager,
@@ -215,7 +225,7 @@ async function createRspackTargets(
     }
   }
 
-  const targets = {};
+  const targets: Record<string, TargetConfiguration> = {};
 
   const env: NodeJS.ProcessEnv = {};
   const isTsConfig = ['.ts', '.cts', '.mts'].includes(extname(configFilePath));
@@ -341,19 +351,27 @@ async function createRspackTargets(
   return { targets, metadata: {} };
 }
 
-function normalizeOptions(options: RspackPluginOptions): RspackPluginOptions {
+function normalizeOptions(
+  options: RspackPluginOptions | undefined
+): NormalizedRspackPluginOptions {
   options ??= {};
   options.buildTargetName ??= 'build';
   options.serveTargetName ??= 'serve';
   options.previewTargetName ??= 'preview';
   options.serveStaticTargetName ??= 'serve-static';
-  return options;
+  return {
+    ...options,
+    buildTargetName: options.buildTargetName,
+    serveTargetName: options.serveTargetName,
+    previewTargetName: options.previewTargetName,
+    serveStaticTargetName: options.serveStaticTargetName,
+  };
 }
 
 function normalizeOutputPath(
   outputPath: string | undefined,
   projectRoot: string
-): string | undefined {
+): string {
   if (!outputPath) {
     // If outputPath is undefined, use rspack's default `dist` directory.
     if (projectRoot === '.') {

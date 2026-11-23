@@ -45,7 +45,7 @@ function processPackage(
 ): void {
   let packageJson: any;
   try {
-    packageJson = JSON.parse(tree.read(packageJsonPath, 'utf-8'));
+    packageJson = JSON.parse(tree.read(packageJsonPath, 'utf-8') ?? '');
   } catch {
     return;
   }

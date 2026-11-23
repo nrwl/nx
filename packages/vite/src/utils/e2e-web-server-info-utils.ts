@@ -13,9 +13,9 @@ export async function getViteE2EWebServerInfo(
 ) {
   const nxJson = readNxJson(tree);
   let e2ePort = e2ePortOverride ?? 4200;
-  const devPort = readTargetDefaultsForTarget('dev', nxJson.targetDefaults)
+  const devPort = readTargetDefaultsForTarget('dev', nxJson?.targetDefaults)
     ?.options?.port;
-  const servePort = readTargetDefaultsForTarget('serve', nxJson.targetDefaults)
+  const servePort = readTargetDefaultsForTarget('serve', nxJson?.targetDefaults)
     ?.options?.port;
 
   if (devPort || servePort) {
@@ -48,7 +48,7 @@ export async function getReactRouterE2EWebServerInfo(
   e2ePortOverride?: number,
   e2eCIPortOverride?: number
 ) {
-  const e2ePort = e2ePortOverride ?? parseInt(process.env.PORT) ?? 4200;
+  const e2ePort = e2ePortOverride ?? parseInt(process.env.PORT ?? '') ?? 4200;
 
   return await getE2EWebServerInfo(
     tree,

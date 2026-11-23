@@ -139,12 +139,10 @@ export function applyWebConfig(
   const sassOptions = options.stylePreprocessorOptions?.sassOptions;
   const lessOptions = options.stylePreprocessorOptions?.lessOptions;
   const includePaths: string[] = [];
-  if (options?.stylePreprocessorOptions?.includePaths?.length > 0) {
-    options.stylePreprocessorOptions.includePaths.forEach(
-      (includePath: string) =>
-        includePaths.push(resolve(options.root, includePath))
-    );
-  }
+  options.stylePreprocessorOptions?.includePaths?.forEach(
+    (includePath: string) =>
+      includePaths.push(resolve(options.root, includePath))
+  );
 
   let lessPathOptions: { paths?: string[] } = {};
 
@@ -423,12 +421,13 @@ export function applyWebConfig(
         },
       };
 
+  config.resolve ??= {};
   config.resolve.mainFields = ['browser', 'module', 'main'];
 
   config.module = {
     ...(config.module ?? {}),
     rules: [
-      ...(config.module.rules ?? []),
+      ...(config.module?.rules ?? []),
       // Images: Inline small images, and emit a separate file otherwise (including SVGs).
       {
         test: /\.(avif|bmp|gif|ico|jpe?g|png|svg|webp)$/,
@@ -457,7 +456,7 @@ function getClientEnvironment() {
 
   const raw = Object.keys(process.env)
     .filter((key) => nxPublicKeyRegex.test(key))
-    .reduce((env, key) => {
+    .reduce<Record<string, string | undefined>>((env, key) => {
       env[key] = process.env[key];
       return env;
     }, {});

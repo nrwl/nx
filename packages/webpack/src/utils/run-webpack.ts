@@ -1,3 +1,4 @@
+import type { Stats } from 'webpack';
 import type { Configuration as WebpackDevServerConfiguration } from 'webpack-dev-server';
 import { Observable } from 'rxjs';
 
@@ -11,7 +12,7 @@ export function runWebpackDevServer(
 
     let baseUrl: string;
 
-    webpackCompiler.hooks.done.tap('build-webpack', (stats) => {
+    webpackCompiler.hooks.done.tap('build-webpack', (stats: Stats) => {
       subscriber.next({ stats, baseUrl });
     });
 
@@ -25,10 +26,14 @@ export function runWebpackDevServer(
       }
 
       const devServerOptions: WebpackDevServerConfiguration = server.options;
+      const { devMiddleware } = devServerOptions;
+      if (!devMiddleware) {
+        throw new Error('Expected the dev server to define devMiddleware.');
+      }
 
       baseUrl = `${server.options.https ? 'https' : 'http'}://${
         server.options.host
-      }:${server.options.port}${devServerOptions.devMiddleware.publicPath}`;
+      }:${server.options.port}${devMiddleware.publicPath}`;
     };
 
     const webpackServer = new WebpackDevServer(

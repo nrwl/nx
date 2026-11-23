@@ -49,9 +49,8 @@ export function servePostTargetTransformerFactory(
   };
 }
 
-type RspackConfigDevServerOptions = Exclude<
-  RspackOptionsNormalized['devServer'],
-  false
+type RspackConfigDevServerOptions = NonNullable<
+  Exclude<RspackOptionsNormalized['devServer'], false>
 >;
 type ExtractedOptions = {
   default: RspackConfigDevServerOptions;
@@ -65,26 +64,39 @@ async function processOptions(
   devServerOptions: ExtractedOptions;
   rspackConfigPath: string;
 }> {
+  const options = target.options;
+  if (!options) {
+    throw new Error(
+      `The "buildTarget" option is missing for project ${context.projectName}.`
+    );
+  }
   const buildTarget = parseTargetString(
-    target.options.buildTarget,
+    options.buildTarget,
     context.projectGraph
   );
   const buildConfiguration =
-    context.projectGraph.nodes[buildTarget.project].data.targets[
+    context.projectGraph.nodes[buildTarget.project].data.targets?.[
       buildTarget.target
     ];
+  if (!buildConfiguration) {
+    throw new Error(
+      `Could not find the build target ${options.buildTarget} for project ${context.projectName}.`
+    );
+  }
+  const buildConfigurationName =
+    buildTarget.configuration ?? buildConfiguration.defaultConfiguration;
   // The build executor is removed in v24; do not resolve its schema.
   const buildOptions = {
     ...buildConfiguration.options,
-    ...buildConfiguration.configurations?.[
-      buildTarget.configuration ?? buildConfiguration.defaultConfiguration
-    ],
+    ...(buildConfigurationName
+      ? buildConfiguration.configurations?.[buildConfigurationName]
+      : undefined),
   };
 
   // it must exist, we validated it in the project filter
   const rspackConfigPath = buildOptions.rspackConfig;
 
-  const defaultOptions = extractDevServerOptions(target.options, context);
+  const defaultOptions = extractDevServerOptions(options, context);
   applyDefaults(defaultOptions, buildOptions);
   const devServerOptions: ExtractedOptions = {
     default: defaultOptions,
@@ -103,7 +115,8 @@ function extractDevServerOptions(
   options: DevServerExecutorOptions,
   context: TransformerContext
 ): RspackConfigDevServerOptions {
-  const devServerOptions: RspackConfigDevServerOptions = {};
+  const devServerOptions: RspackConfigDevServerOptions &
+    Record<string, unknown> = {};
 
   for (const [key, value] of Object.entries(options)) {
     if (key === 'ssl' || key === 'sslCert' || key === 'sslKey') {
@@ -154,10 +167,10 @@ function extractDevServerOptions(
         delete options.sslKey;
       }
     } else if (key === 'buildTarget') {
-      delete options.buildTarget;
+      Reflect.deleteProperty(options, 'buildTarget');
     } else {
       devServerOptions[key] = value;
-      delete options[key];
+      Reflect.deleteProperty(options, key);
     }
   }
 
@@ -193,14 +206,14 @@ function updateRspackConfig(
   devServerOptions: ExtractedOptions,
   context: TransformerContext
 ): void {
-  let sourceFile: ts.SourceFile;
-  let rspackConfigText: string;
-
-  const updateSources = () => {
-    rspackConfigText = tree.read(rspackConfigPath, 'utf-8');
-    sourceFile = ast(rspackConfigText);
+  const readSources = () => {
+    const text = tree.read(rspackConfigPath, 'utf-8');
+    if (text === null) {
+      throw new Error(`Cannot read ${rspackConfigPath}`);
+    }
+    return { text, sourceFile: ast(text) };
   };
-  updateSources();
+  let { text: rspackConfigText, sourceFile } = readSources();
 
   // A target kept on its executor is converted again on rerun, and its options
   // are already in the config.
@@ -215,7 +228,7 @@ function updateRspackConfig(
     rspackConfigPath,
     devServerOptions
   );
-  updateSources();
+  ({ text: rspackConfigText, sourceFile } = readSources());
 
   setDevServerOptionsInRspackConfig(
     tree,

@@ -5,6 +5,8 @@ import { LicenseWebpackPlugin } from 'license-webpack-plugin';
 import type {
   Compiler,
   Configuration,
+  ExternalItem,
+  ExternalItemFunctionData,
   RspackPluginInstance,
   RspackOptionsNormalized,
   Output,
@@ -313,7 +315,12 @@ function applyNxDependentConfig(
   options.useTsconfigPaths ??= !isUsingTsSolution;
   // If the project is using ts solutions setup, the paths are not in tsconfig and we should not use the plugin's paths.
   if (options.useTsconfigPaths) {
-    plugins.push(new NxTsconfigPathsRspackPlugin({ ...options, tsConfig }));
+    plugins.push(
+      new NxTsconfigPathsRspackPlugin({
+        ...options,
+        tsConfig: tsConfig ?? undefined,
+      })
+    );
   }
 
   // Normalize typeCheckOptions from deprecated skipTypeChecking for backward compatibility
@@ -339,13 +346,14 @@ function applyNxDependentConfig(
 
   if (shouldTypeCheck) {
     const { TsCheckerRspackPlugin } = require('ts-checker-rspack-plugin');
+    const typeCheckTsConfig = requireTsConfig(tsConfig);
 
     const pluginConfig: any = {
       ...typeCheckOptions,
       typescript: {
-        configFile: path.isAbsolute(tsConfig)
-          ? tsConfig
-          : path.join(options.root, tsConfig),
+        configFile: path.isAbsolute(typeCheckTsConfig)
+          ? typeCheckTsConfig
+          : path.join(options.root, typeCheckTsConfig),
         memoryLimit: options.memoryLimit || 8192,
       },
     };
@@ -396,13 +404,13 @@ function applyNxDependentConfig(
     });
   }
 
-  config.entry ??= {};
+  const configEntry = (config.entry ??= {});
   entries.forEach((entry) => {
-    if (useNormalizedEntry) {
-      config.entry[entry.name] = { import: entry.import };
-    } else {
-      config.entry[entry.name] = entry.import;
-    }
+    Object.assign(configEntry, {
+      [entry.name]: useNormalizedEntry
+        ? { import: entry.import }
+        : entry.import,
+    });
   });
 
   if (options.progress) {
@@ -451,14 +459,19 @@ function applyNxDependentConfig(
     );
   }
   if (options.generatePackageJson && executorContext) {
-    plugins.push(new GeneratePackageJsonPlugin({ ...options, tsConfig }));
+    plugins.push(
+      new GeneratePackageJsonPlugin({
+        ...options,
+        tsConfig: requireTsConfig(tsConfig),
+      })
+    );
   }
 
   if (options.statsJson) {
     plugins.push(new StatsJsonPlugin());
   }
 
-  const externals = [];
+  const externals: ExternalItem[] = [];
   if (
     (options.target === 'node' || options.target === 'async-node') &&
     options.externalDependencies === 'all'
@@ -480,8 +493,15 @@ function applyNxDependentConfig(
       nodeExternals({ modulesDir, allowlist: nonBuildableWorkspaceLibs })
     );
   } else if (Array.isArray(options.externalDependencies)) {
-    externals.push(function (ctx, callback: Function) {
-      if (options.externalDependencies.includes(ctx.request)) {
+    const externalDependencies = options.externalDependencies;
+    externals.push(function (
+      ctx: ExternalItemFunctionData,
+      callback: Function
+    ) {
+      if (
+        ctx.request !== undefined &&
+        externalDependencies.includes(ctx.request)
+      ) {
         // not bundled
         return callback(null, `commonjs ${ctx.request}`);
       }
@@ -621,4 +641,13 @@ function readProjectPackageName(
     return undefined;
   }
   return readJsonFile(packageJsonPath).name;
+}
+
+function requireTsConfig(tsConfig: string | null): string {
+  if (tsConfig === null) {
+    throw new Error(
+      `Missing "tsConfig" option. Set this option in your Nx rspack plugin.`
+    );
+  }
+  return tsConfig;
 }

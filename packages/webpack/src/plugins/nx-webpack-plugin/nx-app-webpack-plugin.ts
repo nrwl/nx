@@ -17,7 +17,7 @@ import { READY_SIGNAL_PLUGIN } from '../../utils/dev-server-ready-signal';
  * Web-only features, such as stylesheets and images, are only supported when `target` is 'web' or 'webworker'.
  */
 export class NxAppWebpackPlugin {
-  private readonly options: NormalizedNxAppWebpackPluginOptions;
+  private readonly options: NormalizedNxAppWebpackPluginOptions | undefined;
   readonly [READY_SIGNAL_PLUGIN] = true;
 
   constructor(options: NxAppWebpackPluginOptions = {}) {
@@ -37,36 +37,45 @@ export class NxAppWebpackPlugin {
       require('../../utils/dev-server-ready-signal') as typeof import('../../utils/dev-server-ready-signal');
     applyDevServerReadySignal(compiler);
 
+    const { options } = this;
+    if (!options) {
+      throw new Error(
+        'The plugin options were not normalized because the plugin was created during project graph creation.'
+      );
+    }
+
     // Defaults to 'web' if not specified to match Webpack's default.
-    const target = this.options.target ?? compiler.options.target ?? 'web';
-    this.options.outputPath ??= compiler.options.output?.path;
+    const target = options.target ?? compiler.options.target ?? 'web';
+    options.outputPath ??= compiler.options.output?.path;
     if (typeof target === 'string') {
-      this.options.target = target;
+      options.target = target;
     }
     // Cypress supplies its own `main` entry and index.html, and license
     // extraction fails with ENOENT for buildable libraries under component
     // testing.
     if (process.env.NX_CYPRESS_COMPONENT_TEST === 'true') {
-      this.options.main = undefined;
-      this.options.generateIndexHtml = false;
-      this.options.extractLicenses = false;
+      options.main = undefined;
+      options.generateIndexHtml = false;
+      options.extractLicenses = false;
     }
 
-    applyBaseConfig(this.options, compiler.options, {
+    applyBaseConfig(options, compiler.options, {
       useNormalizedEntry: true,
     });
-    compiler.context = compiler.options.context;
+    if (compiler.options.context !== undefined) {
+      compiler.context = compiler.options.context;
+    }
 
     if (compiler.options.target) {
-      this.options.target = compiler.options.target;
+      options.target = compiler.options.target;
     }
 
     if (
-      this.options.target === 'web' ||
-      this.options.target === 'webworker' ||
-      this.options.ssr
+      options.target === 'web' ||
+      options.target === 'webworker' ||
+      options.ssr
     ) {
-      applyWebConfig(this.options, compiler.options, {
+      applyWebConfig(options, compiler.options, {
         useNormalizedEntry: true,
       });
     }

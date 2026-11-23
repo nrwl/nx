@@ -30,7 +30,7 @@ export function toPropertyAssignment(
     return ts.factory.createPropertyAssignment(
       ts.factory.createStringLiteral(key),
       ts.factory.createObjectLiteralExpression(
-        Object.entries(value).map(([key, value]) =>
+        Object.entries(toObject(value)).map(([key, value]) =>
           toPropertyAssignment(key, value)
         )
       )
@@ -51,7 +51,7 @@ export function toExpression(value: unknown): ts.Expression {
     );
   } else {
     return ts.factory.createObjectLiteralExpression(
-      Object.entries(value).map(([key, value]) =>
+      Object.entries(toObject(value)).map(([key, value]) =>
         toPropertyAssignment(key, value)
       )
     );
@@ -81,4 +81,11 @@ export function hasMigratedConfigValues(
           )
       )
   );
+}
+
+function toObject(value: unknown): object {
+  if (value === null || value === undefined) {
+    throw new TypeError('Cannot convert undefined or null to object');
+  }
+  return Object(value);
 }

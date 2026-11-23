@@ -49,8 +49,11 @@ export async function useLegacyNxPlugin(
 
   const projectGraph = readCachedProjectGraph();
   const projectName = process.env.NX_TASK_TARGET_PROJECT;
-  const project = projectGraph.nodes[projectName];
   const targetName = process.env.NX_TASK_TARGET_TARGET;
+  if (projectName === undefined || targetName === undefined) {
+    throw new Error('useLegacyNxPlugin must run inside an Nx task.');
+  }
+  const project = projectGraph.nodes[projectName];
 
   const context: ExecutorContext = {
     cwd: process.cwd(),
@@ -60,7 +63,7 @@ export async function useLegacyNxPlugin(
     projectsConfigurations:
       readProjectsConfigurationFromProjectGraph(projectGraph),
     nxJsonConfiguration: readNxJson(workspaceRoot),
-    target: project.data.targets[targetName],
+    target: project.data.targets?.[targetName],
     targetName: targetName,
     projectName: projectName,
   };

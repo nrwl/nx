@@ -58,9 +58,9 @@ function getBrowsers(
     .map((entry) =>
       typeof entry === 'string' ? entry.match(/^browserslist(?::(.+))?$/) : null
     )
-    .filter(Boolean)
+    .filter((match) => match !== null)
     .map((match) => loadBrowserslist(match[1]?.trim(), projectRoot))
-    .filter(Boolean);
+    .filter((list) => list !== undefined);
   return lists.length ? lists.flat() : undefined;
 }
 
@@ -83,7 +83,14 @@ function loadBrowserslist(
     try {
       return browserslist(rest, { path: projectRoot });
     } catch (error) {
-      if (!error?.browserslist) {
+      if (
+        !(
+          typeof error === 'object' &&
+          error !== null &&
+          'browserslist' in error &&
+          error.browserslist
+        )
+      ) {
         throw error;
       }
       return browserslist(undefined, { env: rest, path: projectRoot });
@@ -143,7 +150,7 @@ export function getUnsupportedEnvironmentFeatures(
   });
   config.applyRspackOptionsDefaults(options);
   return Object.fromEntries(
-    Object.entries(options.output.environment).filter(
+    Object.entries(options.output.environment ?? {}).filter(
       ([, supported]) => supported === false
     )
   ) as Record<string, false>;

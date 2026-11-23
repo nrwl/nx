@@ -37,6 +37,7 @@ export default async function addReadySignalPlugin(tree: Tree) {
       );
       if (!tree.exists(configPath)) continue;
       const content = tree.read(configPath, 'utf-8');
+      if (content === null) continue;
       if (
         content.includes('nx-ready-signal') ||
         content.includes('nxReadySignal')

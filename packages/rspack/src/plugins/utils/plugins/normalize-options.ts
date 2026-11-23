@@ -36,8 +36,18 @@ export function normalizeOptions(
     ? taskDetailsFromBuildTarget.configuration
     : process.env.NX_TASK_TARGET_CONFIGURATION;
 
+  if (!projectName || !targetName) {
+    throw new Error(
+      'Could not determine the project and target being built. Run this build through Nx.'
+    );
+  }
   const projectNode = projectGraph.nodes[projectName];
-  const targetConfig = projectNode.data.targets[targetName];
+  const targetConfig = projectNode.data.targets?.[targetName];
+  if (!targetConfig) {
+    throw new Error(
+      `Could not find target "${targetName}" in project "${projectName}".`
+    );
+  }
 
   normalizeRelativePaths(projectNode.data.root, options);
 
@@ -222,7 +232,7 @@ export function normalizeAssets(
 
 export function normalizeFileReplacements(
   root: string,
-  fileReplacements: FileReplacement[]
+  fileReplacements: FileReplacement[] | undefined
 ): FileReplacement[] {
   return fileReplacements
     ? fileReplacements.map((fileReplacement) => ({
@@ -238,7 +248,7 @@ function normalizeRelativePaths(
 ): void {
   for (const [fieldName, fieldValue] of Object.entries(options)) {
     if (isRelativePath(fieldValue)) {
-      options[fieldName] = join(projectRoot, fieldValue);
+      Object.assign(options, { [fieldName]: join(projectRoot, fieldValue) });
     } else if (fieldName === 'additionalEntryPoints') {
       for (let i = 0; i < fieldValue.length; i++) {
         const v = fieldValue[i];

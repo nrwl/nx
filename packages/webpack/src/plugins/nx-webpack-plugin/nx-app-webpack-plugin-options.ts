@@ -278,9 +278,21 @@ export interface NormalizedNxAppWebpackPluginOptions extends NxAppWebpackPluginO
   root: string;
   projectRoot: string;
   sourceRoot: string;
-  configurationName: string;
+  configurationName?: string;
   targetName: string;
   projectGraph: ProjectGraph;
   outputFileName: string;
   assets: AssetGlobPattern[];
 }
+
+/** `applyBaseConfig`/`applyWebConfig` also run outside a task, e.g. from the Storybook preset. */
+export type ApplyConfigOptions = Omit<
+  NormalizedNxAppWebpackPluginOptions,
+  'projectName' | 'targetName' | 'projectGraph'
+> &
+  Partial<
+    Pick<
+      NormalizedNxAppWebpackPluginOptions,
+      'projectName' | 'targetName' | 'projectGraph'
+    >
+  >;

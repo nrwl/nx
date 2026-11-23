@@ -19,7 +19,7 @@ import { loadRspackCore } from '../../utils/load-rspack-core';
  * Web-only features, such as stylesheets and images, are only supported when `target` runs in a browser, such as `web`, `webworker` or `browserslist`.
  */
 export class NxAppRspackPlugin {
-  private readonly options: NormalizedNxAppRspackPluginOptions;
+  private readonly options: NormalizedNxAppRspackPluginOptions | undefined;
   readonly [READY_SIGNAL_PLUGIN] = true;
 
   constructor(options: NxAppRspackPluginOptions = {}) {
@@ -34,34 +34,45 @@ export class NxAppRspackPlugin {
       require('../../utils/dev-server-ready-signal') as typeof import('../../utils/dev-server-ready-signal');
     applyDevServerReadySignal(compiler);
 
-    // Default's to web
-    const target = this.options.target ?? compiler.options.target;
-    this.options.outputPath ??= compiler.options.output?.path;
-    if (typeof target === 'string') {
-      this.options.target = target;
+    const { options } = this;
+    if (!options) {
+      throw new Error(
+        'The plugin options were not normalized because the plugin was created during project graph creation.'
+      );
     }
 
+    // Default's to web
+    const target = options.target ?? compiler.options.target;
+    options.outputPath ??= compiler.options.output?.path;
+    if (typeof target === 'string') {
+      options.target = target;
+    }
+
+    const entry = compiler.options.entry;
     if (
-      compiler.options.entry &&
-      compiler.options.entry['main'] &&
-      typeof compiler.options.entry['main'] === 'object' &&
-      Object.keys(compiler.options.entry['main']).length === 0
+      entry &&
+      typeof entry !== 'function' &&
+      entry['main'] &&
+      typeof entry['main'] === 'object' &&
+      Object.keys(entry['main']).length === 0
     ) {
       compiler.options.entry = {};
     }
 
-    applyBaseConfig(this.options, compiler.options, {
+    applyBaseConfig(options, compiler.options, {
       useNormalizedEntry: true,
       compiler,
     });
-    compiler.context = compiler.options.context;
-
-    if (compiler.options.target) {
-      this.options.target = compiler.options.target;
+    if (compiler.options.context !== undefined) {
+      compiler.context = compiler.options.context;
     }
 
-    if (isBrowserTarget(compiler, this.options.target) || this.options.ssr) {
-      applyWebConfig(this.options, compiler.options, {
+    if (compiler.options.target) {
+      options.target = compiler.options.target;
+    }
+
+    if (isBrowserTarget(compiler, options.target) || options.ssr) {
+      applyWebConfig(options, compiler.options, {
         useNormalizedEntry: true,
         compiler,
       });
@@ -70,7 +81,10 @@ export class NxAppRspackPlugin {
 }
 
 // Let rspack resolve the platform so `browserslist` targets count by the browsers they list.
-function isBrowserTarget(compiler: Compiler, target: string | string[]) {
+function isBrowserTarget(
+  compiler: Compiler,
+  target: string | string[] | undefined
+) {
   const { config } = loadRspackCore(compiler);
   const options = config.getNormalizedRspackOptions({
     context: compiler.options.context,

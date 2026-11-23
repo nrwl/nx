@@ -1,10 +1,11 @@
 import * as path from 'path';
+import type { LoaderContext } from 'webpack';
 import autoprefixer = require('autoprefixer');
 import postcssImports = require('postcss-import');
 
 import { getCSSModuleLocalIdent } from '../../../utils/get-css-module-local-ident';
 import { getOutputHashFormat } from '../../../utils/hash-format';
-import { NormalizedNxAppWebpackPluginOptions } from '../nx-app-webpack-plugin-options';
+import { ApplyConfigOptions } from '../nx-app-webpack-plugin-options';
 import { PostcssCliResources } from '../../../utils/webpack/plugins/postcss-cli-resources';
 
 interface PostcssOptions {
@@ -14,7 +15,7 @@ interface PostcssOptions {
 }
 
 export function getCommonLoadersForCssModules(
-  options: NormalizedNxAppWebpackPluginOptions,
+  options: ApplyConfigOptions,
   includePaths: string[]
 ) {
   const MiniCssExtractPlugin =
@@ -32,7 +33,12 @@ export function getCommonLoadersForCssModules(
       options: {
         modules: {
           mode: 'local',
-          getLocalIdent: (ctx, localIdentName, localName, loaderOptions) =>
+          getLocalIdent: (
+            ctx: LoaderContext<unknown>,
+            localIdentName: string,
+            localName: string,
+            loaderOptions: { context?: string; regExp?: string | RegExp }
+          ) =>
             getCSSModuleLocalIdent(
               ctx,
               localIdentName,
@@ -63,7 +69,7 @@ export function getCommonLoadersForCssModules(
 }
 
 export function getCommonLoadersForGlobalCss(
-  options: NormalizedNxAppWebpackPluginOptions,
+  options: ApplyConfigOptions,
   includePaths: string[]
 ) {
   const MiniCssExtractPlugin =
@@ -89,7 +95,7 @@ export function getCommonLoadersForGlobalCss(
 }
 
 export function getCommonLoadersForGlobalStyle(
-  options: NormalizedNxAppWebpackPluginOptions,
+  options: ApplyConfigOptions,
   includePaths: string[]
 ) {
   const MiniCssExtractPlugin =
@@ -116,7 +122,7 @@ export function getCommonLoadersForGlobalStyle(
 }
 
 function postcssOptionsCreator(
-  options: NormalizedNxAppWebpackPluginOptions,
+  options: ApplyConfigOptions,
   {
     includePaths,
     forCssModules = false,

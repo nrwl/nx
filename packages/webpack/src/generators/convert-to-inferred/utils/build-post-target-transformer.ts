@@ -6,7 +6,10 @@ import {
 import { ast, query } from '@phenomnomnominal/tsquery';
 import * as ts from 'typescript';
 import type { WebpackExecutorOptions } from '../../../executors/webpack/schema';
-import type { NxAppWebpackPluginOptions } from '../../../plugins/nx-webpack-plugin/nx-app-webpack-plugin-options';
+import type {
+  AdditionalEntryPoint,
+  NxAppWebpackPluginOptions,
+} from '../../../plugins/nx-webpack-plugin/nx-app-webpack-plugin-options';
 import { hasMigratedConfigValues, toPropertyAssignment } from './ast';
 import type { MigrationContext, TransformerContext } from './types';
 
@@ -67,11 +70,17 @@ function processOptions(
   pluginOptions: ExtractedOptions;
   webpackConfigPath: string;
 } {
-  const webpackConfigPath = target.options.webpackConfig;
-  delete target.options.webpackConfig;
+  const options = target.options;
+  const webpackConfigPath = options?.webpackConfig;
+  if (!options || !webpackConfigPath) {
+    throw new Error(
+      `The "webpackConfig" option is missing for project ${context.projectName}.`
+    );
+  }
+  delete options.webpackConfig;
 
   const pluginOptions: ExtractedOptions = {
-    default: extractPluginOptions(target.options, context),
+    default: extractPluginOptions(options, context),
   };
 
   if (target.configurations && Object.keys(target.configurations).length) {
@@ -102,12 +111,12 @@ function extractPluginOptions(
   context: TransformerContext,
   configName?: string
 ): NxAppWebpackPluginOptions {
-  const pluginOptions: NxAppWebpackPluginOptions = {};
+  const pluginOptions: NxAppWebpackPluginOptions & Record<string, unknown> = {};
 
   for (const [key, value] of Object.entries(options)) {
     if (pathOptions.has(key)) {
       pluginOptions[key] = toProjectRelativePath(value, context.projectRoot);
-      delete options[key];
+      Reflect.deleteProperty(options, key);
     } else if (assetsOptions.has(key)) {
       pluginOptions[key] = value.map((asset: string | { input: string }) => {
         if (typeof asset === 'string') {
@@ -117,7 +126,7 @@ function extractPluginOptions(
         asset.input = toProjectRelativePath(asset.input, context.projectRoot);
         return asset;
       });
-      delete options[key];
+      Reflect.deleteProperty(options, key);
     } else if (key === 'fileReplacements') {
       pluginOptions.fileReplacements = value.map(
         (replacement: { replace: string; with: string }) => ({
@@ -130,13 +139,15 @@ function extractPluginOptions(
       );
       delete options.fileReplacements;
     } else if (key === 'additionalEntryPoints') {
-      pluginOptions.additionalEntryPoints = value.map((entryPoint) => {
-        entryPoint.entryPath = toProjectRelativePath(
-          entryPoint.entryPath,
-          context.projectRoot
-        );
-        return entryPoint;
-      });
+      pluginOptions.additionalEntryPoints = value.map(
+        (entryPoint: AdditionalEntryPoint) => {
+          entryPoint.entryPath = toProjectRelativePath(
+            entryPoint.entryPath,
+            context.projectRoot
+          );
+          return entryPoint;
+        }
+      );
       delete options.additionalEntryPoints;
     } else if (key === 'memoryLimit') {
       pluginOptions.memoryLimit = value;
@@ -157,7 +168,7 @@ function extractPluginOptions(
       delete options.standardWebpackConfigFunction;
     } else {
       pluginOptions[key] = value;
-      delete options[key];
+      Reflect.deleteProperty(options, key);
     }
   }
 
@@ -169,14 +180,14 @@ function updateWebpackConfig(
   webpackConfig: string,
   pluginOptions: ExtractedOptions
 ): void {
-  let sourceFile: ts.SourceFile;
-  let webpackConfigText: string;
-
-  const updateSources = () => {
-    webpackConfigText = tree.read(webpackConfig, 'utf-8');
-    sourceFile = ast(webpackConfigText);
+  const readSources = () => {
+    const text = tree.read(webpackConfig, 'utf-8');
+    if (text === null) {
+      throw new Error(`Cannot read ${webpackConfig}`);
+    }
+    return { text, sourceFile: ast(text) };
   };
-  updateSources();
+  let { text: webpackConfigText, sourceFile } = readSources();
 
   // A target kept on its executor is converted again on rerun, and its options
   // are already in the config.
@@ -191,7 +202,7 @@ function updateWebpackConfig(
     webpackConfig,
     pluginOptions
   );
-  updateSources();
+  ({ text: webpackConfigText, sourceFile } = readSources());
 
   setOptionsInNxWebpackPlugin(
     tree,
@@ -199,7 +210,7 @@ function updateWebpackConfig(
     sourceFile,
     webpackConfig
   );
-  updateSources();
+  ({ text: webpackConfigText, sourceFile } = readSources());
 
   setOptionsInLegacyNxPlugin(
     tree,
@@ -423,7 +434,7 @@ function getMemoryLimitFromServeTarget(
 ): number | undefined {
   const { targets } = context.projectGraph.nodes[context.projectName].data;
 
-  const serveTarget = Object.values(targets).find(
+  const serveTarget = Object.values(targets ?? {}).find(
     (target) =>
       target.executor === '@nx/webpack:dev-server' ||
       target.executor === '@nrwl/web:dev-server'

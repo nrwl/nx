@@ -1,6 +1,6 @@
 import { interpolateName } from 'loader-utils';
 import * as path from 'path';
-import type { Declaration } from 'postcss';
+import type { Declaration, Root } from 'postcss';
 import type { LoaderContext } from 'webpack';
 
 function wrapUrl(url: string): string {
@@ -31,14 +31,14 @@ export interface PostcssCliResourcesOptions {
   rebaseRootRelative?: boolean;
   filename: string;
   loader: LoaderContext<unknown>;
-  publicPath: string;
+  publicPath?: string;
 }
 
 async function resolve(
   file: string,
   base: string,
-  resolver: (file: string, base: string) => Promise<boolean | string>
-): Promise<boolean | string> {
+  resolver: (file: string, base: string) => Promise<string | false | undefined>
+): Promise<string | false | undefined> {
   try {
     return await resolver(`./${file}`, base);
   } catch {
@@ -118,7 +118,7 @@ export function PostcssCliResources(options: PostcssCliResourcesOptions) {
       ({ hash, search } = new URL(`file:///dummy${urlSuffix}`));
     }
     const resolver = (file: string, base: string) =>
-      new Promise<boolean | string>((resolve, reject) => {
+      new Promise<string | false | undefined>((resolve, reject) => {
         loader.resolve(base, file, (err, result) => {
           if (err) {
             reject(err);
@@ -128,9 +128,9 @@ export function PostcssCliResources(options: PostcssCliResourcesOptions) {
         });
       });
     const result = await resolve(resolveRequest, context, resolver);
-    return new Promise<boolean | string>((resolve, reject) => {
-      loader.fs.readFile(result as string, (err: Error, content: Buffer) => {
-        if (err) {
+    return new Promise<string>((resolve, reject) => {
+      loader.fs.readFile(result as string, (err, content) => {
+        if (err || content === undefined) {
           reject(err);
           return;
         }
@@ -160,7 +160,7 @@ export function PostcssCliResources(options: PostcssCliResourcesOptions) {
   };
   return {
     postcssPlugin: 'postcss-cli-resources',
-    Once(root) {
+    Once(root: Root) {
       const urlDeclarations: Array<Declaration> = [];
       /**
        * TODO: Explore if this can be rewritten using the new `Declaration()`
@@ -193,7 +193,11 @@ export function PostcssCliResources(options: PostcssCliResourcesOptions) {
             try {
               processedUrl = await process(originalUrl, context, resourceCache);
             } catch (err) {
-              loader.emitError(decl.error(err.message, { word: originalUrl }));
+              loader.emitError(
+                decl.error(err instanceof Error ? err.message : String(err), {
+                  word: originalUrl,
+                })
+              );
               continue;
             }
             if (lastIndex < match.index) {

@@ -278,7 +278,7 @@ export interface NormalizedNxAppRspackPluginOptions extends NxAppRspackPluginOpt
   root: string;
   projectRoot: string;
   sourceRoot: string;
-  configurationName: string;
+  configurationName?: string;
   targetName: string;
   projectGraph: ProjectGraph;
   outputFileName: string;

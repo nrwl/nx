@@ -21,9 +21,9 @@ export type TargetFlags = Partial<Record<Target, boolean>>;
 export type UserProvidedTargetName = Partial<Record<Target, string>>;
 export type ValidFoundTargetName = Partial<Record<Target, string>>;
 
-export function findExistingJsBuildTargetInProject(targets: {
-  [targetName: string]: TargetConfiguration;
-}): {
+export function findExistingJsBuildTargetInProject(
+  targets: { [targetName: string]: TargetConfiguration } | undefined
+): {
   supported?: string;
   unsupported?: string;
 } {
@@ -69,6 +69,9 @@ export function findExistingJsBuildTargetInProject(targets: {
   // for build since this is the one we will be converting
   for (const target in targets) {
     const executorName = targets[target].executor;
+    if (!executorName) {
+      continue;
+    }
     if (supportedExecutors.build.includes(executorName)) {
       output.supported = target;
     } else if (unsupportedExecutors.includes(executorName)) {
@@ -94,8 +97,10 @@ export function assertNoRemovedExecutorTargets(
   targets: Record<string, TargetConfiguration> | undefined
 ) {
   const removedTargets = Object.entries(targets ?? {})
-    .filter(([, target]) =>
-      removedConvertibleExecutors.includes(target.executor)
+    .filter(
+      ([, target]) =>
+        !!target.executor &&
+        removedConvertibleExecutors.includes(target.executor)
     )
     .map(([targetName, target]) => `${targetName} (${target.executor})`);
   if (removedTargets.length) {
@@ -114,10 +119,16 @@ export function editTsConfig(
   let tsconfigPath = joinPathFragments(projectConfig.root, 'tsconfig.json');
   const isTsSolutionSetup = isUsingTsSolutionSetup(tree);
   if (isTsSolutionSetup) {
-    tsconfigPath = [
+    const solutionTsconfigPath = [
       joinPathFragments(projectConfig.root, 'tsconfig.app.json'),
       joinPathFragments(projectConfig.root, 'tsconfig.lib.json'),
     ].find((p) => tree.exists(p));
+    if (!solutionTsconfigPath) {
+      throw new Error(
+        `Cannot find a tsconfig.app.json or tsconfig.lib.json file in ${projectConfig.root}.`
+      );
+    }
+    tsconfigPath = solutionTsconfigPath;
   }
   const config = readJson(tree, tsconfigPath);
 
@@ -191,7 +202,7 @@ export function moveAndEditIndexHtml(
   }
 
   if (tree.exists(indexHtmlPath)) {
-    const indexHtmlContent = tree.read(indexHtmlPath, 'utf8');
+    const indexHtmlContent = tree.read(indexHtmlPath, 'utf8') ?? '';
     if (
       !indexHtmlContent.includes(
         `<script type='module' src='${mainPath}'></script>`
@@ -475,7 +486,7 @@ export function normalizeViteConfigFilePathWithTree(
   tree: Tree,
   projectRoot: string,
   configFile?: string
-): string {
+): string | undefined {
   return configFile && tree.exists(configFile)
     ? configFile
     : tree.exists(joinPathFragments(`${projectRoot}/vite.config.mts`))
@@ -534,7 +545,7 @@ export async function handleUnsupportedUserProvidedTargets(
 }
 
 async function handleUnsupportedUserProvidedTargetsErrors(
-  userProvidedTargetName: string,
+  userProvidedTargetName: string | undefined,
   validFoundTargetName: string,
   target: Target,
   executor: 'build' | 'dev-server' | 'test'
