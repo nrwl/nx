@@ -470,7 +470,7 @@ describe('Cypress Component Testing Configuration', () => {
         const { defineConfig } = require('cypress');
 
         module.exports = defineConfig({
-          component: nxComponentTestingPreset(__filename, {"buildTarget":"something:build"})
+          component: nxComponentTestingPreset(__filename, { "buildTarget": "something:build" })
         });
         "
       `);
@@ -522,7 +522,7 @@ describe('Cypress Component Testing Configuration', () => {
     // No explicit target carries `devServerTarget` any more, so the preset
     // call receives the build target directly.
     expect(config).toContain(
-      '...nxComponentTestingPreset(__filename, {"buildTarget":"something:build"})'
+      '...nxComponentTestingPreset(__filename, { "buildTarget": "something:build" })'
     );
     expect(config).toContain('justInTimeCompile: false');
   });
@@ -960,7 +960,6 @@ describe('Cypress Component Testing Configuration', () => {
           namespace Cypress {
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
             interface Chainable<Subject> {
-              
               mount: typeof mount;
             }
           }
@@ -1029,7 +1028,6 @@ describe('Cypress Component Testing Configuration', () => {
           namespace Cypress {
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
             interface Chainable<Subject> {
-              
               mount: typeof mount;
             }
           }

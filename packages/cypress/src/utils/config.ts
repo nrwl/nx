@@ -218,9 +218,12 @@ export async function addDefaultCTConfig(
       }
 
       if (Object.keys(options).length) {
-        configValue = `nxComponentTestingPreset(${pathToConfig}, ${JSON.stringify(
-          options
-        )})`;
+        // Strings escape their newlines, so this only joins JSON.stringify's own lines.
+        const inlineOptions = JSON.stringify(options, null, 1).replace(
+          /\n */g,
+          ' '
+        );
+        configValue = `nxComponentTestingPreset(${pathToConfig}, ${inlineOptions})`;
       }
     }
 
@@ -303,13 +306,16 @@ export async function addMountDefinition(cmpCommandFileContents: string) {
     cmpCommandFileContents,
     'InterfaceDeclaration',
     (node: InterfaceDeclaration) => {
+      const members = [
+        ...node.members.map((m) => m.getText()),
+        'mount: typeof mount;',
+      ];
       return `interface ${node.name.getText()}${
         node.typeParameters
           ? `<${node.typeParameters.map((p) => p.getText()).join(', ')}>`
           : ''
       } {
-      ${node.members.map((m) => m.getText()).join('\n      ')}
-      mount: typeof mount;
+      ${members.join('\n      ')}
     }`;
     }
   );
