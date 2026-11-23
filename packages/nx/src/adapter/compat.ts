@@ -92,9 +92,12 @@ export const allowedWorkspaceExtensions = [
 ] as const;
 
 if (!patched) {
-  Module.prototype.require = function () {
-    const result = originalRequire.apply(this, arguments);
-    if (arguments[0].startsWith('@angular-devkit/core')) {
+  Module.prototype.require = function (
+    this: NodeJS.Module,
+    ...args: Parameters<NodeRequire>
+  ) {
+    const result = originalRequire.apply(this, args);
+    if (args[0].startsWith('@angular-devkit/core')) {
       const ngCoreWorkspace = originalRequire.apply(this, [
         `@angular-devkit/core/src/workspace/core`,
       ]);
@@ -125,6 +128,7 @@ if (!patched) {
 }
 
 function mockReadWorkspace(
+  this: void,
   ngCoreWorkspace: typeof import('@angular-devkit/core/src/workspace/core')
 ) {
   mockMember(
@@ -143,6 +147,7 @@ function mockReadWorkspace(
  * NOTE: We hide warnings that would be logged during this process.
  */
 function mockReadJsonWorkspace(
+  this: void,
   readJsonUtils: typeof import('@angular-devkit/core/src/workspace/json/reader')
 ) {
   mockMember(
@@ -183,7 +188,10 @@ function mockReadJsonWorkspace(
           'angular.json', // path name, doesn't matter
           {
             // second arg is a host, only method used is readFile
-            readFile: () => JSON.stringify(workspaceConfiguration),
+            readFile: async () => JSON.stringify(workspaceConfiguration),
+            writeFile: async () => {},
+            isDirectory: async () => false,
+            isFile: async () => false,
           },
           modifiedOptions,
         ]);

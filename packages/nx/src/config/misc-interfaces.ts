@@ -18,7 +18,7 @@ export type GeneratorCallback = () => void | Promise<void>;
  * A function that schedules updates to the filesystem to be done atomically
  */
 export type Generator<T = unknown> = (
-  tree,
+  tree: Tree,
   schema: T
 ) => void | GeneratorCallback | Promise<void | GeneratorCallback>;
 

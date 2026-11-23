@@ -65,8 +65,8 @@ function resolveTargetInfoData(t: ResolvedTarget) {
     graph,
     nxJson,
     sourceMaps,
+    targetConfig,
   } = t;
-  const targetConfig = node.data.targets[targetName];
 
   const allTargetNames = new Set<string>();
   for (const n of Object.values(graph.nodes)) {
@@ -172,7 +172,11 @@ function resolveTargetInfoData(t: ResolvedTarget) {
   };
 }
 
-function withEffectiveTimeout(readyWhen: ReadyWhen | null): ReadyWhen | null {
+type ResolvedReadyWhen = ReadyWhen & { timeout: number };
+
+function withEffectiveTimeout(
+  readyWhen: ReadyWhen | null
+): ResolvedReadyWhen | null {
   if (readyWhen === null || typeof readyWhen !== 'object') return readyWhen;
   return { ...readyWhen, timeout: readyWhen.timeout ?? DEFAULT_READY_TIMEOUT };
 }
@@ -361,7 +365,8 @@ function expandInputsForDisplay(
   node: ProjectGraph['nodes'][string],
   nxJson: NxJsonConfiguration
 ): ExpandedInput[] {
-  const namedInputs = getNamedInputs(nxJson, node);
+  const namedInputs: Record<string, (InputDefinition | string)[]> =
+    getNamedInputs(nxJson, node);
   const result: ExpandedInput[] = [];
 
   for (let i = 0; i < inputs.length; i++) {
@@ -423,7 +428,7 @@ function extractTargetSourceMap(
 
 // ── Render ──────────────────────────────────────────────────────────
 
-function describeReadyWhen(readyWhen: ReadyWhen | null): string {
+function describeReadyWhen(readyWhen: ResolvedReadyWhen | null): string {
   if (readyWhen === null) return 'off (null)';
   if (typeof readyWhen !== 'object') return JSON.stringify(readyWhen);
   const timing = [`timeout ${formatDuration(readyWhen.timeout)}`];

@@ -88,17 +88,19 @@ function waitForSignal(
   return new Promise<Readiness>((resolve, reject) => {
     let unsubscribe = () => {};
     let settled = false;
-    const settle = (error: Error | null, readiness?: Readiness) => {
+    const settle = (outcome: () => void) => {
       if (settled) return;
       settled = true;
       clearTimeout(timer);
       unsubscribe();
       context.signal.removeEventListener('abort', onAbort);
-      error ? reject(error) : resolve(readiness);
+      outcome();
     };
-    const onAbort = () => settle(notReadyError(context.taskId, 'exited'));
+    const onAbort = () =>
+      settle(() => reject(notReadyError(context.taskId, 'exited')));
     const timer = setTimeout(
-      () => settle(readinessTimeoutError(context.taskId, readyWhen)),
+      () =>
+        settle(() => reject(readinessTimeoutError(context.taskId, readyWhen))),
       readyWhen.timeout
     );
     timer.unref();
@@ -108,7 +110,7 @@ function waitForSignal(
       return;
     }
     const stop = context.readySignal?.subscribe(context.taskId, (message) =>
-      settle(null, message.url ? { url: message.url } : {})
+      settle(() => resolve(message.url ? { url: message.url } : {}))
     );
     if (settled) {
       stop?.();
@@ -138,6 +140,9 @@ function waitForLogMatch(
     );
     timer.unref();
     context.signal.addEventListener('abort', onAbort);
+    if (!context.runningTask.onOutput) {
+      throw new TypeError(`Task ${context.taskId} does not report its output`);
+    }
     context.runningTask.onOutput((chunk, isCommandHeader) => {
       if (!settled && !isCommandHeader && matcher.feed(chunk)) {
         settle();

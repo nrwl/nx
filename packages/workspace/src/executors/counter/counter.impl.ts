@@ -1,3 +1,4 @@
+import type { TaskGraph } from '@nx/devkit';
 import { EOL } from 'os';
 
 async function wait() {
@@ -21,7 +22,7 @@ export default async function* counter(opts: CounterOptions) {
 }
 
 export async function batchCounter(
-  taskGraph,
+  taskGraph: TaskGraph,
   inputs: Record<string, CounterOptions>
 ) {
   const result: Record<string, { success: boolean; terminalOutput: string }> =

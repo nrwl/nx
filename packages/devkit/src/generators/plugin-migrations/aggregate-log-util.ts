@@ -26,15 +26,16 @@ export class AggregatedLog {
   logs: Map<string, Map<string, AggregateLogItem>> = new Map();
 
   addLog({ project, log, executorName }: AggregateLogOptions): void {
-    if (!this.logs.has(executorName)) {
-      this.logs.set(executorName, new Map());
+    let executorLogs = this.logs.get(executorName);
+    if (!executorLogs) {
+      executorLogs = new Map();
+      this.logs.set(executorName, executorLogs);
     }
 
-    const executorLogs = this.logs.get(executorName);
-    if (!executorLogs.has(log)) {
+    const logItem = executorLogs.get(log);
+    if (!logItem) {
       executorLogs.set(log, { log, projects: new Set([project]) });
     } else {
-      const logItem = executorLogs.get(log);
       logItem.projects.add(project);
     }
   }
@@ -49,11 +50,11 @@ export class AggregatedLog {
     }
 
     let fullLog = '';
-    for (const executorName of this.logs.keys()) {
+    for (const [executorName, executorLogs] of this.logs) {
       fullLog = `${fullLog}${output.bold(
         `Encountered the following while migrating '${executorName}':\r\n`
       )}`;
-      for (const logItem of this.logs.get(executorName).values()) {
+      for (const logItem of executorLogs.values()) {
         fullLog = `${fullLog}   • ${logItem.log}\r\n`;
         fullLog = `${fullLog}     ${output.bold(`Affected Projects`)}\r\n`;
         fullLog = `${fullLog}      ${Array.from(logItem.projects.values()).join(

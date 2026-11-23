@@ -35,7 +35,12 @@ export function readPluginPackageJson(
       path: result.path,
     };
   } catch (e) {
-    if (e.code === 'MODULE_NOT_FOUND') {
+    if (
+      typeof e === 'object' &&
+      e !== null &&
+      'code' in e &&
+      e.code === 'MODULE_NOT_FOUND'
+    ) {
       const localPluginPath = resolveLocalNxPlugin(pluginName, projects);
       if (localPluginPath) {
         const localPluginPackageJson = path.join(

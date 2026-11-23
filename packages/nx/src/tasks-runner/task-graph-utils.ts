@@ -40,7 +40,7 @@ export function findCycle(graph: {
   dependencies: Record<string, Edge[]>;
   continuousDependencies?: Record<string, Edge[]>;
 }): string[] | null {
-  const visited = {};
+  const visited: Record<string, boolean> = {};
   for (const t of Object.keys(graph.dependencies)) {
     visited[t] = false;
   }
@@ -61,7 +61,7 @@ export function findCycles(graph: {
   dependencies: Record<string, Edge[]>;
   continuousDependencies?: Record<string, Edge[]>;
 }): Set<string> | null {
-  const visited = {};
+  const visited: Record<string, boolean> = {};
   const cycles = new Set<string>();
   for (const t of Object.keys(graph.dependencies)) {
     visited[t] = false;
@@ -114,7 +114,7 @@ export function makeAcyclic(graph: {
   roots: string[];
   dependencies: Record<string, Edge[]>;
 }): void {
-  const visited = {};
+  const visited: Record<string, boolean> = {};
   for (const t of Object.keys(graph.dependencies)) {
     visited[t] = false;
   }
@@ -130,7 +130,7 @@ export function validateNoAtomizedTasks(
   taskGraph: TaskGraph,
   projectGraph: ProjectGraph
 ) {
-  const getNonAtomizedTargetForTask = (task) =>
+  const getNonAtomizedTargetForTask = (task: Task) =>
     projectGraph.nodes[task.target.project]?.data?.targets?.[task.target.target]
       ?.metadata?.nonAtomizedTarget;
 
@@ -266,13 +266,15 @@ export function getLeafTasks(taskGraph: TaskGraph): Set<string> {
   return leafTasks;
 }
 
-function reverseTaskGraph(taskGraph: TaskGraph): TaskGraph {
+function reverseTaskGraph(
+  taskGraph: TaskGraph
+): Pick<TaskGraph, 'tasks' | 'dependencies'> {
   const reversed = {
     tasks: taskGraph.tasks,
-    dependencies: Object.fromEntries(
+    dependencies: Object.fromEntries<TaskGraphEdge[]>(
       Object.entries(taskGraph.tasks).map(([taskId]) => [taskId, []])
     ),
-  } as TaskGraph;
+  };
   for (const [taskId, dependencies] of Object.entries(taskGraph.dependencies)) {
     for (const { id: dependency } of dependencies) {
       reversed.dependencies[dependency].push({ id: taskId });

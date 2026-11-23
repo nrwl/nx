@@ -30,6 +30,7 @@ import { resolveNxJsonConfigErrorMessage } from './utils/resolve-nx-json-error-m
 import {
   createCommitMessageValues,
   createGitTagValues,
+  getReleaseGroupFilteredProjects,
   handleDuplicateGitTags,
 } from './utils/shared';
 import {
@@ -42,7 +43,7 @@ import {
 } from './version';
 
 export const releaseCLIHandler = (args: VersionOptions) =>
-  handleErrors(args.verbose, () => createAPI({}, false)(args));
+  handleErrors(args.verbose ?? false, () => createAPI({}, false)(args));
 
 export function createAPI(
   overrideReleaseConfig: NxReleaseConfiguration,
@@ -150,7 +151,7 @@ export function createAPI(
       rawVersionPlans,
       releaseGraph.allReleaseGroups,
       Object.keys(projectGraph.nodes),
-      args.verbose
+      args.verbose ?? false
     );
 
     // Validate version plans against the filter after resolution
@@ -337,7 +338,7 @@ export function createAPI(
           changelogResult.workspaceChangelog.releaseVersion,
           changelogResult.workspaceChangelog.contents,
           latestCommit,
-          { dryRun: args.dryRun }
+          { dryRun: args.dryRun ?? false }
         );
       }
 
@@ -364,7 +365,10 @@ export function createAPI(
           const projects = args.projects?.length
             ? // If the user has passed a list of projects, we need to use the filtered list of projects within the release group
               Array.from(
-                releaseGraph.releaseGroupToFilteredProjects.get(releaseGroup)
+                getReleaseGroupFilteredProjects(
+                  releaseGraph.releaseGroupToFilteredProjects,
+                  releaseGroup
+                )
               )
             : // Otherwise, we use the full list of projects within the release group
               releaseGroup.projects;
@@ -394,7 +398,7 @@ export function createAPI(
               changelog.releaseVersion,
               changelog.contents,
               latestCommit,
-              { dryRun: args.dryRun }
+              { dryRun: args.dryRun ?? false }
             );
           }
         }

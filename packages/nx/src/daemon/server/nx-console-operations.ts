@@ -42,7 +42,10 @@ export async function getNxConsoleStatus({
     log('Console status check completed, shouldPrompt:', result);
     return result;
   } catch (error) {
-    log('Failed to use latest Nx for console status. Error:', error.message);
+    log(
+      'Failed to use latest Nx for console status. Error:',
+      error instanceof Error ? error.message : String(error)
+    );
     return await getNxConsoleStatusImpl();
   }
 }
@@ -90,7 +93,7 @@ export async function handleNxConsolePreferenceAndInstall({
   } catch (error) {
     log(
       'Failed to use latest Nx for preference install. Error:',
-      error.message
+      error instanceof Error ? error.message : String(error)
     );
     return await handleNxConsolePreferenceAndInstallImpl(preference);
   }

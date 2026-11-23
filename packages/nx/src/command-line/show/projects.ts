@@ -57,7 +57,7 @@ export async function showProjectsHandler(
           !selectsAffectedTasks(nxJson) && taskGranularityRequirement(),
           !args.affected && '--affected',
           !args.withTarget?.length && 'targets passed with --withTarget (-t)',
-        ].filter(Boolean),
+        ].filter((requirement): requirement is string => !!requirement),
         args.projects ? ['--projects'] : []
       )
     );
@@ -87,6 +87,9 @@ export async function showProjectsHandler(
         ...(await runCommandModule().runnerInputsForSelection(nxArgs, nxJson)),
       });
       if (isExplaining(nxArgs.explain)) {
+        if (!affectedTasks.explanation) {
+          throw new Error('Affected task selection returned no explanation.');
+        }
         printAffectedExplanation(
           affectedTasks.explanation,
           'Affected tasks',
@@ -130,10 +133,11 @@ export async function showProjectsHandler(
   }
 
   // Grab only the nodes with the specified target
-  if (args.withTarget) {
+  const { withTarget } = args;
+  if (withTarget) {
     graph.nodes = Object.entries(graph.nodes).reduce(
       (acc, [name, node]) => {
-        if (args.withTarget.some((target) => node.data.targets?.[target])) {
+        if (withTarget.some((target) => node.data.targets?.[target])) {
           acc[name] = node;
         }
         return acc;

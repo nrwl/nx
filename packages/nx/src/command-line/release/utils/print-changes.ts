@@ -39,7 +39,7 @@ export function printAndFlushChanges(
   diffContextLines = 1,
   shouldPrintDryRunMessage = true,
   noDiffMessage?: string,
-  changePredicate?: (f: { path: string; content?: Buffer }) => boolean
+  changePredicate?: (f: { path: string; content?: Buffer | null }) => boolean
 ) {
   changePredicate = changePredicate || (() => true);
   const changes = tree.listChanges();

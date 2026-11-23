@@ -125,7 +125,7 @@ export const commandsObject: yargs.Argv<CreateNxPluginArguments> = yargs
         throw error;
       });
     },
-    [normalizeArgsMiddleware]
+    [normalizeArgsMiddleware] as yargs.MiddlewareFunction<{}>[]
   )
   .help('help', pc.dim(`Show help`))
   .updateLocale(yargsDecorator)

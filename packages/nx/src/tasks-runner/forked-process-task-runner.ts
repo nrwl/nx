@@ -34,8 +34,21 @@ export class ForkedProcessTaskRunner {
 
   private readonly verbose = process.env.NX_VERBOSE_LOGGING === 'true';
   private processes = new Set<RunningTask | BatchProcess>();
-  private processMessageHandler: (message: Serializable) => void;
-  private processExitHandler: () => void;
+  private processMessageHandler = (message: Serializable) => {
+    this.pseudoTerminals.forEach((p) => {
+      p.sendMessageToChildren(message);
+    });
+
+    this.processes.forEach((p) => {
+      if ('connected' in p && p.connected && 'send' in p && p.send) {
+        p.send(message);
+      }
+    });
+  };
+  private processExitHandler = () => {
+    this.cleanup();
+    process.off('message', this.processMessageHandler);
+  };
   private finishedProcesses = new Set<BatchProcess>();
   private pseudoTerminals = new Set<PseudoTerminal>();
 
@@ -199,6 +212,11 @@ export class ForkedProcessTaskRunner {
     await terminal.init();
 
     terminal.onMessageFromChildren((message: Serializable) => {
+      if (!process.send) {
+        throw new Error(
+          'Cannot forward a child message without an IPC channel.'
+        );
+      }
       process.send(message);
     });
 
@@ -254,7 +272,7 @@ export class ForkedProcessTaskRunner {
       this.pseudoTerminals.delete(pseudoTerminal);
       this.processes.delete(p);
       if (!streamOutput) {
-        this.options.lifeCycle.printTaskTerminalOutput(
+        this.options.lifeCycle.printTaskTerminalOutput?.(
           task,
           code === 0 ? 'success' : 'failure',
           terminalOutput
@@ -317,7 +335,7 @@ export class ForkedProcessTaskRunner {
         this.processes.delete(cp);
 
         if (!streamOutput) {
-          this.options.lifeCycle.printTaskTerminalOutput(
+          this.options.lifeCycle.printTaskTerminalOutput?.(
             task,
             code === 0 ? 'success' : 'failure',
             terminalOutput
@@ -384,7 +402,7 @@ export class ForkedProcessTaskRunner {
         try {
           const terminalOutput = cp.getTerminalOutput();
           if (!streamOutput) {
-            this.options.lifeCycle.printTaskTerminalOutput(
+            this.options.lifeCycle.printTaskTerminalOutput?.(
               task,
               code === 0 ? 'success' : 'failure',
               terminalOutput
@@ -396,7 +414,7 @@ export class ForkedProcessTaskRunner {
               Task failed with Exit Code ${code} and Signal "${signal}".
 
               Received error message:
-              ${e.message}
+              ${e instanceof Error ? e.message : String(e)}
             `);
         }
       });
@@ -418,22 +436,6 @@ export class ForkedProcessTaskRunner {
   }
 
   private setupProcessEventListeners() {
-    this.processMessageHandler = (message: Serializable) => {
-      this.pseudoTerminals.forEach((p) => {
-        p.sendMessageToChildren(message);
-      });
-
-      this.processes.forEach((p) => {
-        if ('connected' in p && p.connected && 'send' in p) {
-          p.send(message);
-        }
-      });
-    };
-    this.processExitHandler = () => {
-      this.cleanup();
-      process.off('message', this.processMessageHandler);
-    };
-
     // When the nx process gets a message, it will be sent into the task's process
     process.on('message', this.processMessageHandler);
 

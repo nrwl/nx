@@ -43,14 +43,18 @@ export interface FinalConfigForProject {
   currentVersionResolverMetadata: NxReleaseVersionConfiguration['currentVersionResolverMetadata'];
   fallbackCurrentVersionResolver: NxReleaseVersionConfiguration['fallbackCurrentVersionResolver'];
   versionPrefix: NxReleaseVersionConfiguration['versionPrefix'];
-  preserveLocalDependencyProtocols: NxReleaseVersionConfiguration['preserveLocalDependencyProtocols'];
+  preserveLocalDependencyProtocols: NonNullable<
+    NxReleaseVersionConfiguration['preserveLocalDependencyProtocols']
+  >;
   preserveMatchingDependencyRanges: NxReleaseVersionConfiguration['preserveMatchingDependencyRanges'];
   adjustSemverBumpsForZeroMajorVersion: NxReleaseVersionConfiguration['adjustSemverBumpsForZeroMajorVersion'];
   applyPreidToDependents: NxReleaseVersionConfiguration['applyPreidToDependents'];
   versionActionsOptions: NxReleaseVersionConfiguration['versionActionsOptions'];
   manifestRootsToUpdate: Array<
     Exclude<
-      NxReleaseVersionConfiguration['manifestRootsToUpdate'][number],
+      NonNullable<
+        NxReleaseVersionConfiguration['manifestRootsToUpdate']
+      >[number],
       string
     >
   >;
@@ -354,6 +358,11 @@ export class ReleaseGraph {
         const projectGraphNode = projectGraph.nodes[project];
 
         const releaseGroup = this.projectToReleaseGroup.get(project);
+        if (!releaseGroup) {
+          throw new Error(
+            `No release group found for project "${project}", please report this as a bug on https://github.com/nrwl/nx/issues`
+          );
+        }
 
         const finalConfigForProject = ReleaseGraph.resolveFinalConfigForProject(
           releaseGroup,
@@ -424,6 +433,11 @@ export class ReleaseGraph {
   ): Promise<void> {
     for (const projectName of this.allProjectsConfiguredForNxRelease) {
       const versionActions = this.projectsToVersionActions.get(projectName);
+      if (!versionActions) {
+        throw new Error(
+          `No version actions found for project "${projectName}", please report this as a bug on https://github.com/nrwl/nx/issues`
+        );
+      }
 
       if (!this.projectToDependencies.has(projectName)) {
         this.projectToDependencies.set(projectName, new Set());

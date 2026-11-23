@@ -230,7 +230,7 @@ export async function importHandler(options: ImportOptions) {
       );
     }
     throw new Error(
-      `Failed to clone ${displayRepository} into ${sourceTempRepoPath}. Please double check the remote and try again.\n${redactUrlCredentials(e.message)}`
+      `Failed to clone ${displayRepository} into ${sourceTempRepoPath}. Please double check the remote and try again.\n${redactUrlCredentials(e instanceof Error ? e.message : String(e))}`
     );
   }
   if (!aiMode) {
@@ -435,7 +435,7 @@ export async function importHandler(options: ImportOptions) {
   );
   if (installed) {
     // Check compatibility with existing plugins for the workspace included new imported projects
-    if (nxJson.plugins?.length > 0) {
+    if (nxJson.plugins?.length) {
       const incompatiblePlugins = await checkCompatibleWithPlugins();
       if (Object.keys(incompatiblePlugins).length > 0) {
         updatePluginsInNxJson(workspaceRoot, incompatiblePlugins);
@@ -700,8 +700,8 @@ async function runInstallDestinationRepo(
   } catch (e) {
     installed = false;
     output.error({
-      title: `Install failed: ${e.message || 'Unknown error'}`,
-      bodyLines: [e.stack],
+      title: `Install failed: ${(e instanceof Error && e.message) || 'Unknown error'}`,
+      bodyLines: e instanceof Error && e.stack ? [e.stack] : [],
     });
   }
   return installed;
@@ -721,11 +721,11 @@ async function runPluginsInstall(
   } catch (e) {
     installed = false;
     output.error({
-      title: `Install failed: ${e.message || 'Unknown error'}`,
+      title: `Install failed: ${(e instanceof Error && e.message) || 'Unknown error'}`,
       bodyLines: [
         'The following plugins were not installed:',
         ...plugins.map((p) => `- ${pc.bold(p)}`),
-        e.stack,
+        ...(e instanceof Error && e.stack ? [e.stack] : []),
       ],
     });
     output.error({

@@ -14,7 +14,7 @@ export const yargsDaemonCommand = makeCommandModule({
     'Prints information about the Nx Daemon process or starts a daemon process.',
   builder,
   handler: async (args) => {
-    const exitCode = await handleErrors(args.verbose, async () =>
+    const exitCode = await handleErrors(args.verbose ?? false, async () =>
       (await handleImport('./daemon.js', __dirname)).daemonHandler(args)
     );
     process.exit(exitCode);

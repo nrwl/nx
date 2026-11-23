@@ -13,11 +13,10 @@ import { targetDefaultConfigs } from '../utils/target-defaults';
 
 export default async function (tree: Tree) {
   // If the workspace doesn't have a nx.json, don't make any changes
-  if (!tree.exists('nx.json')) {
+  const nxJson = readNxJson(tree);
+  if (!nxJson) {
     return;
   }
-
-  const nxJson = readNxJson(tree);
 
   for (const [projectName, project] of getProjects(tree)) {
     for (const [_, target] of Object.entries(project.targets ?? {})) {

@@ -105,7 +105,7 @@ export interface NxCloudClient {
 export async function verifyOrUpdateNxCloudClient(options?: {
   url?: string;
   customProxyConfigPath?: string;
-}): Promise<{ nxCloudClient: NxCloudClient; version: string } | null> {
+}): Promise<{ nxCloudClient: NxCloudClient; version: string }> {
   debugLog('Verifying current cloud bundle');
 
   try {
@@ -318,19 +318,35 @@ const stateDirectory = inWorkspace
   ? join(workspaceDataDirectory, 'nx-cloud')
   : runnerBundleInstallDirectory && `${runnerBundleInstallDirectory}-state`;
 
-function ensureStateDirectory(): void {
-  mkdirSync(stateDirectory, { recursive: true });
+const NO_INSTALL_DIRECTORY_MESSAGE =
+  'The Nx Cloud client cannot be installed outside a workspace without a home directory separate from the shared temp directory.';
+
+function installDirectory(): string {
+  if (!runnerBundleInstallDirectory) {
+    throw new Error(NO_INSTALL_DIRECTORY_MESSAGE);
+  }
+  return runnerBundleInstallDirectory;
 }
 
-function ensureInstallDirectories(): void {
-  if (inWorkspace) {
-    mkdirSync(runnerBundleInstallDirectory, { recursive: true });
-    return;
+function stateDir(): string {
+  if (!stateDirectory) {
+    throw new Error(NO_INSTALL_DIRECTORY_MESSAGE);
   }
-  if (!runnerBundleInstallDirectory) {
-    throw new Error(
-      'The Nx Cloud client cannot be installed outside a workspace without a home directory separate from the shared temp directory.'
-    );
+  return stateDirectory;
+}
+
+function ensureStateDirectory(): void {
+  mkdirSync(stateDir(), { recursive: true });
+}
+
+function ensureInstallDirectories(): string {
+  if (inWorkspace) {
+    const dir = installDirectory();
+    mkdirSync(dir, { recursive: true });
+    return dir;
+  }
+  if (!runnerBundleInstallDirectory || !NX_HOME_TMP_DIR || !stateDirectory) {
+    throw new Error(NO_INSTALL_DIRECTORY_MESSAGE);
   }
   for (const dir of [
     NX_HOME_TMP_DIR,
@@ -343,25 +359,28 @@ function ensureInstallDirectories(): void {
       throw new DirectoryRefusedError(result.refusal);
     }
   }
+  return runnerBundleInstallDirectory;
 }
 
-const downloadLockFilePath =
-  stateDirectory && join(stateDirectory, 'download.lock');
+function downloadLockFilePath(): string {
+  return join(stateDir(), 'download.lock');
+}
 
 // The record lives beside the lockfile rather than inside it. Windows
 // byte-range locks are mandatory and handle-scoped, so writing to a file this
 // process holds an exclusive lock on fails with ERROR_LOCK_VIOLATION. It also
 // matches the convention elsewhere in nx: project-graph.lock and run.json.lock
 // are never written to.
-const downloadRecordFilePath =
-  stateDirectory && join(stateDirectory, 'download.record');
+function downloadRecordFilePath(): string {
+  return join(stateDir(), 'download.record');
+}
 
 // A version names a directory that is created and later deleted, so a value
 // from the server must not be able to escape the install directory.
 const VALID_BUNDLE_VERSION = /^[A-Za-z0-9][A-Za-z0-9._-]*$/;
 
 function getLatestInstalledRunnerBundle(): CloudBundleInstall | null {
-  ensureInstallDirectories();
+  const runnerBundleInstallDirectory = ensureInstallDirectories();
 
   try {
     const installedBundles: CloudBundleInstall[] = readdirSync(
@@ -443,7 +462,7 @@ async function verifyCurrentBundle(
 }
 
 function getLatestBundleVerificationTimestamp(): number | null {
-  const lockfilePath = join(stateDirectory, 'verify.lock');
+  const lockfilePath = join(stateDir(), 'verify.lock');
 
   if (existsSync(lockfilePath)) {
     const timestampAsString = readFileSync(lockfilePath, 'utf-8');
@@ -460,7 +479,7 @@ function getLatestBundleVerificationTimestamp(): number | null {
 }
 
 function writeBundleVerificationLock() {
-  const lockfilePath = join(stateDirectory, 'verify.lock');
+  const lockfilePath = join(stateDir(), 'verify.lock');
 
   ensureStateDirectory();
   writeFileSync(lockfilePath, new Date().getTime().toString(), 'utf-8');
@@ -516,10 +535,10 @@ export async function downloadAndExtractClientBundle(
   }
 
   const recordBeforeContending = readDownloadRecord();
-  const lock = !IS_WASM ? new FileLock(downloadLockFilePath) : null;
+  const lock = !IS_WASM ? new FileLock(downloadLockFilePath()) : null;
   let locked = lock?.locked;
   let contended = false;
-  while (locked) {
+  while (lock && locked) {
     debugLog(
       'Another process is downloading the client bundle, waiting for it to complete'
     );
@@ -589,7 +608,7 @@ export async function downloadAndExtractClientBundle(
 // answer that: filesystem mtime granularity is coarser than the race window.
 function readDownloadRecord(): string {
   try {
-    return readFileSync(downloadRecordFilePath, 'utf-8').trim();
+    return readFileSync(downloadRecordFilePath(), 'utf-8').trim();
   } catch {
     return '';
   }
@@ -597,7 +616,11 @@ function readDownloadRecord(): string {
 
 function writeDownloadRecord(version: string, directoryName: string): void {
   ensureStateDirectory();
-  writeFileSync(downloadRecordFilePath, `${version} ${directoryName}`, 'utf-8');
+  writeFileSync(
+    downloadRecordFilePath(),
+    `${version} ${directoryName}`,
+    'utf-8'
+  );
 }
 
 /**
@@ -616,7 +639,7 @@ function recordedBundle(): CloudBundleInstall | null {
   ) {
     return null;
   }
-  const fullPath = join(runnerBundleInstallDirectory, directoryName);
+  const fullPath = join(installDirectory(), directoryName);
   return existsSync(fullPath) ? { version, fullPath } : null;
 }
 
@@ -642,6 +665,7 @@ async function downloadAndExtractBundle(
   // that bundle out from under it - and a holder loading its client in the gap
   // fails with MODULE_NOT_FOUND, which drops the task runner to running
   // without Nx Cloud. A directory nothing else has seen cannot be in use.
+  const runnerBundleInstallDirectory = installDirectory();
   const bundleDirectoryName = `${version}-${randomUUID()}`;
   const bundleExtractLocation = join(
     runnerBundleInstallDirectory,
@@ -738,6 +762,7 @@ async function downloadAndExtractBundle(
 }
 
 function removeOldClientBundles(currentInstallDirectoryName: string) {
+  const runnerBundleInstallDirectory = installDirectory();
   const filesAndFolders = readdirSync(runnerBundleInstallDirectory);
 
   for (let fileOrFolder of filesAndFolders) {

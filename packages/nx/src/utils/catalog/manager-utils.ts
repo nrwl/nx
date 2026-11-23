@@ -1,4 +1,3 @@
-import { load } from '@zkochan/js-yaml';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import {
@@ -16,6 +15,8 @@ import type { Tree } from '../../generators/tree';
 import { readYamlFile } from '../fileutils';
 import { output } from '../output';
 import type { CatalogDefinitions } from './types';
+
+const { load } = require('@zkochan/js-yaml');
 
 // Walks `path` resolving aliases at every step so structural checks can
 // see through `key: *anchor` references. Neither `doc.getIn` nor
@@ -112,7 +113,7 @@ function readCatalogConfigFromFs(
   } catch (error) {
     output.warn({
       title: `Unable to parse ${filename}`,
-      bodyLines: [error.toString()],
+      bodyLines: [String(error)],
     });
     return null;
   }
@@ -123,12 +124,15 @@ function readCatalogConfigFromTree(
   tree: Tree
 ): CatalogDefinitions | null {
   const content = tree.read(filename, 'utf-8');
+  if (content === null) {
+    return null;
+  }
   try {
     return load(content, { filename }) as CatalogDefinitions;
   } catch (error) {
     output.warn({
       title: `Unable to parse ${filename}`,
-      bodyLines: [error.toString()],
+      bodyLines: [String(error)],
     });
     return null;
   }
@@ -144,8 +148,9 @@ export function readCatalogDefinitions(
   cache: Map<string, CatalogDefinitions | null>
 ): CatalogDefinitions | null {
   if (typeof treeOrRoot === 'string') {
-    if (cache.has(treeOrRoot)) {
-      return cache.get(treeOrRoot);
+    const cached = cache.get(treeOrRoot);
+    if (cached !== undefined) {
+      return cached;
     }
     const configPath = join(treeOrRoot, filename);
     const defs = existsSync(configPath)
@@ -190,7 +195,13 @@ export function updateCatalogVersionsInFile(
     writeYaml = (content) => writeFileSync(configPath, content, 'utf-8');
   } else {
     checkExists = () => treeOrRoot.exists(filename);
-    readYaml = () => treeOrRoot.read(filename, 'utf-8');
+    readYaml = () => {
+      const content = treeOrRoot.read(filename, 'utf-8');
+      if (content === null) {
+        throw new Error(`Could not read ${filename}`);
+      }
+      return content;
+    };
     writeYaml = (content) => treeOrRoot.write(filename, content);
   }
 

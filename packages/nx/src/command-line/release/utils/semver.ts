@@ -25,7 +25,7 @@ export function isRelativeVersionKeyword(val: string): val is ReleaseType {
 
 export function isValidSemverSpecifier(specifier: string): boolean {
   return (
-    specifier && !!(valid(specifier) || isRelativeVersionKeyword(specifier))
+    !!specifier && !!(valid(specifier) || isRelativeVersionKeyword(specifier))
   );
 }
 
@@ -106,12 +106,12 @@ function adjustSpecifierForZeroMajorVersion(
 }
 
 export function deriveNewSemverVersion(
-  currentSemverVersion: string,
+  currentSemverVersion: string | null,
   semverSpecifier: string,
   preid?: string,
   options?: { adjustSemverBumpsForZeroMajorVersion?: boolean }
 ) {
-  if (!valid(currentSemverVersion)) {
+  if (currentSemverVersion === null || !valid(currentSemverVersion)) {
     throw new Error(
       `Invalid semver version "${currentSemverVersion}" provided.`
     );
@@ -130,6 +130,7 @@ export function deriveNewSemverVersion(
     const derivedVersion = inc(
       currentSemverVersion,
       adjustedSpecifier as ReleaseType,
+      undefined,
       preid
     );
     if (!derivedVersion) {

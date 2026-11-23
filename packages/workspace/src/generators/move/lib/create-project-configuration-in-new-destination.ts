@@ -58,10 +58,9 @@ export function createProjectConfigurationInNewDestination(
 
   // Correct "e2e" target and config since part of the rename will be wrong unless we make the project name "e2e" more unique.
   // e.g. my-app-e2e is safer to search and replace than "e2e".
-  if (projectConfig.name === 'e2e') {
-    for (const [targetName, targetConfig] of Object.entries(
-      newProject.targets
-    )) {
+  const targets = newProject.targets;
+  if (projectConfig.name === 'e2e' && targets) {
+    for (const [targetName, targetConfig] of Object.entries(targets)) {
       const wrongName = schema.relativeToRootDestination;
       if (targetName !== wrongName) continue;
 
@@ -69,8 +68,8 @@ export function createProjectConfigurationInNewDestination(
         targetConfig.options.testingType = 'e2e';
       }
 
-      newProject.targets['e2e'] = targetConfig;
-      delete newProject.targets[targetName];
+      targets['e2e'] = targetConfig;
+      delete targets[targetName];
     }
   }
 

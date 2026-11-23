@@ -78,15 +78,14 @@ export async function httpRequest<T = any>(
   }
 
   const controller = new AbortController();
-  if (config.signal) {
-    if (config.signal.aborted) {
-      controller.abort(config.signal.reason);
+  const signal = config.signal;
+  if (signal) {
+    if (signal.aborted) {
+      controller.abort(signal.reason);
     } else {
-      config.signal.addEventListener(
-        'abort',
-        () => controller.abort(config.signal.reason),
-        { once: true }
-      );
+      signal.addEventListener('abort', () => controller.abort(signal.reason), {
+        once: true,
+      });
     }
   }
   const timer = config.timeout

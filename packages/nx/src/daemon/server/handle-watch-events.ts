@@ -34,9 +34,9 @@ export const handleWatchEvents: WatchEventsListener = async (
   try {
     if (err || !changeEvents || !changeEvents.length) {
       let error = typeof err === 'string' ? new Error(err) : err;
-      serverLogger.watcherLog('Unexpected watch error', error.message);
+      serverLogger.watcherLog('Unexpected watch error', error?.message);
       console.error(error);
-      if (err) {
+      if (err && error) {
         // A native error is terminal: the watch loop has exited, so the
         // gitignored dotenv edits only this watcher reports stop arriving and
         // the graph invalidation below can never run again. Fail requests
@@ -101,7 +101,10 @@ export const handleWatchEvents: WatchEventsListener = async (
       invalidateGraphCache();
     }
   } catch (err) {
-    serverLogger.watcherLog(`Unexpected watch error`, err.message);
+    serverLogger.watcherLog(
+      `Unexpected watch error`,
+      err instanceof Error ? err.message : String(err)
+    );
     console.error(err);
   }
 };

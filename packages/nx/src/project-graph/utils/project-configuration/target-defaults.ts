@@ -93,7 +93,13 @@ export function createTargetDefaultsResults(
   // (document order, later winning) — matching the in-key merge the reader does.
   const syntheticProjectsByKeyIndex: Record<
     string,
-    Record<number, Record<string, ProjectConfiguration>>
+    Record<
+      number,
+      Record<
+        string,
+        ProjectConfiguration & { targets: Record<string, TargetConfiguration> }
+      >
+    >
   > = {};
 
   const allRoots = new Set<string>([

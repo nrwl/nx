@@ -4,7 +4,7 @@ export async function* combineAsyncIterables<T = any>(
   // Convert iterables into iterators with next, return, throws methods.
   // If it's already an iterator, keep it.
   const iterators: AsyncIterableIterator<T>[] = _iterators.map((it) => {
-    if (typeof it['next'] === 'function') {
+    if ('next' in it && typeof it.next === 'function') {
       return it as AsyncIterableIterator<T>;
     } else {
       return (async function* wrapped() {
@@ -15,12 +15,14 @@ export async function* combineAsyncIterables<T = any>(
     }
   });
 
-  let [options] = iterators;
+  const [first] = iterators;
+  let options: object;
 
-  if (typeof options.next === 'function') {
+  if (typeof first.next === 'function') {
     options = Object.create(null);
   } else {
     iterators.shift();
+    options = first;
   }
 
   const getNextAsyncIteratorValue = getNextAsyncIteratorFactory(options);
@@ -44,18 +46,22 @@ export async function* combineAsyncIterables<T = any>(
     } while (asyncIteratorsValues.size > 0);
   } finally {
     for (const [, iterator] of asyncIteratorsValues.entries())
-      if (iterator?.['return'] !== null) iterator['return']?.();
+      if ('return' in iterator && typeof iterator.return === 'function')
+        iterator.return();
   }
 }
 
-function getNextAsyncIteratorFactory(options) {
-  return async (asyncIterator, index) => {
+function getNextAsyncIteratorFactory(options: object) {
+  return async <T>(asyncIterator: AsyncIterator<T>, index: number) => {
     try {
       const iterator = await asyncIterator.next();
 
       return { index, iterator };
     } catch (err) {
-      if (options.errorCallback) {
+      if (
+        'errorCallback' in options &&
+        typeof options.errorCallback === 'function'
+      ) {
         options.errorCallback(err, index);
       }
       return Promise.reject(err);

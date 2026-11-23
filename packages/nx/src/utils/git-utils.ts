@@ -1015,7 +1015,11 @@ export function commitChanges(
       logger.verbose(`Git may not be set up correctly for this new workspace.
         ${err}`);
     } else {
-      throw new Error(`Error committing changes:\n${err.stderr}`);
+      const stderr =
+        typeof err === 'object' && err !== null && 'stderr' in err
+          ? err.stderr
+          : undefined;
+      throw new Error(`Error committing changes:\n${stderr}`);
     }
   }
 

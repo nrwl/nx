@@ -5,7 +5,9 @@ import { readJsonFile } from '../../../../utils/fileutils';
 /**
  * Get version of hoisted package if available
  */
-export function getHoistedPackageVersion(packageName: string): string {
+export function getHoistedPackageVersion(
+  packageName: string
+): string | undefined {
   const fullPath = `${workspaceRoot}/node_modules/${packageName}/package.json`;
 
   try {

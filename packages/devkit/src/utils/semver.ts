@@ -34,7 +34,7 @@ export function checkAndCleanWithSemver(
       }
     } catch (error) {
       throw new Error(
-        `The catalog reference for ${pkgName} is invalid - (${newVersion})\n${error.message}`
+        `The catalog reference for ${pkgName} is invalid - (${newVersion})\n${error instanceof Error ? error.message : String(error)}`
       );
     }
 

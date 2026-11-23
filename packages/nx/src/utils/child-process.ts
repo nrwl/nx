@@ -38,7 +38,11 @@ export function getRunNxBaseCommand(
     }
     return `${packageManagerCommand.exec} nx`;
   } else {
-    const offsetFromRoot = relative(cwd, workspaceRootInner(cwd, null));
+    const root = workspaceRootInner(cwd, null);
+    if (root === null) {
+      throw new Error(`Cannot find an Nx workspace root from ${cwd}.`);
+    }
+    const offsetFromRoot = relative(cwd, root);
     if (process.platform === 'win32') {
       return '.\\' + join(`${offsetFromRoot}`, 'nx.bat');
     } else {
@@ -139,13 +143,15 @@ export function runNxArgvSync(
     nxBin?: string;
   }
 ) {
-  let { nxBin, ...spawnOptions } = options ?? {};
+  const { nxBin: requestedNxBin, ...spawnOptions } = options ?? {};
   spawnOptions.cwd ??= process.cwd();
   spawnOptions.windowsHide ??= true;
 
-  nxBin ??= getNxBin(
-    workspaceRootInner(spawnOptions.cwd as string, null) ?? workspaceRoot
-  );
+  const nxBin =
+    requestedNxBin ??
+    getNxBin(
+      workspaceRootInner(spawnOptions.cwd as string, null) ?? workspaceRoot
+    );
   if (!nxBin) {
     runNxSync(
       argv.map(quoteShellArg).join(' '),
@@ -250,7 +256,7 @@ export function whenStdioClosed(child: NodeChildProcess): Promise<void> {
 export class PseudoTtyProcess {
   isAlive = true;
 
-  exitCallbacks = [];
+  exitCallbacks: Array<(code: number) => void> = [];
 
   constructor(private childProcess: ChildProcess) {
     childProcess.onExit((message) => {

@@ -258,11 +258,12 @@ export function findTargetDefault(
 function* logicalTargetDefaultEntries(
   targetDefaults: TargetDefaults | undefined
 ): Generator<TargetDefaultEntry> {
-  for (const key of Object.keys(targetDefaults ?? {})) {
+  const defaults = targetDefaults ?? {};
+  for (const key of Object.keys(defaults)) {
     const locator = isExecutorLikeKey(key)
       ? { executor: key }
       : { target: key };
-    const value = targetDefaults[key];
+    const value = defaults[key];
     const entries: TargetDefaultArrayEntry[] = Array.isArray(value)
       ? value
       : [value ?? {}];
@@ -582,7 +583,7 @@ export async function addE2eCiTargetDefaults(
     !e2ePluginGlob ||
     minimatch(pathToE2EConfigFile, e2ePluginGlob, { dot: true });
 
-  let foundPluginForApplication: PluginConfiguration;
+  let foundPluginForApplication: PluginConfiguration | undefined;
   for (let i = 0; i < e2ePluginRegistrations.length; i++) {
     let candidatePluginForApplication = e2ePluginRegistrations[i];
     if (typeof candidatePluginForApplication === 'string') {

@@ -76,9 +76,12 @@ export function parseJson<T extends object = any>(
  */
 function formatParseError(input: string, parseError: ParseError) {
   const { error, offset, length } = parseError;
-  let { line, column } = new LinesAndColumns(input).locationForIndex(offset);
-  line++;
-  column++;
+  const location = new LinesAndColumns(input).locationForIndex(offset);
+  if (!location) {
+    return `${printParseErrorCode(error)} in JSON at offset ${offset}\n`;
+  }
+  const line = location.line + 1;
+  const column = location.column + 1;
 
   return (
     `${printParseErrorCode(error)} in JSON at ${line}:${column}\n` +

@@ -9,7 +9,10 @@ import {
   ConfigurationResult,
   createProjectConfigurationsWithPlugins,
 } from './project-configuration-utils';
-import type { LoadedNxPlugin } from '../plugins/loaded-nx-plugin';
+import type {
+  LoadedNxPlugin,
+  LoadedNxPluginWith,
+} from '../plugins/loaded-nx-plugin';
 import {
   getNxWorkspaceFilesFromContext,
   globWithWorkspaceContext,
@@ -72,12 +75,10 @@ export async function retrieveProjectConfigurations(
   workspaceRoot: string,
   nxJson: NxJsonConfiguration
 ): Promise<ConfigurationResult> {
-  const specifiedWithCreateNodes = separatedPlugins.specifiedPlugins.filter(
-    (p) => !!p.createNodes
-  );
-  const defaultWithCreateNodes = separatedPlugins.defaultPlugins.filter(
-    (p) => !!p.createNodes
-  );
+  const specifiedWithCreateNodes =
+    separatedPlugins.specifiedPlugins.filter(hasCreateNodes);
+  const defaultWithCreateNodes =
+    separatedPlugins.defaultPlugins.filter(hasCreateNodes);
 
   const [specifiedPluginFiles, defaultPluginFiles] = await Promise.all([
     globPluginFiles(workspaceRoot, specifiedWithCreateNodes),
@@ -130,7 +131,7 @@ export async function retrieveProjectConfigurationsWithAngularProjects(
 
 export async function retrieveProjectConfigurationPaths(
   root: string,
-  plugins: Array<LoadedNxPlugin>
+  plugins: Array<PluginWithCreateNodes>
 ): Promise<string[]> {
   const pluginConfigFiles = await globPluginFiles(root, plugins);
   return pluginConfigFiles.flat();
@@ -147,12 +148,13 @@ export async function retrieveProjectConfigurationsWithoutPluginInference(
 ): Promise<Record<string, ProjectConfiguration>> {
   const nxJson = readNxJson(root);
   const defaultPlugins = await getOnlyDefaultPlugins(); // only load default plugins
-  const pluginsWithCreateNodes = defaultPlugins.filter((p) => !!p.createNodes);
+  const pluginsWithCreateNodes = defaultPlugins.filter(hasCreateNodes);
   const projectGlobPatterns = getGlobPatternsOfPlugins(pluginsWithCreateNodes);
   const cacheKey = root + ',' + projectGlobPatterns.join(',');
 
-  if (projectsWithoutPluginCache.has(cacheKey)) {
-    return projectsWithoutPluginCache.get(cacheKey);
+  const cached = projectsWithoutPluginCache.get(cacheKey);
+  if (cached) {
+    return cached;
   }
 
   const projectFiles =
@@ -191,7 +193,7 @@ export function clearProjectsWithoutPluginInferenceCache(): void {
  */
 async function globPluginFiles(
   root: string,
-  plugins: Array<LoadedNxPlugin>
+  plugins: Array<PluginWithCreateNodes>
 ): Promise<string[][]> {
   const unscoped = plugins.filter((p) => !canGlobInclude(p));
   const unscopedFiles =
@@ -213,9 +215,12 @@ async function globPluginFiles(
 
 // Only narrow includes: a `**` scope can return more files than the plugin
 // pattern does. Negations and extglobs keep the JS matcher's semantics.
-function canGlobInclude(plugin: LoadedNxPlugin): boolean {
+function canGlobInclude<P extends LoadedNxPlugin>(
+  plugin: P
+): plugin is P & { readonly include: string[] } {
   return (
-    plugin.include?.length > 0 &&
+    !!plugin.include &&
+    plugin.include.length > 0 &&
     plugin.include.every(
       (pattern) => !pattern.includes('**') && !/[!()]/.test(pattern)
     )
@@ -223,7 +228,15 @@ function canGlobInclude(plugin: LoadedNxPlugin): boolean {
 }
 
 export function getGlobPatternsOfPlugins(
-  plugins: Array<LoadedNxPlugin>
+  plugins: Array<PluginWithCreateNodes>
 ): string[] {
   return plugins.map((p) => p.createNodes[0]);
+}
+
+type PluginWithCreateNodes = LoadedNxPluginWith<'createNodes'>;
+
+function hasCreateNodes(
+  plugin: LoadedNxPlugin
+): plugin is PluginWithCreateNodes {
+  return !!plugin.createNodes;
 }

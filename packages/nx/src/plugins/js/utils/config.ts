@@ -10,9 +10,11 @@ import { workspaceRoot } from '../../../utils/workspace-root';
 import { existsSync } from 'fs';
 
 export function jsPluginConfig(
-  nxJson: NxJsonConfiguration
+  nxJson: NxJsonConfiguration | undefined
 ): Required<NrwlJsPluginConfig> {
-  const nxJsonConfig: NrwlJsPluginConfig = nxJson?.pluginsConfig?.['@nx/js'];
+  const nxJsonConfig = nxJson?.pluginsConfig?.['@nx/js'] as
+    | NrwlJsPluginConfig
+    | undefined;
 
   // using lerna _before_ installing deps is causing an issue when parsing lockfile.
   // See: https://github.com/lerna/lerna/issues/3807

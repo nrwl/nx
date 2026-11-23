@@ -18,7 +18,11 @@ export function assertSupportedPlatform() {
         'This likely means that optional dependencies were not installed correctly, or your system is missing some system dependencies.',
       ];
       if (process.env.NX_VERBOSE_LOGGING === 'true') {
-        bodyLines.push('', 'Additional error information:', e.message);
+        bodyLines.push(
+          '',
+          'Additional error information:',
+          e instanceof Error ? e.message : String(e)
+        );
       }
     } else {
       title = 'Platform not supported';

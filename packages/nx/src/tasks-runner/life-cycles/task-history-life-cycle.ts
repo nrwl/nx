@@ -7,6 +7,7 @@ import { serializeTarget } from '../../utils/serialize-target';
 import { getTaskHistory, TaskHistory } from '../../utils/task-history';
 import { isTuiEnabled } from '../is-tui-enabled';
 import { LifeCycle, TaskResult } from '../life-cycle';
+import { getTaskHash } from '../utils';
 import { LegacyTaskHistoryLifeCycle } from './task-history-life-cycle-old';
 
 interface TaskRun extends NativeTaskRun {
@@ -38,7 +39,7 @@ export class TaskHistoryLifeCycle implements LifeCycle {
   >();
   private taskRuns = new Map<string, TaskRun>();
   private taskHistory: TaskHistory | null = getTaskHistory();
-  private flakyTasks: string[];
+  private flakyTasks: string[] | undefined;
 
   constructor() {
     if (tasksHistoryLifeCycle) {
@@ -71,8 +72,9 @@ export class TaskHistoryLifeCycle implements LifeCycle {
 
     // Build TaskRun objects now — task.hash is guaranteed to be set by this point
     for (const { task, code, status } of pendingResults) {
-      this.taskRuns.set(task.hash, {
-        hash: task.hash,
+      const hash = getTaskHash(task);
+      this.taskRuns.set(hash, {
+        hash,
         target: task.target,
         code,
         status,
@@ -108,7 +110,7 @@ export class TaskHistoryLifeCycle implements LifeCycle {
   }
 
   printFlakyTasksMessage() {
-    if (this.flakyTasks?.length > 0) {
+    if (this.flakyTasks && this.flakyTasks.length > 0) {
       const MAX_VISIBLE_FLAKY = 5;
       const visibleFlaky =
         this.flakyTasks.length > MAX_VISIBLE_FLAKY + 1
@@ -117,6 +119,9 @@ export class TaskHistoryLifeCycle implements LifeCycle {
       const hiddenCount = this.flakyTasks.length - visibleFlaky.length;
       const flakyRows = visibleFlaky.map((hash) => {
         const taskRun = this.taskRuns.get(hash);
+        if (!taskRun) {
+          throw new Error(`No task run was recorded for hash ${hash}`);
+        }
         return `  ${serializeTarget(
           taskRun.target.project,
           taskRun.target.target,
@@ -133,7 +138,6 @@ export class TaskHistoryLifeCycle implements LifeCycle {
             : `${this.flakyTasks.length} flaky tasks`
         }`,
         bodyLines: [
-          ,
           ...flakyRows,
           ...(isNxCloudUsed(readNxJson())
             ? []

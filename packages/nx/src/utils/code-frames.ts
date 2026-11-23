@@ -6,6 +6,8 @@ type Location = {
   line: number;
 };
 
+type MarkerLines = Record<number, true | [number, number]>;
+
 type NodeLocation = {
   end?: Location;
   start?: Location;
@@ -32,7 +34,7 @@ function getMarkerLines(
   loc: NodeLocation,
   source: Array<string>,
   opts: { linesAbove?: number; linesBelow?: number } = {}
-): { start: number; end: number; markerLines: Object } {
+): { start: number; end: number; markerLines: MarkerLines } {
   const startLoc: Location = {
     column: 0,
     line: -1,
@@ -60,7 +62,7 @@ function getMarkerLines(
   }
 
   const lineDiff = endLine - startLine;
-  const markerLines = {};
+  const markerLines: MarkerLines = {};
 
   if (lineDiff) {
     for (let i = 0; i <= lineDiff; i++) {

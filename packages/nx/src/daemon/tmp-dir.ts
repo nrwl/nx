@@ -81,7 +81,7 @@ export const DAEMON_OUTPUT_LOG_FILE = join(
   'daemon.log'
 );
 
-export function writeDaemonLogs(error?: string) {
+export function writeDaemonLogs(error: string) {
   const file = join(DAEMON_DIR_FOR_CURRENT_WORKSPACE, 'daemon-error.log');
   writeFileSync(file, error);
   return file;

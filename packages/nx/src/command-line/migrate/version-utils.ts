@@ -10,7 +10,9 @@ const LEGACY_ERA_BOUNDARY = '14.0.0-beta.0';
 // Non-semver values (e.g. dist-tags or the literal `'latest'` sentinel before
 // tag resolution) are treated as modern era.
 export function isLegacyEra(targetVersion: string): boolean {
-  return valid(targetVersion) && lt(targetVersion, LEGACY_ERA_BOUNDARY);
+  return (
+    valid(targetVersion) !== null && lt(targetVersion, LEGACY_ERA_BOUNDARY)
+  );
 }
 
 export function normalizeVersion(version: string) {

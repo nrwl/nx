@@ -25,7 +25,8 @@ import {
   TaskTarget,
 } from '../../native';
 import {
-  DaemonProjectGraphError,
+  coerceToError,
+  isDaemonProjectGraphError,
   ProjectGraphError,
 } from '../../project-graph/error-types';
 import { PreTasksExecutionContext } from '../../project-graph/plugins/public-api';
@@ -160,6 +161,10 @@ type ConnectRefusal = {
   socketPath: string;
 };
 
+declare global {
+  var NX_PLUGIN_WORKER: boolean | undefined;
+}
+
 export type UnregisterCallback = () => void;
 export type ChangedFile = {
   path: string;
@@ -219,12 +224,12 @@ export class DaemonClient {
     this.reset();
   }
 
-  private queue: PromisedBasedQueue;
-  private socketMessenger: DaemonSocketMessenger;
+  private queue = new PromisedBasedQueue();
+  private socketMessenger: DaemonSocketMessenger | null = null;
 
-  private currentMessage;
-  private currentResolve;
-  private currentReject;
+  private currentMessage: DaemonMessage | null = null;
+  private currentResolve: ((value: unknown) => void) | null = null;
+  private currentReject: ((reason: unknown) => void) | null = null;
   // Tracks the spinner owned by the in-flight request so streamed
   // progress updates are routed to the caller's spinner instead of
   // mutating the process-wide globalSpinner (which may belong to an
@@ -234,8 +239,8 @@ export class DaemonClient {
   private _enabled: boolean | undefined;
   private _daemonStatus: DaemonStatus = DaemonStatus.DISCONNECTED;
   private _waitForDaemonReady: Promise<void> | null = null;
-  private _daemonReady: (() => void) | null = null;
-  private _daemonReadyFailed: ((err: Error) => void) | null = null;
+  private _daemonReady: () => void = () => {};
+  private _daemonReadyFailed: ((err: unknown) => void) | null = null;
   // Terminal once set — see `handleConnectionError`.
   private _pluginWorkerConnectionLost: Error | null = null;
 
@@ -366,7 +371,7 @@ export class DaemonClient {
   // Move out of CONNECTING and surface an error to every caller parked on
   // `_waitForDaemonReady`. Without this, a failure while CONNECTING leaves
   // concurrent callers waiting on a promise that will never settle.
-  private failDaemonReady(err: Error) {
+  private failDaemonReady(err: unknown) {
     this._daemonStatus = DaemonStatus.DISCONNECTED;
     this._daemonReadyFailed?.(err);
   }
@@ -401,7 +406,7 @@ export class DaemonClient {
         sourceMaps: response.sourceMaps,
       };
     } catch (e) {
-      if (e.name === DaemonProjectGraphError.name) {
+      if (isDaemonProjectGraphError(e)) {
         throw ProjectGraphError.fromDaemonProjectGraphError(e);
       } else {
         throw e;
@@ -523,7 +528,7 @@ export class DaemonClient {
               }
             } catch (e) {
               for (const cb of this.fileWatcherCallbacks.values()) {
-                cb(e, null);
+                cb(coerceToError(e), null);
               }
             }
           },
@@ -588,7 +593,7 @@ export class DaemonClient {
         clearTimeout(timeout);
         this.fileWatcherRegistrations.delete(callbackId);
       };
-      const fail = (error: Error) => {
+      const fail = (error: unknown) => {
         cleanup();
         this.fileWatcherCallbacks.delete(callbackId);
         this.fileWatcherConfigs.delete(callbackId);
@@ -610,6 +615,9 @@ export class DaemonClient {
         reject: fail,
       });
       try {
+        if (!this.fileWatcherMessenger) {
+          throw new Error('The file watcher connection is not open');
+        }
         this.fileWatcherMessenger.sendMessage({
           type: 'REGISTER_FILE_WATCHER',
           config: this.fileWatcherConfigs.get(callbackId),
@@ -673,11 +681,11 @@ export class DaemonClient {
     } catch (err) {
       // Version mismatch - pass error to callbacks so they can handle it
       clientLogger.log(
-        `[FileWatcher] Error during reconnection: ${err.message}`
+        `[FileWatcher] Error during reconnection: ${errorMessage(err)}`
       );
       this.fileWatcherReconnecting = false;
       for (const cb of this.fileWatcherCallbacks.values()) {
-        cb(err, null);
+        cb(coerceToError(err), null);
       }
       return;
     }
@@ -711,7 +719,7 @@ export class DaemonClient {
             }
           } catch (e) {
             for (const cb of this.fileWatcherCallbacks.values()) {
-              cb(e, null);
+              cb(coerceToError(e), null);
             }
           }
         },
@@ -762,7 +770,7 @@ export class DaemonClient {
       this.fileWatcherReconnecting = false;
     } catch (e) {
       // Failed to reconnect - notify as closed
-      clientLogger.log(`[FileWatcher] Reconnection failed: ${e.message}`);
+      clientLogger.log(`[FileWatcher] Reconnection failed: ${errorMessage(e)}`);
       this.fileWatcherReconnecting = false;
       for (const cb of this.fileWatcherCallbacks.values()) {
         cb('closed', null);
@@ -813,7 +821,7 @@ export class DaemonClient {
             }
           } catch (e) {
             for (const cb of this.projectGraphListenerCallbacks.values()) {
-              cb(e, null);
+              cb(coerceToError(e), null);
             }
           }
         },
@@ -901,11 +909,11 @@ export class DaemonClient {
     } catch (err) {
       // Version mismatch - pass error to callbacks so they can handle it
       clientLogger.log(
-        `[ProjectGraphListener] Error during reconnection: ${err.message}`
+        `[ProjectGraphListener] Error during reconnection: ${errorMessage(err)}`
       );
       this.projectGraphListenerReconnecting = false;
       for (const cb of this.projectGraphListenerCallbacks.values()) {
-        cb(err, null);
+        cb(coerceToError(err), null);
       }
       return;
     }
@@ -939,7 +947,7 @@ export class DaemonClient {
             }
           } catch (e) {
             for (const cb of this.projectGraphListenerCallbacks.values()) {
-              cb(e, null);
+              cb(coerceToError(e), null);
             }
           }
         },
@@ -983,7 +991,7 @@ export class DaemonClient {
     } catch (e) {
       // Failed to reconnect - notify as closed
       clientLogger.log(
-        `[ProjectGraphListener] Reconnection failed: ${e.message}`
+        `[ProjectGraphListener] Reconnection failed: ${errorMessage(e)}`
       );
       this.projectGraphListenerReconnecting = false;
       for (const cb of this.projectGraphListenerCallbacks.values()) {
@@ -1269,7 +1277,7 @@ export class DaemonClient {
       this._waitForDaemonReady = this.createReadyPromise();
       this._daemonStatus = DaemonStatus.CONNECTING;
 
-      let daemonPid: number | null = null;
+      let daemonPid: number | null | undefined = null;
       try {
         let probe: { available: boolean; refusal?: ConnectRefusal };
         try {
@@ -1371,7 +1379,7 @@ export class DaemonClient {
         // teardown at the end of this handler the connection stays open and
         // permanently deaf, and the next request waits out the keep-alive.
         if (!err.message) {
-          this.currentReject(daemonProcessException(err.toString()));
+          this.inFlightRequest().reject(daemonProcessException(err.toString()));
           this.socketMessenger?.close();
           return;
         }
@@ -1403,7 +1411,7 @@ export class DaemonClient {
         } else {
           error = daemonProcessException(err.toString());
         }
-        this.currentReject(error);
+        this.inFlightRequest().reject(error);
         this.socketMessenger?.close();
       }
     );
@@ -1579,6 +1587,9 @@ export class DaemonClient {
       this.currentResolve = resolve;
       this.currentReject = reject;
 
+      if (!this.socketMessenger) {
+        throw new Error('The daemon connection is not open');
+      }
       this.socketMessenger.sendMessage(message);
     }).finally(() => {
       clearTimeout(keepAlive);
@@ -1603,15 +1614,29 @@ export class DaemonClient {
     }
   }
 
+  private inFlightRequest() {
+    const message = this.currentMessage;
+    const resolve = this.currentResolve;
+    const reject = this.currentReject;
+    if (!message || !resolve || !reject) {
+      throw new Error('Received a daemon response with no request in flight');
+    }
+    return { message, resolve, reject };
+  }
+
   private handleMessage(serializedResult: Buffer) {
+    const message = this.currentMessage;
+    if (!message) {
+      throw new Error('Received a daemon response with no request in flight');
+    }
     try {
-      performance.mark('result-parse-start-' + this.currentMessage.type);
+      performance.mark('result-parse-start-' + message.type);
       const parsedResult = parseMessage<any>(serializedResult);
-      performance.mark('result-parse-end-' + this.currentMessage.type);
+      performance.mark('result-parse-end-' + message.type);
       performance.measure(
-        'deserialize daemon response - ' + this.currentMessage.type,
-        'result-parse-start-' + this.currentMessage.type,
-        'result-parse-end-' + this.currentMessage.type
+        'deserialize daemon response - ' + message.type,
+        'result-parse-start-' + message.type,
+        'result-parse-end-' + message.type
       );
       // Streaming messages fire side-effects on the client but do not
       // resolve the pending request promise — the daemon can push several
@@ -1626,26 +1651,27 @@ export class DaemonClient {
         console[parsedResult.level](parsedResult.message);
         return;
       }
+      const { resolve, reject } = this.inFlightRequest();
       if (parsedResult.error) {
-        this.currentReject(parsedResult.error);
+        reject(parsedResult.error);
       } else {
         performance.measure(
-          `${this.currentMessage.type} round trip`,
+          `${message.type} round trip`,
           'sendMessageToDaemon-start',
-          'result-parse-end-' + this.currentMessage.type
+          'result-parse-end-' + message.type
         );
 
-        return this.currentResolve(parsedResult);
+        return resolve(parsedResult);
       }
     } catch (e) {
       const endOfResponse = describeMessage(serializedResult, {
         from: 'end',
       });
-      this.currentReject(
+      this.inFlightRequest().reject(
         daemonProcessException(
           [
             'Could not deserialize response from Nx daemon.',
-            `Message: ${e.message}`,
+            `Message: ${errorMessage(e)}`,
             '\n',
             `Received:`,
             endOfResponse,
@@ -1770,10 +1796,17 @@ export class DaemonClient {
         process.kill(pid, 'SIGTERM');
       }
     } catch (err) {
-      if ((err as any).code !== 'ESRCH') {
+      if (
+        !(
+          typeof err === 'object' &&
+          err !== null &&
+          'code' in err &&
+          err.code === 'ESRCH'
+        )
+      ) {
         output.error({
           title:
-            err?.message ||
+            (err instanceof Error && err.message) ||
             'Something unexpected went wrong when stopping the daemon server',
         });
       }
@@ -1861,4 +1894,8 @@ export function daemonProcessException(message: string) {
   const error = new Error(body);
   (error as any).internalDaemonError = true;
   return error;
+}
+
+function errorMessage(e: unknown): string {
+  return e instanceof Error ? e.message : String(e);
 }

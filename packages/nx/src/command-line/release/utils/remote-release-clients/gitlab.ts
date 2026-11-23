@@ -13,6 +13,7 @@ import { extractGitLabRepoSlug } from './extract-repo-slug';
 import {
   RemoteReleaseClient,
   RemoteReleaseOptions,
+  ManualRemoteReleaseResult,
   RemoteReleaseResult,
   RemoteRepoData,
 } from './remote-release-client';
@@ -165,7 +166,7 @@ export class GitLabRemoteReleaseClient extends RemoteReleaseClient<GitLabRelease
   }
 
   protected async updateRelease(
-    _id: string,
+    _id: string | undefined,
     remoteRelease: GitLabRelease
   ): Promise<any> {
     const gitlabRepoData = this.getRequiredRemoteRepoData();
@@ -224,7 +225,7 @@ export class GitLabRemoteReleaseClient extends RemoteReleaseClient<GitLabRelease
 
   protected async handleError(
     error: any,
-    result: RemoteReleaseResult
+    result: ManualRemoteReleaseResult
   ): Promise<void> {
     if (error) {
       process.exitCode = 1;

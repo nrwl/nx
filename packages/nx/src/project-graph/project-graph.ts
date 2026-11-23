@@ -40,6 +40,7 @@ import {
   StaleProjectGraphCacheError,
 } from './error-types';
 import {
+  type FileMapCache,
   readFileMapCache,
   readProjectGraphCache,
   readSourceMapsCache,
@@ -56,6 +57,10 @@ import {
   retrieveWorkspaceFiles,
 } from './utils/retrieve-workspace-files';
 import { handleImport } from '../utils/handle-import';
+
+declare global {
+  var NX_GRAPH_CREATION: boolean | undefined;
+}
 
 /**
  * Synchronously reads the latest cached copy of the workspace's ProjectGraph.
@@ -134,7 +139,7 @@ export async function buildProjectGraphAndSourceMapsWithoutDaemon() {
 
   performance.mark('retrieve-project-configurations:start');
   let configurationResult: ConfigurationResult;
-  let projectConfigurationsError: ProjectConfigurationsError;
+  let projectConfigurationsError: ProjectConfigurationsError | undefined;
   const separatedPlugins = await getPluginsSeparated(nxJson);
   const plugins = separatedPlugins.specifiedPlugins.concat(
     separatedPlugins.defaultPlugins
@@ -166,10 +171,11 @@ export async function buildProjectGraphAndSourceMapsWithoutDaemon() {
 
   const cacheEnabled = process.env.NX_CACHE_PROJECT_GRAPH !== 'false';
   performance.mark('build-project-graph-using-project-file-map:start');
-  let projectGraphError: AggregateProjectGraphError;
-  let projectGraphResult: Awaited<
-    ReturnType<typeof buildProjectGraphUsingProjectFileMap>
-  >;
+  let projectGraphError: AggregateProjectGraphError | undefined;
+  let projectGraphResult: {
+    projectGraph: ProjectGraph;
+    projectFileMapCache: FileMapCache | null;
+  };
   try {
     projectGraphResult = await buildProjectGraphUsingProjectFileMap(
       projects,
@@ -227,12 +233,20 @@ export async function buildProjectGraphAndSourceMapsWithoutDaemon() {
   }
 }
 
-export function handleProjectGraphError(opts: { exitOnError: boolean }, e) {
+export function handleProjectGraphError(
+  opts: { exitOnError: boolean },
+  e: unknown
+): never {
   if (opts.exitOnError) {
     const isVerbose = process.env.NX_VERBOSE_LOGGING === 'true';
     if (e instanceof ProjectGraphError) {
       output.error(formatProjectGraphError(e, isVerbose));
-    } else if (typeof e.message === 'string') {
+    } else if (
+      typeof e === 'object' &&
+      e !== null &&
+      'message' in e &&
+      typeof e.message === 'string'
+    ) {
       const lines = e.message.split('\n');
       output.error({
         title: lines[0],
@@ -423,7 +437,7 @@ export async function createProjectGraphAndSourceMapsAsync(
     } catch (e) {
       handleProjectGraphError(opts, e);
     } finally {
-      if (holdingLock) {
+      if (lock && holdingLock) {
         lock.unlock();
       }
     }
@@ -447,7 +461,14 @@ export async function createProjectGraphAndSourceMapsAsync(
       });
       return projectGraphAndSourceMaps;
     } catch (e) {
-      if (e.message && e.message.indexOf('inotify_add_watch') > -1) {
+      const message =
+        typeof e === 'object' &&
+        e !== null &&
+        'message' in e &&
+        typeof e.message === 'string'
+          ? e.message
+          : undefined;
+      if (message && message.indexOf('inotify_add_watch') > -1) {
         // common errors with the daemon due to OS settings (cannot watch all the files available)
         output.note({
           title: `Unable to start Nx Daemon due to the limited amount of inotify watches, continuing without the daemon.`,
@@ -456,11 +477,17 @@ export async function createProjectGraphAndSourceMapsAsync(
             'Nx Daemon is going to be disabled until you run "nx reset".',
           ],
         });
-        markDaemonAsDisabled(e.message);
+        markDaemonAsDisabled(message);
         return buildProjectGraphAndSourceMapsWithoutDaemon();
       }
 
-      if (e.daemonPermissionError) {
+      if (
+        message !== undefined &&
+        typeof e === 'object' &&
+        e !== null &&
+        'daemonPermissionError' in e &&
+        e.daemonPermissionError
+      ) {
         // Deliberately not disabled: unlike the inotify limit above, a socket
         // owned by someone else stops being there when it is removed or the
         // machine reboots, and disabling until `nx reset` would outlive the
@@ -471,7 +498,7 @@ export async function createProjectGraphAndSourceMapsAsync(
         // sockets under the Nx socket root). The message hedges between exactly
         // those two because it cannot tell them apart, and this branch does not
         // call writeDaemonLogs, so dropping the line loses the errno for good.
-        const [summary, ...details] = e.message.split('\n');
+        const [summary, ...details] = message.split('\n');
         output.note({
           title: `${summary} Continuing without the daemon.`,
           // The blank line after the summary separates paragraphs when the
@@ -481,8 +508,14 @@ export async function createProjectGraphAndSourceMapsAsync(
         return buildProjectGraphAndSourceMapsWithoutDaemon();
       }
 
-      if (e.internalDaemonError) {
-        const errorLogFile = writeDaemonLogs(e.message);
+      if (
+        message !== undefined &&
+        typeof e === 'object' &&
+        e !== null &&
+        'internalDaemonError' in e &&
+        e.internalDaemonError
+      ) {
+        const errorLogFile = writeDaemonLogs(message);
         const sandboxed = isSandbox();
         output.warn({
           title: `Nx Daemon was not able to compute the project graph.`,
@@ -504,9 +537,9 @@ export async function createProjectGraphAndSourceMapsAsync(
         // and survive the user fixing their allowlist, since only `nx reset`
         // clears it.
         if (sandboxed) {
-          disableDaemonForThisProcess(e.message);
+          disableDaemonForThisProcess(message);
         } else {
-          markDaemonAsDisabled(e.message);
+          markDaemonAsDisabled(message);
         }
         // Both writes are only read through `isDaemonDisabled()`, which
         // `enabled()` consults once and then memoizes. Without clearing that,

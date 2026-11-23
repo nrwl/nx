@@ -28,8 +28,8 @@ import {
 import type { NormalizedSchema } from './new';
 
 type PresetInfo = {
-  generateAppCmd?: string;
-  generateLibCmd?: string;
+  generateAppCmd?: string | null;
+  generateLibCmd?: string | null;
   generateNxReleaseInfo?: boolean;
   learnMoreLink?: string;
 };
@@ -162,6 +162,10 @@ const presetToPluginMap: { [key in Preset]: PresetInfo } = {
   },
 };
 
+function isPreset(preset: string): preset is Preset {
+  return Object.values<string>(Preset).includes(preset);
+}
+
 export async function generateWorkspaceFiles(
   tree: Tree,
   options: NormalizedSchema
@@ -202,7 +206,7 @@ export async function generateWorkspaceFiles(
 
   await createReadme(tree, options, token);
 
-  let aiAgentsCallback: () => unknown | undefined = undefined;
+  let aiAgentsCallback: (() => unknown) | undefined = undefined;
   if (options.aiAgents && options.aiAgents.length > 0) {
     aiAgentsCallback = await setupAiAgentsGenerator(tree, {
       directory: options.directory,
@@ -322,12 +326,13 @@ function createFiles(tree: Tree, options: NormalizedSchema) {
 async function createReadme(
   tree: Tree,
   { name, appName, directory, preset, nxCloud, workspaces }: NormalizedSchema,
-  nxCloudToken?: string
+  nxCloudToken?: string | null
 ) {
   const formattedNames = names(name);
 
   // default to an empty one for custom presets
-  const presetInfo: PresetInfo = presetToPluginMap[preset] ?? {
+  const presetInfo: PresetInfo = (isPreset(preset) &&
+    presetToPluginMap[preset]) || {
     generateLibCmd: null,
   };
 
@@ -370,7 +375,7 @@ function addPnpmSettings(
   packageManagerVersion: string,
   presetDependencies: PresetDependencies
 ) {
-  const buildScripts = {
+  const buildScripts: Record<string, boolean> = {
     nx: true,
     ...getPresetBuildScripts(options, presetDependencies),
   };
@@ -458,9 +463,7 @@ function addPropertyWithStableKeys(obj: any, key: string, value: string) {
 
 function normalizeOptions(options: NormalizedSchema) {
   let defaultBase = options.defaultBase || deduceDefaultBase();
-  const name = names(options.name).fileName;
   return {
-    name,
     ...options,
     defaultBase,
     nxCloud: options.nxCloud ?? 'skip',
@@ -493,7 +496,7 @@ function setUpWorkspacesInPackageJson(tree: Tree, options: NormalizedSchema) {
 
       if (tree.exists(pnpmWorkspacePath)) {
         // already added to set the peer deps settings for pnpm 10.6.0+
-        const existingContent = tree.read(pnpmWorkspacePath, 'utf-8');
+        const existingContent = tree.read(pnpmWorkspacePath, 'utf-8') ?? '';
         if (existingContent.trim().length) {
           content = `${content}\n${existingContent}`;
         }

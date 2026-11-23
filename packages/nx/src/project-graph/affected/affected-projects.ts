@@ -62,5 +62,5 @@ export async function getProjectGlobPatterns(
   );
   return capabilities
     .map((capability) => capability.createNodesPattern)
-    .filter((pattern) => !!pattern);
+    .filter((pattern): pattern is string => !!pattern);
 }

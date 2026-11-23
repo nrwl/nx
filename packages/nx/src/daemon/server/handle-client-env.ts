@@ -45,7 +45,7 @@ let workersHoldBerryFolders = false;
  * whose env still reflects the previous client.
  */
 export async function handleClientEnv(
-  env: Record<string, string>,
+  env: NodeJS.ProcessEnv,
   client?: ClientSocket
 ): Promise<void> {
   // A client whose env matches one an in-flight apply already wrote to
@@ -118,7 +118,7 @@ async function runApply(apply: Promise<void>): Promise<void> {
 }
 
 function trackLiveClient(
-  env: Record<string, string>,
+  env: NodeJS.ProcessEnv,
   client: ClientSocket | undefined
 ): void {
   // A socket that closed while this message waited will not emit 'close' again.
@@ -182,7 +182,7 @@ export function envWithLiveBerryBinFolders(): NodeJS.ProcessEnv {
 }
 
 function workerEnv(
-  env: Record<string, string>,
+  env: NodeJS.ProcessEnv,
   keepBerryFolders: boolean
 ): Record<string, string> {
   workersHoldBerryFolders = keepBerryFolders;

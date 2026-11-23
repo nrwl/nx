@@ -239,6 +239,7 @@ export async function createRunManyDynamicOutputRenderer({
        */
       if (
         totalCompletedTasks !== totalTasks &&
+        typeof args.parallel === 'number' &&
         Number.isInteger(args.parallel) &&
         runningTasks.length < args.parallel
       ) {

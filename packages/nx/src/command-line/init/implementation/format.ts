@@ -116,7 +116,7 @@ export async function formatInitWrites(
         ? `Could not format the files ${command} wrote with ${formatter}.`
         : `Could not work out which formatter to use for the files ${command} wrote.`,
       bodyLines: [
-        ...(e?.message ? [e.message] : []),
+        ...(e instanceof Error && e.message ? [e.message] : []),
         'Run "nx format:write" to format them.',
       ],
     });

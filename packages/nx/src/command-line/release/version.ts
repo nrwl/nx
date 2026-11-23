@@ -40,6 +40,7 @@ import {
   commitChanges,
   createCommitMessageValues,
   createGitTagValues,
+  getReleaseGroupFilteredProjects,
   handleDuplicateGitTags,
 } from './utils/shared';
 import { validateResolvedVersionPlansAgainstFilter } from './utils/version-plan-utils';
@@ -77,7 +78,7 @@ export interface NxReleaseVersionResult {
 }
 
 export const releaseVersionCLIHandler = (args: VersionOptions) =>
-  handleErrors(args.verbose, () => createAPI({}, false)(args));
+  handleErrors(args.verbose ?? false, () => createAPI({}, false)(args));
 
 export function createAPI(
   overrideReleaseConfig: NxReleaseConfiguration,
@@ -139,7 +140,7 @@ export function createAPI(
       process.exit(1);
     }
 
-    const tree = new FsTree(workspaceRoot, args.verbose);
+    const tree = new FsTree(workspaceRoot, args.verbose ?? false);
 
     // Use pre-built release graph if provided, otherwise create a new one
     const releaseGraph: ReleaseGraph =
@@ -152,8 +153,8 @@ export function createAPI(
           projects: args.projects,
           groups: args.groups,
         },
-        firstRelease: args.firstRelease,
-        verbose: args.verbose,
+        firstRelease: args.firstRelease ?? false,
+        verbose: args.verbose ?? false,
         preid: args.preid,
         versionActionsOptionsOverrides: args.versionActionsOptionsOverrides,
       }));
@@ -172,7 +173,7 @@ export function createAPI(
         rawVersionPlans,
         releaseGraph.allReleaseGroups,
         Object.keys(projectGraph.nodes),
-        args.verbose
+        args.verbose ?? false
       );
 
       // Validate version plans against the filter after resolution
@@ -414,7 +415,10 @@ export function createAPI(
       const releaseGroup = releaseGraph.releaseGroups[0];
       if (releaseGroup.projectsRelationship === 'fixed') {
         const releaseGroupProjectNames = Array.from(
-          releaseGraph.releaseGroupToFilteredProjects.get(releaseGroup)
+          getReleaseGroupFilteredProjects(
+            releaseGraph.releaseGroupToFilteredProjects,
+            releaseGroup
+          )
         );
         workspaceVersion = versionData[releaseGroupProjectNames[0]].newVersion; // all projects have the same version so we can just grab the first
       }
@@ -559,7 +563,7 @@ function printAndFlushChanges(tree: Tree, isDryRun: boolean) {
 
 function runPreVersionCommand(
   preVersionCommand: string,
-  { dryRun, verbose }: { dryRun: boolean; verbose: boolean },
+  { dryRun, verbose }: { dryRun?: boolean; verbose?: boolean },
   releaseGroup?: ReleaseGroupWithName,
   dockerPreVersionCommand: boolean = false
 ) {
@@ -581,7 +585,7 @@ function runPreVersionCommand(
     console.log(preVersionCommand);
   }
 
-  let env: Record<string, string> = {
+  let env: NodeJS.ProcessEnv = {
     ...process.env,
   };
   if (dryRun) {
@@ -603,7 +607,7 @@ function runPreVersionCommand(
       : `The pre-version command failed. Retry with --verbose to see the full output of the pre-version command.`;
     output.error({
       title,
-      bodyLines: [preVersionCommand, e],
+      bodyLines: [preVersionCommand, String(e)],
     });
     process.exit(1);
   }

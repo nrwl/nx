@@ -21,11 +21,11 @@ export type DelayedSpinnerOptions = {
  * takes longer than a certain amount of time.
  */
 export class DelayedSpinner {
-  spinner: typeof globalSpinner;
+  spinner: typeof globalSpinner | undefined;
   timeouts: NodeJS.Timeout[] = [];
 
   private lastMessage: string;
-  private ready: boolean;
+  private ready = false;
   private readonly progressTopic: ProgressTopic | undefined;
 
   /**

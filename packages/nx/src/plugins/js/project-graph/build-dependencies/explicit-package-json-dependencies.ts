@@ -15,7 +15,7 @@ export function buildExplicitPackageJsonDependencies(
   targetProjectLocator: TargetProjectLocator
 ): RawProjectGraphDependency[] {
   const res: RawProjectGraphDependency[] = [];
-  const roots = {};
+  const roots: Record<string, boolean> = {};
   Object.values(ctx.projects).forEach((project) => {
     roots[project.root] = true;
   });
@@ -51,7 +51,11 @@ function processPackageJson(
   collectedDeps: RawProjectGraphDependency[]
 ) {
   try {
-    const deps = readDeps(parseJson(defaultFileRead(packageJsonPath)));
+    const content = defaultFileRead(packageJsonPath);
+    if (content === null) {
+      throw new Error(`Could not read ${packageJsonPath}`);
+    }
+    const deps = readDeps(parseJson(content));
 
     Object.keys(deps).forEach((packageName) => {
       const packageVersion = deps[packageName];
@@ -127,9 +131,12 @@ function readDeps(packageJson: PackageJson) {
   ] as const;
 
   for (const type of depType) {
-    Object.keys(packageJson[type] || {}).forEach((depName) => {
-      deps[depName] = packageJson[type][depName];
-    });
+    const section = packageJson[type];
+    if (section) {
+      Object.keys(section).forEach((depName) => {
+        deps[depName] = section[depName];
+      });
+    }
   }
 
   return deps;

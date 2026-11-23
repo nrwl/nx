@@ -31,6 +31,7 @@ import {
   gitRan,
   markCommitStarted,
   markInstallFailed,
+  requireStep,
   stepsToPendingMigrations,
   stepLabel,
   uncoveredFailedStepIds,
@@ -189,10 +190,7 @@ export function recordUnresolvedIssue(
   if (state.singleMigration === true) return { state };
   // Minted from the transitioned step: a died one only gains its failure in
   // the transition.
-  const minted = mintUnresolvedIssue(
-    state,
-    state.steps.find((s) => s.id === stepId)
-  );
+  const minted = mintUnresolvedIssue(state, requireStep(state, stepId));
   let archiveError: string | undefined;
   try {
     archiveIssues(dir, minted.application);

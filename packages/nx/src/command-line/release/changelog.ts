@@ -75,6 +75,7 @@ import {
   commitChanges,
   createCommitMessageValues,
   createGitTagValues,
+  getReleaseGroupFilteredProjects,
   handleDuplicateGitTags,
   isPrerelease,
   noDiffInChangelogMessage,
@@ -123,7 +124,7 @@ export function isChangelogEffectivelyEnabled(
 }
 
 export const releaseChangelogCLIHandler = (args: ChangelogOptions) =>
-  handleErrors(args.verbose, () => createAPI({}, false)(args));
+  handleErrors(args.verbose ?? false, () => createAPI({}, false)(args));
 
 export function createAPI(
   overrideReleaseConfig: NxReleaseConfiguration,
@@ -185,7 +186,7 @@ export function createAPI(
       process.exit(1);
     }
 
-    const tree = new FsTree(workspaceRoot, args.verbose);
+    const tree = new FsTree(workspaceRoot, args.verbose ?? false);
 
     // Use pre-built release graph if provided, otherwise create a new one
     const releaseGraph: ReleaseGraph =
@@ -198,8 +199,8 @@ export function createAPI(
           projects: args.projects,
           groups: args.groups,
         },
-        firstRelease: args.firstRelease,
-        verbose: args.verbose,
+        firstRelease: args.firstRelease ?? false,
+        verbose: args.verbose ?? false,
       }));
 
     // Display filter log if filters were applied (only when graph was created, not reused)
@@ -241,8 +242,9 @@ export function createAPI(
       args.deleteVersionPlans = true;
     }
 
-    const useAutomaticFromRef =
-      nxReleaseConfig.changelog?.automaticFromRef || args.firstRelease;
+    const useAutomaticFromRef = !!(
+      nxReleaseConfig.changelog?.automaticFromRef || args.firstRelease
+    );
 
     /**
      * For determining the versions to use within changelog files, there are a few different possibilities:
@@ -282,7 +284,7 @@ export function createAPI(
         rawVersionPlans,
         fromSHA,
         toSHA,
-        args.verbose
+        args.verbose ?? false
       );
 
       if (args.verbose) {
@@ -297,7 +299,7 @@ export function createAPI(
       rawVersionPlans,
       releaseGraph.allReleaseGroups,
       Object.keys(projectGraph.nodes),
-      args.verbose
+      args.verbose ?? false
     );
 
     // Validate version plans against the filter after resolution
@@ -391,13 +393,14 @@ export function createAPI(
       pattern: string,
       templateValues: Record<string, string>,
       preid: string | undefined,
-      checkAllBranchesWhen: CheckAllBranchesWhen,
+      checkAllBranchesWhen: CheckAllBranchesWhen | undefined,
       requireSemver: boolean,
       strictPreid: boolean,
       projectRoot?: string
     ): Promise<string | null> => {
-      if (fromSHACache.has(cacheKey)) {
-        return fromSHACache.get(cacheKey);
+      const cachedSHA = fromSHACache.get(cacheKey);
+      if (cachedSHA !== undefined) {
+        return cachedSHA;
       }
       const sha = await resolveChangelogFromSHA({
         fromRef: args.from,
@@ -450,9 +453,8 @@ export function createAPI(
 
         for (const dependent of dependentProjects) {
           const additionalDependencyBumpsForProject =
-            projectToAdditionalDependencyBumps.has(dependent.dependencyName)
-              ? projectToAdditionalDependencyBumps.get(dependent.dependencyName)
-              : [];
+            projectToAdditionalDependencyBumps.get(dependent.dependencyName) ??
+            [];
           additionalDependencyBumpsForProject.push({
             dependencyName: project,
             newVersion: projectsVersionData[project].newVersion,
@@ -480,7 +482,10 @@ export function createAPI(
           Array.from(
             new Set(
               Array.from(
-                releaseGraph.releaseGroupToFilteredProjects.get(releaseGroup)
+                getReleaseGroupFilteredProjects(
+                  releaseGraph.releaseGroupToFilteredProjects,
+                  releaseGroup
+                )
               ).flatMap((project) => {
                 return [
                   project,
@@ -672,7 +677,7 @@ function resolveChangelogVersions(
   args: ChangelogOptions,
   releaseGraph: ReleaseGraph
 ): {
-  workspaceChangelogVersion: string | undefined;
+  workspaceChangelogVersion: string | null | undefined;
   projectsVersionData: VersionData;
 } {
   if (!args.version && !args.versionData) {
@@ -684,13 +689,16 @@ function resolveChangelogVersions(
   const versionData: VersionData = releaseGraph.releaseGroups.reduce(
     (versionData, releaseGroup) => {
       const releaseGroupProjectNames = Array.from(
-        releaseGraph.releaseGroupToFilteredProjects.get(releaseGroup)
+        getReleaseGroupFilteredProjects(
+          releaseGraph.releaseGroupToFilteredProjects,
+          releaseGroup
+        )
       );
       for (const projectName of releaseGroupProjectNames) {
         if (!args.versionData) {
           versionData[projectName] = {
             dockerVersion: args.version,
-            newVersion: args.version,
+            newVersion: args.version ?? null,
             currentVersion: '', // not relevant within changelog/commit generation
             dependentProjects: [], // not relevant within changelog/commit generation
           };
@@ -913,8 +921,9 @@ async function generateChangelogForWorkspace({
     return;
   }
 
-  // If explicitly null it must mean that no changes were detected (e.g. when using conventional commits), so do nothing
-  if (workspaceChangelogVersion === null) {
+  // null means no changes were detected (e.g. when using conventional commits); undefined means only
+  // versionData was passed, which cannot produce a workspace changelog. Either way, do nothing.
+  if (workspaceChangelogVersion == null) {
     return;
   }
 
@@ -1024,9 +1033,8 @@ async function generateChangelogForWorkspace({
   }
 
   if (interpolatedTreePath) {
-    let rootChangelogContents = tree.exists(interpolatedTreePath)
-      ? tree.read(interpolatedTreePath).toString()
-      : '';
+    let rootChangelogContents =
+      tree.read(interpolatedTreePath)?.toString() ?? '';
     if (rootChangelogContents && !args.replaceExistingContents) {
       // NOTE: right now existing releases are always expected to be in markdown format, but in the future we could potentially support others via a custom parser option
       const changelogReleases = parseChangelogMarkdown(
@@ -1137,12 +1145,17 @@ async function generateChangelogForProjects({
 
     const preferDockerVersion =
       shouldPreferDockerVersionForReleaseGroup(releaseGroup);
+    const { dockerVersion, newVersion } = projectsVersionData[project.name];
+    const version =
+      (preferDockerVersion === true || preferDockerVersion === 'both') &&
+      dockerVersion
+        ? dockerVersion
+        : (newVersion ?? dockerVersion);
+    if (!version) {
+      continue;
+    }
     const releaseVersion = new ReleaseVersion({
-      version:
-        (preferDockerVersion === true || preferDockerVersion === 'both') &&
-        projectsVersionData[project.name].dockerVersion
-          ? projectsVersionData[project.name].dockerVersion
-          : projectsVersionData[project.name].newVersion,
+      version,
       releaseTagPattern: releaseGroup.releaseTag.pattern,
       projectName: project.name,
       releaseGroupName: releaseGroup.name,
@@ -1194,9 +1207,7 @@ async function generateChangelogForProjects({
     }
 
     if (interpolatedTreePath) {
-      let changelogContents = tree.exists(interpolatedTreePath)
-        ? tree.read(interpolatedTreePath).toString()
-        : '';
+      let changelogContents = tree.read(interpolatedTreePath)?.toString() ?? '';
       if (changelogContents) {
         // NOTE: right now existing releases are always expected to be in markdown format, but in the future we could potentially support others via a custom parser option
         const changelogReleases =

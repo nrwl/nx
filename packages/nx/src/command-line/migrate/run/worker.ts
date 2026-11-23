@@ -63,6 +63,7 @@ import {
   commitResultToLedgerEntry,
   latestRound,
   markInstallFailed,
+  requireStep,
   stepsToPendingMigrations,
   uncoveredFailedStepIds,
   unresolvedFailureDetail,
@@ -670,7 +671,7 @@ async function runRecorded(
   // reapply it against a tree that already holds its changes. Read from the
   // state the start transition returned, not the entry snapshot: a delayed
   // invocation may have claimed a later attempt whose flag `step` predates.
-  const startedStep = state.steps.find((s) => s.id === step.id);
+  const startedStep = requireStep(state, step.id);
   const generatorAlreadyCompleted = startedStep.generatorCompleted === true;
   // Dispensed worker commands never carry the user's flags, so the run records
   // its install policy. An explicit --skip-install here applies only to the
@@ -890,10 +891,12 @@ async function runRecorded(
         printNextSteps(migration, nextSteps);
 
         if (validationOwed) {
-          if (emitsHandBack) emitValidationPayload(migrationId, owed, true);
+          if (emitsHandBack && owed)
+            emitValidationPayload(migrationId, owed, true);
           awaitingKind = 'generator-validation';
         } else if (promptOwed) {
-          if (emitsHandBack) emitPromptForOuterAgent(migrationId, owed, true);
+          if (emitsHandBack && owed)
+            emitPromptForOuterAgent(migrationId, owed, true);
           awaitingKind = 'migration-prompt';
         } else {
           outcome = buildOutcome(

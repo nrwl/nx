@@ -1,6 +1,7 @@
 import type { PreTasksExecutionContext } from './public-api';
 import { readNxJson } from '../../config/nx-json';
 import { getPlugins } from './get-plugins';
+import type { LoadedNxPluginWith } from './loaded-nx-plugin';
 import { isOnDaemon } from '../../daemon/is-on-daemon';
 import { daemonClient, isDaemonEnabled } from '../../daemon/client/client';
 import { workspaceRoot } from '../../utils/workspace-root';
@@ -38,7 +39,10 @@ export async function runPreTasksExecution(
     );
     const envs = await Promise.all(
       plugins
-        .filter((p) => p.preTasksExecution)
+        .filter(
+          (p): p is LoadedNxPluginWith<'preTasksExecution'> =>
+            !!p.preTasksExecution
+        )
         .map(async (plugin) => {
           performance.mark(`${plugin.name}:preTasksExecution:start`);
           try {
@@ -89,7 +93,10 @@ export async function runPostTasksExecution(
     const plugins = await getPlugins(readNxJson(workspaceRoot));
     await Promise.all(
       plugins
-        .filter((p) => p.postTasksExecution)
+        .filter(
+          (p): p is LoadedNxPluginWith<'postTasksExecution'> =>
+            !!p.postTasksExecution
+        )
         .map(async (plugin) => {
           performance.mark(`${plugin.name}:postTasksExecution:start`);
           try {

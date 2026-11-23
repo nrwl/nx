@@ -55,7 +55,8 @@ function withFormatOptions(yargs: Argv): Argv {
       args.sortRootTsconfigPaths ??=
         process.env.NX_FORMAT_SORT_TSCONFIG_PATHS === 'true';
       // If NX_FORMAT_SORT_TSCONFIG_PATHS=false and --sort-root-tsconfig-paths is passed, we want to set it to true favoring the arg
-      process.env.NX_FORMAT_SORT_TSCONFIG_PATHS =
-        args.sortRootTsconfigPaths.toString();
+      process.env.NX_FORMAT_SORT_TSCONFIG_PATHS = String(
+        args.sortRootTsconfigPaths
+      );
     });
 }

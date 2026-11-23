@@ -39,6 +39,10 @@ import '../src/utils/perf-logging';
 const isTsExt = extname(__filename).endsWith('.ts');
 const pathToPkgJson = isTsExt ? '../package.json' : '../../package.json';
 
+declare global {
+  var GLOBAL_NX_VERSION: string | null | undefined;
+}
+
 async function main() {
   // Tab-completion fast path. Bare env-var read so nothing runs before
   // the try/catch — a throw here would splice a stack trace into the
@@ -170,7 +174,7 @@ async function main() {
   }
 }
 
-function handleNoWorkspace(globalNxVersion?: string) {
+function handleNoWorkspace(globalNxVersion: string | null) {
   output.log({
     title: `The current directory isn't part of an Nx workspace.`,
     bodyLines: [
@@ -192,8 +196,8 @@ function handleNoWorkspace(globalNxVersion?: string) {
 }
 
 function handleNxVersionCommand(
-  LOCAL_NX_VERSION: string,
-  GLOBAL_NX_VERSION: string
+  LOCAL_NX_VERSION: string | null,
+  GLOBAL_NX_VERSION: string | null
 ) {
   console.log(stripIndents`Nx Version:
       - Local: ${LOCAL_NX_VERSION ? 'v' + LOCAL_NX_VERSION : 'Not found'}
@@ -202,13 +206,12 @@ function handleNxVersionCommand(
 }
 
 function determineNxVersions(
-  localNx: string,
-  workspace: WorkspaceTypeAndRoot,
+  localNx: string | null,
+  workspace: WorkspaceTypeAndRoot | null,
   isLocalInstall: boolean
 ) {
-  const LOCAL_NX_VERSION: string | null = localNx
-    ? getLocalNxVersion(workspace)
-    : null;
+  const LOCAL_NX_VERSION: string | null =
+    localNx && workspace ? getLocalNxVersion(workspace) : null;
   const GLOBAL_NX_VERSION: string | null = isLocalInstall
     ? null
     : require(pathToPkgJson).version;
@@ -287,8 +290,8 @@ function handleMissingLocalInstallation(detectedWorkspaceRoot: string | null) {
  * Warns if out of date by 1 major version or more.
  */
 function warnIfUsingOutdatedGlobalInstall(
-  globalNxVersion: string,
-  localNxVersion?: string
+  globalNxVersion: string | null,
+  localNxVersion?: string | null
 ) {
   // Skip when Nx is recursively invoking itself.
   if (process.env.NX_CLI_SET) {
@@ -319,8 +322,8 @@ function warnIfUsingOutdatedGlobalInstall(
 }
 
 function checkOutdatedGlobalInstallation(
-  globalNxVersion?: string,
-  localNxVersion?: string
+  globalNxVersion: string | null,
+  localNxVersion?: string | null
 ) {
   // We aren't running a global install, so we can't know if its outdated.
   if (!globalNxVersion) {
@@ -359,7 +362,7 @@ function getLocalNxVersion(workspace: WorkspaceTypeAndRoot): string | null {
   return null;
 }
 
-function _getLatestVersionOfNx(): string {
+function _getLatestVersionOfNx(): string | null {
   try {
     return execSync('npm view nx@latest version', {
       windowsHide: true,
@@ -379,8 +382,8 @@ function _getLatestVersionOfNx(): string {
   }
 }
 
-const getLatestVersionOfNx = ((fn: () => string) => {
-  let cache: string = null;
+const getLatestVersionOfNx = ((fn: () => string | null) => {
+  let cache: string | null = null;
   return () => cache || (cache = fn());
 })(_getLatestVersionOfNx);
 

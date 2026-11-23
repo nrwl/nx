@@ -75,7 +75,7 @@ import { splitTargetFromNodes } from '../../utils/split-target';
 
 export interface GraphError {
   message: string;
-  stack: string;
+  stack?: string;
   cause: unknown;
   name: string;
   pluginName: string;
@@ -83,13 +83,13 @@ export interface GraphError {
 }
 
 export interface ProjectGraphClientResponse {
-  hash: string;
+  hash: string | null;
   projects: ProjectGraphProjectNode[];
   dependencies: Record<string, ProjectGraphDependency[]>;
   fileMap?: ProjectFileMap;
   layout: { appsDir: string; libsDir: string };
   affected: string[];
-  focus: string;
+  focus: string | null;
   groupByFolder: boolean;
   exclude: string[];
   isPartial: boolean;
@@ -104,12 +104,16 @@ export interface TaskGraphClientResponse {
   error?: string | null;
 }
 
+type TaskGraphClientResponseWithPlans = TaskGraphClientResponse & {
+  plans: Record<string, string[]>;
+};
+
 export interface ExpandedTaskInputsReponse {
   [taskId: string]: Record<string, string[]>;
 }
 
 // maps file extention to MIME types
-const mimeType = {
+const mimeType: Record<string, string> = {
   '.ico': 'image/x-icon',
   '.html': 'text/html',
   '.js': 'text/javascript',
@@ -128,12 +132,12 @@ const mimeType = {
 
 function buildEnvironmentJs(
   exclude: string[],
-  watchMode: boolean,
+  watchMode: boolean | undefined,
   localMode: 'build' | 'serve',
   depGraphClientResponse?: ProjectGraphClientResponse,
   taskGraphClientResponse?: TaskGraphClientResponse,
   expandedTaskInputsReponse?: ExpandedTaskInputsReponse,
-  sourceMapsResponse?: ConfigurationSourceMaps
+  sourceMapsResponse?: ConfigurationSourceMaps | null
 ) {
   let environmentJs = `window.exclude = ${JSON.stringify(exclude)};
   window.watch = ${!!watchMode};
@@ -211,7 +215,7 @@ function hasPath(
 
 function filterGraph(
   graph: ProjectGraph,
-  focus: string,
+  focus: string | null,
   exclude: string[]
 ): ProjectGraph {
   let projectNames = (
@@ -298,32 +302,31 @@ export async function generateGraph(
   }
 
   let rawGraph: ProjectGraph;
-  let sourceMaps: ConfigurationSourceMaps;
+  let sourceMaps: ConfigurationSourceMaps | null;
   try {
     const projectGraphAndSourceMaps =
       await createProjectGraphAndSourceMapsAsync({ exitOnError: false });
     rawGraph = projectGraphAndSourceMaps.projectGraph;
     sourceMaps = projectGraphAndSourceMaps.sourceMaps;
   } catch (e) {
-    if (e instanceof ProjectGraphError) {
-      rawGraph = e.getPartialProjectGraph();
-      sourceMaps = e.getPartialSourcemaps();
-    }
-    if (!rawGraph) {
+    const partialGraph =
+      e instanceof ProjectGraphError ? e.getPartialProjectGraph() : null;
+    if (!(e instanceof ProjectGraphError) || !partialGraph) {
       handleProjectGraphError({ exitOnError: true }, e);
-    } else {
-      const errors = e.getErrors();
-      if (errors?.length > 0) {
-        errors.forEach((e) => {
-          output.error({ title: e.message, bodyLines: [e.stack] });
-        });
-      }
-      output.warn({
-        title: `${
-          errors?.length > 1 ? `${errors.length} errors` : `An error`
-        } occurred while processing the project graph. Showing partial graph.`,
+    }
+    rawGraph = partialGraph;
+    sourceMaps = e.getPartialSourcemaps();
+    const errors = e.getErrors();
+    if (errors?.length > 0) {
+      errors.forEach((e) => {
+        output.error({ title: e.message, bodyLines: [String(e.stack)] });
       });
     }
+    output.warn({
+      title: `${
+        errors?.length > 1 ? `${errors.length} errors` : `An error`
+      } occurred while processing the project graph. Showing partial graph.`,
+    });
   }
   let prunedGraph = pruneExternalNodes(rawGraph);
 
@@ -372,7 +375,7 @@ export async function generateGraph(
           'affected',
           {
             printWarnings:
-              args.affected && !args.print && args.file !== 'stdout',
+              !!args.affected && !args.print && args.file !== 'stdout',
           },
           readNxJson()
         ).nxArgs,
@@ -408,7 +411,7 @@ export async function generateGraph(
     } catch (e) {
       output.error({
         title: `Invalid exclude pattern:`,
-        bodyLines: [e.message],
+        bodyLines: [e instanceof Error ? e.message : String(e)],
       });
       process.exit(1);
     }
@@ -538,7 +541,9 @@ export async function generateGraph(
         args.focus,
         args.groupByFolder,
         excludePatterns,
-        typeof args.taskSelection === 'object' && args.taskSelection.taskIds
+        typeof args.taskSelection === 'object' &&
+          args.taskSelection.taskIds &&
+          args.targets
           ? {
               targets: args.targets,
               configuration: args.configuration,
@@ -551,7 +556,7 @@ export async function generateGraph(
     } catch (err) {
       output.error({
         title: 'Failed to start graph server',
-        bodyLines: [err.message],
+        bodyLines: [err instanceof Error ? err.message : String(err)],
       });
       process.exit(1);
     }
@@ -654,7 +659,7 @@ export async function startServer(
   port = 4211,
   watchForChanges = true,
   affected: string[] = [],
-  focus: string = null,
+  focus: string | null = null,
   groupByFolder: boolean = false,
   exclude: string[] = [],
   selection?: TaskSelectionForGraph
@@ -699,6 +704,11 @@ export async function startServer(
     }
 
     // parse URL
+    if (req.url === undefined) {
+      res.writeHead(400, { 'Content-Type': 'text/plain' });
+      res.end('Bad Request');
+      return;
+    }
     const parsedUrl = new URL(req.url, `http://${host}:${port}`);
     // extract URL path
     // Avoid https://en.wikipedia.org/wiki/Directory_traversal_attack
@@ -813,7 +823,12 @@ export async function startServer(
         res.end(JSON.stringify({ text, success: true }));
       } catch (err) {
         res.writeHead(200, { 'Content-Type': 'application/javascript' });
-        res.end(JSON.stringify({ text: err.message, success: false }));
+        res.end(
+          JSON.stringify({
+            text: err instanceof Error ? err.message : String(err),
+            success: false,
+          })
+        );
       }
       return;
     }
@@ -942,7 +957,7 @@ let currentProjectGraphClientResponse: ProjectGraphClientResponse = {
   isPartial: false,
   errors: [],
 };
-let currentSourceMapsClientResponse: ConfigurationSourceMaps = {};
+let currentSourceMapsClientResponse: ConfigurationSourceMaps | null = {};
 let isFilteredGraph = false;
 
 function debounce<T extends (...args: any[]) => void>(fn: T, time: number): T {
@@ -984,11 +999,16 @@ function createProjectGraphListener() {
         output.note({ title: 'Project graph recomputed, updating...' });
 
         let projectGraph = data.projectGraph;
-        let sourceMaps = data.sourceMaps;
+        let sourceMaps: ConfigurationSourceMaps | null = data.sourceMaps;
         let errors: GraphError[] | undefined;
 
         if (data.error instanceof ProjectGraphError) {
-          projectGraph = data.error.getPartialProjectGraph();
+          const partialGraph = data.error.getPartialProjectGraph();
+          if (!partialGraph) {
+            output.error({ title: `Watch error: ${data.error.message}` });
+            return;
+          }
+          projectGraph = partialGraph;
           sourceMaps = data.error.getPartialSourcemaps();
           errors = data.error.getErrors().map((e) => ({
             message: e.message,
@@ -1017,18 +1037,17 @@ function createProjectGraphListener() {
             currentProjectGraphClientResponse.hash &&
           sourceMapResponse
         ) {
-          if (projectGraphClientResponse.errors?.length > 0) {
-            projectGraphClientResponse.errors.forEach((e) => {
+          const errors = projectGraphClientResponse.errors;
+          if (errors && errors.length > 0) {
+            errors.forEach((e) => {
               output.error({
                 title: e.message,
-                bodyLines: [e.stack],
+                bodyLines: [String(e.stack)],
               });
             });
             output.warn({
               title: `${
-                projectGraphClientResponse.errors.length > 1
-                  ? `${projectGraphClientResponse.errors.length} errors`
-                  : `An error`
+                errors.length > 1 ? `${errors.length} errors` : `An error`
               } occurred while processing the project graph. Showing partial graph.`,
             });
           }
@@ -1083,15 +1102,15 @@ function markTargetsHashedFromUltracacheInCI(
 
 function transformProjectGraphToClientResponse(
   projectGraph: ProjectGraph,
-  sourceMaps: ConfigurationSourceMaps,
-  errors: GraphError[] | null,
+  sourceMaps: ConfigurationSourceMaps | null,
+  errors: GraphError[] | undefined,
   affected: string[] = [],
-  focus: string = null,
+  focus: string | null = null,
   exclude: string[] = [],
   ultracacheOnInCI = false
 ): {
   projectGraphClientResponse: ProjectGraphClientResponse;
-  sourceMapResponse: ConfigurationSourceMaps;
+  sourceMapResponse: ConfigurationSourceMaps | null;
 } {
   performance.mark('project graph transform:start');
 
@@ -1154,16 +1173,16 @@ function transformProjectGraphToClientResponse(
 
 async function createProjectGraphAndSourceMapClientResponse(
   affected: string[] = [],
-  focus: string = null,
+  focus: string | null = null,
   exclude: string[] = []
 ): Promise<{
   projectGraphClientResponse: ProjectGraphClientResponse;
-  sourceMapResponse: ConfigurationSourceMaps;
+  sourceMapResponse: ConfigurationSourceMaps | null;
 }> {
   performance.mark('project graph watch calculation:start');
 
   let projectGraph: ProjectGraph;
-  let sourceMaps: ConfigurationSourceMaps;
+  let sourceMaps: ConfigurationSourceMaps | null;
   let errors: GraphError[] | undefined;
   try {
     const projectGraphAndSourceMaps =
@@ -1171,23 +1190,22 @@ async function createProjectGraphAndSourceMapClientResponse(
     projectGraph = projectGraphAndSourceMaps.projectGraph;
     sourceMaps = projectGraphAndSourceMaps.sourceMaps;
   } catch (e) {
-    if (e instanceof ProjectGraphError) {
-      projectGraph = e.getPartialProjectGraph();
-      sourceMaps = e.getPartialSourcemaps();
-      errors = e.getErrors().map((e) => ({
-        message: e.message,
-        stack: e.stack,
-        cause: e.cause,
-        name: e.name,
-        pluginName: (e as any).pluginName,
-        fileName:
-          (e as any).file ?? (e.cause as any)?.errors?.[0]?.location?.file,
-      }));
-    }
-
-    if (!projectGraph) {
+    const partialGraph =
+      e instanceof ProjectGraphError ? e.getPartialProjectGraph() : null;
+    if (!(e instanceof ProjectGraphError) || !partialGraph) {
       handleProjectGraphError({ exitOnError: true }, e);
     }
+    projectGraph = partialGraph;
+    sourceMaps = e.getPartialSourcemaps();
+    errors = e.getErrors().map((e) => ({
+      message: e.message,
+      stack: e.stack,
+      cause: e.cause,
+      name: e.name,
+      pluginName: (e as any).pluginName,
+      fileName:
+        (e as any).file ?? (e.cause as any)?.errors?.[0]?.location?.file,
+    }));
   }
 
   performance.mark('project graph watch calculation:end');
@@ -1224,14 +1242,17 @@ async function createProjectGraphAndSourceMapClientResponse(
   };
 }
 
-async function createTaskGraphClientResponse(): Promise<TaskGraphClientResponse> {
+async function createTaskGraphClientResponse(): Promise<TaskGraphClientResponseWithPlans> {
   let graph: ProjectGraph;
   try {
     graph = await createProjectGraphAsync({ exitOnError: false });
   } catch (e) {
-    if (e instanceof ProjectGraphError) {
-      graph = e.getPartialProjectGraph();
+    const partialGraph =
+      e instanceof ProjectGraphError ? e.getPartialProjectGraph() : null;
+    if (!partialGraph) {
+      throw e;
     }
+    graph = partialGraph;
   }
 
   const nxJson = readNxJson();
@@ -1303,13 +1324,13 @@ async function createTaskGraphClientResponse(): Promise<TaskGraphClientResponse>
         roots: [],
       },
       plans: {},
-      error: err.message,
+      error: err instanceof Error ? err.message : String(err),
     };
   }
 }
 
 async function createExpandedTaskInputResponse(
-  taskGraphClientResponse: TaskGraphClientResponse,
+  taskGraphClientResponse: TaskGraphClientResponseWithPlans,
   depGraphClientResponse: ProjectGraphClientResponse
 ): Promise<ExpandedTaskInputsReponse> {
   performance.mark('task input static generation:start');
@@ -1408,15 +1429,18 @@ async function createTaskGraphForTargetsAndProjects(
   selection?:
     | { taskGraph?: TaskGraph; taskIds?: string[] }
     | (() => TaskSelection)
-): Promise<TaskGraphClientResponse> {
+): Promise<TaskGraphClientResponseWithPlans> {
   // Get project graph
   let graph: ProjectGraph;
   try {
     graph = await createProjectGraphAsync({ exitOnError: false });
   } catch (e) {
-    if (e instanceof ProjectGraphError) {
-      graph = e.getPartialProjectGraph();
+    const partialGraph =
+      e instanceof ProjectGraphError ? e.getPartialProjectGraph() : null;
+    if (!partialGraph) {
+      throw e;
     }
+    graph = partialGraph;
   }
   const nxJson = readNxJson();
 
@@ -1491,7 +1515,7 @@ async function createTaskGraphForTargetsAndProjects(
         roots: [],
       },
       plans: {},
-      error: err.message,
+      error: err instanceof Error ? err.message : String(err),
     };
   }
 }
@@ -1518,15 +1542,17 @@ export async function getExpandedTaskInputs(
     projectNodes,
     { silent: true }
   );
-  const taskGraphResponse = await createTaskGraphForTargetsAndProjects(
-    [targetName],
-    [projectName],
-    configuration
-  );
+  const taskGraphResponse = targetName
+    ? await createTaskGraphForTargetsAndProjects(
+        [targetName],
+        [projectName],
+        configuration
+      )
+    : undefined;
 
   const allWorkspaceFiles = await allFileData();
 
-  const inputs = taskGraphResponse.plans?.[taskId];
+  const inputs = taskGraphResponse?.plans[taskId];
   let result: Record<string, string[]> = {};
 
   if (inputs) {
@@ -1571,7 +1597,7 @@ function splitGlobGroup(group: string): string[] {
 
 function expandInputs(
   inputs: string[],
-  project: ProjectGraphProjectNode,
+  project: ProjectGraphProjectNode | undefined,
   allWorkspaceFiles: FileData[],
   depGraphClientResponse: ProjectGraphClientResponse
 ): Record<string, string[]> {
@@ -1629,14 +1655,26 @@ function expandInputs(
 
   const otherInputsExpanded = otherInputs.map((input) => {
     if (input === 'TsConfig') {
-      return relative(workspaceRoot, getRootTsConfigPath());
+      const rootTsConfigPath = getRootTsConfigPath();
+      if (!rootTsConfigPath) {
+        throw new Error('Cannot find the root tsconfig file');
+      }
+      return relative(workspaceRoot, rootTsConfigPath);
     }
     if (input === 'ProjectConfiguration') {
-      return depGraphClientResponse.fileMap[project.name].find(
-        (file) =>
-          file.file === `${project.data.root}/project.json` ||
-          file.file === `${project.data.root}/package.json`
-      ).file;
+      const configFile =
+        project &&
+        depGraphClientResponse.fileMap?.[project.name]?.find(
+          (file) =>
+            file.file === `${project.data.root}/project.json` ||
+            file.file === `${project.data.root}/package.json`
+        );
+      if (!configFile) {
+        throw new Error(
+          `Cannot find the configuration file of project ${project?.name}`
+        );
+      }
+      return configFile.file;
     }
 
     return input;
@@ -1649,11 +1687,17 @@ function expandInputs(
         (p) => p.name === fileSetProjectName
       );
       const fileSets = input.replace(`${fileSetProjectName}:`, '').split(',');
+      const fileMap = depGraphClientResponse.fileMap;
+      if (!fileSetProject || !fileMap) {
+        throw new Error(
+          `Cannot expand inputs of project ${fileSetProjectName}`
+        );
+      }
 
       const projectInputExpanded = {
         [fileSetProject.name]: filterUsingGlobPatterns(
           fileSetProject.data.root,
-          depGraphClientResponse.fileMap[fileSetProject.name] || [],
+          fileMap[fileSetProject.name] || [],
           fileSets
         ).map((f) => f.file),
       };
@@ -1701,8 +1745,8 @@ function getExpandedWorkspaceRoots(
   allWorkspaceFiles: FileData[]
 ) {
   const workspaceRootsExpanded: string[] = [];
-  const negativeWRPatterns = [];
-  const positiveWRPatterns = [];
+  const negativeWRPatterns: string[] = [];
+  const positiveWRPatterns: string[] = [];
   for (const fileset of workspaceRootInputs) {
     if (fileset.startsWith('!')) {
       negativeWRPatterns.push(fileset.substring(17));
@@ -1755,18 +1799,21 @@ async function createJsonOutput(
     }
     const hashes = await hasher.hashTasks(tasks, taskGraph, perTaskEnvs);
     response.tasks = taskGraph;
-    response.taskPlans = tasks.reduce((acc, task, index) => {
-      acc[task.id] = Object.keys(hashes[index].details.nodes).sort();
-      return acc;
-    }, {});
+    response.taskPlans = tasks.reduce<Record<string, string[]>>(
+      (acc, task, index) => {
+        acc[task.id] = Object.keys(hashes[index].details.nodes).sort();
+        return acc;
+      },
+      {}
+    );
   }
 
   return response;
 }
 
 function getHelpTextFromTarget(
-  projectName: string,
-  targetName: string
+  projectName: string | null,
+  targetName: string | null
 ): string {
   if (!projectName) throw new Error(`Missing project`);
   if (!targetName) throw new Error(`Missing target`);
@@ -1776,7 +1823,7 @@ function getHelpTextFromTarget(
   );
   if (!project) throw new Error(`Cannot find project ${projectName}`);
 
-  const target = project.data.targets[targetName];
+  const target = project.data.targets?.[targetName];
   if (!target) throw new Error(`Cannot find target ${targetName}`);
 
   const command = target.metadata?.help?.command;

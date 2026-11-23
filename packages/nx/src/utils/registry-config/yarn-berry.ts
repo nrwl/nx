@@ -5,6 +5,7 @@ import { dirname, join, resolve } from 'path';
 import { gte, lt, major } from 'semver';
 import { readYamlFile } from '../fileutils';
 import { logger } from '../logger';
+import { isErrnoException } from '../is-errno-exception';
 import { readNpmrcMap } from '../package-manager-config/npmrc';
 import {
   ancestorDirectories,
@@ -297,7 +298,10 @@ function npmrcReader(root: string): (key: string) => string | undefined {
   });
   return (key) => {
     for (const map of maps) {
-      const value = map && readExpandedKey(map, key, expandNpmEnvVars);
+      if (!map) {
+        return undefined;
+      }
+      const value = readExpandedKey(map, key, expandNpmEnvVars);
       if (value !== undefined) {
         return value;
       }
@@ -340,7 +344,7 @@ function collectRcFiles(root: string): BerryRcFile[] {
     } catch (e) {
       // Nothing looked this one up, so an absent file surfaces as the read's
       // own ENOENT rather than as a missed lookup.
-      if (!lookedUp && e?.code === 'ENOENT') {
+      if (!lookedUp && isErrnoException(e) && e.code === 'ENOENT') {
         continue;
       }
       // The parse error quotes the lines around the fault, which in an rc file

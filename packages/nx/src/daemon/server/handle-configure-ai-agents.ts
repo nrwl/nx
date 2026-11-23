@@ -127,7 +127,7 @@ async function computeAgentStatuses(): Promise<ConfigureAiAgentsStatusResponse> 
   } catch (error) {
     log(
       'Failed to compute agent configuration status from latest Nx. Error:',
-      error.message
+      error instanceof Error ? error.message : String(error)
     );
     return { ...emptyStatus };
   }

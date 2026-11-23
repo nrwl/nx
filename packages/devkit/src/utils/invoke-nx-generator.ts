@@ -10,6 +10,30 @@ import {
 } from 'nx/src/devkit-exports';
 import { stripIndent } from 'nx/src/devkit-internals';
 
+type SchematicAction =
+  | { kind: 'c' | 'o'; path: string; content: Buffer }
+  | { kind: 'r'; path: string; to: string }
+  | { kind: 'd'; path: string };
+
+interface SchematicTree {
+  root: { path: string };
+  actions: SchematicAction[];
+  getDir(path: string): { subdirs: string[]; subfiles: string[] };
+  exists(path: string): boolean;
+  read(path: string): Buffer | null;
+  delete(path: string): void;
+  rename(from: string, to: string): void;
+  overwrite(path: string, content: Buffer | string): void;
+  create(path: string, content: Buffer | string): void;
+}
+
+interface SchematicContext {
+  engine: {
+    workflow: { engineHost: { paths?: string[] } } | null;
+  };
+  addTask(task: RunCallbackTask): void;
+}
+
 class RunCallbackTask {
   constructor(private callback: GeneratorCallback) {}
 
@@ -43,8 +67,7 @@ function createRunCallbackTask() {
 export function convertNxGenerator<T = any>(
   generator: Generator<T>,
   skipWritingConfigInOldFormat: boolean = false
-) {
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+): (generatorOptions: T) => (tree: any, context: any) => Promise<any> {
   return (generatorOptions: T) =>
     invokeNxGenerator(generator, generatorOptions);
 }
@@ -57,7 +80,7 @@ function invokeNxGenerator<T = any>(
   options: T,
   skipWritingConfigInOldFormat?: boolean
 ) {
-  return async (tree, context) => {
+  return async (tree: SchematicTree, context: SchematicContext) => {
     if (context.engine.workflow) {
       const engineHost = (context.engine.workflow as any).engineHost;
       engineHost.registerTaskExecutor(createRunCallbackTask());
@@ -86,17 +109,15 @@ function invokeNxGenerator<T = any>(
   };
 }
 
-const actionToFileChangeMap = {
+const actionToFileChangeMap: Record<'c' | 'o' | 'd', FileChange['type']> = {
   c: 'CREATE',
   o: 'UPDATE',
   d: 'DELETE',
 };
 
 class DevkitTreeFromAngularDevkitTree implements Tree {
-  private configFileName: string;
-
   constructor(
-    private tree,
+    private tree: SchematicTree,
     private _root: string,
     private skipWritingConfigInOldFormat?: boolean
   ) {
@@ -141,7 +162,7 @@ class DevkitTreeFromAngularDevkitTree implements Tree {
   }
 
   listChanges(): FileChange[] {
-    const fileChanges = [];
+    const fileChanges: FileChange[] = [];
     for (const action of this.tree.actions) {
       if (action.kind === 'r') {
         fileChanges.push({

@@ -39,7 +39,7 @@ export function moveProjectFiles(
     'public', // Vite, Remix, Next.js
   ];
 
-  const isKnownRootProjectFile = (file) => {
+  const isKnownRootProjectFile = (file: string) => {
     const baseDir = dirname(file).split(sep)[0];
     if (baseDir === '.') {
       // Not nested, check file matches
@@ -58,7 +58,7 @@ export function moveProjectFiles(
   const isWorkspaceJestConfig = (file: string) =>
     new RegExp(`^jest\\.config\\.(${MOVED_JEST_CONFIG_EXTENSIONS})$`).test(
       file
-    ) && tree.read(file, 'utf-8').includes('getJestProjectsAsync()');
+    ) && (tree.read(file, 'utf-8') ?? '').includes('getJestProjectsAsync()');
 
   visitNotIgnoredFiles(tree, project.root, (file) => {
     if (
@@ -84,6 +84,9 @@ export function moveProjectFiles(
     );
 
     const content = tree.read(file);
+    if (content === null) {
+      return;
+    }
     tree.write(newFilePath, content);
     tree.delete(file);
   });

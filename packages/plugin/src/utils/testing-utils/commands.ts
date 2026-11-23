@@ -3,6 +3,12 @@ import { tmpProjPath } from './paths';
 import { detectPackageManager, getPackageManagerCommand } from '@nx/devkit';
 import { fileExists } from './utils';
 
+function isExecSyncError(
+  e: unknown
+): e is Error & { stdout: Buffer | string; stderr: Buffer | string } {
+  return typeof e === 'object' && e !== null && 'stdout' in e && 'stderr' in e;
+}
+
 /**
  * Run a nx command inside the e2e directory
  * @param command
@@ -41,6 +47,9 @@ export function runNxCommand(
         ''
       );
   } catch (e) {
+    if (!isExecSyncError(e)) {
+      throw e;
+    }
     if (opts.silenceError) {
       return e.stdout.toString();
     } else {
@@ -62,6 +71,9 @@ export function runCommand(
       windowsHide: true,
     }).toString();
   } catch (e) {
+    if (!isExecSyncError(e)) {
+      throw e;
+    }
     return e.stdout.toString() + e.stderr.toString();
   }
 }

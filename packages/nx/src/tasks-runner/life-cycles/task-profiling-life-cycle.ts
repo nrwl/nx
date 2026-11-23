@@ -5,14 +5,24 @@ import { resolve } from 'path';
 import { Task } from '../../config/task-graph';
 import { writeJsonFile } from '../../utils/fileutils';
 
+interface TraceEvent {
+  name: string;
+  cat?: string;
+  ph: string;
+  ts: number;
+  dur?: number;
+  pid: number;
+  tid: number;
+  args: Record<string, unknown>;
+}
+
 export class TaskProfilingLifeCycle implements LifeCycle {
   private timings: {
     [target: string]: {
       perfStart: number;
-      perfEnd?: number;
     };
   } = {};
-  private profile = [];
+  private profile: TraceEvent[] = [];
   private readonly profileFile: string;
   private registeredGroups = new Set();
 
@@ -36,11 +46,6 @@ export class TaskProfilingLifeCycle implements LifeCycle {
       if (tr.task.startTime) {
         this.timings[tr.task.id].perfStart = tr.task.startTime;
       }
-      if (tr.task.endTime) {
-        this.timings[tr.task.id].perfEnd = tr.task.endTime;
-      } else {
-        this.timings[tr.task.id].perfEnd = Date.now();
-      }
     }
     this.recordTaskCompletions(taskResults, metadata);
   }
@@ -55,7 +60,8 @@ export class TaskProfilingLifeCycle implements LifeCycle {
     { groupId }: TaskMetadata
   ) {
     for (const { task, status } of tasks) {
-      const { perfStart, perfEnd } = this.timings[task.id];
+      const { perfStart } = this.timings[task.id];
+      const perfEnd = task.endTime || Date.now();
       this.profile.push({
         name: task.id,
         cat: Object.values(task.target).join(','),

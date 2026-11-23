@@ -21,10 +21,20 @@ export function addPresetDependencies(
   const { dependencies, dev } = presetDependencies;
   return addDependenciesToPackageJson(
     host,
-    dependencies,
-    dev,
+    withVersions(dependencies),
+    withVersions(dev),
     join(options.directory, 'package.json'),
     true
+  );
+}
+
+function withVersions(
+  deps: Record<string, string | null | undefined>
+): Record<string, string> {
+  return Object.fromEntries(
+    Object.entries(deps).filter(
+      (entry): entry is [string, string] => typeof entry[1] === 'string'
+    )
   );
 }
 
@@ -178,7 +188,7 @@ export function generatePreset(host: Tree, opts: NormalizedSchema) {
       opts.skipInstall ? `--skipInstall` : null,
       opts.workspaces !== false ? `--workspaces` : `--no-workspaces`,
       opts.useProjectJson ? `--useProjectJson` : null,
-    ].filter((e) => !!e);
+    ].filter((e): e is string => !!e);
   }
 }
 

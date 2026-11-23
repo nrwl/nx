@@ -81,7 +81,7 @@ export function serializeResult(
   error: Error | null,
   serializedProjectGraph: string | null,
   serializedSourceMaps: string | null
-): string | null {
+): string {
   // We do not want to repeat work `JSON.stringify`ing an object containing the potentially large project graph so merge as strings
   return `{ "error": ${JSON.stringify(
     error ? createSerializableError(error) : error

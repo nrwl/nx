@@ -62,16 +62,21 @@ export async function getE2EWebServerInfo(
     };
   }
 
-  const nxJson = readNxJson(tree);
+  const pluginRegistrationOptions = foundPlugin.options as Record<
+    string,
+    string | undefined
+  >;
   let e2ePort = defaultValues.defaultE2EPort ?? 4200;
   const serveTargetName =
-    foundPlugin.options[pluginOptions.serveTargetName] ??
+    pluginRegistrationOptions[pluginOptions.serveTargetName] ??
     defaultValues.defaultServeTargetName;
 
   if (!defaultValues.e2EPortIsExplicit) {
     e2ePort =
-      readTargetDefaultsForTarget(serveTargetName, nxJson.targetDefaults)
-        ?.options?.port ?? e2ePort;
+      readTargetDefaultsForTarget(
+        serveTargetName,
+        readNxJson(tree)?.targetDefaults
+      )?.options?.port ?? e2ePort;
   }
 
   const e2eWebServerAddress = defaultValues.e2EPortIsExplicit
@@ -82,7 +87,7 @@ export async function getE2EWebServerInfo(
     e2eWebServerAddress,
     e2eWebServerCommand: `${pm.exec} nx run ${projectName}:${serveTargetName}`,
     e2eCiWebServerCommand: `${pm.exec} nx run ${projectName}:${
-      foundPlugin.options[pluginOptions.serveStaticTargetName] ??
+      pluginRegistrationOptions[pluginOptions.serveStaticTargetName] ??
       defaultValues.defaultServeStaticTargetName
     }`,
     e2eCiBaseUrl: defaultValues.defaultE2ECiBaseUrl,

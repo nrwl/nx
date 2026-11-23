@@ -125,6 +125,7 @@ import {
   appendCommit,
   applyStepEvent,
   commitReceipt,
+  requireStep,
   commitMayBeInHistory,
   commitResultToLedgerEntry,
   completionSummaryLines,
@@ -493,7 +494,7 @@ export async function runOrchestratorInit(
       emitAgentInstructions
     );
   }
-  if (deleted) {
+  if (deleted && active) {
     removeDeletedRunDir(root, active.runId);
   }
   // Checkpoint pre-existing working-tree state BEFORE run.json exists, so a
@@ -656,10 +657,13 @@ export function activeRunForClassic(
  * Run before the commit prompt, as init does, so the user is not asked for a
  * run that is then refused; deleteRunForStartFresh repeats the checks.
  */
-export function checkRunForStartFresh(root: string, runId: string): void {
+export function checkRunForStartFresh(
+  root: string,
+  runId: string | undefined
+): void {
   withRunCreationLock(root, () => {
     const active = activeRunToDelete(root, runId);
-    refuseUndeletableRun(root, runId, active.state);
+    refuseUndeletableRun(root, active.runId, active.state);
   });
 }
 
@@ -682,7 +686,7 @@ export function deleteRunForStartFresh(root: string, runId: string): void {
 // is refused, never deleted in place of the one they saw.
 function activeRunToDelete(
   root: string,
-  runId: string
+  runId: string | undefined
 ): { runId: string; state: MigrateRunState } {
   const active = findActiveRunForInit(root, true);
   if (!active) {
@@ -1451,8 +1455,7 @@ export async function runOrchestratorReconcile(
         // generatorCompletedAtAttempt bound is the correctness gate.
         if (
           stepAction === 'retry-clean' &&
-          result.state.steps.find((s) => s.id === target.id)
-            .generatorCompleted !== true
+          requireStep(result.state, target.id).generatorCompleted !== true
         ) {
           removeAgentWorkPayloads(dir, target.id, target.attempt);
         }
@@ -1579,7 +1582,7 @@ async function foldHandoffs(
   // snapshot while every status read comes from `current`: each iteration can
   // have advanced the run.
   for (const { id } of state.steps) {
-    const step = current.steps.find((s) => s.id === id);
+    const step = requireStep(current, id);
     if (step.status !== 'awaiting-prompt-outcome') continue;
     const result = readStepHandoff(dir, step.id);
     if (!result.ok) continue; // still awaiting; the dispense asks to settle it
@@ -1608,10 +1611,7 @@ async function foldHandoffs(
       if (applied.kind === 'error') return;
       // A corrupt receipt refuses the fold here, before the commit below
       // could land unrecorded.
-      commitReceipt(
-        fresh,
-        fresh.steps.find((s) => s.id === step.id)
-      );
+      commitReceipt(fresh, requireStep(fresh, step.id));
       const issues = parseHandoffIssues(result.handoff.extras, fresh, step);
       if (issues.ok !== true) return;
       try {
@@ -1683,7 +1683,7 @@ async function foldHandoffs(
         // takes them, stamped at its index.
         const receipt = commitReceipt(
           applied.state,
-          applied.state.steps.find((s) => s.id === step.id)
+          requireStep(applied.state, step.id)
         );
         const carrier = entry && !recorded ? undefined : receipt;
         const application = applyReportedIssues(
@@ -1906,7 +1906,7 @@ function detectDeaths(dir: string, state: MigrateRunState): MigrateRunState {
   // As in foldHandoffs: ids from the caller's snapshot, statuses from
   // `current`, so an earlier iteration's write is visible to the next.
   for (const { id } of state.steps) {
-    const step = current.steps.find((s) => s.id === id);
+    const step = requireStep(current, id);
     if (step.status !== 'running') continue;
     if (step.pid === undefined || isPidAlive(step.pid)) continue;
     // markDied re-validates against fresh disk state, on the attempt and pid
@@ -2398,7 +2398,7 @@ function trackNoProgress(
       return null;
     }
   }
-  let streak: MigrateRunNoProgress;
+  let streak: MigrateRunNoProgress | undefined;
   updateRunState(dir, (fresh) => {
     const fingerprint = responseFingerprint(fresh);
     const prev = fresh.noProgress;
@@ -2412,6 +2412,7 @@ function trackNoProgress(
           };
     return { ...fresh, noProgress: streak };
   });
+  if (!streak) throw new Error('The no-progress streak was not recorded.');
   return streak.consecutiveCount >= NO_PROGRESS_THRESHOLD ? streak : null;
 }
 
@@ -2454,7 +2455,7 @@ function dispenseNextStep(
     emitHeld(root, runId, current, step, held, noProgress);
     return;
   }
-  const dispensed = current.steps.find((s) => s.id === step.id);
+  const dispensed = requireStep(current, step.id);
   if (reportsOrchestratorAnalytics(current)) {
     reportMigrateOrchestratorStepDispensed({
       attempt: dispensed.attempt,
@@ -3025,7 +3026,7 @@ function emitStillRunning(
     held !== undefined && held.pid !== step.pid
       ? treeOperationLabel(held)
       : undefined;
-  if (parentOperation) {
+  if (parentOperation && held) {
     lines.push(
       `The nx process ${held.pid} is running ${parentOperation} for it; killing the worker does not stop that, and the step can be classified as died only once it finishes.`
     );

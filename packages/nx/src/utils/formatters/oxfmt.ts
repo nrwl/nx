@@ -10,6 +10,7 @@ import {
   createIgnoreChainResolver,
   OXFMT_IGNORE_OPTIONS,
 } from '../ignore';
+import { isErrnoException } from '../is-errno-exception';
 import { parseJson } from '../json';
 import { readModulePackageJson } from '../package-json';
 import { FORMATTER_MAX_BUFFER } from './shared';
@@ -229,6 +230,10 @@ function isJsonOxfmtConfig(name: string): boolean {
  *
  * Covered by `create-nx-workspace-formatter.test.ts`; unreachable from jest.
  */
+function errorMessage(e: unknown): string {
+  return e instanceof Error ? e.message : String(e);
+}
+
 async function loadTsOxfmtConfig(configPath: string): Promise<unknown> {
   try {
     return (
@@ -238,7 +243,10 @@ async function loadTsOxfmtConfig(configPath: string): Promise<unknown> {
     try {
       return await dynamicImport(pathToFileURL(configPath).href);
     } catch (importError) {
-      throw Object.assign(importError, { cause: loadError });
+      if (typeof importError === 'object' && importError !== null) {
+        throw Object.assign(importError, { cause: loadError });
+      }
+      throw importError;
     }
   }
 }
@@ -292,8 +300,8 @@ function readEditorConfigInDir(
     // Not having one is the common case. Anything else - unreadable, a
     // directory, a broken mount - would otherwise look identical to that and
     // silently format to different widths than `nx format` produces.
-    if (e.code !== 'ENOENT') {
-      throw new Error(`Could not read .editorconfig: ${e.message}`);
+    if (!isErrnoException(e) || e.code !== 'ENOENT') {
+      throw new Error(`Could not read .editorconfig: ${errorMessage(e)}`);
     }
     return undefined;
   }
@@ -723,7 +731,7 @@ async function resolveOxfmtConfigInDir(
     try {
       return splitOxfmtConfig(parseJson(seedConfig.content));
     } catch (e) {
-      return { error: `Could not read ${seedConfig.name}: ${e.message}` };
+      return { error: `Could not read ${seedConfig.name}: ${errorMessage(e)}` };
     }
   }
 
@@ -752,9 +760,9 @@ async function resolveOxfmtConfigInDir(
       // Unlike the CLI, oxfmt never sees this file - it is handed options in
       // memory - so nothing else will report that the config is unusable.
       return {
-        error: `Could not read ${path.relative(workspaceRoot, configPath)}: ${
-          e.message
-        }`,
+        error: `Could not read ${path.relative(workspaceRoot, configPath)}: ${errorMessage(
+          e
+        )}`,
       };
     }
   }
@@ -949,7 +957,10 @@ export async function formatFilesWithOxfmt(
     // Resolved once for the batch, so this sits outside the per-file catch.
     // Bare defaults would format to widths `nx format` does not, so an
     // unreadable file fails every file rather than being formatted without it.
-    return { formatted, errors: files.map((f) => `${f.path}: ${e.message}`) };
+    return {
+      formatted,
+      errors: files.map((f) => `${f.path}: ${errorMessage(e)}`),
+    };
   }
 
   const errors: string[] = [];
@@ -1014,7 +1025,7 @@ export async function formatFilesWithOxfmt(
           formatted.set(file.path, result.code);
         }
       } catch (e) {
-        errors.push(`${file.path}: ${e.message}`);
+        errors.push(`${file.path}: ${errorMessage(e)}`);
       }
     })
   );

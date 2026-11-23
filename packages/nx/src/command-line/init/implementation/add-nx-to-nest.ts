@@ -30,6 +30,10 @@ import { MessageOptionKey } from '../../../utils/ab-testing';
 
 type Options = Pick<InitArgs, 'nxCloud' | 'interactive' | 'cacheable'>;
 type NestCLIConfiguration = any;
+type NestPackageJson = PackageJson &
+  Required<Pick<PackageJson, 'scripts' | 'devDependencies'>>;
+type NestProjectJson = ProjectConfiguration &
+  Required<Pick<ProjectConfiguration, 'targets'>> & { $schema?: string };
 
 export async function addNxToNest(options: Options, packageJson: PackageJson) {
   const repoRoot = process.cwd();
@@ -70,7 +74,7 @@ export async function addNxToNest(options: Options, packageJson: PackageJson) {
   });
 
   let cacheableOperations: string[];
-  let scriptOutputs = {};
+  let scriptOutputs: Record<string, string> = {};
   let nxCloudChoice: MessageOptionKey;
 
   if (options.interactive && scripts.length > 0) {
@@ -143,7 +147,7 @@ export async function addNxToNest(options: Options, packageJson: PackageJson) {
 
 function addNestPluginToPackageJson(repoRoot: string) {
   const path = join(repoRoot, `package.json`);
-  const json: PackageJson = readJsonFile(path);
+  const json: NestPackageJson = readJsonFile(path);
   json.devDependencies['@nx/nest'] = nxVersion;
   json.devDependencies['@nx/jest'] = nxVersion;
   writeJsonFile(path, json);
@@ -157,7 +161,7 @@ function createProjectJson(
 ) {
   const packageName = packageJson.name;
   const path = join(repoRoot, 'project.json');
-  const json: ProjectConfiguration = {
+  const json: NestProjectJson = {
     name: packageName,
     root: '.',
     sourceRoot: nestCLIOptions.sourceRoot,
@@ -268,8 +272,8 @@ module.exports = {...nxPreset};
 function addJestTargets(
   repoRoot: string,
   packageName: string,
-  projectJson: ProjectConfiguration,
-  packageJson: PackageJson
+  projectJson: NestProjectJson,
+  packageJson: PackageJson & { jest?: Record<string, unknown> }
 ) {
   const unitTestOptions = getJestOptions(
     false,
@@ -332,7 +336,7 @@ function addNrwlJsPluginsConfig(repoRoot: string) {
 
 function updatePackageJsonScripts(repoRoot: string, isJS: boolean) {
   const path = join(repoRoot, `package.json`);
-  const json: PackageJson = readJsonFile(path);
+  const json: NestPackageJson = readJsonFile(path);
 
   if (json.scripts['build']) {
     json.scripts['build'] = 'nx build';

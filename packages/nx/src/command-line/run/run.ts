@@ -84,6 +84,11 @@ async function parseExecutorAndTarget(
   if (!targetConfig) {
     throw new Error(`Cannot find target '${target}' for project '${project}'`);
   }
+  if (!targetConfig.executor) {
+    throw new Error(
+      `Target '${target}' for project '${project}' has no executor`
+    );
+  }
 
   const [nodeModule, executor] = parseExecutor(targetConfig.executor);
   const { schema, implementationFactory } = getExecutorInformation(
@@ -155,7 +160,7 @@ async function runExecutorInternal<T extends { success: boolean }>(
   projectsConfigurations: ProjectsConfigurations,
   nxJsonConfiguration: NxJsonConfiguration,
   projectGraph: ProjectGraph,
-  taskGraph: TaskGraph,
+  taskGraph: TaskGraph | undefined,
   isVerbose: boolean
 ): Promise<AsyncIterableIterator<T>> {
   validateProject(projectsConfigurations, project);

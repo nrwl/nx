@@ -17,7 +17,6 @@ import { logger } from '../../utils/logger';
 import { singleLine } from './text';
 import {
   ArrayPackageGroup,
-  NxMigrationsConfiguration,
   PackageJson,
   readModulePackageJson,
   readNxMigrateConfig,
@@ -40,9 +39,11 @@ import { terminalOutput, type MigrateOutputSink } from './deferred-output';
 // Migration execution engine shared by the CLI migrate loop, the Console
 // API, and the single-migration child process.
 
-interface PackageMigrationConfig extends NxMigrationsConfiguration {
+interface PackageMigrationConfig {
   packageJson: PackageJson;
-  packageGroup: ArrayPackageGroup;
+  migrations: string | null;
+  packageGroup?: ArrayPackageGroup;
+  supportsOptionalMigrations?: boolean;
 }
 
 export function readPackageMigrationConfig(
@@ -60,25 +61,20 @@ export function readPackageMigrationConfig(
     return { packageJson: json, migrations: null, packageGroup: [] };
   }
 
-  try {
-    const migrationFile = require.resolve(config.migrations, {
-      paths: [dirname(packageJsonPath)],
-    });
-
-    return {
-      packageJson: json,
-      migrations: migrationFile,
-      packageGroup: config.packageGroup,
-      supportsOptionalMigrations: config.supportsOptionalMigrations,
-    };
-  } catch {
-    return {
-      packageJson: json,
-      migrations: null,
-      packageGroup: config.packageGroup,
-      supportsOptionalMigrations: config.supportsOptionalMigrations,
-    };
+  let migrationFile: string | null = null;
+  if (config.migrations) {
+    try {
+      migrationFile = require.resolve(config.migrations, {
+        paths: [dirname(packageJsonPath)],
+      });
+    } catch {}
   }
+  return {
+    packageJson: json,
+    migrations: migrationFile,
+    packageGroup: config.packageGroup,
+    supportsOptionalMigrations: config.supportsOptionalMigrations,
+  };
 }
 
 /**
@@ -142,7 +138,7 @@ export function runInstall(
       }
       if (shouldCaptureStderr) stderrChunks.push(chunk);
     });
-    if (sink) child.stderr.on('end', () => out.raw(stderrText.end()));
+    if (sink) child.stderr?.on('end', () => out.raw(stderrText.end()));
 
     // With a sink the rejection waits for `close`, which follows the streams'
     // `end`: a caller must be able to render what it collected on rejection.
@@ -540,6 +536,11 @@ export function readMigrationCollection(
     packageName,
     root
   ).migrations;
+  if (!collectionPath) {
+    throw new Error(
+      `Unable to resolve the migrations file for "${packageName}"`
+    );
+  }
   const collection = readJsonFile<MigrationsJson>(collectionPath);
   collection.name ??= packageName;
   return {
@@ -582,6 +583,11 @@ export function getImplementationPath(
     );
   }
   const implRelativePathAndMaybeSymbol = g.implementation || g.factory;
+  if (!implRelativePathAndMaybeSymbol) {
+    throw new Error(
+      `Unable to determine implementation path for "${collectionPath}:${name}"`
+    );
+  }
   const [implRelativePath, fnSymbol = 'default'] =
     implRelativePathAndMaybeSymbol.split('#');
 

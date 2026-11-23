@@ -14,7 +14,9 @@ export function createProjectRootMappingsFromProjectConfigurations(
 ) {
   const projectRootMappings: ProjectRootMappings = new Map();
   for (const { name, root } of Object.values(projects)) {
-    projectRootMappings.set(normalizeProjectRoot(root), name);
+    if (name !== undefined) {
+      projectRootMappings.set(normalizeProjectRoot(root), name);
+    }
   }
   return projectRootMappings;
 }
@@ -24,7 +26,7 @@ export function createProjectRootMappingsFromProjectConfigurations(
  * @param nodes This is the nodes from the project graph
  */
 export function createProjectRootMappings(
-  nodes: Record<string, ProjectGraphProjectNode>
+  nodes: Record<string, Pick<ProjectGraphProjectNode, 'data'>>
 ): ProjectRootMappings {
   const projectRootMappings = new Map<string, string>();
   for (const projectName of Object.keys(nodes)) {
@@ -43,7 +45,7 @@ export function createProjectRootMappings(
 export function findProjectForPath(
   filePath: string,
   projectRootMap: ProjectRootMappings
-): string | null {
+): string | undefined {
   /**
    * Project Mappings are in UNIX-style file paths
    * Windows may pass Win-style file paths

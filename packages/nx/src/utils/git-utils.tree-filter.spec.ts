@@ -37,7 +37,7 @@ function git(args: string[], cwd: string, env?: Record<string, string>) {
       mkdirSync(repo);
       mkdirSync(outside);
       filterScript = join(root, 'tree-filter.js');
-      copyFileSync(join(__dirname, 'git-utils.tree-filter.ts'), filterScript);
+      copyFileSync(join(__dirname, 'git-utils.tree-filter.js'), filterScript);
       git(['init', '-b', 'main'], repo);
       git(['config', 'user.email', 'test@example.com'], repo);
       git(['config', 'user.name', 'Test User'], repo);

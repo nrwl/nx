@@ -58,7 +58,7 @@ function readBunCatalogConfigFromFs(
   } catch (error) {
     output.warn({
       title: `Unable to parse ${filename}`,
-      bodyLines: [error.toString()],
+      bodyLines: [String(error)],
     });
     return null;
   }
@@ -69,12 +69,15 @@ function readBunCatalogConfigFromTree(
   tree: Tree
 ): CatalogDefinitions | null {
   const content = tree.read(filename, 'utf-8');
+  if (content === null) {
+    return null;
+  }
   try {
     return normalizeBunCatalogDefinitions(parseJson<BunPackageJson>(content));
   } catch (error) {
     output.warn({
       title: `Unable to parse ${filename}`,
-      bodyLines: [error.toString()],
+      bodyLines: [String(error)],
     });
     return null;
   }
@@ -88,8 +91,9 @@ export function readBunCatalogDefinitions(
   cache: Map<string, CatalogDefinitions | null>
 ): CatalogDefinitions | null {
   if (typeof treeOrRoot === 'string') {
-    if (cache.has(treeOrRoot)) {
-      return cache.get(treeOrRoot);
+    const cached = cache.get(treeOrRoot);
+    if (cached !== undefined) {
+      return cached;
     }
     const configPath = join(treeOrRoot, filename);
     const defs = existsSync(configPath)
@@ -177,7 +181,13 @@ export function updateBunCatalogVersionsInFile(
     writeContent = (content) => writeFileSync(configPath, content, 'utf-8');
   } else {
     checkExists = () => treeOrRoot.exists(filename);
-    readContent = () => treeOrRoot.read(filename, 'utf-8');
+    readContent = () => {
+      const content = treeOrRoot.read(filename, 'utf-8');
+      if (content === null) {
+        throw new Error(`Could not read ${filename}`);
+      }
+      return content;
+    };
     writeContent = (content) => treeOrRoot.write(filename, content);
   }
 

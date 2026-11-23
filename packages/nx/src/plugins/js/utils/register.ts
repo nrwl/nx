@@ -802,7 +802,10 @@ export function getTranspiler(
   // use NodeJs module resolution until support for TS 4.x is dropped and then
   // we can switch to Node10
   compilerOptions.moduleResolution = ts.ModuleResolutionKind.NodeJs;
-  compilerOptions.customConditions = null;
+  // null, not undefined, so ts-node unsets an inherited value (#30477).
+  const conditionOverride: { customConditions?: string[] | null } =
+    compilerOptions;
+  conditionOverride.customConditions = null;
   compilerOptions.target = ts.ScriptTarget.ES2021;
   compilerOptions.inlineSourceMap = true;
   compilerOptions.skipLibCheck = true;
@@ -820,11 +823,13 @@ export function getTranspiler(
   compilerOptions.tsBuildInfoFile = undefined;
   delete compilerOptions.strict;
 
-  let _getTranspiler: (
-    compilerOptions: CompilerOptions,
-    tsNodeOptions?: TsConfigOptions,
-    preferTsNode?: boolean
-  ) => (...args: unknown[]) => unknown;
+  let _getTranspiler:
+    | ((
+        compilerOptions: CompilerOptions,
+        tsNodeOptions?: TsConfigOptions,
+        preferTsNode?: boolean
+      ) => (...args: unknown[]) => unknown)
+    | undefined;
 
   let registrationKey = JSON.stringify(compilerOptions);
   let tsNodeOptions: TsConfigOptions | undefined;
@@ -834,7 +839,11 @@ export function getTranspiler(
     // We can fall back on ts-node if it's available
     _getTranspiler = getTsNodeTranspiler;
     tsNodeOptions = filterRecognizedTsConfigTsNodeOptions(
-      tsConfigRaw?.['ts-node']
+      typeof tsConfigRaw === 'object' &&
+        tsConfigRaw !== null &&
+        'ts-node' in tsConfigRaw
+        ? tsConfigRaw['ts-node']
+        : undefined
     ).recognized;
     // include ts-node options in the registration key
     registrationKey += JSON.stringify(tsNodeOptions);
@@ -844,7 +853,7 @@ export function getTranspiler(
 
   // Just return if transpiler was already registered before.
   const registrationEntry = registered.get(registrationKey);
-  if (registered.has(registrationKey)) {
+  if (registrationEntry) {
     registrationEntry.refCount++;
     return registrationEntry.cleanup;
   }
@@ -1263,12 +1272,15 @@ export function registerTranspiler(
  * @param tsConfigPath Adds the paths from a tsconfig file into node resolutions
  * @returns cleanup function
  */
-export function registerTsConfigPaths(tsConfigPath): () => void {
+export function registerTsConfigPaths(tsConfigPath: string): () => void {
   try {
     /**
      * Load the ts config from the source project
      */
     const tsconfigPaths = loadTsConfigPaths();
+    if (!tsconfigPaths) {
+      throw new Error('tsconfig-paths could not be loaded');
+    }
     const tsConfigResult = tsconfigPaths.loadConfig(tsConfigPath);
     /**
      * Register the custom workspace path mappings with node so that workspace libraries
@@ -1300,7 +1312,7 @@ export function registerTsConfigPaths(tsConfigPath): () => void {
   throw new Error(`Unable to load ${tsConfigPath}`);
 }
 
-function readCompilerOptions(tsConfigPath): {
+function readCompilerOptions(tsConfigPath: string): {
   compilerOptions: CompilerOptions;
   tsConfigRaw?: unknown;
 } {
@@ -1315,7 +1327,7 @@ function readCompilerOptions(tsConfigPath): {
   }
 }
 
-function readCompilerOptionsWithSwc(tsConfigPath) {
+function readCompilerOptionsWithSwc(tsConfigPath: string) {
   const { options: compilerOptions } = readTsConfigWithoutFiles(tsConfigPath);
 
   // Inherited "paths" usually come from the workspace root tsconfig, so
@@ -1328,7 +1340,7 @@ function readCompilerOptionsWithSwc(tsConfigPath) {
   return compilerOptions;
 }
 
-function readCompilerOptionsWithTypescript(tsConfigPath) {
+function readCompilerOptionsWithTypescript(tsConfigPath: string) {
   const { options, raw } = readTsConfigWithoutFiles(tsConfigPath);
   // This property is returned in compiler options for some reason, but not part of the typings.
   // ts-node fails on unknown props, so we have to remove it.
@@ -1340,7 +1352,7 @@ function readCompilerOptionsWithTypescript(tsConfigPath) {
   };
 }
 
-function loadTsConfigPaths(): typeof import('tsconfig-paths') | null {
+function loadTsConfigPaths(): typeof import('tsconfig-paths') | undefined {
   try {
     return require('tsconfig-paths');
   } catch {
@@ -1389,23 +1401,24 @@ export function getTsNodeCompilerOptions(compilerOptions: CompilerOptions) {
   }
 
   const flagMap: Partial<{
-    [key in keyof RemoveIndex<CompilerOptions>]: keyof typeof ts;
+    [key in keyof RemoveIndex<CompilerOptions>]: Record<number, string>;
   }> = {
-    module: 'ModuleKind',
-    target: 'ScriptTarget',
-    moduleDetection: 'ModuleDetectionKind',
-    newLine: 'NewLineKind',
-    moduleResolution: 'ModuleResolutionKind',
-    importsNotUsedAsValues: 'ImportsNotUsedAsValues',
+    module: ts.ModuleKind,
+    target: ts.ScriptTarget,
+    moduleDetection: ts.ModuleDetectionKind,
+    newLine: ts.NewLineKind,
+    moduleResolution: ts.ModuleResolutionKind,
+    importsNotUsedAsValues: ts.ImportsNotUsedAsValues,
   };
 
   const result: { [key in keyof CompilerOptions]: any } = {
     ...compilerOptions,
   };
 
-  for (const flag in flagMap) {
-    if (compilerOptions[flag]) {
-      result[flag] = ts[flagMap[flag]][compilerOptions[flag]];
+  for (const [flag, enumObject] of Object.entries(flagMap)) {
+    const value = compilerOptions[flag];
+    if (value && enumObject) {
+      result[flag] = enumObject[value as number];
     }
   }
 
@@ -1416,7 +1429,7 @@ export function getTsNodeCompilerOptions(compilerOptions: CompilerOptions) {
   delete result.jsx;
 
   // lib option is in the format `lib.es2022.d.ts`, so we need to remove the leading `lib.` and trailing `.d.ts` to make it valid
-  result.lib = result.lib?.map((value) => {
+  result.lib = result.lib?.map((value: string) => {
     return value.replace(/^lib\./, '').replace(/\.d\.ts$/, '');
   });
 

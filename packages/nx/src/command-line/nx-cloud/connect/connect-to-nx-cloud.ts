@@ -48,9 +48,9 @@ export function onlyDefaultRunnerIsUsed(nxJson: NxJsonConfiguration) {
 }
 
 export async function connectToNxCloudIfExplicitlyAsked(
-  opts: NxArgs
+  opts: NxArgs & { cloud?: boolean }
 ): Promise<void> {
-  if (opts['cloud'] === true) {
+  if (opts.cloud === true) {
     const nxJson = readNxJson();
     if (!onlyDefaultRunnerIsUsed(nxJson)) return;
 

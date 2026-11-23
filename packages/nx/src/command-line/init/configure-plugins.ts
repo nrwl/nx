@@ -39,9 +39,15 @@ export function installPluginPackages(
     runInstall(repoRoot, packageManager, pmc);
   } else {
     const nxJson = readNxJson(repoRoot);
-    nxJson.installation.plugins ??= {};
+    const installation = nxJson.installation;
+    if (!installation) {
+      throw new Error(
+        'The "installation" entry in nx.json is required when there is no package.json.'
+      );
+    }
+    installation.plugins ??= {};
     for (const plugin of plugins) {
-      nxJson.installation.plugins[plugin] = nxVersion;
+      installation.plugins[plugin] = nxVersion;
     }
     const nxJsonPath = join(repoRoot, 'nx.json');
     writeJsonFile(nxJsonPath, nxJson);
@@ -117,7 +123,7 @@ export async function runPluginInitGenerators(
   verbose: boolean = false
 ): Promise<{
   succeededPlugins: string[];
-  failedPlugins: { [plugin: string]: Error };
+  failedPlugins: { [plugin: string]: unknown };
 }> {
   if (plugins.length === 0) {
     return {
@@ -127,7 +133,7 @@ export async function runPluginInitGenerators(
   }
   let succeededPlugins = [];
   const failedPlugins: {
-    [pluginName: string]: Error;
+    [pluginName: string]: unknown;
   } = {};
 
   for (const plugin of plugins) {
@@ -166,7 +172,7 @@ export async function configurePlugins(
   verbose: boolean = false
 ): Promise<{
   succeededPlugins: string[];
-  failedPlugins: { [plugin: string]: Error };
+  failedPlugins: { [plugin: string]: unknown };
 }> {
   if (plugins.length === 0) {
     return {

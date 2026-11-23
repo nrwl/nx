@@ -666,6 +666,17 @@ export function appendCommit(
  * without a receipt. A receipt past the ledger or naming another step is
  * corrupt run state, so it throws.
  */
+export function requireStep(
+  state: MigrateRunState,
+  stepId: string
+): MigrateStep {
+  const step = state.steps.find((s) => s.id === stepId);
+  if (!step) {
+    throw new Error(`Migrate run '${state.runId}' has no step '${stepId}'.`);
+  }
+  return step;
+}
+
 export function commitReceipt(
   state: MigrateRunState,
   step: MigrateStep

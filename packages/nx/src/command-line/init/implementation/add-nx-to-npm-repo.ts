@@ -29,7 +29,7 @@ export async function addNxToNpmRepo(options: Options, guided: boolean = true) {
   output.log({ title: '🐳 Nx initialization' });
 
   let cacheableOperations: string[];
-  let scriptOutputs = {};
+  let scriptOutputs: Record<string, string> = {};
   let nxCloudChoice: MessageOptionKey;
 
   const packageJson = readJsonFile('package.json');

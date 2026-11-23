@@ -46,7 +46,7 @@ type PluginMessageDefs = DefineMessages<{
           name: string;
           include?: string[];
           exclude?: string[];
-          createNodesPattern: string;
+          createNodesPattern?: string;
           hasCreateDependencies: boolean;
           hasProcessProjectGraph: boolean;
           hasCreateMetadata: boolean;
@@ -68,7 +68,9 @@ type PluginMessageDefs = DefineMessages<{
     result:
       | {
           success: true;
-          result: Awaited<ReturnType<LoadedNxPlugin['createNodes'][1]>>;
+          result: Awaited<
+            ReturnType<NonNullable<LoadedNxPlugin['createNodes']>[1]>
+          >;
         }
       | {
           success: false;
@@ -83,7 +85,7 @@ type PluginMessageDefs = DefineMessages<{
     result:
       | {
           dependencies: Awaited<
-            ReturnType<LoadedNxPlugin['createDependencies']>
+            ReturnType<NonNullable<LoadedNxPlugin['createDependencies']>>
           >;
           success: true;
         }
@@ -100,7 +102,9 @@ type PluginMessageDefs = DefineMessages<{
     };
     result:
       | {
-          metadata: Awaited<ReturnType<LoadedNxPlugin['createMetadata']>>;
+          metadata: Awaited<
+            ReturnType<NonNullable<LoadedNxPlugin['createMetadata']>>
+          >;
           success: true;
         }
       | {

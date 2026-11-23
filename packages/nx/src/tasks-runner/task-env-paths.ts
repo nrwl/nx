@@ -1,5 +1,5 @@
 export function getEnvPathsForTask(
-  projectRoot: string,
+  projectRoot: string | undefined,
   target: string,
   configuration?: string,
   nonAtomizedTarget?: string

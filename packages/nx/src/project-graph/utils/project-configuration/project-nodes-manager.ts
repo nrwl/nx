@@ -52,7 +52,7 @@ export function mergeProjectConfigurationIntoRootMap(
       root: project.root,
     };
     matchingProject = projectRootMap[project.root];
-    if (sourceMap) {
+    if (sourceMap && sourceInformation) {
       sourceMap[`root`] = sourceInformation;
     }
   }
@@ -66,7 +66,9 @@ export function mergeProjectConfigurationIntoRootMap(
     ...matchingProject,
   };
 
-  for (const k in project) {
+  const updatedProjectProperties: Record<string, unknown> =
+    updatedProjectConfiguration;
+  for (const [k, value] of Object.entries(project)) {
     if (
       ![
         'tags',
@@ -77,8 +79,8 @@ export function mergeProjectConfigurationIntoRootMap(
         'namedInputs',
       ].includes(k)
     ) {
-      updatedProjectConfiguration[k] = project[k];
-      if (sourceMap) {
+      updatedProjectProperties[k] = value;
+      if (sourceMap && sourceInformation) {
         sourceMap[`${k}`] = sourceInformation;
       }
     }
@@ -90,7 +92,7 @@ export function mergeProjectConfigurationIntoRootMap(
       new Set((matchingProject.tags ?? []).concat(project.tags))
     );
 
-    if (sourceMap) {
+    if (sourceMap && sourceInformation) {
       sourceMap['tags'] ??= sourceInformation;
       project.tags.forEach((tag) => {
         sourceMap[`tags.${tag}`] = sourceInformation;
@@ -103,7 +105,7 @@ export function mergeProjectConfigurationIntoRootMap(
       matchingProject.implicitDependencies ?? []
     ).concat(project.implicitDependencies);
 
-    if (sourceMap) {
+    if (sourceMap && sourceInformation) {
       sourceMap['implicitDependencies'] ??= sourceInformation;
       project.implicitDependencies.forEach((implicitDependency) => {
         sourceMap[`implicitDependencies.${implicitDependency}`] =
@@ -116,7 +118,7 @@ export function mergeProjectConfigurationIntoRootMap(
     // Start with generators config in new project.
     updatedProjectConfiguration.generators = { ...project.generators };
 
-    if (sourceMap) {
+    if (sourceMap && sourceInformation) {
       sourceMap['generators'] ??= sourceInformation;
       for (const generator in project.generators) {
         sourceMap[`generators.${generator}`] = sourceInformation;
@@ -144,7 +146,7 @@ export function mergeProjectConfigurationIntoRootMap(
       ...project.namedInputs,
     };
 
-    if (sourceMap) {
+    if (sourceMap && sourceInformation) {
       sourceMap['namedInputs'] ??= sourceInformation;
       for (const namedInput in project.namedInputs) {
         sourceMap[`namedInputs.${namedInput}`] = sourceInformation;
@@ -166,7 +168,7 @@ export function mergeProjectConfigurationIntoRootMap(
     // We merge the targets with special handling, so clear this back to the
     // targets as defined originally before merging.
     updatedProjectConfiguration.targets = matchingProject?.targets ?? {};
-    if (sourceMap) {
+    if (sourceMap && sourceInformation) {
       sourceMap['targets'] ??= sourceInformation;
     }
 
@@ -177,7 +179,7 @@ export function mergeProjectConfigurationIntoRootMap(
 
       const target = project.targets?.[targetName];
 
-      if (sourceMap) {
+      if (sourceMap && sourceInformation) {
         // Claims the node key for a newly-created target (or reclaims it from
         // a weak target-defaults stamp). Whether an *existing* target changes
         // owners is decided inside `mergeTargetConfigurations`, which knows
@@ -256,7 +258,9 @@ export function readProjectConfigurationsFromRootMap(
     const project = projectRootMap[root];
     // We're setting `// targets` as a comment `targets` is empty due to Project Crystal.
     // Strip it before returning configuration for usage.
-    if (project['// targets']) delete project['// targets'];
+    if ('// targets' in project && project['// targets']) {
+      delete project['// targets'];
+    }
 
     try {
       validateProject(project, projects);
@@ -297,7 +301,9 @@ export function createRootMap(
   const map: Record<string, string> = {};
   for (const projectRoot in projectRootMap) {
     const projectName = projectRootMap[projectRoot].name;
-    map[projectRoot] = projectName;
+    if (projectName !== undefined) {
+      map[projectRoot] = projectName;
+    }
   }
   return map;
 }

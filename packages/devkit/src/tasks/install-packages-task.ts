@@ -9,6 +9,10 @@ import {
   Tree,
 } from 'nx/src/devkit-exports';
 
+declare global {
+  var __packageJsonInstallCache__: string | null | undefined;
+}
+
 /**
  * Runs `npm install` or `yarn install`. It will skip running the install if
  * `package.json` hasn't changed at all or it hasn't changed since the last invocation.
@@ -33,7 +37,7 @@ export function installPackagesTask(
   }
 
   const packageJsonValue = tree.read(packageJsonPath, 'utf-8');
-  const storedPackageJsonValue: string = global['__packageJsonInstallCache__'];
+  const storedPackageJsonValue = global['__packageJsonInstallCache__'];
   const installAlreadyRan = storedPackageJsonValue != null;
   const packageJsonDiffers = storedPackageJsonValue != packageJsonValue;
 

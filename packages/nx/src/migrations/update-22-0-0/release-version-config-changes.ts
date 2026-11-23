@@ -58,14 +58,11 @@ export default async function update(tree: Tree) {
       ];
       for (const option of versionActionsOptions) {
         if (versionConfig.generatorOptions[option]) {
-          (
-            versionConfig as NxReleaseVersionConfiguration
-          ).versionActionsOptions =
-            (versionConfig as NxReleaseVersionConfiguration)
-              .versionActionsOptions || {};
-          (
-            versionConfig as NxReleaseVersionConfiguration
-          ).versionActionsOptions[option] =
+          const releaseVersionConfig =
+            versionConfig as NxReleaseVersionConfiguration;
+          releaseVersionConfig.versionActionsOptions =
+            releaseVersionConfig.versionActionsOptions || {};
+          releaseVersionConfig.versionActionsOptions[option] =
             versionConfig.generatorOptions[option];
           delete versionConfig.generatorOptions[option];
         }

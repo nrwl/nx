@@ -29,7 +29,7 @@ export type ReleaseBoundaryFinding =
        */
       type: 'added-by-dependents';
       project: string;
-      releaseGroup: string;
+      releaseGroup: string | null;
       newVersion: string;
       releasedDependencies: string[];
     }
@@ -39,7 +39,7 @@ export type ReleaseBoundaryFinding =
        */
       type: 'dependent-not-released';
       project: string;
-      releaseGroup: string;
+      releaseGroup: string | null;
       dependency: string;
       dependencyNewVersion: string;
       declaredVersion: string | null;
@@ -57,7 +57,7 @@ export type ReleaseBoundaryFinding =
        */
       type: 'dependency-not-released';
       project: string;
-      releaseGroup: string;
+      releaseGroup: string | null;
       dependent: string;
       declaredVersion: string | null;
       pendingChanges:
@@ -106,17 +106,19 @@ export async function checkReleaseBoundary({
   // Projects without real version actions (e.g. Docker-only) get a placeholder version, not a release.
   const isNoop = (project: string) =>
     versionActionsOf(project) instanceof NOOP_VERSION_ACTIONS;
-  const released = new Set(
-    Object.keys(versionData).filter(
-      (p) => versionData[p].newVersion !== null && !isNoop(p)
-    )
-  );
+  const releasedVersions = new Map<string, string>();
+  for (const [project, { newVersion }] of Object.entries(versionData)) {
+    if (newVersion !== null && !isNoop(project)) {
+      releasedVersions.set(project, newVersion);
+    }
+  }
+  const released = new Set(releasedVersions.keys());
   const originallyFiltered = releaseGraph.getOriginallyFilteredProjects();
   const groupNameOf = (project: string) =>
     releaseGraph.getReleaseGroupNameForProject(project);
   const findings: ReleaseBoundaryFinding[] = [];
 
-  for (const project of released) {
+  for (const [project, newVersion] of releasedVersions) {
     if (originallyFiltered.has(project)) {
       continue;
     }
@@ -124,15 +126,14 @@ export async function checkReleaseBoundary({
       type: 'added-by-dependents',
       project,
       releaseGroup: groupNameOf(project),
-      newVersion: versionData[project].newVersion,
+      newVersion,
       releasedDependencies: Array.from(
         releaseGraph.getProjectDependencies(project)
       ).filter((dep) => released.has(dep)),
     });
   }
 
-  for (const project of released) {
-    const newVersion = versionData[project].newVersion;
+  for (const [project, newVersion] of releasedVersions) {
     for (const dependent of releaseGraph.originalDependentProjectsPerProject.get(
       project
     ) ?? []) {
@@ -186,16 +187,19 @@ export async function checkReleaseBoundary({
       if (pendingChanges.status === 'none') {
         continue;
       }
-      const declaredVersion = await attempt(
-        async () =>
-          (
-            await versionActionsOf(project).readCurrentVersionOfDependency(
-              tree,
-              projectGraph,
-              dependency
-            )
-          ).currentVersion
-      );
+      const versionActions = versionActionsOf(project);
+      const declaredVersion = versionActions
+        ? await attempt(
+            async () =>
+              (
+                await versionActions.readCurrentVersionOfDependency(
+                  tree,
+                  projectGraph,
+                  dependency
+                )
+              ).currentVersion
+          )
+        : null;
       findings.push({
         type: 'dependency-not-released',
         project: dependency,
@@ -307,18 +311,19 @@ function resolvePendingChanges(
     releaseGroup.projectsRelationship === 'fixed'
       ? releaseGroup.projects[0]
       : projectName;
-  if (!context.pendingChangesBySubject.has(subject)) {
-    context.pendingChangesBySubject.set(
+  let pendingChanges = context.pendingChangesBySubject.get(subject);
+  if (!pendingChanges) {
+    pendingChanges = resolvePendingChangesForSubject(
       subject,
-      resolvePendingChangesForSubject(subject, releaseGroup, context).catch(
-        (e) => ({
-          status: 'unknown' as const,
-          reason: e instanceof Error ? e.message.split('\n')[0] : String(e),
-        })
-      )
-    );
+      releaseGroup,
+      context
+    ).catch((e) => ({
+      status: 'unknown' as const,
+      reason: e instanceof Error ? e.message.split('\n')[0] : String(e),
+    }));
+    context.pendingChangesBySubject.set(subject, pendingChanges);
   }
-  return context.pendingChangesBySubject.get(subject);
+  return pendingChanges;
 }
 
 async function resolvePendingChangesForSubject(

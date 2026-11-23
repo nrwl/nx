@@ -25,7 +25,7 @@ export function toJS(tree: Tree, options?: ToJSOptions): void {
   // converted instead of silently left as TypeScript on disk.
   const tsExtRegex = /\.([cm]?ts|tsx)$/;
   for (const c of tree.listChanges()) {
-    if (tsExtRegex.test(c.path) && c.type === 'CREATE') {
+    if (tsExtRegex.test(c.path) && c.type === 'CREATE' && c.content !== null) {
       tree.write(
         c.path,
         transpile(c.content.toString('utf-8'), {

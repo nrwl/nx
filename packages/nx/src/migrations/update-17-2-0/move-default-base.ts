@@ -8,7 +8,7 @@ import { formatChangedFiles } from '../../generators/internal-utils/format-chang
  */
 export default async function update(host: Tree) {
   const nxJson = readNxJson(host) as NxJsonConfiguration & {
-    affected: { defaultBase?: string };
+    affected?: { defaultBase?: string };
   };
   if (nxJson?.affected?.defaultBase) {
     nxJson.defaultBase = nxJson.affected.defaultBase;

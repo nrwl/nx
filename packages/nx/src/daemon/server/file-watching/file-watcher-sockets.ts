@@ -4,7 +4,7 @@ import { findAllProjectNodeDependencies } from '../../../utils/project-graph-uti
 import { PromisedBasedQueue } from '../../../utils/promised-based-queue';
 import { currentProjectGraph } from '../project-graph-incremental-recomputation';
 import { handleResult } from '../server';
-import { getProjectsAndGlobalChanges } from './changed-projects';
+import { ChangedFile, getProjectsAndGlobalChanges } from './changed-projects';
 
 const queue = new PromisedBasedQueue();
 
@@ -72,8 +72,8 @@ export function notifyFileWatcherSockets(
 
     await Promise.all(
       registeredFileWatcherSockets.map(({ socket, config }) => {
-        const changedProjects = [];
-        const changedFiles = [];
+        const changedProjects: string[] = [];
+        const changedFiles: ChangedFile[] = [];
         if (config.watchProjects === 'all') {
           for (const [projectName, projectFiles] of Object.entries(
             projectAndGlobalChanges.projects
@@ -82,18 +82,19 @@ export function notifyFileWatcherSockets(
             changedFiles.push(...projectFiles);
           }
         } else {
+          const projectGraph = currentProjectGraph;
+          if (!projectGraph) {
+            throw new Error('The project graph has not been computed');
+          }
           const watchedProjects = new Set<string>(
-            findMatchingProjects(
-              config.watchProjects,
-              currentProjectGraph.nodes
-            )
+            findMatchingProjects(config.watchProjects, projectGraph.nodes)
           );
 
           if (config.includeDependencies) {
             for (const project of watchedProjects) {
               for (const dep of findAllProjectNodeDependencies(
                 project,
-                currentProjectGraph
+                projectGraph
               )) {
                 watchedProjects.add(dep);
               }

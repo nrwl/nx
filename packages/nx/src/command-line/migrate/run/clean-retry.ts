@@ -131,8 +131,9 @@ export function resetForCleanRetry(
   let step: MigrateStep | undefined;
   let updates: IssueArchiveUpdate[] = [];
   const prepared = updateRunState(dir, (fresh) => {
-    step = fresh.steps.find((s) => s.id === stepId);
-    if (!step) throw new Error(`step '${stepId}' is not in the run.`);
+    const found = fresh.steps.find((s) => s.id === stepId);
+    if (!found) throw new Error(`step '${stepId}' is not in the run.`);
+    step = found;
     if (!canOfferCleanRetry(root, fresh, step, head)) {
       throw new Error(cleanRetryUnavailableReason(root, fresh, step, head));
     }
@@ -143,7 +144,11 @@ export function resetForCleanRetry(
     updates = reopened.updates;
     return reopened.state;
   });
+  if (!step) throw new Error(`step '${stepId}' is not in the run.`);
   archiveReopenedResolutions(dir, prepared, updates, stepLabel(step));
+  if (!step.gitRefBefore) {
+    throw new Error(`step '${stepId}' records no git ref to reset to.`);
+  }
   // Unlike the commit exclusions, every owned path, committed or not: a failed
   // probe must not let the reset remove the plan or prompt files.
   resetWorkingTree(step.gitRefBefore, MIGRATE_OWNED_PATHS, root);

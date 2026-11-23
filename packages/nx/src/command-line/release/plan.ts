@@ -22,6 +22,7 @@ import {
 } from './config/config';
 import { deepMergeJson } from './config/deep-merge-json';
 import { filterReleaseGroups } from './config/filter-release-groups';
+import { getReleaseGroupFilteredProjects } from './utils/shared';
 import { getVersionPlansAbsolutePath } from './config/version-plans';
 import { generateVersionPlanContent } from './utils/generate-version-plan-content';
 import { createGetTouchedProjectsForGroup } from './utils/get-touched-projects-for-group';
@@ -30,7 +31,7 @@ import { printDiff } from './utils/print-changes';
 import { printConfigAndExit } from './utils/print-config';
 
 export const releasePlanCLIHandler = (args: PlanOptions) =>
-  handleErrors(args.verbose, () => createAPI({})(args));
+  handleErrors(args.verbose ?? false, () => createAPI({})(args));
 
 export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
   return async function releasePlan(
@@ -101,7 +102,7 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
       args,
       'affected',
       {
-        printWarnings: args.verbose,
+        printWarnings: args.verbose ?? false,
       },
       nxJson
     );
@@ -150,7 +151,10 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
       for (const releaseGroup of releaseGroups) {
         const releaseGroupName = releaseGroup.name;
         const releaseGroupProjectNames = Array.from(
-          releaseGroupToFilteredProjects.get(releaseGroup)
+          getReleaseGroupFilteredProjects(
+            releaseGroupToFilteredProjects,
+            releaseGroup
+          )
         );
         let applicableProjects = releaseGroupProjectNames;
 

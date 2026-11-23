@@ -13,6 +13,9 @@ export function insertStatement(tree: Tree, path: string, statement: string) {
   const { createSourceFile, isImportDeclaration, ScriptTarget } = tsModule;
 
   const contents = tree.read(path, 'utf-8');
+  if (contents === null) {
+    throw new Error(`Cannot find ${path}`);
+  }
 
   const sourceFile = createSourceFile(path, contents, ScriptTarget.ESNext);
 

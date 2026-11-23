@@ -17,13 +17,11 @@ export function hasGenerator(
     tree,
     joinPathFragments(project.root, 'package.json')
   );
-  if (!packageJson.generators && !packageJson.schematics) {
+  const generatorsFile = packageJson.generators ?? packageJson.schematics;
+  if (!generatorsFile) {
     return false;
   }
-  const generatorsPath = joinPathFragments(
-    project.root,
-    packageJson.generators ?? packageJson.schematics
-  );
+  const generatorsPath = joinPathFragments(project.root, generatorsFile);
   const generatorsJson = readJson<GeneratorsJson>(tree, generatorsPath);
   return (
     (generatorsJson.generators?.[generatorName] ??

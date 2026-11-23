@@ -30,6 +30,7 @@
     "release/**/*.ts",
     "src/**/*.ts",
     "src/**/*.json",
+    "src/utils/git-utils.tree-filter.js",
     "tasks-runners/**/*.ts"
   ]
 }

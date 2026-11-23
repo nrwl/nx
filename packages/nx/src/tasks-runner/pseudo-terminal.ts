@@ -93,7 +93,7 @@ export class PseudoTerminal {
     }: {
       cwd?: string;
       execArgv?: string[];
-      jsEnv?: Record<string, string>;
+      jsEnv?: NodeJS.ProcessEnv;
       quiet?: boolean;
       tty?: boolean;
     } = {}
@@ -103,7 +103,7 @@ export class PseudoTerminal {
       this.rustPseudoTerminal.runCommand(
         command,
         cwd,
-        jsEnv,
+        jsEnv as Record<string, string> | undefined,
         execArgv,
         quiet,
         tty
@@ -127,8 +127,8 @@ export class PseudoTerminal {
     }: {
       cwd?: string;
       execArgv?: string[];
-      jsEnv?: Record<string, string>;
-      quiet?: boolean;
+      jsEnv?: NodeJS.ProcessEnv;
+      quiet: boolean;
       commandLabel?: string;
     }
   ) {
@@ -142,7 +142,7 @@ export class PseudoTerminal {
         script,
         this.pseudoIPCPath,
         cwd,
-        jsEnv,
+        jsEnv as Record<string, string> | undefined,
         execArgv,
         quiet,
         commandLabel

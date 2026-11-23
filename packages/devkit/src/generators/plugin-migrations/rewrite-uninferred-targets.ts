@@ -80,8 +80,10 @@ function rewriteUninferredTargets(
     }
     const heldBack: Record<string, TargetConfiguration> = {};
     let changed = false;
-    for (const [targetName, target] of Object.entries(project.targets ?? {})) {
-      if (!rewrite.executors.includes(target.executor)) {
+    const targets = project.targets ?? {};
+    for (const [targetName, target] of Object.entries(targets)) {
+      const executor = target.executor;
+      if (executor === undefined || !rewrite.executors.includes(executor)) {
         continue;
       }
       const readDefaults = (executor: string) =>
@@ -91,7 +93,7 @@ function rewriteUninferredTargets(
         });
       let uninferred = false;
       try {
-        const executorDefaults = readDefaults(target.executor);
+        const executorDefaults = readDefaults(executor);
         const resolved = resolveTarget(
           target,
           executorDefaults,
@@ -110,7 +112,7 @@ function rewriteUninferredTargets(
           runCommandsTarget,
           readDefaults('nx:run-commands')
         );
-        project.targets[targetName] = runCommandsTarget;
+        targets[targetName] = runCommandsTarget;
         rewritten++;
         changed = true;
       } catch (error) {
@@ -119,7 +121,7 @@ function rewriteUninferredTargets(
         );
         if (uninferred) {
           heldBack[targetName] = target;
-          delete project.targets[targetName];
+          delete targets[targetName];
           changed = true;
         }
       }
@@ -160,9 +162,10 @@ function resolveTarget(
   if (resolved.options) {
     resolved.options = resolveNxTokensInOptions(resolved.options, project, key);
   }
-  for (const name of Object.keys(resolved.configurations ?? {})) {
-    resolved.configurations[name] = resolveNxTokensInOptions(
-      resolved.configurations[name],
+  const configurations = resolved.configurations ?? {};
+  for (const name of Object.keys(configurations)) {
+    configurations[name] = resolveNxTokensInOptions(
+      configurations[name],
       project,
       `${key}:${name}`
     );
@@ -234,9 +237,15 @@ export function optionsFor(
   target: TargetConfiguration,
   configuration?: string
 ): TargetOptions {
+  if (!configuration) {
+    return { ...target.options };
+  }
+  if (!target.configurations) {
+    throw new Error(`The target has no "${configuration}" configuration.`);
+  }
   return {
     ...target.options,
-    ...(configuration ? target.configurations[configuration] : {}),
+    ...target.configurations[configuration],
   };
 }
 

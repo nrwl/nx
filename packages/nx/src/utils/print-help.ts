@@ -11,6 +11,9 @@ import { readModulePackageJson } from './package-json';
 // works in build or in test but not both.
 const cliui = require('cliui') as (typeof import('cliui'))['default'];
 
+// A falsy width makes cliui size to the terminal.
+const createUi = () => cliui({ width: 0 });
+
 export function printHelp(
   header: string,
   schema: Schema,
@@ -56,7 +59,7 @@ function generateOverviewOutput({
 }: {
   pluginName: string;
   name: string;
-  description: string;
+  description: string | undefined;
   mode: 'generate' | 'run';
   aliases: string[];
 }): string {
@@ -87,17 +90,17 @@ function generateGeneratorOverviewOutput({
 }: {
   pluginName: string;
   name: string;
-  description: string;
+  description: string | undefined;
   aliases: string[];
 }): string {
-  const ui = cliui(null);
+  const ui = createUi();
   const overviewItemsLabelWidth =
     // Chars in labels "From" and "Name"
     4 +
     // The `:` char
     1;
 
-  let installedVersion: string;
+  let installedVersion: string | undefined;
   try {
     installedVersion = readModulePackageJson(pluginName).packageJson.version;
   } catch {}
@@ -137,7 +140,7 @@ function generateGeneratorOverviewOutput({
   ui.div(
     ...[
       {
-        text: description,
+        text: description ?? '',
         padding: [2, 0, 1, 2],
       },
     ]
@@ -153,9 +156,9 @@ function generateExecutorOverviewOutput({
 }: {
   pluginName: string;
   name: string;
-  description: string;
+  description: string | undefined;
 }): string {
-  const ui = cliui(null);
+  const ui = createUi();
   const overviewItemsLeftPadding = 2;
   const overviewItemsLabelWidth = overviewItemsLeftPadding + 'Executor:'.length;
 
@@ -178,7 +181,7 @@ function generateExecutorOverviewOutput({
   ui.div(
     ...[
       {
-        text: description,
+        text: description ?? '',
         padding: [2, 0, 1, 2],
       },
     ]
@@ -191,7 +194,7 @@ const formatOptionVal = (maybeStr: unknown) =>
   typeof maybeStr === 'string' ? `"${maybeStr}"` : JSON.stringify(maybeStr);
 
 // From our JSON schemas an option could possibly have more than one valid type
-const formatOptionType = (optionConfig: Schema['properties'][0]) => {
+const formatOptionType = (optionConfig: Schema['properties'][0]): string => {
   if (Array.isArray(optionConfig.oneOf)) {
     return optionConfig.oneOf
       .map((typeConfig) => formatOptionType(typeConfig))
@@ -201,7 +204,7 @@ const formatOptionType = (optionConfig: Schema['properties'][0]) => {
 };
 
 function generateOptionsOutput(schema: Schema): string {
-  const ui = cliui(null);
+  const ui = createUi();
   const flagAndAliasLeftPadding = 4;
   const flagAndAliasRightPadding = 4;
 
@@ -210,7 +213,7 @@ function generateOptionsOutput(schema: Schema): string {
     string,
     {
       renderedFlagAndAlias: string;
-      renderedDescription: string;
+      renderedDescription: string | undefined;
       renderedTypesAndDefault: string;
     }
   >();
@@ -272,7 +275,7 @@ function generateOptionsOutput(schema: Schema): string {
         padding: [0, flagAndAliasRightPadding, 0, flagAndAliasLeftPadding],
       },
       {
-        text: renderedDescription,
+        text: renderedDescription ?? '',
         padding: [0, 0, 0, 0],
       },
       {
@@ -292,7 +295,7 @@ function generateExamplesOutput(schema: Schema): string {
   if (!schema.examples || schema.examples.length === 0) {
     return '';
   }
-  const ui = cliui(null);
+  const ui = createUi();
   const xPadding = 4;
 
   ui.div({

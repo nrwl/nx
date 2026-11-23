@@ -43,7 +43,7 @@ export async function addPlugin<PluginOptions>(
       new LoadedNxPlugin(
         {
           name: pluginName,
-          createNodes: createNodesTuple,
+          createNodes: createNodesTuple as CreateNodes,
         },
         {
           plugin: pluginName,
@@ -78,7 +78,7 @@ export async function addPluginV1<PluginOptions>(
       new LoadedNxPlugin(
         {
           name: pluginName,
-          createNodes: createNodesTuple,
+          createNodes: createNodesTuple as CreateNodes,
         },
         {
           plugin: pluginName,
@@ -102,18 +102,30 @@ async function _addPluginInternal<PluginOptions>(
 ) {
   const graphNodes = Object.values(graph.nodes);
   const nxJson = readNxJson(tree);
+  if (!nxJson) {
+    throw new Error('Could not find nx.json in the workspace.');
+  }
 
-  let pluginOptions: PluginOptions;
-  let projConfigs: ConfigurationResult;
+  const plugins = (nxJson.plugins ??= []);
+  let pluginOptions: PluginOptions | null = null;
+  let projConfigs: ConfigurationResult | undefined;
 
   if (Object.keys(options).length > 0) {
-    const combinations = generateCombinations(options);
+    const optionValues: Record<string, unknown[]> = {};
+    for (const [key, values] of Object.entries(options)) {
+      if (!Array.isArray(values)) {
+        throw new TypeError(
+          `The "${key}" plugin option values are not an array.`
+        );
+      }
+      optionValues[key] = values;
+    }
+    const combinations = generateCombinations(optionValues);
     optionsLoop: for (const _pluginOptions of combinations) {
       pluginOptions = _pluginOptions as PluginOptions;
 
-      nxJson.plugins ??= [];
       if (
-        nxJson.plugins.some((p) =>
+        plugins.some((p) =>
           typeof p === 'string'
             ? p === pluginName
             : p.plugin === pluginName && !p.include
@@ -158,7 +170,11 @@ async function _addPluginInternal<PluginOptions>(
         }
 
         for (const targetName in projConfig.targets) {
-          if (node.data.targets[targetName]) {
+          const nodeTargets = node.data.targets;
+          if (!nodeTargets) {
+            throw new TypeError(`Project "${node.name}" has no targets.`);
+          }
+          if (nodeTargets[targetName]) {
             // Conflicting Target Name, check the next one
             pluginOptions = null;
             continue optionsLoop;
@@ -170,7 +186,6 @@ async function _addPluginInternal<PluginOptions>(
     }
   } else {
     // If the plugin does not take in options, we add the plugin with empty options.
-    nxJson.plugins ??= [];
     pluginOptions = {} as unknown as PluginOptions;
     global.NX_GRAPH_CREATION = true;
     try {
@@ -205,14 +220,14 @@ async function _addPluginInternal<PluginOptions>(
     );
   }
 
-  nxJson.plugins.push({
+  plugins.push({
     plugin: pluginName,
     options: pluginOptions,
   });
 
   updateNxJson(tree, nxJson);
 
-  if (shouldUpdatePackageJsonScripts) {
+  if (shouldUpdatePackageJsonScripts && projConfigs) {
     updatePackageScripts(tree, projConfigs);
   }
 }
@@ -433,7 +448,7 @@ export function generateCombinations<T>(
   const keys = Object.keys(input).reverse();
   return _generateCombinations(Object.values(input).reverse()).map(
     (combination) => {
-      const result = {};
+      const result: Record<string, T> = {};
       combination.reverse().forEach((combo, i) => {
         result[keys[keys.length - i - 1]] = combo;
       });

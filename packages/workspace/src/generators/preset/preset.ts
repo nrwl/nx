@@ -351,9 +351,10 @@ async function createPreset(tree: Tree, options: Schema) {
     const { applicationGenerator: nodeApplicationGenerator } = require(
       '@nx' + '/node'
     );
-    const bundler = nodeBundlers.includes(options.bundler)
-      ? options.bundler
-      : undefined;
+    const bundler =
+      options.bundler && nodeBundlers.includes(options.bundler)
+        ? options.bundler
+        : undefined;
     return nodeApplicationGenerator(tree, {
       bundler,
       name: options.workspaces ? undefined : options.name,
@@ -370,9 +371,10 @@ async function createPreset(tree: Tree, options: Schema) {
     const { applicationGenerator: nodeApplicationGenerator } = require(
       '@nx' + '/node'
     );
-    const bundler = nodeBundlers.includes(options.bundler)
-      ? options.bundler
-      : undefined;
+    const bundler =
+      options.bundler && nodeBundlers.includes(options.bundler)
+        ? options.bundler
+        : undefined;
     return nodeApplicationGenerator(tree, {
       bundler,
       name: options.workspaces ? undefined : options.name,

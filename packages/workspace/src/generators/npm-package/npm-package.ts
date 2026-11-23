@@ -17,6 +17,7 @@ export interface ProjectOptions {
 }
 
 interface NormalizedProjectOptions extends ProjectOptions {
+  name: string;
   projectRoot: string;
   importPath: string;
 }

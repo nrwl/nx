@@ -26,7 +26,7 @@ function isUsingUtilityFunction(host: Tree) {
     return false;
   }
 
-  const rootConfig = host.read(rootConfigPath, 'utf-8');
+  const rootConfig = host.read(rootConfigPath, 'utf-8') ?? '';
 
   return rootConfig.includes('getJestProjectsAsync()');
 }
@@ -42,7 +42,7 @@ function isMonorepoConfig(tree: Tree) {
     return false;
   }
 
-  return tree.read(rootConfigPath, 'utf-8').includes('projects:');
+  return (tree.read(rootConfigPath, 'utf-8') ?? '').includes('projects:');
 }
 
 /**
@@ -78,7 +78,7 @@ export function updateJestConfig(
     return;
   }
 
-  const contents = tree.read(rootConfigPath, 'utf-8');
+  const contents = tree.read(rootConfigPath, 'utf-8') ?? '';
   const sourceFile = createSourceFile(
     rootConfigPath,
     contents,

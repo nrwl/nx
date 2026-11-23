@@ -33,7 +33,7 @@ async function getHasher(runnerOptions: any): Promise<InProcessTaskHasher> {
 
   const nxJson = readNxJson();
 
-  if (projectGraph !== storedProjectGraph) {
+  if (projectGraph !== storedProjectGraph || !storedHasher) {
     storedProjectGraph = projectGraph;
     storedHasher = new InProcessTaskHasher(
       projectGraph,

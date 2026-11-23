@@ -43,7 +43,12 @@ export function parseExecutor(
   return executorString.split(':') as [string, string];
 }
 
-const cachedExecutorInformation = {};
+type ExecutorInformation = ExecutorConfig & {
+  isNgCompat: boolean;
+  isNxExecutor: boolean;
+};
+
+const cachedExecutorInformation: Record<string, ExecutorInformation> = {};
 
 export function getExecutorInformation(
   nodeModule: string,
@@ -53,7 +58,7 @@ export function getExecutorInformation(
    * A map of projects keyed by project name
    */
   projects: Record<string, ProjectConfiguration>
-): ExecutorConfig & { isNgCompat: boolean; isNxExecutor: boolean } {
+): ExecutorInformation {
   try {
     const key = cacheKey(nodeModule, executor, root);
     if (cachedExecutorInformation[key]) return cachedExecutorInformation[key];
@@ -87,7 +92,7 @@ export function getExecutorInformation(
           nodeModule,
           projects
         )
-      : null;
+      : undefined;
 
     // TODO(v25): remove custom hasher support (NXC-5052).
     const hasherFactory = executorConfig.hasher
@@ -97,7 +102,7 @@ export function getExecutorInformation(
           nodeModule,
           projects
         )
-      : null;
+      : undefined;
 
     const res = {
       schema,
@@ -113,7 +118,7 @@ export function getExecutorInformation(
     return res;
   } catch (e) {
     throw new Error(
-      `Unable to resolve ${nodeModule}:${executor}.\n${e.message}`
+      `Unable to resolve ${nodeModule}:${executor}.\n${e instanceof Error ? e.message : String(e)}`
     );
   }
 }

@@ -17,6 +17,7 @@ import { formatPluginProgressText } from '../../utils/plugin-progress-text';
 import { ProgressTopics } from '../../utils/progress-topics';
 import {
   AggregateCreateNodesError,
+  coerceToError,
   formatAggregateCreateNodesError,
   isAggregateCreateNodesError,
   isMultipleProjectsWithSameNameError,
@@ -28,7 +29,10 @@ import {
   ProjectsWithNoNameError,
   WorkspaceValidityError,
 } from '../error-types';
-import type { LoadedNxPlugin } from '../plugins/loaded-nx-plugin';
+import type {
+  LoadedNxPlugin,
+  LoadedNxPluginWith,
+} from '../plugins/loaded-nx-plugin';
 import { CreateNodesResult } from '../plugins/public-api';
 
 import type {
@@ -109,10 +113,10 @@ export async function createProjectConfigurationsWithPlugins(
       : '';
 
   const specifiedCreateNodesPlugins = plugins.specifiedPlugins.filter(
-    (plugin) => plugin.createNodes?.[0]
+    hasCreateNodesPattern
   );
   const defaultCreateNodesPlugins = plugins.defaultPlugins.filter(
-    (plugin) => plugin.createNodes?.[0]
+    hasCreateNodesPattern
   );
   const allCreateNodesPlugins = [
     ...specifiedCreateNodesPlugins,
@@ -308,7 +312,12 @@ function mergeSinglePluginResults(
         mergeFn(project, sourceInfo);
       } catch (error) {
         errors.push(
-          new MergeNodesError({ file, pluginName, error, pluginIndex })
+          new MergeNodesError({
+            file,
+            pluginName,
+            error: coerceToError(error),
+            pluginIndex,
+          })
         );
       }
     }
@@ -330,7 +339,12 @@ function registerNameRefsFromSinglePlugin(
       nodesManager.registerNameRefs(projectNodes);
     } catch (error) {
       errors.push(
-        new MergeNodesError({ file, pluginName, error, pluginIndex })
+        new MergeNodesError({
+          file,
+          pluginName,
+          error: coerceToError(error),
+          pluginIndex,
+        })
       );
     }
   }
@@ -514,7 +528,7 @@ export function mergeCreateNodesResults(
  * @returns A function that checks if a file matches the patterns
  */
 function createMatcher(
-  patterns: string[],
+  patterns: string[] | undefined,
   emptyValue: boolean
 ): (file: string) => boolean {
   if (!patterns || patterns.length === 0) {
@@ -553,8 +567,8 @@ function createMatcher(
 
 export function findMatchingConfigFiles(
   projectFiles: string[],
-  include: string[],
-  exclude: string[]
+  include: string[] | undefined,
+  exclude: string[] | undefined
 ): string[] {
   // Callers pass files that already match the plugin's createNodes pattern,
   // so only include/exclude filters remain here.
@@ -563,4 +577,10 @@ export function findMatchingConfigFiles(
   const excludes = createMatcher(exclude, false);
 
   return projectFiles.filter((file) => includes(file) && !excludes(file));
+}
+
+function hasCreateNodesPattern(
+  plugin: LoadedNxPlugin
+): plugin is LoadedNxPluginWith<'createNodes'> {
+  return !!plugin.createNodes?.[0];
 }

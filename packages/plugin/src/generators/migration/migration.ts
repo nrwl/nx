@@ -23,6 +23,7 @@ import { addMigrationJsonChecks } from '../lint-checks/generator';
 import type { Schema } from './schema';
 
 interface NormalizedSchema extends Schema {
+  name: string;
   directory: string;
   fileName: string;
   projectRoot: string;
@@ -148,7 +149,10 @@ function updatePackageJson(host: Tree, options: NormalizedSchema) {
         json[migrationKey].migrations = './migrations.json';
       }
 
-      addFile(json[migrationKey].migrations);
+      const migrationsFile = json[migrationKey].migrations;
+      if (migrationsFile) {
+        addFile(migrationsFile);
+      }
 
       // add dependencies
       json.dependencies = {
@@ -168,12 +172,14 @@ function updateProjectConfig(host: Tree, options: NormalizedSchema) {
 
   const project = readProjectConfiguration(host, options.project);
 
-  const assets = project.targets.build?.options?.assets;
+  const buildTarget = project.targets?.build;
+  const assets = buildTarget?.options?.assets;
   if (
+    buildTarget &&
     assets &&
     (assets as any[]).filter((a) => a.glob === 'migrations.json').length === 0
   ) {
-    project.targets.build.options.assets = [
+    buildTarget.options.assets = [
       ...assets,
       {
         input: `./${options.projectRoot}`,

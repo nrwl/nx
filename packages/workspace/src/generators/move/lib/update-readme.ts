@@ -15,7 +15,7 @@ export function updateReadme(tree: Tree, schema: NormalizedSchema) {
     return;
   }
   const findName = new RegExp(`${schema.projectName}`, 'g');
-  const oldContent = tree.read(readmePath, 'utf-8');
+  const oldContent = tree.read(readmePath, 'utf-8') ?? '';
   const newContent = oldContent.replace(findName, schema.newProjectName);
   tree.write(readmePath, newContent);
 }

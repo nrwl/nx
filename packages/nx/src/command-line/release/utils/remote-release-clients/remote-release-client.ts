@@ -4,6 +4,7 @@ import { ResolvedCreateRemoteReleaseProvider } from '../../config/config';
 import type { Reference } from '../git';
 import { handleImport } from '../../../../utils/handle-import';
 import {
+  HttpError,
   httpRequest,
   type HttpRequestConfig,
 } from '../../../../utils/http-client';
@@ -30,10 +31,17 @@ export interface RemoteReleaseOptions {
 }
 
 // Release creation result
-export interface RemoteReleaseResult {
-  status: 'created' | 'updated' | 'manual';
-  id?: string;
-  url?: string;
+export type RemoteReleaseResult =
+  | {
+      status: 'created' | 'updated';
+      id?: string;
+      url?: string;
+    }
+  | ManualRemoteReleaseResult;
+
+export interface ManualRemoteReleaseResult {
+  status: 'manual';
+  url: string;
   error?: any;
   requestData?: any;
 }
@@ -162,11 +170,12 @@ export abstract class RemoteReleaseClient<
     try {
       existingRelease = await this.getReleaseByTag(releaseVersion.gitTag);
     } catch (err) {
-      if (err.response?.status === 401) {
+      const status = err instanceof HttpError ? err.status : undefined;
+      if (status === 401) {
         this.handleAuthError();
         process.exit(1);
       }
-      if (err.response?.status === 404) {
+      if (status === 404) {
         // No existing release found, this is fine
       } else {
         // Rethrow unknown errors for now
@@ -217,7 +226,7 @@ export abstract class RemoteReleaseClient<
    */
   protected abstract handleError(
     error: any,
-    result: RemoteReleaseResult
+    result: ManualRemoteReleaseResult
   ): Promise<void>;
 
   /**
@@ -266,7 +275,7 @@ export abstract class RemoteReleaseClient<
    * Update an existing release
    */
   protected abstract updateRelease(
-    id: string,
+    id: string | undefined,
     body: RemoteRelease
   ): Promise<any>;
 
@@ -285,7 +294,7 @@ export abstract class RemoteReleaseClient<
 export async function createRemoteReleaseClient(
   createReleaseConfig: false | ResolvedCreateRemoteReleaseProvider,
   remoteName = 'origin'
-): Promise<GithubRemoteReleaseClient | GitLabRemoteReleaseClient | null> {
+): Promise<GithubRemoteReleaseClient | GitLabRemoteReleaseClient> {
   switch (true) {
     // GitHub and GitHub Enterprise Server
     case typeof createReleaseConfig === 'object' &&

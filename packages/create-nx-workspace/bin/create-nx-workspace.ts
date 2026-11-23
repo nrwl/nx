@@ -1603,7 +1603,7 @@ async function determineNodeOptions(
   let preset: Preset;
   let appName: string;
   let framework: 'express' | 'fastify' | 'koa' | 'nest' | 'none';
-  let bundler = parsedArgs.bundler;
+  let bundler: NodeArguments['bundler'] | undefined = parsedArgs.bundler;
   let docker: boolean;
   let linter: undefined | Linter;
   let unitTestRunner: undefined | 'none' | 'jest' | 'vitest' = undefined;

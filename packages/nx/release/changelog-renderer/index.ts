@@ -85,7 +85,7 @@ export default class DefaultChangelogRenderer {
   protected relevantChanges: ChangelogChange[];
   protected breakingChanges: string[];
   protected additionalChangesForAuthorsSection: ChangelogChange[];
-  protected remoteReleaseClient: RemoteReleaseClient<unknown>;
+  protected remoteReleaseClient: RemoteReleaseClient<object>;
 
   /**
    * A ChangelogRenderer class takes in the determined changes and other relevant metadata
@@ -111,7 +111,7 @@ export default class DefaultChangelogRenderer {
     changelogRenderOptions: DefaultChangelogRenderOptions;
     dependencyBumps?: DependencyBump[];
     conventionalCommitsConfig: NxReleaseConfig['conventionalCommits'];
-    remoteReleaseClient: RemoteReleaseClient<unknown>;
+    remoteReleaseClient: RemoteReleaseClient<object>;
   }) {
     this.changes = this.filterChanges(config.changes, config.project);
     this.changelogEntryVersion = config.changelogEntryVersion;
@@ -315,19 +315,19 @@ export default class DefaultChangelogRenderer {
   }
 
   protected hasDependencyBumps(): boolean {
-    return this.dependencyBumps && this.dependencyBumps.length > 0;
+    return !!this.dependencyBumps && this.dependencyBumps.length > 0;
   }
 
   protected renderDependencyBumps(): string[] {
     const markdownLines = ['', '### 🧱 Updated Dependencies', ''];
-    this.dependencyBumps.forEach(({ dependencyName, newVersion }) => {
+    (this.dependencyBumps ?? []).forEach(({ dependencyName, newVersion }) => {
       markdownLines.push(`- Updated ${dependencyName} to ${newVersion}`);
     });
     return markdownLines;
   }
 
   protected shouldRenderAuthors(): boolean {
-    return this.changelogRenderOptions.authors;
+    return !!this.changelogRenderOptions.authors;
   }
 
   protected async renderAuthors(): Promise<string[]> {
@@ -349,11 +349,13 @@ export default class DefaultChangelogRenderer {
         if (!name || name.includes('[bot]') || this.isAiAgentAuthor(author)) {
           continue;
         }
-        if (!_authors.has(name)) {
-          _authors.set(name, { email: new Set<string>() });
+        let authorEntry = _authors.get(name);
+        if (!authorEntry) {
+          authorEntry = { email: new Set<string>() };
+          _authors.set(name, authorEntry);
         }
         if (author.email) {
-          _authors.get(name).email.add(author.email);
+          authorEntry.email.add(author.email);
         }
       }
     }
@@ -512,7 +514,9 @@ export default class DefaultChangelogRenderer {
     return scopeGroups;
   }
 
-  protected extractBreakingChangeExplanation(message: string): string | null {
+  protected extractBreakingChangeExplanation(
+    message: string | undefined
+  ): string | null {
     if (!message) {
       return null;
     }

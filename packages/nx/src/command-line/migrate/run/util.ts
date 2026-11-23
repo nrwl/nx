@@ -118,7 +118,7 @@ export function recordInstallLanded(
       return {
         ...fresh,
         steps: fresh.steps.map(({ installFailed, ...s }) =>
-          s.id === stepId && baselineMoves
+          s.id === stepId && baselineMoves && hash !== null
             ? { ...s, depsHashAtDispense: hash }
             : s
         ),

@@ -150,7 +150,7 @@ class ProcessMetricsService {
   /**
    * Get system information (CPU cores and total memory)
    */
-  getSystemInfo(): SystemInfo | null {
+  getSystemInfo(): SystemInfo | null | undefined {
     try {
       return this.collector?.getSystemInfo();
     } catch {

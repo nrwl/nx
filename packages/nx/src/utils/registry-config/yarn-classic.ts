@@ -2,6 +2,7 @@ import { existsSync, readFileSync } from 'fs';
 import { homedir } from 'os';
 import { dirname, join, resolve } from 'path';
 import { readYamlFile } from '../fileutils';
+import { isErrnoException } from '../is-errno-exception';
 import { readNpmrcMap } from '../package-manager-config/npmrc';
 import {
   ancestorDirectories,
@@ -195,7 +196,9 @@ function resolveAuth(
   // refuses to run on a bare auth key in its own config (ERR_INVALID_AUTH,
   // --force included) before any overlay matters. The _auth/_password base64
   // carries over as-is.
-  let winner: { form: readonly string[]; rank: number; values: LadderMatch[] };
+  let winner:
+    | { form: readonly string[]; rank: number; values: LadderMatch[] }
+    | undefined;
   for (let rank = 0; rank < CREDENTIAL_FORMS.length && !winner; rank++) {
     const form = CREDENTIAL_FORMS[rank];
     const values: LadderMatch[] = [];
@@ -1011,8 +1014,8 @@ function readYarnrcMap(
     // then dies on the open. Anything left leaves no resolution to reproduce.
     // See https://github.com/yarnpkg/yarn/blob/740c38c3a962c30ddb344a919bbfb7065620714b/src/util/rc.js#L64-L79
     if (
-      e?.code === 'ENOENT' ||
-      (e?.code === 'EISDIR' && readers === 'cli-rc')
+      isErrnoException(e) &&
+      (e.code === 'ENOENT' || (e.code === 'EISDIR' && readers === 'cli-rc'))
     ) {
       return null;
     }
@@ -1120,7 +1123,11 @@ function* tokenizeYarnrc(input: string): Generator<YarnToken> {
         yield { type: 'invalid' };
       }
     } else if (/^[0-9]/.test(input)) {
-      const digits = /^[0-9]+/.exec(input)[0];
+      const match = /^[0-9]+/.exec(input);
+      if (!match) {
+        throw new Error(`Expected digits at the start of "${input}"`);
+      }
+      const digits = match[0];
       chop = digits.length;
       yield { type: 'value', value: +digits };
     } else if (input.startsWith('true')) {

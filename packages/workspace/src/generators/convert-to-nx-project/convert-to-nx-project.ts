@@ -48,7 +48,7 @@ export async function convertToNxProjectGenerator(host: Tree, schema: Schema) {
   await validateSchema(schema, configName);
 
   const projects = toNewFormat(readJson(host, configName)).projects;
-  const leftOverProjects = {};
+  const leftOverProjects: Record<string, unknown> = {};
 
   for (const projectName of Object.keys(projects)) {
     const config = projects[projectName];

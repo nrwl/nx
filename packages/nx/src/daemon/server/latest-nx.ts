@@ -88,7 +88,7 @@ async function runCleanup(): Promise<void> {
   latestNxTmpPath = null;
   cleanupFn = null;
 
-  if (!cleanup) {
+  if (!cleanup || tmpPath === null) {
     return;
   }
 
@@ -114,7 +114,7 @@ async function runCleanup(): Promise<void> {
     serverLogger.log(
       '[LATEST-NX]: Failed to clean up latest Nx installation from',
       tmpPath,
-      e.message
+      e instanceof Error ? e.message : String(e)
     );
   }
 }
@@ -124,7 +124,7 @@ async function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
   // a late rejection would surface as an unhandledRejection.
   promise.catch(() => {});
 
-  let timer: NodeJS.Timeout;
+  let timer: NodeJS.Timeout | undefined;
   try {
     return await Promise.race([
       promise,

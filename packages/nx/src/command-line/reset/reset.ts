@@ -130,7 +130,7 @@ async function runResetStep(
     globalSpinner.succeed(step.success);
   } catch (e) {
     globalSpinner.fail(step.failure);
-    errors.push(step.failure, e.toString());
+    errors.push(step.failure, String(e));
   }
 }
 

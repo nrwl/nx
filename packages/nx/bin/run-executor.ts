@@ -5,12 +5,14 @@ import { output } from '../src/utils/output';
 
 if (process.env.NX_TERMINAL_OUTPUT_PATH) {
   setUpOutputWatching(
+    process.env.NX_TERMINAL_OUTPUT_PATH,
     process.env.NX_TERMINAL_CAPTURE_STDERR === 'true',
     process.env.NX_STREAM_OUTPUT === 'true'
   );
 }
 
-if (!process.env.NX_WORKSPACE_ROOT) {
+const workspaceRoot = process.env.NX_WORKSPACE_ROOT;
+if (!workspaceRoot) {
   console.error('Invalid Nx command invocation');
   process.exit(1);
 }
@@ -27,19 +29,22 @@ process.env.NX_CLI_SET = 'true';
  * And the cached output should be correct unless the CLI bypasses process.stdout or console.log and uses some
  * C-binary to write to stdout.
  */
-function setUpOutputWatching(captureStderr: boolean, streamOutput: boolean) {
+function setUpOutputWatching(
+  outputPath: string,
+  captureStderr: boolean,
+  streamOutput: boolean
+) {
   const stdoutWrite = process.stdout._write;
   const stderrWrite = process.stderr._write;
 
   // The terminal output file gets out and err
-  const outputPath = process.env.NX_TERMINAL_OUTPUT_PATH;
   const stdoutAndStderrLogFileHandle = openSync(outputPath, 'w');
 
   const onlyStdout = [] as string[];
   process.stdout._write = (
     chunk: any,
-    encoding: string,
-    callback: Function
+    encoding: BufferEncoding,
+    callback: (error?: Error | null) => void
   ) => {
     onlyStdout.push(chunk);
     appendFileSync(stdoutAndStderrLogFileHandle, chunk);
@@ -52,8 +57,8 @@ function setUpOutputWatching(captureStderr: boolean, streamOutput: boolean) {
 
   process.stderr._write = (
     chunk: any,
-    encoding: string,
-    callback: Function
+    encoding: BufferEncoding,
+    callback: (error?: Error | null) => void
   ) => {
     appendFileSync(stdoutAndStderrLogFileHandle, chunk);
     if (streamOutput) {
@@ -83,7 +88,7 @@ process.on(
     try {
       const statusCode = await run(
         process.cwd(),
-        process.env.NX_WORKSPACE_ROOT,
+        workspaceRoot,
         message.targetDescription,
         message.overrides,
         message.isVerbose,

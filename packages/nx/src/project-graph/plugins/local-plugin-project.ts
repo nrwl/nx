@@ -51,6 +51,7 @@ export function findNxProjectForImportPath(
     const projectNameMap = new Map<string, ProjectConfiguration>();
     for (const projectRoot in projects) {
       const project = projects[projectRoot];
+      if (project.name === undefined) continue;
       projectRootMappings.set(project.root, project.name);
       projectNameMap.set(project.name, project);
     }

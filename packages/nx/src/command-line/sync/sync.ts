@@ -20,7 +20,8 @@ interface SyncOptions extends SyncArgs {
 }
 
 export function syncHandler(options: SyncOptions): Promise<number> {
-  return handleErrors(options.verbose, async () => {
+  const isVerbose = options.verbose ?? false;
+  return handleErrors(isVerbose, async () => {
     const projectGraph = await createProjectGraphAsync();
     const nxJson = readNxJson();
     const { globalGenerators, taskGenerators } =
@@ -61,7 +62,7 @@ export function syncHandler(options: SyncOptions): Promise<number> {
     const failedSyncGeneratorsFixMessageLines =
       getFailedSyncGeneratorsFixMessageLines(
         results,
-        options.verbose,
+        isVerbose,
         new Set(globalGenerators)
       );
 
@@ -122,7 +123,7 @@ export function syncHandler(options: SyncOptions): Promise<number> {
           title: 'Failed to sync the workspace',
           bodyLines: getFlushFailureMessageLines(
             flushResult,
-            options.verbose,
+            isVerbose,
             new Set(globalGenerators)
           ),
         });
@@ -136,8 +137,8 @@ export function syncHandler(options: SyncOptions): Promise<number> {
         bodyLines: [
           'Syncing the workspace failed with the following error:',
           '',
-          e.message,
-          ...(!!e.stack ? [`\n${e.stack}`] : []),
+          e instanceof Error ? e.message : String(e),
+          ...(e instanceof Error && e.stack ? [`\n${e.stack}`] : []),
           '',
           'Please report the error at: https://github.com/nrwl/nx/issues/new/choose',
         ],

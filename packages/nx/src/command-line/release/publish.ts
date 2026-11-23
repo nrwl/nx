@@ -37,6 +37,7 @@ import {
 } from './config/config';
 import { deepMergeJson } from './config/deep-merge-json';
 import type { ReleaseGroupWithName } from './config/filter-release-groups';
+import { getReleaseGroupFilteredProjects } from './utils/shared';
 import { printConfigAndExit } from './utils/print-config';
 import { createReleaseGraph, type ReleaseGraph } from './utils/release-graph';
 
@@ -47,7 +48,7 @@ export interface PublishProjectsResult {
 }
 
 export const releasePublishCLIHandler = (args: PublishOptions) =>
-  handleErrors(args.verbose, async () => {
+  handleErrors(args.verbose ?? false, async () => {
     const publishProjectsResult: PublishProjectsResult = await createAPI(
       {},
       false
@@ -111,15 +112,15 @@ export function createAPI(
       args.releaseGraph ||
       (await createReleaseGraph({
         // Only build the tree if no existing graph, it's only needed for this
-        tree: new FsTree(workspaceRoot, args.verbose),
+        tree: new FsTree(workspaceRoot, args.verbose ?? false),
         projectGraph,
         nxReleaseConfig,
         filters: {
           projects: _args.projects,
           groups: _args.groups,
         },
-        firstRelease: args.firstRelease,
-        verbose: args.verbose,
+        firstRelease: args.firstRelease ?? false,
+        verbose: args.verbose ?? false,
         // Publish doesn't need to resolve current versions during graph construction
         skipVersionResolution: true,
       }));
@@ -137,9 +138,9 @@ export function createAPI(
      * for dependencies, because that could cause projects outset of the filtered set to be published.
      */
     const shouldExcludeTaskDependencies =
-      _args.projects?.length > 0 ||
-      _args.groups?.length > 0 ||
-      args.excludeTaskDependencies;
+      (_args.projects?.length ?? 0) > 0 ||
+      (_args.groups?.length ?? 0) > 0 ||
+      (args.excludeTaskDependencies ?? false);
 
     let overallPublishProjectsResult: PublishProjectsResult = {};
 
@@ -158,7 +159,7 @@ export function createAPI(
         releaseGraph,
         releaseGroup,
         projectGraph,
-        args.projects?.length > 0
+        (args.projects?.length ?? 0) > 0
       );
       if (projectNames.length === 0) {
         continue;
@@ -197,7 +198,10 @@ function getProjectsToPublish(
     isFilteredByProjects ||
     (isAddedForDependents && releaseGroup.projectsRelationship !== 'fixed')
       ? Array.from(
-          releaseGraph.releaseGroupToFilteredProjects.get(releaseGroup)
+          getReleaseGroupFilteredProjects(
+            releaseGraph.releaseGroupToFilteredProjects,
+            releaseGroup
+          )
         )
       : releaseGroup.projects;
   if (!isAddedForDependents) {

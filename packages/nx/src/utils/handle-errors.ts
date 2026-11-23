@@ -18,9 +18,12 @@ export async function handleErrors(
       return result;
     }
     return 0;
-  } catch (err) {
-    err ||= new Error('Unknown error caught');
-    if (err.constructor.name === 'UnsuccessfulWorkflowExecution') {
+  } catch (caught) {
+    const err = caught || new Error('Unknown error caught');
+    if (!(err instanceof Error)) {
+      const lines = String(err).split('\n');
+      output.error({ title: lines[0], bodyLines: lines.slice(1) });
+    } else if (err.constructor.name === 'UnsuccessfulWorkflowExecution') {
       logger.error('The generator workflow failed. See above.');
     } else if (
       err.name === 'ProjectGraphError' ||
@@ -37,7 +40,10 @@ export async function handleErrors(
       // actionable remediation; surface the remediation rather than a stack.
       output.error({
         title: err.message,
-        bodyLines: Array.isArray(err.remediation) ? err.remediation : [],
+        bodyLines:
+          'remediation' in err && Array.isArray(err.remediation)
+            ? err.remediation
+            : [],
       });
     } else {
       const lines = (err.message ? err.message : err.toString()).split('\n');

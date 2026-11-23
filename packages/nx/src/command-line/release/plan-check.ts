@@ -24,7 +24,7 @@ import { createGetTouchedProjectsForGroup } from './utils/get-touched-projects-f
 import { printConfigAndExit } from './utils/print-config';
 
 export const releasePlanCheckCLIHandler = (args: PlanCheckOptions) =>
-  handleErrors(args.verbose, () => createAPI({})(args));
+  handleErrors(args.verbose ?? false, () => createAPI({})(args));
 
 export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
   return async function releasePlanCheck(args: PlanOptions): Promise<number> {
@@ -81,7 +81,7 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
       rawVersionPlans,
       releaseGroups,
       Object.keys(projectGraph.nodes),
-      args.verbose
+      args.verbose ?? false
     );
 
     // Resolve the final values for base, head etc to use when resolving the changes to consider
@@ -89,7 +89,7 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
       args,
       'affected',
       {
-        printWarnings: args.verbose,
+        printWarnings: args.verbose ?? false,
       },
       nxJson
     );
@@ -161,7 +161,9 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
       const projectsInResolvedVersionPlans: Record<
         string,
         { bump: string; fileName: string }[]
-      > = resolvedVersionPlans.reduce((acc, plan) => {
+      > = resolvedVersionPlans.reduce<
+        Record<string, { bump: string; fileName: string }[]>
+      >((acc, plan) => {
         if ('projectVersionBumps' in plan) {
           for (const project in plan.projectVersionBumps) {
             acc[project] = acc[project] || [];

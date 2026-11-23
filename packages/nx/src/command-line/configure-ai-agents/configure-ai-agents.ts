@@ -60,7 +60,7 @@ export async function configureAiAgentsHandler(
     // If we can't check, proceed with download
   }
 
-  let cleanup: () => void | undefined;
+  let cleanup: (() => void) | undefined;
   try {
     const version = await resolveVersionWithProvenance('nx', 'latest');
     const packageInstallResults = installPackageToTmp(
@@ -280,7 +280,7 @@ export async function configureAiAgentsHandlerImpl(
         } else {
           output.error({
             title: 'Error details:',
-            bodyLines: [e.message],
+            bodyLines: [e instanceof Error ? e.message : String(e)],
           });
         }
         process.exit(1);
@@ -402,7 +402,7 @@ export async function configureAiAgentsHandlerImpl(
     } else {
       output.error({
         title: 'Error details:',
-        bodyLines: [e.message],
+        bodyLines: [e instanceof Error ? e.message : String(e)],
       });
     }
     process.exit(1);

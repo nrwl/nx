@@ -274,12 +274,15 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
     } catch (e) {
       // `execAndWait` names a log file only when there was no output at all,
       // and that file is deleted below - so report the exit code instead.
+      const failure = e instanceof CnwError ? e : undefined;
       const reason =
-        e?.logFile && e?.message?.includes(e.logFile)
+        failure?.logFile && failure.message.includes(failure.logFile)
           ? `The command failed with exit code ${
-              e.exitCode ?? 'unknown'
+              failure.exitCode ?? 'unknown'
             } and produced no output.`
-          : e?.message;
+          : e instanceof Error
+            ? e.message
+            : undefined;
       output.warn({
         title: 'Could not format the new workspace.',
         bodyLines: [
@@ -290,9 +293,9 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
       });
       // Otherwise `initializeGitRepo`'s `git add .` puts an error.log in the
       // workspace's first commit; the .gitignore templates do not cover it.
-      if (e?.logFile && existsSync(e.logFile)) {
+      if (failure?.logFile && existsSync(failure.logFile)) {
         try {
-          unlinkSync(e.logFile);
+          unlinkSync(failure.logFile);
         } catch {}
       }
     }

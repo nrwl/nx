@@ -1,3 +1,4 @@
+import { isErrnoException } from '../utils/is-errno-exception';
 import { selectPrompt } from '../utils/prompt-helpers';
 import { stripVTControlCharacters } from 'node:util';
 
@@ -145,7 +146,7 @@ const SYNC_SKIPPED_FIX_MESSAGE_LINES = [
 ];
 
 async function getTerminalOutputLifeCycle(
-  initiatingProject: string,
+  initiatingProject: string | null,
   initiatingTasks: Task[],
   projectNames: string[],
   tasks: Task[],
@@ -180,14 +181,15 @@ async function getTerminalOutputLifeCycle(
     // `node_modules/.cache` location. Using the client's own resolver keeps the
     // interception working in all of those cases.
     const nxCloudClientDir = getBundleInstallDefaultLocation();
+    const isNxCloudStackTrace = (stackTrace: string | undefined) =>
+      nxCloudClientDir !== null && !!stackTrace?.includes(nxCloudClientDir);
 
     const createPatchedConsoleMethod = (
       originalMethod: typeof console.log | typeof console.error
     ): typeof console.log | typeof console.error => {
       return (...args: any[]) => {
         // Check if the log came from the Nx Cloud client, otherwise invoke the original write method
-        const stackTrace = new Error().stack;
-        const isNxCloudLog = stackTrace.includes(nxCloudClientDir);
+        const isNxCloudLog = isNxCloudStackTrace(new Error().stack);
         if (!isNxCloudLog) {
           return originalMethod(...args);
         }
@@ -198,7 +200,11 @@ async function getTerminalOutputLifeCycle(
     console.log = createPatchedConsoleMethod(originalConsoleLog);
     console.error = createPatchedConsoleMethod(originalConsoleError);
 
-    const patchedWrite = (_chunk, _encoding, callback) => {
+    const patchedWrite = (
+      _chunk: unknown,
+      _encoding: unknown,
+      callback?: () => void
+    ) => {
       // Preserve original behavior around callback and return value, just in case
       if (callback) {
         callback();
@@ -209,11 +215,10 @@ async function getTerminalOutputLifeCycle(
     process.stdout.write = patchedWrite as any;
     process.stderr.write = patchedWrite as any;
 
-    const { AppLifeCycle, restoreTerminal } = await handleImport(
-      '../native/index.js',
-      __dirname
-    );
-    let appLifeCycle;
+    const { AppLifeCycle, restoreTerminal } = await handleImport<
+      typeof import('../native')
+    >('../native/index.js', __dirname);
+    let appLifeCycle: InstanceType<typeof AppLifeCycle> | undefined;
 
     const isRunOne = initiatingProject != null;
 
@@ -238,7 +243,7 @@ async function getTerminalOutputLifeCycle(
       }
     } else {
       const mainTasksCount = projectNames.length;
-      const targetText = nxArgs.targets.join(', ');
+      const targetText = (nxArgs.targets ?? []).join(', ');
       const mainTaskText = mainTasksCount === 1 ? 'task' : 'tasks';
       titleText = `${mainTasksCount} ${targetText} ${mainTaskText}`;
       if (tasks.length > projectNames.length) {
@@ -249,7 +254,7 @@ async function getTerminalOutputLifeCycle(
       }
     }
 
-    let resolveRenderIsDonePromise: (value: void) => void;
+    let resolveRenderIsDonePromise: (value: void) => void = () => {};
     // Default renderIsDone that will be overridden if the TUI is used
     let renderIsDone = new Promise<void>(
       (resolve) => (resolveRenderIsDonePromise = resolve)
@@ -280,7 +285,7 @@ async function getTerminalOutputLifeCycle(
     const lifeCycles: LifeCycle[] = [tsLifeCycle];
     // Only run the TUI if there are tasks to run
     if (tasks.length > 0) {
-      appLifeCycle = new AppLifeCycle(
+      const tuiLifeCycle = new AppLifeCycle(
         tasks,
         initiatingTasks.map((t) => t.id),
         isRunOne ? RunMode.RunOne : RunMode.RunMany,
@@ -293,6 +298,7 @@ async function getTerminalOutputLifeCycle(
         getReadyDependencies(taskGraph, projectGraph),
         isNxCloudUsed(nxJson)
       );
+      appLifeCycle = tuiLifeCycle;
       // The native endCommand renders the perf report in the exit popup; the runner
       // sources the payload and CompositeLifeCycle forwards it here.
       lifeCycles.unshift(appLifeCycle as unknown as LifeCycle);
@@ -319,8 +325,7 @@ async function getTerminalOutputLifeCycle(
             );
           }
 
-          const stackTrace = new Error().stack;
-          const isNxCloudLog = stackTrace.includes(nxCloudClientDir);
+          const isNxCloudLog = isNxCloudStackTrace(new Error().stack);
           if (isNxCloudLog) {
             interceptedNxCloudLogs.push(chunk);
             // Do not bother to store logs with only whitespace characters, they aren't relevant for the TUI
@@ -346,8 +351,7 @@ async function getTerminalOutputLifeCycle(
       ): typeof console.log | typeof console.error => {
         return (...args: any[]) => {
           // Check if the log came from the Nx Cloud client, otherwise invoke the original write method
-          const stackTrace = new Error().stack;
-          const isNxCloudLog = stackTrace.includes(nxCloudClientDir);
+          const isNxCloudLog = isNxCloudStackTrace(new Error().stack);
           if (!isNxCloudLog) {
             return originalMethod(...args);
           }
@@ -362,27 +366,29 @@ async function getTerminalOutputLifeCycle(
       console.log = createPatchedConsoleMethod(originalConsoleLog);
       console.error = createPatchedConsoleMethod(originalConsoleError);
 
-      globalThis.tuiOnProcessExit = () => {
-        restoreTerminal();
-        // Revert the patched methods
-        process.stdout.write = originalStdoutWrite;
-        process.stderr.write = originalStderrWrite;
-        console.log = originalConsoleLog;
-        console.error = originalConsoleError;
-        process.stdout.write('\n');
-        // Print the intercepted Nx Cloud logs
-        for (const log of interceptedNxCloudLogs) {
-          const logString = log.toString().trimStart();
+      Object.assign(globalThis, {
+        tuiOnProcessExit: () => {
+          restoreTerminal();
+          // Revert the patched methods
+          process.stdout.write = originalStdoutWrite;
+          process.stderr.write = originalStderrWrite;
+          console.log = originalConsoleLog;
+          console.error = originalConsoleError;
+          process.stdout.write('\n');
+          // Print the intercepted Nx Cloud logs
+          for (const log of interceptedNxCloudLogs) {
+            const logString = log.toString().trimStart();
 
-          process.stdout.write(logString);
-          if (logString) {
-            process.stdout.write('\n');
+            process.stdout.write(logString);
+            if (logString) {
+              process.stdout.write('\n');
+            }
           }
-        }
-      };
+        },
+      });
 
       renderIsDone = new Promise<void>((resolve) => {
-        appLifeCycle.__init(() => {
+        tuiLifeCycle.__init(() => {
           resolve();
         });
       });
@@ -467,11 +473,12 @@ export function selectTasksForProjects(
   extraTargetDependencies: TargetDependencies,
   excludeTaskDependencies: boolean
 ): TaskSelection {
+  const targets = nxArgs.targets ?? [];
   const taskGraph = createTaskGraph(
     projectGraph,
     extraTargetDependencies,
     projectNames,
-    nxArgs.targets,
+    targets,
     nxArgs.configuration,
     overrides,
     excludeTaskDependencies
@@ -482,8 +489,7 @@ export function selectTasksForProjects(
     initiatingTaskIds: Object.values(taskGraph.tasks)
       .filter(
         (t) =>
-          projects.has(t.target.project) &&
-          nxArgs.targets.includes(t.target.target)
+          projects.has(t.target.project) && targets.includes(t.target.target)
       )
       .map((t) => t.id),
   };
@@ -752,7 +758,7 @@ async function ensureWorkspaceIsInSyncAndGetGraphs(
     anySyncGeneratorsFailed,
   } = processSyncGeneratorResultErrors(results);
   const failedSyncGeneratorsFixMessageLines =
-    getFailedSyncGeneratorsFixMessageLines(results, nxArgs.verbose);
+    getFailedSyncGeneratorsFixMessageLines(results, nxArgs.verbose ?? false);
   const outOfSyncTitle = 'The workspace is out of sync';
   const resultBodyLines = getSyncGeneratorSuccessResultsMessageLines(results);
 
@@ -861,7 +867,7 @@ async function ensureWorkspaceIsInSyncAndGetGraphs(
       output.error({
         title: 'Failed to sync the workspace',
         bodyLines: [
-          ...getFlushFailureMessageLines(flushResult, nxArgs.verbose),
+          ...getFlushFailureMessageLines(flushResult, nxArgs.verbose ?? false),
           ...(flushResult.generalFailure
             ? [
                 'If needed, you can run the tasks with the `--skip-sync` flag to disable syncing.',
@@ -1251,7 +1257,10 @@ async function convertObservableToPromise(
   });
 }
 
-function shouldUseDynamicLifeCycle(tasks: Task[], outputStyle: string) {
+function shouldUseDynamicLifeCycle(
+  tasks: Task[],
+  outputStyle: string | undefined
+) {
   if (
     process.env.NX_BATCH_MODE === 'true' ||
     process.env.NX_VERBOSE_LOGGING === 'true' ||
@@ -1286,7 +1295,11 @@ function loadTasksRunner(modulePath: string): TasksRunner {
       ? maybeTasksRunner.default
       : maybeTasksRunner;
   } catch (e) {
-    if (e.code === 'MODULE_NOT_FOUND' && isLegacyCloudPackage) {
+    if (
+      isErrnoException(e) &&
+      e.code === 'MODULE_NOT_FOUND' &&
+      isLegacyCloudPackage
+    ) {
       return require('../nx-cloud/nx-cloud-tasks-runner-shell')
         .nxCloudTasksRunnerShell;
     }
@@ -1388,9 +1401,8 @@ function getTasksRunnerPath(
     nxJson.nxCloudAccessToken ||
     // No runner prop in tasks runner options, check if access token is set.
     nxJson.tasksRunnerOptions?.[runner]?.options?.accessToken ||
-    ['nx-cloud', '@nrwl/nx-cloud'].includes(
-      nxJson.tasksRunnerOptions?.[runner]?.runner
-    ) ||
+    nxJson.tasksRunnerOptions?.[runner]?.runner === 'nx-cloud' ||
+    nxJson.tasksRunnerOptions?.[runner]?.runner === '@nrwl/nx-cloud' ||
     // Cloud access token specified in env var.
     process.env.NX_CLOUD_AUTH_TOKEN ||
     process.env.NX_CLOUD_ACCESS_TOKEN ||

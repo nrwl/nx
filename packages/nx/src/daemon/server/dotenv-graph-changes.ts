@@ -49,7 +49,7 @@ export interface DotEnvChangeClassification {
  */
 export function classifyDotEnvChanges(
   changeEvents: WatchEvent[],
-  projectGraph: ProjectGraph | undefined
+  projectGraph: ProjectGraph | null | undefined
 ): DotEnvChangeClassification {
   // Outputs batches rarely touch dotenv files, so the O(projects) roots set is
   // only built once a path clears this superset-of-dotenv-names check.
@@ -117,7 +117,7 @@ function mayBeDotEnvPath(path: string): boolean {
 }
 
 function graphTimeDotEnvRoots(
-  projectGraph: ProjectGraph | undefined
+  projectGraph: ProjectGraph | null | undefined
 ): Set<string> {
   const roots = new Set<string>(['.']);
   if (projectGraph) {
@@ -220,7 +220,7 @@ export function queuePendingDotEnvEvents(
  * cannot prove which side of that computation's file read the edit landed on.
  */
 export function drainPendingDotEnvEvents(
-  projectGraph: ProjectGraph | undefined,
+  projectGraph: ProjectGraph | null | undefined,
   sinceGeneration: number
 ): { invalidating: string[]; overflowed: boolean } {
   const entries = Array.from(pendingDotEnvEvents.entries());
@@ -282,7 +282,7 @@ export function hasPendingDotEnvEvidence(sinceGeneration: number): boolean {
  * queued for that computation's drain.
  */
 export function hasRelevantPendingDotEnvEvidence(
-  projectGraph: ProjectGraph | undefined,
+  projectGraph: ProjectGraph | null | undefined,
   sinceGeneration: number
 ): boolean {
   if (

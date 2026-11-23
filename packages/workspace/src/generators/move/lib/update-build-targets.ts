@@ -33,12 +33,12 @@ function updateJsonValue(
   config: TargetConfiguration,
   callback: (x: string) => void | string
 ): boolean {
-  function recur(obj, key, value): boolean {
+  function recur(obj: object, key: string | number, value: unknown): boolean {
     let changed = false;
     if (typeof value === 'string') {
       const result = callback(value);
-      if (result && obj[key] !== result) {
-        obj[key] = result;
+      if (result && value !== result) {
+        Reflect.set(obj, key, result);
         changed = true;
       }
     } else if (Array.isArray(value)) {

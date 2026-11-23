@@ -95,8 +95,9 @@ export async function listPluginCapabilities(
     return;
   }
 
-  const hasBuilders = hasElements(plugin.executors);
-  const hasGenerators = hasElements(plugin.generators);
+  const { executors, generators } = plugin;
+  const hasBuilders = hasElements(executors);
+  const hasGenerators = hasElements(generators);
   const hasProjectGraphExtension = !!plugin.projectGraphExtension;
   const hasProjectInference = !!plugin.projectInference;
 
@@ -141,8 +142,8 @@ export async function listPluginCapabilities(
     bodyLines.push(pc.bold(pc.green('GENERATORS')));
     bodyLines.push('');
     bodyLines.push(
-      ...Object.keys(plugin.generators).map(
-        (name) => `${pc.bold(name)} : ${plugin.generators[name].description}`
+      ...Object.keys(generators).map(
+        (name) => `${pc.bold(name)} : ${generators[name].description}`
       )
     );
     if (hasBuilders) {
@@ -154,8 +155,8 @@ export async function listPluginCapabilities(
     bodyLines.push(pc.bold(pc.green('EXECUTORS/BUILDERS')));
     bodyLines.push('');
     bodyLines.push(
-      ...Object.keys(plugin.executors).map((name) => {
-        const definition = plugin.executors[name];
+      ...Object.keys(executors).map((name) => {
+        const definition = executors[name];
         return typeof definition === 'string'
           ? pc.bold(name)
           : `${pc.bold(name)} : ${definition.description}`;
@@ -264,6 +265,6 @@ function resolveCapabilityPath(
   return join(pluginPath, relativePath);
 }
 
-function hasElements(obj: any): boolean {
-  return obj && Object.values(obj).length > 0;
+function hasElements<T extends object>(obj: T | undefined): obj is T {
+  return !!obj && Object.values(obj).length > 0;
 }

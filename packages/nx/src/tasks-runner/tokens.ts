@@ -93,7 +93,10 @@ export function resolveToken(
       return renderLiteral(part.nodes);
     }
     const value =
-      part.name === 'env' && scope.env && 'read' in scope.env
+      part.name === 'env' &&
+      part.path !== undefined &&
+      scope.env &&
+      'read' in scope.env
         ? readEnv(scope.env.read(), part.path)
         : scope.read(part.name, part.path);
     if (
@@ -121,7 +124,7 @@ export function readPath(value: unknown, path: string | undefined): unknown {
     ) {
       return undefined;
     }
-    value = value[key];
+    value = (value as Record<string, unknown>)[key];
   }
   return value;
 }

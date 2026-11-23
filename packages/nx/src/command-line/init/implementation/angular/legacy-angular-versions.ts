@@ -40,7 +40,7 @@ const versionWithRescopeToNx = '16.0.0-beta.2';
 export async function getLegacyMigrationFunctionIfApplicable(
   repoRoot: string,
   options: Options
-): Promise<() => Promise<void> | null> {
+): Promise<(() => Promise<void>) | null> {
   let majorAngularVersion: number;
   try {
     const angularVersion = readModulePackageJson('@angular/core', [
@@ -111,7 +111,7 @@ export async function getLegacyMigrationFunctionIfApplicable(
     } catch (e) {
       // errors are caught in the initHandler and not logged to the user, so we
       // log it first and then throw to ensure it is logged to the user
-      output.error({ title: e.message });
+      output.error({ title: e instanceof Error ? e.message : String(e) });
       throw e;
     }
 

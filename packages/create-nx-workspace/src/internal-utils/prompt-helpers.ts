@@ -125,12 +125,11 @@ export async function textPrompt(options: {
     return options.skippedValue ?? options.initialValue ?? '';
   }
   const { text, isCancel } = await prompts();
+  const validate = options.validate;
   const answer = await text({
     message: options.message,
     initialValue: options.initialValue,
-    validate: options.validate
-      ? (value) => options.validate(value ?? '')
-      : undefined,
+    validate: validate ? (value) => validate(value ?? '') : undefined,
   });
   if (isCancel(answer)) {
     if (options.onCancel) {

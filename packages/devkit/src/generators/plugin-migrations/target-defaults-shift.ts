@@ -103,11 +103,12 @@ export function correctTargetDefaultsShift(
     Record<string, string | undefined>
   >();
   for (const { projectName, targetName, inputs } of pairs) {
-    if (!migratedExecutorsByProject.has(projectName)) {
-      migratedExecutorsByProject.set(projectName, {});
+    let executors = migratedExecutorsByProject.get(projectName);
+    if (!executors) {
+      executors = {};
+      migratedExecutorsByProject.set(projectName, executors);
     }
-    migratedExecutorsByProject.get(projectName)[targetName] =
-      inputs.inferredExecutor;
+    executors[targetName] = inputs.inferredExecutor;
   }
 
   for (const pair of pairs) {
@@ -160,10 +161,12 @@ export function correctTargetDefaultsShift(
     }
 
     const groupKey = `${key}\0${stableStringify(correction)}`;
-    if (!groups.has(groupKey)) {
-      groups.set(groupKey, { key, correction, projects: [] });
+    let group = groups.get(groupKey);
+    if (!group) {
+      group = { key, correction, projects: [] };
+      groups.set(groupKey, group);
     }
-    groups.get(groupKey).projects.push(projectName);
+    group.projects.push(projectName);
   }
 
   for (const { key, correction, projects } of groups.values()) {
@@ -228,20 +231,26 @@ function diffAgainstBefore(
 
   const correction: Partial<TargetConfiguration> = {};
   const unexpressible: string[] = [];
-  const fields = new Set([...Object.keys(got), ...Object.keys(want)]);
+  const gotFields = new Map(Object.entries(got));
+  const wantFields = new Map(Object.entries(want));
+  const neutralFields = new Map(Object.entries(NEUTRAL_VALUES));
+  const fields = new Set([...gotFields.keys(), ...wantFields.keys()]);
   for (const field of [...fields].sort()) {
     if (SKIPPED_FIELDS.has(field) || ownedFields.has(field)) {
       continue;
     }
-    if (stableStringify(got[field]) === stableStringify(want[field])) {
+    if (
+      stableStringify(gotFields.get(field)) ===
+      stableStringify(wantFields.get(field))
+    ) {
       continue;
     }
-    const value =
-      want[field] !== undefined ? want[field] : NEUTRAL_VALUES[field];
+    const wanted = wantFields.get(field);
+    const value = wanted !== undefined ? wanted : neutralFields.get(field);
     if (value === undefined) {
       unexpressible.push(field);
     } else {
-      correction[field] = structuredClone(value);
+      Object.assign(correction, { [field]: structuredClone(value) });
     }
   }
 

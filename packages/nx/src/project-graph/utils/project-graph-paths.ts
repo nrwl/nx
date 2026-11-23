@@ -11,21 +11,24 @@ import { findMatchingProjects } from '../../utils/find-matching-projects';
 
 interface Reach {
   graph: ProjectGraph;
-  matrix: Record<string, Array<string>>;
+  matrix: Record<string, Record<string, boolean>>;
   adjList: Record<string, Array<string>>;
 }
 
-const reach: Reach = {
-  graph: null,
-  matrix: null,
-  adjList: null,
-};
+let reach: Reach | null = null;
+
+function getReach(graph: ProjectGraph): Reach {
+  if (reach?.graph !== graph) {
+    reach = { graph, ...buildMatrix(graph) };
+  }
+  return reach;
+}
 
 function buildMatrix(graph: ProjectGraph) {
   const nodes = Object.keys(graph.nodes);
   const nodesLength = nodes.length;
-  const adjList = {};
-  const matrix = {};
+  const adjList: Record<string, string[]> = {};
+  const matrix: Record<string, Record<string, boolean>> = {};
 
   // create matrix value set
   for (let i = 0; i < nodesLength; i++) {
@@ -76,21 +79,14 @@ export function getPath(
 ): Array<ProjectGraphProjectNode> {
   if (sourceProjectName === targetProjectName) return [];
 
-  if (reach.graph !== graph) {
-    const { matrix, adjList } = buildMatrix(graph);
-    reach.graph = graph;
-    reach.matrix = matrix;
-    reach.adjList = adjList;
-  }
-
-  const adjList = reach.adjList;
+  const { matrix, adjList } = getReach(graph);
 
   let path: string[] = [];
   const queue: Array<[string, string[]]> = [[sourceProjectName, path]];
   const visited: string[] = [sourceProjectName];
 
-  while (queue.length > 0) {
-    const [current, p] = queue.pop();
+  for (let entry = queue.pop(); entry !== undefined; entry = queue.pop()) {
+    const [current, p] = entry;
     path = [...p, current];
 
     if (current === targetProjectName) break;
@@ -99,7 +95,7 @@ export function getPath(
 
     adjList[current]
       .filter((adj) => visited.indexOf(adj) === -1)
-      .filter((adj) => reach.matrix[adj][targetProjectName])
+      .filter((adj) => matrix[adj][targetProjectName])
       .forEach((adj) => {
         visited.push(adj);
         queue.push([adj, [...path]]);
@@ -120,14 +116,7 @@ export function pathExists(
 ): boolean {
   if (sourceProjectName === targetProjectName) return true;
 
-  if (reach.graph !== graph) {
-    const { matrix, adjList } = buildMatrix(graph);
-    reach.graph = graph;
-    reach.matrix = matrix;
-    reach.adjList = adjList;
-  }
-
-  return !!reach.matrix[sourceProjectName][targetProjectName];
+  return !!getReach(graph).matrix[sourceProjectName][targetProjectName];
 }
 
 export function checkCircularPath(
@@ -214,10 +203,11 @@ export function expandIgnoredCircularDependencies(
     const setB = new Set(findMatchingProjects([b], projectGraph.nodes));
 
     for (const projectA of setA) {
-      if (!allowed.has(projectA)) {
-        allowed.set(projectA, new Set<string>());
+      let currentSetA = allowed.get(projectA);
+      if (!currentSetA) {
+        currentSetA = new Set<string>();
+        allowed.set(projectA, currentSetA);
       }
-      const currentSetA = allowed.get(projectA);
 
       for (const projectB of setB) {
         currentSetA.add(projectB);
@@ -225,10 +215,11 @@ export function expandIgnoredCircularDependencies(
     }
 
     for (const projectB of setB) {
-      if (!allowed.has(projectB)) {
-        allowed.set(projectB, new Set<string>());
+      let currentSetB = allowed.get(projectB);
+      if (!currentSetB) {
+        currentSetB = new Set<string>();
+        allowed.set(projectB, currentSetB);
       }
-      const currentSetB = allowed.get(projectB);
 
       for (const projectA of setA) {
         currentSetB.add(projectA);

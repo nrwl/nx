@@ -23,7 +23,7 @@ import { workspaceRoot } from '../utils/workspace-root';
 export class HashPlanInspector {
   private readonly projectGraphRef: ExternalObject<NativeProjectGraph>;
   private planner: HashPlanner;
-  private inspector: NativeHashPlanInspector;
+  private inspector: NativeHashPlanInspector | undefined;
   private readonly nxJson: NxJsonConfiguration;
 
   constructor(
@@ -44,11 +44,21 @@ export class HashPlanInspector {
       map,
       false
     );
+    if (!externalReferences) {
+      throw new Error('Workspace context returned no external references.');
+    }
     this.inspector = new NativeHashPlanInspector(
       externalReferences.allWorkspaceFiles,
       externalReferences.projectFiles,
       this.workspaceRootPath
     );
+  }
+
+  private getInspector(): NativeHashPlanInspector {
+    if (!this.inspector) {
+      throw new Error('HashPlanInspector.init() must be called first.');
+    }
+    return this.inspector;
   }
 
   /**
@@ -76,7 +86,7 @@ export class HashPlanInspector {
 
     const plansReference = this.planner.getPlansReference(taskIds, taskGraph);
 
-    return this.inspector.inspect(plansReference);
+    return this.getInspector().inspect(plansReference);
   }
 
   /**
@@ -109,7 +119,7 @@ export class HashPlanInspector {
       this.projectGraph,
       extraTargetDependencies,
       [project],
-      nxArgs.targets,
+      [target],
       nxArgs.configuration,
       overrides,
       excludeTaskDependencies
@@ -119,7 +129,7 @@ export class HashPlanInspector {
     const taskIds = Object.keys(taskGraph.tasks);
 
     const plansReference = this.planner.getPlansReference(taskIds, taskGraph);
-    return this.inspector.inspect(plansReference);
+    return this.getInspector().inspect(plansReference);
   }
 
   /**
@@ -150,7 +160,7 @@ export class HashPlanInspector {
       this.projectGraph,
       extraTargetDependencies,
       [project],
-      nxArgs.targets,
+      [target],
       nxArgs.configuration,
       overrides,
       excludeTaskDependencies
@@ -158,6 +168,6 @@ export class HashPlanInspector {
 
     const taskIds = Object.keys(taskGraph.tasks);
     const plansReference = this.planner.getPlansReference(taskIds, taskGraph);
-    return this.inspector.inspectInputs(plansReference);
+    return this.getInspector().inspectInputs(plansReference);
   }
 }

@@ -62,7 +62,7 @@ export class NativeTaskHasherImpl implements TaskHasherImpl {
     let paths = {};
     let rootTsConfigPath = getRootTsConfigPath();
     if (rootTsConfigPath) {
-      tsconfig = readJsonFile(getRootTsConfigPath());
+      tsconfig = readJsonFile(rootTsConfigPath);
       paths = tsconfig.compilerOptions?.paths ?? {};
       if (tsconfig.compilerOptions?.paths) {
         delete tsconfig.compilerOptions.paths;
@@ -117,16 +117,17 @@ export class NativeTaskHasherImpl implements TaskHasherImpl {
     const resolvedCwd = cwd ?? process.cwd();
     const hashes: Record<string, PartialHash> = {};
     let unplanned = tasks.map((t) => t.id);
+    const upfrontPlans = this.upfrontPlans;
     if (
-      this.upfrontPlans &&
-      unplanned.some((id) => this.upfrontPlans.taskIds.has(id)) &&
-      this.upfrontPlans.fingerprint ===
+      upfrontPlans &&
+      unplanned.some((id) => upfrontPlans.taskIds.has(id)) &&
+      upfrontPlans.fingerprint ===
         taskGraphFingerprint(taskGraph, ultracacheConfigurations)
     ) {
       Object.assign(
         hashes,
         this.hasher.hashPlansFor(
-          this.upfrontPlans.plans,
+          upfrontPlans.plans,
           unplanned,
           envs,
           resolvedCwd,

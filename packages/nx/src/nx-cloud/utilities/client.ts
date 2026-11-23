@@ -17,6 +17,8 @@ export async function getCloudClient(options: CloudTaskRunnerOptions) {
   const paths = findAncestorNodeModules(__dirname, []);
   nxCloudClient.configureLightClientRequire()(paths);
 
+  const runCLI = nxCloudClient.runCLI;
+
   return {
     invoke: (command: string, exit = true) => {
       if (command in nxCloudClient.commands) {
@@ -26,7 +28,7 @@ export async function getCloudClient(options: CloudTaskRunnerOptions) {
               process.exit(0);
             }
           })
-          .catch((e) => {
+          .catch((e: unknown) => {
             console.error(e);
             if (exit) {
               process.exit(1);
@@ -44,8 +46,8 @@ export async function getCloudClient(options: CloudTaskRunnerOptions) {
     // Bundles that export runCLI own dispatch, help, output and the exit code.
     // Older bundles only export `commands`.
     runCLI:
-      typeof nxCloudClient.runCLI === 'function'
-        ? (args: string[]) => nxCloudClient.runCLI(args)
+      typeof runCLI === 'function'
+        ? (args: string[]) => runCLI.call(nxCloudClient, args)
         : undefined,
   };
 }

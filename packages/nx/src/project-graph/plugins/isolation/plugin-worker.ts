@@ -10,6 +10,7 @@ import {
 } from '../../../utils/consume-messages-from-socket';
 import { logger } from '../../../utils/logger';
 import { createSerializableError } from '../../../utils/serializable-error';
+import { coerceToError } from '../../error-types';
 import { assertNotForeignWorkspaceMessage } from '../../../daemon/message-types/daemon-message';
 import type { LoadedNxPlugin } from '../loaded-nx-plugin';
 import { consumeMessage, isPluginWorkerMessage } from './messaging';
@@ -174,22 +175,34 @@ const server = createServer((socket) => {
           },
           createNodes: async ({ configFiles, context }) =>
             withErrorHandling(async () => {
-              const result = await plugin.createNodes[1](configFiles, context);
+              const result = await requireHook(plugin, 'createNodes')[1](
+                configFiles,
+                context
+              );
               return { result, success: true as const };
             }),
           createDependencies: async ({ context }) =>
             withErrorHandling(async () => {
-              const result = await plugin.createDependencies(context);
+              const result = await requireHook(
+                plugin,
+                'createDependencies'
+              )(context);
               return { dependencies: result, success: true as const };
             }),
           createMetadata: async ({ graph, context }) =>
             withErrorHandling(async () => {
-              const result = await plugin.createMetadata(graph, context);
+              const result = await requireHook(plugin, 'createMetadata')(
+                graph,
+                context
+              );
               return { metadata: result, success: true as const };
             }),
           preTasksExecution: async ({ context }) =>
             withErrorHandling(async () => {
-              const mutations = await plugin.preTasksExecution?.(context);
+              const mutations = await requireHook(
+                plugin,
+                'preTasksExecution'
+              )(context);
               return { success: true as const, mutations };
             }),
           postTasksExecution: async ({ context }) =>
@@ -267,7 +280,7 @@ async function withErrorHandling<T>(
   } catch (e) {
     return {
       success: false as const,
-      error: createSerializableError(e) as Error,
+      error: createSerializableError(coerceToError(e)),
     };
   }
 }
@@ -319,3 +332,14 @@ const fatalHandler = (error: unknown) => {
 };
 process.once('uncaughtException', fatalHandler);
 process.once('unhandledRejection', fatalHandler);
+
+function requireHook<K extends keyof LoadedNxPlugin>(
+  plugin: LoadedNxPlugin,
+  hook: K
+): NonNullable<LoadedNxPlugin[K]> {
+  const implementation = plugin[hook];
+  if (!implementation) {
+    throw new Error(`The plugin "${plugin.name}" does not implement ${hook}`);
+  }
+  return implementation;
+}

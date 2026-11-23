@@ -8,7 +8,7 @@ import {
   connectWorkspaceToCloud,
 } from './connect-to-nx-cloud';
 
-export async function viewLogs(): Promise<number> {
+export async function viewLogs(): Promise<number | undefined> {
   const cloudUsed = isNxCloudUsed(readNxJson());
   if (cloudUsed) {
     output.error({

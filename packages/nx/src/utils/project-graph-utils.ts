@@ -35,11 +35,11 @@ export function projectHasTargetAndConfiguration(
   target: string,
   configuration: string
 ) {
-  return (
-    projectHasTarget(project, target) &&
-    project.data.targets[target].configurations &&
-    project.data.targets[target].configurations[configuration]
-  );
+  if (!projectHasTarget(project, target)) {
+    return false;
+  }
+  const configurations = project.data.targets?.[target]?.configurations;
+  return configurations && configurations[configuration];
 }
 
 export function getSourceDirOfDependentProjects(
@@ -137,9 +137,7 @@ function collectDependentProjectNodesNames(
   }
 }
 
-export function getProjectSourceRoot(
-  project: ProjectConfiguration
-): string | undefined {
+export function getProjectSourceRoot(project: ProjectConfiguration): string {
   return (
     project.sourceRoot ??
     (existsSync(posix.join(project.root, 'src'))

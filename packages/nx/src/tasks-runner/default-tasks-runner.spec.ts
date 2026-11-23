@@ -84,7 +84,7 @@ describe('RemoteCacheV2.fromCacheV1', () => {
 
     expect(await cache.retrieve(hash, cacheDirectory)).toEqual({
       outputsPath: join(entry, 'outputs'),
-      terminalOutput: null,
+      terminalOutput: undefined,
       code: 0,
     });
   });

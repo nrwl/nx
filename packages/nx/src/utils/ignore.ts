@@ -358,7 +358,7 @@ export function addEntryToGitIgnore(
   entry: string
 ) {
   const gitignore = tree.exists(gitignorePath)
-    ? tree.read(gitignorePath, 'utf-8')
+    ? (tree.read(gitignorePath, 'utf-8') ?? '')
     : '';
   const ig = ignore();
   ig.add(gitignore);

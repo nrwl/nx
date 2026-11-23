@@ -224,10 +224,10 @@ export function parseGeneratorString(value: string): {
 
 async function convertToGenerateOptions(
   generatorOptions: { [p: string]: any },
-  projectsConfiguration?: ProjectsConfigurations
+  projectsConfiguration: ProjectsConfigurations
 ): Promise<GenerateOptions> {
-  let collectionName: string | null = null;
-  let generatorName: string | null = null;
+  let collectionName: string | undefined;
+  let generatorName: string;
   const interactive = generatorOptions.interactive as boolean;
 
   const generatorDescriptor = generatorOptions['generator'] as string;
@@ -245,6 +245,11 @@ async function convertToGenerateOptions(
     const parsedGeneratorString = parseGeneratorString(generatorString);
     collectionName = parsedGeneratorString.collection;
     generatorName = parsedGeneratorString.generator;
+  }
+  if (!collectionName) {
+    throw new Error(
+      `Could not determine the collection for generator "${generatorName}"`
+    );
   }
 
   const res = {
@@ -273,7 +278,7 @@ async function convertToGenerateOptions(
   return res;
 }
 
-function throwInvalidInvocation(availableGenerators: string[]) {
+function throwInvalidInvocation(availableGenerators: string[]): never {
   throw new Error(
     `Specify the generator name (e.g., nx generate ${availableGenerators.join(
       ', '

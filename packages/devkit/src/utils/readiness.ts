@@ -116,8 +116,13 @@ export function parseCacArgs(
   for (const [short, long] of Object.entries(aliases)) {
     aliasOf.set(short, long).set(long, short);
   }
-  const isBoolean = (name: string) =>
-    booleans.includes(name) || booleans.includes(aliasOf.get(name));
+  const isBoolean = (name: string) => {
+    const alias = aliasOf.get(name);
+    return (
+      booleans.includes(name) ||
+      (alias !== undefined && booleans.includes(alias))
+    );
+  };
   const parsed: Record<string, unknown> = {};
   const add = (name: string, value: string | boolean) => {
     const number = Number(value);
@@ -136,7 +141,7 @@ export function parseCacArgs(
   let i = 0;
   for (; i < args.length && args[i] !== '--'; i++) {
     const arg = args[i];
-    const dashes = arg.match(/^-*/)[0].length;
+    const dashes = /^-*/.exec(arg)?.[0].length ?? 0;
     if (dashes === 0) continue;
     if (arg.startsWith('no-', dashes)) {
       parsed[arg.slice(dashes + 3)] = false;
@@ -184,11 +189,14 @@ export function parseCommanderArgs(
 ): Record<string, string | true> {
   const options = declarations.map((flags) => {
     const names = flags.split(/[ |,]+/).filter((part) => part.startsWith('-'));
+    const longName = names.at(-1);
+    if (longName === undefined) {
+      throw new Error(`option '${flags}' has no flag`);
+    }
     return {
       flags,
       names,
-      key: names
-        .at(-1)
+      key: longName
         .replace(/^-+/, '')
         .split('-')
         .reduce((key, word) => key + word[0].toUpperCase() + word.slice(1)),
@@ -203,17 +211,24 @@ export function parseCommanderArgs(
   const rest = [...args];
   while (rest.length > 0 && rest[0] !== '--') {
     const arg = rest.shift();
+    if (arg === undefined) {
+      break;
+    }
     let option = find(arg);
     if (option?.required) {
-      if (rest.length === 0) {
+      const value = rest.shift();
+      if (value === undefined) {
         throw new Error(`option '${option.flags}' argument missing`);
       }
-      parsed[option.key] = rest.shift();
+      parsed[option.key] = value;
     } else if (option) {
-      parsed[option.key] =
-        option.optional && rest.length > 0 && !isOption(rest[0])
-          ? rest.shift()
-          : true;
+      const next = rest[0];
+      if (option.optional && next !== undefined && !isOption(next)) {
+        rest.shift();
+        parsed[option.key] = next;
+      } else {
+        parsed[option.key] = true;
+      }
     } else if (
       arg.length > 2 &&
       arg[0] === '-' &&

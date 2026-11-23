@@ -1,7 +1,10 @@
 import { FileChange, readPackageJson } from '../file-utils';
 import { AffectedProjectGraphContext } from './affected-project-graph-models';
 import { NxJsonConfiguration } from '../../config/nx-json';
-import { ProjectGraph } from '../../config/project-graph';
+import {
+  ProjectGraph,
+  ProjectGraphExternalNode,
+} from '../../config/project-graph';
 import { reverse } from '../operators';
 import { readNxJson } from '../../config/configuration';
 import { runTouchedProjectLocators } from './affected-projects';
@@ -41,7 +44,7 @@ function filterAffectedProjects(
   graph: ProjectGraph,
   ctx: AffectedProjectGraphContext
 ): ProjectGraph {
-  const result: ProjectGraph = {
+  const result: AffectedGraph = {
     nodes: {},
     externalNodes: {},
     dependencies: {},
@@ -61,15 +64,19 @@ function filterAffectedProjects(
   return result;
 }
 
+type AffectedGraph = ProjectGraph & {
+  externalNodes: Record<string, ProjectGraphExternalNode>;
+};
+
 function addAffectedNodes(
   startingProject: string,
   reversed: ProjectGraph,
-  result: ProjectGraph,
+  result: AffectedGraph,
   visited: Set<string>
 ): void {
   if (visited.has(startingProject)) return;
   const reversedNode = reversed.nodes[startingProject];
-  const reversedExternalNode = reversed.externalNodes[startingProject];
+  const reversedExternalNode = reversed.externalNodes?.[startingProject];
   if (!reversedNode && !reversedExternalNode) {
     throw new Error(`Invalid project name is detected: "${startingProject}"`);
   }
@@ -77,7 +84,7 @@ function addAffectedNodes(
   if (reversedNode) {
     result.nodes[startingProject] = reversedNode;
     result.dependencies[startingProject] = [];
-  } else {
+  } else if (reversedExternalNode) {
     result.externalNodes[startingProject] = reversedExternalNode;
   }
   reversed.dependencies[startingProject]?.forEach(({ target }) =>

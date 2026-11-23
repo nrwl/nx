@@ -12,7 +12,7 @@ export interface DownloadCloudClientArgs {
 export function downloadCloudClientHandler(
   args: DownloadCloudClientArgs
 ): Promise<number> {
-  return handleErrors(args.verbose, async () => {
+  return handleErrors(args.verbose ?? false, async () => {
     // Try to get cloud options from nx.json if available, otherwise
     // fall back to defaults (env vars / https://cloud.nx.app).
     let options: { url?: string; customProxyConfigPath?: string } = {};

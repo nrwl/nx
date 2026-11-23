@@ -19,6 +19,7 @@ import { parseJson } from '../../../utils/json';
 import type { PackageJson } from '../../../utils/package-json';
 import { getWorkspacePackagesFromGraph } from '../utils/get-workspace-packages-from-graph';
 import { BUN_TEXT_LOCK_FILE } from './lock-file-names';
+import { getExternalNodes } from './project-graph-pruning';
 import {
   getPrunedPatchFiles,
   isUnderWorkspaceModules,
@@ -167,9 +168,9 @@ interface BunLocalPathSource {
 
 export { BUN_LOCK_FILE, BUN_TEXT_LOCK_FILE } from './lock-file-names';
 
-let currentLockFileHash: string;
-let cachedParsedLockFile: BunLockFile;
-let cachedPackageIndex: PackageIndex;
+let currentLockFileHash: string | undefined;
+let cachedParsedLockFile: BunLockFile | undefined;
+let cachedPackageIndex: PackageIndex | undefined;
 
 const keyMap = new Map<string, ProjectGraphExternalNode>();
 const specParseCache = new Map<
@@ -233,7 +234,7 @@ export function getBunTextLockfileDependencies(
       throw error;
     }
     throw new Error(
-      `Failed to get Bun lockfile dependencies: ${error.message}`
+      `Failed to get Bun lockfile dependencies: ${String(error)}`
     );
   }
 }
@@ -381,7 +382,23 @@ function calculatePackageHash(packageData: PackageTuple): string {
   return hashArray(hashData);
 }
 
-function withPatchHash(hash: string, patchHash: string | undefined): string {
+function addPackageVersion(
+  packageVersions: Map<string, Set<string>>,
+  packageName: string,
+  version: string
+) {
+  let versions = packageVersions.get(packageName);
+  if (!versions) {
+    versions = new Set();
+    packageVersions.set(packageName, versions);
+  }
+  versions.add(version);
+}
+
+function withPatchHash(
+  hash: string,
+  patchHash: string | null | undefined
+): string {
   return patchHash === undefined ? hash : hashArray([hash, patchHash]);
 }
 
@@ -561,7 +578,7 @@ function getBunLocalPathSources(
   for (const [path, workspace] of Object.entries(workspaces)) {
     if (path === '' || workspace.name) {
       declarers.push({
-        scope: path === '' ? [] : [workspace.name],
+        scope: path !== '' && workspace.name ? [workspace.name] : [],
         dir: path,
         dependencies: workspace,
       });
@@ -585,8 +602,10 @@ function getBunLocalPathSources(
           continue;
         }
         const key = findNearestBunPackageKey(scope, name, hasKey);
-        const recordedPath =
-          key === undefined ? undefined : tarballPaths.get(key);
+        if (key === undefined) {
+          continue;
+        }
+        const recordedPath = tarballPaths.get(key);
         if (
           recordedPath === undefined ||
           sources.has(key) ||
@@ -677,8 +696,9 @@ function parseLockFile(
   } catch (error) {
     // Handle JSON parsing errors
     if (
-      error.message.includes('JSON') ||
-      error.message.includes('InvalidSymbol')
+      error instanceof Error &&
+      (error.message.includes('JSON') ||
+        error.message.includes('InvalidSymbol'))
     ) {
       throw new BunLockfileParseError(
         'Failed to parse Bun lockfile: Invalid JSON syntax. Please check for syntax errors or regenerate the lockfile.',
@@ -693,8 +713,7 @@ function parseLockFile(
 
     // Handle unknown errors
     throw new BunLockfileParseError(
-      `Failed to parse Bun lockfile: ${error.message}`,
-      error
+      `Failed to parse Bun lockfile: ${String(error)}`
     );
   }
 }
@@ -709,7 +728,7 @@ function parseLockFile(
 export function getBunTextLockfileNodes(
   lockFileContent: string,
   lockFileHash: string,
-  patchFileHashes?: Map<string, string>
+  patchFileHashes?: Map<string, string | null>
 ): Record<string, ProjectGraphExternalNode> {
   try {
     const { lockFile, index } = parseLockFile(lockFileContent, lockFileHash);
@@ -721,7 +740,7 @@ export function getBunTextLockfileNodes(
       return nodes;
     }
 
-    const patchHashes = new Map<string, string>();
+    const patchHashes = new Map<string, string | null>();
     for (const [resolution, patchPath] of Object.entries(
       lockFile.patchedDependencies ?? {}
     )) {
@@ -756,7 +775,7 @@ export function getBunTextLockfileNodes(
     if (error instanceof Error) {
       throw error;
     }
-    throw new Error(`Failed to get Bun lockfile nodes: ${error.message}`);
+    throw new Error(`Failed to get Bun lockfile nodes: ${String(error)}`);
   }
 }
 
@@ -777,10 +796,12 @@ export function getBunLocalPathNodeSources(
       lockFile.packages[key][0] as string
     );
     const resolution = `${name}@${version}`;
-    if (!sourcesByResolution.has(resolution)) {
-      sourcesByResolution.set(resolution, new Set());
+    let sources = sourcesByResolution.get(resolution);
+    if (!sources) {
+      sources = new Set();
+      sourcesByResolution.set(resolution, sources);
     }
-    sourcesByResolution.get(resolution).add(source.path);
+    sources.add(source.path);
   }
   const nodeSources: Record<string, string[]> = {};
   if (!sourcesByResolution.size) {
@@ -822,9 +843,13 @@ export function getBunInstalledLocalPathNodes(
     if (path !== '' && !workspace.name) {
       continue;
     }
-    const scope = path === '' ? [] : [workspace.name];
+    const scope = path !== '' && workspace.name ? [workspace.name] : [];
     for (const depType of DEPENDENCY_TYPES) {
-      for (const depName of Object.keys(workspace[depType] ?? {})) {
+      const deps = workspace[depType];
+      if (!deps) {
+        continue;
+      }
+      for (const depName of Object.keys(deps)) {
         const key = findNearestBunPackageKey(scope, depName, hasKey);
         if (key === undefined || !index.localPathSources.has(key)) {
           continue;
@@ -835,7 +860,7 @@ export function getBunInstalledLocalPathNodes(
         if (
           scope.length &&
           key === depName &&
-          workspace[depType][depName].startsWith('workspace:')
+          deps[depName].startsWith('workspace:')
         ) {
           continue;
         }
@@ -862,7 +887,7 @@ function processPackageEntry(
   keyMap: Map<string, ProjectGraphExternalNode>,
   nodes: Record<string, ProjectGraphExternalNode>,
   packageVersions: Map<string, Set<string>>,
-  patchHashes: Map<string, string>
+  patchHashes: Map<string, string | null>
 ): PackageProcessingResult {
   try {
     if (
@@ -950,27 +975,20 @@ function processPackageEntry(
         nodes[targetNodeKey] = targetNode;
       }
 
-      if (!packageVersions.has(aliasName)) {
-        packageVersions.set(aliasName, new Set());
-      }
-      packageVersions
-        .get(aliasName)
-        .add(`npm:${actualPackageName}@${actualVersion}`);
-
-      if (!packageVersions.has(actualPackageName)) {
-        packageVersions.set(actualPackageName, new Set());
-      }
-      packageVersions.get(actualPackageName).add(actualVersion);
+      addPackageVersion(
+        packageVersions,
+        aliasName,
+        `npm:${actualPackageName}@${actualVersion}`
+      );
+      addPackageVersion(packageVersions, actualPackageName, actualVersion);
     } else {
-      if (!packageVersions.has(name)) {
-        packageVersions.set(name, new Set());
-      }
-      packageVersions.get(name).add(version);
+      addPackageVersion(packageVersions, name, version);
 
       const nodeKey = `npm:${name}@${version}`;
 
-      if (keyMap.has(nodeKey)) {
-        nodes[nodeKey] = keyMap.get(nodeKey);
+      const existingNode = keyMap.get(nodeKey);
+      if (existingNode) {
+        nodes[nodeKey] = existingNode;
         return { shouldContinue: false };
       }
 
@@ -996,7 +1014,7 @@ function processPackageEntry(
     return { shouldContinue: false };
   } catch (error) {
     console.warn(
-      `Unable to process package '${packageKey}'. The lockfile may be corrupted. Try regenerating with 'bun install --force'.\nDebug: ${error.message}`
+      `Unable to process package '${packageKey}'. The lockfile may be corrupted. Try regenerating with 'bun install --force'.\nDebug: ${error instanceof Error ? error.message : String(error)}`
     );
     return { shouldContinue: true };
   }
@@ -1100,7 +1118,7 @@ function processPackageForDependencies(
   }
 
   const sourceNodeName = `npm:${sourcePackageName}@${sourceVersion}`;
-  if (!ctx.externalNodes[sourceNodeName]) {
+  if (!getExternalNodes(ctx)[sourceNodeName]) {
     return [];
   }
 
@@ -1133,13 +1151,13 @@ function processPackageForDependencies(
   const bareNodeName = `npm:${sourcePackageName}`;
   if (
     isLocalPackage &&
-    ctx.externalNodes[bareNodeName]?.data.version === sourceVersion
+    getExternalNodes(ctx)[bareNodeName]?.data.version === sourceVersion
   ) {
     edgeSources.push(bareNodeName);
   }
   const aliasNodeName = `npm:${packageKey}`;
   if (
-    ctx.externalNodes[aliasNodeName]?.data.version ===
+    getExternalNodes(ctx)[aliasNodeName]?.data.version ===
     `npm:${sourcePackageName}@${sourceVersion}`
   ) {
     edgeSources.push(aliasNodeName);
@@ -1323,11 +1341,12 @@ function resolveTargetNodeName(
   const hoistedNodeName = `npm:${targetPackageName}`;
   const versionedNodeName = `npm:${targetPackageName}@${targetVersion}`;
 
-  if (ctx.externalNodes[versionedNodeName]) {
+  const externalNodes = getExternalNodes(ctx);
+  if (externalNodes[versionedNodeName]) {
     return versionedNodeName;
   }
 
-  if (ctx.externalNodes[hoistedNodeName]) {
+  if (externalNodes[hoistedNodeName]) {
     return hoistedNodeName;
   }
 
@@ -1478,9 +1497,7 @@ function getHoistedVersion(
   // Use the index to find the main package version
   const candidates = index.byName.get(packageName);
   if (!candidates || candidates.length === 0) {
-    return availableVersions.size > 0
-      ? availableVersions.values().next().value
-      : null;
+    return availableVersions.values().next().value ?? null;
   }
 
   // Look for the main package entry (the one where packageKey === packageName)
@@ -1490,9 +1507,7 @@ function getHoistedVersion(
   }
 
   // Fallback: return the first available version
-  return availableVersions.size > 0
-    ? availableVersions.values().next().value
-    : null;
+  return availableVersions.values().next().value ?? null;
 }
 
 /**
@@ -1664,6 +1679,8 @@ interface PrunedPackage {
   bundle?: { rootScope: string[]; path: string[] };
 }
 
+type PrunedRootPackage = Omit<PrunedPackage, 'path'> & { rootScope: string[] };
+
 /**
  * Writes the bun.lock for a standalone install of `packageJson`, with every
  * package at the version the root lockfile installs for it. Dependencies are
@@ -1735,7 +1752,7 @@ export function stringifyBunLockfile(
   const createPackage = (
     key: string,
     shippedSpec?: string
-  ): Omit<PrunedPackage, 'path'> => {
+  ): PrunedRootPackage => {
     const tuple = rootPackages[key] as unknown[];
     const resolution = tuple?.[0];
     if (typeof resolution !== 'string') {
@@ -1826,15 +1843,15 @@ export function stringifyBunLockfile(
     if (nested) {
       return { resolution, tuple: [resolution, {}], isWorkspaceModule: true };
     }
-    const [workspacePath, workspace] =
-      Object.entries(rootLockFile.workspaces).find(
-        ([path, entry]) => path !== '' && entry.name === name
-      ) ?? [];
-    if (!workspace) {
+    const workspaceEntry = Object.entries(rootLockFile.workspaces).find(
+      ([path, entry]) => path !== '' && entry.name === name
+    );
+    if (!workspaceEntry) {
       throw new Error(
         `Pruned lock file creation failed. The workspace package ${name} was not found in the root lock file.`
       );
     }
+    const [workspacePath, workspace] = workspaceEntry;
     return {
       resolution,
       tuple: [
@@ -1859,7 +1876,9 @@ export function stringifyBunLockfile(
     const reachedKey = findNearestBunPackageKey(dependentPath, name, (key) =>
       placed.has(key)
     );
-    if (placed.get(reachedKey)?.resolution === pkg.resolution) {
+    const reached =
+      reachedKey === undefined ? undefined : placed.get(reachedKey);
+    if (reached?.resolution === pkg.resolution) {
       return;
     }
     // The hoisted slot is safe while no key on the dependent's path resolves
@@ -1875,7 +1894,7 @@ export function stringifyBunLockfile(
   // out, so that subtree keeps its root lockfile layout.
   const placeBundled = (
     bundle: NonNullable<PrunedPackage['bundle']>,
-    pkg: Omit<PrunedPackage, 'path'>
+    pkg: PrunedRootPackage
   ) => {
     const path = [
       ...bundle.path,
@@ -1970,6 +1989,7 @@ export function stringifyBunLockfile(
       // The manifest's local-path specs arrive relocated.
       const declaredByApp =
         appResolvedSpec !== undefined &&
+        projectRoot !== undefined &&
         (relocatePrunedLocalPathSpec(appResolvedSpec, projectRoot, '')?.spec ??
           appResolvedSpec) === resolvedSpec;
       // A library's manifest takes the specs it doesn't declare from the
@@ -2003,7 +2023,7 @@ export function stringifyBunLockfile(
             )
           : undefined;
         if (pinnedSpec) {
-          rootWorkspace[depType][name] = pinnedSpec;
+          (rootWorkspace[depType] ??= {})[name] = pinnedSpec;
           onPinnedSpec?.({ depType, name, spec: pinnedSpec });
         }
       } else if (depType !== 'optionalDependencies') {
@@ -2035,22 +2055,23 @@ export function stringifyBunLockfile(
       if (pkg.isWorkspaceModule && depType === 'devDependencies') {
         continue;
       }
-      for (const name of Object.keys(pkg.dependencies?.[depType] ?? {})) {
+      const pkgDependencies = pkg.dependencies;
+      const deps = pkgDependencies?.[depType];
+      if (!pkgDependencies || !deps) {
+        continue;
+      }
+      for (const name of Object.keys(deps)) {
         if (
           seen.has(name) ||
           (depType === 'optionalDependencies' &&
-            pkg.dependencies.unresolved?.includes(name))
+            pkgDependencies.unresolved?.includes(name))
         ) {
           continue;
         }
         seen.add(name);
         if (
           pkg.isWorkspaceModule &&
-          resolvesToWorkspaceModule(
-            name,
-            pkg.dependencies[depType][name],
-            pkg.workspacePath
-          )
+          resolvesToWorkspaceModule(name, deps[name], pkg.workspacePath)
         ) {
           place(pkg.path, name, createWorkspaceModule(name, true), true);
           continue;
@@ -2500,8 +2521,8 @@ export function validatePrunedBunLocalPathClosure(
  */
 export function getBunPatchFileHashes(
   workspaceRootPath: string
-): Map<string, string> {
-  const hashes = new Map<string, string>();
+): Map<string, string | null> {
+  const hashes = new Map<string, string | null>();
   const rootPackageJsonPath = join(workspaceRootPath, 'package.json');
   if (!existsSync(rootPackageJsonPath)) {
     return hashes;

@@ -46,7 +46,7 @@ export function getDependsOnEntries(
   projectGraph: ProjectGraph
 ): (TargetDependencyConfig | string)[] {
   return (
-    projectGraph.nodes[project].data?.targets[target]?.dependsOn ??
+    projectGraph.nodes[project].data?.targets?.[target]?.dependsOn ??
     // This is passed into `run-command` from programmatic invocations
     extraTargetDependencies[target] ??
     []
@@ -58,7 +58,7 @@ export function getDependencyConfigs(
   extraTargetDependencies: Record<string, (TargetDependencyConfig | string)[]>,
   projectGraph: ProjectGraph,
   allTargetNames: string[]
-): NormalizedTargetDependencyConfig[] | undefined {
+): NormalizedTargetDependencyConfig[] {
   return getDependsOnEntries(
     { project, target },
     extraTargetDependencies,
@@ -339,11 +339,13 @@ export function getOutputsForTargetAndConfiguration(
 
   const { target, configuration } = taskTarget;
 
-  const targetConfiguration = node.data.targets[target];
+  const targetConfiguration = node.data.targets?.[target];
 
   const options = {
     ...targetConfiguration?.options,
-    ...targetConfiguration?.configurations?.[configuration],
+    ...(configuration !== undefined
+      ? targetConfiguration?.configurations?.[configuration]
+      : undefined),
     ...overrides,
   };
 
@@ -417,11 +419,12 @@ export function interpolate(
     return template;
   }
 
+  const envNotAllowed = options?.envNotAllowed;
   const scope: TokenScope = {
     isToken: (name) => name === 'env' || Object.hasOwn(data, name),
     read: (name, path) => readPath(data[name], path),
-    env: options?.envNotAllowed
-      ? { reject: () => new Error(options.envNotAllowed(template)) }
+    env: envNotAllowed
+      ? { reject: () => new Error(envNotAllowed(template)) }
       : undefined,
     noValue: (token) => token,
   };
@@ -500,7 +503,7 @@ export function getTargetConfigurationForTask(
         `This can happen when the project graph in this environment diverges from the one the task was created from.`
     );
   }
-  return node.data.targets[task.target.target];
+  return node.data.targets?.[task.target.target];
 }
 
 export function getExecutorNameForTask(task: Task, projectGraph: ProjectGraph) {
@@ -553,9 +556,9 @@ export function getExecutorForTask(
   task: Task,
   projects: Record<string, ProjectConfiguration>
 ): ExecutorConfig & { isNgCompat: boolean; isNxExecutor: boolean } {
-  const executor =
-    projects[task.target.project]?.targets?.[task.target.target]?.executor;
-  const [nodeModule, executorName] = parseExecutor(executor);
+  const [nodeModule, executorName] = parseExecutor(
+    getExecutorString(task, projects)
+  );
 
   return getExecutorInformation(
     nodeModule,
@@ -574,10 +577,20 @@ export function getCustomHasher(
   if (!factory) {
     return null;
   }
-  warnCustomHasherDeprecation(
-    projects[task.target.project].targets[task.target.target].executor
-  );
+  warnCustomHasherDeprecation(getExecutorString(task, projects));
   return factory();
+}
+
+function getExecutorString(
+  task: Task,
+  projects: Record<string, ProjectConfiguration>
+): string {
+  const executor =
+    projects[task.target.project]?.targets?.[task.target.target]?.executor;
+  if (executor === undefined) {
+    throw new Error(`Task "${task.id}" does not define an executor.`);
+  }
+  return executor;
 }
 
 const customHasherDeprecationWarned = new Set<string>();
@@ -645,9 +658,9 @@ function removeIdsFromTaskGraph<T>(
   dependencies: Record<string, TaskGraphEdge[]>;
   continuousDependencies: Record<string, TaskGraphEdge[]>;
 } {
-  const filteredMapWithIds = {};
-  const dependencies = {};
-  const continuousDependencies = {};
+  const filteredMapWithIds: Record<string, T> = {};
+  const dependencies: Record<string, TaskGraphEdge[]> = {};
+  const continuousDependencies: Record<string, TaskGraphEdge[]> = {};
   const removedSet = new Set(ids);
   for (let id of Object.keys(mapWithIds)) {
     if (!removedSet.has(id)) {
@@ -729,7 +742,7 @@ export function getSerializedArgsForTask(task: Task, isVerbose: boolean) {
 
 export function shouldStreamOutput(
   task: Task,
-  initiatingProject: string | null
+  initiatingProject: string | null | undefined
 ): boolean {
   // For now, disable streaming output on the JS side when running the TUI
   if (isTuiEnabled()) return false;
@@ -742,6 +755,13 @@ export function shouldStreamOutput(
 
 export function isCacheableTask(task: Task): boolean {
   return task.cache;
+}
+
+export function getTaskHash(task: Task): string {
+  if (task.hash === undefined) {
+    throw new Error(`Task ${task.id} has not been hashed`);
+  }
+  return task.hash;
 }
 
 function longRunningTask(task: Task) {

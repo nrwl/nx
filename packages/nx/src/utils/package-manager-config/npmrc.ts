@@ -1,4 +1,5 @@
 import { readFileSync } from 'fs';
+import { isErrnoException } from '../is-errno-exception';
 
 export interface NpmrcEntry {
   key: string;
@@ -23,7 +24,9 @@ export function readNpmrcEntries(
   } catch (e) {
     // ENOTDIR (a path through a non-directory) is another shape of absent, not an
     // unreadable file.
-    return e?.code === 'ENOENT' || e?.code === 'ENOTDIR' ? null : 'unreadable';
+    return isErrnoException(e) && (e.code === 'ENOENT' || e.code === 'ENOTDIR')
+      ? null
+      : 'unreadable';
   }
   return parseNpmrcContent(raw);
 }

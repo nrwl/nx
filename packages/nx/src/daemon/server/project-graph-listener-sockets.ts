@@ -17,7 +17,7 @@ export function hasRegisteredProjectGraphListenerSockets() {
 
 export async function notifyProjectGraphListenerSockets(
   projectGraph: ProjectGraph,
-  sourceMaps: ConfigurationSourceMaps,
+  sourceMaps: ConfigurationSourceMaps | null,
   error: Error | null
 ) {
   if (!hasRegisteredProjectGraphListenerSockets()) {

@@ -102,8 +102,12 @@ const messageOptions: Record<string, MessageData[]> = {
 
 export type MessageKey = keyof typeof messageOptions;
 
+function isMessageKey(key: string): key is MessageKey {
+  return key in messageOptions;
+}
+
 export class PromptMessages {
-  private selectedMessages = {};
+  private selectedMessages: Partial<Record<MessageKey, number>> = {};
 
   getPrompt(key: MessageKey): MessageData {
     if (this.selectedMessages[key] === undefined) {
@@ -118,9 +122,11 @@ export class PromptMessages {
     return messageOptions[key][this.selectedMessages[key]];
   }
 
-  codeOfSelectedPromptMessage(key: string): string {
-    if (this.selectedMessages[key] === undefined) return null;
-    return messageOptions[key][this.selectedMessages[key]].code;
+  codeOfSelectedPromptMessage(key: string): string | null {
+    if (!isMessageKey(key)) return null;
+    const selected = this.selectedMessages[key];
+    if (selected === undefined) return null;
+    return messageOptions[key][selected].code;
   }
 }
 

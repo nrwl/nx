@@ -291,7 +291,7 @@ function isExcludedEnvVar(key: string): boolean {
  * typically does not).
  */
 export function hashDaemonClientEnv(): string {
-  const env: Record<string, string> = {};
+  const env: NodeJS.ProcessEnv = {};
   for (const key in process.env) {
     if (
       !isExcludedEnvVar(key) &&

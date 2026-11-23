@@ -3,6 +3,7 @@ import {
   expandDependencyConfigSyntaxSugar,
   getDependsOnEntries,
   getOutputs,
+  type NormalizedTargetDependencyConfig,
   interpolate,
   createTaskId,
   normalizeDependencyConfigDefinition,
@@ -57,14 +58,14 @@ export class ProcessTasks {
   processTasks(
     projectNames: string[],
     targets: string[],
-    configuration: string,
+    configuration: string | undefined,
     overrides: Record<string, unknown>,
     excludeTaskDependencies: boolean
   ): string[] {
     for (const projectName of projectNames) {
       for (const target of targets) {
         const project = this.projectGraph.nodes[projectName];
-        if (targets.length === 1 || project.data.targets[target]) {
+        if (targets.length === 1 || project.data.targets?.[target]) {
           const resolvedConfiguration = this.resolveConfiguration(
             project,
             target,
@@ -126,7 +127,7 @@ export class ProcessTasks {
   processTask(
     task: Task,
     projectUsedToDeriveDependencies: string,
-    configuration: string,
+    configuration: string | undefined,
     overrides: Record<string, unknown>
   ): void {
     const seenKey = `${task.id}-${projectUsedToDeriveDependencies}`;
@@ -215,8 +216,8 @@ export class ProcessTasks {
   }
 
   private processTasksForMultipleProjects(
-    dependencyConfig: TargetDependencyConfig,
-    configuration: string,
+    dependencyConfig: NormalizedTargetDependencyConfig,
+    configuration: string | undefined,
     task: Task,
     taskOverrides:
       | Record<string, unknown>
@@ -242,7 +243,7 @@ export class ProcessTasks {
     task: Task,
     projectName: string,
     dependencyConfig: TargetDependencyConfig,
-    configuration: string,
+    configuration: string | undefined,
     taskOverrides:
       | Record<string, unknown>
       | { __overrides_unparsed__: string[] },
@@ -297,7 +298,7 @@ export class ProcessTasks {
   private processTasksForDependencies(
     projectUsedToDeriveDependencies: string,
     dependencyConfig: TargetDependencyConfig,
-    configuration: string,
+    configuration: string | undefined,
     task: Task,
     taskOverrides:
       | Record<string, unknown>
@@ -335,13 +336,13 @@ export class ProcessTasks {
         );
 
         const depTargetConfiguration =
-          this.projectGraph.nodes[depProject.name].data.targets[
+          this.projectGraph.nodes[depProject.name].data.targets?.[
             dependencyConfig.target
           ];
 
         if (task.id !== depTargetId) {
           this.recordEdge(task, depTargetId, taskOverrides);
-          if (depTargetConfiguration.continuous) {
+          if (depTargetConfiguration?.continuous) {
             this.addContinuousEdge(task, depTargetId, dependencyConfig);
           } else {
             this.dependencies[task.id].push({ id: depTargetId });
@@ -428,13 +429,14 @@ export class ProcessTasks {
     resolvedConfiguration: string | undefined,
     overrides: Record<string, unknown>
   ): Task {
-    if (!project.data.targets[target]) {
+    const targetConfiguration = project.data.targets?.[target];
+    if (!targetConfiguration) {
       throw new Error(
         `Cannot find configuration for task ${project.name}:${target}`
       );
     }
 
-    if (!project.data.targets[target].executor) {
+    if (!targetConfiguration.executor) {
       throw new Error(
         `Target "${project.name}:${target}" does not have an executor configured`
       );
@@ -462,10 +464,10 @@ export class ProcessTasks {
         qualifiedTarget,
         interpolatedOverrides
       ),
-      cache: project.data.targets[target].cache ?? false,
-      parallelism: project.data.targets[target].parallelism ?? true,
-      continuous: project.data.targets[target].continuous ?? false,
-      ultracache: project.data.targets[target].ultracache,
+      cache: targetConfiguration.cache ?? false,
+      parallelism: targetConfiguration.parallelism ?? true,
+      continuous: targetConfiguration.continuous ?? false,
+      ultracache: targetConfiguration.ultracache,
     };
   }
 
@@ -477,13 +479,11 @@ export class ProcessTasks {
     const defaultConfiguration =
       project.data.targets?.[target]?.defaultConfiguration;
     configuration ??= defaultConfiguration;
-    const resolved = projectHasTargetAndConfiguration(
-      project,
-      target,
-      configuration
-    )
-      ? configuration
-      : defaultConfiguration;
+    const resolved =
+      configuration !== undefined &&
+      projectHasTargetAndConfiguration(project, target, configuration)
+        ? configuration
+        : defaultConfiguration;
     // `createTaskId` drops an empty configuration, so the target must too.
     return resolved || undefined;
   }
@@ -599,12 +599,12 @@ function buildTaskGraph(
   };
 }
 
-function interpolateOverrides<T = any>(
-  args: T,
+function interpolateOverrides(
+  args: Record<string, unknown>,
   projectName: string,
   project: any
-): T {
-  const interpolatedArgs: T = { ...args };
+): Record<string, unknown> {
+  const interpolatedArgs: Record<string, unknown> = { ...args };
   Object.entries(interpolatedArgs).forEach(([name, value]) => {
     interpolatedArgs[name] =
       typeof value === 'string'
@@ -689,7 +689,7 @@ export function filterDummyTasks(dependencies: {
 export function getNonDummyDeps(
   currentEdge: TaskGraphEdge,
   dependencies: { [k: string]: TaskGraphEdge[] },
-  cycles?: Set<string>,
+  cycles?: Set<string> | null,
   seen: Set<string> = new Set()
 ): TaskGraphEdge[] {
   const currentTask = currentEdge.id;

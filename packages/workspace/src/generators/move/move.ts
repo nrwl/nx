@@ -71,7 +71,7 @@ export async function moveGenerator(tree: Tree, rawSchema: Schema) {
 
   await runAngularPlugin(tree, schema);
 
-  let task: GeneratorCallback;
+  let task: GeneratorCallback | undefined;
   if (wasIncludedInWorkspaces) {
     // check if the new destination is included in the package manager workspaces
     const isIncludedInWorkspaces = isProjectIncludedInPackageManagerWorkspaces(

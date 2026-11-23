@@ -1,4 +1,9 @@
-import { readJson, Tree, writeJson } from 'nx/src/devkit-exports';
+import {
+  readJson,
+  Tree,
+  writeJson,
+  type FileChange,
+} from 'nx/src/devkit-exports';
 import type { FormatterType, TreeIgnoreChecker } from 'nx/src/devkit-internals';
 import {
   createOxfmtIgnoreChecker,
@@ -90,7 +95,12 @@ export async function formatFiles(
     return new Set(
       tree
         .listChanges()
-        .filter((file) => file.type !== 'DELETE' && !isIgnoredFile(file.path))
+        .filter(
+          (file): file is FileChange & { content: Buffer } =>
+            file.type !== 'DELETE' &&
+            file.content !== null &&
+            !isIgnoredFile(file.path)
+        )
     );
   };
 
@@ -156,7 +166,8 @@ async function formatWithPrettier(
           await prettier.format(file.content.toString('utf-8'), options)
         );
       } catch (e) {
-        console.warn(`Could not format ${file.path}. Error: "${e.message}"`);
+        const message = e instanceof Error ? e.message : String(e);
+        console.warn(`Could not format ${file.path}. Error: "${message}"`);
       }
     })
   );
@@ -190,7 +201,7 @@ async function formatWithOxfmt(
       // Only when the checkers exist. An nx without them is older than this
       // argument, so it would drop the reader and filter nothing - and there is
       // no pre-filter to disagree with either.
-      createOxfmtIgnoreChecker
+      typeof createOxfmtIgnoreChecker === 'function'
         ? (relativePath: string) => tree.read(relativePath, 'utf-8')
         : undefined
     );
@@ -205,7 +216,8 @@ async function formatWithOxfmt(
       );
     }
   } catch (e) {
-    console.warn(`Could not format files with oxfmt. Error: "${e.message}"`);
+    const message = e instanceof Error ? e.message : String(e);
+    console.warn(`Could not format files with oxfmt. Error: "${message}"`);
   }
 }
 

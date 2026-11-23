@@ -217,7 +217,7 @@ export function createProjectFileMapCache(
 let lastWrittenCacheMtimeMs: number | undefined;
 
 export function writeCache(
-  cache: FileMapCache,
+  cache: FileMapCache | null,
   projectGraph: ProjectGraph,
   sourceMaps: ConfigurationSourceMaps,
   errors: ProjectGraphErrorTypes[],
@@ -251,7 +251,7 @@ export function writeCache(
       // only write the file map if there are no errors
       // if there were errors, the errors make the filemap invalid
       // TODO: We should be able to keep the valid part of the filemap if the errors being thrown told us which parts of the filemap were invalid
-      if (errors.length === 0) {
+      if (errors.length === 0 && cache) {
         writeJsonFile(tmpFileMapPath, cache);
         renameSync(tmpFileMapPath, nxFileMap);
       }

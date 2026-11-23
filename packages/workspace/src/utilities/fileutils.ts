@@ -56,6 +56,6 @@ export function renameSync(
     fsRenameSync(from, to);
     cb(null);
   } catch (e) {
-    cb(e);
+    cb(e instanceof Error ? e : new Error(String(e)));
   }
 }

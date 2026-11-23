@@ -153,9 +153,11 @@ function removeDir(dir: string) {
       rmSync(dir, { recursive: true, force: true });
       return;
     } catch (e) {
+      const code = e instanceof Error && 'code' in e ? e.code : undefined;
       if (
         attempt === MAX_REMOVE_ATTEMPTS ||
-        !['ENOTEMPTY', 'EBUSY', 'EPERM'].includes(e.code)
+        typeof code !== 'string' ||
+        !['ENOTEMPTY', 'EBUSY', 'EPERM'].includes(code)
       ) {
         throw e;
       }

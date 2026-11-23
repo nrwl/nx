@@ -60,12 +60,12 @@ function checkIfProjectIsUsed(
   config: TargetConfiguration,
   callback: (x: string) => void | string
 ) {
-  function recur(value) {
+  function recur(value: unknown) {
     if (typeof value === 'string') {
       callback(value);
     } else if (Array.isArray(value)) {
       value.forEach((x) => recur(x));
-    } else if (typeof value === 'object') {
+    } else if (typeof value === 'object' && value !== null) {
       Object.entries(value).forEach(([, v]) => {
         recur(v);
       });

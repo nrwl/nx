@@ -32,7 +32,7 @@ export class ProjectGraphBuilder {
   readonly removedEdges: { [source: string]: Set<string> } = {};
 
   constructor(
-    graph?: ProjectGraph,
+    graph?: ProjectGraph | null,
     projectFileMap?: ProjectFileMap,
     nonProjectFiles?: FileMap['nonProjectFiles']
   ) {
@@ -54,6 +54,10 @@ export class ProjectGraphBuilder {
       this.projectFileMap = projectFileMap || {};
       this.nonProjectFiles = nonProjectFiles || [];
     }
+  }
+
+  private get externalNodes(): Record<string, ProjectGraphExternalNode> {
+    return definedExternalNodes(this.graph.externalNodes);
   }
 
   /**
@@ -92,7 +96,7 @@ export class ProjectGraphBuilder {
    * Removes a node and all of its dependency edges from the graph
    */
   removeNode(name: string) {
-    if (!this.graph.nodes[name] && !this.graph.externalNodes[name]) {
+    if (!this.graph.nodes[name] && !this.externalNodes[name]) {
       throw new Error(`There is no node named: "${name}"`);
     }
 
@@ -101,7 +105,7 @@ export class ProjectGraphBuilder {
     if (this.graph.nodes[name]) {
       delete this.graph.nodes[name];
     } else {
-      delete this.graph.externalNodes[name];
+      delete this.externalNodes[name];
     }
   }
 
@@ -110,16 +114,16 @@ export class ProjectGraphBuilder {
    */
   addExternalNode(node: ProjectGraphExternalNode): void {
     // Check if project with the same name already exists
-    if (this.graph.externalNodes[node.name]) {
+    if (this.externalNodes[node.name]) {
       throw new Error(
         `Multiple projects are named "${node.name}". One has version "${
           node.data.version
         }" and the other has version "${
-          this.graph.externalNodes[node.name].data.version
+          this.externalNodes[node.name].data.version
         }". Please resolve the conflicting package names.`
       );
     }
-    this.graph.externalNodes[node.name] = node;
+    this.externalNodes[node.name] = node;
   }
 
   /**
@@ -180,7 +184,7 @@ export class ProjectGraphBuilder {
     }
     if (
       !this.graph.nodes[targetProjectName] &&
-      !this.graph.externalNodes[targetProjectName]
+      !this.externalNodes[targetProjectName]
     ) {
       throw new Error(`Target project does not exist: ${targetProjectName}`);
     }
@@ -229,15 +233,12 @@ export class ProjectGraphBuilder {
         // only add known nodes
         if (
           !this.graph.nodes[targetProject] &&
-          !this.graph.externalNodes[targetProject]
+          !this.externalNodes[targetProject]
         ) {
           continue;
         }
         for (const type of types.values()) {
-          if (
-            !alreadySetTargetProjects.has(targetProject) ||
-            !alreadySetTargetProjects.get(targetProject).has(type)
-          ) {
+          if (!alreadySetTargetProjects.get(targetProject)?.has(type)) {
             if (
               !this.removedEdges[sourceProject] ||
               !this.removedEdges[sourceProject].has(targetProject)
@@ -293,7 +294,7 @@ export class ProjectGraphBuilder {
         target,
         type,
         sourceFile,
-      },
+      } as RawProjectGraphDependency,
       {
         externalNodes: this.graph.externalNodes,
         fileMap: {
@@ -302,9 +303,6 @@ export class ProjectGraphBuilder {
         },
         // the validators only really care about the keys on this.
         projects: this.graph.nodes as any,
-        filesToProcess: null,
-        nxJsonConfiguration: null,
-        workspaceRoot: null,
       }
     );
 
@@ -386,10 +384,11 @@ export class ProjectGraphBuilder {
       if (f.deps) {
         for (let d of f.deps) {
           const target = fileDataDepTarget(d);
-          if (!fileDeps.has(target)) {
+          const types = fileDeps.get(target);
+          if (!types) {
             fileDeps.set(target, new Set([fileDataDepType(d)]));
           } else {
-            fileDeps.get(target).add(fileDataDepType(d));
+            types.add(fileDataDepType(d));
           }
         }
       }
@@ -411,10 +410,11 @@ export class ProjectGraphBuilder {
         // will be rebuilt based on the file dependencies
         // we only need to keep the implicit dependencies
         if (d.type === DependencyType.implicit && !removed?.has(d.target)) {
-          if (!alreadySetTargetProjects.has(d.target)) {
+          const byType = alreadySetTargetProjects.get(d.target);
+          if (!byType) {
             alreadySetTargetProjects.set(d.target, new Map([[d.type, d]]));
           } else {
-            alreadySetTargetProjects.get(d.target).set(d.type, d);
+            byType.set(d.type, d);
           }
         }
       }
@@ -505,9 +505,14 @@ export type RawProjectGraphDependency =
  * A function to validate dependencies in a {@link CreateDependencies} function
  * @throws If the dependency is invalid.
  */
+type DependencyValidationContext = Pick<
+  CreateDependenciesContext,
+  'externalNodes' | 'projects' | 'fileMap'
+>;
+
 export function validateDependency(
   dependency: RawProjectGraphDependency,
-  ctx: CreateDependenciesContext
+  ctx: DependencyValidationContext
 ): void {
   if (dependency.type === DependencyType.implicit) {
     validateImplicitDependency(dependency, ctx);
@@ -522,8 +527,10 @@ export function validateDependency(
 
 function validateCommonDependencyRules(
   d: RawProjectGraphDependency,
-  { externalNodes, projects, fileMap }: CreateDependenciesContext
+  ctx: DependencyValidationContext
 ) {
+  const { projects, fileMap } = ctx;
+  const externalNodes = definedExternalNodes(ctx.externalNodes);
   if (!projects[d.source] && !externalNodes[d.source]) {
     throw new Error(`Source project does not exist: ${d.source}`);
   }
@@ -556,18 +563,18 @@ function validateCommonDependencyRules(
 
 function validateImplicitDependency(
   d: ImplicitDependency,
-  { externalNodes }: CreateDependenciesContext
+  ctx: DependencyValidationContext
 ) {
-  if (externalNodes[d.source]) {
+  if (definedExternalNodes(ctx.externalNodes)[d.source]) {
     throw new Error(`External projects can't have "implicit" dependencies`);
   }
 }
 
 function validateDynamicDependency(
   d: DynamicDependency,
-  { externalNodes }: CreateDependenciesContext
+  ctx: DependencyValidationContext
 ) {
-  if (externalNodes[d.source]) {
+  if (definedExternalNodes(ctx.externalNodes)[d.source]) {
     throw new Error(`External projects can't have "dynamic" dependencies`);
   }
   // dynamic dependency is always bound to a file
@@ -580,7 +587,7 @@ function validateDynamicDependency(
 
 function validateStaticDependency(
   d: StaticDependency,
-  { projects }: CreateDependenciesContext
+  { projects }: DependencyValidationContext
 ) {
   // internal nodes must provide sourceProjectFile when creating static dependency
   // externalNodes do not have sourceProjectFile
@@ -646,4 +653,13 @@ function getFileData(
     getProjectFileData(source, sourceFile, fileMap) ??
     getNonProjectFileData(sourceFile, nonProjectFiles)
   );
+}
+
+function definedExternalNodes(
+  externalNodes: ProjectGraph['externalNodes']
+): Record<string, ProjectGraphExternalNode> {
+  if (!externalNodes) {
+    throw new TypeError('The project graph has no external nodes');
+  }
+  return externalNodes;
 }

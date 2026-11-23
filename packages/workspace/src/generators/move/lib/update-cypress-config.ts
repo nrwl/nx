@@ -26,7 +26,7 @@ export function updateCypressConfig(
 
   if (tree.exists(cypressJsonPath)) {
     const cypressJson = JSON.parse(
-      tree.read(cypressJsonPath).toString('utf-8')
+      tree.read(cypressJsonPath, 'utf-8') ?? ''
     ) as PartialCypressJson;
     // videosFolder is not required because videos can be turned off - it also has a default
     if (cypressJson.videosFolder) {
@@ -54,7 +54,7 @@ export function updateCypressConfig(
   // Search and replace for "e2e" directory is not safe, and will result in an invalid config file.
   // Leave it and let users fix the config if needed.
   if (project.root !== 'e2e' && tree.exists(cypressConfigPath)) {
-    const oldContent = tree.read(cypressConfigPath, 'utf-8');
+    const oldContent = tree.read(cypressConfigPath, 'utf-8') ?? '';
     const findName = new RegExp(`'${schema.projectName}'`, 'g');
     const findDir = new RegExp(project.root, 'g');
     const newContent = oldContent

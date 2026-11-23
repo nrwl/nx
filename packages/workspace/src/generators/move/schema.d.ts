@@ -8,6 +8,7 @@ export interface Schema {
 }
 
 export interface NormalizedSchema extends Schema {
+  newProjectName: string;
   relativeToRootDestination: string;
   isNxConfiguredInPackageJson?: boolean;
 }

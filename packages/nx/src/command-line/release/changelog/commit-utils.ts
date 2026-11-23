@@ -83,7 +83,7 @@ export function commitChangesNonProjectFiles(
 export function createFileToProjectMap(
   projectFileMap: ProjectFileMap
 ): Record<string, string> {
-  const fileToProjectMap = {};
+  const fileToProjectMap: Record<string, string> = {};
   for (const [projectName, projectFiles] of Object.entries(projectFileMap)) {
     for (const file of projectFiles) {
       fileToProjectMap[file.file] = projectName;

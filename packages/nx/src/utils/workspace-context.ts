@@ -33,16 +33,17 @@ const eventListeners = new Set<WatchEventsListener>();
 export function setupWorkspaceContext(
   workspaceRoot: string,
   options?: WorkspaceContextOptions
-) {
+): WorkspaceContext {
   const { WorkspaceContext } =
     require('../native') as typeof import('../native');
   performance.mark('workspace-context');
   const cacheDir = workspaceDataDirectoryForWorkspace(workspaceRoot);
   // A plugin worker is only asked for files after its host finished walking
   // and wrote the archive, so it loads that rather than walking again.
-  workspaceContext = (global as any).NX_PLUGIN_WORKER
+  const context = (global as any).NX_PLUGIN_WORKER
     ? WorkspaceContext.fromArchive(workspaceRoot, cacheDir, options)
     : new WorkspaceContext(workspaceRoot, cacheDir, options);
+  workspaceContext = context;
   contextOptions = options;
   contextRoot = workspaceRoot;
   contextGeneration++;
@@ -56,6 +57,7 @@ export function setupWorkspaceContext(
     'workspace-context',
     'workspace-context:end'
   );
+  return context;
 }
 
 export async function getNxWorkspaceFilesFromContext(
@@ -64,8 +66,8 @@ export async function getNxWorkspaceFilesFromContext(
   useDaemonProcess: boolean = true
 ) {
   if (!useDaemonProcess || isOnDaemon() || !daemonClient.enabled()) {
-    await ensureFilesReady(workspaceRoot);
-    return workspaceContext.getWorkspaceFiles(projectRootMap);
+    const context = await ensureFilesReady(workspaceRoot);
+    return context.getWorkspaceFiles(projectRootMap);
   }
   return daemonClient.getWorkspaceFiles(projectRootMap);
 }
@@ -82,8 +84,7 @@ export function globWithWorkspaceContextSync(
   globs: string[],
   exclude?: string[]
 ) {
-  ensureContextAvailable(workspaceRoot);
-  return workspaceContext.glob(globs, exclude);
+  return ensureContextAvailable(workspaceRoot).glob(globs, exclude);
 }
 
 export async function globWithWorkspaceContext(
@@ -92,8 +93,8 @@ export async function globWithWorkspaceContext(
   exclude?: string[]
 ) {
   if (workspaceRoot === '/virtual' || isOnDaemon() || !daemonClient.enabled()) {
-    await ensureFilesReady(workspaceRoot);
-    return workspaceContext.glob(globs, exclude);
+    const context = await ensureFilesReady(workspaceRoot);
+    return context.glob(globs, exclude);
   } else {
     return daemonClient.glob(globs, exclude);
   }
@@ -105,8 +106,8 @@ export async function multiGlobWithWorkspaceContext(
   exclude?: string[]
 ) {
   if (workspaceRoot === '/virtual' || isOnDaemon() || !daemonClient.enabled()) {
-    await ensureFilesReady(workspaceRoot);
-    return workspaceContext.multiGlob(globs, exclude);
+    const context = await ensureFilesReady(workspaceRoot);
+    return context.multiGlob(globs, exclude);
   }
   return daemonClient.multiGlob(globs, exclude);
 }
@@ -117,8 +118,8 @@ export async function hashWithWorkspaceContext(
   exclude?: string[]
 ) {
   if (isOnDaemon() || !daemonClient.enabled()) {
-    await ensureFilesReady(workspaceRoot);
-    return workspaceContext.hashFilesMatchingGlob(globs, exclude);
+    const context = await ensureFilesReady(workspaceRoot);
+    return context.hashFilesMatchingGlob(globs, exclude);
   }
   return daemonClient.hashGlob(globs, exclude);
 }
@@ -128,8 +129,8 @@ export async function hashMultiGlobWithWorkspaceContext(
   globGroups: string[][]
 ) {
   if (isOnDaemon() || !daemonClient.enabled()) {
-    await ensureFilesReady(workspaceRoot);
-    return workspaceContext.hashFilesMatchingGlobs(globGroups);
+    const context = await ensureFilesReady(workspaceRoot);
+    return context.hashFilesMatchingGlobs(globGroups);
   }
   return daemonClient.hashMultiGlob(globGroups);
 }
@@ -207,8 +208,8 @@ export function updateFilesInContext(
 
 export async function getAllFileDataInContext(workspaceRoot: string) {
   if (isOnDaemon() || !daemonClient.enabled()) {
-    await ensureFilesReady(workspaceRoot);
-    return workspaceContext.allFileData();
+    const context = await ensureFilesReady(workspaceRoot);
+    return context.allFileData();
   }
   return daemonClient.getWorkspaceContextFileData();
 }
@@ -235,8 +236,7 @@ export function subscribeToWorkspaceChanges(
  * context is not watching.
  */
 export function settleWorkspaceContext(workspaceRoot: string): ChangeBatch {
-  ensureContextAvailable(workspaceRoot);
-  return workspaceContext.settle();
+  return ensureContextAvailable(workspaceRoot).settle();
 }
 
 /**
@@ -246,8 +246,7 @@ export function settleWorkspaceContext(workspaceRoot: string): ChangeBatch {
 export function takeAppliedWorkspaceChanges(
   workspaceRoot: string
 ): ChangeBatch {
-  ensureContextAvailable(workspaceRoot);
-  return workspaceContext.takeAppliedChanges();
+  return ensureContextAvailable(workspaceRoot).takeAppliedChanges();
 }
 
 export function isWatchingWorkspaceContext(): boolean {
@@ -309,8 +308,8 @@ export async function getFilesInDirectoryUsingContext(
   dir: string
 ) {
   if (isOnDaemon() || !daemonClient.enabled()) {
-    await ensureFilesReady(workspaceRoot);
-    return workspaceContext.getFilesInDirectory(dir);
+    const context = await ensureFilesReady(workspaceRoot);
+    return context.getFilesInDirectory(dir);
   }
   return daemonClient.getFilesInDirectory(dir);
 }
@@ -336,12 +335,15 @@ export function updateProjectFiles(
  * entry points await this first; a plugin host is then never frozen while a
  * worker is connecting to it.
  */
-async function ensureFilesReady(workspaceRoot: string) {
-  ensureContextAvailable(workspaceRoot);
+async function ensureFilesReady(
+  workspaceRoot: string
+): Promise<WorkspaceContext> {
+  const context = ensureContextAvailable(workspaceRoot);
   // A binding without `ready` (an older native build, a mocked one) reads
   // synchronously as before.
-  filesReady ??= workspaceContext.ready?.() ?? Promise.resolve();
+  filesReady ??= context.ready?.() ?? Promise.resolve();
   await filesReady;
+  return ensureContextAvailable(workspaceRoot);
 }
 
 /**
@@ -362,10 +364,11 @@ export function refreshWorkspaceContext(workspaceRoot: string) {
   filesReady = undefined;
 }
 
-function ensureContextAvailable(workspaceRoot: string) {
-  if (!workspaceContext || workspaceContext?.workspaceRoot !== workspaceRoot) {
-    setupWorkspaceContext(workspaceRoot, contextOptions);
+function ensureContextAvailable(workspaceRoot: string): WorkspaceContext {
+  if (!workspaceContext || workspaceContext.workspaceRoot !== workspaceRoot) {
+    return setupWorkspaceContext(workspaceRoot, contextOptions);
   }
+  return workspaceContext;
 }
 
 export function resetWorkspaceContext() {

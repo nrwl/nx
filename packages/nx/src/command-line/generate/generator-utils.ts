@@ -21,7 +21,10 @@ export type GeneratorInformation = {
   implementationFactory: () => Generator<unknown>;
   isNgCompat: boolean;
   isNxGenerator: boolean;
-  generatorConfiguration: GeneratorsJsonEntry;
+  generatorConfiguration: GeneratorsJsonEntry & {
+    aliases: string[];
+    hidden: boolean;
+  };
 };
 
 export function getGeneratorInformation(
@@ -41,6 +44,11 @@ export function getGeneratorInformation(
     const generatorConfig =
       generatorsJson.generators?.[normalizedGeneratorName] ||
       generatorsJson.schematics?.[normalizedGeneratorName];
+    if (!generatorConfig) {
+      throw new Error(
+        `Cannot find generator '${normalizedGeneratorName}' in ${generatorsFilePath}.`
+      );
+    }
     const isNgCompat = !generatorsJson.generators?.[normalizedGeneratorName];
     const schemaPath = resolveSchema(
       generatorConfig.schema,
@@ -52,19 +60,26 @@ export function getGeneratorInformation(
     if (!schema.properties || typeof schema.properties !== 'object') {
       schema.properties = {};
     }
-    generatorConfig.implementation =
+    const implementation =
       generatorConfig.implementation || generatorConfig.factory;
+    if (!implementation) {
+      throw new Error(
+        `Generator '${normalizedGeneratorName}' has no implementation or factory.`
+      );
+    }
+    generatorConfig.implementation = implementation;
     const implementationFactory = getImplementationFactory<Generator>(
-      generatorConfig.implementation,
+      implementation,
       generatorsDir,
       collectionName,
       projects
     );
-    const normalizedGeneratorConfiguration: GeneratorsJsonEntry = {
-      ...generatorConfig,
-      aliases: generatorConfig.aliases ?? [],
-      hidden: !!generatorConfig.hidden,
-    };
+    const normalizedGeneratorConfiguration: GeneratorInformation['generatorConfiguration'] =
+      {
+        ...generatorConfig,
+        aliases: generatorConfig.aliases ?? [],
+        hidden: !!generatorConfig.hidden,
+      };
     return {
       resolvedCollectionName,
       normalizedGeneratorName,
@@ -77,7 +92,11 @@ export function getGeneratorInformation(
   } catch (e) {
     throw new Error(
       `Unable to resolve ${collectionName}:${generatorName}.\n${
-        process.env.NX_VERBOSE_LOGGING === 'true' ? e.stack : e.message
+        e instanceof Error
+          ? process.env.NX_VERBOSE_LOGGING === 'true'
+            ? e.stack
+            : e.message
+          : String(e)
       }`
     );
   }
@@ -148,9 +167,7 @@ export function readGeneratorsJson(
 
 function findFullGeneratorName(
   name: string,
-  generators: {
-    [name: string]: { aliases?: string[] };
-  }
+  generators: { [name: string]: { aliases?: string[] } } | undefined
 ) {
   if (generators) {
     for (let [key, data] of Object.entries<{ aliases?: string[] }>(

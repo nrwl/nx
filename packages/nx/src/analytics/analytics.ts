@@ -31,7 +31,7 @@ let flushTelemetry: typeof FlushTelemetryType;
 let trackEventNative: typeof TrackEventType;
 let trackPageViewNative: typeof TrackPageViewType;
 
-let getEventDimensions: typeof GetEventDimensionsType;
+let getEventDimensions: typeof GetEventDimensionsType | undefined;
 
 if (!IS_WASM) {
   const nativeModule = require('../native');
@@ -145,6 +145,9 @@ export async function startAnalytics() {
 }
 
 export function reportNxAddCommand(packageName: string, version: string) {
+  if (!customDimensions) {
+    return;
+  }
   reportCommandRunEvent('add', {
     [customDimensions.packageName]: packageName,
     [customDimensions.packageVersion]: version,
@@ -152,6 +155,9 @@ export function reportNxAddCommand(packageName: string, version: string) {
 }
 
 export function reportNxGenerateCommand(generator: string) {
+  if (!customDimensions) {
+    return;
+  }
   reportCommandRunEvent('generate', {
     [customDimensions.generatorName]: generator,
   });
@@ -213,10 +219,7 @@ export function argsToQueryString(args: Record<string, any>): string {
   return params.toString();
 }
 
-function trackEvent(
-  eventName: string,
-  parameters?: Record<string, string | number | boolean>
-) {
+function trackEvent(eventName: string, parameters?: EventParameters) {
   if (_telemetryInitialized) {
     // Convert parameters to string map for Rust
     const stringParams: Record<string, string> = {};
@@ -269,7 +272,9 @@ export function flushAnalytics() {
     } catch (error) {
       // Failure to report analytics shouldn't crash the CLI
       if (process.env.NX_VERBOSE_LOGGING === 'true') {
-        console.log(`Failed to flush telemetry: ${error.message}`);
+        console.log(
+          `Failed to flush telemetry: ${error instanceof Error ? error.message : error}`
+        );
       }
     }
   }

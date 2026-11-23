@@ -45,7 +45,11 @@ export function assertGeneratorsEnforceVersionFloor(options: {
       // generators.json is the published shape — factory paths point at the
       // built `./dist/src/.../foo`. The spec runs against the source tree, so
       // map the published path back to its source location.
-      const [factoryRelative, exportName] = (def.factory ?? def.implementation)
+      const factoryPath = def.factory ?? def.implementation;
+      if (!factoryPath) {
+        throw new Error(`\`${name}\` has no factory or implementation`);
+      }
+      const [factoryRelative, exportName] = factoryPath
         .replace(/^\.\//, '')
         .replace(/^dist\//, '')
         .split('#');

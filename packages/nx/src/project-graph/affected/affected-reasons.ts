@@ -204,7 +204,7 @@ export function formatAffectedReason(
     case 'input-file':
       return reason.pattern
         ? `${reason.file} (${reason.pattern})`
-        : reason.file;
+        : (reason.file ?? '');
     case 'dependent-output':
       return `reads the outputs of ${reason.producer}`;
     case 'external-dependencies':
@@ -282,7 +282,7 @@ export function formatAffectedExplanation(
     for (const name of group) {
       if (requestedSet.has(name)) {
         const target = targetOf(name);
-        byTarget.set(target, byTarget.get(target) + 1);
+        byTarget.set(target, (byTarget.get(target) ?? 0) + 1);
       } else {
         rest++;
       }
@@ -443,7 +443,11 @@ function reasonLines(
     (reason) => reason.kind === 'external-dependencies'
   );
   const movedPackages = [
-    ...new Set(externals.flatMap((reason) => moved[reason.file] ?? [])),
+    ...new Set(
+      externals.flatMap((reason) =>
+        reason.file === undefined ? [] : (moved[reason.file] ?? [])
+      )
+    ),
   ].sort();
   // Hashing every external covers every package in an ecosystem that moved,
   // unless the line names packages instead of files.
@@ -476,7 +480,7 @@ function reasonLines(
   }
 
   const lines: string[] = [];
-  const done = new Set<string>();
+  const done = new Set<string | undefined>();
   for (const reason of reasons) {
     const key = keyOf(reason);
     if (reason.kind === 'external-dependencies' && movedPackages.length) {
@@ -497,11 +501,11 @@ function reasonLines(
     if (reason.kind === 'input-file') {
       if (done.has(key)) continue;
       done.add(key);
-      const patterns = group.map((r) => r.pattern).filter(Boolean);
+      const patterns = (group ?? []).map((r) => r.pattern).filter(Boolean);
       lines.push(
         patterns.length
           ? `${reason.file} ${dim(`(${patterns.join(', ')})`)}`
-          : reason.file
+          : (reason.file ?? '')
       );
       continue;
     }
@@ -516,7 +520,7 @@ function reasonLines(
     switch (first.kind) {
       case 'dependent-output':
         lines.push(
-          `reads the outputs of ${listed(group.map((r) => r.producer).sort())}`
+          `reads the outputs of ${listed(group.map((r) => r.producer ?? '').sort())}`
         );
         break;
       case 'npm-package':
@@ -598,9 +602,10 @@ function disambiguate(groups: Group[], noun: 'file' | 'package'): void {
   for (const [group, picked] of telling) {
     // Leading with a telling file can, rarely, read like an unrelated group;
     // the first name keeps it apart from everything outside its lookalikes.
+    const lead = leading.get(group);
     group.heading =
-      taken.get(leading.get(group)) === 1
-        ? leading.get(group)
+      lead !== undefined && taken.get(lead) === 1
+        ? lead
         : listed([
             group.names[0],
             ...picked,
@@ -629,7 +634,9 @@ function changedIn(
   for (const reason of reasons) {
     if (isUpstreamReason(reason)) continue;
     const packages =
-      reason.kind === 'external-dependencies' ? moved[reason.file] : undefined;
+      reason.kind === 'external-dependencies' && reason.file !== undefined
+        ? moved[reason.file]
+        : undefined;
     if (packages?.length) {
       packages.forEach((name) => add(name, true));
     } else if (reason.kind === 'npm-package') {

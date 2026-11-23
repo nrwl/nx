@@ -14,11 +14,14 @@ const cp: typeof import('child_process') = require('child_process');
 import type { NxJsonConfiguration } from '../../../../config/nx-json';
 import type { PackageJson } from '../../../../utils/package-json';
 
+type NxJsonWithInstallation = NxJsonConfiguration &
+  Required<Pick<NxJsonConfiguration, 'installation'>>;
+
 const installationPath = path.join(__dirname, 'installation', 'package.json');
 
 function matchesCurrentNxInstall(
   currentInstallation: PackageJson,
-  nxJsonInstallation: NxJsonConfiguration['installation']
+  nxJsonInstallation: NxJsonWithInstallation['installation']
 ) {
   if (
     !currentInstallation.devDependencies ||
@@ -75,7 +78,7 @@ function getCurrentInstallation(): PackageJson {
 
 function performInstallation(
   currentInstallation: PackageJson,
-  nxJson: NxJsonConfiguration
+  nxJson: NxJsonWithInstallation
 ) {
   fs.writeFileSync(
     installationPath,
@@ -105,7 +108,7 @@ function performInstallation(
 
 function ensureUpToDateInstallation() {
   const nxJsonPath = path.join(__dirname, '..', 'nx.json');
-  let nxJson: NxJsonConfiguration;
+  let nxJson: NxJsonWithInstallation;
 
   try {
     nxJson = require(nxJsonPath);
@@ -138,7 +141,7 @@ function ensureUpToDateInstallation() {
       performInstallation(currentInstallation, nxJson);
     }
   } catch (e: unknown) {
-    const messageLines = [
+    const messageLines: (string | undefined)[] = [
       '[NX]: Nx wrapper failed to synchronize installation.',
     ];
     if (e instanceof Error) {
@@ -146,7 +149,7 @@ function ensureUpToDateInstallation() {
       messageLines.push(e.message);
       messageLines.push(e.stack);
     } else {
-      messageLines.push(e.toString());
+      messageLines.push(String(e));
     }
     console.error(messageLines.join('\n'));
     process.exit(1);

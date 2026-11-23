@@ -27,7 +27,7 @@ export async function launchEditor(filePath: string) {
   });
 }
 
-function getGitConfig(key): string | null {
+function getGitConfig(key: string): string | null {
   try {
     return execSync(`git config --get ${key}`, {
       windowsHide: true,
@@ -39,7 +39,7 @@ function getGitConfig(key): string | null {
   }
 }
 
-function parseCommand(commandString) {
+function parseCommand(commandString: string) {
   const parts = commandString.split(/\s+/);
   return {
     cmd: parts[0],

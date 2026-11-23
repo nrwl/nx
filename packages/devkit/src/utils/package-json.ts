@@ -25,7 +25,7 @@ import {
 } from 'nx/src/utils/catalog';
 
 const UNIDENTIFIED_VERSION = 'UNIDENTIFIED_VERSION';
-const NON_SEMVER_TAGS = {
+const NON_SEMVER_TAGS: Record<string, number> = {
   '*': 2,
   [UNIDENTIFIED_VERSION]: 2,
   next: 1,
@@ -321,10 +321,18 @@ function isIncomingVersionGreater(
     return true;
   }
 
-  return gt(
-    cleanSemver(tree, incomingVersion, packageName),
-    cleanSemver(tree, resolvedExistingVersion, packageName)
+  const incomingSemver = cleanSemver(tree, incomingVersion, packageName);
+  const existingSemver = cleanSemver(
+    tree,
+    resolvedExistingVersion,
+    packageName
   );
+  if (!incomingSemver || !existingSemver) {
+    throw new TypeError(
+      `Could not compare the versions of "${packageName}": ${incomingVersion} and ${resolvedExistingVersion}.`
+    );
+  }
+  return gt(incomingSemver, existingSemver);
 }
 
 function updateExistingAltDependenciesVersion(
@@ -573,7 +581,7 @@ function splitDependenciesByCatalogType(
         title: 'Invalid catalog reference',
         bodyLines: [
           `Invalid catalog reference "${catalogRef}" for package "${packageName}".`,
-          error.message,
+          error instanceof Error ? error.message : String(error),
         ],
       });
       throw new Error(
@@ -598,6 +606,9 @@ function writeCatalogDependencies(
   }
 
   const manager = getCatalogManager(tree.root);
+  if (!manager) {
+    throw new Error('Could not find a catalog manager for this workspace.');
+  }
   manager.updateCatalogVersions(tree, catalogUpdates);
 }
 
@@ -634,7 +645,7 @@ function removeLowerVersions(
   existingDeps: Record<string, string>,
   workspaceRootPath: string
 ) {
-  return Object.keys(incomingDeps).reduce((acc, d) => {
+  return Object.keys(incomingDeps).reduce<Record<string, string>>((acc, d) => {
     if (
       !existingDeps?.[d] ||
       isIncomingVersionGreater(tree, incomingDeps[d], existingDeps[d], d)
@@ -649,7 +660,7 @@ function removeExistingDependencies(
   incomingDeps: Record<string, string>,
   existingDeps: Record<string, string>
 ): Record<string, string> {
-  return Object.keys(incomingDeps).reduce((acc, d) => {
+  return Object.keys(incomingDeps).reduce<Record<string, string>>((acc, d) => {
     if (!existingDeps?.[d]) {
       acc[d] = incomingDeps[d];
     }
@@ -710,12 +721,12 @@ function sortObjectByKeys<T>(obj: T): T {
   if (!obj || typeof obj !== 'object' || Array.isArray(obj)) {
     return obj;
   }
-  return Object.keys(obj)
-    .sort()
-    .reduce((result, key) => {
+  return Object.entries(obj)
+    .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
+    .reduce((result, [key, value]) => {
       return {
         ...result,
-        [key]: obj[key],
+        [key]: value,
       };
     }, {}) as T;
 }
@@ -734,14 +745,16 @@ function requiresAddingOfPackages(
   let needsDepsUpdate = false;
   let needsDevDepsUpdate = false;
 
-  packageJsonFile.dependencies = packageJsonFile.dependencies || {};
-  packageJsonFile.devDependencies = packageJsonFile.devDependencies || {};
+  const dependencies = (packageJsonFile.dependencies =
+    packageJsonFile.dependencies || {});
+  const devDependencies = (packageJsonFile.devDependencies =
+    packageJsonFile.devDependencies || {});
 
   if (Object.keys(deps).length > 0) {
     needsDepsUpdate = Object.keys(deps).some((entry) => {
       const incomingVersion = deps[entry];
-      if (packageJsonFile.dependencies[entry]) {
-        const existingVersion = packageJsonFile.dependencies[entry];
+      if (dependencies[entry]) {
+        const existingVersion = dependencies[entry];
         return isIncomingVersionGreater(
           tree,
           incomingVersion,
@@ -750,8 +763,8 @@ function requiresAddingOfPackages(
         );
       }
 
-      if (packageJsonFile.devDependencies[entry]) {
-        const existingVersion = packageJsonFile.devDependencies[entry];
+      if (devDependencies[entry]) {
+        const existingVersion = devDependencies[entry];
         return isIncomingVersionGreater(
           tree,
           incomingVersion,
@@ -767,8 +780,8 @@ function requiresAddingOfPackages(
   if (Object.keys(devDeps).length > 0) {
     needsDevDepsUpdate = Object.keys(devDeps).some((entry) => {
       const incomingVersion = devDeps[entry];
-      if (packageJsonFile.devDependencies[entry]) {
-        const existingVersion = packageJsonFile.devDependencies[entry];
+      if (devDependencies[entry]) {
+        const existingVersion = devDependencies[entry];
         return isIncomingVersionGreater(
           tree,
           incomingVersion,
@@ -776,8 +789,8 @@ function requiresAddingOfPackages(
           entry
         );
       }
-      if (packageJsonFile.dependencies[entry]) {
-        const existingVersion = packageJsonFile.dependencies[entry];
+      if (dependencies[entry]) {
+        const existingVersion = dependencies[entry];
 
         return isIncomingVersionGreater(
           tree,
@@ -799,24 +812,24 @@ function requiresAddingOfPackages(
  * given the deps & devDeps passed in
  */
 function requiresRemovingOfPackages(
-  packageJsonFile,
+  packageJsonFile: PackageJson,
   deps: string[],
   devDeps: string[]
 ): boolean {
   let needsDepsUpdate = false;
   let needsDevDepsUpdate = false;
 
-  packageJsonFile.dependencies = packageJsonFile.dependencies || {};
-  packageJsonFile.devDependencies = packageJsonFile.devDependencies || {};
+  const dependencies = (packageJsonFile.dependencies =
+    packageJsonFile.dependencies || {});
+  const devDependencies = (packageJsonFile.devDependencies =
+    packageJsonFile.devDependencies || {});
 
   if (deps.length > 0) {
-    needsDepsUpdate = deps.some((entry) => packageJsonFile.dependencies[entry]);
+    needsDepsUpdate = deps.some((entry) => dependencies[entry]);
   }
 
   if (devDeps.length > 0) {
-    needsDevDepsUpdate = devDeps.some(
-      (entry) => packageJsonFile.devDependencies[entry]
-    );
+    needsDevDepsUpdate = devDeps.some((entry) => devDependencies[entry]);
   }
 
   return needsDepsUpdate || needsDevDepsUpdate;
@@ -876,10 +889,10 @@ export function ensurePackage<T extends any = any>(
   pkgOrTree: string | Tree,
   requiredVersionOrPackage: string,
   maybeRequiredVersion?: string,
-  _?: never
-): T {
+  _?: { dev?: boolean; throwOnMissing?: boolean }
+): T | null {
   let pkg: string;
-  let requiredVersion: string;
+  let requiredVersion: string | undefined;
   if (typeof pkgOrTree === 'string') {
     pkg = pkgOrTree;
     requiredVersion = requiredVersionOrPackage;
@@ -900,11 +913,11 @@ export function ensurePackage<T extends any = any>(
     // different copy of the package than the workspace depends on.
     return require(require.resolve(pkg, { paths: [workspaceRoot, __dirname] }));
   } catch (e) {
-    if (e.code === 'ERR_REQUIRE_ESM') {
+    if (errorCode(e) === 'ERR_REQUIRE_ESM') {
       // The package is installed, but is an ESM package.
       // The consumer of this function can import it as needed.
       return null;
-    } else if (e.code !== 'MODULE_NOT_FOUND') {
+    } else if (errorCode(e) !== 'MODULE_NOT_FOUND') {
       throw e;
     }
   }
@@ -913,6 +926,10 @@ export function ensurePackage<T extends any = any>(
     throw new Error(
       'NOTE: This generator does not support --dry-run. If you are running this in Nx Console, it should execute fine once you hit the "Generate" button.\n'
     );
+  }
+
+  if (requiredVersion === undefined) {
+    throw new Error(`A version is required to install "${pkg}".`);
   }
 
   const { tempDir } = installPackageToTmp(
@@ -938,7 +955,7 @@ export function ensurePackage<T extends any = any>(
 
     return result;
   } catch (e) {
-    if (e.code === 'ERR_REQUIRE_ESM') {
+    if (errorCode(e) === 'ERR_REQUIRE_ESM') {
       // The package is installed, but is an ESM package.
       // The consumer of this function can import it as needed.
       packageMapCache.set(pkg, null);
@@ -946,6 +963,12 @@ export function ensurePackage<T extends any = any>(
     }
     throw e;
   }
+}
+
+function errorCode(e: unknown): unknown {
+  return typeof e === 'object' && e !== null && 'code' in e
+    ? e.code
+    : undefined;
 }
 
 function addToNodePath(dir: string) {

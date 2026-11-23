@@ -4,15 +4,21 @@ import type { LoadedNxPlugin } from '../loaded-nx-plugin';
 
 import { IsolatedPlugin } from './isolated-plugin';
 
-const loadedPlugins: Map<string, Promise<IsolatedPlugin>> = (global[
-  'nxLoadedPlugins'
-] ??= new Map());
+declare global {
+  var nxLoadedPlugins: Map<string, Promise<IsolatedPlugin>> | undefined;
+  var nxWantedPlugins: Map<string, Set<string>> | undefined;
+}
+
+const loadedPlugins: Map<
+  string,
+  Promise<IsolatedPlugin>
+> = (global.nxLoadedPlugins ??= new Map());
 
 /**
  * Keys each loader last asked for; a sweep keeps their union. Global like
  * `loadedPlugins`, or one copy of Nx would sweep another's workers.
  */
-const wantedBy: Map<string, Set<string>> = (global['nxWantedPlugins'] ??=
+const wantedBy: Map<string, Set<string>> = (global.nxWantedPlugins ??=
   new Map());
 
 /**

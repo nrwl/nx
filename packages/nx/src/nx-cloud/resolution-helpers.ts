@@ -1,7 +1,10 @@
 import { existsSync } from 'fs';
 import { dirname, isAbsolute, join, resolve } from 'path';
 
-export function findAncestorNodeModules(startPath, collector) {
+export function findAncestorNodeModules(
+  startPath: string,
+  collector: string[]
+): string[] {
   let currentPath = isAbsolute(startPath) ? startPath : resolve(startPath);
 
   while (currentPath !== dirname(currentPath)) {

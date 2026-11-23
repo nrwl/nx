@@ -334,11 +334,15 @@ export function withOverrides<T extends { _: Array<string | number> }>(
   args: T,
   commandLevel: number = 1
 ): T & { __overrides_unparsed__: string[] } {
-  const unparsedArgs: string[] = (args['--'] ?? args._.slice(commandLevel)).map(
-    (v) => v.toString()
-  );
-  delete args['--'];
-  delete args._;
+  const parsed: {
+    _?: Array<string | number>;
+    '--'?: Array<string | number>;
+  } = args;
+  const unparsedArgs: string[] = (
+    parsed['--'] ?? args._.slice(commandLevel)
+  ).map((v) => v.toString());
+  delete parsed['--'];
+  delete parsed._;
   return {
     ...args,
     __overrides_unparsed__: unparsedArgs,

@@ -13,7 +13,11 @@ import {
 import type { ReleaseGroupWithName } from '../config/filter-release-groups';
 import { FinalConfigForProject, ReleaseGraph } from '../utils/release-graph';
 import { resolveSemverSpecifierFromPrompt } from '../utils/resolve-semver-specifier';
-import type { VersionData, VersionDataEntry } from '../utils/shared';
+import {
+  getReleaseGroupFilteredProjects,
+  type VersionData,
+  type VersionDataEntry,
+} from '../utils/shared';
 import { deriveSpecifierFromConventionalCommits } from './derive-specifier-from-conventional-commits';
 import { deriveSpecifierFromVersionPlan } from './deriver-specifier-from-version-plans';
 import { ProjectLogger } from './project-logger';
@@ -41,9 +45,9 @@ export const BUMP_TYPE_REASON_TEXT = {
 } as const;
 
 interface ReleaseGroupProcessorOptions {
-  dryRun: boolean;
-  verbose: boolean;
-  firstRelease: boolean;
+  dryRun?: boolean;
+  verbose?: boolean;
+  firstRelease?: boolean;
   preid: string;
   // This could be a semver bump type, an exact semver version, or any arbitrary string to use as a new version
   userGivenSpecifier?: string;
@@ -279,17 +283,25 @@ export class ReleaseGroupProcessor {
     dockerVersionScheme?: string,
     dockerVersion?: string
   ) {
-    const dockerProjects = new Map<string, FinalConfigForProject>();
-    for (const project of this.versionData.keys()) {
+    const dockerProjects = new Map<
+      string,
+      {
+        finalConfigForProject: FinalConfigForProject | undefined;
+        projectVersionData: VersionDataEntry;
+      }
+    >();
+    for (const [project, projectVersionData] of this.versionData) {
       const hasDockerTechnology = Object.values(
         this.projectGraph.nodes[project]?.data?.targets ?? []
       ).some(({ metadata }) => metadata?.technologies?.includes('docker'));
       if (!hasDockerTechnology) {
         continue;
       }
-      const finalConfigForProject =
-        this.releaseGraph.finalConfigsByProject.get(project);
-      dockerProjects.set(project, finalConfigForProject);
+      dockerProjects.set(project, {
+        finalConfigForProject:
+          this.releaseGraph.finalConfigsByProject.get(project),
+        projectVersionData,
+      });
     }
     // If no docker projects to process, exit early to avoid unnecessary loading of docker handling
     if (dockerProjects.size === 0) {
@@ -298,7 +310,7 @@ export class ReleaseGroupProcessor {
     let handleDockerVersion: (
       workspaceRoot: string,
       projectGraphNode: ProjectGraphProjectNode,
-      finalConfigForProject: FinalConfigForProject,
+      finalConfigForProject: FinalConfigForProject | undefined,
       dockerVersionScheme?: string,
       dockerVersion?: string,
       versionActionsVersion?: string | null
@@ -315,9 +327,11 @@ export class ReleaseGroupProcessor {
       );
       throw e;
     }
-    for (const [project, finalConfigForProject] of dockerProjects.entries()) {
+    for (const [
+      project,
+      { finalConfigForProject, projectVersionData },
+    ] of dockerProjects.entries()) {
       const projectNode = this.projectGraph.nodes[project];
-      const projectVersionData = this.versionData.get(project);
       const { newVersion, logs } = await handleDockerVersion(
         workspaceRoot,
         projectNode,
@@ -520,8 +534,10 @@ export class ReleaseGroupProcessor {
   private async bumpIndependentVersionGroup(
     releaseGroup: ReleaseGroupWithName
   ): Promise<boolean> {
-    const releaseGroupFilteredProjects =
-      this.releaseGraph.releaseGroupToFilteredProjects.get(releaseGroup);
+    const releaseGroupFilteredProjects = getReleaseGroupFilteredProjects(
+      this.releaseGraph.releaseGroupToFilteredProjects,
+      releaseGroup
+    );
 
     let bumped = false;
     const projectBumpTypes = new Map<
@@ -652,7 +668,7 @@ export class ReleaseGroupProcessor {
           projectGraphNode,
           currentVersion
         );
-      if (bumpType !== 'none') {
+      if (bumpType !== 'none' && versionPlanPath) {
         this.processedVersionPlanFiles.add(versionPlanPath);
       }
       return {
@@ -737,7 +753,7 @@ export class ReleaseGroupProcessor {
   private getCurrentCachedVersionForProject(
     projectName: string
   ): string | null {
-    return this.releaseGraph.cachedCurrentVersions.get(projectName);
+    return this.releaseGraph.cachedCurrentVersions.get(projectName) ?? null;
   }
 
   private getCachedFinalConfigForProject(
@@ -808,14 +824,13 @@ export class ReleaseGroupProcessor {
           if (!currentDependencyVersion) {
             continue;
           }
+          const { versionPrefix } = cachedFinalConfigForProject;
           let finalPrefix = '';
-          if (cachedFinalConfigForProject.versionPrefix === 'auto') {
+          if (versionPrefix === 'auto') {
             const prefixMatch = currentDependencyVersion?.match(/^([~^=])/);
             finalPrefix = prefixMatch ? prefixMatch[1] : '';
-          } else if (
-            ['~', '^', '='].includes(cachedFinalConfigForProject.versionPrefix)
-          ) {
-            finalPrefix = cachedFinalConfigForProject.versionPrefix;
+          } else if (versionPrefix && ['~', '^', '='].includes(versionPrefix)) {
+            finalPrefix = versionPrefix;
           }
 
           const newVersion =
@@ -1059,20 +1074,33 @@ export class ReleaseGroupProcessor {
 
   private async getFixedReleaseGroupBumpType(
     releaseGroupName: string
-  ): Promise<SemverBumpType | SemverVersion> {
+  ): Promise<SemverBumpType | SemverVersion | null> {
     const releaseGroup =
       this.releaseGraph.groupGraph.get(releaseGroupName)!.group;
-    const releaseGroupFilteredProjects =
-      this.releaseGraph.releaseGroupToFilteredProjects.get(releaseGroup);
+    const releaseGroupFilteredProjects = getReleaseGroupFilteredProjects(
+      this.releaseGraph.releaseGroupToFilteredProjects,
+      releaseGroup
+    );
     if (releaseGroupFilteredProjects.size === 0) {
       return 'none';
     }
 
     // It's a fixed release group, so we can just pick any project in the group
-    const anyProject = releaseGroupFilteredProjects.values().next().value;
+    const [anyProject] = releaseGroupFilteredProjects;
+    const anyProjectVersionData = this.versionData.get(anyProject);
+    if (!anyProjectVersionData) {
+      throw new Error(
+        `Unexpected error: No version data found for project ${anyProject}, please report this as a bug on https://github.com/nrwl/nx/issues`
+      );
+    }
     // If already bumped, no need to re-calculate it
-    const { currentVersion, newVersion } = this.versionData.get(anyProject);
+    const { currentVersion, newVersion } = anyProjectVersionData;
     if (newVersion) {
+      if (currentVersion === null) {
+        throw new Error(
+          `Unexpected error: No current version found for project ${anyProject}, please report this as a bug on https://github.com/nrwl/nx/issues`
+        );
+      }
       return semver.diff(currentVersion, newVersion);
     }
 

@@ -22,7 +22,7 @@ export const noDiffInChangelogMessage = pc.yellow(
 export type VersionData = Record<string, VersionDataEntry>;
 
 export interface VersionDataEntry {
-  currentVersion: string;
+  currentVersion: string | null;
   /**
    * newVersion will be null in the case that no changes are detected for the project,
    * e.g. when using conventional commits
@@ -83,6 +83,15 @@ export class ReleaseVersion {
   }
 }
 
+function requireNewVersion(projectName: string, newVersion: string | null) {
+  if (newVersion === null) {
+    throw new Error(
+      `Unexpected error: No new version found for project ${projectName}, please report this as a bug on https://github.com/nrwl/nx/issues`
+    );
+  }
+  return newVersion;
+}
+
 export async function commitChanges({
   changedFiles,
   deletedFiles,
@@ -95,7 +104,7 @@ export async function commitChanges({
   deletedFiles?: string[];
   isDryRun?: boolean;
   isVerbose?: boolean;
-  gitCommitMessages?: string[];
+  gitCommitMessages: string[];
   gitCommitArgs?: string | string[];
 }) {
   if (!changedFiles?.length && !deletedFiles?.length) {
@@ -121,6 +130,19 @@ export async function commitChanges({
   });
 }
 
+export function getReleaseGroupFilteredProjects(
+  releaseGroupToFilteredProjects: Map<ReleaseGroupWithName, Set<string>>,
+  releaseGroup: ReleaseGroupWithName
+): Set<string> {
+  const filteredProjects = releaseGroupToFilteredProjects.get(releaseGroup);
+  if (!filteredProjects) {
+    throw new Error(
+      `No filtered projects found for release group "${releaseGroup.name}"`
+    );
+  }
+  return filteredProjects;
+}
+
 export function createCommitMessageValues(
   releaseGroups: ReleaseGroupWithName[],
   releaseGroupToFilteredProjects: Map<ReleaseGroupWithName, Set<string>>,
@@ -140,11 +162,17 @@ export function createCommitMessageValues(
   ) {
     const releaseGroup = releaseGroups[0];
     const releaseGroupProjectNames = Array.from(
-      releaseGroupToFilteredProjects.get(releaseGroup)
+      getReleaseGroupFilteredProjects(
+        releaseGroupToFilteredProjects,
+        releaseGroup
+      )
     );
     const projectVersionData = versionData[releaseGroupProjectNames[0]]; // all at the same version, so we can just pick the first one
     const releaseVersion = new ReleaseVersion({
-      version: projectVersionData.newVersion,
+      version: requireNewVersion(
+        releaseGroupProjectNames[0],
+        projectVersionData.newVersion
+      ),
       releaseTagPattern: releaseGroup.releaseTag.pattern,
       releaseGroupName: releaseGroup.name,
     });
@@ -166,12 +194,18 @@ export function createCommitMessageValues(
   ) {
     const releaseGroup = releaseGroups[0];
     const releaseGroupProjectNames = Array.from(
-      releaseGroupToFilteredProjects.get(releaseGroup)
+      getReleaseGroupFilteredProjects(
+        releaseGroupToFilteredProjects,
+        releaseGroup
+      )
     );
     if (releaseGroupProjectNames.length === 1) {
       const projectVersionData = versionData[releaseGroupProjectNames[0]];
       const releaseVersion = new ReleaseVersion({
-        version: projectVersionData.newVersion,
+        version: requireNewVersion(
+          releaseGroupProjectNames[0],
+          projectVersionData.newVersion
+        ),
         releaseTagPattern: releaseGroup.releaseTag.pattern,
         projectName: releaseGroupProjectNames[0],
         releaseGroupName: releaseGroup.name,
@@ -228,7 +262,10 @@ export function createCommitMessageValues(
 
     // One entry for the whole group for fixed groups
     const releaseGroupProjectNames = Array.from(
-      releaseGroupToFilteredProjects.get(releaseGroup)
+      getReleaseGroupFilteredProjects(
+        releaseGroupToFilteredProjects,
+        releaseGroup
+      )
     );
     const projectVersionData = versionData[releaseGroupProjectNames[0]]; // all at the same version, so we can just pick the first one
     if (projectVersionData.newVersion !== null) {
@@ -347,7 +384,10 @@ export function createGitTagValues(
     }
     // For fixed groups we want one tag for the overall group
     const releaseGroupProjectNames = Array.from(
-      releaseGroupToFilteredProjects.get(releaseGroup)
+      getReleaseGroupFilteredProjects(
+        releaseGroupToFilteredProjects,
+        releaseGroup
+      )
     );
     const projectVersionData = versionData[releaseGroupProjectNames[0]]; // all at the same version, so we can just pick the first one
     if (

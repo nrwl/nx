@@ -6,6 +6,7 @@ import { ProjectGraphBuilder } from '../../../../project-graph/project-graph-bui
 import { readJsonFile } from '../../../../utils/fileutils';
 import { PackageJson } from '../../../../utils/package-json';
 import { workspaceRoot } from '../../../../utils/workspace-root';
+import { getExternalNodes } from '../../lock-file/project-graph-pruning';
 
 export function buildNpmPackageNodes(builder: ProjectGraphBuilder) {
   const packageJsonPath = join(workspaceRoot, 'package.json');
@@ -17,7 +18,7 @@ export function buildNpmPackageNodes(builder: ProjectGraphBuilder) {
     ...packageJson.devDependencies,
   };
   Object.keys(deps).forEach((d) => {
-    if (!builder.graph.externalNodes[`npm:${d}`]) {
+    if (!getExternalNodes(builder.graph)[`npm:${d}`]) {
       builder.addExternalNode({
         type: 'npm',
         name: `npm:${d}`,

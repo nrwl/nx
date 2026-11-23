@@ -26,6 +26,8 @@ import { getProjectSourceRoot } from '../../utils/project-config';
 
 let tsModule: typeof import('typescript');
 
+type ProjectRef = { from: string; to: string | null | undefined };
+
 /**
  * Updates all the imports in the workspace and modifies the tsconfig appropriately.
  *
@@ -52,9 +54,9 @@ export function updateImports(
     : getRootTsConfigPathInTree(tree);
   // If we are using a ts solution setup, we need to use tsconfig.json instead of tsconfig.base.json
   let tsConfig: any;
-  let mainEntryPointImportPath: string;
-  let secondaryEntryPointImportPaths: string[];
-  let serverEntryPointImportPath: string;
+  let mainEntryPointImportPath: string | undefined;
+  let secondaryEntryPointImportPaths: string[] | undefined;
+  let serverEntryPointImportPath: string | undefined;
   if (tree.exists(tsConfigPath)) {
     tsConfig = readJson(tree, tsConfigPath);
     const sourceRoot = getProjectSourceRoot(project, tree);
@@ -62,7 +64,7 @@ export function updateImports(
     mainEntryPointImportPath = Object.keys(
       tsConfig.compilerOptions?.paths ?? {}
     ).find((path) =>
-      tsConfig.compilerOptions.paths[path].some((x) =>
+      tsConfig.compilerOptions.paths[path].some((x: string) =>
         stripDotSlash(x).startsWith(ensureTrailingSlash(sourceRoot))
       )
     );
@@ -70,7 +72,7 @@ export function updateImports(
       tsConfig.compilerOptions?.paths ?? {}
     ).filter((path) =>
       tsConfig.compilerOptions.paths[path].some(
-        (x) =>
+        (x: string) =>
           stripDotSlash(x).startsWith(ensureTrailingSlash(project.root)) &&
           !stripDotSlash(x).startsWith(ensureTrailingSlash(sourceRoot))
       )
@@ -82,7 +84,7 @@ export function updateImports(
       tsConfig.compilerOptions?.paths ?? {}
     ).find((path) =>
       tsConfig.compilerOptions.paths[path].some(
-        (x) =>
+        (x: string) =>
           stripDotSlash(x).startsWith(ensureTrailingSlash(sourceRoot)) &&
           x.includes('server') &&
           path.endsWith('server')
@@ -97,7 +99,7 @@ export function updateImports(
     )
   );
 
-  const projectRefs = [
+  const projectRefs: ProjectRef[] = [
     {
       from: mainEntryPointImportPath,
       to: schema.importPath,
@@ -131,7 +133,8 @@ export function updateImports(
   }
 
   for (const projectRef of projectRefs) {
-    if (schema.updateImportPath && projectRef.to) {
+    const to = projectRef.to;
+    if (schema.updateImportPath && to) {
       const replaceProjectRef = new RegExp(projectRef.from, 'g');
 
       for (const [name, definition] of Array.from(projects.entries())) {
@@ -140,13 +143,13 @@ export function updateImports(
         }
 
         visitNotIgnoredFiles(tree, definition.root, (file) => {
-          const contents = tree.read(file, 'utf-8');
+          const contents = tree.read(file, 'utf-8') ?? '';
           replaceProjectRef.lastIndex = 0;
           if (!replaceProjectRef.test(contents)) {
             return;
           }
 
-          updateImportPaths(tree, file, projectRef.from, projectRef.to);
+          updateImportPaths(tree, file, projectRef.from, to);
         });
       }
     }
@@ -181,7 +184,7 @@ function updateTsConfigReferences(
 ) {
   // Since paths can be './path' or 'path' we check if both are the same relative path to the workspace root
   const projectRefIndex = tsConfig.references.findIndex(
-    (ref) => relative(ref.path, projectRoot.from) === ''
+    (ref: { path: string }) => relative(ref.path, projectRoot.from) === ''
   );
   if (projectRefIndex === -1) {
     throw new Error(
@@ -211,7 +214,7 @@ function updateTsConfigReferences(
 
 function updateTsConfigPaths(
   tsConfig: any,
-  projectRef: { from: string; to: string },
+  projectRef: ProjectRef,
   tsConfigPath: string,
   projectRoot: { from: string; to: string },
   schema: NormalizedSchema
@@ -259,7 +262,7 @@ function updateImportPaths(tree: Tree, path: string, from: string, to: string) {
   if (!tsModule) {
     tsModule = ensureTypescript();
   }
-  const contents = tree.read(path, 'utf-8');
+  const contents = tree.read(path, 'utf-8') ?? '';
   const sourceFile = tsModule.createSourceFile(
     path,
     contents,

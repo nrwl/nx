@@ -16,7 +16,7 @@ import {
   type TreeIgnoreChecker,
 } from '../../utils/ignore';
 import { existsSync } from 'fs';
-import type { Tree } from '../tree';
+import type { FileChange, Tree } from '../tree';
 import { getNxRequirePaths } from '../../utils/installation-directory';
 import { output } from '../../utils/output';
 
@@ -51,8 +51,9 @@ export async function formatChangedFiles(
     tree
       .listChanges()
       .filter(
-        (file) =>
+        (file): file is FileChange & { content: Buffer } =>
           file.type !== 'DELETE' &&
+          file.content !== null &&
           !excludedPaths?.has(normalizePath(file.path))
       )
   );
@@ -164,7 +165,7 @@ async function formatFilesWithPrettier(
 ): Promise<Map<string, string>> {
   const results = new Map<string, string>();
 
-  let prettier: typeof Prettier;
+  let prettier: typeof Prettier | undefined;
   try {
     const prettierPath = require.resolve('prettier', {
       paths: [...getNxRequirePaths(root), __dirname],
@@ -223,7 +224,7 @@ async function formatFilesWithPrettier(
         if (!options?.silent) {
           output.warn({
             title: `Could not format ${file.path}`,
-            bodyLines: [e.message],
+            bodyLines: [e instanceof Error ? e.message : String(e)],
           });
         }
       }
@@ -265,7 +266,7 @@ async function runOxfmtBatch(
     if (!options?.silent) {
       output.warn({
         title: 'Could not format files with oxfmt',
-        bodyLines: [e.message],
+        bodyLines: [e instanceof Error ? e.message : String(e)],
       });
     }
     return new Map<string, string>();

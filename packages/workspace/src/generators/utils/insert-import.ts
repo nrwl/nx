@@ -23,6 +23,9 @@ export function insertImport(
   } = tsModule;
 
   const contents = tree.read(path, 'utf-8');
+  if (contents === null) {
+    throw new Error(`Cannot find ${path}`);
+  }
 
   const sourceFile = createSourceFile(path, contents, ScriptTarget.ESNext);
 
@@ -35,7 +38,7 @@ export function insertImport(
         .getText(sourceFile)
         .replace(/['"`]/g, '')
         .trim() === modulePath &&
-      statement.importClause.namedBindings &&
+      statement.importClause?.namedBindings &&
       isNamedImports(statement.importClause.namedBindings)
   );
   if (!existingImport) {
@@ -45,7 +48,7 @@ export function insertImport(
 
   // TODO: Also check if the namedImport already exists
   const namedImports = existingImport.importClause
-    .namedBindings as NamedImports;
+    ?.namedBindings as NamedImports;
 
   const index = namedImports.getEnd() - 1;
 
