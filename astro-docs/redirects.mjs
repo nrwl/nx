@@ -44,6 +44,11 @@ export const redirects = {
     '/docs/enterprise/single-tenant/overview',
   '/platform-features/enterprise/conformance-reference':
     '/docs/reference/conformance/overview',
+  // Conformance and owners left Enterprise when they became free (Nx 24.1).
+  '/enterprise/conformance': '/docs/features/conformance',
+  '/enterprise/owners': '/docs/features/owners',
+  '/core-features/enterprise/conformance-reference':
+    '/docs/core-features/code-organization/conformance',
   '/kb/setup-ci': '/docs/getting-started/setup-ci',
   // Executor reference pages removed in Nx 24 with their executors.
   '/technologies/test-tools/cypress/executors':

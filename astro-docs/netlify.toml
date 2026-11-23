@@ -1422,6 +1422,19 @@ to = "/docs/enterprise/single-tenant/overview"
 from = "/docs/platform-features/enterprise/conformance-reference"
 to = "/docs/reference/conformance/overview"
 
+# Conformance and owners left Enterprise when they became free (Nx 24.1).
+[[redirects]]
+from = "/docs/enterprise/conformance"
+to = "/docs/features/conformance"
+
+[[redirects]]
+from = "/docs/enterprise/owners"
+to = "/docs/features/owners"
+
+[[redirects]]
+from = "/docs/core-features/enterprise/conformance-reference"
+to = "/docs/core-features/code-organization/conformance"
+
 [[redirects]]
 from = "/docs/kb/setup-ci"
 to = "/docs/getting-started/setup-ci"

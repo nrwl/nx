@@ -21,7 +21,7 @@ Nx offers two complementary approaches to enforce module boundaries:
 
 **Lint rule integration**: For JavaScript/TypeScript projects, enforce boundaries on code imports with a lint rule for ESLint or Oxlint. This checks TypeScript imports and `package.json` dependencies during linting.
 
-**Language-Agnostic Conformance**: For any project type (e.g. Java, Python, PHP, JavaScript, etc.), use the [Conformance plugin's Enforce Project Boundaries rule](/docs/enterprise/conformance). This rule checks dependencies in the Nx graph during `nx conformance:check`.
+**Language-Agnostic Conformance**: For any project type (e.g. Java, Python, PHP, JavaScript, etc.), use the [Conformance plugin's Enforce Project Boundaries rule](/docs/features/conformance). This rule checks dependencies in the Nx graph during `nx conformance:check`.
 
 Both approaches use the same tag-based constraint system described below.
 
@@ -292,7 +292,7 @@ Run conformance checks in CI:
   run: npx nx conformance:check
 ```
 
-Learn more about [Conformance rules](/docs/enterprise/conformance).
+Learn more about [Conformance rules](/docs/features/conformance).
 
 {% /tabitem %}
 {% /tabs %}

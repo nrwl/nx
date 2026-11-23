@@ -516,8 +516,8 @@
 
 # --- enterpriseNxSection ---
 /features/powerpack /docs/enterprise 301
-/features/powerpack/conformance /docs/enterprise/conformance 301
-/features/powerpack/owners /docs/enterprise/owners 301
+/features/powerpack/conformance /docs/features/conformance 301
+/features/powerpack/owners /docs/features/owners 301
 /features/powerpack/custom-caching /docs/guides/tasks--caching/self-hosted-caching 301
 /recipes/installation/activate-powerpack /docs/enterprise/activate-license 301
 
@@ -534,7 +534,7 @@
 # --- cliAndCloudLinkFixes ---
 /ci/enterprise/conformance/configure-conformance-rules-in-nx-cloud /docs/enterprise/configure-conformance-rules-in-nx-cloud 301
 /ci/features/polygraph /docs/enterprise/polygraph 301
-/code-owners /docs/enterprise/owners 301
+/code-owners /docs/features/owners 301
 /nx-api/powerpack-shared-fs-cache /docs/reference/remote-cache-plugins/shared-fs-cache 301
 /nx-api/powerpack-s3-cache /docs/reference/remote-cache-plugins/s3-cache 301
 /nx-api/powerpack-gcs-cache /docs/reference/remote-cache-plugins/gcs-cache 301
@@ -544,8 +544,8 @@
 
 # --- powerpackRedirects ---
 /powerpack /docs/guides/tasks--caching/self-hosted-caching 301
-/powerpack/conformance /docs/enterprise/conformance 301
-/powerpack/owners /docs/enterprise/owners 301
+/powerpack/conformance /docs/features/conformance 301
+/powerpack/owners /docs/features/owners 301
 /powerpack/license /docs/reference/powerpack-license 301
 /powerpack/* /docs/enterprise 301
 /nx-enterprise/powerpack/custom-caching /docs/guides/tasks--caching/self-hosted-caching 301
@@ -569,8 +569,8 @@
 /docs/reference/powerpack/owners/overview /docs/reference/owners/overview 301
 /docs/reference/powerpack/owners/generators /docs/reference/owners/generators 301
 /docs/enterprise/powerpack /docs/enterprise 301
-/docs/enterprise/powerpack/conformance /docs/enterprise/conformance 301
-/docs/enterprise/powerpack/owners /docs/enterprise/owners 301
+/docs/enterprise/powerpack/conformance /docs/features/conformance 301
+/docs/enterprise/powerpack/owners /docs/features/owners 301
 /docs/enterprise/powerpack/configure-conformance-rules-in-nx-cloud /docs/enterprise/configure-conformance-rules-in-nx-cloud 301
 /docs/enterprise/powerpack/publish-conformance-rules-to-nx-cloud /docs/enterprise/publish-conformance-rules-to-nx-cloud 301
 /docs/enterprise/powerpack/licenses-and-trials /docs/enterprise 301
@@ -919,7 +919,7 @@
 /ci/recipes/enterprise /docs/enterprise 301
 /ci/recipes/enterprise/single-tenant/auth-saml /docs/enterprise/single-tenant 301
 /ci/recipes/enterprise/single-tenant/* /docs/enterprise/single-tenant/:splat 301
-/ci/recipes/enterprise/conformance /docs/enterprise/conformance 301
+/ci/recipes/enterprise/conformance /docs/features/conformance 301
 /ci/recipes/enterprise/conformance/configure-conformance-rules-in-nx-cloud /docs/enterprise/configure-conformance-rules-in-nx-cloud 301
 /ci/recipes/enterprise/conformance/publish-conformance-rules-to-nx-cloud /docs/enterprise/publish-conformance-rules-to-nx-cloud 301
 /ci/recipes/enterprise/polygraph /docs/enterprise/polygraph 301
@@ -965,10 +965,10 @@
 /nx-enterprise/activate-powerpack /docs/enterprise/activate-license 301
 /nx-enterprise/activate-license /docs/enterprise/activate-license 301
 /nx-enterprise/powerpack/licenses-and-trials /docs/enterprise 301
-/nx-enterprise/powerpack/conformance /docs/enterprise/conformance 301
-/nx-enterprise/powerpack/owners /docs/enterprise/owners 301
-/nx-enterprise/conformance /docs/enterprise/conformance 301
-/nx-enterprise/owners /docs/enterprise/owners 301
+/nx-enterprise/powerpack/conformance /docs/features/conformance 301
+/nx-enterprise/powerpack/owners /docs/features/owners 301
+/nx-enterprise/conformance /docs/features/conformance 301
+/nx-enterprise/owners /docs/features/owners 301
 /nx-enterprise/powerpack /docs/enterprise 301
 /plugin-registry /docs/plugin-registry 301
 /recipes /docs/guides 301
