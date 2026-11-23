@@ -50,8 +50,10 @@ export function isAndroid() {
   );
 }
 
+// One per test file, so newProject() never restores another file's backup. It sits
+// in the run directory from global-setup.ts, which teardown removes.
 export const e2eRoot = isCI
-  ? dirSync({ prefix: 'nx-e2e-' }).name
+  ? dirSync({ prefix: 'nx-e2e-', tmpdir: process.env.NX_E2E_RUN_DIR }).name
   : '/tmp/nx-e2e';
 
 export function isVerbose() {

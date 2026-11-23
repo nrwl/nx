@@ -110,6 +110,12 @@ export default async function (globalConfig: Config.ConfigGlobals) {
     // package cache. Do not reuse metadata from an earlier local registry.
     process.env.YARN_GLOBAL_FOLDER = join(e2eCacheDir, 'yarn-global');
 
+    // get-env-info.ts creates each test file's e2e root in here, so teardown can remove them all.
+    const e2eRunDir = isCI ? mkdtempSync(join(tmpdir(), 'nx-e2e-')) : undefined;
+    if (e2eRunDir) {
+      process.env.NX_E2E_RUN_DIR = e2eRunDir;
+    }
+
     process.env.NX_SKIP_PROVENANCE_CHECK = 'true';
 
     // Workspace installs would unzip the Cypress binary into the user's cache
@@ -130,6 +136,12 @@ export default async function (globalConfig: Config.ConfigGlobals) {
       // Clean up environment variable instead of npm config command
       delete process.env[`npm_config_//${listenAddress}:${port}/:_authToken`];
       delete process.env[`pnpm_config_//${listenAddress}:${port}/:_authToken`];
+      // Nothing else removes the run's caches and workspaces, which add up to
+      // gigabytes per agent. cleanupProject applies the same conditions to each workspace.
+      if (e2eRunDir && !process.env.NX_E2E_SKIP_PROJECT_CLEANUP) {
+        removeLeftovers(e2eCacheDir);
+        removeLeftovers(e2eRunDir);
+      }
     };
 
     /**
@@ -170,6 +182,15 @@ export default async function (globalConfig: Config.ConfigGlobals) {
       console.log('Killed local registry process due to an error during setup');
     }
     throw err;
+  }
+}
+
+// A throwing global teardown fails the Jest run even when every test passed.
+function removeLeftovers(dir: string) {
+  try {
+    removeSync(dir);
+  } catch (err) {
+    console.warn(`Could not remove ${dir}: ${(err as Error).message}`);
   }
 }
 
