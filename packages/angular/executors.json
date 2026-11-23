@@ -10,6 +10,11 @@
       "schema": "./dist/src/executors/ng-packagr-lite/schema.json",
       "description": "Builds an Angular library with support for incremental builds.\n\nThis executor is meant to be used with buildable libraries in an incremental build scenario. It is similar to the `@nx/angular:package` executor but it only produces ESM2022 bundles."
     },
+    "library": {
+      "implementation": "./dist/src/executors/library/library.impl",
+      "schema": "./dist/src/executors/library/schema.json",
+      "description": "Builds an Angular library producing an output following the Angular Package Format (APF), using the `@angular/build:library` builder. _Note: this is only supported in Angular versions >= 22.3.0_."
+    },
     "package": {
       "implementation": "./dist/src/executors/package/package.impl",
       "schema": "./dist/src/executors/package/schema.json",
