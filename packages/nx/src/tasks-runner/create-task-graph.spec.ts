@@ -9,12 +9,32 @@ import {
 } from '../config/workspace-json-project-json';
 import {
   createTaskGraph,
+  assertOverridesAccepted,
   createTaskGraphWithDependencyOverrides,
+  unsentOverrides,
   filterDummyTasks,
   getNonDummyDeps,
   filterTaskGraphToSelection,
 } from './create-task-graph';
 import { pruneToSelectedTasks } from './utils';
+import { getExecutorInformation } from '../command-line/run/executor-utils';
+
+const mockSchemas = vi.hoisted((): Record<string, object> => ({}));
+vi.mock('../command-line/run/executor-utils', async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import('../command-line/run/executor-utils')>();
+  return {
+    ...actual,
+    getExecutorInformation: vi.fn(
+      (...args: Parameters<typeof actual.getExecutorInformation>) => {
+        const schema = mockSchemas[`${args[0]}:${args[1]}`];
+        return schema
+          ? ({ schema } as ReturnType<typeof actual.getExecutorInformation>)
+          : actual.getExecutorInformation(...args);
+      }
+    ),
+  };
+});
 
 describe('createTaskGraph', () => {
   let projectGraph: ProjectGraph;
@@ -4877,7 +4897,11 @@ describe('createTaskGraphWithDependencyOverrides', () => {
       );
     expect(taskGraph.tasks['lib:build'].overrides).toEqual(cli);
     expect(dependencyOverrides['lib:build']).toEqual([
-      { from: 'app:build', overrides: { __overrides_unparsed__: [] } },
+      {
+        from: 'app:build',
+        overrides: { __overrides_unparsed__: [] },
+        delivery: { sent: [], unsent: [] },
+      },
     ]);
     expect(dependencyOverrides['app:build']).toBeUndefined();
   });
@@ -4892,7 +4916,11 @@ describe('createTaskGraphWithDependencyOverrides', () => {
       cli
     );
     expect(dependencyOverrides['lib:build']).toEqual([
-      { from: 'app:build', overrides: cli },
+      {
+        from: 'app:build',
+        overrides: cli,
+        delivery: { sent: ['flag'], unsent: [] },
+      },
     ]);
   });
 });
@@ -4945,7 +4973,7 @@ describe('filterTaskGraphToSelection', () => {
     candidates: string[],
     initial: string[]
   ) {
-    const { taskGraph, dependencyOverrides } =
+    const { taskGraph, overrideDeliveries, dependencyOverrides } =
       createTaskGraphWithDependencyOverrides(
         projectGraph,
         {},
@@ -4957,10 +4985,11 @@ describe('filterTaskGraphToSelection', () => {
     return filterTaskGraphToSelection(
       projectGraph,
       taskGraph,
+      overrideDeliveries,
       dependencyOverrides,
       new Set(initial),
       new Set([...initial, 'lib:build'])
-    );
+    )?.taskGraph;
   }
 
   // lib:build is initial in the full graph, so it took the CLI outputPath. The
@@ -5028,7 +5057,7 @@ describe('filterTaskGraphToSelection', () => {
         x: [],
       },
     } as ProjectGraph;
-    const { taskGraph, dependencyOverrides } =
+    const { taskGraph, overrideDeliveries, dependencyOverrides } =
       createTaskGraphWithDependencyOverrides(
         projectGraph,
         {},
@@ -5042,10 +5071,11 @@ describe('filterTaskGraphToSelection', () => {
     const result = filterTaskGraphToSelection(
       projectGraph,
       taskGraph,
+      overrideDeliveries,
       dependencyOverrides,
       new Set(['a:build']),
       keep
-    );
+    )?.taskGraph;
 
     const expected = pruneToSelectedTasks(
       createTaskGraph(projectGraph, {}, ['a'], ['build'], undefined, cli),
@@ -5142,5 +5172,321 @@ describe('dependsOn with inputs: false', () => {
       { projects: ['app'], target: 'build', inputs: false },
     ]);
     expect(taskGraph.dependencies['e2e:e2e']).toEqual([{ id: 'app:build' }]);
+  });
+});
+
+describe('override routing', () => {
+  const target = (
+    executor: string,
+    extra: Partial<TargetConfiguration> = {}
+  ): TargetConfiguration => ({ executor, ...extra });
+
+  function graph(
+    nodes: Record<string, Record<string, TargetConfiguration>>,
+    dependencies: Record<string, string[]> = {}
+  ): ProjectGraph {
+    return {
+      nodes: Object.fromEntries(
+        Object.entries(nodes).map(([name, targets]) => [
+          name,
+          { name, type: 'lib', data: { root: name, targets } },
+        ])
+      ),
+      dependencies: Object.fromEntries(
+        Object.keys(nodes).map((name) => [
+          name,
+          (dependencies[name] ?? []).map((target) => ({
+            source: name,
+            target,
+            type: DependencyType.static,
+          })),
+        ])
+      ),
+    };
+  }
+
+  beforeEach(() => {
+    mockSchemas['test:fixer'] = {
+      additionalProperties: false,
+      properties: {
+        fix: { type: 'boolean' },
+        baseHref: { type: 'string', aliases: ['b'] },
+      },
+    };
+    mockSchemas['test:check'] = { additionalProperties: false, properties: {} };
+    mockSchemas['test:keeper'] = {
+      additionalProperties: false,
+      properties: { keep: { type: 'string' } },
+    };
+    mockSchemas['test:open'] = { properties: {} };
+    vi.mocked(getExecutorInformation).mockClear();
+  });
+
+  const app = () =>
+    graph({ app: { lint: target('test:fixer'), check: target('test:check') } });
+
+  // app:check forwards its params to lib:lint.
+  const forwardingApp = () =>
+    graph(
+      {
+        app: {
+          check: target('test:check', {
+            dependsOn: [
+              { target: 'lint', dependencies: true, params: 'forward' },
+            ],
+          }),
+        },
+        lib: { lint: target('test:fixer') },
+      },
+      { app: ['lib'] }
+    );
+
+  function route(
+    projectGraph: ProjectGraph,
+    projects: string[],
+    targets: string[],
+    overrides: Record<string, unknown>,
+    excludeTaskDependencies = false
+  ) {
+    return createTaskGraphWithDependencyOverrides(
+      projectGraph,
+      {},
+      projects,
+      targets,
+      undefined,
+      overrides,
+      excludeTaskDependencies
+    );
+  }
+
+  it('lists, per task, the overrides its executor does not accept', () => {
+    const { taskGraph, overrideDeliveries } = route(
+      graph({
+        app: {
+          lint: target('test:fixer'),
+          check: target('test:check'),
+          open: target('test:open'),
+        },
+      }),
+      ['app'],
+      ['lint', 'check', 'open'],
+      { fix: true, __overrides_unparsed__: ['--fix'] }
+    );
+    expect(unsentOverrides(overrideDeliveries, taskGraph)).toEqual({
+      'app:check': ['fix'],
+    });
+  });
+
+  it('gives each task only the overrides its executor accepts', () => {
+    const taskGraph = createTaskGraph(
+      app(),
+      {},
+      ['app'],
+      ['lint', 'check'],
+      undefined,
+      { fix: true, __overrides_unparsed__: ['--fix'] }
+    );
+    expect(taskGraph.tasks['app:lint'].overrides).toEqual({
+      fix: true,
+      __overrides_unparsed__: ['--fix'],
+    });
+    expect(taskGraph.tasks['app:check'].overrides).toEqual({
+      __overrides_unparsed__: [],
+    });
+  });
+
+  it('removes every form of an unsent override from the raw arguments', () => {
+    const taskGraph = createTaskGraph(
+      graph({ app: { keep: target('test:keeper') } }),
+      {},
+      ['app'],
+      ['keep'],
+      undefined,
+      {
+        fix: true,
+        'base-href': '/x',
+        outputPath: 'dist',
+        watch: false,
+        b: '/y',
+        keep: 'k',
+        _: ['pos'],
+        __overrides_unparsed__: [
+          '--fix',
+          '--base-href=/x',
+          '--outputPath',
+          'dist',
+          '--no-watch',
+          '-b',
+          '/y',
+          '--keep',
+          'k',
+          'pos',
+        ],
+      }
+    );
+    expect(taskGraph.tasks['app:keep'].overrides).toEqual({
+      keep: 'k',
+      _: ['pos'],
+      __overrides_unparsed__: ['--keep', 'k', 'pos'],
+    });
+  });
+
+  it('routes kebab-case and alias forms to the accepting task', () => {
+    const taskGraph = createTaskGraph(
+      app(),
+      {},
+      ['app'],
+      ['lint', 'check'],
+      undefined,
+      { 'base-href': '/x', b: '/y' }
+    );
+    expect(taskGraph.tasks['app:lint'].overrides).toEqual({
+      'base-href': '/x',
+      b: '/y',
+    });
+    expect(taskGraph.tasks['app:check'].overrides).toEqual({});
+  });
+
+  it('gives a task on an accept-all executor every override and argument', () => {
+    const taskGraph = createTaskGraph(
+      graph({ app: { lint: target('test:fixer'), run: target('test:open') } }),
+      {},
+      ['app'],
+      ['lint', 'run'],
+      undefined,
+      { fix: true, other: 1, __overrides_unparsed__: ['--fix', '--other=1'] }
+    );
+    expect(taskGraph.tasks['app:run'].overrides).toEqual({
+      fix: true,
+      other: 1,
+      __overrides_unparsed__: ['--fix', '--other=1'],
+    });
+  });
+
+  it('keeps positional arguments on every task', () => {
+    const taskGraph = createTaskGraph(
+      app(),
+      {},
+      ['app'],
+      ['lint', 'check'],
+      undefined,
+      { fix: true, _: ['x'] }
+    );
+    expect(taskGraph.tasks['app:check'].overrides).toEqual({ _: ['x'] });
+  });
+
+  it('fails when no task accepts an override', () => {
+    const { taskGraph, overrideDeliveries } = route(
+      app(),
+      ['app'],
+      ['lint', 'check'],
+      { fxi: true }
+    );
+    expect(() =>
+      assertOverridesAccepted(overrideDeliveries, taskGraph)
+    ).toThrow(
+      "'fxi' is not in the schema of any task in this run (app:lint, app:check)"
+    );
+  });
+
+  it('checks only the tasks in the graph it is given', () => {
+    const { taskGraph, overrideDeliveries } = route(
+      app(),
+      ['app'],
+      ['lint', 'check'],
+      { fix: true }
+    );
+    const onlyCheck = pruneToSelectedTasks(taskGraph, ['app:check']);
+    const none = pruneToSelectedTasks(taskGraph, []);
+    expect(() =>
+      assertOverridesAccepted(overrideDeliveries, onlyCheck)
+    ).toThrow("'fix' is not in the schema of any task in this run (app:check)");
+    expect(() =>
+      assertOverridesAccepted(overrideDeliveries, none)
+    ).not.toThrow();
+  });
+
+  it('routes overrides forwarded to dependencies, which count as recipients', () => {
+    const { taskGraph, overrideDeliveries } = route(
+      forwardingApp(),
+      ['app'],
+      ['check'],
+      { fix: true }
+    );
+    expect(taskGraph.tasks['app:check'].overrides).toEqual({});
+    expect(taskGraph.tasks['lib:lint'].overrides).toEqual({ fix: true });
+    expect(() =>
+      assertOverridesAccepted(overrideDeliveries, taskGraph)
+    ).not.toThrow();
+  });
+
+  it('fails when only an excluded dependency accepts an override', () => {
+    const { taskGraph, overrideDeliveries } = route(
+      forwardingApp(),
+      ['app'],
+      ['check'],
+      { fix: true },
+      true
+    );
+    expect(() =>
+      assertOverridesAccepted(overrideDeliveries, taskGraph)
+    ).toThrow("'fix' is not in the schema of any task in this run (app:check)");
+  });
+
+  it('routes the overrides recorded for dependency edges', () => {
+    const { dependencyOverrides } = route(
+      graph({
+        app: {
+          lint: target('test:fixer', {
+            dependsOn: [{ target: 'check', params: 'forward' }],
+          }),
+          check: target('test:check'),
+        },
+      }),
+      ['app'],
+      ['lint'],
+      { fix: true }
+    );
+    expect(dependencyOverrides['app:check']).toEqual([
+      {
+        from: 'app:lint',
+        overrides: {},
+        delivery: { sent: [], unsent: ['fix'] },
+      },
+    ]);
+  });
+
+  it('reads each executor schema once per task graph', () => {
+    createTaskGraph(
+      graph({
+        a: { lint: target('test:fixer') },
+        b: { lint: target('test:fixer') },
+      }),
+      {},
+      ['a', 'b'],
+      ['lint'],
+      undefined,
+      { fix: true }
+    );
+    expect(getExecutorInformation).toHaveBeenCalledTimes(1);
+  });
+
+  it('reads no schema when there are no named overrides', () => {
+    createTaskGraph(app(), {}, ['app'], ['lint', 'check'], undefined, {
+      __overrides_unparsed__: [],
+    });
+    expect(getExecutorInformation).not.toHaveBeenCalled();
+  });
+
+  it('gives every override to a task whose executor cannot be resolved', () => {
+    const taskGraph = createTaskGraph(
+      graph({ app: { lint: target('missing:executor') } }),
+      {},
+      ['app'],
+      ['lint'],
+      undefined,
+      { fxi: true }
+    );
+    expect(taskGraph.tasks['app:lint'].overrides).toEqual({ fxi: true });
   });
 });

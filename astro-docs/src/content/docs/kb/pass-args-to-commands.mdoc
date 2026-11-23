@@ -297,3 +297,18 @@ nx test mobile-e2e --configuration=ci --args="--configuration=ios.sim.release"
 ```
 
 {% /aside %}
+
+## Pass args to several tasks at once
+
+When one command runs several tasks, for example `nx run-many -t lint,check --fix`, Nx sends each arg only to the tasks whose executor accepts it.
+An executor accepts an arg when its schema lists the option (by name or alias), or when its schema allows any option.
+Accept-all executors such as `nx:run-commands` get every arg, as do inferred tasks that run a command.
+
+If no task in the run accepts an arg, the run fails before any task starts:
+
+```text
+'fxi' is not in the schema of any task in this run (my-app:lint, my-app:check)
+```
+
+To see which args Nx didn't send to a task, add `--verbose`.
+Nx prints one line per task, such as `--fix not sent to my-app:check (not in executor schema)`.

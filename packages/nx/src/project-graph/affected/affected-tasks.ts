@@ -18,9 +18,10 @@ import {
 } from '../../ultracache/store';
 import type { UltracacheConfigurationVersion } from '../../daemon/message-types/ultracache-configuration-version';
 import {
-  createTaskGraph,
+  assertOverridesAccepted,
   createTaskGraphWithDependencyOverrides,
   filterTaskGraphToSelection,
+  unsentOverrides,
 } from '../../tasks-runner/create-task-graph';
 import { runnableForTarget } from '../../utils/project-graph-utils';
 import {
@@ -305,7 +306,7 @@ async function matchAffectedTasks(
     };
   }
 
-  const { taskGraph, dependencyOverrides } =
+  const { taskGraph, overrideDeliveries, dependencyOverrides } =
     createTaskGraphWithDependencyOverrides(
       projectGraph,
       request.extraTargetDependencies,
@@ -411,6 +412,19 @@ async function matchAffectedTasks(
     ).used.filter((id) => runnable.has(id) && !kept.has(id));
   }
 
+  // Edges that disagree on a dependency's overrides leave it to a build
+  // from the owning projects, which settles them the way the run always has.
+  const selected =
+    filterTaskGraphToSelection(
+      projectGraph,
+      taskGraph,
+      overrideDeliveries,
+      dependencyOverrides,
+      initial,
+      new Set(keep)
+    ) ?? selectFromOwningProjects(projectGraph, request, [...owning], keep);
+  assertOverridesAccepted(selected.overrideDeliveries, selected.taskGraph);
+
   return {
     affectedTaskIds: new Set(selection.affected),
     taskGraph,
@@ -427,32 +441,37 @@ async function matchAffectedTasks(
       requested: requestedTasks(taskIds, taskGraph, targets, options),
     },
     taskSelection: {
-      // Edges that disagree on a dependency's overrides leave it to a build
-      // from the owning projects, which settles them the way the run always has.
-      taskGraph:
-        filterTaskGraphToSelection(
-          projectGraph,
-          taskGraph,
-          dependencyOverrides,
-          initial,
-          new Set(keep)
-        ) ??
-        pruneToSelectedTasks(
-          createTaskGraph(
-            projectGraph,
-            request.extraTargetDependencies,
-            [...owning],
-            targets,
-            request.configuration,
-            request.overrides,
-            request.excludeTaskDependencies
-          ),
-          keep
-        ),
+      taskGraph: selected.taskGraph,
+      unsentOverrides: unsentOverrides(
+        selected.overrideDeliveries,
+        selected.taskGraph
+      ),
       initiatingTaskIds: keep.filter((id) => initial.has(id)),
       taskIds: keep,
       ultracacheSkippedTaskIds,
     },
+  };
+}
+
+function selectFromOwningProjects(
+  projectGraph: ProjectGraph,
+  request: AffectedTasksRequest,
+  owning: string[],
+  keep: string[]
+) {
+  const { taskGraph, overrideDeliveries } =
+    createTaskGraphWithDependencyOverrides(
+      projectGraph,
+      request.extraTargetDependencies,
+      owning,
+      request.targets,
+      request.configuration,
+      request.overrides,
+      request.excludeTaskDependencies
+    );
+  return {
+    taskGraph: pruneToSelectedTasks(taskGraph, keep),
+    overrideDeliveries,
   };
 }
 

@@ -29,6 +29,17 @@ vi.mock('../../tasks-runner/utils', async (importOriginal) => {
         : actual.getExecutorForTask(task, projects),
   };
 });
+const mockSchemas = vi.hoisted((): Record<string, object> => ({}));
+vi.mock('../../command-line/run/executor-utils', async (importOriginal) => {
+  const actual = await importOriginal<any>();
+  return {
+    ...actual,
+    getExecutorInformation: (...args: any[]) => {
+      const schema = mockSchemas[`${args[0]}:${args[1]}`];
+      return schema ? { schema } : actual.getExecutorInformation(...args);
+    },
+  };
+});
 import {
   computeAffectedTasks,
   selectsAffectedTasks,
@@ -1441,5 +1452,77 @@ describe('taskGranularityRequirement', () => {
     expect(taskGranularityRequirement()).toBe(
       'NX_LEGACY_AFFECTED unset or set to false'
     );
+  });
+});
+
+describe('CLI overrides in a task-level selection', () => {
+  // app:lint reads only src/lint, app:check reads all of src.
+  function strictApp(): ProjectGraph {
+    return {
+      nodes: {
+        app: {
+          name: 'app',
+          type: 'app',
+          data: {
+            root: 'packages/js',
+            targets: {
+              lint: {
+                executor: 'test:fixer',
+                inputs: ['{projectRoot}/src/lint/**/*'],
+              },
+              check: {
+                executor: 'test:check',
+                inputs: ['{projectRoot}/src/**/*'],
+              },
+            },
+          },
+        },
+      },
+      dependencies: { app: [] },
+      externalNodes: {},
+    } as any;
+  }
+
+  const select = (targets: string[], file: string, overrides: object) =>
+    computeAffectedTasks({
+      projectGraph: strictApp(),
+      nxJson: {} as any,
+      targets,
+      touchedFiles: [
+        { file, getChanges: () => [new WholeFileChange()] },
+      ] as any,
+      overrides: { ...overrides, __overrides_unparsed__: [] },
+    });
+
+  beforeEach(() => {
+    mockSchemas['test:fixer'] = {
+      additionalProperties: false,
+      properties: { fix: { type: 'boolean' } },
+    };
+    mockSchemas['test:check'] = { additionalProperties: false, properties: {} };
+  });
+
+  it('passes when no selected task gets an override', async () => {
+    const result = await select(['check'], 'README.md', { fxi: true });
+    expect(result.taskSelection.taskIds).toEqual([]);
+  });
+
+  it('fails when no selected task accepts an override', async () => {
+    await expect(
+      select(['lint', 'check'], 'packages/js/src/index.ts', { fix: true })
+    ).rejects.toThrow(
+      "'fix' is not in the schema of any task in this run (app:check)"
+    );
+  });
+
+  it('lists the overrides each selected task did not get', async () => {
+    const result = await select(
+      ['lint', 'check'],
+      'packages/js/src/lint/index.ts',
+      { fix: true }
+    );
+    expect(result.taskSelection.unsentOverrides).toEqual({
+      'app:check': ['fix'],
+    });
   });
 });
