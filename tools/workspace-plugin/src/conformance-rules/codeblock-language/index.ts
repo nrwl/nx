@@ -47,6 +47,9 @@ export default createConformanceRule({
         continue;
       }
       const content = tree.read(file, 'utf-8');
+      if (content === null) {
+        throw new Error(`Could not read ${file}`);
+      }
 
       const fileViolations = checkCodeBlocks(content, file);
       violations.push(...fileViolations);

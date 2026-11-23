@@ -73,7 +73,7 @@ function menuItemToStrings(item: MenuItem, pathPrefix = '/'): string[] {
     .split('/')
     .map(() => '  ')
     .join('');
-  const childLines = item.children.flatMap((child) =>
+  const childLines = item.children.flatMap((child: MenuItem) =>
     menuItemToStrings(child, pathPrefix)
   );
   return [padding + line, ...childLines];
@@ -91,7 +91,7 @@ export async function generateIndexMarkdownFile(
     const [firstLetter, ...rest] = word;
     return firstLetter.toLocaleUpperCase() + rest.join('');
   }
-  const idToPathPrefix = {
+  const idToPathPrefix: Record<string, string | undefined> = {
     nx: undefined,
     recipes: `/recipes/`,
     plugins: `/plugins/`,
@@ -273,7 +273,7 @@ export function generateOptionsMarkdown(
       .sort((a, b) => sortAlphabeticallyFunction(a.name[0], b.name[0]))
       .filter(({ hidden }) => !hidden)
       .forEach((option) => {
-        function nameAliases(aliases) {
+        function nameAliases(aliases: string[]) {
           return aliases.map((alias) => code('--' + alias)).join(', ');
         }
         const name = option.deprecated

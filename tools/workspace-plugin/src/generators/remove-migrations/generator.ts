@@ -12,6 +12,14 @@ export interface RemoveMigrationsGeneratorSchema {
   v: number;
 }
 
+interface MigrationsJson {
+  generators?: Record<
+    string,
+    { version: string; implementation?: string; factory?: string }
+  >;
+  packageJsonUpdates?: Record<string, { version: string }>;
+}
+
 export async function removeMigrationsGenerator(
   tree: Tree,
   { v }: RemoveMigrationsGeneratorSchema
@@ -43,9 +51,9 @@ export async function removeMigrationsGenerator(
     if (migrations.startsWith('.')) {
       const migrationsPath = join(dirname(path), migrations);
 
-      updateJson(tree, migrationsPath, (migrationsJson) => {
-        const { generators, packageJsonUpdates } = migrationsJson;
-        for (const [migrationName, m] of Object.entries(generators ?? {})) {
+      updateJson<MigrationsJson>(tree, migrationsPath, (migrationsJson) => {
+        const { generators = {}, packageJsonUpdates = {} } = migrationsJson;
+        for (const [migrationName, m] of Object.entries(generators)) {
           if (major(m['version']) < v) {
             const implFile = getImplFile(tree, migrationsPath, m);
             const dir = dirname(implFile);
@@ -57,12 +65,12 @@ export async function removeMigrationsGenerator(
               console.log(e);
             }
 
-            delete migrationsJson.generators[migrationName];
+            delete generators[migrationName];
           }
         }
 
         for (const [updateName, packageJsonUpdate] of Object.entries(
-          packageJsonUpdates ?? {}
+          packageJsonUpdates
         )) {
           if (major(packageJsonUpdate['version']) < v) {
             delete packageJsonUpdates[updateName];
@@ -90,6 +98,11 @@ function getImplFile(
   }
 ) {
   const rawPath = implementation ?? factory;
+  if (!rawPath) {
+    throw new Error(
+      `Migration in ${migrationsFilePath} has no implementation or factory`
+    );
+  }
 
   const fullPath = join(dirname(migrationsFilePath), rawPath);
 

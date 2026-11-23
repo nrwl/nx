@@ -121,7 +121,11 @@ function isPullRequest(issue: IssueItem): boolean {
 }
 
 function prClosedAt(pr: IssueItem): Date {
-  return new Date(pr.pull_request?.merged_at ?? pr.closed_at);
+  const closedAt = pr.pull_request?.merged_at ?? pr.closed_at;
+  if (!closedAt) {
+    throw new Error(`PR #${pr.number} has no closed date`);
+  }
+  return new Date(closedAt);
 }
 
 function toIssue(issue: IssueItem, scopeLabels: string[]): ScrapedIssue {

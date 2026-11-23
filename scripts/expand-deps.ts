@@ -170,7 +170,12 @@ function main() {
   for (const document of documents) {
     if (document.errors.length) throw document.errors[0];
   }
-  const lockfile: Lockfile = documents.at(-1).toJS();
+  const lastDocument = documents.at(-1);
+  if (!lastDocument) {
+    console.error('ERROR: No YAML document found in pnpm-lock.yaml');
+    process.exit(1);
+  }
+  const lockfile: Lockfile = lastDocument.toJS();
 
   // Find the importer entry for this package
   const importerKey = `packages/${project}`;

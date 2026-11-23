@@ -962,6 +962,9 @@ importers:
       '@types/yargs':
         specifier: 17.0.10
         version: 17.0.10
+      '@types/yargs-parser':
+        specifier: 21.0.3
+        version: 21.0.3
       '@types/yarnpkg__lockfile':
         specifier: ^1.1.5
         version: 1.1.9
@@ -1547,6 +1550,9 @@ importers:
 
   e2e/nx:
     dependencies:
+      '@nx/angular':
+        specifier: workspace:*
+        version: link:../../packages/angular
       '@nx/e2e-utils':
         specifier: workspace:*
         version: link:../utils

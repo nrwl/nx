@@ -37,7 +37,7 @@ export function buildReport(
   const scopeLabels = new Set<string>();
   for (const items of Object.values(data)) {
     for (const item of items) {
-      item.scopes.forEach((s) => scopeLabels.add(s));
+      item.scopes.forEach((s: string) => scopeLabels.add(s));
     }
   }
 

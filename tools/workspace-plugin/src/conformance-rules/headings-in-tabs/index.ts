@@ -38,7 +38,11 @@ export default createConformanceRule({
       if (!file.endsWith('.mdoc')) {
         continue;
       }
-      violations.push(...checkHeadingsInTabs(tree.read(file, 'utf-8'), file));
+      const content = tree.read(file, 'utf-8');
+      if (content === null) {
+        throw new Error(`Could not read ${file}`);
+      }
+      violations.push(...checkHeadingsInTabs(content, file));
     }
 
     return {

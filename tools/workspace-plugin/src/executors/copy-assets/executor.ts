@@ -23,6 +23,9 @@ export async function copyAssetsExecutor(
   context: ExecutorContext
 ): Promise<{ success: boolean }> {
   const projectName = context.projectName;
+  if (!projectName) {
+    throw new Error('The copy-assets executor requires a project.');
+  }
   const projectRoot =
     context.projectsConfigurations?.projects[projectName]?.root || projectName;
 
