@@ -654,8 +654,6 @@ describe('createPackageJson', () => {
       },
     });
 
-    // An npm lockfile that installs each of the graph's packages from the
-    // registry.
     const npmLockFile = (projectGraph: ProjectGraph) => ({
       packages: Object.fromEntries(
         Object.values(projectGraph.externalNodes).map(
@@ -1360,7 +1358,9 @@ describe('createPackageJson', () => {
           .spyOn(fs, 'existsSync')
           .mockImplementation(
             (path) =>
-              path === 'libs/lib1/package.json' || path === 'package.json'
+              path === 'libs/lib1/package.json' ||
+              path === 'package.json' ||
+              path === 'package-lock.json'
           )
       );
       spies.push(
@@ -1372,6 +1372,9 @@ describe('createPackageJson', () => {
                 typescript: { '.': '5.0.0' },
               },
             };
+          }
+          if (path === 'package-lock.json') {
+            return npmLockFile(graph);
           }
           if (path === 'libs/lib1/package.json') {
             return projectPackageJson();
@@ -1515,7 +1518,6 @@ describe('createPackageJson', () => {
                   tslib: '$tslib',
                   bar: '$typescript',
                 },
-                // Other overrides are kept as they are.
                 nx: { '.': '$nx' },
                 qux: '$tslib',
               },
