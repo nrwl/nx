@@ -488,6 +488,57 @@ async function resolveValidConfigFilesAndHashes(
     );
   }
 
+  // A build target's inputs depend on which referenced projects get a build
+  // target of their own, known only once every config file is validated.
+  const buildConfigName = options.build ? options.build.configName : undefined;
+  if (buildConfigName) {
+    validConfigFilePaths.forEach((configFilePath, idx) => {
+      const config = getConfigContext(
+        join(context.workspaceRoot, configFilePath),
+        context.workspaceRoot,
+        cache
+      );
+      if (config.basename !== buildConfigName) {
+        return;
+      }
+      const referencedProjectRoots = new Set(
+        Object.keys(
+          resolveShallowExternalProjectReferences(
+            retrieveTsConfigFromCache(
+              config.absolutePath,
+              context.workspaceRoot,
+              cache
+            ),
+            context.workspaceRoot,
+            config.project,
+            cache
+          )
+        ).map(
+          (refConfigPath) =>
+            getConfigContext(refConfigPath, context.workspaceRoot, cache)
+              .project.root
+        )
+      );
+      if (referencedProjectRoots.size) {
+        hashes[idx] = hashArray([
+          hashes[idx],
+          ...Array.from(referencedProjectRoots)
+            .sort()
+            .map(
+              (root) =>
+                `${root}:${willInferBuildTarget(
+                  root,
+                  options,
+                  validConfigFilePaths,
+                  context.workspaceRoot,
+                  cache
+                )}`
+            ),
+        ]);
+      }
+    });
+  }
+
   return { configFilePaths: validConfigFilePaths, hashes, projectRoots };
 }
 
@@ -666,27 +717,17 @@ function buildTscTargets(
       if (options.build && targets[options.build.targetName]) {
         // we already processed and have a build target
         buildTargetName = options.build.targetName;
-      } else if (options.build) {
-        // check if the project will have a build target
-        const buildConfigPath = joinPathFragments(
+      } else if (
+        options.build &&
+        willInferBuildTarget(
           config.project.root,
-          options.build.configName
-        );
-        if (
-          configFiles.some((f) => f === buildConfigPath) &&
-          (options.build.skipBuildCheck ||
-            isValidPackageJsonBuildConfig(
-              retrieveTsConfigFromCache(
-                buildConfigPath,
-                context.workspaceRoot,
-                cache
-              ),
-              context.workspaceRoot,
-              config.project.root
-            ))
-        ) {
-          buildTargetName = options.build.targetName;
-        }
+          options,
+          configFiles,
+          context.workspaceRoot,
+          cache
+        )
+      ) {
+        buildTargetName = options.build.targetName;
       }
 
       const target = createTypecheckTarget({
@@ -764,7 +805,15 @@ function buildTscTargets(
         tsConfig,
         internalProjectReferences,
         context.workspaceRoot,
-        cache
+        cache,
+        (projectRoot) =>
+          willInferBuildTarget(
+            projectRoot,
+            options,
+            configFiles,
+            context.workspaceRoot,
+            cache
+          )
       ),
       outputs: getOutputs(
         config,
@@ -878,13 +927,45 @@ function readTargets(
   }
 }
 
+/**
+ * Whether this plugin invocation infers a build target for the project.
+ * Another plugin, or another entry of this one, may still give it one.
+ */
+function willInferBuildTarget(
+  projectRoot: string,
+  options: NormalizedPluginOptions,
+  configFiles: readonly string[],
+  workspaceRoot: string,
+  cache: InvocationCache
+): boolean {
+  if (!options.build) {
+    return false;
+  }
+  const buildConfigPath = joinPathFragments(
+    projectRoot,
+    options.build.configName
+  );
+  return (
+    configFiles.includes(buildConfigPath) &&
+    (options.build.skipBuildCheck ||
+      isValidPackageJsonBuildConfig(
+        retrieveTsConfigFromCache(buildConfigPath, workspaceRoot, cache),
+        workspaceRoot,
+        projectRoot
+      ))
+  );
+}
+
 function getInputs(
   namedInputs: NxJsonConfiguration['namedInputs'],
   config: ConfigContext,
   tsConfig: ParsedTsconfigData,
   internalProjectReferences: Record<string, ParsedTsconfigData>,
   workspaceRoot: string,
-  cache: InvocationCache
+  cache: InvocationCache,
+  // Set for a build target: says whether a referenced project is built by a
+  // task of its own. `tsc --build` compiles the others from their sources.
+  isBuiltProject?: (projectRoot: string) => boolean
 ): TargetConfiguration['inputs'] {
   const configFiles = new Set<string>();
   // TODO(leo): temporary disable external dependencies until we support hashing
@@ -942,12 +1023,15 @@ function getInputs(
   // checking its last component, so specs like "." and ".." resolve to a
   // directory name first.
   // https://github.com/microsoft/TypeScript/blob/19b777260b26aac5707b1efd34202054164d4a9d/src/compiler/utilities.ts#L9577-L9585
-  const isImplicitGlobSpec = (spec: string): boolean =>
-    !/[.*?]/.test(basename(resolve(absoluteProjectRoot, spec)));
+  const isImplicitGlobSpec = (
+    spec: string,
+    baseDir = absoluteProjectRoot
+  ): boolean => !/[.*?]/.test(basename(resolve(baseDir, spec)));
 
   const normalizeInput = (
     input: string,
-    config: ParsedTsconfigData
+    config: ParsedTsconfigData,
+    baseDir = absoluteProjectRoot
   ): string[] => {
     const extensions = config.options.allowJs
       ? [...allSupportedExtensions]
@@ -957,7 +1041,7 @@ function getInputs(
     }
 
     // An "includes" path "foo" is implicitly a glob "foo/**/*"
-    if (isImplicitGlobSpec(input)) {
+    if (isImplicitGlobSpec(input, baseDir)) {
       return extensions.map((ext) => `${input}/**/*${ext}`);
     }
 
@@ -1106,14 +1190,58 @@ function getInputs(
     dependencies: true,
   });
 
-  const externalRefPatterns = getExternalProjectReferenceTsconfigPatterns(
+  const externalRefs = getExternalProjectReferences(
     tsConfig,
     internalProjectReferences,
     workspaceRoot,
     config.project,
     cache
   );
-  inputs.push(...externalRefPatterns);
+  inputs.push(...externalRefs.tsconfigPatterns);
+
+  if (isBuiltProject) {
+    // No task emits the declarations of a referenced project that is not
+    // built, so the `dependentTasksOutputFiles` input above never sees them.
+    // `tsc --build` compiles that project itself, so its sources are inputs.
+    const sourceInputs = new Set<string>();
+    for (const ref of externalRefs.references) {
+      if (
+        ref.ownerProject.normalized === config.project.normalized ||
+        isBuiltProject(ref.ownerProject.root)
+      ) {
+        continue;
+      }
+      const refTsConfig = retrieveTsConfigFromCache(
+        ref.configPath,
+        workspaceRoot,
+        cache
+      );
+      const refDir = dirname(ref.configPath);
+      const toInput = (spec: string) =>
+        `{workspaceRoot}/${joinPathFragments(
+          posixRelative(workspaceRoot, refDir),
+          substituteConfigDir(spec)
+        )}`;
+      // TS includes everything under the config's directory by default.
+      const include: string[] =
+        refTsConfig.raw?.include ?? (refTsConfig.raw?.files ? [] : ['.']);
+      for (const spec of [...include, ...(refTsConfig.raw?.files ?? [])]) {
+        for (const input of normalizeInput(spec, refTsConfig, refDir)) {
+          sourceInputs.add(toInput(input));
+        }
+      }
+      for (const spec of refTsConfig.raw?.exclude ?? []) {
+        sourceInputs.add(
+          `!${toInput(isImplicitGlobSpec(spec, refDir) ? `${spec}/**/*` : spec)}`
+        );
+      }
+    }
+    // `always` keeps them in the hash when an Ultracache recording, made
+    // while the declarations happened to exist, read none of these sources.
+    inputs.push(
+      ...Array.from(sourceInputs, (fileset) => ({ fileset, always: true }))
+    );
+  }
 
   // inputs.push({ externalDependencies });
 
@@ -1506,13 +1634,17 @@ function resolveShallowExternalProjectReferences(
  * and returns them as `^{projectRoot}/...` input patterns. We only need to
  * discover the full set of distinct relative paths.
  */
-function getExternalProjectReferenceTsconfigPatterns(
+function getExternalProjectReferences(
   tsConfig: ParsedTsconfigData,
   internalProjectReferences: Record<string, ParsedTsconfigData>,
   workspaceRoot: string,
   project: ProjectContext,
   cache: InvocationCache
-): string[] {
+): {
+  tsconfigPatterns: string[];
+  /** Every tsconfig the reference chain reaches, with the project owning it. */
+  references: { configPath: string; ownerProject: ProjectContext }[];
+} {
   const externalRefs: Record<string, ParsedTsconfigData> = {};
 
   // Collect direct external references from the root tsconfig
@@ -1539,7 +1671,12 @@ function getExternalProjectReferenceTsconfigPatterns(
   // reference chain, seeded with the external refs.
   const uniqueRelPaths = new Set<string>();
   const visited = new Set<string>();
-  const worklist: { configPath: string; ownerProject: ProjectContext }[] = [];
+  const worklist: {
+    configPath: string;
+    ownerProject: ProjectContext;
+    isReference: boolean;
+  }[] = [];
+  const references: { configPath: string; ownerProject: ProjectContext }[] = [];
 
   for (const refConfigPath of Object.keys(externalRefs)) {
     const refContext = getConfigContext(refConfigPath, workspaceRoot, cache);
@@ -1549,16 +1686,20 @@ function getExternalProjectReferenceTsconfigPatterns(
     worklist.push({
       configPath: refConfigPath,
       ownerProject: refContext.project,
+      isReference: true,
     });
   }
 
   for (let i = 0; i < worklist.length; i++) {
-    const { configPath, ownerProject } = worklist[i];
+    const { configPath, ownerProject, isReference } = worklist[i];
 
     if (visited.has(configPath)) {
       continue;
     }
     visited.add(configPath);
+    if (isReference) {
+      references.push({ configPath, ownerProject });
+    }
 
     const expansion = getReferenceExpansion(
       configPath,
@@ -1577,6 +1718,7 @@ function getExternalProjectReferenceTsconfigPatterns(
       worklist.push({
         configPath: extended.configPath,
         ownerProject: extended.ownerProject,
+        isReference: false,
       });
     }
 
@@ -1590,14 +1732,18 @@ function getExternalProjectReferenceTsconfigPatterns(
         worklist.push({
           configPath: ref.configPath,
           ownerProject: ref.ownerProject,
+          isReference: true,
         });
       }
     }
   }
 
-  return Array.from(uniqueRelPaths).map(
-    (relPath) => `^{projectRoot}/${relPath}`
-  );
+  return {
+    tsconfigPatterns: Array.from(uniqueRelPaths).map(
+      (relPath) => `^{projectRoot}/${relPath}`
+    ),
+    references,
+  };
 }
 
 /**

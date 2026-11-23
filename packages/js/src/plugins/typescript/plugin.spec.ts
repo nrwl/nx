@@ -5734,7 +5734,7 @@ snapshots:
             compilerOptions: { outDir: 'dist' },
           }),
           'libs/other-lib/tsconfig.json': JSON.stringify({
-            include: ['**/*.ts'], // different pattern that should not be included because it's an external project
+            include: ['**/*.ts'], // has no build target, so `tsc --build` compiles it from these sources
           }),
           'libs/my-lib/package.json': `{"main": "dist/index.js"}`, // Should be defined so that the project is considered buildable
         });
@@ -5770,6 +5770,10 @@ snapshots:
                         "fileset": "{projectRoot}/**/*.{d.ts,d.cts,d.mts}",
                       },
                       "^{projectRoot}/tsconfig.json",
+                      {
+                        "always": true,
+                        "fileset": "{workspaceRoot}/libs/other-lib/**/*.ts",
+                      },
                     ],
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
@@ -5802,6 +5806,143 @@ snapshots:
             },
           }
         `);
+      });
+
+      it('should add the sources of referenced projects that have no build target', async () => {
+        configFiles = await applyFilesToTempFsAndContext(tempFs, {
+          'libs/my-lib/tsconfig.json': '{}',
+          'libs/my-lib/tsconfig.lib.json': JSON.stringify({
+            compilerOptions: { outDir: 'dist' },
+            include: ['src/**/*.ts'],
+            references: [
+              { path: '../built-lib/tsconfig.lib.json' },
+              { path: '../source-lib/tsconfig.lib.json' },
+            ],
+          }),
+          'libs/my-lib/package.json': `{"main": "dist/index.js"}`,
+          // built by its own task, so its declarations come from that task
+          'libs/built-lib/tsconfig.json': '{}',
+          'libs/built-lib/tsconfig.lib.json': JSON.stringify({
+            compilerOptions: { outDir: 'dist' },
+            include: ['src/**/*.ts'],
+          }),
+          'libs/built-lib/package.json': `{"main": "dist/index.js"}`,
+          // consumed from source: its package.json points at the sources
+          'libs/source-lib/tsconfig.json': '{}',
+          'libs/source-lib/tsconfig.lib.json': JSON.stringify({
+            compilerOptions: { outDir: 'dist' },
+            include: ['src'],
+            exclude: ['src/**/*.spec.ts', 'fixtures'],
+            references: [{ path: '../nested-source-lib' }],
+          }),
+          'libs/source-lib/package.json': `{"main": "src/index.ts"}`,
+          // reached only through source-lib, with the default include
+          'libs/nested-source-lib/tsconfig.json': JSON.stringify({
+            compilerOptions: { outDir: 'dist' },
+          }),
+          'libs/nested-source-lib/package.json': `{"main": "src/index.ts"}`,
+        });
+        const result = await invokeCreateNodesOnMatchingFiles(
+          configFiles,
+          context,
+          { typecheck: false, build: true }
+        );
+
+        expect(result.projects['libs/built-lib'].targets.build).toBeDefined();
+        expect(
+          result.projects['libs/source-lib'].targets?.build
+        ).toBeUndefined();
+        expect(
+          result.projects['libs/nested-source-lib'].targets?.build
+        ).toBeUndefined();
+        expect(result.projects['libs/my-lib'].targets.build.inputs)
+          .toMatchInlineSnapshot(`
+            [
+              "{projectRoot}/package.json",
+              "{projectRoot}/tsconfig.lib.json",
+              "{projectRoot}/src/**/*.ts",
+              {
+                "dependentTasksOutputFiles": "**/*.{d.ts,d.cts,d.mts,tsbuildinfo}",
+                "transitive": true,
+              },
+              {
+                "dependencies": true,
+                "fileset": "{projectRoot}/**/*.{d.ts,d.cts,d.mts}",
+              },
+              "^{projectRoot}/tsconfig.lib.json",
+              {
+                "always": true,
+                "fileset": "{workspaceRoot}/libs/source-lib/src/**/*.ts",
+              },
+              {
+                "always": true,
+                "fileset": "{workspaceRoot}/libs/source-lib/src/**/*.tsx",
+              },
+              {
+                "always": true,
+                "fileset": "{workspaceRoot}/libs/source-lib/src/**/*.d.ts",
+              },
+              {
+                "always": true,
+                "fileset": "{workspaceRoot}/libs/source-lib/src/**/*.cts",
+              },
+              {
+                "always": true,
+                "fileset": "{workspaceRoot}/libs/source-lib/src/**/*.d.cts",
+              },
+              {
+                "always": true,
+                "fileset": "{workspaceRoot}/libs/source-lib/src/**/*.mts",
+              },
+              {
+                "always": true,
+                "fileset": "{workspaceRoot}/libs/source-lib/src/**/*.d.mts",
+              },
+              {
+                "always": true,
+                "fileset": "!{workspaceRoot}/libs/source-lib/src/**/*.spec.ts",
+              },
+              {
+                "always": true,
+                "fileset": "!{workspaceRoot}/libs/source-lib/fixtures/**/*",
+              },
+              {
+                "always": true,
+                "fileset": "{workspaceRoot}/libs/nested-source-lib/**/*.ts",
+              },
+              {
+                "always": true,
+                "fileset": "{workspaceRoot}/libs/nested-source-lib/**/*.tsx",
+              },
+              {
+                "always": true,
+                "fileset": "{workspaceRoot}/libs/nested-source-lib/**/*.d.ts",
+              },
+              {
+                "always": true,
+                "fileset": "{workspaceRoot}/libs/nested-source-lib/**/*.cts",
+              },
+              {
+                "always": true,
+                "fileset": "{workspaceRoot}/libs/nested-source-lib/**/*.d.cts",
+              },
+              {
+                "always": true,
+                "fileset": "{workspaceRoot}/libs/nested-source-lib/**/*.mts",
+              },
+              {
+                "always": true,
+                "fileset": "{workspaceRoot}/libs/nested-source-lib/**/*.d.mts",
+              },
+            ]
+          `);
+        // A built project hashes nothing but its own files.
+        expect(
+          result.projects['libs/built-lib'].targets.build.inputs.filter(
+            (input) =>
+              typeof input === 'string' && input.includes('{workspaceRoot}')
+          )
+        ).toEqual([]);
       });
 
       it('should only collect tsconfig patterns from the build reference chain', async () => {
