@@ -315,12 +315,16 @@ export async function getGitDiff(
   return commits;
 }
 
-async function getChangedTrackedFiles(cwd: string): Promise<Set<string>> {
-  const result = await execCommand('git', ['status', '--porcelain'], {
-    cwd,
-  });
-  const lines = result.split('\n').filter((l) => l.trim().length > 0);
-  return new Set(lines.map((l) => l.substring(3)));
+async function getUnstagedDeletions(
+  files: string[],
+  cwd: string
+): Promise<string[]> {
+  const result = await execCommand(
+    'git',
+    ['ls-files', '--deleted', '-z', '--', ...files],
+    { cwd }
+  );
+  return result.split('\0').filter(Boolean);
 }
 
 export async function gitAdd({
@@ -353,17 +357,20 @@ export async function gitAdd({
     }
   }
 
-  if (deletedFiles?.length > 0) {
-    const changedTrackedFiles = await getChangedTrackedFiles(cwd);
-    for (const f of deletedFiles ?? []) {
-      const isFileIgnored = await isIgnored(f, cwd);
-      if (isFileIgnored) {
-        ignoredFiles.push(f);
-        // git add will fail if trying to add an untracked file that doesn't exist
-      } else if (changedTrackedFiles.has(f) || dryRun) {
-        filesToAdd.push(f);
-      }
+  const deletedFilesToCheck: string[] = [];
+  for (const f of deletedFiles ?? []) {
+    const isFileIgnored = await isIgnored(f, cwd);
+    if (isFileIgnored) {
+      ignoredFiles.push(f);
+    } else {
+      deletedFilesToCheck.push(f);
     }
+  }
+  if (dryRun) {
+    filesToAdd.push(...deletedFilesToCheck);
+  } else if (deletedFilesToCheck.length > 0) {
+    // git add fails on a missing path the index no longer tracks
+    filesToAdd.push(...(await getUnstagedDeletions(deletedFilesToCheck, cwd)));
   }
 
   if (verbose && ignoredFiles.length) {
