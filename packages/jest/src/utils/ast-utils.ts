@@ -27,8 +27,8 @@ export function addTransformerToConfig(
       `${TS_QUERY_JEST_CONFIG_PREFIX} > ObjectLiteralExpression`,
       (node: ObjectLiteralExpression) => {
         return `{
-${node.properties.map((p) => p.getText()).join(',\n')},
-transform: { ${transformer} }
+  ${node.properties.map((p) => p.getText()).join(',\n  ')},
+  transform: { ${transformer} }
 }`;
       }
     );
