@@ -18,6 +18,8 @@ import * as outputModule from './output';
 describe('analytics-prompt', () => {
   let originalStdinIsTTY: boolean | undefined;
   let originalStdoutIsTTY: boolean | undefined;
+  let originalColumns: number | undefined;
+  let originalRows: number | undefined;
 
   let mockIsCI = vi.spyOn(isCi, 'isCI');
   let mockReadNxJson = vi.spyOn(nxJson, 'readNxJson');
@@ -43,12 +45,18 @@ describe('analytics-prompt', () => {
     // Save original TTY values
     originalStdinIsTTY = process.stdin.isTTY;
     originalStdoutIsTTY = process.stdout.isTTY;
+    originalColumns = process.stdout.columns;
+    originalRows = process.stdout.rows;
+    process.stdout.columns = 80;
+    process.stdout.rows = 24;
   });
 
   afterEach(() => {
     // Restore TTY values
     process.stdin.isTTY = originalStdinIsTTY;
     process.stdout.isTTY = originalStdoutIsTTY;
+    process.stdout.columns = originalColumns;
+    process.stdout.rows = originalRows;
   });
 
   describe('ensureAnalyticsPreferenceSet', () => {
@@ -70,6 +78,19 @@ describe('analytics-prompt', () => {
 
       await ensureAnalyticsPreferenceSet();
 
+      expect(mockPrompt).not.toHaveBeenCalled();
+      expect(mockWriteFormattedJsonFile).not.toHaveBeenCalled();
+    });
+
+    it('should skip prompting when the terminal reports a 0x0 size', async () => {
+      mockIsCI.mockReturnValue(false);
+      process.stdin.isTTY = true;
+      process.stdout.isTTY = true;
+      process.stdout.columns = 0;
+      process.stdout.rows = 0;
+      mockReadNxJson.mockReturnValue({});
+
+      expect(await ensureAnalyticsPreferenceSet()).toBe('unset');
       expect(mockPrompt).not.toHaveBeenCalled();
       expect(mockWriteFormattedJsonFile).not.toHaveBeenCalled();
     });
