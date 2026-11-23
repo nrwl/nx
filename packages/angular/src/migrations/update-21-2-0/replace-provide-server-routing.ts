@@ -2,6 +2,7 @@ import { formatFiles, visitNotIgnoredFiles, type Tree } from '@nx/devkit';
 import {
   ensureTypescript,
   ast,
+  printNodeUpdate,
   query,
   type TypescriptAst,
 } from '@nx/devkit/internal';
@@ -9,12 +10,9 @@ import type {
   ArrayLiteralExpression,
   CallExpression,
   ImportDeclaration,
-  Node,
+  ImportSpecifier,
 } from 'typescript';
-import {
-  FileChangeRecorder,
-  spliceListElements,
-} from '../../utils/file-change-recorder';
+import { FileChangeRecorder } from '../../utils/file-change-recorder';
 import { getProjectsFilteredByDependencies } from '../utils/projects';
 
 let ts: TypescriptAst;
@@ -64,7 +62,15 @@ function processFile(tree: Tree, filePath: string): void {
     return;
   }
 
-  if (!providersArray.elements.some(isServerRoutingCall)) {
+  if (
+    !providersArray.elements.some(
+      (el) =>
+        ts.isCallExpression(el) &&
+        ts.isIdentifier(el.expression) &&
+        (el.expression.text === 'provideServerRouting' ||
+          el.expression.text === 'provideServerRoutesConfig')
+    )
+  ) {
     return;
   }
 
@@ -77,58 +83,86 @@ function processFile(tree: Tree, filePath: string): void {
     ts.isCallExpression(el)
   );
   for (const node of providerCallNodes) {
-    if (isProvideServerRenderingCall(node)) {
+    const name = ts.isIdentifier(node.expression)
+      ? node.expression.text
+      : undefined;
+    if (name === 'provideServerRendering') {
       provideServerRenderingCall = node;
-    } else if (isServerRoutingCall(node)) {
+    } else if (
+      name === 'provideServerRouting' ||
+      name === 'provideServerRoutesConfig'
+    ) {
       provideServerRoutingCall = node;
     }
   }
 
-  const [routesArgument] = provideServerRoutingCall.arguments;
-  const lastRoutingArgument =
-    provideServerRoutingCall.arguments[
-      provideServerRoutingCall.arguments.length - 1
-    ];
-  const provideServerRenderingArguments = `withRoutes(${routesArgument.getText()})${content.slice(
-    routesArgument.getEnd(),
-    lastRoutingArgument.getEnd()
-  )}`;
+  const withRoutesCall = ts.factory.createCallExpression(
+    ts.factory.createIdentifier('withRoutes'),
+    undefined,
+    [provideServerRoutingCall.arguments.at(0)]
+  );
 
+  let updatedProvidersArray: ArrayLiteralExpression;
   if (provideServerRenderingCall) {
     // remove the "provideServerRouting" and "provideServerRoutesConfig"
     // calls and update the existing "provideServerRendering" call
-    spliceListElements(
-      recorder,
-      providersArray.elements,
-      providersArray.getEnd() - 1,
-      isServerRoutingCall
+    updatedProvidersArray = ts.factory.updateArrayLiteralExpression(
+      providersArray,
+      providersArray.elements
+        .filter(
+          (el) =>
+            !(
+              ts.isCallExpression(el) &&
+              ts.isIdentifier(el.expression) &&
+              (el.expression.text === 'provideServerRouting' ||
+                el.expression.text === 'provideServerRoutesConfig')
+            )
+        )
+        .map((el) => {
+          if (
+            ts.isCallExpression(el) &&
+            ts.isIdentifier(el.expression) &&
+            el.expression.text === 'provideServerRendering'
+          ) {
+            return ts.factory.updateCallExpression(
+              el,
+              el.expression,
+              el.typeArguments,
+              [withRoutesCall, ...provideServerRoutingCall.arguments.slice(1)]
+            );
+          }
+
+          return el;
+        })
     );
-    for (const el of providersArray.elements) {
-      if (isProvideServerRenderingCall(el)) {
-        const args = el.arguments;
-        if (args.length) {
-          recorder.remove(args[0].getStart(), args[args.length - 1].getEnd());
-          recorder.insertLeft(
-            args[0].getStart(),
-            provideServerRenderingArguments
-          );
-        } else {
-          recorder.insertLeft(el.getEnd() - 1, provideServerRenderingArguments);
-        }
-      }
-    }
   } else {
     // replace the "provideServerRouting" and "provideServerRoutesConfig"
     // calls with the new "provideServerRendering" call
-    for (const el of providersArray.elements) {
-      if (isServerRoutingCall(el)) {
-        recorder.replace(
-          el,
-          `provideServerRendering(${provideServerRenderingArguments})`
-        );
-      }
-    }
+    updatedProvidersArray = ts.factory.updateArrayLiteralExpression(
+      providersArray,
+      providersArray.elements.map((el) => {
+        if (
+          ts.isCallExpression(el) &&
+          ts.isIdentifier(el.expression) &&
+          (el.expression.text === 'provideServerRouting' ||
+            el.expression.text === 'provideServerRoutesConfig')
+        ) {
+          return ts.factory.createCallExpression(
+            ts.factory.createIdentifier('provideServerRendering'),
+            undefined,
+            [withRoutesCall, ...provideServerRoutingCall.arguments.slice(1)]
+          );
+        }
+
+        return el;
+      })
+    );
   }
+
+  recorder.replace(
+    providersArray,
+    printNodeUpdate(providersArray, updatedProvidersArray)
+  );
 
   const importDecl = sourceFile.statements.find(
     (stmt) =>
@@ -143,36 +177,33 @@ function processFile(tree: Tree, filePath: string): void {
     if (ts.isNamedImports(namedBindings)) {
       // remove the "provideServerRouting" and "provideServerRoutesConfig"
       // imports and ensure we have the "withRoutes" import
-      spliceListElements(
-        recorder,
-        namedBindings.elements,
-        namedBindings.getEnd() - 1,
+      const isImportOf = (el: ImportSpecifier, name: string) =>
+        !el.propertyName && el.name.text === name;
+      const keptElements = namedBindings.elements.filter(
         (el) =>
-          el.getText() === 'provideServerRouting' ||
-          el.getText() === 'provideServerRoutesConfig',
-        namedBindings.elements.some((el) => el.getText() === 'withRoutes')
-          ? undefined
-          : 'withRoutes'
+          !isImportOf(el, 'provideServerRouting') &&
+          !isImportOf(el, 'provideServerRoutesConfig')
+      );
+      const updatedNamedBindings = ts.factory.updateNamedImports(
+        namedBindings,
+        keptElements.some((el) => isImportOf(el, 'withRoutes'))
+          ? keptElements
+          : [
+              ...keptElements,
+              ts.factory.createImportSpecifier(
+                false,
+                undefined,
+                ts.factory.createIdentifier('withRoutes')
+              ),
+            ]
+      );
+
+      recorder.replace(
+        namedBindings,
+        printNodeUpdate(namedBindings, updatedNamedBindings)
       );
     }
   }
 
   recorder.applyChanges();
-}
-
-function isProvideServerRenderingCall(node: Node): node is CallExpression {
-  return (
-    ts.isCallExpression(node) &&
-    ts.isIdentifier(node.expression) &&
-    node.expression.text === 'provideServerRendering'
-  );
-}
-
-function isServerRoutingCall(node: Node): node is CallExpression {
-  return (
-    ts.isCallExpression(node) &&
-    ts.isIdentifier(node.expression) &&
-    (node.expression.text === 'provideServerRouting' ||
-      node.expression.text === 'provideServerRoutesConfig')
-  );
 }

@@ -215,4 +215,70 @@ export const config = mergeApplicationConfig(appConfig, serverConfig);
       "
     `);
   });
+
+  it('should keep the comments of the "@angular/ssr" imports it keeps', async () => {
+    tree.write(
+      'apps/app1/src/app/app.config.server.ts',
+      `import { ApplicationConfig } from '@angular/core';
+import {
+  provideServerRendering,
+  // keeps the app shell
+  withAppShell,
+  provideServerRouting,
+} from '@angular/ssr';
+import { serverRoutes } from './app.routes.server';
+
+const serverConfig: ApplicationConfig = {
+  providers: [provideServerRendering(), provideServerRouting(serverRoutes)],
+};
+`
+    );
+
+    await migration(tree);
+
+    expect(tree.read('apps/app1/src/app/app.config.server.ts', 'utf-8'))
+      .toMatchInlineSnapshot(`
+      "import { ApplicationConfig } from '@angular/core';
+      import {
+        provideServerRendering,
+        // keeps the app shell
+        withAppShell,
+        withRoutes,
+      } from '@angular/ssr';
+      import { serverRoutes } from './app.routes.server';
+
+      const serverConfig: ApplicationConfig = {
+        providers: [provideServerRendering(withRoutes(serverRoutes))],
+      };
+      "
+    `);
+  });
+
+  it('should migrate a "provideServerRouting" call written with escapes', async () => {
+    tree.write(
+      'apps/app1/src/app/app.config.server.ts',
+      `import { ApplicationConfig } from '@angular/core';
+import { provideServerRendering, provideServerRouting } from '@angular/ssr';
+import { serverRoutes } from './app.routes.server';
+
+const serverConfig: ApplicationConfig = {
+  providers: [provideServerRendering(), provideServerRout\\u0069ng(serverRoutes)],
+};
+`
+    );
+
+    await migration(tree);
+
+    expect(tree.read('apps/app1/src/app/app.config.server.ts', 'utf-8'))
+      .toMatchInlineSnapshot(`
+      "import { ApplicationConfig } from '@angular/core';
+      import { provideServerRendering, withRoutes } from '@angular/ssr';
+      import { serverRoutes } from './app.routes.server';
+
+      const serverConfig: ApplicationConfig = {
+        providers: [provideServerRendering(withRoutes(serverRoutes))],
+      };
+      "
+    `);
+  });
 });

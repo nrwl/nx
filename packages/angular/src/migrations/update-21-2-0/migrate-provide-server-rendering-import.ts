@@ -4,12 +4,13 @@ import {
   visitNotIgnoredFiles,
   type Tree,
 } from '@nx/devkit';
-import { ensureTypescript, type TypescriptAst } from '@nx/devkit/internal';
-import type { ImportDeclaration, NamedImports } from 'typescript';
 import {
-  FileChangeRecorder,
-  spliceListElements,
-} from '../../utils/file-change-recorder';
+  ensureTypescript,
+  printNodeUpdate,
+  type TypescriptAst,
+} from '@nx/devkit/internal';
+import type { ImportDeclaration, NamedImports } from 'typescript';
+import { FileChangeRecorder } from '../../utils/file-change-recorder';
 import { angularDevkitVersion } from '../../utils/versions';
 import { getProjectsFilteredByDependencies } from '../utils/projects';
 
@@ -113,12 +114,20 @@ function processFile(tree: Tree, filePath: string): boolean {
   ) {
     const namedBindingsNode = ssrImportNode.importClause!
       .namedBindings as NamedImports;
-    spliceListElements(
-      recorder,
-      namedBindingsNode.elements,
-      namedBindingsNode.getEnd() - 1,
-      () => false,
-      'provideServerRendering'
+    const updatedNamedBindingsNode = ts.factory.updateNamedImports(
+      namedBindingsNode,
+      [
+        ...namedBindingsNode.elements,
+        ts.factory.createImportSpecifier(
+          false,
+          undefined,
+          ts.factory.createIdentifier('provideServerRendering')
+        ),
+      ]
+    );
+    recorder.replace(
+      namedBindingsNode,
+      printNodeUpdate(namedBindingsNode, updatedNamedBindingsNode)
     );
   } else {
     /**
@@ -140,11 +149,15 @@ function processFile(tree: Tree, filePath: string): boolean {
     // imports, so we can safely use the type
     const namedBindingsNode = platformServerImportNode.importClause!
       .namedBindings as NamedImports;
-    spliceListElements(
-      recorder,
-      namedBindingsNode.elements,
-      namedBindingsNode.getEnd() - 1,
-      (e) => !platformServerImports.has(e.getText(sourceFile))
+    const updatedNamedBindingsNode = ts.factory.updateNamedImports(
+      namedBindingsNode,
+      namedBindingsNode.elements.filter((e) =>
+        platformServerImports.has(e.getText(sourceFile))
+      )
+    );
+    recorder.replace(
+      namedBindingsNode,
+      printNodeUpdate(namedBindingsNode, updatedNamedBindingsNode)
     );
   } else {
     recorder.remove(
