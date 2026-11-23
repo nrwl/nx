@@ -179,6 +179,9 @@ type InvocationCache = {
   configContexts: Map<string, ConfigContext>;
   referenceExpansionCache: ReferenceExpansionCache;
   siblingFiles: Map<string, string[]>;
+  /** Project root -> whether this invocation infers a build target for it. */
+  inferredBuildTargets: Map<string, boolean>;
+  configFileSet?: Set<string>;
 };
 
 // Module-level cache store — each invocation gets a unique Symbol key
@@ -310,6 +313,7 @@ export const createNodesV2: CreateNodes<TscPluginOptions> = [
       projectContexts: new Map(),
       configContexts: new Map(),
       referenceExpansionCache: new Map(),
+      inferredBuildTargets: new Map(),
       siblingFiles: new Map(),
     });
     const cache = cacheStore.get(cacheKey)!;
@@ -941,19 +945,26 @@ function willInferBuildTarget(
   if (!options.build) {
     return false;
   }
+  const known = cache.inferredBuildTargets.get(projectRoot);
+  if (known !== undefined) {
+    return known;
+  }
+  // Asked once per referenced project of every config, so not a scan each time.
+  cache.configFileSet ??= new Set(configFiles);
   const buildConfigPath = joinPathFragments(
     projectRoot,
     options.build.configName
   );
-  return (
-    configFiles.includes(buildConfigPath) &&
+  const inferred =
+    cache.configFileSet.has(buildConfigPath) &&
     (options.build.skipBuildCheck ||
       isValidPackageJsonBuildConfig(
         retrieveTsConfigFromCache(buildConfigPath, workspaceRoot, cache),
         workspaceRoot,
         projectRoot
-      ))
-  );
+      ));
+  cache.inferredBuildTargets.set(projectRoot, inferred);
+  return inferred;
 }
 
 function getInputs(
