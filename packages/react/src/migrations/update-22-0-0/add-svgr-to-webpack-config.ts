@@ -131,9 +131,8 @@ export default async function addSvgrToWebpackConfig(tree: Tree) {
       if (!options.webpackConfig) return;
 
       const webpackConfigPath = options.webpackConfig as string;
-      if (!tree.exists(webpackConfigPath)) return;
-
       const content = tree.read(webpackConfigPath, 'utf-8');
+      if (content === null) return;
 
       const sourceFile = ast(content);
 
@@ -253,6 +252,7 @@ export default async function addSvgrToWebpackConfig(tree: Tree) {
   // Update webpack configs to add withSvgr function inline
   for (const [webpackConfigPath, config] of projects.entries()) {
     let content = tree.read(webpackConfigPath, 'utf-8');
+    if (content === null) continue;
     const sourceFile = ast(content);
     const changes: StringChange[] = [];
 

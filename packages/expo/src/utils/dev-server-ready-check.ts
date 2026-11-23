@@ -65,7 +65,7 @@ export function parseExpoStartFlags(
 /** The Metro port `expo start` uses when no `--port` is given. */
 export function getMetroPort(rctMetroPort: string | undefined): number {
   // Expo falls back to 8081 on an RCT_METRO_PORT of 0 too
-  return Number.parseInt(rctMetroPort, 10) || 8081;
+  return Number.parseInt(rctMetroPort ?? '', 10) || 8081;
 }
 
 /**

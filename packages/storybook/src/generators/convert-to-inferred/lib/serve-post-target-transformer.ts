@@ -4,6 +4,7 @@ import {
   ensureViteConfigPathIsRelative,
   getConfigFilePath,
   getStorybookPropMappings,
+  requireConfigFilePath,
 } from './utils';
 export function servePostTargetTransformer(migrationLogs: AggregatedLog) {
   return (
@@ -40,7 +41,7 @@ export function servePostTargetTransformer(migrationLogs: AggregatedLog) {
         ) {
           ensureViteConfigPathIsRelative(
             tree,
-            getConfigFilePath(tree, configuration.configDir),
+            requireConfigFilePath(tree, configuration.configDir),
             projectDetails.projectName,
             projectDetails.root,
             '@nx/storybook:storybook',
@@ -66,7 +67,10 @@ export function servePostTargetTransformer(migrationLogs: AggregatedLog) {
 
       if (
         'defaultConfiguration' in target &&
-        !target.configurations[target.defaultConfiguration]
+        !(
+          target.defaultConfiguration &&
+          target.configurations?.[target.defaultConfiguration]
+        )
       ) {
         delete target.defaultConfiguration;
       }
@@ -74,7 +78,7 @@ export function servePostTargetTransformer(migrationLogs: AggregatedLog) {
 
     ensureViteConfigPathIsRelative(
       tree,
-      getConfigFilePath(tree, defaultConfigDir),
+      requireConfigFilePath(tree, defaultConfigDir),
       projectDetails.projectName,
       projectDetails.root,
       '@nx/storybook:storybook',

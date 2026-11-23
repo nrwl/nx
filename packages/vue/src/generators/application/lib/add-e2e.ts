@@ -21,7 +21,7 @@ export async function addE2e(
   const hasPlugin =
     options.bundler === 'rsbuild'
       ? await hasRsbuildPlugin(tree, options.appProjectRoot)
-      : nxJson.plugins?.find((p) =>
+      : nxJson?.plugins?.find((p) =>
           typeof p === 'string'
             ? p === '@nx/vite/plugin'
             : p.plugin === '@nx/vite/plugin'
@@ -40,7 +40,7 @@ export async function addE2e(
       ),
       options.devServerPort ?? 4200
     );
-  } else if (options.bundler === 'rsbuild') {
+  } else {
     ensurePackage('@nx/rsbuild', nxVersion);
     // `require()` honors Module._initPaths (which ensurePackage updates); ESM
     // dynamic `import()` doesn't, so it can't see the on-demand temp install.

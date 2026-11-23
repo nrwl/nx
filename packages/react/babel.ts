@@ -26,7 +26,9 @@ module.exports = function (api: any, options: NxReactBabelOptions) {
   /**
    * pagesDir is set when being transpiled by Next.js
    */
-  const isNextJs = api.caller((caller) => caller?.pagesDir);
+  const isNextJs = api.caller(
+    (caller: { pagesDir?: string } | undefined) => caller?.pagesDir
+  );
 
   const presets: Array<[string, unknown]> = [
     [require.resolve('@nx/js/babel'), options],

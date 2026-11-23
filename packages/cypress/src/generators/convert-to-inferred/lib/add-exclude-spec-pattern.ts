@@ -6,9 +6,12 @@ export function addExcludeSpecPattern(
   configFilePath: string,
   excludeSpecPattern: string | string[]
 ) {
-  let configFileContents = tree.read(configFilePath, 'utf-8');
+  const configFileContents = tree.read(configFilePath, 'utf-8');
+  if (configFileContents === null) {
+    throw new Error(`Cannot read ${configFilePath}.`);
+  }
 
-  let sourceFile = parseSourceFile(configFilePath, configFileContents);
+  const sourceFile = parseSourceFile(configFilePath, configFileContents);
 
   const E2E_CONFIG_SELECTOR =
     'PropertyAssignment:has(Identifier[name=e2e]) > ObjectLiteralExpression';

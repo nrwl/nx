@@ -26,6 +26,9 @@ export async function createWatchPaths(dirname: string): Promise<string[]> {
     relative(workspaceRoot, dirname),
     projectRootMappings
   );
+  if (!projectName) {
+    throw new Error(`Could not find a project for ${dirname}.`);
+  }
   const deps = findAllProjectNodeDependencies(projectName, graph);
 
   return getRelativeDependencyPaths(graph.nodes[projectName], deps, graph);

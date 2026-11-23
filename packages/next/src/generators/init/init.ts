@@ -33,7 +33,11 @@ async function updateDependencies(host: Tree, schema: InitSchema) {
   // next 15+ pulls in sharp, whose install script only compiles from source
   // against a system libvips and is otherwise a no-op; the prebuilt binaries
   // ship via optional dependencies, so skip it.
-  if (major(coerce(versions.next)) >= 15) {
+  const nextVersion = coerce(versions.next);
+  if (!nextVersion) {
+    throw new Error(`Invalid Next.js version: ${versions.next}`);
+  }
+  if (major(nextVersion) >= 15) {
     acknowledgeBuildScripts(host, detectPackageManager(host.root), {
       sharp: false,
     });
@@ -88,7 +92,7 @@ export async function nextInitGeneratorInternal(
       buildDepsTargetName: ['build-deps', 'next:build-deps', 'next-build-deps'],
       watchDepsTargetName: ['watch-deps', 'next:watch-deps', 'next-watch-deps'],
     },
-    schema.updatePackageScripts
+    schema.updatePackageScripts ?? false
   );
 
   addGitIgnoreEntry(host);

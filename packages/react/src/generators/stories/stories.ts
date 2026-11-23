@@ -1,6 +1,6 @@
 import {
   formatFiles,
-  getProjects,
+  readProjectConfiguration,
   joinPathFragments,
   ProjectConfiguration,
   Tree,
@@ -147,8 +147,7 @@ export async function storiesGenerator(
 ) {
   assertSupportedReactVersion(host);
 
-  const projects = getProjects(host);
-  const projectConfiguration = projects.get(schema.project);
+  const projectConfiguration = readProjectConfiguration(host, schema.project);
   schema.interactionTests = schema.interactionTests ?? true;
   schema.uiFramework ??= getUiFramework(host, schema.project);
   await createAllStories(host, schema, projectConfiguration);

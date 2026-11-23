@@ -1,7 +1,7 @@
 import {
   formatFiles,
   generateFiles,
-  getProjects,
+  readProjectConfiguration,
   joinPathFragments,
   normalizePath,
   Tree,
@@ -39,7 +39,7 @@ export function createComponentStoriesFile(
   if (!tsModule) {
     tsModule = ensureTypescript();
   }
-  const proj = getProjects(host).get(project);
+  const proj = readProjectConfiguration(host, project);
 
   const componentFilePath = joinPathFragments(
     getProjectSourceRoot(proj, host),
@@ -117,8 +117,8 @@ export function findPropsAndGenerateFile(
   cmpDeclaration: ts.Node,
   componentDirectory: string,
   name: string,
-  interactionTests: boolean,
-  uiFramework: string,
+  interactionTests: boolean | undefined,
+  uiFramework: string | undefined,
   isPlainJs: boolean,
   fromNodeArray?: boolean
 ) {

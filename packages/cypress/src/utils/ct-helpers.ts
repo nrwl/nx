@@ -60,7 +60,7 @@ export function isCtProjectUsingBuildProject(
   }
   const maybeIntermediateProjects = graph.dependencies[
     parentProjectName
-  ].filter((p) => !graph.externalNodes[p.target]);
+  ].filter((p) => !graph.externalNodes?.[p.target]);
 
   for (const maybeIntermediateProject of maybeIntermediateProjects) {
     if (
@@ -100,7 +100,7 @@ export function getProjectConfigByPath(
     throw new Error(
       stripIndents`Unable to find the project configuration that includes ${normalizedPathFromWorkspaceRoot}. 
       Found project name? ${componentTestingProjectName}. 
-      Graph has data? ${!!graph.nodes[componentTestingProjectName]?.data}`
+      Graph has data? ${!!(componentTestingProjectName && graph.nodes[componentTestingProjectName]?.data)}`
     );
   }
   // make sure name is set since it can be undefined
@@ -114,7 +114,7 @@ export function createExecutorContext(
   targets: Record<string, TargetConfiguration>,
   projectName: string,
   targetName: string,
-  configurationName: string
+  configurationName: string | undefined
 ): ExecutorContext {
   const projectsConfigurations =
     readProjectsConfigurationFromProjectGraph(graph);

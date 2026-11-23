@@ -157,6 +157,9 @@ function updateJsConfigSplashScreenConfig(
 ) {
   try {
     const content = tree.read(configPath, 'utf-8');
+    if (content === null) {
+      throw new Error(`Cannot read ${configPath}`);
+    }
 
     // Check if the file contains legacy splash screen configuration
     if (content.includes('splash:') && !content.includes('plugins:')) {
@@ -187,8 +190,9 @@ function updateJsConfigSplashScreenConfig(
         // Build plugin configuration
         const pluginConfig: string[] = [];
 
-        if (imageMatch || imageUrlMatch) {
-          const imageValue = imageMatch ? imageMatch[1] : imageUrlMatch[1];
+        const imageSourceMatch = imageMatch ?? imageUrlMatch;
+        if (imageSourceMatch) {
+          const imageValue = imageSourceMatch[1];
           pluginConfig.push(`      image: '${imageValue}'`);
           pluginConfig.push(`      imageWidth: 200`);
         }

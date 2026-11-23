@@ -3,7 +3,7 @@ import { logger } from '@nx/devkit';
 declare global {
   // Set by Nx while it builds the project graph. See nx's project-graph.
   // eslint-disable-next-line no-var
-  var NX_GRAPH_CREATION: boolean;
+  var NX_GRAPH_CREATION: boolean | undefined;
 }
 
 // Helper behavior was removed in v24; exports remain only as inert stubs.

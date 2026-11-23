@@ -20,7 +20,7 @@ export async function nuxtInitGenerator(host: Tree, schema: InitSchema) {
       buildDepsTargetName: ['build-deps', 'nuxt:build-deps', 'nuxt-build-deps'],
       watchDepsTargetName: ['watch-deps', 'nuxt:watch-deps', 'nuxt-watch-deps'],
     },
-    schema.updatePackageScripts
+    schema.updatePackageScripts ?? false
   );
 
   let installTask: GeneratorCallback = () => {};

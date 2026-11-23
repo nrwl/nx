@@ -46,7 +46,9 @@ export default async function addOptionalModuleFederationPackages(tree: Tree) {
 
   for (const [, project] of projects) {
     for (const target of Object.values(project.targets ?? {})) {
-      needsModuleFederation ||= moduleFederationExecutors.has(target.executor);
+      needsModuleFederation ||=
+        target.executor !== undefined &&
+        moduleFederationExecutors.has(target.executor);
       needsStaticServer ||= target.executor === staticServerExecutor;
     }
 

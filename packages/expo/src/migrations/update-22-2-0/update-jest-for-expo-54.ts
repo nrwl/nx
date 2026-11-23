@@ -33,6 +33,7 @@ export default async function update(tree: Tree) {
     // package.json (or one without expo), which skipped real expo projects.
     // Only the jest config is reliable: jest-expo preset + custom resolver.
     if (
+      jestConfigContent === null ||
       !JEST_EXPO_PRESET_REGEX.test(jestConfigContent) ||
       !SDK_53_RESOLVER_REGEX.test(jestConfigContent)
     ) {

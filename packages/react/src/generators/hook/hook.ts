@@ -8,7 +8,7 @@ import {
   applyChangesToString,
   formatFiles,
   generateFiles,
-  getProjects,
+  readProjectConfiguration,
   joinPathFragments,
   logger,
   names,
@@ -19,7 +19,7 @@ import { join } from 'path';
 import { addImport } from '../../utils/ast-utils';
 import { Schema } from './schema';
 interface NormalizedSchema extends Omit<Schema, 'js'> {
-  projectSourceRoot: string;
+  projectSourceRoot: string | undefined;
   hookName: string;
   hookTypeName: string;
   fileName: string;
@@ -66,21 +66,25 @@ function addExportsToBarrel(host: Tree, options: NormalizedSchema) {
   if (!tsModule) {
     tsModule = ensureTypescript();
   }
-  const workspace = getProjects(host);
   const isApp =
-    workspace.get(options.projectName).projectType === 'application';
+    readProjectConfiguration(host, options.projectName).projectType ===
+    'application';
 
   if (options.export && !isApp) {
+    if (!options.projectSourceRoot) {
+      throw new Error(
+        `Cannot determine the source root of ${options.projectName}.`
+      );
+    }
     const indexFilePath = joinPathFragments(
       options.projectSourceRoot,
       options.fileExtensionType === 'js' ? 'index.js' : 'index.ts'
     );
 
-    if (!host.exists(indexFilePath)) {
+    const indexSource = host.read(indexFilePath, 'utf-8');
+    if (indexSource === null) {
       return;
     }
-
-    const indexSource = host.read(indexFilePath, 'utf-8');
     const indexSourceFile = tsModule.createSourceFile(
       indexFilePath,
       indexSource,
@@ -127,7 +131,7 @@ async function normalizeOptions(
       ? className
       : `use${className}`;
   const hookTypeName = names(hookName).className;
-  const project = getProjects(host).get(projectName);
+  const project = readProjectConfiguration(host, projectName);
 
   const { root, sourceRoot: projectSourceRoot, projectType } = project;
 

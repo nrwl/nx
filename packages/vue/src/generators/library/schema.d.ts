@@ -31,6 +31,7 @@ export interface NormalizedSchema extends Schema {
   linter: LinterType;
   fileName: string;
   projectRoot: string;
+  importPath: string;
   routePath: string;
   parsedTags: string[];
   appMain?: string;

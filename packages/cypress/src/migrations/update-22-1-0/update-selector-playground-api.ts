@@ -1,7 +1,7 @@
 import { formatFiles, visitNotIgnoredFiles, type Tree } from '@nx/devkit';
 import { ensureTypescript } from '@nx/js/internal';
 import { ast, replace } from '@phenomnomnominal/tsquery';
-import type { CallExpression, Printer, PropertyName } from 'typescript';
+import type { Printer, PropertyName } from 'typescript';
 import { cypressProjectConfigs } from '../../utils/migrations';
 
 let printer: Printer;
@@ -10,11 +10,14 @@ let ts: typeof import('typescript');
 export default async function updateSelectorPlaygroundApi(tree: Tree) {
   for await (const { projectConfig } of cypressProjectConfigs(tree)) {
     visitNotIgnoredFiles(tree, projectConfig.root, (filePath) => {
-      if (!isJsTsFile(filePath) || !tree.exists(filePath)) {
+      if (!isJsTsFile(filePath)) {
         return;
       }
 
       const originalContent = tree.read(filePath, 'utf-8');
+      if (originalContent === null) {
+        return;
+      }
       const updatedContent = migrateSelectorPlaygroundApi(originalContent);
 
       if (updatedContent !== originalContent) {
@@ -52,7 +55,10 @@ function migrateSelectorPlaygroundApi(fileContent: string): string {
   const result = replace(
     updated,
     'CallExpression:has(Identifier[name="defaults"])',
-    (node: CallExpression) => {
+    (node) => {
+      if (!ts.isCallExpression(node)) {
+        return null;
+      }
       if (!ts.isPropertyAccessExpression(node.expression)) {
         return node.getText();
       }

@@ -139,7 +139,7 @@ async function getNuxtE2EWebServerInfo(
   let e2ePort = 4200;
   const serveTargetOptions = readTargetDefaultsForTarget(
     'serve',
-    nxJson.targetDefaults
+    nxJson?.targetDefaults
   )?.options;
 
   if (serveTargetOptions?.port) {

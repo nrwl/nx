@@ -11,7 +11,9 @@ export function updateNextConfig(
   migrationLogs: AggregatedLog
 ) {
   const nextConfigPath = findNextConfigPath(tree, project.root);
-  if (!nextConfigPath) {
+  const nextConfigContents =
+    nextConfigPath && tree.read(nextConfigPath, 'utf-8');
+  if (!nextConfigPath || nextConfigContents == null) {
     migrationLogs.addLog({
       project: project.projectName,
       executorName: '@nx/next:build',
@@ -20,7 +22,6 @@ export function updateNextConfig(
     return;
   }
 
-  const nextConfigContents = tree.read(nextConfigPath, 'utf-8');
   let sourceFile = ast(nextConfigContents);
 
   const reservedVarQuery = `
@@ -85,14 +86,14 @@ export function updateNextConfig(
       'PropertyAssignment:has(Identifier[name=nx]) ObjectLiteralExpression'
     )[0];
 
-    if (nxNode) {
+    if (nxNode && ts.isObjectLiteralExpression(nxNode)) {
       const spread = ts.factory.createSpreadAssignment(
         ts.factory.createIdentifier('options')
       );
 
       const updatedNxNode = ts.factory.updateObjectLiteralExpression(
-        nxNode as ts.ObjectLiteralExpression,
-        ts.factory.createNodeArray([...nxNode['properties'], spread])
+        nxNode,
+        ts.factory.createNodeArray([...nxNode.properties, spread])
       );
 
       const transformer =

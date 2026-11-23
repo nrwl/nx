@@ -78,7 +78,7 @@ export function nxComponentTestingPreset(pathToConfig: string): {
   };
 }
 
-function findViteConfig(projectRootFullPath: string): string {
+function findViteConfig(projectRootFullPath: string): string | undefined {
   const allowsExt = ['js', 'mjs', 'ts', 'cjs', 'mts', 'cts'];
 
   for (const ext of allowsExt) {

@@ -30,7 +30,7 @@ export function getNextServerAddress(
     }
   }
   // Next.js 14.1 falls back to 3000 on a non-numeric PORT, 14.2+ exits
-  const envPort = parseInt(env.PORT, 10);
+  const envPort = parseInt(env.PORT ?? '', 10);
   const port =
     flags.port !== undefined
       ? parseInt(flags.port, 10)

@@ -14,7 +14,7 @@ export function editRootTsConfig(tree: Tree) {
     return;
   }
 
-  if (storybookMajorVersion(tree) >= 10) {
+  if ((storybookMajorVersion(tree) ?? 0) >= 10) {
     // This is not needed from storybook 10+
     return;
   }

@@ -28,17 +28,24 @@ export async function mergeReportsExecutor(
   }
 
   const { config, expectedSuites } = options;
+  const { projectName } = context;
+  if (!projectName) {
+    throw new Error(
+      'The "@nx/playwright:merge-reports" executor must be run for a project.'
+    );
+  }
 
   const projectRoot = join(
     context.root,
-    context.projectsConfigurations.projects[context.projectName].root
+    context.projectsConfigurations.projects[projectName].root
   );
   const configPath = join(projectRoot, config);
   const playwrightConfig =
     await loadConfigFile<PlaywrightTestConfig>(configPath);
   const reporterOutputs = getReporterOutputs(playwrightConfig);
   const blobReporterOutput = reporterOutputs.find(
-    ([reporter]) => reporter === 'blob'
+    (r): r is [reporter: string, output: string] =>
+      r[0] === 'blob' && r[1] !== undefined
   );
 
   if (!blobReporterOutput) {

@@ -77,10 +77,10 @@ export function getInstalledReactVersion(tree: Tree): string {
     installedReactVersion === 'latest' ||
     installedReactVersion === 'next'
   ) {
-    return clean(reactVersion) ?? coerce(reactVersion).version;
+    return toSemverVersion(reactVersion);
   }
 
-  return clean(installedReactVersion) ?? coerce(installedReactVersion).version;
+  return toSemverVersion(installedReactVersion);
 }
 
 export async function getInstalledReactVersionFromGraph() {
@@ -89,7 +89,7 @@ export async function getInstalledReactVersionFromGraph() {
   if (!reactDep) {
     return undefined;
   }
-  return clean(reactDep.data.version) ?? coerce(reactDep.data.version).version;
+  return toSemverVersion(reactDep.data.version);
 }
 
 export function getInstalledReactRouterDevVersion(
@@ -117,4 +117,16 @@ export function reactRouterSupportsVite8(tree: Tree): boolean {
     return true;
   }
   return coerced.major > 7 || (coerced.major === 7 && coerced.minor >= 14);
+}
+
+function toSemverVersion(version: string): string {
+  const cleaned = clean(version);
+  if (cleaned) {
+    return cleaned;
+  }
+  const coerced = coerce(version);
+  if (!coerced) {
+    throw new Error(`Invalid version: ${version}`);
+  }
+  return coerced.version;
 }

@@ -49,7 +49,7 @@ export async function expoInitGeneratorInternal(host: Tree, schema: Schema) {
       watchDepsTargetName: ['watch-deps', 'expo:watch-deps', 'expo-watch-deps'],
     },
 
-    schema.updatePackageScripts
+    schema.updatePackageScripts ?? false
   );
 
   const tasks: GeneratorCallback[] = [];

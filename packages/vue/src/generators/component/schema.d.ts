@@ -12,7 +12,7 @@ export interface ComponentGeneratorSchema {
 export interface NormalizedSchema extends ComponentGeneratorSchema {
   directory: string;
   projectName: string;
-  projectSourceRoot: string;
+  projectSourceRoot?: string;
   fileName: string;
   className: string;
   filePath: string;

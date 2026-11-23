@@ -2,6 +2,9 @@ import { Tree, readNxJson, updateNxJson } from '@nx/devkit';
 
 export function addPlugin(tree: Tree) {
   const nxJson = readNxJson(tree);
+  if (!nxJson) {
+    throw new Error('Cannot find nx.json');
+  }
   nxJson.plugins ??= [];
 
   for (const plugin of nxJson.plugins) {

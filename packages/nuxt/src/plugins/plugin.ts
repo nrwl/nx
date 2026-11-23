@@ -40,6 +40,13 @@ export interface NuxtPluginOptions {
   watchDepsTargetName?: string;
 }
 
+type NormalizedNuxtPluginOptions = NuxtPluginOptions & {
+  buildTargetName: string;
+  serveTargetName: string;
+  serveStaticTargetName: string;
+  buildStaticTargetName: string;
+};
+
 export const createNodes: CreateNodes<NuxtPluginOptions> = [
   '**/nuxt.config.{js,ts,mjs,mts,cjs,cts}',
   async (files, options, context) => {
@@ -98,7 +105,7 @@ export const createNodesV2 = createNodes;
 
 async function createNodesInternal(
   configFilePath: string,
-  options: NuxtPluginOptions,
+  options: NormalizedNuxtPluginOptions,
   context: CreateNodesContext,
   pmc: ReturnType<typeof getPackageManagerCommand>,
   hash: string
@@ -124,7 +131,7 @@ async function createNodesInternal(
 async function buildNuxtTargets(
   configFilePath: string,
   projectRoot: string,
-  options: NuxtPluginOptions,
+  options: NormalizedNuxtPluginOptions,
   context: CreateNodesContext,
   pmc: ReturnType<typeof getPackageManagerCommand>
 ) {
@@ -382,11 +389,13 @@ async function filterNuxtConfigs(
   };
 }
 
-function normalizeOptions(options: NuxtPluginOptions): NuxtPluginOptions {
-  options ??= {};
-  options.buildTargetName ??= 'build';
-  options.serveTargetName ??= 'serve';
-  options.serveStaticTargetName ??= 'serve-static';
-  options.buildStaticTargetName ??= 'build-static';
-  return options;
+function normalizeOptions(
+  options: NuxtPluginOptions | undefined
+): NormalizedNuxtPluginOptions {
+  return Object.assign(options ?? {}, {
+    buildTargetName: options?.buildTargetName ?? 'build',
+    serveTargetName: options?.serveTargetName ?? 'serve',
+    serveStaticTargetName: options?.serveStaticTargetName ?? 'serve-static',
+    buildStaticTargetName: options?.buildStaticTargetName ?? 'build-static',
+  });
 }

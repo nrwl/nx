@@ -18,8 +18,11 @@ export default async function* buildExecutor(
   options: ExpoEasUpdateOptions,
   context: ExecutorContext
 ): AsyncGenerator<ReactNativeUpdateOutput> {
-  const projectRoot =
-    context.projectsConfigurations.projects[context.projectName].root;
+  const { projectName } = context;
+  if (!projectName) {
+    throw new Error('The update executor requires a project name.');
+  }
+  const projectRoot = context.projectsConfigurations.projects[projectName].root;
 
   try {
     await installAndUpdatePackageJson(context, {
@@ -68,8 +71,7 @@ function runCliUpdate(
 }
 
 function createUpdateOptions(options: ExpoEasUpdateOptions) {
-  return Object.keys(options).reduce((acc, k) => {
-    const v = options[k];
+  return Object.entries(options).reduce<string[]>((acc, [k, v]) => {
     if (typeof v === 'boolean') {
       if (k === 'interactive') {
         if (v === false) {
@@ -80,7 +82,7 @@ function createUpdateOptions(options: ExpoEasUpdateOptions) {
         acc.push(`--${names(k).fileName}`);
       }
     } else {
-      acc.push(`--${names(k).fileName}`, v);
+      acc.push(`--${names(k).fileName}`, String(v));
     }
     return acc;
   }, []);

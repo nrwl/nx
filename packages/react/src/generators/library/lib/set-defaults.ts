@@ -3,6 +3,9 @@ import { NormalizedSchema } from '../schema';
 
 export function setDefaults(host: Tree, options: NormalizedSchema) {
   const nxJson = readNxJson(host);
+  if (!nxJson) {
+    throw new Error('Cannot find nx.json');
+  }
 
   nxJson.generators = nxJson.generators || {};
   nxJson.generators['@nx/react'] = nxJson.generators['@nx/react'] || {};

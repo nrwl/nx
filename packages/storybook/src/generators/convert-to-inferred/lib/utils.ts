@@ -18,6 +18,18 @@ export function getConfigFilePath(tree: Tree, configDir: string) {
   ].find((f) => tree.exists(f));
 }
 
+export function requireConfigFilePath(
+  tree: Tree,
+  configDir: string | undefined
+): string {
+  const configFilePath =
+    configDir === undefined ? undefined : getConfigFilePath(tree, configDir);
+  if (!configFilePath) {
+    throw new Error(`Could not find a Storybook config file in ${configDir}.`);
+  }
+  return configFilePath;
+}
+
 export function addConfigValuesToConfigFile(
   tree: Tree,
   configFile: string,
@@ -25,6 +37,9 @@ export function addConfigValuesToConfigFile(
 ) {
   const IMPORT_PROPERTY_SELECTOR = 'ImportDeclaration';
   const configFileContents = tree.read(configFile, 'utf-8');
+  if (configFileContents === null) {
+    return;
+  }
 
   const sourceFile = ast(configFileContents);
   // An earlier run that kept the target already added the block; a second
@@ -108,6 +123,9 @@ export function ensureViteConfigPathIsRelative(
   migrationLogs: AggregatedLog
 ) {
   const configFileContents = tree.read(configPath, 'utf-8');
+  if (configFileContents === null) {
+    return;
+  }
 
   if (configFileContents.includes('viteFinal:')) {
     return;

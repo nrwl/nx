@@ -68,7 +68,7 @@ export function addBaseCypressSetup(
         ? getRelativePathToRootTsConfig(
             tree,
             opts.hasTsConfig
-              ? joinPathFragments(projectConfig.root, options.directory)
+              ? joinPathFragments(projectConfig.root, opts.directory)
               : // If an existing tsconfig.json file does not exist, then cypress tsconfig will be moved to the project root.
                 projectConfig.root
           )
@@ -130,9 +130,13 @@ export function addBaseCypressSetup(
           return json;
         }
 
-        const tsconfigPath = `./${options.directory}/tsconfig.json`;
+        const tsconfigPath = `./${opts.directory}/tsconfig.json`;
 
-        if (!json.references.some((ref) => ref.path === tsconfigPath)) {
+        if (
+          !json.references.some(
+            (ref: { path: string }) => ref.path === tsconfigPath
+          )
+        ) {
           json.references.push({
             path: tsconfigPath,
           });
@@ -142,7 +146,7 @@ export function addBaseCypressSetup(
     );
   } else {
     tree.rename(
-      joinPathFragments(projectConfig.root, options.directory, 'tsconfig.json'),
+      joinPathFragments(projectConfig.root, opts.directory, 'tsconfig.json'),
       joinPathFragments(projectConfig.root, 'tsconfig.json')
     );
   }
@@ -166,6 +170,7 @@ function normalizeOptions(
 
   return {
     ...options,
+    directory: options.directory,
     projectConfig,
     offsetFromProjectRoot: `${offsetFromProjectRoot}/`,
     hasTsConfig,

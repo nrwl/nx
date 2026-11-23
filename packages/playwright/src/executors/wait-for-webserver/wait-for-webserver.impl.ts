@@ -156,7 +156,9 @@ async function waitForServer(
 ): Promise<void> {
   // Named the way it is probed: a port wins over a url when both are set.
   const label =
-    server.port != null ? `port ${server.port}` : redactedHref(server.url);
+    server.port != null
+      ? `port ${server.port}`
+      : redactedHref(serverUrl(server));
   const deadline = Date.now() + timeout;
   const schedule = [...RETRY_SCHEDULE];
   let lastObserved: string | undefined;
@@ -199,12 +201,20 @@ function probeServer(
   return server.port != null
     ? probePort(server.port, deadline)
     : probeUrl(
-        server.url,
+        serverUrl(server),
         server.ignoreHTTPSErrors ?? false,
         deadline,
         skipProxiedTls,
         npmConfigProxy
       );
+}
+
+// findServerProblem rejects a server with neither a port nor a url.
+function serverUrl(server: Server): string {
+  if (!server.url) {
+    throw new Error('requires each server to define a "port" or a "url".');
+  }
+  return server.url;
 }
 
 function probePort(port: number, deadline: number): Promise<ProbeFailure> {

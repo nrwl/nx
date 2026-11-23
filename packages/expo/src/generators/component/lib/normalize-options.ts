@@ -1,4 +1,4 @@
-import { getProjects, logger, names, Tree } from '@nx/devkit';
+import { logger, names, readProjectConfiguration, Tree } from '@nx/devkit';
 import {
   determineArtifactNameAndDirectoryOptions,
   type FileExtensionType,
@@ -8,7 +8,7 @@ import { getProjectType } from '@nx/js/internal';
 
 export interface NormalizedSchema extends Schema {
   directory: string;
-  projectSourceRoot: string;
+  projectSourceRoot: string | undefined;
   fileName: string;
   fileExtension: string;
   fileExtensionType: FileExtensionType;
@@ -38,7 +38,7 @@ export async function normalizeOptions(
   });
 
   const { className } = names(name);
-  const project = getProjects(host).get(projectName);
+  const project = readProjectConfiguration(host, projectName);
   const { root, sourceRoot: projectSourceRoot, projectType } = project;
 
   if (

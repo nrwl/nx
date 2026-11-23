@@ -39,6 +39,11 @@ export interface ExpoPluginOptions {
   watchDepsTargetName?: string;
 }
 
+type NormalizedExpoPluginOptions = ExpoPluginOptions &
+  Required<
+    Omit<ExpoPluginOptions, 'buildDepsTargetName' | 'watchDepsTargetName'>
+  >;
+
 type ExpoTargets = Record<string, TargetConfiguration<ExpoPluginOptions>>;
 
 export const createNodes: CreateNodes<ExpoPluginOptions> = [
@@ -106,7 +111,7 @@ export const createNodesV2 = createNodes;
 
 async function createNodesInternal(
   configFile: string,
-  options: ExpoPluginOptions,
+  options: NormalizedExpoPluginOptions,
   context: CreateNodesContext,
   targetsCache: PluginCache<ExpoTargets>,
   pmc: ReturnType<typeof getPackageManagerCommand>,
@@ -132,7 +137,7 @@ async function createNodesInternal(
 
 function buildExpoTargets(
   projectRoot: string,
-  options: ExpoPluginOptions,
+  options: NormalizedExpoPluginOptions,
   context: CreateNodesContext,
   pmc: ReturnType<typeof getPackageManagerCommand>
 ) {
@@ -260,7 +265,7 @@ async function filterExpoConfigs(
 }
 
 function getInputs(
-  namedInputs: NxJsonConfiguration['namedInputs']
+  namedInputs: NonNullable<NxJsonConfiguration['namedInputs']>
 ): TargetConfiguration['inputs'] {
   return [
     ...('production' in namedInputs
@@ -280,16 +285,19 @@ function getOutputs(projectRoot: string, dir: string) {
   }
 }
 
-function normalizeOptions(options: ExpoPluginOptions): ExpoPluginOptions {
+function normalizeOptions(
+  options: ExpoPluginOptions | undefined
+): NormalizedExpoPluginOptions {
   options ??= {};
-  options.startTargetName ??= 'start';
-  options.serveTargetName ??= 'serve';
-  options.runIosTargetName ??= 'run-ios';
-  options.runAndroidTargetName ??= 'run-android';
-  options.exportTargetName ??= 'export';
-  options.prebuildTargetName ??= 'prebuild';
-  options.installTargetName ??= 'install';
-  options.buildTargetName ??= 'build';
-  options.submitTargetName ??= 'submit';
-  return options;
+  return Object.assign(options, {
+    startTargetName: options.startTargetName ?? 'start',
+    serveTargetName: options.serveTargetName ?? 'serve',
+    runIosTargetName: options.runIosTargetName ?? 'run-ios',
+    runAndroidTargetName: options.runAndroidTargetName ?? 'run-android',
+    exportTargetName: options.exportTargetName ?? 'export',
+    prebuildTargetName: options.prebuildTargetName ?? 'prebuild',
+    installTargetName: options.installTargetName ?? 'install',
+    buildTargetName: options.buildTargetName ?? 'build',
+    submitTargetName: options.submitTargetName ?? 'submit',
+  });
 }

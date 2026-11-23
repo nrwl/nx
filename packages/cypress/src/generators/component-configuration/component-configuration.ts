@@ -95,7 +95,7 @@ function normalizeOptions(options: CypressComponentConfigurationSchema) {
 function updateDeps(tree: Tree, opts: NormalizeCTOptions) {
   const pkgVersions = componentTestingVersions(tree, opts.bundler);
 
-  const devDeps = {
+  const devDeps: Record<string, string> = {
     '@nx/cypress': nxVersion,
     cypress: pkgVersions.cypressVersion,
   };
@@ -150,12 +150,14 @@ function addProjectFiles(
 
 function updateNxJsonConfiguration(tree: Tree) {
   const nxJson = readNxJson(tree);
+  if (!nxJson) {
+    throw new Error('Cannot find nx.json');
+  }
 
-  const productionFileSet = nxJson.namedInputs?.production;
-  if (productionFileSet) {
+  if (nxJson.namedInputs?.production) {
     nxJson.namedInputs.production = Array.from(
       new Set([
-        ...productionFileSet,
+        ...nxJson.namedInputs.production,
         '!{projectRoot}/cypress/**/*',
         '!{projectRoot}/**/*.cy.[jt]s?(x)',
         '!{projectRoot}/cypress.config.[jt]s',
@@ -199,7 +201,7 @@ export function updateTsConfigForComponentTesting(
   if (tree.exists(projectBaseTsConfig)) {
     updateJson(tree, projectBaseTsConfig, (json) => {
       if (json.references) {
-        const hasCyTsConfig = json.references.some((r) =>
+        const hasCyTsConfig = json.references.some((r: { path: string }) =>
           r.path.includes('./cypress/tsconfig.json')
         );
         if (!hasCyTsConfig) {

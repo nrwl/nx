@@ -38,7 +38,9 @@ export async function addRsbuild(tree: Tree, options: NormalizedSchema) {
     versions,
   }: typeof import('@nx/rsbuild/config-utils') = require('@nx/rsbuild/config-utils');
 
-  const deps = { '@rsbuild/plugin-vue': versions.rsbuildPluginVueVersion };
+  const deps: Record<string, string> = {
+    '@rsbuild/plugin-vue': versions.rsbuildPluginVueVersion,
+  };
 
   const pathToConfigFile = joinPathFragments(
     options.appProjectRoot,

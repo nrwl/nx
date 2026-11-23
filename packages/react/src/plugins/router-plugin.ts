@@ -47,6 +47,14 @@ export interface ReactRouterPluginOptions {
   watchDepsTargetName?: string;
 }
 
+type NormalizedReactRouterPluginOptions = ReactRouterPluginOptions &
+  Required<
+    Pick<
+      ReactRouterPluginOptions,
+      'buildTargetName' | 'devTargetName' | 'startTargetName'
+    >
+  >;
+
 type ReactRouterTargets = Pick<
   ProjectConfiguration,
   'targets' | 'metadata' | 'projectType'
@@ -178,7 +186,7 @@ export const createNodes: CreateNodes<ReactRouterPluginOptions> = [
             metadata,
           };
 
-          if (project.targets[normalizedOptions.buildTargetName]) {
+          if (targets?.[normalizedOptions.buildTargetName]) {
             project.projectType = projectType;
           }
 
@@ -206,7 +214,7 @@ export const createNodesV2 = createNodes;
 async function buildReactRouterTargets(
   configFilePath: string,
   projectRoot: string,
-  options: ReactRouterPluginOptions,
+  options: NormalizedReactRouterPluginOptions,
   context: CreateNodesContext,
   isUsingTsSolutionSetup: boolean,
   pmCommand: ReturnType<typeof getPackageManagerCommand>
@@ -276,7 +284,7 @@ async function getBuildTargetConfig(
   buildTargetName: string,
   projectRoot: string,
   buildDirectory: string,
-  serverBuildDirectory: string,
+  serverBuildDirectory: string | undefined,
   namedInputs: { [inputName: string]: any[] },
   isUsingTsSolutionSetup: boolean
 ) {
@@ -307,7 +315,10 @@ async function getBuildTargetConfig(
   return buildTarget;
 }
 
-async function getBuildPaths(reactRouterConfig, isLibMode: boolean) {
+async function getBuildPaths(
+  reactRouterConfig: { buildDirectory?: string } | undefined,
+  isLibMode: boolean
+) {
   return {
     buildDirectory: reactRouterConfig?.buildDirectory ?? 'build/client',
     ...(isLibMode
@@ -495,13 +506,15 @@ async function startTarget(
   return startTarget;
 }
 
-function normalizeOptions(options: ReactRouterPluginOptions) {
+function normalizeOptions(
+  options: ReactRouterPluginOptions | undefined
+): NormalizedReactRouterPluginOptions {
   options ??= {};
-  options.buildTargetName ??= 'build';
-  options.devTargetName ??= 'dev';
-  options.startTargetName ??= 'start';
-
-  return options;
+  return Object.assign(options, {
+    buildTargetName: options.buildTargetName ?? 'build',
+    devTargetName: options.devTargetName ?? 'dev',
+    startTargetName: options.startTargetName ?? 'start',
+  });
 }
 
 function checkIfConfigFileShouldBeProject(

@@ -88,19 +88,27 @@ async function addFiles(
     'component.ts'
   );
 
-  const updatedCommandFile = await addMountDefinition(
-    tree.read(ctFile, 'utf-8')
-  );
+  const ctFileContent = tree.read(ctFile, 'utf-8');
+  if (ctFileContent === null) {
+    throw new Error(`Could not find ${ctFile}.`);
+  }
+  const updatedCommandFile = await addMountDefinition(ctFileContent);
   const moduleSpecifier =
-    installedCypressMajorVersion >= 14 ? 'cypress/react' : 'cypress/react18';
+    installedCypressMajorVersion !== null && installedCypressMajorVersion >= 14
+      ? 'cypress/react'
+      : 'cypress/react18';
   tree.write(
     ctFile,
     `import { mount } from '${moduleSpecifier}';\nimport './styles.ct.css';\n${updatedCommandFile}`
   );
 
   const cyFile = joinPathFragments(projectConfig.root, 'cypress.config.ts');
+  const cyFileContent = tree.read(cyFile, 'utf-8');
+  if (cyFileContent === null) {
+    throw new Error(`Could not find ${cyFile}.`);
+  }
   const updatedCyConfig = await addDefaultCTConfig(
-    tree.read(cyFile, 'utf-8'),
+    cyFileContent,
     undefined,
     '@nx/next/plugins/component-testing',
     installedCypressMajorVersion
@@ -130,7 +138,7 @@ ${
   );
 
   if (opts.generateTests) {
-    const filePaths = [];
+    const filePaths: string[] = [];
     const sourceRoot = getProjectSourceRoot(projectConfig, tree);
     visitNotIgnoredFiles(tree, sourceRoot, (filePath) => {
       const fromProjectRootPath = relative(projectConfig.root, filePath);

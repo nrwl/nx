@@ -80,12 +80,14 @@ export function addPlugin(
 
 function updateProductionFileset(tree: Tree) {
   const nxJson = readNxJson(tree);
+  if (!nxJson) {
+    throw new Error('Cannot find nx.json');
+  }
 
-  const productionFileset = nxJson.namedInputs?.production;
-  if (productionFileset) {
+  if (nxJson.namedInputs?.production) {
     nxJson.namedInputs.production = Array.from(
       new Set([
-        ...productionFileset,
+        ...nxJson.namedInputs.production,
         '!{projectRoot}/cypress/**/*',
         '!{projectRoot}/**/*.cy.[jt]s?(x)',
         '!{projectRoot}/cypress.config.[jt]s',
@@ -110,7 +112,7 @@ export async function cypressInitGeneratorInternal(
   await addPlugin(
     tree,
     await createProjectGraphAsync(),
-    options.updatePackageScripts
+    options.updatePackageScripts ?? false
   );
 
   let installTask: GeneratorCallback = () => {};

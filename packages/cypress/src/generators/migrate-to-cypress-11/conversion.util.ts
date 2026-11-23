@@ -10,7 +10,6 @@ import {
 } from '@nx/devkit';
 import { ensureTypescript, getProjectSourceRoot } from '@nx/js/internal';
 import { basename, dirname, extname, relative } from 'path';
-import type { StringLiteral } from 'typescript';
 
 let tsModule: typeof import('typescript');
 let tsquery: typeof import('@phenomnomnominal/tsquery').tsquery;
@@ -28,14 +27,20 @@ export function findCypressConfigs(
   tree: Tree,
   projectConfig: ProjectConfiguration,
   target: string,
-  config: string
+  config: string | undefined
 ): {
-  cypressConfigPathJson: string;
-  cypressConfigPathTs: string;
+  cypressConfigPathJson: string | null;
+  cypressConfigPathTs: string | null;
 } {
+  const targets = projectConfig.targets;
+  if (!targets) {
+    throw new Error(
+      `Cannot find targets for project at ${projectConfig.root}.`
+    );
+  }
   const cypressConfigPathJson =
-    projectConfig.targets[target]?.configurations?.[config]?.cypressConfig ||
-    projectConfig.targets[target]?.options?.cypressConfig;
+    (config && targets[target]?.configurations?.[config]?.cypressConfig) ||
+    targets[target]?.options?.cypressConfig;
 
   // make sure it's a json file, since it could have been updated to ts file from previous configuration migration
   if (!cypressConfigPathJson || extname(cypressConfigPathJson) !== '.json') {
@@ -174,7 +179,7 @@ export function updateProjectPaths(
   );
 
   let newSupportFile: string;
-  let oldSupportFile: string;
+  let oldSupportFile: string | undefined;
   let oldImportLeafPath: string;
   let newImportLeafPath: string;
   let shouldUpdateSupportFileImports = false;
@@ -219,7 +224,7 @@ export function updateProjectPaths(
     }
   }
 
-  if (shouldUpdateSupportFileImports) {
+  if (shouldUpdateSupportFileImports && oldSupportFile !== undefined) {
     const newImportPaths = createSupportFileImport(
       oldSupportFile,
       newSupportFile,
@@ -275,14 +280,24 @@ export function updateImports(
     ensureTypescript();
     tsquery = require('@phenomnomnominal/tsquery').tsquery;
   }
-  const { isCallExpression, isExportDeclaration, isImportDeclaration } =
-    tsModule;
+  const {
+    isCallExpression,
+    isExportDeclaration,
+    isImportDeclaration,
+    isStringLiteral,
+  } = tsModule;
   const endOfImportSelector = `StringLiteral[value=/${oldImportPath}$/]`;
   const fileContent = tree.read(filePath, 'utf-8');
+  if (fileContent === null) {
+    throw new Error(`Cannot read ${filePath}.`);
+  }
   const newContent = tsquery.replace(
     fileContent,
     endOfImportSelector,
-    (node: StringLiteral) => {
+    (node) => {
+      if (!isStringLiteral(node)) {
+        return null;
+      }
       // if node.parent is an CallExpression require() ||ImportDeclaration
       if (
         node?.parent &&
@@ -388,9 +403,9 @@ export function updatePluginFile(
 
   const pluginFilePath = joinPathFragments(projectConfig.root, pluginsFile);
 
-  if (ext === '.ts' && tree.exists(pluginFilePath)) {
-    const pluginFileContent = tree.read(pluginFilePath, 'utf-8');
-
+  const pluginFileContent =
+    ext === '.ts' ? tree.read(pluginFilePath, 'utf-8') : null;
+  if (pluginFileContent !== null) {
     tree.write(
       pluginFilePath,
       pluginFileContent

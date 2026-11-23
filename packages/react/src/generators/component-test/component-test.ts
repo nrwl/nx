@@ -46,9 +46,13 @@ function generateSpecsForComponents(tree: Tree, filePath: string) {
     tsModule = ensureTypescript();
   }
 
+  const content = tree.read(filePath, 'utf-8');
+  if (content === null) {
+    throw new Error(`Could not find ${filePath}.`);
+  }
   const sourceFile = tsModule.createSourceFile(
     filePath,
-    tree.read(filePath, 'utf-8'),
+    content,
     tsModule.ScriptTarget.Latest,
     true
   );
@@ -79,7 +83,7 @@ function generateSpecsForComponents(tree: Tree, filePath: string) {
       };
     });
     const namedImports = components
-      .reduce((imports, cmp) => {
+      .reduce<string[]>((imports, cmp) => {
         if (cmp.typeName) {
           imports.push(cmp.typeName);
         }

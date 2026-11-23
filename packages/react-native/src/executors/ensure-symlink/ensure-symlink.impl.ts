@@ -10,11 +10,14 @@ export interface ReactNativeEnsureSymlinkOutput {
  * @deprecated It is no longer needed for react native 73.
  */
 export default async function* ensureSymlinkExecutor(
-  _,
+  _: unknown,
   context: ExecutorContext
 ): AsyncGenerator<ReactNativeEnsureSymlinkOutput> {
-  const projectRoot =
-    context.projectsConfigurations.projects[context.projectName].root;
+  const { projectName } = context;
+  if (!projectName) {
+    throw new Error('The ensure-symlink executor requires a project name.');
+  }
+  const projectRoot = context.projectsConfigurations.projects[projectName].root;
 
   ensureNodeModulesSymlink(context.root, projectRoot);
 

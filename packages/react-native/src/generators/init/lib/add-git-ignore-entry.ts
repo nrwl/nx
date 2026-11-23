@@ -3,15 +3,16 @@ import ignore from 'ignore';
 import { gitIgnoreEntriesForReactNative } from './gitignore-entries';
 
 export function addGitIgnoreEntry(host: Tree) {
-  if (!host.exists('.gitignore')) {
+  const gitignore = host.read('.gitignore', 'utf-8');
+  if (gitignore === null) {
     logger.warn(`Couldn't find .gitignore file to update`);
     return;
   }
 
-  let content = host.read('.gitignore', 'utf-8').trimEnd();
+  let content = gitignore.trimEnd();
 
   const ig = ignore();
-  ig.add(host.read('.gitignore', 'utf-8'));
+  ig.add(gitignore);
 
   if (!ig.ignores('apps/example/ios/Pods/Folly')) {
     content = `${content}\n${gitIgnoreEntriesForReactNative}\n`;

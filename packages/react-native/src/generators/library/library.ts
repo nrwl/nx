@@ -253,7 +253,7 @@ async function addProject(
         ...options,
         format: ['cjs', 'esm'],
         style: 'none',
-        js: options.js,
+        js: options.js ?? false,
         skipFormat: true,
       },
       external
@@ -320,7 +320,7 @@ function createFiles(host: Tree, options: NormalizedSchema) {
 
 function determineEntryFields(
   options: NormalizedSchema
-): Pick<PackageJson, 'main' | 'types' | 'exports'> {
+): Pick<PackageJson, 'main' | 'types' | 'exports'> | undefined {
   if (
     options.buildable ||
     options.publishable ||

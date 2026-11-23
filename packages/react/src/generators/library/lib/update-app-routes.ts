@@ -96,14 +96,13 @@ function readComponent(
   host: Tree,
   path: string
 ): { content: string; source: ts.SourceFile } {
-  if (!host.exists(path)) {
+  const content = host.read(path, 'utf-8');
+  if (content === null) {
     throw new Error(`Cannot find ${path}`);
   }
   if (!tsModule) {
     tsModule = ensureTypescript();
   }
-
-  const content = host.read(path, 'utf-8');
 
   const source = tsModule.createSourceFile(
     path,

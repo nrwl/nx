@@ -21,11 +21,10 @@ let ts: typeof import('typescript');
 export default async function disableWebpackCtJustInTimeCompile(tree: Tree) {
   let wereProjectsMigrated = false;
   for await (const { cypressConfigPath } of cypressProjectConfigs(tree)) {
-    if (!tree.exists(cypressConfigPath)) {
+    const contents = tree.read(cypressConfigPath, 'utf-8');
+    if (contents === null) {
       continue;
     }
-
-    const contents = tree.read(cypressConfigPath, 'utf-8');
     const config = resolveCypressConfigObject(contents);
     if (!config) {
       continue;

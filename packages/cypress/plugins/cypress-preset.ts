@@ -21,6 +21,21 @@ const treeKill = require('tree-kill');
 //
 // import type * as Cypress from 'cypress';
 
+type CypressPluginEvents = (
+  event: string,
+  handler: (...args: never[]) => unknown
+) => void;
+
+interface CypressPluginConfig {
+  baseUrl: string | null;
+  env?: {
+    webServerCommand?: string;
+    webServerCommands?: Record<string, string>;
+  };
+  resolved?: { baseUrl?: { from?: string } };
+  rawJson?: { e2e?: { baseUrl?: unknown } };
+}
+
 interface BaseCypressPreset {
   videosFolder: string;
   screenshotsFolder: string;
@@ -115,7 +130,7 @@ function startWebServer(webServerCommand: string) {
             rej('Unable to kill process');
           }
         } else {
-          treeKill(serverProcess.pid, (err) => {
+          treeKill(serverProcess.pid, (err?: Error) => {
             if (err) {
               rej(err);
             }
@@ -165,7 +180,10 @@ export function nxE2EPreset(
       reuseExistingServer: options?.webServerConfig?.reuseExistingServer,
     },
 
-    async setupNodeEvents(on, config) {
+    async setupNodeEvents(
+      on: CypressPluginEvents,
+      config: CypressPluginConfig
+    ) {
       const webServerCommands =
         config.env?.webServerCommands ?? options?.webServerCommands;
       const webServerCommand =
@@ -190,7 +208,8 @@ export function nxE2EPreset(
         return;
       }
       if (readyUrl) {
-        config.baseUrl = getReadyUrl(config.baseUrl);
+        config.baseUrl =
+          getReadyUrl(config.baseUrl ?? undefined) ?? config.baseUrl;
         console.log(
           `Testing against the server Nx started on ${config.baseUrl}`
         );
@@ -239,9 +258,9 @@ export function nxE2EPreset(
 // reports CYPRESS_BASE_URL as from 'env'. A config file that reads
 // CYPRESS_BASE_URL has it in rawJson too. Inferred CI targets pass ciBaseUrl.
 function isBaseUrlOverridden(
-  config: any,
+  config: CypressPluginConfig,
   options: NxCypressE2EPresetOptions | undefined
-) {
+): config is CypressPluginConfig & { baseUrl: string } {
   if (!config.baseUrl) {
     return false;
   }
@@ -270,12 +289,12 @@ function isSameUrl(url: string, other: unknown) {
 
 function waitForServer(
   url: string,
-  webServerConfig: WebServerConfig,
+  webServerConfig: WebServerConfig | undefined,
   timeoutMessage = (ms: number) =>
     `Web server failed to start in ${ms}ms. This can be configured in cypress.config.ts.`
 ): Promise<void> {
   return new Promise((resolve, reject) => {
-    let pollTimeout: NodeJS.Timeout | null;
+    let pollTimeout: NodeJS.Timeout | undefined;
     const { protocol } = new URL(url);
 
     let settled = false;

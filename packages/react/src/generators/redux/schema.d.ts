@@ -12,12 +12,12 @@ export interface Schema {
 }
 
 interface NormalizedSchema extends Omit<Schema, 'js'> {
-  projectType: string;
+  projectType: string | undefined;
   projectDirectory: string;
-  projectSourcePath: string;
-  projectModulePath: string;
-  appProjectSourcePath: string;
-  appMainFilePath: string;
+  projectSourcePath: string | undefined;
+  projectModulePath: string | undefined;
+  appProjectSourcePath: string | undefined;
+  appMainFilePath: string | undefined;
   className: string;
   constantName: string;
   propertyName: string;

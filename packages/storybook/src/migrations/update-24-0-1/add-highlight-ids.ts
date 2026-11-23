@@ -33,7 +33,12 @@ type ImportBindings = {
   useChannel: Identifier[];
 };
 
-let ts: typeof import('typescript') | undefined;
+let tsModule: typeof import('typescript') | undefined;
+
+function getTypescript(): typeof import('typescript') {
+  tsModule ??= ensureTypescript();
+  return tsModule;
+}
 
 export default async function addHighlightIds(tree: Tree) {
   let rewritten = false;
@@ -47,6 +52,9 @@ export default async function addHighlightIds(tree: Tree) {
       return;
     }
     const content = tree.read(filePath, 'utf-8');
+    if (content === null) {
+      return;
+    }
     const usesHighlight = content.includes(HIGHLIGHT_MODULE);
     if (!usesHighlight && !content.includes('clickEvent')) {
       return;
@@ -82,7 +90,7 @@ export default async function addHighlightIds(tree: Tree) {
 // `useChannel`, which Storybook types as `(eventName: string, ...args: any)`.
 // Any other payload can have a type that rejects the new property.
 function addIds(filePath: string, content: string): string {
-  ts ??= ensureTypescript();
+  const ts = getTypescript();
   const sourceFile = ts.createSourceFile(
     filePath,
     content,
@@ -148,6 +156,7 @@ function addIds(filePath: string, content: string): string {
 }
 
 function readImports(sourceFile: SourceFile): ImportBindings {
+  const ts = getTypescript();
   const imports: ImportBindings = { highlight: [], useChannel: [] };
   for (const statement of sourceFile.statements) {
     if (
@@ -181,6 +190,7 @@ function readImports(sourceFile: SourceFile): ImportBindings {
 function getAddablePayload(
   call: CallExpression
 ): ObjectLiteralExpression | undefined {
+  const ts = getTypescript();
   const payload = call.arguments[1];
   if (!payload || !ts.isObjectLiteralExpression(payload)) {
     return undefined;
@@ -196,6 +206,7 @@ function getAddablePayload(
 }
 
 function getPropertyName(name: PropertyName): string | undefined {
+  const ts = getTypescript();
   if (!ts.isComputedPropertyName(name)) {
     return name.text;
   }
@@ -221,7 +232,7 @@ function createImportBindingCheck(
 
 function createChecker(sourceFile: SourceFile): TypeChecker {
   const fileName = sourceFile.fileName;
-  return ts
+  return getTypescript()
     .createProgram(
       [fileName],
       { noLib: true, noResolve: true, allowJs: true, types: [] },
@@ -243,6 +254,7 @@ function createChecker(sourceFile: SourceFile): TypeChecker {
 // Without lib files the global `Math` has no symbol, so any match is a local
 // binding. Imports, type-only ones included, are unresolved aliases.
 function hasLocalMath(checker: TypeChecker, node: Node): boolean {
+  const ts = getTypescript();
   return checker
     .getSymbolsInScope(node, ts.SymbolFlags.Value | ts.SymbolFlags.Alias)
     .some((symbol) => symbol.name === 'Math');

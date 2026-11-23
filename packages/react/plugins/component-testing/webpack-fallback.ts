@@ -11,7 +11,11 @@ export function buildBaseWebpackConfig({
   compiler: 'swc' | 'babel';
 }): Configuration {
   const extensions = ['.ts', '.tsx', '.mjs', '.js', '.jsx'];
-  const config: Configuration = {
+  const config: Configuration & {
+    module: {
+      rules: NonNullable<NonNullable<Configuration['module']>['rules']>;
+    };
+  } = {
     target: 'web',
     resolve: {
       extensions,

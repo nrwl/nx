@@ -61,9 +61,13 @@ function addBuildDependency(
   );
   let parsed: ReturnType<typeof parseTargetString>;
   try {
+    const projectConfig = projects.get(projectName);
+    if (!projectConfig) {
+      return false;
+    }
     const { buildTarget } = resolveNxTokensInOptions(
       { buildTarget: effective.options.buildTarget },
-      { ...projects.get(projectName), name: projectName },
+      { ...projectConfig, name: projectName },
       'buildTarget'
     );
     parsed = parseTargetString(buildTarget, {

@@ -73,6 +73,9 @@ async function getMigrationInfo(
   ts ??= ensureTypescript();
 
   const cypressConfig = tree.read(cypressConfigPath, 'utf-8');
+  if (cypressConfig === null) {
+    throw new Error(`Cannot read ${cypressConfigPath}.`);
+  }
   const config = resolveCypressConfigObject(cypressConfig);
 
   if (!config) {
@@ -109,16 +112,22 @@ function migrateProject(tree: Tree, projectConfig: ProjectConfiguration) {
   printer ??= ts.createPrinter();
 
   visitNotIgnoredFiles(tree, projectConfig.root, (filePath) => {
-    if (!isJsTsFile(filePath) || !tree.exists(filePath)) {
+    if (!isJsTsFile(filePath)) {
       return;
     }
 
     const originalContent = tree.read(filePath, 'utf-8');
+    if (originalContent === null) {
+      return;
+    }
     const sourceFile = ast(originalContent);
     const updatedContent = replace(
       originalContent,
       'ImportDeclaration',
-      (node: ImportDeclaration) => {
+      (node) => {
+        if (!ts.isImportDeclaration(node)) {
+          return null;
+        }
         if (
           !ts.isStringLiteral(node.moduleSpecifier) ||
           node.moduleSpecifier.text !== 'cypress/angular'

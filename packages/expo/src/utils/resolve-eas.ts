@@ -9,7 +9,8 @@ export function resolveEas(workspaceRoot: string): string {
     );
   }
 
-  let npmGlobalPath: string, yarnGlobalPath: string;
+  let npmGlobalPath: string | undefined;
+  let yarnGlobalPath: string | undefined;
   try {
     npmGlobalPath = execSync('npm root -g', { windowsHide: true })
       ?.toString()

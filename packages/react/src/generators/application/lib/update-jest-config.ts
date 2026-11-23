@@ -27,10 +27,10 @@ export function updateSpecConfig(host: Tree, options: NormalizedSchema) {
   }
 
   const configPath = findProjectJestConfig(host, options.appProjectRoot);
-  if (!configPath) {
+  const originalContent = configPath && host.read(configPath, 'utf-8');
+  if (!configPath || originalContent == null) {
     return;
   }
-  const originalContent = host.read(configPath, 'utf-8');
   const content = updateJestConfigContent(originalContent);
   host.write(configPath, content);
 }

@@ -24,13 +24,14 @@ export default async function (tree: Tree) {
       }
 
       const projectConfiguration = readProjectConfiguration(tree, project);
+      const targetConfiguration = projectConfiguration.targets?.[target];
+      if (!targetConfiguration) {
+        throw new Error(`Cannot find target ${project}:${target}.`);
+      }
       if (configuration) {
-        updateConfiguration(
-          projectConfiguration.targets[target],
-          configuration
-        );
+        updateConfiguration(targetConfiguration, configuration);
       } else {
-        updateOptions(projectConfiguration.targets[target]);
+        updateOptions(targetConfiguration);
       }
 
       updateProjectConfiguration(tree, project, projectConfiguration);
@@ -39,6 +40,9 @@ export default async function (tree: Tree) {
 
   // update options from nx.json target defaults
   const nxJson = readNxJson(tree);
+  if (!nxJson) {
+    throw new Error('Cannot find nx.json');
+  }
   if (nxJson.targetDefaults) {
     const targetDefaults = nxJson.targetDefaults;
     for (const key of Object.keys(targetDefaults)) {
@@ -101,16 +105,20 @@ function updateConfiguration(
   target: TargetConfiguration,
   configuration: string
 ) {
-  delete target.configurations[configuration].tsConfig;
-  delete target.configurations[configuration].copyFiles;
+  const configurations = target.configurations;
+  if (!configurations) {
+    throw new Error(`Cannot find configuration ${configuration}.`);
+  }
+  delete configurations[configuration].tsConfig;
+  delete configurations[configuration].copyFiles;
   if (
-    !Object.keys(target.configurations[configuration]).length &&
+    !Object.keys(configurations[configuration]).length &&
     (!target.defaultConfiguration ||
       target.defaultConfiguration !== configuration)
   ) {
-    delete target.configurations[configuration];
+    delete configurations[configuration];
   }
-  if (!Object.keys(target.configurations).length) {
+  if (!Object.keys(configurations).length) {
     delete target.configurations;
   }
 }

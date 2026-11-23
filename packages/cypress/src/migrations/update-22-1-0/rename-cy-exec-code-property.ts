@@ -9,11 +9,14 @@ let ts: typeof import('typescript');
 export default async function renameCyExecCodeProperty(tree: Tree) {
   for await (const { projectConfig } of cypressProjectConfigs(tree)) {
     visitNotIgnoredFiles(tree, projectConfig.root, (filePath) => {
-      if (!isJsTsFile(filePath) || !tree.exists(filePath)) {
+      if (!isJsTsFile(filePath)) {
         return;
       }
 
       const originalContent = tree.read(filePath, 'utf-8');
+      if (originalContent === null) {
+        return;
+      }
       const updatedContent = updateCyExecItsCalls(originalContent);
 
       if (updatedContent !== originalContent) {

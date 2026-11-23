@@ -18,22 +18,29 @@ export function applyReactConfig(
 function addHotReload(
   config: Partial<WebpackOptionsNormalized | Configuration>
 ) {
+  const devServer = 'devServer' in config ? config.devServer : undefined;
   if (
     config.mode === 'development' &&
-    typeof config['devServer'] === 'object' &&
-    config['devServer']?.hot
+    typeof devServer === 'object' &&
+    devServer !== null &&
+    'hot' in devServer &&
+    devServer.hot
   ) {
     // add `react-refresh/babel` to babel loader plugin
-    const babelLoader = config.module.rules.find(
+    const babelLoader = config.module?.rules?.find(
       (rule) =>
         rule &&
         typeof rule !== 'string' &&
         rule.loader?.toString().includes('babel-loader')
     );
 
-    if (babelLoader && typeof babelLoader !== 'string') {
-      babelLoader.options['plugins'] = [
-        ...(babelLoader.options['plugins'] || []),
+    const babelOptions =
+      babelLoader && typeof babelLoader !== 'string'
+        ? babelLoader.options
+        : undefined;
+    if (babelOptions && typeof babelOptions !== 'string') {
+      babelOptions['plugins'] = [
+        ...(babelOptions['plugins'] || []),
         [
           require.resolve('react-refresh/babel'),
           {
@@ -44,6 +51,6 @@ function addHotReload(
     }
 
     const ReactRefreshPlugin = require('@pmmmwh/react-refresh-webpack-plugin');
-    config.plugins.push(new ReactRefreshPlugin({ overlay: false }));
+    (config.plugins ??= []).push(new ReactRefreshPlugin({ overlay: false }));
   }
 }

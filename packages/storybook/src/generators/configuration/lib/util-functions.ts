@@ -40,12 +40,13 @@ const DEFAULT_PORT = 4400;
 export function addAngularStorybookTarget(
   tree: Tree,
   projectName: string,
-  interactionTests: boolean
+  interactionTests?: boolean
 ) {
   const projectConfig = readProjectConfiguration(tree, projectName);
   const { ngBuildTarget } = findStorybookAndBuildTargetsAndCompiler(
     projectConfig.targets
   );
+  projectConfig.targets ??= {};
   projectConfig.targets['storybook'] = {
     executor: '@storybook/angular:start-storybook',
     continuous: true,
@@ -106,8 +107,14 @@ export async function addStaticTarget(
   });
 
   const projectConfig = readProjectConfiguration(tree, opts.project);
+  const staticStorybookTarget = projectConfig.targets?.['static-storybook'];
+  if (!staticStorybookTarget) {
+    throw new Error(
+      `Could not find the static-storybook target for ${opts.project}.`
+    );
+  }
 
-  projectConfig.targets['static-storybook'].configurations = {
+  staticStorybookTarget.configurations = {
     ci: {
       buildTarget: `${opts.project}:build-storybook:ci`,
     },
@@ -119,7 +126,7 @@ export async function addStaticTarget(
 export function createStorybookTsconfigFile(
   tree: Tree,
   projectRoot: string,
-  uiFramework: UiFramework,
+  uiFramework: UiFramework | undefined,
   isRootProject: boolean,
   mainDir: 'components' | 'src'
 ) {
@@ -366,6 +373,9 @@ export function updateLintConfig(tree: Tree, schema: StorybookConfigureSchema) {
 
   if (useFlatConfig(tree)) {
     let config = tree.read(eslintFile, 'utf-8');
+    if (config === null) {
+      throw new Error(`Could not read ${eslintFile}.`);
+    }
     const projectRegex = RegExp(/project:\s?\[?['"](.*)['"]\]?/g);
     let match;
     while ((match = projectRegex.exec(config)) !== null) {
@@ -437,24 +447,24 @@ export function addStorybookToNamedInputs(
 ) {
   const nxJson = readNxJson(tree);
 
-  if (nxJson.namedInputs) {
-    const hasProductionFileset = !!nxJson.namedInputs?.production;
-    if (hasProductionFileset) {
+  if (nxJson?.namedInputs) {
+    const production = nxJson.namedInputs.production;
+    if (production) {
       const storiesExclusion = `!{projectRoot}/${storybookFilePatterns.stories}`;
-      if (!nxJson.namedInputs.production.includes(storiesExclusion)) {
-        nxJson.namedInputs.production.push(storiesExclusion);
+      if (!production.includes(storiesExclusion)) {
+        production.push(storiesExclusion);
       }
       const configExclusion = `!{projectRoot}/${storybookFilePatterns.config}`;
-      if (!nxJson.namedInputs.production.includes(configExclusion)) {
-        nxJson.namedInputs.production.push(configExclusion);
+      if (!production.includes(configExclusion)) {
+        production.push(configExclusion);
       }
 
       const tsconfigExclusion = `!{projectRoot}/${storybookFilePatterns.tsconfig}`;
       if (
         schema.uiFramework !== '@storybook/angular' &&
-        !nxJson.namedInputs.production.includes(tsconfigExclusion)
+        !production.includes(tsconfigExclusion)
       ) {
-        nxJson.namedInputs.production.push(tsconfigExclusion);
+        production.push(tsconfigExclusion);
       }
     }
 
@@ -465,13 +475,13 @@ export function addStorybookToNamedInputs(
 export function createProjectStorybookDir(
   tree: Tree,
   projectName: string,
-  uiFramework: UiFramework,
-  js: boolean,
-  tsConfiguration: boolean,
+  uiFramework: UiFramework | undefined,
+  js: boolean | undefined,
+  tsConfiguration: boolean | undefined,
   root: string,
-  projectType: string,
+  projectType: string | undefined,
   projectIsRootProjectInStandaloneWorkspace: boolean,
-  interactionTests: boolean,
+  interactionTests: boolean | undefined,
   mainDir?: string,
   isNextJs?: boolean,
   usesSwc?: boolean,
@@ -556,7 +566,7 @@ export function getTsConfigPath(
   const { root, projectType } = readProjectConfiguration(tree, projectName);
   return join(
     root,
-    path?.length > 0
+    path && path.length > 0
       ? path
       : getProjectType(tree, root, projectType) === 'application'
         ? 'tsconfig.app.json'
@@ -566,16 +576,15 @@ export function getTsConfigPath(
 
 export function addBuildStorybookToCacheableOperations(tree: Tree) {
   const nxJson = readNxJson(tree);
+  const cacheableOperations =
+    nxJson?.tasksRunnerOptions?.default?.options?.cacheableOperations;
 
   if (
-    nxJson.tasksRunnerOptions?.default?.options?.cacheableOperations &&
-    !nxJson.tasksRunnerOptions.default.options.cacheableOperations.includes(
-      'build-storybook'
-    )
+    nxJson &&
+    cacheableOperations &&
+    !cacheableOperations.includes('build-storybook')
   ) {
-    nxJson.tasksRunnerOptions.default.options.cacheableOperations.push(
-      'build-storybook'
-    );
+    cacheableOperations.push('build-storybook');
 
     updateNxJson(tree, nxJson);
   }
@@ -616,10 +625,12 @@ export function rootFileIsTs(
 export function findViteConfig(
   tree: Tree,
   projectRoot: string
-): {
-  fullConfigPath: string | undefined;
-  viteConfigFileName: string | undefined;
-} {
+):
+  | {
+      fullConfigPath: string | undefined;
+      viteConfigFileName: string | undefined;
+    }
+  | undefined {
   const allowsExt = ['js', 'mjs', 'ts', 'cjs', 'mts', 'cts'];
 
   for (const ext of allowsExt) {
@@ -722,7 +733,7 @@ export function renameAndMoveOldTsConfig(
   const eslintFile = findEslintFile(tree, projectRoot);
   if (eslintFile) {
     const fileName = joinPathFragments(projectRoot, eslintFile);
-    const config = tree.read(fileName, 'utf-8');
+    const config = tree.read(fileName, 'utf-8') ?? '';
     tree.write(
       fileName,
       config.replace(/\.storybook\/tsconfig\.json/g, 'tsconfig.storybook.json')

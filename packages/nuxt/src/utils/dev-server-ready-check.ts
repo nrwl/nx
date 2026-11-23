@@ -90,7 +90,7 @@ function parseNuxtDevArgs(
   cli: CliRange
 ): NuxtDevArgs {
   const cli4 = cli === '4.0.0';
-  const valueOptions = {
+  const valueOptions: Record<string, string[]> = {
     ...(cli4 ? CLI_4_VALUE_OPTIONS : VALUE_OPTIONS),
     // nuxi 3.7.0 and 3.7.1 give `port` no `-p` alias, and never read `-p`
     ...(cli === '3.7.0' || cli === '3.7.1' ? { port: [], p: [] } : {}),
@@ -173,7 +173,7 @@ export async function waitForNuxtDevServer() {
 // The CLI `nuxt dev` runs: the one the nearest node_modules/.bin/nuxt links
 // to, else nuxt's own: nuxi before Nuxt 3.15.2, and @nuxt/cli from it
 function getCliRange(root: string): CliRange {
-  let cliVersion = getLinkedCliVersion(root);
+  let cliVersion: string | null | undefined = getLinkedCliVersion(root);
   if (cliVersion === undefined) {
     let nuxt: ReturnType<typeof readModulePackageJson>;
     try {

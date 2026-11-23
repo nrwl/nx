@@ -4,7 +4,11 @@ import { names } from '@nx/devkit';
 const JS_SOURCE_EXTENSIONS = ['.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs'];
 
 module.exports = {
-  process(src, filename, options): { code: string } {
+  process(
+    src: string,
+    filename: string,
+    options: { config?: { transform?: [string, string, string?] } }
+  ): { code: string } {
     const assetFilename = JSON.stringify(path.basename(filename));
 
     if (filename.match(/\.svg$/)) {
@@ -28,7 +32,7 @@ module.exports = {
     }
 
     if (JS_SOURCE_EXTENSIONS.includes(path.extname(filename))) {
-      const transformer = getJsTransform(options.config?.transform ?? []);
+      const transformer = getJsTransform(options.config?.transform);
       if (transformer) return transformer.process(src, filename, options);
     }
 

@@ -43,7 +43,7 @@ export default async function updateCypress16QueryCommandOverwrites(
     }
 
     const originalContent = tree.read(filePath, 'utf-8');
-    if (!originalContent.includes('overwrite')) {
+    if (originalContent === null || !originalContent.includes('overwrite')) {
       return;
     }
 

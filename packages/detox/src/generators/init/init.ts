@@ -51,7 +51,7 @@ export async function detoxInitGeneratorInternal(host: Tree, schema: Schema) {
         'detox-watch-deps',
       ],
     },
-    schema.updatePackageScripts
+    schema.updatePackageScripts ?? false
   );
 
   if (!schema.skipFormat) {

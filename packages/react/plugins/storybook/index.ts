@@ -19,7 +19,7 @@ import { mergePlugins } from './merge-plugins';
 
 // This is shamelessly taken from CRA and modified for NX use
 // https://github.com/facebook/create-react-app/blob/4784997f0682e75eb32a897b4ffe34d735912e6c/packages/react-scripts/config/env.js#L71
-function getClientEnvironment(mode) {
+function getClientEnvironment(mode: Configuration['mode']) {
   // Grab NODE_ENV and NX_* and STORYBOOK_* environment variables and prepare them to be
   // injected into the application via DefinePlugin in webpack configuration.
   const NX_PREFIX = /^NX_PUBLIC_/i;
@@ -27,7 +27,7 @@ function getClientEnvironment(mode) {
 
   const raw = Object.keys(process.env)
     .filter((key) => NX_PREFIX.test(key) || STORYBOOK_PREFIX.test(key))
-    .reduce(
+    .reduce<Record<string, string | undefined>>(
       (env, key) => {
         env[key] = process.env[key];
         return env;
@@ -62,7 +62,7 @@ function getClientEnvironment(mode) {
   return { stringified };
 }
 
-export const core = (prev, options) => ({
+export const core = (prev: Record<string, unknown>, options: unknown) => ({
   ...prev,
   disableWebpackDefaults: true,
 });
@@ -86,7 +86,8 @@ const getProjectData = async (
   if (!process.env.NX_WORKSPACE_ROOT) return fallbackData;
 
   const projectGraph = await createProjectGraphAsync();
-  const projectNode = projectGraph.nodes[process.env.NX_TASK_TARGET_PROJECT];
+  const projectName = process.env.NX_TASK_TARGET_PROJECT;
+  const projectNode = projectName ? projectGraph.nodes[projectName] : undefined;
 
   return projectNode
     ? {
@@ -105,10 +106,9 @@ const fixBabelConfigurationIfNeeded = (
 ): void => {
   if (!projectData.projectNode) return;
 
-  const isUsingBabelUpwardRootMode = Object.keys(
-    projectData.projectNode.data.targets
-  ).find((k) => {
-    const targetConfig = projectData.projectNode.data.targets[k];
+  const targets = projectData.projectNode.data.targets ?? {};
+  const isUsingBabelUpwardRootMode = Object.keys(targets).find((k) => {
+    const targetConfig = targets[k];
     return (
       targetConfig.executor === '@nx/webpack:webpack' &&
       targetConfig.options?.babelUpwardRootMode
@@ -117,7 +117,7 @@ const fixBabelConfigurationIfNeeded = (
 
   if (isUsingBabelUpwardRootMode) return;
 
-  let babelrcPath: string;
+  let babelrcPath: string | undefined;
   for (const ext of ['', '.json', '.js', '.cjs', '.mjs', '.cts']) {
     const candidate = join(
       projectData.workspaceRoot,
@@ -133,20 +133,24 @@ const fixBabelConfigurationIfNeeded = (
   // Unexpected setup, skip.
   if (!babelrcPath) return;
 
-  let babelRuleItem;
-  for (const rule of webpackConfig.module.rules) {
+  let babelRuleOptions: string | Record<string, unknown> | undefined;
+  for (const rule of webpackConfig.module?.rules ?? []) {
     if (typeof rule === 'string') continue;
     if (!rule || !Array.isArray(rule.use)) continue;
     for (const item of rule.use) {
-      if (typeof item !== 'string' && item['loader'].includes('babel-loader')) {
-        babelRuleItem = item;
+      if (
+        item &&
+        typeof item === 'object' &&
+        item.loader?.includes('babel-loader')
+      ) {
+        babelRuleOptions = item.options;
         break;
       }
     }
   }
 
-  if (babelRuleItem) {
-    babelRuleItem.options.configFile = babelrcPath;
+  if (babelRuleOptions && typeof babelRuleOptions === 'object') {
+    babelRuleOptions.configFile = babelrcPath;
   }
 };
 
@@ -177,6 +181,10 @@ export const webpack = async (
   // because it will look into the cypress project dir and it will not find tsconfig.storybook.json
 
   fixBabelConfigurationIfNeeded(storybookWebpackConfig, projectData);
+
+  if (!projectData.projectNode) {
+    throw new Error('Unable to find the Nx project for this Storybook.');
+  }
 
   const builderOptions: NormalizedWebpackExecutorOptions = {
     ...options,
@@ -216,8 +224,8 @@ export const webpack = async (
     module: {
       ...storybookWebpackConfig.module,
       rules: [
-        ...storybookWebpackConfig.module.rules,
-        ...finalConfig.module.rules,
+        ...(storybookWebpackConfig.module?.rules ?? []),
+        ...(finalConfig.module?.rules ?? []),
       ],
     },
     resolve: {
@@ -231,10 +239,10 @@ export const webpack = async (
         util: false,
       },
       plugins: mergePlugins(
-        ...((storybookWebpackConfig.resolve.plugins ??
+        ...((storybookWebpackConfig.resolve?.plugins ??
           []) as ResolvePluginInstance[]),
         ...((finalConfig.resolve
-          .plugins as unknown as ResolvePluginInstance[]) ?? [])
+          ?.plugins as unknown as ResolvePluginInstance[]) ?? [])
       ) as ResolvePluginInstance[],
     },
     plugins: mergePlugins(

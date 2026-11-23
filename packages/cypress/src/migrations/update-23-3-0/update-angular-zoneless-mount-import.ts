@@ -36,7 +36,10 @@ export default async function updateAngularZonelessMountImport(tree: Tree) {
     }
 
     const originalContent = tree.read(filePath, 'utf-8');
-    if (!originalContent.includes('angular-zoneless')) {
+    if (
+      originalContent === null ||
+      !originalContent.includes('angular-zoneless')
+    ) {
       return;
     }
 

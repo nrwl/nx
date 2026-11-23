@@ -54,11 +54,10 @@ export default async function updateCypress16ConfigOptions(tree: Tree) {
   let wereConfigsMigrated = false;
 
   for await (const { cypressConfigPath } of cypressProjectConfigs(tree)) {
-    if (!tree.exists(cypressConfigPath)) {
+    const contents = tree.read(cypressConfigPath, 'utf-8');
+    if (contents === null) {
       continue;
     }
-
-    const contents = tree.read(cypressConfigPath, 'utf-8');
     const config = resolveCypressConfigObject(contents);
     if (!config) {
       unhandled.push(
@@ -202,9 +201,13 @@ function getOptionBlocks(config: ObjectLiteralExpression): {
   const blocks = new Set(topLevel);
   for (const block of topLevel) {
     for (const property of block.properties) {
+      if (!isConfigProperty(property)) {
+        continue;
+      }
+      const propertyName = getPropertyName(property.name);
       if (
-        !isConfigProperty(property) ||
-        !TESTING_TYPE_BLOCKS.includes(getPropertyName(property.name))
+        propertyName === null ||
+        !TESTING_TYPE_BLOCKS.includes(propertyName)
       ) {
         continue;
       }

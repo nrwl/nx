@@ -11,8 +11,8 @@ export async function addJest(
   unitTestRunner: 'jest' | 'none',
   projectName: string,
   appProjectRoot: string,
-  js: boolean,
-  skipPackageJson: boolean,
+  js: boolean | undefined,
+  skipPackageJson: boolean | undefined,
   runtimeTsconfigFileName: string
 ): Promise<GeneratorCallback> {
   if (unitTestRunner !== 'jest') {

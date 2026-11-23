@@ -10,6 +10,7 @@ import type { LinterType } from '@nx/js';
 export interface NormalizedSchema extends Omit<Schema, 'useTsSolution'> {
   // `normalizeOptions` always resolves this, so it is no longer optional.
   linter: LinterType;
+  name: string;
   className: string; // app name in class case
   fileName: string; // app name in file class
   projectName: string; // directory + app name, case based on user input

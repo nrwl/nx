@@ -268,7 +268,7 @@ function createNxWebpackPluginOptions(
 function generateReactRouterFiles(
   tree: Tree,
   options: NormalizedSchema,
-  templateVariables
+  templateVariables: Record<string, unknown>
 ) {
   generateFiles(
     tree,

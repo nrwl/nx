@@ -52,9 +52,9 @@ export function dedupe(arr: string[]) {
   return Array.from(new Set(arr));
 }
 
-export function findStorybookAndBuildTargetsAndCompiler(targets: {
-  [targetName: string]: TargetConfiguration;
-}): {
+export function findStorybookAndBuildTargetsAndCompiler(
+  targets: { [targetName: string]: TargetConfiguration } | undefined
+): {
   storybookBuildTarget?: string;
   storybookTarget?: string;
   ngBuildTarget?: string;
@@ -86,7 +86,8 @@ export function findStorybookAndBuildTargetsAndCompiler(targets: {
   ];
 
   for (const target in targets) {
-    if (arrayOfBuilders.includes(targets[target].executor)) {
+    const executor = targets[target].executor;
+    if (executor && arrayOfBuilders.includes(executor)) {
       if (
         targets[target].executor === '@angular-devkit/build-angular:browser' ||
         targets[target].executor ===
@@ -102,7 +103,7 @@ export function findStorybookAndBuildTargetsAndCompiler(targets: {
          * better served by build-storybook, which can carry those options.
          */
         returnObject.ngBuildTarget = target;
-      } else if (targets[target].executor.includes('vite')) {
+      } else if (executor.includes('vite')) {
         returnObject.viteBuildTarget = target;
       } else {
         returnObject.otherBuildTarget = target;
@@ -133,9 +134,9 @@ export function isTheFileAStory(tree: Tree, path: string): boolean {
     const importArray = findNodes(file, [ts.SyntaxKind.ImportDeclaration]);
     let nodeContainsStorybookImport = false;
     let nodeContainsStoryImport = false;
-    importArray.forEach((importNode: ts.ImportClause) => {
+    importArray.forEach((importNode: ts.Node) => {
       const importPath = findNodes(importNode, [ts.SyntaxKind.StringLiteral]);
-      importPath.forEach((importPath: ts.StringLiteral) => {
+      importPath.forEach((importPath: ts.Node) => {
         if (importPath.getText()?.includes('@storybook/')) {
           nodeContainsStorybookImport = true;
         }
@@ -144,7 +145,7 @@ export function isTheFileAStory(tree: Tree, path: string): boolean {
         ts.SyntaxKind.ImportSpecifier,
         ts.SyntaxKind.NamespaceImport,
       ]);
-      importSpecifiers.forEach((importSpecifier: ts.ImportSpecifier) => {
+      importSpecifiers.forEach((importSpecifier: ts.Node) => {
         if (
           importSpecifier.getText() === 'Story' ||
           importSpecifier.getText() === 'Meta' ||

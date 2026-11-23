@@ -36,6 +36,8 @@ export interface ReactNativePluginOptions {
   upgradeTargetName?: string;
 }
 
+type NormalizedReactNativePluginOptions = Required<ReactNativePluginOptions>;
+
 type ReactNativeTargets = Record<
   string,
   TargetConfiguration<ReactNativePluginOptions>
@@ -108,7 +110,7 @@ export const createNodesV2 = createNodes;
 
 async function createNodesInternal(
   configFile: string,
-  options: ReactNativePluginOptions,
+  options: NormalizedReactNativePluginOptions,
   context: CreateNodesContext,
   targetsCache: PluginCache<ReactNativeTargets>,
   hash: string
@@ -133,7 +135,7 @@ async function createNodesInternal(
 
 function buildReactNativeTargets(
   projectRoot: string,
-  options: ReactNativePluginOptions,
+  options: NormalizedReactNativePluginOptions,
   context: CreateNodesContext
 ) {
   const namedInputs = getNamedInputs(projectRoot, context);
@@ -275,7 +277,7 @@ async function filterReactNativeConfigs(
 }
 
 function getInputs(
-  namedInputs: NxJsonConfiguration['namedInputs']
+  namedInputs: NonNullable<NxJsonConfiguration['namedInputs']>
 ): TargetConfiguration['inputs'] {
   return [
     ...('production' in namedInputs
@@ -296,17 +298,18 @@ function getOutputs(projectRoot: string, dir: string) {
 }
 
 function normalizeOptions(
-  options: ReactNativePluginOptions
-): ReactNativePluginOptions {
+  options: ReactNativePluginOptions | undefined
+): NormalizedReactNativePluginOptions {
   options ??= {};
-  options.startTargetName ??= 'start';
-  options.podInstallTargetName ??= 'pod-install';
-  options.runIosTargetName ??= 'run-ios';
-  options.runAndroidTargetName ??= 'run-android';
-  options.buildIosTargetName ??= 'build-ios';
-  options.buildAndroidTargetName ??= 'build-android';
-  options.bundleTargetName ??= 'bundle';
-  options.syncDepsTargetName ??= 'sync-deps';
-  options.upgradeTargetName ??= 'upgrade';
-  return options;
+  return Object.assign(options, {
+    startTargetName: options.startTargetName ?? 'start',
+    podInstallTargetName: options.podInstallTargetName ?? 'pod-install',
+    runIosTargetName: options.runIosTargetName ?? 'run-ios',
+    runAndroidTargetName: options.runAndroidTargetName ?? 'run-android',
+    buildIosTargetName: options.buildIosTargetName ?? 'build-ios',
+    buildAndroidTargetName: options.buildAndroidTargetName ?? 'build-android',
+    bundleTargetName: options.bundleTargetName ?? 'bundle',
+    syncDepsTargetName: options.syncDepsTargetName ?? 'sync-deps',
+    upgradeTargetName: options.upgradeTargetName ?? 'upgrade',
+  });
 }

@@ -2,6 +2,14 @@ import type { Tree } from '@nx/devkit';
 import { query } from '@phenomnomnominal/tsquery';
 import { parseSourceFile } from '../../../utils/migrations';
 
+function readConfigFile(tree: Tree, configFilePath: string): string {
+  const configFileContents = tree.read(configFilePath, 'utf-8');
+  if (configFileContents === null) {
+    throw new Error(`Cannot read ${configFilePath}.`);
+  }
+  return configFileContents;
+}
+
 /**
  * Add or update the webServerCommands and ciWebServerCommand options in the Cypress Config
  * Scenarios Covered:
@@ -18,7 +26,7 @@ export function addDevServerTargetToConfig(
   webServerCommands: Record<string, string>,
   ciDevServerTarget?: string
 ) {
-  let configFileContents = tree.read(configFilePath, 'utf-8');
+  let configFileContents = readConfigFile(tree, configFilePath);
 
   let sourceFile = parseSourceFile(configFilePath, configFileContents);
 
@@ -77,7 +85,7 @@ export function addDevServerTargetToConfig(
     }
 
     if (ciDevServerTarget) {
-      configFileContents = tree.read(configFilePath, 'utf-8');
+      configFileContents = readConfigFile(tree, configFilePath);
       sourceFile = parseSourceFile(configFilePath, configFileContents);
       nxE2ePresetOptionsNode = query(sourceFile, NX_E2E_PRESET_SELECTOR)[0];
 

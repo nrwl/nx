@@ -16,35 +16,38 @@ export interface NextPluginThatReturnsConfigFn {
   (config: NextConfig): NextConfigFn;
 }
 
+interface WebpackConfigContext {
+  buildId: string;
+  dev: boolean;
+  isServer: boolean;
+}
+
 export function createWebpackConfig(
   workspaceRoot: string,
   projectRoot: string,
   fileReplacements: FileReplacement[] = [],
   assets: any = null
-): (a, b) => Configuration {
+): (config: Configuration, context: WebpackConfigContext) => Configuration {
   return function webpackConfig(
     config: Configuration,
-    {
-      isServer,
-    }: {
-      buildId: string;
-      dev: boolean;
-      isServer: boolean;
-    }
+    { isServer }: WebpackConfigContext
   ): Configuration {
-    fileReplacements
-      .map((fileReplacement) => ({
-        replace: resolve(workspaceRoot, fileReplacement.replace),
-        with: resolve(workspaceRoot, fileReplacement.with),
-      }))
-      .reduce((alias, replacement) => {
-        alias[replacement.replace] = replacement.with;
-        return alias;
-      }, config.resolve.alias);
+    const alias = config.resolve?.alias;
+    for (const fileReplacement of fileReplacements) {
+      if (!alias || Array.isArray(alias)) {
+        throw new Error('Expected the webpack config to define resolve.alias.');
+      }
+      alias[resolve(workspaceRoot, fileReplacement.replace)] = resolve(
+        workspaceRoot,
+        fileReplacement.with
+      );
+    }
 
     // Copy (shared) assets to `public` folder during client-side compilation
     if (!isServer && Array.isArray(assets) && assets.length > 0) {
-      config.plugins.push(createCopyPlugin(assets, workspaceRoot, projectRoot));
+      (config.plugins ??= []).push(
+        createCopyPlugin(assets, workspaceRoot, projectRoot)
+      );
     }
 
     return config;

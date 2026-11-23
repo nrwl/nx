@@ -5,9 +5,11 @@ import {
 } from '@nx/devkit/internal';
 import type { NextServeBuilderOptions } from '../../../utils/types';
 
+type ServeTargetOptions = Record<string, unknown> & { args?: string[] };
+
 export function servePosTargetTransformer(migrationLogs: AggregatedLog) {
   return (
-    target: TargetConfiguration<NextServeBuilderOptions>,
+    target: TargetConfiguration<ServeTargetOptions>,
     _tree: Tree,
     projectDetails: { projectName: string; root: string },
     inferredTargetConfiguration: InferredTargetConfiguration
@@ -23,7 +25,8 @@ export function servePosTargetTransformer(migrationLogs: AggregatedLog) {
         handlePropertiesFromTargetOptions(configuration);
       }
 
-      if (Object.keys(target.configurations).length === 0) {
+      const configurations = target.configurations;
+      if (Object.keys(configurations).length === 0) {
         if ('defaultConfiguration' in target) {
           delete target.defaultConfiguration;
         }
@@ -32,7 +35,8 @@ export function servePosTargetTransformer(migrationLogs: AggregatedLog) {
 
       if (
         'defaultConfiguration' in target &&
-        !target.configurations[target.defaultConfiguration]
+        (!target.defaultConfiguration ||
+          !configurations[target.defaultConfiguration])
       ) {
         delete target.defaultConfiguration;
       }
@@ -63,7 +67,7 @@ const executorFieldsToRemain: Array<keyof NextServeBuilderOptions> = [
 const camelCaseToKebabCase = (str: string) =>
   str.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`);
 
-function handlePropertiesFromTargetOptions(options: NextServeBuilderOptions) {
+function handlePropertiesFromTargetOptions(options: ServeTargetOptions) {
   Object.keys(options).forEach((key) => {
     if (
       !executorFieldsToRename.includes(key as keyof NextServeBuilderOptions) &&

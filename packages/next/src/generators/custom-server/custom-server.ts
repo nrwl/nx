@@ -27,6 +27,9 @@ export async function customServerGenerator(
   const swcServerName = '.server.swcrc';
 
   const nxJson = readNxJson(host);
+  if (!nxJson) {
+    throw new Error('Cannot find nx.json');
+  }
   const hasPlugin = nxJson.plugins?.some((p) =>
     typeof p === 'string'
       ? p === '@nx/next/plugin'
@@ -72,6 +75,7 @@ export async function customServerGenerator(
     tmpl: '',
   });
 
+  project.targets ??= {};
   project.targets['build'] = {
     dependsOn: ['^build', 'build-custom-server'],
   };

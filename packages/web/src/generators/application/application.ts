@@ -235,6 +235,9 @@ async function addProject(tree: Tree, options: NormalizedSchema) {
 
 function setDefaults(tree: Tree, options: NormalizedSchema) {
   const nxJson = readNxJson(tree);
+  if (!nxJson) {
+    throw new Error('Cannot find nx.json');
+  }
   nxJson.generators = nxJson.generators || {};
   nxJson.generators['@nx/web:application'] = {
     style: options.style,
@@ -280,7 +283,7 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
 
   createApplicationFiles(host, options);
 
-  let enableTypedLinting = false;
+  let enableTypedLinting: boolean | undefined = false;
   if (options.linter !== 'eslint') {
     tasks.push(
       await addLintingToProject(host, {
@@ -402,6 +405,9 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
   }
 
   const nxJson = readNxJson(host);
+  if (!nxJson) {
+    throw new Error('Cannot find nx.json');
+  }
   let hasPlugin: PluginConfiguration | undefined;
   let buildPlugin: string;
   if (options.bundler === 'webpack' || options.bundler === 'vite') {

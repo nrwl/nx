@@ -110,7 +110,7 @@ export async function initGeneratorInternal(tree: Tree, schema: Schema) {
         'storybook-watch-deps',
       ],
     },
-    schema.updatePackageScripts
+    schema.updatePackageScripts ?? false
   );
   updateGitignore(tree);
 

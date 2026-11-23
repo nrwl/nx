@@ -1,7 +1,10 @@
 import { workspaceRoot } from '@nx/devkit';
 import { getInstalledPackageVersion } from '@nx/devkit/internal';
 import { isUsingTsSolutionSetup } from '@nx/js/internal';
-import type { PlaywrightTestConfig } from '@playwright/test';
+import type {
+  PlaywrightTestConfig,
+  ReporterDescription,
+} from '@playwright/test';
 import { lstatSync } from 'node:fs';
 import { dirname, join, relative } from 'node:path';
 import { lt } from 'semver';
@@ -68,7 +71,7 @@ export function nxE2EPreset(
     ? 'test-output/playwright/output'
     : join(offset, 'dist', '.playwright', projectPath, 'test-output');
 
-  const reporters = [];
+  const reporters: ReporterDescription[] = [];
   reporters.push([
     'html',
     {

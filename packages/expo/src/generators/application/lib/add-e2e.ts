@@ -157,6 +157,9 @@ async function getExpoE2EWebServerInfo(
   configFilePath: string
 ) {
   const nxJson = readNxJson(tree);
+  if (!nxJson) {
+    throw new Error('Cannot find nx.json');
+  }
   let e2ePort = 8081;
   const serveTargetOptions = readTargetDefaultsForTarget(
     'serve',

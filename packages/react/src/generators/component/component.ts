@@ -4,8 +4,8 @@ import {
   formatFiles,
   generateFiles,
   GeneratorCallback,
-  getProjects,
   joinPathFragments,
+  readProjectConfiguration,
   runTasksInSerial,
   Tree,
 } from '@nx/devkit';
@@ -86,9 +86,9 @@ function addExportsToBarrel(host: Tree, options: NormalizedSchema) {
   if (!tsModule) {
     tsModule = ensureTypescript();
   }
-  const workspace = getProjects(host);
   const isApp =
-    workspace.get(options.projectName).projectType === 'application';
+    readProjectConfiguration(host, options.projectName).projectType ===
+    'application';
 
   if (options.export && !isApp) {
     const indexFilePath = joinPathFragments(
@@ -98,11 +98,10 @@ function addExportsToBarrel(host: Tree, options: NormalizedSchema) {
       options.fileExtensionType === 'js' ? 'index.js' : 'index.ts'
     );
 
-    if (!host.exists(indexFilePath)) {
+    const indexSource = host.read(indexFilePath, 'utf-8');
+    if (indexSource === null) {
       return;
     }
-
-    const indexSource = host.read(indexFilePath, 'utf-8');
     const indexSourceFile = tsModule.createSourceFile(
       indexFilePath,
       indexSource,

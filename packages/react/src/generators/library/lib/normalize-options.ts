@@ -3,7 +3,7 @@ import {
   ensureRootProjectName,
 } from '@nx/devkit/internal';
 import {
-  getProjects,
+  readProjectConfiguration,
   joinPathFragments,
   logger,
   normalizePath,
@@ -64,7 +64,7 @@ export async function normalizeOptions(
   let appSourceRoot: string | undefined;
 
   if (options.appProject) {
-    const appProjectConfig = getProjects(host).get(options.appProject);
+    const appProjectConfig = readProjectConfiguration(host, options.appProject);
     const appProjectType = getProjectType(
       host,
       appProjectConfig.root,
@@ -78,7 +78,7 @@ export async function normalizeOptions(
     }
 
     appMain =
-      appProjectConfig.targets.build?.options?.main ??
+      appProjectConfig.targets?.build?.options?.main ??
       findMainEntry(host, appProjectConfig.root);
     appSourceRoot = normalizePath(getProjectSourceRoot(appProjectConfig, host));
 

@@ -9,7 +9,7 @@ export interface Schema {
   parallel: boolean;
   maxParallel?: number;
   withDeps: boolean;
-  proxyOptions?: object;
+  proxyOptions?: Record<string, unknown>;
   watch?: boolean;
   spa: boolean;
   staticFilePath?: string;

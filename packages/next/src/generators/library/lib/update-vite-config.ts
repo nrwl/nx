@@ -16,11 +16,10 @@ export function updateViteConfigForServerEntry(
   tree: Tree,
   viteConfigPath: string
 ): boolean {
-  if (!tree.exists(viteConfigPath)) {
+  const viteConfigContent = tree.read(viteConfigPath, 'utf-8');
+  if (viteConfigContent === null) {
     return false;
   }
-
-  const viteConfigContent = tree.read(viteConfigPath, 'utf-8');
 
   // Replace single entry string with multiple entry object
   const updatedViteConfig = viteConfigContent

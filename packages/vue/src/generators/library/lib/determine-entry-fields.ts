@@ -3,7 +3,7 @@ import { type PackageJson } from '@nx/devkit/internal';
 
 export function determineEntryFields(
   options: NormalizedSchema
-): Pick<PackageJson, 'module' | 'types' | 'exports'> {
+): Pick<PackageJson, 'module' | 'types' | 'exports'> | undefined {
   if (options.bundler !== 'none' || !options.isUsingTsSolutionConfig) {
     // for buildable libraries, the entries are configured by the bundler
     return undefined;
