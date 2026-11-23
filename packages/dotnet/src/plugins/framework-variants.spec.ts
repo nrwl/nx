@@ -2,13 +2,13 @@ import {
   ProjectConfiguration,
   ProjectGraph,
   TargetConfiguration,
+  getOutputsForTargetAndConfiguration,
 } from '@nx/devkit';
-import { createTaskGraph } from '../../../nx/src/tasks-runner/create-task-graph';
-import { getOutputsForTargetAndConfiguration } from '../../../nx/src/tasks-runner/utils';
+import { createTaskGraph } from '@nx/devkit/internal-testing-utils';
 import {
   interpolateArgsIntoCommand,
-  normalizeArgs,
-} from '../../../nx/src/executors/run-commands/run-commands.impl';
+  normalizeRunCommandsArgs,
+} from '@nx/devkit/internal';
 import { mergeUserTargetConfigurations } from './create-nodes';
 
 function project(): ProjectConfiguration {
@@ -133,7 +133,7 @@ describe('TFM variant integration with Nx', () => {
     const options = { ...leaf.options, ...leaf.configurations!.release };
     const command = interpolateArgsIntoCommand(
       leaf.command!,
-      normalizeArgs({ ...options, __unparsed__: [] }),
+      normalizeRunCommandsArgs({ ...options, __unparsed__: [] }),
       false
     );
     expect(command).toBe(

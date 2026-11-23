@@ -119,13 +119,18 @@ public class AnalyzerSmokeTests : IDisposable
               </PropertyGroup>
               <ItemGroup Condition="'$(TargetFramework)' == 'net10.0'">
                 <Compile Remove="Portable.cs" />
+                <NxTag Include="tfm:modern" />
               </ItemGroup>
               <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.1'">
                 <Compile Remove="Modern.cs" />
+                <NxTag Include="tfm:portable" />
               </ItemGroup>
             </Project>
             """);
-        var targets = Analyze(projectFile);
+        var node = AnalyzeWorkspace(projectFile).GetProperty("nodesByFile").GetProperty("apps/Debug/Debug.csproj");
+        var targets = node.GetProperty("targets").EnumerateObject().ToDictionary(property => property.Name, property => property.Value);
+        Assert.Equal(new[] { "tfm:modern", "tfm:portable" },
+            node.GetProperty("tags").EnumerateArray().Select(tag => tag.GetString()).ToArray());
         Assert.Equal("nx:noop", targets["build"].GetProperty("executor").GetString());
         Assert.Equal("release", targets["build:release"].GetProperty("defaultConfiguration").GetString());
         var modern = targets["build:net10.0"];

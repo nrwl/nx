@@ -1,4 +1,5 @@
-import { ProjectConfiguration } from '@nx/devkit';
+import { ProjectConfiguration, TargetConfiguration } from '@nx/devkit';
+import { mergeTargetConfigurations } from '@nx/devkit/internal';
 import { minimatch } from 'minimatch';
 import { vi } from 'vitest';
 import * as analyzerClient from '../analyzer/analyzer-client';

@@ -32,6 +32,10 @@ export {
   hashDaemonClientEnv,
   readLockFileSnapshot,
   resolveStartupHost,
+  runCommandsSchema,
+  serializeOverridesIntoCommandLine,
+  interpolateArgsIntoCommand,
+  normalizeRunCommandsArgs,
 } from 'nx/src/devkit-internals';
 
 // Formatter detection and setup. `@nx/js` needs these to write and detect a

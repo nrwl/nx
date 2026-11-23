@@ -9,9 +9,11 @@ import {
   analyzeProjects,
   isAnalysisErrorResult,
 } from '../analyzer/analyzer-client';
-import { mergeTargetConfigurations } from '@nx/devkit/internal';
-import runCommandsSchema from 'nx/src/executors/run-commands/schema.json';
-import { serializeOverridesIntoCommandLine } from 'nx/src/utils/serialize-overrides-into-command-line';
+import {
+  mergeTargetConfigurations,
+  runCommandsSchema,
+  serializeOverridesIntoCommandLine,
+} from '@nx/devkit/internal';
 
 const executionOptions = new Set([
   ...Object.keys(runCommandsSchema.properties),
