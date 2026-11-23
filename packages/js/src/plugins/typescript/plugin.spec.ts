@@ -2186,6 +2186,21 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                         ],
                         "json": "{workspaceRoot}/libs/my-lib/nested-project/package.json",
                       },
+                      {
+                        "always": true,
+                        "fields": [
+                          "name",
+                          "type",
+                          "exports",
+                          "imports",
+                          "main",
+                          "module",
+                          "types",
+                          "typings",
+                          "typesVersions",
+                        ],
+                        "json": "{workspaceRoot}/libs/other-lib/package.json",
+                      },
                     ],
                     "metadata": {
                       "description": "Runs type-checking for the project.",
@@ -3441,6 +3456,21 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                           "typesVersions",
                         ],
                         "json": "{workspaceRoot}/libs/my-lib/nested-project/package.json",
+                      },
+                      {
+                        "always": true,
+                        "fields": [
+                          "name",
+                          "type",
+                          "exports",
+                          "imports",
+                          "main",
+                          "module",
+                          "types",
+                          "typings",
+                          "typesVersions",
+                        ],
+                        "json": "{workspaceRoot}/libs/other-lib/package.json",
                       },
                     ],
                     "metadata": {
@@ -5802,6 +5832,21 @@ snapshots:
                       "^{projectRoot}/tsconfig.json",
                       {
                         "always": true,
+                        "fields": [
+                          "name",
+                          "type",
+                          "exports",
+                          "imports",
+                          "main",
+                          "module",
+                          "types",
+                          "typings",
+                          "typesVersions",
+                        ],
+                        "json": "{workspaceRoot}/libs/other-lib/package.json",
+                      },
+                      {
+                        "always": true,
                         "fileset": "{workspaceRoot}/libs/other-lib/**/*.ts",
                       },
                     ],
@@ -6009,15 +6054,71 @@ snapshots:
                 "always": true,
                 "fileset": "{workspaceRoot}/libs/nested-source-lib/**/*.d.mts",
               },
+              {
+                "always": true,
+                "fileset": "!{workspaceRoot}/libs/nested-source-lib/dist/**/*",
+              },
             ]
           `);
-        // A built project hashes nothing but its own files.
+        // The built project's sources reach the hash through its build task.
         expect(
-          result.projects['libs/built-lib'].targets.build.inputs.filter(
+          result.projects['libs/my-lib'].targets.build.inputs.filter(
             (input) =>
-              typeof input === 'string' && input.includes('{workspaceRoot}')
+              typeof input !== 'string' &&
+              'fileset' in input &&
+              input.fileset.includes('libs/built-lib')
           )
         ).toEqual([]);
+      });
+
+      it('should infer the inputs again when a project deeper in the reference chain stops being built', async () => {
+        process.env.NX_CACHE_PROJECT_GRAPH = 'true';
+        const lib = (references: string[], main: string) => ({
+          tsconfig: JSON.stringify({
+            compilerOptions: { outDir: 'dist' },
+            include: ['src/**/*.ts'],
+            references: references.map((path) => ({ path })),
+          }),
+          packageJson: JSON.stringify({ main }),
+        });
+        const a = lib(['../b/tsconfig.lib.json'], 'dist/index.js');
+        const b = lib(['../c/tsconfig.lib.json'], 'src/index.ts');
+        const c = lib([], 'dist/index.js');
+        configFiles = await applyFilesToTempFsAndContext(tempFs, {
+          'libs/a/tsconfig.json': '{}',
+          'libs/a/tsconfig.lib.json': a.tsconfig,
+          'libs/a/package.json': a.packageJson,
+          'libs/b/tsconfig.json': '{}',
+          'libs/b/tsconfig.lib.json': b.tsconfig,
+          'libs/b/package.json': b.packageJson,
+          'libs/c/tsconfig.json': '{}',
+          'libs/c/tsconfig.lib.json': c.tsconfig,
+          'libs/c/package.json': c.packageJson,
+        });
+        const sourcesOf = async (project: string) => {
+          const result = await invokeCreateNodesOnMatchingFiles(
+            configFiles,
+            context,
+            { typecheck: false, build: true }
+          );
+          return result.projects['libs/a'].targets.build.inputs.filter(
+            (input) =>
+              typeof input !== 'string' &&
+              'fileset' in input &&
+              input.fileset.startsWith(`{workspaceRoot}/libs/${project}/`)
+          );
+        };
+
+        expect(await sourcesOf('b')).not.toEqual([]);
+        expect(await sourcesOf('c')).toEqual([]);
+
+        // `c` now points at its sources, so it no longer gets a build target.
+        await tempFs.createFiles({
+          'libs/c/package.json': JSON.stringify({ main: 'src/index.ts' }),
+        });
+        expect(await sourcesOf('c')).toEqual([
+          { fileset: '{workspaceRoot}/libs/c/src/**/*.ts', always: true },
+        ]);
       });
 
       it('should only collect tsconfig patterns from the build reference chain', async () => {

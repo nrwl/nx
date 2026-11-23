@@ -492,41 +492,47 @@ async function resolveValidConfigFilesAndHashes(
     );
   }
 
-  // A build target's inputs depend on which referenced projects get a build
-  // target of their own, known only once every config file is validated.
+  // Inputs follow the whole reference chain: each config in it, and for a
+  // build target whether the project owning it gets a build target of its
+  // own, known only once every config file is validated.
   const buildConfigName = options.build ? options.build.configName : undefined;
-  if (buildConfigName) {
-    validConfigFilePaths.forEach((configFilePath, idx) => {
-      const config = getConfigContext(
-        join(context.workspaceRoot, configFilePath),
+  validConfigFilePaths.forEach((configFilePath, idx) => {
+    const config = getConfigContext(
+      join(context.workspaceRoot, configFilePath),
+      context.workspaceRoot,
+      cache
+    );
+    const tsConfig = retrieveTsConfigFromCache(
+      config.absolutePath,
+      context.workspaceRoot,
+      cache
+    );
+    const { references } = getExternalProjectReferences(
+      tsConfig,
+      resolveInternalProjectReferences(
+        tsConfig,
         context.workspaceRoot,
+        config.project,
         cache
-      );
-      if (config.basename !== buildConfigName) {
-        return;
-      }
-      const referencedProjectRoots = new Set(
-        Object.keys(
-          resolveShallowExternalProjectReferences(
-            retrieveTsConfigFromCache(
-              config.absolutePath,
-              context.workspaceRoot,
-              cache
-            ),
-            context.workspaceRoot,
-            config.project,
-            cache
-          )
-        ).map(
-          (refConfigPath) =>
-            getConfigContext(refConfigPath, context.workspaceRoot, cache)
-              .project.root
-        )
-      );
-      if (referencedProjectRoots.size) {
-        hashes[idx] = hashArray([
-          hashes[idx],
-          ...Array.from(referencedProjectRoots)
+      ),
+      context.workspaceRoot,
+      config.project,
+      cache
+    );
+    if (!references.length) {
+      return;
+    }
+    const referencedProjectRoots = new Set(
+      references.map((ref) => ref.ownerProject.root)
+    );
+    hashes[idx] = hashArray([
+      hashes[idx],
+      ...references
+        .map((ref) => ref.configPath)
+        .sort()
+        .map((file) => getFileHash(file, context.workspaceRoot, cache)),
+      ...(config.basename === buildConfigName
+        ? Array.from(referencedProjectRoots)
             .sort()
             .map(
               (root) =>
@@ -537,11 +543,10 @@ async function resolveValidConfigFilesAndHashes(
                   context.workspaceRoot,
                   cache
                 )}`
-            ),
-        ]);
-      }
-    });
-  }
+            )
+        : []),
+    ]);
+  });
 
   return { configFilePaths: validConfigFilePaths, hashes, projectRoots };
 }
@@ -553,6 +558,8 @@ async function resolveValidConfigFilesAndHashes(
  *   - config files extended by the current config file (recursively up to the root config file)
  *   - referenced config files that are internal to the owning Nx project of the current config file,
  *     or is a shallow external reference of the owning Nx project
+ *   - every config file in the external reference chain (added by `resolveValidConfigFilesAndHashes`)
+ * - for a build config, whether each project in that chain gets a build target
  *   - lock file
  *   - project's package.json
  * - hash of the plugin options
@@ -1233,16 +1240,15 @@ function getInputs(
       continue;
     }
     referencedProjects.add(ownerProject.root);
-    if (existsSync(join(ownerProject.absolute, 'package.json'))) {
-      inputs.push({
-        json: `{workspaceRoot}/${joinPathFragments(
-          ownerProject.root,
-          'package.json'
-        )}`,
-        fields: PACKAGE_JSON_RESOLUTION_FIELDS,
-        always: true,
-      });
-    }
+    // Not conditional on the file existing: one added later must count.
+    inputs.push({
+      json: `{workspaceRoot}/${joinPathFragments(
+        ownerProject.root,
+        'package.json'
+      )}`,
+      fields: [...PACKAGE_JSON_RESOLUTION_FIELDS],
+      always: true,
+    });
   }
 
   if (isBuiltProject) {
@@ -1276,7 +1282,13 @@ function getInputs(
           sourceInputs.add(toInput(input));
         }
       }
-      for (const spec of refTsConfig.raw?.exclude ?? []) {
+      // TS leaves `outDir` out by default; `exclude` replaces that default.
+      const exclude: string[] =
+        refTsConfig.raw?.exclude ??
+        (refTsConfig.options.outDir
+          ? [relative(refDir, refTsConfig.options.outDir)]
+          : []);
+      for (const spec of exclude) {
         sourceInputs.add(
           `!${toInput(isImplicitGlobSpec(spec, refDir) ? `${spec}/**/*` : spec)}`
         );
@@ -1675,10 +1687,9 @@ function resolveShallowExternalProjectReferences(
 }
 
 /**
- * Collects unique tsconfig paths (relative to their project root) from the
- * project reference chain — including any `extends` chains within those refs —
- * and returns them as `^{projectRoot}/...` input patterns. We only need to
- * discover the full set of distinct relative paths.
+ * Walks the project reference chain, including any `extends` chains within
+ * those refs. `tsconfigPatterns` are the unique tsconfig paths it reaches,
+ * relative to their project root, as `^{projectRoot}/...` input patterns.
  */
 function getExternalProjectReferences(
   tsConfig: ParsedTsconfigData,
@@ -1688,7 +1699,7 @@ function getExternalProjectReferences(
   cache: InvocationCache
 ): {
   tsconfigPatterns: string[];
-  /** Every tsconfig the reference chain reaches, with the project owning it. */
+  /** Every referenced tsconfig in the chain, with the project owning it. */
   references: { configPath: string; ownerProject: ProjectContext }[];
 } {
   const externalRefs: Record<string, ParsedTsconfigData> = {};
