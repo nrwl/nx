@@ -2,8 +2,9 @@ import {
   getTypescriptAst,
   requireClassicTypescript,
   type TypescriptAst,
+  useTemporaryTypescript,
 } from 'nx/src/devkit-internals';
-import { ensurePackage } from './package-json';
+import { ensurePackage, installToTemporaryDirectory } from './package-json';
 import { typescriptVersion } from './versions';
 
 /**
@@ -22,7 +23,12 @@ export function ensureTypescript(): TypescriptAst {
       throw e;
     }
   }
-  ensurePackage('typescript', typescriptVersion);
+  // The adapter only searches the workspace and the nx installation, so it is
+  // told where the temporary copy is.
+  const tempDir = installToTemporaryDirectory('typescript', typescriptVersion);
+  useTemporaryTypescript(
+    require.resolve('typescript/package.json', { paths: [tempDir] })
+  );
   return getTypescriptAst();
 }
 

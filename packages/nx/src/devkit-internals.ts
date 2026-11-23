@@ -97,6 +97,7 @@ export {
   getTypescriptBackend,
   requireClassicTypescript,
   unhandledTypescriptBackend,
+  useTemporaryTypescript,
   withTypescriptApi,
 } from './plugins/js/utils/typescript-backend';
 export type { ApiTypescriptBackend } from './plugins/js/utils/typescript-backend';

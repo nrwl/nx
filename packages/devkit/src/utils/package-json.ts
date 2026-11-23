@@ -909,23 +909,7 @@ export function ensurePackage<T extends any = any>(
     }
   }
 
-  if (process.env.NX_DRY_RUN && process.env.NX_DRY_RUN !== 'false') {
-    throw new Error(
-      'NOTE: This generator does not support --dry-run. If you are running this in Nx Console, it should execute fine once you hit the "Generate" button.\n'
-    );
-  }
-
-  const { tempDir } = installPackageToTmp(
-    pkg,
-    requiredVersion,
-    detectPackageManager(workspaceRoot)
-  );
-
-  addToNodePath(join(workspaceRoot, 'node_modules'));
-  addToNodePath(join(tempDir, 'node_modules'));
-
-  // Re-initialize the added paths into require
-  (Module as any)._initPaths();
+  const tempDir = installToTemporaryDirectory(pkg, requiredVersion);
 
   try {
     const result = require(
@@ -946,6 +930,35 @@ export function ensurePackage<T extends any = any>(
     }
     throw e;
   }
+}
+
+/**
+ * Installs `pkg` to a temporary directory and adds its `node_modules` to
+ * `NODE_PATH` for this process, so a bare `require` finds it. Throws in a dry run.
+ */
+export function installToTemporaryDirectory(
+  pkg: string,
+  requiredVersion: string
+): string {
+  if (process.env.NX_DRY_RUN && process.env.NX_DRY_RUN !== 'false') {
+    throw new Error(
+      'NOTE: This generator does not support --dry-run. If you are running this in Nx Console, it should execute fine once you hit the "Generate" button.\n'
+    );
+  }
+
+  const { tempDir } = installPackageToTmp(
+    pkg,
+    requiredVersion,
+    detectPackageManager(workspaceRoot)
+  );
+
+  addToNodePath(join(workspaceRoot, 'node_modules'));
+  addToNodePath(join(tempDir, 'node_modules'));
+
+  // Re-initialize the added paths into require
+  (Module as any)._initPaths();
+
+  return tempDir;
 }
 
 function addToNodePath(dir: string) {

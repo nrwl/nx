@@ -69,6 +69,7 @@ export function unhandledTypescriptBackend(backend: never): never {
 }
 
 const packageJsonPathByLookup = new Map<string, string>();
+let temporaryPackageJsonPath: string | undefined;
 const backendByPackageJsonPath = new Map<string, TypescriptBackend>();
 const apiByPackageJsonPath = new Map<string, TypescriptApi>();
 const hostedApiByPackageJsonPath = new Map<string, TypescriptApi>();
@@ -86,17 +87,15 @@ let activeFileSystem: ActiveFileSystem | undefined;
  * Only `node_modules` inside the workspace or an nx installation count.
  * TypeScript < 7 loads the classic API, >= 7.1 the `typescript/sync` API, and
  * 7.0, which ships no API, throws a {@link TypescriptSetupError}. A missing
- * install throws the module resolution error.
+ * install falls back to the copy passed to {@link useTemporaryTypescript}, and
+ * without one throws the module resolution error.
  */
 export function getTypescriptBackend(): TypescriptBackend {
   const lookupPaths = [...getNxRequirePaths(), __dirname];
   const lookupKey = lookupPaths.join('\0');
   let packageJsonPath = packageJsonPathByLookup.get(lookupKey);
   if (!packageJsonPath) {
-    packageJsonPath = resolveInstalledPackage(
-      'typescript/package.json',
-      lookupPaths
-    );
+    packageJsonPath = resolveTypescriptPackageJson(lookupPaths);
     packageJsonPathByLookup.set(lookupKey, packageJsonPath);
   }
 
@@ -106,6 +105,26 @@ export function getTypescriptBackend(): TypescriptBackend {
     backendByPackageJsonPath.set(packageJsonPath, backend);
   }
   return backend;
+}
+
+/**
+ * Makes {@link getTypescriptBackend} use the TypeScript at `packageJsonPath`
+ * when neither the workspace nor the nx installation has one.
+ * `ensureTypescript` passes the copy it installs to a temporary directory.
+ */
+export function useTemporaryTypescript(packageJsonPath: string): void {
+  temporaryPackageJsonPath = packageJsonPath;
+}
+
+function resolveTypescriptPackageJson(lookupPaths: string[]): string {
+  try {
+    return resolveInstalledPackage('typescript/package.json', lookupPaths);
+  } catch (e) {
+    if (e?.code === 'MODULE_NOT_FOUND' && temporaryPackageJsonPath) {
+      return temporaryPackageJsonPath;
+    }
+    throw e;
+  }
 }
 
 /**
