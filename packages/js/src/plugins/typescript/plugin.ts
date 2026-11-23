@@ -931,6 +931,18 @@ function readTargets(
   }
 }
 
+const PACKAGE_JSON_RESOLUTION_FIELDS = [
+  'name',
+  'type',
+  'exports',
+  'imports',
+  'main',
+  'module',
+  'types',
+  'typings',
+  'typesVersions',
+];
+
 /**
  * Whether this plugin invocation infers a build target for the project.
  * Another plugin, or another entry of this one, may still give it one.
@@ -1209,6 +1221,29 @@ function getInputs(
     cache
   );
   inputs.push(...externalRefs.tsconfigPatterns);
+
+  // TS resolves an import of a referenced project through these fields of its
+  // package.json. The rest of the file, such as its version, changes nothing.
+  const referencedProjects = new Set<string>();
+  for (const { ownerProject } of externalRefs.references) {
+    if (
+      ownerProject.normalized === config.project.normalized ||
+      referencedProjects.has(ownerProject.root)
+    ) {
+      continue;
+    }
+    referencedProjects.add(ownerProject.root);
+    if (existsSync(join(ownerProject.absolute, 'package.json'))) {
+      inputs.push({
+        json: `{workspaceRoot}/${joinPathFragments(
+          ownerProject.root,
+          'package.json'
+        )}`,
+        fields: PACKAGE_JSON_RESOLUTION_FIELDS,
+        always: true,
+      });
+    }
+  }
 
   if (isBuiltProject) {
     // No task emits the declarations of a referenced project that is not
