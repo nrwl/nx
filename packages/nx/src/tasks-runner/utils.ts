@@ -40,17 +40,29 @@ export type NormalizedTargetDependencyConfig = TargetDependencyConfig & {
   projects: string[];
 };
 
+export function getDependsOnEntries(
+  { project, target }: { project: string; target: string },
+  extraTargetDependencies: Record<string, (TargetDependencyConfig | string)[]>,
+  projectGraph: ProjectGraph
+): (TargetDependencyConfig | string)[] {
+  return (
+    projectGraph.nodes[project].data?.targets[target]?.dependsOn ??
+    // This is passed into `run-command` from programmatic invocations
+    extraTargetDependencies[target] ??
+    []
+  );
+}
+
 export function getDependencyConfigs(
   { project, target }: { project: string; target: string },
   extraTargetDependencies: Record<string, (TargetDependencyConfig | string)[]>,
   projectGraph: ProjectGraph,
   allTargetNames: string[]
 ): NormalizedTargetDependencyConfig[] | undefined {
-  return (
-    projectGraph.nodes[project].data?.targets[target]?.dependsOn ??
-    // This is passed into `run-command` from programmatic invocations
-    extraTargetDependencies[target] ??
-    []
+  return getDependsOnEntries(
+    { project, target },
+    extraTargetDependencies,
+    projectGraph
   ).flatMap((config) =>
     normalizeDependencyConfigDefinition(
       config,
@@ -83,18 +95,19 @@ export function normalizeDependencyConfigProjects(
   graph: ProjectGraph
 ): NormalizedTargetDependencyConfig {
   assertNotLegacyProjectsString(dependencyConfig, currentProject, graph);
-  const noStringConfig =
+  const { projects, ...rest } =
     normalizeTargetDependencyWithStringProjects(dependencyConfig);
 
-  if (noStringConfig.projects) {
-    dependencyConfig.projects = findMatchingProjects(
-      noStringConfig.projects,
-      graph.nodes
-    );
-  } else if (!noStringConfig.dependencies) {
-    dependencyConfig.projects = [currentProject];
+  if (projects) {
+    return {
+      ...rest,
+      projects: findMatchingProjects([...projects], graph.nodes),
+    };
   }
-  return dependencyConfig as NormalizedTargetDependencyConfig;
+  if (!rest.dependencies) {
+    return { ...rest, projects: [currentProject] };
+  }
+  return rest as NormalizedTargetDependencyConfig;
 }
 
 function assertNotLegacyProjectsString(
@@ -231,7 +244,7 @@ export function normalizeTargetDependencyWithStringProjects(
   dependencyConfig: TargetDependencyConfig
 ): Omit<TargetDependencyConfig, 'projects'> & { projects?: string[] } {
   if (typeof dependencyConfig.projects === 'string') {
-    dependencyConfig.projects = [dependencyConfig.projects];
+    return { ...dependencyConfig, projects: [dependencyConfig.projects] };
   }
   return dependencyConfig as Omit<TargetDependencyConfig, 'projects'> & {
     projects?: string[];
