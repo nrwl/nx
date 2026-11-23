@@ -6121,6 +6121,50 @@ snapshots:
         ]);
       });
 
+      it('should infer the inputs again when a config a reference extends changes its options', async () => {
+        process.env.NX_CACHE_PROJECT_GRAPH = 'true';
+        const files = (bOptions: object) => ({
+          'libs/a/tsconfig.json': '{}',
+          'libs/a/tsconfig.lib.json': JSON.stringify({
+            compilerOptions: { outDir: 'dist' },
+            include: ['src/**/*.ts'],
+            references: [{ path: '../b/tsconfig.lib.json' }],
+          }),
+          'libs/a/package.json': `{"main": "dist/index.js"}`,
+          'libs/b/tsconfig.json': JSON.stringify({ compilerOptions: bOptions }),
+          'libs/b/tsconfig.lib.json': JSON.stringify({
+            extends: './tsconfig.json',
+            compilerOptions: { outDir: 'dist' },
+            include: ['src'],
+          }),
+          'libs/b/package.json': `{"main": "src/index.ts"}`,
+        });
+        const jsSourcesOfB = async () => {
+          const result = await invokeCreateNodesOnMatchingFiles(
+            configFiles,
+            context,
+            { typecheck: false, build: true }
+          );
+          return result.projects['libs/a'].targets.build.inputs.filter(
+            (input) =>
+              typeof input !== 'string' &&
+              'fileset' in input &&
+              input.fileset === '{workspaceRoot}/libs/b/src/**/*.js'
+          );
+        };
+
+        configFiles = await applyFilesToTempFsAndContext(tempFs, files({}));
+        expect(await jsSourcesOfB()).toEqual([]);
+
+        configFiles = await applyFilesToTempFsAndContext(
+          tempFs,
+          files({ allowJs: true })
+        );
+        expect(await jsSourcesOfB()).toEqual([
+          { fileset: '{workspaceRoot}/libs/b/src/**/*.js', always: true },
+        ]);
+      });
+
       it('should only collect tsconfig patterns from the build reference chain', async () => {
         configFiles = await applyFilesToTempFsAndContext(tempFs, {
           'libs/my-lib/tsconfig.json': '{}',

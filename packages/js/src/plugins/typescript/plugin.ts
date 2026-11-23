@@ -525,10 +525,20 @@ async function resolveValidConfigFilesAndHashes(
     const referencedProjectRoots = new Set(
       references.map((ref) => ref.ownerProject.root)
     );
+    // A referenced config's merged options shape the inputs too, so the
+    // configs it extends count along with it.
+    const chainConfigs = new Set<string>();
+    for (const { configPath } of references) {
+      chainConfigs.add(configPath);
+      getExtendedConfigFiles(
+        retrieveTsConfigFromCache(configPath, context.workspaceRoot, cache),
+        context.workspaceRoot,
+        cache
+      ).files.forEach((file) => chainConfigs.add(file));
+    }
     hashes[idx] = hashArray([
       hashes[idx],
-      ...references
-        .map((ref) => ref.configPath)
+      ...Array.from(chainConfigs)
         .sort()
         .map((file) => getFileHash(file, context.workspaceRoot, cache)),
       ...(config.basename === buildConfigName
@@ -558,10 +568,12 @@ async function resolveValidConfigFilesAndHashes(
  *   - config files extended by the current config file (recursively up to the root config file)
  *   - referenced config files that are internal to the owning Nx project of the current config file,
  *     or is a shallow external reference of the owning Nx project
- *   - every config file in the external reference chain (added by `resolveValidConfigFilesAndHashes`)
- * - for a build config, whether each project in that chain gets a build target
+ *   - every referenced config file in the external reference chain and the config files
+ *     each extends (added by `resolveValidConfigFilesAndHashes`)
  *   - lock file
  *   - project's package.json
+ * - for a build config, whether each project in that chain gets a build target
+ *   (added by `resolveValidConfigFilesAndHashes`)
  * - hash of the plugin options
  * - current config file path
  */
@@ -1282,16 +1294,22 @@ function getInputs(
           sourceInputs.add(toInput(input));
         }
       }
-      // TS leaves `outDir` out by default; `exclude` replaces that default.
-      const exclude: string[] =
-        refTsConfig.raw?.exclude ??
-        (refTsConfig.options.outDir
-          ? [relative(refDir, refTsConfig.options.outDir)]
-          : []);
-      for (const spec of exclude) {
-        sourceInputs.add(
-          `!${toInput(isImplicitGlobSpec(spec, refDir) ? `${spec}/**/*` : spec)}`
-        );
+      if (refTsConfig.raw?.exclude) {
+        for (const spec of refTsConfig.raw.exclude) {
+          sourceInputs.add(
+            `!${toInput(isImplicitGlobSpec(spec, refDir) ? `${spec}/**/*` : spec)}`
+          );
+        }
+      } else {
+        // TS leaves its output directories out unless `exclude` is set.
+        for (const dir of [
+          refTsConfig.options.outDir,
+          refTsConfig.options.declarationDir,
+        ]) {
+          if (dir) {
+            sourceInputs.add(`!${toInput(`${relative(refDir, dir)}/**/*`)}`);
+          }
+        }
       }
     }
     // `always` keeps them in the hash when an Ultracache recording, made
