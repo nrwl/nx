@@ -59,6 +59,9 @@ function processFileWithStandaloneSetup(
   printer: Printer
 ) {
   let content = tree.read(filePath, 'utf-8');
+  if (content === null) {
+    return;
+  }
   let sourceFile = ast(content);
 
   const provideRouterCallExpression =
@@ -114,6 +117,9 @@ function processFileWithStandaloneSetup(
     withDisabledInitialNavigationImportNode.parent.elements.hasTrailingComma;
 
   content = tree.read(filePath, 'utf-8');
+  if (content === null) {
+    return;
+  }
   tree.write(
     filePath,
     `${content.slice(
@@ -158,6 +164,9 @@ function processFileWithNgModuleSetup(
   printer: Printer
 ) {
   const content = tree.read(filePath, 'utf-8');
+  if (content === null) {
+    return;
+  }
   const sourceFile = ast(content);
 
   const routerModuleForRootCallExpression =

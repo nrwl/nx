@@ -21,7 +21,7 @@ export default async function (tree: Tree) {
 
     for (const targetConfig of Object.values(projectConfig.targets ?? {})) {
       if (
-        continuousExecutors.has(targetConfig.executor) &&
+        continuousExecutors.has(targetConfig.executor ?? '') &&
         targetConfig.continuous === undefined
       ) {
         targetConfig.continuous = true;

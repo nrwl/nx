@@ -1,10 +1,9 @@
 import {
   addProjectConfiguration,
   readJson,
-  readNxJson,
   updateJson,
-  updateNxJson,
   writeJson,
+  type NxJsonConfiguration,
   type Tree,
 } from '@nx/devkit';
 import { withPnpm } from '@nx/devkit/internal-testing-utils';
@@ -145,11 +144,12 @@ describe('add-angular-build migration', () => {
         projectType: 'application',
         targets: { build: {} },
       });
-      const nxJson = readNxJson(tree);
-      nxJson.targetDefaults = {
-        build: { executor: '@nx/angular:application', options: {} },
-      };
-      updateNxJson(tree, nxJson);
+      updateJson<NxJsonConfiguration>(tree, 'nx.json', (nxJson) => {
+        nxJson.targetDefaults = {
+          build: { executor: '@nx/angular:application', options: {} },
+        };
+        return nxJson;
+      });
 
       await migration(tree);
 
@@ -157,11 +157,12 @@ describe('add-angular-build migration', () => {
     });
 
     it('should detect a record-shaped targetDefault keyed by the executor', async () => {
-      const nxJson = readNxJson(tree);
-      nxJson.targetDefaults = {
-        '@angular/build:application': { options: {} },
-      };
-      updateNxJson(tree, nxJson);
+      updateJson<NxJsonConfiguration>(tree, 'nx.json', (nxJson) => {
+        nxJson.targetDefaults = {
+          '@angular/build:application': { options: {} },
+        };
+        return nxJson;
+      });
 
       await migration(tree);
 
@@ -169,14 +170,15 @@ describe('add-angular-build migration', () => {
     });
 
     it('should not add @angular/build when targetDefaults do not use a relevant executor', async () => {
-      const nxJson = readNxJson(tree);
-      nxJson.targetDefaults = {
-        build: {
-          executor: '@angular-devkit/build-angular:browser',
-          options: {},
-        },
-      };
-      updateNxJson(tree, nxJson);
+      updateJson<NxJsonConfiguration>(tree, 'nx.json', (nxJson) => {
+        nxJson.targetDefaults = {
+          build: {
+            executor: '@angular-devkit/build-angular:browser',
+            options: {},
+          },
+        };
+        return nxJson;
+      });
 
       await migration(tree);
 

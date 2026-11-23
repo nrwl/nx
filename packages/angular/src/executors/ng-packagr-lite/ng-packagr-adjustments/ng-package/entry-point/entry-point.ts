@@ -49,7 +49,7 @@ export function createNgEntryPoint(
         join(primaryDestPath, ...paths);
 
       return {
-        directory: ensureUnixPath(secondaryDir),
+        directory: ensureUnixPath(secondaryDir) ?? '',
         declarations: pathJoinWithDest(
           'tmp-typings',
           secondaryDir,

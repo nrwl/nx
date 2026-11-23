@@ -43,7 +43,8 @@ export default async function update(tree: Tree) {
     }
 
     let updated = false;
-    for (const targetName of Object.keys(project.targets ?? {})) {
+    const targets = project.targets ?? {};
+    for (const targetName of Object.keys(targets)) {
       const target =
         projectGraph.nodes[projectName]?.data.targets?.[targetName];
       if (
@@ -58,7 +59,7 @@ export default async function update(tree: Tree) {
         // Only project.json is written, so a package.json entry could keep the target
         !isTargetAlsoInPackageJson(tree, project.root, targetName)
       ) {
-        delete project.targets[targetName];
+        delete targets[targetName];
         removedTargets.push(`${projectName}:${targetName}`);
         updated = true;
       }

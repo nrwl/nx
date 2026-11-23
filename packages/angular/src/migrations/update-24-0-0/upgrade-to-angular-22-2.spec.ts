@@ -68,7 +68,7 @@ describe('upgrade-to-angular-22-2 migration', () => {
       const result = await migration(tree);
 
       expect(readAngularCore()).toBe('~22.1.0');
-      expect(result.nextSteps).toEqual([
+      expect(result?.nextSteps).toEqual([
         'Kept Angular 22.1. Cypress component testing (libs/ui/cypress/support/component.ts) fails with the webpack-dev-server 6 that Angular 22.2 installs (https://github.com/cypress-io/cypress/issues/34259). A later Nx migration updates Angular once these issues are fixed. To update before then, move the Angular packages to 22.2 by hand and work around the issues.',
       ]);
     }
@@ -105,7 +105,7 @@ describe('upgrade-to-angular-22-2 migration', () => {
       const result = await migration(tree);
 
       expect(readAngularCore()).toBe('~22.1.0');
-      expect(result.nextSteps[0]).toContain(
+      expect(result?.nextSteps[0]).toContain(
         'Module Federation builds (tools/webpack/with-mf.ts) fail'
       );
     }
@@ -133,7 +133,7 @@ describe('upgrade-to-angular-22-2 migration', () => {
     const result = await migration(tree);
 
     expect(readAngularCore()).toBe('~22.1.0');
-    expect(result.nextSteps[0]).toContain(
+    expect(result?.nextSteps[0]).toContain(
       'Module Federation builds (apps/legacy/webpack.config.js) fail'
     );
   });
@@ -159,7 +159,7 @@ describe('upgrade-to-angular-22-2 migration', () => {
     const result = await migration(tree);
 
     expect(readAngularCore()).toBe('~22.1.0');
-    expect(result.nextSteps[0]).toContain(
+    expect(result?.nextSteps[0]).toContain(
       'Module Federation builds (apps/remote/webpack.prod.config.ts) fail'
     );
   });
@@ -232,7 +232,7 @@ describe('upgrade-to-angular-22-2 migration', () => {
     const result = await migration(tree);
 
     expect(readAngularCore()).toBe('~22.1.0');
-    expect(result.nextSteps[0]).toContain(
+    expect(result?.nextSteps[0]).toContain(
       'libs/webpack-utils/src/index.ts import it, and the migration could not tell whether an Angular webpack build does: apps/host/webpack.config.ts loads "@myorg/webpack-utils", which is not an installed package'
     );
   });

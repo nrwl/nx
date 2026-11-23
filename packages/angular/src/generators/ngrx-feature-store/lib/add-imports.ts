@@ -14,9 +14,17 @@ import { insertImport } from '@nx/js';
 
 let tsModule: typeof import('typescript');
 
+function readParentFile(tree: Tree, parentPath: string): string {
+  const contents = tree.read(parentPath, 'utf-8');
+  if (contents === null) {
+    throw new Error(`Cannot find the parent file "${parentPath}".`);
+  }
+  return contents;
+}
+
 function addStoreForFeatureImport(
   tree: Tree,
-  isParentStandalone,
+  isParentStandalone: boolean,
   route: string,
   sourceFile: SourceFile,
   parentPath: string,
@@ -24,7 +32,7 @@ function addStoreForFeatureImport(
   storeForFeature: string
 ) {
   if (isParentStandalone) {
-    const parentContents = tree.read(parentPath, 'utf-8');
+    const parentContents = readParentFile(tree, parentPath);
     if (parentContents.includes('ApplicationConfig')) {
       addProviderToAppConfig(tree, parentPath, provideStoreForFeature);
     } else if (parentContents.includes('bootstrapApplication')) {
@@ -49,7 +57,7 @@ function addStoreForFeatureImport(
 
 function addEffectsForFeatureImport(
   tree: Tree,
-  isParentStandalone,
+  isParentStandalone: boolean,
   route: string,
   sourceFile: SourceFile,
   parentPath: string,
@@ -57,7 +65,7 @@ function addEffectsForFeatureImport(
   effectsForFeature: string
 ) {
   if (isParentStandalone) {
-    const parentContents = tree.read(parentPath, 'utf-8');
+    const parentContents = readParentFile(tree, parentPath);
     if (parentContents.includes('ApplicationConfig')) {
       addProviderToAppConfig(tree, parentPath, provideEffectsForFeature);
     } else if (parentContents.includes('bootstrapApplication')) {
@@ -88,7 +96,7 @@ export function addImportsToModule(
     tsModule = ensureTypescript();
   }
   const parentPath = options.parent;
-  const sourceText = tree.read(parentPath, 'utf-8');
+  const sourceText = readParentFile(tree, parentPath);
   let sourceFile = tsModule.createSourceFile(
     parentPath,
     sourceText,
@@ -152,7 +160,7 @@ export function addImportsToModule(
   if (options.facade) {
     sourceFile = addImport(sourceFile, facadeName, facadePath);
     if (isParentStandalone) {
-      if (tree.read(parentPath, 'utf-8').includes('ApplicationConfig')) {
+      if (readParentFile(tree, parentPath).includes('ApplicationConfig')) {
         addProviderToAppConfig(tree, parentPath, facadeName);
       } else {
         addProviderToRoute(tree, parentPath, options.route, facadeName);

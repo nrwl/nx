@@ -87,9 +87,11 @@ export default async function addOptionalWebpackPackages(tree: Tree) {
   for (const [, project] of projects) {
     for (const target of Object.values(project.targets ?? {})) {
       needsWebpack ||=
-        webpackExecutors.has(target.executor) ||
+        webpackExecutors.has(target.executor ?? '') ||
         usesWebpackDevServer(target, projects, targetDefaults);
-      needsModuleFederation ||= moduleFederationExecutors.has(target.executor);
+      needsModuleFederation ||= moduleFederationExecutors.has(
+        target.executor ?? ''
+      );
       needsRspack ||= target.executor?.startsWith('@nx/rspack:') ?? false;
     }
 

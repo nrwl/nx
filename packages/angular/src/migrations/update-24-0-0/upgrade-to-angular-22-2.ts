@@ -177,6 +177,9 @@ function scanWorkspace(tree: Tree): WorkspaceScan {
     }
 
     const content = tree.read(filePath, 'utf-8');
+    if (content === null) {
+      return;
+    }
     if (!MARKER_TEXT.test(content)) {
       return;
     }
@@ -218,10 +221,12 @@ function findModuleFederationConfigs(
         return;
       }
       visited.add(filePath);
-      const { specifiers, computed } = readModuleSpecifiers(
-        filePath,
-        tree.read(filePath, 'utf-8')
-      );
+      const content = tree.read(filePath, 'utf-8');
+      if (content === null) {
+        unresolved.push(`${importer} loads "${specifier}", which is missing`);
+        return;
+      }
+      const { specifiers, computed } = readModuleSpecifiers(filePath, content);
       if (computed) {
         unresolved.push(`${filePath} has a computed require or import`);
       }
@@ -336,7 +341,9 @@ function findModuleFederationConfigs(
   return [...configs];
 }
 
-function isAngularWebpackExecutor(executor: string | undefined): boolean {
+function isAngularWebpackExecutor(
+  executor: string | undefined
+): executor is string {
   return (
     !!executor &&
     (NX_WEBPACK_EXECUTORS.has(executor) ||

@@ -14,9 +14,6 @@ import type { Logger, ProjectMigrationInfo } from '../../utilities';
 import { BuilderMigrator } from './builder.migrator';
 
 export class AngularEslintLintMigrator extends BuilderMigrator {
-  private oldEsLintConfigPath: string;
-  private newEsLintConfigPath: string;
-
   constructor(
     tree: Tree,
     project: ProjectMigrationInfo,
@@ -39,14 +36,19 @@ export class AngularEslintLintMigrator extends BuilderMigrator {
     }
 
     for (const [name, target] of this.targets) {
-      this.oldEsLintConfigPath =
+      const oldEsLintConfigPath: string =
         target.options?.eslintConfig ??
         joinPathFragments(this.project.oldRoot, '.eslintrc.json');
-      this.newEsLintConfigPath = this.convertRootPath(this.oldEsLintConfigPath);
+      const newEsLintConfigPath = this.convertRootPath(oldEsLintConfigPath);
 
-      this.moveProjectRootFile(this.oldEsLintConfigPath);
-      this.updateTargetConfiguration(name, target);
-      this.updateEsLintConfig();
+      this.moveProjectRootFile(oldEsLintConfigPath);
+      this.updateTargetConfiguration(
+        name,
+        target,
+        oldEsLintConfigPath,
+        newEsLintConfigPath
+      );
+      this.updateEsLintConfig(oldEsLintConfigPath, newEsLintConfigPath);
       this.updateCacheableOperations([name]);
     }
 
@@ -65,7 +67,9 @@ export class AngularEslintLintMigrator extends BuilderMigrator {
 
   private async updateTargetConfiguration(
     targetName: string,
-    target: TargetConfiguration
+    target: TargetConfiguration,
+    oldEsLintConfigPath: string,
+    newEsLintConfigPath: string
   ): Promise<void> {
     if (!target.options) {
       this.logger.warn(
@@ -74,18 +78,18 @@ export class AngularEslintLintMigrator extends BuilderMigrator {
       return;
     }
 
-    const existEsLintConfigPath = this.tree.exists(this.newEsLintConfigPath);
+    const existEsLintConfigPath = this.tree.exists(newEsLintConfigPath);
     if (!existEsLintConfigPath) {
       this.logger.warn(
-        `The ESLint config file "${this.oldEsLintConfigPath}" could not be found. Skipping updating the file.`
+        `The ESLint config file "${oldEsLintConfigPath}" could not be found. Skipping updating the file.`
       );
     }
 
     target.options.eslintConfig =
-      target.options.eslintConfig && this.newEsLintConfigPath;
+      target.options.eslintConfig && newEsLintConfigPath;
     target.options.lintFilePatterns =
       target.options.lintFilePatterns &&
-      target.options.lintFilePatterns.map((pattern) => {
+      target.options.lintFilePatterns.map((pattern: string) => {
         // replace the old source root with the new root, we want to lint all
         // matching files in the project, not just the ones in the source root
         if (pattern.startsWith(this.project.oldSourceRoot)) {
@@ -113,8 +117,7 @@ export class AngularEslintLintMigrator extends BuilderMigrator {
 
     // `@nx/eslint:lint` is gone in v24, so the migrated target runs the ESLint
     // CLI directly. Patterns were rebased onto the new project root above.
-    const eslintConfig =
-      target.options.eslintConfig && this.newEsLintConfigPath;
+    const eslintConfig = target.options.eslintConfig && newEsLintConfigPath;
     const patterns: string[] = target.options.lintFilePatterns ?? [];
     delete target.executor;
     delete target.options;
@@ -130,12 +133,15 @@ export class AngularEslintLintMigrator extends BuilderMigrator {
     });
   }
 
-  private updateEsLintConfig(): void {
-    if (!this.tree.exists(this.newEsLintConfigPath)) {
+  private updateEsLintConfig(
+    oldEsLintConfigPath: string,
+    newEsLintConfigPath: string
+  ): void {
+    if (!this.tree.exists(newEsLintConfigPath)) {
       return;
     }
 
-    updateJson(this.tree, this.newEsLintConfigPath, (json) => {
+    updateJson(this.tree, newEsLintConfigPath, (json) => {
       delete json.root;
       json.ignorePatterns = ['!**/*'];
 
@@ -145,10 +151,7 @@ export class AngularEslintLintMigrator extends BuilderMigrator {
       );
       if (Array.isArray(json.extends)) {
         json.extends = json.extends.map((extend: string) =>
-          this.convertEsLintConfigExtendToNewPath(
-            this.oldEsLintConfigPath,
-            extend
-          )
+          this.convertEsLintConfigExtendToNewPath(oldEsLintConfigPath, extend)
         );
 
         // it might have not been extending from the root config, make sure it does
@@ -159,15 +162,17 @@ export class AngularEslintLintMigrator extends BuilderMigrator {
         json.extends = rootEsLintConfigRelativePath;
       }
 
-      json.overrides?.forEach((override) => {
-        if (!override.parserOptions?.project) {
-          return;
-        }
+      json.overrides?.forEach(
+        (override: { parserOptions?: { project?: unknown } }) => {
+          if (!override.parserOptions?.project) {
+            return;
+          }
 
-        override.parserOptions.project = [
-          `${this.projectConfig.root}/tsconfig.*?.json`,
-        ];
-      });
+          override.parserOptions.project = [
+            `${this.projectConfig.root}/tsconfig.*?.json`,
+          ];
+        }
+      );
 
       return json;
     });

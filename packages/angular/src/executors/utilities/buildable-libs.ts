@@ -10,12 +10,16 @@ export function createTmpTsConfigForBuildableLibs(
   tsConfigPath: string,
   context: ExecutorContext
 ) {
+  const { projectName, targetName } = context;
+  if (!projectName || !targetName) {
+    throw new Error('The executor must be run for a project target.');
+  }
   let dependencies: DependentBuildableProjectNode[];
   const result = calculateProjectDependencies(
     context.projectGraph ?? readCachedProjectGraph(),
     context.root,
-    context.projectName,
-    context.targetName,
+    projectName,
+    targetName,
     context.configurationName
   );
   dependencies = result.dependencies;

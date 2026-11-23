@@ -6,6 +6,7 @@ import * as devkit from '@nx/devkit';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { AngularRspackPluginOptions } from '../models';
 import * as postcssConfiguration from '../utils/postcss-configuration';
+import type { NgRspackPlugin } from '../plugins/ng-rspack';
 import { READY_SIGNAL_PLUGIN } from '../utils/dev-server-ready-signal';
 import { isRspackV2 } from '../utils/rspack-version';
 import { handleConfigurations } from './config-utils/user-defined-config-helpers';
@@ -235,12 +236,13 @@ describe('createConfig', () => {
       expect(configs).toHaveLength(2);
       const [browserPlugin, serverPlugin] = configs.map((config) =>
         config.plugins?.find(
-          (plugin) => plugin?.constructor.name === 'NgRspackPlugin'
+          (plugin): plugin is NgRspackPlugin =>
+            plugin?.constructor.name === 'NgRspackPlugin'
         )
       );
-      expect(browserPlugin['sharedLicenseInputs']).toBeInstanceOf(Map);
-      expect(browserPlugin['sharedLicenseInputs']).toBe(
-        serverPlugin['sharedLicenseInputs']
+      expect(browserPlugin?.['sharedLicenseInputs']).toBeInstanceOf(Map);
+      expect(browserPlugin?.['sharedLicenseInputs']).toBe(
+        serverPlugin?.['sharedLicenseInputs']
       );
     } finally {
       await rm(root, { recursive: true, force: true });
@@ -264,12 +266,13 @@ describe('createConfig', () => {
       expect(configs).toHaveLength(2);
       const [browserPlugin, serverPlugin] = configs.map((config) =>
         config.plugins?.find(
-          (plugin) => plugin?.constructor.name === 'NgRspackPlugin'
+          (plugin): plugin is NgRspackPlugin =>
+            plugin?.constructor.name === 'NgRspackPlugin'
         )
       );
-      expect(browserPlugin['sharedAngularPlugin']).toBeDefined();
-      expect(browserPlugin['sharedAngularPlugin']).toBe(
-        serverPlugin['sharedAngularPlugin']
+      expect(browserPlugin?.['sharedAngularPlugin']).toBeDefined();
+      expect(browserPlugin?.['sharedAngularPlugin']).toBe(
+        serverPlugin?.['sharedAngularPlugin']
       );
     } finally {
       await rm(root, { recursive: true, force: true });
@@ -357,7 +360,7 @@ describe('createConfig', () => {
         const serverExportsRule = findServerExportsRule(configs[1]);
 
         expect(serverExportsRule).toBeDefined();
-        expect(serverExportsRule.options.engineWiring).toMatchObject({
+        expect(serverExportsRule?.options.engineWiring).toMatchObject({
           mainServerEntry: join(root, 'src', 'main.server.ts'),
           baseHref: '/app/',
           // Posix-normalized by the config, so a native join would fail on
@@ -391,7 +394,7 @@ describe('createConfig', () => {
       });
 
       const manifestModuleRequest = (
-        findServerExportsRule(configs[1]).options.engineWiring as Record<
+        findServerExportsRule(configs[1])?.options.engineWiring as Record<
           string,
           unknown
         >
@@ -426,9 +429,9 @@ describe('createConfig', () => {
         });
 
         const serverExportsRule = findServerExportsRule(configs[1]);
-        expect(serverExportsRule.options.engineWiring).toBeDefined();
+        expect(serverExportsRule?.options.engineWiring).toBeDefined();
         expect(
-          (serverExportsRule.options.engineWiring as Record<string, unknown>)
+          (serverExportsRule?.options.engineWiring as Record<string, unknown>)
             .manifestModuleRequest
         ).toBeUndefined();
         expect(
@@ -487,7 +490,7 @@ describe('createConfig', () => {
         });
 
         const serverExportsRule = findServerExportsRule(configs[1]);
-        expect(serverExportsRule.options.engineWiring).toMatchObject({
+        expect(serverExportsRule?.options.engineWiring).toMatchObject({
           allowedHosts: ['example.com'],
         });
       } finally {
@@ -509,7 +512,7 @@ describe('createConfig', () => {
       });
 
       const serverExportsRule = findServerExportsRule(configs[1]);
-      expect(serverExportsRule.options.engineWiring).toBeDefined();
+      expect(serverExportsRule?.options.engineWiring).toBeDefined();
     } finally {
       await rm(root, { recursive: true, force: true });
     }
@@ -702,7 +705,7 @@ describe('createConfig', () => {
       });
 
       const serverExportsRule = findServerExportsRule(configs[1]);
-      expect(serverExportsRule.options.engineWiring).toMatchObject({
+      expect(serverExportsRule?.options.engineWiring).toMatchObject({
         allowedHosts: [
           'example.com',
           '*.example.com',
@@ -714,7 +717,7 @@ describe('createConfig', () => {
         ],
       });
       expect(
-        (serverExportsRule.options.engineWiring as Record<string, unknown>)
+        (serverExportsRule?.options.engineWiring as Record<string, unknown>)
           .disableHostCheck
       ).toBeUndefined();
     } finally {
@@ -739,7 +742,7 @@ describe('createConfig', () => {
       });
 
       const serverExportsRule = findServerExportsRule(configs[1]);
-      expect(serverExportsRule.options.engineWiring).toMatchObject({
+      expect(serverExportsRule?.options.engineWiring).toMatchObject({
         allowedHosts: [
           'example.com',
           '*.example.com',
@@ -770,7 +773,7 @@ describe('createConfig', () => {
       });
 
       const serverExportsRule = findServerExportsRule(configs[1]);
-      expect(serverExportsRule.options.engineWiring).toMatchObject({
+      expect(serverExportsRule?.options.engineWiring).toMatchObject({
         allowedHosts: ['localhost', '*.localhost', '127.0.0.1', '[::1]'],
         disableHostCheck: true,
       });
@@ -802,7 +805,7 @@ describe('createConfig', () => {
         });
 
         const serverExportsRule = findServerExportsRule(configs[1]);
-        expect(serverExportsRule.options.engineWiring).toMatchObject({
+        expect(serverExportsRule?.options.engineWiring).toMatchObject({
           allowedHosts: [
             'localhost',
             '*.localhost',
@@ -895,7 +898,7 @@ describe('createConfig', () => {
 
       const serverExportsRule = findServerExportsRule(configs[1]);
       expect(serverExportsRule).toBeDefined();
-      expect(serverExportsRule.options.engineWiring).toBeUndefined();
+      expect(serverExportsRule?.options.engineWiring).toBeUndefined();
       expect(warnSpy).toHaveBeenCalledWith(
         expect.stringContaining(
           'Locale inlining ("localize") disables the "@angular/ssr" application engine wiring'
@@ -985,7 +988,12 @@ describe('createConfig', () => {
           outputDirs.map((dir) => join(root, 'dist', dir))
         );
         expect(
-          configs[0].plugins?.some((plugin) => plugin?.[READY_SIGNAL_PLUGIN])
+          configs[0].plugins?.some(
+            (plugin) =>
+              !!plugin &&
+              READY_SIGNAL_PLUGIN in plugin &&
+              !!plugin[READY_SIGNAL_PLUGIN]
+          )
         ).toBe(true);
         expect(warnSpy).not.toHaveBeenCalled();
       },
@@ -1079,9 +1087,10 @@ describe('createConfig', () => {
 
     expect(configs).toHaveLength(1);
     const browserPlugin = configs[0].plugins?.find(
-      (plugin) => plugin?.constructor.name === 'NgRspackPlugin'
+      (plugin): plugin is NgRspackPlugin =>
+        plugin?.constructor.name === 'NgRspackPlugin'
     );
-    expect(browserPlugin['sharedAngularPlugin']).toBeUndefined();
+    expect(browserPlugin?.['sharedAngularPlugin']).toBeUndefined();
   }, 10000);
 
   it('should turn lazy compilation off on rspack 2 unless overridden, keep overrides off the server, and leave it unset on rspack 1', async () => {
@@ -1448,12 +1457,11 @@ describe('createConfig', () => {
 
         const plugins = config[0].plugins;
         const NgRspackPlugin = plugins?.find(
-          (plugin) => plugin?.constructor.name === 'NgRspackPlugin'
+          (plugin): plugin is NgRspackPlugin =>
+            plugin?.constructor.name === 'NgRspackPlugin'
         );
         expect(NgRspackPlugin).toBeDefined();
-        expect(
-          NgRspackPlugin['pluginOptions'] as AngularRspackPluginOptions
-        ).toEqual(
+        expect(NgRspackPlugin?.pluginOptions).toEqual(
           expect.objectContaining({
             browser: `./src/${fileNameSegment}.main.ts`,
             skipTypeChecking,

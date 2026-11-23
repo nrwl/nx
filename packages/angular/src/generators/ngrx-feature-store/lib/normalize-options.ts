@@ -8,7 +8,8 @@ import type { Schema } from '../schema';
 
 export type NormalizedNgRxFeatureStoreGeneratorOptions = Schema & {
   parentDirectory: string;
-  subdirectory: string;
+  subdirectory: string | undefined;
+  route: string;
   rxjsVersion: string;
   rxjsMajorVersion: number;
 };
@@ -35,7 +36,7 @@ export function normalizeOptions(
     ...options,
     name,
     subdirectory,
-    parentDirectory: options.parent ? dirname(options.parent) : undefined,
+    parentDirectory: dirname(options.parent),
     route: options.route === '' ? `''` : (options.route ?? `''`),
     directory: names(options.directory).fileName,
     rxjsVersion,
@@ -46,10 +47,10 @@ export function normalizeOptions(
 function determineSubdirectoryAndName(name: string) {
   if (name.includes('/')) {
     const parts = name.split('/');
-    const storeName = parts.pop();
-    const subdirectory = joinPathFragments(...parts);
+    const storeName = parts[parts.length - 1];
+    const subdirectory = joinPathFragments(...parts.slice(0, -1));
     return { subdirectory, name: storeName };
   } else {
-    return { name };
+    return { subdirectory: undefined, name };
   }
 }

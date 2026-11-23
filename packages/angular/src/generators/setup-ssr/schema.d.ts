@@ -19,6 +19,8 @@ export interface Schema {
 }
 
 export interface NormalizedGeneratorOptions extends Schema {
+  main: string;
+  serverFileName: string;
   isUsingApplicationBuilder: boolean;
   isUsingWebpackBuilder: boolean;
   buildTargetExecutor: string;

@@ -1,4 +1,3 @@
-import type { Mock } from 'vitest';
 import '@nx/devkit/internal-testing-utils/mock-project-graph';
 import { mockCjsModule } from '@nx/devkit/internal-testing-utils';
 import { createRequire } from 'module';
@@ -10,8 +9,8 @@ vi.mock('@nx/cypress/internal', async () => ({
 }));
 // mock bc the nxE2EPreset uses fs for path normalization; it is `require`d,
 // so the fake has to go on the CJS channel.
-mockCjsModule(import.meta.url, 'fs', {
-  ...createRequire(import.meta.url)('fs'),
+mockCjsModule(__filename, 'fs', {
+  ...createRequire(__filename)('fs'),
   lstatSync: vi.fn(() => ({
     isDirectory: vi.fn(() => true),
   })),
@@ -37,9 +36,9 @@ describe('e2e migrator', () => {
   let tree: Tree;
   let migrator: E2eMigrator;
   let envBackup: string | undefined;
-  let mockedInstalledCypressVersion = getInstalledCypressMajorVersion as Mock<
-    ReturnType<typeof getInstalledCypressMajorVersion>
-  >;
+  const mockedInstalledCypressVersion = vi.mocked(
+    getInstalledCypressMajorVersion
+  );
 
   function addProject(
     name: string,
@@ -113,10 +112,10 @@ describe('e2e migrator', () => {
       const result = migrator.validate();
 
       expect(result).toHaveLength(1);
-      expect(result[0].message).toBe(
+      expect(result?.[0].message).toBe(
         'The "e2e" target is not specifying any options. The target will be skipped.'
       );
-      expect(result[0].hint).toBe(
+      expect(result?.[0].hint).toBe(
         'Make sure to manually migrate the target configuration and any possible associated files. Alternatively, you could revert the migration, ensure the "app1.architect.e2e.options" is correctly set or remove the target if it is not valid, and run the migration again.'
       );
     });
@@ -136,10 +135,10 @@ describe('e2e migrator', () => {
       const result = migrator.validate();
 
       expect(result).toHaveLength(1);
-      expect(result[0].message).toBe(
+      expect(result?.[0].message).toBe(
         'The "e2e" target is using the "@angular-devkit/build-angular:protractor" builder but the Protractor config file is not specified. The target will be skipped.'
       );
-      expect(result[0].hint).toBe(
+      expect(result?.[0].hint).toBe(
         'Make sure to manually migrate the target configuration and any possible associated files. Alternatively, you could revert the migration, ensure the "app1.architect.e2e.options.protractorConfig" is correctly set or remove the "app1.architect.e2e" target if it is not valid, and run the migration again.'
       );
     });
@@ -159,10 +158,10 @@ describe('e2e migrator', () => {
       const result = migrator.validate();
 
       expect(result).toHaveLength(1);
-      expect(result[0].message).toBe(
+      expect(result?.[0].message).toBe(
         'The specified Protractor config file "protractor.conf.js" in the "e2e" target could not be found. The target will be skipped.'
       );
-      expect(result[0].hint).toBe(
+      expect(result?.[0].hint).toBe(
         'Make sure to manually migrate the target configuration and any possible associated files. Alternatively, you could revert the migration, ensure the "app1.architect.e2e.options.protractorConfig" is set to a valid path or remove the "app1.architect.e2e" target if it is not valid, and run the migration again.'
       );
     });
@@ -200,10 +199,10 @@ describe('e2e migrator', () => {
       const result = migrator.validate();
 
       expect(result).toHaveLength(1);
-      expect(result[0].message).toBe(
+      expect(result?.[0].message).toBe(
         'The specified Cypress config file "cypress.conf.json" in the "e2e" target could not be found. The target will be skipped.'
       );
-      expect(result[0].hint).toBe(
+      expect(result?.[0].hint).toBe(
         'Make sure to manually migrate the target configuration and any possible associated files. Alternatively, you could revert the migration, ensure the "app1.architect.e2e.options.configFile" option is set to a valid path or remove the "app1.architect.e2e" target if it is not valid, and run the migration again.'
       );
     });
@@ -220,10 +219,10 @@ describe('e2e migrator', () => {
       const result = migrator.validate();
 
       expect(result).toHaveLength(1);
-      expect(result[0].message).toBe(
+      expect(result?.[0].message).toBe(
         'The "e2e" target is using the "@cypress/schematic:cypress" builder but the "configFile" option is not specified and a "cypress.config.{ts,js,mjs,cjs}" file could not be found at the project root. The target will be skipped.'
       );
-      expect(result[0].hint).toBe(
+      expect(result?.[0].hint).toBe(
         'Make sure to manually migrate the target configuration and any possible associated files. Alternatively, you could revert the migration, ensure the "app1.architect.e2e.options.configFile" option is set to a valid path or that a "cypress.config.{ts,js,mjs,cjs}" file exists at the project root or remove the "app1.architect.e2e" target if it is not valid, and run the migration again.'
       );
     });
@@ -358,7 +357,7 @@ describe('e2e migrator', () => {
         await migrator.migrate();
 
         const appProject = readProjectConfiguration(tree, 'app1');
-        expect(appProject.targets.e2e).toBeUndefined();
+        expect(appProject.targets?.e2e).toBeUndefined();
       });
 
       it('should add a lint target when the application is using it', async () => {
@@ -408,7 +407,7 @@ describe('e2e migrator', () => {
         await migrator.migrate();
 
         const appProject = readProjectConfiguration(tree, 'app1-e2e');
-        expect(appProject.targets.lint).toBeUndefined();
+        expect(appProject.targets?.lint).toBeUndefined();
       });
     }
   );

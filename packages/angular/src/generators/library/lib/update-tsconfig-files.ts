@@ -45,6 +45,9 @@ export function updateTsConfigFiles(
   };
 
   const rootTsConfigPath = getRootTsConfigFileName(tree);
+  if (!rootTsConfigPath) {
+    throw new Error('Cannot find the root tsconfig file.');
+  }
 
   const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);
   // Angular warns about emitDecoratorMetadata when isolatedModules is enabled,

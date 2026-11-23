@@ -7,7 +7,9 @@ import { loadModule } from './module-loader';
 // This is a workaround to make sure we use the same esbuild version as the
 // Angular DevKit uses. This is only used internally to load the plugins and
 // forward them to the Angular DevKit builders.
-type Plugin = Parameters<typeof buildApplication>[2]['codePlugins'][number];
+type Plugin = NonNullable<
+  NonNullable<Parameters<typeof buildApplication>[2]>['codePlugins']
+>[number];
 
 export type PluginSpec = {
   path: string;
@@ -28,7 +30,7 @@ function resolveModulePath(path: string): string {
 
 export async function loadPlugins(
   plugins: string[] | PluginSpec[] | undefined,
-  tsConfig: string
+  tsConfig: string | undefined
 ): Promise<Plugin[]> {
   if (!plugins?.length) {
     return [];
@@ -41,7 +43,7 @@ export async function loadPlugins(
 
 async function loadPlugin(
   pluginSpec: string | PluginSpec,
-  tsConfig: string
+  tsConfig: string | undefined
 ): Promise<Plugin> {
   const pluginPath =
     typeof pluginSpec === 'string' ? pluginSpec : pluginSpec.path;
@@ -72,7 +74,7 @@ export async function loadMiddleware(
 
 export async function loadIndexHtmlTransformer(
   indexHtmlTransformerPath: string,
-  tsConfig: string
+  tsConfig: string | undefined
 ): Promise<any> {
   return loadModule(resolveModulePath(indexHtmlTransformerPath), tsConfig);
 }

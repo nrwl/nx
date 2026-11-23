@@ -19,6 +19,9 @@ export function setServerTsConfigOptionsForSingleProgramBuild(
   options: NormalizedGeneratorOptions
 ) {
   const { targets } = readProjectConfiguration(tree, options.project);
+  if (!targets) {
+    throw new Error(`The "${options.project}" project has no targets.`);
+  }
   const tsConfigPath = targets.build.options.tsConfig;
 
   updateJson(tree, tsConfigPath, (json) => {

@@ -3,8 +3,12 @@ import { major } from 'semver';
 
 export type VersionInfo = { major: number; version: string };
 
-export function getInstalledAngularVersionInfo(): VersionInfo | null {
-  return getInstalledPackageVersionInfo('@angular/core');
+export function getInstalledAngularVersionInfo(): VersionInfo {
+  const versionInfo = getInstalledPackageVersionInfo('@angular/core');
+  if (!versionInfo) {
+    throw new Error('Could not find the installed version of "@angular/core".');
+  }
+  return versionInfo;
 }
 
 export function getInstalledPackageVersionInfo(

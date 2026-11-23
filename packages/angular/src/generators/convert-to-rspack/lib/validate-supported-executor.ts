@@ -9,7 +9,7 @@ export function validateSupportedBuildExecutor(targets: TargetConfiguration[]) {
   const executorsUsedByProject = targets.map((target) => target.executor);
   if (
     !executorsUsedByProject.some((executor) =>
-      SUPPORTED_BUILD_EXECUTORS.includes(executor)
+      SUPPORTED_BUILD_EXECUTORS.includes(executor ?? '')
     )
   ) {
     throw new Error(

@@ -22,19 +22,18 @@ export function addRoute(
   routesConst?: string,
   importPath?: string
 ) {
-  if (!tree.exists(routesFile)) {
-    throw new Error(
-      `Path to parent routing declaration (${routesFile}) does not exist. Please ensure path is correct.`
-    );
-  }
+  let routesFileContents = readRoutesFile(tree, routesFile);
   if (!tsModule) {
     tsModule = ensureTypescript();
   }
   const { ast, query } = require('@phenomnomnominal/tsquery');
 
-  let routesFileContents = tree.read(routesFile, 'utf-8');
-
   if (!lazy) {
+    if (!routesConst || !importPath) {
+      throw new Error(
+        'The "routesConst" and "importPath" arguments are required when "lazy" is false.'
+      );
+    }
     let parentSourceFile = tsModule.createSourceFile(
       routesFile,
       routesFileContents,
@@ -50,7 +49,7 @@ export function addRoute(
       importPath
     );
 
-    routesFileContents = tree.read(routesFile, 'utf-8');
+    routesFileContents = readRoutesFile(tree, routesFile);
   }
 
   const sourceFile = ast(routesFileContents);
@@ -101,15 +100,10 @@ export function addProviderToRoute(
   routeToAddProviderTo: string,
   providerToAdd: string
 ) {
-  if (!tree.exists(routesFile)) {
-    throw new Error(
-      `Path to parent routing declaration (${routesFile}) does not exist. Please ensure path is correct.`
-    );
-  }
+  let routesFileContents = readRoutesFile(tree, routesFile);
 
   ensureTypescript();
   const { ast, query } = require('@phenomnomnominal/tsquery');
-  let routesFileContents = tree.read(routesFile, 'utf-8');
 
   const sourceFile = ast(routesFileContents);
 
@@ -171,4 +165,14 @@ export function addProviderToRoute(
       tree.write(routesFile, newFileContents);
     }
   }
+}
+
+function readRoutesFile(tree: Tree, routesFile: string): string {
+  const contents = tree.read(routesFile, 'utf-8');
+  if (contents === null) {
+    throw new Error(
+      `Path to parent routing declaration (${routesFile}) does not exist. Please ensure path is correct.`
+    );
+  }
+  return contents;
 }

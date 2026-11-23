@@ -809,7 +809,7 @@ describe('@nx/angular/plugin', () => {
     const nodes = await createNodesFunction(['angular.json'], {}, context);
 
     expect(
-      nodes[0][1].projects['projects/my-lib'].targets.build.outputs
+      nodes[0][1].projects?.['projects/my-lib'].targets?.build.outputs
     ).toEqual(['{workspaceRoot}/build-output/custom-nested/my-lib']);
   });
 
@@ -842,7 +842,7 @@ describe('@nx/angular/plugin', () => {
     const nodes = await createNodesFunction(['angular.json'], {}, context);
 
     expect(
-      nodes[0][1].projects['projects/my-lib'].targets.build.outputs
+      nodes[0][1].projects?.['projects/my-lib'].targets?.build.outputs
     ).toEqual(['{workspaceRoot}/build-output/custom-nested/my-lib']);
   });
 
@@ -877,7 +877,7 @@ describe('@nx/angular/plugin', () => {
     const nodes = await createNodesFunction(['angular.json'], {}, context);
 
     expect(
-      nodes[0][1].projects['projects/my-lib'].targets.build.outputs
+      nodes[0][1].projects?.['projects/my-lib'].targets?.build.outputs
     ).toEqual(['{workspaceRoot}/build-output/custom-nested/my-lib']);
   });
 
@@ -912,7 +912,7 @@ describe('@nx/angular/plugin', () => {
     const nodes = await createNodesFunction(['angular.json'], {}, context);
 
     expect(
-      nodes[0][1].projects['projects/my-lib'].targets.build.outputs
+      nodes[0][1].projects?.['projects/my-lib'].targets?.build.outputs
     ).toEqual(['{workspaceRoot}/build-output/custom-nested/my-lib']);
   });
 
@@ -960,7 +960,7 @@ describe('@nx/angular/plugin', () => {
 
     const nodes = await createNodesFunction(['angular.json'], {}, context);
 
-    expect(nodes[0][1].projects['.'].targets['app-shell'])
+    expect(nodes[0][1].projects?.['.'].targets?.['app-shell'])
       .toMatchInlineSnapshot(`
       {
         "cache": true,
@@ -1056,7 +1056,7 @@ describe('@nx/angular/plugin', () => {
     const nodes = await createNodesFunction(['angular.json'], {}, context);
 
     expect(
-      nodes[0][1].projects['.'].targets['app-shell'].outputs
+      nodes[0][1].projects?.['.'].targets?.['app-shell'].outputs
     ).toStrictEqual([
       '{projectRoot}/dist/my-app/browser',
       '{projectRoot}/dist/my-app/server',
@@ -1108,7 +1108,8 @@ describe('@nx/angular/plugin', () => {
 
     const nodes = await createNodesFunction(['angular.json'], {}, context);
 
-    expect(nodes[0][1].projects['.'].targets.prerender).toMatchInlineSnapshot(`
+    expect(nodes[0][1].projects?.['.'].targets?.prerender)
+      .toMatchInlineSnapshot(`
       {
         "cache": true,
         "command": "ng run my-app:prerender",
@@ -1171,7 +1172,7 @@ describe('@nx/angular/plugin', () => {
 
     const nodes = await createNodesFunction(['angular.json'], {}, context);
 
-    expect(nodes[0][1].projects['.'].targets['some-target'])
+    expect(nodes[0][1].projects?.['.'].targets?.['some-target'])
       .toMatchInlineSnapshot(`
       {
         "command": "ng run my-app:some-target",
@@ -1206,7 +1207,9 @@ describe('@nx/angular/plugin', () => {
 
     const nodes = await createNodesFunction(['angular.json'], {}, context);
 
-    expect(nodes[0][1].projects['.'].targets['serve-ssr'].readyWhen).toEqual({
+    expect(
+      nodes[0][1].projects?.['.'].targets?.['serve-ssr'].readyWhen
+    ).toEqual({
       command: `node -e "require('@nx/angular/ready-check').waitForDevServer(process.argv[1])" angular.json`,
       interval: 1000,
     });
@@ -1241,7 +1244,7 @@ describe('@nx/angular/plugin', () => {
 
     const nodes = await createNodesFunction(['angular.json'], {}, context);
 
-    expect(nodes[0][1].projects['.'].targets.test.outputs).toEqual([
+    expect(nodes[0][1].projects?.['.'].targets?.test.outputs).toEqual([
       '{projectRoot}/custom-coverage-dir',
     ]);
   });
@@ -1261,14 +1264,14 @@ describe('@nx/angular/plugin', () => {
 
     const nodes = await createNodesFunction(['angular.json'], {}, context);
 
-    expect(nodes[0][1].projects['.'].targets.test.outputs).toEqual([
+    expect(nodes[0][1].projects?.['.'].targets?.test.outputs).toEqual([
       '{workspaceRoot}/coverage/{projectName}',
     ]);
-    expect(nodes[0][1].projects['.'].targets.test.inputs).toContainEqual({
+    expect(nodes[0][1].projects?.['.'].targets?.test.inputs).toContainEqual({
       externalDependencies: ['@angular/cli', 'vitest'],
     });
     expect(
-      nodes[0][1].projects['.'].targets.test.metadata.help.example.options
+      nodes[0][1].projects?.['.'].targets?.test.metadata?.help?.example.options
     ).toEqual({ coverage: true });
   });
 
@@ -1290,7 +1293,7 @@ describe('@nx/angular/plugin', () => {
 
     const nodes = await createNodesFunction(['angular.json'], {}, context);
 
-    expect(nodes[0][1].projects['.'].targets.test.outputs).toEqual([
+    expect(nodes[0][1].projects?.['.'].targets?.test.outputs).toEqual([
       '{workspaceRoot}/coverage/{projectName}',
       '{projectRoot}/test-results/results.json',
     ]);
@@ -1317,7 +1320,7 @@ describe('@nx/angular/plugin', () => {
 
     const nodes = await createNodesFunction(['angular.json'], {}, context);
 
-    expect(nodes[0][1].projects['.'].targets.test.outputs).toEqual([
+    expect(nodes[0][1].projects?.['.'].targets?.test.outputs).toEqual([
       '{workspaceRoot}/coverage/{projectName}',
       '{projectRoot}/test-results/junit.xml',
     ]);
@@ -1351,11 +1354,11 @@ describe('@nx/angular/plugin', () => {
 
     const nodes = await createNodesFunction(['angular.json'], {}, context);
 
-    expect(nodes[0][1].projects['.'].targets.test.outputs).toEqual([
+    expect(nodes[0][1].projects?.['.'].targets?.test.outputs).toEqual([
       '{workspaceRoot}/coverage/{projectName}',
       '{projectRoot}/executor-results.json',
     ]);
-    expect(nodes[0][1].projects['.'].targets.test.outputs).not.toContain(
+    expect(nodes[0][1].projects?.['.'].targets?.test.outputs).not.toContain(
       '{projectRoot}/config-results.xml'
     );
   });
@@ -1388,11 +1391,11 @@ describe('@nx/angular/plugin', () => {
 
     const nodes = await createNodesFunction(['angular.json'], {}, context);
 
-    expect(nodes[0][1].projects['.'].targets.test.outputs).toEqual([
+    expect(nodes[0][1].projects?.['.'].targets?.test.outputs).toEqual([
       '{workspaceRoot}/coverage/{projectName}',
       '{projectRoot}/executor-json.json',
     ]);
-    expect(nodes[0][1].projects['.'].targets.test.outputs).not.toContain(
+    expect(nodes[0][1].projects?.['.'].targets?.test.outputs).not.toContain(
       '{projectRoot}/config-junit.xml'
     );
   });
@@ -1425,7 +1428,7 @@ describe('@nx/angular/plugin', () => {
 
     const nodes = await createNodesFunction(['angular.json'], {}, context);
 
-    expect(nodes[0][1].projects['.'].targets.test.outputs).toEqual([
+    expect(nodes[0][1].projects?.['.'].targets?.test.outputs).toEqual([
       '{workspaceRoot}/coverage/{projectName}',
       '{projectRoot}/config-results.xml',
       '{projectRoot}/config-junit.xml',

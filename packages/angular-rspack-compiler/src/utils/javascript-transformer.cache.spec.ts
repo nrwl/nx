@@ -44,10 +44,13 @@ describe('createJavaScriptTransformer', () => {
         })
       );
     const sourcesContent = (output: Uint8Array) => {
-      const [, base64] = Buffer.from(output)
+      const match = Buffer.from(output)
         .toString('utf8')
         .match(/sourceMappingURL=data:application\/json[^,]*,(\S+)/);
-      return JSON.parse(Buffer.from(base64, 'base64').toString('utf8'))
+      if (!match) {
+        throw new Error('Expected an inline source map');
+      }
+      return JSON.parse(Buffer.from(match[1], 'base64').toString('utf8'))
         .sourcesContent;
     };
     // One transform at a time makes the later calls queue, and each must

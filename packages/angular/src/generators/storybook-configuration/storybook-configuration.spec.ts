@@ -83,7 +83,7 @@ describe('StorybookConfiguration generator', () => {
       tree.read('test-ui-lib/src/lib/test-other/test-other.stories.ts', 'utf-8')
     ).toMatchSnapshot();
 
-    const packageJson = JSON.parse(tree.read('package.json', 'utf-8'));
+    const packageJson = JSON.parse(readFile(tree, 'package.json'));
     expect(packageJson.devDependencies['@storybook/angular']).toBeDefined();
   });
 
@@ -167,3 +167,9 @@ describe('StorybookConfiguration generator', () => {
     expect(listFiles(tree)).toMatchSnapshot();
   });
 });
+
+function readFile(tree: Tree, path: string): string {
+  const content = tree.read(path, 'utf-8');
+  if (content === null) throw new Error(`${path} not found`);
+  return content;
+}

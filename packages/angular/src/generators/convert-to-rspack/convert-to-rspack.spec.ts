@@ -7,7 +7,6 @@ import {
   readNxJson,
   readProjectConfiguration,
   updateJson,
-  updateNxJson,
   writeJson,
   type NxJsonConfiguration,
 } from '@nx/devkit';
@@ -27,11 +26,11 @@ vi.mock('@nx/devkit/internal', async () => ({
 describe('convert-to-rspack', () => {
   // The generator keeps a polyfill that resolves from the workspace's
   // node_modules. Unit tests run against an empty scratch workspace root.
-  const tslib = join(
-    process.env.NX_WORKSPACE_ROOT_PATH,
-    'node_modules',
-    'tslib'
-  );
+  const workspaceRootPath = process.env.NX_WORKSPACE_ROOT_PATH;
+  if (!workspaceRootPath) {
+    throw new Error('NX_WORKSPACE_ROOT_PATH is not set');
+  }
+  const tslib = join(workspaceRootPath, 'node_modules', 'tslib');
   beforeAll(() => {
     mkdirSync(tslib, { recursive: true });
     writeFileSync(
@@ -150,13 +149,13 @@ describe('convert-to-rspack', () => {
     `);
     expect(pkgJson.devDependencies['@nx/angular-rspack']).toBeDefined();
     expect(
-      nxJson.plugins.find((p) =>
+      nxJson?.plugins?.find((p) =>
         typeof p === 'string' ? false : p.plugin === '@nx/rspack/plugin'
       )
     ).toBeDefined();
     expect(pkgJson.scripts?.build).toBeUndefined();
-    expect(updatedProject.targets.build).not.toBeDefined();
-    expect(updatedProject.targets.serve).not.toBeDefined();
+    expect(updatedProject.targets?.build).not.toBeDefined();
+    expect(updatedProject.targets?.serve).not.toBeDefined();
   });
 
   it('should convert a ssr angular webpack application to rspack', async () => {
@@ -256,14 +255,14 @@ describe('convert-to-rspack', () => {
     `);
     expect(pkgJson.devDependencies['@nx/angular-rspack']).toBeDefined();
     expect(
-      nxJson.plugins.find((p) =>
+      nxJson?.plugins?.find((p) =>
         typeof p === 'string' ? false : p.plugin === '@nx/rspack/plugin'
       )
     ).toBeDefined();
     expect(pkgJson.scripts?.build).toBeUndefined();
-    expect(updatedProject.targets.build).not.toBeDefined();
-    expect(updatedProject.targets.serve).not.toBeDefined();
-    expect(updatedProject.targets['serve-ssr']).not.toBeDefined();
+    expect(updatedProject.targets?.build).not.toBeDefined();
+    expect(updatedProject.targets?.serve).not.toBeDefined();
+    expect(updatedProject.targets?.['serve-ssr']).not.toBeDefined();
   });
 
   const externalConfiguration = {
@@ -354,12 +353,13 @@ describe('convert-to-rspack', () => {
       },
     };
     if (options.targetDefaults) {
-      const nxJson = readNxJson(tree);
-      nxJson.targetDefaults = {
-        ...nxJson.targetDefaults,
-        ...options.targetDefaults,
-      };
-      updateNxJson(tree, nxJson);
+      updateJson<NxJsonConfiguration>(tree, 'nx.json', (nxJson) => {
+        nxJson.targetDefaults = {
+          ...nxJson.targetDefaults,
+          ...options.targetDefaults,
+        };
+        return nxJson;
+      });
     }
     addProjectConfiguration(tree, 'app', {
       root: 'apps/app',
@@ -392,9 +392,9 @@ describe('convert-to-rspack', () => {
 
     await convertToRspack(tree, { project: 'app' });
 
-    expect(readProjectConfiguration(tree, 'app').targets['serve-ssr']).toEqual(
-      serveSsr
-    );
+    expect(
+      readProjectConfiguration(tree, 'app').targets?.['serve-ssr']
+    ).toEqual(serveSsr);
   });
 
   it('should remove an ssr-dev-server target from a package.json-based project and keep its serve port', async () => {
@@ -566,7 +566,7 @@ describe('convert-to-rspack', () => {
 
       const config = tree.read('apps/app/rspack.config.ts', 'utf-8');
       expect(config).toContain(`entry: './src/server.ts'`);
-      expect(config.includes('serveFromDevServer: true')).toBe(
+      expect(config?.includes('serveFromDevServer: true')).toBe(
         servesFromDevServer
       );
     }
@@ -1161,13 +1161,13 @@ describe('convert-to-rspack', () => {
     `);
     expect(pkgJson.devDependencies['@nx/angular-rspack']).toBeDefined();
     expect(
-      nxJson.plugins.find((p) =>
+      nxJson?.plugins?.find((p) =>
         typeof p === 'string' ? false : p.plugin === '@nx/rspack/plugin'
       )
     ).toBeDefined();
     expect(pkgJson.scripts?.build).toBeUndefined();
-    expect(updatedProject.targets.build).not.toBeDefined();
-    expect(updatedProject.targets.serve).not.toBeDefined();
+    expect(updatedProject.targets?.build).not.toBeDefined();
+    expect(updatedProject.targets?.serve).not.toBeDefined();
   });
 
   it('should convert a basic angular webpack application with configurations to rspack', async () => {
@@ -1260,12 +1260,12 @@ describe('convert-to-rspack', () => {
     `);
     expect(pkgJson.devDependencies['@nx/angular-rspack']).toBeDefined();
     expect(
-      nxJson.plugins.find((p) =>
+      nxJson?.plugins?.find((p) =>
         typeof p === 'string' ? false : p.plugin === '@nx/rspack/plugin'
       )
     ).toBeDefined();
-    expect(updatedProject.targets.build).not.toBeDefined();
-    expect(updatedProject.targets.serve).not.toBeDefined();
+    expect(updatedProject.targets?.build).not.toBeDefined();
+    expect(updatedProject.targets?.serve).not.toBeDefined();
   });
 
   it('should refuse a project using a module federation executor', async () => {
@@ -1619,7 +1619,7 @@ module.exports = withModuleFederation(config, { dts: false });
         await convertToRspack(tree, { project: 'app' });
 
         const updatedProject = readProjectConfiguration(tree, 'app');
-        expect(updatedProject.targets.build).not.toBeDefined();
+        expect(updatedProject.targets?.build).not.toBeDefined();
       });
 
       it('should remove the target when all the top-level options match what would be inferred', async () => {
@@ -1660,7 +1660,7 @@ module.exports = withModuleFederation(config, { dts: false });
         await convertToRspack(tree, { project: 'app' });
 
         const updatedProject = readProjectConfiguration(tree, 'app');
-        expect(updatedProject.targets.build).not.toBeDefined();
+        expect(updatedProject.targets?.build).not.toBeDefined();
       });
 
       it('should remove the target when the normalized output matches what would be inferred', async () => {
@@ -1687,7 +1687,7 @@ module.exports = withModuleFederation(config, { dts: false });
         await convertToRspack(tree, { project: 'app' });
 
         const updatedProject = readProjectConfiguration(tree, 'app');
-        expect(updatedProject.targets.build).not.toBeDefined();
+        expect(updatedProject.targets?.build).not.toBeDefined();
       });
 
       it('should remove the target when the transformed output matches what would be inferred', async () => {
@@ -1714,7 +1714,7 @@ module.exports = withModuleFederation(config, { dts: false });
         await convertToRspack(tree, { project: 'app' });
 
         const updatedProject = readProjectConfiguration(tree, 'app');
-        expect(updatedProject.targets.build).not.toBeDefined();
+        expect(updatedProject.targets?.build).not.toBeDefined();
       });
 
       it('should keep the target with updated outputs when they would not match what would be inferred', async () => {
@@ -1746,7 +1746,7 @@ module.exports = withModuleFederation(config, { dts: false });
         await convertToRspack(tree, { project: 'app' });
 
         const updatedProject = readProjectConfiguration(tree, 'app');
-        expect(updatedProject.targets.build).toStrictEqual({
+        expect(updatedProject.targets?.build).toStrictEqual({
           outputs: [
             '{workspaceRoot}/dist/apps/app',
             '{workspaceRoot}/some-other-output',
@@ -1778,7 +1778,7 @@ module.exports = withModuleFederation(config, { dts: false });
         await convertToRspack(tree, { project: 'app' });
 
         const updatedProject = readProjectConfiguration(tree, 'app');
-        expect(updatedProject.targets.build).not.toBeDefined();
+        expect(updatedProject.targets?.build).not.toBeDefined();
       });
 
       it('should keep the target with dependsOn when they would not match what would be inferred', async () => {
@@ -1805,7 +1805,7 @@ module.exports = withModuleFederation(config, { dts: false });
         await convertToRspack(tree, { project: 'app' });
 
         const updatedProject = readProjectConfiguration(tree, 'app');
-        expect(updatedProject.targets.build).toStrictEqual({
+        expect(updatedProject.targets?.build).toStrictEqual({
           dependsOn: ['pre-build', '^build'],
         });
       });
@@ -1834,7 +1834,7 @@ module.exports = withModuleFederation(config, { dts: false });
         await convertToRspack(tree, { project: 'app' });
 
         const updatedProject = readProjectConfiguration(tree, 'app');
-        expect(updatedProject.targets.build).not.toBeDefined();
+        expect(updatedProject.targets?.build).not.toBeDefined();
       });
 
       it('should keep the target with syncGenerators when they would not match what would be inferred', async () => {
@@ -1861,7 +1861,7 @@ module.exports = withModuleFederation(config, { dts: false });
         await convertToRspack(tree, { project: 'app' });
 
         const updatedProject = readProjectConfiguration(tree, 'app');
-        expect(updatedProject.targets.build).toStrictEqual({
+        expect(updatedProject.targets?.build).toStrictEqual({
           syncGenerators: ['@foo/bar:baz', '@nx/js:typescript-sync'],
         });
       });
@@ -1890,7 +1890,7 @@ module.exports = withModuleFederation(config, { dts: false });
         await convertToRspack(tree, { project: 'app' });
 
         const updatedProject = readProjectConfiguration(tree, 'app');
-        expect(updatedProject.targets.build).toStrictEqual({
+        expect(updatedProject.targets?.build).toStrictEqual({
           parallelism: false,
         });
       });
@@ -1924,7 +1924,7 @@ module.exports = withModuleFederation(config, { dts: false });
         await convertToRspack(tree, { project: 'app' });
 
         const updatedProject = readProjectConfiguration(tree, 'app');
-        expect(updatedProject.targets.serve).not.toBeDefined();
+        expect(updatedProject.targets?.serve).not.toBeDefined();
       });
 
       it('should remove the target when all the top-level options match what would be inferred', async () => {
@@ -1957,7 +1957,7 @@ module.exports = withModuleFederation(config, { dts: false });
         await convertToRspack(tree, { project: 'app' });
 
         const updatedProject = readProjectConfiguration(tree, 'app');
-        expect(updatedProject.targets.serve).not.toBeDefined();
+        expect(updatedProject.targets?.serve).not.toBeDefined();
       });
 
       it('should remove the target when the syncGenerators option matches what would be inferred', async () => {
@@ -1988,7 +1988,7 @@ module.exports = withModuleFederation(config, { dts: false });
         await convertToRspack(tree, { project: 'app' });
 
         const updatedProject = readProjectConfiguration(tree, 'app');
-        expect(updatedProject.targets.serve).not.toBeDefined();
+        expect(updatedProject.targets?.serve).not.toBeDefined();
       });
 
       it('should keep the target with syncGenerators when they would not match what would be inferred', async () => {
@@ -2019,7 +2019,7 @@ module.exports = withModuleFederation(config, { dts: false });
         await convertToRspack(tree, { project: 'app' });
 
         const updatedProject = readProjectConfiguration(tree, 'app');
-        expect(updatedProject.targets.serve).toStrictEqual({
+        expect(updatedProject.targets?.serve).toStrictEqual({
           syncGenerators: ['@foo/bar:baz', '@nx/js:typescript-sync'],
         });
       });
@@ -2053,7 +2053,7 @@ module.exports = withModuleFederation(config, { dts: false });
         await convertToRspack(tree, { project: 'app' });
 
         const updatedProject = readProjectConfiguration(tree, 'app');
-        expect(updatedProject.targets.serve).toStrictEqual({
+        expect(updatedProject.targets?.serve).toStrictEqual({
           parallelism: false,
           readyWhen: { signal: true, timeout: 120000 },
         });
@@ -2088,7 +2088,7 @@ module.exports = withModuleFederation(config, { dts: false });
         await convertToRspack(tree, { project: 'app' });
 
         const updatedProject = readProjectConfiguration(tree, 'app');
-        expect(updatedProject.targets.serve).toStrictEqual({
+        expect(updatedProject.targets?.serve).toStrictEqual({
           options: {
             port: 4300,
           },
@@ -2127,7 +2127,7 @@ module.exports = withModuleFederation(config, { dts: false });
         await convertToRspack(tree, { project: 'app' });
 
         const updatedProject = readProjectConfiguration(tree, 'app');
-        expect(updatedProject.targets.serve).toStrictEqual({
+        expect(updatedProject.targets?.serve).toStrictEqual({
           configurations: {
             production: {
               port: 4500,
@@ -2171,7 +2171,7 @@ module.exports = withModuleFederation(config, { dts: false });
         await convertToRspack(tree, { project: 'app' });
 
         const updatedProject = readProjectConfiguration(tree, 'app');
-        expect(updatedProject.targets.serve).toStrictEqual({
+        expect(updatedProject.targets?.serve).toStrictEqual({
           configurations: {
             production: {
               port: 4500,
@@ -2217,7 +2217,7 @@ module.exports = withModuleFederation(config, { dts: false });
         await convertToRspack(tree, { project: 'app' });
 
         const updatedProject = readProjectConfiguration(tree, 'app');
-        expect(updatedProject.targets.serve).toStrictEqual({
+        expect(updatedProject.targets?.serve).toStrictEqual({
           options: {
             port: 4300,
           },

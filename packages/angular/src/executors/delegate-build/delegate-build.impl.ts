@@ -10,12 +10,18 @@ export async function* delegateBuildExecutor(
   options: DelegateBuildExecutorSchema,
   context: ExecutorContext
 ) {
+  const { projectName, targetName } = context;
+  if (!projectName || !targetName) {
+    throw new Error(
+      'The "delegate-build" executor must be run for a project target.'
+    );
+  }
   const { target, dependencies } = calculateProjectBuildableDependencies(
     context.taskGraph,
     context.projectGraph,
     context.root,
-    context.projectName,
-    context.targetName,
+    projectName,
+    targetName,
     context.configurationName
   );
 

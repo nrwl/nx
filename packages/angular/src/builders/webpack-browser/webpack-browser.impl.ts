@@ -23,7 +23,12 @@ const patchedWebpackPath = require.resolve('webpack', {
 });
 
 // Override the resolve function
-Module._resolveFilename = function (request, parent, isMain, options) {
+Module._resolveFilename = function (
+  request: string,
+  parent: unknown,
+  isMain: boolean,
+  options: unknown
+) {
   // Intercept webpack specifically
   if (request === 'webpack') {
     // Force webpack to resolve from your specific path
@@ -77,8 +82,15 @@ export function executeWebpackBrowserBuilder(
     ...delegateBuilderOptions
   } = options;
 
+  const { target } = context;
+  if (!target) {
+    throw new Error(
+      'The "@nx/angular:webpack-browser" builder requires a target.'
+    );
+  }
+
   process.env.NX_BUILD_LIBS_FROM_SOURCE = `${buildLibsFromSource}`;
-  process.env.NX_BUILD_TARGET = targetToTargetString({ ...context.target });
+  process.env.NX_BUILD_TARGET = targetToTargetString({ ...target });
 
   const pathToWebpackConfig =
     customWebpackConfig?.path &&
@@ -145,15 +157,15 @@ export function executeWebpackBrowserBuilder(
               if (workspaceDependencies.length > 0) {
                 const skipInitialRun = shouldSkipInitialTargetRun(
                   projectGraph,
-                  context.target.project,
-                  context.target.target
+                  target.project,
+                  target.target
                 );
 
-                baseWebpackConfig.plugins.push(
+                (baseWebpackConfig.plugins ??= []).push(
                   // Cast away the angular/webpack plugin type difference (webpack versions).
                   new (WebpackNxBuildCoordinationPlugin as any)(
                     `nx run-many --target=${
-                      context.target.target
+                      target.target
                     } --projects=${workspaceDependencies.join(',')}`,
                     { skipInitialRun, skipWatchingDeps: !watchDependencies }
                   )
@@ -169,7 +181,7 @@ export function executeWebpackBrowserBuilder(
               baseWebpackConfig,
               pathToWebpackConfig,
               delegateBuilderOptions,
-              context.target
+              target
             );
           },
           ...(pathToIndexFileTransformer
@@ -177,7 +189,7 @@ export function executeWebpackBrowserBuilder(
                 indexHtml: resolveIndexHtmlTransformer(
                   pathToIndexFileTransformer,
                   delegateBuilderOptions.tsConfig,
-                  context.target
+                  target
                 ),
               }
             : {}),

@@ -128,9 +128,11 @@ async function addFiles(
   const { addMountDefinition } = <typeof import('@nx/cypress/internal')>(
     require('@nx/cypress/internal')
   );
-  const updatedCmpContents = await addMountDefinition(
-    tree.read(componentFile, 'utf-8')
-  );
+  const componentFileContents = tree.read(componentFile, 'utf-8');
+  if (componentFileContents === null) {
+    throw new Error(`Cannot find the file "${componentFile}".`);
+  }
+  const updatedCmpContents = await addMountDefinition(componentFileContents);
   tree.write(
     componentFile,
     `import { mount } from '${mountModule}';\n${updatedCmpContents}`
@@ -151,7 +153,7 @@ async function addFiles(
     );
   }
 
-  let ctTask: GeneratorCallback;
+  let ctTask: GeneratorCallback | undefined;
   for (const info of componentInfo) {
     if (info === undefined) {
       continue;
@@ -185,9 +187,10 @@ async function configureCypressCT(
   tree: Tree,
   options: CypressComponentConfigSchema
 ) {
-  let found: FoundTarget = { target: options.buildTarget, config: undefined };
-
-  if (!options.buildTarget) {
+  let found: FoundTarget;
+  if (options.buildTarget) {
+    found = { target: options.buildTarget, config: undefined };
+  } else {
     const { findBuildConfig } = <typeof import('@nx/cypress/internal')>(
       require('@nx/cypress/internal')
     );
@@ -240,8 +243,12 @@ async function configureCypressCT(
     tree,
     projectConfig.root
   );
+  const cypressConfigContents = tree.read(cypressConfigPath, 'utf-8');
+  if (cypressConfigContents === null) {
+    throw new Error(`Cannot find the file "${cypressConfigPath}".`);
+  }
   const updatedCyConfig = await addDefaultCTConfig(
-    tree.read(cypressConfigPath, 'utf-8'),
+    cypressConfigContents,
     ctConfigOptions,
     '@nx/angular/plugins/component-testing',
     getInstalledCypressMajorVersion(tree)

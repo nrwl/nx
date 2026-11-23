@@ -5,15 +5,18 @@ import {
 } from '@nx/js/internal';
 import { NgPackagr } from 'ng-packagr';
 import { join, resolve } from 'path';
-import { createLibraryExecutor } from '../package/package.impl';
-import type { BuildAngularLibraryExecutorOptions } from '../package/schema';
+import {
+  createLibraryExecutor,
+  type NormalizedLibraryExecutorOptions,
+} from '../package/package.impl';
 import { parseRemappedTsConfigAndMergeDefaults } from '../utilities/typescript';
 import { getNgPackagrInstance } from './ng-packagr-adjustments/ng-packagr';
 
 async function initializeNgPackgrLite(
-  options: BuildAngularLibraryExecutorOptions,
+  options: NormalizedLibraryExecutorOptions,
   context: ExecutorContext,
-  projectDependencies: DependentBuildableProjectNode[]
+  projectDependencies: DependentBuildableProjectNode[],
+  projectRoot: string
 ): Promise<NgPackagr> {
   const ngPackagr = await getNgPackagrInstance();
   ngPackagr.forProject(resolve(context.root, options.project));
@@ -22,7 +25,7 @@ async function initializeNgPackgrLite(
     const remappedTsConfigFilePath = createTmpTsConfig(
       join(context.root, options.tsConfig),
       context.root,
-      context.projectsConfigurations.projects[context.projectName].root,
+      projectRoot,
       projectDependencies
     );
     const tsConfig = await parseRemappedTsConfigAndMergeDefaults(

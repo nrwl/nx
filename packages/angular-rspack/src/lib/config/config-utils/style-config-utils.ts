@@ -460,7 +460,7 @@ async function tryResolve(
 async function getTailwindConfig(
   searchDirectories: SearchDirectory[],
   workspaceRoot: string,
-  projectGraphCreation: boolean
+  projectGraphCreation?: boolean
 ): Promise<{ file: string; package: string } | undefined> {
   const tailwindConfigurationPath =
     findTailwindConfiguration(searchDirectories);

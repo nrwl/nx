@@ -47,7 +47,7 @@ function updateTarget(
   projectConfig: ProjectConfiguration,
   target: TargetConfiguration
 ) {
-  if (buildExecutors.has(target.executor)) {
+  if (buildExecutors.has(target.executor ?? '')) {
     if (target.configurations?.['development']?.tsConfig) {
       // only set the option if the target has the expected tsConfig option in
       // the development configuration
@@ -56,7 +56,7 @@ function updateTarget(
       // remove tsConfig from development configuration after moving it to options
       delete target.configurations['development'].tsConfig;
     }
-  } else if (testExecutors.has(target.executor)) {
+  } else if (testExecutors.has(target.executor ?? '')) {
     const expectedTsconfigPath = joinPathFragments(
       projectConfig.root,
       'tsconfig.spec.json'
@@ -73,10 +73,10 @@ function updateTarget(
 function* relevantTargets(
   project: ProjectConfiguration
 ): Iterable<TargetConfiguration> {
-  for (const [, target] of allProjectTargets(project)) {
+  for (const [, target] of allProjectTargets<{ tsConfig?: string }>(project)) {
     if (
-      !buildExecutors.has(target.executor) &&
-      !testExecutors.has(target.executor)
+      !buildExecutors.has(target.executor ?? '') &&
+      !testExecutors.has(target.executor ?? '')
     ) {
       continue;
     }

@@ -13,6 +13,7 @@ import { getProjectSourceRoot } from '@nx/js/internal';
 
 export type NormalizedNgRxRootStoreGeneratorOptions = Schema & {
   parent: string;
+  directory: string;
   rxjsVersion: string;
 };
 
@@ -28,6 +29,9 @@ export function normalizeOptions(
       'package.json',
       ['dependencies']
     );
+    if (!rxjsVersionFromPackageJson) {
+      throw new Error('The "rxjs" dependency is not installed.');
+    }
     rxjsVersion = checkAndCleanWithSemver(
       tree,
       'rxjs',
@@ -41,6 +45,9 @@ export function normalizeOptions(
   const isStandalone = isNgStandaloneApp(tree, options.project);
   const sourceRoot = getProjectSourceRoot(project, tree);
   const appConfigPath = joinPathFragments(sourceRoot, 'app/app.config.ts');
+  if (!project.targets) {
+    throw new Error(`The project "${options.project}" has no targets.`);
+  }
   let appMainPath =
     project.targets.build.options.main ?? project.targets.build.options.browser;
   if (!appMainPath) {

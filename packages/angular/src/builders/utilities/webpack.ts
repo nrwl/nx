@@ -8,7 +8,7 @@ export async function mergeCustomWebpackConfig(
   baseWebpackConfig: any,
   pathToWebpackConfig: string,
   options: { tsConfig: string; [k: string]: any },
-  target: import('@angular-devkit/architect').Target
+  target: import('@angular-devkit/architect').Target | undefined
 ) {
   const customWebpackConfiguration = resolveCustomWebpackConfig(
     pathToWebpackConfig,
@@ -34,7 +34,7 @@ export async function mergeCustomWebpackConfig(
   // This will result in an error being thrown
   // Ensure root package.json is excluded
   const licensePlugin = newConfig.plugins.find(
-    (p) => p.constructor.name === 'LicenseWebpackPlugin'
+    (p: object) => p.constructor.name === 'LicenseWebpackPlugin'
   );
   if (licensePlugin) {
     let rootPackageJsonName: string;
@@ -76,10 +76,10 @@ export function resolveCustomWebpackConfig(path: string, tsConfig: string) {
 export function resolveIndexHtmlTransformer(
   path: string,
   tsConfig: string,
-  target: import('@angular-devkit/architect').Target
+  target: import('@angular-devkit/architect').Target | undefined
 ) {
   const indexTransformer = loadTsFile<any>(path, tsConfig);
   const transform = indexTransformer.default ?? indexTransformer;
 
-  return (indexHtml) => transform(target, indexHtml);
+  return (indexHtml: string) => transform(target, indexHtml);
 }

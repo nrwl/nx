@@ -14,7 +14,9 @@ type SsrPlatformInput =
       experimentalPlatform?: 'node' | 'neutral';
     };
 
-function normalizeSsr(ssr: SsrPlatformInput): SsrPlatformInput {
+function normalizeSsr(
+  ssr: SsrPlatformInput | undefined
+): SsrPlatformInput | undefined {
   return normalizeOptions({ ssr } as ApplicationExecutorOptions)
     .ssr as SsrPlatformInput;
 }
@@ -56,7 +58,7 @@ describe('normalizeOptions', () => {
         version: '22.0.0',
       });
 
-      expect(normalizeSsr(ssr as ApplicationExecutorOptions['ssr'])).toBe(ssr);
+      expect(normalizeSsr(ssr)).toBe(ssr);
     }
   );
 

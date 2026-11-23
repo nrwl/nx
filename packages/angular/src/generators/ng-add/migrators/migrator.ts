@@ -18,13 +18,13 @@ import type {
 } from '../utilities/types';
 
 export abstract class Migrator {
-  protected project: ProjectMigrationInfo;
   protected readonly originalProjectConfig: ProjectConfiguration;
 
   constructor(
     protected readonly tree: Tree,
     protected projectConfig: ProjectConfiguration,
-    protected readonly logger: Logger
+    protected readonly logger: Logger,
+    protected project: ProjectMigrationInfo
   ) {
     this.originalProjectConfig = Object.freeze(
       JSON.parse(JSON.stringify(this.projectConfig))
@@ -61,8 +61,29 @@ export abstract class Migrator {
       : originalPath;
   }
 
+  protected getTarget(targetName: string): TargetConfiguration {
+    const target = this.projectConfig.targets?.[targetName];
+    if (!target) {
+      throw new Error(
+        `Cannot find the "${targetName}" target in the "${this.project.name}" project.`
+      );
+    }
+    return target;
+  }
+
+  protected getOriginalTarget(targetName: string): TargetConfiguration {
+    const target = this.originalProjectConfig.targets?.[targetName];
+    if (!target) {
+      throw new Error(
+        `Cannot find the "${targetName}" target in the original configuration of the "${this.project.name}" project.`
+      );
+    }
+    return target;
+  }
+
   protected moveFile(from: string, to: string, required: boolean = true): void {
-    if (!this.tree.exists(from)) {
+    const contents = this.tree.read(from);
+    if (contents === null) {
       if (required) {
         this.logger.warn(`The path "${from}" does not exist. Skipping.`);
       }
@@ -71,7 +92,6 @@ export abstract class Migrator {
         this.logger.warn(`The path "${to}" already exists. Skipping.`);
       }
     } else {
-      const contents = this.tree.read(from);
       this.tree.write(to, contents);
       this.tree.delete(from);
     }
@@ -121,7 +141,7 @@ export abstract class Migrator {
   // TODO(leo): This should be moved to BuilderMigrator once everything is split into builder migrators.
   protected updateTsConfigFile(
     tsConfigPath: string,
-    rootTsConfigFile: string,
+    rootTsConfigFile: string | null,
     projectOffsetFromRoot: string
   ): void {
     updateJson(this.tree, tsConfigPath, (json) => {

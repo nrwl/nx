@@ -29,7 +29,11 @@ export function createFiles(
       );
 
   const version = getInstalledAngularVersion(tree);
-  const { major, minor } = parse(version);
+  const parsedVersion = parse(version);
+  if (!parsedVersion) {
+    throw new TypeError(`Invalid Version: ${version}`);
+  }
+  const { major, minor } = parsedVersion;
 
   const componentType = options.componentOptions.type
     ? names(options.componentOptions.type).className
@@ -38,13 +42,18 @@ export function createFiles(
     ? `.${options.componentOptions.type}`
     : '';
 
+  const rootTsConfigFileName = getRootTsConfigFileName(tree);
+  if (!rootTsConfigFileName) {
+    throw new Error('Cannot find the root tsconfig file.');
+  }
+
   const substitutions = {
     libName: options.libraryOptions.name,
     libFileName: options.libraryOptions.fileName,
     libClassName: libNames.className,
     libPropertyName: libNames.propertyName,
     unitTesting: options.libraryOptions.unitTestRunner !== UnitTestRunner.None,
-    rootTsConfig: joinPathFragments(rootOffset, getRootTsConfigFileName(tree)),
+    rootTsConfig: joinPathFragments(rootOffset, rootTsConfigFileName),
     skipModule: options.libraryOptions.skipModule,
     projectRoot: options.libraryOptions.projectRoot,
     routing: options.libraryOptions.routing,

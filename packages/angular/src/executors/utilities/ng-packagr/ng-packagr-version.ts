@@ -6,7 +6,11 @@ import {
 let ngPackagrVersionInfo: VersionInfo | undefined;
 export function getNgPackagrVersionInfo(): VersionInfo {
   if (!ngPackagrVersionInfo) {
-    ngPackagrVersionInfo = getInstalledPackageVersionInfo('ng-packagr');
+    const versionInfo = getInstalledPackageVersionInfo('ng-packagr');
+    if (!versionInfo) {
+      throw new Error('Could not find the installed version of "ng-packagr".');
+    }
+    ngPackagrVersionInfo = versionInfo;
   }
 
   return ngPackagrVersionInfo;

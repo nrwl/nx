@@ -82,9 +82,12 @@ export async function addE2e(tree: Tree, options: NormalizedSchema) {
 function getAngularE2EWebServerInfo(
   tree: Tree,
   projectName: string,
-  portOverride: number
+  portOverride: number | undefined
 ): E2EWebServerDetails & { e2ePort: number } {
   const nxJson = readNxJson(tree);
+  if (!nxJson) {
+    throw new Error('Cannot find nx.json');
+  }
   let e2ePort = portOverride ?? 4200;
   const serveTargetOptions = readTargetDefaultsForTarget(
     'serve',

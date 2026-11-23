@@ -95,6 +95,10 @@ function normalizeFromProjectRoot(
 const defaultNormalizer = (tree: Tree, path: string, root: string) =>
   normalizeFromProjectRoot(tree, path, root);
 
+function isRenamedOption(key: string): key is keyof typeof RENAMED_OPTIONS {
+  return key in RENAMED_OPTIONS;
+}
+
 const PATH_NORMALIZER = {
   index: (
     tree: Tree,
@@ -241,6 +245,12 @@ const PATH_NORMALIZER = {
   },
 };
 
+function isPathNormalizerOption(
+  key: string
+): key is keyof typeof PATH_NORMALIZER {
+  return key in PATH_NORMALIZER;
+}
+
 function handleBuildTargetOptions(
   tree: Tree,
   options: Record<string, any>,
@@ -259,12 +269,13 @@ function handleBuildTargetOptions(
 
   for (const [key, value] of Object.entries(options)) {
     let optionName = key;
-    let optionValue =
-      key in PATH_NORMALIZER ? PATH_NORMALIZER[key](tree, value, root) : value;
+    let optionValue = isPathNormalizerOption(key)
+      ? PATH_NORMALIZER[key](tree, value, root)
+      : value;
     if (REMOVED_OPTIONS.includes(key)) {
       continue;
     }
-    if (key in RENAMED_OPTIONS) {
+    if (isRenamedOption(key)) {
       optionName = RENAMED_OPTIONS[key];
     }
     newConfigurationOptions[optionName] = optionValue;
@@ -314,12 +325,13 @@ function handleDevServerTargetOptions(
 ) {
   for (const [key, value] of Object.entries(options)) {
     let optionName = key;
-    let optionValue =
-      key in PATH_NORMALIZER ? PATH_NORMALIZER[key](tree, value, root) : value;
+    let optionValue = isPathNormalizerOption(key)
+      ? PATH_NORMALIZER[key](tree, value, root)
+      : value;
     if (REMOVED_OPTIONS.includes(key)) {
       continue;
     }
-    if (key in RENAMED_OPTIONS) {
+    if (isRenamedOption(key)) {
       optionName = RENAMED_OPTIONS[key];
     }
     newConfigurationOptions[optionName] = optionValue;
@@ -370,6 +382,9 @@ export async function convertToRspack(
     projectName = await getProjectToConvert(tree);
   }
   const project = readProjectConfiguration(tree, projectName);
+  if (!project.targets) {
+    throw new Error(`The project "${projectName}" has no targets.`);
+  }
   const tasks: GeneratorCallback[] = [];
 
   const createConfigOptions: Record<string, any> = {
@@ -612,6 +627,11 @@ export async function convertToRspack(
 
   // find the inferred target names
   const nxJson = readNxJson(tree);
+  if (!nxJson?.plugins) {
+    throw new Error(
+      'Cannot find the plugins registered in the "nx.json" file.'
+    );
+  }
   let inferredBuildTargetName = 'build';
   let inferredServeTargetName = 'serve';
   const pluginRegistration = nxJson.plugins.find(
@@ -620,9 +640,9 @@ export async function convertToRspack(
   );
   if (pluginRegistration) {
     inferredBuildTargetName =
-      pluginRegistration.options.buildTargetName ?? inferredBuildTargetName;
+      pluginRegistration.options?.buildTargetName ?? inferredBuildTargetName;
     inferredServeTargetName =
-      pluginRegistration.options.serveTargetName ?? inferredServeTargetName;
+      pluginRegistration.options?.serveTargetName ?? inferredServeTargetName;
   }
 
   if (buildTarget) {
@@ -663,7 +683,7 @@ export async function convertToRspack(
     if (shouldOverrideInputs(buildTarget.config.inputs)) {
       // keep existing inputs and add the @rspack/cli external dependency
       buildTarget.config.inputs = [
-        ...buildTarget.config.inputs,
+        ...(buildTarget.config.inputs ?? []),
         { externalDependencies: ['@rspack/cli'] },
       ];
     } else {
@@ -738,25 +758,27 @@ export async function convertToRspack(
     };
 
     if (shouldOverrideOutputs(buildTarget.config.outputs)) {
-      buildTarget.config.outputs = buildTarget.config.outputs.map((output) => {
-        if (output === '{options.outputPath}') {
-          // the target won't have an outputPath option, so we replace it with the new output path
-          return normalizeOutput(newOutputPath, workspaceRoot, project.root);
-        }
+      buildTarget.config.outputs = (buildTarget.config.outputs ?? []).map(
+        (output) => {
+          if (output === '{options.outputPath}') {
+            // the target won't have an outputPath option, so we replace it with the new output path
+            return normalizeOutput(newOutputPath, workspaceRoot, project.root);
+          }
 
-        const normalizedOutputPath = output
-          .replace('{workspaceRoot}/', '')
-          .replace('{projectRoot}', project.root)
-          .replace('{projectName}', '');
-        if (
-          /\/browser\/?$/.test(normalizedOutputPath) &&
-          normalizedOutputPath.replace(/\/browser\/?$/, '') === newOutputPath
-        ) {
-          return normalizeOutput(newOutputPath, workspaceRoot, project.root);
-        }
+          const normalizedOutputPath = output
+            .replace('{workspaceRoot}/', '')
+            .replace('{projectRoot}', project.root)
+            .replace('{projectName}', '');
+          if (
+            /\/browser\/?$/.test(normalizedOutputPath) &&
+            normalizedOutputPath.replace(/\/browser\/?$/, '') === newOutputPath
+          ) {
+            return normalizeOutput(newOutputPath, workspaceRoot, project.root);
+          }
 
-        return output;
-      });
+          return output;
+        }
+      );
     } else {
       delete buildTarget.config.outputs;
     }

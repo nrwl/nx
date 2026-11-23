@@ -6,7 +6,11 @@ export function addPathMapping(
   tree: Tree,
   options: NormalizedGeneratorOptions
 ): void {
-  updateJson(tree, getRootTsConfigPathInTree(tree), (json) => {
+  const rootTsConfigPath = getRootTsConfigPathInTree(tree);
+  if (!rootTsConfigPath) {
+    throw new Error('Cannot find the root TypeScript configuration file.');
+  }
+  updateJson(tree, rootTsConfigPath, (json) => {
     const c = json.compilerOptions;
     c.paths = c.paths || {};
     c.paths[options.secondaryEntryPoint] = [

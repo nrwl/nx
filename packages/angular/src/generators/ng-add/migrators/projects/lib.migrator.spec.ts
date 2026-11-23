@@ -70,10 +70,10 @@ describe('lib migrator', () => {
       const result = migrator.validate();
 
       expect(result).toHaveLength(1);
-      expect(result[0].message).toBe(
+      expect(result?.[0].message).toBe(
         'The project root is not defined in the project configuration. The project will be skipped.'
       );
-      expect(result[0].hint).toBe(
+      expect(result?.[0].hint).toBe(
         'Make sure to manually migrate its configuration and files or remove the project if it is not valid. Alternatively, you could revert the migration, ensure the value for "projects.lib1.root" is set and run the migration again.'
       );
     });
@@ -92,10 +92,10 @@ describe('lib migrator', () => {
       const result = migrator.validate();
 
       expect(result).toHaveLength(1);
-      expect(result[0].message).toBe(
+      expect(result?.[0].message).toBe(
         'The project root "projects/wrong-lib1" could not be found. The project will be skipped.'
       );
-      expect(result[0].hint).toBe(
+      expect(result?.[0].hint).toBe(
         'Make sure to manually migrate its configuration and files or remove the project if it is not valid. Alternatively, you could revert the migration, ensure the value for "projects.lib1.root" is correct and run the migration again.'
       );
     });
@@ -117,10 +117,10 @@ describe('lib migrator', () => {
       const result = migrator.validate();
 
       expect(result).toHaveLength(1);
-      expect(result[0].message).toBe(
+      expect(result?.[0].message).toBe(
         'The project source root "projects/lib1/wrong-src" could not be found. The project will be skipped.'
       );
-      expect(result[0].hint).toBe(
+      expect(result?.[0].hint).toBe(
         'Make sure to manually migrate its configuration and files or remove the project if it is not valid. Alternatively, you could revert the migration, ensure the value for "projects.lib1.sourceRoot" is correct and run the migration again.'
       );
     });
@@ -135,11 +135,11 @@ describe('lib migrator', () => {
       const result = migrator.validate();
 
       expect(result).toHaveLength(1);
-      expect(result[0].messageGroup.title).toBe('Unsupported builders');
-      expect(result[0].messageGroup.messages).toStrictEqual([
+      expect(result?.[0]?.messageGroup?.title).toBe('Unsupported builders');
+      expect(result?.[0]?.messageGroup?.messages).toStrictEqual([
         `The "build" target is using a builder "@not/supported:builder" that's not currently supported by the automated migration. The target will be skipped.`,
       ]);
-      expect(result[0].hint).toMatchInlineSnapshot(
+      expect(result?.[0].hint).toMatchInlineSnapshot(
         `"Make sure to manually migrate the target configuration and any possible associated files. Alternatively, you could revert the migration, change the builder to one of the builders supported by the automated migration ("@angular-devkit/build-angular:ng-packagr", "@angular/build:ng-packagr", "@angular/build:unit-test", "@angular/build:karma", "@angular-devkit/build-angular:karma" and "@angular-eslint/builder:lint"), and run the migration again."`
       );
     });
@@ -157,12 +157,12 @@ describe('lib migrator', () => {
       const result = migrator.validate();
 
       expect(result).toHaveLength(1);
-      expect(result[0].messageGroup.title).toBe('Unsupported builders');
-      expect(result[0].messageGroup.messages).toStrictEqual([
+      expect(result?.[0]?.messageGroup?.title).toBe('Unsupported builders');
+      expect(result?.[0]?.messageGroup?.messages).toStrictEqual([
         `The "build" target is using a builder "@not/supported:builder" that's not currently supported by the automated migration. The target will be skipped.`,
         `The "test" target is using a builder "@other/not-supported:builder" that's not currently supported by the automated migration. The target will be skipped.`,
       ]);
-      expect(result[0].hint).toMatchInlineSnapshot(
+      expect(result?.[0].hint).toMatchInlineSnapshot(
         `"Make sure to manually migrate the target configuration and any possible associated files. Alternatively, you could revert the migration, change the builder to one of the builders supported by the automated migration ("@angular-devkit/build-angular:ng-packagr", "@angular/build:ng-packagr", "@angular/build:unit-test", "@angular/build:karma", "@angular-devkit/build-angular:karma" and "@angular-eslint/builder:lint"), and run the migration again."`
       );
     });
@@ -177,11 +177,11 @@ describe('lib migrator', () => {
       const result = migrator.validate();
 
       expect(result).toHaveLength(1);
-      expect(result[0].messageGroup.title).toBe('Unsupported builders');
-      expect(result[0].messageGroup.messages).toStrictEqual([
+      expect(result?.[0]?.messageGroup?.title).toBe('Unsupported builders');
+      expect(result?.[0]?.messageGroup?.messages).toStrictEqual([
         `The "my-build" target is using a builder "@not/supported:builder" that's not currently supported by the automated migration. The target will be skipped.`,
       ]);
-      expect(result[0].hint).toMatchInlineSnapshot(
+      expect(result?.[0].hint).toMatchInlineSnapshot(
         `"Make sure to manually migrate the target configuration and any possible associated files. Alternatively, you could revert the migration, change the builder to one of the builders supported by the automated migration ("@angular-devkit/build-angular:ng-packagr", "@angular/build:ng-packagr", "@angular/build:unit-test", "@angular/build:karma", "@angular-devkit/build-angular:karma" and "@angular-eslint/builder:lint"), and run the migration again."`
       );
     });
@@ -199,10 +199,10 @@ describe('lib migrator', () => {
       const result = migrator.validate();
 
       expect(result).toHaveLength(1);
-      expect(result[0].message).toBe(
+      expect(result?.[0].message).toBe(
         'There is more than one target using the builders "@angular-devkit/build-angular:ng-packagr" and "@angular/build:ng-packagr": "build1" and "build2". This is not currently supported by the automated migration. These targets will be skipped.'
       );
-      expect(result[0].hint).toBe(
+      expect(result?.[0].hint).toBe(
         'Make sure to manually migrate their configuration and any possible associated files.'
       );
     });
@@ -222,16 +222,16 @@ describe('lib migrator', () => {
       const result = migrator.validate();
 
       expect(result).toHaveLength(2);
-      expect(result[0].message).toBe(
+      expect(result?.[0].message).toBe(
         'There is more than one target using the builders "@angular-devkit/build-angular:ng-packagr" and "@angular/build:ng-packagr": "build1" and "build2". This is not currently supported by the automated migration. These targets will be skipped.'
       );
-      expect(result[0].hint).toBe(
+      expect(result?.[0].hint).toBe(
         'Make sure to manually migrate their configuration and any possible associated files.'
       );
-      expect(result[1].message).toBe(
+      expect(result?.[1].message).toBe(
         'There is more than one target using the builder "@angular-eslint/builder:lint": "lint1" and "lint2". This is not currently supported by the automated migration. These targets will be skipped.'
       );
-      expect(result[1].hint).toBe(
+      expect(result?.[1].hint).toBe(
         'Make sure to manually migrate their configuration and any possible associated files.'
       );
     });
@@ -581,7 +581,7 @@ describe('lib migrator', () => {
       await migrator.migrate();
 
       const { targets } = readProjectConfiguration(tree, 'lib1');
-      expect(targets.build).toStrictEqual({
+      expect(targets?.build).toStrictEqual({
         executor: '@nx/angular:package',
         options: { project: 'libs/lib1/ng-package.json' },
         configurations: {
@@ -613,7 +613,7 @@ describe('lib migrator', () => {
       await migrator.migrate();
 
       const { targets } = readProjectConfiguration(tree, 'lib1');
-      expect(targets.myCustomBuildTarget).toStrictEqual({
+      expect(targets?.myCustomBuildTarget).toStrictEqual({
         executor: '@nx/angular:package',
         options: { project: 'libs/lib1/ng-package.json' },
         configurations: {
@@ -650,7 +650,7 @@ describe('lib migrator', () => {
       await migrator.migrate();
 
       const { targets } = readProjectConfiguration(tree, 'lib1');
-      expect(targets.build).toStrictEqual({
+      expect(targets?.build).toStrictEqual({
         executor: '@nx/angular:package',
         configurations: {
           production: {
@@ -688,7 +688,7 @@ describe('lib migrator', () => {
       await migrator.migrate();
 
       const { targets } = readProjectConfiguration(tree, 'lib1');
-      expect(targets.build).toStrictEqual({
+      expect(targets?.build).toStrictEqual({
         executor: '@nx/angular:package',
         options: {
           project: 'libs/lib1/ng-package.json',
@@ -721,7 +721,7 @@ describe('lib migrator', () => {
       await migrator.migrate();
 
       const { targets } = readProjectConfiguration(tree, 'lib1');
-      expect(targets.lint).toStrictEqual({
+      expect(targets?.lint).toStrictEqual({
         command: `eslint "libs/lib1/**/*.ts" "libs/lib1/**/*.html"`,
       });
     });
@@ -747,7 +747,7 @@ describe('lib migrator', () => {
       await migrator.migrate();
 
       const { targets } = readProjectConfiguration(tree, 'lib1');
-      expect(targets.myCustomLintTarget).toStrictEqual({
+      expect(targets?.myCustomLintTarget).toStrictEqual({
         command: `eslint "libs/lib1/**/*.ts" "libs/lib1/**/*.html"`,
       });
     });
@@ -774,7 +774,7 @@ describe('lib migrator', () => {
       await migrator.migrate();
 
       const { targets } = readProjectConfiguration(tree, 'lib1');
-      expect(targets.lint).toStrictEqual({
+      expect(targets?.lint).toStrictEqual({
         command: `eslint --config libs/lib1/.eslintrc.json "libs/lib1/**/*.ts" "libs/lib1/**/*.html"`,
       });
     });
@@ -799,7 +799,7 @@ describe('lib migrator', () => {
       await migrator.migrate();
 
       const { targets } = readProjectConfiguration(tree, 'lib1');
-      expect(targets.test).toStrictEqual({
+      expect(targets?.test).toStrictEqual({
         executor: '@angular-devkit/build-angular:karma',
         options: {
           main: 'libs/lib1/src/test.ts',
@@ -829,7 +829,7 @@ describe('lib migrator', () => {
       await migrator.migrate();
 
       const { targets } = readProjectConfiguration(tree, 'lib1');
-      expect(targets.myCustomTestTarget).toStrictEqual({
+      expect(targets?.myCustomTestTarget).toStrictEqual({
         executor: '@angular-devkit/build-angular:karma',
         options: {
           main: 'libs/lib1/src/test.ts',
@@ -857,7 +857,7 @@ describe('lib migrator', () => {
       await migrator.migrate();
 
       const { targets } = readProjectConfiguration(tree, 'lib1');
-      expect(targets.test).toStrictEqual({
+      expect(targets?.test).toStrictEqual({
         executor: '@angular/build:unit-test',
         options: {
           tsConfig: 'libs/lib1/tsconfig.spec.json',
@@ -885,7 +885,7 @@ describe('lib migrator', () => {
       await migrator.migrate();
 
       const { targets } = readProjectConfiguration(tree, 'lib1');
-      expect(targets.test).toStrictEqual({
+      expect(targets?.test).toStrictEqual({
         executor: '@angular/build:unit-test',
         options: {
           tsConfig: 'libs/lib1/tsconfig.spec.json',
@@ -914,7 +914,7 @@ describe('lib migrator', () => {
       await migrator.migrate();
 
       const { targets } = readProjectConfiguration(tree, 'lib1');
-      expect(targets.myCustomTestTarget).toStrictEqual({
+      expect(targets?.myCustomTestTarget).toStrictEqual({
         executor: '@angular/build:unit-test',
         options: {
           tsConfig: 'libs/lib1/tsconfig.spec.json',
@@ -1317,9 +1317,11 @@ describe('lib migrator', () => {
 
       await migrator.migrate();
 
-      const { targetDefaults } = readNxJson(tree);
+      const targetDefaults = readNxJson(tree)?.targetDefaults ?? {};
       expect(
-        Object.keys(targetDefaults).filter((f) => targetDefaults[f].cache)
+        Object.entries(targetDefaults)
+          .filter(([, value]) => !Array.isArray(value) && value.cache)
+          .map(([name]) => name)
       ).toStrictEqual([
         'build',
         'lint',
@@ -1345,9 +1347,11 @@ describe('lib migrator', () => {
 
       await migrator.migrate();
 
-      const { targetDefaults } = readNxJson(tree);
+      const targetDefaults = readNxJson(tree)?.targetDefaults ?? {};
       expect(
-        Object.keys(targetDefaults).filter((f) => targetDefaults[f].cache)
+        Object.entries(targetDefaults)
+          .filter(([, value]) => !Array.isArray(value) && value.cache)
+          .map(([name]) => name)
       ).toStrictEqual(['build', 'lint', 'myCustomTest']);
     });
   });

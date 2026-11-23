@@ -24,7 +24,7 @@ export default async function (tree: Tree) {
 
     let isUpdated = false;
     for (const target of Object.values(project.targets ?? {})) {
-      if (!executorsToAddPolyfillTo.includes(target.executor)) {
+      if (!executorsToAddPolyfillTo.includes(target.executor ?? '')) {
         continue;
       }
 

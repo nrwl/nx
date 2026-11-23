@@ -38,7 +38,7 @@ describe('remove-scam-generator-defaults', () => {
 
     const result = await migration(tree);
 
-    expect(readNxJson(tree).generators).toEqual({
+    expect(readNxJson(tree)?.generators).toEqual({
       '@nx/angular:component': { type: 'component' },
       '@nx/angular': { pipe: { typeSeparator: '.' } },
     });
@@ -56,7 +56,7 @@ describe('remove-scam-generator-defaults', () => {
 
     await migration(tree);
 
-    expect(readNxJson(tree).generators).toEqual({
+    expect(readNxJson(tree)?.generators).toEqual({
       '@schematics/angular:component': { type: 'component' },
     });
   });
@@ -149,16 +149,16 @@ describe('remove-scam-generator-defaults', () => {
   });
 
   it('should not throw on a non-object collection entry', async () => {
-    updateNxJson(tree, {
-      ...readNxJson(tree),
+    updateJson(tree, 'nx.json', (json) => ({
+      ...json,
       generators: {
         '@nx/angular': null,
         '@nx/angular:scam': { type: 'component' },
       },
-    });
+    }));
 
     await migration(tree);
 
-    expect(readNxJson(tree).generators).toEqual({ '@nx/angular': null });
+    expect(readNxJson(tree)?.generators).toEqual({ '@nx/angular': null });
   });
 });

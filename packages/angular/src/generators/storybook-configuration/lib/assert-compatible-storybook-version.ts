@@ -1,7 +1,7 @@
 import { lt } from 'semver';
 
 export function assertCompatibleStorybookVersion() {
-  let storybookVersion: string;
+  let storybookVersion: string | undefined;
   try {
     storybookVersion = require(
       require.resolve('@storybook/angular/package.json')

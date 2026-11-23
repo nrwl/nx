@@ -1,4 +1,3 @@
-import type { Mock } from 'vitest';
 import { getInstalledCypressMajorVersion } from '@nx/cypress/internal';
 import {
   DependencyType,
@@ -41,16 +40,16 @@ vi.mock('nx/src/project-graph/project-graph', async () => ({
 }));
 // The generator `require`s @nx/cypress/internal, which reaches the graph and
 // @nx/devkit on the CJS channel; register those first so cypress loads them.
-const cjsRequire = createRequire(import.meta.url);
-mockCjsModule(import.meta.url, 'nx/src/project-graph/project-graph', {
+const cjsRequire = createRequire(__filename);
+mockCjsModule(__filename, 'nx/src/project-graph/project-graph', {
   ...cjsRequire('nx/src/project-graph/project-graph'),
   readCachedProjectGraph: mocks.readCachedProjectGraph,
 });
-mockCjsModule(import.meta.url, '@nx/devkit', {
+mockCjsModule(__filename, '@nx/devkit', {
   ...cjsRequire('@nx/devkit'),
   createProjectGraphAsync: mocks.createProjectGraphAsync,
 });
-mockCjsModule(import.meta.url, '@nx/cypress/internal', {
+mockCjsModule(__filename, '@nx/cypress/internal', {
   ...cjsRequire('@nx/cypress/internal'),
   getInstalledCypressMajorVersion: mocks.getInstalledCypressMajorVersion,
 });
@@ -67,9 +66,9 @@ function useAngularSupportedByCypress(tree: Tree) {
 
 describe('Cypress Component Testing Configuration', () => {
   let tree: Tree;
-  let mockedInstalledCypressVersion: Mock<
-    ReturnType<typeof getInstalledCypressMajorVersion>
-  > = getInstalledCypressMajorVersion as never;
+  const mockedInstalledCypressVersion = vi.mocked(
+    getInstalledCypressMajorVersion
+  );
   // TODO(@leosvelperez): Turn this to adding the plugin
 
   beforeEach(() => {
@@ -154,7 +153,7 @@ describe('Cypress Component Testing Configuration', () => {
         tree.exists('fancy-lib/src/lib/fancy-cmp/fancy-cmp.component.cy.ts')
       ).toBeFalsy();
       expect(
-        readProjectConfiguration(tree, 'fancy-lib').targets['component-test']
+        readProjectConfiguration(tree, 'fancy-lib').targets?.['component-test']
       ).toBeUndefined();
     });
 
@@ -213,7 +212,7 @@ describe('Cypress Component Testing Configuration', () => {
         tree.exists('fancy-lib/src/lib/fancy-cmp/fancy-cmp.component.cy.ts')
       ).toBeFalsy();
       expect(
-        readProjectConfiguration(tree, 'fancy-lib').targets['component-test']
+        readProjectConfiguration(tree, 'fancy-lib').targets?.['component-test']
       ).toBeUndefined();
     });
 
@@ -238,7 +237,11 @@ describe('Cypress Component Testing Configuration', () => {
       vi.clearAllMocks();
 
       const appConfig = readProjectConfiguration(tree, 'fancy-app');
-      appConfig.targets['build'].executor = 'something/else';
+      const buildTarget = appConfig.targets?.['build'];
+      if (!buildTarget) {
+        throw new Error('fancy-app has no build target');
+      }
+      buildTarget.executor = 'something/else';
       updateProjectConfiguration(tree, 'fancy-app', appConfig);
       projectGraph = {
         nodes: {
@@ -347,7 +350,7 @@ describe('Cypress Component Testing Configuration', () => {
       });
 
       expect(
-        readProjectConfiguration(tree, 'fancy-app').targets['component-test']
+        readProjectConfiguration(tree, 'fancy-app').targets?.['component-test']
       ).toBeUndefined();
     });
 
@@ -407,7 +410,7 @@ describe('Cypress Component Testing Configuration', () => {
       });
 
       expect(
-        readProjectConfiguration(tree, 'fancy-lib').targets['component-test']
+        readProjectConfiguration(tree, 'fancy-lib').targets?.['component-test']
       ).toBeUndefined();
     });
   });
@@ -1485,8 +1488,11 @@ async function setup(
     });
 
     if (options.withInputs) {
+      if (!options.basePath) {
+        throw new Error('basePath is required when withInputs is set');
+      }
       const cmpPath = joinPathFragments(options.basePath, name, `${name}.ts`);
-      const oldContent = tree.read(cmpPath, 'utf-8');
+      const oldContent = readFile(tree, cmpPath);
 
       const newContent = oldContent.replace(
         'constructor()',
@@ -1533,4 +1539,10 @@ function getCmpsFromTree(
       ),
     };
   });
+}
+
+function readFile(tree: Tree, path: string): string {
+  const content = tree.read(path, 'utf-8');
+  if (content === null) throw new Error(`${path} not found`);
+  return content;
 }

@@ -62,7 +62,7 @@ export default async function (tree: Tree) {
 
     let isUpdated = false;
     for (const target of Object.values(project.targets ?? {})) {
-      if (!ssrApplicationExecutors.includes(target.executor)) {
+      if (!ssrApplicationExecutors.includes(target.executor ?? '')) {
         continue;
       }
       if (renameSsrPlatform(target)) {
@@ -90,7 +90,7 @@ export default async function (tree: Tree) {
       }
       if (
         !ssrApplicationExecutors.includes(targetOrExecutor) &&
-        !ssrApplicationExecutors.includes(targetConfig.executor)
+        !ssrApplicationExecutors.includes(targetConfig.executor ?? '')
       ) {
         continue;
       }

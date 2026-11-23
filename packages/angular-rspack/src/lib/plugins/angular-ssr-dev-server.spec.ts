@@ -251,6 +251,7 @@ async function startHarness({
       name: '@rspack/dev-middleware',
       middleware: undefined,
     }) as unknown as DevServerMiddleware;
+  const passThrough: DevServerMiddlewareHandler = (_req, _res, next) => next();
   const middlewares =
     (browser.options.devServer || {}).setupMiddlewares?.(
       proxy
@@ -258,7 +259,7 @@ async function startHarness({
             devMiddlewareEntry(),
             {
               name: 'http-proxy-middleware',
-              middleware: (_req, _res, next) => next(),
+              middleware: passThrough,
             },
             devMiddlewareEntry(),
           ]

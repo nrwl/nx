@@ -6,6 +6,7 @@ import {
   readJson,
   readProjectConfiguration,
   updateJson,
+  Tree,
   updateProjectConfiguration,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
@@ -20,6 +21,15 @@ import {
 import { generateTestApplication } from '../utils/testing';
 import { setupSsr } from './setup-ssr';
 import { PackageJson } from '@nx/devkit/internal';
+
+function readProjectWithTargets(tree: Tree, projectName: string) {
+  const project = readProjectConfiguration(tree, projectName);
+  const { targets } = project;
+  if (!targets) {
+    throw new Error(`Project "${projectName}" has no targets.`);
+  }
+  return { ...project, targets };
+}
 
 describe('setupSSR', () => {
   describe('with application builder', () => {
@@ -37,7 +47,7 @@ describe('setupSSR', () => {
 
       // ASSERT
       expect(
-        readProjectConfiguration(tree, 'app1').targets.build
+        readProjectConfiguration(tree, 'app1').targets?.build
       ).toMatchSnapshot();
       expect(tree.read('app1/src/server.ts', 'utf-8')).toMatchSnapshot();
       expect(tree.read('app1/src/main.server.ts', 'utf-8'))
@@ -115,7 +125,7 @@ describe('setupSSR', () => {
         "
       `);
       const nxJson = readJson<NxJsonConfiguration>(tree, 'nx.json');
-      expect(nxJson.targetDefaults.server).toBeUndefined();
+      expect(nxJson.targetDefaults?.server).toBeUndefined();
     });
 
     it('should create the files correctly for ssr when app is standalone', async () => {
@@ -131,7 +141,7 @@ describe('setupSSR', () => {
 
       // ASSERT
       expect(
-        readProjectConfiguration(tree, 'app1').targets.build
+        readProjectConfiguration(tree, 'app1').targets?.build
       ).toMatchSnapshot();
       expect(tree.read('app1/src/server.ts', 'utf-8')).toMatchSnapshot();
       expect(tree.read('app1/src/main.server.ts', 'utf-8'))
@@ -186,7 +196,7 @@ describe('setupSSR', () => {
         "
       `);
       const nxJson = readJson<NxJsonConfiguration>(tree, 'nx.json');
-      expect(nxJson.targetDefaults.server).toBeUndefined();
+      expect(nxJson.targetDefaults?.server).toBeUndefined();
     });
 
     it('should configure the allowed hosts', async () => {
@@ -199,7 +209,7 @@ describe('setupSSR', () => {
       await setupSsr(tree, { project: 'app1', skipFormat: true });
 
       expect(
-        readProjectConfiguration(tree, 'app1').targets.build.options.security
+        readProjectConfiguration(tree, 'app1').targets?.build.options.security
       ).toStrictEqual({ allowedHosts: [] });
     });
 
@@ -209,7 +219,7 @@ describe('setupSSR', () => {
         directory: 'app1',
         skipFormat: true,
       });
-      const project = readProjectConfiguration(tree, 'app1');
+      const project = readProjectWithTargets(tree, 'app1');
       project.targets.build.options.security = {
         allowedHosts: ['example.com'],
       };
@@ -218,7 +228,7 @@ describe('setupSSR', () => {
       await setupSsr(tree, { project: 'app1', skipFormat: true });
 
       expect(
-        readProjectConfiguration(tree, 'app1').targets.build.options.security
+        readProjectConfiguration(tree, 'app1').targets?.build.options.security
       ).toStrictEqual({ allowedHosts: ['example.com'] });
     });
 
@@ -236,7 +246,7 @@ describe('setupSSR', () => {
       await setupSsr(tree, { project: 'app1', skipFormat: true });
 
       expect(
-        readProjectConfiguration(tree, 'app1').targets.build.options.security
+        readProjectConfiguration(tree, 'app1').targets?.build.options.security
       ).toBeUndefined();
     });
 
@@ -260,7 +270,7 @@ describe('setupSSR', () => {
         '~20.3.17'
       );
       expect(
-        readProjectConfiguration(tree, 'app1').targets.build.options.security
+        readProjectConfiguration(tree, 'app1').targets?.build.options.security
       ).toStrictEqual({ allowedHosts: [] });
     });
 
@@ -270,7 +280,7 @@ describe('setupSSR', () => {
         directory: 'app1',
         skipFormat: true,
       });
-      const project = readProjectConfiguration(tree, 'app1');
+      const project = readProjectWithTargets(tree, 'app1');
       project.targets.build.options.outputPath = {
         base: project.targets.build.options.outputPath,
         browser: 'public',
@@ -292,7 +302,7 @@ describe('setupSSR', () => {
         directory: 'app1',
         skipFormat: true,
       });
-      const project = readProjectConfiguration(tree, 'app1');
+      const project = readProjectWithTargets(tree, 'app1');
       project.targets.build.options.outputPath = {
         base: project.targets.build.options.outputPath,
         browser: '',
@@ -302,7 +312,9 @@ describe('setupSSR', () => {
       await setupSsr(tree, { project: 'app1' });
 
       const updatedProject = readProjectConfiguration(tree, 'app1');
-      expect(updatedProject.targets.build.options.outputPath).toBe('dist/app1');
+      expect(updatedProject.targets?.build.options.outputPath).toBe(
+        'dist/app1'
+      );
     });
 
     it('should update "outputPath" to a string when "outputPath.browser" is an empty string and the other properties match their default values', async () => {
@@ -311,7 +323,7 @@ describe('setupSSR', () => {
         directory: 'app1',
         skipFormat: true,
       });
-      const project = readProjectConfiguration(tree, 'app1');
+      const project = readProjectWithTargets(tree, 'app1');
       project.targets.build.options.outputPath = {
         base: project.targets.build.options.outputPath,
         browser: '',
@@ -323,7 +335,9 @@ describe('setupSSR', () => {
       await setupSsr(tree, { project: 'app1' });
 
       const updatedProject = readProjectConfiguration(tree, 'app1');
-      expect(updatedProject.targets.build.options.outputPath).toBe('dist/app1');
+      expect(updatedProject.targets?.build.options.outputPath).toBe(
+        'dist/app1'
+      );
     });
 
     it('should remove "outputPath.browser" when it is an empty string', async () => {
@@ -332,7 +346,7 @@ describe('setupSSR', () => {
         directory: 'app1',
         skipFormat: true,
       });
-      const project = readProjectConfiguration(tree, 'app1');
+      const project = readProjectWithTargets(tree, 'app1');
       project.targets.build.options.outputPath = {
         base: project.targets.build.options.outputPath,
         browser: '',
@@ -343,7 +357,7 @@ describe('setupSSR', () => {
       await setupSsr(tree, { project: 'app1' });
 
       const updatedProject = readProjectConfiguration(tree, 'app1');
-      expect(updatedProject.targets.build.options.outputPath).toStrictEqual({
+      expect(updatedProject.targets?.build.options.outputPath).toStrictEqual({
         base: 'dist/app1',
         server: 'node-server',
       });
@@ -355,7 +369,7 @@ describe('setupSSR', () => {
         directory: 'app1',
         skipFormat: true,
       });
-      const project = readProjectConfiguration(tree, 'app1');
+      const project = readProjectWithTargets(tree, 'app1');
       project.targets.build.outputs = [
         '{options.outputPath.base}',
         '{projectRoot}/some-other-output-dir',
@@ -369,11 +383,13 @@ describe('setupSSR', () => {
       await setupSsr(tree, { project: 'app1' });
 
       const updatedProject = readProjectConfiguration(tree, 'app1');
-      expect(updatedProject.targets.build.outputs).toStrictEqual([
+      expect(updatedProject.targets?.build.outputs).toStrictEqual([
         '{options.outputPath}',
         '{projectRoot}/some-other-output-dir',
       ]);
-      expect(updatedProject.targets.build.options.outputPath).toBe('dist/app1');
+      expect(updatedProject.targets?.build.options.outputPath).toBe(
+        'dist/app1'
+      );
     });
   });
 
@@ -393,7 +409,7 @@ describe('setupSSR', () => {
 
       // ASSERT
       expect(
-        readProjectConfiguration(tree, 'app1').targets.server
+        readProjectConfiguration(tree, 'app1').targets?.server
       ).toMatchSnapshot();
       expect(tree.read('app1/src/server.ts', 'utf-8')).toMatchSnapshot();
       expect(tree.read('app1/src/main.server.ts', 'utf-8'))
@@ -467,7 +483,7 @@ describe('setupSSR', () => {
         "
       `);
       const nxJson = readJson<NxJsonConfiguration>(tree, 'nx.json');
-      expect(nxJson.targetDefaults.server.cache).toBe(true);
+      expect(nxJson.targetDefaults?.server).toHaveProperty('cache', true);
     });
 
     it('should not import from `zone.js/node` in the server file even when the app is not zoneless', async () => {
@@ -501,7 +517,7 @@ describe('setupSSR', () => {
 
       // ASSERT
       expect(
-        readProjectConfiguration(tree, 'app1').targets.server
+        readProjectConfiguration(tree, 'app1').targets?.server
       ).toMatchSnapshot();
       expect(tree.read('app1/src/server.ts', 'utf-8')).toMatchSnapshot();
       expect(tree.read('app1/src/main.server.ts', 'utf-8'))
@@ -549,7 +565,7 @@ describe('setupSSR', () => {
         "
       `);
       const nxJson = readJson<NxJsonConfiguration>(tree, 'nx.json');
-      expect(nxJson.targetDefaults.server.cache).toEqual(true);
+      expect(nxJson.targetDefaults?.server).toHaveProperty('cache', true);
     });
 
     it('should update build target output path', async () => {
@@ -562,13 +578,13 @@ describe('setupSSR', () => {
       });
       // verify default output path
       expect(
-        readProjectConfiguration(tree, 'app1').targets.build.options.outputPath
+        readProjectConfiguration(tree, 'app1').targets?.build.options.outputPath
       ).toBe('dist/app1');
 
       await setupSsr(tree, { project: 'app1', skipFormat: true });
 
       expect(
-        readProjectConfiguration(tree, 'app1').targets.build.options.outputPath
+        readProjectConfiguration(tree, 'app1').targets?.build.options.outputPath
       ).toBe('dist/app1/browser');
     });
 
@@ -583,11 +599,11 @@ describe('setupSSR', () => {
 
       await setupSsr(tree, { project: 'app1', skipFormat: true });
 
-      const serveSsr = readProjectConfiguration(tree, 'app1').targets[
+      const serveSsr = readProjectConfiguration(tree, 'app1').targets?.[
         'serve-ssr'
       ];
-      expect(serveSsr.continuous).toBe(true);
-      expect(serveSsr.readyWhen).toStrictEqual({ signal: true });
+      expect(serveSsr?.continuous).toBe(true);
+      expect(serveSsr?.readyWhen).toStrictEqual({ signal: true });
     });
 
     it('should reference the server tsconfig with a path relative to the project tsconfig', async () => {
@@ -602,7 +618,7 @@ describe('setupSSR', () => {
       await setupSsr(tree, { project: 'app1', skipFormat: true });
 
       const { references } = readJson(tree, 'apps/app1/tsconfig.json');
-      const serverReference = references.find((reference) =>
+      const serverReference = references.find((reference: { path: string }) =>
         reference.path.endsWith('tsconfig.server.json')
       );
       expect(serverReference).toStrictEqual({
@@ -627,14 +643,14 @@ describe('setupSSR', () => {
       tree,
       'package.json'
     );
-    expect(dependencies['@angular/platform-server']).toEqual(angularVersion);
-    expect(dependencies['@angular/ssr']).toEqual(angularDevkitVersion);
-    expect(dependencies['express']).toEqual(expressVersion);
-    expect(dependencies['@nguniversal/express-engine']).toBeUndefined();
-    expect(devDependencies['@types/express']).toBe(typesExpressVersion);
-    expect(devDependencies['@nguniversal/builders']).toBeUndefined();
-    expect(devDependencies['@nx/webpack']).toBeUndefined();
-    expect(devDependencies['webpack-merge']).toBeUndefined();
+    expect(dependencies?.['@angular/platform-server']).toEqual(angularVersion);
+    expect(dependencies?.['@angular/ssr']).toEqual(angularDevkitVersion);
+    expect(dependencies?.['express']).toEqual(expressVersion);
+    expect(dependencies?.['@nguniversal/express-engine']).toBeUndefined();
+    expect(devDependencies?.['@types/express']).toBe(typesExpressVersion);
+    expect(devDependencies?.['@nguniversal/builders']).toBeUndefined();
+    expect(devDependencies?.['@nx/webpack']).toBeUndefined();
+    expect(devDependencies?.['webpack-merge']).toBeUndefined();
   });
 
   it('should install webpack dependencies when it creates a webpack server target', async () => {
@@ -643,15 +659,15 @@ describe('setupSSR', () => {
       directory: 'app1',
       skipFormat: true,
     });
-    const project = readProjectConfiguration(tree, 'app1');
+    const project = readProjectWithTargets(tree, 'app1');
     project.targets.build.executor = '@nx/angular:webpack-browser';
     updateProjectConfiguration(tree, 'app1', project);
 
     await setupSsr(tree, { project: 'app1', skipFormat: true });
 
     const { devDependencies } = readJson<PackageJson>(tree, 'package.json');
-    expect(devDependencies['@nx/webpack']).toBe(nxVersion);
-    expect(devDependencies['webpack-merge']).toBe(webpackMergeVersion);
+    expect(devDependencies?.['@nx/webpack']).toBe(nxVersion);
+    expect(devDependencies?.['webpack-merge']).toBe(webpackMergeVersion);
   });
 
   it.each([
@@ -666,7 +682,7 @@ describe('setupSSR', () => {
         skipFormat: true,
       });
       if (executor) {
-        const project = readProjectConfiguration(tree, 'app1');
+        const project = readProjectWithTargets(tree, 'app1');
         project.targets.build.executor = executor;
         updateProjectConfiguration(tree, 'app1', project);
       }
@@ -678,7 +694,7 @@ describe('setupSSR', () => {
       await setupSsr(tree, { project: 'app1', skipFormat: true });
 
       const { devDependencies } = readJson<PackageJson>(tree, 'package.json');
-      expect(devDependencies['@nx/js']).toBe(expected);
+      expect(devDependencies?.['@nx/js']).toBe(expected);
     }
   );
 
@@ -688,15 +704,15 @@ describe('setupSSR', () => {
       directory: 'app1',
       skipFormat: true,
     });
-    const project = readProjectConfiguration(tree, 'app1');
+    const project = readProjectWithTargets(tree, 'app1');
     project.targets.build.executor = '@example/custom:build';
     updateProjectConfiguration(tree, 'app1', project);
 
     await setupSsr(tree, { project: 'app1', skipFormat: true });
 
     const { devDependencies } = readJson<PackageJson>(tree, 'package.json');
-    expect(devDependencies['@nx/webpack']).toBeUndefined();
-    expect(devDependencies['webpack-merge']).toBeUndefined();
+    expect(devDependencies?.['@nx/webpack']).toBeUndefined();
+    expect(devDependencies?.['webpack-merge']).toBeUndefined();
   });
 
   it('should resolve a webpack build executor inherited from targetDefaults', async () => {
@@ -707,7 +723,7 @@ describe('setupSSR', () => {
       skipFormat: true,
     });
     const project = readProjectConfiguration(tree, 'app1');
-    delete project.targets.build.executor;
+    delete project.targets?.build.executor;
     updateProjectConfiguration(tree, 'app1', project);
     updateJson(tree, 'nx.json', (json) => ({
       ...json,
@@ -722,9 +738,9 @@ describe('setupSSR', () => {
 
     await setupSsr(tree, { project: 'app1', skipFormat: true });
 
-    expect(readProjectConfiguration(tree, 'app1').targets.server.executor).toBe(
-      '@nx/angular:webpack-server'
-    );
+    expect(
+      readProjectConfiguration(tree, 'app1').targets?.server.executor
+    ).toBe('@nx/angular:webpack-server');
   });
 
   it('should resolve the application build executor inherited from targetDefaults', async () => {
@@ -734,8 +750,8 @@ describe('setupSSR', () => {
       skipFormat: true,
     });
     const project = readProjectConfiguration(tree, 'app1');
-    const buildExecutor = project.targets.build.executor;
-    delete project.targets.build.executor;
+    const buildExecutor = project.targets?.build.executor;
+    delete project.targets?.build.executor;
     updateProjectConfiguration(tree, 'app1', project);
     updateJson(tree, 'nx.json', (json) => ({
       ...json,
@@ -749,9 +765,9 @@ describe('setupSSR', () => {
 
     // application builder configures ssr on the build target rather than
     // creating a separate server target
-    const build = readProjectConfiguration(tree, 'app1').targets.build;
-    expect(build.options.outputMode).toBe('server');
-    expect(build.options.ssr).toBeDefined();
+    const build = readProjectConfiguration(tree, 'app1').targets?.build;
+    expect(build?.options.outputMode).toBe('server');
+    expect(build?.options.ssr).toBeDefined();
   });
 
   it('should throw when the build target has no resolvable executor', async () => {
@@ -761,7 +777,7 @@ describe('setupSSR', () => {
       skipFormat: true,
     });
     const project = readProjectConfiguration(tree, 'app1');
-    delete project.targets.build.executor;
+    delete project.targets?.build.executor;
     updateProjectConfiguration(tree, 'app1', project);
 
     await expect(

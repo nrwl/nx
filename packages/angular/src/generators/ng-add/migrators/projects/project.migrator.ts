@@ -42,20 +42,20 @@ export class ProjectMigrator<
     // refactor is done.
     supportedBuilderMigrators?: BuilderMigratorClassType[]
   ) {
-    super(tree, project.config, logger ?? new Logger(project.name));
-
-    this.project = {
+    super(tree, project.config, logger ?? new Logger(project.name), {
       name: project.name,
-      oldRoot: this.projectConfig.root ?? '',
+      oldRoot: project.config.root ?? '',
       oldSourceRoot:
-        this.projectConfig.sourceRoot ||
-        joinPathFragments(this.projectConfig.root ?? '', 'src'),
+        project.config.sourceRoot ||
+        joinPathFragments(project.config.root ?? '', 'src'),
       newRoot: `${rootDir}/${project.name}`,
       newSourceRoot: `${rootDir}/${project.name}/src`,
-    };
+    });
 
     this.collectTargetNames();
-    this.createBuilderMigrators(supportedBuilderMigrators);
+    this.builderMigrators = this.createBuilderMigrators(
+      supportedBuilderMigrators
+    );
   }
 
   getWorkspaceRootFileTypesInfo(): WorkspaceRootFileTypesInfo {
@@ -139,11 +139,12 @@ export class ProjectMigrator<
         (migrator) => migrator.possibleBuilderNames
       )
     );
-    const unsupportedBuilders: [target: string, builder: string][] = [];
+    const unsupportedBuilders: [target: string, builder: string | undefined][] =
+      [];
 
     Object.entries(this.projectConfig.targets ?? {}).forEach(
       ([targetName, target]) => {
-        if (!allSupportedBuilders.includes(target.executor)) {
+        if (!allSupportedBuilders.includes(target.executor ?? '')) {
           unsupportedBuilders.push([targetName, target.executor]);
         }
       }
@@ -174,7 +175,7 @@ export class ProjectMigrator<
     ).reduce(
       (acc, [target, { executor }]) => {
         targetTypes.forEach((targetType) => {
-          if (this.targets[targetType].builders.includes(executor)) {
+          if (this.targets[targetType].builders.includes(executor ?? '')) {
             acc[targetType].push(target);
             return acc;
           }
@@ -268,14 +269,14 @@ export class ProjectMigrator<
     }
     const regex = new RegExp(`(^!?\\/?)(${from})(\\/|$)`, 'gm');
 
-    if (this.tree.exists('.gitignore')) {
-      const gitignore = this.tree.read('.gitignore', 'utf-8');
+    const gitignore = this.tree.read('.gitignore', 'utf-8');
+    if (gitignore !== null) {
       const content = gitignore.replace(regex, `$1${to}$3`);
       this.tree.write('.gitignore', content);
     }
 
-    if (this.tree.exists('.prettierignore')) {
-      const prettierIgnore = this.tree.read('.prettierignore', 'utf-8');
+    const prettierIgnore = this.tree.read('.prettierignore', 'utf-8');
+    if (prettierIgnore !== null) {
       const content = prettierIgnore.replace(regex, `$1${to}$3`);
       this.tree.write('.prettierignore', content);
     }
@@ -289,7 +290,7 @@ export class ProjectMigrator<
         targetTypes.forEach((targetType) => {
           if (
             !this.targetNames[targetType] &&
-            this.targets[targetType].builders.includes(target.executor)
+            this.targets[targetType].builders.includes(target.executor ?? '')
           ) {
             this.targetNames[targetType] = targetName;
           }
@@ -300,13 +301,12 @@ export class ProjectMigrator<
 
   private createBuilderMigrators(
     supportedBuilderMigrators?: BuilderMigratorClassType[]
-  ): void {
+  ): BuilderMigrator[] {
     if (!supportedBuilderMigrators) {
-      this.builderMigrators = [];
-      return;
+      return [];
     }
 
-    this.builderMigrators = supportedBuilderMigrators.map(
+    return supportedBuilderMigrators.map(
       (migratorClass) =>
         new migratorClass(
           this.tree,

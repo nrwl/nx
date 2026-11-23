@@ -20,9 +20,9 @@ function validateBundler(bundler: string): 'esbuild' | 'webpack' | 'rspack' {
 
 export async function normalizeOptions(
   host: Tree,
-  options: Partial<Schema>
+  options: Schema
 ): Promise<NormalizedSchema> {
-  await ensureRootProjectName(options as Schema, 'application');
+  await ensureRootProjectName(options, 'application');
   const { projectName: appProjectName, projectRoot: appProjectRoot } =
     await determineProjectNameAndRootOptions(host, {
       name: options.name,
@@ -62,7 +62,6 @@ export async function normalizeOptions(
     e2eTestRunner: E2eTestRunner.Playwright,
     strict: true,
     standalone: true,
-    directory: appProjectRoot,
     ...options,
     // Resolved after the spread, so the `=== 'none'` and `!== 'eslint'` guards
     // downstream see a concrete linter. Both read `undefined` as "some linter,

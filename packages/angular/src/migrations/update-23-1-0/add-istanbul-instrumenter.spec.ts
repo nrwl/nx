@@ -1,9 +1,8 @@
 import {
   addProjectConfiguration,
   readJson,
-  readNxJson,
   updateJson,
-  updateNxJson,
+  type NxJsonConfiguration,
   type Tree,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
@@ -133,11 +132,12 @@ describe('add-istanbul-instrumenter migration', () => {
         projectType: 'application',
         targets: { test: {} },
       });
-      const nxJson = readNxJson(tree);
-      nxJson.targetDefaults = {
-        test: { executor: '@angular/build:karma', options: {} },
-      };
-      updateNxJson(tree, nxJson);
+      updateJson<NxJsonConfiguration>(tree, 'nx.json', (nxJson) => {
+        nxJson.targetDefaults = {
+          test: { executor: '@angular/build:karma', options: {} },
+        };
+        return nxJson;
+      });
 
       await migration(tree);
 
@@ -145,11 +145,12 @@ describe('add-istanbul-instrumenter migration', () => {
     });
 
     it('should detect a record-shaped targetDefault keyed by a Karma builder executor', async () => {
-      const nxJson = readNxJson(tree);
-      nxJson.targetDefaults = {
-        '@angular-devkit/build-angular:karma': { options: {} },
-      };
-      updateNxJson(tree, nxJson);
+      updateJson<NxJsonConfiguration>(tree, 'nx.json', (nxJson) => {
+        nxJson.targetDefaults = {
+          '@angular-devkit/build-angular:karma': { options: {} },
+        };
+        return nxJson;
+      });
 
       await migration(tree);
 
@@ -157,14 +158,15 @@ describe('add-istanbul-instrumenter migration', () => {
     });
 
     it('should detect runner: karma on a unit-test targetDefault keyed by target name', async () => {
-      const nxJson = readNxJson(tree);
-      nxJson.targetDefaults = {
-        test: {
-          executor: '@nx/angular:unit-test',
-          options: { runner: 'karma' },
-        },
-      };
-      updateNxJson(tree, nxJson);
+      updateJson<NxJsonConfiguration>(tree, 'nx.json', (nxJson) => {
+        nxJson.targetDefaults = {
+          test: {
+            executor: '@nx/angular:unit-test',
+            options: { runner: 'karma' },
+          },
+        };
+        return nxJson;
+      });
 
       await migration(tree);
 
@@ -172,14 +174,15 @@ describe('add-istanbul-instrumenter migration', () => {
     });
 
     it('should not add istanbul-lib-instrument when targetDefaults do not use Karma', async () => {
-      const nxJson = readNxJson(tree);
-      nxJson.targetDefaults = {
-        test: {
-          executor: '@nx/angular:unit-test',
-          options: { runner: 'vitest' },
-        },
-      };
-      updateNxJson(tree, nxJson);
+      updateJson<NxJsonConfiguration>(tree, 'nx.json', (nxJson) => {
+        nxJson.targetDefaults = {
+          test: {
+            executor: '@nx/angular:unit-test',
+            options: { runner: 'vitest' },
+          },
+        };
+        return nxJson;
+      });
 
       await migration(tree);
 

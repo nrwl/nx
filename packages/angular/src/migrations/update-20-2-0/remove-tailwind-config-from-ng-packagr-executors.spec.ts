@@ -4,7 +4,8 @@ import {
   readProjectConfiguration,
   updateJson,
   type NxJsonConfiguration,
-  type TargetDefaults,
+  type TargetConfiguration,
+  type TargetDefaultEntry,
   type Tree,
 } from '@nx/devkit';
 import * as devkit from '@nx/devkit';
@@ -13,7 +14,10 @@ import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 // This migration ran before targetDefaults supported the array shape, so
 // the test fixtures all use the legacy record shape.
 type LegacyNxJson = Omit<NxJsonConfiguration, 'targetDefaults'> & {
-  targetDefaults?: TargetDefaults;
+  targetDefaults?: Record<string, Partial<TargetConfiguration>>;
+};
+type ArrayNxJson = Omit<NxJsonConfiguration, 'targetDefaults'> & {
+  targetDefaults?: TargetDefaultEntry[];
 };
 import migration, {
   executors,
@@ -56,12 +60,12 @@ describe('remove-tailwind-config-from-ng-packagr-executors migration', () => {
       await migration(tree);
 
       const project = readProjectConfiguration(tree, 'lib1');
-      expect(project.targets.build.options.tailwindConfig).toBeUndefined();
+      expect(project.targets?.build.options.tailwindConfig).toBeUndefined();
       expect(
-        project.targets.build.configurations.development.tailwindConfig
+        project.targets?.build.configurations?.development.tailwindConfig
       ).toBeUndefined();
       expect(
-        project.targets.build.configurations.production.tailwindConfig
+        project.targets?.build.configurations?.production.tailwindConfig
       ).toBeUndefined();
     }
   );
@@ -92,8 +96,8 @@ describe('remove-tailwind-config-from-ng-packagr-executors migration', () => {
       await migration(tree);
 
       const project = readProjectConfiguration(tree, 'lib1');
-      expect(project.targets.build.options).toBeUndefined();
-      expect(project.targets.build.configurations).toBeUndefined();
+      expect(project.targets?.build.options).toBeUndefined();
+      expect(project.targets?.build.configurations).toBeUndefined();
     }
   );
 
@@ -121,15 +125,15 @@ describe('remove-tailwind-config-from-ng-packagr-executors migration', () => {
     await migration(tree);
 
     const project = readProjectConfiguration(tree, 'lib1');
-    expect(project.targets.build.options.tailwindConfig).toBe(
+    expect(project.targets?.build.options.tailwindConfig).toBe(
       'libs/lib1/tailwind.config.js'
     );
     expect(
-      project.targets.build.configurations.development.tailwindConfig
+      project.targets?.build.configurations?.development.tailwindConfig
     ).toBe('libs/lib1/tailwind.config.dev.js');
-    expect(project.targets.build.configurations.production.tailwindConfig).toBe(
-      'libs/lib1/tailwind.config.prod.js'
-    );
+    expect(
+      project.targets?.build.configurations?.production.tailwindConfig
+    ).toBe('libs/lib1/tailwind.config.prod.js');
   });
 
   it.each(executors)(
@@ -161,13 +165,13 @@ describe('remove-tailwind-config-from-ng-packagr-executors migration', () => {
 
       const nxJson = readJson<LegacyNxJson>(tree, 'nx.json');
       expect(
-        nxJson.targetDefaults.build.options.tailwindConfig
+        nxJson.targetDefaults?.build.options.tailwindConfig
       ).toBeUndefined();
       expect(
-        nxJson.targetDefaults.build.configurations.development.tailwindConfig
+        nxJson.targetDefaults?.build.configurations?.development.tailwindConfig
       ).toBeUndefined();
       expect(
-        nxJson.targetDefaults.build.configurations.production.tailwindConfig
+        nxJson.targetDefaults?.build.configurations?.production.tailwindConfig
       ).toBeUndefined();
     }
   );
@@ -229,14 +233,15 @@ describe('remove-tailwind-config-from-ng-packagr-executors migration', () => {
 
       const nxJson = readJson<LegacyNxJson>(tree, 'nx.json');
       expect(
-        nxJson.targetDefaults[executor].options.tailwindConfig
+        nxJson.targetDefaults?.[executor].options.tailwindConfig
       ).toBeUndefined();
       expect(
-        nxJson.targetDefaults[executor].configurations.development
+        nxJson.targetDefaults?.[executor].configurations?.development
           .tailwindConfig
       ).toBeUndefined();
       expect(
-        nxJson.targetDefaults[executor].configurations.production.tailwindConfig
+        nxJson.targetDefaults?.[executor].configurations?.production
+          .tailwindConfig
       ).toBeUndefined();
     }
   );
@@ -273,7 +278,7 @@ describe('remove-tailwind-config-from-ng-packagr-executors migration', () => {
     it.each(executors)(
       'should strip "tailwindConfig" from an executor-keyed array entry for "%s"',
       async (executor) => {
-        updateJson<NxJsonConfiguration>(tree, 'nx.json', (json) => {
+        updateJson<ArrayNxJson>(tree, 'nx.json', (json) => {
           json.targetDefaults = [
             {
               executor,
@@ -290,7 +295,7 @@ describe('remove-tailwind-config-from-ng-packagr-executors migration', () => {
 
         await migration(tree);
 
-        const nxJson = readJson<NxJsonConfiguration>(tree, 'nx.json');
+        const nxJson = readJson<ArrayNxJson>(tree, 'nx.json');
         // The entry's only payload was tailwindConfig — once stripped the
         // entry has nothing left beyond `executor`, so it gets dropped and
         // the empty `targetDefaults` is removed entirely.
@@ -301,7 +306,7 @@ describe('remove-tailwind-config-from-ng-packagr-executors migration', () => {
     it.each(executors)(
       'should keep an entry that retains other options after stripping tailwindConfig (executor "%s")',
       async (executor) => {
-        updateJson<NxJsonConfiguration>(tree, 'nx.json', (json) => {
+        updateJson<ArrayNxJson>(tree, 'nx.json', (json) => {
           json.targetDefaults = [
             {
               target: 'build',
@@ -317,7 +322,7 @@ describe('remove-tailwind-config-from-ng-packagr-executors migration', () => {
 
         await migration(tree);
 
-        const nxJson = readJson<NxJsonConfiguration>(tree, 'nx.json');
+        const nxJson = readJson<ArrayNxJson>(tree, 'nx.json');
         expect(nxJson.targetDefaults).toEqual([
           {
             target: 'build',

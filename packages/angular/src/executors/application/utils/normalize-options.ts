@@ -34,8 +34,6 @@ function coerceSsrPlatform(ssr: SsrPlatformInput | undefined): SsrOption {
     return ssr as SsrOption;
   }
 
-  // `validateOptions` runs first and asserts Angular is installed, so the
-  // version info is always present here.
   const { major: angularMajorVersion } = getInstalledAngularVersionInfo();
 
   return (

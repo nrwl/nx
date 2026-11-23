@@ -255,9 +255,9 @@ describe('webWorker generator', () => {
       });
 
       // ASSERT - Check if the worker file incorrectly receives the snippet (this shows the bug)
-      const workerFileContent = tree.read(
-        `${appName}/src/app/test-worker.worker.ts`,
-        'utf-8'
+      const workerFileContent = readFile(
+        tree,
+        `${appName}/src/app/test-worker.worker.ts`
       );
 
       // This assertion will currently PASS (showing the bug exists)
@@ -399,10 +399,7 @@ describe('webWorker generator', () => {
       });
 
       // ASSERT
-      const tsconfigContent = tree.read(
-        `${appName}/tsconfig.worker.json`,
-        'utf-8'
-      );
+      const tsconfigContent = readFile(tree, `${appName}/tsconfig.worker.json`);
       const tsconfig = JSON.parse(tsconfigContent);
 
       // Check that outDir doesn't have double slashes
@@ -430,9 +427,9 @@ describe('webWorker generator', () => {
       });
 
       // ASSERT
-      const tsconfigContent = tree.read(
-        `${nestedAppDirectory}/tsconfig.worker.json`,
-        'utf-8'
+      const tsconfigContent = readFile(
+        tree,
+        `${nestedAppDirectory}/tsconfig.worker.json`
       );
       const tsconfig = JSON.parse(tsconfigContent);
 
@@ -445,3 +442,9 @@ describe('webWorker generator', () => {
     });
   });
 });
+
+function readFile(tree: Tree, path: string): string {
+  const content = tree.read(path, 'utf-8');
+  if (content === null) throw new Error(`${path} not found`);
+  return content;
+}

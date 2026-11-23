@@ -33,7 +33,7 @@ bar
 
       const angularEntries = tree
         .read('.gitignore', 'utf-8')
-        .match(/^.angular$/gm);
+        ?.match(/^.angular$/gm);
       expect(angularEntries).toHaveLength(1);
     });
 
@@ -60,7 +60,7 @@ bar
 
       const angularEntries = tree
         .read('.prettierignore', 'utf-8')
-        .match(/^.angular$/gm);
+        ?.match(/^.angular$/gm);
       expect(angularEntries).toHaveLength(1);
     });
 

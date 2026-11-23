@@ -17,7 +17,7 @@ describe('insertNgModuleImport', () => {
 
     insertNgModuleImport(tree, 'app.module.ts', 'HttpClientModule');
 
-    expect(tree.read('app.module.ts').toString()).toMatchInlineSnapshot(
+    expect(tree.read('app.module.ts')?.toString()).toMatchInlineSnapshot(
       `"import { NgModule } from '@angular/core'; @NgModule({ imports: [HttpClientModule]}) class MyModule {}"`
     );
   });
@@ -30,7 +30,7 @@ describe('insertNgModuleImport', () => {
 
     insertNgModuleImport(tree, 'app.module.ts', 'HttpClientModule');
 
-    expect(tree.read('app.module.ts').toString()).toMatchInlineSnapshot(
+    expect(tree.read('app.module.ts')?.toString()).toMatchInlineSnapshot(
       `"import { NgModule } from '@angular/core'; @NgModule({ declarations: [MyComponent] , imports: [HttpClientModule]}) class MyModule {}"`
     );
   });
@@ -43,7 +43,7 @@ describe('insertNgModuleImport', () => {
 
     insertNgModuleImport(tree, 'app.module.ts', 'HttpClientModule');
 
-    expect(tree.read('app.module.ts').toString()).toMatchInlineSnapshot(
+    expect(tree.read('app.module.ts')?.toString()).toMatchInlineSnapshot(
       `"import { NgModule } from '@angular/core'; @NgModule({ declarations: [MyComponent], imports: [CommonModule, HttpClientModule] }) class MyModule {}"`
     );
   });
@@ -56,7 +56,7 @@ describe('insertNgModuleImport', () => {
 
     insertNgModuleImport(tree, 'app.module.ts', 'HttpClientModule');
 
-    expect(tree.read('app.module.ts').toString()).toMatchInlineSnapshot(
+    expect(tree.read('app.module.ts')?.toString()).toMatchInlineSnapshot(
       `"import { NgModule } from '@angular/core'; @NgModule({ declarations: [MyComponent], imports: [CommonModule,HttpClientModule,] }) class MyModule {}"`
     );
   });

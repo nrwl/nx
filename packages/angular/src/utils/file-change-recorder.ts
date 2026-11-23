@@ -17,7 +17,7 @@ export class FileChangeRecorder {
     private readonly tree: Tree,
     private readonly filePath: string
   ) {
-    this.setContentToFileContent();
+    this.mutableContent = this.readFileContent();
   }
 
   applyChanges(): void {
@@ -45,8 +45,14 @@ export class FileChangeRecorder {
   }
 
   setContentToFileContent(): void {
-    this.mutableContent = new MagicString(
-      this.tree.read(this.filePath, 'utf-8')
-    );
+    this.mutableContent = this.readFileContent();
+  }
+
+  private readFileContent(): MagicString {
+    const content = this.tree.read(this.filePath, 'utf-8');
+    if (content === null) {
+      throw new Error(`Cannot read the file "${this.filePath}".`);
+    }
+    return new MagicString(content);
   }
 }

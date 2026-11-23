@@ -35,7 +35,7 @@ describe('set-continuous-option migration', () => {
       await migration(tree);
 
       const project = readProjectConfiguration(tree, 'app1');
-      expect(project.targets.serve.continuous).toBe(true);
+      expect(project.targets?.serve.continuous).toBe(true);
     }
   );
 
@@ -55,7 +55,7 @@ describe('set-continuous-option migration', () => {
     await migration(tree);
 
     const project = readProjectConfiguration(tree, 'app1');
-    expect(project.targets.serve.continuous).toBe(false);
+    expect(project.targets?.serve.continuous).toBe(false);
   });
 
   it('should not modify targets using other executors', async () => {
@@ -73,6 +73,6 @@ describe('set-continuous-option migration', () => {
     await migration(tree);
 
     const project = readProjectConfiguration(tree, 'app1');
-    expect(project.targets.build.continuous).toBeUndefined();
+    expect(project.targets?.build.continuous).toBeUndefined();
   });
 });

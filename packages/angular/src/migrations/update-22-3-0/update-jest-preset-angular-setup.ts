@@ -32,6 +32,9 @@ export default async function (tree: Tree) {
       }
 
       let content = tree.read(file, 'utf-8');
+      if (content === null) {
+        return;
+      }
       if (!content.includes('jest-preset-angular/setup-jest')) {
         return;
       }

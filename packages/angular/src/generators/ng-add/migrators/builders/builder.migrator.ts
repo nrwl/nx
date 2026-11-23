@@ -26,9 +26,8 @@ export abstract class BuilderMigrator extends Migrator {
     projectConfig: ProjectConfiguration,
     logger: Logger
   ) {
-    super(tree, projectConfig, logger);
+    super(tree, projectConfig, logger, project);
 
-    this.project = project;
     this.projectConfig = projectConfig;
 
     this.collectBuilderTargets();
@@ -61,7 +60,7 @@ export abstract class BuilderMigrator extends Migrator {
     for (const [name, target] of Object.entries(
       this.projectConfig.targets ?? {}
     )) {
-      if (this.possibleBuilderNames.includes(target.executor)) {
+      if (this.possibleBuilderNames.includes(target.executor ?? '')) {
         this.targets.set(name, target);
       }
     }

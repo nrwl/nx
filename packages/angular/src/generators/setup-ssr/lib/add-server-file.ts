@@ -12,6 +12,9 @@ import { DEFAULT_BROWSER_DIR } from './constants';
 
 export function addServerFile(tree: Tree, options: NormalizedGeneratorOptions) {
   const project = readProjectConfiguration(tree, options.project);
+  if (!project.targets) {
+    throw new Error(`The "${options.project}" project has no targets.`);
+  }
   const { outputPath } = project.targets.build.options;
   const usesApplicationEngine =
     options.isUsingApplicationBuilder || options.isRspack;

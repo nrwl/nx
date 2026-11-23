@@ -21,7 +21,7 @@ describe('update-unit-test-runner-option migration', () => {
     await updateUnitTestRunnerOption(tree);
 
     const nxJson = readNxJson(tree);
-    expect(nxJson.generators['@nx/angular:application']).toEqual({
+    expect(nxJson?.generators?.['@nx/angular:application']).toEqual({
       unitTestRunner: 'vitest-analog',
     });
   });
@@ -40,7 +40,7 @@ describe('update-unit-test-runner-option migration', () => {
     await updateUnitTestRunnerOption(tree);
 
     const nxJson = readNxJson(tree);
-    expect(nxJson.generators['@nx/angular']['application']).toEqual({
+    expect(nxJson?.generators?.['@nx/angular']['application']).toEqual({
       unitTestRunner: 'vitest-analog',
     });
   });
@@ -63,13 +63,13 @@ describe('update-unit-test-runner-option migration', () => {
     await updateUnitTestRunnerOption(tree);
 
     const nxJson = readNxJson(tree);
-    expect(nxJson.generators['@nx/angular:application'].unitTestRunner).toBe(
+    expect(nxJson?.generators?.['@nx/angular:application'].unitTestRunner).toBe(
       'vitest-analog'
     );
-    expect(nxJson.generators['@nx/angular:library'].unitTestRunner).toBe(
+    expect(nxJson?.generators?.['@nx/angular:library'].unitTestRunner).toBe(
       'vitest-analog'
     );
-    expect(nxJson.generators['@nx/angular:host'].unitTestRunner).toBe(
+    expect(nxJson?.generators?.['@nx/angular:host'].unitTestRunner).toBe(
       'vitest-analog'
     );
   });
@@ -89,10 +89,10 @@ describe('update-unit-test-runner-option migration', () => {
     await updateUnitTestRunnerOption(tree);
 
     const nxJson = readNxJson(tree);
-    expect(nxJson.generators['@nx/angular:application'].unitTestRunner).toBe(
+    expect(nxJson?.generators?.['@nx/angular:application'].unitTestRunner).toBe(
       'jest'
     );
-    expect(nxJson.generators['@nx/angular:library'].unitTestRunner).toBe(
+    expect(nxJson?.generators?.['@nx/angular:library'].unitTestRunner).toBe(
       'none'
     );
   });
@@ -117,7 +117,7 @@ describe('update-unit-test-runner-option migration', () => {
     await updateUnitTestRunnerOption(tree);
 
     const nxJson = readNxJson(tree);
-    expect(nxJson.generators['@nx/angular:application']).toEqual({
+    expect(nxJson?.generators?.['@nx/angular:application']).toEqual({
       unitTestRunner: 'vitest-analog',
       style: 'scss',
       routing: true,

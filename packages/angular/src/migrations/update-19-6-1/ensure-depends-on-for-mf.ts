@@ -12,12 +12,15 @@ export default async function (tree: Tree) {
     tree,
     '@nx/angular:webpack-browser',
     (options) => {
-      const webpackConfig: string = options.webpackConfig;
+      const webpackConfig = options.webpackConfig;
       if (!webpackConfig) {
         return;
       }
 
       const webpackContents = tree.read(webpackConfig, 'utf-8');
+      if (webpackContents === null) {
+        throw new Error(`Cannot find the file "${webpackConfig}".`);
+      }
       if (
         ['withModuleFederation', 'withModuleFederationForSSR'].some((p) =>
           webpackContents.includes(p)
@@ -60,7 +63,9 @@ export default async function (tree: Tree) {
     const inputs = [...(existing.inputs ?? [])];
     if (
       !inputs.find((i) =>
-        typeof i === 'string' ? false : i['env'] === nxMFDevRemotesEnvVar
+        typeof i === 'string'
+          ? false
+          : 'env' in i && i.env === nxMFDevRemotesEnvVar
       )
     ) {
       inputs.push({ env: nxMFDevRemotesEnvVar });

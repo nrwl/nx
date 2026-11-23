@@ -88,6 +88,9 @@ async function convertProjectTargets(
     return false;
   }
 
+  if (!project.targets) {
+    throw new Error(`The project "${projectName}" has no targets.`);
+  }
   const { buildTargetName, serverTargetName } = getTargetsToConvert(
     project.targets
   );
@@ -100,8 +103,8 @@ async function convertProjectTargets(
     return false;
   }
 
-  const useNxExecutor =
-    project.targets[buildTargetName].executor.startsWith('@nx/angular:');
+  const buildTarget = project.targets[buildTargetName];
+  const useNxExecutor = buildTarget.executor?.startsWith('@nx/angular:');
   let newExecutor: string;
   if (useNxExecutor) {
     newExecutor = '@nx/angular:application';
@@ -109,7 +112,6 @@ async function convertProjectTargets(
     newExecutor = '@angular/build:application';
   }
 
-  const buildTarget = project.targets[buildTargetName];
   buildTarget.executor = newExecutor;
 
   if (buildTarget.outputs) {
@@ -258,9 +260,13 @@ async function convertProjectTargets(
   }
 
   // Delete all redundant targets
-  for (const [targetName, target] of Object.entries(project.targets)) {
-    if (redundantExecutors.has(target.executor)) {
-      delete project.targets[targetName];
+  const { targets } = project;
+  if (!targets) {
+    throw new Error(`The project "${projectName}" has no targets.`);
+  }
+  for (const [targetName, target] of Object.entries(targets)) {
+    if (redundantExecutors.has(target.executor ?? '')) {
+      delete targets[targetName];
     }
   }
 
@@ -272,8 +278,8 @@ function getTargetsToConvert(targets: Record<string, TargetConfiguration>): {
   buildTargetName?: string;
   serverTargetName?: string;
 } {
-  let buildTargetName: string;
-  let serverTargetName: string;
+  let buildTargetName: string | undefined;
+  let serverTargetName: string | undefined;
   for (const target of Object.keys(targets)) {
     if (
       targets[target].executor === '@nx/angular:application' ||
@@ -287,7 +293,7 @@ function getTargetsToConvert(targets: Record<string, TargetConfiguration>): {
     }
 
     // build target
-    if (executorsToConvert.has(targets[target].executor)) {
+    if (executorsToConvert.has(targets[target].executor ?? '')) {
       for (const [, options] of allTargetOptions(targets[target])) {
         if (options.customWebpackConfig) {
           logger.warn(
@@ -307,7 +313,7 @@ function getTargetsToConvert(targets: Record<string, TargetConfiguration>): {
     }
 
     // server target
-    if (serverTargetExecutors.has(targets[target].executor)) {
+    if (serverTargetExecutors.has(targets[target].executor ?? '')) {
       if (targets[target].executor === '@nx/angular:webpack-server') {
         for (const [, options] of allTargetOptions(targets[target])) {
           if (options.customWebpackConfig) {

@@ -27,7 +27,7 @@ describe('add-localize-polyfill-to-targets migration', () => {
       await migration(tree);
 
       const project = readProjectConfiguration(tree, 'app1');
-      expect(project.targets.build.options.polyfills).toStrictEqual([
+      expect(project.targets?.build.options.polyfills).toStrictEqual([
         '@angular/localize/init',
       ]);
     }
@@ -50,7 +50,7 @@ describe('add-localize-polyfill-to-targets migration', () => {
       await migration(tree);
 
       const project = readProjectConfiguration(tree, 'app1');
-      expect(project.targets.build.options.polyfills).toStrictEqual([
+      expect(project.targets?.build.options.polyfills).toStrictEqual([
         '@angular/localize/init',
       ]);
     }
@@ -73,7 +73,7 @@ describe('add-localize-polyfill-to-targets migration', () => {
       await migration(tree);
 
       const project = readProjectConfiguration(tree, 'app1');
-      expect(project.targets.build.options.polyfills).toStrictEqual([
+      expect(project.targets?.build.options.polyfills).toStrictEqual([
         '@angular/localize/init',
       ]);
     }
@@ -96,7 +96,7 @@ describe('add-localize-polyfill-to-targets migration', () => {
       await migration(tree);
 
       const project = readProjectConfiguration(tree, 'app1');
-      expect(project.targets.build.options.polyfills).toStrictEqual([
+      expect(project.targets?.build.options.polyfills).toStrictEqual([
         'some-other-polyfill',
         '@angular/localize/init',
       ]);
@@ -115,7 +115,7 @@ describe('add-localize-polyfill-to-targets migration', () => {
       await migration(tree);
 
       const project = readProjectConfiguration(tree, 'app1');
-      expect(project.targets.build.options.polyfills).toBeUndefined();
+      expect(project.targets?.build.options.polyfills).toBeUndefined();
     }
   );
 
@@ -134,6 +134,6 @@ describe('add-localize-polyfill-to-targets migration', () => {
     await migration(tree);
 
     const project = readProjectConfiguration(tree, 'app1');
-    expect(project.targets.build.options.polyfills).toBeUndefined();
+    expect(project.targets?.build.options.polyfills).toBeUndefined();
   });
 });

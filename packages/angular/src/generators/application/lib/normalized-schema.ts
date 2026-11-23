@@ -3,6 +3,10 @@ import type { Schema } from '../schema';
 import { LinterType } from '@nx/js';
 
 export interface NormalizedSchema extends Schema {
+  name: string;
+  bundler: 'webpack' | 'esbuild' | 'rspack';
+  ssr: boolean;
+  zoneless: boolean;
   linter: LinterType;
   unitTestRunner: UnitTestRunner;
   e2eTestRunner: E2eTestRunner;

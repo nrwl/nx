@@ -36,7 +36,9 @@ export default async function (tree: Tree) {
 
     // look for tsConfig in @nx/jest:jest tasks in case there are any
     // custom test tsconfig files
-    for (const [, target] of allProjectTargets(graphNode.data)) {
+    for (const [, target] of allProjectTargets<{ tsConfig?: string }>(
+      graphNode.data
+    )) {
       if (target.executor !== '@nx/jest:jest') {
         continue;
       }

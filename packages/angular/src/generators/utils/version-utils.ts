@@ -43,7 +43,14 @@ export function getInstalledAngularVersionInfo(tree: Tree) {
 export function getInstalledPackageVersionInfo(tree: Tree, pkgName: string) {
   const version = getDependencyVersionFromPackageJson(tree, pkgName);
 
-  return version ? { major: major(coerce(version)), version } : null;
+  if (!version) {
+    return null;
+  }
+  const coercedVersion = coerce(version);
+  if (!coercedVersion) {
+    throw new TypeError(`Invalid Version: ${version}`);
+  }
+  return { major: major(coercedVersion), version };
 }
 
 // Released in 20.3.17, 21.1.5 and 21.2.0, and never backported to 21.0.
@@ -127,7 +134,12 @@ export function versions(
     );
   }
 
-  return backwardCompatibleVersions[majorAngularVersion] ?? latestVersions;
+  const supportedVersion = supportedVersions.find(
+    (v) => v === majorAngularVersion
+  );
+  return supportedVersion === undefined
+    ? latestVersions
+    : backwardCompatibleVersions[supportedVersion];
 }
 
 // Helper types

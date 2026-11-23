@@ -10,5 +10,9 @@ export function isAngularBuildVersionAtLeast(version: string): boolean {
   const { version: installedVersion } = createRequire(__filename)(
     '@angular/build/package.json'
   );
-  return gte(coerce(installedVersion), version);
+  const installed = coerce(installedVersion);
+  if (!installed) {
+    throw new TypeError(`Invalid Version: ${installedVersion}`);
+  }
+  return gte(installed, version);
 }

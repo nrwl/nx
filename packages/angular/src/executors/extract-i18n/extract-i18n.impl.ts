@@ -15,7 +15,10 @@ export default async function* extractI18nExecutor(
   );
 
   const buildTarget =
-    buildTargetProjectConfiguration.targets[parsedBuildTarget.target];
+    buildTargetProjectConfiguration.targets?.[parsedBuildTarget.target];
+  if (!buildTarget) {
+    throw new Error(`Cannot find the build target "${options.buildTarget}".`);
+  }
 
   const isUsingEsbuildBuilder = [
     '@angular/build:application',
@@ -23,7 +26,7 @@ export default async function* extractI18nExecutor(
     '@angular-devkit/build-angular:browser-esbuild',
     '@nx/angular:application',
     '@nx/angular:browser-esbuild',
-  ].includes(buildTarget.executor);
+  ].includes(buildTarget.executor ?? '');
 
   const builderContext = await createBuilderContext(
     {

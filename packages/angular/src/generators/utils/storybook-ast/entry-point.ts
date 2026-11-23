@@ -19,15 +19,18 @@ export function getProjectEntryPoints(
     projectName
   );
 
-  const rootEntryPoint: EntryPoint = {
-    name: '',
-    path: normalizeMainEntryPointSourceRoot(
-      tree,
-      root,
-      sourceRoot,
-      projectType
-    ),
-  };
+  const rootEntryPointPath = normalizeMainEntryPointSourceRoot(
+    tree,
+    root,
+    sourceRoot,
+    projectType
+  );
+  if (!rootEntryPointPath) {
+    throw new Error(
+      `Cannot find the source directory of the "${projectName}" project.`
+    );
+  }
+  const rootEntryPoint: EntryPoint = { name: '', path: rootEntryPointPath };
   const entryPointRootPaths = [rootEntryPoint];
 
   if (projectType === 'application') {
@@ -87,9 +90,9 @@ function collectLibrarySecondaryEntryPoints(
 function normalizeMainEntryPointSourceRoot(
   tree: Tree,
   root: string,
-  sourceRoot: string,
-  projectType: ProjectType
-): string {
+  sourceRoot: string | undefined,
+  projectType: ProjectType | undefined
+): string | undefined {
   const projectTypeDir = projectType === 'application' ? 'app' : 'lib';
 
   if (sourceRoot) {
@@ -98,14 +101,14 @@ function normalizeMainEntryPointSourceRoot(
     );
   }
 
-  return getSourcePath(tree, root, projectTypeDir) ?? root;
+  return getSourcePath(tree, root, projectTypeDir);
 }
 
 function getSourcePath(
   tree: Tree,
   basePath: string,
   projectTypeDir: string
-): string | undefined {
+): string {
   const candidatePaths = [
     joinPathFragments(basePath, 'src', projectTypeDir),
     joinPathFragments(basePath, 'src'),
@@ -113,5 +116,8 @@ function getSourcePath(
     basePath,
   ];
 
-  return candidatePaths.find((candidatePath) => tree.exists(candidatePath));
+  return (
+    candidatePaths.find((candidatePath) => tree.exists(candidatePath)) ??
+    basePath
+  );
 }

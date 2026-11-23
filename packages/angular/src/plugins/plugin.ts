@@ -53,6 +53,18 @@ export type AngularProjectConfiguration = {
 };
 type AngularJson = { projects?: Record<string, AngularProjectConfiguration> };
 
+type TargetMetadata = NonNullable<TargetConfiguration['metadata']>;
+type InferredTargetConfiguration = TargetConfiguration & {
+  metadata: TargetMetadata & { help: NonNullable<TargetMetadata['help']> };
+};
+type InferredProjects = Record<
+  string,
+  AngularProjects[string] & {
+    root: string;
+    targets: Record<string, InferredTargetConfiguration>;
+  }
+>;
+
 const knownExecutors = {
   appShell: new Set(['@angular-devkit/build-angular:app-shell']),
   build: new Set([
@@ -157,7 +169,7 @@ export const createNodesV2 = createNodes;
 
 async function createNodesInternal(
   configFilePath: string,
-  options: {} | undefined,
+  options: AngularPluginOptions | undefined,
   context: CreateNodesContext,
   projectsCache: PluginCache<AngularProjects>,
   pmc: ReturnType<typeof getPackageManagerCommand>,
@@ -183,23 +195,21 @@ async function createNodesInternal(
 
 async function buildAngularProjects(
   configFilePath: string,
-  options: AngularPluginOptions,
+  options: AngularPluginOptions | undefined,
   angularWorkspaceRoot: string,
   context: CreateNodesContext,
   pmc: ReturnType<typeof getPackageManagerCommand>
 ): Promise<AngularProjects> {
-  const projects: Record<string, AngularProjects[string] & { root: string }> =
-    {};
+  const projects: InferredProjects = {};
 
   const absoluteConfigFilePath = join(context.workspaceRoot, configFilePath);
   const angularJson = readJsonFile<AngularJson>(absoluteConfigFilePath);
+  const angularProjects = angularJson.projects ?? {};
 
   const appShellTargets: Target[] = [];
   const prerenderTargets: Target[] = [];
-  for (const [projectName, project] of Object.entries(
-    angularJson.projects ?? {}
-  )) {
-    const targets: Record<string, TargetConfiguration> = {};
+  for (const [projectName, project] of Object.entries(angularProjects)) {
+    const targets: Record<string, InferredTargetConfiguration> = {};
 
     const projectTargets = getAngularJsonProjectTargets(project);
     if (!projectTargets) {
@@ -328,14 +338,14 @@ async function buildAngularProjects(
       project,
       target,
       projects,
-      angularJson,
+      angularProjects,
       angularWorkspaceRoot,
       context
     );
   }
 
   for (const { project, target } of prerenderTargets) {
-    updatePrerenderTarget(project, target, projects, angularJson);
+    updatePrerenderTarget(project, target, projects, angularProjects);
   }
 
   return Object.entries(projects).reduce((acc, [projectName, project]) => {
@@ -351,8 +361,8 @@ async function buildAngularProjects(
 function updateAppShellTarget(
   projectName: string,
   targetName: string,
-  projects: AngularProjects,
-  angularJson: AngularJson,
+  projects: InferredProjects,
+  angularProjects: Record<string, AngularProjectConfiguration>,
   angularWorkspaceRoot: string,
   context: CreateNodesContext
 ): void {
@@ -365,12 +375,12 @@ function updateAppShellTarget(
     projectName,
     targetName,
     projects,
-    angularJson
+    angularProjects
   );
 
   const outputIndexPath = getAngularJsonProjectTargets(
-    angularJson.projects[projectName]
-  )[targetName].options?.outputIndexPath;
+    angularProjects[projectName]
+  )?.[targetName].options?.outputIndexPath;
   if (outputIndexPath) {
     const fullOutputIndexPath = join(
       context.workspaceRoot,
@@ -382,7 +392,7 @@ function updateAppShellTarget(
         fullOutputIndexPath,
         context.workspaceRoot,
         angularWorkspaceRoot,
-        angularJson.projects[projectName].root
+        angularProjects[projectName].root
       )
     );
   }
@@ -401,7 +411,7 @@ function updateAppShellTarget(
 async function updateBuildTarget(
   projectName: string,
   targetName: string,
-  target: TargetConfiguration,
+  target: InferredTargetConfiguration,
   angularTarget: AngularTargetConfiguration,
   context: CreateNodesContext,
   angularWorkspaceRoot: string,
@@ -459,7 +469,7 @@ async function updateBuildTarget(
 }
 
 async function updateTestTarget(
-  target: TargetConfiguration,
+  target: InferredTargetConfiguration,
   angularTarget: AngularTargetConfiguration,
   context: CreateNodesContext,
   angularWorkspaceRoot: string,
@@ -504,7 +514,7 @@ async function updateTestTarget(
 }
 
 function updateServerTarget(
-  target: TargetConfiguration,
+  target: InferredTargetConfiguration,
   angularTarget: AngularTargetConfiguration,
   context: CreateNodesContext,
   angularWorkspaceRoot: string,
@@ -542,14 +552,14 @@ function updateServerTarget(
 function updatePrerenderTarget(
   projectName: string,
   targetName: string,
-  projects: AngularProjects,
-  angularJson: AngularJson
+  projects: InferredProjects,
+  angularProjects: Record<string, AngularProjectConfiguration>
 ): void {
   // it must exist since we collected it when processing it
   const target = projects[projectName].targets[targetName];
 
   target.metadata.help.example.options =
-    getAngularJsonProjectTargets(angularJson.projects[projectName])[targetName]
+    getAngularJsonProjectTargets(angularProjects[projectName])?.[targetName]
       .builder === '@angular-devkit/build-angular:prerender'
       ? { discoverRoutes: false }
       : { guessRoutes: false };
@@ -558,7 +568,7 @@ function updatePrerenderTarget(
     projectName,
     targetName,
     projects,
-    angularJson
+    angularProjects
   );
 
   if (!outputs.length) {
@@ -851,10 +861,10 @@ function getBrowserAndServerTargetInputsAndOutputs(
   projectName: string,
   targetName: string,
   projects: AngularProjects,
-  angularJson: AngularJson
+  angularProjects: Record<string, AngularProjectConfiguration>
 ) {
   const { browserTarget, serverTarget } = extractBrowserAndServerTargets(
-    angularJson,
+    angularProjects,
     projectName,
     targetName
   );
@@ -885,20 +895,21 @@ function getBrowserAndServerTargetInputsAndOutputs(
 }
 
 function extractBrowserAndServerTargets(
-  angularJson: AngularJson,
+  angularProjects: Record<string, AngularProjectConfiguration>,
   projectName: string,
   targetName: string
 ): {
-  browserTarget: Target;
-  serverTarget: Target;
+  browserTarget: Target | undefined;
+  serverTarget: Target | undefined;
 } {
   let browserTarget: Target | undefined;
   let serverTarget: Target | undefined;
 
   try {
-    const targets = getAngularJsonProjectTargets(
-      angularJson.projects[projectName]
-    );
+    const targets = getAngularJsonProjectTargets(angularProjects[projectName]);
+    if (!targets) {
+      return { browserTarget, serverTarget };
+    }
     const target = targets[targetName];
 
     let browserTargetSpecifier = target.options?.browserTarget;
@@ -937,7 +948,7 @@ function extractBrowserAndServerTargets(
 }
 
 function mergeInputs(
-  ...inputs: TargetConfiguration['inputs']
+  ...inputs: NonNullable<TargetConfiguration['inputs']>
 ): TargetConfiguration['inputs'] {
   const stringInputs = new Set<string>();
   const externalDependencies = new Set<string>();
@@ -984,7 +995,7 @@ function getOutput(
 
 function getAngularJsonProjectTargets(
   project: AngularProjectConfiguration
-): Record<string, AngularTargetConfiguration> {
+): Record<string, AngularTargetConfiguration> | undefined {
   return project.architect ?? project.targets;
 }
 

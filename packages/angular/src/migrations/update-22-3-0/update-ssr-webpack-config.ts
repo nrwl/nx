@@ -22,7 +22,7 @@ const serverExecutors = new Set([
   '@nx/angular:webpack-server',
 ]);
 
-let ts: typeof import('typescript') | undefined;
+let ts: typeof import('typescript');
 
 export default async function (tree: Tree) {
   const projects = await getProjectsFilteredByDependencies([
@@ -42,7 +42,7 @@ export default async function (tree: Tree) {
     }
 
     for (const target of Object.values(project.targets ?? {})) {
-      if (!serverExecutors.has(target.executor)) {
+      if (!serverExecutors.has(target.executor ?? '')) {
         continue;
       }
 
@@ -117,6 +117,9 @@ function updateTsConfigServer(tree: Tree, tsConfigPath: string): boolean {
 
 function updateServerImports(tree: Tree, serverFilePath: string): void {
   const content = tree.read(serverFilePath, 'utf-8');
+  if (content === null) {
+    return;
+  }
   const sourceFile = ts.createSourceFile(
     serverFilePath,
     content,

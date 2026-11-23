@@ -1,5 +1,6 @@
 import {
   addProjectConfiguration,
+  readJson,
   type ProjectConfiguration,
   type ProjectGraph,
   type Tree,
@@ -158,7 +159,7 @@ const fallback = require('@nx/angular/module-federation');`
     await migrateWithMfImport(tree);
 
     // ASSERT
-    const pkg = JSON.parse(tree.read('package.json', 'utf-8'));
+    const pkg = readJson(tree, 'package.json');
     expect(pkg.devDependencies?.['@nx/module-federation']).toBeDefined();
   });
 
@@ -168,7 +169,7 @@ const fallback = require('@nx/angular/module-federation');`
     await migrateWithMfImport(tree);
 
     // ASSERT
-    const pkg = JSON.parse(tree.read('package.json', 'utf-8'));
+    const pkg = readJson(tree, 'package.json');
     expect(pkg.devDependencies?.['@nx/module-federation']).toBeUndefined();
   });
 
@@ -215,7 +216,7 @@ const fallback = require('@nx/angular/module-federation');`
 
 function addProject(
   tree: Tree,
-  config: ProjectConfiguration,
+  config: ProjectConfiguration & { name: string },
   dependencies: string[] = []
 ): void {
   projectGraph.nodes[config.name] = {

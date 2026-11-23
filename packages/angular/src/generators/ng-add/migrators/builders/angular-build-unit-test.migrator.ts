@@ -180,7 +180,7 @@ export class AngularBuildUnitTestMigrator extends BuilderMigrator {
     }
     if (!this.tree.exists(target.options.tsConfig)) {
       const originalTsConfigPath =
-        this.originalProjectConfig.targets[targetName].options.tsConfig;
+        this.getOriginalTarget(targetName).options.tsConfig;
       this.logger.warn(
         `The tsConfig file "${originalTsConfigPath}" specified in the "${targetName}" target could not be found. Skipping updating the tsConfig file.`
       );

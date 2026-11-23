@@ -2,6 +2,10 @@ import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import { extname, join } from 'node:path';
 
+function isErrnoException(e: unknown): e is NodeJS.ErrnoException {
+  return typeof e === 'object' && e !== null && 'code' in e;
+}
+
 /** The document server rendering renders into, in the server output. */
 export const INDEX_SERVER_HTML = 'index.server.html';
 /** The document served for client-rendered routes, in the server output. */
@@ -44,7 +48,7 @@ export function createServerAssets(
     try {
       entries = readdirSync(browserOutputPath);
     } catch (error) {
-      if (error.code !== 'ENOENT') {
+      if (!isErrnoException(error) || error.code !== 'ENOENT') {
         throw error;
       }
       // Without a browser output there is nothing to inline.
@@ -79,7 +83,7 @@ export function readCriticalCss(serverOutputPath: string): {
   try {
     content = readFileSync(join(serverOutputPath, CRITICAL_CSS_FILE), 'utf-8');
   } catch (error) {
-    if (error.code !== 'ENOENT') {
+    if (!isErrnoException(error) || error.code !== 'ENOENT') {
       throw error;
     }
     // Never emitted, as when the browser build failed; rendering then skips
@@ -93,7 +97,7 @@ function createDiskAsset(filePath: string): ServerAsset | undefined {
   try {
     statSync(filePath);
   } catch (error) {
-    if (error.code !== 'ENOENT') {
+    if (!isErrnoException(error) || error.code !== 'ENOENT') {
       throw error;
     }
     // Never emitted under this name, or removed by a concurrent rebuild;

@@ -10,8 +10,8 @@ import {
 export function* allProjectTargets<T>(
   project: ProjectConfiguration
 ): Iterable<[name: string, target: TargetConfiguration<T>]> {
-  for (const name of Object.keys(project.targets ?? {})) {
-    yield [name, project.targets[name]];
+  for (const [name, target] of Object.entries(project.targets ?? {})) {
+    yield [name, target];
   }
 }
 

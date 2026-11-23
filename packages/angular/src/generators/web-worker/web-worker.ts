@@ -46,6 +46,9 @@ export async function webWorkerGenerator(
     addSnippet(tree, workerNames.fileName, options.path);
   }
 
+  if (!projectConfig.targets) {
+    throw new Error(`The "${options.project}" project has no targets.`);
+  }
   projectConfig.targets['build'].options.webWorkerTsConfig ??=
     joinPathFragments(projectConfig.root, 'tsconfig.worker.json');
   if (projectConfig.targets['test']) {

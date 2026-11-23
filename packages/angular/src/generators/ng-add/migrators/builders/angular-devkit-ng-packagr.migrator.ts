@@ -107,7 +107,7 @@ export class AngularDevkitNgPackagrMigrator extends BuilderMigrator {
       return;
     } else if (!this.tree.exists(target.options.project)) {
       this.logger.warn(
-        `The ng-packagr project file "${this.originalProjectConfig.targets[targetName].options.project}" specified in the "${targetName}" ` +
+        `The ng-packagr project file "${this.getOriginalTarget(targetName).options.project}" specified in the "${targetName}" ` +
           `target could not be found. Skipping updating the ng-packagr project file.`
       );
       return;
@@ -137,9 +137,9 @@ export class AngularDevkitNgPackagrMigrator extends BuilderMigrator {
       return;
     } else if (!this.tree.exists(tsConfigPath)) {
       const originalTsConfigPath = target.options?.tsConfig
-        ? this.originalProjectConfig.targets[targetName].options.tsConfig
-        : this.originalProjectConfig.targets[targetName].configurations
-            ?.development?.tsConfig;
+        ? this.getOriginalTarget(targetName).options.tsConfig
+        : this.getOriginalTarget(targetName).configurations?.development
+            ?.tsConfig;
       this.logger.warn(
         `The tsConfig file "${originalTsConfigPath}" specified in the "${targetName}" target could not be found. Skipping updating the tsConfig file.`
       );

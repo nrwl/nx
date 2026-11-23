@@ -72,10 +72,10 @@ describe('app migrator', () => {
       const result = migrator.validate();
 
       expect(result).toHaveLength(1);
-      expect(result[0].message).toBe(
+      expect(result?.[0].message).toBe(
         'The project root is not defined in the project configuration. The project will be skipped.'
       );
-      expect(result[0].hint).toBe(
+      expect(result?.[0].hint).toBe(
         'Make sure to manually migrate its configuration and files or remove the project if it is not valid. Alternatively, you could revert the migration, ensure the value for "projects.app1.root" is set and run the migration again.'
       );
     });
@@ -94,10 +94,10 @@ describe('app migrator', () => {
       const result = migrator.validate();
 
       expect(result).toHaveLength(1);
-      expect(result[0].message).toBe(
+      expect(result?.[0].message).toBe(
         'The project root "wrong-root" could not be found. The project will be skipped.'
       );
-      expect(result[0].hint).toBe(
+      expect(result?.[0].hint).toBe(
         'Make sure to manually migrate its configuration and files or remove the project if it is not valid. Alternatively, you could revert the migration, ensure the value for "projects.app1.root" is correct and run the migration again.'
       );
     });
@@ -116,10 +116,10 @@ describe('app migrator', () => {
       const result = migrator.validate();
 
       expect(result).toHaveLength(1);
-      expect(result[0].message).toBe(
+      expect(result?.[0].message).toBe(
         'The project source root "wrong-src" could not be found. The project will be skipped.'
       );
-      expect(result[0].hint).toBe(
+      expect(result?.[0].hint).toBe(
         'Make sure to manually migrate its configuration and files or remove the project if it is not valid. Alternatively, you could revert the migration, ensure the value for "projects.app1.sourceRoot" is correct and run the migration again.'
       );
     });
@@ -134,11 +134,11 @@ describe('app migrator', () => {
       const result = migrator.validate();
 
       expect(result).toHaveLength(1);
-      expect(result[0].messageGroup.title).toBe('Unsupported builders');
-      expect(result[0].messageGroup.messages).toStrictEqual([
+      expect(result?.[0]?.messageGroup?.title).toBe('Unsupported builders');
+      expect(result?.[0]?.messageGroup?.messages).toStrictEqual([
         `The "build" target is using a builder "@not/supported:builder" that's not currently supported by the automated migration. The target will be skipped.`,
       ]);
-      expect(result[0].hint).toMatchInlineSnapshot(
+      expect(result?.[0].hint).toMatchInlineSnapshot(
         `"Make sure to manually migrate the target configuration and any possible associated files. Alternatively, you could revert the migration, change the builder to one of the builders supported by the automated migration ("@angular/build:application", "@angular-devkit/build-angular:application", "@angular-devkit/build-angular:browser", "@angular-devkit/build-angular:browser-esbuild", "@angular-devkit/build-angular:protractor", "@cypress/schematic:cypress", "@angular/build:extract-i18n", "@angular-devkit/build-angular:extract-i18n", "@nguniversal/builders:prerender", "@angular-devkit/build-angular:prerender", "@angular/build:dev-server", "@angular-devkit/build-angular:dev-server", "@angular-devkit/build-angular:server", "@nguniversal/builders:ssr-dev-server", "@angular-devkit/build-angular:ssr-dev-server", "@angular/build:unit-test", "@angular/build:karma", "@angular-devkit/build-angular:karma" and "@angular-eslint/builder:lint"), and run the migration again."`
       );
     });
@@ -156,12 +156,12 @@ describe('app migrator', () => {
       const result = migrator.validate();
 
       expect(result).toHaveLength(1);
-      expect(result[0].messageGroup.title).toBe('Unsupported builders');
-      expect(result[0].messageGroup.messages).toStrictEqual([
+      expect(result?.[0]?.messageGroup?.title).toBe('Unsupported builders');
+      expect(result?.[0]?.messageGroup?.messages).toStrictEqual([
         `The "build" target is using a builder "@not/supported:builder" that's not currently supported by the automated migration. The target will be skipped.`,
         `The "test" target is using a builder "@other/not-supported:builder" that's not currently supported by the automated migration. The target will be skipped.`,
       ]);
-      expect(result[0].hint).toMatchInlineSnapshot(
+      expect(result?.[0].hint).toMatchInlineSnapshot(
         `"Make sure to manually migrate the target configuration and any possible associated files. Alternatively, you could revert the migration, change the builder to one of the builders supported by the automated migration ("@angular/build:application", "@angular-devkit/build-angular:application", "@angular-devkit/build-angular:browser", "@angular-devkit/build-angular:browser-esbuild", "@angular-devkit/build-angular:protractor", "@cypress/schematic:cypress", "@angular/build:extract-i18n", "@angular-devkit/build-angular:extract-i18n", "@nguniversal/builders:prerender", "@angular-devkit/build-angular:prerender", "@angular/build:dev-server", "@angular-devkit/build-angular:dev-server", "@angular-devkit/build-angular:server", "@nguniversal/builders:ssr-dev-server", "@angular-devkit/build-angular:ssr-dev-server", "@angular/build:unit-test", "@angular/build:karma", "@angular-devkit/build-angular:karma" and "@angular-eslint/builder:lint"), and run the migration again."`
       );
     });
@@ -176,11 +176,11 @@ describe('app migrator', () => {
       const result = migrator.validate();
 
       expect(result).toHaveLength(1);
-      expect(result[0].messageGroup.title).toBe('Unsupported builders');
-      expect(result[0].messageGroup.messages).toStrictEqual([
+      expect(result?.[0]?.messageGroup?.title).toBe('Unsupported builders');
+      expect(result?.[0]?.messageGroup?.messages).toStrictEqual([
         `The "my-build" target is using a builder "@not/supported:builder" that's not currently supported by the automated migration. The target will be skipped.`,
       ]);
-      expect(result[0].hint).toMatchInlineSnapshot(
+      expect(result?.[0].hint).toMatchInlineSnapshot(
         `"Make sure to manually migrate the target configuration and any possible associated files. Alternatively, you could revert the migration, change the builder to one of the builders supported by the automated migration ("@angular/build:application", "@angular-devkit/build-angular:application", "@angular-devkit/build-angular:browser", "@angular-devkit/build-angular:browser-esbuild", "@angular-devkit/build-angular:protractor", "@cypress/schematic:cypress", "@angular/build:extract-i18n", "@angular-devkit/build-angular:extract-i18n", "@nguniversal/builders:prerender", "@angular-devkit/build-angular:prerender", "@angular/build:dev-server", "@angular-devkit/build-angular:dev-server", "@angular-devkit/build-angular:server", "@nguniversal/builders:ssr-dev-server", "@angular-devkit/build-angular:ssr-dev-server", "@angular/build:unit-test", "@angular/build:karma", "@angular-devkit/build-angular:karma" and "@angular-eslint/builder:lint"), and run the migration again."`
       );
     });
@@ -198,10 +198,10 @@ describe('app migrator', () => {
       const result = migrator.validate();
 
       expect(result).toHaveLength(1);
-      expect(result[0].message).toBe(
+      expect(result?.[0].message).toBe(
         'There is more than one target using a builder that is used to build the project ("build1" and "build2"). This is not currently supported by the automated migration. These targets will be skipped.'
       );
-      expect(result[0].hint).toBe(
+      expect(result?.[0].hint).toBe(
         'Make sure to manually migrate their configuration and any possible associated files.'
       );
     });
@@ -221,16 +221,16 @@ describe('app migrator', () => {
       const result = migrator.validate();
 
       expect(result).toHaveLength(2);
-      expect(result[0].message).toBe(
+      expect(result?.[0].message).toBe(
         'There is more than one target using a builder that is used to build the project ("build1" and "build2"). This is not currently supported by the automated migration. These targets will be skipped.'
       );
-      expect(result[0].hint).toBe(
+      expect(result?.[0].hint).toBe(
         'Make sure to manually migrate their configuration and any possible associated files.'
       );
-      expect(result[1].message).toBe(
+      expect(result?.[1].message).toBe(
         'There is more than one target using the builder "@angular-eslint/builder:lint": "lint1" and "lint2". This is not currently supported by the automated migration. These targets will be skipped.'
       );
-      expect(result[1].hint).toBe(
+      expect(result?.[1].hint).toBe(
         'Make sure to manually migrate their configuration and any possible associated files.'
       );
     });
@@ -708,7 +708,7 @@ describe('app migrator', () => {
       await migrator.migrate();
 
       const { targets } = readProjectConfiguration(tree, 'app1');
-      expect(targets.build).toStrictEqual({
+      expect(targets?.build).toStrictEqual({
         executor: '@angular-devkit/build-angular:browser',
         outputs: ['{options.outputPath}'],
         options: {
@@ -784,7 +784,7 @@ describe('app migrator', () => {
       await migrator.migrate();
 
       const { targets } = readProjectConfiguration(tree, 'app1');
-      expect(targets.build).toStrictEqual({
+      expect(targets?.build).toStrictEqual({
         executor: '@angular-devkit/build-angular:application',
         outputs: ['{options.outputPath}'],
         options: {
@@ -853,7 +853,7 @@ describe('app migrator', () => {
       await migrator.migrate();
 
       const { targets } = readProjectConfiguration(tree, 'app1');
-      expect(targets.build).toStrictEqual({
+      expect(targets?.build).toStrictEqual({
         executor: '@angular-devkit/build-angular:browser',
         outputs: ['{options.outputPath}'],
         options: {
@@ -911,7 +911,7 @@ describe('app migrator', () => {
       await migrator.migrate();
 
       const { targets } = readProjectConfiguration(tree, 'app1');
-      expect(targets.myCustomBuildTarget).toStrictEqual({
+      expect(targets?.myCustomBuildTarget).toStrictEqual({
         executor: '@angular-devkit/build-angular:browser',
         outputs: ['{options.outputPath}'],
         options: {
@@ -956,7 +956,7 @@ describe('app migrator', () => {
       await migrator.migrate();
 
       const { targets } = readProjectConfiguration(tree, 'app1');
-      expect(targets.build).toStrictEqual({
+      expect(targets?.build).toStrictEqual({
         executor: '@angular-devkit/build-angular:browser',
         outputs: ['{options.outputPath}'],
         options: { outputPath: 'dist/apps/app1/browser' },
@@ -981,7 +981,7 @@ describe('app migrator', () => {
       await migrator.migrate();
 
       const { targets } = readProjectConfiguration(tree, 'app1');
-      expect(targets.lint).toStrictEqual({
+      expect(targets?.lint).toStrictEqual({
         command: `eslint "apps/app1/**/*.ts" "apps/app1/**/*.html"`,
       });
     });
@@ -1004,7 +1004,7 @@ describe('app migrator', () => {
       await migrator.migrate();
 
       const { targets } = readProjectConfiguration(tree, 'app1');
-      expect(targets.myCustomLintTarget).toStrictEqual({
+      expect(targets?.myCustomLintTarget).toStrictEqual({
         command: `eslint "apps/app1/**/*.ts" "apps/app1/**/*.html"`,
       });
     });
@@ -1028,7 +1028,7 @@ describe('app migrator', () => {
       await migrator.migrate();
 
       const { targets } = readProjectConfiguration(tree, 'app1');
-      expect(targets.lint).toStrictEqual({
+      expect(targets?.lint).toStrictEqual({
         command: `eslint --config apps/app1/.eslintrc.json "apps/app1/**/*.ts" "apps/app1/**/*.html"`,
       });
     });
@@ -1066,7 +1066,7 @@ describe('app migrator', () => {
       await migrator.migrate();
 
       const { targets } = readProjectConfiguration(tree, 'app1');
-      expect(targets.server).toStrictEqual({
+      expect(targets?.server).toStrictEqual({
         executor: '@angular-devkit/build-angular:server',
         options: {
           outputPath: 'dist/apps/app1/server',
@@ -1122,7 +1122,7 @@ describe('app migrator', () => {
       await migrator.migrate();
 
       const { targets } = readProjectConfiguration(tree, 'app1');
-      expect(targets.myCustomServerTarget).toStrictEqual({
+      expect(targets?.myCustomServerTarget).toStrictEqual({
         executor: '@angular-devkit/build-angular:server',
         options: {
           outputPath: 'dist/apps/app1/server',
@@ -1165,7 +1165,7 @@ describe('app migrator', () => {
       await migrator.migrate();
 
       const { targets } = readProjectConfiguration(tree, 'app1');
-      expect(targets.test).toStrictEqual({
+      expect(targets?.test).toStrictEqual({
         executor: '@angular-devkit/build-angular:karma',
         options: {
           main: 'apps/app1/src/test.ts',
@@ -1195,7 +1195,7 @@ describe('app migrator', () => {
       await migrator.migrate();
 
       const { targets } = readProjectConfiguration(tree, 'app1');
-      expect(targets.myCustomTestTarget).toStrictEqual({
+      expect(targets?.myCustomTestTarget).toStrictEqual({
         executor: '@angular-devkit/build-angular:karma',
         options: {
           main: 'apps/app1/src/test.ts',
@@ -1223,7 +1223,7 @@ describe('app migrator', () => {
       await migrator.migrate();
 
       const { targets } = readProjectConfiguration(tree, 'app1');
-      expect(targets.test).toStrictEqual({
+      expect(targets?.test).toStrictEqual({
         executor: '@angular/build:unit-test',
         options: {
           tsConfig: 'apps/app1/tsconfig.spec.json',
@@ -1257,7 +1257,7 @@ describe('app migrator', () => {
       await migrator.migrate();
 
       const { targets } = readProjectConfiguration(tree, 'app1');
-      expect(targets.test).toStrictEqual({
+      expect(targets?.test).toStrictEqual({
         executor: '@angular/build:unit-test',
         options: {
           tsConfig: 'apps/app1/tsconfig.spec.json',
@@ -1302,7 +1302,7 @@ describe('app migrator', () => {
       await migrator.migrate();
 
       const { targets } = readProjectConfiguration(tree, 'app1');
-      expect(targets.test).toStrictEqual({
+      expect(targets?.test).toStrictEqual({
         executor: '@angular/build:unit-test',
         options: {
           tsConfig: 'apps/app1/tsconfig.spec.json',
@@ -1334,7 +1334,7 @@ describe('app migrator', () => {
       await migrator.migrate();
 
       const { targets } = readProjectConfiguration(tree, 'app1');
-      expect(targets.prerender).toStrictEqual({
+      expect(targets?.prerender).toStrictEqual({
         executor: '@nguniversal/builders:prerender',
         options: { routesFile: 'apps/app1/server-routes-files.txt' },
       });
@@ -1356,7 +1356,7 @@ describe('app migrator', () => {
       await migrator.migrate();
 
       const { targets } = readProjectConfiguration(tree, 'app1');
-      expect(targets.myCustomPrerenderTarget).toStrictEqual({
+      expect(targets?.myCustomPrerenderTarget).toStrictEqual({
         executor: '@nguniversal/builders:prerender',
         options: { routesFile: 'apps/app1/server-routes-files.txt' },
       });
@@ -1382,7 +1382,7 @@ describe('app migrator', () => {
       await migrator.migrate();
 
       const { targets } = readProjectConfiguration(tree, 'app1');
-      expect(targets['serve-ssr']).toStrictEqual({
+      expect(targets?.['serve-ssr']).toStrictEqual({
         executor: '@nguniversal/builders:ssr-dev-server',
         options: {
           sslKey: 'apps/app1/ssl/ssl.key',
@@ -1412,7 +1412,7 @@ describe('app migrator', () => {
       await migrator.migrate();
 
       const { targets } = readProjectConfiguration(tree, 'app1');
-      expect(targets.myCustomServeSsr).toStrictEqual({
+      expect(targets?.myCustomServeSsr).toStrictEqual({
         executor: '@nguniversal/builders:ssr-dev-server',
         options: {
           sslKey: 'apps/app1/ssl/ssl.key',
@@ -1439,8 +1439,8 @@ describe('app migrator', () => {
         await migrator.migrate();
 
         const { targets } = readProjectConfiguration(tree, 'app1');
-        expect(targets[targetName].continuous).toBe(true);
-        expect(targets[targetName].readyWhen).toStrictEqual({ signal: true });
+        expect(targets?.[targetName].continuous).toBe(true);
+        expect(targets?.[targetName].readyWhen).toStrictEqual({ signal: true });
       }
     );
   });
@@ -1808,9 +1808,11 @@ describe('app migrator', () => {
 
       await migrator.migrate();
 
-      const { targetDefaults } = readNxJson(tree);
+      const targetDefaults = readNxJson(tree)?.targetDefaults ?? {};
       expect(
-        Object.keys(targetDefaults).filter((f) => targetDefaults[f].cache)
+        Object.entries(targetDefaults)
+          .filter(([, value]) => !Array.isArray(value) && value.cache)
+          .map(([name]) => name)
       ).toStrictEqual([
         'build',
         'lint',
@@ -1842,9 +1844,11 @@ describe('app migrator', () => {
 
       await migrator.migrate();
 
-      const { targetDefaults } = readNxJson(tree);
+      const targetDefaults = readNxJson(tree)?.targetDefaults ?? {};
       expect(
-        Object.keys(targetDefaults).filter((f) => targetDefaults[f].cache)
+        Object.entries(targetDefaults)
+          .filter(([, value]) => !Array.isArray(value) && value.cache)
+          .map(([name]) => name)
       ).toStrictEqual(['build', 'lint', 'myCustomTest', 'e2e']);
     });
   });

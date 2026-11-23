@@ -130,12 +130,12 @@ function updateFileContent(
   if (content) {
     let updated = false;
 
-    replacements.forEach((replacement) => {
+    for (const replacement of replacements) {
       if (replacement.regex.test(content)) {
         content = content.replace(replacement.regex, replacement.replaceWith);
         updated = true;
       }
-    });
+    }
 
     if (updated) {
       tree.write(newFileName ?? fileName, content);

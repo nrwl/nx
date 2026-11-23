@@ -27,6 +27,9 @@ export default async function migrateWithMfImport(tree: Tree) {
         return;
       }
       let contents = tree.read(filePath, 'utf-8');
+      if (contents === null) {
+        return;
+      }
       if (!contents.includes('@nx/angular/module-federation')) {
         return;
       }

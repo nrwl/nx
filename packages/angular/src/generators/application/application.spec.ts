@@ -1,9 +1,8 @@
-import type { Mock, MockInstance } from 'vitest';
+import type { MockInstance } from 'vitest';
 import { getInstalledCypressMajorVersion } from '@nx/cypress/internal';
 import * as devkit from '@nx/devkit';
 import {
   NxJsonConfiguration,
-  parseJson,
   readJson,
   readNxJson,
   readProjectConfiguration,
@@ -25,12 +24,25 @@ vi.mock('@nx/cypress/internal', async () => ({
   getInstalledCypressMajorVersion: vi.fn(),
 }));
 
+type TsConfigJson = {
+  compilerOptions: { outDir?: string };
+  exclude?: string[];
+};
+
+type TsConfigReference = { path: string };
+
+type JsonValueCheck = {
+  path: string;
+  lookupFn: (json: TsConfigJson) => unknown;
+  expectedValue: unknown;
+};
+
 describe('app', () => {
   let appTree: Tree;
   let envBackup: string | undefined;
-  let mockedInstalledCypressVersion: Mock<
-    ReturnType<typeof getInstalledCypressMajorVersion>
-  > = getInstalledCypressMajorVersion as never;
+  const mockedInstalledCypressVersion = vi.mocked(
+    getInstalledCypressMajorVersion
+  );
 
   beforeEach(() => {
     envBackup = process.env.ESLINT_USE_FLAT_CONFIG;
@@ -168,7 +180,7 @@ describe('app', () => {
         unitTestRunner: UnitTestRunner.None,
       });
       const { targets } = readProjectConfiguration(appTree, 'my-app');
-      expect(targets.test).toBeFalsy();
+      expect(targets?.test).toBeFalsy();
       expect(appTree.exists('my-app/src/app/app.spec.ts')).toBeFalsy();
     });
 
@@ -178,7 +190,7 @@ describe('app', () => {
 
       // ASSERT
       expect(
-        readProjectConfiguration(appTree, 'my-app').targets.e2e
+        readProjectConfiguration(appTree, 'my-app').targets?.e2e
       ).not.toBeDefined();
     });
 
@@ -218,22 +230,18 @@ describe('app', () => {
         'tsconfig.json'
       );
 
-      const tsconfigApp = parseJson(
-        appTree.read('my-app/tsconfig.app.json', 'utf-8')
-      );
+      const tsconfigApp = readJson(appTree, 'my-app/tsconfig.app.json');
       expect(tsconfigApp).toMatchSnapshot('tsconfig.app.json');
 
       expect(appTree.exists('my-app/eslint.config.mjs')).toBeTruthy();
 
       expect(appTree.exists('my-app-e2e/cypress.config.ts')).toBeTruthy();
-      const tsconfigE2E = parseJson(
-        appTree.read('my-app-e2e/tsconfig.json', 'utf-8')
-      );
+      const tsconfigE2E = readJson(appTree, 'my-app-e2e/tsconfig.json');
       expect(tsconfigE2E).toMatchSnapshot('e2e tsconfig.json');
     });
 
     it('should generate the module file respecting the "typeSeparator" generator default', async () => {
-      const nxJson = readNxJson(appTree);
+      const nxJson = readJson<NxJsonConfiguration>(appTree, 'nx.json');
       nxJson.generators = {
         '@nx/angular:module': {
           typeSeparator: '.',
@@ -306,7 +314,7 @@ describe('app', () => {
 
     it('should not overwrite default project if already set', async () => {
       // ARRANGE
-      const nxJson = readNxJson(appTree);
+      const nxJson = readJson<NxJsonConfiguration>(appTree, 'nx.json');
       nxJson.defaultProject = 'some-awesome-project';
       devkit.updateNxJson(appTree, nxJson);
 
@@ -314,7 +322,10 @@ describe('app', () => {
       await generateApp(appTree);
 
       // ASSERT
-      const { defaultProject } = readNxJson(appTree);
+      const { defaultProject } = readJson<NxJsonConfiguration>(
+        appTree,
+        'nx.json'
+      );
       expect(defaultProject).toBe('some-awesome-project');
     });
 
@@ -358,8 +369,12 @@ describe('app', () => {
     });
 
     it('should generate files', async () => {
-      const hasJsonValue = ({ path, expectedValue, lookupFn }) => {
-        const content = readJson(appTree, path);
+      const hasJsonValue = ({
+        path,
+        expectedValue,
+        lookupFn,
+      }: JsonValueCheck) => {
+        const content = readJson<TsConfigJson>(appTree, path);
 
         expect(lookupFn(content)).toEqual(expectedValue);
       };
@@ -381,24 +396,26 @@ describe('app', () => {
       });
 
       // Make sure these have properties
-      [
-        {
-          path: 'my-dir/my-app/tsconfig.app.json',
-          lookupFn: (json) => json.compilerOptions.outDir,
-          expectedValue: '../../dist/out-tsc',
-        },
-        {
-          path: 'my-dir/my-app/tsconfig.app.json',
-          lookupFn: (json) => json.exclude,
-          expectedValue: [
-            'src/**/*.spec.ts',
-            'src/**/*.test.ts',
-            'jest.config.ts',
-            'jest.config.cts',
-            'src/test-setup.ts',
-          ],
-        },
-      ].forEach(hasJsonValue);
+      (
+        [
+          {
+            path: 'my-dir/my-app/tsconfig.app.json',
+            lookupFn: (json) => json.compilerOptions.outDir,
+            expectedValue: '../../dist/out-tsc',
+          },
+          {
+            path: 'my-dir/my-app/tsconfig.app.json',
+            lookupFn: (json) => json.exclude,
+            expectedValue: [
+              'src/**/*.spec.ts',
+              'src/**/*.test.ts',
+              'jest.config.ts',
+              'jest.config.cts',
+              'src/test-setup.ts',
+            ],
+          },
+        ] satisfies JsonValueCheck[]
+      ).forEach(hasJsonValue);
     });
 
     it('should extend from tsconfig.base.json', async () => {
@@ -444,8 +461,12 @@ describe('app', () => {
     });
 
     it('should generate files', async () => {
-      const hasJsonValue = ({ path, expectedValue, lookupFn }) => {
-        const content = readJson(appTree, path);
+      const hasJsonValue = ({
+        path,
+        expectedValue,
+        lookupFn,
+      }: JsonValueCheck) => {
+        const content = readJson<TsConfigJson>(appTree, path);
 
         expect(lookupFn(content)).toEqual(expectedValue);
       };
@@ -467,24 +488,26 @@ describe('app', () => {
       });
 
       // Make sure these have properties
-      [
-        {
-          path: 'my-dir/my-app/tsconfig.app.json',
-          lookupFn: (json) => json.compilerOptions.outDir,
-          expectedValue: '../../dist/out-tsc',
-        },
-        {
-          path: 'my-dir/my-app/tsconfig.app.json',
-          lookupFn: (json) => json.exclude,
-          expectedValue: [
-            'src/**/*.spec.ts',
-            'src/**/*.test.ts',
-            'jest.config.ts',
-            'jest.config.cts',
-            'src/test-setup.ts',
-          ],
-        },
-      ].forEach(hasJsonValue);
+      (
+        [
+          {
+            path: 'my-dir/my-app/tsconfig.app.json',
+            lookupFn: (json) => json.compilerOptions.outDir,
+            expectedValue: '../../dist/out-tsc',
+          },
+          {
+            path: 'my-dir/my-app/tsconfig.app.json',
+            lookupFn: (json) => json.exclude,
+            expectedValue: [
+              'src/**/*.spec.ts',
+              'src/**/*.test.ts',
+              'jest.config.ts',
+              'jest.config.cts',
+              'src/test-setup.ts',
+            ],
+          },
+        ] satisfies JsonValueCheck[]
+      ).forEach(hasJsonValue);
     });
   });
 
@@ -553,7 +576,7 @@ describe('app', () => {
     });
 
     it('should respect the "type" configured in the component generator defaults', async () => {
-      const nxJson = readNxJson(appTree);
+      const nxJson = readJson<NxJsonConfiguration>(appTree, 'nx.json');
       nxJson.generators = {
         ...nxJson.generators,
         '@nx/angular:component': { type: 'component' },
@@ -597,9 +620,9 @@ describe('app', () => {
         'my-app/src/app/nx-welcome.ts',
         'utf-8'
       );
-      const styleMatch = nxWelcomeContent.match(/<style>([\s\S]*?)<\/style>/);
+      const styleMatch = nxWelcomeContent?.match(/<style>([\s\S]*?)<\/style>/);
       expect(styleMatch).toBeTruthy();
-      const styleContent = styleMatch[1];
+      const styleContent = styleMatch?.[1];
       // CSS/SCSS syntax should contain { and }
       expect(styleContent).toContain('{');
       expect(styleContent).toContain('}');
@@ -618,9 +641,9 @@ describe('app', () => {
         'my-app/src/app/nx-welcome.ts',
         'utf-8'
       );
-      const styleMatch = nxWelcomeContent.match(/<style>([\s\S]*?)<\/style>/);
+      const styleMatch = nxWelcomeContent?.match(/<style>([\s\S]*?)<\/style>/);
       expect(styleMatch).toBeTruthy();
-      const styleContent = styleMatch[1];
+      const styleContent = styleMatch?.[1];
       // SASS indented syntax should not contain { or }
       expect(styleContent).not.toContain('{');
       expect(styleContent).not.toContain('}');
@@ -736,7 +759,7 @@ describe('app', () => {
       it('should rely on the inferred lint target for the application', async () => {
         await generateApp(appTree, 'my-app', { linter: 'eslint' });
         expect(
-          readProjectConfiguration(appTree, 'my-app').targets.lint
+          readProjectConfiguration(appTree, 'my-app').targets?.lint
         ).toBeUndefined();
       });
 
@@ -744,7 +767,7 @@ describe('app', () => {
         await generateApp(appTree, 'my-app', { linter: 'eslint' });
 
         const nxJson = readNxJson(appTree);
-        expect(nxJson.plugins).toMatchInlineSnapshot(`
+        expect(nxJson?.plugins).toMatchInlineSnapshot(`
           [
             {
               "options": {
@@ -770,7 +793,7 @@ describe('app', () => {
           ]
         `);
         expect(
-          readProjectConfiguration(appTree, 'my-app-e2e').targets.lint
+          readProjectConfiguration(appTree, 'my-app-e2e').targets?.lint
         ).toBeUndefined();
       });
 
@@ -780,7 +803,7 @@ describe('app', () => {
           e2eTestRunner: E2eTestRunner.None,
         });
 
-        const plugins = readNxJson(appTree).plugins.map((p) =>
+        const plugins = readNxJson(appTree)?.plugins?.map((p) =>
           typeof p === 'string' ? p : p.plugin
         );
         expect(plugins).toContain('@nx/eslint/plugin');
@@ -929,7 +952,7 @@ describe('app', () => {
       it('should add no lint target', async () => {
         await generateApp(appTree, 'my-app', { linter: 'none' });
         expect(
-          readProjectConfiguration(appTree, 'my-app').targets.lint
+          readProjectConfiguration(appTree, 'my-app').targets?.lint
         ).toBeUndefined();
       });
     });
@@ -958,7 +981,9 @@ describe('app', () => {
 
         const { references } = readJson(appTree, 'my-app/tsconfig.json');
         expect(
-          references.find((r) => r.path.includes('tsconfig.spec.json'))
+          references.find((r: TsConfigReference) =>
+            r.path.includes('tsconfig.spec.json')
+          )
         ).toBeTruthy();
       });
 
@@ -979,19 +1004,19 @@ describe('app', () => {
         });
 
         const project = readProjectConfiguration(appTree, 'my-app');
-        expect(project.targets.test).toStrictEqual({
+        expect(project.targets?.test).toStrictEqual({
           executor: '@angular/build:unit-test',
           options: {
             watch: false,
           },
         });
         const nxJson = readNxJson(appTree);
-        expect(nxJson.targetDefaults['@angular/build:unit-test']).toStrictEqual(
-          {
-            cache: true,
-            inputs: ['default', '^default'],
-          }
-        );
+        expect(
+          nxJson?.targetDefaults?.['@angular/build:unit-test']
+        ).toStrictEqual({
+          cache: true,
+          inputs: ['default', '^default'],
+        });
       });
 
       it('should install vitest, jsdom and @angular/build packages', async () => {
@@ -1051,12 +1076,14 @@ describe('app', () => {
         expect(appTree.exists('my-app/karma.config.js')).toBeFalsy();
         expect(appTree.exists('my-app/src/app/app.spec.ts')).toBeFalsy();
         expect(
-          readProjectConfiguration(appTree, 'my-app').targets.test
+          readProjectConfiguration(appTree, 'my-app').targets?.test
         ).toBeUndefined();
         // check tsconfig.spec.json is not referenced
         const { references } = readJson(appTree, 'my-app/tsconfig.json');
         expect(
-          references.every((r) => !r.path.includes('tsconfig.spec.json'))
+          references.every(
+            (r: TsConfigReference) => !r.path.includes('tsconfig.spec.json')
+          )
         ).toBe(true);
       });
     });
@@ -1119,7 +1146,7 @@ describe('app', () => {
       // should not update workspace configuration since --strict=true is the default
       const nxJson = readJson<NxJsonConfiguration>(appTree, 'nx.json');
       expect(
-        nxJson.generators['@nx/angular:application'].strict
+        nxJson.generators?.['@nx/angular:application'].strict
       ).not.toBeDefined();
     });
 
@@ -1129,7 +1156,7 @@ describe('app', () => {
       // check to see if the workspace configuration has been updated to turn off
       // strict mode by default in future applications
       const nxJson = readJson<NxJsonConfiguration>(appTree, 'nx.json');
-      expect(nxJson.generators['@nx/angular:application'].strict).toBe(false);
+      expect(nxJson.generators?.['@nx/angular:application'].strict).toBe(false);
     });
   });
 
@@ -1219,7 +1246,7 @@ describe('app', () => {
       expect(appTree.exists('e2e/cypress.config.ts')).toBe(true);
       expect(readJson(appTree, 'tsconfig.json').extends).toBeUndefined();
       const project = readProjectConfiguration(appTree, 'my-app');
-      expect(project.targets.build.options['outputPath']).toBe('dist/my-app');
+      expect(project.targets?.build.options['outputPath']).toBe('dist/my-app');
     });
 
     it('should generate playwright with root project', async () => {
@@ -1307,19 +1334,19 @@ describe('app', () => {
       });
 
       const project = readProjectConfiguration(appTree, 'ngesbuild');
-      expect(project.targets.build.executor).toEqual(
+      expect(project.targets?.build.executor).toEqual(
         '@angular/build:application'
       );
       expect(
-        project.targets.build.configurations.development.buildOptimizer
+        project.targets?.build.configurations?.development.buildOptimizer
       ).toBeUndefined();
       expect(
-        project.targets.build.configurations.development.namedChunks
+        project.targets?.build.configurations?.development.namedChunks
       ).toBeUndefined();
       expect(
-        project.targets.build.configurations.development.vendorChunks
+        project.targets?.build.configurations?.development.vendorChunks
       ).toBeUndefined();
-      expect(project.targets.build.configurations.production.budgets)
+      expect(project.targets?.build.configurations?.production.budgets)
         .toMatchInlineSnapshot(`
         [
           {
@@ -1342,19 +1369,19 @@ describe('app', () => {
       });
 
       const project = readProjectConfiguration(appTree, 'app1');
-      expect(project.targets.build.executor).toEqual(
+      expect(project.targets?.build.executor).toEqual(
         '@angular-devkit/build-angular:browser'
       );
       expect(
-        project.targets.build.configurations.development.buildOptimizer
+        project.targets?.build.configurations?.development.buildOptimizer
       ).toBe(false);
-      expect(project.targets.build.configurations.development.namedChunks).toBe(
-        true
-      );
-      expect(project.targets.build.configurations.development.vendorChunk).toBe(
-        true
-      );
-      expect(project.targets.build.configurations.production.budgets)
+      expect(
+        project.targets?.build.configurations?.development.namedChunks
+      ).toBe(true);
+      expect(
+        project.targets?.build.configurations?.development.vendorChunk
+      ).toBe(true);
+      expect(project.targets?.build.configurations?.production.budgets)
         .toMatchInlineSnapshot(`
         [
           {
@@ -1377,7 +1404,7 @@ describe('app', () => {
       });
 
       const project = readProjectConfiguration(appTree, 'app1');
-      expect(project.targets.build).not.toBeDefined();
+      expect(project.targets?.build).not.toBeDefined();
       expect(appTree.exists('app1/rspack.config.ts')).toBeTruthy();
       expect(appTree.read('app1/rspack.config.ts', 'utf-8')).toMatchSnapshot();
     });
@@ -1421,7 +1448,7 @@ describe('app', () => {
 
     it('should not add a serve-ssr target when --bundler=rspack and ssr', async () => {
       // A matching default makes the conversion keep the target, so only the ssr setup can leave it out
-      const nxJson = readNxJson(appTree);
+      const nxJson = readJson<NxJsonConfiguration>(appTree, 'nx.json');
       nxJson.targetDefaults = {
         ...nxJson.targetDefaults,
         'serve-ssr': { cache: false },
@@ -1431,7 +1458,7 @@ describe('app', () => {
       await generateApp(appTree, 'app1', { bundler: 'rspack', ssr: true });
 
       expect(
-        readProjectConfiguration(appTree, 'app1').targets['serve-ssr']
+        readProjectConfiguration(appTree, 'app1').targets?.['serve-ssr']
       ).toBeUndefined();
     });
 
@@ -1479,10 +1506,10 @@ describe('app', () => {
       });
 
       const project = readProjectConfiguration(appTree, 'app1');
-      expect(project.targets.test).not.toBeDefined();
+      expect(project.targets?.test).not.toBeDefined();
 
       const nxJson = readNxJson(appTree);
-      const jestPlugin = nxJson.plugins.find(
+      const jestPlugin = nxJson?.plugins?.find(
         (p) =>
           (typeof p === 'string' && p === '@nx/jest/plugin') ||
           (typeof p !== 'string' && p.plugin === '@nx/jest/plugin')
@@ -1497,10 +1524,10 @@ describe('app', () => {
       });
 
       const project = readProjectConfiguration(appTree, 'app1');
-      expect(project.targets.test).not.toBeDefined();
+      expect(project.targets?.test).not.toBeDefined();
 
       const nxJson = readNxJson(appTree);
-      const vitestPlugin = nxJson.plugins.find(
+      const vitestPlugin = nxJson?.plugins?.find(
         (p) =>
           (typeof p === 'string' && p === '@nx/vitest') ||
           (typeof p !== 'string' && p.plugin === '@nx/vitest')
@@ -1512,9 +1539,9 @@ describe('app', () => {
       await generateApp(appTree, 'my-app', { standalone: true });
 
       const project = readProjectConfiguration(appTree, 'my-app');
-      expect(project.targets.build.options.browser).toBeDefined();
+      expect(project.targets?.build.options.browser).toBeDefined();
       expect(
-        project.targets.serve.configurations.development.buildTarget
+        project.targets?.serve.configurations?.development.buildTarget
       ).toBeDefined();
     });
   });
@@ -1552,8 +1579,8 @@ describe('app', () => {
       await generateApp(appTree, 'my-app', { bundler: 'esbuild' });
 
       const project = readProjectConfiguration(appTree, 'my-app');
-      expect(project.targets['extract-i18n']).toBeDefined();
-      expect(project.targets['extract-i18n'].executor).toBe(
+      expect(project.targets?.['extract-i18n']).toBeDefined();
+      expect(project.targets?.['extract-i18n'].executor).toBe(
         '@angular/build:extract-i18n'
       );
     });
@@ -1596,7 +1623,7 @@ describe('app', () => {
       });
 
       const project = readProjectConfiguration(appTree, 'my-app');
-      expect(project.targets.build.options.polyfills).toStrictEqual([
+      expect(project.targets?.build.options.polyfills).toStrictEqual([
         'zone.js',
       ]);
       expect(appTree.read('my-app/src/app/app.config.ts', 'utf-8'))
@@ -1628,7 +1655,7 @@ describe('app', () => {
       await generateApp(appTree, 'my-app', { skipFormat: true });
 
       const project = readProjectConfiguration(appTree, 'my-app');
-      expect(project.targets.build.options.polyfills).toStrictEqual([
+      expect(project.targets?.build.options.polyfills).toStrictEqual([
         'zone.js',
       ]);
       expect(appTree.read('my-app/src/main.ts', 'utf-8'))
@@ -1751,7 +1778,7 @@ describe('app', () => {
           unitTestRunner: UnitTestRunner.VitestAnalog,
         });
         const { targets } = readProjectConfiguration(appTree, 'my-app');
-        expect(targets.build.executor).toBe('@angular/build:application');
+        expect(targets?.build.executor).toBe('@angular/build:application');
       });
 
       it('should not override serve configuration when using vitest-analog as a test runner', async () => {
@@ -1759,7 +1786,7 @@ describe('app', () => {
           unitTestRunner: UnitTestRunner.VitestAnalog,
         });
         const { targets } = readProjectConfiguration(appTree, 'my-app');
-        expect(targets.serve.executor).toBe('@angular/build:dev-server');
+        expect(targets?.serve.executor).toBe('@angular/build:dev-server');
       });
 
       it('should use crystal vitest when --bundler=rspack', async () => {
@@ -1769,10 +1796,10 @@ describe('app', () => {
         });
 
         const project = readProjectConfiguration(appTree, 'app1');
-        expect(project.targets.test).not.toBeDefined();
+        expect(project.targets?.test).not.toBeDefined();
 
         const nxJson = readNxJson(appTree);
-        const vitestPlugin = nxJson.plugins.find(
+        const vitestPlugin = nxJson?.plugins?.find(
           (p) =>
             (typeof p === 'string' && p === '@nx/vitest') ||
             (typeof p !== 'string' && p.plugin === '@nx/vitest')

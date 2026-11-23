@@ -11,6 +11,9 @@ const TYPE_SEPARATOR_GENERATORS = [
 
 export default async function (tree: Tree) {
   const nxJson = readNxJson(tree);
+  if (!nxJson) {
+    throw new Error('Cannot find the nx.json file.');
+  }
   nxJson.generators ??= {};
 
   for (const generator of TYPE_GENERATORS) {

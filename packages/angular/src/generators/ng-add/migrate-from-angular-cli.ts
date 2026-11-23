@@ -24,7 +24,7 @@ import {
 export async function migrateFromAngularCli(
   tree: Tree,
   options: GeneratorOptions
-): Promise<GeneratorCallback> {
+): Promise<GeneratorCallback | undefined> {
   validateWorkspace(tree);
   const projects = getAllProjects(tree);
 

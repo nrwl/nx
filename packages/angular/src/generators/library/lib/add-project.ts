@@ -9,7 +9,9 @@ export async function addProject(
   tree: Tree,
   libraryOptions: NormalizedSchema['libraryOptions']
 ) {
-  const project: AngularProjectConfiguration = {
+  const project: AngularProjectConfiguration & {
+    targets: NonNullable<AngularProjectConfiguration['targets']>;
+  } = {
     name: libraryOptions.name,
     root: libraryOptions.projectRoot,
     sourceRoot: joinPathFragments(libraryOptions.projectRoot, 'src'),

@@ -17,7 +17,9 @@ export default async function (tree: Tree) {
   const projects = getProjects(tree);
 
   for (const [projectName, project] of projects) {
-    for (const [, target] of allProjectTargets(project)) {
+    for (const [, target] of allProjectTargets<{
+      karmaConfig?: string | unknown;
+    }>(project)) {
       let needDevkitPlugin = false;
       switch (target.executor) {
         case '@angular-devkit/build-angular:karma':
@@ -38,8 +40,9 @@ export default async function (tree: Tree) {
         }
 
         let isRemovable = removableKarmaConfigs.get(karmaConfig);
-        if (isRemovable === undefined && tree.exists(karmaConfig)) {
-          const content = tree.read(karmaConfig, 'utf-8');
+        const content =
+          isRemovable === undefined ? tree.read(karmaConfig, 'utf-8') : null;
+        if (content !== null) {
           const analysis = analyzeKarmaConfig(content);
 
           if (analysis.hasUnsupportedValues) {

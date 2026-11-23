@@ -25,7 +25,7 @@ export enum CssUrl {
 type StyleConfig = {
   postcssConfiguration: ReturnType<typeof loadPostcssConfiguration>;
   tailwindConfiguration: ReturnType<typeof getTailwindConfig>;
-  target: string[];
+  target: string[] | undefined;
 };
 
 export function getStylesheetProcessor(): new (
@@ -33,7 +33,7 @@ export function getStylesheetProcessor(): new (
   basePath: string,
   cssUrl?: CssUrl,
   includePaths?: string[],
-  sass?: NgPackageEntryConfig['lib']['sass'],
+  sass?: NonNullable<NgPackageEntryConfig['lib']>['sass'],
   cacheDirectory?: string | false,
   watch?: boolean
 ) => {
@@ -54,7 +54,9 @@ export function getStylesheetProcessor(): new (
       protected readonly basePath: string,
       protected readonly cssUrl?: CssUrl,
       protected readonly includePaths?: string[],
-      protected readonly sass?: NgPackageEntryConfig['lib']['sass'],
+      protected readonly sass?: NonNullable<
+        NgPackageEntryConfig['lib']
+      >['sass'],
       protected readonly cacheDirectory?: string | false,
       protected readonly watch?: boolean
     ) {
@@ -80,12 +82,12 @@ export function getStylesheetProcessor(): new (
           tailwindConfiguration: tailwindConfiguration,
           sass: sass as any,
           workspaceRoot: projectBasePath,
-          cssUrl: cssUrl,
-          target: target,
+          cssUrl: cssUrl as CssUrl,
+          target: target as string[],
           includePaths: includePaths,
         },
         'css',
-        watch
+        watch ?? false
       );
     }
 
@@ -131,7 +133,7 @@ function resolveStyleConfig(
 
 function transformSupportedBrowsersToTargets(
   supportedBrowsers: string[]
-): string[] {
+): string[] | undefined {
   const transformed: string[] = [];
 
   // https://esbuild.github.io/api/#target

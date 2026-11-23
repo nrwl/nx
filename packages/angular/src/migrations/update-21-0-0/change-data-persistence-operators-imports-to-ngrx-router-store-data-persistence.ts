@@ -37,7 +37,11 @@ export default async function (tree: Tree): Promise<void> {
   const tsqueryModule = require('@phenomnomnominal/tsquery');
   tsqueryAst = tsqueryModule.ast;
   tsqueryQuery = tsqueryModule.query;
-  const cachedFileMap = readFileMapCache().fileMap.projectFileMap;
+  const fileMapCache = readFileMapCache();
+  if (!fileMapCache) {
+    throw new Error('Cannot read the cached project file map.');
+  }
+  const cachedFileMap = fileMapCache.fileMap.projectFileMap;
 
   const filesWithNxAngularImports: FileData[] = [];
   for (const graphNode of projects) {
@@ -62,6 +66,9 @@ export default async function (tree: Tree): Promise<void> {
 
 function replaceDataPersistenceInFile(tree: Tree, file: string): boolean {
   const fileContents = tree.read(file, 'utf-8');
+  if (fileContents === null) {
+    throw new Error(`Cannot find the file "${file}".`);
+  }
   const fileAst = tsqueryAst(fileContents);
 
   // "\\u002F" is the unicode code for "/", there's an issue with the query parser

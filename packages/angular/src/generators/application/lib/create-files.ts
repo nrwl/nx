@@ -36,6 +36,11 @@ export async function createFiles(
   const componentFileSuffix = componentType ? `.${componentType}` : '';
   const moduleTypeSeparator = getModuleTypeSeparator(tree);
 
+  const rootTsConfigFileName = getRootTsConfigFileName(tree);
+  if (!rootTsConfigFileName) {
+    throw new Error('Cannot find the root tsconfig file.');
+  }
+
   const substitutions = {
     rootSelector,
     appName: options.name,
@@ -47,7 +52,7 @@ export async function createFiles(
     routing: options.routing,
     minimal: options.minimal,
     nxWelcomeSelector,
-    rootTsConfig: joinPathFragments(rootOffset, getRootTsConfigFileName(tree)),
+    rootTsConfig: joinPathFragments(rootOffset, rootTsConfigFileName),
     rootOffset,
     componentType: componentType ? names(componentType).className : '',
     componentFileSuffix,

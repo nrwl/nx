@@ -13,6 +13,9 @@ export async function normalizeOptions(
   options: Schema
 ): Promise<NormalizedGeneratorOptions> {
   const { targets, root } = readProjectConfiguration(tree, options.project);
+  if (!targets) {
+    throw new Error(`The "${options.project}" project has no targets.`);
+  }
   // Resolve the executor via targetDefaults: readProjectConfiguration returns
   // the raw config, so an inherited executor would otherwise read as undefined.
   const buildTargetExecutor =

@@ -6,6 +6,9 @@ export function setGeneratorDefaults(
   options: NormalizedSchema
 ): void {
   const nxJson = readNxJson(tree);
+  if (!nxJson) {
+    throw new Error('Cannot find nx.json');
+  }
 
   nxJson.generators = nxJson.generators ?? {};
   nxJson.generators['@nx/angular:application'] = {

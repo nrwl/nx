@@ -49,6 +49,7 @@ type CypressCommonConfig = {
   screenshotsFolder?: string;
   specPattern?: string;
   videosFolder?: string;
+  [key: string]: string | undefined;
 };
 
 const cypressConfig = {
@@ -60,8 +61,7 @@ const cypressConfig = {
 export class E2eMigrator extends ProjectMigrator<SupportedTargets> {
   private appConfig: ProjectConfiguration;
   private appName: string;
-  private isProjectUsingEsLint: boolean;
-  private cypressPreset: Record<string, any>;
+  private isProjectUsingEsLint = false;
 
   constructor(
     tree: Tree,
@@ -81,6 +81,30 @@ export class E2eMigrator extends ProjectMigrator<SupportedTargets> {
     this.targetNames.e2e = this.appConfig.targets?.e2e ? 'e2e' : undefined;
 
     this.initialize();
+  }
+
+  private get e2eTargetName(): string {
+    const { e2e } = this.targetNames;
+    if (!e2e) {
+      throw new Error(`The "${this.appName}" project has no e2e target.`);
+    }
+    return e2e;
+  }
+
+  private get appTargets(): Record<string, TargetConfiguration> {
+    const { targets } = this.appConfig;
+    if (!targets) {
+      throw new Error(`The "${this.appName}" project has no targets.`);
+    }
+    return targets;
+  }
+
+  private get projectTargets(): Record<string, TargetConfiguration> {
+    const { targets } = this.projectConfig;
+    if (!targets) {
+      throw new Error(`The "${this.project.name}" project has no targets.`);
+    }
+    return targets;
   }
 
   override async migrate(): Promise<void> {
@@ -128,7 +152,7 @@ export class E2eMigrator extends ProjectMigrator<SupportedTargets> {
       return null;
     }
 
-    const e2eTarget = this.projectConfig.targets[this.targetNames.e2e];
+    const e2eTarget = this.getTarget(this.e2eTargetName);
     if (!e2eTarget.options) {
       return [
         {
@@ -171,8 +195,7 @@ export class E2eMigrator extends ProjectMigrator<SupportedTargets> {
     }
 
     if (this.isCypressE2eProject()) {
-      const configFile =
-        this.projectConfig.targets[this.targetNames.e2e].options?.configFile;
+      const configFile = this.getTarget(this.e2eTargetName).options?.configFile;
       if (configFile === undefined && !this.getOldCypressConfigFilePath()) {
         const expectedConfigFile = 'cypress.config.{ts,js,mjs,cjs}';
 
@@ -266,12 +289,11 @@ export class E2eMigrator extends ProjectMigrator<SupportedTargets> {
       projectType: 'application',
       targets: {
         e2e: {
-          ...this.projectConfig.targets[this.targetNames.e2e],
+          ...this.getTarget(this.e2eTargetName),
           options: {
-            ...this.projectConfig.targets[this.targetNames.e2e].options,
+            ...this.getTarget(this.e2eTargetName).options,
             protractorConfig: this.convertRootPath(
-              this.projectConfig.targets[this.targetNames.e2e].options
-                .protractorConfig
+              this.getTarget(this.e2eTargetName).options.protractorConfig
             ),
           },
         },
@@ -281,7 +303,7 @@ export class E2eMigrator extends ProjectMigrator<SupportedTargets> {
     };
 
     // remove e2e target from the app config
-    delete this.appConfig.targets[this.targetNames.e2e];
+    delete this.appTargets[this.e2eTargetName];
     updateProjectConfiguration(this.tree, this.appName, {
       ...this.appConfig,
     });
@@ -353,7 +375,7 @@ export class E2eMigrator extends ProjectMigrator<SupportedTargets> {
     );
   }
 
-  private updateOrCreateCypressConfigFile(configFile: string): string {
+  private updateOrCreateCypressConfigFile(configFile: string | null): string {
     if (!configFile) {
       return this.getDefaultCypressConfigFilePath();
     }
@@ -376,15 +398,14 @@ export class E2eMigrator extends ProjectMigrator<SupportedTargets> {
       // the generated cypress project always generates a "lint" target,
       // in case the app was using a different name for it, we use it
       if (this.lintTargetName && this.lintTargetName !== 'lint') {
-        this.projectConfig.targets[this.lintTargetName] =
-          this.projectConfig.targets.lint;
+        this.projectTargets[this.lintTargetName] = this.projectTargets.lint;
       }
     }
 
-    [this.targetNames.e2e, 'cypress-run', 'cypress-open'].forEach((target) => {
-      if (this.appConfig.targets[target]) {
-        this.projectConfig.targets[target] = this.updateE2eCypressTarget(
-          this.appConfig.targets[target],
+    [this.e2eTargetName, 'cypress-run', 'cypress-open'].forEach((target) => {
+      if (this.appTargets[target]) {
+        this.projectTargets[target] = this.updateE2eCypressTarget(
+          this.appTargets[target],
           cypressConfigPath
         );
       }
@@ -394,9 +415,9 @@ export class E2eMigrator extends ProjectMigrator<SupportedTargets> {
       ...this.projectConfig,
     });
 
-    delete this.appConfig.targets['cypress-run'];
-    delete this.appConfig.targets['cypress-open'];
-    delete this.appConfig.targets[this.targetNames.e2e];
+    delete this.appTargets['cypress-run'];
+    delete this.appTargets['cypress-open'];
+    delete this.appTargets[this.e2eTargetName];
     updateProjectConfiguration(this.tree, this.appName, {
       ...this.appConfig,
     });
@@ -479,7 +500,7 @@ export class E2eMigrator extends ProjectMigrator<SupportedTargets> {
     const { isPropertyAssignment } = ensureTypescript();
     const { tsquery } = require('@phenomnomnominal/tsquery');
     const { nxE2EPreset } = require('@nx/cypress/plugins/cypress-preset');
-    this.cypressPreset = nxE2EPreset(configFilePath);
+    const cypressPreset: Record<string, unknown> = nxE2EPreset(configFilePath);
 
     const fileContent = this.tree.read(configFilePath, 'utf-8');
     let sourceFile = tsquery.ast(fileContent);
@@ -497,8 +518,8 @@ export class E2eMigrator extends ProjectMigrator<SupportedTargets> {
       return;
     }
 
-    let e2eNode: PropertyAssignment;
-    let componentNode: PropertyAssignment;
+    let e2eNode: PropertyAssignment | undefined;
+    let componentNode: PropertyAssignment | undefined;
     const globalConfig: CypressCommonConfig = {};
     defineConfigExpression.forEachChild((node: Node) => {
       if (isPropertyAssignment(node) && node.name.getText() === 'component') {
@@ -521,14 +542,15 @@ export class E2eMigrator extends ProjectMigrator<SupportedTargets> {
       defineConfigExpression,
       e2eNode,
       recorder,
-      globalConfig
+      globalConfig,
+      cypressPreset
     );
 
     recorder.applyChanges();
   }
 
   private updateCypressComponentConfig(
-    componentNode: PropertyAssignment,
+    componentNode: PropertyAssignment | undefined,
     recorder: FileChangeRecorder
   ): void {
     if (!componentNode) {
@@ -556,13 +578,14 @@ export class E2eMigrator extends ProjectMigrator<SupportedTargets> {
   private updateCypressE2EConfig(
     configFilePath: string,
     defineConfigNode: ObjectLiteralExpression,
-    e2eNode: PropertyAssignment,
+    e2eNode: PropertyAssignment | undefined,
     recorder: FileChangeRecorder,
-    { ...globalConfig }: CypressCommonConfig
+    { ...globalConfig }: CypressCommonConfig,
+    cypressPreset: Record<string, unknown>
   ): void {
     ensureTypescript();
     const { tsquery } = require('@phenomnomnominal/tsquery');
-    const e2eConfig = {};
+    const e2eConfig: Record<string, string | undefined> = {};
     const presetSpreadAssignment = `...nxE2EPreset(__dirname),`;
     if (!e2eNode) {
       // add the e2e node with the preset and properties that need to overwrite
@@ -571,8 +594,7 @@ export class E2eMigrator extends ProjectMigrator<SupportedTargets> {
         ${presetSpreadAssignment}
         ${Object.entries(globalConfig)
           .filter(
-            ([key, value]) =>
-              !e2eConfig[key] && value !== this.cypressPreset[key]
+            ([key, value]) => !e2eConfig[key] && value !== cypressPreset[key]
           )
           .map(([key, value]) => `${key}: '${value}'`)
           .join(',\n')}
@@ -608,8 +630,8 @@ export class E2eMigrator extends ProjectMigrator<SupportedTargets> {
         const oldValue = this.normalizeNodeText(node.initializer.getText());
         e2eConfig[property] = oldValue;
 
-        const createChange = (newValue: string): typeof change => {
-          if (newValue === this.cypressPreset[property]) {
+        const createChange = (newValue: string | undefined): typeof change => {
+          if (newValue === cypressPreset[property]) {
             return { type: 'remove' };
           }
 
@@ -666,7 +688,7 @@ export class E2eMigrator extends ProjectMigrator<SupportedTargets> {
       // add any global config that was present and that would be overwritten
       // by the preset
       Object.entries(globalConfig).forEach(([key, value]) => {
-        if (e2eConfig[key] || value === this.cypressPreset[key]) {
+        if (e2eConfig[key] || value === cypressPreset[key]) {
           return;
         }
 
@@ -696,7 +718,7 @@ export class E2eMigrator extends ProjectMigrator<SupportedTargets> {
     node: PropertyAssignment,
     configCollected?: CypressCommonConfig
   ): void {
-    let newValue: string;
+    let newValue: string | undefined;
     const oldValue = this.normalizeNodeText(node.initializer.getText());
 
     if (
@@ -786,7 +808,7 @@ export class E2eMigrator extends ProjectMigrator<SupportedTargets> {
 
   private getOldCypressConfigFilePath(): string | null {
     let cypressConfig: string | null;
-    const configFileOption = this.projectConfig.targets.e2e.options.configFile;
+    const configFileOption = this.getTarget('e2e').options.configFile;
     if (configFileOption === false) {
       cypressConfig = null;
     } else if (typeof configFileOption === 'string') {
@@ -821,14 +843,14 @@ export class E2eMigrator extends ProjectMigrator<SupportedTargets> {
 
   private isCypressE2eProject(): boolean {
     return (
-      this.projectConfig.targets[this.targetNames.e2e].executor ===
+      this.getTarget(this.e2eTargetName).executor ===
       '@cypress/schematic:cypress'
     );
   }
 
   private isProtractorE2eProject(): boolean {
     return (
-      this.projectConfig.targets[this.targetNames.e2e].executor ===
+      this.getTarget(this.e2eTargetName).executor ===
       '@angular-devkit/build-angular:protractor'
     );
   }
