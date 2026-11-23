@@ -4,7 +4,7 @@ import {
   readNxJson,
   CreateNodes,
 } from 'nx/src/devkit-exports';
-import { matchPluginFiles } from 'nx/src/devkit-internals';
+import { matchPluginFiles } from './match-plugin-files';
 
 export async function findPluginForConfigFile(
   tree: Tree,

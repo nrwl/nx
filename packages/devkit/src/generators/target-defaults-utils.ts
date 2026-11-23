@@ -14,10 +14,10 @@ import {
   updateNxJson,
 } from 'nx/src/devkit-exports';
 import {
-  matchPluginFiles,
   findMatchingProjects,
   readTargetDefaultsForTarget as readTargetDefaultsForTargetFromNx,
 } from 'nx/src/devkit-internals';
+import { matchPluginFiles } from '../utils/match-plugin-files';
 
 /**
  * Upsert a `targetDefaults` entry on the provided `nxJson`. Mutates
