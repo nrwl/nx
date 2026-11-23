@@ -51,9 +51,9 @@ export function splitConfigFiles(files: readonly string[]): {
   testFiles: string[];
   projectRoots: string[];
 } {
-  const buildFiles = [];
-  const testFiles = [];
-  const gradlewFiles = [];
+  const buildFiles: string[] = [];
+  const testFiles: string[] = [];
+  const gradlewFiles: string[] = [];
   const projectRoots = new Set<string>();
 
   files.forEach((file) => {

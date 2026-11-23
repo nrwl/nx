@@ -11,11 +11,11 @@ import { DOMParser, XMLSerializer } from '@xmldom/xmldom';
 export function updateNxMavenPluginVersion(tree: Tree, version: string): void {
   const pomPath = 'pom.xml';
 
-  if (!tree.exists(pomPath)) {
+  const content = tree.read(pomPath, 'utf-8');
+  if (content === null) {
     return;
   }
 
-  const content = tree.read(pomPath, 'utf-8');
   const parser = new DOMParser();
   const doc = parser.parseFromString(content);
 

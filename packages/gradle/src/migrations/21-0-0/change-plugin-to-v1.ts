@@ -9,15 +9,16 @@ export default function update(tree: Tree) {
   if (!nxJson) {
     return;
   }
-  if (!hasGradlePlugin(tree)) {
+  const plugins = nxJson.plugins;
+  if (!plugins || !hasGradlePlugin(tree)) {
     return;
   }
-  let gradlePluginIndex = nxJson.plugins.findIndex((p) =>
+  let gradlePluginIndex = plugins.findIndex((p) =>
     typeof p === 'string' ? p === '@nx/gradle' : p.plugin === '@nx/gradle'
   );
-  let gradlePlugin = nxJson.plugins[gradlePluginIndex];
+  let gradlePlugin = plugins[gradlePluginIndex];
   if (typeof gradlePlugin === 'string') {
-    nxJson.plugins[gradlePluginIndex] = '@nx/gradle/plugin-v1';
+    plugins[gradlePluginIndex] = '@nx/gradle/plugin-v1';
   } else {
     gradlePlugin.plugin = '@nx/gradle/plugin-v1';
   }

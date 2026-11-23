@@ -44,8 +44,8 @@ export async function initGenerator(tree: Tree, options: InitGeneratorSchema) {
 
 export function updateGitIgnore(tree: Tree) {
   const gitignorePath = '.gitignore';
-  if (tree.exists(gitignorePath)) {
-    let gitignore = tree.read(gitignorePath, 'utf-8');
+  let gitignore = tree.read(gitignorePath, 'utf-8');
+  if (gitignore !== null) {
     const sectionHeader = '# .NET';
     const potentialLinesToAdd = new Set(['**/bin/', '**/obj/', '/artifacts/']);
 
@@ -98,7 +98,7 @@ export function updateGitIgnore(tree: Tree) {
 }
 
 function addPlugin(tree: Tree) {
-  const nxJson = readNxJson(tree);
+  const nxJson = readNxJson(tree) ?? {};
 
   if (!hasDotNetPlugin(tree)) {
     nxJson.plugins ??= [];
@@ -108,7 +108,7 @@ function addPlugin(tree: Tree) {
 }
 
 export function updateNxJsonConfiguration(tree: Tree) {
-  const nxJson = readNxJson(tree);
+  const nxJson = readNxJson(tree) ?? {};
 
   if (!nxJson.namedInputs) {
     nxJson.namedInputs = {};

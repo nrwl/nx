@@ -74,9 +74,10 @@ function getTemplateData(tree: Tree, options: Schema): Substitutes {
     options.name
   );
 
+  const nxJson = readNxJson(tree) ?? {};
   let nxCloudHost: string = 'nx.app';
   try {
-    const nxCloudUrl = getNxCloudUrl(readNxJson(tree));
+    const nxCloudUrl = getNxCloudUrl(nxJson);
     nxCloudHost = new URL(nxCloudUrl).host;
   } catch {}
 
@@ -84,7 +85,7 @@ function getTemplateData(tree: Tree, options: Schema): Substitutes {
 
   const commands = options.commands ?? getCiCommands(options.ci);
 
-  const connectedToCloud = isNxCloudUsed(readNxJson(tree));
+  const connectedToCloud = isNxCloudUsed(nxJson);
 
   return {
     workflowName,

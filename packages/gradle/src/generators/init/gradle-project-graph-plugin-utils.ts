@@ -39,10 +39,9 @@ function ensureBuildGradleFile(
     isKotlinDsl ? 'build.gradle.kts' : 'build.gradle'
   );
 
-  let content = '';
-  if (tree.exists(buildGradleFile)) {
-    content = tree.read(buildGradleFile, 'utf-8');
-  } else {
+  let content = tree.read(buildGradleFile, 'utf-8');
+  if (content === null) {
+    content = '';
     tree.write(buildGradleFile, content);
   }
 

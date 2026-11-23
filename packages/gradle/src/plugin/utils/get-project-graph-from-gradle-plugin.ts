@@ -47,11 +47,8 @@ function readProjectGraphReportCache(
   cachePath: string,
   hash: string
 ): ProjectGraphReport | undefined {
-  const projectGraphReportCache: Partial<ProjectGraphReportCache> = existsSync(
-    cachePath
-  )
-    ? readJsonFile(cachePath)
-    : undefined;
+  const projectGraphReportCache: Partial<ProjectGraphReportCache> | undefined =
+    existsSync(cachePath) ? readJsonFile(cachePath) : undefined;
   if (
     !projectGraphReportCache ||
     projectGraphReportCache.hash !== hash ||
@@ -127,7 +124,7 @@ export function getCurrentBuildFiles(): string[] {
 export async function populateProjectGraph(
   workspaceRoot: string,
   gradlewFiles: string[],
-  options: GradlePluginOptions
+  options: GradlePluginOptions | undefined
 ): Promise<void> {
   const normalizedOptions = normalizeOptions(options);
   const gradleConfigHash = hashArray([

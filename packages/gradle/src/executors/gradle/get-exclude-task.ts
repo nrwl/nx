@@ -59,8 +59,8 @@ export function getAllDependsOnFromTaskGraph(
     }
   }
 
-  while (stack.length > 0) {
-    const current = stack.pop();
+  let current: string | undefined;
+  while ((current = stack.pop()) !== undefined) {
     if (seen.has(current)) {
       continue;
     }

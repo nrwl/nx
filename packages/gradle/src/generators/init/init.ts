@@ -40,7 +40,7 @@ export async function initGenerator(tree: Tree, options: InitGeneratorSchema) {
 }
 
 function addPlugin(tree: Tree) {
-  const nxJson = readNxJson(tree);
+  const nxJson = readNxJson(tree) ?? {};
 
   if (!hasGradlePlugin(tree)) {
     nxJson.plugins ??= [];
@@ -57,7 +57,7 @@ function addPlugin(tree: Tree) {
 }
 
 export function updateNxJsonConfiguration(tree: Tree) {
-  const nxJson = readNxJson(tree);
+  const nxJson = readNxJson(tree) ?? {};
 
   if (!nxJson.namedInputs) {
     nxJson.namedInputs = {};
