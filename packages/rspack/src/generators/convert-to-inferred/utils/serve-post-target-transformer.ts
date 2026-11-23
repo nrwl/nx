@@ -1,6 +1,6 @@
 import {
   ensureTypescript,
-  printNode,
+  printNodeUpdate,
   processTargetOutputs,
   toProjectRelativePath,
   ast,
@@ -23,9 +23,9 @@ import type { RspackOptionsNormalized } from '@rspack/core';
 import { buildServePath } from '../../../executors/dev-server/lib/serve-path';
 import type { DevServerExecutorSchema as DevServerExecutorOptions } from '../../../executors/dev-server/schema';
 import {
-  appendProperties,
   hasMigratedConfigValues,
   toPropertyAssignment,
+  toPropertyName,
 } from './ast';
 import type { MigrationContext, TransformerContext } from './types';
 
@@ -269,35 +269,41 @@ function setOptionsInRspackConfig(
    *    ...
    *  },
    */
-  const serveProperty = printNode(
-    ts.factory.createPropertyAssignment(
-      'serve',
-      ts.factory.createObjectLiteralExpression([
-        ts.factory.createPropertyAssignment(
-          'default',
-          ts.factory.createObjectLiteralExpression(
-            Object.entries(defaultOptions).map(([key, value]) =>
-              toPropertyAssignment(key, value)
-            )
-          )
-        ),
-        ...Object.entries(configurationOptions).map(([key, value]) =>
+  const updatedConfigValuesObject = ts.factory.updateObjectLiteralExpression(
+    configValuesObject,
+    [
+      ...configValuesObject.properties,
+      ts.factory.createPropertyAssignment(
+        'serve',
+        ts.factory.createObjectLiteralExpression([
           ts.factory.createPropertyAssignment(
-            key,
+            'default',
             ts.factory.createObjectLiteralExpression(
-              Object.entries(value).map(([key, value]) =>
+              Object.entries(defaultOptions).map(([key, value]) =>
                 toPropertyAssignment(key, value)
               )
             )
-          )
-        ),
-      ])
-    )
+          ),
+          ...(configurationOptions
+            ? Object.entries(configurationOptions).map(([key, value]) =>
+                ts.factory.createPropertyAssignment(
+                  toPropertyName(key),
+                  ts.factory.createObjectLiteralExpression(
+                    Object.entries(value).map(([key, value]) =>
+                      toPropertyAssignment(key, value)
+                    )
+                  )
+                )
+              )
+            : []),
+        ])
+      ),
+    ]
   );
 
-  text = `${text.slice(0, configValuesObject.getStart())}${appendProperties(
+  text = `${text.slice(0, configValuesObject.getStart())}${printNodeUpdate(
     configValuesObject,
-    [serveProperty]
+    updatedConfigValuesObject
   )}${text.slice(configValuesObject.getEnd())}`;
 
   tree.write(rspackConfigPath, text);
@@ -326,6 +332,7 @@ function setDevServerOptionsInRspackConfig(
   rspackConfigPath: string,
   context: TransformerContext
 ) {
+  ts ??= ensureTypescript();
   const rspackConfigDevServerSelector =
     'ObjectLiteralExpression > PropertyAssignment:has(Identifier[name=devServer])';
   const rspackConfigDevServer = query<PropertyAssignment>(
@@ -359,9 +366,21 @@ function setDevServerOptionsInRspackConfig(
     rspackConfigSelector
   )[0];
 
-  const afterBrace = rspackConfig.getStart() + 1;
-  const whitespace = text.slice(afterBrace).match(/^\s*/)[0];
-  text = `${text.slice(0, afterBrace)}${whitespace}devServer: devServerOptions,${text.slice(afterBrace)}`;
+  const updatedRspackConfig = ts.factory.updateObjectLiteralExpression(
+    rspackConfig,
+    [
+      ts.factory.createPropertyAssignment(
+        'devServer',
+        ts.factory.createIdentifier('devServerOptions')
+      ),
+      ...rspackConfig.properties,
+    ]
+  );
+
+  text = `${text.slice(0, rspackConfig.getStart())}${printNodeUpdate(
+    rspackConfig,
+    updatedRspackConfig
+  )}${text.slice(rspackConfig.getEnd())}`;
 
   tree.write(rspackConfigPath, text);
 }

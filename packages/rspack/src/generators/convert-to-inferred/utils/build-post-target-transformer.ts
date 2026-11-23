@@ -1,7 +1,7 @@
 import type { TargetConfiguration, Tree } from '@nx/devkit';
 import {
   ensureTypescript,
-  printNode,
+  printNodeUpdate,
   processTargetOutputs,
   toProjectRelativePath,
   ast,
@@ -18,9 +18,9 @@ import type {
 import type { RspackExecutorSchema } from '../../../executors/rspack/schema';
 import type { NxAppRspackPluginOptions } from '../../../plugins/utils/models';
 import {
-  appendProperties,
   hasMigratedConfigValues,
   toPropertyAssignment,
+  toPropertyName,
 } from './ast';
 import type { MigrationContext, TransformerContext } from './types';
 
@@ -253,14 +253,22 @@ function setOptionsInRspackConfig(
     optionsVariable = query<VariableStatement>(sourceFile, optionsSelector)[0];
   }
 
+  let defaultOptionsObject: ObjectLiteralExpression;
   const optionsObject = query<ObjectLiteralExpression>(
     optionsVariable,
     'ObjectLiteralExpression'
   )[0];
-  // filter out the default options that are already in the options object
-  // the existing options override the options from the project.json file
-  const defaultOptionsProperties = Object.entries(defaultOptions)
-    .filter(
+  if (optionsObject.properties.length === 0) {
+    defaultOptionsObject = ts.factory.updateObjectLiteralExpression(
+      optionsObject,
+      Object.entries(defaultOptions).map(([key, value]) =>
+        toPropertyAssignment(key, value)
+      )
+    );
+  } else {
+    // filter out the default options that are already in the options object
+    // the existing options override the options from the project.json file
+    const filteredDefaultOptions = Object.entries(defaultOptions).filter(
       ([key]) =>
         !optionsObject.properties.some(
           (property) =>
@@ -268,8 +276,17 @@ function setOptionsInRspackConfig(
             ts.isIdentifier(property.name) &&
             property.name.text === key
         )
-    )
-    .map(([key, value]) => printNode(toPropertyAssignment(key, value)));
+    );
+    defaultOptionsObject = ts.factory.updateObjectLiteralExpression(
+      optionsObject,
+      [
+        ...optionsObject.properties,
+        ...filteredDefaultOptions.map(([key, value]) =>
+          toPropertyAssignment(key, value)
+        ),
+      ]
+    );
+  }
 
   /**
    * const configValues = {
@@ -279,28 +296,50 @@ function setOptionsInRspackConfig(
    *   configuration2: { ... },
    * }
    */
-  const buildProperties = [
-    `default: ${appendProperties(optionsObject, defaultOptionsProperties)}`,
-    ...Object.entries(configurationOptions).map(([key, value]) =>
-      printNode(
-        ts.factory.createPropertyAssignment(
-          key,
+  const configValuesVariable = ts.factory.createVariableStatement(
+    undefined,
+    ts.factory.createVariableDeclarationList(
+      [
+        ts.factory.createVariableDeclaration(
+          'configValues',
+          undefined,
+          undefined,
           ts.factory.createObjectLiteralExpression(
-            Object.entries(value).map(([key, value]) =>
-              toPropertyAssignment(key, value)
-            )
+            [
+              ts.factory.createPropertyAssignment(
+                'build',
+                ts.factory.createObjectLiteralExpression([
+                  ts.factory.createPropertyAssignment(
+                    'default',
+                    defaultOptionsObject
+                  ),
+                  ...(configurationOptions
+                    ? Object.entries(configurationOptions).map(([key, value]) =>
+                        ts.factory.createPropertyAssignment(
+                          toPropertyName(key),
+                          ts.factory.createObjectLiteralExpression(
+                            Object.entries(value).map(([key, value]) =>
+                              toPropertyAssignment(key, value)
+                            )
+                          )
+                        )
+                      )
+                    : []),
+                ])
+              ),
+            ],
+            true
           )
-        )
-      )
-    ),
-  ];
+        ),
+      ],
+      ts.NodeFlags.Const
+    )
+  );
 
   text = `${text.slice(0, optionsVariable.getStart())}
     // These options were migrated by @nx/rspack:convert-to-inferred from
     // the project.json file and merged with the options in this file
-    const configValues = {
-      build: { ${buildProperties.join(', ')} },
-    };
+    ${printNodeUpdate(optionsVariable, configValuesVariable)}
 
     // Determine the correct configValue to use based on the configuration
     const configuration = process.env.NX_TASK_TARGET_CONFIGURATION || 'default';
@@ -330,6 +369,7 @@ function setOptionsInNxRspackPlugin(
   sourceFile: SourceFile,
   rspackConfig: string
 ): void {
+  ts ??= ensureTypescript();
   const nxAppRspackPluginSelector =
     'PropertyAssignment:has(Identifier[name=plugins]) NewExpression:has(Identifier[name=NxAppRspackPlugin])';
   const nxAppRspackPlugin = query<NewExpression>(
@@ -338,10 +378,17 @@ function setOptionsInNxRspackPlugin(
   )[0];
 
   // the NxAppRspackPlugin must exists, otherwise, the migration doesn't run and we wouldn't reach this point
-  const pluginEnd = nxAppRspackPlugin.getEnd();
-  text = nxAppRspackPlugin.arguments
-    ? `${text.slice(0, nxAppRspackPlugin.arguments.pos)}buildOptions${text.slice(pluginEnd - 1)}`
-    : `${text.slice(0, pluginEnd)}(buildOptions)${text.slice(pluginEnd)}`;
+  const updatedNxAppRspackPlugin = ts.factory.updateNewExpression(
+    nxAppRspackPlugin,
+    nxAppRspackPlugin.expression,
+    undefined,
+    [ts.factory.createIdentifier('buildOptions')]
+  );
+
+  text = `${text.slice(0, nxAppRspackPlugin.getStart())}${printNodeUpdate(
+    nxAppRspackPlugin,
+    updatedNxAppRspackPlugin
+  )}${text.slice(nxAppRspackPlugin.getEnd())}`;
 
   tree.write(rspackConfig, text);
 }
@@ -352,6 +399,7 @@ function setOptionsInLegacyNxPlugin(
   sourceFile: SourceFile,
   rspackConfig: string
 ): void {
+  ts ??= ensureTypescript();
   const legacyNxPluginSelector =
     'AwaitExpression CallExpression:has(Identifier[name=useLegacyNxPlugin])';
   const legacyNxPlugin = query<CallExpression>(
@@ -361,7 +409,17 @@ function setOptionsInLegacyNxPlugin(
 
   if (!legacyNxPlugin) return;
 
-  text = `${text.slice(0, legacyNxPlugin.arguments[0].getEnd())}, buildOptions${text.slice(legacyNxPlugin.getEnd() - 1)}`;
+  const updatedLegacyNxPlugin = ts.factory.updateCallExpression(
+    legacyNxPlugin,
+    legacyNxPlugin.expression,
+    undefined,
+    [legacyNxPlugin.arguments[0], ts.factory.createIdentifier('buildOptions')]
+  );
+
+  text = `${text.slice(0, legacyNxPlugin.getStart())}${printNodeUpdate(
+    legacyNxPlugin,
+    updatedLegacyNxPlugin
+  )}${text.slice(legacyNxPlugin.getEnd())}`;
 
   tree.write(rspackConfig, text);
 }

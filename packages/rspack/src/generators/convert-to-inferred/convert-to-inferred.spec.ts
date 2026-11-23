@@ -414,6 +414,45 @@ module.exports = { plugins: [new NxAppRspackPlugin] };
       );
     });
 
+    it('should quote configuration names that are not identifiers', async () => {
+      const project = createProject(tree);
+      project.targets.build.configurations['production-fr'] = {
+        sourceMap: false,
+      };
+      project.targets.serve.configurations['production-fr'] = { hmr: false };
+      updateProjectConfiguration(tree, project.name, project);
+      fs.createFileSync(
+        `${project.root}/project.json`,
+        JSON.stringify(project)
+      );
+      writeRspackConfig(tree, project.root);
+
+      await convertToInferred(tree, { project: project.name });
+
+      const config = tree.read(`${project.root}/rspack.config.js`, 'utf-8');
+      expect(config).toContain(`'production-fr': { sourceMap: false }`);
+      expect(config).toContain(`'production-fr': { hmr: false }`);
+    });
+
+    it('should keep the comments in an options object that has no properties', async () => {
+      const project = createProject(tree);
+      writeRspackConfig(
+        tree,
+        project.root,
+        `const { NxAppRspackPlugin } = require('@nx/rspack/app-plugin');
+const options = {
+  // TODO: add options once the app grows
+};
+module.exports = { plugins: [new NxAppRspackPlugin(options)] };
+`
+      );
+
+      await convertToInferred(tree, { project: project.name });
+
+      const config = tree.read(`${project.root}/rspack.config.js`, 'utf-8');
+      expect(config).toContain('// TODO: add options once the app grows');
+    });
+
     it('should register plugin in nx.json', async () => {
       const project = createProject(tree);
       writeRspackConfig(tree, project.root);
