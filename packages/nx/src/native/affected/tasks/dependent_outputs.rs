@@ -2,8 +2,9 @@
 //! producer -> consumer. Outputs are gitignored and may not exist yet, so this
 //! compares declared configuration, never the filesystem. A `TaskOutput` embeds
 //! its producer's `outputs` verbatim and is matched by equality. An
-//! `IgnoredFileSet` (snapshot plans carry observed reads instead of any
-//! `TaskOutput`) names no producer and is matched by pattern overlap.
+//! `IgnoredFileSet` (a snapshot plan's observed reads; it carries a
+//! `TaskOutput` only for a declared `dependentTasksOutputFiles`) names no
+//! producer and is matched by pattern overlap.
 
 use rayon::prelude::*;
 use std::collections::{HashMap, HashSet};
@@ -297,8 +298,8 @@ mod tests {
         assert_eq!(e["app:build"], strings(&["ui:build"]));
     }
 
-    /// An observed read with no TaskOutput anywhere in the plan, which is what
-    /// I/O tracing produces once it has preempted the declared input.
+    /// An observed read with no TaskOutput anywhere in the plan, as a snapshot
+    /// plan has without a declared `dependentTasksOutputFiles`.
     #[test]
     fn resolves_an_include_ignored_read_by_overlap() {
         let e = edges(
@@ -320,7 +321,8 @@ mod tests {
         let scoped = HashInstruction::IgnoredFileSet {
             globs: ["packages/gradle/**/*"].map(Into::into).into(),
             project_roots: strings(&["packages/gradle", "packages/gradle/runner"]),
-            ultracache: false,
+            exact_extension_exclusions: false,
+            from_ultracache: false,
         };
         let e = edges(
             &[

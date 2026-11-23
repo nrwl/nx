@@ -436,10 +436,11 @@ fn instruction_matches_detail(
         HashInstruction::IgnoredFileSet {
             globs,
             project_roots,
-            ultracache,
+            exact_extension_exclusions,
+            ..
         } => {
             let globs: Vec<String> = globs.iter().map(|glob| normalize_glob(glob)).collect();
-            collect(&globs, None, project_roots, *ultracache).map(of_files)
+            collect(&globs, None, project_roots, *exact_extension_exclusions).map(of_files)
         }
         HashInstruction::JsonFileSet(json)
             if json.fields.is_some() || json.exclude_fields.is_some() =>
@@ -925,7 +926,8 @@ mod tests {
         let instruction = |negative: &str, ultracache| HashInstruction::IgnoredFileSet {
             globs: ["libs/a/**/*.ts", negative].map(Into::into).into(),
             project_roots: strings(&["libs/a"]),
-            ultracache,
+            exact_extension_exclusions: ultracache,
+            from_ultracache: false,
         };
         for file in [
             "cat.spec.ts",
@@ -978,7 +980,8 @@ mod tests {
             let instruction = HashInstruction::IgnoredFileSet {
                 globs: ["libs/a/**/*", "!libs/a/**/*.t!s"].map(Into::into).into(),
                 project_roots: strings(&["libs/a"]),
-                ultracache,
+                exact_extension_exclusions: ultracache,
+                from_ultracache: false,
             };
             let changed = format!("libs/a/{file}");
             assert_eq!(
@@ -995,7 +998,8 @@ mod tests {
         let instruction = HashInstruction::IgnoredFileSet {
             globs: ["libs/a/**/*"].map(Into::into).into(),
             project_roots: strings(&["libs/a", "libs/a/nested"]),
-            ultracache: false,
+            exact_extension_exclusions: false,
+            from_ultracache: false,
         };
         assert_eq!(
             touched_for(&g, vec![instruction.clone()], &["libs/a/build/out.js"]),
