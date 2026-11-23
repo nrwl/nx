@@ -66,7 +66,7 @@ Bazel treats C++, Java, Go, Rust, and Python as first-class citizens with mature
 
 ## Module boundaries
 
-Credit where due: Bazel's per-target `visibility` is stronger enforcement than a lint rule. Targets are private by default and violations fail the build, in every language. Nx [enforces boundaries](/docs/features/enforce-module-boundaries) with tags at lint time for JS/TS, extended by [conformance rules](/docs/enterprise/conformance) for other languages, softer enforcement, but requiring no per-target declarations.
+Credit where due: Bazel's per-target `visibility` is stronger enforcement than a lint rule. Targets are private by default and violations fail the build, in every language. Nx [enforces boundaries](/docs/features/enforce-module-boundaries) with tags at lint time for JS/TS, extended by [conformance rules](/docs/features/conformance) for other languages, softer enforcement, but requiring no per-target declarations.
 
 ## Affected detection
 

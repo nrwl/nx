@@ -96,6 +96,22 @@ export const featuresItems: Record<string, MenuItem[]> = {
       isNew: false,
       isHighlight: false,
     },
+    {
+      name: 'Run Conformance Rules',
+      description: null,
+      href: '/docs/features/conformance',
+      icon: CheckBadgeIcon,
+      isNew: false,
+      isHighlight: false,
+    },
+    {
+      name: 'Define Project Owners',
+      description: null,
+      href: '/docs/features/owners',
+      icon: UserGroupIcon,
+      isNew: false,
+      isHighlight: false,
+    },
   ],
   'Nx Cloud Features': [
     {
@@ -112,24 +128,6 @@ export const featuresItems: Record<string, MenuItem[]> = {
         'One-line config for distributing tasks across multiple machines',
       href: '/docs/features/ci-features/distribute-task-execution',
       icon: NxAgentsIcon,
-      isNew: false,
-      isHighlight: false,
-    },
-  ],
-  'Nx Enterprise Features': [
-    {
-      name: 'Run Conformance Rules',
-      description: null,
-      href: '/docs/enterprise/conformance',
-      icon: CheckBadgeIcon,
-      isNew: false,
-      isHighlight: false,
-    },
-    {
-      name: 'Define Project Owners',
-      description: null,
-      href: '/docs/enterprise/owners',
-      icon: UserGroupIcon,
       isNew: false,
       isHighlight: false,
     },

@@ -125,6 +125,34 @@ const learnGroups: SidebarItems = [
               },
             ],
           },
+          {
+            label: 'Conformance',
+            collapsed: true,
+            items: [
+              { label: 'Overview', link: 'features/conformance' },
+              {
+                label: 'Create conformance rule',
+                link: 'reference/conformance/create-conformance-rule',
+              },
+              {
+                label: 'Test conformance rule',
+                link: 'reference/conformance/test-conformance-rule',
+              },
+              {
+                label: 'Plugin reference',
+                link: 'reference/conformance/overview',
+              },
+              {
+                label: 'Generators',
+                link: 'reference/conformance/generators',
+              },
+              {
+                label: 'Executors',
+                link: 'reference/conformance/executors',
+              },
+            ],
+          },
+          { label: 'Owners', link: 'features/owners' },
         ],
       },
       {
@@ -220,7 +248,6 @@ const learnGroups: SidebarItems = [
         label: 'Enterprise',
         collapsed: true,
         items: [
-          { label: 'Conformance', link: 'enterprise/conformance' },
           {
             label: 'Configure conformance rules in Nx Cloud',
             link: 'enterprise/configure-conformance-rules-in-nx-cloud',
@@ -229,7 +256,6 @@ const learnGroups: SidebarItems = [
             label: 'Publish conformance rules to Nx Cloud',
             link: 'enterprise/publish-conformance-rules-to-nx-cloud',
           },
-          { label: 'Owners', link: 'enterprise/owners' },
           { label: 'Custom workflows', link: 'enterprise/custom-workflows' },
           { label: 'Activate license', link: 'enterprise/activate-license' },
           {
@@ -267,32 +293,6 @@ const learnGroups: SidebarItems = [
               {
                 label: 'Azure SAML',
                 link: 'enterprise/single-tenant/azure-saml',
-              },
-            ],
-          },
-          {
-            label: 'Conformance reference',
-            collapsed: true,
-            items: [
-              {
-                label: 'Overview',
-                link: 'reference/conformance/overview',
-              },
-              {
-                label: 'Create conformance rule',
-                link: 'reference/conformance/create-conformance-rule',
-              },
-              {
-                label: 'Test conformance rule',
-                link: 'reference/conformance/test-conformance-rule',
-              },
-              {
-                label: 'Generators',
-                link: 'reference/conformance/generators',
-              },
-              {
-                label: 'Executors',
-                link: 'reference/conformance/executors',
               },
             ],
           },

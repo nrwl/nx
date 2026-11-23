@@ -298,7 +298,7 @@ The real value isn't raw scaffolding, AI can do that too. It's deterministic, co
 
 In large workspaces, unchecked dependencies between projects lead to architectural drift. Both tools offer mechanisms to enforce boundaries, but with different maturity and scope.
 
-Nx has provided [module boundary rules](/docs/features/enforce-module-boundaries) since its earliest versions. You assign tags to projects and define which tags can depend on which, enforced as a lint rule. For polyglot workspaces where ESLint isn't available, Nx also offers [conformance rules](/docs/enterprise/conformance) that work across any language.
+Nx has provided [module boundary rules](/docs/features/enforce-module-boundaries) since its earliest versions. You assign tags to projects and define which tags can depend on which, enforced as a lint rule. For polyglot workspaces where ESLint isn't available, Nx also offers [conformance rules](/docs/features/conformance) that work across any language.
 
 This becomes especially important with AI coding agents. Boundary rules act as guardrails, preventing agents from creating arbitrary cross-project dependencies that violate your architecture.
 
