@@ -72,6 +72,44 @@ export function ensureViteConfigIsCorrect(
   }
 }
 
+// Strings escape their newlines, so this only joins JSON.stringify's own lines.
+function toInlineJson(value: unknown): string {
+  return JSON.stringify(value, null, 1).replace(/\n */g, ' ');
+}
+
+// Inserts the text before the property. A comment keeps covering the same
+// code unless a multi-line text has to split the line it covers.
+function insertBeforeProperty(
+  content: string,
+  property: Node,
+  text: string
+): string {
+  const { ensureTypescript } = require('@nx/devkit/internal');
+  const ts: TypescriptAst = ensureTypescript();
+  const start = property.getStart();
+  const linePrefix = content.slice(
+    content.lastIndexOf('\n', start - 1) + 1,
+    start
+  );
+  const sharesLine = linePrefix.trim() !== '';
+  // A comment ending the line above may cover the property's line, and code
+  // before the property shares it. A single-line text joins that line intact.
+  if (
+    !text.trim().includes('\n') &&
+    (sharesLine || ts.getTrailingCommentRanges(content, property.pos)?.length)
+  ) {
+    return `${content.slice(0, start)}${text.trim()} ${content.slice(start)}`;
+  }
+  // A multi-line text splits the shared line anyway, so put it on own lines.
+  if (sharesLine) {
+    const indentation = linePrefix.match(/^[ \t]*/)[0];
+    return `${content.slice(0, start).trimEnd()}\n${indentation}${text.trim()}\n${indentation}${content.slice(start)}`;
+  }
+  const anchor =
+    ts.getLeadingCommentRanges(content, property.pos)?.[0]?.pos ?? start;
+  return `${content.slice(0, anchor)}${text.trimStart()}\n${linePrefix}${content.slice(anchor)}`;
+}
+
 function handleBuildOrTestNode(
   updatedFileContent: string,
   configContentString: string,
@@ -114,12 +152,12 @@ function handleBuildOrTestNode(
             let propString = `    '${propName}': {\n`;
             for (const [pName, pValue] of Object.entries(propValue)) {
               if (pName === 'provider') {
-                propString += `    '${pName}': ${pValue} as const,\n`;
+                propString += `      '${pName}': ${pValue} as const,\n`;
               } else {
-                propString += `    '${pName}': '${pValue}',\n`;
+                propString += `      '${pName}': '${pValue}',\n`;
               }
             }
-            propString += `}`;
+            propString += `    },`;
             updatedPropsString += `${propString}\n`;
           } else if (propName === 'lib') {
             let propString = `    '${propName}': {\n`;
@@ -135,7 +173,7 @@ function handleBuildOrTestNode(
             propString += `    },`;
             updatedPropsString += `${propString}\n`;
           } else {
-            updatedPropsString += `    '${propName}': ${JSON.stringify(
+            updatedPropsString += `    '${propName}': ${toInlineJson(
               propValue
             )},\n`;
           }
@@ -174,13 +212,11 @@ ${updatedPropsString}  }`;
         );
 
         if (propertyAssignments.length) {
-          return applyChangesToString(updatedFileContent, [
-            {
-              type: ChangeType.Insert,
-              index: propertyAssignments[0].getStart(),
-              text: configContentString,
-            },
-          ]);
+          return insertBeforeProperty(
+            updatedFileContent,
+            propertyAssignments[0],
+            configContentString
+          );
         } else {
           return applyChangesToString(updatedFileContent, [
             {
@@ -240,7 +276,7 @@ function transformCurrentBuildObject(
     (_node: Node) => {
       return `{
         ...${currentBuildObject},
-        ...${JSON.stringify(buildConfigObject)}
+        ...${toInlineJson(buildConfigObject)}
       }`;
     }
   );
@@ -311,7 +347,7 @@ function transformConditionalConfig(
           index: functionBlockStart + 1,
           text: `
             if (command === 'build') {
-              return ${JSON.stringify(buildConfigObject)}
+              return ${toInlineJson(buildConfigObject)}
             }
             `,
         },
@@ -357,13 +393,10 @@ function handlePluginNode(
           node,
           'ArrayLiteralExpression'
         ) as ArrayLiteralExpression[];
-        let updatedPluginsString = '';
-
         const existingPluginNodes = found?.[0].elements ?? [];
-
-        for (const plugin of existingPluginNodes) {
-          updatedPluginsString += `${plugin.getText()}, `;
-        }
+        const updatedPlugins = existingPluginNodes.map((plugin) =>
+          plugin.getText()
+        );
 
         for (const plugin of plugins) {
           if (
@@ -371,11 +404,11 @@ function handlePluginNode(
               node.getText().includes(plugin)
             )
           ) {
-            updatedPluginsString += `${plugin}, `;
+            updatedPlugins.push(plugin);
           }
         }
 
-        return `plugins: [${updatedPluginsString}]`;
+        return `plugins: [${updatedPlugins.join(', ')}]`;
       }
     );
     writeFile = true;
@@ -405,13 +438,11 @@ function handlePluginNode(
         );
 
         if (propertyAssignments.length) {
-          appFileContent = applyChangesToString(appFileContent, [
-            {
-              type: ChangeType.Insert,
-              index: propertyAssignments[0].getStart(),
-              text: `plugins: [${plugins.join(', ')}],`,
-            },
-          ]);
+          appFileContent = insertBeforeProperty(
+            appFileContent,
+            propertyAssignments[0],
+            `plugins: [${plugins.join(', ')}],`
+          );
           writeFile = true;
         } else {
           appFileContent = applyChangesToString(appFileContent, [
@@ -699,13 +730,11 @@ function handleCacheDirNode(appFileContent: string, cacheDir: string): string {
         );
 
         if (propertyAssignments.length) {
-          appFileContent = applyChangesToString(appFileContent, [
-            {
-              type: ChangeType.Insert,
-              index: propertyAssignments[0].getStart(),
-              text: cacheDir,
-            },
-          ]);
+          appFileContent = insertBeforeProperty(
+            appFileContent,
+            propertyAssignments[0],
+            cacheDir
+          );
         } else {
           appFileContent = applyChangesToString(appFileContent, [
             {

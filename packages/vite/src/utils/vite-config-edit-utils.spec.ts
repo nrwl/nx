@@ -26,6 +26,64 @@ describe('ensureViteConfigIsCorrect', () => {
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
   });
 
+  it.each([
+    [
+      'a @ts-expect-error on its own line',
+      `export default defineConfig({
+  // @ts-expect-error not a Vite option
+  notAnOption: true,
+});
+`,
+      `({\n  plugins: [react()],\n  // @ts-expect-error not a Vite option\n  notAnOption: true,`,
+    ],
+    [
+      'a @ts-expect-error on the opening brace line',
+      `export default defineConfig({ // @ts-expect-error not a Vite option
+  notAnOption: true,
+});
+`,
+      `({ // @ts-expect-error not a Vite option\n  plugins: [react()], notAnOption: true,`,
+    ],
+    [
+      'an eslint-disable-line after a spread',
+      `export default defineConfig({
+  ...base, // eslint-disable-line no-undef
+  root: '.',
+});
+`,
+      `  ...base, // eslint-disable-line no-undef\n  plugins: [react()], root: '.',`,
+    ],
+    [
+      'a @ts-expect-error above a one-line config',
+      `// @ts-expect-error not a Vite option
+export default defineConfig({ notAnOption: true, root: '.' });
+`,
+      `// @ts-expect-error not a Vite option\nexport default defineConfig({ plugins: [react()], notAnOption: true, root: '.' });`,
+    ],
+  ])('should keep %s on the lines it covers', (_, config, expected) => {
+    tree.write(
+      'apps/my-app/vite.config.ts',
+      `import { defineConfig } from 'vite';\n\n${config}`
+    );
+
+    ensureViteConfigIsCorrect(
+      tree,
+      'apps/my-app/vite.config.ts',
+      '',
+      {},
+      [],
+      ['react()'],
+      '',
+      {},
+      '',
+      { build: true, test: true, serve: false }
+    );
+
+    expect(tree.read('apps/my-app/vite.config.ts', 'utf-8')).toContain(
+      expected
+    );
+  });
+
   it("should add build options if build options don't exist", () => {
     tree.write('apps/my-app/vite.config.ts', noBuildOptions);
     ensureViteConfigIsCorrect(
@@ -55,8 +113,7 @@ describe('ensureViteConfigIsCorrect', () => {
           import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 
           export default defineConfig({
-            
-          // Configuration for building your library.
+            // Configuration for building your library.
           // See: https://vite.dev/guide/build.html#library-mode
           build: {
             lib: {
@@ -72,8 +129,9 @@ describe('ensureViteConfigIsCorrect', () => {
               // External packages that should not be bundled into your library.
               external: ['react', 'react-dom', 'react/jsx-runtime']
             }
-          },cacheDir: '../../node_modules/.vitest',
-            plugins: [react(), nxViteTsPaths(), ],
+          },
+            cacheDir: '../../node_modules/.vitest',
+            plugins: [react(), nxViteTsPaths()],
 
             test: {
               globals: true,
@@ -116,7 +174,7 @@ describe('ensureViteConfigIsCorrect', () => {
 
           export default defineConfig({
             cacheDir: '../../node_modules/.vitest',
-            plugins: [react(), nxViteTsPaths(), ],
+            plugins: [react(), nxViteTsPaths()],
 
             test: {
               globals: true,
@@ -132,7 +190,7 @@ describe('ensureViteConfigIsCorrect', () => {
             'fileName': "index",
             'formats': ['es' as const],
           },
-          'rolldownOptions': {"external":["react","react-dom","react/jsx-runtime"]},
+          'rolldownOptions': { "external": [ "react", "react-dom", "react/jsx-runtime" ] },
         }
 
           });
@@ -171,9 +229,10 @@ describe('ensureViteConfigIsCorrect', () => {
           import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 
           export default defineConfig({
+          plugins: [react(), nxViteTsPaths()],
           // Configuration for building your library.
           // See: https://vite.dev/guide/build.html#library-mode
-          plugins: [react(), nxViteTsPaths()],build: {
+          build: {
             lib: {
               // Could also be a dictionary or array of multiple entry points.
               entry: 'src/index.ts',
@@ -187,7 +246,8 @@ describe('ensureViteConfigIsCorrect', () => {
               // External packages that should not be bundled into your library.
               external: ['react', 'react-dom', 'react/jsx-runtime']
             }
-          },test: {
+          },
+          test: {
               globals: true,
               environment: 'jsdom',
               include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
@@ -270,7 +330,7 @@ describe('ensureViteConfigIsCorrect', () => {
               environment: 'jsdom',
               include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
           },
-            plugins: [react(), nxViteTsPaths(), ],
+            plugins: [react(), nxViteTsPaths()],
           };
           "
     `);
@@ -319,7 +379,7 @@ describe('ensureViteConfigIsCorrect', () => {
 
           export default defineConfig({
             cacheDir: '../../node_modules/.vitest',
-            plugins: [dts({ entryRoot: 'src', tsConfigFilePath: joinPathFragments(__dirname, 'tsconfig.lib.json'), skipDiagnostics: true }), react(), nxViteTsPaths(), ],
+            plugins: [dts({ entryRoot: 'src', tsConfigFilePath: joinPathFragments(__dirname, 'tsconfig.lib.json'), skipDiagnostics: true }), react(), nxViteTsPaths()],
           
             // Configuration for building your library.
             // See: https://vite.dev/guide/build.html#library-mode
@@ -373,8 +433,7 @@ describe('ensureViteConfigIsCorrect', () => {
 
           export default defineConfig({
           
-            
-          // Configuration for building your library.
+            // Configuration for building your library.
           // See: https://vite.dev/guide/build.html#library-mode
           build: {
             lib: {
@@ -390,8 +449,9 @@ describe('ensureViteConfigIsCorrect', () => {
               // External packages that should not be bundled into your library.
               external: ['react', 'react-dom', 'react/jsx-runtime']
             }
-          },cacheDir: '../../node_modules/.vitest',
-            plugins: [react(), nxViteTsPaths(), ],
+          },
+            cacheDir: '../../node_modules/.vitest',
+            plugins: [react(), nxViteTsPaths()],
 
             test: {
               globals: true,
@@ -427,13 +487,13 @@ describe('ensureViteConfigIsCorrect', () => {
           import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 
           export default defineConfig({
-            plugins: [react(), nxViteTsPaths(), ],
+            plugins: [react(), nxViteTsPaths()],
 
             test: {
           'my': 'option',
           'globals': true,
           'environment': "jsdom",
-          'include': ["src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}"],
+          'include': [ "src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}" ],
         },
 
             build: {
@@ -444,7 +504,7 @@ describe('ensureViteConfigIsCorrect', () => {
             'fileName': "index",
             'formats': ['es' as const],
           },
-          'rolldownOptions': {"external":["react","react-dom","react/jsx-runtime"]},
+          'rolldownOptions': { "external": [ "react", "react-dom", "react/jsx-runtime" ] },
         }
 
           });
