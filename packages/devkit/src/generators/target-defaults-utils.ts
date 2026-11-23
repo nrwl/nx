@@ -18,7 +18,6 @@ import {
   findMatchingProjects,
   readTargetDefaultsForTarget as readTargetDefaultsForTargetFromNx,
 } from 'nx/src/devkit-internals';
-import { minimatch } from 'minimatch';
 
 /**
  * Upsert a `targetDefaults` entry on the provided `nxJson`. Mutates
@@ -580,7 +579,8 @@ export async function addE2eCiTargetDefaults(
   // include/exclude filters are applied.
   const e2eConfigMatchesPluginGlob =
     !e2ePluginGlob ||
-    minimatch(pathToE2EConfigFile, e2ePluginGlob, { dot: true });
+    findMatchingConfigFiles([pathToE2EConfigFile], [e2ePluginGlob], []).length >
+      0;
 
   let foundPluginForApplication: PluginConfiguration;
   for (let i = 0; i < e2ePluginRegistrations.length; i++) {

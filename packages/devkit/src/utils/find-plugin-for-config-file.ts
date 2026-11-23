@@ -5,7 +5,7 @@ import {
   CreateNodes,
 } from 'nx/src/devkit-exports';
 import { findMatchingConfigFiles } from 'nx/src/devkit-internals';
-import { minimatch } from 'minimatch';
+
 export async function findPluginForConfigFile(
   tree: Tree,
   pluginName: string,
@@ -39,14 +39,13 @@ export async function findPluginForConfigFile(
       // The file must be one this plugin actually processes (its path matches
       // the plugin's createNodes glob) before the registration's include/exclude
       // filters are applied.
-      const matchingConfigFile =
-        !pluginGlob || minimatch(pathToConfigFile, pluginGlob, { dot: true })
-          ? findMatchingConfigFiles(
-              [pathToConfigFile],
-              plugin.include,
-              plugin.exclude
-            )
-          : [];
+      const matchingConfigFile = findMatchingConfigFiles(
+        pluginGlob
+          ? findMatchingConfigFiles([pathToConfigFile], [pluginGlob], [])
+          : [pathToConfigFile],
+        plugin.include,
+        plugin.exclude
+      );
       if (matchingConfigFile.length) {
         return plugin;
       }
