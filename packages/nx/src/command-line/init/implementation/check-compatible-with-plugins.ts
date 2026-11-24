@@ -84,13 +84,16 @@ function findPluginAndFilesWithError(
       },
     ];
   }
-  excludeFiles = excludeFiles.filter(Boolean).map((excludeFile) => {
-    const file = excludeFile.file;
-    excludeFile.file = file.startsWith(workspaceRoot)
-      ? relative(workspaceRoot, file)
-      : file;
-    return excludeFile;
-  });
+  // A null file means the plugin failed as a whole, so there is no file to exclude.
+  excludeFiles = excludeFiles
+    .filter((f) => f?.file)
+    .map((excludeFile) => {
+      const file = excludeFile.file;
+      excludeFile.file = file.startsWith(workspaceRoot)
+        ? relative(workspaceRoot, file)
+        : file;
+      return excludeFile;
+    });
   return {
     pluginIndex,
     excludeFiles,
