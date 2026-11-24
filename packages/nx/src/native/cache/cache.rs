@@ -16,7 +16,7 @@ use crate::native::cache::expand_outputs::{
     outputs_below_a_link,
 };
 use crate::native::cache::file_ops::{
-    copy_and_list, copy_outputs_into_workspace, find_link_leaving_output,
+    copy_and_list, copy_outputs_into_workspace, find_link_leaving_output, outputs_to_copy,
 };
 use crate::native::db::connection::NxDbConnection;
 use crate::native::pseudo_terminal::strip_queries::strip_queries;
@@ -458,7 +458,7 @@ impl NxCache {
         // Copy the outputs to the cache
         let mut copied_files = 0;
         let mut written = vec![];
-        for expanded_output in expanded_outputs.iter() {
+        for expanded_output in outputs_to_copy(&self.workspace_root, &expanded_outputs) {
             let p = self.workspace_root.join(expanded_output);
             if p.exists() {
                 let cached_outputs_dir = task_dir.join(expanded_output);
@@ -1127,6 +1127,59 @@ mod test {
     }
 
     const LOG_SIZE: i64 = "log".len() as i64;
+
+    #[test]
+    fn overlapping_outputs_are_copied_once_when_saved_and_restored() {
+        let cases: &[(&[&str], &[&str])] = &[
+            (
+                &["dist/app/main.js", "dist", "./dist"],
+                &["dist/app/main.js"],
+            ),
+            (
+                &["apps/a", "apps/a/../../dist/apps/a"],
+                &["apps/a/first.js", "dist/apps/a/second.js"],
+            ),
+        ];
+        for &(outputs, files) in cases {
+            let temp = TempDir::new().unwrap();
+            let mut cache = cache_in(&temp);
+            let hash = "1".to_string();
+            record_task(&cache, &hash);
+            let built = b"built";
+            for file in files {
+                let path = cache.workspace_root.join(file);
+                create_dir_all(path.parent().unwrap()).unwrap();
+                write(path, built).unwrap();
+            }
+            let outputs: Vec<String> = outputs.iter().map(|path| path.to_string()).collect();
+
+            let saved = cache
+                .put(hash.clone(), "log".to_string(), outputs.clone(), 0)
+                .unwrap();
+            assert_eq!(saved.expanded_outputs, outputs);
+            let hit = cache.get(hash).unwrap().unwrap();
+            let size = hit.size;
+
+            for file in files {
+                remove_file(cache.workspace_root.join(file)).unwrap();
+            }
+            let restored = cache.copy_files_from_cache(hit, outputs.clone()).unwrap();
+            assert_eq!(
+                (size, restored.map(|restored_files| restored_files.len())),
+                (
+                    Some(LOG_SIZE + (files.len() * built.len()) as i64),
+                    Some(files.len())
+                ),
+                "{outputs:?}"
+            );
+            for file in files {
+                assert_eq!(
+                    std::fs::read(cache.workspace_root.join(file)).unwrap(),
+                    built
+                );
+            }
+        }
+    }
 
     #[test]
     fn restore_keeps_a_file_where_a_glob_match_needs_a_directory() {
