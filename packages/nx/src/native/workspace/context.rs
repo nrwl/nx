@@ -452,11 +452,14 @@ fn gather_and_hash_files(
     find_ignore_files: bool,
 ) -> GatheredFiles {
     let archived_files = read_files_archive(&cache_dir);
-    let commit = if std::env::var("NX_CLOUD_ULTRACACHE_REHASH").as_deref() == Ok("true") {
-        clean_commit(workspace_root)
-    } else {
-        None
-    };
+    // Reuse needs a change stamp independent of size and last-write time.
+    // Only the Unix metadata key includes the inode's change time.
+    let commit =
+        if cfg!(unix) && std::env::var("NX_CLOUD_ULTRACACHE_REHASH").as_deref() == Ok("true") {
+            clean_commit(workspace_root)
+        } else {
+            None
+        };
 
     trace!("Gathering files in {}", workspace_root.display());
     let now = std::time::Instant::now();
