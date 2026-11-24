@@ -190,6 +190,8 @@ export {
   interpolateArgsIntoCommand,
   normalizeArgs as normalizeRunCommandsArgs,
 } from './executors/run-commands/run-commands.impl';
+export { default as runCommandsSchema } from './executors/run-commands/schema.json';
+export { serializeOverridesIntoCommandLine } from './utils/serialize-overrides-into-command-line';
 export { FsTree, flushChanges } from './generators/tree';
 export { getRelativeProjectJsonSchemaPath } from './generators/utils/project-configuration';
 export { hashFile } from './hasher/file-hasher';

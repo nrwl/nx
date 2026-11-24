@@ -232,7 +232,7 @@ public class NxTagsTests : IDisposable
         startInfo.ArgumentList.Add(workspaceRoot);
 
         using var process = Process.Start(startInfo)!;
-        process.StandardInput.WriteLine(string.Empty);
+        process.StandardInput.WriteLine("""{"tfmVariants":false}""");
         process.StandardInput.Write(string.Join(Environment.NewLine, projectFiles));
         process.StandardInput.Close();
 
