@@ -20,8 +20,7 @@ use crate::native::glob::{
     NxGlobSet, NxGlobSetBuilder, expand_literal_braces, normalize_glob, partition_glob,
 };
 use crate::native::tasks::hashers::{
-    OnceCache, Positive, ProjectScope, parse_group_with_exclusions, scope_roots,
-    validate_files_globs,
+    OnceCache, Positive, ProjectScope, parse_group, scope_roots, validate_files_globs,
 };
 use crate::native::tasks::inputs::{
     expand_single_project_inputs, get_inputs, get_inputs_for_dependency_group, get_named_inputs,
@@ -325,40 +324,24 @@ impl HashPlanner {
     }
 
     fn disk_file_set(&self, globs: Vec<Arc<str>>, from_ultracache: bool) -> HashInstruction {
-        let (project_roots, exact_extension_exclusions) =
-            match parse_group_with_exclusions(&globs, from_ultracache) {
-                Ok((positives, negatives)) => (
-                    scope_roots(&positives, self.project_roots()),
-                    negatives
-                        .iter()
-                        .any(|negative| negative.has_suffix_category()),
-                ),
-                Err(_) => (Vec::new(), from_ultracache),
-            };
+        let project_roots = parse_group(&globs).map_or_else(
+            |_| Vec::new(),
+            |(positives, _)| scope_roots(&positives, self.project_roots()),
+        );
         HashInstruction::IgnoredFileSet {
             globs: globs.into(),
             project_roots,
-            exact_extension_exclusions,
             from_ultracache,
         }
     }
 
-    /// A task's recorded reads of tracked files, owned by `project` or by
-    /// none: an ordinary fileset, unless Nx Cloud learned a `*.ext` exclusion
-    /// for it, which a glob set cannot express.
-    fn recorded_file_set(&self, project: Option<&str>, globs: Vec<Arc<str>>) -> HashInstruction {
-        // A group that does not parse reports the error when it is hashed.
-        let learned_exclusions =
-            parse_group_with_exclusions(&globs, true).map_or(true, |(_, negatives)| {
-                negatives
-                    .iter()
-                    .any(|negative| negative.has_suffix_category())
-            });
+    /// A task's recorded reads of tracked files: an ordinary fileset of
+    /// `project`'s files, or of the workspace's when no project owns them.
+    fn recorded_file_set(project: Option<&str>, globs: Vec<Arc<str>>) -> HashInstruction {
         let globs: Vec<String> = globs.iter().map(|glob| normalize_glob(glob)).collect();
-        match (learned_exclusions, project) {
-            (true, project) => HashInstruction::LearnedFileSet(project.map(str::to_string), globs),
-            (false, Some(project)) => HashInstruction::ProjectFileSet(project.to_string(), globs),
-            (false, None) => HashInstruction::WorkspaceFileSet(
+        match project {
+            Some(project) => HashInstruction::ProjectFileSet(project.to_string(), globs),
+            None => HashInstruction::WorkspaceFileSet(
                 globs
                     .iter()
                     .map(|glob| match glob.strip_prefix('!') {
@@ -796,7 +779,7 @@ impl HashPlanner {
             group.extend(group_exclusions);
             instructions.push(match include_unstable {
                 true => self.disk_file_set(group, true),
-                false => self.recorded_file_set(project, group),
+                false => Self::recorded_file_set(project, group),
             });
         }
         instructions.push(HashInstruction::UltracacheConfiguration(
@@ -1673,19 +1656,16 @@ fn prefixed_cache_key(dep: &str, kind: char, rest: &str) -> String {
 /// Drops groups from the Ultracache configuration that a declared group in
 /// the same plan already hashes, so the files are walked once.
 fn drop_ultracache_duplicates(pool: &InstructionPool, ids: &mut Vec<u32>) {
-    type Key = (Arc<[Arc<str>]>, Vec<String>, bool);
+    type Key = (Arc<[Arc<str>]>, Vec<String>);
     let key = |id: &u32, from_configuration: bool| -> Option<Key> {
         match pool.get(*id).value() {
             HashInstruction::IgnoredFileSet {
                 globs,
                 project_roots,
-                exact_extension_exclusions,
                 from_ultracache,
-            } if *from_ultracache == from_configuration => Some((
-                Arc::clone(globs),
-                project_roots.clone(),
-                *exact_extension_exclusions,
-            )),
+            } if *from_ultracache == from_configuration => {
+                Some((Arc::clone(globs), project_roots.clone()))
+            }
             _ => None,
         }
     };
@@ -2777,7 +2757,6 @@ mod tests {
         let scoped = pool.intern(HashInstruction::IgnoredFileSet {
             globs: vec!["packages/gradle/**/*".into()].into(),
             project_roots: vec!["packages/gradle".into(), "packages/gradle/runner".into()],
-            exact_extension_exclusions: false,
             from_ultracache: false,
         });
         let plans: HashMap<String, Vec<u32>> = [
@@ -3260,7 +3239,6 @@ mod always_tests {
         let group = |globs: &[&str], from_ultracache| HashInstruction::IgnoredFileSet {
             globs: globs.iter().map(|glob| Arc::from(*glob)).collect(),
             project_roots: vec!["libs/app".into()],
-            exact_extension_exclusions: false,
             from_ultracache,
         };
         let declared = pool.intern(group(&["libs/app/fixtures/**"], false));
@@ -3627,9 +3605,7 @@ mod always_tests {
             .filter(|instruction| {
                 matches!(
                     instruction,
-                    HashInstruction::IgnoredFileSet { .. }
-                        | HashInstruction::ProjectFileSet(..)
-                        | HashInstruction::LearnedFileSet(..)
+                    HashInstruction::IgnoredFileSet { .. } | HashInstruction::ProjectFileSet(..)
                 ) || matches!(instruction, HashInstruction::WorkspaceFileSet(globs)
                     if globs.iter().any(|glob| glob.contains("tools")))
             })
@@ -3643,7 +3619,6 @@ mod always_tests {
         let disk = |glob: &str, from_ultracache: bool| HashInstruction::IgnoredFileSet {
             globs: vec![glob.into()].into(),
             project_roots: vec!["libs/e2e".into()],
-            exact_extension_exclusions: false,
             from_ultracache,
         };
         // A read no project owns is a workspace fileset. The declared
@@ -3671,35 +3646,18 @@ mod always_tests {
     }
 
     #[test]
-    fn a_learned_extension_exclusion_keeps_its_meaning_in_a_recorded_fileset() {
+    fn a_recorded_exclusion_stays_in_the_fileset_of_the_reads_it_trims() {
         let planner = planner(vec![("e2e:e2e", vec![])], &[]);
-        let recorded = |reads: &[&str]| -> Vec<HashInstruction> {
-            recorded_e2e_plan_reading(&planner, reads)
+        let recorded: Vec<HashInstruction> =
+            recorded_e2e_plan_reading(&planner, &["libs/e2e/**/*.ts", "!libs/e2e/src/**/*.ts"])
                 .into_iter()
-                .filter(|instruction| {
-                    matches!(
-                        instruction,
-                        HashInstruction::ProjectFileSet(..) | HashInstruction::LearnedFileSet(..)
-                    )
-                })
-                .collect()
-        };
+                .filter(|instruction| matches!(instruction, HashInstruction::ProjectFileSet(..)))
+                .collect();
         assert_eq!(
-            recorded(&["libs/e2e/**/*.ts", "!libs/e2e/src/**/*.ts"]),
-            vec![HashInstruction::LearnedFileSet(
-                Some("e2e".into()),
-                vec!["libs/e2e/**/*.ts".into(), "!libs/e2e/src/**/*.ts".into()]
-            )]
-        );
-        // An exclusion a glob set matches the same way needs nothing special.
-        assert_eq!(
-            recorded(&["libs/e2e/**/*.ts", "!libs/e2e/src/generated.ts"]),
+            recorded,
             vec![HashInstruction::ProjectFileSet(
                 "e2e".into(),
-                vec![
-                    "libs/e2e/**/*.ts".into(),
-                    "!libs/e2e/src/generated.ts".into()
-                ]
+                vec!["libs/e2e/**/*.ts".into(), "!libs/e2e/src/**/*.ts".into()]
             )]
         );
     }
@@ -3765,7 +3723,6 @@ mod always_tests {
                 ]
                 .into(),
                 project_roots: vec!["libs/app".into()],
-                exact_extension_exclusions: false,
                 from_ultracache: false,
             }]
         );
@@ -4279,7 +4236,7 @@ mod nested_project_tests {
 
     #[test]
     fn a_recording_hashes_a_nested_project_only_through_its_own_globs() {
-        use crate::native::tasks::hashers::{Source, expand_globs_with_exclusions};
+        use crate::native::tasks::hashers::{Source, expand_globs};
         use crate::native::test_utils::ultracache_configurations;
         use assert_fs::TempDir;
         use assert_fs::prelude::*;
@@ -4315,15 +4272,13 @@ mod nested_project_tests {
                 HashInstruction::IgnoredFileSet {
                     globs,
                     project_roots,
-                    exact_extension_exclusions,
                     ..
                 } => Some(
-                    expand_globs_with_exclusions(
+                    expand_globs(
                         temp.path(),
                         globs,
                         project_roots,
                         &Source::fileset_from_disk(temp.path()),
-                        *exact_extension_exclusions,
                     )
                     .unwrap()
                     .files,

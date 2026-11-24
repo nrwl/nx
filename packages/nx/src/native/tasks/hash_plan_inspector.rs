@@ -1,7 +1,7 @@
 use crate::native::tasks::hashers::{
     ProjectFileIndicesCache, Source, WorkspaceFileIndex, collect_json_input_files,
-    collect_project_file_paths_cached, collect_workspace_file_paths, expand_globs_with_exclusions,
-    hash_learned_files, resolve_task_output_files,
+    collect_project_file_paths_cached, collect_workspace_file_paths, expand_globs,
+    resolve_task_output_files,
 };
 use crate::native::tasks::task_hasher::{HashInputs, HashInputsBuilder};
 use crate::native::tasks::types::{HashInstruction, HashPlans};
@@ -62,7 +62,6 @@ impl HashPlanInspector {
                     // File-set instructions: resolve to actual file paths
                     HashInstruction::WorkspaceFileSet(_)
                     | HashInstruction::ProjectFileSet(_, _)
-                    | HashInstruction::LearnedFileSet(..)
                     | HashInstruction::IgnoredFileSet { .. } => {
                         let builder = self
                             .resolve_instruction_inputs(instruction, &project_file_indices_cache)?;
@@ -146,19 +145,6 @@ impl HashPlanInspector {
                     ..Default::default()
                 })
             }
-            HashInstruction::LearnedFileSet(project_name, globs) => {
-                let (_, files) = hash_learned_files(
-                    project_name.as_deref(),
-                    globs,
-                    &self.project_file_map,
-                    &self.all_workspace_files,
-                    true,
-                )?;
-                Ok(HashInputsBuilder {
-                    files: files.into_iter().collect(),
-                    ..Default::default()
-                })
-            }
             HashInstruction::ProjectFileSet(project_name, file_sets) => {
                 let files = collect_project_file_paths_cached(
                     project_name,
@@ -174,11 +160,10 @@ impl HashPlanInspector {
             HashInstruction::IgnoredFileSet {
                 globs,
                 project_roots,
-                exact_extension_exclusions,
                 ..
             } => {
                 let workspace_root = std::path::Path::new(&self.workspace_root);
-                let files = expand_globs_with_exclusions(
+                let files = expand_globs(
                     workspace_root,
                     globs,
                     project_roots,
@@ -186,7 +171,6 @@ impl HashPlanInspector {
                         &|path| self.tracked.tracks(path),
                         workspace_root,
                     ),
-                    *exact_extension_exclusions,
                 )?
                 .files;
                 Ok(HashInputsBuilder {

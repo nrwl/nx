@@ -20,11 +20,10 @@ use crate::native::{
         FilesExpansion, FilesExpansionCache, JsonHashResult, ProjectFileIndicesCache,
         ProjectFileSetCache, Source, WorkspaceFileIndex, WorkspaceFileIndicesCache,
         WorkspaceFileSetCache, collect_project_file_paths_cached,
-        collect_workspace_file_paths_cached, expand_cached, expand_globs_with_exclusions,
-        expand_task_outputs, file_hashes, fold_file_hashes, hash_all_externals, hash_external,
-        hash_files, hash_json_files, hash_learned_files, hash_project_config,
-        hash_project_files_cached, hash_task_output, hash_tsconfig_selectively,
-        hash_workspace_files_cached, output_prefixes,
+        collect_workspace_file_paths_cached, expand_cached, expand_globs, expand_task_outputs,
+        file_hashes, fold_file_hashes, hash_all_externals, hash_external, hash_files,
+        hash_json_files, hash_project_config, hash_project_files_cached, hash_task_output,
+        hash_tsconfig_selectively, hash_workspace_files_cached, output_prefixes,
     },
     types::FileData,
     walker::PathPredicate,
@@ -404,7 +403,6 @@ impl TaskHasher {
         id: u32,
         globs: &[Arc<str>],
         project_roots: &[String],
-        exact_extension_exclusions: bool,
         files_expansion_cache: &FilesExpansionCache,
         run_stage: RunStage,
     ) -> anyhow::Result<Arc<FilesExpansion>> {
@@ -421,7 +419,7 @@ impl TaskHasher {
             )
         };
         expand_cached(&format!("files#{id}"), files_expansion_cache, || {
-            expand_globs_with_exclusions(
+            expand_globs(
                 workspace_root,
                 globs,
                 project_roots,
@@ -429,7 +427,6 @@ impl TaskHasher {
                     &|path| run_stage.nothing_ran() && self.workspace_tracks_file(path),
                     list_directory,
                 ),
-                exact_extension_exclusions,
             )
         })
     }
@@ -451,17 +448,11 @@ impl TaskHasher {
                 HashInstruction::IgnoredFileSet {
                     globs,
                     project_roots,
-                    exact_extension_exclusions,
                     from_ultracache: true,
-                } => Some((
-                    id,
-                    globs.clone(),
-                    project_roots.clone(),
-                    *exact_extension_exclusions,
-                )),
+                } => Some((id, globs.clone(), project_roots.clone())),
                 _ => None,
             })
-            .map(|(id, globs, project_roots, exact_extension_exclusions)| {
+            .map(|(id, globs, project_roots)| {
                 if let Some(cached) = caches.group_files.get(&id) {
                     return Ok(Arc::clone(&cached));
                 }
@@ -469,7 +460,6 @@ impl TaskHasher {
                     id,
                     &globs,
                     &project_roots,
-                    exact_extension_exclusions,
                     files_expansion_cache,
                     run_stage,
                 )?;
@@ -510,13 +500,11 @@ impl TaskHasher {
                     HashInstruction::IgnoredFileSet {
                         globs,
                         project_roots,
-                        exact_extension_exclusions,
                         ..
                     } => self.expand_ignored_files(
                         id,
                         &globs,
                         &project_roots,
-                        exact_extension_exclusions,
                         files_expansion_cache,
                         run_stage,
                     )?,
@@ -759,7 +747,6 @@ impl TaskHasher {
                 HashInstruction::WorkspaceFileSet(_)
                 | HashInstruction::Cwd(_)
                 | HashInstruction::ProjectFileSet(_, _)
-                | HashInstruction::LearnedFileSet(..)
                 | HashInstruction::IgnoredFileSet { .. }
                 | HashInstruction::ProjectConfiguration(_)
                 | HashInstruction::TsConfiguration(_)
@@ -1019,14 +1006,12 @@ impl TaskHasher {
             HashInstruction::IgnoredFileSet {
                 globs,
                 project_roots,
-                exact_extension_exclusions,
                 ..
             } => {
                 let expansion = self.expand_ignored_files(
                     id,
                     globs,
                     project_roots,
-                    *exact_extension_exclusions,
                     files_expansion_cache,
                     run_stage,
                 )?;
@@ -1047,20 +1032,6 @@ impl TaskHasher {
                     empty
                 };
                 (hashed, inputs)
-            }
-            HashInstruction::LearnedFileSet(project_name, globs) => {
-                let (hash, files) = hash_learned_files(
-                    project_name.as_deref(),
-                    globs,
-                    &self.project_file_map,
-                    &self.all_workspace_files,
-                    collect_inputs,
-                )?;
-                let inputs = HashInputsBuilder {
-                    files: files.into_iter().collect(),
-                    ..Default::default()
-                };
-                (hash, inputs)
             }
             HashInstruction::ProjectFileSet(project_name, file_sets) => {
                 let hashed = hash_project_files_cached(
@@ -1465,7 +1436,6 @@ mod tests {
         HashInstruction::IgnoredFileSet {
             globs: globs.iter().map(|glob| Arc::from(*glob)).collect(),
             project_roots: Vec::new(),
-            exact_extension_exclusions: false,
             from_ultracache: true,
         }
     }
