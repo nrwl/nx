@@ -1136,46 +1136,12 @@ function getInputs(
           );
         }
       });
-      const normalize = (p: string) => (p.startsWith('./') ? p.slice(2) : p);
-      // Static (non-glob) prefix of a spec, used for subtree coverage checks.
-      const staticPrefix = (p: string): string => {
-        const segments = normalize(p).split('/');
-        const firstGlobSegment = segments.findIndex((s) => /[*?]/.test(s));
-        return firstGlobSegment === -1
-          ? segments.join('/')
-          : segments.slice(0, firstGlobSegment).join('/');
-      };
-      // A non-glob include spec (an implicit directory glob like "." or "src",
-      // or a literal file path) covers an exclude spec if the exclude's static
-      // prefix falls within the include's subtree.
-      const includeCoversExclude = (
-        includePath: string,
-        excludePath: string
-      ): boolean => {
-        if (/[*?]/.test(includePath)) {
-          return false;
-        }
-        const rel = relative(
-          resolve(absoluteProjectRoot, normalize(includePath)),
-          resolve(absoluteProjectRoot, staticPrefix(excludePath))
-        );
-        return !rel.startsWith('..') && !isAbsolute(rel);
-      };
       tsconfig.raw.exclude.forEach((e: string) => {
         const excludePath = substituteConfigDir(e);
-        const normalizedExclude = normalize(excludePath);
-        const excludeMatcher = getOrCreateMatcher(normalizedExclude);
-
         if (
-          !otherFilesInclude.some((includePath) => {
-            const normalizedInclude = normalize(includePath);
-            const includeMatcher = getOrCreateMatcher(normalizedInclude);
-            return (
-              excludeMatcher(normalizedInclude) ||
-              includeMatcher(normalizedExclude) ||
-              includeCoversExclude(includePath, excludePath)
-            );
-          })
+          !otherFilesInclude.some((includePath) =>
+            excludeOverlapsInclude(includePath, excludePath, getOrCreateMatcher)
+          )
         ) {
           // TS treats an implicit-glob exclude like "dist" as excluding the
           // whole subtree, so emit it as "dist/**/*".
@@ -1276,7 +1242,8 @@ function getInputs(
     // No task emits the declarations of a referenced project that is not
     // built, so the `dependentTasksOutputFiles` input above never sees them.
     // `tsc --build` compiles that project itself, so its sources are inputs.
-    const sourceInputs = new Set<string>();
+    const refFilesets: { owner: string; path: string; negative: boolean }[] =
+      [];
     for (const ref of externalRefs.references) {
       if (
         ref.ownerProject.normalized === config.project.normalized ||
@@ -1290,24 +1257,29 @@ function getInputs(
         cache
       );
       const refDir = dirname(ref.configPath);
-      const toInput = (spec: string) =>
-        `{workspaceRoot}/${joinPathFragments(
+      const toPath = (spec: string) =>
+        joinPathFragments(
           posixRelative(workspaceRoot, refDir),
           substituteConfigDir(spec)
-        )}`;
+        );
+      const owner = ref.configPath;
       // TS includes everything under the config's directory by default.
       const include: string[] =
         refTsConfig.raw?.include ?? (refTsConfig.raw?.files ? [] : ['.']);
       for (const spec of [...include, ...(refTsConfig.raw?.files ?? [])]) {
         for (const input of normalizeInput(spec, refTsConfig, refDir, true)) {
-          sourceInputs.add(toInput(input));
+          refFilesets.push({ owner, path: toPath(input), negative: false });
         }
       }
       if (refTsConfig.raw?.exclude) {
         for (const spec of refTsConfig.raw.exclude) {
-          sourceInputs.add(
-            `!${toInput(isImplicitGlobSpec(spec, refDir) ? `${spec}/**/*` : spec)}`
-          );
+          refFilesets.push({
+            negative: true,
+            owner,
+            path: toPath(
+              isImplicitGlobSpec(spec, refDir) ? `${spec}/**/*` : spec
+            ),
+          });
         }
       } else {
         // TS leaves its output directories out unless `exclude` is set.
@@ -1316,9 +1288,36 @@ function getInputs(
           refTsConfig.options.declarationDir,
         ]) {
           if (dir) {
-            sourceInputs.add(`!${toInput(`${relative(refDir, dir)}/**/*`)}`);
+            refFilesets.push({
+              negative: true,
+              owner,
+              path: toPath(`${relative(refDir, dir)}/**/*`),
+            });
           }
         }
+      }
+    }
+    // A negative filters every fileset in its group, so drop one that could
+    // remove a file another config hashes (as for the project's own excludes).
+    const consumerPositives = inputs.flatMap((input) =>
+      workspaceRelativeFileset(input, config.project.root)
+    );
+    const otherPositives = (owner: string) => [
+      ...consumerPositives,
+      ...refFilesets
+        .filter((f) => !f.negative && f.owner !== owner)
+        .map((f) => f.path),
+    ];
+    const sourceInputs = new Set<string>();
+    for (const { owner, path, negative } of refFilesets) {
+      if (!negative) {
+        sourceInputs.add(`{workspaceRoot}/${path}`);
+      } else if (
+        !otherPositives(owner).some((include) =>
+          excludeOverlapsInclude(include, path, getOrCreateMatcher)
+        )
+      ) {
+        sourceInputs.add(`!{workspaceRoot}/${path}`);
       }
     }
     // `always` keeps them in the hash when an Ultracache recording, made
@@ -1520,6 +1519,66 @@ function getTsBuildInfoOutputPath(
     '{projectRoot}',
     `${basename(configPathNoExt)}.tsbuildinfo`
   );
+}
+
+/**
+ * Whether excluding `exclude` could remove a file that `include` hashes. Both
+ * are paths or globs relative to the same directory.
+ */
+function excludeOverlapsInclude(
+  include: string,
+  exclude: string,
+  getMatcher: (pattern: string) => (path: string) => boolean
+): boolean {
+  const normalizedInclude = stripDotSlash(include);
+  const normalizedExclude = stripDotSlash(exclude);
+  if (
+    getMatcher(normalizedExclude)(normalizedInclude) ||
+    getMatcher(normalizedInclude)(normalizedExclude)
+  ) {
+    return true;
+  }
+  // A non-glob include ("src", ".", a file) covers its whole subtree.
+  if (/[*?]/.test(normalizedInclude)) {
+    return false;
+  }
+  const segments = normalizedExclude.split('/');
+  const firstGlobSegment = segments.findIndex((s) => /[*?]/.test(s));
+  const staticPrefix = (
+    firstGlobSegment === -1 ? segments : segments.slice(0, firstGlobSegment)
+  ).join('/');
+  const rel = relative(resolve(normalizedInclude), resolve(staticPrefix));
+  return !rel.startsWith('..') && !isAbsolute(rel);
+}
+
+function stripDotSlash(path: string): string {
+  return path.startsWith('./') ? path.slice(2) : path;
+}
+
+/** A positive fileset input as a workspace-relative path, or none. */
+function workspaceRelativeFileset(
+  input: NonNullable<TargetConfiguration['inputs']>[number],
+  projectRoot: string
+): string[] {
+  const fileset =
+    typeof input === 'string'
+      ? input
+      : 'fileset' in input && !('dependencies' in input)
+        ? input.fileset
+        : undefined;
+  if (!fileset || fileset.startsWith('!') || fileset.startsWith('^')) {
+    return [];
+  }
+  if (fileset.startsWith('{workspaceRoot}/')) {
+    return [fileset.slice('{workspaceRoot}/'.length)];
+  }
+  if (fileset.startsWith('{projectRoot}/')) {
+    return [
+      joinPathFragments(projectRoot, fileset.slice('{projectRoot}/'.length)),
+    ];
+  }
+  // A named input: assume it covers the whole project.
+  return [joinPathFragments(projectRoot, '**/*')];
 }
 
 function pathToInputOrOutput(

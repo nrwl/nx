@@ -6023,6 +6023,76 @@ snapshots:
         ).toEqual([]);
       });
 
+      it("should not let an unbuilt reference's excludes remove inputs other configs need", async () => {
+        configFiles = await applyFilesToTempFsAndContext(tempFs, {
+          'libs/a/tsconfig.json': '{}',
+          'libs/a/tsconfig.lib.json': JSON.stringify({
+            extends: '../b/tsconfig.shared.json',
+            compilerOptions: { outDir: 'dist' },
+            include: ['src/**/*.ts'],
+            references: [
+              { path: '../b/tsconfig.lib.json' },
+              { path: '../c/tsconfig.lib.json' },
+              { path: '../d/tsconfig.lib.json' },
+            ],
+          }),
+          'libs/a/package.json': `{"main": "dist/index.js"}`,
+          // a extends b's shared config, which b's own config excludes
+          'libs/b/tsconfig.json': '{}',
+          'libs/b/tsconfig.shared.json': JSON.stringify({
+            compilerOptions: { strict: true },
+          }),
+          'libs/b/tsconfig.lib.json': JSON.stringify({
+            compilerOptions: { outDir: 'dist' },
+            include: ['src'],
+            exclude: ['tsconfig.shared.json', 'src/**/*.spec.ts'],
+          }),
+          'libs/b/package.json': `{"main": "src/index.ts"}`,
+          // c excludes a file that d includes
+          'libs/c/tsconfig.json': '{}',
+          'libs/c/tsconfig.lib.json': JSON.stringify({
+            compilerOptions: { outDir: 'dist' },
+            include: ['src'],
+            exclude: ['../d/src/generated.ts'],
+          }),
+          'libs/c/package.json': `{"main": "src/index.ts"}`,
+          'libs/d/tsconfig.json': '{}',
+          'libs/d/tsconfig.lib.json': JSON.stringify({
+            compilerOptions: { outDir: 'dist' },
+            include: ['src'],
+          }),
+          'libs/d/package.json': `{"main": "src/index.ts"}`,
+        });
+        const result = await invokeCreateNodesOnMatchingFiles(
+          configFiles,
+          context,
+          { typecheck: false, build: true }
+        );
+
+        for (const project of ['libs/b', 'libs/c', 'libs/d']) {
+          expect(result.projects[project].targets?.build).toBeUndefined();
+        }
+        const filesets = result.projects['libs/a'].targets.build.inputs.map(
+          (input) =>
+            typeof input === 'string'
+              ? input
+              : 'fileset' in input
+                ? input.fileset
+                : undefined
+        );
+        expect(filesets).toContain(
+          '{workspaceRoot}/libs/b/tsconfig.shared.json'
+        );
+        expect(filesets).not.toContain(
+          '!{workspaceRoot}/libs/b/tsconfig.shared.json'
+        );
+        expect(filesets).not.toContain(
+          '!{workspaceRoot}/libs/d/src/generated.ts'
+        );
+        // An exclude inside the reference's own include still applies.
+        expect(filesets).toContain('!{workspaceRoot}/libs/b/src/**/*.spec.ts');
+      });
+
       it('should infer the inputs again when a project deeper in the reference chain stops being built', async () => {
         process.env.NX_CACHE_PROJECT_GRAPH = 'true';
         const lib = (references: string[], main: string) => ({
