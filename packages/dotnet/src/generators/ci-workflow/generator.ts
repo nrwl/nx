@@ -40,7 +40,6 @@ function getCiCommands(ci: Schema['ci']): Command[] {
 export type Command = {
   command?: string;
   comments?: string[];
-  alwaysRun?: boolean;
 };
 
 export interface Schema {
