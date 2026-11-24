@@ -4,17 +4,25 @@ description: Configure authentication for Nx Cloud using a GitLab app
 filter: 'type:Guides'
 ---
 
-Before creating your container, you'll need to create a GitLab app for your organisation.
+Before creating your container, you'll need to create a GitLab OAuth application for your organization.
 
 ## Creating a GitLab app
 
-From GitLab, click on your profile picture and chose "Preferences":
+Create the application in a GitLab group, not under your own profile.
+GitLab deletes a personal application along with the account that owns it,
+and Nx Cloud login stops working.
+Pick a group that several people own, so the application stays when one of them leaves.
 
-![Step 1](../../../../assets/enterprise/single-tenant/gitlab_step_1.png)
+1. Open the group in GitLab.
+1. Go to **Settings** > **Applications**.
+1. Select **Add new application**.
 
-Then "Applications" from the left-hand menu:
+You need the Owner role on the group to add an application.
+On GitLab self-managed, an administrator can instead create an instance-wide application
+under **Admin** > **Applications**.
 
-![Step 2](../../../../assets/enterprise/single-tenant/gitlab_step_2.png)
+The screenshots below were taken on a personal profile.
+The form is the same in a group.
 
 Give the app a name. The authorization callback is the important bit. It needs to be in this form:
 
@@ -42,3 +50,13 @@ Once you create, keep a note of the Client ID and the Secret:
 ## Connect your Nx Cloud installation to your new app
 
 Contact your developer productivity engineer to connect your Nx Cloud instance to the newly created GitLab app.
+
+On a self-hosted Nx Cloud, set these environment variables on the frontend:
+
+- `GITLAB_APP_ID`: the application ID.
+- `GITLAB_APP_SECRET`: the secret.
+- `GITLAB_API_URL`: the URL of your GitLab instance. Set it only when you don't use gitlab.com.
+
+If you recreate the GitLab application,
+update `GITLAB_APP_ID` and `GITLAB_APP_SECRET` with the new values.
+Existing Nx Cloud users keep their accounts, because Nx Cloud matches them by GitLab user ID.
