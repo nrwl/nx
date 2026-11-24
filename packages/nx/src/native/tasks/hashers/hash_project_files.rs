@@ -99,7 +99,7 @@ fn collect_project_file_indices(
     )
 }
 
-fn collect_project_file_indices_cached(
+pub(crate) fn collect_project_file_indices_cached(
     project_name: &str,
     file_sets: &[String],
     project_file_map: &HashMap<String, Vec<FileData>>,

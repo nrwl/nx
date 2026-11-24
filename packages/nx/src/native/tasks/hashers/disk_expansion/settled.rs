@@ -3,6 +3,7 @@
 //! linked directories. An explicit root beyond such a boundary opens its own
 //! subtree, visible only to entries rooted there or deeper.
 
+use std::borrow::Cow;
 use std::collections::{HashMap, HashSet};
 use std::ops::Range;
 use std::path::Path;
@@ -57,16 +58,16 @@ struct Group {
     output_filter: Option<Arc<NxGlobSet>>,
 }
 
-struct File {
+struct File<'a> {
     path: String,
     // Length of the widest requested root whose walk can see this file.
     visible_from: usize,
-    hash: Option<String>,
+    hash: Option<Cow<'a, str>>,
 }
 
-pub(crate) struct SettledFiles(Vec<File>);
+pub(crate) struct SettledFiles<'a>(Vec<File<'a>>);
 
-impl SettledFiles {
+impl SettledFiles<'_> {
     fn inventory(workspace_root: &Path, roots: HashSet<&str>) -> Result<Self> {
         let ignores = DiskWalkIgnores::new()?;
         let mut roots = Vec::from_iter(roots);
@@ -116,7 +117,7 @@ impl SettledFiles {
                 }
             }
         }
-        let mut files: Vec<File> = files
+        let mut files: Vec<_> = files
             .into_iter()
             .map(|(path, visible_from)| File {
                 path,
@@ -215,7 +216,7 @@ impl SettledFiles {
     pub(crate) fn fold(&self, ids: &[u32]) -> String {
         fold_file_hashes(ids.iter().filter_map(|&id| {
             let file = &self.0[id as usize];
-            Some((&file.path, file.hash.as_ref()?))
+            Some((file.path.as_str(), file.hash.as_deref()?))
         }))
     }
 }
@@ -232,13 +233,13 @@ fn hash_stream(
 }
 
 /// Sorted file IDs per disk instruction. IDs order like the workspace-relative paths.
-pub(crate) struct SettledGroups {
-    pub(crate) files: SettledFiles,
+pub(crate) struct SettledGroups<'a> {
+    pub(crate) files: SettledFiles<'a>,
     pub(crate) groups: Vec<Option<Vec<u32>>>,
 }
 
-impl SettledGroups {
-    pub(crate) fn new<'a>(
+impl<'a> SettledGroups<'a> {
+    pub(crate) fn new(
         workspace_root: &Path,
         plans: &HashPlans,
         used: &[bool],
@@ -323,7 +324,7 @@ impl SettledGroups {
                 && !prehashed.contains_key(file.file.as_str())
                 && proof.is_none_or(|p| p.still_matches(index, &workspace_root.join(&file.file)))
             {
-                files.0[i].hash = Some(file.hash.clone());
+                files.0[i].hash = Some(Cow::Borrowed(&file.hash));
                 needed[i] = false;
             }
         }
@@ -346,7 +347,8 @@ impl SettledGroups {
                     } else {
                         let path = workspace_root.join(&file.path);
                         hash_stream(&path, buffer, budget)?
-                    };
+                    }
+                    .map(Cow::Owned);
                 }
                 Ok::<_, anyhow::Error>(())
             },

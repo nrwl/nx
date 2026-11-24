@@ -12,6 +12,26 @@ pub(crate) struct RehashReadBudget {
 }
 
 impl RehashReadBudget {
+    /// Return unused pages of Nx's native allocator between a budgeted batch's
+    /// planning, disk hashing and JS finalization. Its normal decay interval
+    /// can keep all three phases' scratch memory resident for the entire run.
+    pub(crate) fn release_unused_pages(&self) {
+        #[cfg(any(target_os = "linux", target_os = "macos"))]
+        if self.remaining.is_some() {
+            // jemalloc's MALLCTL_ARENAS_ALL is 4096. This write-only command
+            // takes no arguments and only releases unused allocator pages.
+            unsafe {
+                tikv_jemalloc_sys::mallctl(
+                    c"arena.4096.purge".as_ptr(),
+                    std::ptr::null_mut(),
+                    std::ptr::null_mut(),
+                    std::ptr::null_mut(),
+                    0,
+                );
+            }
+        }
+    }
+
     pub(crate) fn new(bytes: Option<i64>) -> Result<Self> {
         Ok(Self {
             remaining: bytes

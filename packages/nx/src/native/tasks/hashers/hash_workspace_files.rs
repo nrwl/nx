@@ -165,7 +165,7 @@ fn collect_workspace_file_indices(
         .collect())
 }
 
-fn collect_workspace_file_indices_cached(
+pub(crate) fn collect_workspace_file_indices_cached(
     workspace_file_sets: &[String],
     all_workspace_files: &[FileData],
     cache: &WorkspaceFileIndicesCache,

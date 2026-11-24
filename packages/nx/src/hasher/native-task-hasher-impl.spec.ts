@@ -1607,6 +1607,35 @@ describe('native task hasher', () => {
     expect(child.hash).toEqual('hash');
   });
 
+  it('filters declared project and workspace files after hashing their full selection', async () => {
+    const { taskGraph, impl } = await upfrontFixture();
+    const task = taskGraph.tasks['child:compile'];
+    const envs = { [task.id]: {} };
+    const [ordinary] = await impl.hashTasks(
+      [task],
+      taskGraph,
+      envs,
+      tempFs.tempDir,
+      true
+    );
+    const tracked = ['libs/child/src/index.ts'];
+    expect(ordinary.inputs.files).toContain(tracked[0]);
+    const [settled] = impl.hashTasksForRehash(
+      [task],
+      taskGraph,
+      envs,
+      tempFs.tempDir,
+      undefined,
+      tracked
+    );
+    expect(settled).toEqual({
+      value: ordinary.value,
+      mutableInputs: ordinary.inputs.files
+        .filter((path) => !tracked.includes(path))
+        .sort(),
+    });
+  });
+
   it('rehashes in task order with only mutable file and dependency-output evidence', async () => {
     const { taskGraph, impl } = await upfrontFixture();
     const child = taskGraph.tasks['child:compile'];

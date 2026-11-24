@@ -22,8 +22,8 @@ pub use hash_ignored_files::*;
 pub use hash_json::*;
 pub use hash_project_config::*;
 pub(crate) use hash_project_files::{
-    ProjectFileIndicesCache, ProjectFileSetCache, collect_project_file_paths_cached,
-    hash_project_files_cached,
+    ProjectFileIndicesCache, ProjectFileSetCache, collect_project_file_indices_cached,
+    collect_project_file_paths_cached, hash_project_files_cached,
 };
 pub use hash_project_files::{
     collect_project_file_paths, collect_project_files, hash_project_files,

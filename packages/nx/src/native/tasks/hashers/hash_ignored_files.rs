@@ -34,7 +34,11 @@ pub(crate) fn hash_files(
     stage: RunStage,
 ) -> String {
     let files = file_hashes(workspace_root, expansion, known, index, stage);
-    fold_file_hashes(files.iter().map(|(file, hash)| (file, hash)))
+    fold_file_hashes(
+        files
+            .iter()
+            .map(|(file, hash)| (file.as_str(), hash.as_str())),
+    )
 }
 
 /// `hash_files` before the fold: each existing file with its content hash, in
@@ -57,9 +61,7 @@ pub(crate) fn file_hashes(
         .collect()
 }
 
-pub(crate) fn fold_file_hashes<'a>(
-    files: impl IntoIterator<Item = (&'a String, &'a String)>,
-) -> String {
+pub(crate) fn fold_file_hashes<'a>(files: impl IntoIterator<Item = (&'a str, &'a str)>) -> String {
     let mut hasher = xxh3::Xxh3::new();
     for (file, hash) in files {
         hasher.update(file.as_bytes());

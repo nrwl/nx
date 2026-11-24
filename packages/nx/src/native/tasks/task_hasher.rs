@@ -1279,7 +1279,10 @@ fn fold_recorded_files(
         .filter(|(file, _)| !covered.iter().any(|files| files.contains(file)))
         .map(|(file, hash)| (file, hash))
         .collect();
-    let folded = fold_file_hashes(kept.iter().map(|(file, hash)| (*file, *hash)));
+    let folded = fold_file_hashes(
+        kept.iter()
+            .map(|(file, hash)| (file.as_str(), hash.as_str())),
+    );
     let paths = if collect_inputs {
         kept.into_keys().cloned().collect()
     } else {

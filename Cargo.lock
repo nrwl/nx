@@ -2486,6 +2486,7 @@ dependencies = [
  "tempfile",
  "terminal-colorsaurus",
  "thiserror 1.0.69",
+ "tikv-jemalloc-sys",
  "tikv-jemallocator",
  "tokio",
  "tokio-util",

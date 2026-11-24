@@ -260,8 +260,9 @@ pub(crate) const ALWAYS_ON_WORKSPACE_FILES: [&str; 3] = [
 /// instead of once per task that references it.
 #[derive(Default)]
 pub struct InstructionPool {
-    ids: DashMap<HashInstruction, u32>,
-    items: DashMap<u32, HashInstruction>,
+    // Both lookup directions refer to the same instruction and its owned inputs.
+    ids: DashMap<Arc<HashInstruction>, u32>,
+    items: DashMap<u32, Arc<HashInstruction>>,
     /// Split brace alternatives, declared globs and records from different
     /// handles can all produce the same text in otherwise distinct groups.
     disk_globs: DashMap<Arc<str>, ()>,
@@ -295,7 +296,7 @@ impl InstructionPool {
                     .clone();
             }
         }
-        match self.ids.entry(instruction) {
+        match self.ids.entry(Arc::new(instruction)) {
             dashmap::mapref::entry::Entry::Occupied(existing) => *existing.get(),
             dashmap::mapref::entry::Entry::Vacant(vacant) => {
                 let id = self.next_id.fetch_add(1, Ordering::Relaxed);
@@ -335,10 +336,14 @@ impl InstructionPool {
         }
     }
 
-    pub fn get(&self, id: u32) -> dashmap::mapref::one::Ref<'_, u32, HashInstruction> {
+    pub fn get(
+        &self,
+        id: u32,
+    ) -> dashmap::mapref::one::MappedRef<'_, u32, Arc<HashInstruction>, HashInstruction> {
         self.items
             .get(&id)
             .expect("instruction ids are only handed out by intern()")
+            .map(Arc::as_ref)
     }
 
     pub fn label(&self, id: u32) -> Arc<str> {

@@ -1,6 +1,10 @@
 use super::*;
-use crate::native::tasks::hashers::{RehashReadBudget, SettledGroups};
+use crate::native::tasks::hashers::{
+    RehashReadBudget, SettledGroups, collect_project_file_indices_cached,
+    collect_workspace_file_indices_cached,
+};
 use crate::native::tasks::id_set::IdSet;
+use crate::native::types::FileData;
 
 #[napi(object)]
 pub struct RehashResult {
@@ -81,15 +85,19 @@ impl TaskHasher {
         if !tracked.is_sorted() {
             tracked.sort_unstable();
         }
-        self.rehash(
+        let budget = RehashReadBudget::new(max_live_read_bytes)?;
+        budget.release_unused_pages();
+        let results = self.rehash(
             plans,
             &task_ids,
             &envs,
             &cwd,
             &tracked,
             file_map_matches_tracked_files.unwrap_or(false),
-            &RehashReadBudget::new(max_live_read_bytes)?,
-        )
+            &budget,
+        );
+        budget.release_unused_pages();
+        results
     }
 }
 
@@ -192,6 +200,14 @@ impl TaskHasher {
         // Disk groups and non-env instructions are independent of the task.
         // Keep their values once, and only the IO evidence the caller needs.
         let empty_env = HashMap::new();
+        let mutable_paths = |indices: &[u32], files: &[FileData]| {
+            indices
+                .iter()
+                .map(|&i| &files[i as usize].file)
+                .filter(|path| !is_tracked(path))
+                .cloned()
+                .collect()
+        };
         let values = used
             .par_iter()
             .enumerate()
@@ -219,20 +235,36 @@ impl TaskHasher {
                     _ => {
                         let collect = matches!(
                             &*instruction,
-                            HashInstruction::WorkspaceFileSet(_)
-                                | HashInstruction::ProjectFileSet(..)
-                                | HashInstruction::JsonFileSet(_)
-                                | HashInstruction::TsConfiguration(_)
+                            HashInstruction::JsonFileSet(_) | HashInstruction::TsConfiguration(_)
                         );
                         let (hash, inputs) = ordinary("", id, &instruction, &empty_env, collect)?;
-                        (
-                            hash,
-                            inputs
+                        // Matched indices point into the immutable file map. Copy only
+                        // the paths needed for evidence, even for workspace-wide inputs.
+                        let mutable_inputs = match &*instruction {
+                            HashInstruction::WorkspaceFileSet(globs) => {
+                                let indices = collect_workspace_file_indices_cached(
+                                    globs,
+                                    &self.all_workspace_files,
+                                    &self.workspace_file_indices_cache,
+                                )?;
+                                mutable_paths(&indices, &self.all_workspace_files)
+                            }
+                            HashInstruction::ProjectFileSet(project, globs) => {
+                                let indices = collect_project_file_indices_cached(
+                                    project,
+                                    globs,
+                                    &self.project_file_map,
+                                    &self.project_file_indices_cache,
+                                )?;
+                                mutable_paths(&indices, &self.project_file_map[project])
+                            }
+                            _ => inputs
                                 .files
                                 .into_iter()
                                 .filter(|p| !is_tracked(p))
                                 .collect(),
-                        )
+                        };
+                        (hash, mutable_inputs)
                     }
                 };
                 Ok(Some(InstructionValue {
