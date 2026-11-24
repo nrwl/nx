@@ -22,8 +22,9 @@ use crate::native::{
         WorkspaceFileSetCache, collect_project_file_paths_cached,
         collect_workspace_file_paths_cached, expand_cached, expand_globs_with_exclusions,
         expand_task_outputs, file_hashes, fold_file_hashes, hash_all_externals, hash_external,
-        hash_files, hash_json_files, hash_project_config, hash_project_files_cached,
-        hash_task_output, hash_tsconfig_selectively, hash_workspace_files_cached, output_prefixes,
+        hash_files, hash_json_files, hash_learned_files, hash_project_config,
+        hash_project_files_cached, hash_task_output, hash_tsconfig_selectively,
+        hash_workspace_files_cached, output_prefixes,
     },
     types::FileData,
     walker::PathPredicate,
@@ -362,16 +363,15 @@ impl TaskHasher {
         let mut output_roots: Vec<String> = Vec::new();
         for id in 0..pool.len() as u32 {
             match pool.get(id).value() {
-                HashInstruction::IgnoredFileSet {
-                    globs,
-                    tracked_only: false,
-                    ..
-                } => prefixes.extend(globs.iter().filter(|g| !g.starts_with('!')).filter_map(
-                    |g| {
-                        let glob = normalize_glob(g);
-                        Some(partition_glob(&glob).0)
-                    },
-                )),
+                HashInstruction::IgnoredFileSet { globs, .. } => prefixes.extend(
+                    globs
+                        .iter()
+                        .filter(|g| !g.starts_with('!'))
+                        .filter_map(|g| {
+                            let glob = normalize_glob(g);
+                            Some(partition_glob(&glob).0)
+                        }),
+                ),
                 HashInstruction::TaskOutput(_, outputs) => {
                     output_roots.extend(output_prefixes(outputs))
                 }
@@ -405,25 +405,10 @@ impl TaskHasher {
         globs: &[Arc<str>],
         project_roots: &[String],
         exact_extension_exclusions: bool,
-        tracked_only: bool,
         files_expansion_cache: &FilesExpansionCache,
         run_stage: RunStage,
     ) -> anyhow::Result<Arc<FilesExpansion>> {
         let workspace_root = Path::new(&self.workspace_root);
-        if tracked_only {
-            let index = &self.workspace_file_index;
-            return expand_cached(&format!("files#{id}"), files_expansion_cache, || {
-                expand_globs_with_exclusions(
-                    workspace_root,
-                    globs,
-                    project_roots,
-                    &Source::tracked_fileset(&|path| index.tracks(path), |dir, accept, _| {
-                        Some(index.files_under(dir, accept))
-                    }),
-                    exact_extension_exclusions,
-                )
-            });
-        }
         // The index answers from a listing it keeps only while nothing has
         // run, like the file map; afterwards it reads the disk for us.
         let list_directory = |dir: &str, accept: PathPredicate, skip: &[String]| {
@@ -468,41 +453,36 @@ impl TaskHasher {
                     project_roots,
                     exact_extension_exclusions,
                     from_ultracache: true,
-                    tracked_only,
                 } => Some((
                     id,
                     globs.clone(),
                     project_roots.clone(),
                     *exact_extension_exclusions,
-                    *tracked_only,
                 )),
                 _ => None,
             })
-            .map(
-                |(id, globs, project_roots, exact_extension_exclusions, tracked_only)| {
-                    if let Some(cached) = caches.group_files.get(&id) {
-                        return Ok(Arc::clone(&cached));
-                    }
-                    let expansion = self.expand_ignored_files(
-                        id,
-                        &globs,
-                        &project_roots,
-                        exact_extension_exclusions,
-                        tracked_only,
-                        files_expansion_cache,
-                        run_stage,
-                    )?;
-                    let hashed = Arc::new(file_hashes(
-                        workspace_root,
-                        &expansion,
-                        |path| self.known_file_hash(path, run_stage),
-                        self.ignored_index.index(),
-                        run_stage,
-                    ));
-                    caches.group_files.insert(id, Arc::clone(&hashed));
-                    Ok(hashed)
-                },
-            )
+            .map(|(id, globs, project_roots, exact_extension_exclusions)| {
+                if let Some(cached) = caches.group_files.get(&id) {
+                    return Ok(Arc::clone(&cached));
+                }
+                let expansion = self.expand_ignored_files(
+                    id,
+                    &globs,
+                    &project_roots,
+                    exact_extension_exclusions,
+                    files_expansion_cache,
+                    run_stage,
+                )?;
+                let hashed = Arc::new(file_hashes(
+                    workspace_root,
+                    &expansion,
+                    |path| self.known_file_hash(path, run_stage),
+                    self.ignored_index.index(),
+                    run_stage,
+                ));
+                caches.group_files.insert(id, Arc::clone(&hashed));
+                Ok(hashed)
+            })
             .collect::<anyhow::Result<Vec<_>>>()?;
         let covered = ids
             .par_iter()
@@ -512,7 +492,6 @@ impl TaskHasher {
                     HashInstruction::TaskOutput(..)
                         | HashInstruction::IgnoredFileSet {
                             from_ultracache: false,
-                            tracked_only: false,
                             ..
                         }
                 )
@@ -532,14 +511,12 @@ impl TaskHasher {
                         globs,
                         project_roots,
                         exact_extension_exclusions,
-                        tracked_only,
                         ..
                     } => self.expand_ignored_files(
                         id,
                         &globs,
                         &project_roots,
                         exact_extension_exclusions,
-                        tracked_only,
                         files_expansion_cache,
                         run_stage,
                     )?,
@@ -782,6 +759,7 @@ impl TaskHasher {
                 HashInstruction::WorkspaceFileSet(_)
                 | HashInstruction::Cwd(_)
                 | HashInstruction::ProjectFileSet(_, _)
+                | HashInstruction::LearnedFileSet(..)
                 | HashInstruction::IgnoredFileSet { .. }
                 | HashInstruction::ProjectConfiguration(_)
                 | HashInstruction::TsConfiguration(_)
@@ -1042,7 +1020,6 @@ impl TaskHasher {
                 globs,
                 project_roots,
                 exact_extension_exclusions,
-                tracked_only,
                 ..
             } => {
                 let expansion = self.expand_ignored_files(
@@ -1050,7 +1027,6 @@ impl TaskHasher {
                     globs,
                     project_roots,
                     *exact_extension_exclusions,
-                    *tracked_only,
                     files_expansion_cache,
                     run_stage,
                 )?;
@@ -1071,6 +1047,20 @@ impl TaskHasher {
                     empty
                 };
                 (hashed, inputs)
+            }
+            HashInstruction::LearnedFileSet(project_name, globs) => {
+                let (hash, files) = hash_learned_files(
+                    project_name.as_deref(),
+                    globs,
+                    &self.project_file_map,
+                    &self.all_workspace_files,
+                    collect_inputs,
+                )?;
+                let inputs = HashInputsBuilder {
+                    files: files.into_iter().collect(),
+                    ..Default::default()
+                };
+                (hash, inputs)
             }
             HashInstruction::ProjectFileSet(project_name, file_sets) => {
                 let hashed = hash_project_files_cached(
@@ -1477,7 +1467,6 @@ mod tests {
             project_roots: Vec::new(),
             exact_extension_exclusions: false,
             from_ultracache: true,
-            tracked_only: false,
         }
     }
 

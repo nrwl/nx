@@ -433,6 +433,9 @@ fn instruction_matches_detail(
         HashInstruction::ProjectFileSet(project, file_sets) => {
             collect(file_sets, Some(project), &[], false).map(of_files)
         }
+        HashInstruction::LearnedFileSet(project, globs) => {
+            collect(globs, project.as_deref(), &[], true).map(of_files)
+        }
         HashInstruction::IgnoredFileSet {
             globs,
             project_roots,
@@ -921,6 +924,26 @@ mod tests {
     }
 
     #[test]
+    fn a_learned_fileset_keeps_compound_suffix_changes_affected() {
+        let g = graph(&[("a", "libs/a"), ("b", "libs/b")]);
+        let learned = |project: Option<&str>| {
+            HashInstruction::LearnedFileSet(
+                project.map(str::to_string),
+                strings(&["libs/**/*.ts", "!libs/a/src/**/*.ts"]),
+            )
+        };
+        let touched = |project, file: &str| touched_for(&g, vec![learned(project)], &[file]);
+        assert_eq!(
+            touched(Some("a"), "libs/a/src/cat.spec.ts"),
+            vec!["a:build"]
+        );
+        assert!(touched(Some("a"), "libs/a/src/cat.ts").is_empty());
+        // A project's fileset reads only that project's files.
+        assert!(touched(Some("a"), "libs/b/src/cat.ts").is_empty());
+        assert_eq!(touched(None, "libs/b/src/cat.ts"), vec!["a:build"]);
+    }
+
+    #[test]
     fn ultracache_exclusions_keep_compound_suffix_changes_affected() {
         let g = graph(&[("a", "libs/a")]);
         let instruction = |negative: &str, ultracache| HashInstruction::IgnoredFileSet {
@@ -928,7 +951,6 @@ mod tests {
             project_roots: strings(&["libs/a"]),
             exact_extension_exclusions: ultracache,
             from_ultracache: false,
-            tracked_only: false,
         };
         for file in [
             "cat.spec.ts",
@@ -983,7 +1005,6 @@ mod tests {
                 project_roots: strings(&["libs/a"]),
                 exact_extension_exclusions: ultracache,
                 from_ultracache: false,
-                tracked_only: false,
             };
             let changed = format!("libs/a/{file}");
             assert_eq!(
@@ -1002,7 +1023,6 @@ mod tests {
             project_roots: strings(&["libs/a", "libs/a/nested"]),
             exact_extension_exclusions: false,
             from_ultracache: false,
-            tracked_only: false,
         };
         assert_eq!(
             touched_for(&g, vec![instruction.clone()], &["libs/a/build/out.js"]),

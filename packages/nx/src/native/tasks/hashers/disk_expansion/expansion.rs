@@ -44,8 +44,6 @@ pub(crate) struct Source<'a> {
     tracked_file: PathPredicate<'a>,
     /// How a directory is listed, see `ListDirectory`.
     list_directory: ListDirectory<'a>,
-    /// Whether a path the file map does not hold is looked up on disk.
-    reads_disk: bool,
 }
 
 impl<'a> Source<'a> {
@@ -58,20 +56,6 @@ impl<'a> Source<'a> {
         Self {
             tracked_file,
             list_directory: Box::new(list_directory),
-            reads_disk: true,
-        }
-    }
-
-    /// A fileset of tracked files only. `list_directory` answers from the
-    /// file map, so a file that `.gitignore` excludes never matches.
-    pub(crate) fn tracked_fileset(
-        tracked_file: PathPredicate<'a>,
-        list_directory: impl Fn(&str, PathPredicate, &[String]) -> Option<Vec<String>> + Sync + 'a,
-    ) -> Self {
-        Self {
-            tracked_file,
-            list_directory: Box::new(list_directory),
-            reads_disk: false,
         }
     }
 
@@ -83,7 +67,6 @@ impl<'a> Source<'a> {
         Self {
             tracked_file,
             list_directory: disk_files(workspace_root),
-            reads_disk: true,
         }
     }
 
@@ -98,7 +81,6 @@ impl<'a> Source<'a> {
         Self {
             tracked_file: NOTHING_TRACKED,
             list_directory: disk_files(workspace_root),
-            reads_disk: true,
         }
     }
 }
@@ -179,7 +161,6 @@ pub(crate) fn expand_entries(
     let Source {
         tracked_file,
         list_directory,
-        reads_disk,
     } = source;
 
     // One question asked at every place a path joins `found`, so no entry
@@ -197,17 +178,15 @@ pub(crate) fn expand_entries(
             }
             continue;
         }
-        if *reads_disk {
-            let start = workspace_root.join(root);
-            let Ok(metadata) = std::fs::metadata(&start) else {
-                continue;
-            };
-            if metadata.is_file() {
-                if !has_pattern && !excluded(root) {
-                    found.push(root.clone());
-                }
-                continue;
+        let start = workspace_root.join(root);
+        let Ok(metadata) = std::fs::metadata(&start) else {
+            continue;
+        };
+        if metadata.is_file() {
+            if !has_pattern && !excluded(root) {
+                found.push(root.clone());
             }
+            continue;
         }
         // A directory named by its exact path means everything under it, the
         // same in a fileset as in a declared output; with a pattern, only the

@@ -223,9 +223,16 @@ pub enum HashInstruction {
     Cwd(CwdMode),
     /// Globs filtered against one project's tracked files.
     ProjectFileSet(String, Vec<String>),
+    /// A project's tracked files, or every tracked file without one, that
+    /// workspace-relative globs match. Unlike in a fileset, a `*.ext` exclusion
+    /// matches only files whose whole suffix is `.ext`, so `!**/*.ts` keeps
+    /// `a.spec.ts` and `a.d.ts`. For the reads in a task's Ultracache
+    /// configuration when Nx Cloud learned such an exclusion.
+    LearnedFileSet(Option<String>, Vec<String>),
     /// Workspace-relative globs expanded against the disk, so gitignored and
     /// generated files count: a project's `includeIgnored` globs, or the
-    /// reads in a task's Ultracache configuration. The project is not part of
+    /// reads in the Ultracache configuration of a task whose target sets
+    /// `includeUnstableFiles`. The project is not part of
     /// it: the same globs read the same files wherever they were declared.
     /// `project_roots` keep each glob out of projects nested below the one it
     /// reads from; they follow from the globs, see `scope_roots`.
@@ -238,9 +245,6 @@ pub enum HashInstruction {
         exact_extension_exclusions: bool,
         /// Read by the task per its Ultracache configuration, not declared.
         from_ultracache: bool,
-        /// Only files the workspace tracks match, and the disk is not listed.
-        /// Set for a recording unless its target sets `includeUnstableFiles`.
-        tracked_only: bool,
     },
     ProjectConfiguration(String),
     TsConfiguration(String),
@@ -334,6 +338,7 @@ impl InstructionPool {
         match &*self.get(id) {
             HashInstruction::ProjectFileSet(..)
             | HashInstruction::WorkspaceFileSet(_)
+            | HashInstruction::LearnedFileSet(..)
             | HashInstruction::IgnoredFileSet { .. } => true,
             HashInstruction::TsConfiguration(_) => !keep_tsconfig,
             HashInstruction::JsonFileSet(json) => !read(&json.json_path),
@@ -387,7 +392,6 @@ impl HashInstruction {
             project_roots: Vec::new(),
             exact_extension_exclusions: false,
             from_ultracache: false,
-            tracked_only: false,
         }
     }
 
@@ -395,8 +399,9 @@ impl HashInstruction {
     /// which then has to catch up before the parallel section.
     pub fn lists_ignored_files(&self) -> bool {
         match self {
-            HashInstruction::IgnoredFileSet { tracked_only, .. } => !tracked_only,
+            HashInstruction::IgnoredFileSet { .. } => true,
             HashInstruction::WorkspaceFileSet(_)
+            | HashInstruction::LearnedFileSet(..)
             | HashInstruction::Runtime(_)
             | HashInstruction::Environment(_)
             | HashInstruction::Cwd(_)
@@ -487,6 +492,10 @@ impl fmt::Display for HashInstruction {
                 }
                 HashInstruction::IgnoredFileSet { globs, .. } =>
                     format!("files:[{}]", globs.join(",")),
+                HashInstruction::LearnedFileSet(Some(project_name), globs) =>
+                    format!("{project_name}:{}", globs.join(",")),
+                HashInstruction::LearnedFileSet(None, globs) =>
+                    format!("workspace:[{}]", globs.join(",")),
                 HashInstruction::WorkspaceFileSet(file_set) =>
                     format!("workspace:[{}]", file_set.join(",")),
                 HashInstruction::Runtime(runtime) => format!("runtime:{}", runtime),

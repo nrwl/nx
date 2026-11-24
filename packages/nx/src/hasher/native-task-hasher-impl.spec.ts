@@ -1803,11 +1803,11 @@ describe('native task hasher', () => {
     // Braces split only across projects; an exclusion trimming nothing is dropped.
     expect(
       Object.keys(hash.details)
-        .filter((key) => key.startsWith('files:['))
+        .filter((key) => key.includes('libs/'))
         .sort()
     ).toEqual([
-      'files:[libs/child/**/*.{ts,js},libs/child/x.json,!libs/child/gen/**]',
-      'files:[libs/parent/x.json]',
+      'child:libs/child/**/*.{ts,js},libs/child/x.json,!libs/child/gen/**',
+      'parent:libs/parent/x.json',
     ]);
   });
 

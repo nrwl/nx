@@ -10,6 +10,7 @@ mod hash_runtime;
 mod hash_task_output;
 mod hash_tsconfig;
 mod hash_workspace_files;
+mod learned_exclusions;
 mod once_cache;
 
 pub use disk_expansion::*;
@@ -30,4 +31,5 @@ pub use hash_runtime::*;
 pub use hash_task_output::*;
 pub use hash_tsconfig::*;
 pub use hash_workspace_files::*;
+pub(crate) use learned_exclusions::hash_learned_files;
 pub(crate) use once_cache::OnceCache;

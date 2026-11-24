@@ -2259,8 +2259,8 @@ describe('task planner', () => {
           },
         })
       )['parent:build'];
-      expect(plan).toContain('files:[libs/child/readme.md]');
-      expect(plan).toContain('files:[libs/parent/a.spec.ts]');
+      expect(plan).toContain('child:libs/child/readme.md');
+      expect(plan).toContain('parent:libs/parent/a.spec.ts');
     });
 
     it("keeps an always input's declared files", () => {
@@ -2309,7 +2309,7 @@ describe('task planner', () => {
 
       expect(plan).toContain('child:libs/child/**/*');
       expect(plan).not.toContainEqual(
-        expect.stringMatching(/^files:\[libs\/child\/src\/index\.ts[,\]]/)
+        expect.stringMatching(/^child:libs\/child\/src\/index\.ts(,|$)/)
       );
       expect(
         plan.filter((entry) => entry.startsWith('io-snapshot:'))
@@ -2350,9 +2350,10 @@ describe('task planner', () => {
       )['parent:build'];
       expect(plan).toEqual(
         expect.arrayContaining([
-          'files:[libs/child/src/index.ts]',
-          // Reads under no project root belong to the task's own project.
-          'files:[docs/readme.md,libs/parent/src/**/*.ts]',
+          'child:libs/child/src/index.ts',
+          // A read under no project root is a workspace fileset.
+          'workspace:[{workspaceRoot}/docs/readme.md]',
+          'parent:libs/parent/src/**/*.ts',
           'parent:ProjectConfiguration',
           'child:ProjectConfiguration',
           'env:TESTENV',
@@ -2363,9 +2364,13 @@ describe('task planner', () => {
           expect.stringMatching(/^io-snapshot:\d+$/),
         ])
       );
-      expect(plan).not.toContainEqual(
-        expect.stringMatching(/^(parent|child):libs\//)
-      );
+      // The declared filesets are gone: only the reads are left.
+      expect(
+        plan.filter((entry) => /^(parent|child):libs\//.test(entry))
+      ).toEqual([
+        'child:libs/child/src/index.ts',
+        'parent:libs/parent/src/**/*.ts',
+      ]);
       expect(plan).not.toContain('parent:TsConfig');
       expect(plan).not.toContain('child:TsConfig');
       expect(plan).not.toContain(
@@ -2391,7 +2396,8 @@ describe('task planner', () => {
           'parent:json:libs/parent/package.json[version]',
           // Both files are hashed whole too: the native instructions cover
           // only selected fields and a stripped tsconfig.
-          'files:[libs/parent/package.json,tsconfig.base.json]',
+          'parent:libs/parent/package.json',
+          'workspace:[{workspaceRoot}/tsconfig.base.json]',
         ])
       );
     });
@@ -2414,7 +2420,9 @@ describe('task planner', () => {
       )['parent:build'];
       // Externals hash resolved versions, not package.json scripts or the
       // rest of the lockfile.
-      expect(plan).toContain('files:[package.json,tools/x.ts,yarn.lock]');
+      expect(plan).toContain(
+        'workspace:[{workspaceRoot}/package.json,{workspaceRoot}/tools/x.ts,{workspaceRoot}/yarn.lock]'
+      );
       expect(plan).toContain('AllExternalDependencies');
       expect(plan).not.toContainEqual(expect.stringMatching(/node_modules/));
     });
@@ -2491,8 +2499,9 @@ describe('task planner', () => {
           expect(plan).toContain(external);
           expect(plan).not.toContain('npm:lodash');
           expect(plan).not.toContain('AllExternalDependencies');
+          expect(plan).toContain('tools:tools/audit-deps.js');
           expect(plan).toContain(
-            'files:[package-lock.json,tools/audit-deps.js]'
+            'workspace:[{workspaceRoot}/package-lock.json]'
           );
         }
       );
@@ -2513,7 +2522,7 @@ describe('task planner', () => {
             'tools:audit': { inputs: ['tools/audit-deps.js'] },
           })
         )['tools:audit'];
-        expect(plan).toContain('files:[tools/audit-deps.js]');
+        expect(plan).toContain('tools:tools/audit-deps.js');
         expect(plan).not.toContainEqual(
           expect.stringMatching(/package-lock\.json/)
         );
@@ -2582,9 +2591,7 @@ describe('task planner', () => {
       const childGroup = plan.find((entry) =>
         entry.includes('libs/child/fileb.ts')
       );
-      expect(childGroup).toBe(
-        'files:[libs/child/a.gen.ts,libs/child/fileb.ts]'
-      );
+      expect(childGroup).toBe('child:libs/child/a.gen.ts,libs/child/fileb.ts');
     });
 
     it.each([
@@ -2848,9 +2855,7 @@ describe('task planner', () => {
         taskGraph,
         configurations
       )['parent:build'];
-      expect(plan).toContainEqual(
-        expect.stringMatching(/^files:\[\*\*\/\*\.gen,/)
-      );
+      expect(plan).toContain('workspace:[{workspaceRoot}/**/*.gen]');
       expect(
         getUltracacheReport(configurations, getUltracacheSettings(taskGraph))
           .used
@@ -2892,8 +2897,8 @@ describe('task planner', () => {
           'parent:build': { inputs: ['libs/child/src/index.ts'] },
         })
       )['parent:build'];
-      expect(plan).toContain('files:[libs/child/src/index.ts]');
-      expect(plan).not.toContainEqual(expect.stringMatching(/^child:libs\//));
+      expect(plan).toContain('child:libs/child/src/index.ts');
+      expect(plan).not.toContain('child:libs/child/**/*');
     });
 
     it("defers a task that includes unstable files when its reads sit under a producer's declared outputs", () => {
