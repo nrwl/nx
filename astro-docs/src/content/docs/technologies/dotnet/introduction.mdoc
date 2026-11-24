@@ -105,7 +105,9 @@ For the command itself, see [import an existing project](/docs/kb/import-project
 nx import ../my-dotnet-repo dotnet --source=.
 ```
 
-After the import, run `dotnet restore` before the first `nx build`.
+After the import, restore the imported projects before the first `nx build`.
+Pass the path of the imported solution, for example `dotnet restore dotnet/MySolution.sln`.
+If no solution came with the import, pass each top-level project file instead.
 The `obj` folder is gitignored, so imported projects arrive unrestored and `build` fails with
 `NETSDK1004`.
 
