@@ -238,7 +238,7 @@ pub enum HashInstruction {
         exact_extension_exclusions: bool,
         /// Read by the task per its Ultracache configuration, not declared.
         from_ultracache: bool,
-        /// Only files the workspace tracks match, and the disk is not read.
+        /// Only files the workspace tracks match, and the disk is not listed.
         /// Set for a recording unless its target sets `includeUnstableFiles`.
         tracked_only: bool,
     },

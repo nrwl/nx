@@ -922,11 +922,13 @@ With it on:
 
 - Nx matches the recorded reads against the files on disk, so a gitignored file counts whenever it is present.
 - The reads replace the target's declared `includeIgnored` filesets.
-- Nx hashes the task only after the tasks it depends on run, because their outputs exist only then.
+- If the recording read an output of a task this one depends on, Nx hashes the task only after that task runs.
 
 Changing `includeUnstableFiles` re-runs the task, so its next recording follows the new setting.
 
 To hash specific unstable files without the rest, leave it off and declare an [`includeIgnored` fileset](/docs/reference/inputs#gitignored-files) or a [`dependentTasksOutputFiles`](/docs/reference/inputs#outputs-of-dependent-tasks) input instead.
+
+With it off, a recording never makes a task wait for another task. That includes a read of a committed file that another task also writes, such as a generated file checked into the repository: Nx hashes the committed copy. To hash what the other task writes in the current run, declare a [`dependentTasksOutputFiles`](/docs/reference/inputs#outputs-of-dependent-tasks) input for it.
 
 {% aside type="note" title="Nx Cloud only" %}
 Nothing outside Nx Cloud records or applies IO, so every mode behaves as `off` without it.

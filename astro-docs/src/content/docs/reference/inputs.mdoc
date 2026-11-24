@@ -379,7 +379,7 @@ Add `"always": true` to an input to keep the files it resolves to:
 }
 ```
 
-The task's hash covers the tracked files it read, the files of every `always` input, its [`includeIgnored` filesets](#gitignored-files), and the [outputs of dependent tasks](#outputs-of-dependent-tasks) its `dependentTasksOutputFiles` inputs select.
+The task's hash covers the tracked files it read, the files of every `always` input, its [`includeIgnored` filesets](#gitignored-files) unless the target sets `ultracache.includeUnstableFiles`, and the [outputs of dependent tasks](#outputs-of-dependent-tasks) its `dependentTasksOutputFiles` inputs select.
 Those outputs count whether or not the recording read them.
 To hash a target from its declared inputs alone, set its [`ultracache` mode](/docs/reference/project-configuration#ultracache) to `warn` or `off` instead.
 

@@ -3602,6 +3602,32 @@ mod always_tests {
     }
 
     #[test]
+    fn a_recorded_read_of_an_upstream_output_does_not_defer_the_task() {
+        let planner = planner(vec![("e2e:e2e", vec![])], &[("e2e", &["app"])]);
+        // `app:build` declares a committed file as its output.
+        let graph = task_graph(
+            &[
+                ("e2e:e2e", &[]),
+                ("app:build", &["libs/app/src/generated.d.ts"]),
+            ],
+            &[("e2e:e2e", &["app:build"])],
+        );
+        let (_dir, configurations) =
+            ultracache_configurations(&[("e2e:e2e", &["libs/app/src/generated.d.ts"])]);
+        let plans = planner
+            .get_plans_internal(vec!["e2e:e2e"], graph, Some(&configurations), &[])
+            .unwrap();
+        // Hashed up front from the file map: only a declared
+        // `dependentTasksOutputFiles` input waits for the producer.
+        assert!(!plans.deferred.contains("e2e:e2e"));
+        assert!(plans.plans["e2e:e2e"].iter().any(|id| matches!(
+            plans.pool.get(*id).value(),
+            HashInstruction::IgnoredFileSet { globs, tracked_only: true, .. }
+                if globs.iter().any(|glob| &**glob == "libs/app/src/generated.d.ts")
+        )));
+    }
+
+    #[test]
     fn keeps_only_the_marked_part_of_a_dependency_include_ignored_group() {
         let retained = |fixtures: bool, exclusion: bool| -> Vec<HashInstruction> {
             let planner = planner(

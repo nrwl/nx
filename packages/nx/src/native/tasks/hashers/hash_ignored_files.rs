@@ -206,6 +206,11 @@ mod tests {
             .files
         };
         assert_eq!(expand(&["libs/models/**/*.ts"]), ["libs/models/src/a.ts"]);
+        // A glob with no literal prefix lists from the workspace root.
+        assert_eq!(
+            expand(&["**/*.ts"]),
+            ["libs/models-ui/src/b.ts", "libs/models/src/a.ts"]
+        );
         assert_eq!(expand(&["libs/models"]), ["libs/models/src/a.ts"]);
         assert!(expand(&["libs/models/dist/a.d.ts"]).is_empty());
     }
