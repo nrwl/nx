@@ -25,6 +25,8 @@ common-env-vars: &common-env-vars
   NX_CLOUD_USE_ULTRACACHE: 'true'
   # V4 agents restore dependency artifacts in the background instead of holding the work loop.
   NX_CLOUD_AGENT_BACKGROUND_ARTIFACT_RESTORE: 'true'
+  # Packed V4 agents admit a task by CPU work over time, read from task profile curves.
+  NX_CLOUD_PACKING_WORK_CURVE_ADMISSION: 'true'
 
 common-init-steps: &common-init-steps
   - name: Checkout
