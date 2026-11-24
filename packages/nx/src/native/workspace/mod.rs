@@ -11,6 +11,7 @@ mod files_hashing;
 mod glob_hashing;
 pub mod ignored_index;
 pub mod outputs_tracking;
+pub(crate) mod rehash;
 pub mod shebang;
 pub mod types;
 pub mod workspace_files;
@@ -27,6 +28,7 @@ pub fn __test_only_transfer_file_map(
         .chain(non_project_files.clone())
         .collect::<Vec<FileData>>();
     NxWorkspaceFilesExternals {
+        rehash_source_commit: None,
         project_files: External::new(Arc::new(project_files)),
         global_files: External::new(Arc::new(non_project_files)),
         all_workspace_files: External::new(Arc::new(all_workspace_files)),

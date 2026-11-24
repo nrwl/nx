@@ -5,6 +5,7 @@ use std::sync::Arc;
 #[cfg(not(target_arch = "wasm32"))]
 use std::time::{Duration, Instant, SystemTime};
 
+use super::rehash::{RehashFileMap, clean_commit};
 use crate::native::glob::{build_glob_set, glob_files::glob_files};
 use crate::native::hasher::hash;
 use crate::native::project_graph::utils::{ProjectRootMappings, find_project_for_path};
@@ -187,6 +188,7 @@ fn hashes_to_files(hashes: NxFileHashes) -> Files {
 /// walk was not asked for them because nothing builds rules from them.
 struct GatheredFiles {
     files: Files,
+    rehash_file_map: Option<Arc<RehashFileMap>>,
     ignore_files: Option<Vec<PathBuf>>,
 }
 
@@ -194,6 +196,7 @@ impl From<Files> for GatheredFiles {
     fn from(files: Files) -> Self {
         GatheredFiles {
             files,
+            rehash_file_map: None,
             ignore_files: None,
         }
     }
@@ -449,6 +452,11 @@ fn gather_and_hash_files(
     find_ignore_files: bool,
 ) -> GatheredFiles {
     let archived_files = read_files_archive(&cache_dir);
+    let commit = if std::env::var("NX_CLOUD_ULTRACACHE_REHASH").as_deref() == Ok("true") {
+        clean_commit(workspace_root)
+    } else {
+        None
+    };
 
     trace!("Gathering files in {}", workspace_root.display());
     let now = std::time::Instant::now();
@@ -476,6 +484,9 @@ fn gather_and_hash_files(
     .with_gathered_at(gathered_at);
 
     write_files_archive(&cache_dir, &file_hashes);
+    let rehash_file_map = commit
+        .filter(|start| clean_commit(workspace_root).as_ref() == Some(start))
+        .map(|commit| RehashFileMap::new(commit, &file_hashes));
 
     // Drain the map rather than clone it: the path and hash strings move into
     // the map, so the list is never held twice.
@@ -485,6 +496,7 @@ fn gather_and_hash_files(
     GatheredFiles {
         files,
         ignore_files,
+        rehash_file_map,
     }
 }
 
@@ -515,6 +527,7 @@ struct State {
     ignored: Arc<IgnoredIndex>,
     /// Kept through a re-walk so its result can be diffed against it.
     files: Files,
+    rehash_file_map: Option<Arc<RehashFileMap>>,
     /// Changes reported during a walk, applied on top of its result. A file
     /// the walk also saw is re-hashed, which lands on the same answer.
     queued: Vec<Change>,
@@ -561,6 +574,7 @@ impl FileState {
                 policy: None,
                 ignored,
                 files: Files::new(),
+                rehash_file_map: None,
                 queued: Vec::new(),
                 delivered: Vec::new(),
                 change_seq: 0,
@@ -696,6 +710,7 @@ impl FileState {
                 outcomes.extend(diff_files(&state.files, &fresh.files));
             }
             state.files = fresh.files;
+            state.rehash_file_map = fresh.rehash_file_map;
             #[cfg(not(target_arch = "wasm32"))]
             if policy.is_some() {
                 state.policy = policy;
@@ -863,7 +878,7 @@ impl FileState {
 
     /// Runs `f` against the files under their lock, once a walk in progress
     /// has finished. `None` when the workspace root does not exist.
-    fn with_files<R>(&self, f: impl FnOnce(&Files) -> R) -> Option<R> {
+    fn with_ready_state<R>(&self, f: impl FnOnce(&State) -> R) -> Option<R> {
         let sync = self.0.as_ref()?;
         let (lock, cvar) = sync.deref();
         trace!("waiting for files to be available");
@@ -872,21 +887,27 @@ impl FileState {
             .wait(state, |s| s.phase == Phase::Scanning)
             .expect("Should be able to wait for files");
         trace!("files are available");
-        Some(f(&state.files))
+        Some(f(&state))
     }
 
     fn get_files(&self, directory: Option<&Path>) -> Vec<FileData> {
-        self.with_files(|files| {
+        self.snapshot(directory).0
+    }
+
+    fn snapshot(&self, directory: Option<&Path>) -> (Vec<FileData>, Option<Arc<RehashFileMap>>) {
+        self.with_ready_state(|state| {
+            let files = &state.files;
             let entries = match directory {
                 Some(directory) => Either::Left(get_child_files(directory, files)),
                 None => Either::Right(files.iter()),
             };
-            entries
+            let files = entries
                 .map(|(path, hash)| FileData {
                     file: path.to_normalized_string(),
                     hash: hash.clone(),
                 })
-                .collect()
+                .collect();
+            (files, state.rehash_file_map.clone())
         })
         .unwrap_or_default()
     }
@@ -980,6 +1001,9 @@ fn apply(state: &mut State, workspace_root: &Path, changes: Vec<Change>) -> Outc
         outcomes.insert(change.path.clone(), outcome);
     }
 
+    if !outcomes.is_empty() {
+        state.rehash_file_map = None;
+    }
     outcomes
 }
 
@@ -1372,7 +1396,7 @@ impl WorkspaceContext {
     /// `current_files` without the copy: `f` reads the files under their lock.
     fn with_current_files<R>(&self, f: impl FnOnce(&Files) -> R) -> Option<R> {
         self.apply_delivered();
-        self.files.with_files(f)
+        self.files.with_ready_state(|state| f(&state.files))
     }
 
     fn apply_delivered(&self) {
@@ -1453,12 +1477,12 @@ impl WorkspaceContext {
         &self,
         project_root_map: HashMap<String, String>,
     ) -> anyhow::Result<NxWorkspaceFiles> {
-        workspace_files::get_files(
-            project_root_map,
-            self.current_files(),
-            Arc::new(self.reader()),
-        )
-        .map_err(anyhow::Error::from)
+        self.apply_delivered();
+        let (files, proof) = self.files.snapshot(None);
+        let mut reader = self.reader();
+        reader.rehash_file_map = proof;
+        workspace_files::get_files(project_root_map, files, Arc::new(reader))
+            .map_err(anyhow::Error::from)
     }
 
     #[cfg(test)]
@@ -1674,6 +1698,7 @@ impl WorkspaceContext {
                 non_project_files: non_project_files.clone(),
             },
             external_references: NxWorkspaceFilesExternals {
+                rehash_source_commit: None,
                 project_files: External::new(Arc::new(project_files_map)),
                 global_files: External::new(Arc::new(non_project_files)),
                 all_workspace_files: External::new(Arc::new(self.current_files())),

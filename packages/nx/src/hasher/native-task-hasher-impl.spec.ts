@@ -315,6 +315,18 @@ describe('native task hasher', () => {
     expect(soloParent.details[runtimeKey]).not.toEqual(
       soloChild.details[runtimeKey]
     );
+    expect(
+      hasher
+        .hashTasksForRehash(
+          tasks,
+          taskGraph,
+          perTaskEnvs,
+          process.cwd(),
+          undefined,
+          []
+        )
+        .map((result) => result.value)
+    ).toEqual([soloParent.value, soloChild.value]);
 
     // Hashing both tasks in one invocation must produce the same
     // per-task runtime hashes, with and without input collection.
@@ -1593,6 +1605,101 @@ describe('native task hasher', () => {
     expect(planned).not.toHaveProperty('hash');
     expect(planned).not.toHaveProperty('hashDetails');
     expect(child.hash).toEqual('hash');
+  });
+
+  it('rehashes in task order with only mutable file and dependency-output evidence', async () => {
+    const { taskGraph, impl } = await upfrontFixture();
+    const child = taskGraph.tasks['child:compile'];
+    const parent = taskGraph.tasks['parent:compile'];
+    child.outputs = ['libs/child/out'];
+    const output = 'libs/child/out/api.d.ts';
+    const source = 'libs/child/src/index.ts';
+    const generated = 'libs/child/gen/data.txt';
+    await tempFs.createFiles({ [output]: 'declaration', [generated]: 'first' });
+    const db = connectToNxDb(join(tempFs.tempDir, 'rehash-db'), 'ultracache');
+    try {
+      const inputs = [source, 'libs/child/gen/**', output];
+      const configs = new UltracacheConfigurationStore(db).import({
+        requestedCommit: 'head',
+        configurationsJson: JSON.stringify({
+          [child.id]: { commit: 'head', inputs, outputs: child.outputs },
+          [parent.id]: { commit: 'head', inputs, outputs: [] },
+        }),
+      });
+      const tasks = [parent, child, parent];
+      const envs = {
+        [child.id]: { NX_CLOUD_ENCRYPTION_KEY: 'child' },
+        [parent.id]: {},
+      };
+      const tracked = [source, output];
+      const check = async (fileMapMatchesTrackedFiles: boolean) => {
+        const ordinary = await impl.hashTasks(
+          tasks,
+          taskGraph,
+          envs,
+          tempFs.tempDir,
+          true,
+          configs
+        );
+        const settled = impl.hashTasksForRehash(
+          tasks,
+          taskGraph,
+          envs,
+          tempFs.tempDir,
+          configs,
+          tracked,
+          fileMapMatchesTrackedFiles
+        );
+        expect(settled).toEqual(
+          ordinary.map(({ value, inputs }) => ({
+            value,
+            mutableInputs: [
+              ...new Set([
+                ...inputs.files.filter((p) => !tracked.includes(p)),
+                ...inputs.depOutputs,
+              ]),
+            ].sort(),
+          }))
+        );
+        expect(settled[0].mutableInputs).toContain(output);
+        expect(settled[1].mutableInputs).not.toContain(output);
+        expect(settled[1].mutableInputs).toContain(generated);
+        return settled.map((r) => r.value);
+      };
+      const before = await check(true);
+      const packed = Buffer.from([...tracked].reverse().join('\0') + '\0');
+      expect(
+        impl
+          .hashTasksForRehash(
+            tasks,
+            taskGraph,
+            envs,
+            tempFs.tempDir,
+            configs,
+            packed
+          )
+          .map((result) => result.value)
+      ).toEqual(before);
+      expect(() =>
+        impl.hashTasksForRehash(
+          tasks,
+          taskGraph,
+          envs,
+          tempFs.tempDir,
+          configs,
+          packed,
+          false,
+          0
+        )
+      ).toThrow('NX_REHASH_MEMORY_BUDGET');
+      await tempFs.createFiles({ [generated]: 'other' });
+      const generatedChanged = await check(true);
+      expect(generatedChanged).not.toEqual(before);
+      await tempFs.createFiles({ [source]: 'new tracked contents' });
+      expect(await check(false)).not.toEqual(generatedChanged);
+    } finally {
+      closeDbConnection(db);
+    }
   });
 
   // The entry digest covers the writes, not the reads, because a read

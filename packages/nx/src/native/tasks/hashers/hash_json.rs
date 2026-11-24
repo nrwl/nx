@@ -78,6 +78,118 @@ fn parse_json_or_jsonc(bytes: &[u8]) -> Option<Value> {
         .ok()?
 }
 
+enum JsonContents {
+    Parsed(Value),
+    Raw(Vec<u8>),
+}
+
+impl JsonContents {
+    fn new(bytes: Vec<u8>) -> Self {
+        match parse_json_or_jsonc(&bytes) {
+            Some(value) => Self::Parsed(value),
+            None => Self::Raw(bytes),
+        }
+    }
+
+    fn fold(
+        &self,
+        hasher: &mut Xxh3,
+        path: &str,
+        fields: Option<&[String]>,
+        excluded: Option<&[String]>,
+    ) {
+        hasher.update(path.as_bytes());
+        match self {
+            Self::Raw(bytes) => hasher.update(bytes),
+            Self::Parsed(value) if fields.is_none() && excluded.is_none() => {
+                hash_sorted_json(hasher, value)
+            }
+            Self::Parsed(value) => {
+                hash_sorted_json(hasher, &filter_json_value(value, fields, excluded))
+            }
+        }
+    }
+}
+
+/// In a settled batch, a file may be selected by several JSON projections and
+/// by raw filesets. Read it once, retain its raw hash, and release its parsed
+/// contents as soon as the last projection folds it in file-map order.
+pub(crate) fn hash_settled_json<'a>(
+    workspace_root: &Path,
+    inputs: impl Iterator<Item = (u32, crate::native::tasks::types::JsonFileSetInput)>,
+    project_files: &'a HashMap<String, Vec<FileData>>,
+    workspace_files: &'a [FileData],
+    is_tracked: impl Fn(&str) -> bool,
+    budget: &super::RehashReadBudget,
+) -> Result<SettledJson<'a>> {
+    let mut selections = Vec::new();
+    let mut remaining = HashMap::new();
+    for (id, input) in inputs {
+        let files = collect_json_input_files(
+            &input.json_path,
+            input.project_name.as_deref(),
+            project_files,
+            workspace_files,
+        )?;
+        for &path in &files {
+            *remaining.entry(path).or_insert(0usize) += 1;
+        }
+        selections.push((id, input, files));
+    }
+    let mut contents = HashMap::new();
+    let mut buffer = [0; 32 * 1024];
+    let mut raw_hashes = HashMap::new();
+    let values = dashmap::DashMap::new();
+    for (id, input, files) in selections {
+        let mut hasher = Xxh3::new();
+        let mut mutable_files = Vec::new();
+        for path in files {
+            let content = match contents.entry(path) {
+                std::collections::hash_map::Entry::Occupied(e) => e.into_mut(),
+                std::collections::hash_map::Entry::Vacant(e) => {
+                    let absolute = workspace_root.join(path);
+                    let mut bytes = Vec::new();
+                    let read = budget.read(&absolute, &mut buffer, |chunk| {
+                        bytes.extend_from_slice(chunk)
+                    })?;
+                    let bytes = read.then_some(bytes);
+                    raw_hashes.insert(path, bytes.as_deref().map(hash));
+                    e.insert(bytes.map(JsonContents::new))
+                }
+            };
+            if let Some(content) = content {
+                content.fold(
+                    &mut hasher,
+                    path,
+                    input.fields.as_deref(),
+                    input.exclude_fields.as_deref(),
+                );
+                if !is_tracked(path) {
+                    mutable_files.push(path.to_owned());
+                }
+            }
+            let count = remaining.get_mut(path).unwrap();
+            *count -= 1;
+            if *count == 0 {
+                contents.remove(path);
+            }
+        }
+        values.insert(
+            id,
+            JsonHashResult {
+                hash: hasher.digest().to_string(),
+                files: mutable_files,
+            },
+        );
+    }
+    Ok(SettledJson { values, raw_hashes })
+}
+
+pub(crate) struct SettledJson<'a> {
+    pub(crate) values: dashmap::DashMap<u32, JsonHashResult>,
+    pub(crate) raw_hashes: HashMap<&'a str, Option<String>>,
+}
+
 /// Hashes JSON files, optionally filtering to specific fields.
 ///
 /// Token resolution (`{projectRoot}`, `{projectName}`) is handled upstream by the
@@ -125,32 +237,7 @@ pub fn hash_json_files(
                 continue;
             };
 
-            let Some(parsed) = parse_json_or_jsonc(&bytes) else {
-                // Neither strict JSON nor JSONC accepted the bytes. Fall back
-                // to hashing the raw file contents so the input is still
-                // covered by the cache key — but field filters are necessarily
-                // ignored in this branch since we have no parsed tree.
-                trace!("Failed to parse JSON/JSONC file {:?}", abs_path);
-                hasher.update(file_path.as_bytes());
-                hasher.update(&bytes);
-                result_files.push(file_path.to_string());
-                continue;
-            };
-
-            // Stream the JSON bytes (object keys sorted at every level) straight
-            // into the hasher. The byte sequence is deterministic and defines the
-            // cache key, so it MUST NOT change once released — do not reformat
-            // without a migration.
-            debug!("Adding {} to hash", file_path);
-            hasher.update(file_path.as_bytes());
-            // When no filters are set, skip the filter step to avoid cloning the
-            // parsed tree just to return it unchanged.
-            if fields.is_none() && exclude_fields.is_none() {
-                hash_sorted_json(&mut hasher, &parsed);
-            } else {
-                let filtered = filter_json_value(&parsed, fields, exclude_fields);
-                hash_sorted_json(&mut hasher, &filtered);
-            }
+            JsonContents::new(bytes).fold(&mut hasher, file_path, fields, exclude_fields);
             result_files.push(file_path.to_string());
             trace!("hash_json {}: {:?}", file_path, file_start.elapsed());
         }
@@ -338,6 +425,72 @@ fn hash_sorted_json(hasher: &mut Xxh3, value: &Value) {
 mod tests {
     use super::*;
     use std::collections::HashMap;
+
+    #[test]
+    fn settled_projections_share_raw_hashes_and_preserve_each_file_maps_order() {
+        use crate::native::tasks::types::JsonFileSetInput;
+        let dir = tempfile::tempdir().unwrap();
+        let project_files = vec!["b.json", "a.json", "missing.json"]
+            .into_iter()
+            .map(|p| FileData {
+                file: p.into(),
+                hash: "prior".into(),
+            })
+            .collect::<Vec<_>>();
+        let mut workspace = project_files.clone();
+        workspace.reverse();
+        let project = HashMap::from([("p".into(), project_files)]);
+        std::fs::write(dir.path().join("a.json"), "invalid").unwrap();
+        std::fs::write(
+            dir.path().join("b.json"),
+            "{ /* comment */ \"value\": 1, \"other\": 2 }",
+        )
+        .unwrap();
+        let inputs = vec![
+            JsonFileSetInput {
+                json_path: "{workspaceRoot}/*.json".into(),
+                project_name: None,
+                fields: None,
+                exclude_fields: None,
+            },
+            JsonFileSetInput {
+                json_path: "*.json".into(),
+                project_name: Some("p".into()),
+                fields: Some(vec!["value".into()]),
+                exclude_fields: None,
+            },
+        ];
+        let batch = hash_settled_json(
+            dir.path(),
+            inputs
+                .iter()
+                .cloned()
+                .enumerate()
+                .map(|(i, input)| (i as u32, input)),
+            &project,
+            &workspace,
+            |path| path == "b.json",
+            &Default::default(),
+        )
+        .unwrap();
+        for (id, input) in inputs.iter().enumerate() {
+            let ordinary = hash_json_files(
+                dir.path().to_str().unwrap(),
+                &input.json_path,
+                input.project_name.as_deref(),
+                input.fields.as_deref(),
+                input.exclude_fields.as_deref(),
+                &project,
+                &workspace,
+            )
+            .unwrap();
+            let settled = batch.values.get(&(id as u32)).unwrap();
+            assert_eq!(settled.hash, ordinary.hash);
+            assert_eq!(settled.files, ["a.json"]);
+        }
+        assert_eq!(batch.raw_hashes["a.json"], Some(hash(b"invalid")));
+        assert_eq!(batch.raw_hashes["missing.json"], None);
+    }
 
     #[test]
     fn test_filter_no_filters() {

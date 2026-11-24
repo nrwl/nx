@@ -1,3 +1,5 @@
+mod rehash;
+
 use std::collections::{BTreeMap, HashMap};
 use std::path::Path;
 use std::sync::Arc;
@@ -236,24 +238,32 @@ fn fold_equal_ranks(entries: &mut Vec<(u32, SharedStr)>, ranks: &KeyRanks) {
     }
 }
 
+fn fold_ranked_hash(
+    entries: &mut Vec<(u32, SharedStr)>,
+    keys: &[SharedStr],
+    ranks: &KeyRanks,
+) -> String {
+    if ranks.has_duplicate_keys {
+        fold_equal_ranks(entries, ranks);
+    } else {
+        entries.sort_unstable_by_key(|(id, _)| ranks.of(*id));
+    }
+    let mut hasher = xxhash_rust::xxh3::Xxh3::new();
+    for (id, value) in entries.iter() {
+        trace!("Adding {} ({}) to hash", value, keys[*id as usize]);
+        hasher.update(value.as_bytes());
+    }
+    hasher.digest().to_string()
+}
+
 fn assemble_ranked_hash(
     mut entries: Vec<(u32, SharedStr)>,
     keys: &Arc<[SharedStr]>,
     ranks: &KeyRanks,
     inputs: HashInputsBuilder,
 ) -> HashDetails {
-    if ranks.has_duplicate_keys {
-        fold_equal_ranks(&mut entries, ranks);
-    } else {
-        entries.sort_unstable_by_key(|(id, _)| ranks.of(*id));
-    }
-    let mut hasher = xxhash_rust::xxh3::Xxh3::new();
-    for (id, value) in &entries {
-        trace!("Adding {} ({}) to hash", value, keys[*id as usize]);
-        hasher.update(value.as_bytes());
-    }
     HashDetails {
-        value: hasher.digest().to_string(),
+        value: fold_ranked_hash(&mut entries, keys, ranks),
         details: SharedStrMap::from_indexed_entries(Arc::clone(keys), entries),
         inputs: inputs.into(),
     }
@@ -770,17 +780,7 @@ impl TaskHasher {
             .collect();
         // Also classified once, for the same reason as `value_slots`.
         let fold_kinds: Vec<FoldKind> = (0..pool.len() as u32)
-            .map(|id| match pool.get(id).value() {
-                HashInstruction::UltracacheConfiguration(_) => FoldKind::UltracacheConfiguration,
-                HashInstruction::IgnoredFileSet {
-                    from_ultracache: true,
-                    ..
-                } => FoldKind::UltracacheGroup,
-                HashInstruction::TaskOutput(..) | HashInstruction::IgnoredFileSet { .. } => {
-                    FoldKind::CoversReads
-                }
-                _ => FoldKind::Other,
-            })
+            .map(|id| FoldKind::of(&pool.get(id)))
             .collect();
         let is = |id: u32, kind: FoldKind| fold_kinds[id as usize] == kind;
         let recorded_caches = RecordedCaches::default();
@@ -790,10 +790,7 @@ impl TaskHasher {
             }
             // A recorded plan with something that could cover its reads folds
             // them into its configuration entry, see `fold_recorded_files`.
-            let folds_recorded = ids
-                .iter()
-                .any(|&id| is(id, FoldKind::UltracacheConfiguration))
-                && ids.iter().any(|&id| is(id, FoldKind::CoversReads));
+            let folds_recorded = FoldKind::folds_recorded(ids, &fold_kinds);
             let js_env = resolve_env(task_id);
             // Workers accumulate locally, then publish one result per task.
             // The inner parallel iterator also preserves concurrency when
@@ -911,7 +908,7 @@ impl TaskHasher {
                     .iter_mut()
                     .find(|(id, _)| is(*id, FoldKind::UltracacheConfiguration))
                 {
-                    *value = SharedStr::from(hash(format!("{value}{recorded}").as_bytes()));
+                    *value = fold_configuration(value, &recorded);
                 }
                 if should_collect_inputs {
                     inputs.files.extend(files);
@@ -1236,6 +1233,34 @@ enum FoldKind {
     /// Hashes files on its own, so Ultracache reads of them need not count.
     CoversReads,
     Other,
+}
+
+impl FoldKind {
+    fn of(instruction: &HashInstruction) -> Self {
+        match instruction {
+            HashInstruction::UltracacheConfiguration(_) => Self::UltracacheConfiguration,
+            HashInstruction::IgnoredFileSet {
+                from_ultracache: true,
+                ..
+            } => Self::UltracacheGroup,
+            HashInstruction::IgnoredFileSet { .. } | HashInstruction::TaskOutput(..) => {
+                Self::CoversReads
+            }
+            _ => Self::Other,
+        }
+    }
+
+    fn folds_recorded(ids: &[u32], kinds: &[Self]) -> bool {
+        ids.iter()
+            .any(|&id| kinds[id as usize] == Self::UltracacheConfiguration)
+            && ids
+                .iter()
+                .any(|&id| kinds[id as usize] == Self::CoversReads)
+    }
+}
+
+fn fold_configuration(value: &SharedStr, recorded: &str) -> SharedStr {
+    hash(format!("{value}{recorded}").as_bytes()).into()
 }
 
 type RecordedFileLists = (Vec<Arc<Vec<(String, String)>>>, Vec<Arc<HashSet<String>>>);

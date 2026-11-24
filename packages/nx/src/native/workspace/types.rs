@@ -25,6 +25,8 @@ pub struct NxWorkspaceFiles {
 /// `FromNapiValue` since `External<T>` only supports `FromNapiRef` in napi v3.
 #[napi(object, object_from_js = false)]
 pub struct NxWorkspaceFilesExternals {
+    /// The clean Git commit observed on both sides of this native file gather.
+    pub rehash_source_commit: Option<String>,
     #[napi(ts_type = "ExternalObject<Record<string, Array<FileData>>>")]
     pub project_files: External<Arc<ProjectFiles>>,
     pub global_files: External<Arc<Vec<FileData>>>,

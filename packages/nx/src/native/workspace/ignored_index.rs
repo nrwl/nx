@@ -16,7 +16,7 @@ use parking_lot::RwLock;
 use tracing::{debug, trace};
 
 use crate::native::hasher::hash_file_path;
-use crate::native::walker::{PathPredicate, read_directory, seed_walk};
+use crate::native::walker::{DiskWalkIgnores, PathPredicate, read_directory, seed_walk};
 
 /// Whether the watch delivers events for a workspace-relative directory.
 pub(crate) type DeliversUnder = Arc<dyn Fn(&str) -> bool + Send + Sync>;
@@ -304,10 +304,32 @@ impl IgnoredIndex {
         if !self.is_tracked(dir) {
             return None;
         }
-        // Without a watch nothing keeps a listing current, so every ask walks.
-        if (self.watch.is_none() || !self.is_listed(dir))
-            && !self.walk_into_listing(workspace_root, dir)
+        let Some(watch) = &self.watch else {
+            // The result belongs to this walk. Publishing it into the common
+            // listing lets an overlapping walk replace it before it is read,
+            // even when their explicitly named roots cross different boundaries.
+            let mut files = seed_walk(workspace_root, dir)?;
+            files.sort_unstable();
+            files.dedup();
+            return Some(files);
+        };
+        // An ancestor's listing cannot answer a request rooted beyond a
+        // hardcoded ignore or directory link, even one pointing inside the tree.
+        let path = workspace_root.join(dir);
+        let ignores = DiskWalkIgnores::new().ok()?;
+        if watch.may_miss_under(dir)
+            || path
+                .ancestors()
+                .take_while(|p| *p != workspace_root)
+                .any(|p| ignores.skips(p))
+            || dunce::canonicalize(path).is_ok_and(|resolved| {
+                self.canonical_root(workspace_root)
+                    .is_none_or(|root| root.join(dir) != resolved)
+            })
         {
+            return None;
+        }
+        if !self.is_listed(dir) && !self.walk_into_listing(workspace_root, dir) {
             return None;
         }
         Some(members_under(&self.members.read(), dir))
@@ -566,13 +588,18 @@ pub(crate) type CatchUp = Arc<dyn Fn() + Send + Sync>;
 
 #[napi]
 pub struct IgnoredIndexReader {
+    pub(crate) rehash_file_map: Option<Arc<super::rehash::RehashFileMap>>,
     index: Arc<IgnoredIndex>,
     catch_up: CatchUp,
 }
 
 impl IgnoredIndexReader {
     pub(crate) fn new(index: Arc<IgnoredIndex>, catch_up: CatchUp) -> Self {
-        Self { index, catch_up }
+        Self {
+            index,
+            catch_up,
+            rehash_file_map: None,
+        }
     }
 
     /// A reader over an index nothing watches, for a hasher built without a
@@ -712,6 +739,29 @@ mod tests {
                 "dist/other/c.js"
             ]
         );
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn an_explicit_link_or_ignored_directory_keeps_its_own_listing() {
+        let temp = workspace();
+        std::os::unix::fs::symlink(temp.path().join("src"), temp.path().join("dist/linked"))
+            .unwrap();
+        temp.child("dist/node_modules/pkg/hidden.js")
+            .write_str("hidden")
+            .unwrap();
+        for index in [watched(), IgnoredIndex::new(None)] {
+            index.track(temp.path(), "dist");
+            for start in ["dist", "dist/linked", "dist/node_modules/pkg", "dist"] {
+                let mut expected = read_directory(temp.path(), start, &|_| true, &[]).unwrap();
+                let mut actual = index
+                    .files_under(temp.path(), start, true, &|_| true, &[])
+                    .unwrap();
+                expected.sort();
+                actual.sort();
+                assert_eq!(actual, expected, "{start}");
+            }
+        }
     }
 
     #[test]

@@ -77,6 +77,10 @@ pub(super) fn get_files(
         project_file_map,
         global_files,
         external_references: Some(NxWorkspaceFilesExternals {
+            rehash_source_commit: ignored_index
+                .rehash_file_map
+                .as_ref()
+                .map(|m| m.commit.clone()),
             project_files: project_files_external,
             global_files: global_files_external,
             all_workspace_files,

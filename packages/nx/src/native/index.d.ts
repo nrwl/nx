@@ -121,7 +121,7 @@ export declare class HashPlanner {
    * target configuration are resolved.
    */
   getPlans(taskIds: Array<string>, taskGraph: TaskGraph, configurations?: UltracacheConfigurations | undefined | null, options?: UltracacheEligibilityOptions | undefined | null): Record<string, string[]>
-  getPlansReference(taskIds: Array<string>, taskGraph: TaskGraph, configurations?: UltracacheConfigurations | undefined | null, options?: UltracacheEligibilityOptions | undefined | null): ExternalObject<Record<string, Array<HashInstruction>>>
+  getPlansReference(taskIds: Array<string>, taskGraph: TaskGraph, configurations?: UltracacheConfigurations | undefined | null, options?: UltracacheEligibilityOptions | undefined | null, settled?: boolean | undefined | null): ExternalObject<Record<string, Array<HashInstruction>>>
 }
 
 export declare class HttpRemoteCache {
@@ -309,6 +309,11 @@ export declare class TaskDetails {
 }
 
 export declare class TaskHasher {
+  /**
+   * Hash a workspace after restores and execution have finished. All disk
+   * state is local to this call; a later batch inventories and reads again.
+   */
+  hashPlansForRehash(plans: ExternalObject<Record<string, Array<HashInstruction>>>, taskIds: Array<string>, perTaskEnvs: Record<string, Record<string, string>>, cwd: string, trackedFiles: ReadonlyArray<string> | Buffer, fileMapMatchesTrackedFiles?: boolean | undefined | null, maxLiveReadBytes?: number | undefined | null): Array<RehashResult>
   constructor(workspaceRoot: string, projectGraph: ExternalObject<ProjectGraph>, projectFileMap: ExternalObject<Record<string, Array<FileData>>>, allWorkspaceFiles: ExternalObject<Array<FileData>>, tsConfig: Buffer, tsConfigPaths: Record<string, Array<string>>, rootTsconfigPath: string | undefined | null, options: HasherOptions | undefined | null, ignoredIndex: ExternalObject<IgnoredIndexReader>)
   /**
    * Hash each task's instructions using the env map keyed by `task.id`.
@@ -1103,6 +1108,8 @@ export interface NxWorkspaceFiles {
  * `FromNapiValue` since `External<T>` only supports `FromNapiRef` in napi v3.
  */
 export interface NxWorkspaceFilesExternals {
+  /** The clean Git commit observed on both sides of this native file gather. */
+  rehashSourceCommit?: string
   projectFiles: ExternalObject<Record<string, Array<FileData>>>
   globalFiles: ExternalObject<Array<FileData>>
   allWorkspaceFiles: ExternalObject<Array<FileData>>
@@ -1200,6 +1207,11 @@ export interface ReadinessProbeConfig {
  * the root (rooted, drive-prefixed, or climbing with `..`).
  */
 export declare function readShebangHeaders(workspaceRoot: string, files: Array<string>): Array<ShebangFile>
+
+export interface RehashResult {
+  value: string
+  mutableInputs: Array<string>
+}
 
 export declare function remove(src: string): void
 

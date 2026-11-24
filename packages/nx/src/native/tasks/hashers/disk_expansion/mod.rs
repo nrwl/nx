@@ -10,6 +10,9 @@
 mod entries;
 mod expansion;
 mod scope;
+mod settled;
+
+pub(crate) use settled::SettledGroups;
 
 pub(crate) use entries::{Negation, Positive};
 pub use expansion::FilesExpansion;

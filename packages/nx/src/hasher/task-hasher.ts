@@ -17,6 +17,7 @@ import {
   HashInputs,
   UltracacheConfigurations,
   NxWorkspaceFilesExternals,
+  type RehashResult,
 } from '../native';
 import { getTaskIOService } from '../tasks-runner/task-io-service';
 
@@ -93,6 +94,24 @@ export interface TaskHasher {
     perTaskEnvs: Record<string, NodeJS.ProcessEnv>,
     cwd?: string
   ): Promise<Hash[]>;
+
+  /**
+   * In-process only. Rehash a settled workspace and return the paths requiring IO validation.
+   * Set fileMapMatchesTrackedFiles only when the file map and the settled worktree
+   * are known to contain the same bytes for the commit's tracked regular files.
+   * A Buffer contains NUL-terminated UTF-8 paths. Dependency outputs always use
+   * their settled bytes. maxLiveReadBytes optionally bounds page-rounded disk reads.
+   */
+  hashTasksForRehash?(
+    tasks: Task[],
+    taskGraph: TaskGraph,
+    perTaskEnvs: Record<string, NodeJS.ProcessEnv>,
+    cwd: string,
+    configurations: UltracacheConfigurations,
+    trackedFiles: readonly string[] | Buffer,
+    fileMapMatchesTrackedFiles?: boolean,
+    maxLiveReadBytes?: number
+  ): Promise<RehashResult[]>;
 
   /**
    * Hash the tasks whose hash needs no output of another task, keyed by
@@ -228,7 +247,7 @@ export class DaemonBasedTaskHasher implements TaskHasher {
 }
 
 export class InProcessTaskHasher implements TaskHasher {
-  private taskHasher: TaskHasherImpl;
+  private taskHasher: NativeTaskHasherImpl;
 
   constructor(
     private readonly projectGraph: ProjectGraph,
@@ -270,6 +289,32 @@ export class InProcessTaskHasher implements TaskHasher {
     return tasks.map((task, index) =>
       this.createHashDetails(task, hashes[index])
     );
+  }
+
+  async hashTasksForRehash(
+    tasks: Task[],
+    taskGraph: TaskGraph,
+    perTaskEnvs: Record<string, NodeJS.ProcessEnv>,
+    cwd: string,
+    configurations: UltracacheConfigurations,
+    trackedFiles: readonly string[] | Buffer,
+    fileMapMatchesTrackedFiles = false,
+    maxLiveReadBytes?: number
+  ): Promise<RehashResult[]> {
+    const hashes = this.taskHasher.hashTasksForRehash(
+      tasks,
+      taskGraph,
+      perTaskEnvs,
+      cwd,
+      configurations,
+      trackedFiles,
+      fileMapMatchesTrackedFiles,
+      maxLiveReadBytes
+    );
+    return hashes.map(({ value, mutableInputs }, i) => ({
+      value: hashArray([value, this.hashCommand(tasks[i])]),
+      mutableInputs,
+    }));
   }
 
   async hashTasksUpfront(

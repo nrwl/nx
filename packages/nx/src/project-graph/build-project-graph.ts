@@ -60,6 +60,7 @@ let storedRustReferences: NxWorkspaceFilesExternals | null = null;
 export function getFileMap(): {
   fileMap: FileMap;
   rustReferences: NxWorkspaceFilesExternals | null;
+  rehashSourceCommit?: string;
   /** @deprecated always `[]`; kept so cached nx-cloud workers that destructure it don't see `undefined`. */
   allWorkspaceFiles: FileData[];
 } {
@@ -67,6 +68,7 @@ export function getFileMap(): {
     return {
       fileMap: storedFileMap,
       rustReferences: storedRustReferences,
+      rehashSourceCommit: storedRustReferences?.rehashSourceCommit,
       allWorkspaceFiles: [],
     };
   } else {

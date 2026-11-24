@@ -37,7 +37,7 @@ impl Positive {
 /// only the remainder is a glob. Without a remainder it names an exact file,
 /// or a directory whose whole contents are excluded.
 pub(crate) struct Negation {
-    root: String,
+    pub(super) root: String,
     remainder: Option<Arc<NxGlobSet>>,
     /// Excludes `root` and everything under it.
     whole: bool,

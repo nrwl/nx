@@ -98,7 +98,7 @@ pub(crate) fn output_prefixes(outputs: &[String]) -> Vec<String> {
 /// whatever characters it has (`.next/server/app/[id]`), and only one that
 /// names nothing on disk is a glob walked from its literal prefix. A `!`
 /// entry filters the rest.
-fn output_entries(
+pub(crate) fn output_entries(
     workspace_root: &Path,
     outputs: &[String],
 ) -> Result<(Vec<Positive>, Vec<Negation>)> {

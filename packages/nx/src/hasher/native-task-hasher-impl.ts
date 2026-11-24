@@ -5,6 +5,7 @@ import {
   ExternalObject,
   FileData,
   HasherOptions,
+  type RehashResult,
   hashArray,
   HashPlanner,
   UltracacheConfigurations,
@@ -145,6 +146,29 @@ export class NativeTaskHasherImpl implements TaskHasherImpl {
     return tasks.map((t) => hashes[t.id]);
   }
 
+  hashTasksForRehash(
+    tasks: Task[],
+    taskGraph: TaskGraph,
+    perTaskEnvs: Record<string, NodeJS.ProcessEnv>,
+    cwd: string,
+    configurations: UltracacheConfigurations | undefined,
+    trackedFiles: readonly string[] | Buffer,
+    fileMapMatchesTrackedFiles = false,
+    maxLiveReadBytes?: number
+  ): RehashResult[] {
+    const ids = tasks.map((task) => task.id);
+    const plans = this.plan(ids, taskGraph, configurations, true);
+    return this.hasher.hashPlansForRehash(
+      plans,
+      ids,
+      perTaskEnvs as Record<string, Record<string, string>>,
+      cwd,
+      trackedFiles,
+      fileMapMatchesTrackedFiles,
+      maxLiveReadBytes
+    );
+  }
+
   /**
    * Plans through the native planner. With Ultracache configurations, the
    * tasks JS resolves as custom-hashed or opted out ride along so the
@@ -153,7 +177,8 @@ export class NativeTaskHasherImpl implements TaskHasherImpl {
   private plan(
     taskIds: string[],
     taskGraph: TaskGraph,
-    ultracacheConfigurations?: UltracacheConfigurations
+    ultracacheConfigurations?: UltracacheConfigurations,
+    settled = false
   ) {
     // N-API converts each task's result fields too, which the planner never reads.
     const prunedGraph = pruneTaskGraph(taskGraph);
@@ -164,7 +189,8 @@ export class NativeTaskHasherImpl implements TaskHasherImpl {
       taskIds,
       prunedGraph,
       ultracacheConfigurations,
-      ultracacheEligibilityOptions(this.projectGraph, taskGraph)
+      ultracacheEligibilityOptions(this.projectGraph, taskGraph),
+      settled
     );
   }
 

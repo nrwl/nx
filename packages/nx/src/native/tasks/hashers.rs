@@ -11,6 +11,8 @@ mod hash_task_output;
 mod hash_tsconfig;
 mod hash_workspace_files;
 mod once_cache;
+mod rehash_read;
+pub(crate) use rehash_read::RehashReadBudget;
 
 pub use disk_expansion::*;
 pub use hash_cwd::*;

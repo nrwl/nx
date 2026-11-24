@@ -404,6 +404,25 @@ fn transient_skips() -> Result<Arc<NxGlobSet>> {
         .context("the transient-file globs always build")
 }
 
+/// The unconditional entry vetoes applied below the root of any fileset walk.
+pub(crate) struct DiskWalkIgnores {
+    hardcoded: Arc<NxGlobSet>,
+    transient: Arc<NxGlobSet>,
+}
+
+impl DiskWalkIgnores {
+    pub(crate) fn new() -> Result<Self> {
+        Ok(Self {
+            hardcoded: build_glob_set(HARDCODED_IGNORE_PATTERNS)?,
+            transient: transient_skips()?,
+        })
+    }
+
+    pub(crate) fn skips(&self, path: &Path) -> bool {
+        self.hardcoded.is_match(path) || self.transient.is_match(path)
+    }
+}
+
 /// Files under `start`, workspace-relative, with the stamp read on the way
 /// for anything the context does not vouch for. The walker skips what it
 /// skips for every walk, but never the root it is given, so a glob rooted at
