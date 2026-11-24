@@ -443,7 +443,7 @@ impl TaskHasher {
         run_stage: RunStage,
     ) -> anyhow::Result<RecordedFileLists> {
         let workspace_root = Path::new(&self.workspace_root);
-        let groups = ids
+        let mut groups = ids
             .par_iter()
             .filter_map(|&id| match pool.get(id).value() {
                 group @ (HashInstruction::IgnoredFileSet {
@@ -455,8 +455,9 @@ impl TaskHasher {
                 _ => None,
             })
             .map(|(id, group)| {
+                let reads_disk = matches!(group, HashInstruction::IgnoredFileSet { .. });
                 if let Some(cached) = caches.group_files.get(&id) {
-                    return Ok(Arc::clone(&cached));
+                    return Ok((reads_disk, Arc::clone(&cached)));
                 }
                 let hashed = Arc::new(match group {
                     HashInstruction::ProjectFileSet(project, file_sets) => {
@@ -472,11 +473,11 @@ impl TaskHasher {
                             &self.workspace_file_indices_cache,
                         )?
                         .into_iter()
-                        .map(|file| {
-                            let hash = self.workspace_file_hash(&file).unwrap_or_default();
-                            (file, hash)
+                        .map(|file| match self.workspace_file_hash(&file) {
+                            Some(hash) => Ok((file, hash)),
+                            None => Err(anyhow::anyhow!("{file} is not in the workspace file map")),
                         })
-                        .collect()
+                        .collect::<anyhow::Result<_>>()?
                     }
                     HashInstruction::IgnoredFileSet {
                         globs,
@@ -498,9 +499,13 @@ impl TaskHasher {
                     _ => unreachable!("filtered to the plan's groups"),
                 });
                 caches.group_files.insert(id, Arc::clone(&hashed));
-                Ok(hashed)
+                Ok((reads_disk, hashed))
             })
             .collect::<anyhow::Result<Vec<_>>>()?;
+        // Disk-backed groups last: for a path in both, the fold keeps the
+        // disk's hash, which is current after a task rewrote the file.
+        groups.sort_by_key(|(reads_disk, _)| *reads_disk);
+        let groups = groups.into_iter().map(|(_, files)| files).collect();
         let covered = ids
             .par_iter()
             .filter(|&&id| {
@@ -1263,7 +1268,8 @@ enum FoldKind {
 type RecordedFileLists = (Vec<Arc<Vec<(String, String)>>>, Vec<Arc<HashSet<String>>>);
 
 /// One value for a recorded plan's group files: every file, by path, minus
-/// those its `TaskOutput`s and declared groups hash. So whether a recording
+/// those its `TaskOutput`s and declared groups hash. A path listed twice
+/// takes the hash of the later group. So whether a recording
 /// read a file those already hash, and how the reads were grouped, leaves the
 /// hash alone. Also returns the paths kept when `collect_inputs`.
 fn fold_recorded_files(
@@ -1723,6 +1729,27 @@ mod tests {
                     project("e2e", &["libs/e2e/src/app.spec.ts"])
                 ])
             )
+        );
+    }
+
+    #[test]
+    fn a_file_read_from_disk_and_listed_in_the_file_map_takes_the_disk_hash() {
+        // The file map's hash is stale: a task rewrote the file since.
+        let files = [("libs/app/src/a.ts", "rewritten")];
+        let plan = |fileset: Option<HashInstruction>| {
+            let mut plan = vec![
+                HashInstruction::UltracacheConfiguration("digest".into()),
+                HashInstruction::ignored_files(vec!["libs/app/generated".to_string()]),
+                recorded_files(&["libs/app/src/a.ts"]),
+            ];
+            // Interned last, so it would win if the fold took the last hash.
+            plan.extend(fileset);
+            plan
+        };
+        let always = HashInstruction::ProjectFileSet("app".into(), vec!["libs/app/src".into()]);
+        assert_eq!(
+            tracked_hash(&files, plan(Some(always))),
+            tracked_hash(&files, plan(None))
         );
     }
 
