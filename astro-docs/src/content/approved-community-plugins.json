@@ -588,5 +588,10 @@
     "name": "@clearlydev/nx-archweave",
     "url": "https://github.com/clearlydev/nx-archweave",
     "description": "Nx generators for an FSD Lite lint rule, frontend/backend boundaries, AI agent rules, GitHub templates and optional AI PR review"
+  },
+  {
+    "name": "nx-orval",
+    "url": "https://github.com/artnikbrothers/nx-orval",
+    "description": "Nx plugin for Orval: inferred, cached orval targets, affected-aware API clients, and generators to add Orval in one command"
   }
 ]
