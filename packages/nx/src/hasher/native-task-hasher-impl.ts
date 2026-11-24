@@ -120,6 +120,7 @@ export class NativeTaskHasherImpl implements TaskHasherImpl {
     let unplanned = tasks.map((t) => t.id);
     if (
       this.upfrontPlans &&
+      !ultracacheConfigurations?.isTransient &&
       unplanned.some((id) => this.upfrontPlans.taskIds.has(id)) &&
       this.upfrontPlans.fingerprint ===
         taskGraphFingerprint(taskGraph, ultracacheConfigurations)
@@ -182,14 +183,13 @@ export class NativeTaskHasherImpl implements TaskHasherImpl {
   ) {
     // N-API converts each task's result fields too, which the planner never reads.
     const prunedGraph = pruneTaskGraph(taskGraph);
-    if (!ultracacheConfigurations) {
-      return this.planner.getPlansReference(taskIds, prunedGraph);
-    }
     return this.planner.getPlansReference(
       taskIds,
       prunedGraph,
       ultracacheConfigurations,
-      ultracacheEligibilityOptions(this.projectGraph, taskGraph),
+      ultracacheConfigurations
+        ? ultracacheEligibilityOptions(this.projectGraph, taskGraph)
+        : undefined,
       settled
     );
   }
@@ -207,11 +207,16 @@ export class NativeTaskHasherImpl implements TaskHasherImpl {
       taskGraph,
       ultracacheConfigurations
     );
-    this.upfrontPlans = {
-      fingerprint: taskGraphFingerprint(taskGraph, ultracacheConfigurations),
-      taskIds: new Set(tasks.map((t) => t.id)),
-      plans,
-    };
+    this.upfrontPlans = ultracacheConfigurations?.isTransient
+      ? null
+      : {
+          fingerprint: taskGraphFingerprint(
+            taskGraph,
+            ultracacheConfigurations
+          ),
+          taskIds: new Set(tasks.map((t) => t.id)),
+          plans,
+        };
     const shouldCollectInputs =
       collectInputs ?? getTaskIOService().hasTaskInputSubscribers();
     return this.hasher.hashPlansUpfront(

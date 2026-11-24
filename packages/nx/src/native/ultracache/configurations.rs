@@ -1,6 +1,9 @@
 use std::collections::HashMap;
 use std::sync::Mutex;
 
+#[cfg(not(target_arch = "wasm32"))]
+use napi::{Env, bindgen_prelude::Object};
+
 use super::UltracacheConfigurationResolution;
 use super::set::SharedInputs;
 
@@ -10,7 +13,7 @@ use super::set::SharedInputs;
 pub struct UltracacheConfigurations {
     resolution: UltracacheConfigurationResolution,
     #[cfg(not(target_arch = "wasm32"))]
-    db: super::store::UltracacheConfigurationStore,
+    db: Option<super::store::UltracacheConfigurationStore>,
     #[cfg(not(target_arch = "wasm32"))]
     version: Option<i64>,
     cache: Mutex<EntryCache>,
@@ -36,7 +39,7 @@ impl UltracacheConfigurations {
     ) -> Self {
         Self {
             resolution,
-            db,
+            db: Some(db),
             version,
             cache: Mutex::default(),
         }
@@ -49,8 +52,67 @@ impl UltracacheConfigurations {
     }
 }
 
+#[cfg(not(target_arch = "wasm32"))]
 #[napi]
 impl UltracacheConfigurations {
+    /// An immutable, in-memory set for a single rehash. Shares input lists
+    /// and glob strings across tasks and needs no temporary database.
+    #[napi(factory)]
+    pub fn from_entries(
+        env: Env,
+        requested_commit: String,
+        #[napi(
+            ts_arg_type = "Readonly<Record<string, { commit: string; inputs: readonly string[] }>>"
+        )]
+        configurations: Object<'_>,
+    ) -> napi::Result<Self, String> {
+        let set = super::store::compact_entries(&env, configurations)?;
+        let mut artifacts = vec![SharedInputs::default(); set.inputs.len()];
+        for (ids, artifact) in set.inputs {
+            let mut inputs: Vec<_> = ids
+                .iter()
+                .map(|&id| set.globs[id as usize].clone())
+                .collect();
+            inputs.sort_unstable();
+            artifacts[artifact as usize] = inputs.into();
+        }
+        let resolution = UltracacheConfigurationResolution {
+            requested_commit,
+            fetched_at: crate::native::utils::time::current_timestamp_millis(),
+            tasks: set.tasks.len() as u32,
+        };
+        let tasks = set
+            .tasks
+            .into_iter()
+            .map(|(task, id)| (task, Some(artifacts[id as usize].clone())))
+            .collect();
+        Ok(Self {
+            resolution,
+            db: None,
+            version: None,
+            cache: Mutex::new(EntryCache {
+                tasks,
+                ..Default::default()
+            }),
+        })
+    }
+}
+
+#[napi]
+impl UltracacheConfigurations {
+    /// A transient handle has no stored version for cross-call plan reuse.
+    #[napi(getter)]
+    pub fn is_transient(&self) -> bool {
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            self.db.is_none()
+        }
+        #[cfg(target_arch = "wasm32")]
+        {
+            false
+        }
+    }
+
     #[napi(getter)]
     pub fn commit(&self) -> String {
         self.resolution.requested_commit.clone()
@@ -69,18 +131,21 @@ impl UltracacheConfigurations {
         &self,
         task_ids: &[&str],
     ) -> anyhow::Result<HashMap<String, SharedInputs>> {
-        let mut cache = self.cache.lock().unwrap();
-        let missing: Vec<&str> = task_ids
-            .iter()
-            .copied()
-            .filter(|id| !cache.tasks.contains_key(*id))
-            .collect();
-        if !missing.is_empty() {
-            #[cfg(not(target_arch = "wasm32"))]
-            self.db
-                .read_entries(self.version, &self.resolution, &missing, &mut cache)?;
-            for id in missing {
-                cache.tasks.entry(id.to_string()).or_insert(None);
+        let cache = self.cache.lock().unwrap();
+        #[cfg(not(target_arch = "wasm32"))]
+        let mut cache = cache;
+        #[cfg(not(target_arch = "wasm32"))]
+        if let Some(db) = &self.db {
+            let missing: Vec<&str> = task_ids
+                .iter()
+                .copied()
+                .filter(|id| !cache.tasks.contains_key(*id))
+                .collect();
+            if !missing.is_empty() {
+                db.read_entries(self.version, &self.resolution, &missing, &mut cache)?;
+                for id in missing {
+                    cache.tasks.entry(id.to_string()).or_insert(None);
+                }
             }
         }
         Ok(task_ids

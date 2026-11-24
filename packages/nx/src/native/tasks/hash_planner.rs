@@ -367,15 +367,20 @@ impl HashPlanner {
         settled: bool,
     ) -> anyhow::Result<HashPlans> {
         let function_start = std::time::Instant::now();
-        let memo = self.plan_memo.begin(
-            &task_graph,
-            configurations.map(|configurations| {
-                let resolution = configurations.resolution_ref();
-                (resolution.requested_commit.clone(), resolution.fetched_at)
-            }),
-            custom_hasher_task_ids,
-        );
-        let to_plan = memo.missing(&task_ids);
+        // Settled batches consume their plans immediately. A transient
+        // configuration has no persistent version to memoize across calls.
+        let memo = (!settled && !configurations.is_some_and(|c| c.is_transient())).then(|| {
+            self.plan_memo.begin(
+                &task_graph,
+                configurations.map(|configurations| {
+                    let resolution = configurations.resolution_ref();
+                    (resolution.requested_commit.clone(), resolution.fetched_at)
+                }),
+                custom_hasher_task_ids,
+            )
+        });
+        let missing = memo.as_ref().map(|memo| memo.missing(&task_ids));
+        let to_plan = missing.as_deref().unwrap_or(&task_ids);
         let ultracache_tasks = configurations.map(|configurations| {
             ultracache_eligibility::resolve(
                 configurations,
@@ -544,8 +549,11 @@ impl HashPlanner {
             );
         }
 
-        let result = result.map(|planned| memo.finish(planned, &task_ids));
-        result.map(|plans| {
+        result.map(|planned| {
+            let plans = match memo {
+                Some(memo) => memo.finish(planned, &task_ids),
+                None => planned,
+            };
             let deferred = if settled {
                 HashSet::new()
             } else {

@@ -4,6 +4,7 @@ use std::rc::Rc;
 use std::sync::{Arc, Mutex};
 
 use anyhow::{Context, Result, ensure};
+use napi::Env;
 use napi::bindgen_prelude::{External, JsObjectValue, Object};
 use rusqlite::{params, types::Value};
 use tracing::debug;
@@ -31,6 +32,34 @@ fn invalid_response(error: impl std::fmt::Display) -> napi::Error<String> {
         "INVALID_RESPONSE".into(),
         format!("Nx Cloud returned unreadable Ultracache configurations: {error}"),
     )
+}
+
+/// N-API keeps a handle to every visited array element until its scope closes.
+/// Only Rust-owned strings cross a task boundary here.
+pub(super) fn compact_entries(
+    env: &Env,
+    configurations: Object<'_>,
+) -> napi::Result<CompactSet, String> {
+    let mut set = CompactSet::default();
+    for id in Object::keys(&configurations).map_err(invalid_response)? {
+        env.run_in_scope(|| {
+            if configurations.has_own_property(&id)? {
+                let entry = configurations
+                    .get::<Object>(&id)?
+                    .ok_or_else(|| napi::Error::from_reason("missing task configuration"))?;
+                entry
+                    .get::<String>("commit")?
+                    .ok_or_else(|| napi::Error::from_reason("missing commit"))?;
+                let inputs = entry
+                    .get::<Vec<String>>("inputs")?
+                    .ok_or_else(|| napi::Error::from_reason("missing inputs"))?;
+                set.add_legacy(id, inputs);
+            }
+            Ok(())
+        })
+        .map_err(invalid_response)?;
+    }
+    Ok(set)
 }
 
 #[napi]
@@ -66,35 +95,14 @@ impl UltracacheConfigurationStore {
     #[napi]
     pub fn import_entries(
         &self,
+        env: Env,
         requested_commit: String,
         #[napi(
             ts_arg_type = "Readonly<Record<string, { commit: string; inputs: readonly string[] }>>"
         )]
         configurations: Object<'_>,
     ) -> napi::Result<UltracacheConfigurations, String> {
-        let mut set = CompactSet::default();
-        for id in Object::keys(&configurations).map_err(invalid_response)? {
-            if !configurations
-                .has_own_property(&id)
-                .map_err(invalid_response)?
-            {
-                continue;
-            }
-            let entry = configurations
-                .get::<Object>(&id)
-                .map_err(invalid_response)?
-                .ok_or_else(|| invalid_response("missing task configuration"))?;
-            entry
-                .get::<String>("commit")
-                .map_err(invalid_response)?
-                .ok_or_else(|| invalid_response("missing commit"))?;
-            let inputs = entry
-                .get::<Vec<String>>("inputs")
-                .map_err(invalid_response)?
-                .ok_or_else(|| invalid_response("missing inputs"))?;
-            set.add_legacy(id, inputs);
-        }
-        self.publish(requested_commit, set)
+        self.publish(requested_commit, compact_entries(&env, configurations)?)
     }
 
     /// Verifies and imports the immutable manifest and its referenced objects.

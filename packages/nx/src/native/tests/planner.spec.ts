@@ -7,6 +7,7 @@ import {
   closeDbConnection,
   connectToNxDb,
   HashPlanner,
+  UltracacheConfigurations,
   UltracacheConfigurationStore,
   getUltracacheDeferredTaskIds,
   getUltracacheReport,
@@ -2098,15 +2099,21 @@ describe('task planner', () => {
       );
       const db = new UltracacheConfigurationStore(configurationDb);
       const legacy = configurationsFor(configs);
-      const fromObject = db.importEntries(
-        'legacy-object',
-        Object.fromEntries(
-          Object.entries(configs).map(([id, config]) => [
-            id,
-            { commit: 'head', ...config },
-          ])
-        )
+      const entries = Object.fromEntries(
+        Object.entries(configs).map(([id, config]) => [
+          id,
+          { commit: 'head', ...config },
+        ])
       );
+      const fromObject = db.importEntries('legacy-object', entries);
+      const transient = UltracacheConfigurations.fromEntries(
+        'transient',
+        entries
+      );
+      expect(transient.resolution.tasks).toBe(2);
+      expect(transient.isTransient).toBe(true);
+      expect(fromObject.isTransient).toBe(false);
+      expect(db.get('transient')).toBeNull();
       const imported = db.importFiles('head', manifestPath, configurationDbDir);
       const pinned = db.getVersion('head', imported.resolution.fetchedAt);
       await tempFs.createFiles({
@@ -2145,7 +2152,7 @@ describe('task planner', () => {
       expect(expected['parent:build'].inputs.files).not.toContain(
         'dist/parent/log.txt'
       );
-      for (const handle of [fromObject, imported, pinned]) {
+      for (const handle of [transient, fromObject, imported, pinned]) {
         expect(hash(handle)).toEqual(expected);
         const report = getUltracacheReport(handle, {
           ...getUltracacheSettings(taskGraph),

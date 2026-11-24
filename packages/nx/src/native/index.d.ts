@@ -386,6 +386,13 @@ export declare class TaskInvocationTracker {
  * requested tasks, their distinct input lists, and the globs those lists use.
  */
 export declare class UltracacheConfigurations {
+  /**
+   * An immutable, in-memory set for a single rehash. Shares input lists
+   * and glob strings across tasks and needs no temporary database.
+   */
+  static fromEntries(requestedCommit: string, configurations: Readonly<Record<string, { commit: string; inputs: readonly string[] }>>): UltracacheConfigurations
+  /** A transient handle has no stored version for cross-call plan reuse. */
+  get isTransient(): boolean
   get commit(): string
   get resolution(): UltracacheConfigurationResolution
 }
