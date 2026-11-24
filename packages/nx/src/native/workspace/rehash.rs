@@ -5,7 +5,7 @@ use rayon::prelude::*;
 
 use super::files_archive::NxFileHashes;
 use crate::native::types::FileData;
-use crate::native::utils::{command::create_command, get_metadata_key, get_mod_time};
+use crate::native::utils::{ci::is_ci, command::create_command, get_metadata_key, get_mod_time};
 
 /// Metadata from the same gather that produced the immutable FileData vector.
 /// The keys follow its path order, using eight more bytes per workspace file.
@@ -56,6 +56,21 @@ impl RehashFileMap {
                 && self.keys.get(index) == Some(&get_metadata_key(&metadata))
         })
     }
+}
+
+/// The Cloud runner can learn the workspace's Ultracache setting only after
+/// this gather. Capture proof in CI without requiring a local Ultracache setting.
+pub(super) fn should_capture_rehash_provenance() -> bool {
+    // Only Unix metadata includes the inode change time needed for safe reuse.
+    cfg!(unix)
+        && match std::env::var_os("NX_CLOUD_ULTRACACHE_REHASH") {
+            Some(setting) => setting == "true",
+            None => {
+                std::env::var("NX_NO_CLOUD").as_deref() != Ok("true")
+                    && (is_ci()
+                        || std::env::var_os("NX_CI_EXECUTION_ID").is_some_and(|id| !id.is_empty()))
+            }
+        }
 }
 
 /// Both sides of the gather must observe the same clean commit. Per-file

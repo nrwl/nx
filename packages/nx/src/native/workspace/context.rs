@@ -5,7 +5,7 @@ use std::sync::Arc;
 #[cfg(not(target_arch = "wasm32"))]
 use std::time::{Duration, Instant, SystemTime};
 
-use super::rehash::{RehashFileMap, clean_commit};
+use super::rehash::{RehashFileMap, clean_commit, should_capture_rehash_provenance};
 use crate::native::glob::{build_glob_set, glob_files::glob_files};
 use crate::native::hasher::hash;
 use crate::native::project_graph::utils::{ProjectRootMappings, find_project_for_path};
@@ -452,14 +452,11 @@ fn gather_and_hash_files(
     find_ignore_files: bool,
 ) -> GatheredFiles {
     let archived_files = read_files_archive(&cache_dir);
-    // Reuse needs a change stamp independent of size and last-write time.
-    // Only the Unix metadata key includes the inode's change time.
-    let commit =
-        if cfg!(unix) && std::env::var("NX_CLOUD_ULTRACACHE_REHASH").as_deref() == Ok("true") {
-            clean_commit(workspace_root)
-        } else {
-            None
-        };
+    let commit = if should_capture_rehash_provenance() {
+        clean_commit(workspace_root)
+    } else {
+        None
+    };
 
     trace!("Gathering files in {}", workspace_root.display());
     let now = std::time::Instant::now();

@@ -44,68 +44,125 @@ describe('hydrateFileMap', () => {
     hydrateFileMap(fileMap, rustReferences);
     expect((getFileMap() as any).allWorkspaceFiles).toEqual([]);
   });
+});
+
+describe('rehash provenance from a native workspace gather', () => {
+  let fs: TempFs;
+  let commit: string;
+  const supportsProvenance = process.platform !== 'win32' && !IS_WASM;
+  const git = (...args: string[]) =>
+    execFileSync('git', args, { cwd: fs.tempDir, encoding: 'utf8' }).trim();
+
+  async function gather() {
+    const { projectFileMap, globalFiles, externalReferences } =
+      await getNxWorkspaceFilesFromContext(fs.tempDir, {}, false);
+    hydrateFileMap(
+      { projectFileMap, nonProjectFiles: globalFiles },
+      externalReferences
+    );
+    return getFileMap();
+  }
+
+  beforeEach(() => {
+    vi.stubEnv('CI', 'true');
+    vi.stubEnv('NX_CI_EXECUTION_ID', undefined);
+    vi.stubEnv('NX_NO_CLOUD', undefined);
+    vi.stubEnv('NX_CLOUD_USE_ULTRACACHE', undefined);
+    vi.stubEnv('NX_CLOUD_ULTRACACHE_MODE', undefined);
+    vi.stubEnv('NX_CLOUD_ULTRACACHE_REHASH', undefined);
+    fs = new TempFs('nx-rehash-gather');
+    fs.createFileSync('source.txt', 'committed');
+    git('init', '--quiet');
+    git('add', 'source.txt');
+    git(
+      '-c',
+      'user.name=Nx',
+      '-c',
+      'user.email=nx@example.com',
+      '-c',
+      'commit.gpgsign=false',
+      'commit',
+      '--quiet',
+      '-m',
+      'source'
+    );
+    commit = git('rev-parse', 'HEAD');
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    resetWorkspaceContext();
+    fs.cleanup();
+  });
+
+  it.each([
+    { name: 'CI default', ci: 'true', capture: true },
+    { name: 'ordinary local command', ci: 'false', capture: false },
+    {
+      name: 'explicit local opt-in',
+      ci: 'false',
+      setting: 'true',
+      capture: true,
+    },
+    {
+      name: 'explicit CI opt-out',
+      ci: 'true',
+      setting: 'false',
+      capture: false,
+    },
+    { name: 'invalid CI setting', ci: 'true', setting: 'TRUE', capture: false },
+    { name: 'empty CI setting', ci: 'true', setting: '', capture: false },
+    {
+      name: 'Cloud execution without provider detection',
+      ci: 'false',
+      executionId: 'job',
+      capture: true,
+    },
+    {
+      name: 'Cloud disabled in CI',
+      ci: 'true',
+      noCloud: 'true',
+      capture: false,
+    },
+  ])('$name', async ({ ci, setting, executionId, noCloud, capture }) => {
+    vi.stubEnv('CI', ci);
+    vi.stubEnv('NX_CLOUD_ULTRACACHE_REHASH', setting);
+    vi.stubEnv('NX_CI_EXECUTION_ID', executionId);
+    vi.stubEnv('NX_NO_CLOUD', noCloud);
+    const fresh = await gather();
+    const expected = capture && supportsProvenance ? commit : undefined;
+    expect(fresh.rehashSourceCommit).toBe(expected);
+    expect(fresh.rustReferences.rehashSourceCommit).toBe(expected);
+  });
 
   it('keeps a dirty native gather unverified when the runner later sees a clean checkout', async () => {
-    const fs = new TempFs('nx-rehash-gather');
-    const git = (...args: string[]) =>
-      execFileSync('git', args, { cwd: fs.tempDir, encoding: 'utf8' }).trim();
-    const gather = async () => {
-      const { projectFileMap, globalFiles, externalReferences } =
-        await getNxWorkspaceFilesFromContext(fs.tempDir, {}, false);
-      const map = { projectFileMap, nonProjectFiles: globalFiles };
-      hydrateFileMap(map, externalReferences);
-      return getFileMap();
-    };
-    vi.stubEnv('NX_CLOUD_ULTRACACHE_REHASH', 'true');
-    try {
-      fs.createFileSync('source.txt', 'committed');
-      git('init', '--quiet');
-      git('add', 'source.txt');
-      git(
-        '-c',
-        'user.name=Nx',
-        '-c',
-        'user.email=nx@example.com',
-        '-c',
-        'commit.gpgsign=false',
-        'commit',
-        '--quiet',
-        '-m',
-        'source'
-      );
-      const commit = git('rev-parse', 'HEAD');
-      fs.createFileSync('source.txt', 'dirty');
-      const dirty = await gather();
-      expect(dirty.rehashSourceCommit).toBeUndefined();
-      git('restore', 'source.txt');
-      git('diff', '--quiet', commit, '--');
-      const stale = await gather();
-      expect(
-        stale.fileMap.nonProjectFiles.find((f) => f.file === 'source.txt').hash
-      ).not.toBe(hashFile(join(fs.tempDir, 'source.txt')));
-      expect(stale.rehashSourceCommit).toBeUndefined();
-      expect(stale.rustReferences.rehashSourceCommit).toBeUndefined();
+    fs.createFileSync('source.txt', 'dirty');
+    const dirty = await gather();
+    expect(dirty.rehashSourceCommit).toBeUndefined();
+    git('restore', 'source.txt');
+    git('diff', '--quiet', commit, '--');
+    const stale = await gather();
+    expect(
+      stale.fileMap.nonProjectFiles.find((f) => f.file === 'source.txt').hash
+    ).not.toBe(hashFile(join(fs.tempDir, 'source.txt')));
+    expect(stale.rehashSourceCommit).toBeUndefined();
+    expect(stale.rustReferences.rehashSourceCommit).toBeUndefined();
 
-      resetWorkspaceContext();
-      const fresh = await gather();
-      if (process.platform !== 'win32' && !IS_WASM) {
-        expect(fresh.rehashSourceCommit).toBe(commit);
-        expect(fresh.rustReferences.rehashSourceCommit).toBe(commit);
-        expect(JSON.stringify(fresh.rustReferences)).not.toContain(commit);
-      }
-      hydrateFileMap(fresh.fileMap, {
-        ...fresh.rustReferences,
-        rehashSourceCommit: commit,
-      });
-      expect(getFileMap().rehashSourceCommit).toBeUndefined();
-      expect(getFileMap().rustReferences.rehashSourceCommit).toBeUndefined();
-      hydrateFileMap(stale.fileMap, fresh.rustReferences);
-      expect(getFileMap().rehashSourceCommit).toBeUndefined();
-    } finally {
-      vi.unstubAllEnvs();
-      resetWorkspaceContext();
-      fs.cleanup();
+    resetWorkspaceContext();
+    const fresh = await gather();
+    if (supportsProvenance) {
+      expect(fresh.rehashSourceCommit).toBe(commit);
+      expect(fresh.rustReferences.rehashSourceCommit).toBe(commit);
+      expect(JSON.stringify(fresh.rustReferences)).not.toContain(commit);
     }
+    hydrateFileMap(fresh.fileMap, {
+      ...fresh.rustReferences,
+      rehashSourceCommit: commit,
+    });
+    expect(getFileMap().rehashSourceCommit).toBeUndefined();
+    expect(getFileMap().rustReferences.rehashSourceCommit).toBeUndefined();
+    hydrateFileMap(stale.fileMap, fresh.rustReferences);
+    expect(getFileMap().rehashSourceCommit).toBeUndefined();
   });
 });
 
