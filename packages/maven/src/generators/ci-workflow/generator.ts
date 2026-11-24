@@ -24,7 +24,6 @@ function getCiCommands(ci: Schema['ci']): Command[] {
         {
           command: `./nx affected --base=$NX_BASE --head=$NX_HEAD -t verify-ci`,
         },
-        getNxCloudFixCiCommand(),
       ];
     }
     default: {
@@ -35,20 +34,9 @@ function getCiCommands(ci: Schema['ci']): Command[] {
           ],
           command: `./nx affected -t verify-ci`,
         },
-        getNxCloudFixCiCommand(),
       ];
     }
   }
-}
-
-function getNxCloudFixCiCommand(): Command {
-  return {
-    comments: [
-      `Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci`,
-    ],
-    command: `./nx fix-ci`,
-    alwaysRun: true,
-  };
 }
 
 export type Command = {

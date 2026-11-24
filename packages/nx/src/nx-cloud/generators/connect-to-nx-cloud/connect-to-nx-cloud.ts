@@ -109,7 +109,7 @@ export async function printSuccessMessage(
     false
   );
   output.note({
-    title: `Your Self-Healing CI and Remote Caching setup is almost complete`,
+    title: `Your Nx Cloud setup is almost complete`,
     bodyLines: [
       `1. Commit your changes and push a pull request to your repository.`,
       `2. Go to Nx Cloud and finish the setup: ${connectCloudUrl}`,

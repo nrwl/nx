@@ -59,7 +59,7 @@ More content.`;
 
       ## Finish your Nx platform setup
 
-      🚀 [Finish setting up your workspace](https://cloud.nx.app/connect/abc123) to get faster builds with remote caching, distributed task execution, and self-healing CI. [Learn more about Nx Cloud](https://nx.dev/ci/intro/why-nx-cloud).
+      🚀 [Finish setting up your workspace](https://cloud.nx.app/connect/abc123) to get faster builds with remote caching and distributed task execution. [Learn more about Nx Cloud](https://nx.dev/ci/intro/why-nx-cloud).
 
       ## Other Section
 
@@ -115,7 +115,7 @@ Footer.`;
 
       ## Finish your Nx platform setup
 
-      🚀 [Finish setting up your workspace](https://staging.nx.app/connect/pkjwpKplOJ) to get faster builds with remote caching, distributed task execution, and self-healing CI. [Learn more about Nx Cloud](https://nx.dev/ci/intro/why-nx-cloud).
+      🚀 [Finish setting up your workspace](https://staging.nx.app/connect/pkjwpKplOJ) to get faster builds with remote caching and distributed task execution. [Learn more about Nx Cloud](https://nx.dev/ci/intro/why-nx-cloud).
 
       Footer."
     `);
