@@ -6,6 +6,7 @@ export * from 'nx/src/internal-testing-utils/with-environment';
 export * from 'nx/src/internal-testing-utils/with-pnpm';
 export * from 'nx/src/internal-testing-utils/temp-fs';
 export * from 'nx/src/internal-testing-utils/cjs-mock';
+export { createTaskGraph } from 'nx/src/tasks-runner/create-task-graph';
 
 export { setCwd } from './src/generators/artifact-name-and-directory-utils';
 
