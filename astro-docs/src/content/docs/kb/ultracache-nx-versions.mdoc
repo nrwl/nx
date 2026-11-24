@@ -23,7 +23,8 @@ A task's hash then changes when one of those files appears or disappears, as bui
 Nx 24.1.0 and later hash only the other files a recording read.
 
 To hash the excluded files too, set [`ultracache.includeUnstableFiles`](/docs/reference/project-configuration#include-unstable-files) on the target.
-That option requires Nx 24.1.0 or later, and Nx 24.0 reports it as unknown.
+That option requires Nx 24.1.0 or later.
+Nx 24.0 fails with an error when a target sets it.
 
 ## Control Ultracache for one pipeline
 

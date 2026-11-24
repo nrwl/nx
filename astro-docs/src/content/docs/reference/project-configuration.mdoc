@@ -907,7 +907,7 @@ The first path segment cannot contain `*`, so `**/generated/**` is not supported
 A file that `.gitignore` or `.nxignore` excludes is unstable: it can differ between two runs on the same commit. Set `includeUnstableFiles: true` to also hash the recorded reads of such files, such as `dist/libs/ui/index.d.ts`. It defaults to `false`.
 
 `includeUnstableFiles` requires Nx 24.1.0 or later.
-Nx 24.0 always hashes those reads and reports the option as unknown ([Ultracache and Nx versions](/docs/kb/ultracache-nx-versions#unstable-files-in-nx-240)).
+Nx 24.0 always hashes those reads and fails with an error when a target sets the option ([Ultracache and Nx versions](/docs/kb/ultracache-nx-versions#unstable-files-in-nx-240)).
 
 ```json
 {
