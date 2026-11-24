@@ -4,18 +4,21 @@ use crate::native::tasks::hashers::{
     collect_workspace_file_indices_cached,
 };
 use crate::native::tasks::id_set::IdSet;
+use crate::native::tasks::rehash_evidence::{EMPTY, EvidenceId, RehashEvidence};
 use crate::native::types::FileData;
+use parking_lot::Mutex;
 
-#[napi(object)]
-pub struct RehashResult {
+#[napi(object, object_from_js = false)]
+pub struct RehashResult<'env> {
     pub value: String,
-    pub mutable_inputs: Vec<String>,
+    #[napi(ts_type = "string[]")]
+    pub mutable_inputs: Array<'env>,
 }
 
 struct InstructionValue {
     hash: SharedStr,
     // Only files absent from the commit, plus every selected dependency output.
-    mutable_inputs: Vec<String>,
+    evidence: EvidenceId,
 }
 
 #[napi]
@@ -23,8 +26,9 @@ impl TaskHasher {
     /// Hash a workspace after restores and execution have finished. All disk
     /// state is local to this call; a later batch inventories and reads again.
     #[napi]
-    pub fn hash_plans_for_rehash(
+    pub fn hash_plans_for_rehash<'env>(
         &self,
+        env: &'env Env,
         #[napi(ts_arg_type = "ExternalObject<Record<string, Array<HashInstruction>>>")]
         plans: &External<HashPlans>,
         task_ids: Vec<String>,
@@ -36,7 +40,9 @@ impl TaskHasher {
         >,
         file_map_matches_tracked_files: Option<bool>,
         max_live_read_bytes: Option<f64>,
-    ) -> anyhow::Result<Vec<RehashResult>> {
+        max_result_bytes: Option<f64>,
+    ) -> anyhow::Result<Vec<RehashResult<'env>>> {
+        let mut evidence = RehashEvidence::new(max_result_bytes, task_ids.len())?;
         // A process environment can be large. Copy only the variables the
         // plan reads, or the entire environment for a shell command.
         let mut envs = HashMap::with_capacity(task_ids.len());
@@ -101,9 +107,18 @@ impl TaskHasher {
             &tracked,
             file_map_matches_tracked_files.unwrap_or(false),
             &budget,
+            &mut evidence,
         );
         budget.release_unused_pages();
-        results
+        let results = results?;
+        let arrays = evidence.into_arrays(env, results.iter().map(|(_, set)| *set))?;
+        Ok(results
+            .into_iter()
+            .map(|(value, set)| RehashResult {
+                value,
+                mutable_inputs: arrays[set].expect("every returned set was materialized"),
+            })
+            .collect())
     }
 }
 
@@ -117,7 +132,8 @@ impl TaskHasher {
         tracked: &[&str],
         file_map_matches_tracked_files: bool,
         budget: &RehashReadBudget,
-    ) -> anyhow::Result<Vec<RehashResult>> {
+        evidence: &mut RehashEvidence,
+    ) -> anyhow::Result<Vec<(String, EvidenceId)>> {
         let pool = &plans.pool;
         let is_tracked = |path: &str| tracked.binary_search(&path).is_ok();
         let mut used = vec![false; pool.len()];
@@ -140,6 +156,7 @@ impl TaskHasher {
             &self.all_workspace_files,
             is_tracked,
             budget,
+            evidence,
         )?;
         let proof = self
             .ignored_index
@@ -160,6 +177,7 @@ impl TaskHasher {
             verified_files,
             proof,
             budget,
+            evidence,
         )?;
         drop(json.raw_hashes);
         let keys: Vec<SharedStr> = (0..pool.len() as u32)
@@ -175,7 +193,7 @@ impl TaskHasher {
         let mut sorted_externals = self.project_graph.external_nodes.keys().collect::<Vec<_>>();
         sorted_externals.sort_unstable();
         let runtime_cache = DashMap::new();
-        let json_file_set_cache = json.values;
+        let json_file_set_cache = DashMap::new();
         let files_expansion_cache = FilesExpansionCache::new();
         let ordinary = |task_id: &str,
                         id,
@@ -210,13 +228,16 @@ impl TaskHasher {
         // Disk groups and non-env instructions are independent of the task.
         // Keep their values once, and only the IO evidence the caller needs.
         let empty_env = HashMap::new();
+        // Only one worker assembles an evidence union at a time. Hashing and
+        // per-task folds still run in parallel, independently of the JS handles.
+        let evidence = Mutex::new(evidence);
         let mutable_paths = |indices: &[u32], files: &[FileData]| {
-            indices
-                .iter()
-                .map(|&i| &files[i as usize].file)
-                .filter(|path| !is_tracked(path))
-                .cloned()
-                .collect()
+            evidence.lock().from_paths(
+                indices
+                    .iter()
+                    .map(|&i| files[i as usize].file.as_str())
+                    .filter(|path| !is_tracked(path)),
+            )
         };
         let values = used
             .par_iter()
@@ -227,37 +248,28 @@ impl TaskHasher {
                 }
                 let id = index as u32;
                 let instruction = pool.get(id);
-                let (hash, mutable_inputs) = match &*instruction {
+                let (hash, evidence_id) = match &*instruction {
                     HashInstruction::Environment(_) | HashInstruction::Runtime(_) => {
                         return Ok(None);
                     }
                     HashInstruction::IgnoredFileSet { .. } | HashInstruction::TaskOutput(..) => {
                         let files = settled.groups[index].as_deref().unwrap();
-                        let dep_output = matches!(&*instruction, HashInstruction::TaskOutput(..));
-                        let mutable_inputs = files
-                            .iter()
-                            .map(|&id| settled.files.path(id))
-                            .filter(|&path| dep_output || !is_tracked(path))
-                            .map(str::to_owned)
-                            .collect();
-                        (settled.files.fold(files), mutable_inputs)
+                        (settled.files.fold(files), settled.evidence[index])
                     }
+                    HashInstruction::JsonFileSet(_) => json.values[&id].clone(),
                     _ => {
-                        let collect = matches!(
-                            &*instruction,
-                            HashInstruction::JsonFileSet(_) | HashInstruction::TsConfiguration(_)
-                        );
+                        let collect = matches!(&*instruction, HashInstruction::TsConfiguration(_));
                         let (hash, inputs) = ordinary("", id, &instruction, &empty_env, collect)?;
                         // Matched indices point into the immutable file map. Copy only
                         // the paths needed for evidence, even for workspace-wide inputs.
-                        let mutable_inputs = match &*instruction {
+                        let evidence_id = match &*instruction {
                             HashInstruction::WorkspaceFileSet(globs) => {
                                 let indices = collect_workspace_file_indices_cached(
                                     globs,
                                     &self.all_workspace_files,
                                     &self.workspace_file_indices_cache,
                                 )?;
-                                mutable_paths(&indices, &self.all_workspace_files)
+                                mutable_paths(&indices, &self.all_workspace_files)?
                             }
                             HashInstruction::ProjectFileSet(project, globs) => {
                                 let indices = collect_project_file_indices_cached(
@@ -266,20 +278,23 @@ impl TaskHasher {
                                     &self.project_file_map,
                                     &self.project_file_indices_cache,
                                 )?;
-                                mutable_paths(&indices, &self.project_file_map[project])
+                                mutable_paths(&indices, &self.project_file_map[project])?
                             }
-                            _ => inputs
-                                .files
-                                .into_iter()
-                                .filter(|p| !is_tracked(p))
-                                .collect(),
+                            _ if inputs.files.is_empty() => EMPTY,
+                            _ => evidence.lock().from_paths(
+                                inputs
+                                    .files
+                                    .iter()
+                                    .map(String::as_str)
+                                    .filter(|p| !is_tracked(p)),
+                            )?,
                         };
-                        (hash, mutable_inputs)
+                        (hash, evidence_id)
                     }
                 };
                 Ok(Some(InstructionValue {
                     hash: hash.into(),
-                    mutable_inputs,
+                    evidence: evidence_id,
                 }))
             })
             .collect::<anyhow::Result<Vec<_>>>()?;
@@ -291,7 +306,7 @@ impl TaskHasher {
                 let env = &per_task_envs[task_id];
                 let folds = FoldKind::folds_recorded(ids, &kinds);
                 let mut entries = Vec::with_capacity(ids.len());
-                let mut mutable_inputs = HashSet::new();
+                let mut recorded_evidence = EMPTY;
                 let mut reads = IdSet::default();
                 let mut covered = IdSet::default();
                 for &id in ids {
@@ -310,7 +325,6 @@ impl TaskHasher {
                         }
                     }
                     let value = if let Some(value) = &values[index] {
-                        mutable_inputs.extend(value.mutable_inputs.iter().map(String::as_str));
                         value.hash.clone()
                     } else {
                         ordinary(task_id, id, &pool.get(id), env, false)?.0.into()
@@ -320,12 +334,12 @@ impl TaskHasher {
                 if folds {
                     let mut reads = reads.into_sorted_vec();
                     reads.retain(|id| !covered.contains(*id) && settled.files.was_read(*id));
-                    mutable_inputs.extend(
+                    recorded_evidence = evidence.lock().from_paths(
                         reads
                             .iter()
                             .map(|&id| settled.files.path(id))
                             .filter(|&path| !is_tracked(path)),
-                    );
+                    )?;
                     let recorded = settled.files.fold(&reads);
                     if let Some((_, config)) = entries
                         .iter_mut()
@@ -334,13 +348,18 @@ impl TaskHasher {
                         *config = fold_configuration(config, &recorded);
                     }
                 }
-                let mut mutable_inputs: Vec<_> =
-                    mutable_inputs.into_iter().map(str::to_owned).collect();
-                mutable_inputs.sort_unstable();
-                Ok(RehashResult {
-                    value: fold_ranked_hash(&mut entries, &keys, &ranks),
-                    mutable_inputs,
-                })
+                let groups = ids
+                    .iter()
+                    .filter_map(|&id| {
+                        let i = id as usize;
+                        if folds && kinds[i] == FoldKind::UltracacheGroup {
+                            return None;
+                        }
+                        values[i].as_ref().map(|v| v.evidence)
+                    })
+                    .chain(std::iter::once(recorded_evidence));
+                let set = evidence.lock().union(groups)?;
+                Ok((fold_ranked_hash(&mut entries, &keys, &ranks), set))
             })
             .collect()
     }

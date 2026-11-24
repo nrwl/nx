@@ -3,11 +3,14 @@ import { retrieveWorkspaceFiles } from '../project-graph/utils/retrieve-workspac
 import { NxJsonConfiguration } from '../config/nx-json';
 import { createTaskGraph } from '../tasks-runner/create-task-graph';
 import { NativeTaskHasherImpl } from './native-task-hasher-impl';
+import { InProcessTaskHasher } from './task-hasher';
+import { setWorkspaceRoot, workspaceRoot } from '../utils/workspace-root';
 import {
   closeDbConnection,
   connectToNxDb,
   HashPlanner,
   UltracacheConfigurationStore,
+  UltracacheConfigurations,
 } from '../native';
 import { join } from 'path';
 import type { TaskGraph, TaskGraphEdge } from '../config/task-graph';
@@ -1519,7 +1522,12 @@ describe('native task hasher', () => {
       workspaceFiles.rustReferences,
       { selectivelyHashTsConfig: false }
     );
-    return { taskGraph, impl };
+    return {
+      taskGraph,
+      impl,
+      projectGraph,
+      rustReferences: workspaceFiles.rustReferences,
+    };
   }
 
   it('hashes up front only the tasks whose plan holds no output of another task', async () => {
@@ -1634,6 +1642,86 @@ describe('native task hasher', () => {
         .filter((path) => !tracked.includes(path))
         .sort(),
     });
+  });
+
+  it('shares equal mutable evidence across distinct tasks and rejects an oversized result atomically', async () => {
+    const { taskGraph, projectGraph, rustReferences } = await upfrontFixture();
+    const child = taskGraph.tasks['child:compile'];
+    const parent = taskGraph.tasks['parent:compile'];
+    const other = {
+      ...parent,
+      id: parent.id + ':other',
+      target: { ...parent.target, configuration: 'other' },
+    };
+    taskGraph.tasks[other.id] = other;
+    taskGraph.dependencies[other.id] = taskGraph.dependencies[parent.id];
+    taskGraph.continuousDependencies[other.id] = [];
+    child.outputs = ['libs/child/out'];
+    const paths = Array.from(
+      { length: 64 },
+      (_, i) => `libs/child/out/${i}.d.ts`
+    ).sort();
+    await tempFs.createFiles(Object.fromEntries(paths.map((p) => [p, p])));
+
+    const tasks = [other, child, parent];
+    const envs = Object.fromEntries(tasks.map((t) => [t.id, {}]));
+    const tracked = ['libs/child/src/index.ts'];
+    const configs = UltracacheConfigurations.fromEntries(
+      'head',
+      Object.fromEntries(
+        tasks.map((t) => [t.id, { commit: 'head', inputs: tracked }])
+      )
+    );
+    const originalRoot = workspaceRoot;
+    setWorkspaceRoot(tempFs.tempDir);
+    try {
+      const hasher = new InProcessTaskHasher(
+        projectGraph,
+        nxJson,
+        rustReferences,
+        {}
+      );
+      const ordinary = await hasher.hashTasks(
+        tasks,
+        taskGraph,
+        envs,
+        tempFs.tempDir,
+        true,
+        configs
+      );
+      const run = (maxResultBytes: number) =>
+        hasher.hashTasksForRehash(
+          tasks,
+          taskGraph,
+          envs,
+          tempFs.tempDir,
+          configs,
+          tracked,
+          false,
+          128 * 1024 * 1024,
+          maxResultBytes
+        );
+      await expect(run(4 * 1024)).rejects.toThrow(
+        /NX_REHASH_MEMORY_BUDGET.*maxResultBytes/
+      );
+      const result = await run(64 * 1024);
+      expect(result.map((r) => r.value)).toEqual(ordinary.map((r) => r.value));
+      for (const [i, r] of result.entries()) {
+        expect(r.mutableInputs).toEqual(
+          [
+            ...new Set([
+              ...ordinary[i].inputs!.files.filter((p) => !tracked.includes(p)),
+              ...ordinary[i].inputs!.depOutputs,
+            ]),
+          ].sort()
+        );
+      }
+      expect(result[0].mutableInputs).toEqual(expect.arrayContaining(paths));
+      expect(result[0].mutableInputs).toBe(result[2].mutableInputs);
+      expect(result[1].mutableInputs).not.toBe(result[0].mutableInputs);
+    } finally {
+      setWorkspaceRoot(originalRoot);
+    }
   });
 
   it('rehashes in task order with only mutable file and dependency-output evidence', async () => {

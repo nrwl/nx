@@ -155,7 +155,8 @@ export class NativeTaskHasherImpl implements TaskHasherImpl {
     configurations: UltracacheConfigurations | undefined,
     trackedFiles: readonly string[] | Buffer,
     fileMapMatchesTrackedFiles = false,
-    maxLiveReadBytes?: number
+    maxLiveReadBytes?: number,
+    maxResultBytes?: number
   ): RehashResult[] {
     const ids = tasks.map((task) => task.id);
     const plans = this.plan(ids, taskGraph, configurations, true);
@@ -166,7 +167,8 @@ export class NativeTaskHasherImpl implements TaskHasherImpl {
       cwd,
       trackedFiles,
       fileMapMatchesTrackedFiles,
-      maxLiveReadBytes
+      maxLiveReadBytes,
+      maxResultBytes
     );
   }
 

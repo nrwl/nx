@@ -313,7 +313,7 @@ export declare class TaskHasher {
    * Hash a workspace after restores and execution have finished. All disk
    * state is local to this call; a later batch inventories and reads again.
    */
-  hashPlansForRehash(plans: ExternalObject<Record<string, Array<HashInstruction>>>, taskIds: Array<string>, perTaskEnvs: Record<string, Record<string, string>>, cwd: string, trackedFiles: ReadonlyArray<string> | Buffer, fileMapMatchesTrackedFiles?: boolean | undefined | null, maxLiveReadBytes?: number | undefined | null): Array<RehashResult>
+  hashPlansForRehash(plans: ExternalObject<Record<string, Array<HashInstruction>>>, taskIds: Array<string>, perTaskEnvs: Record<string, Record<string, string>>, cwd: string, trackedFiles: ReadonlyArray<string> | Buffer, fileMapMatchesTrackedFiles?: boolean | undefined | null, maxLiveReadBytes?: number | undefined | null, maxResultBytes?: number | undefined | null): Array<RehashResult>
   constructor(workspaceRoot: string, projectGraph: ExternalObject<ProjectGraph>, projectFileMap: ExternalObject<Record<string, Array<FileData>>>, allWorkspaceFiles: ExternalObject<Array<FileData>>, tsConfig: Buffer, tsConfigPaths: Record<string, Array<string>>, rootTsconfigPath: string | undefined | null, options: HasherOptions | undefined | null, ignoredIndex: ExternalObject<IgnoredIndexReader>)
   /**
    * Hash each task's instructions using the env map keyed by `task.id`.
@@ -1217,7 +1217,7 @@ export declare function readShebangHeaders(workspaceRoot: string, files: Array<s
 
 export interface RehashResult {
   value: string
-  mutableInputs: Array<string>
+  mutableInputs: string[]
 }
 
 export declare function remove(src: string): void

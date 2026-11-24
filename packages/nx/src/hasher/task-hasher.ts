@@ -100,9 +100,13 @@ export interface TaskHasher {
    * Set fileMapMatchesTrackedFiles only when the file map and the settled worktree
    * are known to contain the same bytes for the commit's tracked regular files.
    * A Buffer contains NUL-terminated UTF-8 paths. Dependency outputs always use
-   * their settled bytes. maxLiveReadBytes is an optional nonnegative safe integer.
-   * Each distinct live input consumes its page-rounded size. Reuse is free.
-   * Exceeding the limit rejects the entire batch with NX_REHASH_MEMORY_BUDGET.
+   * their settled bytes. Tasks with identical evidence share a mutableInputs
+   * array. Callers must treat these arrays as read-only.
+   *
+   * maxLiveReadBytes bounds page-rounded live reads. Reused hashes are free.
+   * maxResultBytes independently bounds the estimated storage for task records,
+   * unique paths and evidence sets. Each optional limit is a nonnegative safe
+   * integer. Exceeding either rejects the entire batch with NX_REHASH_MEMORY_BUDGET.
    */
   hashTasksForRehash?(
     tasks: Task[],
@@ -112,7 +116,8 @@ export interface TaskHasher {
     configurations: UltracacheConfigurations,
     trackedFiles: readonly string[] | Buffer,
     fileMapMatchesTrackedFiles?: boolean,
-    maxLiveReadBytes?: number
+    maxLiveReadBytes?: number,
+    maxResultBytes?: number
   ): Promise<RehashResult[]>;
 
   /**
@@ -301,7 +306,8 @@ export class InProcessTaskHasher implements TaskHasher {
     configurations: UltracacheConfigurations,
     trackedFiles: readonly string[] | Buffer,
     fileMapMatchesTrackedFiles = false,
-    maxLiveReadBytes?: number
+    maxLiveReadBytes?: number,
+    maxResultBytes?: number
   ): Promise<RehashResult[]> {
     const hashes = this.taskHasher.hashTasksForRehash(
       tasks,
@@ -311,7 +317,8 @@ export class InProcessTaskHasher implements TaskHasher {
       configurations,
       trackedFiles,
       fileMapMatchesTrackedFiles,
-      maxLiveReadBytes
+      maxLiveReadBytes,
+      maxResultBytes
     );
     return hashes.map(({ value, mutableInputs }, i) => ({
       value: hashArray([value, this.hashCommand(tasks[i])]),

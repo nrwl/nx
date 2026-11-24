@@ -5,6 +5,7 @@ pub mod hashers;
 mod id_set;
 mod inputs;
 mod plan_memo;
+pub(crate) mod rehash_evidence;
 pub mod task_hasher;
 pub mod types;
 pub(crate) mod ultracache_eligibility;

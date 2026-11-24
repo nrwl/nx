@@ -172,6 +172,7 @@ mod tests {
                 files.iter().enumerate().filter(|_| trusted),
                 trusted.then_some(&*proof),
                 &RehashReadBudget::new(Some(bytes as f64))?,
+                &mut crate::native::tasks::rehash_evidence::RehashEvidence::new(None, 0)?,
             )?;
             Ok(settled
                 .groups

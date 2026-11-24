@@ -9,6 +9,10 @@ use xxhash_rust::xxh3::Xxh3;
 use crate::native::glob::build_glob_set;
 use crate::native::hasher::hash;
 use crate::native::tasks::hashers::hash_workspace_files::globs_from_workspace_globs;
+use crate::native::tasks::{
+    id_set::IdSet,
+    rehash_evidence::{EvidenceId, RehashEvidence},
+};
 use crate::native::types::FileData;
 
 #[derive(Clone)]
@@ -121,28 +125,33 @@ pub(crate) fn hash_settled_json<'a>(
     workspace_files: &'a [FileData],
     is_tracked: impl Fn(&str) -> bool,
     budget: &super::RehashReadBudget,
+    evidence: &mut RehashEvidence,
 ) -> Result<SettledJson<'a>> {
-    let mut selections = Vec::new();
-    let mut remaining = HashMap::new();
-    for (id, input) in inputs {
-        let files = collect_json_input_files(
+    let inputs: Vec<_> = inputs.collect();
+    let select = |input: &crate::native::tasks::types::JsonFileSetInput| {
+        collect_json_input_files(
             &input.json_path,
             input.project_name.as_deref(),
             project_files,
             workspace_files,
-        )?;
-        for &path in &files {
+        )
+    };
+    // Keep a use count per path, without retaining a workspace-sized path
+    // vector for every projection before the evidence budget can reject one.
+    let mut remaining = HashMap::new();
+    for (_, input) in &inputs {
+        for path in select(input)? {
             *remaining.entry(path).or_insert(0usize) += 1;
         }
-        selections.push((id, input, files));
     }
     let mut contents = HashMap::new();
     let mut buffer = [0; 32 * 1024];
     let mut raw_hashes = HashMap::new();
-    let values = dashmap::DashMap::new();
-    for (id, input, files) in selections {
+    let mut values = HashMap::new();
+    for (id, input) in inputs {
+        let files = select(&input)?;
         let mut hasher = Xxh3::new();
-        let mut mutable_files = Vec::new();
+        let mut mutable_files = IdSet::default();
         for path in files {
             let content = match contents.entry(path) {
                 std::collections::hash_map::Entry::Occupied(e) => e.into_mut(),
@@ -165,7 +174,7 @@ pub(crate) fn hash_settled_json<'a>(
                     input.exclude_fields.as_deref(),
                 );
                 if !is_tracked(path) {
-                    mutable_files.push(path.to_owned());
+                    evidence.add_path(&mut mutable_files, path)?;
                 }
             }
             let count = remaining.get_mut(path).unwrap();
@@ -176,17 +185,14 @@ pub(crate) fn hash_settled_json<'a>(
         }
         values.insert(
             id,
-            JsonHashResult {
-                hash: hasher.digest().to_string(),
-                files: mutable_files,
-            },
+            (hasher.digest().to_string(), evidence.intern(mutable_files)?),
         );
     }
     Ok(SettledJson { values, raw_hashes })
 }
 
 pub(crate) struct SettledJson<'a> {
-    pub(crate) values: dashmap::DashMap<u32, JsonHashResult>,
+    pub(crate) values: HashMap<u32, (String, EvidenceId)>,
     pub(crate) raw_hashes: HashMap<&'a str, Option<String>>,
 }
 
@@ -466,6 +472,7 @@ mod tests {
         use crate::native::tasks::types::HashInstruction;
         use crate::native::test_utils::hash_plans;
         let budget = RehashReadBudget::new(Some((2 * page_bytes(1)) as f64)).unwrap();
+        let mut evidence = RehashEvidence::new(None, 0).unwrap();
         let batch = hash_settled_json(
             dir.path(),
             inputs
@@ -477,6 +484,7 @@ mod tests {
             &workspace,
             |path| path == "b.json",
             &budget,
+            &mut evidence,
         )
         .unwrap();
         for (id, input) in inputs.iter().enumerate() {
@@ -491,8 +499,8 @@ mod tests {
             )
             .unwrap();
             let settled = batch.values.get(&(id as u32)).unwrap();
-            assert_eq!(settled.hash, ordinary.hash);
-            assert_eq!(settled.files, ["a.json"]);
+            assert_eq!(settled.0, ordinary.hash);
+            assert_eq!(evidence.names(settled.1), ["a.json"]);
         }
         assert_eq!(batch.raw_hashes["a.json"], Some(hash(b"invalid")));
         assert_eq!(batch.raw_hashes["missing.json"], None);
@@ -512,6 +520,7 @@ mod tests {
             std::iter::empty(),
             None,
             &budget,
+            &mut evidence,
         )
         .unwrap();
         assert_eq!(raw.groups.iter().flatten().next().unwrap().len(), 2);

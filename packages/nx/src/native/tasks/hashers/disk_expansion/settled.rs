@@ -17,6 +17,7 @@ use crate::native::glob::{NxGlobSet, build_glob_set};
 use crate::native::tasks::hashers::RehashReadBudget;
 use crate::native::tasks::hashers::{fold_file_hashes, output_entries};
 use crate::native::tasks::id_set::IdSet;
+use crate::native::tasks::rehash_evidence::{EMPTY, EvidenceId, RehashEvidence};
 use crate::native::tasks::types::{HashInstruction, HashPlans};
 use crate::native::types::FileData;
 use crate::native::walker::DiskWalkIgnores;
@@ -250,7 +251,8 @@ fn hash_stream(
 /// Sorted file IDs per disk instruction. IDs order like the workspace-relative paths.
 pub(crate) struct SettledGroups<'a> {
     pub(crate) files: SettledFiles<'a>,
-    pub(crate) groups: Vec<Option<Vec<u32>>>,
+    pub(crate) groups: Vec<Option<Arc<[u32]>>>,
+    pub(crate) evidence: Vec<EvidenceId>,
 }
 
 impl<'a> SettledGroups<'a> {
@@ -263,6 +265,7 @@ impl<'a> SettledGroups<'a> {
         verified_files: impl Iterator<Item = (usize, &'a FileData)>,
         proof: Option<&RehashFileMap>,
         budget: &RehashReadBudget,
+        evidence: &mut RehashEvidence,
     ) -> Result<Self> {
         let mut parsed: HashMap<(Arc<str>, bool), Arc<Patterns>> = HashMap::new();
         let mut groups = Vec::with_capacity(used.len());
@@ -323,12 +326,45 @@ impl<'a> SettledGroups<'a> {
             .map(|p| p.entry.root.as_str())
             .collect();
         let mut files = SettledFiles::inventory(workspace_root, roots, tracked)?;
-        let groups: Vec<_> = groups
-            .into_par_iter()
-            .map(|group| group.map(|group| files.select(&group)))
-            .collect();
+        // Admit each selection before retaining the next one. An output glob
+        // can match the whole workspace. Cap scratch at one such selection,
+        // and share identical membership even across different selectors.
+        let mut selections = HashSet::<Arc<[u32]>>::new();
+        let mut group_evidence = Vec::with_capacity(groups.len());
+        let groups = groups
+            .into_iter()
+            .enumerate()
+            .map(|(index, group)| {
+                let Some(group) = group else {
+                    group_evidence.push(EMPTY);
+                    return Ok(None);
+                };
+                let selected = files.select(&group);
+                let output = matches!(
+                    &*plans.pool.get(index as u32),
+                    HashInstruction::TaskOutput(..)
+                );
+                let mutable = evidence.from_paths(
+                    selected
+                        .iter()
+                        .map(|&id| files.path(id))
+                        .filter(|path| output || tracked.binary_search(path).is_err()),
+                )?;
+                group_evidence.push(mutable);
+                let shared = match selections.get(selected.as_slice()) {
+                    Some(existing) => Arc::clone(existing),
+                    None => {
+                        let shared: Arc<[u32]> = selected.into();
+                        selections.insert(shared.clone());
+                        shared
+                    }
+                };
+                Ok(Some(shared))
+            })
+            .collect::<Result<Vec<_>>>()?;
+        drop(selections);
         let mut needed = vec![false; files.entries.len()];
-        for &id in groups.iter().flatten().flatten() {
+        for &id in groups.iter().flatten().flat_map(|group| group.iter()) {
             needed[id as usize] = true;
         }
         // The caller can attest that the file map and the settled checkout
@@ -349,7 +385,7 @@ impl<'a> SettledGroups<'a> {
             if let Some(outputs) = group
                 && matches!(&*plans.pool.get(id as u32), HashInstruction::TaskOutput(..))
             {
-                for &output in outputs {
+                for &output in outputs.iter() {
                     needed[output as usize] = true;
                 }
             }
@@ -374,7 +410,11 @@ impl<'a> SettledGroups<'a> {
                     Ok::<_, anyhow::Error>(())
                 },
             )?;
-        Ok(Self { files, groups })
+        Ok(Self {
+            files,
+            groups,
+            evidence: group_evidence,
+        })
     }
 }
 
@@ -487,6 +527,7 @@ mod tests {
             std::iter::empty(),
             None,
             &Default::default(),
+            &mut RehashEvidence::new(None, 0).unwrap(),
         )
         .unwrap();
         for &id in &plans.plans["task"] {
@@ -553,6 +594,7 @@ mod tests {
             verified.iter().enumerate(),
             None,
             &Default::default(),
+            &mut RehashEvidence::new(None, 0).unwrap(),
         )
         .unwrap();
         let hash_of = |path| settled.files.hashes[settled.files.exact(path).unwrap()].as_deref();
