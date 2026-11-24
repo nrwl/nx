@@ -30,9 +30,7 @@ impl ProjectScope {
 
     /// The deepest root that is `directory` or holds it.
     fn owner_of_directory(&self, directory: &str) -> Option<&str> {
-        std::iter::once(directory)
-            .chain(parent_dirs(directory))
-            .find_map(|dir| self.roots.get(dir).map(String::as_str))
+        owner_of_directory(&self.roots, directory)
     }
 
     /// The deepest root holding the file at `path`.
@@ -66,18 +64,21 @@ impl ProjectScope {
 /// The roots `ProjectScope` needs for `positives`, from every project root in
 /// the workspace except the workspace root's own (`.`), sorted.
 pub(crate) fn scope_roots(positives: &[Positive], project_roots: &BTreeSet<String>) -> Vec<String> {
-    let all = ProjectScope {
-        roots: project_roots.clone(),
-    };
     let mut needed: BTreeSet<&str> = BTreeSet::new();
     for entry in positives {
-        let Some(owner) = all.owner_of_directory(&entry.root) else {
+        let Some(owner) = owner_of_directory(project_roots, &entry.root) else {
             continue;
         };
         needed.insert(owner);
         needed.extend(roots_below(project_roots, &entry.root));
     }
     needed.into_iter().map(str::to_string).collect()
+}
+
+fn owner_of_directory<'a>(roots: &'a BTreeSet<String>, directory: &str) -> Option<&'a str> {
+    std::iter::once(directory)
+        .chain(parent_dirs(directory))
+        .find_map(|dir| roots.get(dir).map(String::as_str))
 }
 
 /// The roots strictly below `dir`, in order.

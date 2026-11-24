@@ -2,6 +2,7 @@ mod dep_outputs;
 mod hash_plan_inspector;
 pub(crate) mod hash_planner;
 pub mod hashers;
+mod id_set;
 mod inputs;
 mod plan_memo;
 pub mod task_hasher;

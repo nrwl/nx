@@ -1,3 +1,4 @@
+use super::id_set::IdSet;
 use crate::native::tasks::{
     dep_outputs::{collect_continuous_dependencies, get_dep_output},
     types::{
@@ -39,11 +40,11 @@ use std::sync::{Arc, OnceLock};
 /// Ids a plan keeps even when a configuration replaces its declared files: those of
 /// `always` inputs. Only `replace_with_configuration` reads them, so a plan no
 /// configuration replaces skips collecting them.
-struct AlwaysIds(Option<InstructionIdSet>);
+struct AlwaysIds(Option<IdSet>);
 
 impl AlwaysIds {
     fn collecting(collect: bool) -> Self {
-        Self(collect.then(InstructionIdSet::default))
+        Self(collect.then(IdSet::default))
     }
 
     fn extend(&mut self, ids: impl IntoIterator<Item = u32>) {
@@ -61,9 +62,7 @@ impl AlwaysIds {
     }
 
     fn into_sorted_vec(self) -> Vec<u32> {
-        self.0
-            .map(InstructionIdSet::into_sorted_vec)
-            .unwrap_or_default()
+        self.0.map(IdSet::into_sorted_vec).unwrap_or_default()
     }
 }
 
@@ -71,65 +70,117 @@ const ROOT_TSCONFIG_FILES: [&str; 2] = ["tsconfig.base.json", "tsconfig.json"];
 /// Hashed by the always-on workspace fileset every plan carries.
 const ALWAYS_ON_FILES: [&str; 3] = ["nx.json", ".gitignore", ".nxignore"];
 
-/// A task's Ultracache configuration plus a matcher over its observed reads,
-/// used to decide whether a class-mapped file (root tsconfig, a declared
-/// `{json}` file) was actually read. An unparsable glob keeps the native
-/// instruction (conservative).
-struct UltracacheContext<'a> {
-    entry: &'a UltracacheTask,
-    /// Observed reads that name one path outright, answered without a matcher.
-    literal: HashSet<&'a str>,
-    /// Matcher over the observed reads that are real globs; `None` when there are none.
-    observed: Option<NxGlobSet>,
-    /// A glob failed to parse: treat every class-mapped file as read so the
-    /// native instruction is kept.
-    unparsable: bool,
+/// Facts about a recorded glob are independent of the task that read it.
+struct RecordedGlob {
+    root: String,
+    scope: Vec<String>,
+    exact_exclusion: bool,
+    alternatives: Vec<Arc<str>>,
+    // A literal byte prefix and the shared raw glob over its remainder.
+    // None as a matcher means parsing failed; retain class-mapped inputs.
+    observed: Option<(usize, Option<Arc<NxGlobSet>>)>,
 }
 
-impl<'a> UltracacheContext<'a> {
-    fn new(entry: &'a UltracacheTask) -> Self {
-        let mut literal = HashSet::new();
-        let mut patterns: Vec<&str> = Vec::new();
-        for glob in entry.files.iter().map(AsRef::as_ref) {
-            if glob.starts_with('!') {
-                continue;
-            }
-            if ultracache_eligibility::is_literal_path(glob) {
-                literal.insert(glob);
-            } else {
-                patterns.push(glob);
-            }
-        }
-        if patterns.is_empty() {
-            return Self {
-                entry,
-                literal,
-                observed: None,
-                unparsable: false,
-            };
-        }
-        match NxGlobSetBuilder::new(&patterns).and_then(|b| b.build(None)) {
-            Ok(set) => Self {
-                entry,
-                literal,
-                observed: Some(set),
-                unparsable: false,
-            },
-            Err(_) => Self {
-                entry,
-                literal,
-                observed: None,
-                unparsable: true,
-            },
-        }
-    }
+struct RecordedGlobs(HashMap<Arc<str>, RecordedGlob>);
 
-    fn read(&self, path: &str) -> bool {
-        self.literal.contains(path)
-            || match &self.observed {
-                Some(set) => set.is_match(path),
-                None => self.unparsable,
+impl RecordedGlobs {
+    fn new(tasks: &HashMap<String, UltracacheTask>, roots: &BTreeSet<String>) -> Self {
+        let mut unique = HashSet::new();
+        for task in tasks.values() {
+            unique.extend(task.files.iter().cloned());
+        }
+        let mut all = HashMap::new();
+        for glob in unique {
+            let alternatives: Vec<Arc<str>> = if glob.contains('{') {
+                expand_literal_braces(&glob)
+                    .into_iter()
+                    .map(Arc::from)
+                    .collect::<Vec<_>>()
+            } else {
+                Vec::new()
+            };
+            for alternative in &alternatives {
+                all.entry(alternative.clone()).or_insert_with(Vec::new);
             }
+            all.insert(glob, alternatives);
+        }
+        let mut matchers = HashMap::new();
+        Self(
+            all.into_iter()
+                .map(|(glob, alternatives)| {
+                    let negated = glob.starts_with('!');
+                    let (scope, exact_exclusion) =
+                        match parse_group_with_exclusions(std::slice::from_ref(&glob), true) {
+                            Ok((positive, negative)) => (
+                                scope_roots(&positive, roots),
+                                negative.iter().any(|n| n.has_suffix_category()),
+                            ),
+                            Err(_) => (Vec::new(), true),
+                        };
+                    let observed = if negated || ultracache_eligibility::is_literal_path(&glob) {
+                        None
+                    } else {
+                        // Only plain, complete path segments may be removed before
+                        // matching. Keep a leading bang in its original context.
+                        let literal = glob
+                            .split(['*', '?', '[', ']', '{', '}', '\\'])
+                            .next()
+                            .unwrap_or("");
+                        let mut end = literal.rfind('/').map_or(0, |i| i + 1);
+                        if glob[end..].starts_with('!') {
+                            end = 0;
+                        }
+                        let rest = &glob[end..];
+                        let matcher = matchers.entry(rest.to_owned()).or_insert_with(|| {
+                            NxGlobSetBuilder::new(&[rest])
+                                .and_then(|b| b.build(None))
+                                .ok()
+                                .map(Arc::new)
+                        });
+                        Some((end, matcher.clone()))
+                    };
+                    let root = walk_root(glob.strip_prefix('!').unwrap_or(&glob));
+                    (
+                        glob,
+                        RecordedGlob {
+                            root,
+                            scope,
+                            exact_exclusion,
+                            alternatives,
+                            observed,
+                        },
+                    )
+                })
+                .collect(),
+        )
+    }
+}
+
+struct UltracacheContext<'a> {
+    entry: &'a UltracacheTask,
+    globs: &'a RecordedGlobs,
+}
+
+impl UltracacheContext<'_> {
+    fn read(&self, path: &str) -> bool {
+        #[cfg(windows)]
+        let normalized_path = path.replace('\\', "/");
+        #[cfg(windows)]
+        let observed_path = normalized_path.as_str();
+        #[cfg(not(windows))]
+        let observed_path = path;
+        self.entry.files.iter().any(|glob| {
+            if glob.starts_with('!') {
+                return false;
+            }
+            match &self.globs.0[glob].observed {
+                None => path == glob.as_ref(),
+                Some((_, None)) => true,
+                Some((end, Some(set))) => observed_path
+                    .strip_prefix(&glob[..*end])
+                    .is_some_and(|rest| set.is_match(rest)),
+            }
+        })
     }
 
     fn root_tsconfig_read(&self) -> bool {
@@ -181,58 +232,6 @@ struct LocalDependencyInputs {
     ids: Vec<u32>,
     always: Vec<u32>,
     needs_legacy: bool,
-}
-
-/// A temporary union of dense pool ids. Merge dependency closures without
-/// copying their repeated ids into a large Vec and sorting all occurrences.
-/// The bitset is discarded once the exact-sized, sorted result is produced.
-#[derive(Default)]
-struct InstructionIdSet {
-    words: Vec<u64>,
-}
-
-impl Extend<u32> for InstructionIdSet {
-    fn extend<T: IntoIterator<Item = u32>>(&mut self, values: T) {
-        for id in values {
-            let word = id as usize / 64;
-            if word >= self.words.len() {
-                self.words.resize(word + 1, 0);
-            }
-            self.words[word] |= 1u64 << (id % 64);
-        }
-    }
-}
-
-impl FromIterator<u32> for InstructionIdSet {
-    fn from_iter<T: IntoIterator<Item = u32>>(values: T) -> Self {
-        let mut result = Self::default();
-        result.extend(values);
-        result
-    }
-}
-
-impl InstructionIdSet {
-    fn contains(&self, id: u32) -> bool {
-        self.words
-            .get(id as usize / 64)
-            .is_some_and(|word| word & (1u64 << (id % 64)) != 0)
-    }
-
-    fn into_sorted_vec(self) -> Vec<u32> {
-        let count = self
-            .words
-            .iter()
-            .map(|word| word.count_ones() as usize)
-            .sum();
-        let mut result = Vec::with_capacity(count);
-        for (word_index, mut word) in self.words.into_iter().enumerate() {
-            while word != 0 {
-                result.push(word_index as u32 * 64 + word.trailing_zeros());
-                word &= word - 1;
-            }
-        }
-        result
-    }
 }
 
 /// Cycle-detection set with an undo log. Each dependency input needs its own
@@ -350,6 +349,23 @@ impl HashPlanner {
         configurations: Option<&UltracacheConfigurations>,
         custom_hasher_task_ids: &[String],
     ) -> anyhow::Result<HashPlans> {
+        self.plan(
+            task_ids,
+            task_graph,
+            configurations,
+            custom_hasher_task_ids,
+            false,
+        )
+    }
+
+    fn plan(
+        &self,
+        task_ids: Vec<&str>,
+        task_graph: TaskGraph,
+        configurations: Option<&UltracacheConfigurations>,
+        custom_hasher_task_ids: &[String],
+        settled: bool,
+    ) -> anyhow::Result<HashPlans> {
         let function_start = std::time::Instant::now();
         let memo = self.plan_memo.begin(
             &task_graph,
@@ -393,6 +409,9 @@ impl HashPlanner {
 
         trace!("External deps setup completed in {:?}", setup_duration);
 
+        let recorded_globs = ultracache_tasks
+            .as_ref()
+            .map(|tasks| RecordedGlobs::new(tasks, self.project_roots()));
         let pool = &self.instruction_pool;
         let parallel_start = std::time::Instant::now();
         let result: anyhow::Result<HashMap<String, Vec<u32>>> = to_plan
@@ -434,7 +453,10 @@ impl HashPlanner {
                 let context = ultracache_tasks
                     .as_ref()
                     .and_then(|tasks| tasks.get(*id))
-                    .map(UltracacheContext::new);
+                    .map(|entry| UltracacheContext {
+                        entry,
+                        globs: recorded_globs.as_ref().unwrap(),
+                    });
                 let mut always = AlwaysIds::collecting(context.is_some());
                 ids.extend(self.self_and_deps_inputs(
                     &task.target.project,
@@ -524,7 +546,11 @@ impl HashPlanner {
 
         let result = result.map(|planned| memo.finish(planned, &task_ids));
         result.map(|plans| {
-            let deferred = deferred_tasks(&plans, pool, &task_graph);
+            let deferred = if settled {
+                HashSet::new()
+            } else {
+                deferred_tasks(&plans, pool, &task_graph)
+            };
             HashPlans {
                 pool: Arc::clone(&self.instruction_pool),
                 plans,
@@ -588,14 +614,16 @@ impl HashPlanner {
         task_graph: TaskGraph,
         configurations: Option<ClassInstance<'_, UltracacheConfigurations>>,
         options: Option<UltracacheEligibilityOptions>,
+        settled: Option<bool>,
     ) -> anyhow::Result<External<HashPlans>> {
         let task_ids: Vec<&str> = task_ids.iter().map(|s| s.as_str()).collect();
         let options = options.unwrap_or_default();
-        let plans = self.get_plans_internal(
+        let plans = self.plan(
             task_ids,
             task_graph,
             configurations.as_deref(),
             options.custom_hasher_task_ids.as_deref().unwrap_or(&[]),
+            settled.unwrap_or(false),
         )?;
         Ok(External::new(plans))
     }
@@ -688,56 +716,85 @@ impl HashPlanner {
                 }
                 continue;
             }
-            let expanded = expand_literal_braces(glob);
-            let kept: Vec<String> = expanded
+            let expanded = &context.globs.0[glob].alternatives;
+            let kept: Vec<_> = expanded
                 .iter()
                 .filter(|glob| !covered_by_native_instruction(glob, not_installed))
                 .cloned()
                 .collect();
             let whole = kept.len() == expanded.len();
             if glob.starts_with('!') {
-                match whole {
-                    true => exclusions.push(glob.clone()),
-                    false => exclusions.extend(kept.into_iter().map(Arc::from)),
-                }
-            } else {
-                let owners: Vec<&str> = kept.iter().map(|g| owner(g)).collect();
-                if whole && owners.iter().all(|o| *o == owners[0]) {
-                    buckets.entry(owners[0]).or_default().push(glob.clone());
+                if whole {
+                    exclusions.push(glob.clone());
                 } else {
-                    for (glob, project) in kept.into_iter().zip(owners) {
-                        buckets.entry(project).or_default().push(glob.into());
+                    exclusions.extend(kept);
+                }
+            } else if let Some(first) = kept.first() {
+                let project = owner(first);
+                if whole && kept.iter().all(|g| owner(g) == project) {
+                    buckets.entry(project).or_default().push(glob.clone());
+                } else {
+                    for glob in kept {
+                        buckets.entry(owner(&glob)).or_default().push(glob);
                     }
                 }
             }
         }
-        let exclusion_roots: Vec<String> = exclusions
-            .iter()
-            .map(|exclusion| walk_root(&exclusion[1..]))
-            .collect();
-
+        // Index negatives by literal directory. A group can only be affected
+        // by those rooted at, above, or below one of its positive roots.
+        let mut exclusions_by_root = BTreeMap::<&str, Vec<&Arc<str>>>::new();
+        for glob in &exclusions {
+            exclusions_by_root
+                .entry(&context.globs.0[glob].root)
+                .or_default()
+                .push(glob);
+        }
         let mut instructions = Vec::new();
         for mut group in buckets.into_values() {
-            group.sort();
+            group.sort_unstable();
             group.dedup();
-            // Exclusions apply to every recorded positive, so each group takes
-            // the ones that could remove its files.
-            let mut group_exclusions: Vec<Arc<str>> = Vec::new();
+            let mut selected = Vec::new();
             if !exclusions.is_empty() {
-                let mut roots: Vec<String> = group.iter().map(|glob| walk_root(glob)).collect();
+                let mut roots: Vec<_> = group
+                    .iter()
+                    .map(|g| context.globs.0[g].root.as_str())
+                    .collect();
                 roots.sort_unstable();
-                group_exclusions.extend(
-                    exclusions
-                        .iter()
-                        .zip(&exclusion_roots)
-                        .filter(|(_, root)| overlaps_any(&roots, root))
-                        .map(|(exclusion, _)| exclusion.clone()),
-                );
+                roots.dedup();
+                if roots.first() == Some(&"") {
+                    selected.extend(exclusions.iter().cloned());
+                } else {
+                    for root in roots {
+                        for ancestor in std::iter::once(root).chain(parent_dirs(root)).chain([""]) {
+                            if let Some(found) = exclusions_by_root.get(ancestor) {
+                                selected.extend(found.iter().map(|g| (*g).clone()));
+                            }
+                        }
+                        let prefix = format!("{root}/");
+                        for (_, found) in exclusions_by_root
+                            .range(prefix.as_str()..)
+                            .take_while(|(key, _)| key.starts_with(&prefix))
+                        {
+                            selected.extend(found.iter().map(|g| (*g).clone()));
+                        }
+                    }
+                }
             }
-            group_exclusions.sort();
-            group_exclusions.dedup();
-            group.extend(group_exclusions);
-            instructions.push(self.disk_file_set(group, true));
+            let mut project_roots = BTreeSet::new();
+            for glob in &group {
+                project_roots.extend(context.globs.0[glob].scope.iter());
+            }
+            let exact_extension_exclusions =
+                selected.iter().any(|g| context.globs.0[g].exact_exclusion);
+            selected.sort_unstable();
+            selected.dedup();
+            group.extend(selected);
+            instructions.push(HashInstruction::IgnoredFileSet {
+                globs: group.into(),
+                project_roots: project_roots.into_iter().cloned().collect(),
+                exact_extension_exclusions,
+                from_ultracache: true,
+            });
         }
         instructions.push(HashInstruction::UltracacheConfiguration(
             entry.digest.clone(),
@@ -1045,12 +1102,12 @@ impl HashPlanner {
         let mut needs_legacy =
             !dep_inputs.deps_outputs.is_empty() || dep_inputs.deps_inputs.len() != inputs.len();
         let pool = &self.instruction_pool;
-        let mut ids: InstructionIdSet = self
+        let mut ids: IdSet = self
             .gather_self_inputs(dep, &dep_inputs.self_inputs, None)?
             .into_iter()
             .map(|instruction| pool.intern(instruction))
             .collect();
-        let mut always: InstructionIdSet = self
+        let mut always: IdSet = self
             .gather_always_self_inputs(dep, &dep_inputs.self_inputs)?
             .into_iter()
             .collect();
@@ -1170,7 +1227,7 @@ impl HashPlanner {
             return Ok(ids);
         }
 
-        let mut deps_inputs = InstructionIdSet::default();
+        let mut deps_inputs = IdSet::default();
 
         // Scope cycle detection to each propagated unit so siblings all apply to
         // the same dependency, rolling its visits back instead of cloning the
@@ -1247,7 +1304,7 @@ impl HashPlanner {
         always: &mut AlwaysIds,
     ) -> anyhow::Result<Vec<u32>> {
         let pool = &self.instruction_pool;
-        let mut deps_inputs = InstructionIdSet::default();
+        let mut deps_inputs = IdSet::default();
         // External membership is separate from project cycle detection, whose
         // scopes must still be rolled back independently for sibling inputs.
         let mut external_inputs = hashbrown::HashSet::new();
@@ -2061,6 +2118,58 @@ mod tests {
     use crate::native::project_graph::types::{ExternalNode, Project, Target};
     use crate::native::test_utils::edges_to;
 
+    #[test]
+    fn shared_recorded_patterns_match_the_raw_observation_globs() {
+        let roots = BTreeSet::new();
+        for glob in [
+            "p/**",
+            "p/**/file.json",
+            "p/!name*.json",
+            "p/?",
+            "p/[a-z]*",
+            "p/{a,b}/*.json",
+            "p/\\*/?",
+            "p/literal",
+            "p/**/[",
+            "p//*.json",
+            "p/../?.ts",
+            "p/dir/**/",
+        ] {
+            let entry = UltracacheTask {
+                files: vec![Arc::from(glob)].into(),
+                digest: String::new(),
+            };
+            let cache =
+                RecordedGlobs::new(&HashMap::from([("task".into(), entry.clone())]), &roots);
+            let context = UltracacheContext {
+                entry: &entry,
+                globs: &cache,
+            };
+            let raw = NxGlobSetBuilder::new(&[glob]).and_then(|b| b.build(None));
+            for path in [
+                "p",
+                "p/",
+                "p/a",
+                "p/a/file.json",
+                "p/file.json",
+                "p/!name1.json",
+                "p/*/a",
+                "p/literal",
+                "p/dir/foo/",
+                "p//file.json",
+                "other/foo.json",
+                "p/../a.ts",
+            ] {
+                let expected = if ultracache_eligibility::is_literal_path(glob) {
+                    path == glob
+                } else {
+                    raw.as_ref().map_or(true, |set| set.is_match(path))
+                };
+                assert_eq!(context.read(path), expected, "{glob:?} against {path:?}");
+            }
+        }
+    }
+
     fn mixed_cycle_planner(with_outputs: bool) -> HashPlanner {
         use crate::native::types::{DepsOutputsInput, JsInputs};
         use napi::bindgen_prelude::Either9;
@@ -2418,10 +2527,10 @@ mod tests {
         let mut expected = values.clone();
         expected.sort_unstable();
         expected.dedup();
-        let mut set: InstructionIdSet = values.into_iter().collect();
+        let mut set: IdSet = values.into_iter().collect();
         set.extend([128, 65, 0]);
         assert_eq!(set.into_sorted_vec(), expected);
-        assert!(InstructionIdSet::default().into_sorted_vec().is_empty());
+        assert!(IdSet::default().into_sorted_vec().is_empty());
     }
 
     #[test]
