@@ -208,7 +208,8 @@ Pass `--no-validate` or `--no-agentic` to skip the review instructions.
 
 Some migrations ship an AI prompt that an installed agent applies for you. The [agentic flow](/docs/features/automate-updating-dependencies#step-2-run-migrations) is interactive by default, but you can control it with flags:
 
-- `--agentic` enables it and resolves the installed agent. Use `--agentic=claude-code` (or `codex`, `opencode`) to pin one, or `--no-agentic` to disable it.
+- `--agentic` enables it and resolves the installed agent.
+  Use `--agentic=claude-code` (or `codex`, `opencode`, `copilot`) to pin one, or `--no-agentic` to disable it.
 - `--validate` / `--no-validate` toggles the agent's review of generator-only migrations. It's on by default.
 - `--final-validation` / `--no-final-validation` toggles the agent's final check of the projects the run touched. It's on by default.
 

@@ -4,12 +4,13 @@ import {
   existsSync,
   mkdirSync,
   mkdtempSync,
+  readFileSync,
   rmSync,
   symlinkSync,
   writeFileSync,
 } from 'fs';
 import { tmpdir } from 'os';
-import { join } from 'path';
+import { dirname, join } from 'path';
 
 vi.mock('child_process', () => ({
   spawn: vi.fn(),
@@ -706,6 +707,81 @@ describe('spawnMasterSession', () => {
       expect(await pending).toEqual({ kind: 'exited' });
       expect(child.kill).toHaveBeenCalledWith('SIGINT');
       expect(existsSync(promptedSentinel())).toBe(true);
+    });
+  });
+
+  describe('files the agent reads at startup', () => {
+    let root: string;
+    let copilotDir: string;
+
+    beforeEach(() => {
+      root = mkdtempSync(join(tmpdir(), 'nx-master-files-'));
+      copilotDir = join(root, '.nx', 'migrate-runs', runId, 'copilot');
+      mkdirSync(join(root, '.nx', 'migrate-runs', runId), { recursive: true });
+    });
+
+    afterEach(() => {
+      rmSync(root, { recursive: true, force: true });
+    });
+
+    const copilot = agent({
+      id: 'copilot',
+      displayName: 'GitHub Copilot CLI',
+      binary: '/usr/local/bin/copilot',
+    });
+
+    it('replaces the instructions a previous session left before the agent starts', async () => {
+      delete process.env.COPILOT_CUSTOM_INSTRUCTIONS_DIRS;
+      const instructions = join(
+        copilotDir,
+        '.github',
+        'instructions',
+        'nx-migrate.instructions.md'
+      );
+      mkdirSync(dirname(instructions), { recursive: true });
+      writeFileSync(instructions, 'stale');
+      let atSpawn: { dirs: string; content: string } | undefined;
+      mockSpawn.mockImplementation((_binary, _args, options) => {
+        const dirs = options.env.COPILOT_CUSTOM_INSTRUCTIONS_DIRS;
+        atSpawn = {
+          dirs,
+          content: readFileSync(
+            join(
+              root,
+              dirs,
+              '.github',
+              'instructions',
+              'nx-migrate.instructions.md'
+            ),
+            'utf-8'
+          ),
+        };
+        return fakeChild();
+      });
+
+      await spawnMasterSession(input({ agent: copilot, runRoot: root }));
+
+      expect(atSpawn.dirs).toBe(`.nx/migrate-runs/${runId}/copilot`);
+      expect(atSpawn.content).toMatch(sentinelPattern);
+    });
+
+    it('refuses to spawn when something else stands where a directory for them belongs', async () => {
+      writeFileSync(copilotDir, '');
+      mockSpawn.mockImplementation(() => fakeChild());
+
+      const result = await spawnMasterSession(
+        input({ agent: copilot, runRoot: root })
+      );
+
+      expect(mockSpawn).not.toHaveBeenCalled();
+      expect(result).toEqual({
+        kind: 'spawn-failed',
+        error: expect.objectContaining({
+          message: expect.stringContaining(
+            `something other than a directory at ${copilotDir}`
+          ),
+        }),
+      });
     });
   });
 

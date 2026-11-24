@@ -8,6 +8,7 @@ vi.mock('@clack/prompts', () => ({
   isCancel: () => false,
 }));
 vi.mock('./detect-installed', () => ({
+  confirmAgentIdentity: vi.fn(),
   detectInstalledAgents: vi.fn(),
 }));
 vi.mock('../../../utils/output', () => ({
@@ -23,19 +24,23 @@ import { autocomplete } from '@clack/prompts';
 import { output } from '../../../utils/output';
 import { parseJson } from '../../../utils/json';
 import { TempFs } from '../../../internal-testing-utils/temp-fs';
-import { detectInstalledAgents } from './detect-installed';
+import {
+  confirmAgentIdentity,
+  detectInstalledAgents,
+} from './detect-installed';
 import { resolveAgentic } from './select';
 import { DetectedInstalledAgent } from './types';
 
 const mockIsAiAgent = isAiAgent as unknown as Mock;
 const mockPrompt = autocomplete as unknown as Mock;
 const mockDetect = detectInstalledAgents as unknown as Mock;
+const mockConfirm = confirmAgentIdentity as unknown as Mock;
 const mockOutputLog = output.log as unknown as Mock;
 const mockOutputError = output.error as unknown as Mock;
 const mockOutputWarn = output.warn as unknown as Mock;
 
 function detected(
-  id: 'claude-code' | 'codex' | 'opencode'
+  id: 'claude-code' | 'codex' | 'opencode' | 'copilot'
 ): DetectedInstalledAgent {
   return {
     id,
@@ -69,6 +74,11 @@ describe('resolveAgentic', () => {
     mockIsAiAgent.mockReturnValue(false);
     mockPrompt.mockReset();
     mockDetect.mockReset();
+    mockConfirm.mockReset();
+    mockConfirm.mockImplementation(async (_definition, agent) => ({
+      kind: 'confirmed',
+      agent,
+    }));
     mockOutputLog.mockReset();
     mockOutputError.mockReset();
     mockOutputWarn.mockReset();
@@ -476,6 +486,108 @@ describe('resolveAgentic', () => {
     );
   });
 
+  describe('checking agent identity after opt-in', () => {
+    const rejectedLine =
+      '  - /usr/local/bin/copilot is not copilot: `--version` printed "copilot version: v1.34.1"';
+
+    beforeEach(() => {
+      mockConfirm.mockImplementation(async (_definition, agent) =>
+        agent.id === 'copilot'
+          ? {
+              kind: 'rejected',
+              binaries: [
+                {
+                  binary: agent.binary,
+                  reason: '`--version` printed "copilot version: v1.34.1"',
+                },
+              ],
+            }
+          : { kind: 'confirmed', agent }
+      );
+    });
+
+    it('runs no identity check when the up-front prompt is declined', async () => {
+      mockDetect.mockResolvedValue([detected('copilot')]);
+      mockPrompt.mockResolvedValueOnce('no-once');
+
+      await resolveAgentic({
+        agentic: undefined,
+        migrations: [{ prompt: 'x.md' }],
+      });
+
+      expect(mockConfirm).not.toHaveBeenCalled();
+    });
+
+    it('continues without the agentic flow, saving nothing, when the up-front prompt is accepted and no agent is usable', async () => {
+      tempFs.createFileSync('nx.json', '{}\n');
+      mockDetect.mockResolvedValue([detected('copilot')]);
+      mockPrompt.mockResolvedValueOnce('yes-flex');
+
+      const result = await resolveAgentic({
+        agentic: undefined,
+        migrations: [{ prompt: 'x.md' }],
+      });
+
+      expect(result).toEqual({ kind: 'disabled' });
+      expect(await tempFs.readFile('nx.json')).toBe('{}\n');
+      expect(mockOutputWarn.mock.calls[0][0]).toMatchObject({
+        title: expect.stringMatching(/^Continuing without the agentic flow/),
+        bodyLines: expect.arrayContaining([rejectedLine]),
+      });
+    });
+
+    it('keeps the error, naming the unusable binary, when an explicit --agentic leaves no usable agent', async () => {
+      mockDetect.mockResolvedValue([detected('copilot')]);
+
+      await expect(
+        resolveAgentic({ agentic: true, migrations: [{ prompt: 'x.md' }] })
+      ).rejects.toThrow(/No installed AI agent/);
+      expect(mockOutputError.mock.calls[0][0]).toMatchObject({
+        title: expect.stringMatching(/no installed AI agent could be used/),
+        bodyLines: expect.arrayContaining([rejectedLine]),
+      });
+    });
+
+    it('names the unusable binary when --agentic=<id> requested it, then uses the installed agent', async () => {
+      mockDetect.mockResolvedValue([
+        detected('claude-code'),
+        detected('copilot'),
+      ]);
+
+      const result = await resolveAgentic({
+        agentic: 'copilot',
+        migrations: [{ prompt: 'x.md' }],
+      });
+
+      expect(result).toMatchObject({
+        kind: 'enabled',
+        selectedAgent: { id: 'claude-code' },
+      });
+      expect(mockOutputWarn).toHaveBeenCalledTimes(1);
+      expect(mockOutputWarn.mock.calls[0][0]).toMatchObject({
+        title:
+          'The requested agent "copilot" could not be used; using the installed agent(s) instead.',
+        bodyLines: expect.arrayContaining([rejectedLine]),
+      });
+    });
+
+    it('checks only the requested agent when it is usable', async () => {
+      mockDetect.mockResolvedValue([
+        detected('claude-code'),
+        detected('copilot'),
+      ]);
+
+      await resolveAgentic({
+        agentic: 'claude-code',
+        migrations: [{ prompt: 'x.md' }],
+      });
+
+      expect(mockConfirm.mock.calls.map(([, agent]) => agent.id)).toEqual([
+        'claude-code',
+      ]);
+    });
+  });
+
   it('errors when --agentic=<id> is set and NO agents are installed', async () => {
     mockDetect.mockResolvedValue([]);
     await expect(
@@ -516,6 +628,7 @@ describe('resolveAgentic', () => {
       });
       expect(result).toEqual({ kind: 'disabled' });
       expect(mockPrompt).not.toHaveBeenCalled();
+      expect(mockDetect).not.toHaveBeenCalled();
       expect(mockOutputWarn).toHaveBeenCalled();
       expect(mockOutputWarn.mock.calls[0][0].title).toMatch(
         /needs an interactive terminal/i
@@ -531,6 +644,7 @@ describe('resolveAgentic', () => {
     });
     expect(result.kind).toBe('disabled');
     expect(mockPrompt).not.toHaveBeenCalled();
+    expect(mockDetect).not.toHaveBeenCalled();
   });
 
   it.each([
@@ -547,6 +661,7 @@ describe('resolveAgentic', () => {
       });
       expect(result).toEqual({ kind: 'disabled' });
       expect(mockPrompt).not.toHaveBeenCalled();
+      expect(mockDetect).not.toHaveBeenCalled();
       expect(mockOutputWarn).toHaveBeenCalled();
       expect(mockOutputWarn.mock.calls[0][0].title).toMatch(
         /needs an interactive terminal/i
@@ -563,5 +678,6 @@ describe('resolveAgentic', () => {
     });
     expect(result.kind).toBe('disabled');
     expect(mockPrompt).not.toHaveBeenCalled();
+    expect(mockDetect).not.toHaveBeenCalled();
   });
 });

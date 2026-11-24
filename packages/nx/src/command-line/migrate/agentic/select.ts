@@ -11,7 +11,11 @@ import {
 import type { MigrationIdProblem } from '../run';
 import { migrateChoice } from '../safe-prompt';
 import { singleLine } from '../text';
-import { detectInstalledAgents } from './detect-installed';
+import {
+  confirmAgentIdentity,
+  detectInstalledAgents,
+  type RejectedAgentBinary,
+} from './detect-installed';
 import { isInsideAgent } from './inception';
 import { AGENT_DEFINITIONS } from './definitions';
 import { AgentId, DetectedInstalledAgent, ResolvedAgentic } from './types';
@@ -53,20 +57,20 @@ export async function resolveAgentic(
     !!process.stdout.isTTY &&
     input.interactive !== false;
 
-  // Skip detection for the one case where the result is unused: explicit
-  // `--agentic=false`. For every other path (explicit enable, explicit id, or
-  // undefined-with-prompt) we either need the detection result to pick/verify
-  // an agent or to decide whether the up-front prompt is even worth asking.
+  // Skip detection where its result is unused: explicit `--agentic=false`,
+  // and any non-interactive run, since the agent session needs a terminal.
   if (input.agentic === false) {
+    return { kind: 'disabled' };
+  }
+  if (!isInteractive) {
+    if (input.agentic !== undefined) {
+      warnAgenticInteractiveOnly();
+    }
     return { kind: 'disabled' };
   }
 
   const detected = await detectInstalledAgents(AGENT_DEFINITIONS);
-  const { enabled, explicitId, persist } = await resolveFlag(
-    input,
-    isInteractive,
-    detected
-  );
+  const { enabled, explicitId, persist } = await resolveFlag(input, detected);
 
   if (!enabled) {
     if (persist === false) {
@@ -75,7 +79,27 @@ export async function resolveAgentic(
     return { kind: 'disabled' };
   }
 
-  const selected = await selectAgent(detected, explicitId, isInteractive);
+  const identified = await keepIdentifiedAgents(detected, explicitId);
+  // Only the up-front prompt enables the flow with `agentic` unset. Saying yes
+  // there must not stop the migration, so it continues without an agent.
+  if (input.agentic === undefined && identified.agents.length === 0) {
+    output.warn({
+      title:
+        'Continuing without the agentic flow: no installed AI agent could be used.',
+      bodyLines: [
+        ...identified.rejected.flatMap(rejectedBinaryLines),
+        'Generators still run, prompt-based changes are left for you to apply, and no AI validation runs.',
+      ],
+    });
+    return { kind: 'disabled' };
+  }
+
+  const selected = await selectAgent(
+    identified.agents,
+    explicitId,
+    isInteractive,
+    identified.rejected
+  );
 
   if (persist === true) {
     persistAgenticChoice(true);
@@ -140,7 +164,6 @@ type PersistChoice = undefined | boolean | 'pin';
 
 async function resolveFlag(
   input: ResolveAgenticInput,
-  isInteractive: boolean,
   detected: DetectedInstalledAgent[]
 ): Promise<{
   enabled: boolean;
@@ -148,26 +171,15 @@ async function resolveFlag(
   persist?: PersistChoice;
 }> {
   if (input.agentic === true) {
-    if (!isInteractive) {
-      warnAgenticInteractiveOnly();
-      return { enabled: false };
-    }
     return { enabled: true };
   }
   if (typeof input.agentic === 'string') {
-    if (!isInteractive) {
-      warnAgenticInteractiveOnly();
-      return { enabled: false };
-    }
     return { enabled: true, explicitId: input.agentic };
   }
-  // undefined — fire the up-front prompt only when we have a TTY, something
-  // agentic-eligible is queued, and at least one agent is installed. Without
-  // an installed agent the user can't say "Yes" meaningfully — asking would
-  // walk them into a dead end.
-  if (!isInteractive) {
-    return { enabled: false };
-  }
+  // undefined: fire the up-front prompt only when something agentic-eligible
+  // is queued and at least one agent is installed. Without an installed agent
+  // the user can't say "Yes" meaningfully, so asking would walk them into a
+  // dead end.
   if (!input.migrations.some((m) => !!m.prompt)) {
     return { enabled: false };
   }
@@ -311,35 +323,112 @@ function persistAgenticChoice(value: boolean | AgentId): void {
   }
 }
 
+interface IdentifiedAgents {
+  agents: DetectedInstalledAgent[];
+  rejected: {
+    agent: DetectedInstalledAgent;
+    binaries: RejectedAgentBinary[];
+  }[];
+}
+
+// Runs once the flow is enabled, since confirming an agent can execute every
+// binary that carries its name. A usable requested agent is the only one
+// selection reads, so the others are not confirmed.
+async function keepIdentifiedAgents(
+  detected: DetectedInstalledAgent[],
+  explicitId: AgentId | undefined
+): Promise<IdentifiedAgents> {
+  const rejected: IdentifiedAgents['rejected'] = [];
+  const identify = async (agent: DetectedInstalledAgent) => {
+    const definition = AGENT_DEFINITIONS.find((d) => d.id === agent.id)!;
+    const identity = await confirmAgentIdentity(definition, agent);
+    if (identity.kind === 'confirmed') {
+      return identity.agent;
+    }
+    rejected.push({ agent, binaries: identity.binaries });
+    return null;
+  };
+
+  const requested = detected.find((d) => d.id === explicitId);
+  if (requested) {
+    const agent = await identify(requested);
+    if (agent) {
+      return { agents: [agent], rejected };
+    }
+  }
+  const agents: DetectedInstalledAgent[] = [];
+  for (const candidate of detected) {
+    if (candidate === requested) {
+      continue;
+    }
+    const agent = await identify(candidate);
+    if (agent) {
+      agents.push(agent);
+    }
+  }
+  return { agents, rejected };
+}
+
+function rejectedBinaryLines({
+  agent,
+  binaries,
+}: IdentifiedAgents['rejected'][number]): string[] {
+  return binaries.map(
+    ({ binary, reason }) =>
+      `  - ${binary} is not ${agent.displayName}: ${reason}`
+  );
+}
+
 async function selectAgent(
   detected: DetectedInstalledAgent[],
   explicitId: AgentId | undefined,
-  isInteractive: boolean
+  isInteractive: boolean,
+  rejected: IdentifiedAgents['rejected']
 ): Promise<DetectedInstalledAgent> {
   if (explicitId) {
     const match = detected.find((d) => d.id === explicitId);
     if (match) {
       return match;
     }
-    // The requested agent isn't installed. Rather than aborting the migration,
-    // warn and fall through to resolve from the agents that ARE installed
-    // (pick when 2+, auto-select the only one, error only when none exist).
-    if (detected.length > 0) {
+    // The requested agent isn't installed or can't be used. Rather than
+    // aborting the migration, warn and fall through to resolve from the agents
+    // that ARE installed (pick when 2+, auto-select the only one, error only
+    // when none exist).
+    const installedLines = [
+      'Currently installed agents:',
+      ...detected.map((d) => `  - ${d.displayName} (${d.id})`),
+    ];
+    const rejection = rejected.find((r) => r.agent.id === explicitId);
+    if (rejection) {
+      output.warn({
+        title:
+          detected.length > 0
+            ? `The requested agent "${explicitId}" could not be used; using the installed agent(s) instead.`
+            : `The requested agent "${explicitId}" could not be used.`,
+        bodyLines: [
+          ...rejectedBinaryLines(rejection),
+          ...(detected.length > 0 ? installedLines : []),
+        ],
+      });
+    } else if (detected.length > 0) {
       output.warn({
         title: `The requested agent "${explicitId}" is not installed; using the installed agent(s) instead.`,
-        bodyLines: [
-          'Currently installed agents:',
-          ...detected.map((d) => `  - ${d.displayName} (${d.id})`),
-        ],
+        bodyLines: installedLines,
       });
     }
   }
 
   if (detected.length === 0) {
+    const unshownRejections = rejected.filter((r) => r.agent.id !== explicitId);
     output.error({
       title:
-        'Agentic flow was enabled, but no supported AI agent is installed on this machine.',
-      bodyLines: INSTALL_SUPPORTED_AGENTS_HINT,
+        rejected.length > 0
+          ? 'Agentic flow was enabled, but no installed AI agent could be used.'
+          : 'Agentic flow was enabled, but no supported AI agent is installed on this machine.',
+      bodyLines: [
+        ...unshownRejections.flatMap(rejectedBinaryLines),
+        ...INSTALL_SUPPORTED_AGENTS_HINT,
+      ],
     });
     throw new Error('No installed AI agent available.');
   }

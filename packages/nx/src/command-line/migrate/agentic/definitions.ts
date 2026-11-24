@@ -18,13 +18,21 @@ function claudeCodeWellKnownPaths(): string[] {
 }
 
 /**
- * The run directory names Nx will interpolate into a permission rule. A rule
- * is a gitignore pattern, which reads `*?[]\` as syntax, and `--allowedTools`
- * splits its value on commas and spaces, so a name carrying any of those
- * would change what the rule authorizes rather than what it names. The
- * leading character rejects `.` and `..`.
+ * The run directory names Nx will interpolate into a permission rule. Claude
+ * Code reads a rule's path as a gitignore pattern, with `*?[]\` as syntax, and
+ * Copilot CLI reads it as a glob. `--allowedTools` also splits its value on
+ * commas and spaces, so a name carrying any of those would change what the
+ * rule authorizes rather than what it names. The leading character rejects `.`
+ * and `..`.
  */
 const RULE_SAFE_RUN_DIR_NAME = /^[A-Za-z0-9][A-Za-z0-9._+-]*$/;
+
+function runHandoffsPattern(runDirName: string): string | null {
+  if (!RULE_SAFE_RUN_DIR_NAME.test(runDirName)) {
+    return null;
+  }
+  return `${MIGRATE_RUNS_RELATIVE_DIR}/${runDirName}/${HANDOFFS_DIR_NAME}/**`;
+}
 
 /**
  * Pre-authorizes the handoff write. Claude Code's default permission mode
@@ -46,10 +54,8 @@ const RULE_SAFE_RUN_DIR_NAME = /^[A-Za-z0-9][A-Za-z0-9._+-]*$/;
 export function claudeCodeHandoffAllowedTools(
   runDirName: string
 ): string | null {
-  if (!RULE_SAFE_RUN_DIR_NAME.test(runDirName)) {
-    return null;
-  }
-  return `Edit(${MIGRATE_RUNS_RELATIVE_DIR}/${runDirName}/${HANDOFFS_DIR_NAME}/**)`;
+  const pattern = runHandoffsPattern(runDirName);
+  return pattern === null ? null : `Edit(${pattern})`;
 }
 
 export const claudeCodeDefinition: AgentDefinition = {
@@ -127,10 +133,43 @@ export const opencodeDefinition: AgentDefinition = {
   wellKnownPaths: opencodeWellKnownPaths,
 };
 
+// --- GitHub Copilot CLI --------------------------------------------------
+
+// The install script's default for a non-root user. On Windows the script
+// installs through WinGet instead.
+function copilotCliWellKnownPaths(): string[] {
+  if (process.platform === 'win32') {
+    return [];
+  }
+  return [join(homedir(), '.local', 'bin', 'copilot')];
+}
+
+/**
+ * Pre-authorizes the handoff write, as {@link claudeCodeHandoffAllowedTools}
+ * does for Claude Code. Copilot CLI matches a relative path by its trailing
+ * segments, so the rule also admits this run's handoffs path nested anywhere
+ * in the workspace, which nx never reads. An absolute path would put the
+ * workspace path, glob syntax included, into the rule.
+ */
+export function copilotCliHandoffAllowTool(runDirName: string): string | null {
+  const pattern = runHandoffsPattern(runDirName);
+  return pattern === null ? null : `write(${pattern})`;
+}
+
+const copilotCliDefinition: AgentDefinition = {
+  id: 'copilot',
+  displayName: 'GitHub Copilot CLI',
+  binaryNames: ['copilot'],
+  wellKnownPaths: copilotCliWellKnownPaths,
+  // AWS Copilot CLI also installs a `copilot` binary.
+  versionOutputPrefix: 'GitHub Copilot CLI ',
+};
+
 // --- Registry ------------------------------------------------------------
 
 export const AGENT_DEFINITIONS: readonly AgentDefinition[] = [
   claudeCodeDefinition,
   codexDefinition,
   opencodeDefinition,
+  copilotCliDefinition,
 ];

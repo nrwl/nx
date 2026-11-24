@@ -6,7 +6,12 @@
  * layer for `--agentic` validation and by the runtime as the source of truth
  * for the {@link AgentId} union.
  */
-export const AGENT_IDS = ['claude-code', 'codex', 'opencode'] as const;
+export const AGENT_IDS = [
+  'claude-code',
+  'codex',
+  'opencode',
+  'copilot',
+] as const;
 
 export type AgentId = (typeof AGENT_IDS)[number];
 
