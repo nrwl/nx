@@ -588,7 +588,7 @@ pub(crate) type CatchUp = Arc<dyn Fn() + Send + Sync>;
 
 #[napi]
 pub struct IgnoredIndexReader {
-    pub(crate) rehash_file_map: Option<Arc<super::rehash::RehashFileMap>>,
+    pub(crate) rehash_snapshot: Option<super::rehash::RehashSnapshot>,
     index: Arc<IgnoredIndex>,
     catch_up: CatchUp,
 }
@@ -598,7 +598,7 @@ impl IgnoredIndexReader {
         Self {
             index,
             catch_up,
-            rehash_file_map: None,
+            rehash_snapshot: None,
         }
     }
 

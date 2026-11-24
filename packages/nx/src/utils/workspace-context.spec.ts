@@ -2,6 +2,7 @@ const mockGlob = vi.fn();
 const mockMultiGlob = vi.fn();
 const mockDaemonGlob = vi.fn();
 const mockDaemonMultiGlob = vi.fn();
+const mockDaemonWorkspaceFiles = vi.fn();
 const mockEnabled = vi.fn();
 const mockIsOnDaemon = vi.fn();
 const mockReady = vi.fn();
@@ -33,6 +34,8 @@ vi.mock('../daemon/client/client', () => ({
     enabled: () => mockEnabled(),
     glob: (...args: unknown[]) => mockDaemonGlob(...args),
     multiGlob: (...args: unknown[]) => mockDaemonMultiGlob(...args),
+    getWorkspaceFiles: (...args: unknown[]) =>
+      mockDaemonWorkspaceFiles(...args),
   },
 }));
 
@@ -41,11 +44,24 @@ vi.mock('../daemon/is-on-daemon', () => ({
 }));
 
 import {
+  getNxWorkspaceFilesFromContext,
   globWithWorkspaceContext,
   multiGlobWithWorkspaceContext,
   refreshWorkspaceContext,
   resetWorkspaceContext,
 } from './workspace-context';
+
+it('discards a source commit replayed over daemon IPC', async () => {
+  mockEnabled.mockReturnValue(true);
+  mockIsOnDaemon.mockReturnValue(false);
+  mockDaemonWorkspaceFiles.mockResolvedValueOnce({
+    projectFileMap: {},
+    globalFiles: [],
+    externalReferences: { rehashSourceCommit: 'from another process' },
+  });
+  const files = await getNxWorkspaceFilesFromContext('/workspace', {});
+  expect(files.externalReferences.rehashSourceCommit).toBeUndefined();
+});
 
 describe('workspace-context /virtual short-circuit', () => {
   beforeEach(() => {

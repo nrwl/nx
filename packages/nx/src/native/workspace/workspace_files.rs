@@ -8,12 +8,14 @@ use tracing::trace;
 
 use crate::native::types::FileData;
 use crate::native::workspace::ignored_index::IgnoredIndexReader;
+use crate::native::workspace::rehash::{RehashFileMap, RehashSnapshot};
 use crate::native::workspace::types::{FileLocation, NxWorkspaceFiles, NxWorkspaceFilesExternals};
 
 pub(super) fn get_files(
     project_root_map: HashMap<String, String>,
     files: Vec<FileData>,
-    ignored_index: Arc<IgnoredIndexReader>,
+    mut ignored_index: IgnoredIndexReader,
+    proof: Option<Arc<RehashFileMap>>,
 ) -> napi::Result<NxWorkspaceFiles> {
     if files.is_empty() {
         return Ok(Default::default());
@@ -72,19 +74,18 @@ pub(super) fn get_files(
 
     let project_files_external = External::new(Arc::new(project_file_map.clone()));
     let global_files_external = External::new(Arc::new(global_files.clone()));
-    let all_workspace_files = External::new(Arc::new(files));
+    let all_workspace_files = Arc::new(files);
+    let rehash_source_commit = proof.as_ref().map(|map| map.commit.clone());
+    ignored_index.rehash_snapshot = proof.map(|map| RehashSnapshot::new(map, &all_workspace_files));
     Ok(NxWorkspaceFiles {
         project_file_map,
         global_files,
         external_references: Some(NxWorkspaceFilesExternals {
-            rehash_source_commit: ignored_index
-                .rehash_file_map
-                .as_ref()
-                .map(|m| m.commit.clone()),
+            rehash_source_commit,
             project_files: project_files_external,
             global_files: global_files_external,
-            all_workspace_files,
-            ignored_index: External::new(ignored_index),
+            all_workspace_files: External::new(all_workspace_files),
+            ignored_index: External::new(Arc::new(ignored_index)),
         }),
     })
 }

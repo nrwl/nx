@@ -1482,9 +1482,7 @@ impl WorkspaceContext {
     ) -> anyhow::Result<NxWorkspaceFiles> {
         self.apply_delivered();
         let (files, proof) = self.files.snapshot(None);
-        let mut reader = self.reader();
-        reader.rehash_file_map = proof;
-        workspace_files::get_files(project_root_map, files, Arc::new(reader))
+        workspace_files::get_files(project_root_map, files, self.reader(), proof)
             .map_err(anyhow::Error::from)
     }
 

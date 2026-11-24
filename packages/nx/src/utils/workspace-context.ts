@@ -6,6 +6,7 @@ import type {
   WorkspaceContextOptions,
 } from '../native';
 import { performance } from 'perf_hooks';
+import type { FileMap } from '../config/project-graph';
 import { workspaceDataDirectoryForWorkspace } from './cache-directory';
 import { isOnDaemon } from '../daemon/is-on-daemon';
 import { daemonClient } from '../daemon/client/client';
@@ -29,6 +30,27 @@ let contextRoot: string | undefined;
 let contextGeneration = 0;
 const changeListeners = new Set<WorkspaceChangesListener>();
 const eventListeners = new Set<WatchEventsListener>();
+// A daemon response or a copied bag of externals cannot carry a local gather.
+// Weak references keep this record from extending the lifetime of either map.
+const rehashSnapshots = new WeakMap<
+  NxWorkspaceFilesExternals,
+  {
+    projects: WeakRef<FileMap['projectFileMap']>;
+    globals: WeakRef<FileMap['nonProjectFiles']>;
+  }
+>();
+
+export function isGatheredFileMap(
+  fileMap: FileMap,
+  references: NxWorkspaceFilesExternals
+): boolean {
+  const snapshot = rehashSnapshots.get(references);
+  return (
+    !!snapshot &&
+    snapshot.projects.deref() === fileMap.projectFileMap &&
+    snapshot.globals.deref() === fileMap.nonProjectFiles
+  );
+}
 
 export function setupWorkspaceContext(
   workspaceRoot: string,
@@ -65,9 +87,24 @@ export async function getNxWorkspaceFilesFromContext(
 ) {
   if (!useDaemonProcess || isOnDaemon() || !daemonClient.enabled()) {
     await ensureFilesReady(workspaceRoot);
-    return workspaceContext.getWorkspaceFiles(projectRootMap);
+    const files = workspaceContext.getWorkspaceFiles(projectRootMap);
+    const refs = files.externalReferences;
+    if (refs?.rehashSourceCommit) {
+      // Keep the native handles paired and the commit out of IPC serialization.
+      Object.defineProperty(refs, 'rehashSourceCommit', { enumerable: false });
+      Object.freeze(refs);
+      rehashSnapshots.set(refs, {
+        projects: new WeakRef(files.projectFileMap),
+        globals: new WeakRef(files.globalFiles),
+      });
+    }
+    return files;
   }
-  return daemonClient.getWorkspaceFiles(projectRootMap);
+  const files = await daemonClient.getWorkspaceFiles(projectRootMap);
+  if (files?.externalReferences?.rehashSourceCommit) {
+    delete files.externalReferences.rehashSourceCommit;
+  }
+  return files;
 }
 
 /**

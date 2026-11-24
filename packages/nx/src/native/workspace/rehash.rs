@@ -1,9 +1,10 @@
 use std::path::Path;
-use std::sync::Arc;
+use std::sync::{Arc, Weak};
 
 use rayon::prelude::*;
 
 use super::files_archive::NxFileHashes;
+use crate::native::types::FileData;
 use crate::native::utils::{command::create_command, get_metadata_key, get_mod_time};
 
 /// Metadata from the same gather that produced the immutable FileData vector.
@@ -12,6 +13,26 @@ pub(crate) struct RehashFileMap {
     pub(super) commit: String,
     gathered_at: i64,
     keys: Vec<u64>,
+}
+
+/// A reader and a file vector cross N-API as separate externals. Only the
+/// vector exported alongside this reader contains the hashes we verified.
+pub(crate) struct RehashSnapshot {
+    map: Arc<RehashFileMap>,
+    files: Weak<Vec<FileData>>,
+}
+
+impl RehashSnapshot {
+    pub(super) fn new(map: Arc<RehashFileMap>, files: &Arc<Vec<FileData>>) -> Self {
+        Self {
+            map,
+            files: Arc::downgrade(files),
+        }
+    }
+
+    pub(crate) fn proof_for(&self, files: &Arc<Vec<FileData>>) -> Option<&RehashFileMap> {
+        std::ptr::eq(self.files.as_ptr(), Arc::as_ptr(files)).then_some(&self.map)
+    }
 }
 
 impl RehashFileMap {
@@ -62,6 +83,19 @@ pub(super) fn clean_commit(root: &Path) -> Option<String> {
 mod tests {
     use super::*;
     use crate::native::workspace::files_archive::NxFileHashed;
+
+    #[test]
+    fn a_snapshot_only_vouches_for_its_own_exported_vector() {
+        let map = Arc::new(RehashFileMap {
+            commit: "head".into(),
+            gathered_at: 0,
+            keys: vec![],
+        });
+        let files = Arc::new(Vec::new());
+        let snapshot = RehashSnapshot::new(map, &files);
+        assert!(snapshot.proof_for(&Arc::clone(&files)).is_some());
+        assert!(snapshot.proof_for(&Arc::new(Vec::new())).is_none());
+    }
 
     #[test]
     fn verifies_the_stamp_for_the_same_sorted_file_map_entry() {

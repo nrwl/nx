@@ -135,20 +135,23 @@ impl TaskHasher {
             is_tracked,
             budget,
         )?;
-        let verified_files = (file_map_matches_tracked_files
-            && self.ignored_index.rehash_file_map.is_some())
-        .then_some(self.all_workspace_files.as_slice())
-        .unwrap_or_default()
-        .iter()
-        .enumerate()
-        .filter(|(_, file)| is_tracked(&file.file));
+        let proof = self
+            .ignored_index
+            .rehash_snapshot
+            .as_ref()
+            .filter(|_| file_map_matches_tracked_files)
+            .and_then(|snapshot| snapshot.proof_for(&self.all_workspace_files));
+        let verified_files = proof
+            .into_iter()
+            .flat_map(|_| self.all_workspace_files.iter().enumerate())
+            .filter(|(_, file)| is_tracked(&file.file));
         let settled = SettledGroups::new(
             workspace_root,
             plans,
             &used,
             &json.raw_hashes,
             verified_files,
-            self.ignored_index.rehash_file_map.as_deref(),
+            proof,
             budget,
         )?;
         drop(json.raw_hashes);

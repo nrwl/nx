@@ -24,7 +24,10 @@ import { readJsonFile } from '../utils/fileutils';
 import { PackageJson } from '../utils/package-json';
 import { formatPluginProgressText } from '../utils/plugin-progress-text';
 import { ProgressTopics } from '../utils/progress-topics';
-import { hashWithWorkspaceContext } from '../utils/workspace-context';
+import {
+  hashWithWorkspaceContext,
+  isGatheredFileMap,
+} from '../utils/workspace-context';
 import { workspaceRoot } from '../utils/workspace-root';
 import {
   AggregateProjectGraphError,
@@ -65,6 +68,13 @@ export function getFileMap(): {
   allWorkspaceFiles: FileData[];
 } {
   if (!!storedFileMap) {
+    if (
+      storedRustReferences?.rehashSourceCommit &&
+      !isGatheredFileMap(storedFileMap, storedRustReferences)
+    ) {
+      storedRustReferences = { ...storedRustReferences };
+      delete storedRustReferences.rehashSourceCommit;
+    }
     return {
       fileMap: storedFileMap,
       rustReferences: storedRustReferences,
