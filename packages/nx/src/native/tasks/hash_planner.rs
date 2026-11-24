@@ -20,8 +20,7 @@ use crate::native::glob::{
     NxGlobSet, NxGlobSetBuilder, expand_literal_braces, normalize_glob, partition_glob,
 };
 use crate::native::tasks::hashers::{
-    OnceCache, Positive, ProjectScope, parse_group_with_exclusions, scope_roots,
-    validate_files_globs,
+    OnceCache, Positive, ProjectScope, parse_group, scope_roots, validate_files_globs,
 };
 use crate::native::tasks::inputs::{
     expand_single_project_inputs, get_inputs, get_inputs_for_dependency_group, get_named_inputs,
@@ -325,20 +324,13 @@ impl HashPlanner {
     }
 
     fn disk_file_set(&self, globs: Vec<Arc<str>>, from_ultracache: bool) -> HashInstruction {
-        let (project_roots, exact_extension_exclusions) =
-            match parse_group_with_exclusions(&globs, from_ultracache) {
-                Ok((positives, negatives)) => (
-                    scope_roots(&positives, self.project_roots()),
-                    negatives
-                        .iter()
-                        .any(|negative| negative.has_suffix_category()),
-                ),
-                Err(_) => (Vec::new(), from_ultracache),
-            };
+        let project_roots = parse_group(&globs).map_or_else(
+            |_| Vec::new(),
+            |(positives, _)| scope_roots(&positives, self.project_roots()),
+        );
         HashInstruction::IgnoredFileSet {
             globs: globs.into(),
             project_roots,
-            exact_extension_exclusions,
             from_ultracache,
         }
     }
@@ -600,13 +592,18 @@ impl HashPlanner {
         Ok(External::new(plans))
     }
 
-    /// Observed reads minus natively covered files, one disk-backed group per
-    /// owning project (else the `.` project, else the task's), plus the entry
-    /// digest. Declared filesets, negations included, never shape the groups.
+    /// Observed reads minus natively covered files, one group per owning
+    /// project and one for the reads no project owns, plus the entry digest.
+    /// A group is an ordinary fileset. With `includeUnstableFiles` it is
+    /// disk-backed instead, and unowned reads join the `.` project's group,
+    /// else the task's. Declared filesets, negations included, never shape
+    /// the groups.
     /// Replaces the declared filesets in `ids` (self, deps, `{input, projects}`)
     /// with `task`'s observed reads; TsConfiguration and JSON inputs survive
     /// only if read. `always` is kept, and added where the configuration path never
-    /// gathered it (the task's own filesets).
+    /// gathered it (the task's own filesets). Unless the target sets
+    /// `includeUnstableFiles`, the reads are ordinary filesets of tracked
+    /// files, so declared `includeIgnored` filesets are kept too.
     fn replace_with_configuration(
         &self,
         task: &Task,
@@ -618,23 +615,34 @@ impl HashPlanner {
     ) {
         let pool = &self.instruction_pool;
         let keep_tsconfig = context.root_tsconfig_read();
+        let include_unstable = task
+            .ultracache
+            .as_ref()
+            .and_then(|ultracache| ultracache.include_unstable_files)
+            .unwrap_or(false);
         // Files under node_modules that no external hashes: upstream outputs,
-        // and what a declared `includeIgnored` group walks into there.
-        let mut not_installed = upstream_output_roots(task_graph, &task.id);
-        for id in ids.iter() {
-            if let HashInstruction::IgnoredFileSet { globs, .. } = &*pool.get(*id) {
-                not_installed.extend(
-                    globs
-                        .iter()
-                        .filter(|glob| !glob.starts_with('!'))
-                        .map(|glob| walk_root(glob))
-                        .filter(|root| root.split('/').any(|segment| segment == "node_modules")),
-                );
+        // and what a declared `includeIgnored` group walks into there. None
+        // of them is tracked.
+        let mut not_installed = Vec::new();
+        if include_unstable {
+            not_installed = upstream_output_roots(task_graph, &task.id);
+            for id in ids.iter() {
+                if let HashInstruction::IgnoredFileSet { globs, .. } = &*pool.get(*id) {
+                    not_installed.extend(
+                        globs
+                            .iter()
+                            .filter(|glob| !glob.starts_with('!'))
+                            .map(|glob| walk_root(glob))
+                            .filter(|root| {
+                                root.split('/').any(|segment| segment == "node_modules")
+                            }),
+                    );
+                }
             }
+            not_installed.sort_unstable();
         }
-        not_installed.sort_unstable();
         let own: hashbrown::HashSet<u32> = self
-            .configuration_file_instructions(task, context, &not_installed)
+            .ultracache_instructions(task, context, &not_installed, include_unstable)
             .into_iter()
             .map(|instruction| pool.intern(instruction))
             .collect();
@@ -642,17 +650,20 @@ impl HashPlanner {
             *id == always_on_id
                 || own.contains(id)
                 || always.contains(*id)
+                || (!include_unstable
+                    && matches!(&*pool.get(*id), HashInstruction::IgnoredFileSet { .. }))
                 || !pool.replaced_by_configuration(*id, keep_tsconfig, |path| context.read(path))
         });
         ids.extend(own);
         ids.extend(always.into_sorted_vec());
     }
 
-    fn configuration_file_instructions(
+    fn ultracache_instructions(
         &self,
         task: &Task,
         context: &UltracacheContext,
         not_installed: &[String],
+        include_unstable: bool,
     ) -> Vec<HashInstruction> {
         let entry = context.entry;
         let self_project = task.target.project.as_str();
@@ -667,15 +678,27 @@ impl HashPlanner {
             .find(|(_, project)| project.root == ".")
             .map(|(name, _)| name.as_str())
             .unwrap_or(self_project);
-        let owner = |glob: &str| -> &str {
-            parent_dirs(glob.strip_prefix('!').unwrap_or(glob))
+        let owner = |glob: &str| -> Option<&str> {
+            let glob = glob.strip_prefix('!').unwrap_or(glob);
+            if include_unstable {
+                // Only groups the reads: `disk_file_set` scopes each entry.
+                return parent_dirs(glob)
+                    .find_map(|dir| project_by_root.get(dir))
+                    .map_or(Some(unowned), |project| Some(project.as_str()));
+            }
+            // A fileset reads its project's files only, so an entry naming a
+            // project root has to belong to that project. With no owner it
+            // reads the workspace's files.
+            let root = walk_root(glob);
+            std::iter::once(root.as_str())
+                .chain(parent_dirs(&root))
                 .find_map(|dir| project_by_root.get(dir))
-                .map_or(unowned, String::as_str)
+                .map(String::as_str)
         };
 
         // A recorded glob stays whole unless its brace alternatives belong to
         // different projects or name a file the always-on set hashes.
-        let mut buckets: BTreeMap<&str, Vec<Arc<str>>> = BTreeMap::new();
+        let mut buckets: BTreeMap<Option<&str>, Vec<Arc<str>>> = BTreeMap::new();
         let mut exclusions: Vec<Arc<str>> = Vec::new();
         for glob in entry.files.iter() {
             if !glob.contains('{') {
@@ -701,7 +724,7 @@ impl HashPlanner {
                     false => exclusions.extend(kept.into_iter().map(Arc::from)),
                 }
             } else {
-                let owners: Vec<&str> = kept.iter().map(|g| owner(g)).collect();
+                let owners: Vec<Option<&str>> = kept.iter().map(|g| owner(g)).collect();
                 if whole && owners.iter().all(|o| *o == owners[0]) {
                     buckets.entry(owners[0]).or_default().push(glob.clone());
                 } else {
@@ -717,7 +740,7 @@ impl HashPlanner {
             .collect();
 
         let mut instructions = Vec::new();
-        for mut group in buckets.into_values() {
+        for (project, mut group) in buckets {
             group.sort();
             group.dedup();
             // Exclusions apply to every recorded positive, so each group takes
@@ -737,7 +760,23 @@ impl HashPlanner {
             group_exclusions.sort();
             group_exclusions.dedup();
             group.extend(group_exclusions);
-            instructions.push(self.disk_file_set(group, true));
+            if include_unstable {
+                instructions.push(self.disk_file_set(group, true));
+                continue;
+            }
+            // An ordinary fileset of the owner's files, or of the workspace's.
+            let globs = group.iter().map(|glob| normalize_glob(glob));
+            instructions.push(match project {
+                Some(project) => HashInstruction::ProjectFileSet(project.into(), globs.collect()),
+                None => HashInstruction::WorkspaceFileSet(
+                    globs
+                        .map(|glob| match glob.strip_prefix('!') {
+                            Some(excluded) => format!("!{{workspaceRoot}}/{excluded}"),
+                            None => format!("{{workspaceRoot}}/{glob}"),
+                        })
+                        .collect(),
+                ),
+            });
         }
         instructions.push(HashInstruction::UltracacheConfiguration(
             entry.digest.clone(),
@@ -894,7 +933,8 @@ impl HashPlanner {
                     }),
             );
         }
-        // Kept with a configuration too; the hasher drops recorded reads these hash.
+        // Kept with a configuration too; with `includeUnstableFiles` the hasher
+        // drops recorded reads these hash.
         ids.extend(
             self.gather_dependency_outputs(task, task_graph, &inputs.deps_outputs)?
                 .into_iter()
@@ -1612,19 +1652,16 @@ fn prefixed_cache_key(dep: &str, kind: char, rest: &str) -> String {
 /// Drops groups from the Ultracache configuration that a declared group in
 /// the same plan already hashes, so the files are walked once.
 fn drop_ultracache_duplicates(pool: &InstructionPool, ids: &mut Vec<u32>) {
-    type Key = (Arc<[Arc<str>]>, Vec<String>, bool);
+    type Key = (Arc<[Arc<str>]>, Vec<String>);
     let key = |id: &u32, from_configuration: bool| -> Option<Key> {
         match pool.get(*id).value() {
             HashInstruction::IgnoredFileSet {
                 globs,
                 project_roots,
-                exact_extension_exclusions,
                 from_ultracache,
-            } if *from_ultracache == from_configuration => Some((
-                Arc::clone(globs),
-                project_roots.clone(),
-                *exact_extension_exclusions,
-            )),
+            } if *from_ultracache == from_configuration => {
+                Some((Arc::clone(globs), project_roots.clone()))
+            }
             _ => None,
         }
     };
@@ -2716,7 +2753,6 @@ mod tests {
         let scoped = pool.intern(HashInstruction::IgnoredFileSet {
             globs: vec!["packages/gradle/**/*".into()].into(),
             project_roots: vec!["packages/gradle".into(), "packages/gradle/runner".into()],
-            exact_extension_exclusions: false,
             from_ultracache: false,
         });
         let plans: HashMap<String, Vec<u32>> = [
@@ -3186,7 +3222,9 @@ mod continuous_inputs_tests {
 mod always_tests {
     use super::*;
     use crate::native::project_graph::types::{Project, Target};
-    use crate::native::test_utils::{task_graph, ultracache_configurations};
+    use crate::native::test_utils::{
+        including_unstable_files, task_graph, ultracache_configurations,
+    };
     use crate::native::types::{DepsOutputsInput, FileSetInput, InputsInput, JsInputs, JsonInput};
     use napi::Either;
     use napi::bindgen_prelude::Either9;
@@ -3197,7 +3235,6 @@ mod always_tests {
         let group = |globs: &[&str], from_ultracache| HashInstruction::IgnoredFileSet {
             globs: globs.iter().map(|glob| Arc::from(*glob)).collect(),
             project_roots: vec!["libs/app".into()],
-            exact_extension_exclusions: false,
             from_ultracache,
         };
         let declared = pool.intern(group(&["libs/app/fixtures/**"], false));
@@ -3294,6 +3331,12 @@ mod always_tests {
         )
     }
 
+    /// The fileset a recording that read only `e2e`'s spec adds to a plan.
+    fn recorded_spec_read(instruction: &HashInstruction) -> bool {
+        matches!(instruction, HashInstruction::ProjectFileSet(project, globs)
+            if project == "e2e" && globs == &["libs/e2e/src/app.spec.ts".to_string()])
+    }
+
     /// The projects whose declared files each task's plan hashes, with the
     /// e2e tasks hashed from a recording that read only their own spec.
     fn hashed_projects(
@@ -3322,6 +3365,7 @@ mod always_tests {
                 let mut projects: Vec<String> = ids
                     .iter()
                     .filter_map(|id| match plans.pool.get(*id).value() {
+                        instruction if recorded_spec_read(instruction) => None,
                         HashInstruction::ProjectFileSet(project, _) => Some(project.clone()),
                         _ => None,
                     })
@@ -3337,20 +3381,27 @@ mod always_tests {
         hashed_projects(&planner, &["e2e:e2e"], with_configurations).unwrap()["e2e:e2e"].clone()
     }
 
-    /// `e2e:e2e`'s plan, hashed from a recording that read only its spec.
+    /// `e2e:e2e`'s plan, hashed from a recording that read only its spec,
+    /// without the fileset for that read.
     fn recorded_e2e_plan(planner: &HashPlanner) -> Vec<HashInstruction> {
         recorded_e2e_plan_reading(planner, &["libs/e2e/src/app.spec.ts"])
+            .into_iter()
+            .filter(|instruction| !recorded_spec_read(instruction))
+            .collect()
     }
 
     fn recorded_e2e_plan_reading(planner: &HashPlanner, reads: &[&str]) -> Vec<HashInstruction> {
+        recorded_e2e_plan_in(planner, reads, task_graph(&[("e2e:e2e", &[])], &[]))
+    }
+
+    fn recorded_e2e_plan_in(
+        planner: &HashPlanner,
+        reads: &[&str],
+        graph: TaskGraph,
+    ) -> Vec<HashInstruction> {
         let (_dir, configurations) = ultracache_configurations(&[("e2e:e2e", reads)]);
         let plans = planner
-            .get_plans_internal(
-                vec!["e2e:e2e"],
-                task_graph(&[("e2e:e2e", &[])], &[]),
-                Some(&configurations),
-                &[],
-            )
+            .get_plans_internal(vec!["e2e:e2e"], graph, Some(&configurations), &[])
             .unwrap();
         plans.plans["e2e:e2e"]
             .iter()
@@ -3532,9 +3583,111 @@ mod always_tests {
     }
 
     #[test]
+    fn a_recording_is_an_ordinary_fileset_unless_the_target_includes_unstable_files() {
+        let planner = planner(
+            vec![(
+                "e2e:e2e",
+                vec![ignored_fileset("{projectRoot}/generated/**", false, false)],
+            )],
+            &[],
+        );
+        let filesets = |graph: TaskGraph| -> Vec<HashInstruction> {
+            recorded_e2e_plan_in(
+                &planner,
+                &["libs/e2e/src/app.spec.ts", "tools/setup.ts"],
+                graph,
+            )
+            .into_iter()
+            .filter(|instruction| {
+                matches!(
+                    instruction,
+                    HashInstruction::IgnoredFileSet { .. } | HashInstruction::ProjectFileSet(..)
+                ) || matches!(instruction, HashInstruction::WorkspaceFileSet(globs)
+                    if globs.iter().any(|glob| glob.contains("tools")))
+            })
+            .collect()
+        };
+        let sorted = |mut instructions: Vec<HashInstruction>| {
+            instructions.sort();
+            instructions
+        };
+        let graph = || task_graph(&[("e2e:e2e", &[])], &[]);
+        let disk = |glob: &str, from_ultracache: bool| HashInstruction::IgnoredFileSet {
+            globs: vec![glob.into()].into(),
+            project_roots: vec!["libs/e2e".into()],
+            from_ultracache,
+        };
+        // A read no project owns is a workspace fileset. The declared
+        // `includeIgnored` fileset stays: no read hashes an ignored file.
+        assert_eq!(
+            sorted(filesets(graph())),
+            sorted(vec![
+                HashInstruction::WorkspaceFileSet(vec!["{workspaceRoot}/tools/setup.ts".into()]),
+                HashInstruction::ProjectFileSet(
+                    "e2e".into(),
+                    vec!["libs/e2e/src/app.spec.ts".into()]
+                ),
+                disk("libs/e2e/generated/**", false),
+            ])
+        );
+        let unstable = filesets(including_unstable_files(graph()));
+        assert!(unstable.iter().all(|instruction| matches!(
+            instruction,
+            HashInstruction::IgnoredFileSet {
+                from_ultracache: true,
+                ..
+            }
+        )));
+        assert_eq!(unstable.len(), 1);
+    }
+
+    #[test]
+    fn a_recorded_exclusion_stays_in_the_fileset_of_the_reads_it_trims() {
+        let planner = planner(vec![("e2e:e2e", vec![])], &[]);
+        let recorded: Vec<HashInstruction> =
+            recorded_e2e_plan_reading(&planner, &["libs/e2e/**/*.ts", "!libs/e2e/src/**/*.ts"])
+                .into_iter()
+                .filter(|instruction| matches!(instruction, HashInstruction::ProjectFileSet(..)))
+                .collect();
+        assert_eq!(
+            recorded,
+            vec![HashInstruction::ProjectFileSet(
+                "e2e".into(),
+                vec!["libs/e2e/**/*.ts".into(), "!libs/e2e/src/**/*.ts".into()]
+            )]
+        );
+    }
+
+    #[test]
+    fn a_recorded_read_of_an_upstream_output_does_not_defer_the_task() {
+        let planner = planner(vec![("e2e:e2e", vec![])], &[("e2e", &["app"])]);
+        // `app:build` declares a committed file as its output.
+        let graph = task_graph(
+            &[
+                ("e2e:e2e", &[]),
+                ("app:build", &["libs/app/src/generated.d.ts"]),
+            ],
+            &[("e2e:e2e", &["app:build"])],
+        );
+        let (_dir, configurations) =
+            ultracache_configurations(&[("e2e:e2e", &["libs/app/src/generated.d.ts"])]);
+        let plans = planner
+            .get_plans_internal(vec!["e2e:e2e"], graph, Some(&configurations), &[])
+            .unwrap();
+        // Hashed up front from the file map: only a declared
+        // `dependentTasksOutputFiles` input waits for the producer.
+        assert!(!plans.deferred.contains("e2e:e2e"));
+        assert!(plans.plans["e2e:e2e"].iter().any(|id| matches!(
+            plans.pool.get(*id).value(),
+            HashInstruction::ProjectFileSet(project, globs)
+                if project == "app" && globs == &["libs/app/src/generated.d.ts".to_string()]
+        )));
+    }
+
+    #[test]
     fn keeps_only_the_marked_part_of_a_dependency_include_ignored_group() {
         let retained = |fixtures: bool, exclusion: bool| -> Vec<HashInstruction> {
-            recorded_e2e_plan(&planner(
+            let planner = planner(
                 vec![(
                     "e2e:e2e",
                     vec![
@@ -3544,7 +3697,12 @@ mod always_tests {
                     ],
                 )],
                 &[("e2e", &["app"])],
-            ))
+            );
+            recorded_e2e_plan_in(
+                &planner,
+                &["libs/e2e/src/app.spec.ts"],
+                including_unstable_files(task_graph(&[("e2e:e2e", &[])], &[])),
+            )
             .into_iter()
             .filter(|instruction| {
                 matches!(instruction, HashInstruction::IgnoredFileSet { globs, .. }
@@ -3561,7 +3719,6 @@ mod always_tests {
                 ]
                 .into(),
                 project_roots: vec!["libs/app".into()],
-                exact_extension_exclusions: false,
                 from_ultracache: false,
             }]
         );
@@ -3629,21 +3786,25 @@ mod always_tests {
     #[test]
     fn hashes_a_node_modules_read_inside_an_upstream_output() {
         let planner = planner(vec![("e2e:e2e", vec![])], &[("e2e", &["app"])]);
-        let graph = task_graph(
-            &[("e2e:e2e", &[]), ("app:build", &["node_modules/.gen/app"])],
-            &[("e2e:e2e", &["app:build"])],
-        );
+        let graph = || {
+            task_graph(
+                &[("e2e:e2e", &[]), ("app:build", &["node_modules/.gen/app"])],
+                &[("e2e:e2e", &["app:build"])],
+            )
+        };
+        let reads = [
+            "node_modules/.gen/app/index.js",
+            "node_modules/foo/index.js",
+            "dist/libs/app/node_modules/dep/index.js",
+        ];
         assert_eq!(
-            hashed_node_modules_reads(
-                &planner,
-                graph,
-                &[
-                    "node_modules/.gen/app/index.js",
-                    "node_modules/foo/index.js",
-                    "dist/libs/app/node_modules/dep/index.js",
-                ],
-            ),
+            hashed_node_modules_reads(&planner, including_unstable_files(graph()), &reads),
             (vec!["node_modules/.gen/app/index.js".to_string()], true)
+        );
+        // Without `includeUnstableFiles` nothing under node_modules is tracked.
+        assert_eq!(
+            hashed_node_modules_reads(&planner, graph(), &reads),
+            (vec![], false)
         );
     }
 
@@ -3673,11 +3834,11 @@ mod always_tests {
             HashInstruction::TaskOutput(glob, outputs)
                 if glob == "**/*.d.ts" && outputs == &["libs/app/dist"]
         )));
-        assert!(plans.plans["e2e:e2e"].iter().any(|id| matches!(
-            plans.pool.get(*id).value(),
-            HashInstruction::IgnoredFileSet { globs, from_ultracache: true, .. }
-                if globs.iter().any(|glob| &**glob == "libs/e2e/src/app.spec.ts")
-        )));
+        assert!(
+            plans.plans["e2e:e2e"]
+                .iter()
+                .any(|id| recorded_spec_read(plans.pool.get(*id).value()))
+        );
     }
 
     #[test]
@@ -3691,7 +3852,7 @@ mod always_tests {
         let hashed = |inputs: Vec<JsInputs>| {
             hashed_node_modules_reads(
                 &planner(vec![("e2e:e2e", inputs)], &[("e2e", &["app"])]),
-                task_graph(&[("e2e:e2e", &[])], &[]),
+                including_unstable_files(task_graph(&[("e2e:e2e", &[])], &[])),
                 &reads,
             )
             .0
@@ -3913,7 +4074,7 @@ mod always_tests {
 mod nested_project_tests {
     use super::*;
     use crate::native::project_graph::types::{Project, Target};
-    use crate::native::test_utils::task_graph;
+    use crate::native::test_utils::{including_unstable_files, task_graph};
     use crate::native::types::FileSetInput;
     use napi::bindgen_prelude::Either9;
 
@@ -4019,8 +4180,59 @@ mod nested_project_tests {
     }
 
     #[test]
+    fn a_recorded_read_naming_a_project_root_belongs_to_that_project() {
+        use crate::native::test_utils::ultracache_configurations;
+
+        let (_dir, configurations) = ultracache_configurations(&[(
+            "gradle:build",
+            &[
+                "packages/gradle/batch-runner",
+                "packages/gradle/{batch-runner,src}",
+                "packages/gradle//src/a.ts",
+            ],
+        )]);
+        let plans = planner()
+            .get_plans_materialized(
+                vec!["gradle:build"],
+                task_graph(&[("gradle:build", &[])], &[]),
+                Some(&configurations),
+                &[],
+            )
+            .unwrap();
+        let mut filesets: Vec<(String, Vec<String>)> = plans["gradle:build"]
+            .iter()
+            .filter_map(|instruction| match instruction {
+                HashInstruction::ProjectFileSet(project, globs) => {
+                    let mut globs = globs.clone();
+                    globs.sort();
+                    Some((project.clone(), globs))
+                }
+                _ => None,
+            })
+            .collect();
+        filesets.sort();
+        // The outer project's file list holds none of the nested project's files.
+        assert_eq!(
+            filesets,
+            vec![
+                (
+                    "batch-runner".to_string(),
+                    vec!["packages/gradle/batch-runner".to_string()]
+                ),
+                (
+                    "gradle".to_string(),
+                    vec![
+                        "packages/gradle/src".to_string(),
+                        "packages/gradle/src/a.ts".to_string()
+                    ]
+                ),
+            ]
+        );
+    }
+
+    #[test]
     fn a_recording_hashes_a_nested_project_only_through_its_own_globs() {
-        use crate::native::tasks::hashers::{Source, expand_globs_with_exclusions};
+        use crate::native::tasks::hashers::{Source, expand_globs};
         use crate::native::test_utils::ultracache_configurations;
         use assert_fs::TempDir;
         use assert_fs::prelude::*;
@@ -4045,7 +4257,7 @@ mod nested_project_tests {
         let plans = planner()
             .get_plans_materialized(
                 vec!["gradle:build"],
-                task_graph(&[("gradle:build", &[])], &[]),
+                including_unstable_files(task_graph(&[("gradle:build", &[])], &[])),
                 Some(&configurations),
                 &[],
             )
@@ -4056,15 +4268,13 @@ mod nested_project_tests {
                 HashInstruction::IgnoredFileSet {
                     globs,
                     project_roots,
-                    exact_extension_exclusions,
                     ..
                 } => Some(
-                    expand_globs_with_exclusions(
+                    expand_globs(
                         temp.path(),
                         globs,
                         project_roots,
                         &Source::fileset_from_disk(temp.path()),
-                        *exact_extension_exclusions,
                     )
                     .unwrap()
                     .files,

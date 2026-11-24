@@ -859,8 +859,9 @@ export declare function getMainWorktreeRoot(workspaceRoot: string): string | nul
 export declare function getTransformableOutputs(outputs: Array<string>): Array<string>
 
 /**
- * Tasks whose Ultracache configuration read another task's outputs: they
- * hash after their producers ran, because those files only exist then. Needs
+ * Tasks with `includeUnstableFiles` whose Ultracache configuration read another
+ * task's outputs: they hash after their producers ran, because those files
+ * only exist then. Any other task hashes its tracked reads alone. Needs
  * no project graph, so the client can call it before the first hashing wave
  * on the daemon path.
  * Opted-out and custom-hasher tasks are not excluded: deferring a task that
@@ -1510,6 +1511,11 @@ export interface TaskUltracacheSettings {
    * pattern to a directory instead of leading with `**`.
    */
   ignoreWrites?: Array<string>
+  /**
+   * Hash recorded reads of unstable files too: those `.gitignore` or
+   * `.nxignore` exclude, such as dependency outputs. Defaults to `false`.
+   */
+  includeUnstableFiles?: boolean
 }
 
 export interface TerminalOutputRecord {

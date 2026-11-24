@@ -83,6 +83,9 @@ pub struct TaskUltracacheSettings {
     /// and `?`, `!`, `[`, `]` and extglobs are not supported; anchor the
     /// pattern to a directory instead of leading with `**`.
     pub ignore_writes: Option<Vec<String>>,
+    /// Hash recorded reads of unstable files too: those `.gitignore` or
+    /// `.nxignore` exclude, such as dependency outputs. Defaults to `false`.
+    pub include_unstable_files: Option<bool>,
 }
 
 impl Task {
@@ -222,17 +225,14 @@ pub enum HashInstruction {
     ProjectFileSet(String, Vec<String>),
     /// Workspace-relative globs expanded against the disk, so gitignored and
     /// generated files count: a project's `includeIgnored` globs, or the
-    /// reads in a task's Ultracache configuration. The project is not part of
+    /// reads in the Ultracache configuration of a task whose target sets
+    /// `includeUnstableFiles`. The project is not part of
     /// it: the same globs read the same files wherever they were declared.
     /// `project_roots` keep each glob out of projects nested below the one it
     /// reads from; they follow from the globs, see `scope_roots`.
     IgnoredFileSet {
         globs: Arc<[Arc<str>]>,
         project_roots: Vec<String>,
-        /// A `*.ext` exclusion matches only files whose whole suffix is `.ext`,
-        /// so `!**/*.ts` keeps `a.spec.ts` and `a.d.ts`. Set when a learned
-        /// exclusion has such a suffix category.
-        exact_extension_exclusions: bool,
         /// Read by the task per its Ultracache configuration, not declared.
         from_ultracache: bool,
     },
@@ -324,7 +324,7 @@ impl InstructionPool {
         keep_tsconfig: bool,
         read: impl Fn(&str) -> bool,
     ) -> bool {
-        // The configuration's own reads are disk-backed groups too; the caller keeps those.
+        // The configuration's own reads are filesets too; the caller keeps those.
         match &*self.get(id) {
             HashInstruction::ProjectFileSet(..)
             | HashInstruction::WorkspaceFileSet(_)
@@ -379,7 +379,6 @@ impl HashInstruction {
         HashInstruction::IgnoredFileSet {
             globs: globs.into_iter().map(Arc::from).collect(),
             project_roots: Vec::new(),
-            exact_extension_exclusions: false,
             from_ultracache: false,
         }
     }

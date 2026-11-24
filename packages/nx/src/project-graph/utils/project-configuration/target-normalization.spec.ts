@@ -282,6 +282,24 @@ describe('validateAndNormalizeProjectRootMap', () => {
       }
     );
 
+    it.each([true, false, undefined])(
+      'should accept includeUnstableFiles %s',
+      (includeUnstableFiles) => {
+        expect(ultracacheErrors({ includeUnstableFiles })).toEqual([]);
+      }
+    );
+
+    it.each(['true', 0, null, []])(
+      'should reject includeUnstableFiles %j',
+      (includeUnstableFiles) => {
+        expect(ultracacheErrors({ includeUnstableFiles })).toEqual([
+          expect.stringMatching(
+            /"ultracache.includeUnstableFiles" for target "build" in project "a-ui" must be a boolean/
+          ),
+        ]);
+      }
+    );
+
     it('should reject a key that is not an ultracache option', () => {
       expect(ultracacheErrors({ ignoredReads: ['tmp/**'] })).toEqual([
         expect.stringMatching(
