@@ -16,6 +16,15 @@ Runs outside CI always hash tasks from the `inputs` declared in your project con
 Earlier Nx versions don't support Ultracache.
 To use it, [update your workspace](/docs/features/automate-updating-dependencies) to Nx 24.0.0 or later.
 
+## Unstable files in Nx 24.0
+
+Nx 24.0 hashes every file a recording read, including files that `.gitignore` or `.nxignore` exclude.
+A task's hash then changes when one of those files appears or disappears, as build outputs do.
+Nx 24.1.0 and later hash only the other files a recording read.
+
+To hash the excluded files too, set [`ultracache.includeUnstableFiles`](/docs/reference/project-configuration#include-unstable-files) on the target.
+That option requires Nx 24.1.0 or later, and Nx 24.0 reports it as unknown.
+
 ## Control Ultracache for one pipeline
 
 Set `NX_CLOUD_ULTRACACHE_MODE` in a CI pipeline to override the workspace setting for that pipeline only.
