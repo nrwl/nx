@@ -92,9 +92,13 @@
     "@typescript-eslint/parser": "^8.0.0",
     "eslint": "^9.0.0 || ^10.0.0",
     "eslint-config-prettier": "catalog:eslint",
-    "typescript": "^5.8.0 || ^6.0.0"
+    "typescript": "^5.8.0 || ^6.0.0",
+    "typescript-eslint": "^8.0.0"
   },
   "peerDependenciesMeta": {
+    "@eslint/js": {
+      "optional": true
+    },
     "@typescript-eslint/parser": {
       "optional": true
     },
@@ -102,6 +106,9 @@
       "optional": true
     },
     "typescript": {
+      "optional": true
+    },
+    "typescript-eslint": {
       "optional": true
     }
   },
