@@ -121,4 +121,77 @@ mod tests {
         assert!(!map.still_matches(0, &a));
         assert!(map.still_matches(1, &z));
     }
+
+    #[test]
+    fn a_batch_charges_shared_live_files_once_and_only_reuses_attested_sources() {
+        use crate::native::hasher::hash;
+        use crate::native::tasks::hashers::{RehashReadBudget, SettledGroups};
+        use crate::native::tasks::types::HashInstruction;
+        use crate::native::test_utils::hash_plans;
+        use std::collections::HashMap;
+
+        let dir = tempfile::tempdir().unwrap();
+        // A shared multiple of the supported platforms' filesystem page sizes.
+        const SIZE: usize = 128 * 1024;
+        let files = ["output", "source"].map(|name| {
+            let path = dir.path().join(name);
+            let bytes = vec![name.as_bytes()[0]; SIZE];
+            std::fs::write(&path, &bytes).unwrap();
+            FileData {
+                file: name.into(),
+                hash: hash(&bytes),
+            }
+        });
+        let hashes = files
+            .iter()
+            .map(|file| {
+                let stamp = get_metadata_key(&dir.path().join(&file.file).metadata().unwrap());
+                (file.file.clone(), NxFileHashed(file.hash.clone(), stamp))
+            })
+            .collect::<NxFileHashes>()
+            .with_gathered_at(i64::MAX);
+        let proof = RehashFileMap::new("head".into(), &hashes);
+        let sources = HashInstruction::IgnoredFileSet {
+            globs: vec!["source".into(), "output".into()].into(),
+            project_roots: vec![],
+            exact_extension_exclusions: false,
+            from_ultracache: true,
+        };
+        let outputs = HashInstruction::TaskOutput("**/*".into(), vec!["output".into()]);
+        let plans = hash_plans(&[
+            ("producer", vec![sources.clone()]),
+            ("consumer", vec![sources, outputs]),
+        ]);
+        let run = |trusted: bool, bytes: usize| -> anyhow::Result<Vec<String>> {
+            let settled = SettledGroups::new(
+                dir.path(),
+                &plans,
+                &vec![true; plans.pool.len()],
+                &HashMap::new(),
+                files.iter().enumerate().filter(|_| trusted),
+                trusted.then_some(&*proof),
+                &RehashReadBudget::new(Some(bytes as f64))?,
+            )?;
+            Ok(settled
+                .groups
+                .iter()
+                .flatten()
+                .map(|ids| settled.files.fold(ids))
+                .collect())
+        };
+        let live = run(false, 2 * SIZE).unwrap();
+        assert!(
+            run(false, 2 * SIZE - 1)
+                .unwrap_err()
+                .to_string()
+                .contains("NX_REHASH_MEMORY_BUDGET")
+        );
+        assert_eq!(run(true, SIZE).unwrap(), live);
+        assert!(
+            run(true, SIZE - 1)
+                .unwrap_err()
+                .to_string()
+                .contains("NX_REHASH_MEMORY_BUDGET")
+        );
+    }
 }

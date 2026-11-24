@@ -460,6 +460,12 @@ mod tests {
                 exclude_fields: None,
             },
         ];
+        // The two projections share two one-page reads. Missing files and
+        // later raw-output consumers of the same bytes use no additional pages.
+        use super::super::{RehashReadBudget, SettledGroups, rehash_read::page_bytes};
+        use crate::native::tasks::types::HashInstruction;
+        use crate::native::test_utils::hash_plans;
+        let budget = RehashReadBudget::new(Some((2 * page_bytes(1)) as f64)).unwrap();
         let batch = hash_settled_json(
             dir.path(),
             inputs
@@ -470,7 +476,7 @@ mod tests {
             &project,
             &workspace,
             |path| path == "b.json",
-            &Default::default(),
+            &budget,
         )
         .unwrap();
         for (id, input) in inputs.iter().enumerate() {
@@ -490,6 +496,24 @@ mod tests {
         }
         assert_eq!(batch.raw_hashes["a.json"], Some(hash(b"invalid")));
         assert_eq!(batch.raw_hashes["missing.json"], None);
+        let plans = hash_plans(&[(
+            "task",
+            vec![HashInstruction::TaskOutput(
+                "**/*".into(),
+                vec!["a.json".into(), "b.json".into()],
+            )],
+        )]);
+        let raw = SettledGroups::new(
+            dir.path(),
+            &plans,
+            &vec![true; plans.pool.len()],
+            &batch.raw_hashes,
+            std::iter::empty(),
+            None,
+            &budget,
+        )
+        .unwrap();
+        assert_eq!(raw.groups.iter().flatten().next().unwrap().len(), 2);
     }
 
     #[test]

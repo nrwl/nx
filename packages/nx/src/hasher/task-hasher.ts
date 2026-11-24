@@ -100,7 +100,9 @@ export interface TaskHasher {
    * Set fileMapMatchesTrackedFiles only when the file map and the settled worktree
    * are known to contain the same bytes for the commit's tracked regular files.
    * A Buffer contains NUL-terminated UTF-8 paths. Dependency outputs always use
-   * their settled bytes. maxLiveReadBytes optionally bounds page-rounded disk reads.
+   * their settled bytes. maxLiveReadBytes is an optional nonnegative safe integer.
+   * Each distinct live input consumes its page-rounded size. Reuse is free.
+   * Exceeding the limit rejects the entire batch with NX_REHASH_MEMORY_BUDGET.
    */
   hashTasksForRehash?(
     tasks: Task[],

@@ -35,7 +35,7 @@ impl TaskHasher {
             Vec<String>,
         >,
         file_map_matches_tracked_files: Option<bool>,
-        max_live_read_bytes: Option<i64>,
+        max_live_read_bytes: Option<f64>,
     ) -> anyhow::Result<Vec<RehashResult>> {
         // A process environment can be large. Copy only the variables the
         // plan reads, or the entire environment for a shell command.
