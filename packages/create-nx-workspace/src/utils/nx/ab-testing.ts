@@ -156,7 +156,7 @@ export function isEnterpriseCloudUrl(cloudUrl?: string): boolean {
  * Get the banner variant for completion messages.
  * Now locked to variant 2 (CLOUD-4255).
  * - Variant 0: Plain link - used for enterprise URLs and docs generation
- * - Variant 2: "Enable remote caching and automatic fixes" banner
+ * - Variant 2: Simple box banner with setup URL
  *
  * @param cloudUrl - The Nx Cloud URL. If enterprise, always returns '0'.
  */
