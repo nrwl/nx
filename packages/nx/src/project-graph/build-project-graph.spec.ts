@@ -135,6 +135,35 @@ describe('rehash provenance from a native workspace gather', () => {
     expect(fresh.rustReferences.rehashSourceCommit).toBe(expected);
   });
 
+  it.each([
+    ['oFf', 'true', undefined, false],
+    [undefined, 'false', undefined, false],
+    ['ON', 'false', undefined, true],
+    ['warn', 'false', undefined, true],
+    ['error', 'false', undefined, true],
+    [undefined, 'FALSE', undefined, true],
+    ['off', 'false', 'true', true],
+    ['on', 'true', 'false', false],
+  ] as const)(
+    'CI with mode=%s, legacy=%s and rehash=%s captures provenance=%s',
+    async (mode, legacy, rehash, capture) => {
+      vi.stubEnv('NX_CLOUD_ULTRACACHE_MODE', mode);
+      vi.stubEnv('NX_CLOUD_USE_ULTRACACHE', legacy);
+      vi.stubEnv('NX_CLOUD_ULTRACACHE_REHASH', rehash);
+      const trace = '.git/gather.trace';
+      fs.createFileSync(trace, '');
+      vi.stubEnv('GIT_TRACE2_EVENT', join(fs.tempDir, trace));
+
+      const map = await gather();
+      const shouldCapture = capture && supportsProvenance;
+      expect(map.rehashSourceCommit).toBe(shouldCapture ? commit : undefined);
+      const gitTrace = await fs.readFile(trace);
+      expect(
+        gitTrace.includes('HEAD^{commit}') || gitTrace.includes('--no-ext-diff')
+      ).toBe(shouldCapture);
+    }
+  );
+
   it('keeps a dirty native gather unverified when the runner later sees a clean checkout', async () => {
     fs.createFileSync('source.txt', 'dirty');
     const dirty = await gather();

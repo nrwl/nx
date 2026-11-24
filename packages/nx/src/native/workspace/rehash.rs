@@ -69,8 +69,18 @@ pub(super) fn should_capture_rehash_provenance() -> bool {
                 std::env::var("NX_NO_CLOUD").as_deref() != Ok("true")
                     && (is_ci()
                         || std::env::var_os("NX_CI_EXECUTION_ID").is_some_and(|id| !id.is_empty()))
+                    && !ultracache_disabled_by_env()
             }
         }
+}
+
+fn ultracache_disabled_by_env() -> bool {
+    // An explicit mode takes precedence over the legacy flag. The Cloud
+    // runner validates the mode and resolves the workspace default later.
+    match std::env::var_os("NX_CLOUD_ULTRACACHE_MODE") {
+        Some(mode) => mode.eq_ignore_ascii_case("off"),
+        None => std::env::var("NX_CLOUD_USE_ULTRACACHE").as_deref() == Ok("false"),
+    }
 }
 
 /// Both sides of the gather must observe the same clean commit. Per-file
