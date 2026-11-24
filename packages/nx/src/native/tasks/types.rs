@@ -334,7 +334,7 @@ impl InstructionPool {
         keep_tsconfig: bool,
         read: impl Fn(&str) -> bool,
     ) -> bool {
-        // The configuration's own reads are disk-backed groups too; the caller keeps those.
+        // The configuration's own reads are filesets too; the caller keeps those.
         match &*self.get(id) {
             HashInstruction::ProjectFileSet(..)
             | HashInstruction::WorkspaceFileSet(_)

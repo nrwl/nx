@@ -712,13 +712,22 @@ impl HashPlanner {
             .find(|(_, project)| project.root == ".")
             .map(|(name, _)| name.as_str())
             .unwrap_or(self_project);
-        // A disk-backed group needs an owner. A fileset no project owns
-        // reads the workspace's files instead.
         let owner = |glob: &str| -> Option<&str> {
-            parent_dirs(glob.strip_prefix('!').unwrap_or(glob))
+            let glob = glob.strip_prefix('!').unwrap_or(glob);
+            if include_unstable {
+                // Only groups the reads: `disk_file_set` scopes each entry.
+                return parent_dirs(glob)
+                    .find_map(|dir| project_by_root.get(dir))
+                    .map_or(Some(unowned), |project| Some(project.as_str()));
+            }
+            // A fileset reads its project's files only, so an entry naming a
+            // project root has to belong to that project. With no owner it
+            // reads the workspace's files.
+            let root = walk_root(glob);
+            std::iter::once(root.as_str())
+                .chain(parent_dirs(&root))
                 .find_map(|dir| project_by_root.get(dir))
                 .map(String::as_str)
-                .or(include_unstable.then_some(unowned))
         };
 
         // A recorded glob stays whole unless its brace alternatives belong to
@@ -945,7 +954,8 @@ impl HashPlanner {
                     }),
             );
         }
-        // Kept with a configuration too; the hasher drops recorded reads these hash.
+        // Kept with a configuration too; with `includeUnstableFiles` the hasher
+        // drops recorded reads these hash.
         ids.extend(
             self.gather_dependency_outputs(task, task_graph, &inputs.deps_outputs)?
                 .into_iter()
@@ -3347,15 +3357,14 @@ mod always_tests {
         )
     }
 
-    /// The projects whose declared files each task's plan hashes, with the
-    /// e2e tasks hashed from a recording that read only their own spec.
     /// The fileset a recording that read only `e2e`'s spec adds to a plan.
     fn recorded_spec_read(instruction: &HashInstruction) -> bool {
         matches!(instruction, HashInstruction::ProjectFileSet(project, globs)
             if project == "e2e" && globs == &["libs/e2e/src/app.spec.ts".to_string()])
     }
 
-    /// The projects whose declared filesets each task's plan holds.
+    /// The projects whose declared files each task's plan hashes, with the
+    /// e2e tasks hashed from a recording that read only their own spec.
     fn hashed_projects(
         planner: &HashPlanner,
         task_ids: &[&str],
@@ -4214,6 +4223,57 @@ mod nested_project_tests {
         assert_eq!(
             roots_of(&group(&["packages/**/*.json", "dist/**"])),
             Some(vec![])
+        );
+    }
+
+    #[test]
+    fn a_recorded_read_naming_a_project_root_belongs_to_that_project() {
+        use crate::native::test_utils::ultracache_configurations;
+
+        let (_dir, configurations) = ultracache_configurations(&[(
+            "gradle:build",
+            &[
+                "packages/gradle/batch-runner",
+                "packages/gradle/{batch-runner,src}",
+                "packages/gradle//src/a.ts",
+            ],
+        )]);
+        let plans = planner()
+            .get_plans_materialized(
+                vec!["gradle:build"],
+                task_graph(&[("gradle:build", &[])], &[]),
+                Some(&configurations),
+                &[],
+            )
+            .unwrap();
+        let mut filesets: Vec<(String, Vec<String>)> = plans["gradle:build"]
+            .iter()
+            .filter_map(|instruction| match instruction {
+                HashInstruction::ProjectFileSet(project, globs) => {
+                    let mut globs = globs.clone();
+                    globs.sort();
+                    Some((project.clone(), globs))
+                }
+                _ => None,
+            })
+            .collect();
+        filesets.sort();
+        // The outer project's file list holds none of the nested project's files.
+        assert_eq!(
+            filesets,
+            vec![
+                (
+                    "batch-runner".to_string(),
+                    vec!["packages/gradle/batch-runner".to_string()]
+                ),
+                (
+                    "gradle".to_string(),
+                    vec![
+                        "packages/gradle/src".to_string(),
+                        "packages/gradle/src/a.ts".to_string()
+                    ]
+                ),
+            ]
         );
     }
 
