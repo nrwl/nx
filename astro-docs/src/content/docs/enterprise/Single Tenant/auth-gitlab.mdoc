@@ -4,17 +4,22 @@ description: Configure authentication for Nx Cloud using a GitLab app
 filter: 'type:Guides'
 ---
 
-Before creating your container, you'll need to create a GitLab app for your organisation.
+Before creating your container, you'll need to create a GitLab OAuth application for your organization.
 
 ## Creating a GitLab app
 
-From GitLab, click on your profile picture and chose "Preferences":
+Create the application in a GitLab group, not under your own profile.
+GitLab deletes a personal application along with the account that owns it,
+and Nx Cloud login stops working.
+Pick a group that several people own, so the application stays when one of them leaves.
 
-![Step 1](../../../../assets/enterprise/single-tenant/gitlab_step_1.png)
+1. Open the group in GitLab.
+1. Go to **Settings** > **Applications**.
+1. Select **Add new application**.
 
-Then "Applications" from the left-hand menu:
-
-![Step 2](../../../../assets/enterprise/single-tenant/gitlab_step_2.png)
+You need the Owner role on the group to add an application.
+On GitLab self-managed, an administrator can instead create an instance-wide application
+under **Admin** > **Applications**.
 
 Give the app a name. The authorization callback is the important bit. It needs to be in this form:
 
@@ -27,17 +32,17 @@ https://my.nx-enterprise.url:8080/auth-callback
 
 **Important:** Ensure there is **no backslash at the end of the "Redirect URI"** (i.e. it matches the above pattern)
 
-![Step 3](../../../../assets/enterprise/single-tenant/gitlab_step_3.png)
+![GitLab group application form](../../../../assets/enterprise/single-tenant/gitlab-group-app-form.webp)
 
 Ensure you grant it the "`read_user`" scope:
 
-![Step 4](../../../../assets/enterprise/single-tenant/gitlab_step_4.png)
+![GitLab application scopes with read_user selected](../../../../assets/enterprise/single-tenant/gitlab-group-app-scopes.webp)
 
 Click "Save application".
 
 Once you create, keep a note of the Client ID and the Secret:
 
-![Step 5](../../../../assets/enterprise/single-tenant/gitlab_step_5.png)
+![Created GitLab group application with its ID and secret](../../../../assets/enterprise/single-tenant/gitlab-group-app-created.webp)
 
 ## Connect your Nx Cloud installation to your new app
 

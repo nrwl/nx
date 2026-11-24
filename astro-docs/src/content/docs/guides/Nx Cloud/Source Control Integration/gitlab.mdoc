@@ -6,7 +6,7 @@ sidebar:
   label: GitLab
 ---
 
-The Nx Cloud GitLab Integration lets you access the result of every run—with all its logs and build insights—straight from your Merge Requests.
+The Nx Cloud GitLab Integration lets you access the result of every run, with all its logs and build insights, straight from your Merge Requests.
 
 ### Connecting your workspace
 
@@ -20,13 +20,20 @@ To locate the ID for your project, visit the home page of your repository on Git
 
 ![Add GitLab Repository](../../../../../assets/nx-cloud/set-up/add-gitlab-repository.webp)
 
-### Using a personal access token
+### Using an access token
 
-To use a Personal Access Token for authentication, one must be generated with proper permissions. The minimum required permissions are shown in the screenshot below.
+Use a group access token or a project access token.
+These tokens belong to the group or project,
+so the integration keeps working when the person who set it up leaves.
 
-![Minimum GitLab Personal Access Token Permissions](../../../../../assets/nx-cloud/set-up/minimal-gitlab-access-token.webp)
+1. In GitLab, open the group or project.
+1. Go to **Settings** > **Access tokens**.
+1. Give the token the **Developer** role and the `api` and `read_repository` scopes.
 
-Once this token is created, select the radio button for providing a personal access token, paste the value, and then click "Connect".
+If your GitLab plan doesn't offer group or project access tokens,
+create a personal access token on a shared service account.
+
+Once this token is created, select the radio button for providing a token, paste the value, and then click "Connect".
 
 This will verify that Nx Cloud can connect to your repo. Upon a successful test, your configuration is saved, and setup is complete.
 
