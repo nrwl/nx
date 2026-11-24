@@ -156,7 +156,7 @@ export function isEnterpriseCloudUrl(cloudUrl?: string): boolean {
  * Get the banner variant for completion messages.
  * Now locked to variant 2 (CLOUD-4255).
  * - Variant 0: Plain link - used for enterprise URLs and docs generation
- * - Variant 2: "Enable remote caching and automatic fixes" banner
+ * - Variant 2: Simple box banner with setup URL
  *
  * @param cloudUrl - The Nx Cloud URL. If enterprise, always returns '0'.
  */
@@ -204,7 +204,7 @@ const messageOptions: Record<string, MessageData[]> = {
         { value: 'circleci', name: 'Circle CI\n' },
         { value: 'skip', name: 'Do it later' },
       ],
-      footer: `\nSelf-healing CI, remote caching, and task distribution are provided by Nx Cloud: ${NX_CLOUD_HYPERLINK}\nSee it in action: ${NX_CLOUD_DEMO_HYPERLINK}`,
+      footer: `\nRemote caching and task distribution are provided by Nx Cloud: ${NX_CLOUD_HYPERLINK}\nSee it in action: ${NX_CLOUD_DEMO_HYPERLINK}`,
       fallback: { value: 'skip', key: 'setupNxCloud' },
       completionMessage: 'ci-setup',
     },
@@ -222,7 +222,7 @@ const messageOptions: Record<string, MessageData[]> = {
         { value: 'yes', name: 'Yes' },
         { value: 'skip', name: 'Skip' },
       ],
-      footer: `\nAutomatically fix broken PRs, 70% faster CI: ${NX_CLOUD_HYPERLINK}\nSee it in action: ${NX_CLOUD_DEMO_HYPERLINK}`,
+      footer: `\n70% faster CI with remote caching and task distribution: ${NX_CLOUD_HYPERLINK}\nSee it in action: ${NX_CLOUD_DEMO_HYPERLINK}`,
       fallback: undefined,
       completionMessage: 'platform-setup',
     },

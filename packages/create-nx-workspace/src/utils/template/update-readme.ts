@@ -7,7 +7,7 @@ const END_MARKER = '<!-- END: nx-cloud -->';
 
 const CLOUD_SETUP_SECTION = `## Finish your Nx platform setup
 
-🚀 [Finish setting up your workspace]({{CONNECT_URL}}) to get faster builds with remote caching, distributed task execution, and self-healing CI. [Learn more about Nx Cloud](https://nx.dev/ci/intro/why-nx-cloud).
+🚀 [Finish setting up your workspace]({{CONNECT_URL}}) to get faster builds with remote caching and distributed task execution. [Learn more about Nx Cloud](https://nx.dev/ci/intro/why-nx-cloud).
 `;
 
 /**

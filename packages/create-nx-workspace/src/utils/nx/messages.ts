@@ -122,7 +122,7 @@ export function getSkippedCloudMessage(): {
     bodyLines: [
       'Run "nx connect" to enable remote caching and speed up your CI.',
       '',
-      '70% faster CI, 60% less compute, automatically fix broken PRs.',
+      '70% faster CI, 60% less compute.',
       'Learn more at https://nx.dev/nx-cloud',
     ],
   };

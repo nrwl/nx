@@ -80,17 +80,6 @@ const messageOptions: Record<string, MessageData[]> = {
       footer:
         '\nFree for small teams. Remote caching and task distribution. 2-minute setup:',
     },
-    {
-      code: 'cloud-self-healing-remote-cache',
-      message: `Would you like to enable AI-powered Self-Healing CI and Remote Caching?`,
-      initial: 0,
-      choices: [
-        { value: 'yes', name: 'Yes' },
-        { value: 'skip', name: 'Skip for now' },
-      ],
-      footer: '\nLearn about it at',
-      hint: `\n(it's free and can be disabled any time)`,
-    },
   ],
   setupViewLogs: [
     {
