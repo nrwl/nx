@@ -59,31 +59,42 @@ struct Group {
 }
 
 struct File<'a> {
-    path: String,
+    path: Cow<'a, str>,
     // Length of the widest requested root whose walk can see this file.
     visible_from: usize,
-    hash: Option<Cow<'a, str>>,
 }
 
-pub(crate) struct SettledFiles<'a>(Vec<File<'a>>);
+pub(crate) struct SettledFiles<'a> {
+    entries: Vec<File<'a>>,
+    hashes: Vec<Option<Cow<'a, str>>>,
+}
 
-impl SettledFiles<'_> {
-    fn inventory(workspace_root: &Path, roots: HashSet<&str>) -> Result<Self> {
+impl<'a> SettledFiles<'a> {
+    fn inventory(workspace_root: &Path, roots: HashSet<&str>, tracked: &[&'a str]) -> Result<Self> {
         let ignores = DiskWalkIgnores::new()?;
         let mut roots = Vec::from_iter(roots);
         roots.sort_unstable_by_key(|root| root.len());
         let mut directories = HashSet::new();
-        let mut files = HashMap::new();
+        let mut entries = Vec::new();
+        let mut record = |path: Cow<'_, str>, visible_from| {
+            // The name can borrow the caller's path table even when the file's
+            // bytes require a live read. Only a disk observation adds an entry.
+            let path = match tracked.binary_search(&path.as_ref()) {
+                Ok(i) => Cow::Borrowed(tracked[i]),
+                Err(_) => Cow::Owned(path.into_owned()),
+            };
+            entries.push(File { path, visible_from });
+        };
         for root in roots {
             let start = workspace_root.join(root);
-            if directories.contains(&start) || files.contains_key(root) {
+            if directories.contains(&start) {
                 continue;
             }
             let Ok(metadata) = std::fs::metadata(&start) else {
                 continue;
             };
             if metadata.is_file() {
-                files.insert(root.to_owned(), root.len());
+                record(Cow::Borrowed(root), root.len());
                 continue;
             }
             if !metadata.is_dir() {
@@ -105,44 +116,48 @@ impl SettledFiles<'_> {
                     let Ok(kind) = entry.file_type() else {
                         continue;
                     };
-                    let relative = path
-                        .strip_prefix(workspace_root)?
-                        .to_string_lossy()
-                        .replace('\\', "/");
                     if kind.is_dir() {
                         stack.push(path);
                     } else if kind.is_file() || (kind.is_symlink() && path.is_file()) {
-                        files.insert(relative, root.len());
+                        let mut relative = path.strip_prefix(workspace_root)?.to_string_lossy();
+                        if relative.contains('\\') {
+                            relative = Cow::Owned(relative.replace('\\', "/"));
+                        }
+                        record(relative, root.len());
                     }
                 }
             }
         }
-        let mut files: Vec<_> = files
-            .into_iter()
-            .map(|(path, visible_from)| File {
-                path,
-                visible_from,
-                hash: None,
-            })
-            .collect();
-        files.sort_unstable_by(|a, b| a.path.cmp(&b.path));
-        Ok(Self(files))
+        // An explicit file root may also have been found below a directory.
+        // Keep its widest visibility and assign one ID for all its consumers.
+        entries.sort_unstable_by(|a, b| {
+            a.path
+                .cmp(&b.path)
+                .then(a.visible_from.cmp(&b.visible_from))
+        });
+        entries.dedup_by(|a, b| a.path == b.path);
+        Ok(Self {
+            hashes: vec![None; entries.len()],
+            entries,
+        })
     }
 
     // A sibling such as "pkg-tests" sorts between "pkg" and "pkg/".
     fn below(&self, root: &str) -> Range<usize> {
         if root.is_empty() {
-            return 0..self.0.len();
+            return 0..self.entries.len();
         }
         let prefix = format!("{root}/");
-        let start = self.0.partition_point(|f| f.path < prefix);
-        let end = start + self.0[start..].partition_point(|f| f.path.starts_with(&prefix));
+        let start = self
+            .entries
+            .partition_point(|f| f.path.as_ref() < prefix.as_str());
+        let end = start + self.entries[start..].partition_point(|f| f.path.starts_with(&prefix));
         start..end
     }
 
     fn exact(&self, path: &str) -> Option<usize> {
-        self.0
-            .binary_search_by(|file| file.path.as_str().cmp(path))
+        self.entries
+            .binary_search_by(|file| file.path.as_ref().cmp(path))
             .ok()
     }
 
@@ -161,7 +176,7 @@ impl SettledFiles<'_> {
             ids.extend(
                 self.below(root)
                     .filter(|&i| {
-                        let file = &self.0[i];
+                        let file = &self.entries[i];
                         file.visible_from <= root.len()
                             && positive
                                 .matcher
@@ -206,18 +221,18 @@ impl SettledFiles<'_> {
     }
 
     pub(crate) fn path(&self, id: u32) -> &str {
-        &self.0[id as usize].path
+        &self.entries[id as usize].path
     }
 
     pub(crate) fn was_read(&self, id: u32) -> bool {
-        self.0[id as usize].hash.is_some()
+        self.hashes[id as usize].is_some()
     }
 
     pub(crate) fn fold(&self, ids: &[u32]) -> String {
-        fold_file_hashes(ids.iter().filter_map(|&id| {
-            let file = &self.0[id as usize];
-            Some((file.path.as_str(), file.hash.as_deref()?))
-        }))
+        fold_file_hashes(
+            ids.iter()
+                .filter_map(|&id| Some((self.path(id), self.hashes[id as usize].as_deref()?))),
+        )
     }
 }
 
@@ -244,6 +259,7 @@ impl<'a> SettledGroups<'a> {
         plans: &HashPlans,
         used: &[bool],
         prehashed: &HashMap<&str, Option<String>>,
+        tracked: &[&'a str],
         verified_files: impl Iterator<Item = (usize, &'a FileData)>,
         proof: Option<&RehashFileMap>,
         budget: &RehashReadBudget,
@@ -306,12 +322,12 @@ impl<'a> SettledGroups<'a> {
             .flat_map(|p| &p.positives)
             .map(|p| p.entry.root.as_str())
             .collect();
-        let mut files = SettledFiles::inventory(workspace_root, roots)?;
+        let mut files = SettledFiles::inventory(workspace_root, roots, tracked)?;
         let groups: Vec<_> = groups
             .into_par_iter()
             .map(|group| group.map(|group| files.select(&group)))
             .collect();
-        let mut needed = vec![false; files.0.len()];
+        let mut needed = vec![false; files.entries.len()];
         for &id in groups.iter().flatten().flatten() {
             needed[id as usize] = true;
         }
@@ -324,7 +340,7 @@ impl<'a> SettledGroups<'a> {
                 && !prehashed.contains_key(file.file.as_str())
                 && proof.is_none_or(|p| p.still_matches(index, &workspace_root.join(&file.file)))
             {
-                files.0[i].hash = Some(Cow::Borrowed(&file.hash));
+                files.hashes[i] = Some(Cow::Borrowed(&file.hash));
                 needed[i] = false;
             }
         }
@@ -338,21 +354,26 @@ impl<'a> SettledGroups<'a> {
                 }
             }
         }
-        files.0.par_iter_mut().zip(needed).try_for_each_init(
-            || vec![0; 32 * 1024],
-            |buffer, (file, needed)| {
-                if needed {
-                    file.hash = if let Some(hash) = prehashed.get(file.path.as_str()) {
-                        hash.clone()
-                    } else {
-                        let path = workspace_root.join(&file.path);
-                        hash_stream(&path, buffer, budget)?
+        files
+            .hashes
+            .par_iter_mut()
+            .zip(&files.entries)
+            .zip(needed)
+            .try_for_each_init(
+                || vec![0; 32 * 1024],
+                |buffer, ((hash, file), needed)| {
+                    if needed {
+                        *hash = if let Some(hash) = prehashed.get(file.path.as_ref()) {
+                            hash.clone()
+                        } else {
+                            let path = workspace_root.join(file.path.as_ref());
+                            hash_stream(&path, buffer, budget)?
+                        }
+                        .map(Cow::Owned);
                     }
-                    .map(Cow::Owned);
-                }
-                Ok::<_, anyhow::Error>(())
-            },
-        )?;
+                    Ok::<_, anyhow::Error>(())
+                },
+            )?;
         Ok(Self { files, groups })
     }
 }
@@ -366,6 +387,24 @@ mod tests {
     use crate::native::test_utils::hash_plans;
     use assert_fs::TempDir;
     use assert_fs::prelude::*;
+
+    #[test]
+    fn inventory_borrows_existing_tracked_names_and_discovers_untracked_files() {
+        let temp = TempDir::new().unwrap();
+        temp.child("dir/source").write_str("source").unwrap();
+        temp.child("dir/generated").write_str("generated").unwrap();
+        let tracked = ["dir/absent", "dir/source"];
+        let files = SettledFiles::inventory(
+            temp.path(),
+            ["dir", "dir/source", "dir/absent"].into_iter().collect(),
+            &tracked,
+        )
+        .unwrap();
+        assert_eq!(files.entries.len(), 2);
+        assert!(matches!(&files.entries[0].path, Cow::Owned(p) if p == "dir/generated"));
+        assert!(matches!(files.entries[1].path, Cow::Borrowed(p) if std::ptr::eq(p, tracked[1])));
+        assert_eq!(files.entries[1].visible_from, "dir".len());
+    }
 
     #[test]
     fn streams_output_bytes_across_buffer_boundaries() {
@@ -444,6 +483,7 @@ mod tests {
             &plans,
             &vec![true; plans.pool.len()],
             &HashMap::new(),
+            &[],
             std::iter::empty(),
             None,
             &Default::default(),
@@ -509,16 +549,13 @@ mod tests {
             &plans,
             &vec![true; plans.pool.len()],
             &HashMap::new(),
+            &[],
             verified.iter().enumerate(),
             None,
             &Default::default(),
         )
         .unwrap();
-        let hash_of = |path| {
-            settled.files.0[settled.files.exact(path).unwrap()]
-                .hash
-                .as_deref()
-        };
+        let hash_of = |path| settled.files.hashes[settled.files.exact(path).unwrap()].as_deref();
         assert_eq!(hash_of("src"), Some("from-file-map"));
         assert_eq!(
             hash_of("out"),

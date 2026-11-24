@@ -78,7 +78,13 @@ impl TaskHasher {
                     paths.is_empty() || paths.ends_with('\0'),
                     "Expected NUL-terminated tracked paths"
                 );
-                paths.split_terminator('\0').collect()
+                let count = paths.as_bytes().iter().filter(|&&b| b == 0).count();
+                let mut index = Vec::with_capacity(count);
+                for path in paths.split_terminator('\0') {
+                    anyhow::ensure!(!path.is_empty(), "Expected a nonempty tracked path");
+                    index.push(path);
+                }
+                index
             }
             Either::B(paths) => paths.iter().map(String::as_str).collect(),
         };
@@ -150,6 +156,7 @@ impl TaskHasher {
             plans,
             &used,
             &json.raw_hashes,
+            tracked,
             verified_files,
             proof,
             budget,

@@ -168,6 +168,7 @@ mod tests {
                 &plans,
                 &vec![true; plans.pool.len()],
                 &HashMap::new(),
+                &["output", "source"],
                 files.iter().enumerate().filter(|_| trusted),
                 trusted.then_some(&*proof),
                 &RehashReadBudget::new(Some(bytes as f64))?,

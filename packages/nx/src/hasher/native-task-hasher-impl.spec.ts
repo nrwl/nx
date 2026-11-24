@@ -1721,6 +1721,22 @@ describe('native task hasher', () => {
           0
         )
       ).toThrow('NX_REHASH_MEMORY_BUDGET');
+      for (const [bytes, error] of [
+        [Buffer.from([0xc3, 0]), /utf-8/i],
+        [Buffer.from(source), /NUL-terminated/],
+        [Buffer.from(source + '\0\0'), /nonempty tracked path/],
+      ] as const) {
+        expect(() =>
+          impl.hashTasksForRehash(
+            tasks,
+            taskGraph,
+            envs,
+            tempFs.tempDir,
+            configs,
+            bytes
+          )
+        ).toThrow(error);
+      }
       await tempFs.createFiles({ [generated]: 'other' });
       const generatedChanged = await check(true);
       expect(generatedChanged).not.toEqual(before);

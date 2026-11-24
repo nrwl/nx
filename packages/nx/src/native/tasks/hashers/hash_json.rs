@@ -508,6 +508,7 @@ mod tests {
             &plans,
             &vec![true; plans.pool.len()],
             &batch.raw_hashes,
+            &["b.json"],
             std::iter::empty(),
             None,
             &budget,
