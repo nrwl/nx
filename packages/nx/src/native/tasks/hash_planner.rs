@@ -335,24 +335,6 @@ impl HashPlanner {
         }
     }
 
-    /// A task's recorded reads of tracked files: an ordinary fileset of
-    /// `project`'s files, or of the workspace's when no project owns them.
-    fn recorded_file_set(project: Option<&str>, globs: Vec<Arc<str>>) -> HashInstruction {
-        let globs: Vec<String> = globs.iter().map(|glob| normalize_glob(glob)).collect();
-        match project {
-            Some(project) => HashInstruction::ProjectFileSet(project.to_string(), globs),
-            None => HashInstruction::WorkspaceFileSet(
-                globs
-                    .iter()
-                    .map(|glob| match glob.strip_prefix('!') {
-                        Some(excluded) => format!("!{{workspaceRoot}}/{excluded}"),
-                        None => format!("{{workspaceRoot}}/{glob}"),
-                    })
-                    .collect(),
-            ),
-        }
-    }
-
     pub fn get_plans_internal(
         &self,
         task_ids: Vec<&str>,
@@ -610,11 +592,12 @@ impl HashPlanner {
         Ok(External::new(plans))
     }
 
-    /// Observed reads minus natively covered files, one fileset per owning
+    /// Observed reads minus natively covered files, one group per owning
     /// project and one for the reads no project owns, plus the entry digest.
-    /// With `includeUnstableFiles` they are disk-backed groups instead, and
-    /// unowned reads join the `.` project's group, else the task's. Declared
-    /// filesets, negations included, never shape the groups.
+    /// A group is an ordinary fileset. With `includeUnstableFiles` it is
+    /// disk-backed instead, and unowned reads join the `.` project's group,
+    /// else the task's. Declared filesets, negations included, never shape
+    /// the groups.
     /// Replaces the declared filesets in `ids` (self, deps, `{input, projects}`)
     /// with `task`'s observed reads; TsConfiguration and JSON inputs survive
     /// only if read. `always` is kept, and added where the configuration path never
@@ -659,7 +642,7 @@ impl HashPlanner {
             not_installed.sort_unstable();
         }
         let own: hashbrown::HashSet<u32> = self
-            .configuration_file_instructions(task, context, &not_installed, include_unstable)
+            .ultracache_instructions(task, context, &not_installed, include_unstable)
             .into_iter()
             .map(|instruction| pool.intern(instruction))
             .collect();
@@ -675,7 +658,7 @@ impl HashPlanner {
         ids.extend(always.into_sorted_vec());
     }
 
-    fn configuration_file_instructions(
+    fn ultracache_instructions(
         &self,
         task: &Task,
         context: &UltracacheContext,
@@ -777,9 +760,22 @@ impl HashPlanner {
             group_exclusions.sort();
             group_exclusions.dedup();
             group.extend(group_exclusions);
-            instructions.push(match include_unstable {
-                true => self.disk_file_set(group, true),
-                false => Self::recorded_file_set(project, group),
+            if include_unstable {
+                instructions.push(self.disk_file_set(group, true));
+                continue;
+            }
+            // An ordinary fileset of the owner's files, or of the workspace's.
+            let globs = group.iter().map(|glob| normalize_glob(glob));
+            instructions.push(match project {
+                Some(project) => HashInstruction::ProjectFileSet(project.into(), globs.collect()),
+                None => HashInstruction::WorkspaceFileSet(
+                    globs
+                        .map(|glob| match glob.strip_prefix('!') {
+                            Some(excluded) => format!("!{{workspaceRoot}}/{excluded}"),
+                            None => format!("{{workspaceRoot}}/{glob}"),
+                        })
+                        .collect(),
+                ),
             });
         }
         instructions.push(HashInstruction::UltracacheConfiguration(
