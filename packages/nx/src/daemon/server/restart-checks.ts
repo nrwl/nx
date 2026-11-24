@@ -4,7 +4,10 @@ import type { ChangeBatch, FileData, WatchEvent } from '../../native';
 import { normalizePath } from '../../utils/path';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { getDaemonProcessIdSync, serverProcessJsonPath } from '../cache';
-import { handleServerProcessTermination } from './shutdown-utils';
+import {
+  handleServerProcessTermination,
+  handleServerProcessTerminationWithRestart,
+} from './shutdown-utils';
 
 // Kept apart from server.ts: the recomputation module needs these, and
 // importing server.ts starts a server.
@@ -48,15 +51,21 @@ const IGNORE_FILE_NAMES = ['.gitignore', '.nxignore'];
 
 /**
  * The watch's ignore rules are fixed when it starts, so an ignore-file edit
- * needs a daemon restart to take effect. True when it stopped the daemon.
+ * needs a daemon restart to take effect. The replacement starts before this
+ * one exits, so clients with requests in flight reconnect instead of waiting
+ * out the reconnect timeout. True when it restarted the daemon.
  */
 export function restartDaemonIfIgnoreFilesChanged(paths: string[]): boolean {
   for (const path of paths) {
     const basename = path.slice(path.lastIndexOf('/') + 1);
     if (IGNORE_FILE_NAMES.includes(basename)) {
-      stopDaemon(
-        'Stopping the daemon the set of ignored files changed (native)'
-      );
+      if (daemon) {
+        handleServerProcessTerminationWithRestart({
+          server: daemon.server,
+          reason: 'Restarting the daemon: the set of ignored files changed',
+          sockets: daemon.sockets,
+        });
+      }
       return true;
     }
   }

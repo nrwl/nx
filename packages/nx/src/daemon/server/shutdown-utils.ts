@@ -69,11 +69,17 @@ interface HandleServerProcessTerminationParams {
   sockets: Iterable<Socket>;
 }
 
+// Deleting the process file below makes the outdated check see this daemon as
+// replaced; without the guard its plain shutdown exits before the spawn.
+let shutdownStarted = false;
+
 export async function handleServerProcessTermination({
   server,
   reason,
   sockets,
 }: HandleServerProcessTerminationParams) {
+  if (shutdownStarted) return;
+  shutdownStarted = true;
   await performShutdown(server, reason, sockets);
 }
 
@@ -82,11 +88,16 @@ export async function handleServerProcessTerminationWithRestart({
   reason,
   sockets,
 }: HandleServerProcessTerminationParams) {
+  if (shutdownStarted) return;
+  shutdownStarted = true;
   // Clean up old daemon cache before starting new instance
   deleteDaemonJsonProcessCache();
-  // Start new daemon before shutting down
-  await startNewDaemonInBackground();
-  await performShutdown(server, reason, sockets);
+  try {
+    // Start new daemon before shutting down
+    await startNewDaemonInBackground();
+  } finally {
+    await performShutdown(server, reason, sockets);
+  }
 }
 
 let shutdownPromise: Promise<void> | null = null;

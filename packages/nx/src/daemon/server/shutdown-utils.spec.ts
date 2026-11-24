@@ -4,6 +4,15 @@ import { rm } from 'node:fs/promises';
 import { join } from 'node:path';
 import { dirSync } from 'tmp';
 
+const { spawn } = vi.hoisted(() => ({
+  spawn: vi.fn(() => ({ unref: vi.fn() })),
+}));
+
+vi.mock('child_process', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('child_process')>()),
+  spawn,
+}));
+
 vi.mock('../logger', () => ({
   serverLogger: {
     log: vi.fn(),
@@ -53,6 +62,7 @@ function createFakeInstallDir(): string {
 describe('shutdown-utils', () => {
   let handleServerProcessTermination: typeof import('./shutdown-utils').handleServerProcessTermination;
   let respondWithErrorAndExit: typeof import('./shutdown-utils').respondWithErrorAndExit;
+  let handleServerProcessTerminationWithRestart: typeof import('./shutdown-utils').handleServerProcessTerminationWithRestart;
   let exitSpy: MockInstance;
   let tempDir: string;
 
@@ -78,8 +88,11 @@ describe('shutdown-utils', () => {
     });
 
     vi.spyOn(console, 'error').mockImplementation(() => {});
-    ({ handleServerProcessTermination, respondWithErrorAndExit } =
-      await import('./shutdown-utils'));
+    ({
+      handleServerProcessTermination,
+      respondWithErrorAndExit,
+      handleServerProcessTerminationWithRestart,
+    } = await import('./shutdown-utils'));
   });
 
   afterEach(async () => {
@@ -169,5 +182,29 @@ describe('shutdown-utils', () => {
     expect(exitSpy).not.toHaveBeenCalled();
     expect(existedAtFirstExit()).toBeUndefined();
     expect(existsSync(tempDir)).toBe(true);
+  });
+
+  it('starts the replacement daemon even if a plain shutdown is requested meanwhile', async () => {
+    spyOnExit();
+
+    const restarting = handleServerProcessTerminationWithRestart({
+      server,
+      reason: 'restart',
+      sockets: [],
+    });
+    // What the outdated check does once the restart has deleted the process
+    // file: this daemon no longer looks current, so it asks for a shutdown.
+    await handleServerProcessTermination({
+      server,
+      reason: 'replaced',
+      sockets: [],
+    });
+    await restarting;
+
+    expect(spawn).toHaveBeenCalledTimes(1);
+    expect(exitSpy).toHaveBeenCalledTimes(1);
+    expect(spawn.mock.invocationCallOrder[0]).toBeLessThan(
+      exitSpy.mock.invocationCallOrder[0]
+    );
   });
 });
