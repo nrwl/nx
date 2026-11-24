@@ -191,7 +191,11 @@ async function createRsbuildTargets(
     options: { cwd: projectRoot, args: ['--mode=production'] },
     cache: true,
     dependsOn: [`^${options.buildTargetName}`],
-    inputs: [...buildInputs],
+    inputs: [
+      ...buildInputs,
+      // A dependency consumed as built is read from its build's outputs.
+      { dependentTasksOutputFiles: '**/*', transitive: true },
+    ],
     outputs: buildOutputs,
     metadata: {
       technologies: ['rsbuild'],

@@ -80,6 +80,7 @@ Inputs:
   - ^production
   - {"externalDependencies":["webpack-cli"]}
   - {"json":"{workspaceRoot}/tsconfig.json","fields":["extends","files","include"]}
+  - {"dependentTasksOutputFiles":"**/*","transitive":true}
 Outputs:
   - {workspaceRoot}/dist/apps/<APP>
 Options:
@@ -110,6 +111,7 @@ Inputs:
   - ^production
   - {"externalDependencies":["webpack-cli"]}
   - {"json":"{workspaceRoot}/tsconfig.json","fields":["extends","files","include"]}
+  - {"dependentTasksOutputFiles":"**/*","transitive":true}
   - {"json":"{workspaceRoot}/package.json","fields":["packageManager","pnpm.onlyBuiltDependencies","pnpm.neverBuiltDependencies","pnpm.allowBuilds","pnpm.supportedArchitectures","pnpm.patchedDependencies"]}
 Outputs:
   - {workspaceRoot}/dist/apps/<APP>
