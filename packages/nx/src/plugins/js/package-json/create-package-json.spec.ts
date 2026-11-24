@@ -598,6 +598,21 @@ describe('createPackageJson', () => {
           name: 'npm:typescript',
           data: { version: '4.9.5', hash: '', packageName: 'typescript' },
         },
+        'npm:foo': {
+          type: 'npm',
+          name: 'npm:foo',
+          data: { version: '1.0.0', hash: '', packageName: 'foo' },
+        },
+        'npm:bar': {
+          type: 'npm',
+          name: 'npm:bar',
+          data: { version: '4.9.5', hash: '', packageName: 'bar' },
+        },
+        'npm:qux': {
+          type: 'npm',
+          name: 'npm:qux',
+          data: { version: '1.0.0', hash: '', packageName: 'qux' },
+        },
       },
       dependencies: {
         app1: appDependencies,
@@ -637,6 +652,20 @@ describe('createPackageJson', () => {
         typescript: '^4.8.4',
         random: '1.0.0',
       },
+    });
+
+    const npmLockFile = (projectGraph: ProjectGraph) => ({
+      packages: Object.fromEntries(
+        Object.values(projectGraph.externalNodes).map(
+          ({ data: { packageName, version } }) => [
+            `node_modules/${packageName}`,
+            {
+              version,
+              resolved: `https://registry.npmjs.org/${packageName}/-/${packageName}-${version}.tgz`,
+            },
+          ]
+        )
+      ),
     });
 
     const spies = [];
@@ -1258,13 +1287,15 @@ describe('createPackageJson', () => {
       });
     });
 
-    it('should drop an npm override that pins a direct dependency through a "." key', () => {
+    it('should drop only the "." key of an npm override on a direct dependency', () => {
       spies.push(
         vi
           .spyOn(fs, 'existsSync')
           .mockImplementation(
             (path) =>
-              path === 'libs/lib1/package.json' || path === 'package.json'
+              path === 'libs/lib1/package.json' ||
+              path === 'package.json' ||
+              path === 'package-lock.json'
           )
       );
       spies.push(
@@ -1274,11 +1305,25 @@ describe('createPackageJson', () => {
               ...rootPackageJson(),
               overrides: {
                 // `.` sets the version of `typescript` itself, which npm
-                // rejects with EOVERRIDE against the direct dependency.
+                // rejects with EOVERRIDE against the direct dependency, while
+                // `foo` only constrains its dependencies and is kept.
                 typescript: { '.': '5.0.0', foo: '1.0.0' },
                 // transitive-only, in either form - must be carried through.
-                foo: '1.0.0',
+                qux: '1.0.0',
                 bar: { '.': '2.0.0' },
+              },
+            };
+          }
+          if (path === 'package-lock.json') {
+            const { packages } = npmLockFile(graph);
+            return {
+              packages: {
+                ...packages,
+                // qux accepts the installed typescript without the `.` value.
+                'node_modules/qux': {
+                  ...packages['node_modules/qux'],
+                  dependencies: { typescript: '^4.8.4' },
+                },
               },
             };
           }
@@ -1300,11 +1345,445 @@ describe('createPackageJson', () => {
         name: 'other-name',
         version: '1.2.3',
         overrides: {
-          foo: '1.0.0',
+          typescript: { foo: '1.0.0' },
+          qux: '1.0.0',
           bar: { '.': '2.0.0' },
         },
       });
     });
+
+    it('should drop an npm override on a direct dependency that only has a "." key', () => {
+      spies.push(
+        vi
+          .spyOn(fs, 'existsSync')
+          .mockImplementation(
+            (path) =>
+              path === 'libs/lib1/package.json' ||
+              path === 'package.json' ||
+              path === 'package-lock.json'
+          )
+      );
+      spies.push(
+        vi.spyOn(fileutilsModule, 'readJsonFile').mockImplementation((path) => {
+          if (path === 'package.json') {
+            return {
+              ...rootPackageJson(),
+              overrides: {
+                typescript: { '.': '5.0.0' },
+              },
+            };
+          }
+          if (path === 'package-lock.json') {
+            return npmLockFile(graph);
+          }
+          if (path === 'libs/lib1/package.json') {
+            return projectPackageJson();
+          }
+        })
+      );
+
+      expect(
+        createPackageJson('lib1', graph, {
+          root: '',
+        })
+      ).not.toHaveProperty('overrides');
+    });
+
+    it('should take a "." npm override on a direct dependency from the root package.json, not the project package.json', () => {
+      spies.push(vi.spyOn(configModule, 'readNxJson').mockReturnValue({}));
+      spies.push(
+        vi
+          .spyOn(fs, 'existsSync')
+          .mockImplementation(
+            (path) =>
+              path === 'libs/lib1/package.json' ||
+              path === 'package.json' ||
+              path === 'package-lock.json'
+          )
+      );
+      spies.push(
+        vi.spyOn(fileutilsModule, 'readJsonFile').mockImplementation((path) => {
+          if (path === 'package.json') {
+            return {
+              ...rootPackageJson(),
+              overrides: { typescript: { '.': '^4.8.2', foo: '1.0.0' } },
+            };
+          }
+          if (path === 'package-lock.json') {
+            return npmLockFile(graphWithRandom);
+          }
+          if (path === 'libs/lib1/package.json') {
+            // npm ignores overrides outside the root package.json, so the
+            // workspace lockfile was resolved with the root's rules only.
+            return {
+              ...projectPackageJson(),
+              overrides: {
+                typescript: { '.': '5.0.0', foo: '2.0.0' },
+                random: { '.': '1.0.0', foo: '1.0.0' },
+              },
+            };
+          }
+        })
+      );
+
+      const graphWithRandom: ProjectGraph = {
+        ...graph,
+        externalNodes: {
+          ...graph.externalNodes,
+          'npm:random': {
+            type: 'npm',
+            name: 'npm:random',
+            data: { version: '1.0.0', hash: '', packageName: 'random' },
+          },
+        },
+      };
+
+      expect(
+        createPackageJson('lib1', graphWithRandom, { root: '' }).overrides
+      ).toEqual({
+        typescript: { foo: '1.0.0' },
+      });
+    });
+
+    it('should keep the rest of a "." npm override on a direct dependency of a standalone project', () => {
+      spies.push(vi.spyOn(configModule, 'readNxJson').mockReturnValue({}));
+      spies.push(
+        vi
+          .spyOn(fs, 'existsSync')
+          .mockImplementation(
+            (path) => path === 'package.json' || path === 'package-lock.json'
+          )
+      );
+      spies.push(
+        vi.spyOn(fileutilsModule, 'readJsonFile').mockImplementation((path) => {
+          if (path === 'package.json') {
+            return {
+              ...rootPackageJson(),
+              name: 'standalone',
+              version: '1.0.0',
+              overrides: { '@nx/devkit': { '.': '~16.0.0', foo: '1.0.0' } },
+            };
+          }
+          if (path === 'package-lock.json') {
+            return npmLockFile(standaloneGraph);
+          }
+        })
+      );
+      const standaloneGraph: ProjectGraph = {
+        ...graph,
+        nodes: {
+          ...graph.nodes,
+          lib1: {
+            ...graph.nodes.lib1,
+            data: { ...graph.nodes.lib1.data, root: '.' },
+          },
+        },
+      };
+
+      const packageJson = createPackageJson(
+        'lib1',
+        standaloneGraph,
+        { root: '' },
+        fileMap
+      );
+
+      expect(packageJson.dependencies).toHaveProperty('@nx/devkit');
+      expect(packageJson.overrides).toEqual({
+        '@nx/devkit': { foo: '1.0.0' },
+      });
+    });
+
+    it('should replace "$name" values in the "." npm override of a direct dependency with the root spec', () => {
+      spies.push(vi.spyOn(configModule, 'readNxJson').mockReturnValue({}));
+      spies.push(
+        vi
+          .spyOn(fs, 'existsSync')
+          .mockImplementation(
+            (path) =>
+              path === 'libs/lib1/package.json' ||
+              path === 'package.json' ||
+              path === 'package-lock.json'
+          )
+      );
+      spies.push(
+        vi.spyOn(fileutilsModule, 'readJsonFile').mockImplementation((path) => {
+          if (path === 'package.json') {
+            return {
+              ...rootPackageJson(),
+              overrides: {
+                // `$tslib` and `$typescript` take the root spec whether or not
+                // the generated package.json declares them.
+                typescript: {
+                  '.': '$typescript',
+                  tslib: '$tslib',
+                  bar: '$typescript',
+                },
+                nx: { '.': '$nx' },
+                qux: '$tslib',
+              },
+            };
+          }
+          if (path === 'package-lock.json') {
+            return npmLockFile(graph);
+          }
+          if (path === 'libs/lib1/package.json') {
+            return projectPackageJson();
+          }
+        })
+      );
+
+      expect(createPackageJson('lib1', graph, { root: '' }).overrides).toEqual({
+        typescript: { tslib: '~2.4.0', bar: '^4.8.2' },
+        nx: { '.': '$nx' },
+        qux: '$tslib',
+      });
+    });
+
+    it.each<
+      [
+        string,
+        PackageJson['overrides'],
+        {
+          packages?: [string, string][];
+          workspacePackages?: string[];
+          lockfile?: Record<
+            string,
+            {
+              version?: string;
+              link?: boolean;
+              resolved?: string;
+              peerDependencies?: Record<string, string>;
+            }
+          > | null;
+        },
+        PackageJson['overrides'] | undefined,
+        Record<string, string>?,
+      ]
+    >([
+      [
+        'the workspace lockfile has no package for it',
+        { random: { '.': '1.0.0', foo: '1.0.0' } },
+        {},
+        undefined,
+      ],
+      [
+        'a copy of it is linked',
+        { typescript: { '.': '^4.8.2', foo: '1.0.0' } },
+        {
+          lockfile: {
+            'node_modules/typescript': { link: true, resolved: 'libs/ts' },
+          },
+        },
+        undefined,
+      ],
+      [
+        'a copy of it comes from a local tarball',
+        { typescript: { '.': '^4.8.2', foo: '1.0.0' } },
+        {
+          lockfile: {
+            'node_modules/qux/node_modules/typescript': {
+              resolved: 'file:vendor/typescript-4.8.4.tgz',
+            },
+          },
+        },
+        undefined,
+      ],
+      [
+        'a package depends on it with a range a copy of it does not satisfy',
+        { typescript: { '.': '^4.8.2', foo: '1.0.0' } },
+        {
+          lockfile: {
+            'node_modules/qux': {
+              version: '1.0.0',
+              peerDependencies: { typescript: '^5.0.0' },
+            },
+          },
+        },
+        undefined,
+      ],
+      [
+        'a package depends on another dropped override with a range a copy does not satisfy',
+        { typescript: { '.': '^4.8.2', foo: '1.0.0' }, random: '1.0.0' },
+        {
+          packages: [['random', '1.0.0']],
+          lockfile: {
+            'node_modules/qux': {
+              version: '1.0.0',
+              peerDependencies: { random: '^2.0.0' },
+            },
+          },
+        },
+        undefined,
+      ],
+      [
+        'the workspace has no npm lockfile',
+        { typescript: { '.': '^4.8.2', foo: '1.0.0' } },
+        { lockfile: null },
+        undefined,
+      ],
+      [
+        'a package it pins is not installed',
+        { typescript: { '.': '^4.8.2', foo: '1.0.0', missing: '1.0.0' } },
+        {},
+        undefined,
+      ],
+      [
+        'a package it pins is a workspace package',
+        { typescript: { '.': '^4.8.2', foo: '1.0.0' } },
+        { workspacePackages: ['foo'] },
+        undefined,
+      ],
+      [
+        'an installed copy of a package it pins has another version',
+        { typescript: { '.': '^4.8.2', foo: '1.0.0' } },
+        { packages: [['foo', '2.0.0']] },
+        undefined,
+      ],
+      [
+        'it holds a "$name" the root does not declare',
+        { typescript: { '.': '^4.8.2', foo: '1.0.0', bar: '$missing' } },
+        {},
+        undefined,
+      ],
+      [
+        'it holds a "$name" the root declares as "*"',
+        { typescript: { '.': '^4.8.2', foo: '$qux' } },
+        {},
+        undefined,
+        { qux: '*' },
+      ],
+      [
+        'it holds a local path',
+        { typescript: { '.': '^4.8.2', foo: '1.0.0', bar: 'file:../bar' } },
+        {},
+        undefined,
+      ],
+      [
+        'it holds a nested override',
+        { typescript: { '.': '^4.8.2', foo: '1.0.0', bar: { qux: '1.0.0' } } },
+        {},
+        undefined,
+      ],
+      [
+        'another override has nested rules',
+        {
+          nx: { qux: '1.0.0' },
+          typescript: { '.': '^4.8.2', foo: '1.0.0' },
+        },
+        {},
+        { nx: { qux: '1.0.0' } },
+      ],
+      [
+        'another override has a range',
+        {
+          'qux@^2.0.0': '1.0.0',
+          typescript: { '.': '^4.8.2', foo: '1.0.0' },
+        },
+        {},
+        { 'qux@^2.0.0': '1.0.0' },
+      ],
+      [
+        'another override names a package it pins',
+        { foo: '1.0.0', typescript: { '.': '^4.8.2', foo: '1.0.0' } },
+        {},
+        { foo: '1.0.0' },
+      ],
+      [
+        'another kept override pins the same package',
+        {
+          typescript: { '.': '^4.8.2', foo: '1.0.0' },
+          random: { '.': '1.0.0', foo: '1.0.0' },
+        },
+        { packages: [['random', '1.0.0']] },
+        undefined,
+      ],
+      [
+        'it pins a package twice',
+        {
+          typescript: {
+            '.': '^4.8.2',
+            'foo@^1.0.0': '1.0.0',
+            'foo@>=1.0.0': '1.0.0',
+          },
+        },
+        {},
+        undefined,
+      ],
+    ])(
+      'should drop a "." npm override on a direct dependency when %s',
+      (_, rootOverrides, installed, expected, rootDependencies = {}) => {
+        spies.push(vi.spyOn(configModule, 'readNxJson').mockReturnValue({}));
+        spies.push(
+          vi
+            .spyOn(fs, 'existsSync')
+            .mockImplementation(
+              (path) =>
+                path === 'libs/lib1/package.json' ||
+                path === 'package.json' ||
+                (path === 'package-lock.json' && installed.lockfile !== null)
+            )
+        );
+        spies.push(
+          vi
+            .spyOn(fileutilsModule, 'readJsonFile')
+            .mockImplementation((path) => {
+              if (path === 'package-lock.json') {
+                const lockFile = npmLockFile(installedGraph);
+                return {
+                  packages: { ...lockFile.packages, ...installed.lockfile },
+                };
+              }
+              if (path === 'package.json') {
+                const root = rootPackageJson();
+                return {
+                  ...root,
+                  dependencies: { ...root.dependencies, ...rootDependencies },
+                  overrides: rootOverrides,
+                };
+              }
+              if (path === 'libs/lib1/package.json') {
+                return projectPackageJson();
+              }
+            })
+        );
+        const installedGraph: ProjectGraph = {
+          ...graph,
+          nodes: {
+            ...graph.nodes,
+            ...Object.fromEntries(
+              (installed.workspacePackages ?? []).map((packageName) => [
+                packageName,
+                {
+                  type: 'lib' as const,
+                  name: packageName,
+                  data: {
+                    root: `libs/${packageName}`,
+                    metadata: { js: { packageName } },
+                  },
+                },
+              ])
+            ),
+          },
+          externalNodes: {
+            ...graph.externalNodes,
+            ...Object.fromEntries(
+              (installed.packages ?? []).map(([packageName, version]) => [
+                `npm:${packageName}@${version}`,
+                {
+                  type: 'npm' as const,
+                  name: `npm:${packageName}@${version}` as const,
+                  data: { version, hash: '', packageName },
+                },
+              ])
+            ),
+          },
+        };
+
+        expect(
+          createPackageJson('lib1', installedGraph, { root: '' }).overrides
+        ).toEqual(expected);
+      }
+    );
 
     it('should add resolutions (yarn)', () => {
       spies.push(
