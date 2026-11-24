@@ -50,13 +50,3 @@ Once you create, keep a note of the Client ID and the Secret:
 ## Connect your Nx Cloud installation to your new app
 
 Contact your developer productivity engineer to connect your Nx Cloud instance to the newly created GitLab app.
-
-On a self-hosted Nx Cloud, set these environment variables on the frontend:
-
-- `GITLAB_APP_ID`: the application ID.
-- `GITLAB_APP_SECRET`: the secret.
-- `GITLAB_API_URL`: the URL of your GitLab instance. Set it only when you don't use gitlab.com.
-
-If you recreate the GitLab application,
-update `GITLAB_APP_ID` and `GITLAB_APP_SECRET` with the new values.
-Existing Nx Cloud users keep their accounts, because Nx Cloud matches them by GitLab user ID.
