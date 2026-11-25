@@ -1,5 +1,5 @@
 import type { Mock } from 'vitest';
-import { detectPlugins } from './init-v2';
+import { detectPlugins, initHandler } from './init-v2';
 
 // Mock dependencies
 vi.mock('fs', async () => ({
@@ -23,8 +23,60 @@ vi.mock('../../utils/workspace-context', () => ({
 }));
 
 vi.mock('../../utils/output', () => ({
-  output: { log: vi.fn() },
+  output: { log: vi.fn(), warn: vi.fn(), error: vi.fn() },
 }));
+
+// Everything below is only needed to drive `initHandler` through the non-AI
+// path. The pieces that touch the file system, the network or a package
+// manager are stubbed out.
+vi.mock('../../native', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../../native')>()),
+  isAiAgent: vi.fn(() => false),
+}));
+
+vi.mock('../../config/nx-json', () => ({
+  readNxJson: vi.fn(() => ({ plugins: [] })),
+}));
+
+vi.mock('../../utils/ab-testing', () => ({ recordStat: vi.fn() }));
+
+vi.mock('../../utils/prompt-helpers', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../../utils/prompt-helpers')>()),
+  selectPrompt: vi.fn(async () => 'Guided'),
+  multiselectPrompt: vi.fn(async () => []),
+}));
+
+vi.mock('./ai-agent-prompts', () => ({
+  determineAiAgents: vi.fn(async () => []),
+}));
+
+vi.mock('./configure-plugins', () => ({
+  installPluginPackages: vi.fn(),
+  configurePlugins: vi.fn(async () => {}),
+}));
+
+vi.mock('./implementation/add-nx-to-npm-repo', () => ({
+  addNxToNpmRepo: vi.fn(async () => {}),
+}));
+
+vi.mock('./implementation/format', () => ({
+  formatInitWrites: vi.fn(async () => {}),
+  recordInitWrite: vi.fn(),
+}));
+
+vi.mock('./implementation/utils', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('./implementation/utils')>()),
+  createNxJsonFile: vi.fn(),
+  updateGitIgnore: vi.fn(),
+  printFinalMessage: vi.fn(),
+}));
+
+import { multiselectPrompt, selectPrompt } from '../../utils/prompt-helpers';
+import { configurePlugins, installPluginPackages } from './configure-plugins';
+const mockSelectPrompt = selectPrompt as Mock;
+const mockMultiselectPrompt = multiselectPrompt as Mock;
+const mockInstallPluginPackages = installPluginPackages as Mock;
+const mockConfigurePlugins = configurePlugins as Mock;
 
 describe('detectPlugins', () => {
   beforeEach(() => {
@@ -75,5 +127,82 @@ describe('detectPlugins', () => {
     );
 
     expect(result.plugins).not.toContain('@nx/vite');
+  });
+});
+
+describe('initHandler --plugins flag (non-AI mode)', () => {
+  // A project with eslint and vite so there is more than one plugin to detect.
+  const packageJson = {
+    name: 'test',
+    version: '1.0.0',
+    devDependencies: { eslint: '^9.0.0', vite: '^5.0.0' },
+  };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    process.env.NX_USE_LOCAL = 'true';
+    mockReadJsonFile.mockReturnValue(packageJson);
+  });
+
+  afterEach(() => {
+    delete process.env.NX_USE_LOCAL;
+  });
+
+  it('should not install any plugin when --plugins=skip', async () => {
+    await initHandler({
+      interactive: false,
+      nxCloud: false,
+      plugins: 'skip',
+    });
+
+    expect(mockInstallPluginPackages).not.toHaveBeenCalled();
+    expect(mockConfigurePlugins).not.toHaveBeenCalled();
+  });
+
+  it('should install every detected plugin without prompting when --plugins=all', async () => {
+    await initHandler({ interactive: true, nxCloud: false, plugins: 'all' });
+
+    expect(mockMultiselectPrompt).not.toHaveBeenCalled();
+    expect(mockInstallPluginPackages).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.anything(),
+      expect.arrayContaining(['@nx/eslint', '@nx/vite'])
+    );
+  });
+
+  it('should only install the plugins listed in --plugins', async () => {
+    await initHandler({
+      interactive: false,
+      nxCloud: false,
+      plugins: '@nx/eslint',
+    });
+
+    expect(mockInstallPluginPackages).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.anything(),
+      ['@nx/eslint']
+    );
+    expect(mockConfigurePlugins).toHaveBeenCalledWith(
+      ['@nx/eslint'],
+      true,
+      expect.anything(),
+      expect.anything(),
+      undefined
+    );
+  });
+
+  it('should skip the minimum/guided question and honor --plugins when interactive', async () => {
+    await initHandler({
+      interactive: true,
+      nxCloud: false,
+      plugins: '@nx/vite',
+    });
+
+    expect(mockSelectPrompt).not.toHaveBeenCalled();
+    expect(mockInstallPluginPackages).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.anything(),
+      ['@nx/vite']
+    );
   });
 });
