@@ -155,11 +155,7 @@ describe('sandboxSocketHint', () => {
   );
 
   describe('a refused connect', () => {
-    // The socket was created, so where sockets are created is not the problem
-
     it('should describe the denied connection with no remedy under Antigravity, whose sandbox refuses the connect in every directory', () => {
-      // Real agy 1.5.15: bind allowed and connect EPERM under the Nx socket
-      // root, $TMPDIR, /tmp and the workspace alike
       mockIsSandbox.mockReturnValue(false);
       mockDetectAiAgent.mockReturnValue('antigravity');
 
