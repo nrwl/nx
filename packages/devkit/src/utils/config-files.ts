@@ -81,24 +81,62 @@ export function readConfigFiles(
   return entries;
 }
 
+export interface TopLevelTargetOption {
+  /** The plugin option name, for warnings. */
+  name: string;
+  /** The value the user set, if any. */
+  value: string | undefined;
+}
+
+export interface ConfigFileTargetNames {
+  /** Whether the file has a default config name. */
+  isDefault: boolean;
+  target: string;
+  ci?: string;
+}
+
 /**
- * Resolves one target name of a default config file. The `configFiles` entry
- * wins over the top-level option, with a warning when the user set both to
- * different names.
+ * Returns a function that gives the target names a config file infers, or
+ * undefined when it infers none. A default config file takes the top-level
+ * target options, which its `configFiles` entry overrides with a warning. Any
+ * other file infers targets only through its `configFiles` entry.
  */
-export function resolveConfigFileTarget(
+export function createConfigFileTargetResolver(
   pluginName: string,
-  fileName: string,
-  field: keyof ConfigFileEntry,
-  entryValue: string | undefined,
-  option: { name: string; value: string | undefined }
-): string | undefined {
-  if (entryValue && option.value && entryValue !== option.value) {
-    warnOnce(
-      `${pluginName}: configFiles sets the "${fileName}" ${field === 'ci' ? 'ci target' : 'target'} to "${entryValue}", overriding ${option.name} "${option.value}".`
-    );
+  configFiles: Record<string, unknown> | undefined,
+  patterns: ConfigFileNamePatterns,
+  topLevel: {
+    target: TopLevelTargetOption & { default: string };
+    ci: TopLevelTargetOption;
   }
-  return entryValue ?? option.value;
+): (fileName: string) => ConfigFileTargetNames | undefined {
+  const entries = readConfigFiles(pluginName, configFiles, patterns);
+  const resolve = (
+    fileName: string,
+    label: string,
+    entryValue: string | undefined,
+    option: TopLevelTargetOption
+  ) => {
+    if (entryValue && option.value && entryValue !== option.value) {
+      warnOnce(
+        `${pluginName}: configFiles sets the "${fileName}" ${label} to "${entryValue}", overriding ${option.name} "${option.value}".`
+      );
+    }
+    return entryValue ?? option.value;
+  };
+  return (fileName) => {
+    const entry = entries.get(fileName);
+    if (!patterns.defaultName.test(fileName)) {
+      return entry && { isDefault: false, ...entry };
+    }
+    return {
+      isDefault: true,
+      target:
+        resolve(fileName, 'target', entry?.target, topLevel.target) ??
+        topLevel.target.default,
+      ci: resolve(fileName, 'ci target', entry?.ci, topLevel.ci),
+    };
+  };
 }
 
 export interface ConfigFileTargets {

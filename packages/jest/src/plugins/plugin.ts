@@ -13,10 +13,10 @@ import {
   workspaceDataDirectory,
   applyTestFileDirectives,
   quoteShellArg,
-  readConfigFiles,
-  resolveConfigFileTarget,
+  createConfigFileTargetResolver,
   assertUniqueConfigTargetNames,
   type ConfigFileEntry,
+  type ConfigFileTargetNames,
   type ConfigFileTargets,
 } from '@nx/devkit/internal';
 import {
@@ -124,13 +124,20 @@ export const createNodes: CreateNodes<JestPluginOptions> = [
       context.workspaceRoot
     );
 
-    const userOptions = options;
-    options = normalizeOptions(options);
-    const configFileEntries = readConfigFiles(
+    const resolveTargetNames = createConfigFileTargetResolver(
       '@nx/jest/plugin',
-      options.configFiles,
-      jestConfigFileNamePatterns
+      options?.configFiles,
+      jestConfigFileNamePatterns,
+      {
+        target: {
+          name: 'targetName',
+          value: options?.targetName,
+          default: 'test',
+        },
+        ci: { name: 'ciTargetName', value: options?.ciTargetName },
+      }
     );
+    options = normalizeOptions(options);
 
     const packageManager = detectPackageManager(context.workspaceRoot);
     const pmc = getPackageManagerCommand(packageManager);
@@ -143,8 +150,7 @@ export const createNodes: CreateNodes<JestPluginOptions> = [
       const fileTargets = getConfigFileTargets(
         configFile,
         options,
-        userOptions,
-        configFileEntries
+        resolveTargetNames
       );
       const potentialRoot = dirname(configFile);
       if (
@@ -297,49 +303,26 @@ interface JestConfigFileTargets extends ConfigFileTargets {
 function getConfigFileTargets(
   configFile: string,
   options: JestPluginOptions,
-  userOptions: JestPluginOptions | undefined,
-  configFileEntries: Map<string, ConfigFileEntry>
+  resolveTargetNames: (fileName: string) => ConfigFileTargetNames | undefined
 ): JestConfigFileTargets | undefined {
   const fileName = posix.basename(configFile);
-  const entry = configFileEntries.get(fileName);
-  if (jestConfigFileNamePatterns.defaultName.test(fileName)) {
-    const targetName =
-      resolveConfigFileTarget(
-        '@nx/jest/plugin',
-        fileName,
-        'target',
-        entry?.target,
-        { name: 'targetName', value: userOptions?.targetName }
-      ) ?? options.targetName;
-    const ciTargetName = resolveConfigFileTarget(
-      '@nx/jest/plugin',
-      fileName,
-      'ci',
-      entry?.ci,
-      { name: 'ciTargetName', value: options.ciTargetName }
-    );
-    return {
-      configFile,
-      isDefault: true,
-      targetNames: [targetName, ciTargetName].filter(Boolean),
-      options: { ...options, targetName, ciTargetName },
-      jestCommand: 'jest',
-    };
-  }
-  if (!entry) {
+  const names = resolveTargetNames(fileName);
+  if (!names) {
     return undefined;
   }
   return {
     configFile,
-    isDefault: false,
-    targetNames: [entry.target, entry.ci].filter(Boolean),
+    isDefault: names.isDefault,
+    targetNames: [names.target, names.ci].filter(Boolean),
     options: {
       ...options,
-      targetName: entry.target,
-      ciTargetName: entry.ci,
-      ciGroupName: undefined,
+      targetName: names.target,
+      ciTargetName: names.ci,
+      ...(names.isDefault ? {} : { ciGroupName: undefined }),
     },
-    jestCommand: `jest --config ${quoteShellArg(fileName)}`,
+    jestCommand: names.isDefault
+      ? 'jest'
+      : `jest --config ${quoteShellArg(fileName)}`,
   };
 }
 

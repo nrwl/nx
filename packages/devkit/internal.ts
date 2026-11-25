@@ -119,10 +119,10 @@ export {
 export { loadConfigFile, clearRequireCache } from './src/utils/config-utils';
 export {
   assertUniqueConfigTargetNames,
-  readConfigFiles,
-  resolveConfigFileTarget,
+  createConfigFileTargetResolver,
   type ConfigFileEntry,
   type ConfigFileNamePatterns,
+  type ConfigFileTargetNames,
   type ConfigFileTargets,
 } from './src/utils/config-files';
 export {

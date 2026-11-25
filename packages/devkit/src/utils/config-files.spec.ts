@@ -1,7 +1,7 @@
 import { logger } from 'nx/src/devkit-exports';
 import {
+  createConfigFileTargetResolver,
   readConfigFiles,
-  resolveConfigFileTarget,
   type ConfigFileNamePatterns,
 } from './config-files';
 
@@ -110,7 +110,7 @@ describe('readConfigFiles', () => {
   });
 });
 
-describe('resolveConfigFileTarget', () => {
+describe('createConfigFileTargetResolver', () => {
   let warn: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
@@ -121,15 +121,49 @@ describe('resolveConfigFileTarget', () => {
     warn.mockRestore();
   });
 
-  it('prefers the entry and warns once when the option differs', () => {
-    const resolve = () =>
-      resolveConfigFileTarget('tool', 'tool.config.ts', 'target', 'test', {
-        name: 'targetName',
-        value: 'unit',
-      });
+  const createResolver = (
+    configFiles: Record<string, unknown>,
+    targetName?: string,
+    ciTargetName?: string
+  ) =>
+    createConfigFileTargetResolver('tool', configFiles, patterns, {
+      target: { name: 'targetName', value: targetName, default: 'test' },
+      ci: { name: 'ciTargetName', value: ciTargetName },
+    });
 
-    expect(resolve()).toBe('test');
-    expect(resolve()).toBe('test');
+  it('gives a default config the top-level options', () => {
+    expect(createResolver({}, 'unit', 'unit-ci')('tool.config.ts')).toEqual({
+      isDefault: true,
+      target: 'unit',
+      ci: 'unit-ci',
+    });
+    expect(createResolver({})('tool.config.ts')).toEqual({
+      isDefault: true,
+      target: 'test',
+      ci: undefined,
+    });
+  });
+
+  it('gives a mapped config only its entry', () => {
+    const resolve = createResolver(
+      { 'tool.config.e2e.ts': { target: 'e2e', ci: 'e2e-ci' } },
+      'unit',
+      'unit-ci'
+    );
+
+    expect(resolve('tool.config.e2e.ts')).toEqual({
+      isDefault: false,
+      target: 'e2e',
+      ci: 'e2e-ci',
+    });
+    expect(resolve('tool.config.other.ts')).toBeUndefined();
+  });
+
+  it('prefers the entry and warns once when the option differs', () => {
+    const resolve = createResolver({ 'tool.config.ts': 'test' }, 'unit');
+
+    expect(resolve('tool.config.ts').target).toBe('test');
+    expect(resolve('tool.config.ts').target).toBe('test');
     expect(warn).toHaveBeenCalledTimes(1);
     expect(warn).toHaveBeenCalledWith(
       'tool: configFiles sets the "tool.config.ts" target to "test", overriding targetName "unit".'
@@ -138,10 +172,11 @@ describe('resolveConfigFileTarget', () => {
 
   it('names the ci target in the warning', () => {
     expect(
-      resolveConfigFileTarget('tool', 'tool.config.ts', 'ci', 'test-ci', {
-        name: 'ciTargetName',
-        value: 'ci',
-      })
+      createResolver(
+        { 'tool.config.ts': { target: 'test', ci: 'test-ci' } },
+        undefined,
+        'ci'
+      )('tool.config.ts').ci
     ).toBe('test-ci');
     expect(warn).toHaveBeenCalledWith(
       'tool: configFiles sets the "tool.config.ts" ci target to "test-ci", overriding ciTargetName "ci".'
@@ -150,26 +185,22 @@ describe('resolveConfigFileTarget', () => {
 
   it('does not warn when the option matches or is unset', () => {
     expect(
-      resolveConfigFileTarget('tool', 'tool.config.ts', 'target', 'same', {
-        name: 'targetName',
-        value: 'same',
-      })
+      createResolver({ 'tool.config.ts': 'same' }, 'same')('tool.config.ts')
+        .target
     ).toBe('same');
     expect(
-      resolveConfigFileTarget('tool', 'tool.config.ts', 'target', 'unset', {
-        name: 'targetName',
-        value: undefined,
-      })
+      createResolver({ 'tool.config.ts': 'unset' })('tool.config.ts').target
     ).toBe('unset');
     expect(warn).not.toHaveBeenCalled();
   });
 
   it('falls back to the option without an entry value', () => {
     expect(
-      resolveConfigFileTarget('tool', 'tool.config.ts', 'ci', undefined, {
-        name: 'ciTargetName',
-        value: 'test-ci',
-      })
+      createResolver(
+        { 'tool.config.ts': 'test' },
+        undefined,
+        'test-ci'
+      )('tool.config.ts').ci
     ).toBe('test-ci');
     expect(warn).not.toHaveBeenCalled();
   });

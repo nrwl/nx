@@ -8,10 +8,10 @@ import {
   globWithWorkspaceContext,
   quoteShellArg,
   retryOnRequireEsmRace,
-  readConfigFiles,
-  resolveConfigFileTarget,
+  createConfigFileTargetResolver,
   assertUniqueConfigTargetNames,
   type ConfigFileEntry,
+  type ConfigFileTargetNames,
   type ConfigFileTargets,
 } from '@nx/devkit/internal';
 import {
@@ -114,10 +114,18 @@ export const createNodes: CreateNodes<VitestPluginOptions> = [
     );
     const optionsHash = hashObject(options);
     const normalizedOptions = normalizeOptions(options);
-    const configFileEntries = readConfigFiles(
+    const resolveTargetNames = createConfigFileTargetResolver(
       '@nx/vitest',
-      normalizedOptions.configFiles,
-      vitestConfigFileNamePatterns
+      options?.configFiles,
+      vitestConfigFileNamePatterns,
+      {
+        target: {
+          name: 'testTargetName',
+          value: options?.testTargetName,
+          default: 'test',
+        },
+        ci: { name: 'ciTargetName', value: options?.ciTargetName },
+      }
     );
     const cachePath = join(
       workspaceDataDirectory,
@@ -133,8 +141,7 @@ export const createNodes: CreateNodes<VitestPluginOptions> = [
       const fileOptions = getConfigFileOptions(
         configFile,
         normalizedOptions,
-        options,
-        configFileEntries
+        resolveTargetNames
       );
       const potentialRoot = dirname(configFile);
       if (
@@ -285,40 +292,20 @@ interface VitestConfigFileOptions {
 function getConfigFileOptions(
   configFile: string,
   options: VitestPluginOptions,
-  userOptions: VitestPluginOptions | undefined,
-  configFileEntries: Map<string, ConfigFileEntry>
+  resolveTargetNames: (fileName: string) => ConfigFileTargetNames | undefined
 ): VitestConfigFileOptions | undefined {
-  const fileName = posix.basename(configFile);
-  const entry = configFileEntries.get(fileName);
-  if (vitestConfigFileNamePatterns.defaultName.test(fileName)) {
-    const testTargetName =
-      resolveConfigFileTarget('@nx/vitest', fileName, 'target', entry?.target, {
-        name: 'testTargetName',
-        value: userOptions?.testTargetName,
-      }) ?? options.testTargetName;
-    const ciTargetName = resolveConfigFileTarget(
-      '@nx/vitest',
-      fileName,
-      'ci',
-      entry?.ci,
-      { name: 'ciTargetName', value: options.ciTargetName }
-    );
-    return {
-      options: { ...options, testTargetName, ciTargetName },
-      mapped: false,
-    };
-  }
-  if (!entry) {
+  const names = resolveTargetNames(posix.basename(configFile));
+  if (!names) {
     return undefined;
   }
   return {
     options: {
       ...options,
-      testTargetName: entry.target,
-      ciTargetName: entry.ci,
-      ciGroupName: undefined,
+      testTargetName: names.target,
+      ciTargetName: names.ci,
+      ...(names.isDefault ? {} : { ciGroupName: undefined }),
     },
-    mapped: true,
+    mapped: !names.isDefault,
   };
 }
 
