@@ -352,6 +352,19 @@ describe.each(typescriptInstalls)(
         existingDirectory: undefined,
         createdFile: 'proj/lib/missing.ts',
       },
+      {
+        target: 'a missing file imported with an escaped slash',
+        source: `import { value } from '.\\u002flib/missing';`,
+        existingDirectory: undefined,
+        createdFile: 'proj/lib/missing.ts',
+      },
+      {
+        target:
+          'a missing file imported by a file with a deeply nested expression',
+        source: `import { value } from './lib/missing';\nexport const sum = ${Array(8000).fill('1').join(' + ')};`,
+        existingDirectory: 'proj/lib',
+        createdFile: 'proj/lib/missing.ts',
+      },
     ])(
       'should rebuild when $target is created',
       async ({ source, existingDirectory, createdFile }) => {

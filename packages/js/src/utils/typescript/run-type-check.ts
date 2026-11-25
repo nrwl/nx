@@ -16,7 +16,9 @@ import type {
   BuilderProgram,
   CompilerOptions,
   Diagnostic,
+  Node,
   Program,
+  SourceFile,
 } from 'typescript';
 import type {
   CompilerOptions as ApiCompilerOptions,
@@ -29,6 +31,7 @@ import { isFileSystemCaseSensitive } from './file-system-case';
 import {
   codeFrameColumns,
   flattenApiDiagnosticMessage,
+  getTypescriptAst,
   getTypescriptBackend,
   unhandledTypescriptBackend,
   withTypescriptApi,
@@ -288,8 +291,10 @@ function runApiTypeCheckWatch(
             formatHost.getCanonicalFileName(getRealPath(fileName))
           )
         );
-        unresolvedImportDirectories =
-          getUnresolvedImportDirectories(diagnostics);
+        unresolvedImportDirectories = getUnresolvedImportDirectories(
+          program,
+          diagnostics
+        );
         for (const diagnostic of diagnostics) {
           process.stdout.write(formatDiagnostics([diagnostic], formatHost));
         }
@@ -351,31 +356,27 @@ function runApiTypeCheckWatch(
 // appear. This returns the real paths of the nearest existing directory of each
 // relative one and, when it names an existing directory, of that directory.
 function getUnresolvedImportDirectories(
+  program: ApiProgram,
   diagnostics: readonly ApiDiagnostic[]
 ): Set<string> {
   const cannotFindModuleCode = 2307;
   const directories = new Set<string>();
-  const contents = new Map<string, string>();
-  for (const { code, fileName, pos, end } of diagnostics) {
+  const stringLiterals = new Map<string, Map<number, string>>();
+  for (const { code, fileName, end } of diagnostics) {
     if (code !== cannotFindModuleCode || !fileName) {
       continue;
     }
-    let content = contents.get(fileName);
-    if (content === undefined) {
-      try {
-        content = readSourceText(fileName);
-      } catch (e) {
-        // Deleted since the program read it; its own watcher reports that.
-        if (e?.code === 'ENOENT') {
-          continue;
-        }
-        throw e;
-      }
-      contents.set(fileName, content);
+    if (!stringLiterals.has(fileName)) {
+      stringLiterals.set(
+        fileName,
+        getStringLiteralsByEnd(
+          program.getSourceFile(fileName) as unknown as SourceFile | undefined
+        )
+      );
     }
-    // The diagnostic spans the specifier's string literal, quotes included.
-    const specifier = content.slice(pos + 1, end - 1);
-    if (!/^\.\.?(?:\/|$)/.test(specifier)) {
+    // The diagnostic spans the specifier's string literal.
+    const specifier = stringLiterals.get(fileName).get(end);
+    if (specifier === undefined || !/^\.\.?(?:\/|$)/.test(specifier)) {
       continue;
     }
     const target = path.resolve(path.dirname(fileName), specifier);
@@ -390,6 +391,29 @@ function getUnresolvedImportDirectories(
     directories.add(getRealPath(directory));
   }
   return directories;
+}
+
+// Maps each string literal's end to its text, with escapes decoded. Nodes
+// reparsed from JSDoc sit outside their parent's range, so every node is
+// visited. An explicit stack keeps deeply nested expressions from overflowing
+// the call stack.
+function getStringLiteralsByEnd(
+  sourceFile: SourceFile | undefined
+): Map<number, string> {
+  const ast = getTypescriptAst();
+  const literals = new Map<number, string>();
+  const stack: Node[] = sourceFile ? [sourceFile] : [];
+  while (stack.length) {
+    const node = stack.pop();
+    if (ast.isStringLiteralLike(node)) {
+      literals.set(node.end, node.text);
+    }
+    // forEachChild stops at the first truthy return, such as push's.
+    ast.forEachChild(node, (child) => {
+      stack.push(child);
+    });
+  }
+  return literals;
 }
 
 // Like existsSync, count a path that can't be checked as absent, e.g. one with
