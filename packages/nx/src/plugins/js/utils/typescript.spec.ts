@@ -328,6 +328,7 @@ describe('getTypescriptBackend', () => {
       [
         'TypeScript 7.0.2 has no stable API',
         'Install typescript@>=7.1',
+        'install TypeScript 6 as "typescript"',
         '"@typescript/native": "npm:typescript@7.0.2"',
       ],
     ],

@@ -1062,9 +1062,8 @@ export function createTypescriptPrinter(
     return DOTTED_IDENTIFIER.test(text);
   }
 
-  // `replace-provide-server-routing` builds a specifier whose name holds the
-  // whole specifier text (`type A`, `A as B`), so the text is validated by
-  // parsing it.
+  // A built name can hold a whole specifier's text (`type A`, `A as B`), so the
+  // text is validated by parsing it.
   const specifierValidity = new Map<string, boolean>();
   function isSpecifierValid(node: ts.ImportSpecifier): boolean {
     const name = node.name.text;
