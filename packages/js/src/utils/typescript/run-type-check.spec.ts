@@ -1,9 +1,21 @@
 import { getTypescriptBackend } from '@nx/devkit/internal';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
-import { existsSync, readFileSync, symlinkSync, writeFileSync } from 'node:fs';
+import { watch as fsWatch } from 'fs';
+import {
+  existsSync,
+  readFileSync,
+  statSync,
+  symlinkSync,
+  writeFileSync,
+} from 'node:fs';
 import { stripVTControlCharacters } from 'node:util';
 import { dirname, join, relative } from 'path';
 import { runTypeCheck, runTypeCheckWatch } from './run-type-check';
+
+vi.mock('fs', async () => {
+  const actual = await vi.importActual<typeof import('fs')>('fs');
+  return { ...actual, watch: vi.fn(actual.watch) };
+});
 
 // Real installs: the repo's `typescript` is TS 6, and 7.1 is aliased.
 const typescriptInstalls = [
@@ -316,5 +328,196 @@ describe.each(typescriptInstalls)(
         'export declare const value = 1;'
       );
     });
+
+    // The classic backend runs TypeScript 6's own watch program, so these cover
+    // only the 7.1 watcher.
+    const itWithApiWatcher = it.skipIf(backendKind === 'classic');
+
+    itWithApiWatcher.each([
+      {
+        target: 'a missing file',
+        source: `import { value } from './lib/missing';`,
+        existingDirectory: undefined,
+        createdFile: 'proj/lib/missing.ts',
+      },
+      {
+        target: 'an index file in an existing directory',
+        source: `import { value } from './lib';`,
+        existingDirectory: 'proj/lib',
+        createdFile: 'proj/lib/index.ts',
+      },
+      {
+        target: 'a missing file imported after a byte order mark',
+        source: `\uFEFFimport { value } from './lib/missing';`,
+        existingDirectory: undefined,
+        createdFile: 'proj/lib/missing.ts',
+      },
+    ])(
+      'should rebuild when $target is created',
+      async ({ source, existingDirectory, createdFile }) => {
+        if (existingDirectory) {
+          fs.createDirSync(existingDirectory);
+        }
+        await fs.createFiles({
+          'proj/source.ts': `${source}\nexport const result: number = value;`,
+        });
+        const statuses: [number, number | undefined][] = [];
+        const write = vi
+          .spyOn(process.stdout, 'write')
+          .mockImplementation(() => true);
+        let watch: Awaited<ReturnType<typeof runTypeCheckWatch>>;
+        try {
+          watch = await runTypeCheckWatch(
+            {
+              workspaceRoot,
+              tsConfigPath,
+              mode: 'noEmit',
+              rootDir: projectRoot,
+            },
+            (diagnostic, _formattedDiagnostic, errorCount) => {
+              statuses.push([diagnostic.code, errorCount]);
+            }
+          );
+          expect(statuses).toEqual([
+            [6031, undefined],
+            [6193, 1],
+          ]);
+
+          // On macOS, fs.watch misses a change made right after it starts.
+          await new Promise((resolve) => setTimeout(resolve, 500));
+          await fs.createFiles({ [createdFile]: `export const value = 1;` });
+          await vi.waitFor(() => expect(statuses.at(-1)).toEqual([6194, 0]), {
+            timeout: 10_000,
+            interval: 50,
+          });
+        } finally {
+          watch?.close();
+          write.mockRestore();
+        }
+      }
+    );
+
+    itWithApiWatcher(
+      'should not rebuild when the emit writes next to an unresolved import',
+      async () => {
+        const outDir = join(workspaceRoot, 'dist');
+        // `linked` points at dist, and dist/source.d.ts, which each emit
+        // rewrites, shares the import's name.
+        const source = `import { value } from '../linked/source.mjs';\nexport const result: number = value;`;
+        fs.createDirSync('dist');
+        symlinkSync(outDir, join(workspaceRoot, 'linked'), 'dir');
+        await fs.createFiles({ 'proj/source.ts': source });
+        const statuses: number[] = [];
+        let editStatuses: number;
+        const write = vi
+          .spyOn(process.stdout, 'write')
+          .mockImplementation(() => true);
+        let watch: Awaited<ReturnType<typeof runTypeCheckWatch>>;
+        try {
+          watch = await runTypeCheckWatch(
+            {
+              workspaceRoot,
+              tsConfigPath,
+              mode: 'emitDeclarationOnly',
+              outDir,
+              rootDir: projectRoot,
+            },
+            (diagnostic) => {
+              statuses.push(diagnostic.code);
+            }
+          );
+
+          // On macOS, fs.watch misses a change made right after it starts. A
+          // directory watcher that fails falls back to polling within this wait,
+          // which costs one rebuild.
+          await new Promise((resolve) => setTimeout(resolve, 500));
+          editStatuses = statuses.length;
+          writeFileSync(
+            join(projectRoot, 'source.ts'),
+            `${source}\nexport const other = 1;`
+          );
+          await vi.waitFor(
+            () => expect(statuses).toHaveLength(editStatuses + 2),
+            { timeout: 10_000, interval: 50 }
+          );
+          // The rebuild rewrote dist/source.d.ts; a rebuild that triggered would
+          // show within this wait.
+          await new Promise((resolve) => setTimeout(resolve, 1000));
+        } finally {
+          watch?.close();
+          write.mockRestore();
+        }
+
+        expect(statuses.slice(editStatuses)).toEqual([6032, 6193]);
+      }
+    );
+
+    itWithApiWatcher(
+      'should poll a directory whose watcher fails',
+      async () => {
+        const { watch: actualWatch } =
+          await vi.importActual<typeof import('fs')>('fs');
+        // Fails every directory watcher right away, as EMFILE does.
+        vi.mocked(fsWatch).mockImplementation(((watchedPath, ...args) => {
+          const watcher = actualWatch(watchedPath, ...args);
+          if (statSync(watchedPath).isDirectory()) {
+            process.nextTick(() =>
+              watcher.emit(
+                'error',
+                Object.assign(new Error('EMFILE: too many open files, watch'), {
+                  code: 'EMFILE',
+                })
+              )
+            );
+          }
+          return watcher;
+        }) as typeof fsWatch);
+        await fs.createFiles({
+          'proj/source.ts': `import { value } from './lib/missing';\nexport const result: number = value;`,
+        });
+        const statuses: [number, number | undefined][] = [];
+        const write = vi
+          .spyOn(process.stdout, 'write')
+          .mockImplementation(() => true);
+        let watch: Awaited<ReturnType<typeof runTypeCheckWatch>>;
+        try {
+          watch = await runTypeCheckWatch(
+            {
+              workspaceRoot,
+              tsConfigPath,
+              mode: 'noEmit',
+              rootDir: projectRoot,
+            },
+            (diagnostic, _formattedDiagnostic, errorCount) => {
+              statuses.push([diagnostic.code, errorCount]);
+            }
+          );
+
+          // A watcher that keeps retrying would rebuild again within this wait.
+          await new Promise((resolve) => setTimeout(resolve, 1000));
+          await fs.createFiles({
+            'proj/lib/missing.ts': `export const value = 1;`,
+          });
+          await vi.waitFor(() => expect(statuses.at(-1)).toEqual([6194, 0]), {
+            timeout: 10_000,
+            interval: 50,
+          });
+        } finally {
+          watch?.close();
+          write.mockRestore();
+          vi.mocked(fsWatch).mockImplementation(actualWatch);
+        }
+
+        // One rebuild for the failed watcher, one for the created file.
+        expect(statuses).toEqual([
+          [6031, undefined],
+          [6193, 1],
+          [6032, undefined],
+          [6193, 1],
+          [6032, undefined],
+          [6194, 0],
+        ]);
+      }
+    );
   }
 );

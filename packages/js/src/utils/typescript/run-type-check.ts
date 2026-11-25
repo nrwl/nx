@@ -1,5 +1,15 @@
 import chalk from 'chalk';
-import { readFileSync, watch, type FSWatcher } from 'fs';
+import {
+  existsSync,
+  readFileSync,
+  realpathSync,
+  statSync,
+  unwatchFile,
+  watch,
+  watchFile,
+  type FSWatcher,
+  type Stats,
+} from 'fs';
 import { EOL } from 'os';
 import * as path from 'path';
 import type {
@@ -136,6 +146,8 @@ const watchStatusMessages = {
 
 // TypeScript 6 waits this long after the last file change to rebuild.
 const watchUpdateDelay = 250;
+// TypeScript 6 polls at this interval where fs.watch fails.
+const watchPollingInterval = 500;
 
 // Reproduces TypeScript 6's watch program with its default reporters: a fresh
 // program per file change, built from the same root files and options.
@@ -156,7 +168,9 @@ function runApiTypeCheckWatch(
       useCaseSensitiveFileNames ? fileName : fileName.toLowerCase(),
   };
 
-  const watchers = new Map<string, FSWatcher>();
+  const watchers = new Map<string, { close(): void }>();
+  let unresolvedImportDirectories = new Set<string>();
+  let emittedFiles = new Set<string>();
   let updateTimer: NodeJS.Timeout | undefined;
   let closed = false;
 
@@ -188,26 +202,52 @@ function runApiTypeCheckWatch(
     }, watchUpdateDelay);
   };
 
-  const watchProgramFiles = (fileNames: readonly string[]) => {
-    const current = new Set(fileNames);
-    for (const [fileName, watcher] of watchers) {
-      if (!current.has(fileName)) {
+  // Like TypeScript 6, skip the files the emit writes into a watched
+  // directory, so an emit doesn't trigger the next rebuild. Both sides are
+  // real paths, so a directory reached through a symlink still matches.
+  const isEmitOutput = (watchedPath: string, fileName: string | null) =>
+    fileName !== null &&
+    unresolvedImportDirectories.has(watchedPath) &&
+    emittedFiles.has(
+      formatHost.getCanonicalFileName(path.join(watchedPath, fileName))
+    );
+
+  // Like TypeScript 6, poll a path that fs.watch can't watch, e.g. on EMFILE.
+  const watchByPolling = (watchedPath: string) => {
+    const listener = (current: Stats, previous: Stats) => {
+      if (current.mtimeMs !== previous.mtimeMs) {
+        scheduleUpdate();
+      }
+    };
+    watchFile(watchedPath, { interval: watchPollingInterval }, listener);
+    watchers.set(watchedPath, {
+      close: () => unwatchFile(watchedPath, listener),
+    });
+  };
+
+  const watchPaths = (paths: Iterable<string>) => {
+    const current = new Set(paths);
+    for (const [watchedPath, watcher] of watchers) {
+      if (!current.has(watchedPath)) {
         watcher.close();
-        watchers.delete(fileName);
+        watchers.delete(watchedPath);
       }
     }
-    for (const fileName of fileNames) {
-      if (watchers.has(fileName)) {
+    for (const watchedPath of current) {
+      if (watchers.has(watchedPath)) {
         continue;
       }
       let watcher: FSWatcher;
       try {
-        watcher = watch(fileName, (event) => {
+        watcher = watch(watchedPath, (event, fileName) => {
+          if (isEmitOutput(watchedPath, fileName)) {
+            return;
+          }
           // A file replaced by a rename (editors' atomic saves) ends its
-          // watcher; the update watches the new file.
+          // watcher; the update watches the path again if it still needs it.
           if (event === 'rename') {
             watcher.close();
-            watchers.delete(fileName);
+            watchers.delete(watchedPath);
           }
           scheduleUpdate();
         });
@@ -215,16 +255,17 @@ function runApiTypeCheckWatch(
         // Deleted since the program read it; the next update drops it.
         if (e?.code === 'ENOENT') {
           scheduleUpdate();
-          continue;
+        } else {
+          watchByPolling(watchedPath);
         }
-        throw e;
+        continue;
       }
       watcher.on('error', () => {
         watcher.close();
-        watchers.delete(fileName);
+        watchByPolling(watchedPath);
         scheduleUpdate();
       });
-      watchers.set(fileName, watcher);
+      watchers.set(watchedPath, watcher);
     }
   };
 
@@ -240,10 +281,15 @@ function runApiTypeCheckWatch(
       });
       try {
         const [program] = snapshot.operation.createdPrograms;
-        const diagnostics = emitAndGetWatchDiagnostics(
-          program,
-          compilerOptions
+        const { diagnostics, emittedFiles: emitted } =
+          emitAndGetWatchDiagnostics(program, compilerOptions);
+        emittedFiles = new Set(
+          emitted.map((fileName) =>
+            formatHost.getCanonicalFileName(getRealPath(fileName))
+          )
         );
+        unresolvedImportDirectories =
+          getUnresolvedImportDirectories(diagnostics);
         for (const diagnostic of diagnostics) {
           process.stdout.write(formatDiagnostics([diagnostic], formatHost));
         }
@@ -257,7 +303,10 @@ function runApiTypeCheckWatch(
             : `Found ${errorCount} errors. Watching for file changes.`,
           errorCount
         );
-        watchProgramFiles(program.getSourceFileNames());
+        watchPaths([
+          ...program.getSourceFileNames(),
+          ...unresolvedImportDirectories,
+        ]);
 
         return status === watchStatusMessages.starting &&
           !options.ignoreDiagnostics
@@ -298,6 +347,79 @@ function runApiTypeCheckWatch(
   };
 }
 
+// TypeScript 6's watch program also watches where an unresolved import could
+// appear. This returns the real paths of the nearest existing directory of each
+// relative one and, when it names an existing directory, of that directory.
+function getUnresolvedImportDirectories(
+  diagnostics: readonly ApiDiagnostic[]
+): Set<string> {
+  const cannotFindModuleCode = 2307;
+  const directories = new Set<string>();
+  const contents = new Map<string, string>();
+  for (const { code, fileName, pos, end } of diagnostics) {
+    if (code !== cannotFindModuleCode || !fileName) {
+      continue;
+    }
+    let content = contents.get(fileName);
+    if (content === undefined) {
+      try {
+        content = readSourceText(fileName);
+      } catch (e) {
+        // Deleted since the program read it; its own watcher reports that.
+        if (e?.code === 'ENOENT') {
+          continue;
+        }
+        throw e;
+      }
+      contents.set(fileName, content);
+    }
+    // The diagnostic spans the specifier's string literal, quotes included.
+    const specifier = content.slice(pos + 1, end - 1);
+    if (!/^\.\.?(?:\/|$)/.test(specifier)) {
+      continue;
+    }
+    const target = path.resolve(path.dirname(fileName), specifier);
+    // `./lib` also resolves to a file inside an existing lib, e.g. lib/index.ts.
+    if (isExistingDirectory(target)) {
+      directories.add(getRealPath(target));
+    }
+    let directory = path.dirname(target);
+    while (!existsSync(directory) && path.dirname(directory) !== directory) {
+      directory = path.dirname(directory);
+    }
+    directories.add(getRealPath(directory));
+  }
+  return directories;
+}
+
+// Like existsSync, count a path that can't be checked as absent, e.g. one with
+// a NUL byte or too long, where statSync throws even without throwIfNoEntry.
+function isExistingDirectory(fileName: string): boolean {
+  try {
+    return statSync(fileName).isDirectory();
+  } catch {
+    return false;
+  }
+}
+
+// TypeScript drops the byte order mark when it reads a file, so diagnostic
+// positions count from after it.
+function readSourceText(fileName: string): string {
+  return readFileSync(fileName, 'utf-8').replace(/^\uFEFF/, '');
+}
+
+function getRealPath(fileName: string): string {
+  try {
+    return realpathSync.native(fileName);
+  } catch (e) {
+    // Deleted since it was read or written; its watcher reports that.
+    if (e?.code === 'ENOENT') {
+      return fileName;
+    }
+    throw e;
+  }
+}
+
 // TypeScript 6's default, non-pretty watch status reporter.
 function writeWatchStatus(
   code: number,
@@ -329,7 +451,7 @@ function writeWatchStatus(
 function emitAndGetWatchDiagnostics(
   program: ApiProgram,
   compilerOptions: CompilerOptions
-): ApiDiagnostic[] {
+): { diagnostics: ApiDiagnostic[]; emittedFiles: readonly string[] } {
   const diagnostics = [...program.getConfigFileParsingDiagnostics()];
   const configDiagnosticsCount = diagnostics.length;
   diagnostics.push(...program.getSyntacticDiagnostics());
@@ -349,8 +471,12 @@ function emitAndGetWatchDiagnostics(
       diagnostics.push(...program.getDeclarationDiagnostics());
     }
   }
-  diagnostics.push(...program.emit().diagnostics);
-  return sortAndDeduplicateApiDiagnostics(diagnostics);
+  const { diagnostics: emitDiagnostics, emittedFiles } = program.emit();
+  diagnostics.push(...emitDiagnostics);
+  return {
+    diagnostics: sortAndDeduplicateApiDiagnostics(diagnostics),
+    emittedFiles,
+  };
 }
 
 export async function runTypeCheck(
@@ -630,8 +756,7 @@ function getFormattedApiDiagnostic(
             fileName,
             line: startPosition.line + 1,
             column: startPosition.character + 1,
-            // TypeScript drops the byte order mark when it reads a file.
-            fileText: readFileSync(fileName, 'utf-8').replace(/^\uFEFF/, ''),
+            fileText: readSourceText(fileName),
           }
         : undefined,
   });
