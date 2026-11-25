@@ -461,9 +461,9 @@ export async function createProjectGraphAndSourceMapsAsync(
       }
 
       if (e.daemonPermissionError) {
-        // Deliberately not disabled: unlike the inotify limit above, a socket
-        // owned by someone else stops being there when it is removed or the
-        // machine reboots, and disabling until `nx reset` would outlive the
+        // Disabled for this process only: unlike the inotify limit above, a
+        // socket owned by someone else stops being there when it is removed or
+        // the machine reboots, and disabling until `nx reset` would outlive the
         // cause and hide the fix from anyone who followed the advice.
         // The first line carries the errno, and it is the one token that tells
         // the two causes apart: EACCES is a socket owned by someone else (delete
@@ -472,12 +472,19 @@ export async function createProjectGraphAndSourceMapsAsync(
         // those two because it cannot tell them apart, and this branch does not
         // call writeDaemonLogs, so dropping the line loses the errno for good.
         const [summary, ...details] = e.message.split('\n');
-        output.note({
+        // On stderr: the command's own output, such as `show projects --json`,
+        // follows on stdout
+        output.warn({
           title: `${summary} Continuing without the daemon.`,
           // The blank line after the summary separates paragraphs when the
           // message is printed as one blob; as bodyLines it is a leading gap.
           bodyLines: details[0] === '' ? details.slice(1) : details,
         });
+        // Otherwise the daemonless build's own daemon calls start the daemon
+        // again and hit the same refusal. The reset clears the memoized
+        // `enabled()` so the disable is read.
+        disableDaemonForThisProcess(e.message);
+        daemonClient.reset();
         return buildProjectGraphAndSourceMapsWithoutDaemon();
       }
 
