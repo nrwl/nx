@@ -165,6 +165,24 @@ const copilotCliDefinition: AgentDefinition = {
   versionOutputPrefix: 'GitHub Copilot CLI ',
 };
 
+// --- Antigravity CLI -----------------------------------------------------
+
+// The install scripts' default locations.
+function antigravityWellKnownPaths(): string[] {
+  if (process.platform === 'win32') {
+    const localAppData = process.env.LOCALAPPDATA;
+    return localAppData ? [join(localAppData, 'agy', 'bin', 'agy.exe')] : [];
+  }
+  return [join(homedir(), '.local', 'bin', 'agy')];
+}
+
+const antigravityDefinition: AgentDefinition = {
+  id: 'antigravity',
+  displayName: 'Antigravity CLI',
+  binaryNames: ['agy'],
+  wellKnownPaths: antigravityWellKnownPaths,
+};
+
 // --- Registry ------------------------------------------------------------
 
 export const AGENT_DEFINITIONS: readonly AgentDefinition[] = [
@@ -172,4 +190,5 @@ export const AGENT_DEFINITIONS: readonly AgentDefinition[] = [
   codexDefinition,
   opencodeDefinition,
   copilotCliDefinition,
+  antigravityDefinition,
 ];

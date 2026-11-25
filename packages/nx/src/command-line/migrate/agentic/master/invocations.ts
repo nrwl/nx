@@ -1,3 +1,4 @@
+import { join } from 'path';
 import {
   claudeCodeHandoffAllowedTools,
   copilotCliHandoffAllowTool,
@@ -11,6 +12,8 @@ import {
 
 export interface MasterInvocationContext {
   runId: string;
+  /** Absolute path of the run directory. */
+  runDirPath: string;
   reconcileCommand: string;
   /** Workspace-relative with forward slashes: prose the agent reads, not a shell path. */
   runbookPath: string;
@@ -35,15 +38,23 @@ const OPENCODE_AGENT_NAME = 'nx-migrate';
 // other layout there.
 const COPILOT_INSTRUCTIONS_DIRS_VAR = 'COPILOT_CUSTOM_INSTRUCTIONS_DIRS';
 const COPILOT_INSTRUCTIONS_DIR_NAME = 'copilot';
-// Copilot CLI subagents load the same custom instructions, including the
-// invariant's order to reconcile, and reconciling after a handoff advances the
-// run.
-const COPILOT_SUBAGENT_RULE =
+// Copilot CLI and Antigravity CLI subagents load the same instructions,
+// including the invariant's order to reconcile, and reconciling after a
+// handoff advances the run.
+const SUBAGENT_RULE =
   'If another agent started you as its subagent, do not run nx migrate commands or write handoff files; report your results to that agent instead.';
 // Copilot CLI collapses shell output, so the user sees `[nx]` progress lines
 // only if the agent repeats them.
 const COPILOT_PROGRESS_RULE =
   'Each time you read the output of a command that is still running, tell the user in one sentence what its latest [nx] line says.';
+
+// Antigravity CLI loads the AGENTS.md of each directory `--add-dir` adds to
+// the workspace, but only when given an absolute path.
+const ANTIGRAVITY_RULES_DIR_NAME = 'antigravity';
+// Antigravity CLI tries each nx command in its sandbox first, which can hide
+// Node.js. Conditional, so nx commands stay sandboxed where Node.js is visible.
+const ANTIGRAVITY_SANDBOX_RULE =
+  "If an nx command fails in the terminal sandbox because it can't find or run Node.js or the package manager, run every later nx command outside the sandbox.";
 
 function copilotInstructionsDirs(runId: string): string {
   // Relative, so only the run id lands in the list: Copilot CLI resolves it
@@ -105,11 +116,27 @@ const builders: Record<
       files: [
         {
           path: `${COPILOT_INSTRUCTIONS_DIR_NAME}/.github/instructions/nx-migrate.instructions.md`,
-          content: `${masterInvariant(ctx)} ${COPILOT_SUBAGENT_RULE} ${COPILOT_PROGRESS_RULE}`,
+          content: `${masterInvariant(ctx)} ${SUBAGENT_RULE} ${COPILOT_PROGRESS_RULE}`,
         },
       ],
     };
   },
+  // No handoff write grant: an allow list in `--settings` replaces the user's
+  // own, and Antigravity CLI has no flag that adds a rule for one session.
+  antigravity: (ctx) => ({
+    args: [
+      '--add-dir',
+      join(ctx.runDirPath, ANTIGRAVITY_RULES_DIR_NAME),
+      '--prompt-interactive',
+      masterBootstrapPrompt(ctx),
+    ],
+    files: [
+      {
+        path: `${ANTIGRAVITY_RULES_DIR_NAME}/AGENTS.md`,
+        content: `${masterInvariant(ctx)} ${SUBAGENT_RULE} ${ANTIGRAVITY_SANDBOX_RULE}`,
+      },
+    ],
+  }),
 };
 
 export function buildMasterInvocation(

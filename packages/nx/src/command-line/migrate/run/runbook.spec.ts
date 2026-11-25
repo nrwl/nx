@@ -207,9 +207,9 @@ describe('renderRunbook', () => {
     );
     expect(runbook).toContain('Codex: subagents inherit the live sandbox');
     expect(runbook).toContain(
-      "Copilot CLI: subagents get this session's tool permission rules"
+      "Copilot CLI and Antigravity CLI: subagents get this session's permission"
     );
-    expect(runbook).toContain('tell a subagent not');
+    expect(runbook).toContain('subagent not to run any `nx migrate` command');
     // Run-scoped, not a wildcard: a grant configured from this line must not
     // reach another run's handoffs.
     expect(runbook).toContain('.nx/migrate-runs/run-1/handoffs/**');

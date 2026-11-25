@@ -132,6 +132,7 @@ export async function spawnMasterSession(
     sentinelPath = sessionCompleteSentinel(runRoot, runId, broker.nonce);
     const spec = buildMasterInvocation(agent.id, {
       runId,
+      runDirPath: runDir(runRoot, runId),
       reconcileCommand,
       runbookPath: prosePath(runRoot, runbookPath),
       sentinelPath: prosePath(runRoot, sentinelPath),
