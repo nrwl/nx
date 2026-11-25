@@ -348,6 +348,32 @@ describe('@nx/oxlint plugin', () => {
     expect(inputs).not.toContain('{workspaceRoot}/libs/ab/.oxlintrc.json');
   });
 
+  it('should escape glob characters in real path inputs', async () => {
+    createFiles({
+      '.oxlintrc.json': `{"rules":{}}`,
+      'apps/(group)/.oxlintrc.json': `{"jsPlugins":["./[plugins]/local.js"],"rules":{}}`,
+      'apps/(group)/[plugins]/local.js': `export default { meta: {}, rules: {} };`,
+      'apps/(group)/tsconfig.shared.json': `{}`,
+      'apps/(group)/[id]/project.json': `{"name":"id"}`,
+      'apps/(group)/[id]/src/index.ts': `export const a = 1;`,
+      'apps/(group)/[id]/tsconfig.json': JSON.stringify({
+        extends: '../tsconfig.shared.json',
+      }),
+    });
+
+    const results = await invokeCreateNodesOnMatchingFiles(context);
+    const inputs = results.projects['apps/(group)/[id]'].targets.lint.inputs;
+
+    expect(inputs).toEqual(
+      expect.arrayContaining([
+        '{workspaceRoot}/apps/\\(group\\)/.oxlintrc.json',
+        '{workspaceRoot}/apps/\\(group\\)/\\[plugins\\]/local.js',
+        '{workspaceRoot}/apps/\\(group\\)/.gitignore',
+        '{workspaceRoot}/apps/\\(group\\)/tsconfig.shared.json',
+      ])
+    );
+  });
+
   it('should create a target when using oxlint.config.mts', async () => {
     createFiles({
       'oxlint.config.mts': `export default { rules: {} };`,
