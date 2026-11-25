@@ -12,6 +12,7 @@ export const redirects = {
     '/docs/kb/docker-read-through-cache',
   '/features/ci-features/npm-read-through-cache':
     '/docs/kb/npm-read-through-cache',
+  '/kb/npm-proxy-cache-setup-for-nx-agents': '/docs/kb/npm-read-through-cache',
   '/guides/nx-cloud/optimize-your-ttg': '/docs/kb/optimize-your-ttg',
   '/guides/nx-cloud/record-commands': '/docs/kb/record-commands',
   '/guides/nx-cloud/cipe-affected-project-graph':

@@ -1313,6 +1313,10 @@ from = "/docs/features/ci-features/npm-read-through-cache"
 to = "/docs/kb/npm-read-through-cache"
 
 [[redirects]]
+from = "/docs/kb/npm-proxy-cache-setup-for-nx-agents"
+to = "/docs/kb/npm-read-through-cache"
+
+[[redirects]]
 from = "/docs/guides/nx-cloud/optimize-your-ttg"
 to = "/docs/kb/optimize-your-ttg"
 
