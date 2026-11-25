@@ -16,7 +16,7 @@ use parking_lot::RwLock;
 use tracing::{debug, trace};
 
 use crate::native::hasher::hash_file_path;
-use crate::native::walker::{PathPredicate, read_directory, seed_walk};
+use crate::native::walker::{PathPredicate, disk_relative_path, read_directory, seed_walk};
 
 /// Whether the watch delivers events for a workspace-relative directory.
 pub(crate) type DeliversUnder = Arc<dyn Fn(&str) -> bool + Send + Sync>;
@@ -181,6 +181,10 @@ impl IgnoredIndex {
         }
     }
 
+    pub(crate) fn has_watch(&self) -> bool {
+        self.watch.is_some()
+    }
+
     /// Whether a directory that has been walked holds `path`. Only then is
     /// there a listing to answer from, or a hash safe to serve blind.
     pub(crate) fn is_listed(&self, path: &str) -> bool {
@@ -329,7 +333,18 @@ impl IgnoredIndex {
         accept: PathPredicate,
         skip: &[String],
     ) -> Option<Vec<String>> {
-        if cached && self.is_tracked(dir) {
+        let can_list = cached
+            && self.is_tracked(dir)
+            && self.watch.as_ref().is_none_or(|watch| {
+                // A listed ancestor can have skipped this explicit root,
+                // including a directory reached through a symlink.
+                !watch.may_miss_under(dir)
+                    && self.canonical_root(workspace_root).is_some_and(|root| {
+                        dunce::canonicalize(workspace_root.join(dir))
+                            .is_ok_and(|resolved| resolved == root.join(dir))
+                    })
+            });
+        if can_list {
             // A listing that cannot settle, because the disk kept moving
             // under the walk, must not read as an empty directory: fall
             // through and read it the way an untracked one is read.
@@ -382,7 +397,7 @@ impl IgnoredIndex {
             self.forget(path);
             return;
         }
-        if listed {
+        if listed && disk_relative_path(workspace_root, &full_path).is_some() {
             self.members.write().insert(path.to_string());
         }
     }
@@ -743,6 +758,14 @@ mod tests {
         let index = watched();
         assert!(!index.track(temp.path(), "node_modules/dep"));
         assert!(index.list(temp.path(), "node_modules/dep").is_none());
+        assert!(index.track(temp.path(), ""));
+        assert!(index.list(temp.path(), "").is_some());
+        assert_eq!(
+            index
+                .files_under(temp.path(), "node_modules/dep", true, &|_| true, &[])
+                .unwrap(),
+            ["node_modules/dep/index.js"]
+        );
         // Without a watch there is no gate: the seed stands for the run.
         let unwatched = IgnoredIndex::new(None);
         assert!(unwatched.track(temp.path(), "node_modules/dep"));
@@ -1116,6 +1139,13 @@ mod tests {
         assert!(index.track(temp.path(), "dist"));
         assert!(!index.track(temp.path(), "dist/cache"));
         assert!(index.list(temp.path(), "dist/cache").is_none());
+        assert!(index.list(temp.path(), "dist").is_some());
+        assert_eq!(
+            index
+                .files_under(temp.path(), "dist/cache", true, &|_| true, &[])
+                .unwrap(),
+            ["dist/cache/out.js"]
+        );
         index.hash_file(temp.path(), "dist/cache/out.js", None, RunStage::NothingRan);
         assert!(index.trusted_hash("dist/cache/out.js").is_none());
     }
