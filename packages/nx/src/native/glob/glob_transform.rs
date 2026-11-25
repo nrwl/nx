@@ -5,7 +5,10 @@
 use crate::native::glob::glob_group::GlobGroup;
 use crate::native::glob::glob_parser::{literal_segment, parse_glob};
 use itertools::Itertools;
+use regex::Regex;
+use std::borrow::Cow;
 use std::collections::HashSet;
+use std::sync::LazyLock;
 
 /// Expands brace groups whose alternatives are all literal names into the
 /// exact paths they stand for (`{nx,tsconfig.base}.json` → `nx.json`,
@@ -189,8 +192,146 @@ fn convert_glob_segments(negated: bool, parsed: Vec<Vec<GlobGroup>>) -> Vec<Stri
     globs
 }
 
+/// Most sequence-expression items `expand_brace_ranges` writes out. A larger
+/// range is left as written.
+const MAX_RANGE_ITEMS: usize = 1000;
+
+static BRACE_RANGE: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(r"\{(-?\d+|[a-zA-Z])\.\.(-?\d+|[a-zA-Z])(?:\.\.(-?\d+))?\}").unwrap()
+});
+
+/// Rewrites brace sequence expressions (`{1..3}`, `{01..10}`, `{a..c}`,
+/// `{0..10..5}`) into the alternation the matcher reads (`{1,2,3}`), as
+/// minimatch does. An escaped brace stays literal.
+pub(crate) fn expand_brace_ranges(glob: &str) -> Cow<'_, str> {
+    if !glob.contains("..") {
+        return Cow::Borrowed(glob);
+    }
+    let mut out = String::with_capacity(glob.len());
+    let mut last = 0;
+    for captures in BRACE_RANGE.captures_iter(glob) {
+        let whole = captures.get(0).unwrap();
+        let escaped = glob[..whole.start()].ends_with('\\');
+        let items = (!escaped)
+            .then(|| {
+                range_items(
+                    &captures[1],
+                    &captures[2],
+                    captures.get(3).map(|m| m.as_str()),
+                )
+            })
+            .flatten();
+        let Some(items) = items else {
+            continue;
+        };
+        out.push_str(&glob[last..whole.start()]);
+        match items.as_slice() {
+            [only] => out.push_str(only),
+            _ => out.push_str(&format!("{{{}}}", items.join(","))),
+        }
+        last = whole.end();
+    }
+    if last == 0 {
+        return Cow::Borrowed(glob);
+    }
+    out.push_str(&glob[last..]);
+    Cow::Owned(out)
+}
+
+fn range_items(start: &str, end: &str, step: Option<&str>) -> Option<Vec<String>> {
+    let step = match step {
+        Some(step) => step.parse::<i64>().ok()?.unsigned_abs().max(1),
+        None => 1,
+    };
+    let (from, to, letters) = match (start.parse::<i64>(), end.parse::<i64>()) {
+        (Ok(from), Ok(to)) => (from, to, false),
+        (Err(_), Err(_)) if start.len() == 1 && end.len() == 1 => {
+            (start.as_bytes()[0] as i64, end.as_bytes()[0] as i64, true)
+        }
+        _ => return None,
+    };
+    let count = (from.abs_diff(to) / step + 1) as usize;
+    if count > MAX_RANGE_ITEMS {
+        return None;
+    }
+    let padded =
+        |s: &str| s.trim_start_matches('-').len() > 1 && s.trim_start_matches('-').starts_with('0');
+    let width = (padded(start) || padded(end)).then(|| start.len().max(end.len()));
+    let direction = if from <= to { 1 } else { -1 };
+    Some(
+        (0..count as i64)
+            .map(|i| from + direction * i * step as i64)
+            .map(|value| match (letters, width) {
+                (true, _) => (value as u8 as char).to_string(),
+                (false, Some(width)) if value < 0 => format!("-{:0>1$}", -value, width - 1),
+                (false, Some(width)) => format!("{value:0>width$}"),
+                (false, None) => value.to_string(),
+            })
+            .collect(),
+    )
+}
+
+/// Rewrites POSIX character classes inside a bracket expression
+/// (`[[:alpha:]_]`) as the ASCII ranges they stand for, as minimatch does.
+pub(crate) fn expand_posix_classes(glob: &str) -> Cow<'_, str> {
+    if !glob.contains("[:") {
+        return Cow::Borrowed(glob);
+    }
+    let mut out = String::with_capacity(glob.len());
+    let mut in_bracket = false;
+    let mut rest = glob;
+    while let Some(c) = rest.chars().next() {
+        if c == '\\' {
+            let escaped: String = rest.chars().take(2).collect();
+            out.push_str(&escaped);
+            rest = &rest[escaped.len()..];
+            continue;
+        }
+        if in_bracket && rest.starts_with("[:") {
+            if let Some(end) = rest[2..].find(":]") {
+                if let Some(range) = posix_class(&rest[2..2 + end]) {
+                    out.push_str(range);
+                    rest = &rest[2 + end + 2..];
+                    continue;
+                }
+            }
+        }
+        match c {
+            '[' if !in_bracket => in_bracket = true,
+            ']' if in_bracket
+                && !out.ends_with('[')
+                && !out.ends_with("[!")
+                && !out.ends_with("[^") =>
+            {
+                in_bracket = false
+            }
+            _ => {}
+        }
+        out.push(c);
+        rest = &rest[c.len_utf8()..];
+    }
+    Cow::Owned(out)
+}
+
+fn posix_class(name: &str) -> Option<&'static str> {
+    Some(match name {
+        "alpha" => "a-zA-Z",
+        "digit" => "0-9",
+        "alnum" => "a-zA-Z0-9",
+        "lower" => "a-z",
+        "upper" => "A-Z",
+        "xdigit" => "0-9a-fA-F",
+        "word" => "a-zA-Z0-9_",
+        "space" => " \t\r\n\x0b\x0c",
+        "blank" => " \t",
+        _ => return None,
+    })
+}
+
 pub fn convert_glob(glob: &str) -> anyhow::Result<Vec<String>> {
-    let (negated, parsed) = parse_glob(glob)?;
+    let glob = expand_brace_ranges(glob);
+    let glob = expand_posix_classes(&glob);
+    let (negated, parsed) = parse_glob(&glob)?;
     Ok(convert_glob_segments(negated, parsed))
 }
 
@@ -217,8 +358,14 @@ fn build_segment(
                 off_group.into_iter().chain(on_group).collect::<Vec<_>>()
             }
             GlobGroup::Negated(_) => {
-                let existing = if !is_last_segment { "*" } else { existing };
-                let off_group = build_segment(existing, &group[1..], is_last_segment, is_negative);
+                // A trailing `!(x)` accepts any other ending, so the name
+                // stays open after what precedes it.
+                let existing = match (is_last_segment, group.len() == 1) {
+                    (false, _) => "*".to_string(),
+                    (true, true) => format!("{existing}*"),
+                    (true, false) => existing.to_string(),
+                };
+                let off_group = build_segment(&existing, &group[1..], is_last_segment, is_negative);
                 let on_group = build_segment(&built_glob, &group[1..], is_last_segment, true);
                 off_group.into_iter().chain(on_group).collect::<Vec<_>>()
             }
@@ -270,6 +417,52 @@ mod test {
         for untouched in ["libs/app/**/*.ts", "libs/app/src/", "*.json", ""] {
             assert_eq!(path_or_everything_under(untouched), vec![untouched]);
         }
+    }
+
+    #[test]
+    fn expands_brace_ranges() {
+        for (glob, expected) in [
+            ("libs/app{1..3}/**", "libs/app{1,2,3}/**"),
+            ("v{3..1}", "v{3,2,1}"),
+            ("{01..03}.txt", "{01,02,03}.txt"),
+            ("{0..10..5}", "{0,5,10}"),
+            ("{a..c}/x", "{a,b,c}/x"),
+            ("{1..1}", "1"),
+            ("{-1..1}", "{-1,0,1}"),
+            (r"a\{1..3}", r"a\{1..3}"),
+            ("{1..5000}", "{1..5000}"),
+            ("{a..3}", "{a..3}"),
+            ("dist/**", "dist/**"),
+        ] {
+            assert_eq!(expand_brace_ranges(glob), expected, "{glob}");
+        }
+    }
+
+    #[test]
+    fn expands_posix_classes() {
+        for (glob, expected) in [
+            ("apps/[[:lower:]]/x", "apps/[a-z]/x"),
+            ("[[:alpha:]_]*", "[a-zA-Z_]*"),
+            ("[![:digit:]]", "[!0-9]"),
+            ("[[:alnum:]][[:upper:]]", "[a-zA-Z0-9][A-Z]"),
+            ("[:lower:]", "[:lower:]"),
+            ("[[:nope:]]", "[[:nope:]]"),
+            (r"\[[:lower:]]", r"\[[:lower:]]"),
+        ] {
+            assert_eq!(expand_posix_classes(glob), expected, "{glob}");
+        }
+    }
+
+    #[test]
+    fn a_trailing_negated_group_accepts_any_other_ending() {
+        assert_eq!(
+            convert_glob("**/jest.config.!(cts)").unwrap(),
+            ["!**/jest.config.cts", "**/jest.config.*"]
+        );
+        assert_eq!(
+            convert_glob("config/*.!(tmp|bak)").unwrap(),
+            ["!config/*.{tmp,bak}", "config/*.*"]
+        );
     }
 
     #[test]

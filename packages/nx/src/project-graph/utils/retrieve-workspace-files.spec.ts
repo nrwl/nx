@@ -87,6 +87,11 @@ describe('retrieve-workspace-files', () => {
             include: ['libs/**/*'],
             createNodes: ['**/index.ts', async () => []],
           },
+          {
+            name: 'excluded',
+            exclude: ['apps/api/src/other.ts', 'apps/w{a..e}b/**'],
+            createNodes: ['apps/**/*.!(json)', async () => []],
+          },
         ]
       );
 
@@ -98,6 +103,8 @@ describe('retrieve-workspace-files', () => {
         'apps/web/src/main.ts',
         // broad
         'libs/a/src/index.ts',
+        // excluded
+        'apps/api/src/main.ts',
       ]);
       scopedFs.cleanup();
     });

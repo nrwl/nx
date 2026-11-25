@@ -141,8 +141,9 @@ impl PluginGlobMatcher {
 /// The `files` that pass a plugin's `createNodes` pattern, `include` and
 /// `exclude`, in input order. Matches the way the project graph finds each
 /// plugin's config files.
-pub fn match_plugin_files(files: Vec<String>, globs: PluginGlobs) -> anyhow::Result<Vec<String>> {
-    let matcher = PluginGlobMatcher::new(&globs)?;
+pub fn match_plugin_files(files: Vec<String>, globs: PluginGlobs) -> napi::Result<Vec<String>> {
+    let matcher = PluginGlobMatcher::new(&globs)
+        .map_err(|error| napi::Error::from_reason(format!("{error:?}")))?;
     Ok(files
         .into_iter()
         .filter(|file| matcher.is_match(file))
@@ -254,15 +255,58 @@ mod test {
     }
 
     #[test]
+    fn reads_minimatch_syntax_in_include_and_exclude() {
+        let configs = [
+            "apps/a/jest.config.ts",
+            "apps/b/jest.config.cts",
+            "libs/app2/jest.config.ts",
+            "libs/app4/jest.config.ts",
+            "libs/B/jest.config.ts",
+        ];
+        for (include, exclude, expected) in [
+            (
+                &["**/jest.config.!(cts)"][..],
+                &[][..],
+                &[
+                    "apps/a/jest.config.ts",
+                    "libs/app2/jest.config.ts",
+                    "libs/app4/jest.config.ts",
+                    "libs/B/jest.config.ts",
+                ][..],
+            ),
+            (&["libs/app{1..3}/**"], &[], &["libs/app2/jest.config.ts"]),
+            (
+                &["libs/**"],
+                &["libs/app{1..3}/**"],
+                &["libs/app4/jest.config.ts", "libs/B/jest.config.ts"],
+            ),
+            (&["libs/[[:upper:]]/**"], &[], &["libs/B/jest.config.ts"]),
+        ] {
+            assert_eq!(
+                matching(&globs(None, include, exclude), &configs),
+                expected,
+                "include {include:?} exclude {exclude:?}"
+            );
+        }
+    }
+
+    #[test]
     fn names_the_plugin_in_pattern_errors() {
         let mut bad = globs(None, &["apps/[a"], &[]);
         bad.name = Some("@nx/vite/plugin".into());
         bad.index = Some(3);
-        let error = format!("{:#}", PluginGlobMatcher::new(&bad).err().unwrap());
+        // The reason is the message JS sees.
+        let error = match_plugin_files(vec![], bad).unwrap_err().reason.clone();
         assert!(
             error.contains("@nx/vite/plugin (nx.json plugins[3])"),
             "{error}"
         );
+        assert!(error.contains("apps/[a"), "{error}");
+
+        let error = match_plugin_files(vec![], globs(None, &["apps/[a"], &[]))
+            .unwrap_err()
+            .reason
+            .clone();
         assert!(error.contains("apps/[a"), "{error}");
     }
 }
