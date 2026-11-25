@@ -2,7 +2,10 @@ import type { MockedFunction } from 'vitest';
 import { withEnvironmentVariables } from '../internal-testing-utils/with-environment';
 import { detectAiAgent } from '../native';
 import { isSandbox } from '../utils/is-sandbox';
-import { sandboxSocketHint } from './sandbox-socket-hint';
+import {
+  sandboxSocketHint,
+  type SandboxSocketHintOptions,
+} from './sandbox-socket-hint';
 
 vi.mock('../native', async () => ({
   ...(await vi.importActual('../native')),
@@ -31,7 +34,7 @@ describe('sandboxSocketHint', () => {
     mockIsSandbox.mockReset();
   });
 
-  const hint = (opts?: { certain?: boolean }) =>
+  const hint = (opts?: SandboxSocketHintOptions) =>
     withEnvironmentVariables({ NX_SOCKET_DIR: socketRoot }, () =>
       sandboxSocketHint(opts)
     );
@@ -141,7 +144,7 @@ describe('sandboxSocketHint', () => {
   });
 
   it.each([true, false])(
-    'should always offer NX_SOCKET_DIR, which needs no sandbox settings change (sandbox: %s)',
+    'should offer NX_SOCKET_DIR unless a connect was refused, since it needs no sandbox settings change (sandbox: %s)',
     (sandboxed: boolean) => {
       // An agent often cannot write its own sandbox settings, so the hint must
       // name a way forward that does not depend on editing them.
@@ -150,6 +153,45 @@ describe('sandboxSocketHint', () => {
       expect(hint().join('\n')).toContain('NX_SOCKET_DIR');
     }
   );
+
+  describe('a refused connect', () => {
+    // The socket was created, so where sockets are created is not the problem
+
+    it('should describe the denied connection with no remedy under Antigravity, whose sandbox refuses the connect in every directory', () => {
+      // Real agy 1.5.15: bind allowed and connect EPERM under the Nx socket
+      // root, $TMPDIR, /tmp and the workspace alike
+      mockIsSandbox.mockReturnValue(false);
+      mockDetectAiAgent.mockReturnValue('antigravity');
+
+      expect(hint({ certain: true, operation: 'connect' })).toEqual([
+        `Nx was denied permission to connect to its unix socket under ${socketRoot}.`,
+      ]);
+    });
+
+    it.each([true, false])(
+      'should check access to the socket path instead of moving it elsewhere (sandbox: %s)',
+      (sandboxed: boolean) => {
+        // connect(2) returns EACCES without write access to the socket or
+        // search access to a directory above it
+        mockIsSandbox.mockReturnValue(sandboxed);
+
+        const lines = hint({ certain: true, operation: 'connect' }).join('\n');
+
+        expect(lines).toContain('connect to its unix socket');
+        expect(lines).toContain('If file permissions refused it');
+        expect(lines).not.toContain('NX_SOCKET_DIR');
+      }
+    );
+
+    it('should ask an unrecognised sandbox to allow the connection, since creating the socket worked', () => {
+      mockDetectAiAgent.mockReturnValue(null);
+
+      const lines = hint({ certain: true, operation: 'connect' }).join('\n');
+
+      expect(lines).toContain('Allow your sandbox to connect to unix sockets');
+      expect(lines).not.toContain('create unix sockets');
+    });
+  });
 
   describe('the configure-ai-agents remediation', () => {
     it('should be offered to Claude Code, which the generator writes sandbox settings for', () => {

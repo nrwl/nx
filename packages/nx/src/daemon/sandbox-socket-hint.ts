@@ -41,7 +41,15 @@ export interface SandboxSocketHintOptions {
    * those the lead line offers the cause rather than asserting it.
    */
   certain?: boolean;
+  /**
+   * The call the operating system refused, when the caller knows it. A refused
+   * connect means the socket was created, so advice about where sockets are
+   * created does not apply to it.
+   */
+  operation?: RefusedSocketOperation;
 }
+
+export type RefusedSocketOperation = 'bind' | 'connect';
 
 /**
  * Guidance for a unix socket Nx was not allowed to use. The lead line names
@@ -61,16 +69,17 @@ export interface SandboxSocketHintOptions {
  */
 export function sandboxSocketHint({
   certain = false,
+  operation,
 }: SandboxSocketHintOptions = {}): string[] {
   const roots = socketRoots();
-  const sandboxRemedy = sandboxSpecificRemedy(roots, certain);
+  const sandboxRemedy = sandboxSpecificRemedy(roots, certain, operation);
   const lead = certain
-    ? `Nx was denied permission to use its unix socket under ${roots}.`
+    ? `Nx was denied permission to ${operation === 'connect' ? 'connect to' : 'use'} its unix socket under ${roots}.`
     : `Nx could not use its unix socket under ${roots}. Denied permission on that directory is a common cause.`;
-  const permissionRemedy = `Get permission to create sockets under ${roots}, or set NX_SOCKET_DIR to a directory you do have permission for.`;
+  const permissionRemedy = getPermissionRemedy(roots, operation);
 
   if (sandboxRemedy.length === 0) {
-    return [lead, permissionRemedy];
+    return [lead, ...permissionRemedy];
   }
 
   return [
@@ -84,10 +93,30 @@ export function sandboxSocketHint({
           '  - Run `nx configure-ai-agents` to write the sandbox allowances Nx needs. Agent sandboxes usually block writes to their own settings file, so this may have to be run from a regular terminal rather than through the agent.',
         ]
       : []),
-    ...sandboxRemedy.map((remedy) => `  - ${remedy}`),
-    `  - ${permissionRemedy}`,
+    ...[...sandboxRemedy, ...permissionRemedy].map((remedy) => `  - ${remedy}`),
     'See https://nx.dev/docs/kb/nx-sandbox-unix-sockets for details.',
   ];
+}
+
+function getPermissionRemedy(
+  roots: string,
+  operation: RefusedSocketOperation | undefined
+): string[] {
+  switch (operation) {
+    case 'connect':
+      // Antigravity's sandbox refuses the connect whichever directory holds the
+      // socket, so no directory or file permission change helps there
+      return detectAiAgent() === 'antigravity'
+        ? []
+        : [
+            `If file permissions refused it, check that you have write access to the socket under ${roots} and search (execute) access to every directory above it.`,
+          ];
+    case 'bind':
+    case undefined:
+      return [
+        `Get permission to create sockets under ${roots}, or set NX_SOCKET_DIR to a directory you do have permission for.`,
+      ];
+  }
 }
 
 /**
@@ -122,7 +151,11 @@ export function sandboxSocketHint({
  * Any other agent, or none, leaves the setting unknown, so the fallback can only
  * describe the grant.
  */
-function sandboxSpecificRemedy(roots: string, certain: boolean): string[] {
+function sandboxSpecificRemedy(
+  roots: string,
+  certain: boolean,
+  operation: RefusedSocketOperation | undefined
+): string[] {
   const sandboxed = isSandbox();
   const agent = detectAiAgent();
   const knownAgent =
@@ -145,10 +178,16 @@ function sandboxSpecificRemedy(roots: string, certain: boolean): string[] {
         `In \`~/.codex/config.toml\`, set \`sandbox_workspace_write.network_access\` to true and add ${roots} to \`sandbox_workspace_write.writable_roots\`. Codex has no setting that scopes sockets to a path, and \`network_access\` also grants general network access, so this is a broader grant than the other agents need.`,
       ];
     default:
-      return sandboxed
+      if (!sandboxed) {
+        return [];
+      }
+      // A refused connect means creating the socket already worked
+      return operation === 'connect'
         ? [
-            `Allow your sandbox to create unix sockets under ${roots}, not only connect to them, and grant read and write on those directories.`,
+            `Allow your sandbox to connect to unix sockets under ${roots}, and grant read and write on those directories.`,
           ]
-        : [];
+        : [
+            `Allow your sandbox to create unix sockets under ${roots}, not only connect to them, and grant read and write on those directories.`,
+          ];
   }
 }

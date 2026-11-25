@@ -36,10 +36,10 @@ const startupFailure = () => {
   return e;
 };
 
-/** What the host builds when the worker exits with the socket-refused code. */
-const socketRefusal = () => {
+/** What the host builds when the operating system refuses the worker's socket. */
+const socketRefusal = (operation: 'bind' | 'connect' = 'bind') => {
   const e = startupFailure();
-  e[Symbol.for('nx.pluginWorkerSocketRefused')] = true;
+  e[Symbol.for('nx.pluginWorkerSocketRefused')] = operation;
   return e;
 };
 
@@ -214,7 +214,20 @@ describe('falling back on the worker errno rather than the environment', () => {
 
     await loadingMethod({ plugin: 'p' } as any, '/root', 0);
 
-    expect(mockHint).toHaveBeenCalledWith({ certain: true });
+    expect(mockHint).toHaveBeenCalledWith({ certain: true, operation: 'bind' });
+  });
+
+  it('should tell the hint a connect was refused, which it advises on differently', async () => {
+    mockIsSandbox.mockReturnValue(false);
+    mockIsAiAgent.mockReturnValue(true);
+    mockIsolated.mockReturnValue(isolatedRejecting(socketRefusal('connect')));
+
+    await loadingMethod({ plugin: 'p' } as any, '/root', 0);
+
+    expect(mockHint).toHaveBeenCalledWith({
+      certain: true,
+      operation: 'connect',
+    });
   });
 
   it('should hedge when only the environment, not an errno, put us here', async () => {
