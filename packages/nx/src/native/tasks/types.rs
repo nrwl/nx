@@ -331,10 +331,16 @@ impl InstructionPool {
             | HashInstruction::WorkspaceFileSet(_)
             | HashInstruction::IgnoredFileSet { .. } => true,
             HashInstruction::TsConfiguration(_) => !keep_tsconfig,
-            HashInstruction::JsonFileSet(json) => match partition_glob(&json.json_path) {
-                (path, None) => !read(&path),
-                _ => !read(&json.json_path),
-            },
+            HashInstruction::JsonFileSet(json) => {
+                let glob = json
+                    .json_path
+                    .strip_prefix("{workspaceRoot}/")
+                    .unwrap_or(&json.json_path);
+                match partition_glob(glob) {
+                    (path, None) => !read(&path),
+                    _ => !read(glob),
+                }
+            }
             _ => false,
         }
     }
@@ -594,6 +600,17 @@ mod tests {
         })));
         assert!(
             !pool.replaced_by_configuration(escaped, true, |path| path == "p/(g)/package.json")
+        );
+        let workspace = pool.intern(HashInstruction::JsonFileSet(Box::new(JsonFileSetInput {
+            project_name: None,
+            json_path: r"{workspaceRoot}/tools/\[s\]/package.json".into(),
+            fields: None,
+            exclude_fields: None,
+        })));
+        assert!(pool.replaced_by_configuration(workspace, true, unread));
+        assert!(
+            !pool.replaced_by_configuration(workspace, true, |path| path
+                == "tools/[s]/package.json")
         );
     }
 
