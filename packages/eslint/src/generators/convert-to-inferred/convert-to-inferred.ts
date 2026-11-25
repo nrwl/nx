@@ -223,7 +223,8 @@ function postTargetTransformer(
         .replace('{workspaceRoot}', '')
         .replace('{projectRoot}', projectDetails.root)
         .replace('{projectName}', projectDetails.projectName)
-        .replace(/^\//, '');
+        .replace(/^\//, '')
+        .replace(/\\([\\*?[\]{}()!])/g, '$1');
     };
 
     const inputs = target.inputs.filter((input) => {

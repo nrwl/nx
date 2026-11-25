@@ -315,6 +315,7 @@ export {
   killChildOnHostExit,
   killProcessTreeGraceful,
   loadTsFile,
+  matchGlobPaths,
   mergeTargetConfigurations,
   movePeerDependencyToDependencies,
   multiselectPrompt,

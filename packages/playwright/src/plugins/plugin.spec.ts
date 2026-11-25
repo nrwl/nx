@@ -4164,6 +4164,35 @@ module.exports = {};`,
       );
     });
 
+    it('should escape glob characters in tsconfig file inputs', async () => {
+      vi.spyOn(jsUtils, 'getRootTsConfigFileName').mockReturnValue(
+        'tsconfig.base.json'
+      );
+      await tempFs.createFiles({
+        'tsconfig.base.json': JSON.stringify({}),
+        'configs/(shared)/[ts]/tsconfig.json': JSON.stringify({
+          extends: '../../../tsconfig.base.json',
+        }),
+        'apps/my-app/package.json': '{}',
+        'apps/my-app/tsconfig.json': JSON.stringify({
+          extends: '../../configs/(shared)/[ts]/tsconfig.json',
+        }),
+        'apps/my-app/playwright.config.js': 'module.exports = {}',
+      });
+
+      const results = await createNodesFunction(
+        ['apps/my-app/playwright.config.js'],
+        { targetName: 'e2e' },
+        context
+      );
+
+      const inputs = results[0][1].projects['apps/my-app'].targets.e2e.inputs;
+      expect(inputs).toContainEqual({
+        ...tsconfigFieldsInput,
+        json: '{workspaceRoot}/configs/\\(shared\\)/\\[ts\\]/tsconfig.json',
+      });
+    });
+
     it('should add the workspace root tsconfig.json when tsconfig.base.json exists (handled by nxE2EPreset at runtime)', async () => {
       vi.spyOn(jsUtils, 'getRootTsConfigFileName').mockReturnValue(
         'tsconfig.base.json'

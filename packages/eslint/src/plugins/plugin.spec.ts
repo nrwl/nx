@@ -1595,6 +1595,34 @@ module.exports = [];`
     });
   });
 
+  it('should escape glob characters in real path inputs', async () => {
+    createFiles({
+      '.eslintrc.json': `{}`,
+      'apps/(group)/tsconfig.shared.json': `{}`,
+      'apps/(group)/[id]/.eslintrc.json': `{}`,
+      'apps/(group)/[id]/.eslintignore': `dist`,
+      'apps/(group)/[id]/project.json': `{}`,
+      'apps/(group)/[id]/index.ts': `console.log('hello world')`,
+      'apps/(group)/[id]/tsconfig.json': JSON.stringify({
+        extends: '../tsconfig.shared.json',
+      }),
+    });
+    const { projects } = await invokeCreateNodesOnMatchingFiles(context, {
+      targetName: 'lint',
+    });
+
+    expect(projects['apps/(group)/[id]'].targets.lint.inputs).toEqual([
+      'default',
+      '^default',
+      '{workspaceRoot}/.eslintrc.json',
+      '{workspaceRoot}/apps/\\(group\\)/\\[id\\]/.eslintrc.json',
+      '{workspaceRoot}/apps/\\(group\\)/\\[id\\]/.eslintignore',
+      '{workspaceRoot}/apps/\\(group\\)/tsconfig.shared.json',
+      '{workspaceRoot}/tools/eslint-rules/**/*',
+      { externalDependencies: ['eslint'] },
+    ]);
+  });
+
   function createFiles(fileSys: Record<string, string>) {
     tempFs.createFilesSync(fileSys);
     configFiles = getMatchingFiles(Object.keys(fileSys));

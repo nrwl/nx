@@ -1628,6 +1628,31 @@ describe('@nx/jest/plugin config file inputs', () => {
     expect(inputs).toContainEqual('{workspaceRoot}/scripts/global-teardown.js');
   });
 
+  it('should escape glob characters in resolved file input paths', async () => {
+    await tempFs.createFiles({
+      'proj/(group)/[id]/setup.js': '',
+      'scripts/(group)/[id]/setup.js': '',
+    });
+    mockConfig({
+      setupFiles: [
+        './(group)/[id]/setup.js',
+        '../scripts/(group)/[id]/setup.js',
+      ],
+    });
+    const results = await createNodesFunction(
+      ['proj/jest.config.js'],
+      { targetName: 'test', disableJestRuntime: true },
+      context
+    );
+    const inputs = getTestInputs(results);
+    expect(inputs).toContainEqual(
+      '{projectRoot}/\\(group\\)/\\[id\\]/setup.js'
+    );
+    expect(inputs).toContainEqual(
+      '{workspaceRoot}/scripts/\\(group\\)/\\[id\\]/setup.js'
+    );
+  });
+
   it('should resolve moduleNameMapper file values and skip backreferences', async () => {
     await tempFs.createFiles({ 'scripts/mock-file.js': '' });
     mockConfig({
