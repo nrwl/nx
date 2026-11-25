@@ -7,9 +7,9 @@ import { config as loadDotEnvFile } from 'dotenv';
 import { expand } from 'dotenv-expand';
 import { join } from 'node:path';
 import { ProjectGraph } from '../config/project-graph';
-import type { InvocationAncestor } from '../native';
 import { Task } from '../config/task-graph';
 import { workspaceRoot } from '../utils/workspace-root';
+import { serializeInvocationAncestors } from './invocation-ancestors';
 import { getEnvPathsForTask } from './task-env-paths';
 
 /**
@@ -43,8 +43,6 @@ export function getEnvVariablesForBatchProcess(
       skipNxCache,
       captureStderr
     ),
-    // A batch worker runs several tasks under this one env.
-    NX_INVOCATION_ANCESTORS: appendInvocationAncestor(),
   };
   // NX_ORIGINAL_FORCE_COLOR is an internal signal and should not leak into child processes
   delete res.NX_ORIGINAL_FORCE_COLOR;
@@ -205,42 +203,6 @@ function getNxEnvVariablesForForkedProcess(
   return env;
 }
 
-function appendInvocationAncestor(taskId?: string): string {
-  const ancestors: InvocationAncestor[] = [
-    ...getInvocationAncestors(),
-    { pid: process.pid, taskId },
-  ];
-  return JSON.stringify(ancestors);
-}
-
-/**
- * The nx processes this one is nested inside, each with the task that started
- * the next process down, outermost first. Empty for a root invocation.
- */
-export function getInvocationAncestors(): InvocationAncestor[] {
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(process.env.NX_INVOCATION_ANCESTORS ?? '[]');
-  } catch {
-    return [];
-  }
-  if (!Array.isArray(parsed)) return [];
-  return parsed.filter(
-    (ancestor): ancestor is InvocationAncestor =>
-      Number.isInteger(ancestor?.pid) &&
-      ancestor.pid > 0 &&
-      (ancestor.taskId === undefined || typeof ancestor.taskId === 'string')
-  );
-}
-
-/**
- * Pid of the outermost nx process in this tree, which is this process when it
- * is the root.
- */
-export function getInvocationRootPid(): number {
-  return getInvocationAncestors()[0]?.pid ?? process.pid;
-}
-
 function getNxEnvVariablesForTask(
   task: Task,
   forceColor: string,
@@ -254,7 +216,7 @@ function getNxEnvVariablesForTask(
     NX_TASK_TARGET_TARGET: task.target.target,
     NX_TASK_TARGET_CONFIGURATION: task.target.configuration ?? undefined,
     NX_TASK_HASH: task.hash,
-    NX_INVOCATION_ANCESTORS: appendInvocationAncestor(task.id),
+    NX_INVOCATION_ANCESTORS: serializeInvocationAncestors([task]),
     // used when Nx is invoked via Lerna
     LERNA_PACKAGE_NAME: task.target.project,
   };

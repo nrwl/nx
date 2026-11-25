@@ -6,12 +6,9 @@ import { Task } from '../config/task-graph';
 import { setWorkspaceRoot, workspaceRoot } from '../utils/workspace-root';
 import {
   getEnvFilesForTask,
-  getEnvVariablesForBatchProcess,
   getEnvVariablesForTask,
   getForceColorForChild,
   getGraphTimeDotEnvForTask,
-  getInvocationAncestors,
-  getInvocationRootPid,
   loadAndExpandDotEnvFile,
 } from './task-env';
 
@@ -45,27 +42,24 @@ describe('invocation tracking env vars', () => {
     } as any as Task;
   }
 
-  it('should append this process and the task it spawns to NX_INVOCATION_ANCESTORS', () => {
+  it('should append the task it spawns to NX_INVOCATION_ANCESTORS', () => {
     const task = makeTask('workspace', 'dev');
-
-    expect(
+    const ancestorsFor = () =>
       JSON.parse(
         getEnvVariablesForTask(task, {}, 'true', false, false, '', false)
           .NX_INVOCATION_ANCESTORS
-      )
-    ).toEqual([{ pid: process.pid, taskId: 'workspace:dev' }]);
+      );
+
+    expect(ancestorsFor()).toEqual([
+      { taskId: 'workspace:dev', overridesHash: expect.any(String) },
+    ]);
 
     process.env.NX_INVOCATION_ANCESTORS = JSON.stringify([
-      { pid: 123, taskId: 'outer:build' },
+      { taskId: 'outer:build', overridesHash: 'h' },
     ]);
-    expect(
-      JSON.parse(
-        getEnvVariablesForTask(task, {}, 'true', false, false, '', false)
-          .NX_INVOCATION_ANCESTORS
-      )
-    ).toEqual([
-      { pid: 123, taskId: 'outer:build' },
-      { pid: process.pid, taskId: 'workspace:dev' },
+    expect(ancestorsFor()).toEqual([
+      { taskId: 'outer:build', overridesHash: 'h' },
+      { taskId: 'workspace:dev', overridesHash: expect.any(String) },
     ]);
   });
 
@@ -91,58 +85,6 @@ describe('invocation tracking env vars', () => {
     expect(env).not.toHaveProperty('NX_READY_SIGNAL_TASK');
     expect(env).not.toHaveProperty('NX_READY_URL');
     expect(env.KEPT).toBe('yes');
-  });
-
-  it('should append this process without a task for batch processes', () => {
-    expect(
-      JSON.parse(
-        getEnvVariablesForBatchProcess(false, false).NX_INVOCATION_ANCESTORS
-      )
-    ).toEqual([{ pid: process.pid }]);
-
-    process.env.NX_INVOCATION_ANCESTORS = JSON.stringify([
-      { pid: 12345, taskId: 'outer:build' },
-    ]);
-    expect(
-      JSON.parse(
-        getEnvVariablesForBatchProcess(false, false).NX_INVOCATION_ANCESTORS
-      )
-    ).toEqual([{ pid: 12345, taskId: 'outer:build' }, { pid: process.pid }]);
-  });
-
-  it('should read the root pid off the front of the ancestor chain', () => {
-    expect(getInvocationRootPid()).toBe(process.pid);
-
-    process.env.NX_INVOCATION_ANCESTORS = JSON.stringify([
-      { pid: 12345, taskId: 'outer:build' },
-      { pid: process.pid, taskId: 'workspace:dev' },
-    ]);
-    expect(getInvocationRootPid()).toBe(12345);
-  });
-
-  it('should read back the ancestor chain it writes', () => {
-    process.env.NX_INVOCATION_ANCESTORS = JSON.stringify([{ pid: 123 }]);
-    const child = getEnvVariablesForTask(
-      makeTask('workspace', 'dev'),
-      {},
-      'true',
-      false,
-      false,
-      '',
-      false
-    );
-
-    process.env.NX_INVOCATION_ANCESTORS = child.NX_INVOCATION_ANCESTORS;
-    expect(getInvocationAncestors()).toEqual([
-      { pid: 123 },
-      { pid: process.pid, taskId: 'workspace:dev' },
-    ]);
-  });
-
-  it('should treat a malformed ancestor chain as a root invocation', () => {
-    process.env.NX_INVOCATION_ANCESTORS = '123,456';
-    expect(getInvocationAncestors()).toEqual([]);
-    expect(getInvocationRootPid()).toBe(process.pid);
   });
 });
 

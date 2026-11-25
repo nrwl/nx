@@ -337,46 +337,6 @@ export declare class TaskHasher {
 }
 
 /**
- * Tracks which tasks each Nx process in a nested process tree is running, so
- * that a task which re-invokes itself can be reported instead of looping
- * forever.
- *
- * Every process in the tree shares a `root_pid`, but sharing a root does not
- * imply a parent/child relationship: sibling Nx processes are common and
- * legitimate (N atomized e2e specs each spawning the same `serve-static` web
- * server, or two parallel tasks that each shell out to `nx run lib:build`).
- * An ancestor process can also run sibling tasks of the one that started this
- * process. Only an invocation by an actual *ancestor task* is a loop, so the
- * check is scoped to `ancestors` rather than to the whole tree.
- */
-export declare class TaskInvocationTracker {
-  constructor(db: ExternalObject<NxDbConnection>, rootPid: number, ancestors: Array<InvocationAncestor>)
-  /**
-   * Register a task as invoked by the process identified by `pid`.
-   *
-   * Returns the invocation chain when an ancestor task is this task, which is
-   * a genuine loop. The chain lists every task invoked along the ancestry
-   * path, outermost first. Returns `null` when the task was registered,
-   * including when a *sibling* task or process is already running it.
-   *
-   * An ancestor running this task with the *same* overrides is a loop
-   * immediately. An ancestor running it with different overrides is allowed
-   * up to `MAX_ANCESTOR_INVOCATIONS_PER_TASK`, which lets a terminating
-   * `app:build -> app:build --flag` chain through while still bounding a
-   * recursion whose forwarded arguments grow on every hop.
-   */
-  registerTask(pid: number, taskId: string, overridesHash: string): Array<InvocationRecord> | null
-  /**
-   * Remove a task invocation record after the task completes. Scoped to the
-   * registering process so that a sibling finishing the same task does not
-   * drop this process's record.
-   */
-  unregisterTask(pid: number, taskId: string): void
-  /** Clean up stale invocations older than 1 day (handles PID recycling). */
-  cleanupStale(): void
-}
-
-/**
  * One pinned version of a commit's configurations. Reads and caches only the
  * requested tasks, their distinct input lists, and the globs those lists use.
  */
@@ -976,22 +936,6 @@ export interface InputsInput {
 export declare function installNxConsole(): Promise<boolean>
 
 export declare function installNxConsoleForEditor(editor: SupportedEditor): Promise<boolean>
-
-/**
- * One hop of the nested Nx process tree: an ancestor process, and the task in
- * it whose command started the next process down. `task_id` is `None` for a
- * batch worker, which runs several tasks under one environment, so every task
- * that process holds counts as an ancestor.
- */
-export interface InvocationAncestor {
-  pid: number
-  taskId?: string
-}
-
-export interface InvocationRecord {
-  pid: number
-  taskId: string
-}
 
 export const IS_WASM: boolean
 

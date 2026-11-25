@@ -15,7 +15,6 @@ import { walkTaskGraph } from './task-graph-utils';
 import { TaskHasher } from '../hasher/task-hasher';
 import {
   BatchStatus,
-  InvocationRecord,
   IS_WASM,
   OutputFile,
   TaskOutputs,
@@ -23,11 +22,15 @@ import {
   parseTaskStatus,
   RunningTasksService,
   TaskDetails,
-  TaskInvocationTracker,
   TaskReadiness,
 } from '../native';
 import { NxArgs } from '../utils/command-line-utils';
 import { getLocalDbConnection } from '../utils/db-connection';
+import {
+  findInvocationLoop,
+  getInvocationAncestors,
+  serializeInvocationAncestors,
+} from './invocation-ancestors';
 import {
   EXPECTED_TERMINATION_SIGNALS,
   signalToCode,
@@ -83,8 +86,6 @@ import {
   getEnvVariablesForBatchProcess,
   getEnvVariablesForTask,
   getForceColorForChild,
-  getInvocationAncestors,
-  getInvocationRootPid,
   getTaskSpecificEnv,
 } from './task-env';
 import { TaskStatus } from './tasks-runner';
@@ -95,7 +96,6 @@ import {
   getExecutorForTask,
   getPrintableCommandArgsForTask,
   getTargetConfigurationForTask,
-  hashTaskOverrides,
   removeTasksFromTaskGraph,
   shouldStreamOutput,
 } from './utils';
@@ -200,18 +200,6 @@ export class TaskOrchestrator {
   private runningTasksService = !IS_WASM
     ? new RunningTasksService(getLocalDbConnection())
     : null;
-  private taskInvocationTracker = !IS_WASM
-    ? new TaskInvocationTracker(
-        getLocalDbConnection(),
-        getInvocationRootPid(),
-        getInvocationAncestors()
-      )
-    : null;
-  // Task ids this process has already registered. Recursive code paths (e.g.
-  // applyFromCacheOrRunBatch looping on incomplete batches) re-enter the
-  // detector for the same task; skipping them saves a DB round trip. A task id
-  // is unique within one process, so it is enough to identify the row.
-  private registeredInvocations = new Set<string>();
   private tasksSchedule = new TasksSchedule(
     this.projectGraph,
     this.projects,
@@ -332,7 +320,6 @@ export class TaskOrchestrator {
 
   async init() {
     this.setupSignalHandlers();
-    this.taskInvocationTracker?.cleanupStale();
 
     // Init the ForkedProcessTaskRunner, TasksSchedule, and Cache
     await Promise.all([
@@ -638,45 +625,20 @@ export class TaskOrchestrator {
   }
 
   /**
-   * Registers a task invocation and checks for loops across nested Nx
-   * processes. registerTask() returns the invocation chain only when an
-   * *ancestor* task is this task — a genuine loop. Sibling tasks and
-   * processes running the same task are legitimate and register without
-   * complaint.
-   *
-   * The overrides hash rides along with the task id so the tracker can tell an
-   * ancestor re-invoking a task with different arguments from one repeating
-   * the same invocation.
+   * Exits when `task` is one of the tasks whose commands started this nested
+   * Nx process. Sibling tasks in an ancestor process are not ancestors, so
+   * they never count.
    */
   private detectTaskInvocationLoop(task: Task): void {
-    if (!this.taskInvocationTracker) return;
-    if (this.registeredInvocations.has(task.id)) return;
+    const chain = findInvocationLoop(task, getInvocationAncestors());
+    if (!chain) return;
 
-    let chain: InvocationRecord[] | null;
-    try {
-      chain = this.taskInvocationTracker.registerTask(
-        process.pid,
-        task.id,
-        hashTaskOverrides(task)
-      );
-    } catch {
-      // Loop detection is diagnostic only; a DB failure must not fail the run
-      // or be mistaken for a loop.
-      return;
-    }
-
-    if (!chain) {
-      this.registeredInvocations.add(task.id);
-      return;
-    }
-
-    const chainDisplay = chain.map((r) => r.taskId).join(' -> ');
     output.error({
       title: 'Recursive task invocation detected',
       bodyLines: [
         `Nx detected a recursive loop of task invocations:`,
         ``,
-        `  ${chainDisplay} -> ${task.id}`,
+        `  ${[...chain, task.id].join(' -> ')}`,
         ``,
         `Task "${task.id}" was already invoked by a parent Nx process in this chain.`,
         `This typically happens when a task's command (e.g., "nx ${task.target.target} ${task.target.project}")`,
@@ -686,15 +648,6 @@ export class TaskOrchestrator {
       ],
     });
     process.exit(1);
-  }
-
-  private releaseTaskInvocation(task: Task): void {
-    if (!this.registeredInvocations.delete(task.id)) return;
-    try {
-      this.taskInvocationTracker?.unregisterTask(process.pid, task.id);
-    } catch {
-      // Diagnostic only, like registration. A leftover row is swept as stale.
-    }
   }
 
   // endregion Processing Scheduled Tasks
@@ -1103,7 +1056,12 @@ export class TaskOrchestrator {
           executorName: batch.executorName,
           taskGraph: runGraph,
         },
-        this.batchEnv,
+        {
+          ...this.batchEnv,
+          NX_INVOCATION_ANCESTORS: serializeInvocationAncestors(
+            Object.values(runGraph.tasks)
+          ),
+        },
         groupId
       );
 
@@ -2837,7 +2795,6 @@ export class TaskOrchestrator {
       if (this.completedTasks.has(task.id)) continue;
 
       this.completedTasks.set(task.id, status);
-      this.releaseTaskInvocation(task);
 
       if (this.tuiEnabled) {
         this.options.lifeCycle.setTaskStatus(
