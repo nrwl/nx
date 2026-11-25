@@ -194,14 +194,18 @@ jobs:
                 # mise's core node/java backends don't ship musl binaries and fall back to
                 # compile-from-source on Alpine, which fails. Install via apk + tarball instead.
                 echo 'https://dl-cdn.alpinelinux.org/alpine/edge/community' >> /etc/apk/repositories
-                apk add --no-cache curl xz openjdk21 build-base lld dotnet9-sdk
+                apk add --no-cache curl xz openjdk21 build-base lld icu-libs libgcc libstdc++ zlib
 
                 # Java 21
                 export JAVA_HOME=/usr/lib/jvm/java-21-openjdk
                 export PATH=\"\$JAVA_HOME/bin:\$PATH\"
                 java --version
 
-                # .NET 9 SDK (needed by @nx/dotnet plugin)
+                # .NET 9 SDK (needed by @nx/dotnet plugin). Alpine edge dropped dotnet9-sdk after .NET 9 EOL.
+                curl -fsSL https://dot.net/v1/dotnet-install.sh -o /tmp/dotnet-install.sh
+                bash /tmp/dotnet-install.sh --channel 9.0 --install-dir /usr/local/dotnet
+                export DOTNET_ROOT=/usr/local/dotnet
+                export PATH=\"\$DOTNET_ROOT:\$PATH\"
                 dotnet --version
 
                 # Node.js musl build from unofficial-builds.nodejs.org
@@ -292,14 +296,18 @@ jobs:
                 # mise's core node/java backends don't ship musl binaries and fall back to
                 # compile-from-source on Alpine, which fails. Install via apk + tarball instead.
                 echo 'https://dl-cdn.alpinelinux.org/alpine/edge/community' >> /etc/apk/repositories
-                apk add --no-cache curl xz openjdk21 build-base lld dotnet9-sdk
+                apk add --no-cache curl xz openjdk21 build-base lld icu-libs libgcc libstdc++ zlib
 
                 # Java 21
                 export JAVA_HOME=/usr/lib/jvm/java-21-openjdk
                 export PATH=\"\$JAVA_HOME/bin:\$PATH\"
                 java --version
 
-                # .NET 9 SDK (needed by @nx/dotnet plugin)
+                # .NET 9 SDK (needed by @nx/dotnet plugin). Alpine edge dropped dotnet9-sdk after .NET 9 EOL.
+                curl -fsSL https://dot.net/v1/dotnet-install.sh -o /tmp/dotnet-install.sh
+                bash /tmp/dotnet-install.sh --channel 9.0 --install-dir /usr/local/dotnet
+                export DOTNET_ROOT=/usr/local/dotnet
+                export PATH=\"\$DOTNET_ROOT:\$PATH\"
                 dotnet --version
 
                 # Node.js musl build from unofficial-builds.nodejs.org. Container is x64;
