@@ -14,6 +14,9 @@ import { configureModernYarn } from './utils';
 
 expect.addSnapshotSerializer({
   serialize(str: string) {
+    const e2eRegistryUrl = execSync('npm config get registry')
+      .toString()
+      .trim();
     return (
       normalizePerformanceReport(str)
         // Remove all output unique to specific projects to ensure deterministic snapshots
@@ -36,6 +39,7 @@ expect.addSnapshotSerializer({
         .replaceAll(/\b[a-fA-F0-9]{7}\b/g, '{COMMIT_SHA}')
         .replaceAll(/Test @[\w\d]+/g, 'Test @{COMMIT_AUTHOR}')
         .replaceAll(/(\w+) lock file/g, 'PM lock file')
+        .replaceAll(`${e2eRegistryUrl}/`, e2eRegistryUrl)
         // Normalize the version title date.
         .replaceAll(/\(\d{4}-\d{2}-\d{2}\)/g, '(YYYY-MM-DD)')
         // We trim each line to reduce the chances of snapshot flakiness
