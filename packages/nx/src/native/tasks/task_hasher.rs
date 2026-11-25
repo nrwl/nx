@@ -410,22 +410,32 @@ impl TaskHasher {
         project_roots: &[String],
         files_expansion_cache: &FilesExpansionCache,
         run_stage: RunStage,
+        disk_batch: Option<&SettledFiles>,
     ) -> anyhow::Result<Arc<FilesExpansion>> {
         let workspace_root = Path::new(&self.workspace_root);
         // The index answers from a listing it keeps only while nothing has
         // run, like the file map; afterwards it reads the disk for us.
         let list_directory = |dir: &str, accept: PathPredicate, skip: &[String]| {
-            self.ignored_index.index().files_under(
-                workspace_root,
-                dir,
-                // An unwatched index would rewalk the entire prefix to list it.
-                // Use the pruned walker when skips can avoid that work.
-                run_stage.nothing_ran()
-                    && is_normalized_disk_root(dir)
-                    && (skip.is_empty() || self.ignored_index.index().has_watch()),
-                accept,
-                skip,
-            )
+            let read = |accept: PathPredicate| {
+                self.ignored_index.index().files_under(
+                    workspace_root,
+                    dir,
+                    // An unwatched index would rewalk the entire prefix to list it.
+                    // Use the pruned walker when skips can avoid that work.
+                    run_stage.nothing_ran()
+                        && is_normalized_disk_root(dir)
+                        && (skip.is_empty() || self.ignored_index.index().has_watch()),
+                    accept,
+                    skip,
+                )
+            };
+            if !run_stage.nothing_ran()
+                && let Some(batch) = disk_batch
+            {
+                batch.list_pruned_directory(dir, skip, accept, read)
+            } else {
+                read(accept)
+            }
         };
         expand_cached(&format!("files#{id}"), files_expansion_cache, || {
             expand_globs(
@@ -523,6 +533,7 @@ impl TaskHasher {
                                     &project_roots,
                                     files_expansion_cache,
                                     run_stage,
+                                    batch.disk.as_ref(),
                                 )?,
                                 |path| self.known_file_hash(path, run_stage),
                                 self.ignored_index.index(),
@@ -577,6 +588,7 @@ impl TaskHasher {
                                 &project_roots,
                                 files_expansion_cache,
                                 run_stage,
+                                batch.disk.as_ref(),
                             )?
                         }
                     }
@@ -1161,6 +1173,7 @@ impl TaskHasher {
                     project_roots,
                     files_expansion_cache,
                     run_stage,
+                    batch.disk.as_ref(),
                 )?;
                 let hashed = hash_files(
                     Path::new(&self.workspace_root),

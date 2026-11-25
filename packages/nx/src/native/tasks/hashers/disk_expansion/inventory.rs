@@ -4,9 +4,11 @@ use super::super::{MIN_BATCH_GROUPS, OnceCache};
 use super::entries::{Negation, Positive};
 use super::{FilesExpansion, ProjectScope, parse_group};
 use anyhow::Result;
+use dashmap::{DashMap, mapref::entry::Entry};
+use hashbrown::{HashMap, HashSet};
+use once_cell::sync::OnceCell;
 use parking_lot::Mutex;
 use rayon::prelude::*;
-use std::collections::{HashMap, HashSet};
 use std::fs::Metadata;
 use std::ops::Range;
 use std::path::{Path, PathBuf};
@@ -58,6 +60,8 @@ struct PositiveMatches {
     ids: Vec<u32>,
 }
 
+type DirectoryListings = DashMap<(String, Vec<String>), Arc<OnceCell<Vec<String>>>>;
+
 pub(crate) struct SettledFiles {
     groups: HashSet<u32>,
     entries: Vec<File>,
@@ -65,6 +69,7 @@ pub(crate) struct SettledFiles {
     counts: InventoryCounts,
     positives: OnceCache<Vec<PositiveMatches>>,
     negatives: OnceCache<Vec<u32>>,
+    pruned_listings: DirectoryListings,
 }
 
 impl SettledFiles {
@@ -97,9 +102,8 @@ impl SettledFiles {
         let mut directories = HashSet::new();
         let mut directory_roots = HashSet::new();
         let mut entries = Vec::new();
-        let explicit_files: hashbrown::HashSet<&str> =
-            roots.iter().map(|&(_, root)| root).collect();
-        let mut seen_files = hashbrown::HashSet::new();
+        let explicit_files: HashSet<&str> = roots.iter().map(|&(_, root)| root).collect();
+        let mut seen_files = HashSet::new();
         for layer in roots.chunk_by(|a, b| a.0 == b.0) {
             let uncovered: Vec<_> = layer
                 .iter()
@@ -204,6 +208,7 @@ impl SettledFiles {
             directory_roots,
             positives: OnceCache::new(),
             negatives: OnceCache::new(),
+            pruned_listings: DirectoryListings::new(),
         })
     }
 
@@ -260,11 +265,9 @@ impl SettledFiles {
         let ignores = DiskWalkIgnores::new()?;
         let mut groups = HashSet::new();
         let mut positives_by_glob = HashMap::<Arc<str>, Vec<Positive>>::new();
+        let mut noncanonical = HashSet::new();
         let mut skip_roots_by_glob = HashMap::<Arc<str>, Vec<String>>::new();
         let mut skip_is_dir = HashMap::new();
-        // Accumulate the roots only from groups that will use the shared
-        // inventory. A group that can avoid an entire subtree uses the
-        // ordinary pruned walk, even if another group needs that subtree.
         let mut group_globs = HashSet::new();
         for id in ids {
             let instruction = plans.pool.get(id);
@@ -278,22 +281,27 @@ impl SettledFiles {
                 for glob in positives.clone() {
                     if !positives_by_glob.contains_key(glob.as_ref()) {
                         // Let the ordinary expansion report malformed entries in their group order.
-                        let Ok((parsed, _)) = parse_group(&[glob]) else {
+                        let Ok((entries, _)) = parse_group(&[glob]) else {
                             return Ok(None);
                         };
-                        positives_by_glob.insert(glob.clone(), parsed);
+                        if entries
+                            .iter()
+                            .any(|entry| !is_normalized_disk_root(&entry.root))
+                        {
+                            noncanonical.insert(glob.clone());
+                        }
+                        positives_by_glob.insert(glob.clone(), entries);
                     }
                 }
-                let entries = positives.clone().flat_map(|glob| &positives_by_glob[glob]);
-                // The shared walk merges equivalent Path roots, but the
-                // ordinary walker may return a path with its original spelling.
-                if entries
-                    .clone()
-                    .any(|entry| !is_normalized_disk_root(&entry.root))
+                // The ordinary walker may return noncanonical paths with their original spelling.
+                if !noncanonical.is_empty()
+                    && positives.clone().any(|g| noncanonical.contains(g.as_ref()))
                 {
                     continue;
                 }
-                if !project_roots.is_empty() {
+                let entries = positives.clone().flat_map(|glob| &positives_by_glob[glob]);
+                // A nested boundary requires both the owner and a distinct project below it.
+                if project_roots.len() > 1 {
                     let scope = ProjectScope::new(project_roots);
                     if entries
                         .clone()
@@ -302,33 +310,35 @@ impl SettledFiles {
                         continue;
                     }
                 }
-                let mut negatives = globs.iter().filter(|glob| glob.starts_with('!')).peekable();
-                if negatives.peek().is_some() {
-                    let walk_roots: HashSet<_> = entries.map(|entry| entry.root.as_str()).collect();
-                    if negatives.any(|glob| {
-                        skip_roots_by_glob
-                            .entry(glob.clone())
-                            .or_insert_with(|| {
-                                expand_literal_braces(glob)
-                                    .iter()
-                                    .filter_map(|expanded| Negation::possible_skip_root(expanded))
-                                    .collect()
-                            })
-                            .iter()
-                            .any(|dir| {
-                                (walk_roots.contains("")
-                                    || parent_dirs(dir).any(|p| walk_roots.contains(p)))
-                                    && *skip_is_dir.entry(dir.clone()).or_insert_with(|| {
-                                        let path = workspace.join(dir);
-                                        !escapes_workspace(Path::new(dir))
-                                            && !ignores.skips(&path)
-                                            && std::fs::symlink_metadata(path)
-                                                .is_ok_and(|meta| meta.is_dir())
-                                    })
-                            })
-                    }) {
-                        continue;
-                    }
+                let walk_roots = std::cell::OnceCell::new();
+                if globs
+                    .iter()
+                    .filter(|glob| glob.starts_with('!'))
+                    .any(|glob| {
+                        let dirs = skip_roots_by_glob.entry(glob.clone()).or_insert_with(|| {
+                            expand_literal_braces(glob)
+                                .iter()
+                                .filter_map(|expanded| Negation::possible_skip_root(expanded))
+                                .collect()
+                        });
+                        // An excluded file cannot prune a traversal. Drop it from
+                        // further group checks once a relevant walk has probed it.
+                        dirs.retain(|dir| skip_is_dir.get(dir) != Some(&false));
+                        dirs.iter().any(|dir| {
+                            let roots: &HashSet<_> = walk_roots
+                                .get_or_init(|| entries.clone().map(|e| e.root.as_str()).collect());
+                            (roots.contains("") || parent_dirs(dir).any(|p| roots.contains(p)))
+                                && *skip_is_dir.entry(dir.clone()).or_insert_with(|| {
+                                    let path = workspace.join(dir);
+                                    !escapes_workspace(Path::new(dir))
+                                        && !ignores.skips(&path)
+                                        && std::fs::symlink_metadata(path)
+                                            .is_ok_and(|meta| meta.is_dir())
+                                })
+                        })
+                    })
+                {
+                    continue;
                 }
                 groups.insert(id);
                 group_globs.extend(positives.cloned());
@@ -374,6 +384,39 @@ impl SettledFiles {
 
     pub(crate) fn for_group(&self, id: u32) -> Option<&Self> {
         self.groups.contains(&id).then_some(self)
+    }
+
+    /// Keep a single filtered walk cheap. If other groups request the same
+    /// traversal, share the pruned listing and apply their individual matchers.
+    pub(crate) fn list_pruned_directory(
+        &self,
+        dir: &str,
+        skip: &[String],
+        accept: PathPredicate,
+        read: impl Fn(PathPredicate) -> Option<Vec<String>>,
+    ) -> Option<Vec<String>> {
+        // Another group may already have required the full walk from this directory.
+        if skip.is_empty() && self.directory_roots.contains(dir) {
+            return Some(
+                self.entries[self.below(dir)]
+                    .iter()
+                    .filter(|file| file.visible_from <= dir.len() && accept(&file.path))
+                    .map(|file| file.path.clone())
+                    .collect(),
+            );
+        }
+        let mut skipped = skip.to_vec();
+        skipped.sort_unstable();
+        skipped.dedup();
+        let listing = match self.pruned_listings.entry((dir.to_owned(), skipped)) {
+            Entry::Vacant(slot) => {
+                slot.insert(Arc::new(OnceCell::new()));
+                return read(accept);
+            }
+            Entry::Occupied(slot) => Arc::clone(slot.get()),
+        };
+        let files = listing.get_or_try_init(|| read(&|_| true).ok_or(())).ok()?;
+        Some(files.iter().filter(|path| accept(path)).cloned().collect())
     }
 
     // Exact tracked files still use the workspace snapshot up front. Directory
@@ -801,6 +844,46 @@ mod tests {
     }
 
     #[test]
+    fn repeated_pruned_walks_share_only_the_listing_for_the_same_skips() -> Result<()> {
+        use crate::native::walker::read_directory;
+        let temp = TempDir::new()?;
+        let root = temp.path();
+        std::fs::create_dir_all(root.join("pkg/nested"))?;
+        for path in ["pkg/a.js", "pkg/b.ts", "pkg/nested/c.js"] {
+            std::fs::write(root.join(path), "")?;
+        }
+        let walks = std::cell::Cell::new(0);
+        let list = |inventory: &SettledFiles, skip: &[String], suffix: &str| {
+            let mut paths = inventory
+                .list_pruned_directory("pkg", skip, &|p| p.ends_with(suffix), |accept| {
+                    walks.set(walks.get() + 1);
+                    read_directory(root, "pkg", accept, skip)
+                })
+                .unwrap();
+            paths.sort();
+            paths
+        };
+        let inventory = SettledFiles::inventory(root, HashSet::new())?;
+        let skip = ["pkg/nested".to_string()];
+        assert_eq!(list(&inventory, &skip, ".js"), ["pkg/a.js"]);
+        assert_eq!(list(&inventory, &skip, ".ts"), ["pkg/b.ts"]);
+        assert_eq!(list(&inventory, &skip, ".js"), ["pkg/a.js"]);
+        assert_eq!(walks.get(), 2);
+        assert_eq!(
+            list(&inventory, &[], ".js"),
+            ["pkg/a.js", "pkg/nested/c.js"]
+        );
+        assert_eq!(walks.get(), 3);
+        std::fs::write(root.join("pkg/new.js"), "")?;
+        let next = SettledFiles::inventory(root, HashSet::new())?;
+        assert_eq!(list(&next, &skip, ".js"), ["pkg/a.js", "pkg/new.js"]);
+        let shared = SettledFiles::inventory(root, ["pkg"].into_iter().collect())?;
+        assert_eq!(list(&shared, &[], ".ts"), ["pkg/b.ts"]);
+        assert_eq!(walks.get(), 4);
+        Ok(())
+    }
+
+    #[test]
     fn groups_with_existing_excluded_subtrees_keep_the_pruned_walk() -> Result<()> {
         use crate::native::test_utils::hash_plans;
 
@@ -825,6 +908,8 @@ mod tests {
         };
         let negative_file =
             HashInstruction::ignored_files(vec!["plain/**".into(), "!plain/file.js".into()]);
+        let unrelated =
+            HashInstruction::ignored_files(vec!["plain/**".into(), "!pkg/excluded/**".into()]);
         let explicit = HashInstruction::ignored_files(vec!["pkg/excluded/**".into()]);
         let names: Vec<_> = (0..MIN_BATCH_GROUPS).map(|i| format!("task-{i}")).collect();
         let mut plans: Vec<_> = names
@@ -844,6 +929,7 @@ mod tests {
                 negative_subtree.clone(),
                 nested_project.clone(),
                 negative_file.clone(),
+                unrelated.clone(),
                 explicit.clone(),
             ],
         ));
@@ -864,6 +950,7 @@ mod tests {
                 .for_group(plans.pool.intern(negative_file))
                 .is_some()
         );
+        assert!(inventory.for_group(plans.pool.intern(unrelated)).is_some());
         assert!(inventory.for_group(plans.pool.intern(explicit)).is_some());
         assert_eq!(inventory.counts.read_dir_calls, 2);
         assert_eq!(
