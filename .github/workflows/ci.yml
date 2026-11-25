@@ -32,6 +32,7 @@ jobs:
     env:
       NX_BATCH_MODE: 'true'
       NX_E2E_CI_CACHE_KEY: e2e-github-linux
+      SELECTED_PM: 'pnpm'
       NX_DAEMON: 'true'
       NX_PERF_LOGGING: 'false'
       NX_VERBOSE_LOGGING: 'false'
