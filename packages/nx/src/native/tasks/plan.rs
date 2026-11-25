@@ -2,7 +2,7 @@
 //! references its direct children. Filtering a whole class of inputs (for
 //! example, replacing declared files with observed reads) changes only the view.
 use super::types::{CwdMode, HashInstruction, InstructionPool};
-use std::{borrow::Cow, sync::Arc};
+use std::{borrow::Cow, collections::BTreeMap, sync::Arc};
 
 pub(crate) mod kind {
     pub const OTHER: u8 = 1;
@@ -140,6 +140,10 @@ impl Plan {
     /// Expand each reachable node at most once per requested class, even when
     /// many parents (or differently filtered views) reach the same diamond.
     pub(crate) fn union_ids<'a>(plans: impl IntoIterator<Item = &'a Plan>) -> Vec<u32> {
+        Self::collect_ids(plans).into_sorted_vec()
+    }
+
+    fn collect_ids<'a>(plans: impl IntoIterator<Item = &'a Plan>) -> InstructionIdSet {
         let mut ids = InstructionIdSet::default();
         Self::visit(plans, |node, kinds| {
             if node.local_kinds & kinds == node.local_kinds {
@@ -154,7 +158,7 @@ impl Plan {
             }
             false
         });
-        ids.into_sorted_vec()
+        ids
     }
 
     pub(super) fn any_id(&self, mut check: impl FnMut(u32) -> bool) -> bool {
@@ -194,22 +198,31 @@ impl Plan {
     }
 }
 
-/// A temporary union of dense pool ids. Merge dependency closures without
-/// copying their repeated ids into a large Vec and sorting all occurrences.
-/// The bitset is discarded once the exact-sized, sorted result is produced.
+const WORDS_PER_PAGE: usize = 8;
+const IDS_PER_PAGE: usize = 64 * WORDS_PER_PAGE;
+
+/// Only occupied pages are allocated and scanned, regardless of the largest pool id.
 #[derive(Default)]
 pub(super) struct InstructionIdSet {
-    words: Vec<u64>,
+    prefix: Vec<[u64; WORDS_PER_PAGE]>,
+    sparse: BTreeMap<usize, [u64; WORDS_PER_PAGE]>,
 }
 
 impl Extend<u32> for InstructionIdSet {
     fn extend<T: IntoIterator<Item = u32>>(&mut self, values: T) {
-        for id in values {
-            let word = id as usize / 64;
-            if word >= self.words.len() {
-                self.words.resize(word + 1, 0);
+        let mut values = values.into_iter().peekable();
+        while let Some(first) = values.next() {
+            let page = first as usize / IDS_PER_PAGE;
+            let words = self.page_mut(page);
+            // Local ids are sorted. Reuse the page for consecutive ids in that range.
+            let mut insert = |id: u32| {
+                let word = id as usize / 64 % WORDS_PER_PAGE;
+                words[word] |= 1u64 << (id % 64);
+            };
+            insert(first);
+            while let Some(id) = values.next_if(|id| *id as usize / IDS_PER_PAGE == page) {
+                insert(id);
             }
-            self.words[word] |= 1u64 << (id % 64);
         }
     }
 }
@@ -223,14 +236,37 @@ impl FromIterator<u32> for InstructionIdSet {
 }
 
 impl InstructionIdSet {
+    fn page_mut(&mut self, index: usize) -> &mut [u64; WORDS_PER_PAGE] {
+        // Dense unions can index consecutive occupied pages directly.
+        if index == self.prefix.len() {
+            self.prefix.push([0; WORDS_PER_PAGE]);
+            while let Some(next) = self.sparse.remove(&self.prefix.len()) {
+                self.prefix.push(next);
+            }
+        }
+        if index < self.prefix.len() {
+            &mut self.prefix[index]
+        } else {
+            self.sparse.entry(index).or_default()
+        }
+    }
+
+    fn words(&self) -> impl Iterator<Item = (usize, u64)> + '_ {
+        let pages = self
+            .prefix
+            .iter()
+            .enumerate()
+            .chain(self.sparse.iter().map(|(&i, page)| (i, page)));
+        pages.flat_map(|(i, page)| (i * WORDS_PER_PAGE..).zip(page.iter().copied()))
+    }
+
     pub(super) fn into_sorted_vec(self) -> Vec<u32> {
         let count = self
-            .words
-            .iter()
-            .map(|word| word.count_ones() as usize)
+            .words()
+            .map(|(_, bits)| bits.count_ones() as usize)
             .sum();
         let mut result = Vec::with_capacity(count);
-        for (word_index, mut word) in self.words.into_iter().enumerate() {
+        for (word_index, mut word) in self.words() {
             while word != 0 {
                 result.push(word_index as u32 * 64 + word.trailing_zeros());
                 word &= word - 1;
@@ -243,6 +279,40 @@ impl InstructionIdSet {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn star_plans_only_scan_words_for_their_own_instructions() {
+        let pool = InstructionPool::new();
+        let shared_id = pool.intern(HashInstruction::ProjectConfiguration("shared".into()));
+        let shared = Plan::from_ids([shared_id], &pool);
+        let projects = 4096;
+        let mut words = 0;
+        for i in 0..projects {
+            let local_id = pool.intern(HashInstruction::ProjectConfiguration(i.to_string()));
+            let mut task = PlanBuilder::default();
+            task.ids([local_id]);
+            task.include(shared.clone());
+            let task = task.finish(&pool);
+            words += Plan::collect_ids([&task]).words().count();
+            assert_eq!(task.ids().as_ref(), [shared_id, local_id]);
+        }
+        assert!(
+            words <= 2 * WORDS_PER_PAGE * projects,
+            "{words} bitmap words for {projects} tasks"
+        );
+    }
+
+    #[test]
+    fn sparse_pages_preserve_order_and_deduplication_across_boundaries() {
+        let boundary = IDS_PER_PAGE as u32;
+        let mut ids = InstructionIdSet::default();
+        ids.extend([u32::MAX, boundary, 63, boundary + 1, 64, boundary - 1]);
+        ids.extend(0..=boundary + 1);
+        ids.extend([u32::MAX, boundary, 0]);
+        let expected: Vec<_> = (0..=boundary + 1).chain([u32::MAX]).collect();
+        assert_eq!(ids.words().count(), 3 * WORDS_PER_PAGE);
+        assert_eq!(ids.into_sorted_vec(), expected);
+    }
 
     #[test]
     fn filtered_paths_through_a_diamond_keep_the_union_of_requested_classes() {
