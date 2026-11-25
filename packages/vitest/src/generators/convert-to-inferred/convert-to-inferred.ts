@@ -6,14 +6,15 @@ import {
 } from '@nx/devkit';
 import {
   convertWithUninferredTargetsRewritten,
+  mappedConfigFileName,
   migrateProjectExecutorsToPlugin,
   NoTargetsToMigrateError,
   readResolvedTarget,
 } from '@nx/devkit/internal';
 import { createNodesV2, VitestPluginOptions } from '../../plugins/plugin';
 import {
-  mappedVitestConfigFileName,
   vitestConfigRewrite,
+  vitestMappableConfig,
 } from './lib/rewrite-uninferred-targets';
 import { testPostTargetTransformer } from './lib/test-post-target-transformer';
 import { assertSupportedVitestVersion } from '../../utils/assert-supported-vitest-version';
@@ -54,11 +55,12 @@ export async function convertToInferred(tree: Tree, options: Schema) {
                         testMode: 'run' as const,
                         cwd: 'workspaceRoot' as const,
                       };
-                const fileName = mappedVitestConfigFileName(
+                const fileName = mappedConfigFileName(
                   tree,
                   readResolvedTarget(tree, project.name, targetName),
                   readProjectConfiguration(tree, project.name),
-                  targetName
+                  targetName,
+                  vitestMappableConfig
                 );
                 return fileName
                   ? {

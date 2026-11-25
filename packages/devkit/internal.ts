@@ -392,3 +392,8 @@ export {
   type TargetOptions,
   type UninferredTargetRewrite,
 } from './src/generators/plugin-migrations/rewrite-uninferred-targets';
+export {
+  mappedConfigFileName,
+  toMappedConfigPath,
+  type MappableConfigOption,
+} from './src/generators/plugin-migrations/mapped-config-files';

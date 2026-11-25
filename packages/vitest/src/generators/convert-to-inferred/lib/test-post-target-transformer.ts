@@ -2,6 +2,7 @@ import { type TargetConfiguration, type Tree } from '@nx/devkit';
 import {
   processTargetOutputs,
   resolveNxTokensInOptions,
+  toMappedConfigPath,
 } from '@nx/devkit/internal';
 import { posix } from 'node:path';
 import { vitestConfigFileNamePatterns } from '../../../utils/config-file-names';
@@ -13,7 +14,10 @@ export function testPostTargetTransformer(
   projectDetails: { projectName: string; root: string },
   inferredTargetConfiguration: TargetConfiguration
 ) {
-  const mappedConfigFile = toMappedConfigFile(target.options?.configFile);
+  const mappedConfigFile = toMappedConfigPath(
+    target.options?.configFile,
+    vitestConfigFileNamePatterns
+  );
 
   if (target.options) {
     removePropertiesFromTargetOptions(
@@ -128,18 +132,6 @@ function removePropertiesFromTargetOptions(
       delete targetOptions[name];
     }
   }
-}
-
-// A configFile with another name reaches the converter only when
-// configFiles infers it, and the inferred command already passes it
-function toMappedConfigFile(configFile: unknown): string | undefined {
-  if (typeof configFile !== 'string') {
-    return undefined;
-  }
-  const path = posix.normalize(configFile);
-  return vitestConfigFileNamePatterns.defaultName.test(posix.basename(path))
-    ? undefined
-    : path;
 }
 
 // Vitest resolves a relative filter against the cwd, which is now the project

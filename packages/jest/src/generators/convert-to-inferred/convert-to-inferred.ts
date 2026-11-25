@@ -1,9 +1,11 @@
 import {
   convertWithUninferredTargetsRewritten,
   migrateProjectExecutorsToPlugin,
+  mappedConfigFileName,
   NoTargetsToMigrateError,
   processTargetOutputs,
   readResolvedTarget,
+  toMappedConfigPath,
   toProjectRelativePath,
 } from '@nx/devkit/internal';
 import type { Config } from '@jest/types';
@@ -25,7 +27,7 @@ import { assertSupportedJestVersion } from '../../utils/assert-supported-jest-ve
 import { getInstalledJestMajorVersion } from '../../utils/versions';
 import {
   jestConfigRewrite,
-  mappedJestConfigFileName,
+  jestMappableConfig,
 } from './lib/rewrite-uninferred-targets';
 
 interface Schema {
@@ -53,11 +55,12 @@ export async function convertToInferred(tree: Tree, options: Schema) {
               executors: jestConfigRewrite.executors,
               postTargetTransformer,
               targetPluginOptionMapper: (targetName, project) => {
-                const fileName = mappedJestConfigFileName(
+                const fileName = mappedConfigFileName(
                   tree,
                   readResolvedTarget(tree, project.name, targetName),
                   readProjectConfiguration(tree, project.name),
-                  targetName
+                  targetName,
+                  jestMappableConfig
                 );
                 return fileName
                   ? { configFiles: { [fileName]: targetName } }
@@ -92,7 +95,10 @@ async function postTargetTransformer(
       tree.exists(posix.join(projectDetails.root, configFileName))
     );
 
-  const mappedJestConfig = toMappedJestConfig(target.options?.jestConfig);
+  const mappedJestConfig = toMappedConfigPath(
+    target.options?.jestConfig,
+    jestConfigFileNamePatterns
+  );
 
   if (target.options) {
     await updateOptionsObject(
@@ -151,18 +157,6 @@ async function postTargetTransformer(
 }
 
 export default convertToInferred;
-
-// A jestConfig other than jest.config.<ext> reaches the converter only when
-// configFiles infers it
-function toMappedJestConfig(jestConfig: unknown): string | undefined {
-  if (typeof jestConfig !== 'string') {
-    return undefined;
-  }
-  const path = posix.normalize(jestConfig);
-  return jestConfigFileNamePatterns.defaultName.test(posix.basename(path))
-    ? undefined
-    : path;
-}
 
 async function updateOptionsObject(
   tree: Tree,
