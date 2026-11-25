@@ -1692,10 +1692,12 @@ function expandInputs(
     });
 
     const expanded = { [fileSetProjectName]: files, ...previous };
-    if (Object.hasOwn(previous, fileSetProjectName)) {
-      expanded[fileSetProjectName] = Array.from(
-        new Set(previous[fileSetProjectName].concat(files))
-      );
+    if (files.length > 0 && Object.hasOwn(previous, fileSetProjectName)) {
+      const previousFiles = previous[fileSetProjectName];
+      expanded[fileSetProjectName] =
+        previousFiles.length > 0
+          ? Array.from(new Set(previousFiles.concat(files)))
+          : files;
     }
     return expanded;
   }, {});
