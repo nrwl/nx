@@ -86,9 +86,10 @@ let activeFileSystem: ActiveFileSystem | undefined;
  * workspace root and this nx installation, in that order.
  * Only `node_modules` inside the workspace or an nx installation count.
  * TypeScript < 7 loads the classic API, >= 7.1 the `typescript/sync` API, and
- * 7.0, which ships no API, throws a {@link TypescriptSetupError}. A missing
- * install falls back to the copy passed to {@link useTemporaryTypescript}, and
- * without one throws the module resolution error.
+ * 7.0, whose API is only under `typescript/unstable`, throws a
+ * {@link TypescriptSetupError}. A missing install falls back to the copy passed
+ * to {@link useTemporaryTypescript}, and without one throws the module
+ * resolution error.
  */
 export function getTypescriptBackend(): TypescriptBackend {
   const lookupPaths = [...getNxRequirePaths(), __dirname];
@@ -296,7 +297,7 @@ function loadBackend(
 
   if (major === 7 && minor === 0) {
     throw new TypescriptSetupError(
-      `TypeScript ${version} has no programmatic API, which Nx needs. Install typescript@>=7.1, or install TypeScript 6 as "typescript" and TypeScript 7.0 under an alias, e.g. "@typescript/native": "npm:typescript@${version}".`
+      `TypeScript ${version} has no stable API, which Nx needs. Install typescript@>=7.1, or install TypeScript 6 as "typescript" and TypeScript 7.0 under an alias, e.g. "@typescript/native": "npm:typescript@${version}".`
     );
   }
 
