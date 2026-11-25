@@ -66,7 +66,6 @@ export interface DetectedInstalledAgent {
 export interface InvocationSpec {
   args: string[];
   env?: NodeJS.ProcessEnv;
-  cwd?: string;
   /** Written before the agent starts, at paths relative to the run directory. */
   files?: InvocationFile[];
 }

@@ -97,7 +97,6 @@ export async function resolveAgentic(
   const selected = await selectAgent(
     identified.agents,
     explicitId,
-    isInteractive,
     identified.rejected
   );
 
@@ -187,17 +186,6 @@ async function resolveFlag(
     return { enabled: false };
   }
   return firePromptForAgentic(input.migrations, detected);
-}
-
-function requireInteractiveOrAbort(isInteractive: boolean): void {
-  if (isInteractive) return;
-  output.error({
-    title: 'The agentic flow needs an interactive terminal.',
-    bodyLines: [
-      'Re-run in an interactive terminal, or pass `--agentic=false` to skip the agentic flow.',
-    ],
-  });
-  throw new Error('Agentic flow requires an interactive terminal.');
 }
 
 function warnAgenticInteractiveOnly(): void {
@@ -382,7 +370,6 @@ function rejectedBinaryLines({
 async function selectAgent(
   detected: DetectedInstalledAgent[],
   explicitId: AgentId | undefined,
-  isInteractive: boolean,
   rejected: IdentifiedAgents['rejected']
 ): Promise<DetectedInstalledAgent> {
   if (explicitId) {
@@ -440,10 +427,6 @@ async function selectAgent(
     });
     return only;
   }
-
-  // 2+ detected. The picker only fires interactively. We've already required
-  // a TTY before resolving an enabled state, so this is defense-in-depth.
-  requireInteractiveOrAbort(isInteractive);
 
   // Blank line keeps the prompt from gluing to the preceding output.
   console.log();

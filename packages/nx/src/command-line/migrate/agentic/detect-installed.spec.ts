@@ -234,5 +234,30 @@ describe('detectInstalledAgents', () => {
         });
       }
     );
+
+    // Agents without a version check launch the binary detection returns.
+    it('detects the PATH binary over one in the current directory', async () => {
+      process.env.PATH = binDir;
+      mockWhich.mockImplementation(async (path: string) => {
+        // Windows `which` searches the current directory first for a bare name.
+        if (path === 'claude') {
+          return [join(cwd, 'claude.CMD'), join(binDir, 'claude.CMD')];
+        }
+        return path === join(cwd, 'claude') || path === join(binDir, 'claude')
+          ? [`${path}.CMD`]
+          : null;
+      });
+
+      const result = await detectInstalledAgents([
+        makeDefinition({ id: 'claude-code', binaryNames: ['claude'] }),
+      ]);
+
+      expect(result).toEqual([
+        expect.objectContaining({
+          binary: join(binDir, 'claude.CMD'),
+          source: 'path',
+        }),
+      ]);
+    });
   });
 });
