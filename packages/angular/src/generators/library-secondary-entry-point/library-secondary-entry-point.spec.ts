@@ -269,6 +269,43 @@ describe('librarySecondaryEntryPoint generator', () => {
     ]);
   });
 
+  it('should not prefix globs that belong to existing secondary entry points', async () => {
+    await generateTestLibrary(tree, {
+      name: 'lib1',
+      directory: 'libs/lib1',
+      importPath: '@my-org/lib1',
+      publishable: true,
+      skipFormat: true,
+    });
+
+    await librarySecondaryEntryPointGenerator(tree, {
+      name: 'secondary1',
+      library: 'lib1',
+      skipFormat: true,
+    });
+
+    await librarySecondaryEntryPointGenerator(tree, {
+      name: 'secondary2',
+      library: 'lib1',
+      skipFormat: true,
+    });
+
+    const tsConfig = readJson(tree, 'libs/lib1/tsconfig.lib.json');
+    expect(tsConfig.include).toStrictEqual([
+      'src/**/*.ts',
+      'secondary1/src/**/*.ts',
+      'secondary2/src/**/*.ts',
+    ]);
+    expect(tsConfig.exclude).toStrictEqual([
+      'src/**/*.spec.ts',
+      'src/**/*.test.ts',
+      'secondary1/src/**/*.spec.ts',
+      'secondary1/src/**/*.test.ts',
+      'secondary2/src/**/*.spec.ts',
+      'secondary2/src/**/*.test.ts',
+    ]);
+  });
+
   describe('--skipFormat', () => {
     let formatFilesSpy: MockInstance;
 
