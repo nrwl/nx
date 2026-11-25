@@ -211,7 +211,12 @@ pub(crate) fn expand_brace_ranges(glob: &str) -> Cow<'_, str> {
     let mut last = 0;
     for captures in BRACE_RANGE.captures_iter(glob) {
         let whole = captures.get(0).unwrap();
-        let escaped = glob[..whole.start()].ends_with('\\');
+        let backslashes = glob[..whole.start()]
+            .bytes()
+            .rev()
+            .take_while(|&b| b == b'\\')
+            .count();
+        let escaped = backslashes % 2 == 1;
         let items = (!escaped)
             .then(|| {
                 range_items(
@@ -245,12 +250,17 @@ fn range_items(start: &str, end: &str, step: Option<&str>) -> Option<Vec<String>
     };
     let (from, to, letters) = match (start.parse::<i64>(), end.parse::<i64>()) {
         (Ok(from), Ok(to)) => (from, to, false),
-        (Err(_), Err(_)) if start.len() == 1 && end.len() == 1 => {
+        (Err(_), Err(_))
+            if start.len() == 1
+                && end.len() == 1
+                && (start.as_bytes()[0].is_ascii_lowercase()
+                    == end.as_bytes()[0].is_ascii_lowercase()) =>
+        {
             (start.as_bytes()[0] as i64, end.as_bytes()[0] as i64, true)
         }
         _ => return None,
     };
-    let count = (from.abs_diff(to) / step + 1) as usize;
+    let count = usize::try_from((from.abs_diff(to) / step).checked_add(1)?).ok()?;
     if count > MAX_RANGE_ITEMS {
         return None;
     }
@@ -272,10 +282,12 @@ fn range_items(start: &str, end: &str, step: Option<&str>) -> Option<Vec<String>
 }
 
 /// Rewrites POSIX character classes inside a bracket expression
-/// (`[[:alpha:]_]`) as the ASCII ranges they stand for, as minimatch does.
-pub(crate) fn expand_posix_classes(glob: &str) -> Cow<'_, str> {
+/// (`[[:alpha:]_]`) as ASCII ranges. minimatch matches them as Unicode
+/// categories, so a non-ASCII name matches there and not here. A class
+/// `posix_class` doesn't map is an error, so it can't silently match nothing.
+pub(crate) fn expand_posix_classes(glob: &str) -> anyhow::Result<Cow<'_, str>> {
     if !glob.contains("[:") {
-        return Cow::Borrowed(glob);
+        return Ok(Cow::Borrowed(glob));
     }
     let mut out = String::with_capacity(glob.len());
     let mut in_bracket = false;
@@ -289,11 +301,16 @@ pub(crate) fn expand_posix_classes(glob: &str) -> Cow<'_, str> {
         }
         if in_bracket && rest.starts_with("[:") {
             if let Some(end) = rest[2..].find(":]") {
-                if let Some(range) = posix_class(&rest[2..2 + end]) {
-                    out.push_str(range);
-                    rest = &rest[2 + end + 2..];
-                    continue;
-                }
+                let name = &rest[2..2 + end];
+                let Some(range) = posix_class(name) else {
+                    anyhow::bail!(
+                        "unsupported POSIX character class [:{name}:] in {glob:?}; supported: \
+                         alpha, alnum, digit, lower, upper, xdigit, word, space, blank"
+                    );
+                };
+                out.push_str(range);
+                rest = &rest[2 + end + 2..];
+                continue;
             }
         }
         match c {
@@ -310,7 +327,7 @@ pub(crate) fn expand_posix_classes(glob: &str) -> Cow<'_, str> {
         out.push(c);
         rest = &rest[c.len_utf8()..];
     }
-    Cow::Owned(out)
+    Ok(Cow::Owned(out))
 }
 
 fn posix_class(name: &str) -> Option<&'static str> {
@@ -330,7 +347,7 @@ fn posix_class(name: &str) -> Option<&'static str> {
 
 pub fn convert_glob(glob: &str) -> anyhow::Result<Vec<String>> {
     let glob = expand_brace_ranges(glob);
-    let glob = expand_posix_classes(&glob);
+    let glob = expand_posix_classes(&glob)?;
     let (negated, parsed) = parse_glob(&glob)?;
     Ok(convert_glob_segments(negated, parsed))
 }
@@ -358,12 +375,17 @@ fn build_segment(
                 off_group.into_iter().chain(on_group).collect::<Vec<_>>()
             }
             // The text before a `!(...)` stays part of the name, and the
-            // group itself becomes a wildcard. In a directory segment or at
-            // the end of the glob it accepts any other name.
+            // group itself becomes a wildcard. Before an optional group in the
+            // last segment (`[jt]s!(x)?(.snap)`) it matches nothing instead,
+            // so the name ends where the optional part starts.
             GlobGroup::Negated(_) => {
-                let existing = match (is_last_segment, group.len() == 1) {
-                    (true, false) => existing.to_string(),
-                    _ => format!("{existing}*"),
+                let before_optional = matches!(
+                    group.get(1),
+                    Some(GlobGroup::ZeroOrOne(_) | GlobGroup::ZeroOrMore(_))
+                );
+                let existing = match is_last_segment && before_optional {
+                    true => existing.to_string(),
+                    false => format!("{existing}*"),
                 };
                 let off_group = build_segment(&existing, &group[1..], is_last_segment, is_negative);
                 let on_group = build_segment(&built_glob, &group[1..], is_last_segment, true);
@@ -442,6 +464,12 @@ mod test {
             (r"a\{1..3}", r"a\{1..3}"),
             ("{1..5000}", "{1..5000}"),
             ("{a..3}", "{a..3}"),
+            ("{A..z}", "{A..z}"),
+            (
+                "{-9223372036854775808..9223372036854775807}",
+                "{-9223372036854775808..9223372036854775807}",
+            ),
+            (r"a\\{1..2}", r"a\\{1,2}"),
             ("dist/**", "dist/**"),
         ] {
             assert_eq!(expand_brace_ranges(glob), expected, "{glob}");
@@ -456,10 +484,16 @@ mod test {
             ("[![:digit:]]", "[!0-9]"),
             ("[[:alnum:]][[:upper:]]", "[a-zA-Z0-9][A-Z]"),
             ("[:lower:]", "[:lower:]"),
-            ("[[:nope:]]", "[[:nope:]]"),
             (r"\[[:lower:]]", r"\[[:lower:]]"),
         ] {
-            assert_eq!(expand_posix_classes(glob), expected, "{glob}");
+            assert_eq!(expand_posix_classes(glob).unwrap(), expected, "{glob}");
+        }
+        for unsupported in ["libs/[[:punct:]]", "[[:nope:]]", "[a[:print:]]"] {
+            let error = expand_posix_classes(unsupported).unwrap_err().to_string();
+            assert!(
+                error.contains("unsupported POSIX character class"),
+                "{error}"
+            );
         }
     }
 
@@ -480,6 +514,10 @@ mod test {
         assert_eq!(
             convert_glob("packages/lib-!(a)*/foo").unwrap(),
             ["!packages/lib-a*/", "packages/lib-*/foo"]
+        );
+        assert_eq!(
+            convert_glob("src/!(index)-foo.ts").unwrap(),
+            ["!src/index-foo.ts", "src/*-foo.ts"]
         );
     }
 
