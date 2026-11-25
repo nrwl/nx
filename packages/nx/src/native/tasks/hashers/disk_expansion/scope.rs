@@ -64,12 +64,12 @@ impl ProjectScope {
 /// The roots `ProjectScope` needs for `positives`, from every project root in
 /// the workspace except the workspace root's own (`.`), sorted.
 pub(crate) fn scope_roots(positives: &[Positive], project_roots: &BTreeSet<String>) -> Vec<String> {
-    let all = ProjectScope {
-        roots: project_roots.clone(),
-    };
     let mut needed: BTreeSet<&str> = BTreeSet::new();
     for entry in positives {
-        let Some(owner) = all.owner_of_directory(&entry.root) else {
+        let Some(owner) = std::iter::once(entry.root.as_str())
+            .chain(parent_dirs(&entry.root))
+            .find_map(|dir| project_roots.get(dir).map(String::as_str))
+        else {
             continue;
         };
         needed.insert(owner);

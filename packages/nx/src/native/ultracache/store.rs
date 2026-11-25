@@ -5,6 +5,7 @@ use std::sync::{Arc, Mutex};
 
 use anyhow::{Context, Result, ensure};
 use napi::bindgen_prelude::{External, JsObjectValue, Object};
+use rayon::prelude::*;
 use rusqlite::{params, types::Value};
 use tracing::debug;
 
@@ -323,11 +324,17 @@ impl UltracacheConfigurationStore {
                     .globs
                     .extend(rows.into_iter().map(|(id, glob)| (id, glob.into())));
             }
-            for (id, ids) in artifacts {
-                let mut inputs: Vec<_> = ids.iter().map(|glob| cache.globs[glob].clone()).collect();
-                inputs.sort_unstable();
-                cache.artifacts.insert(id, inputs.into());
-            }
+            // Sort each newly requested artifact independently. Small or repeated
+            // requests never revisit the glob dictionary already held by the handle.
+            let lists: Vec<_> = artifacts
+                .into_par_iter()
+                .map(|(id, ids)| {
+                    let mut inputs: Vec<_> = ids.iter().map(|g| cache.globs[g].clone()).collect();
+                    inputs.sort_unstable();
+                    (id, Arc::<[_]>::from(inputs))
+                })
+                .collect();
+            cache.artifacts.extend(lists);
         }
         for (id, artifact) in tasks {
             cache

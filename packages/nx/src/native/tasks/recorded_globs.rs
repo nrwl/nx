@@ -17,32 +17,192 @@ struct ReadGlob<'a> {
     disk_owner: Option<&'a str>,
     alternatives: Vec<u32>,
     scope: OnceLock<Option<Vec<String>>>,
+    candidates: OnceLock<Vec<u32>>,
+    always_covered: bool,
+    package: bool,
+}
+
+// globset 0.4.18 uses a 10 MiB regex-automata Thompson NFA budget. Only
+// literal paths and the simple rooted extension patterns below take a fast
+// path. All other shapes use the same task-wide compiler as stock.
+pub(super) const GLOBSET_LIMIT: usize = 10 << 20;
+#[derive(Clone, Copy)]
+pub(super) enum RootRead {
+    Yes,
+    No(usize),
+    FullMatcher,
+}
+
+pub(super) fn root_read(text: &str, shapes: &DashMap<(usize, String), RootRead>) -> RootRead {
+    use super::hash_planner::ROOT_TSCONFIG_FILES;
+    if text.starts_with('!') {
+        return RootRead::No(0);
+    }
+    if super::ultracache_eligibility::is_literal_path(text) {
+        return if ROOT_TSCONFIG_FILES.contains(&text) {
+            RootRead::Yes
+        } else {
+            RootRead::No(0)
+        };
+    }
+    let Some((prefix, ext)) = text.split_once("/**/*.") else {
+        return RootRead::FullMatcher;
+    };
+    if prefix.is_empty()
+        || !prefix
+            .bytes()
+            .all(|b| b.is_ascii_alphanumeric() || b"/._- @".contains(&b))
+    {
+        return RootRead::FullMatcher;
+    }
+    let simple = |s: &str| {
+        !s.is_empty()
+            && s.bytes()
+                .all(|b| b.is_ascii_alphanumeric() || b"._-".contains(&b))
+    };
+    let alts = ext.strip_prefix('{').and_then(|e| e.strip_suffix('}'));
+    if !simple(ext) && !alts.is_some_and(|e| e.split(',').all(simple)) {
+        return RootRead::FullMatcher;
+    }
+    let key = (prefix.len(), ext.to_owned());
+    *shapes.entry(key).or_insert_with(|| {
+        // Each literal ASCII prefix byte compiles to one byte transition.
+        // Substituting equal-length literal text preserves compilation size.
+        let source = format!("{}/**/*.{ext}", "x".repeat(prefix.len()));
+        let Ok(glob) = globset::GlobBuilder::new(&source)
+            .literal_separator(true)
+            .backslash_escape(true)
+            .build()
+        else {
+            return RootRead::FullMatcher;
+        };
+        // A plain terminal extension uses globset's independent RequiredExtension
+        // strategy. Its regex only has to compile individually.
+        if alts.is_none() {
+            let mut set = globset::GlobSetBuilder::new();
+            set.add(glob);
+            return if set.build().is_ok() {
+                RootRead::No(0)
+            } else {
+                RootRead::FullMatcher
+            };
+        }
+        use regex_automata::{nfa::thompson::NFA, util::syntax};
+        let fits = |budget| {
+            NFA::compiler()
+                .syntax(syntax::Config::new().utf8(false).dot_matches_new_line(true))
+                .configure(NFA::config().utf8(false).nfa_size_limit(Some(budget)))
+                .build(glob.regex())
+                .is_ok()
+        };
+        // The multi-pattern Thompson compiler creates each anchored pattern
+        // independently and joins their starts with a union and one edge per
+        // pattern. Reserve extra space for that edge and its shared state.
+        let mut high = 1024;
+        while high < GLOBSET_LIMIT && !fits(high) {
+            high *= 2;
+        }
+        if high >= GLOBSET_LIMIT {
+            return RootRead::FullMatcher;
+        }
+        let mut low = high / 2;
+        while high - low > 256 {
+            let mid = (low + high) / 2;
+            if fits(mid) {
+                high = mid;
+            } else {
+                low = mid;
+            }
+        }
+        RootRead::No(high + 64)
+    })
 }
 
 pub(super) struct RecordedGlobs<'a> {
-    ids: HashMap<Arc<str>, u32>,
+    root_tsconfig: Vec<RootRead>,
+    source_ids: Vec<u32>,
+    exclusion_roots: BTreeMap<String, Vec<u32>>,
     entries: Vec<ReadGlob<'a>>,
     project_roots: &'a BTreeSet<String>,
     // A pool instruction depends on its backing store, owner and ordered globs.
     groups: DashMap<(bool, Option<String>, Vec<u32>), u32>,
 }
 
+enum ActiveExclusions<'g> {
+    Sparse(BTreeMap<&'g str, Vec<u32>>),
+    Dense(Vec<u64>),
+}
+
+/// Collect roots that are ancestors or descendants, respecting path segments.
+fn overlapping_exclusions<K: std::borrow::Borrow<str> + Ord>(
+    by_root: &BTreeMap<K, Vec<u32>>,
+    root: &str,
+    out: &mut Vec<u32>,
+) {
+    for dir in std::iter::once("")
+        .chain(std::iter::once(root))
+        .chain(parent_dirs(root))
+    {
+        if let Some(ids) = by_root.get(dir) {
+            out.extend_from_slice(ids);
+        }
+    }
+    descendant_exclusions(by_root, root, out);
+}
+
+fn descendant_exclusions<K: std::borrow::Borrow<str> + Ord>(
+    by_root: &BTreeMap<K, Vec<u32>>,
+    root: &str,
+    out: &mut Vec<u32>,
+) {
+    let prefix = format!("{root}/");
+    use std::ops::Bound::{Included, Unbounded};
+    for (_, ids) in by_root
+        .range::<str, _>((Included(prefix.as_str()), Unbounded))
+        .take_while(|(dir, _)| (*dir).borrow().starts_with(&prefix))
+    {
+        out.extend_from_slice(ids);
+    }
+}
+
+fn overlapping_roots<K: std::borrow::Borrow<str> + Ord>(
+    by_root: &BTreeMap<K, Vec<u32>>,
+    roots: &HashSet<&str>,
+    out: &mut Vec<u32>,
+) {
+    let mut checked = HashSet::new();
+    for &root in roots {
+        if parent_dirs(root).any(|p| roots.contains(p)) {
+            continue;
+        }
+        for dir in std::iter::once("")
+            .chain(std::iter::once(root))
+            .chain(parent_dirs(root))
+        {
+            if checked.insert(dir)
+                && let Some(ids) = by_root.get(dir)
+            {
+                out.extend_from_slice(ids);
+            }
+        }
+        descendant_exclusions(by_root, root, out);
+    }
+}
+
 impl<'a> RecordedGlobs<'a> {
-    pub(super) fn new<'t>(
-        tasks: impl Iterator<Item = &'t UltracacheTask>,
+    pub(super) fn new(
+        source: &[Arc<str>],
         projects: &'a std::collections::HashMap<String, String>,
         project_roots: &'a BTreeSet<String>,
     ) -> Self {
-        let mut unique = HashSet::new();
-        for task in tasks {
-            for glob in task.files.iter() {
-                if !unique.contains(glob) {
-                    unique.insert(glob.clone());
-                }
-            }
-        }
+        use rayon::prelude::*;
+        let shapes = DashMap::new();
+        let root_tsconfig = source
+            .par_iter()
+            .map(|text| root_read(text, &shapes))
+            .collect();
         let mut alternatives = HashMap::new();
-        let mut texts: Vec<_> = unique.into_iter().collect();
+        let mut texts = source.to_vec();
         for glob in &texts {
             if glob.contains('{') {
                 let expanded = expand_literal_braces(glob);
@@ -64,7 +224,7 @@ impl<'a> RecordedGlobs<'a> {
             .enumerate()
             .map(|(i, t)| (t.clone(), i as u32))
             .collect();
-        let entries = texts
+        let entries: Vec<_> = texts
             .into_iter()
             .map(|text| {
                 let body = text.strip_prefix('!').unwrap_or(&text);
@@ -83,6 +243,9 @@ impl<'a> RecordedGlobs<'a> {
                     .map(|s| ids[s.as_str()])
                     .collect();
                 ReadGlob {
+                    always_covered: ALWAYS_ON_FILES.contains(&body),
+                    package: body.starts_with("node_modules/") || body.contains("/node_modules/"),
+                    candidates: OnceLock::new(),
                     text,
                     root,
                     tracked_owner,
@@ -92,12 +255,46 @@ impl<'a> RecordedGlobs<'a> {
                 }
             })
             .collect();
+        let mut exclusion_roots = BTreeMap::<String, Vec<u32>>::new();
+        for (i, g) in entries
+            .iter()
+            .enumerate()
+            .filter(|(_, g)| g.text.starts_with('!'))
+        {
+            exclusion_roots
+                .entry(g.root.clone())
+                .or_default()
+                .push(i as u32);
+            for &alt in &g.alternatives {
+                exclusion_roots
+                    .entry(entries[alt as usize].root.clone())
+                    .or_default()
+                    .push(alt);
+            }
+        }
         Self {
-            ids,
+            root_tsconfig,
+            exclusion_roots,
+            source_ids: source.iter().map(|g| ids[g.as_ref()]).collect(),
             entries,
             project_roots,
             groups: Default::default(),
         }
+    }
+
+    /// A positive union matching either root file keeps it immediately. If
+    /// the union might exceed globset's compiler limit, ask the original
+    /// matcher, whose build failure conservatively keeps the files too.
+    pub(super) fn reads_root_tsconfig(&self, task: &UltracacheTask) -> Option<bool> {
+        let mut bytes = 0usize;
+        for &id in &task.files {
+            match self.root_tsconfig[id as usize] {
+                RootRead::Yes => return Some(true),
+                RootRead::No(cost) => bytes = bytes.saturating_add(cost),
+                RootRead::FullMatcher => bytes = usize::MAX,
+            }
+        }
+        (bytes < GLOBSET_LIMIT).then_some(false)
     }
 
     pub(super) fn instructions(
@@ -111,10 +308,7 @@ impl<'a> RecordedGlobs<'a> {
         let entry = |id: u32| &self.entries[id as usize];
         let covered = |id: u32| {
             let g = entry(id);
-            let path = g.text.strip_prefix('!').unwrap_or(&g.text);
-            ALWAYS_ON_FILES.contains(&path)
-                || ((path.starts_with("node_modules/") || path.contains("/node_modules/"))
-                    && !overlaps_any(not_installed, &g.root))
+            g.always_covered || (g.package && !overlaps_any(not_installed, &g.root))
         };
         let owner = |id: u32| {
             if disk {
@@ -124,15 +318,16 @@ impl<'a> RecordedGlobs<'a> {
             }
         };
         let mut buckets: HashMap<Option<&str>, Vec<u32>> = HashMap::new();
-        let mut exclusions: BTreeMap<&str, Vec<u32>> = BTreeMap::new();
-        for glob in task.files.iter() {
-            let id = self.ids[glob];
+        let mut exclusions: Vec<u32> = Vec::new();
+        for &source in &task.files {
+            let id = self.source_ids[source as usize];
+            let glob = &entry(id).text;
             let alts = &entry(id).alternatives;
             let negated = glob.starts_with('!');
             if alts.is_empty() {
                 if !covered(id) {
                     if negated {
-                        exclusions.entry(&entry(id).root).or_default().push(id);
+                        exclusions.push(id);
                     } else {
                         buckets.entry(owner(id)).or_default().push(id);
                     }
@@ -141,14 +336,14 @@ impl<'a> RecordedGlobs<'a> {
                 let whole = alts.iter().all(|&a| !covered(a));
                 if whole && (negated || alts.iter().all(|&a| owner(a) == owner(alts[0]))) {
                     if negated {
-                        exclusions.entry(&entry(id).root).or_default().push(id);
+                        exclusions.push(id);
                     } else {
                         buckets.entry(owner(alts[0])).or_default().push(id);
                     }
                 } else {
                     for &a in alts.iter().filter(|&&a| !covered(a)) {
                         if negated {
-                            exclusions.entry(&entry(a).root).or_default().push(a);
+                            exclusions.push(a);
                         } else {
                             buckets.entry(owner(a)).or_default().push(a);
                         }
@@ -156,11 +351,27 @@ impl<'a> RecordedGlobs<'a> {
                 }
             }
         }
+        // Size the per-task index from its own exclusions. A small recording
+        // must not clear a dictionary-sized bitset or scan other tasks' globs.
+        let words = self.entries.len().div_ceil(64);
+        let active = if words <= exclusions.len().saturating_mul(2) {
+            let mut bits = vec![0u64; words];
+            for &id in &exclusions {
+                bits[id as usize / 64] |= 1 << (id % 64);
+            }
+            ActiveExclusions::Dense(bits)
+        } else {
+            let mut roots = BTreeMap::<&str, Vec<u32>>::new();
+            for &id in &exclusions {
+                roots.entry(entry(id).root.as_str()).or_default().push(id);
+            }
+            ActiveExclusions::Sparse(roots)
+        };
         let mut instructions = Vec::with_capacity(buckets.len() + 1);
         for (project, mut group) in buckets {
             group.sort_unstable();
             group.dedup();
-            self.add_exclusions(&mut group, &exclusions);
+            self.add_exclusions(&mut group, &exclusions, &active);
             instructions.push(self.intern_group(pool, group, disk, project));
         }
         instructions.push(pool.intern(HashInstruction::UltracacheConfiguration(
@@ -169,46 +380,75 @@ impl<'a> RecordedGlobs<'a> {
         instructions
     }
 
-    fn add_exclusions(&self, group: &mut Vec<u32>, exclusions: &BTreeMap<&str, Vec<u32>>) {
-        let entry = |id: u32| &self.entries[id as usize];
-        if !exclusions.is_empty() {
-            let roots: HashSet<_> = group.iter().map(|&id| entry(id).root.as_str()).collect();
-            let mut matches = Vec::new();
+    pub(super) fn needs_output_roots(&self, task: &UltracacheTask) -> bool {
+        task.files.iter().any(|&i| {
+            let g = &self.entries[self.source_ids[i as usize] as usize];
+            g.package
+                || g.alternatives
+                    .iter()
+                    .any(|&a| self.entries[a as usize].package)
+        })
+    }
+
+    fn add_exclusions(&self, group: &mut Vec<u32>, exclusions: &[u32], active: &ActiveExclusions) {
+        if exclusions.is_empty() {
+            return;
+        }
+        let mut matches = Vec::new();
+        // A large bucket can contain thousands of sibling roots. Their shared
+        // ancestor's exclusions must enter the result only once for this bucket.
+        if group.len() > 16 {
+            let roots: HashSet<_> = group
+                .iter()
+                .map(|&i| self.entries[i as usize].root.as_str())
+                .collect();
             if roots.contains("") {
-                matches.extend(exclusions.values().flatten().copied());
+                matches.extend_from_slice(exclusions);
             } else {
-                let mut checked = HashSet::new();
-                for &root in &roots {
-                    // A wider positive already queries this entire interval. The
-                    // remaining descendant ranges are disjoint. Test their shared
-                    // ancestors once per group, even for thousands of sibling files.
-                    if parent_dirs(root).any(|dir| roots.contains(dir)) {
-                        continue;
+                match active {
+                    ActiveExclusions::Sparse(index) => {
+                        overlapping_roots(index, &roots, &mut matches)
                     }
-                    for dir in std::iter::once("")
-                        .chain(std::iter::once(root))
-                        .chain(parent_dirs(root))
-                    {
-                        if checked.insert(dir)
-                            && let Some(ids) = exclusions.get(dir)
-                        {
-                            matches.extend_from_slice(ids);
-                        }
+                    ActiveExclusions::Dense(bits) => {
+                        overlapping_roots(&self.exclusion_roots, &roots, &mut matches);
+                        matches.retain(|&i| bits[i as usize / 64] & (1 << (i % 64)) != 0);
                     }
-                    let prefix = format!("{root}/");
-                    matches.extend(
-                        exclusions
-                            .range(prefix.as_str()..)
-                            .take_while(|(dir, _)| dir.starts_with(&prefix))
-                            .flat_map(|(_, ids)| ids)
-                            .copied(),
-                    );
                 }
             }
-            matches.sort_unstable();
-            matches.dedup();
-            group.extend(matches);
+        } else {
+            for &id in group.iter() {
+                let g = &self.entries[id as usize];
+                let root = g.root.as_str();
+                if root.is_empty() {
+                    matches.clear();
+                    matches.extend_from_slice(exclusions);
+                    break;
+                }
+                match active {
+                    ActiveExclusions::Sparse(roots) => {
+                        overlapping_exclusions(roots, root, &mut matches)
+                    }
+                    ActiveExclusions::Dense(bits) => {
+                        let candidates = g.candidates.get_or_init(|| {
+                            let mut ids = Vec::new();
+                            overlapping_exclusions(&self.exclusion_roots, root, &mut ids);
+                            ids.sort_unstable();
+                            ids.dedup();
+                            ids
+                        });
+                        matches.extend(
+                            candidates
+                                .iter()
+                                .copied()
+                                .filter(|&i| bits[i as usize / 64] & (1 << (i % 64)) != 0),
+                        );
+                    }
+                }
+            }
         }
+        matches.sort_unstable();
+        matches.dedup();
+        group.extend(matches);
     }
 
     fn intern_group(
@@ -264,5 +504,46 @@ impl<'a> RecordedGlobs<'a> {
                 id
             }
         }
+    }
+}
+#[cfg(test)]
+mod tests {
+    use super::super::hash_planner::ROOT_TSCONFIG_FILES;
+    use super::*;
+    use crate::native::glob::NxGlobSetBuilder;
+
+    #[test]
+    fn root_projection_respects_the_combined_compiler_limit_and_invalid_reads() {
+        // Each regex fits on its own. The original set cannot compile them
+        // together, so an otherwise disjoint root tsconfig must be retained.
+        let long = "p".repeat(240);
+        let dictionary: Arc<[Arc<str>]> = (0..1600)
+            .map(|i| Arc::from(format!("pkg/{long}{i}/**/*.{{abcdef,ghijkl,mnopqr}}")))
+            .collect();
+        let roots = BTreeSet::new();
+        let projects = std::collections::HashMap::new();
+        let index = RecordedGlobs::new(&dictionary, &projects, &roots);
+        for n in [1, 2, 8, 150, 500, 900, 1600] {
+            let task = UltracacheTask {
+                dictionary: dictionary.clone(),
+                files: (0..n as u32).collect(),
+                digest: String::new(),
+            };
+            let original = NxGlobSetBuilder::new(&dictionary[..n]).and_then(|b| b.build(None));
+            if n == 1600 {
+                assert!(original.is_err());
+            }
+            let expected =
+                original.map_or(true, |s| ROOT_TSCONFIG_FILES.iter().any(|p| s.is_match(p)));
+            if let Some(projected) = index.reads_root_tsconfig(&task) {
+                assert_eq!(projected, expected, "{n}");
+            }
+        }
+        let shapes = DashMap::new();
+        assert!(matches!(
+            root_read("x/[z-a]", &shapes),
+            RootRead::FullMatcher
+        ));
+        assert!(matches!(root_read("tsconfig.json", &shapes), RootRead::Yes));
     }
 }

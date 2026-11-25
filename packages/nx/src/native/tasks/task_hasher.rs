@@ -19,12 +19,12 @@ use crate::native::{
 use crate::native::{
     tasks::hashers::{
         FilesExpansion, FilesExpansionCache, JsonHashResult, ProjectFileIndicesCache,
-        ProjectFileSetCache, Source, WorkspaceFileIndex, WorkspaceFileIndicesCache,
-        WorkspaceFileSetCache, collect_project_file_paths_cached, collect_project_files,
-        collect_workspace_file_paths_cached, expand_cached, expand_globs, expand_task_outputs,
-        file_hashes, fold_file_hashes, hash_all_externals, hash_external, hash_files,
-        hash_json_files, hash_project_config, hash_project_files_cached, hash_task_output,
-        hash_tsconfig_selectively, hash_workspace_files_cached, output_prefixes,
+        ProjectFileSetCache, SettledFiles, Source, TrackedBatch, WorkspaceFileIndex,
+        WorkspaceFileIndicesCache, WorkspaceFileSetCache, collect_project_file_paths_cached,
+        collect_project_files, collect_workspace_file_paths_cached, expand_cached, expand_globs,
+        expand_task_outputs, file_hashes, fold_file_hashes, hash_all_externals, hash_external,
+        hash_files, hash_json_files, hash_project_config, hash_project_files_cached,
+        hash_task_output, hash_tsconfig_selectively, hash_workspace_files_cached, output_prefixes,
     },
     types::FileData,
     walker::PathPredicate,
@@ -359,19 +359,21 @@ impl TaskHasher {
     /// Anything it refuses is read from disk instead.
     fn register_prefixes(&self, hash_plans: &HashPlans) {
         let pool = &hash_plans.pool;
+        let mut seen_globs = hashbrown::HashSet::<Arc<str>>::new();
         let mut prefixes: Vec<String> = Vec::new();
         let mut output_roots: Vec<String> = Vec::new();
         for id in 0..pool.len() as u32 {
             match pool.get(id).value() {
-                HashInstruction::IgnoredFileSet { globs, .. } => prefixes.extend(
-                    globs
-                        .iter()
-                        .filter(|g| !g.starts_with('!'))
-                        .filter_map(|g| {
-                            let glob = normalize_glob(g);
-                            Some(partition_glob(&glob).0)
-                        }),
-                ),
+                HashInstruction::IgnoredFileSet { globs, .. } => {
+                    prefixes.extend(globs.iter().filter_map(|g| {
+                        if g.starts_with('!') || seen_globs.contains(g.as_ref()) {
+                            return None;
+                        }
+                        seen_globs.insert(g.clone());
+                        let glob = normalize_glob(g);
+                        Some(partition_glob(&glob).0)
+                    }))
+                }
                 HashInstruction::TaskOutput(_, outputs) => {
                     output_roots.extend(output_prefixes(outputs))
                 }
@@ -440,10 +442,13 @@ impl TaskHasher {
         ids: &[u32],
         pool: &InstructionPool,
         caches: &RecordedCaches,
+        batch: &FileSetBatch,
         files_expansion_cache: &FilesExpansionCache,
         run_stage: RunStage,
     ) -> anyhow::Result<RecordedFileLists> {
         let workspace_root = Path::new(&self.workspace_root);
+        let tracked = |p: &str| run_stage.nothing_ran() && self.workspace_tracks_file(p);
+        let read = |p: &str| self.disk_file_hash(p, run_stage);
         let mut groups = ids
             .par_iter()
             .filter_map(|&id| match pool.get(id).value() {
@@ -452,51 +457,73 @@ impl TaskHasher {
                     ..
                 }
                 | HashInstruction::ProjectFileSet(..)
-                | HashInstruction::WorkspaceFileSet(_)) => Some((id, group.clone())),
+                | HashInstruction::WorkspaceFileSet(_)) => {
+                    Some((id, matches!(group, HashInstruction::IgnoredFileSet { .. })))
+                }
                 _ => None,
             })
-            .map(|(id, group)| {
-                let reads_disk = matches!(group, HashInstruction::IgnoredFileSet { .. });
+            .map(|(id, reads_disk)| {
                 if let Some(cached) = caches.group_files.get(&id) {
                     return Ok((reads_disk, Arc::clone(&cached)));
                 }
-                let hashed = Arc::new(match group {
+                let hashed = Arc::new(match pool.get(id).value().clone() {
                     HashInstruction::ProjectFileSet(project, file_sets) => {
-                        collect_project_files(&project, &file_sets, &self.project_file_map)?
+                        let files = match batch.select_tracked(Some(&project), &file_sets)? {
+                            Some(files) => files,
+                            None => {
+                                collect_project_files(&project, &file_sets, &self.project_file_map)?
+                            }
+                        };
+                        files
                             .into_iter()
                             .map(|file| (file.file.clone(), file.hash.clone()))
                             .collect()
                     }
                     HashInstruction::WorkspaceFileSet(file_sets) => {
-                        collect_workspace_file_paths_cached(
-                            &file_sets,
-                            &self.workspace_file_index,
-                            &self.workspace_file_indices_cache,
-                        )?
-                        .into_iter()
-                        .map(|file| match self.workspace_file_hash(&file) {
-                            Some(hash) => Ok((file, hash)),
-                            None => Err(anyhow::anyhow!("{file} is not in the workspace file map")),
-                        })
-                        .collect::<anyhow::Result<_>>()?
+                        if let Some(files) = batch.select_tracked(None, &file_sets)? {
+                            files
+                                .into_iter()
+                                .map(|f| (f.file.clone(), f.hash.clone()))
+                                .collect()
+                        } else {
+                            collect_workspace_file_paths_cached(
+                                &file_sets,
+                                &self.workspace_file_index,
+                                &self.workspace_file_indices_cache,
+                            )?
+                            .into_iter()
+                            .map(|file| match self.workspace_file_hash(&file) {
+                                Some(hash) => Ok((file, hash)),
+                                None => {
+                                    Err(anyhow::anyhow!("{file} is not in the workspace file map"))
+                                }
+                            })
+                            .collect::<anyhow::Result<_>>()?
+                        }
                     }
                     HashInstruction::IgnoredFileSet {
                         globs,
                         project_roots,
                         ..
-                    } => file_hashes(
-                        workspace_root,
-                        &*self.expand_ignored_files(
-                            id,
-                            &globs,
-                            &project_roots,
-                            files_expansion_cache,
-                            run_stage,
-                        )?,
-                        |path| self.known_file_hash(path, run_stage),
-                        self.ignored_index.index(),
-                        run_stage,
-                    ),
+                    } => {
+                        if let Some(disk) = &batch.disk {
+                            disk.file_hashes(&globs, &project_roots, &tracked, read)?
+                        } else {
+                            file_hashes(
+                                workspace_root,
+                                &*self.expand_ignored_files(
+                                    id,
+                                    &globs,
+                                    &project_roots,
+                                    files_expansion_cache,
+                                    run_stage,
+                                )?,
+                                |path| self.known_file_hash(path, run_stage),
+                                self.ignored_index.index(),
+                                run_stage,
+                            )
+                        }
+                    }
                     _ => unreachable!("filtered to the plan's groups"),
                 });
                 caches.group_files.insert(id, Arc::clone(&hashed));
@@ -534,13 +561,19 @@ impl TaskHasher {
                         globs,
                         project_roots,
                         ..
-                    } => self.expand_ignored_files(
-                        id,
-                        &globs,
-                        &project_roots,
-                        files_expansion_cache,
-                        run_stage,
-                    )?,
+                    } => {
+                        if let Some(disk) = &batch.disk {
+                            Arc::new(disk.paths(&globs, &project_roots, &tracked)?)
+                        } else {
+                            self.expand_ignored_files(
+                                id,
+                                &globs,
+                                &project_roots,
+                                files_expansion_cache,
+                                run_stage,
+                            )?
+                        }
+                    }
                     _ => unreachable!("filtered to covering instructions"),
                 };
                 let files: Arc<HashSet<String>> =
@@ -550,6 +583,14 @@ impl TaskHasher {
             })
             .collect::<anyhow::Result<Vec<_>>>()?;
         Ok((groups, covered))
+    }
+
+    fn disk_file_hash(&self, path: &str, stage: RunStage) -> Option<String> {
+        self.known_file_hash(path, stage).or_else(|| {
+            self.ignored_index
+                .index()
+                .hash_file(Path::new(&self.workspace_root), path, None, stage)
+        })
     }
 
     fn workspace_tracks_file(&self, path: &str) -> bool {
@@ -760,6 +801,16 @@ impl TaskHasher {
         if hash_plans.plans.values().any(|plan| plan.has(kind::DISK)) {
             self.ignored_index.catch_up();
         }
+        let batch = FileSetBatch {
+            tracked: TrackedBatch::for_plans(
+                hash_plans,
+                &self.project_file_map,
+                &self.all_workspace_files,
+            ),
+            disk: SettledFiles::for_plans(Path::new(&self.workspace_root), hash_plans, &|p| {
+                run_stage.nothing_ran() && self.workspace_tracks_file(p)
+            })?,
+        };
         // Id-indexed snapshots so the hot loop reads a plain Vec instead of
         // taking a DashMap shard lock per (task, instruction) entry. Every
         // instruction except Environment and Runtime (whose values depend on
@@ -890,6 +941,7 @@ impl TaskHasher {
                                                     .workspace_file_set_cache,
                                                 json_file_set_cache: &json_file_set_cache,
                                                 files_expansion_cache: &files_expansion_cache,
+                                                batch: &batch,
                                                 run_stage,
                                                 cwd: cwd_path,
                                                 collect_inputs: should_collect_inputs,
@@ -930,6 +982,7 @@ impl TaskHasher {
                             &ids,
                             pool,
                             &recorded_caches,
+                            &batch,
                             &files_expansion_cache,
                             run_stage,
                         )
@@ -990,6 +1043,7 @@ impl TaskHasher {
             workspace_file_set_cache,
             json_file_set_cache,
             files_expansion_cache,
+            batch,
             run_stage,
             cwd,
             collect_inputs,
@@ -998,6 +1052,25 @@ impl TaskHasher {
         let now = std::time::Instant::now();
         let span = trace_span!("hashing", task_id).entered();
         let empty = HashInputsBuilder::default();
+        if let Some(batch) = &batch.tracked {
+            let group = match instruction {
+                HashInstruction::ProjectFileSet(p, globs) => Some((Some(p.as_str()), globs)),
+                HashInstruction::WorkspaceFileSet(globs) => Some((None, globs)),
+                _ => None,
+            };
+            if let Some((project, globs)) = group
+                && let Some(files) = batch.select(project, globs)?
+            {
+                let value = super::hashers::fold_files(files.iter().copied());
+                let mut inputs = HashInputsBuilder::default();
+                if collect_inputs {
+                    inputs
+                        .files
+                        .extend(files.into_iter().map(|f| f.file.clone()));
+                }
+                return Ok((value, inputs));
+            }
+        }
         let (hash, inputs) = match instruction {
             HashInstruction::WorkspaceFileSet(workspace_file_set) => {
                 let hashed = hash_workspace_files_cached(
@@ -1053,6 +1126,22 @@ impl TaskHasher {
                 project_roots,
                 ..
             } => {
+                if let Some(inventory) = &batch.disk {
+                    let (hash, files) = inventory.hash(
+                        globs,
+                        project_roots,
+                        &|p| run_stage.nothing_ran() && self.workspace_tracks_file(p),
+                        |p| self.disk_file_hash(p, run_stage),
+                        collect_inputs,
+                    )?;
+                    return Ok((
+                        hash,
+                        HashInputsBuilder {
+                            files: files.into_iter().collect(),
+                            ..empty
+                        },
+                    ));
+                }
                 let expansion = self.expand_ignored_files(
                     id,
                     globs,
@@ -1306,7 +1395,25 @@ struct RecordedCaches {
     covered_files: DashMap<u32, Arc<HashSet<String>>>,
 }
 
-struct HashInstructionArgs<'a> {
+struct FileSetBatch<'snapshot> {
+    disk: Option<SettledFiles>,
+    tracked: Option<TrackedBatch<'snapshot>>,
+}
+
+impl<'a> FileSetBatch<'a> {
+    fn select_tracked(
+        &self,
+        project: Option<&str>,
+        globs: &[String],
+    ) -> anyhow::Result<Option<Vec<&'a FileData>>> {
+        match &self.tracked {
+            Some(batch) => batch.select(project, globs),
+            None => Ok(None),
+        }
+    }
+}
+
+struct HashInstructionArgs<'a, 'snapshot> {
     /// The instruction's pool id: the key disk-backed group expansions and
     /// JSON results are shared under within one call. Labels can repeat.
     id: u32,
@@ -1320,6 +1427,7 @@ struct HashInstructionArgs<'a> {
     workspace_file_set_cache: &'a WorkspaceFileSetCache,
     json_file_set_cache: &'a DashMap<u32, JsonHashResult>,
     files_expansion_cache: &'a FilesExpansionCache,
+    batch: &'a FileSetBatch<'snapshot>,
     run_stage: RunStage,
     cwd: &'a std::path::Path,
     collect_inputs: bool,
@@ -1501,6 +1609,114 @@ mod tests {
                 )
             })
             .collect()
+    }
+
+    #[test]
+    fn batched_hashes_and_inputs_observe_each_runs_file_policy() -> anyhow::Result<()> {
+        use crate::native::test_utils::hash_plans;
+        let temp = assert_fs::TempDir::new()?;
+        let root = temp.path();
+        let tracked = [
+            ("libs/app/z.ts", "snapshot-z"),
+            ("libs/app/a.ts", "snapshot-a"),
+        ];
+        std::fs::create_dir_all(root.join("libs/app"))?;
+        for (file, _) in tracked {
+            std::fs::write(root.join(file), "on disk")?;
+        }
+        let ignored = root.join("libs/app/generated.ts");
+        std::fs::write(&ignored, "before")?;
+        let index = IgnoredIndexReader::new(Arc::new(IgnoredIndex::new(None)), Arc::new(|| {}));
+        let hasher = hasher_tracking(root, index, &tracked);
+        let names: Vec<_> = (0..132).map(|i| format!("task-{i}")).collect();
+        let env = HashMap::new();
+        let run = |entries: &[(&str, Vec<HashInstruction>)], stage| {
+            hasher.hash_plans_impl(
+                &hash_plans(entries),
+                root.to_string_lossy().into_owned(),
+                Some(true),
+                stage,
+                |_| &env,
+            )
+        };
+        // Every policy has >128 different groups sharing the same real inputs.
+        // Some tasks also fold reads covered by declared files or task outputs.
+        for disk in [false, true] {
+            let entries: Vec<_> = names
+                .iter()
+                .enumerate()
+                .map(|(i, name)| {
+                    let globs = vec![
+                        "libs/app/**/*.ts".to_owned(),
+                        format!("!libs/app/absent-{i}.ts"),
+                    ];
+                    let read = if disk {
+                        HashInstruction::IgnoredFileSet {
+                            globs: globs.into_iter().map(Arc::from).collect(),
+                            project_roots: vec!["libs/app".into()],
+                            from_ultracache: true,
+                        }
+                    } else if i % 2 == 0 {
+                        HashInstruction::ProjectFileSet("app".into(), globs)
+                    } else {
+                        HashInstruction::WorkspaceFileSet(vec![
+                            "{workspaceRoot}/libs/app/**/*.ts".into(),
+                            format!("!{{workspaceRoot}}/libs/app/absent-{i}.ts"),
+                        ])
+                    };
+                    let mut plan = vec![
+                        read,
+                        HashInstruction::UltracacheConfiguration("recording".into()),
+                    ];
+                    if i % 3 == 0 {
+                        plan.push(HashInstruction::ignored_files(vec!["libs/app/a.ts".into()]));
+                        plan.push(HashInstruction::TaskOutput(
+                            "**/a.ts".into(),
+                            vec!["libs/app/a.ts".into()],
+                        ));
+                    }
+                    (name.as_str(), plan)
+                })
+                .collect();
+            let mut previous = None;
+            for (stage, mutation) in [
+                (RunStage::NothingRan, 0),
+                (RunStage::ATaskMayHaveWritten, 1),
+                (RunStage::ATaskMayHaveWritten, 2),
+            ] {
+                match mutation {
+                    0 => std::fs::write(&ignored, "before")?,
+                    1 => std::fs::write(&ignored, "producer has changed this file")?,
+                    _ => std::fs::remove_file(&ignored)?,
+                }
+                let hashed = run(&entries, stage)?;
+                for i in 0..6 {
+                    let small = run(&entries[i..i + 1], stage)?;
+                    let task = entries[i].0;
+                    let got = hashed.0.get(task).unwrap();
+                    let reference = small.0.get(task).unwrap();
+                    assert_eq!(got.value, reference.value, "{disk} {mutation} {task}");
+                    assert_eq!(
+                        got.inputs.files, reference.inputs.files,
+                        "{disk} {mutation} {task}"
+                    );
+                }
+                let regular = hashed.0.get(entries[1].0).unwrap();
+                assert_eq!(
+                    regular
+                        .inputs
+                        .files
+                        .iter()
+                        .any(|p| p == "libs/app/generated.ts"),
+                    disk && mutation != 2
+                );
+                if let Some(old) = previous {
+                    assert_eq!(old != regular.value, disk);
+                }
+                previous = Some(regular.value.clone());
+            }
+        }
+        Ok(())
     }
 
     const DIST_FILES: [(&str, &str); 6] = [

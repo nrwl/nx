@@ -69,7 +69,7 @@ impl AlwaysIds {
     }
 }
 
-const ROOT_TSCONFIG_FILES: [&str; 2] = ["tsconfig.base.json", "tsconfig.json"];
+pub(super) const ROOT_TSCONFIG_FILES: [&str; 2] = ["tsconfig.base.json", "tsconfig.json"];
 /// Hashed by the always-on workspace fileset every plan carries.
 pub(super) const ALWAYS_ON_FILES: [&str; 3] = ["nx.json", ".gitignore", ".nxignore"];
 
@@ -98,7 +98,7 @@ impl<'a> UltracacheContext<'a> {
             && self
                 .entry
                 .files
-                .binary_search_by(|g| g.as_ref().cmp(path))
+                .binary_search_by(|&id| self.entry.dictionary[id as usize].as_ref().cmp(path))
                 .is_ok()
     }
 
@@ -109,6 +109,7 @@ impl<'a> UltracacheContext<'a> {
                     .entry
                     .files
                     .iter()
+                    .map(|&id| &self.entry.dictionary[id as usize])
                     .filter(|g| !g.starts_with('!') && !ultracache_eligibility::is_literal_path(g))
                     .collect();
                 if patterns.is_empty() {
@@ -123,11 +124,6 @@ impl<'a> UltracacheContext<'a> {
                 Ok(None) => false,
                 Err(()) => true,
             }
-    }
-
-    fn root_tsconfig_read(&self) -> bool {
-        ROOT_TSCONFIG_FILES.iter().any(|path| self.literal(path))
-            || ROOT_TSCONFIG_FILES.iter().any(|path| self.read(path))
     }
 }
 
@@ -324,9 +320,9 @@ impl HashPlanner {
 
         let globs = ultracache_tasks
             .as_ref()
-            .filter(|tasks| !tasks.is_empty())
-            .map(|tasks| {
-                RecordedGlobs::new(tasks.values(), self.project_by_root(), self.project_roots())
+            .and_then(|tasks| tasks.values().next())
+            .map(|t| {
+                RecordedGlobs::new(&t.dictionary, self.project_by_root(), self.project_roots())
             });
 
         trace!("Starting get_plans_internal for {} tasks", task_ids.len());
@@ -565,7 +561,9 @@ impl HashPlanner {
         always: AlwaysIds,
     ) -> PlanBuilder {
         let pool = &self.instruction_pool;
-        let keep_tsconfig = context.root_tsconfig_read();
+        let keep_tsconfig = globs
+            .reads_root_tsconfig(context.entry)
+            .unwrap_or_else(|| ROOT_TSCONFIG_FILES.iter().any(|p| context.read(p)));
         let include_unstable = task
             .ultracache
             .as_ref()
@@ -575,13 +573,7 @@ impl HashPlanner {
         // and what a declared `includeIgnored` group walks into there. None
         // of them is tracked.
         let mut not_installed = Vec::new();
-        if include_unstable
-            && context
-                .entry
-                .files
-                .iter()
-                .any(|g| g.contains("node_modules") || g.contains('{'))
-        {
+        if include_unstable && globs.needs_output_roots(context.entry) {
             not_installed = upstream_output_roots(task_graph, &task.id);
             for id in plan.only(kind::DECLARED_DISK).ids().iter() {
                 if let HashInstruction::IgnoredFileSet { globs, .. } = &*pool.get(*id) {
