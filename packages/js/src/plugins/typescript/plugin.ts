@@ -1298,7 +1298,7 @@ function getInputs(
       }
     }
     // A negative filters every fileset in its group, so drop one that could
-    // remove a file another config hashes (as for the project's own excludes).
+    // remove a file another config hashes.
     const consumerPositives = inputs.flatMap((input) =>
       workspaceRelativeFileset(input, config.project.root)
     );
@@ -1314,7 +1314,7 @@ function getInputs(
         sourceInputs.add(`{workspaceRoot}/${path}`);
       } else if (
         !otherPositives(owner).some((include) =>
-          excludeOverlapsInclude(include, path, getOrCreateMatcher)
+          excludeMayOverlapInclude(include, path, getOrCreateMatcher)
         )
       ) {
         sourceInputs.add(`!{workspaceRoot}/${path}`);
@@ -1549,6 +1549,40 @@ function excludeOverlapsInclude(
   ).join('/');
   const rel = relative(resolve(normalizedInclude), resolve(staticPrefix));
   return !rel.startsWith('..') && !isAbsolute(rel);
+}
+
+/**
+ * Like `excludeOverlapsInclude` for normalized workspace-relative filesets, but
+ * errs towards an overlap: two globs are disjoint only when neither's static
+ * directory prefix contains the other's.
+ */
+function excludeMayOverlapInclude(
+  include: string,
+  exclude: string,
+  getMatcher: (pattern: string) => (path: string) => boolean
+): boolean {
+  const isGlob = (segment: string) => /[*?{[(]/.test(segment);
+  const staticPrefix = (pattern: string) => {
+    const segments = pattern.split('/');
+    const firstGlobSegment = segments.findIndex(isGlob);
+    return firstGlobSegment === -1
+      ? segments
+      : segments.slice(0, firstGlobSegment);
+  };
+  const contains = (parent: string[], child: string[]) =>
+    parent.every((segment, i) => child[i] === segment);
+
+  const includePrefix = staticPrefix(include);
+  const excludePrefix = staticPrefix(exclude);
+  if (!isGlob(include)) {
+    return (
+      getMatcher(exclude)(include) || contains(includePrefix, excludePrefix)
+    );
+  }
+  return (
+    contains(includePrefix, excludePrefix) ||
+    contains(excludePrefix, includePrefix)
+  );
 }
 
 function stripDotSlash(path: string): string {

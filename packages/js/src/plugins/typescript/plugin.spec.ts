@@ -6093,6 +6093,89 @@ snapshots:
         expect(filesets).toContain('!{workspaceRoot}/libs/b/src/**/*.spec.ts');
       });
 
+      describe("an unbuilt reference's negatives", () => {
+        const buildFilesets = async (files: Record<string, string>) => {
+          configFiles = await applyFilesToTempFsAndContext(tempFs, {
+            'libs/a/tsconfig.json': '{}',
+            'libs/a/package.json': `{"main": "dist/index.js"}`,
+            'libs/b/tsconfig.json': '{}',
+            'libs/b/package.json': `{"main": "src/index.ts"}`,
+            ...files,
+          });
+          const result = await invokeCreateNodesOnMatchingFiles(
+            configFiles,
+            context,
+            { typecheck: false, build: true }
+          );
+          expect(result.projects['libs/b'].targets?.build).toBeUndefined();
+          return result.projects['libs/a'].targets.build.inputs.map((input) =>
+            typeof input === 'string'
+              ? input
+              : 'fileset' in input
+                ? input.fileset
+                : undefined
+          );
+        };
+
+        it('should drop an exclude glob that overlaps a glob another config includes', async () => {
+          const filesets = await buildFilesets({
+            'libs/a/tsconfig.lib.json': JSON.stringify({
+              compilerOptions: { outDir: 'dist' },
+              include: ['src/**/*.ts', '../b/**/*.d.ts'],
+              references: [{ path: '../b/tsconfig.lib.json' }],
+            }),
+            'libs/b/tsconfig.lib.json': JSON.stringify({
+              compilerOptions: { outDir: 'dist' },
+              include: ['src'],
+              exclude: ['types/**/*'],
+            }),
+          });
+
+          expect(filesets).toContain('{workspaceRoot}/libs/b/**/*.d.ts');
+          expect(filesets).not.toContain('!{workspaceRoot}/libs/b/types/**/*');
+        });
+
+        it('should drop an output directory that holds a config another config extends', async () => {
+          const filesets = await buildFilesets({
+            'libs/a/tsconfig.lib.json': JSON.stringify({
+              extends: '../b/cfg/tsconfig.shared.json',
+              compilerOptions: { outDir: 'dist' },
+              include: ['src/**/*.ts'],
+              references: [{ path: '../b/tsconfig.lib.json' }],
+            }),
+            'libs/b/cfg/tsconfig.shared.json': JSON.stringify({
+              compilerOptions: { strict: true },
+            }),
+            'libs/b/tsconfig.lib.json': JSON.stringify({
+              compilerOptions: { outDir: 'cfg' },
+              include: ['src'],
+            }),
+          });
+
+          expect(filesets).toContain(
+            '{workspaceRoot}/libs/b/cfg/tsconfig.shared.json'
+          );
+          expect(filesets).not.toContain('!{workspaceRoot}/libs/b/cfg/**/*');
+        });
+
+        it('should keep an exclude that no other config reaches', async () => {
+          const filesets = await buildFilesets({
+            'libs/a/tsconfig.lib.json': JSON.stringify({
+              compilerOptions: { outDir: 'dist' },
+              include: ['src/**/*.ts'],
+              references: [{ path: '../b/tsconfig.lib.json' }],
+            }),
+            'libs/b/tsconfig.lib.json': JSON.stringify({
+              compilerOptions: { outDir: 'dist' },
+              include: ['src'],
+              exclude: ['**/*.spec.ts'],
+            }),
+          });
+
+          expect(filesets).toContain('!{workspaceRoot}/libs/b/**/*.spec.ts');
+        });
+      });
+
       it('should infer the inputs again when a project deeper in the reference chain stops being built', async () => {
         process.env.NX_CACHE_PROJECT_GRAPH = 'true';
         const lib = (references: string[], main: string) => ({
