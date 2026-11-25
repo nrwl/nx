@@ -95,6 +95,42 @@ dotnet new webapi -o ./apps/my-api
 
 Full project creation docs can be found here [on the official Microsoft documentation](https://learn.microsoft.com/en-us/dotnet/core/tools/dotnet-new).
 
+### Import a .NET repository
+
+`nx import` moves a .NET repository into your workspace with its git history, and offers to
+install `@nx/dotnet` when it finds `.csproj`, `.fsproj`, or `.vbproj` files.
+For the command itself, see [import an existing project](/docs/kb/import-project).
+
+```shell
+nx import ../my-dotnet-repo dotnet --source=.
+```
+
+After the import, restore the imported projects before the first `nx build`.
+Pass the path of the imported solution, for example `dotnet restore dotnet/MySolution.sln`.
+If no solution came with the import, pass each top-level project file instead.
+The `obj` folder is gitignored, so imported projects arrive unrestored and `build` fails with
+`NETSDK1004`.
+
+Importing the whole repository keeps its solution, `global.json`, and `Directory.*` files beside
+the projects.
+Importing one folder at a time with `--source` leaves those root files behind, so check the
+following after each import:
+
+- Copy `Directory.Build.props`, `Directory.Build.targets`, `Directory.Packages.props`,
+  `global.json`, and `nuget.config` from the source root to a folder above the imported projects.
+  Without `Directory.Build.props`, a project that sets `TargetFramework` there fails with
+  `NETSDK1013`.
+  Without `Directory.Packages.props`, restore only warns `NU1604` and resolves the lowest
+  available package versions.
+- Update `<ProjectReference>` paths when folders land under new names, for example `src` imported
+  into `apps`.
+  The paths are relative, so a reference into the old folder no longer resolves.
+
+MSBuild reads only the nearest `Directory.Build.props` and `Directory.Packages.props`, and the
+.NET SDK reads only the nearest `global.json`.
+If your workspace already has these files at its root, merge the imported settings into them
+rather than adding a second copy that hides the first.
+
 ## How @nx/dotnet infers tasks
 
 The `@nx/dotnet` plugin uses MSBuild to analyze your .NET solution and project structure. When using `nx add`, the plugin is automatically configured in your `nx.json` file.
