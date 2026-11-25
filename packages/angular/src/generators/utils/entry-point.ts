@@ -75,6 +75,41 @@ export function readLibraryBuilderEntryPoints(
   return entryPoints;
 }
 
+// The entry point whose entry file's directory is the closest one containing
+// the directory. The primary wins a tie and is the fallback when none does.
+export function locateLibraryBuilderEntryPoint(
+  tree: Tree,
+  directory: string,
+  projectRoot: string
+): string | null {
+  let primaryEntryFile: string | undefined;
+  let closest: { entryFile: string; distance: number } | undefined;
+  for (const { subpath, entryFile } of readLibraryBuilderEntryPoints(
+    tree,
+    projectRoot
+  )) {
+    if (subpath === '.') {
+      primaryEntryFile = entryFile;
+    }
+
+    const relativeDir = posix.relative(posix.dirname(entryFile), directory);
+    if (relativeDir === '..' || relativeDir.startsWith('../')) {
+      continue;
+    }
+    const distance = relativeDir === '' ? 0 : relativeDir.split('/').length;
+    if (
+      !closest ||
+      distance < closest.distance ||
+      (distance === closest.distance && subpath === '.')
+    ) {
+      closest = { entryFile, distance };
+    }
+  }
+
+  const entryFile = closest?.entryFile ?? primaryEntryFile;
+  return entryFile && tree.exists(entryFile) ? entryFile : null;
+}
+
 // An array resolves to its first resolvable item and a conditions object to
 // its "default" condition, without checking the file extension.
 function resolveExportTarget(value: unknown): string | undefined {

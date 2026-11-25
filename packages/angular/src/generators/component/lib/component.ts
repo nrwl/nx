@@ -2,8 +2,12 @@ import type { Tree } from '@nx/devkit';
 import { logger, readProjectConfiguration, stripIndents } from '@nx/devkit';
 import { ensureTypescript } from '@nx/js/internal';
 import type { StringLiteral } from 'typescript';
-import { locateLibraryEntryPointFromDirectory } from '../../utils/entry-point';
+import {
+  locateLibraryBuilderEntryPoint,
+  locateLibraryEntryPointFromDirectory,
+} from '../../utils/entry-point';
 import { getRelativeImportToFile } from '../../utils/path';
+import { usesLibraryBuilder } from '../../utils/project';
 import type { NormalizedSchema } from '../schema';
 import { findModuleFromOptions } from './module';
 
@@ -24,12 +28,14 @@ export function exportComponentInEntryPoint(
     return;
   }
 
-  const entryPointPath = locateLibraryEntryPointFromDirectory(
-    tree,
-    schema.directory,
-    root,
-    schema.projectSourceRoot
-  );
+  const entryPointPath = usesLibraryBuilder(tree, schema.projectName)
+    ? locateLibraryBuilderEntryPoint(tree, schema.directory, root)
+    : locateLibraryEntryPointFromDirectory(
+        tree,
+        schema.directory,
+        root,
+        schema.projectSourceRoot
+      );
   if (!entryPointPath) {
     logger.warn(
       `Unable to determine whether the component should be exported in the library entry point file. ` +
