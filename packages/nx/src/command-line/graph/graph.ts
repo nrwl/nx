@@ -1675,29 +1675,30 @@ function expandInputs(
     return input;
   });
 
-  const projectRootsExpanded = projectRootInputs
-    .map((input) => {
-      const fileSetProjectName = input.split(':')[0];
-      const files = matchFiles(fileMatches?.project, input, () => {
-        const fileSetProject = depGraphClientResponse.projects.find(
-          (p) => p.name === fileSetProjectName
-        );
-        const fileSets = input.replace(`${fileSetProjectName}:`, '').split(',');
-        return filterUsingGlobPatterns(
-          fileSetProject.data.root,
-          depGraphClientResponse.fileMap[fileSetProjectName] || [],
-          fileSets
-        ).map((f) => f.file);
-      });
+  const projectRootsExpanded = projectRootInputs.reduce<
+    Record<string, string[]>
+  >((previous, input) => {
+    const fileSetProjectName = input.split(':')[0];
+    const files = matchFiles(fileMatches?.project, input, () => {
+      const fileSetProject = depGraphClientResponse.projects.find(
+        (p) => p.name === fileSetProjectName
+      );
+      const fileSets = input.replace(`${fileSetProjectName}:`, '').split(',');
+      return filterUsingGlobPatterns(
+        fileSetProject.data.root,
+        depGraphClientResponse.fileMap[fileSetProjectName] || [],
+        fileSets
+      ).map((f) => f.file);
+    });
 
-      return { [fileSetProjectName]: files };
-    })
-    .reduce((curr, acc) => {
-      for (let key in curr) {
-        acc[key] = curr[key];
-      }
-      return acc;
-    }, {});
+    const expanded = { [fileSetProjectName]: files, ...previous };
+    if (Object.hasOwn(previous, fileSetProjectName)) {
+      expanded[fileSetProjectName] = Array.from(
+        new Set(previous[fileSetProjectName].concat(files))
+      );
+    }
+    return expanded;
+  }, {});
 
   return {
     general: [
