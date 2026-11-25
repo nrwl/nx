@@ -1,13 +1,17 @@
 use std::{
+    cell::Cell,
     env,
     fs::{self},
-    io::Read,
-    path::Path,
+    io::{self, Read},
+    path::{Component, Path},
 };
 
 use super::{
     cache::CachedResult,
-    errors::{HttpRemoteCacheErrors, convert_request_error, convert_response_to_error},
+    errors::{
+        HttpRemoteCacheErrors, convert_request_error, convert_response_to_error,
+        report_request_error,
+    },
 };
 use flate2::Compression;
 use reqwest::{Client, ClientBuilder, StatusCode, header};
@@ -43,6 +47,19 @@ pub struct HttpRemoteCache {
 impl HttpRemoteCache {
     #[napi(constructor)]
     pub fn new() -> Self {
+        Self::with_read_timeouts(
+            env::var("NX_SELF_HOSTED_REMOTE_CACHE_SERVER")
+                .expect("NX_REMOTE_CACHE_URL must be set"),
+            DOWNLOAD_TIMEOUT,
+            UPLOAD_TIMEOUT,
+        )
+    }
+
+    fn with_read_timeouts(
+        url: String,
+        download_timeout: Duration,
+        upload_timeout: Duration,
+    ) -> Self {
         let mut headers = header::HeaderMap::new();
         let auth_token = env::var("NX_SELF_HOSTED_REMOTE_CACHE_ACCESS_TOKEN");
         if let Ok(token) = auth_token {
@@ -95,10 +112,9 @@ impl HttpRemoteCache {
         };
 
         HttpRemoteCache {
-            download_client: build_client(DOWNLOAD_TIMEOUT),
-            upload_client: build_client(UPLOAD_TIMEOUT),
-            url: env::var("NX_SELF_HOSTED_REMOTE_CACHE_SERVER")
-                .expect("NX_REMOTE_CACHE_URL must be set"),
+            download_client: build_client(download_timeout),
+            upload_client: build_client(upload_timeout),
+            url,
         }
     }
 
@@ -263,13 +279,18 @@ impl HttpRemoteCache {
     /// server committed anyway — and the caller may fall back to rebuilding.
     /// An archive that tries to write outside `output_dir` is `UnsafeArtifact`
     /// and always stops the run, because a cache server behaving that way is
-    /// not something to silently work around.
+    /// not something to silently work around. A disk that refuses a write is
+    /// `LocalCacheError`, which also stops the run but blames the machine.
     fn extract_tarball(
         content: &[u8],
         cache_directory: &str,
         hash: &str,
     ) -> Result<CachedResult, HttpRemoteCacheErrors> {
-        let tar = flate2::read::GzDecoder::new(content);
+        let stream_ended = Cell::new(false);
+        let tar = WatchedStream {
+            inner: flate2::read::GzDecoder::new(content),
+            ended: &stream_ended,
+        };
         let mut archive = Archive::new(tar);
         let entries = archive.entries().map_err(|e| {
             HttpRemoteCacheErrors::CorruptArtifact(format!(
@@ -358,13 +379,29 @@ impl HttpRemoteCache {
                 );
                 let is_file = entry.header().entry_type().is_file();
                 let entry_size = entry.size();
-                // Reject entries `unpack_in` skips (`..`) or refuses (symlink escape).
+                let link_target = if entry.header().entry_type().is_hard_link() {
+                    entry
+                        .link_name()
+                        .map_err(|e| {
+                            HttpRemoteCacheErrors::CorruptArtifact(format!(
+                                "invalid link target for entry {}: {}",
+                                entry_path, e
+                            ))
+                        })?
+                        .map(|target| output_dir.join(target))
+                } else {
+                    None
+                };
                 let unpacked = entry.unpack_in(&output_dir).map_err(|e| {
-                    HttpRemoteCacheErrors::UnsafeArtifact(format!(
-                        "failed to unpack entry {}: {}",
-                        entry_path, e
-                    ))
+                    classify_unpack_error(
+                        &output_dir,
+                        &entry_path,
+                        link_target.as_deref(),
+                        stream_ended.get(),
+                        e,
+                    )
                 })?;
+                // `unpack_in` skips `..` entries instead of failing on them.
                 if !unpacked {
                     return Err(HttpRemoteCacheErrors::UnsafeArtifact(format!(
                         "refusing to extract cache entry with unsafe path: {}",
@@ -391,6 +428,85 @@ impl HttpRemoteCache {
             size: Some(size),
         })
     }
+}
+
+/// Flags when the archive stream errors or runs dry. An entry body is read
+/// through a length limit, so either one during an unpack means the artifact
+/// was cut short.
+struct WatchedStream<'a, R> {
+    inner: R,
+    ended: &'a Cell<bool>,
+}
+
+impl<R: Read> Read for WatchedStream<'_, R> {
+    fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
+        let result = self.inner.read(buf);
+        if result.is_err() || matches!(result, Ok(0) if !buf.is_empty()) {
+            self.ended.set(true);
+        }
+        result
+    }
+}
+
+/// `tar` reports a path escape, a truncated body and a full disk as the same
+/// `io::Error`, so the cause is read off the filesystem and the stream instead.
+fn classify_unpack_error(
+    output_dir: &Path,
+    entry_path: &str,
+    link_target: Option<&Path>,
+    stream_ended: bool,
+    err: io::Error,
+) -> HttpRemoteCacheErrors {
+    let mut destination = output_dir.to_path_buf();
+    for component in Path::new(entry_path).components() {
+        if let Component::Normal(part) = component {
+            destination.push(part);
+        }
+    }
+    let cause = report_request_error(&err);
+
+    if resolves_outside(output_dir, &destination)
+        || link_target.is_some_and(|target| resolves_outside(output_dir, target))
+    {
+        return HttpRemoteCacheErrors::UnsafeArtifact(format!(
+            "refusing to extract cache entry {} outside the cache directory: {}",
+            entry_path, cause
+        ));
+    }
+
+    // `tar` raises `Other` only for archive contents it refuses. Errors from the
+    // OS carry a specific kind.
+    let link_target_missing = link_target.is_some_and(|target| target.symlink_metadata().is_err());
+    if stream_ended || link_target_missing || err.kind() == io::ErrorKind::Other {
+        return HttpRemoteCacheErrors::CorruptArtifact(format!(
+            "failed to unpack entry {}: {}",
+            entry_path, cause
+        ));
+    }
+
+    HttpRemoteCacheErrors::LocalCacheError(format!(
+        "failed to write entry {} into {}: {}",
+        entry_path,
+        output_dir.display(),
+        cause
+    ))
+}
+
+/// Whether `path` lands outside `root` once the symlinks already on disk are
+/// followed, matching `tar`'s own containment check. A symlink that does not
+/// resolve counts as outside.
+fn resolves_outside(root: &Path, path: &Path) -> bool {
+    let Ok(root) = dunce::canonicalize(root) else {
+        return false;
+    };
+    let mut existing = path;
+    while existing.symlink_metadata().is_err() {
+        match existing.parent() {
+            Some(parent) => existing = parent,
+            None => return false,
+        }
+    }
+    dunce::canonicalize(existing).map_or(true, |resolved| !resolved.starts_with(&root))
 }
 
 #[cfg(test)]
@@ -759,32 +875,112 @@ mod test {
     /// connection and then goes silent. Without a read timeout this blocks
     /// forever; with one it must come back as a recoverable timeout.
     #[tokio::test]
-    async fn retrieve_times_out_against_a_stalled_server() {
+    async fn retrieve_and_store_time_out_against_a_stalled_server() {
         let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
         let addr = listener.local_addr().unwrap();
-        // Accept and hold the connection open without ever writing a response.
+        // Accept and hold both connections open without ever writing a response.
         std::thread::spawn(move || {
-            let held: Vec<_> = listener.incoming().filter_map(Result::ok).take(1).collect();
+            let held: Vec<_> = listener.incoming().filter_map(Result::ok).take(2).collect();
             std::thread::sleep(Duration::from_secs(30));
             drop(held);
         });
 
-        let client = ClientBuilder::new()
-            .connect_timeout(CONNECT_TIMEOUT)
-            .read_timeout(Duration::from_millis(250))
-            .build()
-            .unwrap();
+        let cache = HttpRemoteCache::with_read_timeouts(
+            format!("http://{}", addr),
+            Duration::from_millis(250),
+            Duration::from_millis(250),
+        );
+        let temp = TempDir::new().unwrap();
+        std::fs::create_dir_all(temp.join("123")).unwrap();
+        let cache_dir = temp.to_str().unwrap().to_string();
+        let bounded = Duration::from_secs(5);
 
-        let err = client
-            .get(format!("http://{}/v1/cache/abc", addr))
-            .send()
+        let err = tokio::time::timeout(bounded, cache.retrieve("123".into(), cache_dir.clone()))
             .await
-            .expect_err("a silent server must not block indefinitely");
-
-        assert!(err.is_timeout(), "expected a timeout, got {:?}", err);
+            .expect("retrieve must not block on a silent server")
+            .expect_err("a silent server is not a cache hit");
+        assert_eq!(err.status, napi::Status::GenericFailure, "{}", err.reason);
         assert!(
-            !convert_request_error(&err, false).is_fatal(),
-            "a stalled cache server should degrade to a miss, not fail the run"
+            err.reason.starts_with("Timed out downloading"),
+            "{}",
+            err.reason
+        );
+
+        let err = tokio::time::timeout(
+            bounded,
+            cache.store("123".into(), cache_dir, String::new(), 0),
+        )
+        .await
+        .expect("store must not block on a silent server")
+        .expect_err("a silent server did not acknowledge the upload");
+        assert_eq!(err.status, napi::Status::GenericFailure, "{}", err.reason);
+        assert!(
+            err.reason.starts_with("Timed out uploading"),
+            "{}",
+            err.reason
+        );
+    }
+
+    #[test]
+    fn extract_reports_a_truncated_body_as_damage() {
+        let mut state: u32 = 0x9e37_79b9;
+        let body: Vec<u8> = (0..64 * 1024)
+            .map(|_| {
+                state ^= state << 13;
+                state ^= state >> 17;
+                state ^= state << 5;
+                state as u8
+            })
+            .collect();
+        let mut tar = Builder::new(Vec::new());
+        let (header, data) = raw_entry("dist/main.js", EntryType::Regular, None, &body);
+        tar.append(&header, data.as_slice()).unwrap();
+        let tar = tar.into_inner().unwrap();
+        let gzip = |bytes: &[u8]| {
+            let mut encoder = GzEncoder::new(Vec::new(), Compression::default());
+            std::io::Write::write_all(&mut encoder, bytes).unwrap();
+            encoder.finish().unwrap()
+        };
+
+        // Gzip cut mid-body, so the decoder errors.
+        let full = gzip(&tar);
+        let cut_gzip = full[..full.len() / 2].to_vec();
+        // Tar cut mid-body inside a complete gzip, so the stream ends cleanly.
+        let cut_tar = gzip(&tar[..512 + body.len() / 2]);
+
+        for artifact in [cut_gzip, cut_tar] {
+            let temp = TempDir::new().unwrap();
+            let cache_dir = temp.join("cache");
+
+            let result =
+                HttpRemoteCache::extract_tarball(&artifact, cache_dir.to_str().unwrap(), "123");
+
+            assert!(
+                matches!(result, Err(HttpRemoteCacheErrors::CorruptArtifact(_))),
+                "a body that ends early is damage, so the run can still fall back: {:?}",
+                result.err()
+            );
+        }
+    }
+
+    #[test]
+    fn extract_reports_a_blocked_destination_as_local() {
+        let temp = TempDir::new().unwrap();
+        let cache_dir = temp.join("cache");
+        // A file where the artifact needs a directory, so the write fails locally.
+        std::fs::create_dir_all(cache_dir.join("123")).unwrap();
+        std::fs::write(cache_dir.join("123").join("dist"), b"").unwrap();
+        let tar = build_tar_gz(vec![
+            raw_entry("dist/main.js", EntryType::Regular, None, b"console.log(1)"),
+            code_entry(0),
+        ]);
+
+        let result = HttpRemoteCache::extract_tarball(&tar, cache_dir.to_str().unwrap(), "123");
+
+        assert!(
+            matches!(result, Err(HttpRemoteCacheErrors::LocalCacheError(_))),
+            "a local write failure must not be blamed on the server: {:?}",
+            result.err()
         );
     }
 
