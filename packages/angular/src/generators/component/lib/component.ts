@@ -5,6 +5,7 @@ import type { StringLiteral } from 'typescript';
 import {
   locateLibraryBuilderEntryPoint,
   locateLibraryEntryPointFromDirectory,
+  locateSecondaryNgPackageEntryPoint,
 } from '../../utils/entry-point';
 import { getRelativeImportToFile } from '../../utils/path';
 import { usesLibraryBuilder } from '../../utils/project';
@@ -28,8 +29,11 @@ export function exportComponentInEntryPoint(
     return;
   }
 
+  // A library using the library builder can still have ng-packagr secondary
+  // entry points, which another target builds.
   const entryPointPath = usesLibraryBuilder(tree, schema.projectName)
-    ? locateLibraryBuilderEntryPoint(tree, schema.directory, root)
+    ? (locateSecondaryNgPackageEntryPoint(tree, schema.directory, root) ??
+      locateLibraryBuilderEntryPoint(tree, schema.directory, root))
     : locateLibraryEntryPointFromDirectory(
         tree,
         schema.directory,

@@ -62,7 +62,7 @@ export function readLibraryBuilderEntryPoints(
 
     const entryFile = joinPathFragments(rootDir, target);
     const relativeEntryFile = posix.relative(rootDir, entryFile);
-    if (relativeEntryFile === '..' || relativeEntryFile.startsWith('../')) {
+    if (isOutsideDirectory(relativeEntryFile)) {
       continue;
     }
 
@@ -93,7 +93,7 @@ export function locateLibraryBuilderEntryPoint(
     }
 
     const relativeDir = posix.relative(posix.dirname(entryFile), directory);
-    if (relativeDir === '..' || relativeDir.startsWith('../')) {
+    if (isOutsideDirectory(relativeDir)) {
       continue;
     }
     const distance = relativeDir === '' ? 0 : relativeDir.split('/').length;
@@ -131,19 +131,36 @@ function resolveExportTarget(value: unknown): string | undefined {
   return undefined;
 }
 
+// The entry file of the closest ng-package.json between the directory and the
+// project root whose entry file exists. The project root's own is left out.
+export function locateSecondaryNgPackageEntryPoint(
+  tree: Tree,
+  directory: string,
+  projectRoot: string
+): string | null {
+  let dir = directory;
+  let relativeDir = posix.relative(projectRoot, dir);
+  while (relativeDir !== '' && !isOutsideDirectory(relativeDir)) {
+    const entryFile = readNgPackageEntryFile(tree, dir);
+    if (entryFile && tree.isFile(entryFile)) {
+      return entryFile;
+    }
+    dir = posix.dirname(dir);
+    relativeDir = posix.relative(projectRoot, dir);
+  }
+
+  return null;
+}
+
 export function locateLibraryEntryPointFromDirectory(
   tree: Tree,
   directory: string,
   projectRoot: string,
   projectSourceRoot: string
 ): string | null {
-  const ngPackageJsonPath = joinPathFragments(directory, 'ng-package.json');
-  let entryPointFile = tree.exists(ngPackageJsonPath)
-    ? (readJson(tree, ngPackageJsonPath).lib?.entryFile ?? 'src/public_api.ts')
-    : null;
-
+  const entryPointFile = readNgPackageEntryFile(tree, directory);
   if (entryPointFile) {
-    return joinPathFragments(directory, entryPointFile);
+    return entryPointFile;
   }
 
   if (directory === projectRoot) {
@@ -158,4 +175,17 @@ export function locateLibraryEntryPointFromDirectory(
     projectRoot,
     projectSourceRoot
   );
+}
+
+function readNgPackageEntryFile(tree: Tree, directory: string): string | null {
+  const ngPackageJsonPath = joinPathFragments(directory, 'ng-package.json');
+  const entryFile = tree.exists(ngPackageJsonPath)
+    ? (readJson(tree, ngPackageJsonPath).lib?.entryFile ?? 'src/public_api.ts')
+    : null;
+
+  return entryFile ? joinPathFragments(directory, entryFile) : null;
+}
+
+function isOutsideDirectory(relativePath: string): boolean {
+  return relativePath === '..' || relativePath.startsWith('../');
 }

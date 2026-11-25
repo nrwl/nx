@@ -1125,6 +1125,12 @@ export class LibModule {}
         './example/example',
       ],
       [
+        'a secondary entry point with an ng-package.json',
+        'libs/lib1/legacy/src/lib/example/example',
+        'libs/lib1/legacy/src/index.ts',
+        './lib/example/example',
+      ],
+      [
         'the primary entry point when no entry point contains the component',
         'libs/lib1/other/example/example',
         'libs/lib1/src/public-api.ts',
@@ -1149,7 +1155,17 @@ export class LibModule {}
             './utils': './src/utils/index.ts',
           },
         });
+        writeJson(tree, 'libs/lib1/ng-package.json', {
+          lib: { entryFile: 'src/public-api.ts' },
+        });
+        writeJson(tree, 'libs/lib1/legacy/ng-package.json', {
+          lib: { entryFile: 'src/index.ts' },
+        });
+        writeJson(tree, 'libs/lib1/testing/ng-package.json', {
+          lib: { entryFile: 'src/public-api.ts' },
+        });
         const entryFiles = [
+          'libs/lib1/legacy/src/index.ts',
           'libs/lib1/src/helpers.ts',
           'libs/lib1/src/public-api.ts',
           'libs/lib1/testing/src/index.ts',
