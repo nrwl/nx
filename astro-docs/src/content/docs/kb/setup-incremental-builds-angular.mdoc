@@ -21,8 +21,12 @@ You can generate a new buildable library with:
 nx g @nx/angular:lib libs/my-lib --buildable
 ```
 
-The generated buildable library uses the `@nx/angular:ng-packagr-lite` executor which is optimized for the incremental
-builds scenario:
+The generated buildable library uses the `@nx/angular:library` executor when both `@angular/core` and the
+Angular build package are at version 22.3 or later.
+The build package is `@angular/build`, or `@angular-devkit/build-angular` when the workspace doesn't declare
+`@angular/build`.
+The executor builds the library with the Angular library builder (`@angular/build:library`) against the
+outputs of the buildable libraries it depends on:
 
 ```jsonc
 {
@@ -30,11 +34,12 @@ builds scenario:
   ...
   "targets": {
     "build": {
-      "executor": "@nx/angular:ng-packagr-lite",
+      "executor": "@nx/angular:library",
       "outputs": [
-        "{workspaceRoot}/dist/libs/my-lib"
+        "{options.outputPath}"
       ],
       "options": {
+        "outputPath": "dist/libs/my-lib",
         ...
       },
       "configurations": {
@@ -48,15 +53,9 @@ builds scenario:
 },
 ```
 
-{% aside type="caution" title="More details" %}
-Please note that it is important to keep the `outputs` property in sync with the `dest` property in the file
-`ng-package.json` located inside the library root. When a library is generated, this is configured correctly, but if the
-path is later changed in `ng-package.json`, it needs to be updated as well in the project configuration.
-
-The `@nx/angular:package` executor also supports incremental builds. It is used to build and package an Angular library
-to be distributed as an NPM package following the Angular Package Format (APF) specification. It will be automatically
-configured when generating a publishable library (`nx g @nx/angular:lib libs/my-lib --publishable --importPath my-lib`).
-{% /aside %}
+A publishable library (`nx g @nx/angular:lib libs/my-lib --publishable --importPath my-lib`) uses the same
+executor, so it supports incremental builds too.
+For libraries that use ng-packagr, see [libraries built with ng-packagr](#libraries-built-with-ng-packagr).
 
 ## Adjust the application executor
 
@@ -268,7 +267,7 @@ nx serve my-app
 
 It is required to use the same target name for the build target (target using one of the executors that support
 incremental builds: `@nx/angular:application`, `@nx/angular:browser-esbuild`, `@nx/angular:webpack-browser`,
-`@nx/angular:package` and `@nx/angular:ng-packagr-lite`) in the
+`@nx/angular:library`, `@nx/angular:package`, and `@nx/angular:ng-packagr-lite`) in the
 project being built and the buildable libraries it depends on. The executors that support incremental builds rely on the
 build target name of the project to identify which of the libraries it depends on are buildable.
 
@@ -353,11 +352,12 @@ depends on must also be `build-base`:
   ...
   "targets": {
     "build-base": {
-      "executor": "@nx/angular:ng-packagr-lite",
+      "executor": "@nx/angular:library",
       "outputs": [
-        "{workspaceRoot}/dist/libs/my-lib"
+        "{options.outputPath}"
       ],
       "options": {
+        "outputPath": "dist/libs/my-lib",
         ...
       },
       "configurations": {
@@ -370,6 +370,18 @@ depends on must also be `build-base`:
   ...
 },
 ```
+
+## Libraries built with ng-packagr
+
+When `@angular/core` or the Angular build package is older than 22.3, the generator falls back to
+ng-packagr.
+It configures buildable libraries with the `@nx/angular:ng-packagr-lite` executor and publishable libraries
+with the `@nx/angular:package` executor.
+Libraries keep these executors when you upgrade Angular, and both executors support incremental builds.
+
+Both executors write the library to the `dest` path in the `ng-package.json` file at the library root,
+and the generator sets the target's `outputs` to the same path.
+If you change `dest`, update `outputs` in the project configuration too.
 
 ## Example repository
 

@@ -1,4 +1,5 @@
 import { names, type Tree } from '@nx/devkit';
+import { lt } from 'semver';
 import {
   determineProjectNameAndRootOptions,
   ensureRootProjectName,
@@ -8,7 +9,10 @@ import {
   getComponentType,
   getModuleTypeSeparator,
 } from '../../utils/artifact-types';
-import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
+import {
+  angularBuildSupportsLibraryBuilder,
+  getInstalledAngularVersionInfo,
+} from '../../utils/version-utils';
 import type { Schema } from '../schema';
 import type { NormalizedSchema } from './normalized-schema';
 import { normalizeLinterOption } from '@nx/js/internal';
@@ -55,7 +59,8 @@ export async function normalizeOptions(
   const moduleTypeSeparator = getModuleTypeSeparator(host);
   const modulePath = `${projectRoot}/src/lib/${fileName}${moduleTypeSeparator}module.ts`;
 
-  const { major: angularMajorVersion } = getInstalledAngularVersionInfo(host);
+  const { major: angularMajorVersion, version: angularVersion } =
+    getInstalledAngularVersionInfo(host);
   const unitTestRunner =
     options.unitTestRunner ??
     (angularMajorVersion >= 21 && (options.buildable || options.publishable)
@@ -84,6 +89,12 @@ export async function normalizeOptions(
       names(projectNames.projectSimpleName).className
     }Component`,
     moduleTypeSeparator,
+    useLibraryBuilder:
+      (options.buildable || options.publishable) &&
+      !lt(angularVersion, '22.3.0') &&
+      angularBuildSupportsLibraryBuilder(host, {
+        skipPackageJson: options.skipPackageJson,
+      }),
   };
 
   const {

@@ -236,10 +236,10 @@ describe('release publishable libraries', () => {
       {project-name} 🏷️  Resolved the current version as 0.0.3 from git tag "v0.0.3", based on releaseTag.pattern "v{version}"
       {project-name} ❓ Applied explicit semver value "0.0.4", from the given specifier, to get new version 0.0.4
       {project-name} ✍️  New version 0.0.4 written to manifest: dist/packages/{project-name}/package.json
-      "name": "@proj/{project-name}",
-      -   "version": "0.0.1",
-      +   "version": "0.0.4",
-      "sideEffects": false,
+      },
+      -   "version": "0.0.1"
+      +   "version": "0.0.4"
+      }
       NX   Staging changed files with git
       No files to stage. Skipping git add.
       NX   Generating an entry in CHANGELOG.md for v0.0.4

@@ -19,7 +19,24 @@ export async function addProject(
     targets: {},
   };
 
-  if (libraryOptions.buildable || libraryOptions.publishable) {
+  if (libraryOptions.useLibraryBuilder) {
+    addBuildTargetDefaults(tree, '@nx/angular:library');
+
+    project.targets.build = {
+      executor: '@nx/angular:library',
+      outputs: ['{options.outputPath}'],
+      options: {
+        tsConfig: `${libraryOptions.projectRoot}/tsconfig.lib.json`,
+        outputPath: joinPathFragments('dist', libraryOptions.projectRoot),
+        compilationMode: libraryOptions.compilationMode,
+      },
+      configurations: {
+        production: {},
+        development: { compilationMode: 'full', declarationMap: true },
+      },
+      defaultConfiguration: 'production',
+    };
+  } else if (libraryOptions.buildable || libraryOptions.publishable) {
     const executor = libraryOptions.publishable
       ? '@nx/angular:package'
       : '@nx/angular:ng-packagr-lite';
@@ -41,14 +58,10 @@ export async function addProject(
       },
       defaultConfiguration: 'production',
     };
+  }
 
-    if (libraryOptions.publishable) {
-      await addReleaseConfigForNonTsSolution(
-        tree,
-        libraryOptions.name,
-        project
-      );
-    }
+  if (libraryOptions.publishable) {
+    await addReleaseConfigForNonTsSolution(tree, libraryOptions.name, project);
   }
 
   addProjectConfiguration(tree, libraryOptions.name, project);

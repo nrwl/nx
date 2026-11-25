@@ -73,6 +73,30 @@ export function createFiles(
     );
   }
 
+  if (options.libraryOptions.useLibraryBuilder) {
+    const { projectRoot } = options.libraryOptions;
+    tree.delete(joinPathFragments(projectRoot, 'ng-package.json'));
+    tree.delete(joinPathFragments(projectRoot, 'tsconfig.lib.prod.json'));
+    updateJson(
+      tree,
+      joinPathFragments(projectRoot, 'package.json'),
+      (json) => ({
+        ...json,
+        exports: { '.': './src/index.ts' },
+      })
+    );
+    // The development configuration enables declaration maps. Production
+    // follows the workspace tsconfig.
+    updateJson(
+      tree,
+      joinPathFragments(projectRoot, 'tsconfig.lib.json'),
+      (json) => {
+        delete json.compilerOptions.declarationMap;
+        return json;
+      }
+    );
+  }
+
   if (options.libraryOptions.standalone) {
     generateFiles(
       tree,

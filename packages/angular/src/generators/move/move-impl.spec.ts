@@ -85,6 +85,14 @@ describe('move-impl (Angular plugin for @nx/workspace:move)', () => {
     await move(tree, { oldProjectName, newProjectName });
   }
 
+  // Buildable libraries use ng-packagr below Angular 22.3.
+  function setAngularCoreVersion(version: string) {
+    updateJson(tree, 'package.json', (json) => ({
+      ...json,
+      dependencies: { ...json.dependencies, '@angular/core': version },
+    }));
+  }
+
   beforeEach(async () => {
     tree = createTreeWithEmptyWorkspace();
 
@@ -112,6 +120,7 @@ describe('move-impl (Angular plugin for @nx/workspace:move)', () => {
   });
 
   it('should update ng-package.json dest property', async () => {
+    setAngularCoreVersion('~22.2.0');
     await generateTestLibrary(tree, {
       directory: 'mylib2',
       buildable: true,
@@ -126,6 +135,7 @@ describe('move-impl (Angular plugin for @nx/workspace:move)', () => {
   });
 
   it('should update secondary entry points readme file', async () => {
+    setAngularCoreVersion('~22.2.0');
     await generateTestLibrary(tree, {
       directory: 'mylib2',
       buildable: true,
@@ -406,6 +416,7 @@ describe('move-impl (Angular plugin for @nx/workspace:move)', () => {
         return json;
       });
       addProjectToGraph('my-lib');
+      setAngularCoreVersion('~22.2.0');
       await generateTestLibrary(tree, {
         directory: 'my-lib',
         buildable: true,

@@ -17,6 +17,7 @@ import {
   setupProjectsTest,
   resetProjectsTest,
   cleanupProjectsTest,
+  convertToNgPackagrLibrary,
   ProjectsTestSetup,
 } from './projects-setup';
 
@@ -47,6 +48,8 @@ describe('Angular Projects - Buildable Libraries', () => {
     runCLI(
       `generate @nx/angular:library ${buildableChildLib} --buildable=true --no-standalone --no-interactive`
     );
+    // an ng-packagr library depending on a library builder one
+    convertToNgPackagrLibrary(buildableLib, '@nx/angular:ng-packagr-lite');
     runCLI(
       `generate @nx/angular:secondary-entry-point --name=${entryPoint} --library=${buildableLib} --no-interactive`
     );
@@ -172,10 +175,10 @@ describe('Angular Projects - Buildable Libraries', () => {
 
     // ACT
     // The buildable lib is a dependency of app1, so the failures-only default
-    // would collapse its ng-packagr body to a single line. An explicit static
-    // keeps the body, which is what the assertion below reads. A cache hit
-    // replays that same body, so the proof that it built from source is the
-    // main.js content check further down, not this line.
+    // would collapse its build log to a single line. An explicit static keeps
+    // the log, which is what the assertion below reads. A cache hit replays
+    // that same log, so the proof that it built from source is the main.js
+    // content check further down, not this line.
     const libOutput = runCLI(
       `build ${app1} --configuration=development --output-style=static`
     );
@@ -186,19 +189,13 @@ describe('Angular Projects - Buildable Libraries', () => {
     expect(libOutput).toContain(
       `Building entry point '@${proj}/${buildableLib}'`
     );
+    expect(libOutput).toContain(`Compiling @${proj}/${buildableChildLib}...`);
     expect(libOutput).toContain(`nx run ${app1}:build:development`);
 
     // the development configuration keeps declarationMap enabled
-    const declarationMap = `dist/${buildableLib}/lib/${
-      names(buildableLib).fileName
-    }-module.d.ts.map`;
-    const { sources } = readJson<{ sources: string[] }>(declarationMap);
     expect(
-      sources.map((source) =>
-        relative(
-          tmpProjPath(),
-          join(tmpProjPath(dirname(declarationMap)), source)
-        )
+      readDeclarationMapSources(
+        `dist/${buildableLib}/lib/${names(buildableLib).fileName}-module.d.ts.map`
       )
     ).toEqual([
       join(
@@ -221,6 +218,21 @@ describe('Angular Projects - Buildable Libraries', () => {
     );
     checkFilesDoNotExist(`dist/${buildableLib}/${typings}.map`);
 
+    // the development configuration enables declarationMap
+    const { typings: childTypings } = readJson<{ typings: string }>(
+      `dist/${buildableChildLib}/package.json`
+    );
+    expect(
+      readDeclarationMapSources(`dist/${buildableChildLib}/${childTypings}.map`)
+    ).toEqual([
+      join(
+        buildableChildLib,
+        'src',
+        'lib',
+        `${names(buildableChildLib).fileName}-module.ts`
+      ),
+    ]);
+
     // the package manifest is written while the primary entry point is in
     // progress, so the secondary entry point is mapped before it is built
     expect(packageExports[`./${entryPoint}`]).toBeDefined();
@@ -234,8 +246,18 @@ describe('Angular Projects - Buildable Libraries', () => {
     // the path to dist
     const mainBundle = readFile(`dist/${app1}/main.js`);
     expect(mainBundle).toContain(`dist/${buildableLib}`);
+    expect(mainBundle).toContain(`dist/${buildableChildLib}`);
 
     const mainEsBuildBundle = readFile(`dist/${esbuildApp}/main.js`);
     expect(mainEsBuildBundle).toContain(`dist/${buildableLib}`);
+    expect(mainEsBuildBundle).toContain(`dist/${buildableChildLib}`);
   });
 });
+
+// The sources of a declaration map, relative to the workspace root.
+function readDeclarationMapSources(declarationMap: string): string[] {
+  const { sources } = readJson<{ sources: string[] }>(declarationMap);
+  return sources.map((source) =>
+    relative(tmpProjPath(), join(tmpProjPath(dirname(declarationMap)), source))
+  );
+}

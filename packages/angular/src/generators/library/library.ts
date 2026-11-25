@@ -14,13 +14,16 @@ import init from '../../generators/init/init';
 import { assertSupportedAngularVersion } from '../../utils/assert-supported-angular-version';
 import { UnitTestRunner } from '../../utils/test-runners';
 import addLintingGenerator from '../add-linting/add-linting';
-import { acknowledgeAngularBuildScripts } from '../utils/acknowledge-build-scripts';
+import {
+  acknowledgeAngularBuildScripts,
+  acknowledgeLessBuildScripts,
+} from '../utils/acknowledge-build-scripts';
 import { addJest } from '../utils/add-jest';
 import { addVitestAnalog, addVitestAngular } from '../utils/add-vitest';
 import { addBuildableLibrariesPostCssDependencies } from '../utils/dependencies';
 import { ensureAngularDependencies } from '../utils/ensure-angular-dependencies';
 import { assertNotUsingTsSolutionSetup } from '../utils/validations';
-import { versions } from '../utils/version-utils';
+import { getAngularBuildVersionRange, versions } from '../utils/version-utils';
 import { addModule } from './lib/add-module';
 import { addProject } from './lib/add-project';
 import { addStandaloneComponent } from './lib/add-standalone-component';
@@ -80,16 +83,28 @@ export async function libraryGenerator(
     !libraryOptions.skipPackageJson
   ) {
     acknowledgeAngularBuildScripts(tree);
-    addDependenciesToPackageJson(
-      tree,
-      {},
-      {
-        'ng-packagr': pkgVersions.ngPackagrVersion,
-      },
-      undefined,
-      true
-    );
-    addBuildableLibrariesPostCssDependencies(tree);
+    if (libraryOptions.useLibraryBuilder) {
+      const devDependencies: Record<string, string> = {
+        '@angular/build': getAngularBuildVersionRange(tree),
+      };
+      // ng-packagr depends on less, while @angular/build leaves it optional.
+      if (options.componentOptions.style === 'less') {
+        devDependencies['less'] = pkgVersions.lessVersion;
+        acknowledgeLessBuildScripts(tree);
+      }
+      addDependenciesToPackageJson(tree, {}, devDependencies, undefined, true);
+    } else {
+      addDependenciesToPackageJson(
+        tree,
+        {},
+        {
+          'ng-packagr': pkgVersions.ngPackagrVersion,
+        },
+        undefined,
+        true
+      );
+      addBuildableLibrariesPostCssDependencies(tree);
+    }
   }
 
   if (!libraryOptions.skipFormat) {

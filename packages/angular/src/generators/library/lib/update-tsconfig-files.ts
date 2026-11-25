@@ -137,7 +137,10 @@ function updateProjectIvyConfig(
   host: Tree,
   options: NormalizedSchema['libraryOptions']
 ) {
-  if (options.buildable || options.publishable) {
+  if (
+    (options.buildable || options.publishable) &&
+    !options.useLibraryBuilder
+  ) {
     return updateJson(
       host,
       `${options.projectRoot}/tsconfig.lib.prod.json`,
