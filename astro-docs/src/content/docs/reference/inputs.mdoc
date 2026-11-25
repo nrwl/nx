@@ -66,6 +66,7 @@ Use it for names that contain glob characters, such as a Next.js route group:
 ```
 
 JSON strings need `\\` to write a single `\`.
+Nx inserts the values of `{projectRoot}` and `{projectName}` literally, so `{projectRoot}/**/*` on a project at `apps/(marketing)` needs no escaping. Glob characters you write yourself still do.
 A Windows-style glob such as `{projectRoot}\src\**` matches nothing, because `\s` reads as a plain `s`.
 
 #### Directory paths
