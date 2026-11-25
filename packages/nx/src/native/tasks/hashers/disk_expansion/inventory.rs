@@ -4,10 +4,12 @@ use super::super::{MIN_BATCH_GROUPS, OnceCache};
 use super::entries::{Negation, Positive};
 use super::{FilesExpansion, ProjectScope, parse_group};
 use anyhow::Result;
+use parking_lot::Mutex;
 use rayon::prelude::*;
 use std::collections::{HashMap, HashSet};
+use std::fs::Metadata;
 use std::ops::Range;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::sync::{Arc, OnceLock};
 
 use crate::native::glob::expand_literal_braces;
@@ -17,11 +19,36 @@ use crate::native::walker::{
     DiskWalkIgnores, PathPredicate, disk_relative_path, is_normalized_disk_root,
 };
 
+const MIN_PARALLEL_DISK_OPS: usize = 64;
+const MIN_DISK_CHUNK_SIZE: usize = 16;
+
 struct File {
     path: String,
     // Length of the widest requested root whose walk can see this file.
     visible_from: usize,
     content: OnceLock<Option<String>>,
+    reading: Mutex<()>,
+}
+
+impl File {
+    fn new(path: String, visible_from: usize) -> Self {
+        Self {
+            path,
+            visible_from,
+            content: OnceLock::new(),
+            reading: Mutex::new(()),
+        }
+    }
+
+    fn hash(&self, read: &impl Fn(&str) -> Option<String>) -> Option<&str> {
+        self.content
+            .get()
+            .unwrap_or_else(|| {
+                let _reading = self.reading.lock();
+                self.content.get_or_init(|| read(&self.path))
+            })
+            .as_deref()
+    }
 }
 
 struct PositiveMatches {
@@ -42,92 +69,116 @@ pub(crate) struct SettledFiles {
 
 impl SettledFiles {
     fn inventory(workspace_root: &Path, roots: HashSet<&str>) -> Result<Self> {
+        Self::inventory_with_metadata(workspace_root, roots, |path| std::fs::metadata(path).ok())
+    }
+
+    fn inventory_with_metadata(
+        workspace_root: &Path,
+        roots: HashSet<&str>,
+        metadata: impl Fn(&Path) -> Option<Metadata> + Sync,
+    ) -> Result<Self> {
         let timer = std::time::Instant::now();
         let mut counts = InventoryCounts {
             requested_roots: roots.len(),
             ..Default::default()
         };
         let ignores = DiskWalkIgnores::new()?;
-        let mut roots = Vec::from_iter(roots);
-        roots.sort_unstable_by_key(|root| root.len());
+        // Walk shallower roots first. Siblings can be stat'ed together once
+        // any ancestor walks have covered the roots they can see.
+        let mut roots: Vec<_> = roots
+            .into_iter()
+            .map(|root| {
+                let depth =
+                    usize::from(!root.is_empty()) + root.bytes().filter(|&c| c == b'/').count();
+                (depth, root)
+            })
+            .collect();
+        roots.sort_unstable_by_key(|&(depth, _)| depth);
         let mut directories = HashSet::new();
         let mut directory_roots = HashSet::new();
         let mut entries = Vec::new();
-        let explicit_files: hashbrown::HashSet<&str> = roots.iter().copied().collect();
+        let explicit_files: hashbrown::HashSet<&str> =
+            roots.iter().map(|&(_, root)| root).collect();
         let mut seen_files = hashbrown::HashSet::new();
-        for root in roots {
-            let start = workspace_root.join(root);
-            if directories.contains(&start) {
-                continue;
-            }
-            if seen_files.contains(root) {
-                continue;
-            }
-            let Ok(metadata) = std::fs::metadata(&start) else {
-                continue;
-            };
-            if metadata.is_file() {
-                entries.push(File {
-                    path: root.to_owned(),
-                    visible_from: root.len(),
-                    content: OnceLock::new(),
-                });
-                seen_files.insert(root.to_owned());
-                continue;
-            }
-            directory_roots.insert(root.to_owned());
-            if !metadata.is_dir() {
-                continue;
-            }
-            counts.traversal_starts += 1;
-            let mut level = vec![start];
-            while !level.is_empty() {
-                level.retain(|d| directories.insert(d.clone()));
-                counts.read_dir_calls += level.len();
-                let children: Vec<_> = level
-                    .par_iter()
-                    .map(|dir| {
-                        let mut dirs = Vec::new();
-                        let mut files = Vec::new();
-                        if let Ok(list) = std::fs::read_dir(dir) {
-                            for entry in list.flatten() {
-                                let path = entry.path();
-                                if ignores.skips(&path) {
-                                    continue;
-                                }
-                                let Some(relative) = disk_relative_path(workspace_root, &path)
-                                else {
-                                    continue;
-                                };
-                                let Ok(kind) = entry.file_type() else {
-                                    continue;
-                                };
-                                if kind.is_dir() {
-                                    dirs.push(path);
-                                } else if kind.is_file()
-                                    || (kind.is_symlink()
-                                        && std::fs::metadata(&path).is_ok_and(|m| !m.is_dir()))
-                                {
-                                    files.push(relative.into_owned());
+        for layer in roots.chunk_by(|a, b| a.0 == b.0) {
+            let uncovered: Vec<_> = layer
+                .iter()
+                .filter_map(|&(_, root)| {
+                    if seen_files.contains(root) {
+                        return None;
+                    }
+                    let start = workspace_root.join(root);
+                    (!directories.contains(&start)).then_some((root, start))
+                })
+                .collect();
+            let stat =
+                |(root, start): (_, PathBuf)| metadata(&start).map(|meta| (root, meta.file_type()));
+            let stats: Vec<_> =
+                if uncovered.len() >= MIN_PARALLEL_DISK_OPS && rayon::current_num_threads() > 1 {
+                    uncovered
+                        .into_par_iter()
+                        .with_min_len(MIN_DISK_CHUNK_SIZE)
+                        .filter_map(stat)
+                        .collect()
+                } else {
+                    uncovered.into_iter().filter_map(stat).collect()
+                };
+            for (root, kind) in stats {
+                if kind.is_file() {
+                    entries.push(File::new(root.to_owned(), root.len()));
+                    seen_files.insert(root.to_owned());
+                    continue;
+                }
+                directory_roots.insert(root.to_owned());
+                if !kind.is_dir() {
+                    continue;
+                }
+                counts.traversal_starts += 1;
+                let mut level = vec![workspace_root.join(root)];
+                while !level.is_empty() {
+                    level.retain(|d| directories.insert(d.clone()));
+                    counts.read_dir_calls += level.len();
+                    let children: Vec<_> = level
+                        .par_iter()
+                        .map(|dir| {
+                            let mut dirs = Vec::new();
+                            let mut files = Vec::new();
+                            if let Ok(list) = std::fs::read_dir(dir) {
+                                for entry in list.flatten() {
+                                    let path = entry.path();
+                                    if ignores.skips(&path) {
+                                        continue;
+                                    }
+                                    let Some(relative) = disk_relative_path(workspace_root, &path)
+                                    else {
+                                        continue;
+                                    };
+                                    let Ok(kind) = entry.file_type() else {
+                                        continue;
+                                    };
+                                    if kind.is_dir() {
+                                        dirs.push(path);
+                                    } else if kind.is_file()
+                                        || (kind.is_symlink()
+                                            && std::fs::metadata(&path).is_ok_and(|m| !m.is_dir()))
+                                    {
+                                        files.push(relative.into_owned());
+                                    }
                                 }
                             }
+                            (dirs, files)
+                        })
+                        .collect();
+                    level.clear();
+                    for (mut dirs, files) in children {
+                        level.append(&mut dirs);
+                        for path in files {
+                            // A literal root may also have been reached from a broader walk.
+                            if explicit_files.contains(path.as_str()) {
+                                seen_files.insert(path.clone());
+                            }
+                            entries.push(File::new(path, root.len()));
                         }
-                        (dirs, files)
-                    })
-                    .collect();
-                level.clear();
-                for (mut dirs, files) in children {
-                    level.append(&mut dirs);
-                    for path in files {
-                        // A literal root may also have been reached from a broader walk.
-                        if explicit_files.contains(path.as_str()) {
-                            seen_files.insert(path.clone());
-                        }
-                        entries.push(File {
-                            path,
-                            visible_from: root.len(),
-                            content: OnceLock::new(),
-                        });
                     }
                 }
             }
@@ -306,11 +357,7 @@ impl SettledFiles {
         let mut extra: Vec<_> = tracked_literals
             .into_iter()
             .filter(|path| inventory.exact(path).is_none())
-            .map(|path| File {
-                path: path.to_owned(),
-                visible_from: usize::MAX,
-                content: OnceLock::new(),
-            })
+            .map(|path| File::new(path.to_owned(), usize::MAX))
             .collect();
         if !extra.is_empty() {
             inventory.entries.append(&mut extra);
@@ -387,12 +434,12 @@ impl SettledFiles {
         Ok(ids)
     }
 
-    fn matches(
+    fn match_ids(
         &self,
         globs: &[impl AsRef<str>],
         roots: &[String],
         tracked: PathPredicate,
-    ) -> Result<impl Iterator<Item = &File>> {
+    ) -> Result<Vec<u32>> {
         let scope = std::cell::OnceCell::new();
         let mut positives = Vec::new();
         let mut negatives = Vec::new();
@@ -440,7 +487,36 @@ impl SettledFiles {
                 excluded.next_if_eq(id).is_none()
             });
         }
-        Ok(positives.into_iter().map(|id| &self.entries[id as usize]))
+        Ok(positives)
+    }
+
+    fn prefetch_content(
+        &self,
+        ids: &[u32],
+        tracked: PathPredicate,
+        read: &(impl Fn(&str) -> Option<String> + Sync),
+    ) {
+        if ids.len() < MIN_PARALLEL_DISK_OPS || rayon::current_num_threads() == 1 {
+            return;
+        }
+        let pending: Vec<_> = ids
+            .iter()
+            .map(|&id| &self.entries[id as usize])
+            .filter(|file| file.content.get().is_none() && !tracked(&file.path))
+            .collect();
+        if pending.len() < MIN_PARALLEL_DISK_OPS {
+            return;
+        }
+        pending
+            .into_par_iter()
+            .with_min_len(MIN_DISK_CHUNK_SIZE)
+            .for_each(|file| {
+                // If an overlapping group is reading this file, keep working
+                // through the remaining files. The ordered fold can wait later.
+                if let Some(_reading) = file.reading.try_lock() {
+                    file.content.get_or_init(|| read(&file.path));
+                }
+            });
     }
 
     pub(crate) fn file_hashes(
@@ -448,13 +524,15 @@ impl SettledFiles {
         globs: &[impl AsRef<str>],
         roots: &[String],
         tracked: PathPredicate,
-        read: impl Fn(&str) -> Option<String>,
+        read: impl Fn(&str) -> Option<String> + Sync,
     ) -> Result<Vec<(String, String)>> {
-        Ok(self
-            .matches(globs, roots, tracked)?
-            .filter_map(|file| {
-                let value = file.content.get_or_init(|| read(&file.path)).as_ref()?;
-                Some((file.path.clone(), value.clone()))
+        let ids = self.match_ids(globs, roots, tracked)?;
+        self.prefetch_content(&ids, tracked, &read);
+        Ok(ids
+            .into_iter()
+            .filter_map(|id| {
+                let file = &self.entries[id as usize];
+                Some((file.path.clone(), file.hash(&read)?.to_owned()))
             })
             .collect())
     }
@@ -467,8 +545,9 @@ impl SettledFiles {
     ) -> Result<FilesExpansion> {
         Ok(FilesExpansion {
             files: self
-                .matches(globs, roots, tracked)?
-                .map(|f| f.path.clone())
+                .match_ids(globs, roots, tracked)?
+                .into_iter()
+                .map(|id| self.entries[id as usize].path.clone())
                 .collect(),
         })
     }
@@ -478,16 +557,19 @@ impl SettledFiles {
         globs: &[impl AsRef<str>],
         roots: &[String],
         tracked: PathPredicate,
-        read: impl Fn(&str) -> Option<String>,
+        read: impl Fn(&str) -> Option<String> + Sync,
         collect_inputs: bool,
     ) -> Result<(String, Vec<String>)> {
+        let ids = self.match_ids(globs, roots, tracked)?;
+        self.prefetch_content(&ids, tracked, &read);
         let mut hash = xxhash_rust::xxh3::Xxh3::new();
         let mut inputs = Vec::new();
-        for file in self.matches(globs, roots, tracked)? {
+        for id in ids {
+            let file = &self.entries[id as usize];
             if collect_inputs {
                 inputs.push(file.path.clone());
             }
-            if let Some(value) = file.content.get_or_init(|| read(&file.path)) {
+            if let Some(value) = file.hash(&read) {
                 hash.update(file.path.as_bytes());
                 hash.update(value.as_bytes());
             }
@@ -535,6 +617,132 @@ mod tests {
             disk_relative_path(root, &valid).as_deref(),
             Some("pkg/name-\u{fffd}")
         );
+    }
+
+    #[test]
+    fn literal_roots_stat_in_parallel_after_ancestor_walks() -> Result<()> {
+        use std::sync::atomic::{AtomicUsize, Ordering::Relaxed};
+        use std::time::Duration;
+
+        let temp = TempDir::new()?;
+        let workspace = temp.path();
+        let paths: Vec<_> = (0..128).map(|i| format!("pkg/file-{i:03}")).collect();
+        std::fs::create_dir(workspace.join("pkg"))?;
+        for path in &paths {
+            std::fs::write(workspace.join(path), "sample")?;
+        }
+        let pool = rayon::ThreadPoolBuilder::new().num_threads(4).build()?;
+        for ancestor in [false, true] {
+            let mut roots: HashSet<_> = paths.iter().map(String::as_str).collect();
+            if ancestor {
+                roots.insert("pkg");
+            }
+            let calls = AtomicUsize::new(0);
+            let workers = AtomicUsize::new(0);
+            let inventory = pool.install(|| {
+                SettledFiles::inventory_with_metadata(workspace, roots, |path| {
+                    calls.fetch_add(1, Relaxed);
+                    workers.fetch_or(1 << rayon::current_thread_index().unwrap(), Relaxed);
+                    std::thread::sleep(Duration::from_millis(1));
+                    std::fs::metadata(path).ok()
+                })
+            })?;
+            assert_eq!(inventory.entries.len(), paths.len());
+            assert_eq!(calls.load(Relaxed), if ancestor { 1 } else { paths.len() });
+            assert_eq!(workers.load(Relaxed).count_ones() > 1, !ancestor);
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn large_disk_groups_read_cold_files_in_parallel_and_share_results() -> Result<()> {
+        use crate::native::tasks::hashers::fold_file_hashes;
+        use crate::native::test_utils::hash_plans;
+        use std::sync::atomic::{AtomicUsize, Ordering::Relaxed};
+        use std::time::Duration;
+
+        let temp = TempDir::new()?;
+        let workspace = temp.path();
+        let paths: Vec<_> = (0..128).map(|i| format!("pkg/file-{i:03}.bin")).collect();
+        std::fs::create_dir(workspace.join("pkg"))?;
+        for path in &paths {
+            std::fs::write(workspace.join(path), "sample")?;
+        }
+        let primary = ["pkg/*.bin", "!pkg/file-127.bin"];
+        let overlap = ["pkg/*.bin", "!pkg/file-126.bin", "!pkg/file-127.bin"];
+        let instruction = |group: &[&str]| {
+            HashInstruction::ignored_files(group.iter().map(|glob| glob.to_string()).collect())
+        };
+        let names: Vec<_> = (0..MIN_BATCH_GROUPS - 1)
+            .map(|i| format!("task-{i}"))
+            .collect();
+        let mut tasks: Vec<_> = names
+            .iter()
+            .map(|name| {
+                (
+                    name.as_str(),
+                    vec![HashInstruction::ignored_files(vec![format!("out/{name}")])],
+                )
+            })
+            .collect();
+        tasks.push(("primary", vec![instruction(&primary)]));
+        tasks.push(("overlap", vec![instruction(&overlap)]));
+        let plans = hash_plans(&tasks);
+        plans.pool.intern(instruction(&["deferred/**"]));
+        std::fs::create_dir(workspace.join("deferred"))?;
+        std::fs::write(workspace.join("deferred/output"), "producer output")?;
+        let pool = rayon::ThreadPoolBuilder::new().num_threads(4).build()?;
+        let expected: Vec<_> = paths[1..127]
+            .iter()
+            .map(|path| (path.clone(), "content-hash".to_owned()))
+            .collect();
+        let expected_hash = fold_file_hashes(expected.iter().map(|(path, hash)| (path, hash)));
+
+        for (known, overlap_reads) in [(false, false), (false, true), (true, false)] {
+            let tracked = &|_: &str| known;
+            let inventory = pool
+                .install(|| SettledFiles::for_plans(workspace, &plans, tracked))?
+                .unwrap();
+            assert!(!inventory.directory_roots.contains("deferred"));
+            let primary_inventory = inventory
+                .for_group(plans.pool.intern(instruction(&primary)))
+                .unwrap();
+            let workers = AtomicUsize::new(0);
+            let calls = [const { AtomicUsize::new(0) }; 128];
+            let read = |path: &str| {
+                let idx: usize = path["pkg/file-".len()..]
+                    .trim_end_matches(".bin")
+                    .parse()
+                    .unwrap();
+                calls[idx].fetch_add(1, Relaxed);
+                workers.fetch_or(1 << rayon::current_thread_index().unwrap(), Relaxed);
+                if !known {
+                    // Give Rayon work to steal without asserting on elapsed time.
+                    std::thread::sleep(Duration::from_millis(1));
+                }
+                (idx != 0).then(|| "content-hash".to_owned())
+            };
+            let hash = || primary_inventory.hash(&primary, &[], tracked, read, true);
+            let recorded = || inventory.file_hashes(&overlap, &[], tracked, read);
+            let (hashed, recorded) = pool.install(|| {
+                if overlap_reads {
+                    rayon::join(hash, recorded)
+                } else {
+                    let hashed = hash();
+                    (hashed, recorded())
+                }
+            });
+            let (digest, inputs) = hashed?;
+            assert_eq!(digest, expected_hash);
+            assert_eq!(inputs, paths[..127]);
+            assert_eq!(recorded?, expected[..125]);
+            assert!(calls[..127].iter().all(|count| count.load(Relaxed) == 1));
+            assert_eq!(calls[127].load(Relaxed), 0);
+            if !overlap_reads {
+                assert_eq!(workers.load(Relaxed).count_ones() > 1, !known);
+            }
+        }
+        Ok(())
     }
 
     #[test]
