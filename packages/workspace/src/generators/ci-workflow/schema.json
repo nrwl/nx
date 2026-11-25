@@ -9,7 +9,14 @@
     "ci": {
       "type": "string",
       "description": "CI provider.",
-      "enum": ["github", "circleci", "azure", "bitbucket-pipelines", "gitlab"],
+      "enum": [
+        "github",
+        "circleci",
+        "azure",
+        "bitbucket-pipelines",
+        "gitlab",
+        "nx-cloud"
+      ],
       "x-prompt": {
         "message": "What is your target CI provider?",
         "type": "list",
@@ -18,7 +25,8 @@
           { "value": "circleci", "label": "Circle CI" },
           { "value": "azure", "label": "Azure DevOps" },
           { "value": "bitbucket-pipelines", "label": "BitBucket Pipelines" },
-          { "value": "gitlab", "label": "Gitlab" }
+          { "value": "gitlab", "label": "Gitlab" },
+          { "value": "nx-cloud", "label": "Nx Cloud CI (private beta)" }
         ]
       }
     },

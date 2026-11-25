@@ -413,6 +413,98 @@ describe('CI Workflow generator', () => {
     });
   });
 
+  describe('nx-cloud', () => {
+    it('should generate a Nx Cloud CI pipeline without a provider workflow', async () => {
+      await ciWorkflowGenerator(tree, { ci: 'nx-cloud', name: 'CI' });
+
+      expect(tree.exists('.github/workflows/ci.yml')).toBe(false);
+      expect(tree.read('.nx/pipelines/ci.yaml', 'utf-8'))
+        .toMatchInlineSnapshot(`
+          "# yaml-language-server: $schema=https://cloud.nx.app/nx-cloud/static/schemas/workflow.schema.json
+          # Nx Cloud CI runs this pipeline. It is in private beta, see https://nx.dev/docs/features/ci-features#run-ci-on-nx-cloud
+          # Learn how to configure this file at https://nx.dev/docs/reference/nx-cloud/ci-config
+          name: CI
+
+          on:
+            pull-requests:
+              event: PR
+            main-pushes:
+              event: PUSH
+              branches: [main]
+
+          worker-templates:
+            default:
+              workers: 3 linux-medium-js
+              stop-after:
+                - build
+
+          jobs:
+            main:
+              runs-on: linux-medium-js
+              workers: default
+              steps:
+                - run: npx nx affected -t lint test build
+          "
+        `);
+      expect(readJson(tree, 'nx.json').namedInputs.sharedGlobals).toEqual([
+        '{workspaceRoot}/.nx/pipelines/ci.yaml',
+      ]);
+    });
+
+    it('should run e2e-ci when e2e is present', async () => {
+      updateJson(tree, 'package.json', (json) => {
+        json.devDependencies = {
+          ...json.devDependencies,
+          '@nx/playwright': 'latest',
+        };
+        return json;
+      });
+
+      await ciWorkflowGenerator(tree, { ci: 'nx-cloud', name: 'CI' });
+
+      expect(tree.read('.nx/pipelines/ci.yaml', 'utf-8'))
+        .toMatchInlineSnapshot(`
+          "# yaml-language-server: $schema=https://cloud.nx.app/nx-cloud/static/schemas/workflow.schema.json
+          # Nx Cloud CI runs this pipeline. It is in private beta, see https://nx.dev/docs/features/ci-features#run-ci-on-nx-cloud
+          # Learn how to configure this file at https://nx.dev/docs/reference/nx-cloud/ci-config
+          name: CI
+
+          on:
+            pull-requests:
+              event: PR
+            main-pushes:
+              event: PUSH
+              branches: [main]
+
+          worker-templates:
+            default:
+              workers: 3 linux-medium-js
+              stop-after:
+                - e2e-ci
+
+          jobs:
+            main:
+              runs-on: linux-medium-js
+              workers: default
+              steps:
+                - run: npx nx affected -t lint test build e2e-ci
+          "
+        `);
+    });
+
+    it('should use nx run-many when useRunMany is true', async () => {
+      await ciWorkflowGenerator(tree, {
+        ci: 'nx-cloud',
+        name: 'CI',
+        useRunMany: true,
+      });
+
+      const content = tree.read('.nx/pipelines/ci.yaml', 'utf-8');
+      expect(content).toContain('- run: npx nx run-many -t lint test build');
+      expect(content).not.toContain('nx affected');
+    });
+  });
+
   describe('TS solution setup', () => {
     let nxCloudAccessToken: string;
 
@@ -496,6 +588,14 @@ describe('CI Workflow generator', () => {
               - run: npx nx affected -t lint test build typecheck
         "
       `);
+    });
+
+    it('should generate nx-cloud config with typecheck task', async () => {
+      await ciWorkflowGenerator(tree, { ci: 'nx-cloud', name: 'CI' });
+
+      expect(tree.read('.nx/pipelines/ci.yaml', 'utf-8')).toContain(
+        '- run: npx nx affected -t lint test build typecheck'
+      );
     });
 
     it('should generate circleci config with typecheck task', async () => {

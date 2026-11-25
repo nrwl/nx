@@ -146,7 +146,13 @@ export type Command = {
 
 export interface Schema {
   name: string;
-  ci: 'github' | 'azure' | 'circleci' | 'bitbucket-pipelines' | 'gitlab';
+  ci:
+    | 'github'
+    | 'azure'
+    | 'circleci'
+    | 'bitbucket-pipelines'
+    | 'gitlab'
+    | 'nx-cloud';
   useRunMany?: boolean;
 }
 
@@ -160,7 +166,10 @@ export async function ciWorkflowGenerator(tree: Tree, schema: Schema) {
   }
 
   generateFiles(tree, join(__dirname, 'files', ci), '', options);
-  generateFiles(tree, join(__dirname, 'files', 'ci-config'), '', options);
+  // Nx Cloud CI's pipeline file is also its worker config.
+  if (ci !== 'nx-cloud') {
+    generateFiles(tree, join(__dirname, 'files', 'ci-config'), '', options);
+  }
 
   addWorkflowFileToSharedGlobals(nxJson, schema.ci, options.workflowFileName);
 
@@ -188,6 +197,7 @@ interface Substitutes {
   useRunMany: boolean;
   commands: Command[];
   branchCommands?: Command[];
+  nxCloudCiCommand: string;
 }
 
 function normalizeOptions(options: Schema, tree: Tree): Substitutes {
@@ -239,6 +249,14 @@ function normalizeOptions(options: Schema, tree: Tree): Substitutes {
         )
       : undefined;
 
+  const useRunMany = options.useRunMany ?? false;
+  // Nx Cloud CI always distributes, so e2e runs as the atomized e2e-ci target.
+  const nxCloudCiCommand = `${packageManagerPrefix} nx ${
+    useRunMany ? 'run-many' : 'affected'
+  } -t lint test build${hasTypecheck ? ' typecheck' : ''}${
+    hasE2E ? ' e2e-ci' : ''
+  }`;
+
   return {
     workflowName,
     workflowFileName,
@@ -255,9 +273,10 @@ function normalizeOptions(options: Schema, tree: Tree): Substitutes {
     nxCloudHost,
     tmpl: '',
     connectedToCloud,
-    useRunMany: options.useRunMany ?? false,
+    useRunMany,
     commands,
     branchCommands,
+    nxCloudCiCommand,
   };
 }
 
@@ -281,6 +300,7 @@ const ciWorkflowInputs: Record<Schema['ci'], string> = {
   circleci: '.circleci/config.yml',
   github: '.github/workflows/',
   gitlab: '.gitlab-ci.yml',
+  'nx-cloud': '.nx/pipelines/ci.yaml',
 };
 
 function addWorkflowFileToSharedGlobals(
