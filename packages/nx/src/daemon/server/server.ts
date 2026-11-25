@@ -370,9 +370,9 @@ export async function handleMessage(socket: Socket, data: Buffer) {
       mode
     );
   } else if (payload.type === 'REGISTER_FILE_WATCHER') {
-    // Registration throws on an invalid include/exclude glob. The error
-    // response surfaces it in the terminal of the client that sent it rather
-    // than rejecting unhandled and taking the daemon down with no explanation.
+    // Registration throws on an invalid include/exclude glob. That is the
+    // client's mistake, so report it to that client and keep the daemon alive
+    // for every other watcher.
     try {
       registerFileWatcherSocket({ socket, config: payload.config });
       // A client must not announce readiness until this socket is subscribed.
@@ -392,7 +392,7 @@ export async function handleMessage(socket: Socket, data: Buffer) {
         );
       }
     } catch (error) {
-      await respondWithErrorAndExit(
+      await respondWithError(
         socket,
         '[REGISTER_FILE_WATCHER]',
         error instanceof Error ? error : new Error(String(error))
