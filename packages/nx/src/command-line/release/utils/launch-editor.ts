@@ -24,6 +24,18 @@ export async function launchEditor(filePath: string) {
         reject(new Error(`Editor process exited with code ${code}`));
       }
     });
+
+    // Without an `error` listener, a failed spawn (e.g. ENOENT when the editor
+    // is not installed) is thrown as an uncaught exception instead of
+    // rejecting, so the callers can never handle it.
+    editorProcess.on('error', (err) => {
+      reject(
+        new Error(
+          `Could not launch the editor "${cmd}": ${err.message}. Make sure it is installed, or set the GIT_EDITOR or EDITOR environment variable to an editor that is.`,
+          { cause: err }
+        )
+      );
+    });
   });
 }
 
