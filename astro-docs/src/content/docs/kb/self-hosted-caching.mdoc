@@ -211,7 +211,18 @@ Nx applies a 10 second connect timeout, a 120 second download timeout, and a 10 
 
 A cache request that fails or times out is not fatal. Nx warns, rebuilds the task locally, and the run continues. That covers a connection Nx cannot make, a server that stalls mid-response, and a `408`, `429` or `5xx` reply, since a later run may well succeed. A rate limit in front of your cache server is the common case for the `429`, because a run that misses many hashes requests them all at once.
 
-Three things still stop the run, because no retry fixes any of them. A rejected token, a `4xx` other than the ones above (which says the endpoint is wrong rather than busy), and an artifact that tries to write outside the cache directory.
+Nx treats some `4xx` replies as normal answers:
+
+- `404` on a `GET` is a cache miss. Nx runs the task and uploads the result.
+- `403` on a `PUT` means the server won't accept writes, for example from a read-only token. Nx skips the upload.
+- `409` on a `PUT` means the hash is already stored. Nx skips the upload.
+
+These still stop the run, because no retry fixes them:
+
+- A `401`, which means the server rejected the token.
+- Any other `4xx`, such as a `404` on a `PUT`, which means the endpoint is misconfigured.
+- An artifact that tries to write outside the cache directory.
+- A local cache directory that Nx can't write to, such as a full disk.
 
 ### Migrating from custom tasks runners
 
