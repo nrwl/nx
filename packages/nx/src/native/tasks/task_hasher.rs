@@ -1,3 +1,4 @@
+use super::plan::{Plan, kind};
 use std::collections::{BTreeMap, HashMap};
 use std::path::Path;
 use std::sync::Arc;
@@ -609,7 +610,7 @@ impl TaskHasher {
     ) -> anyhow::Result<TaskHashes> {
         let function_start = std::time::Instant::now();
         let pool = &hash_plans.pool;
-        let plans: HashMap<String, Vec<u32>> = hash_plans
+        let plans: HashMap<String, Plan> = hash_plans
             .plans
             .iter()
             .filter(|(task_id, _)| !hash_plans.deferred.contains(task_id.as_str()))
@@ -673,7 +674,7 @@ impl TaskHasher {
         cwd: String,
         collect_task_inputs: Option<bool>,
     ) -> anyhow::Result<TaskHashes> {
-        let plans: HashMap<String, Vec<u32>> = task_ids
+        let plans: HashMap<String, Plan> = task_ids
             .into_iter()
             .filter_map(|task_id| {
                 let ids = hash_plans.plans.get(&task_id)?.clone();
@@ -756,7 +757,7 @@ impl TaskHasher {
         let pool = &hash_plans.pool;
         // Catching up locks the files and may hash on the rayon pool, so it
         // runs once here: a pool job doing it could end up waiting on itself.
-        if pool.any_list_ignored_files(hash_plans.plans.values().flatten().copied()) {
+        if hash_plans.plans.values().any(|plan| plan.has(kind::DISK)) {
             self.ignored_index.catch_up();
         }
         // Id-indexed snapshots so the hot loop reads a plain Vec instead of
@@ -808,149 +809,156 @@ impl TaskHasher {
             .collect();
         let is = |id: u32, kind: FoldKind| fold_kinds[id as usize] == kind;
         let recorded_caches = RecordedCaches::default();
-        hash_plans.plans.par_iter().try_for_each(|(task_id, ids)| {
-            if ids.is_empty() {
-                return Ok(());
-            }
-            // A recorded plan with something that could cover its reads folds
-            // them into its configuration entry, see `fold_recorded_files`.
-            let folds_recorded = ids
-                .iter()
-                .any(|&id| is(id, FoldKind::UltracacheConfiguration))
-                && ids.iter().any(|&id| is(id, FoldKind::CoversReads));
-            let js_env = resolve_env(task_id);
-            // Workers accumulate locally, then publish one result per task.
-            // The inner parallel iterator also preserves concurrency when
-            // a single task has several expensive runtime/file inputs.
-            // Most instructions are already shared cache hits after the first
-            // few tasks. Copy those locally; only work that may need computing
-            // goes through the inner parallel iterator.
-            let mut entries = Vec::with_capacity(ids.len());
-            let mut pending = Vec::new();
-            for &id in ids {
-                if folds_recorded
-                    && (is(id, FoldKind::UltracacheGroup) || is(id, FoldKind::TrackedFiles))
-                {
-                    continue;
+        hash_plans
+            .plans
+            .par_iter()
+            .try_for_each(|(task_id, plan)| {
+                let ids = plan.ids();
+                if ids.is_empty() {
+                    return Ok(());
                 }
-                let cached = if should_collect_inputs {
-                    None
-                } else {
-                    value_slots[id as usize].as_ref().and_then(OnceCell::get)
-                };
-                if let Some(value) = cached {
-                    entries.push((id, value.clone()));
-                } else {
-                    pending.push(id);
+                // A recorded plan with something that could cover its reads folds
+                // them into its configuration entry, see `fold_recorded_files`.
+                let folds_recorded = ids
+                    .iter()
+                    .any(|&id| is(id, FoldKind::UltracacheConfiguration))
+                    && ids.iter().any(|&id| is(id, FoldKind::CoversReads));
+                let js_env = resolve_env(task_id);
+                // Workers accumulate locally, then publish one result per task.
+                // The inner parallel iterator also preserves concurrency when
+                // a single task has several expensive runtime/file inputs.
+                // Most instructions are already shared cache hits after the first
+                // few tasks. Copy those locally; only work that may need computing
+                // goes through the inner parallel iterator.
+                let mut entries = Vec::with_capacity(ids.len());
+                let mut pending = Vec::new();
+                for &id in ids.iter() {
+                    if folds_recorded
+                        && (is(id, FoldKind::UltracacheGroup) || is(id, FoldKind::TrackedFiles))
+                    {
+                        continue;
+                    }
+                    let cached = if should_collect_inputs {
+                        None
+                    } else {
+                        value_slots[id as usize].as_ref().and_then(OnceCell::get)
+                    };
+                    if let Some(value) = cached {
+                        entries.push((id, value.clone()));
+                    } else {
+                        pending.push(id);
+                    }
                 }
-            }
-            let hash_pending = || {
-                pending
-                    .par_iter()
-                    .try_fold(
-                        || (Vec::new(), HashInputsBuilder::default()),
-                        |(mut entries, mut task_inputs), &id| {
-                            let slot = value_slots[id as usize].as_ref();
+                let hash_pending = || {
+                    pending
+                        .par_iter()
+                        .try_fold(
+                            || (Vec::new(), HashInputsBuilder::default()),
+                            |(mut entries, mut task_inputs), &id| {
+                                let slot = value_slots[id as usize].as_ref();
 
-                            // Re-check rather than trusting the scan that put this
-                            // id in `pending`: another task's worker may have filled
-                            // the slot since. Missing that costs a whole
-                            // hash_instruction, which can hash a file set or shell
-                            // out for a runtime input.
-                            let cached = if should_collect_inputs {
-                                // Inputs are per task, so every entry must run
-                                // hash_instruction to produce them.
-                                None
-                            } else {
-                                slot.and_then(|s| s.get()).cloned()
-                            };
-                            let value = match cached {
-                                Some(value) => value,
-                                None => {
-                                    let instruction_ref = pool.get(id);
-                                    let (hash_value, inputs) = self.hash_instruction(
-                                        task_id,
-                                        instruction_ref.value(),
-                                        HashInstructionArgs {
-                                            id,
-                                            js_env,
-                                            ts_config_hash: &ts_config_hash,
-                                            project_root_mappings: &project_root_mappings,
-                                            sorted_externals: &sorted_externals,
-                                            selectively_hash_tsconfig,
-                                            runtime_cache: &runtime_cache,
-                                            project_file_set_cache: &self.project_file_set_cache,
-                                            workspace_file_set_cache: &self
-                                                .workspace_file_set_cache,
-                                            json_file_set_cache: &json_file_set_cache,
-                                            files_expansion_cache: &files_expansion_cache,
-                                            run_stage,
-                                            cwd: cwd_path,
-                                            collect_inputs: should_collect_inputs,
-                                        },
-                                    )?;
+                                // Re-check rather than trusting the scan that put this
+                                // id in `pending`: another task's worker may have filled
+                                // the slot since. Missing that costs a whole
+                                // hash_instruction, which can hash a file set or shell
+                                // out for a runtime input.
+                                let cached = if should_collect_inputs {
+                                    // Inputs are per task, so every entry must run
+                                    // hash_instruction to produce them.
+                                    None
+                                } else {
+                                    slot.and_then(|s| s.get()).cloned()
+                                };
+                                let value = match cached {
+                                    Some(value) => value,
+                                    None => {
+                                        let instruction_ref = pool.get(id);
+                                        let (hash_value, inputs) = self.hash_instruction(
+                                            task_id,
+                                            instruction_ref.value(),
+                                            HashInstructionArgs {
+                                                id,
+                                                js_env,
+                                                ts_config_hash: &ts_config_hash,
+                                                project_root_mappings: &project_root_mappings,
+                                                sorted_externals: &sorted_externals,
+                                                selectively_hash_tsconfig,
+                                                runtime_cache: &runtime_cache,
+                                                project_file_set_cache: &self
+                                                    .project_file_set_cache,
+                                                workspace_file_set_cache: &self
+                                                    .workspace_file_set_cache,
+                                                json_file_set_cache: &json_file_set_cache,
+                                                files_expansion_cache: &files_expansion_cache,
+                                                run_stage,
+                                                cwd: cwd_path,
+                                                collect_inputs: should_collect_inputs,
+                                            },
+                                        )?;
 
-                                    if should_collect_inputs {
-                                        task_inputs.extend(inputs);
-                                    }
-
-                                    match slot {
-                                        Some(slot) => {
-                                            slot.get_or_init(|| SharedStr::from(hash_value)).clone()
+                                        if should_collect_inputs {
+                                            task_inputs.extend(inputs);
                                         }
-                                        None => intern_value(&value_interner, hash_value).into(),
-                                    }
-                                }
-                            };
 
-                            entries.push((id, value));
-                            Ok::<_, anyhow::Error>((entries, task_inputs))
-                        },
-                    )
-                    .try_reduce(
-                        || (Vec::new(), HashInputsBuilder::default()),
-                        |(mut entries, mut inputs), (mut other_entries, other_inputs)| {
-                            entries.append(&mut other_entries);
-                            inputs.extend(other_inputs);
-                            Ok((entries, inputs))
-                        },
-                    )
-            };
-            let ((computed, mut inputs), recorded_lists) = if folds_recorded {
-                let (hashed, lists) = rayon::join(hash_pending, || {
-                    self.recorded_file_lists(
-                        ids,
-                        pool,
-                        &recorded_caches,
-                        &files_expansion_cache,
-                        run_stage,
-                    )
-                });
-                (hashed?, Some(lists?))
-            } else {
-                (hash_pending()?, None)
-            };
-            entries.extend(computed);
-            if let Some(lists) = recorded_lists {
-                let (recorded, files) = fold_recorded_files(&lists, should_collect_inputs);
-                if let Some((_, value)) = entries
-                    .iter_mut()
-                    .find(|(id, _)| is(*id, FoldKind::UltracacheConfiguration))
-                {
-                    *value = SharedStr::from(hash(format!("{value}{recorded}").as_bytes()));
+                                        match slot {
+                                            Some(slot) => slot
+                                                .get_or_init(|| SharedStr::from(hash_value))
+                                                .clone(),
+                                            None => {
+                                                intern_value(&value_interner, hash_value).into()
+                                            }
+                                        }
+                                    }
+                                };
+
+                                entries.push((id, value));
+                                Ok::<_, anyhow::Error>((entries, task_inputs))
+                            },
+                        )
+                        .try_reduce(
+                            || (Vec::new(), HashInputsBuilder::default()),
+                            |(mut entries, mut inputs), (mut other_entries, other_inputs)| {
+                                entries.append(&mut other_entries);
+                                inputs.extend(other_inputs);
+                                Ok((entries, inputs))
+                            },
+                        )
+                };
+                let ((computed, mut inputs), recorded_lists) = if folds_recorded {
+                    let (hashed, lists) = rayon::join(hash_pending, || {
+                        self.recorded_file_lists(
+                            &ids,
+                            pool,
+                            &recorded_caches,
+                            &files_expansion_cache,
+                            run_stage,
+                        )
+                    });
+                    (hashed?, Some(lists?))
+                } else {
+                    (hash_pending()?, None)
+                };
+                entries.extend(computed);
+                if let Some(lists) = recorded_lists {
+                    let (recorded, files) = fold_recorded_files(&lists, should_collect_inputs);
+                    if let Some((_, value)) = entries
+                        .iter_mut()
+                        .find(|(id, _)| is(*id, FoldKind::UltracacheConfiguration))
+                    {
+                        *value = SharedStr::from(hash(format!("{value}{recorded}").as_bytes()));
+                    }
+                    if should_collect_inputs {
+                        inputs.files.extend(files);
+                    }
                 }
-                if should_collect_inputs {
-                    inputs.files.extend(files);
-                }
-            }
-            hashes.insert(
-                task_id.clone(),
-                trace_span!("Assembling hash", hash_id = task_id).in_scope(|| {
-                    assemble_ranked_hash(entries, &instruction_keys, &key_ranks, inputs)
-                }),
-            );
-            Ok::<_, anyhow::Error>(())
-        })?;
+                hashes.insert(
+                    task_id.clone(),
+                    trace_span!("Assembling hash", hash_id = task_id).in_scope(|| {
+                        assemble_ranked_hash(entries, &instruction_keys, &key_ranks, inputs)
+                    }),
+                );
+                Ok::<_, anyhow::Error>(())
+            })?;
 
         let hash_duration = hash_time.elapsed();
         let total_duration = function_start.elapsed();

@@ -2,23 +2,7 @@ use crate::native::tasks::types::HashPlans;
 
 /// The pool ids at least one plan references, sorted. A bitset, since interned ids are dense.
 pub(crate) fn referenced_ids(hash_plans: &HashPlans) -> Vec<u32> {
-    let mut words = vec![0u64; hash_plans.pool.len().div_ceil(64)];
-    for &id in hash_plans.plans.values().flatten() {
-        let word = id as usize / 64;
-        if word >= words.len() {
-            words.resize(word + 1, 0);
-        }
-        words[word] |= 1 << (id % 64);
-    }
-    let count = words.iter().map(|word| word.count_ones() as usize).sum();
-    let mut ids = Vec::with_capacity(count);
-    for (index, mut word) in words.into_iter().enumerate() {
-        while word != 0 {
-            ids.push(index as u32 * 64 + word.trailing_zeros());
-            word &= word - 1;
-        }
-    }
-    ids
+    crate::native::tasks::plan::Plan::union_ids(hash_plans.plans.values())
 }
 
 #[cfg(test)]
@@ -39,7 +23,10 @@ mod tests {
                 ("a".to_string(), vec![ids[129], ids[0], ids[64]]),
                 ("b".to_string(), vec![ids[64], ids[63], ids[0]]),
                 ("c".to_string(), vec![]),
-            ]),
+            ])
+            .into_iter()
+            .map(|(id, v)| (id, crate::native::tasks::plan::Plan::from_ids(v, &pool)))
+            .collect(),
             pool,
             deferred: Default::default(),
         };

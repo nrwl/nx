@@ -62,11 +62,11 @@ pub(crate) fn hash_plans(entries: &[(&str, Vec<HashInstruction>)]) -> HashPlans 
         plans: entries
             .iter()
             .map(|(task, instructions)| {
-                let ids = instructions
-                    .iter()
-                    .map(|i| pool.intern(i.clone()))
-                    .collect();
-                (task.to_string(), ids)
+                let ids = instructions.iter().map(|i| pool.intern(i.clone()));
+                (
+                    task.to_string(),
+                    crate::native::tasks::plan::Plan::from_ids(ids, &pool),
+                )
             })
             .collect(),
         pool,
