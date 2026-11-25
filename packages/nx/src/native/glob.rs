@@ -201,7 +201,8 @@ pub(crate) fn build_glob_set<S: AsRef<str> + Debug>(globs: &[S]) -> anyhow::Resu
 }
 
 /// `path` as a glob that matches only that path. The Nx Cloud client escapes
-/// the same characters before writing a path into a snapshot.
+/// the same characters before writing a path into a snapshot. Keep the set in
+/// step with `escapeGlob` in `src/utils/globs.ts` and in `@nx/devkit`.
 pub(crate) fn escape_glob_literal(path: &str) -> String {
     path.chars()
         .flat_map(|c| {

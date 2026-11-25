@@ -1,3 +1,5 @@
+// Keep in step with `escapeGlob` in nx's `src/utils/globs.ts` and
+// `escape_glob_literal` in nx's `src/native/glob.rs`.
 const GLOB_METACHARACTERS = /[\\*?[\]{}()!]/g;
 
 /**
