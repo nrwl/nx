@@ -6,6 +6,12 @@
 //! never had one. The folder state catches that: it changes when a folder
 //! gains or loses a kind of file, and stays the same when files are edited or
 //! more files of a kind the folder already holds are added.
+//!
+//! Scope: only the files the project owns in the project file map. Folders
+//! above the project root are not included, and files of nested projects are
+//! left out. The file map holds every file that `.gitignore` and `.nxignore`
+//! do not exclude, untracked ones included, so a build output that is not
+//! ignored counts too and can cause extra cache misses.
 
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::convert::Infallible;
