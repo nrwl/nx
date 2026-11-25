@@ -149,6 +149,46 @@ describe('move-impl (Angular plugin for @nx/workspace:move)', () => {
     `);
   });
 
+  it('should update the readme file of secondary entry points the library builder builds', async () => {
+    await generateTestLibrary(tree, {
+      directory: 'mylib2',
+      buildable: true,
+      skipFormat: true,
+    });
+    updateJson(tree, 'mylib2/project.json', (json) => {
+      json.targets.build.executor = '@nx/angular:library';
+      return json;
+    });
+    updateJson(tree, 'mylib2/package.json', (json) => {
+      json.exports = {
+        '.': './src/index.ts',
+        './styles': { sass: './styles/_index.scss' },
+      };
+      return json;
+    });
+    tree.write('mylib2/styles/README.md', 'Use the `.mylib2-theme` class.');
+    await librarySecondaryEntryPointGenerator(tree, {
+      library: 'mylib2',
+      name: 'testing',
+      skipFormat: true,
+    });
+    addProjectToGraph('mylib2');
+
+    await runAngularPlugin('mylib2', 'mynewlib2', 'mynewlib2');
+
+    expect(tree.exists('mynewlib2/testing/ng-package.json')).toBe(false);
+    expect(tree.read('mynewlib2/styles/README.md', 'utf-8')).toBe(
+      'Use the `.mylib2-theme` class.'
+    );
+    const readme = tree.read('mynewlib2/testing/README.md', 'utf-8');
+    expect(readme).toMatchInlineSnapshot(`
+      "# @proj/mynewlib2/testing
+
+      Secondary entry point of \`@proj/mynewlib2\`. It can be used by importing from \`@proj/mynewlib2/testing\`.
+      "
+    `);
+  });
+
   it('should handle nesting resulting in the same project name', async () => {
     addProjectToGraph('my-lib');
 
