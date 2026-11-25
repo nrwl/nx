@@ -1,4 +1,6 @@
 import { rmSync } from 'node:fs';
+import { setFlagsFromString } from 'node:v8';
+import { runInNewContext } from 'node:vm';
 import type { ProjectGraph } from '../config/project-graph';
 import type { Task, TaskGraph } from '../config/task-graph';
 import type { TargetConfiguration } from '../config/workspace-json-project-json';
@@ -206,6 +208,56 @@ describe('agent entry points', () => {
     expect(api).toBeInstanceOf(SharedRunningTask);
     await api.kill();
     otherProcess.removeRunningTask('api:serve');
+  });
+
+  it('keeps a restarted server claimed once the orchestrator that first ran it is collected', async () => {
+    const tasks = [createTask('db:serve', { continuous: true })];
+    const { projectGraph, fullTaskGraph, batch } = createGraphs(
+      {
+        db: {
+          executor: 'nx:run-commands',
+          continuous: true,
+          options: { command: 'db listening' },
+        },
+      },
+      tasks
+    );
+    const startDb = async () => {
+      const running = await runContinuousTasks(
+        batch,
+        projectGraph,
+        fullTaskGraph,
+        {},
+        {} as LifeCycle
+      );
+      return running['db:serve'];
+    };
+    const initialCounts = processListenerCounts();
+    await (await startDb()).kill();
+    // The first orchestrator is unreachable once it has disposed
+    await vi.waitFor(() =>
+      expect(processListenerCounts()).toEqual(initialCounts)
+    );
+    const restarted = await startDb();
+
+    // The mock's recorded results keep the first orchestrator reachable
+    vi.mocked(runCommands).mockClear();
+    try {
+      setFlagsFromString('--expose-gc');
+      const collectGarbage: () => void = runInNewContext('gc');
+      for (let i = 0; i < 5; i++) {
+        collectGarbage();
+        await new Promise((resolve) => setImmediate(resolve));
+      }
+
+      expect(
+        new RunningTasksService(getLocalDbConnection()).getRunningTasks([
+          'db:serve',
+        ])
+      ).toEqual(['db:serve']);
+    } finally {
+      await restarted.kill();
+    }
   });
 
   it('hashes and runs every task of a batch with a task that is not parallel', async () => {

@@ -2055,6 +2055,50 @@ describe('TaskOrchestrator', () => {
     });
   });
 
+  describe('forked executors', () => {
+    const forkTask = {
+      id: 'app:build',
+      target: { project: 'app', target: 'build' },
+    } as Task;
+    const agentTaskGraph = {
+      tasks: { 'app:build': forkTask },
+    } as unknown as TaskGraph;
+    const fullTaskGraph = {
+      tasks: { 'app:build': forkTask, 'lib:build': {} },
+    } as unknown as TaskGraph;
+
+    afterEach(() => {
+      vi.unstubAllEnvs();
+    });
+
+    it.each([
+      ['forkProcess', 'true'],
+      ['forkProcessLegacy', 'false'],
+    ])(
+      'should hand %s the full task graph, not the subset this process schedules',
+      async (forkMethod, nativeCommandRunner) => {
+        vi.stubEnv('NX_NATIVE_COMMAND_RUNNER', nativeCommandRunner);
+        const orchestrator: any = Object.create(TaskOrchestrator.prototype);
+        orchestrator.taskGraph = agentTaskGraph;
+        orchestrator.fullTaskGraph = fullTaskGraph;
+        orchestrator.forkedProcessTaskRunner = { [forkMethod]: vi.fn() };
+
+        await orchestrator.runTaskInForkedProcess(
+          forkTask,
+          {},
+          false,
+          '',
+          false
+        );
+
+        expect(
+          orchestrator.forkedProcessTaskRunner[forkMethod].mock.calls[0][1]
+            .taskGraph
+        ).toBe(fullTaskGraph);
+      }
+    );
+  });
+
   describe('process listener lifecycle', () => {
     it('should remove on dispose() every process listener registered by setupSignalHandlers', async () => {
       const orchestrator: any = Object.create(TaskOrchestrator.prototype);

@@ -183,6 +183,10 @@ function createReadinessState(
   return state;
 }
 
+// Shared by every orchestrator in the process. The native destructor releases
+// each claim its service made, even one a later orchestrator has since retaken.
+let processRunningTasksService: RunningTasksService | undefined;
+
 export class TaskOrchestrator {
   private taskDetails: TaskDetails | null = getTaskDetails();
   private cache: DbCache | Cache = getCache(this.options);
@@ -198,7 +202,9 @@ export class TaskOrchestrator {
   );
 
   private runningTasksService = !IS_WASM
-    ? new RunningTasksService(getLocalDbConnection())
+    ? (processRunningTasksService ??= new RunningTasksService(
+        getLocalDbConnection()
+      ))
     : null;
   private taskInvocationTracker = !IS_WASM
     ? new TaskInvocationTracker(
@@ -1935,13 +1941,13 @@ export class TaskOrchestrator {
       // Disable the pseudo terminal if this is a run-many or when running a continuous task as part of a run-one
       const disablePseudoTerminal =
         !this.tuiEnabled && (!this.initiatingProject || task.continuous);
-      // execution
+      // The full graph lets an executor see dependencies other agents ran
       const childProcess = usePtyFork
         ? await this.forkedProcessTaskRunner.forkProcess(task, {
             temporaryOutputPath,
             streamOutput,
             pipeOutput,
-            taskGraph: this.taskGraph,
+            taskGraph: this.fullTaskGraph,
             env,
             disablePseudoTerminal,
           })
@@ -1949,7 +1955,7 @@ export class TaskOrchestrator {
             temporaryOutputPath,
             streamOutput,
             pipeOutput,
-            taskGraph: this.taskGraph,
+            taskGraph: this.fullTaskGraph,
             env,
           });
 
