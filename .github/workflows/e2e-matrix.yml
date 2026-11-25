@@ -58,6 +58,12 @@ jobs:
           - os: macos-latest
             node_version: 24
             cache_writer: gradle
+          - os: ubuntu-latest
+            node_version: 24
+            cache_writer: maven
+          - os: macos-latest
+            node_version: 26
+            cache_writer: maven
 
     name: Cache install (${{ matrix.os }}, node v${{ matrix.node_version }})
     steps:
@@ -96,8 +102,26 @@ jobs:
         id: brew-install-python-setuptools
         run: brew install python-setuptools
 
+      - name: Prepare Maven caches on the writer
+        id: maven-cache
+        if: github.repository == 'nrwl/nx' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) && matrix.cache_writer == 'maven'
+        timeout-minutes: 2
+        continue-on-error: true
+        uses: ./.github/actions/nightly-maven-cache
+        with:
+          mode: prepare-writer
+
       - name: Install pnpm packages
         run: pnpm install --frozen-lockfile
+
+      - name: Seed Maven repository cache
+        if: steps.maven-cache.outputs.repository-seed-key != ''
+        timeout-minutes: 4
+        continue-on-error: true
+        uses: ./.github/actions/nightly-maven-cache
+        with:
+          mode: save-repository
+          repository-key: ${{ steps.maven-cache.outputs.repository-seed-key }}
 
       - name: Restore .NET packages
         run: dotnet restore nx.sln
@@ -183,6 +207,14 @@ jobs:
           npm install -g corepack@0.35.0 --ignore-scripts
           corepack enable
           corepack prepare --activate
+
+      - name: Restore Maven caches
+        if: matrix.os == 'ubuntu-latest' || matrix.os == 'macos-latest'
+        timeout-minutes: 3
+        continue-on-error: true
+        uses: ./.github/actions/nightly-maven-cache
+        with:
+          mode: restore
 
       - name: Install pnpm packages
         run: pnpm install --frozen-lockfile
