@@ -480,6 +480,77 @@ describe('native task hasher', () => {
     `);
   });
 
+  it("should hash the externalDependencies a dependency's named input declares", async () => {
+    const workspaceFiles = await retrieveWorkspaceFiles(tempFs.tempDir, {
+      'libs/parent': 'parent',
+      'libs/child': 'child',
+    });
+    const hashParentBuild = async (externalHash: string) => {
+      const builder = new ProjectGraphBuilder(
+        undefined,
+        workspaceFiles.fileMap.projectFileMap
+      );
+      builder.addNode({
+        name: 'parent',
+        type: 'lib',
+        data: {
+          root: 'libs/parent',
+          targets: {
+            build: {
+              executor: 'nx:run-commands',
+              inputs: [{ externalDependencies: [] }, '^externals'],
+            },
+          },
+        },
+      });
+      builder.addNode({
+        name: 'child',
+        type: 'lib',
+        data: {
+          root: 'libs/child',
+          namedInputs: {
+            externals: [{ externalDependencies: ['probe-pkg'] }],
+          },
+          targets: { build: { executor: 'nx:run-commands' } },
+        },
+      });
+      // No project has an edge to the package, so only the declaration names it.
+      builder.addExternalNode({
+        name: 'npm:probe-pkg',
+        type: 'npm',
+        data: {
+          packageName: 'probe-pkg',
+          version: '1.0.0',
+          hash: externalHash,
+        },
+      });
+      builder.addStaticDependency('parent', 'child', 'libs/parent/filea.ts');
+
+      const projectGraph = builder.getUpdatedProjectGraph();
+      const taskGraph = createTaskGraph(
+        projectGraph,
+        { build: ['^build'] },
+        ['parent'],
+        ['build'],
+        undefined,
+        {}
+      );
+      return new NativeTaskHasherImpl(
+        tempFs.tempDir,
+        { ...nxJson, namedInputs: { ...nxJson.namedInputs, externals: [] } },
+        projectGraph,
+        workspaceFiles.rustReferences,
+        { selectivelyHashTsConfig: false }
+      ).hashTask(taskGraph.tasks['parent:build'], taskGraph, {});
+    };
+
+    const before = await hashParentBuild('one');
+    const after = await hashParentBuild('two');
+
+    expect(before.inputs.external).toEqual(['npm:probe-pkg']);
+    expect(after.value).not.toEqual(before.value);
+  });
+
   it('should plan non-default filesets', async () => {
     let nxJsonModified = {
       namedInputs: {
