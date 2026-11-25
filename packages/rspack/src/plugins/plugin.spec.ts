@@ -104,6 +104,20 @@ describe('@nx/rspack', () => {
                         "transitive": true,
                       },
                     ],
+                    "metadata": {
+                      "description": "Runs Rspack build",
+                      "help": {
+                        "command": "npx rspack build --help",
+                        "example": {
+                          "options": {
+                            "json": "stats.json",
+                          },
+                        },
+                      },
+                      "technologies": [
+                        "rspack",
+                      ],
+                    },
                     "options": {
                       "args": [
                         "--node-env=production",
@@ -132,6 +146,20 @@ describe('@nx/rspack', () => {
                         ],
                       },
                     ],
+                    "metadata": {
+                      "description": "Starts Rspack dev server in production mode",
+                      "help": {
+                        "command": "npx rspack serve --help",
+                        "example": {
+                          "options": {
+                            "port": 4201,
+                          },
+                        },
+                      },
+                      "technologies": [
+                        "rspack",
+                      ],
+                    },
                     "options": {
                       "args": [
                         "--node-env=production",
@@ -158,6 +186,20 @@ describe('@nx/rspack', () => {
                         ],
                       },
                     ],
+                    "metadata": {
+                      "description": "Starts Rspack dev server",
+                      "help": {
+                        "command": "npx rspack serve --help",
+                        "example": {
+                          "options": {
+                            "port": 4201,
+                          },
+                        },
+                      },
+                      "technologies": [
+                        "rspack",
+                      ],
+                    },
                     "options": {
                       "args": [
                         "--node-env=development",
