@@ -97,6 +97,8 @@ impl PluginGlobMatcher {
             .transpose()?;
         let include = globs.include.as_deref().unwrap_or_default();
         let exclude = globs.exclude.as_deref().unwrap_or_default();
+        let ordered_include = OrderedGlobs::new(include)?;
+        let ordered_exclude = OrderedGlobs::new(exclude)?;
 
         // Only a non-negated pattern can let a file through an include list
         // that does not start with `!`, so every match lies under their prefix.
@@ -118,8 +120,8 @@ impl PluginGlobMatcher {
 
         Ok(Self {
             pattern,
-            include: OrderedGlobs::new(include)?,
-            exclude: OrderedGlobs::new(exclude)?,
+            include: ordered_include,
+            exclude: ordered_exclude,
             prefix,
         })
     }
@@ -308,5 +310,18 @@ mod test {
             .reason
             .clone();
         assert!(error.contains("apps/[a"), "{error}");
+
+        let error = match_plugin_files(vec![], globs(None, &["apps/[[:punct:]]"], &[]))
+            .unwrap_err()
+            .reason
+            .clone();
+        assert!(
+            error.contains("invalid pattern \"apps/[[:punct:]]\""),
+            "{error}"
+        );
+        assert!(
+            error.contains("unsupported POSIX character class"),
+            "{error}"
+        );
     }
 }
