@@ -66,14 +66,17 @@ export function getUltracacheConfigurationStore(): UltracacheConfigurationStore 
  * Stores the configurations the Nx Cloud client read for `requestedCommit` and
  * returns their handle, for `runDiscreteTasks` and `runContinuousTasks`. Exposed to the
  * client through `nx/nx-cloud-internals`. Throws with the store's `code`.
+ * `hashProjectFolderState` matches the files manifest's field of that name.
  */
 export function importUltracacheConfigurations(
   requestedCommit: string,
-  configurations: ReadUltracacheConfigurationsResult['configurations']
+  configurations: ReadUltracacheConfigurationsResult['configurations'],
+  hashProjectFolderState?: boolean
 ): UltracacheConfigurations {
   return getUltracacheConfigurationStore().importEntries(
     requestedCommit,
-    configurations
+    configurations,
+    hashProjectFolderState
   );
 }
 

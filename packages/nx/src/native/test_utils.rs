@@ -133,10 +133,32 @@ pub(crate) fn ultracache_configurations(
     tempfile::TempDir,
     crate::native::ultracache::UltracacheConfigurations,
 ) {
+    ultracache_configurations_imported(entries, UltracacheImport::Json(None))
+}
+
+/// Which store entry point a test imports its configurations through, and the
+/// `hashProjectFolderState` it passes.
+#[cfg(not(target_arch = "wasm32"))]
+pub(crate) enum UltracacheImport {
+    /// `UltracacheConfigurationStore.import`, as the Nx Cloud client's rehash does.
+    Json(Option<bool>),
+    /// `importFiles`, with the switch as a manifest field (omitted for `None`).
+    Files(Option<bool>),
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+pub(crate) fn ultracache_configurations_imported(
+    entries: &[(&str, &[&str])],
+    import: UltracacheImport,
+) -> (
+    tempfile::TempDir,
+    crate::native::ultracache::UltracacheConfigurations,
+) {
     use crate::native::ultracache::{
         UltracacheConfigurationImportOptions, UltracacheConfigurationStore,
     };
     use napi::bindgen_prelude::External;
+    use sha2::{Digest, Sha256};
     use std::sync::Mutex;
 
     let dir = tempfile::tempdir().unwrap();
@@ -144,22 +166,54 @@ pub(crate) fn ultracache_configurations(
     let store =
         UltracacheConfigurationStore::new(&External::new(Arc::new(Mutex::new(db)))).unwrap();
     let commit = "c".repeat(40);
-    let json = serde_json::Value::Object(
-        entries
-            .iter()
-            .map(|(id, inputs)| {
-                (
-                    id.to_string(),
-                    serde_json::json!({ "commit": commit, "inputs": inputs, "outputs": [] }),
+    let configurations = match import {
+        UltracacheImport::Json(hash_project_folder_state) => {
+            let json = serde_json::Value::Object(
+                entries
+                    .iter()
+                    .map(|(id, inputs)| {
+                        (
+                            id.to_string(),
+                            serde_json::json!({ "commit": commit, "inputs": inputs, "outputs": [] }),
+                        )
+                    })
+                    .collect(),
+            );
+            store
+                .import_set(UltracacheConfigurationImportOptions {
+                    requested_commit: commit,
+                    configurations_json: json.to_string(),
+                    hash_project_folder_state,
+                })
+                .unwrap()
+        }
+        UltracacheImport::Files(hash_project_folder_state) => {
+            let mut manifest = serde_json::json!({
+                "enabled": true, "updatedAt": 1, "tasks": {}, "artifacts": {}
+            });
+            if let Some(on) = hash_project_folder_state {
+                manifest["hashProjectFolderState"] = serde_json::json!(on);
+            }
+            for (id, inputs) in entries {
+                let bytes =
+                    serde_json::to_vec(&serde_json::json!({ "inputs": inputs, "outputs": [] }))
+                        .unwrap();
+                let sha = format!("{:x}", Sha256::digest(&bytes));
+                std::fs::write(dir.path().join(format!("{sha}.json")), &bytes).unwrap();
+                manifest["tasks"][*id] =
+                    serde_json::json!({ "commit": commit, "project": "p", "artifactId": sha });
+                manifest["artifacts"][&sha] = serde_json::json!({ "sizeBytes": bytes.len() });
+            }
+            let path = dir.path().join("manifest.json");
+            std::fs::write(&path, serde_json::to_vec(&manifest).unwrap()).unwrap();
+            store
+                .import_files(
+                    commit,
+                    path.to_string_lossy().into_owned(),
+                    dir.path().to_string_lossy().into_owned(),
                 )
-            })
-            .collect(),
-    );
-    let configurations = store
-        .import_set(UltracacheConfigurationImportOptions {
-            requested_commit: commit,
-            configurations_json: json.to_string(),
-        })
-        .unwrap();
+                .unwrap()
+        }
+    };
     (dir, configurations)
 }

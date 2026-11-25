@@ -60,10 +60,13 @@ impl UltracacheConfigurationStore {
         for (id, entry) in entries {
             set.add_legacy(id, entry.inputs);
         }
+        set.hash_project_folder_state = options.hash_project_folder_state.unwrap_or(false);
         self.publish(options.requested_commit, set)
     }
 
     /// Imports the older Cloud API one JS property at a time.
+    /// `hash_project_folder_state` is the manifest's `hashProjectFolderState`;
+    /// it defaults to `false`.
     #[napi]
     pub fn import_entries(
         &self,
@@ -72,8 +75,10 @@ impl UltracacheConfigurationStore {
             ts_arg_type = "Readonly<Record<string, { commit: string; inputs: readonly string[] }>>"
         )]
         configurations: Object<'_>,
+        hash_project_folder_state: Option<bool>,
     ) -> napi::Result<UltracacheConfigurations, String> {
         let mut set = CompactSet::default();
+        set.hash_project_folder_state = hash_project_folder_state.unwrap_or(false);
         for id in Object::keys(&configurations).map_err(invalid_response)? {
             if !configurations
                 .has_own_property(&id)
@@ -126,6 +131,10 @@ impl UltracacheConfigurationStore {
 
 // Older Nx clients keep reading and writing the two original tables. Keeping
 // compact versions separate prevents those clients from opening a partial set.
+// A version in the original tables never hashes project folder state: those
+// clients predate it. The switch belongs to a compact version, and each
+// import publishes a new one with its own `fetched_at`, so one
+// (commit, fetched_at) pin never mixes the two.
 const SCHEMA: &str = "
 CREATE TABLE IF NOT EXISTS io_snapshot_versions (
     commit_sha TEXT NOT NULL, fetched_at INTEGER NOT NULL, tasks INTEGER NOT NULL,

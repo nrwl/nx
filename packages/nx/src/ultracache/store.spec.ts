@@ -278,7 +278,23 @@ describe('importUltracacheConfigurations', () => {
       'web:build': { commit: 'head', inputs: ['apps/web/**'], outputs: [] },
     };
     expect(importUltracacheConfigurations('head', configurations)).toBe(handle);
-    expect(store.importEntries).toHaveBeenCalledWith('head', configurations);
+    expect(store.importEntries).toHaveBeenCalledWith(
+      'head',
+      configurations,
+      undefined
+    );
+  });
+
+  it('passes on whether to hash project folder state', () => {
+    const configurations = {
+      'web:build': { commit: 'head', inputs: ['apps/web/**'], outputs: [] },
+    };
+    importUltracacheConfigurations('head', configurations, true);
+    expect(store.importEntries).toHaveBeenLastCalledWith(
+      'head',
+      configurations,
+      true
+    );
   });
 });
 

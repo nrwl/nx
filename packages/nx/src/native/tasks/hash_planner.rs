@@ -3435,7 +3435,8 @@ mod always_tests {
     use super::*;
     use crate::native::project_graph::types::{Project, Target};
     use crate::native::test_utils::{
-        excluding_unstable_files, including_unstable_files, task_graph, ultracache_configurations,
+        UltracacheImport, excluding_unstable_files, including_unstable_files, task_graph,
+        ultracache_configurations, ultracache_configurations_imported,
     };
     use crate::native::types::{DepsOutputsInput, FileSetInput, InputsInput, JsInputs, JsonInput};
     use napi::Either;
@@ -3670,6 +3671,42 @@ mod always_tests {
         // A task with no configuration keeps its declared inputs and nothing more.
         assert!(app.is_empty());
         assert_eq!(plans(false), (vec![], vec![], vec![]));
+    }
+
+    #[test]
+    fn every_import_path_plans_the_folder_state_alike() {
+        let plan = |import: UltracacheImport| {
+            let planner = planner(
+                vec![("e2e:lint", vec![fileset("{projectRoot}/**/*", false)])],
+                &[],
+            );
+            let (_dir, configurations) = ultracache_configurations_imported(
+                &[("e2e:lint", &["libs/e2e/src/app.spec.ts"])],
+                import,
+            );
+            planner
+                .get_plans_materialized(
+                    vec!["e2e:lint"],
+                    task_graph(&[("e2e:lint", &[])], &[]),
+                    Some(&configurations),
+                    &[],
+                )
+                .unwrap()
+                .remove("e2e:lint")
+                .unwrap()
+        };
+        let folder_state = HashInstruction::ProjectFolderState("e2e".into());
+        // The Nx Cloud client re-imports a run's configurations as JSON to
+        // register its cache entries; those must hash as the files import did.
+        let files = plan(UltracacheImport::Files(Some(true)));
+        assert!(files.contains(&folder_state));
+        assert_eq!(plan(UltracacheImport::Json(Some(true))), files);
+
+        let off = plan(UltracacheImport::Files(None));
+        assert!(!off.contains(&folder_state));
+        assert_eq!(plan(UltracacheImport::Files(Some(false))), off);
+        assert_eq!(plan(UltracacheImport::Json(None)), off);
+        assert_eq!(plan(UltracacheImport::Json(Some(false))), off);
     }
 
     #[test]
