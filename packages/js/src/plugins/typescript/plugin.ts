@@ -1302,21 +1302,18 @@ function getInputs(
     const consumerPositives = inputs.flatMap((input) =>
       workspaceRelativeFileset(input, config.project.root)
     );
-    const otherPositives = (owner: string) => [
-      ...consumerPositives,
-      ...refFilesets
-        .filter((f) => !f.negative && f.owner !== owner)
-        .map((f) => f.path),
-    ];
+    const mayFilterOtherPositive = createNegativeOverlapCheck(
+      [
+        ...consumerPositives.map((path) => ({ path })),
+        ...refFilesets.filter((f) => !f.negative),
+      ],
+      getOrCreateMatcher
+    );
     const sourceInputs = new Set<string>();
     for (const { owner, path, negative } of refFilesets) {
       if (!negative) {
         sourceInputs.add(`{workspaceRoot}/${path}`);
-      } else if (
-        !otherPositives(owner).some((include) =>
-          excludeMayOverlapInclude(include, path, getOrCreateMatcher)
-        )
-      ) {
+      } else if (!mayFilterOtherPositive(owner, path)) {
         sourceInputs.add(`!{workspaceRoot}/${path}`);
       }
     }
@@ -1552,37 +1549,75 @@ function excludeOverlapsInclude(
 }
 
 /**
- * Like `excludeOverlapsInclude` for normalized workspace-relative filesets, but
- * errs towards an overlap: two globs are disjoint only when neither's static
- * directory prefix contains the other's.
+ * Whether a negative could remove a file that a positive of another owner
+ * hashes. Errs towards an overlap: a glob positive is disjoint only when
+ * neither static directory prefix contains the other's. Positives are indexed
+ * by prefix so a check does not walk all of them.
  */
-function excludeMayOverlapInclude(
-  include: string,
-  exclude: string,
+function createNegativeOverlapCheck(
+  positives: { owner?: string; path: string }[],
   getMatcher: (pattern: string) => (path: string) => boolean
-): boolean {
+): (owner: string, negative: string) => boolean {
   const isGlob = (segment: string) => /[*?{[(]/.test(segment);
-  const staticPrefix = (pattern: string) => {
+  // Every ancestor of the static directory prefix, the prefix itself last.
+  const prefixChain = (pattern: string): string[] => {
     const segments = pattern.split('/');
     const firstGlobSegment = segments.findIndex(isGlob);
-    return firstGlobSegment === -1
-      ? segments
-      : segments.slice(0, firstGlobSegment);
+    const depth = firstGlobSegment === -1 ? segments.length : firstGlobSegment;
+    const chain = [''];
+    for (let i = 1; i <= depth; i++) {
+      chain.push(`${chain[i - 1]}/${segments[i - 1]}`);
+    }
+    return chain;
   };
-  const contains = (parent: string[], child: string[]) =>
-    parent.every((segment, i) => child[i] === segment);
-
-  const includePrefix = staticPrefix(include);
-  const excludePrefix = staticPrefix(exclude);
-  if (!isGlob(include)) {
-    return (
-      getMatcher(exclude)(include) || contains(includePrefix, excludePrefix)
-    );
+  const ownersAt = new Map<string, Set<string | undefined>>();
+  const globOwnersUnder = new Map<string, Set<string | undefined>>();
+  const literalsUnder = new Map<string, { owner?: string; path: string }[]>();
+  const addOwner = (
+    index: Map<string, Set<string | undefined>>,
+    prefix: string,
+    owner: string | undefined
+  ) => {
+    let owners = index.get(prefix);
+    if (!owners) {
+      index.set(prefix, (owners = new Set()));
+    }
+    owners.add(owner);
+  };
+  for (const positive of positives) {
+    const chain = prefixChain(positive.path);
+    addOwner(ownersAt, chain[chain.length - 1], positive.owner);
+    for (const prefix of chain) {
+      if (isGlob(positive.path)) {
+        addOwner(globOwnersUnder, prefix, positive.owner);
+      } else {
+        let literals = literalsUnder.get(prefix);
+        if (!literals) {
+          literalsUnder.set(prefix, (literals = []));
+        }
+        literals.push(positive);
+      }
+    }
   }
-  return (
-    contains(includePrefix, excludePrefix) ||
-    contains(excludePrefix, includePrefix)
-  );
+  const hasOtherOwner = (
+    owners: Set<string | undefined> | undefined,
+    owner: string
+  ) => !!owners && (owners.size > 1 || !owners.has(owner));
+
+  return (owner, negative) => {
+    const chain = prefixChain(negative);
+    const prefix = chain[chain.length - 1];
+    return (
+      chain.some((ancestor) => hasOtherOwner(ownersAt.get(ancestor), owner)) ||
+      hasOtherOwner(globOwnersUnder.get(prefix), owner) ||
+      !!literalsUnder
+        .get(prefix)
+        ?.some(
+          (literal) =>
+            literal.owner !== owner && getMatcher(negative)(literal.path)
+        )
+    );
+  };
 }
 
 function stripDotSlash(path: string): string {
