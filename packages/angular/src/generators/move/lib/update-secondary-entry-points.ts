@@ -6,14 +6,8 @@ import {
   visitNotIgnoredFiles,
 } from '@nx/devkit';
 import { basename, dirname } from 'path';
+import { usesNgPackagr } from '../../utils/project';
 import type { MoveImplOptions } from './types';
-
-const libraryExecutors = [
-  '@angular-devkit/build-angular:ng-packagr',
-  '@angular/build:ng-packagr',
-  '@nx/angular:ng-packagr-lite',
-  '@nx/angular:package',
-];
 
 export function updateSecondaryEntryPoints(
   tree: Tree,
@@ -29,11 +23,7 @@ export function updateSecondaryEntryPoints(
     return;
   }
 
-  if (
-    !Object.values(project.targets ?? {}).some((target) =>
-      libraryExecutors.includes(target.executor)
-    )
-  ) {
+  if (!usesNgPackagr(project)) {
     return;
   }
 

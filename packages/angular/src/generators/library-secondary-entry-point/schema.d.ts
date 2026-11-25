@@ -14,4 +14,5 @@ export interface NormalizedGeneratorOptions extends GeneratorOptions {
   secondaryEntryPoint: string;
   skipModule: boolean;
   moduleTypeSeparator: '-' | '.';
+  usesPackageExports: boolean;
 }

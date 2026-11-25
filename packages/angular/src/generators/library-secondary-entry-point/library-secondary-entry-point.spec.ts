@@ -8,6 +8,7 @@ import {
   Tree,
   updateJson,
   updateNxJson,
+  writeJson,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { generateTestLibrary } from '../utils/testing';
@@ -83,6 +84,7 @@ describe('librarySecondaryEntryPoint generator', () => {
     });
 
     expect(tree.exists('libs/lib1/testing/ng-package.json')).toBeTruthy();
+    expect(readJson(tree, 'libs/lib1/package.json').exports).toBeUndefined();
     expect(tree.exists('libs/lib1/testing/README.md')).toBeTruthy();
     expect(tree.exists('libs/lib1/testing/src/index.ts')).toBeTruthy();
     expect(
@@ -146,6 +148,295 @@ describe('librarySecondaryEntryPoint generator', () => {
     const ngPackageJson = readJson(tree, 'libs/lib1/testing/ng-package.json');
     expect(ngPackageJson.lib.entryFile).toBe('src/index.ts');
   });
+
+  it.each([
+    [
+      'a build target using @nx/angular:library',
+      (tree: Tree) => {
+        addProjectConfiguration(tree, 'lib1', {
+          root: 'libs/lib1',
+          projectType: 'library',
+          targets: { build: { executor: '@nx/angular:library' } },
+        });
+      },
+    ],
+    [
+      'a build target using @angular/build:library',
+      (tree: Tree) => {
+        addProjectConfiguration(tree, 'lib1', {
+          root: 'libs/lib1',
+          projectType: 'library',
+          targets: { build: { executor: '@angular/build:library' } },
+        });
+      },
+    ],
+    [
+      'no build target and another target using the library builder',
+      (tree: Tree) => {
+        addProjectConfiguration(tree, 'lib1', {
+          root: 'libs/lib1',
+          projectType: 'library',
+          targets: { package: { executor: '@nx/angular:library' } },
+        });
+      },
+    ],
+    [
+      'a library builder target and an angular.json without projects',
+      (tree: Tree) => {
+        addProjectConfiguration(tree, 'lib1', {
+          root: 'libs/lib1',
+          projectType: 'library',
+          targets: { build: { executor: '@nx/angular:library' } },
+        });
+        writeJson(tree, 'angular.json', { version: 1 });
+      },
+    ],
+    [
+      'a library builder target next to another library using ng-packagr',
+      (tree: Tree) => {
+        addProjectConfiguration(tree, 'lib1', {
+          root: 'libs/lib1',
+          projectType: 'library',
+          targets: { build: { executor: '@nx/angular:library' } },
+        });
+        addProjectConfiguration(tree, 'lib2', {
+          root: 'libs/lib2',
+          projectType: 'library',
+          targets: { build: { executor: '@nx/angular:package' } },
+        });
+      },
+    ],
+  ])(
+    'should add a package.json export instead of an ng-package.json for a library with %s',
+    async (_, setUpProject) => {
+      writeJson(tree, 'libs/lib1/package.json', {
+        name: '@my-org/lib1',
+        exports: { '.': './src/index.ts' },
+      });
+      setUpProject(tree);
+
+      await librarySecondaryEntryPointGenerator(tree, {
+        name: 'testing',
+        library: 'lib1',
+        skipFormat: true,
+      });
+
+      expect(readJson(tree, 'libs/lib1/package.json').exports).toStrictEqual({
+        '.': './src/index.ts',
+        './testing': './testing/src/index.ts',
+      });
+      expect(tree.exists('libs/lib1/testing/ng-package.json')).toBe(false);
+    }
+  );
+
+  it('should keep the ng-package.json layout when the build target uses ng-packagr next to a library builder target', async () => {
+    addProjectConfiguration(tree, 'lib1', {
+      root: 'libs/lib1',
+      projectType: 'library',
+      targets: {
+        build: { executor: '@nx/angular:package' },
+        preview: { executor: '@angular/build:library' },
+      },
+    });
+    writeJson(tree, 'libs/lib1/package.json', {
+      name: '@my-org/lib1',
+      exports: { '.': './src/index.ts' },
+    });
+
+    await librarySecondaryEntryPointGenerator(tree, {
+      name: 'testing',
+      library: 'lib1',
+      skipFormat: true,
+    });
+
+    expect(tree.exists('libs/lib1/testing/ng-package.json')).toBe(true);
+    expect(readJson(tree, 'libs/lib1/package.json').exports).toStrictEqual({
+      '.': './src/index.ts',
+    });
+  });
+
+  it.each([
+    [
+      'a target using ng-packagr',
+      (tree: Tree) => {
+        addProjectConfiguration(tree, 'lib1', {
+          root: 'libs/lib1',
+          projectType: 'library',
+          targets: {
+            build: { executor: '@nx/angular:library' },
+            legacy: { executor: '@nx/angular:package' },
+          },
+        });
+      },
+      'legacy',
+      'libs/lib1/project.json',
+    ],
+    [
+      'a target inheriting ng-packagr through targetDefaults',
+      (tree: Tree) => {
+        updateNxJson(tree, {
+          ...readNxJson(tree),
+          targetDefaults: { legacy: { executor: '@nx/angular:package' } },
+        });
+        addProjectConfiguration(tree, 'lib1', {
+          root: 'libs/lib1',
+          projectType: 'library',
+          targets: {
+            build: { executor: '@nx/angular:library' },
+            legacy: {},
+          },
+        });
+      },
+      'legacy',
+      'libs/lib1/project.json',
+    ],
+    [
+      'an ng-packagr target in package.json next to project.json',
+      (tree: Tree) => {
+        addProjectConfiguration(tree, 'lib1', {
+          root: 'libs/lib1',
+          projectType: 'library',
+          targets: { build: { executor: '@nx/angular:library' } },
+        });
+        updateJson(tree, 'libs/lib1/package.json', (json) => ({
+          ...json,
+          nx: { targets: { legacy: { executor: '@nx/angular:package' } } },
+        }));
+      },
+      'legacy',
+      'libs/lib1/package.json',
+    ],
+    [
+      'an ng-packagr target in a project.json outside the library root',
+      (tree: Tree) => {
+        writeJson(tree, 'configs/lib1/project.json', {
+          name: 'lib1',
+          root: 'libs/lib1',
+          projectType: 'library',
+          targets: {
+            build: { executor: '@nx/angular:library' },
+            legacy: { executor: '@nx/angular:package' },
+          },
+        });
+      },
+      'legacy',
+      'configs/lib1/project.json',
+    ],
+    [
+      'an ng-packagr target in angular.json next to project.json',
+      (tree: Tree) => {
+        addProjectConfiguration(tree, 'lib1', {
+          root: 'libs/lib1',
+          projectType: 'library',
+          targets: { build: { executor: '@nx/angular:library' } },
+        });
+        writeJson(tree, 'angular.json', {
+          version: 1,
+          projects: {
+            'cli-lib1': {
+              root: 'libs/lib1',
+              architect: { build: { builder: '@angular/build:ng-packagr' } },
+            },
+          },
+        });
+      },
+      'build',
+      'angular.json',
+    ],
+    [
+      'an ng-packagr target in angular.json next to a project.json with a "./" root',
+      (tree: Tree) => {
+        writeJson(tree, 'libs/lib1/project.json', {
+          name: 'lib1',
+          root: './libs/lib1',
+          projectType: 'library',
+          targets: { build: { executor: '@nx/angular:library' } },
+        });
+        writeJson(tree, 'angular.json', {
+          version: 1,
+          projects: {
+            'cli-lib1': {
+              root: 'libs/lib1',
+              architect: { legacy: { builder: '@angular/build:ng-packagr' } },
+            },
+          },
+        });
+      },
+      'legacy',
+      'angular.json',
+    ],
+    [
+      'an ng-packagr target in an angular.json in a parent directory',
+      (tree: Tree) => {
+        addProjectConfiguration(tree, 'lib1', {
+          root: 'libs/lib1',
+          projectType: 'library',
+          targets: { build: { executor: '@nx/angular:library' } },
+        });
+        writeJson(tree, 'libs/angular.json', {
+          version: 1,
+          projects: {
+            'cli-lib1': {
+              root: 'lib1',
+              architect: { build: { builder: '@angular/build:ng-packagr' } },
+            },
+          },
+        });
+      },
+      'build',
+      'libs/angular.json',
+    ],
+  ])(
+    'should throw without changing files when a library builder library has %s',
+    async (_, setUpProject, target, file) => {
+      writeJson(tree, 'libs/lib1/package.json', {
+        name: '@my-org/lib1',
+        exports: { '.': './src/index.ts' },
+      });
+      setUpProject(tree);
+      const changes = tree.listChanges();
+
+      await expect(
+        librarySecondaryEntryPointGenerator(tree, {
+          name: 'testing',
+          library: 'lib1',
+          skipFormat: true,
+        })
+      ).rejects.toThrow(
+        `The "lib1" library uses the library builder, but the "${target}" target in "${file}" uses ng-packagr.`
+      );
+      expect(tree.listChanges()).toEqual(changes);
+    }
+  );
+
+  it.each([
+    ['a string', './src/index.ts'],
+    ['a conditions object', { types: './index.d.ts', default: './index.mjs' }],
+  ])(
+    'should keep %s "exports" value as the primary entry point',
+    async (_, primaryExport) => {
+      addProjectConfiguration(tree, 'lib1', {
+        root: 'libs/lib1',
+        projectType: 'library',
+        targets: { build: { executor: '@nx/angular:library' } },
+      });
+      writeJson(tree, 'libs/lib1/package.json', {
+        name: '@my-org/lib1',
+        exports: primaryExport,
+      });
+
+      await librarySecondaryEntryPointGenerator(tree, {
+        name: 'testing',
+        library: 'lib1',
+        skipFormat: true,
+      });
+
+      expect(readJson(tree, 'libs/lib1/package.json').exports).toStrictEqual({
+        '.': primaryExport,
+        './testing': './testing/src/index.ts',
+      });
+    }
+  );
 
   it('should add the path mapping for the entry point', async () => {
     addProjectConfiguration(tree, 'lib1', {
