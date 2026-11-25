@@ -14,7 +14,7 @@ use crate::native::{
 };
 use crate::native::{
     project_graph::utils::ProjectRootMappings,
-    tasks::hashers::{hash_cwd, hash_env, hash_runtime},
+    tasks::hashers::{TrackedFileIndices, hash_cwd, hash_env, hash_runtime},
 };
 use crate::native::{
     tasks::hashers::{
@@ -303,6 +303,7 @@ pub struct TaskHasher {
     project_file_set_cache: ProjectFileSetCache,
     workspace_file_indices_cache: WorkspaceFileIndicesCache,
     project_file_indices_cache: ProjectFileIndicesCache,
+    tracked_file_indices: TrackedFileIndices,
     // Fold over all externals; identical for every task, so computed once.
     all_externals_hash: OnceCell<String>,
     // A path index over the workspace files, built on first use. Workspace
@@ -347,6 +348,7 @@ impl TaskHasher {
             project_file_set_cache: ProjectFileSetCache::new(),
             workspace_file_indices_cache: WorkspaceFileIndicesCache::new(),
             project_file_indices_cache: ProjectFileIndicesCache::new(),
+            tracked_file_indices: TrackedFileIndices::default(),
             all_externals_hash: OnceCell::new(),
             workspace_file_index: WorkspaceFileIndex::new(Arc::clone(&all_workspace_files)),
         }
@@ -810,6 +812,7 @@ impl TaskHasher {
                 hash_plans,
                 &self.project_file_map,
                 &self.all_workspace_files,
+                &self.tracked_file_indices,
             ),
             // Up-front daemon reads can seed or reuse watch-maintained
             // listings. After tasks run, expansion must observe the disk.
@@ -1507,6 +1510,7 @@ mod tests {
             project_file_set_cache: ProjectFileSetCache::new(),
             workspace_file_indices_cache: WorkspaceFileIndicesCache::new(),
             project_file_indices_cache: ProjectFileIndicesCache::new(),
+            tracked_file_indices: TrackedFileIndices::default(),
             all_externals_hash: OnceCell::new(),
             workspace_file_index: WorkspaceFileIndex::new(all_workspace_files),
         }
@@ -2330,5 +2334,74 @@ mod tests {
         assert!(Arc::ptr_eq(&first, &second));
         assert!(!Arc::ptr_eq(&first, &other));
         assert_eq!(interner.len(), 2);
+    }
+
+    #[test]
+    fn repeated_hash_plans_for_reuses_only_needed_tracked_indices() -> anyhow::Result<()> {
+        use crate::native::tasks::hashers::{MIN_BATCH_GROUPS, hash_project_files};
+        use crate::native::test_utils::hash_plans;
+
+        let temp = assert_fs::TempDir::new()?;
+        let reader = IgnoredIndexReader::new(Arc::new(IgnoredIndex::new(None)), Arc::new(|| {}));
+        let mut paths = vec!["nx.json".to_owned(), "libs/p0/extra.css".to_owned()];
+        let mut declared = Vec::new();
+        for i in 0..MIN_BATCH_GROUPS {
+            paths.push(format!("libs/p{i}/a.ts"));
+            declared.push(HashInstruction::ProjectFileSet(
+                format!("p{i}"),
+                vec![format!("libs/p{i}/**/*")],
+            ));
+        }
+        declared.push(HashInstruction::WorkspaceFileSet(vec![
+            "{workspaceRoot}/nx.json".into(),
+        ]));
+        let mut indexed = declared.clone();
+        indexed[0] = HashInstruction::ProjectFileSet("p0".into(), vec!["libs/p0/**/*.ts".into()]);
+        let malformed_globs = vec!["libs/p0/a.ts".into(), "libs/p0/**/*.[".into()];
+        let malformed = HashInstruction::ProjectFileSet("p0".into(), malformed_globs.clone());
+        let mut malformed_batch = declared.clone();
+        malformed_batch[0] = malformed.clone();
+        let plans = External::new(hash_plans(&[
+            ("declared", declared),
+            ("indexed", indexed),
+            ("malformed", vec![malformed]),
+            ("malformed-batch", malformed_batch),
+        ]));
+        let files: Vec<_> = paths.iter().map(|p| (p.as_str(), "hash")).collect();
+        let hasher = hasher_tracking(temp.path(), reader, &files);
+        let run = |task: &str| -> anyhow::Result<_> {
+            let hashes = hasher.hash_plans_for(
+                &plans,
+                vec![task.into()],
+                HashMap::from([(task.into(), HashMap::new())]),
+                temp.path().to_string_lossy().into_owned(),
+                Some(true),
+            )?;
+            let (_, result) = hashes.0.remove(task).unwrap();
+            Ok((result.value, result.inputs.files))
+        };
+
+        paths.sort();
+        let declared = run("declared")?;
+        assert_eq!(declared.1, paths);
+        let (projects, workspace) = hasher.tracked_file_indices.indexed_scopes();
+        assert_eq!(projects, 0);
+        let workspace = workspace.expect("the always-on workspace group built one index");
+        assert_eq!(run("declared")?, declared);
+
+        paths.retain(|path| path != "libs/p0/extra.css");
+        let indexed = run("indexed")?;
+        assert_eq!(indexed.1, paths);
+        assert_eq!(run("indexed")?, indexed);
+        let (projects, same_workspace) = hasher.tracked_file_indices.indexed_scopes();
+        assert_eq!(projects, 1);
+        assert!(std::ptr::eq(workspace, same_workspace.unwrap()));
+
+        let diagnostic = hash_project_files("p0", &malformed_globs, &hasher.project_file_map)
+            .unwrap_err()
+            .to_string();
+        assert_eq!(run("malformed").unwrap_err().to_string(), diagnostic);
+        assert_eq!(run("malformed-batch").unwrap_err().to_string(), diagnostic);
+        Ok(())
     }
 }

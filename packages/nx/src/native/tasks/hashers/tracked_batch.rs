@@ -10,49 +10,66 @@ use std::borrow::Cow;
 use std::collections::HashMap;
 use std::sync::{Arc, OnceLock};
 
-struct Matches {
-    ids: Vec<u32>,
+/// Only file positions survive a hashing call. They belong to one TaskHasher's
+/// immutable file map. Pattern matches can grow with the requests and stay in
+/// the batch that needs them.
+#[derive(Default)]
+pub(crate) struct TrackedFileIndices {
+    projects: OnceLock<DashMap<String, Arc<PathOrder>>>,
+    workspace: Arc<PathOrder>,
+}
+
+#[cfg(test)]
+impl TrackedFileIndices {
+    pub(crate) fn indexed_scopes(&self) -> (usize, Option<&[u32]>) {
+        (
+            self.projects.get().map_or(0, DashMap::len),
+            self.workspace.get().and_then(Option::as_deref),
+        )
+    }
+}
+
+type PathOrder = OnceLock<Option<Vec<u32>>>;
+
+fn sorted_positions(files: &[FileData]) -> Option<Vec<u32>> {
+    if cfg!(windows) && files.iter().any(|f| f.file.contains('\\')) {
+        return None;
+    }
+    let mut by_path: Vec<_> = (0..u32::try_from(files.len()).ok()?).collect();
+    by_path.sort_unstable_by(|&a, &b| files[a as usize].file.cmp(&files[b as usize].file));
+    // Regular expansion emits each path once and looks its data up in the file map.
+    // Delegate ambiguous snapshots to that same lookup.
+    if by_path
+        .windows(2)
+        .any(|pair| files[pair[0] as usize].file == files[pair[1] as usize].file)
+    {
+        return None;
+    }
+    Some(by_path)
+}
+
+struct Pattern<'a> {
+    root: &'a str,
+    tail: Option<&'a str>,
     regex_cost: usize,
 }
 
-struct Scope<'a> {
-    files: &'a [FileData],
-    by_path: Vec<u32>,
-    canonical_separators: bool,
-    patterns: OnceCache<Option<Matches>>,
-}
-
-impl<'a> Scope<'a> {
-    fn new(files: &'a [FileData]) -> Self {
-        let mut by_path: Vec<u32> = (0..files.len() as u32).collect();
-        by_path.sort_unstable_by(|&a, &b| files[a as usize].file.cmp(&files[b as usize].file));
-        Self {
-            files,
-            by_path,
-            patterns: OnceCache::new(),
-            canonical_separators: !cfg!(windows) || files.iter().all(|f| !f.file.contains('\\')),
-        }
-    }
-
-    fn matches(
-        &self,
-        text: &str,
-        shapes: &DashMap<(usize, String), RootRead>,
-    ) -> Result<Option<Matches>> {
+impl<'a> Pattern<'a> {
+    fn parse(text: &'a str, shapes: &DashMap<(usize, String), RootRead>) -> Option<Self> {
         let (root, tail) = match text.split_once("/**/*") {
             Some((root, tail)) if !tail.is_empty() => (root, Some(tail)),
             None => (text, None),
-            _ => return Ok(None),
+            _ => return None,
         };
         // Other glob syntax, escapes and non-canonical paths go through Nx's
-        // original combined compiler and preserve its diagnostics.
+        // regular fileset compiler and preserve its diagnostics.
         let plain = |c: u8| c.is_ascii_alphanumeric() || b"._- @".contains(&c);
         if root.len() > 4096
             || !root
                 .split('/')
                 .all(|s| !s.is_empty() && s != "." && s != ".." && s.bytes().all(plain))
         {
-            return Ok(None);
+            return None;
         }
         let regex_cost = match tail {
             None => 0, // literal + literal directory prefix, neither needs a regex set
@@ -65,11 +82,78 @@ impl<'a> Scope<'a> {
             }
             Some(_) => match root_read(text, shapes) {
                 RootRead::No(cost) => cost,
-                _ => return Ok(None),
+                _ => return None,
             },
         };
+        Some(Self {
+            root,
+            tail,
+            regex_cost,
+        })
+    }
+}
+
+/// Both the first suitability check and subsequent matches must accept the
+/// whole group, including its combined regex size.
+fn visit_group(
+    globs: &[String],
+    workspace: bool,
+    mut visit: impl FnMut(bool, &str) -> Result<Option<usize>>,
+) -> Result<bool> {
+    let mut saw_positive = false;
+    let mut cost = 0usize;
+    for raw in globs {
+        let (exclude, text) = raw
+            .strip_prefix('!')
+            .map_or((false, raw.as_str()), |s| (true, s));
+        let body = if workspace {
+            let Some(body) = text.strip_prefix("{workspaceRoot}/") else {
+                return Ok(false);
+            };
+            body
+        } else {
+            text
+        };
+        let Some(regex_cost) = visit(exclude, body)? else {
+            return Ok(false);
+        };
+        cost = cost.saturating_add(regex_cost);
+        if cost >= GLOBSET_LIMIT {
+            return Ok(false);
+        }
+        saw_positive |= !exclude;
+    }
+    Ok(saw_positive)
+}
+
+struct Matches {
+    // Positions in path order, so merging groups also produces the hash fold order.
+    ids: Vec<u32>,
+    regex_cost: usize,
+}
+
+struct Scope<'a> {
+    files: &'a [FileData],
+    order: Arc<PathOrder>,
+    patterns: OnceCache<Option<Matches>>,
+}
+
+impl<'a> Scope<'a> {
+    fn new(files: &'a [FileData], order: Arc<PathOrder>) -> Self {
+        Self {
+            files,
+            order,
+            patterns: OnceCache::new(),
+        }
+    }
+
+    fn matches(&self, pattern: Pattern, by_path: &[u32]) -> Result<Matches> {
+        let Pattern {
+            root,
+            tail,
+            regex_cost,
+        } = pattern;
         let mut ids = Vec::new();
-        let by_path = &self.by_path;
         let path = |i: u32| self.files[i as usize].file.as_str();
         if tail.is_none() {
             let start = by_path.partition_point(|&i| path(i) < root);
@@ -90,23 +174,29 @@ impl<'a> Scope<'a> {
         } else {
             ids.extend(under);
         }
-        Ok(Some(Matches { ids, regex_cost }))
+        Ok(Matches { ids, regex_cost })
     }
 }
 
 pub(crate) struct TrackedBatch<'a> {
     projects: &'a HashMap<String, Vec<FileData>>,
     workspace: &'a [FileData],
+    indices: &'a TrackedFileIndices,
     scopes: DashMap<String, Arc<Scope<'a>>>,
     workspace_scope: OnceLock<Arc<Scope<'a>>>,
     shapes: DashMap<(usize, String), RootRead>,
 }
 
 impl<'a> TrackedBatch<'a> {
-    fn new(projects: &'a HashMap<String, Vec<FileData>>, workspace: &'a [FileData]) -> Self {
+    fn new(
+        projects: &'a HashMap<String, Vec<FileData>>,
+        workspace: &'a [FileData],
+        indices: &'a TrackedFileIndices,
+    ) -> Self {
         Self {
             projects,
             workspace,
+            indices,
             scopes: DashMap::new(),
             workspace_scope: OnceLock::new(),
             shapes: DashMap::new(),
@@ -117,6 +207,7 @@ impl<'a> TrackedBatch<'a> {
         plans: &crate::native::tasks::types::HashPlans,
         projects: &'a HashMap<String, Vec<FileData>>,
         workspace: &'a [FileData],
+        indices: &'a TrackedFileIndices,
     ) -> Option<Self> {
         use crate::native::tasks::plan::{Plan, kind};
         if plans.pool.len() < MIN_BATCH_GROUPS {
@@ -128,7 +219,50 @@ impl<'a> TrackedBatch<'a> {
             .filter(|p| p.has(kind::TRACKED))
             .map(|p| p.only(kind::TRACKED))
             .collect();
-        (Plan::union_ids(&groups).len() >= MIN_BATCH_GROUPS).then(|| Self::new(projects, workspace))
+        (Plan::union_ids(&groups).len() >= MIN_BATCH_GROUPS)
+            .then(|| Self::new(projects, workspace, indices))
+    }
+
+    fn scope(&self, project: Option<&str>, globs: &[String]) -> Result<Option<Arc<Scope<'a>>>> {
+        let cached = match project {
+            Some(p) => self.scopes.get(p).map(|scope| Arc::clone(&scope)),
+            None => self.workspace_scope.get().cloned(),
+        };
+        if cached.is_some() {
+            return Ok(cached);
+        }
+        // A new scope only pays to sort its file map if the whole group can
+        // use it. Existing scopes already memoize each pattern and its cost.
+        if !visit_group(globs, project.is_none(), |_, text| {
+            Ok(Pattern::parse(text, &self.shapes).map(|p| p.regex_cost))
+        })? {
+            return Ok(None);
+        }
+        let scope = if let Some(project) = project {
+            let Some(files) = self.projects.get(project) else {
+                return Ok(None);
+            };
+            self.scopes
+                .entry(project.to_owned())
+                .or_insert_with(|| {
+                    let order = self
+                        .indices
+                        .projects
+                        .get_or_init(DashMap::new)
+                        .entry(project.to_owned())
+                        .or_default()
+                        .clone();
+                    Arc::new(Scope::new(files, order))
+                })
+                .clone()
+        } else {
+            self.workspace_scope
+                .get_or_init(|| {
+                    Arc::new(Scope::new(self.workspace, self.indices.workspace.clone()))
+                })
+                .clone()
+        };
+        Ok(Some(scope))
     }
 
     /// None requests the ordinary matcher, including invalid patterns, mixed
@@ -138,62 +272,33 @@ impl<'a> TrackedBatch<'a> {
         project: Option<&str>,
         globs: &[String],
     ) -> Result<Option<Vec<&'a FileData>>> {
-        let scope = if let Some(project) = project {
-            let Some(files) = self.projects.get(project) else {
-                return Ok(None);
-            };
-            if let Some(s) = self.scopes.get(project) {
-                Arc::clone(s.value())
-            } else {
-                self.scopes
-                    .entry(project.to_owned())
-                    .or_insert_with(|| Arc::new(Scope::new(files)))
-                    .clone()
-            }
-        } else {
-            self.workspace_scope
-                .get_or_init(|| Arc::new(Scope::new(self.workspace)))
-                .clone()
-        };
-        if !scope.canonical_separators {
+        let Some(scope) = self.scope(project, globs)? else {
             return Ok(None);
-        }
+        };
+        let Some(by_path) = scope.order.get_or_init(|| sorted_positions(scope.files)) else {
+            return Ok(None);
+        };
         let mut positive = Vec::new();
         let mut negative_matches = Vec::new();
-        let mut saw_positive = false;
-        let mut cost = 0usize;
-        for raw in globs {
-            let (exclude, pattern) = raw
-                .strip_prefix('!')
-                .map_or((false, raw.as_str()), |s| (true, s));
-            let body = if project.is_none() {
-                let Some(s) = pattern.strip_prefix("{workspaceRoot}/") else {
-                    return Ok(None);
-                };
-                s
-            } else {
-                pattern
-            };
-            let cached = scope
-                .patterns
-                .get_or_try_init(body.to_owned(), || scope.matches(body, &self.shapes))?;
+        if !visit_group(globs, project.is_none(), |exclude, body| {
+            let cached = scope.patterns.get_or_try_init(body.to_owned(), || {
+                Pattern::parse(body, &self.shapes)
+                    .map(|p| scope.matches(p, by_path))
+                    .transpose()
+            })?;
             let Some(m) = cached.as_ref() else {
                 return Ok(None);
             };
-            cost = cost.saturating_add(m.regex_cost);
-            if cost >= GLOBSET_LIMIT {
-                return Ok(None);
-            }
+            let cost = m.regex_cost;
             if exclude {
                 if !m.ids.is_empty() {
                     negative_matches.push(cached);
                 }
             } else {
-                saw_positive = true;
                 positive.extend_from_slice(&m.ids)
             }
-        }
-        if !saw_positive {
+            Ok(Some(cost))
+        })? {
             return Ok(None);
         }
         positive.sort_unstable();
@@ -214,7 +319,7 @@ impl<'a> TrackedBatch<'a> {
                     excluded
                         .next_if_eq(&i)
                         .is_none()
-                        .then(|| &scope.files[scope.by_path[i as usize] as usize])
+                        .then(|| &scope.files[by_path[i as usize] as usize])
                 })
                 .collect(),
         ))
@@ -256,6 +361,44 @@ mod tests {
     };
 
     #[test]
+    fn unsupported_groups_leave_both_file_indices_unbuilt() -> Result<()> {
+        let files = vec![FileData {
+            file: "pkg/a.ts".into(),
+            hash: "a".into(),
+        }];
+        let projects = HashMap::from([("p".into(), files.clone())]);
+        let indices = TrackedFileIndices::default();
+        let batch = TrackedBatch::new(&projects, &files, &indices);
+        for group in [
+            vec!["pkg/**/*"],
+            vec!["pkg/a.ts", "!pkg/**/*"],
+            vec!["pkg/a.ts", "pkg/**/*.[", "pkg"],
+            vec!["!pkg/a.ts"],
+        ] {
+            let globs: Vec<_> = group.iter().map(|&g| g.to_owned()).collect();
+            assert!(batch.select(Some("p"), &globs)?.is_none(), "{group:?}");
+            let globs: Vec<_> = group
+                .iter()
+                .map(|g| match g.strip_prefix('!') {
+                    Some(g) => format!("!{{workspaceRoot}}/{g}"),
+                    None => format!("{{workspaceRoot}}/{g}"),
+                })
+                .collect();
+            assert!(batch.select(None, &globs)?.is_none(), "{group:?}");
+        }
+        assert!(
+            batch
+                .select(
+                    None,
+                    &["{workspaceRoot}/pkg".into(), "missing-token".into()]
+                )?
+                .is_none()
+        );
+        assert_eq!(indices.indexed_scopes(), (0, None));
+        Ok(())
+    }
+
+    #[test]
     fn probes_broad_exclusions_for_sparse_positives_and_borrows_for_dense_positives() {
         let broad_exclusion: Vec<_> = (0..4096).collect();
         let mut sparse = vec![0, 2048, 4096];
@@ -290,7 +433,8 @@ mod tests {
             })
             .collect();
         let projects = HashMap::from([("project".to_owned(), files)]);
-        let batch = TrackedBatch::new(&projects, &[]);
+        let indices = TrackedFileIndices::default();
+        let batch = TrackedBatch::new(&projects, &[], &indices);
         for i in 0..GROUPS {
             let group = [
                 "!pkg/generated".into(),
@@ -334,12 +478,14 @@ mod tests {
             .map(|i| format!("pkg/{root}{i}/**/*.{{abcdef,ghijkl,mnopqr}}"))
             .collect();
         let projects = HashMap::from([("p".to_owned(), Vec::new())]);
+        let indices = TrackedFileIndices::default();
         assert!(collect_project_files("p", &group, &projects)?.is_empty());
         assert!(
-            TrackedBatch::new(&projects, &[])
+            TrackedBatch::new(&projects, &[], &indices)
                 .select(Some("p"), &group)?
                 .is_none()
         );
+        assert_eq!(indices.indexed_scopes(), (0, None));
         Ok(())
     }
 
@@ -370,7 +516,8 @@ mod tests {
                 .cloned()
                 .collect(),
         )]);
-        let batch = TrackedBatch::new(&projects, &files);
+        let indices = TrackedFileIndices::default();
+        let batch = TrackedBatch::new(&projects, &files, &indices);
         let workspace_index = WorkspaceFileIndex::new(Arc::new(files.clone()));
         for group in [
             vec!["p"],
