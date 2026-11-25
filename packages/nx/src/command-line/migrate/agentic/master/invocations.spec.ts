@@ -140,7 +140,7 @@ describe('buildMasterInvocation', () => {
       'subagent, do not run nx migrate commands'
     );
     expect(spec.files[0].content).toContain(
-      'run every later nx command outside the sandbox'
+      "fails in the terminal sandbox because it can't find or run Node.js or the package manager, run every later nx command outside the sandbox"
     );
     expect(spec.args).toEqual([
       '--add-dir',
