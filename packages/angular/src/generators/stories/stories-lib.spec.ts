@@ -1,6 +1,6 @@
 import '@nx/devkit/internal-testing-utils/mock-project-graph';
 
-import { Tree, writeJson } from '@nx/devkit';
+import { Tree, updateJson, writeJson } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { componentGenerator } from '../component/component';
 import { librarySecondaryEntryPointGenerator } from '../library-secondary-entry-point/library-secondary-entry-point';
@@ -30,6 +30,29 @@ describe('angularStories generator: libraries', () => {
           })
       ).not.toThrow();
     });
+  });
+
+  it('should generate stories.ts files in a sibling directory whose name starts with a secondary entry point directory', async () => {
+    const tree = createTreeWithEmptyWorkspace();
+    await generateTestLibrary(tree, { directory: libName, skipFormat: true });
+    updateJson(tree, `${libName}/project.json`, (json) => {
+      json.sourceRoot = libName;
+      return json;
+    });
+    writeJson(tree, `${libName}/testing/ng-package.json`, {});
+    tree.write(
+      `${libName}/testing-utils/helper-button.ts`,
+      `import { Component } from '@angular/core';
+@Component({ selector: 'lib-helper-button', template: '' })
+export class HelperButton {}
+`
+    );
+
+    await angularStoriesGenerator(tree, { name: libName });
+
+    expect(
+      tree.exists(`${libName}/testing-utils/helper-button.stories.ts`)
+    ).toBe(true);
   });
 
   describe('Stories for non-empty Angular library', () => {

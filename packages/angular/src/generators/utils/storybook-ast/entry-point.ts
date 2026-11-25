@@ -37,11 +37,12 @@ export function getProjectEntryPoints(
   collectLibrarySecondaryEntryPoints(tree, root, entryPointRootPaths);
 
   // since the root includes some secondary entry points, we need to ignore
-  // them when processing the main entry point
+  // them when processing the main entry point. The trailing slash keeps a
+  // sibling such as testing-utils/ when testing/ is ignored.
   if (rootEntryPoint.path === root && entryPointRootPaths.length > 1) {
     rootEntryPoint.excludeDirs = entryPointRootPaths
       .slice(1)
-      .map((entryPoint) => entryPoint.path);
+      .map((entryPoint) => `${entryPoint.path}/`);
   }
 
   return entryPointRootPaths;
