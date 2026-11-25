@@ -422,6 +422,21 @@ impl DiskWalkIgnores {
     }
 }
 
+/// The slash-separated path must still identify this exact entry when rejoined.
+pub(crate) fn disk_relative_path<'a>(
+    workspace_root: &Path,
+    path: &'a Path,
+) -> Option<std::borrow::Cow<'a, str>> {
+    let relative = path.strip_prefix(workspace_root).ok()?.to_str()?;
+    if cfg!(windows) {
+        Some(relative.replace('\\', "/").into())
+    } else if relative.contains('\\') {
+        None
+    } else {
+        Some(relative.into())
+    }
+}
+
 /// Files under `start`, workspace-relative, with the stamp read on the way
 /// for anything the context does not vouch for. The walker skips what it
 /// skips for every walk, but never the root it is given, so a glob rooted at
@@ -433,16 +448,8 @@ pub(crate) fn walk_files(
     accept: PathPredicate,
     skip: &[String],
 ) -> Result<Vec<String>> {
-    let relative_of = |path: &Path| -> Option<String> {
-        Some(
-            path.strip_prefix(workspace_root)
-                .ok()?
-                .to_string_lossy()
-                .replace('\\', "/"),
-        )
-    };
     let visit = |path: &Path, file_type: std::fs::FileType| -> Option<String> {
-        let relative = relative_of(path)?;
+        let relative = disk_relative_path(workspace_root, path)?;
         if file_type.is_symlink() {
             // Read where a linked file points, but never enter a linked
             // directory.
@@ -450,12 +457,12 @@ pub(crate) fn walk_files(
             if target.is_dir() || !accept(&relative) {
                 return None;
             }
-            return Some(relative);
+            return Some(relative.into_owned());
         }
         if !file_type.is_file() || !accept(&relative) {
             return None;
         }
-        Some(relative)
+        Some(relative.into_owned())
     };
 
     let found = Mutex::new(Vec::new());

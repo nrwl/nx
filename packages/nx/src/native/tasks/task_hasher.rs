@@ -416,7 +416,10 @@ impl TaskHasher {
             self.ignored_index.index().files_under(
                 workspace_root,
                 dir,
-                run_stage.nothing_ran(),
+                // An unwatched index would rewalk the entire prefix to list it.
+                // Use the pruned walker when skips can avoid that work.
+                run_stage.nothing_ran()
+                    && (skip.is_empty() || self.ignored_index.index().has_watch()),
                 accept,
                 skip,
             )
@@ -506,7 +509,7 @@ impl TaskHasher {
                         project_roots,
                         ..
                     } => {
-                        if let Some(disk) = &batch.disk {
+                        if let Some(disk) = batch.disk_for_group(id) {
                             disk.file_hashes(&globs, &project_roots, &tracked, read)?
                         } else {
                             file_hashes(
@@ -562,7 +565,7 @@ impl TaskHasher {
                         project_roots,
                         ..
                     } => {
-                        if let Some(disk) = &batch.disk {
+                        if let Some(disk) = batch.disk_for_group(id) {
                             Arc::new(disk.paths(&globs, &project_roots, &tracked)?)
                         } else {
                             self.expand_ignored_files(
@@ -807,9 +810,15 @@ impl TaskHasher {
                 &self.project_file_map,
                 &self.all_workspace_files,
             ),
-            disk: SettledFiles::for_plans(Path::new(&self.workspace_root), hash_plans, &|p| {
-                run_stage.nothing_ran() && self.workspace_tracks_file(p)
-            })?,
+            // Up-front daemon reads can seed or reuse watch-maintained
+            // listings. After tasks run, expansion must observe the disk.
+            disk: if run_stage.nothing_ran() && self.ignored_index.index().has_watch() {
+                None
+            } else {
+                SettledFiles::for_plans(Path::new(&self.workspace_root), hash_plans, &|p| {
+                    run_stage.nothing_ran() && self.workspace_tracks_file(p)
+                })?
+            },
         };
         // Id-indexed snapshots so the hot loop reads a plain Vec instead of
         // taking a DashMap shard lock per (task, instruction) entry. Every
@@ -1126,7 +1135,7 @@ impl TaskHasher {
                 project_roots,
                 ..
             } => {
-                if let Some(inventory) = &batch.disk {
+                if let Some(inventory) = batch.disk_for_group(id) {
                     let (hash, files) = inventory.hash(
                         globs,
                         project_roots,
@@ -1401,6 +1410,10 @@ struct FileSetBatch<'snapshot> {
 }
 
 impl<'a> FileSetBatch<'a> {
+    fn disk_for_group(&self, id: u32) -> Option<&SettledFiles> {
+        self.disk.as_ref()?.for_group(id)
+    }
+
     fn select_tracked(
         &self,
         project: Option<&str>,
@@ -1609,6 +1622,73 @@ mod tests {
                 )
             })
             .collect()
+    }
+
+    #[test]
+    fn watched_batches_reuse_listings_up_front_and_read_live_disk_after_tasks() -> anyhow::Result<()>
+    {
+        use crate::native::tasks::hashers::MIN_BATCH_GROUPS;
+        use crate::native::test_utils::hash_plans;
+        use crate::native::workspace::ignored_index::Watch;
+
+        let temp = assert_fs::TempDir::new()?;
+        let root = temp.path();
+        std::fs::create_dir_all(root.join("pkg"))?;
+        std::fs::write(root.join("pkg/first.js"), "first")?;
+        let index = Arc::new(IgnoredIndex::new(Some(Watch {
+            delivers_under: Arc::new(|_| true),
+        })));
+        let reader = IgnoredIndexReader::new(Arc::clone(&index), Arc::new(|| {}));
+        let hasher = hasher(root, reader);
+        let names: Vec<_> = (0..MIN_BATCH_GROUPS).map(|i| format!("task-{i}")).collect();
+        let tasks: Vec<_> = names
+            .iter()
+            .map(|name| {
+                (
+                    name.as_str(),
+                    vec![HashInstruction::ignored_files(vec![
+                        "pkg/**/*.js".into(),
+                        format!("!pkg/{name}.js"),
+                    ])],
+                )
+            })
+            .collect();
+        let plans = hash_plans(&tasks);
+        hasher.register_prefixes(&plans);
+        let env = HashMap::new();
+        let paths = |stage| {
+            let hashes = hasher.hash_plans_impl(
+                &plans,
+                root.to_string_lossy().into_owned(),
+                Some(true),
+                stage,
+                |_| &env,
+            )?;
+            let files = hashes.0.get(&names[0]).unwrap().inputs.files.clone();
+            Ok::<_, anyhow::Error>(files)
+        };
+        assert_eq!(paths(RunStage::NothingRan)?, ["pkg/first.js"]);
+        assert!(index.is_listed("pkg"));
+        #[cfg(unix)]
+        {
+            let raw = r"pkg/a\b.js";
+            std::fs::write(root.join(raw), "raw filename")?;
+            index.note_written(root, raw);
+        }
+        std::fs::write(root.join("pkg/later.js"), "later")?;
+        // No watch event yet. A warm up-front listing performs no walk,
+        // whereas a late hash reads the output even with the watch behind.
+        assert_eq!(paths(RunStage::NothingRan)?, ["pkg/first.js"]);
+        assert_eq!(
+            paths(RunStage::ATaskMayHaveWritten)?,
+            ["pkg/first.js", "pkg/later.js"]
+        );
+        index.note_written(root, "pkg/later.js");
+        assert_eq!(
+            paths(RunStage::NothingRan)?,
+            ["pkg/first.js", "pkg/later.js"]
+        );
+        Ok(())
     }
 
     #[test]

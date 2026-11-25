@@ -1,18 +1,20 @@
 //! One invocation's disk files, indexed in workspace-relative path order.
 //! Explicit roots hidden beneath a skipped subtree get their own visibility.
 use super::super::{MIN_BATCH_GROUPS, OnceCache};
-use super::FilesExpansion;
-use super::parse_group;
+use super::entries::{Negation, Positive};
+use super::{FilesExpansion, ProjectScope, parse_group};
 use anyhow::Result;
 use rayon::prelude::*;
-use std::collections::HashSet;
-use std::fmt::Write;
+use std::collections::{HashMap, HashSet};
 use std::ops::Range;
 use std::path::Path;
-use std::sync::OnceLock;
+use std::sync::{Arc, OnceLock};
 
+use crate::native::glob::expand_literal_braces;
 use crate::native::tasks::types::{HashInstruction, HashPlans};
-use crate::native::walker::{DiskWalkIgnores, PathPredicate};
+use crate::native::utils::path::{escapes_workspace, parent_dirs};
+use crate::native::walker::{DiskWalkIgnores, PathPredicate, disk_relative_path};
+
 struct File {
     path: String,
     // Length of the widest requested root whose walk can see this file.
@@ -20,11 +22,19 @@ struct File {
     content: OnceLock<Option<String>>,
 }
 
+struct PositiveMatches {
+    // Exact files bypass project scope. Directory matches retain the walk
+    // root so each group can apply its own nested project boundaries.
+    directory: Option<String>,
+    ids: Vec<u32>,
+}
+
 pub(crate) struct SettledFiles {
+    groups: HashSet<u32>,
     entries: Vec<File>,
     directory_roots: HashSet<String>,
     counts: InventoryCounts,
-    positives: OnceCache<Vec<u32>>,
+    positives: OnceCache<Vec<PositiveMatches>>,
     negatives: OnceCache<Vec<u32>>,
 }
 
@@ -63,8 +73,8 @@ impl SettledFiles {
                 seen_files.insert(root.to_owned());
                 continue;
             }
+            directory_roots.insert(root.to_owned());
             if !metadata.is_dir() {
-                directory_roots.insert(root.to_string());
                 continue;
             }
             counts.traversal_starts += 1;
@@ -83,6 +93,10 @@ impl SettledFiles {
                                 if ignores.skips(&path) {
                                     continue;
                                 }
+                                let Some(relative) = disk_relative_path(workspace_root, &path)
+                                else {
+                                    continue;
+                                };
                                 let Ok(kind) = entry.file_type() else {
                                     continue;
                                 };
@@ -92,9 +106,7 @@ impl SettledFiles {
                                     || (kind.is_symlink()
                                         && std::fs::metadata(&path).is_ok_and(|m| !m.is_dir()))
                                 {
-                                    if let Ok(relative) = path.strip_prefix(workspace_root) {
-                                        files.push(relative.to_string_lossy().replace('\\', "/"));
-                                    }
+                                    files.push(relative.into_owned());
                                 }
                             }
                         }
@@ -128,13 +140,12 @@ impl SettledFiles {
         entries.dedup_by(|a, b| a.path == b.path);
         counts.unique_directories = directories.len();
         directory_roots.extend(directories.into_iter().filter_map(|dir| {
-            dir.strip_prefix(workspace_root)
-                .ok()
-                .map(|p| p.to_string_lossy().replace('\\', "/"))
+            disk_relative_path(workspace_root, &dir).map(|path| path.into_owned())
         }));
         counts.files = entries.len();
         counts.scan_seconds = timer.elapsed().as_secs_f64();
         Ok(Self {
+            groups: HashSet::new(),
             counts,
             entries,
             directory_roots,
@@ -193,38 +204,100 @@ impl SettledFiles {
         if ids.len() < MIN_BATCH_GROUPS {
             return Ok(None);
         }
-        let mut seen_globs = HashSet::<std::sync::Arc<str>>::new();
-        let mut roots = HashSet::<String>::new();
-        let mut tracked_literals = hashbrown::HashSet::new();
+        let ignores = DiskWalkIgnores::new()?;
+        let mut groups = HashSet::new();
+        let mut positives_by_glob = HashMap::<Arc<str>, Vec<Positive>>::new();
+        let mut skip_roots_by_glob = HashMap::<Arc<str>, Vec<String>>::new();
+        let mut skip_is_dir = HashMap::new();
+        // Accumulate the roots only from groups that will use the shared
+        // inventory. A group that can avoid an entire subtree uses the
+        // ordinary pruned walk, even if another group needs that subtree.
+        let mut group_globs = HashSet::new();
         for id in ids {
             let instruction = plans.pool.get(id);
-            if let HashInstruction::IgnoredFileSet { globs, .. } = instruction.value() {
-                for glob in globs.iter() {
-                    if glob.starts_with('!') || seen_globs.contains(glob.as_ref()) {
+            if let HashInstruction::IgnoredFileSet {
+                globs,
+                project_roots,
+                ..
+            } = instruction.value()
+            {
+                let positives = globs.iter().filter(|glob| !glob.starts_with('!'));
+                for glob in positives.clone() {
+                    if !positives_by_glob.contains_key(glob.as_ref()) {
+                        // Let the ordinary expansion report malformed entries in their group order.
+                        let Ok((parsed, _)) = parse_group(&[glob]) else {
+                            return Ok(None);
+                        };
+                        positives_by_glob.insert(glob.clone(), parsed);
+                    }
+                }
+                let entries = positives.clone().flat_map(|glob| &positives_by_glob[glob]);
+                if !project_roots.is_empty() {
+                    let scope = ProjectScope::new(project_roots);
+                    if entries
+                        .clone()
+                        .any(|entry| scope.nested_roots(&entry.root).next().is_some())
+                    {
                         continue;
                     }
-                    seen_globs.insert(glob.clone());
-                    for positive in parse_group(&[glob])?.0 {
-                        // An upfront exact tracked file already has a workspace hash.
-                        if positive.below.is_pattern() || !is_tracked(&positive.root) {
-                            roots.insert(positive.root);
-                        } else {
-                            tracked_literals.insert(positive.root);
-                        }
+                }
+                let mut negatives = globs.iter().filter(|glob| glob.starts_with('!')).peekable();
+                if negatives.peek().is_some() {
+                    let walk_roots: HashSet<_> = entries.map(|entry| entry.root.as_str()).collect();
+                    if negatives.any(|glob| {
+                        skip_roots_by_glob
+                            .entry(glob.clone())
+                            .or_insert_with(|| {
+                                expand_literal_braces(glob)
+                                    .iter()
+                                    .filter_map(|expanded| Negation::possible_skip_root(expanded))
+                                    .collect()
+                            })
+                            .iter()
+                            .any(|dir| {
+                                (walk_roots.contains("")
+                                    || parent_dirs(dir).any(|p| walk_roots.contains(p)))
+                                    && *skip_is_dir.entry(dir.clone()).or_insert_with(|| {
+                                        let path = workspace.join(dir);
+                                        !escapes_workspace(Path::new(dir))
+                                            && !ignores.skips(&path)
+                                            && std::fs::symlink_metadata(path)
+                                                .is_ok_and(|meta| meta.is_dir())
+                                    })
+                            })
+                    }) {
+                        continue;
                     }
+                }
+                groups.insert(id);
+                group_globs.extend(positives.cloned());
+            }
+        }
+        if groups.len() < MIN_BATCH_GROUPS {
+            return Ok(None);
+        }
+        let mut roots = HashSet::new();
+        let mut tracked_literals = HashSet::new();
+        for glob in group_globs {
+            for positive in &positives_by_glob[&glob] {
+                // An upfront exact tracked file already has a workspace hash.
+                if positive.below.is_pattern() || !is_tracked(&positive.root) {
+                    roots.insert(positive.root.as_str());
+                } else {
+                    tracked_literals.insert(positive.root.as_str());
                 }
             }
         }
 
-        let roots = roots.iter().map(String::as_str).collect();
         let preparation = timer.elapsed().as_secs_f64();
         let mut inventory = Self::inventory(workspace, roots)?;
+        inventory.groups = groups;
         // A direct tracked read may be absent on disk in the frozen up-front snapshot.
         let mut extra: Vec<_> = tracked_literals
             .into_iter()
             .filter(|path| inventory.exact(path).is_none())
             .map(|path| File {
-                path,
+                path: path.to_owned(),
                 visible_from: usize::MAX,
                 content: OnceLock::new(),
             })
@@ -242,22 +315,24 @@ impl SettledFiles {
         Ok(Some(inventory))
     }
 
+    pub(crate) fn for_group(&self, id: u32) -> Option<&Self> {
+        self.groups.contains(&id).then_some(self)
+    }
+
     // Exact tracked files still use the workspace snapshot up front. Directory
     // matches must be visible from the requested root, including at ignored boundaries.
-    fn positive_ids(
-        &self,
-        glob: &str,
-        tracked: PathPredicate,
-        scope: &super::ProjectScope,
-    ) -> Result<Vec<u32>> {
-        let mut ids = Vec::new();
+    fn positive_matches(&self, glob: &str, tracked: PathPredicate) -> Result<Vec<PositiveMatches>> {
+        let mut matches = Vec::new();
         for positive in parse_group(&[glob])?.0 {
             let root = &positive.root;
             let has_pattern = positive.below.is_pattern();
             if let Some(id) = self.exact(root) {
                 let file = &self.entries[id];
                 if !has_pattern && (tracked(root) || file.visible_from != usize::MAX) {
-                    ids.push(id as u32);
+                    matches.push(PositiveMatches {
+                        directory: None,
+                        ids: vec![id as u32],
+                    });
                     continue;
                 }
                 if file.visible_from != usize::MAX {
@@ -267,20 +342,22 @@ impl SettledFiles {
             if !self.directory_roots.contains(root) {
                 continue;
             }
-            ids.extend(
-                self.below(root)
-                    .filter(|&i| {
-                        let file = &self.entries[i];
-                        file.visible_from <= root.len()
-                            && scope.admits(&positive, &file.path)
-                            && positive.matches(&file.path)
-                    })
-                    .map(|i| i as u32),
-            );
+            let ids: Vec<_> = self
+                .below(root)
+                .filter(|&i| {
+                    let file = &self.entries[i];
+                    file.visible_from <= root.len() && positive.matches(&file.path)
+                })
+                .map(|i| i as u32)
+                .collect();
+            if !ids.is_empty() {
+                matches.push(PositiveMatches {
+                    directory: Some(positive.root),
+                    ids,
+                });
+            }
         }
-        ids.sort_unstable();
-        ids.dedup();
-        Ok(ids)
+        Ok(matches)
     }
 
     fn negative_ids(&self, glob: &str) -> Result<Vec<u32>> {
@@ -306,17 +383,10 @@ impl SettledFiles {
         roots: &[String],
         tracked: PathPredicate,
     ) -> Result<impl Iterator<Item = &File>> {
-        // Length-frame the roots so a glob containing a separator cannot alias
-        // another group with a different number of roots.
-        let mut scope_key = String::new();
-        for root in roots {
-            write!(scope_key, "{}:{root}", root.len()).expect("writing to a String");
-        }
         let scope = std::cell::OnceCell::new();
         let mut positives = Vec::new();
         let mut negatives = Vec::new();
-        for glob in globs {
-            let glob = glob.as_ref();
+        for glob in globs.iter().map(AsRef::as_ref) {
             if glob.starts_with('!') {
                 let group = self
                     .negatives
@@ -324,17 +394,23 @@ impl SettledFiles {
                 if !group.is_empty() {
                     negatives.push(group);
                 }
-            } else {
-                let group =
-                    self.positives
-                        .get_or_try_init(format!("{scope_key}\0{glob}"), || {
-                            self.positive_ids(
-                                glob,
-                                tracked,
-                                scope.get_or_init(|| super::ProjectScope::new(roots)),
-                            )
-                        })?;
-                positives.extend_from_slice(&group);
+                continue;
+            }
+            let group = self
+                .positives
+                .get_or_try_init(glob.to_string(), || self.positive_matches(glob, tracked))?;
+            for matched in group.iter() {
+                let nested = matched.directory.as_deref().and_then(|dir| {
+                    let scope = scope.get_or_init(|| ProjectScope::new(roots));
+                    scope.nested_roots(dir).next().map(|_| (dir, scope))
+                });
+                if let Some((dir, scope)) = nested {
+                    positives.extend(matched.ids.iter().copied().filter(|&id| {
+                        !scope.crosses_nested_root(dir, &self.entries[id as usize].path)
+                    }));
+                } else {
+                    positives.extend_from_slice(&matched.ids);
+                }
             }
         }
         positives.sort_unstable();
@@ -408,29 +484,178 @@ impl SettledFiles {
         }
         Ok((hash.digest().to_string(), inputs))
     }
-
-    #[cfg(test)]
-    pub(crate) fn positive(
-        &self,
-        glob: &str,
-        tracked: PathPredicate,
-        scope: &super::ProjectScope,
-    ) -> Result<FilesExpansion> {
-        Ok(FilesExpansion {
-            files: self
-                .positive_ids(glob, tracked, scope)?
-                .into_iter()
-                .map(|i| self.entries[i as usize].path.clone())
-                .collect(),
-        })
-    }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::super::{ProjectScope, Source, expand_globs};
+    use super::super::{Source, expand_globs};
     use super::*;
     use assert_fs::TempDir;
+
+    #[cfg(unix)]
+    #[test]
+    fn a_raw_backslash_cannot_alias_a_directory_root() -> Result<()> {
+        let temp = TempDir::new()?;
+        let workspace = temp.path();
+        std::fs::create_dir_all(workspace.join("pkg/a/b"))?;
+        std::fs::write(workspace.join(r"pkg/a\b"), "raw filename")?;
+        std::fs::write(workspace.join("pkg/a/b/x.js"), "selected file")?;
+        let inventory =
+            SettledFiles::inventory(workspace, ["pkg", "pkg/a/b"].into_iter().collect())?;
+        let source = Source::fileset_from_disk(workspace);
+        for glob in ["pkg/a/b/*.js", "pkg/a/b", "pkg/**/*"] {
+            let expected = vec!["pkg/a/b/x.js"];
+            assert_eq!(inventory.paths(&[glob], &[], &|_| false)?.files, expected);
+            assert_eq!(expand_globs(&[glob], &[], &source)?.files, expected);
+        }
+        Ok(())
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn a_non_utf8_path_has_no_lossy_inventory_key() {
+        use std::ffi::OsStr;
+        use std::os::unix::ffi::OsStrExt;
+
+        let root = Path::new("workspace");
+        let invalid = root.join(OsStr::from_bytes(b"pkg/name-\xff"));
+        assert!(disk_relative_path(root, &invalid).is_none());
+        let valid = root.join("pkg/name-\u{fffd}");
+        assert_eq!(
+            disk_relative_path(root, &valid).as_deref(),
+            Some("pkg/name-\u{fffd}")
+        );
+    }
+
+    #[test]
+    fn positive_cache_scales_with_globs_across_large_scopes() -> Result<()> {
+        let temp = TempDir::new()?;
+        let workspace = temp.path();
+        let projects: Vec<_> = (0..256).map(|i| format!("packages/pkg-{i}")).collect();
+        let globs: Vec<_> = projects
+            .iter()
+            .map(|root| format!("{root}/**/*.js"))
+            .collect();
+        let mut expected: Vec<_> = projects
+            .iter()
+            .map(|root| format!("{root}/index.js"))
+            .collect();
+        expected.sort_unstable();
+        for path in &expected {
+            let file = workspace.join(path);
+            std::fs::create_dir_all(file.parent().unwrap())?;
+            std::fs::write(file, "sample")?;
+        }
+        let inventory = SettledFiles::inventory(workspace, ["packages"].into_iter().collect())?;
+        let mut scope = projects;
+        for extra_root in ["other/project-a", "other/project-b"] {
+            scope.push(extra_root.to_owned());
+            assert_eq!(inventory.paths(&globs, &scope, &|_| false)?.files, expected);
+            assert_eq!(inventory.positives.len(), globs.len());
+            scope.pop();
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn cached_brace_matches_apply_each_groups_nested_project_boundaries() -> Result<()> {
+        let temp = TempDir::new()?;
+        let workspace = temp.path();
+        std::fs::create_dir_all(workspace.join("pkg/a/nested"))?;
+        std::fs::create_dir_all(workspace.join("pkg/b"))?;
+        for file in ["pkg/a/index.js", "pkg/a/nested/index.js", "pkg/b/index.js"] {
+            std::fs::write(workspace.join(file), "sample")?;
+        }
+        let inventory = SettledFiles::inventory(workspace, ["pkg"].into_iter().collect())?;
+        let globs = ["pkg/{a,b}/**/*.js"];
+        let source = Source::fileset_from_disk(workspace);
+        let scopes = [vec![], vec!["pkg/a".into(), "pkg/a/nested".into()]];
+        for scope in scopes {
+            let expected = expand_globs(&globs, &scope, &source)?.files;
+            assert_eq!(inventory.paths(&globs, &scope, &|_| false)?.files, expected);
+            assert_eq!(
+                expected.contains(&"pkg/a/nested/index.js".to_owned()),
+                scope.is_empty()
+            );
+        }
+        assert_eq!(inventory.positives.len(), 1);
+        Ok(())
+    }
+
+    #[test]
+    fn groups_with_existing_excluded_subtrees_keep_the_pruned_walk() -> Result<()> {
+        use crate::native::test_utils::hash_plans;
+
+        let temp = TempDir::new()?;
+        let workspace = temp.path();
+        for dir in ["pkg/excluded", "apps/nested", "plain"] {
+            std::fs::create_dir_all(workspace.join(dir))?;
+        }
+        std::fs::write(
+            workspace.join("pkg/excluded/index.js"),
+            "explicitly requested",
+        )?;
+        std::fs::write(workspace.join("plain/file.js"), "excluded file")?;
+        let negative_subtree = HashInstruction::ignored_files(vec![
+            "pkg/**/*".into(),
+            "!pkg/{excluded,absent}/**".into(),
+        ]);
+        let nested_project = HashInstruction::IgnoredFileSet {
+            globs: Arc::from([Arc::from("apps/**/*")]),
+            project_roots: vec!["apps".into(), "apps/nested".into()],
+            from_ultracache: false,
+        };
+        let negative_file =
+            HashInstruction::ignored_files(vec!["plain/**".into(), "!plain/file.js".into()]);
+        let explicit = HashInstruction::ignored_files(vec!["pkg/excluded/**".into()]);
+        let names: Vec<_> = (0..MIN_BATCH_GROUPS).map(|i| format!("task-{i}")).collect();
+        let mut plans: Vec<_> = names
+            .iter()
+            .map(|name| {
+                (
+                    name.as_str(),
+                    vec![HashInstruction::ignored_files(vec![format!(
+                        "dist/{name}/**"
+                    )])],
+                )
+            })
+            .collect();
+        plans.push((
+            "sample",
+            vec![
+                negative_subtree.clone(),
+                nested_project.clone(),
+                negative_file.clone(),
+                explicit.clone(),
+            ],
+        ));
+        let plans = hash_plans(&plans);
+        let inventory = SettledFiles::for_plans(workspace, &plans, &|_| false)?.unwrap();
+        assert!(
+            inventory
+                .for_group(plans.pool.intern(negative_subtree))
+                .is_none()
+        );
+        assert!(
+            inventory
+                .for_group(plans.pool.intern(nested_project))
+                .is_none()
+        );
+        assert!(
+            inventory
+                .for_group(plans.pool.intern(negative_file))
+                .is_some()
+        );
+        assert!(inventory.for_group(plans.pool.intern(explicit)).is_some());
+        assert_eq!(inventory.counts.read_dir_calls, 2);
+        assert_eq!(
+            inventory
+                .paths(&["pkg/excluded/**"], &[], &|_| false)?
+                .files,
+            ["pkg/excluded/index.js"]
+        );
+        Ok(())
+    }
 
     #[test]
     fn invalid_positive_patterns_are_reported_even_for_missing_directories() -> Result<()> {
@@ -449,6 +674,29 @@ mod tests {
             assert_eq!(
                 indexed.err().map(|e| e.to_string()),
                 old.err().map(|e| e.to_string())
+            );
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn malformed_globs_are_reported_in_group_order() -> Result<()> {
+        let temp = TempDir::new()?;
+        let workspace = temp.path();
+        std::fs::create_dir(workspace.join("pkg"))?;
+        let source = Source::fileset_from_disk(workspace);
+        let inventory = SettledFiles::inventory(workspace, ["pkg"].into_iter().collect())?;
+        for globs in [["pkg/[z-a]", "!other/[9-1]"], ["!other/[9-1]", "pkg/[z-a]"]] {
+            assert_eq!(
+                inventory
+                    .paths(&globs, &[], &|_| false)
+                    .err()
+                    .unwrap()
+                    .to_string(),
+                expand_globs(&globs, &[], &source)
+                    .err()
+                    .unwrap()
+                    .to_string()
             );
         }
         Ok(())
@@ -490,7 +738,6 @@ mod tests {
             "missing",
         ];
         let scope_roots = vec!["pkg".into(), "pkg/nested".into()];
-        let scope = ProjectScope::new(&scope_roots);
         let inventory = SettledFiles::inventory(workspace, roots.into_iter().collect())?;
         let patterns = [
             "pkg/**/*.ts",
@@ -507,7 +754,7 @@ mod tests {
         for glob in patterns {
             let glob = glob.to_string();
             assert_eq!(
-                inventory.positive(&glob, &|_| false, &scope)?.files,
+                inventory.paths(&[&glob], &scope_roots, &|_| false)?.files,
                 expand_globs(
                     std::slice::from_ref(&glob),
                     &scope_roots,
@@ -526,7 +773,7 @@ mod tests {
         let fresh = SettledFiles::inventory(workspace, ["pkg"].into_iter().collect())?;
         assert!(
             fresh
-                .positive("pkg/src/*.ts", &|_| false, &scope)?
+                .paths(&["pkg/src/*.ts"], &scope_roots, &|_| false)?
                 .files
                 .iter()
                 .any(|p| p == new_file)
