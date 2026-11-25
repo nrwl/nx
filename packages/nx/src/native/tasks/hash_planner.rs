@@ -3077,10 +3077,11 @@ mod tests {
     }
 
     #[test]
-    fn another_projects_input_carries_its_external_dependencies() {
+    fn another_projects_input_carries_its_externals_env_and_runtime() {
         use crate::native::test_utils::task_graph;
         use crate::native::types::{
-            DepsOutputsInput, ExternalDependenciesInput, InputsInput, JsInputs,
+            DepsOutputsInput, EnvironmentInput, ExternalDependenciesInput, InputsInput, JsInputs,
+            RuntimeInput,
         };
         use napi::bindgen_prelude::{Either, Either9};
 
@@ -3132,9 +3133,17 @@ mod tests {
                     ..Default::default()
                 },
             );
-            let mut probeext: Vec<JsInputs> = vec![Either9::F(ExternalDependenciesInput {
-                external_dependencies: vec!["probe-pkg".into()],
-            })];
+            let mut probeext: Vec<JsInputs> = vec![
+                Either9::F(ExternalDependenciesInput {
+                    external_dependencies: vec!["probe-pkg".into()],
+                }),
+                Either9::E(EnvironmentInput {
+                    env: "PROBE_ENV".into(),
+                }),
+                Either9::D(RuntimeInput {
+                    runtime: "echo probe".into(),
+                }),
+            ];
             probeext.extend(lib_extra_input);
             graph.nodes.insert(
                 "lib".into(),
@@ -3170,6 +3179,14 @@ mod tests {
                 })
                 .collect();
             assert_eq!(externals, ["npm:probe-pkg"], "{case}");
+            assert!(
+                plans["app:build"].contains(&HashInstruction::Environment("PROBE_ENV".into())),
+                "{case}"
+            );
+            assert!(
+                plans["app:build"].contains(&HashInstruction::Runtime("echo probe".into())),
+                "{case}"
+            );
         }
     }
 }
