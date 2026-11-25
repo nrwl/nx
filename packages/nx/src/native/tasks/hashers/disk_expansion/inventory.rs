@@ -13,7 +13,9 @@ use std::sync::{Arc, OnceLock};
 use crate::native::glob::expand_literal_braces;
 use crate::native::tasks::types::{HashInstruction, HashPlans};
 use crate::native::utils::path::{escapes_workspace, parent_dirs};
-use crate::native::walker::{DiskWalkIgnores, PathPredicate, disk_relative_path};
+use crate::native::walker::{
+    DiskWalkIgnores, PathPredicate, disk_relative_path, is_normalized_disk_root,
+};
 
 struct File {
     path: String,
@@ -232,6 +234,14 @@ impl SettledFiles {
                     }
                 }
                 let entries = positives.clone().flat_map(|glob| &positives_by_glob[glob]);
+                // The shared walk merges equivalent Path roots, but the
+                // ordinary walker may return a path with its original spelling.
+                if entries
+                    .clone()
+                    .any(|entry| !is_normalized_disk_root(&entry.root))
+                {
+                    continue;
+                }
                 if !project_roots.is_empty() {
                     let scope = ProjectScope::new(project_roots);
                     if entries

@@ -422,6 +422,15 @@ impl DiskWalkIgnores {
     }
 }
 
+/// Whether a walk root can be used as a slash-separated index prefix.
+/// Other spellings, such as a dot segment, can change the paths a walk emits.
+pub(crate) fn is_normalized_disk_root(root: &str) -> bool {
+    root.is_empty()
+        || (!root.contains('\\')
+            && !(cfg!(windows) && root.contains(':'))
+            && root.split('/').all(|part| !matches!(part, "" | "." | "..")))
+}
+
 /// The slash-separated path must still identify this exact entry when rejoined.
 pub(crate) fn disk_relative_path<'a>(
     workspace_root: &Path,

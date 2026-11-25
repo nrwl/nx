@@ -27,7 +27,7 @@ use crate::native::{
         hash_task_output, hash_tsconfig_selectively, hash_workspace_files_cached, output_prefixes,
     },
     types::FileData,
-    walker::PathPredicate,
+    walker::{PathPredicate, is_normalized_disk_root},
     workspace::ignored_index::{IgnoredIndexReader, RunStage},
     workspace::types::ProjectFiles,
 };
@@ -419,6 +419,7 @@ impl TaskHasher {
                 // An unwatched index would rewalk the entire prefix to list it.
                 // Use the pruned walker when skips can avoid that work.
                 run_stage.nothing_ran()
+                    && is_normalized_disk_root(dir)
                     && (skip.is_empty() || self.ignored_index.index().has_watch()),
                 accept,
                 skip,
@@ -1622,6 +1623,83 @@ mod tests {
                 )
             })
             .collect()
+    }
+
+    #[test]
+    fn batched_disk_hashing_preserves_noncanonical_root_spelling() -> anyhow::Result<()> {
+        use crate::native::tasks::hashers::MIN_BATCH_GROUPS;
+        use crate::native::test_utils::hash_plans;
+
+        let temp = assert_fs::TempDir::new()?;
+        let root = temp.path();
+        std::fs::create_dir(root.join("dist"))?;
+        std::fs::write(root.join("root.js"), "root")?;
+        std::fs::write(root.join("dist/index.js"), "dist")?;
+        // Exercise the evaluator directly with resolved instructions.
+        let cases = [
+            ("workspace-dot", ".", &[][..]),
+            ("dist-dot", "dist/.", &["dist/./index.js"][..]),
+            ("dist", "dist", &["dist/index.js"][..]),
+        ];
+        let names: Vec<_> = (0..MIN_BATCH_GROUPS).map(|i| format!("task-{i}")).collect();
+        let mut tasks: Vec<_> = names
+            .iter()
+            .map(|name| {
+                (
+                    name.as_str(),
+                    vec![HashInstruction::ignored_files(vec![format!("out/{name}")])],
+                )
+            })
+            .collect();
+        for (task, glob, _) in cases {
+            tasks.push((
+                task,
+                vec![HashInstruction::ignored_files(vec![glob.into()])],
+            ));
+        }
+        let plans = hash_plans(&tasks);
+        let hasher = hasher(root, IgnoredIndexReader::unwatched());
+        hasher.register_prefixes(&plans);
+        let env = HashMap::new();
+        let run = |plans: &HashPlans, stage| {
+            hasher.hash_plans_impl(
+                plans,
+                root.to_string_lossy().into_owned(),
+                Some(true),
+                stage,
+                |_| &env,
+            )
+        };
+        let source = Source::fileset_from_disk(root);
+        let ordinary_paths = cases
+            .iter()
+            .map(|(_, glob, expected)| {
+                let ordinary = expand_globs(&[glob], &[], &source)?;
+                assert_eq!(ordinary.files, *expected, "{glob}");
+                Ok(ordinary.files)
+            })
+            .collect::<anyhow::Result<Vec<_>>>()?;
+        for stage in [RunStage::ATaskMayHaveWritten, RunStage::NothingRan] {
+            let batch = run(&plans, stage)?;
+            let batch_paths: Vec<_> = cases
+                .iter()
+                .map(|(task, _, _)| batch.0.get(*task).unwrap().inputs.files.clone())
+                .collect();
+            assert_eq!(batch_paths, ordinary_paths);
+            for (task, glob, _) in cases {
+                let actual = batch.0.get(task).unwrap();
+                let small = run(
+                    &hash_plans(&[(
+                        task,
+                        vec![HashInstruction::ignored_files(vec![glob.into()])],
+                    )]),
+                    stage,
+                )?;
+                let expected = small.0.get(task).unwrap();
+                assert_eq!(actual.value, expected.value, "{glob}");
+            }
+        }
+        Ok(())
     }
 
     #[test]
