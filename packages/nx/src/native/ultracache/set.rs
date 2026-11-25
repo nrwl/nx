@@ -26,6 +26,8 @@ pub(super) struct CompactSet {
     glob_ids: HashMap<Arc<str>, u32>,
     pub inputs: HashMap<Vec<u32>, u32>,
     pub tasks: HashMap<String, u32>,
+    /// The manifest's `hashProjectFolderState`.
+    pub hash_project_folder_state: bool,
 }
 
 #[cfg(not(target_arch = "wasm32"))]

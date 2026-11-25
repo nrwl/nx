@@ -55,6 +55,8 @@ pub(crate) struct UltracacheTask {
     pub dictionary: SharedInputs,
     pub files: Vec<u32>,
     pub digest: String,
+    /// Also hash the folder state of the task's project.
+    pub project_folder_state: bool,
 }
 
 /// Why a task (or the whole run) hashes natively; `reason` is rendered by the
@@ -129,6 +131,7 @@ pub(crate) fn resolve<'a>(
     inputs: &EligibilityInputs,
 ) -> Resolved {
     let resolution = configurations.resolution_ref();
+    let project_folder_state = configurations.hashes_project_folder_state();
 
     let ultracache_settings: Vec<_> = ultracache_settings.into_iter().collect();
     let task_ids: Vec<&str> = ultracache_settings.iter().map(|(id, _)| *id).collect();
@@ -241,6 +244,7 @@ pub(crate) fn resolve<'a>(
                     dictionary: Arc::clone(&dictionary),
                     files,
                     digest: configuration_digest(ultracache),
+                    project_folder_state,
                 },
             ))
         })

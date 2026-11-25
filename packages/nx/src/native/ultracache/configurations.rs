@@ -13,6 +13,10 @@ pub struct UltracacheConfigurations {
     db: super::store::UltracacheConfigurationStore,
     #[cfg(not(target_arch = "wasm32"))]
     version: Option<i64>,
+    /// Nx Cloud asked for each task's project folder state to be hashed
+    /// beside its configuration. Stored with the version, so every process
+    /// that reopens it hashes the same way.
+    hash_project_folder_state: bool,
     cache: Mutex<EntryCache>,
 }
 
@@ -33,13 +37,21 @@ impl UltracacheConfigurations {
         resolution: UltracacheConfigurationResolution,
         db: super::store::UltracacheConfigurationStore,
         version: Option<i64>,
+        hash_project_folder_state: bool,
     ) -> Self {
         Self {
             resolution,
             db,
             version,
+            hash_project_folder_state,
             cache: Mutex::default(),
         }
+    }
+
+    #[cfg(all(test, not(target_arch = "wasm32")))]
+    pub(crate) fn with_project_folder_state(mut self, on: bool) -> Self {
+        self.hash_project_folder_state = on;
+        self
     }
 
     #[cfg(all(test, not(target_arch = "wasm32")))]
@@ -63,6 +75,10 @@ impl UltracacheConfigurations {
 
     pub(crate) fn resolution_ref(&self) -> &UltracacheConfigurationResolution {
         &self.resolution
+    }
+
+    pub(crate) fn hashes_project_folder_state(&self) -> bool {
+        self.hash_project_folder_state
     }
 
     pub(crate) fn entries_for(

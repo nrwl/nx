@@ -246,6 +246,11 @@ pub enum HashInstruction {
     /// hash moves when its own observations do. Hashed as the text `Display`
     /// renders, which also keeps it from colliding with a native key.
     UltracacheConfiguration(String),
+    /// The folder state of a project's tracked files: for each folder, the
+    /// kinds of files directly in it (see `hashers::hash_folder_state`). Added
+    /// beside an Ultracache configuration, so a new kind of file the recorded
+    /// globs miss still changes the task's hash.
+    ProjectFolderState(String),
 }
 
 /// Hashed into every task regardless of its inputs (see `HashPlanner::get_plans_internal`).
@@ -473,6 +478,9 @@ impl fmt::Display for HashInstruction {
                 HashInstruction::ProjectConfiguration(project_name) => {
                     format!("{project_name}:ProjectConfiguration")
                 }
+                HashInstruction::ProjectFolderState(project_name) => {
+                    format!("{project_name}:FolderState")
+                }
                 HashInstruction::TsConfiguration(project_name) => {
                     format!("{project_name}:TsConfig")
                 }
@@ -580,6 +588,14 @@ mod tests {
             !pool.replaced_by_configuration(workspace, true, |path| path
                 == "tools/[s]/package.json")
         );
+    }
+
+    #[test]
+    fn the_folder_state_renders_its_project_and_is_never_replaced() {
+        let pool = InstructionPool::new();
+        let id = pool.intern(HashInstruction::ProjectFolderState("app".into()));
+        assert_eq!(&*pool.label(id), "app:FolderState");
+        assert!(!pool.replaced_by_configuration(id, false, |_| false));
     }
 
     #[test]

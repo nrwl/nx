@@ -19,12 +19,14 @@ use crate::native::{
 use crate::native::{
     tasks::hashers::{
         FilesExpansion, FilesExpansionCache, JsonHashResult, ProjectFileIndicesCache,
-        ProjectFileSetCache, SettledFiles, Source, TrackedBatch, WorkspaceFileIndex,
-        WorkspaceFileIndicesCache, WorkspaceFileSetCache, collect_project_file_paths_cached,
-        collect_project_files, collect_workspace_file_paths_cached, expand_cached, expand_globs,
-        expand_task_outputs, file_hashes, fold_file_hashes, hash_all_externals, hash_external,
-        hash_files, hash_json_files, hash_project_config, hash_project_files_cached,
-        hash_task_output, hash_tsconfig_selectively, hash_workspace_files_cached, output_prefixes,
+        ProjectFileSetCache, ProjectFolderStateCache, SettledFiles, Source, TrackedBatch,
+        WorkspaceFileIndex, WorkspaceFileIndicesCache, WorkspaceFileSetCache,
+        collect_project_file_paths_cached, collect_project_files,
+        collect_workspace_file_paths_cached, expand_cached, expand_globs, expand_task_outputs,
+        file_hashes, fold_file_hashes, hash_all_externals, hash_external, hash_files,
+        hash_json_files, hash_project_config, hash_project_files_cached,
+        hash_project_folder_state_cached, hash_task_output, hash_tsconfig_selectively,
+        hash_workspace_files_cached, output_prefixes,
     },
     types::FileData,
     walker::{PathPredicate, is_normalized_disk_root},
@@ -100,7 +102,10 @@ impl From<&HashInstruction> for HashInputsBuilder {
                 external: HashSet::from(["AllExternalDependencies".to_string()]),
                 ..Default::default()
             },
+            // The folder state hashes file names only; listing every file of
+            // the project as an input would drown the task's real reads.
             HashInstruction::UltracacheConfiguration(_)
+            | HashInstruction::ProjectFolderState(_)
             | HashInstruction::ProjectConfiguration(_)
             | HashInstruction::Cwd(_) => HashInputsBuilder::default(),
             // These variants require external context — callers must match on them
@@ -304,6 +309,8 @@ pub struct TaskHasher {
     workspace_file_indices_cache: WorkspaceFileIndicesCache,
     project_file_indices_cache: ProjectFileIndicesCache,
     tracked_file_indices: TrackedFileIndices,
+    // One folder-state digest per project, shared by all its tasks.
+    project_folder_state_cache: ProjectFolderStateCache,
     // Fold over all externals; identical for every task, so computed once.
     all_externals_hash: OnceCell<String>,
     // A path index over the workspace files, built on first use. Workspace
@@ -349,6 +356,7 @@ impl TaskHasher {
             workspace_file_indices_cache: WorkspaceFileIndicesCache::new(),
             project_file_indices_cache: ProjectFileIndicesCache::new(),
             tracked_file_indices: TrackedFileIndices::default(),
+            project_folder_state_cache: ProjectFolderStateCache::new(),
             all_externals_hash: OnceCell::new(),
             workspace_file_index: WorkspaceFileIndex::new(Arc::clone(&all_workspace_files)),
         }
@@ -863,7 +871,8 @@ impl TaskHasher {
                 | HashInstruction::External(_)
                 | HashInstruction::AllExternalDependencies
                 | HashInstruction::JsonFileSet(_)
-                | HashInstruction::UltracacheConfiguration(_) => Some(OnceCell::new()),
+                | HashInstruction::UltracacheConfiguration(_)
+                | HashInstruction::ProjectFolderState(_) => Some(OnceCell::new()),
             })
             .collect();
         // Also classified once, for the same reason as `value_slots`.
@@ -1319,6 +1328,15 @@ impl TaskHasher {
                 // The rendered text, so the prefix lives in one place.
                 (hash(instruction.to_string().as_bytes()), inputs)
             }
+            HashInstruction::ProjectFolderState(project_name) => {
+                let digest = hash_project_folder_state_cached(
+                    project_name,
+                    &self.project_file_map,
+                    &self.project_folder_state_cache,
+                );
+                trace!(parent: &span, "hash_project_folder_state: {:?}", now.elapsed());
+                ((*digest).clone(), empty)
+            }
             HashInstruction::AllExternalDependencies => {
                 // Identical for every task, so fold once and reuse (individual externals
                 // are already cached in external_cache).
@@ -1524,6 +1542,7 @@ mod tests {
             workspace_file_indices_cache: WorkspaceFileIndicesCache::new(),
             project_file_indices_cache: ProjectFileIndicesCache::new(),
             tracked_file_indices: TrackedFileIndices::default(),
+            project_folder_state_cache: ProjectFolderStateCache::new(),
             all_externals_hash: OnceCell::new(),
             workspace_file_index: WorkspaceFileIndex::new(all_workspace_files),
         }
@@ -2119,6 +2138,72 @@ mod tests {
             )
             .unwrap();
         hashes.0.get("e2e:typecheck").unwrap().value.clone()
+    }
+
+    #[test]
+    fn a_new_kind_of_file_the_reads_miss_changes_a_folder_state_plan() {
+        let base = [
+            ("libs/app/project.json", "p"),
+            ("libs/app/src/a.ts", "a"),
+            ("libs/app/src/b.ts", "b"),
+            ("libs/e2e/project.json", "e"),
+        ];
+        let with = |extra: &[(&'static str, &'static str)]| {
+            let mut files = base.to_vec();
+            files.extend_from_slice(extra);
+            files
+        };
+        // With and without a declared group, which makes the plan fold its reads.
+        for fold in [false, true] {
+            let plan = || {
+                let mut plan = vec![
+                    HashInstruction::UltracacheConfiguration("digest".into()),
+                    HashInstruction::ProjectFileSet("app".into(), vec!["libs/app/src/a.ts".into()]),
+                    HashInstruction::ProjectFolderState("app".into()),
+                ];
+                if fold {
+                    plan.push(HashInstruction::ignored_files(vec![
+                        "libs/app/generated".to_string(),
+                    ]));
+                }
+                plan
+            };
+            let before = tracked_hash(&base, plan());
+            assert_ne!(
+                tracked_hash(&with(&[("libs/app/eslint.config.mjs", "x")]), plan()),
+                before,
+                "fold: {fold}"
+            );
+            assert_ne!(
+                tracked_hash(&with(&[("libs/app/src/lib/c.ts", "c")]), plan()),
+                before,
+                "fold: {fold}"
+            );
+            assert_eq!(
+                tracked_hash(&with(&[("libs/app/src/c.ts", "c")]), plan()),
+                before,
+                "fold: {fold}"
+            );
+            assert_eq!(
+                tracked_hash(&with(&[("libs/e2e/eslint.config.mjs", "x")]), plan()),
+                before,
+                "fold: {fold}"
+            );
+            let mut edited = base.to_vec();
+            edited[2].1 = "b edited";
+            assert_eq!(tracked_hash(&edited, plan()), before, "fold: {fold}");
+        }
+        // Without the instruction, the same new file goes unnoticed.
+        let plan = || {
+            vec![
+                HashInstruction::UltracacheConfiguration("digest".into()),
+                HashInstruction::ProjectFileSet("app".into(), vec!["libs/app/src/a.ts".into()]),
+            ]
+        };
+        assert_eq!(
+            tracked_hash(&with(&[("libs/app/eslint.config.mjs", "x")]), plan()),
+            tracked_hash(&base, plan())
+        );
     }
 
     #[test]

@@ -469,6 +469,22 @@ fn instruction_matches_detail(
             all_externals: externals.any(),
             ..Default::default()
         }),
+        // Adding, deleting or moving a file can change which kinds of files
+        // its folder holds; an edit cannot. The diff does not say which a
+        // change was, so every changed file the project owns counts.
+        HashInstruction::ProjectFolderState(project) => {
+            let owned = changed.candidates(Some(project));
+            Ok(of_files(
+                owned
+                    .iter()
+                    .take(if detail { owned.len() } else { 1 })
+                    .map(|&i| InputMatch {
+                        file: raw_files[i].clone(),
+                        pattern: None,
+                    })
+                    .collect(),
+            ))
+        }
         HashInstruction::ProjectConfiguration(project) => Ok(TaskInputMatches {
             project_configs: reconfigured
                 .get(project.as_str())
@@ -610,6 +626,18 @@ mod tests {
             ),
             vec!["a:build"]
         );
+    }
+
+    #[test]
+    fn the_folder_state_is_touched_by_any_change_its_project_owns() {
+        let g = graph(&[("a", "libs/a"), ("nested", "libs/a/nested")]);
+        let folder_state = || vec![HashInstruction::ProjectFolderState("a".into())];
+        assert_eq!(
+            touched_for(&g, folder_state(), &["libs/a/eslint.config.mjs"]),
+            vec!["a:build"]
+        );
+        assert!(touched_for(&g, folder_state(), &["libs/a/nested/x.ts"]).is_empty());
+        assert!(touched_for(&g, folder_state(), &["README.md"]).is_empty());
     }
 
     #[test]

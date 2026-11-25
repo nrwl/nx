@@ -57,6 +57,10 @@ struct Manifest {
     artifacts: HashMap<String, Artifact>,
     #[serde(default, deserialize_with = "unique_map")]
     dictionary_pages: HashMap<String, Page>,
+    /// Hash each task's project folder state beside its configuration.
+    /// Absent means off. Older Nx versions ignore the field.
+    #[serde(default)]
+    hash_project_folder_state: bool,
 }
 
 #[derive(Deserialize)]
@@ -326,6 +330,7 @@ fn read_with_budget(manifest_path: &Path, dir: &Path, mut budget: u64) -> Result
         budget,
         set: CompactSet::default(),
     };
+    reader.set.hash_project_folder_state = manifest.hash_project_folder_state;
     let mut artifact_ids = HashMap::new();
     for (task_id, task) in manifest.tasks {
         let id = match artifact_ids.get(&task.artifact_id) {

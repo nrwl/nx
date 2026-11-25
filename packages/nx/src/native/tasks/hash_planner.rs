@@ -539,7 +539,8 @@ impl HashPlanner {
     }
 
     /// Observed reads minus natively covered files, one group per owning
-    /// project and one for the reads no project owns, plus the entry digest.
+    /// project and one for the reads no project owns, plus the entry digest
+    /// and, when the configurations ask for it, the project's folder state.
     /// A group is disk-backed, and unowned reads join the `.` project's group,
     /// else the task's. With `includeUnstableFiles: false` it is an ordinary
     /// fileset instead. Declared filesets, negations included, never shape
@@ -622,6 +623,13 @@ impl HashPlanner {
             &not_installed,
             include_unstable,
         ));
+        // Catches a new kind of file in the project that the recorded globs
+        // miss. One instruction per project, so its targets share the value.
+        if context.entry.project_folder_state {
+            result.ids([pool.intern(HashInstruction::ProjectFolderState(
+                task.target.project.clone(),
+            ))]);
+        }
         result
     }
 
@@ -3613,6 +3621,55 @@ mod always_tests {
             .iter()
             .map(|id| plans.pool.get(*id).value().clone())
             .collect()
+    }
+
+    #[test]
+    fn the_folder_state_is_planned_only_when_the_configurations_ask_for_it() {
+        let plans = |folder_state: bool| {
+            let planner = planner(
+                vec![
+                    ("e2e:e2e", vec![fileset("{projectRoot}/**/*", false)]),
+                    ("e2e:lint", vec![fileset("{projectRoot}/**/*", false)]),
+                    ("app:build", vec![fileset("{projectRoot}/**/*", false)]),
+                ],
+                &[],
+            );
+            let (_dir, configurations) = ultracache_configurations(&[
+                ("e2e:e2e", &["libs/e2e/src/app.spec.ts"]),
+                ("e2e:lint", &["libs/e2e/src/app.spec.ts"]),
+            ]);
+            let configurations = configurations.with_project_folder_state(folder_state);
+            let ids = vec!["e2e:e2e", "e2e:lint", "app:build"];
+            let graph = task_graph(
+                &[("e2e:e2e", &[]), ("e2e:lint", &[]), ("app:build", &[])],
+                &[],
+            );
+            let plans = planner
+                .get_plans_internal(ids, graph, Some(&configurations), &[])
+                .unwrap();
+            let folder_states = |task: &str| -> Vec<u32> {
+                plans.plans[task]
+                    .ids()
+                    .iter()
+                    .copied()
+                    .filter(|id| {
+                        matches!(plans.pool.get(*id).value(), HashInstruction::ProjectFolderState(p) if p == "e2e")
+                    })
+                    .collect()
+            };
+            (
+                folder_states("e2e:e2e"),
+                folder_states("e2e:lint"),
+                folder_states("app:build"),
+            )
+        };
+        let (e2e, lint, app) = plans(true);
+        assert_eq!(e2e.len(), 1);
+        // Both targets of the project share one instruction, hashed once.
+        assert_eq!(e2e, lint);
+        // A task with no configuration keeps its declared inputs and nothing more.
+        assert!(app.is_empty());
+        assert_eq!(plans(false), (vec![], vec![], vec![]));
     }
 
     #[test]

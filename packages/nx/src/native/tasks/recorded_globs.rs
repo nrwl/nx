@@ -528,6 +528,7 @@ mod tests {
                 dictionary: dictionary.clone(),
                 files: (0..n as u32).collect(),
                 digest: String::new(),
+                project_folder_state: false,
             };
             let original = NxGlobSetBuilder::new(&dictionary[..n]).and_then(|b| b.build(None));
             if n == 1600 {

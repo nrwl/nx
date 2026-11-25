@@ -364,3 +364,47 @@ fn distinct_artifacts_intern_shared_page_strings_on_disk_and_in_the_worker() {
         assert!(Arc::ptr_eq(&a["p0"][i], &b["p1"][i]));
     }
 }
+
+#[test]
+fn the_folder_state_switch_is_pinned_with_its_version() {
+    let dir = tempfile::tempdir().unwrap();
+    let db = store(&dir);
+    let config = br#"{"inputs":["a"],"outputs":[]}"#;
+    let id = object(&dir, config);
+    let manifest = |switch: Option<bool>| {
+        let mut manifest = json!({
+            "enabled":true, "updatedAt":1, "tasks":{"p:lint":task(&id)},
+            "artifacts":{&id: {"sizeBytes":config.len()}}
+        });
+        if let Some(on) = switch {
+            manifest["hashProjectFolderState"] = json!(on);
+        }
+        manifest
+    };
+    let on = import_files(&db, &dir, &manifest(Some(true))).unwrap();
+    let off = import_files(&db, &dir, &manifest(Some(false))).unwrap();
+    let absent = import_files(&db, &dir, &manifest(None)).unwrap();
+    assert!(on.hashes_project_folder_state());
+    assert!(!off.hashes_project_folder_state());
+    assert!(!absent.hashes_project_folder_state());
+
+    let reopen = |imported: &UltracacheConfigurations| {
+        store(&dir)
+            .get_version("head".into(), imported.resolution().fetched_at)
+            .unwrap()
+            .hashes_project_folder_state()
+    };
+    assert!(reopen(&on));
+    assert!(!reopen(&off));
+    assert!(!reopen(&absent));
+    assert!(!db.get("head".into()).unwrap().hashes_project_folder_state());
+
+    let legacy = import(&db, "legacy", r#"{"p:lint":{"commit":"c","inputs":["a"]}}"#).unwrap();
+    assert!(!legacy.hashes_project_folder_state());
+    assert!(
+        !store(&dir)
+            .get("legacy".into())
+            .unwrap()
+            .hashes_project_folder_state()
+    );
+}
