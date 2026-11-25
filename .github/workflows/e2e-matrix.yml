@@ -28,7 +28,10 @@ jobs:
   preinstall:
     if: ${{ github.repository_owner == 'nrwl' }}
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 20
+    timeout-minutes: >-
+      ${{ github.repository == 'nrwl/nx' &&
+      github.ref == format('refs/heads/{0}', github.event.repository.default_branch) &&
+      (matrix.cache_writer == 'gradle' || matrix.cache_writer == 'maven') && 26 || 20 }}
     env:
       NODE_VERSION: ${{ matrix.node_version }}
     strategy:
@@ -48,6 +51,13 @@ jobs:
             node_version: 22
           # - os: windows-latest TODO(Jack): Windows fails to build gradle wrapper which always runs when we build nx. Re-enable when we fix this.
           #   node_version: 22
+        include:
+          - os: ubuntu-latest
+            node_version: 22
+            cache_writer: gradle
+          - os: macos-latest
+            node_version: 24
+            cache_writer: gradle
 
     name: Cache install (${{ matrix.os }}, node v${{ matrix.node_version }})
     steps:
@@ -91,6 +101,17 @@ jobs:
 
       - name: Restore .NET packages
         run: dotnet restore nx.sln
+
+      - name: Seed root Gradle caches
+        if: >-
+          ${{ github.repository == 'nrwl/nx' &&
+          github.ref == format('refs/heads/{0}', github.event.repository.default_branch) &&
+          matrix.cache_writer == 'gradle' }}
+        continue-on-error: true
+        timeout-minutes: 6
+        uses: ./.github/actions/nightly-gradle-cache
+        with:
+          mode: seed
 
       - name: Homebrew cache directory path
         if: ${{ matrix.os == 'macos-latest' }}
@@ -301,6 +322,18 @@ jobs:
         run: |
           git config --global user.email test@users.noreply.github.com
           git config --global user.name 'Test Test'
+
+      - name: Restore root Gradle caches
+        if: >-
+          ${{ github.repository == 'nrwl/nx' &&
+          github.ref == format('refs/heads/{0}', github.event.repository.default_branch) &&
+          (matrix.os == 'ubuntu-latest' ||
+          (matrix.os == 'macos-latest' && steps.reset-simulators.outcome == 'success')) }}
+        continue-on-error: true
+        timeout-minutes: 3
+        uses: ./.github/actions/nightly-gradle-cache
+        with:
+          mode: restore
 
       - name: Set starting timestamp
         if: ${{ (matrix.os != 'macos-latest') || (matrix.os == 'macos-latest' && steps.reset-simulators.outcome == 'success') }}

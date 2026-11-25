@@ -1,0 +1,58 @@
+name: Nightly Gradle cache
+description: Seed or restore the root Gradle wrapper and dependency cache
+inputs:
+  mode:
+    description: seed or restore
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Compute the Gradle cache key
+      id: key
+      shell: bash
+      env:
+        BUILD_HASH: ${{ hashFiles('gradlew', 'gradle/wrapper/*', 'build.gradle.kts', 'settings.gradle.kts', 'gradle.properties', 'gradle/*.toml', 'packages/gradle/batch-runner/*.gradle.kts', 'packages/gradle/project-graph/*.gradle.kts') }}
+      run: |
+        test -n "$BUILD_HASH"
+        gradle_plugin=$(node -p 'require("@nx/gradle/package.json").version')
+        gradle_config=$(jq -ceS '.plugins[] | select(type == "object" and .plugin == "@nx/gradle")' nx.json)
+        jdk_versions=$(java -version 2>&1 && "$JAVA17_HOME/bin/java" -version 2>&1)
+        inference_hash=$(printf '%s\n' "$gradle_plugin" "$gradle_config" "$jdk_versions" |
+          node -p 'require("node:crypto").hash("sha256", require("node:fs").readFileSync(0))')
+        prefix="nx-nightly-gradle-v3-$RUNNER_OS-$RUNNER_ARCH"
+        echo "key=$prefix-$BUILD_HASH-$inference_hash" >> "$GITHUB_OUTPUT"
+
+    - name: Look up or restore root Gradle cache
+      id: cache
+      uses: actions/cache/restore@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
+      continue-on-error: true
+      env:
+        SEGMENT_DOWNLOAD_TIMEOUT_MINS: '1'
+      with:
+        lookup-only: ${{ inputs.mode == 'seed' }}
+        path: |
+          ~/.cache/nx-nightly-gradle/wrapper/dists
+          ~/.cache/nx-nightly-gradle/caches/modules-2
+        key: ${{ steps.key.outputs.key }}
+
+    - name: Install the root Gradle cache
+      if: inputs.mode == 'restore'
+      shell: bash
+      env:
+        CACHE_HIT: ${{ steps.cache.outcome == 'success' && steps.cache.outputs.cache-hit == 'true' }}
+      run: bash "$GITHUB_ACTION_PATH/cache.sh" install
+
+    - name: Seed root Gradle inference
+      id: seed
+      if: inputs.mode == 'seed' && steps.cache.outputs.cache-hit != 'true'
+      shell: bash
+      run: bash "$GITHUB_ACTION_PATH/cache.sh" seed
+
+    - name: Save the root Gradle cache
+      if: steps.seed.outcome == 'success'
+      uses: actions/cache/save@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
+      with:
+        path: |
+          ~/.cache/nx-nightly-gradle/wrapper/dists
+          ~/.cache/nx-nightly-gradle/caches/modules-2
+        key: ${{ steps.key.outputs.key }}
