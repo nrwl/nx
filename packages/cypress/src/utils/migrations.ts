@@ -5,7 +5,7 @@ import {
   normalizePath,
   readNxJson,
   type ProjectConfiguration,
-  type StringChange,
+  type StringDeletion,
   type TargetConfiguration,
   type Tree,
 } from '@nx/devkit';
@@ -192,7 +192,7 @@ export function getPropertyName(name: PropertyName): string | null {
 export function removeProperty(
   contents: string,
   property: ObjectLiteralElementLike
-): StringChange[] {
+): StringDeletion[] {
   ts ??= ensureTypescript();
 
   let start = property.getStart();

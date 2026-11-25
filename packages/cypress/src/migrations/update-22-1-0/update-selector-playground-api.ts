@@ -107,7 +107,20 @@ function migrateSelectorPlaygroundApi(fileContent: string): string {
       .flatMap((prop) => removeProperty(updated, prop));
   });
 
-  return applyChangesToString(updated, changes);
+  // A deletion inside another one, e.g. of a defaults call in a removed
+  // onElement callback, has nothing left to delete.
+  return applyChangesToString(
+    updated,
+    changes.filter(
+      (change) =>
+        !changes.some(
+          (other) =>
+            other !== change &&
+            other.start <= change.start &&
+            change.start + change.length <= other.start + other.length
+        )
+    )
+  );
 }
 
 function isOnElementProperty(name: PropertyName): boolean {

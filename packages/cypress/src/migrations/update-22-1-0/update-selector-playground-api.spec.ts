@@ -181,6 +181,32 @@ export const after = 1;
     `);
   });
 
+  it('should remove an onElement callback that holds another defaults() call', async () => {
+    tree.write(
+      'apps/web-e2e/src/support/nested-callback.ts',
+      `Cypress.ElementSelector.defaults({
+  selectorPriority: ['data-cy'],
+  onElement: (el) => {
+    Cypress.ElementSelector.defaults({ onElement: (inner) => inner, selectorPriority: ['id'] });
+    return el;
+  },
+});
+export const after = 1;
+`
+    );
+
+    await migration(tree);
+
+    expect(tree.read('apps/web-e2e/src/support/nested-callback.ts', 'utf-8'))
+      .toMatchInlineSnapshot(`
+      "Cypress.ElementSelector.defaults({
+        selectorPriority: ['data-cy'],
+      });
+      export const after = 1;
+      "
+    `);
+  });
+
   it('should handle onElement as the only property', async () => {
     tree.write(
       'apps/web-e2e/src/support/only.ts',
