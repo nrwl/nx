@@ -357,25 +357,35 @@ fn build_segment(
                     build_segment(&built_glob, &group[1..], is_last_segment, is_negative);
                 off_group.into_iter().chain(on_group).collect::<Vec<_>>()
             }
+            // The text before a `!(...)` stays part of the name, and the
+            // group itself becomes a wildcard. In a directory segment or at
+            // the end of the glob it accepts any other name.
             GlobGroup::Negated(_) => {
-                // A trailing `!(x)` accepts any other ending, so the name
-                // stays open after what precedes it.
                 let existing = match (is_last_segment, group.len() == 1) {
-                    (false, _) => "*".to_string(),
-                    (true, true) => format!("{existing}*"),
                     (true, false) => existing.to_string(),
+                    _ => format!("{existing}*"),
                 };
                 let off_group = build_segment(&existing, &group[1..], is_last_segment, is_negative);
                 let on_group = build_segment(&built_glob, &group[1..], is_last_segment, true);
                 off_group.into_iter().chain(on_group).collect::<Vec<_>>()
             }
             GlobGroup::NegatedFileName(_) => {
-                let off_group = build_segment("*.", &group[1..], is_last_segment, is_negative);
+                let off_group = build_segment(
+                    &format!("{existing}*."),
+                    &group[1..],
+                    is_last_segment,
+                    is_negative,
+                );
                 let on_group = build_segment(&built_glob, &group[1..], is_last_segment, true);
                 off_group.into_iter().chain(on_group).collect::<Vec<_>>()
             }
             GlobGroup::NegatedWildcard(_) => {
-                let off_group = build_segment("*", &group[1..], is_last_segment, is_negative);
+                let off_group = build_segment(
+                    &format!("{existing}*"),
+                    &group[1..],
+                    is_last_segment,
+                    is_negative,
+                );
                 let on_group = build_segment(&built_glob, &group[1..], is_last_segment, true);
                 off_group.into_iter().chain(on_group).collect::<Vec<_>>()
             }
@@ -451,6 +461,26 @@ mod test {
         ] {
             assert_eq!(expand_posix_classes(glob), expected, "{glob}");
         }
+    }
+
+    #[test]
+    fn a_negated_group_keeps_the_text_before_it() {
+        assert_eq!(
+            convert_glob("packages/!(libraries)/foo").unwrap(),
+            ["!packages/libraries/", "packages/*/foo"]
+        );
+        assert_eq!(
+            convert_glob("packages/lib-!(a)/foo").unwrap(),
+            ["!packages/lib-a/", "packages/lib-*/foo"]
+        );
+        assert_eq!(
+            convert_glob("src/a.!(spec).ts").unwrap(),
+            ["!src/a.spec.ts", "src/a.*.ts"]
+        );
+        assert_eq!(
+            convert_glob("packages/lib-!(a)*/foo").unwrap(),
+            ["!packages/lib-a*/", "packages/lib-*/foo"]
+        );
     }
 
     #[test]
