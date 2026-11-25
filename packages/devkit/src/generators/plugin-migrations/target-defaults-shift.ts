@@ -61,7 +61,6 @@ export interface TargetDefaultsShiftResult {
 const NEUTRAL_VALUES: Partial<TargetConfiguration> = {
   dependsOn: [],
   cache: false,
-  outputs: [],
   parallelism: true,
   inputs: ['default', '^default'],
 };

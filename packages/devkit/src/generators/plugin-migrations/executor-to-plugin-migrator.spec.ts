@@ -6283,6 +6283,30 @@ describe('targetDefaults resolution across the conversion', () => {
     );
   });
 
+  it('warns instead of emptying outputs that a newly winning default sets', async () => {
+    setup('td-shift-unset-outputs', {
+      'nx:run-commands': { outputs: ['{projectRoot}/out'] },
+    });
+    const plugin = createSyntheticPlugin((root, targetName) => {
+      const { outputs: _outputs, ...target } = defaultInferredTarget(
+        root,
+        targetName
+      );
+      return target;
+    });
+    const warn = vi.fn();
+
+    await migrate(plugin, warn);
+
+    // Unset outputs fall back to `outputPath` or legacy paths, so `[]` is not neutral.
+    expect(readNxJson(ctx.tree).targetDefaults).toStrictEqual({
+      'nx:run-commands': { outputs: ['{projectRoot}/out'] },
+    });
+    expect(warn).toHaveBeenCalledWith(
+      'convert-to-inferred could not keep the targetDefaults that app1 > test (outputs), app2 > test (outputs) resolved before the migration: targetDefaults now apply there that set these fields, and no later targetDefaults entry can unset them. Review these targets manually.'
+    );
+  });
+
   it('scopes the correction to the migrated project in single-project mode', async () => {
     setup('td-shift-single-project', {
       test: [
