@@ -361,6 +361,19 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "24.1.0-eslint-js": {
+      "version": "24.1.0-beta.4",
+      "requires": {
+        "eslint": ">=10.0.0",
+        "@nx/eslint-plugin": "*"
+      },
+      "packages": {
+        "@eslint/js": {
+          "version": "^10.0.0",
+          "addToPackageJson": "devDependencies"
+        }
+      }
     }
   }
 }
