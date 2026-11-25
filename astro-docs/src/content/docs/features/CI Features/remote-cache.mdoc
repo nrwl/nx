@@ -146,13 +146,15 @@ The value is case-insensitive and maps to the [`ultracache.mode`](/docs/referenc
 
 Any other value fails the run with `NX_CLOUD_ULTRACACHE_MODE must be on, warn, error, or off.`
 
-Set it at the job or workflow level so both the command that starts the CI run (`nx-cloud start-workers` or `nx-cloud start-ci-run`) and your Nx commands see it.
-Nx Cloud Workers pick it up automatically:
+On Nx Cloud CI, set it in the file's `env`, which reaches each job and its workers:
 
 ```yaml
-# .github/workflows/ultracache-trial.yml
+# .nx/pipelines/ultracache-trial.yaml
+name: Ultracache trial
+
 on:
-  push:
+  trial-pushes:
+    event: PUSH
     branches: [try-ultracache]
 
 env:
@@ -160,15 +162,13 @@ env:
 
 jobs:
   main:
-    runs-on: ubuntu-latest
+    runs-on: linux-medium-js
     steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - run: npx nx-cloud start-workers
-      - run: npm ci
       - run: npx nx affected -t lint test build
 ```
+
+On [your own CI provider](/docs/kb/bring-your-own-ci), set it at the job or workflow level so both the command that starts the CI run (`nx-cloud start-workers` or `nx-cloud start-ci-run`) and your Nx commands see it.
+Nx Cloud workers pick it up automatically.
 
 It doesn't change which tasks run, so tasks that `nx affected` leaves out stay out.
 

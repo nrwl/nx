@@ -11,7 +11,7 @@ topics:
 `.nx/ci-config.yaml` is deprecated. Its settings move to [`.nx/pipelines/ci.yaml`](/docs/reference/nx-cloud/ci-config). What else changes depends on where you want the pipeline to run:
 
 - **Stay on your CI provider** (GitHub Actions, CircleCI, GitLab, and others). Move the worker settings to `ci.yaml` and keep running `nx-cloud start-workers` in your workflow. The steps below are for this path.
-- **Move the pipeline to [Nx Cloud CI](/docs/features/ci-features#run-ci-on-nx-cloud)** (private beta, GitHub only). The jobs and steps move into `ci.yaml` too, and a job sets `workers` instead of running `start-workers`. Translate the worker settings with the [key mapping](#key-mapping), then follow [move a GitHub Actions workflow to Nx Cloud CI](/docs/kb/migrate-from-github-actions) for the jobs. See [if you move to Nx Cloud CI](#if-you-move-to-nx-cloud-ci) for what works differently.
+- **Move the pipeline to [Nx Cloud CI](/docs/features/ci-features#run-ci-on-nx-cloud)** (beta, GitHub only). The jobs and steps move into `ci.yaml` too, and a job sets `workers` instead of running `start-workers`. Translate the worker settings with the [key mapping](#key-mapping), then follow [move a GitHub Actions workflow to Nx Cloud CI](/docs/kb/migrate-from-github-actions) for the jobs. See [if you move to Nx Cloud CI](#if-you-move-to-nx-cloud-ci) for what works differently.
 
 Your pipeline keeps working on the old file until you switch.
 
