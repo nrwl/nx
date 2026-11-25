@@ -10,9 +10,6 @@ on:
     event: PUSH
     branches: [<%= mainBranch %>]
 
-env:
-  NX_BATCH_MODE: true
-
 worker-templates:
   default:
     workers: 3 linux-medium-dotnet

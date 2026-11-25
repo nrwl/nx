@@ -6,9 +6,6 @@ exports[`ci-workflow generator > connected to nxCloud > circleci pipeline > shou
 orbs:
   nx: nrwl/nx@1.7.0
 
-env:
-  NX_BATCH_MODE: true
-
 jobs:
   main:
     environment:
@@ -55,9 +52,6 @@ permissions:
   actions: read
   contents: read
 
-env:
-  NX_BATCH_MODE: true
-
 jobs:
   main:
     runs-on: ubuntu-latest
@@ -100,9 +94,6 @@ on:
     event: PUSH
     branches: [main]
 
-env:
-  NX_BATCH_MODE: true
-
 # The public JVM launch templates set up Gradle, so Maven workspaces get their own.
 launch-templates:
   linux-medium-maven:
@@ -134,9 +125,6 @@ exports[`ci-workflow generator > not connected to nxCloud > circleci pipeline > 
 
 orbs:
   nx: nrwl/nx@1.7.0
-
-env:
-  NX_BATCH_MODE: true
 
 jobs:
   main:
@@ -184,9 +172,6 @@ permissions:
   actions: read
   contents: read
 
-env:
-  NX_BATCH_MODE: true
-
 jobs:
   main:
     runs-on: ubuntu-latest
@@ -228,9 +213,6 @@ on:
   main-pushes:
     event: PUSH
     branches: [main]
-
-env:
-  NX_BATCH_MODE: true
 
 # The public JVM launch templates set up Gradle, so Maven workspaces get their own.
 launch-templates:

@@ -3,9 +3,6 @@ version: 2.1
 orbs:
   nx: nrwl/nx@1.6.2
 
-env:
-  NX_BATCH_MODE: true
-
 jobs:
   main:
     docker:

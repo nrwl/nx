@@ -6,9 +6,6 @@ exports[`ci-workflow generator > connected to nxCloud > circleci pipeline > shou
 orbs:
   nx: nrwl/nx@1.6.2
 
-env:
-  NX_BATCH_MODE: true
-
 jobs:
   main:
     docker:
@@ -51,9 +48,6 @@ permissions:
   actions: read
   contents: read
 
-env:
-  NX_BATCH_MODE: true
-
 jobs:
   main:
     runs-on: ubuntu-latest
@@ -93,9 +87,6 @@ on:
     event: PUSH
     branches: [main]
 
-env:
-  NX_BATCH_MODE: true
-
 worker-templates:
   default:
     workers: 3 linux-medium-dotnet
@@ -116,9 +107,6 @@ exports[`ci-workflow generator > not connected to nxCloud > circleci pipeline > 
 
 orbs:
   nx: nrwl/nx@1.6.2
-
-env:
-  NX_BATCH_MODE: true
 
 jobs:
   main:
@@ -162,9 +150,6 @@ permissions:
   actions: read
   contents: read
 
-env:
-  NX_BATCH_MODE: true
-
 jobs:
   main:
     runs-on: ubuntu-latest
@@ -203,9 +188,6 @@ on:
   main-pushes:
     event: PUSH
     branches: [main]
-
-env:
-  NX_BATCH_MODE: true
 
 worker-templates:
   default:
