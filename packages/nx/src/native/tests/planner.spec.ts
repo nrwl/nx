@@ -1463,17 +1463,23 @@ describe('task planner', () => {
     {
       name: 'a local @nx executor named after its project',
       executor: '@nx/local:build',
-      expected: ['@nx/local:libs/local/**/*'],
+      expected: ['@nx/local:libs/local/**/*', 'AllExternalDependencies'],
     },
     {
       name: 'a local @nx executor found by package name',
       executor: '@nrwl/packaged:build',
-      expected: ['packaged-plugin:libs/packaged/**/*'],
+      expected: [
+        'packaged-plugin:libs/packaged/**/*',
+        'AllExternalDependencies',
+      ],
     },
     {
       name: 'a local @nx executor found by tsconfig path alias',
       executor: '@nx/aliased:build',
-      expected: ['differently-named:libs/differently-named/**/*'],
+      expected: [
+        'differently-named:libs/differently-named/**/*',
+        'AllExternalDependencies',
+      ],
     },
     {
       name: 'a local @nx executor with declared externals',
@@ -1488,7 +1494,7 @@ describe('task planner', () => {
     {
       name: 'an @nx executor that is neither installed nor a project',
       executor: '@nx/missing:build',
-      expected: [],
+      expected: ['AllExternalDependencies'],
     },
   ])(
     'should plan executor inputs for $name',

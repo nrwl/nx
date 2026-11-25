@@ -874,9 +874,14 @@ impl HashPlanner {
             return Ok(Some(external_instructions(external_deps)));
         }
 
-        // A local plugin's executor is workspace source, so its project's
-        // files stand in for the installed package's closure.
-        let mut instructions = external_instructions(external_deps);
+        // An uninstalled @nx executor is planned like a third-party one. A
+        // local plugin's project files are hashed on top, but they don't
+        // cover its npm imports.
+        let mut instructions = if declares_external_deps {
+            external_instructions(external_deps)
+        } else {
+            vec![HashInstruction::AllExternalDependencies]
+        };
         if let Some((executor_project, executor_config)) = target
             .executor_project
             .as_ref()
