@@ -16,7 +16,6 @@ env:
   NX_E2E_PORT_POOL: '10000-32767'
   NX_CLOUD_ACCESS_TOKEN: ${{ secrets.NX_CLOUD_ACCESS_TOKEN }}
   NX_CLOUD_ENABLE_METRICS_COLLECTION: 'true'
-  PNPM_HOME: ~/.pnpm
   # See the root Cargo.toml: the release profile is incremental for local dev.
   # CI builds cold, so incremental only inflates the cargo cache.
   # Note this does NOT reach Nx Agents - see .nx/workflows/agents.yaml.
@@ -33,6 +32,7 @@ jobs:
     env:
       NX_BATCH_MODE: 'true'
       NX_E2E_CI_CACHE_KEY: e2e-github-linux
+      SELECTED_PM: 'pnpm'
       NX_DAEMON: 'true'
       NX_PERF_LOGGING: 'false'
       NX_VERBOSE_LOGGING: 'false'
