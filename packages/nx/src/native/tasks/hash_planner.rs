@@ -13,12 +13,11 @@ use crate::native::{
 use itertools::Itertools;
 use napi::bindgen_prelude::{ClassInstance, External};
 use rayon::prelude::*;
-use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
+use std::collections::{BTreeSet, HashMap, HashSet};
 use tracing::trace;
 
 use crate::native::glob::{
-    NxGlobSet, NxGlobSetBuilder, escape_glob_literal, expand_literal_braces, normalize_glob,
-    partition_glob,
+    NxGlobSet, NxGlobSetBuilder, escape_glob_literal, normalize_glob, partition_glob,
 };
 use crate::native::tasks::hashers::{
     OnceCache, Positive, ProjectScope, parse_group, scope_roots, validate_files_globs,
@@ -39,16 +38,25 @@ use std::sync::{Arc, OnceLock};
 /// Ids a plan keeps even when a configuration replaces its declared files: those of
 /// `always` inputs. Only `replace_with_configuration` reads them, so a plan no
 /// configuration replaces skips collecting them.
-struct AlwaysIds(Option<InstructionIdSet>);
+use super::plan::{Plan, PlanBuilder, kind};
+use super::recorded_globs::RecordedGlobs;
+
+struct AlwaysIds(Option<PlanBuilder>);
 
 impl AlwaysIds {
     fn collecting(collect: bool) -> Self {
-        Self(collect.then(InstructionIdSet::default))
+        Self(collect.then(PlanBuilder::default))
     }
 
     fn extend(&mut self, ids: impl IntoIterator<Item = u32>) {
         if let Some(set) = &mut self.0 {
-            set.extend(ids);
+            set.ids(ids);
+        }
+    }
+
+    fn include(&mut self, plan: &Plan) {
+        if let Some(set) = &mut self.0 {
+            set.include(plan.clone());
         }
     }
 
@@ -56,20 +64,14 @@ impl AlwaysIds {
         self.0.is_some()
     }
 
-    fn contains(&self, id: u32) -> bool {
-        self.0.as_ref().is_some_and(|set| set.contains(id))
-    }
-
-    fn into_sorted_vec(self) -> Vec<u32> {
-        self.0
-            .map(InstructionIdSet::into_sorted_vec)
-            .unwrap_or_default()
+    fn finish(self, pool: &InstructionPool) -> Plan {
+        self.0.map(|s| s.finish(pool)).unwrap_or_default()
     }
 }
 
 const ROOT_TSCONFIG_FILES: [&str; 2] = ["tsconfig.base.json", "tsconfig.json"];
 /// Hashed by the always-on workspace fileset every plan carries.
-const ALWAYS_ON_FILES: [&str; 3] = ["nx.json", ".gitignore", ".nxignore"];
+pub(super) const ALWAYS_ON_FILES: [&str; 3] = ["nx.json", ".gitignore", ".nxignore"];
 
 /// A task's Ultracache configuration plus a matcher over its observed reads,
 /// used to decide whether a class-mapped file (root tsconfig, a declared
@@ -77,63 +79,55 @@ const ALWAYS_ON_FILES: [&str; 3] = ["nx.json", ".gitignore", ".nxignore"];
 /// instruction (conservative).
 struct UltracacheContext<'a> {
     entry: &'a UltracacheTask,
-    /// Observed reads that name one path outright, answered without a matcher.
-    literal: HashSet<&'a str>,
-    /// Matcher over the observed reads that are real globs; `None` when there are none.
-    observed: Option<NxGlobSet>,
-    /// A glob failed to parse: treat every class-mapped file as read so the
-    /// native instruction is kept.
-    unparsable: bool,
+    /// Construct the original combined matcher only when an exact recorded path
+    /// cannot answer the query. Errors conservatively keep class-mapped inputs.
+    observed: OnceLock<Result<Option<NxGlobSet>, ()>>,
 }
 
 impl<'a> UltracacheContext<'a> {
     fn new(entry: &'a UltracacheTask) -> Self {
-        let mut literal = HashSet::new();
-        let mut patterns: Vec<&str> = Vec::new();
-        for glob in entry.files.iter().map(AsRef::as_ref) {
-            if glob.starts_with('!') {
-                continue;
-            }
-            if ultracache_eligibility::is_literal_path(glob) {
-                literal.insert(glob);
-            } else {
-                patterns.push(glob);
-            }
-        }
-        if patterns.is_empty() {
-            return Self {
-                entry,
-                literal,
-                observed: None,
-                unparsable: false,
-            };
-        }
-        match NxGlobSetBuilder::new(&patterns).and_then(|b| b.build(None)) {
-            Ok(set) => Self {
-                entry,
-                literal,
-                observed: Some(set),
-                unparsable: false,
-            },
-            Err(_) => Self {
-                entry,
-                literal,
-                observed: None,
-                unparsable: true,
-            },
+        Self {
+            entry,
+            observed: OnceLock::new(),
         }
     }
 
+    fn literal(&self, path: &str) -> bool {
+        ultracache_eligibility::is_literal_path(path)
+            && !path.starts_with('!')
+            && self
+                .entry
+                .files
+                .binary_search_by(|g| g.as_ref().cmp(path))
+                .is_ok()
+    }
+
     fn read(&self, path: &str) -> bool {
-        self.literal.contains(path)
-            || match &self.observed {
-                Some(set) => set.is_match(path),
-                None => self.unparsable,
+        self.literal(path)
+            || match self.observed.get_or_init(|| {
+                let patterns: Vec<_> = self
+                    .entry
+                    .files
+                    .iter()
+                    .filter(|g| !g.starts_with('!') && !ultracache_eligibility::is_literal_path(g))
+                    .collect();
+                if patterns.is_empty() {
+                    return Ok(None);
+                }
+                NxGlobSetBuilder::new(&patterns)
+                    .and_then(|b| b.build(None))
+                    .map(Some)
+                    .map_err(|_| ())
+            }) {
+                Ok(Some(set)) => set.is_match(path),
+                Ok(None) => false,
+                Err(()) => true,
             }
     }
 
     fn root_tsconfig_read(&self) -> bool {
-        ROOT_TSCONFIG_FILES.iter().any(|f| self.read(f))
+        ROOT_TSCONFIG_FILES.iter().any(|path| self.literal(path))
+            || ROOT_TSCONFIG_FILES.iter().any(|path| self.read(path))
     }
 }
 
@@ -149,12 +143,13 @@ pub struct HashPlanner {
     /// in all get_plans calls: values derive only from the immutable project
     /// graph and nx_json. Only consulted for acyclic dependency closures — see
     /// `dependency_memo_enabled`.
-    subtree_memo: OnceCache<SubtreeResult>,
+    subtree_memo: parking_lot::RwLock<HashMap<String, SubtreeResult>>,
     /// Own-project instructions can be reused even when a cyclic closure must
     /// still be traversed for each task. Initialized only on that fallback.
     local_inputs_memo: OnceLock<OnceCache<LocalDependencyInputs>>,
     acyclic_dependency_projects: OnceLock<hashbrown::HashSet<String>>,
     /// Project name by root, for attributing observed reads to their owner.
+    workspace_root_project: OnceLock<Option<String>>,
     project_by_root: OnceLock<HashMap<String, String>>,
     /// `project_by_root`'s keys, sorted.
     project_roots: OnceLock<BTreeSet<String>>,
@@ -166,11 +161,12 @@ pub struct HashPlanner {
 }
 
 /// Instruction ids contributed by one (project, propagated input) dependency subtree.
+#[derive(Default, Clone)]
 struct SubtreeResult {
-    ids: Vec<u32>,
+    ids: Plan,
     /// See `AlwaysIds`. Fixed by the graph alone, never by the propagated
     /// input's own `always`, which the caller applies, so tasks can share it.
-    always: Vec<u32>,
+    always: Plan,
     /// True when the subtree cannot be spliced from the memo: it contains
     /// deps-outputs inputs (whose resolution depends on the root task) or an
     /// unexpected propagation shape. Callers must use the per-task traversal.
@@ -181,58 +177,6 @@ struct LocalDependencyInputs {
     ids: Vec<u32>,
     always: Vec<u32>,
     needs_legacy: bool,
-}
-
-/// A temporary union of dense pool ids. Merge dependency closures without
-/// copying their repeated ids into a large Vec and sorting all occurrences.
-/// The bitset is discarded once the exact-sized, sorted result is produced.
-#[derive(Default)]
-struct InstructionIdSet {
-    words: Vec<u64>,
-}
-
-impl Extend<u32> for InstructionIdSet {
-    fn extend<T: IntoIterator<Item = u32>>(&mut self, values: T) {
-        for id in values {
-            let word = id as usize / 64;
-            if word >= self.words.len() {
-                self.words.resize(word + 1, 0);
-            }
-            self.words[word] |= 1u64 << (id % 64);
-        }
-    }
-}
-
-impl FromIterator<u32> for InstructionIdSet {
-    fn from_iter<T: IntoIterator<Item = u32>>(values: T) -> Self {
-        let mut result = Self::default();
-        result.extend(values);
-        result
-    }
-}
-
-impl InstructionIdSet {
-    fn contains(&self, id: u32) -> bool {
-        self.words
-            .get(id as usize / 64)
-            .is_some_and(|word| word & (1u64 << (id % 64)) != 0)
-    }
-
-    fn into_sorted_vec(self) -> Vec<u32> {
-        let count = self
-            .words
-            .iter()
-            .map(|word| word.count_ones() as usize)
-            .sum();
-        let mut result = Vec::with_capacity(count);
-        for (word_index, mut word) in self.words.into_iter().enumerate() {
-            while word != 0 {
-                result.push(word_index as u32 * 64 + word.trailing_zeros());
-                word &= word - 1;
-            }
-        }
-        result
-    }
 }
 
 /// Cycle-detection set with an undo log. Each dependency input needs its own
@@ -289,9 +233,10 @@ impl HashPlanner {
             project_graph: Arc::clone(project_graph),
             external_deps_mapped: OnceLock::new(),
             external_node_names: OnceLock::new(),
-            subtree_memo: OnceCache::new(),
+            subtree_memo: Default::default(),
             local_inputs_memo: OnceLock::new(),
             acyclic_dependency_projects: OnceLock::new(),
+            workspace_root_project: OnceLock::new(),
             project_by_root: OnceLock::new(),
             project_roots: OnceLock::new(),
             instruction_pool: Arc::new(InstructionPool::new()),
@@ -377,6 +322,13 @@ impl HashPlanner {
             .tasks
         });
 
+        let globs = ultracache_tasks
+            .as_ref()
+            .filter(|tasks| !tasks.is_empty())
+            .map(|tasks| {
+                RecordedGlobs::new(tasks.values(), self.project_by_root(), self.project_roots())
+            });
+
         trace!("Starting get_plans_internal for {} tasks", task_ids.len());
 
         let external_deps_mapped = self
@@ -388,7 +340,7 @@ impl HashPlanner {
 
         let pool = &self.instruction_pool;
         let parallel_start = std::time::Instant::now();
-        let result: anyhow::Result<HashMap<String, Vec<u32>>> = to_plan
+        let result: anyhow::Result<HashMap<String, Plan>> = to_plan
             .par_iter()
             .map(|id| {
                 let task = &task_graph
@@ -404,32 +356,30 @@ impl HashPlanner {
                     external_deps_mapped,
                 )?;
 
-                // Task-scoped instructions are built as values and interned;
-                // the O(tasks x closure) dependency portion inside
-                // self_and_deps_inputs is spliced from the subtree memo as ids
-                // without materialization.
                 let always_on_id = pool.intern(HashInstruction::WorkspaceFileSet(
                     ALWAYS_ON_WORKSPACE_FILES
                         .iter()
                         .map(|f| f.to_string())
                         .collect(),
                 ));
-                let mut ids: Vec<u32> = target
-                    .unwrap_or(vec![])
-                    .into_iter()
-                    .chain(vec![HashInstruction::Environment(
-                        "NX_CLOUD_ENCRYPTION_KEY".into(),
-                    )])
-                    .map(|instruction| pool.intern(instruction))
-                    .chain([always_on_id])
-                    .collect();
+                let mut builder = PlanBuilder::default();
+                builder.ids(
+                    target
+                        .unwrap_or(vec![])
+                        .into_iter()
+                        .chain(vec![HashInstruction::Environment(
+                            "NX_CLOUD_ENCRYPTION_KEY".into(),
+                        )])
+                        .map(|instruction| pool.intern(instruction))
+                        .chain([always_on_id]),
+                );
 
                 let context = ultracache_tasks
                     .as_ref()
                     .and_then(|tasks| tasks.get(*id))
                     .map(UltracacheContext::new);
                 let mut always = AlwaysIds::collecting(context.is_some());
-                ids.extend(self.self_and_deps_inputs(
+                builder.include(self.self_and_deps_inputs(
                     &task.target.project,
                     task,
                     &inputs,
@@ -441,11 +391,12 @@ impl HashPlanner {
                 )?);
 
                 if let Some(context) = &context {
-                    self.replace_with_configuration(
+                    builder = self.replace_with_configuration(
                         task,
                         &task_graph,
                         context,
-                        &mut ids,
+                        globs.as_ref().unwrap(),
+                        builder.finish(pool),
                         always_on_id,
                         always,
                     );
@@ -460,8 +411,8 @@ impl HashPlanner {
                 // task back from the up-front batch.
                 for dep_task in collect_continuous_dependencies(&task_graph, id) {
                     let dep_inputs = get_inputs(dep_task, &self.project_graph, &self.nx_json)?;
-                    let mut dep_ids: Vec<u32> = self
-                        .target_input(
+                    builder.ids(
+                        self.target_input(
                             &dep_task.target.project,
                             &dep_task.target.target,
                             &dep_inputs.self_inputs,
@@ -469,9 +420,9 @@ impl HashPlanner {
                         )?
                         .unwrap_or_default()
                         .into_iter()
-                        .map(|instruction| pool.intern(instruction))
-                        .collect();
-                    dep_ids.extend(self.self_and_deps_inputs(
+                        .map(|instruction| pool.intern(instruction)),
+                    );
+                    builder.include(self.self_and_deps_inputs(
                         &dep_task.target.project,
                         dep_task,
                         &dep_inputs,
@@ -481,16 +432,13 @@ impl HashPlanner {
                         None,
                         &mut AlwaysIds::collecting(false),
                     )?);
-                    ids.extend(dep_ids);
                 }
 
+                let mut plan = builder.finish(pool);
                 if context.is_some() {
-                    drop_ultracache_duplicates(pool, &mut ids);
+                    plan = drop_ultracache_duplicates(pool, plan);
                 }
-                ids.sort_unstable();
-                ids.dedup();
-
-                Ok((id.to_string(), ids))
+                Ok((id.to_string(), plan))
             })
             .collect();
 
@@ -542,8 +490,9 @@ impl HashPlanner {
             .into_iter()
             .map(|(task_id, ids)| {
                 let mut instructions: Vec<HashInstruction> = ids
-                    .into_iter()
-                    .map(|id| hash_plans.pool.get(id).value().clone())
+                    .ids()
+                    .iter()
+                    .map(|&id| hash_plans.pool.get(id).value().clone())
                     .collect();
                 instructions.par_sort();
                 (task_id, instructions)
@@ -610,10 +559,11 @@ impl HashPlanner {
         task: &Task,
         task_graph: &TaskGraph,
         context: &UltracacheContext,
-        ids: &mut Vec<u32>,
+        globs: &RecordedGlobs,
+        plan: Plan,
         always_on_id: u32,
         always: AlwaysIds,
-    ) {
+    ) -> PlanBuilder {
         let pool = &self.instruction_pool;
         let keep_tsconfig = context.root_tsconfig_read();
         let include_unstable = task
@@ -625,9 +575,15 @@ impl HashPlanner {
         // and what a declared `includeIgnored` group walks into there. None
         // of them is tracked.
         let mut not_installed = Vec::new();
-        if include_unstable {
+        if include_unstable
+            && context
+                .entry
+                .files
+                .iter()
+                .any(|g| g.contains("node_modules") || g.contains('{'))
+        {
             not_installed = upstream_output_roots(task_graph, &task.id);
-            for id in ids.iter() {
+            for id in plan.only(kind::DECLARED_DISK).ids().iter() {
                 if let HashInstruction::IgnoredFileSet { globs, .. } = &*pool.get(*id) {
                     not_installed.extend(
                         globs
@@ -642,147 +598,39 @@ impl HashPlanner {
             }
             not_installed.sort_unstable();
         }
-        let own: hashbrown::HashSet<u32> = self
-            .ultracache_instructions(task, context, &not_installed, include_unstable)
-            .into_iter()
-            .map(|instruction| pool.intern(instruction))
-            .collect();
-        ids.retain(|id| {
-            *id == always_on_id
-                || own.contains(id)
-                || always.contains(*id)
-                || (!include_unstable
-                    && matches!(&*pool.get(*id), HashInstruction::IgnoredFileSet { .. }))
-                || !pool.replaced_by_configuration(*id, keep_tsconfig, |path| context.read(path))
-        });
-        ids.extend(own);
-        ids.extend(always.into_sorted_vec());
-    }
-
-    fn ultracache_instructions(
-        &self,
-        task: &Task,
-        context: &UltracacheContext,
-        not_installed: &[String],
-        include_unstable: bool,
-    ) -> Vec<HashInstruction> {
-        let entry = context.entry;
-        let self_project = task.target.project.as_str();
-
-        // The deepest ancestor directory that is a project root wins. A project
-        // rooted at "." cannot be prefix-matched, so it is the fallback owner.
-        let project_by_root = self.project_by_root();
+        let mut retained = kind::OTHER | kind::ALWAYS_DEFERRED;
+        if keep_tsconfig {
+            retained |= kind::TS;
+        }
+        if !include_unstable {
+            retained |= kind::DECLARED_DISK;
+        }
+        let mut result = PlanBuilder::default();
+        result.include(plan.only(retained));
+        result.include(always.finish(pool));
+        result.ids(plan.only(kind::JSON).ids().iter().copied().filter(|&id| {
+            !pool.replaced_by_configuration(id, keep_tsconfig, |path| context.read(path))
+        }));
+        result.ids([always_on_id]);
         let unowned = self
-            .project_graph
-            .nodes
-            .iter()
-            .find(|(_, project)| project.root == ".")
-            .map(|(name, _)| name.as_str())
-            .unwrap_or(self_project);
-        let owner = |glob: &str| -> Option<&str> {
-            let glob = glob.strip_prefix('!').unwrap_or(glob);
-            if include_unstable {
-                // Only groups the reads: `disk_file_set` scopes each entry.
-                return parent_dirs(glob)
-                    .find_map(|dir| project_by_root.get(dir))
-                    .map_or(Some(unowned), |project| Some(project.as_str()));
-            }
-            // A fileset reads its project's files only, so an entry naming a
-            // project root has to belong to that project. With no owner it
-            // reads the workspace's files.
-            let root = walk_root(glob);
-            std::iter::once(root.as_str())
-                .chain(parent_dirs(&root))
-                .find_map(|dir| project_by_root.get(dir))
-                .map(String::as_str)
-        };
-
-        // A recorded glob stays whole unless its brace alternatives belong to
-        // different projects or name a file the always-on set hashes.
-        let mut buckets: BTreeMap<Option<&str>, Vec<Arc<str>>> = BTreeMap::new();
-        let mut exclusions: Vec<Arc<str>> = Vec::new();
-        for glob in entry.files.iter() {
-            if !glob.contains('{') {
-                if !covered_by_native_instruction(glob, not_installed) {
-                    if glob.starts_with('!') {
-                        exclusions.push(glob.clone());
-                    } else {
-                        buckets.entry(owner(glob)).or_default().push(glob.clone());
-                    }
-                }
-                continue;
-            }
-            let expanded = expand_literal_braces(glob);
-            let kept: Vec<String> = expanded
-                .iter()
-                .filter(|glob| !covered_by_native_instruction(glob, not_installed))
-                .cloned()
-                .collect();
-            let whole = kept.len() == expanded.len();
-            if glob.starts_with('!') {
-                match whole {
-                    true => exclusions.push(glob.clone()),
-                    false => exclusions.extend(kept.into_iter().map(Arc::from)),
-                }
-            } else {
-                let owners: Vec<Option<&str>> = kept.iter().map(|g| owner(g)).collect();
-                if whole && owners.iter().all(|o| *o == owners[0]) {
-                    buckets.entry(owners[0]).or_default().push(glob.clone());
-                } else {
-                    for (glob, project) in kept.into_iter().zip(owners) {
-                        buckets.entry(project).or_default().push(glob.into());
-                    }
-                }
-            }
-        }
-        let exclusion_roots: Vec<String> = exclusions
-            .iter()
-            .map(|exclusion| walk_root(&exclusion[1..]))
-            .collect();
-
-        let mut instructions = Vec::new();
-        for (project, mut group) in buckets {
-            group.sort();
-            group.dedup();
-            // Exclusions apply to every recorded positive, so each group takes
-            // the ones that could remove its files.
-            let mut group_exclusions: Vec<Arc<str>> = Vec::new();
-            if !exclusions.is_empty() {
-                let mut roots: Vec<String> = group.iter().map(|glob| walk_root(glob)).collect();
-                roots.sort_unstable();
-                group_exclusions.extend(
-                    exclusions
-                        .iter()
-                        .zip(&exclusion_roots)
-                        .filter(|(_, root)| overlaps_any(&roots, root))
-                        .map(|(exclusion, _)| exclusion.clone()),
-                );
-            }
-            group_exclusions.sort();
-            group_exclusions.dedup();
-            group.extend(group_exclusions);
-            if include_unstable {
-                instructions.push(self.disk_file_set(group, true));
-                continue;
-            }
-            // An ordinary fileset of the owner's files, or of the workspace's.
-            let globs = group.iter().map(|glob| normalize_glob(glob));
-            instructions.push(match project {
-                Some(project) => HashInstruction::ProjectFileSet(project.into(), globs.collect()),
-                None => HashInstruction::WorkspaceFileSet(
-                    globs
-                        .map(|glob| match glob.strip_prefix('!') {
-                            Some(excluded) => format!("!{{workspaceRoot}}/{excluded}"),
-                            None => format!("{{workspaceRoot}}/{glob}"),
-                        })
-                        .collect(),
-                ),
-            });
-        }
-        instructions.push(HashInstruction::UltracacheConfiguration(
-            entry.digest.clone(),
+            .workspace_root_project
+            .get_or_init(|| {
+                self.project_graph
+                    .nodes
+                    .iter()
+                    .find(|(_, p)| p.root == ".")
+                    .map(|(name, _)| name.clone())
+            })
+            .as_deref()
+            .unwrap_or(&task.target.project);
+        result.ids(globs.instructions(
+            pool,
+            context.entry,
+            unowned,
+            &not_installed,
+            include_unstable,
         ));
-        instructions
+        result
     }
 
     fn target_input<'a>(
@@ -952,15 +800,16 @@ impl HashPlanner {
         visited: &mut VisitedTracker<'a>,
         context: Option<&UltracacheContext>,
         always: &mut AlwaysIds,
-    ) -> anyhow::Result<Vec<u32>> {
+    ) -> anyhow::Result<Plan> {
         let pool = &self.instruction_pool;
         let project_deps = &self.project_graph.dependencies[project_name];
 
-        let mut ids: Vec<u32> = self
-            .gather_self_inputs(project_name, &inputs.self_inputs, context)?
-            .into_iter()
-            .map(|instruction| pool.intern(instruction))
-            .collect();
+        let mut builder = PlanBuilder::default();
+        builder.ids(
+            self.gather_self_inputs(project_name, &inputs.self_inputs, context)?
+                .into_iter()
+                .map(|instruction| pool.intern(instruction)),
+        );
         // With a recording, the task's own TsConfiguration counts only if the
         // root tsconfig was read, `always` inputs or not.
         if always.is_collecting() {
@@ -975,7 +824,7 @@ impl HashPlanner {
         }
         // Kept with a configuration too; unless `includeUnstableFiles` is `false`
         // the hasher drops recorded reads these hash.
-        ids.extend(
+        builder.ids(
             self.gather_dependency_outputs(task, task_graph, &inputs.deps_outputs)?
                 .into_iter()
                 .map(|instruction| pool.intern(instruction)),
@@ -983,7 +832,7 @@ impl HashPlanner {
         // Always gathered: a selected input can carry env, runtime or externals
         // too. Its filesets are dropped with the rest of the replaced set unless
         // it is `always`.
-        ids.extend(self.gather_project_inputs(
+        builder.include(self.gather_project_inputs(
             task,
             &inputs.project_inputs,
             task_graph,
@@ -991,7 +840,7 @@ impl HashPlanner {
             always,
         )?);
 
-        ids.extend(self.gather_dependency_inputs(
+        builder.include(self.gather_dependency_inputs(
             task,
             &inputs.deps_inputs,
             task_graph,
@@ -1001,7 +850,7 @@ impl HashPlanner {
             always,
         )?);
 
-        Ok(ids)
+        Ok(builder.finish(pool))
     }
 
     /// The self inputs declared `always`, gathered as they hash natively: a
@@ -1097,80 +946,114 @@ impl HashPlanner {
         dep: &str,
         inputs: &[Input],
         external_deps_mapped: &HashMap<String, Vec<String>>,
-    ) -> anyhow::Result<Arc<SubtreeResult>> {
-        let cache_key = group_cache_key(dep, inputs);
-        self.subtree_memo.get_or_try_init(cache_key, || {
-            self.compute_dep_subtree(dep, inputs, external_deps_mapped)
-        })
-    }
-
-    fn compute_dep_subtree(
-        &self,
-        dep: &str,
-        inputs: &[Input],
-        external_deps_mapped: &HashMap<String, Vec<String>>,
     ) -> anyhow::Result<SubtreeResult> {
-        let Some(dep_inputs) =
-            get_inputs_for_dependency_group(&self.project_graph.nodes[dep], &self.nx_json, inputs)?
-        else {
-            return Ok(SubtreeResult {
-                ids: vec![],
-                always: vec![],
-                needs_legacy: false,
-            });
-        };
-
-        // Deps-outputs resolution depends on the root task; a propagation that
-        // does not carry the group forward is unexpected — both fall back.
-        let mut needs_legacy =
-            !dep_inputs.deps_outputs.is_empty() || dep_inputs.deps_inputs.len() != inputs.len();
-        let pool = &self.instruction_pool;
-        let mut ids: InstructionIdSet = self
-            .gather_self_inputs(dep, &dep_inputs.self_inputs, None)?
-            .into_iter()
-            .chain(self.declared_external_instructions(
-                dep,
-                &dep_inputs.self_inputs,
-                external_deps_mapped,
-            )?)
-            .map(|instruction| pool.intern(instruction))
-            .collect();
-        let mut always: InstructionIdSet = self
-            .gather_always_self_inputs(dep, &dep_inputs.self_inputs)?
-            .into_iter()
-            .collect();
-
-        // Deduplicate borrowed names before allocating or interning instructions.
-        // Keep each memo entry self-contained so cache hits retain its externals.
-        let mut external_inputs = hashbrown::HashSet::new();
-        if !dep_inputs.deps_inputs.is_empty() {
-            for child in &self.project_graph.dependencies[dep] {
-                if self.project_graph.nodes.contains_key(child) {
-                    let sub = self.memoized_dep_subtree(
-                        child,
-                        &dep_inputs.deps_inputs,
-                        external_deps_mapped,
-                    )?;
-                    needs_legacy |= sub.needs_legacy;
-                    ids.extend(sub.ids.iter().copied());
-                    always.extend(sub.always.iter().copied());
-                } else if let Some(external_deps) = external_deps_mapped.get(child) {
-                    external_inputs.insert(child);
-                    external_inputs.extend(external_deps);
-                }
+        let key = group_cache_key(dep, inputs);
+        if let Some(hit) = self.subtree_memo.read().get(&key) {
+            return Ok(hit.clone());
+        }
+        // A single writer builds missing immutable nodes in postorder. Several
+        // cold tasks can reach the same long suffix at once. Waiting here keeps
+        // the total number of local expansions bounded by distinct cache keys.
+        let mut memo = self.subtree_memo.write();
+        if let Some(hit) = memo.get(&key) {
+            return Ok(hit.clone());
+        }
+        struct Frame<'a> {
+            key: String,
+            children: std::slice::Iter<'a, String>,
+            ids: PlanBuilder,
+            always: PlanBuilder,
+            externals: hashbrown::HashSet<&'a str>,
+            needs_legacy: bool,
+        }
+        impl Frame<'_> {
+            fn include(&mut self, child: &SubtreeResult) {
+                self.ids.include(child.ids.clone());
+                self.always.include(child.always.clone());
+                self.needs_legacy |= child.needs_legacy;
             }
         }
 
-        ids.extend(
-            external_inputs
-                .into_iter()
-                .map(|s| pool.intern(HashInstruction::External(s.to_string()))),
-        );
-        Ok(SubtreeResult {
-            ids: ids.into_sorted_vec(),
-            always: always.into_sorted_vec(),
-            needs_legacy,
-        })
+        let pool = &self.instruction_pool;
+        let frame = |dep: &str, key: String| -> anyhow::Result<Frame<'_>> {
+            let mut frame = Frame {
+                key,
+                children: [].iter(),
+                ids: PlanBuilder::default(),
+                always: PlanBuilder::default(),
+                externals: Default::default(),
+                needs_legacy: false,
+            };
+            if let Some(local) = get_inputs_for_dependency_group(
+                &self.project_graph.nodes[dep],
+                &self.nx_json,
+                inputs,
+            )? {
+                frame.ids.ids(
+                    self.gather_self_inputs(dep, &local.self_inputs, None)?
+                        .into_iter()
+                        .chain(self.declared_external_instructions(
+                            dep,
+                            &local.self_inputs,
+                            external_deps_mapped,
+                        )?)
+                        .map(|i| pool.intern(i)),
+                );
+                frame
+                    .always
+                    .ids(self.gather_always_self_inputs(dep, &local.self_inputs)?);
+                let propagates = inputs.len() == local.deps_inputs.len()
+                    && inputs
+                        .iter()
+                        .zip(&local.deps_inputs)
+                        .all(|(a, b)| propagates_unchanged(a, b));
+                frame.needs_legacy = !propagates
+                    || !local.deps_outputs.is_empty()
+                    || !local.project_inputs.is_empty();
+                // Validate the descendants in their original DFS order even if
+                // output instructions later require task-specific resolution.
+                if propagates && !local.deps_inputs.is_empty() {
+                    frame.children = self.project_graph.dependencies[dep].iter();
+                }
+            }
+            Ok(frame)
+        };
+        let mut stack = vec![frame(dep, key)?];
+        loop {
+            let current = stack.last_mut().unwrap();
+            if let Some(child) = current.children.next() {
+                if self.project_graph.nodes.contains_key(child) {
+                    let key = group_cache_key(child, inputs);
+                    if let Some(hit) = memo.get(&key) {
+                        current.include(hit);
+                    } else {
+                        stack.push(frame(child, key)?);
+                    }
+                } else if let Some(externals) = external_deps_mapped.get(child) {
+                    current.externals.insert(child);
+                    current
+                        .externals
+                        .extend(externals.iter().map(String::as_str));
+                }
+                continue;
+            }
+            let mut done = stack.pop().unwrap();
+            done.ids.ids(
+                done.externals
+                    .into_iter()
+                    .map(|name| pool.intern(HashInstruction::External(name.to_string()))),
+            );
+            let subtree = SubtreeResult {
+                ids: done.ids.finish(pool),
+                always: done.always.finish(pool),
+                needs_legacy: done.needs_legacy,
+            };
+            memo.insert(done.key, subtree.clone());
+            match stack.last_mut() {
+                Some(parent) => parent.include(&subtree),
+                None => return Ok(subtree),
+            }
+        }
     }
 
     fn local_dependency_inputs(
@@ -1236,7 +1119,6 @@ impl HashPlanner {
             .map(Some)
     }
 
-    // todo(jcammisuli): parallelize this more. This function takes the longest time to run
     fn gather_dependency_inputs<'a>(
         &'a self,
         task: &Task,
@@ -1246,7 +1128,7 @@ impl HashPlanner {
         external_deps_mapped: &'a HashMap<String, Vec<String>>,
         visited: &mut VisitedTracker<'a>,
         always: &mut AlwaysIds,
-    ) -> anyhow::Result<Vec<u32>> {
+    ) -> anyhow::Result<Plan> {
         if inputs.len() == 1 {
             let ids = self.gather_dependency_input(
                 task,
@@ -1258,12 +1140,12 @@ impl HashPlanner {
                 always,
             )?;
             if inputs[0].always() {
-                always.extend(ids.iter().copied());
+                always.include(&ids);
             }
             return Ok(ids);
         }
 
-        let mut deps_inputs = InstructionIdSet::default();
+        let mut deps_inputs = PlanBuilder::default();
 
         // Scope cycle detection to each propagated unit so siblings all apply to
         // the same dependency, rolling its visits back instead of cloning the
@@ -1287,7 +1169,7 @@ impl HashPlanner {
             // of it is kept through a traversal of its own.
             let retained = retained_inputs(&ignored_group);
             if retained.len() == ignored_group.len() {
-                always.extend(ids.iter().copied());
+                always.include(&ids);
             } else if !retained.is_empty() && always.is_collecting() {
                 let scope = visited.scope_start();
                 let retained_ids = self.gather_dependency_input(
@@ -1300,9 +1182,9 @@ impl HashPlanner {
                     always,
                 )?;
                 visited.rollback_to(scope);
-                always.extend(retained_ids);
+                always.include(&retained_ids);
             }
-            deps_inputs.extend(ids);
+            deps_inputs.include(ids);
         }
 
         for input in inputs {
@@ -1321,12 +1203,12 @@ impl HashPlanner {
             )?;
             visited.rollback_to(scope);
             if input.always() {
-                always.extend(ids.iter().copied());
+                always.include(&ids);
             }
-            deps_inputs.extend(ids);
+            deps_inputs.include(ids);
         }
 
-        Ok(deps_inputs.into_sorted_vec())
+        Ok(deps_inputs.finish(&self.instruction_pool))
     }
 
     fn gather_dependency_input<'a>(
@@ -1338,9 +1220,9 @@ impl HashPlanner {
         external_deps_mapped: &'a HashMap<String, Vec<String>>,
         visited: &mut VisitedTracker<'a>,
         always: &mut AlwaysIds,
-    ) -> anyhow::Result<Vec<u32>> {
+    ) -> anyhow::Result<Plan> {
         let pool = &self.instruction_pool;
-        let mut deps_inputs = InstructionIdSet::default();
+        let mut deps_inputs = PlanBuilder::default();
         // External membership is separate from project cycle detection, whose
         // scopes must still be rolled back independently for sibling inputs.
         let mut external_inputs = hashbrown::HashSet::new();
@@ -1369,14 +1251,14 @@ impl HashPlanner {
                     if !sub.needs_legacy {
                         // Shared closures are unioned by id before allocation,
                         // without changing the per-input visitation rules.
-                        deps_inputs.extend(sub.ids.iter().copied());
-                        always.extend(sub.always.iter().copied());
+                        deps_inputs.include(sub.ids);
+                        always.include(&sub.always);
                         continue;
                     }
                 }
                 if let Some(local) = self.local_dependency_inputs(dep, inputs)? {
                     if !local.needs_legacy {
-                        deps_inputs.extend(local.ids.iter().copied());
+                        deps_inputs.ids(local.ids.iter().copied());
                         always.extend(local.always.iter().copied());
                         parents.push(children);
                         children = self.project_graph.dependencies[dep].iter();
@@ -1391,7 +1273,7 @@ impl HashPlanner {
                 else {
                     continue;
                 };
-                deps_inputs.extend(
+                deps_inputs.ids(
                     self.declared_external_instructions(
                         dep,
                         &dep_inputs.self_inputs,
@@ -1400,7 +1282,7 @@ impl HashPlanner {
                     .into_iter()
                     .map(|instruction| pool.intern(instruction)),
                 );
-                deps_inputs.extend(self.self_and_deps_inputs(
+                deps_inputs.include(self.self_and_deps_inputs(
                     dep,
                     task,
                     &dep_inputs,
@@ -1419,12 +1301,12 @@ impl HashPlanner {
             }
         }
 
-        deps_inputs.extend(
+        deps_inputs.ids(
             external_inputs
                 .into_iter()
                 .map(|s| pool.intern(HashInstruction::External(s.to_string()))),
         );
-        Ok(deps_inputs.into_sorted_vec())
+        Ok(deps_inputs.finish(&self.instruction_pool))
     }
 
     fn gather_self_inputs(
@@ -1623,9 +1505,9 @@ impl HashPlanner {
         task_graph: &TaskGraph,
         external_deps_mapped: &'a HashMap<String, Vec<String>>,
         always: &mut AlwaysIds,
-    ) -> anyhow::Result<Vec<u32>> {
+    ) -> anyhow::Result<Plan> {
         let pool = &self.instruction_pool;
-        let mut result: Vec<u32> = vec![];
+        let mut result = PlanBuilder::default();
         for project in project_inputs {
             let Input::Projects {
                 input,
@@ -1658,9 +1540,9 @@ impl HashPlanner {
                         always,
                     )?;
                     if *always_input {
-                        always.extend(ids.iter().copied());
+                        always.include(&ids);
                     }
-                    result.extend(ids);
+                    result.include(ids);
                     continue;
                 }
                 let named_inputs =
@@ -1676,7 +1558,7 @@ impl HashPlanner {
                 if always.is_collecting() {
                     always.extend(self.gather_always_self_inputs(project, &expanded_input)?);
                 }
-                result.extend(
+                result.ids(
                     self.gather_self_inputs(project, &expanded_input, None)?
                         .into_iter()
                         .chain(self.declared_external_instructions(
@@ -1688,7 +1570,7 @@ impl HashPlanner {
                 );
             }
         }
-        Ok(result)
+        Ok(result.finish(pool))
     }
 
     /// An `always` input is kept on purpose, so a pattern that selects nothing
@@ -1718,24 +1600,41 @@ fn prefixed_cache_key(dep: &str, kind: char, rest: &str) -> String {
 
 /// Drops groups from the Ultracache configuration that a declared group in
 /// the same plan already hashes, so the files are walked once.
-fn drop_ultracache_duplicates(pool: &InstructionPool, ids: &mut Vec<u32>) {
-    type Key = (Arc<[Arc<str>]>, Vec<String>);
-    let key = |id: &u32, from_configuration: bool| -> Option<Key> {
-        match pool.get(*id).value() {
-            HashInstruction::IgnoredFileSet {
-                globs,
-                project_roots,
-                from_ultracache,
-            } if *from_ultracache == from_configuration => {
-                Some((Arc::clone(globs), project_roots.clone()))
-            }
-            _ => None,
-        }
-    };
-    let declared: hashbrown::HashSet<Key> = ids.iter().filter_map(|id| key(id, false)).collect();
-    if !declared.is_empty() {
-        ids.retain(|id| key(id, true).is_none_or(|key| !declared.contains(&key)));
+fn drop_ultracache_duplicates(pool: &InstructionPool, plan: Plan) -> Plan {
+    if !plan.has(kind::DECLARED_DISK) || !plan.has(kind::RECORDED_DISK) {
+        return plan;
     }
+    let disk = plan.only(kind::DECLARED_DISK);
+    let declared = OnceLock::new();
+    let mut result = PlanBuilder::default();
+    result.include(plan.only(!kind::RECORDED_DISK));
+    result.ids(
+        plan.only(kind::RECORDED_DISK)
+            .ids()
+            .iter()
+            .copied()
+            .filter(|&id| {
+                let other = match pool.get(id).value() {
+                    HashInstruction::IgnoredFileSet {
+                        globs,
+                        project_roots,
+                        ..
+                    } => HashInstruction::IgnoredFileSet {
+                        globs: globs.clone(),
+                        project_roots: project_roots.clone(),
+                        from_ultracache: false,
+                    },
+                    _ => unreachable!(),
+                };
+                pool.id_of(&other).is_none_or(|id| {
+                    declared
+                        .get_or_init(|| disk.ids())
+                        .binary_search(&id)
+                        .is_err()
+                })
+            }),
+    );
+    result.finish(pool)
 }
 
 /// Tasks the up-front batch must leave out because they read what a task
@@ -1748,55 +1647,109 @@ fn drop_ultracache_duplicates(pool: &InstructionPool, ids: &mut Vec<u32>) {
 /// its absolute cwd also waits: under distribution it runs on an agent whose
 /// cwd differs from the coordinator's.
 fn deferred_tasks(
-    plans: &HashMap<String, Vec<u32>>,
+    plans: &HashMap<String, Plan>,
     pool: &InstructionPool,
     task_graph: &TaskGraph,
 ) -> HashSet<String> {
-    plans
-        .par_iter()
-        .filter(|(task_id, ids)| {
-            // Each read root with the nested project roots its glob skips.
-            let mut disk_roots: Vec<(String, Vec<String>)> = Vec::new();
-            for id in ids.iter() {
-                match &*pool.get(*id) {
-                    HashInstruction::TaskOutput(_, _) | HashInstruction::Cwd(CwdMode::Absolute) => {
-                        return true;
+    // The common declared plan only reads tracked files. The class mask also
+    // answers this for an entire shared dependency closure in constant time.
+    let disk_plans: Vec<_> = plans
+        .values()
+        .filter(|p| p.has(kind::DISK) && !p.has(kind::ALWAYS_DEFERRED))
+        .map(|p| p.only(kind::DISK))
+        .collect();
+    let mut disk_roots = HashMap::new();
+    let mut outputs_by_task = HashMap::new();
+    if !disk_plans.is_empty() {
+        for (id, task) in &task_graph.tasks {
+            let roots: Vec<_> = task
+                .outputs
+                .iter()
+                .filter(|o| !o.starts_with('!'))
+                .map(|o| walk_root(o))
+                .collect();
+            if !roots.is_empty() {
+                outputs_by_task.insert(id.as_str(), roots);
+            }
+        }
+        let mut all_outputs: Vec<_> = outputs_by_task.values().flatten().cloned().collect();
+        all_outputs.sort_unstable();
+        all_outputs.dedup();
+        if !all_outputs.is_empty() {
+            for id in Plan::union_ids(&disk_plans) {
+                let instruction = pool.get(id);
+                if let HashInstruction::IgnoredFileSet {
+                    globs,
+                    project_roots,
+                    ..
+                } = instruction.value()
+                {
+                    let scope = ProjectScope::new(project_roots);
+                    let roots: Vec<_> = globs
+                        .iter()
+                        .filter(|g| !g.starts_with('!'))
+                        .filter_map(|g| {
+                            let root = walk_root(g);
+                            if !overlaps_any(&all_outputs, &root) {
+                                return None;
+                            }
+                            let skipped = Positive::parse(g)
+                                .map(|p| scope.nested_below(&p))
+                                .unwrap_or_default();
+                            Some((root, skipped))
+                        })
+                        .collect();
+                    if !roots.is_empty() {
+                        disk_roots.insert(id, roots);
                     }
-                    HashInstruction::IgnoredFileSet {
-                        globs,
-                        project_roots,
-                        ..
-                    } => {
-                        let scope = ProjectScope::new(project_roots);
-                        disk_roots.extend(globs.iter().filter(|glob| !glob.starts_with('!')).map(
-                            |glob| {
-                                let skipped = Positive::parse(glob)
-                                    .map(|entry| scope.nested_below(&entry))
-                                    .unwrap_or_default();
-                                (walk_root(glob), skipped)
-                            },
-                        ))
-                    }
-                    _ => {}
                 }
             }
-            if disk_roots.is_empty() {
+        }
+    }
+    plans
+        .par_iter()
+        .filter(|(task_id, plan)| {
+            if plan.has(kind::ALWAYS_DEFERRED) {
+                return true;
+            }
+            if disk_roots.is_empty() || !plan.has(kind::DISK) {
                 return false;
             }
-            let output_roots = upstream_output_roots(task_graph, task_id);
-            disk_roots.iter().any(|(disk, skipped)| {
-                output_roots.iter().any(|output| {
+            let direct: Vec<_> = task_dependencies(task_graph, task_id)
+                .filter_map(|id| outputs_by_task.get(id))
+                .flatten()
+                .collect();
+            let overlaps = |id, output: &String| {
+                disk_roots[&id].iter().any(|(disk, skipped)| {
                     paths_overlap(disk, output)
                         && !skipped.iter().any(|root| {
                             output == root
                                 || output
                                     .strip_prefix(root.as_str())
-                                    .is_some_and(|rest| rest.starts_with('/'))
+                                    .is_some_and(|r| r.starts_with('/'))
                         })
                 })
-            })
+            };
+            // Follow shared plan nodes only until a direct producer accounts
+            // for the wait. Otherwise keep the candidate ids for the transitive check.
+            let mut reads = hashbrown::HashSet::new();
+            if plan.only(kind::DISK).any_id(|id| {
+                disk_roots.contains_key(&id)
+                    && reads.insert(id)
+                    && direct.iter().any(|o| overlaps(id, o))
+            }) {
+                return true;
+            }
+            !reads.is_empty()
+                && any_upstream_task(task_graph, task_id, |upstream| {
+                    outputs_by_task.get(upstream).is_some_and(|outputs| {
+                        outputs
+                            .iter()
+                            .any(|o| reads.iter().any(|&id| overlaps(id, o)))
+                    })
+                })
         })
-        .map(|(task_id, _)| task_id.clone())
+        .map(|(id, _)| id.clone())
         .collect()
 }
 
@@ -1817,23 +1770,8 @@ pub(crate) fn walk_root(glob: &str) -> String {
 /// Walk roots of every output declared by the tasks `task_id` depends on,
 /// directly or through the chain, continuous dependencies included.
 fn upstream_output_roots(task_graph: &TaskGraph, task_id: &str) -> Vec<String> {
-    let dependencies_of = |id: &str| {
-        [
-            task_graph.dependencies.get(id),
-            task_graph.continuous_dependencies.get(id),
-        ]
-        .into_iter()
-        .flatten()
-        .flat_map(|deps| deps.iter().map(|edge| edge.id.as_str()))
-        .collect::<Vec<&str>>()
-    };
     let mut roots = Vec::new();
-    let mut visited: HashSet<&str> = HashSet::new();
-    let mut stack = dependencies_of(task_id);
-    while let Some(id) = stack.pop() {
-        if !visited.insert(id) {
-            continue;
-        }
+    any_upstream_task(task_graph, task_id, |id| {
         if let Some(task) = task_graph.tasks.get(id) {
             roots.extend(
                 task.outputs
@@ -1842,13 +1780,38 @@ fn upstream_output_roots(task_graph: &TaskGraph, task_id: &str) -> Vec<String> {
                     .map(|output| walk_root(output)),
             );
         }
-        stack.extend(dependencies_of(id));
-    }
+        false
+    });
     roots
 }
 
+fn task_dependencies<'a>(graph: &'a TaskGraph, id: &str) -> impl Iterator<Item = &'a str> {
+    [
+        graph.dependencies.get(id),
+        graph.continuous_dependencies.get(id),
+    ]
+    .into_iter()
+    .flatten()
+    .flatten()
+    .map(|edge| edge.id.as_str())
+}
+
+fn any_upstream_task(graph: &TaskGraph, id: &str, mut check: impl FnMut(&str) -> bool) -> bool {
+    let mut visited = hashbrown::HashSet::new();
+    let mut stack: Vec<_> = task_dependencies(graph, id).collect();
+    while let Some(id) = stack.pop() {
+        if visited.insert(id) {
+            if check(id) {
+                return true;
+            }
+            stack.extend(task_dependencies(graph, id));
+        }
+    }
+    false
+}
+
 /// `paths_overlap` against each of `sorted_roots`, by lookup instead of a scan.
-fn overlaps_any(sorted_roots: &[String], root: &str) -> bool {
+pub(super) fn overlaps_any(sorted_roots: &[String], root: &str) -> bool {
     if root.is_empty() || sorted_roots.first().is_some_and(|r| r.is_empty()) {
         return !sorted_roots.is_empty();
     }
@@ -1906,6 +1869,9 @@ impl FileSetStore {
 /// trims its store's positives, so it goes with a marked one; a store with no
 /// positive selects every other file and goes whole once any entry is marked.
 fn retained_inputs<'a>(inputs: &[Input<'a>]) -> Vec<Input<'a>> {
+    if !inputs.iter().any(Input::always) {
+        return vec![];
+    }
     let file_sets = || {
         inputs.iter().filter_map(|input| match input {
             Input::FileSet {
@@ -2081,20 +2047,6 @@ fn propagates_unchanged(before: &Input, after: &Input) -> bool {
     }
 }
 
-/// Reads left out of the configuration's file groups: installed packages under
-/// node_modules (externals hash them) and nx.json/.gitignore/.nxignore (the
-/// always-on set hashes them whole). A node_modules read overlapping one of the
-/// sorted `not_installed` roots stays. Lockfiles stay: externals may cover only
-/// a few packages, not the whole file.
-fn covered_by_native_instruction(glob: &str, not_installed: &[String]) -> bool {
-    let path = glob.strip_prefix('!').unwrap_or(glob);
-    if ALWAYS_ON_FILES.contains(&path) {
-        return true;
-    }
-    (path.starts_with("node_modules/") || path.contains("/node_modules/"))
-        && !overlaps_any(not_installed, &walk_root(path))
-}
-
 /// Resolves `{projectRoot}` and `{projectName}` in a fileset pattern, escaped so
 /// a root like `app/(group)` matches only itself. One pass, so a substituted
 /// value is never read for tokens. A root-level project strips `{projectRoot}/`
@@ -2185,6 +2137,7 @@ fn find_external_dependency_node_names<'a>(
 
 #[cfg(test)]
 mod tests {
+    use super::super::plan::InstructionIdSet;
     use super::*;
     use crate::native::project_graph::types::{ExternalNode, Project, Target};
     use crate::native::tasks::hashers::FileSet;
@@ -2402,7 +2355,7 @@ mod tests {
             }
         }
         assert_eq!(planner.local_inputs_memo.get().unwrap().len(), 1);
-        assert_eq!(planner.subtree_memo.len(), 0);
+        assert_eq!(planner.subtree_memo.read().len(), 0);
         let output = planner
             .local_dependency_inputs("leaf", std::slice::from_ref(&input))
             .unwrap()
@@ -2619,8 +2572,8 @@ mod tests {
             )
             .unwrap();
         assert!(!subtree.needs_legacy);
-        let projects = subtree
-            .ids
+        let ids = subtree.ids.ids().into_owned();
+        let projects = ids
             .iter()
             .filter(|id| {
                 matches!(
@@ -2630,12 +2583,12 @@ mod tests {
             })
             .count();
         assert_eq!(projects, names.len());
-        assert!(subtree.ids.windows(2).all(|ids| ids[0] < ids[1]));
+        assert!(ids.windows(2).all(|ids| ids[0] < ids[1]));
         assert!(
-            subtree.ids.capacity() <= subtree.ids.len() * 2,
+            ids.capacity() <= ids.len() * 2,
             "{} unique instructions retained {} slots",
-            subtree.ids.len(),
-            subtree.ids.capacity()
+            ids.len(),
+            ids.capacity()
         );
     }
 
@@ -2717,7 +2670,7 @@ mod tests {
         let plans = planner
             .get_plans_internal(vec!["app:build"], task_graph, None, &[])
             .unwrap();
-        let plan = &plans.plans["app:build"];
+        let plan = plans.plans["app:build"].ids().into_owned();
         assert_eq!(
             plan.iter()
                 .filter(|id| matches!(plans.pool.get(**id).value(), HashInstruction::External(_)))
@@ -2749,7 +2702,7 @@ mod tests {
                 globs.iter().map(|g| g.to_string()).collect(),
             ))
         };
-        let plans: HashMap<String, Vec<u32>> = [
+        let plans: HashMap<String, Plan> = [
             ("web:build", vec![disk("web", "apps/web/generated/**/*.ts")]),
             ("web:lint", vec![disk("web", "apps/web/.env.generated")]),
             ("web:test", vec![disk("web", "dist/**")]),
@@ -2773,7 +2726,7 @@ mod tests {
             ),
         ]
         .into_iter()
-        .map(|(id, ids)| (id.to_string(), ids))
+        .map(|(id, ids)| (id.to_string(), Plan::from_ids(ids, &pool)))
         .collect();
         let strings = |list: &[&str]| list.iter().map(|s| s.to_string()).collect::<Vec<_>>();
         let tasks: HashMap<String, Task> = [
@@ -2860,7 +2813,7 @@ mod tests {
     #[test]
     fn defers_a_task_that_hashes_its_absolute_cwd() {
         let pool = InstructionPool::new();
-        let plans: HashMap<String, Vec<u32>> = [
+        let plans: HashMap<String, Plan> = [
             ("app:absolute", CwdMode::Absolute),
             ("app:relative", CwdMode::Relative),
         ]
@@ -2868,7 +2821,7 @@ mod tests {
         .map(|(id, mode)| {
             (
                 id.to_string(),
-                vec![pool.intern(HashInstruction::Cwd(mode))],
+                Plan::from_ids([pool.intern(HashInstruction::Cwd(mode))], &pool),
             )
         })
         .collect();
@@ -2897,12 +2850,14 @@ mod tests {
             project_roots: vec!["packages/gradle".into(), "packages/gradle/runner".into()],
             from_ultracache: false,
         });
-        let plans: HashMap<String, Vec<u32>> = [
+        let plans: HashMap<String, Plan> = [
             ("gradle:nested-output".to_string(), vec![scoped]),
             ("gradle:own-output".to_string(), vec![scoped]),
             ("gradle:holding-output".to_string(), vec![scoped]),
         ]
-        .into();
+        .into_iter()
+        .map(|(id, ids)| (id, Plan::from_ids(ids, &pool)))
+        .collect();
         let task = |id: &str, outputs: &[&str]| {
             let (project, target) = id.split_once(':').unwrap();
             (
@@ -3415,6 +3370,7 @@ mod continuous_inputs_tests {
             .get_plans_internal(vec!["e2e:e2e"], graph, None, &[])
             .unwrap();
         let mut projects: Vec<String> = plans.plans["e2e:e2e"]
+            .ids()
             .iter()
             .filter_map(|id| match plans.pool.get(*id).value() {
                 HashInstruction::ProjectFileSet(project, _) => Some(project.clone()),
@@ -3496,9 +3452,9 @@ mod always_tests {
         let declared = pool.intern(group(&["libs/app/fixtures/**"], false));
         let duplicate = pool.intern(group(&["libs/app/fixtures/**"], true));
         let other = pool.intern(group(&["libs/app/src/**"], true));
-        let mut ids = vec![declared, duplicate, other];
-        drop_ultracache_duplicates(&pool, &mut ids);
-        assert_eq!(ids, vec![declared, other]);
+        let ids = Plan::from_ids([declared, duplicate, other], &pool);
+        let deduped = drop_ultracache_duplicates(&pool, ids);
+        assert_eq!(&*deduped.ids(), &[declared, other]);
     }
 
     fn named(input: &str, dependencies: bool, always: bool) -> JsInputs {
@@ -3619,6 +3575,7 @@ mod always_tests {
             .iter()
             .map(|(task, ids)| {
                 let mut projects: Vec<String> = ids
+                    .ids()
                     .iter()
                     .filter_map(|id| match plans.pool.get(*id).value() {
                         instruction if recorded_spec_read(instruction) => None,
@@ -3660,6 +3617,7 @@ mod always_tests {
             .get_plans_internal(vec!["e2e:e2e"], graph, Some(&configurations), &[])
             .unwrap();
         plans.plans["e2e:e2e"]
+            .ids()
             .iter()
             .map(|id| plans.pool.get(*id).value().clone())
             .collect()
@@ -3698,6 +3656,7 @@ mod always_tests {
                 .get_plans_internal(vec!["e2e:e2e"], graph, None, &[])
                 .unwrap();
             let mut keys: Vec<String> = plans.plans["e2e:e2e"]
+                .ids()
                 .iter()
                 .map(|id| plans.pool.get(*id).to_string())
                 .collect();
@@ -3936,7 +3895,7 @@ mod always_tests {
         // Hashed up front from the file map: only a declared
         // `dependentTasksOutputFiles` input waits for the producer.
         assert!(!plans.deferred.contains("e2e:e2e"));
-        assert!(plans.plans["e2e:e2e"].iter().any(|id| matches!(
+        assert!(plans.plans["e2e:e2e"].ids().iter().any(|id| matches!(
             plans.pool.get(*id).value(),
             HashInstruction::ProjectFileSet(project, globs)
                 if project == "app" && globs == &["libs/app/src/generated.d.ts".to_string()]
@@ -4029,6 +3988,7 @@ mod always_tests {
             .get_plans_internal(vec!["e2e:e2e"], graph, Some(&configurations), &[])
             .unwrap();
         let mut hashed: Vec<String> = plans.plans["e2e:e2e"]
+            .ids()
             .iter()
             .filter_map(|id| match plans.pool.get(*id).value() {
                 HashInstruction::IgnoredFileSet { globs, .. } => Some(globs.to_vec()),
@@ -4088,13 +4048,14 @@ mod always_tests {
         let plans = planner
             .get_plans_internal(vec!["e2e:e2e"], graph, Some(&configurations), &[])
             .unwrap();
-        assert!(plans.plans["e2e:e2e"].iter().any(|id| matches!(
+        assert!(plans.plans["e2e:e2e"].ids().iter().any(|id| matches!(
             plans.pool.get(*id).value(),
             HashInstruction::TaskOutput(glob, outputs)
                 if glob == "**/*.d.ts" && outputs == &["libs/app/dist"]
         )));
         assert!(
             plans.plans["e2e:e2e"]
+                .ids()
                 .iter()
                 .any(|id| recorded_spec_read(plans.pool.get(*id).value()))
         );
