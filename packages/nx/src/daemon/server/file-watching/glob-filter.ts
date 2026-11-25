@@ -3,7 +3,9 @@ import type { ChangedFile } from './changed-projects';
 
 // `dot: true` lets `**` traverse and match dot-prefixed segments (e.g. a file
 // inside `.config/`), which the default minimatch behavior would skip.
-const GLOB_OPTIONS = { dot: true };
+// `nocomment: true` stops minimatch from reading a leading `#` as a comment
+// that matches nothing, so `#*#` (Emacs autosave files) is a real pattern.
+const GLOB_OPTIONS = { dot: true, nocomment: true };
 
 /** The CLI flag a set of patterns came from, used to build error messages. */
 export type WatchGlobFlag = '--includeFiles' | '--excludeFiles';

@@ -180,6 +180,23 @@ describe('fileMatchesGlobFilter', () => {
       expect(fileMatchesGlobFilter('.gitignore', [], [])).toBe(true);
     });
   });
+
+  describe('patterns starting with #', () => {
+    // Without `nocomment: true` minimatch treats these as comments that match
+    // nothing, so the filter would silently do nothing.
+    it('excludes Emacs autosave files with #*#', () => {
+      expect(fileMatchesGlobFilter('#main.ts#', [], globs(['#*#']))).toBe(
+        false
+      );
+      expect(
+        fileMatchesGlobFilter('src/#main.ts#', [], globs(['**/#*#']))
+      ).toBe(false);
+    });
+
+    it('includes files matched by a #-prefixed pattern', () => {
+      expect(fileMatchesGlobFilter('#notes#', globs(['#*#']), [])).toBe(true);
+    });
+  });
 });
 
 describe('filterChangedFiles', () => {
