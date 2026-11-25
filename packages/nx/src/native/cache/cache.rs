@@ -637,37 +637,45 @@ impl NxCache {
         let buffer_amount = (0.1 * user_specified_max_cache_size as f64) as i64;
         let target_cache_size = user_specified_max_cache_size - buffer_amount;
 
-        let full_cache_size = self.get_cache_size()?;
-        if user_specified_max_cache_size < full_cache_size {
-            let mut cache_size = full_cache_size;
-            let db = self.db.lock().unwrap();
-            let mut stmt = db.prepare(
+        let mut cache_size = self.get_cache_size()?;
+        if cache_size <= user_specified_max_cache_size {
+            return Ok(());
+        }
+        let mut db = self.db.lock().unwrap();
+        while cache_size > target_cache_size {
+            // Read the whole batch before deleting any of it. An open cursor pins
+            // a WAL snapshot, and once another process commits, no retry can
+            // upgrade that snapshot to a write.
+            let oldest = db.query_map(
                 "SELECT hash, size FROM cache_outputs ORDER BY accessed_at ASC LIMIT 100",
+                [],
+                |r| Ok((r.get::<_, String>(0)?, r.get::<_, i64>(1)?)),
             )?;
-            'outer: while cache_size > target_cache_size {
-                let rows = stmt.query_map([], |r| {
-                    let hash: String = r.get(0)?;
-                    let size: i64 = r.get(1)?;
-                    Ok((hash, size))
-                })?;
-                for row in rows {
-                    if let Ok((hash, size)) = row {
-                        cache_size -= size;
-                        db.execute("DELETE FROM cache_outputs WHERE hash = ?1", params![hash])?;
-                        // Both paths, matching remove_old_cache_records. Dropping
-                        // the row without the terminal output file would strand
-                        // that file with nothing left to point the GC at it.
-                        remove_items(&[
-                            self.cache_path.join(&hash),
-                            self.get_task_outputs_path_internal(&hash),
-                        ])?;
-                    }
-                    // We've deleted enough cache entries to be under the
-                    // target cache size, stop looking for more.
-                    if cache_size < target_cache_size {
-                        break 'outer;
-                    }
+            if oldest.is_empty() {
+                break;
+            }
+            let mut evicted = Vec::new();
+            for (hash, size) in oldest {
+                cache_size -= size;
+                evicted.push(hash);
+                if cache_size <= target_cache_size {
+                    break;
                 }
+            }
+            db.transaction_immediate(|conn| {
+                for hash in &evicted {
+                    conn.execute("DELETE FROM cache_outputs WHERE hash = ?1", params![hash])?;
+                }
+                Ok(())
+            })?;
+            // Both paths, matching remove_old_cache_records. Dropping the row
+            // without the terminal output file would strand that file with
+            // nothing left to point the GC at it.
+            for hash in &evicted {
+                remove_items(&[
+                    self.cache_path.join(hash),
+                    self.get_task_outputs_path_internal(hash),
+                ])?;
             }
         }
         Ok(())
@@ -1127,6 +1135,41 @@ mod test {
     }
 
     const LOG_SIZE: i64 = "log".len() as i64;
+
+    #[test]
+    fn caches_sharing_a_db_evict_concurrently_without_database_busy() {
+        let temp = TempDir::new().unwrap();
+        let caches: Vec<NxCache> = (0..8)
+            .map(|_| {
+                let mut cache = cache_with(
+                    &temp.path().join("workspace"),
+                    &temp.path().join("test.db"),
+                    &temp.path().join("cache"),
+                );
+                cache.max_cache_size = 500;
+                cache
+            })
+            .collect();
+
+        std::thread::scope(|scope| {
+            for (process, cache) in caches.iter().enumerate() {
+                scope.spawn(move || {
+                    for n in 0..100 {
+                        let hash = format!("{process}-{n}");
+                        let artifacts = cache.cache_path.join(&hash);
+                        create_dir_all(&artifacts).unwrap();
+                        for file in 0..20 {
+                            std::fs::write(artifacts.join(file.to_string()), b"built").unwrap();
+                        }
+                        record_task(cache, &hash);
+                        cache.record_to_cache(hash, 0, 10).unwrap();
+                    }
+                });
+            }
+        });
+
+        assert!(caches[0].get_cache_size().unwrap() <= 500);
+    }
 
     #[test]
     fn overlapping_outputs_are_copied_once_when_saved_and_restored() {
