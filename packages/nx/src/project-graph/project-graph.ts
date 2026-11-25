@@ -465,12 +465,8 @@ export async function createProjectGraphAndSourceMapsAsync(
         // socket owned by someone else stops being there when it is removed or
         // the machine reboots, and disabling until `nx reset` would outlive the
         // cause and hide the fix from anyone who followed the advice.
-        // The first line carries the errno, and it is the one token that tells
-        // the two causes apart: EACCES is a socket owned by someone else (delete
-        // it), EPERM is a sandbox refusing the connect syscall (allow unix
-        // sockets under the Nx socket root). The message hedges between exactly
-        // those two because it cannot tell them apart, and this branch does not
-        // call writeDaemonLogs, so dropping the line loses the errno for good.
+        // Keep the message's first line: it carries the errno, and this branch
+        // does not call writeDaemonLogs, so dropping it loses the errno for good.
         const [summary, ...details] = e.message.split('\n');
         // On stderr: the command's own output, such as `show projects --json`,
         // follows on stdout

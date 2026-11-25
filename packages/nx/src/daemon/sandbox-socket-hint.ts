@@ -41,11 +41,7 @@ export interface SandboxSocketHintOptions {
    * those the lead line offers the cause rather than asserting it.
    */
   certain?: boolean;
-  /**
-   * The call the operating system refused, when the caller knows it. A refused
-   * connect means the socket was created, so advice about where sockets are
-   * created does not apply to it.
-   */
+  /** The call the operating system refused, when the caller knows it. */
   operation?: RefusedSocketOperation;
 }
 
@@ -181,7 +177,6 @@ function sandboxSpecificRemedy(
       if (!sandboxed) {
         return [];
       }
-      // A refused connect means creating the socket already worked
       return operation === 'connect'
         ? [
             `Allow your sandbox to connect to unix sockets under ${roots}, and grant read and write on those directories.`,

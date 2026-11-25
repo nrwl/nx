@@ -179,7 +179,7 @@ describe('sandboxSocketHint', () => {
       }
     );
 
-    it('should ask an unrecognised sandbox to allow the connection, since creating the socket worked', () => {
+    it('should ask an unrecognised sandbox to allow the connection', () => {
       mockDetectAiAgent.mockReturnValue(null);
 
       const lines = hint({ certain: true, operation: 'connect' }).join('\n');
