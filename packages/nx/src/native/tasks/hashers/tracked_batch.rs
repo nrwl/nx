@@ -6,6 +6,7 @@ use crate::native::tasks::recorded_globs::{GLOBSET_LIMIT, RootRead, root_read};
 use crate::native::types::FileData;
 use anyhow::Result;
 use dashmap::DashMap;
+use std::borrow::Cow;
 use std::collections::HashMap;
 use std::sync::{Arc, OnceLock};
 
@@ -158,7 +159,7 @@ impl<'a> TrackedBatch<'a> {
             return Ok(None);
         }
         let mut positive = Vec::new();
-        let mut negative = Vec::new();
+        let mut negative_matches = Vec::new();
         let mut saw_positive = false;
         let mut cost = 0usize;
         for raw in globs {
@@ -184,7 +185,9 @@ impl<'a> TrackedBatch<'a> {
                 return Ok(None);
             }
             if exclude {
-                negative.extend_from_slice(&m.ids)
+                if !m.ids.is_empty() {
+                    negative_matches.push(cached);
+                }
             } else {
                 saw_positive = true;
                 positive.extend_from_slice(&m.ids)
@@ -195,9 +198,14 @@ impl<'a> TrackedBatch<'a> {
         }
         positive.sort_unstable();
         positive.dedup();
-        negative.sort_unstable();
-        negative.dedup();
-        let mut excluded = negative.into_iter().peekable();
+        let negative = filter_sparse_exclusions(
+            &mut positive,
+            negative_matches
+                .iter()
+                .flat_map(|cached| cached.iter())
+                .map(|m| m.ids.as_slice()),
+        );
+        let mut excluded = negative.iter().copied().peekable();
         Ok(Some(
             positive
                 .into_iter()
@@ -213,6 +221,32 @@ impl<'a> TrackedBatch<'a> {
     }
 }
 
+/// Probe large shared exclusions when few positive IDs need checking. Keep
+/// denser exclusions for a single linear scan through the remaining positives.
+fn filter_sparse_exclusions<'a>(
+    positive: &mut Vec<u32>,
+    negatives: impl Iterator<Item = &'a [u32]>,
+) -> Cow<'a, [u32]> {
+    let mut scan = Cow::Borrowed(&[][..]);
+    for ids in negatives {
+        let probe_cost = positive
+            .len()
+            .saturating_mul(ids.len().ilog2() as usize + 1);
+        if probe_cost < ids.len() {
+            positive.retain(|id| ids.binary_search(id).is_err());
+        } else if scan.is_empty() {
+            scan = Cow::Borrowed(ids);
+        } else {
+            scan.to_mut().extend_from_slice(ids);
+        }
+    }
+    if let Cow::Owned(ids) = &mut scan {
+        ids.sort_unstable();
+        ids.dedup();
+    }
+    scan
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -220,6 +254,78 @@ mod tests {
         WorkspaceFileIndex, WorkspaceFileIndicesCache, collect_project_files,
         collect_workspace_file_paths_cached,
     };
+
+    #[test]
+    fn probes_broad_exclusions_for_sparse_positives_and_borrows_for_dense_positives() {
+        let broad_exclusion: Vec<_> = (0..4096).collect();
+        let mut sparse = vec![0, 2048, 4096];
+        let scan = filter_sparse_exclusions(&mut sparse, [broad_exclusion.as_slice()].into_iter());
+        assert!(scan.is_empty());
+        assert_eq!(sparse, [4096]);
+
+        let mut dense: Vec<_> = (0..8192).collect();
+        let scan = filter_sparse_exclusions(&mut dense, [broad_exclusion.as_slice()].into_iter());
+        assert!(std::ptr::eq(scan.as_ref(), broad_exclusion.as_slice()));
+        assert_eq!(dense.len(), 8192);
+    }
+
+    #[test]
+    fn matches_many_sparse_groups_with_shared_broad_exclusions() -> Result<()> {
+        const GROUPS: u32 = 64;
+        const EXCLUDED_FILES: u32 = 4096;
+        let files = (0..EXCLUDED_FILES)
+            .rev()
+            .flat_map(|i| {
+                [
+                    (i < GROUPS).then(|| format!("pkg/kept/{i}/z.ts")),
+                    Some(format!("pkg/generated/{i}/a.ts")),
+                    (i < GROUPS).then(|| format!("pkg/kept/{i}/a.ts")),
+                ]
+                .into_iter()
+                .flatten()
+            })
+            .map(|file| FileData {
+                hash: file.clone(),
+                file,
+            })
+            .collect();
+        let projects = HashMap::from([("project".to_owned(), files)]);
+        let batch = TrackedBatch::new(&projects, &[]);
+        for i in 0..GROUPS {
+            let group = [
+                "!pkg/generated".into(),
+                format!("pkg/kept/{i}"),
+                format!("pkg/generated/{i}"),
+                "!pkg/generated/**/*.ts".into(),
+                format!("pkg/kept/{i}/a.ts"),
+            ];
+            let selected = batch
+                .select(Some("project"), &group)?
+                .expect("indexed project group");
+            assert_eq!(
+                selected,
+                collect_project_files("project", &group, &projects)?
+            );
+            let paths: Vec<_> = selected
+                .into_iter()
+                .map(|file| file.file.as_str())
+                .collect();
+            assert_eq!(
+                paths,
+                [format!("pkg/kept/{i}/a.ts"), format!("pkg/kept/{i}/z.ts")]
+            );
+        }
+        let dense = ["pkg", "!pkg/generated", "!pkg/generated/**/*.ts"].map(str::to_owned);
+        let selected = batch
+            .select(Some("project"), &dense)?
+            .expect("indexed dense project group");
+        assert_eq!(selected.len(), 2 * GROUPS as usize);
+        assert_eq!(
+            selected,
+            collect_project_files("project", &dense, &projects)?
+        );
+        Ok(())
+    }
 
     #[test]
     fn delegates_groups_that_can_exceed_the_combined_regex_budget() -> Result<()> {
