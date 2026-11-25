@@ -67,7 +67,7 @@
     "@netlify/plugin-nextjs": "^5.15.7",
     "@nuxt/kit": "^3.10.0",
     "@nx/angular": "catalog:nx",
-    "@nx/conformance": "24.1.0-beta.2",
+    "@nx/conformance": "24.1.0-beta.3",
     "@nx/cypress": "catalog:nx",
     "@nx/devkit": "catalog:nx",
     "@nx/dotnet": "catalog:nx",
