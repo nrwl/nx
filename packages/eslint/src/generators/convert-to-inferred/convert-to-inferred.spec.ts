@@ -600,6 +600,29 @@ describe('Eslint - Convert Executors To Plugin', () => {
       expect(updatedProject.targets.lint.inputs).toBeUndefined();
     });
 
+    it('should remove unescaped inputs the plugin infers for a root with glob characters', async () => {
+      const project = createTestProject(tree, {
+        appRoot: 'apps/(group)',
+        appName: 'grouped',
+      });
+      project.targets.lint.options.cacheLocation = 'cache-dir';
+      project.targets.lint.inputs = [
+        'default',
+        '^default',
+        '{projectRoot}/.eslintrc.json',
+        '{workspaceRoot}/apps/(group)/.eslintrc.json',
+      ];
+      updateProjectConfiguration(tree, project.name, project);
+
+      await convertToInferred(tree, {
+        project: project.name,
+        skipFormat: true,
+      });
+
+      const updatedProject = readProjectConfiguration(tree, project.name);
+      expect(updatedProject.targets.lint.inputs).toBeUndefined();
+    });
+
     it('should add external dependencies input from inferred task', async () => {
       const project = createTestProject(tree);
       createTestProject(tree, { appRoot: 'second', appName: 'second' });
