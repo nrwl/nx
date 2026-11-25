@@ -40,6 +40,8 @@ export function ensureProjectIsIncludedInPluginRegistrations(
         pattern: '**/tsconfig.json',
         include: registration.include,
         exclude: registration.exclude,
+        name: registration.plugin,
+        index,
       });
       if (matchingConfigFiles.length) {
         // it's included by the plugin registration, check if the user-specified options would result

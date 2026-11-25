@@ -7,6 +7,10 @@ export interface PluginFileGlobs {
   pattern?: string;
   include?: string[];
   exclude?: string[];
+  /** Names the plugin in pattern errors. */
+  name?: string;
+  /** The plugin's position in `nx.json` `plugins`, for pattern errors. */
+  index?: number;
 }
 
 /**

@@ -40,6 +40,8 @@ export async function findPluginForConfigFile(
         pattern: pluginGlob,
         include: plugin.include,
         exclude: plugin.exclude,
+        name: pluginName,
+        index: nxJson.plugins.indexOf(plugin),
       });
       if (matchingConfigFile.length) {
         return plugin;

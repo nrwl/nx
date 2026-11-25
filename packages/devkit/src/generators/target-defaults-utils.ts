@@ -586,6 +586,8 @@ export async function addE2eCiTargetDefaults(
       pattern: e2ePluginGlob,
       include: candidatePluginForApplication.include,
       exclude: candidatePluginForApplication.exclude,
+      name: e2ePlugin,
+      index: nxJson.plugins.indexOf(candidatePluginForApplication),
     });
 
     if (matchingConfigFiles.length) {
