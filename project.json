@@ -56,7 +56,7 @@
           "projects": ["tag:npm:public"]
         }
       ],
-      "command": "node ./scripts/local-registry/run-populate-storage.mjs",
+      "command": "node ./scripts/dump-root-files.mjs task && node ./scripts/local-registry/run-populate-storage.mjs",
       "outputs": ["{workspaceRoot}/dist/local-registry/storage"]
     },
     "populate-e2e-base-workspace": {

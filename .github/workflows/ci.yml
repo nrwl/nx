@@ -110,6 +110,9 @@ jobs:
         run: |
           pids=()
 
+          pnpm nx show projects > /dev/null
+          node ./scripts/dump-root-files.mjs main
+
           pnpm nx record -- nx format:check &
           pids+=($!)
 
