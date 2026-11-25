@@ -1,0 +1,3 @@
+interface:
+  display_name: 'Update Cnw Templates'
+  short_description: 'Nx workflow: update cnw templates'

@@ -1,0 +1,3 @@
+interface:
+  display_name: 'Review Many Prs'
+  short_description: 'Nx workflow: review many prs'

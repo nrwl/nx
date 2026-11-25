@@ -1,0 +1,3 @@
+interface:
+  display_name: 'Deslop'
+  short_description: 'Check and clean Nx outward-facing prose'

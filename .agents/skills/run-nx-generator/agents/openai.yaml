@@ -1,0 +1,3 @@
+interface:
+  display_name: 'Run Nx Generator'
+  short_description: 'Nx workflow: run nx generator'
