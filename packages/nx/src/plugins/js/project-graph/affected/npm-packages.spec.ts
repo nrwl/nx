@@ -3,7 +3,10 @@ import { ProjectGraph } from '../../../../config/project-graph';
 import { jsonDiff, JsonDiffType } from '../../../../utils/json-diff';
 import { logger } from '../../../../utils/logger';
 import { WholeFileChange } from '../../../../project-graph/file-utils';
-import { getTouchedNpmPackages } from './npm-packages';
+import {
+  getTouchedNpmPackages,
+  packageJsonDependencyChanges,
+} from './npm-packages';
 
 describe('getTouchedNpmPackages', () => {
   let projectsConfigurations;
@@ -323,6 +326,106 @@ describe('getTouchedNpmPackages', () => {
     expect(logger.warn).toHaveBeenCalledWith(
       'The affected projects might have not been identified properly. The package(s) changed-test-pkg-name-1, changed-test-pkg-name-2 were not found. Please open an issue in GitHub including the package.json file.'
     );
+  });
+
+  it('should mark all projects as affected when nx itself is changed and is not in the project graph', () => {
+    const warnSpy = vi.spyOn(logger, 'warn').mockImplementation(() => {});
+    warnSpy.mockClear();
+
+    const result = getTouchedNpmPackages(
+      [
+        {
+          file: 'package.json',
+          getChanges: () => [
+            {
+              type: JsonDiffType.Modified,
+              path: ['devDependencies', 'nx'],
+              value: {
+                lhs: '22.7.5',
+                rhs: '23.1.0',
+              },
+            },
+          ],
+        },
+      ],
+      projectsConfigurations,
+      nxJson,
+      {
+        devDependencies: {
+          nx: '23.1.0',
+        },
+      },
+      projectGraph
+    );
+
+    expect(result).toEqual(['proj1', 'proj2']);
+    expect(warnSpy).not.toHaveBeenCalled();
+  });
+
+  it('should mark all projects as affected when a plugin package is changed and is not in the project graph', () => {
+    const warnSpy = vi.spyOn(logger, 'warn').mockImplementation(() => {});
+    warnSpy.mockClear();
+
+    const result = getTouchedNpmPackages(
+      [
+        {
+          file: 'package.json',
+          getChanges: () => [
+            {
+              type: JsonDiffType.Modified,
+              path: ['devDependencies', '@nx/happy-plugin'],
+              value: {
+                lhs: '0.0.1',
+                rhs: '0.0.2',
+              },
+            },
+          ],
+        },
+      ],
+      projectsConfigurations,
+      { ...nxJson, plugins: ['@nx/happy-plugin/plugin'] },
+      {
+        devDependencies: {
+          '@nx/happy-plugin': '0.0.2',
+        },
+      },
+      projectGraph
+    );
+
+    expect(result).toEqual(['proj1', 'proj2']);
+    expect(warnSpy).not.toHaveBeenCalled();
+  });
+
+  it('should report npm as a changed external type when nx itself is changed and is not in the project graph', () => {
+    const warnSpy = vi.spyOn(logger, 'warn').mockImplementation(() => {});
+    warnSpy.mockClear();
+
+    const result = packageJsonDependencyChanges(
+      [
+        {
+          file: 'package.json',
+          getChanges: () => [
+            {
+              type: JsonDiffType.Modified,
+              path: ['devDependencies', 'nx'],
+              value: {
+                lhs: '22.7.5',
+                rhs: '23.1.0',
+              },
+            },
+          ],
+        },
+      ],
+      nxJson,
+      projectGraph
+    );
+
+    expect(result).toEqual({
+      externals: [],
+      changedExternalTypes: ['npm'],
+      projects: [],
+    });
+    expect(warnSpy).not.toHaveBeenCalled();
   });
 
   it('should mark all projects as affected when overrides are changed for unknown packages', () => {
