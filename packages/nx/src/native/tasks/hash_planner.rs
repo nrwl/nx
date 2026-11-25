@@ -1678,7 +1678,9 @@ fn drop_ultracache_duplicates(pool: &InstructionPool, ids: &mut Vec<u32>) {
 /// fileset that reads from a directory containing, or sitting inside, an
 /// output an upstream task declares. An output inside a project nested below
 /// the glob's own is not read by it, so it does not count. Any other
-/// disk-backed fileset hashes up front like a tracked one.
+/// disk-backed fileset hashes up front like a tracked one. A task that hashes
+/// its absolute cwd also waits: under distribution it runs on an agent whose
+/// cwd differs from the coordinator's.
 fn deferred_tasks(
     plans: &HashMap<String, Vec<u32>>,
     pool: &InstructionPool,
@@ -1691,7 +1693,9 @@ fn deferred_tasks(
             let mut disk_roots: Vec<(String, Vec<String>)> = Vec::new();
             for id in ids.iter() {
                 match &*pool.get(*id) {
-                    HashInstruction::TaskOutput(_, _) => return true,
+                    HashInstruction::TaskOutput(_, _) | HashInstruction::Cwd(CwdMode::Absolute) => {
+                        return true;
+                    }
                     HashInstruction::IgnoredFileSet {
                         globs,
                         project_roots,
@@ -2785,6 +2789,38 @@ mod tests {
                 "web:test"
             ]
         );
+    }
+
+    #[test]
+    fn defers_a_task_that_hashes_its_absolute_cwd() {
+        let pool = InstructionPool::new();
+        let plans: HashMap<String, Vec<u32>> = [
+            ("app:absolute", CwdMode::Absolute),
+            ("app:relative", CwdMode::Relative),
+        ]
+        .into_iter()
+        .map(|(id, mode)| {
+            (
+                id.to_string(),
+                vec![pool.intern(HashInstruction::Cwd(mode))],
+            )
+        })
+        .collect();
+        let task_graph = TaskGraph {
+            roots: vec![],
+            tasks: ["app:absolute", "app:relative"]
+                .into_iter()
+                .map(|id| {
+                    let (project, target) = id.split_once(':').unwrap();
+                    (id.to_string(), Task::new(project, target))
+                })
+                .collect(),
+            dependencies: HashMap::new(),
+            continuous_dependencies: HashMap::new(),
+        };
+
+        let deferred = deferred_tasks(&plans, &pool, &task_graph);
+        assert_eq!(deferred, HashSet::from(["app:absolute".to_string()]));
     }
 
     #[test]
