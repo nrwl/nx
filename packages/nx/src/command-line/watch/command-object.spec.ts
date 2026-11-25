@@ -228,7 +228,7 @@ describe('watch command-object argument parsing', () => {
     expect(rewriteTargetsAndProjects(argv('--includeFiles'))).toContain(
       '**/*.md'
     );
-    // The spelling this PR deliberately avoids, for contrast.
+    // A bare `--exclude` is collapsed into one pattern, for contrast.
     expect(rewriteTargetsAndProjects(argv('--exclude'))).toContain(
       '**/*.spec.ts,**/*.md'
     );
