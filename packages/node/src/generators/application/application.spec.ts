@@ -1676,7 +1676,6 @@ describe('app', () => {
             ],
             "options": {
               "ciTargetName": "test-ci",
-              "testMode": "watch",
               "testTargetName": "test",
             },
             "plugin": "@nx/vitest",
