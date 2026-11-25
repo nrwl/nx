@@ -6,9 +6,6 @@ exports[`ci-workflow generator > connected to nxCloud > circleci pipeline > shou
 orbs:
   nx: nrwl/nx@1.7.0
 
-env:
-  NX_BATCH_MODE: true
-
 jobs:
   main:
     environment:
@@ -56,9 +53,6 @@ permissions:
   actions: read
   contents: read
 
-env:
-  NX_BATCH_MODE: true
-
 jobs:
   main:
     runs-on: ubuntu-latest
@@ -92,14 +86,39 @@ jobs:
 "
 `;
 
+exports[`ci-workflow generator > connected to nxCloud > nx-cloud pipeline > should match snapshot 1`] = `
+"# yaml-language-server: $schema=https://cloud.nx.app/nx-cloud/static/schemas/workflow.schema.json
+# Nx Cloud CI runs this pipeline. It is in private beta, see https://nx.dev/docs/features/ci-features#run-ci-on-nx-cloud
+# Learn how to configure this file at https://nx.dev/docs/reference/nx-cloud/ci-config
+name: CI
+
+on:
+  pull-requests:
+    event: PR
+  main-pushes:
+    event: PUSH
+    branches: [main]
+
+worker-templates:
+  default:
+    workers: 3 linux-medium-jvm
+    stop-after:
+      - build
+
+jobs:
+  main:
+    runs-on: linux-medium-jvm
+    workers: default
+    steps:
+      - run: ./nx affected -t build
+"
+`;
+
 exports[`ci-workflow generator > not connected to nxCloud > circleci pipeline > should match snapshot 1`] = `
 "version: 2.1
 
 orbs:
   nx: nrwl/nx@1.7.0
-
-env:
-  NX_BATCH_MODE: true
 
 jobs:
   main:
@@ -148,9 +167,6 @@ permissions:
   actions: read
   contents: read
 
-env:
-  NX_BATCH_MODE: true
-
 jobs:
   main:
     runs-on: ubuntu-latest
@@ -180,6 +196,34 @@ jobs:
 
       # # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected.
       # # Change from build to build-ci if you turn on the atomizer. Learn more: https://nx.dev/nx-api/gradle#splitting-tests
+      - run: ./nx affected -t build
+"
+`;
+
+exports[`ci-workflow generator > not connected to nxCloud > nx-cloud pipeline > should match snapshot 1`] = `
+"# yaml-language-server: $schema=https://cloud.nx.app/nx-cloud/static/schemas/workflow.schema.json
+# Nx Cloud CI runs this pipeline. It is in private beta, see https://nx.dev/docs/features/ci-features#run-ci-on-nx-cloud
+# Learn how to configure this file at https://nx.dev/docs/reference/nx-cloud/ci-config
+name: CI
+
+on:
+  pull-requests:
+    event: PR
+  main-pushes:
+    event: PUSH
+    branches: [main]
+
+worker-templates:
+  default:
+    workers: 3 linux-medium-jvm
+    stop-after:
+      - build
+
+jobs:
+  main:
+    runs-on: linux-medium-jvm
+    workers: default
+    steps:
       - run: ./nx affected -t build
 "
 `;

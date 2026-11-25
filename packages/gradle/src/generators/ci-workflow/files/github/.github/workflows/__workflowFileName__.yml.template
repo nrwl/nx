@@ -10,9 +10,6 @@ permissions:
   actions: read
   contents: read
 
-env:
-  NX_BATCH_MODE: true
-
 jobs:
   main:
     runs-on: ubuntu-latest

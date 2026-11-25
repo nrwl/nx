@@ -78,6 +78,8 @@ jobs:
       - run: npx nx affected -t lint test build
 ```
 
+To generate a starting file with workers set up, run `nx g @nx/workspace:ci-workflow --ci=nx-cloud`.
+
 `linux-medium-js` is a pre-built [launch template](/docs/kb/launch-templates) that checks out your repository and installs its dependencies.
 Before your first step, Nx Cloud sets `NX_BASE` and `NX_HEAD`, so `nx affected` needs no extra setup.
 

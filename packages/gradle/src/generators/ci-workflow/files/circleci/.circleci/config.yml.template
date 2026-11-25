@@ -3,9 +3,6 @@ version: 2.1
 orbs:
   nx: nrwl/nx@1.7.0
 
-env:
-  NX_BATCH_MODE: true
-
 jobs:
   main:
     environment:

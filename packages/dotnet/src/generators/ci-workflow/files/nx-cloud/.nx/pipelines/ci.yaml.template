@@ -1,0 +1,24 @@
+# yaml-language-server: $schema=https://cloud.nx.app/nx-cloud/static/schemas/workflow.schema.json
+# Nx Cloud CI runs this pipeline. It is in private beta, see https://nx.dev/docs/features/ci-features#run-ci-on-nx-cloud
+# Learn how to configure this file at https://nx.dev/docs/reference/nx-cloud/ci-config
+name: <%= workflowName %>
+
+on:
+  pull-requests:
+    event: PR
+  main-pushes:
+    event: PUSH
+    branches: [<%= mainBranch %>]
+
+worker-templates:
+  default:
+    workers: 3 linux-medium-dotnet
+    stop-after:
+      - build
+
+jobs:
+  main:
+    runs-on: linux-medium-dotnet
+    workers: default
+    steps:<% for (const command of commands) { %><% if (command.command) { %>
+      - run: <%= command.command %><% } %><% } %>
