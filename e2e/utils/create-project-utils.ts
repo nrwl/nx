@@ -394,6 +394,11 @@ export function newProject({
           ...json.devDependencies,
           typescript: typescriptVersion,
         };
+        // npm fails the install when the version is outside the @nx/*
+        // packages' optional `typescript` peer range; pnpm and yarn only warn.
+        if (packageManager === 'npm') {
+          json.overrides = { ...json.overrides, typescript: '$typescript' };
+        }
         return json;
       });
       execSync(getPackageManagerCommand({ path: projectDirectory }).install, {
