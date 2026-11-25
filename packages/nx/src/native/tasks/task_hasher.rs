@@ -1703,6 +1703,68 @@ mod tests {
     }
 
     #[test]
+    fn watched_ignored_subdirectory_matches_across_the_disk_batch_threshold() -> anyhow::Result<()>
+    {
+        use crate::native::tasks::hashers::MIN_BATCH_GROUPS;
+        use crate::native::test_utils::hash_plans;
+        use crate::native::workspace::ignored_index::Watch;
+
+        let temp = assert_fs::TempDir::new()?;
+        let root = temp.path();
+        let dir = "pkg/node_modules/sample";
+        let path = "pkg/node_modules/sample/index.js";
+        std::fs::create_dir_all(root.join(dir))?;
+        std::fs::write(root.join(path), "sample")?;
+        let index = Arc::new(IgnoredIndex::new(Some(Watch {
+            delivers_under: Arc::new(|dir| !dir.starts_with("pkg/node_modules")),
+        })));
+        assert!(index.track(root, "pkg"));
+        assert_eq!(index.list(root, "pkg"), Some(Vec::new()));
+        assert!(index.is_listed(dir));
+        assert!(!index.track(root, dir));
+        let reader = IgnoredIndexReader::new(index, Arc::new(|| {}));
+        let hasher = hasher(root, reader);
+        let names: Vec<_> = (0..MIN_BATCH_GROUPS).map(|i| format!("task-{i}")).collect();
+        let tasks: Vec<_> = names
+            .iter()
+            .map(|name| {
+                (
+                    name.as_str(),
+                    vec![HashInstruction::ignored_files(vec![
+                        format!("{dir}/*.js"),
+                        format!("!{dir}/{name}.js"),
+                    ])],
+                )
+            })
+            .collect();
+        let env = HashMap::new();
+        for stage in [RunStage::NothingRan, RunStage::ATaskMayHaveWritten] {
+            let mut results = Vec::new();
+            for count in [MIN_BATCH_GROUPS - 1, MIN_BATCH_GROUPS] {
+                let plans = hash_plans(&tasks[..count]);
+                let hashes = hasher.hash_plans_impl(
+                    &plans,
+                    root.to_string_lossy().into_owned(),
+                    Some(true),
+                    stage,
+                    |_| &env,
+                )?;
+                let details = hashes.0.get(&names[0]).unwrap();
+                results.push((details.inputs.files.clone(), details.value.clone()));
+            }
+            assert_eq!(
+                results
+                    .iter()
+                    .map(|result| result.0.clone())
+                    .collect::<Vec<_>>(),
+                [vec![path], vec![path]],
+            );
+            assert_eq!(results[0].1, results[1].1);
+        }
+        Ok(())
+    }
+
+    #[test]
     fn watched_batches_reuse_listings_up_front_and_read_live_disk_after_tasks() -> anyhow::Result<()>
     {
         use crate::native::tasks::hashers::MIN_BATCH_GROUPS;
