@@ -46,7 +46,7 @@ export type Command = {
 
 export interface Schema {
   name: string;
-  ci: 'github' | 'circleci';
+  ci: 'github' | 'circleci' | 'nx-cloud';
   packageManager?: null;
   commands?: Command[];
 }

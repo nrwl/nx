@@ -8,7 +8,7 @@
     "ci": {
       "type": "string",
       "description": "CI provider.",
-      "enum": ["github", "circleci"],
+      "enum": ["github", "circleci", "nx-cloud"],
       "x-prompt": {
         "message": "What is your target CI provider?",
         "type": "list",
@@ -20,6 +20,10 @@
           {
             "value": "circleci",
             "label": "Circle CI"
+          },
+          {
+            "value": "nx-cloud",
+            "label": "Nx Cloud CI (private beta)"
           }
         ]
       }

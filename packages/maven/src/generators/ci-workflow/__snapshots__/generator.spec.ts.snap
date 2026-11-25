@@ -87,6 +87,48 @@ jobs:
 "
 `;
 
+exports[`ci-workflow generator > connected to nxCloud > nx-cloud pipeline > should match snapshot 1`] = `
+"# yaml-language-server: $schema=https://cloud.nx.app/nx-cloud/static/schemas/workflow.schema.json
+# Nx Cloud CI runs this pipeline. It is in private beta, see https://nx.dev/docs/features/ci-features#run-ci-on-nx-cloud
+# Learn how to configure this file at https://nx.dev/docs/reference/nx-cloud/ci-config
+name: CI
+
+on:
+  pull-requests:
+    event: PR
+  main-pushes:
+    event: PUSH
+    branches: [main]
+
+env:
+  NX_BATCH_MODE: true
+
+# The public JVM launch templates set up Gradle, so Maven workspaces get their own.
+launch-templates:
+  linux-medium-maven:
+    resource-class: docker_linux_amd64/medium
+    image: ubuntu22.04-node24.14-v1
+    init-steps:
+      - name: Checkout
+        uses: nrwl/nx-cloud-workflows/v6/workflow-steps/checkout/main.yaml
+      - name: Set up Nx
+        script: ./nx --version
+
+worker-templates:
+  default:
+    workers: 3 linux-medium-maven
+    stop-after:
+      - verify-ci
+
+jobs:
+  main:
+    runs-on: linux-medium-maven
+    workers: default
+    steps:
+      - run: ./nx affected -t verify-ci
+"
+`;
+
 exports[`ci-workflow generator > not connected to nxCloud > circleci pipeline > should match snapshot 1`] = `
 "version: 2.1
 
@@ -170,6 +212,48 @@ jobs:
       - uses: nrwl/nx-set-shas@v5
 
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected.
+      - run: ./nx affected -t verify-ci
+"
+`;
+
+exports[`ci-workflow generator > not connected to nxCloud > nx-cloud pipeline > should match snapshot 1`] = `
+"# yaml-language-server: $schema=https://cloud.nx.app/nx-cloud/static/schemas/workflow.schema.json
+# Nx Cloud CI runs this pipeline. It is in private beta, see https://nx.dev/docs/features/ci-features#run-ci-on-nx-cloud
+# Learn how to configure this file at https://nx.dev/docs/reference/nx-cloud/ci-config
+name: CI
+
+on:
+  pull-requests:
+    event: PR
+  main-pushes:
+    event: PUSH
+    branches: [main]
+
+env:
+  NX_BATCH_MODE: true
+
+# The public JVM launch templates set up Gradle, so Maven workspaces get their own.
+launch-templates:
+  linux-medium-maven:
+    resource-class: docker_linux_amd64/medium
+    image: ubuntu22.04-node24.14-v1
+    init-steps:
+      - name: Checkout
+        uses: nrwl/nx-cloud-workflows/v6/workflow-steps/checkout/main.yaml
+      - name: Set up Nx
+        script: ./nx --version
+
+worker-templates:
+  default:
+    workers: 3 linux-medium-maven
+    stop-after:
+      - verify-ci
+
+jobs:
+  main:
+    runs-on: linux-medium-maven
+    workers: default
+    steps:
       - run: ./nx affected -t verify-ci
 "
 `;

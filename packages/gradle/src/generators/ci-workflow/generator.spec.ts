@@ -39,6 +39,7 @@ describe('ci-workflow generator', () => {
     describe.each([
       ['github', '.github/workflows/ci.yml'],
       ['circleci', '.circleci/config.yml'],
+      ['nx-cloud', '.nx/pipelines/ci.yaml'],
     ] as const)(`%s pipeline`, (ciProvider, output) => {
       it('should match snapshot', async () => {
         await ciWorkflowGenerator(tree, {
