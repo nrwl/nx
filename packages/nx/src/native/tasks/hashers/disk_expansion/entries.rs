@@ -127,7 +127,7 @@ impl Positive {
 /// A `!` entry split at its literal prefix. The prefix is compared as text;
 /// only the remainder is a glob.
 pub(crate) struct Negation {
-    root: String,
+    pub(super) root: String,
     below: Below,
     /// Excludes `root` and everything under it.
     whole: bool,
