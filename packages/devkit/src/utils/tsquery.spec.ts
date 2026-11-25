@@ -96,5 +96,13 @@ describe.each([
     );
 
     expect(result).toBe(source.replace("path: 'home'", "path: 'start'"));
+    const endOfFile = backendKind === 'api' ? 'EndOfFile' : 'EndOfFileToken';
+    expect(
+      tsquery.replace(
+        'const a = 1;',
+        `:matches(VariableStatement, ${endOfFile})`,
+        (node) => (node.getText() ? 'const a = 2;' : '\n// footer\n')
+      )
+    ).toBe('const a = 2;\n// footer\n');
   });
 });

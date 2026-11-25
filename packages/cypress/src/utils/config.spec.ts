@@ -28,6 +28,40 @@ export default defineConfig({
     `);
   });
 
+  it('should add CT config to a config holding a call with an object argument', async () => {
+    const actual = await addDefaultCTConfig(
+      `import { defineConfig } from 'cypress';
+import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
+import createBundler from '@bahmutov/cypress-esbuild-preprocessor';
+
+export default defineConfig({
+  e2e: {
+    ...nxE2EPreset(__filename),
+    setupNodeEvents(on) {
+      on('file:preprocessor', createBundler({ plugins: [] }));
+    },
+  },
+});
+`
+    );
+    expect(actual).toMatchInlineSnapshot(`
+      "import { defineConfig } from 'cypress';
+      import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
+      import createBundler from '@bahmutov/cypress-esbuild-preprocessor';
+
+      export default defineConfig({
+        e2e: {
+          ...nxE2EPreset(__filename),
+          setupNodeEvents(on) {
+            on('file:preprocessor', createBundler({ plugins: [] }));
+          },
+        },
+        component: nxComponentTestingPreset(import.meta.url)
+      });
+      "
+    `);
+  });
+
   it('should disable justInTimeCompile for webpack on Cypress 14+', async () => {
     const actual = await addDefaultCTConfig(
       `import { defineConfig } from 'cypress';

@@ -100,22 +100,34 @@ export function query<T extends Node = Node>(
 /**
  * Returns `source` with each node matching `selector` replaced by what
  * `stringTransformer` returns for it. A `null` or `undefined` result keeps the
- * node. The rest of the text is kept as is.
+ * node. A match inside a replaced node is ignored. The rest of the text is
+ * kept as is.
  */
 export function replace(
   source: string,
   selector: string,
   stringTransformer: (node: Node) => string | null | undefined
 ): string {
-  const matches = query(source, selector);
-  const replacements = matches.map((node) => stringTransformer(node));
-  let result = source;
-  for (let index = matches.length - 1; index >= 0; index--) {
-    const replacement = replacements[index];
-    if (replacement != null) {
-      const match = matches[index];
-      result = `${result.substring(0, match.getStart())}${replacement}${result.substring(match.getEnd())}`;
+  const edits: { start: number; end: number; text: string }[] = [];
+  // Matches come ancestors first, so an ancestor's edit is already listed. A
+  // zero-width match at an edit's end, like the end of file, is outside it.
+  for (const node of query(source, selector)) {
+    const text = stringTransformer(node);
+    const start = node.getStart();
+    const end = node.getEnd();
+    if (
+      text != null &&
+      !edits.some(
+        (edit) => edit.start <= start && start < edit.end && end <= edit.end
+      )
+    ) {
+      edits.push({ start, end, text });
     }
+  }
+  let result = source;
+  for (let index = edits.length - 1; index >= 0; index--) {
+    const { start, end, text } = edits[index];
+    result = `${result.substring(0, start)}${text}${result.substring(end)}`;
   }
   return result;
 }
