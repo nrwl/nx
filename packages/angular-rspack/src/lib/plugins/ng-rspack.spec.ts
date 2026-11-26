@@ -56,9 +56,10 @@ describe('NgRspackPlugin', () => {
       deleteOutputPath: false,
     });
     expect(
-      config.plugins?.some(
-        (plugin) => plugin?.[Symbol.for('@nx/ready-signal-plugin')]
-      )
+      config.plugins?.some((plugin) => {
+        const signal = Symbol.for('@nx/ready-signal-plugin');
+        return !!plugin && signal in plugin && !!plugin[signal];
+      })
     ).toBe(true);
 
     const compiler = rspack(config);

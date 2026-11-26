@@ -72,7 +72,7 @@ async function runScriptAsNxTarget(
   if (targetName) {
     const defaultPorject = getDefaultProject(projectGraph);
     const scriptDefinition = getScriptDefinition(targetName, defaultPorject);
-    if (scriptDefinition) {
+    if (scriptDefinition && defaultPorject) {
       runTargetOnProject(
         scriptDefinition,
         targetName,
@@ -153,7 +153,7 @@ function readScriptArgV(
 function getScriptDefinition(
   targetName: string,
   project?: ProjectGraphProjectNode
-): PackageJson['scripts'][string] {
+): NonNullable<PackageJson['scripts']>[string] | undefined {
   if (!project) {
     return;
   }
@@ -170,7 +170,7 @@ function getScriptDefinition(
 }
 
 function ensureNxTarget(project: ProjectGraphProjectNode, targetName: string) {
-  if (!project.data.targets[targetName]) {
+  if (!project.data.targets?.[targetName]) {
     output.error({
       title: `Nx cannot find a target called "${targetName}" for ${project.name}`,
       bodyLines: [
@@ -199,7 +199,7 @@ function getProjects(
   projectGraph: ProjectGraph,
   nxArgs: NxArgs
 ): ProjectGraphProjectNode[] {
-  let selectedProjects = {};
+  let selectedProjects: Record<string, ProjectGraphProjectNode> = {};
 
   // get projects matched
   if (nxArgs.projects?.length) {

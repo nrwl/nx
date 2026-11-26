@@ -6,8 +6,9 @@ export function addLoadChildren(
   tree: Tree,
   options: NormalizedSchema['libraryOptions']
 ) {
-  if (!tree.exists(options.parent)) {
-    throw new Error(`Cannot find '${options.parent}'`);
+  const { parent } = options;
+  if (!parent || !tree.exists(parent)) {
+    throw new Error(`Cannot find '${parent}'`);
   }
   const route = `{ path: '${
     names(options.fileName).fileName
@@ -17,5 +18,5 @@ export function addLoadChildren(
       : options.moduleName
   }) }`;
 
-  addRoute(tree, options.parent, route);
+  addRoute(tree, parent, route);
 }

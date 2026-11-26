@@ -17,7 +17,6 @@
     "**/*.spec.jsx",
     "**/*.test.jsx",
     "**/*.d.ts",
-    "vitest.config.mts",
     "*.json"
   ],
   "references": [

@@ -190,11 +190,10 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
       options.projectRoot,
       options.js ? 'jest.config.js' : 'jest.config.cts'
     );
-    if (options.compiler === 'babel' && host.exists(jestConfigPath)) {
-      const updatedContent = updateJestConfigContent(
-        host.read(jestConfigPath, 'utf-8')
-      );
-      host.write(jestConfigPath, updatedContent);
+    const jestConfigContent =
+      options.compiler === 'babel' ? host.read(jestConfigPath, 'utf-8') : null;
+    if (jestConfigContent !== null) {
+      host.write(jestConfigPath, updateJestConfigContent(jestConfigContent));
     }
   } else if (
     options.unitTestRunner === 'vitest' &&

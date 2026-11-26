@@ -49,7 +49,9 @@ export function servePostTargetTransformerFactory(
   };
 }
 
-type WebpackConfigDevServerOptions = WebpackOptionsNormalized['devServer'];
+type WebpackConfigDevServerOptions = NonNullable<
+  Exclude<WebpackOptionsNormalized['devServer'], false>
+>;
 type ExtractedOptions = {
   default: WebpackConfigDevServerOptions;
   [configName: string]: WebpackConfigDevServerOptions;
@@ -62,26 +64,39 @@ async function processOptions(
   devServerOptions: ExtractedOptions;
   webpackConfigPath: string;
 }> {
+  const options = target.options;
+  if (!options) {
+    throw new Error(
+      `The "buildTarget" option is missing for project ${context.projectName}.`
+    );
+  }
   const buildTarget = parseTargetString(
-    target.options.buildTarget,
+    options.buildTarget,
     context.projectGraph
   );
   const buildConfiguration =
-    context.projectGraph.nodes[buildTarget.project].data.targets[
+    context.projectGraph.nodes[buildTarget.project].data.targets?.[
       buildTarget.target
     ];
+  if (!buildConfiguration) {
+    throw new Error(
+      `Could not find the build target ${options.buildTarget} for project ${context.projectName}.`
+    );
+  }
+  const buildConfigurationName =
+    buildTarget.configuration ?? buildConfiguration.defaultConfiguration;
   // The build executor is removed in v24; do not resolve its schema.
   const buildOptions = {
     ...buildConfiguration.options,
-    ...buildConfiguration.configurations?.[
-      buildTarget.configuration ?? buildConfiguration.defaultConfiguration
-    ],
+    ...(buildConfigurationName
+      ? buildConfiguration.configurations?.[buildConfigurationName]
+      : undefined),
   };
 
   // it must exist, we validated it in the project filter
   const webpackConfigPath = buildOptions.webpackConfig;
 
-  const defaultOptions = extractDevServerOptions(target.options, context);
+  const defaultOptions = extractDevServerOptions(options, context);
   applyDefaults(defaultOptions, buildOptions);
   const devServerOptions: ExtractedOptions = {
     default: defaultOptions,
@@ -100,7 +115,8 @@ function extractDevServerOptions(
   options: DevServerExecutorOptions,
   context: TransformerContext
 ): WebpackConfigDevServerOptions {
-  const devServerOptions: WebpackConfigDevServerOptions = {};
+  const devServerOptions: WebpackConfigDevServerOptions &
+    Record<string, unknown> = {};
 
   for (const [key, value] of Object.entries(options)) {
     if (key === 'hmr') {
@@ -172,7 +188,7 @@ function extractDevServerOptions(
         delete options.sslKey;
       }
     } else if (key === 'buildTarget') {
-      delete options.buildTarget;
+      Reflect.deleteProperty(options, 'buildTarget');
     } else if (key === 'watch') {
       context.logger.addLog({
         executorName: '@nx/webpack:dev-server',
@@ -192,7 +208,7 @@ function extractDevServerOptions(
       delete options.memoryLimit;
     } else {
       devServerOptions[key] = value;
-      delete options[key];
+      Reflect.deleteProperty(options, key);
     }
   }
 
@@ -231,14 +247,14 @@ function updateWebpackConfig(
   devServerOptions: ExtractedOptions,
   context: TransformerContext
 ): void {
-  let sourceFile: ts.SourceFile;
-  let webpackConfigText: string;
-
-  const updateSources = () => {
-    webpackConfigText = tree.read(webpackConfigPath, 'utf-8');
-    sourceFile = ast(webpackConfigText);
+  const readSources = () => {
+    const text = tree.read(webpackConfigPath, 'utf-8');
+    if (text === null) {
+      throw new Error(`Cannot read ${webpackConfigPath}`);
+    }
+    return { text, sourceFile: ast(text) };
   };
-  updateSources();
+  let { text: webpackConfigText, sourceFile } = readSources();
 
   // A target kept on its executor is converted again on rerun, and its options
   // are already in the config.
@@ -253,7 +269,7 @@ function updateWebpackConfig(
     webpackConfigPath,
     devServerOptions
   );
-  updateSources();
+  ({ text: webpackConfigText, sourceFile } = readSources());
 
   setDevServerOptionsInWebpackConfig(
     tree,

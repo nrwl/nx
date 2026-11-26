@@ -20,7 +20,7 @@ vi.mock(
         registerFileWatcher: async (
           config: unknown,
           callback: (
-            err,
+            err: Error | null,
             data: {
               changedProjects: string[];
               changedFiles: ChangedFile[];

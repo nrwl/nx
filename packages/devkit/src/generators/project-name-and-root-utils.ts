@@ -71,7 +71,7 @@ export async function determineProjectNameAndRootOptions(
   if (name.startsWith('@')) {
     const [_scope, ...rest] = name.split('/');
     projectFileName = rest.join('-');
-    projectSimpleName = rest.pop();
+    projectSimpleName = rest[rest.length - 1];
   } else {
     projectSimpleName = name;
     projectFileName = name;
@@ -153,7 +153,7 @@ export async function ensureRootProjectName(
 }
 
 function validateOptions(
-  providedName: string,
+  providedName: string | undefined,
   derivedName: string,
   directory: string
 ): void {

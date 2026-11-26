@@ -2,7 +2,7 @@ import { posix, win32 } from 'node:path';
 
 export type DaemonMessage = {
   type: string;
-  env?: Record<string, string>;
+  env?: NodeJS.ProcessEnv;
   /**
    * Stamped centrally by `DaemonSocketMessenger.sendMessage`, not by the ~30
    * sites that construct messages — hence optional. It can also be absent on a
@@ -14,7 +14,7 @@ export type DaemonMessage = {
 };
 
 export function isDaemonMessage(msg: unknown): msg is DaemonMessage {
-  return typeof msg === 'object' && msg && 'type' in msg;
+  return typeof msg === 'object' && msg !== null && 'type' in msg;
 }
 
 /**

@@ -517,10 +517,11 @@ function withEntries(
 }
 
 function importsAgentsMd(tree: Tree, claudePath: string): boolean {
-  if (!tree.exists(claudePath)) {
+  const content = tree.read(claudePath, 'utf-8');
+  if (content === null) {
     return false;
   }
-  const nxBlock = tree.read(claudePath, 'utf-8').match(rulesRegex)?.[0];
+  const nxBlock = content.match(rulesRegex)?.[0];
   return (
     nxBlock
       ?.replace(nxRulesMarkerCommentStart, '')
@@ -531,7 +532,8 @@ function importsAgentsMd(tree: Tree, claudePath: string): boolean {
 }
 
 function writeAgentRules(tree: Tree, path: string, writeNxCloudRules: boolean) {
-  if (!tree.exists(path)) {
+  const existing = tree.read(path, 'utf-8');
+  if (existing === null) {
     // File doesn't exist - create with h1 header (standalone content)
     const expectedRules = getAgentRulesWrapped({
       writeNxCloudRules,
@@ -540,8 +542,6 @@ function writeAgentRules(tree: Tree, path: string, writeNxCloudRules: boolean) {
     tree.write(path, expectedRules);
     return;
   }
-
-  const existing = tree.read(path, 'utf-8');
 
   const regex = rulesRegex;
   const existingNxConfiguration = existing.match(regex);
@@ -622,25 +622,21 @@ function writeCodexConfig(
   if (!generated) {
     // Fallback: use hardcoded MCP-only config (no agents/features)
     const tomlConfig = getNxMcpTomlConfig(nxVersion);
-    if (!tree.exists(codexTomlPath)) {
+    const existing = tree.read(codexTomlPath, 'utf-8');
+    if (existing === null) {
       tree.write(codexTomlPath, tomlConfig);
-    } else {
-      const existing = tree.read(codexTomlPath, 'utf-8');
-      if (!existing.includes(nxMcpTomlHeader)) {
-        tree.write(codexTomlPath, existing + '\n' + tomlConfig);
-      }
+    } else if (!existing.includes(nxMcpTomlHeader)) {
+      tree.write(codexTomlPath, existing + '\n' + tomlConfig);
     }
     return;
   }
 
   // Parse existing config (or start empty)
   let config: Record<string, any> = {};
-  if (tree.exists(codexTomlPath)) {
+  const existingToml = tree.read(codexTomlPath, 'utf-8');
+  if (existingToml !== null) {
     try {
-      config = TOML.parse(tree.read(codexTomlPath, 'utf-8')) as Record<
-        string,
-        any
-      >;
+      config = TOML.parse(existingToml) as Record<string, any>;
     } catch {
       // If existing file can't be parsed, start fresh
       config = {};

@@ -17,6 +17,8 @@ import { hashArray } from '../../../hasher/file-hasher';
 import { sortObjectByKeys } from '../../../utils/object-sort';
 import { CreateDependenciesContext } from '../../../project-graph/plugins';
 import { getWorkspacePackagesFromGraph } from '../utils/get-workspace-packages-from-graph';
+import type { parseSyml } from '../../../utils/yarn-syml';
+import { getExternalNodes } from './project-graph-pruning';
 
 /**
  * Yarn
@@ -41,7 +43,7 @@ type YarnDependency = {
 };
 
 let currentLockFileHash: string;
-let cachedParsedLockFile;
+let cachedParsedLockFile: ReturnType<typeof parseSyml>;
 
 function parseLockFile(lockFileContent: string, lockFileHash: string) {
   if (currentLockFileHash === lockFileHash) {
@@ -101,8 +103,9 @@ function getPackageNameKeyPairs(keys: string): Map<string, Set<string>> {
   const result = new Map<string, Set<string>>();
   keys.split(', ').forEach((key) => {
     const packageName = key.slice(0, key.indexOf('@', 1));
-    if (result.has(packageName)) {
-      result.get(packageName).add(key);
+    const keys = result.get(packageName);
+    if (keys) {
+      keys.add(key);
     } else {
       result.set(packageName, new Set([key]));
     }
@@ -188,10 +191,11 @@ function getNodes(
           snapshot.version && version !== snapshot.version
             ? snapshot.version
             : version;
-        if (!nodes.has(packageName)) {
+        const versionNodes = nodes.get(packageName);
+        if (!versionNodes) {
           nodes.set(packageName, new Map([[mapKey, node]]));
         } else {
-          nodes.get(packageName).set(mapKey, node);
+          versionNodes.set(mapKey, node);
         }
       });
     });
@@ -204,7 +208,7 @@ function getNodes(
     // If there's only one version of a package, treat it as hoisted
     // This ensures deterministic hashing across environments for packages
     // like optional platform-specific dependencies (e.g., @nx/nx-darwin-arm64)
-    const hoistedNode: ProjectGraphExternalNode =
+    const hoistedNode: ProjectGraphExternalNode | undefined =
       versionMap.size === 1
         ? versionMap.values().next().value
         : findHoistedNode(packageName, versionMap, combinedDeps);
@@ -266,7 +270,7 @@ function findHoistedNode(
   packageName: string,
   versionMap: Map<string, ProjectGraphExternalNode>,
   combinedDeps: Record<string, string>
-): ProjectGraphExternalNode {
+): ProjectGraphExternalNode | undefined {
   const hoistedVersion = getHoistedVersion(packageName);
   if (hoistedVersion) {
     return versionMap.get(hoistedVersion);
@@ -288,12 +292,12 @@ function findHoistedNode(
     // try to find alias version
     version = versions.find(
       (v) =>
-        versionMap.get(v).name === `npm:${packageName}@${rootVersionSpecifier}`
+        versionMap.get(v)?.name === `npm:${packageName}@${rootVersionSpecifier}`
     );
   }
   if (!version) {
     // try to find tarball package
-    version = versions.find((v) => versionMap.get(v).data.version !== v);
+    version = versions.find((v) => versionMap.get(v)?.data.version !== v);
   }
   if (version) {
     return versionMap.get(version);
@@ -326,7 +330,11 @@ function findVersion(
     return [snapshot.resolution.slice(packageName.length + 1)];
   }
 
-  if (!isBerry && isTarballPackage(versionRange, snapshot)) {
+  if (
+    !isBerry &&
+    snapshot.resolved &&
+    isTarballPackage(versionRange, snapshot)
+  ) {
     return [snapshot.resolved];
   }
   // otherwise it's a standard version
@@ -352,11 +360,11 @@ function isTarballPackage(
     return false;
   } catch {
     // range is not a valid semver, it can be an npm tag or url part of a tarball
-    return snapshot.version && !snapshot.resolved.includes(snapshot.version);
+    return !!snapshot.version && !snapshot.resolved.includes(snapshot.version);
   }
 }
 
-function getHoistedVersion(packageName: string): string {
+function getHoistedVersion(packageName: string): string | undefined {
   const version = getHoistedPackageVersion(packageName);
   if (version) {
     return version;
@@ -372,8 +380,8 @@ function getDependencies(
   Object.keys(dependencies).forEach((keys) => {
     const snapshot = dependencies[keys];
     keys.split(', ').forEach((key) => {
-      if (keyMap.has(key)) {
-        const node = keyMap.get(key);
+      const node = keyMap.get(key);
+      if (node) {
         [snapshot.dependencies, snapshot.optionalDependencies].forEach(
           (section) => {
             if (section) {
@@ -434,7 +442,7 @@ export function stringifyYarnLockfile(
 
   const snapshots = mapSnapshots(
     dependencies,
-    graph.externalNodes,
+    getExternalNodes(graph),
     packageJson,
     workspaceModules,
     isBerry
@@ -466,16 +474,17 @@ function groupDependencies(
     return dependencies;
   }
   let groupedDependencies: Record<string, YarnDependency>;
-  const resolutionMap = new Map<string, YarnDependency>();
+  const resolutionMap = new Map<string, Set<string>>();
   const snapshotMap = new Map<YarnDependency, Set<string>>();
   Object.entries(dependencies).forEach(([key, snapshot]) => {
     const resolutionKey = `${snapshot.resolved}${snapshot.integrity}`;
-    if (resolutionMap.has(resolutionKey)) {
-      const existingSnapshot = resolutionMap.get(resolutionKey);
-      snapshotMap.get(existingSnapshot).add(key);
+    const existingKeys = resolutionMap.get(resolutionKey);
+    if (existingKeys) {
+      existingKeys.add(key);
     } else {
-      resolutionMap.set(resolutionKey, snapshot);
-      snapshotMap.set(snapshot, new Set([key]));
+      const keys = new Set([key]);
+      resolutionMap.set(resolutionKey, keys);
+      snapshotMap.set(snapshot, keys);
     }
   });
   groupedDependencies = {};
@@ -491,12 +500,14 @@ function addPackageVersion(
   collection: Map<string, Set<string>>,
   isBerry?: boolean
 ) {
-  if (!collection.has(packageName)) {
-    collection.set(packageName, new Set());
+  let versions = collection.get(packageName);
+  if (!versions) {
+    versions = new Set();
+    collection.set(packageName, versions);
   }
-  collection.get(packageName).add(`${packageName}@${version}`);
+  versions.add(`${packageName}@${version}`);
   if (isBerry && !version.startsWith('npm:') && !version.startsWith('patch:')) {
-    collection.get(packageName).add(`${packageName}@npm:${version}`);
+    versions.add(`${packageName}@npm:${version}`);
   }
 }
 
@@ -539,7 +550,8 @@ function mapSnapshots(
       );
     }
     const [matchedKeys, snapshot] = foundOriginalKeys;
-    snapshotMap.set(snapshot, new Set(matchedKeys));
+    const snapshotKeys = new Set(matchedKeys);
+    snapshotMap.set(snapshot, snapshotKeys);
 
     // separately save keys that still exist
     [snapshot.dependencies, snapshot.optionalDependencies].forEach(
@@ -566,8 +578,8 @@ function mapSnapshots(
       const requestedKey = isBerry
         ? reverseMapBerryKey(node, requestedVersion, snapshot)
         : `${node.data.packageName}@${requestedVersion}`;
-      if (!snapshotMap.get(snapshot).has(requestedKey)) {
-        snapshotMap.get(snapshot).add(requestedKey);
+      if (!snapshotKeys.has(requestedKey)) {
+        snapshotKeys.add(requestedKey);
       }
     }
     const requestedResolutionsVersion = getPackageJsonVersion(
@@ -585,8 +597,8 @@ function mapSnapshots(
       const requestedKey = isBerry
         ? reverseMapBerryKey(node, requestedResolutionsVersion, snapshot)
         : `${node.data.packageName}@${requestedResolutionsVersion}`;
-      if (!snapshotMap.get(snapshot).has(requestedKey)) {
-        snapshotMap.get(snapshot).add(requestedKey);
+      if (!snapshotKeys.has(requestedKey)) {
+        snapshotKeys.add(requestedKey);
       }
     }
 
@@ -616,10 +628,8 @@ function mapSnapshots(
           .slice(0, key.indexOf('#'))
           .replace(regEx, '@npm:$2');
       }
-      if (
-        !existingKeys.get(packageName) ||
-        !existingKeys.get(packageName).has(normalizedKey)
-      ) {
+      const packageKeys = existingKeys.get(packageName);
+      if (!packageKeys || !packageKeys.has(normalizedKey)) {
         snapshotValue.delete(key);
       }
     }
@@ -664,7 +674,7 @@ function getPackageJsonVersion(
   dependencies: Record<string, string>,
   node: ProjectGraphExternalNode,
   workspaceModules: Map<string, ProjectGraphProjectNode>
-): string {
+): string | undefined {
   const { packageName, version } = node.data;
   if (workspaceModules.has(packageName)) {
     return `file:./workspace_modules/${packageName}`;
@@ -686,7 +696,7 @@ function isStandardPackage(snapshot: YarnDependency, version: string): boolean {
 }
 
 function isBerryAlias(snapshot: YarnDependency, version: string): boolean {
-  return snapshot.resolution && `npm:${snapshot.resolution}` === version;
+  return !!snapshot.resolution && `npm:${snapshot.resolution}` === version;
 }
 
 function isClassicAlias(
@@ -733,7 +743,7 @@ function findOriginalKeys(
   keyIndex: YarnKeyIndex,
   node: ProjectGraphExternalNode,
   workspaceModules: Map<string, ProjectGraphProjectNode>
-): [string[], YarnDependency] {
+): [string[], YarnDependency] | undefined {
   for (const keyExpr of keyIndex.get(node.data.packageName) ?? []) {
     const snapshot = dependencies[keyExpr];
     const keys = keyExpr.split(', ');
@@ -805,14 +815,17 @@ const BERRY_LOCK_FILE_DISCLAIMER = `# This file is generated by running "yarn in
 
 function generateRootWorkspacePackage(
   packageJson: NormalizedPackageJson
-): YarnDependency {
+): YarnDependency & { resolution: string } {
   let isVersion4 = false;
   if (!!packageJson.packageManager) {
     const [_, version] = packageJson.packageManager.split('@');
     isVersion4 = !!version && satisfies(version, '>=4.0.0');
   }
 
-  const reducer = (acc, [name, version]) => {
+  const reducer = (
+    acc: Record<string, string>,
+    [name, version]: [string, string]
+  ) => {
     acc[name] = isVersion4 ? `npm:${version}` : version;
     return acc;
   };

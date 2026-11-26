@@ -13,7 +13,7 @@ interface LessStatic {
     options: LessRenderOptions,
     callback: (
       error: Less.RenderError | null,
-      output: Less.RenderOutput | undefined
+      output: Less.RenderOutput
     ) => void
   ): void;
 }

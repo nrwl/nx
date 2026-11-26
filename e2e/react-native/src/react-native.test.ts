@@ -92,7 +92,7 @@ describe('@nx/react-native', () => {
   }, 200_000);
 
   it('should start the app', async () => {
-    let childProcess: ChildProcess;
+    let childProcess: ChildProcess | undefined;
     const port = await reservePort();
 
     try {
@@ -121,7 +121,7 @@ describe('@nx/react-native', () => {
   });
 
   it('should serve', async () => {
-    let childProcess: ChildProcess;
+    let childProcess: ChildProcess | undefined;
     const port = await reservePort();
 
     try {

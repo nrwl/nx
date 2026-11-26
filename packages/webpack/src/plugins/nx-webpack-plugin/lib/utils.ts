@@ -204,10 +204,13 @@ export function getAllTransitiveDeps(
  */
 
 export function getNonBuildableLibs(
-  graph: ProjectGraph,
-  projectName: string
+  graph: ProjectGraph | undefined,
+  projectName: string | undefined
 ): (string | RegExp)[] {
-  const deps = graph?.dependencies?.[projectName] ?? [];
+  if (!graph || !projectName) {
+    return [];
+  }
+  const deps = graph.dependencies?.[projectName] ?? [];
 
   const allNonBuildable = new Set<string | RegExp>();
 

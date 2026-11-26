@@ -74,13 +74,13 @@ const PATHLESS_TOKENS = new Set([
   'projectName',
 ]);
 
-export interface ReadyWhenData {
+export type ReadyWhenData = {
   workspaceRoot: string;
   projectRoot: string;
   projectName: string;
   options: Record<string, unknown>;
   env: () => NodeJS.ProcessEnv;
-}
+};
 
 export function normalizeReadyWhen(
   readyWhen: ReadyWhen,
@@ -109,12 +109,13 @@ function resolveReadyWhen(
   }
 
   const config = readyWhen as unknown as Record<string, unknown>;
+  const dataByName: Record<string, unknown> = data;
   const scope: TokenScope = {
     isToken: (name, path) =>
       path === undefined
         ? PATHLESS_TOKENS.has(name)
         : name === 'options' || name === 'env',
-    read: (name, path) => readPath(data[name], path),
+    read: (name, path) => readPath(dataByName[name], path),
     env: { read: data.env },
     noValue: (token) => {
       throw invalid(`"${token}" has no value`);
@@ -149,7 +150,7 @@ function resolveReadyWhen(
     try {
       nodes = parseTokens(value, tokenScope);
     } catch (e) {
-      throw invalid(e.message);
+      throw invalid(e instanceof Error ? e.message : String(e));
     }
     try {
       return renderTokens(nodes, tokenScope);
@@ -453,11 +454,14 @@ export function getReadyWhenInputs(
     return null;
   }
   const node = projectGraph.nodes[task.target.project];
-  const target = node.data.targets[task.target.target];
+  const target = node.data.targets?.[task.target.target];
+  if (!target) {
+    return null;
+  }
   const { schema } = getExecutorForTask(task, projects);
   const options = combineOptionsForExecutor(
     task.overrides as Options,
-    task.target.configuration ?? target.defaultConfiguration,
+    task.target.configuration ?? target.defaultConfiguration ?? '',
     target,
     schema,
     task.target.project,
@@ -485,7 +489,8 @@ export function mayReportReadyUrl(
   if (typeof readyWhen !== 'object' || readyWhen === null) {
     return false;
   }
-  const kind = PROBE_KEYS.find((key) => readyWhen[key] != null);
+  const config = new Map<string, unknown>(Object.entries(readyWhen));
+  const kind = PROBE_KEYS.find((key) => config.get(key) != null);
   switch (kind) {
     case 'signal':
       return true;

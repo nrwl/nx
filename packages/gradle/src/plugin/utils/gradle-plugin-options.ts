@@ -7,7 +7,7 @@ export interface GradlePluginOptions {
 }
 
 export function normalizeOptions(
-  options: GradlePluginOptions
+  options: GradlePluginOptions | undefined
 ): GradlePluginOptions {
   options ??= {};
   options.testTargetName ??= 'test';

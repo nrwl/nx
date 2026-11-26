@@ -1,3 +1,4 @@
+import type { ExpandedPluginConfiguration } from '@nx/devkit';
 import {
   runCLI,
   cleanupProject,
@@ -25,7 +26,8 @@ describe('@nx/detox', () => {
   it('nx.json should contain plugin configuration', () => {
     const nxJson = readJson('nx.json');
     const detoxPlugin = nxJson.plugins.find(
-      (plugin) => plugin.plugin === '@nx/detox/plugin'
+      (plugin: ExpandedPluginConfiguration) =>
+        plugin.plugin === '@nx/detox/plugin'
     );
     expect(detoxPlugin).toBeDefined();
     expect(detoxPlugin.options).toBeDefined();

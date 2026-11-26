@@ -1,6 +1,7 @@
 import {
   checkFilesExist,
   cleanupProject,
+  ensureDefined,
   getSelectedPackageManager,
   newProject,
   runCLI,
@@ -58,11 +59,13 @@ describe('Nx Import - AI Agent Mode', () => {
         env: agentEnv,
       });
       const messages = parseNdjsonOutput(output);
-      const needsInput = findMessage(
-        messages,
-        (m) => m.stage === 'needs_input' && m.inputType === 'import_options'
+      const needsInput = ensureDefined(
+        findMessage(
+          messages,
+          (m) => m.stage === 'needs_input' && m.inputType === 'import_options'
+        ),
+        'needs_input message'
       );
-      expect(needsInput).toBeDefined();
       expect(needsInput.missingFields).toContain('destination');
       expect(needsInput.availableOptions).toHaveProperty('sourceRepository');
       expect(needsInput.availableOptions).toHaveProperty('ref');
@@ -77,11 +80,13 @@ describe('Nx Import - AI Agent Mode', () => {
         env: agentEnv,
       });
       const messages = parseNdjsonOutput(output);
-      const needsInput = findMessage(
-        messages,
-        (m) => m.stage === 'needs_input' && m.inputType === 'import_options'
+      const needsInput = ensureDefined(
+        findMessage(
+          messages,
+          (m) => m.stage === 'needs_input' && m.inputType === 'import_options'
+        ),
+        'needs_input message'
       );
-      expect(needsInput).toBeDefined();
       expect(needsInput.missingFields).toContain('ref');
       expect(needsInput.missingFields).toContain('destination');
     });
@@ -104,11 +109,13 @@ describe('Nx Import - AI Agent Mode', () => {
         findMessage(messages, (m) => m.stage === 'complete')
       ).toBeDefined();
 
-      const success = findMessage(
-        messages,
-        (m) => m.stage === 'complete' && m.success === true
+      const success = ensureDefined(
+        findMessage(
+          messages,
+          (m) => m.stage === 'complete' && m.success === true
+        ),
+        'complete message'
       );
-      expect(success).toBeDefined();
       expect(success.result.pluginsInstalled).toEqual([]);
       expect(success.result.destination).toBe('projects/skip-test');
 
@@ -135,11 +142,13 @@ describe('Nx Import - AI Agent Mode', () => {
         findMessage(messages, (m) => m.stage === 'detecting-plugins')
       ).toBeDefined();
 
-      const success = findMessage(
-        messages,
-        (m) => m.stage === 'complete' && m.success === true
+      const success = ensureDefined(
+        findMessage(
+          messages,
+          (m) => m.stage === 'complete' && m.success === true
+        ),
+        'complete message'
       );
-      expect(success).toBeDefined();
       expect(success.result.destination).toBe('projects/default-plugins');
       expect(success.result.pluginsInstalled).toEqual([]);
 
@@ -168,11 +177,13 @@ describe('Nx Import - AI Agent Mode', () => {
       );
       const messages = parseNdjsonOutput(output);
 
-      const success = findMessage(
-        messages,
-        (m) => m.stage === 'complete' && m.success === true
+      const success = ensureDefined(
+        findMessage(
+          messages,
+          (m) => m.stage === 'complete' && m.success === true
+        ),
+        'complete message'
       );
-      expect(success).toBeDefined();
       expect(success.result.destination).toBe('projects/two-step');
     });
   });
@@ -185,11 +196,13 @@ describe('Nx Import - AI Agent Mode', () => {
         { verbose: true, env: agentEnv }
       );
       const messages = parseNdjsonOutput(output);
-      const success = findMessage(
-        messages,
-        (m) => m.stage === 'complete' && m.success === true
+      const success = ensureDefined(
+        findMessage(
+          messages,
+          (m) => m.stage === 'complete' && m.success === true
+        ),
+        'complete message'
       );
-      expect(success).toBeDefined();
       expect(success.result.source).toBe('packages/a');
       expect(success.result.destination).toBe('projects/pkg-a');
 
@@ -216,8 +229,10 @@ describe('Nx Import - AI Agent Mode', () => {
         { silenceError: true, env: agentEnv }
       );
       const messages = parseNdjsonOutput(output);
-      const error = findMessage(messages, (m) => m.stage === 'error');
-      expect(error).toBeDefined();
+      const error = ensureDefined(
+        findMessage(messages, (m) => m.stage === 'error'),
+        'error message'
+      );
       expect(error.errorCode).toBe('DESTINATION_NOT_EMPTY');
       expect(error.hints.length).toBeGreaterThan(0);
     });

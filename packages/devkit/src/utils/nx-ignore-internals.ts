@@ -12,7 +12,7 @@ import { createGitIgnoreChecker } from 'nx/src/devkit-internals';
  * nx's own behaviour, so this fails instead - once, by name.
  */
 export function assertNxSupportsIgnoreCheckers(): void {
-  if (createGitIgnoreChecker) {
+  if (typeof createGitIgnoreChecker === 'function') {
     return;
   }
 

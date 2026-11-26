@@ -1,5 +1,6 @@
 import '@nx/devkit/internal-testing-utils/mock-project-graph';
 import {
+  NxJsonConfiguration,
   ProjectConfiguration,
   Tree,
   addProjectConfiguration,
@@ -12,13 +13,17 @@ import { createRequire } from 'module';
 
 // `addLintingToProject` loads @nx/eslint through ensurePackage (`require`), so
 // the spy must live on the CJS channel.
-const cjsLinter = createRequire(import.meta.url)('@nx/eslint');
+const cjsLinter = createRequire(__filename)('@nx/eslint');
 const lintProjectGenerator = vi.fn(cjsLinter.lintProjectGenerator);
-mockCjsModule(import.meta.url, '@nx/eslint', {
+mockCjsModule(__filename, '@nx/eslint', {
   ...cjsLinter,
   lintProjectGenerator,
 });
 import { addLintingGenerator } from './add-linting';
+
+type EslintRc = {
+  overrides: { files: string | string[]; parserOptions?: unknown }[];
+};
 
 describe('addLinting generator', () => {
   let tree: Tree;
@@ -120,9 +125,9 @@ describe('addLinting generator', () => {
 
     expect(lintProjectGenerator).not.toHaveBeenCalled();
     expect(tree.exists('.oxlintrc.json')).toBe(true);
-    const plugins = (readJson(tree, 'nx.json').plugins ?? []).map((p) =>
-      typeof p === 'string' ? p : p.plugin
-    );
+    const plugins = (
+      readJson<NxJsonConfiguration>(tree, 'nx.json').plugins ?? []
+    ).map((p) => (typeof p === 'string' ? p : p.plugin));
     expect(plugins).toContain('@nx/oxlint');
     // The one observable this generator alone controls. `addLintingToProject`
     // resolves the linter again on its own, so the oxlint config and the plugin
@@ -250,11 +255,15 @@ describe('addLinting generator', () => {
       enableTypedLinting: true,
     });
 
-    const eslintConfig = readJson(tree, `${appProjectRoot}/.eslintrc.json`);
+    const eslintConfig = readJson<EslintRc>(
+      tree,
+      `${appProjectRoot}/.eslintrc.json`
+    );
     const tsOverride = eslintConfig.overrides.find((o) =>
       o.files.includes('*.ts')
     );
-    expect(tsOverride.parserOptions).toEqual({
+    expect(tsOverride).toBeDefined();
+    expect(tsOverride?.parserOptions).toEqual({
       project: [`${appProjectRoot}/tsconfig.*?.json`],
     });
     expect(
@@ -280,11 +289,15 @@ describe('addLinting generator', () => {
       skipFormat: true,
     });
 
-    const eslintConfig = readJson(tree, `${appProjectRoot}/.eslintrc.json`);
+    const eslintConfig = readJson<EslintRc>(
+      tree,
+      `${appProjectRoot}/.eslintrc.json`
+    );
     const tsOverride = eslintConfig.overrides.find((o) =>
       o.files.includes('*.ts')
     );
-    expect(tsOverride.parserOptions).toEqual({
+    expect(tsOverride).toBeDefined();
+    expect(tsOverride?.parserOptions).toEqual({
       project: [`${appProjectRoot}/tsconfig.*?.json`],
     });
   });
@@ -306,11 +319,15 @@ describe('addLinting generator', () => {
       skipFormat: true,
     });
 
-    const eslintConfig = readJson(tree, `${appProjectRoot}/.eslintrc.json`);
+    const eslintConfig = readJson<EslintRc>(
+      tree,
+      `${appProjectRoot}/.eslintrc.json`
+    );
     const tsOverride = eslintConfig.overrides.find((o) =>
       o.files.includes('*.ts')
     );
-    expect(tsOverride.parserOptions).toBeUndefined();
+    expect(tsOverride).toBeDefined();
+    expect(tsOverride?.parserOptions).toBeUndefined();
   });
 
   it('should not carry over parserOptions.project when the project service is also on', async () => {
@@ -331,11 +348,15 @@ describe('addLinting generator', () => {
       skipFormat: true,
     });
 
-    const eslintConfig = readJson(tree, `${appProjectRoot}/.eslintrc.json`);
+    const eslintConfig = readJson<EslintRc>(
+      tree,
+      `${appProjectRoot}/.eslintrc.json`
+    );
     const tsOverride = eslintConfig.overrides.find((o) =>
       o.files.includes('*.ts')
     );
-    expect(tsOverride.parserOptions).toBeUndefined();
+    expect(tsOverride).toBeDefined();
+    expect(tsOverride?.parserOptions).toBeUndefined();
   });
 
   it('should not set parserOptions in the .eslintrc.json file when typed linting is disabled', async () => {
@@ -348,11 +369,15 @@ describe('addLinting generator', () => {
       skipFormat: true,
     });
 
-    const eslintConfig = readJson(tree, `${appProjectRoot}/.eslintrc.json`);
+    const eslintConfig = readJson<EslintRc>(
+      tree,
+      `${appProjectRoot}/.eslintrc.json`
+    );
     const tsOverride = eslintConfig.overrides.find((o) =>
       o.files.includes('*.ts')
     );
-    expect(tsOverride.parserOptions).toBeUndefined();
+    expect(tsOverride).toBeDefined();
+    expect(tsOverride?.parserOptions).toBeUndefined();
   });
 
   it('should not touch the package.json when run with `--skipPackageJson`', async () => {

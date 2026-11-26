@@ -31,7 +31,7 @@ export async function normalizeOptions(
       jsOptionName: 'language',
     });
 
-  options.path = undefined; // Now that we have `directory` we don't need `path`
+  Object.assign(options, { path: undefined }); // Now that we have `directory` we don't need `path`
 
   if (!skipLanguageOption) {
     // we assign the language based on the normalized file extension

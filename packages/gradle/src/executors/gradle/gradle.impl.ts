@@ -12,8 +12,10 @@ export default async function gradleExecutor(
   options: GradleExecutorSchema,
   context: ExecutorContext
 ): Promise<{ success: boolean }> {
-  let projectRoot =
-    context.projectGraph.nodes[context.projectName]?.data?.root ?? context.root;
+  const projectNode = context.projectName
+    ? context.projectGraph.nodes[context.projectName]
+    : undefined;
+  let projectRoot = projectNode?.data?.root ?? context.root;
   const customGradleExecutableDirectory =
     getCustomGradleExecutableDirectoryFromPlugin(context.nxJsonConfiguration);
 

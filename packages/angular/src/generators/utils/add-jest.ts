@@ -11,10 +11,10 @@ import { getInstalledAngularVersionInfo, versions } from './version-utils';
 export type AddJestOptions = {
   name: string;
   projectRoot: string;
-  skipPackageJson: boolean;
-  strict: boolean;
+  skipPackageJson?: boolean;
+  strict?: boolean;
   runtimeTsconfigFileName: 'tsconfig.app.json' | 'tsconfig.lib.json';
-  zoneless: boolean;
+  zoneless?: boolean;
 };
 
 export async function addJest(
@@ -91,14 +91,14 @@ const strictTestEnvOptions = `{
   errorOnUnknownProperties: true
 }`;
 
-function getZonelessSetupFile(strict: boolean): string {
+function getZonelessSetupFile(strict: boolean | undefined): string {
   return `import { setupZonelessTestEnv } from 'jest-preset-angular/setup-env/zoneless';
 
 setupZonelessTestEnv(${strict ? strictTestEnvOptions : ''});
 `;
 }
 
-function getZoneSetupFile(strict: boolean): string {
+function getZoneSetupFile(strict: boolean | undefined): string {
   return `import { setupZoneTestEnv } from 'jest-preset-angular/setup-env/zone';
 
 setupZoneTestEnv(${strict ? strictTestEnvOptions : ''});

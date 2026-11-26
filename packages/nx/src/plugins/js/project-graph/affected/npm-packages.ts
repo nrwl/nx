@@ -20,6 +20,7 @@ import {
 } from '../../../../config/project-graph';
 import { NxJsonConfiguration } from '../../../../config/nx-json';
 import { getPackageNameFromImportPath } from '../../../../utils/get-package-name-from-import-path';
+import { getExternalNodes } from '../../lock-file/project-graph-pruning';
 
 export const getTouchedNpmPackages: TouchedProjectLocator<
   WholeFileChange | JsonChange
@@ -42,7 +43,7 @@ export function packageJsonDependencyChanges(
     return { externals: [], changedExternalTypes: ['npm'], projects: [] };
   }
   return {
-    externals: touched.filter((name) => name in projectGraph.externalNodes),
+    externals: touched.filter((name) => name in getExternalNodes(projectGraph)),
     changedExternalTypes: [],
     projects: touched.filter((name) => name in projectGraph.nodes),
   };
@@ -112,7 +113,7 @@ function touchedNpmPackages(
     }
   }
 
-  const npmPackages = Object.values(projectGraph.externalNodes);
+  const npmPackages = Object.values(getExternalNodes(projectGraph));
   let packagesByName: Map<string, ProjectGraphExternalNode[]> | undefined;
 
   const missingTouchedNpmPackages: string[] = [];
@@ -126,8 +127,12 @@ function touchedNpmPackages(
       if (c.type === JsonDiffType.Deleted) {
         return null;
       } else {
-        let npmPackage: ProjectGraphProjectNode | ProjectGraphExternalNode =
-          npmPackages.find((pkg) => pkg.data.packageName === c.path[1]);
+        let npmPackage:
+          | ProjectGraphProjectNode
+          | ProjectGraphExternalNode
+          | undefined = npmPackages.find(
+          (pkg) => pkg.data.packageName === c.path[1]
+        );
         if (!npmPackage) {
           // dependency can also point to a workspace project
           const nodes = Object.values(projectGraph.nodes);

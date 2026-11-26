@@ -91,8 +91,7 @@ export class AngularRspackPlugin implements RspackPluginInstance {
   #sourceFileCache: SourceFileCache;
   #persistentCachePath: string | undefined;
   #javascriptTransformer?: JavaScriptTransformerAdapter;
-  // This will be defined in the apply method correctly
-  #angularCompilation: AngularCompilation;
+  #angularCompilation: AngularCompilation | undefined;
   #collectedStylesheetAssets: Array<{ path: string; text: string }> = [];
   // Latest bundled inputs per stylesheet, persisted across rebuilds since
   // only re-bundled stylesheets produce new results.
@@ -118,6 +117,13 @@ export class AngularRspackPlugin implements RspackPluginInstance {
     this.#i18n = i18nOptions;
     this.#persistentCachePath = getPersistentCachePath(options);
     this.#sourceFileCache = new SourceFileCache(this.#persistentCachePath);
+  }
+
+  #getAngularCompilation(): AngularCompilation {
+    if (!this.#angularCompilation) {
+      throw new Error('The Angular compilation has not been set up.');
+    }
+    return this.#angularCompilation;
   }
 
   // Created on first use: its worker pool would otherwise start whenever the
@@ -723,18 +729,19 @@ export class AngularRspackPlugin implements RspackPluginInstance {
 
   // Starts diagnostics collection for this build.
   #createDiagnosticsPromise(): ReturnType<AngularCompilation['diagnoseFiles']> {
+    const angularCompilation = this.#getAngularCompilation();
     if (!this.#_options.skipTypeChecking) {
-      return this.#angularCompilation.diagnoseFiles(DiagnosticModes.All);
+      return angularCompilation.diagnoseFiles(DiagnosticModes.All);
     }
 
     // Surface everything except Semantic (type-checking) diagnostics.
-    const surfacedDiagnostics = this.#angularCompilation.diagnoseFiles(
+    const surfacedDiagnostics = angularCompilation.diagnoseFiles(
       (DiagnosticModes.All & ~DiagnosticModes.Semantic) as DiagnosticModes
     );
 
     // Angular records state needed for incremental emission during semantic diagnostics.
     // Start both calls together, but discard the semantic result or rejection.
-    const silentSemanticWarmup = this.#angularCompilation
+    const silentSemanticWarmup = angularCompilation
       .diagnoseFiles(DiagnosticModes.Semantic)
       .then(
         () => undefined,
@@ -753,7 +760,7 @@ export class AngularRspackPlugin implements RspackPluginInstance {
     }
     try {
       await buildAndAnalyze(
-        this.#angularCompilation,
+        this.#getAngularCompilation(),
         this.#sourceFileCache.typeScriptFileCache,
         this.#getJavascriptTransformer()
       );

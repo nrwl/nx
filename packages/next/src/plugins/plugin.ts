@@ -24,6 +24,7 @@ import {
   isUsingTsSolutionSetup,
 } from '@nx/js/internal';
 import type { NextConfig } from 'next';
+import type { NextConfigFn } from '../utils/config';
 import { readdirSync } from 'fs';
 import { dirname, join } from 'path';
 
@@ -44,6 +45,17 @@ const nextConfigBlob = '**/next.config.{ts,js,cjs,mjs}';
 // Next.js takes its port and hostname from the CLI and env, not from its
 // config, so the check gets no config file
 const readyWhen = getReadyCheckReadyWhen('@nx/next/ready-check');
+
+type NormalizedNextPluginOptions = NextPluginOptions &
+  Required<
+    Pick<
+      NextPluginOptions,
+      | 'buildTargetName'
+      | 'devTargetName'
+      | 'startTargetName'
+      | 'serveStaticTargetName'
+    >
+  >;
 
 type NextTargets = Record<string, TargetConfiguration<NextPluginOptions>>;
 
@@ -118,7 +130,7 @@ export const createNodesV2 = createNodes;
 
 async function createNodesInternal(
   configFilePath: string,
-  options: NextPluginOptions,
+  options: NormalizedNextPluginOptions,
   context: CreateNodesContext,
   targetsCache: PluginCache<NextTargets>,
   isTsSolutionSetup: boolean,
@@ -156,7 +168,7 @@ async function createNodesInternal(
 async function buildNextTargets(
   nextConfigPath: string,
   projectRoot: string,
-  options: NextPluginOptions,
+  options: NormalizedNextPluginOptions,
   context: CreateNodesContext,
   isTsSolutionSetup: boolean,
   typecheckTargetName: string | false,
@@ -207,12 +219,13 @@ async function getBuildTargetConfig(
 ) {
   const nextOutputPath = await getOutputs(projectRoot, nextConfig);
   // Set output path here so that `withNx` can pick it up.
+  const dependsOn = ['^build'];
   const targetConfig: TargetConfiguration = {
     command: `next build`,
     options: {
       cwd: projectRoot,
     },
-    dependsOn: ['^build'],
+    dependsOn,
     cache: true,
     inputs: getInputs(namedInputs),
     outputs: [`${nextOutputPath}/!(cache)/**/*`, `${nextOutputPath}/!(cache)`],
@@ -228,7 +241,7 @@ async function getBuildTargetConfig(
     // `next build` type-checks against dependency declarations, which the
     // dependencies' typecheck targets emit in TS solution setups.
     if (typecheckTargetName) {
-      targetConfig.dependsOn.push(`^${typecheckTargetName}`);
+      dependsOn.push(`^${typecheckTargetName}`);
     }
     targetConfig.syncGenerators = ['@nx/js:typescript-sync'];
   }
@@ -280,7 +293,7 @@ function getDevTargetConfig(
 
 function getStartTargetConfig(
   namedInputs: { [inputName: string]: any[] },
-  options: NextPluginOptions,
+  options: NormalizedNextPluginOptions,
   projectRoot: string
 ) {
   const targetConfig: TargetConfiguration = {
@@ -297,7 +310,10 @@ function getStartTargetConfig(
   return targetConfig;
 }
 
-async function getOutputs(projectRoot, nextConfig) {
+async function getOutputs(
+  projectRoot: string,
+  nextConfig: NextConfig | NextConfigFn
+) {
   const { PHASE_PRODUCTION_BUILD } = require('next/constants');
   let resolvedConfig: Pick<NextConfig, 'distDir' | 'output'> | undefined;
 
@@ -378,17 +394,20 @@ async function filterNextConfigs(
   };
 }
 
-function normalizeOptions(options: NextPluginOptions): NextPluginOptions {
+function normalizeOptions(
+  options: NextPluginOptions | undefined
+): NormalizedNextPluginOptions {
   options ??= {};
-  options.buildTargetName ??= 'build';
-  options.devTargetName ??= 'dev';
-  options.startTargetName ??= 'start';
-  options.serveStaticTargetName ??= 'serve-static';
-  return options;
+  return Object.assign(options, {
+    buildTargetName: options.buildTargetName ?? 'build',
+    devTargetName: options.devTargetName ?? 'dev',
+    startTargetName: options.startTargetName ?? 'start',
+    serveStaticTargetName: options.serveStaticTargetName ?? 'serve-static',
+  });
 }
 
 function getInputs(
-  namedInputs: NxJsonConfiguration['namedInputs']
+  namedInputs: NonNullable<NxJsonConfiguration['namedInputs']>
 ): TargetConfiguration['inputs'] {
   return [
     ...('production' in namedInputs

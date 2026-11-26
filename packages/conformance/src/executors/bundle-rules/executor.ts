@@ -58,9 +58,9 @@ function getDependenciesForRule(
   // Get all unique imports across all entry points
   const imports = new Set<string>();
   Object.values(metafile.outputs).forEach((output) => {
-    Object.keys(output.imports).forEach((imp) => {
+    output.imports.forEach((imp) => {
       // The 'path' property contains the imported package name
-      imports.add(output.imports[imp].path);
+      imports.add(imp.path);
     });
   });
 

@@ -23,11 +23,11 @@ export function waitForPortOpen(
         resolve();
       });
 
-      client.once('error', (err) => {
-        if (retries === 0 || !allowedErrorCodes.includes(err['code'])) {
+      client.once('error', (err: NodeJS.ErrnoException) => {
+        if (retries === 0 || !allowedErrorCodes.includes(err.code ?? '')) {
           if (process.env['NX_VERBOSE_LOGGING'] === 'true') {
             logger.info(
-              `Error connecting on ${host}:${port}: ${err['code'] || err}`
+              `Error connecting on ${host}:${port}: ${err.code || err}`
             );
           }
           cleanupClient();

@@ -77,7 +77,7 @@ export async function addLinting(
 
     editEslintConfigFiles(host, options.projectRoot);
 
-    const devDependencies = {
+    const devDependencies: Record<string, string> = {
       '@vue/eslint-config-prettier': vueEslintConfigPrettierVersion,
       '@vue/eslint-config-typescript': vueEslintConfigTypescriptVersion,
       'eslint-plugin-vue': eslintPluginVueVersion,
@@ -147,19 +147,17 @@ function editEslintConfigFiles(tree: Tree, projectRoot: string) {
         'flat/recommended',
         { moduleName: 'vue', moduleImportPath: 'eslint-plugin-vue' }
       );
-      // This allows .vue files to be parsed
-      addOverrideToLintConfig(
-        tree,
-        projectRoot,
-        {
-          files: ['**/*.vue'],
-          languageOptions: {
-            parserOptions: {
-              parser: '@typescript-eslint/parser',
-            },
+      // languageOptions is not present on eslintrc override, but it is for flat config
+      const vueParserOverride = {
+        files: ['**/*.vue'],
+        languageOptions: {
+          parserOptions: {
+            parser: '@typescript-eslint/parser',
           },
-        } as unknown // languageOptions is not present on eslintrc override, but it is for flat config
-      );
+        },
+      };
+      // This allows .vue files to be parsed
+      addOverrideToLintConfig(tree, projectRoot, vueParserOverride);
       // Add an empty rules object to users know how to add/override rules
       addOverrideToLintConfig(tree, projectRoot, {
         files: ['*.ts', '*.tsx', '*.js', '*.jsx', '*.vue'],
@@ -170,7 +168,7 @@ function editEslintConfigFiles(tree: Tree, projectRoot: string) {
         lintConfigHasOverride(
           tree,
           projectRoot,
-          (o) => o.parserOptions && !hasVueFiles(o),
+          (o) => !!o.parserOptions && !hasVueFiles(o),
           true
         )
       ) {
@@ -203,7 +201,7 @@ function editEslintConfigFiles(tree: Tree, projectRoot: string) {
     lintConfigHasOverride(
       tree,
       '',
-      (o) => o.rules?.['@nx/enforce-module-boundaries'] && !hasVueFiles(o),
+      (o) => !!o.rules?.['@nx/enforce-module-boundaries'] && !hasVueFiles(o),
       true
     )
   ) {

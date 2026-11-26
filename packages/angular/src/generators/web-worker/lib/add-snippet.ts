@@ -36,6 +36,9 @@ export function addSnippet(tree: Tree, name: string, path: string) {
   // Add snippet to the first alphabetically sorted sibling file
   const siblingModulePath = joinPathFragments(path, siblingModules[0]);
   const originalContent = tree.read(siblingModulePath, 'utf-8');
+  if (originalContent === null) {
+    return;
+  }
   const newContent = originalContent.trim()
     ? `${originalContent}\n${workerCreationSnippet}`
     : workerCreationSnippet;

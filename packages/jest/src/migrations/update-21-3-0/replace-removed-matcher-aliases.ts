@@ -25,6 +25,9 @@ export default async function (tree: Tree) {
   const testFilePaths = await getTestFilePaths(tree);
   for (const testFilePath of testFilePaths) {
     const testFileContent = tree.read(testFilePath, 'utf-8');
+    if (testFileContent === null) {
+      throw new Error(`Could not read ${testFilePath}.`);
+    }
     const updatedContent = replaceMatcherAliases(testFileContent);
     if (updatedContent !== testFileContent) {
       tree.write(testFilePath, updatedContent);
@@ -93,6 +96,9 @@ async function getTestFilePaths(tree: Tree): Promise<string[]> {
   const testFilePaths = new Set<string>();
   for (const jestConfigFile of jestConfigFiles) {
     const jestConfigContent = tree.read(jestConfigFile, 'utf-8');
+    if (jestConfigContent === null) {
+      throw new Error(`Could not read ${jestConfigFile}.`);
+    }
     if (jestConfigContent.includes('getJestProjectsAsync()')) {
       // skip the root jest config file which includes all projects
       continue;
@@ -123,7 +129,7 @@ async function resolveTestPaths(
 
   let config: Awaited<ReturnType<typeof readConfig>>;
   try {
-    config = await readConfig({ _: [], $0: undefined }, fullConfigPath);
+    config = await readConfig({ _: [], $0: '' }, fullConfigPath);
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);
     logger.warn(

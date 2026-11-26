@@ -40,6 +40,9 @@ export function findModule(tree: Tree, path: string, module?: string) {
 
   const modules = candidatePaths.filter((p) => {
     const moduleContents = tree.read(p, 'utf-8');
+    if (moduleContents === null) {
+      throw new Error(`Cannot find the file '${p}'.`);
+    }
     return moduleContents.includes('@NgModule');
   });
 
@@ -89,6 +92,9 @@ export function addToNgModule(
     : `./${relativePath}`;
 
   const moduleContents = tree.read(modulePath, 'utf-8');
+  if (moduleContents === null) {
+    throw new Error(`Cannot find the file '${modulePath}'.`);
+  }
   const source = tsModule.createSourceFile(
     modulePath,
     moduleContents,

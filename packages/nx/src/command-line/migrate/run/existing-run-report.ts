@@ -16,6 +16,7 @@ import {
   type MigrateCommitLedgerEntry,
   type MigrateRunPolicy,
   type MigrateRunState,
+  type MigrateStep,
 } from './run-state';
 import { unresolvedIssues } from './issues';
 import { describeHolders, liveRunActivityPids } from './state-lock';
@@ -126,7 +127,8 @@ export function liveWorkers(
 ): ExistingRunFacts['liveWorkers'] {
   return state.steps
     .filter(
-      (s) => s.status === 'running' && s.pid !== undefined && isPidAlive(s.pid)
+      (s): s is MigrateStep & { pid: number } =>
+        s.status === 'running' && s.pid !== undefined && isPidAlive(s.pid)
     )
     .map((s) => ({ pid: s.pid, stepId: s.id, label: stepLabel(s) }));
 }
@@ -206,7 +208,7 @@ export function renderExistingRunCommands(
       agentic === false ? undefined : agentic
     ),
     startFresh:
-      flag === null
+      flag === null && migrationsPath !== undefined
         ? { migrationsPath }
         : {
             command: `${pmExecPrefix(root)} nx migrate ${flag}${

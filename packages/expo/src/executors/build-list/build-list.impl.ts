@@ -17,8 +17,11 @@ export default async function* buildListExecutor(
   options: ExpoEasBuildListOptions,
   context: ExecutorContext
 ): AsyncGenerator<ReactNativeBuildListOutput> {
-  const projectRoot =
-    context.projectsConfigurations.projects[context.projectName].root;
+  const { projectName } = context;
+  if (!projectName) {
+    throw new Error('The build-list executor requires a project name.');
+  }
+  const projectRoot = context.projectsConfigurations.projects[projectName].root;
 
   try {
     if (options.json) {
@@ -55,8 +58,13 @@ export function runCliBuildList(
     process.on('exit', () => childProcess.kill());
     process.on('SIGTERM', () => childProcess.kill());
 
+    const { stdout } = childProcess;
+    if (!stdout) {
+      throw new Error('eas build:list was spawned without a piped stdout');
+    }
+
     let output = '';
-    childProcess.stdout.on('data', (message) => {
+    stdout.on('data', (message) => {
       output += message.toString();
       logger.info(message.toString());
       // when interactive is false, resolve the promise when the child process exits
@@ -80,22 +88,24 @@ export function runCliBuildList(
 
 const nxOptions = ['output'];
 function createBuildListOptions(options: ExpoEasBuildListOptions): string[] {
-  return Object.keys(options).reduce((acc, optionKey) => {
-    const optionValue = options[optionKey];
-    if (!nxOptions.includes(optionKey)) {
-      if (optionKey === 'interactive') {
-        if (optionValue === false) {
-          acc.push(`--non-interactive`);
+  return Object.entries(options).reduce<string[]>(
+    (acc, [optionKey, optionValue]) => {
+      if (!nxOptions.includes(optionKey)) {
+        if (optionKey === 'interactive') {
+          if (optionValue === false) {
+            acc.push(`--non-interactive`);
+          }
+        } else if (typeof optionValue === 'boolean') {
+          if (optionValue === true) {
+            // when true, does not need to pass the value true, just need to pass the flag in camel case
+            acc.push(`--${names(optionKey).propertyName}`);
+          }
+        } else {
+          acc.push(`--${names(optionKey).propertyName}`, String(optionValue));
         }
-      } else if (typeof optionValue === 'boolean') {
-        if (optionValue === true) {
-          // when true, does not need to pass the value true, just need to pass the flag in camel case
-          acc.push(`--${names(optionKey).propertyName}`);
-        }
-      } else {
-        acc.push(`--${names(optionKey).propertyName}`, optionValue);
       }
-    }
-    return acc;
-  }, []);
+      return acc;
+    },
+    []
+  );
 }

@@ -149,13 +149,16 @@ export class FsTree implements Tree {
   read(filePath: string, encoding?: BufferEncoding): Buffer | string | null {
     filePath = this.normalize(filePath);
     try {
-      let content: Buffer;
+      let content: Buffer | null;
       if (this.recordedChanges[this.rp(filePath)]) {
         content = this.recordedChanges[this.rp(filePath)].content;
       } else {
         content = this.fsReadFile(filePath);
       }
 
+      if (content === null) {
+        return null;
+      }
       return encoding ? content.toString(encoding) : content;
     } catch (e) {
       if (this.isVerbose) {
@@ -261,6 +264,9 @@ export class FsTree implements Tree {
 
     if (this.isFile(from)) {
       const content = this.read(this.rp(from));
+      if (content === null) {
+        throw new Error(`Cannot read ${from}.`);
+      }
       this.write(this.rp(to), content);
       this.delete(this.rp(from));
     } else {
@@ -410,7 +416,7 @@ export class FsTree implements Tree {
   }
 
   private directChildrenOfDir(path: string): string[] {
-    const res = {};
+    const res: Record<string, boolean> = {};
     if (path === '') {
       return Object.keys(this.recordedChanges).map(
         (file) => file.split('/')[0]
@@ -438,16 +444,18 @@ export class FsTree implements Tree {
 export function flushChanges(root: string, fileChanges: FileChange[]): void {
   fileChanges.forEach((f) => {
     const fpath = join(root, f.path);
+    if (f.type === 'DELETE') {
+      rmSync(fpath, { recursive: true, force: true });
+      return;
+    }
+    if (f.content === null) {
+      throw new Error(`No content recorded for ${f.type} of ${f.path}.`);
+    }
     if (f.type === 'CREATE') {
       mkdirSync(dirname(fpath), { recursive: true });
-      writeFileSync(fpath, f.content);
-      if (f.options?.mode) chmodSync(fpath, f.options.mode);
-    } else if (f.type === 'UPDATE') {
-      writeFileSync(fpath, f.content);
-      if (f.options?.mode) chmodSync(fpath, f.options.mode);
-    } else if (f.type === 'DELETE') {
-      rmSync(fpath, { recursive: true, force: true });
     }
+    writeFileSync(fpath, f.content);
+    if (f.options?.mode) chmodSync(fpath, f.options.mode);
   });
 }
 

@@ -88,6 +88,9 @@ export async function applicationGenerator(
 
   if (options.rootProject) {
     const nxJson = readNxJson(tree);
+    if (!nxJson) {
+      throw new Error('Cannot find nx.json');
+    }
     nxJson.defaultProject = options.name;
     updateNxJson(tree, nxJson);
   }

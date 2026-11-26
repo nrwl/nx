@@ -87,7 +87,7 @@ export function applyProjectNodesAndFiles(
   projectNodesWithFiles: ProjectNodesWithFiles[]
 ): void {
   // Create the files in the tree
-  const filesObject: Record<string, string> = projectNodesWithFiles.reduce(
+  const filesObject = projectNodesWithFiles.reduce<Record<string, string>>(
     (acc, { projectNode, projectFiles }) => {
       (projectFiles ?? []).forEach(({ projectRootRelativeFile }) => {
         const fullPath = joinPathFragments(

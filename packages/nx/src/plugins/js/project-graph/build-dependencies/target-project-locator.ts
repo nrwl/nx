@@ -44,8 +44,8 @@ type PathPattern = {
   suffix: string;
 };
 type ParsedPatterns = {
-  matchableStrings: Set<string> | undefined;
-  patterns: PathPattern[] | undefined;
+  matchableStrings: Set<string>;
+  patterns: PathPattern[];
 };
 type LinkedProjectTarget = {
   project: string;
@@ -53,7 +53,7 @@ type LinkedProjectTarget = {
 };
 
 function isLinkedProjectTarget(
-  target: string | LinkedProjectTarget
+  target: string | LinkedProjectTarget | null | undefined
 ): target is LinkedProjectTarget {
   return typeof target === 'object' && target !== null;
 }
@@ -123,6 +123,8 @@ function startsWithConfigDirTemplate(value: string): boolean {
   return value.toLowerCase().startsWith(configDirTemplate.toLowerCase());
 }
 
+type LocatorProjectNode = Omit<ProjectGraphProjectNode, 'type'>;
+
 export class TargetProjectLocator {
   private projectRootMappings = createProjectRootMappings(this.nodes);
   private npmProjects: Record<string, ProjectGraphExternalNode | null>;
@@ -138,14 +140,16 @@ export class TargetProjectLocator {
   private typescriptResolvable: boolean | undefined;
   private linkedProjectCache = new Map<string, string | null>();
   private catalogManager: CatalogManager | null | undefined;
-  private packagesMetadata: {
-    entryPointsToProjectMap: Record<string, ProjectGraphProjectNode>;
-    wildcardEntryPointsToProjectMap: Record<string, ProjectGraphProjectNode>;
-    packageToProjectMap: Record<string, ProjectGraphProjectNode>;
-  };
+  private packagesMetadata:
+    | {
+        entryPointsToProjectMap: Record<string, LocatorProjectNode>;
+        wildcardEntryPointsToProjectMap: Record<string, LocatorProjectNode>;
+        packageToProjectMap: Record<string, LocatorProjectNode>;
+      }
+    | undefined;
 
   constructor(
-    private readonly nodes: Record<string, ProjectGraphProjectNode>,
+    private readonly nodes: Record<string, LocatorProjectNode>,
     private readonly externalNodes: Record<
       string,
       ProjectGraphExternalNode
@@ -211,7 +215,10 @@ export class TargetProjectLocator {
    * @param importExpr
    * @param filePath
    */
-  findProjectFromImport(importExpr: string, filePath: string): string {
+  findProjectFromImport(
+    importExpr: string,
+    filePath: string
+  ): string | null | undefined {
     const target = this.resolveImportTarget(importExpr, filePath);
     return isLinkedProjectTarget(target) ? target.project : target;
   }
@@ -235,7 +242,7 @@ export class TargetProjectLocator {
   private resolveImportTarget(
     importExpr: string,
     filePath: string
-  ): string | LinkedProjectTarget {
+  ): string | LinkedProjectTarget | null | undefined {
     if (isRelativePath(importExpr)) {
       const resolvedModule = posix.join(dirname(filePath), importExpr);
       return this.findProjectOfResolvedModule(resolvedModule);
@@ -352,8 +359,9 @@ export class TargetProjectLocator {
 
     const npmImportForProject = `${packageName}__${workspaceRelativeDirPath}`;
     const npmResolutionCache = this.getNpmResolutionCache(packageName);
-    if (npmResolutionCache.has(npmImportForProject)) {
-      return npmResolutionCache.get(npmImportForProject);
+    const cachedResolution = npmResolutionCache.get(npmImportForProject);
+    if (cachedResolution !== undefined) {
+      return cachedResolution;
     }
 
     try {
@@ -543,13 +551,12 @@ export class TargetProjectLocator {
         : join(workspaceRoot, fromFilePath)
     );
     const cacheKey = `${packageName}__${fullDirPath}`;
-    if (!this.linkedProjectCache.has(cacheKey)) {
-      this.linkedProjectCache.set(
-        cacheKey,
-        this.findLinkedProjectFromDir(packageName, fullDirPath)
-      );
+    let linkedProject = this.linkedProjectCache.get(cacheKey);
+    if (linkedProject === undefined) {
+      linkedProject = this.findLinkedProjectFromDir(packageName, fullDirPath);
+      this.linkedProjectCache.set(cacheKey, linkedProject);
     }
-    return this.linkedProjectCache.get(cacheKey);
+    return linkedProject;
   }
 
   // Node loads the nearest node_modules copy, so that one decides. A link
@@ -674,7 +681,7 @@ export class TargetProjectLocator {
       : undefined;
   }
 
-  findImportInWorkspaceProjects(importPath: string): string | null {
+  findImportInWorkspaceProjects(importPath: string): string | null | undefined {
     this.packagesMetadata ??= getWorkspacePackagesMetadata(this.nodes);
 
     if (this.packagesMetadata.entryPointsToProjectMap[importPath]) {
@@ -698,7 +705,7 @@ export class TargetProjectLocator {
 
     const maybeDep = this.packagesMetadata.packageToProjectMap[dep];
 
-    const maybeDepMetadata = maybeDep?.data.metadata.js;
+    const maybeDepMetadata = maybeDep?.data.metadata?.js;
 
     if (!maybeDepMetadata) {
       return null;
@@ -753,6 +760,7 @@ export class TargetProjectLocator {
     }
 
     if (
+      maybeDepMetadata.packageVersion !== undefined &&
       satisfies(maybeDepMetadata.packageVersion, normalizedRange, {
         includePrerelease: true,
       })
@@ -775,10 +783,11 @@ export class TargetProjectLocator {
   }
 
   private parsePaths(paths: Record<string, string>): void {
-    this.parsedPathPatterns = {
+    const parsedPathPatterns: ParsedPatterns = {
       matchableStrings: new Set(),
       patterns: [],
     };
+    this.parsedPathPatterns = parsedPathPatterns;
 
     for (const key of Object.keys(paths)) {
       const parts = key.split('*');
@@ -786,10 +795,10 @@ export class TargetProjectLocator {
         continue;
       }
       if (parts.length === 1) {
-        this.parsedPathPatterns.matchableStrings.add(key);
+        parsedPathPatterns.matchableStrings.add(key);
         continue;
       }
-      this.parsedPathPatterns.patterns.push({
+      parsedPathPatterns.patterns.push({
         pattern: key,
         prefix: parts[0],
         suffix: parts[1],
@@ -800,8 +809,8 @@ export class TargetProjectLocator {
   private resolveImportWithTypescript(
     normalizedImportExpr: string,
     filePath: string
-  ): string | undefined {
-    let resolvedModule: string;
+  ): string | null | undefined {
+    let resolvedModule: string | null | undefined;
     if (!isAbsolute(filePath)) {
       // Convert to an absolute file path because TypeScript's module resolution won't
       // properly walk up the directory tree (toward the workspace root) when given a relative path.
@@ -814,13 +823,14 @@ export class TargetProjectLocator {
       : // fall back to the file path if the project can't be determined
         filePath;
     const cacheKey = `${normalizedImportExpr}__${cacheScope}`;
+    const { absolutePath: tsConfigAbsolutePath } = this.tsConfig;
     if (this.typescriptResolutionCache.has(cacheKey)) {
       resolvedModule = this.typescriptResolutionCache.get(cacheKey);
-    } else {
+    } else if (tsConfigAbsolutePath) {
       resolvedModule = resolveModuleByImport(
         normalizedImportExpr,
         filePath,
-        this.tsConfig.absolutePath
+        tsConfigAbsolutePath
       );
       this.typescriptResolutionCache.set(
         cacheKey,
@@ -896,7 +906,10 @@ export class TargetProjectLocator {
       sourceFilePath,
       this.projectRootMappings
     );
-    const sourceProjectRoot = this.nodes[sourceProjectName]?.data.root ?? '.';
+    const sourceProjectRoot =
+      (sourceProjectName
+        ? this.nodes[sourceProjectName]?.data.root
+        : undefined) ?? '.';
 
     // tsc replaces the template with './' and normalizes against the config dir;
     // here the config dir is the source project root (workspace-relative).
@@ -930,7 +943,7 @@ export class TargetProjectLocator {
 
   private findMatchingProjectFiles(file: string) {
     const project = findProjectForPath(file, this.projectRootMappings);
-    return this.nodes[project];
+    return project ? this.nodes[project] : undefined;
   }
 
   /**
@@ -991,6 +1004,9 @@ export class TargetProjectLocator {
         }
       }
 
+      if (!pathOfFileInPackage) {
+        return null;
+      }
       let dir = dirname(pathOfFileInPackage);
 
       while (dir !== dirname(dir)) {

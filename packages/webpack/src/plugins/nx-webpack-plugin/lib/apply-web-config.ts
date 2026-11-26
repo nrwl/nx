@@ -1,13 +1,14 @@
 import * as path from 'path';
 import type {
   Configuration,
+  EntryObject,
   RuleSetRule,
   WebpackOptionsNormalized,
   WebpackPluginInstance,
 } from 'webpack';
 
 import { WriteIndexHtmlPlugin } from '../../write-index-html-plugin';
-import { NormalizedNxAppWebpackPluginOptions } from '../nx-app-webpack-plugin-options';
+import { ApplyConfigOptions } from '../nx-app-webpack-plugin-options';
 import { getOutputHashFormat } from '../../../utils/hash-format';
 import { getClientEnvironment } from '../../../utils/get-client-environment';
 import { normalizeExtraEntryPoints } from '../../../utils/webpack/normalize-entry';
@@ -19,7 +20,7 @@ import {
 import { instantiateScriptPlugins } from './instantiate-script-plugins';
 
 export function applyWebConfig(
-  options: NormalizedNxAppWebpackPluginOptions,
+  options: ApplyConfigOptions,
   config: Partial<WebpackOptionsNormalized | Configuration> = {},
   {
     useNormalizedEntry,
@@ -99,10 +100,10 @@ export function applyWebConfig(
   const sassOptions = options.stylePreprocessorOptions?.sassOptions;
   const lessOptions = options.stylePreprocessorOptions?.lessOptions;
   const includePaths: string[] = [];
-  if (options?.stylePreprocessorOptions?.includePaths?.length > 0) {
-    options.stylePreprocessorOptions.includePaths.forEach(
-      (includePath: string) =>
-        includePaths.push(path.resolve(options.root, includePath))
+  const styleIncludePaths = options.stylePreprocessorOptions?.includePaths;
+  if (styleIncludePaths && styleIncludePaths.length > 0) {
+    styleIncludePaths.forEach((includePath: string) =>
+      includePaths.push(path.resolve(options.root, includePath))
     );
   }
 
@@ -313,24 +314,31 @@ export function applyWebConfig(
   if (Array.isArray(config.entry))
     throw new Error('Entry array is not supported. Use an object.');
 
+  const configEntry = config.entry as EntryObject;
   Object.entries(entries).forEach(([entryName, entryData]) => {
     if (useNormalizedEntry) {
-      config.entry[entryName] = { import: entryData.import };
+      configEntry[entryName] = { import: entryData.import };
     } else {
-      config.entry[entryName] = entryData.import;
+      configEntry[entryName] = entryData.import;
     }
   });
 
+  const { optimization, resolve, module } = config;
+  if (!optimization?.minimizer || !resolve || !module) {
+    throw new Error(
+      'Expected the webpack config to define optimization.minimizer, resolve and module.'
+    );
+  }
   config.optimization = {
-    ...config.optimization,
-    minimizer: [...config.optimization.minimizer, ...minimizer],
+    ...optimization,
+    minimizer: [...optimization.minimizer, ...minimizer],
     emitOnErrors: false,
     moduleIds: 'deterministic' as const,
     runtimeChunk: options.runtimeChunk ? { name: 'runtime' } : false,
     splitChunks: {
       defaultSizeTypes:
-        config.optimization.splitChunks !== false
-          ? config.optimization.splitChunks?.defaultSizeTypes
+        optimization.splitChunks !== false
+          ? optimization.splitChunks?.defaultSizeTypes
           : ['...'],
       maxAsyncRequests: Infinity,
       cacheGroups: {
@@ -357,12 +365,12 @@ export function applyWebConfig(
     },
   };
 
-  config.resolve.mainFields = ['browser', 'module', 'main'];
+  resolve.mainFields = ['browser', 'module', 'main'];
 
   config.module = {
-    ...config.module,
+    ...module,
     rules: [
-      ...(config.module.rules ?? []),
+      ...(module.rules ?? []),
       // Images: Inline small images, and emit a separate file otherwise (including SVGs).
       {
         test: /\.(avif|bmp|gif|ico|jpe?g|png|svg|webp)$/,

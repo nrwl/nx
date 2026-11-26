@@ -75,7 +75,7 @@ function createRollupConfig(
     : joinPathFragments(
         offsetFromRoot(project.root),
         'dist',
-        project.root === '.' ? project.name : project.root
+        project.root === '.' ? (project.name ?? options.project) : project.root
       );
 
   const buildOptions: RollupWithNxPluginOptions = {
@@ -160,12 +160,19 @@ function updatePackageJson(
 
     // rollup has a specific declaration file generation not handled by the util above,
     // adjust accordingly
-    const typingsFile = (packageJson.module ?? packageJson.main).replace(
-      /\.js$/,
-      '.d.ts'
-    );
+    const entryFile = packageJson.module ?? packageJson.main;
+    const rootExport =
+      typeof packageJson.exports === 'object'
+        ? packageJson.exports['.']
+        : undefined;
+    if (!entryFile || typeof rootExport !== 'object') {
+      throw new Error(
+        `Expected ${packageJsonPath} to have an entry point and an "exports['.']" object.`
+      );
+    }
+    const typingsFile = entryFile.replace(/\.js$/, '.d.ts');
     packageJson.types = typingsFile;
-    packageJson.exports['.'].types = typingsFile;
+    rootExport.types = typingsFile;
   }
 
   writeJson(tree, packageJsonPath, packageJson);

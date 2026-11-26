@@ -3,26 +3,28 @@ import { getRoutesForEnvironment } from '../routes';
 import { useState } from 'react';
 import { getEnvironmentConfig } from '@nx/graph-shared';
 
-export const useCurrentPath = () => {
-  const [lastLocation, setLastLocation] = useState<string>();
-  const [lastPath, setLastPath] = useState<{
-    workspace: string;
-    currentPath: string;
-  }>();
+interface CurrentPath {
+  workspace: string;
+  currentPath: string;
+}
+
+export const useCurrentPath = (): CurrentPath => {
+  const [last, setLast] = useState<{ location: string; path: CurrentPath }>();
 
   const location = useLocation();
 
-  if (location.pathname === lastLocation) {
-    return lastPath;
+  if (last && location.pathname === last.location) {
+    return last.path;
   }
 
-  setLastLocation(location.pathname);
-
-  const route = matchRoutes(getRoutesForEnvironment(), location).at(-1);
+  const route = matchRoutes(getRoutesForEnvironment(), location)?.at(-1);
+  if (!route) {
+    throw new Error(`No route matches ${location.pathname}`);
+  }
 
   const { environment } = getEnvironmentConfig();
 
-  let currentPath: { workspace: string; currentPath: string };
+  let currentPath: CurrentPath;
   // if using dev routes, remove first segment for workspace
   if (environment === 'dev') {
     currentPath = {
@@ -32,6 +34,6 @@ export const useCurrentPath = () => {
   } else {
     currentPath = { workspace: 'local', currentPath: route.pathname };
   }
-  setLastPath(currentPath);
+  setLast({ location: location.pathname, path: currentPath });
   return currentPath;
 };

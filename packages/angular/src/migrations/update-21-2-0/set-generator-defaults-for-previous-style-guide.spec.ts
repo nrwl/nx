@@ -1,4 +1,9 @@
-import { readNxJson, updateNxJson, type Tree } from '@nx/devkit';
+import {
+  readNxJson,
+  updateJson,
+  type NxJsonConfiguration,
+  type Tree,
+} from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import migration from './set-generator-defaults-for-previous-style-guide';
 
@@ -10,14 +15,15 @@ describe('set-generator-defaults-for-previous-style-guide', () => {
   });
 
   it('should add the generator defaults when there is no generators property in the nx.json file', async () => {
-    const nxJson = readNxJson(tree);
-    delete nxJson.generators;
-    updateNxJson(tree, nxJson);
+    updateJson<NxJsonConfiguration>(tree, 'nx.json', (nxJson) => {
+      delete nxJson.generators;
+      return nxJson;
+    });
 
     await migration(tree);
 
     const updatedNxJson = readNxJson(tree);
-    expect(updatedNxJson.generators).toMatchInlineSnapshot(`
+    expect(updatedNxJson?.generators).toMatchInlineSnapshot(`
       {
         "@nx/angular:component": {
           "type": "component",
@@ -78,14 +84,15 @@ describe('set-generator-defaults-for-previous-style-guide', () => {
   });
 
   it('should add the generator defaults when there is an empty generators property in the nx.json file', async () => {
-    const nxJson = readNxJson(tree);
-    nxJson.generators = {};
-    updateNxJson(tree, nxJson);
+    updateJson<NxJsonConfiguration>(tree, 'nx.json', (nxJson) => {
+      nxJson.generators = {};
+      return nxJson;
+    });
 
     await migration(tree);
 
     const updatedNxJson = readNxJson(tree);
-    expect(updatedNxJson.generators).toMatchInlineSnapshot(`
+    expect(updatedNxJson?.generators).toMatchInlineSnapshot(`
       {
         "@nx/angular:component": {
           "type": "component",
@@ -146,19 +153,20 @@ describe('set-generator-defaults-for-previous-style-guide', () => {
   });
 
   it('should not override existing generator defaults for the full generator specifier (<collection>:<generator>) ', async () => {
-    const nxJson = readNxJson(tree);
-    nxJson.generators = {
-      '@nx/angular:component': { type: 'cmp' },
-      '@schematics/angular:component': { type: 'cmp' },
-      '@nx/angular:interceptor': { typeSeparator: '-' },
-      '@schematics/angular:interceptor': { typeSeparator: '-' },
-    };
-    updateNxJson(tree, nxJson);
+    updateJson<NxJsonConfiguration>(tree, 'nx.json', (nxJson) => {
+      nxJson.generators = {
+        '@nx/angular:component': { type: 'cmp' },
+        '@schematics/angular:component': { type: 'cmp' },
+        '@nx/angular:interceptor': { typeSeparator: '-' },
+        '@schematics/angular:interceptor': { typeSeparator: '-' },
+      };
+      return nxJson;
+    });
 
     await migration(tree);
 
     const updatedNxJson = readNxJson(tree);
-    expect(updatedNxJson.generators).toMatchInlineSnapshot(`
+    expect(updatedNxJson?.generators).toMatchInlineSnapshot(`
       {
         "@nx/angular:component": {
           "type": "cmp",
@@ -219,23 +227,24 @@ describe('set-generator-defaults-for-previous-style-guide', () => {
   });
 
   it('should not override existing generator defaults for nested generator specifiers (<collection>.<generator>)', async () => {
-    const nxJson = readNxJson(tree);
-    nxJson.generators = {
-      '@nx/angular': {
-        component: { type: 'cmp' },
-        interceptor: { typeSeparator: '-' },
-      },
-      '@schematics/angular': {
-        component: { type: 'cmp' },
-        interceptor: { typeSeparator: '-' },
-      },
-    };
-    updateNxJson(tree, nxJson);
+    updateJson<NxJsonConfiguration>(tree, 'nx.json', (nxJson) => {
+      nxJson.generators = {
+        '@nx/angular': {
+          component: { type: 'cmp' },
+          interceptor: { typeSeparator: '-' },
+        },
+        '@schematics/angular': {
+          component: { type: 'cmp' },
+          interceptor: { typeSeparator: '-' },
+        },
+      };
+      return nxJson;
+    });
 
     await migration(tree);
 
     const updatedNxJson = readNxJson(tree);
-    expect(updatedNxJson.generators).toMatchInlineSnapshot(`
+    expect(updatedNxJson?.generators).toMatchInlineSnapshot(`
       {
         "@nx/angular": {
           "component": {

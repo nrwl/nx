@@ -34,7 +34,7 @@ describe('convert-to-application-executor generator', () => {
       await convertToApplicationExecutor(tree, {});
 
       const project = readProjectConfiguration(tree, 'app1');
-      expect(project.targets.build.executor).toBe(expected);
+      expect(project.targets?.build.executor).toBe(expected);
     }
   );
 
@@ -57,8 +57,8 @@ describe('convert-to-application-executor generator', () => {
     await convertToApplicationExecutor(tree, {});
 
     const project = readProjectConfiguration(tree, 'app1');
-    expect(project.targets.build.executor).toBe('@nx/angular:webpack-browser');
-    expect(project.targets.build.options.customWebpackConfig).toStrictEqual({
+    expect(project.targets?.build.executor).toBe('@nx/angular:webpack-browser');
+    expect(project.targets?.build.options.customWebpackConfig).toStrictEqual({
       path: 'app1/webpack.config.js',
     });
   });
@@ -80,8 +80,8 @@ describe('convert-to-application-executor generator', () => {
     await convertToApplicationExecutor(tree, {});
 
     const project = readProjectConfiguration(tree, 'app1');
-    expect(project.targets.build.options.browser).toBe('app1/main.ts');
-    expect(project.targets.build.options.main).toBeUndefined();
+    expect(project.targets?.build.options.browser).toBe('app1/main.ts');
+    expect(project.targets?.build.options.main).toBeUndefined();
   });
 
   it('should rename "ngswConfigPath" to "serviceWorker"', async () => {
@@ -101,10 +101,10 @@ describe('convert-to-application-executor generator', () => {
     await convertToApplicationExecutor(tree, {});
 
     const project = readProjectConfiguration(tree, 'app1');
-    expect(project.targets.build.options.serviceWorker).toBe(
+    expect(project.targets?.build.options.serviceWorker).toBe(
       'app1/ngsw-config.json'
     );
-    expect(project.targets.build.options.ngswConfigPath).toBeUndefined();
+    expect(project.targets?.build.options.ngswConfigPath).toBeUndefined();
   });
 
   it('should convert a string value for "polyfills" to an array', async () => {
@@ -124,7 +124,7 @@ describe('convert-to-application-executor generator', () => {
     await convertToApplicationExecutor(tree, {});
 
     const project = readProjectConfiguration(tree, 'app1');
-    expect(project.targets.build.options.polyfills).toStrictEqual(['zone.js']);
+    expect(project.targets?.build.options.polyfills).toStrictEqual(['zone.js']);
   });
 
   it('should update "outputs"', async () => {
@@ -146,7 +146,7 @@ describe('convert-to-application-executor generator', () => {
     await convertToApplicationExecutor(tree, {});
 
     const project = readProjectConfiguration(tree, 'app1');
-    expect(project.targets.build.outputs).toStrictEqual([
+    expect(project.targets?.build.outputs).toStrictEqual([
       '{options.outputPath.base}',
     ]);
   });
@@ -169,7 +169,7 @@ describe('convert-to-application-executor generator', () => {
     await convertToApplicationExecutor(tree, {});
 
     const project = readProjectConfiguration(tree, 'app1');
-    const { outputPath, resourcesOutputPath } = project.targets.build.options;
+    const { outputPath, resourcesOutputPath } = project.targets?.build?.options;
     expect(outputPath).toStrictEqual({ base: 'dist/app1' });
     expect(resourcesOutputPath).toBeUndefined();
   });
@@ -192,7 +192,7 @@ describe('convert-to-application-executor generator', () => {
     await convertToApplicationExecutor(tree, {});
 
     const project = readProjectConfiguration(tree, 'app1');
-    const { outputPath, resourcesOutputPath } = project.targets.build.options;
+    const { outputPath, resourcesOutputPath } = project.targets?.build?.options;
     expect(outputPath).toStrictEqual({ base: 'dist/app1', media: 'resources' });
     expect(resourcesOutputPath).toBeUndefined();
   });
@@ -215,7 +215,7 @@ describe('convert-to-application-executor generator', () => {
     await convertToApplicationExecutor(tree, {});
 
     const project = readProjectConfiguration(tree, 'app1');
-    expect(project.targets.build.options.outputPath).toStrictEqual({
+    expect(project.targets?.build.options.outputPath).toStrictEqual({
       base: 'dist/app1',
       media: 'resources',
     });
@@ -244,13 +244,13 @@ describe('convert-to-application-executor generator', () => {
 
     const project = readProjectConfiguration(tree, 'app1');
     expect(
-      project.targets.build.configurations.development.buildOptimizer
+      project.targets?.build.configurations?.development.buildOptimizer
     ).toBeUndefined();
     expect(
-      project.targets.build.configurations.development.vendorChunk
+      project.targets?.build.configurations?.development.vendorChunk
     ).toBeUndefined();
     expect(
-      project.targets.build.configurations.development.commonChunk
+      project.targets?.build.configurations?.development.commonChunk
     ).toBeUndefined();
   });
 });

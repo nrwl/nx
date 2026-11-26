@@ -19,7 +19,7 @@ export class GeneratePackageJsonPlugin implements WebpackPluginInstance {
   constructor(
     private readonly options: {
       skipPackageManager?: boolean;
-      tsConfig: string;
+      tsConfig: string | null;
       outputFileName: string;
       root: string;
       projectName: string;
@@ -45,8 +45,9 @@ export class GeneratePackageJsonPlugin implements WebpackPluginInstance {
             this.options.projectGraph
           );
 
-          const importHelpers = !!readTsConfig(this.options.tsConfig).options
-            .importHelpers;
+          const importHelpers =
+            this.options.tsConfig !== null &&
+            !!readTsConfig(this.options.tsConfig).options.importHelpers;
           const shouldAddHelperDependency =
             importHelpers &&
             helperDependencies.every(

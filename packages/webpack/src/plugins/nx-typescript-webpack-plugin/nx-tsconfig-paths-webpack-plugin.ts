@@ -11,15 +11,21 @@ import {
   createTmpTsConfig,
 } from '@nx/js/internal';
 import { resolvePathsBaseUrl } from '@nx/js';
-import { NormalizedNxAppWebpackPluginOptions } from '../nx-webpack-plugin/nx-app-webpack-plugin-options';
+import { ApplyConfigOptions } from '../nx-webpack-plugin/nx-app-webpack-plugin-options';
 import { WebpackNxBuildCoordinationPlugin } from '../webpack-nx-build-coordination-plugin';
 
+function requireTsConfig(options: ApplyConfigOptions): string {
+  if (!options.tsConfig) {
+    throw new Error(
+      `Missing "tsConfig" option. Set this option in your Nx webpack plugin.`
+    );
+  }
+  return options.tsConfig;
+}
+
 export class NxTsconfigPathsWebpackPlugin {
-  constructor(private options: NormalizedNxAppWebpackPluginOptions) {
-    if (!this.options.tsConfig)
-      throw new Error(
-        `Missing "tsConfig" option. Set this option in your Nx webpack plugin.`
-      );
+  constructor(private options: ApplyConfigOptions) {
+    requireTsConfig(this.options);
   }
 
   apply(compiler: Compiler): void {
@@ -30,14 +36,16 @@ export class NxTsconfigPathsWebpackPlugin {
       ...['.ts', '.tsx', '.mjs', '.js', '.jsx'],
       ...(compiler.options?.resolve?.extensions ?? []),
     ]);
+    const resolvePlugins = compiler.options.resolve?.plugins ?? [];
     compiler.options.resolve = {
       ...compiler.options.resolve,
-      plugins: compiler.options.resolve?.plugins ?? [],
+      plugins: resolvePlugins,
     };
-    const configFile = !path.isAbsolute(this.options.tsConfig)
-      ? path.join(workspaceRoot, this.options.tsConfig)
-      : this.options.tsConfig;
-    compiler.options.resolve.plugins.push(
+    const tsConfig = requireTsConfig(this.options);
+    const configFile = !path.isAbsolute(tsConfig)
+      ? path.join(workspaceRoot, tsConfig)
+      : tsConfig;
+    resolvePlugins.push(
       new TsconfigPathsPlugin({
         configFile,
         baseUrl: resolvePathsBaseUrl(configFile),
@@ -49,22 +57,27 @@ export class NxTsconfigPathsWebpackPlugin {
 
   handleBuildLibsFromSource(
     config: Partial<WebpackOptionsNormalized | Configuration>,
-    options: NormalizedNxAppWebpackPluginOptions
+    options: ApplyConfigOptions
   ): void {
-    if (!options.buildLibsFromSource && options.targetName) {
-      const remappedTarget =
-        options.targetName === 'serve' ? 'build' : options.targetName;
+    const { targetName, projectGraph, projectName } = options;
+    if (!options.buildLibsFromSource && targetName) {
+      if (!projectGraph || !projectName) {
+        throw new Error(
+          'Resolving buildable libraries requires a project graph and project name.'
+        );
+      }
+      const remappedTarget = targetName === 'serve' ? 'build' : targetName;
 
       const { target, dependencies } = calculateProjectBuildableDependencies(
         undefined,
-        options.projectGraph,
+        projectGraph,
         options.root,
-        options.projectName,
+        projectName,
         remappedTarget,
         options.configurationName
       );
       options.tsConfig = createTmpTsConfig(
-        options.tsConfig,
+        requireTsConfig(options),
         options.root,
         target.data.root,
         dependencies
@@ -78,6 +91,9 @@ export class NxTsconfigPathsWebpackPlugin {
 
         const buildCommand = `nx run-many --target=build --projects=${buildableDependencies}`;
 
+        if (!config.plugins) {
+          throw new Error('Expected the webpack config to have plugins.');
+        }
         config.plugins.push(
           new WebpackNxBuildCoordinationPlugin(buildCommand, {
             skipWatchingDeps: options.watchDependencies === false,

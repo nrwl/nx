@@ -3,6 +3,7 @@ import { calculateDefaultProjectName } from '../../../config/calculate-default-p
 import { readNxJson } from '../../../config/configuration';
 import type { NxJsonConfiguration } from '../../../config/nx-json';
 import type { ProjectGraph } from '../../../config/project-graph';
+import type { TargetConfiguration } from '../../../config/workspace-json-project-json';
 import {
   createProjectGraphAsync,
   createProjectGraphAndSourceMapsAsync,
@@ -27,6 +28,7 @@ export interface ResolvedTarget {
   targetName: string;
   configuration: string | undefined;
   node: ProjectGraph['nodes'][string];
+  targetConfig: TargetConfiguration;
   sourceMaps?: ConfigurationSourceMaps;
 }
 
@@ -42,6 +44,9 @@ export async function resolveTarget(
 
   if (opts?.withSourceMaps) {
     const result = await createProjectGraphAndSourceMapsAsync();
+    if (!result) {
+      throw new Error('Failed to create the project graph.');
+    }
     graph = result.projectGraph;
     sourceMaps = result.sourceMaps;
   } else {
@@ -59,7 +64,8 @@ export async function resolveTarget(
   const node = resolveProjectNode(projectName, graph);
   const resolvedProjectName = node.name;
 
-  if (!node.data.targets?.[targetName]) {
+  const targetConfig = node.data.targets?.[targetName];
+  if (!targetConfig) {
     reportTargetNotFound(resolvedProjectName, targetName, node);
   }
 
@@ -69,7 +75,7 @@ export async function resolveTarget(
       resolvedProjectName,
       targetName,
       configuration,
-      node.data.targets[targetName]
+      targetConfig
     );
   }
 
@@ -80,6 +86,7 @@ export async function resolveTarget(
     targetName,
     configuration,
     node,
+    targetConfig,
     sourceMaps,
   };
 }

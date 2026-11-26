@@ -355,12 +355,15 @@ export interface MigrateOrchestratorTallies {
  * The three step tallies and the total dispense count ride reused numeric
  * dimensions, read conditioned on the event name.
  */
-function orchestratorTallyParams(tallies: MigrateOrchestratorTallies) {
+function orchestratorTallyParams(
+  dimensions: NonNullable<typeof customDimensions>,
+  tallies: MigrateOrchestratorTallies
+) {
   return {
-    [customDimensions.appliedCount]: tallies.completed,
-    [customDimensions.taskCount]: tallies.skipped,
-    [customDimensions.majorsCrossed]: tallies.unresolved,
-    [customDimensions.migrationCount]: tallies.dispenseCount,
+    [dimensions.appliedCount]: tallies.completed,
+    [dimensions.taskCount]: tallies.skipped,
+    [dimensions.majorsCrossed]: tallies.unresolved,
+    [dimensions.migrationCount]: tallies.dispenseCount,
   };
 }
 
@@ -369,7 +372,10 @@ export function reportMigrateOrchestratorComplete(
 ): void {
   safeReport(() => {
     if (!customDimensions) return;
-    reportEvent('migrate_orchestrator_complete', orchestratorTallyParams(opts));
+    reportEvent(
+      'migrate_orchestrator_complete',
+      orchestratorTallyParams(customDimensions, opts)
+    );
   });
 }
 
@@ -380,7 +386,7 @@ export function reportMigrateOrchestratorAbandoned(
   safeReport(() => {
     if (!customDimensions) return;
     reportEvent('migrate_orchestrator_abandoned', {
-      ...orchestratorTallyParams(opts),
+      ...orchestratorTallyParams(customDimensions, opts),
       [customDimensions.agentUsed]: opts.agentUsed,
     });
   });
@@ -397,7 +403,10 @@ export function reportMigrateOrchestratorResume(
 ): void {
   safeReport(() => {
     if (!customDimensions) return;
-    reportEvent('migrate_orchestrator_resume', orchestratorTallyParams(opts));
+    reportEvent(
+      'migrate_orchestrator_resume',
+      orchestratorTallyParams(customDimensions, opts)
+    );
   });
 }
 
@@ -414,7 +423,7 @@ export function reportMigrateOrchestratorExistingRun(
   safeReport(() => {
     if (!customDimensions) return;
     reportEvent('migrate_orchestrator_existing_run', {
-      ...orchestratorTallyParams(opts),
+      ...orchestratorTallyParams(customDimensions, opts),
       [customDimensions.promptChoice]: opts.activity,
     });
   });

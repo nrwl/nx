@@ -223,7 +223,7 @@ export type PackageJsonProjectMetadata = {
   targetGroups: {
     'NPM Scripts'?: Array<string>;
   };
-  description: string;
+  description: string | undefined;
   js: {
     packageName: PackageJson['name'];
     packageVersion: PackageJson['version'];

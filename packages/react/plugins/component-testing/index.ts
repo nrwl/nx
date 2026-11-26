@@ -130,6 +130,9 @@ export function nxComponentTestingPreset(
     );
     const ctTargetName = options?.ctTargetName || 'component-test';
     const ctConfigurationName = process.env.NX_CYPRESS_TARGET_CONFIGURATION;
+    if (!ctProjectName || !ctTargets) {
+      throw new Error(`Unable to find the project for ${pathToConfig}`);
+    }
 
     const ctExecutorContext = createExecutorContext(
       graph,
@@ -139,7 +142,7 @@ export function nxComponentTestingPreset(
       ctConfigurationName
     );
 
-    let buildTarget: string = options?.buildTarget;
+    let buildTarget: string | undefined = options?.buildTarget;
     if (!buildTarget) {
       const ctExecutorOptions = readTargetOptions<CypressExecutorOptions>(
         {
@@ -244,7 +247,11 @@ function buildTargetWebpack(
     `);
   }
 
-  const buildConfig = buildableProjectConfig.targets[parsed.target];
+  const buildableTargets = buildableProjectConfig.targets;
+  if (!buildableTargets) {
+    throw new Error(`The '${parsed.project}' project has no targets.`);
+  }
+  const buildConfig = buildableTargets[parsed.target];
   if (buildConfig.metadata?.technologies?.includes('webpack')) {
     return async () => {
       const configPath = ['js', 'cjs', 'mjs', 'ts', 'cts', 'mts']
@@ -279,10 +286,8 @@ function buildTargetWebpack(
   }
 
   if (
-    buildableProjectConfig.targets[parsed.target].executor !==
-      '@nx/webpack:webpack' &&
-    buildableProjectConfig.targets[parsed.target].executor !==
-      '@nx/rspack:rspack'
+    buildConfig.executor !== '@nx/webpack:webpack' &&
+    buildConfig.executor !== '@nx/rspack:rspack'
   ) {
     throw new InvalidExecutorError(
       `The '${parsed.target}' target of the '${parsed.project}' project is not a Webpack build target. ` +
@@ -292,7 +297,7 @@ function buildTargetWebpack(
 
   const context = createExecutorContext(
     graph,
-    buildableProjectConfig.targets,
+    buildableTargets,
     parsed.project,
     parsed.target,
     parsed.configuration
@@ -378,7 +383,9 @@ function buildTargetWebpack(
                     compiler.options.mode = mode;
                     compiler.options.watchOptions = watchOptions;
                     compiler.options.context = context;
-                    compiler.context = context;
+                    if (context !== undefined) {
+                      compiler.context = context;
+                    }
                   },
                 }
               : plugin
@@ -391,7 +398,7 @@ function buildTargetWebpack(
     );
 }
 
-function findViteConfig(projectRootFullPath: string): string {
+function findViteConfig(projectRootFullPath: string): string | undefined {
   const allowsExt = ['js', 'mjs', 'ts', 'cjs', 'mts', 'cts'];
 
   for (const ext of allowsExt) {

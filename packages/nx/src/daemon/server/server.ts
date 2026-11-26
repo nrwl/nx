@@ -4,6 +4,7 @@ import { SOCKET_REFUSED_EXIT_CODE } from '../../utils/socket-refused-exit-code';
 import { createServer, Server, Socket } from 'net';
 import { join } from 'path';
 import { startAnalytics } from '../../analytics';
+import { coerceToError } from '../../project-graph/error-types';
 import { hashArray } from '../../hasher/file-hasher';
 import { hashFile } from '../../native';
 import {
@@ -273,15 +274,13 @@ export async function handleMessage(socket: Socket, data: Buffer) {
   resetInactivityTimeout(handleInactivityTimeout);
 
   const unparsedPayload = data;
-  let payload;
   // Reply in the format the client used.
   const mode: 'json' | 'v8' = isJsonMessage(unparsedPayload) ? 'json' : 'v8';
 
   serverLogger.log(`Received raw message of length ${unparsedPayload.length}`);
 
-  try {
-    payload = parseMessage<any>(unparsedPayload);
-  } catch (e) {
+  const parsed = tryParsePayload(unparsedPayload);
+  if (!parsed) {
     await respondWithErrorAndExit(
       socket,
       `Invalid payload from the client`,
@@ -293,6 +292,7 @@ export async function handleMessage(socket: Socket, data: Buffer) {
       )
     );
   }
+  const payload = parsed?.payload;
   serverLogger.log(`Received ${mode} message of type ${payload.type}`);
 
   // A mismatch means the client reached the wrong daemon (e.g. a shared
@@ -301,7 +301,11 @@ export async function handleMessage(socket: Socket, data: Buffer) {
     try {
       assertNotForeignWorkspaceMessage(payload, workspaceRoot);
     } catch (e) {
-      await respondWithError(socket, `Workspace root mismatch`, e);
+      await respondWithError(
+        socket,
+        `Workspace root mismatch`,
+        coerceToError(e)
+      );
       return;
     }
   }
@@ -712,14 +716,26 @@ const handleWorkspaceChanges: WorkspaceChangesListener = (err, batch) => {
       return;
     }
 
+    if (!batch) {
+      throw new Error('The workspace watcher reported no changes');
+    }
     routeAppliedChanges(batch);
-  } catch (err) {
+  } catch (e) {
+    const err = coerceToError(e);
     serverLogger.watcherLog(`Unexpected workspace error`, err.message);
     console.error(err);
     workspaceWatcherError = err;
     notifyFileWatcherSocketsOfError(err);
   }
 };
+
+function tryParsePayload(data: Buffer) {
+  try {
+    return { payload: parseMessage<any>(data) };
+  } catch {
+    return undefined;
+  }
+}
 
 export async function startServer(): Promise<Server> {
   // The workspace context owns the daemon's one watch and starts it before
@@ -857,7 +873,7 @@ export async function startServer(): Promise<Server> {
 
           return resolve(server);
         } catch (err) {
-          await handleWorkspaceChanges(err, null);
+          await handleWorkspaceChanges(coerceToError(err), null);
         }
       });
     } catch (err) {

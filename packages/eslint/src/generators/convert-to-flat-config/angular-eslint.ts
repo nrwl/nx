@@ -103,7 +103,7 @@ export async function migrateAngularEslintV22FlatConfig(
 // release in lockstep, so any one reflects the declared version. `nx migrate`
 // writes the version bump before migrations run, and the standalone generator
 // reads the currently installed version; either way package.json is the source.
-function readAngularEslintVersion(tree: Tree): string | undefined {
+function readAngularEslintVersion(tree: Tree): string | null {
   return (
     getDependencyVersionFromPackageJson(
       tree,

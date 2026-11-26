@@ -45,7 +45,7 @@ export async function createJestConfig(
   }
 }
 
-function generateGlobalConfig(tree: Tree, isJS: boolean) {
+function generateGlobalConfig(tree: Tree, isJS: boolean | undefined) {
   const contents = isJS
     ? `const { getJestProjectsAsync } = require('@nx/jest');
 

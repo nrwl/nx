@@ -26,6 +26,9 @@ export function updateProjectConfigForApplicationBuilder(
   options: NormalizedGeneratorOptions
 ): void {
   const project = readProjectConfiguration(tree, options.project);
+  if (!project.targets) {
+    throw new Error(`The "${options.project}" project has no targets.`);
+  }
   const buildTarget = project.targets.build;
 
   let outputPath = buildTarget.options?.outputPath;
@@ -84,11 +87,15 @@ export function updateProjectConfigForBrowserBuilder(
   options: NormalizedGeneratorOptions
 ) {
   const projectConfig = readProjectConfiguration(tree, options.project);
-  const buildTarget = projectConfig.targets.build;
+  const { targets } = projectConfig;
+  if (!targets) {
+    throw new Error(`The "${options.project}" project has no targets.`);
+  }
+  const buildTarget = targets.build;
   const baseOutputPath = buildTarget.options.outputPath;
   buildTarget.options.outputPath = joinPathFragments(baseOutputPath, 'browser');
 
-  const buildConfigurations = projectConfig.targets.build.configurations;
+  const buildConfigurations = targets.build.configurations;
   const configurations: Record<string, {}> = {};
   if (buildConfigurations) {
     for (const [key, options] of Object.entries(buildConfigurations)) {
@@ -98,7 +105,7 @@ export function updateProjectConfigForBrowserBuilder(
 
   const sourceRoot = getProjectSourceRoot(projectConfig, tree);
 
-  projectConfig.targets.server = {
+  targets.server = {
     dependsOn: ['build'],
     executor: options.buildTargetExecutor.startsWith(
       '@angular-devkit/build-angular:'
@@ -117,7 +124,7 @@ export function updateProjectConfigForBrowserBuilder(
 
   // The rspack conversion removes the server target this would run
   if (!options.isRspack) {
-    projectConfig.targets['serve-ssr'] = {
+    targets['serve-ssr'] = {
       continuous: true,
       readyWhen: { signal: true },
       executor: '@angular-devkit/build-angular:ssr-dev-server',
@@ -135,7 +142,7 @@ export function updateProjectConfigForBrowserBuilder(
     };
   }
 
-  projectConfig.targets.prerender = {
+  targets.prerender = {
     executor: '@angular-devkit/build-angular:prerender',
     options: {
       routes: ['/'],

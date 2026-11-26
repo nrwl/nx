@@ -4,6 +4,7 @@
   "private": true,
   "dependencies": {
     "nx": "workspace:*",
-    "@nx/e2e-utils": "workspace:*"
+    "@nx/e2e-utils": "workspace:*",
+    "@nx/angular": "workspace:*"
   }
 }

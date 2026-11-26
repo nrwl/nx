@@ -29,7 +29,7 @@ function migrateCypressExecutorOptions(
   tree: Tree,
   projectName: string,
   target: string,
-  configuration: string,
+  configuration: string | undefined,
   previousCypressConfigs: Map<
     string,
     ReturnType<
@@ -54,7 +54,7 @@ function migrateCypressExecutorOptions(
       configuration
     );
 
-    if (!cypressConfigPathJson && !cypressConfigPathTs) {
+    if (!cypressConfigPathJson || !cypressConfigPathTs) {
       return;
     }
     // a matching cypress ts file hasn't been made yet. need to migrate.
@@ -79,6 +79,11 @@ function migrateCypressExecutorOptions(
       tree.exists(cypressConfigPathTs)
     ) {
       const cypressConfigs = previousCypressConfigs.get(cypressConfigPathJson);
+      if (!cypressConfigs) {
+        throw new Error(
+          `Cannot find the migrated config for ${cypressConfigPathJson}.`
+        );
+      }
 
       updateProjectPaths(tree, projectConfig, cypressConfigs);
       addConfigToTsConfig(
@@ -91,19 +96,31 @@ function migrateCypressExecutorOptions(
         cypressConfigPathTs
       );
 
+      const targetConfig = projectConfig.targets?.[target];
+      if (!targetConfig) {
+        throw new Error(`Cannot find the ${target} target.`);
+      }
       if (configuration) {
-        projectConfig.targets[target].configurations[configuration] = {
-          ...projectConfig.targets[target].configurations[configuration],
+        if (!targetConfig.configurations) {
+          throw new Error(
+            `Cannot find configurations for the ${target} target.`
+          );
+        }
+        targetConfig.configurations[configuration] = {
+          ...targetConfig.configurations[configuration],
           cypressConfig: cypressConfigPathTs,
         };
       } else {
-        projectConfig.targets[target].options = {
-          ...projectConfig.targets[target].options,
+        targetConfig.options = {
+          ...targetConfig.options,
           cypressConfig: cypressConfigPathTs,
         };
       }
 
-      projectConfig.targets[target].options.testingType = 'e2e';
+      if (!targetConfig.options) {
+        throw new Error(`Cannot find options for the ${target} target.`);
+      }
+      targetConfig.options.testingType = 'e2e';
 
       updateProjectConfiguration(tree, projectName, projectConfig);
     }
@@ -119,7 +136,11 @@ https://nx.dev/docs/kb/cypress-v11-migration
 
 export async function migrateCypressProject(tree: Tree) {
   assertMinimumCypressVersion(8);
-  if (getInstalledCypressMajorVersion(tree) >= 10) {
+  const installedCypressMajorVersion = getInstalledCypressMajorVersion(tree);
+  if (
+    installedCypressMajorVersion !== null &&
+    installedCypressMajorVersion >= 10
+  ) {
     logger.info('NX This workspace is already using Cypress v10+');
     return;
   }

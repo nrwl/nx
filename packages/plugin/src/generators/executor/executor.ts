@@ -22,6 +22,7 @@ import pluginLintCheckGenerator from '../lint-checks/generator';
 import type { Schema } from './schema';
 
 interface NormalizedSchema extends Schema {
+  name: string;
   className: string;
   propertyName: string;
   projectRoot: string;

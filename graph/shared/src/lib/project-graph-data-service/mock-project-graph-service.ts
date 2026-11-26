@@ -10,9 +10,11 @@ import type {
 } from 'nx/src/command-line/graph/graph';
 import { ProjectGraphService } from './get-project-graph-data-service';
 
+const MOCK_HASH = '79054025255fb1a26e4bc422aef54eb4';
+
 export class MockProjectGraphService implements ProjectGraphService {
   private projectGraphsResponse: ProjectGraphClientResponse = {
-    hash: '79054025255fb1a26e4bc422aef54eb4',
+    hash: MOCK_HASH,
     layout: {
       appsDir: 'apps',
       libsDir: 'libs',
@@ -56,7 +58,7 @@ export class MockProjectGraphService implements ProjectGraphService {
       'exiting-lib-1': [],
     },
     affected: [],
-    focus: null,
+    focus: '',
     exclude: [],
     groupByFolder: false,
     isPartial: false,
@@ -78,7 +80,7 @@ export class MockProjectGraphService implements ProjectGraphService {
   }
 
   async getHash(): Promise<string> {
-    return new Promise((resolve) => resolve(this.projectGraphsResponse.hash));
+    return new Promise((resolve) => resolve(MOCK_HASH));
   }
 
   getProjectGraph(_url: string): Promise<ProjectGraphClientResponse> {
@@ -91,7 +93,7 @@ export class MockProjectGraphService implements ProjectGraphService {
 
   getSpecificTaskGraph(
     _url: string,
-    projects: string | string[] | null,
+    projects: string[] | null | undefined,
     targets: string[],
     configuration?: string
   ): Promise<TaskGraphClientResponse> {

@@ -1,12 +1,17 @@
 import type {
+  Bundle,
   CustomTransformerFactory,
-  Node,
   Program,
+  SourceFile,
   TransformerFactory as TypescriptTransformerFactory,
 } from 'typescript';
 
 type TransformerFactory =
-  | TypescriptTransformerFactory<Node>
+  | TypescriptTransformerFactory<SourceFile>
+  | CustomTransformerFactory;
+
+type DeclarationTransformerFactory =
+  | TypescriptTransformerFactory<SourceFile | Bundle>
   | CustomTransformerFactory;
 
 export interface TransformerPlugin {
@@ -28,7 +33,7 @@ export interface CompilerPlugin {
   afterDeclarations?: (
     options?: Record<string, unknown>,
     program?: Program
-  ) => TransformerFactory;
+  ) => DeclarationTransformerFactory;
 }
 
 /**
@@ -57,11 +62,13 @@ export type AnyCompilerPlugin =
       afterDeclarations: (
         options?: Record<string, unknown>,
         program?: Program
-      ) => TransformerFactory;
+      ) => DeclarationTransformerFactory;
     };
 
 export interface CompilerPluginHooks {
   beforeHooks: Array<(program?: Program) => TransformerFactory>;
   afterHooks: Array<(program?: Program) => TransformerFactory>;
-  afterDeclarationsHooks: Array<(program?: Program) => TransformerFactory>;
+  afterDeclarationsHooks: Array<
+    (program?: Program) => DeclarationTransformerFactory
+  >;
 }

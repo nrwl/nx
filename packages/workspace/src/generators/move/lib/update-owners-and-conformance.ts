@@ -10,7 +10,7 @@ export function updateOwnersAndConformance(
   tree: Tree,
   schema: NormalizedSchema
 ) {
-  const nxJson = readNxJson(tree);
+  const nxJson = readNxJson(tree) ?? {};
   let changed = false;
 
   if (

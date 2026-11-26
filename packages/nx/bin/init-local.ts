@@ -10,6 +10,10 @@ import { output } from '../src/utils/output';
 import { flushAnalytics } from '../src/analytics';
 import { isCI } from '../src/utils/is-ci';
 
+declare global {
+  var tuiOnProcessExit: ((code: number) => void) | undefined;
+}
+
 /**
  * Nx is being run inside a workspace.
  *
@@ -65,7 +69,7 @@ export async function initLocal(workspace: WorkspaceTypeAndRoot) {
       commandsObject.parse(process.argv.slice(2));
     }
   } catch (e) {
-    console.error(e.message);
+    console.error(e instanceof Error ? e.message : String(e));
     flushAnalytics();
     process.exit(1);
   }

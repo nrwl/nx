@@ -19,10 +19,14 @@ export function updatePackageJson(
   const hasEsmFormat = options.format.includes('esm');
   const hasCjsFormat = options.format.includes('cjs');
 
+  let exportsField:
+    | Exclude<NonNullable<PackageJson['exports']>, string>
+    | undefined;
   if (options.generateExportsField) {
-    packageJson.exports =
+    exportsField =
       typeof packageJson.exports === 'string' ? {} : { ...packageJson.exports };
-    packageJson.exports['./package.json'] = './package.json';
+    exportsField['./package.json'] = './package.json';
+    packageJson.exports = exportsField;
   }
 
   if (hasEsmFormat) {
@@ -38,9 +42,9 @@ export function updatePackageJson(
       packageJson.main ??= esmExports['.'];
     }
 
-    if (options.generateExportsField) {
+    if (exportsField) {
       for (const [exportEntry, filePath] of Object.entries(esmExports)) {
-        packageJson.exports[exportEntry] =
+        exportsField[exportEntry] =
           // If CJS format is used, make sure `import` (from Node) points to same instance of the package.
           // Otherwise, packages that are required to be singletons (like React, RxJS, etc.) will break.
           // Reserve `module` entry for bundlers to accommodate tree-shaking.
@@ -64,7 +68,7 @@ export function updatePackageJson(
       packageJson.type = 'commonjs';
     }
 
-    if (options.generateExportsField) {
+    if (exportsField) {
       for (const [exportEntry, filePath] of Object.entries(cjsExports)) {
         if (hasEsmFormat) {
           // If ESM format used, make sure `import` (from Node) points to a wrapped
@@ -72,13 +76,16 @@ export function updatePackageJson(
           // TODO(jack): This can be made into a rollup plugin to re-use in Vite.
           const relativeFile = parse(filePath).base;
           const fauxEsmFilePath = filePath.replace(/\.cjs\.js$/, '.cjs.mjs');
-          packageJson.exports[exportEntry]['import'] ??= fauxEsmFilePath;
-          packageJson.exports[exportEntry]['default'] ??= filePath;
+          const entry = exportsField[exportEntry];
+          if (typeof entry !== 'object') {
+            throw new Error(
+              `Expected an object for "exports['${exportEntry}']" in package.json.`
+            );
+          }
+          entry.import ??= fauxEsmFilePath;
+          entry.default ??= filePath;
           // Set `types` field only if it's not already set as the preferred ESM Format.
-          packageJson.exports[exportEntry]['types'] ??= filePath.replace(
-            /\.js$/,
-            '.d.ts'
-          );
+          entry.types ??= filePath.replace(/\.js$/, '.d.ts');
           // Re-export from relative CJS file, and Node will synthetically export it as ESM.
           // Make sure both ESM and CJS point to same instance of the package because libs like React, RxJS, etc. requires it.
           // Also need a special .cjs.default.js file that re-exports the `default` from CJS, or else
@@ -103,7 +110,7 @@ export function updatePackageJson(
             `
           );
         } else {
-          packageJson.exports[exportEntry] = filePath;
+          exportsField[exportEntry] = filePath;
         }
       }
     }
@@ -111,7 +118,7 @@ export function updatePackageJson(
 
   if (packageJson.module) {
     packageJson.types ??= packageJson.module.replace(jsFileRegex, '.d.ts');
-  } else {
+  } else if (packageJson.main) {
     packageJson.types ??= packageJson.main.replace(jsFileRegex, '.d.ts');
   }
 

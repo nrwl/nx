@@ -348,13 +348,14 @@ async function interruptedTwice(
   done: Promise<void>,
   ctrlC: EventEmitter
 ): Promise<boolean> {
-  let countPress: () => void;
+  let presses = 0;
+  let resolveSecondPress: (value: true) => void;
   const secondPress = new Promise<true>((resolve) => {
-    let presses = 0;
-    countPress = () => {
-      if (++presses === 2) resolve(true);
-    };
+    resolveSecondPress = resolve;
   });
+  const countPress = () => {
+    if (++presses === 2) resolveSecondPress(true);
+  };
   ctrlC.on('press', countPress);
   try {
     return await Promise.race([done.then(() => false), secondPress]);

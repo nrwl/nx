@@ -1,14 +1,14 @@
 import { dirname, extname, join, resolve } from 'path';
-import { resolve as resolveExports } from 'resolve.exports';
+import { resolve as resolveExports, type Package } from 'resolve.exports';
 import type { ResolverOptions } from 'jest-resolve';
 import { getVersion } from 'jest';
 import { major } from 'semver';
 
-let compilerSetup;
-let ts;
+let compilerSetup: ReturnType<typeof getCompilerSetup> | undefined;
+let ts: typeof import('typescript') | undefined;
 const jestMajorVersion = major(getVersion());
 
-function getCompilerSetup(rootDir: string) {
+function getCompilerSetup(ts: typeof import('typescript'), rootDir: string) {
   const tsConfigPath =
     ts.findConfigFile(rootDir, ts.sys.fileExists, 'tsconfig.spec.json') ||
     ts.findConfigFile(rootDir, ts.sys.fileExists, 'tsconfig.test.json') ||
@@ -16,9 +16,9 @@ function getCompilerSetup(rootDir: string) {
     ts.findConfigFile(rootDir, ts.sys.fileExists, 'tsconfig.json');
 
   if (!tsConfigPath) {
-    console.error(
-      `Cannot locate a tsconfig.spec.json. Please create one at ${rootDir}/tsconfig.spec.json`
-    );
+    const message = `Cannot locate a tsconfig.spec.json. Please create one at ${rootDir}/tsconfig.spec.json`;
+    console.error(message);
+    throw new Error(message);
   }
 
   const readResult = ts.readConfigFile(tsConfigPath, ts.sys.readFile);
@@ -60,7 +60,7 @@ module.exports = function (path: string, options: ResolverOptions) {
           ...pkg,
           main: pkg.main || pkg.es2015 || pkg.module,
         }),
-        pathFilter: (pkg) => {
+        pathFilter: (pkg: Package) => {
           if (!pkg.exports) {
             return path;
           }
@@ -78,10 +78,15 @@ module.exports = function (path: string, options: ResolverOptions) {
       return;
     }
     // Fallback to using typescript
-    ts = ts || require('typescript');
-    compilerSetup = compilerSetup || getCompilerSetup(options.rootDir);
+    const typescript: typeof import('typescript') = ts || require('typescript');
+    ts = typescript;
+    const rootDir = options.rootDir;
+    if (!rootDir) {
+      throw new Error(`Could not resolve ${path}`);
+    }
+    compilerSetup = compilerSetup || getCompilerSetup(typescript, rootDir);
     const { compilerOptions, host } = compilerSetup;
-    const resolvedFileName = ts.resolveModuleName(
+    const resolvedFileName = typescript.resolveModuleName(
       path,
       join(options.basedir, 'fake-placeholder.ts'),
       compilerOptions,
@@ -90,6 +95,6 @@ module.exports = function (path: string, options: ResolverOptions) {
     if (!resolvedFileName) {
       throw new Error(`Could not resolve ${path}`);
     }
-    return resolve(options.rootDir, resolvedFileName);
+    return resolve(rootDir, resolvedFileName);
   }
 };

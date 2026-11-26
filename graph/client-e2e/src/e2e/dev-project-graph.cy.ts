@@ -22,6 +22,9 @@ import * as affectedJson from '../fixtures/affected.json';
 import { testProjectsRoutes } from '../support/routing-tests';
 import * as nxExamplesJson from '../fixtures/nx-examples-project-graph.json';
 
+const projectDependencies: Record<string, { target: string }[]> =
+  nxExamplesJson.dependencies;
+
 describe('dev mode - project graph', () => {
   before(() => {
     cy.intercept('/assets/project-graphs/e2e.json', {
@@ -263,7 +266,7 @@ describe('dev mode - project graph', () => {
       const dependencies = nxExamplesJson.dependencies.cart;
       const dependents = Object.keys(nxExamplesJson.dependencies).filter(
         (key) =>
-          nxExamplesJson.dependencies[key]
+          projectDependencies[key]
             .map((dependencies) => dependencies.target)
             .includes('cart')
       );

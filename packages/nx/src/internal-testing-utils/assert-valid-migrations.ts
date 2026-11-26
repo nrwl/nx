@@ -3,7 +3,11 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 
 export function assertValidMigrationPaths(json: MigrationsJson, root: string) {
-  Object.entries(json.generators).forEach(([generator, m]) => {
+  const { generators } = json;
+  if (!generators) {
+    throw new Error('migrations.json has no "generators"');
+  }
+  Object.entries(generators).forEach(([generator, m]) => {
     it(`should have valid path generator: ${generator}`, () => {
       validateMigration(m, root);
     });
@@ -32,7 +36,7 @@ export function assertValidMigrationPaths(json: MigrationsJson, root: string) {
     if (!fs.existsSync(migrationsPath)) return;
     const dirs = fs.readdirSync(migrationsPath);
     const knownDirs = new Set<string>(['utils']);
-    const migrations = Object.values(json.generators);
+    const migrations = Object.values(generators);
     for (const m of migrations) {
       const impl = m.factory ?? m.implementation;
       if (impl) {

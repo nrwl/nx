@@ -38,7 +38,7 @@ describe('addLintingToProject', () => {
     expect(devDependencies['oxlint']).toBeDefined();
     expect(devDependencies['@nx/oxlint']).toBeDefined();
 
-    const plugins = readNxJson(tree).plugins?.map((p) =>
+    const plugins = readNxJson(tree)?.plugins?.map((p) =>
       typeof p === 'string' ? p : p.plugin
     );
     expect(plugins).toContain('@nx/oxlint');

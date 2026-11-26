@@ -16,6 +16,9 @@ export function generateSSRFiles(
   options: NormalizedGeneratorOptions
 ) {
   const project = readProjectConfiguration(tree, options.project);
+  if (!project.targets) {
+    throw new Error(`The "${options.project}" project has no targets.`);
+  }
 
   if (
     project.targets.server ||

@@ -129,7 +129,7 @@ describe('Migration to remove default Karma configuration', () => {
     await migration(tree);
 
     const project = readProjectConfiguration(tree, 'app');
-    expect(project.targets.test.options.karmaConfig).toBeUndefined();
+    expect(project.targets?.test.options.karmaConfig).toBeUndefined();
     expect(tree.exists(karmaConfigPath)).toBeFalsy();
   });
 
@@ -166,7 +166,7 @@ module.exports = function (config) {
     await migration(tree);
 
     const project = readProjectConfiguration(tree, 'app');
-    expect(project.targets.test.options.karmaConfig).toBe(karmaConfigPath);
+    expect(project.targets?.test.options.karmaConfig).toBe(karmaConfigPath);
     expect(tree.exists(karmaConfigPath)).toBeTruthy();
   });
 
@@ -192,7 +192,7 @@ module.exports = function (config) {
     await migration(tree);
 
     const project = readProjectConfiguration(tree, 'app');
-    expect(project.targets.test.options.karmaConfig).toBe(karmaConfigPath);
+    expect(project.targets?.test.options.karmaConfig).toBe(karmaConfigPath);
     expect(tree.exists(karmaConfigPath)).toBeTruthy();
   });
 
@@ -225,8 +225,8 @@ module.exports = function (config) {
 
     const project1 = readProjectConfiguration(tree, 'app');
     const project2 = readProjectConfiguration(tree, 'app2');
-    expect(project1.targets.test.options.karmaConfig).toBeUndefined();
-    expect(project2.targets.test.options.karmaConfig).toBeUndefined();
+    expect(project1.targets?.test.options.karmaConfig).toBeUndefined();
+    expect(project2.targets?.test.options.karmaConfig).toBeUndefined();
     expect(tree.exists(sharedKarmaConfig)).toBeFalsy();
   });
 
@@ -241,7 +241,7 @@ module.exports = function (config) {
     await migration(tree);
 
     const project = readProjectConfiguration(tree, 'app');
-    expect(project.targets.test.options.karmaConfig).toBe(nonExistentConfig);
+    expect(project.targets?.test.options.karmaConfig).toBe(nonExistentConfig);
   });
 
   it('should work for library projects', async () => {
@@ -294,7 +294,7 @@ module.exports = function (config) {
     await migration(tree);
 
     const project = readProjectConfiguration(tree, 'app');
-    expect(project.targets.test.options.karmaConfig).toBeUndefined();
+    expect(project.targets?.test.options.karmaConfig).toBeUndefined();
     expect(tree.exists(karmaConfigPath)).toBeFalsy();
   });
 
@@ -377,8 +377,8 @@ module.exports = function (config) {
     await migration(tree);
 
     const project = readProjectConfiguration(tree, 'app');
-    expect(project.targets.test.options.karmaConfig).toBeUndefined();
-    expect(project.targets.test.configurations.ci.karmaConfig).toBe(
+    expect(project.targets?.test.options.karmaConfig).toBeUndefined();
+    expect(project.targets?.test.configurations?.ci.karmaConfig).toBe(
       ciKarmaConfig
     );
     expect(tree.exists(karmaConfigPath)).toBeFalsy();
@@ -434,7 +434,7 @@ module.exports = function (config) {
     await migration(tree);
 
     const project = readProjectConfiguration(tree, 'app');
-    expect(project.targets.test.options.karmaConfig).toBeUndefined();
+    expect(project.targets?.test.options.karmaConfig).toBeUndefined();
     expect(tree.exists(karmaConfigPath)).toBeFalsy();
   });
 
@@ -488,7 +488,7 @@ module.exports = function (config) {
     await migration(tree);
 
     const project = readProjectConfiguration(tree, 'app');
-    expect(project.targets.test.options.karmaConfig).toBe(karmaConfigPath);
+    expect(project.targets?.test.options.karmaConfig).toBe(karmaConfigPath);
     expect(tree.exists(karmaConfigPath)).toBeTruthy();
   });
 
@@ -500,7 +500,7 @@ module.exports = function (config) {
     await migration(tree);
 
     const project = readProjectConfiguration(tree, 'app');
-    expect(project.targets.test.options.karmaConfig).toBeUndefined();
+    expect(project.targets?.test.options.karmaConfig).toBeUndefined();
     expect(tree.exists(karmaConfigPath)).toBeFalsy();
   });
 });

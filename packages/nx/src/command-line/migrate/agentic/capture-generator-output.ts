@@ -85,7 +85,9 @@ export class BoundedOutput {
     this.tail.push({ text: record, cost });
     this.tailBytes += cost;
     while (this.tailBytes > TAIL_LIMIT && this.tail.length > 1) {
-      const dropped = this.tail.shift().cost;
+      const oldest = this.tail.shift();
+      if (oldest === undefined) break;
+      const dropped = oldest.cost;
       this.tailBytes -= dropped;
       this.omitted += dropped;
     }

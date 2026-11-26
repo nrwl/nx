@@ -21,7 +21,7 @@ export async function resolveCypressCTTarget(
   tree: Tree,
   options: {
     project: string;
-    buildTarget: string;
+    buildTarget?: string;
   }
 ): Promise<{ found: FoundTarget; bundler: 'vite' | 'webpack' }> {
   const graph = await createProjectGraphAsync();
@@ -59,7 +59,7 @@ export async function resolveCypressCTTarget(
     };
   }
 
-  if (parsed) {
+  if (parsed && options.buildTarget) {
     const executor = readProjectConfiguration(tree, parsed.project).targets?.[
       parsed.target
     ]?.executor;
@@ -120,8 +120,12 @@ export async function configureCypressCT(
     tree,
     projectConfig.root
   );
+  const cypressConfigContent = tree.read(cypressConfigFilePath, 'utf-8');
+  if (cypressConfigContent === null) {
+    throw new Error(`Could not find ${cypressConfigFilePath}.`);
+  }
   const updatedCyConfig = await addDefaultCTConfig(
-    tree.read(cypressConfigFilePath, 'utf-8'),
+    cypressConfigContent,
     ctConfigOptions,
     '@nx/react/plugins/component-testing',
     getInstalledCypressMajorVersion(tree)
@@ -170,6 +174,9 @@ export function isComponent(tree: Tree, filePath: string): boolean {
   }
 
   const content = tree.read(filePath, 'utf-8');
+  if (content === null) {
+    throw new Error(`Could not find ${filePath}.`);
+  }
   const sourceFile = tsModule.createSourceFile(
     filePath,
     content,

@@ -19,4 +19,4 @@ export {
 
 export { addRoute, addProviderToRoute } from './nx-devkit/route-utils';
 
-export { angularDevkitVersion } from './versions';
+export { angularDevkitVersion, webpackMergeVersion } from './versions';

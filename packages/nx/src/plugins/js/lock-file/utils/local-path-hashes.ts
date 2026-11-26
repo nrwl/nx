@@ -54,8 +54,8 @@ export async function foldLocalPathHashes(
 async function hashLocalPathSources(
   sources: string[],
   workspaceRoot: string
-): Promise<Map<string, string>> {
-  const hashes = new Map<string, string>();
+): Promise<Map<string, string | null>> {
+  const hashes = new Map<string, string | null>();
   let realWorkspaceRoot: string | undefined;
   for (const source of new Set(sources)) {
     if (isAbsolute(source) || source === '..' || source.startsWith('../')) {

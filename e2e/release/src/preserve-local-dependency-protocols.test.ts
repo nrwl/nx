@@ -67,7 +67,7 @@ expect.addSnapshotSerializer({
 });
 
 describe('nx release preserve local dependency protocols', () => {
-  let previousPackageManager: string;
+  let previousPackageManager: string | undefined;
   let e2eRegistryUrl: string;
 
   beforeAll(() => {

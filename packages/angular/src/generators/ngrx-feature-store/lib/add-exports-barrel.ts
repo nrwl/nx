@@ -16,14 +16,14 @@ export function addExportsToBarrel(
     '..',
     'index.ts'
   );
-  if (!tree.exists(indexFilePath)) {
+  const indexSourceText = tree.read(indexFilePath, 'utf-8');
+  if (indexSourceText === null) {
     return;
   }
 
   if (!tsModule) {
     tsModule = ensureTypescript();
   }
-  const indexSourceText = tree.read(indexFilePath, 'utf-8');
   let sourceFile = tsModule.createSourceFile(
     indexFilePath,
     indexSourceText,

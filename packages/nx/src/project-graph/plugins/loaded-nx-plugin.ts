@@ -3,6 +3,7 @@ import { type PluginConfiguration } from '../../config/nx-json';
 import { customDimensions, PERF_SPAN_SAMPLE_RATE } from '../../analytics';
 import {
   AggregateCreateNodesError,
+  coerceToError,
   isAggregateCreateNodesError,
 } from '../error-types';
 import type { RawProjectGraphDependency } from '../project-graph-builder';
@@ -141,7 +142,7 @@ export class LoadedNxPlugin {
             );
           }
           // The underlying plugin errored out. We can't know any partial results.
-          throw new AggregateCreateNodesError([[null, e]], []);
+          throw new AggregateCreateNodesError([[null, coerceToError(e)]], []);
         } finally {
           performance.mark(`${plugin.name}:createNodes - end`);
           performance.measure(`${plugin.name}:createNodes`, {
@@ -159,19 +160,21 @@ export class LoadedNxPlugin {
       };
     }
 
-    if (plugin.createDependencies) {
+    const { createDependencies, createMetadata, preTasksExecution } = plugin;
+
+    if (createDependencies) {
       this.createDependencies = async (context) =>
-        plugin.createDependencies(this.options, context);
+        createDependencies.call(plugin, this.options, context);
     }
 
-    if (plugin.createMetadata) {
+    if (createMetadata) {
       this.createMetadata = async (graph, context) =>
-        plugin.createMetadata(graph, this.options, context);
+        createMetadata.call(plugin, graph, this.options, context);
     }
 
-    if (plugin.preTasksExecution) {
+    if (preTasksExecution) {
       this.preTasksExecution = async (context: PreTasksExecutionContext) => {
-        const updates = {};
+        const updates: NodeJS.ProcessEnv = {};
         let originalEnv = process.env;
         if (isIsolationEnabled() || isDaemonEnabled()) {
           process.env = new Proxy<NodeJS.ProcessEnv>(originalEnv, {
@@ -182,7 +185,7 @@ export class LoadedNxPlugin {
             },
           });
         }
-        await plugin.preTasksExecution(this.options, context);
+        await preTasksExecution.call(plugin, this.options, context);
         // This doesn't revert env changes, as the proxy still updates
         // originalEnv, rather it removes the proxy.
         process.env = originalEnv;
@@ -191,14 +194,16 @@ export class LoadedNxPlugin {
       };
     }
 
-    if (plugin.postTasksExecution) {
+    const { postTasksExecution } = plugin;
+    if (postTasksExecution) {
       // The single rehydration point: every transport hands its context
       // straight here, so a context bound for an isolated plugin stays stubbed
       // across that second hop rather than being read and re-stubbed.
       this.postTasksExecution = async (
         context: MaybeStubbedPostTasksExecutionContext
       ) =>
-        plugin.postTasksExecution(
+        postTasksExecution.call(
+          plugin,
           this.options,
           await rehydrateTerminalOutputs(context)
         );
@@ -215,6 +220,9 @@ export class LoadedNxPlugin {
     };
   }
 }
+
+export type LoadedNxPluginWith<K extends keyof LoadedNxPlugin> =
+  LoadedNxPlugin & { readonly [P in K]-?: NonNullable<LoadedNxPlugin[P]> };
 
 /**
  * Drops `undefined` values (`null` in arrays) like the default JSON transport,

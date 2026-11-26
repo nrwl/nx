@@ -101,7 +101,8 @@ export function collectAndScheduleSyncGenerators(
   }
 
   log('collect registered sync generators');
-  collectAllRegisteredSyncGenerators(projectGraph);
+  const registeredSyncGenerators =
+    collectAllRegisteredSyncGenerators(projectGraph);
 
   // a change imply we need to re-run all the generators
   // make sure to schedule all the collected generators
@@ -171,7 +172,9 @@ export async function getCachedRegisteredSyncGenerators(): Promise<{
   if (!registeredGlobalSyncGenerators && !registeredTaskSyncGenerators) {
     log('no registered sync generators, collecting them');
     const { projectGraph } = await getCachedSerializedProjectGraphPromise();
-    collectAllRegisteredSyncGenerators(projectGraph);
+    if (projectGraph) {
+      collectAllRegisteredSyncGenerators(projectGraph);
+    }
   } else {
     log('registered sync generators already collected, returning them');
   }
@@ -214,10 +217,9 @@ async function getFromCacheOrRunGenerators(
           const projects = await getProjectsConfigurations();
           if (projects) {
             log(generator, 'already scheduled or not cached, running it now');
-            syncGeneratorsCacheResultPromises.set(
-              generator,
-              runGenerator(generator, projects)
-            );
+            const result = runGenerator(generator, projects);
+            syncGeneratorsCacheResultPromises.set(generator, result);
+            return result;
           } else {
             log(
               generator,
@@ -244,7 +246,11 @@ async function getFromCacheOrRunGenerators(
           );
         }
 
-        return syncGeneratorsCacheResultPromises.get(generator);
+        const cached = syncGeneratorsCacheResultPromises.get(generator);
+        if (!cached) {
+          throw new Error(`No cached result for sync generator ${generator}`);
+        }
+        return cached;
       })
     )
   ).flat();
@@ -306,7 +312,10 @@ async function processConflictingGenerators(
         );
         // pre-apply the changes from the first generator to avoid running it
         for (const change of firstGeneratorResult.changes) {
-          if (change.type === 'CREATE' || change.type === 'UPDATE') {
+          if (
+            (change.type === 'CREATE' || change.type === 'UPDATE') &&
+            change.content !== null
+          ) {
             tree.write(change.path, change.content, change.options);
           } else if (change.type === 'DELETE') {
             tree.delete(change.path);
@@ -399,7 +408,9 @@ export function _getConflictingGeneratorGroups(
   return conflicts.map((group) => Array.from(group));
 }
 
-function collectAllRegisteredSyncGenerators(projectGraph: ProjectGraph): void {
+function collectAllRegisteredSyncGenerators(
+  projectGraph: ProjectGraph
+): NonNullable<typeof registeredSyncGenerators> {
   const nxJson = readNxJson();
   const projectGraphHash = hashProjectGraph(projectGraph);
   const disabledTaskSyncGeneratorsHash = hashArray(
@@ -431,7 +442,7 @@ function collectAllRegisteredSyncGenerators(projectGraph: ProjectGraph): void {
       globalGenerators: registeredGlobalSyncGenerators,
       taskGenerators: registeredTaskSyncGenerators,
     };
-    return;
+    return registeredSyncGenerators;
   }
 
   for (const generator of registeredSyncGenerators.globalGenerators) {
@@ -458,6 +469,7 @@ function collectAllRegisteredSyncGenerators(projectGraph: ProjectGraph): void {
       registeredSyncGenerators.taskGenerators.add(generator);
     }
   }
+  return registeredSyncGenerators;
 }
 
 function runGenerator(

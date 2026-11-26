@@ -17,7 +17,7 @@ export function addAngularEsLintDependencies(
   const compatVersions = versions(tree);
   const angularEslintVersionToInstall = compatVersions.angularEslintVersion;
   const usesEslintFlatConfig = useFlatConfig(tree);
-  const devDependencies = usesEslintFlatConfig
+  const devDependencies: Record<string, string> = usesEslintFlatConfig
     ? {
         'angular-eslint': angularEslintVersionToInstall,
       }

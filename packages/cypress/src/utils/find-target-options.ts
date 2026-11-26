@@ -42,7 +42,7 @@ export async function findBuildConfig(
     if (options.buildTarget) {
       return {
         target: options.buildTarget,
-        config: findInTarget(tree, graph, options),
+        config: findInTarget(tree, graph, options, options.buildTarget),
       };
     }
     // check to see if there is a valid config in the given project
@@ -74,15 +74,21 @@ export async function findBuildConfig(
 function findInTarget(
   tree: Tree,
   graph: ProjectGraph,
-  options: FindTargetOptions
+  options: FindTargetOptions,
+  buildTarget: string
 ): TargetConfiguration {
   const { project, target, configuration } = parseTargetString(
-    options.buildTarget,
+    buildTarget,
     graph
   );
   const projectConfig = readProjectConfiguration(tree, project);
-  const executorName = projectConfig?.targets?.[target]?.executor;
-  if (!options.validExecutorNames.has(executorName)) {
+  const targetConfig = projectConfig?.targets?.[target];
+  const executorName = targetConfig?.executor;
+  if (
+    !targetConfig ||
+    !executorName ||
+    !options.validExecutorNames.has(executorName)
+  ) {
     logger.error(stripIndents`NX The provided build target, ${
       options.buildTarget
     }, uses the '${executorName}' executor.
@@ -103,18 +109,11 @@ If you do not have an app in the workspace to you can make a new app with 'nx g 
       'The provided --build-target does not use an executor in the allow list of executors defined.'
     );
   }
-  const foundConfig =
-    configuration || projectConfig?.targets?.[target]?.defaultConfiguration;
+  const foundConfig = configuration || targetConfig.defaultConfiguration;
 
   return readTargetOptions(
     { project, target, configuration: foundConfig },
-    createExecutorContext(
-      graph,
-      projectConfig.targets,
-      project,
-      target,
-      foundConfig
-    )
+    createExecutorContext(graph, targetConfig, project, target, foundConfig)
   );
 }
 
@@ -124,7 +123,7 @@ async function findInGraph(
   options: FindTargetOptions
 ): Promise<FoundTarget> {
   const parents = findParentsOfProject(graph, options.project);
-  const potentialTargets = [];
+  const potentialTargets: FoundTarget[] = [];
 
   for (const parent of parents) {
     const parentProject = findTargetOptionsInProject(
@@ -162,14 +161,14 @@ function findTargetOptionsInProject(
   graph: ProjectGraph,
   projectName: string,
   options: FindTargetOptions
-): FoundTarget {
+): FoundTarget | undefined {
   const projectConfig = readProjectConfiguration(tree, projectName);
 
   const includes = options.validExecutorNames;
 
   for (const targetName in projectConfig.targets) {
     const targetConfig = projectConfig.targets[targetName];
-    if (includes.has(targetConfig.executor)) {
+    if (targetConfig.executor && includes.has(targetConfig.executor)) {
       return {
         target: `${projectName}:${targetName}`,
         config: !options.skipGetOptions
@@ -177,13 +176,12 @@ function findTargetOptionsInProject(
               { project: projectName, target: targetName },
               createExecutorContext(
                 graph,
-                projectConfig.targets,
+                targetConfig,
                 projectName,
-                targetName,
-                null
+                targetName
               )
             )
-          : null,
+          : undefined,
       };
     }
   }
@@ -191,7 +189,7 @@ function findTargetOptionsInProject(
 
 function createExecutorContext(
   graph: ProjectGraph,
-  targets: Record<string, TargetConfiguration>,
+  target: TargetConfiguration,
   projectName: string,
   targetName: string,
   configurationName?: string
@@ -202,7 +200,7 @@ function createExecutorContext(
   return {
     cwd: process.cwd(),
     projectGraph: graph,
-    target: targets[targetName],
+    target,
     targetName,
     configurationName,
     root: workspaceRoot,

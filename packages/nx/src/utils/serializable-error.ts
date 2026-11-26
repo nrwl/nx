@@ -2,10 +2,10 @@
  * This function transforms an error into an object which can be properly serialized and deserialized to be sent between processes.
  */
 export function createSerializableError<T extends Error>(error: T): T {
-  const res = {} as T;
+  const res: Record<string, unknown> = {};
 
   Object.getOwnPropertyNames(error).forEach((k) => {
-    let value = error[k];
+    let value: unknown = Reflect.get(error, k);
 
     // If an error has an error as a property such as cause, it will be transformed into a serializable error
     if (typeof value === 'object' && value instanceof Error) {
@@ -32,5 +32,5 @@ export function createSerializableError<T extends Error>(error: T): T {
     res[k] = value;
   });
 
-  return res;
+  return res as T;
 }

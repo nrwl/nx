@@ -45,7 +45,7 @@ function removeIdsFromGraph<T>(
   roots: string[];
   dependencies: Record<string, string[]>;
 } {
-  const dependencies = {};
+  const dependencies: Record<string, string[]> = {};
   const removedSet = new Set(ids);
   for (let id of Object.keys(mapWithIds)) {
     if (!removedSet.has(id)) {

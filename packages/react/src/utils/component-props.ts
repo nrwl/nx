@@ -45,8 +45,8 @@ export function getComponentPropDefaults(
 
   const info = parseComponentPropsInfo(sourceFile, cmpDeclaration);
 
-  let propsTypeName: string = null;
-  let inlineTypeString: string = null;
+  let propsTypeName: string | null = null;
+  let inlineTypeString: string | null = null;
   let props: {
     name: string;
     defaultValue: any;
@@ -60,8 +60,13 @@ export function getComponentPropDefaults(
   if (info) {
     propsTypeName = info.propsTypeName;
     inlineTypeString = info.inlineTypeString;
-    props = info.props.map((member) => {
+    const mappedProps = info.props.map((member) => {
       if (tsModule.isPropertySignature(member)) {
+        if (!member.type) {
+          throw new Error(
+            `Cannot determine the type of the "${member.name.getText()}" prop.`
+          );
+        }
         if (member.type.kind === tsModule.SyntaxKind.FunctionType) {
           argTypes.push({
             name: member.name.getText(),
@@ -83,7 +88,9 @@ export function getComponentPropDefaults(
         };
       }
     });
-    props = props.filter((p) => p && p.defaultValue !== undefined);
+    props = mappedProps.filter(
+      (p): p is NonNullable<typeof p> => !!p && p.defaultValue !== undefined
+    );
   }
   return { propsTypeName, inlineTypeString, props, argTypes };
 }

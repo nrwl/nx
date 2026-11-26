@@ -36,6 +36,9 @@ export default async function migrateMfImportsToNewPackage(tree: Tree) {
       }
 
       let contents = tree.read(filePath, 'utf-8');
+      if (contents === null) {
+        return;
+      }
       if (!contents.includes(MF_IMPORT_TO_UPDATE)) {
         return;
       }

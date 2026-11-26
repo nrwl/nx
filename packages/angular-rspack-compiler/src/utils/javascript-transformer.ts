@@ -68,7 +68,7 @@ export function createJavaScriptTransformer(
         transformer.transformData(
           filename,
           await readFile(filename, 'utf8'),
-          skipLinker,
+          skipLinker ?? false,
           sideEffects
         ),
       close: transformer.close.bind(transformer),

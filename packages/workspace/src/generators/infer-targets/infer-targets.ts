@@ -36,11 +36,10 @@ export async function convertToInferredGenerator(tree: Tree, options: Schema) {
     return;
   }
   let generatorsToRun: string[];
-  if (options.plugins && options.plugins.filter((p) => !!p).length > 0) {
+  const plugins = options.plugins;
+  if (plugins && plugins.filter((p) => !!p).length > 0) {
     generatorsToRun = Array.from(generatorCollectionChoices.values())
-      .filter((generator) =>
-        options.plugins.includes(generator.resolvedCollectionName)
-      )
+      .filter((generator) => plugins.includes(generator.resolvedCollectionName))
       .map((generator) => generator.resolvedCollectionName);
   } else if (process.argv.includes('--no-interactive')) {
     generatorsToRun = Array.from(generatorCollectionChoices.keys());

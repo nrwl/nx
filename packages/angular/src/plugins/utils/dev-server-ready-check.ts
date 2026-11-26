@@ -127,7 +127,7 @@ function parseNgArgs(args: string[]): {
         broken = true;
         break;
       }
-      const name = arg.at(-1);
+      const name = arg[arg.length - 1];
       if (broken || name === '-') continue;
       const count = countValues(
         name,
@@ -171,7 +171,7 @@ function getDefaultProject(
   const roots = new Set(containing.map(([, { root }]) => root));
   const project =
     roots.size === containing.length ? containing[0]?.[0] : undefined;
-  return names.includes(project) ? project : undefined;
+  return project !== undefined && names.includes(project) ? project : undefined;
 }
 
 const DEFAULT_PORT = 4200;

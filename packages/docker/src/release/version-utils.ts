@@ -35,7 +35,7 @@ export async function handleDockerVersion(
     if (dockerVersion) {
       newVersion = dockerVersion;
     } else {
-      const availableVersionSchemes =
+      const availableVersionSchemes: Record<string, string> =
         finalConfigForProject.dockerOptions.versionSchemes ??
         DEFAULT_VERSION_SCHEMES;
       const versionScheme =
@@ -105,7 +105,7 @@ function calculateNewVersion(
   projectName: string,
   versionScheme: string,
   versionSchemes: Record<string, string>,
-  versionActionsVersion?: string
+  versionActionsVersion?: string | null
 ): string {
   if (!(versionScheme in versionSchemes)) {
     throw new Error(
@@ -116,7 +116,7 @@ function calculateNewVersion(
   }
   return interpolateVersionPattern(versionSchemes[versionScheme], {
     projectName,
-    versionActionsVersion,
+    versionActionsVersion: versionActionsVersion ?? undefined,
   });
 }
 

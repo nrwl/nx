@@ -32,7 +32,7 @@ import { stripGlobToBaseDir } from '../../utils/strip-glob-to-base-dir';
 interface ActiveTask {
   id: string;
   killed: boolean;
-  promise: Promise<void>;
+  promise: Promise<void> | null;
   childProcess: null | ChildProcess;
   start: () => Promise<void>;
   stop: (signal: NodeJS.Signals) => Promise<void>;
@@ -45,10 +45,15 @@ export async function* nodeExecutor(
   context: ExecutorContext
 ) {
   process.env.NODE_ENV ??= context?.configurationName ?? 'development';
-  const project = context.projectGraph.nodes[context.projectName];
+  const projectName = context.projectName;
+  if (!projectName) {
+    throw new Error('The node executor requires a project name.');
+  }
+  const project = context.projectGraph.nodes[projectName];
   const buildTarget = parseTargetString(options.buildTarget, context);
 
-  if (!project.data.targets[buildTarget.target]) {
+  const buildTargetConfig = project.data.targets?.[buildTarget.target];
+  if (!buildTargetConfig) {
     throw new Error(
       `Cannot find build target ${chalk.bold(
         options.buildTarget
@@ -56,8 +61,7 @@ export async function* nodeExecutor(
     );
   }
 
-  const buildTargetExecutor =
-    project.data.targets[buildTarget.target]?.executor;
+  const buildTargetExecutor = buildTargetConfig.executor;
 
   if (buildTargetExecutor === 'nx:run-commands') {
     // Run commands does not emit build event, so we have to switch to run entire build through Nx CLI.
@@ -102,7 +106,7 @@ export async function* nodeExecutor(
   });
 
   let additionalExitHandler: null | (() => void) = null;
-  let currentTask: ActiveTask = null;
+  let currentTask: ActiveTask | null = null;
   const tasks: ActiveTask[] = [];
 
   yield* createAsyncIterable<{
@@ -110,10 +114,9 @@ export async function* nodeExecutor(
     options?: Record<string, any>;
   }>(async ({ done, next, error, registerCleanup }) => {
     const processQueue = async () => {
-      if (tasks.length === 0) return;
-
       const previousTask = currentTask;
       const task = tasks.shift();
+      if (!task) return;
 
       if (previousTask && !previousTask.killed) {
         // stop() marks the task killed, detaches listeners, and waits for the
@@ -183,7 +186,7 @@ export async function* nodeExecutor(
                 ? 'node-with-esm-loader'
                 : 'node-with-require-overrides';
 
-            task.childProcess = fork(
+            const childProcess = fork(
               join(__dirname, loaderFile),
               options.args ?? [],
               {
@@ -196,21 +199,22 @@ export async function* nodeExecutor(
                 },
               }
             );
+            task.childProcess = childProcess;
 
-            task.childProcess.stdout?.on('data', (data) => {
+            childProcess.stdout?.on('data', (data) => {
               globalLineAwareWriter.write(data, task.id);
             });
 
-            const handleStdErr = (data) => {
+            const handleStdErr = (data: Buffer) => {
               if (!options.watch || !task.killed) {
                 if (task.id === globalLineAwareWriter.currentProcessId) {
                   logger.error(data.toString());
                 }
               }
             };
-            task.childProcess.stderr?.on('data', handleStdErr);
-            task.childProcess.once('exit', (code) => {
-              task.childProcess.off('data', handleStdErr);
+            childProcess.stderr?.on('data', handleStdErr);
+            childProcess.once('exit', (code) => {
+              childProcess.off('data', handleStdErr);
               if (options.watch && !task.killed) {
                 logger.info(
                   `NX Process exited with code ${code}, waiting for changes to restart...`
@@ -298,7 +302,7 @@ export async function* nodeExecutor(
       process.exit(128 + 1);
     });
 
-    registerCleanup(async () => {
+    registerCleanup?.(async () => {
       await stopAllTasks('SIGTERM');
     });
 
@@ -306,7 +310,7 @@ export async function* nodeExecutor(
       // If a all dependencies need to be rebuild on changes, then register with watcher
       // and run through CLI, otherwise only the current project will rebuild.
       const runBuild = async () => {
-        let childProcess: ChildProcess = null;
+        let childProcess: ChildProcess | null = null;
         const whenReady = new Promise<{ success: boolean }>(async (resolve) => {
           childProcess = fork(
             require.resolve('nx/bin/nx.js'),
@@ -333,7 +337,7 @@ export async function* nodeExecutor(
       if (isDaemonEnabled()) {
         additionalExitHandler = await daemonClient.registerFileWatcher(
           {
-            watchProjects: [context.projectName],
+            watchProjects: [projectName],
             includeDependencies: true,
           },
           async (err, data) => {
@@ -422,7 +426,7 @@ function calculateResolveMappings(
     parsed.target,
     parsed.configuration
   );
-  return dependencies.reduce((m, c) => {
+  return dependencies.reduce<Record<string, string>>((m, c) => {
     if (c.node.type !== 'npm' && c.outputs[0] != null) {
       // `outputs` are cache patterns and may contain globs (e.g. from the
       // inferred `@nx/js/typescript` build target). Strip the glob portion
@@ -460,7 +464,7 @@ function getFileToRun(
   context: ExecutorContext,
   project: ProjectGraphProjectNode,
   buildOptions: Record<string, any>,
-  buildTargetExecutor: string
+  buildTargetExecutor: string | undefined
 ): string {
   // If using run-commands or another custom executor, then user should set
   // outputFileName, but we can try the default value that we use.
@@ -468,7 +472,8 @@ function getFileToRun(
     // If we are using crystal for infering the target, we can use the output path from the target.
     // Since the output path has a token for the project name, we need to interpolate it.
     // {workspaceRoot}/dist/{projectRoot} -> dist/my-app
-    const outputPath = project.data.targets[buildOptions.target]?.outputs?.[0];
+    const outputPath =
+      project.data.targets?.[buildOptions.target]?.outputs?.[0];
 
     if (outputPath) {
       const outputFilePath = interpolate(outputPath, {

@@ -15,6 +15,10 @@ export async function normalizeOptions(
   options: EsBuildExecutorOptions,
   context: ExecutorContext
 ): Promise<NormalizedEsBuildExecutorOptions> {
+  const projectName = context.projectName;
+  if (!projectName) {
+    throw new Error('The esbuild executor must be run for a project.');
+  }
   const isTsSolutionSetup = isUsingTsSolutionSetup();
   if (isTsSolutionSetup && options.generatePackageJson) {
     throw new Error(
@@ -32,9 +36,9 @@ export async function normalizeOptions(
     options.generatePackageJson || isTsSolutionSetup
       ? (options.assets ?? [])
       : [
-          ...options.assets,
+          ...(options.assets ?? []),
           joinPathFragments(
-            context.projectGraph.nodes[context.projectName].data.root,
+            context.projectGraph.nodes[projectName].data.root,
             'package.json'
           ),
         ];
@@ -80,7 +84,7 @@ export async function normalizeOptions(
 
   const skipTypeCheck = declaration ? false : options.skipTypeCheck;
 
-  let userDefinedBuildOptions: esbuild.BuildOptions;
+  let userDefinedBuildOptions: esbuild.BuildOptions | undefined;
   if (options.esbuildConfig) {
     const userDefinedConfig = path.resolve(context.root, options.esbuildConfig);
 
@@ -100,7 +104,7 @@ export async function normalizeOptions(
     userDefinedBuildOptions = options.esbuildOptions;
   }
 
-  if (options.additionalEntryPoints?.length > 0) {
+  if ((options.additionalEntryPoints?.length ?? 0) > 0) {
     const { outputFileName, ...rest } = options;
     if (outputFileName) {
       throw new Error(

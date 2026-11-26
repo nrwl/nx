@@ -63,6 +63,7 @@ export async function normalizeOptions(
 
   return {
     ...options,
+    bundler: options.bundler,
     name: appProjectName,
     frontendProject: options.frontendProject
       ? names(options.frontendProject).fileName

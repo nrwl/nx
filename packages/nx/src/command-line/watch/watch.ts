@@ -162,6 +162,8 @@ export async function watch(args: WatchArguments) {
     'g'
   );
 
+  const command = args.command ?? '';
+
   if (!daemonClient.enabled()) {
     output.error({
       title:
@@ -172,7 +174,7 @@ export async function watch(args: WatchArguments) {
 
   if (
     args.includeGlobalWorkspaceFiles &&
-    args.command.match(projectReplacementRegex)
+    command.match(projectReplacementRegex)
   ) {
     output.error({
       title: 'Invalid command',
@@ -188,10 +190,10 @@ export async function watch(args: WatchArguments) {
     output.logSingleLine('running with args: ' + JSON.stringify(args));
   args.verbose && output.logSingleLine('starting watch process');
 
-  const whatToWatch = args.all ? 'all' : args.projects;
+  const whatToWatch = args.all ? 'all' : (args.projects ?? []);
 
   const batchQueue = new BatchCommandRunner(
-    args.command ?? '',
+    command,
     args.projectNameEnvName,
     args.fileChangesEnvName
   );
@@ -253,9 +255,12 @@ export async function watch(args: WatchArguments) {
         // `data` is null on the error path; falling through dereferences it.
         return;
       }
+      if (!data) {
+        return;
+      }
 
       // Only pass the projects to the queue if the command has a replacement for projects
-      if (args.command.match(projectReplacementRegex)) {
+      if (command.match(projectReplacementRegex)) {
         batchQueue.enqueue(data.changedProjects, data.changedFiles);
       } else {
         batchQueue.enqueue([], data.changedFiles);

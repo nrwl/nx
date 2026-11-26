@@ -112,7 +112,7 @@ export function getLockFileNodes(
   contents: string,
   lockFileHash: string,
   context: CreateNodesContext,
-  bunPatchFileHashes?: Map<string, string>
+  bunPatchFileHashes?: Map<string, string | null>
 ): {
   nodes: Record<string, ProjectGraphExternalNode>;
   keyMap: Map<string, any>;
@@ -149,7 +149,7 @@ export function getLockFileNodesForName(
   contents: string,
   lockFileHash: string,
   packageJson?: PackageJson,
-  bunPatchFileHashes?: Map<string, string>
+  bunPatchFileHashes?: Map<string, string | null>
 ): {
   nodes: Record<string, ProjectGraphExternalNode>;
   keyMap: Map<string, any>;
@@ -445,7 +445,7 @@ function applyPinnedSpecs(
   pinnedSpecs: PinnedManifestSpec[]
 ): void {
   for (const { depType, name, spec } of pinnedSpecs) {
-    packageJson[depType][name] = spec;
+    (packageJson[depType] ??= {})[name] = spec;
   }
 }
 
@@ -489,7 +489,7 @@ function buildLockFile(
   graph: ProjectGraph,
   packageManager: PackageManager = detectPackageManager(workspaceRoot),
   options?: {
-    onPruneFallback?: (error: Error) => void;
+    onPruneFallback?: (error: unknown) => void;
     workspaceRootPath?: string;
     projectRoot?: string;
     onPinnedSpec?: (pin: PinnedManifestSpec) => void;
@@ -564,6 +564,7 @@ function buildLockFile(
     }
     return content;
   }
+  throw new Error(`Unknown package manager: ${packageManager}`);
 }
 
 /**
@@ -617,7 +618,7 @@ function createPrunedLockfile(
     delete packageJson.resolutions;
   }
   const pinnedSpecs: PinnedManifestSpec[] = [];
-  let pruneError: Error | undefined;
+  let pruneError: unknown;
   const lockFileContent = buildLockFile(packageJson, graph, packageManager, {
     onPruneFallback: (error) => {
       pruneError = error;
@@ -654,7 +655,9 @@ function createPrunedLockfile(
     // The pruning error output is suppressed under a postinstall, so
     // this is the only signal there naming the cause and what the fallback
     // output is missing.
-    const bodyLines = [`The lockfile pruning failed: ${pruneError?.message}`];
+    const bodyLines = [
+      `The lockfile pruning failed: ${pruneError instanceof Error ? pruneError.message : undefined}`,
+    ];
     if (packageManager === 'pnpm') {
       bodyLines.push(
         'The emitted package.json keeps its resolution-time pnpm config (`overrides`, `packageExtensions`), its vendored local-path specifiers point at their original workspace locations, and no local-path artifacts are shipped for it.'
@@ -803,7 +806,7 @@ export function generatePrunedDeployOutput(
         mkdirSync(destinationDir, { recursive: true });
         createdDirs.add(destinationDir);
       }
-      if ('sourcePath' in artifact) {
+      if (hasSourcePath(artifact)) {
         copyFileSync(artifact.sourcePath, destination);
       } else {
         writeFileSync(destination, artifact.content);
@@ -813,7 +816,7 @@ export function generatePrunedDeployOutput(
     for (const artifact of artifacts) {
       options.emit(
         artifact.path,
-        'sourcePath' in artifact
+        hasSourcePath(artifact)
           ? readFileSync(artifact.sourcePath)
           : artifact.content
       );
@@ -821,15 +824,30 @@ export function generatePrunedDeployOutput(
   }
 }
 
+function hasSourcePath(
+  artifact: PrunedDeployArtifact
+): artifact is Extract<PrunedDeployArtifact, { sourcePath: string }> {
+  return 'sourcePath' in artifact;
+}
+
 // generate body lines for error message
-function errorBodyLines(originalError: Error, additionalInfo: string[] = []) {
+function errorBodyLines(
+  originalError: unknown,
+  additionalInfo: string[] = []
+): string[] {
+  const message =
+    originalError instanceof Error
+      ? originalError.message
+      : String(originalError);
+  const stack =
+    originalError instanceof Error ? originalError.stack : undefined;
   return [
     'Please open an issue at `https://github.com/nrwl/nx/issues/new?template=1-bug.yml` and provide a reproduction.',
 
     ...additionalInfo,
 
-    `\nOriginal error: ${originalError.message}\n\n`,
-    originalError.stack,
+    `\nOriginal error: ${message}\n\n`,
+    ...(stack ? [stack] : []),
   ];
 }
 

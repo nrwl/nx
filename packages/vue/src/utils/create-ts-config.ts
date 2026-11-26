@@ -148,7 +148,7 @@ export function extractTsConfigBase(host: Tree) {
   shared.extractTsConfigBase(host);
 
   if (host.exists('vite.config.ts')) {
-    const vite = host.read('vite.config.ts').toString();
+    const vite = host.read('vite.config.ts', 'utf-8') ?? '';
     host.write(
       'vite.config.ts',
       vite.replace(`projects: []`, `projects: ['tsconfig.base.json']`)

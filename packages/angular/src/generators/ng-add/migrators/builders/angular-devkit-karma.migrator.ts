@@ -73,7 +73,9 @@ export class AngularDevkitKarmaMigrator extends BuilderMigrator {
     target.options.main =
       target.options.main && this.convertAsset(target.options.main);
     target.options.polyfills = Array.isArray(target.options.polyfills)
-      ? target.options.polyfills.map((p) => this.convertSourceRootPath(p))
+      ? target.options.polyfills.map((p: string) =>
+          this.convertSourceRootPath(p)
+        )
       : target.options.polyfills &&
         this.convertSourceRootPath(target.options.polyfills);
     target.options.tsConfig =
@@ -90,13 +92,19 @@ export class AngularDevkitKarmaMigrator extends BuilderMigrator {
       );
     target.options.assets =
       target.options.assets &&
-      target.options.assets.map((asset) => this.convertAsset(asset));
+      target.options.assets.map((asset: string | object) =>
+        this.convertAsset(asset)
+      );
     target.options.styles =
       target.options.styles &&
-      target.options.styles.map((style) => this.convertAsset(style));
+      target.options.styles.map((style: string | object) =>
+        this.convertAsset(style)
+      );
     target.options.scripts =
       target.options.scripts &&
-      target.options.scripts.map((script) => this.convertAsset(script));
+      target.options.scripts.map((script: string | object) =>
+        this.convertAsset(script)
+      );
 
     updateProjectConfiguration(this.tree, this.project.name, {
       ...this.projectConfig,
@@ -115,7 +123,7 @@ export class AngularDevkitKarmaMigrator extends BuilderMigrator {
     }
     if (!this.tree.exists(target.options.tsConfig)) {
       const originalTsConfigPath =
-        this.originalProjectConfig.targets[targetName].options.tsConfig;
+        this.getOriginalTarget(targetName).options.tsConfig;
       this.logger.warn(
         `The tsConfig file "${originalTsConfigPath}" specified in the "${targetName}" target could not be found. Skipping updating the tsConfig file.`
       );

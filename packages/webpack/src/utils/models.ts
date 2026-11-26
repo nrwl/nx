@@ -6,11 +6,14 @@ export interface ExtraEntryPointClass {
   input: string;
 }
 
-export type NormalizedEntryPoint = Required<ExtraEntryPointClass>;
+export type NormalizedEntryPoint = Required<
+  Omit<ExtraEntryPointClass, 'inject'>
+> &
+  Pick<ExtraEntryPointClass, 'inject'>;
 
 export interface EmittedFile {
   id?: string;
-  name?: string;
+  name?: string | null;
   file: string;
   extension: string;
   initial: boolean;

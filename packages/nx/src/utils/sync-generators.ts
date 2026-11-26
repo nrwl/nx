@@ -144,6 +144,11 @@ export async function runSyncGenerator(
   try {
     performance.mark(`run-sync-generator:${generatorSpecifier}:start`);
     const { collection, generator } = parseGeneratorString(generatorSpecifier);
+    if (collection === undefined) {
+      throw new Error(
+        `The sync generator "${generatorSpecifier}" must be specified as "<collection>:<generator>".`
+      );
+    }
     const { implementationFactory } = getGeneratorInformation(
       collection,
       generator,
@@ -230,8 +235,11 @@ export function collectEnabledTaskSyncGeneratorsFromTaskGraph(
   );
 
   for (const { target } of Object.values(taskGraph.tasks)) {
-    const { syncGenerators } =
-      projectGraph.nodes[target.project].data.targets[target.target];
+    const targets = projectGraph.nodes[target.project].data.targets;
+    if (!targets) {
+      throw new Error(`Project "${target.project}" has no targets.`);
+    }
+    const { syncGenerators } = targets[target.target];
     if (!syncGenerators?.length) {
       continue;
     }
@@ -564,13 +572,16 @@ function errorToString(error: SerializableSimpleError, verbose: boolean) {
   }`;
 }
 
-function toSerializableError(error: Error): SerializableSimpleError {
-  return error instanceof SyncError
-    ? {
-        title: error.title,
-        bodyLines: error.bodyLines,
-        message: error.message,
-        stack: error.stack,
-      }
-    : { message: error.message, stack: error.stack };
+function toSerializableError(error: unknown): SerializableSimpleError {
+  if (error instanceof SyncError) {
+    return {
+      title: error.title,
+      bodyLines: error.bodyLines,
+      message: error.message,
+      stack: error.stack,
+    };
+  }
+  return error instanceof Error
+    ? { message: error.message, stack: error.stack }
+    : { message: String(error), stack: undefined };
 }

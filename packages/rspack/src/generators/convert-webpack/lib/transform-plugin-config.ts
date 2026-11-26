@@ -3,6 +3,9 @@ import { ast, query } from '@phenomnomnominal/tsquery';
 
 export function transformPluginConfig(tree: Tree, configPath: string) {
   let contents = tree.read(configPath, 'utf-8');
+  if (contents === null) {
+    throw new Error(`Cannot read ${configPath}`);
+  }
   const sourceFile = ast(contents);
   const replacements: { start: number; end: number; text: string }[] = [];
 

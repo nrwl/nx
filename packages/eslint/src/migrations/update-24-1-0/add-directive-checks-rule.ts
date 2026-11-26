@@ -20,6 +20,7 @@ import { useFlatConfig } from '../../../internal';
 import {
   determineEslintConfigFormat,
   isEslintConfigFileSupported,
+  readFileOrThrow,
 } from '../../generators/utils/eslint-file';
 import {
   addBlockToFlatConfigExport,
@@ -61,7 +62,7 @@ export default async function update(tree: Tree) {
     if (!LINT_CONFIG_FILES.has(basename(path))) {
       return;
     }
-    const content = tree.read(path, 'utf-8');
+    const content = readFileOrThrow(tree, path);
     usesNxEslintPlugin ||= /@nx[/"']/.test(content);
     ruleConfigured ||= content.includes(RULE);
   });
@@ -90,7 +91,7 @@ export default async function update(tree: Tree) {
   // Without `files`, the rule covers every file the config already lints, and
   // ESLint selects no new files it may lack a parser for.
   if (flatConfig) {
-    const content = tree.read(sharedConfig, 'utf-8');
+    const content = readFileOrThrow(tree, sharedConfig);
     tree.write(
       sharedConfig,
       addBlockToFlatConfigExport(
@@ -135,7 +136,7 @@ function hasOnlyEslintrcBaseConfig(tree: Tree): boolean {
 
 // Top-level `plugins` apply to every file; `overrides` don't.
 function eslintrcRegistersNxPlugin(tree: Tree, config: string): boolean {
-  const { plugins } = parseJson(tree.read(config, 'utf-8'));
+  const { plugins } = parseJson(readFileOrThrow(tree, config));
   return (
     Array.isArray(plugins) &&
     plugins.some((plugin) => plugin === '@nx' || plugin === '@nx/eslint-plugin')
@@ -147,7 +148,7 @@ function eslintrcRegistersNxPlugin(tree: Tree, config: string): boolean {
 function flatConfigRegistersNxPlugin(tree: Tree, config: string): boolean {
   const source = ts.createSourceFile(
     config,
-    tree.read(config, 'utf-8'),
+    readFileOrThrow(tree, config),
     ts.ScriptTarget.Latest,
     true,
     ts.ScriptKind.JS
@@ -220,7 +221,7 @@ async function hasDirectiveFiles(tree: Tree): Promise<boolean> {
     graph = await createProjectGraphAsync();
   } catch (e) {
     logger.warn(
-      `Could not create the project graph to look for Nx directives, so \`${RULE}\` was not added. Add it to your ESLint config if your files use \`@nx-depends-on\` or \`@nx-ignore-server-inputs\`.\n${e.message}`
+      `Could not create the project graph to look for Nx directives, so \`${RULE}\` was not added. Add it to your ESLint config if your files use \`@nx-depends-on\` or \`@nx-ignore-server-inputs\`.\n${e instanceof Error ? e.message : String(e)}`
     );
     return false;
   }
@@ -245,7 +246,7 @@ async function hasDirectiveFiles(tree: Tree): Promise<boolean> {
         if (!tree.isFile(file)) {
           continue;
         }
-        const directives = parseNxDirectives(tree.read(file, 'utf-8'));
+        const directives = parseNxDirectives(readFileOrThrow(tree, file));
         if (TRIGGER_DIRECTIVES.some((name) => directives.has(name))) {
           return true;
         }

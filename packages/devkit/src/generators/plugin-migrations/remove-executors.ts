@@ -4,6 +4,7 @@ import {
   logger,
   readCachedProjectGraph,
   readNxJson,
+  type NxJsonConfiguration,
   type Tree,
   updateNxJson,
 } from 'nx/src/devkit-exports';
@@ -25,6 +26,8 @@ export async function migrateRemovedExecutors(
   skipAgentic?: boolean;
 }> {
   const removed = new Set(executors);
+  const isRemoved = (executor: string | undefined): executor is string =>
+    executor !== undefined && removed.has(executor);
   const defaults = readNxJson(tree)?.targetDefaults ?? {};
   const relevantDefaults = filterDefaults(defaults, removed);
   const agentContext: string[] = [];
@@ -38,7 +41,7 @@ export async function migrateRemovedExecutors(
   }
   const affected = [...projects].filter(([, project]) =>
     Object.values(project.targets ?? {}).some((target) =>
-      removed.has(target.executor)
+      isRemoved(target.executor)
     )
   );
   const pluginTargets = await findPluginTargets(removed, projects);
@@ -94,7 +97,7 @@ export async function migrateRemovedExecutors(
   );
   for (const [name, project] of getProjects(tree)) {
     for (const [targetName, target] of Object.entries(project.targets ?? {})) {
-      if (removed.has(target.executor)) {
+      if (isRemoved(target.executor)) {
         leftovers.push(`${name}:${targetName} (${target.executor})`);
         usedExecutors.add(target.executor);
       }
@@ -177,7 +180,7 @@ async function findPluginTargets(
   removed: Set<string>,
   projects: ReturnType<typeof getProjects>
 ): Promise<PluginTarget[] | null> {
-  if (globalThis[graphUnavailable]) {
+  if (Reflect.get(globalThis, graphUnavailable)) {
     return null;
   }
   let graph: ReturnType<typeof readCachedProjectGraph>;
@@ -187,7 +190,7 @@ async function findPluginTargets(
     try {
       graph = await createProjectGraphAsync();
     } catch {
-      globalThis[graphUnavailable] = true;
+      Reflect.set(globalThis, graphUnavailable, true);
       logger.warn(
         'The project graph could not be created, so targets created by plugins were not checked for removed executors.'
       );
@@ -204,8 +207,10 @@ async function findPluginTargets(
     for (const [targetName, target] of Object.entries(
       node.data.targets ?? {}
     )) {
+      const executor = target.executor;
       if (
-        !removed.has(target.executor) ||
+        executor === undefined ||
+        !removed.has(executor) ||
         declared[targetName]?.executor ||
         declared[targetName]?.command
       ) {
@@ -219,7 +224,7 @@ async function findPluginTargets(
       found.push({
         project: name,
         target: targetName,
-        executor: target.executor,
+        executor,
         plugin,
       });
     }
@@ -260,7 +265,7 @@ function removeDeadExecutorDefaults(
 }
 
 function filterDefaults(
-  defaults: NonNullable<ReturnType<typeof readNxJson>['targetDefaults']>,
+  defaults: NonNullable<NxJsonConfiguration['targetDefaults']>,
   removed: Set<string>
 ) {
   return Object.fromEntries(
@@ -269,7 +274,9 @@ function filterDefaults(
         removed.has(name) ||
         (Array.isArray(value) ? value : [value]).some(
           (entry) =>
-            removed.has(entry.executor) || removed.has(entry.filter?.executor)
+            (entry.executor !== undefined && removed.has(entry.executor)) ||
+            (entry.filter?.executor !== undefined &&
+              removed.has(entry.filter.executor))
         )
     )
   );

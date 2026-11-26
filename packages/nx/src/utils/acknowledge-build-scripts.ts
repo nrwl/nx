@@ -216,7 +216,9 @@ function acknowledgePnpmBuildScripts(
  */
 function parseWorkspaceFile(host: Host): Document | null {
   const parsed = parseDocument(
-    host.exists(PNPM_WORKSPACE_FILE) ? host.read(PNPM_WORKSPACE_FILE) : ''
+    host.exists(PNPM_WORKSPACE_FILE)
+      ? (host.read(PNPM_WORKSPACE_FILE) ?? '')
+      : ''
   );
   if (
     parsed.errors.length > 0 ||
@@ -246,7 +248,7 @@ function readRecordedDecisions(host: Host): Record<string, boolean> {
 interface Host {
   root: string;
   exists(path: string): boolean;
-  read(path: string): string;
+  read(path: string): string | null;
   write(path: string, content: string): void;
   readJson(path: string): any;
 }
@@ -269,7 +271,10 @@ function createHost(treeOrRoot: Tree | string, directory: string): Host {
     exists: (p) => treeOrRoot.exists(join(directory, p)),
     read: (p) => treeOrRoot.read(join(directory, p), 'utf-8'),
     write: (p, c) => treeOrRoot.write(join(directory, p), c),
-    readJson: (p) => parseJson(treeOrRoot.read(join(directory, p), 'utf-8')),
+    readJson: (p) => {
+      const content = treeOrRoot.read(join(directory, p), 'utf-8');
+      return content === null ? null : parseJson(content);
+    },
   };
 }
 

@@ -85,10 +85,10 @@ export function getInstalledNextVersion(tree: Tree): string {
     installedNextVersion === 'latest' ||
     installedNextVersion === 'next'
   ) {
-    return clean(nextVersion) ?? coerce(nextVersion).version;
+    return toSemverVersion(nextVersion);
   }
 
-  return clean(installedNextVersion) ?? coerce(installedNextVersion).version;
+  return toSemverVersion(installedNextVersion);
 }
 
 export async function getInstalledNextVersionFromGraph() {
@@ -97,5 +97,17 @@ export async function getInstalledNextVersionFromGraph() {
   if (!nextDep) {
     return undefined;
   }
-  return clean(nextDep.data.version) ?? coerce(nextDep.data.version).version;
+  return toSemverVersion(nextDep.data.version);
+}
+
+function toSemverVersion(version: string): string {
+  const cleaned = clean(version);
+  if (cleaned) {
+    return cleaned;
+  }
+  const coerced = coerce(version);
+  if (!coerced) {
+    throw new Error(`Invalid version: ${version}`);
+  }
+  return coerced.version;
 }

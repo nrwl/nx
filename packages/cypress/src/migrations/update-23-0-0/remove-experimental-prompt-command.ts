@@ -11,11 +11,10 @@ const SELECTOR =
 
 export default async function removeExperimentalPromptCommand(tree: Tree) {
   for await (const { cypressConfigPath } of cypressProjectConfigs(tree)) {
-    if (!tree.exists(cypressConfigPath)) {
+    const contents = tree.read(cypressConfigPath, 'utf-8');
+    if (contents === null) {
       continue;
     }
-
-    const contents = tree.read(cypressConfigPath, 'utf-8');
     if (!contents.includes('experimentalPromptCommand')) {
       continue;
     }

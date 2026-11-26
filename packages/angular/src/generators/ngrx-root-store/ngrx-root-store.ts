@@ -21,7 +21,7 @@ export async function ngrxRootStoreGenerator(tree: Tree, schema: Schema) {
     addImportsToModule(tree, options);
   }
 
-  if (!options.minimal) {
+  if (!options.minimal && options.name) {
     await ngrxFeatureStoreGenerator(tree, {
       name: options.name,
       parent: options.parent,

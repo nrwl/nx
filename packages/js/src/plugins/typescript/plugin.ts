@@ -380,7 +380,7 @@ export const createNodesV2: CreateNodes<TscPluginOptions> = [
 
           targetsCache[targetsCacheKey] ??= buildTscTargets(
             configContext,
-            options,
+            normalizedOptions,
             context,
             validConfigFilePaths,
             cache,
@@ -879,7 +879,7 @@ function readTargets(
 }
 
 function getInputs(
-  namedInputs: NxJsonConfiguration['namedInputs'],
+  namedInputs: NonNullable<NxJsonConfiguration['namedInputs']>,
   config: ConfigContext,
   tsConfig: ParsedTsconfigData,
   internalProjectReferences: Record<string, ParsedTsconfigData>,
@@ -1125,7 +1125,7 @@ function getOutputs(
   rootTsConfig: ParsedTsconfigData,
   internalProjectReferences: Record<string, ParsedTsconfigData>,
   workspaceRoot: string,
-  emitDeclarationOnly: boolean
+  emitDeclarationOnly: boolean | undefined
 ): string[] {
   const outputs = new Set<string>();
 

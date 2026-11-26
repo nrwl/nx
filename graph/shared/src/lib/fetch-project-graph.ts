@@ -14,5 +14,9 @@ export async function fetchProjectGraph(
     (graph) => graph.id === selectedWorkspaceId
   );
 
+  if (!projectInfo) {
+    throw new Error(`Could not find workspace "${selectedWorkspaceId}"`);
+  }
+
   return await projectGraphService.getProjectGraph(projectInfo.projectGraphUrl);
 }

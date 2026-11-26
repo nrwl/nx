@@ -17,8 +17,11 @@ export default async function* reactNativeStorybookExecutor(
 ): AsyncGenerator<{ success: boolean }> {
   const { syncDeps: isSyncDepsEnabled = true } = options;
 
-  const projectRoot =
-    context.projectsConfigurations.projects[context.projectName].root;
+  const { projectName } = context;
+  if (!projectName) {
+    throw new Error('The storybook executor requires a project name.');
+  }
+  const projectRoot = context.projectsConfigurations.projects[projectName].root;
   logger.info(
     `${pc.bold(
       pc.cyan('info')
@@ -36,9 +39,9 @@ export default async function* reactNativeStorybookExecutor(
 
   if (isSyncDepsEnabled && existsSync(packageJsonPath))
     displayNewlyAddedDepsMessage(
-      context.projectName,
+      projectName,
       await syncDeps(
-        context.projectName,
+        projectName,
         projectPackageJson,
         packageJsonPath,
         workspacePackageJson,

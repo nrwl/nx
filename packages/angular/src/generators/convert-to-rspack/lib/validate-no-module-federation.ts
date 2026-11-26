@@ -18,7 +18,7 @@ export function validateNoModuleFederation(
 
 function usesModuleFederation(tree: Tree, project: ProjectConfiguration) {
   for (const target of Object.values(project.targets ?? {})) {
-    if (MODULE_FEDERATION_EXECUTORS.includes(target.executor)) {
+    if (MODULE_FEDERATION_EXECUTORS.includes(target.executor ?? '')) {
       return true;
     }
     const allOptions = [
@@ -29,8 +29,7 @@ function usesModuleFederation(tree: Tree, project: ProjectConfiguration) {
       const configPath = options?.customWebpackConfig?.path;
       if (
         configPath &&
-        tree.exists(configPath) &&
-        tree.read(configPath, 'utf-8').includes('@nx/module-federation')
+        tree.read(configPath, 'utf-8')?.includes('@nx/module-federation')
       ) {
         return true;
       }

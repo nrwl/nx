@@ -42,7 +42,9 @@ async function startNewDaemonInBackground() {
   } catch (e) {
     // Fall back to using __dirname if resolution fails
     serverLogger.log(
-      `Failed to resolve nx package, falling back to __dirname: ${e.message}`
+      `Failed to resolve nx package, falling back to __dirname: ${
+        e instanceof Error ? e.message : String(e)
+      }`
     );
     startScriptPath = join(__dirname, '../server/start.js');
   }
@@ -149,7 +151,7 @@ export function resetInactivityTimeout(cb: () => void): void {
 export function respondToClient(
   socket: Socket,
   response: Buffer,
-  description: string
+  description: string | null
 ) {
   return new Promise(async (res) => {
     if (description) {

@@ -22,5 +22,6 @@ export async function requireNxKey(): Promise<typeof import('@nx/key')> {
         );
       }
     }
+    throw e;
   });
 }

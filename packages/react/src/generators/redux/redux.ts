@@ -5,7 +5,7 @@ import {
   applyChangesToString,
   formatFiles,
   generateFiles,
-  getProjects,
+  readProjectConfiguration,
   joinPathFragments,
   names,
   readJson,
@@ -73,16 +73,20 @@ function addExportsToBarrel(host: Tree, options: NormalizedSchema) {
     tsModule = ensureTypescript();
   }
 
+  if (!options.projectSourcePath) {
+    throw new Error(
+      `Cannot determine the source root of ${options.projectDirectory}.`
+    );
+  }
   const indexFilePath = joinPathFragments(
     options.projectSourcePath,
     options.fileExtensionType === 'js' ? 'index.js' : 'index.ts'
   );
 
-  if (!host.exists(indexFilePath)) {
+  const indexSource = host.read(indexFilePath, 'utf-8');
+  if (indexSource === null) {
     return;
   }
-
-  const indexSource = host.read(indexFilePath, 'utf-8');
   const indexSourceFile = tsModule.createSourceFile(
     indexFilePath,
     indexSource,
@@ -101,11 +105,11 @@ function addExportsToBarrel(host: Tree, options: NormalizedSchema) {
 }
 
 function addStoreConfiguration(host: Tree, options: NormalizedSchema) {
-  if (!options.appProjectSourcePath) {
+  if (!options.appProjectSourcePath || !options.appMainFilePath) {
     return;
   }
 
-  const mainSource = host.read(options.appMainFilePath, 'utf-8');
+  const mainSource = readAppMain(host, options.appMainFilePath);
   if (!mainSource.includes('redux')) {
     const mainSourceFile = tsModule.createSourceFile(
       options.appMainFilePath,
@@ -126,11 +130,11 @@ function updateReducerConfiguration(host: Tree, options: NormalizedSchema) {
     tsModule = ensureTypescript();
   }
 
-  if (!options.appProjectSourcePath) {
+  if (!options.appProjectSourcePath || !options.appMainFilePath) {
     return;
   }
 
-  const mainSource = host.read(options.appMainFilePath, 'utf-8');
+  const mainSource = readAppMain(host, options.appMainFilePath);
   const mainSourceFile = tsModule.createSourceFile(
     options.appMainFilePath,
     mainSource,
@@ -146,6 +150,14 @@ function updateReducerConfiguration(host: Tree, options: NormalizedSchema) {
     })
   );
   host.write(options.appMainFilePath, changes);
+}
+
+function readAppMain(host: Tree, appMainFilePath: string): string {
+  const mainSource = host.read(appMainFilePath, 'utf-8');
+  if (mainSource === null) {
+    throw new Error(`Could not find ${appMainFilePath}.`);
+  }
+  return mainSource;
 }
 
 async function normalizeOptions(
@@ -168,15 +180,18 @@ async function normalizeOptions(
     js: options.js,
   });
 
-  let appProjectSourcePath: string;
-  let appMainFilePath: string;
+  let appProjectSourcePath: string | undefined;
+  let appMainFilePath: string | undefined;
   const extraNames = names(name);
 
-  const projects = getProjects(host);
-  const project = projects.get(projectName);
+  const project = readProjectConfiguration(host, projectName);
   const { root, sourceRoot, projectType } = project;
 
-  const tsConfigJson = readJson(host, getRootTsConfigPathInTree(host));
+  const rootTsConfigPath = getRootTsConfigPathInTree(host);
+  if (!rootTsConfigPath) {
+    throw new Error('Cannot find the root tsconfig file.');
+  }
+  const tsConfigJson = readJson(host, rootTsConfigPath);
   const tsPaths: { [module: string]: string[] } = tsConfigJson.compilerOptions
     ? tsConfigJson.compilerOptions.paths || {}
     : {};
@@ -186,7 +201,9 @@ async function normalizeOptions(
         ? `./app/${options.path}/${extraNames.fileName}.slice`
         : `./app/${extraNames.fileName}.slice`
       : Object.keys(tsPaths).find((k) =>
-          tsPaths[k].some((s) => s.includes(sourceRoot))
+          tsPaths[k].some(
+            (s) => sourceRoot !== undefined && s.includes(sourceRoot)
+          )
         );
 
   // If --project is set to an app, automatically configure store
@@ -195,7 +212,7 @@ async function normalizeOptions(
     options.appProject ||
     (projectType === 'application' ? projectName : undefined);
   if (options.appProject) {
-    const appConfig = projects.get(options.appProject);
+    const appConfig = readProjectConfiguration(host, options.appProject);
     if (appConfig.projectType !== 'application') {
       throw new Error(
         `Expected ${options.appProject} to be an application but got ${appConfig.projectType}`

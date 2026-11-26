@@ -49,7 +49,12 @@ export async function convertConfigToRspackPluginGenerator(
         }
         if (!configurationName) {
           const project = projects.get(projectName);
-          const target = project.targets[targetName];
+          const target = project?.targets?.[targetName];
+          if (!project || !target?.options) {
+            throw new Error(
+              `Could not find the ${targetName} target options for project ${projectName}.`
+            );
+          }
 
           const hasError = validateProject(tree, project);
           if (hasError) {
@@ -79,8 +84,10 @@ export async function convertConfigToRspackPluginGenerator(
       continue;
     }
     if (
-      Object.values(project.targets ?? {}).some((target) =>
-        buildExecutors.includes(target.executor)
+      Object.values(project.targets ?? {}).some(
+        (target) =>
+          target.executor !== undefined &&
+          buildExecutors.includes(target.executor)
       )
     ) {
       continue;

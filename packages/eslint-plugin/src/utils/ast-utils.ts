@@ -70,7 +70,7 @@ export function getBarrelEntryPointProjectNode(
     const potentialEntryPoints = Object.keys(tsConfigBase.compilerOptions.paths)
       .filter((entry) => {
         const sourceFolderPaths = tsConfigBase.compilerOptions.paths[entry];
-        return sourceFolderPaths.some((sourceFolderPath) => {
+        return sourceFolderPaths.some((sourceFolderPath: string) => {
           const normalizedPath = sourceFolderPath.replace(/^\.\//, '');
           const sourceRoot = getProjectSourceRoot(projectNode.data);
           return (
@@ -80,7 +80,7 @@ export function getBarrelEntryPointProjectNode(
         });
       })
       .map((entry) =>
-        tsConfigBase.compilerOptions.paths[entry].map((x) => ({
+        tsConfigBase.compilerOptions.paths[entry].map((x: string) => ({
           path: x,
           importScope: entry,
         }))
@@ -92,7 +92,7 @@ export function getBarrelEntryPointProjectNode(
   return null;
 }
 
-function hasMemberExport(exportedMember, filePath) {
+function hasMemberExport(exportedMember: string, filePath: string) {
   const fileContent = readFileSync(filePath, 'utf8');
 
   // use the TypeScript AST to find the path to the file where exportedMember is defined
@@ -111,7 +111,10 @@ function hasMemberExport(exportedMember, filePath) {
   );
 }
 
-export function getRelativeImportPath(exportedMember, filePath) {
+export function getRelativeImportPath(
+  exportedMember: string,
+  filePath: string
+): string | null | undefined {
   const status = lstatSync(filePath, {
     throwIfNoEntry: false,
   });

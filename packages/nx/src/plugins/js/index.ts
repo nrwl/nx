@@ -31,6 +31,7 @@ import {
   type LockFileContents,
 } from './lock-file/lock-file-snapshot';
 import { foldLocalPathHashes } from './lock-file/utils/local-path-hashes';
+import { getExternalNodes } from './lock-file/project-graph-pruning';
 import { buildExplicitDependencies } from './project-graph/build-dependencies/build-dependencies';
 import { jsPluginConfig } from './utils/config';
 
@@ -57,7 +58,7 @@ export const createNodes: CreateNodes = [
 
 async function internalCreateNodes(
   lockFile: string,
-  _,
+  _: unknown,
   context: CreateNodesContext
 ) {
   const pluginConfig = jsPluginConfig(context.nxJsonConfiguration);
@@ -132,6 +133,7 @@ export const createDependencies: CreateDependencies = (
   if (
     pluginConfig.analyzeLockfile &&
     cachedLockFile &&
+    cachedKeyMap &&
     lockFileExists(cachedLockFile.packageManager)
   ) {
     const { packageManager, lockFile, lockFileContents, lockFileHash } =
@@ -140,7 +142,7 @@ export const createDependencies: CreateDependencies = (
     // depend on node_modules hoisting.
     const dependenciesHash = hashArray([
       lockFileHash,
-      ...Object.keys(ctx.externalNodes),
+      ...Object.keys(getExternalNodes(ctx)),
     ]);
 
     const cachedDependencies = readCache<RawProjectGraphDependency[]>(

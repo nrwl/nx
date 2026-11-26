@@ -143,7 +143,7 @@ export class TasksSchedule {
       return null;
     }
     if (!filter) {
-      return this.taskGraph.tasks[this.scheduledTasks.shift()];
+      return this.taskGraph.tasks[this.scheduledTasks.shift()!];
     }
     const idx = this.scheduledTasks.findIndex((id) =>
       filter(this.taskGraph.tasks[id])
@@ -155,10 +155,8 @@ export class TasksSchedule {
     return this.taskGraph.tasks[taskId];
   }
 
-  public nextBatch(): Batch {
-    return this.scheduledBatches.length > 0
-      ? this.scheduledBatches.shift()
-      : null;
+  public nextBatch(): Batch | null {
+    return this.scheduledBatches.shift() ?? null;
   }
 
   public getIncompleteTasks(): Task[] {
@@ -255,6 +253,11 @@ export class TasksSchedule {
     for (const root of this.notScheduledTaskGraph.roots) {
       const rootTask = this.notScheduledTaskGraph.tasks[root];
       const executorName = getExecutorNameForTask(rootTask, this.projectGraph);
+      if (!executorName) {
+        throw new Error(
+          `Target "${rootTask.target.project}:${rootTask.target.target}" does not have an executor configured`
+        );
+      }
       await this.processTaskForBatches(
         batchMap,
         rootTask,

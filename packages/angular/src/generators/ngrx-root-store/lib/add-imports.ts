@@ -11,6 +11,14 @@ import { NormalizedNgRxRootStoreGeneratorOptions } from './normalize-options';
 
 let tsModule: typeof import('typescript');
 
+function readParentFile(tree: Tree, parentPath: string): string {
+  const contents = tree.read(parentPath, 'utf-8');
+  if (contents === null) {
+    throw new Error(`Cannot find the parent file "${parentPath}".`);
+  }
+  return contents;
+}
+
 function addRootStoreImport(
   tree: Tree,
   isParentStandalone: boolean,
@@ -20,7 +28,7 @@ function addRootStoreImport(
   storeForRoot: string
 ) {
   if (isParentStandalone) {
-    if (tree.read(parentPath, 'utf-8').includes('ApplicationConfig')) {
+    if (readParentFile(tree, parentPath).includes('ApplicationConfig')) {
       addProviderToAppConfig(tree, parentPath, provideRootStore);
     } else {
       addProviderToBootstrapApplication(tree, parentPath, provideRootStore);
@@ -40,7 +48,7 @@ function addRootEffectsImport(
   effectsForEmptyRoot: string
 ) {
   if (isParentStandalone) {
-    if (tree.read(parentPath, 'utf-8').includes('ApplicationConfig')) {
+    if (readParentFile(tree, parentPath).includes('ApplicationConfig')) {
       addProviderToAppConfig(tree, parentPath, provideRootEffects);
     } else {
       addProviderToBootstrapApplication(tree, parentPath, provideRootEffects);
@@ -99,7 +107,7 @@ function addStoreDevTools(
 
     const provideStoreDevTools =
       'provideStoreDevtools({ logOnly: !isDevMode() })';
-    if (tree.read(parentPath, 'utf-8').includes('ApplicationConfig')) {
+    if (readParentFile(tree, parentPath).includes('ApplicationConfig')) {
       addProviderToAppConfig(tree, parentPath, provideStoreDevTools);
     } else {
       addProviderToBootstrapApplication(tree, parentPath, provideStoreDevTools);
@@ -132,7 +140,7 @@ export function addImportsToModule(
     tsModule = ensureTypescript();
   }
   const parentPath = options.parent;
-  const sourceText = tree.read(parentPath, 'utf-8');
+  const sourceText = readParentFile(tree, parentPath);
   let sourceFile = tsModule.createSourceFile(
     parentPath,
     sourceText,

@@ -3,13 +3,15 @@ export function isAsyncIterator<T>(v: any): v is AsyncIterableIterator<T> {
 }
 
 export async function getLastValueFromAsyncIterableIterator<T>(
-  i: AsyncIterable<T> | AsyncIterableIterator<T>
+  i: AsyncIterable<T> | AsyncIterableIterator<T> | Iterable<T>
 ): Promise<T> {
-  let prev: IteratorResult<T, T>;
-  let current: IteratorResult<T, T>;
+  let prev: IteratorResult<T, T> | undefined;
+  let current: IteratorResult<T, T> | undefined;
 
-  const generator = i[Symbol.asyncIterator] || i[Symbol.iterator];
-  const iterator = generator.call(i);
+  const iterator =
+    Symbol.asyncIterator in i
+      ? i[Symbol.asyncIterator]()
+      : i[Symbol.iterator]();
 
   do {
     prev = current;

@@ -49,12 +49,13 @@ export function getComponentProps(
   }
   const props = getInputPropertyDeclarations(tree, componentPath).map(
     (node) => {
-      const decoratorContent = findNodes(
-        findNodes(node, tsModule.SyntaxKind.Decorator).find((n) =>
-          n.getText().startsWith('@Input')
-        ),
-        tsModule.SyntaxKind.StringLiteral
-      );
+      const inputDecorator = findNodes(
+        node,
+        tsModule.SyntaxKind.Decorator
+      ).find((n) => n.getText().startsWith('@Input'));
+      const decoratorContent = inputDecorator
+        ? findNodes(inputDecorator, tsModule.SyntaxKind.StringLiteral)
+        : [];
       const name =
         useDecoratorName && decoratorContent.length
           ? !decoratorContent[0].getText().includes('.')
@@ -102,7 +103,7 @@ export function getArgType(property: PropertyDeclaration): ArgType {
 }
 
 export function getArgsDefaultValue(property: PropertyDeclaration): string {
-  const typeNameToDefault = {
+  const typeNameToDefault: Record<string, string> = {
     string: "''",
     number: '0',
     boolean: 'false',

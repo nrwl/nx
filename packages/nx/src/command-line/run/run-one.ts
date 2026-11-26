@@ -168,7 +168,7 @@ function getProjects(
         projectName,
         projects: [project],
         projectsMap: {
-          [project.data.name]: project,
+          [project.name]: project,
         },
       };
     } else if (projects.length > 1) {
@@ -381,7 +381,7 @@ export function getRunOneTargetError(
   };
 }
 
-const targetAliases = {
+const targetAliases: Record<string, string> = {
   b: 'build',
   e: 'e2e',
   l: 'lint',
@@ -396,7 +396,12 @@ export function parseRunOneOptions(
   parsedArgs: { [k: string]: any },
   projectGraph: ProjectGraph,
   nxJson: NxJsonConfiguration
-): { project; target; configuration; parsedArgs } {
+): {
+  project: string;
+  target: string;
+  configuration: string | undefined;
+  parsedArgs: { [k: string]: any };
+} {
   const defaultProjectName = calculateDefaultProjectName(
     cwd,
     workspaceRoot,
@@ -404,9 +409,9 @@ export function parseRunOneOptions(
     nxJson
   );
 
-  let project;
-  let target;
-  let configuration;
+  let project: string | undefined;
+  let target: string | undefined;
+  let configuration: string | undefined;
 
   if (
     typeof parsedArgs[PROJECT_TARGET_CONFIG] === 'string' &&

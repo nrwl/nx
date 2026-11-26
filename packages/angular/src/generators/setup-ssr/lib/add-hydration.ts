@@ -38,6 +38,9 @@ export function addHydration(tree: Tree, options: NormalizedGeneratorOptions) {
   }
 
   const sourceText = tree.read(pathToClientConfigFile, 'utf-8');
+  if (sourceText === null) {
+    throw new Error(`Cannot find the file "${pathToClientConfigFile}".`);
+  }
   let sourceFile = tsModule.createSourceFile(
     pathToClientConfigFile,
     sourceText,

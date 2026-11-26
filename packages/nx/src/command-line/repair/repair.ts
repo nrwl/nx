@@ -3,34 +3,39 @@ import { executeMigrations } from '../migrate/migrate';
 import { output } from '../../utils/output';
 
 export async function repair(
-  args: { verbose: boolean },
+  args: { verbose?: boolean },
   extraMigrations = [] as any[]
 ) {
-  return handleErrors(args.verbose, async () => {
+  const isVerbose = args.verbose ?? false;
+  return handleErrors(isVerbose, async () => {
     const migrationsJson: { generators: Record<string, string>[] } = require(
       require.resolve('nx/migrations.json')
     );
-    const nxMigrations = Object.entries(migrationsJson.generators).reduce(
-      (agg, [name, migration]) => {
-        const skip = migration['x-repair-skip'];
-        if (!skip) {
-          agg.push({
-            package: 'nx',
-            name,
-            description: migration.description,
-            version: migration.version,
-          } as const);
-        }
-        return agg;
-      },
-      []
-    );
+    const nxMigrations = Object.entries(migrationsJson.generators).reduce<
+      {
+        package: 'nx';
+        name: string;
+        description: string;
+        version: string;
+      }[]
+    >((agg, [name, migration]) => {
+      const skip = migration['x-repair-skip'];
+      if (!skip) {
+        agg.push({
+          package: 'nx',
+          name,
+          description: migration.description,
+          version: migration.version,
+        });
+      }
+      return agg;
+    }, []);
 
     const migrations = [...nxMigrations, ...extraMigrations];
     const { migrationsWithNoChanges, nextSteps } = await executeMigrations(
       process.cwd(),
       migrations,
-      args.verbose,
+      isVerbose,
       false,
       ''
     );

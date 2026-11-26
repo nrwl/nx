@@ -28,6 +28,10 @@ export const appConfig: ApplicationConfig = {
         project: 'app1',
         standalone: true,
         isUsingApplicationBuilder: true,
+        main: 'main.server.ts',
+        serverFileName: 'server.ts',
+        isUsingWebpackBuilder: false,
+        buildTargetExecutor: '@angular/build:application',
         buildTargetTsConfigPath: 'apps/app1/tsconfig.app.json',
       });
 
@@ -67,6 +71,10 @@ export const appConfig: ApplicationConfig = {
         project: 'app1',
         standalone: true,
         isUsingApplicationBuilder: true,
+        main: 'main.server.ts',
+        serverFileName: 'server.ts',
+        isUsingWebpackBuilder: false,
+        buildTargetExecutor: '@angular/build:application',
         buildTargetTsConfigPath: 'apps/app1/tsconfig.app.json',
       });
 
@@ -105,6 +113,10 @@ export const appConfig: ApplicationConfig = {
         project: 'app1',
         standalone: true,
         isUsingApplicationBuilder: true,
+        main: 'main.server.ts',
+        serverFileName: 'server.ts',
+        isUsingWebpackBuilder: false,
+        buildTargetExecutor: '@angular/build:application',
         buildTargetTsConfigPath: 'apps/app1/tsconfig.app.json',
       });
 
@@ -152,6 +164,10 @@ export class AppModule {}
         project: 'app1',
         standalone: false,
         isUsingApplicationBuilder: true,
+        main: 'main.server.ts',
+        serverFileName: 'server.ts',
+        isUsingWebpackBuilder: false,
+        buildTargetExecutor: '@angular/build:application',
         buildTargetTsConfigPath: 'apps/app1/tsconfig.app.json',
       });
 
@@ -198,6 +214,10 @@ export class AppModule {}
         project: 'app1',
         standalone: false,
         isUsingApplicationBuilder: true,
+        main: 'main.server.ts',
+        serverFileName: 'server.ts',
+        isUsingWebpackBuilder: false,
+        buildTargetExecutor: '@angular/build:application',
         buildTargetTsConfigPath: 'apps/app1/tsconfig.app.json',
       });
 
@@ -249,6 +269,10 @@ export class AppModule {}
         project: 'app1',
         standalone: false,
         isUsingApplicationBuilder: true,
+        main: 'main.server.ts',
+        serverFileName: 'server.ts',
+        isUsingWebpackBuilder: false,
+        buildTargetExecutor: '@angular/build:application',
         buildTargetTsConfigPath: 'apps/app1/tsconfig.app.json',
       });
 

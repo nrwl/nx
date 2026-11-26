@@ -14,8 +14,8 @@ export default function moveCacheDirectory(tree: Tree) {
 
   updateGitIgnore(tree);
 
-  if (tree.exists('.prettierignore')) {
-    const ignored = tree.read('.prettierignore', 'utf-8');
+  const ignored = tree.read('.prettierignore', 'utf-8');
+  if (ignored !== null) {
     if (!ignored.includes('.nx/cache')) {
       tree.write('.prettierignore', [ignored, '/.nx/cache'].join('\n'));
     }
@@ -23,9 +23,7 @@ export default function moveCacheDirectory(tree: Tree) {
 }
 
 function updateGitIgnore(tree: Tree) {
-  const gitignore = tree.exists('.gitignore')
-    ? tree.read('.gitignore', 'utf-8')
-    : '';
+  const gitignore = tree.read('.gitignore', 'utf-8') ?? '';
   const ig = ignore();
   ig.add(gitignore);
   if (!ig.ignores('.nx/cache')) {

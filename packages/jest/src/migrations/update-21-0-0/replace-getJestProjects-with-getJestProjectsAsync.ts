@@ -21,7 +21,7 @@ export default async function update(tree: Tree) {
     '**/jest.config.{cjs,mjs,js,cts,mts,ts}',
   ]);
   jestConfigPaths.forEach((jestConfigPath) => {
-    const oldContent = tree.read(jestConfigPath).toString();
+    const oldContent = tree.read(jestConfigPath, 'utf-8');
     if (oldContent?.includes('projects: getJestProjects()')) {
       let sourceFile = tsModule.createSourceFile(
         jestConfigPath,
@@ -36,6 +36,7 @@ export default async function update(tree: Tree) {
           tsModule.isVariableStatement(statement) &&
           statement.declarationList.declarations.some(
             (declaration) =>
+              !!declaration.initializer &&
               tsModule.isCallExpression(declaration.initializer) &&
               tsModule.isIdentifier(declaration.initializer.expression) &&
               declaration.initializer.expression.escapedText === 'require' &&
@@ -114,7 +115,7 @@ export default async function update(tree: Tree) {
               tsModule.isIdentifier(property.initializer.expression) &&
               property.initializer.expression.escapedText === 'getJestProjects'
           );
-          if (projectProperty) {
+          if (defaultExport && projectProperty) {
             // replace getJestProjects with getJestProjectsAsync in export statement
             const newExpression = defaultExport
               .getText()

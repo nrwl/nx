@@ -29,10 +29,10 @@ export interface DependencyChanges {
 export interface TouchedProjectLocator<T extends Change = Change> {
   (
     fileChanges: FileChange<T>[],
-    projectGraphNodes?: Record<string, ProjectGraphProjectNode>,
-    nxJson?: NxJsonConfiguration<any>,
-    packageJson?: any,
-    projectGraph?: ProjectGraph,
+    projectGraphNodes: Record<string, ProjectGraphProjectNode>,
+    nxJson: NxJsonConfiguration<any>,
+    packageJson: any,
+    projectGraph: ProjectGraph,
     projectDeletionAffectsAllProjects?: boolean
   ): string[] | Promise<string[]>;
 }

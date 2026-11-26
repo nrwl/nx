@@ -1,5 +1,6 @@
 import * as pc from 'picocolors';
-import { ChildProcess, spawn, Serializable } from 'child_process';
+import { ChildProcessByStdio, spawn, Serializable } from 'child_process';
+import type { Readable } from 'stream';
 import { env as appendLocalEnv } from 'npm-run-path';
 import { isAbsolute, join } from 'path';
 import { ExecutorContext } from '../../config/misc-interfaces';
@@ -44,7 +45,7 @@ import {
  */
 function streamChunk(
   chunk: string,
-  streamOutput: boolean,
+  streamOutput: boolean | undefined,
   target: NodeJS.WriteStream = process.stdout
 ) {
   if (streamOutput) {
@@ -77,7 +78,7 @@ function commandsExitedBeforeReadyWarning(
 export class ParallelRunningTasks implements RunningTask {
   private readonly childProcesses: RunningNodeProcess[];
   private readyWhenStatus: { stringToMatch: string; found: boolean }[];
-  private readonly streamOutput: boolean;
+  private readonly streamOutput: boolean | undefined;
 
   private exitCallbacks: Array<(code: number, terminalOutput: string) => void> =
     [];
@@ -226,7 +227,7 @@ export class ParallelRunningTasks implements RunningTask {
       this.emitExit(code, terminalOutput);
     } else {
       const runningProcesses = new Set<RunningNodeProcess>();
-      let failedProcess: RunningNodeProcess | null = null;
+      let failedProcess = null as RunningNodeProcess | null;
       const terminalOutputs = new Map<RunningNodeProcess, string>();
       const failFast = (childProcess: RunningNodeProcess) => {
         if (failedProcess) return;
@@ -292,7 +293,7 @@ export class SeriallyRunningTasks implements RunningTask {
   private currentProcess: RunningTask | PseudoTtyProcess | null = null;
   private exitCallbacks: Array<(code: number, terminalOutput: string) => void> =
     [];
-  private code: number | null = 0;
+  private code = 0;
   private error: any;
   private outputCallbacks: Array<
     (terminalOutput: string, isCommandHeader?: boolean) => void
@@ -426,13 +427,13 @@ export class SeriallyRunningTasks implements RunningTask {
 
   private async createProcess(
     commandConfig: RunCommandsCommandOptions,
-    color: boolean,
+    color: boolean | undefined,
     cwd: string,
     env: Record<string, string>,
     task: Pick<Task, 'id' | 'ultracache'>,
     usePty: boolean = true,
     streamOutput: boolean = true,
-    tty: boolean,
+    tty: boolean | undefined,
     envFile?: string,
     baseEnv?: NodeJS.ProcessEnv
   ): Promise<PseudoTtyProcess | RunningNodeProcess> {
@@ -536,7 +537,7 @@ class RunningNodeProcess implements RunningTask {
   }
 
   private terminalOutputChunks: string[] = [];
-  private childProcess: ChildProcess;
+  private childProcess: ChildProcessByStdio<null, Readable, Readable>;
   private exitCallbacks: Array<(code: number, terminalOutput: string) => void> =
     [];
   private outputCallbacks: Array<(terminalOutput: string) => void> = [];
@@ -555,16 +556,16 @@ class RunningNodeProcess implements RunningTask {
 
   constructor(
     commandConfig: RunCommandsCommandOptions,
-    color: boolean,
+    color: boolean | undefined,
     cwd: string,
     env: Record<string, string>,
     private readyWhenStatus: { stringToMatch: string; found: boolean }[],
     private readonly streamOutput = true,
-    envFile: string,
+    envFile: string | undefined,
     private task: Pick<Task, 'id' | 'ultracache'>,
     baseEnv?: NodeJS.ProcessEnv
   ) {
-    env = processEnv(color, cwd, env, envFile, baseEnv);
+    const childEnv = processEnv(color, cwd, env, envFile, baseEnv);
     this.command = commandConfig.command;
     const header = pc.dim('> ') + commandConfig.command + '\r\n\r\n';
     this.terminalOutputChunks.push(header);
@@ -572,7 +573,7 @@ class RunningNodeProcess implements RunningTask {
     this.childProcess = spawn(commandConfig.command, [], {
       shell: true,
       detached: process.platform !== 'win32',
-      env,
+      env: childEnv,
       cwd,
       windowsHide: true,
       stdio: ['inherit', 'pipe', 'pipe'],
@@ -793,11 +794,11 @@ export async function runSingleCommandWithPseudoTerminal(
 async function createProcessWithPseudoTty(
   pseudoTerminal: PseudoTerminal,
   commandConfig: RunCommandsCommandOptions,
-  color: boolean,
+  color: boolean | undefined,
   cwd: string,
-  env: Record<string, string>,
+  env: Record<string, string> | undefined,
   streamOutput: boolean = true,
-  tty: boolean,
+  tty: boolean | undefined,
   envFile?: string,
   baseEnv?: NodeJS.ProcessEnv
 ) {
@@ -809,13 +810,19 @@ async function createProcessWithPseudoTty(
   });
 }
 
+type ColorName = Exclude<keyof typeof pc, 'isColorSupported' | 'createColors'>;
+
+function isColorName(name: string): name is ColorName {
+  return name in pc && name !== 'isColorSupported' && name !== 'createColors';
+}
+
 function addColorAndPrefix(out: string, config: RunCommandsCommandOptions) {
   if (config.prefix) {
     out = out
       .split('\n')
       .map((l) => {
         let prefixText = config.prefix;
-        if (config.prefixColor && pc[config.prefixColor]) {
+        if (config.prefixColor && isColorName(config.prefixColor)) {
           prefixText = pc[config.prefixColor](prefixText);
         }
         prefixText = pc.bold(prefixText);
@@ -823,10 +830,10 @@ function addColorAndPrefix(out: string, config: RunCommandsCommandOptions) {
       })
       .join('\n');
   }
-  if (config.color && pc[config.color]) {
+  if (config.color && isColorName(config.color)) {
     out = pc[config.color](out);
   }
-  if (config.bgColor && pc[config.bgColor]) {
+  if (config.bgColor && isColorName(config.bgColor)) {
     out = pc[config.bgColor](out);
   }
   return out;
@@ -848,9 +855,9 @@ export function calculateCwd(
  * - local env variables, read from `baseEnv`
  */
 export function processEnv(
-  color: boolean,
+  color: boolean | undefined,
   cwd: string,
-  envOptionFromExecutor: Record<string, string>,
+  envOptionFromExecutor: Record<string, string> | undefined,
   envFile?: string,
   baseEnv: NodeJS.ProcessEnv = process.env
 ) {
@@ -863,7 +870,7 @@ export function processEnv(
   if (readEnv(baseEnv, 'NX_LOAD_DOT_ENV_FILES') !== 'false' && envFile) {
     loadEnvVarsFile(envFile, localEnv);
   }
-  let res: Record<string, string> = {
+  const res: NodeJS.ProcessEnv = {
     ...localEnv,
     ...envOptionFromExecutor,
   };
@@ -922,7 +929,7 @@ function readyWhenMatcher(
   };
 }
 
-function loadEnvVarsFile(path: string, env: Record<string, string> = {}) {
+function loadEnvVarsFile(path: string, env: NodeJS.ProcessEnv = {}) {
   unloadDotEnvFile(path, env);
   const result = loadAndExpandDotEnvFile(path, env);
   if (result.error) {

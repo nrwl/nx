@@ -159,7 +159,7 @@ async function readTerminalOutput(
     return await readFile(path, 'utf-8');
   } catch (e) {
     logger.warn(
-      `Nx could not read a task's terminal output from ${path}: ${e.message}`
+      `Nx could not read a task's terminal output from ${path}: ${e instanceof Error ? e.message : String(e)}`
     );
     return undefined;
   }

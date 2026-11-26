@@ -296,6 +296,9 @@ export function parseFiles(options: NxArgs): { files: string[] } {
       ),
     };
   }
+  throw new Error(
+    'Cannot determine changed files: pass --files, --uncommitted, --untracked or --base.'
+  );
 }
 
 function getUncommittedFiles(): string[] {

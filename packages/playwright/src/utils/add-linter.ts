@@ -25,7 +25,7 @@ export interface PlaywrightLinterOptions {
   project: string;
   linter: LinterType;
   enableTypedLinting?: boolean;
-  skipPackageJson: boolean;
+  skipPackageJson?: boolean;
   rootProject: boolean;
   js?: boolean;
   /**

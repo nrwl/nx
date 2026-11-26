@@ -61,7 +61,7 @@ export abstract class RemoteCacheV2 {
         );
         return {
           outputsPath: join(entry, 'outputs'),
-          terminalOutput: terminalOutput ?? oldTerminalOutput,
+          terminalOutput: terminalOutput ?? oldTerminalOutput ?? undefined,
           code: +exitCode,
         };
       },
@@ -122,9 +122,7 @@ export interface DefaultTasksRunnerOptions {
   batch?: boolean;
 }
 
-export const defaultTasksRunner: TasksRunner<
-  DefaultTasksRunnerOptions
-> = async (
+export const defaultTasksRunner = (async (
   tasks: Task[],
   options: DefaultTasksRunnerOptions,
   context: {
@@ -145,14 +143,14 @@ export const defaultTasksRunner: TasksRunner<
     context.taskGraph
   );
   // Total thread count drives the TUI; the discrete `--parallel` feeds the perf report.
-  await options.lifeCycle.startCommand(threadCount, discrete);
+  await options.lifeCycle.startCommand?.(threadCount, discrete);
   try {
     return await runAllTasks(options, context);
   } finally {
     // Hand the TUI exit popup the perf report (multi-task TUI runs); other modes flush it.
-    await options.lifeCycle.endCommand(getPerformanceReport(tasks.length));
+    await options.lifeCycle.endCommand?.(getPerformanceReport(tasks.length));
   }
-};
+}) as TasksRunner<DefaultTasksRunnerOptions>;
 
 async function runAllTasks(
   options: DefaultTasksRunnerOptions,

@@ -65,7 +65,7 @@ export async function isReactNativeProject(
   let packageJson: any;
 
   try {
-    packageJson = JSON.parse(tree.read(packageJsonPath, 'utf-8'));
+    packageJson = JSON.parse(tree.read(packageJsonPath, 'utf-8') ?? '');
   } catch (error) {
     return {
       isReactNative: false,
@@ -90,7 +90,7 @@ export async function isReactNativeProject(
 
   if (appConfigPath) {
     // Extract just the filename from the full path
-    const filename = appConfigPath.split('/').pop();
+    const filename = appConfigPath.slice(appConfigPath.lastIndexOf('/') + 1);
     try {
       appConfig = await getAppConfig(tree, projectRoot, filename);
       if (appConfig === null) {

@@ -8,7 +8,13 @@ import { acknowledgeBuildScripts } from '@nx/devkit/internal';
 
 import { sassVersion } from './versions';
 
-const nextSpecificStyleDependencies = {
+const nextSpecificStyleDependencies: Record<
+  string,
+  {
+    dependencies: Record<string, string>;
+    devDependencies: Record<string, string>;
+  }
+> = {
   css: {
     dependencies: {},
     devDependencies: {},
@@ -23,7 +29,9 @@ export function addStyleDependencies(
   host: Tree,
   options: { style?: string; swc?: boolean }
 ): GeneratorCallback {
-  const extraDependencies = nextSpecificStyleDependencies[options.style];
+  const extraDependencies = options.style
+    ? nextSpecificStyleDependencies[options.style]
+    : undefined;
 
   if (options.style === 'scss') {
     // sass pulls in @parcel/watcher, whose install script only builds from

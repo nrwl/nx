@@ -9,7 +9,7 @@ import {
 } from '@nx/devkit';
 
 export function removeProjectReferencesInConfig(tree: Tree, schema: Schema) {
-  const nxJson = readNxJson(tree);
+  const nxJson = readNxJson(tree) ?? {};
   let nxJsonChanged = false;
 
   // Unset default project if deleting the default project

@@ -16,6 +16,15 @@ import {
   uncontainLocalPathSpec,
 } from './pruned-output';
 
+export function getExternalNodes(
+  graph: Pick<ProjectGraph, 'externalNodes'>
+): Record<string, ProjectGraphExternalNode> {
+  if (!graph.externalNodes) {
+    throw new Error('The project graph has no external nodes.');
+  }
+  return graph.externalNodes;
+}
+
 /**
  * Prune project graph's external nodes and their dependencies
  * based on the pruned package.json
@@ -94,7 +103,7 @@ function normalizeDependencies(
   const manager = getCatalogManager(workspaceRootPath);
   Object.entries(combinedDependencies).forEach(
     ([packageName, versionRange]) => {
-      let resolvedVersionRange = versionRange;
+      let resolvedVersionRange: string | null = versionRange;
       if (manager?.isCatalogReference(versionRange)) {
         resolvedVersionRange = manager.resolveCatalogReference(
           workspaceRootPath,
@@ -108,13 +117,14 @@ function normalizeDependencies(
         }
       }
 
-      if (graph.externalNodes[`npm:${packageName}@${resolvedVersionRange}`]) {
+      const externalNodes = getExternalNodes(graph);
+      if (externalNodes[`npm:${packageName}@${resolvedVersionRange}`]) {
         combinedDependencies[packageName] = resolvedVersionRange;
         return;
       }
       if (
-        graph.externalNodes[`npm:${packageName}`] &&
-        graph.externalNodes[`npm:${packageName}`].data.version ===
+        externalNodes[`npm:${packageName}`] &&
+        externalNodes[`npm:${packageName}`].data.version ===
           resolvedVersionRange
       ) {
         combinedDependencies[packageName] = resolvedVersionRange;
@@ -202,7 +212,7 @@ export function findLocalPathNode(
   packageName: string,
   versionExpr: string
 ): ProjectGraphExternalNode | undefined {
-  const localPathNodes = Object.values(graph.externalNodes).filter((node) =>
+  const localPathNodes = Object.values(getExternalNodes(graph)).filter((node) =>
     isLocalPathSpecifier(node.data.version)
   );
   // Only the manifest side is read back from its shipped location; the lock
@@ -234,11 +244,12 @@ export function findNodeMatchingVersion(
   packageName: string,
   versionExpr: string
 ) {
-  const bareNode = graph.externalNodes[`npm:${packageName}`];
+  const externalNodes = getExternalNodes(graph);
+  const bareNode = externalNodes[`npm:${packageName}`];
   if (versionExpr === '*' && bareNode && !isLinkNode(bareNode)) {
     return bareNode;
   }
-  const nodes = Object.values(graph.externalNodes)
+  const nodes = Object.values(externalNodes)
     .filter((n) => n.data.packageName === packageName)
     .sort(compareVersionsDescending);
 
@@ -251,13 +262,10 @@ export function findNodeMatchingVersion(
     return nodes.find((n) => satisfies(n.data.version, '*')) ?? nodes[0];
   }
   if (
-    graph.externalNodes[`npm:${packageName}`] &&
-    satisfies(
-      graph.externalNodes[`npm:${packageName}`].data.version,
-      versionExpr
-    )
+    externalNodes[`npm:${packageName}`] &&
+    satisfies(externalNodes[`npm:${packageName}`].data.version, versionExpr)
   ) {
-    return graph.externalNodes[`npm:${packageName}`];
+    return externalNodes[`npm:${packageName}`];
   }
   return nodes.find((n) => satisfies(n.data.version, versionExpr));
 }
@@ -283,9 +291,9 @@ export function addNodesAndDependencies(
   builder: ProjectGraphBuilder
 ) {
   Object.entries(packageJsonDeps).forEach(([name, version]) => {
+    const externalNodes = getExternalNodes(graph);
     const node =
-      graph.externalNodes[`npm:${name}@${version}`] ||
-      graph.externalNodes[`npm:${name}`];
+      externalNodes[`npm:${name}@${version}`] || externalNodes[`npm:${name}`];
     if (node) {
       traverseNode(graph, builder, node);
     } else if (workspacePackages.has(name)) {
@@ -303,12 +311,12 @@ function traverseNode(
   builder: ProjectGraphBuilder,
   node: ProjectGraphExternalNode
 ) {
-  if (builder.graph.externalNodes[node.name]) {
+  if (getExternalNodes(builder.graph)[node.name]) {
     return;
   }
   builder.addExternalNode(node);
   graph.dependencies[node.name]?.forEach((dep) => {
-    const depNode = graph.externalNodes[dep.target];
+    const depNode = getExternalNodes(graph)[dep.target];
     traverseNode(graph, builder, depNode);
     builder.addStaticDependency(node.name, dep.target);
   });
@@ -323,7 +331,7 @@ function traverseWorkspaceNode(
   if (visited.has(node.name)) return;
   visited.add(node.name);
   graph.dependencies[node.name]?.forEach((dep) => {
-    const externalDepNode = graph.externalNodes[dep.target];
+    const externalDepNode = getExternalNodes(graph)[dep.target];
     if (externalDepNode) {
       traverseNode(graph, builder, externalDepNode);
       return;
@@ -343,12 +351,13 @@ export function rehoistNodes(
   const packagesToRehoist = new Map<string, ProjectGraphExternalNode[]>();
 
   // find all packages that need to be rehoisted
-  Object.values(graph.externalNodes).forEach((node) => {
+  Object.values(getExternalNodes(graph)).forEach((node) => {
+    const builderExternalNodes = getExternalNodes(builder.graph);
     if (
       node.name === `npm:${node.data.packageName}` &&
-      !builder.graph.externalNodes[node.name]
+      !builderExternalNodes[node.name]
     ) {
-      const nestedNodes = Object.values(builder.graph.externalNodes).filter(
+      const nestedNodes = Object.values(builderExternalNodes).filter(
         (n) => n.data.packageName === node.data.packageName
       );
       if (nestedNodes.length > 0) {
@@ -379,7 +388,7 @@ export function rehoistNodes(
           builder,
           invertedGraph
         );
-        if (distance < minDistance) {
+        if (distance !== undefined && distance < minDistance) {
           minDistance = distance;
           closest = node;
         }
@@ -437,12 +446,12 @@ function pathLengthToIncoming(
   packageJsonDeps: Record<string, string>,
   builder: ProjectGraphBuilder,
   invertedGraph: ProjectGraph
-): number {
+): number | undefined {
   const visited = new Set<string>([node.name]);
   const queue: Array<[ProjectGraphExternalNode, number]> = [[node, 0]];
 
-  while (queue.length > 0) {
-    const [current, distance] = queue.shift();
+  for (let entry = queue.shift(); entry !== undefined; entry = queue.shift()) {
+    const [current, distance] = entry;
 
     if (packageJsonDeps[current.data.packageName] === current.data.version) {
       return distance;
@@ -451,7 +460,7 @@ function pathLengthToIncoming(
     for (let { target } of invertedGraph.dependencies[current.name] || []) {
       if (!visited.has(target)) {
         visited.add(target);
-        queue.push([builder.graph.externalNodes[target], distance + 1]);
+        queue.push([getExternalNodes(builder.graph)[target], distance + 1]);
       }
     }
   }

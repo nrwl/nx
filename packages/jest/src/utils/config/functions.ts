@@ -16,7 +16,7 @@ function makeTextToInsert(
 
 function findPropertyAssignment(
   object: ts.ObjectLiteralExpression,
-  propertyName: string
+  propertyName: string | undefined
 ) {
   if (!tsModule) {
     tsModule = ensureTypescript();
@@ -51,6 +51,9 @@ export function addOrUpdateProperty(
   const propertyAssignment = findPropertyAssignment(object, propertyName);
 
   const originalContents = tree.read(path, 'utf-8');
+  if (originalContents === null) {
+    throw new Error(`Could not read ${path}.`);
+  }
 
   if (propertyAssignment) {
     if (
@@ -225,8 +228,8 @@ export function jestConfigObjectAst(
     (statement) => isModuleExport(statement) || isDefaultExport(statement)
   );
 
-  let ast: ts.ObjectLiteralExpression;
-  if (tsModule.isExpressionStatement(exportStatement)) {
+  let ast: ts.ObjectLiteralExpression | undefined;
+  if (exportStatement && tsModule.isExpressionStatement(exportStatement)) {
     const moduleExports = exportStatement.expression as ts.BinaryExpression;
     if (!moduleExports) {
       throw new Error(
@@ -237,7 +240,7 @@ export function jestConfigObjectAst(
     }
 
     ast = moduleExports.right as ts.ObjectLiteralExpression;
-  } else if (tsModule.isExportAssignment(exportStatement)) {
+  } else if (exportStatement && tsModule.isExportAssignment(exportStatement)) {
     const defaultExport =
       exportStatement.expression as ts.ObjectLiteralExpression;
 
@@ -279,6 +282,9 @@ export function jestConfigObject(
 ): Partial<Config.InitialOptions> & { [index: string]: any } {
   const __filename = join(host.root, path);
   const contents = host.read(path, 'utf-8');
+  if (contents === null) {
+    throw new Error(`Could not read ${path}.`);
+  }
   let module = { exports: {} };
 
   // transform the export default syntax to module.exports

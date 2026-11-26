@@ -389,6 +389,11 @@ describe('Nx Plugin', () => {
 
       updateFile(`libs/${generatedProject}/project.json`, (f) => {
         const project: ProjectConfiguration = JSON.parse(f);
+        if (!project.targets) {
+          throw new Error(
+            `libs/${generatedProject}/project.json has no targets`
+          );
+        }
         project.targets['execute'] = {
           executor: `@${workspaceName}/${plugin}:${executor}`,
         };
@@ -402,6 +407,11 @@ describe('Nx Plugin', () => {
     it('should work with ts-node only', async () => {
       const oldPackageJson: PackageJson = readJson('package.json');
       updateJson<PackageJson>('package.json', (j) => {
+        if (!j.dependencies || !j.devDependencies) {
+          throw new Error(
+            'package.json is missing dependencies or devDependencies'
+          );
+        }
         delete j.dependencies['@swc-node/register'];
         delete j.devDependencies['@swc-node/register'];
         return j;

@@ -29,7 +29,11 @@ export function waitForPortOpen(
   options: WaitForPortOpenOptions = {}
 ): Promise<void> {
   const host = options.host ?? 'localhost';
-  const allowedErrorCodes = ['ECONNREFUSED', 'ECONNRESET', 'ETIMEDOUT'];
+  const allowedErrorCodes: (string | undefined)[] = [
+    'ECONNREFUSED',
+    'ECONNRESET',
+    'ETIMEDOUT',
+  ];
 
   return new Promise((resolve, reject) => {
     const checkPort = (retries = options.retries ?? 120) => {
@@ -46,11 +50,11 @@ export function waitForPortOpen(
         resolve();
       });
 
-      client.once('error', (err) => {
-        if (retries === 0 || !allowedErrorCodes.includes(err['code'])) {
+      client.once('error', (err: NodeJS.ErrnoException) => {
+        if (retries === 0 || !allowedErrorCodes.includes(err.code)) {
           if (process.env['NX_VERBOSE_LOGGING'] === 'true') {
             logger.info(
-              `Error connecting on ${host}:${port}: ${err['code'] || err}`
+              `Error connecting on ${host}:${port}: ${err.code || err}`
             );
           }
           cleanupClient();

@@ -64,7 +64,9 @@ export async function setupRsbuildConfiguration(
     addSourceDefine(tree, pathToConfigFile, 'import.meta.vitest', 'undefined');
   }
 
-  const deps = { '@rsbuild/plugin-react': versions.rsbuildPluginReactVersion };
+  const deps: Record<string, string> = {
+    '@rsbuild/plugin-react': versions.rsbuildPluginReactVersion,
+  };
 
   addBuildPlugin(
     tree,

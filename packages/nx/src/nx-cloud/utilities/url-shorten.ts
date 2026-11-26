@@ -5,7 +5,7 @@ import { httpRequest } from '../../utils/http-client';
 
 export async function createNxCloudOnboardingURL(
   onboardingSource: string,
-  accessToken?: string,
+  accessToken?: string | null,
   meta?: string,
   forceManual = false,
   forceGithub = false,
@@ -80,7 +80,7 @@ function getSource(
 
 export function getURLifShortenFailed(
   usesGithub: boolean,
-  githubSlug: string | null,
+  githubSlug: string | null | undefined,
   apiUrl: string,
   source: string
 ) {

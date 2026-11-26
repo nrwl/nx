@@ -90,7 +90,12 @@ export function addPluginsToOxlintConfig(
     nearestConfigPath && /\.jsonc?$/.test(nearestConfigPath)
       ? nearestConfigPath
       : null;
-  if (!governingConfigPath && !existingProjectConfig) {
+  const projectConfigPath =
+    projectRoot === '.'
+      ? governingConfigPath
+      : (existingProjectConfig ??
+        joinPathFragments(projectRoot, '.oxlintrc.json'));
+  if (!projectConfigPath || (!governingConfigPath && !existingProjectConfig)) {
     // A TypeScript config cannot be rewritten statically. Say so — otherwise
     // the generator reports success and the plugins silently never run. Name the
     // file too: it can be an ancestor several levels up, so "your Oxlint config"
@@ -105,12 +110,6 @@ export function addPluginsToOxlintConfig(
     );
     return;
   }
-
-  const projectConfigPath =
-    projectRoot === '.'
-      ? governingConfigPath
-      : (existingProjectConfig ??
-        joinPathFragments(projectRoot, '.oxlintrc.json'));
 
   // Only plain JSON survives a rewrite: without this, `updateJson` strips a
   // `.jsonc`'s comments and throws outright on a TypeScript config.
@@ -150,6 +149,9 @@ export function addPluginsToOxlintConfig(
     return;
   }
 
+  if (!governingConfigPath) {
+    throw new Error(`No Oxlint config for "${projectRoot}" to extend`);
+  }
   writeJson<OxlintConfig>(tree, projectConfigPath, {
     extends: [
       joinPathFragments(offsetFromRoot(projectRoot), governingConfigPath),

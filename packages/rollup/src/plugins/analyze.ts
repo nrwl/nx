@@ -1,7 +1,8 @@
 import * as pc from 'picocolors';
 import { logger } from '@nx/devkit';
+import type { RenderedChunk } from 'rollup';
 
-const formatBytes = (bytes) => {
+const formatBytes = (bytes: number) => {
   if (bytes === 0) return '0 Byte';
   const k = 1000;
   const dm = 3;
@@ -13,7 +14,7 @@ const formatBytes = (bytes) => {
 export function analyze() {
   return {
     name: 'rollup-plugin-nx-analyzer',
-    renderChunk(source, chunk) {
+    renderChunk(source: string, chunk: RenderedChunk) {
       const sourceBytes = formatBytes(source.length);
       const fileName = chunk.fileName;
       logger.info(`  ${pc.bold(fileName)} ${pc.cyan(sourceBytes)}`);

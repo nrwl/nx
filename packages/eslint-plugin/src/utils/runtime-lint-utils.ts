@@ -91,10 +91,8 @@ function hasTag(proj: ProjectGraphProjectNode, tag: string): boolean {
 
   // if the tag is a regex, check if the project matches the regex
   if (tag.startsWith('/') && tag.endsWith('/')) {
-    let regex;
-    if (regexMap.has(tag)) {
-      regex = regexMap.get(tag);
-    } else {
+    let regex = regexMap.get(tag);
+    if (!regex) {
       regex = new RegExp(tag.substring(1, tag.length - 1));
       regexMap.set(tag, regex);
     }
@@ -159,10 +157,9 @@ export function findProject(
   projectGraph: ProjectGraph,
   projectRootMappings: ProjectRootMappings,
   sourceFilePath: string
-) {
-  return projectGraph.nodes[
-    findProjectForPath(sourceFilePath, projectRootMappings)
-  ];
+): ProjectGraphProjectNode | undefined {
+  const projectName = findProjectForPath(sourceFilePath, projectRootMappings);
+  return projectName ? projectGraph.nodes[projectName] : undefined;
 }
 
 export function isAbsoluteImportIntoAnotherProject(
@@ -182,8 +179,11 @@ export function findProjectUsingImport(
   targetProjectLocator: TargetProjectLocator,
   filePath: string,
   imp: string
-): ProjectGraphProjectNode | ProjectGraphExternalNode {
+): ProjectGraphProjectNode | ProjectGraphExternalNode | undefined {
   const target = targetProjectLocator.findProjectFromImport(imp, filePath);
+  if (!target) {
+    return undefined;
+  }
   return projectGraph.nodes[target] || projectGraph.externalNodes?.[target];
 }
 
@@ -233,7 +233,7 @@ function hasDynamicImport(
   sourceProjectName: string,
   targetProjectName: string,
   visited: string[]
-) {
+): boolean {
   if (visited.indexOf(sourceProjectName) > -1) {
     return false;
   }
@@ -269,7 +269,7 @@ function isConstraintBanningProject(
   externalProject: ProjectGraphExternalNode,
   constraint: DepConstraint,
   importSpecifier: string
-): boolean {
+): boolean | undefined {
   const { allowedExternalImports, bannedExternalImports } = constraint;
   const { packageName } = externalProject.data;
 
@@ -373,19 +373,18 @@ export function hasBannedDependencies(
   externalDependencies: ProjectGraphDependency[],
   graph: ProjectGraph,
   depConstraint: DepConstraint
-):
-  | Array<[ProjectGraphExternalNode, ProjectGraphProjectNode, DepConstraint]>
-  | undefined {
+): Array<[ProjectGraphExternalNode, ProjectGraphProjectNode, DepConstraint]> {
+  const externalNodes = graph.externalNodes ?? {};
   return externalDependencies
     .filter((dependency) =>
       isConstraintBanningProject(
-        graph.externalNodes[dependency.target],
+        externalNodes[dependency.target],
         depConstraint,
-        graph.externalNodes[dependency.target].data.packageName
+        externalNodes[dependency.target].data.packageName
       )
     )
     .map((dep) => [
-      graph.externalNodes[dep.target],
+      externalNodes[dep.target],
       graph.nodes[dep.source],
       depConstraint,
     ]);
@@ -445,12 +444,11 @@ export function hasBuildExecutor(
   projectGraph: ProjectGraphProjectNode,
   buildTargets = ['build']
 ): boolean {
+  const targets = projectGraph.data.targets;
   return (
-    projectGraph.data.targets &&
+    !!targets &&
     buildTargets.some(
-      (target) =>
-        projectGraph.data.targets[target] &&
-        projectGraph.data.targets[target].executor !== ''
+      (target) => targets[target] && targets[target].executor !== ''
     )
   );
 }
@@ -514,7 +512,9 @@ export function isTerminalRun(): boolean {
 export function groupImports(
   importsToRemap: { member: string; importPath: string }[]
 ): string {
-  const importsToRemapGrouped = importsToRemap.reduce((acc, curr) => {
+  const importsToRemapGrouped = importsToRemap.reduce<
+    { member: string; importPath: string }[]
+  >((acc, curr) => {
     const existing = acc.find(
       (i) => i.importPath === curr.importPath && i.member !== curr.member
     );
@@ -577,7 +577,7 @@ export function getSecondaryEntryPointPath(
   return entryPoint;
 }
 
-function getEntryPoint(file: string, projectRoot: string): string {
+function getEntryPoint(file: string, projectRoot: string): string | undefined {
   const packageEntryPoints = getPackageEntryPoints(projectRoot);
   const fileEntryPoint = packageEntryPoints.find(
     (entry) => entry.file === file
@@ -633,7 +633,7 @@ export function parseExports(
   projectRoot: string,
   entryPaths: Array<{ path: string; file: string }>,
   basePath: string = '.'
-): Array<{ path: string; file: string }> {
+): void {
   if (exports === null) {
     return;
   }

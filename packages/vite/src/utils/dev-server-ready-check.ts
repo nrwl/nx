@@ -44,8 +44,10 @@ export function parseViteFlags(
   }
   const { values, positionals } = parseArgv(args, BOOLEAN_OPTIONS[command]);
   // Vite keeps the values of whichever spelling of an option comes first
-  const last = (...names: string[]) =>
-    values.get([...values.keys()].find((k) => names.includes(k)))?.at(-1);
+  const last = (...names: string[]) => {
+    const key = [...values.keys()].find((k) => names.includes(k));
+    return key === undefined ? undefined : values.get(key)?.at(-1);
+  };
   return {
     port: asString(last('port')),
     host: last('host'),
@@ -68,7 +70,7 @@ function parseArgv(argv: string[], booleans: string[]) {
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i];
     if (arg === '--') break;
-    const dashes = arg.match(/^-*/)[0].length;
+    const dashes = (arg.match(/^-*/)?.[0] ?? '').length;
     if (dashes === 0) {
       positionals.push(arg);
       continue;

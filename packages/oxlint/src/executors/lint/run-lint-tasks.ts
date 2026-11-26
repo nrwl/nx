@@ -112,7 +112,7 @@ export function runLintTasks(
   const agentMode = !!isCI() || isAiAgent();
 
   for (const r of resolved) {
-    const diagnostics = byTask.get(r.taskId);
+    const diagnostics = byTask.get(r.taskId) ?? [];
     const { errors, warnings } = countBySeverity(diagnostics);
     const success =
       errors === 0 &&

@@ -16,6 +16,7 @@ import { extractGitHubRepoSlug } from './extract-repo-slug';
 import {
   RemoteReleaseClient,
   RemoteReleaseOptions,
+  ManualRemoteReleaseResult,
   RemoteReleaseResult,
   RemoteRepoData,
 } from './remote-release-client';
@@ -181,8 +182,7 @@ export class GithubRemoteReleaseClient extends RemoteReleaseClient<GithubRemoteR
     authors: Map<string, { email: Set<string>; username?: string }>
   ): Promise<void> {
     await Promise.all(
-      [...authors.keys()].map(async (authorName) => {
-        const meta = authors.get(authorName);
+      [...authors.values()].map(async (meta) => {
         for (const email of meta.email) {
           // An empty email makes the URL `/users/find/`, so ungh attributes
           // the commit to the "find" user rather than the real author.
@@ -281,7 +281,7 @@ export class GithubRemoteReleaseClient extends RemoteReleaseClient<GithubRemoteR
   }
 
   protected async updateRelease(
-    id: string,
+    id: string | undefined,
     remoteRelease: GithubRemoteRelease
   ): Promise<any> {
     const githubRepoData = this.getRequiredRemoteRepoData();
@@ -342,7 +342,7 @@ export class GithubRemoteReleaseClient extends RemoteReleaseClient<GithubRemoteR
 
   protected async handleError(
     error: any,
-    result: RemoteReleaseResult
+    result: ManualRemoteReleaseResult
   ): Promise<void> {
     if (error) {
       process.exitCode = 1;

@@ -68,7 +68,11 @@ export function getDevServerOptions(
       type: 'https',
     };
     if (serveOptions.sslKey && serveOptions.sslCert) {
-      config.server.options = getSslConfig(root, serveOptions);
+      config.server.options = getSslConfig(
+        root,
+        serveOptions.sslKey,
+        serveOptions.sslCert
+      );
     }
   }
 
@@ -79,10 +83,10 @@ export function getDevServerOptions(
   return config;
 }
 
-function getSslConfig(root: string, options: DevServerExecutorSchema) {
+function getSslConfig(root: string, sslKey: string, sslCert: string) {
   return {
-    key: readFileSync(path.resolve(root, options.sslKey), 'utf-8'),
-    cert: readFileSync(path.resolve(root, options.sslCert), 'utf-8'),
+    key: readFileSync(path.resolve(root, sslKey), 'utf-8'),
+    cert: readFileSync(path.resolve(root, sslCert), 'utf-8'),
   };
 }
 

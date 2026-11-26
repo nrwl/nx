@@ -76,28 +76,38 @@ export function createNxJson(
         inputs: ['production', '^production'],
         cache: true,
       },
-      test: targets.test
+      ...(targets.test
         ? {
-            inputs: ['default', '^production', '{workspaceRoot}/karma.conf.js'],
-            cache: true,
+            test: {
+              inputs: [
+                'default',
+                '^production',
+                '{workspaceRoot}/karma.conf.js',
+              ],
+              cache: true,
+            },
           }
-        : undefined,
-      lint: targets.lint
+        : {}),
+      ...(targets.lint
         ? {
-            inputs: [
-              'default',
-              '{workspaceRoot}/.eslintrc.json',
-              '{workspaceRoot}/eslint.config.cjs',
-            ],
-            cache: true,
+            lint: {
+              inputs: [
+                'default',
+                '{workspaceRoot}/.eslintrc.json',
+                '{workspaceRoot}/eslint.config.cjs',
+              ],
+              cache: true,
+            },
           }
-        : undefined,
-      e2e: targets.e2e
+        : {}),
+      ...(targets.e2e
         ? {
-            inputs: ['default', '^production'],
-            cache: true,
+            e2e: {
+              inputs: ['default', '^production'],
+              cache: true,
+            },
           }
-        : undefined,
+        : {}),
     },
     defaultProject,
   });
@@ -132,6 +142,9 @@ function getWorkspaceCommonTargets(tree: Tree): {
 
 export function updateWorkspaceConfigDefaults(tree: Tree): void {
   const nxJson = readNxJson(tree);
+  if (!nxJson) {
+    throw new Error('Cannot find the "nx.json" file.');
+  }
   delete (nxJson as any).newProjectRoot;
   if (nxJson.cli) {
     delete (nxJson as any).defaultCollection;
@@ -140,7 +153,11 @@ export function updateWorkspaceConfigDefaults(tree: Tree): void {
 }
 
 export function updateRootTsConfig(tree: Tree): void {
-  const tsconfig = readJson(tree, getRootTsConfigPathInTree(tree));
+  const rootTsConfigPath = getRootTsConfigPathInTree(tree);
+  if (!rootTsConfigPath) {
+    throw new Error('Cannot find the root TypeScript configuration file.');
+  }
+  const tsconfig = readJson(tree, rootTsConfigPath);
   tsconfig.compilerOptions.paths ??= {};
   tsconfig.compilerOptions.rootDir = '.';
   tsconfig.exclude = Array.from(
@@ -203,13 +220,15 @@ export async function updateRootEsLintConfig(
       new Set([...(existingEsLintConfig.plugins ?? []), '@nx'])
     );
   }
-  existingEsLintConfig.overrides?.forEach((override) => {
-    if (!override.parserOptions?.project) {
-      return;
-    }
+  existingEsLintConfig.overrides?.forEach(
+    (override: { parserOptions?: { project?: unknown } }) => {
+      if (!override.parserOptions?.project) {
+        return;
+      }
 
-    delete override.parserOptions.project;
-  });
+      delete override.parserOptions.project;
+    }
+  );
   // add the @nx/enforce-module-boundaries rule
   existingEsLintConfig.overrides = [
     ...(existingEsLintConfig.overrides ?? []),
@@ -322,10 +341,11 @@ export function updateVsCodeRecommendedExtensions(tree: Tree): void {
       tree,
       '.vscode/extensions.json',
       (json: { recommendations?: string[] }) => {
-        json.recommendations = json.recommendations || [];
+        const existingRecommendations = json.recommendations || [];
+        json.recommendations = existingRecommendations;
         recommendations.forEach((extension) => {
-          if (!json.recommendations.includes(extension)) {
-            json.recommendations.push(extension);
+          if (!existingRecommendations.includes(extension)) {
+            existingRecommendations.push(extension);
           }
         });
 

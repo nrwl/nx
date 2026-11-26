@@ -44,8 +44,8 @@ describe('nx release lock file updates', () => {
   let pkg1: string;
   let pkg2: string;
   let pkg3: string;
-  let previousPackageManager: string;
-  let previousYarnEnableImmutableInstalls: string;
+  let previousPackageManager: string | undefined;
+  let previousYarnEnableImmutableInstalls: string | undefined;
 
   beforeAll(() => {
     previousPackageManager = process.env.SELECTED_PM;
@@ -112,7 +112,7 @@ describe('nx release lock file updates', () => {
 
     const versionOutput = runCLI(`release version 999.9.9`);
 
-    expect(versionOutput.match(/NX   Updating npm lock file/g).length).toBe(1);
+    expect(versionOutput.match(/NX   Updating npm lock file/g)).toHaveLength(1);
 
     const filesChanges = runCommand('git diff --name-only HEAD');
 
@@ -143,7 +143,7 @@ describe('nx release lock file updates', () => {
 
     const versionOutput = runCLI(`release version 999.9.9 --git-commit`);
 
-    expect(versionOutput.match(/NX   Updating npm lock file/g).length).toBe(1);
+    expect(versionOutput.match(/NX   Updating npm lock file/g)).toHaveLength(1);
 
     // Verify the COMMITTED files (not just working tree changes)
     const committedFiles = runCommand('git show --name-only --pretty="" HEAD');
@@ -178,8 +178,8 @@ describe('nx release lock file updates', () => {
     expect(
       versionOutput.match(
         /Skipped lock file update because npm workspaces are not enabled./g
-      ).length
-    ).toBe(1);
+      )
+    ).toHaveLength(1);
 
     const filesChanges = runCommand('git diff --name-only HEAD');
 
@@ -213,8 +213,8 @@ describe('nx release lock file updates', () => {
     expect(
       versionOutput.match(
         /Skipped lock file update because it is not necessary for Yarn Classic./g
-      ).length
-    ).toBe(1);
+      )
+    ).toHaveLength(1);
 
     const filesChanges = runCommand('git diff --name-only HEAD');
 
@@ -247,7 +247,9 @@ describe('nx release lock file updates', () => {
 
     const versionOutput = runCLI(`release version 999.9.9`);
 
-    expect(versionOutput.match(/NX   Updating yarn lock file/g).length).toBe(1);
+    expect(versionOutput.match(/NX   Updating yarn lock file/g)).toHaveLength(
+      1
+    );
 
     const filesChanges = runCommand('git diff --name-only HEAD');
 
@@ -279,7 +281,9 @@ describe('nx release lock file updates', () => {
 
     const versionOutput = runCLI(`release version 999.9.9`);
 
-    expect(versionOutput.match(/NX   Updating pnpm lock file/g).length).toBe(1);
+    expect(versionOutput.match(/NX   Updating pnpm lock file/g)).toHaveLength(
+      1
+    );
 
     const filesChanges = runCommand('git diff --name-only HEAD');
 

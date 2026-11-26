@@ -33,10 +33,14 @@ export class GeneratePackageJsonPlugin implements RspackPluginInstance {
           stage: compiler.webpack.Compilation.PROCESS_ASSETS_STAGE_ADDITIONAL,
         },
         async () => {
+          const { projectName } = this.context;
+          if (!projectName) {
+            throw new Error(`${pluginName} requires a project name.`);
+          }
           const sources = compiler.webpack.sources;
           const helperDependencies = getHelperDependenciesFromProjectGraph(
             this.context.root,
-            this.context.projectName,
+            projectName,
             this.projectGraph
           );
 
@@ -51,13 +55,13 @@ export class GeneratePackageJsonPlugin implements RspackPluginInstance {
           if (shouldAddHelperDependency) {
             helperDependencies.push({
               type: 'static',
-              source: this.context.projectName,
+              source: projectName,
               target: HelperDependency.tsc,
             });
           }
 
           const packageJson = createPackageJson(
-            this.context.projectName,
+            projectName,
             this.projectGraph,
             {
               target: this.context.targetName,
@@ -73,7 +77,7 @@ export class GeneratePackageJsonPlugin implements RspackPluginInstance {
           generatePrunedDeployOutput(
             packageJson,
             this.projectGraph,
-            this.projectGraph.nodes[this.context.projectName].data.root,
+            this.projectGraph.nodes[projectName].data.root,
             {
               emit: (assetPath, content) =>
                 compilation.emitAsset(

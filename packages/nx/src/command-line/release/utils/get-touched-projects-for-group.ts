@@ -64,13 +64,12 @@ export function createGetTouchedProjectsForGroup(
       );
     }
 
-    let touchedProjects = {};
-    if (
-      serializedIgnorePatternsToTouchedProjects.has(serializedIgnorePatterns)
-    ) {
-      touchedProjects = serializedIgnorePatternsToTouchedProjects.get(
-        serializedIgnorePatterns
-      );
+    let touchedProjects: Record<string, true> = {};
+    const cachedTouchedProjects = serializedIgnorePatternsToTouchedProjects.get(
+      serializedIgnorePatterns
+    );
+    if (cachedTouchedProjects) {
+      touchedProjects = cachedTouchedProjects;
     } else {
       const touchedProjectsArr = directlyTouchedProjects(
         transformProjectGraphForLocators(projectGraph),

@@ -10,14 +10,18 @@ export default async function lintExecutor(
   options: LintExecutorSchema,
   context: ExecutorContext
 ): Promise<{ success: boolean }> {
+  const projectName = context.projectName;
+  if (!projectName) {
+    throw new Error('The Oxlint lint executor requires a project.');
+  }
   const [result] = Object.values(
     runLintTasks(
       [
         {
-          taskId: context.projectName,
-          projectName: context.projectName,
+          taskId: projectName,
+          projectName,
           projectRoot:
-            context.projectsConfigurations.projects[context.projectName].root,
+            context.projectsConfigurations.projects[projectName].root,
           options,
         },
       ],

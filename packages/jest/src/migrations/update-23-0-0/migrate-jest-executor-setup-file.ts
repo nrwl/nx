@@ -127,7 +127,7 @@ export default async function (tree: Tree) {
       project,
       projectConfigCache
     );
-    const targetOptions = projectConfiguration.targets[target]?.options as
+    const targetOptions = projectConfiguration.targets?.[target]?.options as
       | {
           jestConfig?: string;
           setupFile?: string;
@@ -203,13 +203,16 @@ export default async function (tree: Tree) {
       }
     }
 
-    if (configuration) {
-      stripFromConfiguration(
-        projectConfiguration.targets[target],
-        configuration
+    const targetConfiguration = projectConfiguration.targets?.[target];
+    if (!targetConfiguration) {
+      throw new Error(
+        `Could not find target "${target}" in project "${project}".`
       );
+    }
+    if (configuration) {
+      stripFromConfiguration(targetConfiguration, configuration);
     } else {
-      stripFromOptions(projectConfiguration.targets[target]);
+      stripFromOptions(targetConfiguration);
     }
     dirtyProjects.add(project);
   });
@@ -249,7 +252,7 @@ function migrateInheritingConfigurations(
   warnLists: WarnLists
 ): void {
   const configurations =
-    projectConfiguration.targets[target]?.configurations ?? {};
+    projectConfiguration.targets?.[target]?.configurations ?? {};
   for (const [configName, rawConfigOptions] of Object.entries(configurations)) {
     const configOptions = rawConfigOptions as {
       setupFile?: string;
@@ -338,7 +341,7 @@ function migrateInheritedSetupFile(
     project,
     projectConfigCache
   );
-  const targetOptions = projectConfiguration.targets[target]?.options as
+  const targetOptions = projectConfiguration.targets?.[target]?.options as
     | { jestConfig?: string }
     | undefined;
   const expandedSetupFile = expandWorkspaceRelativePath(
@@ -393,16 +396,17 @@ function stripSetupFileFromNxJson(
       }
     }
 
-    for (const configuration of Object.keys(config.configurations ?? {})) {
-      if (config.configurations[configuration]?.setupFile !== undefined) {
+    const configurations = config.configurations ?? {};
+    for (const configuration of Object.keys(configurations)) {
+      if (configurations[configuration]?.setupFile !== undefined) {
         hadSetupFile = true;
-        delete config.configurations[configuration].setupFile;
+        delete configurations[configuration].setupFile;
         if (
-          !Object.keys(config.configurations[configuration]).length &&
+          !Object.keys(configurations[configuration]).length &&
           (!config.defaultConfiguration ||
             config.defaultConfiguration !== configuration)
         ) {
-          delete config.configurations[configuration];
+          delete configurations[configuration];
         }
       }
     }
@@ -513,15 +517,19 @@ function stripFromConfiguration(
   target: TargetConfiguration,
   configuration: string
 ) {
-  delete target.configurations[configuration].setupFile;
+  const configurations = target.configurations;
+  if (!configurations) {
+    throw new Error(`Could not find configuration "${configuration}".`);
+  }
+  delete configurations[configuration].setupFile;
   if (
-    !Object.keys(target.configurations[configuration]).length &&
+    !Object.keys(configurations[configuration]).length &&
     (!target.defaultConfiguration ||
       target.defaultConfiguration !== configuration)
   ) {
-    delete target.configurations[configuration];
+    delete configurations[configuration];
   }
-  if (!Object.keys(target.configurations).length) {
+  if (!Object.keys(configurations).length) {
     delete target.configurations;
   }
 }

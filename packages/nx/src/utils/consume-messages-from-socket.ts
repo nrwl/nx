@@ -67,7 +67,7 @@ export function writeMessage(
   callback?: (err?: Error) => void
 ): void {
   socket.write(frameHeader(payload.length));
-  socket.write(payload, callback);
+  socket.write(payload, callback && ((err) => callback(err ?? undefined)));
 }
 
 export class MessageFramingError extends Error {
@@ -128,9 +128,11 @@ export function consumeMessagesFromSocket(
     // leading one out in place rather than allocating and copying for each.
     // The payload is parsed by the callback before the next read, so sharing
     // the chunk's memory does not retain it.
-    if (chunks[0].length === length) {
+    const first = chunks[0];
+    if (first.length === length) {
       buffered -= length;
-      return chunks.shift();
+      chunks.shift();
+      return first;
     }
     if (chunks[0].length > length) {
       const out = chunks[0].subarray(0, length);

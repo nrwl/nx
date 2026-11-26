@@ -199,7 +199,9 @@ export function acquireTreeOperation(
       commitsStep(request.kind) &&
       fresh.steps.find((s) => s.id === request.stepId)?.commitStarted !== true;
     return {
-      ...(marks ? markCommitStarted(fresh, request.stepId) : fresh),
+      ...(marks && request.stepId !== undefined
+        ? markCommitStarted(fresh, request.stepId)
+        : fresh),
       treeOperation: {
         kind: request.kind,
         ...(request.stepId !== undefined ? { stepId: request.stepId } : {}),
@@ -702,7 +704,7 @@ export class MigrateCommitBroker {
         // step reading it can die with the commit already in history. A failed
         // record throws and ends the session rather than losing the entry.
         if (result.kind === 'commit') {
-          if (gitRan(result.result)) lease.markedStepId = undefined;
+          if (gitRan(result.result) && lease) lease.markedStepId = undefined;
           this.record(request, result);
         }
       } finally {
@@ -753,6 +755,7 @@ export class MigrateCommitBroker {
     const state = readRunState(this.dir);
     const step = state.steps.find((s) => s.id === request.stepId);
     if (
+      step === undefined ||
       !Object.hasOwn(SEAM_STATUSES, request.kind) ||
       !isAtSeam(step, request) ||
       ((commitsStep(request.kind) || request.kind === 'reset') &&

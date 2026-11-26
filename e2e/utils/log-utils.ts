@@ -1,6 +1,6 @@
 import { stripVTControlCharacters, styleText } from 'node:util';
 
-const orangeColor = (text) => `\x1b[38;5;214m${text}\x1b[39m`;
+const orangeColor = (text: string) => `\x1b[38;5;214m${text}\x1b[39m`;
 
 export const E2E_LOG_PREFIX = `${styleText(
   ['reset', 'inverse', 'bold'],

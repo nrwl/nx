@@ -89,7 +89,7 @@ export function getProjectPackageManagerWorkspaceStateWarningTask(
     const packageManager = detectPackageManager(workspaceRoot);
     let adviseMessage =
       'updating the "workspaces" option in the workspace root "package.json" file with the project root or pattern that includes it';
-    let packageManagerWorkspaceSetupDocs: string;
+    let packageManagerWorkspaceSetupDocs: string | undefined;
     if (packageManager === 'pnpm') {
       adviseMessage =
         'updating the "pnpm-workspace.yaml" file with the project root or pattern that includes it';

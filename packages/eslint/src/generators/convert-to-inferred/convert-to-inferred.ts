@@ -137,7 +137,8 @@ function removeUnknownExecutorOptions(
 ): void {
   const dropped = new Set<string>();
   const strip = (options: Record<string, any> | undefined) => {
-    for (const option of Object.keys(options ?? {})) {
+    if (!options) return;
+    for (const option of Object.keys(options)) {
       if (!executorOptions.has(option)) {
         delete options[option];
         dropped.add(option);
@@ -201,8 +202,12 @@ function getConvertedTarget(
       },
     }
   )) {
+    const targets = projects?.[root]?.targets;
+    if (!targets) {
+      throw new Error(`No target defaults result for project "${root}".`);
+    }
     convertedTarget = mergeTargetConfigurations(
-      resolveCommandSyntacticSugar(projects[root].targets[targetName], root),
+      resolveCommandSyntacticSugar(targets[targetName], root),
       convertedTarget
     );
   }
@@ -218,6 +223,12 @@ function postTargetTransformer(
   originalOutputs: string[] | undefined
 ): TargetConfiguration {
   if (target.inputs) {
+    const inferredInputs = inferredTargetConfiguration.inputs;
+    if (!inferredInputs) {
+      throw new Error(
+        `The inferred "${projectDetails.projectName}" lint target has no inputs.`
+      );
+    }
     const normalizeInput = (input: string) => {
       return input
         .replace('{workspaceRoot}', '')
@@ -231,7 +242,7 @@ function postTargetTransformer(
       if (typeof input === 'string') {
         // if the input is a string, check if it is inferred by the plugin
         // if it is, filter it out
-        return !inferredTargetConfiguration.inputs.some(
+        return !inferredInputs.some(
           (inferredInput) =>
             typeof inferredInput === 'string' &&
             normalizeInput(inferredInput) === normalizeInput(input)
@@ -241,7 +252,7 @@ function postTargetTransformer(
         // check if all the external dependencies are inferred by the plugin
         // if they are, filter it out
         return !input.externalDependencies.every((externalDependency) =>
-          inferredTargetConfiguration.inputs.some(
+          inferredInputs.some(
             (inferredInput) =>
               typeof inferredInput === 'object' &&
               'externalDependencies' in inferredInput &&
@@ -471,7 +482,7 @@ function handlePropertiesInOptions(
 
   if ('lintFilePatterns' in options) {
     const normalizedLintFilePatterns = options.lintFilePatterns.map(
-      (pattern) => {
+      (pattern: string) => {
         const interpolatedPattern = interpolate(pattern, {
           workspaceRoot: '',
           projectRoot: projectDetails.root,
@@ -495,7 +506,7 @@ function handlePropertiesInOptions(
 
     options.args = normalizedLintFilePatterns
       // the @nx/eslint/plugin automatically infers these, so we don't need to pass them in
-      .filter((p) =>
+      .filter((p: string) =>
         projectDetails.root === '.'
           ? !['.', 'src', './src', 'lib', './lib'].includes(p)
           : p !== (cwd === projectDetails.root ? '.' : projectDetails.root)

@@ -342,7 +342,7 @@ export async function analyzeProjects(
     join(workspaceDataDirectory, `dotnet-${optionsHash}.hash`)
   );
   const persisted = analyzerCache.get(filesHash);
-  if (await isStillValid(persisted)) {
+  if (persisted && (await isStillValid(persisted))) {
     cache = {
       hash: filesHash,
       inputsHash: persisted.inputsHash,

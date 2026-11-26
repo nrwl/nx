@@ -66,7 +66,9 @@ function tryInlineWorkspaceFile(
   filePath: string,
   unhandled: string[]
 ): boolean {
-  const globs = extractStaticProjectGlobs(tree.read(filePath, 'utf-8'));
+  const workspaceContents = tree.read(filePath, 'utf-8');
+  if (workspaceContents === null) return false;
+  const globs = extractStaticProjectGlobs(workspaceContents);
   if (!globs || globs.length === 0) return false;
 
   const dir = posixDirname(filePath);
@@ -166,6 +168,7 @@ function tryAddProjectsToConfig(
   entries: string[]
 ): boolean {
   const contents = tree.read(configPath, 'utf-8');
+  if (contents === null) return false;
   const configObject = findDefaultExportConfigObject(ast(contents));
   if (!configObject) return false;
   if (hasSpreadOrUnsupportedProperty(configObject.properties, ['test'])) {
@@ -348,9 +351,9 @@ function determineStaticProjectName(
   tree: Tree,
   configPath: string
 ): { name: string } | 'default' | undefined {
-  const configObject = findDefaultExportConfigObject(
-    ast(tree.read(configPath, 'utf-8'))
-  );
+  const contents = tree.read(configPath, 'utf-8');
+  if (contents === null) return undefined;
+  const configObject = findDefaultExportConfigObject(ast(contents));
   if (!configObject) return undefined;
   if (hasSpreadOrUnsupportedProperty(configObject.properties, ['test'])) {
     return undefined;
@@ -378,7 +381,7 @@ function defaultProjectName(tree: Tree, dir: string): string {
   const packageJsonPath = joinPathFragments(dir, 'package.json');
   if (tree.exists(packageJsonPath)) {
     try {
-      const name = JSON.parse(tree.read(packageJsonPath, 'utf-8')).name;
+      const name = JSON.parse(tree.read(packageJsonPath, 'utf-8') ?? '').name;
       if (typeof name === 'string' && name) return name;
     } catch {}
   }

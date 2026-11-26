@@ -20,7 +20,8 @@ export function servePostTargetTransformer(migrationLogs: AggregatedLog) {
         handlePropertiesFromTargetOptions(configuration);
       }
 
-      if (Object.keys(target.configurations).length === 0) {
+      const configurations = target.configurations;
+      if (Object.keys(configurations).length === 0) {
         if ('defaultConfiguration' in target) {
           delete target.defaultConfiguration;
         }
@@ -29,7 +30,8 @@ export function servePostTargetTransformer(migrationLogs: AggregatedLog) {
 
       if (
         'defaultConfiguration' in target &&
-        !target.configurations[target.defaultConfiguration]
+        (!target.defaultConfiguration ||
+          !configurations[target.defaultConfiguration])
       ) {
         delete target.defaultConfiguration;
       }

@@ -83,14 +83,14 @@ export default async function* gradleBatch(
   } catch (e) {
     output.error({
       title: `Gradlew batch failed`,
-      bodyLines: [e.toString()],
+      bodyLines: [String(e)],
     });
     for (const taskId of taskIds) {
       if (!yielded.has(taskId)) {
         yielded.add(taskId);
         yield {
           task: taskId,
-          result: { success: false, terminalOutput: e.toString() },
+          result: { success: false, terminalOutput: String(e) },
         };
       }
     }

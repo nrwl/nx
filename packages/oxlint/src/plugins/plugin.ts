@@ -71,10 +71,11 @@ const OXLINT_CONFIG_GLOB = combineGlobPatterns([
 ]);
 
 type OxlintProjects = CreateNodesResult['projects'];
+type NormalizedOxlintPluginOptions = Required<OxlintPluginOptions>;
 
 const internalCreateNodes = async (
   configFilePath: string,
-  options: OxlintPluginOptions,
+  options: NormalizedOxlintPluginOptions,
   context: CreateNodesContext,
   projectRootsByOxlintRoots: Map<string, string[]>,
   nestedRootsByParent: Map<string, string[]>,
@@ -96,6 +97,9 @@ const internalCreateNodes = async (
   const contributions = await Promise.all(
     orderedProjectRoots.map(async (projectRoot) => {
       const hash = hashByRoot.get(projectRoot);
+      if (hash === undefined) {
+        throw new Error(`No hash computed for project root "${projectRoot}"`);
+      }
 
       const cached = projectsCache.get(hash);
       if (cached) {
@@ -150,8 +154,8 @@ const internalCreateNodes = async (
 export const createNodes: CreateNodes<OxlintPluginOptions> = [
   OXLINT_CONFIG_GLOB,
   async (configFiles, options, context) => {
-    options = normalizeOptions(options);
-    const optionsHash = hashObject(options);
+    const normalizedOptions = normalizeOptions(options);
+    const optionsHash = hashObject(normalizedOptions);
     const cachePath = join(
       workspaceDataDirectory,
       `oxlint-${optionsHash}.hash`
@@ -196,7 +200,7 @@ export const createNodes: CreateNodes<OxlintPluginOptions> = [
     const lockFilePattern = getLockFileName(packageManager);
     const hashes = await calculateHashesForCreateNodes(
       projectRoots,
-      options,
+      normalizedOptions,
       context,
       projectRoots.map((root) => {
         // Own directory and every ancestor. Configs below the root are already
@@ -237,10 +241,10 @@ export const createNodes: CreateNodes<OxlintPluginOptions> = [
 
     try {
       return await createNodesFromFiles(
-        (configFile, fileOptions, fileContext) =>
+        (configFile, _fileOptions, fileContext) =>
           internalCreateNodes(
             configFile,
-            fileOptions,
+            normalizedOptions,
             fileContext,
             projectRootsByOxlintRoots,
             nestedRootsByParent,
@@ -254,7 +258,7 @@ export const createNodes: CreateNodes<OxlintPluginOptions> = [
             rootConfig
           ),
         oxlintConfigFiles,
-        options,
+        normalizedOptions,
         context
       );
     } finally {
@@ -307,7 +311,7 @@ export const createDependencies: CreateDependencies<OxlintPluginOptions> = (
 
   const nodes: Record<string, ProjectGraphProjectNode> = {};
   for (const [name, data] of Object.entries(context.projects)) {
-    nodes[name] = { name, type: null, data };
+    nodes[name] = { name, type: 'lib', data };
   }
   // Own resolution cache: the locator's shared default one is never
   // invalidated, so a plugin resolved before `install` would stay unresolved
@@ -441,8 +445,9 @@ function splitConfigFiles(
       projectRoot,
       projectRootsByOxlintRoots
     );
-    if (oxlintRoot) {
-      projectRootsByOxlintRoots.get(oxlintRoot).push(projectRoot);
+    const roots = oxlintRoot && projectRootsByOxlintRoots.get(oxlintRoot);
+    if (roots) {
+      roots.push(projectRoot);
     }
   }
 
@@ -515,8 +520,9 @@ function collectConfigChains(
   const readConfig = (
     relativeConfigPath: string
   ): { extends?: string[]; jsPlugins?: unknown[] } | null => {
-    if (jsonCache.has(relativeConfigPath)) {
-      return jsonCache.get(relativeConfigPath);
+    const cached = jsonCache.get(relativeConfigPath);
+    if (cached !== undefined) {
+      return cached;
     }
 
     let json: { extends?: string[]; jsPlugins?: unknown[] } | null = null;
@@ -740,7 +746,7 @@ async function collectLintableFilesByProjectRoot(
     if (projectRoot) {
       lintableFilesPerProjectRoot.set(
         projectRoot,
-        lintableFilesPerProjectRoot.get(projectRoot) + 1
+        (lintableFilesPerProjectRoot.get(projectRoot) ?? 0) + 1
       );
     }
   }
@@ -826,14 +832,14 @@ function getProjectUsingOxlintConfig(
   configFilePath: string,
   projectRoot: string,
   nestedRootsByParent: Map<string, string[]>,
-  options: OxlintPluginOptions,
+  options: NormalizedOxlintPluginOptions,
   context: CreateNodesContext,
   pmc: ReturnType<typeof getPackageManagerCommand>,
   configChainsByConfig: Map<string, string[]>,
   jsPluginSpecifiersByConfig: Map<string, string[]>,
   tsconfigChainOutsideProjectRoot: string[],
   rootConfig: string | undefined
-): CreateNodesResult['projects'][string] | null {
+): NonNullable<CreateNodesResult['projects']>[string] | null {
   // Linter-agnostic on purpose: a nested ESLint project's files are still
   // its own.
   const nestedProjectRoots = nestedRootsByParent.get(projectRoot) ?? [];
@@ -946,7 +952,9 @@ function getProjectUsingOxlintConfig(
   };
 }
 
-function normalizeOptions(options: OxlintPluginOptions): OxlintPluginOptions {
+function normalizeOptions(
+  options: OxlintPluginOptions | undefined
+): NormalizedOxlintPluginOptions {
   return {
     targetName: options?.targetName ?? 'lint',
   };

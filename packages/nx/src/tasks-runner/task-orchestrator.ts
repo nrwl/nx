@@ -95,13 +95,16 @@ import {
   getExecutorForTask,
   getPrintableCommandArgsForTask,
   getTargetConfigurationForTask,
+  getTaskHash,
   hashTaskOverrides,
   removeTasksFromTaskGraph,
   shouldStreamOutput,
 } from './utils';
 
+type HashedTask = Task & { hash: string };
+
 type CacheHit = {
-  task: Task;
+  task: HashedTask;
   cachedResult: CachedResult & { remote: boolean };
 };
 
@@ -261,6 +264,7 @@ export class TaskOrchestrator {
   private pendingDiscreteWorkers = new Set<Promise<TaskResult | void>>();
 
   private groups: boolean[] = [];
+  private overflowGroupStart = 0;
   private continuousTasksStarted = 0;
 
   /**
@@ -313,13 +317,13 @@ export class TaskOrchestrator {
 
   constructor(
     private readonly hasher: TaskHasher,
-    private readonly initiatingProject: string | undefined,
+    private readonly initiatingProject: string | null | undefined,
     private readonly initiatingTasks: Task[],
     private readonly projectGraph: ProjectGraph,
     private readonly taskGraph: TaskGraph,
     private readonly nxJson: NxJsonConfiguration,
     private readonly options: NxArgs & DefaultTasksRunnerOptions,
-    private readonly bail: boolean,
+    private readonly bail: boolean | undefined,
     private readonly daemon: DaemonClient,
     /** What the user named; undefined means they named nothing. */
     private readonly specifiedOutputStyle: OutputStyle | undefined,
@@ -346,7 +350,7 @@ export class TaskOrchestrator {
     // Pass estimated timings to TUI after TasksSchedule is initialized
     if (this.tuiEnabled) {
       const estimatedTimings = this.tasksSchedule.getEstimatedTaskTimings();
-      this.options.lifeCycle.setEstimatedTaskTimings(estimatedTimings);
+      this.options.lifeCycle.setEstimatedTaskTimings?.(estimatedTimings);
     }
   }
 
@@ -359,6 +363,7 @@ export class TaskOrchestrator {
       this.options,
       this.taskGraph
     );
+    this.overflowGroupStart = discrete + continuous;
 
     process.stdout.setMaxListeners(total + defaultMaxListeners);
     process.stderr.setMaxListeners(total + defaultMaxListeners);
@@ -377,7 +382,7 @@ export class TaskOrchestrator {
     // Set up forced shutdown handler
     const shutdownPromise = this.tuiEnabled
       ? new Promise((resolve) => {
-          this.options.lifeCycle.registerForcedShutdownCallback(() => {
+          this.options.lifeCycle.registerForcedShutdownCallback?.(() => {
             this.stopRequested = true;
             resolve(undefined);
           });
@@ -446,7 +451,7 @@ export class TaskOrchestrator {
           if (!task.continuous && !this.completedTasks.has(task.id)) {
             this.completedTasks.set(task.id, 'skipped');
             if (this.tuiEnabled) {
-              this.options.lifeCycle.setTaskStatus(
+              this.options.lifeCycle.setTaskStatus?.(
                 task.id,
                 NativeTaskStatus.Skipped
               );
@@ -551,11 +556,12 @@ export class TaskOrchestrator {
       await this.scheduleAfterReadiness();
       this.processAllScheduledTasks();
 
-      const task = this.tasksSchedule.nextTask((t) => t.continuous);
+      const task = this.tasksSchedule.nextTask((t) => !!t.continuous);
       if (task) {
         // Use a separate groupId space (parallel..parallel+N) so continuous tasks
         // don't consume discrete group slots
-        const groupId = this.options.parallel + this.continuousTasksStarted++;
+        const groupId =
+          (this.options.parallel ?? 0) + this.continuousTasksStarted++;
         await this.startContinuousTask(task, groupId);
 
         if (this.initializingTaskIds.has(task.id)) {
@@ -618,7 +624,7 @@ export class TaskOrchestrator {
       );
     }
 
-    await this.options.lifeCycle.scheduleTask(task);
+    await this.options.lifeCycle.scheduleTask?.(task);
 
     return taskSpecificEnv;
   }
@@ -718,7 +724,7 @@ export class TaskOrchestrator {
    */
   private async fetchCacheHits(tasks: Task[]): Promise<CacheHit[]> {
     const tasksToQuery = tasks.filter(
-      (t) => t.hash && !this.cacheMissedHashes.has(t.hash)
+      (t): t is HashedTask => !!t.hash && !this.cacheMissedHashes.has(t.hash)
     );
     if (tasksToQuery.length === 0) return [];
 
@@ -795,7 +801,7 @@ export class TaskOrchestrator {
               ? 'local-cache'
               : 'local-cache-kept-existing';
 
-      this.options.lifeCycle.printTaskTerminalOutput(
+      this.options.lifeCycle.printTaskTerminalOutput?.(
         task,
         status,
         cachedResult.terminalOutput
@@ -896,8 +902,10 @@ export class TaskOrchestrator {
     // to run in this wave.
     const behindMiss = new Set<string>();
     const behindUncacheable = new Set<string>();
-    const pending = (id: string, cacheable: boolean) =>
-      toRun.has(id) && !!toRun.get(id).cache === cacheable;
+    const pending = (id: string, cacheable: boolean) => {
+      const task = toRun.get(id);
+      return task !== undefined && !!task.cache === cacheable;
+    };
 
     await walkTaskGraph(batch.taskGraph, async (levelIds) => {
       const runNow: Task[] = [];
@@ -941,7 +949,9 @@ export class TaskOrchestrator {
         if (cacheResults.length > 0) {
           const cachedTasks = cacheResults.map((r) => r.task);
           await Promise.all(
-            cachedTasks.map((task) => this.options.lifeCycle.scheduleTask(task))
+            cachedTasks.map((task) =>
+              this.options.lifeCycle.scheduleTask?.(task)
+            )
           );
           await this.preRunSteps(cachedTasks, { groupId });
           // Replayed from the cache — don't write the results back.
@@ -1075,7 +1085,7 @@ export class TaskOrchestrator {
     const tasksToRun = wave.filter((t) => !this.completedTasks.has(t.id));
     if (tasksToRun.length > 0) {
       await Promise.all(
-        tasksToRun.map((task) => this.options.lifeCycle.scheduleTask(task))
+        tasksToRun.map((task) => this.options.lifeCycle.scheduleTask?.(task))
       );
       await this.preRunSteps(tasksToRun, { groupId });
     }
@@ -1164,7 +1174,7 @@ export class TaskOrchestrator {
         // Append before print so printTaskTerminalOutput finds the PTY already
         // populated and no-ops; reversing the order writes terminalOutput twice.
         if (result.terminalOutput) {
-          this.options.lifeCycle.appendTaskOutput(
+          this.options.lifeCycle.appendTaskOutput?.(
             taskId,
             result.terminalOutput,
             false
@@ -1181,7 +1191,7 @@ export class TaskOrchestrator {
         // asked for full output or any task failed, was stopped or was never
         // reached.
         if (status !== 'skipped' && !shouldGroupBatchOutput()) {
-          this.options.lifeCycle.printTaskTerminalOutput(
+          this.options.lifeCycle.printTaskTerminalOutput?.(
             task,
             status,
             result.terminalOutput ?? ''
@@ -1198,7 +1208,7 @@ export class TaskOrchestrator {
             result.endTime
           );
         }
-        this.options.lifeCycle.setTaskStatus(taskId, parseTaskStatus(status));
+        this.options.lifeCycle.setTaskStatus?.(taskId, parseTaskStatus(status));
       });
 
       const results = await batchProcess.getResults();
@@ -1221,20 +1231,17 @@ export class TaskOrchestrator {
       // racing bytes that have not reached the file yet.
       await batchProcess.flushCapturedOutput();
 
+      const capturedOutputPath = batchProcess.getCapturedOutputPath();
       if (shouldGroupBatchOutput()) {
         this.renderBatchOutputSafely(batch.id, () =>
-          this.printGroupedBatchOutput(
-            batch,
-            taskResults,
-            batchProcess.getCapturedOutputPath()
-          )
+          this.printGroupedBatchOutput(batch, taskResults, capturedOutputPath)
         );
       }
 
       workerLogAnnounced = this.announceBatchWorkerLog(
         batch.id,
         taskResults,
-        batchProcess.getCapturedOutputPath()
+        capturedOutputPath
       );
       return taskResults;
     } catch (e) {
@@ -1249,7 +1256,10 @@ export class TaskOrchestrator {
           task,
           code: 1,
           status: (isBatchStopping ? 'stopped' : 'failure') as TaskStatus,
-          terminalOutput: isBatchStopping ? '' : (e.stack ?? e.message ?? ''),
+          terminalOutput:
+            isBatchStopping || !(e instanceof Error)
+              ? ''
+              : (e.stack ?? e.message),
         };
       });
 
@@ -1275,7 +1285,8 @@ export class TaskOrchestrator {
         printsTaskOutput(this.resolvedOutputStyle)
       ) {
         const capturedOutputPath = batchProcess?.getCapturedOutputPath();
-        const trailer = isBatchStopping ? undefined : e.message;
+        const trailer =
+          isBatchStopping || !(e instanceof Error) ? undefined : e.message;
         if (capturedOutputPath || trailer) {
           this.renderBatchOutputSafely(batch.id, () =>
             this.printBatchFold(batch, taskResults, {
@@ -1357,7 +1368,7 @@ export class TaskOrchestrator {
     } catch (e) {
       output.warn({
         title: `Could not render output for batch ${batchId}`,
-        bodyLines: [e.message],
+        bodyLines: [e instanceof Error ? e.message : String(e)],
       });
     }
   }
@@ -1440,7 +1451,7 @@ export class TaskOrchestrator {
 
     for (const { task, status, terminalOutput } of taskResults) {
       if (status !== 'skipped') {
-        this.options.lifeCycle.printTaskTerminalOutput(
+        this.options.lifeCycle.printTaskTerminalOutput?.(
           task,
           status,
           terminalOutput ?? ''
@@ -1534,7 +1545,7 @@ export class TaskOrchestrator {
     await Promise.all(
       cacheHits
         .filter(({ task }) => !this.processedTasks.has(task.id))
-        .map(({ task }) => this.options.lifeCycle.scheduleTask(task))
+        .map(({ task }) => this.options.lifeCycle.scheduleTask?.(task))
     );
 
     const hitTasks = cacheHits.map((h) => h.task);
@@ -1591,7 +1602,7 @@ export class TaskOrchestrator {
     // either never landed or can't be trusted. Hand the file back to
     // postRunSteps so the failure itself is what the task's output path holds.
     this.tasksWithPersistedOutput.delete(task.id);
-    this.options.lifeCycle.printTaskTerminalOutput(
+    this.options.lifeCycle.printTaskTerminalOutput?.(
       task,
       'failure',
       terminalOutput
@@ -1623,11 +1634,12 @@ export class TaskOrchestrator {
       (e) => e
     );
     // Skipped by a failed dependency's propagation while waiting
-    if (this.completedTasks.has(task.id)) {
+    const completedStatus = this.completedTasks.get(task.id);
+    if (completedStatus !== undefined) {
       return {
         task,
         code: 1,
-        status: this.completedTasks.get(task.id),
+        status: completedStatus,
         terminalOutput: '',
       };
     }
@@ -1734,7 +1746,7 @@ export class TaskOrchestrator {
           task,
           code: 1,
           status: 'failure',
-          terminalOutput: e?.message ?? String(e),
+          terminalOutput: e instanceof Error ? e.message : String(e),
         };
       }
       // A failed postRunSteps rejects to the caller. dispatchDiscreteWorker
@@ -1762,6 +1774,11 @@ export class TaskOrchestrator {
       task,
       this.projectGraph
     );
+    if (!targetConfiguration) {
+      throw new Error(
+        `Cannot find target "${task.target.target}" for task "${task.id}".`
+      );
+    }
     if (
       process.env.NX_RUN_COMMANDS_DIRECTLY !== 'false' &&
       targetConfiguration.executor === 'nx:run-commands'
@@ -1770,7 +1787,9 @@ export class TaskOrchestrator {
         const { schema } = getExecutorForTask(task, this.projects);
         const combinedOptions = combineOptionsForExecutor(
           task.overrides as Options,
-          task.target.configuration ?? targetConfiguration.defaultConfiguration,
+          task.target.configuration ??
+            targetConfiguration.defaultConfiguration ??
+            '',
           targetConfiguration,
           schema,
           task.target.project,
@@ -1817,21 +1836,23 @@ export class TaskOrchestrator {
         } else if (this.tuiEnabled) {
           if (runningTask instanceof PseudoTtyProcess) {
             // This is an external of a the pseudo terminal where a task is running and can be passed to the TUI
-            this.options.lifeCycle.registerRunningTask(
+            this.options.lifeCycle.registerRunningTask?.(
               task.id,
               runningTask.getPtyHandles()
             );
             runningTask.onOutput((output) => {
-              this.options.lifeCycle.appendTaskOutput(task.id, output, true);
+              this.options.lifeCycle.appendTaskOutput?.(task.id, output, true);
             });
           } else {
-            this.options.lifeCycle.registerRunningTaskWithEmptyParser(task.id);
+            this.options.lifeCycle.registerRunningTaskWithEmptyParser?.(
+              task.id
+            );
             runningTask.onOutput((output) => {
-              this.options.lifeCycle.appendTaskOutput(task.id, output, false);
+              this.options.lifeCycle.appendTaskOutput?.(task.id, output, false);
             });
           }
           for (const warning of warnings) {
-            this.options.lifeCycle.appendTaskOutput(
+            this.options.lifeCycle.appendTaskOutput?.(
               task.id,
               `${pc.yellow(warning)}\r\n`,
               false
@@ -1841,7 +1862,7 @@ export class TaskOrchestrator {
 
         runningTask.onExit((code, terminalOutput) => {
           if (!streamOutput && !shouldPrefix) {
-            this.options.lifeCycle.printTaskTerminalOutput(
+            this.options.lifeCycle.printTaskTerminalOutput?.(
               task,
               code === 0 ? 'success' : 'failure',
               terminalOutput
@@ -1861,9 +1882,9 @@ export class TaskOrchestrator {
         if (process.env.NX_VERBOSE_LOGGING === 'true') {
           console.error(e);
         } else {
-          console.error(e.message);
+          console.error(e instanceof Error ? e.message : e);
         }
-        const terminalOutput = e.stack ?? e.message ?? '';
+        const terminalOutput = e instanceof Error ? (e.stack ?? e.message) : '';
         writeFileSync(temporaryOutputPath, terminalOutput);
         this.tasksWithPersistedOutput.add(task.id);
         return new NoopChildProcess({
@@ -1896,25 +1917,25 @@ export class TaskOrchestrator {
       if (this.tuiEnabled) {
         if (runningTask instanceof PseudoTtyProcess) {
           // This is an external of a the pseudo terminal where a task is running and can be passed to the TUI
-          this.options.lifeCycle.registerRunningTask(
+          this.options.lifeCycle.registerRunningTask?.(
             task.id,
             runningTask.getPtyHandles()
           );
           runningTask.onOutput((output) => {
-            this.options.lifeCycle.appendTaskOutput(task.id, output, true);
+            this.options.lifeCycle.appendTaskOutput?.(task.id, output, true);
           });
         } else if (
           'onOutput' in runningTask &&
           typeof runningTask.onOutput === 'function'
         ) {
           // Register task that can provide progressive output but isn't interactive (e.g., NodeChildProcessWithNonDirectOutput)
-          this.options.lifeCycle.registerRunningTaskWithEmptyParser(task.id);
+          this.options.lifeCycle.registerRunningTaskWithEmptyParser?.(task.id);
           runningTask.onOutput((output) => {
-            this.options.lifeCycle.appendTaskOutput(task.id, output, false);
+            this.options.lifeCycle.appendTaskOutput?.(task.id, output, false);
           });
         } else {
           // Fallback for tasks that don't support progressive output
-          this.options.lifeCycle.registerRunningTaskWithEmptyParser(task.id);
+          this.options.lifeCycle.registerRunningTaskWithEmptyParser?.(task.id);
         }
       }
 
@@ -1934,7 +1955,7 @@ export class TaskOrchestrator {
 
       // Disable the pseudo terminal if this is a run-many or when running a continuous task as part of a run-one
       const disablePseudoTerminal =
-        !this.tuiEnabled && (!this.initiatingProject || task.continuous);
+        !this.tuiEnabled && (!this.initiatingProject || !!task.continuous);
       // execution
       const childProcess = usePtyFork
         ? await this.forkedProcessTaskRunner.forkProcess(task, {
@@ -1958,7 +1979,7 @@ export class TaskOrchestrator {
       if (process.env.NX_VERBOSE_LOGGING === 'true') {
         console.error(e);
       }
-      const terminalOutput = e.stack ?? e.message ?? '';
+      const terminalOutput = e instanceof Error ? (e.stack ?? e.message) : '';
       // No process ever started, so nothing else will write the file. Record
       // why, so the task's terminal output path resolves to the fork error
       // rather than to nothing.
@@ -1989,7 +2010,10 @@ export class TaskOrchestrator {
       await this.preRunSteps([task], { groupId });
 
       if (this.tuiEnabled) {
-        this.options.lifeCycle.setTaskStatus(task.id, NativeTaskStatus.Shared);
+        this.options.lifeCycle.setTaskStatus?.(
+          task.id,
+          NativeTaskStatus.Shared
+        );
       }
 
       const runningTask = new SharedRunningTask(
@@ -2264,7 +2288,7 @@ export class TaskOrchestrator {
   private warnUncheckedReadiness(task: Task, reason: string) {
     const message = `${reason} Nothing in this run waits for it to be ready, so it runs without a readiness check.`;
     if (this.tuiEnabled) {
-      this.options.lifeCycle.appendTaskOutput(
+      this.options.lifeCycle.appendTaskOutput?.(
         task.id,
         `\r\n${message}\r\n`,
         false
@@ -2433,7 +2457,7 @@ export class TaskOrchestrator {
       this.hasReadyWaiter(task.id)
     ) {
       if (this.tuiEnabled) {
-        this.options.lifeCycle.appendTaskOutput(
+        this.options.lifeCycle.appendTaskOutput?.(
           task.id,
           `\r\n${message}\r\n`,
           false
@@ -2562,7 +2586,7 @@ export class TaskOrchestrator {
     for (const task of tasks) {
       task.startTime = now;
     }
-    await this.options.lifeCycle.startTasks(tasks, metadata);
+    await this.options.lifeCycle.startTasks?.(tasks, metadata);
   }
 
   private async postRunSteps(
@@ -2594,6 +2618,9 @@ export class TaskOrchestrator {
       performance.mark('cache-results-start');
       await Promise.all(
         resultsToCache.map(async ({ task, code, terminalOutput, outputs }) => {
+          if (terminalOutput === undefined) {
+            throw new Error(`Task ${task.id} has no terminal output to cache.`);
+          }
           const files = await this.cache.put(
             task,
             terminalOutput,
@@ -2622,7 +2649,11 @@ export class TaskOrchestrator {
         task.outputs.length > 0 &&
         status !== 'local-cache-kept-existing'
       ) {
-        tasksToRecord.push({ outputs: task.outputs, hash: task.hash, files });
+        tasksToRecord.push({
+          outputs: task.outputs,
+          hash: getTaskHash(task),
+          files,
+        });
       }
     }
     if (tasksToRecord.length > 0) {
@@ -2825,7 +2856,7 @@ export class TaskOrchestrator {
     }
 
     if (tasksToReport.length > 0) {
-      await this.options.lifeCycle.endTasks(tasksToReport, { groupId });
+      await this.options.lifeCycle.endTasks?.(tasksToReport, { groupId });
     }
 
     // 2. Mark complete in scheduler
@@ -2840,7 +2871,7 @@ export class TaskOrchestrator {
       this.releaseTaskInvocation(task);
 
       if (this.tuiEnabled) {
-        this.options.lifeCycle.setTaskStatus(
+        this.options.lifeCycle.setTaskStatus?.(
           task.id,
           displayStatus ?? parseTaskStatus(status)
         );
@@ -2928,7 +2959,15 @@ export class TaskOrchestrator {
   }
 
   private closeGroup(): number {
-    for (let i = 0; i < this.options.parallel; i++) {
+    for (let i = 0; i < (this.options.parallel ?? 0); i++) {
+      if (!this.groups[i]) {
+        this.groups[i] = true;
+        return i;
+      }
+    }
+    // Cache hits can be resolved while every slot runs a worker. Their ids start
+    // past the continuous range so they never share a group with a running task.
+    for (let i = this.overflowGroupStart; ; i++) {
       if (!this.groups[i]) {
         this.groups[i] = true;
         return i;
@@ -3195,7 +3234,11 @@ export class TaskOrchestrator {
         // Silence output — pnpm (and similar wrappers) may exit before nx
         // finishes cleanup, returning the shell prompt. Any output after
         // that point would appear after the prompt.
-        const noop = (_chunk, _encoding, callback) => {
+        const noop = (
+          _chunk: unknown,
+          _encoding: unknown,
+          callback?: () => void
+        ) => {
           if (callback) callback();
           return true;
         };
@@ -3292,6 +3335,11 @@ export function getThreadPoolSize(
   ).length;
 
   const discrete = options['parallel'];
+  if (discrete === undefined) {
+    throw new Error(
+      'Expected the parallel option to be normalized to a number'
+    );
+  }
   const continuous = continuousCount;
   const total = discrete + continuous;
 

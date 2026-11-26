@@ -147,7 +147,7 @@ async function getAgentConfiguration(
       agentConfiguration = {
         rules:
           (!customContextFilePath && geminiMdExists) ||
-          (customContextFilePath && customContextFilePathExists),
+          (!!customContextFilePath && customContextFilePathExists),
         mcp: mcpConfigured,
         rulesPath: customContextFilePath ?? geminiRulePath,
         mcpPath: settingsPath,

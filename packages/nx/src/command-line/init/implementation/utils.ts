@@ -143,7 +143,7 @@ export function createNxJsonFromTurboJson(
   if (turboJson.globalDependencies?.length > 0) {
     nxJson.namedInputs = {
       sharedGlobals: turboJson.globalDependencies.map(
-        (dep) => `{workspaceRoot}/${dep}`
+        (dep: string) => `{workspaceRoot}/${dep}`
       ),
       default: ['{projectRoot}/**/*', 'sharedGlobals'],
     };
@@ -154,7 +154,7 @@ export function createNxJsonFromTurboJson(
     nxJson.namedInputs = nxJson.namedInputs || {};
     nxJson.namedInputs.sharedGlobals = nxJson.namedInputs.sharedGlobals || [];
     nxJson.namedInputs.sharedGlobals.push(
-      ...turboJson.globalEnv.map((env) => ({ env }))
+      ...turboJson.globalEnv.map((env: string) => ({ env }))
     );
     nxJson.namedInputs.default = nxJson.namedInputs.default || [];
     if (!nxJson.namedInputs.default.includes('{projectRoot}/**/*')) {
@@ -174,7 +174,9 @@ export function createNxJsonFromTurboJson(
       if (taskName.includes('#')) continue;
 
       const config = taskConfig as any;
-      const entry: TargetDefaultEntry = { target: taskName };
+      const entry: TargetDefaultEntry & { target: string } = {
+        target: taskName,
+      };
 
       // Handle dependsOn
       if (config.dependsOn?.length > 0) {
@@ -184,7 +186,7 @@ export function createNxJsonFromTurboJson(
       // Handle inputs
       if (config.inputs?.length > 0) {
         entry.inputs = config.inputs
-          .map((input) => {
+          .map((input: string) => {
             if (input === '$TURBO_DEFAULT$') {
               return '{projectRoot}/**/*';
             }
@@ -197,7 +199,7 @@ export function createNxJsonFromTurboJson(
               return input;
             return `{projectRoot}/${input}`;
           })
-          .map((input) => {
+          .map((input: string) => {
             // Don't add projectRoot if it's already there or if it's an env var
             if (
               input.startsWith('{projectRoot}/') ||
@@ -211,7 +213,7 @@ export function createNxJsonFromTurboJson(
 
       // Handle outputs
       if (config.outputs?.length > 0) {
-        entry.outputs = config.outputs.map((output) => {
+        entry.outputs = config.outputs.map((output: string) => {
           // Don't add projectRoot if it's already there
           if (output.startsWith('{projectRoot}/')) return output;
           // Handle negated patterns by adding projectRoot after the !
@@ -427,9 +429,9 @@ export function markRootPackageJsonAsNxProjectLegacy(
   cacheableScripts: string[],
   pmc: PackageManagerCommands
 ) {
-  const json = readJsonFile<PackageJson>(
-    joinPathFragments(repoRoot, `package.json`)
-  );
+  const json = readJsonFile<
+    PackageJson & Required<Pick<PackageJson, 'scripts'>>
+  >(joinPathFragments(repoRoot, `package.json`));
   json.nx = {};
   for (let script of cacheableScripts) {
     const scriptDefinition = json.scripts[script];

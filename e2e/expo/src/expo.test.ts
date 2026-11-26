@@ -1,3 +1,4 @@
+import type { ExpandedPluginConfiguration } from '@nx/devkit';
 import { ChildProcess } from 'child_process';
 import { renameSync } from 'fs';
 import {
@@ -62,7 +63,8 @@ describe('@nx/expo', () => {
   it('nx.json should contain plugin configuration', () => {
     const nxJson = readJson('nx.json');
     const expoPlugin = nxJson.plugins.find(
-      (plugin) => plugin.plugin === '@nx/expo/plugin'
+      (plugin: ExpandedPluginConfiguration) =>
+        plugin.plugin === '@nx/expo/plugin'
     );
     expect(expoPlugin).toBeDefined();
     expect(expoPlugin.options).toBeDefined();
@@ -118,7 +120,7 @@ describe('@nx/expo', () => {
   }, 200_000);
 
   it('should start the app', async () => {
-    let process: ChildProcess;
+    let process: ChildProcess | undefined;
     const port = await reservePort();
 
     try {
@@ -137,7 +139,7 @@ describe('@nx/expo', () => {
   });
 
   it('should serve the app', async () => {
-    let process: ChildProcess;
+    let process: ChildProcess | undefined;
     const port = await reservePort();
 
     try {
@@ -178,7 +180,7 @@ console.log(
       const output = runCommand(`node check-metro.js ${appName}`, {
         failOnError: true,
       });
-      return JSON.parse(output.match(/METRO_CHECK (.*)/)[1]);
+      return parseMetroCheck(output);
     };
     const hadAppNodeModules = exists(
       tmpProjPath(join(appName, 'node_modules'))
@@ -257,7 +259,7 @@ console.log(
         const output = runCommand(`node check-metro-direct.js ${appName}`, {
           failOnError: true,
         });
-        config = JSON.parse(output.match(/METRO_CHECK (.*)/)[1]);
+        config = parseMetroCheck(output);
         expect(config.projectRoot).toBe(config.appRoot);
       } finally {
         renameSync(wsExpoHidden, wsExpo);
@@ -343,3 +345,11 @@ console.log(
     createFile(appJson, JSON.stringify(appJsonContent));
   });
 });
+
+function parseMetroCheck(output: string) {
+  const match = output.match(/METRO_CHECK (.*)/);
+  if (!match) {
+    throw new Error(`METRO_CHECK line not found in output:\n${output}`);
+  }
+  return JSON.parse(match[1]);
+}

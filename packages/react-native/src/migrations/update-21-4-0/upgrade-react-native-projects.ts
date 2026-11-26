@@ -31,7 +31,7 @@ export default async function update(tree: Tree) {
       });
     } catch (error) {
       logger.warn(
-        `Failed to upgrade ${projectName}: ${error.message}. Please run '${command}'.`
+        `Failed to upgrade ${projectName}: ${error instanceof Error ? error.message : String(error)}. Please run '${command}'.`
       );
       // Continue with other projects even if one fails
     }

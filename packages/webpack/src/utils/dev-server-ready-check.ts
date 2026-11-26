@@ -267,7 +267,7 @@ export async function waitForWebpackDevServer(configPath: string) {
       .filter(
         (config) =>
           flags.configNames.length === 0 ||
-          flags.configNames.includes(config.name)
+          (config.name !== undefined && flags.configNames.includes(config.name))
       );
 
     let webpackMerge: Merge | undefined;
@@ -319,6 +319,10 @@ export async function waitForWebpackDevServer(configPath: string) {
           process.env.WEBPACK_DEV_SERVER_BASE_PORT
         )
       );
-    return addresses.some((address) => address === null) ? null : addresses;
+    return addresses.every(
+      (address): address is ServerAddress => address !== null
+    )
+      ? addresses
+      : null;
   });
 }

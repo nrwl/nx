@@ -7,23 +7,22 @@ import {
 } from '@nx/devkit';
 import { WebpackExecutorOptions } from '../../executors/webpack/schema';
 
+type LegacyWebpackExecutorOptions = WebpackExecutorOptions & {
+  isolatedConfig?: boolean;
+};
+
 export default async function (tree: Tree) {
-  forEachExecutorOptions<WebpackExecutorOptions>(
+  forEachExecutorOptions<LegacyWebpackExecutorOptions>(
     tree,
     '@nx/webpack:webpack',
-    (
-      options: WebpackExecutorOptions,
-      projectName: string,
-      targetName: string,
-      configurationName: string
-    ) => {
+    (options, projectName, targetName, configurationName) => {
       // Only handle webpack config for default configuration
       if (configurationName) return;
 
       const projectConfiguration = readProjectConfiguration(tree, projectName);
 
       if (!options.webpackConfig) {
-        delete options['isolatedConfig'];
+        delete options.isolatedConfig;
         options.webpackConfig = `${projectConfiguration.root}/webpack.config.js`;
         tree.write(
           options.webpackConfig,
@@ -50,7 +49,13 @@ module.exports = composePlugins(withNx(), (config) => {
         `
         );
 
-        projectConfiguration.targets[targetName].options = options;
+        const target = projectConfiguration.targets?.[targetName];
+        if (!target) {
+          throw new Error(
+            `Cannot find target "${targetName}" for project "${projectName}".`
+          );
+        }
+        target.options = options;
         updateProjectConfiguration(tree, projectName, projectConfiguration);
       }
     }

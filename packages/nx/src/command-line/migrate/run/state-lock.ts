@@ -157,7 +157,13 @@ export function listOtherRuns(root: string, ownRunId?: string): LiveRun[] {
   try {
     entries = readdirSync(migrateRunsDir(root), { withFileTypes: true });
   } catch (e) {
-    if (e?.code === 'ENOENT') return [];
+    if (
+      typeof e === 'object' &&
+      e !== null &&
+      'code' in e &&
+      e.code === 'ENOENT'
+    )
+      return [];
     throw e;
   }
   const runs: LiveRun[] = [];
@@ -307,7 +313,13 @@ function liveActivityNames(
   try {
     names = readdirSync(join(dir, ACTIVITY_DIR_NAME));
   } catch (e) {
-    if (e?.code === 'ENOENT') return [];
+    if (
+      typeof e === 'object' &&
+      e !== null &&
+      'code' in e &&
+      e.code === 'ENOENT'
+    )
+      return [];
     return 'unknown';
   }
   const held: string[] = [];

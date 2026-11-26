@@ -37,6 +37,17 @@ export interface RemixPluginOptions {
   serveStaticTargetName?: string;
 }
 
+type NormalizedRemixPluginOptions = RemixPluginOptions &
+  Required<
+    Pick<
+      RemixPluginOptions,
+      | 'buildTargetName'
+      | 'devTargetName'
+      | 'startTargetName'
+      | 'serveStaticTargetName'
+    >
+  >;
+
 type RemixTargets = Pick<ProjectConfiguration, 'targets' | 'metadata'>;
 
 const remixConfigGlob = '**/{remix,vite}.config.{js,cjs,mjs,ts,cts,mts}';
@@ -116,7 +127,7 @@ export const createNodesV2 = createNodes;
 
 async function createNodesInternal(
   configFilePath: string,
-  options: RemixPluginOptions,
+  options: NormalizedRemixPluginOptions,
   context: CreateNodesContext,
   targetsCache: PluginCache<RemixTargets>,
   isUsingTsSolutionSetup: boolean,
@@ -126,22 +137,21 @@ async function createNodesInternal(
 ) {
   const projectRoot = dirname(configFilePath);
 
-  if (!targetsCache.has(hash)) {
-    targetsCache.set(
-      hash,
-      await buildRemixTargets(
-        configFilePath,
-        projectRoot,
-        options,
-        context,
-        remixCompiler,
-        isUsingTsSolutionSetup,
-        pmc
-      )
+  let cached = targetsCache.get(hash);
+  if (!cached) {
+    cached = await buildRemixTargets(
+      configFilePath,
+      projectRoot,
+      options,
+      context,
+      remixCompiler,
+      isUsingTsSolutionSetup,
+      pmc
     );
+    targetsCache.set(hash, cached);
   }
 
-  const { targets, metadata } = targetsCache.get(hash);
+  const { targets, metadata } = cached;
 
   const project: ProjectConfiguration = {
     root: projectRoot,
@@ -159,7 +169,7 @@ async function createNodesInternal(
 async function buildRemixTargets(
   configFilePath: string,
   projectRoot: string,
-  options: RemixPluginOptions,
+  options: NormalizedRemixPluginOptions,
   context: CreateNodesContext,
   remixCompiler: RemixCompiler,
   isUsingTsSolutionSetup: boolean,
@@ -331,8 +341,8 @@ async function getBuildPaths(
   remixCompiler: RemixCompiler
 ): Promise<{
   buildDirectory: string;
-  assetsBuildDirectory?: string;
-  serverBuildPath?: string;
+  assetsBuildDirectory: string;
+  serverBuildPath: string;
 }> {
   const configPath = join(workspaceRoot, configFilePath);
   if (remixCompiler === RemixCompiler.IsClassic) {
@@ -373,14 +383,16 @@ async function getBuildPaths(
   }
 }
 
-function normalizeOptions(options: RemixPluginOptions) {
+function normalizeOptions(
+  options: RemixPluginOptions | undefined
+): NormalizedRemixPluginOptions {
   options ??= {};
-  options.buildTargetName ??= 'build';
-  options.devTargetName ??= 'dev';
-  options.startTargetName ??= 'start';
-  options.serveStaticTargetName ??= 'serve-static';
-
-  return options;
+  return Object.assign(options, {
+    buildTargetName: options.buildTargetName ?? 'build',
+    devTargetName: options.devTargetName ?? 'dev',
+    startTargetName: options.startTargetName ?? 'start',
+    serveStaticTargetName: options.serveStaticTargetName ?? 'serve-static',
+  });
 }
 
 function determineIsRemixVite(configFilePath: string, workspaceRoot: string) {

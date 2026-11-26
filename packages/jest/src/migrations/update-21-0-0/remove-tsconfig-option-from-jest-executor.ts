@@ -25,13 +25,16 @@ export default async function (tree: Tree) {
       }
 
       const projectConfiguration = readProjectConfiguration(tree, project);
-      if (configuration) {
-        updateConfiguration(
-          projectConfiguration.targets[target],
-          configuration
+      const targetConfiguration = projectConfiguration.targets?.[target];
+      if (!targetConfiguration) {
+        throw new Error(
+          `Could not find target "${target}" in project "${project}".`
         );
+      }
+      if (configuration) {
+        updateConfiguration(targetConfiguration, configuration);
       } else {
-        updateOptions(projectConfiguration.targets[target]);
+        updateOptions(targetConfiguration);
       }
 
       updateProjectConfiguration(tree, project, projectConfiguration);
@@ -73,16 +76,20 @@ function updateConfiguration(
   target: TargetConfiguration,
   configuration: string
 ) {
-  delete target.configurations[configuration].tsConfig;
+  const configurations = target.configurations;
+  if (!configurations) {
+    throw new Error(`Could not find configuration "${configuration}".`);
+  }
+  delete configurations[configuration].tsConfig;
 
   if (
-    !Object.keys(target.configurations[configuration]).length &&
+    !Object.keys(configurations[configuration]).length &&
     (!target.defaultConfiguration ||
       target.defaultConfiguration !== configuration)
   ) {
-    delete target.configurations[configuration];
+    delete configurations[configuration];
   }
-  if (!Object.keys(target.configurations).length) {
+  if (!Object.keys(configurations).length) {
     delete target.configurations;
   }
 }

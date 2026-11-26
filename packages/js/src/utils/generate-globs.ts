@@ -15,7 +15,7 @@ import {
 } from '@nx/devkit/internal';
 
 function configureIgnore() {
-  let ig: ReturnType<typeof ignore>;
+  let ig: ReturnType<typeof ignore> | undefined;
   const pathToGitIgnore = join(workspaceRoot, '.gitignore');
   if (existsSync(pathToGitIgnore)) {
     ig = ignore();
@@ -41,21 +41,22 @@ export function createGlobPatternsForDependencies(
   const projectRootMappings = createProjectRootMappings(projectGraph.nodes);
 
   // find the project
-  let projectName;
+  let projectName: string;
   try {
-    projectName = findProjectForPath(
+    const foundProjectName = findProjectForPath(
       filenameRelativeToWorkspaceRoot,
       projectRootMappings
     );
 
-    if (!projectName) {
+    if (!foundProjectName) {
       throw new Error(
         `createGlobPatternsForDependencies: Could not find any project containing the file "${filenameRelativeToWorkspaceRoot}" among it's project files`
       );
     }
+    projectName = foundProjectName;
   } catch (e) {
     throw new Error(
-      `createGlobPatternsForDependencies: Error when trying to determine main project.\n${e?.message}`
+      `createGlobPatternsForDependencies: Error when trying to determine main project.\n${e instanceof Error ? e.message : undefined}`
     );
   }
 
@@ -66,8 +67,8 @@ export function createGlobPatternsForDependencies(
       projectGraph
     );
 
-    const dirsToUse = [];
-    const recursiveScanDirs = (dirPath) => {
+    const dirsToUse: string[] = [];
+    const recursiveScanDirs = (dirPath: string) => {
       const children = readdirSync(resolve(workspaceRoot, dirPath));
       for (const child of children) {
         const childPath = join(dirPath, child);
@@ -112,7 +113,7 @@ due to missing "sourceRoot" in the dependencies' project configuration
     ];
   } catch (e) {
     throw new Error(
-      `createGlobPatternsForDependencies: Error when generating globs.\n${e?.message}`
+      `createGlobPatternsForDependencies: Error when generating globs.\n${e instanceof Error ? e.message : undefined}`
     );
   }
 }

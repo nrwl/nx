@@ -85,6 +85,9 @@ function hasNgModule(tree: Tree, filePath: string): boolean {
   ensureTypescript();
   const { ast, query } = require('@phenomnomnominal/tsquery');
   const fileContent = tree.read(filePath, 'utf-8');
+  if (fileContent === null) {
+    throw new Error(`Cannot find the file '${filePath}'.`);
+  }
   const sourceFile = ast(fileContent);
   const ngModule = query(
     sourceFile,
@@ -98,9 +101,15 @@ function getDeclaredComponentNodes(declarationsArray: Node): Node[] {
   if (!tsModule) {
     tsModule = ensureTypescript();
   }
-  const cmps = declarationsArray
+  const syntaxList = declarationsArray
     .getChildren()
-    .find((node) => node.kind === tsModule.SyntaxKind.SyntaxList)
+    .find((node) => node.kind === tsModule.SyntaxKind.SyntaxList);
+  if (!syntaxList) {
+    throw new Error(
+      `Cannot read the declarations of "${declarationsArray.getText()}".`
+    );
+  }
+  const cmps = syntaxList
     .getChildren()
     .map((node) => {
       if (node.kind === tsModule.SyntaxKind.Identifier) {
@@ -111,6 +120,11 @@ function getDeclaredComponentNodes(declarationsArray: Node): Node[] {
         const declarationVariableNode = node
           .getChildren()
           .find((node) => node.kind === tsModule.SyntaxKind.Identifier);
+        if (!declarationVariableNode) {
+          throw new Error(
+            `Cannot resolve the spread declarations "${node.getText()}".`
+          );
+        }
 
         // try to find the variable declaration in the same component
         const declarationVariable = getVariableDeclaration(
@@ -118,7 +132,7 @@ function getDeclaredComponentNodes(declarationsArray: Node): Node[] {
           declarationVariableNode.getSourceFile()
         );
         if (
-          declarationVariable &&
+          declarationVariable?.initializer &&
           declarationVariable.initializer.kind ===
             tsModule.SyntaxKind.ArrayLiteralExpression
         ) {
@@ -130,13 +144,15 @@ function getDeclaredComponentNodes(declarationsArray: Node): Node[] {
       }
       return null;
     })
-    .filter((node) => !!node);
+    .filter((node): node is Node | Node[] => !!node);
 
   return flatten(cmps);
 }
 
-function flatten(arr) {
-  let flattened = [];
+type NestedNodes = Array<Node | NestedNodes>;
+
+function flatten(arr: NestedNodes): Node[] {
+  let flattened: Node[] = [];
 
   for (const entry of arr) {
     if (Array.isArray(entry)) {
@@ -263,7 +279,7 @@ function getModuleDeclaredComponentsFromClass(
     return undefined;
   }
 
-  const declarationArray = classDeclaration.members
+  const componentsPropertyDeclaration = classDeclaration.members
     .filter((node) => node.kind === tsModule.SyntaxKind.PropertyDeclaration)
     .find((propertyDeclaration) =>
       propertyDeclaration
@@ -273,7 +289,13 @@ function getModuleDeclaredComponentsFromClass(
             node.kind === tsModule.SyntaxKind.Identifier &&
             node.getText() === componentsProperty.getText()
         )
-    )
+    );
+  if (!componentsPropertyDeclaration) {
+    throw new Error(
+      `Cannot find the "${componentsProperty.getText()}" property of "${clazz.getText()}".`
+    );
+  }
+  const declarationArray = componentsPropertyDeclaration
     .getChildren()
     .find((node) => node.kind === tsModule.SyntaxKind.ArrayLiteralExpression);
 
@@ -340,6 +362,9 @@ function getNgModuleDeclarationsPropertyAssignment(
   const syntaxList = ngModuleDecorator.getChildren().find((node) => {
     return node.kind === tsModule.SyntaxKind.SyntaxList;
   });
+  if (!syntaxList) {
+    throw new Error(`Cannot read the @NgModule metadata in ${moduleFilePath}.`);
+  }
   const declarationsPropertyAssignment = syntaxList
     .getChildren()
     .find((node) => {

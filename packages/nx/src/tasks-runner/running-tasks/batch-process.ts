@@ -305,7 +305,7 @@ export class BatchProcess {
       // mkdir is the only synchronous throw here; the stream reports its own
       // failures through the handler above.
       this.capturedOutputFailed = true;
-      this.warnCaptureFailed(e.message);
+      this.warnCaptureFailed(e instanceof Error ? e.message : String(e));
     }
     return this.capturedOutputStream;
   }

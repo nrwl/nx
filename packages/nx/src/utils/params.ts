@@ -142,7 +142,7 @@ function coerceType(prop: PropertyDescription | undefined, value: any) {
 
   if (prop.oneOf) {
     for (let i = 0; i < prop.oneOf.length; ++i) {
-      const coerced = coerceType(prop.oneOf[i], value);
+      const coerced: unknown = coerceType(prop.oneOf[i], value);
       if (coerced !== value) {
         return coerced;
       }
@@ -150,7 +150,7 @@ function coerceType(prop: PropertyDescription | undefined, value: any) {
     return value;
   } else if (Array.isArray(prop.type)) {
     for (let i = 0; i < prop.type.length; ++i) {
-      const coerced = coerceType({ type: prop.type[i] }, value);
+      const coerced: unknown = coerceType({ type: prop.type[i] }, value);
       if (coerced !== value) {
         return coerced;
       }
@@ -168,7 +168,7 @@ function coerceType(prop: PropertyDescription | undefined, value: any) {
     return Number(value);
   } else if (prop.type == 'array') {
     const itemSchema = Array.isArray(prop.items) ? undefined : prop.items;
-    return value.split(',').map((v) => coerceType(itemSchema, v));
+    return value.split(',').map((v: string) => coerceType(itemSchema, v));
   } else {
     return value;
   }
@@ -186,7 +186,7 @@ export function convertAliases(
   schema: Schema,
   excludeUnmatched: boolean
 ): Options {
-  return Object.keys(opts).reduce((acc, k) => {
+  return Object.keys(opts).reduce<Options>((acc, k) => {
     const prop = findSchemaForProperty(k, schema);
     if (prop) {
       acc[prop.name] = opts[k];
@@ -209,6 +209,10 @@ export class SchemaError {
   constructor(public readonly message: string) {}
 }
 
+function isValidationError(e: unknown): e is Error | SchemaError {
+  return e instanceof Error || e instanceof SchemaError;
+}
+
 export function validateOptsAgainstSchema(
   opts: { [k: string]: any },
   schema: Schema
@@ -222,11 +226,12 @@ export function validateObject(
   definitions: Properties
 ) {
   if (schema.anyOf) {
-    const errors: Error[] = [];
+    const errors: Array<Error | SchemaError> = [];
     for (const s of schema.anyOf) {
       try {
         validateObject(opts, s, definitions);
       } catch (e) {
+        if (!isValidationError(e)) throw e;
         errors.push(e);
       }
     }
@@ -240,12 +245,13 @@ export function validateObject(
   }
   if (schema.oneOf) {
     const matches: Array<PropertyDescription> = [];
-    const errors: Array<Error> = [];
+    const errors: Array<Error | SchemaError> = [];
     for (const propertyDescription of schema.oneOf) {
       try {
         validateObject(opts, propertyDescription, definitions);
         matches.push(propertyDescription);
       } catch (error) {
+        if (!isValidationError(error)) throw error;
         errors.push(error);
       }
     }
@@ -314,15 +320,11 @@ export function validateObject(
   Object.keys(opts).forEach((p) => {
     validateProperty(p, opts[p], (schema.properties ?? {})[p], definitions);
 
-    if (schema.patternProperties) {
-      Object.keys(schema.patternProperties).forEach((pattern) => {
+    const patternProperties = schema.patternProperties;
+    if (patternProperties) {
+      Object.keys(patternProperties).forEach((pattern) => {
         if (new RegExp(pattern).test(p)) {
-          validateProperty(
-            p,
-            opts[p],
-            schema.patternProperties[pattern],
-            definitions
-          );
+          validateProperty(p, opts[p], patternProperties[pattern], definitions);
         }
       });
     }
@@ -560,7 +562,7 @@ function validateProperty(
  * Unfortunately, due to use supporting Angular Devkit, we have to do the following
  * conversions.
  */
-function normalizedPrimitiveType(type: string) {
+function normalizedPrimitiveType(type: string | undefined) {
   if (type === 'integer') return 'number';
   return type;
 }
@@ -670,7 +672,7 @@ export function applyVerbosity(
 
 export function combineOptionsForExecutor(
   commandLineOpts: Options,
-  config: string,
+  config: string | undefined,
   target: TargetConfiguration,
   schema: Schema,
   defaultProjectName: string | null,
@@ -705,8 +707,8 @@ export async function combineOptionsForGenerator(
   commandLineOpts: Options,
   collectionName: string,
   generatorName: string,
-  projectsConfigurations: ProjectsConfigurations,
-  nxJsonConfiguration: NxJsonConfiguration,
+  projectsConfigurations: ProjectsConfigurations | null,
+  nxJsonConfiguration: NxJsonConfiguration | null,
   schema: Schema,
   isInteractive: boolean,
   defaultProjectName: string | null,
@@ -769,7 +771,7 @@ export function convertSmartDefaultsIntoNamedParams(
   relativeCwd: string | null
 ) {
   const argv = opts['_'] || [];
-  const usedPositionalArgs = {};
+  const usedPositionalArgs: Record<number, boolean> = {};
   Object.entries(schema.properties).forEach(([k, v]) => {
     if (
       opts[k] === undefined &&
@@ -821,7 +823,7 @@ export function convertSmartDefaultsIntoNamedParams(
 function getGeneratorDefaults(
   projectName: string | null,
   projectsConfigurations: ProjectsConfigurations,
-  nxJsonConfiguration: NxJsonConfiguration,
+  nxJsonConfiguration: NxJsonConfiguration | null,
   collectionName: string,
   generatorName: string
 ) {
@@ -876,7 +878,7 @@ type Prompt = {
 export function getPromptsForSchema(
   opts: Options,
   schema: Schema,
-  projectsConfigurations: ProjectsConfigurations
+  projectsConfigurations: ProjectsConfigurations | null
 ): Prompt[] {
   const prompts: Prompt[] = [];
   Object.entries(schema.properties).forEach(([k, v]) => {
@@ -921,7 +923,7 @@ export function getPromptsForSchema(
           validateProperty(k, s, v, schema.definitions || {});
           return true;
         } catch (e) {
-          return e.message;
+          return isValidationError(e) ? e.message : String(e);
         }
       };
 
@@ -984,7 +986,7 @@ export function getPromptsForSchema(
 async function promptForValues(
   opts: Options,
   schema: Schema,
-  projectsConfigurations: ProjectsConfigurations
+  projectsConfigurations: ProjectsConfigurations | null
 ) {
   try {
     const values: Options = {};
@@ -1005,9 +1007,10 @@ async function promptForValues(
 }
 
 async function askSchemaQuestion(question: Prompt): Promise<any> {
-  const validate = question.validate
+  const validateAnswer = question.validate;
+  const validate = validateAnswer
     ? (value: any) => {
-        const result = question.validate(value);
+        const result = validateAnswer(value);
         return result === true
           ? undefined
           : typeof result === 'string'
@@ -1094,7 +1097,7 @@ function isTTY(): boolean {
  * Verifies whether the given value can be converted to a boolean
  * @param value
  */
-function isConvertibleToBoolean(value) {
+function isConvertibleToBoolean(value: unknown) {
   if ('boolean' === typeof value) {
     return true;
   }
@@ -1110,11 +1113,11 @@ function isConvertibleToBoolean(value) {
  * Verifies whether the given value can be converted to a number
  * @param value
  */
-function isConvertibleToNumber(value) {
+function isConvertibleToNumber(value: unknown) {
   // exclude booleans explicitly
   if ('boolean' === typeof value) {
     return false;
   }
 
-  return !isNaN(+value);
+  return !isNaN(Number(value));
 }

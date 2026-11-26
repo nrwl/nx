@@ -33,6 +33,10 @@ type CypressPreprocessor = (
   file: Record<string, any>
 ) => string | Promise<string>;
 
+type RollupWatcherEvent =
+  | { code: 'START' | 'BUNDLE_START' | 'BUNDLE_END' | 'END' }
+  | { code: 'ERROR'; error: Error };
+
 const cache = new Map<string, string>();
 
 /**
@@ -46,8 +50,9 @@ function vitePreprocessor(
   return async (file) => {
     const { outputPath, filePath, shouldWatch } = file;
 
-    if (cache.has(filePath)) {
-      return cache.get(filePath);
+    const cached = cache.get(filePath);
+    if (cached !== undefined) {
+      return cached;
     }
 
     const fileName = basename(outputPath);
@@ -87,7 +92,7 @@ function vitePreprocessor(
 
     return new Promise((resolve, reject) => {
       if (shouldWatch && isWatcher(watcher)) {
-        watcher.on('event', (event) => {
+        watcher.on('event', (event: RollupWatcherEvent) => {
           if (event.code === 'END') {
             resolve(outputPath);
             file.emit('rerun');

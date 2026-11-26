@@ -16,13 +16,14 @@ export function testPostTargetTransformer(
     removePropertiesFromTargetOptions(target.options, projectDetails);
   }
 
-  if (target.configurations) {
-    for (const configurationName in target.configurations) {
-      const configuration = target.configurations[configurationName];
+  const { configurations } = target;
+  if (configurations) {
+    for (const configurationName in configurations) {
+      const configuration = configurations[configurationName];
       removePropertiesFromTargetOptions(configuration, projectDetails);
     }
 
-    if (Object.keys(target.configurations).length === 0) {
+    if (Object.keys(configurations).length === 0) {
       if ('defaultConfiguration' in target) {
         delete target.defaultConfiguration;
       }
@@ -31,7 +32,7 @@ export function testPostTargetTransformer(
 
     if (
       'defaultConfiguration' in target &&
-      !target.configurations[target.defaultConfiguration]
+      !configurations[String(target.defaultConfiguration)]
     ) {
       delete target.defaultConfiguration;
     }

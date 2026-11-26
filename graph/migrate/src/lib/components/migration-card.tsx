@@ -324,12 +324,12 @@ export const MigrationCard = forwardRef<
             More Information & Next Steps
           </span>
           <ul className="list-inside list-disc pl-2">
-            {nextSteps.map((step, idx) => (
+            {nextSteps?.map((step, idx) => (
               <li key={idx} className="text-sm">
                 {convertUrlsToLinks(step)}
               </li>
             ))}
-            {showPromptNextStep && (
+            {showPromptNextStep && migration.prompt && (
               <PromptNextStep
                 prompt={migration.prompt}
                 state={promptNextStepState}

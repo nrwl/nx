@@ -23,7 +23,7 @@ export async function watchForSingleFileChanges(
       } else if (err) {
         logger.error(`Watch error: ${err?.message ?? 'Unknown'}`);
       } else if (
-        data.changedFiles.some(
+        data?.changedFiles.some(
           (file) => file.path == join(projectRoot, relativeFilePath)
         )
       ) {

@@ -144,9 +144,11 @@ function addPluginDependencies(): void {
       packageJson
     );
 
+  const devDependencies: Record<string, string | null> =
+    packageJson.devDependencies;
   for (const dep of peerDepsToInstall) {
-    if (!packageJson.devDependencies[dep] && !packageJson.dependencies?.[dep]) {
-      packageJson.devDependencies[dep] = angularCliVersion;
+    if (!devDependencies[dep] && !packageJson.dependencies?.[dep]) {
+      devDependencies[dep] = angularCliVersion;
     }
   }
 

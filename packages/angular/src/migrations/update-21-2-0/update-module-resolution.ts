@@ -40,7 +40,9 @@ export default async function (tree: Tree) {
       }
     }
 
-    for (const [, target] of allProjectTargets(graphNode.data)) {
+    for (const [, target] of allProjectTargets<{ tsConfig?: string }>(
+      graphNode.data
+    )) {
       for (const [, options] of allTargetOptions<{ tsConfig?: string }>(
         target
       )) {

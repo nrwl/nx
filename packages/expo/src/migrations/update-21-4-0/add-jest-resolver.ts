@@ -6,7 +6,7 @@ import { isExpoProject } from '../../utils/expo-project-detection';
 export default async function addJestResolver(tree: Tree) {
   const projects = getProjects(tree);
 
-  for (const [, config] of projects) {
+  for (const [projectName, config] of projects) {
     if (config.targets?.test?.executor === '@nx/jest:jest') {
       // Check if this is an Expo project
       const expoProjectDetectionResult = isExpoProject(tree, config.root);
@@ -19,7 +19,7 @@ export default async function addJestResolver(tree: Tree) {
       const jestConfigJsPath = join(config.root, 'jest.config.js');
       const jestConfigCtsPath = join(config.root, 'jest.config.cts');
 
-      let jestConfigContent = '';
+      let jestConfigContent: string | null = '';
       let configPath = '';
 
       if (tree.exists(jestConfigPath)) {
@@ -65,7 +65,7 @@ module.exports = (request, options) => {
         }
 
         // Update tsconfig files to handle jest.resolver.js properly
-        updateTsConfigFiles(tree, config.name, config.root);
+        updateTsConfigFiles(tree, projectName, config.root);
       }
     }
   }

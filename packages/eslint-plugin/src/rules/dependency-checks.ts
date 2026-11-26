@@ -104,8 +104,8 @@ export default ESLintUtils.RuleCreator(
     context,
     [
       {
-        buildTargets,
-        ignoredDependencies,
+        buildTargets = ['build'],
+        ignoredDependencies = [],
         ignoredFiles,
         checkMissingDependencies,
         checkObsoleteDependencies,
@@ -134,16 +134,17 @@ export default ESLintUtils.RuleCreator(
       return {};
     }
 
-    const sourceProject = findProject(
+    const foundProject = findProject(
       projectGraph,
       projectRootMappings,
       sourceFilePath
     );
 
     // check if source project exists
-    if (!sourceProject) {
+    if (!foundProject) {
       return {};
     }
+    const sourceProject = foundProject;
 
     // check if library has a build target
     const buildTarget = buildTargets.find(
@@ -340,7 +341,7 @@ export default ESLintUtils.RuleCreator(
           messageId: 'invalidCatalogReference',
           data: {
             packageName: packageName,
-            error: error.message,
+            error: error instanceof Error ? error.message : String(error),
           },
         });
       }

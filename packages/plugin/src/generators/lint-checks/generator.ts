@@ -111,7 +111,7 @@ function updateProjectEslintConfig(
   packageJson: PackageJson
 ) {
   if (isEslintConfigSupported(host, options.root)) {
-    const lookup = (o) =>
+    const lookup: Parameters<typeof lintConfigHasOverride>[2] = (o) =>
       Object.keys(o.rules ?? {}).includes('@nx/nx-plugin-checks') ||
       Object.keys(o.rules ?? {}).includes('@nrwl/nx/nx-plugin-checks');
 
@@ -122,7 +122,7 @@ function updateProjectEslintConfig(
       packageJson.schematics,
       packageJson.builders,
       readNxMigrateConfig(packageJson).migrations,
-    ].filter((f) => !!f);
+    ].filter((f): f is string => !!f);
 
     const parser = useFlatConfig(host)
       ? { languageOptions: { parser: 'jsonc-eslint-parser' } }

@@ -27,8 +27,11 @@ export async function installAndUpdatePackageJson(
     createInstallOptions({ force: options.force })
   );
 
-  const projectRoot =
-    context.projectsConfigurations.projects[context.projectName].root;
+  const { projectName } = context;
+  if (!projectName) {
+    throw new Error('The install executor requires a project name.');
+  }
+  const projectRoot = context.projectsConfigurations.projects[projectName].root;
   const workspacePackageJsonPath = join(context.root, 'package.json');
   const projectPackageJsonPath = join(
     context.root,
@@ -39,9 +42,9 @@ export async function installAndUpdatePackageJson(
   const workspacePackageJson = readJsonFile(workspacePackageJsonPath);
   const projectPackageJson = readJsonFile(projectPackageJsonPath);
   displayNewlyAddedDepsMessage(
-    context.projectName,
+    projectName,
     await syncDeps(
-      context.projectName,
+      projectName,
       projectPackageJson,
       projectPackageJsonPath,
       workspacePackageJson,
@@ -53,8 +56,7 @@ export async function installAndUpdatePackageJson(
 
 // options from https://github.com/expo/expo/blob/main/packages/%40expo/cli/src/install/index.ts
 function createInstallOptions(options: ExpoInstallOptions) {
-  return Object.keys(options).reduce((acc, k) => {
-    const v = options[k];
+  return Object.entries(options).reduce<string[]>((acc, [k, v]) => {
     if (typeof v === 'boolean') {
       if (v === true) {
         // when true, does not need to pass the value true, just need to pass the flag in kebob case

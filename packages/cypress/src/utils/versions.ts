@@ -73,9 +73,14 @@ const versionMap: Record<CompatVersions, CypressVersions> = {
   },
 };
 
+const latestCypressVersion = coerce(cypressVersion);
+if (!latestCypressVersion) {
+  throw new Error(`Invalid Cypress version: ${cypressVersion}`);
+}
+
 // Highest first, so a range reaching several majors resolves to the top one.
 const supportedMajors = [
-  major(coerce(cypressVersion)),
+  major(latestCypressVersion),
   ...Object.keys(versionMap).map(Number),
 ].sort((a, b) => b - a);
 
@@ -139,7 +144,7 @@ export function getInstalledCypressMajorVersion(tree?: Tree): number | null {
 export function assertViteSupportsInstalledCypress(tree: Tree): void {
   const cypressMajor = getInstalledCypressMajorVersion(tree);
   const viteVersion = getViteVersionBelowCypress16Floor(tree);
-  if (cypressMajor >= 16 && viteVersion) {
+  if (cypressMajor !== null && cypressMajor >= 16 && viteVersion) {
     throw new Error(
       `Cypress ${cypressMajor} component testing requires Vite 8. Found Vite ${viteVersion}. Update Vite to 8 or use Cypress 15.`
     );

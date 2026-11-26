@@ -17,13 +17,25 @@ import { SetUpDockerOptions } from './schema';
 import { join } from 'path';
 import { existsSync } from 'fs';
 
+type NormalizedSetUpDockerOptions = SetUpDockerOptions & {
+  project: string;
+  targetName: string;
+  buildTarget: string;
+};
+
 function normalizeOptions(
   tree: Tree,
   setupOptions: SetUpDockerOptions
-): SetUpDockerOptions {
+): NormalizedSetUpDockerOptions {
+  const project = setupOptions.project ?? readNxJson(tree)?.defaultProject;
+  if (!project) {
+    throw new Error(
+      'No project was provided and no default project is configured.'
+    );
+  }
   return {
     ...setupOptions,
-    project: setupOptions.project ?? readNxJson(tree).defaultProject,
+    project,
     targetName: setupOptions.targetName ?? 'docker:build',
     buildTarget: setupOptions.buildTarget ?? 'build',
     skipDockerPlugin: setupOptions.skipDockerPlugin ?? false,
@@ -39,7 +51,7 @@ function sanitizeProjectName(projectName: string): string {
     .replace(/^-|-$/g, '');
 }
 
-async function addDocker(tree: Tree, options: SetUpDockerOptions) {
+async function addDocker(tree: Tree, options: NormalizedSetUpDockerOptions) {
   let installTask = () => {};
   if (!options.skipDockerPlugin) {
     installTask = await dockerInitGenerator(tree, { skipFormat: true });
@@ -47,7 +59,7 @@ async function addDocker(tree: Tree, options: SetUpDockerOptions) {
   const projectConfig = readProjectConfiguration(tree, options.project);
 
   const outputPath =
-    projectConfig.targets[options.buildTarget]?.options['outputPath'];
+    projectConfig.targets?.[options.buildTarget]?.options['outputPath'];
 
   if (!projectConfig) {
     throw new Error(`Cannot find project configuration for ${options.project}`);
@@ -99,8 +111,12 @@ async function addDocker(tree: Tree, options: SetUpDockerOptions) {
   return installTask;
 }
 
-export function updateProjectConfig(tree: Tree, options: SetUpDockerOptions) {
+export function updateProjectConfig(
+  tree: Tree,
+  options: NormalizedSetUpDockerOptions
+) {
   let projectConfig = readProjectConfiguration(tree, options.project);
+  projectConfig.targets ??= {};
 
   if (options.skipDockerPlugin) {
     // Use sanitized project name for Docker image tag

@@ -25,14 +25,16 @@ export async function copyPackageJson(
   _options: CopyPackageJsonOptions,
   context: ExecutorContext
 ): Promise<CopyPackageJsonResult> {
-  if (!context.target.options.tsConfig) {
+  const { projectName } = context;
+  const tsConfig = context.target?.options?.tsConfig;
+  if (!projectName || !tsConfig) {
     throw new Error(
-      `Could not find tsConfig option for "${context.targetName}" target of "${context.projectName}" project. Check that your project configuration is correct.`
+      `Could not find tsConfig option for "${context.targetName}" target of "${projectName}" project. Check that your project configuration is correct.`
     );
   }
   let { target, dependencies, projectRoot } = checkDependencies(
     context,
-    context.target.options.tsConfig
+    tsConfig
   );
   const options = { ..._options, projectRoot };
 
@@ -45,7 +47,7 @@ export async function copyPackageJson(
 
   if (options.watch) {
     const dispose = await watchForSingleFileChanges(
-      context.projectName,
+      projectName,
       options.projectRoot,
       'package.json',
       () => updatePackageJson(options, context, target, dependencies)

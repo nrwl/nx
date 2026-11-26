@@ -21,8 +21,11 @@ export default async function* syncDepsExecutor(
   options: ReactNativeSyncDepsOptions,
   context: ExecutorContext
 ): AsyncGenerator<ReactNativeSyncDepsOutput> {
-  const projectRoot =
-    context.projectsConfigurations.projects[context.projectName].root;
+  const { projectName } = context;
+  if (!projectName) {
+    throw new Error('The sync-deps executor requires a project name.');
+  }
+  const projectRoot = context.projectsConfigurations.projects[projectName].root;
 
   const workspacePackageJsonPath = join(context.root, 'package.json');
   const projectPackageJsonPath = join(
@@ -34,9 +37,9 @@ export default async function* syncDepsExecutor(
   const workspacePackageJson = readJsonFile(workspacePackageJsonPath);
   const projectPackageJson = readJsonFile(projectPackageJsonPath);
   displayNewlyAddedDepsMessage(
-    context.projectName,
+    projectName,
     await syncDeps(
-      context.projectName,
+      projectName,
       projectPackageJson,
       projectPackageJsonPath,
       workspacePackageJson,
@@ -71,7 +74,7 @@ export async function syncDeps(
     ? Object.keys(workspacePackageJson.devDependencies || {})
     : [];
 
-  const newDeps = [];
+  const newDeps: string[] = [];
   let updated = false;
 
   if (!projectPackageJson.dependencies) {
@@ -92,23 +95,18 @@ export async function syncDeps(
   if (!projectPackageJson.dependencies) {
     projectPackageJson.dependencies = {};
   }
+  const { dependencies, devDependencies } = projectPackageJson;
 
   npmDeps.forEach((dep) => {
-    if (
-      !projectPackageJson.dependencies[dep] &&
-      !projectPackageJson.devDependencies[dep]
-    ) {
-      projectPackageJson.dependencies[dep] = '*';
+    if (!dependencies[dep] && !devDependencies[dep]) {
+      dependencies[dep] = '*';
       newDeps.push(dep);
       updated = true;
     }
   });
   npmDevdeps.forEach((dep) => {
-    if (
-      !projectPackageJson.dependencies[dep] &&
-      !projectPackageJson.devDependencies[dep]
-    ) {
-      projectPackageJson.devDependencies[dep] = '*';
+    if (!dependencies[dep] && !devDependencies[dep]) {
+      devDependencies[dep] = '*';
       newDeps.push(dep);
       updated = true;
     }

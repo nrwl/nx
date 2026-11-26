@@ -8,6 +8,9 @@ import {
 } from '../support/app.po';
 import * as nxExamplesJson from '../fixtures/nx-examples-project-graph.json';
 
+const projectDependencies: Record<string, { target: string }[]> =
+  nxExamplesJson.dependencies;
+
 describe('release static-mode app', () => {
   describe('smoke tests', () => {
     beforeEach(() => {
@@ -66,7 +69,7 @@ describe('release static-mode app', () => {
 function checkFocusedProject(projectGraphJson: any, projectName: string) {
   const dependencies = projectGraphJson.dependencies.cart;
   const dependents = Object.keys(nxExamplesJson.dependencies).filter((key) =>
-    nxExamplesJson.dependencies[key]
+    projectDependencies[key]
       .map((dependencies) => dependencies.target)
       .includes(projectName)
   );

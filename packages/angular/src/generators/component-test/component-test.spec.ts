@@ -1,4 +1,3 @@
-import type { Mock } from 'vitest';
 import '@nx/devkit/internal-testing-utils/mock-project-graph';
 
 import {
@@ -17,20 +16,20 @@ import { createRequire } from 'node:module';
 
 vi.mock('@nx/cypress/internal');
 // The generator also `require`s @nx/cypress/internal; share the automocks.
-mockCjsModule(import.meta.url, '@nx/cypress/internal', {
-  ...createRequire(import.meta.url)('@nx/cypress/internal'),
+mockCjsModule(__filename, '@nx/cypress/internal', {
+  ...createRequire(__filename)('@nx/cypress/internal'),
   assertMinimumCypressVersion,
   getInstalledCypressMajorVersion,
 });
 
 describe('Angular Cypress Component Test Generator', () => {
   let tree: Tree;
-  let mockedAssertMinimumCypressVersion: Mock<
-    ReturnType<typeof assertMinimumCypressVersion>
-  > = assertMinimumCypressVersion as never;
-  let mockedInstalledCypressMajorVersion: Mock<
-    ReturnType<typeof getInstalledCypressMajorVersion>
-  > = getInstalledCypressMajorVersion as never;
+  const mockedAssertMinimumCypressVersion = vi.mocked(
+    assertMinimumCypressVersion
+  );
+  const mockedInstalledCypressMajorVersion = vi.mocked(
+    getInstalledCypressMajorVersion
+  );
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     // silence warnings about missing .gitignore file
@@ -45,7 +44,7 @@ describe('Angular Cypress Component Test Generator', () => {
       };
       return json;
     });
-    mockedAssertMinimumCypressVersion.mockReturnValue();
+    mockedAssertMinimumCypressVersion.mockReturnValue(undefined);
   });
 
   it('should handle component w/o inputs', async () => {
@@ -253,7 +252,7 @@ describe(MyLib.name, () => {
     expect(
       tree
         .read('my-lib/src/lib/my-lib/my-lib.cy.ts', 'utf-8')
-        .replaceAll(EOL, '\n')
+        ?.replaceAll(EOL, '\n')
     ).toEqual(expected);
 
     await componentTestGenerator(tree, {
@@ -266,7 +265,7 @@ describe(MyLib.name, () => {
     expect(
       tree
         .read('my-lib/src/lib/my-lib/my-lib.cy.ts', 'utf-8')
-        .replaceAll(EOL, '\n')
+        ?.replaceAll(EOL, '\n')
     ).toEqual(expected);
   });
 

@@ -6,7 +6,10 @@ import {
 import { ast, query } from '@phenomnomnominal/tsquery';
 import * as ts from 'typescript';
 import type { RspackExecutorSchema } from '../../../executors/rspack/schema';
-import type { NxAppRspackPluginOptions } from '../../../plugins/utils/models';
+import type {
+  AdditionalEntryPoint,
+  NxAppRspackPluginOptions,
+} from '../../../plugins/utils/models';
 import { hasMigratedConfigValues, toPropertyAssignment } from './ast';
 import type { MigrationContext, TransformerContext } from './types';
 
@@ -65,11 +68,17 @@ function processOptions(
   pluginOptions: ExtractedOptions;
   rspackConfigPath: string;
 } {
-  const rspackConfig = target.options.rspackConfig;
-  delete target.options.rspackConfig;
+  const options = target.options;
+  const rspackConfig = options?.rspackConfig;
+  if (!options || !rspackConfig) {
+    throw new Error(
+      `The "rspackConfig" option is missing for project ${context.projectName}.`
+    );
+  }
+  delete options.rspackConfig;
 
   const pluginOptions: ExtractedOptions = {
-    default: extractPluginOptions(target.options, context),
+    default: extractPluginOptions(options, context),
   };
 
   if (target.configurations && Object.keys(target.configurations).length) {
@@ -100,12 +109,12 @@ function extractPluginOptions(
   context: TransformerContext,
   configName?: string
 ): NxAppRspackPluginOptions {
-  const pluginOptions: NxAppRspackPluginOptions = {};
+  const pluginOptions: NxAppRspackPluginOptions & Record<string, unknown> = {};
 
   for (const [key, value] of Object.entries(options)) {
     if (pathOptions.has(key)) {
       pluginOptions[key] = toProjectRelativePath(value, context.projectRoot);
-      delete options[key];
+      Reflect.deleteProperty(options, key);
     } else if (assetsOptions.has(key)) {
       pluginOptions[key] = value.map((asset: string | { input: string }) => {
         if (typeof asset === 'string') {
@@ -115,7 +124,7 @@ function extractPluginOptions(
         asset.input = toProjectRelativePath(asset.input, context.projectRoot);
         return asset;
       });
-      delete options[key];
+      Reflect.deleteProperty(options, key);
     } else if (key === 'fileReplacements') {
       pluginOptions.fileReplacements = value.map(
         (replacement: { replace: string; with: string }) => ({
@@ -128,13 +137,15 @@ function extractPluginOptions(
       );
       delete options.fileReplacements;
     } else if (key === 'additionalEntryPoints') {
-      pluginOptions.additionalEntryPoints = value.map((entryPoint) => {
-        entryPoint.entryPath = toProjectRelativePath(
-          entryPoint.entryPath,
-          context.projectRoot
-        );
-        return entryPoint;
-      });
+      pluginOptions.additionalEntryPoints = value.map(
+        (entryPoint: AdditionalEntryPoint) => {
+          entryPoint.entryPath = toProjectRelativePath(
+            entryPoint.entryPath,
+            context.projectRoot
+          );
+          return entryPoint;
+        }
+      );
       delete options.additionalEntryPoints;
     } else if (key === 'memoryLimit') {
       pluginOptions.memoryLimit = value;
@@ -162,7 +173,7 @@ function extractPluginOptions(
       delete options.transformers;
     } else {
       pluginOptions[key] = value;
-      delete options[key];
+      Reflect.deleteProperty(options, key);
     }
   }
 
@@ -174,14 +185,14 @@ function updateRspackConfig(
   rspackConfig: string,
   pluginOptions: ExtractedOptions
 ): void {
-  let sourceFile: ts.SourceFile;
-  let rspackConfigText: string;
-
-  const updateSources = () => {
-    rspackConfigText = tree.read(rspackConfig, 'utf-8');
-    sourceFile = ast(rspackConfigText);
+  const readSources = () => {
+    const text = tree.read(rspackConfig, 'utf-8');
+    if (text === null) {
+      throw new Error(`Cannot read ${rspackConfig}`);
+    }
+    return { text, sourceFile: ast(text) };
   };
-  updateSources();
+  let { text: rspackConfigText, sourceFile } = readSources();
 
   // A target kept on its executor is converted again on rerun, and its options
   // are already in the config.
@@ -196,10 +207,10 @@ function updateRspackConfig(
     rspackConfig,
     pluginOptions
   );
-  updateSources();
+  ({ text: rspackConfigText, sourceFile } = readSources());
 
   setOptionsInNxRspackPlugin(tree, rspackConfigText, sourceFile, rspackConfig);
-  updateSources();
+  ({ text: rspackConfigText, sourceFile } = readSources());
 
   setOptionsInLegacyNxPlugin(tree, rspackConfigText, sourceFile, rspackConfig);
 }
@@ -418,7 +429,7 @@ function getMemoryLimitFromServeTarget(
 ): number | undefined {
   const { targets } = context.projectGraph.nodes[context.projectName].data;
 
-  const serveTarget = Object.values(targets).find(
+  const serveTarget = Object.values(targets ?? {}).find(
     (target) =>
       target.executor === '@nx/rspack:dev-server' ||
       target.executor === '@nrwl/web:dev-server'

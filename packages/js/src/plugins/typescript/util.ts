@@ -30,7 +30,7 @@ export function addBuildAndWatchDepsTargets(
   options: { buildDepsTargetName?: string; watchDepsTargetName?: string },
   pmc: PackageManagerCommands
 ): void {
-  let projectName: string;
+  let projectName: string | undefined;
 
   const projectJsonPath = join(workspaceRoot, projectRoot, 'project.json');
   const packageJsonPath = join(workspaceRoot, projectRoot, 'package.json');
@@ -83,7 +83,7 @@ export function isValidPackageJsonBuildConfig(
   if (tsConfig.options.outFile) {
     return isAnyEntryPointPointingToOutFile(
       packageJson,
-      tsConfig,
+      tsConfig.options.outFile,
       projectAbsolutePath,
       workspaceRoot
     );
@@ -109,15 +109,15 @@ export function isValidPackageJsonBuildConfig(
   );
 }
 
-const packageJsonLegacyEntryPoints = ['main', 'module'];
+const packageJsonLegacyEntryPoints = ['main', 'module'] as const;
 
 function isAnyEntryPointPointingToOutFile(
   packageJson: PackageJson,
-  tsConfig: ParsedTsconfigData,
+  tsConfigOutFile: string,
   projectAbsolutePath: string,
   workspaceRoot: string
 ): boolean {
-  const outFile = resolve(projectAbsolutePath, tsConfig.options.outFile);
+  const outFile = resolve(projectAbsolutePath, tsConfigOutFile);
   const relativeToProject = relative(projectAbsolutePath, outFile);
 
   // If outFile is outside project root: buildable

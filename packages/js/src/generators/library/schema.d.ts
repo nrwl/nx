@@ -40,11 +40,12 @@ export interface NormalizedLibraryGeneratorOptions extends LibraryGeneratorSchem
   name: string;
   /** `normalizeOptions` always resolves this, so it is no longer optional. */
   linter: LinterType;
+  bundler: Bundler;
   projectNames: ProjectNameAndRootOptions['names'];
   fileName: string;
   projectRoot: string;
   parsedTags: string[];
-  importPath?: string;
+  importPath: string;
   hasPlugin: boolean;
   isUsingTsSolutionConfig: boolean;
   shouldUseSwcJest: boolean;

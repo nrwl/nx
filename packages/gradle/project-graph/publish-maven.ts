@@ -114,10 +114,10 @@ function sleep(ms: number) {
 
 // Entry
 (async function main() {
-  let { username, password, deploymentZipPath } = parseArgs();
-
-  username = username || process.env.MAVEN_USERNAME;
-  password = password || process.env.MAVEN_PASSWORD;
+  const args = parseArgs();
+  const { deploymentZipPath } = args;
+  const username = args.username || process.env.MAVEN_USERNAME;
+  const password = args.password || process.env.MAVEN_PASSWORD;
 
   if (!username || !password) {
     console.error('❌ Missing MAVEN_USERNAME or MAVEN_PASSWORD');

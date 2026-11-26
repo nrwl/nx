@@ -49,7 +49,11 @@ export class ScriptsRspackPlugin {
     EntryPluginCtor: typeof EntryPlugin,
     cached = false
   ) {
-    new EntryPluginCtor(compiler.context, this.options.name).apply(compiler);
+    const { name } = this.options;
+    if (name === undefined) {
+      throw new Error('ScriptsRspackPlugin requires a "name" option.');
+    }
+    new EntryPluginCtor(compiler.context, name).apply(compiler);
 
     compilation.assets[filename] = source;
   }
@@ -69,35 +73,34 @@ export class ScriptsRspackPlugin {
 
       const sourceGetters = scripts.map((fullPath) => {
         return new Promise<sources.Source>((resolve, reject) => {
-          compilation.inputFileSystem.readFile(
-            fullPath,
-            (err: Error, data: Buffer) => {
-              if (err) {
-                reject(err);
-                return;
-              }
-
-              const content = data.toString();
-
-              let source;
-              if (this.options.sourceMap) {
-                // TODO: Look for source map file (for '.min' scripts, etc.)
-
-                let adjustedPath = fullPath;
-                if (this.options.basePath) {
-                  adjustedPath = path.relative(this.options.basePath, fullPath);
-                }
-                source = new rspackSources.OriginalSource(
-                  content,
-                  adjustedPath
-                );
-              } else {
-                source = new rspackSources.RawSource(content);
-              }
-
-              resolve(source);
+          const { inputFileSystem } = compilation;
+          if (!inputFileSystem) {
+            reject(new Error('The compilation has no input file system.'));
+            return;
+          }
+          inputFileSystem.readFile(fullPath, (err, data) => {
+            if (err || data === undefined) {
+              reject(err ?? new Error(`Could not read ${fullPath}`));
+              return;
             }
-          );
+
+            const content = data.toString();
+
+            let source;
+            if (this.options.sourceMap) {
+              // TODO: Look for source map file (for '.min' scripts, etc.)
+
+              let adjustedPath = fullPath;
+              if (this.options.basePath) {
+                adjustedPath = path.relative(this.options.basePath, fullPath);
+              }
+              source = new rspackSources.OriginalSource(content, adjustedPath);
+            } else {
+              source = new rspackSources.RawSource(content);
+            }
+
+            resolve(source);
+          });
         });
       });
 

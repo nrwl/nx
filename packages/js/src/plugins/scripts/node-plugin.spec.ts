@@ -35,8 +35,11 @@ describe('@nx/js/node', () => {
       createNodes[0],
     ]);
     const results = await createNodesFunction(matched, options, context);
-    return results.find(([, r]) => r.projects?.[root])?.[1].projects[root]
-      .targets;
+    const targets = results.find(([, r]) => r.projects?.[root])?.[1].projects?.[
+      root
+    ]?.targets;
+    if (!targets) throw new Error(`No targets inferred for ${root}`);
+    return targets;
   }
 
   it('should only claim node shebangs', async () => {

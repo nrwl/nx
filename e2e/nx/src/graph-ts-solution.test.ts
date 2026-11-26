@@ -271,7 +271,9 @@ describe('Graph - TS solution setup', () => {
     const { graph } = readJson('graph.json');
     // pkg1, pkg3, pkg12, pkg14, and lib1 are not detected as dependencies
     expect(
-      graph.dependencies['@proj/pkg-parent'].map((d) => d.target)
+      graph.dependencies['@proj/pkg-parent'].map(
+        (d: { target: string }) => d.target
+      )
     ).toStrictEqual([
       '@proj/pkg2',
       '@proj/pkg4',
@@ -432,10 +434,14 @@ describe('Graph - TS solution setup', () => {
     // only `external-package` is detected as a dependency, the rest of the
     // imports point to internal files of each project
     expect(
-      graph.dependencies[`@proj/${pkg1}`].map((d) => d.target)
+      graph.dependencies[`@proj/${pkg1}`].map(
+        (d: { target: string }) => d.target
+      )
     ).toStrictEqual(['npm:external-package']);
     expect(
-      graph.dependencies[`@proj/${pkg2}`].map((d) => d.target)
+      graph.dependencies[`@proj/${pkg2}`].map(
+        (d: { target: string }) => d.target
+      )
     ).toStrictEqual(['npm:external-package']);
 
     // assert build succeeds, tsc outputs nothing when successful

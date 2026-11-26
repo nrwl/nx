@@ -24,6 +24,15 @@ import { ProjectGraph } from '../../config/project-graph';
 // bin/run-executor.ts) — mark it so nested tooling can detect Nx.
 process.env.NX_CLI_SET = 'true';
 
+function sendToParent(
+  message: CompleteTaskMessage | CompleteBatchExecutionMessage
+) {
+  if (!process.send) {
+    throw new Error('The batch worker has no IPC channel to its parent.');
+  }
+  process.send(message);
+}
+
 function getBatchExecutor(
   executorName: string,
   projects: Record<string, ProjectConfiguration>
@@ -65,10 +74,15 @@ async function runTasks(
     const projectConfiguration =
       projectsConfigurations.projects[task.target.project];
     const targetConfiguration =
-      projectConfiguration.targets[task.target.target];
+      projectConfiguration.targets?.[task.target.target];
+    if (!targetConfiguration) {
+      throw new Error(
+        `Cannot find target "${task.target.target}" for task "${task.id}".`
+      );
+    }
     input[task.id] = combineOptionsForExecutor(
       task.overrides as Options,
-      task.target.configuration,
+      task.target.configuration ?? '',
       targetConfiguration,
       batchExecutor.schema,
       null,
@@ -77,6 +91,9 @@ async function runTasks(
   }
 
   try {
+    if (!batchExecutor.batchImplementationFactory) {
+      throw new Error(`"${executorName}" does not support batch execution`);
+    }
     const results = await batchExecutor.batchImplementationFactory()(
       batchTaskGraph,
       input,
@@ -96,7 +113,7 @@ async function runTasks(
 
         if (!current.done) {
           batchResults[current.value.task] = current.value.result;
-          process.send({
+          sendToParent({
             type: BatchMessageType.CompleteTask,
             task: current.value.task,
             result: current.value.result,
@@ -112,7 +129,7 @@ async function runTasks(
     return results;
   } catch (e) {
     const isVerbose = tasks[0].overrides.verbose;
-    console.error(isVerbose ? e : e.message);
+    console.error(isVerbose || !(e instanceof Error) ? e : e.message);
     // `process.exit` does not wait for pipe writes, so the reason this worker
     // died could otherwise be the one line that never arrives.
     await output.drain();
@@ -130,7 +147,7 @@ process.on('message', async (message: BatchMessage) => {
         message.fullTaskGraph
       );
       await output.drain();
-      process.send({
+      sendToParent({
         type: BatchMessageType.CompleteBatchExecution,
         results,
       } as CompleteBatchExecutionMessage);

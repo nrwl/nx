@@ -52,7 +52,8 @@ function normalizeOptions(
   if (
     options.supportTsx ||
     options.babelJest ||
-    ['swc', 'babel'].includes(options.compiler)
+    options.compiler === 'swc' ||
+    options.compiler === 'babel'
   ) {
     options.skipSerializers = true;
   }
@@ -168,7 +169,7 @@ function ignoreTestOutput(tree: Tree): void {
   }
 
   let content = tree.read('.gitignore', 'utf-8');
-  if (/^test-output$/gm.test(content)) {
+  if (/^test-output$/gm.test(content ?? '')) {
     return;
   }
 

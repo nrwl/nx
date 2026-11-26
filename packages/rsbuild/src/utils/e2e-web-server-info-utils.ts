@@ -10,7 +10,7 @@ export async function getRsbuildE2EWebServerInfo(
   configFilePath: string,
   e2ePortOverride?: number
 ) {
-  const nxJson = readNxJson(tree);
+  const nxJson = readNxJson(tree) ?? {};
   let e2ePort = e2ePortOverride ?? 4200;
   const devPort = readTargetDefaultsForTarget('dev', nxJson.targetDefaults)
     ?.options?.port;

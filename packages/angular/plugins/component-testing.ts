@@ -65,16 +65,16 @@ export function nxComponentTestingPreset(
       `Unable to read the project graph for component testing.
 This is likely due to not running via nx. i.e. 'nx component-test my-project'.
 Please open an issue if this error persists.
-${e.stack ? e.stack : e}`
+${e instanceof Error && e.stack ? e.stack : e}`
     );
   }
 
   const ctProjectConfig = getProjectConfigByPath(graph, pathToConfig);
   const ctConfigurationName = process.env.NX_CYPRESS_TARGET_CONFIGURATION;
-  const ctContext = createExecutorContext(
+  const ctContext = createComponentTestingContext(
     graph,
-    ctProjectConfig.targets,
     ctProjectConfig.name,
+    ctProjectConfig.targets,
     options?.ctTargetName || 'component-test',
     ctConfigurationName
   );
@@ -98,10 +98,10 @@ ${e.stack ? e.stack : e}`
     ? offsetFromRoot(normalizedFromWorkspaceRootPath)
     : undefined;
 
-  const buildContext = createExecutorContext(
+  const buildContext = createComponentTestingContext(
     graph,
-    graph.nodes[buildTarget.project]?.data.targets,
     buildTarget.project,
+    graph.nodes[buildTarget.project]?.data.targets,
     buildTarget.target,
     buildTarget.configuration
   );
@@ -141,7 +141,37 @@ ${e.stack ? e.stack : e}`
   };
 }
 
-function getBuildableTarget(ctContext: ExecutorContext) {
+type ComponentTestingContext = ExecutorContext & {
+  projectName: string;
+  targetName: string;
+};
+
+function createComponentTestingContext(
+  graph: ProjectGraph,
+  projectName: string | undefined,
+  targets: ProjectConfiguration['targets'],
+  targetName: string,
+  configurationName: string | undefined
+): ComponentTestingContext {
+  if (!projectName || !targets) {
+    throw new Error(
+      `Unable to find project configuration for '${projectName}'.`
+    );
+  }
+  return {
+    ...createExecutorContext(
+      graph,
+      targets,
+      projectName,
+      targetName,
+      configurationName
+    ),
+    projectName,
+    targetName,
+  };
+}
+
+function getBuildableTarget(ctContext: ComponentTestingContext) {
   const targets =
     ctContext.projectGraph.nodes[ctContext.projectName]?.data?.targets;
   const targetConfig = targets?.[ctContext.targetName];
@@ -180,13 +210,13 @@ function getBuildableTarget(ctContext: ExecutorContext) {
 }
 
 function normalizeBuildTargetOptions(
-  buildContext: ExecutorContext,
-  ctContext: ExecutorContext,
+  buildContext: ComponentTestingContext,
+  ctContext: ComponentTestingContext,
   offset?: string
 ): {
   root: string;
   sourceRoot: string;
-  buildOptions: BrowserBuilderSchema & { workspaceRoot: string };
+  buildOptions: NormalizedBrowserBuilderSchema & { workspaceRoot?: string };
 } {
   const options = readTargetOptions<BrowserBuilderSchema>(
     {
@@ -239,6 +269,11 @@ function normalizeBuildTargetOptions(
             input: joinPathFragments(offset, buildOptions.index.input),
           };
     buildOptions.fileReplacements = buildOptions.fileReplacements.map((fr) => {
+      if (fr.replace === undefined || fr.with === undefined) {
+        throw new TypeError(
+          'File replacements must have "replace" and "with" properties.'
+        );
+      }
       fr.replace = joinPathFragments(offset, fr.replace);
       fr.with = joinPathFragments(offset, fr.with);
       return fr;
@@ -262,7 +297,7 @@ function normalizeBuildTargetOptions(
           ? joinPathFragments(offset, asset)
           : { ...asset, input: joinPathFragments(offset, asset.input) };
       });
-      buildOptions.styles = buildOptions.styles.map((style) => {
+      buildOptions.styles = buildOptions.styles?.map((style) => {
         return typeof style === 'string'
           ? joinPathFragments(offset, style)
           : { ...style, input: joinPathFragments(offset, style.input) };
@@ -272,13 +307,12 @@ function normalizeBuildTargetOptions(
           ? joinPathFragments(offset, script)
           : { ...script, input: joinPathFragments(offset, script.input) };
       });
-      if (buildOptions.stylePreprocessorOptions?.includePaths.length > 0) {
+      const includePaths = buildOptions.stylePreprocessorOptions?.includePaths;
+      if (includePaths?.length) {
         buildOptions.stylePreprocessorOptions = {
-          includePaths: buildOptions.stylePreprocessorOptions.includePaths.map(
-            (path) => {
-              return joinPathFragments(offset, path);
-            }
-          ),
+          includePaths: includePaths.map((path) => {
+            return joinPathFragments(offset, path);
+          }),
         };
       }
     }
@@ -301,11 +335,16 @@ function normalizeBuildTargetOptions(
   };
 }
 
+type NormalizedBrowserBuilderSchema = Omit<BrowserBuilderSchema, 'tsConfig'> &
+  Required<
+    Pick<BrowserBuilderSchema, 'assets' | 'fileReplacements' | 'scripts'>
+  > & { tsConfig?: string };
+
 function withSchemaDefaults(
   options: any,
   sourceRoot: string,
   workspaceRoot: string
-): BrowserBuilderSchema {
+): NormalizedBrowserBuilderSchema {
   if (!options.main && !options.browser) {
     options.browser = joinPathFragments(sourceRoot, 'main.ts');
     if (!existsSync(join(workspaceRoot, options.browser))) {
@@ -346,7 +385,7 @@ function withSchemaDefaults(
  * if tailwind is being used in the project root or workspace root
  * this file should get cleaned up via the cypress executor
  */
-function getTempStylesForTailwind(ctExecutorContext: ExecutorContext) {
+function getTempStylesForTailwind(ctExecutorContext: ComponentTestingContext) {
   const ctProjectConfig = ctExecutorContext.projectGraph.nodes[
     ctExecutorContext.projectName
   ]?.data as ProjectConfiguration;
@@ -368,6 +407,9 @@ function getTempStylesForTailwind(ctExecutorContext: ExecutorContext) {
   if (isTailWindInRoot || isTailWindInCtProject) {
     const pathToStyle = getTempTailwindPath(ctExecutorContext);
     try {
+      if (!pathToStyle) {
+        throw new TypeError('Unable to resolve the temp tailwind styles path.');
+      }
       mkdirSync(dirname(pathToStyle), { recursive: true });
       writeFileSync(
         pathToStyle,

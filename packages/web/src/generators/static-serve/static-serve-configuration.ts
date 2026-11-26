@@ -55,13 +55,14 @@ async function normalizeOptions(
   };
 
   const projectConfig = readProjectConfiguration(tree, target.project);
-  const buildTargetConfig = projectConfig?.targets?.[target.target];
+  const targets = projectConfig.targets ?? {};
+  const buildTargetConfig = targets[target.target];
   if (!buildTargetConfig) {
     throw new Error(stripIndents`Unable to read the target configuration for the provided build target, ${opts.buildTarget}
 Are you sure this target exists?`);
   }
 
-  if (projectConfig.targets[opts.targetName]) {
+  if (targets[opts.targetName]) {
     throw new Error(stripIndents`Project ${target.project} already has a '${opts.targetName}' target configured.
 Either rename or remove the existing '${opts.targetName}' target and try again.
 Optionally, you can provide a different name with the --target-name option other than '${opts.targetName}'`);
@@ -123,6 +124,7 @@ function addStaticConfig(tree: Tree, opts: NormalizedWebStaticServeSchema) {
     },
   };
 
+  projectConfig.targets ??= {};
   projectConfig.targets[opts.targetName] = staticServeOptions;
 
   updateProjectConfiguration(tree, opts.projectName, projectConfig);

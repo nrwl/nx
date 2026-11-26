@@ -14,6 +14,14 @@ import {
 } from '@nx/e2e-utils';
 import * as ts from 'typescript';
 
+interface EslintRc {
+  overrides: {
+    files: string | string[];
+    parser?: string;
+    rules: Record<string, unknown>;
+  }[];
+}
+
 describe('Linter', () => {
   let originalEslintUseFlatConfigVal: string | undefined;
   beforeAll(() => {
@@ -29,7 +37,7 @@ describe('Linter', () => {
     const myapp = uniq('myapp');
     const mylib = uniq('mylib');
 
-    let projScope;
+    let projScope: string;
 
     beforeAll(() => {
       projScope = newProject({
@@ -50,11 +58,11 @@ describe('Linter', () => {
     afterAll(() => cleanupProject());
 
     describe('linting errors', () => {
-      let defaultEslintrc;
+      let defaultEslintrc: EslintRc;
 
       beforeAll(() => {
         updateFile(`apps/${myapp}/src/main.ts`, `console.log("should fail");`);
-        defaultEslintrc = readJson('.eslintrc.json');
+        defaultEslintrc = readJson<EslintRc>('.eslintrc.json');
       });
       afterEach(() => {
         updateFile('.eslintrc.json', JSON.stringify(defaultEslintrc, null, 2));
@@ -63,7 +71,7 @@ describe('Linter', () => {
       it('should check for linting errors', () => {
         // create faulty file
         updateFile(`apps/${myapp}/src/main.ts`, `console.log("should fail");`);
-        const eslintrc = readJson('.eslintrc.json');
+        const eslintrc = readJson<EslintRc>('.eslintrc.json');
 
         // set the eslint rules to error
         eslintrc.overrides.forEach((override) => {
@@ -95,7 +103,7 @@ describe('Linter', () => {
       }, 1000000);
 
       it('should cache eslint with --cache', () => {
-        function readCacheFile(cacheFile) {
+        function readCacheFile(cacheFile: string) {
           const cacheInfo = readFile(cacheFile);
           return process.platform === 'win32'
             ? cacheInfo.replace(/\\\\/g, '\\')
@@ -128,7 +136,7 @@ describe('Linter', () => {
       });
 
       it('linting should generate an output file with a specific format', () => {
-        const eslintrc = readJson('.eslintrc.json');
+        const eslintrc = readJson<EslintRc>('.eslintrc.json');
         eslintrc.overrides.forEach((override) => {
           if (override.files.includes('*.ts')) {
             override.rules['no-console'] = 'error';
@@ -205,7 +213,7 @@ describe('Linter', () => {
         const newRuleNameForUsage = `@nx/workspace-${newRuleName}`;
 
         // Add the new workspace rule to the lint config and run linting
-        const eslintrc = readJson('.eslintrc.json');
+        const eslintrc = readJson<EslintRc>('.eslintrc.json');
         eslintrc.overrides.forEach((override) => {
           if (override.files.includes('*.ts')) {
             override.rules[newRuleNameForUsage] = 'error';
@@ -491,7 +499,7 @@ describe('Linter', () => {
 
     describe('dependency checks', () => {
       beforeAll(() => {
-        updateJson(`libs/${mylib}/.eslintrc.json`, (json) => {
+        updateJson<EslintRc>(`libs/${mylib}/.eslintrc.json`, (json) => {
           if (!json.overrides.some((o) => o.rules?.['@nx/dependency-checks'])) {
             json.overrides = [
               ...json.overrides,
@@ -511,7 +519,7 @@ describe('Linter', () => {
       afterAll(() => {
         // ensure the rule for dependency checks is removed
         // so that it does not affect other tests
-        updateJson(`libs/${mylib}/.eslintrc.json`, (json) => {
+        updateJson<EslintRc>(`libs/${mylib}/.eslintrc.json`, (json) => {
           json.overrides = json.overrides.filter(
             (o) => !o.rules?.['@nx/dependency-checks']
           );
@@ -800,7 +808,7 @@ function updateGeneratedRuleImplementation(
   newRulePath: string,
   newRuleGeneratedContents: string,
   knownLintErrorMessage: string,
-  messageId,
+  messageId: string,
   libMethodName: string,
   libPath: string
 ): string {

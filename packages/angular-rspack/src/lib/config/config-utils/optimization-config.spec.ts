@@ -47,7 +47,7 @@ describe('getOptimization', () => {
   ) {
     vi.doMock('@rspack/core', () => rspackCore);
     const { getOptimization } = await import('./optimization-config.js');
-    const { minimizer } = getOptimization(
+    const optimization = getOptimization(
       {
         optimization: { scripts: true },
       } as NormalizedAngularRspackPluginOptions,
@@ -62,13 +62,15 @@ describe('getOptimization', () => {
       target: [platform === 'browser' ? 'web' : 'node', 'es2015'],
       output: { path: outDir, filename: 'main.js' },
       devtool: false,
-      optimization: { minimize: true, minimizer },
+      optimization: { minimize: true, minimizer: optimization?.minimizer },
     });
     const stats = await new Promise<Stats>((res, rej) => {
       compiler.run((err, stats) => {
         compiler.close((closeErr) => {
           if (err || closeErr) {
             rej(err ?? closeErr);
+          } else if (!stats) {
+            rej(new Error('rspack produced no stats'));
           } else if (stats.hasErrors()) {
             rej(new Error(stats.toString({ errors: true, all: false })));
           } else {

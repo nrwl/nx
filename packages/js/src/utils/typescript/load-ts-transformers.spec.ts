@@ -2,14 +2,22 @@ import { createRequire } from 'node:module';
 import { join } from 'node:path';
 import type * as LoadTsTransformers from './load-ts-transformers';
 
+type LoadTsTransformersFn = typeof LoadTsTransformers.loadTsTransformers;
+
 // The source reads `module.paths`, which vitest's ESM module shim lacks, and
 // `require()`s each plugin, so load it on the CJS channel and resolve plugins
 // straight to the fixtures in `__mocks__`.
-const { loadTsTransformers } = createRequire(import.meta.url)(
-  './load-ts-transformers'
-) as typeof LoadTsTransformers;
+// The signature also admits the falsy `plugins` the source tolerates.
+const {
+  loadTsTransformers,
+}: {
+  loadTsTransformers: (
+    plugins: Parameters<LoadTsTransformersFn>[0] | undefined,
+    moduleResolver?: Parameters<LoadTsTransformersFn>[1]
+  ) => ReturnType<LoadTsTransformersFn>;
+} = createRequire(__filename)('./load-ts-transformers');
 const mockRequireResolve = vi.fn((name: string) =>
-  join(import.meta.dirname, '__mocks__', `${name}.ts`)
+  join(__dirname, '__mocks__', `${name}.ts`)
 );
 
 describe('loadTsTransformers', () => {

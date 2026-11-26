@@ -5,12 +5,13 @@ import {
 } from '@nx/devkit/internal';
 import {
   createProjectGraphAsync,
+  type ExpandedPluginConfiguration,
   formatFiles,
   readNxJson,
   type Tree,
   updateNxJson,
 } from '@nx/devkit';
-import { createNodesV2 } from '../../plugins/plugin';
+import { createNodesV2, type DetoxPluginOptions } from '../../plugins/plugin';
 import { assertSupportedDetoxVersion } from '../../utils/versions';
 import { processBuildOptions } from './lib/process-build-options';
 import { postTargetTransformer } from './lib/post-target-transformer';
@@ -68,17 +69,21 @@ export async function convertToInferred(tree: Tree, options: Schema) {
   );
 
   const nxJson = readNxJson(tree);
-  const detoxPlugins = nxJson.plugins?.filter(
-    (p) => typeof p !== 'string' && p.plugin === '@nx/detox/plugin'
+  if (!nxJson) {
+    throw new Error('Cannot find nx.json');
+  }
+  const detoxPlugins = (nxJson.plugins ?? []).filter(
+    (p): p is ExpandedPluginConfiguration<DetoxPluginOptions> =>
+      typeof p !== 'string' && p.plugin === '@nx/detox/plugin'
   );
 
   // These were either `build-ios`, `test-ios`, etc., and we need to set them back to their generic names.
   // The per-project targets will call these with additional `--args` passed to maintain the same
   // behavior as previous executor-based targets.
   for (const p of detoxPlugins) {
-    if (typeof p === 'string') continue;
-    p.options['buildTargetName'] = 'build';
-    p.options['testTargetName'] = 'test';
+    p.options ??= {};
+    p.options.buildTargetName = 'build';
+    p.options.testTargetName = 'test';
   }
 
   // Inform the users that the inferred targets are platform-agnostic, and they can remove the old targets if unnecessary.

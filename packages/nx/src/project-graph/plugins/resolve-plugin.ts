@@ -30,10 +30,10 @@ type LocalPluginMatch = {
 
 const TS_SOURCE_EXTENSIONS = new Set(['.ts', '.tsx', '.cts', '.mts']);
 
-let projectsWithoutInference: Record<string, ProjectConfiguration>;
+let projectsWithoutInference: Record<string, ProjectConfiguration> | undefined;
 let localPluginLookup: LocalPluginLookup | undefined;
 let projectsWithoutInferencePromise: Promise<
-  typeof projectsWithoutInference
+  Record<string, ProjectConfiguration>
 > | null = null;
 
 export async function resolveNxPlugin(
@@ -103,15 +103,17 @@ function readPluginMainFromProjectConfiguration(
   plugin: ProjectConfiguration
 ): string | null {
   const { main } =
-    Object.values(plugin.targets).find((x) =>
-      [
-        '@nx/js:tsc',
-        '@nrwl/js:tsc',
-        '@nx/js:swc',
-        '@nrwl/js:swc',
-        '@nx/node:package',
-        '@nrwl/node:package',
-      ].includes(x.executor)
+    Object.values(plugin.targets ?? {}).find(
+      (x) =>
+        x.executor !== undefined &&
+        [
+          '@nx/js:tsc',
+          '@nrwl/js:tsc',
+          '@nx/js:swc',
+          '@nrwl/js:swc',
+          '@nx/node:package',
+          '@nrwl/node:package',
+        ].includes(x.executor)
     )?.options ||
     plugin.targets?.build?.options ||
     {};
@@ -129,10 +131,10 @@ export function resolveLocalNxPlugin(
 export function getPluginPathAndName(
   moduleName: string,
   paths: string[],
-  projects: Record<string, ProjectConfiguration>,
+  projects: Record<string, ProjectConfiguration> | undefined,
   root: string
 ) {
-  let pluginPath: string | undefined;
+  let pluginPath: string | null | undefined;
 
   // Resolve local workspace plugins from source first so the workspace's
   // `customConditions`/`development` exports condition wins over the built
@@ -157,7 +159,14 @@ export function getPluginPathAndName(
       if (localPlugin && isPackageResolutionError(e)) {
         throwUnresolvableLocalPluginError(moduleName, localPlugin, root);
       }
-      if (e.code !== 'MODULE_NOT_FOUND') {
+      if (
+        !(
+          typeof e === 'object' &&
+          e !== null &&
+          'code' in e &&
+          e.code === 'MODULE_NOT_FOUND'
+        )
+      ) {
         throw e;
       }
       if (localPlugin) {

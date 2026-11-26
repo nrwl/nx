@@ -20,12 +20,13 @@ export function addPropertyToJestConfig(
   value: unknown,
   options: { valueAsString: boolean } = { valueAsString: false }
 ) {
-  if (!host.exists(path)) {
+  const contents = host.read(path, 'utf-8');
+  if (contents === null) {
     throw new Error(`Cannot find '${path}' in your workspace.`);
   }
   const { propertyString, properties } = parsePropertyName(propertyName);
   try {
-    const configObject = jestConfigObjectAst(host.read(path, 'utf-8'));
+    const configObject = jestConfigObjectAst(contents);
     addOrUpdateProperty(
       host,
       configObject,
@@ -39,7 +40,7 @@ export function addPropertyToJestConfig(
       `Could not automatically add the following property to ${path}:`
     );
     logger.warn(`${propertyString}: ${JSON.stringify(value)}`);
-    logger.warn(`Error: ${e.message}`);
+    logger.warn(`Error: ${e instanceof Error ? e.message : String(e)}`);
   }
 }
 
@@ -54,20 +55,20 @@ export function removePropertyFromJestConfig(
   path: string,
   propertyName: string | string[]
 ) {
-  if (!host.exists(path)) {
+  const contents = host.read(path, 'utf-8');
+  if (contents === null) {
     throw new Error(`Cannot find '${path}' in your workspace.`);
   }
 
   const { propertyString, properties } = parsePropertyName(propertyName);
 
   try {
-    const configObject = jestConfigObjectAst(host.read(path, 'utf-8'));
+    const configObject = jestConfigObjectAst(contents);
     const propertyAssignment = removeProperty(configObject, properties);
 
     if (propertyAssignment) {
-      const file = host.read(path, 'utf-8');
-      const commaNeeded = file[propertyAssignment.end] === ',';
-      const updatedFile = applyChangesToString(file, [
+      const commaNeeded = contents[propertyAssignment.end] === ',';
+      const updatedFile = applyChangesToString(contents, [
         {
           type: ChangeType.Delete,
           start: propertyAssignment.getStart(),

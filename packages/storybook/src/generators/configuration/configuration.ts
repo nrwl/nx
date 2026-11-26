@@ -171,7 +171,7 @@ export async function configurationGeneratorInternal(
   addBuildStorybookToCacheableOperations(tree);
   addStorybookToNamedInputs(tree, schema);
 
-  let devDeps = {};
+  let devDeps: Record<string, string> = {};
 
   if (schema.uiFramework === '@storybook/angular') {
     // `@storybook/angular:*` builders are third-party and still supported, so
@@ -188,7 +188,8 @@ export async function configurationGeneratorInternal(
     const testRunnerVersion = versions(tree).testRunnerVersion;
     // @storybook/test-runner depends on @swc/core.
     acknowledgeSwcBuildScripts(tree);
-    if (gte(minVersion(testRunnerVersion), '0.24.0')) {
+    const minTestRunnerVersion = minVersion(testRunnerVersion);
+    if (minTestRunnerVersion && gte(minTestRunnerVersion, '0.24.0')) {
       // Only the 0.24 line runs on jest 30, whose jest-resolve depends on
       // unrs-resolver and, from 30.5.0, pins a jest-haste-map that depends on
       // @parcel/watcher. Storybook 8 and 9 select jest 29, which needs neither.

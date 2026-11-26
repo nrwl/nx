@@ -84,6 +84,6 @@ describe('componentStory generator', () => {
       projectPath: `${libName}`,
     });
 
-    expect(tree.read(storyFile).toString()).toMatchSnapshot();
+    expect(tree.read(storyFile)?.toString()).toMatchSnapshot();
   });
 });

@@ -1,4 +1,9 @@
-export function findNextConfigPath(tree, projectRoot) {
+import type { Tree } from '@nx/devkit';
+
+export function findNextConfigPath(
+  tree: Tree,
+  projectRoot: string
+): string | undefined {
   const validExtensions = ['js', 'cjs'];
 
   for (const extension of validExtensions) {

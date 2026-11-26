@@ -123,7 +123,7 @@ export async function loadConfigWithProbeEnv<T extends object, R>(
   consume: (config: T) => R
 ): Promise<{ consumed: R; probeEnv: ProbeEnv; ambientEnv: NodeJS.ProcessEnv }> {
   const previous = inProcessLoad;
-  let release: () => void;
+  let release: () => void = () => {};
   inProcessLoad = new Promise<void>((resolve) => (release = resolve));
   await previous;
   try {

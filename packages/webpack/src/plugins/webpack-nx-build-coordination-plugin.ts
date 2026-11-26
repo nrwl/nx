@@ -72,12 +72,13 @@ export class WebpackNxBuildCoordinationPlugin {
     this.currentlyRunning = 'nx-build';
     try {
       return await new Promise<void>((res) => {
-        this.buildCmdProcess = exec(this.buildCmd, {
+        const buildCmdProcess = exec(this.buildCmd, {
           windowsHide: true,
         });
+        this.buildCmdProcess = buildCmdProcess;
 
-        this.buildCmdProcess.stdout.pipe(process.stdout);
-        this.buildCmdProcess.stderr.pipe(process.stderr);
+        buildCmdProcess.stdout?.pipe(process.stdout);
+        buildCmdProcess.stderr?.pipe(process.stderr);
         this.buildCmdProcess.on('exit', () => {
           res();
         });
@@ -97,7 +98,7 @@ export class WebpackNxBuildCoordinationPlugin {
       {
         watchProjects: 'all',
       },
-      (err, { changedProjects, changedFiles }) => {
+      (err, data) => {
         if (err === 'reconnecting') {
           // Silent - daemon restarts automatically on lockfile changes
           return;
@@ -119,8 +120,11 @@ export class WebpackNxBuildCoordinationPlugin {
           this.buildCmdProcess.kill(2);
           this.buildCmdProcess = null;
         }
+        if (!data) {
+          return;
+        }
         // Queue a build
-        runner.enqueue(changedProjects, changedFiles);
+        runner.enqueue(data.changedProjects, data.changedFiles);
       }
     );
   }

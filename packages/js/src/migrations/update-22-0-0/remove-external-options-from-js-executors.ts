@@ -27,18 +27,19 @@ export default async function (tree: Tree) {
         }
 
         const projectConfiguration = readProjectConfiguration(tree, project);
-        if (configuration) {
-          const config =
-            projectConfiguration.targets[target].configurations[configuration];
-          delete config.external;
-          delete config.externalBuildTargets;
-        } else {
-          const config = projectConfiguration.targets[target].options;
-          delete config.external;
-          delete config.externalBuildTargets;
-          if (!Object.keys(config).length) {
-            delete projectConfiguration.targets[target].options;
-          }
+        const targetConfiguration = projectConfiguration.targets?.[target];
+        const config = configuration
+          ? targetConfiguration?.configurations?.[configuration]
+          : targetConfiguration?.options;
+        if (!targetConfiguration || !config) {
+          throw new Error(
+            `Could not find target "${target}" in project "${project}".`
+          );
+        }
+        delete config.external;
+        delete config.externalBuildTargets;
+        if (!configuration && !Object.keys(config).length) {
+          delete targetConfiguration.options;
         }
 
         updateProjectConfiguration(tree, project, projectConfiguration);
@@ -48,7 +49,7 @@ export default async function (tree: Tree) {
 
   // update options from nx.json target defaults
   const nxJson = readNxJson(tree);
-  if (!nxJson.targetDefaults) {
+  if (!nxJson?.targetDefaults) {
     return;
   }
 
@@ -73,10 +74,12 @@ export default async function (tree: Tree) {
       ? value
       : [value];
 
+    const isJsExecutor = (executor: string | undefined) =>
+      executor !== undefined && executors.includes(executor);
     const usesExecutor = (entry: TargetDefaultArrayEntry) =>
       executors.includes(key) ||
-      executors.includes(entry.executor) ||
-      executors.includes(entry.filter?.executor);
+      isJsExecutor(entry.executor) ||
+      isJsExecutor(entry.filter?.executor);
 
     const kept = entries.filter((entry) => {
       if (usesExecutor(entry)) {

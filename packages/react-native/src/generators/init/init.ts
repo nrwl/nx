@@ -81,7 +81,7 @@ export async function reactNativeInitGeneratorInternal(
         'react-native-sync-deps',
       ],
     },
-    schema.updatePackageScripts
+    schema.updatePackageScripts ?? false
   );
 
   const tasks: GeneratorCallback[] = [];

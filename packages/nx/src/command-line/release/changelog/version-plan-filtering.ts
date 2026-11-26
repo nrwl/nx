@@ -116,7 +116,7 @@ async function getFilesAddedInCommitRange(
   } catch (err) {
     if (isVerbose) {
       console.error(
-        `Error getting files in commit range: ${err.message || err}`
+        `Error getting files in commit range: ${(err instanceof Error && err.message) || err}`
       );
     }
     // If there's an error, return empty set (no filtering)
@@ -143,7 +143,7 @@ export async function resolveChangelogFromSHA({
   fromRef?: string;
   tagPattern: string;
   tagPatternValues: Record<string, string>;
-  checkAllBranchesWhen: CheckAllBranchesWhen;
+  checkAllBranchesWhen?: CheckAllBranchesWhen;
   preid?: string;
   requireSemver: boolean;
   strictPreid: boolean;
@@ -217,6 +217,9 @@ export async function resolveWorkspaceChangelogFromSHA({
 export function extractPreidFromVersion(
   version: string | null | undefined
 ): string | undefined {
+  if (!version) {
+    return undefined;
+  }
   try {
     const preid = prerelease(version)?.[0];
     return typeof preid === 'string' ? preid : undefined;

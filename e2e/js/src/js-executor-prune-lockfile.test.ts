@@ -113,7 +113,7 @@ function installPrunedDist(
 }
 
 describe('js:prune-lockfile executor', () => {
-  describe.each([
+  describe.each<[PackageManagerUnderTest, string]>([
     ['pnpm', 'pnpm-lock.yaml'],
     ['yarn', 'yarn.lock'],
     ['npm', 'package-lock.json'],

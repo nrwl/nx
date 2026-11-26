@@ -124,12 +124,25 @@ function stringifyValue(
   throw new Error(`Unsupported value type (${value})`);
 }
 
+type LocatedError = Error & {
+  location: { start: { line: number; column: number } };
+};
+
+function hasLocation(error: unknown): error is LocatedError {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'location' in error &&
+    !!error.location
+  );
+}
+
 export function stringifySyml(value: any): string {
   try {
     const stringified = stringifyValue(value, 0, false);
     return stringified !== `\n` ? stringified : ``;
   } catch (error) {
-    if (error.location)
+    if (hasLocation(error))
       error.message = error.message.replace(
         /(\.)?$/,
         ` (line ${error.location.start.line}, column ${error.location.start.column})$1`

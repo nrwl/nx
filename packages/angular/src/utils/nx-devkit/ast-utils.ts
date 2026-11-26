@@ -117,7 +117,8 @@ export function getDecoratorMetadata(
     source,
     tsModule.SyntaxKind.ImportDeclaration
   )
-    .map((node: ts.ImportDeclaration) => _angularImportsFromNode(node))
+    .filter(tsModule.isImportDeclaration)
+    .map((node) => _angularImportsFromNode(node))
     .reduce(
       (
         acc: { [name: string]: string },
@@ -340,7 +341,7 @@ export function removeFromNgModule(
   source: ts.SourceFile,
   modulePath: string,
   property: string
-): ts.SourceFile {
+): ts.SourceFile | undefined {
   const nodes = getDecoratorMetadata(source, 'NgModule', '@angular/core');
   let node: any = nodes[0];
 
@@ -485,9 +486,13 @@ export function addImportToTestBed(
     );
 
   if (configureTestingModuleObjectLiterals.length > 0) {
-    const startPosition = configureTestingModuleObjectLiterals[0]
-      .getFirstToken(source)
-      .getEnd();
+    const testingModuleConfig = configureTestingModuleObjectLiterals[0];
+    if (!testingModuleConfig) {
+      throw new TypeError(
+        `TestBed.configureTestingModule must be called with an object literal in '${specPath}'.`
+      );
+    }
+    const startPosition = testingModuleConfig.getStart(source) + 1;
     return insertChange(
       host,
       source,
@@ -526,9 +531,13 @@ export function addDeclarationsToTestBed(
     );
 
   if (configureTestingModuleObjectLiterals.length > 0) {
-    const startPosition = configureTestingModuleObjectLiterals[0]
-      .getFirstToken(source)
-      .getEnd();
+    const testingModuleConfig = configureTestingModuleObjectLiterals[0];
+    if (!testingModuleConfig) {
+      throw new TypeError(
+        `TestBed.configureTestingModule must be called with an object literal in '${specPath}'.`
+      );
+    }
+    const startPosition = testingModuleConfig.getStart(source) + 1;
     return insertChange(
       host,
       source,
@@ -568,9 +577,13 @@ export function replaceIntoToTestBed(
     );
 
   if (configureTestingModuleObjectLiterals.length > 0) {
-    const startPosition = configureTestingModuleObjectLiterals[0]
-      .getFirstToken(source)
-      .getEnd();
+    const testingModuleConfig = configureTestingModuleObjectLiterals[0];
+    if (!testingModuleConfig) {
+      throw new TypeError(
+        `TestBed.configureTestingModule must be called with an object literal in '${specPath}'.`
+      );
+    }
+    const startPosition = testingModuleConfig.getStart(source) + 1;
     return replaceChange(
       host,
       source,
@@ -612,7 +625,7 @@ function getMatchingProperty(
   property: string,
   identifier: string,
   module: string
-): ts.ObjectLiteralElement {
+): ts.ObjectLiteralElement | null {
   const nodes = getDecoratorMetadata(source, identifier, module);
   let node: any = nodes[0];
 
@@ -739,6 +752,9 @@ export function addProviderToBootstrapApplication(
     'CallExpression:has(Identifier[name=bootstrapApplication]) ObjectLiteralExpression > PropertyAssignment:has(Identifier[name=providers]) > ArrayLiteralExpression';
 
   const fileContents = tree.read(filePath, 'utf-8');
+  if (fileContents === null) {
+    throw new Error(`Cannot find the file '${filePath}'.`);
+  }
   const sourceFile = ast(fileContents);
   const providersArrayNodes = query(sourceFile, PROVIDERS_ARRAY_SELECTOR);
   if (providersArrayNodes.length === 0) {
@@ -778,6 +794,9 @@ export function addProviderToAppConfig(
     'VariableDeclaration:has(TypeReference > Identifier[name=ApplicationConfig]) > ObjectLiteralExpression  PropertyAssignment:has(Identifier[name=providers]) > ArrayLiteralExpression';
 
   const fileContents = tree.read(filePath, 'utf-8');
+  if (fileContents === null) {
+    throw new Error(`Cannot find the file '${filePath}'.`);
+  }
   const sourceFile = ast(fileContents);
   const providersArrayNodes = query(sourceFile, PROVIDERS_ARRAY_SELECTOR);
   if (providersArrayNodes.length === 0) {
@@ -916,6 +935,9 @@ export function readBootstrapInfo(
 
   let mainPath: string;
   try {
+    if (!config.targets) {
+      throw new Error('Main file cannot be located');
+    }
     mainPath =
       config.targets.build.options?.main ??
       config.targets.build.options?.browser;
@@ -1014,6 +1036,11 @@ export function getDecoratorPropertyValueNode(
     module
   );
 
+  if (!templateNode) {
+    throw new Error(
+      `Cannot find the '${property}' property of '${identifier}' in '${modulePath}'.`
+    );
+  }
   return templateNode.getChildAt(templateNode.getChildCount() - 1);
 }
 

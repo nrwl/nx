@@ -31,7 +31,7 @@ export function updateSecondaryEntryPoints(
 
   if (
     !Object.values(project.targets ?? {}).some((target) =>
-      libraryExecutors.includes(target.executor)
+      libraryExecutors.includes(target.executor ?? '')
     )
   ) {
     return;
@@ -62,12 +62,12 @@ function updateReadme(
   newProjectName: string
 ) {
   const readmePath = joinPathFragments(dir, 'README.md');
-  if (!tree.exists(readmePath)) {
+  const oldContent = tree.read(readmePath, 'utf-8');
+  if (oldContent === null) {
     return;
   }
 
   const findName = new RegExp(`${oldProjectName}`, 'g');
-  const oldContent = tree.read(readmePath, 'utf-8');
   const newContent = oldContent.replace(findName, newProjectName);
   tree.write(readmePath, newContent);
 }

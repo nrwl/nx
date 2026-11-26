@@ -1,4 +1,5 @@
 import {
+  ensureDefined,
   checkFilesExist,
   cleanupProject,
   fileExists,
@@ -44,7 +45,7 @@ describe('Nx Running Tests', () => {
   afterAll(() => cleanupProject());
 
   // Ensures that nx.json is restored to its original state after each test
-  let existingNxJson;
+  let existingNxJson: unknown;
   beforeEach(() => {
     existingNxJson = readJson('nx.json');
   });
@@ -779,9 +780,9 @@ describe('Nx Running Tests', () => {
     });
 
     describe('target dependencies', () => {
-      let myapp;
-      let mylib1;
-      let mylib2;
+      let myapp: string;
+      let mylib1: string;
+      let mylib2: string;
       beforeAll(() => {
         myapp = uniq('myapp');
         mylib1 = uniq('mylib1');
@@ -995,7 +996,10 @@ describe('Nx Running Tests', () => {
           expect(fileExists(`libs/${mylib1}/ready.txt`)).toBe(false);
           const done = new Promise<string>((resolve) => {
             let output = '';
-            check.stdout.on('data', (chunk) => (output += chunk));
+            ensureDefined(check.stdout, 'check stdout').on(
+              'data',
+              (chunk) => (output += chunk)
+            );
             check.on('close', () => resolve(stripVTControlCharacters(output)));
           });
           updateFile(`libs/${mylib1}/go.txt`, '');
@@ -1585,7 +1589,7 @@ describe('Nx Running Tests', () => {
       let exited = false;
       let exitResolve: (clean: boolean) => void;
       const exitPromise = new Promise<boolean>((r) => (exitResolve = r));
-      childProcess.onExit((msg) => {
+      childProcess.onExit((msg: string) => {
         console.log(`[sigint-test] onExit: ${msg}`);
         exited = true;
         exitResolve(true);

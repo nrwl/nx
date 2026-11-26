@@ -9,6 +9,7 @@
   "exclude": ["out-tsc"],
   "include": [
     "src/utils.ts",
+    "src/update-nx-json.ts",
     "**/*.test.ts",
     "**/*.spec.ts",
     "**/*.spec.tsx",

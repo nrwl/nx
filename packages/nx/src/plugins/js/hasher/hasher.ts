@@ -16,7 +16,11 @@ interface TsconfigJsonConfiguration {
 
 function readTsConfigJson(): TsconfigJsonConfiguration {
   try {
-    const res = readJsonFile(getRootTsConfigPath());
+    const rootTsConfigPath = getRootTsConfigPath();
+    if (!rootTsConfigPath) {
+      return { compilerOptions: { paths: {} } };
+    }
+    const res = readJsonFile(rootTsConfigPath);
     res.compilerOptions.paths ??= {};
     return res;
   } catch {

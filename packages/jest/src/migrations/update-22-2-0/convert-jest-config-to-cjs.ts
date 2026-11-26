@@ -62,6 +62,9 @@ export default async function convertJestConfigToCjs(tree: Tree) {
     }
 
     let content = tree.read(configPath, 'utf-8');
+    if (content === null) {
+      throw new Error(`Could not read ${configPath}.`);
+    }
 
     // Check for ESM-only features that can't be converted
     const hasImportMeta =

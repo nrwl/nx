@@ -42,7 +42,7 @@ import {
  * Stuff for specified NX Plugins.
  */
 let currentPluginsConfigurationHash: string;
-let cachedSeparatedPlugins: SeparatedPlugins;
+let cachedSeparatedPlugins: SeparatedPlugins | undefined;
 let pendingPluginsPromise: Promise<LoadedNxPlugin[]> | undefined;
 
 /** Workers aren't disposed here; the next load's `wantPlugins` sweeps the ones it no longer names. */
@@ -232,7 +232,7 @@ export async function getPluginsSeparated(
   // or the `??=` below would serve the previous plugin set forever.
   forgetSpecifiedPlugins();
 
-  const loadPromise = (async (): Promise<SeparatedPlugins> => {
+  const load = async (): Promise<SeparatedPlugins> => {
     const results = await Promise.allSettled([
       getOnlyDefaultPlugins(root),
       (pendingPluginsPromise ??= loadSpecifiedNxPlugins(
@@ -271,7 +271,8 @@ export async function getPluginsSeparated(
     }
 
     return separatedPlugins;
-  })();
+  };
+  const loadPromise = load();
 
   pendingSeparatedPlugins = {
     hash: pluginsConfigurationHash,
@@ -293,7 +294,7 @@ export async function getPluginsSeparated(
  * Stuff for default NX Plugins.
  */
 
-let loadedDefaultPlugins: LoadedNxPlugin[];
+let loadedDefaultPlugins: LoadedNxPlugin[] | undefined;
 let loadedDefaultPluginsHash: string;
 let pendingDefaultPluginPromise: Promise<LoadedNxPlugin[]> | undefined;
 

@@ -23,6 +23,7 @@ import pluginLintCheckGenerator from '../lint-checks/generator';
 import type { Schema } from './schema';
 
 type NormalizedSchema = Schema & {
+  name: string;
   directory: string;
   fileName: string;
   className: string;

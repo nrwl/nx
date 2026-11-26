@@ -2,6 +2,9 @@ import { readNxJson, type Tree } from '@nx/devkit';
 
 export function getComponentType(tree: Tree): string | undefined {
   const nxJson = readNxJson(tree);
+  if (!nxJson) {
+    throw new Error('Cannot find nx.json');
+  }
   const componentType =
     nxJson.generators?.['@nx/angular:component']?.type ??
     nxJson.generators?.['@nx/angular']?.component?.type;
@@ -11,6 +14,9 @@ export function getComponentType(tree: Tree): string | undefined {
 
 export function getModuleTypeSeparator(tree: Tree): '-' | '.' {
   const nxJson = readNxJson(tree);
+  if (!nxJson) {
+    throw new Error('Cannot find nx.json');
+  }
   // We don't have a "module" generator but the @nx/angular collection extends
   // from the @schematics/angular collection so the "module" generator is
   // available there. We check for a generator default for each collection.

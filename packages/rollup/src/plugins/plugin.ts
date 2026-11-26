@@ -142,7 +142,7 @@ async function createNodesInternal(
 async function buildRollupTarget(
   configFilePath: string,
   projectRoot: string,
-  options: RollupPluginOptions,
+  options: Required<RollupPluginOptions>,
   context: CreateNodesContext,
   isTsSolutionSetup: boolean,
   pmc: ReturnType<typeof getPackageManagerCommand>
@@ -309,11 +309,11 @@ async function filterRollupConfigs(
 }
 
 function normalizeOptions(
-  options: RollupPluginOptions
+  options: RollupPluginOptions | undefined
 ): Required<RollupPluginOptions> {
   return {
-    buildTargetName: options.buildTargetName ?? 'build',
-    buildDepsTargetName: options.buildDepsTargetName ?? 'build-deps',
-    watchDepsTargetName: options.watchDepsTargetName ?? 'watch-deps',
+    buildTargetName: options?.buildTargetName ?? 'build',
+    buildDepsTargetName: options?.buildDepsTargetName ?? 'build-deps',
+    watchDepsTargetName: options?.watchDepsTargetName ?? 'watch-deps',
   };
 }

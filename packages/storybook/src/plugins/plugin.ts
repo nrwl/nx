@@ -41,6 +41,7 @@ export interface StorybookPluginOptions {
 }
 
 type StorybookTargets = Record<string, TargetConfiguration>;
+type StorybookInputs = NonNullable<TargetConfiguration['inputs']>;
 
 const storybookConfigGlob = '**/.storybook/main.{js,ts,mjs,mts,cjs,cts}';
 
@@ -198,9 +199,9 @@ async function createNodesInternal(
 async function buildStorybookTargets(
   configFilePath: string,
   projectRoot: string,
-  options: StorybookPluginOptions,
+  options: Required<StorybookPluginOptions>,
   context: CreateNodesContext,
-  projectName: string,
+  projectName: string | undefined,
   angularBuildTarget: string | undefined,
   pmc: ReturnType<typeof getPackageManagerCommand>
 ) {
@@ -300,7 +301,7 @@ function storybookInputs(
   namedInputs: { [inputName: string]: any[] },
   frameworkIsAngular: boolean,
   hasTestRunner: boolean
-): TargetConfiguration['inputs'] {
+): StorybookInputs {
   return [
     ...('production' in namedInputs
       ? [
@@ -315,13 +316,13 @@ function storybookInputs(
         'storybook',
         frameworkIsAngular ? '@storybook/angular' : undefined,
         hasTestRunner ? '@storybook/test-runner' : undefined,
-      ].filter(Boolean),
+      ].filter((dependency): dependency is string => !!dependency),
     },
   ];
 }
 
 function buildTarget(
-  inputs: TargetConfiguration['inputs'],
+  inputs: StorybookInputs,
   outputs: string[],
   projectRoot: string,
   frameworkIsAngular: boolean,
@@ -361,7 +362,7 @@ function serveTarget(
   frameworkIsAngular: boolean,
   browserTarget: string,
   configFilePath: string,
-  inputs: TargetConfiguration['inputs']
+  inputs: StorybookInputs
 ) {
   if (frameworkIsAngular) {
     return {
@@ -424,9 +425,9 @@ function vitestTestTarget(projectRoot: string) {
 }
 
 function serveStaticTarget(
-  options: StorybookPluginOptions,
+  options: Required<StorybookPluginOptions>,
   projectRoot: string,
-  inputs: TargetConfiguration['inputs']
+  inputs: StorybookInputs
 ) {
   const targetConfig: TargetConfiguration = {
     dependsOn: [`${options.buildStorybookTargetName}`],
@@ -515,6 +516,9 @@ async function getStorybookFullyResolvedFramework(
 ): Promise<string> {
   const resolvedPath = join(context.workspaceRoot, configFilePath);
   const { framework } = await loadConfigFile<StorybookConfig>(resolvedPath);
+  if (!framework) {
+    throw new Error(`No Storybook framework is set in ${configFilePath}.`);
+  }
 
   return typeof framework === 'string' ? framework : framework.name;
 }
@@ -571,7 +575,7 @@ async function filterStorybookConfigs(
 }
 
 function normalizeOptions(
-  options: StorybookPluginOptions
+  options: StorybookPluginOptions = {}
 ): Required<StorybookPluginOptions> {
   return {
     buildStorybookTargetName:
@@ -592,9 +596,9 @@ function getProjectMetadata(
 ): { projectName: string | undefined; angularBuildTarget: string | undefined } {
   const packageJsonPath = join(workspaceRoot, projectRoot, 'package.json');
   const projectJsonPath = join(workspaceRoot, projectRoot, 'project.json');
-  let projectJsonName: string;
+  let projectJsonName: string | undefined;
   let projectJsonTargets: Record<string, TargetConfiguration> = {};
-  let packageJsonName: string;
+  let packageJsonName: string | undefined;
   let packageJsonTargets: Record<string, TargetConfiguration> = {};
   if (existsSync(projectJsonPath)) {
     const projectJson = parseJson(readFileSync(projectJsonPath, 'utf-8'));

@@ -1,12 +1,18 @@
 import {
   addProjectConfiguration,
-  readNxJson,
+  readJson,
   readProjectConfiguration,
-  updateNxJson,
+  updateJson,
+  type NxJsonConfiguration,
+  type TargetConfiguration,
   type Tree,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import migration from './rename-ssr-experimental-platform';
+
+type RecordNxJson = Omit<NxJsonConfiguration, 'targetDefaults'> & {
+  targetDefaults?: Record<string, Partial<TargetConfiguration>>;
+};
 
 const ssrApplicationExecutors = [
   '@angular/build:application',
@@ -40,7 +46,7 @@ describe('rename-ssr-experimental-platform migration', () => {
       await migration(tree);
 
       const project = readProjectConfiguration(tree, 'app1');
-      expect(project.targets.build.options.ssr).toStrictEqual({
+      expect(project.targets?.build.options.ssr).toStrictEqual({
         entry: 'src/server.ts',
         platform: 'neutral',
       });
@@ -69,14 +75,16 @@ describe('rename-ssr-experimental-platform migration', () => {
     await migration(tree);
 
     const project = readProjectConfiguration(tree, 'app1');
-    expect(project.targets.build.options.ssr).toStrictEqual({
+    expect(project.targets?.build.options.ssr).toStrictEqual({
       entry: 'src/server.ts',
       platform: 'node',
     });
-    expect(project.targets.build.configurations.production.ssr).toStrictEqual({
-      entry: 'src/server.ts',
-      platform: 'neutral',
-    });
+    expect(project.targets?.build.configurations?.production.ssr).toStrictEqual(
+      {
+        entry: 'src/server.ts',
+        platform: 'neutral',
+      }
+    );
   });
 
   it('should overwrite an existing ssr.platform with the deprecated value when both are set', async () => {
@@ -101,7 +109,7 @@ describe('rename-ssr-experimental-platform migration', () => {
     await migration(tree);
 
     const project = readProjectConfiguration(tree, 'app1');
-    expect(project.targets.build.options.ssr).toStrictEqual({
+    expect(project.targets?.build.options.ssr).toStrictEqual({
       entry: 'src/server.ts',
       platform: 'neutral',
     });
@@ -122,7 +130,7 @@ describe('rename-ssr-experimental-platform migration', () => {
     await migration(tree);
 
     const project = readProjectConfiguration(tree, 'app1');
-    expect(project.targets.build.options.ssr).toStrictEqual({
+    expect(project.targets?.build.options.ssr).toStrictEqual({
       entry: 'src/server.ts',
       platform: 'neutral',
     });
@@ -143,7 +151,7 @@ describe('rename-ssr-experimental-platform migration', () => {
     await migration(tree);
 
     const project = readProjectConfiguration(tree, 'app1');
-    expect(project.targets.build.options.ssr).toBe(true);
+    expect(project.targets?.build.options.ssr).toBe(true);
   });
 
   it('should skip non-application projects', async () => {
@@ -163,7 +171,7 @@ describe('rename-ssr-experimental-platform migration', () => {
     await migration(tree);
 
     const project = readProjectConfiguration(tree, 'lib1');
-    expect(project.targets.build.options.ssr).toStrictEqual({
+    expect(project.targets?.build.options.ssr).toStrictEqual({
       entry: 'src/server.ts',
       experimentalPlatform: 'neutral',
     });
@@ -186,7 +194,7 @@ describe('rename-ssr-experimental-platform migration', () => {
     await migration(tree);
 
     const project = readProjectConfiguration(tree, 'app1');
-    expect(project.targets.build.options.ssr).toStrictEqual({
+    expect(project.targets?.build.options.ssr).toStrictEqual({
       entry: 'src/server.ts',
       experimentalPlatform: 'neutral',
     });
@@ -194,58 +202,64 @@ describe('rename-ssr-experimental-platform migration', () => {
 
   describe('nx.json targetDefaults', () => {
     it('should rename in a record-shaped targetDefault keyed by executor', async () => {
-      const nxJson = readNxJson(tree);
-      nxJson.targetDefaults = {
-        '@nx/angular:application': {
-          options: {
-            ssr: { entry: 'src/server.ts', experimentalPlatform: 'neutral' },
+      updateJson<NxJsonConfiguration>(tree, 'nx.json', (nxJson) => {
+        nxJson.targetDefaults = {
+          '@nx/angular:application': {
+            options: {
+              ssr: { entry: 'src/server.ts', experimentalPlatform: 'neutral' },
+            },
           },
-        },
-      };
-      updateNxJson(tree, nxJson);
+        };
+        return nxJson;
+      });
 
       await migration(tree);
 
       expect(
-        (readNxJson(tree).targetDefaults as any)['@nx/angular:application']
-          .options.ssr
+        readJson<RecordNxJson>(tree, 'nx.json').targetDefaults?.[
+          '@nx/angular:application'
+        ]?.options?.ssr
       ).toStrictEqual({ entry: 'src/server.ts', platform: 'neutral' });
     });
 
     it('should rename in a record-shaped targetDefault keyed by target name with an executor', async () => {
-      const nxJson = readNxJson(tree);
-      nxJson.targetDefaults = {
-        build: {
-          executor: '@nx/angular:application',
-          options: {
-            ssr: { entry: 'src/server.ts', experimentalPlatform: 'neutral' },
+      updateJson<NxJsonConfiguration>(tree, 'nx.json', (nxJson) => {
+        nxJson.targetDefaults = {
+          build: {
+            executor: '@nx/angular:application',
+            options: {
+              ssr: { entry: 'src/server.ts', experimentalPlatform: 'neutral' },
+            },
           },
-        },
-      };
-      updateNxJson(tree, nxJson);
+        };
+        return nxJson;
+      });
 
       await migration(tree);
 
       expect(
-        (readNxJson(tree).targetDefaults as any).build.options.ssr
+        readJson<RecordNxJson>(tree, 'nx.json').targetDefaults?.build?.options
+          ?.ssr
       ).toStrictEqual({ entry: 'src/server.ts', platform: 'neutral' });
     });
 
     it('should skip a record-shaped targetDefault keyed by target name without an executor', async () => {
-      const nxJson = readNxJson(tree);
-      nxJson.targetDefaults = {
-        build: {
-          options: {
-            ssr: { entry: 'src/server.ts', experimentalPlatform: 'neutral' },
+      updateJson<NxJsonConfiguration>(tree, 'nx.json', (nxJson) => {
+        nxJson.targetDefaults = {
+          build: {
+            options: {
+              ssr: { entry: 'src/server.ts', experimentalPlatform: 'neutral' },
+            },
           },
-        },
-      };
-      updateNxJson(tree, nxJson);
+        };
+        return nxJson;
+      });
 
       await migration(tree);
 
       expect(
-        (readNxJson(tree).targetDefaults as any).build.options.ssr
+        readJson<RecordNxJson>(tree, 'nx.json').targetDefaults?.build?.options
+          ?.ssr
       ).toStrictEqual({
         entry: 'src/server.ts',
         experimentalPlatform: 'neutral',

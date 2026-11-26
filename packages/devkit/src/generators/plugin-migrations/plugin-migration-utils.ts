@@ -1,5 +1,11 @@
 import { relative, resolve } from 'node:path/posix';
-import { workspaceRoot, type TargetConfiguration } from 'nx/src/devkit-exports';
+import {
+  readNxJson,
+  workspaceRoot,
+  type NxJsonConfiguration,
+  type TargetConfiguration,
+  type Tree,
+} from 'nx/src/devkit-exports';
 import { interpolate } from 'nx/src/devkit-internals';
 
 /**
@@ -59,27 +65,36 @@ export function deleteMatchingProperties(
   targetToMigrate: object,
   createdTarget: object
 ): void {
-  for (const key in targetToMigrate) {
-    if (Array.isArray(targetToMigrate[key])) {
+  const target = targetToMigrate as Record<string, unknown>;
+  const created = createdTarget as Record<string, unknown>;
+  for (const key in target) {
+    const value = target[key];
+    const createdValue = created[key];
+    if (Array.isArray(value)) {
       if (
-        targetToMigrate[key].every((v) => createdTarget[key]?.includes(v)) &&
-        targetToMigrate[key].length === createdTarget[key]?.length
+        (Array.isArray(createdValue) || typeof createdValue === 'string') &&
+        value.every((v) => createdValue.includes(v)) &&
+        value.length === createdValue.length
       ) {
-        delete targetToMigrate[key];
+        delete target[key];
       }
     } else if (
-      typeof targetToMigrate[key] === 'object' &&
-      typeof createdTarget[key] === 'object'
+      typeof value === 'object' &&
+      value !== null &&
+      typeof createdValue === 'object' &&
+      createdValue !== null
     ) {
-      deleteMatchingProperties(targetToMigrate[key], createdTarget[key]);
-    } else if (targetToMigrate[key] === createdTarget[key]) {
-      delete targetToMigrate[key];
+      deleteMatchingProperties(value, createdValue);
+    } else if (value === createdValue) {
+      delete target[key];
     }
+    const remaining = target[key];
     if (
-      typeof targetToMigrate[key] === 'object' &&
-      Object.keys(targetToMigrate[key]).length === 0
+      typeof remaining === 'object' &&
+      remaining !== null &&
+      Object.keys(remaining).length === 0
     ) {
-      delete targetToMigrate[key];
+      delete target[key];
     }
   }
 }
@@ -90,13 +105,13 @@ export function processTargetOutputs(
   inferredTarget: TargetConfiguration,
   projectDetails: { projectName: string; projectRoot: string }
 ): void {
-  const interpolatedInferredOutputs = (inferredTarget.outputs ?? []).map(
-    (output) =>
-      interpolate(output, {
-        workspaceRoot: '',
-        projectRoot: projectDetails.projectRoot,
-        projectName: projectDetails.projectName,
-      })
+  const inferredOutputs = inferredTarget.outputs ?? [];
+  const interpolatedInferredOutputs = inferredOutputs.map((output) =>
+    interpolate(output, {
+      workspaceRoot: '',
+      projectRoot: projectDetails.projectRoot,
+      projectName: projectDetails.projectName,
+    })
   );
   const targetOutputs = (target.outputs ?? []).map((output) =>
     updateOutput(output, renamedOutputOptions)
@@ -121,7 +136,7 @@ export function processTargetOutputs(
   // move extra inferred outputs to the target outputs
   for (let i = 0; i < interpolatedInferredOutputs.length; i++) {
     if (!interpolatedOutputs.includes(interpolatedInferredOutputs[i])) {
-      targetOutputs.push(inferredTarget.outputs[i]);
+      targetOutputs.push(inferredOutputs[i]);
       interpolatedOutputs.push(interpolatedInferredOutputs[i]);
     }
   }
@@ -223,4 +238,12 @@ export function stableStringify(value: unknown): string {
         stableStringify((value as Record<string, unknown>)[k])
     )
     .join(',')}}`;
+}
+
+export function readRequiredNxJson(tree: Tree): NxJsonConfiguration {
+  const nxJson = readNxJson(tree);
+  if (!nxJson) {
+    throw new Error('Could not find nx.json in the workspace.');
+  }
+  return nxJson;
 }

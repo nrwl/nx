@@ -475,7 +475,10 @@ Update the independent packages with a patch, preminor, and prerelease.
       workspaceRoot,
       join(workspaceRoot, 'packages/nx/package.json')
     );
-    packageInstall('yargs', null, yargsVersion, 'dev');
+    if (!yargsVersion) {
+      throw new Error('Could not resolve the yargs version used by nx');
+    }
+    packageInstall('yargs', undefined, yargsVersion, 'dev');
 
     await writeFile(
       tmpProjPath('release.js'),

@@ -36,7 +36,7 @@ export function createDefautPropsObject(propsObject: {
   return props;
 }
 
-export function getDefinePropsObject(vueComponentFileContent: string): {
+export function getDefinePropsObject(vueComponentFileContent: string | null): {
   [key: string]: string;
 } {
   const scriptTagRegex = /<script[^>]*>([\s\S]*?)<\/script>/;
@@ -62,7 +62,7 @@ export function getDefinePropsObject(vueComponentFileContent: string): {
   } else {
     // No props found
   }
-  const attributes = {};
+  const attributes: Record<string, string> = {};
 
   if (propsContent) {
     const keyTypeRegex = /(\w+):\s*(\w+);/g;

@@ -20,7 +20,7 @@ function getRollupOptions(options: rollup.RollupOptions) {
     options.output = {
       ...options.output,
       globals: {
-        ...options.output.globals,
+        ...options.output?.globals,
         ...extraGlobals,
       },
     };

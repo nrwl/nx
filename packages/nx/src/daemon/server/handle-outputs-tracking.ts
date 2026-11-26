@@ -18,7 +18,7 @@ export async function handleRecordOutputsHashBatch(payload: {
     return {
       description: 'recordOutputsHashBatch failed',
       error: new Error(
-        `Critical error when recording metadata about outputs: '${e.message}'.`
+        `Critical error when recording metadata about outputs: '${e instanceof Error ? e.message : String(e)}'.`
       ),
     };
   }
@@ -38,7 +38,7 @@ export async function handleOutputsHashesMatchBatch(payload: {
     return {
       description: 'outputsHashesMatchBatch failed',
       error: new Error(
-        `Critical error when verifying the contents of the outputs haven't changed: '${e.message}'.`
+        `Critical error when verifying the contents of the outputs haven't changed: '${e instanceof Error ? e.message : String(e)}'.`
       ),
     };
   }

@@ -20,6 +20,9 @@ export function ensureDependencies(
   options: EnsureDependenciesOptions
 ) {
   const storybookVersionToInstall = getInstalledStorybookVersion(tree);
+  if (!storybookVersionToInstall) {
+    throw new Error('Could not determine the installed Storybook version.');
+  }
   const installedStorybookMajorVersion = storybookMajorVersion(tree);
   const dependencies: Record<string, string> = {};
   // Storybook v8 ships `@storybook/core-server` and `@storybook/addon-essentials`

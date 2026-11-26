@@ -39,16 +39,13 @@ export async function setupStandaloneWorkspace(
     workspaceCapabilities,
     workspaceTargets
   );
-  addVsCodeRecommendedExtensions(
-    repoRoot,
-    [
-      'nrwl.angular-console',
-      'angular.ng-template',
-      workspaceCapabilities.eslintProjectConfigFile
-        ? 'dbaeumer.vscode-eslint'
-        : undefined,
-    ].filter(Boolean)
-  );
+  addVsCodeRecommendedExtensions(repoRoot, [
+    'nrwl.angular-console',
+    'angular.ng-template',
+    ...(workspaceCapabilities.eslintProjectConfigFile
+      ? ['dbaeumer.vscode-eslint']
+      : []),
+  ]);
   replaceNgWithNxInPackageJsonScripts(repoRoot);
 
   // convert workspace config format to standalone project configs
@@ -95,8 +92,8 @@ function createNxJson(
         ? [
             '!{projectRoot}/tsconfig.spec.json',
             '!{projectRoot}/**/*.spec.[jt]s',
-            karmaProjectConfigFile ? '!{projectRoot}/karma.conf.js' : undefined,
-          ].filter(Boolean)
+            ...(karmaProjectConfigFile ? ['!{projectRoot}/karma.conf.js'] : []),
+          ]
         : []),
       ...(eslintProjectConfigFile
         ? ['!{projectRoot}/.eslintrc.json', '!{projectRoot}/eslint.config.cjs']
@@ -169,6 +166,7 @@ function updateProjectOutputs(
         target.outputs = ['{options.outputPath}'];
       }
     } else if (
+      target.executor !== undefined &&
       [
         '@angular-devkit/build-angular:browser-esbuild',
         '@angular-devkit/build-angular:browser',
@@ -273,9 +271,9 @@ function projectHasEslintConfig(
 function replaceNgWithNxInPackageJsonScripts(repoRoot: string): void {
   const packageJsonPath = join(repoRoot, 'package.json');
   const packageJson = readJsonFile<PackageJson>(packageJsonPath);
-  packageJson.scripts ??= {};
-  Object.keys(packageJson.scripts).forEach((script) => {
-    packageJson.scripts[script] = packageJson.scripts[script]
+  const scripts = (packageJson.scripts ??= {});
+  Object.keys(scripts).forEach((script) => {
+    scripts[script] = scripts[script]
       .replace(/^nx$/, 'nx')
       .replace(/^ng /, 'nx ')
       .replace(/ ng /g, ' nx ');

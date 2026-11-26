@@ -1,6 +1,6 @@
 import { interpolateName } from 'loader-utils';
 import * as path from 'path';
-import type { Declaration } from 'postcss';
+import type { Declaration, Root } from 'postcss';
 import type { LoaderContext } from '@rspack/core';
 
 function wrapUrl(url: string): string {
@@ -37,8 +37,8 @@ export interface PostcssCliResourcesOptions {
 async function resolve(
   file: string,
   base: string,
-  resolver: (file: string, base: string) => Promise<boolean | string>
-): Promise<boolean | string> {
+  resolver: (file: string, base: string) => Promise<string | false | undefined>
+): Promise<string | false | undefined> {
   try {
     return await resolver(`./${file}`, base);
   } catch {
@@ -61,7 +61,7 @@ export function PostcssCliResources(options: PostcssCliResourcesOptions) {
   const dedupeSlashes = (url: string) => url.replace(/\/\/+/g, '/');
   const process = async (
     inputUrl: string,
-    context: string,
+    context: string | null,
     resourceCache: Map<string, string>
   ) => {
     // If root-relative, absolute or protocol relative url, leave as is
@@ -75,6 +75,9 @@ export function PostcssCliResources(options: PostcssCliResourcesOptions) {
     // this supports bypassing asset processing
     if (inputUrl.startsWith('^')) {
       return inputUrl.slice(1);
+    }
+    if (context === null) {
+      throw new TypeError('The loader context is not available.');
     }
     const cacheKey = path.resolve(context, inputUrl);
     const cachedUrl = resourceCache.get(cacheKey);
@@ -118,7 +121,7 @@ export function PostcssCliResources(options: PostcssCliResourcesOptions) {
       ({ hash, search } = new URL(`file:///dummy${urlSuffix}`));
     }
     const resolver = (file: string, base: string) =>
-      new Promise<boolean | string>((resolve, reject) => {
+      new Promise<string | false | undefined>((resolve, reject) => {
         loader.resolve(base, file, (err, result) => {
           if (err) {
             reject(err);
@@ -128,7 +131,7 @@ export function PostcssCliResources(options: PostcssCliResourcesOptions) {
         });
       });
     const result = await resolve(resolveRequest, context, resolver);
-    return new Promise<boolean | string>((resolve, reject) => {
+    return new Promise<string>((resolve, reject) => {
       loader.fs.readFile(result as string, (err: Error, content: Buffer) => {
         if (err) {
           reject(err);
@@ -160,7 +163,7 @@ export function PostcssCliResources(options: PostcssCliResourcesOptions) {
   };
   return {
     postcssPlugin: 'postcss-cli-resources',
-    Once(root) {
+    Once(root: Root) {
       const urlDeclarations: Array<Declaration> = [];
       /**
        * TODO: Explore if this can be rewritten using the new `Declaration()`
@@ -193,7 +196,11 @@ export function PostcssCliResources(options: PostcssCliResourcesOptions) {
             try {
               processedUrl = await process(originalUrl, context, resourceCache);
             } catch (err) {
-              loader.emitError(decl.error(err.message, { word: originalUrl }));
+              loader.emitError(
+                decl.error(err instanceof Error ? err.message : String(err), {
+                  word: originalUrl,
+                })
+              );
               continue;
             }
             if (lastIndex < match.index) {

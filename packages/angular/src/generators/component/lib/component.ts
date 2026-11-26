@@ -28,7 +28,7 @@ export function exportComponentInEntryPoint(
     tree,
     schema.directory,
     root,
-    schema.projectSourceRoot
+    schema.projectSourceRoot as string
   );
   if (!entryPointPath) {
     logger.warn(

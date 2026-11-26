@@ -34,23 +34,24 @@ export async function updateDependencies(host: Tree, schema: InitSchema) {
 }
 
 export function addVitestTargetDefaults(tree: Tree) {
-  const nxJson = readNxJson(tree);
+  const nxJson = readNxJson(tree) ?? {};
 
-  const productionFileSet = nxJson.namedInputs?.production;
-  if (productionFileSet) {
+  const namedInputs = nxJson.namedInputs;
+  const productionFileSet = namedInputs?.production;
+  if (namedInputs && productionFileSet) {
     productionFileSet.push(
       '!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)',
       '!{projectRoot}/tsconfig.spec.json'
     );
 
-    nxJson.namedInputs.production = Array.from(new Set(productionFileSet));
+    namedInputs.production = Array.from(new Set(productionFileSet));
   }
 
   updateNxJson(tree, nxJson);
 }
 
 export function addPlugin(tree: Tree) {
-  const nxJson = readNxJson(tree);
+  const nxJson = readNxJson(tree) ?? {};
   nxJson.plugins ??= [];
 
   let hasNxNuxtPlugin = false;

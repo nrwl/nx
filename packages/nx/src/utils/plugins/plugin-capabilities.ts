@@ -31,7 +31,7 @@ function tryGetCollection<T extends object>(
 
   try {
     const collectionFilePath = join(dirname(packageJsonPath), collectionFile);
-    return readJsonFile<T>(collectionFilePath)[propName];
+    return readJsonFile<Record<string, T>>(collectionFilePath)[propName];
   } catch {
     return null;
   }
@@ -89,14 +89,14 @@ export async function getPluginCapabilities(
         ),
       },
       projectGraphExtension:
-        pluginModule &&
+        !!pluginModule &&
         ('processProjectGraph' in pluginModule ||
           'createNodes' in pluginModule ||
           'createNodesV2' in pluginModule ||
           'createMetadata' in pluginModule ||
           'createDependencies' in pluginModule),
       projectInference:
-        pluginModule &&
+        !!pluginModule &&
         ('projectFilePatterns' in pluginModule ||
           'createNodes' in pluginModule ||
           'createNodesV2' in pluginModule),

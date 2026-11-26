@@ -155,8 +155,8 @@ export async function resolveVersionActionsForProject(
     projectGraphNode
   );
 
-  let VersionActionsClass: VersionActionsConstructor | undefined;
-  let afterAllProjectsVersioned: AfterAllProjectsVersioned | undefined;
+  let VersionActionsClass: VersionActionsConstructor;
+  let afterAllProjectsVersioned: AfterAllProjectsVersioned;
 
   if (cachedData) {
     VersionActionsClass = cachedData.VersionActionsClass;
@@ -273,6 +273,11 @@ export abstract class VersionActions {
 
     // Build manifestsToUpdate but don't validate existence yet as that could break release graph construction before preVersionCommands have run
     for (const interpolatedManifestRoot of interpolatedManifestRoots) {
+      if (!this.validManifestFilenames) {
+        throw new TypeError(
+          `Project "${this.projectGraphNode.name}" has manifestRootsToUpdate configured, but its VersionActions implementation does not define any validManifestFilenames`
+        );
+      }
       for (const manifestFilename of this.validManifestFilenames) {
         const manifestPath = join(
           interpolatedManifestRoot.path,
@@ -341,7 +346,9 @@ It is also possible that the project is being processed because of a dependency 
     logText: string;
   }> {
     const isSemverRelativeBump = isRelativeVersionKeyword(newVersionInput);
-    const newVersionReasonText = BUMP_TYPE_REASON_TEXT[newVersionInputReason];
+    const reasonTexts: Record<string, string | undefined> =
+      BUMP_TYPE_REASON_TEXT;
+    const newVersionReasonText = reasonTexts[newVersionInputReason];
     if (!newVersionReasonText) {
       throw new Error(
         `Unhandled bump type reason for ${this.projectGraphNode.name} with newVersionInput ${newVersionInput} and newVersionInputReason ${newVersionInputReason}, please report this as a bug on https://github.com/nrwl/nx/issues`

@@ -85,12 +85,17 @@ export async function verdaccioExecutor(
 function getVerdaccioBinPath(): string {
   const { packageJson, path: packageJsonPath } =
     readModulePackageJson('verdaccio');
-  const bin =
-    typeof packageJson.bin === 'string'
-      ? packageJson.bin
-      : packageJson.bin['verdaccio'];
+  const { bin } = packageJson;
+  if (!bin) {
+    throw new Error(
+      `Could not find the verdaccio binary in ${packageJsonPath}.`
+    );
+  }
 
-  return join(dirname(packageJsonPath), bin);
+  return join(
+    dirname(packageJsonPath),
+    typeof bin === 'string' ? bin : bin['verdaccio']
+  );
 }
 
 /**
@@ -145,7 +150,7 @@ function startVerdaccio(
         }
       }
     );
-    childProcess.on('disconnect', (err) => {
+    childProcess.on('disconnect', (err: unknown) => {
       reject(err);
     });
     childProcess.on('exit', (code, signal) => {
@@ -220,7 +225,9 @@ async function removeRejectedNpmAuthToken(
       { env, windowsHide: true }
     );
   } catch (e) {
-    logger.warn(`Failed to remove the npm auth token: ${e.message}`);
+    logger.warn(
+      `Failed to remove the npm auth token: ${e instanceof Error ? e.message : String(e)}`
+    );
   }
   warnPlaceholderAuthTokenRejected(registryUrl);
 }
@@ -266,7 +273,7 @@ function setupNpm(options: VerdaccioExecutorSchema): {
         );
       } catch (e) {
         throw new Error(
-          `Failed to set npm ${registryName} to http://${options.listenAddress}:${options.port}/: ${e.message}`
+          `Failed to set npm ${registryName} to http://${options.listenAddress}:${options.port}/: ${e instanceof Error ? e.message : String(e)}`
         );
       }
     });
@@ -309,13 +316,15 @@ function setupNpm(options: VerdaccioExecutorSchema): {
           { env, windowsHide: true }
         );
       } catch (e) {
-        throw new Error(`Failed to reset npm registry: ${e.message}`);
+        throw new Error(
+          `Failed to reset npm registry: ${e instanceof Error ? e.message : String(e)}`
+        );
       }
     };
     return { cleanup, authTokenSet: true };
   } catch (e) {
     throw new Error(
-      `Failed to set npm registry to http://${options.listenAddress}:${options.port}/: ${e.message}`
+      `Failed to set npm registry to http://${options.listenAddress}:${options.port}/: ${e instanceof Error ? e.message : String(e)}`
     );
   }
 }
@@ -399,7 +408,7 @@ function setupYarn(options: VerdaccioExecutorSchema) {
 
     let whitelistedLocalhost = false;
 
-    if (!isYarnV1 && !currentWhitelist.has(options.listenAddress)) {
+    if (currentWhitelist && !currentWhitelist.has(options.listenAddress)) {
       whitelistedLocalhost = true;
       currentWhitelist.add(options.listenAddress);
 
@@ -450,10 +459,9 @@ function setupYarn(options: VerdaccioExecutorSchema) {
           }
         });
         if (whitelistedLocalhost) {
-          const currentWhitelist: Set<string> =
-            getYarnUnsafeHttpWhitelist(isYarnV1);
+          const currentWhitelist = getYarnUnsafeHttpWhitelist(isYarnV1);
 
-          if (currentWhitelist.has(options.listenAddress)) {
+          if (currentWhitelist?.has(options.listenAddress)) {
             currentWhitelist.delete(options.listenAddress);
 
             setYarnUnsafeHttpWhitelist(currentWhitelist, options);
@@ -463,12 +471,14 @@ function setupYarn(options: VerdaccioExecutorSchema) {
           }
         }
       } catch (e) {
-        throw new Error(`Failed to reset yarn registry: ${e.message}`);
+        throw new Error(
+          `Failed to reset yarn registry: ${e instanceof Error ? e.message : String(e)}`
+        );
       }
     };
   } catch (e) {
     throw new Error(
-      `Failed to set yarn registry to http://${options.listenAddress}:${options.port}/: ${e.message}`
+      `Failed to set yarn registry to http://${options.listenAddress}:${options.port}/: ${e instanceof Error ? e.message : String(e)}`
     );
   }
 }

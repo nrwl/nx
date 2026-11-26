@@ -66,7 +66,7 @@ export async function addJest(
           joinPathFragments(options.appProjectRoot, 'tsconfig.json')
         );
         json.exclude = tsConfig.exclude.filter(
-          (e) => e !== 'jest.config.ts' && e !== 'jest.config.cts'
+          (e: string) => e !== 'jest.config.ts' && e !== 'jest.config.cts'
         );
       }
       return json;

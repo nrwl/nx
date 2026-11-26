@@ -224,12 +224,13 @@ function tryResolveFromSource(
   projects: Record<string, ProjectConfiguration>
 ): string | null {
   packageMetadata ??= getWorkspacePackagesMetadata(projects);
-  let localProject = packageMetadata.packageToProjectMap[packageName];
   // The `packageName` might be a path to the collection rather than an actual
   // package name (e.g. when a generator/executor collection is referenced by
   // path). In that case, `directory` points inside the local project, so we
   // find the project that contains it.
-  localProject ??= getProjectForDirectory(directory, projects);
+  const localProject =
+    packageMetadata.packageToProjectMap[packageName] ??
+    getProjectForDirectory(directory, projects);
   if (!localProject) {
     return null;
   }

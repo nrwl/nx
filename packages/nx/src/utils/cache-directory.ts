@@ -141,7 +141,7 @@ function absolutePath(root: string, path: string): string {
   }
 }
 
-function cacheDirectory(root: string, cacheDirectory: string) {
+function cacheDirectory(root: string, cacheDirectory: string | undefined) {
   const cacheDirFromEnv = process.env.NX_CACHE_DIRECTORY;
   if (cacheDirFromEnv) {
     cacheDirectory = cacheDirFromEnv;
@@ -363,18 +363,20 @@ const resolvedLocations = new Map<string, SharedDataLocation>();
  * shallow clone with no remote. Those keep their own copy.
  */
 function workspaceIdFor(root: string): string | null {
-  if (!workspaceIds.has(root)) {
-    let id: string | null = null;
-    try {
-      // `readNxJson` throws on malformed `nx.json`, which must not take the
-      // process down: this runs at module scope and there is a better error
-      // waiting further in. `generateWorkspaceId` swallows its own git
-      // failures.
-      id = generateWorkspaceId(root, readNxJson(root));
-    } catch {}
-    workspaceIds.set(root, id);
+  const cached = workspaceIds.get(root);
+  if (cached !== undefined) {
+    return cached;
   }
-  return workspaceIds.get(root);
+  let id: string | null = null;
+  try {
+    // `readNxJson` throws on malformed `nx.json`, which must not take the
+    // process down: this runs at module scope and there is a better error
+    // waiting further in. `generateWorkspaceId` swallows its own git
+    // failures.
+    id = generateWorkspaceId(root, readNxJson(root));
+  } catch {}
+  workspaceIds.set(root, id);
+  return id;
 }
 
 /**
@@ -444,6 +446,11 @@ export function sharedUserDataDir(
   dirName: string,
   kind: SharedDataKind
 ): string {
+  if (!NX_HOME_TMP_DIR) {
+    throw new Error(
+      'Cannot resolve the shared data directory without a home directory.'
+    );
+  }
   return join(NX_HOME_TMP_DIR, dirName, SHARED_SEGMENT[kind]);
 }
 

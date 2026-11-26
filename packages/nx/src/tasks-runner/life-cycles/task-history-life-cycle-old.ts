@@ -10,11 +10,12 @@ import { output } from '../../utils/output';
 import { serializeTarget } from '../../utils/serialize-target';
 import { isTuiEnabled } from '../is-tui-enabled';
 import { LifeCycle, TaskResult } from '../life-cycle';
+import { getTaskHash } from '../utils';
 
 export class LegacyTaskHistoryLifeCycle implements LifeCycle {
   private startTimings: Record<string, number> = {};
   private pendingResults: TaskResult[] = [];
-  private flakyTasks: string[];
+  private flakyTasks: string[] | undefined;
 
   startTasks(tasks: Task[]): void {
     for (let task of tasks) {
@@ -34,13 +35,13 @@ export class LegacyTaskHistoryLifeCycle implements LifeCycle {
     const cacheableHashes = new Set<string>();
     for (const taskResult of this.pendingResults) {
       if (taskResult.task.cache === true) {
-        cacheableHashes.add(taskResult.task.hash);
+        cacheableHashes.add(getTaskHash(taskResult.task));
       }
       taskRuns.push({
         project: taskResult.task.target.project,
         target: taskResult.task.target.target,
-        configuration: taskResult.task.target.configuration,
-        hash: taskResult.task.hash,
+        configuration: taskResult.task.target.configuration ?? '',
+        hash: getTaskHash(taskResult.task),
         code: taskResult.code.toString(),
         status: taskResult.status,
         start: (
@@ -83,7 +84,7 @@ export class LegacyTaskHistoryLifeCycle implements LifeCycle {
   }
 
   printFlakyTasksMessage() {
-    if (this.flakyTasks?.length > 0) {
+    if (this.flakyTasks && this.flakyTasks.length > 0) {
       const MAX_VISIBLE_FLAKY = 5;
       const visibleFlaky =
         this.flakyTasks.length > MAX_VISIBLE_FLAKY + 1
@@ -101,7 +102,6 @@ export class LegacyTaskHistoryLifeCycle implements LifeCycle {
             : `${this.flakyTasks.length} flaky tasks`
         }`,
         bodyLines: [
-          ,
           ...flakyRows,
           ...(isNxCloudUsed(readNxJson())
             ? []

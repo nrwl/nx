@@ -1,5 +1,5 @@
 import type { Mock } from 'vitest';
-import { readNxJson, updateNxJson, type Tree } from '@nx/devkit';
+import { readJson, readNxJson, updateNxJson, type Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { isInteractive, selectPrompt } from '@nx/devkit/internal';
 import { normalizeLinterOption } from './generator-prompts';
@@ -27,7 +27,7 @@ describe('normalizeLinterOption', () => {
   });
 
   function addDevDependency(pkg: string) {
-    const packageJson = JSON.parse(tree.read('package.json', 'utf-8'));
+    const packageJson = readJson(tree, 'package.json');
     packageJson.devDependencies = {
       ...packageJson.devDependencies,
       [pkg]: '1.0.0',
@@ -67,7 +67,7 @@ describe('normalizeLinterOption', () => {
   });
 
   it('should detect through the inference plugin, not just dependencies', async () => {
-    const nxJson = readNxJson(tree);
+    const nxJson = readNxJson(tree) ?? {};
     nxJson.plugins = [...(nxJson.plugins ?? []), '@nx/eslint/plugin'];
     updateNxJson(tree, nxJson);
 

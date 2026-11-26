@@ -5,6 +5,7 @@ import {
   cleanupProject,
   directoryExists,
   e2eCwd,
+  ensureDefined,
   fileExists,
   getPublishedVersion,
   getSelectedPackageManager,
@@ -195,10 +196,13 @@ function createYarnBerryProject(): void {
 const suite = getSelectedPackageManager() === 'npm' ? describe : describe.skip;
 
 suite('migrate registry configuration', () => {
-  let previousPackageManager: string;
+  let previousPackageManager: string | undefined;
 
   beforeAll(() => {
-    localRegistry = process.env.npm_config_registry;
+    localRegistry = ensureDefined(
+      process.env.npm_config_registry,
+      'npm_config_registry'
+    );
     previousPackageManager = process.env.SELECTED_PM;
   });
 

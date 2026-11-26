@@ -24,7 +24,7 @@ import {
 } from '@nx/e2e-utils';
 
 describe('js:tsc executor', () => {
-  let scope;
+  let scope: string;
   beforeAll(
     () =>
       (scope = newProject({ packages: ['@nx/js', '@nx/eslint', '@nx/jest'] }))

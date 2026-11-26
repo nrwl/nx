@@ -16,7 +16,7 @@ export async function parseRegistryOptions(
   logWarnFn: (message: string) => void = console.warn
 ): Promise<{
   registry: string | undefined;
-  tag: string;
+  tag: string | undefined;
   registryConfigKey: string;
 }> {
   const npmRcPath = join(pkg.packageRoot, '.npmrc');
@@ -99,7 +99,7 @@ export async function getNpmRegistry(
  *
  * @param cwd the directory where the npm config should be read from
  */
-export async function getNpmTag(cwd: string): Promise<string> {
+export async function getNpmTag(cwd: string): Promise<string | undefined> {
   // npm does not support '@scope:tag' in the npm config, so we only need to check for 'tag'.
   return getNpmConfigValue('tag', cwd);
 }
@@ -152,6 +152,9 @@ async function configGet(
       cwd,
       stdio: ['ignore', 'pipe', 'pipe'],
     });
+    if (!child.stdout || !child.stderr) {
+      throw new Error('npm config get was spawned without piped stdout/stderr');
+    }
     let stdout = '';
     let stderr = '';
     child.stdout.setEncoding('utf-8').on('data', (chunk) => (stdout += chunk));

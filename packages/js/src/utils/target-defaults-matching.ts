@@ -75,9 +75,12 @@ export function compatibleDefaultsEntries(
  */
 export function lastMatchingInputsSupplier(
   ref: MatchedTargetRef,
-  selectedKey: string,
+  selectedKey: string | null,
   entries: TargetDefaultArrayEntry[]
 ): TargetDefaultArrayEntry | undefined {
+  if (selectedKey === null) {
+    return undefined;
+  }
   return [...entries].reverse().find(
     (entry) =>
       entry.inputs !== undefined &&

@@ -7,6 +7,9 @@ const pseudoIPCPath = process.env['NX_PSEUDO_IPC_PATH'];
 const forkId = process.env['NX_PSEUDO_IPC_FORK_ID'];
 delete process.env['NX_PSEUDO_IPC_PATH'];
 delete process.env['NX_PSEUDO_IPC_FORK_ID'];
+if (!pseudoIPCPath || !forkId) {
+  throw new Error('NX_PSEUDO_IPC_PATH and NX_PSEUDO_IPC_FORK_ID must be set');
+}
 
 const script = join(__dirname, '../../bin/run-executor.js');
 

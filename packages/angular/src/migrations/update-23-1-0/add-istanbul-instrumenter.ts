@@ -31,11 +31,11 @@ function usesKarma(
   executors: Array<string | undefined>,
   target: Pick<TargetConfiguration, 'options' | 'configurations'>
 ): boolean {
-  if (executors.some((e) => karmaBuilders.includes(e))) {
+  if (executors.some((e) => karmaBuilders.includes(e ?? ''))) {
     return true;
   }
 
-  if (executors.some((e) => unitTestBuilders.includes(e))) {
+  if (executors.some((e) => unitTestBuilders.includes(e ?? ''))) {
     for (const [, options] of allTargetOptions(
       target as TargetConfiguration<UnitTestOptions>
     )) {

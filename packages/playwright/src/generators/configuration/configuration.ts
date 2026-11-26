@@ -189,7 +189,7 @@ export async function configurationGeneratorInternal(
     if (!tree.exists(packageJsonPath)) {
       const importPath = resolveImportPath(
         tree,
-        projectConfig.name,
+        options.project,
         projectConfig.root
       );
 
@@ -390,7 +390,7 @@ function ignoreTestOutput(
     logger.warn(`Couldn't find a root .gitignore file to update.`);
   }
 
-  let content = tree.read('.gitignore', 'utf-8');
+  let content = tree.read('.gitignore', 'utf-8') ?? '';
   if (/^test-output$/gm.test(content)) {
     return;
   }

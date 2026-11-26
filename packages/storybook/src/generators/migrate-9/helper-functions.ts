@@ -11,7 +11,7 @@ import {
 } from '@nx/devkit';
 import { readFileSync } from 'fs';
 import { dirname, join } from 'path';
-import { fileExists } from '@nx/devkit/internal';
+import { fileExists, type PackageJson } from '@nx/devkit/internal';
 
 export function onlyShowGuide(storybookProjects: {
   [key: string]: {
@@ -95,15 +95,18 @@ export function getAllStorybookInfo(tree: Tree): {
 
 export function handleMigrationResult(
   migrateResult: {
-    successfulProjects: {};
-    failedProjects: {};
+    successfulProjects: Record<string, string>;
+    failedProjects: Record<string, string>;
   },
   allStorybookProjects: {
     [key: string]: {
       configDir: string;
     };
   }
-): { successfulProjects: {}; failedProjects: {} } {
+): {
+  successfulProjects: Record<string, string>;
+  failedProjects: Record<string, string>;
+} {
   if (
     fileExists(join(workspaceRoot, 'migration-storybook.log')) &&
     Object.keys(migrateResult.successfulProjects)?.length
@@ -174,8 +177,8 @@ export function handleMigrationResult(
   return migrateResult;
 }
 
-export function checkStorybookInstalled(packageJson): boolean {
-  return (
+export function checkStorybookInstalled(packageJson: PackageJson): boolean {
+  return !!(
     (packageJson.dependencies?.['storybook'] ||
       packageJson.devDependencies?.['storybook']) &&
     (packageJson.dependencies?.['@nx/storybook'] ||

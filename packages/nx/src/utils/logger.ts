@@ -10,33 +10,34 @@ type LogDriver = Pick<Console, 'warn' | 'error' | 'info' | 'log' | 'debug'>;
 
 export function createLogger(driver: LogDriver) {
   return {
-    warn: (...v) => driver.warn(...v.map((s) => pc.bold(pc.yellow(s)))),
-    error: (s) => {
+    warn: (...v: unknown[]) =>
+      driver.warn(...v.map((s) => pc.bold(pc.yellow(String(s))))),
+    error: (s: unknown) => {
       if (typeof s === 'string' && s.startsWith('NX ')) {
         driver.error(`\n${NX_ERROR} ${pc.bold(pc.red(s.slice(3)))}\n`);
       } else if (s instanceof Error && s.stack) {
         driver.error(pc.bold(pc.red(s.stack)));
       } else {
-        driver.error(pc.bold(pc.red(s)));
+        driver.error(pc.bold(pc.red(String(s))));
       }
     },
-    info: (s) => {
+    info: (s: unknown) => {
       if (typeof s === 'string' && s.startsWith('NX ')) {
         driver.info(`\n${NX_PREFIX} ${pc.bold(s.slice(3))}\n`);
       } else {
         driver.info(s);
       }
     },
-    log: (...s) => {
+    log: (...s: unknown[]) => {
       driver.log(...s);
     },
-    debug: (...s) => {
+    debug: (...s: unknown[]) => {
       driver.debug(...s);
     },
-    fatal: (...s) => {
+    fatal: (...s: unknown[]) => {
       driver.error(...s);
     },
-    verbose: (...s) => {
+    verbose: (...s: unknown[]) => {
       if (process.env.NX_VERBOSE_LOGGING === 'true') {
         // verbose logs go to stderr to prevent things like `nx show projects | grep`
         // breaking when you enable verbose logging. The only potential breakage from

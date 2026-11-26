@@ -25,7 +25,7 @@ function findBuildTarget(
         '@nx/angular:application',
         '@nx/angular:browser-esbuild',
         '@nx/angular:webpack-browser',
-      ].includes(target.executor)
+      ].includes(target.executor ?? '')
     ) {
       return target;
     }

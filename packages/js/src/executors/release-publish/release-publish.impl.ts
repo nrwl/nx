@@ -11,11 +11,20 @@ import { join } from 'path';
 import { isLocallyLinkedPackageVersion } from '../../utils/is-locally-linked-package-version';
 import { parseRegistryOptions } from '../../utils/npm-config';
 import { extractNpmPublishJsonData } from './extract-npm-publish-json-data';
-import { logTar } from './log-tar';
+import { logTar, type PublishedTarball } from './log-tar';
 import { PublishExecutorSchema } from './schema';
 import chalk = require('chalk');
 
 const LARGE_BUFFER = 1024 * 1000000;
+
+interface ExecOutputError {
+  stdout?: Buffer | string | null;
+  stderr?: Buffer | string | null;
+}
+
+function isExecOutputError(err: unknown): err is ExecOutputError {
+  return typeof err === 'object' && err !== null;
+}
 
 function processEnv(color: boolean) {
   const env = {
@@ -182,7 +191,7 @@ Please update the local dependency on "${depName}" to be a valid semantic versio
    */
   if (options.nxReleaseVersionData) {
     const projectVersionData =
-      options.nxReleaseVersionData[context.projectName];
+      options.nxReleaseVersionData[context.projectName!];
     if (projectVersionData && projectVersionData.newVersion === null) {
       console.warn(
         `Skipped ${packageTxt}, because no new version was resolved for this project`
@@ -244,7 +253,7 @@ Please update the local dependency on "${depName}" to be a valid semantic versio
       'dist-tag',
       'add',
       `${packageName}@${packageJson.version}`,
-      tag,
+      String(tag),
       ...registryArgs,
     ],
   };
@@ -283,7 +292,7 @@ Please update the local dependency on "${depName}" to be a valid semantic versio
         const resultJson = JSON.parse(output);
 
         if (pm === 'bun') {
-          distTagVersion = resultJson['dist-tags']?.[tag];
+          distTagVersion = resultJson['dist-tags']?.[String(tag)];
           versionExists = (
             Array.isArray(resultJson.versions)
               ? resultJson.versions
@@ -350,6 +359,9 @@ Please update the local dependency on "${depName}" to be a valid semantic versio
             };
           } catch (err) {
             try {
+              if (!isExecOutputError(err)) {
+                throw err;
+              }
               const stdoutData = JSON.parse(err.stdout?.toString() || '{}');
 
               // If the error is that the package doesn't exist, then we can ignore it because we will be publishing it for the first time in the next step
@@ -402,6 +414,9 @@ Please update the local dependency on "${depName}" to be a valid semantic versio
         }
       }
     } catch (err) {
+      if (!isExecOutputError(err)) {
+        throw err;
+      }
       const isNotFound =
         pm === 'bun'
           ? [err.stderr?.toString(), err.stdout?.toString()].some(
@@ -462,7 +477,7 @@ interface RunPublishContext {
   packageJson: any;
   registry: string | undefined;
   registryConfigKey: string;
-  tag: string;
+  tag: string | undefined;
   isDryRun: boolean;
   isNpmInstalled: boolean;
   packageTxt: string;
@@ -488,7 +503,7 @@ function runPublish(ctx: RunPublishContext): { success: boolean } {
     packageRoot,
     registry,
     registryConfigKey,
-    tag
+    String(tag)
   );
 
   if (options.otp) {
@@ -586,7 +601,7 @@ function runPublish(ctx: RunPublishContext): { success: boolean } {
       console.log(beforeJsonData);
     }
 
-    logTar(jsonData);
+    logTar(jsonData as PublishedTarball);
 
     if (typeof afterJsonData === 'string' && afterJsonData.trim().length > 0) {
       console.log(afterJsonData);
@@ -600,6 +615,9 @@ function runPublish(ctx: RunPublishContext): { success: boolean } {
     };
   } catch (err) {
     try {
+      if (!isExecOutputError(err)) {
+        throw err;
+      }
       // bun publish does not support outputting JSON, so we cannot perform any further processing
       if (pm === 'bun') {
         const bunStderr = err.stderr?.toString() || '';

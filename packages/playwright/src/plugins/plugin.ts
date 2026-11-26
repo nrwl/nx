@@ -507,7 +507,7 @@ async function buildPlaywrightTargets(
     // report files
     const ciReporterOutputs = reporterOutputs.map<ReporterOutput>(
       ([reporter, output]) =>
-        reporter === 'blob' && output.endsWith('.zip')
+        reporter === 'blob' && output?.endsWith('.zip')
           ? [reporter, dirname(output)]
           : [reporter, output]
     );
@@ -541,8 +541,8 @@ async function buildPlaywrightTargets(
     );
 
     const groupName = 'E2E (CI)';
-    metadata = { targetGroups: { [groupName]: [] } };
-    const ciTargetGroup = metadata.targetGroups[groupName];
+    const ciTargetGroup: string[] = [];
+    metadata = { targetGroups: { [groupName]: ciTargetGroup } };
 
     const testDir = configTestDir
       ? joinPathFragments(projectRoot, configTestDir)
@@ -694,7 +694,7 @@ async function buildPlaywrightTargets(
 async function getAllTestFiles(opts: {
   context: CreateNodesContext;
   path: string;
-  testMatch: PlaywrightTestConfig['testMatch'];
+  testMatch: NonNullable<PlaywrightTestConfig['testMatch']>;
   testIgnore: PlaywrightTestConfig['testIgnore'];
 }) {
   const files = await getFilesInDirectoryUsingContext(
@@ -720,7 +720,9 @@ function materializeTestPattern(
   return Array.isArray(pattern) ? Array.from(pattern, clone) : clone(pattern);
 }
 
-function createMatcher(pattern: string | RegExp | Array<string | RegExp>) {
+function createMatcher(
+  pattern: string | RegExp | Array<string | RegExp>
+): (path: string) => boolean {
   if (Array.isArray(pattern)) {
     const matchers = pattern.map((p) => createMatcher(p));
     return (path: string) => matchers.some((m) => m(path));
@@ -731,13 +733,19 @@ function createMatcher(pattern: string | RegExp | Array<string | RegExp>) {
       try {
         return minimatch(path, pattern);
       } catch (e) {
-        throw new Error(`Error matching ${path} with ${pattern}: ${e.message}`);
+        throw new Error(
+          `Error matching ${path} with ${pattern}: ${
+            e instanceof Error ? e.message : String(e)
+          }`
+        );
       }
     };
   }
 }
 
-function normalizeOptions(options: PlaywrightPluginOptions): NormalizedOptions {
+function normalizeOptions(
+  options: PlaywrightPluginOptions | undefined
+): NormalizedOptions {
   const ciTargetName = options?.ciTargetName ?? 'e2e-ci';
 
   return {
@@ -1230,10 +1238,12 @@ function getDependsOn(
   const projectsPerTask = new Map<string, string[]>();
 
   for (const { project, target } of tasks) {
-    if (!projectsPerTask.has(target)) {
-      projectsPerTask.set(target, []);
+    const projects = projectsPerTask.get(target);
+    if (projects) {
+      projects.push(project);
+    } else {
+      projectsPerTask.set(target, [project]);
     }
-    projectsPerTask.get(target).push(project);
   }
 
   return Array.from(projectsPerTask.entries()).map(([target, projects]) => ({

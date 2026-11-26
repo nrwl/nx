@@ -9,7 +9,7 @@ import {
 export function normalizeOptions(
   tree: Tree,
   options: WebWorkerGeneratorOptions
-): WebWorkerGeneratorOptions {
+): WebWorkerGeneratorOptions & { path: string } {
   if (!getProjects(tree).has(options.project)) {
     throw new Error(`Project '${options.project}' does not exist!`);
   }
@@ -24,10 +24,9 @@ export function normalizeOptions(
     );
   }
 
-  const path =
-    (options.path ?? sourceRoot)
-      ? joinPathFragments(sourceRoot, 'app')
-      : joinPathFragments(root, 'src', 'app');
+  const path = sourceRoot
+    ? joinPathFragments(sourceRoot, 'app')
+    : joinPathFragments(root, 'src', 'app');
 
   if (!tree.exists(path)) {
     throw new Error(`Path '${options.path}' does not exist!`);

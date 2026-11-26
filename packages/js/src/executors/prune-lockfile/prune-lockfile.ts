@@ -228,11 +228,15 @@ function declareTransitiveFolderDependencies(
     moduleRoot: string,
     section: 'dependencies' | 'optionalDependencies' | 'devDependencies'
   ) => {
-    if (section !== 'optionalDependencies' && declaredOptional.delete(name)) {
-      (packageJson.dependencies ??= {})[name] =
-        packageJson.optionalDependencies[name];
-      delete packageJson.optionalDependencies[name];
-      if (!Object.keys(packageJson.optionalDependencies).length) {
+    const optionalDependencies = packageJson.optionalDependencies;
+    if (
+      section !== 'optionalDependencies' &&
+      optionalDependencies &&
+      declaredOptional.delete(name)
+    ) {
+      (packageJson.dependencies ??= {})[name] = optionalDependencies[name];
+      delete optionalDependencies[name];
+      if (!Object.keys(optionalDependencies).length) {
         delete packageJson.optionalDependencies;
       }
       return;
@@ -336,7 +340,12 @@ function getOutputDir(schema: PruneLockfileOptions, context: ExecutorContext) {
   }
   const target = parseTargetString(schema.buildTarget, context);
   const project = context.projectGraph.nodes[target.project].data;
-  const buildTarget = project.targets[target.target];
+  const buildTarget = project.targets?.[target.target];
+  if (!buildTarget) {
+    throw new Error(
+      `Cannot find target '${target.target}' for project '${target.project}'.`
+    );
+  }
   let maybeOutputPath =
     buildTarget.outputs?.[0] ??
     buildTarget.options.outputPath ??

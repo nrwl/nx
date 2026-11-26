@@ -5,7 +5,7 @@ export class TaskTimingsLifeCycle implements LifeCycle {
   private timings: {
     [target: string]: {
       start: number;
-      end: number;
+      end: number | undefined;
     };
   } = {};
 
@@ -33,7 +33,7 @@ export class TaskTimingsLifeCycle implements LifeCycle {
 
   endCommand(): void {
     console.log('Task Execution Timings:');
-    const timings = {};
+    const timings: Record<string, number | null> = {};
     Object.keys(this.timings).forEach((p) => {
       const t = this.timings[p];
       timings[p] = t.end ? t.end - t.start : null;

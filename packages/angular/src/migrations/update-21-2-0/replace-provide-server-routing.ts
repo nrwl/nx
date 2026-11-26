@@ -28,6 +28,9 @@ export default async function (tree: Tree) {
 
 function processFile(tree: Tree, filePath: string): void {
   const content = tree.read(filePath, 'utf-8');
+  if (content === null) {
+    return;
+  }
 
   if (
     (!content.includes('provideServerRouting') &&
@@ -66,7 +69,7 @@ function processFile(tree: Tree, filePath: string): void {
   });
 
   let provideServerRenderingCall: ts.CallExpression | undefined;
-  let provideServerRoutingCall: ts.CallExpression;
+  let provideServerRoutingCall: ts.CallExpression | undefined;
 
   const providerCallNodes = providersArray.elements.filter((el) =>
     ts.isCallExpression(el)
@@ -82,10 +85,14 @@ function processFile(tree: Tree, filePath: string): void {
     }
   }
 
+  if (!provideServerRoutingCall) {
+    return;
+  }
+
   const withRoutesCall = ts.factory.createCallExpression(
     ts.factory.createIdentifier('withRoutes'),
     undefined,
-    [provideServerRoutingCall.arguments.at(0)]
+    [provideServerRoutingCall.arguments[0]]
   );
 
   let updatedProvidersArray: ts.ArrayLiteralExpression;

@@ -2,6 +2,7 @@ import type {
   ExecutorContext,
   ProjectGraphProjectNode,
   Target,
+  TaskGraph,
 } from '@nx/devkit';
 import type {
   ExecutorOptions,
@@ -9,13 +10,21 @@ import type {
 } from '../../../utils/schema';
 import { normalizeOptions } from './normalize-options';
 
-const tasksOptionsCache = new Map<string, NormalizedExecutorOptions>();
+export function getTaskGraph(context: ExecutorContext): TaskGraph {
+  if (!context.taskGraph) {
+    throw new Error('The task graph is not available in the executor context.');
+  }
+  return context.taskGraph;
+}
+
+const tasksOptionsCache = new Map<string, NormalizedExecutorOptions | null>();
 export function getTaskOptions(
   taskName: string,
   context: ExecutorContext
 ): NormalizedExecutorOptions | null {
-  if (tasksOptionsCache.has(taskName)) {
-    return tasksOptionsCache.get(taskName);
+  const cachedOptions = tasksOptionsCache.get(taskName);
+  if (cachedOptions !== undefined) {
+    return cachedOptions;
   }
 
   try {
@@ -46,13 +55,16 @@ function parseTaskInfo<T = Record<string, any>>(
 ): {
   taskOptions: T;
   root: string;
-  sourceRoot: string;
+  sourceRoot: string | undefined;
   projectNode: ProjectGraphProjectNode;
   target: Target;
 } {
-  const target = context.taskGraph.tasks[taskName].target;
+  const target = getTaskGraph(context).tasks[taskName].target;
   const projectNode = context.projectGraph.nodes[target.project];
   const targetConfig = projectNode.data.targets?.[target.target];
+  if (!targetConfig) {
+    throw new Error(`Cannot find target configuration for task ${taskName}.`);
+  }
   const { sourceRoot, root } = projectNode.data;
 
   const taskOptions = {

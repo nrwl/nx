@@ -25,7 +25,7 @@ import {
 } from '@nx/devkit/internal';
 
 function isBuildable(target: string, node: ProjectGraphProjectNode): boolean {
-  return (
+  return !!(
     node.data.targets &&
     node.data.targets[target] &&
     node.data.targets[target].executor !== ''
@@ -44,7 +44,7 @@ export function calculateProjectBuildableDependencies(
   root: string,
   projectName: string,
   targetName: string,
-  configurationName: string,
+  configurationName: string | undefined,
   shallow?: boolean
 ): {
   target: ProjectGraphProjectNode;
@@ -79,7 +79,7 @@ export function calculateProjectDependencies(
   root: string,
   projectName: string,
   targetName: string,
-  configurationName: string,
+  configurationName: string | undefined,
   shallow?: boolean
 ): {
   target: ProjectGraphProjectNode;
@@ -89,7 +89,7 @@ export function calculateProjectDependencies(
 } {
   const target = projGraph.nodes[projectName];
   // gather the library dependencies
-  const nonBuildableDependencies = [];
+  const nonBuildableDependencies: string[] = [];
   const topLevelDependencies: DependentBuildableProjectNode[] = [];
   const collectedDeps = collectDependencies(
     projectName,
@@ -97,9 +97,9 @@ export function calculateProjectDependencies(
     [],
     shallow
   );
-  const missing = collectedDeps.reduce(
-    (missing: string[] | undefined, { name: dep }) => {
-      const depNode = projGraph.nodes[dep] || projGraph.externalNodes[dep];
+  const missing = collectedDeps.reduce<string[] | null>(
+    (missing, { name: dep }) => {
+      const depNode = projGraph.nodes[dep] || projGraph.externalNodes?.[dep];
       if (!depNode) {
         missing = missing || [];
         missing.push(dep);
@@ -113,8 +113,8 @@ export function calculateProjectDependencies(
   }
   const dependencies = collectedDeps
     .map(({ name: dep, isTopLevel }) => {
-      let project: DependentBuildableProjectNode = null;
-      const depNode = projGraph.nodes[dep] || projGraph.externalNodes[dep];
+      let project: DependentBuildableProjectNode | null = null;
+      const depNode = projGraph.nodes[dep] || projGraph.externalNodes?.[dep];
       if (isProjectGraphProjectNode(depNode) && depNode.type === 'lib') {
         if (isBuildable(targetName, depNode)) {
           const libPackageJsonPath = join(
@@ -155,7 +155,7 @@ export function calculateProjectDependencies(
 
       return project;
     })
-    .filter((x) => !!x);
+    .filter((x) => x !== null);
 
   dependencies.sort((a, b) => (a.name > b.name ? 1 : b.name > a.name ? -1 : 0));
 
@@ -181,7 +181,7 @@ function collectDependencies(
       // As a result, some nodes might be missing. This should not cause any issues, we can just skip them.
       if (
         dependency.target.startsWith('npm:') &&
-        !projGraph.externalNodes[dependency.target]
+        !projGraph.externalNodes?.[dependency.target]
       )
         return;
 
@@ -245,7 +245,7 @@ export function calculateDependenciesFromTaskGraph(
   root: string,
   projectName: string,
   targetName: string,
-  configurationName: string,
+  configurationName: string | undefined,
   shallow?: boolean
 ): {
   target: ProjectGraphProjectNode;
@@ -254,7 +254,7 @@ export function calculateDependenciesFromTaskGraph(
   topLevelDependencies: DependentBuildableProjectNode[];
 } {
   const target = projectGraph.nodes[projectName];
-  const nonBuildableDependencies = [];
+  const nonBuildableDependencies: string[] = [];
   const topLevelDependencies: DependentBuildableProjectNode[] = [];
 
   const dependentTasks = collectDependentTasks(
@@ -275,7 +275,7 @@ export function calculateDependenciesFromTaskGraph(
 
   const dependencies: DependentBuildableProjectNode[] = [];
   for (const [taskName, { isTopLevel }] of dependentTasks) {
-    let project: DependentBuildableProjectNode = null;
+    let project: DependentBuildableProjectNode | null = null;
     const depTask = taskGraph.tasks[taskName];
     const depProjectNode = projectGraph.nodes?.[depTask.target.project];
     if (depProjectNode?.type !== 'lib') {
@@ -346,9 +346,9 @@ function collectNpmDependencies(
     isTopLevel: boolean;
   }> = projectGraph.dependencies[projectName]
     .map((dep) => {
-      const projectNode =
-        projectGraph.nodes?.[dep.target] ??
-        projectGraph.externalNodes?.[dep.target];
+      const projectNode = projectGraph.nodes?.[dep.target]
+        ? undefined
+        : projectGraph.externalNodes?.[dep.target];
       if (
         projectNode?.type !== 'npm' ||
         collectedPackages.has(projectNode.data.packageName)
@@ -365,7 +365,7 @@ function collectNpmDependencies(
 
       return { project, isTopLevel };
     })
-    .filter((x) => !!x);
+    .filter((x) => x !== null);
 
   if (dependentTasks?.size) {
     for (const [, { project: projectName }] of dependentTasks) {
@@ -394,9 +394,10 @@ function collectDependentTasks(
   dependentTasks = new Map<string, { project: string; isTopLevel: boolean }>()
 ): Map<string, { project: string; isTopLevel: boolean }> {
   for (const { id: depTask } of taskGraph.dependencies[task] ?? []) {
-    if (dependentTasks.has(depTask)) {
-      if (!dependentTasks.get(depTask).isTopLevel && areTopLevelDeps) {
-        dependentTasks.get(depTask).isTopLevel = true;
+    const existingTask = dependentTasks.get(depTask);
+    if (existingTask) {
+      if (!existingTask.isTopLevel && areTopLevelDeps) {
+        existingTask.isTopLevel = true;
       }
       continue;
     }
@@ -474,7 +475,7 @@ export function createTmpTsConfig(
   return join(tmpTsConfigPath);
 }
 
-function cleanupTmpTsConfigFile(tmpTsConfigPath) {
+function cleanupTmpTsConfigFile(tmpTsConfigPath: string) {
   try {
     if (tmpTsConfigPath) {
       unlinkSync(tmpTsConfigPath);
@@ -656,7 +657,11 @@ export function updateBuildableProjectPackageJsonDependencies(
 }
 
 // verify whether the package.json already specifies the dep
-function hasDependency(outputJson, depConfigName: string, packageName: string) {
+function hasDependency(
+  outputJson: Record<string, Record<string, string> | undefined>,
+  depConfigName: string,
+  packageName: string
+) {
   if (outputJson[depConfigName]) {
     return outputJson[depConfigName][packageName];
   } else {

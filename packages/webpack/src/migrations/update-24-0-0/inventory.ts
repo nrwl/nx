@@ -40,10 +40,10 @@ export function inventoryComposePlugins(tree: Tree): HelperUsage[] {
       usesModuleFederation: configs.some(({ source }) =>
         MODULE_FEDERATION_HELPERS.test(source)
       ),
-      usesExecutor: Object.values(project.targets ?? {}).some((target) =>
-        ['@nx/webpack:webpack', '@nrwl/webpack:webpack'].includes(
-          target.executor
-        )
+      usesExecutor: Object.values(project.targets ?? {}).some(
+        ({ executor }) =>
+          executor !== undefined &&
+          ['@nx/webpack:webpack', '@nrwl/webpack:webpack'].includes(executor)
       ),
     });
   }

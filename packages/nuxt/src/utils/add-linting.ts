@@ -112,7 +112,7 @@ export async function addLinting(
 function generateNuxtFlatEslintConfig(
   tree: Tree,
   projectRoot: string,
-  enableTypedLinting: boolean
+  enableTypedLinting?: boolean
 ) {
   const eslintFile = findEslintFile(tree, projectRoot);
   if (!eslintFile) return;
@@ -222,7 +222,7 @@ function editEslintConfigFiles(tree: Tree, projectRoot: string) {
     lintConfigHasOverride(
       tree,
       projectRoot,
-      (o) => o.parserOptions && !hasVueFiles(o),
+      (o) => !!o.parserOptions && !hasVueFiles(o),
       true
     )
   ) {
@@ -248,7 +248,7 @@ function editEslintConfigFiles(tree: Tree, projectRoot: string) {
     lintConfigHasOverride(
       tree,
       '',
-      (o) => o.rules?.['@nx/enforce-module-boundaries'] && !hasVueFiles(o),
+      (o) => !!o.rules?.['@nx/enforce-module-boundaries'] && !hasVueFiles(o),
       true
     )
   ) {

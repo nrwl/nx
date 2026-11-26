@@ -10,14 +10,14 @@ export async function findPluginForConfigFile(
   tree: Tree,
   pluginName: string,
   pathToConfigFile: string
-): Promise<PluginConfiguration> {
-  const nxJson = readNxJson(tree);
-  if (!nxJson.plugins) {
+): Promise<PluginConfiguration | undefined> {
+  const plugins = readNxJson(tree)?.plugins;
+  if (!plugins) {
     return;
   }
 
-  const pluginRegistrations: PluginConfiguration[] = nxJson.plugins.filter(
-    (p) => (typeof p === 'string' ? p === pluginName : p.plugin === pluginName)
+  const pluginRegistrations: PluginConfiguration[] = plugins.filter((p) =>
+    typeof p === 'string' ? p === pluginName : p.plugin === pluginName
   );
 
   for (const plugin of pluginRegistrations) {

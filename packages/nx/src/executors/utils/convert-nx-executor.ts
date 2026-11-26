@@ -10,13 +10,21 @@ import { readProjectConfigurationsFromRootMap } from '../../project-graph/utils/
 import { ProjectsConfigurations } from '../../config/workspace-json-project-json';
 import { getPluginsSeparated } from '../../project-graph/plugins/get-plugins';
 
+interface AngularBuilderContext {
+  workspaceRoot: string;
+  target: { project: string; target: string; configuration?: string };
+}
+
 /**
  * Convert an Nx Executor into an Angular Devkit Builder
  *
  * Use this to expose a compatible Angular Builder
  */
 export function convertNxExecutor(executor: Executor) {
-  const builderFunction = (options, builderContext) => {
+  const builderFunction = (
+    options: unknown,
+    builderContext: AngularBuilderContext
+  ) => {
     const promise = async () => {
       const nxJsonConfiguration = readNxJson(builderContext.workspaceRoot);
 
@@ -33,11 +41,13 @@ export function convertNxExecutor(executor: Executor) {
           ).projects
         ),
       };
-      const context: ExecutorContext = {
+      const context = {
         root: builderContext.workspaceRoot,
         projectName: builderContext.target.project,
         targetName: builderContext.target.target,
-        target: builderContext.target.target,
+        target:
+          projectsConfigurations.projects[builderContext.target.project]
+            ?.targets?.[builderContext.target.target],
         configurationName: builderContext.target.configuration,
         projectsConfigurations,
         nxJsonConfiguration,
@@ -46,7 +56,8 @@ export function convertNxExecutor(executor: Executor) {
         taskGraph: null,
         isVerbose: false,
       };
-      return executor(options, context);
+      // Angular builders run without a project graph or task graph.
+      return executor(options, context as unknown as ExecutorContext);
     };
     return toObservable(promise());
   };
@@ -88,7 +99,7 @@ function toObservable<T extends { success: boolean }>(
             recurse(asyncIterator);
 
             return () => {
-              asyncIterator.return();
+              asyncIterator.return?.();
             };
           }
         })

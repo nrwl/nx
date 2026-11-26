@@ -20,7 +20,7 @@ import {
 import { execSync } from 'child_process';
 import * as http from 'http';
 
-let originalEnvPort;
+let originalEnvPort: string | undefined;
 
 describe('Node Applications', () => {
   const pm = getSelectedPackageManager();
@@ -144,7 +144,7 @@ describe('Node Applications', () => {
     } catch (err) {
       console.log(
         'Error during cleanup (may be expected, especially ECONNRESET):',
-        err.message
+        err instanceof Error ? err.message : String(err)
       );
     }
   }, 300_000);
@@ -186,7 +186,7 @@ describe('Node Applications', () => {
     } catch (err) {
       console.log(
         'Error during cleanup (may be expected, especially ECONNRESET):',
-        err.message
+        err instanceof Error ? err.message : String(err)
       );
     }
   }, 300_000);
@@ -243,7 +243,7 @@ describe('Node Applications', () => {
     } catch (err) {
       console.log(
         'Error during cleanup (may be expected, especially ECONNRESET):',
-        err.message
+        err instanceof Error ? err.message : String(err)
       );
     }
   }, 300_000);
@@ -308,7 +308,7 @@ describe('Node Applications', () => {
     } catch (err) {
       console.log(
         'Error during cleanup (may be expected, especially ECONNRESET):',
-        err.message
+        err instanceof Error ? err.message : String(err)
       );
     }
   }, 300_000);
@@ -338,7 +338,7 @@ describe('Node Applications', () => {
   }, 300_000);
 });
 
-function getData(port, path = '/api'): Promise<any> {
+function getData(port: number, path = '/api'): Promise<any> {
   return new Promise((resolve) => {
     http.get(`http://localhost:${port}${path}`, (res) => {
       expect(res.statusCode).toEqual(200);

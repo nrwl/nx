@@ -9,14 +9,12 @@ function resolveKnownRulesRequiringTypeChecking(): string[] | null {
   }
   try {
     const { rules } = require('@typescript-eslint/eslint-plugin');
-    const rulesRequiringTypeInfo = Object.entries(rules)
-      .map(([ruleName, config]) => {
-        if ((config as any).meta?.docs?.requiresTypeChecking) {
-          return `@typescript-eslint/${ruleName}`;
-        }
-        return null;
-      })
-      .filter(Boolean);
+    const rulesRequiringTypeInfo = Object.entries(rules).flatMap(
+      ([ruleName, config]) =>
+        (config as any).meta?.docs?.requiresTypeChecking
+          ? [`@typescript-eslint/${ruleName}`]
+          : []
+    );
     return rulesRequiringTypeInfo;
   } catch (err) {
     console.log(err);
@@ -27,8 +25,9 @@ function resolveKnownRulesRequiringTypeChecking(): string[] | null {
 export function hasRulesRequiringTypeChecking(
   eslintConfig: Linter.LegacyConfig
 ): boolean {
-  knownRulesRequiringTypeChecking = resolveKnownRulesRequiringTypeChecking();
-  if (!knownRulesRequiringTypeChecking) {
+  const knownRules = resolveKnownRulesRequiringTypeChecking();
+  knownRulesRequiringTypeChecking = knownRules;
+  if (!knownRules) {
     /**
      * If (unexpectedly) known rules requiring type checking could not be resolved,
      * default to assuming that the rules are in use to align most closely with Nx
@@ -37,9 +36,7 @@ export function hasRulesRequiringTypeChecking(
     return true;
   }
   const allRulesInConfig = getAllRulesInConfig(eslintConfig);
-  return allRulesInConfig.some((rule) =>
-    knownRulesRequiringTypeChecking.includes(rule)
-  );
+  return allRulesInConfig.some((rule) => knownRules.includes(rule));
 }
 
 export function removeParserOptionsProjectIfNotRequired(
@@ -53,7 +50,7 @@ export function removeParserOptionsProjectIfNotRequired(
   return json;
 }
 
-function determineEnabledRules(rules: Linter.RulesRecord): string[] {
+function determineEnabledRules(rules: Partial<Linter.RulesRecord>): string[] {
   return Object.entries(rules)
     .filter(([key, value]) => {
       return !(typeof value === 'string' && value === 'off');
@@ -63,7 +60,7 @@ function determineEnabledRules(rules: Linter.RulesRecord): string[] {
 
 function getAllRulesInConfig(json: Linter.LegacyConfig): string[] {
   let allRules = json.rules ? determineEnabledRules(json.rules) : [];
-  if (json.overrides?.length > 0) {
+  if (json.overrides && json.overrides.length > 0) {
     for (const o of json.overrides) {
       if (o.rules) {
         allRules = allRules = [...allRules, ...determineEnabledRules(o.rules)];

@@ -34,8 +34,10 @@ class SpinnerManager {
       this.#prefix = prefix;
     }
     if (this.#ora) {
-      this.#ora.text = text;
-      this.#ora.prefixText = this.#prefix;
+      this.#ora.text = text ?? '';
+      if (this.#prefix !== undefined) {
+        this.#ora.prefixText = this.#prefix;
+      }
     } else {
       this.#createOra(text);
     }
@@ -63,7 +65,7 @@ class SpinnerManager {
 
   updateText(text?: string) {
     if (this.#ora) {
-      this.#ora.text = text;
+      this.#ora.text = text ?? '';
     } else if (SHOULD_SHOW_SPINNERS) {
       this.#createOra(text);
     }

@@ -46,15 +46,20 @@ export async function* esbuildExecutor(
 
   const assetsResult = await copyAssets(options, context);
 
+  const projectName = context.projectName;
+  if (!projectName) {
+    throw new Error('The esbuild executor must be run for a project.');
+  }
+
   let targetProjectLocator: TargetProjectLocator;
   const sourceFile = join(
     context.root,
-    context.projectGraph.nodes[context.projectName].data.root,
+    context.projectGraph.nodes[projectName].data.root,
     'package.json'
   );
   const externalDependencies: DependentBuildableProjectNode[] =
-    options.external.reduce((acc, name) => {
-      let externalNode = context.projectGraph.externalNodes[`npm:${name}`];
+    options.external.reduce<DependentBuildableProjectNode[]>((acc, name) => {
+      let externalNode = context.projectGraph.externalNodes?.[`npm:${name}`];
       if (
         (!externalNode || externalNode.data.version.startsWith('link:')) &&
         name.split('/').length === (name.startsWith('@') ? 2 : 1)
@@ -68,7 +73,7 @@ export async function* esbuildExecutor(
           sourceFile
         );
         externalNode = target
-          ? context.projectGraph.externalNodes[target]
+          ? context.projectGraph.externalNodes?.[target]
           : externalNode;
       }
       if (externalNode) {
@@ -83,7 +88,7 @@ export async function* esbuildExecutor(
 
   if (!options.thirdParty) {
     const thirdPartyDependencies = getExtraDependencies(
-      context.projectName,
+      projectName,
       context.projectGraph
     );
     for (const tpd of thirdPartyDependencies) {
@@ -92,9 +97,11 @@ export async function* esbuildExecutor(
     }
   }
 
-  let packageJsonResult;
+  let packageJsonResult:
+    | Awaited<ReturnType<typeof copyPackageJson>>
+    | undefined;
   if (options.generatePackageJson) {
-    if (context.projectGraph.nodes[context.projectName].type !== 'app') {
+    if (context.projectGraph.nodes[projectName].type !== 'app') {
       logger.warn(
         stripIndents`The project ${context.projectName} is using the 'generatePackageJson' option which is deprecated for library projects. It should only be used for applications.
         For libraries, configure the project to use the '@nx/dependency-checks' ESLint rule instead (https://nx.dev/nx-api/eslint-plugin/documents/dependency-checks).`
@@ -126,12 +133,17 @@ export async function* esbuildExecutor(
     packageJsonResult = await copyPackageJson(cpjOptions, context);
   }
 
+  const formats = options.format;
+  if (!formats) {
+    throw new Error('The esbuild executor requires the "format" option.');
+  }
+
   if (options.watch) {
     return yield* createAsyncIterable<{ success: boolean; outfile?: string }>(
       async ({ next, done }) => {
         let hasTypeErrors = false;
         const disposeFns = await Promise.all(
-          options.format.map(async (format, idx) => {
+          formats.map(async (format, idx) => {
             const esbuildOptions = buildEsbuildOptions(
               format,
               options,
@@ -178,7 +190,7 @@ export async function* esbuildExecutor(
                     }
                   : null,
                 ...(esbuildOptions?.plugins || []),
-              ].filter(Boolean),
+              ].filter((plugin): plugin is esbuild.Plugin => Boolean(plugin)),
             });
 
             await ctx.watch();
@@ -215,16 +227,14 @@ export async function* esbuildExecutor(
     }
 
     // Emit a build event for each file format.
-    for (let i = 0; i < options.format.length; i++) {
-      const format = options.format[i];
+    for (let i = 0; i < formats.length; i++) {
+      const format = formats[i];
       const esbuildOptions = buildEsbuildOptions(format, options, context);
       const buildResult = await esbuild.build(esbuildOptions);
 
-      if (options.metafile) {
+      if (options.metafile && buildResult.metafile) {
         const filename =
-          options.format.length === 1
-            ? 'meta.json'
-            : `meta.${options.format[i]}.json`;
+          formats.length === 1 ? 'meta.json' : `meta.${formats[i]}.json`;
         writeJsonFile(
           join(context.root, options.outputPath, filename),
           buildResult.metafile
@@ -246,6 +256,9 @@ function getTypeCheckOptions(
   context: ExecutorContext
 ) {
   const { watch, tsConfig, outputPath } = options;
+  if (!context.projectName) {
+    throw new Error('The esbuild executor must be run for a project.');
+  }
   const projectRoot = context.projectGraph.nodes[context.projectName].data.root;
 
   const typeCheckOptions: TypeCheckOptions = {

@@ -8,6 +8,7 @@ function hasAnotherWebpackConfig(tree: Tree, projectRoot: string) {
       file !== 'webpack.config.js' &&
       file.endsWith('.js') &&
       file.includes('webpack.config') &&
+      projectJsonString !== null &&
       projectJsonString.includes(file) &&
       tree.exists(`${projectRoot}/webpack.config.js`)
     ) {
@@ -24,12 +25,14 @@ function hasAnotherWebpackConfig(tree: Tree, projectRoot: string) {
  * @returns A string if there is an error, otherwise undefined
  */
 export function validateProject(tree: Tree, project: ProjectConfiguration) {
-  const containsMfeExecutor = Object.keys(project.targets).some((target) => {
-    return [
-      '@nx/react:module-federation-dev-server',
-      '@nx/angular:module-federation-dev-server',
-    ].includes(project.targets[target].executor);
-  });
+  const containsMfeExecutor = Object.values(project.targets ?? {}).some(
+    ({ executor }) =>
+      executor !== undefined &&
+      [
+        '@nx/react:module-federation-dev-server',
+        '@nx/angular:module-federation-dev-server',
+      ].includes(executor)
+  );
 
   if (containsMfeExecutor) {
     return `The project ${project.name} is using Module Federation. At the moment, we don't support migrating projects that use Module Federation.`;

@@ -1,5 +1,5 @@
 import { names } from '@nx/devkit';
-import { webpackMergeVersion } from '@nx/angular/src/utils/versions';
+import { webpackMergeVersion } from '@nx/angular/internal';
 import {
   checkFilesDoNotExist,
   checkFilesExist,

@@ -45,6 +45,9 @@ export default async function (tree: Tree) {
 
 function processFile(tree: Tree, filePath: string): boolean {
   const content = tree.read(filePath, 'utf-8');
+  if (content === null) {
+    return false;
+  }
 
   if (
     !content.includes('provideServerRendering') ||
@@ -95,8 +98,8 @@ function processFile(tree: Tree, filePath: string): boolean {
     }
   });
 
-  if (!platformServerHasProvideServerRendering) {
-    return;
+  if (!platformServerHasProvideServerRendering || !platformServerImportNode) {
+    return false;
   }
 
   const recorder = new FileChangeRecorder(tree, filePath);

@@ -1,3 +1,5 @@
-export default (options, program) => {
+import type { Program } from 'typescript';
+
+export default (options: unknown, program: Program) => {
   return () => {};
 };

@@ -6,7 +6,16 @@ import { Tree, readJson, updateJson } from '@nx/devkit';
 import generator from './generator';
 import { SetupVerdaccioGeneratorSchema } from './schema';
 import { PackageJson } from '@nx/devkit/internal';
-import { load } from '@zkochan/js-yaml';
+import { createRequire } from 'node:module';
+
+const { load }: { load: (content: string) => unknown } =
+  createRequire(__filename)('@zkochan/js-yaml');
+
+function readFile(tree: Tree, path: string): string {
+  const content = tree.read(path, 'utf-8');
+  if (content === null) throw new Error(`${path} not found`);
+  return content;
+}
 
 describe('setup-verdaccio generator', () => {
   let tree: Tree;
@@ -24,8 +33,8 @@ describe('setup-verdaccio generator', () => {
 
   it('should enable jwt api tokens so verdaccio 7+ accepts the placeholder auth token', async () => {
     await generator(tree, options);
-    const config = load(tree.read('.verdaccio/config.yml', 'utf-8')) as any;
-    expect(config.security).toEqual({
+    const config = load(readFile(tree, '.verdaccio/config.yml'));
+    expect(config).toHaveProperty('security', {
       api: { jwt: { sign: { expiresIn: '7d' } } },
     });
   });

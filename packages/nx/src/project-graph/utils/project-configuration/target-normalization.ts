@@ -34,7 +34,7 @@ export function validateProject(
   project: ProjectConfiguration,
   // name -> project
   knownProjects: Record<string, ProjectConfiguration>
-) {
+): asserts project is ProjectConfiguration & { name: string } {
   if (!project.name) {
     try {
       const { name } = readJsonFile(join(project.root, 'package.json'));
@@ -320,7 +320,9 @@ export function validateAndNormalizeProjectRootMap(
     const project = projectRootMap[root];
     // We're setting `// targets` as a comment `targets` is empty due to Project Crystal.
     // Strip it before returning configuration for usage.
-    if (project['// targets']) delete project['// targets'];
+    if ('// targets' in project && project['// targets']) {
+      delete project['// targets'];
+    }
 
     // We initially did this in the project.json plugin, but
     // that resulted in project.json files without names causing

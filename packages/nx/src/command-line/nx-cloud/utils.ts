@@ -29,7 +29,7 @@ export async function executeNxCloudCommand(
   commandName: string,
   verbose?: boolean
 ): Promise<number> {
-  return handleErrors(verbose, async () => {
+  return handleErrors(verbose ?? false, async () => {
     const nxCloudClient = (
       await verifyOrUpdateNxCloudClient(tryGetCloudOptions())
     ).nxCloudClient;

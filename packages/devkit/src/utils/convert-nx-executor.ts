@@ -13,6 +13,11 @@ import {
   retrieveProjectConfigurationsWithAngularProjects,
 } from 'nx/src/devkit-internals';
 
+interface AngularBuilderContext {
+  workspaceRoot: string;
+  target?: { project: string; target: string; configuration?: string };
+}
+
 /**
  * Convert an Nx Executor into an Angular Devkit Builder
  *
@@ -20,7 +25,10 @@ import {
  */
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export function convertNxExecutor(executor: Executor) {
-  const builderFunction = (options, builderContext) => {
+  const builderFunction = (
+    options: unknown,
+    builderContext: AngularBuilderContext
+  ) => {
     const nxJsonConfiguration = readNxJsonFromDisk(
       builderContext.workspaceRoot
     );
@@ -51,11 +59,14 @@ export function convertNxExecutor(executor: Executor) {
         }),
       };
 
-      const context: ExecutorContext = {
+      const context = {
         root: builderContext.workspaceRoot,
         projectName: builderContext.target?.project,
         targetName: builderContext.target?.target,
-        target: builderContext.target?.target,
+        target: builderContext.target
+          ? projectsConfigurations.projects[builderContext.target.project]
+              ?.targets?.[builderContext.target.target]
+          : undefined,
         configurationName: builderContext.target?.configuration,
         projectsConfigurations,
         nxJsonConfiguration,
@@ -64,7 +75,8 @@ export function convertNxExecutor(executor: Executor) {
         taskGraph: null,
         isVerbose: false,
       };
-      return executor(options, context);
+      // Angular builders run without a project graph or task graph.
+      return executor(options, context as unknown as ExecutorContext);
     };
     return toObservable(promise());
   };
@@ -106,7 +118,7 @@ function toObservable<T extends { success: boolean }>(
             recurse(asyncIterator);
 
             return () => {
-              asyncIterator.return();
+              asyncIterator.return?.();
             };
           }
         })

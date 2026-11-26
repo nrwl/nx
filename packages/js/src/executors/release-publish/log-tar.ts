@@ -3,8 +3,23 @@ import chalk from 'chalk';
 import columnify from 'columnify';
 import { formatBytes } from './format-bytes';
 
-export const logTar = (tarball, opts = {}) => {
-  // @ts-ignore
+export type PublishedTarball = {
+  name: string;
+  version: string;
+  filename?: string;
+  size: number;
+  unpackedSize: number;
+  shasum: string;
+  integrity: string;
+  entryCount: number;
+  files: Array<{ path: string; size?: number }>;
+  bundled: string[];
+};
+
+export const logTar = (
+  tarball: PublishedTarball,
+  opts: { unicode?: boolean } = {}
+) => {
   const { unicode = true } = opts;
   console.log('');
   console.log(
@@ -25,7 +40,7 @@ export const logTar = (tarball, opts = {}) => {
             ? null
             : { path: f.path, size: `${bytes}` };
         })
-        .filter((f) => f),
+        .filter((f) => f !== null),
       {
         include: ['size', 'path'],
         showHeaders: false,

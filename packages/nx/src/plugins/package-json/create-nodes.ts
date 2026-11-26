@@ -39,7 +39,8 @@ export const createNodes: CreateNodes = [
   (configFiles, _, context) => {
     const { packageJsons, projectJsonRoots } = splitConfigFiles(configFiles);
 
-    const readJson = (f) => readJsonFile(join(context.workspaceRoot, f));
+    const readJson = (f: string) =>
+      readJsonFile(join(context.workspaceRoot, f));
     let isInPackageJsonWorkspaces = (p: string) => true;
 
     if (
@@ -159,7 +160,7 @@ export function buildPackageJsonWorkspacesMatcher(
   // Compile each glob once; the returned matcher runs per package.json path.
   const positive = patterns.positive.map((p) => new Minimatch(p));
   const negative = patterns.negative.map((p) => new Minimatch(p));
-  return (p) =>
+  return (p: string) =>
     // use lookup to avoid unnecessary minimatch calls
     (patterns.positiveLookup[p] || positive.some((m) => m.match(p))) &&
     /**
@@ -196,7 +197,7 @@ export function createNodeFromPackageJson(
       })
     : undefined;
 
-  const cached = cache?.get(hash);
+  const cached = hash !== undefined ? cache?.get(hash) : undefined;
   if (cached) {
     return {
       projects: {
@@ -214,7 +215,9 @@ export function createNodeFromPackageJson(
     packageManagerCommand
   );
 
-  cache?.set(hash, project);
+  if (hash !== undefined) {
+    cache?.set(hash, project);
+  }
   return {
     projects: {
       [project.root]: project,
@@ -238,8 +241,9 @@ export function buildProjectConfigurationFromPackageJson(
   );
 
   if (siblingProjectJson) {
-    for (const target of Object.keys(siblingProjectJson?.targets ?? {})) {
-      const { executor, command, options } = siblingProjectJson.targets[target];
+    const siblingTargets = siblingProjectJson.targets ?? {};
+    for (const target of Object.keys(siblingTargets)) {
+      const { executor, command, options } = siblingTargets[target];
       if (
         // will use run-commands, different target
         command ||
@@ -328,7 +332,7 @@ export function getGlobPatternsFromPackageManagerWorkspaces(
       } catch (e: unknown) {
         output.warn({
           title: `${NX_PREFIX} Unable to parse pnpm-workspace.yaml`,
-          bodyLines: [e.toString()],
+          bodyLines: [String(e)],
         });
       }
     }
@@ -342,7 +346,7 @@ export function getGlobPatternsFromPackageManagerWorkspaces(
       } catch (e: unknown) {
         output.warn({
           title: `${NX_PREFIX} Unable to parse lerna.json`,
-          bodyLines: [e.toString()],
+          bodyLines: [String(e)],
         });
       }
     }

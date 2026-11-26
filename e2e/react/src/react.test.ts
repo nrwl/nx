@@ -424,7 +424,7 @@ describe('React Applications', () => {
 });
 
 async function testGeneratedApp(
-  appName,
+  appName: string,
   opts: {
     checkStyles: boolean;
     checkLinter: boolean;

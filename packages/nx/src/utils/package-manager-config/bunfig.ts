@@ -1,4 +1,5 @@
 import { readFileSync } from 'fs';
+import { isErrnoException } from '../is-errno-exception';
 
 /**
  * The directory holding bun's global config files (.bunfig.toml and, for bun's
@@ -35,7 +36,8 @@ export function readBunfigRaw(
   } catch (error) {
     // ENOTDIR (a path through a non-directory) is another shape of absent, the
     // same way the .npmrc reader classifies it.
-    return error?.code === 'ENOENT' || error?.code === 'ENOTDIR'
+    return isErrnoException(error) &&
+      (error.code === 'ENOENT' || error.code === 'ENOTDIR')
       ? null
       : 'unreadable';
   }

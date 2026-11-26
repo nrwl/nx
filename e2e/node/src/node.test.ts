@@ -1,5 +1,8 @@
 import { stripIndents } from '@angular-devkit/core/src/utils/literals';
-import { joinPathFragments } from '@nx/devkit';
+import {
+  type ExpandedPluginConfiguration,
+  joinPathFragments,
+} from '@nx/devkit';
 import {
   checkFilesDoNotExist,
   checkFilesExist,
@@ -30,7 +33,7 @@ import { getLockFileName } from '@nx/js';
 import { satisfies } from 'semver';
 import { join } from 'path';
 
-function getData(port, path = '/api'): Promise<any> {
+function getData(port: number, path = '/api'): Promise<any> {
   return new Promise((resolve) => {
     http.get(`http://localhost:${port}${path}`, (res) => {
       expect(res.statusCode).toEqual(200);
@@ -229,7 +232,7 @@ module.exports = {
     expect(nxJson.plugins).toBeDefined();
 
     const jestPlugin = nxJson.plugins.find(
-      (p) => p.plugin === '@nx/jest/plugin'
+      (p: ExpandedPluginConfiguration) => p.plugin === '@nx/jest/plugin'
     );
     expect(jestPlugin).toBeDefined();
     expect(jestPlugin.exclude).toContain(`${appName}-e2e/**/*`);

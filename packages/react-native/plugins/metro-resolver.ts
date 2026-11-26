@@ -232,7 +232,9 @@ function getMatcher(debug: boolean) {
  * This function returns resolver for pnpm.
  * It is inspired form https://github.com/vjpr/pnpm-expo-example/blob/main/packages/pnpm-expo-helper/util/make-resolver.js.
  */
-let pnpmpResolver;
+let pnpmpResolver:
+  | ReturnType<typeof ResolverFactory.createResolver>
+  | undefined;
 function getPnpmResolver(
   extensions: string[],
   exportsConditionNames: string[] = [],

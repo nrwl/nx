@@ -48,6 +48,9 @@ export default async function replacePowerpackConformance(tree: Tree) {
       updateJson(tree, path, replaceDependency);
     }
     const content = tree.read(path, 'utf-8');
+    if (content === null) {
+      throw new Error(`Cannot read ${path}`);
+    }
     const updated = rewrite(content);
     if (updated !== content) {
       tree.write(path, updated);

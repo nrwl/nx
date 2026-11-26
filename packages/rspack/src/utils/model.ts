@@ -7,7 +7,9 @@ export interface ExtraEntryPointClass {
 
 export type ExtraEntryPoint = ExtraEntryPointClass | string;
 
-export type NormalizedEntryPoint = Required<ExtraEntryPointClass>;
+export type NormalizedEntryPoint = ExtraEntryPointClass & {
+  bundleName: string;
+};
 
 export interface EmittedFile {
   id?: string;

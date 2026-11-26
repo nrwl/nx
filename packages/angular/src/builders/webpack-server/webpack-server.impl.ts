@@ -21,7 +21,12 @@ const patchedWebpackPath = require.resolve('webpack', {
 });
 
 // Override the resolve function
-Module._resolveFilename = function (request, parent, isMain, options) {
+Module._resolveFilename = function (
+  request: string,
+  parent: unknown,
+  isMain: boolean,
+  options: unknown
+) {
   // Intercept webpack specifically
   if (request === 'webpack') {
     // Force webpack to resolve from your specific path
@@ -101,14 +106,15 @@ function buildServerAppWithCustomWebpackConfiguration(
 
           if (mergedConfig.target === 'async-node') {
             mergedConfig.entry.main = mergedConfig.entry.main.filter(
-              (m) => !m.startsWith('@angular/platform-server/init')
+              (m: string) => !m.startsWith('@angular/platform-server/init')
             );
-            mergedConfig.module.rules = mergedConfig.module.rules.filter((m) =>
-              !m.loader
-                ? true
-                : !m.loader.endsWith(
-                    '@angular-devkit/build-angular/src/builders/server/platform-server-exports-loader.js'
-                  )
+            mergedConfig.module.rules = mergedConfig.module.rules.filter(
+              (m: { loader?: string }) =>
+                !m.loader
+                  ? true
+                  : !m.loader.endsWith(
+                      '@angular-devkit/build-angular/src/builders/server/platform-server-exports-loader.js'
+                    )
             );
           }
 
@@ -127,8 +133,15 @@ export function executeWebpackServerBuilder(
 
   options.buildLibsFromSource ??= true;
 
+  const { target } = context;
+  if (!target) {
+    throw new Error(
+      'The "@nx/angular:webpack-server" builder requires a target.'
+    );
+  }
+
   process.env.NX_BUILD_LIBS_FROM_SOURCE = `${options.buildLibsFromSource}`;
-  process.env.NX_BUILD_TARGET = targetToTargetString({ ...context.target });
+  process.env.NX_BUILD_TARGET = targetToTargetString({ ...target });
 
   if (!options.buildLibsFromSource) {
     const { tsConfigPath } = createTmpTsConfigForBuildableLibs(

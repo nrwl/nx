@@ -25,7 +25,7 @@ import { isUsingTsSolutionSetup } from '../../utils/typescript/ts-solution-setup
 function normalizeOptions(
   options: SwcExecutorOptions,
   root: string,
-  sourceRoot: string,
+  sourceRoot: string | undefined,
   projectRoot: string
 ): NormalizedSwcExecutorOptions {
   const isTsSolutionSetup = isUsingTsSolutionSetup();
@@ -96,11 +96,14 @@ export async function* swcExecutor(
   _options: SwcExecutorOptions,
   context: ExecutorContext
 ) {
+  if (!context.projectName) {
+    throw new Error('The swc executor requires a project name.');
+  }
   const { sourceRoot, root } =
     context.projectsConfigurations.projects[context.projectName];
   const options = normalizeOptions(_options, context.root, sourceRoot, root);
 
-  let swcHelperDependency: DependentBuildableProjectNode;
+  let swcHelperDependency: DependentBuildableProjectNode | null = null;
   if (!options.isTsSolutionSetup) {
     const { tmpTsConfig, dependencies } = checkDependencies(
       context,
@@ -137,7 +140,7 @@ export async function* swcExecutor(
 
     return yield* compileSwcWatch(context, options, async () => {
       const assetResult = await copyAssets(options, context);
-      let packageJsonResult: CopyPackageJsonResult;
+      let packageJsonResult: CopyPackageJsonResult | undefined;
       if (!options.isTsSolutionSetup) {
         packageJsonResult = await copyPackageJson(
           {
@@ -152,12 +155,12 @@ export async function* swcExecutor(
       }
       removeTmpSwcrc(options.swcCliOptions.swcrcPath);
       disposeFn = () => {
-        assetResult?.stop();
-        packageJsonResult?.stop();
+        assetResult?.stop?.();
+        packageJsonResult?.stop?.();
       };
     });
   } else {
-    return yield compileSwc(context, options, async () => {
+    yield compileSwc(context, options, async () => {
       await copyAssets(options, context);
       if (!options.isTsSolutionSetup) {
         await copyPackageJson(

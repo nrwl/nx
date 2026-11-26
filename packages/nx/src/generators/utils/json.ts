@@ -18,9 +18,15 @@ export function readJson<T extends object = any>(
     throw new Error(`Cannot find ${path}`);
   }
   try {
-    return parseJson(tree.read(path, 'utf-8'), options);
+    const content = tree.read(path, 'utf-8');
+    if (content === null) {
+      throw new Error(`Cannot read ${path}`);
+    }
+    return parseJson(content, options);
   } catch (e) {
-    throw new Error(`Cannot parse ${path}: ${e.message}`);
+    throw new Error(
+      `Cannot parse ${path}: ${e instanceof Error ? e.message : String(e)}`
+    );
   }
 }
 

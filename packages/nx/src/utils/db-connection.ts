@@ -29,10 +29,11 @@ export function getDbConnection(
   } = {}
 ) {
   opts.directory ??= sharedWorkspaceDataDirectory(workspaceRoot);
+  const directory = opts.directory;
   const dbName = opts.dbName ?? (process.env.NX_DB_NAME || undefined);
-  const key = JSON.stringify([opts.directory, dbName]);
+  const key = JSON.stringify([directory, dbName]);
   const connection = getEntryOrSet(dbConnectionMap, key, () =>
-    connectToNxDb(opts.directory, dbName)
+    connectToNxDb(directory, dbName)
   );
   return connection;
 }

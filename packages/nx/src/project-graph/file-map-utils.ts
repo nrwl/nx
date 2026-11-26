@@ -105,6 +105,9 @@ export function updateFileMap(
     updatedFiles,
     deletedFiles
   );
+  if (!updates) {
+    throw new Error('The workspace context is not initialized');
+  }
   return {
     fileMap: updates.fileMap,
     rustReferences: updates.externalReferences,

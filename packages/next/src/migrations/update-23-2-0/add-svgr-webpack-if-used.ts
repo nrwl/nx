@@ -25,7 +25,7 @@ export default async function addSvgrWebpackIfUsed(tree: Tree) {
     for (const fileName of nextConfigFileNames) {
       const path = joinPathFragments(project.root, fileName);
       needsSvgr ||=
-        tree.exists(path) && tree.read(path, 'utf-8').includes('@svgr/webpack');
+        tree.read(path, 'utf-8')?.includes('@svgr/webpack') ?? false;
     }
 
     if (needsSvgr) {

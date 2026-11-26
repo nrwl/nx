@@ -1,5 +1,6 @@
 import {
   cleanupProject,
+  ensureDefined,
   newProject,
   runCLI,
   uniq,
@@ -355,7 +356,7 @@ function createGetOutput(
     const exitedOnItsOwn = exited;
     if (!exited) {
       await wait(settleMs);
-      treeKill(p.pid);
+      treeKill(ensureDefined(p.pid, 'watch process pid'));
     }
     await closed;
 

@@ -76,7 +76,7 @@ export function findMainRenderStatement(
   const hasRenderImport = imports.some(
     (i) =>
       i.moduleSpecifier.getText().includes('react-dom') &&
-      /\brender\b/.test(i.importClause.namedBindings.getText())
+      /\brender\b/.test(i.importClause?.namedBindings?.getText() ?? '')
   );
   if (hasRenderImport) {
     const calls = findNodes(
@@ -128,7 +128,7 @@ export function findDefaultExportDeclaration(
     >;
 
     const exported = all
-      .filter((x) => x.name.kind === tsModule.SyntaxKind.Identifier)
+      .filter((x) => x.name?.kind === tsModule.SyntaxKind.Identifier)
       .find((x) => (x.name as ts.Identifier).text === identifier.text);
 
     return exported || null;
@@ -200,9 +200,9 @@ export function findExportDeclarationsForJsx(
       );
     } else {
       return (
-        (x.name.kind === tsModule.SyntaxKind.Identifier &&
+        (x.name?.kind === tsModule.SyntaxKind.Identifier &&
           foundExport?.length) ||
-        componentNames?.includes(x.name.getText())
+        (x.name !== undefined && componentNames?.includes(x.name.getText()))
       );
     }
   });
@@ -241,7 +241,7 @@ export function findDefaultExportIdentifier(
 }
 
 export function findDefaultClassOrFunction(
-  source: ts.SourceFile | null
+  source: ts.SourceFile
 ): ts.FunctionDeclaration | ts.ClassDeclaration | null {
   if (!tsModule) {
     tsModule = ensureTypescript();
@@ -557,7 +557,7 @@ export function updateReduxStore(
     tsModule.SyntaxKind.CallExpression
   ) as ts.CallExpression[];
 
-  let reducerDescriptor: ts.ObjectLiteralExpression;
+  let reducerDescriptor: ts.ObjectLiteralExpression | undefined;
   // Look for configureStore call
   for (const expr of calls) {
     if (!expr.expression.getText().includes('configureStore')) {
@@ -565,7 +565,7 @@ export function updateReduxStore(
     }
     const arg = expr.arguments[0];
     if (tsModule.isObjectLiteralExpression(arg)) {
-      let found: ts.ObjectLiteralExpression;
+      let found: ts.ObjectLiteralExpression | undefined;
       for (const prop of arg.properties) {
         if (
           tsModule.isPropertyAssignment(prop) &&
@@ -649,13 +649,13 @@ export function parseComponentPropsInfo(
   if (!tsModule) {
     tsModule = ensureTypescript();
   }
-  let propsTypeName: string = null;
-  let inlineTypeString: string = null;
+  let propsTypeName: string | null = null;
+  let inlineTypeString: string | null = null;
   const props: Array<ts.PropertySignature | ts.BindingElement> = [];
 
   const processParameters = (
     parameters: ts.NodeArray<ts.ParameterDeclaration>
-  ): boolean => {
+  ): boolean | null => {
     if (!parameters.length) {
       return null;
     }
@@ -719,10 +719,12 @@ export function parseComponentPropsInfo(
         return name === 'Component' || name === 'PureComponent';
       });
 
-      if (propsTypeExpression?.typeArguments?.[0]?.['typeName']) {
-        propsTypeName = (
-          propsTypeExpression.typeArguments[0] as ts.TypeReferenceNode
-        ).typeName.getText();
+      const propsTypeArgument = propsTypeExpression?.typeArguments?.[0];
+      if (
+        propsTypeArgument &&
+        tsModule.isTypeReferenceNode(propsTypeArgument)
+      ) {
+        propsTypeName = propsTypeArgument.typeName.getText();
       }
     }
   } else {
@@ -750,7 +752,7 @@ export function parseComponentPropsInfo(
 function getPropsFromTypeName(
   sourceFile: ts.SourceFile,
   propsTypeName: string
-): Array<ts.PropertySignature | ts.BindingElement> {
+): Array<ts.PropertySignature | ts.BindingElement> | null {
   const matchingNode = findNodes(sourceFile, [
     tsModule.SyntaxKind.InterfaceDeclaration,
     tsModule.SyntaxKind.TypeAliasDeclaration,

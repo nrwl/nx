@@ -57,7 +57,11 @@ describe('move-impl (Angular plugin for @nx/workspace:move)', () => {
         return;
       }
       const newPath = destination + filePath.slice(oldRoot.length);
-      tree.write(newPath, tree.read(filePath));
+      const content = tree.read(filePath);
+      if (content === null) {
+        throw new Error(`${filePath} not found`);
+      }
+      tree.write(newPath, content);
       tree.delete(filePath);
     });
 

@@ -7,7 +7,7 @@ import { nxVersion } from '../../../utils/versions';
 export async function addVitest(tree: Tree, options: NormalizedSchema) {
   addVitestTargetDefaults(tree);
   const nxJson = readNxJson(tree);
-  const hasPlugin = nxJson.plugins?.some((p) =>
+  const hasPlugin = nxJson?.plugins?.some((p) =>
     typeof p === 'string'
       ? p === '@nx/nuxt/plugin'
       : p.plugin === '@nx/nuxt/plugin'

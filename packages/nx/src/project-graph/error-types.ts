@@ -23,12 +23,12 @@ export class StaleProjectGraphCacheError extends Error {
 }
 
 export class ProjectGraphError extends Error {
-  readonly #partialProjectGraph: ProjectGraph;
-  readonly #partialSourceMaps: ConfigurationSourceMaps;
+  readonly #partialProjectGraph: ProjectGraph | null;
+  readonly #partialSourceMaps: ConfigurationSourceMaps | null;
 
   constructor(
     private readonly errors: Array<ProjectGraphErrorTypes>,
-    partialProjectGraph: ProjectGraph,
+    partialProjectGraph: ProjectGraph | null,
     partialSourceMaps: ConfigurationSourceMaps | null
   ) {
     const messageFragments = ['Failed to process project graph.'];
@@ -167,6 +167,7 @@ export function isProjectWithExistingNameError(
   return (
     e instanceof ProjectWithExistingNameError ||
     (typeof e === 'object' &&
+      e !== null &&
       'name' in e &&
       e?.name === ProjectWithExistingNameError.name)
   );
@@ -178,6 +179,7 @@ export function isMultipleProjectsWithSameNameError(
   return (
     e instanceof MultipleProjectsWithSameNameError ||
     (typeof e === 'object' &&
+      e !== null &&
       'name' in e &&
       e?.name === MultipleProjectsWithSameNameError.name)
   );
@@ -203,6 +205,7 @@ export function isProjectsWithNoNameError(
   return (
     e instanceof ProjectsWithNoNameError ||
     (typeof e === 'object' &&
+      e !== null &&
       'name' in e &&
       e?.name === ProjectsWithNoNameError.name)
   );
@@ -221,6 +224,7 @@ export function isProjectWithNoNameError(
   return (
     e instanceof ProjectWithNoNameError ||
     (typeof e === 'object' &&
+      e !== null &&
       'name' in e &&
       e?.name === ProjectWithNoNameError.name)
   );
@@ -280,6 +284,7 @@ export function isProjectConfigurationsError(
   return (
     e instanceof ProjectConfigurationsError ||
     (typeof e === 'object' &&
+      e !== null &&
       'name' in e &&
       e?.name === ProjectConfigurationsError.name)
   );
@@ -375,7 +380,7 @@ export class AggregateCreateNodesError extends Error {
   }
 }
 
-function coerceToError(value: unknown): Error {
+export function coerceToError(value: unknown): Error {
   if (value instanceof Error) {
     return value;
   }
@@ -424,10 +429,12 @@ export function formatAggregateCreateNodesError(
   const groupedErrors = new Map<string | null, Error[]>();
   for (const [file, e] of error.errors) {
     const key = file ?? null;
-    if (!groupedErrors.has(key)) {
-      groupedErrors.set(key, []);
+    let group = groupedErrors.get(key);
+    if (!group) {
+      group = [];
+      groupedErrors.set(key, group);
     }
-    groupedErrors.get(key).push(e);
+    group.push(e);
   }
 
   for (const [file, errors] of groupedErrors) {
@@ -470,7 +477,7 @@ export function formatAggregateCreateNodesError(
 export class MergeNodesError extends Error {
   file: string;
   pluginName: string;
-  pluginIndex: number;
+  pluginIndex: number | undefined;
 
   constructor({
     file,
@@ -519,7 +526,7 @@ export class CreateMetadataError extends Error {
 export class ProcessDependenciesError extends Error {
   constructor(
     public readonly pluginName: string,
-    { cause }
+    { cause }: { cause: Error }
   ) {
     super(
       `The "${pluginName}" plugin threw an error while creating dependencies: ${cause.message}`,
@@ -528,7 +535,7 @@ export class ProcessDependenciesError extends Error {
       }
     );
     this.name = this.constructor.name;
-    this.stack = `${this.message}\n  ${cause.stack.split('\n').join('\n  ')}`;
+    this.stack = `${this.message}\n  ${(cause.stack ?? cause.message).split('\n').join('\n  ')}`;
   }
 }
 
@@ -536,6 +543,7 @@ function isProcessDependenciesError(e: unknown): e is ProcessDependenciesError {
   return (
     e instanceof ProcessDependenciesError ||
     (typeof e === 'object' &&
+      e !== null &&
       'name' in e &&
       e?.name === ProcessDependenciesError.name)
   );
@@ -559,6 +567,7 @@ export function isWorkspaceValidityError(
   return (
     e instanceof WorkspaceValidityError ||
     (typeof e === 'object' &&
+      e !== null &&
       'name' in e &&
       e?.name === WorkspaceValidityError.name)
   );
@@ -581,6 +590,7 @@ export function isAggregateProjectGraphError(
   return (
     e instanceof AggregateProjectGraphError ||
     (typeof e === 'object' &&
+      e !== null &&
       'name' in e &&
       e?.name === AggregateProjectGraphError.name)
   );
@@ -590,6 +600,7 @@ export function isCreateMetadataError(e: unknown): e is CreateMetadataError {
   return (
     e instanceof CreateMetadataError ||
     (typeof e === 'object' &&
+      e !== null &&
       'name' in e &&
       e?.name === CreateMetadataError.name)
   );
@@ -601,6 +612,7 @@ export function isAggregateCreateNodesError(
   return (
     e instanceof AggregateCreateNodesError ||
     (typeof e === 'object' &&
+      e !== null &&
       'name' in e &&
       e?.name === AggregateCreateNodesError.name)
   );
@@ -609,14 +621,17 @@ export function isAggregateCreateNodesError(
 export function isMergeNodesError(e: unknown): e is MergeNodesError {
   return (
     e instanceof MergeNodesError ||
-    (typeof e === 'object' && 'name' in e && e?.name === MergeNodesError.name)
+    (typeof e === 'object' &&
+      e !== null &&
+      'name' in e &&
+      e?.name === MergeNodesError.name)
   );
 }
 
 export class DaemonProjectGraphError extends Error {
   constructor(
     public errors: any[],
-    readonly projectGraph: ProjectGraph,
+    readonly projectGraph: ProjectGraph | null,
     readonly sourceMaps: ConfigurationSourceMaps
   ) {
     super(
@@ -626,10 +641,21 @@ export class DaemonProjectGraphError extends Error {
   }
 }
 
+export function isDaemonProjectGraphError(
+  e: unknown
+): e is DaemonProjectGraphError {
+  return (
+    typeof e === 'object' &&
+    e !== null &&
+    'name' in e &&
+    e.name === DaemonProjectGraphError.name
+  );
+}
+
 export class LoadPluginError extends Error {
   constructor(
     public plugin: string,
-    cause: Error
+    cause: unknown
   ) {
     super(`Could not load plugin ${plugin}`, {
       cause,

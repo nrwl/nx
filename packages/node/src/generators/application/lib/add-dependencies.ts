@@ -15,6 +15,7 @@ import {
   tslibVersion,
   tsxVersion,
 } from '../../../utils/versions';
+import type { NodeJsFrameWorks } from '../schema';
 import { NormalizedSchema } from './normalized-schema';
 
 export function addProjectDependencies(
@@ -22,9 +23,11 @@ export function addProjectDependencies(
   options: NormalizedSchema
 ): {
   installTask: GeneratorCallback;
-  frameworkDependencies: Record<string, string>;
+  frameworkDependencies: Record<string, string> | undefined;
 } {
-  const bundlers = {
+  const bundlers: Partial<
+    Record<NormalizedSchema['bundler'], Record<string, string>>
+  > = {
     webpack: {
       '@nx/webpack': nxVersion,
     },
@@ -38,7 +41,9 @@ export function addProjectDependencies(
   const koaPkgVersions = koaVersions(tree);
   const fastifyPkgVersions = fastifyVersions(tree);
 
-  const frameworkDependencies = {
+  const frameworkDependencies: Partial<
+    Record<NodeJsFrameWorks, Record<string, string>>
+  > = {
     express: {
       express: exprPkgVersions.expressVersion,
     },
@@ -52,7 +57,9 @@ export function addProjectDependencies(
       '@fastify/sensible': fastifyPkgVersions.fastifySensibleVersion,
     },
   };
-  const frameworkDevDependencies = {
+  const frameworkDevDependencies: Partial<
+    Record<NodeJsFrameWorks, Record<string, string>>
+  > = {
     express: {
       '@types/express': exprPkgVersions.expressTypingsVersion,
     },
@@ -71,16 +78,20 @@ export function addProjectDependencies(
   }
 
   const typesNodeVersion = nodeTypesVersions(tree).typesNodeVersion;
+  const frameworkDeps =
+    options.framework && frameworkDependencies[options.framework];
+  const frameworkDevDeps =
+    options.framework && frameworkDevDependencies[options.framework];
 
   return {
     installTask: addDependenciesToPackageJson(
       tree,
       {
-        ...frameworkDependencies[options.framework],
+        ...frameworkDeps,
         tslib: tslibVersion,
       },
       {
-        ...frameworkDevDependencies[options.framework],
+        ...frameworkDevDeps,
         ...bundlers[options.bundler],
         '@types/node': typesNodeVersion,
         ...(options.serveRuntime === 'tsx' && { tsx: tsxVersion }),
@@ -88,6 +99,6 @@ export function addProjectDependencies(
       undefined,
       options.keepExistingVersions ?? true
     ),
-    frameworkDependencies: frameworkDependencies[options.framework],
+    frameworkDependencies: frameworkDeps,
   };
 }

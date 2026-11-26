@@ -66,13 +66,22 @@ export class I18nInlinePlugin implements RspackPluginInstance {
       // Map of locales to Map of files to output
       const filesToOutput = new Map<
         string,
-        Map<string, { text: string | Buffer; map: sources.RawSourceMap | null }>
+        Map<
+          string,
+          {
+            text: string | Buffer;
+            map: sources.RawSourceMap | null | undefined;
+          }
+        >
       >();
       for (const localeKey of this.#i18n.inlineLocales) {
         const locale = this.#i18n.locales[localeKey];
         const localeFiles = new Map<
           string,
-          { text: string | Buffer; map: sources.RawSourceMap | null }
+          {
+            text: string | Buffer;
+            map: sources.RawSourceMap | null | undefined;
+          }
         >();
         for (const [filename, { text, map }] of filesToInline.entries()) {
           if (this.#shouldSkipPerLocaleEmit(filename)) {

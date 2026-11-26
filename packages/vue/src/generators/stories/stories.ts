@@ -23,11 +23,14 @@ export async function createAllStories(
   tree: Tree,
   projectName: string,
   interactionTests: boolean,
-  js: boolean,
+  js: boolean | undefined,
   projectConfiguration: ProjectConfiguration,
   ignorePaths?: string[]
 ) {
   const { sourceRoot } = projectConfiguration;
+  if (!sourceRoot) {
+    throw new Error(`Project "${projectName}" has no sourceRoot`);
+  }
   let componentPaths: string[] = [];
   const pathsToCheck = [
     joinPathFragments(sourceRoot, 'app'), // Default component folder for apps
@@ -77,6 +80,9 @@ export async function storiesGenerator(
 
   const projects = getProjects(host);
   const projectConfiguration = projects.get(schema.project);
+  if (!projectConfiguration) {
+    throw new Error(`Cannot find project "${schema.project}"`);
+  }
   schema.interactionTests = schema.interactionTests ?? true;
   await createAllStories(
     host,

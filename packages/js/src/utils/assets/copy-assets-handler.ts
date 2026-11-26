@@ -164,7 +164,7 @@ export class CopyAssetsHandler {
           process.exit(1);
         } else if (err) {
           logger.error(`Watch error: ${err?.message ?? 'Unknown'}`);
-        } else {
+        } else if (data) {
           this.processWatchEvents(data.changedFiles);
         }
       }
@@ -207,7 +207,7 @@ export class CopyAssetsHandler {
   }
 
   private filesToEvent(files: string[], assetGlob: AssetEntry): FileEvent[] {
-    return files.reduce((acc, src) => {
+    return files.reduce<FileEvent[]>((acc, src) => {
       if (
         !assetGlob.ignore?.some((ig) => picomatch(ig)(src)) &&
         ((assetGlob.includeIgnoredFiles ?? this.includeIgnoredFiles) ||

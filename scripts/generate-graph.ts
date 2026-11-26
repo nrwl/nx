@@ -40,6 +40,15 @@ async function generateGraph(directory: string, name: string) {
     /window.sourceMapsResponse = (.*?);/
   );
 
+  if (
+    !projectGraphResponse ||
+    !taskGraphResponse ||
+    !expandedTaskInputsReponse ||
+    !sourceMapsResponse
+  ) {
+    throw new Error(`Could not read graph data from ${directory}`);
+  }
+
   ensureDirSync(
     join(__dirname, '../graph/client/src/assets/generated-project-graphs/')
   );
@@ -97,11 +106,13 @@ async function generateGraph(directory: string, name: string) {
     .option('name', {
       type: 'string',
       requiresArg: true,
+      demandOption: true,
       description: 'The snake-case name of the file created',
     })
     .option('directory', {
       type: 'string',
       requiresArg: true,
+      demandOption: true,
       description: 'Directory of workspace',
     })
     .parseSync();

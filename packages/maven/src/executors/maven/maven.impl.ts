@@ -14,11 +14,14 @@ const nxMavenRecordGoal = 'dev.nx.maven:nx-maven-plugin:record';
  * Falls back to the Nx project name if metadata is not available.
  */
 function getMavenProjectName(context: ExecutorContext): string {
-  const projectConfig =
-    context.projectGraph?.nodes?.[context.projectName]?.data;
+  const projectName = context.projectName;
+  if (!projectName) {
+    throw new Error('The Maven executor requires a project name.');
+  }
+  const projectConfig = context.projectGraph?.nodes?.[projectName]?.data;
   return (
     (projectConfig?.metadata as Record<string, string>)?.mavenProject ||
-    context.projectName
+    projectName
   );
 }
 

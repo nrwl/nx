@@ -7,19 +7,21 @@ import {
 import { NormalizedSchema } from './normalized-schema';
 
 export function addProxy(tree: Tree, options: NormalizedSchema) {
-  const projectConfig = readProjectConfiguration(tree, options.frontendProject);
-  if (
-    projectConfig.targets &&
-    ['serve', 'dev'].find((t) => !!projectConfig.targets[t])
-  ) {
-    const targetName = ['serve', 'dev'].find((t) => !!projectConfig.targets[t]);
-    projectConfig.targets[targetName].dependsOn = [
-      ...(projectConfig.targets[targetName].dependsOn ?? []),
-      `${options.name}:serve`,
-    ];
+  const frontendProject = options.frontendProject;
+  if (!frontendProject) {
+    throw new Error('The "frontendProject" option is required.');
+  }
+  const projectConfig = readProjectConfiguration(tree, frontendProject);
+  const targets = projectConfig.targets;
+  const targetName = targets
+    ? ['serve', 'dev'].find((t) => !!targets[t])
+    : undefined;
+  if (targets && targetName) {
+    const target = targets[targetName];
+    target.dependsOn = [...(target.dependsOn ?? []), `${options.name}:serve`];
     const pathToProxyFile = `${projectConfig.root}/proxy.conf.json`;
-    projectConfig.targets[targetName].options = {
-      ...projectConfig.targets[targetName].options,
+    target.options = {
+      ...target.options,
       proxyConfig: pathToProxyFile,
     };
 
@@ -39,7 +41,7 @@ export function addProxy(tree: Tree, options: NormalizedSchema) {
       );
     } else {
       //add new entry to existing config
-      const proxyFileContent = tree.read(pathToProxyFile).toString();
+      const proxyFileContent = tree.read(pathToProxyFile, 'utf-8') ?? '';
 
       const proxyModified = {
         ...JSON.parse(proxyFileContent),
@@ -52,10 +54,10 @@ export function addProxy(tree: Tree, options: NormalizedSchema) {
       tree.write(pathToProxyFile, JSON.stringify(proxyModified, null, 2));
     }
 
-    updateProjectConfiguration(tree, options.frontendProject, projectConfig);
+    updateProjectConfiguration(tree, frontendProject, projectConfig);
   } else {
     logger.warn(
-      `Skip updating proxy for frontend project "${options.frontendProject}" since "serve" target is not found in project.json. For more information, see: https://nx.dev/recipes/node/application-proxies.`
+      `Skip updating proxy for frontend project "${frontendProject}" since "serve" target is not found in project.json. For more information, see: https://nx.dev/recipes/node/application-proxies.`
     );
   }
 }

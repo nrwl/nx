@@ -18,6 +18,7 @@ import {
   HashInputs,
   UltracacheConfigurations,
   NxWorkspaceFilesExternals,
+  type JsonInput,
 } from '../native';
 import { getTaskIOService } from '../tasks-runner/task-io-service';
 
@@ -240,11 +241,14 @@ export class InProcessTaskHasher implements TaskHasher {
     /** This run's Ultracache configurations; the daemon passes them per request instead. */
     private readonly ultracacheConfigurations?: UltracacheConfigurations
   ) {
+    if (!externalRustReferences) {
+      throw new Error('Task hashing requires workspace file references.');
+    }
     this.taskHasher = new NativeTaskHasherImpl(
       workspaceRoot,
       this.nxJson,
       this.projectGraph,
-      this.externalRustReferences,
+      externalRustReferences,
       {
         selectivelyHashTsConfig: this.options?.selectivelyHashTsConfig ?? false,
       },
@@ -334,7 +338,7 @@ export class InProcessTaskHasher implements TaskHasher {
   private hashCommand(task: Task): string {
     const overrides = { ...task.overrides };
     delete overrides['__overrides_unparsed__'];
-    const sortedOverrides = {};
+    const sortedOverrides: Record<string, unknown> = {};
     for (let k of Object.keys(overrides).sort()) {
       sortedOverrides[k] = overrides[k];
     }
@@ -352,7 +356,9 @@ export type ExpandedSelfInput =
   | { fileset: string }
   | { runtime: string }
   | { env: string }
-  | { externalDependencies: string[] };
+  | { externalDependencies: string[] }
+  | { workingDirectory: 'relative' | 'absolute' }
+  | JsonInput;
 export type ExpandedDepsOutput = {
   dependentTasksOutputFiles: string;
   transitive?: boolean;
@@ -386,7 +392,10 @@ export function getTargetInputs(
 ) {
   const namedInputs = getNamedInputs(nxJson, projectNode);
 
-  const targetData = projectNode.data.targets[target];
+  const targetData = projectNode.data.targets?.[target];
+  if (!targetData) {
+    throw new Error(`Project "${projectNode.name}" has no target "${target}".`);
+  }
   const inputs = splitInputsIntoSelfAndDependencies(
     targetData.inputs || DEFAULT_INPUTS,
     namedInputs
@@ -410,8 +419,8 @@ export function extractPatternsFromFileSets(
   inputs: readonly ExpandedInput[]
 ): string[] {
   return inputs
-    .filter((c): c is { fileset: string } => !!c['fileset'])
-    .map((c) => c['fileset']);
+    .filter((c): c is { fileset: string } => 'fileset' in c && !!c.fileset)
+    .map((c) => c.fileset);
 }
 
 export function getInputs(
@@ -421,7 +430,12 @@ export function getInputs(
 ) {
   const projectNode = projectGraph.nodes[task.target.project];
   const namedInputs = getNamedInputs(nxJson, projectNode);
-  const targetData = projectNode.data.targets[task.target.target];
+  const targetData = projectNode.data.targets?.[task.target.target];
+  if (!targetData) {
+    throw new Error(
+      `Project "${projectNode.name}" has no target "${task.target.target}".`
+    );
+  }
   // See `getTargetInputs` — graph construction already merged any
   // matching target-default's `inputs` onto `targetData.inputs`, so a
   // separate `targetDefaults` lookup here would either repeat that
@@ -530,7 +544,7 @@ export function expandSingleProjectInputs(
   inputs: ReadonlyArray<InputDefinition | string>,
   namedInputs: { [inputName: string]: ReadonlyArray<InputDefinition | string> }
 ): ExpandedInput[] {
-  const expanded = [];
+  const expanded: ExpandedInput[] = [];
   for (const d of inputs) {
     if (typeof d === 'string') {
       if (d.startsWith('^'))
@@ -547,15 +561,7 @@ export function expandSingleProjectInputs(
           `namedInputs definitions can only refer to other namedInputs definitions within the same project.`
         );
       }
-      if (
-        (d as any).fileset ||
-        (d as any).env ||
-        (d as any).runtime ||
-        (d as any).externalDependencies ||
-        (d as any).dependentTasksOutputFiles ||
-        (d as any).workingDirectory ||
-        (d as any).json
-      ) {
+      if (isExpandedInput(d)) {
         expanded.push(d);
       } else {
         expanded.push(...expandNamedInput((d as any).input, namedInputs));
@@ -563,6 +569,18 @@ export function expandSingleProjectInputs(
     }
   }
   return expanded;
+}
+
+function isExpandedInput(d: InputDefinition): d is ExpandedInput {
+  return !!(
+    ('fileset' in d && d.fileset) ||
+    ('env' in d && d.env) ||
+    ('runtime' in d && d.runtime) ||
+    ('externalDependencies' in d && d.externalDependencies) ||
+    ('dependentTasksOutputFiles' in d && d.dependentTasksOutputFiles) ||
+    ('workingDirectory' in d && d.workingDirectory) ||
+    ('json' in d && d.json)
+  );
 }
 
 export function expandNamedInput(
@@ -589,8 +607,8 @@ export function filterUsingGlobPatterns(
       return r;
     });
 
-  const positive = [];
-  const negative = [];
+  const positive: string[] = [];
+  const negative: string[] = [];
   for (const p of filesetWithExpandedProjectRoot) {
     if (p.startsWith('!')) {
       negative.push(p);

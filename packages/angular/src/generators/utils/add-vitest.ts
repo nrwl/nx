@@ -33,17 +33,17 @@ import {
 export type AddVitestAngularOptions = {
   name: string;
   projectRoot: string;
-  skipPackageJson: boolean;
+  skipPackageJson?: boolean;
   useNxUnitTestRunnerExecutor?: boolean;
 };
 
 export type AddVitestAnalogOptions = {
   name: string;
   projectRoot: string;
-  skipFormat: boolean;
-  skipPackageJson: boolean;
-  strict: boolean;
-  zoneless: boolean;
+  skipFormat?: boolean;
+  skipPackageJson?: boolean;
+  strict?: boolean;
+  zoneless?: boolean;
 };
 
 export async function addVitestAngular(
@@ -266,7 +266,11 @@ function configureTypeScriptForVitest(tree: Tree, projectRoot: string): void {
   const projectTsconfigPath = joinPathFragments(projectRoot, 'tsconfig.json');
   updateJson(tree, projectTsconfigPath, (json) => {
     json.references ??= [];
-    if (!json.references.some((ref) => ref.path === './tsconfig.spec.json')) {
+    if (
+      !json.references.some(
+        (ref: { path: string }) => ref.path === './tsconfig.spec.json'
+      )
+    ) {
       json.references.push({ path: './tsconfig.spec.json' });
     }
     return json;
@@ -274,8 +278,8 @@ function configureTypeScriptForVitest(tree: Tree, projectRoot: string): void {
 }
 
 function addVitestScreenshotsToGitIgnore(tree: Tree): void {
-  if (tree.exists('.gitignore')) {
-    let content = tree.read('.gitignore', 'utf-8');
+  let content = tree.read('.gitignore', 'utf-8');
+  if (content !== null) {
     if (/^__screenshots__\/$/gm.test(content)) {
       return;
     }

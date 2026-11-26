@@ -60,7 +60,11 @@ export default async function update(
     if (!isFlatConfig(path)) {
       return;
     }
-    const source = parseFlatConfig(tree.read(path, 'utf-8'));
+    const content = tree.read(path, 'utf-8');
+    if (content === null) {
+      return;
+    }
+    const source = parseFlatConfig(content);
     const usage = getEslintConfigNextUsage(source);
     if (!usage.registersNextPlugin && !usage.extendsNextThroughCompat) {
       return;
@@ -144,7 +148,7 @@ function findGeneratedNextEntries(
   }
   const compatConfigs = new Set(
     compatElements
-      .flatMap((element) => getCompatExtendsCall(element).arguments)
+      .flatMap((element) => getCompatExtendsCall(element)?.arguments ?? [])
       .map((argument) => (argument as ts.StringLiteralLike).text)
   );
   if (

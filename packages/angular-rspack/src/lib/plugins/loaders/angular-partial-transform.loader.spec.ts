@@ -36,13 +36,14 @@ describe('angular-partial-transform.loader', () => {
     _compilation: {},
     getOptions: () => ({ engineManifestPath }),
   } as unknown as LoaderContext<AngularPartialTransformLoaderOptions>;
-  const chainMap = {
+  const chainMap: RawSourceMap = {
     version: 3,
+    file: 'file-original.js',
     sources: ['/path/to/file-original.ts'],
     sourcesContent: ['original source'],
     names: [],
     mappings: 'AAAA',
-  } as RawSourceMap;
+  };
   // Built via concatenation so tools scanning this file for sourcemap
   // comments do not mistake the literal for a real one.
   const inlineComment = (map: object) =>

@@ -70,10 +70,9 @@ export async function affected(
 
   // Task selection needs a target to select against, so `nx graph --affected`
   // and the deprecated print-affected stay project-grained.
+  const targets = nxArgs.targets;
   const useTasks =
-    selectsAffectedTasks(nxJson) &&
-    command === 'affected' &&
-    !!nxArgs.targets?.length;
+    selectsAffectedTasks(nxJson) && command === 'affected' && !!targets?.length;
 
   if (isExplaining(nxArgs.explain) && !useTasks) {
     throw new Error(
@@ -81,7 +80,7 @@ export async function affected(
         [
           !selectsAffectedTasks(nxJson) && taskGranularityRequirement(),
           !nxArgs.targets?.length && 'targets passed with --targets (-t)',
-        ].filter(Boolean)
+        ].filter((requirement): requirement is string => !!requirement)
       )
     );
   }
@@ -94,7 +93,7 @@ export async function affected(
     let explanation: AffectedExplanation | undefined;
     ({ projectGraph, taskSelection, explanation } = await computeAffectedTasks({
       nxJson,
-      targets: nxArgs.targets,
+      targets,
       touchedFiles: calculateFileChanges(parseFiles(nxArgs).files, nxArgs),
       fileChangeArgs: {
         base: nxArgs.base,
@@ -112,6 +111,9 @@ export async function affected(
     // --explain reports the selection rather than acting on it: someone asking
     // why a task is affected does not also want it to run.
     if (isExplaining(nxArgs.explain)) {
+      if (!explanation) {
+        throw new Error('Affected task selection returned no explanation.');
+      }
       printAffectedExplanation(explanation, 'Affected tasks', nxArgs.explain, {
         verbose: args.verbose,
       });
@@ -138,9 +140,10 @@ export async function affected(
     switch (command) {
       case 'affected': {
         if (nxArgs.graph) {
-          const projectNames = useTasks
-            ? initiatingProjects(taskSelection)
-            : projectsWithTarget(projects, nxArgs);
+          const projectNames =
+            useTasks && taskSelection
+              ? initiatingProjects(taskSelection)
+              : projectsWithTarget(projects, nxArgs);
           const file = readGraphFileFromGraphArg(nxArgs);
 
           return await generateGraph(
@@ -170,6 +173,9 @@ export async function affected(
             projectNames
           );
         } else {
+          if (!taskSelection) {
+            throw new Error('No tasks were selected to run.');
+          }
           const status = await runCommand(
             taskSelection,
             projectGraph,
@@ -231,8 +237,12 @@ function projectsWithTarget(
   projects: ProjectGraphProjectNode[],
   nxArgs: NxArgs
 ): string[] {
+  const { targets } = nxArgs;
+  if (!targets) {
+    throw new Error('No targets were passed with --targets (-t).');
+  }
   return projects
-    .filter((p) => nxArgs.targets.find((target) => projectHasTarget(p, target)))
+    .filter((p) => targets.find((target) => projectHasTarget(p, target)))
     .map((p) => p.name);
 }
 

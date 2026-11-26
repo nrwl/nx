@@ -13,20 +13,27 @@ import { output } from '../../utils/output';
 import { ensureCatchAllTargetDefaultConfig } from '../utils/target-defaults';
 
 export default async function migrate(tree: Tree) {
-  if (!tree.exists('nx.json')) {
+  const nxJson = readNxJson(tree);
+  if (!nxJson) {
     return;
   }
-
-  const nxJson = readNxJson(tree);
 
   // Already migrated
-  if (!nxJson.tasksRunnerOptions?.default) {
+  const defaultRunnerOptions = nxJson.tasksRunnerOptions?.default;
+  if (!defaultRunnerOptions) {
     return;
   }
 
-  const nxCloudClientSupported = await isNxCloudClientSupported(nxJson);
+  const nxCloudClientSupported = await isNxCloudClientSupported(
+    nxJson,
+    defaultRunnerOptions
+  );
   updateJson<NxJsonConfiguration>(tree, 'nx.json', (nxJson) => {
-    const { runner, options } = nxJson.tasksRunnerOptions.default as {
+    const tasksRunnerOptions = nxJson.tasksRunnerOptions;
+    if (!tasksRunnerOptions?.default) {
+      throw new Error('nx.json has no default tasksRunnerOptions.');
+    }
+    const { runner, options } = tasksRunnerOptions.default as {
       runner: string;
       options: {
         useDaemonProcess?: boolean;
@@ -99,7 +106,7 @@ export default async function migrate(tree: Tree) {
         runner
       )
     ) {
-      delete nxJson.tasksRunnerOptions.default.runner;
+      delete tasksRunnerOptions.default.runner;
       if (Object.values(options).length === 0) {
         delete nxJson.tasksRunnerOptions;
       }
@@ -110,11 +117,18 @@ export default async function migrate(tree: Tree) {
   await formatChangedFiles(tree);
 }
 
-async function isNxCloudClientSupported(nxJson: NxJsonConfiguration) {
+type RunnerOptions = NonNullable<
+  NxJsonConfiguration['tasksRunnerOptions']
+>[string];
+
+async function isNxCloudClientSupported(
+  nxJson: NxJsonConfiguration,
+  defaultRunnerOptions: RunnerOptions
+) {
   const nxCloudOptions = getRunnerOptions('default', nxJson, {}, true);
 
   // Non enterprise workspaces support the Nx Cloud Client
-  if (!isNxCloudEnterpriseWorkspace(nxJson)) {
+  if (!isNxCloudEnterpriseWorkspace(defaultRunnerOptions)) {
     return true;
   }
 
@@ -136,8 +150,7 @@ async function isNxCloudClientSupported(nxJson: NxJsonConfiguration) {
   }
 }
 
-function isNxCloudEnterpriseWorkspace(nxJson: NxJsonConfiguration) {
-  const { runner, options } = nxJson.tasksRunnerOptions.default;
+function isNxCloudEnterpriseWorkspace({ runner, options }: RunnerOptions) {
   return (
     (runner === 'nx-cloud' || runner === '@nrwl/nx-cloud') &&
     options.url &&

@@ -22,10 +22,10 @@ describe('disable-angular-eslint-prefer-standalone', () => {
     envBackup = process.env.ESLINT_USE_FLAT_CONFIG;
     tree = createTreeWithEmptyWorkspace();
 
-    const projectConfig: ProjectConfiguration = {
+    const projectConfig = {
       name: 'app1',
       root: 'apps/app1',
-    };
+    } satisfies ProjectConfiguration;
     projectGraph = {
       dependencies: {
         app1: [

@@ -3,7 +3,7 @@ import { getRelativeDirectoryToProjectRoot } from '../../../utils/get-main-file-
 import { joinPathFragments, normalizePath } from '@nx/devkit';
 
 interface OutputFileNameOptions {
-  buildTargetExecutor: string;
+  buildTargetExecutor: string | undefined;
   main: string;
   outputPath: string;
   rootDir: string;

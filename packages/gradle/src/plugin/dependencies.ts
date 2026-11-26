@@ -23,7 +23,7 @@ import { globWithWorkspaceContext } from '@nx/devkit/internal';
 export const createDependencies: CreateDependencies<
   GradlePluginOptions
 > = async (
-  options: GradlePluginOptions,
+  options: GradlePluginOptions | undefined,
   context: CreateDependenciesContext
 ) => {
   const files = await globWithWorkspaceContext(
@@ -56,6 +56,7 @@ export const createDependencies: CreateDependencies<
       if (
         !sourceProjectName ||
         !targetProjectName ||
+        !sourceFile ||
         !existsSync(join(workspaceRoot, sourceFile))
       ) {
         return;

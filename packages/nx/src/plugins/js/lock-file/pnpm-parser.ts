@@ -1,8 +1,10 @@
 import type {
   Lockfile,
+  LockfileResolution,
   PackageSnapshot,
   PackageSnapshots,
   ProjectSnapshot,
+  ResolvedDependencies,
 } from '@pnpm/lockfile-types';
 import {
   assertPnpmModulesManifest,
@@ -40,6 +42,7 @@ import {
 import {
   findLocalPathNode,
   findNodeMatchingVersion,
+  getExternalNodes,
   isLocalPathSpecifier,
 } from './project-graph-pruning';
 import { isAbsolute, join, posix, relative, sep } from 'path';
@@ -126,7 +129,7 @@ function invertRecordWithoutAliases(
 
 const cachedInvertedRecords = new Map<string, Record<string, string>>();
 function matchPropValue(
-  record: Record<string, string>,
+  record: Record<string, string> | undefined,
   key: string,
   originalPackageName: string,
   recordName: string
@@ -134,11 +137,13 @@ function matchPropValue(
   if (!record) {
     return undefined;
   }
-  if (!cachedInvertedRecords.has(recordName)) {
+  let invertedRecord = cachedInvertedRecords.get(recordName);
+  if (!invertedRecord) {
     // Inversion is only for non-alias specs to avoid alias -> target mislabeling.
-    cachedInvertedRecords.set(recordName, invertRecordWithoutAliases(record));
+    invertedRecord = invertRecordWithoutAliases(record);
+    cachedInvertedRecords.set(recordName, invertedRecord);
   }
-  const packageName = cachedInvertedRecords.get(recordName)[key];
+  const packageName = invertedRecord[key];
   if (packageName) {
     return packageName;
   }
@@ -178,12 +183,25 @@ function matchedDependencyName(
   );
 }
 
+function getResolutionIntegrity(
+  resolution: LockfileResolution | undefined
+): string | undefined {
+  return resolution && 'integrity' in resolution
+    ? resolution.integrity
+    : undefined;
+}
+
+function getResolutionTarball(
+  resolution: LockfileResolution | undefined
+): string | undefined {
+  return resolution && 'tarball' in resolution ? resolution.tarball : undefined;
+}
+
 function createHashFromSnapshot(snapshot: PackageSnapshot, patchHash?: string) {
+  const tarball = getResolutionTarball(snapshot.resolution);
   const baseHash =
-    snapshot.resolution?.['integrity'] ||
-    (snapshot.resolution?.['tarball']
-      ? hashArray([snapshot.resolution['tarball']])
-      : undefined);
+    getResolutionIntegrity(snapshot.resolution) ||
+    (tarball ? hashArray([tarball]) : undefined);
 
   // If there's a patch hash, combine it with the base hash
   if (patchHash && baseHash) {
@@ -303,10 +321,12 @@ function getNodes(
       if (patchHash) {
         const packageName = extractNameFromKey(specifier, false);
         const versionSpecifier = getVersion(specifier, packageName) || null;
-        if (!patchEntriesByPackage.has(packageName)) {
-          patchEntriesByPackage.set(packageName, []);
+        let patchEntries = patchEntriesByPackage.get(packageName);
+        if (!patchEntries) {
+          patchEntries = [];
+          patchEntriesByPackage.set(packageName, patchEntries);
         }
-        patchEntriesByPackage.get(packageName).push({
+        patchEntries.push({
           versionSpecifier,
           hash: patchHash,
         });
@@ -317,10 +337,12 @@ function getNodes(
   // <version, aliases>, since several aliases can resolve to one version
   const maybeAliasedPackageVersions = new Map<string, Set<string>>();
   const addMaybeAlias = (depVersion: string, depName: string) => {
-    if (!maybeAliasedPackageVersions.has(depVersion)) {
-      maybeAliasedPackageVersions.set(depVersion, new Set());
+    let aliases = maybeAliasedPackageVersions.get(depVersion);
+    if (!aliases) {
+      aliases = new Set();
+      maybeAliasedPackageVersions.set(depVersion, aliases);
     }
-    maybeAliasedPackageVersions.get(depVersion).add(depName);
+    aliases.add(depName);
   };
 
   if (data.importers['.'].optionalDependencies) {
@@ -482,12 +504,15 @@ function getNodes(
       continue;
     }
 
-    if (!nodes.has(packageName)) {
-      nodes.set(packageName, new Map());
+    let versionNodes = nodes.get(packageName);
+    if (!versionNodes) {
+      versionNodes = new Map();
+      nodes.set(packageName, versionNodes);
     }
 
-    if (!nodes.get(packageName).has(version)) {
-      const node: ProjectGraphExternalNode = {
+    let node = versionNodes.get(version);
+    if (!node) {
+      node = {
         type: 'npm',
         name:
           version && !version.startsWith('npm:')
@@ -499,19 +524,13 @@ function getNodes(
           hash: hash ?? hashArray([packageName, version]),
         },
       };
-      nodes.get(packageName).set(version, node);
-      if (!keyMap.has(key)) {
-        keyMap.set(key, new Set([node]));
-      } else {
-        keyMap.get(key).add(node);
-      }
+      versionNodes.set(version, node);
+    }
+    const keyNodes = keyMap.get(key);
+    if (!keyNodes) {
+      keyMap.set(key, new Set([node]));
     } else {
-      const node = nodes.get(packageName).get(version);
-      if (!keyMap.has(key)) {
-        keyMap.set(key, new Set([node]));
-      } else {
-        keyMap.get(key).add(node);
-      }
+      keyNodes.add(node);
     }
   }
 
@@ -520,7 +539,7 @@ function getNodes(
   const results: Record<string, ProjectGraphExternalNode> = {};
 
   for (const [packageName, versionMap] of nodes.entries()) {
-    let hoistedNode: ProjectGraphExternalNode;
+    let hoistedNode: ProjectGraphExternalNode | undefined;
     if (versionMap.size === 1) {
       hoistedNode = versionMap.values().next().value;
     } else {
@@ -689,9 +708,11 @@ function getDependencies(
 ): RawProjectGraphDependency[] {
   const results: RawProjectGraphDependency[] = [];
   // pnpm omits the packages block for workspace-only lockfiles (no external deps)
-  Object.keys(data.packages ?? {}).forEach((key) => {
-    const snapshot = data.packages[key];
+  Object.entries(data.packages ?? {}).forEach(([key, snapshot]) => {
     const nodes = keyMap.get(key);
+    if (!nodes) {
+      throw new Error(`Could not find external nodes for "${key}".`);
+    }
     nodes.forEach((node) => {
       [snapshot.dependencies, snapshot.optionalDependencies].forEach(
         (section) => {
@@ -704,8 +725,8 @@ function getDependencies(
               );
               const target =
                 keyMap.get(versionRange)?.values().next().value ||
-                ctx.externalNodes[`npm:${name}@${version}`] ||
-                ctx.externalNodes[`npm:${name}`];
+                getExternalNodes(ctx)[`npm:${name}@${version}`] ||
+                getExternalNodes(ctx)[`npm:${name}`];
               if (target) {
                 const dep: RawProjectGraphDependency = {
                   source: node.name,
@@ -823,7 +844,7 @@ export function stringifyPnpmLockfile(
   const snapshots = mapSnapshots(
     packages,
     packageIndex,
-    graph.externalNodes,
+    getExternalNodes(graph),
     +lockfileVersion
   );
 
@@ -930,7 +951,7 @@ export function stringifyPnpmLockfile(
   // assembly's own already-relocated entries are still separate from them.
   containShippedLocalLinkRefs(snapshots);
 
-  const output: Lockfile = {
+  const output: Lockfile & { packages: PackageSnapshots } = {
     ...data,
     lockfileVersion,
     importers: {
@@ -1148,14 +1169,14 @@ function mapSnapshots(
 
     // the package manager doesn't check for types of dependencies
     // so we can safely set all to prod
-    matchedKeys.forEach(([key, snapshot]) => {
+    matchedKeys.forEach(([key, snapshot]: [string, LegacyPackageSnapshot]) => {
       if (lockfileVersion >= 9) {
-        delete snapshot['dev'];
+        delete snapshot.dev;
         result[key] = snapshot;
       } else {
-        snapshot['dev'] = false; // all dependencies are prod
+        snapshot.dev = false; // all dependencies are prod
         remapDependencies(snapshot);
-        if (snapshot.resolution?.['tarball']) {
+        if (getResolutionTarball(snapshot.resolution)) {
           // tarballs are not prefixed with /
           result[key] = snapshot;
         } else {
@@ -1167,23 +1188,21 @@ function mapSnapshots(
   return result;
 }
 
-function remapDependencies(snapshot: PackageSnapshot) {
-  [
-    'dependencies',
-    'optionalDependencies',
-    'devDependencies',
-    'peerDependencies',
-  ].forEach((depType) => {
-    if (snapshot[depType]) {
-      for (const [packageName, version] of Object.entries(
-        snapshot[depType] as Record<string, string>
-      )) {
+function remapDependencies(snapshot: LegacyPackageSnapshot) {
+  (
+    [
+      'dependencies',
+      'optionalDependencies',
+      'devDependencies',
+      'peerDependencies',
+    ] as const
+  ).forEach((depType) => {
+    const deps = snapshot[depType];
+    if (deps) {
+      for (const [packageName, version] of Object.entries(deps)) {
         if (version.match(/^[a-zA-Z]+.*/)) {
           // remap packageName@version to packageName/version
-          snapshot[depType][packageName] = `/${version.replace(
-            /([a-zA-Z].+)@/,
-            '$1/'
-          )}`;
+          deps[packageName] = `/${version.replace(/([a-zA-Z].+)@/, '$1/')}`;
         }
       }
     }
@@ -1191,6 +1210,12 @@ function remapDependencies(snapshot: PackageSnapshot) {
 }
 
 type PackageIndex = Map<string, Array<[string, PackageSnapshot]>>;
+
+// pre-v9 lockfiles also record `dev` and `devDependencies` on package snapshots
+type LegacyPackageSnapshot = PackageSnapshot & {
+  dev?: boolean;
+  devDependencies?: Record<string, string>;
+};
 
 // Bucket package keys by their package name so a node only scans its own name's
 // versions instead of every key (was O(nodes * allPackages)). v5 is excluded
@@ -1235,7 +1260,7 @@ function findOriginalKeys(
           version.startsWith('npm:') ? aliasTargetName(version) : packageName
         ) ?? NO_CANDIDATES)
       : Object.entries(packages);
-  const matchedKeys = [];
+  const matchedKeys: Array<[string, PackageSnapshot]> = [];
   for (const [key, snapshot] of candidates) {
     // tarball package (legacy lockfile formats key these differently; on v9+ the
     // version-keyed branch below returns the correct full `name@<spec>` key, so
@@ -1244,7 +1269,7 @@ function findOriginalKeys(
     if (
       lockfileVersion < 9 &&
       key.startsWith(`${packageName}@${version}`) &&
-      snapshot.resolution?.['tarball']
+      getResolutionTarball(snapshot.resolution)
     ) {
       matchedKeys.push([getVersion(key, packageName), snapshot]);
     }
@@ -1324,17 +1349,22 @@ function mapRootSnapshot(
   projectRoot: string | undefined
 ) {
   const catalogManager = getCatalogManager(workspaceRoot);
-  const snapshot: ProjectSnapshot = { specifiers: {} };
+  const snapshot: ProjectSnapshot & Record<string, ResolvedDependencies> = {
+    specifiers: {},
+  };
   const importers: Record<string, string> = {};
-  [
-    'dependencies',
-    'optionalDependencies',
-    'devDependencies',
-    'peerDependencies',
-  ].forEach((depType) => {
-    if (packageJson[depType]) {
-      Object.keys(packageJson[depType]).forEach((packageName) => {
-        let version = packageJson[depType][packageName];
+  (
+    [
+      'dependencies',
+      'optionalDependencies',
+      'devDependencies',
+      'peerDependencies',
+    ] as const
+  ).forEach((depType) => {
+    const deps = packageJson[depType];
+    if (deps) {
+      Object.keys(deps).forEach((packageName) => {
+        let version = deps[packageName];
         if (catalogManager?.isCatalogReference(version)) {
           const resolved = catalogManager.resolveCatalogReference(
             workspaceRoot,
@@ -1417,11 +1447,12 @@ function mapRootSnapshot(
             snapshot[section][packageName] = version;
             return;
           }
-          let node =
-            graph.externalNodes[`npm:${packageName}@${version}`] ||
-            (graph.externalNodes[`npm:${packageName}`] &&
-            graph.externalNodes[`npm:${packageName}`].data.version === version
-              ? graph.externalNodes[`npm:${packageName}`]
+          const externalNodes = getExternalNodes(graph);
+          let node: ProjectGraphExternalNode | undefined =
+            externalNodes[`npm:${packageName}@${version}`] ||
+            (externalNodes[`npm:${packageName}`] &&
+            externalNodes[`npm:${packageName}`].data.version === version
+              ? externalNodes[`npm:${packageName}`]
               : findNodeMatchingVersion(graph, packageName, version));
           // findLocalPathNode matches a `file:` dependency that the lookups
           // above miss, such as one relocated into the output

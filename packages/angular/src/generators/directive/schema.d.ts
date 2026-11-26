@@ -13,6 +13,7 @@ export interface Schema {
 }
 
 export interface NormalizedSchema extends Schema {
+  name: string;
   directory: string;
   filePath: string;
   fileName: string;

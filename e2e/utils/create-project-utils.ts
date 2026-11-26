@@ -1,3 +1,7 @@
+// e2e projects compile this source directly, so they need the shim pulled in here.
+// oxlint-disable-next-line typescript/triple-slash-reference
+/// <reference path="./untyped-modules.d.ts" />
+
 import { copySync, ensureDirSync, moveSync, removeSync } from 'fs-extra';
 import * as isCI from 'is-ci';
 import {
@@ -35,6 +39,7 @@ import { performance, PerformanceMeasure } from 'node:perf_hooks';
 import { resetWorkspaceContext } from 'nx/src/utils/workspace-context';
 import {
   getPackageManagerCommand,
+  isExecSyncError,
   runCLI,
   RunCmdOpts,
   runCommand,
@@ -222,8 +227,8 @@ export function newProject({
     const projScope = 'proj';
     const stagingDirectory = `${e2eCwd}/${projScope}`;
 
-    let createNxWorkspaceMeasure: PerformanceMeasure;
-    let packageInstallMeasure: PerformanceMeasure;
+    let createNxWorkspaceMeasure: PerformanceMeasure | undefined;
+    let packageInstallMeasure: PerformanceMeasure | undefined;
     let builtHere = false;
 
     // Namespace by package manager to avoid conflicts in test suites which include multiple package managers
@@ -418,7 +423,10 @@ ${
     openInEditor(projectDirectory);
     return projScope;
   } catch (e) {
-    logError(`Failed to set up project for e2e tests.`, e.message);
+    logError(
+      `Failed to set up project for e2e tests.`,
+      e instanceof Error ? e.message : undefined
+    );
     throw e;
   }
 }
@@ -609,6 +617,7 @@ export function runCreateWorkspace(
 
     return create;
   } catch (e) {
+    if (!isExecSyncError(e)) throw e;
     logError(`Original command: ${command}`, `${e.stdout}\n\n${e.stderr}`);
     throw e;
   }
@@ -660,6 +669,7 @@ export function runCreatePlugin(
 
     return create;
   } catch (e) {
+    if (!isExecSyncError(e)) throw e;
     logError(`Original command: ${command}`, `${e.stdout}\n\n${e.stderr}`);
     throw e;
   }
@@ -700,6 +710,7 @@ export function packageInstall(
 
     return install;
   } catch (e) {
+    if (!isExecSyncError(e)) throw e;
     logError(`Original command: ${command}`, `${e.stdout}\n\n${e.stderr}`);
     throw e;
   }
@@ -898,7 +909,10 @@ export function newLernaWorkspace({
 
     return projScope;
   } catch (e) {
-    logError(`Failed to set up lerna workspace for e2e tests.`, e.message);
+    logError(
+      `Failed to set up lerna workspace for e2e tests.`,
+      e instanceof Error ? e.message : undefined
+    );
     throw e;
   }
 }

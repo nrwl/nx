@@ -28,6 +28,7 @@ import { detectPackageManager } from '../../../utils/package-manager';
 import { normalizePath } from '../../../utils/path';
 import {
   findNodeMatchingVersion,
+  getExternalNodes,
   isLinkNode,
   isLocalPathSpecifier,
 } from '../lock-file/project-graph-pruning';
@@ -60,7 +61,7 @@ export function createPackageJson(
     skipPackageManager?: boolean;
     skipOverrides?: boolean;
   } = {},
-  fileMap: ProjectFileMap = null
+  fileMap: ProjectFileMap | null = null
 ): PackageJson {
   const projectNode = graph.nodes[projectName];
   const isLibrary = projectNode.type === 'lib';
@@ -313,6 +314,7 @@ export function createPackageJson(
       }
       return (
         dependentsAcceptDroppedOverrides &&
+        !!lockFilePackages &&
         hasOnlyRegistryCopies(packageName, lockFilePackages)
       );
     };
@@ -348,7 +350,7 @@ export function createPackageJson(
               name,
               resolvedOverrides,
               mergedOverrides,
-              rootPackageJson.overrides
+              rootPackageJson.overrides ?? {}
             ) ||
             !matchesInstalledPackages(resolvedOverrides, graph) ||
             !matchesLockFile(name)
@@ -442,7 +444,7 @@ function getRootDependencySpec(
 // the root spec. Anything else that is not a version range, such as a path, a
 // nested object or an undeclared `$name`, may apply differently there.
 function resolveNpmOverrideSpecs(
-  override: PackageJson['overrides'],
+  override: NonNullable<PackageJson['overrides']>,
   rootPackageJson: PackageJson
 ): Record<string, string> | undefined {
   const resolved: Record<string, string> = {};
@@ -470,8 +472,8 @@ function resolveNpmOverrideSpecs(
 function namesAPackageTwice(
   name: string,
   dependencyOverrides: Record<string, string>,
-  mergedOverrides: PackageJson['overrides'],
-  rootOverrides: PackageJson['overrides']
+  mergedOverrides: NonNullable<PackageJson['overrides']>,
+  rootOverrides: NonNullable<PackageJson['overrides']>
 ): boolean {
   const packageNames = [
     ...Object.keys(mergedOverrides),
@@ -551,7 +553,10 @@ function dependentsAcceptInstalledCopies(
     packageNames.map((packageName) => [packageName, []])
   );
   for (const [path, entry] of Object.entries(packages)) {
-    versions.get(getLockFilePackageName(path))?.push(entry.version);
+    const packageName = getLockFilePackageName(path);
+    if (packageName !== undefined) {
+      versions.get(packageName)?.push(entry.version ?? '');
+    }
   }
   return Object.values(packages).every((entry) =>
     [
@@ -669,22 +674,28 @@ function createInheritedLocalPathSpecResolver(
     if (lookup === null) {
       return undefined;
     }
-    if (!declarersByImporter.has(importingProject)) {
+    let declarers = declarersByImporter.get(importingProject);
+    if (!declarers) {
       const chain = getImportResolutionChain(graph, importingProject);
       const others = lookup.reachableProjects.filter(
         (projectName) => !chain.includes(projectName)
       );
-      const chainDeclarers = chain.map(getProjectDeclarer).filter(Boolean);
-      const otherDeclarers = others.map(getProjectDeclarer).filter(Boolean);
-      declarersByImporter.set(importingProject, {
+      const chainDeclarers = chain
+        .map(getProjectDeclarer)
+        .filter(isLocalPathSpecDeclarer);
+      const otherDeclarers = others
+        .map(getProjectDeclarer)
+        .filter(isLocalPathSpecDeclarer);
+      declarers = {
         ordered:
           lookup.packageManager === 'bun'
             ? [rootDeclarer, ...chainDeclarers, ...otherDeclarers]
             : [...chainDeclarers, rootDeclarer, ...otherDeclarers],
         onChain: new Set(chainDeclarers),
-      });
+      };
+      declarersByImporter.set(importingProject, declarers);
     }
-    const { ordered, onChain } = declarersByImporter.get(importingProject);
+    const { ordered, onChain } = declarers;
     const isPnpmLink =
       lookup.packageManager === 'pnpm' && version.startsWith('link:');
     for (const declarer of ordered) {
@@ -808,6 +819,12 @@ interface LocalPathSpecDeclarer {
   manifest: PackageJson;
 }
 
+function isLocalPathSpecDeclarer(
+  declarer: LocalPathSpecDeclarer | null | undefined
+): declarer is LocalPathSpecDeclarer {
+  return !!declarer;
+}
+
 function readLocalPathSpecDeclarer(
   project: ProjectGraphProjectNode,
   root: string
@@ -855,14 +872,14 @@ function getReachableProjects(
 export function findProjectsNpmDependencies(
   projectNode: ProjectGraphProjectNode,
   graph: ProjectGraph,
-  target: string,
+  target: string | undefined,
   rootPackageJson: PackageJson,
   options: {
     helperDependencies?: string[];
     ignoredDependencies?: string[];
     isProduction?: boolean;
   },
-  fileMap?: ProjectFileMap,
+  fileMap?: ProjectFileMap | null,
   root = workspaceRoot
 ): NpmDeps {
   if (fileMap == null) {
@@ -950,7 +967,7 @@ function findAllNpmDeps(
   );
 
   for (const dep of projectDependencies) {
-    const node = graph.externalNodes[dep];
+    const node = getExternalNodes(graph)[dep];
 
     if (seen.has(dep)) {
       // if it's in peerDependencies, move it to regular dependencies
@@ -1003,7 +1020,8 @@ function findHelperDependencyNode(
   projectName: string,
   dep: string
 ): ProjectGraphExternalNode | undefined {
-  const bareNode = graph.externalNodes[dep];
+  const externalNodes = getExternalNodes(graph);
+  const bareNode = externalNodes[dep];
   if (bareNode && !isLinkNode(bareNode)) {
     return bareNode;
   }
@@ -1013,10 +1031,10 @@ function findHelperDependencyNode(
   // depends on, else the highest registry version, else the link.
   const packageName = dep.replace(/^npm:/, '');
   const projectDependency = graph.dependencies[projectName]?.find(
-    (d) => graph.externalNodes[d.target]?.data.packageName === packageName
+    (d) => externalNodes[d.target]?.data.packageName === packageName
   );
   return projectDependency
-    ? graph.externalNodes[projectDependency.target]
+    ? externalNodes[projectDependency.target]
     : findNodeMatchingVersion(graph, packageName, '*');
 }
 
@@ -1027,7 +1045,7 @@ function recursivelyCollectPeerDependencies(
   seen: Set<string>,
   root: string
 ) {
-  const npmPackage = graph.externalNodes[projectName];
+  const npmPackage = getExternalNodes(graph)[projectName];
   if (!npmPackage) {
     return npmDeps;
   }
@@ -1041,7 +1059,7 @@ function recursivelyCollectPeerDependencies(
 
     Object.keys(packageJson.peerDependencies)
       .map((dependencyName) => `npm:${dependencyName}`)
-      .map((dependency) => graph.externalNodes[dependency])
+      .map((dependency) => getExternalNodes(graph)[dependency])
       .filter(Boolean)
       .forEach((node) => {
         const isOptional =
@@ -1069,7 +1087,7 @@ function recursivelyCollectPeerDependencies(
     return npmDeps;
   } catch (e) {
     logger.verbose(
-      `Could not read the package.json of ${packageName}, so its peer dependencies were not collected: ${e.message}`
+      `Could not read the package.json of ${packageName}, so its peer dependencies were not collected: ${e instanceof Error ? e.message : String(e)}`
     );
     return npmDeps;
   }

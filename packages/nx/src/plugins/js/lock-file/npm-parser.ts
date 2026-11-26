@@ -16,6 +16,7 @@ import {
 import { hashArray } from '../../../hasher/file-hasher';
 import { CreateDependenciesContext } from '../../../project-graph/plugins';
 import { getWorkspacePackagesFromGraph } from '../utils/get-workspace-packages-from-graph';
+import { getExternalNodes } from './project-graph-pruning';
 
 /**
  * NPM
@@ -61,6 +62,24 @@ type NpmLockFile = {
 let currentLockFileHash: string;
 
 let parsedLockFile: NpmLockFile;
+
+function getV3Packages(data: NpmLockFile): Record<string, NpmDependencyV3> {
+  if (!data.packages) {
+    throw new Error(
+      `The npm lockfile (version ${data.lockfileVersion}) has no "packages" section.`
+    );
+  }
+  return data.packages;
+}
+
+function getV1Dependencies(data: NpmLockFile): Record<string, NpmDependencyV1> {
+  if (!data.dependencies) {
+    throw new Error(
+      `The npm lockfile (version ${data.lockfileVersion}) has no "dependencies" section.`
+    );
+  }
+  return data.dependencies;
+}
 
 function parsePackageLockFile(lockFileContent: string, lockFileHash: string) {
   if (lockFileHash === currentLockFileHash) {
@@ -113,7 +132,7 @@ function getNodes(data: NpmLockFile): {
   const localPathPackageNames = new Set<string>();
 
   if (data.lockfileVersion > 1) {
-    Object.entries(data.packages).forEach(([path, snapshot]) => {
+    Object.entries(getV3Packages(data)).forEach(([path, snapshot]) => {
       // skip workspaces and snapshots bundled into their parent package
       if (
         path === '' ||
@@ -124,7 +143,8 @@ function getNodes(data: NpmLockFile): {
         return;
       }
 
-      const packageName = path.split('node_modules/').pop();
+      const segments = path.split('node_modules/');
+      const packageName = segments[segments.length - 1];
       const version = findV3Version(snapshot, packageName);
       // symlinked packages in workspaces do not have versions
       if (version) {
@@ -135,32 +155,34 @@ function getNodes(data: NpmLockFile): {
       }
     });
   } else {
-    Object.entries(data.dependencies).forEach(([packageName, snapshot]) => {
-      // we only care about dependencies of workspace packages
-      if (snapshot.version?.startsWith('file:')) {
-        if (snapshot.dependencies) {
-          Object.entries(snapshot.dependencies).forEach(
-            ([depName, depSnapshot]) => {
-              addV1Node(
-                depName,
-                depSnapshot,
-                `${snapshot.version.slice(5)}/node_modules/${depName}`,
-                nodes,
-                keyMap
-              );
-            }
+    Object.entries(getV1Dependencies(data)).forEach(
+      ([packageName, snapshot]) => {
+        // we only care about dependencies of workspace packages
+        if (snapshot.version?.startsWith('file:')) {
+          if (snapshot.dependencies) {
+            Object.entries(snapshot.dependencies).forEach(
+              ([depName, depSnapshot]) => {
+                addV1Node(
+                  depName,
+                  depSnapshot,
+                  `${snapshot.version.slice(5)}/node_modules/${depName}`,
+                  nodes,
+                  keyMap
+                );
+              }
+            );
+          }
+        } else {
+          addV1Node(
+            packageName,
+            snapshot,
+            `node_modules/${packageName}`,
+            nodes,
+            keyMap
           );
         }
-      } else {
-        addV1Node(
-          packageName,
-          snapshot,
-          `node_modules/${packageName}`,
-          nodes,
-          keyMap
-        );
       }
-    });
+    );
   }
 
   const results: Record<string, ProjectGraphExternalNode> = {};
@@ -193,11 +215,15 @@ function getInstalledLocalPathNodes(
   localPathPackageNames: Set<string>
 ): Record<string, Record<string, string>> {
   const installed: Record<string, Record<string, string>> = Object.create(null);
-  for (const importerPath in data.packages) {
+  const { packages } = data;
+  if (!packages) {
+    return installed;
+  }
+  for (const importerPath in packages) {
     if (importerPath !== '' && importerPath.includes('node_modules')) {
       continue;
     }
-    const importer = data.packages[importerPath];
+    const importer = packages[importerPath];
     for (const deps of [
       importer.dependencies,
       importer.devDependencies,
@@ -209,8 +235,8 @@ function getInstalledLocalPathNodes(
           continue;
         }
         // Node loads the nearest copy, so a registry copy there wins
-        const key = findNearestNpmPackageKey(data, importerPath, depName);
-        const snapshot = key && data.packages[key];
+        const key = findNearestNpmPackageKey(packages, importerPath, depName);
+        const snapshot = key && packages[key];
         if (
           !snapshot ||
           snapshot.link ||
@@ -231,14 +257,14 @@ function getInstalledLocalPathNodes(
 }
 
 function findNearestNpmPackageKey(
-  data: NpmLockFile,
+  packages: Record<string, NpmDependencyV3>,
   importerPath: string,
   packageName: string
 ): string | undefined {
   let dir = importerPath;
   while (true) {
     const key = `${dir ? `${dir}/` : ''}node_modules/${packageName}`;
-    if (data.packages[key]) {
+    if (packages[key]) {
       return key;
     }
     if (!dir) {
@@ -305,15 +331,19 @@ function createNode(
   };
 
   keyMap.set(key, node);
-  if (!nodes.has(packageName)) {
+  const versionNodes = nodes.get(packageName);
+  if (!versionNodes) {
     nodes.set(packageName, new Map([[version, node]]));
   } else {
-    nodes.get(packageName).set(version, node);
+    versionNodes.set(version, node);
   }
 }
 
-function findV3Version(snapshot: NpmDependencyV3, packageName: string): string {
-  let version = snapshot.version;
+function findV3Version(
+  snapshot: NpmDependencyV3,
+  packageName: string
+): string | undefined {
+  let version: string | undefined = snapshot.version;
 
   const resolved = snapshot.resolved;
   // for tarball packages version might not exist or be useless
@@ -355,12 +385,13 @@ function getDependencies(
     return result;
   };
   if (data.lockfileVersion > 1) {
-    Object.entries(data.packages).forEach(([path, snapshot]) => {
+    Object.entries(getV3Packages(data)).forEach(([path, snapshot]) => {
       // we are skipping workspaces packages
-      if (!keyMap.has(path)) {
+      const sourceNode = keyMap.get(path);
+      if (!sourceNode) {
         return;
       }
-      const sourceName = keyMap.get(path).name;
+      const sourceName = sourceNode.name;
       [
         snapshot.peerDependencies,
         snapshot.dependencies,
@@ -389,16 +420,18 @@ function getDependencies(
       });
     });
   } else {
-    Object.entries(data.dependencies).forEach(([packageName, snapshot]) => {
-      addV1NodeDependencies(
-        `node_modules/${packageName}`,
-        snapshot,
-        dependencies,
-        keyMap,
-        ctx,
-        cachedSatisfies
-      );
-    });
+    Object.entries(getV1Dependencies(data)).forEach(
+      ([packageName, snapshot]) => {
+        addV1NodeDependencies(
+          `node_modules/${packageName}`,
+          snapshot,
+          dependencies,
+          keyMap,
+          ctx,
+          cachedSatisfies
+        );
+      }
+    );
   }
   return dependencies;
 }
@@ -414,14 +447,14 @@ function findTarget(
   // resolved this dependency to that location, so it is the correct target
   // even though the semver check fails.
   fallback?: ProjectGraphExternalNode
-): ProjectGraphExternalNode {
+): ProjectGraphExternalNode | undefined {
   if (sourcePath && !sourcePath.endsWith('/')) {
     sourcePath = `${sourcePath}/`;
   }
   const searchPath = `${sourcePath}node_modules/${targetName}`;
 
-  if (keyMap.has(searchPath)) {
-    const child = keyMap.get(searchPath);
+  const child = keyMap.get(searchPath);
+  if (child) {
     // if the version is alias to another package we need to parse the versions to compare
     if (
       child.data.version.startsWith('npm:') &&
@@ -477,8 +510,9 @@ function addV1NodeDependencies(
   ctx: CreateDependenciesContext,
   cachedSatisfies: (version: string, range: string) => boolean
 ) {
-  if (keyMap.has(path) && snapshot.requires) {
-    const source = keyMap.get(path).name;
+  const sourceNode = keyMap.get(path);
+  if (sourceNode && snapshot.requires) {
+    const source = sourceNode.name;
     Object.entries(snapshot.requires).forEach(([name, versionRange]) => {
       const target = findTarget(
         path,
@@ -523,6 +557,9 @@ function addV1NodeDependencies(
         cachedSatisfies
       );
       if (target) {
+        if (!node) {
+          throw new Error(`Could not find external node for "${path}".`);
+        }
         const dep: RawProjectGraphDependency = {
           source: node.name,
           target: target.name,
@@ -634,7 +671,9 @@ function mapV3Snapshots(
   output[''] = mappedPackageJson;
 
   mappedPackages.forEach((p) => {
-    output[p.path] = p.valueV3;
+    if (p.valueV3) {
+      output[p.path] = p.valueV3;
+    }
   });
 
   return output;
@@ -643,11 +682,15 @@ function mapV3Snapshots(
 function mapPackageJsonWithWorkspaceModules(
   packageJson: NormalizedPackageJson
 ) {
-  for (const [pkgName, pkgVersion] of Object.entries(
-    packageJson.dependencies ?? {}
-  )) {
-    if (pkgVersion.startsWith('workspace:') || pkgVersion.startsWith('file:')) {
-      packageJson.dependencies[pkgName] = `workspace_modules/${pkgName}`;
+  const { dependencies } = packageJson;
+  if (dependencies) {
+    for (const [pkgName, pkgVersion] of Object.entries(dependencies)) {
+      if (
+        pkgVersion.startsWith('workspace:') ||
+        pkgVersion.startsWith('file:')
+      ) {
+        dependencies[pkgName] = `workspace_modules/${pkgName}`;
+      }
     }
   }
   return packageJson;
@@ -659,7 +702,10 @@ function mapV1Snapshots(
   const output: Record<string, NpmDependencyV1> = {};
 
   mappedPackages.forEach((p) => {
-    getPackageParent(p.path, output)[p.name] = p.valueV1;
+    const parent = getPackageParent(p.path, output);
+    if (p.valueV1) {
+      parent[p.name] = p.valueV1;
+    }
   });
 
   return output;
@@ -669,21 +715,17 @@ function getPackageParent(
   path: string,
   packages: Record<string, NpmDependencyV1>
 ): Record<string, NpmDependencyV1> {
-  const segments = path.split(/\/?node_modules\//).slice(1, -1);
+  const [first, ...rest] = path.split(/\/?node_modules\//).slice(1, -1);
 
-  if (!segments.length) {
+  if (first === undefined) {
     return packages;
   }
 
-  let parent = packages[segments.shift()];
-  if (!parent.dependencies) {
-    parent.dependencies = {};
-  }
-  while (segments.length) {
-    parent = parent.dependencies[segments.shift()];
-    if (!parent.dependencies) {
-      parent.dependencies = {};
-    }
+  let parent = packages[first];
+  parent.dependencies ??= {};
+  for (const segment of rest) {
+    parent = parent.dependencies[segment];
+    parent.dependencies ??= {};
   }
   return parent.dependencies;
 }
@@ -711,7 +753,7 @@ function mapSnapshots(
   const packageIndex = buildV3Index(rootLockFile.packages);
 
   // add first level children
-  Object.values(graph.externalNodes).forEach((node) => {
+  Object.values(getExternalNodes(graph)).forEach((node) => {
     if (node.name === `npm:${node.data.packageName}`) {
       const mappedPackage = mapPackage(
         rootLockFile,
@@ -758,10 +800,11 @@ function mapPackage(
 ): MappedPackage {
   const lockfileVersion = rootLockFile.lockfileVersion;
 
-  let valueV3, valueV1;
+  let valueV3: NpmDependencyV3 | undefined;
+  let valueV1: NpmDependencyV1 | undefined;
   if (lockfileVersion < 3) {
     valueV1 = findMatchingPackageV1(
-      rootLockFile.dependencies,
+      getV1Dependencies(rootLockFile),
       packageName,
       version
     );
@@ -799,26 +842,26 @@ function nestMappedPackages(
   }
 
   nestedNodes.forEach((node) => {
-    if (!visitedNodes.has(node)) {
-      visitedNodes.set(node, {
+    let nodeVisit = visitedNodes.get(node);
+    if (!nodeVisit) {
+      nodeVisit = {
         packagePaths: new Set(),
         unresolvedParents: new Set(
           invertedGraph.dependencies[node.name].map(({ target }) => target)
         ),
-      });
+      };
+      visitedNodes.set(node, nodeVisit);
     }
 
     invertedGraph.dependencies[node.name].forEach(({ target }) => {
-      if (!visitedNodes.get(node).unresolvedParents.has(target)) {
+      if (!nodeVisit.unresolvedParents.has(target)) {
         return;
       }
 
-      const targetNode = invertedGraph.externalNodes[target];
-      if (
-        visitedNodes.has(targetNode) &&
-        !visitedNodes.get(targetNode).unresolvedParents.size
-      ) {
-        visitedNodes.get(targetNode).packagePaths.forEach((path) => {
+      const targetNode = getExternalNodes(invertedGraph)[target];
+      const targetVisit = visitedNodes.get(targetNode);
+      if (targetVisit && !targetVisit.unresolvedParents.size) {
+        targetVisit.packagePaths.forEach((path) => {
           const mappedPackage = mapPackage(
             rootLockFile,
             packageIndex,
@@ -827,12 +870,12 @@ function nestMappedPackages(
             path + '/'
           );
           result.set(mappedPackage.path, mappedPackage);
-          visitedNodes.get(node).packagePaths.add(mappedPackage.path);
-          visitedNodes.get(node).unresolvedParents.delete(target);
+          nodeVisit.packagePaths.add(mappedPackage.path);
+          nodeVisit.unresolvedParents.delete(target);
         });
       }
     });
-    if (!visitedNodes.get(node).unresolvedParents.size) {
+    if (!nodeVisit.unresolvedParents.size) {
       nestedNodes.delete(node);
     }
   });
@@ -880,6 +923,9 @@ function elevateNestedPaths(
   sortedPaths.forEach((path) => {
     const segments = path.split('/node_modules/');
     const mappedPackage = remappedPackages.get(path);
+    if (!mappedPackage) {
+      return;
+    }
 
     // we keep hoisted packages intact
     if (segments.length === 1) {
@@ -888,14 +934,14 @@ function elevateNestedPaths(
     }
 
     const packageName = segments.pop();
-    const getNewPath = (segs) =>
+    const getNewPath = (segs: string[]) =>
       `${segs.join('/node_modules/')}/node_modules/${packageName}`;
 
     // check if grandparent has the same package
     const shouldElevate = (segs: string[]) => {
       const elevatedPath = getNewPath(segs.slice(0, -1));
-      if (result.has(elevatedPath)) {
-        const match = result.get(elevatedPath);
+      const match = result.get(elevatedPath);
+      if (match) {
         return (
           match.valueV1?.version === mappedPackage.valueV1?.version &&
           match.valueV3?.version === mappedPackage.valueV3?.version
@@ -971,7 +1017,7 @@ function findMatchingPackageV1(
   packages: Record<string, NpmDependencyV1>,
   name: string,
   version: string
-) {
+): NpmDependency | undefined {
   for (const [
     packageName,
     { dev, peer, dependencies, ...snapshot },

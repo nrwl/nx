@@ -67,10 +67,10 @@ export async function deriveSpecifierFromConventionalCommits(
     );
 
   const getHighestSemverChange = (
-    semverSpecifiersItr: MapIterator<SemverSpecifier>
+    semverSpecifiersItr: MapIterator<SemverSpecifier | null>
   ) => {
     const semverSpecifiers = Array.from(semverSpecifiersItr);
-    return semverSpecifiers.sort((a, b) => b - a)[0];
+    return semverSpecifiers.sort((a, b) => (b ?? 0) - (a ?? 0))[0];
   };
 
   const semverSpecifier =
@@ -79,7 +79,7 @@ export async function deriveSpecifierFromConventionalCommits(
       : getHighestSemverChange(projectToSpecifiers.values());
 
   let specifier =
-    semverSpecifier === null ? null : SemverSpecifierType[semverSpecifier];
+    semverSpecifier == null ? null : SemverSpecifierType[semverSpecifier];
 
   if (!specifier) {
     projectLogger.buffer(

@@ -1,3 +1,4 @@
+import type { ExpandedPluginConfiguration } from '@nx/devkit';
 import {
   checkFilesExist,
   cleanupProject,
@@ -35,7 +36,8 @@ describe('rspack e2e', () => {
 
     const nxJSON = readJson('nx.json');
     const rspackPlugin = nxJSON.plugins.find(
-      (plugin) => plugin.plugin === '@nx/rspack/plugin'
+      (plugin: ExpandedPluginConfiguration) =>
+        plugin.plugin === '@nx/rspack/plugin'
     );
 
     expect(rspackPlugin).toBeDefined();

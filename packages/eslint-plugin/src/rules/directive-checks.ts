@@ -180,7 +180,8 @@ export default ESLintUtils.RuleCreator(
         const ignoredByRunner = checkSplitTargets(header);
         for (const { messageId, data, ...span } of header.problems) {
           // Nx reports only that the runner ignores the directive.
-          if (!ignoredByRunner.has(VALUE_PROBLEM_DIRECTIVES[messageId])) {
+          const directive = VALUE_PROBLEM_DIRECTIVES[messageId];
+          if (!directive || !ignoredByRunner.has(directive)) {
             report(span, messageId, data);
           }
         }

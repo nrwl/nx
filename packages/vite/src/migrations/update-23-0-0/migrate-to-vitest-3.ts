@@ -68,6 +68,7 @@ function processVitestConfig(
   unhandled: string[]
 ): void {
   const contents = tree.read(filePath, 'utf-8');
+  if (contents === null) return;
   // Cheap prechecks: skip parsing if none of the v3 targets appear.
   const hasC8Provider = /['"]c8['"]/.test(contents);
   const hasNoneProvider = /['"]none['"]/.test(contents);
@@ -177,6 +178,7 @@ function processSnapshotEnvironmentImport(
   unhandled: string[]
 ): void {
   const contents = tree.read(filePath, 'utf-8');
+  if (contents === null) return;
   if (!contents.includes('SnapshotEnvironment')) return;
 
   const sourceFile = ast(contents);
@@ -225,6 +227,7 @@ const VITEST_TYPECHECK_RE = /\bvitest\s+typecheck(?=\s|$)/g;
 
 function processPackageJson(tree: Tree, filePath: string): void {
   const contents = tree.read(filePath, 'utf-8');
+  if (contents === null) return;
   let parsed: any;
   try {
     parsed = JSON.parse(contents);
@@ -293,6 +296,7 @@ function processPackageJson(tree: Tree, filePath: string): void {
  */
 function processProjectJson(tree: Tree, filePath: string): void {
   const contents = tree.read(filePath, 'utf-8');
+  if (contents === null) return;
   let parsed: any;
   try {
     parsed = JSON.parse(contents);

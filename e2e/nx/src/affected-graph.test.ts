@@ -1,5 +1,6 @@
 import type { NxJsonConfiguration } from '@nx/devkit';
 import {
+  ensureDefined,
   isNotWindows,
   newProject,
   readFile,
@@ -185,9 +186,9 @@ describe('Nx Affected and Graph Tests', () => {
   });
 
   describe('affected (with git)', () => {
-    let myapp;
-    let myapp2;
-    let mylib;
+    let myapp: string;
+    let myapp2: string;
+    let mylib: string;
 
     beforeEach(() => {
       myapp = uniq('myapp');
@@ -546,9 +547,10 @@ describe('Nx Affected and Graph Tests', () => {
       runCLI(`graph --affected --file=project-graph.html`);
 
       const environmentJs = readFile('static/environment.js');
-      const affectedProjects = environmentJs
-        .match(/"affected":\[(.*?)\]/)[1]
-        ?.split(',');
+      const affectedProjects = ensureDefined(
+        environmentJs.match(/"affected":\[(.*?)\]/),
+        'affected projects in environment.js'
+      )[1]?.split(',');
 
       expect(affectedProjects).toContain(`"${myapp}"`);
       expect(affectedProjects).toContain(`"${myappE2e}"`);

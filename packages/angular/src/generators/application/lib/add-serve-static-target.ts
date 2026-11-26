@@ -11,7 +11,7 @@ import type { NormalizedSchema } from './normalized-schema';
 export function addServeStaticTarget(
   tree: Tree,
   options: NormalizedSchema,
-  port: number
+  port: number | undefined
 ) {
   addFileServerTarget(tree, options, 'serve-static', port);
 }
@@ -20,7 +20,7 @@ function addFileServerTarget(
   tree: Tree,
   options: NormalizedSchema,
   targetName: string,
-  e2ePort: number
+  e2ePort: number | undefined
 ) {
   if (!options.skipPackageJson) {
     addDependenciesToPackageJson(tree, {}, { '@nx/web': nxVersion });
@@ -29,6 +29,7 @@ function addFileServerTarget(
   const isUsingApplicationBuilder = options.bundler === 'esbuild';
 
   const projectConfig = readProjectConfiguration(tree, options.name);
+  projectConfig.targets ??= {};
   projectConfig.targets[targetName] = {
     continuous: true,
     readyWhen: { signal: true },

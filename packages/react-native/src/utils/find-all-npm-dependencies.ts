@@ -12,7 +12,7 @@ export function findAllNpmDependencies(
   }
   seen.add(projectName);
 
-  const node = graph.externalNodes[projectName];
+  const node = graph.externalNodes?.[projectName];
 
   // Don't want to include '@nx/react-native' and '@nx/expo' because React Native
   // autolink will warn that the package has no podspec file for iOS.

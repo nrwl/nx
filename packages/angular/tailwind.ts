@@ -33,7 +33,7 @@ export function createGlobPatternsForDependencies(
      */
     console.warn(
       '\nWARNING: There was an error creating glob patterns, returning an empty array\n' +
-        `${e.message}\n`
+        `${e instanceof Error ? e.message : e}\n`
     );
     return [];
   }

@@ -1,7 +1,11 @@
 /*
  * Babel preset to provide Next.js support for Nx.
  */
-module.exports = function (api, options) {
+interface BabelPresetApi {
+  assertVersion(version: number): void;
+}
+
+module.exports = function (api: BabelPresetApi, options: unknown) {
   api.assertVersion(7);
   // When running from Jest with babel-jest, remove @babel/plugin-syntax-import-assertions since babel-jest-preset
   // comes with @babel/plugin-syntax-import-attributes. These plugins are incompatible. If we don't remove the
@@ -24,7 +28,9 @@ module.exports = function (api, options) {
         ...rest,
         presets: nextBabelPresets,
         plugins: [
-          ...nextBabelPlugins.filter((p) => p.default !== conflictingPlugin),
+          ...nextBabelPlugins.filter(
+            (p: { default?: unknown }) => p.default !== conflictingPlugin
+          ),
           [
             require.resolve('@babel/plugin-proposal-decorators'),
             { legacy: true },

@@ -25,13 +25,14 @@ function splitPosixArgs(value: string): string[] {
     });
   for (let i = 0; i < value.length; i++) {
     const char = value[i];
+    const expansion =
+      char === '$' && quote !== "'" ? expandPosixVariable(value, i) : undefined;
     if (quote === "'") {
       if (char === "'") quote = undefined;
       else word += char;
     } else if (char === '\\' && value[i + 1] === '\n') {
       i++;
-    } else if (char === '$' && expandPosixVariable(value, i)) {
-      const expansion = expandPosixVariable(value, i);
+    } else if (expansion) {
       if (quote) word += expansion.value;
       else appendUnquoted(expansion.value);
       i = expansion.end;

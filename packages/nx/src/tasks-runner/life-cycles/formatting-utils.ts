@@ -23,9 +23,12 @@ function formatValue(value: any) {
 
 export function formatTargetsAndProjects(
   projectNames: string[],
-  targets: string[],
+  targets: string[] | undefined,
   tasks: Task[]
 ) {
+  if (!targets) {
+    throw new Error('Cannot format a run without targets');
+  }
   let targetsText = '';
   let projectsText = '';
   let dependentTasksText = '';
@@ -34,7 +37,7 @@ export function formatTargetsAndProjects(
   const tasksProjects = new Set();
   const dependentTasks = new Set();
 
-  tasks.forEach((task) => {
+  for (const task of tasks) {
     tasksTargets.add(task.target.target);
     tasksProjects.add(task.target.project);
     if (
@@ -43,7 +46,7 @@ export function formatTargetsAndProjects(
     ) {
       dependentTasks.add(task);
     }
-  });
+  }
 
   targets = targets.filter((t) => tasksTargets.has(t)); // filter out targets that don't exist
   projectNames = projectNames.filter((p) => tasksProjects.has(p)); // filter out projects that don't exist

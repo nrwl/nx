@@ -4,13 +4,13 @@ import type { LinterType } from '@nx/js';
 export interface NormalizedSchema {
   libraryOptions: {
     directory: string;
-    name?: string;
+    name: string;
     skipFormat?: boolean;
     addModuleSpec?: boolean;
     sourceDir?: string;
     buildable?: boolean;
     publishable?: boolean;
-    importPath?: string;
+    importPath: string;
     spec?: boolean;
     commonModule?: boolean;
     routing?: boolean;

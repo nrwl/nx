@@ -1,6 +1,9 @@
 import { workspaceRoot } from '@nx/devkit';
 import type { Configuration } from '@rspack/core';
-import { isNxRspackComposablePlugin } from './config';
+import {
+  isNxRspackComposablePlugin,
+  type NxRspackExecutionContext,
+} from './config';
 import { readNxJsonFromDisk } from '@nx/devkit/internal';
 
 /**
@@ -24,33 +27,30 @@ export async function readRspackOptions(
     config: unknown
   ): Promise<Configuration | Configuration[]> => {
     if (isNxRspackComposablePlugin(config)) {
-      return await config(
-        {},
-        {
-          // These values are only used during build-time, so passing stubs here just to read out
-          // the returned config object.
-          options: {
-            root: workspaceRoot,
-            projectRoot: '',
-            sourceRoot: '',
-            outputFileName: '',
-            assets: [],
-            main: '',
-            tsConfig: '',
-            outputPath: '',
-            rspackConfig: '',
-            useTsconfigPaths: undefined,
-          },
-          context: {
-            root: workspaceRoot,
-            cwd: undefined,
-            isVerbose: false,
-            nxJsonConfiguration: readNxJsonFromDisk(workspaceRoot),
-            projectGraph: null,
-            projectsConfigurations: null,
-          },
-        }
-      );
+      return await config({}, {
+        // These values are only used during build-time, so passing stubs here just to read out
+        // the returned config object.
+        options: {
+          root: workspaceRoot,
+          projectRoot: '',
+          sourceRoot: '',
+          outputFileName: '',
+          assets: [],
+          main: '',
+          tsConfig: '',
+          outputPath: '',
+          rspackConfig: '',
+          useTsconfigPaths: undefined,
+        },
+        context: {
+          root: workspaceRoot,
+          cwd: undefined,
+          isVerbose: false,
+          nxJsonConfiguration: readNxJsonFromDisk(workspaceRoot),
+          projectGraph: null,
+          projectsConfigurations: null,
+        },
+      } as unknown as NxRspackExecutionContext);
     } else if (typeof config === 'function') {
       const resolved = await config(env, argv);
       // If the resolved configuration is an array, resolve each configuration

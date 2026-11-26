@@ -54,7 +54,7 @@ export interface GetLatestGitTagForPatternOptions {
   strictPreid: boolean;
 }
 
-function escapeRegExp(string) {
+function escapeRegExp(string: string) {
   return string.replace(/[/\-\\^$*+?.()|[\]{}]/g, '\\$&');
 }
 
@@ -115,7 +115,11 @@ export function extractTagAndVersion(
 ): GitTagAndVersion {
   const { requireSemver } = options;
 
-  const [latestMatchingTag, ...rest] = tag.match(tagRegexp);
+  const match = tag.match(tagRegexp);
+  if (!match) {
+    throw new Error(`Tag "${tag}" does not match pattern "${tagRegexp}"`);
+  }
+  const [latestMatchingTag, ...rest] = match;
   let version = requireSemver
     ? rest.filter((r) => {
         return r.match(SEMVER_REGEX);
@@ -174,10 +178,8 @@ export async function getLatestGitTagForPattern(
     const matchingTags = tags.filter((tag) => {
       if (requireSemver) {
         // Match against Semver Regex when using semverVersioning to ensure only valid semver tags are matched
-        return (
-          !!tag.match(tagRegexp) &&
-          tag.match(tagRegexp).some((r) => r.match(SEMVER_REGEX))
-        );
+        const match = tag.match(tagRegexp);
+        return !!match && match.some((r) => r.match(SEMVER_REGEX));
       } else {
         return !!tag.match(tagRegexp);
       }
@@ -337,7 +339,7 @@ export async function gitAdd({
   verbose?: boolean;
   cwd?: string;
   logFn?: (...messages: string[]) => void;
-}): Promise<string> {
+}): Promise<string | undefined> {
   logFn = logFn || console.log;
   // Default to running git add related commands from the workspace root
   cwd = cwd || workspaceRoot;
@@ -353,7 +355,7 @@ export async function gitAdd({
     }
   }
 
-  if (deletedFiles?.length > 0) {
+  if ((deletedFiles?.length ?? 0) > 0) {
     const changedTrackedFiles = await getChangedTrackedFiles(cwd);
     for (const f of deletedFiles ?? []) {
       const isFileIgnored = await isIgnored(f, cwd);
@@ -419,7 +421,7 @@ export async function gitCommit({
   dryRun?: boolean;
   verbose?: boolean;
   logFn?: (message: string) => void;
-}): Promise<string> {
+}): Promise<string | undefined> {
   logFn = logFn || console.log;
 
   const commandArgs = ['commit'];
@@ -477,7 +479,7 @@ export async function gitTag({
   dryRun?: boolean;
   verbose?: boolean;
   logFn?: (message: string) => void;
-}): Promise<string> {
+}): Promise<string | undefined> {
   logFn = logFn || console.log;
 
   const commandArgs = [
@@ -565,7 +567,9 @@ export async function gitPush({
 }
 
 export function parseCommits(commits: RawGitCommit[]): GitCommit[] {
-  return commits.map((commit) => parseGitCommit(commit)).filter(Boolean);
+  return commits
+    .map((commit) => parseGitCommit(commit))
+    .filter((commit): commit is GitCommit => commit !== null);
 }
 
 export function parseConventionalCommitsMessage(message: string): {
@@ -585,10 +589,10 @@ export function parseConventionalCommitsMessage(message: string): {
   }
 
   return {
-    type: match.groups.type || '',
-    scope: match.groups.scope || '',
-    description: match.groups.description || '',
-    breaking: Boolean(match.groups.breaking),
+    type: match.groups?.type || '',
+    scope: match.groups?.scope || '',
+    description: match.groups?.description || '',
+    breaking: Boolean(match.groups?.breaking),
   };
 }
 
@@ -705,10 +709,10 @@ export function parseGitCommit(commit: RawGitCommit): GitCommit | null {
 
   let type = parsedMessage.type;
   // Extract any reverted hashes, if applicable
-  const revertedHashes = [];
+  const revertedHashes: string[] = [];
   const matchedHashes = commit.body.matchAll(RevertHashRE);
   for (const matchedHash of matchedHashes) {
-    revertedHashes.push(matchedHash.groups.hash);
+    revertedHashes.push(matchedHash[1]);
   }
   if (revertedHashes.length) {
     type = 'revert';

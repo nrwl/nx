@@ -54,7 +54,7 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
     runNgAdd('@cypress/schematic', '--e2e', 'latest');
     // pin latest version of Cypress that's supported by Nx to avoid flakiness
     // when a new major version is released
-    packageInstall('cypress', null, '^15.6.0');
+    packageInstall('cypress', undefined, '^15.6.0');
   }
 
   function addEsLint() {
@@ -66,8 +66,8 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
     // TODO: solve issues with pnpm and remove this fallback
     packageManager = packageManager === 'pnpm' ? 'yarn' : packageManager;
     project = runNgNew(packageManager);
-    packageInstall('nx', null, 'latest');
-    packageInstall('@nx/angular', null, 'latest');
+    packageInstall('nx', undefined, 'latest');
+    packageInstall('@nx/angular', undefined, 'latest');
   });
 
   afterEach(() => {

@@ -229,7 +229,9 @@ export function updateTsconfigFiles(
       );
       const runtimePath = `./${runtimeTsconfigFileName}`;
       json.references ??= [];
-      if (!json.references.some((x) => x.path === runtimePath)) {
+      if (
+        !json.references.some((x: { path: string }) => x.path === runtimePath)
+      ) {
         json.references.push({ path: runtimePath });
       }
       return json;
@@ -240,7 +242,9 @@ export function updateTsconfigFiles(
     updateJson(tree, 'tsconfig.json', (json) => {
       const projectPath = './' + projectRoot;
       json.references ??= [];
-      if (!json.references.some((x) => x.path === projectPath)) {
+      if (
+        !json.references.some((x: { path: string }) => x.path === projectPath)
+      ) {
         json.references.push({ path: projectPath });
       }
       return json;

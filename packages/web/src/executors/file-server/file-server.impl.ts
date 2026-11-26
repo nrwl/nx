@@ -61,16 +61,20 @@ function getHttpServerArgs(options: Schema) {
     args.push(`-P=${proxyUrl}`);
   }
   if (proxyOptions) {
-    Object.keys(options.proxyOptions).forEach((key) => {
-      args.push(`--proxy-options.${key}=${options.proxyOptions[key]}`);
+    Object.keys(proxyOptions).forEach((key) => {
+      args.push(`--proxy-options.${key}=${proxyOptions[key]}`);
     });
   }
 
   return args;
 }
 
-function getBuildTargetCommand(options: Schema, context: ExecutorContext) {
-  const target = parseTargetString(options.buildTarget, context);
+function getBuildTargetCommand(
+  buildTarget: string,
+  options: Schema,
+  context: ExecutorContext
+) {
+  const target = parseTargetString(buildTarget, context);
   const cmd = ['nx', 'run'];
 
   if (target.configuration) {
@@ -93,15 +97,21 @@ function getBuildTargetOutputPath(options: Schema, context: ExecutorContext) {
     return options.staticFilePath;
   }
 
-  let outputPath: string;
+  let outputPath: string | undefined;
   try {
+    if (!options.buildTarget || !context.projectName) {
+      throw new Error(`Invalid buildTarget: ${options.buildTarget}`);
+    }
     const target = parseTargetString(options.buildTarget, context);
     const buildOptions = readTargetOptions(target, context);
     if (buildOptions?.outputPath) {
       outputPath = buildOptions.outputPath;
     } else {
       const project = context.projectGraph.nodes[context.projectName];
-      const buildTarget = project.data.targets[target.target];
+      const buildTarget = project.data.targets?.[target.target];
+      if (!buildTarget) {
+        throw new Error(`Invalid buildTarget: ${options.buildTarget}`);
+      }
       outputPath = buildTarget.outputs?.[0];
       if (outputPath) {
         outputPath = interpolate(outputPath, {
@@ -181,7 +191,7 @@ function createFileWatcher(
         );
       } else if (error) {
         throw new Error(`Watch error: ${error?.message ?? 'Unknown'}`);
-      } else if (val?.changedFiles.length > 0) {
+      } else if ((val?.changedFiles.length ?? 0) > 0) {
         changeHandler();
       }
     }
@@ -203,9 +213,10 @@ export default async function* fileServerExecutor(
   }
 
   let running = false;
-  let disposeWatch: () => void;
+  let disposeWatch: (() => void) | undefined;
 
-  if (options.buildTarget) {
+  const buildTarget = options.buildTarget;
+  if (buildTarget) {
     // Run the build target through the workspace package manager so workspaces
     // that pin a non-npm manager (e.g. devEngines.packageManager) don't fail.
     const pmc = getPackageManagerCommand();
@@ -219,7 +230,7 @@ export default async function* fileServerExecutor(
          * */
         process.env.NX_SERVE_STATIC_BUILD_RUNNING = 'true';
         try {
-          const args = getBuildTargetCommand(options, context);
+          const args = getBuildTargetCommand(buildTarget, options, context);
           execFileSync(pmc.exec, args, {
             stdio: [0, 1, 2],
             shell: true,
@@ -271,7 +282,11 @@ export default async function* fileServerExecutor(
     'http-server',
     module.paths
   );
-  const pathToHttpServerBin = packageJson.bin['http-server'];
+  const { bin } = packageJson;
+  if (!bin || typeof bin === 'string') {
+    throw new Error(`Could not find the http-server binary.`);
+  }
+  const pathToHttpServerBin = bin['http-server'];
   const pathToHttpServer = resolve(
     pathToHttpServerPkgJson.replace('package.json', ''),
     pathToHttpServerBin
@@ -309,6 +324,9 @@ export default async function* fileServerExecutor(
   process.on('exit', processExitListener);
   process.on('SIGTERM', processExitListener);
 
+  if (!serve.stdout || !serve.stderr) {
+    throw new Error('http-server was spawned without piped stdout/stderr');
+  }
   serve.stdout.on('data', (chunk) => {
     if (chunk.toString().indexOf('GET') === -1) {
       process.stdout.write(chunk);

@@ -1,5 +1,6 @@
 import {
   cleanupProject,
+  ensureDefined,
   getPackageManagerCommand,
   getSelectedPackageManager,
   getStrippedEnvironmentVariables,
@@ -69,6 +70,7 @@ interface RunStateFile {
     gitRefBefore?: string;
     adopted?: boolean;
     unresolvedIssueId?: string;
+    validationOwed?: boolean;
   }[];
   commits: {
     kind: string;
@@ -151,7 +153,10 @@ function parseLastPromptBlock(output: string): PromptBlock {
 
 // The shape check is the assertion: a dispensed command carrying anything
 // ahead of `<pm exec>` would not be executable as-is on Windows.
-function dispensedArgs(command: string): string {
+function dispensedArgs(command: string | undefined): string {
+  if (command === undefined) {
+    throw new Error('Dispense block has no command to run');
+  }
   const tokens = command.split(' ');
   const execTokens = PM_EXEC_PREFIX[getSelectedPackageManager()].split(' ');
   const prefixMatches = execTokens.every((t, i) => tokens[i] === t);
@@ -161,7 +166,7 @@ function dispensedArgs(command: string): string {
   return tokens.slice(execTokens.length + 1).join(' ');
 }
 
-function runDispensed(command: string): string {
+function runDispensed(command: string | undefined): string {
   return runCLI(dispensedArgs(command), { env: AGENT_ENV });
 }
 
@@ -173,7 +178,7 @@ function stepActionCommand(runId: string, action: string): string {
 }
 
 function handoffPathFrom(block: DispenseBlock): string {
-  const match = block.payload.instructions.match(/^Handoff file: (.+)$/m);
+  const match = block.payload.instructions?.match(/^Handoff file: (.+)$/m);
   if (!match) {
     throw new Error(
       `No handoff path in await-prompt instructions:\n${block.payload.instructions}`
@@ -229,6 +234,14 @@ function readRunStateFile(runId: string): RunStateFile | null {
   } catch {
     return null;
   }
+}
+
+function readRunState(runId: string): RunStateFile {
+  const state = readRunStateFile(runId);
+  if (!state) {
+    throw new Error(`No readable run state for run ${runId}`);
+  }
+  return state;
 }
 
 function setupMigrationPackage(): void {
@@ -447,7 +460,7 @@ async function withSlowWorkerRunning(
     worker.on('exit', () => resolve())
   );
 
-  let pid: number;
+  let pid: number | undefined;
   try {
     await waitUntil(
       () => {
@@ -468,13 +481,13 @@ async function withSlowWorkerRunning(
       },
       { timeout: 120000, ms: 250 }
     );
-    whileRunning(pid);
+    whileRunning(ensureDefined(pid, 'slow-mig worker pid'));
   } finally {
     try {
       if (process.platform === 'win32') {
         worker.kill('SIGKILL');
       } else {
-        process.kill(-worker.pid, 'SIGKILL');
+        process.kill(-ensureDefined(worker.pid, 'worker pid'), 'SIGKILL');
       }
     } catch {
       // Cleanup is best effort; the worker may already have exited.
@@ -486,7 +499,7 @@ async function withSlowWorkerRunning(
 async function killWorkerAndReconcile(initOutput: string): Promise<{
   runId: string;
   diedBlock: DispenseBlock;
-  gitRefBefore: string;
+  gitRefBefore: string | undefined;
 }> {
   const dispense = reconcileAfterInit(initOutput);
   expect(dispense.action).toBe('next-step');
@@ -502,8 +515,11 @@ async function killWorkerAndReconcile(initOutput: string): Promise<{
     process.kill(pid, 'SIGKILL');
   });
 
-  const state = readRunStateFile(dispense.runId);
-  const step = state.steps.find((s) => s.migrationId === `${PKG}:slow-mig`);
+  const state = readRunState(dispense.runId);
+  const step = ensureDefined(
+    state.steps.find((s) => s.migrationId === `${PKG}:slow-mig`),
+    'step'
+  );
 
   const diedBlock = parseLastDispense(runDispensed(dispense.payload.next));
   return { runId: dispense.runId, diedBlock, gitRefBefore: step.gitRefBefore };
@@ -554,7 +570,7 @@ describe('migrate orchestrator', () => {
     );
     expect(existsSync(join(tmpProjPath(), 'gen-file'))).toBe(false);
     expect(
-      readRunStateFile(init.runId).steps.every((s) => s.status === 'pending')
+      readRunState(init.runId).steps.every((s) => s.status === 'pending')
     ).toBe(true);
     expect(runbook.content).toContain(`# Nx migrate run ${init.runId}`);
     expect(runbook.content).toContain(reconcile);
@@ -579,13 +595,15 @@ describe('migrate orchestrator', () => {
     const genPrompt = parseLastPromptBlock(genWorkerOutput);
     expect(genPrompt.migration).toBe(`${PKG}:gen-mig`);
     expect(genPrompt.payload.kind).toBe('generator-validation');
-    expect(genPrompt.payload.impl.changes).toEqual([
+    const genPromptImpl = ensureDefined(
+      genPrompt.payload.impl,
+      'genPrompt impl'
+    );
+    expect(genPromptImpl.changes).toEqual([
       { type: 'CREATE', path: 'gen-file' },
     ]);
-    expect(genPrompt.payload.impl.logs).toContain('gen-mig log line');
-    expect(genPrompt.payload.impl.agentContext).toEqual([
-      'gen-mig context note',
-    ]);
+    expect(genPromptImpl.logs).toContain('gen-mig log line');
+    expect(genPromptImpl.agentContext).toEqual(['gen-mig context note']);
     const validationOutput = runDispensed(reconcile);
     const validation = parseLastDispense(validationOutput);
     expect(validation.action).toBe('await-prompt');
@@ -595,13 +613,15 @@ describe('migrate orchestrator', () => {
     // Reconcile re-emits the persisted payload for a restarted session.
     const reemitted = parseLastPromptBlock(validationOutput);
     expect(reemitted.payload.kind).toBe('generator-validation');
-    expect(reemitted.payload.impl.changes).toEqual([
+    const reemittedImpl = ensureDefined(
+      reemitted.payload.impl,
+      'reemitted impl'
+    );
+    expect(reemittedImpl.changes).toEqual([
       { type: 'CREATE', path: 'gen-file' },
     ]);
-    expect(reemitted.payload.impl.logs).toContain('gen-mig log line');
-    expect(reemitted.payload.impl.agentContext).toEqual([
-      'gen-mig context note',
-    ]);
+    expect(reemittedImpl.logs).toContain('gen-mig log line');
+    expect(reemittedImpl.agentContext).toEqual(['gen-mig context note']);
     expect(commitCountFor('gen-mig')).toBe(0);
     writeHandoff(validation, {
       status: 'success',
@@ -675,11 +695,15 @@ describe('migrate orchestrator', () => {
     expect(hybrid.action).toBe('await-prompt');
     const hybridReemitted = parseLastPromptBlock(hybridOutput);
     expect(hybridReemitted.payload.prompt).toBe('prompts/hybrid-mig.md');
-    expect(hybridReemitted.payload.impl.logs).toContain('hybrid-mig log line');
-    expect(hybridReemitted.payload.impl.changes).toEqual([
+    const hybridReemittedImpl = ensureDefined(
+      hybridReemitted.payload.impl,
+      'hybridReemitted impl'
+    );
+    expect(hybridReemittedImpl.logs).toContain('hybrid-mig log line');
+    expect(hybridReemittedImpl.changes).toEqual([
       { type: 'CREATE', path: 'hybrid-file' },
     ]);
-    expect(hybridReemitted.payload.impl.agentContext).toEqual([
+    expect(hybridReemittedImpl.agentContext).toEqual([
       'hybrid-mig context note',
     ]);
     expect(hybrid.payload.instructions).toContain(
@@ -697,7 +721,7 @@ describe('migrate orchestrator', () => {
     expect(complete.action).toBe('complete');
     expect(complete.payload.instructions).toContain('applied: 3');
 
-    const state = readRunStateFile(init.runId);
+    const state = readRunState(init.runId);
     expect(state.status).toBe('completed');
     expect(state.steps.map((s) => [s.migrationId, s.status])).toEqual([
       [`${PKG}:gen-mig`, 'succeeded'],
@@ -739,7 +763,7 @@ describe('migrate orchestrator', () => {
     // The change written before init dirtied the tree, so a checkpoint commit
     // landed; the pass diffs against its parent so the checkpoint's own
     // content is in the diff.
-    const parked = readRunStateFile(init.runId);
+    const parked = readRunState(init.runId);
     expect(parked.commits[0].kind).toBe('checkpoint');
     expect(parked.gitRefAtInit).toBe(
       runCommand(`git rev-parse ${parked.commits[0].sha}~1`).trim()
@@ -771,7 +795,7 @@ describe('migrate orchestrator', () => {
     expect(complete.action).toBe('complete');
     expect(complete.payload.instructions).toContain('applied: 2');
 
-    const done = readRunStateFile(init.runId);
+    const done = readRunState(init.runId);
     expect(done.status).toBe('completed');
     expect(done.steps.map((s) => [s.kind, s.status])).toEqual([
       ['migration', 'succeeded'],
@@ -801,9 +825,10 @@ describe('migrate orchestrator', () => {
     expect(second.payload.command).toContain(
       `--run-migration=${PKG}:prompt-mig`
     );
-    const midState = readRunStateFile(first.runId);
-    const waiverStep = midState.steps.find(
-      (s) => s.migrationId === `${PKG}:waiver-mig`
+    const midState = readRunState(first.runId);
+    const waiverStep = ensureDefined(
+      midState.steps.find((s) => s.migrationId === `${PKG}:waiver-mig`),
+      'waiverStep'
     );
     expect(waiverStep.status).toBe('succeeded');
     expect(commitCountFor('waiver-mig')).toBe(1);
@@ -823,10 +848,11 @@ describe('migrate orchestrator', () => {
     expect(complete.payload.instructions).toContain('skipped: 1');
     expect(runCommand('git rev-list --count HEAD').trim()).toBe(revsBeforeFold);
 
-    const state = readRunStateFile(first.runId);
+    const state = readRunState(first.runId);
     expect(state.status).toBe('completed');
-    const promptStep = state.steps.find(
-      (s) => s.migrationId === `${PKG}:prompt-mig`
+    const promptStep = ensureDefined(
+      state.steps.find((s) => s.migrationId === `${PKG}:prompt-mig`),
+      'promptStep'
     );
     expect(promptStep.status).toBe('skipped');
     expect(state.commits.every((c) => !c.stepIds.includes(promptStep.id))).toBe(
@@ -847,7 +873,7 @@ describe('migrate orchestrator', () => {
     // wrongly fold or commit.
     updateFile('applied-prompt.txt', 'applied by fake agent');
     const revsBeforeRejection = runCommand('git rev-list --count HEAD').trim();
-    const commitsBeforeRejection = readRunStateFile(first.runId).commits.length;
+    const commitsBeforeRejection = readRunState(first.runId).commits.length;
     writeHandoff(prompt, 'not json {');
     const rejected = parseLastDispense(runDispensed(prompt.payload.next));
     expect(rejected.action).toBe('await-prompt');
@@ -860,10 +886,11 @@ describe('migrate orchestrator', () => {
     expect(runCommand('git rev-list --count HEAD').trim()).toBe(
       revsBeforeRejection
     );
-    const rejectedState = readRunStateFile(first.runId);
+    const rejectedState = readRunState(first.runId);
     expect(rejectedState.commits.length).toBe(commitsBeforeRejection);
-    const rejectedStep = rejectedState.steps.find(
-      (s) => s.migrationId === `${PKG}:prompt-mig`
+    const rejectedStep = ensureDefined(
+      rejectedState.steps.find((s) => s.migrationId === `${PKG}:prompt-mig`),
+      'rejectedStep'
     );
     expect(rejectedStep.status).toBe('awaiting-prompt-outcome');
     expect(rejectedStep.attempt).toBe(1);
@@ -887,8 +914,11 @@ describe('migrate orchestrator', () => {
     );
     // No generator half to re-run, so retry is the preselected `next`.
     expect(retryBlock.payload.next).toBe(retryCommand);
-    const failedStep = readRunStateFile(first.runId).steps.find(
-      (s) => s.migrationId === `${PKG}:prompt-mig`
+    const failedStep = ensureDefined(
+      readRunState(first.runId).steps.find(
+        (s) => s.migrationId === `${PKG}:prompt-mig`
+      ),
+      'failedStep'
     );
     expect(failedStep.status).toBe('failed');
 
@@ -908,10 +938,11 @@ describe('migrate orchestrator', () => {
       runDispensed(secondAttempt.payload.next)
     );
     expect(complete.action).toBe('complete');
-    const completedState = readRunStateFile(first.runId);
+    const completedState = readRunState(first.runId);
     expect(completedState.status).toBe('completed');
-    const completedStep = completedState.steps.find(
-      (s) => s.migrationId === `${PKG}:prompt-mig`
+    const completedStep = ensureDefined(
+      completedState.steps.find((s) => s.migrationId === `${PKG}:prompt-mig`),
+      'completedStep'
     );
     expect(completedStep.status).toBe('succeeded');
     expect(completedStep.attempt).toBe(2);
@@ -1026,18 +1057,29 @@ describe('migrate orchestrator', () => {
     expect(promptThree.payload.instructions).toContain(
       `...and 1 more not listed; see .nx/migrate-runs/${first.runId}/issues/.`
     );
-    const claimedState = readRunStateFile(first.runId);
-    const stepId = claimedState.steps.find(
-      (s) => s.migrationId === `${PKG}:prompt-three`
+    const claimedState = readRunState(first.runId);
+    const stepId = ensureDefined(
+      claimedState.steps.find((s) => s.migrationId === `${PKG}:prompt-three`),
+      'prompt-three step'
     ).id;
+    const claimedIssues = ensureDefined(claimedState.issues, 'issues');
     expect(
-      claimedState.issues.find((i) => i.id === 'issue-1').claimedByStepId
+      ensureDefined(
+        claimedIssues.find((i) => i.id === 'issue-1'),
+        'issue-1'
+      ).claimedByStepId
     ).toBe(stepId);
     expect(
-      claimedState.issues.find((i) => i.id === 'issue-20').claimedByStepId
+      ensureDefined(
+        claimedIssues.find((i) => i.id === 'issue-20'),
+        'issue-20'
+      ).claimedByStepId
     ).toBe(stepId);
     expect(
-      claimedState.issues.find((i) => i.id === 'issue-21').claimedByStepId
+      ensureDefined(
+        claimedIssues.find((i) => i.id === 'issue-21'),
+        'issue-21'
+      ).claimedByStepId
     ).toBeUndefined();
 
     // Resolving while changing the tree: the landed commit carries the id.
@@ -1054,17 +1096,27 @@ describe('migrate orchestrator', () => {
     );
     expect(complete.payload.instructions).not.toContain('issue-1 (');
 
-    const state = readRunStateFile(first.runId);
-    expect(state.issues.find((i) => i.id === 'issue-1').disposition).toBe(
-      'resolved'
-    );
+    const state = readRunState(first.runId);
+    const issues = ensureDefined(state.issues, 'issues');
+    expect(
+      ensureDefined(
+        issues.find((i) => i.id === 'issue-1'),
+        'issue-1'
+      ).disposition
+    ).toBe('resolved');
     // Every applicable step terminal: the never-assigned issue is demoted.
-    expect(state.issues.find((i) => i.id === 'issue-21').disposition).toBe(
-      'deferred-final'
-    );
+    expect(
+      ensureDefined(
+        issues.find((i) => i.id === 'issue-21'),
+        'issue-21'
+      ).disposition
+    ).toBe('deferred-final');
     expect(commitCountFor('prompt-three')).toBe(1);
-    const promptThreeCommit = state.commits.find(
-      (c) => c.kind === 'landed' && c.stepIds.includes(stepId)
+    const promptThreeCommit = ensureDefined(
+      state.commits.find(
+        (c) => c.kind === 'landed' && c.stepIds.includes(stepId)
+      ),
+      'promptThreeCommit'
     );
     expect(promptThreeCommit.issueIds).toEqual(['issue-1']);
   }, 600000);
@@ -1139,16 +1191,18 @@ describe('migrate orchestrator', () => {
     const promptTwo = parseLastDispense(runDispensed(second.payload.next));
     expect(promptTwo.action).toBe('await-prompt');
 
-    const state = readRunStateFile(first.runId);
-    const stepId = state.steps.find(
-      (s) => s.migrationId === `${PKG}:prompt-two`
+    const state = readRunState(first.runId);
+    const stepId = ensureDefined(
+      state.steps.find((s) => s.migrationId === `${PKG}:prompt-two`),
+      'prompt-two step'
     ).id;
-    const claimed = state.issues.filter((i) => i.claimedByStepId === stepId);
+    const issues = ensureDefined(state.issues, 'issues');
+    const claimed = issues.filter((i) => i.claimedByStepId === stepId);
     expect(claimed.length).toBe(14);
     expect(claimed.map((i) => i.id)).toEqual(
-      state.issues.slice(0, claimed.length).map((i) => i.id)
+      issues.slice(0, claimed.length).map((i) => i.id)
     );
-    for (const issue of state.issues) {
+    for (const issue of issues) {
       if (issue.claimedByStepId === stepId) {
         expect(promptTwo.payload.instructions).toContain(
           `${issue.id} (assigned to this step)`
@@ -1168,15 +1222,19 @@ describe('migrate orchestrator', () => {
       listedBytes += Buffer.byteLength(entryFor(issue), 'utf8');
     }
     expect(listedBytes).toBe(entryBudget);
-    const firstUnclaimed = state.issues.find(
-      (i) => i.claimedByStepId !== stepId
+    const firstUnclaimed = ensureDefined(
+      issues.find((i) => i.claimedByStepId !== stepId),
+      'firstUnclaimed'
     );
     expect(
       listedBytes + Buffer.byteLength(entryFor(firstUnclaimed), 'utf8')
     ).toBeGreaterThan(entryBudget);
 
     // The complete serialized digest, fixed lines included, honors the bound.
-    const instrLines: string[] = promptTwo.payload.instructions.split('\n');
+    const instrLines: string[] = ensureDefined(
+      promptTwo.payload.instructions,
+      'promptTwo instructions'
+    ).split('\n');
     const headingIdx = instrLines.findIndex((l) =>
       l.startsWith('Known issues reported')
     );
@@ -1228,9 +1286,12 @@ describe('migrate orchestrator', () => {
     const complete = driveToComplete(runDispensed(retryClean));
     expect(complete.action).toBe('complete');
 
-    const state = readRunStateFile(runId);
+    const state = readRunState(runId);
     expect(state.status).toBe('completed');
-    const step = state.steps.find((s) => s.migrationId === `${PKG}:slow-mig`);
+    const step = ensureDefined(
+      state.steps.find((s) => s.migrationId === `${PKG}:slow-mig`),
+      'step'
+    );
     expect(step.status).toEqual('succeeded');
     expect(step.attempt).toEqual(2);
     expect(readFile('slow-file')).toEqual('slow-content');
@@ -1260,9 +1321,12 @@ describe('migrate orchestrator', () => {
     expect(complete.payload.instructions).toContain('unresolved: 1');
     expect(complete.payload.instructions).toContain('remains unresolved');
 
-    const state = readRunStateFile(runId);
+    const state = readRunState(runId);
     expect(state.status).toBe('completed');
-    const step = state.steps.find((s) => s.migrationId === `${PKG}:slow-mig`);
+    const step = ensureDefined(
+      state.steps.find((s) => s.migrationId === `${PKG}:slow-mig`),
+      'step'
+    );
     expect(step.status).toBe('unresolved');
     expect(step.attempt).toBe(1);
     expect(step.unresolvedIssueId).toBe('issue-1');
@@ -1313,9 +1377,12 @@ describe('migrate orchestrator', () => {
     expect(runCommand('git status --porcelain').trim()).toBe(
       '?? migrations.json'
     );
-    const state = readRunStateFile(failed.runId);
+    const state = readRunState(failed.runId);
     expect(state.status).toBe('completed');
-    const step = state.steps.find((s) => s.migrationId === `${PKG}:prompt-mig`);
+    const step = ensureDefined(
+      state.steps.find((s) => s.migrationId === `${PKG}:prompt-mig`),
+      'step'
+    );
     expect(step.status).toBe('unresolved');
     expect(step.unresolvedIssueId).toBe('issue-1');
     expect(
@@ -1323,7 +1390,9 @@ describe('migrate orchestrator', () => {
         (c) => c.kind === 'landed' && c.stepIds.includes(step.id)
       )
     ).toBe(true);
-    expect(state.issues[0].summary).toContain('blocked by fake agent');
+    expect(ensureDefined(state.issues, 'issues')[0].summary).toContain(
+      'blocked by fake agent'
+    );
   }, 600000);
 
   it('should adopt a failed prompt step applied by hand', () => {
@@ -1345,9 +1414,12 @@ describe('migrate orchestrator', () => {
 
     expect(commitCountFor('prompt-mig')).toBe(1);
     expect(commitCountFor('prompt-mig (unresolved)')).toBe(0);
-    const state = readRunStateFile(failed.runId);
+    const state = readRunState(failed.runId);
     expect(state.status).toBe('completed');
-    const step = state.steps.find((s) => s.migrationId === `${PKG}:prompt-mig`);
+    const step = ensureDefined(
+      state.steps.find((s) => s.migrationId === `${PKG}:prompt-mig`),
+      'step'
+    );
     expect(step.status).toBe('succeeded');
     expect(step.adopted).toBe(true);
     expect(state.issues ?? []).toEqual([]);
@@ -1387,8 +1459,11 @@ describe('migrate orchestrator', () => {
     expect(refused.payload.instructions).toContain(
       'already been retried 2 times'
     );
-    const step = readRunStateFile(failed.runId).steps.find(
-      (s) => s.migrationId === `${PKG}:prompt-mig`
+    const step = ensureDefined(
+      readRunState(failed.runId).steps.find(
+        (s) => s.migrationId === `${PKG}:prompt-mig`
+      ),
+      'step'
     );
     expect(step.status).toBe('failed');
     expect(step.attempt).toBe(3);
@@ -1400,8 +1475,8 @@ describe('migrate orchestrator', () => {
     expect(complete.payload.instructions).toContain(
       `- ${PKG}:prompt-mig: third failure`
     );
-    const state = readRunStateFile(failed.runId);
-    expect(state.issues[0].summary).toContain(
+    const state = readRunState(failed.runId);
+    expect(ensureDefined(state.issues, 'issues')[0].summary).toContain(
       'left unresolved after 3 attempts: third failure'
     );
   }, 600000);
@@ -1425,13 +1500,15 @@ describe('migrate orchestrator', () => {
     // Validation off: the capture is owed to the hybrid half alone.
     const hybridWorkerOutput = runDispensed(afterAdopt.payload.command);
     const hybridBlock = parseLastPromptBlock(hybridWorkerOutput);
-    expect(hybridBlock.payload.impl.logs).toContain('hybrid-mig log line');
-    expect(hybridBlock.payload.impl.changes).toEqual([
+    const hybridBlockImpl = ensureDefined(
+      hybridBlock.payload.impl,
+      'hybridBlock impl'
+    );
+    expect(hybridBlockImpl.logs).toContain('hybrid-mig log line');
+    expect(hybridBlockImpl.changes).toEqual([
       { type: 'CREATE', path: 'hybrid-file' },
     ]);
-    expect(hybridBlock.payload.impl.agentContext).toEqual([
-      'hybrid-mig context note',
-    ]);
+    expect(hybridBlockImpl.agentContext).toEqual(['hybrid-mig context note']);
     const hybridAwait = parseLastDispense(
       runDispensed(afterAdopt.payload.next)
     );
@@ -1443,9 +1520,12 @@ describe('migrate orchestrator', () => {
     const complete = driveToComplete(runDispensed(hybridAwait.payload.next));
     expect(complete.action).toBe('complete');
 
-    const state = readRunStateFile(runId);
+    const state = readRunState(runId);
     expect(state.status).toBe('completed');
-    const step = state.steps.find((s) => s.migrationId === `${PKG}:slow-mig`);
+    const step = ensureDefined(
+      state.steps.find((s) => s.migrationId === `${PKG}:slow-mig`),
+      'step'
+    );
     expect(step.status).toEqual('succeeded');
     expect(step.attempt).toEqual(1);
     // The adopted working tree was committed at reconcile.
@@ -1582,14 +1662,17 @@ describe('migrate orchestrator', () => {
 
     const complete = driveToComplete(runDispensed(resumed.payload.next));
     expect(complete.runId).toBe(first.runId);
-    const state = readRunStateFile(first.runId);
+    const state = readRunState(first.runId);
     expect(state.status).toBe('completed');
     expect(readFile('gen-file')).toEqual('gen-content');
     expect(readFile('gen-two-file')).toEqual('gen-two-content');
     // The fallback already added the entry, so the planned migration is a
     // no-op.
-    const gitignoreStep = state.steps.find(
-      (s) => s.migrationId === 'nx:23-0-0-add-migrate-runs-to-git-ignore'
+    const gitignoreStep = ensureDefined(
+      state.steps.find(
+        (s) => s.migrationId === 'nx:23-0-0-add-migrate-runs-to-git-ignore'
+      ),
+      'gitignoreStep'
     );
     expect(gitignoreStep.status).toBe('succeeded');
     expect(
@@ -2044,7 +2127,10 @@ process.exit(status ?? 1);
         NX_MIGRATE_SKIP_INSTALL: null,
       });
       expect(log.find((entry) => entry.runbook)).toBeDefined();
-      const done = log.find((entry) => entry.complete);
+      const done = ensureDefined(
+        log.find((entry) => entry.complete),
+        'done'
+      );
       expect(done).toBeDefined();
       expect(runDirs()).toEqual([done.complete]);
       expect(done.sentinelPath).toMatch(
@@ -2053,7 +2139,7 @@ process.exit(status ?? 1);
         )
       );
       expect(existsSync(join(tmpProjPath(), done.sentinelPath))).toBe(false);
-      const state = readRunStateFile(done.complete);
+      const state = readRunState(done.complete);
       expect(state.status).toBe('completed');
       expect(state.steps.map((s) => [s.kind, s.status])).toEqual([
         ['migration', 'succeeded'],
@@ -2104,9 +2190,12 @@ process.exit(status ?? 1);
       expect(output).not.toContain('is still active');
       const log = readFakeAgentLog(logFile);
       expect(log.find((entry) => entry.gaveUp)).toBeDefined();
-      const done = log.find((entry) => entry.complete);
+      const done = ensureDefined(
+        log.find((entry) => entry.complete),
+        'done'
+      );
       expect(done).toBeDefined();
-      const state = readRunStateFile(done.complete);
+      const state = readRunState(done.complete);
       expect(state.status).toBe('completed');
       expect(state.steps.map((s) => s.status)).toEqual([
         'succeeded',
@@ -2129,7 +2218,7 @@ process.exit(status ?? 1);
       expect(runDirs()).toHaveLength(1);
       const runId = runDirs()[0];
       expect(output).toContain('is still active');
-      expect(readRunStateFile(runId).status).toBe('active');
+      expect(readRunState(runId).status).toBe('active');
 
       // A plain re-run reports the active run; with no terminal to ask on
       // (CI is set), it exits 1 with both ways forward and starts nothing.
@@ -2143,7 +2232,7 @@ process.exit(status ?? 1);
         `A migrate run is already active: ${runId}`
       );
       expect(runDirs()).toEqual([runId]);
-      expect(readRunStateFile(runId).status).toBe('active');
+      expect(readRunState(runId).status).toBe('active');
 
       // --run-id hands the same run to a new session, which completes it.
       const resumed = await runMigrateInTerminal(
@@ -2156,7 +2245,7 @@ process.exit(status ?? 1);
       expect(resumed.exitCode).toBe(0);
       expect(resumed.output).toContain(`Migrate run ${runId} is complete.`);
       expect(runDirs()).toEqual([runId]);
-      expect(readRunStateFile(runId).status).toBe('completed');
+      expect(readRunState(runId).status).toBe('completed');
     }, 600000);
 
     it('should run one migration per command, each through its own agent session', async () => {
@@ -2263,19 +2352,29 @@ process.exit(status ?? 1);
       // the step, not printed over the agent.
       expect(output).not.toContain(SKIPPED_INSTALL_WARNING);
       const log = readFakeAgentLog(logFile);
-      const runId = log.find((entry) => entry.complete).complete;
-      const state = readRunStateFile(runId);
+      const runId = ensureDefined(
+        log.find((entry) => entry.complete),
+        'complete entry'
+      ).complete;
+      const state = readRunState(runId);
       expect(state.status).toBe('completed');
-      const depsStep = state.steps.find(
-        (s) => s.migrationId === `${PKG}:deps-mig`
+      const depsStep = ensureDefined(
+        state.steps.find((s) => s.migrationId === `${PKG}:deps-mig`),
+        'depsStep'
       );
       const stepOutputs = log.filter((entry) => entry.stdout);
       expect(stepOutputs).toHaveLength(2);
       expect(
-        stepOutputs.find((entry) => entry.step === depsStep.id).stdout
+        ensureDefined(
+          stepOutputs.find((entry) => entry.step === depsStep.id),
+          'deps-mig output'
+        ).stdout
       ).toContain(SKIPPED_INSTALL_WARNING);
       expect(
-        stepOutputs.find((entry) => entry.step !== depsStep.id).stdout
+        ensureDefined(
+          stepOutputs.find((entry) => entry.step !== depsStep.id),
+          'other step output'
+        ).stdout
       ).not.toContain(SKIPPED_INSTALL_WARNING);
       expect(state.commits.filter((c) => c.kind === 'landed')).toHaveLength(2);
       expect(commitCountFor('deps-mig')).toBe(1);
@@ -2325,15 +2424,21 @@ process.exit(status ?? 1);
       const failure = 'The commit for deps-mig failed';
       expect(output).not.toContain(failure);
       const log = readFakeAgentLog(logFile);
-      const runId = log.find((entry) => entry.complete).complete;
-      const state = readRunStateFile(runId);
+      const runId = ensureDefined(
+        log.find((entry) => entry.complete),
+        'complete entry'
+      ).complete;
+      const state = readRunState(runId);
       expect(state.status).toBe('completed');
       expect(state.steps.map((s) => s.status)).toEqual(['succeeded']);
       expect(state.commits).toEqual([
         { kind: 'checkpoint', sha: expect.any(String), stepIds: [] },
         { kind: 'failed', stepIds: [state.steps[0].id] },
       ]);
-      const stepOutput = log.find((entry) => entry.stdout).stdout;
+      const stepOutput = ensureDefined(
+        log.find((entry) => entry.stdout),
+        'step output entry'
+      ).stdout;
       expect(stepOutput).toContain(failure);
       expect(stepOutput).toContain('fake git: refused the commit');
       expect(stepOutput).toContain('included in the next successful commit');
@@ -2390,14 +2495,20 @@ process.exit(status ?? 1);
           .map((entry) => entry.fromAgent)
       ).toEqual([null, null]);
       const log = readFakeAgentLog(logFile);
-      const runId = log.find((entry) => entry.complete).complete;
-      expect(readRunStateFile(runId).status).toBe('completed');
+      const runId = ensureDefined(
+        log.find((entry) => entry.complete),
+        'complete entry'
+      ).complete;
+      expect(readRunState(runId).status).toBe('completed');
       // The terminal saw the pre-migration install only; the step's was
       // collected for the step command.
       expect(output.split(INSTALL_NOTICE)).toHaveLength(2);
-      expect(log.find((entry) => entry.stdout).stdout).toContain(
-        INSTALL_NOTICE
-      );
+      expect(
+        ensureDefined(
+          log.find((entry) => entry.stdout),
+          'step output entry'
+        ).stdout
+      ).toContain(INSTALL_NOTICE);
       expect(commitCountFor('deps-mig')).toBe(1);
       expect(
         existsSync(join(tmpProjPath(), 'node_modules', 'migrate-orch-dep'))
@@ -2420,11 +2531,15 @@ process.exit(status ?? 1);
       expect(output).toContain('is complete');
       expect(output).not.toContain(SKIPPED_INSTALL_WARNING);
       const log = readFakeAgentLog(logFile);
-      const runId = log.find((entry) => entry.complete).complete;
-      const state = readRunStateFile(runId);
+      const runId = ensureDefined(
+        log.find((entry) => entry.complete),
+        'complete entry'
+      ).complete;
+      const state = readRunState(runId);
       expect(state.status).toBe('completed');
-      const depsStep = state.steps.find(
-        (s) => s.migrationId === `${PKG}:deps-mig`
+      const depsStep = ensureDefined(
+        state.steps.find((s) => s.migrationId === `${PKG}:deps-mig`),
+        'depsStep'
       );
       // The step parked for validation after its install, so the warning is
       // the step command's, and the fold's commit landed after the handoff.
@@ -2433,9 +2548,12 @@ process.exit(status ?? 1);
       expect(
         existsSync(join(tmpProjPath(), `applied-${depsStep.id}.txt`))
       ).toBe(true);
-      expect(log.find((entry) => entry.step === depsStep.id).stdout).toContain(
-        SKIPPED_INSTALL_WARNING
-      );
+      expect(
+        ensureDefined(
+          log.find((entry) => entry.step === depsStep.id),
+          'deps-mig output'
+        ).stdout
+      ).toContain(SKIPPED_INSTALL_WARNING);
       expect(state.commits.filter((c) => c.kind === 'landed')).toHaveLength(2);
       expect(commitCountFor('deps-mig')).toBe(1);
       expect(commitCountFor('prompt-mig')).toBe(1);
@@ -2465,8 +2583,9 @@ process.exit(status ?? 1);
       );
 
       expect(killed.exitCode).not.toBe(0);
-      const kill = readFakeAgentLog(logFile).find(
-        (entry) => entry.killedParent
+      const kill = ensureDefined(
+        readFakeAgentLog(logFile).find((entry) => entry.killedParent),
+        'kill'
       );
       expect(kill).toBeDefined();
       // The lock died with the parent; the step must notice on its own.
@@ -2477,10 +2596,11 @@ process.exit(status ?? 1);
       const workerOutput = readFile('killed-step-output');
       expect(workerOutput).toContain('ended before its request was answered');
       const runId = runDirs()[0];
-      const failed = readRunStateFile(runId);
+      const failed = readRunState(runId);
       expect(failed.status).toBe('active');
-      const step = failed.steps.find(
-        (s) => s.migrationId === `${PKG}:deps-mig`
+      const step = ensureDefined(
+        failed.steps.find((s) => s.migrationId === `${PKG}:deps-mig`),
+        'step'
       );
       expect(step.status).toBe('failed');
       expect(failed.commits).toContainEqual({
@@ -2497,17 +2617,21 @@ process.exit(status ?? 1);
       );
 
       expect(resumed.exitCode).toBe(0);
-      const state = readRunStateFile(runId);
+      const state = readRunState(runId);
       expect(state.status).toBe('completed');
-      const retried = state.steps.find((s) => s.id === step.id);
+      const retried = ensureDefined(
+        state.steps.find((s) => s.id === step.id),
+        'retried'
+      );
       expect(retried.status).toBe('succeeded');
       expect(retried.attempt).toBe(2);
       expect(commitCountFor('deps-mig')).toBe(1);
       expect(commitCountFor('prompt-mig')).toBe(1);
       // The retry only had the install and the commit left, both answered
       // by the new session.
-      const retryOutput = readFakeAgentLog(logFile).find(
-        (entry) => entry.step === step.id
+      const retryOutput = ensureDefined(
+        readFakeAgentLog(logFile).find((entry) => entry.step === step.id),
+        'retryOutput'
       );
       expect(retryOutput.stdout).toContain(SKIPPED_INSTALL_WARNING);
     }, 600000);

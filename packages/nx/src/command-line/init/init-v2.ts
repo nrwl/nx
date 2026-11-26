@@ -79,7 +79,7 @@ export async function initHandler(
     return await initHandlerImpl(options);
   }
 
-  let cleanup: () => void | undefined;
+  let cleanup: (() => void) | undefined;
   try {
     const version = await resolveVersionWithProvenance(
       'nx',
@@ -268,11 +268,11 @@ async function runInit(options: InitArgs): Promise<void> {
   }
 
   const _isNonJs = !existsSync('package.json') || options.useDotNxInstallation;
-  const packageJson: PackageJson = _isNonJs
+  const packageJson: PackageJson | null = _isNonJs
     ? null
     : readJsonFile('package.json');
   const _isTurborepo = existsSync('turbo.json');
-  const _isMonorepo = _isNonJs ? false : isMonorepo(packageJson);
+  const _isMonorepo = packageJson ? isMonorepo(packageJson) : false;
 
   // AI mode defaults to minimum setup, humans can choose
   let guided = !aiMode; // Default to minimum (false) for AI, guided (true) for humans

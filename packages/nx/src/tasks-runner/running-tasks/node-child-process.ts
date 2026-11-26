@@ -14,37 +14,37 @@ export class NodeChildProcessWithNonDirectOutput implements RunningTask {
     [];
   private outputCallbacks: Array<(output: string) => void> = [];
 
-  private exitCode: number;
+  private exitCode: number | undefined;
 
   constructor(
     private childProcess: ChildProcess,
     { streamOutput, prefix }: { streamOutput: boolean; prefix: string }
   ) {
+    const { stdout, stderr } = this.childProcess;
+    if (!stdout || !stderr) {
+      throw new Error('Expected the child process to have piped stdio');
+    }
     // Decode as a stream so a code point split across chunks stays intact
-    this.childProcess.stdout.setEncoding('utf8');
-    this.childProcess.stderr.setEncoding('utf8');
+    stdout.setEncoding('utf8');
+    stderr.setEncoding('utf8');
     if (streamOutput) {
       if (process.env.NX_PREFIX_OUTPUT === 'true') {
         const color = getColor(prefix);
         const prefixText = `${prefix}:`;
 
-        this.childProcess.stdout
+        stdout
           .pipe(
             logClearLineToPrefixTransformer(pc.bold(color(prefixText)) + ' ')
           )
           .pipe(addPrefixTransformer(pc.bold(color(prefixText))))
           .pipe(process.stdout);
-        this.childProcess.stderr
+        stderr
           .pipe(logClearLineToPrefixTransformer(color(prefixText) + ' '))
           .pipe(addPrefixTransformer(color(prefixText)))
           .pipe(process.stderr);
       } else {
-        this.childProcess.stdout
-          .pipe(addPrefixTransformer())
-          .pipe(process.stdout);
-        this.childProcess.stderr
-          .pipe(addPrefixTransformer())
-          .pipe(process.stderr);
+        stdout.pipe(addPrefixTransformer()).pipe(process.stdout);
+        stderr.pipe(addPrefixTransformer()).pipe(process.stderr);
       }
     }
 
@@ -66,14 +66,14 @@ export class NodeChildProcessWithNonDirectOutput implements RunningTask {
         process.send(message);
       }
     });
-    this.childProcess.stdout.on('data', (output: string) => {
+    stdout.on('data', (output: string) => {
       this.terminalOutputChunks.push(output);
       // Stream output to TUI via callbacks
       for (const cb of this.outputCallbacks) {
         cb(output);
       }
     });
-    this.childProcess.stderr.on('data', (output: string) => {
+    stderr.on('data', (output: string) => {
       this.terminalOutputChunks.push(output);
       // Stream output to TUI via callbacks
       for (const cb of this.outputCallbacks) {
@@ -123,11 +123,13 @@ export class NodeChildProcessWithNonDirectOutput implements RunningTask {
  * Prevents terminal escape sequence from clearing line prefix.
  */
 function logClearLineToPrefixTransformer(prefix: string) {
-  let prevChunk = null;
+  let prevChunk: Buffer | string | null = null;
   return new Transform({
     transform(chunk, _encoding, callback) {
       if (prevChunk && prevChunk.toString() === '\x1b[2K') {
-        chunk = chunk.toString().replace(/\x1b\[1G/g, (m) => m + prefix);
+        chunk = chunk
+          .toString()
+          .replace(/\x1b\[1G/g, (m: string) => m + prefix);
       }
       this.push(chunk);
       prevChunk = chunk;
@@ -138,10 +140,11 @@ function logClearLineToPrefixTransformer(prefix: string) {
 
 export class NodeChildProcessWithDirectOutput implements RunningTask {
   private terminalOutput: string | undefined;
-  private exitCallbacks: Array<(code: number, signal: string) => void> = [];
+  private exitCallbacks: Array<
+    (code: number, signal: NodeJS.Signals | null) => void
+  > = [];
 
-  private exited = false;
-  private exitCode: number;
+  private exitCode: number | undefined;
 
   constructor(
     private childProcess: ChildProcess,
@@ -157,7 +160,6 @@ export class NodeChildProcessWithDirectOutput implements RunningTask {
     this.childProcess.on('exit', (code, signal) => {
       if (code === null) code = signalToCode(signal);
 
-      this.exited = true;
       this.exitCode = code;
 
       for (const cb of this.exitCallbacks) {
@@ -172,21 +174,19 @@ export class NodeChildProcessWithDirectOutput implements RunningTask {
     }
   }
 
-  onExit(cb: (code: number, signal: NodeJS.Signals) => void) {
+  onExit(cb: (code: number, signal: NodeJS.Signals | null) => void) {
     this.exitCallbacks.push(cb);
   }
 
   async getResults(): Promise<{ code: number; terminalOutput: string }> {
-    if (!this.exited) {
-      await this.waitForExit();
-    }
+    const code = this.exitCode ?? (await this.waitForExit());
     const terminalOutput = this.getTerminalOutput();
-    return { code: this.exitCode, terminalOutput };
+    return { code, terminalOutput };
   }
 
   waitForExit() {
-    return new Promise<void>((res) => {
-      this.onExit(() => res());
+    return new Promise<number>((res) => {
+      this.onExit((code) => res(code));
     });
   }
 

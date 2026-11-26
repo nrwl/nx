@@ -40,8 +40,10 @@ export function inventoryComposePlugins(tree: Tree): HelperUsage[] {
       usesModuleFederation: configs.some(({ source }) =>
         MODULE_FEDERATION_HELPERS.test(source)
       ),
-      usesExecutor: Object.values(project.targets ?? {}).some((target) =>
-        ['@nx/rspack:rspack', '@nrwl/rspack:rspack'].includes(target.executor)
+      usesExecutor: Object.values(project.targets ?? {}).some(
+        (target) =>
+          target.executor === '@nx/rspack:rspack' ||
+          target.executor === '@nrwl/rspack:rspack'
       ),
     });
   }

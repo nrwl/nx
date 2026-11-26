@@ -30,6 +30,7 @@ export default async function update(
       );
       if (!tree.exists(configPath)) continue;
       const content = tree.read(configPath, 'utf-8');
+      if (content === null) continue;
       if (content.includes('ready-signal') || content.includes(PLUGIN_NAME)) {
         continue;
       }

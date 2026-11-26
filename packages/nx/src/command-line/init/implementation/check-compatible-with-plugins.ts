@@ -47,7 +47,10 @@ export async function checkCompatibleWithPlugins(): Promise<IncompatibleFiles> {
       output.error({
         title:
           'Failed to process project graph. Run "nx reset" to fix this. Please report the issue if you keep seeing it.',
-        bodyLines: projectGraphError.stack?.split('\n'),
+        bodyLines:
+          projectGraphError instanceof Error
+            ? projectGraphError.stack?.split('\n')
+            : undefined,
       });
     }
   }
@@ -59,16 +62,17 @@ export async function checkCompatibleWithPlugins(): Promise<IncompatibleFiles> {
  * @param error the error to find the plugin name and files for
  * @returns pluginName and excludeFiles if found, otherwise undefined
  */
-function findPluginAndFilesWithError(
-  error: any
-):
-  | { pluginIndex: number; excludeFiles: { file: string; error?: any }[] }
+function findPluginAndFilesWithError(error: any):
+  | {
+      pluginIndex: number | undefined;
+      excludeFiles: { file: string; error?: any }[];
+    }
   | undefined {
   let pluginIndex: number | undefined;
-  let excludeFiles: { file: string; error?: any }[] = [];
+  let errorFiles: { file: string | null; error?: any }[] = [];
   if (isAggregateCreateNodesError(error)) {
     pluginIndex = error.pluginIndex;
-    excludeFiles =
+    errorFiles =
       error.errors?.map((error) => {
         return {
           file: error?.[0],
@@ -77,7 +81,7 @@ function findPluginAndFilesWithError(
       }) ?? [];
   } else if (isMergeNodesError(error)) {
     pluginIndex = error.pluginIndex;
-    excludeFiles = [
+    errorFiles = [
       {
         file: error.file,
         error: error,
@@ -85,14 +89,16 @@ function findPluginAndFilesWithError(
     ];
   }
   // A null file means the plugin failed as a whole, so there is no file to exclude.
-  excludeFiles = excludeFiles
-    .filter((f) => f?.file)
+  const excludeFiles = errorFiles
+    .filter((f): f is { file: string; error?: any } => !!f?.file)
     .map((excludeFile) => {
       const file = excludeFile.file;
-      excludeFile.file = file.startsWith(workspaceRoot)
-        ? relative(workspaceRoot, file)
-        : file;
-      return excludeFile;
+      return {
+        ...excludeFile,
+        file: file.startsWith(workspaceRoot)
+          ? relative(workspaceRoot, file)
+          : file,
+      };
     });
   return {
     pluginIndex,
@@ -118,12 +124,13 @@ export function updatePluginsInNxJson(
     // If there is an error reading the nx.json file, no need to update it
     return;
   }
-  if (!Object.keys(pluginToExcludeFiles)?.length || !nxJson?.plugins?.length) {
+  const plugins = nxJson?.plugins;
+  if (!Object.keys(pluginToExcludeFiles)?.length || !plugins?.length) {
     return;
   }
   Object.entries(pluginToExcludeFiles).forEach(
     ([pluginIndex, excludeFiles]) => {
-      let plugin = nxJson.plugins[pluginIndex];
+      let plugin = plugins[Number(pluginIndex)];
       if (!plugin || excludeFiles.length === 0) {
         return;
       }
@@ -144,11 +151,11 @@ export function updatePluginsInNxJson(
       });
 
       const excludes = new Set(plugin.exclude ?? []);
-      excludeFiles.forEach((file) => {
+      excludeFiles.forEach((file: { file: string; error?: any }) => {
         excludes.add(file.file);
       });
       plugin.exclude = Array.from(excludes);
-      nxJson.plugins[pluginIndex] = plugin;
+      plugins[Number(pluginIndex)] = plugin;
     }
   );
   writeJsonFile(nxJsonPath, nxJson);

@@ -12,7 +12,7 @@ const executorPathFieldsToMigrate: Array<keyof RollupExecutorOptions> = [
 
 export function normalizePathOptions(
   projectRoot: string,
-  options: RollupExecutorOptions
+  options: RollupExecutorOptions & Record<string, unknown>
 ): void {
   for (const [key, value] of Object.entries(options)) {
     if (
@@ -24,7 +24,7 @@ export function normalizePathOptions(
       options[key] = value.map((v) =>
         normalizeValue(projectRoot, key as keyof RollupExecutorOptions, v)
       );
-    } else {
+    } else if (typeof value === 'string') {
       options[key] = normalizeValue(
         projectRoot,
         key as keyof RollupExecutorOptions,

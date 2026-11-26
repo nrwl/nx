@@ -81,9 +81,12 @@ export class WriteIndexHtmlPlugin {
     // adds all chunks to the list of emitted files such as lazy loaded modules
     for (const chunk of compilation.chunks) {
       for (const file of chunk.files) {
+        const chunkId = chunk.id;
+        if (chunkId === null || chunkId === undefined) {
+          throw new Error(`Chunk "${chunk.name}" has no id.`);
+        }
         files.push({
-          // The id is guaranteed to exist at this point in the compilation process
-          id: chunk.id.toString(),
+          id: chunkId.toString(),
           name: chunk.name,
           file,
           extension: extname(file),

@@ -76,7 +76,7 @@ export async function convertToInferred(tree: Tree, options: Schema) {
       .flat()
       .find((v) => v.includes('@nx/rspack:convert-config-to-rspack-plugin'));
 
-    if (convertMessage?.length > 0) {
+    if (convertMessage) {
       logger.flushLogs((message) => !convertMessage.includes(message));
       throw new Error(convertMessage);
     } else {
@@ -116,18 +116,26 @@ function skipProjectFilterFactory(tree: Tree) {
   return function skipProjectFilter(
     projectConfiguration: ProjectConfiguration
   ): false | string {
-    const buildTarget = Object.values(projectConfiguration.targets).find(
+    const buildTarget = Object.values(projectConfiguration.targets ?? {}).find(
       (target) =>
         target.executor === '@nx/rspack:rspack' ||
         target.executor === '@nrwl/rspack:rspack'
     );
-    // the projects for which this is called are guaranteed to have a build target
+    if (!buildTarget) {
+      throw new Error(
+        `No @nx/rspack:rspack target found in ${projectConfiguration.root}.`
+      );
+    }
     const rspackConfigPath = buildTarget.options.rspackConfig;
     if (!rspackConfigPath) {
       return `The rspack config path is missing in the project configuration (${projectConfiguration.root}).`;
     }
 
-    const sourceFile = ast(tree.read(rspackConfigPath, 'utf-8'));
+    const rspackConfigSource = tree.read(rspackConfigPath, 'utf-8');
+    if (rspackConfigSource === null) {
+      throw new Error(`Cannot read ${rspackConfigPath}`);
+    }
+    const sourceFile = ast(rspackConfigSource);
 
     const composePluginsSelector =
       'CallExpression:has(Identifier[name=composePlugins])';
@@ -165,6 +173,9 @@ export function createCollectingLogger(): typeof devkitLogger & {
     loggedMessages.forEach((messages, method) => {
       messages.forEach((message) => {
         if (!filter || filter(message)) {
+          if (!isLoggerMethod(method)) {
+            throw new TypeError(`logger.${method} is not a function`);
+          }
           devkitLogger[method](message);
         }
       });
@@ -175,16 +186,22 @@ export function createCollectingLogger(): typeof devkitLogger & {
     { ...devkitLogger, loggedMessages, flushLogs },
     {
       get(target, property) {
-        const originalMethod = target[property];
+        const originalMethod = Reflect.get(target, property);
 
         if (typeof originalMethod === 'function') {
-          return (...args) => {
+          return (...args: unknown[]) => {
             const message = args.join(' ');
             const propertyString = String(property);
             if (!loggedMessages.has(message)) {
               loggedMessages.set(propertyString, []);
             }
-            loggedMessages.get(propertyString).push(message);
+            const messages = loggedMessages.get(propertyString);
+            if (!messages) {
+              throw new TypeError(
+                `No messages collected for logger.${propertyString}`
+              );
+            }
+            messages.push(message);
           };
         }
 
@@ -192,4 +209,8 @@ export function createCollectingLogger(): typeof devkitLogger & {
       },
     }
   );
+}
+
+function isLoggerMethod(method: string): method is keyof typeof devkitLogger {
+  return method in devkitLogger;
 }

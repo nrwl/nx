@@ -84,7 +84,7 @@ export function createChangesFromProjectsVersionPlans(
         authors,
       } as ChangelogChange;
     })
-    .filter(Boolean);
+    .filter((change): change is ChangelogChange => change !== null);
 }
 
 export function extractVersionPlanMetadata(commit: RawGitCommit | null): {

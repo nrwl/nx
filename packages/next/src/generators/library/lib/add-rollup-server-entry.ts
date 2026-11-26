@@ -16,12 +16,12 @@ export function addRollupServerEntry(
     options.projectRoot,
     'rollup.config.cjs'
   );
-  if (!tree.exists(rollupConfigPath)) {
+  const content = tree.read(rollupConfigPath, 'utf-8');
+  if (content === null) {
     throw new Error(
       `Could not add the server entry: ${rollupConfigPath} not found.`
     );
   }
-  const content = tree.read(rollupConfigPath, 'utf-8');
   const updated = content.replace(
     /^(\s*)main: .*\n/m,
     (line, indent) =>

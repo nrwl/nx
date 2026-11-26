@@ -3,7 +3,10 @@ import { ast, query, replace } from '@phenomnomnominal/tsquery';
 import * as ts from 'typescript';
 
 export function extractWebpackOptions(tree: Tree, webpackConfigPath: string) {
-  const source = tree.read(webpackConfigPath).toString('utf-8');
+  const source = tree.read(webpackConfigPath, 'utf-8');
+  if (source === null) {
+    throw new Error(`Cannot read ${webpackConfigPath}`);
+  }
   const sourceFile = ast(source);
 
   const withNxQuery = 'CallExpression:has(Identifier[name="withNx"])';

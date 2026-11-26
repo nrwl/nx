@@ -5,8 +5,8 @@ import { workspaceRoot } from '../../utils/workspace-root';
 
 // Set once
 export const UNLIMITED_TIMEOUT = 9999999;
-export let ACCESS_TOKEN;
-export let NX_CLOUD_NO_TIMEOUTS;
+export let ACCESS_TOKEN: string | undefined;
+export let NX_CLOUD_NO_TIMEOUTS: boolean;
 
 loadEnvVars();
 function parseEnv() {

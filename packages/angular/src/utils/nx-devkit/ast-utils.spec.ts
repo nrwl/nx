@@ -1,4 +1,4 @@
-import { updateJson } from '@nx/devkit';
+import { type Tree, updateJson } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { createSourceFile, ScriptTarget } from 'typescript';
 import {
@@ -27,7 +27,7 @@ describe('Angular AST Utils', () => {
 
     const symbolToAdd = `CommonModule`;
 
-    const sourceText = tree.read(pathToModule, 'utf-8');
+    const sourceText = readFile(tree, pathToModule);
     const tsSourceFile = createSourceFile(
       pathToModule,
       sourceText,
@@ -63,7 +63,7 @@ describe('Angular AST Utils', () => {
 
     const symbolToAdd = `CommonModule`;
 
-    const sourceText = tree.read(pathToFile, 'utf-8');
+    const sourceText = readFile(tree, pathToFile);
     const tsSourceFile = createSourceFile(
       pathToFile,
       sourceText,
@@ -99,7 +99,7 @@ describe('Angular AST Utils', () => {
 
     const symbolToAdd = `CommonModule`;
 
-    const sourceText = tree.read(pathToFile, 'utf-8');
+    const sourceText = readFile(tree, pathToFile);
     const tsSourceFile = createSourceFile(
       pathToFile,
       sourceText,
@@ -135,7 +135,7 @@ describe('Angular AST Utils', () => {
 
     const symbolToAdd = `CommonModule`;
 
-    const sourceText = tree.read(pathToFile, 'utf-8');
+    const sourceText = readFile(tree, pathToFile);
     const tsSourceFile = createSourceFile(
       pathToFile,
       sourceText,
@@ -172,7 +172,7 @@ describe('Angular AST Utils', () => {
 
       tree.write(pathToFile, originalContents);
 
-      const sourceText = tree.read(pathToFile, 'utf-8');
+      const sourceText = readFile(tree, pathToFile);
       const tsSourceFile = createSourceFile(
         pathToFile,
         sourceText,
@@ -220,7 +220,7 @@ describe('Angular AST Utils', () => {
 
       tree.write(pathToFile, originalContents);
 
-      const sourceText = tree.read(pathToFile, 'utf-8');
+      const sourceText = readFile(tree, pathToFile);
       const tsSourceFile = createSourceFile(
         pathToFile,
         sourceText,
@@ -247,7 +247,7 @@ describe('Angular AST Utils', () => {
 
       tree.write(pathToFile, originalContents);
 
-      const sourceText = tree.read(pathToFile, 'utf-8');
+      const sourceText = readFile(tree, pathToFile);
       const tsSourceFile = createSourceFile(
         pathToFile,
         sourceText,
@@ -314,7 +314,7 @@ describe('Angular AST Utils', () => {
 
       tree.write(pathToFile, originalContents);
 
-      const sourceText = tree.read(pathToFile, 'utf-8');
+      const sourceText = readFile(tree, pathToFile);
       const tsSourceFile = createSourceFile(
         pathToFile,
         sourceText,
@@ -486,3 +486,9 @@ export class AppComponent {}
     `);
   });
 });
+
+function readFile(tree: Tree, path: string): string {
+  const content = tree.read(path, 'utf-8');
+  if (content === null) throw new Error(`${path} not found`);
+  return content;
+}

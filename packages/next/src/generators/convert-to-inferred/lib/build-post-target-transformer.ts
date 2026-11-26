@@ -7,9 +7,13 @@ import {
 import { NextBuildBuilderOptions } from '../../../utils/types';
 import { updateNextConfig } from './update-next-config';
 
+type BuildTargetOptions = Partial<NextBuildBuilderOptions> & {
+  args?: string[];
+};
+
 export function buildPostTargetTransformer(migrationLogs: AggregatedLog) {
   return (
-    target: TargetConfiguration<NextBuildBuilderOptions>,
+    target: TargetConfiguration<BuildTargetOptions>,
     tree: Tree,
     projectDetails: { projectName: string; root: string },
     inferredTargetConfiguration: TargetConfiguration
@@ -37,7 +41,8 @@ export function buildPostTargetTransformer(migrationLogs: AggregatedLog) {
         );
       }
 
-      if (Object.keys(target.configurations).length === 0) {
+      const configurations = target.configurations;
+      if (Object.keys(configurations).length === 0) {
         if ('defaultConfiguration' in target) {
           delete target.defaultConfiguration;
         }
@@ -46,7 +51,8 @@ export function buildPostTargetTransformer(migrationLogs: AggregatedLog) {
 
       if (
         'defaultConfiguration' in target &&
-        !target.configurations[target.defaultConfiguration]
+        (!target.defaultConfiguration ||
+          !configurations[target.defaultConfiguration])
       ) {
         delete target.defaultConfiguration;
       }
@@ -79,7 +85,7 @@ export function buildPostTargetTransformer(migrationLogs: AggregatedLog) {
 }
 
 function handlePropertiesFromTargetOptions(
-  options: NextBuildBuilderOptions,
+  options: BuildTargetOptions,
   projectDetails: { projectName: string; root: string },
   migrationLogs: AggregatedLog,
   configuration: string = 'default',
@@ -96,7 +102,7 @@ function handlePropertiesFromTargetOptions(
     delete options.outputPath;
   }
   if ('fileReplacements' in options) {
-    configMap['fileReplacements'] = options.fileReplacements.map(
+    configMap['fileReplacements'] = options.fileReplacements?.map(
       ({ replace: replacePath, with: withPath }) => {
         return {
           replace: toProjectRelativePath(replacePath, projectDetails.root),
@@ -111,7 +117,7 @@ function handlePropertiesFromTargetOptions(
     delete options.nextConfig;
   }
   if ('assets' in options) {
-    configMap['assets'] = options.assets.map((asset) => {
+    configMap['assets'] = options.assets?.map((asset) => {
       return {
         ...asset,
         input: toProjectRelativePath(asset.input, projectDetails.root),

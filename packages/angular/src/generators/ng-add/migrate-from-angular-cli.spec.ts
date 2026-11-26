@@ -271,7 +271,7 @@ x/src/foo
 
       await migrateFromAngularCli(tree, { skipFormat: true });
 
-      const prettierIgnore = tree.read('.prettierignore').toString();
+      const prettierIgnore = tree.read('.prettierignore', 'utf-8');
       expect(prettierIgnore).toMatchInlineSnapshot(`
         "
         # should be modified
@@ -333,7 +333,7 @@ x/src/foo
 
       await migrateFromAngularCli(tree, { skipFormat: true });
 
-      const gitIgnore = tree.read('.gitignore').toString();
+      const gitIgnore = tree.read('.gitignore', 'utf-8');
       expect(gitIgnore).toMatchInlineSnapshot(`
         "
         # should be modified

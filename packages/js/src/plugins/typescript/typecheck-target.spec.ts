@@ -44,7 +44,7 @@ describe('createTypecheckTarget', () => {
 
       expect(target.dependsOn).toEqual(['build', '^check-types']);
       expect(target.syncGenerators).toEqual(['@nx/js:typescript-sync']);
-      expect(target.metadata.help).toEqual({
+      expect(target.metadata?.help).toEqual({
         command: 'npx tsc --build --help',
         example: { args: ['--force'] },
       });
@@ -61,7 +61,7 @@ describe('createTypecheckTarget', () => {
       });
 
       expect(target.command).toBe('tsc --noEmit');
-      expect(target.metadata.help.command).toBe('npx tsc --help');
+      expect(target.metadata?.help?.command).toBe('npx tsc --help');
     });
 
     it('should pass a non-default tsconfig with -p', () => {
@@ -73,7 +73,7 @@ describe('createTypecheckTarget', () => {
       });
 
       expect(target.command).toBe('tsc -p tsconfig.app.json --noEmit');
-      expect(target.metadata.help).toEqual({
+      expect(target.metadata?.help).toEqual({
         command: 'npx tsc -p tsconfig.app.json --help',
         example: { options: { noEmit: true } },
       });

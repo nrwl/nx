@@ -295,7 +295,7 @@ function createFiles(host: Tree, options: NormalizedSchema) {
 
 function determineEntryFields(
   options: NormalizedSchema
-): Pick<PackageJson, 'main' | 'types' | 'exports'> {
+): Pick<PackageJson, 'main' | 'types' | 'exports'> | undefined {
   if (
     options.buildable ||
     options.publishable ||

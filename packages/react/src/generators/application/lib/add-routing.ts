@@ -31,6 +31,9 @@ export function addRouting(host: Tree, options: NormalizedSchema) {
     )
   );
   const appFileContent = host.read(appPath, 'utf-8');
+  if (appFileContent === null) {
+    throw new Error(`Could not find ${appPath}.`);
+  }
   const appSource = tsModule.createSourceFile(
     appPath,
     appFileContent,

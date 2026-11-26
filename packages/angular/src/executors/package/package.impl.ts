@@ -13,10 +13,14 @@ import { parseRemappedTsConfigAndMergeDefaults } from '../utilities/typescript';
 import { getNgPackagrInstance } from './ng-packagr-adjustments/ng-packagr';
 import type { BuildAngularLibraryExecutorOptions } from './schema';
 
+export type NormalizedLibraryExecutorOptions =
+  BuildAngularLibraryExecutorOptions & { project: string };
+
 async function initializeNgPackagr(
-  options: BuildAngularLibraryExecutorOptions,
+  options: NormalizedLibraryExecutorOptions,
   context: ExecutorContext,
-  projectDependencies: DependentBuildableProjectNode[]
+  projectDependencies: DependentBuildableProjectNode[],
+  projectRoot: string
 ): Promise<NgPackagr> {
   const ngPackagr = await getNgPackagrInstance();
   ngPackagr.forProject(resolve(context.root, options.project));
@@ -25,7 +29,7 @@ async function initializeNgPackagr(
     const remappedTsConfigFilePath = createTmpTsConfig(
       join(context.root, options.tsConfig),
       context.root,
-      context.projectsConfigurations.projects[context.projectName].root,
+      projectRoot,
       projectDependencies
     );
     const tsConfig = await parseRemappedTsConfigAndMergeDefaults(
@@ -46,39 +50,50 @@ async function initializeNgPackagr(
  */
 export function createLibraryExecutor(
   initializeNgPackagr: (
-    options: BuildAngularLibraryExecutorOptions,
+    options: NormalizedLibraryExecutorOptions,
     context: ExecutorContext,
-    projectDependencies: DependentBuildableProjectNode[]
+    projectDependencies: DependentBuildableProjectNode[],
+    projectRoot: string
   ) => Promise<NgPackagr>
 ) {
   return async function* (
-    options: BuildAngularLibraryExecutorOptions,
+    rawOptions: BuildAngularLibraryExecutorOptions,
     context: ExecutorContext
   ) {
-    options.project ??= join(
-      context.projectsConfigurations.projects[context.projectName].root,
-      'ng-package.json'
-    );
+    const { projectName, targetName } = context;
+    if (!projectName || !targetName) {
+      throw new Error('The library executor must be run for a project target.');
+    }
+    const projectRoot =
+      context.projectsConfigurations.projects[projectName].root;
+    const options: NormalizedLibraryExecutorOptions = {
+      ...rawOptions,
+      project: rawOptions.project ?? join(projectRoot, 'ng-package.json'),
+    };
 
     const { dependencies } = calculateProjectBuildableDependencies(
       context.taskGraph,
       context.projectGraph,
       context.root,
-      context.projectName,
-      context.targetName,
+      projectName,
+      targetName,
       context.configurationName
     );
 
     if (options.watch) {
       return yield* eachValueFrom(
-        from(initializeNgPackagr(options, context, dependencies)).pipe(
+        from(
+          initializeNgPackagr(options, context, dependencies, projectRoot)
+        ).pipe(
           switchMap((packagr) => packagr.watch()),
           mapTo({ success: true })
         )
       );
     }
 
-    return from(initializeNgPackagr(options, context, dependencies))
+    return from(
+      initializeNgPackagr(options, context, dependencies, projectRoot)
+    )
       .pipe(
         switchMap((packagr) => packagr.build()),
         mapTo({ success: true })

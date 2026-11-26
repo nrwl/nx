@@ -624,7 +624,7 @@ class CLIOutput {
 
   private getCommandWithStatus(
     message: string,
-    taskStatus: TaskStatus
+    taskStatus: TaskStatus | undefined
   ): string {
     const commandOutput =
       pc.dim('> ') + this.formatCommand(this.normalizeMessage(message));
@@ -646,11 +646,7 @@ class CLIOutput {
       case 'remote-cache':
         return '🔁';
       default: {
-        // The repo compiles with `strict: false`, so a `: string` return type
-        // alone does not reject a fallthrough - `undefined` stays assignable.
-        // This does: a new `TaskStatus` member fails to narrow to `never` here.
-        // Worth the lines because the gap already shipped once, rendering
-        // `::group::undefined > nx run ...` for a stopped task.
+        // A new `TaskStatus` member fails to narrow to `never` here.
         const unhandled: never = taskStatus;
         void unhandled;
         // Returning `unhandled` would print the status text where an icon goes
@@ -672,7 +668,10 @@ class CLIOutput {
     }
   }
 
-  private addTaskStatus(taskStatus: TaskStatus, commandOutput: string) {
+  private addTaskStatus(
+    taskStatus: TaskStatus | undefined,
+    commandOutput: string
+  ) {
     if (taskStatus === 'local-cache') {
       return `${commandOutput}  ${pc.dim('[local cache]')}`;
     } else if (taskStatus === 'remote-cache') {

@@ -49,15 +49,16 @@ export async function configurationGenerator(tree: Tree, schema: Schema) {
   tasks.push(initTask);
 
   if (options.skipValidation) {
-    const projectJson = readProjectConfiguration(tree, project.name);
-    if (projectJson.targets['build']) {
-      delete projectJson.targets['build'];
+    const targets =
+      readProjectConfiguration(tree, schema.project).targets ?? {};
+    if (targets['build']) {
+      delete targets['build'];
     }
-    if (projectJson.targets['serve']) {
-      delete projectJson.targets['serve'];
+    if (targets['serve']) {
+      delete targets['serve'];
     }
-    if (projectJson.targets['dev']) {
-      delete projectJson.targets['dev'];
+    if (targets['dev']) {
+      delete targets['dev'];
     }
   }
 

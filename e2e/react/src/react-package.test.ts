@@ -43,7 +43,7 @@ describe('Build React libraries and apps', () => {
     });
 
     // create dependencies by importing
-    const createDep = (parent, children: string[]) => {
+    const createDep = (parent: string, children: string[]) => {
       updateFile(
         `libs/${parent}/src/index.ts`,
         `

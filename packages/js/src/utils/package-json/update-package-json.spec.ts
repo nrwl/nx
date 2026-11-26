@@ -584,6 +584,7 @@ describe('updatePackageJson', () => {
       ],
     },
   };
+  const lib1Node = projectGraph.nodes['@org/lib1'];
   const context: ExecutorContext = {
     root: '/root',
     projectName: '@org/lib1',
@@ -605,7 +606,7 @@ describe('updatePackageJson', () => {
       main: 'libs/lib1/main.ts',
     };
     const dependencies: DependentBuildableProjectNode[] = [];
-    updatePackageJson(options, context, undefined, dependencies, fileMap);
+    updatePackageJson(options, context, lib1Node, dependencies, fileMap);
 
     expect(vol.existsSync('dist/libs/lib1/package.json')).toEqual(true);
     const distPackageJson = JSON.parse(
@@ -633,7 +634,7 @@ describe('updatePackageJson', () => {
       main: 'libs/lib1/main.ts',
     };
     const dependencies: DependentBuildableProjectNode[] = [];
-    updatePackageJson(options, context, undefined, dependencies);
+    updatePackageJson(options, context, lib1Node, dependencies);
 
     expect(vol.existsSync('dist/libs/lib1/package.json')).toEqual(true);
     const distPackageJson = JSON.parse(
@@ -659,7 +660,7 @@ describe('updatePackageJson', () => {
       updateBuildableProjectDepsInPackageJson: true,
     };
     const dependencies: DependentBuildableProjectNode[] = [];
-    updatePackageJson(options, context, undefined, dependencies, fileMap);
+    updatePackageJson(options, context, lib1Node, dependencies, fileMap);
 
     expect(vol.existsSync('dist/libs/lib1/package.json')).toEqual(true);
     const distPackageJson = JSON.parse(
@@ -698,7 +699,7 @@ describe('updatePackageJson', () => {
       updateBuildableProjectDepsInPackageJson: true,
       generateLockfile: true,
     };
-    updatePackageJson(options, context, undefined, [], fileMap);
+    updatePackageJson(options, context, lib1Node, [], fileMap);
 
     const distPackageJson = JSON.parse(
       vol.readFileSync('dist/libs/lib1/package.json', 'utf-8').toString()
@@ -724,7 +725,7 @@ describe('updatePackageJson', () => {
       main: 'libs/lib1/main.ts',
       updateBuildableProjectDepsInPackageJson: true,
     };
-    updatePackageJson(options, context, undefined, [], fileMap);
+    updatePackageJson(options, context, lib1Node, [], fileMap);
 
     const distPackageJson = JSON.parse(
       vol.readFileSync('dist/libs/lib1/package.json', 'utf-8').toString()
@@ -750,7 +751,7 @@ describe('updatePackageJson', () => {
       // branch, which strips pnpm config directly rather than via createPackageJson.
       generateLockfile: true,
     };
-    updatePackageJson(options, context, undefined, [], fileMap);
+    updatePackageJson(options, context, lib1Node, [], fileMap);
 
     const distPackageJson = JSON.parse(
       vol.readFileSync('dist/libs/lib1/package.json', 'utf-8').toString()
@@ -782,7 +783,7 @@ describe('updatePackageJson', () => {
       updateBuildableProjectDepsInPackageJson: true,
       generateLockfile: true,
     };
-    updatePackageJson(options, context, undefined, [], fileMap);
+    updatePackageJson(options, context, lib1Node, [], fileMap);
 
     expect(mockGeneratePrunedDeployOutput).toHaveBeenCalledWith(
       expect.objectContaining({ name: '@org/lib1' }),
@@ -813,7 +814,7 @@ describe('updatePackageJson', () => {
       updateBuildableProjectDepsInPackageJson: true,
       generateLockfile: true,
     };
-    updatePackageJson(options, context, undefined, [], fileMap);
+    updatePackageJson(options, context, lib1Node, [], fileMap);
 
     expect(mockGeneratePrunedDeployOutput).toHaveBeenCalledWith(
       expect.anything(),
@@ -845,6 +846,9 @@ describe('updatePackageJson', () => {
     // The deploy output relocates local-path specifiers in the manifest; the
     // manifest must be written after that mutation lands.
     mockGeneratePrunedDeployOutput.mockImplementationOnce((manifest) => {
+      if (!manifest.dependencies) {
+        throw new Error('manifest has no dependencies');
+      }
       manifest.dependencies.vendored = 'link:local_path_modules/vendor/thing';
     });
     const options: UpdatePackageJsonOption = {
@@ -853,7 +857,7 @@ describe('updatePackageJson', () => {
       main: 'libs/lib1/main.ts',
       generateLockfile: true,
     };
-    updatePackageJson(options, context, undefined, [], fileMap);
+    updatePackageJson(options, context, lib1Node, [], fileMap);
 
     const distPackageJson = JSON.parse(
       vol.readFileSync('dist/libs/lib1/package.json', 'utf-8').toString()

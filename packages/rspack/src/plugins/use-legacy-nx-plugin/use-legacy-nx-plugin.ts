@@ -49,6 +49,9 @@ export async function useLegacyNxPlugin(
 
   const projectGraph = readCachedProjectGraph();
   const projectName = process.env.NX_TASK_TARGET_PROJECT;
+  if (!projectName) {
+    throw new Error('NX_TASK_TARGET_PROJECT is not set.');
+  }
   const project = projectGraph.nodes[projectName];
   const targetName = process.env.NX_TASK_TARGET_TARGET;
 
@@ -60,7 +63,7 @@ export async function useLegacyNxPlugin(
     projectsConfigurations:
       readProjectsConfigurationFromProjectGraph(projectGraph),
     nxJsonConfiguration: readNxJson(workspaceRoot),
-    target: project.data.targets[targetName],
+    target: targetName ? project.data.targets?.[targetName] : undefined,
     targetName: targetName,
     projectName: projectName,
   };

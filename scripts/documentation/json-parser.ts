@@ -9,7 +9,7 @@ export enum OptionType {
   String = 'string',
 }
 
-function _getEnumFromValue<E, T extends E[keyof E]>(
+function _getEnumFromValue<E extends object, T extends E[keyof E]>(
   value: json.JsonValue,
   enumeration: E,
   defaultValue: T

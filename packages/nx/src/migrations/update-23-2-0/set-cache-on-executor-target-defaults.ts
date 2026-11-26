@@ -81,7 +81,11 @@ export default async function update(tree: Tree) {
     if (!canEnableCache(targetDefaults, key, targets, tree.root, projectsMap)) {
       continue;
     }
-    catchAllConfig(targetDefaults[key]).cache = true;
+    const config = catchAllConfig(targetDefaults[key]);
+    if (!config) {
+      continue;
+    }
+    config.cache = true;
     changed = true;
   }
 

@@ -222,7 +222,7 @@ function createComment(lines: string[]): string {
 
 function createCodeownersEntry(
   pattern: string,
-  owners: OwnerId[] | false,
+  owners: OwnerId[] | false | undefined,
   commentLines?: string[]
 ): string {
   const invalidOwner = owners ? owners.find((owner) => /\s/.test(owner)) : '';
@@ -345,7 +345,9 @@ function generateContentForPatterns(
         continue;
       }
       const effectivePrefix = config.prefix ?? ownersPrefix;
-      const ownersWithPrefix: OwnerId[] | false = Array.isArray(owners)
+      const ownersWithPrefix: OwnerId[] | false | undefined = Array.isArray(
+        owners
+      )
         ? applyPrefixIfNeeded(owners, effectivePrefix, config.applyPrefix)
         : owners;
       for (const filePattern of files) {

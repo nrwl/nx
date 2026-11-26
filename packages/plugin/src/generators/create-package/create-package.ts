@@ -70,7 +70,7 @@ export async function createPackageGeneratorInternal(
   tasks.push(cliPackageTask);
 
   if (options.e2eProject) {
-    addE2eProject(host, options);
+    addE2eProject(host, options, options.e2eProject);
   }
 
   if (!options.skipFormat) {
@@ -169,16 +169,22 @@ async function createCliPackage(
     options.projectRoot,
     'bin'
   );
-  projectConfiguration.targets.build.options.main = joinPathFragments(
+  const buildTarget = projectConfiguration.targets?.build;
+  if (!buildTarget) {
+    throw new Error(
+      `Could not find a build target for project ${options.projectName}.`
+    );
+  }
+  buildTarget.options.main = joinPathFragments(
     options.projectRoot,
     'bin/index.ts'
   );
   projectConfiguration.implicitDependencies = [options.project];
   if (options.isTsSolutionSetup) {
     if (options.bundler === 'tsc') {
-      projectConfiguration.targets.build.options.generatePackageJson = false;
+      buildTarget.options.generatePackageJson = false;
     } else if (options.bundler === 'swc') {
-      delete projectConfiguration.targets.build.options.stripLeadingPaths;
+      delete buildTarget.options.stripLeadingPaths;
     }
   }
   updateProjectConfiguration(host, options.projectName, projectConfiguration);
@@ -215,11 +221,12 @@ async function createCliPackage(
  * @param options
  * @returns
  */
-function addE2eProject(host: Tree, options: NormalizedSchema) {
-  const e2eProjectConfiguration = readProjectConfiguration(
-    host,
-    options.e2eProject
-  );
+function addE2eProject(
+  host: Tree,
+  options: NormalizedSchema,
+  e2eProject: string
+) {
+  const e2eProjectConfiguration = readProjectConfiguration(host, e2eProject);
   const projectConfiguration = readProjectConfiguration(host, options.project);
   const { name: pluginPackageName } = readJson(
     host,

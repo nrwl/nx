@@ -30,16 +30,24 @@ function getValidationErrorText({
   messageGroup,
   hint,
 }: ValidationError): string {
-  let lines = message
-    ? [`- ${message}`, ...(hint ? [pc.dim(pc.italic(`  ${hint}`))] : [])]
-    : [
-        `- ${messageGroup.title}:`,
-        '  - Errors:',
-        ...messageGroup.messages.map((message) => `    - ${message}`),
-        ...(hint ? [pc.dim(pc.italic(`  - ${hint}`))] : []),
-      ];
+  if (message) {
+    return [
+      `- ${message}`,
+      ...(hint ? [pc.dim(pc.italic(`  ${hint}`))] : []),
+    ].join('\n  ');
+  }
+  if (!messageGroup) {
+    throw new Error(
+      'A validation error requires a message or a message group.'
+    );
+  }
 
-  return lines.join('\n  ');
+  return [
+    `- ${messageGroup.title}:`,
+    '  - Errors:',
+    ...messageGroup.messages.map((message) => `    - ${message}`),
+    ...(hint ? [pc.dim(pc.italic(`  - ${hint}`))] : []),
+  ].join('\n  ');
 }
 
 function quote(str: string): string {

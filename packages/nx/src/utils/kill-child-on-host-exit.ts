@@ -12,10 +12,11 @@ let exitHookRegistered = false;
  * already exited on its own.
  */
 export function killChildOnHostExit(cp: ChildProcess): void {
-  if (!cp.pid) return;
-  trackedChildren.add(cp.pid);
+  const pid = cp.pid;
+  if (!pid) return;
+  trackedChildren.add(pid);
   const untrack = () => {
-    trackedChildren.delete(cp.pid);
+    trackedChildren.delete(pid);
     // Whichever fires first, drop both — otherwise the other stays registered
     // on a child that is already gone.
     cp.off('exit', untrack);

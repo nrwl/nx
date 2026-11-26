@@ -10,6 +10,9 @@ export default async function (tree: Tree) {
       return;
     }
     let webpackConfigContents = tree.read(path, 'utf-8');
+    if (webpackConfigContents === null) {
+      return;
+    }
     if (
       !/withModuleFederationSSR|withModuleFederation/.test(
         webpackConfigContents
@@ -45,11 +48,8 @@ export default async function (tree: Tree) {
         withModuleFederationNode.getEnd() - 1
       )}`;
     } else {
-      let existingOverrideNode;
+      let existingOverrideNode = existingOverridesNodes[0];
       for (const node of existingOverridesNodes) {
-        if (!existingOverrideNode) {
-          existingOverrideNode = node;
-        }
         if (existingOverrideNode.getText().includes(node.getText())) {
           continue;
         }

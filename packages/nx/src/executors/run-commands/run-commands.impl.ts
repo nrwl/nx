@@ -115,8 +115,8 @@ export async function runCommands(
   const resolvedTaskId =
     task?.id ??
     createTaskId(
-      context.projectName,
-      context.targetName,
+      String(context.projectName),
+      String(context.targetName),
       context.configurationName
     );
   let env: NodeJS.ProcessEnv;
@@ -141,7 +141,7 @@ export async function runCommands(
   }
 
   if (
-    options.commands.find(
+    normalized.commands.find(
       (c: any) => c.prefix || c.prefixColor || c.color || c.bgColor
     ) &&
     !options.parallel
@@ -215,7 +215,7 @@ export async function runCommands(
       console.error(e);
     }
     throw new Error(
-      `ERROR: Something went wrong in run-commands - ${e.message}`
+      `ERROR: Something went wrong in run-commands - ${e instanceof Error ? e.message : String(e)}`
     );
   }
 }
@@ -248,6 +248,11 @@ function normalizeOptions(
     ];
     options.parallel = options.readyWhenStatus?.length > 0;
   } else {
+    if (!options.commands) {
+      throw new Error(
+        'ERROR: Bad executor config for run-commands - either "command" or "commands" must be set.'
+      );
+    }
     options.commands = options.commands.map((c) =>
       typeof c === 'string' ? { command: c } : c
     );
@@ -305,7 +310,7 @@ export function normalizeArgs(
     .filter(
       (p) => propKeys.indexOf(p) === -1 && unparsedCommandArgs[p] === undefined
     )
-    .reduce((m, c) => ((m[c] = options[c]), m), {});
+    .reduce<Record<string, unknown>>((m, c) => ((m[c] = options[c]), m), {});
 
   return {
     args,
@@ -340,7 +345,7 @@ export function interpolateArgsIntoCommand(
       // Overrides are parsed without dot-notation, so `{args.a.b}` reads the
       // `--a.b` override
       read: (_, path) =>
-        Object.hasOwn(opts.parsedArgs, path)
+        path !== undefined && Object.hasOwn(opts.parsedArgs, path)
           ? opts.parsedArgs[path]
           : undefined,
       env: { read: env },
@@ -386,11 +391,12 @@ function droppedUnknownOptions(
   >
 ) {
   const unparsedKeys = Object.keys(opts.unparsedCommandArgs ?? {});
-  return Object.keys(opts.unknownOptions ?? {}).filter(
+  const unknownOptions = opts.unknownOptions ?? {};
+  return Object.keys(unknownOptions).filter(
     (k) =>
-      typeof opts.unknownOptions[k] === 'object' &&
-      opts.unknownOptions[k] !== null &&
-      opts.parsedArgs[k] === opts.unknownOptions[k] &&
+      typeof unknownOptions[k] === 'object' &&
+      unknownOptions[k] !== null &&
+      opts.parsedArgs[k] === unknownOptions[k] &&
       !unparsedKeys.some((u) => u.startsWith(`${k}.`))
   );
 }
@@ -405,13 +411,14 @@ function unknownOptionsToArgsArray(
     | 'unparsedCommandArgs'
   >
 ) {
-  return Object.keys(opts.unknownOptions ?? {})
+  const unknownOptions = opts.unknownOptions ?? {};
+  return Object.keys(unknownOptions)
     .filter(
       (k) =>
-        typeof opts.unknownOptions[k] !== 'object' &&
-        opts.parsedArgs[k] === opts.unknownOptions[k]
+        typeof unknownOptions[k] !== 'object' &&
+        opts.parsedArgs[k] === unknownOptions[k]
     )
-    .map((k) => `--${k}=${opts.unknownOptions[k]}`)
+    .map((k) => `--${k}=${unknownOptions[k]}`)
     .map(wrapArgIntoQuotesIfNeeded);
 }
 
@@ -484,7 +491,7 @@ function rejoinQuotedFragments(args: string[]): string[] {
 
 function parseArgs(
   unparsedCommandArgs: { [k: string]: string },
-  unknownOptions: { [k: string]: string },
+  unknownOptions: Record<string, unknown>,
   args?: string
 ) {
   if (!args) {

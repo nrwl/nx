@@ -3,6 +3,8 @@ import {
   readNxJson,
   readProjectConfiguration,
   updateNxJson,
+  type NxJsonConfiguration,
+  type TargetConfiguration,
   type Tree,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
@@ -31,6 +33,22 @@ const SETTINGS_INPUTS = [
 // default, spelled out, plus the settings sources.
 const DEPLOY_INPUTS = ['default', '^default', ...SETTINGS_INPUTS];
 
+function readExistingNxJson(tree: Tree): NxJsonConfiguration {
+  const nxJson = readNxJson(tree);
+  if (!nxJson) {
+    throw new Error('nx.json not found');
+  }
+  return nxJson;
+}
+
+function readObjectTargetDefault(
+  tree: Tree,
+  key: string
+): Partial<TargetConfiguration> | undefined {
+  const value = readNxJson(tree)?.targetDefaults?.[key];
+  return Array.isArray(value) ? undefined : value;
+}
+
 describe('add-pnpm-deploy-output-cache-inputs migration', () => {
   let tree: Tree;
 
@@ -52,9 +70,9 @@ describe('add-pnpm-deploy-output-cache-inputs migration', () => {
 
     await update(tree);
 
-    expect(readProjectConfiguration(tree, 'app1').targets.build.inputs).toEqual(
-      DEPLOY_INPUTS
-    );
+    expect(
+      readProjectConfiguration(tree, 'app1').targets?.build?.inputs
+    ).toEqual(DEPLOY_INPUTS);
   });
 
   it('adds them when the option is enabled only in a configuration', async () => {
@@ -73,9 +91,9 @@ describe('add-pnpm-deploy-output-cache-inputs migration', () => {
 
     await update(tree);
 
-    expect(readProjectConfiguration(tree, 'app1').targets.build.inputs).toEqual(
-      DEPLOY_INPUTS
-    );
+    expect(
+      readProjectConfiguration(tree, 'app1').targets?.build?.inputs
+    ).toEqual(DEPLOY_INPUTS);
   });
 
   it('adds them to generateLockfile-gated executors', async () => {
@@ -91,9 +109,9 @@ describe('add-pnpm-deploy-output-cache-inputs migration', () => {
 
     await update(tree);
 
-    expect(readProjectConfiguration(tree, 'app1').targets.build.inputs).toEqual(
-      DEPLOY_INPUTS
-    );
+    expect(
+      readProjectConfiguration(tree, 'app1').targets?.build?.inputs
+    ).toEqual(DEPLOY_INPUTS);
   });
 
   it('leaves targets without the gating option alone', async () => {
@@ -112,8 +130,8 @@ describe('add-pnpm-deploy-output-cache-inputs migration', () => {
     await update(tree);
 
     const targets = readProjectConfiguration(tree, 'app1').targets;
-    expect(targets.build.inputs).toBeUndefined();
-    expect(targets['build-next'].inputs).toBeUndefined();
+    expect(targets?.build?.inputs).toBeUndefined();
+    expect(targets?.['build-next']?.inputs).toBeUndefined();
   });
 
   it('leaves unrelated executors alone', async () => {
@@ -130,7 +148,7 @@ describe('add-pnpm-deploy-output-cache-inputs migration', () => {
     await update(tree);
 
     expect(
-      readProjectConfiguration(tree, 'app1').targets.build.inputs
+      readProjectConfiguration(tree, 'app1').targets?.build?.inputs
     ).toBeUndefined();
   });
 
@@ -149,7 +167,7 @@ describe('add-pnpm-deploy-output-cache-inputs migration', () => {
     await update(tree);
 
     expect(
-      readProjectConfiguration(tree, 'app1').targets.build.inputs
+      readProjectConfiguration(tree, 'app1').targets?.build?.inputs
     ).toBeUndefined();
   });
 
@@ -167,19 +185,19 @@ describe('add-pnpm-deploy-output-cache-inputs migration', () => {
 
     await update(tree);
 
-    expect(readProjectConfiguration(tree, 'app1').targets.build.inputs).toEqual(
-      [
-        'production',
-        '^production',
-        '{workspaceRoot}/pnpm-workspace.yaml',
-        SETTINGS_JSON_INPUT,
-        PNPM_MAJOR_PROBE,
-      ]
-    );
+    expect(
+      readProjectConfiguration(tree, 'app1').targets?.build?.inputs
+    ).toEqual([
+      'production',
+      '^production',
+      '{workspaceRoot}/pnpm-workspace.yaml',
+      SETTINGS_JSON_INPUT,
+      PNPM_MAJOR_PROBE,
+    ]);
   });
 
   it('appends to the targetDefaults entry supplying the inherited inputs', async () => {
-    const nxJson = readNxJson(tree);
+    const nxJson = readExistingNxJson(tree);
     nxJson.targetDefaults = {
       '@nx/webpack:webpack': {
         inputs: ['production', '^production'],
@@ -199,7 +217,7 @@ describe('add-pnpm-deploy-output-cache-inputs migration', () => {
     await update(tree);
 
     expect(
-      readNxJson(tree).targetDefaults['@nx/webpack:webpack'].inputs
+      readObjectTargetDefault(tree, '@nx/webpack:webpack')?.inputs
     ).toEqual([
       'production',
       '^production',
@@ -208,12 +226,12 @@ describe('add-pnpm-deploy-output-cache-inputs migration', () => {
       PNPM_MAJOR_PROBE,
     ]);
     expect(
-      readProjectConfiguration(tree, 'app1').targets.build.inputs
+      readProjectConfiguration(tree, 'app1').targets?.build?.inputs
     ).toBeUndefined();
   });
 
   it('reads the gating option from a matching targetDefaults entry', async () => {
-    const nxJson = readNxJson(tree);
+    const nxJson = readExistingNxJson(tree);
     nxJson.targetDefaults = {
       '@nx/webpack:webpack': {
         options: { generatePackageJson: true },
@@ -229,13 +247,13 @@ describe('add-pnpm-deploy-output-cache-inputs migration', () => {
 
     await update(tree);
 
-    expect(readProjectConfiguration(tree, 'app1').targets.build.inputs).toEqual(
-      DEPLOY_INPUTS
-    );
+    expect(
+      readProjectConfiguration(tree, 'app1').targets?.build?.inputs
+    ).toEqual(DEPLOY_INPUTS);
   });
 
   it('matches a target whose executor comes from targetDefaults', async () => {
-    const nxJson = readNxJson(tree);
+    const nxJson = readExistingNxJson(tree);
     nxJson.targetDefaults = {
       build: {
         executor: '@nx/webpack:webpack',
@@ -252,13 +270,13 @@ describe('add-pnpm-deploy-output-cache-inputs migration', () => {
 
     await update(tree);
 
-    expect(readProjectConfiguration(tree, 'app1').targets.build.inputs).toEqual(
-      DEPLOY_INPUTS
-    );
+    expect(
+      readProjectConfiguration(tree, 'app1').targets?.build?.inputs
+    ).toEqual(DEPLOY_INPUTS);
   });
 
   it('never matches a command target through defaults', async () => {
-    const nxJson = readNxJson(tree);
+    const nxJson = readExistingNxJson(tree);
     nxJson.targetDefaults = {
       build: {
         executor: '@nx/webpack:webpack',
@@ -276,7 +294,7 @@ describe('add-pnpm-deploy-output-cache-inputs migration', () => {
     await update(tree);
 
     expect(
-      readProjectConfiguration(tree, 'app1').targets.build.inputs
+      readProjectConfiguration(tree, 'app1').targets?.build?.inputs
     ).toBeUndefined();
   });
 
@@ -294,14 +312,14 @@ describe('add-pnpm-deploy-output-cache-inputs migration', () => {
 
     await update(tree);
 
-    expect(readProjectConfiguration(tree, 'app1').targets.build.inputs).toEqual(
-      [
-        'default',
-        '{workspaceRoot}/pnpm-workspace.yaml',
-        SETTINGS_JSON_INPUT,
-        PNPM_MAJOR_PROBE,
-      ]
-    );
+    expect(
+      readProjectConfiguration(tree, 'app1').targets?.build?.inputs
+    ).toEqual([
+      'default',
+      '{workspaceRoot}/pnpm-workspace.yaml',
+      SETTINGS_JSON_INPUT,
+      PNPM_MAJOR_PROBE,
+    ]);
   });
 
   it('treats a whole-file root package.json fileset as covering the settings fields', async () => {
@@ -318,14 +336,14 @@ describe('add-pnpm-deploy-output-cache-inputs migration', () => {
 
     await update(tree);
 
-    expect(readProjectConfiguration(tree, 'app1').targets.build.inputs).toEqual(
-      [
-        'default',
-        '{workspaceRoot}/package.json',
-        '{workspaceRoot}/pnpm-workspace.yaml',
-        PNPM_MAJOR_PROBE,
-      ]
-    );
+    expect(
+      readProjectConfiguration(tree, 'app1').targets?.build?.inputs
+    ).toEqual([
+      'default',
+      '{workspaceRoot}/package.json',
+      '{workspaceRoot}/pnpm-workspace.yaml',
+      PNPM_MAJOR_PROBE,
+    ]);
   });
 
   it('treats an existing json input covering the settings fields as sufficient', async () => {
@@ -342,14 +360,14 @@ describe('add-pnpm-deploy-output-cache-inputs migration', () => {
 
     await update(tree);
 
-    expect(readProjectConfiguration(tree, 'app1').targets.build.inputs).toEqual(
-      [
-        'default',
-        { json: '{workspaceRoot}/package.json' },
-        '{workspaceRoot}/pnpm-workspace.yaml',
-        PNPM_MAJOR_PROBE,
-      ]
-    );
+    expect(
+      readProjectConfiguration(tree, 'app1').targets?.build?.inputs
+    ).toEqual([
+      'default',
+      { json: '{workspaceRoot}/package.json' },
+      '{workspaceRoot}/pnpm-workspace.yaml',
+      PNPM_MAJOR_PROBE,
+    ]);
   });
 
   it('treats subtree field entries as covering their nested fields', async () => {
@@ -372,17 +390,17 @@ describe('add-pnpm-deploy-output-cache-inputs migration', () => {
 
     await update(tree);
 
-    expect(readProjectConfiguration(tree, 'app1').targets.build.inputs).toEqual(
-      [
-        'default',
-        {
-          json: '{workspaceRoot}/package.json',
-          fields: ['packageManager', 'pnpm'],
-        },
-        '{workspaceRoot}/pnpm-workspace.yaml',
-        PNPM_MAJOR_PROBE,
-      ]
-    );
+    expect(
+      readProjectConfiguration(tree, 'app1').targets?.build?.inputs
+    ).toEqual([
+      'default',
+      {
+        json: '{workspaceRoot}/package.json',
+        fields: ['packageManager', 'pnpm'],
+      },
+      '{workspaceRoot}/pnpm-workspace.yaml',
+      PNPM_MAJOR_PROBE,
+    ]);
   });
 
   it('does not treat a manifest fileset cancelled by an exact negation as covering', async () => {
@@ -403,16 +421,16 @@ describe('add-pnpm-deploy-output-cache-inputs migration', () => {
 
     await update(tree);
 
-    expect(readProjectConfiguration(tree, 'app1').targets.build.inputs).toEqual(
-      [
-        'default',
-        '{workspaceRoot}/package.json',
-        '!{workspaceRoot}/package.json',
-        '{workspaceRoot}/pnpm-workspace.yaml',
-        SETTINGS_JSON_INPUT,
-        PNPM_MAJOR_PROBE,
-      ]
-    );
+    expect(
+      readProjectConfiguration(tree, 'app1').targets?.build?.inputs
+    ).toEqual([
+      'default',
+      '{workspaceRoot}/package.json',
+      '!{workspaceRoot}/package.json',
+      '{workspaceRoot}/pnpm-workspace.yaml',
+      SETTINGS_JSON_INPUT,
+      PNPM_MAJOR_PROBE,
+    ]);
   });
 
   it('does not treat a manifest fileset a glob negation could cancel as covering', async () => {
@@ -434,16 +452,16 @@ describe('add-pnpm-deploy-output-cache-inputs migration', () => {
 
     await update(tree);
 
-    expect(readProjectConfiguration(tree, 'app1').targets.build.inputs).toEqual(
-      [
-        'default',
-        '{workspaceRoot}/package.json',
-        '{workspaceRoot}/pnpm-workspace.yaml',
-        '!{workspaceRoot}/*.json',
-        SETTINGS_JSON_INPUT,
-        PNPM_MAJOR_PROBE,
-      ]
-    );
+    expect(
+      readProjectConfiguration(tree, 'app1').targets?.build?.inputs
+    ).toEqual([
+      'default',
+      '{workspaceRoot}/package.json',
+      '{workspaceRoot}/pnpm-workspace.yaml',
+      '!{workspaceRoot}/*.json',
+      SETTINGS_JSON_INPUT,
+      PNPM_MAJOR_PROBE,
+    ]);
   });
 
   it('does not treat a manifest fileset an extglob negation could cancel as covering', async () => {
@@ -465,16 +483,16 @@ describe('add-pnpm-deploy-output-cache-inputs migration', () => {
 
     await update(tree);
 
-    expect(readProjectConfiguration(tree, 'app1').targets.build.inputs).toEqual(
-      [
-        'default',
-        '{workspaceRoot}/package.json',
-        '{workspaceRoot}/pnpm-workspace.yaml',
-        '!{workspaceRoot}/@(package|other).json',
-        SETTINGS_JSON_INPUT,
-        PNPM_MAJOR_PROBE,
-      ]
-    );
+    expect(
+      readProjectConfiguration(tree, 'app1').targets?.build?.inputs
+    ).toEqual([
+      'default',
+      '{workspaceRoot}/package.json',
+      '{workspaceRoot}/pnpm-workspace.yaml',
+      '!{workspaceRoot}/@(package|other).json',
+      SETTINGS_JSON_INPUT,
+      PNPM_MAJOR_PROBE,
+    ]);
   });
 
   it('does not treat a manifest fileset an object-form negation could cancel as covering', async () => {
@@ -496,16 +514,16 @@ describe('add-pnpm-deploy-output-cache-inputs migration', () => {
 
     await update(tree);
 
-    expect(readProjectConfiguration(tree, 'app1').targets.build.inputs).toEqual(
-      [
-        'default',
-        '{workspaceRoot}/package.json',
-        '{workspaceRoot}/pnpm-workspace.yaml',
-        { fileset: '!{workspaceRoot}/package.json' },
-        SETTINGS_JSON_INPUT,
-        PNPM_MAJOR_PROBE,
-      ]
-    );
+    expect(
+      readProjectConfiguration(tree, 'app1').targets?.build?.inputs
+    ).toEqual([
+      'default',
+      '{workspaceRoot}/package.json',
+      '{workspaceRoot}/pnpm-workspace.yaml',
+      { fileset: '!{workspaceRoot}/package.json' },
+      SETTINGS_JSON_INPUT,
+      PNPM_MAJOR_PROBE,
+    ]);
   });
 
   it('does not treat a json input excluding the settings fields as covering them', async () => {
@@ -525,19 +543,19 @@ describe('add-pnpm-deploy-output-cache-inputs migration', () => {
 
     await update(tree);
 
-    expect(readProjectConfiguration(tree, 'app1').targets.build.inputs).toEqual(
-      [
-        'default',
-        { json: '{workspaceRoot}/package.json', excludeFields: ['pnpm'] },
-        '{workspaceRoot}/pnpm-workspace.yaml',
-        SETTINGS_JSON_INPUT,
-        PNPM_MAJOR_PROBE,
-      ]
-    );
+    expect(
+      readProjectConfiguration(tree, 'app1').targets?.build?.inputs
+    ).toEqual([
+      'default',
+      { json: '{workspaceRoot}/package.json', excludeFields: ['pnpm'] },
+      '{workspaceRoot}/pnpm-workspace.yaml',
+      SETTINGS_JSON_INPUT,
+      PNPM_MAJOR_PROBE,
+    ]);
   });
 
   it('appends to the matching targetDefaults entry, not a later filtered one', async () => {
-    const nxJson = readNxJson(tree);
+    const nxJson = readExistingNxJson(tree);
     nxJson.targetDefaults = {
       '@nx/webpack:webpack': [
         {
@@ -563,7 +581,7 @@ describe('add-pnpm-deploy-output-cache-inputs migration', () => {
 
     await update(tree);
 
-    const entries = readNxJson(tree).targetDefaults[
+    const entries = readNxJson(tree)?.targetDefaults?.[
       '@nx/webpack:webpack'
     ] as any[];
     expect(entries[0].inputs).toEqual([
@@ -592,15 +610,15 @@ describe('add-pnpm-deploy-output-cache-inputs migration', () => {
 
     await update(tree);
 
-    expect(readProjectConfiguration(tree, 'app1').targets.build.inputs).toEqual(
-      [
-        'default',
-        { json: '{workspaceRoot}/package.json', fields: ['dependencies'] },
-        '{workspaceRoot}/pnpm-workspace.yaml',
-        SETTINGS_JSON_INPUT,
-        PNPM_MAJOR_PROBE,
-      ]
-    );
+    expect(
+      readProjectConfiguration(tree, 'app1').targets?.build?.inputs
+    ).toEqual([
+      'default',
+      { json: '{workspaceRoot}/package.json', fields: ['dependencies'] },
+      '{workspaceRoot}/pnpm-workspace.yaml',
+      SETTINGS_JSON_INPUT,
+      PNPM_MAJOR_PROBE,
+    ]);
   });
 
   it('leaves a target alone when a later glob entry replaced its executor entry', async () => {
@@ -620,7 +638,7 @@ describe('add-pnpm-deploy-output-cache-inputs migration', () => {
 
     await update(tree);
 
-    expect(readProjectConfiguration(tree, 'app1').targets.build).toEqual({
+    expect(readProjectConfiguration(tree, 'app1').targets?.build).toEqual({
       inputs: ['{projectRoot}/**/*'],
     });
   });
@@ -642,8 +660,8 @@ describe('add-pnpm-deploy-output-cache-inputs migration', () => {
     await update(tree);
 
     const targets = readProjectConfiguration(tree, 'app1').targets;
-    expect(targets['build*'].inputs).toEqual(['{projectRoot}/**/*']);
-    expect(targets.build.inputs).toEqual(DEPLOY_INPUTS);
+    expect(targets?.['build*']?.inputs).toEqual(['{projectRoot}/**/*']);
+    expect(targets?.build?.inputs).toEqual(DEPLOY_INPUTS);
   });
 
   it('is idempotent', async () => {
@@ -660,9 +678,9 @@ describe('add-pnpm-deploy-output-cache-inputs migration', () => {
     await update(tree);
     await update(tree);
 
-    expect(readProjectConfiguration(tree, 'app1').targets.build.inputs).toEqual(
-      DEPLOY_INPUTS
-    );
+    expect(
+      readProjectConfiguration(tree, 'app1').targets?.build?.inputs
+    ).toEqual(DEPLOY_INPUTS);
   });
 
   describe('inferred webpack/rspack target overlays', () => {
@@ -676,7 +694,7 @@ describe('add-pnpm-deploy-output-cache-inputs migration', () => {
             exclude?: string[];
           }
     ): void {
-      const nxJson = readNxJson(tree);
+      const nxJson = readExistingNxJson(tree);
       nxJson.plugins = [...(nxJson.plugins ?? []), plugin];
       updateNxJson(tree, nxJson);
     }
@@ -694,7 +712,7 @@ describe('add-pnpm-deploy-output-cache-inputs migration', () => {
       await update(tree);
 
       expect(
-        readProjectConfiguration(tree, 'app1').targets.build.inputs
+        readProjectConfiguration(tree, 'app1').targets?.build?.inputs
       ).toEqual(['production', '^production', ...SETTINGS_INPUTS]);
     });
 
@@ -711,7 +729,7 @@ describe('add-pnpm-deploy-output-cache-inputs migration', () => {
       await update(tree);
 
       expect(
-        readProjectConfiguration(tree, 'app1').targets['build*'].inputs
+        readProjectConfiguration(tree, 'app1').targets?.['build*']?.inputs
       ).toEqual(['production', '^production', ...SETTINGS_INPUTS]);
     });
 
@@ -732,11 +750,11 @@ describe('add-pnpm-deploy-output-cache-inputs migration', () => {
       await update(tree);
 
       const targets = readProjectConfiguration(tree, 'app1').targets;
-      expect(targets.build.inputs).toEqual([
+      expect(targets?.build?.inputs).toEqual([
         '{projectRoot}/**/*',
         ...SETTINGS_INPUTS,
       ]);
-      expect(targets['build*']).toBeUndefined();
+      expect(targets?.['build*']).toBeUndefined();
     });
 
     it('appends to the exact entry merging after a glob entry', async () => {
@@ -754,12 +772,12 @@ describe('add-pnpm-deploy-output-cache-inputs migration', () => {
       await update(tree);
 
       const targets = readProjectConfiguration(tree, 'app1').targets;
-      expect(targets.build.inputs).toEqual([
+      expect(targets?.build?.inputs).toEqual([
         'production',
         '^production',
         ...SETTINGS_INPUTS,
       ]);
-      expect(targets['build*'].inputs).toEqual(['{projectRoot}/**/*']);
+      expect(targets?.['build*']?.inputs).toEqual(['{projectRoot}/**/*']);
     });
 
     it('ignores a glob entry a later exact entry overrides', async () => {
@@ -778,8 +796,8 @@ describe('add-pnpm-deploy-output-cache-inputs migration', () => {
       await update(tree);
 
       const targets = readProjectConfiguration(tree, 'app1').targets;
-      expect(targets['build*'].inputs).toEqual(['{projectRoot}/**/*']);
-      expect(targets.build.inputs).toBeUndefined();
+      expect(targets?.['build*']?.inputs).toEqual(['{projectRoot}/**/*']);
+      expect(targets?.build?.inputs).toBeUndefined();
     });
 
     it('leaves an overlay that replaces the run-commands payload alone', async () => {
@@ -808,10 +826,10 @@ describe('add-pnpm-deploy-output-cache-inputs migration', () => {
       await update(tree);
 
       expect(
-        readProjectConfiguration(tree, 'app1').targets.build.inputs
+        readProjectConfiguration(tree, 'app1').targets?.build?.inputs
       ).toEqual(['production', '^production']);
       expect(
-        readProjectConfiguration(tree, 'app2').targets.build.inputs
+        readProjectConfiguration(tree, 'app2').targets?.build?.inputs
       ).toEqual(['production', '^production']);
     });
 
@@ -843,10 +861,10 @@ describe('add-pnpm-deploy-output-cache-inputs migration', () => {
       await update(tree);
 
       expect(
-        readProjectConfiguration(tree, 'app1').targets.build.inputs
+        readProjectConfiguration(tree, 'app1').targets?.build?.inputs
       ).toEqual(['production', '^production', ...SETTINGS_INPUTS]);
       expect(
-        readProjectConfiguration(tree, 'app2').targets.build.inputs
+        readProjectConfiguration(tree, 'app2').targets?.build?.inputs
       ).toEqual(['production', '^production', ...SETTINGS_INPUTS]);
     });
 
@@ -867,7 +885,7 @@ describe('add-pnpm-deploy-output-cache-inputs migration', () => {
       await update(tree);
 
       expect(
-        readProjectConfiguration(tree, 'app1').targets.build.inputs
+        readProjectConfiguration(tree, 'app1').targets?.build?.inputs
       ).toEqual(['production', '^production', ...SETTINGS_INPUTS]);
     });
 
@@ -889,7 +907,7 @@ describe('add-pnpm-deploy-output-cache-inputs migration', () => {
       await update(tree);
 
       expect(
-        readProjectConfiguration(tree, 'app1').targets.build.inputs
+        readProjectConfiguration(tree, 'app1').targets?.build?.inputs
       ).toEqual(['production', '^production', ...SETTINGS_INPUTS]);
     });
 
@@ -909,7 +927,7 @@ describe('add-pnpm-deploy-output-cache-inputs migration', () => {
       await update(tree);
 
       expect(
-        readProjectConfiguration(tree, 'app1').targets.build.inputs
+        readProjectConfiguration(tree, 'app1').targets?.build?.inputs
       ).toEqual(['production', '^production']);
     });
 
@@ -917,7 +935,7 @@ describe('add-pnpm-deploy-output-cache-inputs migration', () => {
       registerPlugin('@nx/webpack/plugin');
       tree.write('apps/app1/webpack.config.js', '');
       addProjectConfiguration(tree, 'app1', { root: 'apps/app1' });
-      const nxJson = readNxJson(tree);
+      const nxJson = readExistingNxJson(tree);
       nxJson.targetDefaults = {
         build: { inputs: ['production', '^production'] },
       };
@@ -925,7 +943,7 @@ describe('add-pnpm-deploy-output-cache-inputs migration', () => {
 
       await update(tree);
 
-      expect(readNxJson(tree).targetDefaults.build.inputs).toEqual([
+      expect(readObjectTargetDefault(tree, 'build')?.inputs).toEqual([
         'production',
         '^production',
         ...SETTINGS_INPUTS,
@@ -947,7 +965,7 @@ describe('add-pnpm-deploy-output-cache-inputs migration', () => {
       ).toBeUndefined();
       // the workspace's seeded defaults supply no inputs, so no layer is
       // narrowed to spell out nx's default
-      expect(readNxJson(tree).targetDefaults).toEqual({
+      expect(readNxJson(tree)?.targetDefaults).toEqual({
         build: { cache: true },
         lint: { cache: true },
       });
@@ -966,7 +984,7 @@ describe('add-pnpm-deploy-output-cache-inputs migration', () => {
       await update(tree);
 
       expect(
-        readProjectConfiguration(tree, 'app1').targets.build.inputs
+        readProjectConfiguration(tree, 'app1').targets?.build?.inputs
       ).toEqual(['...', '{projectRoot}/deploy.json']);
     });
 
@@ -986,7 +1004,7 @@ describe('add-pnpm-deploy-output-cache-inputs migration', () => {
       await update(tree);
 
       expect(
-        readProjectConfiguration(tree, 'app1').targets.build.inputs
+        readProjectConfiguration(tree, 'app1').targets?.build?.inputs
       ).toEqual(['production', '^production']);
     });
 
@@ -1007,12 +1025,12 @@ describe('add-pnpm-deploy-output-cache-inputs migration', () => {
       await update(tree);
 
       const targets = readProjectConfiguration(tree, 'app1').targets;
-      expect(targets.bundle.inputs).toEqual([
+      expect(targets?.bundle?.inputs).toEqual([
         'production',
         '^production',
         ...SETTINGS_INPUTS,
       ]);
-      expect(targets.build.inputs).toEqual(['production', '^production']);
+      expect(targets?.build?.inputs).toEqual(['production', '^production']);
     });
 
     it('skips an overlay that replaces the target identity', async () => {
@@ -1031,7 +1049,7 @@ describe('add-pnpm-deploy-output-cache-inputs migration', () => {
       await update(tree);
 
       expect(
-        readProjectConfiguration(tree, 'app1').targets.build.inputs
+        readProjectConfiguration(tree, 'app1').targets?.build?.inputs
       ).toEqual(['production', '^production']);
     });
 
@@ -1039,7 +1057,7 @@ describe('add-pnpm-deploy-output-cache-inputs migration', () => {
       registerPlugin('@nx/webpack/plugin');
       tree.write('apps/app1/webpack.config.js', '');
       addProjectConfiguration(tree, 'app1', { root: 'apps/app1' });
-      const nxJson = readNxJson(tree);
+      const nxJson = readExistingNxJson(tree);
       nxJson.targetDefaults = {
         'build*': { inputs: ['production', '^production'] },
       };
@@ -1047,7 +1065,7 @@ describe('add-pnpm-deploy-output-cache-inputs migration', () => {
 
       await update(tree);
 
-      expect(readNxJson(tree).targetDefaults['build*'].inputs).toEqual([
+      expect(readObjectTargetDefault(tree, 'build*')?.inputs).toEqual([
         'production',
         '^production',
         ...SETTINGS_INPUTS,
@@ -1058,7 +1076,7 @@ describe('add-pnpm-deploy-output-cache-inputs migration', () => {
       registerPlugin('@nx/webpack/plugin');
       tree.write('apps/app1/webpack.config.js', '');
       addProjectConfiguration(tree, 'app1', { root: 'apps/app1' });
-      const nxJson = readNxJson(tree);
+      const nxJson = readExistingNxJson(tree);
       nxJson.targetDefaults = {
         build: [
           {
@@ -1071,7 +1089,7 @@ describe('add-pnpm-deploy-output-cache-inputs migration', () => {
 
       await update(tree);
 
-      const entries = readNxJson(tree).targetDefaults.build as any[];
+      const entries = readNxJson(tree)?.targetDefaults?.build as any[];
       expect(entries[0].inputs).toEqual([
         'production',
         '^production',
@@ -1089,7 +1107,7 @@ describe('add-pnpm-deploy-output-cache-inputs migration', () => {
         root: 'apps/app1',
         targets: { build: { executor: 'nx:run-commands' } },
       });
-      const nxJson = readNxJson(tree);
+      const nxJson = readExistingNxJson(tree);
       nxJson.targetDefaults = {
         build: [
           {
@@ -1102,10 +1120,10 @@ describe('add-pnpm-deploy-output-cache-inputs migration', () => {
 
       await update(tree);
 
-      const entries = readNxJson(tree).targetDefaults.build as any[];
+      const entries = readNxJson(tree)?.targetDefaults?.build as any[];
       expect(entries[0].inputs).toEqual(['production', '^production']);
       expect(
-        readProjectConfiguration(tree, 'app1').targets.build.inputs
+        readProjectConfiguration(tree, 'app1').targets?.build?.inputs
       ).toBeUndefined();
     });
 
@@ -1116,7 +1134,7 @@ describe('add-pnpm-deploy-output-cache-inputs migration', () => {
         root: 'apps/app1',
         targets: { build: { options: { command: 'webpack-cli build' } } },
       });
-      const nxJson = readNxJson(tree);
+      const nxJson = readExistingNxJson(tree);
       nxJson.targetDefaults = {
         build: [
           {
@@ -1129,7 +1147,7 @@ describe('add-pnpm-deploy-output-cache-inputs migration', () => {
 
       await update(tree);
 
-      const entries = readNxJson(tree).targetDefaults.build as any[];
+      const entries = readNxJson(tree)?.targetDefaults?.build as any[];
       expect(entries[0].inputs).toEqual([
         'production',
         '^production',
@@ -1142,7 +1160,7 @@ describe('add-pnpm-deploy-output-cache-inputs migration', () => {
       tree.write('apps/app1/webpack.config.js', '');
       addProjectConfiguration(tree, 'app1', { root: 'apps/app1' });
       addProjectConfiguration(tree, 'other', { root: 'apps/other' });
-      const nxJson = readNxJson(tree);
+      const nxJson = readExistingNxJson(tree);
       nxJson.targetDefaults = {
         build: [
           {
@@ -1155,7 +1173,7 @@ describe('add-pnpm-deploy-output-cache-inputs migration', () => {
 
       await update(tree);
 
-      const entries = readNxJson(tree).targetDefaults.build as any[];
+      const entries = readNxJson(tree)?.targetDefaults?.build as any[];
       expect(entries[0].inputs).toEqual(['production', '^production']);
     });
 
@@ -1172,7 +1190,7 @@ describe('add-pnpm-deploy-output-cache-inputs migration', () => {
       await update(tree);
 
       expect(
-        readProjectConfiguration(tree, 'app1').targets.build.inputs
+        readProjectConfiguration(tree, 'app1').targets?.build?.inputs
       ).toEqual(['production', '^production', ...SETTINGS_INPUTS]);
     });
   });

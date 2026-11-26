@@ -22,26 +22,32 @@ export default async function (tree: Tree) {
         }
 
         const projectConfiguration = readProjectConfiguration(tree, project);
+        const targetConfiguration = projectConfiguration.targets?.[target];
+        if (!targetConfiguration) {
+          throw new Error(
+            `Cannot find the "${target}" target in "${project}".`
+          );
+        }
         if (configuration) {
-          const config =
-            projectConfiguration.targets[target].configurations[configuration];
+          const { configurations } = targetConfiguration;
+          if (!configurations) {
+            throw new Error(
+              `Cannot find the configurations of the "${target}" target in "${project}".`
+            );
+          }
+          const config = configurations[configuration];
           delete config.tailwindConfig;
           if (!Object.keys(config).length) {
-            delete projectConfiguration.targets[target].configurations[
-              configuration
-            ];
+            delete configurations[configuration];
           }
-          if (
-            !Object.keys(projectConfiguration.targets[target].configurations)
-              .length
-          ) {
-            delete projectConfiguration.targets[target].configurations;
+          if (!Object.keys(configurations).length) {
+            delete targetConfiguration.configurations;
           }
         } else {
-          const config = projectConfiguration.targets[target].options;
+          const config = targetConfiguration.options;
           delete config.tailwindConfig;
           if (!Object.keys(config).length) {
-            delete projectConfiguration.targets[target].options;
+            delete targetConfiguration.options;
           }
         }
 
@@ -52,9 +58,10 @@ export default async function (tree: Tree) {
 
   // update options from nx.json target defaults
   const nxJson = readNxJson(tree);
-  if (!nxJson.targetDefaults) {
+  if (!nxJson?.targetDefaults) {
     return;
   }
+  const { targetDefaults } = nxJson;
 
   const cleanEntry = (
     targetConfig: Record<string, any>
@@ -88,7 +95,7 @@ export default async function (tree: Tree) {
   };
 
   for (const [targetOrExecutor, targetConfig] of Object.entries(
-    nxJson.targetDefaults
+    targetDefaults
   )) {
     if (Array.isArray(targetConfig)) {
       // This migration predates the filtered array value form; values are plain objects here.
@@ -97,17 +104,17 @@ export default async function (tree: Tree) {
 
     if (
       !executors.includes(targetOrExecutor) &&
-      !executors.includes(targetConfig.executor)
+      !executors.includes(targetConfig.executor ?? '')
     ) {
       continue;
     }
 
     const { empty } = cleanEntry(targetConfig as any);
     if (empty) {
-      delete nxJson.targetDefaults[targetOrExecutor];
+      delete targetDefaults[targetOrExecutor];
     }
 
-    if (!Object.keys(nxJson.targetDefaults).length) {
+    if (!Object.keys(targetDefaults).length) {
       delete nxJson.targetDefaults;
     }
   }

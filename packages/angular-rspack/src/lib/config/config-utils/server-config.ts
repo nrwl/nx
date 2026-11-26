@@ -48,7 +48,10 @@ export async function getServerConfig(
   ssrDevServer?: AngularSsrDevServer
 ): Promise<Configuration> {
   const isDevServer = isServeMode();
-  const { root } = normalizedOptions;
+  const { root, server } = normalizedOptions;
+  if (!server) {
+    throw new Error('A server build requires the "server" option.');
+  }
 
   const angularSSRInstalled = isPackageInstalled(root, '@angular/ssr');
   if (
@@ -72,7 +75,7 @@ export async function getServerConfig(
   const engineWiring: EngineWiringOptions | undefined =
     angularSSRInstalled && !i18n.shouldInline
       ? {
-          mainServerEntry: resolve(root, normalizedOptions.server),
+          mainServerEntry: resolve(root, server),
           baseHref: normalizedOptions.baseHref ?? '/',
           locale: i18n.hasDefinedSourceLocale ? i18n.sourceLocale : undefined,
           inlineCriticalCss:

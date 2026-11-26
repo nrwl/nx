@@ -130,7 +130,7 @@ export class IsolatedPlugin implements LoadedNxPlugin {
   private readonly pluginPath: string;
   private readonly shouldRegisterTSTranspiler: boolean;
 
-  private lifecycle: PluginLifecycleManager;
+  private lifecycle: PluginLifecycleManager | undefined;
   private exitHandler:
     | ((code: number | null, signal: NodeJS.Signals | null) => void)
     | null = null;
@@ -354,6 +354,9 @@ export class IsolatedPlugin implements LoadedNxPlugin {
         },
       });
 
+      if (!this.socket) {
+        throw new Error('The plugin worker socket is not connected');
+      }
       sendMessageOverSocket(this.socket, {
         type: 'load',
         payload: {
@@ -382,14 +385,15 @@ export class IsolatedPlugin implements LoadedNxPlugin {
       loadResult.hasPostTasksExecution && 'postTasksExecution'
     );
 
-    this.lifecycle = new PluginLifecycleManager(registeredHooks);
+    const lifecycle = new PluginLifecycleManager(registeredHooks);
+    this.lifecycle = lifecycle;
 
     const shutdown = (hookName: Hook) => this.shutdownIfInactive(hookName);
     const wrap = <TArgs extends unknown[], TReturn>(
       hook: Hook,
       hookFn: (...args: TArgs) => Promise<TReturn>
     ) =>
-      this.lifecycle.wrapHook(
+      lifecycle.wrapHook(
         hook,
         async (...args: TArgs) => {
           await this.ensureAlive();
@@ -478,7 +482,7 @@ export class IsolatedPlugin implements LoadedNxPlugin {
     }
 
     // Shut down immediately if no graph phase hooks
-    if (this.lifecycle.shouldShutdownImmediately()) {
+    if (lifecycle.shouldShutdownImmediately()) {
       this.shutdown();
     }
   }
@@ -528,6 +532,9 @@ export class IsolatedPlugin implements LoadedNxPlugin {
         },
       });
 
+      if (!this.socket) {
+        throw new Error('The plugin worker socket is not connected');
+      }
       sendMessageOverSocket(this.socket, {
         type,
         payload,
@@ -620,8 +627,10 @@ export class IsolatedPlugin implements LoadedNxPlugin {
           const { getProcessMetricsService } = await require(
             require.resolve('../../../tasks-runner/process-metrics-service')
           );
+          const pid = this.worker?.pid;
+          if (!pid) return;
           getProcessMetricsService().registerMainCliSubprocess(
-            this.worker.pid,
+            pid,
             `${this.name}${this.index !== undefined ? ` (${this.index})` : ''}`
           );
         }
@@ -633,6 +642,10 @@ export class IsolatedPlugin implements LoadedNxPlugin {
 }
 
 // --- Worker Spawning Utilities ---
+
+declare global {
+  var nxPluginWorkerCount: number;
+}
 
 global.nxPluginWorkerCount ??= 0;
 
@@ -828,7 +841,15 @@ export function describeWorkerExit(
   return '(no exit code or signal reported)';
 }
 
-function markWorkerStartupFailure(error: Error, refused = false): Error {
+type WorkerStartupFailureMarks = {
+  [PLUGIN_WORKER_STARTUP_FAILURE]?: boolean;
+  [PLUGIN_WORKER_SOCKET_REFUSED]?: boolean;
+};
+
+function markWorkerStartupFailure(
+  error: Error & WorkerStartupFailureMarks,
+  refused = false
+): Error {
   error[PLUGIN_WORKER_STARTUP_FAILURE] = true;
   if (refused) {
     error[PLUGIN_WORKER_SOCKET_REFUSED] = true;
@@ -837,11 +858,21 @@ function markWorkerStartupFailure(error: Error, refused = false): Error {
 }
 
 export function isPluginWorkerStartupFailure(error: unknown): boolean {
-  return Boolean(error?.[PLUGIN_WORKER_STARTUP_FAILURE]);
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    PLUGIN_WORKER_STARTUP_FAILURE in error &&
+    Boolean(error[PLUGIN_WORKER_STARTUP_FAILURE])
+  );
 }
 
 export function isPluginWorkerSocketRefusal(error: unknown): boolean {
-  return Boolean(error?.[PLUGIN_WORKER_SOCKET_REFUSED]);
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    PLUGIN_WORKER_SOCKET_REFUSED in error &&
+    Boolean(error[PLUGIN_WORKER_SOCKET_REFUSED])
+  );
 }
 
 function getTypeName(u: unknown): string {

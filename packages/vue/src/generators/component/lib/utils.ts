@@ -31,6 +31,9 @@ export async function normalizeOptions(
   let { className } = names(fileName);
   const componentFileName = fileName;
   const project = getProjects(host).get(projectName);
+  if (!project) {
+    throw new Error(`Cannot find project "${projectName}"`);
+  }
   const { root, sourceRoot: projectSourceRoot, projectType } = project;
 
   if (
@@ -62,6 +65,9 @@ export function addExportsToBarrel(host: Tree, options: NormalizedSchema) {
   }
   const workspace = getProjects(host);
   const proj = workspace.get(options.projectName);
+  if (!proj) {
+    throw new Error(`Cannot find project "${options.projectName}"`);
+  }
   const isApp =
     getProjectType(host, proj.root, proj.projectType) === 'application';
 

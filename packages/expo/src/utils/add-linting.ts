@@ -52,7 +52,7 @@ export async function addLinting(host: Tree, options: NormalizedSchema) {
       options.projectRoot,
       (override) => Boolean(override.rules?.['@nx/dependency-checks']),
       (override) => {
-        const rule = override.rules['@nx/dependency-checks'] as
+        const rule = override.rules?.['@nx/dependency-checks'] as
           | string
           | [string, { ignoredDependencies?: string[] }];
         if (Array.isArray(rule) && rule.length > 1) {

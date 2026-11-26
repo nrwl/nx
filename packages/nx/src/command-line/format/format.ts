@@ -152,7 +152,7 @@ async function getPatterns(
   } catch (err) {
     output.error({
       title:
-        err?.message ||
+        (err instanceof Error && err.message) ||
         'Something went wrong when resolving the list of files for the formatter',
       bodyLines: [`Defaulting to all files pattern: "${allFilesPattern}"`],
     });
@@ -178,14 +178,14 @@ function addRootConfigFiles(chunkList: string[][], nxArgs: NxArgs): void {
   if (nxArgs.all) {
     return;
   }
-  const chunk = [];
+  const chunk: string[] = [];
   const addToChunkIfNeeded = (file: string) => {
     if (chunkList.every((c) => !c.includes(file))) {
       chunk.push(file);
     }
   };
   ['nx.json', getRootTsConfigFileName()]
-    .filter(Boolean)
+    .filter((file): file is string => !!file)
     .forEach(addToChunkIfNeeded);
 
   if (chunk.length > 0) {
@@ -248,6 +248,9 @@ async function check(
 function sortTsConfig() {
   try {
     const tsconfigPath = getRootTsConfigPath();
+    if (!tsconfigPath) {
+      return;
+    }
     const tsconfig = readJsonFile(tsconfigPath);
     const sortedPaths = sortObjectByKeys(tsconfig.compilerOptions.paths);
     tsconfig.compilerOptions.paths = sortedPaths;

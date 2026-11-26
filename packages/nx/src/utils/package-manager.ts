@@ -32,7 +32,7 @@ import {
 } from 'yaml';
 import { readNxJson } from '../config/configuration';
 import { readPackageJson } from '../project-graph/file-utils';
-import { getCatalogManager, resolveCatalogReferenceIfNeeded } from './catalog';
+import { resolveCatalogReferenceIfNeeded } from './catalog';
 import {
   fileExists,
   readFileIfExisting,
@@ -488,7 +488,7 @@ export function getPackageManagerCommand(
         rm: 'bun rm',
         exec: 'bun',
         dlx: 'bunx',
-        run: (script: string, args: string) => `bun run ${script} -- ${args}`,
+        run: (script: string, args?: string) => `bun run ${script} -- ${args}`,
         list: 'bun pm ls',
         why: 'bun why',
         // Unlike npm, bun publish does not support a custom registryConfigKey option
@@ -511,7 +511,7 @@ export function getPackageManagerVersion(
   packageManager: PackageManager = detectPackageManager(),
   cwd = process.cwd()
 ): string {
-  let version: string;
+  let version: string | null | undefined;
   if (existsSync(join(cwd, 'package.json'))) {
     const packageManagerEntry = readJsonFile<PackageJson>(
       join(cwd, 'package.json')
@@ -836,6 +836,9 @@ const TMPDIR_INSTALL_ROOT = 'nx-installs';
 function createInPrivateInstallRoot(): string {
   let homeRefusal = homeInstallRootRefusal();
   if (!homeRefusal) {
+    if (!NX_HOME_TMP_DIR) {
+      throw new Error('Expected a home temp directory after it passed checks.');
+    }
     const root = join(NX_HOME_TMP_DIR, 'tmp');
     try {
       return createInstallDirectory(root);
@@ -893,9 +896,10 @@ function privateTreeRefusal(dir: string): string | undefined {
       ? undefined
       : `${dir} is not a real directory`;
   }
+  const uid = process.getuid();
   for (const leaf of [resolve(dir), canonicalDir(dir)]) {
     for (let p = leaf; ; p = dirname(p)) {
-      const refusal = privatePathRefusal(p, p === leaf);
+      const refusal = privatePathRefusal(p, p === leaf, uid);
       if (refusal) {
         return refusal;
       }
@@ -907,14 +911,17 @@ function privateTreeRefusal(dir: string): string | undefined {
   return undefined;
 }
 
-function privatePathRefusal(path: string, isLeaf: boolean): string | undefined {
+function privatePathRefusal(
+  path: string,
+  isLeaf: boolean,
+  uid: number
+): string | undefined {
   let stats: ReturnType<typeof lstatSync>;
   try {
     stats = lstatSync(path);
   } catch (e: any) {
     return `${path} could not be inspected${e?.code ? ` (${e.code})` : ''}`;
   }
-  const uid = process.getuid();
   const trustedOwner = stats.uid === uid || (!isLeaf && stats.uid === 0);
   if (stats.isSymbolicLink() && !isLeaf) {
     return trustedOwner ? undefined : `${path} is owned by uid ${stats.uid}`;
@@ -1030,13 +1037,15 @@ export async function resolvePackageVersionUsingRegistry(
      *
      * <package>@<version> '<version>'
      */
-    const finalResolvedVersion = lines
+    const latestLine = lines
       .map((line) => line.split(' ')[1])
       .sort()
-      .pop()
-      .replace(/'/g, '');
+      .pop();
+    if (latestLine === undefined) {
+      throw new Error(`Unable to resolve version ${packageName}@${version}.`);
+    }
 
-    return assertResolvedVersion(packageName, finalResolvedVersion);
+    return assertResolvedVersion(packageName, latestLine.replace(/'/g, ''));
   } catch (e) {
     if (e instanceof InvalidResolvedVersionError) {
       throw e;
@@ -1075,20 +1084,10 @@ export async function resolvePackageVersionUsingInstallation(
   const { dir, cleanup } = createTempNpmDirectory();
 
   try {
-    let resolvedVersion = version;
-    const manager = getCatalogManager(workspaceRoot);
-    if (manager.isCatalogReference(version)) {
-      resolvedVersion = manager.resolveCatalogReference(
-        workspaceRoot,
-        packageName,
-        version
-      );
-      if (!resolvedVersion) {
-        throw new Error(
-          `Unable to resolve catalog reference ${packageName}@${version}.`
-        );
-      }
-    }
+    const resolvedVersion = resolveCatalogReferenceIfNeeded(
+      packageName,
+      version
+    );
 
     const pmc = getPackageManagerCommand();
     const addCommand = [
@@ -1230,7 +1229,7 @@ export function getWorkspaceRegistryUrlForDisplay(pkg: string): string | null {
 function resolveRegistrySpawnTarget(
   workspacePm: PackageManager,
   workspacePmVersion: string | null,
-  buildEnv: (extra?: NodeJS.ProcessEnv) => NodeJS.ProcessEnv,
+  buildEnv: (extra: NpmConfigEnv) => NodeJS.ProcessEnv,
   options?: { forceNpm?: boolean }
 ): { pm: PackageManager; env: NodeJS.ProcessEnv; usesNativePnpm: boolean } {
   let pm = workspacePm;
@@ -1374,19 +1373,21 @@ function getPackageManagerVersionSafe(
   root: string
 ): string | null {
   const key = `${packageManager}:${root}`;
-  if (!packageManagerVersionCache.has(key)) {
-    let version: string | null = null;
-    try {
-      version = getPackageManagerVersion(packageManager, root);
-    } catch (e) {
-      logger.verbose(
-        `Failed to determine the ${packageManager} version in "${root}".`,
-        e
-      );
-    }
-    packageManagerVersionCache.set(key, version);
+  const cached = packageManagerVersionCache.get(key);
+  if (cached !== undefined) {
+    return cached;
   }
-  return packageManagerVersionCache.get(key);
+  let version: string | null = null;
+  try {
+    version = getPackageManagerVersion(packageManager, root);
+  } catch (e) {
+    logger.verbose(
+      `Failed to determine the ${packageManager} version in "${root}".`,
+      e
+    );
+  }
+  packageManagerVersionCache.set(key, version);
+  return version;
 }
 
 // Test-only: production never re-resolves a version mid-run.
@@ -1402,7 +1403,7 @@ export function getPackageWorkspaces(
   packageManager: PackageManager = detectPackageManager(),
   root: string = workspaceRoot
 ): string[] {
-  let workspaces: string[];
+  let workspaces: string[] | undefined;
 
   if (
     packageManager === 'npm' ||
@@ -1410,7 +1411,9 @@ export function getPackageWorkspaces(
     packageManager === 'bun'
   ) {
     const packageJson = readPackageJson(root);
-    workspaces = packageJson.workspaces;
+    workspaces = Array.isArray(packageJson.workspaces)
+      ? packageJson.workspaces
+      : packageJson.workspaces?.packages;
   } else if (packageManager === 'pnpm') {
     const pnpmWorkspacePath = join(root, 'pnpm-workspace.yaml');
     if (existsSync(pnpmWorkspacePath)) {

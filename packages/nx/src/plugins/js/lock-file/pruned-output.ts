@@ -295,8 +295,9 @@ const pnpmMajorByWorkspaceRoot = new Map<string, number | null>();
  * it on every rebuild.
  */
 function getPnpmMajor(workspaceRootPath: string): number | null {
-  if (pnpmMajorByWorkspaceRoot.has(workspaceRootPath)) {
-    return pnpmMajorByWorkspaceRoot.get(workspaceRootPath);
+  const cachedMajor = pnpmMajorByWorkspaceRoot.get(workspaceRootPath);
+  if (cachedMajor !== undefined) {
+    return cachedMajor;
   }
   let major: number | null;
   try {
@@ -1684,11 +1685,26 @@ export function resolveWorkspaceModuleDependency(
  * lockfile snapshot refs) relocates through this one function so the layers
  * cannot disagree.
  */
+type PrunedLocalPathRelocation = {
+  spec: string;
+  reason?: 'outside-workspace' | 'workspace-root';
+};
+
+export function relocatePrunedLocalPathSpec(
+  spec: `file:${string}` | `link:${string}`,
+  sourceDir: string,
+  destDir: string
+): PrunedLocalPathRelocation;
 export function relocatePrunedLocalPathSpec(
   spec: string,
   sourceDir: string,
   destDir: string
-): { spec: string; reason?: 'outside-workspace' | 'workspace-root' } | null {
+): PrunedLocalPathRelocation | null;
+export function relocatePrunedLocalPathSpec(
+  spec: string,
+  sourceDir: string,
+  destDir: string
+): PrunedLocalPathRelocation | null {
   const protocol = spec.startsWith('link:')
     ? 'link:'
     : spec.startsWith('file:')

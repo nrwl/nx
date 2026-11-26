@@ -136,14 +136,15 @@ export async function addDeployOutputCacheInputsToBuildTargets(
         selectedKey,
         targetDefaults
       );
-      const defaults = entries.length
-        ? readTargetDefaultsForTarget(
-            targetName,
-            { [selectedKey]: entries },
-            ref.matcherExecutor,
-            { projectName, projectNode }
-          )
-        : null;
+      const defaults =
+        entries.length && selectedKey !== null
+          ? readTargetDefaultsForTarget(
+              targetName,
+              { [selectedKey]: entries },
+              ref.matcherExecutor,
+              { projectName, projectNode }
+            )
+          : null;
       // The effective view, not the target's own: the gating option may be
       // supplied by a matching defaults entry or set only in a configuration.
       const effective = mergeTargetConfigurations(target, defaults ?? {});
@@ -190,9 +191,12 @@ export async function addDeployOutputCacheInputsToBuildTargets(
   }
 
   for (const projectName of changedProjects) {
-    updateProjectConfiguration(tree, projectName, projects.get(projectName));
+    const project = projects.get(projectName);
+    if (project) {
+      updateProjectConfiguration(tree, projectName, project);
+    }
   }
-  if (defaultsChanged) {
+  if (defaultsChanged && nxJson) {
     updateNxJson(tree, nxJson);
   }
 }
@@ -218,18 +222,19 @@ export function addDeployOutputCacheInputs(
     ? selectDefaultsKey(ref, targetDefaults, executor)
     : null;
   const entries = compatibleDefaultsEntries(ref, selectedKey, targetDefaults);
-  const defaults = entries.length
-    ? readTargetDefaultsForTarget(
-        ref.targetName,
-        { [selectedKey]: entries },
-        ref.matcherExecutor,
-        {
-          projectName: ref.projectName,
-          projectNode: ref.projectNode,
-          sourcePlugin: ref.sourcePlugin,
-        }
-      )
-    : null;
+  const defaults =
+    entries.length && selectedKey !== null
+      ? readTargetDefaultsForTarget(
+          ref.targetName,
+          { [selectedKey]: entries },
+          ref.matcherExecutor,
+          {
+            projectName: ref.projectName,
+            projectNode: ref.projectNode,
+            sourcePlugin: ref.sourcePlugin,
+          }
+        )
+      : null;
   const effective = mergeTargetConfigurations(ref.target, defaults ?? {});
   const missing = missingSettingsInputs(effective.inputs, settingsInputs);
   if (missing.length === 0) {
@@ -270,18 +275,19 @@ function addDeployOutputCacheInputsToInferredTargetOverlay(
     ? selectDefaultsKey(ref, targetDefaults, ref.matcherExecutor)
     : null;
   const entries = compatibleDefaultsEntries(ref, selectedKey, targetDefaults);
-  const defaults = entries.length
-    ? readTargetDefaultsForTarget(
-        ref.targetName,
-        { [selectedKey]: entries },
-        ref.matcherExecutor,
-        {
-          projectName: ref.projectName,
-          projectNode: ref.projectNode,
-          sourcePlugin: ref.sourcePlugin,
-        }
-      )
-    : null;
+  const defaults =
+    entries.length && selectedKey !== null
+      ? readTargetDefaultsForTarget(
+          ref.targetName,
+          { [selectedKey]: entries },
+          ref.matcherExecutor,
+          {
+            projectName: ref.projectName,
+            projectNode: ref.projectNode,
+            sourcePlugin: ref.sourcePlugin,
+          }
+        )
+      : null;
   const inferredLayer: TargetConfiguration = {
     inputs: [...settingsInputs],
   };
@@ -448,6 +454,9 @@ async function inferredDeployTargetOverlayRefs(
         continue;
       }
       const project = projects.get(projectName);
+      if (!project) {
+        continue;
+      }
       const target = inferredTargetOverlayEntry(project.targets, targetName);
       // An entry that changes what the target runs is not an overlay; the
       // executor loop covers the deploy executors among those.

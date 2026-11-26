@@ -12,7 +12,7 @@ export async function ignoreViteTempFiles(
 
 export function addViteTempFilesToGitIgnore(tree: Tree): void {
   let gitIgnoreContents = tree.exists('.gitignore')
-    ? tree.read('.gitignore', 'utf-8')
+    ? (tree.read('.gitignore', 'utf-8') ?? '')
     : '';
 
   if (!/^vite\.config\.\*\.timestamp\*$/m.test(gitIgnoreContents)) {

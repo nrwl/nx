@@ -106,7 +106,8 @@ async function postTargetTransformer(
 
     if (
       'defaultConfiguration' in target &&
-      !target.configurations?.[target.defaultConfiguration]
+      (target.defaultConfiguration === undefined ||
+        !target.configurations?.[target.defaultConfiguration])
     ) {
       delete target.defaultConfiguration;
     }
@@ -218,7 +219,9 @@ async function updateOptions(
   } else {
     const jestMajorVersion = getInstalledJestMajorVersion(tree);
     testPathPatternsOptionName =
-      jestMajorVersion >= 30 ? 'testPathPatterns' : 'testPathPattern';
+      jestMajorVersion !== null && jestMajorVersion >= 30
+        ? 'testPathPatterns'
+        : 'testPathPattern';
   }
 
   if (testPathPatterns.length > 1) {

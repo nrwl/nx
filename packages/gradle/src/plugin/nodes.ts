@@ -2,6 +2,7 @@ import { calculateHashesForCreateNodes } from '@nx/devkit/internal';
 import {
   CreateNodes,
   CreateNodesContext,
+  CreateNodesResult,
   ProjectConfiguration,
   workspaceRoot,
   ProjectGraphExternalNode,
@@ -116,7 +117,7 @@ export const createNodes: CreateNodes<GradlePluginOptions> = [
     const report = getCurrentProjectGraphReport();
     const { nodes, externalNodes = {}, buildFileByProjectRoot = {} } = report;
 
-    const results = [];
+    const results: Array<[string, CreateNodesResult]> = [];
 
     // Roots outside the workspace stay absolute in the report and cannot become Nx projects.
     const projectRoots = Object.keys(nodes)
@@ -185,7 +186,7 @@ export const makeCreateNodesForGradleConfigFile =
     hashes?: string[]
   ) =>
   async (
-    gradleFilePath,
+    gradleFilePath: string,
     options: GradlePluginOptions | undefined,
     context: CreateNodesContext,
     idx?: number

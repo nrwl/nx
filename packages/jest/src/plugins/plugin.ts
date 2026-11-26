@@ -110,7 +110,7 @@ export const createNodes: CreateNodes<JestPluginOptions> = [
       context.workspaceRoot
     );
 
-    options = normalizeOptions(options);
+    const normalizedOptions = normalizeOptions(options);
 
     const packageManager = detectPackageManager(context.workspaceRoot);
     const pmc = getPackageManagerCommand(packageManager);
@@ -194,7 +194,7 @@ export const createNodes: CreateNodes<JestPluginOptions> = [
 
     const hashes = await calculateHashesForCreateNodes(
       projectRoots,
-      options,
+      normalizedOptions,
       context,
       loadedConfigs.map(({ externalFiles }) => [
         lockFilePattern,
@@ -204,7 +204,7 @@ export const createNodes: CreateNodes<JestPluginOptions> = [
 
     try {
       return await createNodesFromFiles(
-        async (configFilePath, options, context, idx) => {
+        async (configFilePath, _options, context, idx) => {
           const projectRoot = projectRoots[idx];
           const hash = hashes[idx];
           const loadedConfig = loadedConfigs[idx];
@@ -213,23 +213,22 @@ export const createNodes: CreateNodes<JestPluginOptions> = [
           }
           const { rawConfig, needsDtsInputs } = loadedConfig;
 
-          if (!targetsCache.has(hash)) {
-            targetsCache.set(
-              hash,
-              await buildJestTargets(
-                rawConfig,
-                needsDtsInputs,
-                configFilePath,
-                projectRoot,
-                options,
-                context,
-                presetCache,
-                pmc
-              )
+          let jestTargets = targetsCache.get(hash);
+          if (!jestTargets) {
+            jestTargets = await buildJestTargets(
+              rawConfig,
+              needsDtsInputs,
+              configFilePath,
+              projectRoot,
+              normalizedOptions,
+              context,
+              presetCache,
+              pmc
             );
+            targetsCache.set(hash, jestTargets);
           }
 
-          const { targets, metadata } = targetsCache.get(hash);
+          const { targets, metadata } = jestTargets;
 
           return {
             projects: {
@@ -242,7 +241,7 @@ export const createNodes: CreateNodes<JestPluginOptions> = [
           };
         },
         validConfigFiles,
-        options,
+        normalizedOptions,
         context
       );
     } finally {
@@ -311,7 +310,7 @@ async function buildJestTargets(
   needsDtsInputs: boolean,
   configFilePath: string,
   projectRoot: string,
-  options: JestPluginOptions,
+  options: NormalizedJestPluginOptions,
   context: CreateNodesContext,
   presetCache: Record<string, unknown>,
   pmc: ReturnType<typeof getPackageManagerCommand>
@@ -396,7 +395,7 @@ async function buildJestTargets(
     target.outputs = outputs;
     cache = target.cache = cacheable;
 
-    if (options?.ciTargetName) {
+    if (options?.ciTargetName && groupName !== null) {
       const { specs, testMatch } = await getTestPaths(
         projectRoot,
         rawConfig,
@@ -404,7 +403,7 @@ async function buildJestTargets(
         context,
         presetCache
       );
-      const targetGroup = [];
+      const targetGroup: string[] = [];
       const dependsOn: TargetConfiguration['dependsOn'] = [];
       metadata = {
         targetGroups: {
@@ -506,7 +505,7 @@ async function buildJestTargets(
       config = await readConfig(
         {
           _: [],
-          $0: undefined,
+          $0: '',
         },
         // Jest resolves a relative rootDir only when it reads the file itself.
         rawConfig.rootDir ? { ...rawConfig, rootDir } : rawConfig,
@@ -527,7 +526,7 @@ async function buildJestTargets(
     target.outputs = outputs;
     cache = target.cache = cacheable;
 
-    if (options?.ciTargetName) {
+    if (options?.ciTargetName && groupName !== null) {
       // nx-ignore-next-line
       const { default: Runtime } = requireJestUtil<
         typeof import('jest-runtime')
@@ -556,7 +555,7 @@ async function buildJestTargets(
       const testPaths = new Set(specs.tests.map(({ path }) => path).sort());
 
       if (testPaths.size > 0) {
-        const targetGroup = [];
+        const targetGroup: string[] = [];
         metadata = {
           targetGroups: {
             [groupName]: targetGroup,
@@ -649,7 +648,7 @@ async function buildJestTargets(
 }
 
 async function getInputs(
-  namedInputs: NxJsonConfiguration['namedInputs'],
+  namedInputs: NonNullable<NxJsonConfiguration['namedInputs']>,
   rawConfig: any,
   rootDir: string,
   projectRoot: string,
@@ -759,7 +758,7 @@ function resolvePresetInputWithoutJestResolver(
   rootDir: string,
   projectRoot: string,
   workspaceRoot: string
-): TargetConfiguration['inputs'][number] | null {
+): NonNullable<TargetConfiguration['inputs']>[number] | null {
   if (!presetValue) return null;
 
   const presetPath = replaceRootDirInPath(rootDir, presetValue);
@@ -787,7 +786,7 @@ function resolvePresetInputWithJestResolver(
   jestResolve: typeof import('jest-resolve').default,
   moduleDirectories?: string[],
   modulePaths?: string[]
-): TargetConfiguration['inputs'][number] | null {
+): NonNullable<TargetConfiguration['inputs']>[number] | null {
   if (!presetValue) return null;
 
   let presetPath = replaceRootDirInPath(rootDir, presetValue);
@@ -905,8 +904,9 @@ function createJestResolveFilePathResolver(
   const absoluteProjectRoot = resolve(workspaceRoot, projectRoot);
   const cache = new Map<string, FilePathInput>();
   return (filePath: string): FilePathInput => {
-    if (cache.has(filePath)) {
-      return cache.get(filePath);
+    const cached = cache.get(filePath);
+    if (cached !== undefined) {
+      return cached;
     }
 
     const resolvedPath = replaceRootDirInPath(rootDir, filePath);
@@ -974,10 +974,13 @@ function isPathOutside(relativePath: string): boolean {
   );
 }
 
-function normalizeOptions(options: JestPluginOptions): JestPluginOptions {
+type NormalizedJestPluginOptions = JestPluginOptions & { targetName: string };
+
+function normalizeOptions(
+  options: JestPluginOptions | undefined
+): NormalizedJestPluginOptions {
   options ??= {};
-  options.targetName ??= 'test';
-  return options;
+  return Object.assign(options, { targetName: options.targetName ?? 'test' });
 }
 
 let resolvedJestPaths: Record<string, string>;

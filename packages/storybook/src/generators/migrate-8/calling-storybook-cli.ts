@@ -6,7 +6,7 @@ import {
 import { execSync } from 'child_process';
 import { Schema } from './schema';
 
-export function callUpgrade(schema: Schema): 1 | Buffer {
+export function callUpgrade(schema: Schema): 1 | undefined {
   const packageManager = detectPackageManager();
   const pm = getPackageManagerCommand(packageManager);
   try {
@@ -61,7 +61,10 @@ export function callAutomigrate(
     };
   },
   schema: Schema
-): { successfulProjects: {}; failedProjects: {} } {
+): {
+  successfulProjects: Record<string, string>;
+  failedProjects: Record<string, string>;
+} {
   output.log({
     title: `⚙️ Calling sb automigrate`,
     bodyLines: [
@@ -71,7 +74,10 @@ export function callAutomigrate(
     color: 'green',
   });
 
-  const resultOfMigration = {
+  const resultOfMigration: {
+    successfulProjects: Record<string, string>;
+    failedProjects: Record<string, string>;
+  } = {
     successfulProjects: {},
     failedProjects: {},
   };

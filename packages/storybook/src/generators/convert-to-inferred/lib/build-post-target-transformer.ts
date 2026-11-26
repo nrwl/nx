@@ -8,8 +8,8 @@ import { ast, query } from '@phenomnomnominal/tsquery';
 import {
   addConfigValuesToConfigFile,
   ensureViteConfigPathIsRelative,
-  getConfigFilePath,
   getStorybookPropMappings,
+  requireConfigFilePath,
 } from './utils';
 
 type StorybookConfigValues = { docsMode?: boolean; staticDir?: string };
@@ -65,7 +65,7 @@ export function buildPostTargetTransformer(migrationLogs: AggregatedLog) {
           configuration.configDir !==
             toProjectRelativePath(defaultConfigDir, projectDetails.root)
         ) {
-          const configFilePath = getConfigFilePath(
+          const configFilePath = requireConfigFilePath(
             tree,
             joinPathFragments(projectDetails.root, configuration.configDir)
           );
@@ -97,7 +97,10 @@ export function buildPostTargetTransformer(migrationLogs: AggregatedLog) {
 
       if (
         'defaultConfiguration' in target &&
-        !target.configurations[target.defaultConfiguration]
+        !(
+          target.defaultConfiguration &&
+          target.configurations?.[target.defaultConfiguration]
+        )
       ) {
         delete target.defaultConfiguration;
       }
@@ -117,12 +120,12 @@ export function buildPostTargetTransformer(migrationLogs: AggregatedLog) {
 
     addConfigValuesToConfigFile(
       tree,
-      getConfigFilePath(tree, defaultConfigDir),
+      requireConfigFilePath(tree, defaultConfigDir),
       configValues
     );
     ensureViteConfigPathIsRelative(
       tree,
-      getConfigFilePath(tree, defaultConfigDir),
+      requireConfigFilePath(tree, defaultConfigDir),
       projectDetails.projectName,
       projectDetails.root,
       '@nx/storybook:build',
@@ -189,8 +192,8 @@ function moveDocsModeToConfigFile(
   projectName: string,
   migrationLogs: AggregatedLog
 ) {
-  const configFilePath = getConfigFilePath(tree, configDir);
-  const configFileContents = tree.read(configFilePath, 'utf-8');
+  const configFilePath = requireConfigFilePath(tree, configDir);
+  const configFileContents = tree.read(configFilePath, 'utf-8') ?? '';
 
   const sourceFile = ast(configFileContents);
   const CONFIG_OBJECT_SELECTOR =
@@ -245,8 +248,8 @@ function moveStaticDirToConfigFile(
   projectName: string,
   migrationLogs: AggregatedLog
 ) {
-  const configFilePath = getConfigFilePath(tree, configDir);
-  const configFileContents = tree.read(configFilePath, 'utf-8');
+  const configFilePath = requireConfigFilePath(tree, configDir);
+  const configFileContents = tree.read(configFilePath, 'utf-8') ?? '';
 
   const sourceFile = ast(configFileContents);
   const CONFIG_OBJECT_SELECTOR =

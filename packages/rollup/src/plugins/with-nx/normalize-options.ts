@@ -99,7 +99,9 @@ function normalizeRelativePaths(
 ): void {
   for (const [fieldName, fieldValue] of Object.entries(options)) {
     if (isRelativePath(fieldValue)) {
-      options[fieldName] = normalizePath(join(projectRoot, fieldValue));
+      Object.assign(options, {
+        [fieldName]: normalizePath(join(projectRoot, fieldValue)),
+      });
     } else if (Array.isArray(fieldValue)) {
       for (let i = 0; i < fieldValue.length; i++) {
         if (isRelativePath(fieldValue[i])) {
@@ -110,6 +112,6 @@ function normalizeRelativePaths(
   }
 }
 
-function isRelativePath(val: unknown): boolean {
+function isRelativePath(val: unknown): val is string {
   return typeof val === 'string' && val.startsWith('.');
 }

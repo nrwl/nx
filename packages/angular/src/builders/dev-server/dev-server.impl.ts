@@ -47,7 +47,15 @@ export function executeDevServerBuilder(
 ) {
   validateOptions(rawOptions);
 
-  process.env.NX_TSCONFIG_PATH = getRootTsConfigPath();
+  const { target } = context;
+  if (!target) {
+    throw new Error('The "@nx/angular:dev-server" builder requires a target.');
+  }
+
+  const rootTsConfigPath = getRootTsConfigPath();
+  if (rootTsConfigPath) {
+    process.env.NX_TSCONFIG_PATH = rootTsConfigPath;
+  }
 
   const options = normalizeOptions(rawOptions);
 
@@ -56,7 +64,7 @@ export function executeDevServerBuilder(
   const parsedBuildTarget = parseTargetString(options.buildTarget, {
     cwd: context.currentDirectory,
     projectGraph,
-    projectName: context.target.project,
+    projectName: target.project,
     projectsConfigurations:
       readProjectsConfigurationFromProjectGraph(projectGraph),
     root: context.workspaceRoot,
@@ -68,14 +76,17 @@ export function executeDevServerBuilder(
   );
 
   const buildTarget =
-    browserTargetProjectConfiguration.targets[parsedBuildTarget.target];
+    browserTargetProjectConfiguration.targets?.[parsedBuildTarget.target];
+  if (!buildTarget) {
+    throw new Error(`Cannot find the build target "${options.buildTarget}".`);
+  }
 
   const buildTargetOptions: BuildTargetOptions = {
     ...buildTarget.options,
     ...(parsedBuildTarget.configuration
-      ? buildTarget.configurations[parsedBuildTarget.configuration]
+      ? buildTarget.configurations?.[parsedBuildTarget.configuration]
       : buildTarget.defaultConfiguration
-        ? buildTarget.configurations[buildTarget.defaultConfiguration]
+        ? buildTarget.configurations?.[buildTarget.defaultConfiguration]
         : {}),
   };
 
@@ -87,7 +98,7 @@ export function executeDevServerBuilder(
   process.env.NX_BUILD_LIBS_FROM_SOURCE = `${buildLibsFromSource}`;
   process.env.NX_BUILD_TARGET = options.buildTarget;
 
-  let pathToWebpackConfig: string;
+  let pathToWebpackConfig: string | undefined;
   if (buildTargetOptions.customWebpackConfig?.path) {
     pathToWebpackConfig = joinPathFragments(
       context.workspaceRoot,
@@ -104,7 +115,7 @@ export function executeDevServerBuilder(
   const normalizedIndexHtmlTransformer =
     buildTargetOptions.indexHtmlTransformer ??
     buildTargetOptions.indexFileTransformer;
-  let pathToIndexFileTransformer: string;
+  let pathToIndexFileTransformer: string | undefined;
   if (normalizedIndexHtmlTransformer) {
     pathToIndexFileTransformer = joinPathFragments(
       context.workspaceRoot,
@@ -156,7 +167,7 @@ export function executeDevServerBuilder(
     '@angular-devkit/build-angular:browser-esbuild',
     '@nx/angular:application',
     '@nx/angular:browser-esbuild',
-  ].includes(buildTarget.executor);
+  ].includes(buildTarget.executor ?? '');
 
   /**
    * The Angular CLI dev-server builder make some decisions based on the build
@@ -213,7 +224,7 @@ export function executeDevServerBuilder(
                       );
                       const { WebpackNxBuildCoordinationPlugin } =
                         await import('@nx/webpack/internal');
-                      baseWebpackConfig.plugins.push(
+                      (baseWebpackConfig.plugins ??= []).push(
                         new WebpackNxBuildCoordinationPlugin(
                           `nx run-many --target=${
                             parsedBuildTarget.target
@@ -242,7 +253,7 @@ export function executeDevServerBuilder(
                     baseWebpackConfig,
                     pathToWebpackConfig,
                     buildTargetOptions,
-                    context.target
+                    target
                   );
                 }
               : undefined,

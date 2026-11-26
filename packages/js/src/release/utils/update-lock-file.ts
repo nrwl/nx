@@ -139,7 +139,7 @@ export async function updateLockFile(
         output.warn({
           title:
             'Unable to restart the Nx Daemon. It will be disabled until you run "nx reset"',
-          bodyLines: [e.message],
+          bodyLines: [e instanceof Error ? e.message : String(e)],
         });
       }
     }

@@ -56,9 +56,9 @@ interface Schema {
 }
 
 export interface NormalizedSchema extends Schema {
-  presetVersion?: string;
+  presetVersion?: string | null;
   isCustomPreset: boolean;
-  nxCloudToken?: string;
+  nxCloudToken?: string | null;
   workspaceGlobs?: string[];
   aiAgents?: Agent[];
 }

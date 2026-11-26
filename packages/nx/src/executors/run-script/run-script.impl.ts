@@ -20,6 +20,9 @@ export default async function (
 ) {
   const pm = getPackageManagerCommand();
   try {
+    if (!context.projectName) {
+      throw new Error('run-script requires a project');
+    }
     let command = pm.run(options.script, options.__unparsed__.join(' '));
     let cwd = path.join(
       context.root,
@@ -50,7 +53,7 @@ export default async function (
 function nodeProcess(
   command: string,
   cwd: string,
-  env: Record<string, string>
+  env: NodeJS.ProcessEnv
 ): Promise<void> {
   return new Promise<void>((res, rej) => {
     let cp = spawn(command, [], {
@@ -101,7 +104,7 @@ function nodeProcess(
 async function ptyProcess(
   command: string,
   cwd: string,
-  env: Record<string, string>
+  env: NodeJS.ProcessEnv
 ) {
   const terminal = createPseudoTerminal();
   await terminal.init();

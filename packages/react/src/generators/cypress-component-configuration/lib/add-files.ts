@@ -47,11 +47,15 @@ export async function addFiles(
     'component.ts'
   );
 
-  const updatedCommandFile = await addMountDefinition(
-    tree.read(commandFile, 'utf-8')
-  );
+  const commandFileContent = tree.read(commandFile, 'utf-8');
+  if (commandFileContent === null) {
+    throw new Error(`Could not find ${commandFile}.`);
+  }
+  const updatedCommandFile = await addMountDefinition(commandFileContent);
   const moduleSpecifier =
-    installedCypressMajorVersion >= 14 ? 'cypress/react' : 'cypress/react18';
+    installedCypressMajorVersion !== null && installedCypressMajorVersion >= 14
+      ? 'cypress/react'
+      : 'cypress/react18';
   tree.write(
     commandFile,
     `import { mount } from '${moduleSpecifier}';\n${updatedCommandFile}`
@@ -84,7 +88,7 @@ export async function addFiles(
   }
 
   if (options.generateTests) {
-    const filePaths = [];
+    const filePaths: string[] = [];
     const sourceRoot = getProjectSourceRoot(projectConfig, tree);
     visitNotIgnoredFiles(tree, sourceRoot, (filePath) => {
       if (isComponent(tree, filePath)) {

@@ -142,6 +142,7 @@ export async function initGeneratorInternal(
     !!process.env.NX_DRY_RUN && process.env.NX_DRY_RUN !== 'false';
   if (
     formatterSetup &&
+    schema.formatter &&
     !schema.skipPackageJson &&
     !isDryRun &&
     process.env.NX_SKIP_FORMAT !== 'true'

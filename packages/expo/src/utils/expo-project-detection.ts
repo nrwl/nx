@@ -61,7 +61,7 @@ export async function isExpoProject(
   let packageJson: any;
 
   try {
-    packageJson = JSON.parse(tree.read(packageJsonPath, 'utf-8'));
+    packageJson = JSON.parse(tree.read(packageJsonPath, 'utf-8') ?? '');
   } catch (error) {
     return {
       isExpo: false,

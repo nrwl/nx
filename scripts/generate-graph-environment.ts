@@ -3,9 +3,16 @@ import { join } from 'path';
 import { readdirSync, writeFileSync } from 'fs';
 import { execSync } from 'child_process';
 
-function generateFileContent(
-  workspaces: { id: string; label: string; url: string }[]
-) {
+interface GraphWorkspace {
+  id: string;
+  label: string;
+  projectGraphUrl: string;
+  taskGraphUrl: string;
+  taskInputsUrl: string;
+  sourceMapsUrl: string;
+}
+
+function generateFileContent(workspaces: GraphWorkspace[]) {
   return `
   window.exclude = [];
   window.watch = false;
@@ -22,7 +29,7 @@ function generateFileContent(
 }
 
 function writeFile() {
-  let generatedGraphs;
+  let generatedGraphs: GraphWorkspace[];
   try {
     generatedGraphs = readdirSync(
       join(__dirname, '../graph/client/src/assets/generated-project-graphs')
@@ -41,7 +48,7 @@ function writeFile() {
     generatedGraphs = [];
   }
 
-  let pregeneratedGraphs;
+  let pregeneratedGraphs: GraphWorkspace[];
   try {
     pregeneratedGraphs = readdirSync(
       join(__dirname, '../graph/client/src/assets/project-graphs')

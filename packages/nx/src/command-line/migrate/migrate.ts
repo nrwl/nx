@@ -206,6 +206,7 @@ export * from './execute-migration';
 export { normalizeVersion };
 
 export interface ResolvedMigrationConfiguration extends MigrationsJson {
+  version: string;
   packageGroup?: ArrayPackageGroup;
   /** Mirrors the package's `nx-migrations`/`ng-update` `supportsOptionalMigrations` flag. */
   supportsOptionalMigrations?: boolean;
@@ -278,12 +279,12 @@ function normalizeSlashes(packageName: string): string {
 export type MigrateInclude = 'required' | 'optional' | 'all';
 
 export interface MigratorOptions {
-  packageJson?: PackageJson;
+  packageJson?: PackageJson | null;
   nxInstallation?: NxJsonConfiguration['installation'];
   getInstalledPackageVersion: (
     pkg: string,
     overrides?: Record<string, string>
-  ) => string;
+  ) => string | null;
   fetch: ((
     pkg: string,
     version: string
@@ -645,7 +646,8 @@ export class Migrator {
       // --to hint.
       if (
         !(e instanceof MinReleaseAgeViolationError) &&
-        e?.message?.includes('No matching version')
+        e instanceof Error &&
+        e.message?.includes('No matching version')
       ) {
         throw new Error(
           `${e.message}\nRun migrate with --to="package1@version1,package2@version2"`
@@ -740,16 +742,14 @@ export class Migrator {
         ignorePackageGroup
       );
 
-    if (
-      !migrationConfig.packageJsonUpdates ||
-      !this.getPkgVersion(packageName)
-    ) {
+    const installedVersion = this.getPkgVersion(packageName);
+    if (!migrationConfig.packageJsonUpdates || !installedVersion) {
       return { packageJsonUpdates: {}, packageGroupOrder };
     }
 
     const packageJsonUpdates = this.filterPackageJsonUpdates(
       migrationConfig.packageJsonUpdates,
-      packageName,
+      installedVersion,
       targetVersion
     );
 
@@ -813,7 +813,7 @@ export class Migrator {
 
   private filterPackageJsonUpdates(
     packageJsonUpdates: PackageJsonUpdates,
-    packageName: string,
+    installedVersion: string,
     targetVersion: string
   ): PackageJsonUpdates {
     const filteredPackageJsonUpdates: PackageJsonUpdates = {};
@@ -823,7 +823,7 @@ export class Migrator {
     )) {
       if (
         !packageJsonUpdate.packages ||
-        this.lt(packageJsonUpdate.version, this.getPkgVersion(packageName)) ||
+        this.lt(packageJsonUpdate.version, installedVersion) ||
         this.gt(packageJsonUpdate.version, targetVersion)
       ) {
         continue;
@@ -944,16 +944,19 @@ export class Migrator {
 
     return Object.entries(requirements).every(([pkgName, versionRange]) => {
       if (this.packageUpdates[pkgName]) {
-        return satisfies(
-          cleanSemver(this.packageUpdates[pkgName].version),
-          versionRange,
-          { includePrerelease: true }
+        const cleanedVersion = cleanSemver(
+          this.packageUpdates[pkgName].version
+        );
+        return (
+          cleanedVersion !== null &&
+          satisfies(cleanedVersion, versionRange, { includePrerelease: true })
         );
       }
 
+      const installedVersion = this.getPkgVersion(pkgName);
       return (
-        this.getPkgVersion(pkgName) &&
-        satisfies(this.getPkgVersion(pkgName), versionRange, {
+        installedVersion &&
+        satisfies(installedVersion, versionRange, {
           includePrerelease: true,
         })
       );
@@ -969,16 +972,19 @@ export class Migrator {
 
     return Object.entries(incompatibleWith).some(([pkgName, versionRange]) => {
       if (this.packageUpdates[pkgName]) {
-        return satisfies(
-          cleanSemver(this.packageUpdates[pkgName].version),
-          versionRange,
-          { includePrerelease: true }
+        const cleanedVersion = cleanSemver(
+          this.packageUpdates[pkgName].version
+        );
+        return (
+          cleanedVersion !== null &&
+          satisfies(cleanedVersion, versionRange, { includePrerelease: true })
         );
       }
 
+      const installedVersion = this.getPkgVersion(pkgName);
       return (
-        this.getPkgVersion(pkgName) &&
-        satisfies(this.getPkgVersion(pkgName), versionRange, {
+        installedVersion &&
+        satisfies(installedVersion, versionRange, {
           includePrerelease: true,
         })
       );
@@ -1057,7 +1063,7 @@ export class Migrator {
     const installedVersion = this.getInstalledPackageVersion(packageName);
 
     return (
-      migration.version &&
+      !!migration.version &&
       (!installedVersion || this.gt(migration.version, installedVersion)) &&
       this.lte(migration.version, this.packageUpdates[packageName].version)
     );
@@ -1072,13 +1078,15 @@ export class Migrator {
     }
 
     // at least a requirement was not met, it was skipped
-    return Object.entries(requirements).some(
-      ([pkgName, versionRange]) =>
-        !this.getInstalledPackageVersion(pkgName) ||
-        !satisfies(this.getInstalledPackageVersion(pkgName), versionRange, {
+    return Object.entries(requirements).some(([pkgName, versionRange]) => {
+      const installedVersion = this.getInstalledPackageVersion(pkgName);
+      return (
+        !installedVersion ||
+        !satisfies(installedVersion, versionRange, {
           includePrerelease: true,
         })
-    );
+      );
+    });
   }
 
   private async runPackageJsonUpdatesConfirmationPrompt(
@@ -1131,7 +1139,7 @@ export class Migrator {
       .join('|');
   }
 
-  private getPkgVersion(pkg: string): string {
+  private getPkgVersion(pkg: string): string | null {
     return this.getInstalledPackageVersion(
       pkg,
       this.installedPkgVersionOverrides
@@ -1380,7 +1388,7 @@ type GenerateMigrations = {
 type RunMigrations = {
   type: 'runMigrations';
   runMigrations: string;
-  ifExists: boolean;
+  ifExists?: boolean;
   agentic: AgenticArg;
   validate?: boolean;
   finalValidation?: boolean;
@@ -1982,7 +1990,7 @@ function createInstalledPackageVersionsResolver(
 export function createFetcher(pmc: PackageManagerCommands) {
   const migrationsCache: Record<
     string,
-    Promise<ResolvedMigrationConfiguration>
+    Promise<ResolvedMigrationConfiguration> | undefined
   > = {};
   const resolvedVersionCache: Record<string, Promise<string>> = {};
   const stats: MigrateFetchStats = { registryCount: 0, installCount: 0 };
@@ -1992,8 +2000,8 @@ export function createFetcher(pmc: PackageManagerCommands) {
   }
 
   function fetchMigrations(
-    packageName,
-    packageVersion,
+    packageName: string,
+    packageVersion: string,
     setCache: (packageName: string, packageVersion: string) => void
   ): Promise<ResolvedMigrationConfiguration> {
     if (!isRegistryResolutionEnabled()) {
@@ -2018,11 +2026,10 @@ export function createFetcher(pmc: PackageManagerCommands) {
         return resolvedVersionCache[cacheKey];
       })
       .then((resolvedVersion) => {
-        if (
-          resolvedVersion !== packageVersion &&
-          migrationsCache[`${packageName}-${resolvedVersion}`]
-        ) {
-          return migrationsCache[`${packageName}-${resolvedVersion}`];
+        const cachedMigrations =
+          migrationsCache[`${packageName}-${resolvedVersion}`];
+        if (resolvedVersion !== packageVersion && cachedMigrations) {
+          return cachedMigrations;
         }
         setCache(packageName, resolvedVersion);
         return getPackageMigrationsUsingRegistry(
@@ -2060,8 +2067,10 @@ export function createFetcher(pmc: PackageManagerCommands) {
     packageName: string,
     packageVersion: string
   ): Promise<ResolvedMigrationConfiguration> => {
-    if (migrationsCache[`${packageName}-${packageVersion}`]) {
-      return migrationsCache[`${packageName}-${packageVersion}`];
+    const cachedMigrations =
+      migrationsCache[`${packageName}-${packageVersion}`];
+    if (cachedMigrations) {
+      return cachedMigrations;
     }
 
     let migrations: Promise<ResolvedMigrationConfiguration>;
@@ -2124,7 +2133,8 @@ async function getPackageMigrationsUsingRegistry(
     };
   }
 
-  if (!migrationsConfig.migrations) {
+  const { migrations: migrationsFilePath } = migrationsConfig;
+  if (!migrationsFilePath) {
     return {
       name: packageName,
       version: packageVersion,
@@ -2139,6 +2149,7 @@ async function getPackageMigrationsUsingRegistry(
   return await downloadPackageMigrationsFromRegistry(
     packageName,
     packageVersion,
+    migrationsFilePath,
     migrationsConfig
   );
 }
@@ -2200,8 +2211,8 @@ async function getPackageMigrationsConfigFromRegistry(
 async function downloadPackageMigrationsFromRegistry(
   packageName: string,
   packageVersion: string,
+  migrationsFilePath: string,
   {
-    migrations: migrationsFilePath,
     packageGroup,
     supportsOptionalMigrations,
   }: NxMigrationsConfiguration & { packageGroup?: ArrayPackageGroup }
@@ -2268,9 +2279,11 @@ function createConcurrencyLimiter(concurrency: number) {
   let active = 0;
 
   function next() {
-    while (queue.length > 0 && active < concurrency) {
+    while (active < concurrency) {
+      const run = queue.shift();
+      if (!run) break;
       active++;
-      queue.shift()();
+      run();
     }
   }
 
@@ -2355,7 +2368,7 @@ async function getPackageMigrationsUsingInstallImpl(
       packageJson,
     } = readPackageMigrationConfig(packageName, dir);
 
-    let migrations: MigrationsJson = undefined;
+    let migrations: MigrationsJson | undefined = undefined;
     let resolvedPromptFiles: Record<string, string> | undefined;
     if (migrationsFilePath) {
       migrations = readJsonFile<MigrationsJson>(migrationsFilePath);
@@ -2414,14 +2427,24 @@ async function updatePackageJson(
   const json = readJsonFile(packageJsonPath, parseOptions);
 
   const manager = getCatalogManager(root);
-  const catalogUpdates = [];
+  const catalogUpdates: {
+    packageName: string;
+    version: string;
+    catalogName?: string;
+  }[] = [];
   let modified = false;
 
   Object.keys(updatedPackages).forEach((p) => {
     const existingVersion = json.dependencies?.[p] ?? json.devDependencies?.[p];
 
     if (existingVersion && manager?.isCatalogReference(existingVersion)) {
-      const { catalogName } = manager.parseCatalogReference(existingVersion);
+      const catalogRef = manager.parseCatalogReference(existingVersion);
+      if (!catalogRef) {
+        throw new Error(
+          `Invalid catalog reference "${existingVersion}" for "${p}".`
+        );
+      }
+      const { catalogName } = catalogRef;
       catalogUpdates.push({
         packageName: p,
         version: updatedPackages[p].version,
@@ -2566,7 +2589,10 @@ async function isMigratingToNewMajor(from: string, to: string) {
   return major(from) < major(to);
 }
 
-function readNxVersion(packageJson: PackageJson, root: string) {
+function readNxVersion(packageJson: PackageJson | null, root: string) {
+  if (!packageJson) {
+    throw new Error(`Unable to find a package.json in "${root}".`);
+  }
   return (
     getDependencyVersionFromPackageJson('nx', root, packageJson) ??
     getDependencyVersionFromPackageJson('@nx/workspace', root, packageJson) ??
@@ -2779,6 +2805,7 @@ export async function generateMigrationsJsonAndUpdatePackageJson(
       if (
         opts.interactive !== false &&
         ['nx', '@nrwl/workspace'].includes(opts.targetPackage) &&
+        from !== null &&
         (await isMigratingToNewMajor(from, opts.targetVersion)) &&
         !isCI() &&
         !isNxCloudDisabled(originalNxJson) &&
@@ -2859,15 +2886,16 @@ export async function generateMigrationsJsonAndUpdatePackageJson(
 }
 
 function addSplitConfigurationMigrationIfAvailable(
-  from: string,
+  from: string | null,
   packageJson: any
 ) {
   if (!packageJson['@nrwl/workspace']) return [];
+  if (!gte(packageJson['@nrwl/workspace'].version, '15.7.0-beta.0')) return [];
+  if (from === null) {
+    throw new Error('Unable to determine the installed Nx version.');
+  }
 
-  if (
-    gte(packageJson['@nrwl/workspace'].version, '15.7.0-beta.0') &&
-    lt(normalizeVersion(from), '15.7.0-beta.0')
-  ) {
+  if (lt(normalizeVersion(from), '15.7.0-beta.0')) {
     return [
       {
         version: '15.7.0-beta.0',
@@ -3341,7 +3369,7 @@ async function runMigrations(
   root: string,
   opts: {
     runMigrations: string;
-    ifExists: boolean;
+    ifExists?: boolean;
     agentic: AgenticArg;
     validate?: boolean;
     finalValidation?: boolean;
@@ -3358,7 +3386,8 @@ async function runMigrations(
   // The WASM build lacks the native locks a durable run relies on.
   const outerAgentDrivesRun =
     isInsideAgent() && opts.agentic !== false && !isCI() && !IS_WASM;
-  const isContinue = opts.runId !== undefined && opts.startFresh !== true;
+  const { runId } = opts;
+  const isContinue = runId !== undefined && opts.startFresh !== true;
   // Refused before the install, and before --if-exists could return silently,
   // when neither the outer agent nor a master session (an agent enabled
   // outside one, off WASM) can continue the run. A start fresh may reach the
@@ -3376,7 +3405,7 @@ async function runMigrations(
     // Before the install: a concurrent start-fresh must not delete the run
     // this command is about to continue.
     const { holdRunToContinue } = require('./run') as typeof import('./run');
-    continued = holdRunToContinue(root, opts.runId);
+    continued = holdRunToContinue(root, runId);
   } else if (opts.startFresh === true) {
     // Before the install too: with no active run there is nothing to replace.
     const { activeRunToReplace } = require('./run') as typeof import('./run');
@@ -3432,22 +3461,22 @@ async function runMigrations(
       // The child holds the run itself and refuses while this process does.
       const { releaseRunToHandOff } =
         require('./run') as typeof import('./run');
-      releaseRunToHandOff(root, opts.runId);
+      releaseRunToHandOff(root, runId);
     }
     return handOffToLocalNx(args);
   }
 
-  let migrationsJson: { migrations?: PlannedMigration[]; [k: string]: unknown };
-  if (isContinue) {
+  let migrationsJson: { migrations: PlannedMigration[]; [k: string]: unknown };
+  if (isContinue && continued) {
     // A continue runs the plan the run recorded, not whatever the workspace's
     // migrations file holds now (it may be gone, or belong to another plan).
     const { latestRound, runDir } = require('./run') as typeof import('./run');
     const round = latestRound(continued);
     if (!round) {
-      throw new Error(`Migrate run '${opts.runId}' records no plan.`);
+      throw new Error(`Migrate run '${runId}' records no plan.`);
     }
     migrationsJson = readJsonFile(
-      join(runDir(root, opts.runId), round.planSnapshot)
+      join(runDir(root, runId), round.planSnapshot)
     );
   } else {
     const migrationsExists: boolean = fileExists(opts.runMigrations);
@@ -3526,7 +3555,7 @@ async function runMigrations(
     if (isContinue) {
       runOrchestratorResume({
         root,
-        runId: opts.runId,
+        runId,
         policy: {
           createCommits: effectiveCreateCommits,
           skipInstall: shouldSkipInstall,
@@ -3985,6 +4014,9 @@ export function readLocalNxVersion(root: string): string | undefined {
           '__filename',
           readFileSync(pnpManifest, 'utf-8').replace(/^#!.*/, '')
         )(manifestModule, manifestModule.exports, require, root, pnpManifest);
+        if (!manifestModule.exports.resolveRequest) {
+          throw new Error('The PnP manifest does not export resolveRequest.');
+        }
         const packageJsonPath = manifestModule.exports.resolveRequest(
           'nx/package.json',
           join(root, 'package.json')

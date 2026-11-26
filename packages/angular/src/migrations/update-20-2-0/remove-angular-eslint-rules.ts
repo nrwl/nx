@@ -69,7 +69,7 @@ function removeRules(tree: Tree, root: string): void {
 
     // there is an override containing the rule, remove the rule
     updateOverrideInLintConfig(tree, root, lookup, (o) => {
-      delete o.rules[rule];
+      delete o.rules?.[rule];
       return o;
     });
   }

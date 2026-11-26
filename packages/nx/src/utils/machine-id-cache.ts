@@ -91,7 +91,9 @@ export async function getCurrentMachineId(): Promise<string> {
       _cachedMachineId = await machineId();
     } catch (e) {
       if (process.env.NX_VERBOSE_LOGGING === 'true') {
-        console.log(`Unable to get machineId. Error: ${e.message}`);
+        console.log(
+          `Unable to get machineId. Error: ${e instanceof Error ? e.message : String(e)}`
+        );
       }
       _cachedMachineId = '';
     }

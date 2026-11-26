@@ -19,7 +19,6 @@ import {
   getPackageManagerCommand,
   joinPathFragments,
   normalizePath,
-  type NxJsonConfiguration,
   type ProjectConfiguration,
   type TargetConfiguration,
 } from '@nx/devkit';
@@ -44,6 +43,17 @@ export interface CypressPluginOptions {
    */
   waitForServerReady?: boolean;
 }
+
+type NormalizedCypressPluginOptions = CypressPluginOptions &
+  Required<
+    Pick<
+      CypressPluginOptions,
+      | 'targetName'
+      | 'openTargetName'
+      | 'componentTestingTargetName'
+      | 'ciTargetName'
+    >
+  >;
 
 const cypressConfigGlob = '**/cypress.config.{js,ts,mjs,cjs}';
 const defaultPatterns = {
@@ -136,7 +146,7 @@ export const createNodesV2 = createNodes;
 
 async function createNodesInternal(
   configFilePath: string,
-  options: CypressPluginOptions,
+  options: NormalizedCypressPluginOptions,
   context: CreateNodesContext,
   pluginCache: PluginCache<CypressTargets>,
   pmc: ReturnType<typeof getPackageManagerCommand>,
@@ -145,19 +155,18 @@ async function createNodesInternal(
   const projectRoot = dirname(configFilePath);
   const hash = projectHash + configFilePath;
 
-  if (!pluginCache.has(hash)) {
-    pluginCache.set(
-      hash,
-      await buildCypressTargets(
-        configFilePath,
-        projectRoot,
-        options,
-        context,
-        pmc
-      )
+  let cypressTargets = pluginCache.get(hash);
+  if (!cypressTargets) {
+    cypressTargets = await buildCypressTargets(
+      configFilePath,
+      projectRoot,
+      options,
+      context,
+      pmc
     );
+    pluginCache.set(hash, cypressTargets);
   }
-  const { targets, metadata } = pluginCache.get(hash);
+  const { targets, metadata } = cypressTargets;
 
   const project: Omit<ProjectConfiguration, 'root'> = {
     projectType: 'application',
@@ -210,15 +219,21 @@ function getTargetConfig(
   outputSubfolder: string,
   ciBaseUrl?: string
 ): string {
-  const config = {};
+  const config: {
+    baseUrl?: string;
+    videosFolder?: string;
+    screenshotsFolder?: string;
+    e2e?: { videosFolder?: string; screenshotsFolder?: string };
+    component?: { videosFolder?: string; screenshotsFolder?: string };
+  } = {};
   if (ciBaseUrl) {
-    config['baseUrl'] = ciBaseUrl;
+    config.baseUrl = ciBaseUrl;
   }
 
   const { screenshotsFolder, videosFolder, e2e, component } = cypressConfig;
 
   if (videosFolder) {
-    config['videosFolder'] = serializeConfigPath(
+    config.videosFolder = serializeConfigPath(
       videosFolder,
       projectRoot,
       workspaceRoot,
@@ -227,7 +242,7 @@ function getTargetConfig(
   }
 
   if (screenshotsFolder) {
-    config['screenshotsFolder'] = serializeConfigPath(
+    config.screenshotsFolder = serializeConfigPath(
       screenshotsFolder,
       projectRoot,
       workspaceRoot,
@@ -236,9 +251,10 @@ function getTargetConfig(
   }
 
   if (e2e) {
-    config['e2e'] = {};
+    const e2eConfig: { videosFolder?: string; screenshotsFolder?: string } = {};
+    config.e2e = e2eConfig;
     if (e2e.videosFolder) {
-      config['e2e']['videosFolder'] = serializeConfigPath(
+      e2eConfig.videosFolder = serializeConfigPath(
         e2e.videosFolder,
         projectRoot,
         workspaceRoot,
@@ -246,7 +262,7 @@ function getTargetConfig(
       );
     }
     if (e2e.screenshotsFolder) {
-      config['e2e']['screenshotsFolder'] = serializeConfigPath(
+      e2eConfig.screenshotsFolder = serializeConfigPath(
         e2e.screenshotsFolder,
         projectRoot,
         workspaceRoot,
@@ -256,9 +272,13 @@ function getTargetConfig(
   }
 
   if (component) {
-    config['component'] = {};
+    const componentConfig: {
+      videosFolder?: string;
+      screenshotsFolder?: string;
+    } = {};
+    config.component = componentConfig;
     if (component.videosFolder) {
-      config['component']['videosFolder'] = serializeConfigPath(
+      componentConfig.videosFolder = serializeConfigPath(
         component.videosFolder,
         projectRoot,
         workspaceRoot,
@@ -266,7 +286,7 @@ function getTargetConfig(
       );
     }
     if (component.screenshotsFolder) {
-      config['component']['screenshotsFolder'] = serializeConfigPath(
+      componentConfig.screenshotsFolder = serializeConfigPath(
         component.screenshotsFolder,
         projectRoot,
         workspaceRoot,
@@ -340,7 +360,7 @@ type CypressTargets = Pick<ProjectConfiguration, 'targets' | 'metadata'>;
 async function buildCypressTargets(
   configFilePath: string,
   projectRoot: string,
-  options: CypressPluginOptions,
+  options: NormalizedCypressPluginOptions,
   context: CreateNodesContext,
   pmc: ReturnType<typeof getPackageManagerCommand>
 ): Promise<CypressTargets> {
@@ -422,11 +442,12 @@ async function buildCypressTargets(
     }
 
     if (Object.keys(webServerCommands ?? {}).length > 0) {
-      targets[options.targetName].configurations ??= {};
+      const configurations = (targets[options.targetName].configurations ??=
+        {});
       for (const [configuration, webServerCommand] of Object.entries(
         webServerCommands ?? {}
       )) {
-        targets[options.targetName].configurations[configuration] = {
+        configurations[configuration] = {
           command: `cypress run --env webServerCommand="${webServerCommand}"`,
         };
       }
@@ -454,8 +475,8 @@ async function buildCypressTargets(
       const inputs = getInputs(namedInputs);
 
       const groupName = 'E2E (CI)';
-      metadata = { targetGroups: { [groupName]: [] } };
-      const ciTargetGroup = metadata.targetGroups[groupName];
+      const ciTargetGroup: string[] = [];
+      metadata = { targetGroups: { [groupName]: ciTargetGroup } };
       const ciWebServerCommandTask = shouldReuseExistingServer
         ? parseTaskFromCommand(ciWebServerCommand)
         : null;
@@ -610,8 +631,7 @@ async function buildCypressTargets(
       const groupName = 'Component Testing (CI)';
       metadata ??= {};
       metadata.targetGroups ??= {};
-      metadata.targetGroups[groupName] ??= [];
-      const ctCiTargetGroup = metadata.targetGroups[groupName];
+      const ctCiTargetGroup = (metadata.targetGroups[groupName] ??= []);
 
       for (const file of specFiles) {
         const relativeSpecFilePath = normalizePath(relative(projectRoot, file));
@@ -721,7 +741,9 @@ async function buildCypressTargets(
   return { targets, metadata };
 }
 
-function normalizeOptions(options: CypressPluginOptions): CypressPluginOptions {
+function normalizeOptions(
+  options: CypressPluginOptions | undefined
+): NormalizedCypressPluginOptions {
   options ??= {};
   options.targetName ??= 'e2e';
   options.openTargetName ??= 'open-cypress';
@@ -729,12 +751,18 @@ function normalizeOptions(options: CypressPluginOptions): CypressPluginOptions {
   options.ciTargetName ??= 'e2e-ci';
   // must be explicitly provided to opt-in to atomized component testing
   options.ciComponentTestingTargetName;
-  return options;
+  return {
+    ...options,
+    targetName: options.targetName,
+    openTargetName: options.openTargetName,
+    componentTestingTargetName: options.componentTestingTargetName,
+    ciTargetName: options.ciTargetName,
+  };
 }
 
 function getInputs(
-  namedInputs: NxJsonConfiguration['namedInputs']
-): TargetConfiguration['inputs'] {
+  namedInputs: ReturnType<typeof getNamedInputs>
+): NonNullable<TargetConfiguration['inputs']> {
   return [
     ...('production' in namedInputs
       ? ['default', '^production']

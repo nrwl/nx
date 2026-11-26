@@ -12,7 +12,7 @@ import * as process from 'process';
   } catch (err) {
     output.error({
       title:
-        err?.message ||
+        (err instanceof Error && err.message) ||
         'Something unexpected went wrong when starting the server',
     });
     process.exit(1);

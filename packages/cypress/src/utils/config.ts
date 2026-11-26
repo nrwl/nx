@@ -5,7 +5,6 @@ import type {
   ExportAssignment,
   Expression,
   ExpressionStatement,
-  InterfaceDeclaration,
   MethodSignature,
   ObjectLiteralExpression,
   PropertyAssignment,
@@ -56,11 +55,13 @@ export function renderE2EPresetOptions(
   options: NxCypressE2EPresetOptions,
   baseUrl: string | undefined
 ): { presetOptions: string; baseUrl: string | undefined } {
-  const webServerCommand = options.webServerCommands?.default;
+  const { webServerCommands, ciWebServerCommand } = options;
+  const webServerCommand = webServerCommands?.default;
   const switchesCommand =
+    !!webServerCommands &&
     !!webServerCommand &&
-    !!options.ciWebServerCommand &&
-    options.ciWebServerCommand !== webServerCommand;
+    !!ciWebServerCommand &&
+    ciWebServerCommand !== webServerCommand;
 
   return {
     presetOptions: switchesCommand
@@ -69,11 +70,11 @@ export function renderE2EPresetOptions(
             key,
             key === 'webServerCommands'
               ? renderObject(
-                  Object.entries(options.webServerCommands).map(
+                  Object.entries(webServerCommands).map(
                     ([name, command]): RenderedMember => [
                       name,
                       name === 'default'
-                        ? ciSwitch(options.ciWebServerCommand, webServerCommand)
+                        ? ciSwitch(ciWebServerCommand, webServerCommand)
                         : stringifyAt(command, '    '),
                     ]
                   ),
@@ -95,12 +96,13 @@ export function renderE2EPresetOptions(
 export async function addDefaultE2EConfig(
   cyConfigContents: string,
   options: NxCypressE2EPresetOptions,
-  baseUrl: string
+  baseUrl: string | undefined
 ) {
   if (!cyConfigContents) {
     throw new Error('The passed in cypress config file is empty!');
   }
   const { tsquery } = await import('@phenomnomnominal/tsquery');
+  const ts = ensureTypescript();
 
   const isCommonJS =
     tsquery.query(cyConfigContents, TS_QUERY_COMMON_JS_EXPORT_SELECTOR).length >
@@ -131,7 +133,10 @@ export async function addDefaultE2EConfig(
     updatedConfigContents = tsquery.replace(
       cyConfigContents,
       `${TS_QUERY_EXPORT_CONFIG_PREFIX} ObjectLiteralExpression:first-child`,
-      (node: ObjectLiteralExpression) => {
+      (node) => {
+        if (!ts.isObjectLiteralExpression(node)) {
+          return null;
+        }
         let baseUrlContents = rendered.baseUrl
           ? `,\n    baseUrl: ${rendered.baseUrl}`
           : '';
@@ -189,6 +194,7 @@ export async function addDefaultCTConfig(
     throw new Error('The passed in cypress config file is empty!');
   }
   const { tsquery } = await import('@phenomnomnominal/tsquery');
+  const ts = ensureTypescript();
 
   const isCommonJS =
     tsquery.query(cyConfigContents, TS_QUERY_COMMON_JS_EXPORT_SELECTOR).length >
@@ -238,7 +244,10 @@ ${jitComment}
     updatedConfigContents = tsquery.replace(
       cyConfigContents,
       `${TS_QUERY_EXPORT_CONFIG_PREFIX} ObjectLiteralExpression:first-child`,
-      (node: ObjectLiteralExpression) => {
+      (node) => {
+        if (!ts.isObjectLiteralExpression(node)) {
+          return null;
+        }
         if (node.properties.length > 0) {
           return `{
   ${node.properties.map((p) => p.getText()).join(',\n')},
@@ -287,6 +296,7 @@ export async function addMountDefinition(cmpCommandFileContents: string) {
     throw new Error('The passed in cypress component file is empty!');
   }
   const { tsquery } = await import('@phenomnomnominal/tsquery');
+  const ts = ensureTypescript();
   const hasMountCommand =
     tsquery.query<MethodSignature | PropertySignature>(
       cmpCommandFileContents,
@@ -302,7 +312,10 @@ export async function addMountDefinition(cmpCommandFileContents: string) {
   const updatedInterface = tsquery.replace(
     cmpCommandFileContents,
     'InterfaceDeclaration',
-    (node: InterfaceDeclaration) => {
+    (node) => {
+      if (!ts.isInterfaceDeclaration(node)) {
+        return null;
+      }
       return `interface ${node.name.getText()}${
         node.typeParameters
           ? `<${node.typeParameters.map((p) => p.getText()).join(', ')}>`

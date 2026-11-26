@@ -86,11 +86,15 @@ export async function addLinting(
     let addsNextConfig = true;
     if (useFlatConfig(host)) {
       const configPath = findFlatConfigFile(host, options.appProjectRoot);
+      const configContent = configPath && host.read(configPath, 'utf-8');
+      if (!configPath || configContent == null) {
+        throw new Error(
+          `Could not find the ESLint flat config of ${options.appProjectRoot}.`
+        );
+      }
       // Adding to an existing setup could widen one scoped to some files or
       // register a second copy of a plugin.
-      addsNextConfig = !configuresNextLint(
-        parseFlatConfig(host.read(configPath, 'utf-8'))
-      );
+      addsNextConfig = !configuresNextLint(parseFlatConfig(configContent));
       if (!addsNextConfig) {
         logger.warn(
           `${configPath} already sets up Next.js linting, so the Next.js lint config was not added to it. ` +

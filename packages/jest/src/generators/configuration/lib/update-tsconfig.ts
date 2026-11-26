@@ -33,7 +33,9 @@ export function updateTsConfig(
   updateJson(host, joinPathFragments(root, 'tsconfig.json'), (json) => {
     if (
       json.references &&
-      !json.references.some((r) => r.path === './tsconfig.spec.json')
+      !json.references.some(
+        (r: { path: string }) => r.path === './tsconfig.spec.json'
+      )
     ) {
       json.references.push({
         path: './tsconfig.spec.json',
@@ -106,7 +108,11 @@ export function updateTsConfig(
     ) {
       updateJson(host, specTsconfigPath, (json) => {
         json.references ??= [];
-        if (!json.references.some((r) => r.path === runtimeReference)) {
+        if (
+          !json.references.some(
+            (r: { path: string }) => r.path === runtimeReference
+          )
+        ) {
           json.references.push({ path: runtimeReference });
         }
         return json;

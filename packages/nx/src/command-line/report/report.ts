@@ -130,10 +130,9 @@ export async function reportHandler() {
 
     bodyLines.push(createNxKeyLicenseeInformation(nxKey));
 
-    if (nxKey.realExpiresAt || nxKey.expiresAt) {
-      const licenseExpiryDate = new Date(
-        (nxKey.realExpiresAt ?? nxKey.expiresAt) * 1000
-      );
+    const expiresAt = nxKey.realExpiresAt ?? nxKey.expiresAt;
+    if (expiresAt) {
+      const licenseExpiryDate = new Date(expiresAt * 1000);
 
       // license is not expired
       if (licenseExpiryDate.getTime() >= Date.now()) {
@@ -265,7 +264,7 @@ export async function reportHandler() {
     bodyLines.push(LINE_SEPARATOR);
     bodyLines.push('⚠️ Unable to construct project graph.');
     bodyLines.push(projectGraphError.message);
-    bodyLines.push(projectGraphError.stack);
+    bodyLines.push(String(projectGraphError.stack));
   }
 
   output.log({
@@ -383,7 +382,7 @@ function findDependencyChain(
 }
 
 function findMismatchedNxVersions(
-  graph: ProjectGraph
+  graph: ProjectGraph | undefined
 ): Array<{ version: string; chain: string[] }> {
   if (!graph || !graph.externalNodes) {
     return [];
@@ -438,13 +437,13 @@ export async function getReportData(): Promise<ReportData> {
 
   const native = isNativeAvailable();
 
-  let nxKey = null;
-  let nxKeyError = null;
+  let nxKey: NxKey | null = null;
+  let nxKeyError: Error | null = null;
   try {
     nxKey = await getNxKeyInformation();
   } catch (e) {
     if (!(e instanceof NxKeyNotInstalledError)) {
-      nxKeyError = e;
+      nxKeyError = e instanceof Error ? e : new Error(String(e));
     }
   }
 
@@ -496,20 +495,23 @@ async function tryGetProjectGraph() {
   } catch (error) {
     if (error instanceof ProjectGraphError) {
       return {
-        graph: error.getPartialProjectGraph(),
+        graph: error.getPartialProjectGraph() ?? undefined,
         error: error,
       };
     }
     return {
-      error,
+      error: error instanceof Error ? error : new Error(String(error)),
     };
   }
 }
 
 async function findLocalPlugins(
-  projectGraph: ProjectGraph,
+  projectGraph: ProjectGraph | undefined,
   nxJson: NxJsonConfiguration
 ) {
+  if (!projectGraph) {
+    return [];
+  }
   try {
     const localPlugins = await getLocalWorkspacePlugins(
       readProjectsConfigurationFromProjectGraph(projectGraph),
@@ -530,7 +532,7 @@ function readPackageJson(p: string): PackageJson | null {
 }
 
 function readPackageVersion(p: string): string | null {
-  return readPackageJson(p)?.version;
+  return readPackageJson(p)?.version ?? null;
 }
 
 interface OutOfSyncPackageGroup {

@@ -1,6 +1,7 @@
 import { homedir } from 'os';
 import { join } from 'path';
 import { readYamlFile } from '../fileutils';
+import { isErrnoException } from '../is-errno-exception';
 
 /**
  * Mirrors pnpm's getConfigDir. Hosts pnpm's global config.yaml and (v11+)
@@ -43,7 +44,7 @@ export function readPnpmYamlConfig(
     // Only ENOENT resolves on, so a path through a non-directory or a file that
     // will not open is fatal here. Callers whose pnpm counterpart looks the file
     // up before reading it widen "absent" themselves.
-    if (e?.code === 'ENOENT') {
+    if (isErrnoException(e) && e.code === 'ENOENT') {
       return null;
     }
     return 'unusable';

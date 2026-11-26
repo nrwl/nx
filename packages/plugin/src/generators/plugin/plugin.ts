@@ -48,28 +48,24 @@ async function addFiles(host: Tree, options: NormalizedSchema) {
 function updatePluginConfig(host: Tree, options: NormalizedSchema) {
   const project = readProjectConfiguration(host, options.projectName);
 
-  if (project.targets.build) {
+  const buildTarget = project.targets?.build;
+  if (buildTarget) {
     if (options.isTsSolutionSetup && options.bundler === 'tsc') {
-      project.targets.build.options.rootDir = getProjectSourceRoot(
-        project,
-        host
-      );
-      project.targets.build.options.generatePackageJson = false;
+      buildTarget.options.rootDir = getProjectSourceRoot(project, host);
+      buildTarget.options.generatePackageJson = false;
     }
 
-    project.targets.build.options.assets = [
-      ...(project.targets.build.options.assets ?? []),
-    ];
+    buildTarget.options.assets = [...(buildTarget.options.assets ?? [])];
 
     const root = options.projectRoot === '.' ? '.' : './' + options.projectRoot;
 
     if (options.isTsSolutionSetup) {
-      project.targets.build.options.assets.push(
+      buildTarget.options.assets.push(
         { input: `${root}/src`, glob: '**/!(*.ts)', output: '.' },
         { input: `${root}/src`, glob: '**/*.d.ts', output: '.' }
       );
     } else {
-      project.targets.build.options.assets.push(
+      buildTarget.options.assets.push(
         { input: `${root}/src`, glob: '**/!(*.ts)', output: './src' },
         { input: `${root}/src`, glob: '**/*.d.ts', output: './src' },
         { input: root, glob: 'generators.json', output: '.' },

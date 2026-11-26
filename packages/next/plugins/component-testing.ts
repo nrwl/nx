@@ -39,6 +39,15 @@ export function nxComponentTestingPreset(
   );
   const ctTargetName = options?.ctTargetName || 'component-test';
   const ctConfigurationName = process.env.NX_CYPRESS_TARGET_CONFIGURATION;
+  const ctProjectConfig = ctProjectName
+    ? graph.nodes[ctProjectName]?.data
+    : undefined;
+
+  if (!ctProjectName || !ctTargets || !ctProjectConfig) {
+    throw new Error(stripIndents`Unable to load project configs from the project graph.
+Able to find CT project, ${!!ctProjectConfig}.`);
+  }
+
   const ctExecutorContext: ExecutorContext = createExecutorContext(
     graph,
     ctTargets,
@@ -47,14 +56,10 @@ export function nxComponentTestingPreset(
     ctConfigurationName
   );
 
-  const ctProjectConfig = graph.nodes[ctProjectName]?.data;
-
-  if (!ctProjectConfig) {
-    throw new Error(stripIndents`Unable to load project configs from the project graph.
-Able to find CT project, ${!!ctProjectConfig}.`);
-  }
-
-  const webpackOptions: NormalizedWebpackExecutorOptions = {
+  const webpackOptions: Omit<
+    NormalizedWebpackExecutorOptions,
+    'useTsconfigPaths'
+  > & { useTsconfigPaths?: boolean } = {
     root: ctExecutorContext.root,
     projectRoot: ctProjectConfig.root,
     sourceRoot: getProjectSourceRoot(ctProjectConfig),
@@ -78,7 +83,7 @@ Able to find CT project, ${!!ctProjectConfig}.`);
     styles: [],
     scripts: [],
     postcssConfig: ctProjectConfig.root,
-    projectName: ctExecutorContext.projectName,
+    projectName: ctProjectName,
     targetName: ctExecutorContext.targetName,
     configurationName: ctExecutorContext.configurationName,
     projectGraph: ctExecutorContext.projectGraph,

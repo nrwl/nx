@@ -247,7 +247,8 @@ function ensureDependencies(
 ): GeneratorCallback {
   // Only add tslib when using tsc compiler
   // When using swc, @swc/helpers is added by addSwcDependencies()
-  const dependencies = compiler === 'tsc' ? { tslib: tslibVersion } : {};
+  const dependencies: Record<string, string> =
+    compiler === 'tsc' ? { tslib: tslibVersion } : {};
   return addDependenciesToPackageJson(tree, dependencies, {
     '@types/node': typesNodeVersion,
   });

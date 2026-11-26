@@ -27,6 +27,14 @@ export interface DetoxPluginOptions {
   watchDepsTargetName?: string;
 }
 
+type NormalizedDetoxPluginOptions = DetoxPluginOptions &
+  Required<
+    Pick<
+      DetoxPluginOptions,
+      'buildTargetName' | 'startTargetName' | 'testTargetName'
+    >
+  >;
+
 type DetoxTargets = Record<string, TargetConfiguration<DetoxPluginOptions>>;
 
 export const createNodes: CreateNodes<DetoxPluginOptions> = [
@@ -73,7 +81,7 @@ export const createNodesV2 = createNodes;
 
 async function createNodesInternal(
   configFile: string,
-  options: DetoxPluginOptions,
+  options: NormalizedDetoxPluginOptions,
   context: CreateNodesContext,
   targetsCache: PluginCache<DetoxTargets>,
   pmc: ReturnType<typeof getPackageManagerCommand>,
@@ -99,7 +107,7 @@ async function createNodesInternal(
 
 function buildDetoxTargets(
   projectRoot: string,
-  options: DetoxPluginOptions,
+  options: NormalizedDetoxPluginOptions,
   context: CreateNodesContext,
   pmc: ReturnType<typeof getPackageManagerCommand>
 ) {
@@ -137,7 +145,7 @@ function buildDetoxTargets(
 }
 
 function getInputs(
-  namedInputs: NxJsonConfiguration['namedInputs']
+  namedInputs: NonNullable<NxJsonConfiguration['namedInputs']>
 ): TargetConfiguration['inputs'] {
   return [
     ...('production' in namedInputs
@@ -149,10 +157,13 @@ function getInputs(
   ];
 }
 
-function normalizeOptions(options: DetoxPluginOptions): DetoxPluginOptions {
+function normalizeOptions(
+  options: DetoxPluginOptions | undefined
+): NormalizedDetoxPluginOptions {
   options ??= {};
-  options.buildTargetName ??= 'build';
-  options.startTargetName ??= 'start';
-  options.testTargetName ??= 'test';
-  return options;
+  return Object.assign(options, {
+    buildTargetName: options.buildTargetName ?? 'build',
+    startTargetName: options.startTargetName ?? 'start',
+    testTargetName: options.testTargetName ?? 'test',
+  });
 }

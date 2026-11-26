@@ -31,17 +31,24 @@ export const createDependencies: CreateDependencies = async (
     context.projects
   );
 
+  // External deps use maven: prefix — pass through as-is
+  const resolveProject = (ref: string): string => {
+    if (ref.startsWith('maven:')) {
+      return ref;
+    }
+    const projectName = rootToProjectMap.get(ref);
+    if (!projectName) {
+      throw new Error(`No Nx project found at Maven project root "${ref}"`);
+    }
+    return projectName;
+  };
+
   // Extract and transform dependencies from the mavenData
   const transformedDependencies = mavenData.createDependenciesResults.map(
     (dep) => ({
       ...dep,
-      source: dep.source.startsWith('maven:')
-        ? dep.source
-        : rootToProjectMap.get(dep.source),
-      // External deps use maven: prefix — pass through as-is
-      target: dep.target.startsWith('maven:')
-        ? dep.target
-        : rootToProjectMap.get(dep.target),
+      source: resolveProject(dep.source),
+      target: resolveProject(dep.target),
     })
   );
 

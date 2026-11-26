@@ -59,7 +59,7 @@ export async function showTargetInputsHandler(
     return;
   }
 
-  const targetConfig = t.node.data.targets[targetName];
+  const { targetConfig } = t;
   const mode = args.json ? undefined : ultracacheModeInCI(targetConfig, false);
   const ultracacheInCI =
     mode && (await isUltracacheOnInCI(t.nxJson)) ? mode : undefined;

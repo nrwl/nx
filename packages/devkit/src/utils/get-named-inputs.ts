@@ -18,12 +18,12 @@ export function getNamedInputs(
   context: CreateNodesContext
 ): { [inputName: string]: (string | InputDefinition)[] } {
   const projectJsonPath = join(directory, 'project.json');
-  const projectJson: ProjectConfiguration = existsSync(projectJsonPath)
+  const projectJson: ProjectConfiguration | null = existsSync(projectJsonPath)
     ? readJsonFile(projectJsonPath)
     : null;
 
   const packageJsonPath = join(directory, 'package.json');
-  const packageJson: PackageJson = existsSync(packageJsonPath)
+  const packageJson: PackageJson | null = existsSync(packageJsonPath)
     ? readJsonFile(packageJsonPath)
     : null;
 

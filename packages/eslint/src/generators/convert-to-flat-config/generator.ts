@@ -85,14 +85,14 @@ export async function convertToFlatConfigGenerator(
     }
   }
 
-  options.eslintConfigFormat ??= 'mjs';
+  const eslintConfigFormat = (options.eslintConfigFormat ??= 'mjs');
 
   const rootConversions = planRootConversions(
     tree,
     eslintFile,
-    options.eslintConfigFormat
+    eslintConfigFormat
   );
-  const nxJson = readNxJson(tree);
+  const nxJson = readRequiredNxJson(tree);
   const projectPlans = [...getProjects(tree)].map(
     ([project, projectConfig]) => ({
       project,
@@ -103,7 +103,7 @@ export async function convertToFlatConfigGenerator(
         projectConfig,
         nxJson,
         rootConversions,
-        options.eslintConfigFormat
+        eslintConfigFormat
       ),
     })
   );
@@ -122,7 +122,7 @@ export async function convertToFlatConfigGenerator(
     convertConfigToFlatConfig(
       tree,
       conversion,
-      options.eslintConfigFormat,
+      eslintConfigFormat,
       [],
       convertedEslintrcFiles,
       options.keepExistingVersions
@@ -137,17 +137,22 @@ export async function convertToFlatConfigGenerator(
           tree,
           project,
           projectConfig,
-          readNxJson(tree),
+          readRequiredNxJson(tree),
           plan.conversion,
           eslintIgnoreFiles,
-          options.eslintConfigFormat,
+          eslintConfigFormat,
           convertedEslintrcFiles,
           options.keepExistingVersions
         );
         break;
       case 'flat':
         // The project lints with a flat config: its own, or the root one from here on.
-        removeNoEslintrc(tree, project, projectConfig, readNxJson(tree));
+        removeNoEslintrc(
+          tree,
+          project,
+          projectConfig,
+          readRequiredNxJson(tree)
+        );
         break;
       case 'skip':
         logger.warn(plan.reason);
@@ -247,12 +252,13 @@ function hasMatchingEslintTargetDefault(
   projectConfig: ProjectConfiguration,
   targetDefaults: NxJsonConfiguration['targetDefaults']
 ): boolean {
-  if (!projectConfig.targets || !targetDefaults) {
+  const { targets } = projectConfig;
+  if (!targets || !targetDefaults) {
     return false;
   }
 
   return Object.entries(targetDefaults).some(([targetName, value]) => {
-    if (projectConfig.targets[targetName] === undefined) {
+    if (targets[targetName] === undefined) {
       return false;
     }
     if (targetName === ESLINT_LINT_EXECUTOR) {
@@ -353,9 +359,9 @@ function planProjectConversion(
 }
 
 function getEslintTargetNames(projectConfig: ProjectConfiguration): string[] {
-  return Object.keys(projectConfig.targets ?? {}).filter((t) =>
-    isEslintTarget(projectConfig.targets[t])
-  );
+  return Object.entries(projectConfig.targets ?? {})
+    .filter(([, target]) => isEslintTarget(target))
+    .map(([name]) => name);
 }
 
 function convertProjectToFlatConfig(
@@ -372,13 +378,15 @@ function convertProjectToFlatConfig(
   // Clean up obsolete target options
   let ignorePath: string | undefined;
   const eslintTargets = getEslintTargetNames(projectConfig);
+  const targets = projectConfig.targets ?? {};
   for (const target of eslintTargets) {
-    if (projectConfig.targets[target].options?.eslintConfig) {
-      delete projectConfig.targets[target].options.eslintConfig;
+    const targetOptions = targets[target].options;
+    if (targetOptions?.eslintConfig) {
+      delete targetOptions.eslintConfig;
     }
-    if (projectConfig.targets[target].options?.ignorePath) {
-      ignorePath = projectConfig.targets[target].options.ignorePath;
-      delete projectConfig.targets[target].options.ignorePath;
+    if (targetOptions?.ignorePath) {
+      ignorePath = targetOptions.ignorePath;
+      delete targetOptions.ignorePath;
     }
   }
   if (eslintTargets.length > 0) {
@@ -814,4 +822,12 @@ function processConvertedConfig(
     'package.json',
     keepExistingVersions
   );
+}
+
+function readRequiredNxJson(tree: Tree): NxJsonConfiguration {
+  const nxJson = readNxJson(tree);
+  if (!nxJson) {
+    throw new Error('Cannot find nx.json');
+  }
+  return nxJson;
 }

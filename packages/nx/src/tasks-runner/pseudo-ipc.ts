@@ -94,8 +94,9 @@ export class PseudoIPCServer {
             }
           } else if (type === 'CHILD_READY') {
             const childId = message as string;
-            if (this.childReadyMap.has(childId)) {
-              this.childReadyMap.get(childId)();
+            const resolveChildReady = this.childReadyMap.get(childId);
+            if (resolveChildReady) {
+              resolveChildReady();
             }
           }
         },
@@ -153,7 +154,7 @@ export class PseudoIPCServer {
 }
 
 export class PseudoIPCClient {
-  private socket: Socket | undefined = connect(this.path);
+  private readonly socket: Socket = connect(this.path);
 
   constructor(private path: string) {}
 

@@ -13,7 +13,7 @@ import {
 } from '@nx/e2e-utils';
 
 describe('React Cypress Component Tests', () => {
-  let projectName;
+  let projectName: string;
   const appName = uniq('cy-react-app');
   const usedInAppLibName = uniq('cy-react-lib');
   const buildableLibName = uniq('cy-react-buildable-lib');

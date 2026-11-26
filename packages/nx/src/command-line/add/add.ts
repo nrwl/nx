@@ -28,7 +28,7 @@ import { reportNxAddCommand } from '../../analytics';
 import { daemonClient } from '../../daemon/client/client';
 
 export function addHandler(options: AddOptions): Promise<number> {
-  return handleErrors(options.verbose, async () => {
+  return handleErrors(options.verbose ?? false, async () => {
     output.addNewline();
 
     // Package managers write the lock file before node_modules is fully linked,
@@ -121,23 +121,26 @@ export async function installPackage(
       )
     );
   } else {
-    nxJson.installation.plugins ??= {};
-    nxJson.installation.plugins[pkgName] = normalizeVersionForNxJson(
-      pkgName,
-      version
-    );
+    const { installation } = nxJson;
+    if (!installation) {
+      throw new TypeError(
+        'nx.json must define "installation" when there is no package.json'
+      );
+    }
+    const plugins = (installation.plugins ??= {});
+    plugins[pkgName] = normalizeVersionForNxJson(pkgName, version);
     writeJsonFile('nx.json', nxJson);
 
     try {
       await runNxAsync('--help', { silent: true });
     } catch (e) {
       // revert adding the plugin to nx.json
-      nxJson.installation.plugins[pkgName] = undefined;
+      delete plugins[pkgName];
       writeJsonFile('nx.json', nxJson);
 
       spinner.fail();
       output.addNewline();
-      logger.error(e.message);
+      logger.error(e instanceof Error ? e.message : String(e));
       output.error({
         title: `Failed to install ${pkgName}. Please check the error above for more details.`,
       });
@@ -200,8 +203,9 @@ function parsePackageSpecifier(
   const i = packageSpecifier.lastIndexOf('@');
 
   if (i <= 0) {
-    if (coreNxPluginVersions.has(packageSpecifier)) {
-      return [packageSpecifier, coreNxPluginVersions.get(packageSpecifier)];
+    const coreVersion = coreNxPluginVersions.get(packageSpecifier);
+    if (coreVersion !== undefined) {
+      return [packageSpecifier, coreVersion];
     }
 
     return [packageSpecifier, 'latest'];
@@ -214,7 +218,11 @@ function parsePackageSpecifier(
 }
 
 export const coreNxPluginVersions = (
-  require(require.resolve('nx/package.json')) as NxPackageJson
+  require(require.resolve('nx/package.json')) as NxPackageJson & {
+    'nx-migrations': Required<
+      Pick<NonNullable<NxPackageJson['nx-migrations']>, 'packageGroup'>
+    >;
+  }
 )['nx-migrations'].packageGroup.reduce(
   (map, entry) => {
     const packageName = typeof entry === 'string' ? entry : entry.package;

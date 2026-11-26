@@ -9,10 +9,10 @@ export async function deriveSpecifierFromVersionPlan(
   projectLogger: ProjectLogger,
   releaseGroup: ReleaseGroupWithName,
   projectGraphNode: ProjectGraphProjectNode,
-  currentVersion: string
+  currentVersion: string | null
 ): Promise<{
   bumpType: SemverBumpType;
-  versionPlanPath: string;
+  versionPlanPath: string | null;
 }> {
   const projectName = projectGraphNode.name;
 
@@ -34,8 +34,8 @@ export async function deriveSpecifierFromVersionPlan(
           };
         }
         if (plan.projectVersionBumps[projectName]) {
-          const prevNewVersion = inc(currentVersion, acc.spec);
-          const nextNewVersion = inc(
+          const prevNewVersion = incOrThrow(currentVersion, acc.spec);
+          const nextNewVersion = incOrThrow(
             currentVersion,
             plan.projectVersionBumps[projectName]
           );
@@ -67,8 +67,11 @@ export async function deriveSpecifierFromVersionPlan(
           };
         }
 
-        const prevNewVersion = inc(currentVersion, acc.spec);
-        const nextNewVersion = inc(currentVersion, plan.groupVersionBump);
+        const prevNewVersion = incOrThrow(currentVersion, acc.spec);
+        const nextNewVersion = incOrThrow(
+          currentVersion,
+          plan.groupVersionBump
+        );
         return gt(nextNewVersion, prevNewVersion)
           ? {
               spec: plan.groupVersionBump,
@@ -90,4 +93,14 @@ export async function deriveSpecifierFromVersionPlan(
     bumpType: bumpType ?? 'none',
     versionPlanPath,
   };
+}
+
+function incOrThrow(version: string | null, release: ReleaseType): string {
+  const incremented = version === null ? null : inc(version, release);
+  if (incremented === null) {
+    throw new TypeError(
+      `Unable to apply a "${release}" bump to version "${version}"`
+    );
+  }
+  return incremented;
 }

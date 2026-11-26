@@ -2,6 +2,7 @@ import { parseJson } from '@nx/devkit';
 import {
   checkFilesExist,
   cleanupProject,
+  ensureDefined,
   isNotWindows,
   newProject,
   readFile,
@@ -509,8 +510,11 @@ NX_USERNAME=$FIRSTNAME $LASTNAME`
       Record<string, string[]>
     > =>
       parseJson(
-        readFile('static/environment.js').match(
-          /window\.expandedTaskInputsResponse\s*=\s*(.*?);/
+        ensureDefined(
+          readFile('static/environment.js').match(
+            /window\.expandedTaskInputsResponse\s*=\s*(.*?);/
+          ),
+          'expandedTaskInputsResponse in environment.js'
         )[1]
       );
 

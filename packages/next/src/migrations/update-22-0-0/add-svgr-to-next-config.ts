@@ -21,8 +21,8 @@ export default async function addSvgrToNextConfig(tree: Tree) {
       const projectConfig = readProjectConfiguration(tree, project);
       const nextConfigPath = `${projectConfig.root}/next.config.js`;
 
-      if (!tree.exists(nextConfigPath)) return;
       const content = tree.read(nextConfigPath, 'utf-8');
+      if (content === null) return;
 
       if (!content.includes('withNx')) return;
       const sourceFile = ast(content);
@@ -94,6 +94,7 @@ export default async function addSvgrToNextConfig(tree: Tree) {
   // Update next.config.js files to add SVGR webpack configuration
   for (const [nextConfigPath, config] of projects.entries()) {
     let content = tree.read(nextConfigPath, 'utf-8');
+    if (content === null) continue;
     const sourceFile = ast(content);
     const changes: StringChange[] = [];
 

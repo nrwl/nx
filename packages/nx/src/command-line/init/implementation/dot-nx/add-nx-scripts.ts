@@ -59,7 +59,7 @@ export function getDotNxWrapperVersionCommand(
   return platform === 'win32' ? '.\\nx.bat --version' : './nx --version';
 }
 
-export function generateDotNxSetup(version?: string) {
+export function generateDotNxSetup(version: string) {
   const host = new FsTree(process.cwd(), false, '.nx setup');
   writeMinimalNxJson(host, version);
   updateGitIgnore(host);

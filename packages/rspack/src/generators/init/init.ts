@@ -72,7 +72,7 @@ export async function rspackInitGenerator(
         'rspack-watch-deps',
       ],
     },
-    schema.updatePackageScripts
+    schema.updatePackageScripts ?? false
   );
 
   const jsInitTask = await initGenerator(tree, {
@@ -86,7 +86,7 @@ export async function rspackInitGenerator(
   const rspackVersions = getRspackVersionsForInstalledMajor(tree);
   const keepExistingVersions = schema.keepExistingVersions ?? true;
 
-  const devDependencies = {
+  const devDependencies: Record<string, string> = {
     '@rspack/core': rspackVersions.rspackCoreVersion,
     '@rspack/cli': rspackVersions.rspackCoreVersion,
     '@rspack/dev-server': rspackVersions.rspackDevServerVersion,

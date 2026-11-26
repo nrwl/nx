@@ -171,14 +171,14 @@ export class AppMigrator extends ProjectMigrator<SupportedTargets> {
 
     if (this.targetNames.build) {
       this.moveFilePathsFromTargetToProjectRoot(
-        this.projectConfig.targets[this.targetNames.build],
+        this.getTarget(this.targetNames.build),
         ['tsConfig', 'webWorkerTsConfig', 'ngswConfigPath']
       );
     }
 
     if (this.targetNames.server) {
       this.moveFilePathsFromTargetToProjectRoot(
-        this.projectConfig.targets[this.targetNames.server],
+        this.getTarget(this.targetNames.server),
         ['tsConfig']
       );
     }
@@ -311,7 +311,7 @@ export class AppMigrator extends ProjectMigrator<SupportedTargets> {
     buildOptions.polyfills =
       buildOptions.polyfills &&
       (Array.isArray(buildOptions.polyfills)
-        ? buildOptions.polyfills.map((asset) =>
+        ? buildOptions.polyfills.map((asset: string) =>
             this.convertSourceRootPath(asset)
           )
         : this.convertSourceRootPath(buildOptions.polyfills));
@@ -320,13 +320,19 @@ export class AppMigrator extends ProjectMigrator<SupportedTargets> {
       joinPathFragments(this.project.newRoot, basename(buildOptions.tsConfig));
     buildOptions.assets =
       buildOptions.assets &&
-      buildOptions.assets.map((asset) => this.convertAsset(asset));
+      buildOptions.assets.map((asset: string | object) =>
+        this.convertAsset(asset)
+      );
     buildOptions.styles =
       buildOptions.styles &&
-      buildOptions.styles.map((style) => this.convertAsset(style));
+      buildOptions.styles.map((style: string | object) =>
+        this.convertAsset(style)
+      );
     buildOptions.scripts =
       buildOptions.scripts &&
-      buildOptions.scripts.map((script) => this.convertAsset(script));
+      buildOptions.scripts.map((script: string | object) =>
+        this.convertAsset(script)
+      );
     buildOptions.fileReplacements =
       buildOptions.fileReplacements &&
       buildOptions.fileReplacements.map((replacement: any) => ({
@@ -362,10 +368,12 @@ export class AppMigrator extends ProjectMigrator<SupportedTargets> {
       joinPathFragments(this.project.newRoot, basename(serverOptions.tsConfig));
     serverOptions.fileReplacements =
       serverOptions.fileReplacements &&
-      serverOptions.fileReplacements.map((replacement) => ({
-        replace: this.convertAsset(replacement.replace),
-        with: this.convertAsset(replacement.with),
-      }));
+      serverOptions.fileReplacements.map(
+        (replacement: { replace: string; with: string }) => ({
+          replace: this.convertAsset(replacement.replace),
+          with: this.convertAsset(replacement.with),
+        })
+      );
   }
 
   private updateBuildTargetConfiguration(): void {
@@ -380,7 +388,7 @@ export class AppMigrator extends ProjectMigrator<SupportedTargets> {
       return;
     }
 
-    const buildTarget = this.projectConfig.targets[this.targetNames.build];
+    const buildTarget = this.getTarget(this.targetNames.build);
 
     if (
       !buildTarget.options &&
@@ -423,8 +431,7 @@ export class AppMigrator extends ProjectMigrator<SupportedTargets> {
       return;
     }
 
-    const prerenderTarget =
-      this.projectConfig.targets[this.targetNames.prerender];
+    const prerenderTarget = this.getTarget(this.targetNames.prerender);
     if (!prerenderTarget.options) {
       this.logger.warn(
         `The target "${this.targetNames.prerender}" is not specifying any options. Skipping updating the target configuration.`
@@ -445,7 +452,7 @@ export class AppMigrator extends ProjectMigrator<SupportedTargets> {
       return;
     }
 
-    const serverTarget = this.projectConfig.targets[this.targetNames.server];
+    const serverTarget = this.getTarget(this.targetNames.server);
 
     if (
       !serverTarget.options &&
@@ -488,9 +495,8 @@ export class AppMigrator extends ProjectMigrator<SupportedTargets> {
       return;
     }
 
-    const ssrTarget =
-      this.targetNames.serveSsr ?? this.targetNames['serve-ssr'];
-    const serveSsrTarget = this.projectConfig.targets[ssrTarget];
+    const ssrTarget = this.targetNames.serveSsr;
+    const serveSsrTarget = this.getTarget(ssrTarget);
     if (
       !serveSsrTarget.options &&
       (!serveSsrTarget.configurations ||
@@ -509,14 +515,11 @@ export class AppMigrator extends ProjectMigrator<SupportedTargets> {
           this.convertPath(serveSsrTarget.options[option]);
       }
 
-      for (const configuration of Object.values(
-        serveSsrTarget.configurations ?? {}
-      )) {
-        serveSsrTarget.configurations[configuration][option] =
-          serveSsrTarget.configurations[configuration][option] &&
-          this.convertPath(
-            serveSsrTarget.configurations[configuration][option]
-          );
+      const configurations = serveSsrTarget.configurations ?? {};
+      for (const configuration of Object.values(configurations)) {
+        configurations[configuration][option] =
+          configurations[configuration][option] &&
+          this.convertPath(configurations[configuration][option]);
       }
     });
   }
@@ -528,8 +531,8 @@ export class AppMigrator extends ProjectMigrator<SupportedTargets> {
         continue;
       }
 
-      const target = this.projectConfig.targets[targetName];
-      if (!readySignalingServeBuilders.has(target.executor)) {
+      const target = this.getTarget(targetName);
+      if (!readySignalingServeBuilders.has(target.executor ?? '')) {
         continue;
       }
       target.continuous ??= true;
@@ -540,7 +543,7 @@ export class AppMigrator extends ProjectMigrator<SupportedTargets> {
   }
 
   private updateTsConfigFileUsedByBuildTarget(
-    rootTsConfigFile: string,
+    rootTsConfigFile: string | null,
     projectOffsetFromRoot: string
   ): void {
     if (
@@ -551,9 +554,9 @@ export class AppMigrator extends ProjectMigrator<SupportedTargets> {
     }
 
     const tsConfigPath =
-      this.projectConfig.targets[this.targetNames.build].options?.tsConfig ??
-      this.projectConfig.targets[this.targetNames.build].configurations
-        ?.development?.tsConfig;
+      this.getTarget(this.targetNames.build).options?.tsConfig ??
+      this.getTarget(this.targetNames.build).configurations?.development
+        ?.tsConfig;
 
     if (!tsConfigPath || !this.tree.exists(tsConfigPath)) {
       // we already logged a warning for these cases, so just return
@@ -578,9 +581,9 @@ export class AppMigrator extends ProjectMigrator<SupportedTargets> {
     }
 
     const tsConfigPath =
-      this.projectConfig.targets[this.targetNames.server].options?.tsConfig ??
-      this.projectConfig.targets[this.targetNames.server].configurations
-        ?.development?.tsConfig;
+      this.getTarget(this.targetNames.server).options?.tsConfig ??
+      this.getTarget(this.targetNames.server).configurations?.development
+        ?.tsConfig;
 
     if (!tsConfigPath || !this.tree.exists(tsConfigPath)) {
       // we already logged a warning for these cases, so just return

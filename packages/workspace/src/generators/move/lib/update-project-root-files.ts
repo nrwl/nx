@@ -66,6 +66,9 @@ export function updateFilesForRootProjects(
       join(schema.relativeToRootDestination, file),
       'utf-8'
     );
+    if (oldContent === null) {
+      continue;
+    }
     let newContent = oldContent
       .replace(regex, newRelativeRoot)
       // The moved config is `jest.config.<ext>`, so plain `jest` merges with the
@@ -142,6 +145,9 @@ export function updateFilesForNonRootProjects(
       join(schema.relativeToRootDestination, file),
       'utf-8'
     );
+    if (oldContent === null) {
+      continue;
+    }
     let newContent = oldContent.replace(regex, newRelativeRoot);
     if (file == 'tsconfig.json') {
       newContent = newContent.replace('tsconfig.json', 'tsconfig.base.json');

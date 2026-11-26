@@ -23,6 +23,10 @@ export function buildEsbuildOptions(
   options: NormalizedEsBuildExecutorOptions,
   context: ExecutorContext
 ): esbuild.BuildOptions {
+  const projectName = context.projectName;
+  if (!projectName) {
+    throw new Error('The esbuild executor must be run for a project.');
+  }
   const outExtension = getOutExtension(format, options, context);
   const external = options.bundle
     ? [
@@ -84,15 +88,11 @@ export function buildEsbuildOptions(
       ? createPathsFromTsConfigReferences(context)
       : getTsConfigCompilerPaths(context);
 
-    const entryPointsFromProjects = getEntryPoints(
-      context.projectName,
-      context,
-      {
-        initialTsConfigFileName: options.tsConfig,
-        initialEntryPoints: entryPoints,
-        recursive: true,
-      }
-    );
+    const entryPointsFromProjects = getEntryPoints(projectName, context, {
+      initialTsConfigFileName: options.tsConfig,
+      initialEntryPoints: entryPoints,
+      recursive: true,
+    });
 
     esbuildOptions.entryPoints = [
       // Write a main entry file that registers workspace libs and then calls the user-defined main.
@@ -128,7 +128,7 @@ export function buildEsbuildOptions(
     ];
   } else {
     // Otherwise, just transpile the project source files. Any workspace lib will need to be published separately.
-    esbuildOptions.entryPoints = getEntryPoints(context.projectName, context, {
+    esbuildOptions.entryPoints = getEntryPoints(projectName, context, {
       initialTsConfigFileName: options.tsConfig,
       initialEntryPoints: entryPoints,
       recursive: false,
@@ -161,7 +161,7 @@ export function createPathsFromTsConfigReferences(
     joinPathFragments(context.root, 'tsconfig.json')
   );
   const referencesAsPaths = new Set(
-    tsConfig.references.reduce((acc, ref) => {
+    tsConfig.references.reduce((acc: string[], ref: { path?: string }) => {
       if (!ref.path) return acc;
 
       const fullPath = joinPathFragments(workspaceRoot, ref.path);
@@ -180,7 +180,7 @@ export function createPathsFromTsConfigReferences(
 
   // for each dep we check if it contains a build target
   // we only want to add the paths for projects that do not have a build target
-  return deps.reduce((acc, dep) => {
+  return deps.reduce((acc: Record<string, string[]>, dep: string) => {
     const projectNode = context.projectGraph.nodes[dep];
     const projectPath = joinPathFragments(workspaceRoot, projectNode.data.root);
     const resolvedTsConfigPath =
@@ -303,6 +303,9 @@ function writeTmpEntryWithRequireOverrides(
   context: ExecutorContext,
   format: 'cjs' | 'esm' = 'cjs'
 ): { in: string; out: string } {
+  if (!context.projectName) {
+    throw new Error('The esbuild executor must be run for a project.');
+  }
   const project = context.projectGraph?.nodes[context.projectName];
   // Write a temp main entry source that registers workspace libs.
   const tmpPath = path.join(context.root, 'tmp', project.name);
@@ -361,8 +364,10 @@ export function getRegisterFileContent(
     module: string;
     pattern: string;
     exactMatch?: string;
-  }> = sortedKeys.reduce((acc, k) => {
-    let exactMatch: string;
+  }> = sortedKeys.reduce<
+    Array<{ module: string; pattern: string; exactMatch?: string }>
+  >((acc, k) => {
+    let exactMatch: string | undefined;
 
     // Nx generates a single path entry.
     // If more sophisticated setup is needed, we can consider tsconfig-paths.

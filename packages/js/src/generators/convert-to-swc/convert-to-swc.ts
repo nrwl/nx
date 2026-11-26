@@ -35,14 +35,8 @@ export async function convertToSwcGenerator(
 
 function normalizeOptions(
   schema: ConvertToSwcGeneratorSchema
-): ConvertToSwcGeneratorSchema {
-  const options = { ...schema };
-
-  if (!options.targets) {
-    options.targets = ['build'];
-  }
-
-  return options;
+): ConvertToSwcGeneratorSchema & { targets: string[] } {
+  return { ...schema, targets: schema.targets ?? ['build'] };
 }
 
 function updateProjectBuildTargets(

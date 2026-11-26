@@ -51,6 +51,9 @@ export async function normalizeOptions(
 
   if (options.appProject) {
     const appProjectConfig = getProjects(host).get(options.appProject);
+    if (!appProjectConfig) {
+      throw new Error(`Cannot find project "${options.appProject}"`);
+    }
     const appProjectType = getProjectType(
       host,
       appProjectConfig.root,
@@ -66,7 +69,11 @@ export async function normalizeOptions(
     const projectSourceRoot = getProjectSourceRoot(appProjectConfig, host);
 
     try {
-      appMain = appProjectConfig.targets.build.options.main;
+      const buildOptions = appProjectConfig.targets?.build?.options;
+      if (!buildOptions) {
+        throw new Error();
+      }
+      appMain = buildOptions.main;
       appSourceRoot = normalizePath(projectSourceRoot);
     } catch (e) {
       throw new Error(

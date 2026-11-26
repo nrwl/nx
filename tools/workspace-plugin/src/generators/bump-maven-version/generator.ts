@@ -100,7 +100,9 @@ function updateXmlVersion(
     tree.write(filePath, updatedContent);
     logger.info(`Updated version in ${filePath} to ${newVersion}`);
   } catch (error) {
-    throw new Error(`Failed to update XML in ${filePath}: ${error.message}`);
+    throw new Error(
+      `Failed to update XML in ${filePath}: ${error instanceof Error ? error.message : String(error)}`
+    );
   }
 }
 
@@ -245,7 +247,9 @@ export default async function update(tree: Tree) {
     logger.info(`✅ Successfully bumped Maven plugin version to ${newVersion}`);
     logger.info(`   Migration created for Nx ${nxVersion}`);
   } catch (error) {
-    logger.error(`Failed to bump Maven version: ${error.message}`);
+    logger.error(
+      `Failed to bump Maven version: ${error instanceof Error ? error.message : String(error)}`
+    );
     throw error;
   }
 }

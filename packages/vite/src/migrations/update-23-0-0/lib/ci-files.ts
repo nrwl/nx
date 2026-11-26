@@ -27,6 +27,7 @@ export function visitCiFiles(
   visitNotIgnoredFiles(tree, '', (filePath) => {
     if (!isCiFile(filePath)) return;
     const contents = tree.read(filePath, 'utf-8');
+    if (contents === null) return;
     callback(filePath, contents);
   });
 }

@@ -31,7 +31,7 @@ export function getTuiTerminalSummaryLifeCycle({
   taskGraph: TaskGraph;
   args: { targets?: string[]; configuration?: string; parallel?: number };
   overrides: Record<string, unknown>;
-  initiatingProject: string;
+  initiatingProject: string | null;
   initiatingTasks: Task[];
   resolveRenderIsDonePromise: (value: void) => void;
 }) {
@@ -187,6 +187,8 @@ export function getTuiTerminalSummaryLifeCycle({
       printRunOneSummary({
         failure,
         cancelled,
+        initiatingProject,
+        targets,
       });
     } else {
       printRunManySummary({
@@ -200,9 +202,13 @@ export function getTuiTerminalSummaryLifeCycle({
   const printRunOneSummary = ({
     failure,
     cancelled,
+    initiatingProject,
+    targets,
   }: {
     failure: boolean;
     cancelled: boolean;
+    initiatingProject: string;
+    targets: string[];
   }) => {
     // Print task outputs in start order above the summary.
     for (const taskId of taskIdsInTheOrderTheyStart) {

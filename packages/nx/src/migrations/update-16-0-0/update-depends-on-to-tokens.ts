@@ -34,8 +34,11 @@ export default async function (tree: Tree) {
 
 function updateDependsOnAndInputsInsideNxJson(tree: Tree) {
   const nxJson = readNxJson(tree);
+  if (!nxJson) {
+    return;
+  }
   let nxJsonChanged = false;
-  for (const defaults of Object.values(nxJson?.targetDefaults ?? {})) {
+  for (const defaults of Object.values(nxJson.targetDefaults ?? {})) {
     // `nx repair` can't assume migration order, so a default may already be in
     // the filtered array shape; rewrite every config block of either form.
     for (const block of targetDefaultConfigs(defaults)) {
@@ -70,23 +73,25 @@ function rewriteTokensInBlock(block: TargetConfiguration): boolean {
       }
     }
   }
-  for (let i = 0; i < (block.inputs?.length ?? 0); i++) {
-    const input = block.inputs[i];
+  const inputs = block.inputs ?? [];
+  for (let i = 0; i < inputs.length; i++) {
+    const input = inputs[i];
     if (typeof input !== 'string') {
       if (
         'projects' in input &&
         (input.projects === 'self' || input.projects === '{self}')
       ) {
-        delete input.projects;
+        const { projects: _projects, ...rest } = input;
+        inputs[i] = rest;
         changed = true;
       } else if (
         'projects' in input &&
         (input.projects === 'dependencies' ||
           input.projects === '{dependencies}')
       ) {
-        delete input.projects;
-        block.inputs[i] = {
-          ...input,
+        const { projects: _projects, ...rest } = input;
+        inputs[i] = {
+          ...rest,
           dependencies: true,
         };
         changed = true;

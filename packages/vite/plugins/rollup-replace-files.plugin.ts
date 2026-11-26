@@ -9,13 +9,14 @@ export function replaceFiles(replacements: FileReplacement[]): {
   name: string;
   enforce: 'pre' | 'post' | undefined;
   resolveId(
+    this: ResolveContext,
     source: any,
     importer: any,
     options: any
   ): Promise<{
     id: string;
-  }>;
-} {
+  } | null>;
+} | null {
   if (!replacements?.length) {
     return null;
   }
@@ -34,17 +35,18 @@ export function replaceFiles(replacements: FileReplacement[]): {
        * the path from the root of our workspace.
        */
 
+      const resolvedId = resolved?.id;
       const foundReplace = replacements.find((replacement) =>
-        resolved?.id?.endsWith(replacement.replace)
+        resolvedId?.endsWith(replacement.replace)
       );
-      if (foundReplace) {
+      if (resolvedId && foundReplace) {
         console.info(
           `replace "${foundReplace.replace}" with "${foundReplace.with}"`
         );
         try {
           // return new file content
           return {
-            id: resolved.id.replace(foundReplace.replace, foundReplace.with),
+            id: resolvedId.replace(foundReplace.replace, foundReplace.with),
           };
         } catch (err) {
           console.error(err);
@@ -54,6 +56,14 @@ export function replaceFiles(replacements: FileReplacement[]): {
       return null;
     },
   };
+}
+
+interface ResolveContext {
+  resolve(
+    source: string,
+    importer: string | undefined,
+    options: object
+  ): Promise<{ id: string } | null>;
 }
 
 export interface FileReplacement {

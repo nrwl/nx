@@ -56,7 +56,7 @@ const row = (rows: { text: string }[][], label: string) => {
 const cellsOf = (rows: { text: string; url: string }[][], label: string) =>
   rows.find((r) => r[0].text === label);
 const query = (url: string) =>
-  decodeURIComponent(new URL(url).searchParams.get('q'));
+  decodeURIComponent(new URL(url).searchParams.get('q') ?? '');
 
 describe('formatGhReport', () => {
   const report = formatGhReport(current, trends, previous, scopeLabels);
@@ -194,7 +194,11 @@ describe('search links', () => {
   const [issues, prs] = report.tables;
   const cell = (t: typeof issues, rowLabel: string, column: string) => {
     const idx = t.columns.findIndex((c) => c.label === column);
-    return cellsOf(t.rows, rowLabel)[idx];
+    const cells = cellsOf(t.rows, rowLabel);
+    if (!cells) {
+      throw new Error(`No row labelled "${rowLabel}"`);
+    }
+    return cells[idx];
   };
   const q = (t: typeof issues, rowLabel: string, column: string) =>
     query(cell(t, rowLabel, column).url);

@@ -145,7 +145,7 @@ function updateProjectConfigurationInPackageJson(
   ) {
     delete projectConfiguration.targets;
     // The spread below would otherwise keep the targets the caller removed
-    if (Object.keys(packageJson.nx?.targets ?? {}).length) {
+    if (packageJson.nx?.targets && Object.keys(packageJson.nx.targets).length) {
       delete packageJson.nx.targets;
       removedTargets = true;
     }
@@ -284,7 +284,7 @@ function readAndCombineAllProjectConfigurations(tree: Tree): {
     ...getGlobPatternsFromPackageManagerWorkspaces(
       tree.root,
       (p) => readJson(tree, p, { expectComments: true }),
-      <T extends Object>(p) => {
+      <T extends Object>(p: string) => {
         const content = tree.read(p, 'utf-8');
         const { load } = require('@zkochan/js-yaml');
         return load(content, { filename: p }) as T;
@@ -381,7 +381,7 @@ function findCreatedProjectFiles(tree: Tree, globPatterns: string[]) {
         )
       ) {
         createdProjectFiles.push(change.path);
-      } else if (fileName === 'package.json') {
+      } else if (fileName === 'package.json' && change.content !== null) {
         try {
           const contents: PackageJson = JSON.parse(change.content.toString());
           if (contents.nx) {
@@ -413,7 +413,7 @@ function findDeletedProjectFiles(tree: Tree, globPatterns: string[]) {
 }
 
 function toNewFormat(w: any): ProjectsConfigurations {
-  const projects = {};
+  const projects: Record<string, ProjectConfiguration> = {};
 
   Object.keys(w.projects || {}).forEach((name) => {
     if (typeof w.projects[name] === 'string') return;
@@ -446,7 +446,7 @@ function toNewFormat(w: any): ProjectsConfigurations {
 
 function handleEmptyTargets(
   projectName: string,
-  projectConfiguration: ProjectConfiguration
+  projectConfiguration: ProjectConfiguration & { '// targets'?: string }
 ): void {
   if (
     projectConfiguration.targets &&

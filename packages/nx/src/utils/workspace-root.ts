@@ -14,10 +14,15 @@ export function setWorkspaceRoot(root: string): void {
   workspaceRoot = root;
 }
 
+export function workspaceRootInner(dir: string, candidateRoot: string): string;
 export function workspaceRootInner(
   dir: string,
   candidateRoot: string | null
-): string {
+): string | null;
+export function workspaceRootInner(
+  dir: string,
+  candidateRoot: string | null
+): string | null {
   if (process.env.NX_WORKSPACE_ROOT_PATH)
     return process.env.NX_WORKSPACE_ROOT_PATH;
   if (path.dirname(dir) === dir) return candidateRoot;

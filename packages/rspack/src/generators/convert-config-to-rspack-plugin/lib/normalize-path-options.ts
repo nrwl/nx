@@ -1,91 +1,69 @@
 import { RspackExecutorSchema } from '../../../executors/rspack/schema';
 import { toProjectRelativePath } from './utils';
 
-const executorFieldsToNormalize: Array<keyof RspackExecutorSchema> = [
+const stringFieldsToNormalize = [
   'outputPath',
   'index',
   'main',
-  'assets',
   'tsConfig',
-  'styles',
-  'additionalEntryPoints',
-  'scripts',
-  'fileReplacements',
   'postcssConfig',
-  'stylePreprocessorOptions',
   'publicPath',
-];
+] as const;
 
 export function normalizePathOptions(
   projectRoot: string,
   options: Partial<RspackExecutorSchema>
 ) {
-  for (const [key, value] of Object.entries(options)) {
-    if (
-      !executorFieldsToNormalize.includes(key as keyof RspackExecutorSchema)
-    ) {
-      continue;
+  const toRelative = (path: string) => toProjectRelativePath(path, projectRoot);
+
+  for (const key of stringFieldsToNormalize) {
+    const value = options[key];
+    if (value) {
+      options[key] = toRelative(value);
     }
-    options[key] = normalizePath(
-      projectRoot,
-      key as keyof RspackExecutorSchema,
-      value
+  }
+
+  if (options.assets) {
+    options.assets = options.assets.map((asset) => {
+      if (typeof asset === 'string') {
+        return toRelative(asset);
+      }
+      return {
+        ...asset,
+        input: toRelative(asset.input),
+        output: toRelative(asset.output),
+      };
+    });
+  }
+
+  if (options.styles) {
+    options.styles = options.styles.map((item) =>
+      typeof item === 'string'
+        ? toRelative(item)
+        : { ...item, input: toRelative(item.input) }
     );
   }
-  return options;
-}
 
-function normalizePath<K extends keyof RspackExecutorSchema>(
-  projectRoot: string,
-  key: K,
-  value: RspackExecutorSchema[K]
-) {
-  if (!value) return value;
-
-  switch (key) {
-    case 'assets':
-      return value.map((asset) => {
-        if (typeof asset === 'string') {
-          return toProjectRelativePath(asset, projectRoot);
-        }
-        return {
-          ...asset,
-          input: toProjectRelativePath(asset.input, projectRoot),
-          output: toProjectRelativePath(asset.output, projectRoot),
-        };
-      });
-
-    case 'styles':
-    case 'scripts':
-      return value.map((item) => {
-        if (typeof item === 'string') {
-          return toProjectRelativePath(item, projectRoot);
-        }
-        return {
-          ...item,
-          input: toProjectRelativePath(item.input, projectRoot),
-        };
-      });
-
-    case 'additionalEntryPoints':
-      return value.map((entry) => {
-        return {
-          ...entry,
-          entryPath: toProjectRelativePath(entry.entryPath, projectRoot),
-        };
-      });
-
-    case 'fileReplacements':
-      return value.map((replacement) => {
-        return {
-          replace: toProjectRelativePath(replacement.replace, projectRoot),
-          with: toProjectRelativePath(replacement.with, projectRoot),
-        };
-      });
-
-    default:
-      return Array.isArray(value)
-        ? value.map((item) => toProjectRelativePath(item, projectRoot))
-        : toProjectRelativePath(value, projectRoot);
+  if (options.scripts) {
+    options.scripts = options.scripts.map((item) =>
+      typeof item === 'string'
+        ? toRelative(item)
+        : { ...item, input: toRelative(item.input) }
+    );
   }
+
+  if (options.additionalEntryPoints) {
+    options.additionalEntryPoints = options.additionalEntryPoints.map(
+      (entry) => ({ ...entry, entryPath: toRelative(entry.entryPath) })
+    );
+  }
+
+  if (options.fileReplacements) {
+    options.fileReplacements = options.fileReplacements.map((replacement) => ({
+      replace: toRelative(replacement.replace),
+      with: toRelative(replacement.with),
+    }));
+  }
+
+  return options;
 }

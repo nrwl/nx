@@ -7,13 +7,12 @@ import { NxJsonConfiguration } from '../../config/nx-json';
 import { joinPathFragments } from '../../utils/path';
 
 export default async function update(tree: Tree) {
-  if (!tree.exists('nx.json')) {
+  const nxJson: LegacyNxJsonConfiguration | null = readNxJson(tree);
+  if (!nxJson) {
     return;
   }
 
-  const nxJson = readNxJson(tree);
-
-  delete nxJson.cli?.['defaultCollection'];
+  delete nxJson.cli?.defaultCollection;
 
   if (nxJson?.cli && Object.keys(nxJson.cli).length < 1) {
     delete nxJson.cli;
@@ -21,18 +20,23 @@ export default async function update(tree: Tree) {
 
   warnNpmScopeHasChanged(tree, nxJson);
 
-  delete nxJson['npmScope'];
+  delete nxJson.npmScope;
 
   updateNxJson(tree, nxJson);
 
   await formatChangedFiles(tree);
 }
 
+type LegacyNxJsonConfiguration = NxJsonConfiguration & {
+  npmScope?: string;
+  cli?: { defaultCollection?: string };
+};
+
 function warnNpmScopeHasChanged(
   tree: Tree,
-  nxJson: NxJsonConfiguration
+  nxJson: LegacyNxJsonConfiguration
 ): boolean {
-  const originalScope = nxJson['npmScope'];
+  const originalScope = nxJson.npmScope;
 
   // There was no original scope
   if (!originalScope) {
@@ -83,6 +87,7 @@ function warnNpmScopeHasChanged(
       ],
     });
   }
+  return true;
 }
 
 function getNpmScopeFromPackageJson(tree: Tree) {

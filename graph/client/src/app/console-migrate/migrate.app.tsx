@@ -66,7 +66,10 @@ export function MigrateApp({
     service,
     (state) => state.context.nxConsoleMetadata
   );
-  const onFileClick = (migration: MigrationDetailsWithId, file: FileChange) => {
+  const onFileClick = (
+    migration: MigrationDetailsWithId,
+    file: Omit<FileChange, 'content'>
+  ) => {
     externalApiService.postEvent({
       type: 'file-click',
       payload: {

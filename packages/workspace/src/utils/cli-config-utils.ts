@@ -17,7 +17,12 @@ export function parseTarget(targetString: string) {
   };
 }
 
-export function editTarget(targetString: string, callback) {
+type ParsedTarget = { project: string; target: string; config?: string };
+
+export function editTarget(
+  targetString: string,
+  callback: (target: ParsedTarget) => ParsedTarget
+) {
   const parsedTarget = parseTarget(targetString);
   return serializeTarget(callback(parsedTarget));
 }
@@ -25,6 +30,6 @@ export function editTarget(targetString: string, callback) {
 /**
  * @deprecated use the utility from nx/src/utils instead
  */
-export function serializeTarget({ project, target, config }) {
+export function serializeTarget({ project, target, config }: ParsedTarget) {
   return [project, target, config].filter((part) => !!part).join(':');
 }

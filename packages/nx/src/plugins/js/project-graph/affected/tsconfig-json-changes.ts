@@ -60,7 +60,7 @@ function getProjectsAffectedByPaths(
   change: JsonChange,
   nodes: ProjectGraphProjectNode[]
 ) {
-  const result = [];
+  const result: string[] = [];
   const paths: string[] = [change.value.lhs, change.value.rhs];
   paths.forEach((path) => {
     nodes.forEach((project) => {

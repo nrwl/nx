@@ -138,9 +138,9 @@ async function findViteBelowFloor(tree: Tree): Promise<string[]> {
 
   const blockers: string[] = [];
   for (const cypressConfigPath of cypressConfigPaths) {
-    const bundler = tree.exists(cypressConfigPath)
-      ? getComponentTestingBundler(tree.read(cypressConfigPath, 'utf-8'))
-      : 'unknown';
+    const contents = tree.read(cypressConfigPath, 'utf-8');
+    const bundler =
+      contents !== null ? getComponentTestingBundler(contents) : 'unknown';
     if (bundler === 'other') {
       continue;
     }
@@ -240,6 +240,7 @@ function classifyComponent(
       return 'vite';
     }
     if (
+      presetImport === null ||
       !NX_WEBPACK_CT_PRESETS.includes(presetImport) ||
       value.arguments.some((argument) => ts.isSpreadElement(argument))
     ) {

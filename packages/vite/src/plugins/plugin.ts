@@ -58,6 +58,15 @@ export interface VitePluginOptions {
   buildDepsTargetName?: string;
 }
 
+type NormalizedVitePluginOptions = VitePluginOptions & {
+  buildTargetName: string;
+  serveTargetName: string;
+  devTargetName: string;
+  previewTargetName: string;
+  serveStaticTargetName: string;
+  typecheckTargetName: string | false;
+};
+
 type ViteTargets = Pick<
   ProjectConfiguration,
   'targets' | 'metadata' | 'projectType'
@@ -134,22 +143,21 @@ export const createNodes: CreateNodes<VitePluginOptions> = [
           });
 
           const hash = hashes[idx] + configFile;
-          if (!targetsCache.has(hash)) {
-            targetsCache.set(
-              hash,
-              await buildViteTargets(
-                configFile,
-                projectRoot,
-                normalizedOptions,
-                tsConfigFiles,
-                hasReactRouterConfig,
-                isUsingTsSolutionSetup,
-                context,
-                pmc
-              )
+          let viteTargets = targetsCache.get(hash);
+          if (!viteTargets) {
+            viteTargets = await buildViteTargets(
+              configFile,
+              projectRoot,
+              normalizedOptions,
+              tsConfigFiles,
+              hasReactRouterConfig,
+              isUsingTsSolutionSetup,
+              context,
+              pmc
             );
+            targetsCache.set(hash, viteTargets);
           }
-          const { projectType, metadata, targets } = targetsCache.get(hash);
+          const { projectType, metadata, targets } = viteTargets;
 
           const project: ProjectConfiguration = {
             root: projectRoot,
@@ -159,7 +167,7 @@ export const createNodes: CreateNodes<VitePluginOptions> = [
 
           // If project is buildable, then the project type.
           // If it is not buildable, then leave it to other plugins/project.json to set the project type.
-          if (project.targets[normalizedOptions.buildTargetName]) {
+          if (targets?.[normalizedOptions.buildTargetName]) {
             project.projectType = projectType;
           }
 
@@ -184,7 +192,7 @@ export const createNodesV2 = createNodes;
 async function buildViteTargets(
   configFilePath: string,
   projectRoot: string,
-  options: VitePluginOptions,
+  options: NormalizedVitePluginOptions,
   tsConfigFiles: string[],
   hasReactRouterConfig: boolean,
   isUsingTsSolutionSetup: boolean,
@@ -418,7 +426,7 @@ async function buildTarget(
 
 function buildInputs(namedInputs: {
   [inputName: string]: any[];
-}): TargetConfiguration['inputs'] {
+}): NonNullable<TargetConfiguration['inputs']> {
   return [
     ...('production' in namedInputs
       ? ['production', '^production']
@@ -501,7 +509,7 @@ function previewTarget(
 }
 
 function serveStaticTarget(
-  options: VitePluginOptions,
+  options: NormalizedVitePluginOptions,
   isUsingTsSolutionSetup: boolean,
   namedInputs: { [inputName: string]: any[] }
 ) {
@@ -581,7 +589,7 @@ function normalizeOutputPath(
   projectRoot: string,
   workspaceRoot: string,
   path: 'dist'
-): string | undefined {
+): string {
   if (!outputPath) {
     if (projectRoot === '.') {
       return `{projectRoot}/${path}`;
@@ -601,15 +609,17 @@ function normalizeOutputPath(
   }
 }
 
-function normalizeOptions(options: VitePluginOptions): VitePluginOptions {
-  options ??= {};
-  options.buildTargetName ??= 'build';
-  options.serveTargetName ??= 'serve';
-  options.devTargetName ??= 'dev';
-  options.previewTargetName ??= 'preview';
-  options.serveStaticTargetName ??= 'serve-static';
-  options.typecheckTargetName ??= 'typecheck';
-  return options;
+function normalizeOptions(
+  options: VitePluginOptions | undefined
+): NormalizedVitePluginOptions {
+  return Object.assign(options ?? {}, {
+    buildTargetName: options?.buildTargetName ?? 'build',
+    serveTargetName: options?.serveTargetName ?? 'serve',
+    devTargetName: options?.devTargetName ?? 'dev',
+    previewTargetName: options?.previewTargetName ?? 'preview',
+    serveStaticTargetName: options?.serveStaticTargetName ?? 'serve-static',
+    typecheckTargetName: options?.typecheckTargetName ?? 'typecheck',
+  });
 }
 
 /**

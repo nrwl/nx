@@ -24,10 +24,16 @@ export function readTargetOptions<T = any>(
     throw new Error(`Unable to find project ${project}`);
   }
 
-  const targetConfiguration = projectConfiguration.targets[target];
+  const targetConfiguration = projectConfiguration.targets?.[target];
 
   if (!targetConfiguration) {
     throw new Error(`Unable to find target ${target} for project ${project}`);
+  }
+
+  if (!targetConfiguration.executor) {
+    throw new Error(
+      `Unable to find the executor of target ${target} for project ${project}`
+    );
   }
 
   const [nodeModule, executorName] = parseExecutor(

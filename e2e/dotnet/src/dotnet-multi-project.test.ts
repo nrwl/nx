@@ -63,14 +63,26 @@ describe('.NET Plugin - Multi-Project Scenarios', () => {
 
       // Verify dependency chain
       const webApiDeps = graph.dependencies['WebApi'] || [];
-      expect(webApiDeps.some((dep) => dep.target === 'Application')).toBe(true);
+      expect(
+        webApiDeps.some(
+          (dep: { target: string }) => dep.target === 'Application'
+        )
+      ).toBe(true);
 
       const appDeps = graph.dependencies['Application'] || [];
-      expect(appDeps.some((dep) => dep.target === 'Core')).toBe(true);
-      expect(appDeps.some((dep) => dep.target === 'Infrastructure')).toBe(true);
+      expect(
+        appDeps.some((dep: { target: string }) => dep.target === 'Core')
+      ).toBe(true);
+      expect(
+        appDeps.some(
+          (dep: { target: string }) => dep.target === 'Infrastructure'
+        )
+      ).toBe(true);
 
       const infraDeps = graph.dependencies['Infrastructure'] || [];
-      expect(infraDeps.some((dep) => dep.target === 'Core')).toBe(true);
+      expect(
+        infraDeps.some((dep: { target: string }) => dep.target === 'Core')
+      ).toBe(true);
     });
 
     it('should build projects in correct order', () => {

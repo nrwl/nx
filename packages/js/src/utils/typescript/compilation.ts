@@ -44,7 +44,7 @@ export function compileTypeScriptWatcher(
     diagnostic: Diagnostic,
     newLine: string,
     options: ts.CompilerOptions,
-    errorCount: number
+    errorCount?: number
   ) => void | Promise<void>
 ) {
   if (!tsModule) {

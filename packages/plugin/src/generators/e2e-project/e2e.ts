@@ -281,8 +281,10 @@ export { default as teardown } from './stop-local-registry';
     }
   }
 
-  if (vitestConfigPath) {
-    let vitestConfig = host.read(vitestConfigPath, 'utf-8');
+  let vitestConfig = vitestConfigPath
+    ? host.read(vitestConfigPath, 'utf-8')
+    : null;
+  if (vitestConfigPath && vitestConfig !== null) {
     const globalSetupPath = join(
       offsetFromRoot(options.projectRoot),
       vitestGlobalSetupPath

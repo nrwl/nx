@@ -7,6 +7,9 @@ import {
   getSelectTargetDropdown,
 } from './app.po';
 
+const projectDependencies: Record<string, { target: string }[]> =
+  nxExamplesJson.dependencies;
+
 function waitForProjectGraph(router: 'hash' | 'browser') {
   if (router === 'browser') {
     cy.wait('@getGraph');
@@ -58,7 +61,7 @@ export function testProjectsRoutes(
         const dependencies = nxExamplesJson.dependencies.cart;
         const dependents = Object.keys(nxExamplesJson.dependencies).filter(
           (key) =>
-            nxExamplesJson.dependencies[key]
+            projectDependencies[key]
               .map((dependencies) => dependencies.target)
               .includes('cart')
         );
@@ -79,7 +82,7 @@ export function testProjectsRoutes(
         const dependencies = nxExamplesJson.dependencies['@scoped/project-a'];
         const dependents = Object.keys(nxExamplesJson.dependencies).filter(
           (key) =>
-            nxExamplesJson.dependencies[key]
+            projectDependencies[key]
               .map((dependencies) => dependencies.target)
               .includes('@scoped/project-a')
         );

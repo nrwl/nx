@@ -51,9 +51,11 @@ export function resolveCommandSyntacticSugar(
   }
 }
 
-export function mergeMetadata<T = ProjectMetadata | TargetMetadata>(
-  sourceMap: Record<string, [file: string, plugin: string]>,
-  sourceInformation: [file: string, plugin: string],
+export function mergeMetadata<
+  T extends ProjectMetadata | TargetMetadata = ProjectMetadata | TargetMetadata,
+>(
+  sourceMap: Record<string, SourceInformation> | undefined,
+  sourceInformation: SourceInformation | undefined,
   baseSourceMapPath: string,
   metadata: T,
   matchingMetadata?: T
@@ -67,7 +69,7 @@ export function mergeMetadata<T = ProjectMetadata | TargetMetadata>(
     if (Array.isArray(value) && Array.isArray(existingValue)) {
       const startIndex = result[metadataKey].length;
       result[metadataKey].push(...value);
-      if (sourceMap) {
+      if (sourceMap && sourceInformation) {
         recordSourceMapKeysByIndex(
           sourceMap,
           `${baseSourceMapPath}.${metadataKey}`,
@@ -78,7 +80,7 @@ export function mergeMetadata<T = ProjectMetadata | TargetMetadata>(
       }
     } else if (Array.isArray(value) && existingValue === undefined) {
       result[metadataKey] ??= value;
-      if (sourceMap) {
+      if (sourceMap && sourceInformation) {
         sourceMap[`${baseSourceMapPath}.${metadataKey}`] = sourceInformation;
         recordSourceMapKeysByIndex(
           sourceMap,
@@ -94,7 +96,7 @@ export function mergeMetadata<T = ProjectMetadata | TargetMetadata>(
         if (Array.isArray(value[key]) && Array.isArray(existingValue)) {
           const startIndex = result[metadataKey][key].length;
           result[metadataKey][key].push(...value[key]);
-          if (sourceMap) {
+          if (sourceMap && sourceInformation) {
             recordSourceMapKeysByIndex(
               sourceMap,
               `${baseSourceMapPath}.${metadataKey}.${key}`,
@@ -105,7 +107,7 @@ export function mergeMetadata<T = ProjectMetadata | TargetMetadata>(
           }
         } else {
           result[metadataKey][key] = value[key];
-          if (sourceMap) {
+          if (sourceMap && sourceInformation) {
             sourceMap[`${baseSourceMapPath}.${metadataKey}`] =
               sourceInformation;
           }
@@ -113,7 +115,7 @@ export function mergeMetadata<T = ProjectMetadata | TargetMetadata>(
       }
     } else {
       result[metadataKey] = value;
-      if (sourceMap) {
+      if (sourceMap && sourceInformation) {
         sourceMap[`${baseSourceMapPath}.${metadataKey}`] = sourceInformation;
 
         if (typeof value === 'object') {
@@ -149,7 +151,7 @@ function mergeOptions(
     return getMergeValueResult(
       baseOptions,
       newOptions,
-      projectConfigSourceMap
+      projectConfigSourceMap && sourceInformation
         ? {
             sourceMap: projectConfigSourceMap,
             key: `${targetIdentifier}.options`,
@@ -164,13 +166,13 @@ function mergeOptions(
     baseOptions ?? {},
     newOptions ?? {}
   );
-  const mergedOptions = {};
+  const mergedOptions: Record<string, unknown> = {};
 
   for (const optionKey of mergedOptionKeys) {
     mergedOptions[optionKey] = getMergeValueResult(
       baseOptions ? baseOptions[optionKey] : undefined,
       newOptions ? newOptions[optionKey] : undefined,
-      projectConfigSourceMap
+      projectConfigSourceMap && sourceInformation
         ? {
             sourceMap: projectConfigSourceMap,
             key: `${targetIdentifier}.options.${optionKey}`,
@@ -200,7 +202,7 @@ function mergeConfigurationValue(
     return getMergeValueResult(
       baseConfig,
       newConfig,
-      projectConfigSourceMap && configIdentifier
+      projectConfigSourceMap && sourceInformation && configIdentifier
         ? {
             sourceMap: projectConfigSourceMap,
             key: configIdentifier,
@@ -218,7 +220,7 @@ function mergeConfigurationValue(
     merged[key] = getMergeValueResult(
       baseConfig ? baseConfig[key] : undefined,
       newConfig ? newConfig[key] : undefined,
-      projectConfigSourceMap && configIdentifier
+      projectConfigSourceMap && sourceInformation && configIdentifier
         ? {
             sourceMap: projectConfigSourceMap,
             key: `${configIdentifier}.${key}`,
@@ -249,13 +251,14 @@ function mergeUltracache(
     return baseUltracache;
   }
 
-  const sourceMapContext = projectConfigSourceMap
-    ? {
-        sourceMap: projectConfigSourceMap,
-        key: `${targetIdentifier}.ultracache`,
-        sourceInformation,
-      }
-    : undefined;
+  const sourceMapContext =
+    projectConfigSourceMap && sourceInformation
+      ? {
+          sourceMap: projectConfigSourceMap,
+          key: `${targetIdentifier}.ultracache`,
+          sourceInformation,
+        }
+      : undefined;
 
   // Object level first: this settles which keys survive, their order, and
   // their source-map attribution.
@@ -273,7 +276,11 @@ function mergeUltracache(
   // Copy before resolving: with no object-level spread `getMergeValueResult`
   // returns `newUltracache` itself, and writing through it would edit the
   // caller's target in place, corrupting later merge layers.
-  const resolved = { ...merged };
+  const resolved: Record<string, unknown> = { ...merged };
+  const authored: Record<string, unknown> = { ...newUltracache };
+  const inherited: Record<string, unknown> | undefined = baseUltracache && {
+    ...baseUltracache,
+  };
 
   // Keys authored before `'...'` let the base win, exactly as they do at the
   // target level. Re-resolving those would overwrite the object-level merge's
@@ -290,14 +297,14 @@ function mergeUltracache(
   // `'...'` expands against the inherited value rather than surviving as a
   // literal element.
   for (const key of Object.keys(resolved)) {
-    if (!Array.isArray(newUltracache[key])) continue;
-    if (keysBeforeSpread.has(key) && baseUltracache && key in baseUltracache) {
+    if (!Array.isArray(authored[key])) continue;
+    if (keysBeforeSpread.has(key) && inherited && key in inherited) {
       continue;
     }
     resolved[key] = getMergeValueResult(
-      baseUltracache?.[key],
-      newUltracache[key],
-      projectConfigSourceMap
+      inherited?.[key],
+      authored[key],
+      projectConfigSourceMap && sourceInformation
         ? {
             sourceMap: projectConfigSourceMap,
             key: `${targetIdentifier}.ultracache.${key}`,
@@ -351,7 +358,8 @@ function mergeConfigurations<T extends Object>(
     const configIdentifier = targetIdentifier
       ? `${targetIdentifier}.configurations.${configName}`
       : undefined;
-    const baseHasConfig = configName in (baseConfigurations ?? {});
+    const baseHasConfig =
+      !!baseConfigurations && configName in baseConfigurations;
     const newHasConfig = !!newConfigurations && configName in newConfigurations;
 
     if (hasSpread && keysBeforeSpread.has(configName)) {
@@ -376,7 +384,7 @@ function mergeConfigurations<T extends Object>(
           configIdentifier,
           deferSpreadsWithoutBase
         ) as T;
-        if (projectConfigSourceMap && configIdentifier) {
+        if (projectConfigSourceMap && sourceInformation && configIdentifier) {
           projectConfigSourceMap[configIdentifier] = sourceInformation;
         }
       }
@@ -394,6 +402,7 @@ function mergeConfigurations<T extends Object>(
     // Only reattribute the config name when the new plugin introduced it.
     if (
       projectConfigSourceMap &&
+      sourceInformation &&
       configIdentifier &&
       newHasConfig &&
       !baseHasConfig
@@ -496,8 +505,11 @@ export function mergeTargetConfigurations(
   }
 
   // merge top level properties if they're compatible
-  const result: Partial<TargetConfiguration> = {};
-  const mergeBase = isCompatible ? baseTargetProperties : {};
+  const result: Record<string, unknown> = {};
+  const mergeBase: Record<string, unknown> = isCompatible
+    ? baseTargetProperties
+    : {};
+  const authoredTarget = target as Record<string, unknown>;
 
   // Keys before '...' let base win; keys after '...' (or when there's no
   // spread) merge normally with target winning.
@@ -544,12 +556,12 @@ export function mergeTargetConfigurations(
 
     if (hasSpread && keysBeforeSpread.has(key)) {
       // Before '...': base wins; fall through to target only if base lacks it.
-      // When base wins, the incoming `target[key]` is dropped without ever
+      // When base wins, the incoming `authoredTarget[key]` is dropped without ever
       // reaching `getMergeValueResult`, so validate its nested spread here —
       // the integer-like-key ambiguity is a property of the authored value,
       // not of which side owns the key, and must throw either way.
       assertNoIntegerLikeSpreadKey(
-        target[key],
+        authoredTarget[key],
         projectConfigSourceMap
           ? `Object at "${targetIdentifier}.${key}"`
           : 'Object'
@@ -559,8 +571,8 @@ export function mergeTargetConfigurations(
           ? mergeBase[key]
           : getMergeValueResult(
               undefined,
-              target[key],
-              projectConfigSourceMap
+              authoredTarget[key],
+              projectConfigSourceMap && sourceInformation
                 ? {
                     sourceMap: projectConfigSourceMap,
                     key: `${targetIdentifier}.${key}`,
@@ -574,8 +586,8 @@ export function mergeTargetConfigurations(
     if (key in target) {
       result[key] = getMergeValueResult(
         mergeBase[key],
-        target[key],
-        projectConfigSourceMap
+        authoredTarget[key],
+        projectConfigSourceMap && sourceInformation
           ? {
               sourceMap: projectConfigSourceMap,
               key: `${targetIdentifier}.${key}`,
@@ -643,7 +655,7 @@ export function mergeTargetConfigurations(
   // key purge above empties the slot anyway). A plugin that only layers fields
   // onto an existing target leaves the node with its creator; weak
   // target-defaults stamps are always reclaimable.
-  if (projectConfigSourceMap) {
+  if (projectConfigSourceMap && sourceInformation && targetIdentifier) {
     const identityChanged =
       !isCompatible ||
       (target.executor !== undefined &&
@@ -670,7 +682,7 @@ export function mergeTargetConfigurations(
       targetIdentifier,
       deferSpreadsWithoutBase
     );
-    if (projectConfigSourceMap && target.options) {
+    if (projectConfigSourceMap && sourceInformation && target.options) {
       projectConfigSourceMap[`${targetIdentifier}.options`] = sourceInformation;
     }
   }
@@ -686,7 +698,7 @@ export function mergeTargetConfigurations(
       targetIdentifier,
       deferSpreadsWithoutBase
     );
-    if (projectConfigSourceMap && target.configurations) {
+    if (projectConfigSourceMap && sourceInformation && target.configurations) {
       projectConfigSourceMap[`${targetIdentifier}.configurations`] =
         sourceInformation;
     }
@@ -800,7 +812,9 @@ export function resolveNxTokensInOptions<T extends Object | Array<unknown>>(
   project: ProjectConfiguration,
   key: string
 ): T {
-  const result: T = Array.isArray(object) ? ([...object] as T) : { ...object };
+  const result = (
+    Array.isArray(object) ? [...object] : { ...object }
+  ) as Record<string, unknown>;
   for (let [opt, value] of Object.entries(object ?? {})) {
     if (typeof value === 'string') {
       const workspaceRootMatch = /^(\{workspaceRoot\}\/?)/.exec(value);
@@ -822,5 +836,5 @@ export function resolveNxTokensInOptions<T extends Object | Array<unknown>>(
       );
     }
   }
-  return result;
+  return result as T;
 }

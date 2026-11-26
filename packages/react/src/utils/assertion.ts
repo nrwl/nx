@@ -2,8 +2,8 @@ import { type Schema } from '../generators/application/schema';
 
 const VALID_STYLES = ['css', 'scss', 'none'];
 
-export function assertValidStyle(style: string): void {
-  if (VALID_STYLES.indexOf(style) === -1) {
+export function assertValidStyle(style: string | undefined): void {
+  if (!style || VALID_STYLES.indexOf(style) === -1) {
     throw new Error(
       `Unsupported style option found: ${style}. Valid values are: "${VALID_STYLES.join(
         '", "'
@@ -13,7 +13,7 @@ export function assertValidStyle(style: string): void {
 }
 
 export function assertValidReactRouter(
-  reactRouter: boolean,
+  reactRouter: boolean | undefined,
   bundler: Schema['bundler']
 ): void {
   if (reactRouter && bundler !== 'vite') {

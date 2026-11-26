@@ -36,11 +36,11 @@ export function replaceAppNameWithPath(
       'outputHashing',
       'buildTarget',
     ]; // Some of the properties should not be renamed
-    return Object.keys(node).reduce(
-      (m, c) => (
+    return Object.entries(node).reduce(
+      (m, [c, value]) => (
         (m[c] = !forbiddenPropertyList.includes(c)
-          ? replaceAppNameWithPath(node[c], appName, root)
-          : node[c]),
+          ? replaceAppNameWithPath(value, appName, root)
+          : value),
         m
       ),
       {} as any

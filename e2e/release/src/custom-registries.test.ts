@@ -18,7 +18,7 @@ describe('nx release - custom npm registries', () => {
   const verdaccioPort = 7191;
   const customRegistryUrl = `http://localhost:${verdaccioPort}`;
   const scope = 'scope';
-  let previousPackageManager: string;
+  let previousPackageManager: string | undefined;
   let e2eRegistryHost: string;
 
   beforeAll(async () => {
@@ -350,8 +350,8 @@ describe('nx release - custom npm registries', () => {
           `Resolved the current version as 0.0.0 from the remote registry: "@scope:registry=${e2eRegistryUrl}" tag=alpha`,
           'g'
         )
-      ).length
-    ).toBe(1);
+      )
+    ).toHaveLength(1);
 
     expect(
       versionResult.match(
@@ -359,8 +359,8 @@ describe('nx release - custom npm registries', () => {
           `Resolved the current version as 0.0.0 from the remote registry: "@scope:registry=${customRegistryUrl}" tag=next`,
           'g'
         )
-      ).length
-    ).toBe(1);
+      )
+    ).toHaveLength(1);
 
     expect(
       versionResult.match(
@@ -368,8 +368,8 @@ describe('nx release - custom npm registries', () => {
           `Resolved the current version as 0.0.0 from the remote registry: "registry=${customRegistryUrl}" tag=beta`,
           'g'
         )
-      ).length
-    ).toBe(1);
+      )
+    ).toHaveLength(1);
 
     expect(
       versionResult.match(
@@ -377,8 +377,8 @@ describe('nx release - custom npm registries', () => {
           `Resolved the current version as 0.0.0 from the remote registry: "@scope:registry=${e2eRegistryUrl}" tag=prev`,
           'g'
         )
-      ).length
-    ).toBe(1);
+      )
+    ).toHaveLength(1);
   }, 1_000_000);
 
   function newPackage(
@@ -420,6 +420,7 @@ describe('nx release - custom npm registries', () => {
       const releaseConfig = (json.release ?? {}) as {
         version: NxReleaseVersionConfiguration;
       };
+      const publishOptions: Record<string, string> = {};
 
       if (options.projectConfig) {
         releaseConfig.version = {
@@ -429,13 +430,12 @@ describe('nx release - custom npm registries', () => {
         json.targets = {
           ...json.targets,
           'nx-release-publish': {
-            options: {},
+            options: publishOptions,
           },
         };
       }
       if (options.projectConfig?.registry) {
-        json.targets['nx-release-publish'].options.registry =
-          options.projectConfig.registry;
+        publishOptions.registry = options.projectConfig.registry;
         (
           releaseConfig.version.currentVersionResolverMetadata as Record<
             string,
@@ -444,8 +444,7 @@ describe('nx release - custom npm registries', () => {
         ).registry = options.projectConfig.registry;
       }
       if (options.projectConfig?.tag) {
-        json.targets['nx-release-publish'].options.tag =
-          options.projectConfig.tag;
+        publishOptions.tag = options.projectConfig.tag;
         (
           releaseConfig.version.currentVersionResolverMetadata as Record<
             string,
@@ -454,12 +453,10 @@ describe('nx release - custom npm registries', () => {
         ).tag = options.projectConfig.tag;
       }
       if (options.projectConfig?.publish?.registry) {
-        json.targets['nx-release-publish'].options.registry =
-          options.projectConfig.publish.registry;
+        publishOptions.registry = options.projectConfig.publish.registry;
       }
       if (options.projectConfig?.publish?.tag) {
-        json.targets['nx-release-publish'].options.tag =
-          options.projectConfig.publish.tag;
+        publishOptions.tag = options.projectConfig.publish.tag;
       }
       if (options.projectConfig?.version?.registry) {
         (

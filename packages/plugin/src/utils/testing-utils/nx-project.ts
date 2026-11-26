@@ -84,5 +84,5 @@ export function ensureNxProject(
   pluginDistPath?: string
 ): void {
   mkdirSync(tmpProjPath(), { recursive: true });
-  newNxProject(npmPackageName, pluginDistPath);
+  newNxProject(String(npmPackageName), String(pluginDistPath));
 }

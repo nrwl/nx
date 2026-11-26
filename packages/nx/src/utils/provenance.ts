@@ -121,6 +121,13 @@ export async function ensurePackageHasProvenance(
     const provenanceAttestation = attestations?.attestations?.find(
       (a) => a.predicateType === 'https://slsa.dev/provenance/v1'
     );
+    if (!provenanceAttestation) {
+      throw new ProvenanceError(
+        packageName,
+        packageVersion,
+        'No SLSA provenance attestation found'
+      );
+    }
 
     const dsseEnvelopePayload = JSON.parse(
       Buffer.from(
@@ -197,7 +204,7 @@ export async function ensurePackageHasProvenance(
     throw new ProvenanceError(
       packageName,
       packageVersion,
-      error.message || error
+      (error instanceof Error && error.message) || String(error)
     );
   }
 }

@@ -3,6 +3,7 @@ import {
   checkFilesDoNotExist,
   cleanupProject,
   createNonNxProjectDirectory,
+  ensureDefined,
   e2eCwd,
   getPackageManagerCommand,
   getPublishedVersion,
@@ -25,11 +26,12 @@ import {
   updateJson,
 } from '@nx/e2e-utils';
 import { renameSync, writeFileSync } from 'fs';
+import type { IncomingMessage, ServerResponse } from 'http';
 import { ensureDirSync } from 'fs-extra';
 import * as path from 'path';
 import { major } from 'semver';
 import { join } from 'path';
-import { angularDevkitVersion } from '@nx/angular/src/utils/versions';
+import { angularDevkitVersion } from '@nx/angular/internal';
 
 describe('Nx Commands', () => {
   beforeAll(() =>
@@ -107,15 +109,16 @@ describe('Nx Commands', () => {
       const project: ProjectConfiguration = JSON.parse(
         runCLI(`show project ${app} --json`)
       );
-      expect(project.targets.build).toBeDefined();
-      expect(project.targets.lint).toBeDefined();
+      const targets = ensureDefined(project.targets, 'project targets');
+      expect(targets.build).toBeDefined();
+      expect(targets.lint).toBeDefined();
     });
 
     it('should open project details view', async () => {
       const app = uniq('myapp');
       runCLI(`generate @nx/web:app apps/${app}`);
-      let url: string;
-      let port: number;
+      let url: string | undefined;
+      let port: number | undefined;
       const childProcess = await runCommandUntil(
         `show project ${app} --web --open=false`,
         (output) => {
@@ -124,7 +127,7 @@ describe('Nx Commands', () => {
           if (output.includes('Project graph started at http://')) {
             const match = /https?:\/\/[\d.]+:(?<port>\d+)/.exec(output);
             if (match) {
-              port = parseInt(match.groups.port);
+              port = parseInt(match[1]);
               url = match[0];
               return true;
             }
@@ -133,9 +136,12 @@ describe('Nx Commands', () => {
         }
       );
       // Check that url is alive
-      const response = await fetch(url);
+      const response = await fetch(ensureDefined(url, 'project graph url'));
       expect(response.status).toEqual(200);
-      await killProcessAndPorts(childProcess.pid, port);
+      await killProcessAndPorts(
+        childProcess.pid,
+        ensureDefined(port, 'project graph port')
+      );
     }, 700000);
 
     describe('show target', () => {
@@ -420,10 +426,12 @@ describe('Nx Commands', () => {
       const http = require('http');
 
       // Create a server that occupies the default port 4211
-      const blockingServer = http.createServer((req, res) => {
-        res.writeHead(200, { 'Content-Type': 'text/plain' });
-        res.end('blocking server');
-      });
+      const blockingServer = http.createServer(
+        (req: IncomingMessage, res: ServerResponse) => {
+          res.writeHead(200, { 'Content-Type': 'text/plain' });
+          res.end('blocking server');
+        }
+      );
 
       await new Promise<void>((resolve) => {
         blockingServer.listen(4211, '127.0.0.1', () => {
@@ -432,8 +440,8 @@ describe('Nx Commands', () => {
         });
       });
 
-      let url: string;
-      let port: number;
+      let url: string | undefined;
+      let port: number | undefined;
       let foundAlternativePort = false;
 
       try {
@@ -449,7 +457,7 @@ describe('Nx Commands', () => {
             if (output.includes('Project graph started at http://')) {
               const match = /https?:\/\/[\d.]+:(?<port>\d+)/.exec(output);
               if (match) {
-                port = parseInt(match.groups.port);
+                port = parseInt(match[1]);
                 url = match[0];
                 return true;
               }
@@ -464,10 +472,13 @@ describe('Nx Commands', () => {
         expect(port).toBeGreaterThan(4211);
 
         // Check that url is alive
-        const response = await fetch(url);
+        const response = await fetch(ensureDefined(url, 'project graph url'));
         expect(response.status).toEqual(200);
 
-        await killProcessAndPorts(childProcess.pid, port);
+        await killProcessAndPorts(
+          childProcess.pid,
+          ensureDefined(port, 'project graph port')
+        );
       } finally {
         // Clean up the blocking server
         blockingServer.close();
@@ -503,7 +514,7 @@ describe('Nx Commands', () => {
 
       if (require('fs').existsSync(pnpmDir)) {
         const entries = readdirSync(pnpmDir);
-        const nextEntries = entries.filter((entry) =>
+        const nextEntries = entries.filter((entry: string) =>
           entry.includes('nx+next@')
         );
 
@@ -594,7 +605,7 @@ describe('Nx Commands', () => {
       expect(Array.isArray(parsed.localWorkspacePlugins)).toBe(true);
 
       const workspacePlugin = parsed.installedPlugins.find(
-        (p) => p.name === '@nx/workspace'
+        (p: { name: string }) => p.name === '@nx/workspace'
       );
       expect(workspacePlugin).toBeDefined();
       expect(workspacePlugin.path).toBeDefined();
@@ -973,9 +984,12 @@ describe('migrate', () => {
       '9.0.0'
     );
     const nxJson: NxJsonConfiguration = readJson(`nx.json`);
-    expect(nxJson.installation.plugins['migrate-child-package']).toEqual(
-      '9.0.0'
-    );
+    expect(
+      ensureDefined(
+        nxJson.installation?.plugins,
+        'nx.json installation plugins'
+      )['migrate-child-package']
+    ).toEqual('9.0.0');
     // should keep new line on package
     const packageContent = readFile('package.json');
     console.log('[DEBUG]: Package contents', packageContent);
@@ -1485,7 +1499,7 @@ describe('global installation', () => {
   // but is easier to cleanup and doesn't mess with the users PC if running tests locally.
   const globalsPath = path.join(e2eCwd, 'globals', 'node_modules', '.bin');
 
-  let oldPath: string;
+  let oldPath: string | undefined;
 
   beforeAll(() => {
     ensureDirSync(globalsPath);
@@ -1534,7 +1548,7 @@ describe('global installation', () => {
         'node_modules/nx/dist/bin/nx.js',
         `console.log('local install');`
       );
-      let output: string;
+      let output: string | undefined;
       expect(() => {
         output = runCommand(`nx show projects`);
       }).not.toThrow();
@@ -1560,7 +1574,7 @@ describe('global installation', () => {
         json.version = localVersion;
         return json;
       });
-      let output: string;
+      let output: string | undefined;
       expect(() => {
         output = runCommand(`nx --version`);
       }).not.toThrow();
@@ -1576,7 +1590,7 @@ describe('global installation', () => {
         json.version = localVersion;
         return json;
       });
-      let output: string;
+      let output: string | undefined;
       expect(() => {
         output = runCommand(`nx report`);
       }).not.toThrow();
@@ -1598,7 +1612,7 @@ describe('global installation', () => {
     });
 
     it('--version should report global version and local not found', () => {
-      let output: string;
+      let output: string | undefined;
       expect(() => {
         output = runCommand(`nx --version`);
       }).not.toThrow();

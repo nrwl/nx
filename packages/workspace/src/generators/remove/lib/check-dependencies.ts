@@ -1,4 +1,9 @@
-import { createProjectGraphAsync, ProjectGraph, reverse } from '@nx/devkit';
+import {
+  createProjectGraphAsync,
+  ProjectGraph,
+  reverse,
+  type Tree,
+} from '@nx/devkit';
 import { Schema } from '../schema';
 
 /**
@@ -6,7 +11,10 @@ import { Schema } from '../schema';
  *
  * Throws an error if the project is in use, unless the `--forceRemove` option is used.
  */
-export async function checkDependencies(_, schema: Schema): Promise<void> {
+export async function checkDependencies(
+  _: Tree,
+  schema: Schema
+): Promise<void> {
   if (schema.forceRemove) {
     return;
   }

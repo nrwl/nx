@@ -52,12 +52,12 @@ describe('set-tsconfig-option migration', () => {
       await migration(tree);
 
       const projectConfig = readProjectConfiguration(tree, 'lib1');
-      expect(projectConfig.targets.build.options.tsConfig).toBe(devTsConfig);
+      expect(projectConfig.targets?.build.options.tsConfig).toBe(devTsConfig);
       expect(
-        projectConfig.targets.build.configurations.development
+        projectConfig.targets?.build.configurations?.development
       ).toBeDefined();
       expect(
-        projectConfig.targets.build.configurations.development.tsConfig
+        projectConfig.targets?.build.configurations?.development.tsConfig
       ).toBeUndefined();
     }
   );
@@ -87,7 +87,7 @@ describe('set-tsconfig-option migration', () => {
       await migration(tree);
 
       const projectConfig = readProjectConfiguration(tree, 'lib1');
-      expect(projectConfig.targets.build.options.tsConfig).toBe(
+      expect(projectConfig.targets?.build.options.tsConfig).toBe(
         existingTsConfig
       );
     }
@@ -114,7 +114,7 @@ describe('set-tsconfig-option migration', () => {
       await migration(tree);
 
       const projectConfig = readProjectConfiguration(tree, 'lib1');
-      expect(projectConfig.targets.build.options).toBeUndefined();
+      expect(projectConfig.targets?.build.options).toBeUndefined();
     }
   );
 
@@ -139,9 +139,9 @@ describe('set-tsconfig-option migration', () => {
       await migration(tree);
 
       const projectConfig = readProjectConfiguration(tree, 'lib1');
-      expect(projectConfig.targets.build.options).toBeUndefined();
+      expect(projectConfig.targets?.build.options).toBeUndefined();
       // Verify development configuration is unchanged
-      expect(projectConfig.targets.build.configurations.development).toEqual({
+      expect(projectConfig.targets?.build.configurations?.development).toEqual({
         optimization: false,
       });
     }
@@ -171,9 +171,9 @@ describe('set-tsconfig-option migration', () => {
       await migration(tree);
 
       const projectConfig = readProjectConfiguration(tree, 'lib1');
-      expect(projectConfig.targets.build.options.tsConfig).toBe(devTsConfig);
+      expect(projectConfig.targets?.build.options.tsConfig).toBe(devTsConfig);
       // Verify tsConfig was removed but other properties remain
-      expect(projectConfig.targets.build.configurations.development).toEqual({
+      expect(projectConfig.targets?.build.configurations?.development).toEqual({
         optimization: false,
         sourceMap: true,
       });
@@ -202,7 +202,7 @@ describe('set-tsconfig-option migration', () => {
     await migration(tree);
 
     const projectConfig = readProjectConfiguration(tree, 'app1');
-    expect(projectConfig.targets.test.options.tsConfig).toBe(
+    expect(projectConfig.targets?.test.options.tsConfig).toBe(
       'apps/app1/tsconfig.spec.json'
     );
   });
@@ -221,7 +221,7 @@ describe('set-tsconfig-option migration', () => {
     await migration(tree);
 
     const projectConfig = readProjectConfiguration(tree, 'app1');
-    expect(projectConfig.targets.test.options).toBeUndefined();
+    expect(projectConfig.targets?.test.options).toBeUndefined();
   });
 
   it('should not modify if tsConfig option already exists for @nx/jest:jest', async () => {
@@ -250,7 +250,7 @@ describe('set-tsconfig-option migration', () => {
     await migration(tree);
 
     const projectConfig = readProjectConfiguration(tree, 'app1');
-    expect(projectConfig.targets.test.options.tsConfig).toBe(existingTsConfig);
+    expect(projectConfig.targets?.test.options.tsConfig).toBe(existingTsConfig);
   });
 
   it('should only process Angular projects with @angular/core dependency', async () => {
@@ -285,11 +285,11 @@ describe('set-tsconfig-option migration', () => {
     await migration(tree);
 
     const angularConfig = readProjectConfiguration(tree, 'angular-app');
-    expect(angularConfig.targets.test.options.tsConfig).toBe(
+    expect(angularConfig.targets?.test.options.tsConfig).toBe(
       'apps/angular-app/tsconfig.spec.json'
     );
     const reactConfig = readProjectConfiguration(tree, 'react-app');
-    expect(reactConfig.targets.test.options).toBeUndefined();
+    expect(reactConfig.targets?.test.options).toBeUndefined();
   });
 
   it('should handle projects without targets', async () => {
@@ -326,14 +326,14 @@ describe('set-tsconfig-option migration', () => {
     await migration(tree);
 
     const projectConfig = readProjectConfiguration(tree, 'app-multi-targets');
-    expect(projectConfig.targets.build.options.tsConfig).toBe(devTsConfig);
+    expect(projectConfig.targets?.build.options.tsConfig).toBe(devTsConfig);
     expect(
-      projectConfig.targets.build.configurations.development
+      projectConfig.targets?.build.configurations?.development
     ).toBeDefined();
     expect(
-      projectConfig.targets.build.configurations.development.tsConfig
+      projectConfig.targets?.build.configurations?.development.tsConfig
     ).toBeUndefined();
-    expect(projectConfig.targets.test.options.tsConfig).toBe(
+    expect(projectConfig.targets?.test.options.tsConfig).toBe(
       'apps/app-multi-targets/tsconfig.spec.json'
     );
   });
@@ -386,8 +386,8 @@ describe('set-tsconfig-option migration', () => {
     await migration(tree);
 
     const projectConfig = readProjectConfiguration(tree, 'app-other-executors');
-    expect(projectConfig.targets.serve.options).toBeUndefined();
-    expect(projectConfig.targets.lint.options).toBeUndefined();
+    expect(projectConfig.targets?.serve.options).toBeUndefined();
+    expect(projectConfig.targets?.lint.options).toBeUndefined();
   });
 
   function addProject(

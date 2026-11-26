@@ -101,12 +101,16 @@ export function projectsToRun(
   nxArgs: NxArgs,
   projectGraph: ProjectGraph
 ): ProjectGraphProjectNode[] {
+  const { targets } = nxArgs;
+  if (!targets) {
+    throw new Error('No targets were passed with --targets (-t).');
+  }
   const selectedProjects: Record<string, ProjectGraphProjectNode> = {};
-  const validProjects = runnableForTarget(projectGraph.nodes, nxArgs.targets);
+  const validProjects = runnableForTarget(projectGraph.nodes, targets);
   const invalidProjects: string[] = [];
 
   // --all is default now, if --projects is provided, it'll override the --all
-  if (nxArgs.all && nxArgs.projects.length === 0) {
+  if (nxArgs.all && !nxArgs.projects?.length) {
     for (const projectName of validProjects) {
       selectedProjects[projectName] = projectGraph.nodes[projectName];
     }
@@ -125,7 +129,7 @@ export function projectsToRun(
 
     if (invalidProjects.length > 0) {
       output.warn({
-        title: `The following projects do not have a configuration for any of the provided targets ("${nxArgs.targets.join(
+        title: `The following projects do not have a configuration for any of the provided targets ("${targets.join(
           ', '
         )}")`,
         bodyLines: invalidProjects.map((name) => `- ${name}`),

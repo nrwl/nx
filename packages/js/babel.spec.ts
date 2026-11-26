@@ -1,4 +1,11 @@
-import { transformSync } from '@babel/core';
+const {
+  transformSync,
+}: {
+  transformSync: (
+    code: string,
+    options: Record<string, unknown>
+  ) => { code?: string | null } | null;
+} = require('@babel/core');
 
 describe('@nx/js/babel preset', () => {
   // Regression for https://github.com/nrwl/nx/issues/36205: the class-properties

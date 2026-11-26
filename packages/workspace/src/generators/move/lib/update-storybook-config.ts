@@ -56,7 +56,7 @@ function updateRecursively(
     const childPath = join(dir, child);
 
     if (tree.isFile(childPath)) {
-      const oldContent = tree.read(childPath, 'utf-8');
+      const oldContent = tree.read(childPath, 'utf-8') ?? '';
       const newContent = oldContent.replace(oldRoot, newRoot);
       tree.write(childPath, newContent);
     } else {

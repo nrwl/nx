@@ -59,7 +59,7 @@ export function findModuleFromOptions(
       ].map((x) => joinPathFragments(c, x));
 
       for (const sc of candidateFiles) {
-        if (tree.isFile(sc) && tree.read(sc, 'utf-8').includes('@NgModule')) {
+        if (tree.isFile(sc) && tree.read(sc, 'utf-8')?.includes('@NgModule')) {
           return normalizePath(sc);
         }
       }

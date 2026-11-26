@@ -12,7 +12,7 @@ export function instantiateScriptPlugins(options: any): RspackPluginInstance[] {
     'scripts'
   ).reduce(
     (
-      prev: { inject: boolean; bundleName: string; paths: string[] }[],
+      prev: { inject?: boolean; bundleName: string; paths: string[] }[],
       curr
     ) => {
       const bundleName = curr.bundleName;
@@ -34,7 +34,7 @@ export function instantiateScriptPlugins(options: any): RspackPluginInstance[] {
   );
 
   const hashFormat = getOutputHashFormat(options.outputHashing as string);
-  const plugins = [];
+  const plugins: RspackPluginInstance[] = [];
   // Add a new asset for each entry.
   globalScriptsByBundleName.forEach((script) => {
     const hash = script.inject ? hashFormat.script : '';

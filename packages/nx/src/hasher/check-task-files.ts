@@ -5,6 +5,7 @@ import type {
   ProjectGraphProjectNode,
 } from '../config/project-graph';
 import type { Task, TaskGraph } from '../config/task-graph';
+import type { TargetConfiguration } from '../config/workspace-json-project-json';
 import type { HashInputs } from '../native';
 import { expandOutputs, matchGlobPaths, matchOutputPaths } from '../native';
 import { createProjectGraphAsync } from '../project-graph/project-graph';
@@ -90,6 +91,7 @@ interface TaskIdentity {
   configuration: string | undefined;
   canonicalTaskId: string;
   projectNode: ProjectGraphProjectNode;
+  targetConfig: TargetConfiguration;
 }
 
 const identityCache = new Map<string, TaskIdentity>();
@@ -153,6 +155,7 @@ function resolveIdentity(
     configuration: effectiveConfiguration,
     canonicalTaskId: createTaskId(project, target, effectiveConfiguration),
     projectNode,
+    targetConfig,
   };
   identityCache.set(taskId, identity);
   return identity;
@@ -213,11 +216,10 @@ function getUnresolvedOutputs(
   taskId: string,
   projectGraph: ProjectGraph
 ): string[] {
-  const { target, configuration, projectNode } = resolveIdentity(
+  const { configuration, projectNode, targetConfig } = resolveIdentity(
     taskId,
     projectGraph
   );
-  const targetConfig = projectNode.data.targets[target];
   const options = {
     ...targetConfig.options,
     ...(configuration

@@ -442,7 +442,7 @@ function updateTsConfig(
   tree: Tree,
   options: VitestGeneratorSchema,
   projectRoot: string,
-  projectType: ProjectType
+  projectType: ProjectType | undefined
 ) {
   const setupFile = tryFindSetupFile(tree, projectRoot);
 
@@ -470,7 +470,9 @@ function updateTsConfig(
       (json) => {
         if (
           json.references &&
-          !json.references.some((r) => r.path === './tsconfig.spec.json')
+          !json.references.some(
+            (r: { path: string }) => r.path === './tsconfig.spec.json'
+          )
         ) {
           json.references.push({
             path: './tsconfig.spec.json',
@@ -650,7 +652,7 @@ function findBuildTarget(project: {
         '@nx/angular:application',
         '@nx/angular:browser-esbuild',
         '@nx/angular:webpack-browser',
-      ].includes(target.executor)
+      ].includes(target.executor ?? '')
     ) {
       return target;
     }

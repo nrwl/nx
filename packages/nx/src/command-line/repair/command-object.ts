@@ -1,9 +1,9 @@
-import { ArgumentsCamelCase, CommandModule } from 'yargs';
 import { handleImport } from '../../utils/handle-import';
 import { linkToNxDevAndExamples } from '../yargs-utils/documentation';
 import { withVerbose } from '../yargs-utils/shared-options';
+import { makeCommandModule } from '../yargs-utils/arguments-of';
 
-export const yargsRepairCommand: CommandModule = {
+export const yargsRepairCommand = makeCommandModule({
   command: 'repair',
   describe: `Repair any configuration that is no longer supported by Nx.
 
@@ -16,8 +16,8 @@ export const yargsRepairCommand: CommandModule = {
     \`nx migrate\`, running \`nx repair\` should do nothing.
   `,
   builder: (yargs) => linkToNxDevAndExamples(withVerbose(yargs), 'repair'),
-  handler: async (args: ArgumentsCamelCase<{ verbose: boolean }>) =>
+  handler: async (args) =>
     process.exit(
       await (await handleImport('./repair.js', __dirname)).repair(args)
     ),
-};
+});

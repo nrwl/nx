@@ -1,5 +1,8 @@
 import { workspaceRoot } from '@nx/devkit';
-import { isNxWebpackComposablePlugin } from '../config';
+import {
+  isNxWebpackComposablePlugin,
+  type NxWebpackExecutionContext,
+} from '../config';
 import type { Configuration } from 'webpack';
 import { readNxJsonFromDisk } from '@nx/devkit/internal';
 
@@ -24,29 +27,26 @@ export async function readWebpackOptions(
     config: unknown
   ): Promise<Configuration | Configuration[]> => {
     if (isNxWebpackComposablePlugin(config)) {
-      return await config(
-        {},
-        {
-          // These values are only used during build-time, so passing stubs here just to read out
-          options: {
-            root: workspaceRoot,
-            projectRoot: '',
-            sourceRoot: '',
-            outputFileName: undefined,
-            outputPath: undefined,
-            assets: undefined,
-            useTsconfigPaths: undefined,
-          },
-          context: {
-            root: workspaceRoot,
-            cwd: undefined,
-            isVerbose: false,
-            projectsConfigurations: null,
-            projectGraph: null,
-            nxJsonConfiguration: readNxJsonFromDisk(workspaceRoot),
-          },
-        }
-      );
+      return await config({}, {
+        // These values are only used during build-time, so passing stubs here just to read out
+        options: {
+          root: workspaceRoot,
+          projectRoot: '',
+          sourceRoot: '',
+          outputFileName: undefined,
+          outputPath: undefined,
+          assets: undefined,
+          useTsconfigPaths: undefined,
+        },
+        context: {
+          root: workspaceRoot,
+          cwd: undefined,
+          isVerbose: false,
+          projectsConfigurations: null,
+          projectGraph: null,
+          nxJsonConfiguration: readNxJsonFromDisk(workspaceRoot),
+        },
+      } as unknown as NxWebpackExecutionContext);
     } else if (typeof config === 'function') {
       const resolved = await config(env, argv);
 

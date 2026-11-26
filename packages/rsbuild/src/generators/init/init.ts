@@ -73,7 +73,7 @@ export async function initGeneratorInternal(
       ],
     },
 
-    schema.updatePackageScripts
+    schema.updatePackageScripts ?? false
   );
   await ensureTypescriptPlugin(tree, schema.updatePackageScripts);
 

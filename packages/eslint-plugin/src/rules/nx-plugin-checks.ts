@@ -259,7 +259,10 @@ export function checkCollectionFileNode(
     { collectionNode: generatorsRootNode, key: 'generators' },
     { collectionNode: executorsRootNode, key: 'executors' },
     { collectionNode: buildersRootNode, key: 'builders' },
-  ].filter(({ collectionNode }) => !!collectionNode);
+  ].filter(
+    (entry): entry is { collectionNode: AST.JSONProperty; key: string } =>
+      !!entry.collectionNode
+  );
 
   for (const { collectionNode, key } of collectionNodes) {
     if (collectionNode.value.type !== 'JSONObjectExpression') {
@@ -430,7 +433,7 @@ export function validateImplementationNode(
   } else {
     const [implementationPath, identifier] =
       implementationNode.value.value.split('#');
-    let resolvedPath: string;
+    let resolvedPath: string | undefined;
 
     try {
       resolvedPath = resolveImplementation(
@@ -540,7 +543,7 @@ export function validatePackageGroup(
     if (packageGroupNode.value.type === 'JSONArrayExpression') {
       // Look at entries which are an object
       const members = packageGroupNode.value.elements.filter(
-        (x) => x.type === 'JSONObjectExpression'
+        (x) => x?.type === 'JSONObjectExpression'
       );
       // validate that the version property exists and is valid
       for (const member of members) {

@@ -47,10 +47,12 @@ export function filterReleaseGroups(
   for (const releaseGroup of releaseGroups) {
     for (const project of releaseGroup.projects) {
       filteredProjectToReleaseGroup.set(project, releaseGroup);
-      if (!releaseGroupToFilteredProjects.has(releaseGroup)) {
-        releaseGroupToFilteredProjects.set(releaseGroup, new Set());
+      let filteredProjects = releaseGroupToFilteredProjects.get(releaseGroup);
+      if (!filteredProjects) {
+        filteredProjects = new Set();
+        releaseGroupToFilteredProjects.set(releaseGroup, filteredProjects);
       }
-      releaseGroupToFilteredProjects.get(releaseGroup).add(project);
+      filteredProjects.add(project);
     }
   }
 
@@ -84,11 +86,13 @@ export function filterReleaseGroups(
 
     // Filter out any non-matching projects from the release group to filtered projects map
     for (const releaseGroup of releaseGroups) {
+      const filteredProjects = releaseGroupToFilteredProjects.get(releaseGroup);
+      if (!filteredProjects) {
+        continue;
+      }
       releaseGroup.projects
         .filter((p) => !matchingProjectsForFilter.includes(p))
-        .forEach((p) =>
-          releaseGroupToFilteredProjects.get(releaseGroup).delete(p)
-        );
+        .forEach((p) => filteredProjects.delete(p));
     }
 
     /**
@@ -160,6 +164,9 @@ export function filterReleaseGroups(
       title: `Your filter "${projectsFilter}" matched the following projects:`,
       bodyLines: matchingProjectsForFilter.map((p) => {
         const releaseGroupForProject = filteredProjectToReleaseGroup.get(p);
+        if (!releaseGroupForProject) {
+          throw new Error(`No release group found for project "${p}"`);
+        }
         if (releaseGroupForProject.name === IMPLICIT_DEFAULT_RELEASE_GROUP) {
           return `- ${p}`;
         }
@@ -177,7 +184,7 @@ export function filterReleaseGroups(
       }
     }
     releaseGroups = releaseGroups.filter(
-      (rg) => releaseGroupToFilteredProjects.get(rg)?.size > 0
+      (rg) => (releaseGroupToFilteredProjects.get(rg)?.size ?? 0) > 0
     );
 
     return {

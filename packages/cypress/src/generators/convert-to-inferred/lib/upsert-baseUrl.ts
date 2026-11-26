@@ -9,6 +9,9 @@ export function upsertBaseUrl(
   baseUrlValueInProject: string
 ) {
   const configFileContents = tree.read(configFilePath, 'utf-8');
+  if (configFileContents === null) {
+    throw new Error(`Cannot read ${configFilePath}.`);
+  }
 
   const sourceFile = parseSourceFile(configFilePath, configFileContents);
   const BASE_URL_SELECTOR =

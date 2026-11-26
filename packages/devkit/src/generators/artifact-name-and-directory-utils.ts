@@ -73,23 +73,17 @@ export async function determineArtifactNameAndDirectoryOptions(
   tree: Tree,
   options: ArtifactGenerationOptions
 ): Promise<NameAndDirectoryOptions> {
-  const normalizedOptions = getNameAndDirectoryOptions(tree, options);
-
-  validateResolvedProject(
-    normalizedOptions.project,
-    normalizedOptions.directory
-  );
-
-  return normalizedOptions;
+  return getNameAndDirectoryOptions(tree, options);
 }
 
 function getNameAndDirectoryOptions(
   tree: Tree,
   options: ArtifactGenerationOptions
 ): NameAndDirectoryOptions {
-  const path = options.path
-    ? normalizePath(options.path.replace(/^\.?\//, ''))
-    : undefined;
+  if (!options.path) {
+    throw new Error('The "path" option is required.');
+  }
+  const path = normalizePath(options.path.replace(/^\.?\//, ''));
   let { name: extractedName, directory } =
     extractNameAndDirectoryFromPath(path);
   const relativeCwd = getRelativeCwd();
@@ -129,6 +123,8 @@ function getNameAndDirectoryOptions(
     options.jsOptionName
   );
 
+  validateResolvedProject(project, directory);
+
   return {
     artifactName: options.name ?? extractedName,
     directory,
@@ -141,9 +137,9 @@ function getNameAndDirectoryOptions(
 }
 
 function validateResolvedProject(
-  project: string | undefined,
+  project: string | null | undefined,
   normalizedDirectory: string
-): void {
+): asserts project is string {
   if (project) {
     return;
   }
@@ -154,7 +150,10 @@ function validateResolvedProject(
   );
 }
 
-function findProjectFromPath(tree: Tree, path: string): string | null {
+function findProjectFromPath(
+  tree: Tree,
+  path: string
+): string | null | undefined {
   const projectConfigurations: Record<string, ProjectConfiguration> = {};
   const projects = getProjects(tree);
   for (const [projectName, project] of projects) {
@@ -191,8 +190,8 @@ function extractNameAndDirectoryFromPath(path: string): {
   path = path.replace(/\/$/, '');
 
   const parsedPath = normalizePath(path).split('/');
-  const name = parsedPath.pop();
-  const directory = parsedPath.join('/');
+  const name = parsedPath[parsedPath.length - 1];
+  const directory = parsedPath.slice(0, -1).join('/');
 
   return { name, directory };
 }

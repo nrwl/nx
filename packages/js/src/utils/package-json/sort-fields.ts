@@ -32,7 +32,7 @@ export function sortPackageJsonFields(tree: Tree, projectRoot: string) {
       ...otherFields,
       ...orderedBottomFields,
     ];
-    const sortedJson = {};
+    const sortedJson: Record<string, unknown> = {};
     for (const k of allFields) {
       sortedJson[k] = json[k];
     }

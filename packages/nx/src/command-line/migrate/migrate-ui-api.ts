@@ -218,7 +218,7 @@ export async function runSingleMigration(
     });
 
     // Wait for the process to complete
-    const exitCode = await new Promise<number>((resolve, reject) => {
+    const exitCode = await new Promise<number | null>((resolve, reject) => {
       migrationProcess.on('close', (code) => {
         resolve(code);
       });
@@ -239,6 +239,9 @@ export async function runSingleMigration(
       .trim()
       .split('\n')
       .find((line) => line.startsWith('{'));
+    if (jsonStr === undefined) {
+      throw new Error('Migration process did not report a result');
+    }
     const result = JSON.parse(jsonStr);
     if (result.type === 'error') {
       throw new Error(result.message);
@@ -299,7 +302,10 @@ export async function runSingleMigration(
       // Migration failed normally
       modifyMigrationsJsonMetadata(
         workspacePath,
-        addFailedMigration(migration.id, e.message)
+        addFailedMigration(
+          migration.id,
+          e instanceof Error ? e.message : String(e)
+        )
       );
     }
   } finally {
@@ -501,8 +507,9 @@ export function readMigrationsJsonMetadata(
 
 export function undoMigration(workspacePath: string, id: string) {
   return (migrationsJsonMetadata: MigrationsJsonMetadata) => {
-    const existing = migrationsJsonMetadata.completedMigrations[id];
-    if (existing.type !== 'successful')
+    const { completedMigrations } = migrationsJsonMetadata;
+    const existing = completedMigrations?.[id];
+    if (!completedMigrations || existing?.type !== 'successful')
       throw new Error(`undoMigration called on unsuccessful migration: ${id}`);
     // No-changes successful entries (prompt-only short-circuit, generators
     // that ran but produced no diff) have no migration commit to roll back;
@@ -516,7 +523,7 @@ export function undoMigration(workspacePath: string, id: string) {
         windowsHide: true,
       });
     }
-    migrationsJsonMetadata.completedMigrations[id] = {
+    completedMigrations[id] = {
       type: 'skipped',
     };
     return migrationsJsonMetadata;

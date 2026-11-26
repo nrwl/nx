@@ -161,41 +161,69 @@ export async function createBuilderContext(
       architect['_scheduler'].schedule('..getProjectMetadata', target).output
     );
 
-  const getBuilderNameForTarget = (target: Target | string) => {
-    if (typeof target === 'string') {
-      return Promise.resolve(
-        context.projectGraph.nodes[context.projectName].data.targets[target]
-          .executor
+  const { projectName, targetName } = context;
+  if (projectName === undefined || targetName === undefined) {
+    throw new Error(
+      'Angular Devkit builders can only run as a target of a project'
+    );
+  }
+
+  const getTargetConfiguration = (projectName: string, targetName: string) => {
+    const targetConfiguration =
+      context.projectGraph.nodes[projectName].data.targets?.[targetName];
+    if (!targetConfiguration) {
+      throw new Error(
+        `Cannot find target '${targetName}' for project '${projectName}'`
       );
     }
-    return Promise.resolve(
-      context.projectGraph.nodes[target.project].data.targets[target.target]
-        .executor
-    );
+    return targetConfiguration;
+  };
+
+  const getBuilderNameForTarget = (target: Target | string) => {
+    const { project, target: targetName } =
+      typeof target === 'string' ? { project: projectName, target } : target;
+    const { executor } = getTargetConfiguration(project, targetName);
+    if (!executor) {
+      throw new Error(
+        `Cannot find the builder for the target '${targetName}' of project '${project}'`
+      );
+    }
+    return Promise.resolve(executor);
   };
 
   const getTargetOptions = (target: Target | string) => {
     if (typeof target === 'string') {
       return Promise.resolve({
-        ...context.projectGraph.nodes[context.projectName].data.targets[target]
-          .options,
+        ...getTargetConfiguration(projectName, target).options,
       });
     }
 
+    const targetConfiguration = getTargetConfiguration(
+      target.project,
+      target.target
+    );
+    const { configurations } = targetConfiguration;
+    if (!configurations) {
+      throw new Error(
+        `Cannot find configurations for target '${target.target}' of project '${target.project}'`
+      );
+    }
     return Promise.resolve({
-      ...context.projectGraph.nodes[target.project].data.targets[target.target]
-        .options,
-      ...context.projectGraph.nodes[target.project].data.targets[target.target]
-        .configurations[target.configuration],
+      ...targetConfiguration.options,
+      ...(target.configuration !== undefined
+        ? configurations[target.configuration]
+        : undefined),
     });
   };
 
   const builderContext: import('@angular-devkit/architect').BuilderContext = {
     workspaceRoot: context.root,
     target: {
-      project: context.projectName,
-      target: context.targetName,
-      configuration: context.configurationName,
+      project: projectName,
+      target: targetName,
+      ...(context.configurationName !== undefined && {
+        configuration: context.configurationName,
+      }),
     },
     builder: {
       ...builderInfo,
@@ -204,7 +232,8 @@ export async function createBuilderContext(
     id: 1,
     currentDirectory: process.cwd(),
     scheduleTarget: (...args) => architect.scheduleTarget(...args),
-    scheduleBuilder: (...args) => architect.scheduleBuilder(...args),
+    scheduleBuilder: (builderName, options = {}, scheduleOptions) =>
+      architect.scheduleBuilder(builderName, options, scheduleOptions),
     addTeardown(teardown: () => Promise<void> | void) {
       // No-op as Nx doesn't require an implementation of this function
       return;
@@ -260,12 +289,13 @@ export async function scheduleTarget(
   if (!project) {
     throw new Error(`Cannot find project '${opts.project}' in the workspace`);
   }
-  if (!project.targets?.get(opts.target)) {
+  const target = project.targets?.get(opts.target);
+  if (!target) {
     throw new Error(
       `Cannot find target '${opts.target}' for project '${opts.project}'`
     );
   }
-  const builderName = project.targets.get(opts.target).builder;
+  const builderName = target.builder;
   if (!builderName) {
     throw new Error(
       `Cannot find the builder for the target '${opts.target}' of project '${opts.project}'`
@@ -294,7 +324,7 @@ export async function scheduleTarget(
     { logger }
   );
 
-  let lastOutputError: string;
+  let lastOutputError: string | undefined;
   return run.output.pipe(
     tap(
       (output) =>
@@ -308,7 +338,7 @@ export async function scheduleTarget(
 }
 
 function createNodeModulesEngineHost(
-  resolvePaths: string[],
+  resolvePaths: string[] | undefined,
   projects: Record<string, ProjectConfiguration>
 ): import('@angular-devkit/schematics/tools').NodeModulesEngineHost {
   const NodeModulesEngineHost = require('@angular-devkit/schematics/tools')
@@ -333,14 +363,15 @@ function createNodeModulesEngineHost(
           path: packageJsonPath,
         } = readPluginPackageJson(name, projects, paths);
 
-        if (!schematics && !generators) {
+        const collectionFile = schematics ?? generators;
+        if ((!schematics && !generators) || collectionFile === undefined) {
           throw new Error(
             `The "${name}" package does not support Nx generators or Angular Devkit schematics.`
           );
         }
 
         collectionFilePath = require.resolve(
-          join(dirname(packageJsonPath), schematics ?? generators)
+          join(dirname(packageJsonPath), collectionFile)
         );
       }
 
@@ -588,7 +619,7 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
             ? Object.keys(existingAngularJson.projects)
             : [];
           const projects = configV2.projects;
-          const allObservables = [];
+          const allObservables: Observable<void>[] = [];
           Object.keys(projects).forEach((projectName) => {
             if (!projectsInAngularJson.includes(projectName)) {
               // Restore tokens in options if they were present before
@@ -638,9 +669,13 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
                 {
                   root,
                   exists: () => true,
-                  write: (path: string, content) => {
+                  write: (path: string, content: string) => {
                     if (existingConfig.projects[projectName]) {
-                      const updatedContent = this.mergeProjectConfiguration(
+                      const updatedContent:
+                        | (Omit<AngularProjectConfiguration, 'root'> & {
+                            root?: string;
+                          })
+                        | null = this.mergeProjectConfiguration(
                         existingConfig.projects[projectName],
                         projects[projectName],
                         projectName
@@ -766,6 +801,9 @@ export class NxScopedHostForBuilders extends NxScopedHost {
       this.readJson<NxJsonConfiguration>('nx.json')
     ).pipe(
       map(([graph, angularJson, nxJson]) => {
+        if (!graph) {
+          throw new Error('Project graph is not available');
+        }
         const workspaceConfig = (angularJson || { projects: {} }) as any;
         workspaceConfig.cli ??= nxJson.cli;
         workspaceConfig.schematics ??= nxJson.generators;
@@ -793,12 +831,11 @@ export function arrayBufferToString(buffer: any) {
   const chunkSize = 8 * 1024;
   let i = 0;
   for (i = 0; i < array.length / chunkSize; i++) {
-    result += String.fromCharCode.apply(
-      null,
-      array.subarray(i * chunkSize, (i + 1) * chunkSize)
+    result += String.fromCharCode(
+      ...array.subarray(i * chunkSize, (i + 1) * chunkSize)
     );
   }
-  result += String.fromCharCode.apply(null, array.subarray(i * chunkSize));
+  result += String.fromCharCode(...array.subarray(i * chunkSize));
   return result;
 }
 
@@ -866,7 +903,7 @@ export class NxScopeHostUsedForWrappedSchematics extends NxScopedHost {
       );
     } else {
       const match = findMatchingFileChange(this.host, path);
-      if (match) {
+      if (match?.content) {
         return of(bufferToArrayBuffer(Buffer.from(match.content)));
       } else {
         return super.read(path);
@@ -993,16 +1030,18 @@ function createPromptProvider() {
             type: !!definition.multiselect ? 'multiselect' : 'select',
             choices:
               definition.items &&
-              definition.items.map((item) => {
-                if (typeof item == 'string') {
-                  return item;
-                } else {
-                  return {
-                    message: item.label,
-                    name: item.value,
-                  };
+              definition.items.map(
+                (item: string | { label: string; value: string }) => {
+                  if (typeof item == 'string') {
+                    return item;
+                  } else {
+                    return {
+                      message: item.label,
+                      name: item.value,
+                    };
+                  }
                 }
-              }),
+              ),
           };
         default:
           return { ...question, type: definition.type };
@@ -1137,13 +1176,17 @@ function resolveMigrationsCollection(name: string): string {
       getNxRequirePaths(process.cwd())
     );
 
-    let pkgJsonSchematics =
+    const migrationsConfig =
       packageJson['nx-migrations'] ?? packageJson['ng-update'];
-    if (!pkgJsonSchematics) {
+    if (!migrationsConfig) {
       throw new Error(`Could not find migrations in package: "${name}"`);
     }
-    if (typeof pkgJsonSchematics != 'string') {
-      pkgJsonSchematics = pkgJsonSchematics.migrations;
+    const pkgJsonSchematics =
+      typeof migrationsConfig == 'string'
+        ? migrationsConfig
+        : migrationsConfig.migrations;
+    if (!pkgJsonSchematics) {
+      throw new Error(`Could not find migrations in package: "${name}"`);
     }
     collectionPath = require.resolve(pkgJsonSchematics, {
       paths: [dirname(packageJsonPath)],
@@ -1161,7 +1204,8 @@ function resolveMigrationsCollection(name: string): string {
   throw new Error(`Collection cannot be resolved: "${name}"`);
 }
 
-let mockedSchematics = null;
+let mockedSchematics: Parameters<typeof mockSchematicsForTesting>[0] | null =
+  null;
 
 /**
  * If you have an Nx Devkit generator invoking the wrapped Angular Devkit schematic,
@@ -1214,14 +1258,11 @@ export function wrapAngularDevkitSchematic(
     const graph = await getProjectGraph();
     const { projects } = readProjectsConfigurationFromProjectGraph(graph);
 
-    if (
-      mockedSchematics &&
-      mockedSchematics[`${collectionName}:${generatorName}`]
-    ) {
-      return await mockedSchematics[`${collectionName}:${generatorName}`](
-        host,
-        generatorOptions
-      );
+    const mockedSchematic =
+      mockedSchematics?.[`${collectionName}:${generatorName}`];
+    if (mockedSchematic) {
+      await mockedSchematic(host, generatorOptions);
+      return () => {};
     }
 
     const recorder = (
@@ -1382,7 +1423,7 @@ async function getWrappedWorkspaceNodeModulesArchitectHost(
 
   class WrappedWorkspaceNodeModulesArchitectHost extends AngularWorkspaceNodeModulesArchitectHost {
     constructor(
-      private workspace,
+      private workspace: workspaces.WorkspaceDefinition,
       private root: string,
       private projects: Record<string, ProjectConfiguration>
     ) {
@@ -1401,7 +1442,7 @@ async function getWrappedWorkspaceNodeModulesArchitectHost(
       return {
         name: builderStr,
         builderName,
-        description: executorConfig.description,
+        description: executorConfig.description ?? '',
         optionSchema: builderInfo.schema,
         import: resolveImplementation(
           executorConfig.implementation,
@@ -1484,7 +1525,7 @@ async function getWrappedWorkspaceNodeModulesArchitectHost(
               executorsDir,
               nodeModule
             )
-          : null;
+          : undefined;
 
         // TODO(v25): remove custom hasher support (NXC-5052).
         const hasherFactory = executorConfig.hasher
@@ -1493,7 +1534,7 @@ async function getWrappedWorkspaceNodeModulesArchitectHost(
               executorsDir,
               nodeModule
             )
-          : null;
+          : undefined;
 
         return {
           schema,
@@ -1504,7 +1545,7 @@ async function getWrappedWorkspaceNodeModulesArchitectHost(
         };
       } catch (e) {
         throw new Error(
-          `Unable to resolve ${nodeModule}:${executor}.\n${e.message}`
+          `Unable to resolve ${nodeModule}:${executor}.\n${e instanceof Error ? e.message : String(e)}`
         );
       }
     }
@@ -1545,13 +1586,13 @@ export function restoreNxTokensInOptions<T extends Object | Array<unknown>>(
   previousOptions: T,
   project: ProjectConfiguration
 ): T {
-  if (!newOptions || !previousOptions) {
+  if (!isRecord(newOptions) || !isRecord(previousOptions)) {
     return newOptions;
   }
 
-  const result: T = Array.isArray(newOptions)
-    ? ([...newOptions] as T)
-    : { ...newOptions };
+  const result = (
+    Array.isArray(newOptions) ? [...newOptions] : { ...newOptions }
+  ) as typeof newOptions;
 
   const resolvedPreviousOptions = resolveNxTokensInOptions(
     previousOptions,
@@ -1594,6 +1635,10 @@ export function restoreNxTokensInOptions<T extends Object | Array<unknown>>(
     }
   }
   return result;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
 }
 
 function toBufferOrString(

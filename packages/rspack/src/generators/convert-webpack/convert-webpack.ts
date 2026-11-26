@@ -21,13 +21,12 @@ import { assertSupportedRspackVersion } from '../../utils/assert-supported-rspac
 export default async function (tree: Tree, options: Schema) {
   assertSupportedRspackVersion(tree);
 
-  const projects = getProjects(tree);
-  if (!projects.has(options.project)) {
+  const project = getProjects(tree).get(options.project);
+  if (!project) {
     throw new Error(
       `Could not find project '${options.project}'. Ensure you have specified the project you'd like to convert correctly.`
     );
   }
-  const project = projects.get(options.project);
   if (usesModuleFederation(tree, project)) {
     throw new Error(
       `The project ${options.project} is using Module Federation. At the moment, we don't support migrating projects that use Module Federation. See https://nx.dev/docs/kb/migrate-from-nx-module-federation to move it to the official Module Federation plugins.`
@@ -35,12 +34,14 @@ export default async function (tree: Tree, options: Schema) {
   }
 
   if (
-    Object.values(project.targets ?? {}).some((target) =>
-      [
-        '@nx/webpack:webpack',
-        '@nx/webpack:dev-server',
-        '@nx/webpack:ssr-dev-server',
-      ].includes(target.executor)
+    Object.values(project.targets ?? {}).some(
+      (target) =>
+        target.executor !== undefined &&
+        [
+          '@nx/webpack:webpack',
+          '@nx/webpack:dev-server',
+          '@nx/webpack:ssr-dev-server',
+        ].includes(target.executor)
     )
   ) {
     throw new Error(
@@ -99,7 +100,7 @@ export default async function (tree: Tree, options: Schema) {
 
   updateProjectConfiguration(tree, options.project, project);
   const nxJson = readNxJson(tree);
-  if (nxJson.plugins !== undefined && nxJson.plugins.length > 0) {
+  if (nxJson && nxJson.plugins !== undefined && nxJson.plugins.length > 0) {
     const nonRspackPlugins = nxJson.plugins.filter(
       (plugin) =>
         (typeof plugin !== 'string' && plugin.plugin !== '@nx/rspack/plugin') ||

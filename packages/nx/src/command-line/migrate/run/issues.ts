@@ -726,6 +726,7 @@ function resolutionCarried(
       (c) =>
         c.kind === 'landed' &&
         (c.issueIds ?? []).includes(issue.id) &&
+        issue.resolvedByStepId !== undefined &&
         c.stepIds.includes(issue.resolvedByStepId)
     );
 }

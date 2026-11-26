@@ -5,7 +5,7 @@ import {
 } from 'webpack';
 
 export const mergeRules = (...args: RuleSetRule[]) =>
-  args.reduce((rules, rule) => {
+  args.reduce<RuleSetRule[]>((rules, rule) => {
     if (
       rules.some(
         (includedPlugin) =>
@@ -15,7 +15,7 @@ export const mergeRules = (...args: RuleSetRule[]) =>
       return rules;
     }
     return [...rules, rule];
-  }, [] as WebpackPluginInstance[]);
+  }, []);
 
 export const mergePlugins = (
   ...args: (WebpackPluginInstance | ResolvePluginInstance)[]

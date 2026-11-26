@@ -21,6 +21,9 @@ export async function addE2e(
   options: NormalizedSchema
 ): Promise<GeneratorCallback> {
   const nxJson = readNxJson(host);
+  if (!nxJson) {
+    throw new Error('Cannot find nx.json');
+  }
   const hasPlugin = nxJson.plugins?.some((p) =>
     typeof p === 'string'
       ? p === '@nx/next/plugin'
@@ -152,6 +155,9 @@ async function getNextE2EWebServerInfo(
   configFilePath: string
 ) {
   const nxJson = readNxJson(tree);
+  if (!nxJson) {
+    throw new Error('Cannot find nx.json');
+  }
   let e2ePort = 3000;
 
   const defaultServeTarget = 'dev';

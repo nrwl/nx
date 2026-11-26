@@ -60,7 +60,7 @@ export async function reactInitGenerator(tree: Tree, schema: InitSchema) {
           'react-router-build-deps',
         ],
       },
-      schema.updatePackageScripts
+      schema.updatePackageScripts ?? false
     );
     await ensureTypescriptPlugin(tree, schema.updatePackageScripts);
   }

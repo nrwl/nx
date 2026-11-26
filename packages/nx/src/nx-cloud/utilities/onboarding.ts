@@ -15,7 +15,7 @@ export async function createNxCloudOnboardingURLForWelcomeApp(
   return (await isWorkspaceClaimed(token)) ? 'claimed' : 'unclaimed';
 }
 
-export async function getNxCloudAppOnBoardingUrl(token: string) {
+export async function getNxCloudAppOnBoardingUrl(token: string | undefined) {
   if (!token) {
     return null;
   }
@@ -36,6 +36,9 @@ export function readNxCloudToken(tree: Tree) {
     getRunnerOptions,
   }: typeof import('../../tasks-runner/run-command') = require('../../tasks-runner/run-command');
   const nxJson = readNxJson(tree);
+  if (!nxJson) {
+    throw new Error('Unable to read nx.json');
+  }
   const { accessToken, nxCloudId } = getRunnerOptions(
     'default',
     nxJson,

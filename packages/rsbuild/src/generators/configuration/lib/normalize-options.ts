@@ -10,7 +10,6 @@ export interface NormalizedOptions extends Schema {
   entry: string;
   target: 'node' | 'web' | 'web-worker';
   devServerPort: number;
-  tsConfig: string;
   projectRoot: string;
 }
 

@@ -15,6 +15,9 @@ export default async function (tree: Tree) {
       }
 
       let content = tree.read(path, 'utf-8');
+      if (content === null) {
+        return;
+      }
       if (
         !content.includes('CommonEngine') ||
         content.includes('@angular/ssr/node')

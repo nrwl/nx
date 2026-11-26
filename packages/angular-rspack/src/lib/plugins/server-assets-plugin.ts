@@ -29,7 +29,7 @@ export class ServerAssetsPlugin implements RspackPluginInstance {
           const inputs = this.serverRenderingInputs.current;
           // The engine is only wired up without locale inlining.
           const indexHtml = inputs?.indexHtml.get('');
-          if (!indexHtml) {
+          if (!inputs || !indexHtml) {
             return;
           }
 

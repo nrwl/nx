@@ -3,8 +3,8 @@ import '@nx/devkit/internal-testing-utils/mock-project-graph';
 
 import {
   addProjectConfiguration,
+  NxJsonConfiguration,
   readJson,
-  readNxJson,
   Tree,
   updateJson,
   updateNxJson,
@@ -94,7 +94,7 @@ describe('librarySecondaryEntryPoint generator', () => {
   });
 
   it('should generate the module file respecting the "typeSeparator" generator default', async () => {
-    const nxJson = readNxJson(tree);
+    const nxJson = readJson<NxJsonConfiguration>(tree, 'nx.json');
     nxJson.generators = {
       ...nxJson.generators,
       '@nx/angular:module': {

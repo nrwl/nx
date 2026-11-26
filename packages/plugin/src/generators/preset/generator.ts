@@ -75,9 +75,10 @@ export async function presetGeneratorInternal(
 
 function moveNxPluginToDevDeps(tree: Tree) {
   updateJson<PackageJson>(tree, 'package.json', (json) => {
-    if (json.dependencies['@nx/plugin']) {
-      const nxPluginEntry = json.dependencies['@nx/plugin'];
+    const nxPluginEntry = json.dependencies?.['@nx/plugin'];
+    if (json.dependencies && nxPluginEntry) {
       delete json.dependencies['@nx/plugin'];
+      json.devDependencies ??= {};
       json.devDependencies['@nx/plugin'] = nxPluginEntry;
     }
     return json;

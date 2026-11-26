@@ -28,6 +28,7 @@ import { hashWithWorkspaceContext } from '../utils/workspace-context';
 import { workspaceRoot } from '../utils/workspace-root';
 import {
   AggregateProjectGraphError,
+  coerceToError,
   CreateMetadataError,
   isAggregateProjectGraphError,
   isWorkspaceValidityError,
@@ -47,7 +48,10 @@ import {
   CreateMetadataContext,
   ProjectsMetadata,
 } from './plugins';
-import type { LoadedNxPlugin } from './plugins/loaded-nx-plugin';
+import type {
+  LoadedNxPlugin,
+  LoadedNxPluginWith,
+} from './plugins/loaded-nx-plugin';
 import { ProjectGraphBuilder } from './project-graph-builder';
 import { applyImplicitDependencies } from './utils/implicit-project-dependencies';
 import { normalizeProjectNodes } from './utils/normalize-project-nodes';
@@ -83,7 +87,7 @@ export function getFileMap(): {
 
 export function hydrateFileMap(
   fileMap: FileMap,
-  rustReferences: NxWorkspaceFilesExternals
+  rustReferences: NxWorkspaceFilesExternals | undefined
 ): void;
 /** @deprecated pass `(fileMap, rustReferences)`. Kept for cached nx-cloud workers still on the 3-arg form. */
 export function hydrateFileMap(
@@ -93,20 +97,20 @@ export function hydrateFileMap(
 ): void;
 export function hydrateFileMap(
   fileMap: FileMap,
-  rustReferencesOrAllFiles: NxWorkspaceFilesExternals | FileData[],
+  rustReferencesOrAllFiles: NxWorkspaceFilesExternals | FileData[] | undefined,
   maybeRustReferences?: NxWorkspaceFilesExternals
 ): void {
   storedFileMap = fileMap;
   storedRustReferences = Array.isArray(rustReferencesOrAllFiles)
     ? (maybeRustReferences ?? null)
-    : rustReferencesOrAllFiles;
+    : (rustReferencesOrAllFiles ?? null);
 }
 
 export async function buildProjectGraphUsingProjectFileMap(
   projectRootMap: Record<string, ProjectConfiguration>,
   externalNodes: Record<string, ProjectGraphExternalNode>,
   fileMap: FileMap,
-  rustReferences: NxWorkspaceFilesExternals,
+  rustReferences: NxWorkspaceFilesExternals | undefined,
   fileMapCache: FileMapCache | null,
   plugins: LoadedNxPlugin[],
   sourceMap: ConfigurationSourceMaps
@@ -115,12 +119,12 @@ export async function buildProjectGraphUsingProjectFileMap(
   projectFileMapCache: FileMapCache;
 }> {
   storedFileMap = fileMap;
-  storedRustReferences = rustReferences;
+  storedRustReferences = rustReferences ?? null;
 
   const projects: Record<string, ProjectConfiguration> = {};
   for (const root in projectRootMap) {
     const project = projectRootMap[root];
-    projects[project.name] = project;
+    projects[String(project.name)] = project;
   }
 
   const errors: Array<
@@ -260,7 +264,7 @@ async function buildProjectGraphUsingContext(
   const initProjectGraph = builder.getUpdatedProjectGraph();
 
   let updatedGraph;
-  let error: AggregateProjectGraphError;
+  let error: AggregateProjectGraphError | undefined;
   try {
     updatedGraph = await updateProjectGraphWithPlugins(
       ctx,
@@ -340,7 +344,8 @@ async function updateProjectGraphWithPlugins(
   );
 
   const createDependencyPlugins = plugins.filter(
-    (plugin) => plugin.createDependencies
+    (plugin): plugin is LoadedNxPluginWith<'createDependencies'> =>
+      !!plugin.createDependencies
   );
   performance.mark('createDependencies:start');
 
@@ -379,13 +384,13 @@ async function updateProjectGraphWithPlugins(
             dep.source,
             dep.target,
             dep.type,
-            'sourceFile' in dep ? dep.sourceFile : null
+            'sourceFile' in dep ? dep.sourceFile : undefined
           );
         }
       } catch (cause) {
         errors.push(
           new ProcessDependenciesError(plugin.name, {
-            cause,
+            cause: coerceToError(cause),
           })
         );
       }
@@ -449,14 +454,15 @@ export async function applyProjectMetadata(
   plugins: LoadedNxPlugin[],
   context: CreateMetadataContext,
   sourceMap: ConfigurationSourceMaps
-): Promise<{ graph: ProjectGraph; errors?: CreateMetadataError[] }> {
+): Promise<{ graph: ProjectGraph; errors: CreateMetadataError[] }> {
   const results: { metadata: ProjectsMetadata; pluginName: string }[] = [];
   const errors: CreateMetadataError[] = [];
 
   performance.mark('createMetadata:start');
-  let spinner: DelayedSpinner;
+  let spinner: DelayedSpinner | undefined;
   const createMetadataPlugins = plugins.filter(
-    (plugin) => plugin.createMetadata
+    (plugin): plugin is LoadedNxPluginWith<'createMetadata'> =>
+      !!plugin.createMetadata
   );
 
   const inProgressPlugins = new Set<string>(
@@ -480,10 +486,10 @@ export async function applyProjectMetadata(
       const metadata = await plugin.createMetadata(graph, context);
       results.push({ metadata, pluginName: plugin.name });
     } catch (e) {
-      errors.push(new CreateMetadataError(e, plugin.name));
+      errors.push(new CreateMetadataError(coerceToError(e), plugin.name));
     } finally {
       inProgressPlugins.delete(plugin.name);
-      spinner.setMessage(getSpinnerText());
+      spinner?.setMessage(getSpinnerText());
       performance.mark(`${plugin.name}:createMetadata - end`);
       performance.measure(
         `${plugin.name}:createMetadata`,
@@ -501,12 +507,13 @@ export async function applyProjectMetadata(
     for (const project in projectsMetadata) {
       const projectConfiguration: ProjectConfiguration =
         graph.nodes[project]?.data;
-      if (projectConfiguration) {
+      const metadata = projectsMetadata[project].metadata;
+      if (projectConfiguration && metadata) {
         projectConfiguration.metadata = mergeMetadata(
           sourceMap[project],
           [null, pluginName],
           'metadata',
-          projectsMetadata[project].metadata,
+          metadata,
           projectConfiguration.metadata
         );
       }
@@ -554,9 +561,12 @@ function hashExternalNodes(
   externalNodes: Record<string, ProjectGraphExternalNode>
 ): string {
   return hashObject(
-    Object.entries(externalNodes).reduce((acc, [name, node]) => {
-      acc[name] = node.data.version;
-      return acc;
-    }, {})
+    Object.entries(externalNodes).reduce<Record<string, string>>(
+      (acc, [name, node]) => {
+        acc[name] = node.data.version;
+        return acc;
+      },
+      {}
+    )
   );
 }

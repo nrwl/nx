@@ -237,6 +237,7 @@ In this case you need to provide a devServerTarget,'<projectName>:<targetName>[:
 
   return {
     ...options,
+    directory: options.directory,
     bundler: options.bundler ?? 'webpack',
     projectRoot: projectConfig.root,
     rootProject: options.rootProject ?? projectConfig.root === '.',
@@ -314,10 +315,10 @@ async function addFiles(
   // needs AST parsing - loading tsquery crashes under TypeScript 7.
   const cypressConfigExists = tree.exists(cyFile);
 
-  let webServerCommands: Record<string, string>;
+  let webServerCommands: Record<string, string> | undefined;
 
-  let ciWebServerCommand: string;
-  let ciBaseUrl: string;
+  let ciWebServerCommand: string | undefined;
+  let ciBaseUrl: string | undefined;
 
   if (options.webServerCommands && options.ciWebServerCommand) {
     webServerCommands = options.webServerCommands;
@@ -350,8 +351,10 @@ async function addFiles(
   }
 
   if (typeof options.port === 'number') {
-    for (const name of Object.keys(webServerCommands ?? {})) {
-      webServerCommands[name] += ` --port=${options.port}`;
+    if (webServerCommands) {
+      for (const name of Object.keys(webServerCommands)) {
+        webServerCommands[name] += ` --port=${options.port}`;
+      }
     }
     if (ciWebServerCommand) ciWebServerCommand += ` --port=${options.port}`;
   }
@@ -382,11 +385,14 @@ async function addFiles(
     },
   });
 
-  if (cypressConfigExists) {
+  const existingConfig = cypressConfigExists
+    ? tree.read(cyFile, 'utf-8')
+    : null;
+  if (existingConfig !== null) {
     tree.write(
       cyFile,
       await addDefaultE2EConfig(
-        tree.read(cyFile, 'utf-8'),
+        existingConfig,
         e2ePresetOptions,
         options.baseUrl
       )
@@ -408,7 +414,7 @@ function createPackageJson(tree: Tree, options: NormalizedSchema) {
 
   const importPath = resolveImportPath(
     tree,
-    projectConfig.name,
+    projectConfig.name ?? options.project,
     projectConfig.root
   );
 
@@ -428,7 +434,7 @@ function ignoreTestOutput(tree: Tree): void {
     logger.warn(`Couldn't find a root .gitignore file to update.`);
   }
 
-  let content = tree.read('.gitignore', 'utf-8');
+  let content = tree.read('.gitignore', 'utf-8') ?? '';
   if (/^test-output$/gm.test(content)) {
     return;
   }

@@ -99,20 +99,20 @@ export function ensureProjectIsIncludedInPluginRegistrations(
   if (!isIncluded) {
     // the project is not included by any plugin registration with an inferred build task
     // with the given name, so we create a new plugin registration for it
-    const registration: ExpandedPluginConfiguration<TscPluginOptions> = {
-      plugin: '@nx/js/typescript',
-      include: [`${projectRoot}/*`],
-      options: {
-        typecheck: { targetName: 'typecheck' },
-      },
+    const options: TscPluginOptions = {
+      typecheck: { targetName: 'typecheck' },
     };
-
     if (buildTargetName) {
-      registration.options.build = {
+      options.build = {
         targetName: buildTargetName,
         configName: 'tsconfig.lib.json',
       };
     }
+    const registration: ExpandedPluginConfiguration<TscPluginOptions> = {
+      plugin: '@nx/js/typescript',
+      include: [`${projectRoot}/*`],
+      options,
+    };
 
     nxJson.plugins.push(registration);
   }

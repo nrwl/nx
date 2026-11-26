@@ -34,6 +34,7 @@ import {
 import { getTaskIOService } from './task-io-service';
 import { handleImport } from '../utils/handle-import';
 import { resolveInstalledPackage } from '../utils/installation-directory';
+import { getTaskHash } from './utils';
 
 export type CachedResult = {
   terminalOutput: string;
@@ -155,14 +156,14 @@ export class DbCache {
     resolveMaxCacheSize(this.nxJson)
   );
 
-  private remoteCache: RemoteCacheV2 | null;
-  private remoteCachePromise: Promise<RemoteCacheV2>;
+  private remoteCache: RemoteCacheV2 | null = null;
+  private remoteCachePromise?: Promise<RemoteCacheV2 | null>;
 
   private isVerbose = process.env.NX_VERBOSE_LOGGING === 'true';
 
   constructor(
     private readonly options: {
-      nxCloudRemoteCache: RemoteCache;
+      nxCloudRemoteCache: RemoteCache | null | undefined;
       skipRemoteCache?: boolean;
       parallel?: number;
     }
@@ -177,7 +178,8 @@ export class DbCache {
   }
 
   async get(task: Task): Promise<CachedResult | null> {
-    const res = this.cache.get(task.hash);
+    const hash = getTaskHash(task);
+    const res = this.cache.get(hash);
 
     if (res) {
       return {
@@ -190,14 +192,14 @@ export class DbCache {
       // didn't find it locally but we have a remote cache
       // attempt remote cache
       const res = await this.remoteCache.retrieve(
-        task.hash,
+        hash,
         this.cache.cacheDirectory
       );
 
       const terminalOutput = res
         ? this.applyRemoteCacheResults(task, res)
         : null;
-      if (terminalOutput !== null) {
+      if (res && terminalOutput !== null) {
         return { ...res, terminalOutput, remote: true };
       } else {
         return null;
@@ -217,25 +219,26 @@ export class DbCache {
     // vtable overhead when there's nothing to amortize over.
     if (tasks.length === 1) {
       const res = await this.get(tasks[0]);
-      if (res) results.set(tasks[0].hash, res);
+      if (res) results.set(getTaskHash(tasks[0]), res);
       return results;
     }
 
-    const hashes = tasks.map((t) => t.hash);
+    const hashes = tasks.map(getTaskHash);
 
     // 1. Local: one rarray SQL query + parallel terminal output reads.
     //    batchResults is index-aligned with tasks, so we walk in lockstep.
     const batchResults = this.cache.getBatch(hashes);
+    const remoteCache = this.remoteCache;
     const remoteMisses: Task[] = [];
     for (const [i, task] of tasks.entries()) {
       const res = batchResults[i];
       if (res) {
-        results.set(task.hash, {
+        results.set(hashes[i], {
           ...res,
           terminalOutput: res.terminalOutput ?? '',
           remote: false,
         });
-      } else if (this.remoteCache) {
+      } else if (remoteCache) {
         remoteMisses.push(task);
       }
     }
@@ -243,20 +246,21 @@ export class DbCache {
     // Remote misses are fetched before --parallel gates task execution, and
     // RemoteCache has no batch retrieve. Cap in-flight calls so a cold run
     // cannot open one connection per task.
-    if (remoteMisses.length > 0) {
+    if (remoteCache && remoteMisses.length > 0) {
       await mapWithConcurrency(
         remoteMisses,
         remoteCacheRetrieveConcurrency(this.options.parallel),
         async (task) => {
-          const res = await this.remoteCache.retrieve(
-            task.hash,
+          const hash = getTaskHash(task);
+          const res = await remoteCache.retrieve(
+            hash,
             this.cache.cacheDirectory
           );
           const terminalOutput = res
             ? this.applyRemoteCacheResults(task, res)
             : null;
-          if (terminalOutput !== null) {
-            results.set(task.hash, { ...res, terminalOutput, remote: true });
+          if (res && terminalOutput !== null) {
+            results.set(hash, { ...res, terminalOutput, remote: true });
           }
         }
       );
@@ -274,7 +278,7 @@ export class DbCache {
     res: NativeCacheResult
   ): string | null {
     const terminalOutput = this.cache.applyRemoteCacheResults(
-      task.hash,
+      getTaskHash(task),
       res,
       task.outputs
     );
@@ -291,13 +295,14 @@ export class DbCache {
 
   async put(
     task: Task,
-    terminalOutput: string | null,
+    terminalOutput: string,
     outputs: string[],
     code: number
   ) {
     return tryAndRetry(async () => {
+      const hash = getTaskHash(task);
       const { expandedOutputs, files, outputsBelowALink } = this.cache.put(
-        task.hash,
+        hash,
         terminalOutput,
         outputs,
         code
@@ -316,7 +321,7 @@ export class DbCache {
         });
       } else if (this.remoteCache) {
         await this.remoteCache.store(
-          task.hash,
+          hash,
           this.cache.cacheDirectory,
           terminalOutput,
           code
@@ -347,7 +352,7 @@ export class DbCache {
   }
 
   temporaryOutputPath(task: Task) {
-    return this.cache.getTaskOutputsPath(task.hash);
+    return this.cache.getTaskOutputsPath(getTaskHash(task));
   }
 
   private async getRemoteCache(): Promise<RemoteCacheV2 | null> {
@@ -377,7 +382,7 @@ export class DbCache {
         const { nxCloudClient } = await verifyOrUpdateNxCloudClient(options);
         if (nxCloudClient.getRemoteCache) {
           return nxCloudClient.getRemoteCache();
-        } else {
+        } else if (this.options.nxCloudRemoteCache) {
           // old nx cloud instance
           return await RemoteCacheV2.fromCacheV1(
             this.options.nxCloudRemoteCache
@@ -531,7 +536,7 @@ export class Cache {
         p.unref();
       } catch (e) {
         console.log(`Unable to start remove-old-cache-records script:`);
-        console.log(e.message);
+        console.log(e instanceof Error ? e.message : e);
       }
     }
   }
@@ -545,7 +550,10 @@ export class Cache {
     } else if (this.options.remoteCache && !this.options.skipRemoteCache) {
       // didn't find it locally but we have a remote cache
       // attempt remote cache
-      await this.options.remoteCache.retrieve(task.hash, this.cachePath);
+      await this.options.remoteCache.retrieve(
+        getTaskHash(task),
+        this.cachePath
+      );
       // try again from local cache
       const res2 = await this.getFromLocalDir(task);
       return res2 ? { ...res2, remote: true } : null;
@@ -563,7 +571,7 @@ export class Cache {
       tasks.map(async (t) => ({ task: t, res: await this.get(t) }))
     );
     for (const { task, res } of entries) {
-      if (res) results.set(task.hash, res);
+      if (res) results.set(getTaskHash(task), res);
     }
     return results;
   }
@@ -578,8 +586,9 @@ export class Cache {
       /**
        * This is the directory with the cached artifacts
        */
-      const td = join(this.cachePath, task.hash);
-      const tdCommit = join(this.cachePath, `${task.hash}.commit`);
+      const hash = getTaskHash(task);
+      const td = join(this.cachePath, hash);
+      const tdCommit = join(this.cachePath, `${hash}.commit`);
 
       // might be left overs from partially-completed cache invocations
       await this.remove(tdCommit);
@@ -612,7 +621,7 @@ export class Cache {
       await writeFile(tdCommit, 'true');
 
       if (this.options.remoteCache && !this.options.skipRemoteCache) {
-        await this.options.remoteCache.store(task.hash, this.cachePath);
+        await this.options.remoteCache.store(hash, this.cachePath);
       }
 
       if (terminalOutput) {
@@ -646,7 +655,7 @@ export class Cache {
   }
 
   temporaryOutputPath(task: Task) {
-    return join(this.terminalOutputsDir, task.hash);
+    return join(this.terminalOutputsDir, getTaskHash(task));
   }
 
   /**
@@ -713,8 +722,9 @@ export class Cache {
   }
 
   private async getFromLocalDir(task: Task) {
-    const tdCommit = join(this.cachePath, `${task.hash}.commit`);
-    const td = join(this.cachePath, task.hash);
+    const hash = getTaskHash(task);
+    const tdCommit = join(this.cachePath, `${hash}.commit`);
+    const td = join(this.cachePath, hash);
 
     if (existsSync(tdCommit)) {
       const terminalOutput = await readFile(
@@ -737,7 +747,7 @@ export class Cache {
   }
 
   private async assertLocalCacheValidity(task: Task) {
-    const td = join(this.cachePath, task.hash);
+    const td = join(this.cachePath, getTaskHash(task));
     let sourceMachineId = null;
     try {
       sourceMachineId = await readFile(join(td, 'source'), 'utf-8');
@@ -820,8 +830,12 @@ export function resolveMaxCacheSize(nxJson: NxJsonConfiguration): number {
  *
  * @param maxCacheSize Max cache size as specified in nx.json
  */
+export function parseMaxCacheSize(maxCacheSize: string | number): number;
 export function parseMaxCacheSize(
-  maxCacheSize: string | number
+  maxCacheSize: string | number | null | undefined
+): number | undefined;
+export function parseMaxCacheSize(
+  maxCacheSize: string | number | null | undefined
 ): number | undefined {
   if (maxCacheSize === null || maxCacheSize === undefined) {
     return undefined;
@@ -831,7 +845,7 @@ export function parseMaxCacheSize(
     .toString()
     // Match a number followed by an optional unit (KB, MB, GB), with optional whitespace between the number and unit
     .match(/^(?<size>[\d|.]+)\s?((?<unit>[KMG]?B)?)$/);
-  if (!regexResult) {
+  if (!regexResult?.groups) {
     throw new Error(
       `Invalid max cache size specified in nx.json: ${maxCacheSize}. Must be a number followed by an optional unit (KB, MB, GB)`
     );

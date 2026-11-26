@@ -12,7 +12,7 @@ export async function getWebpackE2EWebServerInfo(
 ) {
   const nxJson = readNxJson(tree);
   let e2ePort = e2ePortOverride ?? 4200;
-  const servePort = readTargetDefaultsForTarget('serve', nxJson.targetDefaults)
+  const servePort = readTargetDefaultsForTarget('serve', nxJson?.targetDefaults)
     ?.options?.port;
 
   // targetDefaults is a workspace-wide fallback, so it fills in only when the caller

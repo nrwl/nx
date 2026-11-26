@@ -602,7 +602,7 @@ describe('nx release - independent projects', () => {
           release: {
             ...json.release,
             changelog: {
-              ...json.release.changelog,
+              ...json.release?.changelog,
               git: {
                 commit: false,
                 tag: false,
@@ -1135,22 +1135,19 @@ describe('nx release - independent projects', () => {
 
       expect(
         releaseOutput.match(new RegExp(`New version 1\.2\.1 written`, 'g'))
-          .length
-      ).toEqual(1);
+      ).toHaveLength(1);
 
       expect(
         releaseOutput.match(new RegExp(`New version 1\.4\.1 written`, 'g'))
-          .length
-      ).toEqual(2);
+      ).toHaveLength(2);
 
       expect(
         releaseOutput.match(new RegExp(`New version 1\.6\.1 written`, 'g'))
-          .length
-      ).toEqual(1);
+      ).toHaveLength(1);
 
       expect(
-        releaseOutput.match(new RegExp(`Generating an entry in `, 'g')).length
-      ).toEqual(3);
+        releaseOutput.match(new RegExp(`Generating an entry in `, 'g'))
+      ).toHaveLength(3);
 
       expect(
         releaseOutput.match(
@@ -1158,8 +1155,8 @@ describe('nx release - independent projects', () => {
             `Successfully ran target nx-release-publish for 3 projects`,
             'g'
           )
-        ).length
-      ).toEqual(1);
+        )
+      ).toHaveLength(1);
     });
 
     it('should allow versioning projects independently with conventional commits', async () => {
@@ -1221,21 +1218,21 @@ describe('nx release - independent projects', () => {
             `Resolved the specifier as "minor" using git history and the conventional commits standard`,
             'g'
           )
-        ).length
-      ).toEqual(1);
+        )
+      ).toHaveLength(1);
       expect(
         releaseOutput.match(
           new RegExp(
             `New version 1\\.4\\.0 written to manifest: my-pkg-1\\d*`,
             'g'
           )
-        ).length
-      ).toEqual(1);
+        )
+      ).toHaveLength(1);
       expect(
         releaseOutput.match(
           new RegExp(`- \\*\\*${pkg1}:\\*\\* new feature 1`, 'g')
-        ).length
-      ).toEqual(1);
+        )
+      ).toHaveLength(1);
 
       expect(
         releaseOutput.match(
@@ -1243,8 +1240,8 @@ describe('nx release - independent projects', () => {
             `New version 1\\.5\\.1 written to manifest: my-pkg-2\\d*`,
             'g'
           )
-        ).length
-      ).toEqual(2);
+        )
+      ).toHaveLength(2);
 
       expect(
         releaseOutput.match(
@@ -1252,24 +1249,23 @@ describe('nx release - independent projects', () => {
             `Resolved the specifier as "patch" using git history and the conventional commits standard`,
             'g'
           )
-        ).length
-      ).toEqual(2);
+        )
+      ).toHaveLength(2);
       expect(
         releaseOutput.match(
           new RegExp(
             `New version 1\\.8\\.1 written to manifest: my-pkg-3\\d*`,
             'g'
           )
-        ).length
-      ).toEqual(1);
+        )
+      ).toHaveLength(1);
       expect(
         releaseOutput.match(new RegExp(`- \\*\\*${pkg3}:\\*\\* new fix 3`, 'g'))
-          .length
-      ).toEqual(1);
+      ).toHaveLength(1);
 
       expect(
-        releaseOutput.match(new RegExp(`Generating an entry in `, 'g')).length
-      ).toEqual(3);
+        releaseOutput.match(new RegExp(`Generating an entry in `, 'g'))
+      ).toHaveLength(3);
 
       expect(
         releaseOutput.match(
@@ -1277,8 +1273,8 @@ describe('nx release - independent projects', () => {
             `Successfully ran target nx-release-publish for 3 projects`,
             'g'
           )
-        ).length
-      ).toEqual(1);
+        )
+      ).toHaveLength(1);
     });
 
     it('should include dependent projects in the commit message when using --projects filter with updateDependents', async () => {
@@ -1319,8 +1315,8 @@ describe('nx release - independent projects', () => {
             `New version 999\\.9\\.9-dependent-commit-test\\.1 written`,
             'g'
           )
-        ).length
-      ).toBeGreaterThanOrEqual(1);
+        )
+      ).not.toBeNull();
 
       // pkg2 should also be versioned (dependent of pkg3)
       expect(releaseOutput).toContain(

@@ -23,8 +23,6 @@ import remarkGfm from 'remark-gfm';
 import { workspaceRoot } from '@nx/devkit';
 import { readFileSync } from 'fs';
 
-let identityMap = {};
-
 const myEnv = loadDotEnvFile();
 expand(myEnv);
 
@@ -225,10 +223,13 @@ async function generateEmbeddings() {
     }
   }
 
-  const supabaseClient = !isLocal
+  const supabaseUrl = process.env.NX_NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseServiceRoleKey = process.env.NX_SUPABASE_SERVICE_ROLE_KEY;
+  const supabaseClient =
+    !isLocal && supabaseUrl && supabaseServiceRoleKey
     ? createClient(
-        process.env.NX_NEXT_PUBLIC_SUPABASE_URL,
-        process.env.NX_SUPABASE_SERVICE_ROLE_KEY,
+        supabaseUrl,
+        supabaseServiceRoleKey,
         {
           auth: {
             persistSession: false,
@@ -278,7 +279,7 @@ async function generateEmbeddings() {
     try {
       const { checksum, sections } = await embeddingSource.load();
 
-      if (isLocal) {
+      if (!supabaseClient) {
         // Local mode: skip queries, just accumulate data
         const pageId = nextPageId++;
 
@@ -290,7 +291,14 @@ async function generateEmbeddings() {
         );
 
         // Create page record (will update checksum after all sections succeed)
-        const pageRecord = {
+        const pageRecord: {
+          id: number;
+          checksum: string | null;
+          path: string;
+          url_partial: string;
+          type: string;
+          source: string;
+        } = {
           id: pageId,
           checksum: null,
           path,
@@ -549,75 +557,6 @@ async function getAstroPaths(): Promise<WalkEntry[]> {
   return files;
 }
 
-function getAllFilesFromMapJson(doc): WalkEntry[] {
-  const files: WalkEntry[] = [];
-
-  function traverse(itemList) {
-    for (const item of itemList) {
-      if (item.file && item.file.length > 0) {
-        // we can exclude some docs here, eg. the deprecated ones
-        // the path is the relative path to the file within the nx repo
-        // the url_partial is the relative path to the file within the docs site - under nx.dev
-        files.push({
-          path: `docs/${item.file}.md`,
-          url_partial: identityMap[item.id]?.path || ''
-        });
-      }
-
-      if (item.itemList) {
-        traverse(item.itemList);
-      }
-    }
-  }
-
-  for (const item of doc.content) {
-    traverse([item]);
-  }
-  return files;
-}
-
-function getAllFilesWithItemList(data): WalkEntry[] {
-  const files: WalkEntry[] = [];
-
-  function traverse(itemList) {
-    for (const item of itemList) {
-      if (item.file && item.file.length > 0) {
-        // the path is the relative path to the file within the nx repo
-        // the url_partial is the relative path to the file within the docs site - under nx.dev
-
-        files.push({ path: `docs/${item.file}.md`, url_partial: item.path });
-        if (!identityMap[item.id]) {
-          identityMap = { ...identityMap, [item.id]: item };
-        }
-      }
-
-      if (item.itemList) {
-        traverse(item.itemList);
-      }
-    }
-  }
-
-  for (const key in data) {
-    if (data[key].itemList) {
-      traverse([data[key]]);
-    } else {
-      if (data[key].documents) {
-        files.push(...getAllFilesWithItemList(data[key].documents));
-      }
-      if (data[key].generators) {
-        files.push(...getAllFilesWithItemList(data[key].generators));
-      }
-      if (data[key].executors) {
-        files.push(...getAllFilesWithItemList(data[key].executors));
-      }
-      if (data[key]?.length > 0) {
-        traverse(data[key]);
-      }
-    }
-  }
-  return files;
-}
-
 function createLongerHeading(
   heading?: string | null,
   url_partial?: string
@@ -649,7 +588,7 @@ async function createMarkdownForCommunityPlugins(): Promise<{
   text: string;
   url: string;
 }[]> {
-  const communityPlugins =  JSON.parse(readFileSync(
+  const communityPlugins: { name: string; description: string; url: string }[] =  JSON.parse(readFileSync(
     '../../../../astro-docs/src/content/approved-community-plugins.json', 'utf-8'
   ))
   return communityPlugins.map((plugin) => {

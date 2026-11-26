@@ -1,6 +1,9 @@
 import { existsSync, readFileSync } from 'fs';
 import { join } from 'path';
-import type { ProjectGraph } from '../../../config/project-graph';
+import type {
+  ProjectGraph,
+  ProjectGraphExternalNode,
+} from '../../../config/project-graph';
 import { hashArray } from '../../../hasher/file-hasher';
 import type { CreateNodesContext } from '../../../project-graph/plugins';
 import { workspaceDataDirectory } from '../../../utils/cache-directory';
@@ -29,7 +32,7 @@ export const dependenciesCache = join(
 );
 
 export interface ExternalNodesCache {
-  nodes: ProjectGraph['externalNodes'];
+  nodes: Record<string, ProjectGraphExternalNode>;
   keyMap: Record<string, any>;
   // The lockfile does not cover these sources' contents, so the cached node
   // hashes are folded with them on every read.
@@ -42,7 +45,7 @@ export interface LockFileContents {
   lockFile: string;
   lockFileContents: string;
   lockFileHash: string;
-  bunPatchFileHashes?: Map<string, string>;
+  bunPatchFileHashes?: Map<string, string | null>;
 }
 
 export interface LockFileSnapshot {

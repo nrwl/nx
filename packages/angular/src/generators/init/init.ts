@@ -42,7 +42,7 @@ export async function angularInitGenerator(
       {
         targetNamePrefix: ['', 'angular:', 'angular-'],
       },
-      options.updatePackageScripts
+      options.updatePackageScripts ?? false
     );
   }
 
@@ -89,7 +89,7 @@ function installAngularDevkitCoreIfMissing(
 }
 
 function ignoreAngularCacheDirectory(tree: Tree): void {
-  const { cli } = readNxJson(tree);
+  const { cli } = readNxJson(tree) ?? {};
   // angular-specific cli config is supported though is not included in the
   // NxJsonConfiguration type
   const angularCacheDir = (cli as any)?.cache?.path ?? '.angular';
@@ -99,8 +99,8 @@ function ignoreAngularCacheDirectory(tree: Tree): void {
 }
 
 function addGitIgnoreEntry(tree: Tree, entry: string): void {
-  if (tree.exists('.gitignore')) {
-    let content = tree.read('.gitignore', 'utf-8');
+  let content = tree.read('.gitignore', 'utf-8');
+  if (content !== null) {
     if (/^\.angular$/gm.test(content)) {
       return;
     }
@@ -113,11 +113,11 @@ function addGitIgnoreEntry(tree: Tree, entry: string): void {
 }
 
 function addPrettierIgnoreEntry(tree: Tree, entry: string): void {
-  if (!tree.exists('.prettierignore')) {
+  let content = tree.read('.prettierignore', 'utf-8');
+  if (content === null) {
     return;
   }
 
-  let content = tree.read('.prettierignore', 'utf-8');
   if (/^\.angular(\/cache)?$/gm.test(content)) {
     return;
   }

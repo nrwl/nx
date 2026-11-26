@@ -104,7 +104,7 @@ describe('ensure-depends-on-for-mf', () => {
 });
 
 function findWebpackEntry(tree: Tree) {
-  return findTargetDefault(readNxJson(tree).targetDefaults, {
+  return findTargetDefault(readNxJson(tree)?.targetDefaults, {
     executor: WEBPACK_EXECUTOR,
   });
 }

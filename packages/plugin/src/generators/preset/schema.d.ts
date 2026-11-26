@@ -8,6 +8,6 @@ export interface PresetGeneratorSchema {
 }
 
 export interface NormalizedPresetGeneratorOptions extends PresetGeneratorSchema {
-  createPackageName: string;
+  createPackageName?: string;
   linter: LinterType;
 }

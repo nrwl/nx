@@ -59,7 +59,7 @@ describe('nx release create github release', () => {
       response.setHeader('Content-Type', 'application/json');
       response.writeHead(
         request.method === 'GET' &&
-          request.url.startsWith('/repos/nrwl/fake-repo/releases/tags/')
+          request.url?.startsWith('/repos/nrwl/fake-repo/releases/tags/')
           ? 404
           : 500
       );
@@ -159,18 +159,17 @@ describe('nx release create github release', () => {
 
     expect(
       result.match(new RegExp(`NX   Pushing to git remote "origin"`, 'g'))
-        .length
-    ).toEqual(1);
+    ).toHaveLength(1);
     expect(
-      result.match(new RegExp(`NX   Creating GitHub Release`, 'g')).length
-    ).toEqual(1);
+      result.match(new RegExp(`NX   Creating GitHub Release`, 'g'))
+    ).toHaveLength(1);
 
     // should have two occurrences of each - one for the changelog file, one for the github release
-    expect(result.match(new RegExp(`### 🚀 Features`, 'g')).length).toEqual(2);
-    expect(result.match(new RegExp(`### 🩹 Fixes`, 'g')).length).toEqual(2);
+    expect(result.match(new RegExp(`### 🚀 Features`, 'g'))).toHaveLength(2);
+    expect(result.match(new RegExp(`### 🩹 Fixes`, 'g'))).toHaveLength(2);
     expect(
-      result.match(new RegExp(`### ⚠️  Breaking Changes`, 'g')).length
-    ).toEqual(2);
+      result.match(new RegExp(`### ⚠️  Breaking Changes`, 'g'))
+    ).toHaveLength(2);
   });
 
   it('should create github releases for all independent packages', async () => {
@@ -206,17 +205,16 @@ describe('nx release create github release', () => {
 
     expect(
       result.match(new RegExp(`NX   Pushing to git remote "origin"`, 'g'))
-        .length
-    ).toEqual(1);
+    ).toHaveLength(1);
     expect(
-      result.match(new RegExp(`NX   Creating GitHub Release`, 'g')).length
-    ).toEqual(3);
+      result.match(new RegExp(`NX   Creating GitHub Release`, 'g'))
+    ).toHaveLength(3);
 
     // should have one occurrence of each because files are disabled
-    expect(result.match(new RegExp(`### 🚀 Features`, 'g')).length).toEqual(2);
-    expect(result.match(new RegExp(`### 🩹 Fixes`, 'g')).length).toEqual(1);
+    expect(result.match(new RegExp(`### 🚀 Features`, 'g'))).toHaveLength(2);
+    expect(result.match(new RegExp(`### 🩹 Fixes`, 'g'))).toHaveLength(1);
     expect(
-      result.match(new RegExp(`### ⚠️  Breaking Changes`, 'g')).length
-    ).toEqual(1);
+      result.match(new RegExp(`### ⚠️  Breaking Changes`, 'g'))
+    ).toHaveLength(1);
   });
 });

@@ -4,10 +4,10 @@ import type { WebpackPluginInstance } from 'webpack';
 import { getOutputHashFormat } from '../../../utils/hash-format';
 import { ScriptsWebpackPlugin } from '../../../utils/webpack/plugins/scripts-webpack-plugin';
 import { normalizeExtraEntryPoints } from '../../../utils/webpack/normalize-entry';
-import { NormalizedNxAppWebpackPluginOptions } from '../nx-app-webpack-plugin-options';
+import { ApplyConfigOptions } from '../nx-app-webpack-plugin-options';
 
 export function instantiateScriptPlugins(
-  options: NormalizedNxAppWebpackPluginOptions
+  options: ApplyConfigOptions
 ): WebpackPluginInstance[] {
   // process global scripts
   const globalScriptsByBundleName = normalizeExtraEntryPoints(
@@ -15,7 +15,7 @@ export function instantiateScriptPlugins(
     'scripts'
   ).reduce(
     (
-      prev: { inject: boolean; bundleName: string; paths: string[] }[],
+      prev: { inject?: boolean; bundleName: string; paths: string[] }[],
       curr
     ) => {
       const bundleName = curr.bundleName;
@@ -37,7 +37,7 @@ export function instantiateScriptPlugins(
   );
 
   const hashFormat = getOutputHashFormat(options.outputHashing as string);
-  const plugins = [];
+  const plugins: WebpackPluginInstance[] = [];
   // Add a new asset for each entry.
   globalScriptsByBundleName.forEach((script) => {
     const hash = script.inject ? hashFormat.script : '';

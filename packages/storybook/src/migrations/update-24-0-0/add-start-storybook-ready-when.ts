@@ -59,7 +59,7 @@ function setContinuous(tree: Tree): boolean {
       );
       if (
         defaults?.continuous !== undefined ||
-        isSmokeTest(mergeTargetConfigurations(target, defaults))
+        isSmokeTest(mergeTargetConfigurations(target, defaults ?? undefined))
       ) {
         continue;
       }

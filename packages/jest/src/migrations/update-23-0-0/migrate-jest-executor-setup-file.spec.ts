@@ -12,6 +12,22 @@ import {
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import migration from './migrate-jest-executor-setup-file';
 
+function readFile(tree: Tree, path: string): string {
+  const contents = tree.read(path, 'utf-8');
+  if (contents === null) {
+    throw new Error(`${path} not found`);
+  }
+  return contents;
+}
+
+function readTargetDefault(tree: Tree, key: string) {
+  const value = readNxJson(tree)?.targetDefaults?.[key];
+  if (Array.isArray(value)) {
+    throw new Error(`${key} target default is array-shaped`);
+  }
+  return value;
+}
+
 describe('migrate-jest-executor-setup-file', () => {
   let tree: Tree;
 
@@ -47,7 +63,7 @@ describe('migrate-jest-executor-setup-file', () => {
     await migration(tree);
 
     const updated = readProjectConfiguration(tree, 'app1');
-    expect(updated.targets.test.options).toStrictEqual({
+    expect(updated.targets?.test.options).toStrictEqual({
       jestConfig: 'apps/app1/jest.config.js',
     });
     expect(tree.read('apps/app1/jest.config.js', 'utf-8')).toContain(
@@ -139,7 +155,7 @@ describe('migrate-jest-executor-setup-file', () => {
 `
     );
     await migration(tree);
-    const app2Content = tree.read('apps/app2/jest.config.ts', 'utf-8');
+    const app2Content = readFile(tree, 'apps/app2/jest.config.ts');
     // Already-present path should not be duplicated.
     const occurrences = (
       app2Content.match(/<rootDir>\/src\/test-setup\.ts/g) ?? []
@@ -176,15 +192,15 @@ describe('migrate-jest-executor-setup-file', () => {
     await migration(tree);
 
     const updated = readProjectConfiguration(tree, 'app1');
-    expect(updated.targets.test.options).toStrictEqual({
+    expect(updated.targets?.test.options).toStrictEqual({
       jestConfig: 'apps/app1/jest.config.ts',
     });
-    expect(updated.targets.test.configurations.ci).toStrictEqual({
+    expect(updated.targets?.test.configurations?.ci).toStrictEqual({
       codeCoverage: true,
     });
     // The base iteration writes the setup file once; the matching configuration
     // value just gets stripped.
-    const config = tree.read('apps/app1/jest.config.ts', 'utf-8');
+    const config = readFile(tree, 'apps/app1/jest.config.ts');
     expect(config).toContain(`'<rootDir>/src/test-setup.ts'`);
     expect((config.match(/test-setup\.ts/g) ?? []).length).toBe(1);
   });
@@ -219,7 +235,7 @@ describe('migrate-jest-executor-setup-file', () => {
     // alone but still strips the dead option.
     expect(tree.read('apps/app1/jest.config.ts', 'utf-8')).toBe(original);
     const updated = readProjectConfiguration(tree, 'app1');
-    expect(updated.targets.test.configurations.ci).toStrictEqual({
+    expect(updated.targets?.test.configurations?.ci).toStrictEqual({
       codeCoverage: true,
     });
     expect(typeof followUp).toBe('function');
@@ -239,12 +255,9 @@ describe('migrate-jest-executor-setup-file', () => {
 
     await migration(tree);
 
-    const updatedNxJson = readNxJson(tree);
-    expect(updatedNxJson.targetDefaults['@nx/jest:jest'].options).toStrictEqual(
-      {
-        passWithNoTests: true,
-      }
-    );
+    expect(readTargetDefault(tree, '@nx/jest:jest')?.options).toStrictEqual({
+      passWithNoTests: true,
+    });
   });
 
   it('should strip setupFile from the filtered array value form and drop emptied entries', async () => {
@@ -269,7 +282,7 @@ describe('migrate-jest-executor-setup-file', () => {
 
     await migration(tree);
 
-    expect(readNxJson(tree).targetDefaults).toStrictEqual({
+    expect(readNxJson(tree)?.targetDefaults).toStrictEqual({
       test: [
         {
           filter: { executor: '@nx/jest:jest', projects: ['app-a'] },
@@ -299,7 +312,7 @@ describe('migrate-jest-executor-setup-file', () => {
     await migration(tree);
 
     const updated = readProjectConfiguration(tree, 'app1');
-    expect(updated.targets.test).toStrictEqual(initial.targets.test);
+    expect(updated.targets?.test).toStrictEqual(initial.targets?.test);
     expect(tree.read('apps/app1/jest.config.ts', 'utf-8')).toBe(config);
   });
 
@@ -329,7 +342,7 @@ describe('migrate-jest-executor-setup-file', () => {
 
     await migration(tree);
 
-    const content = tree.read('apps/app1/jest.config.js', 'utf-8');
+    const content = readFile(tree, 'apps/app1/jest.config.js');
     // Existing array should be appended to (and there should be exactly one
     // setupFilesAfterEnv property total — no duplicate inserted at the end).
     const setupKeyOccurrences = (content.match(/setupFilesAfterEnv/g) ?? [])
@@ -366,7 +379,7 @@ describe('migrate-jest-executor-setup-file', () => {
     await migration(tree);
 
     const updated = readProjectConfiguration(tree, 'app1');
-    expect(updated.targets.test.options).toStrictEqual({
+    expect(updated.targets?.test.options).toStrictEqual({
       jestConfig: 'apps/app1/jest.config.ts',
     });
     // rootDir resolves to the workspace root, so the migrated path stays
@@ -403,7 +416,7 @@ export default {
 
     expect(tree.read('apps/app1/jest.config.ts', 'utf-8')).toBe(original);
     const updated = readProjectConfiguration(tree, 'app1');
-    expect(updated.targets.test.options).toStrictEqual({
+    expect(updated.targets?.test.options).toStrictEqual({
       jestConfig: 'apps/app1/jest.config.ts',
     });
     expect(typeof followUp).toBe('function');
@@ -466,7 +479,7 @@ export default {
     await migration(tree);
 
     const updated = readProjectConfiguration(tree, 'app1');
-    expect(updated.targets.test.options).toBeUndefined();
+    expect(updated.targets?.test.options).toBeUndefined();
     // The setup file landed in the resolved jest config.
     expect(tree.read('apps/app1/jest.config.ts', 'utf-8')).toContain(
       `'<rootDir>/src/test-setup.ts'`
@@ -567,7 +580,7 @@ export default {
 
     await migration(tree);
 
-    const content = tree.read('apps/app1/jest.config.ts', 'utf-8');
+    const content = readFile(tree, 'apps/app1/jest.config.ts');
     // The migration should recognize './src/test-setup.ts' and the new
     // '<rootDir>/src/test-setup.ts' as the same file and skip the append.
     expect((content.match(/test-setup\.ts/g) ?? []).length).toBe(1);
@@ -608,10 +621,10 @@ export default {
     expect(config).not.toContain(`'<rootDir>/src/test-setup-b.ts'`);
     // Both targets had the dead option stripped.
     const updated = readProjectConfiguration(tree, 'app1');
-    expect(updated.targets.test.options).toStrictEqual({
+    expect(updated.targets?.test.options).toStrictEqual({
       jestConfig: 'apps/app1/jest.config.ts',
     });
-    expect(updated.targets['test-other'].options).toStrictEqual({
+    expect(updated.targets?.['test-other'].options).toStrictEqual({
       jestConfig: 'apps/app1/jest.config.ts',
     });
     expect(typeof followUp).toBe('function');
@@ -647,7 +660,7 @@ export default {
     // setupFile is still stripped (option is dead at runtime); setupFilesAfterEnv
     // passthrough stays so the user can decide how to consolidate.
     const updated = readProjectConfiguration(tree, 'app1');
-    expect(updated.targets.test.options).toStrictEqual({
+    expect(updated.targets?.test.options).toStrictEqual({
       jestConfig: 'apps/app1/jest.config.ts',
       setupFilesAfterEnv: ['apps/app1/src/other-setup.ts'],
     });
@@ -695,10 +708,10 @@ export default {
     );
 
     const updated = readProjectConfiguration(tree, 'app1');
-    expect(updated.targets.test.options).toStrictEqual({
+    expect(updated.targets?.test.options).toStrictEqual({
       jestConfig: 'apps/app1/jest.config.ts',
     });
-    expect(updated.targets.test.configurations.ci).toStrictEqual({
+    expect(updated.targets?.test.configurations?.ci).toStrictEqual({
       jestConfig: 'apps/app1/jest.ci.config.ts',
     });
   });
@@ -736,8 +749,8 @@ export default {
     await migration(tree);
 
     // Same setupFile across base + ci → both jest configs migrated once each.
-    const baseContent = tree.read('apps/app1/jest.config.ts', 'utf-8');
-    const ciContent = tree.read('apps/app1/jest.ci.config.ts', 'utf-8');
+    const baseContent = readFile(tree, 'apps/app1/jest.config.ts');
+    const ciContent = readFile(tree, 'apps/app1/jest.ci.config.ts');
     expect((baseContent.match(/test-setup\.ts/g) ?? []).length).toBe(1);
     expect((ciContent.match(/test-setup\.ts/g) ?? []).length).toBe(1);
   });
@@ -772,7 +785,7 @@ export default {
 
     await migration(tree);
 
-    const content = tree.read('apps/app1/jest.config.ts', 'utf-8');
+    const content = readFile(tree, 'apps/app1/jest.config.ts');
     // Last spread wins: presetB's setupFilesAfterEnv falls back to presetA's
     // only when presetB doesn't define it. The chain must resolve presetB
     // before presetA (last-wins) rather than concatenate both.
@@ -825,9 +838,8 @@ export default {
     expect(tree.read('apps/app1/jest.config.ts', 'utf-8')).toContain(
       `'<rootDir>/src/test-setup.ts'`
     );
-    const updatedNxJson = readNxJson(tree);
     expect(
-      updatedNxJson?.targetDefaults?.['@nx/jest:jest']?.options?.setupFile
+      readTargetDefault(tree, '@nx/jest:jest')?.options?.setupFile
     ).toBeUndefined();
   });
 
@@ -872,10 +884,10 @@ export default {
     expect(ciContent).not.toContain('test-setup');
 
     const updated = readProjectConfiguration(tree, 'app1');
-    expect(updated.targets.test.options).toStrictEqual({
+    expect(updated.targets?.test.options).toStrictEqual({
       jestConfig: 'apps/app1/jest.config.ts',
     });
-    expect(updated.targets.test.configurations.ci).toStrictEqual({
+    expect(updated.targets?.test.configurations?.ci).toStrictEqual({
       jestConfig: 'apps/app1/jest.ci.config.ts',
     });
   });
@@ -914,7 +926,7 @@ export default {
     // The configuration's passthrough is left for the user to consolidate;
     // a follow-up warning surfaces the regression risk.
     const updated = readProjectConfiguration(tree, 'app1');
-    expect(updated.targets.test.configurations.ci).toStrictEqual({
+    expect(updated.targets?.test.configurations?.ci).toStrictEqual({
       setupFilesAfterEnv: ['apps/app1/src/ci-setup.ts'],
     });
     expect(typeof followUp).toBe('function');
@@ -942,7 +954,7 @@ export default {
 
     // The deprecated option is still removed from project.json.
     const updated = readProjectConfiguration(tree, 'app1');
-    expect(updated.targets.test.options).toStrictEqual({
+    expect(updated.targets?.test.options).toStrictEqual({
       jestConfig: 'apps/app1/jest.config.ts',
     });
     // The jest config is left untouched.

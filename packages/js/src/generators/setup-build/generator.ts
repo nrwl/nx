@@ -44,6 +44,11 @@ import { SetupBuildGeneratorSchema } from './schema';
 
 let ts: typeof import('typescript');
 
+type NormalizedSetupBuildGeneratorSchema = SetupBuildGeneratorSchema &
+  Required<
+    Pick<SetupBuildGeneratorSchema, 'buildTarget' | 'main' | 'tsConfig'>
+  >;
+
 export async function setupBuildGenerator(
   tree: Tree,
   options: SetupBuildGeneratorSchema
@@ -57,7 +62,7 @@ export async function setupBuildGenerator(
 
   project.targets ??= {};
 
-  let mainFile: string;
+  let mainFile: string | undefined;
   if (prevBuildOptions?.main) {
     mainFile = prevBuildOptions.main;
   } else if (options.main) {
@@ -83,7 +88,7 @@ export async function setupBuildGenerator(
   }
   options.main = mainFile;
 
-  let tsConfigFile: string;
+  let tsConfigFile: string | undefined;
   if (prevBuildOptions?.tsConfig) {
     tsConfigFile = prevBuildOptions.tsConfig;
   } else if (options.tsConfig) {
@@ -107,6 +112,12 @@ export async function setupBuildGenerator(
     );
   }
   options.tsConfig = tsConfigFile;
+  const normalizedOptions: NormalizedSetupBuildGeneratorSchema = {
+    ...options,
+    buildTarget: options.buildTarget,
+    main: mainFile,
+    tsConfig: tsConfigFile,
+  };
 
   const isTsSolutionSetup = isUsingTsSolutionSetup(tree);
   switch (options.bundler) {
@@ -161,13 +172,16 @@ export async function setupBuildGenerator(
     case 'tsc': {
       if (isTsSolutionSetup) {
         const nxJson = readNxJson(tree);
+        if (!nxJson) {
+          throw new Error('Cannot find nx.json');
+        }
         ensureProjectIsIncludedInPluginRegistrations(
           nxJson,
           project.root,
           options.buildTarget
         );
         updateNxJson(tree, nxJson);
-        updatePackageJsonForTsc(tree, options, project);
+        updatePackageJsonForTsc(tree, normalizedOptions, project);
       } else {
         addBuildTargetDefaults(tree, '@nx/js:tsc');
 
@@ -212,7 +226,7 @@ export async function setupBuildGenerator(
       tasks.push(addSwcDependencies(tree));
       addSwcConfig(tree, project.root, isTsSolutionSetup ? 'es6' : 'commonjs');
       if (isTsSolutionSetup) {
-        updatePackageJsonForSwc(tree, options, project);
+        updatePackageJsonForSwc(tree, normalizedOptions, project);
       }
     }
   }
@@ -226,7 +240,7 @@ export default setupBuildGenerator;
 
 function updatePackageJsonForTsc(
   tree: Tree,
-  options: SetupBuildGeneratorSchema,
+  options: NormalizedSetupBuildGeneratorSchema,
   project: ProjectConfiguration
 ) {
   if (!ts) {
@@ -251,22 +265,25 @@ function updatePackageJsonForTsc(
   } else {
     main = options.main;
 
-    ({ rootDir = project.root, outDir: outputPath } = tsconfig.options);
+    ({ rootDir = project.root } = tsconfig.options);
     const tsOutFile = tsconfig.options.outFile;
 
     if (tsOutFile) {
       main = join(project.root, basename(tsOutFile));
       outputPath = dirname(tsOutFile);
-    }
-
-    if (!outputPath) {
-      outputPath = project.root;
+    } else {
+      outputPath = tsconfig.options.outDir || project.root;
     }
   }
 
-  const module = Object.keys(ts.ModuleKind).find(
-    (m) => ts.ModuleKind[m] === tsconfig.options.module
-  );
+  const module = Object.entries(ts.ModuleKind).find(
+    ([, kind]) => kind === tsconfig.options.module
+  )?.[0];
+  if (!module) {
+    throw new Error(
+      `Cannot determine the module kind from ${options.tsConfig}.`
+    );
+  }
   const format: SupportedFormat[] = module.toLowerCase().startsWith('es')
     ? ['esm']
     : ['cjs'];
@@ -284,7 +301,7 @@ function updatePackageJsonForTsc(
 
 function updatePackageJsonForSwc(
   tree: Tree,
-  options: SetupBuildGeneratorSchema,
+  options: NormalizedSetupBuildGeneratorSchema,
   project: ProjectConfiguration
 ) {
   const mergedTarget = mergeTargetDefaults(tree, project, options.buildTarget);
@@ -350,7 +367,15 @@ function mergeTargetDefaults(
   buildTarget: string
 ) {
   const nxJson = readNxJson(tree);
-  const projectTarget = project.targets[buildTarget];
+  const projectTarget = project.targets?.[buildTarget];
+  if (!nxJson) {
+    throw new Error('Cannot find nx.json');
+  }
+  if (!projectTarget) {
+    throw new Error(
+      `Cannot find target "${buildTarget}" in project "${project.name}".`
+    );
+  }
 
   return mergeTargetConfigurations(
     projectTarget,
@@ -358,6 +383,6 @@ function mergeTargetDefaults(
       buildTarget,
       nxJson.targetDefaults,
       projectTarget.executor
-    )
+    ) ?? undefined
   );
 }

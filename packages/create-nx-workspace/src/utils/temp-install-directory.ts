@@ -159,9 +159,10 @@ function privateTreeRefusal(dir: string): string | undefined {
     } catch {}
     return `${dir} is not a real directory`;
   }
+  const uid = process.getuid();
   for (const leaf of [resolve(dir), canonicalDir(dir)]) {
     for (let p = leaf; ; p = dirname(p)) {
-      const refusal = privatePathRefusal(p, p === leaf);
+      const refusal = privatePathRefusal(p, p === leaf, uid);
       if (refusal) {
         return refusal;
       }
@@ -173,7 +174,11 @@ function privateTreeRefusal(dir: string): string | undefined {
   return undefined;
 }
 
-function privatePathRefusal(path: string, isLeaf: boolean): string | undefined {
+function privatePathRefusal(
+  path: string,
+  isLeaf: boolean,
+  uid: number
+): string | undefined {
   let stats: ReturnType<typeof lstatSync>;
   try {
     stats = lstatSync(path);
@@ -181,7 +186,6 @@ function privatePathRefusal(path: string, isLeaf: boolean): string | undefined {
     const code = (e as NodeJS.ErrnoException)?.code;
     return `${path} could not be inspected${code ? ` (${code})` : ''}`;
   }
-  const uid = process.getuid();
   const trustedOwner = stats.uid === uid || (!isLeaf && stats.uid === 0);
   if (stats.isSymbolicLink() && !isLeaf) {
     return trustedOwner ? undefined : `${path} is owned by uid ${stats.uid}`;

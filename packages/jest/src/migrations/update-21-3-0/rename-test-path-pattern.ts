@@ -20,9 +20,15 @@ export default async function (tree: Tree) {
     '@nx/jest:jest',
     (_, project, target, configuration) => {
       const projectConfiguration = readProjectConfiguration(tree, project);
+      const targetConfiguration = projectConfiguration.targets?.[target];
       const config = configuration
-        ? projectConfiguration.targets[target].configurations[configuration]
-        : projectConfiguration.targets[target].options;
+        ? targetConfiguration?.configurations?.[configuration]
+        : targetConfiguration?.options;
+      if (!config) {
+        throw new Error(
+          `Could not find options for target "${target}" in project "${project}".`
+        );
+      }
 
       renameTestPathPattern(config);
 

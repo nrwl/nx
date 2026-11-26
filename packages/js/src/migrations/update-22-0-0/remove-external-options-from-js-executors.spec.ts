@@ -4,7 +4,7 @@ import {
   readProjectConfiguration,
   updateJson,
   type NxJsonConfiguration,
-  type TargetDefaults,
+  type TargetConfiguration,
   type Tree,
 } from '@nx/devkit';
 import * as devkit from '@nx/devkit';
@@ -16,7 +16,7 @@ import migration, {
 // Fixtures use the record-shaped targetDefaults (keyed by target name or
 // executor) that this migration reads.
 type LegacyNxJson = Omit<NxJsonConfiguration, 'targetDefaults'> & {
-  targetDefaults?: TargetDefaults;
+  targetDefaults?: Record<string, Partial<TargetConfiguration>>;
 };
 
 describe('remove-external-options-from-js-executors migration', () => {
@@ -61,21 +61,21 @@ describe('remove-external-options-from-js-executors migration', () => {
       await migration(tree);
 
       const project = readProjectConfiguration(tree, 'lib1');
-      expect(project.targets.build.options.external).toBeUndefined();
+      expect(project.targets?.build?.options?.external).toBeUndefined();
       expect(
-        project.targets.build.options.externalBuildTargets
+        project.targets?.build?.options?.externalBuildTargets
       ).toBeUndefined();
       expect(
-        project.targets.build.configurations.development.external
+        project.targets?.build?.configurations?.development.external
       ).toBeUndefined();
       expect(
-        project.targets.build.configurations.development.externalBuildTargets
+        project.targets?.build?.configurations?.development.externalBuildTargets
       ).toBeUndefined();
       expect(
-        project.targets.build.configurations.production.external
+        project.targets?.build?.configurations?.production.external
       ).toBeUndefined();
       expect(
-        project.targets.build.configurations.production.externalBuildTargets
+        project.targets?.build?.configurations?.production.externalBuildTargets
       ).toBeUndefined();
     }
   );
@@ -109,9 +109,9 @@ describe('remove-external-options-from-js-executors migration', () => {
       await migration(tree);
 
       const project = readProjectConfiguration(tree, 'lib1');
-      expect(project.targets.build.options).toBeUndefined();
+      expect(project.targets?.build?.options).toBeUndefined();
       // we keep them because users might rely on them, e.g. in scripts, CI, etc.
-      expect(project.targets.build.configurations).toEqual({
+      expect(project.targets?.build?.configurations).toEqual({
         development: {},
         production: {},
       });
@@ -145,21 +145,21 @@ describe('remove-external-options-from-js-executors migration', () => {
     await migration(tree);
 
     const project = readProjectConfiguration(tree, 'lib1');
-    expect(project.targets.build.options.external).toEqual(['react']);
-    expect(project.targets.build.options.externalBuildTargets).toEqual([
+    expect(project.targets?.build?.options?.external).toEqual(['react']);
+    expect(project.targets?.build?.options?.externalBuildTargets).toEqual([
       'build',
     ]);
-    expect(project.targets.build.configurations.development.external).toBe(
+    expect(project.targets?.build?.configurations?.development.external).toBe(
       'all'
     );
     expect(
-      project.targets.build.configurations.development.externalBuildTargets
+      project.targets?.build?.configurations?.development.externalBuildTargets
     ).toEqual(['build']);
-    expect(project.targets.build.configurations.production.external).toBe(
+    expect(project.targets?.build?.configurations?.production.external).toBe(
       'none'
     );
     expect(
-      project.targets.build.configurations.production.externalBuildTargets
+      project.targets?.build?.configurations?.production.externalBuildTargets
     ).toEqual(['build', 'build-prod']);
   });
 
@@ -196,22 +196,22 @@ describe('remove-external-options-from-js-executors migration', () => {
       await migration(tree);
 
       const nxJson = readJson<LegacyNxJson>(tree, 'nx.json');
-      expect(nxJson.targetDefaults.build.options.external).toBeUndefined();
+      expect(nxJson.targetDefaults?.build?.options?.external).toBeUndefined();
       expect(
-        nxJson.targetDefaults.build.options.externalBuildTargets
+        nxJson.targetDefaults?.build?.options?.externalBuildTargets
       ).toBeUndefined();
       expect(
-        nxJson.targetDefaults.build.configurations.development.external
+        nxJson.targetDefaults?.build?.configurations?.development.external
       ).toBeUndefined();
       expect(
-        nxJson.targetDefaults.build.configurations.development
+        nxJson.targetDefaults?.build?.configurations?.development
           .externalBuildTargets
       ).toBeUndefined();
       expect(
-        nxJson.targetDefaults.build.configurations.production.external
+        nxJson.targetDefaults?.build?.configurations?.production.external
       ).toBeUndefined();
       expect(
-        nxJson.targetDefaults.build.configurations.production
+        nxJson.targetDefaults?.build?.configurations?.production
           .externalBuildTargets
       ).toBeUndefined();
     }
@@ -245,10 +245,10 @@ describe('remove-external-options-from-js-executors migration', () => {
       await migration(tree);
 
       const nxJson = readJson<LegacyNxJson>(tree, 'nx.json');
-      expect(nxJson.targetDefaults.build.options).toBeUndefined();
+      expect(nxJson.targetDefaults?.build?.options).toBeUndefined();
       // we keep them because users might rely on them, e.g. in scripts, CI, etc.
       // they might be applying them from target defaults
-      expect(nxJson.targetDefaults.build.configurations).toEqual({
+      expect(nxJson.targetDefaults?.build?.configurations).toEqual({
         development: {},
         production: {},
       });
@@ -287,22 +287,24 @@ describe('remove-external-options-from-js-executors migration', () => {
       await migration(tree);
 
       const nxJson = readJson<LegacyNxJson>(tree, 'nx.json');
-      expect(nxJson.targetDefaults[executor].options.external).toBeUndefined();
       expect(
-        nxJson.targetDefaults[executor].options.externalBuildTargets
+        nxJson.targetDefaults?.[executor]?.options?.external
       ).toBeUndefined();
       expect(
-        nxJson.targetDefaults[executor].configurations.development.external
+        nxJson.targetDefaults?.[executor]?.options?.externalBuildTargets
       ).toBeUndefined();
       expect(
-        nxJson.targetDefaults[executor].configurations.development
+        nxJson.targetDefaults?.[executor]?.configurations?.development.external
+      ).toBeUndefined();
+      expect(
+        nxJson.targetDefaults?.[executor]?.configurations?.development
           .externalBuildTargets
       ).toBeUndefined();
       expect(
-        nxJson.targetDefaults[executor].configurations.production.external
+        nxJson.targetDefaults?.[executor]?.configurations?.production.external
       ).toBeUndefined();
       expect(
-        nxJson.targetDefaults[executor].configurations.production
+        nxJson.targetDefaults?.[executor]?.configurations?.production
           .externalBuildTargets
       ).toBeUndefined();
     }
@@ -327,9 +329,9 @@ describe('remove-external-options-from-js-executors migration', () => {
       await migration(tree);
 
       const nxJson = readJson<LegacyNxJson>(tree, 'nx.json');
-      expect(nxJson.targetDefaults[executor]).toBeUndefined();
+      expect(nxJson.targetDefaults?.[executor]).toBeUndefined();
       // sibling defaults are untouched
-      expect(nxJson.targetDefaults.build).toEqual({ cache: true });
+      expect(nxJson.targetDefaults?.build).toEqual({ cache: true });
     }
   );
 });

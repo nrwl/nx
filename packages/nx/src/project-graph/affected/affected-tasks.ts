@@ -39,7 +39,7 @@ import {
 import type { NxArgs } from '../../utils/command-line-utils';
 import { findMatchingProjects } from '../../utils/find-matching-projects';
 import { logger } from '../../utils/logger';
-import { DaemonProjectGraphError, ProjectGraphError } from '../error-types';
+import { isDaemonProjectGraphError, ProjectGraphError } from '../error-types';
 import {
   hydrateExplanation,
   type AffectedExplanation,
@@ -192,7 +192,7 @@ export async function computeAffectedTasks(
         },
       };
     } catch (e) {
-      if (e?.name === DaemonProjectGraphError.name) {
+      if (isDaemonProjectGraphError(e)) {
         throw ProjectGraphError.fromDaemonProjectGraphError(e);
       }
       // Not rethrown: the graph fetch handles an unreachable daemon, and a
@@ -537,14 +537,17 @@ function dependencyChanges(
   for (const external of packageJsonChanges.externals) {
     movedBy.set(external, 'package.json');
   }
-  for (const external of lockFile.externals) {
-    movedBy.set(external, changedLockFile);
+  if (changedLockFile !== undefined) {
+    for (const external of lockFile.externals) {
+      movedBy.set(external, changedLockFile);
+    }
   }
   const ecosystemMovedBy = new Map<string, string[]>();
   for (const [changes, file] of [
     [packageJsonChanges, 'package.json'],
     [lockFile, changedLockFile],
   ] as const) {
+    if (file === undefined) continue;
     for (const ecosystem of changes.changedExternalTypes) {
       ecosystemMovedBy.set(ecosystem, [
         ...(ecosystemMovedBy.get(ecosystem) ?? []),
@@ -644,7 +647,7 @@ function explainTasks(
     }
 
     const project = taskGraph.tasks[taskId]?.target.project;
-    for (const reason of (project && named.get(project)) ?? []) {
+    for (const reason of (project ? named.get(project) : undefined) ?? []) {
       forTask.push(reason);
     }
     if (customHashed.has(taskId)) {
@@ -682,8 +685,7 @@ function explainTasks(
     ...Object.keys(result.affected),
     ...Object.keys(result.upstream),
   ].flatMap((id) => explanation.producersOf[id] ?? []);
-  while (producers.length) {
-    const id = producers.pop();
+  for (let id = producers.pop(); id !== undefined; id = producers.pop()) {
     if (id in result.affected || id in result.upstream) continue;
     result.upstream[id] = reasonsFor(id);
     producers.push(...(explanation.producersOf[id] ?? []));

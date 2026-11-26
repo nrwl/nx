@@ -7,25 +7,33 @@ import {
 } from '@nx/devkit';
 import picomatch = require('picomatch');
 
-export async function addPluginRegistrations<T>(
+export async function addPluginRegistrations<T extends object>(
   tree: Tree,
   projectTargets: Map<string, T>,
   projects: Map<string, ProjectConfiguration>,
   pluginPath: string
 ): Promise<void> {
   const nxJson = readNxJson(tree);
+  if (!nxJson) {
+    throw new Error('Cannot find nx.json');
+  }
 
   for (const [project, options] of projectTargets.entries()) {
     const existingPlugin = nxJson.plugins?.find(
       (plugin): plugin is ExpandedPluginConfiguration =>
         typeof plugin !== 'string' &&
         plugin.plugin === pluginPath &&
-        Object.keys(options).every(
-          (key) => plugin.options[key] === options[key]
+        Object.entries(options).every(
+          ([key, value]) =>
+            (plugin.options as Record<string, unknown>)[key] === value
         )
     );
 
-    const projectIncludeGlob = `${projects.get(project).root}/**/*`;
+    const projectConfig = projects.get(project);
+    if (!projectConfig) {
+      throw new Error(`Cannot find project "${project}"`);
+    }
+    const projectIncludeGlob = `${projectConfig.root}/**/*`;
     if (!existingPlugin) {
       nxJson.plugins ??= [];
       const plugin: ExpandedPluginConfiguration = {

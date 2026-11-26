@@ -25,6 +25,9 @@ export default async function findCustomHashers(
       continue;
     }
     const content = tree.read(packageJsonPath, 'utf-8');
+    if (content === null) {
+      throw new Error(`Cannot read ${packageJsonPath}`);
+    }
     if (!content.includes('"executors"') && !content.includes('"builders"')) {
       continue;
     }
@@ -120,7 +123,10 @@ function isValidHasher(hasher: unknown): hasher is string | undefined {
   return hasher === undefined || typeof hasher === 'string';
 }
 
-function tryParse<T extends object>(content: string): T | null {
+function tryParse<T extends object>(content: string | null): T | null {
+  if (content === null) {
+    return null;
+  }
   try {
     return parseJson<T>(content);
   } catch {

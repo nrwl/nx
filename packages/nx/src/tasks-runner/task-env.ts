@@ -3,7 +3,7 @@ import {
   READY_SIGNAL_TASK_ENV,
   READY_URL_ENV,
 } from './readiness/ready-signal';
-import { config as loadDotEnvFile } from 'dotenv';
+import { config as loadDotEnvFile, type DotenvPopulateInput } from 'dotenv';
 import { expand } from 'dotenv-expand';
 import { join } from 'node:path';
 import { ProjectGraph } from '../config/project-graph';
@@ -30,8 +30,8 @@ export function getForceColorForChild(): string {
 }
 
 export function getEnvVariablesForBatchProcess(
-  skipNxCache: boolean,
-  captureStderr: boolean
+  skipNxCache: boolean | undefined,
+  captureStderr: boolean | undefined
 ): NodeJS.ProcessEnv {
   const res = {
     // User Process Env Variables override Dotenv Variables
@@ -137,12 +137,12 @@ export function getGraphTimeDotEnvForTask(
 
 export function getEnvVariablesForTask(
   task: Task,
-  taskSpecificEnv: NodeJS.ProcessEnv,
-  forceColor: string,
-  skipNxCache: boolean,
-  captureStderr: boolean,
-  outputPath: string,
-  streamOutput: boolean
+  taskSpecificEnv: NodeJS.ProcessEnv | undefined,
+  forceColor: string | undefined,
+  skipNxCache: boolean | undefined,
+  captureStderr: boolean | undefined,
+  outputPath: string | null,
+  streamOutput: boolean | null
 ): NodeJS.ProcessEnv {
   const res = {
     // Start With Dotenv Variables
@@ -178,11 +178,11 @@ export function getEnvVariablesForTask(
 }
 
 function getNxEnvVariablesForForkedProcess(
-  forceColor: string,
-  skipNxCache: boolean,
-  captureStderr: boolean,
-  outputPath?: string,
-  streamOutput?: boolean
+  forceColor: string | undefined,
+  skipNxCache: boolean | undefined,
+  captureStderr: boolean | undefined,
+  outputPath?: string | null,
+  streamOutput?: boolean | null
 ) {
   const env: NodeJS.ProcessEnv = {
     FORCE_COLOR: forceColor,
@@ -233,11 +233,11 @@ export function getInvocationRootPid(): number {
 
 function getNxEnvVariablesForTask(
   task: Task,
-  forceColor: string,
-  skipNxCache: boolean,
-  captureStderr: boolean,
-  outputPath: string,
-  streamOutput: boolean
+  forceColor: string | undefined,
+  skipNxCache: boolean | undefined,
+  captureStderr: boolean | undefined,
+  outputPath: string | null,
+  streamOutput: boolean | null
 ): NodeJS.ProcessEnv {
   const env: NodeJS.ProcessEnv = {
     NX_TASK_TARGET_PROJECT: task.target.project,
@@ -283,12 +283,12 @@ export function loadAndExpandDotEnvFile(
 ) {
   const myEnv = loadDotEnvFile({
     path: filename,
-    processEnv: environmentVariables,
+    processEnv: environmentVariables as DotenvPopulateInput,
     override,
   });
   return expand({
     ...myEnv,
-    processEnv: environmentVariables,
+    processEnv: environmentVariables as DotenvPopulateInput,
   });
 }
 
@@ -323,11 +323,10 @@ function getOwnerTargetForTask(
           // a target group can name a target the project does not define —
           // inference plugins build the group and the targets separately, so
           // the two can disagree. skip the phantom rather than dereferencing it.
-          if (project.data.targets[target]?.metadata?.nonAtomizedTarget) {
-            return [
-              target,
-              project.data.targets[target]?.metadata?.nonAtomizedTarget,
-            ];
+          const nonAtomizedTarget =
+            project.data.targets?.[target]?.metadata?.nonAtomizedTarget;
+          if (nonAtomizedTarget) {
+            return [target, nonAtomizedTarget];
           }
         }
       }

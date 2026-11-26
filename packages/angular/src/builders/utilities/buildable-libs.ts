@@ -11,13 +11,17 @@ export function createTmpTsConfigForBuildableLibs(
   context: import('@angular-devkit/architect').BuilderContext,
   options?: { projectGraph?: ProjectGraph; target?: string }
 ) {
+  const { target } = context;
+  if (!target) {
+    throw new Error('The builder context has no target.');
+  }
   let dependencies: DependentBuildableProjectNode[];
   const result = calculateProjectDependencies(
     options?.projectGraph ?? readCachedProjectGraph(),
     context.workspaceRoot,
-    context.target.project,
-    options?.target ?? context.target.target,
-    context.target.configuration
+    target.project,
+    options?.target ?? target.target,
+    target.configuration
   );
   dependencies = result.dependencies;
 

@@ -15,6 +15,8 @@ import type {
   PackageSnapshots,
   ProjectSnapshot,
   ResolvedDependencies,
+  LockfileV9,
+  SpecifierAndResolution,
 } from '@pnpm/lockfile-types';
 import { existsSync, readFileSync } from 'node:fs';
 import { valid } from 'semver';
@@ -331,11 +333,19 @@ const DEPENDENCIES_FIELDS = [
   'optionalDependencies',
   'dependencies',
   'devDependencies',
-];
+] as const;
+
+type LockfileFileV5 = LockfileFile & {
+  specifiers?: ResolvedDependencies;
+  importers?: Record<
+    string,
+    InlineSpecifiersProjectSnapshot & { specifiers?: ResolvedDependencies }
+  >;
+};
 
 // https://github.com/pnpm/pnpm/blob/cca56c0c6c956d036883003092ca1d11bbb700f6/lockfile/lockfile-file/src/lockfileFormatConverters.ts#L169
 function convertFromLockfileFileMutable(
-  lockfileFile: LockfileFile
+  lockfileFile: LockfileFileV5
 ): LockfileFileV9 {
   if (typeof lockfileFile?.['importers'] === 'undefined') {
     lockfileFile.importers = {
@@ -353,14 +363,26 @@ function convertFromLockfileFileMutable(
   } else if (isV5Syntax(lockfileFile)) {
     // remap the importers from v5 to the new format
     for (const depType of DEPENDENCIES_FIELDS) {
-      if (lockfileFile.importers['.'][depType]) {
-        for (const [depName, version] of Object.entries(
-          lockfileFile.importers['.'][depType]
-        )) {
-          lockfileFile.importers['.'][depType][depName] = {
+      const rootImporter = lockfileFile.importers['.'];
+      const deps = rootImporter[depType];
+      if (deps) {
+        const specifiers =
+          lockfileFile['specifiers'] || rootImporter['specifiers'];
+        for (const [depName, version] of Object.entries<
+          string | SpecifierAndResolution
+        >(deps)) {
+          // v5 stores plain version strings here
+          if (typeof version !== 'string') {
+            continue;
+          }
+          if (!specifiers) {
+            throw new Error(
+              `The pnpm lockfile has no specifiers for "${depName}".`
+            );
+          }
+          deps[depName] = {
             version,
-            specifier: (lockfileFile['specifiers'] ||
-              lockfileFile.importers['.']['specifiers'])[depName],
+            specifier: specifiers[depName],
           };
         }
       }
@@ -590,7 +612,8 @@ function createGitHostedPkgId({
 
 // https://github.com/pnpm/pnpm/blob/af3e5559d377870d4c3d303429b3ed1a4e64fedc/lockfile/lockfile-file/src/write.ts#L106
 function normalizeLockfileV6(lockfile: Lockfile, isLockfileV6: boolean) {
-  let lockfileToSave!: LockfileFile;
+  let lockfileToSave: LockfileFile &
+    Pick<LockfileV9, 'neverBuiltDependencies' | 'onlyBuiltDependencies'>;
   if (Object.keys(lockfile.importers).length === 1 && lockfile.importers['.']) {
     lockfileToSave = {
       ...lockfile,
@@ -635,7 +658,7 @@ function normalizeLockfileV6(lockfile: Lockfile, isLockfileV6: boolean) {
     }
   }
   if (lockfileToSave.packages) {
-    const newPackages = {};
+    const newPackages: PackageSnapshots = {};
     for (const [depPath, pkgSnapshot] of Object.entries(
       lockfileToSave.packages
     )) {
@@ -684,13 +707,10 @@ function pruneTimeInLockfileV6(
   const rootDepPaths = new Set<string>();
   for (const importer of Object.values(importers)) {
     for (const depType of DEPENDENCIES_FIELDS) {
-      for (let [depName, ref] of Object.entries(importer[depType] ?? {})) {
-        let version: string;
-        if (ref['version']) {
-          version = ref['version'];
-        } else {
-          version = ref as string;
-        }
+      for (const [depName, ref] of Object.entries<
+        string | SpecifierAndResolution
+      >(importer[depType] ?? {})) {
+        const version = typeof ref === 'string' ? ref : ref.version;
         const suffixStart = version.indexOf('(');
         const refWithoutPeerSuffix =
           suffixStart === -1 ? version : version.slice(0, suffixStart);
@@ -728,13 +748,10 @@ function pruneTime(
   const rootDepPaths = new Set<string>();
   for (const importer of Object.values(importers)) {
     for (const depType of DEPENDENCIES_FIELDS) {
-      for (let [depName, ref] of Object.entries(importer[depType] ?? {})) {
-        let version: string;
-        if (ref['version']) {
-          version = ref['version'];
-        } else {
-          version = ref as string;
-        }
+      for (const [depName, ref] of Object.entries<
+        string | SpecifierAndResolution
+      >(importer[depType] ?? {})) {
+        const version = typeof ref === 'string' ? ref : ref.version;
         const suffixStart = version.indexOf('_');
         const refWithoutPeerSuffix =
           suffixStart === -1 ? version : version.slice(0, suffixStart);
@@ -920,14 +937,15 @@ const ROOT_KEYS_ORDER = Object.fromEntries(
 // https://github.com/pnpm/pnpm/blob/af3e5559d377870d4c3d303429b3ed1a4e64fedc/lockfile/lockfile-file/src/sortLockfileKeys.ts#L60
 // TODO(meeroslav): pnpm has not a more sophisticated implementation for this function. check if this becomes a bottleneck
 function sortLockfileKeys(lockfile: LockfileFile): LockfileFile {
-  let sortedLockfile = {} as LockfileFile;
-  const sortedKeys = Object.keys(lockfile).sort(
+  const unsortedLockfile: Record<string, unknown> = lockfile;
+  const sortedLockfile: Record<string, unknown> = {};
+  const sortedKeys = Object.keys(unsortedLockfile).sort(
     (a, b) => ROOT_KEYS_ORDER[a] - ROOT_KEYS_ORDER[b]
   );
   for (const key of sortedKeys) {
-    sortedLockfile[key] = lockfile[key];
+    sortedLockfile[key] = unsortedLockfile[key];
   }
-  return sortedLockfile;
+  return sortedLockfile as LockfileFile;
 }
 
 /*************************************************************************
@@ -935,7 +953,7 @@ function sortLockfileKeys(lockfile: LockfileFile): LockfileFile {
  *************************************************************************/
 
 // https://github.com/pnpm/pnpm/blob/af3e5559d377870d4c3d303429b3ed1a4e64fedc/packages/dependency-path/src/index.ts#L6
-function isAbsolute(dependencyPath) {
+function isAbsolute(dependencyPath: string) {
   return dependencyPath[0] !== '/';
 }
 
@@ -986,7 +1004,7 @@ function removePeersSuffix(relDepPath: string): string {
 }
 
 // https://github.com/pnpm/pnpm/blob/af3e5559d377870d4c3d303429b3ed1a4e64fedc/packages/dependency-path/src/index.ts#L80
-function dpRefToRelative(reference, pkgName) {
+function dpRefToRelative(reference: string, pkgName: string) {
   if (reference.startsWith('link:')) {
     return null;
   }
@@ -1004,7 +1022,7 @@ function dpRefToRelative(reference, pkgName) {
 }
 
 // https://github.com/pnpm/pnpm/blob/af3e5559d377870d4c3d303429b3ed1a4e64fedc/packages/dependency-path/src/index.ts#L96
-function dpParse(dependencyPath) {
+function dpParse(dependencyPath: string) {
   // eslint-disable-next-line: strict-type-predicates
   if (typeof dependencyPath !== 'string') {
     throw new TypeError(
@@ -1083,7 +1101,7 @@ function pick<T extends Record<string, any>, N extends keyof T>(
 
 // https://github.com/pnpm/ramda/blob/50c6b57110b2f3631ed8633141f12012b7768d85/source/pickBy.js#L24
 function pickBy(test: (prop: string) => boolean, obj: Record<string, string>) {
-  let result = {};
+  let result: Record<string, string> = {};
 
   for (const prop in obj) {
     if (test(obj[prop])) {
@@ -1095,7 +1113,7 @@ function pickBy(test: (prop: string) => boolean, obj: Record<string, string>) {
 }
 
 // https://github.com/pnpm/ramda/blob/50c6b57110b2f3631ed8633141f12012b7768d85/source/isEmpty.js#L28
-function isEmpty(obj: object) {
+function isEmpty(obj: object | null | undefined) {
   return obj != null && Object.keys(obj).length === 0;
 }
 
@@ -1105,7 +1123,7 @@ function omit<T extends Record<string, any>, N extends string[]>(
   obj: T
 ): Pick<T, Exclude<keyof T, N>> {
   let result: Partial<T> = {};
-  let index = {};
+  let index: Record<string, number> = {};
   let idx = 0;
   const len = names.length;
 

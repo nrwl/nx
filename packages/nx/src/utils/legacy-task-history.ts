@@ -21,9 +21,7 @@ let taskHashToIndicesMap: Map<string, number[]> = new Map();
 export async function getHistoryForHashes(hashes: string[]): Promise<{
   [hash: string]: TaskRun[];
 }> {
-  if (taskHistory === undefined) {
-    loadTaskHistoryFromDisk();
-  }
+  const history = taskHistory ?? loadTaskHistoryFromDisk();
 
   const result: { [hash: string]: TaskRun[] } = {};
   for (let hash of hashes) {
@@ -31,7 +29,7 @@ export async function getHistoryForHashes(hashes: string[]): Promise<{
     if (!indices) {
       result[hash] = [];
     } else {
-      result[hash] = indices.map((index) => taskHistory[index]);
+      result[hash] = indices.map((index) => history[index]);
     }
   }
 
@@ -41,15 +39,13 @@ export async function getHistoryForHashes(hashes: string[]): Promise<{
 export async function writeTaskRunsToHistory(
   taskRuns: TaskRun[]
 ): Promise<void> {
-  if (taskHistory === undefined) {
-    loadTaskHistoryFromDisk();
-  }
+  const history = taskHistory ?? loadTaskHistoryFromDisk();
 
   const serializedLines: string[] = [];
   for (let taskRun of taskRuns) {
     const serializedLine = taskRunKeys.map((key) => taskRun[key]).join(',');
     serializedLines.push(serializedLine);
-    recordTaskRunInMemory(taskRun);
+    recordTaskRunInMemory(history, taskRun);
   }
 
   if (!existsSync(taskHistoryFile)) {
@@ -60,23 +56,24 @@ export async function writeTaskRunsToHistory(
 
 export const taskHistoryFile = join(workspaceDataDirectory, 'task-history.csv');
 
-function loadTaskHistoryFromDisk() {
+function loadTaskHistoryFromDisk(): TaskRun[] {
   taskHashToIndicesMap.clear();
-  taskHistory = [];
+  const history: TaskRun[] = [];
+  taskHistory = history;
 
   if (!existsSync(taskHistoryFile)) {
-    return;
+    return history;
   }
 
   const fileContent = readFileSync(taskHistoryFile, 'utf8');
   if (!fileContent) {
-    return;
+    return history;
   }
   const lines = fileContent.split('\n');
 
   // if there are no lines or just the header, return
   if (lines.length <= 1) {
-    return;
+    return history;
   }
 
   const contentLines = lines.slice(1).filter((l) => l.trim() !== '');
@@ -90,14 +87,16 @@ function loadTaskHistoryFromDisk() {
       run[header] = values[index];
     });
 
-    recordTaskRunInMemory(run as TaskRun);
+    recordTaskRunInMemory(history, run as TaskRun);
   }
+  return history;
 }
 
-function recordTaskRunInMemory(taskRun: TaskRun) {
-  const index = taskHistory.push(taskRun) - 1;
-  if (taskHashToIndicesMap.has(taskRun.hash)) {
-    taskHashToIndicesMap.get(taskRun.hash).push(index);
+function recordTaskRunInMemory(history: TaskRun[], taskRun: TaskRun) {
+  const index = history.push(taskRun) - 1;
+  const indices = taskHashToIndicesMap.get(taskRun.hash);
+  if (indices) {
+    indices.push(index);
   } else {
     taskHashToIndicesMap.set(taskRun.hash, [index]);
   }

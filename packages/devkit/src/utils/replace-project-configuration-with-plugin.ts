@@ -19,6 +19,9 @@ export async function replaceProjectConfigurationsWithPlugin<T = unknown>(
   pluginOptions: T
 ): Promise<void> {
   const nxJson = readNxJson(tree);
+  if (!nxJson) {
+    throw new Error('Could not find nx.json in the workspace.');
+  }
   const hasPlugin = nxJson.plugins?.some((p) =>
     typeof p === 'string' ? p === pluginPath : p.plugin === pluginPath
   );
@@ -39,34 +42,44 @@ export async function replaceProjectConfigurationsWithPlugin<T = unknown>(
 
   const results = await createNodesFunction(configFiles, pluginOptions, {
     workspaceRoot: tree.root,
-    nxJsonConfiguration: readNxJson(tree),
+    nxJsonConfiguration: readNxJson(tree) ?? nxJson,
   });
 
   for (const [configFile, nodes] of results) {
     try {
       const projectName = findProjectForPath(configFile, rootMappings);
+      if (!projectName) {
+        throw new Error(`Could not find a project for ${configFile}.`);
+      }
       const projectConfig = readProjectConfiguration(tree, projectName);
-      const node = nodes.projects[Object.keys(nodes.projects)[0]];
+      const node = Object.values(nodes.projects ?? {})[0];
+      if (!node) {
+        throw new Error(`No project was created for ${configFile}.`);
+      }
 
       for (const [targetName, targetConfig] of Object.entries(
         node.targets ?? {}
       )) {
-        const targetFromProjectConfig = projectConfig.targets[targetName];
+        const projectTargets = projectConfig.targets;
+        if (!projectTargets) {
+          throw new Error(`Project "${projectName}" has no targets.`);
+        }
+        const targetFromProjectConfig = projectTargets[targetName];
 
-        if (
-          targetFromProjectConfig?.executor !==
-          (targetConfig as TargetConfiguration).executor
-        ) {
+        if (targetFromProjectConfig?.executor !== targetConfig.executor) {
           continue;
         }
-
-        const targetFromCreateNodes = node.targets[targetName];
+        if (!targetFromProjectConfig) {
+          throw new Error(
+            `Project "${projectName}" has no "${targetName}" target.`
+          );
+        }
 
         removeConfigurationDefinedByPlugin(
           targetName,
           targetFromProjectConfig,
-          targetFromCreateNodes,
-          projectConfig
+          targetConfig,
+          projectTargets
         );
       }
 
@@ -77,11 +90,11 @@ export async function replaceProjectConfigurationsWithPlugin<T = unknown>(
   }
 }
 
-function removeConfigurationDefinedByPlugin<T>(
+function removeConfigurationDefinedByPlugin(
   targetName: string,
-  targetFromProjectConfig: TargetConfiguration<T>,
-  targetFromCreateNodes: TargetConfiguration<T>,
-  projectConfig: ProjectConfiguration
+  targetFromProjectConfig: TargetConfiguration,
+  targetFromCreateNodes: TargetConfiguration,
+  projectTargets: NonNullable<ProjectConfiguration['targets']>
 ) {
   // Executor
   delete targetFromProjectConfig.executor;
@@ -145,19 +158,18 @@ function removeConfigurationDefinedByPlugin<T>(
   }
 
   // Configurations
-  for (const [configName, configOptions] of Object.entries(
-    targetFromProjectConfig.configurations ?? {}
-  )) {
+  const configurations = targetFromProjectConfig.configurations ?? {};
+  for (const [configName, configOptions] of Object.entries(configurations)) {
     for (const [optionName, optionValue] of Object.entries(configOptions)) {
       if (
         targetFromCreateNodes.configurations?.[configName]?.[optionName] ===
         optionValue
       ) {
-        delete targetFromProjectConfig.configurations[configName][optionName];
+        delete configurations[configName][optionName];
       }
     }
     if (Object.keys(configOptions).length === 0) {
-      delete targetFromProjectConfig.configurations[configName];
+      delete configurations[configName];
     }
   }
   if (Object.keys(targetFromProjectConfig.configurations ?? {}).length === 0) {
@@ -165,11 +177,11 @@ function removeConfigurationDefinedByPlugin<T>(
   }
 
   if (Object.keys(targetFromProjectConfig).length === 0) {
-    delete projectConfig.targets[targetName];
+    delete projectTargets[targetName];
   }
 }
 
-function equals<T extends unknown>(a: T, b: T) {
+function equals(a: unknown, b: unknown) {
   if (Array.isArray(a) && Array.isArray(b)) {
     return a.length === b.length && a.every((v, i) => v === b[i]);
   }
@@ -181,8 +193,11 @@ function equals<T extends unknown>(a: T, b: T) {
 
 function shouldRemoveArrayProperty(
   arrayValuesFromProjectConfiguration: (object | string)[],
-  arrayValuesFromCreateNodes: (object | string)[]
+  arrayValuesFromCreateNodes: (object | string)[] | undefined
 ) {
+  if (!arrayValuesFromCreateNodes) {
+    throw new TypeError('The inferred target is missing an array property.');
+  }
   const setOfArrayValuesFromProjectConfiguration = new Set(
     arrayValuesFromProjectConfiguration
   );

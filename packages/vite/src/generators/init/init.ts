@@ -18,17 +18,18 @@ import { ignoreViteTempFiles } from '../../utils/ignore-vite-temp-files';
 import { assertSupportedViteVersion } from '../../utils/assert-supported-vite-version';
 
 export function updateNxJsonSettings(tree: Tree) {
-  const nxJson = readNxJson(tree);
+  const nxJson = readNxJson(tree) ?? {};
 
-  const productionFileSet = nxJson.namedInputs?.production;
-  if (productionFileSet) {
+  const namedInputs = nxJson.namedInputs;
+  const productionFileSet = namedInputs?.production;
+  if (namedInputs && productionFileSet) {
     productionFileSet.push(
       '!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)',
       '!{projectRoot}/tsconfig.spec.json',
       '!{projectRoot}/src/test-setup.[jt]s'
     );
 
-    nxJson.namedInputs.production = Array.from(new Set(productionFileSet));
+    namedInputs.production = Array.from(new Set(productionFileSet));
   }
 
   updateNxJson(tree, nxJson);
@@ -63,7 +64,7 @@ export async function initGeneratorInternal(
       buildDepsTargetName: ['build-deps', 'vite:build-deps', 'vite-build-deps'],
       watchDepsTargetName: ['watch-deps', 'vite:watch-deps', 'vite-watch-deps'],
     },
-    schema.updatePackageScripts
+    schema.updatePackageScripts ?? false
   );
   await ensureTypescriptPlugin(
     tree,

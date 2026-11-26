@@ -1,8 +1,8 @@
-export function sortObjectByKeys(originalObject: object) {
+export function sortObjectByKeys<T extends object>(originalObject: T): T {
   const keys = Object.keys(originalObject).sort();
 
-  const sortedObject = {};
-  keys.forEach((key) => (sortedObject[key] = originalObject[key]));
+  const sortedObject: Record<string, unknown> = {};
+  keys.forEach((key) => (sortedObject[key] = Reflect.get(originalObject, key)));
 
-  return sortedObject;
+  return sortedObject as T;
 }

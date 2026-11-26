@@ -95,9 +95,8 @@ export function assertWorkspaceValidity(
 
   if (invalidImplicitDependencies.size > 0) {
     message += `The following implicitDependencies point to non-existent project(s):\n`;
-    message += [...invalidImplicitDependencies.keys()]
-      .map((key) => {
-        const projectNames = invalidImplicitDependencies.get(key);
+    message += [...invalidImplicitDependencies]
+      .map(([key, projectNames]) => {
         return `  ${key}\n${projectNames
           .map((projectName) => `    ${projectName}`)
           .join('\n')}`;

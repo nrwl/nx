@@ -78,7 +78,11 @@ export function findConfigWithConflictingPlugin(
       return undefined;
     }
     visited.add(file);
-    const source = parseFlatConfig(tree.read(file, 'utf-8'));
+    const content = tree.read(file, 'utf-8');
+    if (content === null) {
+      return undefined;
+    }
+    const source = parseFlatConfig(content);
     if (registersConflictingPlugin(source, eslintMajor)) {
       return file;
     }
@@ -151,11 +155,10 @@ function registersConflictingPlugin(
       (tsModule.isPropertyAssignment(node) &&
         getPropertyName(node.name) === 'plugins' &&
         tsModule.isObjectLiteralExpression(node.initializer) &&
-        node.initializer.properties.some(
-          (property) =>
-            property.name &&
-            CONFLICTING_PLUGIN_NAMES.has(getPropertyName(property.name))
-        ))
+        node.initializer.properties.some((property) => {
+          const name = property.name && getPropertyName(property.name);
+          return name !== undefined && CONFLICTING_PLUGIN_NAMES.has(name);
+        }))
     ) {
       found = true;
       return;

@@ -1,11 +1,10 @@
 import * as path from 'path';
+import type { Program } from 'typescript';
 import { readTsConfig } from '@nx/js';
 
-import { NormalizedNxAppWebpackPluginOptions } from '../nx-app-webpack-plugin-options';
+import { ApplyConfigOptions } from '../nx-app-webpack-plugin-options';
 
-export function createLoaderFromCompiler(
-  options: NormalizedNxAppWebpackPluginOptions
-) {
+export function createLoaderFromCompiler(options: ApplyConfigOptions) {
   switch (options.compiler) {
     case 'swc':
       return {
@@ -31,9 +30,10 @@ export function createLoaderFromCompiler(
         },
       };
     case 'tsc':
-      const { loadTsTransformers } = require('@nx/js');
+      const { loadTsTransformers } =
+        require('@nx/js') as typeof import('@nx/js');
       const { compilerPluginHooks, hasPlugin } = loadTsTransformers(
-        options.transformers
+        options.transformers ?? []
       );
       return {
         test: /\.([jt])sx?$/,
@@ -50,7 +50,7 @@ export function createLoaderFromCompiler(
           // here (the default transpile path emits JS, not declarations), so widen
           // it to the workspace root to clear the error without altering output.
           compilerOptions: { rootDir: options.root },
-          getCustomTransformers: (program) => ({
+          getCustomTransformers: (program: Program) => ({
             before: compilerPluginHooks.beforeHooks.map((hook) =>
               hook(program)
             ),
@@ -80,17 +80,15 @@ export function createLoaderFromCompiler(
           envName: process.env.BABEL_ENV ?? process.env.NODE_ENV,
           cacheDirectory: true,
           cacheCompression: false,
+          ...(options.babelUpwardRootMode
+            ? { rootMode: 'upward', babelrc: true }
+            : {
+                configFile: options.babelConfig
+                  ? path.join(options.root, options.babelConfig)
+                  : path.join(options.root, options.projectRoot, '.babelrc'),
+              }),
         },
       };
-
-      if (options.babelUpwardRootMode) {
-        babelConfig.options['rootMode'] = 'upward';
-        babelConfig.options['babelrc'] = true;
-      } else {
-        babelConfig.options['configFile'] = options.babelConfig
-          ? path.join(options.root, options.babelConfig)
-          : path.join(options.root, options.projectRoot, '.babelrc');
-      }
 
       return babelConfig;
     default:

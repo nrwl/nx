@@ -38,6 +38,9 @@ export function addConfigValuesToViteConfig(
 ) {
   const IMPORT_PROPERTY_SELECTOR = 'ImportDeclaration';
   const viteConfigContents = tree.read(configFile, 'utf-8');
+  if (viteConfigContents === null) {
+    return;
+  }
 
   const sourceFile = ast(viteConfigContents);
   // An earlier run that kept the target already added the block; a second

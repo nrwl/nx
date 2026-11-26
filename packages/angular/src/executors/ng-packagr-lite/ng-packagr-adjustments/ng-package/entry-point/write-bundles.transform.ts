@@ -11,7 +11,7 @@ import type { BuildGraph } from 'ng-packagr/src/lib/graph/build-graph';
 import { transformFromPromise } from 'ng-packagr/src/lib/graph/transform';
 import type { NgEntryPoint } from 'ng-packagr/src/lib/ng-package/entry-point/entry-point';
 import {
-  byEntryPoint,
+  isEntryPoint,
   isEntryPointInProgress,
   isPackage,
 } from 'ng-packagr/src/lib/ng-package/nodes';
@@ -46,11 +46,19 @@ const { getActiveEntryPoint } = ngPackagrNodes as {
 
 export const writeBundlesTransform = (_options: NgPackagrOptions) => {
   return transformFromPromise(async (graph) => {
+    const inProgress = isEntryPointInProgress();
     const entryPointNode = getActiveEntryPoint
       ? getActiveEntryPoint(graph)
-      : graph.find(isEntryPointInProgress());
+      : graph.find(
+          (node): node is EntryPointNode =>
+            isEntryPoint(node) && inProgress(node)
+        );
     if (!entryPointNode) {
       return;
+    }
+    const { cache } = entryPointNode;
+    if (!cache) {
+      throw new Error(`The entry point "${entryPointNode.url}" was disposed.`);
     }
 
     const entryPoint = toCustomNgEntryPoint(entryPointNode.data.entryPoint);
@@ -64,10 +72,7 @@ export const writeBundlesTransform = (_options: NgPackagrOptions) => {
     );
     const flatModuleDeclarationsMap = `${flatModuleDeclarations}.map`;
 
-    for (const [
-      path,
-      outputCache,
-    ] of entryPointNode.cache.outputCache.entries()) {
+    for (const [path, outputCache] of cache.outputCache.entries()) {
       const originalPath = normalize(path);
       if (originalPath === flatModuleDeclarationsMap) {
         continue;
@@ -90,17 +95,14 @@ export const writeBundlesTransform = (_options: NgPackagrOptions) => {
         await writeFile(normalizedPath, content);
       }
     }
-    if (
-      !entryPointNode.cache.outputCache.size &&
-      entryPoint.isSecondaryEntryPoint
-    ) {
+    if (!cache.outputCache.size && entryPoint.isSecondaryEntryPoint) {
       await mkdir(entryPoint.destinationPath, { recursive: true });
     }
 
     if (!entryPoint.isSecondaryEntryPoint) {
       // the primary manifest reads every entry point, so adjust any that have
       // not been processed yet
-      for (const node of graph.filter(byEntryPoint())) {
+      for (const node of graph.filter(isEntryPoint)) {
         if (node === entryPointNode) {
           continue;
         }

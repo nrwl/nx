@@ -9,7 +9,7 @@ import { createNxCloudOnboardingURL } from '../../utilities/url-shorten';
 import { getCloudUrl } from '../../utilities/get-cloud-options';
 import { join } from 'path';
 import { getVcsRemoteInfo } from '../../../utils/git-utils';
-import { httpRequest } from '../../../utils/http-client';
+import { HttpError, httpRequest } from '../../../utils/http-client';
 
 function printCloudConnectionDisabledMessage() {
   output.error({
@@ -24,11 +24,13 @@ function printCloudConnectionDisabledMessage() {
   });
 }
 
-function getRootPackageName(tree: Tree, directory: string): string {
+function getRootPackageName(tree: Tree, directory: string | undefined): string {
   let packageJson;
   try {
-    const packageJsonPath = join(directory, 'package.json');
-    packageJson = readJson(tree, packageJsonPath);
+    if (directory !== undefined) {
+      const packageJsonPath = join(directory, 'package.json');
+      packageJson = readJson(tree, packageJsonPath);
+    }
   } catch (e) {}
   return packageJson?.name ?? 'my-workspace';
 }
@@ -99,7 +101,7 @@ async function createNxCloudWorkspaceV2(
 }
 
 export async function printSuccessMessage(
-  token: string | undefined,
+  token: string | null | undefined,
   installationSource: string
 ) {
   const connectCloudUrl = await createNxCloudOnboardingURL(
@@ -220,7 +222,7 @@ export async function connectToNxCloud(
       getNxInitDate()
     );
   } catch (e) {
-    if (e.response?.status === 404) {
+    if (e instanceof HttpError && e.response.status === 404) {
       responseFromCreateNxCloudWorkspaceV1 = await createNxCloudWorkspaceV1(
         apiUrl,
         getRootPackageName(tree, schema.directory),

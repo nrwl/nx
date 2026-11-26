@@ -161,7 +161,9 @@ export class CompositeLifeCycle implements LifeCycle {
       if (l.startTasks) {
         await l.startTasks(tasks, metadata);
       } else if (l.startTask) {
-        tasks.forEach((t) => l.startTask(t));
+        for (const t of tasks) {
+          l.startTask(t);
+        }
       }
     }
   }
@@ -174,7 +176,9 @@ export class CompositeLifeCycle implements LifeCycle {
       if (l.endTasks) {
         await l.endTasks(taskResults, metadata);
       } else if (l.endTask) {
-        taskResults.forEach((t) => l.endTask(t.task, t.code));
+        for (const t of taskResults) {
+          l.endTask(t.task, t.code);
+        }
       }
     }
   }

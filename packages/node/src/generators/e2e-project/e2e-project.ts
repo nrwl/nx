@@ -20,6 +20,7 @@ import {
   updateJson,
   updateNxJson,
   writeJson,
+  type PluginConfiguration,
 } from '@nx/devkit';
 import { lintProjectGenerator } from '@nx/eslint';
 import {
@@ -130,7 +131,7 @@ export async function e2eProjectGeneratorInternal(
   // We remove the 'test' target from the e2e project because it is not needed
   // The 'e2e' target is the one that should run the tests for the e2e project
   const nxJson = readNxJson(host);
-  const hasPlugin = nxJson.plugins?.some((p) => {
+  const hasPlugin = nxJson?.plugins?.some((p) => {
     if (typeof p !== 'string' && p.plugin === '@nx/jest/plugin') {
       return true;
     }
@@ -140,7 +141,7 @@ export async function e2eProjectGeneratorInternal(
     updateJson(host, 'nx.json', (json) => {
       return {
         ...json,
-        plugins: json.plugins?.map((p) => {
+        plugins: json.plugins?.map((p: PluginConfiguration) => {
           if (typeof p !== 'string' && p.plugin === '@nx/jest/plugin') {
             return {
               ...p,
@@ -166,7 +167,9 @@ export async function e2eProjectGeneratorInternal(
   const coverageDirectory = options.isUsingTsSolutionConfig
     ? 'test-output/jest/coverage'
     : joinPathFragments(rootOffset, 'coverage', options.e2eProjectName);
-  const projectSimpleName = options.project.split('/').pop();
+  const projectSimpleName = options.project.slice(
+    options.project.lastIndexOf('/') + 1
+  );
   if (options.projectType === 'server') {
     generateFiles(
       host,
@@ -202,7 +205,7 @@ export async function e2eProjectGeneratorInternal(
     // Inferred builds (tsc, rolldown) have no outputPath option; use the
     // output dir the app generator configures.
     const mainFile =
-      appProject.targets.build?.options?.outputPath ??
+      appProject.targets?.build?.options?.outputPath ??
       joinPathFragments(
         options.isUsingTsSolutionConfig
           ? joinPathFragments(appProject.root, 'dist')
@@ -353,7 +356,9 @@ export async function e2eProjectGeneratorInternal(
     updateJson(host, 'tsconfig.json', (json) => {
       json.references ??= [];
       const e2eRef = `./${options.e2eProjectRoot}`;
-      if (!json.references.find((ref) => ref.path === e2eRef)) {
+      if (
+        !json.references.find((ref: { path: string }) => ref.path === e2eRef)
+      ) {
         json.references.push({ path: e2eRef });
       }
       return json;
@@ -439,7 +444,7 @@ async function addVitest(
 
   // A scoped registration infers `e2e`; the others would add a `test` target.
   const include = `${e2eProjectRoot}/**/*`;
-  const nxJson = readNxJson(tree);
+  const nxJson = readNxJson(tree) ?? {};
   // Split tasks get no `dependsOn` from `e2e`, so give them the app's serve here.
   const ciTargetDefaults = nxJson.targetDefaults?.['e2e-ci--**/**'];
   updateNxJson(tree, {

@@ -186,7 +186,7 @@ export async function* tscBatchExecutor(
   );
   let tasksToReportIterator: IterableIterator<string>;
 
-  const processSkippedTasks = () => {
+  const processSkippedTasks = (): IteratorResult<BatchExecutorTaskResult> => {
     const { value: tsConfig, done } = tasksToReportIterator.next();
     if (done) {
       return { value: undefined, done: true };
@@ -242,8 +242,9 @@ async function* mapAsyncIterable(
 ) {
   return yield* {
     [Symbol.asyncIterator]() {
-      const iterator: AsyncIterableIterator<TypescriptCompilationResult> =
-        iterable[Symbol.asyncIterator].call(iterable);
+      const iterator = iterable[Symbol.asyncIterator].call(
+        iterable
+      ) as AsyncIterableIterator<TypescriptCompilationResult>;
 
       return {
         async next() {

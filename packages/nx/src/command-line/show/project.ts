@@ -81,7 +81,7 @@ export async function showProjectHandler(
     );
   } else {
     const pc = require('picocolors') as typeof import('picocolors');
-    const logIfExists = (label, key: keyof (typeof node)['data']) => {
+    const logIfExists = (label: string, key: keyof (typeof node)['data']) => {
       if (node.data[key]) {
         console.log(`${pc.bold(label)}: ${node.data[key]}`);
       }

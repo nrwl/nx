@@ -35,6 +35,9 @@ export default async function* runExecutor(
   process.env.NX_BUILD_LIBS_FROM_SOURCE = `${buildOptions.buildLibsFromSource}`;
   process.env.NX_BUILD_TARGET = options.buildTarget;
 
+  if (!context.projectName) {
+    throw new Error('The dev-server executor requires a project name.');
+  }
   const metadata = context.projectsConfigurations.projects[context.projectName];
   const sourceRoot = getProjectSourceRoot(metadata);
   const normalizedBuildOptions = normalizeOptions(

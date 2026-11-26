@@ -1,3 +1,7 @@
+// e2e projects compile this source directly, so they need the shim pulled in here.
+// oxlint-disable-next-line typescript/triple-slash-reference
+/// <reference path="./untyped-modules.d.ts" />
+
 import { promisify } from 'util';
 import treeKill = require('tree-kill');
 import { logError, logInfo, logSuccess, secondsSince } from './log-utils';
@@ -7,10 +11,17 @@ export const kill = require('kill-port');
 const KILL_PORT_TIMEOUT = 5000;
 const KILL_PORT_POLL_INTERVAL = 100;
 
-export const promisifiedTreeKill: (
-  pid: number,
+const treeKillAsync = promisify<number, string>(treeKill);
+
+export function promisifiedTreeKill(
+  pid: number | undefined,
   signal: string
-) => Promise<void> = promisify(treeKill);
+): Promise<void> {
+  if (pid === undefined) {
+    return Promise.reject(new Error('Spawned process has no pid'));
+  }
+  return treeKillAsync(pid, signal);
+}
 
 /**
  * `unknown` is not `free`: tcp-port-used's check() rejects on any connect error

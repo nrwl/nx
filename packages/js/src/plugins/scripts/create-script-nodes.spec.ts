@@ -1,4 +1,4 @@
-import { type CreateNodesContext } from '@nx/devkit';
+import { type CreateNodesContext, type CreateNodesResultV2 } from '@nx/devkit';
 import {
   emitPluginWorkerLog,
   globWithWorkspaceContext,
@@ -11,6 +11,12 @@ vi.mock('@nx/devkit/internal', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@nx/devkit/internal')>()),
   emitPluginWorkerLog: vi.fn(),
 }));
+
+function targetsOf(results: CreateNodesResultV2, root: string, index: number) {
+  const targets = results[index][1].projects?.[root]?.targets;
+  if (!targets) throw new Error(`No targets inferred for ${root}`);
+  return targets;
+}
 
 describe('createScriptNodes', () => {
   const [glob, createNodes] = createScriptNodes({
@@ -62,7 +68,7 @@ describe('createScriptNodes', () => {
       'scripts/seed.d.ts': '#!/usr/bin/env node\n',
     });
 
-    expect(Object.keys(results[0][1].projects['.'].targets)).toEqual(['seed']);
+    expect(Object.keys(targetsOf(results, '.', 0))).toEqual(['seed']);
   });
 
   it('should infer a target per claimed script in its nearest project', async () => {
@@ -154,8 +160,8 @@ describe('createScriptNodes', () => {
       context
     );
 
-    expect(Object.keys(all[0][1].projects['.'].targets)).toEqual(['a', 'b']);
-    expect(Object.keys(narrowed[0][1].projects['.'].targets)).toEqual(['a']);
+    expect(Object.keys(targetsOf(all, '.', 0))).toEqual(['a', 'b']);
+    expect(Object.keys(targetsOf(narrowed, '.', 0))).toEqual(['a']);
   });
 
   it('should not reuse cached targets when a script header changes', async () => {
@@ -177,8 +183,8 @@ describe('createScriptNodes', () => {
       context
     );
 
-    expect(Object.keys(before[0][1].projects['.'].targets)).toEqual(['seed']);
-    expect(Object.keys(after[0][1].projects['.'].targets)).toEqual(['reseed']);
+    expect(Object.keys(targetsOf(before, '.', 0))).toEqual(['seed']);
+    expect(Object.keys(targetsOf(after, '.', 0))).toEqual(['reseed']);
   });
 
   it("should treat a package.json as a project root only where core's default package-json plugin does", async () => {
@@ -196,20 +202,14 @@ describe('createScriptNodes', () => {
       'tools/esm/run.js': '#!/usr/bin/env node\n',
     });
 
-    expect(results.map(([, r]) => Object.keys(r.projects))).toEqual([
+    expect(results.map(([, r]) => Object.keys(r.projects ?? {}))).toEqual([
       ['tools/esm'],
       ['tools/named'],
       ['.'],
     ]);
-    expect(Object.keys(results[0][1].projects['tools/esm'].targets)).toEqual([
-      'run',
-    ]);
-    expect(Object.keys(results[1][1].projects['tools/named'].targets)).toEqual([
-      'gen',
-    ]);
-    expect(Object.keys(results[2][1].projects['.'].targets)).toEqual([
-      'release',
-    ]);
+    expect(Object.keys(targetsOf(results, 'tools/esm', 0))).toEqual(['run']);
+    expect(Object.keys(targetsOf(results, 'tools/named', 1))).toEqual(['gen']);
+    expect(Object.keys(targetsOf(results, '.', 2))).toEqual(['release']);
   });
 
   it('should disambiguate scripts that share a name', async () => {
@@ -220,7 +220,7 @@ describe('createScriptNodes', () => {
       'scripts/c/run.js': '#!/usr/bin/env node\n// @nx-target-name: build\n',
     });
 
-    expect(Object.keys(results[0][1].projects['.'].targets)).toEqual([
+    expect(Object.keys(targetsOf(results, '.', 0))).toEqual([
       'scripts/a/build',
       'scripts/b/build',
       'build',
@@ -236,10 +236,8 @@ describe('createScriptNodes', () => {
       { watch: false }
     );
 
-    expect(results[0][1].projects['.'].targets.seed).not.toHaveProperty(
-      'continuous'
-    );
-    expect(results[0][1].projects['.'].targets.seed.command).toBe(
+    expect(targetsOf(results, '.', 0).seed).not.toHaveProperty('continuous');
+    expect(targetsOf(results, '.', 0).seed.command).toBe(
       'node scripts/seed.js'
     );
   });
@@ -250,7 +248,7 @@ describe('createScriptNodes', () => {
       'src/main.ts': '#!/usr/bin/env node\n// @nx-target-name: serve\n',
     });
 
-    expect(results[0][1].projects['.'].targets).toMatchInlineSnapshot(`
+    expect(targetsOf(results, '.', 0)).toMatchInlineSnapshot(`
       {
         "serve": {
           "cache": false,
@@ -276,7 +274,7 @@ describe('createScriptNodes', () => {
       'scripts/my tool.js': '#!/usr/bin/env node\n',
     });
 
-    expect(results[0][1].projects['.'].targets['my tool'].command).toBe(
+    expect(targetsOf(results, '.', 0)['my tool'].command).toBe(
       'node --watch "scripts/my tool.js"'
     );
   });
@@ -287,7 +285,7 @@ describe('createScriptNodes', () => {
       'scripts/seed.js': '#!/usr/bin/env node\n// @nx-target-name:\n',
     });
 
-    expect(Object.keys(results[0][1].projects['.'].targets)).toEqual(['seed']);
+    expect(Object.keys(targetsOf(results, '.', 0))).toEqual(['seed']);
     expect(emitPluginWorkerLog).toHaveBeenCalledWith(
       'warn',
       'scripts/seed.js: "@nx-target-name" is empty.'

@@ -14,6 +14,9 @@ export function addExportsToBarrelFile(
   }
   const indexPath = `${options.projectRoot}/src/index.ts`;
   const indexContent = tree.read(indexPath, 'utf-8');
+  if (indexContent === null) {
+    throw new Error(`Cannot find ${indexPath}`);
+  }
   let sourceFile = tsModule.createSourceFile(
     indexPath,
     indexContent,
@@ -25,6 +28,9 @@ export function addExportsToBarrelFile(
   const exportStatement = sourceFile.statements.find((statement) =>
     tsModule.isExportDeclaration(statement)
   );
+  if (!exportStatement) {
+    throw new Error(`Cannot find an export statement in ${indexPath}`);
+  }
 
   sourceFile = removeChange(
     tree,

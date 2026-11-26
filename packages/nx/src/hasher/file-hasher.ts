@@ -5,21 +5,24 @@ function getNative(): typeof import('../native') {
   return (native ??= require('../native'));
 }
 
-export function hashArray(content: string[]): string {
+export function hashArray(content: Array<string | null | undefined>): string {
   return getNative().hashArray(content);
 }
 
-export function hashObject(obj: object): string {
+export function hashObject(obj: object | null | undefined): string {
   const parts: string[] = [];
 
-  for (const key of Object.keys(obj ?? {}).sort()) {
+  const entries = Object.entries(obj ?? {}).sort(([a], [b]) =>
+    a < b ? -1 : a > b ? 1 : 0
+  );
+  for (const [key, value] of entries) {
     parts.push(key);
-    parts.push(JSON.stringify(obj[key]));
+    parts.push(JSON.stringify(value));
   }
 
   return getNative().hashArray(parts);
 }
 
-export function hashFile(filePath: string): string {
+export function hashFile(filePath: string): string | null {
   return getNative().hashFile(filePath);
 }

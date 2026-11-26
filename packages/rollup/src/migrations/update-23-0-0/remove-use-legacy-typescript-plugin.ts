@@ -74,7 +74,7 @@ export default async function (tree: Tree) {
 
     visitNotIgnoredFiles(tree, projectConfig.root, (filePath) => {
       const basename = filePath.split('/').pop();
-      if (!ROLLUP_CONFIG_NAMES.includes(basename)) return;
+      if (!basename || !ROLLUP_CONFIG_NAMES.includes(basename)) return;
       if (stripFromRollupConfig(tree, filePath)) {
         anyChange = true;
       }

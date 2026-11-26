@@ -39,7 +39,7 @@ export async function updateTsconfig(tree: Tree, schema: Schema) {
           );
         }
         json.references = json.references.filter(
-          (ref) => relative(ref.path, project.root) !== ''
+          (ref: { path: string }) => relative(ref.path, project.root) !== ''
         );
       } else {
         for (const importPath in json.compilerOptions.paths) {

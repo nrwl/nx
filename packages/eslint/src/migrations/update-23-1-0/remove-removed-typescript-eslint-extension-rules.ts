@@ -103,7 +103,7 @@ export default async function update(tree: Tree): Promise<void> {
 
   visitNotIgnoredFiles(tree, '.', (path) => {
     const fileName = path.split('/').pop();
-    if (!ESLINT_FLAT_CONFIG_FILENAMES.includes(fileName)) {
+    if (!fileName || !ESLINT_FLAT_CONFIG_FILENAMES.includes(fileName)) {
       return;
     }
     const content = tree.read(path, 'utf-8');

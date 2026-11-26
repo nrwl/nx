@@ -107,14 +107,17 @@ async function createNodesInternal(
 ) {
   const projectRoot = dirname(configFilePath);
 
-  if (!targetsCache.has(hash)) {
-    targetsCache.set(
-      hash,
-      await createDockerTargets(projectRoot, normalizedOptions, context)
+  let dockerTargets = targetsCache.get(hash);
+  if (!dockerTargets) {
+    dockerTargets = await createDockerTargets(
+      projectRoot,
+      normalizedOptions,
+      context
     );
+    targetsCache.set(hash, dockerTargets);
   }
 
-  const { targets, metadata } = targetsCache.get(hash);
+  const { targets, metadata } = dockerTargets;
 
   return {
     projects: {
@@ -377,7 +380,7 @@ async function createDockerTargets(
 }
 
 function normalizePluginOptions(
-  options: DockerPluginOptions
+  options: DockerPluginOptions | undefined
 ): NormalizedDockerPluginOptions {
   const normalizeTarget = (
     target: string | DockerTargetOptions | undefined,

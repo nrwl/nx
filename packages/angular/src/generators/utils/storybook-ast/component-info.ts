@@ -119,6 +119,9 @@ function getStandaloneComponents(tree: Tree, filePath: string): string[] {
     tsqueryQuery = tsqueryModule.query;
   }
   const fileContent = tree.read(filePath, 'utf-8');
+  if (fileContent === null) {
+    throw new Error(`Cannot find the file '${filePath}'.`);
+  }
   const sourceFile = tsqueryAst(fileContent);
 
   // standalone: true is the default, so all components except those with
@@ -139,17 +142,28 @@ function getComponentImportPath(
     tsModule = ensureTypescript();
   }
   const componentImportStatement = imports.find((statement) => {
-    const namedImports = statement
+    const importClause = statement
       .getChildren()
-      .find((node) => node.kind === tsModule.SyntaxKind.ImportClause)
+      .find((node) => node.kind === tsModule.SyntaxKind.ImportClause);
+    if (!importClause) {
+      throw new Error(`"${statement.getText()}" has no import clause.`);
+    }
+    const namedImports = importClause
       .getChildren()
       .find((node) => node.kind === tsModule.SyntaxKind.NamedImports);
 
     if (namedImports === undefined) return false;
 
-    const importedIdentifiers = namedImports
+    const syntaxList = namedImports
       .getChildren()
-      .find((node) => node.kind === tsModule.SyntaxKind.SyntaxList)
+      .find((node) => node.kind === tsModule.SyntaxKind.SyntaxList);
+    if (!syntaxList) {
+      throw new Error(
+        `Cannot read the named imports of "${statement.getText()}".`
+      );
+    }
+
+    const importedIdentifiers = syntaxList
       .getChildren()
       .filter((node) => node.kind === tsModule.SyntaxKind.ImportSpecifier)
       .map((node) => node.getText());
@@ -157,11 +171,16 @@ function getComponentImportPath(
     return importedIdentifiers.includes(componentName);
   });
 
-  const importPath = componentImportStatement
+  if (!componentImportStatement) {
+    throw new Error(`Cannot find the import of "${componentName}".`);
+  }
+  const moduleSpecifier = componentImportStatement
     .getChildren()
-    .find((node) => node.kind === tsModule.SyntaxKind.StringLiteral)
-    .getText()
-    .slice(1, -1);
+    .find((node) => node.kind === tsModule.SyntaxKind.StringLiteral);
+  if (!moduleSpecifier) {
+    throw new Error(`Cannot find the import path of "${componentName}".`);
+  }
+  const importPath = moduleSpecifier.getText().slice(1, -1);
 
   return importPath;
 }
@@ -227,11 +246,11 @@ function tryGetComponentInfo(
     ];
 
     for (const candidatePath of candidatePaths) {
-      if (!tree.exists(candidatePath)) {
+      const content = tree.read(candidatePath, 'utf-8');
+      if (content === null) {
         continue;
       }
 
-      const content = tree.read(candidatePath, 'utf-8');
       const classAndComponentRegex = new RegExp(
         `@Component[\\s\\S\n]*?\\bclass ${symbolName}\\b`,
         'g'
@@ -265,9 +284,6 @@ function tryGetComponentInfoFromDir(
   symbolName: string,
   moduleFolderPath: string
 ): ComponentInfo | undefined {
-  let path = null;
-  let componentFileName = null;
-
   const componentImportPathChildren: string[] = [];
   visitNotIgnoredFiles(tree, dir, (filePath) => {
     componentImportPathChildren.push(normalizePath(filePath));
@@ -276,37 +292,34 @@ function tryGetComponentInfoFromDir(
   for (const candidateFile of componentImportPathChildren) {
     if (candidateFile.endsWith('.ts')) {
       const content = tree.read(candidateFile, 'utf-8');
+      if (content === null) {
+        continue;
+      }
       const classAndComponentRegex = new RegExp(
         `@Component[\\s\\S\n]*?\\bclass ${symbolName}\\b`,
         'g'
       );
       if (content.match(classAndComponentRegex)) {
-        path = candidateFile
-          .slice(0, candidateFile.lastIndexOf('/'))
-          .replace(moduleFolderPath, '.');
-        componentFileName = candidateFile.slice(
-          candidateFile.lastIndexOf('/') + 1,
-          candidateFile.lastIndexOf('.')
-        );
-        break;
+        return {
+          componentFileName: candidateFile.slice(
+            candidateFile.lastIndexOf('/') + 1,
+            candidateFile.lastIndexOf('.')
+          ),
+          moduleFolderPath,
+          name: symbolName,
+          path: candidateFile
+            .slice(0, candidateFile.lastIndexOf('/'))
+            .replace(moduleFolderPath, '.'),
+          entryPointName: entryPoint.name,
+        };
       }
     }
   }
 
-  if (path === null) {
-    console.warn(
-      `Couldn't resolve "${symbolName}" imported from ${dir} relative to ${moduleFolderPath}.`
-    );
-    return undefined;
-  }
-
-  return {
-    componentFileName,
-    moduleFolderPath,
-    name: symbolName,
-    path,
-    entryPointName: entryPoint.name,
-  };
+  console.warn(
+    `Couldn't resolve "${symbolName}" imported from ${dir} relative to ${moduleFolderPath}.`
+  );
+  return undefined;
 }
 
 function getFullComponentFilePath(

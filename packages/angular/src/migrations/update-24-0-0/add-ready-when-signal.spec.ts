@@ -28,10 +28,10 @@ describe('add-ready-when-signal migration', () => {
     await update(tree);
 
     const { targets } = readProjectConfiguration(tree, 'app');
-    expect(targets.serve.readyWhen).toEqual({ signal: true });
-    expect(targets['serve-devkit'].readyWhen).toEqual({ signal: true });
-    expect(targets['serve-ssr'].readyWhen).toEqual({ signal: true });
-    expect(targets['serve-nx'].readyWhen).toEqual({ signal: true });
-    expect(targets['serve-nguniversal'].readyWhen).toBeUndefined();
+    expect(targets?.serve.readyWhen).toEqual({ signal: true });
+    expect(targets?.['serve-devkit'].readyWhen).toEqual({ signal: true });
+    expect(targets?.['serve-ssr'].readyWhen).toEqual({ signal: true });
+    expect(targets?.['serve-nx'].readyWhen).toEqual({ signal: true });
+    expect(targets?.['serve-nguniversal'].readyWhen).toBeUndefined();
   });
 });

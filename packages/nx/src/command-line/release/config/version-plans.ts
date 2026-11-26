@@ -169,9 +169,8 @@ export async function setResolvedVersionPlansOnGroups(
     }
 
     for (const [key, value] of Object.entries(rawVersionPlan.content)) {
-      if (groupsByName.has(key)) {
-        const group = groupsByName.get(key);
-
+      const group = groupsByName.get(key);
+      if (group) {
         if (!group.resolvedVersionPlans) {
           if (isDefaultGroup) {
             throw new Error(
@@ -336,8 +335,14 @@ export async function setResolvedVersionPlansOnGroups(
               }
             } else {
               // Avoid duplicates when releaseGraph is reused and version plans are resolved multiple times
-              if (!existingPlan.triggeredByProjects.includes(key)) {
-                existingPlan.triggeredByProjects.push(key);
+              const { triggeredByProjects } = existingPlan;
+              if (!triggeredByProjects) {
+                throw new Error(
+                  `Found a version bump for project '${key}' in '${rawVersionPlan.fileName}' alongside a version bump for its release group '${groupForProject.name}'.`
+                );
+              }
+              if (!triggeredByProjects.includes(key)) {
+                triggeredByProjects.push(key);
               }
             }
           } else {
@@ -406,7 +411,7 @@ async function getCommitForVersionPlanFile(
   } catch (error) {
     if (isVerbose) {
       console.error(
-        `Error executing git command for ${rawVersionPlan.relativePath}: ${error?.message ?? error}`
+        `Error executing git command for ${rawVersionPlan.relativePath}: ${error instanceof Error ? error.message : error}`
       );
     }
     return null;

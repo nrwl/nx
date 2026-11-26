@@ -1,6 +1,7 @@
 import * as path from 'path';
 import type {
   Configuration,
+  EntryObject,
   WebpackOptionsNormalized,
   WebpackPluginInstance,
 } from 'webpack';
@@ -12,7 +13,7 @@ import { getOutputHashFormat } from '../../../utils/hash-format';
 import { NxTsconfigPathsWebpackPlugin } from '../../nx-typescript-webpack-plugin/nx-tsconfig-paths-webpack-plugin';
 import { getTerserEcmaVersion } from './get-terser-ecma-version';
 import { createLoaderFromCompiler } from './compiler-loaders';
-import { NormalizedNxAppWebpackPluginOptions } from '../nx-app-webpack-plugin-options';
+import { ApplyConfigOptions } from '../nx-app-webpack-plugin-options';
 import { isUsingTsSolutionSetup } from '@nx/js/internal';
 import { getNonBuildableLibs } from './utils';
 import { ExecutorContext } from '@nx/devkit';
@@ -54,7 +55,7 @@ function setMinimizeValue(
 }
 
 export function applyBaseConfig(
-  options: NormalizedNxAppWebpackPluginOptions,
+  options: ApplyConfigOptions,
   config: Partial<WebpackOptionsNormalized | Configuration> = {},
   {
     useNormalizedEntry,
@@ -81,7 +82,7 @@ export function applyBaseConfig(
 }
 
 function applyNxIndependentConfig(
-  options: NormalizedNxAppWebpackPluginOptions,
+  options: ApplyConfigOptions,
   config: Partial<WebpackOptionsNormalized | Configuration>,
   configIsNormalized: boolean
 ): void {
@@ -275,7 +276,7 @@ function applyNxIndependentConfig(
 }
 
 function applyNxDependentConfig(
-  options: NormalizedNxAppWebpackPluginOptions,
+  options: ApplyConfigOptions,
   config: Partial<WebpackOptionsNormalized | Configuration>,
   { useNormalizedEntry }: { useNormalizedEntry?: boolean } = {}
 ): void {
@@ -303,7 +304,12 @@ function applyNxDependentConfig(
 
   // If the project is using ts solutions setup, the paths are not in tsconfig and we should not use the plugin's paths.
   if (options.useTsconfigPaths) {
-    plugins.push(new NxTsconfigPathsWebpackPlugin({ ...options, tsConfig }));
+    plugins.push(
+      new NxTsconfigPathsWebpackPlugin({
+        ...options,
+        tsConfig: tsConfig ?? undefined,
+      })
+    );
   }
 
   // Normalize typeCheckOptions from deprecated skipTypeChecking for backward compatibility
@@ -330,6 +336,11 @@ function applyNxDependentConfig(
     (!isUsingTsSolution || process.env['WEBPACK_SERVE']);
 
   if (shouldTypeCheck) {
+    if (tsConfig === null) {
+      throw new Error(
+        `Missing "tsConfig" option. Set this option in your Nx webpack plugin.`
+      );
+    }
     const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
     plugins.push(
       new ForkTsCheckerWebpackPlugin({
@@ -371,12 +382,12 @@ function applyNxDependentConfig(
     });
   }
 
-  config.entry ??= {};
+  const configEntry = (config.entry ??= {}) as EntryObject;
   entries.forEach((entry) => {
     if (useNormalizedEntry) {
-      config.entry[entry.name] = { import: entry.import };
+      configEntry[entry.name] = { import: entry.import };
     } else {
-      config.entry[entry.name] = entry.import;
+      configEntry[entry.name] = entry.import;
     }
   });
 
@@ -422,7 +433,21 @@ function applyNxDependentConfig(
     );
   }
   if (options.generatePackageJson && executorContext) {
-    plugins.push(new GeneratePackageJsonPlugin({ ...options, tsConfig }));
+    const { projectName, targetName, projectGraph } = options;
+    if (!projectName || !targetName || !projectGraph) {
+      throw new Error(
+        'Generating a package.json requires a project graph, project name and target name.'
+      );
+    }
+    plugins.push(
+      new GeneratePackageJsonPlugin({
+        ...options,
+        projectName,
+        targetName,
+        projectGraph,
+        tsConfig,
+      })
+    );
   }
 
   if (options.statsJson) {
@@ -451,8 +476,9 @@ function applyNxDependentConfig(
       nodeExternals({ modulesDir, allowlist: nonBuildableWorkspaceLibs })
     );
   } else if (Array.isArray(options.externalDependencies)) {
+    const externalDependencies = options.externalDependencies;
     externals.push(function (ctx, callback: Function) {
-      if (options.externalDependencies.includes(ctx.request)) {
+      if (externalDependencies.includes(ctx.request)) {
         // not bundled
         return callback(null, `commonjs ${ctx.request}`);
       }

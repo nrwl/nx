@@ -1,16 +1,16 @@
 import { ExternalApi, getExternalApiService } from '@nx/graph-shared';
-import { getRouter } from './get-router';
+import { type AppRouter, getRouter } from './get-router';
 import { GraphStateSerializer } from '@nx/graph';
 import { ProjectElement } from '@nx/graph/projects';
 
 export class ExternalApiImpl extends ExternalApi {
-  router = getRouter();
+  router: AppRouter = getRouter();
   externalApiService = getExternalApiService();
 
   constructor() {
     super();
     this.externalApiService.subscribe(
-      ({ type, payload }: { type: string; payload: any }) => {
+      ({ type, payload }: { type: string; payload?: any }) => {
         if (!this.graphInteractionEventListener) {
           console.log('graphInteractionEventListener not registered.');
           return;

@@ -116,7 +116,7 @@ function allPackageJsonFiles(repoRoot: string, dirName: string) {
     return [];
   }
 
-  let res = [];
+  let res: string[] = [];
   try {
     readdirSync(dirName).forEach((c) => {
       const child = join(dirName, c);

@@ -13,12 +13,15 @@ import {
   resolveCommandSyntacticSugar,
   resolveNxTokensInOptions,
 } from '@nx/devkit/internal';
-import { load } from '@zkochan/js-yaml';
 import {
   compatibleDefaultsEntries,
   selectDefaultsKey,
   type MatchedTargetRef,
 } from '../../utils/target-defaults-matching';
+
+const {
+  load,
+}: { load: (content: string) => unknown } = require('@zkochan/js-yaml');
 
 const VERDACCIO_EXECUTOR = '@nx/js:verdaccio';
 
@@ -43,6 +46,7 @@ export default async function addVerdaccioJwtSecurity(tree: Tree) {
   for (const path of findVerdaccioConfigPaths(tree)) {
     if (!tree.exists(path)) continue;
     const content = tree.read(path, 'utf-8');
+    if (content === null) continue;
 
     const config = parseYamlMap(content);
     if (!config) {
@@ -134,6 +138,9 @@ function resolveTarget(
   const key = targetDefaults
     ? selectDefaultsKey(matchedRef, targetDefaults, target.executor)
     : null;
+  if (key === null) {
+    return target;
+  }
 
   let defaults: TargetConfiguration | undefined;
   for (const entry of compatibleDefaultsEntries(

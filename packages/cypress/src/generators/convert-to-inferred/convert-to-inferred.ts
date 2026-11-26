@@ -142,7 +142,8 @@ function removeUnknownExecutorOptions(
 ): void {
   const dropped = new Set<string>();
   const strip = (options: Record<string, any> | undefined) => {
-    for (const option of Object.keys(options ?? {})) {
+    if (!options) return;
+    for (const option of Object.keys(options)) {
       if (!executorOptions.has(option)) {
         delete options[option];
         dropped.add(option);
@@ -213,10 +214,11 @@ function handlePropertiesInOptions(
   projectRoot: string,
   target: TargetConfiguration
 ) {
-  let configFilePath: string;
+  let configFilePath: string | undefined;
   if ('cypressConfig' in options) {
-    configFilePath = options.cypressConfig;
-    options['config-file'] = toProjectRelativePath(configFilePath, projectRoot);
+    const cypressConfig: string = options.cypressConfig;
+    configFilePath = cypressConfig;
+    options['config-file'] = toProjectRelativePath(cypressConfig, projectRoot);
     delete options.cypressConfig;
   }
 
@@ -224,11 +226,11 @@ function handlePropertiesInOptions(
     delete options.skipServe;
   }
 
-  for (const key in targetOptionsToCliMap) {
+  for (const [key, cliKey] of Object.entries(targetOptionsToCliMap)) {
     if (options[key]) {
       const prevValue = options[key];
       delete options[key];
-      options[targetOptionsToCliMap[key]] = prevValue;
+      options[cliKey] = prevValue;
     }
   }
 
@@ -277,6 +279,11 @@ function handlePropertiesInOptions(
   }
 
   if ('ignoreTestFiles' in options) {
+    if (!configFilePath) {
+      throw new Error(
+        'The "ignoreTestFiles" option requires the "cypressConfig" option.'
+      );
+    }
     addExcludeSpecPattern(tree, configFilePath, options.ignoreTestFiles);
     delete options.ignoreTestFiles;
   }

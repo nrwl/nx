@@ -1,12 +1,16 @@
 import { CreateNodesContext, CreateNodesResult } from './public-api';
-import { AggregateCreateNodesError } from '../error-types';
+import { AggregateCreateNodesError, coerceToError } from '../error-types';
 export async function createNodesFromFiles<T = unknown>(
   createNodes: (
     projectConfigurationFile: string,
     options: T | undefined,
     context: CreateNodesContext & { configFiles: readonly string[] },
     idx: number
-  ) => CreateNodesResult | Promise<CreateNodesResult>,
+  ) =>
+    | CreateNodesResult
+    | null
+    | undefined
+    | Promise<CreateNodesResult | null | undefined>,
   configFiles: readonly string[],
   options: T,
   context: CreateNodesContext
@@ -35,7 +39,7 @@ export async function createNodesFromFiles<T = unknown>(
         );
         return value ? { kind: 'value', file, value } : { kind: 'empty' };
       } catch (e) {
-        return { kind: 'error', file, error: e };
+        return { kind: 'error', file, error: coerceToError(e) };
       }
     })
   );

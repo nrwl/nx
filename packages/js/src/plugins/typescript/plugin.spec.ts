@@ -2495,7 +2495,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         for (const projectRoot of ['apps/app-one', 'apps/app-two']) {
           expect(
             result.projects[projectRoot].targets.typecheck.inputs.filter(
-              (input) =>
+              (input: unknown) =>
                 typeof input === 'string' && input.startsWith('^{projectRoot}/')
             )
           ).toEqual(expectedPatterns);

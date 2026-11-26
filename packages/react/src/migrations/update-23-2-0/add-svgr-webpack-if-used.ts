@@ -67,9 +67,5 @@ export default async function addSvgrWebpackIfUsed(tree: Tree) {
 }
 
 function referencesSvgrWebpack(tree: Tree, path: string): boolean {
-  if (!tree.exists(path)) {
-    return false;
-  }
-
-  return tree.read(path, 'utf-8').includes('@svgr/webpack');
+  return tree.read(path, 'utf-8')?.includes('@svgr/webpack') ?? false;
 }

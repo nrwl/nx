@@ -45,7 +45,7 @@ export async function initGeneratorInternal(
     '@nx/playwright/plugin',
     createNodesV2,
     { targetName: ['e2e', 'playwright:e2e', 'playwright-e2e'] },
-    options.updatePackageScripts
+    options.updatePackageScripts ?? false
   );
 
   if (!options.skipFormat) {

@@ -125,6 +125,7 @@
     "@types/tmp": "^0.2.6",
     "@types/which": "^3.0.4",
     "@types/yargs": "17.0.10",
+    "@types/yargs-parser": "21.0.3",
     "@types/yarnpkg__lockfile": "^1.1.5",
     "@typescript-eslint/eslint-plugin": "8.73.0",
     "@typescript-eslint/parser": "8.73.0",
