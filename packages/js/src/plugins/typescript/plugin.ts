@@ -191,8 +191,10 @@ type InvocationCache = {
   entryConfigFiles: Set<string>;
   /** Roots of the projects this entry creates. */
   entryProjectRoots?: Set<string>;
-  /** Config path -> the configs of this entry it extends or references. */
-  entryEdges: Map<string, ReferenceEdge[]>;
+  /** Config path -> the configs it extends or references. */
+  referenceEdges: Map<string, ReferenceEdge[]>;
+  /** Configs outside this entry, hash-checked this run -> whether they exist. */
+  checkedConfigs: Map<string, boolean>;
   /** Config path -> it and the configs it extends, with their file hashes. */
   configChains: Map<string, Map<string, string>>;
 };
@@ -328,7 +330,8 @@ export const createNodesV2: CreateNodes<TscPluginOptions> = [
       referenceExpansionCache: new Map(),
       inferredBuildTargets: new Map(),
       entryConfigFiles: new Set(configFilePaths),
-      entryEdges: new Map(),
+      referenceEdges: new Map(),
+      checkedConfigs: new Map(),
       configChains: new Map(),
       siblingFiles: new Map(),
     });
@@ -531,7 +534,7 @@ async function resolveValidConfigFilesAndHashes(
       context.workspaceRoot,
       cache
     );
-    const references = getEntryReferences(
+    const references = getCheckedReferences(
       getDirectExternalReferences(
         tsConfig,
         resolveInternalProjectReferences(
@@ -1823,10 +1826,7 @@ function getExternalProjectReferences(
   cache: InvocationCache
 ): {
   tsconfigPatterns: string[];
-  /**
-   * Every referenced tsconfig in the chain, with the project owning it. Holds
-   * only configs this plugin entry matched, reached through such configs.
-   */
+  /** Every referenced tsconfig in the chain, with the project owning it. */
   references: { configPath: string; ownerProject: ProjectContext }[];
 } {
   const externalRefPaths = getDirectExternalReferences(
@@ -1902,7 +1902,7 @@ function getExternalProjectReferences(
       (relPath) => `^{projectRoot}/${relPath}`
     ),
     references: Array.from(
-      getEntryReferences(externalRefPaths, workspaceRoot, cache),
+      getCheckedReferences(externalRefPaths, workspaceRoot, cache),
       ([configPath, ownerProject]) => ({
         configPath,
         ownerProject,
@@ -1945,52 +1945,73 @@ function getDirectExternalReferences(
 }
 
 /**
- * Configs outside this entry may hold data from an earlier run that was never
- * hash-checked, so they can't decide which references count.
+ * Whether a config exists with hash-checked data. A config outside this entry
+ * may hold data from an earlier run, so it is checked on first use.
  */
-function isEntryConfig(
+function isCheckedConfig(
   configPath: string,
   workspaceRoot: string,
   cache: InvocationCache
 ): boolean {
-  return cache.entryConfigFiles.has(posixRelative(workspaceRoot, configPath));
+  const key = posixRelative(workspaceRoot, configPath);
+  if (cache.entryConfigFiles.has(key)) {
+    return true;
+  }
+  let exists = cache.checkedConfigs.get(key);
+  if (exists === undefined) {
+    exists = existsSync(configPath);
+    if (exists) {
+      readTsConfigAndCache(configPath, workspaceRoot, cache);
+    }
+    cache.checkedConfigs.set(key, exists);
+  }
+  return exists;
 }
 
-function getEntryEdges(
+function getReferenceEdges(
   configPath: string,
   workspaceRoot: string,
   cache: InvocationCache
 ): ReferenceEdge[] {
-  let edges = cache.entryEdges.get(configPath);
+  let edges = cache.referenceEdges.get(configPath);
   if (!edges) {
-    const expansion = getReferenceExpansion(
+    edges = [];
+    const addEdge = (path: string, isReference: boolean) => {
+      if (!isCheckedConfig(path, workspaceRoot, cache)) {
+        return;
+      }
+      const ownerProject = getConfigContext(path, workspaceRoot, cache).project;
+      // The consumer's own extends walk covers workspace-root configs.
+      if (isReference || (ownerProject.root && ownerProject.root !== '.')) {
+        edges.push({ configPath: path, ownerProject, isReference });
+      }
+    };
+    const tsConfig = retrieveTsConfigFromCache(
       configPath,
-      getConfigContext(configPath, workspaceRoot, cache).project,
       workspaceRoot,
       cache
     );
-    edges = [
-      ...expansion.extendedConfigs.map(({ configPath, ownerProject }) => ({
-        configPath,
-        ownerProject,
-        isReference: false,
-      })),
-      ...expansion.projectReferences.map(({ configPath, ownerProject }) => ({
-        configPath,
-        ownerProject,
-        isReference: true,
-      })),
-    ].filter((edge) => isEntryConfig(edge.configPath, workspaceRoot, cache));
-    cache.entryEdges.set(configPath, edges);
+    for (const { filePath } of tsConfig.extendedConfigFiles ?? []) {
+      if (filePath) {
+        addEdge(filePath, false);
+      }
+    }
+    for (const { path } of tsConfig.projectReferences ?? []) {
+      addEdge(
+        path.endsWith('.json') ? path : join(path, 'tsconfig.json'),
+        true
+      );
+    }
+    cache.referenceEdges.set(configPath, edges);
   }
   return edges;
 }
 
 /**
- * The configs of this entry that `configPaths` reference, directly or through
- * the configs they extend or reference, with the project owning each.
+ * The configs that `configPaths` reference, directly or through the configs
+ * they extend or reference, with the project owning each.
  */
-function getEntryReferences(
+function getCheckedReferences(
   configPaths: string[],
   workspaceRoot: string,
   cache: InvocationCache
@@ -2008,7 +2029,7 @@ function getEntryReferences(
     }
   };
   for (const configPath of configPaths) {
-    if (isEntryConfig(configPath, workspaceRoot, cache)) {
+    if (isCheckedConfig(configPath, workspaceRoot, cache)) {
       reach({
         configPath,
         ownerProject: getConfigContext(configPath, workspaceRoot, cache)
@@ -2018,7 +2039,7 @@ function getEntryReferences(
     }
   }
   for (let i = 0; i < worklist.length; i++) {
-    getEntryEdges(worklist[i], workspaceRoot, cache).forEach(reach);
+    getReferenceEdges(worklist[i], workspaceRoot, cache).forEach(reach);
   }
   return references;
 }

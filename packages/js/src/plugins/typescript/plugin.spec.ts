@@ -6343,6 +6343,44 @@ snapshots:
         ]);
       });
 
+      it('should read the sources of a reference this plugin entry does not match', async () => {
+        configFiles = await applyFilesToTempFsAndContext(tempFs, {
+          'libs/a/tsconfig.json': '{}',
+          'libs/a/tsconfig.lib.json': JSON.stringify({
+            compilerOptions: { outDir: 'dist' },
+            include: ['src/**/*.ts'],
+            references: [{ path: '../b/tsconfig.lib.json' }],
+          }),
+          'libs/a/package.json': `{"main": "dist/index.js"}`,
+          'libs/b/tsconfig.json': '{}',
+          'libs/b/tsconfig.lib.json': JSON.stringify({
+            compilerOptions: { outDir: 'dist' },
+            include: ['src/**/*.ts'],
+            references: [{ path: '../c/tsconfig.lib.json' }],
+          }),
+          'libs/b/package.json': `{"main": "src/index.ts"}`,
+          'libs/c/tsconfig.json': '{}',
+          'libs/c/tsconfig.lib.json': JSON.stringify({
+            compilerOptions: { outDir: 'dist' },
+            include: ['src/**/*.ts'],
+          }),
+          'libs/c/package.json': `{"main": "src/index.ts"}`,
+        });
+        // What an `exclude` on the plugin entry leaves out.
+        const result = await invokeCreateNodesOnMatchingFiles(
+          configFiles.filter((file) => file.startsWith('libs/a/')),
+          context,
+          { typecheck: false, build: true }
+        );
+
+        expect(result.projects['libs/a'].targets.build.inputs).toEqual(
+          expect.arrayContaining([
+            { fileset: '{workspaceRoot}/libs/b/src/**/*.ts', always: true },
+            { fileset: '{workspaceRoot}/libs/c/src/**/*.ts', always: true },
+          ])
+        );
+      });
+
       it("should read a reference's files entries without its excludes", async () => {
         configFiles = await applyFilesToTempFsAndContext(tempFs, {
           'libs/a/tsconfig.json': '{}',
