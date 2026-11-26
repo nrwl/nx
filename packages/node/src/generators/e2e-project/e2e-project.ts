@@ -37,6 +37,7 @@ import {
   isEslintConfigSupported,
   replaceOverridesInLintConfig,
   useFlatConfig,
+  versions,
 } from '@nx/eslint/internal';
 import { existsSync } from 'node:fs';
 import * as path from 'path';
@@ -353,6 +354,23 @@ export async function e2eProjectGeneratorInternal(
             host,
             options.e2eProjectRoot,
             config
+          );
+        }
+        // Root setup skips its dependencies when a root ESLint config already exists.
+        if (!options.skipPackageJson) {
+          const { eslintVersion, typescriptESLintVersion } = versions(host);
+          tasks.push(
+            addDependenciesToPackageJson(
+              host,
+              {},
+              {
+                '@eslint/js': eslintVersion,
+                '@nx/eslint-plugin': nxVersion,
+                'typescript-eslint': typescriptESLintVersion,
+              },
+              undefined,
+              true
+            )
           );
         }
       } else {

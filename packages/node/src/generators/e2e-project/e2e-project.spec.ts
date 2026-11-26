@@ -47,42 +47,100 @@ describe('e2eProjectGenerator', () => {
     expect(tree.exists(`e2e/src/server/server.spec.ts`)).toBeTruthy();
   });
 
-  it('should configure a standalone e2e project with the Nx flat presets and no FlatCompat', async () => {
-    vi.stubEnv('ESLINT_USE_FLAT_CONFIG', 'true');
-    try {
-      await applicationGenerator(tree, {
-        directory: '.',
-        name: 'api',
-        framework: 'express',
-        e2eTestRunner: 'none',
-        linter: 'eslint',
-      });
-      await e2eProjectGenerator(tree, {
-        projectType: 'server',
-        project: 'api',
-        rootProject: true,
-        linter: 'eslint',
-      });
+  it.each([
+    {
+      packages: 'declare their packages',
+      declared: {},
+      skipPackageJson: false,
+      expected: {
+        '@eslint/js': expect.stringMatching(/^\^9\./),
+        '@nx/eslint-plugin': expect.any(String),
+        'typescript-eslint': expect.any(String),
+      },
+    },
+    {
+      packages: 'keep a declared version',
+      declared: { '@eslint/js': '9.1.0' },
+      skipPackageJson: false,
+      expected: {
+        '@eslint/js': '9.1.0',
+        '@nx/eslint-plugin': expect.any(String),
+        'typescript-eslint': expect.any(String),
+      },
+    },
+    {
+      packages: 'skip their packages with skipPackageJson',
+      declared: {},
+      skipPackageJson: true,
+      expected: {},
+    },
+  ])(
+    'should configure a standalone e2e project with the Nx flat presets and $packages',
+    async ({ declared, skipPackageJson, expected }) => {
+      vi.stubEnv('ESLINT_USE_FLAT_CONFIG', 'true');
+      try {
+        tree.write(
+          'eslint.config.mjs',
+          `import tsParser from '@typescript-eslint/parser';
+import tsPlugin from '@typescript-eslint/eslint-plugin';
 
-      const config = tree.read('e2e/eslint.config.mjs', 'utf-8');
-      const nxPlugin = config.match(
-        /import (\w+) from ['"]@nx\/eslint-plugin['"]/
-      )?.[1];
-      expect(nxPlugin).toBeDefined();
-      for (const preset of [
-        'flat/base',
-        'flat/typescript',
-        'flat/javascript',
-      ]) {
-        expect(config).toMatch(
-          new RegExp(`\\.\\.\\.${nxPlugin}\\.configs\\[['"]${preset}['"]\\]`)
+export default [
+  {
+    files: ['**/*.ts'],
+    languageOptions: { parser: tsParser },
+    plugins: { '@typescript-eslint': tsPlugin },
+  },
+];
+`
         );
+        updateJson(tree, 'package.json', (json) => {
+          json.devDependencies = {
+            ...json.devDependencies,
+            '@typescript-eslint/eslint-plugin': '^8.40.0',
+            '@typescript-eslint/parser': '^8.40.0',
+            eslint: '~9.39.0',
+            ...declared,
+          };
+          return json;
+        });
+
+        await applicationGenerator(tree, {
+          directory: '.',
+          name: 'api',
+          framework: 'express',
+          e2eTestRunner: 'jest',
+          linter: 'eslint',
+          skipPackageJson,
+        });
+
+        const config = tree.read('e2e/eslint.config.mjs', 'utf-8');
+        const nxPlugin = config.match(
+          /import (\w+) from ['"]@nx\/eslint-plugin['"]/
+        )?.[1];
+        expect(nxPlugin).toBeDefined();
+        for (const preset of [
+          'flat/base',
+          'flat/typescript',
+          'flat/javascript',
+        ]) {
+          expect(config).toMatch(
+            new RegExp(`\\.\\.\\.${nxPlugin}\\.configs\\[['"]${preset}['"]\\]`)
+          );
+        }
+        expect(config).not.toMatch(/@eslint\/eslintrc|FlatCompat/);
+        const { devDependencies } = readJson(tree, 'package.json');
+        expect(
+          Object.fromEntries(
+            ['@eslint/js', '@nx/eslint-plugin', 'typescript-eslint']
+              .filter((name) => name in devDependencies)
+              .map((name) => [name, devDependencies[name]])
+          )
+        ).toEqual(expected);
+      } finally {
+        vi.unstubAllEnvs();
       }
-      expect(config).not.toMatch(/@eslint\/eslintrc|FlatCompat/);
-    } finally {
-      vi.unstubAllEnvs();
     }
-  });
+  );
 
   it('should generate jest test config with ts-jest for server app', async () => {
     await applicationGenerator(tree, {
