@@ -2988,29 +2988,31 @@ describe('task planner', () => {
       );
     });
 
-    it("hashes reads of a producer task's outputs from disk and defers the task when the target includes unstable files", () => {
-      const { planner, taskGraph } = fixture();
-      taskGraph.tasks['parent:build'].ultracache = {
-        includeUnstableFiles: true,
-      };
-      const configurations = configurationsFor({
-        'parent:build': {
-          inputs: ['dist/libs/child/index.js'],
-        },
-      });
-      const plan = planner.getPlans(
-        ['parent:build'],
-        taskGraph,
-        configurations
-      )['parent:build'];
-      expect(plan).toContain('files:[dist/libs/child/index.js]');
-      expect(plan).not.toContainEqual(
-        expect.stringMatching(/^dist\/libs\/child\/index\.js:/)
-      );
-      expect(getUltracacheDeferredTaskIds(configurations, taskGraph)).toEqual([
-        'parent:build',
-      ]);
-    });
+    // Unset follows the default.
+    it.each([undefined, {}, { includeUnstableFiles: true }])(
+      "hashes reads of a producer task's outputs from disk and defers the task when its ultracache is %j",
+      (ultracache) => {
+        const { planner, taskGraph } = fixture();
+        taskGraph.tasks['parent:build'].ultracache = ultracache;
+        const configurations = configurationsFor({
+          'parent:build': {
+            inputs: ['dist/libs/child/index.js'],
+          },
+        });
+        const plan = planner.getPlans(
+          ['parent:build'],
+          taskGraph,
+          configurations
+        )['parent:build'];
+        expect(plan).toContain('files:[dist/libs/child/index.js]');
+        expect(plan).not.toContainEqual(
+          expect.stringMatching(/^dist\/libs\/child\/index\.js:/)
+        );
+        expect(getUltracacheDeferredTaskIds(configurations, taskGraph)).toEqual(
+          ['parent:build']
+        );
+      }
+    );
 
     it('reports eligibility the same way it plans', () => {
       const { planner, taskGraph } = fixture();

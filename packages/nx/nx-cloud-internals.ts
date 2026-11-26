@@ -17,6 +17,5 @@ export const TASK_GRAPH_FORMAT = 2;
 
 // What an unset `ultracache.includeUnstableFiles` means. An nx that exports
 // it matches recorded reads against tracked files only for a target that
-// sets the option to `false`, and Nx Cloud keeps ignored files out of that
-// target's configuration.
+// sets the option to `false`.
 export const ULTRACACHE_INCLUDES_UNSTABLE_FILES_BY_DEFAULT = true;
