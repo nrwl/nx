@@ -47,6 +47,43 @@ describe('e2eProjectGenerator', () => {
     expect(tree.exists(`e2e/src/server/server.spec.ts`)).toBeTruthy();
   });
 
+  it('should configure a standalone e2e project with the Nx flat presets and no FlatCompat', async () => {
+    vi.stubEnv('ESLINT_USE_FLAT_CONFIG', 'true');
+    try {
+      await applicationGenerator(tree, {
+        directory: '.',
+        name: 'api',
+        framework: 'express',
+        e2eTestRunner: 'none',
+        linter: 'eslint',
+      });
+      await e2eProjectGenerator(tree, {
+        projectType: 'server',
+        project: 'api',
+        rootProject: true,
+        linter: 'eslint',
+      });
+
+      const config = tree.read('e2e/eslint.config.mjs', 'utf-8');
+      const nxPlugin = config.match(
+        /import (\w+) from ['"]@nx\/eslint-plugin['"]/
+      )?.[1];
+      expect(nxPlugin).toBeDefined();
+      for (const preset of [
+        'flat/base',
+        'flat/typescript',
+        'flat/javascript',
+      ]) {
+        expect(config).toMatch(
+          new RegExp(`\\.\\.\\.${nxPlugin}\\.configs\\[['"]${preset}['"]\\]`)
+        );
+      }
+      expect(config).not.toMatch(/@eslint\/eslintrc|FlatCompat/);
+    } finally {
+      vi.unstubAllEnvs();
+    }
+  });
+
   it('should generate jest test config with ts-jest for server app', async () => {
     await applicationGenerator(tree, {
       directory: 'api',

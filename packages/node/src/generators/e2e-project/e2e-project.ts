@@ -33,8 +33,10 @@ import {
   javaScriptOverride,
   typeScriptOverride,
   addPluginsToLintConfig,
+  addPredefinedConfigToFlatLintConfig,
   isEslintConfigSupported,
   replaceOverridesInLintConfig,
+  useFlatConfig,
 } from '@nx/eslint/internal';
 import { existsSync } from 'node:fs';
 import * as path from 'path';
@@ -341,11 +343,25 @@ export async function e2eProjectGeneratorInternal(
     tasks.push(linterTask);
 
     if (options.rootProject && isEslintConfigSupported(host)) {
-      addPluginsToLintConfig(host, options.e2eProjectRoot, '@nx');
-      replaceOverridesInLintConfig(host, options.e2eProjectRoot, [
-        typeScriptOverride,
-        javaScriptOverride,
-      ]);
+      if (useFlatConfig(host)) {
+        for (const config of [
+          'flat/base',
+          'flat/typescript',
+          'flat/javascript',
+        ]) {
+          addPredefinedConfigToFlatLintConfig(
+            host,
+            options.e2eProjectRoot,
+            config
+          );
+        }
+      } else {
+        addPluginsToLintConfig(host, options.e2eProjectRoot, '@nx');
+        replaceOverridesInLintConfig(host, options.e2eProjectRoot, [
+          typeScriptOverride,
+          javaScriptOverride,
+        ]);
+      }
     }
   }
 
