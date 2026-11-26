@@ -1,5 +1,4 @@
 import { names, type Tree } from '@nx/devkit';
-import { lt } from 'semver';
 import {
   determineProjectNameAndRootOptions,
   ensureRootProjectName,
@@ -10,8 +9,8 @@ import {
   getModuleTypeSeparator,
 } from '../../utils/artifact-types';
 import {
-  angularBuildSupportsLibraryBuilder,
   getInstalledAngularVersionInfo,
+  supportsLibraryBuilder,
 } from '../../utils/version-utils';
 import type { Schema } from '../schema';
 import type { NormalizedSchema } from './normalized-schema';
@@ -59,8 +58,7 @@ export async function normalizeOptions(
   const moduleTypeSeparator = getModuleTypeSeparator(host);
   const modulePath = `${projectRoot}/src/lib/${fileName}${moduleTypeSeparator}module.ts`;
 
-  const { major: angularMajorVersion, version: angularVersion } =
-    getInstalledAngularVersionInfo(host);
+  const { major: angularMajorVersion } = getInstalledAngularVersionInfo(host);
   const unitTestRunner =
     options.unitTestRunner ??
     (angularMajorVersion >= 21 && (options.buildable || options.publishable)
@@ -91,8 +89,7 @@ export async function normalizeOptions(
     moduleTypeSeparator,
     useLibraryBuilder:
       (options.buildable || options.publishable) &&
-      !lt(angularVersion, '22.3.0') &&
-      angularBuildSupportsLibraryBuilder(host, {
+      supportsLibraryBuilder(host, {
         skipPackageJson: options.skipPackageJson,
       }),
   };

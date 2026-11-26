@@ -1,0 +1,26 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "$id": "NxAngularConvertToLibraryExecutorGenerator",
+  "cli": "nx",
+  "title": "Converts projects to use the `@nx/angular:library` executor or the `@angular/build:library` builder.",
+  "description": "Converts a library or all libraries using one of the `@nx/angular:package`, `@nx/angular:ng-packagr-lite`, `@angular-devkit/build-angular:ng-packagr` and `@angular/build:ng-packagr` executors to use the `@nx/angular:library` executor or the `@angular/build:library` builder. If the converted target is using one of the `@nx/angular` executors, the `@nx/angular:library` executor will be used. Otherwise, the `@angular/build:library` builder will be used. The ng-packagr configuration moves to the target options and the library `package.json` `exports`.",
+  "type": "object",
+  "properties": {
+    "project": {
+      "type": "string",
+      "description": "Name of the Angular library project to convert. It has to contain a target using one of the `@nx/angular:package`, `@nx/angular:ng-packagr-lite`, `@angular-devkit/build-angular:ng-packagr` and `@angular/build:ng-packagr` executors. If not specified, all projects with such targets will be converted.",
+      "$default": {
+        "$source": "argv",
+        "index": 0
+      },
+      "x-priority": "important"
+    },
+    "skipFormat": {
+      "description": "Skip formatting files.",
+      "type": "boolean",
+      "default": false,
+      "x-priority": "internal"
+    }
+  },
+  "additionalProperties": false
+}

@@ -71,6 +71,7 @@ export {
 export { getTsConfigBaseOptions } from './src/utils/typescript/create-ts-config';
 export {
   createTreeParseConfigHost,
+  extendsResolutionFailed,
   type TreeParseConfigHost,
 } from './src/utils/typescript/ts-config';
 export { ensureTypescript } from './src/utils/typescript/ensure-typescript';

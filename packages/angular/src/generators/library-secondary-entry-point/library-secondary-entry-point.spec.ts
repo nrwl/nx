@@ -10,7 +10,10 @@ import {
   updateNxJson,
   writeJson,
 } from '@nx/devkit';
+import { TempFs } from '@nx/devkit/internal-testing-utils';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import { symlinkSync } from 'node:fs';
+import { join } from 'node:path';
 import { generateTestLibrary } from '../utils/testing';
 import { librarySecondaryEntryPointGenerator } from './library-secondary-entry-point';
 import * as devkitModule from '@nx/devkit';
@@ -373,6 +376,12 @@ describe('librarySecondaryEntryPoint generator', () => {
           projectType: 'library',
           targets: { build: { executor: '@nx/angular:library' } },
         });
+        // @nx/angular/plugin reads an angular.json with a package.json next to it.
+        updateJson(tree, 'nx.json', (json) => ({
+          ...json,
+          plugins: ['@nx/angular/plugin'],
+        }));
+        writeJson(tree, 'libs/package.json', { name: 'libs' });
         writeJson(tree, 'libs/angular.json', {
           version: 1,
           projects: {
@@ -385,6 +394,31 @@ describe('librarySecondaryEntryPoint generator', () => {
       },
       'build',
       'libs/angular.json',
+    ],
+    [
+      'an ng-packagr target in another project that reads its ng-package.json',
+      (tree: Tree) => {
+        addProjectConfiguration(tree, 'lib1', {
+          root: 'libs/lib1',
+          projectType: 'library',
+          targets: { build: { executor: '@nx/angular:library' } },
+        });
+        writeJson(tree, 'libs/lib1/ng-package.json', {
+          lib: { entryFile: 'src/index.ts' },
+        });
+        addProjectConfiguration(tree, 'proxy', {
+          root: 'libs/proxy',
+          projectType: 'library',
+          targets: {
+            build: {
+              executor: '@nx/angular:ng-packagr-lite',
+              options: { project: 'libs/lib1/ng-package.json' },
+            },
+          },
+        });
+      },
+      'build',
+      'libs/proxy/project.json',
     ],
   ])(
     'should throw without changing files when a library builder library has %s',
@@ -408,6 +442,86 @@ describe('librarySecondaryEntryPoint generator', () => {
       expect(tree.listChanges()).toEqual(changes);
     }
   );
+
+  it('should throw when an ng-packagr target reads the configuration of a library builder library through a symlink', async () => {
+    const tempFs = new TempFs('library-secondary-entry-point');
+    try {
+      tree.root = tempFs.tempDir;
+      tempFs.createFileSync(
+        'libs/lib1/ng-package.json',
+        JSON.stringify({ lib: { entryFile: 'src/index.ts' } })
+      );
+      symlinkSync(
+        join(tempFs.tempDir, 'libs/lib1'),
+        join(tempFs.tempDir, 'libs/link'),
+        'junction'
+      );
+      addProjectConfiguration(tree, 'lib1', {
+        root: 'libs/lib1',
+        projectType: 'library',
+        targets: { build: { executor: '@nx/angular:library' } },
+      });
+      writeJson(tree, 'libs/lib1/package.json', {
+        name: '@my-org/lib1',
+        exports: { '.': './src/index.ts' },
+      });
+      addProjectConfiguration(tree, 'proxy', {
+        root: 'libs/proxy',
+        projectType: 'library',
+        targets: {
+          build: {
+            executor: '@nx/angular:ng-packagr-lite',
+            options: { project: 'libs/link/ng-package.json' },
+          },
+        },
+      });
+
+      await expect(
+        librarySecondaryEntryPointGenerator(tree, {
+          name: 'testing',
+          library: 'lib1',
+          skipFormat: true,
+        })
+      ).rejects.toThrow(
+        'The "lib1" library uses the library builder, but the "build" target in "libs/proxy/project.json" uses ng-packagr.'
+      );
+    } finally {
+      tempFs.cleanup();
+    }
+  });
+
+  it('should generate when an ng-packagr target only builds the library as a secondary entry point', async () => {
+    addProjectConfiguration(tree, 'lib1', {
+      root: 'libs/lib1',
+      projectType: 'library',
+      targets: { build: { executor: '@nx/angular:library' } },
+    });
+    writeJson(tree, 'libs/lib1/package.json', {
+      name: '@my-org/lib1',
+      exports: { '.': './src/index.ts' },
+    });
+    writeJson(tree, 'libs/lib1/ng-package.json', {
+      lib: { entryFile: 'src/index.ts' },
+    });
+    // ng-packagr writes the exports of the primary entry point only.
+    addProjectConfiguration(tree, 'all', {
+      root: 'libs',
+      projectType: 'library',
+      targets: { build: { executor: '@nx/angular:package' } },
+    });
+    writeJson(tree, 'libs/ng-package.json', {});
+
+    await librarySecondaryEntryPointGenerator(tree, {
+      name: 'testing',
+      library: 'lib1',
+      skipFormat: true,
+    });
+
+    expect(readJson(tree, 'libs/lib1/package.json').exports).toStrictEqual({
+      '.': './src/index.ts',
+      './testing': './testing/src/index.ts',
+    });
+  });
 
   it.each([
     ['a string', './src/index.ts'],

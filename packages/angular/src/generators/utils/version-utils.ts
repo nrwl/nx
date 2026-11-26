@@ -65,13 +65,27 @@ export function getAngularBuildVersionRange(tree: Tree): string {
 const LIBRARY_BUILDER_MIN_VERSION = '22.3.0';
 
 /**
+ * Whether the workspace can build libraries with the Angular library builder,
+ * which needs both `@angular/core` and `@angular/build` at 22.3 or later.
+ */
+export function supportsLibraryBuilder(
+  tree: Tree,
+  options: { skipPackageJson?: boolean }
+): boolean {
+  return (
+    !lt(getInstalledAngularVersion(tree), LIBRARY_BUILDER_MIN_VERSION) &&
+    angularBuildSupportsLibraryBuilder(tree, options)
+  );
+}
+
+/**
  * Whether the `@angular/build` version the workspace ends up with ships the
  * library builder. The installed version only counts when the declared range
  * keeps it, because the next install replaces anything else. Without
  * package.json writes nothing adds `@angular/build`, so only a declared one
  * counts.
  */
-export function angularBuildSupportsLibraryBuilder(
+function angularBuildSupportsLibraryBuilder(
   tree: Tree,
   { skipPackageJson }: { skipPackageJson?: boolean }
 ): boolean {
