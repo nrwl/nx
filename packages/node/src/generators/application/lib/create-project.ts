@@ -74,8 +74,14 @@ export function addProject(
     project.targets.serve = getServeConfig(options);
   } else {
     // @nx/js/node or @nx/js/tsx infers the command. `^build` builds workspace
-    // libraries whose exports point at their output.
-    project.targets.serve = { continuous: true, dependsOn: ['^build'] };
+    // libraries whose exports point at their output. `watch-deps` rebuilds
+    // them on changes, which `node --watch` picks up; skipped where the
+    // project has no such target.
+    project.targets.serve = {
+      continuous: true,
+      dependsOn:
+        options.serveRuntime === 'node' ? ['^build', 'watch-deps'] : ['^build'],
+    };
   }
   // The framework templates call emitReadySignal once the server listens
   if (options.isNest || (options.framework && options.framework !== 'none')) {

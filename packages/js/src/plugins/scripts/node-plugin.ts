@@ -15,6 +15,12 @@ export interface NodeScriptsPluginOptions extends ScriptPluginOptions {
    * workspace file). Defaults to `["build"]`.
    */
   binDependsOn?: string[];
+  /**
+   * Target that rebuilds a project's workspace dependencies when they change.
+   * Scripts in watch mode depend on it where the project has one. Defaults to
+   * `watch-deps`.
+   */
+  watchDepsTargetName?: string;
 }
 
 export const createNodes = createScriptNodes<NodeScriptsPluginOptions>({
@@ -23,6 +29,10 @@ export const createNodes = createScriptNodes<NodeScriptsPluginOptions>({
   claims: (shebang) => shebang.interpreter === 'node',
   command: (file, shebang, watch) =>
     ['node', ...(watch ? ['--watch'] : []), ...shebang.args, file].join(' '),
+  // `node --watch` restarts on rebuilt output, not on a dependency's sources.
+  watchTarget: (options) => ({
+    dependsOn: [options?.watchDepsTargetName ?? 'watch-deps'],
+  }),
   extraTargets: createBinTargets,
 });
 

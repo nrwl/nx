@@ -32,6 +32,8 @@ export interface ScriptPluginDefinition<T extends ScriptPluginOptions> {
   claims(shebang: Shebang): boolean;
   /** `file` is relative to the target's cwd. */
   command(file: string, shebang: Shebang, watch: boolean): string;
+  /** Extra configuration for the targets that run in watch mode. */
+  watchTarget?(options: T | undefined): Partial<TargetConfiguration>;
   /** Targets not tied to a shebang; claimed scripts win on name clashes. */
   extraTargets?(
     projectRoot: string,
@@ -95,7 +97,7 @@ export function createScriptNodes<T extends ScriptPluginOptions>(
                 context.workspaceRoot,
                 projectRoot,
                 scripts,
-                options?.watch !== false
+                options
               ),
             });
           }
@@ -203,7 +205,7 @@ function createTargets<T extends ScriptPluginOptions>(
   workspaceRoot: string,
   projectRoot: string,
   scripts: string[],
-  watch: boolean
+  options: T | undefined
 ): ScriptTargets {
   const claimed: ClaimedScript[] = [];
   for (const { file, header } of readShebangHeaders(workspaceRoot, scripts)) {
@@ -237,7 +239,7 @@ function createTargets<T extends ScriptPluginOptions>(
       (baseNameCounts.get(baseName) > 1
         ? withoutExtension(script.relativePath)
         : baseName);
-    targets[name] = createTarget(definition, projectRoot, script, watch);
+    targets[name] = createTarget(definition, projectRoot, script, options);
   }
   return targets;
 }
@@ -246,8 +248,9 @@ function createTarget<T extends ScriptPluginOptions>(
   definition: ScriptPluginDefinition<T>,
   projectRoot: string,
   { path, relativePath, shebang }: ClaimedScript,
-  watch: boolean
+  options: T | undefined
 ): TargetConfiguration {
+  const watch = options?.watch !== false;
   return {
     command: definition.command(
       quoteShellArg(posix.relative(projectRoot, path)),
@@ -256,7 +259,7 @@ function createTarget<T extends ScriptPluginOptions>(
     ),
     options: { cwd: projectRoot },
     cache: false,
-    ...(watch && { continuous: true }),
+    ...(watch && { continuous: true, ...definition.watchTarget?.(options) }),
     metadata: {
       technologies: [definition.technology],
       description: `Runs ${relativePath}`,

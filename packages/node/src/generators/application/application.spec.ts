@@ -1333,7 +1333,7 @@ describe('app', () => {
       expect(project.targets.build).toBeUndefined();
       expect(project.targets.serve).toEqual({
         continuous: true,
-        dependsOn: ['^build'],
+        dependsOn: ['^build', 'watch-deps'],
       });
       expect(
         readNxJson(tree).plugins.filter(
@@ -1826,7 +1826,7 @@ describe('app', () => {
       expect(project.targets.build).toBeUndefined();
       expect(project.targets.serve).toEqual({
         continuous: true,
-        dependsOn: ['^build'],
+        dependsOn: ['^build', 'watch-deps'],
       });
       expect(
         readNxJson(tree).plugins.some(
