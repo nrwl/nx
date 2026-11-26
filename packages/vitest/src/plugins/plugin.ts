@@ -1,10 +1,12 @@
 import {
+  applyTestFileDirectives,
   calculateHashesForCreateNodes,
   getNamedInputs,
   PluginCache,
   hashObject,
   workspaceDataDirectory,
   deriveGroupNameFromTarget,
+  getFilesInDirectoryUsingContext,
   globWithWorkspaceContext,
   quoteShellArg,
   retryOnRequireEsmRace,
@@ -185,7 +187,6 @@ export const createNodes: CreateNodes<VitestPluginOptions> = [
             // or their tsconfigs.
             targets: withSetupFileInputs(
               targets,
-              normalizedOptions.testTargetName,
               setupFileCandidates,
               projectRoot,
               context.workspaceRoot,
@@ -381,16 +382,15 @@ async function buildVitestTargets(
           'serve'
         )
       );
-      const projectRootRelativeTestPaths =
-        await getTestPathsRelativeToProjectRoot(
-          projectRoot,
-          context.workspaceRoot,
-          fullRunCwd,
-          // Only the glob path reads this config; the opt-out path forces the
-          // runtime by receiving no config, and takes `test.dir` separately.
-          useGlobDiscovery ? viteServeConfig : undefined,
-          viteServeConfig.test?.dir
-        );
+      const discoveredTestFiles = await getTestPathsRelativeToProjectRoot(
+        projectRoot,
+        context.workspaceRoot,
+        fullRunCwd,
+        // Only the glob path reads this config; the opt-out path forces the
+        // runtime by receiving no config, and takes `test.dir` separately.
+        useGlobDiscovery ? viteServeConfig : undefined,
+        viteServeConfig.test?.dir
+      );
 
       // Each atom writes coverage to its own directory or the reports would
       // overwrite one another. The nested flag never enables coverage.
@@ -431,7 +431,7 @@ async function buildVitestTargets(
       );
       const atomOutputs: string[] = [];
 
-      for (const relativePath of projectRootRelativeTestPaths) {
+      for (const relativePath of discoveredTestFiles.testPaths) {
         if (relativePath.includes('../')) {
           throw new Error(
             '@nx/vitest attempted to run tests outside of the project root. This is not supported and should not happen. Please open an issue at https://github.com/nrwl/nx/issues/new/choose with the following information:\n\n' +
@@ -439,7 +439,7 @@ async function buildVitestTargets(
                 {
                   projectRoot,
                   relativePath,
-                  projectRootRelativeTestPaths,
+                  projectRootRelativeTestPaths: discoveredTestFiles.testPaths,
                   context,
                 },
                 null,
@@ -462,7 +462,7 @@ async function buildVitestTargets(
           ? joinPathFragments(projectRoot, relativePath)
           : relativePath;
         dependsOn.push(targetName);
-        targets[targetName] = {
+        const atomTarget: TargetConfiguration = {
           // It does not make sense to run atomized tests in watch mode as they are intended to be run in CI
           command: `vitest run${rootArg} ${quoteShellArg(testFileFilter)}${
             vitestRejectsReportsDirectory
@@ -500,6 +500,16 @@ async function buildVitestTargets(
             },
           },
         };
+        // The inference cache key hashes only indexed files, so a directive
+        // edit in a file outside the index would leave stale targets.
+        targets[targetName] = discoveredTestFiles.isIndexed(relativePath)
+          ? applyTestFileDirectives(
+              atomTarget,
+              context.workspaceRoot,
+              joinPathFragments(projectRoot, relativePath),
+              { ignoreServerInputs: false }
+            )
+          : atomTarget;
         atomOutputs.push(...targets[targetName].outputs);
         targetGroup.push(targetName);
       }
@@ -508,7 +518,12 @@ async function buildVitestTargets(
         targets[options.ciTargetName] = {
           executor: 'nx:noop',
           cache: isCoverageCacheable,
-          inputs: targets[options.testTargetName].inputs,
+          // A cache hit restores the atoms' coverage, so the hash covers what
+          // they wrote. Atom inputs can differ from the test target's.
+          inputs: [
+            ...targets[options.testTargetName].inputs,
+            { dependentTasksOutputFiles: '**/*' },
+          ],
           // Exactly the atom directories: a cache restore replaces each declared
           // directory, and any wider one can hold other projects' coverage.
           outputs: atomOutputs,
@@ -537,7 +552,6 @@ async function buildVitestTargets(
 
 function withSetupFileInputs(
   targets: Record<string, TargetConfiguration>,
-  testTargetName: string,
   setupFileCandidates: string[],
   projectRoot: string,
   workspaceRoot: string,
@@ -561,11 +575,10 @@ function withSetupFileInputs(
     // executes, so any change to them changes the run.
     ...files.map((f) => `{workspaceRoot}/${escapeGlob(f)}`),
   ];
-  const inputs = [...targets[testTargetName].inputs, ...setupInputs];
   return Object.fromEntries(
     Object.entries(targets).map(([name, target]) => [
       name,
-      { ...target, inputs },
+      { ...target, inputs: [...target.inputs, ...setupInputs] },
     ])
   );
 }
@@ -889,6 +902,11 @@ function checkIfConfigFileShouldBeProject(
   return true;
 }
 
+interface DiscoveredTestFiles {
+  testPaths: string[];
+  isIndexed: (testPath: string) => boolean;
+}
+
 async function getTestPathsRelativeToProjectRoot(
   projectRoot: string,
   workspaceRoot: string,
@@ -897,23 +915,27 @@ async function getTestPathsRelativeToProjectRoot(
   // Serve-resolved `test.dir` (the command Vitest runs under). Only used on the
   // opt-out path below, which receives no `viteConfig` to read it from.
   optOutTestDir: string | undefined
-): Promise<string[]> {
+): Promise<DiscoveredTestFiles> {
   const fullProjectRoot = join(workspaceRoot, projectRoot);
 
-  // `viteConfig` is resolved only when glob discovery is requested; its absence
+  // `viteConfig` is passed only when glob discovery is requested; its absence
   // means the runtime path was selected (`discoverTestFiles: 'vitest'`).
   if (viteConfig) {
     const test: InlineConfig = viteConfig.test ?? {};
     if (!configRequiresVitestRuntime(test, viteConfig, fullProjectRoot)) {
-      return globTestPathsRelativeToProjectRoot(
-        test,
-        workspaceRoot,
-        projectRoot,
-        fullRunCwd
-      );
+      return {
+        testPaths: await globTestPathsRelativeToProjectRoot(
+          test,
+          workspaceRoot,
+          projectRoot,
+          fullRunCwd
+        ),
+        isIndexed: () => true,
+      };
     }
 
     return getTestPathsViaVitestRuntime(
+      workspaceRoot,
       fullProjectRoot,
       projectRoot,
       resolveTestDir(fullProjectRoot, fullRunCwd, test.dir)
@@ -921,6 +943,7 @@ async function getTestPathsRelativeToProjectRoot(
   }
 
   return getTestPathsViaVitestRuntime(
+    workspaceRoot,
     fullProjectRoot,
     projectRoot,
     resolveTestDir(fullProjectRoot, fullRunCwd, optOutTestDir)
@@ -1148,10 +1171,11 @@ function configRequiresVitestRuntime(
 }
 
 async function getTestPathsViaVitestRuntime(
+  workspaceRoot: string,
   fullProjectRoot: string,
   projectRoot: string,
   testDir: string
-): Promise<string[]> {
+): Promise<DiscoveredTestFiles> {
   const { createVitest } = await import('vitest/node');
   const vitest = await createVitest('test', {
     root: fullProjectRoot,
@@ -1166,10 +1190,23 @@ async function getTestPathsViaVitestRuntime(
   // Sort to keep atomized target name insertion order stable.
   // vitest.getRelevantTestSpecifications uses tinyglobby internally,
   // which does not sort its filesystem traversal output.
-  return relevantTestSpecifications
+  const testPaths = relevantTestSpecifications
     .filter((ts) =>
       fullProjectRoot === '.' ? true : ts.moduleId.startsWith(fullProjectRoot)
     )
     .map((ts) => normalizePath(relative(projectRoot, ts.moduleId)))
     .sort();
+  // Vitest also returns files that .gitignore or .nxignore keep out of the
+  // Nx file index.
+  const indexedFiles = new Set(
+    await getFilesInDirectoryUsingContext(
+      workspaceRoot,
+      projectRoot === '.' ? '' : projectRoot
+    )
+  );
+  return {
+    testPaths,
+    isIndexed: (testPath) =>
+      indexedFiles.has(joinPathFragments(projectRoot, testPath)),
+  };
 }

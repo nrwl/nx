@@ -19,7 +19,7 @@ You are scoping split (atomized) e2e test files in an Nx workspace so that each 
 
 The directives require Nx 24 or later. Check the workspace's `nx` version first. On an older version, stop and report that the workspace needs to upgrade.
 
-1. Find the e2e projects and their split targets with `nx show project <e2e-project> --json`. Split targets are named `<ciTargetName>--<test file path>`, where `ciTargetName` is the Playwright or Cypress plugin option in `nx.json` and defaults to `e2e-ci`. If there are none, stop. Cypress creates them only when the `nxE2EPreset` options set `ciWebServerCommand`, and Vitest and Cypress component tests don't read the directives.
+1. Find the e2e projects and their split targets with `nx show project <e2e-project> --json`. Split targets are named `<ciTargetName>--<test file path>`, where `ciTargetName` is the plugin option in `nx.json`. It defaults to `e2e-ci` for Playwright and Cypress. Jest and Vitest create split targets only when it's set. If there are none, stop. Cypress creates them only when the `nxE2EPreset` options set `ciWebServerCommand`. Cypress component tests don't read the directives, and Vitest reads only `@nx-depends-on`.
 2. Before editing any files, ask the user to choose a scoping approach and wait for their answer:
    - **A. Project-based scoping with `@nx-depends-on` (recommended).** Explicitly list the projects each test exercises. The projects they depend on are included automatically.
    - **B. Import-based scoping with `@nx-ignore-server-inputs` (advanced).** Use only when we understand exactly what each test depends on, Ultracache is enabled in Nx Cloud, the runner is Playwright or Cypress, and the imports capture everything needed to invalidate its cached result.
@@ -83,7 +83,8 @@ The same edit to `search/` reruns only `search.spec.ts`:
 
 `// @nx-depends-on: <projects>` scopes the test to the projects you list and the projects they depend on.
 The test reruns when one of those projects changes.
-It works in Playwright, Cypress, and Jest test files.
+It works in Playwright, Cypress, Jest, and Vitest test files.
+For Jest and Vitest, set the plugin's `ciTargetName` option to create the split tasks.
 
 `// @nx-ignore-server-inputs` drops the app server from the test's hash.
 With [Ultracache](/docs/reference/project-configuration#ultracache) turned on in Nx Cloud, Nx then hashes the test from the files its last CI run read: the test file and the app code it imports.
@@ -285,7 +286,7 @@ For more on the commands Nx recognizes, see [Playwright web server readiness](/d
 For **Cypress**, set `ciWebServerCommand` in `nxE2EPreset` to an Nx command.
 Don't set `webServerConfig.reuseExistingServer` to `false`.
 
-**Jest** supports only `@nx-depends-on`. Neither directive is supported in **Vitest** or **Cypress component tests**.
+**Jest** and **Vitest** support only `@nx-depends-on`. Neither directive is supported in **Cypress component tests**.
 
 Excluding the server's inputs also excludes its environment variables, runtime inputs, and external dependencies.
 If the test needs any of these, add them to the test target's `inputs` in `project.json`.
@@ -329,7 +330,8 @@ For `// @nx-depends-on: checkout, checkout-utils` in a Cypress test file, the pl
 ```
 
 - The two `production` inputs replace the `^` inputs the plugin infers: `^production` for Cypress, plus `^{projectRoot}/tsconfig*.json` for Playwright.
-  They use `default` when there's no `production` [named input](/docs/kb/configure-inputs).
+  For Vitest, they also replace the inputs for each dependency's `tsconfig.spec.json` and `tsconfig.storybook.json`.
+  They use `default` when the test's project has no `production` [named input](/docs/kb/configure-inputs).
 - `"always": true` keeps these projects in the hash under Ultracache, which would otherwise drop them because the test runner doesn't read the code the server serves.
 - `"inputs": false` on the server dependency leaves the server task's inputs out of the hash.
 

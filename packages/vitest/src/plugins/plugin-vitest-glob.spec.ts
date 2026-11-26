@@ -4,6 +4,7 @@ import { TempFs } from '@nx/devkit/internal-testing-utils';
 import { join } from 'node:path';
 import { createNodesV2, type VitestPluginOptions } from './plugin';
 import { loadViteDynamicImport } from '../utils/executor-utils';
+import { createVitest } from 'vitest/node';
 
 // Only the Vite/Vitest module loading is mocked; the filesystem and the
 // workspace-context glob are real. These tests pin the native glob's semantics
@@ -292,6 +293,93 @@ describe('@nx/vitest glob discovery against a real filesystem', () => {
       );
     });
   });
+
+  it('should scope the atomized target of a test file to the projects its @nx-depends-on directive names', async () => {
+    await temp.createFiles({
+      'libs/lib1/vitest.config.ts': '',
+      'libs/lib1/package.json': '{"name":"lib1"}',
+      'libs/lib1/src/feature.spec.ts':
+        '// @nx-depends-on: feature, feature-utils\nimport { x } from "feature";\n',
+      'libs/lib1/src/unit.spec.ts': '',
+      'tools/vitest/setup.mts': '',
+    });
+    mockResolvedTestConfig({ setupFiles: ['../../tools/vitest/setup.mts'] });
+
+    const targets = await getProjectTargets('libs/lib1/vitest.config.ts');
+
+    const scoped = targets['test-ci--src/feature.spec.ts'];
+    expect(scoped.inputs).toEqual([
+      'default',
+      {
+        input: 'production',
+        projects: ['feature', 'feature-utils'],
+        always: true,
+      },
+      {
+        input: 'production',
+        projects: ['feature', 'feature-utils'],
+        dependencies: true,
+        always: true,
+      },
+      { externalDependencies: ['vitest'] },
+      { env: 'CI' },
+      { dependentTasksOutputFiles: '**/*.js', transitive: true },
+      '{workspaceRoot}/tools/vitest/setup.mts',
+    ]);
+    expect(scoped.metadata.testFileDirectives).toEqual({
+      file: 'libs/lib1/src/feature.spec.ts',
+    });
+    expect(targets['test-ci--src/unit.spec.ts'].inputs).toEqual(
+      targets['test'].inputs
+    );
+  });
+
+  it.each(['libs/lib1', '.'])(
+    'should ignore @nx-depends-on in a test file outside the file index (project root %s)',
+    async (projectRoot) => {
+      const directive = '// @nx-depends-on: feature\n';
+      await temp.createFiles({
+        [join(projectRoot, 'vitest.config.ts')]: '',
+        [join(projectRoot, 'project.json')]: '{"name":"lib1"}',
+        [join(projectRoot, 'src/indexed.spec.ts')]: directive,
+        // `generated/` is gitignored at the workspace root.
+        [join(projectRoot, 'generated/ignored.spec.ts')]: directive,
+      });
+      mockResolvedTestConfig({});
+      (createVitest as Mock).mockImplementationOnce(() => ({
+        getRelevantTestSpecifications: vi.fn().mockResolvedValue(
+          ['generated/ignored.spec.ts', 'src/indexed.spec.ts'].map((file) => ({
+            moduleId: join(temp.tempDir, projectRoot, file),
+          }))
+        ),
+      }));
+      // Plugin workers run from the workspace root.
+      const originalCwd = process.cwd();
+      process.chdir(temp.tempDir);
+
+      try {
+        const targets = await getProjectTargets(
+          join(projectRoot, 'vitest.config.ts'),
+          {
+            testTargetName: 'test',
+            ciTargetName: 'test-ci',
+            discoverTestFiles: 'vitest',
+          }
+        );
+
+        expect(targets['test-ci--src/indexed.spec.ts'].inputs).toContainEqual({
+          input: 'production',
+          projects: ['feature'],
+          always: true,
+        });
+        const ignored = targets['test-ci--generated/ignored.spec.ts'];
+        expect(ignored.inputs).toEqual(targets['test'].inputs);
+        expect(ignored.metadata.testFileDirectives).toBeUndefined();
+      } finally {
+        process.chdir(originalCwd);
+      }
+    }
+  );
 
   it('should discover spec files matching the Vitest extglob default include', async () => {
     await temp.createFiles({

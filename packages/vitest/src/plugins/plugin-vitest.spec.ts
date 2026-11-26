@@ -8,20 +8,28 @@ import { createNodesV2 } from './plugin';
 import { loadViteDynamicImport } from '../utils/executor-utils';
 
 // Mock fs to provide stable test environment
-vi.mock('node:fs', async () => ({
-  ...(await vi.importActual<any>('node:fs')),
-  readdirSync: vi.fn(() => [
-    'package.json',
-    'vitest.config.ts',
-    'tsconfig.lib.json',
-  ]),
-  existsSync: vi.fn((path) => {
-    if (path.endsWith('package.json') || path.endsWith('project.json')) {
-      return true;
-    }
-    return false;
-  }),
-}));
+vi.mock('node:fs', async () => {
+  const actual = await vi.importActual<typeof import('node:fs')>('node:fs');
+  return {
+    ...actual,
+    // The mocked file index lists test files that are not on disk, and each
+    // atomized target reads its test file for directives.
+    readFileSync: vi.fn((path, ...args) =>
+      actual.existsSync(path) ? actual.readFileSync(path, ...args) : ''
+    ),
+    readdirSync: vi.fn(() => [
+      'package.json',
+      'vitest.config.ts',
+      'tsconfig.lib.json',
+    ]),
+    existsSync: vi.fn((path) => {
+      if (path.endsWith('package.json') || path.endsWith('project.json')) {
+        return true;
+      }
+      return false;
+    }),
+  };
+});
 
 vi.mock('vitest/node', () => ({
   createVitest: vi.fn().mockImplementation(() => {
@@ -46,6 +54,9 @@ vi.mock('nx/src/utils/workspace-context', () => ({
   globWithWorkspaceContext: vi
     .fn()
     .mockResolvedValue(['src/test-2.ts', 'src/test-1.ts']),
+  getFilesInDirectoryUsingContext: vi
+    .fn()
+    .mockResolvedValue(['src/test-1.ts', 'src/test-2.ts']),
   hashWithWorkspaceContext: vi.fn().mockResolvedValue('hash'),
   hashMultiGlobWithWorkspaceContext: vi.fn(
     (_workspaceRoot: string, globGroups: string[][]) =>

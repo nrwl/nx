@@ -115,6 +115,9 @@ exports[`@nx/vitest > root project > should create nodes with ci target name 1`]
                   "dependentTasksOutputFiles": "**/*.js",
                   "transitive": true,
                 },
+                {
+                  "dependentTasksOutputFiles": "**/*",
+                },
               ],
               "metadata": {
                 "description": "Run Vitest Tests in CI",
@@ -176,6 +179,9 @@ exports[`@nx/vitest > root project > should create nodes with ci target name 1`]
                 "technologies": [
                   "vitest",
                 ],
+                "testFileDirectives": {
+                  "file": "src/test-1.ts",
+                },
               },
               "options": {
                 "cwd": ".",
@@ -225,6 +231,9 @@ exports[`@nx/vitest > root project > should create nodes with ci target name 1`]
                 "technologies": [
                   "vitest",
                 ],
+                "testFileDirectives": {
+                  "file": "src/test-2.ts",
+                },
               },
               "options": {
                 "cwd": ".",
@@ -339,6 +348,9 @@ exports[`@nx/vitest > root project > should create nodes with ci target name and
                   "dependentTasksOutputFiles": "**/*.js",
                   "transitive": true,
                 },
+                {
+                  "dependentTasksOutputFiles": "**/*",
+                },
               ],
               "metadata": {
                 "description": "Run Vitest Tests in CI",
@@ -400,6 +412,9 @@ exports[`@nx/vitest > root project > should create nodes with ci target name and
                 "technologies": [
                   "vitest",
                 ],
+                "testFileDirectives": {
+                  "file": "src/test-1.ts",
+                },
               },
               "options": {
                 "cwd": ".",
@@ -449,6 +464,9 @@ exports[`@nx/vitest > root project > should create nodes with ci target name and
                 "technologies": [
                   "vitest",
                 ],
+                "testFileDirectives": {
+                  "file": "src/test-2.ts",
+                },
               },
               "options": {
                 "cwd": ".",
