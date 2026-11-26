@@ -3674,6 +3674,45 @@ mod always_tests {
     }
 
     #[test]
+    fn a_target_that_excludes_the_folder_state_never_plans_it() {
+        let planner = planner(
+            vec![
+                ("e2e:e2e", vec![fileset("{projectRoot}/**/*", false)]),
+                ("e2e:lint", vec![fileset("{projectRoot}/**/*", false)]),
+            ],
+            &[],
+        );
+        let (_dir, configurations) = ultracache_configurations(&[
+            ("e2e:e2e", &["libs/e2e/src/app.spec.ts"]),
+            ("e2e:lint", &["libs/e2e/src/app.spec.ts"]),
+        ]);
+        let configurations = configurations.with_project_folder_state(true);
+        let mut graph = task_graph(&[("e2e:e2e", &[]), ("e2e:lint", &[])], &[]);
+        graph.tasks.get_mut("e2e:lint").unwrap().ultracache =
+            Some(crate::native::tasks::types::TaskUltracacheSettings {
+                exclude_folder_state_hash: Some(true),
+                ..Default::default()
+            });
+        let plans = planner
+            .get_plans_materialized(
+                vec!["e2e:e2e", "e2e:lint"],
+                graph,
+                Some(&configurations),
+                &[],
+            )
+            .unwrap();
+        let folder_state = HashInstruction::OwnerFolderState("libs/e2e".into());
+        assert!(plans["e2e:e2e"].contains(&folder_state));
+        assert!(!plans["e2e:lint"].contains(&folder_state));
+        // The recording still applies.
+        assert!(
+            plans["e2e:lint"]
+                .iter()
+                .any(|i| matches!(i, HashInstruction::UltracacheConfiguration(_)))
+        );
+    }
+
+    #[test]
     fn every_import_path_plans_the_folder_state_alike() {
         let plan = |import: UltracacheImport| {
             let planner = planner(

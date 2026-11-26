@@ -1522,6 +1522,13 @@ export interface TaskUltracacheSettings {
    * `.nxignore` exclude, such as dependency outputs. Defaults to `true`.
    */
   includeUnstableFiles?: boolean
+  /**
+   * Never hash the folder state of the task's project beside its
+   * Ultracache configuration, even when Nx Cloud asks for it. For projects
+   * where files come and go without changing what the task does. Defaults
+   * to `false`.
+   */
+  excludeFolderStateHash?: boolean
 }
 
 export interface TerminalOutputRecord {

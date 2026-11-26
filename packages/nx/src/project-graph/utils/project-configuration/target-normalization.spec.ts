@@ -300,6 +300,21 @@ describe('validateAndNormalizeProjectRootMap', () => {
       }
     );
 
+    it.each([true, false, undefined])(
+      'should accept excludeFolderStateHash %s',
+      (excludeFolderStateHash) => {
+        expect(ultracacheErrors({ excludeFolderStateHash })).toEqual([]);
+      }
+    );
+
+    it('should reject a non-boolean excludeFolderStateHash', () => {
+      expect(ultracacheErrors({ excludeFolderStateHash: 'true' })).toEqual([
+        expect.stringMatching(
+          /"ultracache.excludeFolderStateHash" for target "build" in project "a-ui" must be a boolean/
+        ),
+      ]);
+    });
+
     it('should reject a key that is not an ultracache option', () => {
       expect(ultracacheErrors({ ignoredReads: ['tmp/**'] })).toEqual([
         expect.stringMatching(

@@ -86,6 +86,11 @@ pub struct TaskUltracacheSettings {
     /// Hash recorded reads of unstable files too: those `.gitignore` or
     /// `.nxignore` exclude, such as dependency outputs. Defaults to `true`.
     pub include_unstable_files: Option<bool>,
+    /// Never hash the folder state of the task's project beside its
+    /// Ultracache configuration, even when Nx Cloud asks for it. For projects
+    /// where files come and go without changing what the task does. Defaults
+    /// to `false`.
+    pub exclude_folder_state_hash: Option<bool>,
 }
 
 impl Task {
