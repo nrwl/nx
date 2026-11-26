@@ -15,7 +15,7 @@ export {
 //   2: edges are objects (`{ id, waitFor?, inputs? }`)
 export const TASK_GRAPH_FORMAT = 2;
 
-// Recorded reads match tracked files only, unless a target sets
-// `ultracache.includeUnstableFiles`. Nx Cloud keeps ignored files out of the
-// configurations it builds for an nx that exports it.
-export const ULTRACACHE_HASHES_TRACKED_READS_ONLY = true;
+// What an unset `ultracache.includeUnstableFiles` means. An nx that exports
+// it matches recorded reads against tracked files only for a target that
+// sets the option to `false`.
+export const ULTRACACHE_INCLUDES_UNSTABLE_FILES_BY_DEFAULT = true;

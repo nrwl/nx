@@ -258,9 +258,9 @@ fn configuration_digest(ultracache: Option<&TaskUltracacheSettings>) -> String {
         }) => (
             ignore_reads.clone().unwrap_or_default(),
             collect_stats.unwrap_or(false),
-            include_unstable_files.unwrap_or(false),
+            include_unstable_files.unwrap_or(true),
         ),
-        None => (Vec::new(), false, false),
+        None => (Vec::new(), false, true),
     };
     reads.sort();
     reads.dedup();
@@ -271,7 +271,7 @@ fn configuration_digest(ultracache: Option<&TaskUltracacheSettings>) -> String {
     }
     let mut hasher = Xxh3::new();
     hasher.update(base.as_bytes());
-    // Only `true` is hashed, so unset and `false` keep their existing markers.
+    // Only `true` is hashed, so `false` keeps the marker of a tracked-only recording.
     // 0xFF never occurs in UTF-8, so no glob can produce this tag.
     if collect_stats {
         hasher.update(b"\xFFcollectStats\0");
@@ -375,7 +375,7 @@ fn reads_dependency_outputs(task_id: &str, files: &SharedInputs, task_graph: &Ta
     false
 }
 
-/// Tasks with `includeUnstableFiles` whose Ultracache configuration read another
+/// Tasks hashing unstable files whose Ultracache configuration read another
 /// task's outputs: they hash after their producers ran, because those files
 /// only exist then. Any other task hashes its tracked reads alone. Needs
 /// no project graph, so the client can call it before the first hashing wave
@@ -395,7 +395,8 @@ pub fn get_ultracache_deferred_task_ids(
         .filter(|(_, task)| {
             task.ultracache
                 .as_ref()
-                .is_some_and(|ultracache| ultracache.include_unstable_files == Some(true))
+                .and_then(|ultracache| ultracache.include_unstable_files)
+                .unwrap_or(true)
         })
         .map(|(task_id, _)| task_id)
         .filter(|task_id| {

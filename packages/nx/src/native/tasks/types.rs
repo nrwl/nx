@@ -85,7 +85,7 @@ pub struct TaskUltracacheSettings {
     /// pattern to a directory instead of leading with `**`.
     pub ignore_writes: Option<Vec<String>>,
     /// Hash recorded reads of unstable files too: those `.gitignore` or
-    /// `.nxignore` exclude, such as dependency outputs. Defaults to `false`.
+    /// `.nxignore` exclude, such as dependency outputs. Defaults to `true`.
     pub include_unstable_files: Option<bool>,
 }
 
@@ -226,8 +226,8 @@ pub enum HashInstruction {
     ProjectFileSet(String, Vec<String>),
     /// Workspace-relative globs expanded against the disk, so gitignored and
     /// generated files count: a project's `includeIgnored` globs, or the
-    /// reads in the Ultracache configuration of a task whose target sets
-    /// `includeUnstableFiles`. The project is not part of
+    /// reads in the Ultracache configuration of a task whose target leaves
+    /// `includeUnstableFiles` on. The project is not part of
     /// it: the same globs read the same files wherever they were declared.
     /// `project_roots` keep each glob out of projects nested below the one it
     /// reads from; they follow from the globs, see `scope_roots`.

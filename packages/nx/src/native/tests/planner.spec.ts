@@ -2132,6 +2132,15 @@ describe('task planner', () => {
     });
   });
   describe('ultracache configurations', () => {
+    // Tracked reads only, unless a test turns unstable files back on.
+    function excludeUnstableFiles(
+      taskGraph: ReturnType<typeof createTaskGraph>
+    ) {
+      for (const task of Object.values(taskGraph.tasks)) {
+        task.ultracache = { includeUnstableFiles: false };
+      }
+    }
+
     function fixture(
       opts: {
         cyclic?: boolean;
@@ -2194,6 +2203,7 @@ describe('task planner', () => {
         undefined,
         {}
       );
+      excludeUnstableFiles(taskGraph);
       const nxJson = {
         namedInputs: { prod: ['default', '!{projectRoot}/**/*.spec.ts'] },
       } as any;
@@ -2680,6 +2690,7 @@ describe('task planner', () => {
           undefined,
           {}
         );
+        excludeUnstableFiles(taskGraph);
         const planner = new HashPlanner(
           {} as any,
           transferProjectGraph(toRustProjectGraph(projectGraph))
@@ -2960,12 +2971,12 @@ describe('task planner', () => {
       expect(markerWith({ ignoreReads: [] })).toBe(none);
       // Recorded writes are never used, so their exclusions don't count.
       expect(markerWith({ ignoreWrites: ['tmp/**', 'cache/**'] })).toBe(none);
-      // It decides whether the recording holds unstable files.
-      expect(markerWith({ includeUnstableFiles: true })).not.toBe(none);
-      expect(markerWith({ includeUnstableFiles: false })).toBe(none);
+      // It decides whether the recording holds unstable files, as it does by default.
+      expect(markerWith({ includeUnstableFiles: true })).toBe(none);
+      expect(markerWith({ includeUnstableFiles: false })).not.toBe(none);
     });
 
-    it("leaves a task that read a producer's outputs undeferred by default", () => {
+    it("leaves a task that read a producer's outputs undeferred when the target excludes unstable files", () => {
       const { taskGraph } = fixture();
       const configurations = configurationsFor({
         'parent:build': {
@@ -2977,29 +2988,31 @@ describe('task planner', () => {
       );
     });
 
-    it("hashes reads of a producer task's outputs from disk and defers the task when the target includes unstable files", () => {
-      const { planner, taskGraph } = fixture();
-      taskGraph.tasks['parent:build'].ultracache = {
-        includeUnstableFiles: true,
-      };
-      const configurations = configurationsFor({
-        'parent:build': {
-          inputs: ['dist/libs/child/index.js'],
-        },
-      });
-      const plan = planner.getPlans(
-        ['parent:build'],
-        taskGraph,
-        configurations
-      )['parent:build'];
-      expect(plan).toContain('files:[dist/libs/child/index.js]');
-      expect(plan).not.toContainEqual(
-        expect.stringMatching(/^dist\/libs\/child\/index\.js:/)
-      );
-      expect(getUltracacheDeferredTaskIds(configurations, taskGraph)).toEqual([
-        'parent:build',
-      ]);
-    });
+    // Unset follows the default.
+    it.each([undefined, {}, { includeUnstableFiles: true }])(
+      "hashes reads of a producer task's outputs from disk and defers the task when its ultracache is %j",
+      (ultracache) => {
+        const { planner, taskGraph } = fixture();
+        taskGraph.tasks['parent:build'].ultracache = ultracache;
+        const configurations = configurationsFor({
+          'parent:build': {
+            inputs: ['dist/libs/child/index.js'],
+          },
+        });
+        const plan = planner.getPlans(
+          ['parent:build'],
+          taskGraph,
+          configurations
+        )['parent:build'];
+        expect(plan).toContain('files:[dist/libs/child/index.js]');
+        expect(plan).not.toContainEqual(
+          expect.stringMatching(/^dist\/libs\/child\/index\.js:/)
+        );
+        expect(getUltracacheDeferredTaskIds(configurations, taskGraph)).toEqual(
+          ['parent:build']
+        );
+      }
+    );
 
     it('reports eligibility the same way it plans', () => {
       const { planner, taskGraph } = fixture();
@@ -3185,6 +3198,7 @@ describe('task planner', () => {
         undefined,
         {}
       );
+      excludeUnstableFiles(taskGraph);
       const planner = new HashPlanner(
         {} as any,
         transferProjectGraph(toRustProjectGraph(projectGraph))

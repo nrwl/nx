@@ -1509,10 +1509,8 @@ describe('native task hasher', () => {
       workspaceFiles.rustReferences,
       { selectivelyHashTsConfig: false }
     );
-    if (includeUnstableFiles) {
-      for (const task of Object.values(taskGraph.tasks)) {
-        task.ultracache = { includeUnstableFiles: true };
-      }
+    for (const task of Object.values(taskGraph.tasks)) {
+      task.ultracache = { includeUnstableFiles };
     }
     return { taskGraph, impl };
   }
@@ -1822,7 +1820,7 @@ describe('native task hasher', () => {
     expect(hash.inputs.files).toContain(file);
   });
 
-  it('hashes only the tracked files an Ultracache configuration matches by default', async () => {
+  it('hashes only the tracked files an Ultracache configuration matches when the target excludes unstable files', async () => {
     await tempFs.createFiles({
       '.gitignore': 'libs/child/dist/\n',
       'libs/child/src/kept.ts': 'tracked',
