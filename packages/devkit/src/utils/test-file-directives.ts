@@ -17,7 +17,9 @@ export type TestFileDirective = 'depends-on' | 'ignore-server-inputs';
  * no projects, has a value it does not take, or is not supported
  * (`ignoreServerInputs: false`) is skipped with a warning. The target's
  * metadata records the file, and `ignore-server-inputs` when supported, for
- * `recordedTestFile` and `appliesTestFileDirective`.
+ * `recordedTestFile` and `appliesTestFileDirective`. A file that no longer
+ * exists, such as one deleted after the file index listed it, leaves `target`
+ * unchanged.
  */
 export function applyTestFileDirectives(
   target: TargetConfiguration,
@@ -25,9 +27,16 @@ export function applyTestFileDirectives(
   file: string,
   options: { ignoreServerInputs: boolean }
 ): TargetConfiguration {
-  const directives = parseNxDirectives(
-    readFileSync(join(workspaceRoot, file), 'utf-8')
-  );
+  let content: string;
+  try {
+    content = readFileSync(join(workspaceRoot, file), 'utf-8');
+  } catch (e) {
+    if (e?.code === 'ENOENT') {
+      return target;
+    }
+    throw e;
+  }
+  const directives = parseNxDirectives(content);
   let result: TargetConfiguration = {
     ...target,
     metadata: {
@@ -72,8 +81,7 @@ export function applyTestFileDirectives(
 }
 
 /**
- * The workspace-relative test file that `target` runs, when
- * `applyTestFileDirectives` returned it.
+ * The workspace-relative test file that `target`'s metadata records.
  */
 export function recordedTestFile(
   target: TargetConfiguration
@@ -82,9 +90,9 @@ export function recordedTestFile(
 }
 
 /**
- * Whether `target` applies `directive` to its test file. Every target that
- * `applyTestFileDirectives` returned applies `depends-on`, and any other
- * target applies neither.
+ * Whether `target` applies `directive` to its test file. `depends-on` applies
+ * to every target whose metadata records its test file, and
+ * `ignore-server-inputs` only to one whose metadata marks it as applied.
  */
 export function appliesTestFileDirective(
   target: TargetConfiguration,
