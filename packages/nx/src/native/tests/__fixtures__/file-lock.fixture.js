@@ -1,5 +1,4 @@
 const { FileLock } = require('../../native-bindings.js');
-const ora = require('ora');
 const tmp = require('os').tmpdir();
 
 (async () => {
@@ -8,9 +7,7 @@ const tmp = require('os').tmpdir();
   );
   console.log(lock.locked ? 'found lock held' : 'found lock free');
   if (lock.locked) {
-    const s = ora('Waiting for lock').start();
     await lock.wait();
-    s.stop();
     console.log('waited for lock');
   } else {
     await lock.lock();

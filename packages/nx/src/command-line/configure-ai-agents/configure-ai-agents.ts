@@ -26,7 +26,7 @@ import { nxVersion } from '../../utils/versions';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { ConfigureAiAgentsOptions } from './command-object';
 import { handleImport } from '../../utils/handle-import';
-import ora = require('ora');
+import { Spinner } from '../../utils/spinner';
 
 export async function configureAiAgentsHandler(
   args: ConfigureAiAgentsOptions,
@@ -256,7 +256,7 @@ export async function configureAiAgentsHandlerImpl(
       : 'All configured AI agents are up to date';
 
     if (agentsToConfig.length > 0) {
-      const configSpinner = ora(`Configuring agent(s)...`).start();
+      const configSpinner = new Spinner(`Configuring agent(s)...`).start();
       try {
         await configureAgents(agentsToConfig, workspaceRoot, false);
         configSpinner.stop();
@@ -365,7 +365,7 @@ export async function configureAiAgentsHandlerImpl(
     process.exit(0);
   }
 
-  const configSpinner = ora(`Configuring agent(s)...`).start();
+  const configSpinner = new Spinner(`Configuring agent(s)...`).start();
   try {
     await configureAgents(selectedAgents, workspaceRoot, false);
 
