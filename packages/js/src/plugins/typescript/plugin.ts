@@ -99,7 +99,10 @@ interface NormalizedPluginOptions {
   verboseOutput: boolean;
 }
 
-type TscProjectResult = Pick<ProjectConfiguration, 'targets'>;
+type TscProjectResult = Pick<ProjectConfiguration, 'targets'> & {
+  /** Named inputs the targets read from other projects, by project root. */
+  referencedNamedInputs?: Record<string, ProjectConfiguration['namedInputs']>;
+};
 
 type TsconfigCacheData = {
   data: ParsedTsconfigData;
@@ -169,6 +172,8 @@ type ReferenceExpansion = {
 
 type ReferenceExpansionCache = Map<string, Map<string, ReferenceExpansion>>;
 
+type ReferenceEdge = ReferenceExpansionEntry & { isReference: boolean };
+
 type InvocationCache = {
   fileHashes: Record<string, string>;
   rawFiles: Record<string, string | undefined>;
@@ -179,6 +184,19 @@ type InvocationCache = {
   configContexts: Map<string, ConfigContext>;
   referenceExpansionCache: ReferenceExpansionCache;
   siblingFiles: Map<string, string[]>;
+  /** Project root -> whether this invocation infers a build target for it. */
+  inferredBuildTargets: Map<string, boolean>;
+  configFileSet?: Set<string>;
+  /** Every config file this plugin entry matched, hash-checked on load. */
+  entryConfigFiles: Set<string>;
+  /** Roots of the projects this entry creates. */
+  entryProjectRoots?: Set<string>;
+  /** Config path -> the configs it extends or references. */
+  referenceEdges: Map<string, ReferenceEdge[]>;
+  /** Configs outside this entry, hash-checked this run -> whether they exist. */
+  checkedConfigs: Map<string, boolean>;
+  /** Config path -> it and the configs it extends, with their file hashes. */
+  configChains: Map<string, Map<string, string>>;
 };
 
 // Module-level cache store — each invocation gets a unique Symbol key
@@ -310,6 +328,11 @@ export const createNodesV2: CreateNodes<TscPluginOptions> = [
       projectContexts: new Map(),
       configContexts: new Map(),
       referenceExpansionCache: new Map(),
+      inferredBuildTargets: new Map(),
+      entryConfigFiles: new Set(configFilePaths),
+      referenceEdges: new Map(),
+      checkedConfigs: new Map(),
+      configChains: new Map(),
       siblingFiles: new Map(),
     });
     const cache = cacheStore.get(cacheKey)!;
@@ -389,10 +412,16 @@ export const createNodesV2: CreateNodes<TscPluginOptions> = [
             typescriptAliases
           );
 
-          const { targets } = targetsCache[targetsCacheKey];
+          const { targets, referencedNamedInputs } =
+            targetsCache[targetsCacheKey];
 
           return {
             projects: {
+              ...Object.fromEntries(
+                Object.entries(referencedNamedInputs ?? {}).map(
+                  ([root, namedInputs]) => [root, { namedInputs }]
+                )
+              ),
               [projectRoot]: {
                 targets,
               },
@@ -488,6 +517,73 @@ async function resolveValidConfigFilesAndHashes(
     );
   }
 
+  cache.entryProjectRoots = new Set(projectRoots);
+
+  // Inputs follow the whole reference chain: each config in it, and for a
+  // build target whether the project owning it gets a build target of its
+  // own, known only once every config file is validated.
+  const buildConfigName = options.build ? options.build.configName : undefined;
+  validConfigFilePaths.forEach((configFilePath, idx) => {
+    const config = getConfigContext(
+      join(context.workspaceRoot, configFilePath),
+      context.workspaceRoot,
+      cache
+    );
+    const tsConfig = retrieveTsConfigFromCache(
+      config.absolutePath,
+      context.workspaceRoot,
+      cache
+    );
+    const references = getCheckedReferences(
+      getDirectExternalReferences(
+        tsConfig,
+        resolveInternalProjectReferences(
+          tsConfig,
+          context.workspaceRoot,
+          config.project,
+          cache
+        ),
+        context.workspaceRoot,
+        config.project,
+        cache
+      ),
+      context.workspaceRoot,
+      cache
+    );
+    if (!references.size) {
+      return;
+    }
+    const referencedProjectRoots = new Set(
+      Array.from(references.values(), (ownerProject) => ownerProject.root)
+    );
+    const chainHashes = new Map<string, string>();
+    for (const configPath of references.keys()) {
+      getConfigChain(configPath, context.workspaceRoot, cache).forEach(
+        (hash, file) => chainHashes.set(file, hash)
+      );
+    }
+    hashes[idx] = hashArray([
+      hashes[idx],
+      ...Array.from(chainHashes.keys())
+        .sort()
+        .map((file) => chainHashes.get(file)),
+      ...(config.basename === buildConfigName
+        ? Array.from(referencedProjectRoots)
+            .sort()
+            .map(
+              (root) =>
+                `${root}:${willInferBuildTarget(
+                  root,
+                  options,
+                  validConfigFilePaths,
+                  context.workspaceRoot,
+                  cache
+                )}:${cache.entryProjectRoots.has(normalizePath(root))}`
+            )
+        : []),
+    ]);
+  });
+
   return { configFilePaths: validConfigFilePaths, hashes, projectRoots };
 }
 
@@ -498,8 +594,13 @@ async function resolveValidConfigFilesAndHashes(
  *   - config files extended by the current config file (recursively up to the root config file)
  *   - referenced config files that are internal to the owning Nx project of the current config file,
  *     or is a shallow external reference of the owning Nx project
+ *   - every referenced config file in the external reference chain and the config files
+ *     each extends (added by `resolveValidConfigFilesAndHashes`)
  *   - lock file
  *   - project's package.json
+ * - for a build config, whether each project in that chain gets a build target,
+ *   and whether this plugin entry creates it (added by
+ *   `resolveValidConfigFilesAndHashes`)
  * - hash of the plugin options
  * - current config file path
  */
@@ -608,8 +709,9 @@ function buildTscTargets(
   pmc: ReturnType<typeof getPackageManagerCommand>,
   isUsingTsSolutionSetup: boolean,
   typescriptAliases: string[]
-) {
+): TscProjectResult {
   const targets: Record<string, TargetConfiguration> = {};
+  const referencedNamedInputs: TscProjectResult['referencedNamedInputs'] = {};
   const namedInputs = getNamedInputs(config.project.root, context);
   const tsConfig = retrieveTsConfigFromCache(
     config.absolutePath,
@@ -666,27 +768,17 @@ function buildTscTargets(
       if (options.build && targets[options.build.targetName]) {
         // we already processed and have a build target
         buildTargetName = options.build.targetName;
-      } else if (options.build) {
-        // check if the project will have a build target
-        const buildConfigPath = joinPathFragments(
+      } else if (
+        options.build &&
+        willInferBuildTarget(
           config.project.root,
-          options.build.configName
-        );
-        if (
-          configFiles.some((f) => f === buildConfigPath) &&
-          (options.build.skipBuildCheck ||
-            isValidPackageJsonBuildConfig(
-              retrieveTsConfigFromCache(
-                buildConfigPath,
-                context.workspaceRoot,
-                cache
-              ),
-              context.workspaceRoot,
-              config.project.root
-            ))
-        ) {
-          buildTargetName = options.build.targetName;
-        }
+          options,
+          configFiles,
+          context.workspaceRoot,
+          cache
+        )
+      ) {
+        buildTargetName = options.build.targetName;
       }
 
       const target = createTypecheckTarget({
@@ -764,7 +856,16 @@ function buildTscTargets(
         tsConfig,
         internalProjectReferences,
         context.workspaceRoot,
-        cache
+        cache,
+        (projectRoot) =>
+          willInferBuildTarget(
+            projectRoot,
+            options,
+            configFiles,
+            context.workspaceRoot,
+            cache
+          ),
+        referencedNamedInputs
       ),
       outputs: getOutputs(
         config,
@@ -799,7 +900,9 @@ function buildTscTargets(
     );
   }
 
-  return { targets };
+  return Object.keys(referencedNamedInputs).length
+    ? { targets, referencedNamedInputs }
+    : { targets };
 }
 
 /**
@@ -878,13 +981,66 @@ function readTargets(
   }
 }
 
+const PACKAGE_JSON_RESOLUTION_FIELDS = [
+  'name',
+  'type',
+  'exports',
+  'imports',
+  'main',
+  'module',
+  'types',
+  'typings',
+  'typesVersions',
+];
+
+/**
+ * Whether this plugin invocation infers a build target for the project.
+ * Another plugin, or another entry of this one, may still give it one.
+ */
+function willInferBuildTarget(
+  projectRoot: string,
+  options: NormalizedPluginOptions,
+  configFiles: readonly string[],
+  workspaceRoot: string,
+  cache: InvocationCache
+): boolean {
+  if (!options.build) {
+    return false;
+  }
+  const known = cache.inferredBuildTargets.get(projectRoot);
+  if (known !== undefined) {
+    return known;
+  }
+  // Asked once per referenced project of every config, so not a scan each time.
+  cache.configFileSet ??= new Set(configFiles);
+  const buildConfigPath = joinPathFragments(
+    projectRoot,
+    options.build.configName
+  );
+  const inferred =
+    cache.configFileSet.has(buildConfigPath) &&
+    (options.build.skipBuildCheck ||
+      isValidPackageJsonBuildConfig(
+        retrieveTsConfigFromCache(buildConfigPath, workspaceRoot, cache),
+        workspaceRoot,
+        projectRoot
+      ));
+  cache.inferredBuildTargets.set(projectRoot, inferred);
+  return inferred;
+}
+
 function getInputs(
   namedInputs: NxJsonConfiguration['namedInputs'],
   config: ConfigContext,
   tsConfig: ParsedTsconfigData,
   internalProjectReferences: Record<string, ParsedTsconfigData>,
   workspaceRoot: string,
-  cache: InvocationCache
+  cache: InvocationCache,
+  // Set for a build target: says whether a referenced project is built by a
+  // task of its own. `tsc --build` compiles the others from their sources.
+  isBuiltProject?: (projectRoot: string) => boolean,
+  // Receives the named inputs the returned inputs read from other projects.
+  referencedNamedInputs?: TscProjectResult['referencedNamedInputs']
 ): TargetConfiguration['inputs'] {
   const configFiles = new Set<string>();
   // TODO(leo): temporary disable external dependencies until we support hashing
@@ -942,23 +1098,28 @@ function getInputs(
   // checking its last component, so specs like "." and ".." resolve to a
   // directory name first.
   // https://github.com/microsoft/TypeScript/blob/19b777260b26aac5707b1efd34202054164d4a9d/src/compiler/utilities.ts#L9577-L9585
-  const isImplicitGlobSpec = (spec: string): boolean =>
-    !/[.*?]/.test(basename(resolve(absoluteProjectRoot, spec)));
+  const isImplicitGlobSpec = (
+    spec: string,
+    baseDir = absoluteProjectRoot
+  ): boolean => !/[.*?]/.test(basename(resolve(baseDir, spec)));
 
-  const normalizeInput = (
-    input: string,
-    config: ParsedTsconfigData
-  ): string[] => {
+  const getExtensions = (config: ParsedTsconfigData): Extension[] => {
     const extensions = config.options.allowJs
       ? [...allSupportedExtensions]
       : [...supportedTSExtensions];
     if (config.options.resolveJsonModule) {
       extensions.push(ts.Extension.Json);
     }
+    return extensions;
+  };
 
+  const normalizeInput = (
+    input: string,
+    config: ParsedTsconfigData
+  ): string[] => {
     // An "includes" path "foo" is implicitly a glob "foo/**/*"
     if (isImplicitGlobSpec(input)) {
-      return extensions.map((ext) => `${input}/**/*${ext}`);
+      return getExtensions(config).map((ext) => `${input}/**/*${ext}`);
     }
 
     return [input];
@@ -1001,46 +1162,12 @@ function getInputs(
           );
         }
       });
-      const normalize = (p: string) => (p.startsWith('./') ? p.slice(2) : p);
-      // Static (non-glob) prefix of a spec, used for subtree coverage checks.
-      const staticPrefix = (p: string): string => {
-        const segments = normalize(p).split('/');
-        const firstGlobSegment = segments.findIndex((s) => /[*?]/.test(s));
-        return firstGlobSegment === -1
-          ? segments.join('/')
-          : segments.slice(0, firstGlobSegment).join('/');
-      };
-      // A non-glob include spec (an implicit directory glob like "." or "src",
-      // or a literal file path) covers an exclude spec if the exclude's static
-      // prefix falls within the include's subtree.
-      const includeCoversExclude = (
-        includePath: string,
-        excludePath: string
-      ): boolean => {
-        if (/[*?]/.test(includePath)) {
-          return false;
-        }
-        const rel = relative(
-          resolve(absoluteProjectRoot, normalize(includePath)),
-          resolve(absoluteProjectRoot, staticPrefix(excludePath))
-        );
-        return !rel.startsWith('..') && !isAbsolute(rel);
-      };
       tsconfig.raw.exclude.forEach((e: string) => {
         const excludePath = substituteConfigDir(e);
-        const normalizedExclude = normalize(excludePath);
-        const excludeMatcher = getOrCreateMatcher(normalizedExclude);
-
         if (
-          !otherFilesInclude.some((includePath) => {
-            const normalizedInclude = normalize(includePath);
-            const includeMatcher = getOrCreateMatcher(normalizedInclude);
-            return (
-              excludeMatcher(normalizedInclude) ||
-              includeMatcher(normalizedExclude) ||
-              includeCoversExclude(includePath, excludePath)
-            );
-          })
+          !otherFilesInclude.some((includePath) =>
+            excludeOverlapsInclude(includePath, excludePath, getOrCreateMatcher)
+          )
         ) {
           // TS treats an implicit-glob exclude like "dist" as excluding the
           // whole subtree, so emit it as "dist/**/*".
@@ -1106,14 +1233,146 @@ function getInputs(
     dependencies: true,
   });
 
-  const externalRefPatterns = getExternalProjectReferenceTsconfigPatterns(
+  const externalRefs = getExternalProjectReferences(
     tsConfig,
     internalProjectReferences,
     workspaceRoot,
     config.project,
     cache
   );
-  inputs.push(...externalRefPatterns);
+  inputs.push(...externalRefs.tsconfigPatterns);
+
+  // TS resolves an import of a referenced project through these fields of its
+  // package.json. The rest of the file, such as its version, changes nothing.
+  const referencedProjects = new Set<string>();
+  for (const { ownerProject } of externalRefs.references) {
+    if (
+      ownerProject.normalized === config.project.normalized ||
+      referencedProjects.has(ownerProject.root)
+    ) {
+      continue;
+    }
+    referencedProjects.add(ownerProject.root);
+    // Not conditional on the file existing: one added later must count.
+    inputs.push({
+      json: `{workspaceRoot}/${escapeGlob(
+        joinPathFragments(ownerProject.root, 'package.json')
+      )}`,
+      fields: [...PACKAGE_JSON_RESOLUTION_FIELDS],
+      always: true,
+    });
+  }
+
+  if (isBuiltProject) {
+    // No task emits the declarations of a referenced project that is not
+    // built, so the `dependentTasksOutputFiles` input above never sees them.
+    // `tsc --build` compiles that project itself, so its sources are inputs.
+    // `always` keeps them in the hash when an Ultracache recording, made
+    // while the declarations happened to exist, read none of these sources.
+    const sourceInputs = new Map<
+      string,
+      NonNullable<TargetConfiguration['inputs']>[number]
+    >();
+    const addSourceInput = (
+      input: NonNullable<TargetConfiguration['inputs']>[number]
+    ) => sourceInputs.set(JSON.stringify(input), input);
+    for (const ref of externalRefs.references) {
+      if (
+        ref.ownerProject.normalized === config.project.normalized ||
+        isBuiltProject(ref.ownerProject.root)
+      ) {
+        continue;
+      }
+      const refTsConfig = retrieveTsConfigFromCache(
+        ref.configPath,
+        workspaceRoot,
+        cache
+      );
+      const refDir = dirname(ref.configPath);
+      const refRoot = ref.ownerProject.normalized;
+      const toRelativePath = (spec: string) =>
+        joinPathFragments(substituteConfigDir(spec));
+      // `*.ts` already matches `*.d.ts`, and the same for `.cts` and `.mts`.
+      const sourceExtensions = `.{${getExtensions(refTsConfig)
+        .map((ext) => ext.slice(1))
+        .filter((ext) => !ext.startsWith('d.'))
+        .join(',')}}`;
+      const sourceGlob = (dir: string) =>
+        `${widenTsSpec(joinPathFragments(dir, '**/*'))}${sourceExtensions}`;
+      type Spec = [path: string, toGlob: (path: string) => string];
+      const positives: Spec[] = [
+        // TS includes everything under the config's directory by default.
+        ...(refTsConfig.raw?.include || refTsConfig.raw?.files
+          ? []
+          : [['.', sourceGlob] as Spec]),
+        ...(refTsConfig.raw?.include ?? []).map((spec: string): Spec => [
+          toRelativePath(spec),
+          isImplicitGlobSpec(spec, refDir) ? sourceGlob : widenTsSpec,
+        ]),
+      ];
+      const negatives: Spec[] = refTsConfig.raw?.exclude
+        ? refTsConfig.raw.exclude
+            // A `?` exclude can remove a non-ASCII name TS compiles, see
+            // `widenTsSpec`.
+            .filter((spec: string) => !`${refRoot}/${spec}`.includes('?'))
+            .map((spec: string): Spec => [
+              toRelativePath(
+                isImplicitGlobSpec(spec, refDir) ? `${spec}/**/*` : spec
+              ),
+              escapeTsSpec,
+            ])
+        : // TS leaves its output directories out unless `exclude` is set.
+          [refTsConfig.options.outDir, refTsConfig.options.declarationDir]
+            .filter(Boolean)
+            .map((dir): Spec => [
+              normalizePath(relative(refDir, dir)),
+              (path) => `${escapeGlob(path)}/**/*`,
+            ]);
+      // TS reads `files` entries as literal paths, not specs.
+      const files = (refTsConfig.raw?.files ?? []).map((file: string): Spec => [
+        toRelativePath(file),
+        escapeGlob,
+      ]);
+      // Workspace filesets also match files owned by projects nested in the
+      // reference, which a project's own file set leaves out.
+      const toFileset = ([path, toGlob]: Spec) =>
+        `{workspaceRoot}/${toGlob(joinPathFragments(refRoot, path))}`;
+
+      // Only a project this entry creates is sure to carry the named input.
+      // Without it, the excludes would filter every workspace fileset of the
+      // task, so they are left out.
+      if (!cache.entryProjectRoots.has(refRoot)) {
+        for (const spec of [...positives, ...files]) {
+          addSourceInput({ fileset: toFileset(spec), always: true });
+        }
+        continue;
+      }
+      // A project-scoped input is hashed as its own group, so its negatives
+      // filter only its own files.
+      const addScopedInput = (name: string, filesets: string[]) => {
+        referencedNamedInputs[refRoot] ??= {};
+        referencedNamedInputs[refRoot][name] = filesets;
+        addSourceInput({
+          input: name,
+          projects: `directory:${escapeGlob(refRoot)}`,
+          always: true,
+        });
+      };
+      const name = `${PLUGIN_NAME}:${basename(ref.configPath)}`;
+      if (positives.length) {
+        addScopedInput(name, [
+          ...positives.map(toFileset),
+          ...negatives.map((spec) => `!${toFileset(spec)}`),
+        ]);
+      }
+      // `exclude` never removes a `files` entry, so they get an input of
+      // their own without the negatives.
+      if (files.length) {
+        addScopedInput(`${name}:files`, files.map(toFileset));
+      }
+    }
+    inputs.push(...sourceInputs.values());
+  }
 
   // inputs.push({ externalDependencies });
 
@@ -1309,6 +1568,40 @@ function getTsBuildInfoOutputPath(
   );
 }
 
+/**
+ * Whether excluding `exclude` could remove a file that `include` hashes. Both
+ * are paths or globs relative to the same directory.
+ */
+function excludeOverlapsInclude(
+  include: string,
+  exclude: string,
+  getMatcher: (pattern: string) => (path: string) => boolean
+): boolean {
+  const normalizedInclude = stripDotSlash(include);
+  const normalizedExclude = stripDotSlash(exclude);
+  if (
+    getMatcher(normalizedExclude)(normalizedInclude) ||
+    getMatcher(normalizedInclude)(normalizedExclude)
+  ) {
+    return true;
+  }
+  // A non-glob include ("src", ".", a file) covers its whole subtree.
+  if (/[*?]/.test(normalizedInclude)) {
+    return false;
+  }
+  const segments = normalizedExclude.split('/');
+  const firstGlobSegment = segments.findIndex((s) => /[*?]/.test(s));
+  const staticPrefix = (
+    firstGlobSegment === -1 ? segments : segments.slice(0, firstGlobSegment)
+  ).join('/');
+  const rel = relative(resolve(normalizedInclude), resolve(staticPrefix));
+  return !rel.startsWith('..') && !isAbsolute(rel);
+}
+
+function stripDotSlash(path: string): string {
+  return path.startsWith('./') ? path.slice(2) : path;
+}
+
 function pathToInputOrOutput(
   path: string,
   workspaceRoot: string,
@@ -1353,11 +1646,31 @@ function tsSpecToInput(
     workspaceRoot,
     project
   );
-  const escaped = relativePath
+  const escaped = escapeTsSpec(relativePath);
+  return escaped ? `${root}/${escaped}` : root;
+}
+
+/** Escapes every glob character in a tsconfig spec except `*` and `?`. */
+function escapeTsSpec(spec: string): string {
+  return spec
     .split(/([*?])/)
     .map((part, i) => (i % 2 ? part : escapeGlob(part)))
     .join('');
-  return escaped ? `${root}/${escaped}` : root;
+}
+
+/**
+ * Like `escapeTsSpec`, but turns each run of wildcards that holds a `?` into
+ * one `*`. Nx matches `?` against one byte and TS against one UTF-16 unit, so
+ * a `?` misses names such as `é.ts` that TS matches. One `*` matches them all
+ * without growing into a `**` that crosses directories.
+ */
+function widenTsSpec(spec: string): string {
+  return spec
+    .split(/([*?]+)/)
+    .map((part, i) =>
+      i % 2 ? (part.includes('?') ? '*' : part) : escapeGlob(part)
+    )
+    .join('');
 }
 
 function rootAndRelativePath(
@@ -1501,47 +1814,36 @@ function resolveShallowExternalProjectReferences(
 }
 
 /**
- * Collects unique tsconfig paths (relative to their project root) from the
- * project reference chain — including any `extends` chains within those refs —
- * and returns them as `^{projectRoot}/...` input patterns. We only need to
- * discover the full set of distinct relative paths.
+ * Walks the project reference chain, including any `extends` chains within
+ * those refs. `tsconfigPatterns` are the unique tsconfig paths it reaches,
+ * relative to their project root, as `^{projectRoot}/...` input patterns.
  */
-function getExternalProjectReferenceTsconfigPatterns(
+function getExternalProjectReferences(
   tsConfig: ParsedTsconfigData,
   internalProjectReferences: Record<string, ParsedTsconfigData>,
   workspaceRoot: string,
   project: ProjectContext,
   cache: InvocationCache
-): string[] {
-  const externalRefs: Record<string, ParsedTsconfigData> = {};
-
-  // Collect direct external references from the root tsconfig
-  resolveShallowExternalProjectReferences(
+): {
+  tsconfigPatterns: string[];
+  /** Every referenced tsconfig in the chain, with the project owning it. */
+  references: { configPath: string; ownerProject: ProjectContext }[];
+} {
+  const externalRefPaths = getDirectExternalReferences(
     tsConfig,
+    internalProjectReferences,
     workspaceRoot,
     project,
-    cache,
-    externalRefs
+    cache
   );
-
-  // Collect external references from internal project references
-  for (const refTsConfig of Object.values(internalProjectReferences)) {
-    resolveShallowExternalProjectReferences(
-      refTsConfig,
-      workspaceRoot,
-      project,
-      cache,
-      externalRefs
-    );
-  }
 
   // Collect unique tsconfig paths (relative to project root) from the
   // reference chain, seeded with the external refs.
   const uniqueRelPaths = new Set<string>();
   const visited = new Set<string>();
-  const worklist: { configPath: string; ownerProject: ProjectContext }[] = [];
+  const worklist: ReferenceExpansionEntry[] = [];
 
-  for (const refConfigPath of Object.keys(externalRefs)) {
+  for (const refConfigPath of externalRefPaths) {
     const refContext = getConfigContext(refConfigPath, workspaceRoot, cache);
     uniqueRelPaths.add(
       posixRelative(refContext.project.absolute, refConfigPath)
@@ -1595,9 +1897,178 @@ function getExternalProjectReferenceTsconfigPatterns(
     }
   }
 
-  return Array.from(uniqueRelPaths).map(
-    (relPath) => `^{projectRoot}/${relPath}`
+  return {
+    tsconfigPatterns: Array.from(uniqueRelPaths).map(
+      (relPath) => `^{projectRoot}/${relPath}`
+    ),
+    references: Array.from(
+      getCheckedReferences(externalRefPaths, workspaceRoot, cache),
+      ([configPath, ownerProject]) => ({
+        configPath,
+        ownerProject,
+      })
+    ),
+  };
+}
+
+/** The external configs a config and its internal references point at. */
+function getDirectExternalReferences(
+  tsConfig: ParsedTsconfigData,
+  internalProjectReferences: Record<string, ParsedTsconfigData>,
+  workspaceRoot: string,
+  project: ProjectContext,
+  cache: InvocationCache
+): string[] {
+  const externalRefs: Record<string, ParsedTsconfigData> = {};
+
+  // Collect direct external references from the root tsconfig
+  resolveShallowExternalProjectReferences(
+    tsConfig,
+    workspaceRoot,
+    project,
+    cache,
+    externalRefs
   );
+
+  // Collect external references from internal project references
+  for (const refTsConfig of Object.values(internalProjectReferences)) {
+    resolveShallowExternalProjectReferences(
+      refTsConfig,
+      workspaceRoot,
+      project,
+      cache,
+      externalRefs
+    );
+  }
+
+  return Object.keys(externalRefs);
+}
+
+/**
+ * Whether a config exists with hash-checked data. A config outside this entry
+ * may hold data from an earlier run, so it is checked on first use.
+ */
+function isCheckedConfig(
+  configPath: string,
+  workspaceRoot: string,
+  cache: InvocationCache
+): boolean {
+  const key = posixRelative(workspaceRoot, configPath);
+  if (cache.entryConfigFiles.has(key)) {
+    return true;
+  }
+  let exists = cache.checkedConfigs.get(key);
+  if (exists === undefined) {
+    exists = existsSync(configPath);
+    if (exists) {
+      readTsConfigAndCache(configPath, workspaceRoot, cache);
+    }
+    cache.checkedConfigs.set(key, exists);
+  }
+  return exists;
+}
+
+function getReferenceEdges(
+  configPath: string,
+  workspaceRoot: string,
+  cache: InvocationCache
+): ReferenceEdge[] {
+  let edges = cache.referenceEdges.get(configPath);
+  if (!edges) {
+    edges = [];
+    const addEdge = (path: string, isReference: boolean) => {
+      if (!isCheckedConfig(path, workspaceRoot, cache)) {
+        return;
+      }
+      const ownerProject = getConfigContext(path, workspaceRoot, cache).project;
+      // The consumer's own extends walk covers workspace-root configs.
+      if (isReference || (ownerProject.root && ownerProject.root !== '.')) {
+        edges.push({ configPath: path, ownerProject, isReference });
+      }
+    };
+    const tsConfig = retrieveTsConfigFromCache(
+      configPath,
+      workspaceRoot,
+      cache
+    );
+    for (const { filePath } of tsConfig.extendedConfigFiles ?? []) {
+      if (filePath) {
+        addEdge(filePath, false);
+      }
+    }
+    for (const { path } of tsConfig.projectReferences ?? []) {
+      addEdge(
+        path.endsWith('.json') ? path : join(path, 'tsconfig.json'),
+        true
+      );
+    }
+    cache.referenceEdges.set(configPath, edges);
+  }
+  return edges;
+}
+
+/**
+ * The configs that `configPaths` reference, directly or through the configs
+ * they extend or reference, with the project owning each.
+ */
+function getCheckedReferences(
+  configPaths: string[],
+  workspaceRoot: string,
+  cache: InvocationCache
+): Map<string, ProjectContext> {
+  const references = new Map<string, ProjectContext>();
+  const reached = new Set<string>();
+  const worklist: string[] = [];
+  const reach = (edge: ReferenceEdge) => {
+    if (edge.isReference && !references.has(edge.configPath)) {
+      references.set(edge.configPath, edge.ownerProject);
+    }
+    if (!reached.has(edge.configPath)) {
+      reached.add(edge.configPath);
+      worklist.push(edge.configPath);
+    }
+  };
+  for (const configPath of configPaths) {
+    if (isCheckedConfig(configPath, workspaceRoot, cache)) {
+      reach({
+        configPath,
+        ownerProject: getConfigContext(configPath, workspaceRoot, cache)
+          .project,
+        isReference: true,
+      });
+    }
+  }
+  for (let i = 0; i < worklist.length; i++) {
+    getReferenceEdges(worklist[i], workspaceRoot, cache).forEach(reach);
+  }
+  return references;
+}
+
+/**
+ * A config and the configs it extends, with their file hashes. A referenced
+ * config's merged options shape the inputs, so its extended configs count.
+ */
+function getConfigChain(
+  configPath: string,
+  workspaceRoot: string,
+  cache: InvocationCache
+): Map<string, string> {
+  let chain = cache.configChains.get(configPath);
+  if (!chain) {
+    chain = new Map();
+    for (const file of [
+      configPath,
+      ...getExtendedConfigFiles(
+        retrieveTsConfigFromCache(configPath, workspaceRoot, cache),
+        workspaceRoot,
+        cache
+      ).files,
+    ]) {
+      chain.set(file, getFileHash(file, workspaceRoot, cache));
+    }
+    cache.configChains.set(configPath, chain);
+  }
+  return chain;
 }
 
 /**

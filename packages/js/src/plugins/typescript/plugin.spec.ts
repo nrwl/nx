@@ -2217,6 +2217,36 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                         "fileset": "{projectRoot}/**/*.{d.ts,d.cts,d.mts}",
                       },
                       "^{projectRoot}/tsconfig.json",
+                      {
+                        "always": true,
+                        "fields": [
+                          "name",
+                          "type",
+                          "exports",
+                          "imports",
+                          "main",
+                          "module",
+                          "types",
+                          "typings",
+                          "typesVersions",
+                        ],
+                        "json": "{workspaceRoot}/libs/my-lib/nested-project/package.json",
+                      },
+                      {
+                        "always": true,
+                        "fields": [
+                          "name",
+                          "type",
+                          "exports",
+                          "imports",
+                          "main",
+                          "module",
+                          "types",
+                          "typings",
+                          "typesVersions",
+                        ],
+                        "json": "{workspaceRoot}/libs/other-lib/package.json",
+                      },
                     ],
                     "metadata": {
                       "description": "Runs type-checking for the project.",
@@ -3458,6 +3488,36 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                         "fileset": "{projectRoot}/**/*.{d.ts,d.cts,d.mts}",
                       },
                       "^{projectRoot}/tsconfig.json",
+                      {
+                        "always": true,
+                        "fields": [
+                          "name",
+                          "type",
+                          "exports",
+                          "imports",
+                          "main",
+                          "module",
+                          "types",
+                          "typings",
+                          "typesVersions",
+                        ],
+                        "json": "{workspaceRoot}/libs/my-lib/nested-project/package.json",
+                      },
+                      {
+                        "always": true,
+                        "fields": [
+                          "name",
+                          "type",
+                          "exports",
+                          "imports",
+                          "main",
+                          "module",
+                          "types",
+                          "typings",
+                          "typesVersions",
+                        ],
+                        "json": "{workspaceRoot}/libs/other-lib/package.json",
+                      },
                     ],
                     "metadata": {
                       "description": "Runs type-checking for the project.",
@@ -5780,7 +5840,7 @@ snapshots:
             compilerOptions: { outDir: 'dist' },
           }),
           'libs/other-lib/tsconfig.json': JSON.stringify({
-            include: ['**/*.ts'], // different pattern that should not be included because it's an external project
+            include: ['**/*.ts'], // has no build target, so `tsc --build` compiles it from these sources
           }),
           'libs/my-lib/package.json': `{"main": "dist/index.js"}`, // Should be defined so that the project is considered buildable
         });
@@ -5816,6 +5876,25 @@ snapshots:
                         "fileset": "{projectRoot}/**/*.{d.ts,d.cts,d.mts}",
                       },
                       "^{projectRoot}/tsconfig.json",
+                      {
+                        "always": true,
+                        "fields": [
+                          "name",
+                          "type",
+                          "exports",
+                          "imports",
+                          "main",
+                          "module",
+                          "types",
+                          "typings",
+                          "typesVersions",
+                        ],
+                        "json": "{workspaceRoot}/libs/other-lib/package.json",
+                      },
+                      {
+                        "always": true,
+                        "fileset": "{workspaceRoot}/libs/other-lib/**/*.ts",
+                      },
                     ],
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
@@ -5848,6 +5927,626 @@ snapshots:
             },
           }
         `);
+      });
+
+      it('should add the sources of referenced projects that have no build target', async () => {
+        configFiles = await applyFilesToTempFsAndContext(tempFs, {
+          'libs/my-lib/tsconfig.json': '{}',
+          'libs/my-lib/tsconfig.lib.json': JSON.stringify({
+            compilerOptions: { outDir: 'dist' },
+            include: ['src/**/*.ts'],
+            references: [
+              { path: '../built-lib/tsconfig.lib.json' },
+              { path: '../source-lib/tsconfig.lib.json' },
+            ],
+          }),
+          'libs/my-lib/package.json': `{"main": "dist/index.js"}`,
+          // built by its own task, so its declarations come from that task
+          'libs/built-lib/tsconfig.json': '{}',
+          'libs/built-lib/tsconfig.lib.json': JSON.stringify({
+            compilerOptions: { outDir: 'dist' },
+            include: ['src/**/*.ts'],
+          }),
+          'libs/built-lib/package.json': `{"main": "dist/index.js"}`,
+          // consumed from source: its package.json points at the sources
+          'libs/source-lib/tsconfig.json': '{}',
+          'libs/source-lib/tsconfig.lib.json': JSON.stringify({
+            compilerOptions: { outDir: 'dist' },
+            include: ['src'],
+            exclude: ['src/**/*.spec.ts', 'fixtures'],
+            references: [{ path: '../nested-source-lib' }],
+          }),
+          'libs/source-lib/package.json': `{"main": "src/index.ts"}`,
+          // reached only through source-lib, with the default include
+          'libs/nested-source-lib/tsconfig.json': JSON.stringify({
+            compilerOptions: { outDir: 'dist' },
+          }),
+          'libs/nested-source-lib/package.json': `{"main": "src/index.ts"}`,
+        });
+        const result = await invokeCreateNodesOnMatchingFiles(
+          configFiles,
+          context,
+          { typecheck: false, build: true }
+        );
+
+        expect(result.projects['libs/built-lib'].targets.build).toBeDefined();
+        expect(
+          result.projects['libs/source-lib'].targets?.build
+        ).toBeUndefined();
+        expect(
+          result.projects['libs/nested-source-lib'].targets?.build
+        ).toBeUndefined();
+        expect(result.projects['libs/my-lib'].targets.build.inputs)
+          .toMatchInlineSnapshot(`
+            [
+              "{projectRoot}/package.json",
+              "{projectRoot}/tsconfig.lib.json",
+              "{projectRoot}/src/**/*.ts",
+              {
+                "dependentTasksOutputFiles": "**/*.{d.ts,d.cts,d.mts,tsbuildinfo}",
+                "transitive": true,
+              },
+              {
+                "dependencies": true,
+                "fileset": "{projectRoot}/**/*.{d.ts,d.cts,d.mts}",
+              },
+              "^{projectRoot}/tsconfig.lib.json",
+              {
+                "always": true,
+                "fields": [
+                  "name",
+                  "type",
+                  "exports",
+                  "imports",
+                  "main",
+                  "module",
+                  "types",
+                  "typings",
+                  "typesVersions",
+                ],
+                "json": "{workspaceRoot}/libs/built-lib/package.json",
+              },
+              {
+                "always": true,
+                "fields": [
+                  "name",
+                  "type",
+                  "exports",
+                  "imports",
+                  "main",
+                  "module",
+                  "types",
+                  "typings",
+                  "typesVersions",
+                ],
+                "json": "{workspaceRoot}/libs/source-lib/package.json",
+              },
+              {
+                "always": true,
+                "fields": [
+                  "name",
+                  "type",
+                  "exports",
+                  "imports",
+                  "main",
+                  "module",
+                  "types",
+                  "typings",
+                  "typesVersions",
+                ],
+                "json": "{workspaceRoot}/libs/nested-source-lib/package.json",
+              },
+              {
+                "always": true,
+                "input": "@nx/js/typescript:tsconfig.lib.json",
+                "projects": "directory:libs/source-lib",
+              },
+              {
+                "always": true,
+                "input": "@nx/js/typescript:tsconfig.json",
+                "projects": "directory:libs/nested-source-lib",
+              },
+            ]
+          `);
+        // The built project's sources reach the hash through its build task.
+        expect(
+          result.projects['libs/my-lib'].targets.build.inputs.filter(
+            (input) =>
+              typeof input !== 'string' &&
+              'fileset' in input &&
+              input.fileset.includes('libs/built-lib')
+          )
+        ).toEqual([]);
+        expect(result.projects['libs/source-lib'].namedInputs).toEqual({
+          '@nx/js/typescript:tsconfig.lib.json': [
+            '{workspaceRoot}/libs/source-lib/src/**/*.{ts,tsx,cts,mts}',
+            '!{workspaceRoot}/libs/source-lib/src/**/*.spec.ts',
+            '!{workspaceRoot}/libs/source-lib/fixtures/**/*',
+          ],
+        });
+      });
+
+      it("should not let an unbuilt reference's excludes remove inputs other configs need", async () => {
+        configFiles = await applyFilesToTempFsAndContext(tempFs, {
+          'libs/a/tsconfig.json': '{}',
+          'libs/a/tsconfig.lib.json': JSON.stringify({
+            extends: '../b/tsconfig.shared.json',
+            compilerOptions: { outDir: 'dist' },
+            include: ['src/**/*.ts'],
+            references: [
+              { path: '../b/tsconfig.lib.json' },
+              { path: '../c/tsconfig.lib.json' },
+              { path: '../d/tsconfig.lib.json' },
+            ],
+          }),
+          'libs/a/package.json': `{"main": "dist/index.js"}`,
+          // a extends b's shared config, which b's own config excludes
+          'libs/b/tsconfig.json': '{}',
+          'libs/b/tsconfig.shared.json': JSON.stringify({
+            compilerOptions: { strict: true },
+          }),
+          'libs/b/tsconfig.lib.json': JSON.stringify({
+            compilerOptions: { outDir: 'dist' },
+            include: ['src'],
+            exclude: ['tsconfig.shared.json', 'src/**/*.spec.ts'],
+          }),
+          'libs/b/package.json': `{"main": "src/index.ts"}`,
+          // c excludes a file that d includes
+          'libs/c/tsconfig.json': '{}',
+          'libs/c/tsconfig.lib.json': JSON.stringify({
+            compilerOptions: { outDir: 'dist' },
+            include: ['src'],
+            exclude: ['../d/src/generated.ts'],
+          }),
+          'libs/c/package.json': `{"main": "src/index.ts"}`,
+          'libs/d/tsconfig.json': '{}',
+          'libs/d/tsconfig.lib.json': JSON.stringify({
+            compilerOptions: { outDir: 'dist' },
+            include: ['src'],
+          }),
+          'libs/d/package.json': `{"main": "src/index.ts"}`,
+        });
+        const result = await invokeCreateNodesOnMatchingFiles(
+          configFiles,
+          context,
+          { typecheck: false, build: true }
+        );
+
+        for (const project of ['libs/b', 'libs/c', 'libs/d']) {
+          expect(result.projects[project].targets?.build).toBeUndefined();
+        }
+        const filesets = result.projects['libs/a'].targets.build.inputs.map(
+          (input) =>
+            typeof input === 'string'
+              ? input
+              : 'fileset' in input
+                ? input.fileset
+                : undefined
+        );
+        expect(filesets).toContain(
+          '{workspaceRoot}/libs/b/tsconfig.shared.json'
+        );
+        expect(filesets).not.toContain(
+          '!{workspaceRoot}/libs/b/tsconfig.shared.json'
+        );
+        expect(filesets).not.toContain(
+          '!{workspaceRoot}/libs/d/src/generated.ts'
+        );
+        // b's excludes stay in its own input, which is hashed as its own group.
+        expect(result.projects['libs/b'].namedInputs).toEqual({
+          '@nx/js/typescript:tsconfig.lib.json': [
+            '{workspaceRoot}/libs/b/src/**/*.{ts,tsx,cts,mts}',
+            '!{workspaceRoot}/libs/b/tsconfig.shared.json',
+            '!{workspaceRoot}/libs/b/src/**/*.spec.ts',
+          ],
+        });
+      });
+
+      it('should escape the glob characters in the paths of a reference', async () => {
+        configFiles = await applyFilesToTempFsAndContext(tempFs, {
+          'libs/a/tsconfig.json': '{}',
+          'libs/a/tsconfig.lib.json': JSON.stringify({
+            compilerOptions: { outDir: 'dist' },
+            include: ['src/**/*.ts'],
+            references: [{ path: '../b(1)/tsconfig.lib.json' }],
+          }),
+          'libs/a/package.json': `{"main": "dist/index.js"}`,
+          'libs/b(1)/tsconfig.json': '{}',
+          'libs/b(1)/tsconfig.lib.json': JSON.stringify({
+            compilerOptions: { outDir: 'dist' },
+            files: ['src/[id].ts'],
+          }),
+          'libs/b(1)/package.json': `{"main": "src/[id].ts"}`,
+        });
+        const result = await invokeCreateNodesOnMatchingFiles(
+          configFiles,
+          context,
+          { typecheck: false, build: true }
+        );
+
+        const inputs = result.projects['libs/a'].targets.build.inputs;
+        expect(inputs).toContainEqual(
+          expect.objectContaining({
+            json: '{workspaceRoot}/libs/b\\(1\\)/package.json',
+          })
+        );
+        expect(inputs).toContainEqual({
+          input: '@nx/js/typescript:tsconfig.lib.json:files',
+          projects: 'directory:libs/b\\(1\\)',
+          always: true,
+        });
+        expect(result.projects['libs/b(1)'].namedInputs).toEqual({
+          '@nx/js/typescript:tsconfig.lib.json:files': [
+            '{workspaceRoot}/libs/b\\(1\\)/src/\\[id\\].ts',
+          ],
+        });
+      });
+
+      it('should infer the inputs again when a project deeper in the reference chain stops being built', async () => {
+        process.env.NX_CACHE_PROJECT_GRAPH = 'true';
+        const lib = (references: string[], main: string) => ({
+          tsconfig: JSON.stringify({
+            compilerOptions: { outDir: 'dist' },
+            include: ['src/**/*.ts'],
+            references: references.map((path) => ({ path })),
+          }),
+          packageJson: JSON.stringify({ main }),
+        });
+        const a = lib(['../b/tsconfig.lib.json'], 'dist/index.js');
+        const b = lib(['../c/tsconfig.lib.json'], 'src/index.ts');
+        const c = lib([], 'dist/index.js');
+        configFiles = await applyFilesToTempFsAndContext(tempFs, {
+          'libs/a/tsconfig.json': '{}',
+          'libs/a/tsconfig.lib.json': a.tsconfig,
+          'libs/a/package.json': a.packageJson,
+          'libs/b/tsconfig.json': '{}',
+          'libs/b/tsconfig.lib.json': b.tsconfig,
+          'libs/b/package.json': b.packageJson,
+          'libs/c/tsconfig.json': '{}',
+          'libs/c/tsconfig.lib.json': c.tsconfig,
+          'libs/c/package.json': c.packageJson,
+        });
+        const sourcesOf = async (project: string) => {
+          const result = await invokeCreateNodesOnMatchingFiles(
+            configFiles,
+            context,
+            { typecheck: false, build: true }
+          );
+          return result.projects['libs/a'].targets.build.inputs.filter(
+            (input) =>
+              typeof input !== 'string' &&
+              'projects' in input &&
+              input.projects === `directory:libs/${project}`
+          );
+        };
+
+        expect(await sourcesOf('b')).not.toEqual([]);
+        expect(await sourcesOf('c')).toEqual([]);
+
+        // `c` now points at its sources, so it no longer gets a build target.
+        await tempFs.createFiles({
+          'libs/c/package.json': JSON.stringify({ main: 'src/index.ts' }),
+        });
+        expect(await sourcesOf('c')).toEqual([
+          {
+            input: '@nx/js/typescript:tsconfig.lib.json',
+            projects: 'directory:libs/c',
+            always: true,
+          },
+        ]);
+      });
+
+      it('should infer the inputs again when a config a reference extends changes its options', async () => {
+        process.env.NX_CACHE_PROJECT_GRAPH = 'true';
+        const files = (bOptions: object) => ({
+          'libs/a/tsconfig.json': '{}',
+          'libs/a/tsconfig.lib.json': JSON.stringify({
+            compilerOptions: { outDir: 'dist' },
+            include: ['src/**/*.ts'],
+            references: [{ path: '../b/tsconfig.lib.json' }],
+          }),
+          'libs/a/package.json': `{"main": "dist/index.js"}`,
+          'libs/b/tsconfig.json': JSON.stringify({ compilerOptions: bOptions }),
+          'libs/b/tsconfig.lib.json': JSON.stringify({
+            extends: './tsconfig.json',
+            compilerOptions: { outDir: 'dist' },
+            include: ['src'],
+          }),
+          'libs/b/package.json': `{"main": "src/index.ts"}`,
+        });
+        const sourcesOfB = async () => {
+          const result = await invokeCreateNodesOnMatchingFiles(
+            configFiles,
+            context,
+            { typecheck: false, build: true }
+          );
+          return result.projects['libs/b'].namedInputs[
+            '@nx/js/typescript:tsconfig.lib.json'
+          ];
+        };
+
+        configFiles = await applyFilesToTempFsAndContext(tempFs, files({}));
+        expect(await sourcesOfB()).toEqual([
+          '{workspaceRoot}/libs/b/src/**/*.{ts,tsx,cts,mts}',
+          '!{workspaceRoot}/libs/b/dist/**/*',
+        ]);
+
+        configFiles = await applyFilesToTempFsAndContext(
+          tempFs,
+          files({ allowJs: true })
+        );
+        expect(await sourcesOfB()).toEqual([
+          '{workspaceRoot}/libs/b/src/**/*.{ts,tsx,js,jsx,cts,cjs,mts,mjs}',
+          '!{workspaceRoot}/libs/b/dist/**/*',
+        ]);
+      });
+
+      it('should add the sources of unbuilt projects that reference each other', async () => {
+        const lib = (reference: string) => ({
+          tsconfig: JSON.stringify({
+            compilerOptions: { outDir: 'dist' },
+            include: ['src/**/*.ts'],
+            references: [{ path: reference }],
+          }),
+        });
+        configFiles = await applyFilesToTempFsAndContext(tempFs, {
+          'libs/a/tsconfig.json': '{}',
+          'libs/a/tsconfig.lib.json': lib('../b/tsconfig.lib.json').tsconfig,
+          'libs/a/package.json': `{"main": "dist/index.js"}`,
+          'libs/b/tsconfig.json': '{}',
+          'libs/b/tsconfig.lib.json': lib('../c/tsconfig.lib.json').tsconfig,
+          'libs/b/package.json': `{"main": "src/index.ts"}`,
+          'libs/c/tsconfig.json': '{}',
+          'libs/c/tsconfig.lib.json': lib('../b/tsconfig.lib.json').tsconfig,
+          'libs/c/package.json': `{"main": "src/index.ts"}`,
+        });
+        const result = await invokeCreateNodesOnMatchingFiles(
+          configFiles,
+          context,
+          { typecheck: false, build: true }
+        );
+
+        expect(
+          result.projects['libs/a'].targets.build.inputs.filter(
+            (input) => typeof input !== 'string' && 'always' in input
+          )
+        ).toEqual([
+          expect.objectContaining({
+            json: '{workspaceRoot}/libs/b/package.json',
+          }),
+          expect.objectContaining({
+            json: '{workspaceRoot}/libs/c/package.json',
+          }),
+          {
+            input: '@nx/js/typescript:tsconfig.lib.json',
+            projects: 'directory:libs/b',
+            always: true,
+          },
+          {
+            input: '@nx/js/typescript:tsconfig.lib.json',
+            projects: 'directory:libs/c',
+            always: true,
+          },
+        ]);
+        for (const project of ['libs/b', 'libs/c']) {
+          expect(
+            result.projects[project].namedInputs[
+              '@nx/js/typescript:tsconfig.lib.json'
+            ]
+          ).toEqual([
+            `{workspaceRoot}/${project}/src/**/*.ts`,
+            `!{workspaceRoot}/${project}/dist/**/*`,
+          ]);
+        }
+      });
+
+      it('should read the sources from the workspace once the plugin stops creating the referenced project', async () => {
+        process.env.NX_CACHE_PROJECT_GRAPH = 'true';
+        configFiles = await applyFilesToTempFsAndContext(tempFs, {
+          'libs/a/tsconfig.json': '{}',
+          'libs/a/tsconfig.lib.json': JSON.stringify({
+            compilerOptions: { outDir: 'dist' },
+            include: ['src/**/*.ts'],
+            references: [{ path: '../b/tsconfig.lib.json' }],
+          }),
+          'libs/a/package.json': `{"main": "dist/index.js"}`,
+          'libs/b/tsconfig.json': '{}',
+          'libs/b/tsconfig.lib.json': JSON.stringify({
+            compilerOptions: { outDir: 'dist' },
+            include: ['src/**/*.ts'],
+          }),
+          'libs/b/package.json': `{"main": "src/index.ts"}`,
+        });
+        const sourcesOfB = async () => {
+          const result = await invokeCreateNodesOnMatchingFiles(
+            configFiles,
+            context,
+            { typecheck: false, build: true }
+          );
+          return result.projects['libs/a'].targets.build.inputs.filter(
+            (input) =>
+              typeof input !== 'string' &&
+              (('projects' in input && input.projects === 'directory:libs/b') ||
+                ('fileset' in input && input.fileset.includes('libs/b/')))
+          );
+        };
+
+        expect(await sourcesOfB()).toEqual([
+          {
+            input: '@nx/js/typescript:tsconfig.lib.json',
+            projects: 'directory:libs/b',
+            always: true,
+          },
+        ]);
+
+        // Without a sibling tsconfig.json, the plugin creates no project there.
+        tempFs.removeFileSync('libs/b/tsconfig.json');
+        configFiles = configFiles.filter(
+          (file) => file !== 'libs/b/tsconfig.json'
+        );
+        expect(await sourcesOfB()).toEqual([
+          { fileset: '{workspaceRoot}/libs/b/src/**/*.ts', always: true },
+        ]);
+      });
+
+      it('should read the sources of a reference this plugin entry does not match', async () => {
+        configFiles = await applyFilesToTempFsAndContext(tempFs, {
+          'libs/a/tsconfig.json': '{}',
+          'libs/a/tsconfig.lib.json': JSON.stringify({
+            compilerOptions: { outDir: 'dist' },
+            include: ['src/**/*.ts'],
+            references: [{ path: '../b/tsconfig.lib.json' }],
+          }),
+          'libs/a/package.json': `{"main": "dist/index.js"}`,
+          'libs/b/tsconfig.json': '{}',
+          'libs/b/tsconfig.lib.json': JSON.stringify({
+            compilerOptions: { outDir: 'dist' },
+            include: ['src/**/*.ts'],
+            references: [{ path: '../c/tsconfig.lib.json' }],
+          }),
+          'libs/b/package.json': `{"main": "src/index.ts"}`,
+          'libs/c/tsconfig.json': '{}',
+          'libs/c/tsconfig.lib.json': JSON.stringify({
+            compilerOptions: { outDir: 'dist' },
+            include: ['src/**/*.ts'],
+          }),
+          'libs/c/package.json': `{"main": "src/index.ts"}`,
+        });
+        // What an `exclude` on the plugin entry leaves out.
+        const result = await invokeCreateNodesOnMatchingFiles(
+          configFiles.filter((file) => file.startsWith('libs/a/')),
+          context,
+          { typecheck: false, build: true }
+        );
+
+        expect(result.projects['libs/a'].targets.build.inputs).toEqual(
+          expect.arrayContaining([
+            { fileset: '{workspaceRoot}/libs/b/src/**/*.ts', always: true },
+            { fileset: '{workspaceRoot}/libs/c/src/**/*.ts', always: true },
+          ])
+        );
+      });
+
+      it("should read a reference's files entries without its excludes", async () => {
+        configFiles = await applyFilesToTempFsAndContext(tempFs, {
+          'libs/a/tsconfig.json': '{}',
+          'libs/a/tsconfig.lib.json': JSON.stringify({
+            compilerOptions: { outDir: 'dist' },
+            include: ['src/**/*.ts'],
+            exclude: ['../b/src/**/*.ts'],
+            references: [{ path: '../b/tsconfig.lib.json' }],
+          }),
+          'libs/a/package.json': `{"main": "dist/index.js"}`,
+          'libs/b/tsconfig.json': '{}',
+          'libs/b/tsconfig.lib.json': JSON.stringify({
+            compilerOptions: { outDir: 'dist' },
+            files: ['src/index.ts'],
+            include: ['src/**/*.ts'],
+            exclude: ['src/**/*.ts'],
+          }),
+          'libs/b/package.json': `{"main": "src/index.ts"}`,
+        });
+        const result = await invokeCreateNodesOnMatchingFiles(
+          configFiles,
+          context,
+          { typecheck: false, build: true }
+        );
+
+        expect(result.projects['libs/a'].targets.build.inputs).toContainEqual({
+          input: '@nx/js/typescript:tsconfig.lib.json:files',
+          projects: 'directory:libs/b',
+          always: true,
+        });
+        expect(result.projects['libs/b'].namedInputs).toEqual({
+          '@nx/js/typescript:tsconfig.lib.json': [
+            '{workspaceRoot}/libs/b/src/**/*.ts',
+            '!{workspaceRoot}/libs/b/src/**/*.ts',
+          ],
+          '@nx/js/typescript:tsconfig.lib.json:files': [
+            '{workspaceRoot}/libs/b/src/index.ts',
+          ],
+        });
+      });
+
+      it('should apply the excludes of a reference to its includes outside its root', async () => {
+        configFiles = await applyFilesToTempFsAndContext(tempFs, {
+          'libs/a/tsconfig.json': '{}',
+          'libs/a/tsconfig.lib.json': JSON.stringify({
+            compilerOptions: { outDir: 'dist' },
+            include: ['src/**/*.ts'],
+            references: [{ path: '../b/tsconfig.lib.json' }],
+          }),
+          'libs/a/package.json': `{"main": "dist/index.js"}`,
+          'libs/b/tsconfig.json': '{}',
+          'libs/b/tsconfig.lib.json': JSON.stringify({
+            compilerOptions: { outDir: 'dist' },
+            include: ['src/**/*.ts', '../shared/**/*.ts'],
+            exclude: ['**/*.spec.ts', '../shared/**/*.spec.ts'],
+          }),
+          'libs/b/package.json': `{"main": "src/index.ts"}`,
+        });
+        const result = await invokeCreateNodesOnMatchingFiles(
+          configFiles,
+          context,
+          { typecheck: false, build: true }
+        );
+
+        const inputs = result.projects['libs/a'].targets.build.inputs;
+        expect(inputs).toContainEqual({
+          input: '@nx/js/typescript:tsconfig.lib.json',
+          projects: 'directory:libs/b',
+          always: true,
+        });
+        expect(inputs).not.toContainEqual(
+          expect.objectContaining({
+            fileset: expect.stringContaining('libs/shared'),
+          })
+        );
+        expect(
+          result.projects['libs/b'].namedInputs[
+            '@nx/js/typescript:tsconfig.lib.json'
+          ]
+        ).toEqual([
+          '{workspaceRoot}/libs/b/src/**/*.ts',
+          '{workspaceRoot}/libs/shared/**/*.ts',
+          '!{workspaceRoot}/libs/b/**/*.spec.ts',
+          '!{workspaceRoot}/libs/shared/**/*.spec.ts',
+        ]);
+      });
+
+      it("should widen a reference's `?` wildcards, which Nx matches per byte", async () => {
+        configFiles = await applyFilesToTempFsAndContext(tempFs, {
+          'libs/a/tsconfig.json': '{}',
+          'libs/a/tsconfig.lib.json': JSON.stringify({
+            compilerOptions: { outDir: 'dist' },
+            include: ['src/**/*.ts'],
+            references: [{ path: '../b/tsconfig.lib.json' }],
+          }),
+          'libs/a/package.json': `{"main": "dist/index.js"}`,
+          'libs/b/tsconfig.json': '{}',
+          'libs/b/tsconfig.lib.json': JSON.stringify({
+            compilerOptions: { outDir: 'dist' },
+            include: ['src/a?.ts', 'src/??/index.ts', 'src/**/*.ts'],
+            exclude: ['src/??.ts', 'src/**/*.spec.ts'],
+          }),
+          'libs/b/package.json': `{"main": "src/index.ts"}`,
+        });
+        const result = await invokeCreateNodesOnMatchingFiles(
+          configFiles,
+          context,
+          { typecheck: false, build: true }
+        );
+
+        expect(
+          result.projects['libs/b'].namedInputs[
+            '@nx/js/typescript:tsconfig.lib.json'
+          ]
+        ).toEqual([
+          '{workspaceRoot}/libs/b/src/a*.ts',
+          '{workspaceRoot}/libs/b/src/*/index.ts',
+          '{workspaceRoot}/libs/b/src/**/*.ts',
+          '!{workspaceRoot}/libs/b/src/**/*.spec.ts',
+        ]);
       });
 
       it('should only collect tsconfig patterns from the build reference chain', async () => {
@@ -7958,6 +8657,12 @@ async function invokeCreateNodesOnMatchingFiles(
           ...aggregateProjects[projectName].targets,
           ...project.targets,
         };
+        if (project.namedInputs) {
+          aggregateProjects[projectName].namedInputs = {
+            ...aggregateProjects[projectName].namedInputs,
+            ...project.namedInputs,
+          };
+        }
       } else {
         aggregateProjects[projectName] = project;
       }
