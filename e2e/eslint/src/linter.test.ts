@@ -605,13 +605,19 @@ describe('Linter', () => {
     describe('flat config', () => {
       let envVar: string | undefined;
       beforeAll(() => {
-        runCLI(`generate @nx/eslint:convert-to-flat-config`);
+        // Capture it before the conversion so afterAll restores it even when the conversion throws
         envVar = process.env.ESLINT_USE_FLAT_CONFIG;
+        runCLI(`generate @nx/eslint:convert-to-flat-config`);
         // Now that we have converted the existing configs to flat config we need to clear the explicitly set env var to allow it to infer things from the root config file type
         delete process.env.ESLINT_USE_FLAT_CONFIG;
       });
       afterAll(() => {
-        process.env.ESLINT_USE_FLAT_CONFIG = envVar;
+        // Assigning undefined to process.env stores the string 'undefined'
+        if (envVar === undefined) {
+          delete process.env.ESLINT_USE_FLAT_CONFIG;
+        } else {
+          process.env.ESLINT_USE_FLAT_CONFIG = envVar;
+        }
       });
 
       it('should generate new projects using flat config', () => {
