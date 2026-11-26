@@ -80,11 +80,9 @@ It gives you several benefits:
 
 - **Faster CI and lower compute costs.** Changing a file a task never reads no longer invalidates its cache.
   Fewer unnecessary cache misses mean fewer tasks to run, which can substantially reduce CI compute (**up to 3× in some cases**).
-- **Correct cache invalidation.** By default, Ultracache tracks every file a task reads,
-  preventing stale cache hits from missing input declarations.
-  That includes files `.gitignore` and `.nxignore` exclude, such as another task's build output.
-  To leave those out for a target, set
-  [`includeUnstableFiles`](/docs/reference/project-configuration#include-unstable-files) to `false`.
+- **Correct cache invalidation.** Ultracache tracks every file a task reads, including gitignored
+  files such as another task's build output, preventing stale cache hits from missing input declarations.
+  To leave gitignored files out for a target, set [`includeUnstableFiles`](/docs/reference/project-configuration#include-unstable-files) to `false`.
 - **No input configuration maintenance.** Ultracache records file inputs for new targets
   automatically and keeps them up to date as your tasks change. You don't need to maintain file
   lists by hand.

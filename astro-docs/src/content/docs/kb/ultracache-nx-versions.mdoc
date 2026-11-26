@@ -20,9 +20,9 @@ To use it, [update your workspace](/docs/features/automate-updating-dependencies
 
 Nx 24.0 hashes every file a recording read, including files that `.gitignore` or `.nxignore` exclude.
 A task's hash then changes when one of those files appears or disappears, as build outputs do.
-Nx 24.1.0 and later hash them by default too, and let a target hash only the other files a recording read.
+Nx 24.1.0 and later do the same by default.
 
-To do that, set [`ultracache.includeUnstableFiles`](/docs/reference/project-configuration#include-unstable-files) to `false` on the target.
+To leave those files out, set [`ultracache.includeUnstableFiles`](/docs/reference/project-configuration#include-unstable-files) to `false` on the target.
 That option requires Nx 24.1.0 or later.
 Nx 24.0 fails with an error when a target sets it.
 
