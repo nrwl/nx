@@ -595,9 +595,9 @@ impl TaskHasher {
     /// Like `hash_plans`, but only for the plans the planner did not defer
     /// (`HashPlans::deferred`: a task that reads another task's outputs, or a
     /// disk-backed fileset whose directory contains, or sits inside, an
-    /// upstream task's output). The rest are left out and hash once those
-    /// tasks have run; their ids are absent from the result and need no entry
-    /// in `per_task_envs`.
+    /// upstream task's output, or one that hashes its absolute cwd). The rest
+    /// are left out and hash where they run; their ids are absent from the
+    /// result and need no entry in `per_task_envs`.
     #[napi(ts_return_type = "Record<string, HashDetails>")]
     pub fn hash_plans_upfront(
         &self,
@@ -618,7 +618,7 @@ impl TaskHasher {
         let partition_duration = function_start.elapsed();
         let (upfront_count, total_count) = (plans.len(), hash_plans.plans.len());
         trace!(
-            "hash_plans_upfront: {} of {} plans hash up front, {} wait for other tasks' outputs (partition: {:?})",
+            "hash_plans_upfront: {} of {} plans hash up front, {} deferred (partition: {:?})",
             upfront_count,
             total_count,
             total_count - upfront_count,
