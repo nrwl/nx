@@ -313,6 +313,8 @@ on:
 
 Triggers can also filter with `branches-ignore` and `paths`, `PUSH` triggers with `tags` and `tags-ignore`, and `PR` triggers with `types`.
 A positive filter can't be combined with its `-ignore` counterpart.
+One event starts at most 50 jobs across all pipeline files.
+For more information, see [jobs per event](#jobs-per-event).
 
 ## `jobs`
 
@@ -640,3 +642,16 @@ Nx Cloud CI doesn't support these yet:
 - Git LFS. The job image doesn't include it, so a repository that uses LFS checks out pointer files.
 
 A job runs for at most 60 minutes, and that is also the default for `timeout-minutes`.
+
+### Jobs per event
+
+Nx Cloud CI starts at most 50 jobs for one push or pull request event, counted across every pipeline file whose triggers match it.
+It takes pipeline files whole, in file name order, so a file never starts only some of its jobs.
+The file that would take the total past 50, and every file after it, start no jobs.
+Each of those files gets a failed `<file> / configuration` check on GitHub and a configuration error on the pipeline page:
+
+```plaintext
+This event matched <N> jobs. Nx Cloud CI starts at most 50 jobs per event, so no job in this file started.
+```
+
+To stay under the limit, narrow the [triggers](#on) with `branches` or `paths` so fewer pipeline files match one event, or combine work into fewer jobs.
