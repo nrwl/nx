@@ -36,31 +36,15 @@ When you run the CI test target, Nx handles each test file as an independent tas
 1. Each split task has its own cache entry, and a one-line directive at the top of a test file scopes its hash to the code that file tests.
    A change limited to checkout reruns `checkout.spec.ts`, while `search.spec.ts` replays its cached result.
 
-## Enable splitting and per-file caching
-
-To split and cache e2e tests in CI:
-
-1. Enable task splitting in your test plugin configuration in `nx.json`.
-   `@nx/playwright/plugin` and `@nx/cypress/plugin` default `ciTargetName` to `"e2e-ci"` (Cypress also needs `ciWebServerCommand` set in `nxE2EPreset`).
-   `@nx/jest/plugin` and `@nx/vitest` opt in by setting `ciTargetName`, and `@nx/gradle` opts in by setting `ciTestTargetName`.
-1. Run the `*-ci` target in CI, and keep using the base target (`e2e` or `test`) on your local machine where a single runner process is faster:
-
-   ```shell
-   nx affected -t lint test build e2e-ci
-   ```
-
-1. Add a per-file caching directive at the top of each test file you want to scope.
-
-{% aside type="note" title="Version and plugin requirements for per-file caching" %}
-Per-file caching directives require Nx 24 or later.
-`@nx-depends-on` works with Playwright, Cypress e2e tests, Jest, and Vitest.
-`@nx-ignore-server-inputs` works with Playwright and Cypress e2e tests and requires [Ultracache](/docs/features/ci-features/remote-cache#ultracache) turned on in Nx Cloud.
-`@nx/gradle` splits test tasks across workers, though it doesn't support comment directives.
-{% /aside %}
+This workflow builds on Nx Cloud workers, so make sure you [set up Nx Cloud workers](/docs/features/ci-features/distribute-task-execution#set-up-nx-cloud-workers) first.
+From there, first split your e2e targets into per-file tasks, then enable per-file caching so unaffected test files don't rerun.
 
 ## Split e2e tasks by file
 
 Configure the CI target option for your test plugin in `nx.json` so Nx infers one task per test file.
+`@nx/playwright/plugin` and `@nx/cypress/plugin` default `ciTargetName` to `"e2e-ci"` (Cypress also requires `ciWebServerCommand` in `nxE2EPreset`).
+`@nx/jest/plugin` and `@nx/vitest` opt in by setting `ciTargetName`, and `@nx/gradle` opts in by setting `ciTestTargetName`.
+
 Here's an example with `@nx/playwright/plugin`:
 
 ```json
@@ -78,16 +62,24 @@ Here's an example with `@nx/playwright/plugin`:
 }
 ```
 
+Run the `*-ci` target in CI, and keep using the base target (`e2e` or `test`) locally where a single runner process is faster:
+
+```shell
+nx affected -t lint test build e2e-ci
+```
+
 Inspect the generated per-file targets with `nx show project <project-e2e>`.
 To configure Playwright, Cypress, Jest, Vitest, or Gradle and wire the `*-ci` target into your CI pipeline, see [automatically split slow tasks by file](/docs/kb/split-e2e-tasks).
 
 ## Cache e2e test results per file
 
 By default, every split e2e task hashes the entire application and the entire e2e project, so an edit to any feature or any spec file reruns every test file.
-Adding a directive comment at the top of a test file scopes its cache inputs so unaffected test files replay from cache.
+With Nx 24 or later, you can add a directive comment at the top of a test file to scope its cache inputs so unaffected test files replay from cache.
 
-Start with `@nx-depends-on` to list the projects a test exercises, including their dependencies automatically.
-Use `@nx-ignore-server-inputs` with Ultracache when you want Nx to drop the app server from the hash and track the feature modules the test imports directly.
+- `@nx-depends-on` lists the projects a test exercises and includes their dependencies automatically.
+  It works with Playwright, Cypress e2e tests, Jest, and Vitest.
+- `@nx-ignore-server-inputs` pairs with [Ultracache](/docs/features/ci-features/remote-cache#ultracache) in Nx Cloud to drop the app server from the hash, so Ultracache records and hashes only the feature modules the test file imports directly.
+  It works with Playwright and Cypress e2e tests.
 
 {% tabs %}
 {% tabitem label="@nx-depends-on" %}
@@ -125,7 +117,8 @@ test('shows the order summary', async ({ page }) => {
 {% /tabitem %}
 {% /tabs %}
 
-Leave the directive off whole-app smoke tests so they continue running on every application change.
+Without Ultracache, each split task still hashes every file in the e2e project, so an edit to one spec file reruns the others.
+Leave directives off whole-app smoke tests so they continue running on every application change.
 For full directive syntax, choosing between the two directives, server setup requirements, and verification steps, see [skip unaffected split e2e tests](/docs/kb/skip-unaffected-e2e-tests).
 
 ## Related guides
