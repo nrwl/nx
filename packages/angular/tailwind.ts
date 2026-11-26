@@ -20,7 +20,9 @@ export function createGlobPatternsForDependencies(
     );
   }
   try {
-    return jsGenerateGlobs(dirPath, fileGlobPattern);
+    return jsGenerateGlobs(dirPath, fileGlobPattern, {
+      includeLibraryBuilderEntryPoints: true,
+    });
   } catch (e) {
     /**
      * It should not be possible to reach this point when the utility is invoked as part of the normal

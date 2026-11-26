@@ -352,7 +352,7 @@ export { deriveGroupNameFromTarget } from './utils/plugins/atomizer-utils';
 export { findInstalledPlugins } from './utils/plugins/installed-plugins';
 export {
   findAllProjectNodeDependencies,
-  getSourceDirOfDependentProjects,
+  getProjectSourceRoot,
 } from './utils/project-graph-utils';
 export { quoteShellArg } from './utils/shell-quoting';
 export type { SyncGeneratorResult } from './utils/sync-generators';

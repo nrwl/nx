@@ -1,5 +1,9 @@
 import type { Tree } from '@nx/devkit';
 import { joinPathFragments, readJson } from '@nx/devkit';
+import {
+  isLibraryBuilderEntryFile,
+  resolveExportTarget,
+} from '@nx/js/internal';
 import * as posix from 'node:path/posix';
 import { dirname, parse } from 'path';
 
@@ -40,7 +44,7 @@ export function readLibraryBuilderEntryPoints(
     const target = resolveExportTarget(value);
     // Targets follow the host's path rules, as in the builder. A target with a
     // root or drive is skipped, even one the builder resolves inside the project.
-    if (!target || !/(?<!\.d)\.m?ts$/.test(target) || parse(target).root) {
+    if (!target || !isLibraryBuilderEntryFile(target) || parse(target).root) {
       continue;
     }
 
@@ -108,27 +112,6 @@ export function locateLibraryBuilderEntryPoint(
 
   const entryFile = closest?.entryFile ?? primaryEntryFile;
   return entryFile && tree.exists(entryFile) ? entryFile : null;
-}
-
-// An array resolves to its first resolvable item and a conditions object to
-// its "default" condition, without checking the file extension.
-function resolveExportTarget(value: unknown): string | undefined {
-  if (typeof value === 'string') {
-    return value;
-  }
-  if (Array.isArray(value)) {
-    for (const item of value) {
-      const target = resolveExportTarget(item);
-      if (target) {
-        return target;
-      }
-    }
-    return undefined;
-  }
-  if (typeof value === 'object' && value !== null) {
-    return resolveExportTarget((value as Record<string, unknown>).default);
-  }
-  return undefined;
 }
 
 // The entry file of the closest ng-package.json between the directory and the

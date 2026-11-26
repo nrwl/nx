@@ -1,7 +1,7 @@
 import {
   joinPathFragments,
-  logger,
   normalizePath,
+  readJsonFile,
   workspaceRoot,
   readCachedProjectGraph,
 } from '@nx/devkit';
@@ -9,10 +9,15 @@ import { dirname, join, relative, resolve } from 'path';
 import { existsSync, lstatSync, readdirSync, readFileSync } from 'fs';
 import ignore from 'ignore';
 import {
-  getSourceDirOfDependentProjects,
   createProjectRootMappings,
+  findAllProjectNodeDependencies,
   findProjectForPath,
+  getProjectSourceRoot,
 } from '@nx/devkit/internal';
+import {
+  isEntryPointDirectoryExport,
+  resolveExportTarget,
+} from './package-json/export-entry-points';
 
 function configureIgnore() {
   let ig: ReturnType<typeof ignore>;
@@ -28,10 +33,12 @@ function configureIgnore() {
  * Generates a set of glob patterns based off the source root of the app and its dependencies
  * @param dirPath workspace relative directory path that will be used to infer the parent project and dependencies
  * @param fileGlobPattern pass a custom glob pattern to be used
+ * @param options.includeLibraryBuilderEntryPoints also scan the directories of the package.json export subpaths that the Angular library builder compiles
  */
 export function createGlobPatternsForDependencies(
   dirPath: string,
-  fileGlobPattern: string
+  fileGlobPattern: string,
+  options?: { includeLibraryBuilderEntryPoints?: boolean }
 ): string[] {
   let ig = configureIgnore();
   const filenameRelativeToWorkspaceRoot = normalizePath(
@@ -61,13 +68,11 @@ export function createGlobPatternsForDependencies(
 
   // generate the glob
   try {
-    const [projectDirs, warnings] = getSourceDirOfDependentProjects(
-      projectName,
-      projectGraph
-    );
-
     const dirsToUse = [];
-    const recursiveScanDirs = (dirPath) => {
+    // Angular secondary entry points live in a directory with an
+    // ng-package.json or, with the library builder, in the directory of a
+    // package.json export subpath.
+    const recursiveScanDirs = (dirPath, exportDirs: Set<string>) => {
       const children = readdirSync(resolve(workspaceRoot, dirPath));
       for (const child of children) {
         const childPath = join(dirPath, child);
@@ -77,26 +82,33 @@ export function createGlobPatternsForDependencies(
         ) {
           continue;
         }
-        if (existsSync(join(workspaceRoot, childPath, 'ng-package.json'))) {
+        if (
+          exportDirs.has(childPath) ||
+          existsSync(join(workspaceRoot, childPath, 'ng-package.json'))
+        ) {
           dirsToUse.push(childPath);
         } else {
-          recursiveScanDirs(childPath);
+          recursiveScanDirs(childPath, exportDirs);
         }
       }
     };
 
-    for (const srcDir of projectDirs) {
+    for (const dependency of findAllProjectNodeDependencies(
+      projectName,
+      projectGraph
+    )) {
+      const project = projectGraph.nodes[dependency].data;
+      const srcDir = getProjectSourceRoot(project);
       dirsToUse.push(srcDir);
       const root = dirname(srcDir);
-      recursiveScanDirs(root);
-    }
-
-    if (warnings.length > 0) {
-      logger.warn(`
-[createGlobPatternsForDependencies] Failed to generate glob pattern for the following:
-${warnings.join('\n- ')}\n
-due to missing "sourceRoot" in the dependencies' project configuration
-      `);
+      recursiveScanDirs(
+        root,
+        new Set(
+          options?.includeLibraryBuilderEntryPoints
+            ? readEntryPointExportDirs(project.root)
+            : []
+        )
+      );
     }
 
     // A dependency whose sourceRoot is its project root would otherwise scan its
@@ -115,4 +127,33 @@ due to missing "sourceRoot" in the dependencies' project configuration
       `createGlobPatternsForDependencies: Error when generating globs.\n${e?.message}`
     );
   }
+}
+
+function readEntryPointExportDirs(projectRoot: string): string[] {
+  const packageJsonPath = join(workspaceRoot, projectRoot, 'package.json');
+  let exports: unknown;
+  try {
+    exports = existsSync(packageJsonPath)
+      ? readJsonFile(packageJsonPath).exports
+      : undefined;
+  } catch {
+    // A malformed package.json fails the library's build, not the Tailwind config.
+    return [];
+  }
+  if (!exports || typeof exports !== 'object' || Array.isArray(exports)) {
+    return [];
+  }
+  const dirs: string[] = [];
+  for (const [key, value] of Object.entries(exports)) {
+    const subpath = key.replace(/\/+$/, '');
+    const target = resolveExportTarget(value);
+    if (
+      subpath.startsWith('./') &&
+      target &&
+      isEntryPointDirectoryExport(subpath, target)
+    ) {
+      dirs.push(join(projectRoot, subpath));
+    }
+  }
+  return dirs;
 }
