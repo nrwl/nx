@@ -109,17 +109,10 @@ describe('@nx/react/react-router-plugin', () => {
       'uses signal readiness only when the Vite config loads its plugin (%s)',
       async (signals) => {
         mockConfig('acme/react-router.config.js', {}, context);
-        const pluginPath = fileURLToPath(
-          new URL(
-            '../../../vite/plugins/nx-ready-signal.plugin.ts',
-            import.meta.url
-          )
-        );
         await tempFs.createFiles({
           'acme/vite.config.js': `
-            import { nxReadySignal } from ${JSON.stringify(pluginPath)};
             export default async () => ({
-              plugins: [false, Promise.resolve([${signals ? 'nxReadySignal()' : ''}])],
+              plugins: [false, Promise.resolve([${signals ? "{ name: 'nx-ready-signal' }" : ''}])],
             });
           `,
         });
@@ -168,16 +161,9 @@ describe('@nx/react/react-router-plugin', () => {
 
     it('keeps command readiness when Vite cannot resolve', async () => {
       mockConfig('acme/react-router.config.js', {}, context);
-      const pluginPath = fileURLToPath(
-        new URL(
-          '../../../vite/plugins/nx-ready-signal.plugin.ts',
-          import.meta.url
-        )
-      );
       await tempFs.createFiles({
         'acme/vite.config.js': `
-          import { nxReadySignal } from ${JSON.stringify(pluginPath)};
-          export default { plugins: [nxReadySignal()] };
+          export default { plugins: [{ name: 'nx-ready-signal' }] };
         `,
       });
       const module = require('node:module');
