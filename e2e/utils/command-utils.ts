@@ -302,6 +302,36 @@ export function runCommandAsync(
   });
 }
 
+// Commands started by runCommandUntil since the last cleanup, each with its
+// kill once one starts. A test that Jest times out never reaches its own
+// cleanup, so these are stopped after each test.
+const startedCommands = new Map<ChildProcess, Promise<void> | undefined>();
+
+export async function stopRunningCommands(): Promise<void> {
+  await Promise.all([...startedCommands.keys()].map(stopCommand));
+}
+
+// Every caller waits for the same kill, so an afterEach that overlaps the
+// timeout's kill waits for it to finish even after the root process exits
+function stopCommand(p: ChildProcess): Promise<void> {
+  let kill = startedCommands.get(p);
+  if (!kill) {
+    kill = killCommandTree(p).finally(() => startedCommands.delete(p));
+    startedCommands.set(p, kill);
+  }
+  return kill;
+}
+
+async function killCommandTree(p: ChildProcess): Promise<void> {
+  if (p.pid !== undefined && p.exitCode === null && p.signalCode === null) {
+    try {
+      await promisifiedTreeKill(p.pid, 'SIGKILL');
+    } catch (error) {
+      logError('Failed to terminate command', String(error));
+    }
+  }
+}
+
 export function runCommandUntil(
   command: string,
   criteria: (output: string) => boolean,
@@ -309,6 +339,7 @@ export function runCommandUntil(
 ): Promise<ChildProcess> {
   const pm = getPackageManagerCommand();
   const timeout = opts.timeout ?? 30_000;
+  const startedAt = Date.now();
   const p = exec(`${pm.runNx} ${command}`, {
     cwd: tmpProjPath(),
     encoding: 'utf-8',
@@ -323,41 +354,48 @@ export function runCommandUntil(
     },
     windowsHide: false,
   });
+  startedCommands.set(p, undefined);
   return new Promise((res, rej) => {
     let output = '';
     let complete = false;
+    // Each output line with the seconds from the command's start to the line's
+    // first character, so a timeout shows how long every phase took
+    const timedLines: string[] = [];
+    let partialLine = '';
+    let partialLineAt = startedAt;
+    const stamp = (at: number, line: string) =>
+      `    [${((at - startedAt) / 1000).toFixed(1)}s] ${line}`;
+    const recordOutput = (text: string) => {
+      const now = Date.now();
+      const [first, ...rest] = text.split('\n');
+      if (!partialLine) partialLineAt = now;
+      partialLine += first;
+      for (const line of rest) {
+        timedLines.push(stamp(partialLineAt, partialLine));
+        partialLine = line;
+        partialLineAt = now;
+      }
+    };
+    const timedOutput = () =>
+      (partialLine
+        ? [...timedLines, stamp(partialLineAt, partialLine)]
+        : timedLines
+      ).join('\n');
 
     const timeoutId = setTimeout(async () => {
       if (!complete) {
         complete = true;
-        if (
-          p.pid !== undefined &&
-          p.exitCode === null &&
-          p.signalCode === null
-        ) {
-          try {
-            await promisifiedTreeKill(p.pid, 'SIGKILL');
-          } catch (error) {
-            logError(
-              'Failed to terminate command after startup timeout',
-              String(error)
-            );
-          }
-        }
-        logError(
-          `Output did not meet the criteria:`,
-          output
-            .split('\n')
-            .map((l) => `    ${l}`)
-            .join('\n')
-        );
+        await stopCommand(p);
+        logError(`Output did not meet the criteria:`, timedOutput());
         rej(new Error(`Timed out after ${timeout}ms waiting for criteria`));
       }
     }, timeout);
 
     function checkCriteria(c) {
       if (complete) return;
-      output += c.toString();
+      const text = c.toString();
+      output += text;
+      recordOutput(text);
       const strippedOutput = stripVTControlCharacters(output);
       if (criteria(strippedOutput) && !complete) {
         complete = true;
@@ -372,13 +410,7 @@ export function runCommandUntil(
       if (!complete) {
         complete = true;
         clearTimeout(timeoutId);
-        logError(
-          `Original output:`,
-          output
-            .split('\n')
-            .map((l) => `    ${l}`)
-            .join('\n')
-        );
+        logError(`Original output:`, timedOutput());
         rej(new Error(`Exited with ${code}`));
       }
     });
