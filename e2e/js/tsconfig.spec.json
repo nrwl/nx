@@ -8,6 +8,7 @@
   },
   "exclude": ["out-tsc"],
   "include": [
+    "src/js-executor-prune-lockfile-utils.ts",
     "**/*.test.ts",
     "**/*.spec.ts",
     "**/*.spec.tsx",
