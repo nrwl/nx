@@ -61,7 +61,7 @@ describe('Playwright E2E Test runner', () => {
         `g @nx/web:app demo-js-e2e --unitTestRunner=none --bundler=vite --e2eTestRunner=none --style=css --no-interactive`
       );
       runCLI(
-        `g @nx/playwright:configuration --project demo-js-e2e --js  --webServerCommand="${pmc.runNx} serve demo-e2e --port=${port} --strictPort" --webServerAddress="http://localhost:${port}"`
+        `g @nx/playwright:configuration --project demo-js-e2e --js  --webServerCommand="${pmc.runNx} serve demo-js-e2e --port=${port} --strictPort" --webServerAddress="http://localhost:${port}"`
       );
 
       const e2eResults = runCLI(`e2e demo-js-e2e`);
