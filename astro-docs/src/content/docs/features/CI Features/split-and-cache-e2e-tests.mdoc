@@ -41,11 +41,9 @@ From there, first split your e2e targets into per-file tasks, then enable per-fi
 
 ## Split e2e tasks by file
 
-Configure the CI target option for your test plugin in `nx.json` so Nx infers one task per test file.
-`@nx/playwright/plugin` and `@nx/cypress/plugin` default `ciTargetName` to `"e2e-ci"` (Cypress also requires `ciWebServerCommand` in `nxE2EPreset`).
-`@nx/jest/plugin` and `@nx/vitest` opt in by setting `ciTargetName`, and `@nx/gradle` opts in by setting `ciTestTargetName`.
-
-Here's an example with `@nx/playwright/plugin`:
+The Nx plugins for Playwright, Cypress, Jest, Vitest, and Gradle split test suites into per-file tasks automatically once added to your workspace (for example with `nx add @nx/playwright`).
+You don't need to declare per-file targets by hand.
+`@nx/playwright/plugin` and `@nx/cypress/plugin` default `ciTargetName` to `"e2e-ci"` (Cypress also uses `ciWebServerCommand` in `nxE2EPreset`), while `@nx/jest/plugin`, `@nx/vitest`, and `@nx/gradle` opt in through `ciTargetName` (or `ciTestTargetName` for Gradle) in `nx.json`:
 
 ```json
 // nx.json
@@ -62,14 +60,19 @@ Here's an example with `@nx/playwright/plugin`:
 }
 ```
 
-Run the `*-ci` target in CI, and keep using the base target (`e2e` or `test`) locally where a single runner process is faster:
+Run `nx show project` on your e2e project to inspect the inferred `e2e`, `e2e-ci`, and per-file `e2e-ci--<test-file>` tasks:
+
+```shell
+nx show project <project-e2e>
+```
+
+In CI, run the `*-ci` target so Nx schedules each test file as its own task, and keep using the base target (`e2e` or `test`) locally where a single runner process is faster:
 
 ```shell
 nx affected -t lint test build e2e-ci
 ```
 
-Inspect the generated per-file targets with `nx show project <project-e2e>`.
-To configure Playwright, Cypress, Jest, Vitest, or Gradle and wire the `*-ci` target into your CI pipeline, see [automatically split slow tasks by file](/docs/kb/split-e2e-tasks).
+Refer to the [automatically split slow tasks by file](/docs/kb/split-e2e-tasks) knowledge base guide for setup instructions across Playwright, Cypress, Jest, Vitest, and Gradle, inspecting split targets in the project detail view, and full CI workflow examples.
 
 ## Cache e2e test results per file
 
@@ -119,7 +122,8 @@ test('shows the order summary', async ({ page }) => {
 
 Without Ultracache, each split task still hashes every file in the e2e project, so an edit to one spec file reruns the others.
 Leave directives off whole-app smoke tests so they continue running on every application change.
-For full directive syntax, choosing between the two directives, server setup requirements, and verification steps, see [skip unaffected split e2e tests](/docs/kb/skip-unaffected-e2e-tests).
+
+Refer to the [skip unaffected split e2e tests](/docs/kb/skip-unaffected-e2e-tests) knowledge base guide for full directive syntax, choosing between `@nx-depends-on` and `@nx-ignore-server-inputs`, server setup requirements, and verifying scoped inputs with `nx show target inputs`.
 
 ## Related guides
 
