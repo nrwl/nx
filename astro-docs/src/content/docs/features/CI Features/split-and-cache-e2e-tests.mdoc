@@ -41,9 +41,8 @@ From there, first split your e2e targets into per-file tasks, then enable per-fi
 
 ## Split e2e tasks by file
 
-The Nx plugins for Playwright, Cypress, Jest, Vitest, and Gradle split test suites into per-file tasks automatically once added to your workspace (for example with `nx add @nx/playwright`).
-You don't need to declare per-file targets by hand.
-`@nx/playwright/plugin` and `@nx/cypress/plugin` default `ciTargetName` to `"e2e-ci"` (Cypress also uses `ciWebServerCommand` in `nxE2EPreset`), while `@nx/jest/plugin`, `@nx/vitest`, and `@nx/gradle` opt in through `ciTargetName` (or `ciTestTargetName` for Gradle) in `nx.json`:
+The Nx plugins for Playwright, Cypress, Jest, Vitest, and Gradle split test suites into per-file tasks automatically once added to your workspace, for example with `nx add @nx/playwright`.
+Playwright and Cypress infer an `e2e-ci` target by default, while Jest, Vitest, and Gradle opt in through their plugin options in `nx.json`:
 
 ```json
 // nx.json
