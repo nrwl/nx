@@ -47,9 +47,10 @@ import {
   normalizeWebServers,
   resolveWebServersUnderEnv,
   taskEnvDivergesFromAmbient,
-  type ProbeEnv,
+  type ConfigEvaluation,
   type ResolvedWebServer,
 } from './webserver-readiness';
+import { getConfigBrowsers } from './config-browsers';
 import { createRequire } from 'node:module';
 
 // Node passes a stand-in require, without a cache, require.extensions or
@@ -90,6 +91,35 @@ export interface PlaywrightPluginOptions {
    * the only behavior in Nx 25. This option will be removed in Nx 25.
    */
   waitForServerReady?: boolean;
+  /**
+   * Whether to infer a target that installs the browsers the tests use, which
+   * the `e2e` target and the atomized CI targets depend on. Defaults to true.
+   * Set it to `false` to not infer the target, or to an object to configure it.
+   */
+  installBrowsers?: boolean | InstallBrowsersOptions;
+}
+
+interface InstallBrowsersOptions {
+  /** Defaults to `playwright-install`. */
+  targetName?: string;
+  /**
+   * The browsers to install, as `playwright install` names them, or `'all'`
+   * for Playwright's default browsers. Defaults to the browsers the config's
+   * projects launch, leaving out projects that use a branded channel, a
+   * remote browser or a custom executable.
+   */
+  browsers?: 'all' | string[];
+  /**
+   * Whether to install the browsers' system packages before the browsers.
+   * Defaults to true on Linux in CI, and to false otherwise. Below Playwright
+   * 1.60, the default skips them when the user can't run apt-get as root
+   * without a password.
+   */
+  withDeps?: boolean;
+}
+
+interface NormalizedInstallBrowsersOptions extends InstallBrowsersOptions {
+  targetName: string;
 }
 
 interface NormalizedOptions {
@@ -99,6 +129,7 @@ interface NormalizedOptions {
   webServerTimeout?: number;
   waitForWebServer: boolean;
   waitForServerReady: boolean;
+  installBrowsers: NormalizedInstallBrowsersOptions | false;
 }
 
 type PlaywrightTargets = Pick<ProjectConfiguration, 'targets' | 'metadata'>;
@@ -120,13 +151,6 @@ interface ChainWebserver {
   readinessServers: WebserverReadinessServer[];
   // Count of `reuseExistingServer` servers no task could be inferred for.
   uncoveredServers: number;
-}
-
-interface ResolvedChainWebserver {
-  chain: ChainWebserver;
-  // Outside ChainWebserver so a failed evaluation does not split `sameChain`'s
-  // structural comparison of two otherwise identical chains.
-  taskEnvEvalFailed: boolean;
 }
 
 const playwrightConfigGlob = '**/playwright.config.{js,ts,cjs,cts,mjs,mts}';
@@ -327,12 +351,15 @@ async function buildPlaywrightTargets(
       testDir: configTestDir,
       testMatch,
       testIgnore,
+      configBrowsers,
     },
     probeEnv: ambientProbeEnv,
+    connectEndpoint: ambientConnectEndpoint,
     ambientEnv,
   } = await loadConfigWithProbeEnv(
     join(context.workspaceRoot, configFilePath),
     (config: PlaywrightTestConfig) => ({
+      configBrowsers: getConfigBrowsers(config),
       testOutput: getTestOutput(config),
       reporterOutputs: getReporterOutputs(config),
       ambientWebServers: normalizeWebServers(config.webServer),
@@ -361,11 +388,11 @@ async function buildPlaywrightTargets(
   // races the server boot, misses, and spawns its own nested server command
   // whose I/O then leaks into the task.
   //
-  // The command and address can read process.env, and createNodes runs without
-  // the task's dotenv loaded, so each consumer chain's servers resolve under
-  // that chain's task env. Chains whose tasks and gates load the same dotenv
-  // inputs share one resolution; distinct inputs resolve concurrently and can
-  // gate separately.
+  // The command, the address and the browsers can read process.env, and
+  // createNodes runs without the task's dotenv loaded, so each consumer chain's
+  // config evaluates under that chain's task env. Chains whose tasks and gates
+  // load the same dotenv inputs share one evaluation; distinct inputs evaluate
+  // concurrently and can gate separately.
   const gatesShareDotEnv =
     JSON.stringify(chainDotEnvPairs.gate) ===
     JSON.stringify(chainDotEnvPairs.ciGate);
@@ -375,60 +402,66 @@ async function buildPlaywrightTargets(
       JSON.stringify(chainDotEnvPairs.ciTarget);
   const e2eGateName = `${options.targetName}--wait-for-webserver`;
   const ciGateName = `${options.ciTargetName}--wait-for-webserver`;
-  let e2eResolved: ResolvedChainWebserver;
-  let ciResolved: ResolvedChainWebserver;
-  if (!options.ciTargetName || chainsShareDotEnv) {
-    e2eResolved = await resolveChainWebserver(
+  const ambient: ConfigEvaluation = {
+    webServers: ambientWebServers,
+    probeEnv: ambientProbeEnv,
+    browsers: configBrowsers,
+    connectEndpoint: ambientConnectEndpoint,
+  };
+  const needsConfigBrowsers =
+    options.installBrowsers !== false &&
+    options.installBrowsers.browsers === undefined;
+  const evaluateChain = (target: string, nonAtomizedTarget?: string) =>
+    evaluateChainConfig(
       configFilePath,
       projectRoot,
       context.workspaceRoot,
-      ambientWebServers,
-      ambientProbeEnv,
+      ambient,
       ambientEnv,
+      target,
+      nonAtomizedTarget,
+      // Even with a configured browser list, the config run under the chain's
+      // env decides whether the chain connects to a remote browser.
+      ambientWebServers.length > 0 || options.installBrowsers !== false
+    );
+  const resolveChain = (
+    chainConfig: ChainConfig,
+    target: string,
+    gateTarget: string
+  ) =>
+    resolveChainWebserver(
+      configFilePath,
+      projectRoot,
+      ambientWebServers,
+      ambientEnv,
+      chainConfig,
       legacyProxiedTls,
       npmConfigProxy,
-      options.targetName,
-      undefined,
-      e2eGateName,
+      target,
+      gateTarget,
       options.waitForWebServer
     );
-    ciResolved = e2eResolved;
+  let e2eConfig: ChainConfig;
+  let ciConfig: ChainConfig;
+  let e2eChain: ChainWebserver;
+  let ciChain: ChainWebserver;
+  if (!options.ciTargetName || chainsShareDotEnv) {
+    e2eConfig = ciConfig = await evaluateChain(options.targetName);
+    e2eChain = ciChain = resolveChain(
+      e2eConfig,
+      options.targetName,
+      e2eGateName
+    );
   } else {
-    [e2eResolved, ciResolved] = await Promise.all([
-      resolveChainWebserver(
-        configFilePath,
-        projectRoot,
-        context.workspaceRoot,
-        ambientWebServers,
-        ambientProbeEnv,
-        ambientEnv,
-        legacyProxiedTls,
-        npmConfigProxy,
-        options.targetName,
-        undefined,
-        e2eGateName,
-        options.waitForWebServer
-      ),
-      resolveChainWebserver(
-        configFilePath,
-        projectRoot,
-        context.workspaceRoot,
-        ambientWebServers,
-        ambientProbeEnv,
-        ambientEnv,
-        legacyProxiedTls,
-        npmConfigProxy,
-        options.ciTargetName,
-        options.targetName,
-        ciGateName,
-        options.waitForWebServer
-      ),
+    [e2eConfig, ciConfig] = await Promise.all([
+      evaluateChain(options.targetName),
+      evaluateChain(options.ciTargetName, options.targetName),
     ]);
+    e2eChain = resolveChain(e2eConfig, options.targetName, e2eGateName);
+    ciChain = resolveChain(ciConfig, options.ciTargetName, ciGateName);
   }
-  const e2eChain = e2eResolved.chain;
-  const ciChain = ciResolved.chain;
   const taskEnvEvalFailed =
-    e2eResolved.taskEnvEvalFailed || ciResolved.taskEnvEvalFailed;
+    e2eConfig.taskEnvEvalFailed || ciConfig.taskEnvEvalFailed;
 
   const e2eReadyTargetName =
     e2eChain.readinessServers.length > 0 ? e2eGateName : undefined;
@@ -440,6 +473,30 @@ async function buildPlaywrightTargets(
       ? chainsShareGate
         ? e2eReadyTargetName
         : ciGateName
+      : undefined;
+
+  const e2eBrowsers = getChainBrowsers(e2eConfig);
+  const ciBrowsers = getChainBrowsers(ciConfig);
+  let installTargetName: string | undefined;
+  if (options.installBrowsers) {
+    const installTarget = buildInstallBrowsersTarget(
+      options.installBrowsers,
+      [...new Set([...e2eBrowsers, ...ciBrowsers])].sort()
+    );
+    if (installTarget) {
+      installTargetName = options.installBrowsers.targetName;
+      targets[installTargetName] = installTarget;
+    }
+  }
+  // A chain waits for the install unless it connects to a remote browser or,
+  // without a configured browser list, needs no downloaded browser.
+  const chainInstallTargetName = (
+    chainConfig: ChainConfig,
+    chainBrowsers: string[]
+  ) =>
+    chainBrowsers.length > 0 ||
+    (!needsConfigBrowsers && !connectsToRemoteBrowser(chainConfig))
+      ? installTargetName
       : undefined;
 
   const baseTargetConfig: TargetConfiguration = {
@@ -466,6 +523,10 @@ async function buildPlaywrightTargets(
     e2eChain,
     e2eReadyTargetName,
     options.waitForServerReady
+  );
+  dependOnInstallTarget(
+    baseTargetConfig,
+    chainInstallTargetName(e2eConfig, e2eBrowsers)
   );
 
   targets[options.targetName] = {
@@ -538,6 +599,10 @@ async function buildPlaywrightTargets(
       ciChain,
       ciReadyTargetName,
       options.waitForServerReady
+    );
+    dependOnInstallTarget(
+      ciBaseTargetConfig,
+      chainInstallTargetName(ciConfig, ciBrowsers)
     );
 
     const groupName = 'E2E (CI)';
@@ -747,7 +812,56 @@ function normalizeOptions(options: PlaywrightPluginOptions): NormalizedOptions {
     mergeReportsTargetName: `${ciTargetName}--merge-reports`,
     waitForWebServer: options?.waitForWebServer ?? false,
     waitForServerReady: options?.waitForServerReady !== false,
+    installBrowsers: normalizeInstallBrowsersOptions(options?.installBrowsers),
   };
+}
+
+function normalizeInstallBrowsersOptions(
+  option: PlaywrightPluginOptions['installBrowsers']
+): NormalizedInstallBrowsersOptions | false {
+  if (option === false) {
+    return false;
+  }
+  const configured =
+    typeof option === 'object' && option !== null ? option : {};
+  return {
+    ...configured,
+    targetName: configured.targetName ?? 'playwright-install',
+  };
+}
+
+function buildInstallBrowsersTarget(
+  options: NormalizedInstallBrowsersOptions,
+  configBrowsers: string[]
+): TargetConfiguration | null {
+  const browsers = options.browsers ?? configBrowsers;
+  if (browsers !== 'all' && browsers.length === 0) {
+    return null;
+  }
+  return {
+    executor: '@nx/playwright:install-browsers',
+    cache: false,
+    options: {
+      ...(browsers === 'all' ? {} : { browsers }),
+      ...(options.withDeps === undefined ? {} : { withDeps: options.withDeps }),
+    },
+    metadata: {
+      technologies: ['playwright'],
+      description: 'Installs the browsers the Playwright tests use.',
+    },
+  };
+}
+
+function dependOnInstallTarget(
+  targetConfig: TargetConfiguration,
+  installTargetName: string | undefined
+): void {
+  if (installTargetName) {
+    targetConfig.dependsOn = [
+      ...(targetConfig.dependsOn ?? []),
+      { target: installTargetName },
+    ];
+  }
 }
 
 function getTestOutput(playwrightConfig: PlaywrightTestConfig): string {
@@ -897,45 +1011,31 @@ function getDotEnvPairsForTask(
   return pairs.sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0));
 }
 
-// Resolves the web server command tasks and readiness servers a consumer chain
-// (`e2e` or the atomized `e2e-ci`) would see. A config with no ambient
-// `webServer` yields nothing to depend on or gate, so the task-env resolution
-// is skipped entirely: a `webServer` entry whose existence (not address)
-// depends on task-scoped env is not detected. Otherwise, when the chain's
-// task env differs from the graph-time ambient env, the config is re-evaluated
-// in a child under that env so an env-derived command or address resolves the
-// way the task will; a matching env reuses the ambient config. When
-// `inferReadiness` is false the gate is opted out: the resolved command tasks
-// still become dependencies, but no readiness servers are returned. A failed
-// re-evaluation falls back to the ambient servers and skips the gate for the
-// chain: an unverified address must not become a gate the daemon then caches,
-// but a config bug or timeout should degrade to master's behavior, not kill
-// graph construction for most commands. The returned `taskEnvEvalFailed` flag
-// keeps that degraded result out of the plugin cache so a later pass retries
-// the evaluation.
-async function resolveChainWebserver(
+interface ChainConfig {
+  evaluation: ConfigEvaluation;
+  taskEnv: NodeJS.ProcessEnv;
+  // Set when the evaluation failed and fell back to the ambient one. It keeps
+  // that degraded result out of the plugin cache so a later pass retries.
+  taskEnvEvalFailed: boolean;
+}
+
+// Evaluates the config the way a consumer chain's (`e2e` or the atomized
+// `e2e-ci`) tasks would. With `reevaluate` set and a chain task env that
+// differs from the graph-time ambient env, the config is re-evaluated in a
+// child under that env so env-derived values resolve the way the task will;
+// otherwise the ambient evaluation is reused. A failed re-evaluation falls back
+// to the ambient one: a config bug or timeout should degrade to master's
+// behavior, not kill graph construction for most commands.
+async function evaluateChainConfig(
   configFilePath: string,
   projectRoot: string,
   workspaceRoot: string,
-  ambientWebServers: ResolvedWebServer[],
-  ambientProbeEnv: ProbeEnv,
+  ambient: ConfigEvaluation,
   ambientEnv: NodeJS.ProcessEnv,
-  legacyProxiedTls: boolean,
-  npmConfigProxy: boolean,
   target: string,
   nonAtomizedTarget: string | undefined,
-  gateTarget: string,
-  inferReadiness: boolean
-): Promise<ResolvedChainWebserver> {
-  if (ambientWebServers.length === 0) {
-    return {
-      chain: { commandTasks: [], readinessServers: [], uncoveredServers: 0 },
-      taskEnvEvalFailed: false,
-    };
-  }
-  let webServers = ambientWebServers;
-  let probeEnv = ambientProbeEnv;
-  let taskEnvEvalFailed = false;
+  reevaluate: boolean
+): Promise<ChainConfig> {
   // Base every env reconstruction on the locked ambient snapshot, never on the
   // live process.env: another config's in-process load can be writing env
   // concurrently, and a transient write read as ambient would mask the values
@@ -947,21 +1047,59 @@ async function resolveChainWebserver(
     nonAtomizedTarget,
     ambientEnv
   );
-  if (taskEnvDivergesFromAmbient(taskEnv, ambientEnv)) {
-    try {
-      ({ webServers, probeEnv } = await resolveWebServersUnderEnv(
+  if (!reevaluate || !taskEnvDivergesFromAmbient(taskEnv, ambientEnv)) {
+    return { evaluation: ambient, taskEnv, taskEnvEvalFailed: false };
+  }
+  try {
+    return {
+      evaluation: await resolveWebServersUnderEnv(
         configFilePath,
         workspaceRoot,
         taskEnv
-      ));
-    } catch (e) {
-      taskEnvEvalFailed = true;
-      const detail = e instanceof Error ? e.message : String(e);
-      emitPluginWorkerLog(
-        'warn',
-        `@nx/playwright: could not evaluate ${configFilePath} under the ${target} task env to resolve the web server address. Targets are inferred from the ambient config evaluation and no web server readiness task is inferred for ${target}.\n${detail}`
-      );
-    }
+      ),
+      taskEnv,
+      taskEnvEvalFailed: false,
+    };
+  } catch (e) {
+    const detail = e instanceof Error ? e.message : String(e);
+    const readiness =
+      ambient.webServers.length > 0
+        ? ` and no web server readiness task is inferred for ${target}`
+        : '';
+    emitPluginWorkerLog(
+      'warn',
+      `@nx/playwright: could not evaluate ${configFilePath} under the ${target} task env. Targets are inferred from the ambient config evaluation${readiness}.\n${detail}`
+    );
+    return { evaluation: ambient, taskEnv, taskEnvEvalFailed: true };
+  }
+}
+
+// Resolves the web server command tasks and readiness servers a consumer chain
+// would see from its config evaluation. A config with no ambient `webServer`
+// yields nothing to depend on or gate, even when the chain's evaluation finds
+// one: a `webServer` entry whose existence (not address) depends on
+// task-scoped env is not detected. When `inferReadiness` is false the gate is
+// opted out: the resolved command tasks still become dependencies, but no
+// readiness servers are returned. A failed evaluation skips the gate for the
+// chain: an unverified address must not become a gate the daemon then caches.
+function resolveChainWebserver(
+  configFilePath: string,
+  projectRoot: string,
+  ambientWebServers: ResolvedWebServer[],
+  ambientEnv: NodeJS.ProcessEnv,
+  {
+    evaluation: { webServers, probeEnv },
+    taskEnv,
+    taskEnvEvalFailed,
+  }: ChainConfig,
+  legacyProxiedTls: boolean,
+  npmConfigProxy: boolean,
+  target: string,
+  gateTarget: string,
+  inferReadiness: boolean
+): ChainWebserver {
+  if (ambientWebServers.length === 0) {
+    return { commandTasks: [], readinessServers: [], uncoveredServers: 0 };
   }
 
   const { commandTasks, uncoveredServers } = getWebserverCommandTasks(
@@ -1003,10 +1141,26 @@ async function resolveChainWebserver(
       );
     }
   }
-  return {
-    chain: { commandTasks, readinessServers, uncoveredServers },
-    taskEnvEvalFailed,
-  };
+  return { commandTasks, readinessServers, uncoveredServers };
+}
+
+// Playwright connects to this endpoint instead of launching a browser, in
+// every project, and reads it after the config runs. An evaluation reused from
+// the ambient one ran without the chain's dotenv files, so the chain's value
+// counts unless the config set or cleared it.
+function connectsToRemoteBrowser({
+  evaluation: { connectEndpoint },
+  taskEnv,
+}: ChainConfig): boolean {
+  return !!(connectEndpoint.changedByConfig
+    ? connectEndpoint.value
+    : taskEnv.PW_TEST_CONNECT_WS_ENDPOINT);
+}
+
+function getChainBrowsers(chainConfig: ChainConfig): string[] {
+  return connectsToRemoteBrowser(chainConfig)
+    ? []
+    : chainConfig.evaluation.browsers;
 }
 
 // Two chains share a gate only when both the readiness servers and the serve

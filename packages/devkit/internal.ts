@@ -186,10 +186,12 @@ export {
   // side — an editor auto-import can silently pick the wrong one.
   type FileChange,
   type FileDataDependency,
+  FileLock,
   type FileMapCache,
   type FinalConfigForProject,
   FsTree,
   type GeneratorInformation,
+  IS_WASM,
   type InputDefinition,
   type JsonInput,
   LARGE_BUFFER,

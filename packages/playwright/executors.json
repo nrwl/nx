@@ -1,5 +1,11 @@
 {
   "executors": {
+    "install-browsers": {
+      "implementation": "./dist/src/executors/install-browsers/install-browsers.impl",
+      "schema": "./dist/src/executors/install-browsers/schema.json",
+      "description": "Install the Playwright browsers, and their system packages on Linux CI.",
+      "hidden": true
+    },
     "merge-reports": {
       "implementation": "./dist/src/executors/merge-reports/merge-reports.impl",
       "schema": "./dist/src/executors/merge-reports/schema.json",

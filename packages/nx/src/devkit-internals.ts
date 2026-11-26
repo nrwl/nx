@@ -197,6 +197,8 @@ export { hashFile } from './hasher/file-hasher';
 export { filterUsingGlobPatterns, getTargetInputs } from './hasher/task-hasher';
 export type { JsonInput } from './native';
 export {
+  FileLock,
+  IS_WASM,
   isAiAgent,
   killProcessTreeGraceful,
   matchGlobPaths,

@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/schema",
+  "version": 2,
+  "title": "Schema for Playwright Install Browsers Executor",
+  "description": "Installs the browsers the Playwright tests use.",
+  "type": "object",
+  "properties": {
+    "browsers": {
+      "type": "array",
+      "description": "The browsers to install, as `playwright install` names them. Installs Playwright's default browsers when omitted.",
+      "items": {
+        "type": "string"
+      }
+    },
+    "withDeps": {
+      "type": "boolean",
+      "description": "Whether to install the browsers' system packages before the browsers. Defaults to true on Linux in CI, and to false otherwise. Below Playwright 1.60, the default skips them when the user can't run apt-get as root without a password."
+    }
+  }
+}
