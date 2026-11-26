@@ -1,0 +1,143 @@
+---
+title: Split and cache e2e tests by file
+description: Split slow e2e test suites into per-file tasks with Nx Atomizer, distribute them across workers, and cache each test file separately so unaffected tests don't rerun.
+keywords:
+  [
+    split e2e tests,
+    atomizer,
+    per-file caching,
+    cache e2e tests,
+    skip unaffected e2e tests,
+    ciTargetName,
+  ]
+sidebar:
+  order: 15
+filter: 'type:Features'
+---
+
+End-to-end (e2e) tests verify real user flows, and coding agents make them fast to write, so test suites grow quickly.
+When an entire suite runs as a single task, it becomes the bottleneck in CI:
+
+- [Distributed task execution](/docs/features/ci-features/distribute-task-execution) and _dynamic task packing_ can't spread one monolithic task across machines or schedule other work around it well, leaving workers underutilized.
+- [Remote caching](/docs/features/ci-features/remote-cache) becomes all or nothing, because any change to the application or any test file invalidates the cache and reruns the whole suite.
+
+Nx solves both problems by splitting each e2e target into one task per test file (Atomizer) and caching each test file separately.
+Workers run the split tasks in parallel, and pull requests rerun only the test files affected by the change while the rest replay from cache.
+
+{% figure name="atomization" height=380 caption="One 18-minute e2e task, split into one task per spec file. On the next pull request, only the tasks that read the changed file rerun, and only one spec is among them. Everything else comes from the cache, so the run needs fewer workers." /%}
+
+## How per-file splitting and caching work
+
+When you run the CI test target, Nx handles each test file as an independent task in the task graph:
+
+1. Supported Nx plugins inspect your test runner configuration and infer one target per test file, such as `e2e-ci--src/checkout.spec.ts` and `e2e-ci--src/search.spec.ts`, under a parent `e2e-ci` target.
+1. In CI, workers distribute those per-file tasks across machines and pack them alongside lighter tasks, such as lint and unit tests.
+1. When a single test flakes, Nx Cloud isolates and retries only that file's task instead of the whole suite.
+1. Each split task has its own cache entry, and a one-line directive at the top of a test file scopes its hash to the code that file tests.
+   A change limited to checkout reruns `checkout.spec.ts`, while `search.spec.ts` replays its cached result.
+
+## Enable splitting and per-file caching
+
+To split and cache e2e tests in CI:
+
+1. Enable task splitting in your test plugin configuration in `nx.json`.
+   `@nx/playwright/plugin` and `@nx/cypress/plugin` default `ciTargetName` to `"e2e-ci"` (Cypress also needs `ciWebServerCommand` set in `nxE2EPreset`).
+   `@nx/jest/plugin` and `@nx/vitest` opt in by setting `ciTargetName`, and `@nx/gradle` opts in by setting `ciTestTargetName`.
+1. Run the `*-ci` target in CI, and keep using the base target (`e2e` or `test`) on your local machine where a single runner process is faster:
+
+   ```shell
+   nx affected -t lint test build e2e-ci
+   ```
+
+1. Add a per-file caching directive at the top of each test file you want to scope.
+
+{% aside type="note" title="Version and plugin requirements for per-file caching" %}
+Per-file caching directives require Nx 24 or later.
+`@nx-depends-on` works with Playwright, Cypress e2e tests, Jest, and Vitest.
+`@nx-ignore-server-inputs` works with Playwright and Cypress e2e tests and requires [Ultracache](/docs/features/ci-features/remote-cache#ultracache) turned on in Nx Cloud.
+`@nx/gradle` splits test tasks across workers, though it doesn't support comment directives.
+{% /aside %}
+
+## Split e2e tasks by file
+
+Configure the CI target option for your test plugin in `nx.json` so Nx infers one task per test file.
+Here's an example with `@nx/playwright/plugin`:
+
+```json
+// nx.json
+{
+  "plugins": [
+    {
+      "plugin": "@nx/playwright/plugin",
+      "options": {
+        "targetName": "e2e",
+        "ciTargetName": "e2e-ci"
+      }
+    }
+  ]
+}
+```
+
+Inspect the generated per-file targets with `nx show project <project-e2e>`.
+To configure Playwright, Cypress, Jest, Vitest, or Gradle and wire the `*-ci` target into your CI pipeline, see [automatically split slow tasks by file](/docs/kb/split-e2e-tasks).
+
+## Cache e2e test results per file
+
+By default, every split e2e task hashes the entire application and the entire e2e project, so an edit to any feature or any spec file reruns every test file.
+Adding a directive comment at the top of a test file scopes its cache inputs so unaffected test files replay from cache.
+
+Start with `@nx-depends-on` to list the projects a test exercises, including their dependencies automatically.
+Use `@nx-ignore-server-inputs` with Ultracache when you want Nx to drop the app server from the hash and track the feature modules the test imports directly.
+
+{% tabs %}
+{% tabitem label="@nx-depends-on" %}
+
+```ts
+// apps/shop-e2e/src/checkout.spec.ts
+// @nx-depends-on: checkout
+import { expect, test } from '@playwright/test';
+
+test('shows the order summary', async ({ page }) => {
+  await page.goto('/checkout');
+  await expect(
+    page.getByRole('heading', { name: 'Order summary' })
+  ).toBeVisible();
+});
+```
+
+{% /tabitem %}
+{% tabitem label="@nx-ignore-server-inputs" %}
+
+```ts
+// apps/shop-e2e/src/checkout.spec.ts
+// @nx-ignore-server-inputs
+import '@myorg/checkout/checkout-page';
+import { expect, test } from '@playwright/test';
+
+test('shows the order summary', async ({ page }) => {
+  await page.goto('/checkout');
+  await expect(
+    page.getByRole('heading', { name: 'Order summary' })
+  ).toBeVisible();
+});
+```
+
+{% /tabitem %}
+{% /tabs %}
+
+Leave the directive off whole-app smoke tests so they continue running on every application change.
+For full directive syntax, choosing between the two directives, server setup requirements, and verification steps, see [skip unaffected split e2e tests](/docs/kb/skip-unaffected-e2e-tests).
+
+## Related guides
+
+{% cardgrid %}
+
+{% linkcard title="Automatically split slow tasks by file" description="Configure Atomizer for Playwright, Cypress, Jest, Vitest, and Gradle" href="/docs/kb/split-e2e-tasks" /%}
+
+{% linkcard title="Skip unaffected split e2e tests" description="Scope each split test file with @nx-depends-on or @nx-ignore-server-inputs for per-file caching" href="/docs/kb/skip-unaffected-e2e-tests" /%}
+
+{% linkcard title="Merge atomized outputs" description="Combine reports and coverage artifacts from split test tasks" href="/docs/kb/merge-atomized-outputs" /%}
+
+{% linkcard title="Detect and retry flaky tasks" description="Isolate and retry only the failing split test file on a different worker" href="/docs/kb/flaky-tasks" /%}
+
+{% /cardgrid %}

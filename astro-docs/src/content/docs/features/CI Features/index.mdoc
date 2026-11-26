@@ -164,7 +164,7 @@ If your workspace has a `.nx/ci-config.yaml` file, [migrate it to `ci.yaml`](/do
 
 Fast CI comes from two things:
 
-- **Get more out of your machine minutes.** [Distributed task execution](/docs/features/ci-features/distribute-task-execution) spreads tasks across workers so work runs in parallel. Dynamic task packing runs tasks together when their combined CPU and memory needs fit on a worker, so you get more work out of each machine.
+- **Get more out of your machine minutes.** [Distributed task execution](/docs/features/ci-features/distribute-task-execution) spreads tasks across workers so work runs in parallel. Dynamic task packing runs tasks together when their combined CPU and memory needs fit on a worker, so you get more work out of each machine. [Splitting and caching e2e tests by file](/docs/features/ci-features/split-and-cache-e2e-tests) breaks slow suites into per-file tasks that workers can pack and cache individually.
 - **Only run what you have to.** [`nx affected`](/docs/features/ci-features/affected) selects tasks whose inputs your changes touch. [Remote caching](/docs/features/ci-features/remote-cache) reuses results from tasks that already ran with the same inputs, so they don't run again.
 
 ## Why task-based CI costs less
