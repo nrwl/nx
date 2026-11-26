@@ -1316,6 +1316,10 @@ async function createExpandedTaskInputResponse(
 
   const allWorkspaceFiles = await allFileData();
   const response: Record<string, Record<string, string[]>> = {};
+  const fileMatches: FileMatchCache = {
+    workspace: new Map(),
+    project: new Map(),
+  };
 
   Object.entries(taskGraphClientResponse.plans).forEach(([key, inputs]) => {
     const [project] = key.split(':');
@@ -1324,7 +1328,8 @@ async function createExpandedTaskInputResponse(
       inputs,
       depGraphClientResponse.projects.find((p) => p.name === project),
       allWorkspaceFiles,
-      depGraphClientResponse
+      depGraphClientResponse,
+      fileMatches
     );
 
     response[key] = expandedInputs;
@@ -1569,11 +1574,34 @@ function splitGlobGroup(group: string): string[] {
   return depth === 0 ? globs : group.split(',');
 }
 
+interface FileMatchCache {
+  workspace: Map<string, string[]>;
+  project: Map<string, string[]>;
+}
+
+function matchFiles(
+  cache: Map<string, string[]> | undefined,
+  key: string,
+  match: () => string[]
+): string[] {
+  if (!cache) {
+    return match();
+  }
+
+  let files = cache.get(key);
+  if (files === undefined) {
+    files = match();
+    cache.set(key, files);
+  }
+  return files;
+}
+
 function expandInputs(
   inputs: string[],
   project: ProjectGraphProjectNode,
   allWorkspaceFiles: FileData[],
-  depGraphClientResponse: ProjectGraphClientResponse
+  depGraphClientResponse: ProjectGraphClientResponse,
+  fileMatches?: FileMatchCache
 ): Record<string, string[]> {
   const projectNames = depGraphClientResponse.projects.map((p) => p.name);
 
@@ -1618,10 +1646,15 @@ function expandInputs(
     }
   });
 
-  const workspaceRootsExpanded: string[] = getExpandedWorkspaceRoots(
-    workspaceRootInputs,
-    allWorkspaceFiles
-  );
+  const expandWorkspaceRoots = () =>
+    getExpandedWorkspaceRoots(workspaceRootInputs, allWorkspaceFiles);
+  const workspaceRootsExpanded = fileMatches
+    ? matchFiles(
+        fileMatches.workspace,
+        JSON.stringify(workspaceRootInputs),
+        expandWorkspaceRoots
+      )
+    : expandWorkspaceRoots();
   const projectRoots = depGraphClientResponse.projects.map((p) => p.data.root);
   const filesExpanded = filesInputs.flatMap((globs) =>
     expandFilesInput(workspaceRoot, globs, projectRoots)
@@ -1645,20 +1678,19 @@ function expandInputs(
   const projectRootsExpanded = projectRootInputs
     .map((input) => {
       const fileSetProjectName = input.split(':')[0];
-      const fileSetProject = depGraphClientResponse.projects.find(
-        (p) => p.name === fileSetProjectName
-      );
-      const fileSets = input.replace(`${fileSetProjectName}:`, '').split(',');
-
-      const projectInputExpanded = {
-        [fileSetProject.name]: filterUsingGlobPatterns(
+      const files = matchFiles(fileMatches?.project, input, () => {
+        const fileSetProject = depGraphClientResponse.projects.find(
+          (p) => p.name === fileSetProjectName
+        );
+        const fileSets = input.replace(`${fileSetProjectName}:`, '').split(',');
+        return filterUsingGlobPatterns(
           fileSetProject.data.root,
-          depGraphClientResponse.fileMap[fileSetProject.name] || [],
+          depGraphClientResponse.fileMap[fileSetProjectName] || [],
           fileSets
-        ).map((f) => f.file),
-      };
+        ).map((f) => f.file);
+      });
 
-      return projectInputExpanded;
+      return { [fileSetProjectName]: files };
     })
     .reduce((curr, acc) => {
       for (let key in curr) {
