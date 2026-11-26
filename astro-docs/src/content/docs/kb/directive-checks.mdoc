@@ -156,22 +156,22 @@ none of the lines in the file lists a project.
 These checks run on a test file that a split task runs.
 The checks read the cached project graph.
 A plugin can record on each split task the test file it runs and the directives it applies.
-The Playwright, Cypress e2e, and Jest plugins record them with `applyTestFileDirectives` from
-`@nx/devkit/internal`, which other plugins can also call.
+The Playwright, Cypress e2e, Jest, and Vitest plugins record them with `applyTestFileDirectives`
+from `@nx/devkit/internal`, which other plugins can also call.
 When no split task records the file, the rule looks for a split task that records no file and
 whose name is `<target>--<file path>`, such as `test-ci--src/checkout.spec.ts`.
-Vitest and Cypress component test split tasks record nothing, so the rule finds them this way.
+Cypress component test split tasks record nothing, so the rule finds them this way.
 A name can also end with another file's path, so the rule can
 [check a file that no split task runs](#limits).
 
 ### Directives the test runner ignores
 
 Nx applies both directives to Playwright and Cypress e2e split tasks, and only `@nx-depends-on`
-to Jest split tasks.
-It applies neither to Vitest or Cypress component test split tasks.
+to Jest and Vitest split tasks.
+It applies neither to Cypress component test split tasks.
 The rule reports a directive that the file's split task doesn't record as applied.
 
-For a Jest test file, list the projects the test exercises instead:
+For a Jest or Vitest test file, list the projects the test exercises instead:
 
 ```diff {% meta="lang='ts'" %}
 - // @nx-ignore-server-inputs
@@ -180,7 +180,7 @@ For a Jest test file, list the projects the test exercises instead:
 
 The rule reports
 `No split task that runs this file applies "@nx-ignore-server-inputs", so Nx ignores it.`
-For a Vitest or Cypress component test file, remove the directive.
+For a Cypress component test file, remove the directive.
 
 When several split tasks run the same file, the rule reports a directive only if none of them
 records it.
@@ -221,9 +221,9 @@ The rule reports
   it reports the directive as ignored, even when a plugin applies it.
 - For a split task that records no test file, the rule goes by the task name, which can end with
   another file's path.
-  For example, the Vitest task `test-ci--checkout--unit.spec.ts` runs `checkout--unit.spec.ts`,
-  but its name also ends with `unit.spec.ts`.
-  The rule then reports a test directive in `unit.spec.ts` as ignored.
+  For example, the Cypress component test task `component-test-ci--checkout--unit.cy.ts` runs
+  `checkout--unit.cy.ts`, but its name also ends with `unit.cy.ts`.
+  The rule then reports a test directive in `unit.cy.ts` as ignored.
   Nx does ignore it there, since no split task runs that file.
 - A lint task's hash covers the e2e project and the projects it depends on.
   The rule also reads other projects, such as an API that `@nx-depends-on` names but the e2e

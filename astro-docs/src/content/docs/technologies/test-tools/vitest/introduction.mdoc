@@ -201,6 +201,7 @@ Configure the plugin in `nx.json`:
 When `discoverTestFiles` is `glob`, configs that a glob cannot reproduce faithfully still boot Vitest automatically: `test.projects` or `test.workspace` (inline or an auto-loaded `vitest.workspace.*` or `vitest.projects.*` file), plugins with a `configureVitest` hook, `test.changed` or `test.related`, and enabled browser `instances` that set their own `include`, `exclude`, `includeSource`, or `dir`. Patterns the glob reads differently than Vitest trigger the same fallback: an absolute path, a trailing `/`, or an `!(...)` extglob, each optionally negated, in `include`, `exclude`, `includeSource`, or `typecheck`'s include or exclude.
 
 The `glob` path reads the Nx workspace file index, so it never enumerates specs ignored by `.gitignore` or `.nxignore`, even ones Vitest itself would run. Set `discoverTestFiles` to `vitest` if you need those specs atomized.
+The [`@nx-depends-on` directive](/docs/kb/skip-unaffected-e2e-tests) has no effect in those specs.
 
 Set `cwd` to `workspaceRoot` if your tests or `.env` values resolve paths from the working directory, such as `NODE_CONFIG_DIR=./src/config/`.
 Vitest still loads the project's config and runs only its tests, because `--root` points it at the project.
@@ -222,6 +223,10 @@ unless the directory already ends with it.
 `../../reports` for `apps/my-app` gives `reports/apps/my-app/src/a.spec.ts`.
 Nx caches only outputs inside the workspace, so atomized tasks and their CI parent run uncached
 when `reportsDirectory` resolves outside it.
+
+By default, atomized tasks use the same inferred inputs as the test target.
+To limit which dependency projects Nx hashes for a test file, use `@nx-depends-on` as described in
+[skip unaffected split e2e tests](/docs/kb/skip-unaffected-e2e-tests).
 
 A [target defaults](/docs/reference/nx-json#target-defaults) `plugin` filter for these tasks must use the exact identifier `@nx/vitest`.
 
