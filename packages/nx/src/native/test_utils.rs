@@ -74,11 +74,20 @@ pub(crate) fn hash_plans(entries: &[(&str, Vec<HashInstruction>)]) -> HashPlans 
     }
 }
 
-/// The graph with every target setting `ultracache.includeUnstableFiles`.
-pub(crate) fn including_unstable_files(mut graph: TaskGraph) -> TaskGraph {
+/// The graph with every target setting `ultracache.includeUnstableFiles: true`.
+pub(crate) fn including_unstable_files(graph: TaskGraph) -> TaskGraph {
+    with_include_unstable_files(graph, true)
+}
+
+/// The graph with every target setting `ultracache.includeUnstableFiles: false`.
+pub(crate) fn excluding_unstable_files(graph: TaskGraph) -> TaskGraph {
+    with_include_unstable_files(graph, false)
+}
+
+fn with_include_unstable_files(mut graph: TaskGraph, include: bool) -> TaskGraph {
     for task in graph.tasks.values_mut() {
         task.ultracache = Some(TaskUltracacheSettings {
-            include_unstable_files: Some(true),
+            include_unstable_files: Some(include),
             ..Default::default()
         });
     }

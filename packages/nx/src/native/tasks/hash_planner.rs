@@ -595,16 +595,16 @@ impl HashPlanner {
 
     /// Observed reads minus natively covered files, one group per owning
     /// project and one for the reads no project owns, plus the entry digest.
-    /// A group is an ordinary fileset. With `includeUnstableFiles` it is
-    /// disk-backed instead, and unowned reads join the `.` project's group,
-    /// else the task's. Declared filesets, negations included, never shape
+    /// A group is disk-backed, and unowned reads join the `.` project's group,
+    /// else the task's. With `includeUnstableFiles: false` it is an ordinary
+    /// fileset instead. Declared filesets, negations included, never shape
     /// the groups.
     /// Replaces the declared filesets in `ids` (self, deps, `{input, projects}`)
     /// with `task`'s observed reads; TsConfiguration and JSON inputs survive
     /// only if read. `always` is kept, and added where the configuration path never
-    /// gathered it (the task's own filesets). Unless the target sets
-    /// `includeUnstableFiles`, the reads are ordinary filesets of tracked
-    /// files, so declared `includeIgnored` filesets are kept too.
+    /// gathered it (the task's own filesets). With `includeUnstableFiles: false`
+    /// the reads are ordinary filesets of tracked files, so declared
+    /// `includeIgnored` filesets are kept too.
     fn replace_with_configuration(
         &self,
         task: &Task,
@@ -620,7 +620,7 @@ impl HashPlanner {
             .ultracache
             .as_ref()
             .and_then(|ultracache| ultracache.include_unstable_files)
-            .unwrap_or(false);
+            .unwrap_or(true);
         // Files under node_modules that no external hashes: upstream outputs,
         // and what a declared `includeIgnored` group walks into there. None
         // of them is tracked.
@@ -934,8 +934,8 @@ impl HashPlanner {
                     }),
             );
         }
-        // Kept with a configuration too; with `includeUnstableFiles` the hasher
-        // drops recorded reads these hash.
+        // Kept with a configuration too; unless `includeUnstableFiles` is `false`
+        // the hasher drops recorded reads these hash.
         ids.extend(
             self.gather_dependency_outputs(task, task_graph, &inputs.deps_outputs)?
                 .into_iter()
@@ -3263,7 +3263,7 @@ mod always_tests {
     use super::*;
     use crate::native::project_graph::types::{Project, Target};
     use crate::native::test_utils::{
-        including_unstable_files, task_graph, ultracache_configurations,
+        excluding_unstable_files, including_unstable_files, task_graph, ultracache_configurations,
     };
     use crate::native::types::{DepsOutputsInput, FileSetInput, InputsInput, JsInputs, JsonInput};
     use napi::Either;
@@ -3623,7 +3623,7 @@ mod always_tests {
     }
 
     #[test]
-    fn a_recording_is_an_ordinary_fileset_unless_the_target_includes_unstable_files() {
+    fn a_recording_is_an_ordinary_fileset_when_the_target_excludes_unstable_files() {
         let planner = planner(
             vec![(
                 "e2e:e2e",
@@ -3660,7 +3660,7 @@ mod always_tests {
         // A read no project owns is a workspace fileset. The declared
         // `includeIgnored` fileset stays: no read hashes an ignored file.
         assert_eq!(
-            sorted(filesets(graph())),
+            sorted(filesets(excluding_unstable_files(graph()))),
             sorted(vec![
                 HashInstruction::WorkspaceFileSet(vec!["{workspaceRoot}/tools/setup.ts".into()]),
                 HashInstruction::ProjectFileSet(
@@ -3670,7 +3670,7 @@ mod always_tests {
                 disk("libs/e2e/generated/**", false),
             ])
         );
-        let unstable = filesets(including_unstable_files(graph()));
+        let unstable = filesets(graph());
         assert!(unstable.iter().all(|instruction| matches!(
             instruction,
             HashInstruction::IgnoredFileSet {
@@ -3684,11 +3684,14 @@ mod always_tests {
     #[test]
     fn a_recorded_exclusion_stays_in_the_fileset_of_the_reads_it_trims() {
         let planner = planner(vec![("e2e:e2e", vec![])], &[]);
-        let recorded: Vec<HashInstruction> =
-            recorded_e2e_plan_reading(&planner, &["libs/e2e/**/*.ts", "!libs/e2e/src/**/*.ts"])
-                .into_iter()
-                .filter(|instruction| matches!(instruction, HashInstruction::ProjectFileSet(..)))
-                .collect();
+        let recorded: Vec<HashInstruction> = recorded_e2e_plan_in(
+            &planner,
+            &["libs/e2e/**/*.ts", "!libs/e2e/src/**/*.ts"],
+            excluding_unstable_files(task_graph(&[("e2e:e2e", &[])], &[])),
+        )
+        .into_iter()
+        .filter(|instruction| matches!(instruction, HashInstruction::ProjectFileSet(..)))
+        .collect();
         assert_eq!(
             recorded,
             vec![HashInstruction::ProjectFileSet(
@@ -3702,13 +3705,13 @@ mod always_tests {
     fn a_recorded_read_of_an_upstream_output_does_not_defer_the_task() {
         let planner = planner(vec![("e2e:e2e", vec![])], &[("e2e", &["app"])]);
         // `app:build` declares a committed file as its output.
-        let graph = task_graph(
+        let graph = excluding_unstable_files(task_graph(
             &[
                 ("e2e:e2e", &[]),
                 ("app:build", &["libs/app/src/generated.d.ts"]),
             ],
             &[("e2e:e2e", &["app:build"])],
-        );
+        ));
         let (_dir, configurations) =
             ultracache_configurations(&[("e2e:e2e", &["libs/app/src/generated.d.ts"])]);
         let plans = planner
@@ -3838,12 +3841,12 @@ mod always_tests {
             "dist/libs/app/node_modules/dep/index.js",
         ];
         assert_eq!(
-            hashed_node_modules_reads(&planner, including_unstable_files(graph()), &reads),
+            hashed_node_modules_reads(&planner, graph(), &reads),
             (vec!["node_modules/.gen/app/index.js".to_string()], true)
         );
-        // Without `includeUnstableFiles` nothing under node_modules is tracked.
+        // Without unstable files nothing under node_modules is tracked.
         assert_eq!(
-            hashed_node_modules_reads(&planner, graph(), &reads),
+            hashed_node_modules_reads(&planner, excluding_unstable_files(graph()), &reads),
             (vec![], false)
         );
     }
@@ -3860,10 +3863,10 @@ mod always_tests {
             )],
             &[("e2e", &["app"])],
         );
-        let graph = task_graph(
+        let graph = excluding_unstable_files(task_graph(
             &[("e2e:e2e", &[]), ("app:build", &["libs/app/dist"])],
             &[("e2e:e2e", &["app:build"])],
-        );
+        ));
         let (_dir, configurations) =
             ultracache_configurations(&[("e2e:e2e", &["libs/e2e/src/app.spec.ts"])]);
         let plans = planner
@@ -4114,7 +4117,9 @@ mod always_tests {
 mod nested_project_tests {
     use super::*;
     use crate::native::project_graph::types::{Project, Target};
-    use crate::native::test_utils::{including_unstable_files, task_graph};
+    use crate::native::test_utils::{
+        excluding_unstable_files, including_unstable_files, task_graph,
+    };
     use crate::native::types::FileSetInput;
     use napi::bindgen_prelude::Either9;
 
@@ -4234,7 +4239,7 @@ mod nested_project_tests {
         let plans = planner()
             .get_plans_materialized(
                 vec!["gradle:build"],
-                task_graph(&[("gradle:build", &[])], &[]),
+                excluding_unstable_files(task_graph(&[("gradle:build", &[])], &[])),
                 Some(&configurations),
                 &[],
             )
