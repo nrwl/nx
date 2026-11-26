@@ -94,7 +94,7 @@ export async function newGenerator(tree: Tree, opts: Schema) {
       );
       if (pmc.preInstall) {
         execSync(pmc.preInstall, {
-          cwd: joinPathFragments(tree.root, options.directory),
+          cwd: join(tree.root, options.directory),
           stdio:
             process.env.NX_GENERATE_QUIET === 'true' ? 'ignore' : 'inherit',
           windowsHide: true,
