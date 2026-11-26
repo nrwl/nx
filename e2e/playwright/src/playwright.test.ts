@@ -67,7 +67,7 @@ describe('Playwright E2E Test runner', () => {
       const e2eResults = runCLI(`e2e demo-js-e2e`);
       expect(e2eResults).toContain('Successfully ran target e2e for project');
 
-      const lintResults = runCLI(`lint demo-e2e`);
+      const lintResults = runCLI(`lint demo-js-e2e`);
       expect(lintResults).toContain('Successfully ran target lint');
     },
     TEN_MINS_MS
