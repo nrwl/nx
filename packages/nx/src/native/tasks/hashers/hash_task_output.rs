@@ -32,7 +32,6 @@ pub fn expand_task_outputs(
         let (positives, negations) = output_entries(workspace_root, outputs)?;
         // Declared outputs are read wherever they point, nested projects included.
         expand_entries(
-            workspace_root,
             &positives,
             &negations,
             &ProjectScope::default(),
