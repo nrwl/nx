@@ -674,7 +674,11 @@ describe('librarySecondaryEntryPoint generator', () => {
     ]);
   });
 
-  it('should not prefix globs that belong to existing secondary entry points', async () => {
+  it('should not prefix globs that belong to existing ng-packagr secondary entry points', async () => {
+    updateJson(tree, 'package.json', (json) => ({
+      ...json,
+      dependencies: { ...json.dependencies, '@angular/core': '~22.2.0' },
+    }));
     await generateTestLibrary(tree, {
       name: 'lib1',
       directory: 'libs/lib1',
