@@ -1,0 +1,140 @@
+---
+title: Find CI optimizations with an AI agent
+description: Have an AI agent find costly flaky tasks, tasks to split, cache misses, idle workers and credit trends in your Nx Cloud CI data, on demand or on a schedule.
+filter: 'type:Guides'
+topics:
+  - 'Nx Cloud'
+  - 'Continuous integration'
+---
+
+The `ci-optimization` skill teaches an AI agent where to look in your recorded Nx Cloud CI data, and how
+to rank what it finds by the CI time or credits it costs.
+It reads data only: what to do with a finding (a report, an issue, a pull request) is up to you and your
+prompt.
+
+| Finding                         | What the agent looks at                                                             |
+| ------------------------------- | ----------------------------------------------------------------------------------- |
+| Flaky tasks                     | Daily flakiness and reruns per task, ranked by CI time lost, with failing-attempt logs |
+| Tasks to atomize or shard       | Long test and e2e targets that run in most pipelines and aren't split yet            |
+| Cache misses and broad inputs   | Targets ranked by hours spent on cache misses, and the likely cause                  |
+| Worker utilization              | Worker startup, busy and idle time, CPU and memory per launch template               |
+| Compute and credits             | Credits and VM minutes per pipeline, compared between periods                        |
+
+The data comes from the [Nx Cloud Public API](/docs/reference/nx-cloud/public-api) and the Nx Cloud
+CLI.
+For causes the API doesn't record, such as a target's inputs, the agent reads your workspace.
+
+## Install the skill
+
+The skill is part of the `nx-cloud` plugin for coding agents.
+
+For Claude Code:
+
+```shell
+claude plugin marketplace add https://raw.githubusercontent.com/nrwl/nx-ai-agents-config/main/plugins/.claude-plugin/marketplace.json
+claude plugin install nx-cloud@nx-plugins
+```
+
+For Codex:
+
+```shell
+codex plugin marketplace add nrwl/nx-ai-agents-config
+codex plugin add nx-cloud@nx-plugins
+```
+
+The agent needs Public API access to your workspace: your login from `npx nx login`, or a CI access token
+in `NX_CLOUD_ACCESS_TOKEN`.
+See [Authenticate with the Nx Cloud Public API](/docs/kb/authenticate-public-api).
+Some commands it uses need `NX_CLOUD_EXPERIMENTAL_CLI=true` in its environment.
+
+## Ask for a review
+
+Run your agent from the workspace root, and ask in your own words:
+
+```plaintext
+Which flaky tasks cost us the most CI time last week, and why do they fail?
+```
+
+```plaintext
+Which test targets should we atomize or shard?
+```
+
+```plaintext
+Find targets with a low cache hit rate on main this month and check whether their inputs are too broad.
+```
+
+```plaintext
+Are our Nx Cloud workers sized right? Compare credits per pipeline with the previous two weeks.
+```
+
+Treat each finding as a hypothesis until a change is measured in CI.
+The report links the pipelines and runs it is based on.
+
+## Run it on a schedule
+
+Any scheduler that can run your agent headless works: a CI cron job,
+[Claude Code routines](https://code.claude.com/docs/en/routines), or
+[Codex automations](https://developers.openai.com/codex/app/automations).
+Give the job a read-only CI access token as `NX_CLOUD_ACCESS_TOKEN`.
+On a single-tenant installation, also set `NX_CLOUD_API` to your Nx Cloud URL.
+
+This GitHub Actions workflow writes a weekly report to the job summary:
+
+```yaml {% title=".github/workflows/ci-optimization.yml" %}
+name: Weekly CI optimization report
+
+on:
+  schedule:
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install -g @anthropic-ai/claude-code
+      - run: |
+          claude plugin marketplace add https://raw.githubusercontent.com/nrwl/nx-ai-agents-config/main/plugins/.claude-plugin/marketplace.json
+          claude plugin install nx-cloud@nx-plugins
+      - name: Write the report
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          NX_CLOUD_ACCESS_TOKEN: ${{ secrets.NX_CLOUD_READ_TOKEN }}
+          NX_CLOUD_EXPERIMENTAL_CLI: 'true'
+        run: |
+          claude -p "Report the flaky tasks that cost the most CI time over the last 7 full UTC days, with the likely cause of the top 3. Output Markdown only." \
+            --allowedTools "Bash Read Grep Glob" > report.md
+          cat report.md >> "$GITHUB_STEP_SUMMARY"
+```
+
+To post the report somewhere else, or to open an issue or a pull request for the top finding, say so in
+the prompt and give the job the permissions and credentials that needs.
+
+## Example: a weekly flaky-task report
+
+This is part of a report the skill produced for the Nx repository itself, for one week in November 2026:
+
+```markdown
+## Flaky tasks (time lost = reruns × the file's mean cache-miss duration)
+
+| Target             | Reruns | Days flaky | Time lost | Worst files (reruns)                                   |
+| ------------------ | ------ | ---------- | --------- | ------------------------------------------------------ |
+| e2e-release:e2e-ci | 643    | 6/7        | 34.5 h    | preserve-local-dependency-protocols (80)               |
+| e2e-maven:e2e-ci   | 74     | 6/7        | 16.2 h    | maven.test.ts (45)                                     |
+| e2e-nx:e2e-ci      | 82     | 5/7        | 15.9 h    | affected-graph (37), watch (18)                        |
+
+Nearly all reruns passed on retry, so CI ends green but still pays the time.
+
+- e2e-release, preserve-local-dependency-protocols.test.ts: 3 failed attempts, each a
+  different test hitting Jest's `Exceeded timeout of 120000 ms` after 228 to 330 s.
+  Hypothesis: package installs sometimes run past the 120 s `testTimeout`.
+- e2e-maven, maven.test.ts: every failure was the non-batch build hitting its own
+  15-minute timeout, so each flake costs the full 15 minutes before the retry.
+```

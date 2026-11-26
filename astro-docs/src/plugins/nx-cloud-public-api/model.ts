@@ -337,6 +337,10 @@ export function buildOpenApiReference(
           href: '/docs/kb/use-public-api-with-ai-agent',
         },
         {
+          label: 'Find CI optimizations with an AI agent',
+          href: '/docs/kb/find-ci-optimizations-with-ai-agent',
+        },
+        {
           label: 'Read raw resource-utilization reports',
           href: '/docs/kb/read-resource-utilization-reports',
         },
