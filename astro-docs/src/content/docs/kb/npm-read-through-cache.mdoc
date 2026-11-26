@@ -1,66 +1,157 @@
 ---
-title: 'npm Read-Through Cache'
-description: 'Serve repeated npm installs from a cache close to your Workers instead of the public npm registry.'
+title: 'npm read-through cache'
+description: 'Serve repeated npm, pnpm, and Yarn installs from a cache close to your Workers instead of the public npm registry.'
 keywords:
-  [npm, read-through cache, registry proxy, nx agents, nx cloud, add-on, npmrc]
+  [
+    npm,
+    read-through cache,
+    proxy cache,
+    registry proxy,
+    dedicated compute,
+    single-tenant,
+    nx agents,
+    nx cloud,
+    add-on,
+    npmrc,
+  ]
 filter: 'type:Guides'
 topics:
   - 'Continuous integration'
   - 'Nx Cloud'
 ---
 
-The npm read-through cache puts a package registry proxy close to your
-[Workers](/docs/features/ci-features/distribute-task-execution). The first time a package is
-requested, it is fetched from the public npm registry and stored in the cache. Repeated installs of
-the same package are then served from the cache instead of the upstream registry, cutting install
-time and external network usage. Once the cache is warm, packages often install faster than restoring
-them from `node_modules` caching.
+The npm read-through cache (also called the npm proxy cache) puts a package registry proxy close
+to your [Workers](/docs/features/ci-features/distribute-task-execution).
+The first time a package is requested, it is fetched from the public npm registry and stored in the
+cache.
+Repeated installs of the same package are then served from the cache instead of the upstream
+registry, cutting install time and external network usage.
 
 It also protects your organization from npm registry outages.
 
-## How to enable it
+## Enable the cache
 
-{% aside type="note" title="Requires a dedicated compute cluster" %}
-The npm read-through cache is an Nx Cloud add-on that runs on a
-[dedicated compute cluster](/docs/kb/dedicated-compute-cluster). Request the
-cluster, then enable this add-on under [**Settings > Add-ons**](https://cloud.nx.app/go/organization/add-ons).
-{% /aside %}
+The cache runs inside the cluster that hosts your Workers, so how you get it depends on your Nx
+Cloud deployment:
 
-You can enable npm read-through cache through your organization settings:
+- **Dedicated compute cluster**: the cache is an Nx Cloud add-on that runs on a
+  [dedicated compute cluster](/docs/kb/dedicated-compute-cluster).
+  Once the cluster is active, open [**Settings > Add-ons**](https://cloud.nx.app/go/organization/add-ons)
+  for your organization.
+  On the **Dedicated compute cluster** card, find **npm read-through cache**, click
+  **Request add-on**, and confirm.
+- **Single-tenant**: the cache is available for hosted
+  [single-tenant deployments](/docs/enterprise/single-tenant/overview).
+  [Contact the Nx team](https://nx.dev/enterprise) to add it to your deployment.
 
-1. Open [**Settings > Add-ons**](https://cloud.nx.app/go/organization/add-ons) for your organization.
-2. Under **Dedicated compute cluster** card, find **npm read-through cache** and click **Request add-on** and confirm.
+## Cache address
 
-When the add-on is enabled, Nx Cloud runs a caching proxy in your dedicated cluster that sits in
-front of the public npm registry. You point your package manager at the proxy through an `.npmrc`
-file. Installs then flow through the cache.
+Each deployment exposes the cache at a fixed address inside the cluster.
+Use the address for your deployment wherever `<cache-url>` appears on this page:
 
-The cache works with **npm**, **yarn**, and **pnpm**, since they all read the `registry` setting
-from `.npmrc`.
+| Deployment                | Cache address                              |
+| ------------------------- | ------------------------------------------ |
+| Dedicated compute cluster | `http://npm:4873/`                         |
+| Single-tenant             | `http://cache.npm.svc.cluster.local:4873/` |
+
+Both addresses resolve only inside the cluster, so use them from Workers, not from a local machine.
 
 ## Scope
 
 - **Public npm packages only.** The cache proxies the public npm registry.
-- **Private and scoped packages that require authentication are not cached.** Keep their existing
-  registry entries in your `.npmrc`. Those requests bypass the cache and go straight to your private
-  registry.
+- **Private and scoped packages that require authentication are not cached.** Send them directly
+  to your private registry, as described in [route private packages](#route-private-packages).
+- **Do not publish packages to the cache.** See [configure package publishing](#configure-package-publishing).
 
-## Configuration
+## Configure the default registry
 
-Point your package manager at the cache by setting the registry in an `.npmrc`. Place it in the
-project root (simplest) or in the agent's home directory (`~/.npmrc`):
+Point your package manager at the cache before it installs dependencies.
+Put the file at the workspace root or in the Worker home directory:
+
+{% tabs syncKey="package-manager" %}
+{% tabitem label="npm, pnpm, and Yarn Classic" %}
+
+npm, pnpm, and Yarn Classic read the registry from `.npmrc`:
 
 ```ini
 # .npmrc
-registry=http://npm:4873/
+registry=<cache-url>
 ```
 
-The cache is always reachable from within your cluster at the address above.
-For package-manager-specific setup, private registry routing, and publishing configuration, see
-[Configure the npm proxy cache for Workers](/docs/kb/npm-proxy-cache-setup-for-nx-agents).
+{% /tabitem %}
+{% tabitem label="Yarn Modern" %}
 
-{% aside type="note" title="If you publish packages" %}
-If your CI publishes npm packages, set a publish registry so `npm publish` targets your real
-registry instead of the cache. Add `publishConfig.registry` to the package's `package.json`, or
-pass `npm publish --registry <url>`.
-{% /aside %}
+Yarn Modern ignores `.npmrc` and reads the registry from `npmRegistryServer` in `.yarnrc.yml`:
+
+```yaml
+# .yarnrc.yml
+npmRegistryServer: '<cache-url>'
+```
+
+{% /tabitem %}
+{% /tabs %}
+
+If an existing project-level file sets the registry, update that file.
+A user-level setting does not override a project-level setting.
+
+## Route private packages
+
+Map each private package scope to the registry that hosts it.
+The scoped setting takes precedence over the default cache registry:
+
+```ini
+# .npmrc
+registry=<cache-url>
+@<package-scope>:registry=https://<private-registry-host>/npm/
+```
+
+You can also write the scoped setting with the npm CLI:
+
+```shell
+npm config set @<package-scope>:registry https://<private-registry-host>/npm/
+```
+
+## Configure package publishing
+
+Set a publishing registry for each package that your workspace publishes.
+The `publishConfig` field in `package.json` keeps publish requests away from the cache:
+
+```json
+{
+  "publishConfig": {
+    "registry": "https://<publishing-registry-host>/npm/"
+  }
+}
+```
+
+You can also pass `npm publish --registry <url>`.
+A scoped registry in `.npmrc` also applies when you publish a package from that scope.
+
+## Configure an agent setup step
+
+Add the registry settings before the dependency installation step in your
+[launch template](/docs/kb/launch-templates):
+
+```yaml
+# .nx/pipelines/ci.yaml
+launch-templates:
+  linux-medium:
+    init-steps:
+      - name: Configure the npm read-through cache
+        script: |
+          npm config set --location=user registry <cache-url>
+          npm config set --location=user @<package-scope>:registry https://<private-registry-host>/npm/
+```
+
+Use a committed project-level configuration instead when the workspace already defines its
+registry in `.npmrc` or an equivalent file.
+
+## Understand cache behavior
+
+The cache uses multiple replicas for reliability and local network access.
+A cold replica still fetches a package from the upstream registry, so the first request in an
+availability zone can take longer than later requests.
+
+For package manager details, see the [npm `.npmrc` reference](https://docs.npmjs.com/cli/configuring-npm/npmrc),
+[pnpm settings](https://pnpm.io/npmrc), [Yarn Classic configuration](https://classic.yarnpkg.com/lang/en/docs/cli/config/),
+and [Yarn Modern configuration](https://yarnpkg.com/configuration/yarnrc).
