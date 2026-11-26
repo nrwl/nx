@@ -1,4 +1,11 @@
 {
-  "generators": {},
+  "generators": {
+    "update-24-1-0-add-dependent-tasks-output-files-input": {
+      "version": "24.1.0-beta.4",
+      "description": "Adds a `dependentTasksOutputFiles` input to the inputs of `@nx/esbuild:esbuild` targets and target defaults, so a build is not restored from the cache after the output of a task it depends on has changed",
+      "implementation": "./dist/src/migrations/update-24-1-0/add-dependent-tasks-output-files-input",
+      "documentation": "./dist/src/migrations/update-24-1-0/add-dependent-tasks-output-files-input.md"
+    }
+  },
   "packageJsonUpdates": {}
 }

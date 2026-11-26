@@ -53,6 +53,8 @@ export function addProject(
   if (options.bundler === 'esbuild') {
     addBuildTargetDefaults(tree, '@nx/esbuild:esbuild', 'build', [
       TS_SOLUTION_SETUP_TSCONFIG_INPUT,
+      // A dependency consumed as built is read from its build's outputs.
+      { dependentTasksOutputFiles: '**/*', transitive: true },
       ...deployInputs,
     ]);
     project.targets.build = getEsBuildConfig(tree, project, options);

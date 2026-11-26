@@ -65,6 +65,8 @@ function addBuildTarget(
 ) {
   addBuildTargetDefaults(tree, '@nx/esbuild:esbuild', options.buildTarget, [
     TS_SOLUTION_SETUP_TSCONFIG_INPUT,
+    // A dependency consumed as built is read from its build's outputs.
+    { dependentTasksOutputFiles: '**/*', transitive: true },
   ]);
   const project = readProjectConfiguration(tree, options.project);
 

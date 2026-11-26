@@ -86,6 +86,7 @@ describe('configurationGenerator', () => {
           json: '{workspaceRoot}/tsconfig.json',
           fields: ['extends', 'files', 'include'],
         },
+        { dependentTasksOutputFiles: '**/*', transitive: true },
       ],
     });
     expect(
@@ -119,6 +120,7 @@ describe('configurationGenerator', () => {
         json: '{workspaceRoot}/tsconfig.json',
         fields: ['extends', 'files', 'include'],
       },
+      { dependentTasksOutputFiles: '**/*', transitive: true },
     ]);
   });
 

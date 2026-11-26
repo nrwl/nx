@@ -2065,6 +2065,7 @@ describe('app', () => {
         'default',
         '^default',
         TS_SOLUTION_SETUP_TSCONFIG_INPUT,
+        { dependentTasksOutputFiles: '**/*', transitive: true },
         ...PNPM_INSTALL_SETTINGS_INPUTS,
       ]);
     });
@@ -2196,6 +2197,7 @@ describe('app', () => {
           'default',
           '^default',
           TS_SOLUTION_SETUP_TSCONFIG_INPUT,
+          { dependentTasksOutputFiles: '**/*', transitive: true },
           ...BUN_INSTALL_SETTINGS_INPUTS,
         ]);
       }
