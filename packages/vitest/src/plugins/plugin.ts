@@ -184,7 +184,6 @@ export const createNodes: CreateNodes<VitestPluginOptions> = [
             // or their tsconfigs.
             targets: withSetupFileInputs(
               targets,
-              normalizedOptions.testTargetName,
               setupFileCandidates,
               projectRoot,
               context.workspaceRoot,
@@ -507,7 +506,12 @@ async function buildVitestTargets(
         targets[options.ciTargetName] = {
           executor: 'nx:noop',
           cache: isCoverageCacheable,
-          inputs: targets[options.testTargetName].inputs,
+          // A cache hit restores the atoms' coverage, so the hash covers what
+          // they wrote. Atom inputs can differ from the test target's.
+          inputs: [
+            ...targets[options.testTargetName].inputs,
+            { dependentTasksOutputFiles: '**/*' },
+          ],
           // Exactly the atom directories: a cache restore replaces each declared
           // directory, and any wider one can hold other projects' coverage.
           outputs: atomOutputs,
@@ -536,7 +540,6 @@ async function buildVitestTargets(
 
 function withSetupFileInputs(
   targets: Record<string, TargetConfiguration>,
-  testTargetName: string,
   setupFileCandidates: string[],
   projectRoot: string,
   workspaceRoot: string,
@@ -560,11 +563,10 @@ function withSetupFileInputs(
     // executes, so any change to them changes the run.
     ...files.map((f) => `{workspaceRoot}/${f}`),
   ];
-  const inputs = [...targets[testTargetName].inputs, ...setupInputs];
   return Object.fromEntries(
     Object.entries(targets).map(([name, target]) => [
       name,
-      { ...target, inputs },
+      { ...target, inputs: [...target.inputs, ...setupInputs] },
     ])
   );
 }
