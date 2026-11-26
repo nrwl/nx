@@ -496,6 +496,8 @@ describe('isAngularSecondaryEntrypoint', () => {
         '@project/standard/secondary': ['libs/standard/secondary/src/index.ts'],
         '@project/features': ['libs/features/index.ts'],
         '@project/features/*': ['libs/features/*/random/folder/api.ts'],
+        '@project/exported': ['libs/exported/src/index.ts'],
+        '@project/exported/secondary': ['libs/exported/secondary/src/index.ts'],
       },
     },
   };
@@ -518,6 +520,19 @@ describe('isAngularSecondaryEntrypoint', () => {
         lib: { entryFile: 'random/folder/api.ts' },
       }),
       'libs/features/secondary/random/folder/api.ts': 'const bla = "foo"',
+      // Declares its entry points only in the package.json exports.
+      'libs/exported/package.json': JSON.stringify({
+        exports: {
+          '.': './src/index.ts',
+          './secondary': './secondary/src/index.ts',
+          './styles': './styles/index.css',
+          './shared': './src/shared.ts',
+        },
+      }),
+      'libs/exported/src/index.ts': 'const bla = "foo"',
+      'libs/exported/src/shared.ts': 'const bla = "foo"',
+      'libs/exported/secondary/src/index.ts': 'const bla = "foo"',
+      'libs/exported/styles/index.css': '',
     };
     vol.fromJSON(fsJson, '/root');
   });
@@ -565,6 +580,28 @@ describe('isAngularSecondaryEntrypoint', () => {
         'libs/features'
       )
     ).toBe(false);
+    expect(
+      belongsToDifferentEntryPoint(
+        '@project/exported/secondary',
+        'libs/exported/secondary/src/subfolder/index.ts',
+        'libs/exported'
+      )
+    ).toBe(false);
+    // Directories of exports whose target isn't a TypeScript file inside them
+    expect(
+      belongsToDifferentEntryPoint(
+        '@project/exported',
+        'libs/exported/styles/helper.ts',
+        'libs/exported'
+      )
+    ).toBe(false);
+    expect(
+      belongsToDifferentEntryPoint(
+        '@project/exported',
+        'libs/exported/shared/helper.ts',
+        'libs/exported'
+      )
+    ).toBe(false);
   });
 
   it('should return true if they belong to different entrypoints', () => {
@@ -581,6 +618,13 @@ describe('isAngularSecondaryEntrypoint', () => {
         '@project/features',
         'libs/features/secondary/random/folder/src/index.ts',
         'libs/features'
+      )
+    ).toBe(true);
+    expect(
+      belongsToDifferentEntryPoint(
+        '@project/exported',
+        'libs/exported/secondary/src/subfolder/index.ts',
+        'libs/exported'
       )
     ).toBe(true);
     // secondary
