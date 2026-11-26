@@ -540,7 +540,7 @@ impl HashPlanner {
 
     /// Observed reads minus natively covered files, one group per owning
     /// project and one for the reads no project owns, plus the entry digest
-    /// and, when the configurations ask for it, the project's folder state.
+    /// and, when the configurations ask for it, the folder state of its root.
     /// A group is disk-backed, and unowned reads join the `.` project's group,
     /// else the task's. With `includeUnstableFiles: false` it is an ordinary
     /// fileset instead. Declared filesets, negations included, never shape
@@ -624,10 +624,10 @@ impl HashPlanner {
             include_unstable,
         ));
         // Catches a new kind of file in the project that the recorded globs
-        // miss. One instruction per project, so its targets share the value.
+        // miss. One instruction per project root, so its targets share the value.
         if context.entry.project_folder_state {
-            result.ids([pool.intern(HashInstruction::ProjectFolderState(
-                task.target.project.clone(),
+            result.ids([pool.intern(HashInstruction::owner_folder_state(
+                &self.project_graph.nodes[&task.target.project].root,
             ))]);
         }
         result
@@ -3654,7 +3654,7 @@ mod always_tests {
                     .iter()
                     .copied()
                     .filter(|id| {
-                        matches!(plans.pool.get(*id).value(), HashInstruction::ProjectFolderState(p) if p == "e2e")
+                        matches!(plans.pool.get(*id).value(), HashInstruction::OwnerFolderState(root) if root == "libs/e2e")
                     })
                     .collect()
             };
@@ -3695,7 +3695,7 @@ mod always_tests {
                 .remove("e2e:lint")
                 .unwrap()
         };
-        let folder_state = HashInstruction::ProjectFolderState("e2e".into());
+        let folder_state = HashInstruction::OwnerFolderState("libs/e2e".into());
         // The Nx Cloud client re-imports a run's configurations as JSON to
         // register its cache entries; those must hash as the files import did.
         let files = plan(UltracacheImport::Files(Some(true)));

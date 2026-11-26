@@ -1,4 +1,4 @@
-//! A project's folder state: which kinds of files each of its folders holds.
+//! A folder's state: which kinds of files each folder under it holds.
 //!
 //! A task hashed from its Ultracache configuration only sees the files its
 //! recorded globs match. A new file those globs miss can still change what the
@@ -7,9 +7,9 @@
 //! gains or loses a kind of file, and stays the same when files are edited or
 //! more files of a kind the folder already holds are added.
 //!
-//! Scope: only the files the project owns in the project file map. Folders
-//! above the project root are not included, and files of nested projects are
-//! left out. The file map holds every file that `.gitignore` and `.nxignore`
+//! Scope: the files of the file map under one folder (the task's project root
+//! today), minus those of projects nested below it. Folders above it are not
+//! included. The file map holds every file that `.gitignore` and `.nxignore`
 //! do not exclude, untracked ones included, so a build output that is not
 //! ignored counts too and can cause extra cache misses.
 
@@ -20,15 +20,23 @@ use std::sync::Arc;
 use xxhash_rust::xxh3::Xxh3;
 
 use super::once_cache::OnceCache;
+use crate::native::project_graph::utils::{ProjectRootMappings, find_project_for_path};
 use crate::native::types::FileData;
 
 /// Hashed ahead of every folder state. Changing how kinds or folders are
 /// derived must change this tag, so every task re-runs once on purpose.
 const FOLDER_STATE_VERSION: &[u8] = b"folder-state:v1";
 
-/// Persisted folder-state digests, keyed by project name. The file map they
-/// are computed from is fixed for the hasher's lifetime.
-pub(crate) type ProjectFolderStateCache = OnceCache<String>;
+/// Persisted folder-state digests, keyed by folder. The file map they are
+/// computed from is fixed for the hasher's lifetime.
+pub(crate) type OwnerFolderStateCache = OnceCache<String>;
+
+/// The file map, as the folder state reads it.
+pub(crate) struct FileMap<'a> {
+    pub project_root_mappings: &'a ProjectRootMappings,
+    pub project_file_map: &'a HashMap<String, Vec<FileData>>,
+    pub all_workspace_files: &'a [FileData],
+}
 
 /// The kind of a file, from its name: everything after the first dot, so
 /// `a.component.spec.ts` is `component.spec.ts` and `eslint.config.mjs` is
@@ -78,29 +86,45 @@ pub fn hash_folder_state<'a>(files: impl IntoIterator<Item = &'a str>) -> String
     hasher.digest().to_string()
 }
 
-/// The folder state of `project`'s files in the file map: the files it owns
-/// and no project nested inside it does. A project with no files hashes as
-/// an empty state.
-pub fn hash_project_folder_state(
-    project: &str,
-    project_file_map: &HashMap<String, Vec<FileData>>,
-) -> String {
-    hash_folder_state(
-        project_file_map
-            .get(project)
-            .into_iter()
-            .flatten()
-            .map(|file| file.file.as_str()),
-    )
+/// The folder state of the files under `root`, a normalized workspace-relative
+/// folder (`.` for the workspace root), minus those of projects nested below
+/// it. The project owning `root` holds exactly those files; with no owning
+/// project, they are the files under it that no project owns.
+pub(crate) fn hash_owner_folder_state(root: &str, files: &FileMap) -> String {
+    let prefix = match root {
+        "." => String::new(),
+        root => format!("{root}/"),
+    };
+    let under = |file: &&str| file.starts_with(&prefix);
+    let mappings = files.project_root_mappings;
+    match find_project_for_path(root, mappings) {
+        Some(owner) => hash_folder_state(
+            files
+                .project_file_map
+                .get(owner)
+                .into_iter()
+                .flatten()
+                .map(|file| file.file.as_str())
+                .filter(under),
+        ),
+        None => hash_folder_state(
+            files
+                .all_workspace_files
+                .iter()
+                .map(|file| file.file.as_str())
+                .filter(under)
+                .filter(|file| find_project_for_path(file, mappings).is_none()),
+        ),
+    }
 }
 
-pub(crate) fn hash_project_folder_state_cached(
-    project: &str,
-    project_file_map: &HashMap<String, Vec<FileData>>,
-    cache: &ProjectFolderStateCache,
+pub(crate) fn hash_owner_folder_state_cached(
+    root: &str,
+    files: &FileMap,
+    cache: &OwnerFolderStateCache,
 ) -> Arc<String> {
-    let Ok(digest) = cache.get_or_try_init(project.to_string(), || {
-        Ok::<_, Infallible>(hash_project_folder_state(project, project_file_map))
+    let Ok(digest) = cache.get_or_try_init(root.to_string(), || {
+        Ok::<_, Infallible>(hash_owner_folder_state(root, files))
     });
     digest
 }
@@ -108,23 +132,69 @@ pub(crate) fn hash_project_folder_state_cached(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::native::project_graph::types::Project;
+    use crate::native::project_graph::utils::create_project_root_mappings;
 
-    fn file_map(projects: &[(&str, &[&str])]) -> HashMap<String, Vec<FileData>> {
-        projects
+    /// Projects as (name, root, files); every file also joins the workspace list.
+    struct Workspace {
+        mappings: ProjectRootMappings,
+        project_files: HashMap<String, Vec<FileData>>,
+        all: Vec<FileData>,
+    }
+
+    fn file(path: &str) -> FileData {
+        FileData {
+            file: path.into(),
+            hash: "h".into(),
+        }
+    }
+
+    fn workspace(projects: &[(&str, &str, &[&str])], unowned: &[&str]) -> Workspace {
+        let nodes = projects
             .iter()
-            .map(|(project, files)| {
+            .map(|(name, root, _)| {
                 (
-                    project.to_string(),
-                    files
-                        .iter()
-                        .map(|file| FileData {
-                            file: file.to_string(),
-                            hash: "h".into(),
-                        })
-                        .collect(),
+                    name.to_string(),
+                    Project {
+                        root: root.to_string(),
+                        ..Default::default()
+                    },
                 )
             })
-            .collect()
+            .collect();
+        let project_files: HashMap<String, Vec<FileData>> = projects
+            .iter()
+            .map(|(name, _, files)| (name.to_string(), files.iter().map(|f| file(f)).collect()))
+            .collect();
+        let all = project_files
+            .values()
+            .flatten()
+            .cloned()
+            .chain(unowned.iter().map(|f| file(f)))
+            .collect();
+        Workspace {
+            mappings: create_project_root_mappings(&nodes),
+            project_files,
+            all,
+        }
+    }
+
+    impl Workspace {
+        fn state(&self, root: &str) -> String {
+            hash_owner_folder_state(root, &self.files())
+        }
+
+        fn files(&self) -> FileMap<'_> {
+            FileMap {
+                project_root_mappings: &self.mappings,
+                project_file_map: &self.project_files,
+                all_workspace_files: &self.all,
+            }
+        }
+    }
+
+    fn lib_a(files: &[&str]) -> Workspace {
+        workspace(&[("a", "libs/a", files)], &[])
     }
 
     #[test]
@@ -161,61 +231,36 @@ mod tests {
 
     #[test]
     fn edits_and_more_files_of_a_kind_leave_the_state_alone() {
-        let before = file_map(&[("a", &["libs/a/src/index.ts", "libs/a/project.json"])]);
-        let edited = HashMap::from([(
-            "a".to_string(),
-            vec![
-                FileData {
-                    file: "libs/a/src/index.ts".into(),
-                    hash: "changed".into(),
-                },
-                FileData {
-                    file: "libs/a/project.json".into(),
-                    hash: "changed".into(),
-                },
-            ],
-        )]);
-        let more = file_map(&[(
-            "a",
-            &[
-                "libs/a/project.json",
-                "libs/a/src/other.ts",
-                "libs/a/src/index.ts",
-            ],
-        )]);
-        let digest = hash_project_folder_state("a", &before);
-        assert_eq!(hash_project_folder_state("a", &edited), digest);
-        assert_eq!(hash_project_folder_state("a", &more), digest);
+        let before = lib_a(&["libs/a/src/index.ts", "libs/a/project.json"]);
+        let mut edited = lib_a(&["libs/a/src/index.ts", "libs/a/project.json"]);
+        for file in edited.project_files.get_mut("a").unwrap() {
+            file.hash = "changed".into();
+        }
+        let more = lib_a(&[
+            "libs/a/project.json",
+            "libs/a/src/other.ts",
+            "libs/a/src/index.ts",
+        ]);
+        let digest = before.state("libs/a");
+        assert_eq!(edited.state("libs/a"), digest);
+        assert_eq!(more.state("libs/a"), digest);
     }
 
     #[test]
     fn a_new_kind_or_a_new_folder_changes_the_state() {
-        let before = hash_project_folder_state(
-            "a",
-            &file_map(&[("a", &["libs/a/project.json", "libs/a/src/index.ts"])]),
-        );
-        let new_kind = hash_project_folder_state(
-            "a",
-            &file_map(&[(
-                "a",
-                &[
-                    "libs/a/project.json",
-                    "libs/a/eslint.config.mjs",
-                    "libs/a/src/index.ts",
-                ],
-            )]),
-        );
-        let new_folder = hash_project_folder_state(
-            "a",
-            &file_map(&[(
-                "a",
-                &[
-                    "libs/a/project.json",
-                    "libs/a/src/index.ts",
-                    "libs/a/src/lib/index.ts",
-                ],
-            )]),
-        );
+        let before = lib_a(&["libs/a/project.json", "libs/a/src/index.ts"]).state("libs/a");
+        let new_kind = lib_a(&[
+            "libs/a/project.json",
+            "libs/a/eslint.config.mjs",
+            "libs/a/src/index.ts",
+        ])
+        .state("libs/a");
+        let new_folder = lib_a(&[
+            "libs/a/project.json",
+            "libs/a/src/index.ts",
+            "libs/a/src/lib/index.ts",
+        ])
+        .state("libs/a");
         assert_ne!(new_kind, before);
         assert_ne!(new_folder, before);
         assert_ne!(new_kind, new_folder);
@@ -225,32 +270,71 @@ mod tests {
     fn a_nested_project_and_the_root_project_keep_to_their_own_files() {
         // The file map gives every file to its innermost project, and files
         // no other project owns to the root project.
-        let map = file_map(&[
-            ("root", &["package.json", "tools/x.ts"]),
-            ("a", &["libs/a/project.json"]),
-            ("nested", &["libs/a/nested/project.json"]),
-        ]);
-        let a = hash_project_folder_state("a", &map);
-        let root = hash_project_folder_state("root", &map);
-
-        let mut grown = map.clone();
-        grown.get_mut("nested").unwrap().push(FileData {
-            file: "libs/a/nested/eslint.config.mjs".into(),
-            hash: "h".into(),
-        });
-        assert_eq!(hash_project_folder_state("a", &grown), a);
-        assert_eq!(hash_project_folder_state("root", &grown), root);
-        assert_ne!(
-            hash_project_folder_state("nested", &grown),
-            hash_project_folder_state("nested", &map)
+        let projects = |nested: &'static [&'static str], root: &'static [&'static str]| {
+            workspace(
+                &[
+                    ("root", ".", root),
+                    ("a", "libs/a", &["libs/a/project.json"]),
+                    ("nested", "libs/a/nested", nested),
+                ],
+                &[],
+            )
+        };
+        let before = projects(
+            &["libs/a/nested/project.json"],
+            &["package.json", "tools/x.ts"],
         );
+        let grown = projects(
+            &[
+                "libs/a/nested/project.json",
+                "libs/a/nested/eslint.config.mjs",
+            ],
+            &["package.json", "tools/x.ts"],
+        );
+        assert_eq!(grown.state("libs/a"), before.state("libs/a"));
+        assert_eq!(grown.state("."), before.state("."));
+        assert_ne!(grown.state("libs/a/nested"), before.state("libs/a/nested"));
 
-        grown.get_mut("root").unwrap().push(FileData {
-            file: "tools/x.mjs".into(),
-            hash: "h".into(),
-        });
-        assert_ne!(hash_project_folder_state("root", &grown), root);
-        assert_eq!(hash_project_folder_state("a", &grown), a);
+        let root_grown = projects(
+            &["libs/a/nested/project.json"],
+            &["package.json", "tools/x.ts", "tools/x.mjs"],
+        );
+        assert_ne!(root_grown.state("."), before.state("."));
+        assert_eq!(root_grown.state("libs/a"), before.state("libs/a"));
+    }
+
+    #[test]
+    fn a_folder_inside_a_project_takes_only_the_files_under_it() {
+        let both = |extra: &'static str| {
+            workspace(
+                &[
+                    (
+                        "a",
+                        "libs/a",
+                        &["libs/a/project.json", "libs/a/src/a.ts", extra],
+                    ),
+                    ("nested", "libs/a/src/nested", &["libs/a/src/nested/x.mjs"]),
+                ],
+                &[],
+            )
+        };
+        let src = both("libs/a/b.ts").state("libs/a/src");
+        assert_eq!(src, hash_folder_state(["libs/a/src/a.ts"]));
+        // A new kind above the folder is out of its scope.
+        assert_eq!(both("libs/a/b.mjs").state("libs/a/src"), src);
+        assert_ne!(both("libs/a/src/b.mjs").state("libs/a/src"), src);
+    }
+
+    #[test]
+    fn a_folder_no_project_owns_takes_the_files_no_project_owns() {
+        let files = workspace(
+            &[("a", "tools/a", &["tools/a/project.json"])],
+            &["tools/x.ts", "tools/y/z.mjs", "other/w.ts"],
+        );
+        assert_eq!(
+            files.state("tools"),
+            hash_folder_state(["tools/x.ts", "tools/y/z.mjs"])
+        );
     }
 
     #[test]
@@ -267,10 +351,8 @@ mod tests {
         // state hashing re-runs once. Bump `FOLDER_STATE_VERSION` when that
         // is intended.
         assert_eq!(hash_folder_state(files), "15099054082418110423");
-        assert_eq!(
-            hash_project_folder_state("missing", &HashMap::new()),
-            hash_folder_state([])
-        );
+        assert_eq!(lib_a(&files).state("libs/a"), hash_folder_state(files));
+        assert_eq!(lib_a(&[]).state("libs/a"), hash_folder_state([]));
     }
 
     #[test]
@@ -283,13 +365,13 @@ mod tests {
     }
 
     #[test]
-    fn the_cache_computes_once_per_project() {
-        let map = file_map(&[("a", &["libs/a/project.json"])]);
-        let cache = ProjectFolderStateCache::new();
-        let first = hash_project_folder_state_cached("a", &map, &cache);
-        let changed = file_map(&[("a", &["libs/a/project.json", "libs/a/x.ts"])]);
+    fn the_cache_computes_once_per_folder() {
+        let cache = OwnerFolderStateCache::new();
+        let before = lib_a(&["libs/a/project.json"]);
+        let first = hash_owner_folder_state_cached("libs/a", &before.files(), &cache);
+        let changed = lib_a(&["libs/a/project.json", "libs/a/x.ts"]);
         assert_eq!(
-            hash_project_folder_state_cached("a", &changed, &cache),
+            hash_owner_folder_state_cached("libs/a", &changed.files(), &cache),
             first
         );
     }

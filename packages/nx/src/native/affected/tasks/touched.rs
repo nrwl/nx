@@ -75,6 +75,7 @@ struct ChangedFiles<'a> {
     files: Vec<String>,
     all: Vec<usize>,
     by_owner: HashMap<&'a str, Vec<usize>>,
+    roots: &'a ProjectRoots,
 }
 
 impl<'a> ChangedFiles<'a> {
@@ -90,6 +91,32 @@ impl<'a> ChangedFiles<'a> {
             all: (0..files.len()).collect(),
             files,
             by_owner,
+            roots,
+        }
+    }
+
+    /// Indices of the files under `root` (`.` for the workspace) that no
+    /// project nested below it owns.
+    fn in_folder(&self, root: &str) -> Vec<usize> {
+        let prefix = match root {
+            "." => String::new(),
+            root => format!("{root}/"),
+        };
+        let under = |i: &&usize| self.files[**i].starts_with(&prefix);
+        match self.roots.owner_of(root) {
+            Some(owner) => self
+                .candidates(Some(owner))
+                .iter()
+                .filter(under)
+                .copied()
+                .collect(),
+            None => self
+                .all
+                .iter()
+                .filter(under)
+                .filter(|&&i| self.roots.owner_of(&self.files[i]).is_none())
+                .copied()
+                .collect(),
         }
     }
 
@@ -471,9 +498,9 @@ fn instruction_matches_detail(
         }),
         // Adding, deleting or moving a file can change which kinds of files
         // its folder holds; an edit cannot. The diff does not say which a
-        // change was, so every changed file the project owns counts.
-        HashInstruction::ProjectFolderState(project) => {
-            let owned = changed.candidates(Some(project));
+        // change was, so every changed file in its scope counts.
+        HashInstruction::OwnerFolderState(root) => {
+            let owned = changed.in_folder(root);
             Ok(of_files(
                 owned
                     .iter()
@@ -631,7 +658,7 @@ mod tests {
     #[test]
     fn the_folder_state_is_touched_by_any_change_its_project_owns() {
         let g = graph(&[("a", "libs/a"), ("nested", "libs/a/nested")]);
-        let folder_state = || vec![HashInstruction::ProjectFolderState("a".into())];
+        let folder_state = || vec![HashInstruction::OwnerFolderState("libs/a".into())];
         assert_eq!(
             touched_for(&g, folder_state(), &["libs/a/eslint.config.mjs"]),
             vec!["a:build"]
