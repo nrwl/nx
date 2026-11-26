@@ -1,4 +1,6 @@
 import type { MockInstance } from 'vitest';
+import * as childProcess from 'child_process';
+import { join } from 'path';
 import { readJson, Tree, writeJson } from '@nx/devkit';
 import * as devkit from '@nx/devkit';
 import { createTree } from '@nx/devkit/testing';
@@ -13,6 +15,8 @@ import { Preset } from '../utils/presets';
 import { newGenerator, NormalizedSchema } from './new';
 import * as getNpmPackageVersion from './../utils/get-npm-package-version';
 import * as generatePreset from './generate-preset';
+
+vi.mock('child_process', { spy: true });
 
 // Hoisted so the mock factory and the tests share one function without a
 // static import: specs outside packages/nx may not import nx/src directly.
@@ -77,6 +81,7 @@ describe('new', () => {
 
   afterEach(() => {
     vi.resetAllMocks();
+    pinnedPnpmVersion.value = undefined;
     tempFs.cleanup();
   });
 
@@ -107,6 +112,30 @@ describe('new', () => {
     expect(readJson(tree, 'my-workspace/nx.json')).toMatchSnapshot();
     expect(installPackagesTaskSpy).not.toHaveBeenCalled();
     expect(generatePresetSpy).toHaveBeenCalled();
+  });
+
+  it('uses the native workspace path for the package manager preinstall command', async () => {
+    pinnedPnpmVersion.value = '4.19.0';
+    const task = await newGenerator(tree, {
+      ...defaultOptions,
+      name: 'my-workspace',
+      directory: 'my-workspace',
+      appName: 'app',
+      packageManager: 'yarn',
+    });
+    tree.root = 'D:\\projects';
+
+    vi.spyOn(devkit, 'getPackageManagerCommand').mockReturnValue({
+      preInstall: 'yarn set version 4.19.0',
+    } as ReturnType<typeof devkit.getPackageManagerCommand>);
+    const execSyncSpy = vi.spyOn(childProcess, 'execSync').mockReturnValue('');
+
+    await task();
+
+    expect(execSyncSpy).toHaveBeenCalledWith(
+      'yarn set version 4.19.0',
+      expect.objectContaining({ cwd: join('D:\\projects', 'my-workspace') })
+    );
   });
 
   describe('--preset', () => {
