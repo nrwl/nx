@@ -171,8 +171,8 @@ describe('getExpandedTaskInputs', () => {
       'myproj:build': [
         // grouped workspace inputs: exact file + top-level glob
         'workspace:[{workspaceRoot}/package.json,{workspaceRoot}/*.md]',
-        // project root fileset
-        'myproj:{projectRoot}/src/**/*',
+        'myproj:{projectRoot}/src/**/*.ts',
+        'myproj:{projectRoot}/src/index.ts,{projectRoot}/README.md',
         // "other" named input
         'ProjectConfiguration',
         // external dependency (has a modifier prefix)
@@ -189,7 +189,15 @@ describe('getExpandedTaskInputs', () => {
 
     const cache = new Map<string, Record<string, string[]>>();
     const result = await getExpandedTaskInputs(
-      makeResponse(),
+      makeResponse({
+        fileMap: {
+          myproj: [
+            { file: 'libs/myproj/src/index.ts', hash: 'a' },
+            { file: 'libs/myproj/project.json', hash: 'b' },
+            { file: 'libs/myproj/README.md', hash: 'c' },
+          ],
+        },
+      }),
       cache,
       'myproj:build'
     );
@@ -197,8 +205,7 @@ describe('getExpandedTaskInputs', () => {
     expect(result).toEqual({
       // workspace roots are sorted, then the ProjectConfiguration file is appended
       general: ['package.json', 'readme.md', 'libs/myproj/project.json'],
-      // project root glob only matches files under libs/myproj/src
-      myproj: ['libs/myproj/src/index.ts'],
+      myproj: ['libs/myproj/src/index.ts', 'libs/myproj/README.md'],
       external: ['npm:some-pkg'],
     });
     // and the same result is stored in the cache
