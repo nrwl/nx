@@ -266,6 +266,18 @@ async function createRspackTargets(
       ...(includeBunInstallSettingsInputs ? BUN_INSTALL_SETTINGS_INPUTS : []),
     ],
     outputs,
+    metadata: {
+      technologies: ['rspack'],
+      description: 'Runs Rspack build',
+      help: {
+        command: `${pmc.exec} rspack build --help`,
+        example: {
+          options: {
+            json: 'stats.json',
+          },
+        },
+      },
+    },
   };
 
   const devServerReadyWhen = getDevServerReadyWhen(
@@ -283,6 +295,18 @@ async function createRspackTargets(
       env,
     },
     readyWhen: devServerReadyWhen,
+    metadata: {
+      technologies: ['rspack'],
+      description: 'Starts Rspack dev server',
+      help: {
+        command: `${pmc.exec} rspack serve --help`,
+        example: {
+          options: {
+            port: 4201,
+          },
+        },
+      },
+    },
   };
 
   targets[options.previewTargetName] = {
@@ -295,6 +319,18 @@ async function createRspackTargets(
       env,
     },
     readyWhen: devServerReadyWhen,
+    metadata: {
+      technologies: ['rspack'],
+      description: 'Starts Rspack dev server in production mode',
+      help: {
+        command: `${pmc.exec} rspack serve --help`,
+        example: {
+          options: {
+            port: 4201,
+          },
+        },
+      },
+    },
   };
 
   targets[options.serveStaticTargetName] = {
