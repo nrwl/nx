@@ -24,6 +24,10 @@ describe('nxReadySignal', () => {
     });
   }
 
+  it('has the name that @nx/vite and @nx/react inference look for', () => {
+    expect(nxReadySignal().name).toBe('nx-ready-signal');
+  });
+
   it('applies to builds too, so inference finds it in the build-resolved config', () => {
     expect(nxReadySignal().apply).toBeUndefined();
   });
