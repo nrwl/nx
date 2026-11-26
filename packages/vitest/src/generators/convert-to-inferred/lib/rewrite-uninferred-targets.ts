@@ -7,14 +7,16 @@ import {
   assertAcceptedOptions,
   assertOutputOptionsKept,
   isPlainPath,
+  mappedConfigFileName,
   optionsFor,
+  type MappableConfigOption,
   type TargetOptions,
   type UninferredTargetRewrite,
 } from '@nx/devkit/internal';
 import { posix } from 'node:path';
+import { vitestConfigFileNamePatterns } from '../../../utils/config-file-names';
 
-// Matches the config files @nx/vitest infers a project from
-const inferredConfigName = /^(vite|vitest)\.config\.(js|ts|mjs|mts|cjs|cts)$/;
+const executors = ['@nx/vitest:test', '@nrwl/vitest:test'];
 
 const isBoolean = (value: unknown) => typeof value === 'boolean';
 const isPlainPathList = (value: unknown) =>
@@ -37,11 +39,12 @@ const acceptedOptions = new Map<string, (value: unknown) => boolean>([
 ]);
 
 /**
- * @nx/vitest infers a project's target only from a vite or vitest config in its
- * root, so a target running another config becomes an explicit command.
+ * @nx/vitest infers a project's target from a vite or vitest config in its
+ * root, or from another config in its root through `configFiles`. A
+ * target running any other config becomes an explicit command.
  */
 export const vitestConfigRewrite: UninferredTargetRewrite = {
-  executors: ['@nx/vitest:test', '@nrwl/vitest:test'],
+  executors,
   tool: 'Vitest',
   isInferred,
   toRunCommandsTarget,
@@ -50,23 +53,44 @@ export const vitestConfigRewrite: UninferredTargetRewrite = {
 function isInferred(
   tree: Tree,
   target: TargetConfiguration,
-  project: ProjectConfiguration
+  project: ProjectConfiguration,
+  targetName: string
 ) {
   const configFile = target.options?.configFile;
   if (configFile) {
-    return isInferredConfig(posix.normalize(configFile), project.root);
+    return (
+      isDefaultConfig(posix.normalize(configFile), project.root) ||
+      mappedConfigFileName(
+        tree,
+        target,
+        project,
+        targetName,
+        vitestMappableConfig
+      ) !== undefined
+    );
   }
-  return tree
-    .children(project.root)
-    .some((file) => inferredConfigName.test(file));
+  return hasDefaultConfig(tree, project.root);
 }
 
-function isInferredConfig(configFile: string, projectRoot: string) {
+function isDefaultConfig(configFile: string, projectRoot: string) {
   return (
     posix.dirname(configFile) === posix.normalize(projectRoot) &&
-    inferredConfigName.test(posix.basename(configFile))
+    vitestConfigFileNamePatterns.defaultName.test(posix.basename(configFile))
   );
 }
+
+function hasDefaultConfig(tree: Tree, projectRoot: string) {
+  return tree
+    .children(projectRoot)
+    .some((file) => vitestConfigFileNamePatterns.defaultName.test(file));
+}
+
+export const vitestMappableConfig: MappableConfigOption = {
+  executors,
+  option: 'configFile',
+  patterns: vitestConfigFileNamePatterns,
+  infersDefaultTarget: hasDefaultConfig,
+};
 
 // The executor loaded the config with root set to the project, and Vitest
 // resolves --config against --root

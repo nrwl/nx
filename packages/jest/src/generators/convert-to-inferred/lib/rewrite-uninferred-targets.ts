@@ -7,13 +7,18 @@ import {
   assertAcceptedOptions,
   assertOutputOptionsKept,
   isPlainPath,
+  mappedConfigFileName,
   optionsFor,
   toProjectRelativePath,
+  type MappableConfigOption,
   type TargetOptions,
   type UninferredTargetRewrite,
 } from '@nx/devkit/internal';
 import { posix } from 'node:path';
-import { jestConfigExtensions } from '../../../utils/config/config-file';
+import {
+  jestConfigExtensions,
+  jestConfigFileNamePatterns,
+} from '../../../utils/config/config-file';
 
 const executors = ['@nx/jest:jest', '@nrwl/jest:jest'];
 
@@ -50,21 +55,48 @@ const acceptedOptions = new Map<string, (value: unknown) => boolean>([
 ]);
 
 /**
- * @nx/jest/plugin infers a project's target only from `jest.config.<ext>` in
- * its root, so a target running another config becomes an explicit command.
+ * @nx/jest/plugin infers a project's target from `jest.config.<ext>` in its
+ * root, or from another config in its root through `configFiles`. A
+ * target running any other config becomes an explicit command.
  */
 export const jestConfigRewrite: UninferredTargetRewrite = {
   executors,
   tool: 'Jest',
   isInferred: (
-    _tree: Tree,
+    tree: Tree,
     target: TargetConfiguration,
-    project: ProjectConfiguration
+    project: ProjectConfiguration,
+    targetName: string
   ) => {
     const jestConfig = target.options?.jestConfig;
-    return !jestConfig || isProjectRootJestConfig(jestConfig, project.root);
+    return (
+      !jestConfig ||
+      isProjectRootJestConfig(jestConfig, project.root) ||
+      mappedConfigFileName(
+        tree,
+        target,
+        project,
+        targetName,
+        jestMappableConfig
+      ) !== undefined
+    );
   },
   toRunCommandsTarget,
+};
+
+export const jestMappableConfig: MappableConfigOption = {
+  executors,
+  option: 'jestConfig',
+  patterns: jestConfigFileNamePatterns,
+  // A workspace config that runs every project infers no project of its own
+  infersDefaultTarget: (tree, projectRoot) =>
+    jestConfigExtensions.some((ext) => {
+      const path = posix.join(projectRoot, `jest.config.${ext}`);
+      return (
+        tree.exists(path) &&
+        !tree.read(path, 'utf-8').includes('getJestProjectsAsync()')
+      );
+    }),
 };
 
 function isProjectRootJestConfig(jestConfig: string, projectRoot: string) {

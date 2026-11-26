@@ -4,6 +4,7 @@ import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { readFile } from 'node:fs/promises';
 import { globWithWorkspaceContext } from '@nx/devkit/internal';
+import { minimatch } from 'minimatch';
 import { createNodesV2 } from './plugin';
 import { loadViteDynamicImport } from '../utils/executor-utils';
 
@@ -343,6 +344,352 @@ describe('@nx/vitest', () => {
       );
 
       expect(nodes[0][1].projects).toEqual({});
+    });
+  });
+
+  describe('configFiles', () => {
+    beforeEach(() => {
+      context = {
+        nxJsonConfiguration: {
+          targetDefaults: {},
+          namedInputs: {
+            default: ['{projectRoot}/**/*'],
+            production: ['!{projectRoot}/**/*.spec.ts'],
+          },
+        },
+        workspaceRoot: '',
+      };
+    });
+
+    afterEach(() => {
+      vi.resetModules();
+    });
+
+    it('globs config files with a suffix after the config name', () => {
+      expect(minimatch('app/vitest.config.e2e.mts', createNodesV2[0])).toBe(
+        true
+      );
+      expect(minimatch('app/vite.config.e2e.ts', createNodesV2[0])).toBe(true);
+    });
+
+    it('infers nothing from a non-default config without the option', async () => {
+      const nodes = await createNodesFunction(
+        ['vitest.config.ts', 'vitest.config.e2e.mts'],
+        { testTargetName: 'test' },
+        context
+      );
+
+      expect(nodes.map(([file]) => file)).toEqual(['vitest.config.ts']);
+    });
+
+    it('infers a target that runs the mapped config', async () => {
+      const nodes = await createNodesFunction(
+        ['vitest.config.ts', 'vitest.config.e2e.mts'],
+        {
+          testTargetName: 'test',
+          testMode: 'run',
+          configFiles: { 'vitest.config.e2e.mts': 'e2e' },
+        },
+        context
+      );
+
+      const { test } = nodes[0][1].projects!['.'].targets!;
+      const { e2e, ...rest } = nodes[1][1].projects!['.'].targets!;
+      expect(test.command).toBe('vitest run');
+      expect(rest).toEqual({});
+      expect(e2e).toEqual({
+        ...test,
+        command: 'vitest run --config vitest.config.e2e.mts',
+      });
+    });
+
+    it('infers a target from a mapped vite config without a test block', async () => {
+      const nodes = await createNodesFunction(
+        ['vite.config.e2e.ts'],
+        {
+          testTargetName: 'test',
+          configFiles: { 'vite.config.e2e.ts': 'e2e' },
+        },
+        context
+      );
+
+      expect(nodes[0][1].projects!['.'].targets!.e2e.command).toBe(
+        'vitest --config vite.config.e2e.ts'
+      );
+    });
+
+    it('names the atomized targets of a mapped config after its target', async () => {
+      const nodes = await createNodesFunction(
+        ['vitest.config.e2e.mts'],
+        {
+          testTargetName: 'test',
+          ciTargetName: 'test-ci',
+          ciGroupName: 'Unit (CI)',
+          configFiles: {
+            'vitest.config.e2e.mts': { target: 'e2e', ci: 'e2e-ci' },
+          },
+        },
+        context
+      );
+
+      const { targets, metadata } = nodes[0][1].projects!['.'];
+      expect(Object.keys(targets).sort()).toEqual([
+        'e2e',
+        'e2e-ci',
+        'e2e-ci--src/test-1.ts',
+        'e2e-ci--src/test-2.ts',
+      ]);
+      expect(targets['e2e-ci--src/test-1.ts'].command).toMatch(
+        /^vitest run --config vitest\.config\.e2e\.mts src\/test-1\.ts /
+      );
+      expect(targets['e2e-ci'].metadata.nonAtomizedTarget).toBe('e2e');
+      expect(metadata.targetGroups).toEqual({
+        'E2E (CI)': [
+          'e2e-ci',
+          'e2e-ci--src/test-1.ts',
+          'e2e-ci--src/test-2.ts',
+        ],
+      });
+    });
+
+    it('infers no CI target for a string entry', async () => {
+      const nodes = await createNodesFunction(
+        ['vitest.config.e2e.mts'],
+        {
+          testTargetName: 'test',
+          ciTargetName: 'test-ci',
+          configFiles: { 'vitest.config.e2e.mts': 'e2e' },
+        },
+        context
+      );
+
+      const { targets, metadata } = nodes[0][1].projects!['.'];
+      expect(Object.keys(targets)).toEqual(['e2e']);
+      expect(metadata).toEqual({});
+    });
+
+    it('overrides the top-level target names for the default config', async () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const options = {
+        testTargetName: 'test',
+        ciTargetName: 'test-ci',
+        configFiles: {
+          'vitest.config.ts': { target: 'unit', ci: 'unit-ci' },
+        },
+      };
+
+      try {
+        await createNodesFunction(['vitest.config.ts'], options, context);
+        const nodes = await createNodesFunction(
+          ['vitest.config.ts'],
+          options,
+          context
+        );
+
+        const { targets, metadata } = nodes[0][1].projects!['.'];
+        expect(Object.keys(targets).sort()).toEqual([
+          'unit',
+          'unit-ci',
+          'unit-ci--src/test-1.ts',
+          'unit-ci--src/test-2.ts',
+        ]);
+        expect(Object.keys(metadata.targetGroups)).toEqual(['UNIT (CI)']);
+        expect(warn.mock.calls).toEqual([
+          [
+            expect.stringContaining(
+              '@nx/vitest: configFiles sets the "vitest.config.ts" target to "unit", overriding testTargetName "test".'
+            ),
+          ],
+          [
+            expect.stringContaining(
+              '@nx/vitest: configFiles sets the "vitest.config.ts" ci target to "unit-ci", overriding ciTargetName "test-ci".'
+            ),
+          ],
+        ]);
+      } finally {
+        warn.mockRestore();
+      }
+    });
+
+    it('does not warn when the default config entry agrees with or replaces an unset option', async () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+      try {
+        const matching = await createNodesFunction(
+          ['vitest.config.ts'],
+          {
+            testTargetName: 'spec',
+            configFiles: { 'vitest.config.ts': 'spec' },
+          },
+          context
+        );
+        const unset = await createNodesFunction(
+          ['vitest.config.ts'],
+          { configFiles: { 'vitest.config.ts': 'check' } },
+          context
+        );
+
+        expect(Object.keys(matching[0][1].projects!['.'].targets)).toEqual([
+          'spec',
+        ]);
+        expect(Object.keys(unset[0][1].projects!['.'].targets)).toEqual([
+          'check',
+        ]);
+        expect(warn).not.toHaveBeenCalled();
+      } finally {
+        warn.mockRestore();
+      }
+    });
+
+    it('warns once about an entry the plugin can never read', async () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const options = {
+        testTargetName: 'test',
+        configFiles: { 'vitest.e2e.config.mts': 'e2e' },
+      };
+
+      try {
+        await createNodesFunction(['vitest.config.ts'], options, context);
+        await createNodesFunction(['vitest.config.ts'], options, context);
+
+        expect(warn.mock.calls).toEqual([
+          [
+            expect.stringContaining(
+              '@nx/vitest: ignoring the "vitest.e2e.config.mts" entry of configFiles because the plugin only reads config files named {vite,vitest}.config*.{js,ts,mjs,mts,cjs,cts}.'
+            ),
+          ],
+        ]);
+      } finally {
+        warn.mockRestore();
+      }
+    });
+
+    it('boots Vitest with the mapped config to find its test files', async () => {
+      const { createVitest } = await import('vitest/node');
+      (createVitest as Mock).mockClear();
+
+      await createNodesFunction(
+        ['vitest.config.e2e.mts'],
+        {
+          testTargetName: 'test',
+          ciTargetName: 'test-ci',
+          discoverTestFiles: 'vitest',
+          configFiles: {
+            'vitest.config.e2e.mts': { target: 'e2e', ci: 'e2e-ci' },
+          },
+        },
+        context
+      );
+
+      expect(createVitest).toHaveBeenCalledWith(
+        'test',
+        expect.objectContaining({ config: 'vitest.config.e2e.mts' })
+      );
+    });
+
+    it('reports a mapped config that infers the same target as another config', async () => {
+      await expect(
+        createNodesFunction(
+          ['vitest.config.ts', 'vitest.config.e2e.mts'],
+          {
+            testTargetName: 'test',
+            configFiles: { 'vitest.config.e2e.mts': 'test' },
+          },
+          context
+        )
+      ).rejects.toMatchObject({
+        errors: [
+          [
+            'vitest.config.e2e.mts',
+            expect.objectContaining({
+              message:
+                '@nx/vitest: "vitest.config.e2e.mts" and "vitest.config.ts" in "." both infer the "test" target. Give each config file its own target name.',
+            }),
+          ],
+        ],
+      });
+    });
+
+    function mockViteConfigWithTest(hasTest: boolean) {
+      const viteImport = {
+        resolveConfig: vi.fn(async ({ configFile }) => ({
+          path: configFile,
+          config: {},
+          dependencies: [],
+          ...(hasTest && configFile.endsWith('vite.config.ts')
+            ? { test: {} }
+            : {}),
+        })),
+      };
+      (loadViteDynamicImport as Mock)
+        .mockResolvedValueOnce(viteImport)
+        .mockResolvedValueOnce(viteImport);
+    }
+
+    it('maps a config to the test target when vite.config has no test block', async () => {
+      mockViteConfigWithTest(false);
+
+      const nodes = await createNodesFunction(
+        ['vite.config.ts', 'vitest.config.unit.mts'],
+        {
+          testTargetName: 'test',
+          testMode: 'run',
+          configFiles: { 'vitest.config.unit.mts': 'test' },
+        },
+        context
+      );
+
+      expect(nodes[0][1].projects!['.'].targets).toEqual({});
+      expect(nodes[1][1].projects!['.'].targets!.test.command).toBe(
+        'vitest run --config vitest.config.unit.mts'
+      );
+    });
+
+    it('reports a mapped config that infers the test target of a vite.config with a test block', async () => {
+      mockViteConfigWithTest(true);
+
+      await expect(
+        createNodesFunction(
+          ['vite.config.ts', 'vitest.config.unit.mts'],
+          {
+            testTargetName: 'test',
+            configFiles: { 'vitest.config.unit.mts': 'test' },
+          },
+          context
+        )
+      ).rejects.toMatchObject({
+        errors: [
+          [
+            'vitest.config.unit.mts',
+            expect.objectContaining({
+              message:
+                '@nx/vitest: "vitest.config.unit.mts" and "vite.config.ts" in "." both infer the "test" target. Give each config file its own target name.',
+            }),
+          ],
+        ],
+      });
+    });
+
+    it('reports both mapped configs that infer the same target', async () => {
+      await expect(
+        createNodesFunction(
+          ['vitest.config.ts', 'vitest.config.a.mts', 'vitest.config.b.mts'],
+          {
+            testTargetName: 'test',
+            configFiles: {
+              'vitest.config.a.mts': 'e2e',
+              'vitest.config.b.mts': 'e2e',
+            },
+          },
+          context
+        )
+      ).rejects.toMatchObject({
+        errors: [
+          ['vitest.config.a.mts', expect.any(Error)],
+          ['vitest.config.b.mts', expect.any(Error)],
+        ],
+        partialResults: [['vitest.config.ts', expect.anything()]],
+      });
     });
   });
 

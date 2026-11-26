@@ -1,11 +1,21 @@
-import { createProjectGraphAsync, formatFiles, type Tree } from '@nx/devkit';
+import {
+  createProjectGraphAsync,
+  formatFiles,
+  readProjectConfiguration,
+  type Tree,
+} from '@nx/devkit';
 import {
   convertWithUninferredTargetsRewritten,
+  mappedConfigFileName,
   migrateProjectExecutorsToPlugin,
   NoTargetsToMigrateError,
+  readResolvedTarget,
 } from '@nx/devkit/internal';
 import { createNodesV2, VitestPluginOptions } from '../../plugins/plugin';
-import { vitestConfigRewrite } from './lib/rewrite-uninferred-targets';
+import {
+  vitestConfigRewrite,
+  vitestMappableConfig,
+} from './lib/rewrite-uninferred-targets';
 import { testPostTargetTransformer } from './lib/test-post-target-transformer';
 import { assertSupportedVitestVersion } from '../../utils/assert-supported-vitest-version';
 
@@ -37,14 +47,28 @@ export async function convertToInferred(tree: Tree, options: Schema) {
               // The executor ran once unless asked to watch, from the
               // workspace root. Set per target, not as a default, so a
               // watch-mode registration is not reused.
-              targetPluginOptionMapper: (target, project) =>
-                project.root === '.'
-                  ? { testTargetName: target, testMode: 'run' }
-                  : {
-                      testTargetName: target,
-                      testMode: 'run',
-                      cwd: 'workspaceRoot' as const,
-                    },
+              targetPluginOptionMapper: (targetName, project) => {
+                const runOptions =
+                  project.root === '.'
+                    ? { testMode: 'run' as const }
+                    : {
+                        testMode: 'run' as const,
+                        cwd: 'workspaceRoot' as const,
+                      };
+                const fileName = mappedConfigFileName(
+                  tree,
+                  readResolvedTarget(tree, project.name, targetName),
+                  readProjectConfiguration(tree, project.name),
+                  targetName,
+                  vitestMappableConfig
+                );
+                return fileName
+                  ? {
+                      configFiles: { [fileName]: targetName },
+                      ...runOptions,
+                    }
+                  : { testTargetName: targetName, ...runOptions };
+              },
             },
           ],
           options.project

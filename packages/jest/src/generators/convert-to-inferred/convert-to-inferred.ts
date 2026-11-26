@@ -1,24 +1,34 @@
 import {
   convertWithUninferredTargetsRewritten,
   migrateProjectExecutorsToPlugin,
+  mappedConfigFileName,
   NoTargetsToMigrateError,
   processTargetOutputs,
+  readResolvedTarget,
+  toMappedConfigPath,
   toProjectRelativePath,
 } from '@nx/devkit/internal';
 import type { Config } from '@jest/types';
 import {
   createProjectGraphAsync,
   formatFiles,
+  readProjectConfiguration,
   type TargetConfiguration,
   type Tree,
 } from '@nx/devkit';
 import { readConfig } from 'jest-config';
 import { join, normalize, posix } from 'node:path';
 import { createNodesV2, type JestPluginOptions } from '../../plugins/plugin';
-import { jestConfigExtensions } from '../../utils/config/config-file';
+import {
+  jestConfigExtensions,
+  jestConfigFileNamePatterns,
+} from '../../utils/config/config-file';
 import { assertSupportedJestVersion } from '../../utils/assert-supported-jest-version';
 import { getInstalledJestMajorVersion } from '../../utils/versions';
-import { jestConfigRewrite } from './lib/rewrite-uninferred-targets';
+import {
+  jestConfigRewrite,
+  jestMappableConfig,
+} from './lib/rewrite-uninferred-targets';
 
 interface Schema {
   project?: string;
@@ -44,7 +54,18 @@ export async function convertToInferred(tree: Tree, options: Schema) {
             {
               executors: jestConfigRewrite.executors,
               postTargetTransformer,
-              targetPluginOptionMapper: (targetName) => ({ targetName }),
+              targetPluginOptionMapper: (targetName, project) => {
+                const fileName = mappedConfigFileName(
+                  tree,
+                  readResolvedTarget(tree, project.name, targetName),
+                  readProjectConfiguration(tree, project.name),
+                  targetName,
+                  jestMappableConfig
+                );
+                return fileName
+                  ? { configFiles: { [fileName]: targetName } }
+                  : { targetName };
+              },
             },
           ],
           options.project
@@ -74,6 +95,11 @@ async function postTargetTransformer(
       tree.exists(posix.join(projectDetails.root, configFileName))
     );
 
+  const mappedJestConfig = toMappedConfigPath(
+    target.options?.jestConfig,
+    jestConfigFileNamePatterns
+  );
+
   if (target.options) {
     await updateOptionsObject(
       tree,
@@ -86,12 +112,20 @@ async function postTargetTransformer(
 
   if (target.configurations) {
     for (const [configName, config] of Object.entries(target.configurations)) {
+      // The inferred command already passes the mapped config
+      if (
+        mappedJestConfig &&
+        config.jestConfig &&
+        posix.normalize(config.jestConfig) === mappedJestConfig
+      ) {
+        delete config.jestConfig;
+      }
       await updateConfigurationObject(
         tree,
         config,
         projectDetails.root,
         tree.root,
-        jestConfigPath
+        mappedJestConfig ?? jestConfigPath
       );
 
       if (!Object.keys(config).length) {
