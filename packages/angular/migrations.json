@@ -401,15 +401,15 @@
       "implementation": "./dist/src/migrations/update-24-1-0/remove-rspack-ssr-dev-server-targets",
       "documentation": "./dist/src/migrations/update-24-1-0/remove-rspack-ssr-dev-server-targets.md"
     },
-    "update-24-1-0-upgrade-to-angular-22-3": {
-      "version": "24.1.0-beta.3",
+    "update-24-2-0-upgrade-to-angular-22-3": {
+      "version": "24.2.0-beta.0",
       "requires": {
         "@angular/core": ">=22.1.0 <22.2.0"
       },
       "optionalUpdate": true,
       "description": "Update the Angular packages to 22.3 when the Angular 22.2 upgrade moved the workspace from 22.1 in the same run. The Angular 22.3 package updates apply only to workspaces that start on 22.2.",
-      "implementation": "./dist/src/migrations/update-24-1-0/upgrade-to-angular-22-3",
-      "documentation": "./dist/src/migrations/update-24-1-0/upgrade-to-angular-22-3.md"
+      "implementation": "./dist/src/migrations/update-24-2-0/upgrade-to-angular-22-3",
+      "documentation": "./dist/src/migrations/update-24-2-0/upgrade-to-angular-22-3.md"
     }
   },
   "packageJsonUpdates": {
@@ -2535,8 +2535,8 @@
         }
       }
     },
-    "24.1.0": {
-      "version": "24.1.0-beta.3",
+    "24.2.0": {
+      "version": "24.2.0-beta.0",
       "requires": {
         "@angular/core": ">=22.2.0 <22.3.0"
       },
