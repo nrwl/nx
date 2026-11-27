@@ -35,7 +35,31 @@
         "release": true
       }
     },
+    "build-fstrace-shim": {
+      "cache": true,
+      "inputs": [
+        "{projectRoot}/src/native/fstrace/**",
+        "{workspaceRoot}/scripts/build-fstrace-shim.mjs",
+        "{workspaceRoot}/Cargo.lock",
+        {
+          "runtime": "node -p process.platform"
+        }
+      ],
+      "outputs": [
+        "{projectRoot}/src/native/fstrace.darwin.dylib",
+        "{projectRoot}/src/native/fstrace.linux.so",
+        "{projectRoot}/src/native/fstrace-linux",
+        "{projectRoot}/src/native/fstrace-*.{dll,exe}"
+      ],
+      "command": "node scripts/build-fstrace-shim.mjs"
+    },
     "build-native": {
+      "dependsOn": [
+        {
+          "target": "build-fstrace-shim",
+          "params": "forward"
+        }
+      ],
       "outputs": [
         "{projectRoot}/src/native/*.node",
         "{projectRoot}/src/native/*.wasm",
@@ -59,7 +83,7 @@
     },
     "artifacts": {
       "dependsOn": ["copy-native-package-directories"],
-      "command": "pnpm napi artifacts --package-json-path packages/nx/package.json -d ./artifacts --npm-dir dist/packages"
+      "command": "pnpm napi artifacts --package-json-path packages/nx/package.json -d ./artifacts --npm-dir dist/packages && node scripts/copy-native-extras.mjs ./artifacts dist/packages"
     },
     "echo": {
       "command": "echo hi"

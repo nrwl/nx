@@ -12,6 +12,10 @@ import {
 } from './isolated-plugin';
 
 // We need to mock the dependencies before importing the class
+// These cover the worker lifecycle, which a cached createNodes call skips, and
+// whether tracing is available depends on the machine having built the tracer.
+delete process.env.NX_CREATE_NODES_CACHE;
+
 vi.mock('../../../daemon/socket-utils', () => ({
   getPluginOsSocketPath: vi.fn(() => '/mock/socket/path'),
 }));

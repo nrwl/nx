@@ -61,6 +61,18 @@ import {
   Phase,
   PluginLifecycleManager,
 } from './plugin-lifecycle-manager';
+import {
+  EvaluationCache,
+  LoadResultCache,
+  readCallTrace,
+  readLoadTrace,
+  type TraceMarkers,
+} from './evaluation-cache';
+import {
+  isReadTracingEnabled,
+  removeReadLog,
+  traceWorkerCommand,
+} from './read-tracing';
 
 const PLUGIN_TIMEOUT_HINT_TEXT =
   'As a last resort, you can set NX_PLUGIN_NO_TIMEOUTS=true to bypass this timeout.';
@@ -135,12 +147,15 @@ export class IsolatedPlugin implements LoadedNxPlugin {
   private readonly shouldRegisterTSTranspiler: boolean;
 
   private lifecycle: PluginLifecycleManager;
+  private readTrace: TraceMarkers | null = null;
+  private evaluationCache: EvaluationCache | null = null;
   private exitHandler:
     | ((code: number | null, signal: NodeJS.Signals | null) => void)
     | null = null;
 
   /**
-   * Creates and loads an isolated plugin worker.
+   * Creates and loads an isolated plugin worker. When an earlier load's answer
+   * still holds, the worker is not started until a hook call needs it.
    */
   static async load(
     plugin: PluginConfiguration,
@@ -160,9 +175,23 @@ export class IsolatedPlugin implements LoadedNxPlugin {
       index
     );
 
+    const loadCache = isReadTracingEnabled()
+      ? new LoadResultCache<LoadResultPayload>(name, index, plugin)
+      : null;
+    const cached = loadCache?.lookup();
+    if (cached) {
+      instance.setupHooks(cached);
+      return instance;
+    }
+
     try {
+      const startedMs = performance.timeOrigin + performance.now();
       const loadResult = await instance.spawnAndConnect();
       instance.setupHooks(loadResult);
+      const trace = instance.readTrace && readLoadTrace(instance.readTrace);
+      if (loadCache && trace) {
+        loadCache.store(loadResult, trace, startedMs);
+      }
       return instance;
     } catch (e) {
       // A timed-out worker is still running, and the caller is about to drop this instance.
@@ -197,9 +226,11 @@ export class IsolatedPlugin implements LoadedNxPlugin {
   }
 
   private async spawnAndConnect(): Promise<LoadResultPayload> {
-    const { worker, socket } = await startPluginWorker(this.name);
+    const { worker, socket, readTrace } = await startPluginWorker(this.name);
+    this.dropReadTrace();
     this.worker = worker;
     this.socket = socket;
+    this.readTrace = readTrace;
 
     this.registerProcessMetrics();
 
@@ -241,6 +272,13 @@ export class IsolatedPlugin implements LoadedNxPlugin {
     }
     if (this.worker?.stderr) {
       this.worker.stderr.unpipe(process.stderr);
+    }
+  }
+
+  private dropReadTrace(): void {
+    if (this.readTrace) {
+      removeReadLog(this.readTrace.logPath);
+      this.readTrace = null;
     }
   }
 
@@ -391,11 +429,20 @@ export class IsolatedPlugin implements LoadedNxPlugin {
     const shutdown = (hookName: Hook) => this.shutdownIfInactive(hookName);
     const wrap = <TArgs extends unknown[], TReturn>(
       hook: Hook,
-      hookFn: (...args: TArgs) => Promise<TReturn>
+      hookFn: (...args: TArgs) => Promise<TReturn>,
+      // Answers without the worker, so a stopped worker is not restarted.
+      cached?: (...args: TArgs) => Promise<TReturn | null> | undefined
     ) =>
       this.lifecycle.wrapHook(
         hook,
         async (...args: TArgs) => {
+          // Awaited only when there is a lookup, so a call without one reaches
+          // ensureAlive in the same tick, as a concurrent setWorkerEnv expects.
+          const lookup = cached?.(...args);
+          const hit = lookup && (await lookup);
+          if (hit) {
+            return hit;
+          }
           await this.ensureAlive();
           try {
             return await hookFn(...args);
@@ -410,18 +457,62 @@ export class IsolatedPlugin implements LoadedNxPlugin {
       );
 
     if (loadResult.createNodesPattern) {
+      if (isReadTracingEnabled()) {
+        this.evaluationCache = new EvaluationCache(
+          this.name,
+          this.index,
+          this.plugin
+        );
+      }
       (this as { createNodes: IsolatedPlugin['createNodes'] }).createNodes = [
         loadResult.createNodesPattern,
-        wrap('createNodes', async (configFiles, ctx) => {
-          const result = await this.sendRequest('createNodes', {
-            configFiles,
-            context: ctx,
-          });
-          if (result.success === false) {
-            throw result.error;
-          }
-          return result.result;
-        }),
+        wrap(
+          'createNodes',
+          async (configFiles, ctx) => {
+            const readTrace = this.readTrace;
+            const traceId = readTrace
+              ? this.generateTxId('createNodesTrace')
+              : undefined;
+            // Sub-millisecond, because file times are compared against it in
+            // nanoseconds: a config saved just before the call must not look
+            // like it was written during it.
+            const startedMs = performance.timeOrigin + performance.now();
+            // The first entry has no inputs to carry forward, so it needs a
+            // run that reads everything.
+            const bypassPluginCaches =
+              !!readTrace &&
+              !!this.evaluationCache &&
+              !this.evaluationCache.hasEntry();
+            const result = await this.sendRequest('createNodes', {
+              configFiles,
+              context: ctx,
+              traceId,
+              bypassPluginCaches,
+            });
+            if (result.success === false) {
+              throw result.error;
+            }
+            if (readTrace && this.evaluationCache) {
+              await this.storeEvaluation(
+                configFiles,
+                ctx,
+                result.result,
+                readTrace,
+                traceId,
+                startedMs,
+                bypassPluginCaches
+              );
+            }
+            return result.result;
+          },
+          (configFiles, ctx) =>
+            this.evaluationCache?.lookup(configFiles, ctx).catch((e) => {
+              logger.verbose(
+                `[isolated-plugin] could not read cached createNodes results for "${this.name}": ${e}`
+              );
+              return null;
+            })
+        ),
       ];
     }
 
@@ -484,6 +575,38 @@ export class IsolatedPlugin implements LoadedNxPlugin {
     // Shut down immediately if no graph phase hooks
     if (this.lifecycle.shouldShutdownImmediately()) {
       this.shutdown();
+    }
+  }
+
+  private async storeEvaluation(
+    configFiles: string[],
+    ctx: CreateNodesContext,
+    results: Awaited<ReturnType<IsolatedPlugin['createNodes'][1]>>,
+    readTrace: TraceMarkers,
+    traceId: string,
+    startedMs: number,
+    bypassPluginCaches: boolean
+  ): Promise<void> {
+    try {
+      const trace = readCallTrace(readTrace, traceId);
+      if (!trace) {
+        logger.verbose(
+          `[isolated-plugin] not caching createNodes results for "${this.name}": the read trace is incomplete`
+        );
+        return;
+      }
+      await this.evaluationCache.store(
+        configFiles,
+        ctx,
+        results,
+        trace,
+        startedMs,
+        bypassPluginCaches
+      );
+    } catch (e) {
+      logger.verbose(
+        `[isolated-plugin] could not cache createNodes results for "${this.name}": ${e}`
+      );
     }
   }
 
@@ -611,6 +734,7 @@ export class IsolatedPlugin implements LoadedNxPlugin {
     this.worker = null;
     this.socket = null;
     this.exitHandler = null;
+    this.dropReadTrace();
   }
 
   private registerProcessMetrics(): void {
@@ -676,11 +800,12 @@ async function startPluginWorker(name: string) {
   // `performance.now()` stamp it replaced varied with process uptime. That
   // keeps the socket path inside the 95-character budget `assertValidSocketPath`
   // enforces.
-  const ipcPath = getPluginOsSocketPath(getPluginWorkerSocketId());
+  const socketId = getPluginWorkerSocketId();
+  const ipcPath = getPluginOsSocketPath(socketId);
 
-  const worker = spawn(
-    process.execPath,
-    [
+  const command = {
+    command: process.execPath,
+    args: [
       // Spawn the worker with the same resolve conditions Nx uses for plugin
       // entries so the plugin's transitive workspace imports resolve to source.
       ...getPluginResolveConditionNodeArgs(),
@@ -694,14 +819,21 @@ async function startPluginWorker(name: string) {
       // so the two agree by construction.
       workspaceRoot,
     ],
-    {
-      stdio: ['ignore', 'pipe', 'pipe'],
-      env,
-      detached: true,
-      shell: false,
-      windowsHide: true,
-    }
-  );
+    env,
+  };
+  const traced = traceWorkerCommand(command, socketId);
+  const { command: file, args, env: workerEnv } = traced ?? command;
+  const readTrace: TraceMarkers | null = traced
+    ? { logPath: traced.logPath, workerScript: workerPath }
+    : null;
+
+  const worker = spawn(file, args, {
+    stdio: ['ignore', 'pipe', 'pipe'],
+    env: workerEnv,
+    detached: true,
+    shell: false,
+    windowsHide: true,
+  });
 
   logger.verbose(
     `[isolated-plugin] spawned worker for "${name}" (pid: ${worker.pid}, socket: ${ipcPath})`
@@ -723,7 +855,7 @@ async function startPluginWorker(name: string) {
 
   try {
     const socket = await connectToWorker(worker, ipcPath, name);
-    return { worker, socket };
+    return { worker, socket, readTrace };
   } finally {
     performance.mark(`start-plugin-worker-end:${name}`);
     performance.measure(
