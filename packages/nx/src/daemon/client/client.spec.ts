@@ -771,6 +771,46 @@ describe('DaemonClient state machine', () => {
     });
   });
 
+  describe('a daemon resetting the connection with a request in flight', () => {
+    afterEach(async () => {
+      const actual = await vi.importActual<typeof import('net')>('net');
+      (connect as Mock).mockImplementation(actual.connect);
+    });
+
+    it('resends the request to the replacement daemon instead of failing it', async () => {
+      const first = createFakeSocket();
+      (connect as Mock).mockReturnValue(first);
+      (readDaemonProcessJsonCache as Mock).mockReturnValue({
+        socketPath: join(dirname(logFile), 'd.sock'),
+      });
+      vi.spyOn(client, 'probeServer').mockResolvedValue({ available: true });
+      await client.startDaemonIfNecessary();
+
+      let rejection: unknown;
+      daemon.requestShutdown().catch((e) => (rejection = e));
+      await tick();
+      const writesPerRequest = (first.write as Mock).mock.calls.length;
+      expect(writesPerRequest).toBeGreaterThan(0);
+
+      const replacement = createFakeSocket();
+      (connect as Mock).mockReturnValue(replacement);
+      vi.spyOn(client, 'waitForServerToBeAvailable').mockResolvedValue({
+        available: true,
+      });
+      // How Node reports a peer that closed with our request still unread.
+      first.emit(
+        'error',
+        Object.assign(new Error('read ECONNRESET'), { code: 'ECONNRESET' })
+      );
+      first.emit('close');
+      await tick();
+      await tick();
+
+      expect(rejection).toBeUndefined();
+      expect(replacement.write).toHaveBeenCalledTimes(writesPerRequest);
+    });
+  });
+
   describe('handleConnectionError() when the reconnect never succeeds', () => {
     it('surfaces the original error to the in-flight message and to concurrent callers', async () => {
       vi.spyOn(client, 'waitForServerToBeAvailable').mockResolvedValue({

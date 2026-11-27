@@ -1366,6 +1366,14 @@ export class DaemonClient {
         }
       },
       (err) => {
+        // A daemon that exits with our request still unread resets the
+        // connection. The 'close' that follows reconnects and resends it.
+        if (
+          (err as NodeJS.ErrnoException).code === 'ECONNRESET' &&
+          !this.queue.isEmpty()
+        ) {
+          return;
+        }
         // Every recovery path below is keyed on the socket 'close' event, and a
         // framing failure emits neither 'close' nor 'error'. Without the
         // teardown at the end of this handler the connection stays open and
