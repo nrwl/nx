@@ -1,0 +1,101 @@
+name: Nightly Maven caches
+description: Cache the root Maven wrapper distribution and Maven repository independently
+inputs:
+  mode:
+    description: Prepare the writer, restore for a reader, or save the repository after install
+    required: true
+  repository-key:
+    description: Repository key from the writer's prepare step
+    required: false
+outputs:
+  repository-seed-key:
+    description: Key to save after pnpm install on a repository miss
+    value: ${{ steps.repository-prepare.outputs.seed-key }}
+runs:
+  using: composite
+  steps:
+    - name: Compute Maven cache keys
+      id: keys
+      if: inputs.mode != 'save-repository'
+      shell: bash
+      env:
+        WRAPPER_HASH: ${{ hashFiles('mvnw', '.mvn/wrapper/maven-wrapper.properties') }}
+        REPOSITORY_HASH: ${{ hashFiles('mvnw', '.mvn/wrapper/maven-wrapper.properties', '**/pom.xml', '.mvn/*.xml', '.mvn/*.config', 'packages/maven/**/src/**', 'scripts/install-maven-plugin.js', 'pnpm-workspace.yaml') }}
+      run: bash "$GITHUB_ACTION_PATH/cache.sh" keys
+
+    - name: Restore Maven repository
+      id: repository
+      if: inputs.mode != 'save-repository'
+      uses: actions/cache/restore@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
+      continue-on-error: true
+      env:
+        SEGMENT_DOWNLOAD_TIMEOUT_MINS: '1'
+      with:
+        path: ~/.cache/nx-nightly-maven/repository
+        key: ${{ steps.keys.outputs.repository }}
+
+    - name: Prepare Maven repository
+      id: repository-prepare
+      if: inputs.mode != 'save-repository'
+      shell: bash
+      continue-on-error: true
+      env:
+        MODE: ${{ inputs.mode }}
+        REPOSITORY_HIT: ${{ steps.repository.outcome == 'success' && steps.repository.outputs.cache-hit == 'true' }}
+        REPOSITORY_KEY: ${{ steps.keys.outputs.repository }}
+      run: bash "$GITHUB_ACTION_PATH/cache.sh" prepare-repository
+
+    - name: Restore Maven wrapper distribution
+      id: wrapper
+      if: inputs.mode != 'save-repository'
+      uses: actions/cache/restore@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
+      continue-on-error: true
+      env:
+        SEGMENT_DOWNLOAD_TIMEOUT_MINS: '1'
+      with:
+        path: ~/.cache/nx-nightly-maven/wrapper/dists
+        key: ${{ steps.keys.outputs.wrapper }}
+
+    - name: Download verified Maven wrapper distribution
+      id: wrapper-seed
+      if: inputs.mode == 'prepare-writer' && steps.wrapper.outputs.cache-hit != 'true'
+      shell: bash
+      continue-on-error: true
+      run: bash "$GITHUB_ACTION_PATH/cache.sh" seed-wrapper
+
+    - name: Warn when Maven wrapper seeding fails
+      if: steps.wrapper-seed.outcome == 'failure'
+      shell: bash
+      run: echo "::warning::Maven wrapper cache was not seeded. Check the download error and update the expected ZIP URL and checksum together when changing Maven."
+
+    - name: Save Maven wrapper distribution
+      if: steps.wrapper-seed.outcome == 'success'
+      uses: actions/cache/save@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
+      continue-on-error: true
+      with:
+        path: ~/.cache/nx-nightly-maven/wrapper/dists
+        key: ${{ steps.keys.outputs.wrapper }}
+
+    - name: Install Maven wrapper distribution
+      if: (steps.wrapper.outcome == 'success' && steps.wrapper.outputs.cache-hit == 'true') || steps.wrapper-seed.outcome == 'success'
+      shell: bash
+      run: bash "$GITHUB_ACTION_PATH/cache.sh" install-wrapper
+
+    - name: Populate the Maven repository for inference
+      id: repository-seed
+      if: inputs.mode == 'save-repository'
+      shell: bash
+      continue-on-error: true
+      run: bash "$GITHUB_ACTION_PATH/cache.sh" seed-repository
+
+    - name: Warn when Maven repository seeding fails
+      if: steps.repository-seed.outcome == 'failure'
+      shell: bash
+      run: echo "::warning::Maven repository cache was not seeded. Maven can still resolve dependencies online."
+
+    - name: Save the Maven repository
+      if: steps.repository-seed.outcome == 'success'
+      uses: actions/cache/save@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
+      with:
+        path: ~/.cache/nx-nightly-maven/repository
+        key: ${{ inputs.repository-key }}
