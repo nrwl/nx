@@ -121,6 +121,25 @@ describe('@nx/vitest:configuration', () => {
       expect(devDependencies['@vitest/ui']).toBe('^4.0.0');
     });
 
+    it.each(['@analogjs/vitest-angular', '@analogjs/vite-plugin-angular'])(
+      'keeps the Angular test plugins aligned when only %s is on Analog 3',
+      async (installed) => {
+        const version = '3.0.0-beta.44';
+        updateJson(tree, 'package.json', (json) => {
+          json.devDependencies[installed] = version;
+          return json;
+        });
+        await configurationGenerator(tree, {
+          project: 'mylib',
+          uiFramework: 'angular',
+          skipFormat: true,
+        });
+        const { devDependencies } = readJson(tree, 'package.json');
+        expect(devDependencies['@analogjs/vitest-angular']).toBe(version);
+        expect(devDependencies['@analogjs/vite-plugin-angular']).toBe(version);
+      }
+    );
+
     it('should not resolve vitest versions when skipping package.json', async () => {
       setVitestVersion('~5.0.1');
       updateJson(tree, 'package.json', (json) => {

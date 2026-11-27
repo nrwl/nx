@@ -50,6 +50,11 @@
       "implementation": "./dist/src/migrations/update-24-0-0/remove-deprecated-executors",
       "prompt": "./dist/src/migrations/update-24-0-0/finish-inferred-conversion.md",
       "documentation": "./dist/src/migrations/update-24-0-0/remove-deprecated-executors.md"
+    },
+    "update-analog-v3-zone-setup": {
+      "version": "24.1.0-beta.3",
+      "description": "Update legacy Angular Vitest Zone setup imports in workspaces using Analog 3.",
+      "implementation": "./dist/src/migrations/update-analog-v3/update-zone-setup"
     }
   },
   "packageJsonUpdates": {
