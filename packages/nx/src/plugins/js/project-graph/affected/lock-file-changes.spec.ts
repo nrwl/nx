@@ -326,6 +326,46 @@ some-other-external-package@^4.0.1:
       tempFs.cleanup();
     });
 
+    // A lockfile that parses and contains none of the packages in `base`.
+    const emptyLockFile = (lockFile: string): string => {
+      if (lockFile === 'yarn.lock' || lockFile === 'bun.lockb') {
+        return '# yarn lockfile v1\n\n\n';
+      }
+      if (lockFile === 'package-lock.json') {
+        return JSON.stringify({
+          name: 'test',
+          version: '1.0.0',
+          lockfileVersion: 3,
+          requires: true,
+          packages: {
+            '': { name: 'test', version: '1.0.0' },
+          },
+        });
+      }
+      if (lockFile === 'bun.lock') {
+        return `{
+  "lockfileVersion": 1,
+  "workspaces": { "": { "name": "test" } },
+  "packages": {}
+}`;
+      }
+      return `lockfileVersion: '9.0'
+
+importers:
+
+  .: {}
+
+`;
+    };
+
+    const graphWithoutRemovedPackage = (): ProjectGraph => ({
+      ...graph,
+      externalNodes: {
+        'npm:unrelated-package': graph.externalNodes['npm:unrelated-package']!,
+      },
+      dependencies: {},
+    });
+
     AUTO_CASES.forEach(({ lockFile, base, head }) => {
       describe(`"${lockFile}"`, () => {
         it('should not return changes when the lock file is untouched', () => {
@@ -397,54 +437,19 @@ some-other-external-package@^4.0.1:
           );
         });
 
-        it('should return all projects when all changed packages are removed (not in external nodes)', () => {
-          // head has no packages at all; base had some-external-package.
-          // The parser may produce no nodes for an empty lockfile, so
-          // the removed package is the only "changed" one and it will
-          // not map to an external node -- fall back to all projects.
-          const emptyHead =
-            lockFile === 'yarn.lock'
-              ? '# yarn lockfile v1\n\n\n'
-              : lockFile === 'package-lock.json'
-                ? JSON.stringify({
-                    name: 'test',
-                    version: '1.0.0',
-                    lockfileVersion: 3,
-                    requires: true,
-                    packages: {
-                      '': { name: 'test', version: '1.0.0' },
-                    },
-                  })
-                : lockFile === 'bun.lock'
-                  ? `{
-  "lockfileVersion": 1,
-  "workspaces": { "": { "name": "test" } },
-  "packages": {}
-}`
-                  : `lockfileVersion: '9.0'
-
-importers:
-
-  .: {}
-
-`;
-
-          // Mutate the graph so the removed package has no matching
-          // external node -- forcing the "fall back to all projects"
-          // branch.
-          const prunedGraph: ProjectGraph = {
-            ...graph,
-            externalNodes: {
-              'npm:unrelated-package':
-                graph.externalNodes['npm:unrelated-package']!,
-            },
-          };
+        it('should return no projects when a removed package has no dependents', () => {
+          // The package exists only in the base lockfile and the head graph
+          // has no node for it. Nothing depends on it, so this is not the
+          // all-projects fallback.
+          const prunedGraph = graphWithoutRemovedPackage();
 
           const result = getTouchedProjectsFromLockFile(
             [
               {
                 file: lockFile,
-                getChanges: () => [new LockFileChange(base, emptyHead)],
+                getChanges: () => [
+                  new LockFileChange(base, emptyLockFile(lockFile)),
+                ],
               },
             ],
             prunedGraph.nodes,
@@ -452,7 +457,140 @@ importers:
             undefined,
             prunedGraph
           );
-          expect(result).toStrictEqual(allNodes);
+          expect(result).toStrictEqual([]);
+        });
+
+        it('should return only projects that depend on a package removed from the lockfile', () => {
+          const prunedGraph: ProjectGraph = {
+            ...graphWithoutRemovedPackage(),
+            dependencies: {
+              proj1: [
+                {
+                  type: 'static',
+                  source: 'proj1',
+                  target: 'npm:some-external-package@0.0.1',
+                },
+              ],
+            },
+          };
+
+          const result = getTouchedProjectsFromLockFile(
+            [
+              {
+                file: lockFile,
+                getChanges: () => [
+                  new LockFileChange(base, emptyLockFile(lockFile)),
+                ],
+              },
+            ],
+            prunedGraph.nodes,
+            autoNxJson,
+            undefined,
+            prunedGraph
+          );
+          expect(result).toStrictEqual(['proj1']);
+        });
+
+        it('should return only projects whose package.json depends on a removed package', () => {
+          const manifestPath = 'libs/proj1/package.json';
+          tempFs.createFileSync(
+            manifestPath,
+            JSON.stringify({
+              name: 'proj1',
+              devDependencies: { 'some-external-package': '^0.0.1' },
+            })
+          );
+          const prunedGraph = graphWithoutRemovedPackage();
+          try {
+            const result = getTouchedProjectsFromLockFile(
+              [
+                {
+                  file: lockFile,
+                  getChanges: () => [
+                    new LockFileChange(base, emptyLockFile(lockFile)),
+                  ],
+                },
+              ],
+              prunedGraph.nodes,
+              autoNxJson,
+              undefined,
+              prunedGraph
+            );
+            expect(result).toStrictEqual(['proj1']);
+          } finally {
+            tempFs.removeFileSync(manifestPath);
+          }
+        });
+
+        it('should touch the root project when the root package.json depends on a removed package', () => {
+          const prunedGraph: ProjectGraph = {
+            ...graphWithoutRemovedPackage(),
+            nodes: {
+              ...graph.nodes,
+              root: {
+                name: 'root',
+                type: 'app',
+                data: { root: '.' },
+              },
+            },
+          };
+
+          const result = getTouchedProjectsFromLockFile(
+            [
+              {
+                file: lockFile,
+                getChanges: () => [
+                  new LockFileChange(base, emptyLockFile(lockFile)),
+                ],
+              },
+            ],
+            prunedGraph.nodes,
+            autoNxJson,
+            {
+              name: 'test',
+              version: '1.0.0',
+              dependencies: { 'some-external-package': '^0.0.1' },
+            },
+            prunedGraph
+          );
+          expect(result).toStrictEqual(['root']);
+        });
+
+        it('should not fall back to all projects when a removal accompanies a resolved version change', () => {
+          // Head revision is the `base` fixture: some-other-external-package is
+          // gone, and some-external-package changed. Only that package has a head node.
+          const mixedGraph: ProjectGraph = {
+            ...graph,
+            externalNodes: {
+              'npm:some-external-package':
+                graph.externalNodes['npm:some-external-package']!,
+            },
+            dependencies: {
+              proj2: [
+                {
+                  type: 'static',
+                  source: 'proj2',
+                  target: 'npm:some-other-external-package',
+                },
+              ],
+            },
+          };
+
+          const result = getTouchedProjectsFromLockFile(
+            [
+              {
+                file: lockFile,
+                getChanges: () => [new LockFileChange(head, base)],
+              },
+            ],
+            mixedGraph.nodes,
+            autoNxJson,
+            undefined,
+            mixedGraph
+          );
+          expect(result.sort()).toStrictEqual(
+            ['npm:some-external-package', 'proj2'].sort()
+          );
         });
 
         it('should return all projects when only some changed packages exist in the current external node graph', () => {
