@@ -768,6 +768,7 @@ export function stringifyPnpmLockfile(
   type ManifestPeers = {
     workspaceSiblings: string[];
     localPathPeers: Array<[name: string, spec: string]>;
+    registryPeers: Array<[name: string, spec: string]>;
   };
   const manifestPeersCache = new Map<string, ManifestPeers>();
   const getManifestPeers = (importerPath: string): ManifestPeers => {
@@ -775,7 +776,7 @@ export function stringifyPnpmLockfile(
     if (peers) {
       return peers;
     }
-    peers = { workspaceSiblings: [], localPathPeers: [] };
+    peers = { workspaceSiblings: [], localPathPeers: [], registryPeers: [] };
     const manifestPath = join(workspaceRoot, importerPath, 'package.json');
     if (existsSync(manifestPath)) {
       try {
@@ -795,6 +796,8 @@ export function stringifyPnpmLockfile(
             peers.workspaceSiblings.push(name);
           } else if (typeof spec === 'string' && isLocalPathSpecifier(spec)) {
             peers.localPathPeers.push([name, spec]);
+          } else if (typeof spec === 'string') {
+            peers.registryPeers.push([name, spec]);
           }
         }
       } catch {
@@ -882,6 +885,19 @@ export function stringifyPnpmLockfile(
     snapshot: PackageSnapshot;
     importerPath: string;
   }[] = [];
+  // `<name>@file:workspace_modules/<name>` keys of the copied modules whose
+  // manifest declares a registry peer, mapped to that peer's declared range and
+  // the version pnpm resolved it to. pnpm qualifies such a `file:` directory
+  // dependency with the resolved version while recording the declared range on
+  // the entry, so both are needed; the suffix is applied once the whole
+  // lockfile is assembled, so every ref can be rewritten in one place.
+  const modulePeers = new Map<
+    string,
+    {
+      declarations: Record<string, string>;
+      resolved: Record<string, string>;
+    }
+  >();
   for (const [packageName, importerPath] of Object.entries(
     allRequiredImporters
   )) {
@@ -919,6 +935,27 @@ export function stringifyPnpmLockfile(
     }
 
     pendingPeerBackfills.push({ snapshot, importerPath });
+
+    const declarations: Record<string, string> = {};
+    const resolved: Record<string, string> = {};
+    for (const [peerName, peerSpec] of getManifestPeers(importerPath)
+      .registryPeers) {
+      const resolvedPeer =
+        snapshot.dependencies?.[peerName] ??
+        snapshot.optionalDependencies?.[peerName] ??
+        baseImporter.dependencies?.[peerName] ??
+        baseImporter.optionalDependencies?.[peerName];
+      if (typeof resolvedPeer === 'string') {
+        declarations[peerName] = peerSpec;
+        resolved[peerName] = resolvedPeer;
+      }
+    }
+    if (Object.keys(resolved).length > 0) {
+      modulePeers.set(`${packageName}@file:workspace_modules/${packageName}`, {
+        declarations,
+        resolved,
+      });
+    }
 
     synthesizedModulePaths.add(`workspace_modules/${packageName}`);
     workspaceModulePackages[
@@ -1010,12 +1047,121 @@ export function stringifyPnpmLockfile(
   }
   output.packages = sortObjectByKeys(output.packages);
 
+  applyWorkspaceModulePeerSuffixes(output, modulePeers);
+
   stripStandaloneLockfileConfig(output);
 
   return joinPnpmLockfileDocuments(
     extractEnvLockfileDocument(rootLockFileContent),
     stringifyToPnpmYaml(output)
   );
+}
+
+/**
+ * Qualifies each copied workspace module that declares a registry peer the way
+ * pnpm records a `file:` directory dependency with a resolved peer: the package
+ * key and its snapshot key take a `(peer@version)` suffix built from the
+ * resolved versions, the package entry carries the peers' declared ranges, and
+ * every ref pointing at the key takes the same suffix. Without them pnpm 12.21+
+ * reads the entry as outdated and refuses a `--frozen-lockfile` install
+ * (ERR_PNPM_OUTDATED_LOCKFILE). Lockfiles whose modules declare no registry peer
+ * are untouched.
+ */
+function applyWorkspaceModulePeerSuffixes(
+  lockfile: Lockfile,
+  modulePeers: Map<
+    string,
+    {
+      declarations: Record<string, string>;
+      resolved: Record<string, string>;
+    }
+  >
+): void {
+  if (modulePeers.size === 0) {
+    return;
+  }
+  const suffixByKey = new Map<string, string>();
+  for (const [key, { resolved }] of modulePeers) {
+    const names = Object.keys(resolved).sort();
+    suffixByKey.set(
+      key,
+      `(${names.map((name) => `${name}@${resolved[name]}`).join(')(')})`
+    );
+  }
+  const withSuffix = (ref: unknown): unknown => {
+    if (typeof ref !== 'string') {
+      return ref;
+    }
+    const suffix = suffixByKey.get(ref);
+    if (suffix !== undefined) {
+      return `${ref}${suffix}`;
+    }
+    // A ref names the dependency by its `file:` specifier, while the key that
+    // carries the peer suffix is `<name>@file:...`. Match on the specifier so
+    // both spellings get the same suffix.
+    const suffixBySpecifier = [...suffixByKey].find(([key]) =>
+      key.endsWith(`@${ref}`)
+    );
+    return suffixBySpecifier === undefined
+      ? ref
+      : `${ref}${suffixBySpecifier[1]}`;
+  };
+
+  // The entry key carries the suffix here; the writer splits it back out into a
+  // suffixed snapshot key and a bare package key. Each block is rebuilt rather
+  // than mutated in place, so a key is moved exactly once.
+  if (lockfile.packages) {
+    const next: Record<string, unknown> = {};
+    for (const [key, entry] of Object.entries(lockfile.packages)) {
+      const suffix = suffixByKey.get(key);
+      if (suffix === undefined) {
+        next[key] = entry;
+        continue;
+      }
+      (entry as PackageSnapshot).peerDependencies = {
+        ...modulePeers.get(key)?.declarations,
+        ...(entry as PackageSnapshot).peerDependencies,
+      };
+      next[`${key}${suffix}`] = entry;
+    }
+    lockfile.packages = sortObjectByKeys(next) as typeof lockfile.packages;
+  }
+
+  // Every ref that points at one of the renamed keys. Importers carry the
+  // `file:` ref both as a plain string and as a `{ specifier, version }` pair.
+  const visitRefs = (deps: Record<string, unknown> | undefined) => {
+    if (!deps) {
+      return;
+    }
+    for (const [name, ref] of Object.entries(deps)) {
+      if (ref && typeof ref === 'object' && 'version' in ref) {
+        const version = (ref as { version?: unknown }).version;
+        const qualified = withSuffix(version);
+        if (qualified !== version) {
+          (ref as { version?: unknown }).version = qualified;
+        }
+      } else {
+        const qualified = withSuffix(ref);
+        if (qualified !== ref) {
+          deps[name] = qualified;
+        }
+      }
+    }
+  };
+  for (const importer of Object.values(lockfile.importers ?? {})) {
+    for (const section of WORKSPACE_DEP_TYPES) {
+      visitRefs(importer[section] as Record<string, unknown> | undefined);
+    }
+  }
+  for (const entry of Object.values(lockfile.packages ?? {})) {
+    for (const section of WORKSPACE_DEP_TYPES) {
+      visitRefs(
+        (entry as unknown as Record<string, unknown>)[section] as
+          | Record<string, unknown>
+          | undefined
+      );
+    }
+  }
 }
 
 /**

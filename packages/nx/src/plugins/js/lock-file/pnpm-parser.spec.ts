@@ -16,6 +16,7 @@ import {
   RawProjectGraphDependency,
 } from '../../../project-graph/project-graph-builder';
 import { CreateDependenciesContext } from '../../../project-graph/plugins';
+import type { NormalizedPackageJson } from '../../../utils/package-json';
 import { hashArray } from '../../../hasher/file-hasher';
 
 vi.mock('node:fs', async () => {
@@ -2250,6 +2251,179 @@ importers:
       );
 
       expect(result).toEqual(expectedPrunedLockFile);
+    });
+  });
+
+  describe('copied workspace module with a registry peer', () => {
+    // pnpm 12.21.0 rejects a pruned lockfile that omits the peer records it
+    // writes for a `file:` directory dependency with a resolved peer
+    // (ERR_PNPM_OUTDATED_LOCKFILE, "local dependency ... is outdated"). pnpm
+    // records three things: `peerDependencies` on the package entry, the
+    // peer-qualified version on the importer, and the same suffix on the
+    // snapshot key.
+    const lockFile = `lockfileVersion: '9.0'
+
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
+
+importers:
+
+  .:
+    dependencies:
+      '@acme/lib':
+        specifier: workspace:*
+        version: link:packages/lib
+      is-even:
+        specifier: 1.0.0
+        version: 1.0.0
+
+  packages/lib:
+    dependencies:
+      is-even:
+        specifier: 1.0.0
+        version: 1.0.0
+      is-odd:
+        specifier: 3.0.1
+        version: 3.0.1
+
+packages:
+
+  is-even@1.0.0:
+    resolution: {integrity: sha512-is-even}
+
+  is-odd@3.0.1:
+    resolution: {integrity: sha512-is-odd}
+
+snapshots:
+
+  is-even@1.0.0: {}
+
+  is-odd@3.0.1: {}`;
+
+    const packageJson = {
+      name: 'app',
+      version: '1.0.0',
+      dependencies: {
+        '@acme/lib': 'file:./workspace_modules/@acme/lib',
+        'is-even': '1.0.0',
+      },
+    } as NormalizedPackageJson;
+
+    const graph: ProjectGraph = {
+      nodes: {
+        lib: {
+          name: 'lib',
+          type: 'lib',
+          data: {
+            root: 'packages/lib',
+            metadata: { js: { packageName: '@acme/lib' } },
+          },
+        },
+      },
+      dependencies: {},
+      externalNodes: {
+        'npm:is-even': {
+          type: 'npm',
+          name: 'npm:is-even',
+          data: {
+            version: '1.0.0',
+            packageName: 'is-even',
+            hash: 'sha512-is-even',
+          },
+        },
+        'npm:is-odd': {
+          type: 'npm',
+          name: 'npm:is-odd',
+          data: {
+            version: '3.0.1',
+            packageName: 'is-odd',
+            hash: 'sha512-is-odd',
+          },
+        },
+      },
+    };
+
+    beforeEach(() => {
+      vol.fromJSON(
+        {
+          'node_modules/.modules.yaml': `hoistedDependencies: {}`,
+          'packages/lib/package.json': JSON.stringify({
+            name: '@acme/lib',
+            version: '1.0.0',
+            dependencies: { 'is-odd': '3.0.1' },
+            peerDependencies: { 'is-even': '1.0.0' },
+          }),
+        },
+        '/virtual'
+      );
+    });
+
+    it('records the peer the way pnpm does for a file: directory dependency', () => {
+      const result = stringifyPnpmLockfile(
+        graph,
+        lockFile,
+        packageJson,
+        '/virtual'
+      );
+      // The package entry carries the peer declaration. pnpm keys `packages`
+      // without the peer suffix (it is appended to the snapshot key instead),
+      // so the entry itself stays on the bare key.
+      expect(result).toContain(
+        [
+          "  '@acme/lib@file:workspace_modules/@acme/lib':",
+          '    resolution: {directory: workspace_modules/@acme/lib, type: directory}',
+          '    peerDependencies:',
+          '      is-even: 1.0.0',
+        ].join('\n')
+      );
+
+      // importer references the peer-qualified version
+      expect(result).toContain(
+        'version: file:workspace_modules/@acme/lib(is-even@1.0.0)'
+      );
+
+      // the snapshot key carries the suffix
+      expect(result).toContain(
+        "  '@acme/lib@file:workspace_modules/@acme/lib(is-even@1.0.0)':"
+      );
+    });
+
+    it('keeps the declared range on the entry while the suffix uses the resolved version', () => {
+      vol.fromJSON(
+        {
+          'node_modules/.modules.yaml': `hoistedDependencies: {}`,
+          'packages/lib/package.json': JSON.stringify({
+            name: '@acme/lib',
+            version: '1.0.0',
+            dependencies: { 'is-odd': '3.0.1' },
+            peerDependencies: { 'is-even': '^1.0.0' },
+          }),
+        },
+        '/virtual'
+      );
+      const rangePackageJson = {
+        ...packageJson,
+        dependencies: { ...packageJson.dependencies, 'is-even': '^1.0.0' },
+      } as NormalizedPackageJson;
+      const result = stringifyPnpmLockfile(
+        graph,
+        lockFile,
+        rangePackageJson,
+        '/virtual'
+      );
+      // pnpm keeps the declared range on the entry; only the suffix and the refs
+      // use the resolved version. Recording the resolved version as the
+      // declaration makes pnpm reject the lockfile as outdated.
+      expect(result).toContain(
+        ['    peerDependencies:', '      is-even: ^1.0.0'].join('\n')
+      );
+      expect(result).toContain(
+        'version: file:workspace_modules/@acme/lib(is-even@1.0.0)'
+      );
+      expect(result).toContain(
+        "  '@acme/lib@file:workspace_modules/@acme/lib(is-even@1.0.0)':"
+      );
     });
   });
 
