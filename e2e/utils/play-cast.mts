@@ -2,7 +2,7 @@
 //   node e2e/utils/play-cast.mts <file.cast>
 //   node e2e/utils/play-cast.mts --from-log <saved task log>
 //   node e2e/utils/play-cast.mts --run <runId> --task <taskId>   (fetches the log from Nx Cloud)
-// Options: --pick <n> (when a log holds several), --save <file.cast>, --speed <x>,
+// Options: --pick <n | part of the test name> (when a log holds several), --save <file.cast>, --speed <x>,
 //   --idle <seconds> (cap on pauses; 0 plays in real time, default from the recording)
 import { execFileSync } from 'node:child_process';
 import { readFileSync, writeFileSync } from 'node:fs';
@@ -79,15 +79,28 @@ function pickFromLog(log: string): string {
     console.error('No e2e recordings in this log.');
     process.exit(1);
   }
-  const pick = values.pick ? Number(values.pick) : blocks.length === 1 ? 1 : 0;
-  if (!blocks[pick - 1]) {
-    console.log('Recordings in this log (choose one with --pick <n>):');
-    blocks.forEach((b, i) =>
-      console.log(`  ${i + 1}. ${JSON.parse(b.split('\n')[0]).title}`)
+  const titles = blocks.map((b) => JSON.parse(b.split('\n')[0]).title ?? '');
+  const query = values.pick;
+  let matches = blocks.map((_, i) => i);
+  if (query && /^\d+$/.test(query)) {
+    matches = blocks[Number(query) - 1] ? [Number(query) - 1] : [];
+  } else if (query) {
+    matches = matches.filter((i) =>
+      titles[i].toLowerCase().includes(query.toLowerCase())
     );
-    process.exit(pick ? 1 : 0);
   }
-  return blocks[pick - 1];
+  if (matches.length !== 1) {
+    console.log(
+      query && matches.length === 0
+        ? `No recording matches "${query}". Recordings in this log:`
+        : 'Recordings in this log (choose one with --pick <n or part of the test name>):'
+    );
+    (matches.length ? matches : blocks.map((_, i) => i)).forEach((i) =>
+      console.log(`  ${i + 1}. ${titles[i]}`)
+    );
+    process.exit(query ? 1 : 0);
+  }
+  return blocks[matches[0]];
 }
 
 async function play(cast: string, speed: number) {
