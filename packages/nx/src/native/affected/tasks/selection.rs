@@ -397,7 +397,7 @@ mod tests {
         let p = hash_plans(&[
             (
                 "b:build",
-                vec![HashInstruction::ProjectConfiguration("a".into())],
+                vec![HashInstruction::ProjectConfiguration("a".into(), None)],
             ),
             ("c:build", vec![]),
         ]);
@@ -1007,7 +1007,7 @@ mod tests {
         let g = graph(&[("a", "packages/nx"), ("b", "packages/js")]);
         let p = plans(
             "b:build",
-            vec![HashInstruction::ProjectConfiguration("a".into())],
+            vec![HashInstruction::ProjectConfiguration("a".into(), None)],
         );
         let tg = task_graph(&[("b:build", &[])], &[]);
         let e = compute_affected_task_selection(

@@ -956,8 +956,11 @@ impl HashPlanner {
         let pool = &self.instruction_pool;
         let project_deps = &self.project_graph.dependencies[project_name];
 
+        // Only the task's own project keys a target: the task's own.
+        let own_target =
+            (project_name == task.target.project).then_some(task.target.target.as_str());
         let mut ids: Vec<u32> = self
-            .gather_self_inputs(project_name, &inputs.self_inputs, context)?
+            .gather_self_inputs(project_name, own_target, &inputs.self_inputs, context)?
             .into_iter()
             .map(|instruction| pool.intern(instruction))
             .collect();
@@ -965,7 +968,7 @@ impl HashPlanner {
         // root tsconfig was read, `always` inputs or not.
         if always.is_collecting() {
             always.extend(
-                self.gather_always_self_inputs(project_name, &inputs.self_inputs)?
+                self.gather_always_self_inputs(project_name, own_target, &inputs.self_inputs)?
                     .into_iter()
                     .filter(|id| {
                         context.is_none()
@@ -1009,6 +1012,7 @@ impl HashPlanner {
     fn gather_always_self_inputs(
         &self,
         project_name: &str,
+        target: Option<&str>,
         self_inputs: &[Input],
     ) -> anyhow::Result<Vec<u32>> {
         let retained = retained_inputs(self_inputs);
@@ -1016,7 +1020,7 @@ impl HashPlanner {
             return Ok(vec![]);
         }
         Ok(self
-            .gather_self_inputs(project_name, &retained, None)?
+            .gather_self_inputs(project_name, target, &retained, None)?
             .into_iter()
             .map(|instruction| self.instruction_pool.intern(instruction))
             .collect())
@@ -1126,7 +1130,7 @@ impl HashPlanner {
             !dep_inputs.deps_outputs.is_empty() || dep_inputs.deps_inputs.len() != inputs.len();
         let pool = &self.instruction_pool;
         let mut ids: InstructionIdSet = self
-            .gather_self_inputs(dep, &dep_inputs.self_inputs, None)?
+            .gather_self_inputs(dep, None, &dep_inputs.self_inputs, None)?
             .into_iter()
             .chain(self.declared_external_instructions(
                 dep,
@@ -1136,7 +1140,7 @@ impl HashPlanner {
             .map(|instruction| pool.intern(instruction))
             .collect();
         let mut always: InstructionIdSet = self
-            .gather_always_self_inputs(dep, &dep_inputs.self_inputs)?
+            .gather_always_self_inputs(dep, None, &dep_inputs.self_inputs)?
             .into_iter()
             .collect();
 
@@ -1212,7 +1216,7 @@ impl HashPlanner {
                     (vec![], vec![])
                 } else {
                     (
-                        self.gather_self_inputs(dep, &inputs.self_inputs, None)?
+                        self.gather_self_inputs(dep, None, &inputs.self_inputs, None)?
                             .into_iter()
                             .chain(
                                 self.declared_external_instructions(
@@ -1224,7 +1228,7 @@ impl HashPlanner {
                             )
                             .map(|instruction| self.instruction_pool.intern(instruction))
                             .collect(),
-                        self.gather_always_self_inputs(dep, &inputs.self_inputs)?,
+                        self.gather_always_self_inputs(dep, None, &inputs.self_inputs)?,
                     )
                 };
                 Ok(LocalDependencyInputs {
@@ -1430,11 +1434,12 @@ impl HashPlanner {
     fn gather_self_inputs(
         &self,
         project_name: &str,
+        target: Option<&str>,
         self_inputs: &[Input],
         context: Option<&UltracacheContext>,
     ) -> anyhow::Result<Vec<HashInstruction>> {
         if context.is_some() {
-            return self.gather_self_inputs_from_configuration(project_name, self_inputs);
+            return self.gather_self_inputs_from_configuration(project_name, target, self_inputs);
         }
         // `includeIgnored` filesets hash from disk as one aggregated group, so
         // a negation filters across entries; the rest read the file map.
@@ -1457,9 +1462,13 @@ impl HashPlanner {
 
         let project_root = &self.project_graph.nodes[project_name].root;
 
+        let project_configuration = HashInstruction::ProjectConfiguration(
+            project_name.to_string(),
+            target.map(str::to_string),
+        );
         let project_inputs = if project_file_sets.is_empty() {
             vec![
-                HashInstruction::ProjectConfiguration(project_name.to_string()),
+                project_configuration,
                 HashInstruction::TsConfiguration(project_name.to_string()),
             ]
         } else {
@@ -1471,7 +1480,7 @@ impl HashPlanner {
                         .map(|f| resolve_tokens(f, project_root, project_name))
                         .collect(),
                 ),
-                HashInstruction::ProjectConfiguration(project_name.to_string()),
+                project_configuration,
                 HashInstruction::TsConfiguration(project_name.to_string()),
             ]
         };
@@ -1515,11 +1524,15 @@ impl HashPlanner {
     fn gather_self_inputs_from_configuration(
         &self,
         project_name: &str,
+        target: Option<&str>,
         self_inputs: &[Input],
     ) -> anyhow::Result<Vec<HashInstruction>> {
         let project_root = &self.project_graph.nodes[project_name].root;
         let mut instructions = vec![
-            HashInstruction::ProjectConfiguration(project_name.to_string()),
+            HashInstruction::ProjectConfiguration(
+                project_name.to_string(),
+                target.map(str::to_string),
+            ),
             HashInstruction::TsConfiguration(project_name.to_string()),
         ];
         let ignored: Vec<String> = self_inputs
@@ -1674,10 +1687,14 @@ impl HashPlanner {
                     &named_inputs,
                 )?;
                 if always.is_collecting() {
-                    always.extend(self.gather_always_self_inputs(project, &expanded_input)?);
+                    always.extend(self.gather_always_self_inputs(
+                        project,
+                        None,
+                        &expanded_input,
+                    )?);
                 }
                 result.extend(
-                    self.gather_self_inputs(project, &expanded_input, None)?
+                    self.gather_self_inputs(project, None, &expanded_input, None)?
                         .into_iter()
                         .chain(self.declared_external_instructions(
                             project,
@@ -2395,7 +2412,7 @@ mod tests {
         assert_eq!(first.ids.len(), 3);
         for id in &first.ids {
             match planner.instruction_pool.get(*id).value() {
-                HashInstruction::ProjectConfiguration(name)
+                HashInstruction::ProjectConfiguration(name, _)
                 | HashInstruction::TsConfiguration(name)
                 | HashInstruction::ProjectFileSet(name, _) => assert_eq!(name, "cycle-a"),
                 other => panic!("Unexpected local instruction: {other:?}"),
@@ -2625,7 +2642,7 @@ mod tests {
             .filter(|id| {
                 matches!(
                     planner.instruction_pool.get(**id).value(),
-                    HashInstruction::ProjectConfiguration(_)
+                    HashInstruction::ProjectConfiguration(..)
                 )
             })
             .count();
