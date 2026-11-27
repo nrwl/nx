@@ -11,10 +11,6 @@ import {
   findNxProjectForImportPath,
   LocalPluginLookup,
 } from './local-plugin-project';
-import {
-  clearProjectsWithoutPluginInferenceCache,
-  retrieveProjectConfigurationsWithoutPluginInference,
-} from '../utils/retrieve-workspace-files';
 
 import type { ProjectConfiguration } from '../../config/workspace-json-project-json';
 
@@ -59,6 +55,10 @@ export async function resolveNxPlugin(
       !resolvedFromNode ||
       isWorkspaceLocalResolution(resolvedFromNode, root)
     ) {
+      // Lazy: retrieve-workspace-files reaches the daemon client through
+      // workspace-context, and only this local-plugin fallback needs it.
+      const { retrieveProjectConfigurationsWithoutPluginInference } =
+        require('../utils/retrieve-workspace-files') as typeof import('../utils/retrieve-workspace-files');
       projectsWithoutInferencePromise ??=
         retrieveProjectConfigurationsWithoutPluginInference(root);
       projectsWithoutInference ??= await projectsWithoutInferencePromise;
@@ -324,5 +324,7 @@ export function resetResolvePluginCache(): void {
   projectsWithoutInference = undefined;
   projectsWithoutInferencePromise = null;
   localPluginLookup = undefined;
+  const { clearProjectsWithoutPluginInferenceCache } =
+    require('../utils/retrieve-workspace-files') as typeof import('../utils/retrieve-workspace-files');
   clearProjectsWithoutPluginInferenceCache();
 }

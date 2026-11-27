@@ -209,3 +209,5 @@ astro-docs/public/.well-known/agent-skills
 
 # Staged issue-triage records (.claude/tools/triage)
 .nx-issue-triage
+
+/profile-out
