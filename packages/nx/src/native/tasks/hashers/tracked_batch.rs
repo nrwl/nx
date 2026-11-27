@@ -272,6 +272,17 @@ impl<'a> TrackedBatch<'a> {
         project: Option<&str>,
         globs: &[String],
     ) -> Result<Option<Vec<&'a FileData>>> {
+        Ok(self
+            .select_indices(project, globs)?
+            .map(|(files, ids)| ids.into_iter().map(|i| &files[i as usize]).collect()))
+    }
+
+    /// `select` as indices into the scope's file map, in path order.
+    pub(crate) fn select_indices(
+        &self,
+        project: Option<&str>,
+        globs: &[String],
+    ) -> Result<Option<(&'a [FileData], Vec<u32>)>> {
         let Some(scope) = self.scope(project, globs)? else {
             return Ok(None);
         };
@@ -311,7 +322,8 @@ impl<'a> TrackedBatch<'a> {
                 .map(|m| m.ids.as_slice()),
         );
         let mut excluded = negative.iter().copied().peekable();
-        Ok(Some(
+        Ok(Some((
+            scope.files,
             positive
                 .into_iter()
                 .filter_map(|i| {
@@ -319,10 +331,10 @@ impl<'a> TrackedBatch<'a> {
                     excluded
                         .next_if_eq(&i)
                         .is_none()
-                        .then(|| &scope.files[by_path[i as usize] as usize])
+                        .then(|| by_path[i as usize])
                 })
                 .collect(),
-        ))
+        )))
     }
 }
 
@@ -553,7 +565,8 @@ mod tests {
                 collect_workspace_file_paths_cached(
                     &workspace,
                     &workspace_index,
-                    &WorkspaceFileIndicesCache::new()
+                    &WorkspaceFileIndicesCache::new(),
+                    None,
                 )?,
                 "{group:?}"
             );

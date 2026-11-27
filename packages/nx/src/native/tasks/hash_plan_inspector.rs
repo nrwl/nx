@@ -161,6 +161,7 @@ impl HashPlanInspector {
                     file_sets,
                     &self.project_file_map,
                     project_file_indices_cache,
+                    None,
                 )?;
                 Ok(HashInputsBuilder {
                     files: files.into_iter().collect(),

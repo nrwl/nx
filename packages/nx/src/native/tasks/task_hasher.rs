@@ -304,6 +304,9 @@ pub struct TaskHasher {
     workspace_file_indices_cache: WorkspaceFileIndicesCache,
     project_file_indices_cache: ProjectFileIndicesCache,
     tracked_file_indices: TrackedFileIndices,
+    // Tracked fileset hashes by pool id, reused by later calls on the same
+    // pool. Like the caches above, they only fold the immutable snapshot.
+    tracked_values: parking_lot::Mutex<(std::sync::Weak<InstructionPool>, Vec<Option<SharedStr>>)>,
     // Fold over all externals; identical for every task, so computed once.
     all_externals_hash: OnceCell<String>,
     // A path index over the workspace files, built on first use. Workspace
@@ -349,6 +352,7 @@ impl TaskHasher {
             workspace_file_indices_cache: WorkspaceFileIndicesCache::new(),
             project_file_indices_cache: ProjectFileIndicesCache::new(),
             tracked_file_indices: TrackedFileIndices::default(),
+            tracked_values: Default::default(),
             all_externals_hash: OnceCell::new(),
             workspace_file_index: WorkspaceFileIndex::new(Arc::clone(&all_workspace_files)),
         }
@@ -507,6 +511,7 @@ impl TaskHasher {
                                 &file_sets,
                                 &self.workspace_file_index,
                                 &self.workspace_file_indices_cache,
+                                None,
                             )?
                             .into_iter()
                             .map(|file| match self.workspace_file_hash(&file) {
@@ -886,6 +891,19 @@ impl TaskHasher {
             })
             .collect();
         let is = |id: u32, kind: FoldKind| fold_kinds[id as usize] == kind;
+        let same_pool = |known: &std::sync::Weak<InstructionPool>| {
+            std::ptr::eq(known.as_ptr(), Arc::as_ptr(pool))
+        };
+        {
+            let known = self.tracked_values.lock();
+            if same_pool(&known.0) {
+                for (slot, value) in value_slots.iter().zip(&known.1) {
+                    if let (Some(slot), Some(value)) = (slot, value) {
+                        let _ = slot.set(value.clone());
+                    }
+                }
+            }
+        }
         let recorded_caches = RecordedCaches::default();
         hash_plans
             .plans
@@ -1040,6 +1058,20 @@ impl TaskHasher {
                 Ok::<_, anyhow::Error>(())
             })?;
 
+        let mut known = self.tracked_values.lock();
+        if !same_pool(&known.0) {
+            *known = (Arc::downgrade(pool), Vec::new());
+        }
+        known.1.resize(value_slots.len(), None);
+        for (id, slot) in value_slots.iter().enumerate() {
+            if is(id as u32, FoldKind::TrackedFiles)
+                && let Some(value) = slot.as_ref().and_then(OnceCell::get)
+            {
+                known.1[id] = Some(value.clone());
+            }
+        }
+        drop(known);
+
         let hash_duration = hash_time.elapsed();
         let total_duration = function_start.elapsed();
 
@@ -1079,31 +1111,27 @@ impl TaskHasher {
         let now = std::time::Instant::now();
         let span = trace_span!("hashing", task_id).entered();
         let empty = HashInputsBuilder::default();
-        if let Some(batch) = &batch.tracked {
-            let group = match instruction {
+        // Hash-only values persist by id in `tracked_values`, so they skip the
+        // string-keyed caches; collected inputs still fill those from the batch.
+        if !collect_inputs
+            && let Some(tracked) = &batch.tracked
+            && let Some((project, globs)) = match instruction {
                 HashInstruction::ProjectFileSet(p, globs) => Some((Some(p.as_str()), globs)),
                 HashInstruction::WorkspaceFileSet(globs) => Some((None, globs)),
                 _ => None,
-            };
-            if let Some((project, globs)) = group
-                && let Some(files) = batch.select(project, globs)?
-            {
-                let value = super::hashers::fold_files(files.iter().copied());
-                let mut inputs = HashInputsBuilder::default();
-                if collect_inputs {
-                    inputs
-                        .files
-                        .extend(files.into_iter().map(|f| f.file.clone()));
-                }
-                return Ok((value, inputs));
             }
+            && let Some(files) = tracked.select(project, globs)?
+        {
+            return Ok((super::hashers::fold_files(files.iter().copied()), empty));
         }
+        let fill = batch.tracked.as_ref().filter(|_| collect_inputs);
         let (hash, inputs) = match instruction {
             HashInstruction::WorkspaceFileSet(workspace_file_set) => {
                 let hashed = hash_workspace_files_cached(
                     workspace_file_set,
                     &self.workspace_file_index,
                     workspace_file_set_cache,
+                    fill,
                 )?;
                 trace!(parent: &span, "hash_workspace_files: {:?}", now.elapsed());
                 let inputs = if collect_inputs {
@@ -1111,6 +1139,7 @@ impl TaskHasher {
                         workspace_file_set,
                         &self.workspace_file_index,
                         &self.workspace_file_indices_cache,
+                        fill,
                     )?;
                     HashInputsBuilder {
                         files: files.into_iter().collect(),
@@ -1201,6 +1230,7 @@ impl TaskHasher {
                     file_sets,
                     &self.project_file_map,
                     project_file_set_cache,
+                    fill,
                 )?;
                 trace!(parent: &span, "hash_project_files: {:?}", now.elapsed());
                 let inputs = if collect_inputs {
@@ -1209,6 +1239,7 @@ impl TaskHasher {
                         file_sets,
                         &self.project_file_map,
                         &self.project_file_indices_cache,
+                        fill,
                     )?;
                     HashInputsBuilder {
                         files: files.into_iter().collect(),
@@ -1528,6 +1559,7 @@ mod tests {
             workspace_file_indices_cache: WorkspaceFileIndicesCache::new(),
             project_file_indices_cache: ProjectFileIndicesCache::new(),
             tracked_file_indices: TrackedFileIndices::default(),
+            tracked_values: Default::default(),
             all_externals_hash: OnceCell::new(),
             workspace_file_index: WorkspaceFileIndex::new(all_workspace_files),
         }
@@ -2419,6 +2451,46 @@ mod tests {
             .to_string();
         assert_eq!(run("malformed").unwrap_err().to_string(), diagnostic);
         assert_eq!(run("malformed-batch").unwrap_err().to_string(), diagnostic);
+        Ok(())
+    }
+
+    #[test]
+    fn repeated_hash_plans_reuse_tracked_values_by_pool_id() -> anyhow::Result<()> {
+        use crate::native::tasks::hashers::MIN_BATCH_GROUPS;
+        use crate::native::test_utils::hash_plans;
+
+        let temp = assert_fs::TempDir::new()?;
+        let reader = IgnoredIndexReader::new(Arc::new(IgnoredIndex::new(None)), Arc::new(|| {}));
+        let paths: Vec<_> = (0..MIN_BATCH_GROUPS)
+            .map(|i| format!("libs/p{i}/a.ts"))
+            .collect();
+        let plan = (0..MIN_BATCH_GROUPS)
+            .map(|i| {
+                HashInstruction::ProjectFileSet(format!("p{i}"), vec![format!("libs/p{i}/**/*.ts")])
+            })
+            .collect();
+        let plans = External::new(hash_plans(&[("task", plan)]));
+        let files: Vec<_> = paths.iter().map(|p| (p.as_str(), "hash")).collect();
+        let hasher = hasher_tracking(temp.path(), reader, &files);
+        let run = || -> anyhow::Result<_> {
+            let hashes = hasher.hash_plans(
+                &plans,
+                HashMap::from([("task".into(), HashMap::new())]),
+                temp.path().to_string_lossy().into_owned(),
+                Some(false),
+            )?;
+            Ok(hashes.0.remove("task").unwrap().1.value)
+        };
+
+        let first = run()?;
+        assert_eq!(run()?, first);
+        // A planted value shows the next call reads the stored one instead of rehashing.
+        {
+            let mut known = hasher.tracked_values.lock();
+            assert_eq!(known.1.iter().flatten().count(), MIN_BATCH_GROUPS);
+            *known.1.iter_mut().flatten().next().unwrap() = SharedStr::from("planted".to_string());
+        }
+        assert_ne!(run()?, first);
         Ok(())
     }
 }
