@@ -637,37 +637,44 @@ impl NxCache {
         let buffer_amount = (0.1 * user_specified_max_cache_size as f64) as i64;
         let target_cache_size = user_specified_max_cache_size - buffer_amount;
 
-        let mut cache_size = self.get_cache_size()?;
-        if cache_size <= user_specified_max_cache_size {
+        if self.get_cache_size()? <= user_specified_max_cache_size {
             return Ok(());
         }
         let mut db = self.db.lock().unwrap();
-        while cache_size > target_cache_size {
-            // Read the whole batch before deleting any of it. An open cursor pins
-            // a WAL snapshot, and once another process commits, no retry can
-            // upgrade that snapshot to a write.
-            let oldest = db.query_map(
-                "SELECT hash, size FROM cache_outputs ORDER BY accessed_at ASC LIMIT 100",
-                [],
-                |r| Ok((r.get::<_, String>(0)?, r.get::<_, i64>(1)?)),
-            )?;
-            if oldest.is_empty() {
-                break;
-            }
-            let mut evicted = Vec::new();
-            for (hash, size) in oldest {
-                cache_size -= size;
-                evicted.push(hash);
+        loop {
+            // Size, batch and delete under one write lock, so caches sharing the
+            // db never choose the same entries or count space another freed.
+            let evicted = db.transaction_immediate(|conn| {
+                let mut cache_size: i64 = conn.query_row(
+                    "SELECT COALESCE(SUM(size), 0) FROM cache_outputs",
+                    [],
+                    |r| r.get(0),
+                )?;
+                let mut evicted = Vec::new();
                 if cache_size <= target_cache_size {
-                    break;
+                    return Ok(evicted);
                 }
-            }
-            db.transaction_immediate(|conn| {
+                let oldest = conn
+                    .prepare(
+                        "SELECT hash, size FROM cache_outputs ORDER BY accessed_at ASC LIMIT 100",
+                    )?
+                    .query_map([], |r| Ok((r.get::<_, String>(0)?, r.get::<_, i64>(1)?)))?
+                    .collect::<rusqlite::Result<Vec<_>>>()?;
+                for (hash, size) in oldest {
+                    cache_size -= size;
+                    evicted.push(hash);
+                    if cache_size <= target_cache_size {
+                        break;
+                    }
+                }
                 for hash in &evicted {
                     conn.execute("DELETE FROM cache_outputs WHERE hash = ?1", params![hash])?;
                 }
-                Ok(())
+                Ok(evicted)
             })?;
+            if evicted.is_empty() {
+                break;
+            }
             // Both paths, matching remove_old_cache_records. Dropping the row
             // without the terminal output file would strand that file with
             // nothing left to point the GC at it.
