@@ -210,6 +210,12 @@
       "description": "Replaces @nx/powerpack-conformance with @nx/conformance, which nx conformance now loads. Rewrites its rule specifiers, executors and imports, points ensure-owners at @nx/owners, and adds esbuild for the bundle-rules executor.",
       "implementation": "./dist/src/migrations/update-24-1-0/replace-powerpack-conformance",
       "documentation": "./dist/src/migrations/update-24-1-0/replace-powerpack-conformance.md"
+    },
+    "24-1-0-remove-nx-rules-from-agent-files": {
+      "version": "24.1.0-beta.2",
+      "description": "Removes the Nx guidelines block that earlier versions of nx configure-ai-agents wrote into AGENTS.md, CLAUDE.md and GEMINI.md. The command no longer writes these guidelines.",
+      "implementation": "./dist/src/migrations/update-24-1-0/remove-nx-rules-from-agent-files",
+      "documentation": "./dist/src/migrations/update-24-1-0/remove-nx-rules-from-agent-files.md"
     }
   }
 }

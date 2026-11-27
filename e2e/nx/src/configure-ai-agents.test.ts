@@ -11,6 +11,23 @@ import {
   updateFile,
 } from '@nx/e2e-utils';
 
+// Both leave the agent configured but different from what the generator writes.
+function makeClaudeOutdated() {
+  updateFile('.claude/settings.json', (content: string) => {
+    const settings = JSON.parse(content);
+    delete settings.extraKnownMarketplaces;
+    return JSON.stringify(settings, null, 2);
+  });
+}
+
+function makeGeminiOutdated() {
+  updateFile('.gemini/settings.json', (content: string) => {
+    const settings = JSON.parse(content);
+    settings.mcpServers['nx-mcp'].command = 'outdated';
+    return JSON.stringify(settings, null, 2);
+  });
+}
+
 describe('configure-ai-agents', () => {
   beforeAll(() => {
     process.env.NX_USE_LOCAL = 'true';
@@ -24,10 +41,11 @@ describe('configure-ai-agents', () => {
   it('should generate local configuration', () => {
     runCLI(`configure-ai-agents --agents claude --no-interactive`);
 
-    expect(readFile('CLAUDE.md')).toContain('# General Guidelines');
     // Claude uses plugin from marketplace (MCP is included in plugin)
     expect(readFile('.claude/settings.json')).toContain('nx-claude-plugins');
     expect(readFile('.claude/settings.json')).toContain('nx@nx-claude-plugins');
+    expect(fileExists(tmpProjPath('CLAUDE.md'))).toBeFalsy();
+    expect(fileExists(tmpProjPath('AGENTS.md'))).toBeFalsy();
   });
 
   it('should do nothing if agent is already configured', () => {
@@ -38,10 +56,8 @@ describe('configure-ai-agents', () => {
     expect(output).toContain('All selected AI agents are already configured');
   });
 
-  it('should throw with --check if agent rules are out of date', () => {
-    updateFile('CLAUDE.md', (content: string) =>
-      content.replace('nx_docs', 'nx_docs_outdated')
-    );
+  it('should throw with --check if agent configuration is out of date', () => {
+    makeClaudeOutdated();
 
     let didThrow = false;
     try {
@@ -52,16 +68,17 @@ describe('configure-ai-agents', () => {
     expect(didThrow).toBe(true);
   });
 
-  it('should update agent rules if out of date', () => {
+  it('should update agent configuration if out of date', () => {
     runCLI(`configure-ai-agents --agents claude --no-interactive`);
 
-    expect(readFile('CLAUDE.md')).not.toContain('nx_docs_outdated');
+    expect(readFile('.claude/settings.json')).toContain(
+      'extraKnownMarketplaces'
+    );
   });
 
   describe('--check (backward compatible, defaults to outdated mode)', () => {
     beforeAll(() => {
       // Clean up previous tests
-      removeFile('CLAUDE.md');
       removeFile('.claude/settings.json');
     });
 
@@ -80,24 +97,11 @@ describe('configure-ai-agents', () => {
 
   describe('--check=outdated (explicit outdated mode)', () => {
     it('should exit 0 with no configured agents', () => {
-      removeFile('CLAUDE.md');
       removeFile('.claude/settings.json');
 
       const output = runCLI(
         `configure-ai-agents --agents claude --check=outdated`
       );
-      expect(output).toContain('No AI agents are configured');
-    });
-
-    it('should exit 0 with partially configured agents (ignores partial configs)', () => {
-      runCLI(`configure-ai-agents --agents claude --no-interactive`);
-      removeFile('.claude/settings.json');
-
-      const output = runCLI(
-        `configure-ai-agents --agents claude --check=outdated`
-      );
-      // Should exit 0 because partially configured agents are not considered "fully configured"
-      // so outdated mode reports no agents configured
       expect(output).toContain('No AI agents are configured');
     });
 
@@ -105,10 +109,7 @@ describe('configure-ai-agents', () => {
       // Restore full configuration
       runCLI(`configure-ai-agents --agents claude --no-interactive`);
 
-      // Make it outdated
-      updateFile('CLAUDE.md', (content: string) =>
-        content.replace('nx_docs', 'nx_docs_outdated')
-      );
+      makeClaudeOutdated();
 
       let didThrow = false;
       try {
@@ -125,7 +126,6 @@ describe('configure-ai-agents', () => {
 
   describe('--check=all (comprehensive check)', () => {
     it('should exit 1 on clean workspace with no configured agents', () => {
-      removeFile('CLAUDE.md');
       removeFile('.claude/settings.json');
 
       let didThrow = false;
@@ -135,28 +135,11 @@ describe('configure-ai-agents', () => {
         didThrow = true;
       }
       expect(didThrow).toBe(true);
-    });
-
-    it('should exit 1 with partially configured agents', () => {
-      runCLI(`configure-ai-agents --agents claude --no-interactive`);
-      removeFile('.claude/settings.json');
-
-      let didThrow = false;
-      try {
-        runCLI(`configure-ai-agents --agents claude --check=all`);
-      } catch {
-        didThrow = true;
-      }
-      expect(didThrow).toBe(true);
-
-      // Restore full configuration for next tests
-      runCLI(`configure-ai-agents --agents claude --no-interactive`);
     });
 
     it('should exit 1 with outdated agents', () => {
-      updateFile('CLAUDE.md', (content: string) =>
-        content.replace('nx_docs', 'nx_docs_outdated')
-      );
+      runCLI(`configure-ai-agents --agents claude --no-interactive`);
+      makeClaudeOutdated();
 
       let didThrow = false;
       try {
@@ -269,9 +252,7 @@ describe('configure-ai-agents', () => {
       );
 
       // Make gemini outdated so re-running triggers the generator
-      updateFile('AGENTS.md', (content: string) =>
-        content.replace('nx_docs', 'nx_docs_outdated')
-      );
+      makeGeminiOutdated();
 
       // Re-run configure to trigger cleanup
       runCLI('configure-ai-agents --agents gemini --no-interactive');
@@ -294,10 +275,8 @@ describe('configure-ai-agents', () => {
 
     beforeAll(() => {
       // Start clean: remove all agent configs
-      removeFile('CLAUDE.md');
       removeFile('.claude');
       removeFile('.gemini');
-      removeFile('AGENTS.md');
       removeFile('opencode.json');
       removeFile('.opencode');
       removeFile('.codex');
@@ -307,7 +286,7 @@ describe('configure-ai-agents', () => {
       const output = runCLI('configure-ai-agents --no-interactive');
 
       // Nothing should have been configured
-      expect(() => readFile('CLAUDE.md')).toThrow();
+      expect(() => readFile('.claude/settings.json')).toThrow();
 
       // Should report non-configured agents
       expect(output).toContain('not yet configured');
@@ -317,17 +296,15 @@ describe('configure-ai-agents', () => {
     it('should update outdated agents and report non-configured ones', () => {
       // Configure claude first
       runCLI('configure-ai-agents --agents claude --no-interactive');
-      expect(readFile('CLAUDE.md')).toContain('# General Guidelines');
 
-      // Make it outdated
-      updateFile('CLAUDE.md', (content: string) =>
-        content.replace('nx_docs', 'nx_docs_outdated')
-      );
+      makeClaudeOutdated();
 
       const output = runCLI('configure-ai-agents --no-interactive');
 
       // Should have updated the outdated claude config
-      expect(readFile('CLAUDE.md')).not.toContain('nx_docs_outdated');
+      expect(readFile('.claude/settings.json')).toContain(
+        'extraKnownMarketplaces'
+      );
       expect(output).toContain('configured successfully');
 
       // Should report non-configured agents
@@ -340,21 +317,6 @@ describe('configure-ai-agents', () => {
 
       expect(output).toContain('up to date');
     });
-
-    it('should not configure partially configured agents', () => {
-      // Remove the rules file to make claude partially configured
-      removeFile('CLAUDE.md');
-
-      const output = runCLI('configure-ai-agents --no-interactive');
-
-      // Should NOT have restored the missing rules file — partial agents
-      // are not auto-configured (same as AI agent mode for non-detected agents)
-      expect(() => readFile('CLAUDE.md')).toThrow();
-      expect(output).toContain('up to date');
-
-      // Restore for subsequent tests
-      runCLI('configure-ai-agents --agents claude --no-interactive');
-    });
   });
 
   describe('when running from a detected AI agent', () => {
@@ -365,7 +327,6 @@ describe('configure-ai-agents', () => {
 
     beforeAll(() => {
       // Start clean: remove all agent configs
-      removeFile('CLAUDE.md');
       removeFile('.claude');
       removeFile('.gemini');
     });
@@ -377,7 +338,6 @@ describe('configure-ai-agents', () => {
       });
 
       // Should have configured claude (the detected agent)
-      expect(readFile('CLAUDE.md')).toContain('# General Guidelines');
       expect(readFile('.claude/settings.json')).toContain('nx-claude-plugins');
 
       // Should mention other unconfigured agents with a command to configure them
@@ -394,30 +354,26 @@ describe('configure-ai-agents', () => {
       expect(output).toContain('up to date');
     });
 
-    it('should update the detected agent when its rules are outdated', () => {
-      // Make claude outdated
-      updateFile('CLAUDE.md', (content: string) =>
-        content.replace('nx_docs', 'nx_docs_outdated')
-      );
+    it('should update the detected agent when its configuration is outdated', () => {
+      makeClaudeOutdated();
 
       const output = runCLI('configure-ai-agents', {
         env: claudeEnv,
       });
 
-      // Should have updated claude's rules
-      expect(readFile('CLAUDE.md')).not.toContain('nx_docs_outdated');
+      // Should have updated claude's configuration
+      expect(readFile('.claude/settings.json')).toContain(
+        'extraKnownMarketplaces'
+      );
       expect(output).toContain('configured successfully');
     });
 
     it('should update other outdated agents alongside the detected agent', () => {
       // Configure gemini fully first
       runCLI('configure-ai-agents --agents gemini --no-interactive');
-      expect(readFile('AGENTS.md')).toBeTruthy();
 
       // Make gemini outdated
-      updateFile('AGENTS.md', (content: string) =>
-        content.replace('nx_docs', 'nx_docs_outdated')
-      );
+      makeGeminiOutdated();
 
       // Run from detected claude agent — should also update outdated gemini
       const output = runCLI('configure-ai-agents', {
@@ -425,7 +381,7 @@ describe('configure-ai-agents', () => {
       });
 
       // Gemini should have been updated because it was outdated
-      expect(readFile('AGENTS.md')).not.toContain('nx_docs_outdated');
+      expect(readFile('.gemini/settings.json')).not.toContain('outdated');
       expect(output).toContain('configured successfully');
     });
 
@@ -447,7 +403,6 @@ describe('configure-ai-agents', () => {
 
     it('should ignore the detected agent when --agents is explicitly passed', () => {
       // Clean up both agents
-      removeFile('CLAUDE.md');
       removeFile('.claude');
       removeFile('.gemini');
 
@@ -458,20 +413,17 @@ describe('configure-ai-agents', () => {
       });
 
       // Gemini should be configured because it was explicitly requested
-      expect(readFile('AGENTS.md')).toContain('# General Guidelines');
+      expect(readFile('.gemini/settings.json')).toContain('nx-mcp');
 
       // Claude should NOT be configured — --agents overrides detection
-      expect(() => readFile('CLAUDE.md')).toThrow();
+      expect(() => readFile('.claude/settings.json')).toThrow();
     });
 
     it('should throw with --check when the detected agent is outdated', () => {
       // Restore claude config (previous test removed it)
       runCLI('configure-ai-agents --agents claude --no-interactive');
 
-      // Make claude outdated
-      updateFile('CLAUDE.md', (content: string) =>
-        content.replace('nx_docs', 'nx_docs_outdated')
-      );
+      makeClaudeOutdated();
 
       let didThrow = false;
       try {
@@ -492,9 +444,7 @@ describe('configure-ai-agents', () => {
       runCLI('configure-ai-agents --agents gemini --no-interactive');
 
       // Make gemini outdated while claude stays up-to-date
-      updateFile('AGENTS.md', (content: string) =>
-        content.replace('nx_docs', 'nx_docs_outdated')
-      );
+      makeGeminiOutdated();
 
       let didThrow = false;
       try {
@@ -511,10 +461,7 @@ describe('configure-ai-agents', () => {
     });
 
     it('should not throw with --check when --agents scopes to up-to-date agents only', () => {
-      // Make claude outdated
-      updateFile('CLAUDE.md', (content: string) =>
-        content.replace('nx_docs', 'nx_docs_outdated')
-      );
+      makeClaudeOutdated();
 
       // --agents gemini --check should only check gemini, ignoring
       // the detected (and outdated) claude entirely
@@ -525,6 +472,44 @@ describe('configure-ai-agents', () => {
 
       // Restore
       runCLI('configure-ai-agents --agents claude --no-interactive');
+    });
+  });
+
+  describe('rules files', () => {
+    const nxBlock =
+      '<!-- nx configuration start-->\nOutdated\n<!-- nx configuration end-->';
+
+    it('should report an agent as outdated while an Nx block is left', () => {
+      runCLI('configure-ai-agents --agents claude --no-interactive');
+      createFile('AGENTS.md', `# My Project\n\n${nxBlock}\n`);
+      createFile('CLAUDE.md', `${nxBlock}\n`);
+
+      let didThrow = false;
+      try {
+        runCLI('configure-ai-agents --agents claude --check');
+      } catch {
+        didThrow = true;
+      }
+      expect(didThrow).toBe(true);
+    });
+
+    it('should remove the Nx block and keep the rest of the file', () => {
+      runCLI('configure-ai-agents --agents claude --no-interactive');
+
+      expect(readFile('AGENTS.md')).toEqual('# My Project\n');
+      expect(fileExists(tmpProjPath('CLAUDE.md'))).toBeFalsy();
+    });
+
+    it('should leave rules files without an Nx block untouched', () => {
+      const existing = '# My Project\n\nMy own rules\n';
+      createFile('AGENTS.md', existing);
+      createFile('CLAUDE.md', existing);
+      makeClaudeOutdated();
+
+      runCLI('configure-ai-agents --agents claude --no-interactive');
+
+      expect(readFile('AGENTS.md')).toEqual(existing);
+      expect(readFile('CLAUDE.md')).toEqual(existing);
     });
   });
 });
