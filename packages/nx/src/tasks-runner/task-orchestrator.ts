@@ -304,6 +304,9 @@ export class TaskOrchestrator {
   private waitingLogged = new Set<string>();
   private cleanupPromise: Promise<void> | null = null;
   private signalHandlers: Array<[NodeJS.Signals, () => void]> = [];
+  private closedOutputErrorHandler:
+    | ((error: NodeJS.ErrnoException) => void)
+    | null = null;
   // Tasks whose runner already owns the write to
   // `<cacheDir>/terminalOutputs/<hash>` — forked processes write it as they
   // exit, and the paths that never spawn one write it inline. The backstop in
@@ -3181,6 +3184,10 @@ export class TaskOrchestrator {
     const handleSignal = (signal: NodeJS.Signals) => {
       if (this.stopRequested) return;
       this.stopRequested = true;
+      // EPIPE from a write during cleanup arrives on a later turn, after
+      // dispose(). Leave the handler installed: kill() records its promise
+      // before the signal lands, and the exit fallback then skips that task.
+      this.ignoreClosedOutputErrors();
       if (!this.tuiEnabled) {
         // Synchronously remove DB entries before async cleanup to prevent
         // new nx processes from seeing stale "Waiting for ..." messages.
@@ -3240,6 +3247,19 @@ export class TaskOrchestrator {
     }
     this.signalHandlers = [];
     this.forkedProcessTaskRunner.removeProcessEventListeners();
+  }
+
+  private ignoreClosedOutputErrors() {
+    if (this.closedOutputErrorHandler) return;
+    const handler = (error: NodeJS.ErrnoException) => {
+      if (error.code === 'EPIPE' || error.code === 'ERR_STREAM_DESTROYED') {
+        return;
+      }
+      throw error;
+    };
+    this.closedOutputErrorHandler = handler;
+    process.stdout.on('error', handler);
+    process.stderr.on('error', handler);
   }
 
   private cleanUpUnneededContinuousTasks() {
