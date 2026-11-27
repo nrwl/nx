@@ -2,7 +2,7 @@
 title: Continuous Integration (CI) with Nx Cloud
 sidebar:
   hidden: true
-description: Run your whole CI pipeline on Nx Cloud, or add it to your CI provider, to cut time and cost with remote caching, Ultracache, and distributed task execution.
+description: Run your whole CI pipeline on Nx Cloud CI to cut time and cost with remote caching, Ultracache, distributed task execution, and self-healing CI.
 filter: 'type:Features'
 ---
 
@@ -13,8 +13,11 @@ Nx Cloud makes CI faster and cheaper in two ways:
 
 In most workspaces, distribution uses about **50% fewer machine-minutes** than remote caching alone.
 Teams using Nx Cloud report **40% to 90% faster CI**.
+In a [511-project benchmark](https://github.com/nrwl/new-cloud-bench), Nx Cloud CI ran the same pipeline **10.6x faster on 79% less compute** than remote caching only.
 
-[Run your whole pipeline on Nx Cloud](#run-ci-on-nx-cloud), or [keep your CI provider](#use-your-existing-ci-provider) and add Nx Cloud to it.
+{% figure name="benchmarks" height=300 caption="Average pipeline time and compute for the same 511-project workspace, weighted across feature, large, and full-rebuild changes. Setup time is included." /%}
+
+[Nx Cloud CI](#run-ci-on-nx-cloud) runs your whole pipeline on Nx Cloud, with all of these built in.
 
 ## What you get with Nx Cloud on top of Nx Core
 
@@ -28,16 +31,15 @@ Teams using Nx Cloud report **40% to 90% faster CI**.
 
 ## Connect your workspace to Nx Cloud
 
-Push your workspace to a remote repository, then run:
+Push your workspace to GitHub, then run:
 
 ```shell
 npx nx@latest connect
 ```
 
 Remote caching works as soon as the workspace is connected.
-To try [Nx Cloud CI](#run-ci-on-nx-cloud), [join the private beta](https://nx.dev/nx-cloud-ci-beta) before you connect, because the beta sets up its own organization.
 
-{% call_to_action title="Connect from your browser" url="https://cloud.nx.app/get-started?utm_source=nx-docs&utm_medium=website&utm_campaign=nx-cloud-signup&utm_content=ci-features" icon="nxcloud" description="Sign in to Nx Cloud and connect your repository without the CLI" /%}
+{% call_to_action title="Connect from your browser" url="https://cloud.nx.app/get-started?plan=nx-cloud-ci&utm_source=nx-docs&utm_medium=website&utm_campaign=nx-cloud-signup&utm_content=ci-features" icon="nxcloud" description="Sign in to Nx Cloud and connect your repository without the CLI" /%}
 
 ## Run CI on Nx Cloud
 
@@ -45,13 +47,9 @@ Nx Cloud CI runs your whole pipeline on Nx Cloud from a `.nx/pipelines/ci.yaml` 
 A push or pull request on GitHub starts the jobs in that file, and the results show up on Nx Cloud and as a status on the pull request.
 Remote caching and self-healing CI work without extra steps, and workers take one line in the file.
 
-{% aside type="note" title="Private beta" %}
-Nx Cloud CI is in private beta.
-To join, [sign up for the beta](https://nx.dev/nx-cloud-ci-beta), and we'll email you a link that creates a new Nx Cloud organization for the beta.
-{% /aside %}
-
-Your repository must be on github.com and connected to Nx Cloud through the [GitHub App](/docs/kb/github-integration).
-Personal access tokens, GitHub Enterprise, and other providers aren't supported yet.
+Nx Cloud CI is in beta, and your repository must be on github.com and connected to Nx Cloud through the [GitHub App](/docs/kb/github-integration).
+Personal access tokens and GitHub Enterprise aren't supported yet, and other providers are coming soon.
+Until then, see [bring your own CI](#bring-your-own-ci).
 
 ### Set up a pipeline
 
@@ -142,24 +140,6 @@ To convert a workflow, see [move a GitHub Actions workflow to Nx Cloud CI](/docs
 Scheduled runs, GitHub Marketplace actions, and macOS and Windows machines aren't supported yet.
 For the full list, see [Nx Cloud CI limits](/docs/reference/nx-cloud/ci-config#nx-cloud-ci-limits).
 
-## Use your existing CI provider
-
-To keep your pipeline on GitHub Actions, CircleCI, GitLab, or another provider, add Nx Cloud to it.
-The same [CI configuration file](/docs/reference/nx-cloud/ci-config) sets your workers, and `nx-cloud start-workers` starts them from your main job:
-
-```yaml
-# .nx/pipelines/ci.yaml
-worker-templates:
-  default: 3 linux-large-js
-```
-
-```shell
-npx nx-cloud start-workers
-```
-
-For the full pipeline on your provider, see [setting up CI](/docs/getting-started/setup-ci).
-If your workspace has a `.nx/ci-config.yaml` file, [migrate it to `ci.yaml`](/docs/kb/migrate-from-ci-config).
-
 ## Building blocks of fast CI
 
 Fast CI comes from two things:
@@ -184,15 +164,17 @@ Workers stay busy, a worker that fails during setup has its work picked up by th
 
 {% index_page_cards path="features/ci-features" /%}
 
+## Bring your own CI
+
+Remote caching, workers, and self-healing CI also work from GitHub Actions, GitLab, CircleCI, Azure Pipelines, Bitbucket Pipelines, and Jenkins.
+Your pipeline stays on your provider, and `nx-cloud start-workers` starts the workers from your main job.
+For the setup, see [bring your own CI](/docs/kb/bring-your-own-ci).
+
 ## Related guides
 
 {% cardgrid %}
 
 {% linkcard title="Create custom launch templates" description="Set up jobs and workers with the tools and machine size your tasks need" href="/docs/kb/launch-templates" /%}
-
-{% linkcard title="CI workflow examples" description="Pipelines for CircleCI, GitLab, Azure Pipelines, Jenkins, and Bitbucket" href="/docs/kb/ci-workflow-examples" /%}
-
-{% linkcard title="GitHub Actions integration" description="Run affected tasks with remote caching and PR insights on GitHub Actions" href="/docs/kb/github-integration" /%}
 
 {% linkcard title="Optimize your time to green" description="Find and fix what slows pull requests down" href="/docs/kb/optimize-your-ttg" /%}
 

@@ -57,10 +57,27 @@ npx nx@latest connect
 
 {% call_to_action title="Connect from your browser" url="https://cloud.nx.app/get-started?utm_source=nx-docs&utm_medium=website&utm_campaign=nx-cloud-signup&utm_content=distribute-task-execution" icon="nxcloud" description="Sign in to Nx Cloud and connect your repository without the CLI" /%}
 
-Choose one of the following setup paths.
+On [Nx Cloud CI](/docs/features/ci-features#run-ci-on-nx-cloud), a job distributes tasks to its own [main-job worker](/docs/reference/nx-cloud/ci-config#main-job-worker).
+To run them across more machines, add `workers` to the job in `.nx/pipelines/ci.yaml`:
 
-{% tabs %}
-{% tabitem label="Use an AI agent" %}
+```yaml {% meta="{5}" %}
+# .nx/pipelines/ci.yaml
+jobs:
+  main:
+    runs-on: linux-medium-js
+    workers: 3 linux-large-js
+    steps:
+      - run: npx nx affected -t lint test build
+```
+
+Every Nx command in the job then runs its tasks across the three workers.
+`linux-large-js` is a predefined [launch template](/docs/kb/launch-templates).
+To keep tasks apart or send them to specific workers, see [control where tasks run](#control-where-tasks-run).
+For every option, see the [CI configuration file reference](/docs/reference/nx-cloud/ci-config), and for the full pipeline, see [setting up CI](/docs/getting-started/setup-ci).
+
+To start workers from GitHub Actions, GitLab, or another provider with `nx-cloud start-workers`, see [bring your own CI](/docs/kb/bring-your-own-ci#distribute-tasks-with-workers).
+
+To move an existing pipeline, including manually sharded jobs, onto workers, hand it to an AI agent:
 
 {% llm_copy_prompt title="Let an AI agent set it up for you" previewLines=15 %}
 You are a migration assistant for Nx Cloud workers.
@@ -258,62 +275,6 @@ Do not stop at a proposal unless the user asks for one. Make the changes, then e
 
 Be conservative. Explain tradeoffs. When unsure, call out the uncertainty instead of inventing behavior. Preserve existing CI semantics first; reduce complexity second; optimize worker usage third.
 {% /llm_copy_prompt %}
-
-{% /tabitem %}
-{% tabitem label="Manual" %}
-
-If you don't have a CI workflow yet, generate one:
-
-```shell
-npx nx g ci-workflow
-```
-
-Set how many workers to use in `.nx/pipelines/ci.yaml`:
-
-```yaml
-# .nx/pipelines/ci.yaml
-worker-templates:
-  default: 3 linux-large-js
-```
-
-If the generator created `.nx/ci-config.yaml` instead, as older Nx versions do, [migrate it](/docs/kb/migrate-from-ci-config) first, because `start-workers` keeps reading that file while it exists.
-
-`linux-large-js` is a predefined [launch template](/docs/kb/launch-templates).
-To keep tasks apart or send them to specific workers, see [control where tasks run](#control-where-tasks-run).
-For every option, see the [CI configuration file reference](/docs/reference/nx-cloud/ci-config).
-
-Then start the workers early in your CI job, before installing dependencies:
-
-```yaml {% meta="{13}" %}
-// .github/workflows/ci.yml
-name: CI
-# ... triggers
-
-jobs:
-  main:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
-          filter: tree:0
-      - run: pnpm dlx nx-cloud start-workers
-      - uses: actions/setup-node@v6
-        with:
-          node-version: 24
-          cache: 'pnpm'
-      # ... install dependencies
-      - run: pnpm exec nx affected -t lint test build
-```
-
-Every Nx command in the job then runs its tasks across the three workers.
-On [Nx Cloud CI](/docs/features/ci-features#run-ci-on-nx-cloud), a job distributes tasks to its own [main-job worker](/docs/reference/nx-cloud/ci-config#main-job-worker).
-To add three more workers, add `workers: 3 linux-large-js` to the job instead of running `start-workers`.
-For the full pipeline, see [setting up CI](/docs/getting-started/setup-ci).
-For workflows on other CI providers, see [CI workflow examples](/docs/kb/ci-workflow-examples).
-
-{% /tabitem %}
-{% /tabs %}
 
 ### Turn on dynamic task packing
 

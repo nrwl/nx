@@ -17,7 +17,7 @@ Nx Cloud Self-Healing CI is an **AI-powered system that automatically detects, a
 - **Improves Time to Green (TTG):** Automatically proposes fixes when tasks fail, significantly reducing the time to get your PR merge-ready. No more babysitting PRs.
 - **Keeps You in the Flow:** Get notified about failed PRs and proposed fixes via PR/MR comments or directly in your editor with Nx Console (VS Code, Cursor, or WebStorm). Review, approve, and keep working while AI handles the rest.
 - **Leverages Deep Context:** AI agents understand your workspace structure, project relationships, and build configurations through the Nx [project graph](/docs/features/explore-graph) and metadata.
-- **Non-Invasive Integration:** Works with your existing CI provider without overhauling your current setup.
+- **Built into Nx Cloud CI:** Runs at the end of every Nx Cloud CI job with no pipeline changes, and also works from your own CI provider.
 
 ## Enable self-healing CI
 
@@ -41,138 +41,11 @@ Next, check the [Nx Cloud workspace settings](https://cloud.nx.app/go/workspace/
 
 ### Configure your CI pipeline
 
-On [Nx Cloud CI](/docs/features/ci-features#run-ci-on-nx-cloud), Nx Cloud adds this step for you, so you can skip this section.
+On [Nx Cloud CI](/docs/features/ci-features#run-ci-on-nx-cloud), Nx Cloud adds the `Fix CI` step at the end of each job, so there's nothing to add to `.nx/pipelines/ci.yaml`.
+To limit which tasks it fixes, use the [`self-healing`](/docs/reference/nx-cloud/ci-config#self-healing) section.
 
-Add a step to your CI configuration's "main" job that runs the `fix-ci` command. It doesn't matter exactly what this job is called, it is whichever job in your config where you invoke `nx-cloud start-workers` and kick off your `nx run-many` or `nx affected` commands.
-
-By default, your CI provider will only run the step if the previous steps succeeded, but by definition we want to run Self-Healing CI even when previous steps fail. Therefore make sure you are using a condition of `if: always()` or equivalent to ensure it runs even when previous steps fail:
-
-`.nx/pipelines/ci.yaml` holds your CI configuration, for Nx Cloud CI and for workers on other CI providers.
-In these examples, it sets up the workers that `start-workers` starts.
-See the [CI configuration file reference](/docs/reference/nx-cloud/ci-config) for every key you can set.
-
-```yaml
-# .nx/pipelines/ci.yaml
-worker-templates:
-  default:
-    workers: 3 linux-large-js
-    stop-after:
-      - lint
-      - test
-      - build
-```
-
-{% tabs %}
-
-{% tabitem label="GitHub Actions" %}
-
-```yaml
-# .github/workflows/ci.yml
-name: CI
-
-jobs:
-  main:
-    runs-on: ubuntu-latest
-    steps:
-      # Your existing steps which check out the repo, start-workers, install
-      # dependencies, etc.
-      # These are just illustrative examples...
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v6
-      - run: npx nx-cloud start-workers
-      - run: npm ci
-      - run: npx nx affected -t lint test build
-
-      # NEW: Add this step at the end of your job
-      - run: npx nx fix-ci
-        if: always() # IMPORTANT: Always run
-```
-
-{% /tabitem %}
-
-{% tabitem label="GitLab CI" %}
-
-```yaml
-# .gitlab-ci.yml
-stages:
-  - build
-
-main:
-  stage: build
-  script:
-    # Your existing steps which check out the repo, start-workers, install
-    # dependencies, etc.
-    - npx nx-cloud start-workers
-    - npm ci
-    - npx nx affected -t lint test build
-  # NEW: Add this section at the end of your job if you don't
-  # already have an after_script section
-  after_script:
-    # IMPORTANT: after_script runs regardless of job success/failure
-    # so it's like if: always() on GitHub
-    - npx nx fix-ci
-```
-
-{% /tabitem %}
-
-{% tabitem label="Azure DevOps" %}
-
-```yaml
-# azure-pipelines.yml
-trigger:
-  - main
-
-pool:
-  vmImage: 'ubuntu-latest'
-
-steps:
-  # Your existing steps which check out the repo, start-workers, install
-  # dependencies, etc.
-  # These are just illustrative examples...
-  - task: NodeTool@0
-    inputs:
-      versionSpec: '22.x'
-  - script: npx nx-cloud start-workers
-  - script: npm ci
-  - script: npx nx affected -t lint test build
-
-  # NEW: Add this step at the end of your job
-  - script: npx nx fix-ci
-    condition: always() # IMPORTANT: Always run
-```
-
-{% /tabitem %}
-
-{% tabitem label="Bitbucket Pipelines" %}
-
-```yaml
-# bitbucket-pipelines.yml
-image: node:22
-
-pipelines:
-  pull-requests:
-    '**':
-      - step:
-          name: CI
-          script:
-            # Your existing steps which start-workers, install
-            # dependencies, etc.
-            # These are just illustrative examples...
-            - npx nx-cloud start-workers
-            - npm ci
-            - npx nx affected -t lint test build
-          after-script:
-            # NEW: Add this section at the end of your step
-            # IMPORTANT: after-script runs regardless of step success/failure
-            # so it's like if: always() on GitHub
-            - npx nx fix-ci
-```
-
-{% /tabitem %}
-
-{% /tabs %}
-
-> NOTE: If all tasks succeed then the `fix-ci` command becomes a no-op automatically, so that is why "always" is recommended.
+On your own CI provider, add an `nx fix-ci` step that runs even when earlier steps fail.
+For GitHub Actions, GitLab, Azure Pipelines, and Bitbucket Pipelines examples, see [bring your own CI](/docs/kb/bring-your-own-ci#add-self-healing-ci).
 
 ## Configuring self-healing CI
 

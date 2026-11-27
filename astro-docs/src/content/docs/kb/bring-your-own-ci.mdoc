@@ -1,0 +1,255 @@
+---
+title: Bring your own CI (GitHub Actions)
+description: Run Nx Cloud remote caching, distributed task execution, and self-healing CI from GitHub Actions, with links to pipelines for GitLab, CircleCI, Azure Pipelines, Bitbucket Pipelines, and Jenkins.
+filter: 'type:Guides'
+topics:
+  - 'Continuous integration'
+  - 'Nx Cloud'
+---
+
+Keep your pipeline on GitHub Actions and connect it to Nx Cloud for remote caching, workers, and self-healing CI.
+To run the whole pipeline on Nx Cloud instead, see [setting up CI](/docs/getting-started/setup-ci).
+For GitLab, CircleCI, Azure Pipelines, Bitbucket Pipelines, and Jenkins, see [other CI providers](#other-ci-providers).
+
+## Connect your workspace
+
+Push your workspace to a remote repository, then run:
+
+```shell
+npx nx@latest connect
+```
+
+Remote caching works as soon as the workspace is connected, with no configuration file.
+For read-only and read-write CI tokens, see [CI access tokens](/docs/kb/access-tokens).
+
+## Run CI with Nx
+
+Caching, affected, and distribution only apply to tasks that `nx` runs.
+`nx test` is fine, and so is `npm test` if it wraps `nx test`.
+Direct calls to `jest`, `tsc`, or `eslint` skip Nx.
+
+Use `nx affected` to run tasks only for projects your change touches:
+
+```yaml
+# .github/workflows/ci.yml
+# ... name and triggers
+jobs:
+  main:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      # ... set up Node.js
+      - run: npm ci
+      - uses: nrwl/nx-set-shas@v5
+      - run: npx nx affected -t lint test build
+```
+
+`fetch-depth: 0` gives Nx the git history it needs to compare commits.
+On a pull request, Nx compares the branch with `main` (or `defaultBase` in `nx.json`).
+On a push to `main`, `nrwl/nx-set-shas` sets the base to the last commit that passed CI.
+
+If you don't have a CI workflow yet, generate one:
+
+```shell
+nx add @nx/workspace
+nx g @nx/workspace:ci-workflow --ci=github
+```
+
+Supported `--ci` values: `github`, `circleci`, `gitlab`, `azure`, `bitbucket-pipelines`.
+The generated workflow also includes the Nx Cloud steps described below.
+
+## Distribute tasks with workers
+
+Set the number of workers in `.nx/pipelines/ci.yaml`:
+
+```yaml
+# .nx/pipelines/ci.yaml
+worker-templates:
+  default: 3 linux-large-js
+```
+
+`linux-large-js` is a predefined [launch template](/docs/kb/launch-templates).
+If the generator created `.nx/ci-config.yaml` instead, as older Nx versions do, [migrate it](/docs/kb/migrate-from-ci-config) first, because `start-workers` keeps reading that file while it exists.
+
+Then start the workers early in your CI job, before installing dependencies, so they boot while the job installs:
+
+```yaml {% meta="{7}" %}
+# .github/workflows/ci.yml
+jobs:
+  main:
+    runs-on: ubuntu-latest
+    steps:
+      # ... checkout
+      - run: npx nx-cloud start-workers
+      # ... set up Node.js, install dependencies, and set SHAs
+      - run: npx nx affected -t lint test build
+```
+
+Every Nx command in the job then runs its tasks across the three workers.
+For how Nx Cloud fills each worker, see [distribute task execution](/docs/features/ci-features/distribute-task-execution).
+For every configuration option, see the [CI configuration file reference](/docs/reference/nx-cloud/ci-config).
+
+## Add self-healing CI
+
+On your own CI provider, add a step that runs `nx fix-ci` at the end of the job that runs `nx-cloud start-workers` and your `nx affected` or `nx run-many` commands.
+The step must run even when earlier steps fail, so use `if: always()` or your provider's equivalent.
+When every task succeeds, `nx fix-ci` does nothing.
+
+{% tabs syncKey="ci-provider" %}
+
+{% tabitem label="GitHub" %}
+
+```yaml
+# .github/workflows/ci.yml
+jobs:
+  main:
+    runs-on: ubuntu-latest
+    steps:
+      # ... checkout, start-workers, set up Node.js
+      - run: npm ci
+      - run: npx nx affected -t lint test build
+      - run: npx nx fix-ci
+        if: always()
+```
+
+{% /tabitem %}
+
+{% tabitem label="GitLab" %}
+
+```yaml
+# .gitlab-ci.yml
+main:
+  stage: build
+  script:
+    - npx nx-cloud start-workers
+    - npm ci
+    - npx nx affected -t lint test build
+  # after_script runs whether the job succeeds or fails
+  after_script:
+    - npx nx fix-ci
+```
+
+{% /tabitem %}
+
+{% tabitem label="Azure" %}
+
+```yaml
+# azure-pipelines.yml
+steps:
+  # ... set up Node.js
+  - script: npx nx-cloud start-workers
+  - script: npm ci
+  - script: npx nx affected -t lint test build
+  - script: npx nx fix-ci
+    condition: always()
+```
+
+{% /tabitem %}
+
+{% tabitem label="Bitbucket" %}
+
+```yaml
+# bitbucket-pipelines.yml
+pipelines:
+  pull-requests:
+    '**':
+      - step:
+          name: CI
+          script:
+            - npx nx-cloud start-workers
+            - npm ci
+            - npx nx affected -t lint test build
+          # after-script runs whether the step succeeds or fails
+          after-script:
+            - npx nx fix-ci
+```
+
+{% /tabitem %}
+
+{% /tabs %}
+
+Self-healing CI also needs a [VCS integration](/docs/kb/source-control-integration) and the setting turned on in your workspace.
+For both, see [self-healing CI](/docs/features/ci-features/self-healing-ci).
+
+## Complete example
+
+This pipeline combines affected, remote caching, distribution, and self-healing CI:
+
+```yaml
+// .nx/pipelines/ci.yaml
+worker-templates:
+  default:
+    # Distribute across 3 workers using the linux-large-js launch template
+    workers: 3 linux-large-js
+    # Shut idle workers down once every build task has been requested
+    stop-after:
+      - build
+```
+
+```yaml
+// .github/workflows/ci.yml
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  main:
+    runs-on: ubuntu-latest
+    steps:
+      # fetch-depth: 0 gives Nx the full history it needs to work out what changed
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          filter: tree:0
+
+      # Provisions the workers declared in .nx/pipelines/ci.yaml.
+      # Run it before installing dependencies so workers boot while this job installs.
+      - run: npx nx-cloud start-workers
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: 'npm'
+
+      - run: npm ci
+
+      # Sets the base to the last commit that passed CI on main
+      - uses: nrwl/nx-set-shas@v5
+
+      # Runs lint, test, and build only for projects affected by this change.
+      # Nx Cloud distributes these tasks across the workers started above.
+      - run: npx nx affected -t lint test build
+
+      - run: npx nx fix-ci
+        if: always()
+```
+
+## Other CI providers
+
+On other providers, the steps are the same, but the pipeline syntax differs:
+
+- [CI workflow examples](/docs/kb/ci-workflow-examples) has a complete pipeline for CircleCI, GitLab, Azure Pipelines, Jenkins, and Bitbucket Pipelines.
+- [Set the affected base commit in CI](/docs/kb/affected-base-commit) covers how each provider passes `NX_BASE` and `NX_HEAD`.
+- For self-healing CI, use the GitLab, Azure, or Bitbucket tab in [add self-healing CI](#add-self-healing-ci).
+
+To see Nx Cloud run results on each merge or pull request, connect [GitLab](/docs/guides/nx-cloud/source-control-integration/gitlab), [Bitbucket](/docs/guides/nx-cloud/source-control-integration/bitbucket), or [Azure DevOps](/docs/guides/nx-cloud/source-control-integration/azure-devops).
+
+## Related guides
+
+{% cardgrid %}
+
+{% linkcard title="GitHub Actions integration" description="Remote caching, workers, and PR insights on GitHub Actions" href="/docs/kb/github-integration" /%}
+
+{% linkcard title="Move to Nx Cloud CI" description="Convert a GitHub Actions workflow to .nx/pipelines/ci.yaml" href="/docs/kb/migrate-from-github-actions" /%}
+
+{% /cardgrid %}

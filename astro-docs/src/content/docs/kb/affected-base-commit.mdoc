@@ -10,6 +10,7 @@ topics:
 On a pull request, the base is where the branch left the main branch.
 On a push to the main branch, the most useful base is the last commit that passed CI, so every change since then gets checked.
 Each CI provider exposes that commit differently.
+On [Nx Cloud CI](/docs/getting-started/setup-ci), Nx Cloud sets both before your first step, so you can skip this page.
 
 For complete workflows per provider, see [CI workflow examples](/docs/kb/ci-workflow-examples).
 
@@ -21,10 +22,16 @@ Add it after installing dependencies:
 
 ```yaml
 // .github/workflows/ci.yml
+- uses: actions/checkout@v7
+  with:
+    fetch-depth: 0
+    filter: tree:0
+- run: npm ci
 - uses: nrwl/nx-set-shas@v5
 - run: npx nx affected -t lint test build
 ```
 
+`fetch-depth: 0` is required. Without the full Git history, there is no base commit to compare against.
 For why the last successful commit matters, see the [action documentation](https://github.com/marketplace/actions/nx-set-shas#background).
 
 {% /tabitem %}
