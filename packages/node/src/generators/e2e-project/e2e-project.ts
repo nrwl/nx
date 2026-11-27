@@ -33,8 +33,11 @@ import {
   javaScriptOverride,
   typeScriptOverride,
   addPluginsToLintConfig,
+  addPredefinedConfigToFlatLintConfig,
   isEslintConfigSupported,
   replaceOverridesInLintConfig,
+  useFlatConfig,
+  versions,
 } from '@nx/eslint/internal';
 import { existsSync } from 'node:fs';
 import * as path from 'path';
@@ -341,11 +344,42 @@ export async function e2eProjectGeneratorInternal(
     tasks.push(linterTask);
 
     if (options.rootProject && isEslintConfigSupported(host)) {
-      addPluginsToLintConfig(host, options.e2eProjectRoot, '@nx');
-      replaceOverridesInLintConfig(host, options.e2eProjectRoot, [
-        typeScriptOverride,
-        javaScriptOverride,
-      ]);
+      if (useFlatConfig(host)) {
+        for (const config of [
+          'flat/base',
+          'flat/typescript',
+          'flat/javascript',
+        ]) {
+          addPredefinedConfigToFlatLintConfig(
+            host,
+            options.e2eProjectRoot,
+            config
+          );
+        }
+        // Root setup skips its dependencies when a root ESLint config already exists.
+        if (!options.skipPackageJson) {
+          const { eslintVersion, typescriptESLintVersion } = versions(host);
+          tasks.push(
+            addDependenciesToPackageJson(
+              host,
+              {},
+              {
+                '@eslint/js': eslintVersion,
+                '@nx/eslint-plugin': nxVersion,
+                'typescript-eslint': typescriptESLintVersion,
+              },
+              undefined,
+              true
+            )
+          );
+        }
+      } else {
+        addPluginsToLintConfig(host, options.e2eProjectRoot, '@nx');
+        replaceOverridesInLintConfig(host, options.e2eProjectRoot, [
+          typeScriptOverride,
+          javaScriptOverride,
+        ]);
+      }
     }
   }
 
