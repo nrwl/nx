@@ -1,9 +1,9 @@
-use std::io::Stdin;
+use std::io::{Read, Stdin, Write};
 use std::os::windows::ffi::OsStrExt;
 use std::{ffi::OsString, os::windows::ffi::OsStringExt};
 use winapi::um::fileapi::GetShortPathNameW;
 
-use super::pseudo_terminal::WriterArc;
+use super::pseudo_terminal::LiveWriter;
 
 pub fn handle_path_space(path: String) -> String {
     let wide: Vec<u16> = std::path::PathBuf::from(&path)
@@ -25,9 +25,22 @@ pub fn handle_path_space(path: String) -> String {
     }
 }
 
-pub fn write_to_pty(stdin: &mut Stdin, writer: WriterArc) -> anyhow::Result<()> {
-    let mut writer = writer.lock();
-    std::io::copy(stdin, writer.as_mut())
-        .map_err(|e| anyhow::anyhow!(e))
-        .map(|_| ())
+pub fn write_to_pty(stdin: &mut Stdin, live_writer: LiveWriter) -> anyhow::Result<()> {
+    let mut buffer = [0; 1024];
+    loop {
+        let n = match stdin.read(&mut buffer) {
+            Ok(0) => return Ok(()),
+            Ok(n) => n,
+            Err(e) if e.kind() == std::io::ErrorKind::Interrupted => continue,
+            Err(e) => return Err(e.into()),
+        };
+        // Lock only around the write. Holding it across the blocking read
+        // deadlocks a thread that needs the same lock to close the fd.
+        let Some(writer) = live_writer.read().clone() else {
+            continue;
+        };
+        let mut writer = writer.lock();
+        writer.write_all(&buffer[..n])?;
+        writer.flush()?;
+    }
 }
