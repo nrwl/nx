@@ -254,6 +254,10 @@ export {
 } from './project-graph/file-utils';
 export type { FileMapCache } from './project-graph/nx-deps-cache';
 export {
+  nxFileMap,
+  nxProjectGraph,
+  parseFileMapCache,
+  parseProjectGraphCache,
   readFileMapCache,
   readSourceMapsCache,
 } from './project-graph/nx-deps-cache';

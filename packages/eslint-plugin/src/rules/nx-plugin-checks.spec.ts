@@ -1,10 +1,22 @@
 import '@nx/devkit/internal-testing-utils/mock-fs';
 import { vol } from 'memfs';
+import { Linter } from 'eslint';
+import * as jsoncParser from 'jsonc-eslint-parser';
 import { parseForESLint } from 'jsonc-eslint-parser';
-import {
+import nxPluginChecks, {
   checkIfIdentifierIsFunction,
+  RULE_NAME,
   validateNoDuplicateKeys,
 } from './nx-plugin-checks';
+
+vi.mock('../utils/project-graph-utils', () => ({
+  readProjectGraph: () => ({
+    projectGraph: undefined,
+    projectFileMap: undefined,
+    projectRootMappings: undefined,
+    targetProjectLocator: undefined,
+  }),
+}));
 
 vi.mock('@nx/devkit', async () => ({
   ...(await vi.importActual<any>('@nx/devkit')),
@@ -207,5 +219,25 @@ describe('validateNoDuplicateKeys', () => {
       { messageId: 'duplicateKey', key: 'build' },
       { messageId: 'duplicateKey', key: 'build' },
     ]);
+  });
+});
+
+describe('nx-plugin-checks', () => {
+  it('should report nothing when no project graph is available', () => {
+    const linter = new Linter({ cwd: '/root' });
+    const config = {
+      files: ['**'],
+      languageOptions: { parser: jsoncParser },
+      plugins: { '@nx': { rules: { [RULE_NAME]: nxPluginChecks as any } } },
+      rules: { [`@nx/${RULE_NAME}`]: 'error' },
+    };
+
+    expect(
+      linter.verify(
+        '{ "generators": { "a": { "factory": "./missing" } } }',
+        [config] as any,
+        '/root/libs/plugin/generators.json'
+      )
+    ).toEqual([]);
   });
 });
