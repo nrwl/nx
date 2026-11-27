@@ -152,7 +152,7 @@ describe('generatePrunedDeployOutput sinks', () => {
     return emitted;
   }
 
-  it('prunes the root lockfile of the workspace root it was given', () => {
+  it('passes the workspace lockfile and source project root to the pnpm pruner', () => {
     run(join(tempDir, 'dist'));
 
     expect(stringifyPnpmLockfile).toHaveBeenCalledWith(
