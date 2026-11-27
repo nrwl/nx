@@ -8,6 +8,11 @@ import {
   uniq,
   updateJson,
 } from '@nx/e2e-utils';
+import {
+  type GitBaseline,
+  recordGitBaseline,
+  restoreGitBaseline,
+} from './utils';
 
 expect.addSnapshotSerializer({
   serialize(str: string) {
@@ -43,10 +48,10 @@ expect.addSnapshotSerializer({
 
 describe('nx release source tag selection', () => {
   let pkg1: string;
+  let baseline: GitBaseline;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     newProject({
-      keepBackup: true,
       packages: ['@nx/js'],
     });
 
@@ -55,9 +60,12 @@ describe('nx release source tag selection', () => {
 
     await runCommandAsync(`git add .`);
     await runCommandAsync(`git commit -m "chore: initial commit"`);
+    baseline = recordGitBaseline();
   });
 
-  afterEach(() => cleanupProject());
+  beforeEach(() => restoreGitBaseline(baseline));
+
+  afterAll(() => cleanupProject());
 
   describe('when releaseTag.strictPreid is undefined', () => {
     beforeEach(() => {

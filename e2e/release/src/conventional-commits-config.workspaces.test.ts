@@ -11,7 +11,12 @@ import {
   uniq,
   updateJson,
 } from '@nx/e2e-utils';
-import { setupWorkspaces } from './utils';
+import {
+  setupWorkspaces,
+  type GitBaseline,
+  recordGitBaseline,
+  restoreGitBaseline,
+} from './utils';
 
 expect.addSnapshotSerializer({
   serialize(str: string) {
@@ -51,10 +56,10 @@ describe('nx release conventional commits config', () => {
   let pkg4: string;
   let pkg5: string;
   let pkg6: string;
+  let baseline: GitBaseline;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     newProject({
-      keepBackup: true,
       packages: ['@nx/js'],
     });
 
@@ -103,8 +108,12 @@ describe('nx release conventional commits config', () => {
     await runCommandAsync(`git tag -a ${pkg4}@0.0.1 -m "${pkg4}@0.0.1"`);
     await runCommandAsync(`git tag -a ${pkg5}@0.0.1 -m "${pkg5}@0.0.1"`);
     await runCommandAsync(`git tag -a ${pkg6}@0.0.1 -m "${pkg6}@0.0.1"`);
+    baseline = recordGitBaseline();
   });
-  afterEach(() => cleanupProject());
+
+  beforeEach(() => restoreGitBaseline(baseline));
+
+  afterAll(() => cleanupProject());
 
   it('should respect custom conventional commits configuration', async () => {
     updateJson<NxJsonConfiguration>('nx.json', (json) => {
