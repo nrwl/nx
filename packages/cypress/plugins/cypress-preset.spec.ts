@@ -1,3 +1,4 @@
+import { killProcessTreeGraceful } from '@nx/devkit/internal';
 import { spawn } from 'child_process';
 import { request } from 'http';
 import vitePreprocessor from '../src/plugins/preprocessor-vite';
@@ -6,6 +7,10 @@ import { nxE2EPreset } from './cypress-preset';
 vi.mock('child_process', async (importOriginal) => ({
   ...(await importOriginal<typeof import('child_process')>()),
   spawn: vi.fn(() => ({ pid: 123, kill: vi.fn(() => true) })),
+}));
+vi.mock('@nx/devkit/internal', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@nx/devkit/internal')>()),
+  killProcessTreeGraceful: vi.fn().mockResolvedValue(undefined),
 }));
 vi.mock('http', async (importOriginal) => ({
   ...(await importOriginal<typeof import('http')>()),
@@ -247,6 +252,29 @@ describe('nxE2EPreset setupNodeEvents', () => {
     );
     expect(on).toHaveBeenCalledWith('after:run', expect.any(Function));
   });
+
+  it.each(['darwin', 'linux'])(
+    'should kill the whole web server process tree after the run on %s',
+    async (platform) => {
+      const originalPlatform = process.platform;
+      Object.defineProperty(process, 'platform', { value: platform });
+      mockServerResponses(false, true);
+      const on = vi.fn();
+      const preset = nxE2EPreset(__filename, { webServerCommands });
+      await preset.setupNodeEvents(on, { baseUrl: 'http://localhost:4200' });
+      const afterRun = on.mock.calls.find(
+        ([event]) => event === 'after:run'
+      )[1];
+
+      try {
+        await afterRun();
+      } finally {
+        Object.defineProperty(process, 'platform', { value: originalPlatform });
+      }
+
+      expect(killProcessTreeGraceful).toHaveBeenCalledWith(123);
+    }
+  );
 
   it('should reuse a server already running on baseUrl when NX_READY_URL is not set', async () => {
     mockServerResponses(true);
