@@ -1,5 +1,5 @@
 import type { ExecutorContext } from '@nx/devkit';
-import { eachValueFrom } from '@nx/devkit/internal';
+import { eachValueFrom, FsTree } from '@nx/devkit/internal';
 import {
   calculateProjectBuildableDependencies,
   createTmpTsConfig,
@@ -9,6 +9,7 @@ import type { NgPackagr } from 'ng-packagr';
 import { join, resolve } from 'path';
 import { from } from 'rxjs';
 import { mapTo, switchMap } from 'rxjs/operators';
+import { warnOnDeprecatedNgPackagrExecutor } from '../utilities/ng-packagr/deprecation';
 import { parseRemappedTsConfigAndMergeDefaults } from '../utilities/typescript';
 import { getNgPackagrInstance } from './ng-packagr-adjustments/ng-packagr';
 import type { BuildAngularLibraryExecutorOptions } from './schema';
@@ -18,6 +19,11 @@ async function initializeNgPackagr(
   context: ExecutorContext,
   projectDependencies: DependentBuildableProjectNode[]
 ): Promise<NgPackagr> {
+  warnOnDeprecatedNgPackagrExecutor(
+    '@nx/angular:package',
+    context.projectName,
+    new FsTree(context.root, false)
+  );
   const ngPackagr = await getNgPackagrInstance();
   ngPackagr.forProject(resolve(context.root, options.project));
 

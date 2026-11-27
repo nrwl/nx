@@ -383,10 +383,12 @@ Both executors write the library to the `dest` path in the `ng-package.json` fil
 and the generator sets the target's `outputs` to the same path.
 If you change `dest`, update `outputs` in the project configuration too.
 
-To move a library from the `@nx/angular:ng-packagr-lite` or `@nx/angular:package` executor to the
-`@nx/angular:library` executor once `@angular/core` and the Angular build package are at version 22.3
-or later, run the
-[`convert-to-library-executor` generator](/docs/technologies/angular/generators#convert-to-library-executor):
+Once `package.json` requires `@angular/core` and the Angular build package at version 22.3 or later,
+both executors are deprecated.
+They print a warning when they run with `@angular/core` 22.3 or later installed.
+Run the
+[`convert-to-library-executor` generator](/docs/technologies/angular/generators#convert-to-library-executor)
+to move a library from a deprecated executor to the `@nx/angular:library` executor:
 
 ```shell
 nx g @nx/angular:convert-to-library-executor my-lib
