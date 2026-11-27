@@ -4,7 +4,7 @@ import {
   type Tree,
   updateJson,
 } from '@nx/devkit';
-import { ensureTypescript } from '@nx/js/internal';
+import { ModuleKind, ModuleResolutionKind } from '@nx/devkit/internal';
 import { readCompilerOptionsFromTsConfig } from '../../generators/utils/tsconfig-utils';
 import { allProjectTargets, allTargetOptions } from '../../utils/targets';
 import { getProjectsFilteredByDependencies } from '../utils/projects';
@@ -68,15 +68,13 @@ function updateModuleAndModuleResolution(
   tree: Tree,
   tsConfigPath: string
 ): void {
-  const ts = ensureTypescript();
-
   // Read the resolved compiler options from the tsconfig
   const compilerOptions = readCompilerOptionsFromTsConfig(tree, tsConfigPath);
 
   // Check if both module and moduleResolution are already set correctly
   if (
-    compilerOptions.module === ts.ModuleKind.Preserve &&
-    compilerOptions.moduleResolution === ts.ModuleResolutionKind.Bundler
+    compilerOptions.module === ModuleKind.Preserve &&
+    compilerOptions.moduleResolution === ModuleResolutionKind.Bundler
   ) {
     return;
   }

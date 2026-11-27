@@ -1,9 +1,11 @@
 import {
+  ChangeType,
   getProjects,
   globAsync,
   normalizePath,
   readNxJson,
   type ProjectConfiguration,
+  type StringDeletion,
   type TargetConfiguration,
   type Tree,
 } from '@nx/devkit';
@@ -11,13 +13,14 @@ import {
   interpolate,
   mergeTargetConfigurations,
   readTargetDefaultsForTarget,
+  type TypescriptAst,
 } from '@nx/devkit/internal';
 import { ensureTypescript } from '@nx/js/internal';
 import { isAbsolute, posix, relative } from 'path';
 import type {
-  Expression,
   ModuleDeclaration,
   Node,
+  ObjectLiteralElementLike,
   ObjectLiteralExpression,
   PropertyAssignment,
   PropertyName,
@@ -27,7 +30,7 @@ import type {
 import type { CypressExecutorOptions } from '../executors/cypress/schema';
 import { CYPRESS_CONFIG_FILE_NAME_PATTERN } from './config';
 
-let ts: typeof import('typescript');
+let ts: TypescriptAst;
 
 export async function* cypressProjectConfigs(tree: Tree): AsyncGenerator<{
   projectName: string;
@@ -117,43 +120,6 @@ export function getObjectProperty(
   );
 }
 
-export function removeObjectProperty(
-  config: ObjectLiteralExpression,
-  property: PropertyAssignment
-): ObjectLiteralExpression {
-  ts ??= ensureTypescript();
-
-  return ts.factory.updateObjectLiteralExpression(
-    config,
-    config.properties.filter((p) => p !== property)
-  );
-}
-
-export function updateObjectProperty(
-  config: ObjectLiteralExpression,
-  property: PropertyAssignment,
-  { newName, newValue }: { newName?: string; newValue?: Expression }
-): ObjectLiteralExpression {
-  ts ??= ensureTypescript();
-
-  if (!newName && !newValue) {
-    throw new Error('newName or newValue must be provided');
-  }
-
-  return ts.factory.updateObjectLiteralExpression(
-    config,
-    config.properties.map((p) =>
-      p === property
-        ? ts.factory.updatePropertyAssignment(
-            p,
-            newName ? ts.factory.createIdentifier(newName) : p.name,
-            newValue ? newValue : p.initializer
-          )
-        : p
-    )
-  );
-}
-
 // Resolves the module specifier that binds the `nxComponentTestingPreset`
 // identifier in a cypress config, covering both ESM `import` and CJS
 // `require` forms. Returns null when no such binding is found.
@@ -219,6 +185,43 @@ export function getPropertyName(name: PropertyName): string | null {
     return name.expression.text;
   }
   return null;
+}
+
+// Removes the property with its trailing comma, and the whole line when the
+// property is alone on it.
+export function removeProperty(
+  contents: string,
+  property: ObjectLiteralElementLike
+): StringDeletion[] {
+  ts ??= ensureTypescript();
+
+  let start = property.getStart();
+  let end = property.getEnd();
+  // The node ends before its trailing trivia, so the comma can sit behind a
+  // comment or a line break.
+  const scanner = ts.createScanner(
+    ts.ScriptTarget.Latest,
+    true,
+    ts.LanguageVariant.Standard,
+    contents,
+    undefined,
+    end
+  );
+  if (scanner.scan() === ts.SyntaxKind.CommaToken) {
+    end = scanner.getTokenEnd();
+  }
+  const lineStart = contents.lastIndexOf('\n', start - 1) + 1;
+  const lineEnd = contents.indexOf('\n', end);
+  const restOfLine =
+    lineEnd === -1 ? contents.slice(end) : contents.slice(end, lineEnd);
+  if (
+    contents.slice(lineStart, start).trim() === '' &&
+    restOfLine.trim() === ''
+  ) {
+    start = lineStart;
+    end = lineEnd === -1 ? contents.length : lineEnd + 1;
+  }
+  return [{ type: ChangeType.Delete, start, length: end - start }];
 }
 
 function isStringLiteralName(node: Node): node is StringLiteralLike {

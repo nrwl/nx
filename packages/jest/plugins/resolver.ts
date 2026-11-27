@@ -1,19 +1,22 @@
+import { statSync } from 'fs';
 import { dirname, extname, join, resolve } from 'path';
 import { resolve as resolveExports } from 'resolve.exports';
 import type { ResolverOptions } from 'jest-resolve';
 import { getVersion } from 'jest';
 import { major } from 'semver';
 
-let compilerSetup;
-let ts;
+let resolveTsModule: (
+  moduleName: string,
+  containingFile: string
+) => string | undefined;
 const jestMajorVersion = major(getVersion());
 
-function getCompilerSetup(rootDir: string) {
+function createTsResolverForRootDir(rootDir: string) {
   const tsConfigPath =
-    ts.findConfigFile(rootDir, ts.sys.fileExists, 'tsconfig.spec.json') ||
-    ts.findConfigFile(rootDir, ts.sys.fileExists, 'tsconfig.test.json') ||
-    ts.findConfigFile(rootDir, ts.sys.fileExists, 'tsconfig.jest.json') ||
-    ts.findConfigFile(rootDir, ts.sys.fileExists, 'tsconfig.json');
+    findConfigFile(rootDir, 'tsconfig.spec.json') ||
+    findConfigFile(rootDir, 'tsconfig.test.json') ||
+    findConfigFile(rootDir, 'tsconfig.jest.json') ||
+    findConfigFile(rootDir, 'tsconfig.json');
 
   if (!tsConfigPath) {
     console.error(
@@ -21,19 +24,37 @@ function getCompilerSetup(rootDir: string) {
     );
   }
 
-  const readResult = ts.readConfigFile(tsConfigPath, ts.sys.readFile);
-  const config = ts.parseJsonConfigFileContent(
-    readResult.config,
-    ts.sys,
-    dirname(tsConfigPath)
-  );
-  const compilerOptions = config.options;
+  const devkitInternal: typeof import('@nx/devkit/internal') = require('@nx/devkit/internal');
+  const compilerOptions =
+    devkitInternal.readTsConfigWithoutFiles(tsConfigPath).options;
   if (!compilerOptions.baseUrl) {
     const { resolvePathsBaseUrl } = require('@nx/js');
     compilerOptions.baseUrl = resolvePathsBaseUrl(tsConfigPath);
   }
-  const host = ts.createCompilerHost(compilerOptions, true);
-  return { compilerOptions, host };
+  return devkitInternal.createTsModuleResolver(compilerOptions);
+}
+
+// Searches `dir` and its ancestors, like `ts.findConfigFile`.
+function findConfigFile(dir: string, configName: string): string | undefined {
+  while (true) {
+    const configPath = join(dir, configName);
+    if (isFile(configPath)) {
+      return configPath;
+    }
+    const parent = dirname(dir);
+    if (parent === dir) {
+      return undefined;
+    }
+    dir = parent;
+  }
+}
+
+function isFile(path: string): boolean {
+  try {
+    return statSync(path).isFile();
+  } catch {
+    return false;
+  }
 }
 
 module.exports = function (path: string, options: ResolverOptions) {
@@ -78,15 +99,11 @@ module.exports = function (path: string, options: ResolverOptions) {
       return;
     }
     // Fallback to using typescript
-    ts = ts || require('typescript');
-    compilerSetup = compilerSetup || getCompilerSetup(options.rootDir);
-    const { compilerOptions, host } = compilerSetup;
-    const resolvedFileName = ts.resolveModuleName(
+    resolveTsModule ??= createTsResolverForRootDir(options.rootDir);
+    const resolvedFileName = resolveTsModule(
       path,
-      join(options.basedir, 'fake-placeholder.ts'),
-      compilerOptions,
-      host
-    ).resolvedModule?.resolvedFileName;
+      join(options.basedir, 'fake-placeholder.ts')
+    );
     if (!resolvedFileName) {
       throw new Error(`Could not resolve ${path}`);
     }

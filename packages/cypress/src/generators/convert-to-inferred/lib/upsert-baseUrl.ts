@@ -1,6 +1,6 @@
 import type { Tree } from '@nx/devkit';
 
-import { query } from '@phenomnomnominal/tsquery';
+import { query } from '@nx/devkit/internal';
 import { parseSourceFile } from '../../../utils/migrations';
 
 export function upsertBaseUrl(

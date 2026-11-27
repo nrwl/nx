@@ -1,20 +1,35 @@
 import {
+  ensureTypescript,
+  printNodeUpdate,
   processTargetOutputs,
   toProjectRelativePath,
+  ast,
+  query,
+  type TypescriptAst,
 } from '@nx/devkit/internal';
 import {
   parseTargetString,
   type TargetConfiguration,
   type Tree,
 } from '@nx/devkit';
-import { ast, query } from '@phenomnomnominal/tsquery';
 import { basename, resolve } from 'path';
-import * as ts from 'typescript';
+import type {
+  ObjectLiteralExpression,
+  PropertyAssignment,
+  SourceFile,
+  VariableStatement,
+} from 'typescript';
 import type { WebpackOptionsNormalized } from 'webpack';
 import { buildServePath } from '../../../executors/dev-server/lib/serve-path';
 import type { WebDevServerOptions as DevServerExecutorOptions } from '../../../executors/dev-server/schema';
-import { hasMigratedConfigValues, toPropertyAssignment } from './ast';
+import {
+  hasMigratedConfigValues,
+  toPropertyAssignment,
+  toPropertyName,
+} from './ast';
 import type { MigrationContext, TransformerContext } from './types';
+
+let ts: TypescriptAst;
 
 export function servePostTargetTransformerFactory(
   migrationContext: MigrationContext
@@ -231,7 +246,7 @@ function updateWebpackConfig(
   devServerOptions: ExtractedOptions,
   context: TransformerContext
 ): void {
-  let sourceFile: ts.SourceFile;
+  let sourceFile: SourceFile;
   let webpackConfigText: string;
 
   const updateSources = () => {
@@ -267,15 +282,16 @@ function updateWebpackConfig(
 function setOptionsInWebpackConfig(
   tree: Tree,
   text: string,
-  sourceFile: ts.SourceFile,
+  sourceFile: SourceFile,
   webpackConfigPath: string,
   devServerOptions: ExtractedOptions
 ) {
+  ts ??= ensureTypescript();
   const { default: defaultOptions, ...configurationOptions } = devServerOptions;
 
   const configValuesSelector =
     'VariableDeclaration:has(Identifier[name=configValues]) ObjectLiteralExpression';
-  const configValuesObject = query<ts.ObjectLiteralExpression>(
+  const configValuesObject = query<ObjectLiteralExpression>(
     sourceFile,
     configValuesSelector
   )[0];
@@ -309,7 +325,7 @@ function setOptionsInWebpackConfig(
           ...(configurationOptions
             ? Object.entries(configurationOptions).map(([key, value]) =>
                 ts.factory.createPropertyAssignment(
-                  key,
+                  toPropertyName(key),
                   ts.factory.createObjectLiteralExpression(
                     Object.entries(value).map(([key, value]) =>
                       toPropertyAssignment(key, value)
@@ -323,20 +339,17 @@ function setOptionsInWebpackConfig(
     ]
   );
 
-  text = `${text.slice(0, configValuesObject.getStart())}${ts
-    .createPrinter()
-    .printNode(
-      ts.EmitHint.Unspecified,
-      updatedConfigValuesObject,
-      sourceFile
-    )}${text.slice(configValuesObject.getEnd())}`;
+  text = `${text.slice(0, configValuesObject.getStart())}${printNodeUpdate(
+    configValuesObject,
+    updatedConfigValuesObject
+  )}${text.slice(configValuesObject.getEnd())}`;
 
   tree.write(webpackConfigPath, text);
 
   sourceFile = ast(text);
   const buildOptionsSelector =
     'VariableStatement:has(VariableDeclaration:has(Identifier[name=buildOptions]))';
-  const buildOptionsStatement = query<ts.VariableStatement>(
+  const buildOptionsStatement = query<VariableStatement>(
     sourceFile,
     buildOptionsSelector
   )[0];
@@ -353,13 +366,14 @@ function setOptionsInWebpackConfig(
 function setDevServerOptionsInWebpackConfig(
   tree: Tree,
   text: string,
-  sourceFile: ts.SourceFile,
+  sourceFile: SourceFile,
   webpackConfigPath: string,
   context: TransformerContext
 ) {
+  ts ??= ensureTypescript();
   const webpackConfigDevServerSelector =
     'ObjectLiteralExpression > PropertyAssignment:has(Identifier[name=devServer])';
-  const webpackConfigDevServer = query<ts.PropertyAssignment>(
+  const webpackConfigDevServer = query<PropertyAssignment>(
     sourceFile,
     webpackConfigDevServerSelector
   )[0];
@@ -385,7 +399,7 @@ function setDevServerOptionsInWebpackConfig(
 
   const webpackConfigSelector =
     'ObjectLiteralExpression:has(PropertyAssignment:has(Identifier[name=plugins]))';
-  const webpackConfig = query<ts.ObjectLiteralExpression>(
+  const webpackConfig = query<ObjectLiteralExpression>(
     sourceFile,
     webpackConfigSelector
   )[0];
@@ -401,13 +415,10 @@ function setDevServerOptionsInWebpackConfig(
     ]
   );
 
-  text = `${text.slice(0, webpackConfig.getStart())}${ts
-    .createPrinter()
-    .printNode(
-      ts.EmitHint.Unspecified,
-      updatedWebpackConfig,
-      sourceFile
-    )}${text.slice(webpackConfig.getEnd())}`;
+  text = `${text.slice(0, webpackConfig.getStart())}${printNodeUpdate(
+    webpackConfig,
+    updatedWebpackConfig
+  )}${text.slice(webpackConfig.getEnd())}`;
 
   tree.write(webpackConfigPath, text);
 }

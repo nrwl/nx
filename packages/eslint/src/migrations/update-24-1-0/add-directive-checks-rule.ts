@@ -11,11 +11,13 @@ import {
   type Tree,
 } from '@nx/devkit';
 import {
+  ensureTypescript,
   normalizeDependencyConfigDefinition,
   parseNxDirectives,
+  type TypescriptAst,
 } from '@nx/devkit/internal';
 import { basename } from 'node:path';
-import * as ts from 'typescript';
+import type { SourceFile } from 'typescript';
 import { useFlatConfig } from '../../../internal';
 import {
   determineEslintConfigFormat,
@@ -35,6 +37,8 @@ import {
   ESLINT_FLAT_CONFIG_FILENAMES,
   ESLINT_OLD_CONFIG_FILENAMES,
 } from '../../utils/config-file';
+
+let ts: TypescriptAst;
 
 const RULE = '@nx/directive-checks';
 const LINT_CONFIG_FILES = new Set([
@@ -145,6 +149,7 @@ function eslintrcRegistersNxPlugin(tree: Tree, config: string): boolean {
 // Only a `...nx.configs['flat/base']` element directly in the exported array
 // applies to every file.
 function flatConfigRegistersNxPlugin(tree: Tree, config: string): boolean {
+  ts ??= ensureTypescript();
   const source = ts.createSourceFile(
     config,
     tree.read(config, 'utf-8'),
@@ -174,7 +179,7 @@ function flatConfigRegistersNxPlugin(tree: Tree, config: string): boolean {
 }
 
 /** Module of each `import x from 'm'` and top-level `const x = require('m')`. */
-function defaultImports(source: ts.SourceFile): Map<string, string> {
+function defaultImports(source: SourceFile): Map<string, string> {
   const modules = new Map<string, string>();
   for (const statement of source.statements) {
     if (

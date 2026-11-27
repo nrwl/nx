@@ -45,8 +45,7 @@ describe('UpdateNextConfig', () => {
     const projectName = 'my-app';
     tree.write(`${projectName}/next.config.js`, initConfig);
 
-    const executorOptionsString = `
-    const configValues = {
+    const executorOptionsString = `const configValues = {
     default: {
       fileReplacements: [
         {
@@ -69,46 +68,164 @@ describe('UpdateNextConfig', () => {
 
     const result = tree.read(`${projectName}/next.config.js`, 'utf-8');
     expect(result).toMatchInlineSnapshot(`
-      "//@ts-check
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
-      const { composePlugins, withNx } = require('@nx/next');
+      "
+          //@ts-check
+
+          // eslint-disable-next-line @typescript-eslint/no-var-requires
+          const { composePlugins, withNx } = require('@nx/next');
+
       const configValues = {
           default: {
-              fileReplacements: [
-                  {
-                      replace: './environments/environment.ts',
-                      with: './environments/environment.foo.ts',
-                  },
-              ],
+            fileReplacements: [
+              {
+                replace: './environments/environment.ts',
+                with: './environments/environment.foo.ts',
+              },
+            ],
           },
           development: {},
-      };
-      const configuration = process.env.NX_TASK_TARGET_CONFIGURATION || 'default';
-      const options = {
+        };
+        const configuration = process.env.NX_TASK_TARGET_CONFIGURATION || 'default';
+        const options = {
           ...configValues.default,
           //@ts-expect-error: Ignore TypeScript error for indexing configValues with a dynamic key
           ...configValues[configuration],
-      };
-      ;
-      /**
-       * @type {import('@nx/next/plugins/with-nx').WithNxOptions}
-       **/
-      const nextConfig = {
-          nx: {
+        };
+
+          /**
+           * @type {import('@nx/next/plugins/with-nx').WithNxOptions}
+           **/
+          const nextConfig = {
+            nx: {
               // Set this to true if you would like to use SVGR
               // See: https://github.com/gregberge/svgr
               svgr: false,
-              ...options
-          },
-      };
-      const plugins = [
-          // Add more Next.js plugins to this list if needed.
-          withNx,
-      ];
-      module.exports = composePlugins(...plugins)(nextConfig);
-      "
+              ...options,
+            },
+          };
+
+          const plugins = [
+            // Add more Next.js plugins to this list if needed.
+            withNx,
+          ];
+
+          module.exports = composePlugins(...plugins)(nextConfig);
+          "
     `);
   });
+
+  it.each([
+    ['an empty object', 'nx: {}', 'nx: { ...options }'],
+    ['an empty object with a space', 'nx: { }', 'nx: { ...options }'],
+    [
+      'a single-line object',
+      'nx: { svgr: false }',
+      'nx: { svgr: false, ...options }',
+    ],
+    [
+      'a multi-line object without a trailing comma',
+      'nx: {\n    svgr: false // keep\n  }',
+      'nx: {\n    svgr: false, // keep\n    ...options\n  }',
+    ],
+  ])('should add the options spread to %s', (_, nxBefore, nxAfter) => {
+    tree.write(
+      'my-app/next.config.js',
+      `const { composePlugins, withNx } = require('@nx/next');
+const nextConfig = {
+  ${nxBefore},
+};
+module.exports = composePlugins(withNx)(nextConfig);
+`
+    );
+
+    updateNextConfig(
+      tree,
+      'const options = {};',
+      { projectName: 'my-app', root: 'my-app' },
+      mockLog
+    );
+
+    expect(tree.read('my-app/next.config.js', 'utf-8')).toContain(
+      `const nextConfig = {\n  ${nxAfter},\n};`
+    );
+  });
+
+  it.each([
+    [
+      'shares its line with the require',
+      `const { composePlugins, withNx } = require('@nx/next'); const nextConfig = { nx: { svgr: false } };`,
+    ],
+    [
+      'follows a multi-line comment on the require line',
+      `const { composePlugins, withNx } = require('@nx/next'); /* Nx
+   helpers */
+const nextConfig = { nx: { svgr: false } };`,
+    ],
+  ])('should keep the config loadable when nextConfig %s', (_, head) => {
+    tree.write(
+      'my-app/next.config.js',
+      `${head}\nmodule.exports = composePlugins(withNx)(nextConfig);\n`
+    );
+
+    updateNextConfig(
+      tree,
+      `const configValues = { default: { distDir: 'dist' } };
+const options = { ...configValues.default };`,
+      { projectName: 'my-app', root: 'my-app' },
+      mockLog
+    );
+
+    const module = { exports: {} as { nx?: unknown } };
+    new Function(
+      'require',
+      'module',
+      tree.read('my-app/next.config.js', 'utf-8')
+    )(() => ({ composePlugins: () => (config) => config, withNx: {} }), module);
+    expect(module.exports.nx).toEqual({ svgr: false, distDir: 'dist' });
+  });
+
+  it.each([
+    [
+      'the require ends with a semicolon',
+      `const { composePlugins, withNx } = require('@nx/next'); // @ts-expect-error\nconst probe = 'x'.nope;`,
+      `// @ts-expect-error\nconst probe = 'x'.nope;`,
+    ],
+    [
+      'the semicolon starts the next line',
+      `const { composePlugins, withNx } = require('@nx/next') // @ts-expect-error\n;(function () { 'x'.nope; })();`,
+      `// @ts-expect-error\n;(function () { 'x'.nope; })();`,
+    ],
+    [
+      'the semicolon starts a line after a bare CR',
+      `const { composePlugins, withNx } = require('@nx/next') // @ts-expect-error\r;(function () { 'x'.nope; })();`,
+      `// @ts-expect-error\r;(function () { 'x'.nope; })();`,
+    ],
+    [
+      'a block comment precedes the semicolon',
+      `const { composePlugins, withNx } = require('@nx/next') /* @ts-expect-error */;\nconst probe = 'x'.nope;`,
+      `/* @ts-expect-error */;\nconst probe = 'x'.nope;`,
+    ],
+  ])(
+    'should keep a @ts-expect-error after the require above the code it covers when %s',
+    (_, source, expected) => {
+      tree.write(
+        'my-app/next.config.js',
+        `${source}\nconst nextConfig = { nx: {} };\nmodule.exports = composePlugins(withNx)(nextConfig);\n`
+      );
+      const block = `const configValues = { default: {} };\nconst options = { ...configValues.default };`;
+
+      updateNextConfig(
+        tree,
+        block,
+        { projectName: 'my-app', root: 'my-app' },
+        mockLog
+      );
+
+      expect(tree.read('my-app/next.config.js', 'utf-8')).toContain(
+        `${block}\n\n${expected}`
+      );
+    }
+  );
 
   it('should warm the user if the next config file is not support (.mjs)', () => {
     const initConfig = `export default {}`;

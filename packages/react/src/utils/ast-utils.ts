@@ -2,8 +2,9 @@ import type * as ts from 'typescript';
 import { findNodes } from '@nx/js';
 import { ChangeType, logger, StringChange, StringInsertion } from '@nx/devkit';
 import { ensureTypescript } from '@nx/js/internal';
+import type { TypescriptAst } from '@nx/devkit/internal';
 
-let tsModule: typeof import('typescript');
+let tsModule: TypescriptAst;
 
 export function addImport(
   source: ts.SourceFile,
@@ -714,7 +715,7 @@ export function parseComponentPropsInfo(
     if (heritageClause) {
       const propsTypeExpression = heritageClause.types.find((x) => {
         const name =
-          (x.expression as ts.Identifier).escapedText ||
+          (x.expression as ts.Identifier).text ||
           (x.expression as ts.PropertyAccessExpression).name.text;
         return name === 'Component' || name === 'PureComponent';
       });

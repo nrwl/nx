@@ -477,7 +477,7 @@ export class E2eMigrator extends ProjectMigrator<SupportedTargets> {
 
   private updateCypressConfigFile(configFilePath: string): void {
     const { isPropertyAssignment } = ensureTypescript();
-    const { tsquery } = require('@phenomnomnominal/tsquery');
+    const { tsquery } = require('@nx/devkit/internal');
     const { nxE2EPreset } = require('@nx/cypress/plugins/cypress-preset');
     this.cypressPreset = nxE2EPreset(configFilePath);
 
@@ -561,7 +561,7 @@ export class E2eMigrator extends ProjectMigrator<SupportedTargets> {
     { ...globalConfig }: CypressCommonConfig
   ): void {
     ensureTypescript();
-    const { tsquery } = require('@phenomnomnominal/tsquery');
+    const { tsquery } = require('@nx/devkit/internal');
     const e2eConfig = {};
     const presetSpreadAssignment = `...nxE2EPreset(__dirname),`;
     if (!e2eNode) {

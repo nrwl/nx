@@ -1,4 +1,4 @@
-import { forEachExecutorOptions } from '@nx/devkit/internal';
+import { forEachExecutorOptions, ast, query } from '@nx/devkit/internal';
 import {
   type Tree,
   formatFiles,
@@ -6,7 +6,6 @@ import {
   visitNotIgnoredFiles,
   addDependenciesToPackageJson,
 } from '@nx/devkit';
-import { ast, query } from '@phenomnomnominal/tsquery';
 import { nxVersion } from '../../utils/versions';
 
 const NX_ANGULAR_MODULE_FEDERATION_IMPORT_SELECTOR =

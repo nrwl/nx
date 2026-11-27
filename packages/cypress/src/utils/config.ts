@@ -100,7 +100,7 @@ export async function addDefaultE2EConfig(
   if (!cyConfigContents) {
     throw new Error('The passed in cypress config file is empty!');
   }
-  const { tsquery } = await import('@phenomnomnominal/tsquery');
+  const { tsquery } = await import('@nx/devkit/internal');
 
   const isCommonJS =
     tsquery.query(cyConfigContents, TS_QUERY_COMMON_JS_EXPORT_SELECTOR).length >
@@ -188,7 +188,7 @@ export async function addDefaultCTConfig(
   if (!cyConfigContents) {
     throw new Error('The passed in cypress config file is empty!');
   }
-  const { tsquery } = await import('@phenomnomnominal/tsquery');
+  const { tsquery } = await import('@nx/devkit/internal');
 
   const isCommonJS =
     tsquery.query(cyConfigContents, TS_QUERY_COMMON_JS_EXPORT_SELECTOR).length >
@@ -218,9 +218,12 @@ export async function addDefaultCTConfig(
       }
 
       if (Object.keys(options).length) {
-        configValue = `nxComponentTestingPreset(${pathToConfig}, ${JSON.stringify(
-          options
-        )})`;
+        // Strings escape their newlines, so this only joins JSON.stringify's own lines.
+        const inlineOptions = JSON.stringify(options, null, 1).replace(
+          /\n */g,
+          ' '
+        );
+        configValue = `nxComponentTestingPreset(${pathToConfig}, ${inlineOptions})`;
       }
     }
 
@@ -286,7 +289,7 @@ export async function addMountDefinition(cmpCommandFileContents: string) {
   if (!cmpCommandFileContents) {
     throw new Error('The passed in cypress component file is empty!');
   }
-  const { tsquery } = await import('@phenomnomnominal/tsquery');
+  const { tsquery } = await import('@nx/devkit/internal');
   const hasMountCommand =
     tsquery.query<MethodSignature | PropertySignature>(
       cmpCommandFileContents,
@@ -303,13 +306,16 @@ export async function addMountDefinition(cmpCommandFileContents: string) {
     cmpCommandFileContents,
     'InterfaceDeclaration',
     (node: InterfaceDeclaration) => {
+      const members = [
+        ...node.members.map((m) => m.getText()),
+        'mount: typeof mount;',
+      ];
       return `interface ${node.name.getText()}${
         node.typeParameters
           ? `<${node.typeParameters.map((p) => p.getText()).join(', ')}>`
           : ''
       } {
-      ${node.members.map((m) => m.getText()).join('\n      ')}
-      mount: typeof mount;
+      ${members.join('\n      ')}
     }`;
     }
   );
@@ -335,8 +341,8 @@ export function resolveCypressConfigObject(
 ): ObjectLiteralExpression | null {
   const ts = ensureTypescript();
 
-  const { tsquery } = <typeof import('@phenomnomnominal/tsquery')>(
-    require('@phenomnomnominal/tsquery')
+  const { tsquery } = <typeof import('@nx/devkit/internal')>(
+    require('@nx/devkit/internal')
   );
   const sourceFile = tsquery.ast(cypressConfigContents);
 

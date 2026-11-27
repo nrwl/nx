@@ -382,12 +382,31 @@ export function newProject({
 
     // Apply suite-specific versions after copying the shared package-manager
     // backup so they work for every package manager without changing the backup.
+    // pnpm 12.4.2's `add` keeps the backup's `~` range and installs its newest
+    // match, so write the exact version to package.json and install.
     if (
       typescriptVersion &&
       readJsonFile(`${projectDirectory}/package.json`).devDependencies
         ?.typescript !== typescriptVersion
     ) {
-      packageInstall('typescript', projName, typescriptVersion);
+      updateJson('package.json', (json) => {
+        json.devDependencies = {
+          ...json.devDependencies,
+          typescript: typescriptVersion,
+        };
+        // npm fails the install when the version is outside the @nx/*
+        // packages' optional `typescript` peer range; pnpm and yarn only warn.
+        if (packageManager === 'npm') {
+          json.overrides = { ...json.overrides, typescript: '$typescript' };
+        }
+        return json;
+      });
+      execSync(getPackageManagerCommand({ path: projectDirectory }).install, {
+        cwd: projectDirectory,
+        stdio: isVerbose() ? 'inherit' : 'pipe',
+        env: process.env,
+        encoding: 'utf-8',
+      });
     }
 
     const newProjectEnd = performance.mark('new-project:end');

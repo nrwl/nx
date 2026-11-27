@@ -87,7 +87,6 @@
     "@nx/devkit": "workspace:*",
     "@nx/eslint": "workspace:*",
     "@nx/js": "workspace:*",
-    "@phenomnomnominal/tsquery": "catalog:typescript",
     "semver": "catalog:",
     "tree-kill": "catalog:",
     "tslib": "catalog:typescript"

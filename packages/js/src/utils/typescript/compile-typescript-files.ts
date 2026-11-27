@@ -38,33 +38,37 @@ export function compileTypeScriptFiles(
 
   return {
     iterator: createAsyncIterable<TypescriptCompilationResult>(
-      async ({ next, done }) => {
-        if (normalizedOptions.watch) {
-          const host = compileTypeScriptWatcher(
-            tscOptions,
-            async (d: Diagnostic) => {
-              if (
-                d.code === TYPESCRIPT_FOUND_N_ERRORS_WATCHING_FOR_FILE_CHANGES
-              ) {
-                await postCompilationCallback();
-                next(
-                  getResult(
-                    getErrorCountFromMessage(d.messageText as string) === 0
-                  )
-                );
+      async ({ next, done, error }) => {
+        try {
+          if (normalizedOptions.watch) {
+            const host = compileTypeScriptWatcher(
+              tscOptions,
+              async (d: Diagnostic) => {
+                if (
+                  d.code === TYPESCRIPT_FOUND_N_ERRORS_WATCHING_FOR_FILE_CHANGES
+                ) {
+                  await postCompilationCallback();
+                  next(
+                    getResult(
+                      getErrorCountFromMessage(d.messageText as string) === 0
+                    )
+                  );
+                }
               }
-            }
-          );
+            );
 
-          tearDown = () => {
-            host.close();
+            tearDown = () => {
+              host.close();
+              done();
+            };
+          } else {
+            const { success } = compileTypeScript(tscOptions);
+            await postCompilationCallback();
+            next(getResult(success));
             done();
-          };
-        } else {
-          const { success } = compileTypeScript(tscOptions);
-          await postCompilationCallback();
-          next(getResult(success));
-          done();
+          }
+        } catch (e) {
+          error(e);
         }
       }
     ),

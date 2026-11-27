@@ -1,6 +1,20 @@
 import { joinPathFragments, type Tree } from '@nx/devkit';
+import {
+  ensureTypescript,
+  getSyntaxErrors,
+  type TypescriptAst,
+} from '@nx/devkit/internal';
 import { ESLint } from 'eslint';
-import * as ts from 'typescript';
+import type {
+  ArrayLiteralExpression,
+  Expression,
+  Node,
+  ObjectLiteralExpression,
+  PropertyName,
+  Statement,
+} from 'typescript';
+
+let ts: TypescriptAst;
 
 export const JS_ESLINTRC_FILENAMES = ['.eslintrc.js', '.eslintrc.cjs'];
 
@@ -36,20 +50,12 @@ export function readStaticJsEslintrc(
 ): StaticJsConfigResult {
   // TypeScript's parser recovers from syntax errors, so an unterminated object
   // would otherwise read as an empty config and silently replace the user's rules.
-  const { diagnostics } = ts.transpileModule(content, {
-    fileName: filePath,
-    reportDiagnostics: true,
-    compilerOptions: { allowJs: true },
-  });
-  if (diagnostics?.length) {
-    return unsupported(
-      `it could not be parsed (${ts.flattenDiagnosticMessageText(
-        diagnostics[0].messageText,
-        ' '
-      )})`
-    );
+  const [syntaxError] = getSyntaxErrors(filePath, content);
+  if (syntaxError !== undefined) {
+    return unsupported(`it could not be parsed (${syntaxError})`);
   }
 
+  ts ??= ensureTypescript();
   const sourceFile = ts.createSourceFile(
     filePath,
     content,
@@ -58,7 +64,7 @@ export function readStaticJsEslintrc(
     ts.ScriptKind.JS
   );
 
-  let exported: ts.Expression | undefined;
+  let exported: Expression | undefined;
   for (const statement of sourceFile.statements) {
     if (isDirective(statement)) {
       continue;
@@ -103,16 +109,14 @@ export function readStaticJsEslintrc(
   };
 }
 
-function isDirective(statement: ts.Statement): boolean {
+function isDirective(statement: Statement): boolean {
   return (
     ts.isExpressionStatement(statement) &&
     ts.isStringLiteral(statement.expression)
   );
 }
 
-function getModuleExportsValue(
-  statement: ts.Statement
-): ts.Expression | undefined {
+function getModuleExportsValue(statement: Statement): Expression | undefined {
   if (!ts.isExpressionStatement(statement)) {
     return undefined;
   }
@@ -134,7 +138,7 @@ type EvaluateResult =
   | { kind: 'value'; value: unknown }
   | { kind: 'unsupported'; reason: string };
 
-function evaluate(node: ts.Expression, path: string): EvaluateResult {
+function evaluate(node: Expression, path: string): EvaluateResult {
   if (ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node)) {
     return { kind: 'value', value: node.text };
   }
@@ -170,7 +174,7 @@ function evaluate(node: ts.Expression, path: string): EvaluateResult {
 }
 
 function evaluateArray(
-  node: ts.ArrayLiteralExpression,
+  node: ArrayLiteralExpression,
   path: string
 ): EvaluateResult {
   const value: unknown[] = [];
@@ -190,7 +194,7 @@ function evaluateArray(
 }
 
 function evaluateObject(
-  node: ts.ObjectLiteralExpression,
+  node: ObjectLiteralExpression,
   path: string
 ): EvaluateResult {
   const value: Record<string, unknown> = {};
@@ -217,7 +221,7 @@ function evaluateObject(
   return { kind: 'value', value };
 }
 
-function getPropertyKey(name: ts.PropertyName): string | undefined {
+function getPropertyKey(name: PropertyName): string | undefined {
   if (
     ts.isIdentifier(name) ||
     ts.isStringLiteral(name) ||
@@ -229,14 +233,14 @@ function getPropertyKey(name: ts.PropertyName): string | undefined {
   return undefined;
 }
 
-function dynamicValueReason(node: ts.Node, path: string): string {
+function dynamicValueReason(node: Node, path: string): string {
   const location = path ? `"${path}"` : 'the exported object';
   return `${location} is not a literal value (${describe(node)})`;
 }
 
 // Short, quotable snippet of the offending syntax so the message points at the
 // line the reader has to fix rather than at a TypeScript SyntaxKind name.
-function describe(node: ts.Node): string {
+function describe(node: Node): string {
   const text = node.getText().replace(/\s+/g, ' ').trim();
   return text.length > 60 ? `${text.slice(0, 57)}...` : text;
 }

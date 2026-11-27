@@ -17,7 +17,7 @@ import {
   updateJson,
   updateNxJson,
 } from '@nx/devkit';
-import { upsertTargetDefault } from '@nx/devkit/internal';
+import { upsertTargetDefault, type TypescriptAst } from '@nx/devkit/internal';
 import { initGenerator as jsInitGenerator } from '@nx/js';
 import {
   ensureTypescript,
@@ -50,7 +50,7 @@ import type {
   SourceFile,
 } from 'typescript';
 
-let ts: typeof import('typescript');
+let ts: TypescriptAst;
 
 // Must match `vitestWorkspaceFiles` in ../../plugins/plugin.ts, or the guards
 // here and inference disagree about what counts as an existing workspace file.
@@ -701,7 +701,7 @@ function rootConfigDeclaresProjects(
   configPath: string
 ): 'declares' | 'missing' | 'unknown' {
   ts ??= ensureTypescript();
-  const { tsquery } = require('@phenomnomnominal/tsquery');
+  const { tsquery } = require('@nx/devkit/internal');
 
   let sourceFile: SourceFile;
   try {

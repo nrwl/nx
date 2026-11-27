@@ -4,8 +4,9 @@ import { NormalizedNgRxFeatureStoreGeneratorOptions } from './normalize-options'
 import { ensureTypescript } from '@nx/js/internal';
 
 import { addGlobal } from '@nx/js';
+import type { TypescriptAst } from '@nx/devkit/internal';
 
-let tsModule: typeof import('typescript');
+let tsModule: TypescriptAst;
 
 export function addExportsToBarrel(
   tree: Tree,

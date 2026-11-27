@@ -9,8 +9,9 @@ import { addInitialRoutes } from '../../../utils/ast-utils';
 import { reactRouterDomVersion } from '../../../utils/versions';
 import { maybeJs } from '../../../utils/maybe-js';
 import { NormalizedSchema } from '../schema';
+import type { TypescriptAst } from '@nx/devkit/internal';
 
-let tsModule: typeof import('typescript');
+let tsModule: TypescriptAst;
 
 export function addRouting(host: Tree, options: NormalizedSchema) {
   if (!options.routing) {

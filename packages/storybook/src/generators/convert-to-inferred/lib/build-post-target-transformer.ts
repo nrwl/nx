@@ -3,8 +3,9 @@ import {
   processTargetOutputs,
   toProjectRelativePath,
   AggregatedLog,
+  ast,
+  query,
 } from '@nx/devkit/internal';
-import { ast, query } from '@phenomnomnominal/tsquery';
 import {
   addConfigValuesToConfigFile,
   ensureViteConfigPathIsRelative,

@@ -103,7 +103,6 @@
   },
   "dependencies": {
     "@babel/core": "catalog:",
-    "@phenomnomnominal/tsquery": "catalog:typescript",
     "ajv": "catalog:",
     "autoprefixer": "catalog:css",
     "babel-loader": "^9.1.2",

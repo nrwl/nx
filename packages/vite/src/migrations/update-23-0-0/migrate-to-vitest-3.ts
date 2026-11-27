@@ -1,6 +1,6 @@
 import { formatFiles, type Tree, visitNotIgnoredFiles } from '@nx/devkit';
 import { ensureTypescript } from '@nx/js/internal';
-import { ast, query } from '@phenomnomnominal/tsquery';
+import { ast, query, type TypescriptAst } from '@nx/devkit/internal';
 import type {
   Identifier,
   ImportDeclaration,
@@ -21,7 +21,7 @@ import {
   visitVitestConfigFiles,
 } from './lib/vitest-config-files';
 
-let ts: typeof import('typescript');
+let ts: TypescriptAst;
 
 /**
  * Hybrid migration paired with `ai-instructions-for-vitest-3.md`. Applies the

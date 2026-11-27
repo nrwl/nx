@@ -1,8 +1,21 @@
 import { formatFiles, visitNotIgnoredFiles, type Tree } from '@nx/devkit';
-import { ast, query } from '@phenomnomnominal/tsquery';
-import * as ts from 'typescript';
+import {
+  ensureTypescript,
+  ast,
+  printNodeUpdate,
+  query,
+  type TypescriptAst,
+} from '@nx/devkit/internal';
+import type {
+  ArrayLiteralExpression,
+  CallExpression,
+  ImportDeclaration,
+  ImportSpecifier,
+} from 'typescript';
 import { FileChangeRecorder } from '../../utils/file-change-recorder';
 import { getProjectsFilteredByDependencies } from '../utils/projects';
+
+let ts: TypescriptAst;
 
 export default async function (tree: Tree) {
   const projects = await getProjectsFilteredByDependencies([
@@ -37,9 +50,10 @@ function processFile(tree: Tree, filePath: string): void {
     return;
   }
 
+  ts ??= ensureTypescript();
   const sourceFile = ast(content);
 
-  const providersArray = query<ts.ArrayLiteralExpression>(
+  const providersArray = query<ArrayLiteralExpression>(
     sourceFile,
     'PropertyAssignment:has(Identifier[name=providers]) > ArrayLiteralExpression'
   )[0];
@@ -53,30 +67,30 @@ function processFile(tree: Tree, filePath: string): void {
       (el) =>
         ts.isCallExpression(el) &&
         ts.isIdentifier(el.expression) &&
-        (el.expression.getText() === 'provideServerRouting' ||
-          el.expression.getText() === 'provideServerRoutesConfig')
+        (el.expression.text === 'provideServerRouting' ||
+          el.expression.text === 'provideServerRoutesConfig')
     )
   ) {
     return;
   }
 
   const recorder = new FileChangeRecorder(tree, filePath);
-  const printer = ts.createPrinter({
-    newLine: ts.NewLineKind.LineFeed,
-  });
 
-  let provideServerRenderingCall: ts.CallExpression | undefined;
-  let provideServerRoutingCall: ts.CallExpression;
+  let provideServerRenderingCall: CallExpression | undefined;
+  let provideServerRoutingCall: CallExpression;
 
   const providerCallNodes = providersArray.elements.filter((el) =>
     ts.isCallExpression(el)
   );
   for (const node of providerCallNodes) {
-    if (node.expression.getText() === 'provideServerRendering') {
+    const name = ts.isIdentifier(node.expression)
+      ? node.expression.text
+      : undefined;
+    if (name === 'provideServerRendering') {
       provideServerRenderingCall = node;
     } else if (
-      node.expression.getText() === 'provideServerRouting' ||
-      node.expression.getText() === 'provideServerRoutesConfig'
+      name === 'provideServerRouting' ||
+      name === 'provideServerRoutesConfig'
     ) {
       provideServerRoutingCall = node;
     }
@@ -88,7 +102,7 @@ function processFile(tree: Tree, filePath: string): void {
     [provideServerRoutingCall.arguments.at(0)]
   );
 
-  let updatedProvidersArray: ts.ArrayLiteralExpression;
+  let updatedProvidersArray: ArrayLiteralExpression;
   if (provideServerRenderingCall) {
     // remove the "provideServerRouting" and "provideServerRoutesConfig"
     // calls and update the existing "provideServerRendering" call
@@ -147,11 +161,7 @@ function processFile(tree: Tree, filePath: string): void {
 
   recorder.replace(
     providersArray,
-    printer.printNode(
-      ts.EmitHint.Unspecified,
-      updatedProvidersArray,
-      sourceFile
-    )
+    printNodeUpdate(providersArray, updatedProvidersArray)
   );
 
   const importDecl = sourceFile.statements.find(
@@ -159,7 +169,7 @@ function processFile(tree: Tree, filePath: string): void {
       ts.isImportDeclaration(stmt) &&
       ts.isStringLiteral(stmt.moduleSpecifier) &&
       stmt.moduleSpecifier.text === '@angular/ssr'
-  ) as ts.ImportDeclaration | undefined;
+  ) as ImportDeclaration | undefined;
 
   if (importDecl?.importClause?.namedBindings) {
     const namedBindings = importDecl?.importClause.namedBindings;
@@ -167,36 +177,30 @@ function processFile(tree: Tree, filePath: string): void {
     if (ts.isNamedImports(namedBindings)) {
       // remove the "provideServerRouting" and "provideServerRoutesConfig"
       // imports and ensure we have the "withRoutes" import
-      const updatedElementNames = new Set([
-        ...namedBindings.elements
-          .map((el) => el.getText())
-          .filter(
-            (x) =>
-              x !== 'provideServerRouting' && x !== 'provideServerRoutesConfig'
-          ),
-        'withRoutes',
-      ]);
+      const isImportOf = (el: ImportSpecifier, name: string) =>
+        !el.propertyName && el.name.text === name;
+      const keptElements = namedBindings.elements.filter(
+        (el) =>
+          !isImportOf(el, 'provideServerRouting') &&
+          !isImportOf(el, 'provideServerRoutesConfig')
+      );
       const updatedNamedBindings = ts.factory.updateNamedImports(
         namedBindings,
-        Array.from(updatedElementNames).map((name) =>
-          ts.factory.createImportSpecifier(
-            false,
-            undefined,
-            ts.factory.createIdentifier(name)
-          )
-        )
+        keptElements.some((el) => isImportOf(el, 'withRoutes'))
+          ? keptElements
+          : [
+              ...keptElements,
+              ts.factory.createImportSpecifier(
+                false,
+                undefined,
+                ts.factory.createIdentifier('withRoutes')
+              ),
+            ]
       );
 
-      const printer = ts.createPrinter({
-        newLine: ts.NewLineKind.LineFeed,
-      });
       recorder.replace(
         namedBindings,
-        printer.printNode(
-          ts.EmitHint.Unspecified,
-          updatedNamedBindings,
-          sourceFile
-        )
+        printNodeUpdate(namedBindings, updatedNamedBindings)
       );
     }
   }

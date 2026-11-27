@@ -1,20 +1,20 @@
 import type { Tree } from '@nx/devkit';
 import type * as ts from 'typescript';
 import { ensureTypescript } from './ensure-typescript';
-import { Node, SyntaxKind } from 'typescript';
+import type { Node, SyntaxKind } from 'typescript';
 import { workspaceRoot } from '@nx/devkit';
-import { dirname } from 'path';
+import {
+  createTsModuleResolver,
+  readTsConfigWithoutFiles,
+  type TypescriptAst,
+} from '@nx/devkit/internal';
 import { getSourceNodes } from './get-source-nodes';
 
 const normalizedAppRoot = workspaceRoot.replace(/\\/g, '/');
 
-let tsModule: typeof import('typescript');
+let tsModule: TypescriptAst;
 
-let compilerHost: {
-  host: ts.CompilerHost;
-  options: ts.CompilerOptions;
-  moduleResolutionCache: ts.ModuleResolutionCache;
-};
+let moduleResolver: ReturnType<typeof createTsModuleResolver> | undefined;
 
 /**
  * Find a module based on its import
@@ -28,56 +28,16 @@ export function resolveModuleByImport(
   filePath: string,
   tsConfigPath: string
 ) {
-  compilerHost = compilerHost || getCompilerHost(tsConfigPath);
-  const { options, host, moduleResolutionCache } = compilerHost;
-
-  const { resolvedModule } = tsModule.resolveModuleName(
-    importExpr,
-    filePath,
-    options,
-    host,
-    moduleResolutionCache
+  moduleResolver ??= createTsModuleResolver(
+    readTsConfigWithoutFiles(tsConfigPath).options
   );
 
-  if (!resolvedModule) {
+  const resolvedFileName = moduleResolver(importExpr, filePath);
+  if (!resolvedFileName) {
     return;
   } else {
-    return resolvedModule.resolvedFileName.replace(`${normalizedAppRoot}/`, '');
+    return resolvedFileName.replace(`${normalizedAppRoot}/`, '');
   }
-}
-
-function getCompilerHost(tsConfigPath: string) {
-  const options = readTsConfigOptions(tsConfigPath);
-  const host = tsModule.createCompilerHost(options, true);
-  const moduleResolutionCache = tsModule.createModuleResolutionCache(
-    workspaceRoot,
-    host.getCanonicalFileName
-  );
-  return { options, host, moduleResolutionCache };
-}
-
-function readTsConfigOptions(tsConfigPath: string) {
-  if (!tsModule) {
-    tsModule = require('typescript');
-  }
-
-  const readResult = tsModule.readConfigFile(
-    tsConfigPath,
-    tsModule.sys.readFile
-  );
-
-  // we don't need to scan the files, we only care about options
-  const host: Partial<ts.ParseConfigHost> = {
-    readDirectory: () => [],
-    readFile: () => '',
-    fileExists: tsModule.sys.fileExists,
-  };
-
-  return tsModule.parseJsonConfigFileContent(
-    readResult.config,
-    host as ts.ParseConfigHost,
-    dirname(tsConfigPath)
-  ).options;
 }
 
 function nodesByPosition(first: ts.Node, second: ts.Node): number {
@@ -89,14 +49,19 @@ function updateTsSourceFile(
   sourceFile: ts.SourceFile,
   filePath: string
 ): ts.SourceFile {
+  if (!tsModule) {
+    tsModule = ensureTypescript();
+  }
   const newFileContents = host.read(filePath).toString('utf-8');
-  return sourceFile.update(newFileContents, {
-    newLength: newFileContents.length,
-    span: {
-      length: sourceFile.text.length,
-      start: 0,
-    },
-  });
+  // TypeScript 7.1 source files have no `update`. A full parse gives the tree
+  // TypeScript 6's `update` returns for a whole-file change.
+  return tsModule.createSourceFile(
+    sourceFile.fileName,
+    newFileContents,
+    sourceFile.languageVersion,
+    true,
+    (sourceFile as { scriptKind?: ts.ScriptKind }).scriptKind
+  );
 }
 
 export function insertChange(

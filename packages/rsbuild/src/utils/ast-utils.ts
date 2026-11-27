@@ -1,6 +1,6 @@
 import { type Tree } from '@nx/devkit';
 import { indentBy } from './indent-by';
-import { ast, query } from '@phenomnomnominal/tsquery';
+import { ast, query } from '@nx/devkit/internal';
 
 const DEFINE_CONFIG_SELECTOR =
   'CallExpression:has(Identifier[name=defineConfig]) > ObjectLiteralExpression';

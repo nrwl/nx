@@ -1,5 +1,5 @@
 import { formatFiles, visitNotIgnoredFiles, type Tree } from '@nx/devkit';
-import { ast, query } from '@phenomnomnominal/tsquery';
+import { ast, query } from '@nx/devkit/internal';
 import type { Identifier, StringLiteral } from 'typescript';
 import picomatch = require('picomatch');
 

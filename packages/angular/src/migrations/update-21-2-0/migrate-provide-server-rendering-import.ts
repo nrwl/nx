@@ -4,10 +4,17 @@ import {
   visitNotIgnoredFiles,
   type Tree,
 } from '@nx/devkit';
-import * as ts from 'typescript';
+import {
+  ensureTypescript,
+  printNodeUpdate,
+  type TypescriptAst,
+} from '@nx/devkit/internal';
+import type { ImportDeclaration, NamedImports } from 'typescript';
 import { FileChangeRecorder } from '../../utils/file-change-recorder';
 import { angularDevkitVersion } from '../../utils/versions';
 import { getProjectsFilteredByDependencies } from '../utils/projects';
+
+let ts: TypescriptAst;
 
 export default async function (tree: Tree) {
   const projects = await getProjectsFilteredByDependencies([
@@ -53,6 +60,7 @@ function processFile(tree: Tree, filePath: string): boolean {
     return false;
   }
 
+  ts ??= ensureTypescript();
   const sourceFile = ts.createSourceFile(
     filePath,
     content,
@@ -61,8 +69,8 @@ function processFile(tree: Tree, filePath: string): boolean {
   );
 
   let platformServerHasProvideServerRendering = false;
-  let platformServerImportNode: ts.ImportDeclaration | undefined;
-  let ssrImportNode: ts.ImportDeclaration | undefined;
+  let platformServerImportNode: ImportDeclaration | undefined;
+  let ssrImportNode: ImportDeclaration | undefined;
   const platformServerImports = new Set<string>();
 
   sourceFile.forEachChild((node) => {
@@ -100,15 +108,12 @@ function processFile(tree: Tree, filePath: string): boolean {
   }
 
   const recorder = new FileChangeRecorder(tree, filePath);
-  const printer = ts.createPrinter({
-    newLine: ts.NewLineKind.LineFeed,
-  });
   if (
     ssrImportNode?.importClause?.namedBindings &&
     ts.isNamedImports(ssrImportNode.importClause.namedBindings)
   ) {
     const namedBindingsNode = ssrImportNode.importClause!
-      .namedBindings as ts.NamedImports;
+      .namedBindings as NamedImports;
     const updatedNamedBindingsNode = ts.factory.updateNamedImports(
       namedBindingsNode,
       [
@@ -122,11 +127,7 @@ function processFile(tree: Tree, filePath: string): boolean {
     );
     recorder.replace(
       namedBindingsNode,
-      printer.printNode(
-        ts.EmitHint.Unspecified,
-        updatedNamedBindingsNode,
-        sourceFile
-      )
+      printNodeUpdate(namedBindingsNode, updatedNamedBindingsNode)
     );
   } else {
     /**
@@ -147,7 +148,7 @@ function processFile(tree: Tree, filePath: string): boolean {
     // we only collected platform server imports because there were named
     // imports, so we can safely use the type
     const namedBindingsNode = platformServerImportNode.importClause!
-      .namedBindings as ts.NamedImports;
+      .namedBindings as NamedImports;
     const updatedNamedBindingsNode = ts.factory.updateNamedImports(
       namedBindingsNode,
       namedBindingsNode.elements.filter((e) =>
@@ -156,11 +157,7 @@ function processFile(tree: Tree, filePath: string): boolean {
     );
     recorder.replace(
       namedBindingsNode,
-      printer.printNode(
-        ts.EmitHint.Unspecified,
-        updatedNamedBindingsNode,
-        sourceFile
-      )
+      printNodeUpdate(namedBindingsNode, updatedNamedBindingsNode)
     );
   } else {
     recorder.remove(

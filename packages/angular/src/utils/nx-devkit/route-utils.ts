@@ -2,8 +2,9 @@ import { Tree } from '@nx/devkit';
 import { insertImport } from '@nx/js';
 import { addRouteToNgModule } from './ast-utils';
 import { ensureTypescript } from '@nx/js/internal';
+import type { TypescriptAst } from '@nx/devkit/internal';
 
-let tsModule: typeof import('typescript');
+let tsModule: TypescriptAst;
 
 /**
  * Add a new route to a routes definition
@@ -30,7 +31,7 @@ export function addRoute(
   if (!tsModule) {
     tsModule = ensureTypescript();
   }
-  const { ast, query } = require('@phenomnomnominal/tsquery');
+  const { ast, query } = require('@nx/devkit/internal');
 
   let routesFileContents = tree.read(routesFile, 'utf-8');
 
@@ -108,7 +109,7 @@ export function addProviderToRoute(
   }
 
   ensureTypescript();
-  const { ast, query } = require('@phenomnomnominal/tsquery');
+  const { ast, query } = require('@nx/devkit/internal');
   let routesFileContents = tree.read(routesFile, 'utf-8');
 
   const sourceFile = ast(routesFileContents);

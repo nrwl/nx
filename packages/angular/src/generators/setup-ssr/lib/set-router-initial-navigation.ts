@@ -4,39 +4,30 @@ import {
   type Tree,
 } from '@nx/devkit';
 import { insertImport } from '@nx/js';
-import { ast, query } from '@phenomnomnominal/tsquery';
+import {
+  ast,
+  ensureTypescript,
+  printNodeUpdate,
+  query,
+  type TypescriptAst,
+} from '@nx/devkit/internal';
 import type {
   CallExpression,
   Expression,
   ImportSpecifier,
   ObjectLiteralElementLike,
   ObjectLiteralExpression,
-  Printer,
   SourceFile,
-  SpreadAssignment,
-} from 'typescript';
-import {
-  EmitHint,
-  SyntaxKind,
-  createPrinter,
-  factory,
-  isAsExpression,
-  isCallExpression,
-  isElementAccessExpression,
-  isIdentifier,
-  isNonNullExpression,
-  isParenthesizedExpression,
-  isPropertyAccessExpression,
-  isPropertyAssignment,
-  isSatisfiesExpression,
 } from 'typescript';
 import type { NormalizedGeneratorOptions } from '../schema';
+
+let ts: TypescriptAst;
 
 export function setRouterInitialNavigation(
   tree: Tree,
   options: NormalizedGeneratorOptions
 ): void {
-  const printer = createPrinter();
+  ts ??= ensureTypescript();
   const project = readProjectConfiguration(tree, options.project);
 
   visitNotIgnoredFiles(tree, project.root, (filePath) => {
@@ -46,18 +37,14 @@ export function setRouterInitialNavigation(
     }
 
     if (options.standalone) {
-      processFileWithStandaloneSetup(tree, filePath, printer);
+      processFileWithStandaloneSetup(tree, filePath);
     } else {
-      processFileWithNgModuleSetup(tree, filePath, printer);
+      processFileWithNgModuleSetup(tree, filePath);
     }
   });
 }
 
-function processFileWithStandaloneSetup(
-  tree: Tree,
-  filePath: string,
-  printer: Printer
-) {
+function processFileWithStandaloneSetup(tree: Tree, filePath: string) {
   let content = tree.read(filePath, 'utf-8');
   let sourceFile = ast(content);
 
@@ -70,18 +57,17 @@ function processFileWithStandaloneSetup(
   if (
     provideRouterCallExpression.arguments.some(
       (arg) =>
-        isCallExpression(arg) &&
-        isIdentifier(arg.expression) &&
+        ts.isCallExpression(arg) &&
+        ts.isIdentifier(arg.expression) &&
         arg.expression.text === 'withEnabledBlockingInitialNavigation'
     )
   ) {
     return;
   }
 
-  const updatedProvideRouterCallExpression = printer.printNode(
-    EmitHint.Unspecified,
-    updateProvideRouterCallExpression(provideRouterCallExpression),
-    sourceFile
+  const updatedProvideRouterCallExpression = printNodeUpdate(
+    provideRouterCallExpression,
+    updateProvideRouterCallExpression(provideRouterCallExpression)
   );
 
   content = `${content.slice(
@@ -132,19 +118,19 @@ function updateProvideRouterCallExpression(
   const filteredArgs = node.arguments.filter(
     (arg) =>
       !(
-        isCallExpression(arg) &&
-        isIdentifier(arg.expression) &&
+        ts.isCallExpression(arg) &&
+        ts.isIdentifier(arg.expression) &&
         arg.expression.text === 'withDisabledInitialNavigation'
       )
   );
 
-  const initialNavigationFeatureArg = factory.createCallExpression(
-    factory.createIdentifier('withEnabledBlockingInitialNavigation'),
+  const initialNavigationFeatureArg = ts.factory.createCallExpression(
+    ts.factory.createIdentifier('withEnabledBlockingInitialNavigation'),
     [],
     []
   );
 
-  return factory.updateCallExpression(
+  return ts.factory.updateCallExpression(
     node,
     node.expression,
     node.typeArguments,
@@ -152,11 +138,7 @@ function updateProvideRouterCallExpression(
   );
 }
 
-function processFileWithNgModuleSetup(
-  tree: Tree,
-  filePath: string,
-  printer: Printer
-) {
+function processFileWithNgModuleSetup(tree: Tree, filePath: string) {
   const content = tree.read(filePath, 'utf-8');
   const sourceFile = ast(content);
 
@@ -166,10 +148,29 @@ function processFileWithNgModuleSetup(
     return;
   }
 
-  const updatedRouterModuleForRootCallExpression = printer.printNode(
-    EmitHint.Unspecified,
-    updateRouterModuleForRootCallExpression(routerModuleForRootCallExpression),
-    sourceFile
+  // The printer can't print parsed code inside a built spread, so options
+  // passed by reference are replaced as text.
+  const { arguments: args } = routerModuleForRootCallExpression;
+  const optionsArgument = args[1];
+  const spreadOptions = optionsArgument && getSpreadOptions(optionsArgument);
+  if (spreadOptions) {
+    // Like the update below, drop the arguments after the options with their
+    // comments. An argument's full start follows its comma.
+    const dropStart =
+      args.length > 2 ? args[2].pos - 1 : optionsArgument.getEnd();
+    tree.write(
+      filePath,
+      `${content.slice(0, optionsArgument.getStart())}{ ${spreadOptions}, initialNavigation: 'enabledBlocking' }${content.slice(
+        optionsArgument.getEnd(),
+        dropStart
+      )}${content.slice(args[args.length - 1].getEnd())}`
+    );
+    return;
+  }
+
+  const updatedRouterModuleForRootCallExpression = printNodeUpdate(
+    routerModuleForRootCallExpression,
+    updateRouterModuleForRootCallExpression(routerModuleForRootCallExpression)
   );
 
   tree.write(
@@ -191,39 +192,42 @@ function updateRouterModuleForRootCallExpression(
     | undefined;
 
   const existingProperties = existingOptions?.properties
-    ? factory.createNodeArray(
+    ? ts.factory.createNodeArray(
         existingOptions.properties.filter(
           (exp) =>
             !(
-              isPropertyAssignment(exp) &&
-              isIdentifier(exp.name) &&
+              ts.isPropertyAssignment(exp) &&
+              ts.isIdentifier(exp.name) &&
               exp.name.text === 'initialNavigation'
             )
         )
       )
-    : factory.createNodeArray<ObjectLiteralElementLike>();
+    : ts.factory.createNodeArray<ObjectLiteralElementLike>();
 
-  const enabledLiteral = factory.createStringLiteral('enabledBlocking', true);
-  const initialNavigationProperty = factory.createPropertyAssignment(
+  const enabledLiteral = ts.factory.createStringLiteral(
+    'enabledBlocking',
+    true
+  );
+  const initialNavigationProperty = ts.factory.createPropertyAssignment(
     'initialNavigation',
     enabledLiteral
   );
 
   const routerOptions = existingOptions
-    ? factory.updateObjectLiteralExpression(
+    ? ts.factory.updateObjectLiteralExpression(
         existingOptions,
-        factory.createNodeArray([
-          ...getSpreadOptions(node.arguments[1]),
+        ts.factory.createNodeArray([
           ...existingProperties,
           initialNavigationProperty,
         ])
       )
-    : factory.createObjectLiteralExpression(
-        factory.createNodeArray([initialNavigationProperty])
+    : ts.factory.createObjectLiteralExpression(
+        ts.factory.createNodeArray([initialNavigationProperty])
       );
   const args = [node.arguments[0], routerOptions];
 
-  return factory.createCallExpression(
+  return ts.factory.updateCallExpression(
+    node,
     node.expression,
     node.typeArguments,
     args
@@ -232,41 +236,33 @@ function updateRouterModuleForRootCallExpression(
 
 // `?? {}` lets a value typed `undefined` be spread (TS2698). Other expressions
 // aren't spread, since TypeScript rejects `??` after some of them (TS2869).
-function getSpreadOptions(optionsArgument: Expression): SpreadAssignment[] {
+function getSpreadOptions(optionsArgument: Expression): string | undefined {
   const value = skipWrappers(optionsArgument);
   if (
-    !(isIdentifier(value) && value.text !== 'undefined') &&
-    !isPropertyAccessExpression(value) &&
-    !isElementAccessExpression(value) &&
-    !isCallExpression(value)
+    !(ts.isIdentifier(value) && value.text !== 'undefined') &&
+    !ts.isPropertyAccessExpression(value) &&
+    !ts.isElementAccessExpression(value) &&
+    !ts.isCallExpression(value)
   ) {
-    return [];
+    return undefined;
   }
   let operand = optionsArgument;
-  while (isParenthesizedExpression(operand)) {
+  while (ts.isParenthesizedExpression(operand)) {
     operand = operand.expression;
   }
-  return [
-    factory.createSpreadAssignment(
-      factory.createParenthesizedExpression(
-        factory.createBinaryExpression(
-          isAsExpression(operand) || isSatisfiesExpression(operand)
-            ? factory.createParenthesizedExpression(operand)
-            : operand,
-          SyntaxKind.QuestionQuestionToken,
-          factory.createObjectLiteralExpression()
-        )
-      )
-    ),
-  ];
+  const operandText =
+    ts.isAsExpression(operand) || ts.isSatisfiesExpression(operand)
+      ? `(${operand.getText()})`
+      : operand.getText();
+  return `...(${operandText} ?? {})`;
 }
 
 function skipWrappers(expression: Expression): Expression {
   while (
-    isParenthesizedExpression(expression) ||
-    isAsExpression(expression) ||
-    isNonNullExpression(expression) ||
-    isSatisfiesExpression(expression)
+    ts.isParenthesizedExpression(expression) ||
+    ts.isAsExpression(expression) ||
+    ts.isNonNullExpression(expression) ||
+    ts.isSatisfiesExpression(expression)
   ) {
     expression = expression.expression;
   }

@@ -1,4 +1,10 @@
-import { forEachExecutorOptions } from '@nx/devkit/internal';
+import {
+  ensureTypescript,
+  forEachExecutorOptions,
+  ast,
+  query,
+  type TypescriptAst,
+} from '@nx/devkit/internal';
 import {
   type Tree,
   formatFiles,
@@ -7,10 +13,12 @@ import {
   ChangeType,
   type StringChange,
 } from '@nx/devkit';
-import { ast, query } from '@phenomnomnominal/tsquery';
-import * as ts from 'typescript';
+import type * as ts from 'typescript';
+
+let tsModule: TypescriptAst;
 
 export default async function addSvgrToNextConfig(tree: Tree) {
+  tsModule ??= ensureTypescript();
   const projects = new Map<string, { svgrOptions?: any }>();
 
   // Find all Next.js projects using withNx that have svgr explicitly set to true or an options object
@@ -40,32 +48,32 @@ export default async function addSvgrToNextConfig(tree: Tree) {
 
         const nxProp = objLiteral.properties.find(
           (prop) =>
-            ts.isPropertyAssignment(prop) &&
-            ts.isIdentifier(prop.name) &&
+            tsModule.isPropertyAssignment(prop) &&
+            tsModule.isIdentifier(prop.name) &&
             prop.name.text === 'nx'
         ) as ts.PropertyAssignment | undefined;
 
-        if (nxProp && ts.isObjectLiteralExpression(nxProp.initializer)) {
+        if (nxProp && tsModule.isObjectLiteralExpression(nxProp.initializer)) {
           const svgrProp = nxProp.initializer.properties.find(
             (prop) =>
-              ts.isPropertyAssignment(prop) &&
-              ts.isIdentifier(prop.name) &&
+              tsModule.isPropertyAssignment(prop) &&
+              tsModule.isIdentifier(prop.name) &&
               prop.name.text === 'svgr'
           ) as ts.PropertyAssignment | undefined;
 
           if (svgrProp) {
             // It's an object with options
-            if (ts.isObjectLiteralExpression(svgrProp.initializer)) {
+            if (tsModule.isObjectLiteralExpression(svgrProp.initializer)) {
               svgrValue = {};
               for (const prop of svgrProp.initializer.properties) {
-                if (!ts.isPropertyAssignment(prop)) continue;
-                if (!ts.isIdentifier(prop.name)) continue;
+                if (!tsModule.isPropertyAssignment(prop)) continue;
+                if (!tsModule.isIdentifier(prop.name)) continue;
 
                 const key = prop.name.text;
-                if (prop.initializer.kind === ts.SyntaxKind.TrueKeyword) {
+                if (prop.initializer.kind === tsModule.SyntaxKind.TrueKeyword) {
                   svgrValue[key] = true;
                 } else if (
-                  prop.initializer.kind === ts.SyntaxKind.FalseKeyword
+                  prop.initializer.kind === tsModule.SyntaxKind.FalseKeyword
                 ) {
                   svgrValue[key] = false;
                 }
@@ -74,7 +82,7 @@ export default async function addSvgrToNextConfig(tree: Tree) {
             // It's a boolean
             else {
               svgrValue =
-                svgrProp.initializer.kind === ts.SyntaxKind.TrueKeyword;
+                svgrProp.initializer.kind === tsModule.SyntaxKind.TrueKeyword;
             }
           }
         }
@@ -108,16 +116,16 @@ export default async function addSvgrToNextConfig(tree: Tree) {
 
       const nxProp = objLiteral.properties.find(
         (prop) =>
-          ts.isPropertyAssignment(prop) &&
-          ts.isIdentifier(prop.name) &&
+          tsModule.isPropertyAssignment(prop) &&
+          tsModule.isIdentifier(prop.name) &&
           prop.name.text === 'nx'
       ) as ts.PropertyAssignment | undefined;
 
-      if (nxProp && ts.isObjectLiteralExpression(nxProp.initializer)) {
+      if (nxProp && tsModule.isObjectLiteralExpression(nxProp.initializer)) {
         const svgrProp = nxProp.initializer.properties.find(
           (prop) =>
-            ts.isPropertyAssignment(prop) &&
-            ts.isIdentifier(prop.name) &&
+            tsModule.isPropertyAssignment(prop) &&
+            tsModule.isIdentifier(prop.name) &&
             prop.name.text === 'svgr'
         ) as ts.PropertyAssignment | undefined;
 
@@ -257,7 +265,7 @@ export default async function addSvgrToNextConfig(tree: Tree) {
         const composeCall = composePluginsCalls[0] as ts.CallExpression;
 
         const spreadArg = composeCall.arguments.find((arg) =>
-          ts.isSpreadElement(arg)
+          tsModule.isSpreadElement(arg)
         ) as ts.SpreadElement | undefined;
 
         if (spreadArg) {

@@ -127,9 +127,17 @@ describe('readStaticJsEslintrc', () => {
     });
   });
 
-  it('should not throw on a syntactically invalid file', () => {
-    const result = read('module.exports = {');
-
-    expect(result.kind).toBe('unsupported');
+  it.each([
+    ['an unterminated object', `module.exports = {`, `'}' expected.`],
+    [
+      'TypeScript-only syntax',
+      `module.exports = { root: true } as any;`,
+      'Type assertion expressions can only be used in TypeScript files.',
+    ],
+  ])('should report the first syntax error of %s', (_, content, error) => {
+    expect(read(content)).toEqual({
+      kind: 'unsupported',
+      reason: `it could not be parsed (${error})`,
+    });
   });
 });

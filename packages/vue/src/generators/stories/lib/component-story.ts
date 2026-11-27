@@ -13,8 +13,9 @@ import {
   getDefinePropsObject,
 } from './utils';
 import { join } from 'path';
+import type { TypescriptAst } from '@nx/devkit/internal';
 
-let tsModule: typeof import('typescript');
+let tsModule: TypescriptAst;
 
 export function createComponentStories(
   host: Tree,

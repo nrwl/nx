@@ -2,7 +2,6 @@ import type { TSESLint } from '@typescript-eslint/utils';
 import { ESLintUtils } from '@typescript-eslint/utils';
 import type { AST } from 'jsonc-eslint-parser';
 import { readFileSync } from 'fs';
-import { query } from '@phenomnomnominal/tsquery';
 
 import {
   ProjectConfiguration,
@@ -11,12 +10,14 @@ import {
 } from '@nx/devkit';
 import { loadTsFile, requireWithTsconfigFallback } from '@nx/js/internal';
 import {
+  getTypescriptAst,
   ImplementationResolutionError,
   PromptResolutionError,
   resolveImplementation,
   resolvePrompt,
   resolveSchema,
   SchemaResolutionError,
+  query,
 } from '@nx/devkit/internal';
 import * as path from 'path';
 import { valid } from 'semver';
@@ -655,7 +656,7 @@ export function checkIfIdentifierIsFunction(
   identifier: string
 ): boolean {
   try {
-    const ts = require('typescript');
+    const ts = getTypescriptAst();
     const sourceCode = readFileSync(filePath, 'utf-8');
     const sourceFile = ts.createSourceFile(
       filePath,

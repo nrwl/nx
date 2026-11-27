@@ -1,5 +1,5 @@
 import { type Tree } from '@nx/devkit';
-import { ast, query } from '@phenomnomnominal/tsquery';
+import { ast, query } from '@nx/devkit/internal';
 
 export function transformPluginConfig(tree: Tree, configPath: string) {
   let contents = tree.read(configPath, 'utf-8');

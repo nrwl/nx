@@ -12,6 +12,7 @@ import { addImport } from './lib/add-import';
 import { ensureTypescript, getProjectType } from '@nx/js/internal';
 import { dirname, join, parse, relative } from 'path';
 import { assertSupportedReactNativeVersion } from '../../utils/versions';
+import type { TypescriptAst } from '@nx/devkit/internal';
 export async function reactNativeComponentGenerator(
   host: Tree,
   schema: Schema
@@ -49,7 +50,7 @@ function createComponentFiles(host: Tree, options: NormalizedSchema) {
   }
 }
 
-let tsModule: typeof import('typescript');
+let tsModule: TypescriptAst;
 
 function addExportsToBarrel(host: Tree, options: NormalizedSchema) {
   if (!tsModule) {

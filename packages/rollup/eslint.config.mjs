@@ -5,6 +5,13 @@ export default [
   ...baseConfig,
   { ignores: ['dist'] },
   {
+    // The TypeScript step loads the classic compiler.
+    files: ['src/plugins/with-nx/with-nx.ts'],
+    rules: {
+      '@nx/workspace-no-runtime-typescript-import': 'off',
+    },
+  },
+  {
     files: ['./package.json', './generators.json', './executors.json'],
     rules: {
       '@nx/nx-plugin-checks': 'error',

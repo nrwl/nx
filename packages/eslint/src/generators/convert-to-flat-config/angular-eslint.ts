@@ -8,7 +8,8 @@ import {
   type Tree,
 } from '@nx/devkit';
 import { coerce } from 'semver';
-import * as ts from 'typescript';
+import type * as ts from 'typescript';
+import { ensureTypescript, type TypescriptAst } from '@nx/devkit/internal';
 import {
   BASE_ESLINT_CONFIG_FILENAMES,
   ESLINT_FLAT_CONFIG_FILENAMES,
@@ -17,6 +18,8 @@ import {
   addImportToFlatConfig,
   removeImportFromFlatConfig,
 } from '../utils/flat-config/ast-utils';
+
+let tsModule: TypescriptAst;
 
 // angular-eslint v22 dropped the legacy eslintrc config format, so every
 // `plugin:@angular-eslint/*` shared config stops resolving. The converter emits
@@ -180,12 +183,13 @@ function rewriteAngularShims(
   content: string,
   flatAngularPresent: boolean
 ): { updated: string; introducedAngularRef: boolean } {
-  const source = ts.createSourceFile(
+  tsModule ??= ensureTypescript();
+  const source = tsModule.createSourceFile(
     '',
     content,
-    ts.ScriptTarget.Latest,
+    tsModule.ScriptTarget.Latest,
     true,
-    ts.ScriptKind.JS
+    tsModule.ScriptKind.JS
   );
 
   const changes: StringChange[] = [];
@@ -198,7 +202,10 @@ function rewriteAngularShims(
   };
 
   const visit = (node: ts.Node): void => {
-    if (ts.isSpreadElement(node) && ts.isCallExpression(node.expression)) {
+    if (
+      tsModule.isSpreadElement(node) &&
+      tsModule.isCallExpression(node.expression)
+    ) {
       // Shape 1: `...compat.extends('plugin:@angular-eslint/...', ...)`
       if (node.expression.expression.getText(source) === 'compat.extends') {
         const replacement = buildExtendsReplacement(node.expression.arguments);
@@ -220,7 +227,7 @@ function rewriteAngularShims(
       }
     }
 
-    ts.forEachChild(node, visit);
+    tsModule.forEachChild(node, visit);
   };
   visit(source);
 
@@ -233,20 +240,21 @@ function rewriteAngularShims(
 // Removes every `<rule>: ...` property assignment (with its trailing comma and
 // any trailing comment) so the config loads once the rule no longer exists.
 function removeRule(content: string, rule: string): string {
-  const source = ts.createSourceFile(
+  tsModule ??= ensureTypescript();
+  const source = tsModule.createSourceFile(
     '',
     content,
-    ts.ScriptTarget.Latest,
+    tsModule.ScriptTarget.Latest,
     true,
-    ts.ScriptKind.JS
+    tsModule.ScriptKind.JS
   );
 
   const changes: StringChange[] = [];
   const visit = (node: ts.Node): void => {
     if (
-      ts.isPropertyAssignment(node) &&
-      (ts.isStringLiteral(node.name) ||
-        ts.isNoSubstitutionTemplateLiteral(node.name)) &&
+      tsModule.isPropertyAssignment(node) &&
+      (tsModule.isStringLiteral(node.name) ||
+        tsModule.isNoSubstitutionTemplateLiteral(node.name)) &&
       node.name.text === rule
     ) {
       // `getStart` (not `getFullStart`) so leading trivia is left intact; that
@@ -258,7 +266,7 @@ function removeRule(content: string, rule: string): string {
         length: consumeTrailingComma(content, node.end) - start,
       });
     }
-    ts.forEachChild(node, visit);
+    tsModule.forEachChild(node, visit);
   };
   visit(source);
 
@@ -298,23 +306,24 @@ function buildConfigOverrideReplacement(
   source: ts.SourceFile,
   flatAngularPresent: boolean
 ): { text: string; introducedAngularRef: boolean } | null {
+  tsModule ??= ensureTypescript();
   const mapCall = node.expression;
   // Structural match (not `getText`) so it survives prettier wrapping the
   // `compat.config(...).map(...)` chain across lines in an already-formatted config.
   if (
-    !ts.isCallExpression(mapCall) ||
+    !tsModule.isCallExpression(mapCall) ||
     mapCall.arguments.length !== 1 ||
-    !ts.isArrowFunction(mapCall.arguments[0]) ||
-    !ts.isPropertyAccessExpression(mapCall.expression) ||
+    !tsModule.isArrowFunction(mapCall.arguments[0]) ||
+    !tsModule.isPropertyAccessExpression(mapCall.expression) ||
     mapCall.expression.name.text !== 'map' ||
-    !ts.isCallExpression(mapCall.expression.expression)
+    !tsModule.isCallExpression(mapCall.expression.expression)
   ) {
     return null;
   }
   const configCall = mapCall.expression.expression;
   if (
-    !ts.isPropertyAccessExpression(configCall.expression) ||
-    !ts.isIdentifier(configCall.expression.expression) ||
+    !tsModule.isPropertyAccessExpression(configCall.expression) ||
+    !tsModule.isIdentifier(configCall.expression.expression) ||
     configCall.expression.expression.text !== 'compat' ||
     configCall.expression.name.text !== 'config'
   ) {
@@ -324,20 +333,22 @@ function buildConfigOverrideReplacement(
   // Only handle a plain `{ extends: [...string literals] }` object; a block that
   // also carries plugins/env/etc. is left alone rather than partially rewritten.
   const configArg = configCall.arguments[0];
-  if (!configArg || !ts.isObjectLiteralExpression(configArg)) {
+  if (!configArg || !tsModule.isObjectLiteralExpression(configArg)) {
     return null;
   }
   const extendsProp = configArg.properties.find(
     (prop): prop is ts.PropertyAssignment =>
-      ts.isPropertyAssignment(prop) &&
-      ts.isIdentifier(prop.name) &&
+      tsModule.isPropertyAssignment(prop) &&
+      tsModule.isIdentifier(prop.name) &&
       prop.name.text === 'extends'
   );
   if (
     !extendsProp ||
     configArg.properties.length !== 1 ||
-    !ts.isArrayLiteralExpression(extendsProp.initializer) ||
-    !extendsProp.initializer.elements.every((el) => ts.isStringLiteral(el))
+    !tsModule.isArrayLiteralExpression(extendsProp.initializer) ||
+    !extendsProp.initializer.elements.every((el) =>
+      tsModule.isStringLiteral(el)
+    )
   ) {
     return null;
   }
@@ -363,21 +374,21 @@ function buildConfigOverrideReplacement(
   // The collapse branch strips the arrow's `...param` spreads by name, so the
   // param must be a plain identifier; bail otherwise rather than mangle the body.
   const mapParam = arrow.parameters[0]?.name;
-  if (!mapParam || !ts.isIdentifier(mapParam)) {
+  if (!mapParam || !tsModule.isIdentifier(mapParam)) {
     return null;
   }
   const paramName = mapParam.text;
   const body = arrow.body;
   if (
-    !ts.isParenthesizedExpression(body) ||
-    !ts.isObjectLiteralExpression(body.expression)
+    !tsModule.isParenthesizedExpression(body) ||
+    !tsModule.isObjectLiteralExpression(body.expression)
   ) {
     return null;
   }
   const filesProp = body.expression.properties.find(
     (prop): prop is ts.PropertyAssignment =>
-      ts.isPropertyAssignment(prop) &&
-      ts.isIdentifier(prop.name) &&
+      tsModule.isPropertyAssignment(prop) &&
+      tsModule.isIdentifier(prop.name) &&
       prop.name.text === 'files'
   );
   if (!filesProp) {
@@ -435,9 +446,10 @@ function buildConfigOverrideReplacement(
 function buildExtendsReplacement(
   args: ts.NodeArray<ts.Expression>
 ): string | null {
+  tsModule ??= ensureTypescript();
   // The converter only ever emits string-literal arguments; bail on anything
   // else rather than risk dropping an argument shape we don't understand.
-  if (!args.every((arg) => ts.isStringLiteral(arg))) {
+  if (!args.every((arg) => tsModule.isStringLiteral(arg))) {
     return null;
   }
 
@@ -498,23 +510,25 @@ function consumeTrailingComma(content: string, end: number): number {
 // its `baseDirectory` may be left unused. Drop each once nothing else references
 // it, so the config carries no dead FlatCompat scaffolding.
 function removeOrphanedFlatCompat(content: string): string {
+  tsModule ??= ensureTypescript();
   if (!content.includes('new FlatCompat')) {
     return content;
   }
 
-  const source = ts.createSourceFile(
+  const source = tsModule.createSourceFile(
     '',
     content,
-    ts.ScriptTarget.Latest,
+    tsModule.ScriptTarget.Latest,
     true,
-    ts.ScriptKind.JS
+    tsModule.ScriptKind.JS
   );
 
   const compatDeclaration = source.statements.find(
     (node): node is ts.VariableStatement =>
-      ts.isVariableStatement(node) &&
+      tsModule.isVariableStatement(node) &&
       node.declarationList.declarations.some(
-        (decl) => ts.isIdentifier(decl.name) && decl.name.text === 'compat'
+        (decl) =>
+          tsModule.isIdentifier(decl.name) && decl.name.text === 'compat'
       )
   );
 
@@ -562,17 +576,18 @@ function isSoleNamedImport(
   name: string,
   module: string
 ): boolean {
-  const source = ts.createSourceFile(
+  tsModule ??= ensureTypescript();
+  const source = tsModule.createSourceFile(
     '',
     content,
-    ts.ScriptTarget.Latest,
+    tsModule.ScriptTarget.Latest,
     true,
-    ts.ScriptKind.JS
+    tsModule.ScriptKind.JS
   );
   return source.statements.some((node) => {
     if (
-      !ts.isImportDeclaration(node) ||
-      !ts.isStringLiteral(node.moduleSpecifier) ||
+      !tsModule.isImportDeclaration(node) ||
+      !tsModule.isStringLiteral(node.moduleSpecifier) ||
       node.moduleSpecifier.text !== module
     ) {
       return false;
@@ -582,7 +597,7 @@ function isSoleNamedImport(
       !!clause &&
       !clause.name &&
       !!clause.namedBindings &&
-      ts.isNamedImports(clause.namedBindings) &&
+      tsModule.isNamedImports(clause.namedBindings) &&
       clause.namedBindings.elements.length === 1 &&
       clause.namedBindings.elements[0].name.text === name
     );
@@ -592,19 +607,20 @@ function isSoleNamedImport(
 // Counts identifiers with the given name (declarations, bindings, and
 // references alike) so callers can tell an orphaned binding from a live one.
 function countIdentifier(content: string, name: string): number {
-  const source = ts.createSourceFile(
+  tsModule ??= ensureTypescript();
+  const source = tsModule.createSourceFile(
     '',
     content,
-    ts.ScriptTarget.Latest,
+    tsModule.ScriptTarget.Latest,
     true,
-    ts.ScriptKind.JS
+    tsModule.ScriptKind.JS
   );
   let count = 0;
   const visit = (node: ts.Node): void => {
-    if (ts.isIdentifier(node) && node.text === name) {
+    if (tsModule.isIdentifier(node) && node.text === name) {
       count++;
     }
-    ts.forEachChild(node, visit);
+    tsModule.forEachChild(node, visit);
   };
   visit(source);
 

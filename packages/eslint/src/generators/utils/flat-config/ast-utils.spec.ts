@@ -1,4 +1,4 @@
-import * as ts from 'typescript';
+import { ensureTypescript, printNode } from '@nx/devkit/internal';
 import {
   addBlockToFlatConfigExport,
   addFlatCompatToFlatConfig,
@@ -17,23 +17,15 @@ import {
 } from './ast-utils';
 import { stripIndents } from '@nx/devkit';
 
+const ts = ensureTypescript();
+
 describe('ast-utils', () => {
-  const printer = ts.createPrinter();
-
-  function printTsNode(node: ts.Node) {
-    return printer.printNode(
-      ts.EmitHint.Unspecified,
-      node,
-      ts.createSourceFile('test.ts', '', ts.ScriptTarget.Latest)
-    );
-  }
-
   describe('generateFlatOverride', () => {
     it('should create appropriate ASTs for a flat config entries based on the provided legacy eslintrc JSON override data', () => {
       // It's easier to review the stringified result of the AST than the AST itself
       const getOutput = (input: any) => {
         const ast = generateFlatOverride(input, 'mjs');
-        return printTsNode(ast);
+        return printNode(ast);
       };
 
       expect(getOutput({})).toMatchInlineSnapshot(`"{}"`);
@@ -306,27 +298,25 @@ describe('ast-utils', () => {
       );
       expect(result).toMatchInlineSnapshot(`
         "import baseConfig from "../../eslint.config.mjs";
-
-        export default [
-            ...baseConfig,
-            {
-                files: [
-                    "my-lib/**/*.ts",
-                    "my-lib/**/*.tsx"
-                ],
-                rules: {}
-            },
-            { ignores: ["my-lib/.cache/**/*"] },
-            {
-                files: [
-                    "**/*.svg"
-                ],
-                rules: {
-                    "@nx/do-something-with-svg": "error"
-                }
-            }
-        ];
-        "
+            export default [
+                ...baseConfig,
+                {
+                    files: [
+                        "my-lib/**/*.ts",
+                        "my-lib/**/*.tsx"
+                    ],
+                    rules: {}
+                },
+                { ignores: ["my-lib/.cache/**/*"] },
+                {
+                    files: [
+                        "**/*.svg"
+                    ],
+                    rules: {
+                        "@nx/do-something-with-svg": "error"
+                    }
+                },
+            ];"
       `);
     });
 
@@ -350,20 +340,18 @@ describe('ast-utils', () => {
       );
       expect(result).toMatchInlineSnapshot(`
         "import baseConfig from "../../eslint.config.mjs";
-
-        export default [
-            ...config,
-            ...baseConfig,
-            {
-                files: [
-                    "my-lib/**/*.ts",
-                    "my-lib/**/*.tsx"
-                ],
-                rules: {}
-            },
-            { ignores: ["my-lib/.cache/**/*"] }
-        ];
-        "
+            export default [
+                ...config,
+                ...baseConfig,
+                {
+                    files: [
+                        "my-lib/**/*.ts",
+                        "my-lib/**/*.tsx"
+                    ],
+                    rules: {}
+                },
+                { ignores: ["my-lib/.cache/**/*"] },
+            ];"
       `);
     });
 
@@ -383,16 +371,14 @@ describe('ast-utils', () => {
       );
       expect(result).toMatchInlineSnapshot(`
         "import baseConfig from "../../eslint.config.mjs";
-
-        export default [
-            ...nx.configs["flat/react"],
-            ...baseConfig,
-            {
-                files: ["**/*.ts"],
-                rules: {}
-            }
-        ];
-        "
+            export default [
+                ...nx.configs["flat/react"],
+                ...baseConfig,
+                {
+                    files: ["**/*.ts"],
+                    rules: {}
+                },
+            ];"
       `);
     });
 
@@ -409,13 +395,11 @@ describe('ast-utils', () => {
       );
       expect(result).toMatchInlineSnapshot(`
         "import nx from "@nx/eslint-plugin";
-
-        export default [
-            ...nx.configs["flat/base"],
-            ...nx.configs["flat/typescript"],
-            ...nx.configs["flat/react"]
-        ];
-        "
+            export default [
+                ...nx.configs["flat/base"],
+                ...nx.configs["flat/typescript"],
+                ...nx.configs["flat/react"],
+            ];"
       `);
     });
 
@@ -1783,7 +1767,7 @@ export default [
     it('should return spread element with fixupConfigRules call wrapping the extended plugin', () => {
       const result = generatePluginExtendsElementWithCompatFixup('my-plugin');
 
-      expect(printTsNode(result)).toMatchInlineSnapshot(
+      expect(printNode(result)).toMatchInlineSnapshot(
         `"...fixupConfigRules(compat.extends("my-plugin"))"`
       );
     });

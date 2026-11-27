@@ -1,14 +1,30 @@
 import type { TargetConfiguration, Tree } from '@nx/devkit';
 import {
+  ensureTypescript,
+  printNodeUpdate,
   processTargetOutputs,
   toProjectRelativePath,
+  ast,
+  query,
+  type TypescriptAst,
 } from '@nx/devkit/internal';
-import { ast, query } from '@phenomnomnominal/tsquery';
-import * as ts from 'typescript';
+import type {
+  CallExpression,
+  NewExpression,
+  ObjectLiteralExpression,
+  SourceFile,
+  VariableStatement,
+} from 'typescript';
 import type { WebpackExecutorOptions } from '../../../executors/webpack/schema';
 import type { NxAppWebpackPluginOptions } from '../../../plugins/nx-webpack-plugin/nx-app-webpack-plugin-options';
-import { hasMigratedConfigValues, toPropertyAssignment } from './ast';
+import {
+  hasMigratedConfigValues,
+  toPropertyAssignment,
+  toPropertyName,
+} from './ast';
 import type { MigrationContext, TransformerContext } from './types';
+
+let ts: TypescriptAst;
 
 export function buildPostTargetTransformerFactory(
   migrationContext: MigrationContext
@@ -169,7 +185,7 @@ function updateWebpackConfig(
   webpackConfig: string,
   pluginOptions: ExtractedOptions
 ): void {
-  let sourceFile: ts.SourceFile;
+  let sourceFile: SourceFile;
   let webpackConfigText: string;
 
   const updateSources = () => {
@@ -212,21 +228,22 @@ function updateWebpackConfig(
 function setOptionsInWebpackConfig(
   tree: Tree,
   text: string,
-  sourceFile: ts.SourceFile,
+  sourceFile: SourceFile,
   webpackConfig: string,
   pluginOptions: ExtractedOptions
 ): void {
+  ts ??= ensureTypescript();
   const { default: defaultOptions, ...configurationOptions } = pluginOptions;
 
   const optionsSelector =
     'VariableStatement:has(VariableDeclaration:has(Identifier[name=options]))';
-  let optionsVariable = query<ts.VariableStatement>(
+  let optionsVariable = query<VariableStatement>(
     sourceFile,
     optionsSelector
   )[0];
 
   if (!optionsVariable) {
-    const plugin = query<ts.NewExpression>(
+    const plugin = query<NewExpression>(
       sourceFile,
       'NewExpression:has(Identifier[name=NxAppWebpackPlugin])'
     )[0];
@@ -238,19 +255,17 @@ function setOptionsInWebpackConfig(
     }
     text = `const options = ${argument?.getText(sourceFile) ?? '{}'};\n${text}`;
     sourceFile = ast(text);
-    optionsVariable = query<ts.VariableStatement>(
-      sourceFile,
-      optionsSelector
-    )[0];
+    optionsVariable = query<VariableStatement>(sourceFile, optionsSelector)[0];
   }
 
-  let defaultOptionsObject: ts.ObjectLiteralExpression;
-  const optionsObject = query<ts.ObjectLiteralExpression>(
+  let defaultOptionsObject: ObjectLiteralExpression;
+  const optionsObject = query<ObjectLiteralExpression>(
     optionsVariable,
     'ObjectLiteralExpression'
   )[0];
   if (optionsObject.properties.length === 0) {
-    defaultOptionsObject = ts.factory.createObjectLiteralExpression(
+    defaultOptionsObject = ts.factory.updateObjectLiteralExpression(
+      optionsObject,
       Object.entries(defaultOptions).map(([key, value]) =>
         toPropertyAssignment(key, value)
       )
@@ -267,12 +282,15 @@ function setOptionsInWebpackConfig(
             property.name.text === key
         )
     );
-    defaultOptionsObject = ts.factory.createObjectLiteralExpression([
-      ...optionsObject.properties,
-      ...filteredDefaultOptions.map(([key, value]) =>
-        toPropertyAssignment(key, value)
-      ),
-    ]);
+    defaultOptionsObject = ts.factory.updateObjectLiteralExpression(
+      optionsObject,
+      [
+        ...optionsObject.properties,
+        ...filteredDefaultOptions.map(([key, value]) =>
+          toPropertyAssignment(key, value)
+        ),
+      ]
+    );
   }
 
   /**
@@ -303,7 +321,7 @@ function setOptionsInWebpackConfig(
                   ...(configurationOptions
                     ? Object.entries(configurationOptions).map(([key, value]) =>
                         ts.factory.createPropertyAssignment(
-                          key,
+                          toPropertyName(key),
                           ts.factory.createObjectLiteralExpression(
                             Object.entries(value).map(([key, value]) =>
                               toPropertyAssignment(key, value)
@@ -326,10 +344,8 @@ function setOptionsInWebpackConfig(
   text = `${text.slice(0, optionsVariable.getStart())}
     // These options were migrated by @nx/webpack:convert-to-inferred from
     // the project.json file and merged with the options in this file
-    ${ts
-      .createPrinter()
-      .printNode(ts.EmitHint.Unspecified, configValuesVariable, sourceFile)}
-    
+    ${printNodeUpdate(optionsVariable, configValuesVariable)}
+
     // Determine the correct configValue to use based on the configuration
     const configuration = process.env.NX_TASK_TARGET_CONFIGURATION || 'default';
 
@@ -355,12 +371,13 @@ function setOptionsInWebpackConfig(
 function setOptionsInNxWebpackPlugin(
   tree: Tree,
   text: string,
-  sourceFile: ts.SourceFile,
+  sourceFile: SourceFile,
   webpackConfig: string
 ): void {
+  ts ??= ensureTypescript();
   const nxAppWebpackPluginSelector =
     'PropertyAssignment:has(Identifier[name=plugins]) NewExpression:has(Identifier[name=NxAppWebpackPlugin])';
-  const nxAppWebpackPlugin = query<ts.NewExpression>(
+  const nxAppWebpackPlugin = query<NewExpression>(
     sourceFile,
     nxAppWebpackPluginSelector
   )[0];
@@ -373,13 +390,10 @@ function setOptionsInNxWebpackPlugin(
     [ts.factory.createIdentifier('buildOptions')]
   );
 
-  text = `${text.slice(0, nxAppWebpackPlugin.getStart())}${ts
-    .createPrinter()
-    .printNode(
-      ts.EmitHint.Unspecified,
-      updatedNxAppWebpackPlugin,
-      sourceFile
-    )}${text.slice(nxAppWebpackPlugin.getEnd())}`;
+  text = `${text.slice(0, nxAppWebpackPlugin.getStart())}${printNodeUpdate(
+    nxAppWebpackPlugin,
+    updatedNxAppWebpackPlugin
+  )}${text.slice(nxAppWebpackPlugin.getEnd())}`;
 
   tree.write(webpackConfig, text);
 }
@@ -387,12 +401,13 @@ function setOptionsInNxWebpackPlugin(
 function setOptionsInLegacyNxPlugin(
   tree: Tree,
   text: string,
-  sourceFile: ts.SourceFile,
+  sourceFile: SourceFile,
   webpackConfig: string
 ): void {
+  ts ??= ensureTypescript();
   const legacyNxPluginSelector =
     'AwaitExpression CallExpression:has(Identifier[name=useLegacyNxPlugin])';
-  const legacyNxPlugin = query<ts.CallExpression>(
+  const legacyNxPlugin = query<CallExpression>(
     sourceFile,
     legacyNxPluginSelector
   )[0];
@@ -406,13 +421,10 @@ function setOptionsInLegacyNxPlugin(
     [legacyNxPlugin.arguments[0], ts.factory.createIdentifier('buildOptions')]
   );
 
-  text = `${text.slice(0, legacyNxPlugin.getStart())}${ts
-    .createPrinter()
-    .printNode(
-      ts.EmitHint.Unspecified,
-      updatedLegacyNxPlugin,
-      sourceFile
-    )}${text.slice(legacyNxPlugin.getEnd())}`;
+  text = `${text.slice(0, legacyNxPlugin.getStart())}${printNodeUpdate(
+    legacyNxPlugin,
+    updatedLegacyNxPlugin
+  )}${text.slice(legacyNxPlugin.getEnd())}`;
 
   tree.write(webpackConfig, text);
 }

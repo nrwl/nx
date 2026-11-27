@@ -1,5 +1,5 @@
-import { query, replace } from '@phenomnomnominal/tsquery';
-import { ObjectLiteralExpression, PropertyAssignment } from 'typescript';
+import { query, replace } from '@nx/devkit/internal';
+import type { ObjectLiteralExpression, PropertyAssignment } from 'typescript';
 
 /**
  * match testing file based on their name file
@@ -27,8 +27,8 @@ export function addTransformerToConfig(
       `${TS_QUERY_JEST_CONFIG_PREFIX} > ObjectLiteralExpression`,
       (node: ObjectLiteralExpression) => {
         return `{
-${node.properties.map((p) => p.getText()).join(',\n')},
-transform: { ${transformer} }
+  ${node.properties.map((p) => p.getText()).join(',\n  ')},
+  transform: { ${transformer} }
 }`;
       }
     );

@@ -377,6 +377,87 @@ describe('convert-to-inferred', () => {
       expect(content).not.toContain('useLegacyNxPlugin');
     });
 
+    it('should convert a config whose options already set every build option and whose plugin has no arguments', async () => {
+      const project: ProjectConfiguration = {
+        name: 'app1',
+        root: 'apps/app1',
+        projectType: 'application',
+        targets: {
+          build: {
+            executor: '@nx/webpack:webpack',
+            options: {
+              webpackConfig: 'apps/app1/webpack.config.js',
+              main: 'apps/app1/src/main.ts',
+            },
+          },
+        },
+      };
+      addProject(tree, project.name, project);
+      fs.createFileSync(
+        `${project.root}/project.json`,
+        JSON.stringify(project)
+      );
+      writeWebpackConfig(
+        tree,
+        project.root,
+        `const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
+const options = {
+  main: './src/main.ts',
+};
+module.exports = { plugins: [new NxAppWebpackPlugin] };
+`
+      );
+
+      await convertToInferred(tree, { project: project.name });
+
+      const config = tree.read(`${project.root}/webpack.config.js`, 'utf-8');
+      expect(config).toContain(
+        `build: {\n    default: {\n      main: './src/main.ts',\n    },\n  },`
+      );
+      expect(config).toContain(
+        'module.exports = { plugins: [new NxAppWebpackPlugin(buildOptions)] };'
+      );
+    });
+
+    it('should quote configuration names that are not identifiers', async () => {
+      const project = createProject(tree);
+      project.targets.build.configurations['production-fr'] = {
+        sourceMap: false,
+      };
+      project.targets.serve.configurations['production-fr'] = { hmr: false };
+      updateProjectConfiguration(tree, project.name, project);
+      fs.createFileSync(
+        `${project.root}/project.json`,
+        JSON.stringify(project)
+      );
+      writeWebpackConfig(tree, project.root);
+
+      await convertToInferred(tree, { project: project.name });
+
+      const config = tree.read(`${project.root}/webpack.config.js`, 'utf-8');
+      expect(config).toContain(`'production-fr': { sourceMap: false }`);
+      expect(config).toContain(`'production-fr': { hot: false }`);
+    });
+
+    it('should keep the comments in an options object that has no properties', async () => {
+      const project = createProject(tree);
+      writeWebpackConfig(
+        tree,
+        project.root,
+        `const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
+const options = {
+  // TODO: add options once the app grows
+};
+module.exports = { plugins: [new NxAppWebpackPlugin(options)] };
+`
+      );
+
+      await convertToInferred(tree, { project: project.name });
+
+      const config = tree.read(`${project.root}/webpack.config.js`, 'utf-8');
+      expect(config).toContain('// TODO: add options once the app grows');
+    });
+
     it('should register plugin in nx.json', async () => {
       const project = createProject(tree);
       writeWebpackConfig(tree, project.root);

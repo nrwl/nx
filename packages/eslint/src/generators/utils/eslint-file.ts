@@ -10,6 +10,13 @@ import {
   type Tree,
   updateJson,
 } from '@nx/devkit';
+import {
+  ensureTypescript,
+  withSourceFileChecker,
+  type SourceFileChecker,
+  type SourceFileSymbol,
+  type TypescriptAst,
+} from '@nx/devkit/internal';
 import type { Linter } from 'eslint';
 import {
   baseEsLintConfigFile,
@@ -44,8 +51,24 @@ import {
   replaceOverride,
 } from './flat-config/ast-utils';
 import { mapFilePath } from './flat-config/path-utils';
-import ts = require('typescript');
 import { dirname, extname } from 'node:path/posix';
+import type {
+  ArrowFunction,
+  BinaryOperatorToken,
+  ElementAccessExpression,
+  Expression,
+  FunctionExpression,
+  Node,
+  ObjectLiteralElementLike,
+  ObjectLiteralExpression,
+  PropertyAccessExpression,
+  PropertyName,
+  ShorthandPropertyAssignment,
+  SourceFile,
+  SpreadElement,
+} from 'typescript';
+
+let ts: TypescriptAst;
 
 export function findEslintFile(
   tree: Tree,
@@ -225,6 +248,7 @@ function determineEslintConfigFormatForFile(
 }
 
 export function determineEslintConfigFormat(content: string): 'mjs' | 'cjs' {
+  ts ??= ensureTypescript();
   const sourceFile = ts.createSourceFile(
     '',
     content,
@@ -419,19 +443,32 @@ function isFalsyValue(value: unknown): boolean {
   return value === false || value === null || value === undefined;
 }
 
+/**
+ * Reads the config with a type checker attached, so a `parserOptions` written
+ * as a reference resolves under real scope rules (shadowing, destructuring,
+ * parameters, imports) rather than an approximation of them.
+ */
 function findParserOptionsInSource(content: string): ParserOptionsReading[] {
-  const { source, checker } = parseSource(content);
-  const configs = findConfigExpressions(source);
-  if (configs.length === 0) {
-    // No recognizable export (e.g. a `.eslintrc.js` legacy config, or a
-    // tokenizer-only fixture): scan the whole source. That can read a
-    // `parserOptions` from a declaration the config never uses, but a real flat
-    // config exports its array, so the structured walk covers those.
-    return collectParserOptions(source, checker, new Set());
-  }
-  const seen = new Set<ts.Node>();
+  ts ??= ensureTypescript();
+  // Parsed as TS: flat configs may be `.ts`/`.cts`/`.mts`, and TS is a
+  // superset, so the same parse covers the `.js` variants.
+  return withSourceFileChecker(
+    'eslint.config.ts',
+    content,
+    (source, checker) => {
+      const configs = findConfigExpressions(source);
+      if (configs.length === 0) {
+        // No recognizable export (e.g. a `.eslintrc.js` legacy config, or a
+        // tokenizer-only fixture): scan the whole source. That can read a
+        // `parserOptions` from a declaration the config never uses, but a real flat
+        // config exports its array, so the structured walk covers those.
+        return collectParserOptions(source, checker, new Set());
+      }
+      const seen = new Set<Node>();
 
-  return configs.flatMap((config) => walkValue(config, checker, seen));
+      return configs.flatMap((config) => walkValue(config, checker, seen));
+    }
+  );
 }
 
 /**
@@ -439,8 +476,8 @@ function findParserOptionsInSource(content: string): ParserOptionsReading[] {
  * and `module.exports = <expr>`. Only exports declared in this file, so an export
  * assembled in another module names nothing this walk reads.
  */
-function findConfigExpressions(source: ts.SourceFile): ts.Expression[] {
-  const expressions: ts.Expression[] = [];
+function findConfigExpressions(source: SourceFile): Expression[] {
+  const expressions: Expression[] = [];
   for (const statement of source.statements) {
     if (ts.isExportAssignment(statement)) {
       expressions.push(statement.expression);
@@ -458,7 +495,7 @@ function findConfigExpressions(source: ts.SourceFile): ts.Expression[] {
 }
 
 /** The `module.exports` target of a CommonJS config's top-level assignment. */
-function isModuleExports(node: ts.Expression): boolean {
+function isModuleExports(node: Expression): boolean {
   return (
     ts.isPropertyAccessExpression(node) &&
     ts.isIdentifier(node.expression) &&
@@ -475,7 +512,7 @@ const IGNORED_CONFIG_KEYS = new Set(['rules', 'settings', 'plugins']);
  * carry an object with a `parserOptions` key that configures something else;
  * ESLint reads parser options only from `languageOptions`.
  */
-function isIgnoredConfigKey(name: ts.PropertyName): boolean {
+function isIgnoredConfigKey(name: PropertyName): boolean {
   return IGNORED_CONFIG_KEYS.has(getPropertyName(name) ?? '');
 }
 
@@ -495,9 +532,9 @@ function isIgnoredConfigKey(name: ts.PropertyName): boolean {
  * arbitrary function whose arguments stay unread.
  */
 function walkValue(
-  expression: ts.Expression,
-  checker: ts.TypeChecker,
-  seen: Set<ts.Node>,
+  expression: Expression,
+  checker: SourceFileChecker,
+  seen: Set<Node>,
   inConfigPosition = true
 ): ParserOptionsReading[] {
   const value = resolveExpressionValue(expression, checker, seen);
@@ -571,7 +608,7 @@ function walkValue(
 }
 
 /** The `&&`, `||` and `??` operators, whose result is one of their operands. */
-function isShortCircuit(operator: ts.BinaryOperatorToken): boolean {
+function isShortCircuit(operator: BinaryOperatorToken): boolean {
   return (
     operator.kind === ts.SyntaxKind.AmpersandAmpersandToken ||
     operator.kind === ts.SyntaxKind.BarBarToken ||
@@ -581,13 +618,13 @@ function isShortCircuit(operator: ts.BinaryOperatorToken): boolean {
 
 /** The values an inline function returns: a concise arrow body, or each `return`. */
 function returnedExpressions(
-  fn: ts.ArrowFunction | ts.FunctionExpression
-): ts.Expression[] {
+  fn: ArrowFunction | FunctionExpression
+): Expression[] {
   if (!ts.isBlock(fn.body)) {
     return [fn.body];
   }
-  const expressions: ts.Expression[] = [];
-  const visit = (node: ts.Node): void => {
+  const expressions: Expression[] = [];
+  const visit = (node: Node): void => {
     if (ts.isReturnStatement(node)) {
       if (node.expression) {
         expressions.push(node.expression);
@@ -608,9 +645,9 @@ function returnedExpressions(
 
 /** The `parserOptions` a single config-object property contributes. */
 function walkProperty(
-  property: ts.ObjectLiteralElementLike,
-  checker: ts.TypeChecker,
-  seen: Set<ts.Node>
+  property: ObjectLiteralElementLike,
+  checker: SourceFileChecker,
+  seen: Set<Node>
 ): ParserOptionsReading[] {
   if (ts.isSpreadAssignment(property)) {
     return walkValue(property.expression, checker, seen, false);
@@ -651,12 +688,12 @@ function walkProperty(
  * a spread of another module names no file this walk reads.
  */
 function collectParserOptions(
-  root: ts.Node,
-  checker: ts.TypeChecker,
-  localSeen: Set<ts.Node>
+  root: Node,
+  checker: SourceFileChecker,
+  localSeen: Set<Node>
 ): ParserOptionsReading[] {
   const blocks: ParserOptionsReading[] = [];
-  const visit = (node: ts.Node): void => {
+  const visit = (node: Node): void => {
     if (ts.isPropertyAssignment(node) && isIgnoredConfigKey(node.name)) {
       return;
     }
@@ -682,10 +719,10 @@ function collectParserOptions(
  * `const a = b; const b = a`.
  */
 function resolveExpressionValue(
-  expression: ts.Expression,
-  checker: ts.TypeChecker,
-  seen: Set<ts.Node>
-): ts.Expression | null {
+  expression: Expression,
+  checker: SourceFileChecker,
+  seen: Set<Node>
+): Expression | null {
   const unwrapped = unwrapExpression(expression);
   if (
     ts.isPropertyAccessExpression(unwrapped) ||
@@ -719,9 +756,9 @@ function resolveExpressionValue(
  * so sibling accesses on the same registry don't shadow one another.
  */
 function resolveMemberValue(
-  access: ts.PropertyAccessExpression | ts.ElementAccessExpression,
-  checker: ts.TypeChecker
-): ts.Expression | null {
+  access: PropertyAccessExpression | ElementAccessExpression,
+  checker: SourceFileChecker
+): Expression | null {
   const key = memberKey(access);
   if (key === null) {
     return null;
@@ -744,16 +781,16 @@ function resolveMemberValue(
  * reached again through a sibling spread still gets read.
  */
 function lookupObjectKey(
-  object: ts.ObjectLiteralExpression,
+  object: ObjectLiteralExpression,
   key: string,
-  checker: ts.TypeChecker,
-  seen: Set<ts.Node>
-): { found: boolean; value: ts.Expression | null } {
+  checker: SourceFileChecker,
+  seen: Set<Node>
+): { found: boolean; value: Expression | null } {
   if (seen.has(object)) {
     return { found: false, value: null };
   }
   seen.add(object);
-  let result: { found: boolean; value: ts.Expression | null } = {
+  let result: { found: boolean; value: Expression | null } = {
     found: false,
     value: null,
   };
@@ -787,9 +824,9 @@ function lookupObjectKey(
 
 /** The initializer a shorthand property's binding was declared with. */
 function shorthandValue(
-  property: ts.ShorthandPropertyAssignment,
-  checker: ts.TypeChecker
-): ts.Expression | null {
+  property: ShorthandPropertyAssignment,
+  checker: SourceFileChecker
+): Expression | null {
   const declaration =
     checker.getShorthandAssignmentValueSymbol(property)?.declarations?.[0];
 
@@ -802,7 +839,7 @@ function shorthandValue(
 
 /** The static key of a member access, or `null` for a dynamic one. */
 function memberKey(
-  access: ts.PropertyAccessExpression | ts.ElementAccessExpression
+  access: PropertyAccessExpression | ElementAccessExpression
 ): string | null {
   if (ts.isPropertyAccessExpression(access)) {
     return access.name.text;
@@ -817,9 +854,9 @@ function memberKey(
 
 /** A local array the config spreads in; its entries belong to this config. */
 function followLocalSpread(
-  expression: ts.Expression,
-  checker: ts.TypeChecker,
-  localSeen: Set<ts.Node>
+  expression: Expression,
+  checker: SourceFileChecker,
+  localSeen: Set<Node>
 ): ParserOptionsReading[] {
   // Only a name needs following. An inline array is already being walked as
   // part of the surrounding config, so resolving it again would double-count.
@@ -835,48 +872,8 @@ function followLocalSpread(
   return value ? collectParserOptions(value, checker, localSeen) : [];
 }
 
-/**
- * Parses the config with a type checker attached, so a `parserOptions` written
- * as a reference resolves under real scope rules (shadowing, destructuring,
- * parameters, imports) rather than an approximation of them. One in-memory
- * file, no lib and no module resolution, so nothing reads from disk.
- */
-function parseSource(content: string): {
-  source: ts.SourceFile;
-  checker: ts.TypeChecker;
-} {
-  // Parsed as TS: flat configs may be `.ts`/`.cts`/`.mts`, and TS is a superset,
-  // so the same parse covers the `.js` variants.
-  const fileName = 'eslint.config.ts';
-  const source = ts.createSourceFile(
-    fileName,
-    content,
-    ts.ScriptTarget.Latest,
-    true,
-    ts.ScriptKind.TS
-  );
-  const host: ts.CompilerHost = {
-    getSourceFile: (name) => (name === fileName ? source : undefined),
-    getDefaultLibFileName: () => 'lib.d.ts',
-    writeFile: () => {},
-    getCurrentDirectory: () => '',
-    getCanonicalFileName: (name) => name,
-    useCaseSensitiveFileNames: () => true,
-    getNewLine: () => '\n',
-    fileExists: (name) => name === fileName,
-    readFile: (name) => (name === fileName ? content : undefined),
-  };
-  const program = ts.createProgram(
-    [fileName],
-    { noLib: true, allowJs: true, types: [] },
-    host
-  );
-
-  return { source, checker: program.getTypeChecker() };
-}
-
 /** A `parserOptions` property, whether written in full or by ES shorthand. */
-function isParserOptionsProperty(node: ts.Node): boolean {
+function isParserOptionsProperty(node: Node): boolean {
   return (
     (ts.isShorthandPropertyAssignment(node) &&
       node.name.text === 'parserOptions') ||
@@ -892,9 +889,9 @@ function isParserOptionsProperty(node: ts.Node): boolean {
  * an unused declaration configures nothing.
  */
 function getParserOptionsObject(
-  node: ts.Node,
-  checker: ts.TypeChecker
-): ts.ObjectLiteralExpression | null {
+  node: Node,
+  checker: SourceFileChecker
+): ObjectLiteralExpression | null {
   if (
     ts.isShorthandPropertyAssignment(node) &&
     node.name.text === 'parserOptions'
@@ -919,7 +916,7 @@ function getParserOptionsObject(
  * literal behind `as const`, `satisfies`, a non-null assertion or parentheses is
  * still read as one.
  */
-function unwrapExpression(node: ts.Expression): ts.Expression {
+function unwrapExpression(node: Expression): Expression {
   let current = node;
   while (
     ts.isParenthesizedExpression(current) ||
@@ -942,10 +939,10 @@ function unwrapExpression(node: ts.Expression): ts.Expression {
  * guards against a cycle such as `const a = b; const b = a`.
  */
 function resolveObjectExpression(
-  expression: ts.Expression,
-  checker: ts.TypeChecker,
-  seen: Set<ts.Node>
-): ts.ObjectLiteralExpression | null {
+  expression: Expression,
+  checker: SourceFileChecker,
+  seen: Set<Node>
+): ObjectLiteralExpression | null {
   const unwrapped = unwrapExpression(expression);
   if (ts.isObjectLiteralExpression(unwrapped)) {
     return unwrapped;
@@ -972,10 +969,10 @@ function resolveObjectExpression(
 
 /** The object literal behind a resolved name, if it was declared with one. */
 function resolveSymbolObject(
-  symbol: ts.Symbol | undefined,
-  checker: ts.TypeChecker,
-  seen: Set<ts.Node>
-): ts.ObjectLiteralExpression | null {
+  symbol: SourceFileSymbol | undefined,
+  checker: SourceFileChecker,
+  seen: Set<Node>
+): ObjectLiteralExpression | null {
   const declaration = symbol?.declarations?.[0];
   return declaration &&
     ts.isVariableDeclaration(declaration) &&
@@ -992,11 +989,11 @@ function resolveSymbolObject(
  * while the same object spread again later still gets read.
  */
 function flattenProperties(
-  node: ts.ObjectLiteralExpression,
-  checker: ts.TypeChecker,
-  seen: Set<ts.Node>
-): { properties: Map<string, ts.Expression | null>; unreadable: boolean } {
-  const properties = new Map<string, ts.Expression | null>();
+  node: ObjectLiteralExpression,
+  checker: SourceFileChecker,
+  seen: Set<Node>
+): { properties: Map<string, Expression | null>; unreadable: boolean } {
+  const properties = new Map<string, Expression | null>();
   let unreadable = false;
   if (seen.has(node)) {
     return { properties, unreadable };
@@ -1039,8 +1036,8 @@ function flattenProperties(
 }
 
 function readParserOptions(
-  node: ts.ObjectLiteralExpression,
-  checker: ts.TypeChecker
+  node: ObjectLiteralExpression,
+  checker: SourceFileChecker
 ): ParserOptions {
   const { properties, unreadable } = flattenProperties(
     node,
@@ -1063,7 +1060,7 @@ function readParserOptions(
   };
 }
 
-function getPropertyName(name: ts.PropertyName): string | null {
+function getPropertyName(name: PropertyName): string | null {
   return ts.isIdentifier(name) ||
     ts.isStringLiteral(name) ||
     ts.isNumericLiteral(name)
@@ -1071,7 +1068,7 @@ function getPropertyName(name: ts.PropertyName): string | null {
     : null;
 }
 
-function isFalsyLiteral(node: ts.Expression | null): boolean {
+function isFalsyLiteral(node: Expression | null): boolean {
   if (!node) {
     return false;
   }
@@ -1344,7 +1341,7 @@ export function addExtendsToLintConfig(
   insertAtTheEnd = false
 ): GeneratorCallback {
   if (useFlatConfig(tree)) {
-    const pluginExtends: ts.SpreadElement[] = [];
+    const pluginExtends: SpreadElement[] = [];
     let fileName: string | undefined;
     for (const f of eslintFlatConfigFilenames) {
       if (tree.exists(joinPathFragments(root, f))) {
@@ -1524,6 +1521,7 @@ export function addPluginConfigToFlatLintConfig(
   configName: string,
   options: { insertAtTheEnd?: boolean; checkBaseConfig?: boolean } = {}
 ): boolean {
+  ts ??= ensureTypescript();
   return addImportedConfigToFlatLintConfig(
     tree,
     root,
@@ -1545,7 +1543,7 @@ function addImportedConfigToFlatLintConfig(
   root: string,
   variableName: string,
   importPath: string,
-  element: ts.Expression,
+  element: Expression,
   options: { insertAtTheEnd?: boolean; checkBaseConfig?: boolean }
 ): boolean {
   const { insertAtTheEnd = true, checkBaseConfig = false } = options;
@@ -1639,7 +1637,7 @@ export function addIgnoresToLintConfig(
       content = addPatternsToFlatConfigIgnoresBlock(content, ignorePatterns);
       tree.write(fileName, content);
     } else {
-      const block = generateAst<ts.ObjectLiteralExpression>({
+      const block = generateAst<ObjectLiteralExpression>({
         ignores: ignorePatterns.map((path) => mapFilePath(path)),
       });
       tree.write(fileName, addBlockToFlatConfigExport(content, block));

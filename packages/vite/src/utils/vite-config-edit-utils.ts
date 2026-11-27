@@ -4,6 +4,7 @@ import {
   Tree,
   type StringChange,
 } from '@nx/devkit';
+import type { TypescriptAst } from '@nx/devkit/internal';
 import { findNodes } from '@nx/js';
 import { TargetFlags } from './generator-utils';
 import type {
@@ -71,13 +72,51 @@ export function ensureViteConfigIsCorrect(
   }
 }
 
+// Strings escape their newlines, so this only joins JSON.stringify's own lines.
+function toInlineJson(value: unknown): string {
+  return JSON.stringify(value, null, 1).replace(/\n */g, ' ');
+}
+
+// Inserts the text before the property. A comment keeps covering the same
+// code unless a multi-line text has to split the line it covers.
+function insertBeforeProperty(
+  content: string,
+  property: Node,
+  text: string
+): string {
+  const { ensureTypescript } = require('@nx/devkit/internal');
+  const ts: TypescriptAst = ensureTypescript();
+  const start = property.getStart();
+  const linePrefix = content.slice(
+    content.lastIndexOf('\n', start - 1) + 1,
+    start
+  );
+  const sharesLine = linePrefix.trim() !== '';
+  // A comment ending the line above may cover the property's line, and code
+  // before the property shares it. A single-line text joins that line intact.
+  if (
+    !text.trim().includes('\n') &&
+    (sharesLine || ts.getTrailingCommentRanges(content, property.pos)?.length)
+  ) {
+    return `${content.slice(0, start)}${text.trim()} ${content.slice(start)}`;
+  }
+  // A multi-line text splits the shared line anyway, so put it on own lines.
+  if (sharesLine) {
+    const indentation = linePrefix.match(/^[ \t]*/)[0];
+    return `${content.slice(0, start).trimEnd()}\n${indentation}${text.trim()}\n${indentation}${content.slice(start)}`;
+  }
+  const anchor =
+    ts.getLeadingCommentRanges(content, property.pos)?.[0]?.pos ?? start;
+  return `${content.slice(0, anchor)}${text.trimStart()}\n${linePrefix}${content.slice(anchor)}`;
+}
+
 function handleBuildOrTestNode(
   updatedFileContent: string,
   configContentString: string,
   configContentObject: {},
   name: 'build' | 'test'
 ): string | undefined {
-  const { tsquery } = require('@phenomnomnominal/tsquery');
+  const { tsquery } = require('@nx/devkit/internal');
   const buildOrTestNode = tsquery.query(
     updatedFileContent,
     `PropertyAssignment:has(Identifier[name="${name}"])`
@@ -113,12 +152,12 @@ function handleBuildOrTestNode(
             let propString = `    '${propName}': {\n`;
             for (const [pName, pValue] of Object.entries(propValue)) {
               if (pName === 'provider') {
-                propString += `    '${pName}': ${pValue} as const,\n`;
+                propString += `      '${pName}': ${pValue} as const,\n`;
               } else {
-                propString += `    '${pName}': '${pValue}',\n`;
+                propString += `      '${pName}': '${pValue}',\n`;
               }
             }
-            propString += `}`;
+            propString += `    },`;
             updatedPropsString += `${propString}\n`;
           } else if (propName === 'lib') {
             let propString = `    '${propName}': {\n`;
@@ -134,7 +173,7 @@ function handleBuildOrTestNode(
             propString += `    },`;
             updatedPropsString += `${propString}\n`;
           } else {
-            updatedPropsString += `    '${propName}': ${JSON.stringify(
+            updatedPropsString += `    '${propName}': ${toInlineJson(
               propValue
             )},\n`;
           }
@@ -173,13 +212,11 @@ ${updatedPropsString}  }`;
         );
 
         if (propertyAssignments.length) {
-          return applyChangesToString(updatedFileContent, [
-            {
-              type: ChangeType.Insert,
-              index: propertyAssignments[0].getStart(),
-              text: configContentString,
-            },
-          ]);
+          return insertBeforeProperty(
+            updatedFileContent,
+            propertyAssignments[0],
+            configContentString
+          );
         } else {
           return applyChangesToString(updatedFileContent, [
             {
@@ -226,7 +263,7 @@ function transformCurrentBuildObject(
   if (!returnStatements?.[index]) {
     return undefined;
   }
-  const { tsquery } = require('@phenomnomnominal/tsquery');
+  const { tsquery } = require('@nx/devkit/internal');
   const currentBuildObject = tsquery
     .query(returnStatements[index], 'ObjectLiteralExpression')?.[0]
     .getText();
@@ -239,7 +276,7 @@ function transformCurrentBuildObject(
     (_node: Node) => {
       return `{
         ...${currentBuildObject},
-        ...${JSON.stringify(buildConfigObject)}
+        ...${toInlineJson(buildConfigObject)}
       }`;
     }
   );
@@ -265,8 +302,8 @@ function transformConditionalConfig(
   appFileContent: string,
   buildConfigObject: {}
 ): string | undefined {
-  const { tsquery } = require('@phenomnomnominal/tsquery');
-  const { SyntaxKind } = require('typescript');
+  const { tsquery, ensureTypescript } = require('@nx/devkit/internal');
+  const { SyntaxKind } = ensureTypescript();
   const functionBlock = tsquery.query(conditionalConfig[0], 'Block');
   const ifStatement = tsquery.query(functionBlock?.[0], 'IfStatement');
 
@@ -310,7 +347,7 @@ function transformConditionalConfig(
           index: functionBlockStart + 1,
           text: `
             if (command === 'build') {
-              return ${JSON.stringify(buildConfigObject)}
+              return ${toInlineJson(buildConfigObject)}
             }
             `,
         },
@@ -338,7 +375,7 @@ function handlePluginNode(
   imports: string[],
   plugins: string[]
 ): string | undefined {
-  const { tsquery } = require('@phenomnomnominal/tsquery');
+  const { tsquery } = require('@nx/devkit/internal');
   const file = tsquery.ast(appFileContent);
   const pluginsNode = tsquery.query(
     file,
@@ -356,13 +393,10 @@ function handlePluginNode(
           node,
           'ArrayLiteralExpression'
         ) as ArrayLiteralExpression[];
-        let updatedPluginsString = '';
-
         const existingPluginNodes = found?.[0].elements ?? [];
-
-        for (const plugin of existingPluginNodes) {
-          updatedPluginsString += `${plugin.getText()}, `;
-        }
+        const updatedPlugins = existingPluginNodes.map((plugin) =>
+          plugin.getText()
+        );
 
         for (const plugin of plugins) {
           if (
@@ -370,11 +404,11 @@ function handlePluginNode(
               node.getText().includes(plugin)
             )
           ) {
-            updatedPluginsString += `${plugin}, `;
+            updatedPlugins.push(plugin);
           }
         }
 
-        return `plugins: [${updatedPluginsString}]`;
+        return `plugins: [${updatedPlugins.join(', ')}]`;
       }
     );
     writeFile = true;
@@ -404,13 +438,11 @@ function handlePluginNode(
         );
 
         if (propertyAssignments.length) {
-          appFileContent = applyChangesToString(appFileContent, [
-            {
-              type: ChangeType.Insert,
-              index: propertyAssignments[0].getStart(),
-              text: `plugins: [${plugins.join(', ')}],`,
-            },
-          ]);
+          appFileContent = insertBeforeProperty(
+            appFileContent,
+            propertyAssignments[0],
+            `plugins: [${plugins.join(', ')}],`
+          );
           writeFile = true;
         } else {
           appFileContent = applyChangesToString(appFileContent, [
@@ -453,7 +485,7 @@ function handlePluginNode(
 }
 
 function filterImport(appFileContent: string, imports: string[]): string[] {
-  const { tsquery } = require('@phenomnomnominal/tsquery');
+  const { tsquery } = require('@nx/devkit/internal');
   const file = tsquery.ast(appFileContent);
   const importNodes = tsquery.query(
     file,
@@ -475,8 +507,8 @@ function filterImport(appFileContent: string, imports: string[]): string[] {
  * when the config's shape hides the object we would have to edit.
  */
 export function addTsconfigPathsResolution(appFileContent: string): string {
-  const { tsquery } = require('@phenomnomnominal/tsquery');
-  const tsModule: typeof import('typescript') = require('typescript');
+  const { tsquery, ensureTypescript } = require('@nx/devkit/internal');
+  const tsModule: TypescriptAst = ensureTypescript();
 
   const file = tsquery.ast(appFileContent);
   const config = findConfigObject(tsModule, tsquery, file);
@@ -523,8 +555,8 @@ export function addTsconfigPathsResolution(appFileContent: string): string {
 }
 
 export function hasTsconfigPathsResolution(content: string): boolean {
-  const { tsquery } = require('@phenomnomnominal/tsquery');
-  const tsModule: typeof import('typescript') = require('typescript');
+  const { tsquery, ensureTypescript } = require('@nx/devkit/internal');
+  const tsModule: TypescriptAst = ensureTypescript();
   const config = findConfigObject(tsModule, tsquery, tsquery.ast(content));
   if (!config || config.properties.some(tsModule.isSpreadAssignment))
     return false;
@@ -554,8 +586,8 @@ export function addTsconfigPathsPlugin(
   commonJs = false
 ): string {
   if (content.includes('vite-tsconfig-paths')) return content;
-  const { tsquery } = require('@phenomnomnominal/tsquery');
-  const tsModule: typeof import('typescript') = require('typescript');
+  const { tsquery, ensureTypescript } = require('@nx/devkit/internal');
+  const tsModule: TypescriptAst = ensureTypescript();
   const config = findConfigObject(tsModule, tsquery, tsquery.ast(content));
   if (!config || config.properties.some(tsModule.isSpreadAssignment))
     return content;
@@ -597,7 +629,7 @@ export function addTsconfigPathsPlugin(
  * undefined when the config is assembled somewhere we cannot follow.
  */
 export function findConfigObject(
-  tsModule: typeof import('typescript'),
+  tsModule: TypescriptAst,
   tsquery: any,
   file: import('typescript').SourceFile
 ): import('typescript').ObjectLiteralExpression | undefined {
@@ -624,7 +656,7 @@ export function findConfigObject(
 }
 
 function unwrapConfigExpression(
-  tsModule: typeof import('typescript'),
+  tsModule: TypescriptAst,
   node: import('typescript').Node | undefined
 ): import('typescript').ObjectLiteralExpression | undefined {
   if (!node) return undefined;
@@ -665,7 +697,7 @@ function stripQuotes(text: string): string {
 }
 
 function handleCacheDirNode(appFileContent: string, cacheDir: string): string {
-  const { tsquery } = require('@phenomnomnominal/tsquery');
+  const { tsquery } = require('@nx/devkit/internal');
 
   const file = tsquery.ast(appFileContent);
   const cacheDirNode = tsquery.query(
@@ -698,13 +730,11 @@ function handleCacheDirNode(appFileContent: string, cacheDir: string): string {
         );
 
         if (propertyAssignments.length) {
-          appFileContent = applyChangesToString(appFileContent, [
-            {
-              type: ChangeType.Insert,
-              index: propertyAssignments[0].getStart(),
-              text: cacheDir,
-            },
-          ]);
+          appFileContent = insertBeforeProperty(
+            appFileContent,
+            propertyAssignments[0],
+            cacheDir
+          );
         } else {
           appFileContent = applyChangesToString(appFileContent, [
             {

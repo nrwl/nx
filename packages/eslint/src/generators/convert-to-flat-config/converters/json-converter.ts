@@ -1,6 +1,11 @@
 import { joinPathFragments, logger, Tree, names } from '@nx/devkit';
+import { ensureTypescript, type TypescriptAst } from '@nx/devkit/internal';
 import { ESLint } from 'eslint';
-import * as ts from 'typescript';
+import type {
+  Expression,
+  PropertyAssignment,
+  QuestionDotToken,
+} from 'typescript';
 import {
   addFlatCompatToFlatConfig,
   createNodeList,
@@ -13,6 +18,8 @@ import {
 } from '../../utils/flat-config/ast-utils';
 import { getPluginImport } from '../../utils/eslint-file';
 import { mapFilePath } from '../../utils/flat-config/path-utils';
+
+let ts: TypescriptAst;
 
 // Rewrites legacy `.eslintrc[.base][.json]`, `.eslintrc.{yaml,yml,js,cjs}` / `.eslintignore`
 // filenames to their flat-config counterparts. Used for `extends` local paths, rule option
@@ -110,12 +117,13 @@ export function convertEslintJsonToFlatConfig(
   addESLintJS: boolean;
   addGlobals: boolean;
 } {
+  ts ??= ensureTypescript();
   const importsMap = new Map<string, string>();
-  const exportElements: ts.Expression[] = [];
+  const exportElements: Expression[] = [];
   let isFlatCompatNeeded = false;
   let isESLintJSNeeded = false;
-  let combinedConfig: ts.PropertyAssignment[] = [];
-  let languageOptions: ts.PropertyAssignment[] = [];
+  let combinedConfig: PropertyAssignment[] = [];
+  let languageOptions: PropertyAssignment[] = [];
 
   if (config.rules) {
     config.rules = preprocessRules(
@@ -418,7 +426,7 @@ function addExtends(
   tree: Tree,
   root: string,
   importsMap: Map<string, string | string[]>,
-  configBlocks: ts.Expression[],
+  configBlocks: Expression[],
   config: ESLint.ConfigData,
   format: 'mjs' | 'cjs',
   convertedEslintrcFiles: ReadonlySet<string>
@@ -504,7 +512,7 @@ function addExtends(
 
 function addPlugins(
   importsMap: Map<string, string | string[]>,
-  configBlocks: ts.Expression[],
+  configBlocks: Expression[],
   config: ESLint.ConfigData
 ) {
   // Replace @nx plugin with flat/base predefined config to match fresh generation.
@@ -570,7 +578,7 @@ function isPluginEnvironment(env: string): boolean {
 function getPluginEnvironmentGlobals(
   env: ESLint.ConfigData['env'],
   importsMap: Map<string, string | string[]>
-): ts.Expression[] {
+): Expression[] {
   return Object.keys(env ?? {})
     .filter((name) => env[name] && isPluginEnvironment(name))
     .map((name) => {
@@ -596,10 +604,10 @@ function getPluginEnvironmentGlobals(
 
 // `globals.shared-node-browser` would read as a subtraction.
 function accessProperty(
-  object: ts.Expression,
+  object: Expression,
   name: string,
-  questionDotToken?: ts.QuestionDotToken
-): ts.Expression {
+  questionDotToken?: QuestionDotToken
+): Expression {
   const isIdentifier = /^[A-Za-z_$][\w$]*$/.test(name);
   if (questionDotToken) {
     return isIdentifier

@@ -10,7 +10,24 @@
     "composite": true,
     "customConditions": ["@nx/nx-source"],
     "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true
+    "allowSyntheticDefaultImports": true,
+    "paths": {
+      "typescript/sync": [
+        "../../node_modules/@typescript/native/dist/api/sync/api.d.ts"
+      ],
+      "typescript/fs": [
+        "../../node_modules/@typescript/native/dist/api/fs.d.ts"
+      ],
+      "typescript/ast": [
+        "../../node_modules/@typescript/native/dist/ast/index.d.ts"
+      ],
+      "typescript/ast/is": [
+        "../../node_modules/@typescript/native/dist/ast/is.d.ts"
+      ],
+      "typescript/ast/factory": [
+        "../../node_modules/@typescript/native/dist/ast/factory.generated.d.ts"
+      ]
+    }
   },
   "exclude": [
     "node_modules",

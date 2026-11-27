@@ -278,8 +278,10 @@ describe('convert-to-inferred', () => {
     expect(tree.read(`${project.root}/next.config.js`, 'utf-8'))
       .toMatchInlineSnapshot(`
       "//@ts-check
+
       // eslint-disable-next-line @typescript-eslint/no-var-requires
       const { composePlugins, withNx } = require('@nx/next');
+
       const configValues = {
         default: {
           fileReplacements: [
@@ -298,12 +300,15 @@ describe('convert-to-inferred', () => {
         },
         development: {},
       };
+
       const configuration = process.env.NX_TASK_TARGET_CONFIGURATION || 'default';
+
       const options = {
         ...configValues.default,
         // @ts-expect-error: Ignore TypeScript error for indexing configValues with a dynamic key
         ...configValues[configuration],
       };
+
       /**
        * @type {import('@nx/next/plugins/with-nx').WithNxOptions}
        **/
@@ -315,10 +320,12 @@ describe('convert-to-inferred', () => {
           ...options,
         },
       };
+
       const plugins = [
         // Add more Next.js plugins to this list if needed.
         withNx,
       ];
+
       module.exports = composePlugins(...plugins)(nextConfig);
       "
     `);

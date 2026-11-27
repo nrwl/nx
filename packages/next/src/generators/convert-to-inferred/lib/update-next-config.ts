@@ -1,8 +1,16 @@
 import { Tree } from '@nx/devkit';
-import { AggregatedLog } from '@nx/devkit/internal';
+import {
+  AggregatedLog,
+  ensureTypescript,
+  ast,
+  query,
+  printNodeUpdate,
+  type TypescriptAst,
+} from '@nx/devkit/internal';
+import type { Node, ObjectLiteralExpression } from 'typescript';
 import { findNextConfigPath } from './utils';
-import { ast, query } from '@phenomnomnominal/tsquery';
-import * as ts from 'typescript';
+
+let ts: TypescriptAst;
 
 export function updateNextConfig(
   tree: Tree,
@@ -52,26 +60,39 @@ export function updateNextConfig(
     return;
   }
 
-  let lastRequireEndPosition = -1;
+  ts ??= ensureTypescript();
 
-  const findLastRequire = (node: ts.Node) => {
-    if (
-      ts.isCallExpression(node) &&
+  const callsRequire = (node: Node): boolean =>
+    (ts.isCallExpression(node) &&
       ts.isIdentifier(node.expression) &&
-      node.expression.text === 'require'
-    ) {
-      lastRequireEndPosition = node.end;
+      node.expression.text === 'require') ||
+    ts.forEachChild(node, callsRequire) === true;
+
+  // Insert after the `;` only when spaces alone precede it. Otherwise insert at
+  // the code's end, so comments move down with the `;` and the code they cover.
+  let insertAt = -1;
+  for (const statement of sourceFile.statements) {
+    if (callsRequire(statement)) {
+      const codeEnd = ts.isVariableStatement(statement)
+        ? statement.declarationList.end
+        : ts.isExpressionStatement(statement)
+          ? statement.expression.end
+          : statement.end;
+      insertAt = /^[ \t]*;?$/.test(
+        nextConfigContents.slice(codeEnd, statement.end)
+      )
+        ? statement.end
+        : codeEnd;
     }
-    ts.forEachChild(node, findLastRequire);
-  };
+  }
 
-  findLastRequire(sourceFile);
-
-  let updatedCode = `
-    ${nextConfigContents.slice(0, lastRequireEndPosition)}\n
-    ${updatedConfigFileContents}\n\n
-    ${nextConfigContents.slice(lastRequireEndPosition)}
-    `;
+  // What is left on the line moves to its own line. A blank line below the
+  // statement becomes the gap after the block.
+  let rest = nextConfigContents.slice(insertAt).replace(/^[ \t]+/, '');
+  rest = rest.startsWith('\n')
+    ? rest.replace(/^\n(?=[ \t]*\n)/, '')
+    : `\n${rest}`;
+  let updatedCode = `${nextConfigContents.slice(0, insertAt)}\n\n${updatedConfigFileContents}\n${rest}`;
   sourceFile = ast(updatedCode);
 
   const nextConfigNode = query(
@@ -80,7 +101,7 @@ export function updateNextConfig(
   )[0];
 
   if (nextConfigNode) {
-    const nxNode = query(
+    const nxNode = query<ObjectLiteralExpression>(
       nextConfigNode,
       'PropertyAssignment:has(Identifier[name=nx]) ObjectLiteralExpression'
     )[0];
@@ -91,28 +112,14 @@ export function updateNextConfig(
       );
 
       const updatedNxNode = ts.factory.updateObjectLiteralExpression(
-        nxNode as ts.ObjectLiteralExpression,
-        ts.factory.createNodeArray([...nxNode['properties'], spread])
+        nxNode,
+        ts.factory.createNodeArray([...nxNode.properties, spread])
       );
 
-      const transformer =
-        <T extends ts.Node>(context: ts.TransformationContext) =>
-        (rootNode: T) => {
-          function visit(node: ts.Node): ts.Node {
-            if (node === nxNode) {
-              return updatedNxNode;
-            }
-            return ts.visitEachChild(node, visit, context);
-          }
-
-          return ts.visitNode(rootNode, visit);
-        };
-
-      const result = ts.transform(sourceFile, [transformer]);
-      const transformedSourceFile = result.transformed[0] as ts.SourceFile;
-
-      const printer = ts.createPrinter();
-      updatedCode = printer.printFile(transformedSourceFile);
+      updatedCode =
+        updatedCode.slice(0, nxNode.getStart()) +
+        printNodeUpdate(nxNode, updatedNxNode) +
+        updatedCode.slice(nxNode.getEnd());
     }
 
     tree.write(nextConfigPath, updatedCode);

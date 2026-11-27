@@ -36,4 +36,11 @@ export default [
   {
     ignores: ['dist'],
   },
+  {
+    // The Angular compiler runs on the TypeScript 6 API.
+    files: ['**/*.ts'],
+    rules: {
+      '@nx/workspace-no-runtime-typescript-import': 'off',
+    },
+  },
 ];

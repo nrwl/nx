@@ -127,12 +127,82 @@ Cypress.SelectorPlayground.defaults({
 
     expect(tree.read('apps/web-e2e/src/support/multiple.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
+        "Cypress.ElementSelector.defaults({
+          selectorPriority: ['data-cy'],
+        });
+
+        Cypress.ElementSelector.defaults({
+          selectorPriority: ['data-test'],
+        });
+        "
+      `);
+  });
+
+  it('should remove the onElement option from a defaults() call nested in another call', async () => {
+    tree.write(
+      'apps/web-e2e/src/support/nested.ts',
+      `before(() => {
+  Cypress.SelectorPlayground.defaults({ selectorPriority: ['id'], onElement: (el) => el });
+});
+`
+    );
+
+    await migration(tree);
+
+    expect(tree.read('apps/web-e2e/src/support/nested.ts', 'utf-8'))
+      .toMatchInlineSnapshot(`
+      "before(() => {
+        Cypress.ElementSelector.defaults({ selectorPriority: ['id'] });
+      });
+      "
+    `);
+  });
+
+  it('should remove the onElement option from a defaults() call nested in another defaults() call', async () => {
+    tree.write(
+      'apps/web-e2e/src/support/nested-defaults.ts',
+      `Cypress.ElementSelector.defaults({
+  onElement: (el) => el,
+  nested: Cypress.ElementSelector.defaults({ selectorPriority: ['id'], onElement: (el) => el }),
+});
+export const after = 1;
+`
+    );
+
+    await migration(tree);
+
+    expect(tree.read('apps/web-e2e/src/support/nested-defaults.ts', 'utf-8'))
+      .toMatchInlineSnapshot(`
+      "Cypress.ElementSelector.defaults({
+        nested: Cypress.ElementSelector.defaults({ selectorPriority: ['id'] }),
+      });
+      export const after = 1;
+      "
+    `);
+  });
+
+  it('should remove an onElement callback that holds another defaults() call', async () => {
+    tree.write(
+      'apps/web-e2e/src/support/nested-callback.ts',
+      `Cypress.ElementSelector.defaults({
+  selectorPriority: ['data-cy'],
+  onElement: (el) => {
+    Cypress.ElementSelector.defaults({ onElement: (inner) => inner, selectorPriority: ['id'] });
+    return el;
+  },
+});
+export const after = 1;
+`
+    );
+
+    await migration(tree);
+
+    expect(tree.read('apps/web-e2e/src/support/nested-callback.ts', 'utf-8'))
+      .toMatchInlineSnapshot(`
       "Cypress.ElementSelector.defaults({
         selectorPriority: ['data-cy'],
       });
-      Cypress.ElementSelector.defaults({
-        selectorPriority: ['data-test'],
-      });
+      export const after = 1;
       "
     `);
   });
