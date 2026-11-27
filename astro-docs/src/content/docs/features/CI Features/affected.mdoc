@@ -152,6 +152,21 @@ CI:
 ```
 
 {% /tabitem %}
+{% tabitem label="Nx Cloud CI" %}
+[Nx Cloud CI](/docs/features/ci-features#run-ci-on-nx-cloud) sets `NX_BASE` and `NX_HEAD` before your first step runs, so you don't need `nrwl/nx-set-shas` or `fetch-depth: 0`.
+Pull requests compare against the merge base with the target branch, and pushes compare against the last successful build on the default branch.
+
+```yaml
+// .nx/pipelines/ci.yaml
+jobs:
+  main:
+    runs-on: linux-medium-js
+    steps:
+      - run: npx nx affected -t lint test build
+```
+
+For the full resolution rules and edge cases, see [set the affected base commit in CI](/docs/kb/affected-base-commit).
+{% /tabitem %}
 {% /tabs %}
 
 For other CI providers (Jenkins, Azure Pipelines, Bitbucket), see our guides to get the [last successful CI run for your CI provider](/docs/kb/affected-base-commit).

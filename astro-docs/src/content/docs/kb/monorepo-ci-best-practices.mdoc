@@ -218,8 +218,10 @@ answer to the usual advice that monorepos need shallow clones.
 Sparse checkout is a worse trade, since excluding files the project graph is built from leaves
 change detection incomplete.
 
+Nx Cloud CI sets `NX_BASE` and `NX_HEAD` automatically before your first step, so you don't need
+`nrwl/nx-set-shas` or `fetch-depth: 0`.
 Other providers expose the same information under different names.
-The [affected base commit guide](/docs/kb/affected-base-commit) covers how to retrieve the last successful commit on
+The [affected base commit guide](/docs/kb/affected-base-commit) covers Nx Cloud CI alongside
 CircleCI, GitLab, Azure Pipelines, Jenkins, and Bitbucket.
 
 ## Cache task results, not just dependencies

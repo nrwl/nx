@@ -82,6 +82,7 @@ To generate a starting file with workers set up, run `nx g @nx/workspace:ci-work
 
 `linux-medium-js` is a pre-built [launch template](/docs/kb/launch-templates) that checks out your repository and installs its dependencies.
 Before your first step, Nx Cloud sets `NX_BASE` and `NX_HEAD`, so `nx affected` needs no extra setup.
+See [set the affected base commit in CI](/docs/kb/affected-base-commit) for how Nx Cloud picks those commits.
 
 Each file reports one status on the pull request for the whole run, named `Nx Cloud: <name>`, where `<name>` is the file's `name` or, without one, its file name.
 To also get a check for each job, named `<name> / <job>`, turn on **Show check runs for individual Nx Cloud CI jobs** in the VCS integration settings of your [workspace](https://cloud.nx.app/go/workspace/settings).
