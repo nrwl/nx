@@ -1,8 +1,13 @@
 import type { Mock } from 'vitest';
 import type { ProjectGraph } from '@nx/devkit';
 import { detectPackageManager } from '@nx/devkit';
-import { createPackageJson, generatePrunedDeployOutput } from '@nx/js';
+import {
+  createPackageJson,
+  generatePrunedDeployOutput,
+  readTsConfig,
+} from '@nx/js';
 import { GeneratePackageJsonPlugin } from './generate-package-json-plugin';
+import { resolve } from 'path';
 
 vi.mock('@nx/devkit', async () => ({
   ...(await vi.importActual<any>('@nx/devkit')),
@@ -39,7 +44,9 @@ describe('GeneratePackageJsonPlugin', () => {
     (detectPackageManager as Mock).mockReturnValue('pnpm');
   });
 
-  function runPlugin(): { emitAsset: Mock } {
+  function runPlugin(tsConfig = '/root/apps/my-app/tsconfig.json'): {
+    emitAsset: Mock;
+  } {
     const emitAsset = vi.fn();
     const compilation = {
       hooks: {
@@ -57,7 +64,7 @@ describe('GeneratePackageJsonPlugin', () => {
       },
     };
     new GeneratePackageJsonPlugin({
-      tsConfig: '/root/apps/my-app/tsconfig.json',
+      tsConfig,
       outputFileName: 'main.js',
       root: '/root',
       projectName: 'my-app',
@@ -86,6 +93,14 @@ describe('GeneratePackageJsonPlugin', () => {
       ([name]) => name === 'pnpm-lock.yaml'
     );
     expect(lockfileEmit[1].source()).toBe('pruned-lock');
+  });
+
+  it('resolves a workspace-relative tsConfig from the workspace root', () => {
+    runPlugin('apps/my-app/tsconfig.json');
+
+    expect(readTsConfig).toHaveBeenCalledWith(
+      resolve('/root', 'apps/my-app/tsconfig.json')
+    );
   });
 
   it('emits the manifest after the deploy output, which rewrites it', () => {
