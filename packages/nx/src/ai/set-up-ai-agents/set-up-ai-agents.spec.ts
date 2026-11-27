@@ -1366,6 +1366,27 @@ sandbox_mode = "read-only"
         expect(content).not.toContain('[agents');
       });
 
+      it('should not duplicate an unquoted nx-mcp table when repo is unavailable', async () => {
+        getAiConfigRepoPathSpy.mockImplementation(() => {
+          throw new Error('Network error');
+        });
+
+        const existingConfig = `[mcp_servers.nx-mcp]
+command = "npx"
+args = ["nx", "mcp"]
+`;
+        tree.write('.codex/config.toml', existingConfig);
+
+        await setupAiAgentsGenerator(tree, {
+          directory: '.',
+          agents: ['codex'],
+        });
+
+        expect(tree.read('.codex/config.toml')?.toString()).toEqual(
+          existingConfig
+        );
+      });
+
       it('warns when the repo cache directory is refused', async () => {
         getAiConfigRepoPathSpy.mockImplementation(() => {
           throw new DirectoryRefusedError({

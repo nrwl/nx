@@ -28,7 +28,7 @@ import {
   NX_ALLOWLIST_ROOTS,
   claudeMcpJsonPath,
   getNxMcpTomlConfig,
-  nxMcpTomlHeader,
+  hasNxMcpTomlServer,
   opencodeMcpPath,
 } from '../constants';
 import { getAiConfigRepoPath } from '../clone-ai-config-repo';
@@ -513,7 +513,7 @@ function writeCodexConfig(
       tree.write(codexTomlPath, tomlConfig);
     } else {
       const existing = tree.read(codexTomlPath, 'utf-8');
-      if (!existing.includes(nxMcpTomlHeader)) {
+      if (!hasNxMcpTomlServer(existing)) {
         tree.write(codexTomlPath, existing + '\n' + tomlConfig);
       }
     }
