@@ -8,6 +8,11 @@ import {
   uniq,
   updateJson,
 } from '@nx/e2e-utils';
+import {
+  type GitBaseline,
+  recordGitBaseline,
+  restoreGitBaseline,
+} from './utils';
 
 expect.addSnapshotSerializer({
   serialize(str: string) {
@@ -43,10 +48,10 @@ expect.addSnapshotSerializer({
 
 describe('nx release releaseTag.pattern', () => {
   let pkg1: string;
+  let baseline: GitBaseline;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     newProject({
-      keepBackup: true,
       packages: ['@nx/js'],
     });
 
@@ -55,9 +60,12 @@ describe('nx release releaseTag.pattern', () => {
 
     await runCommandAsync(`git add .`);
     await runCommandAsync(`git commit -m "chore: initial commit"`);
+    baseline = recordGitBaseline();
   });
 
-  afterEach(() => cleanupProject());
+  beforeEach(() => restoreGitBaseline(baseline));
+
+  afterAll(() => cleanupProject());
 
   it('should prefer stable versions over prereleases', async () => {
     updateJson<NxJsonConfiguration>('nx.json', (nxJson) => {

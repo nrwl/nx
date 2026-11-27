@@ -4,7 +4,50 @@ import {
   updateJson,
   removeFile,
   getSelectedPackageManager,
+  runCommand,
 } from '@nx/e2e-utils';
+
+export interface GitBaseline {
+  commit: string;
+  branch: string;
+  refs: string[];
+}
+
+function listGitRefs(): string[] {
+  return runCommand(
+    'git for-each-ref --format="%(refname)" refs/heads refs/tags',
+    { failOnError: true }
+  )
+    .split('\n')
+    .filter(Boolean);
+}
+
+export function recordGitBaseline(): GitBaseline {
+  return {
+    commit: runCommand('git rev-parse HEAD', { failOnError: true }).trim(),
+    branch: runCommand('git branch --show-current', {
+      failOnError: true,
+    }).trim(),
+    refs: listGitRefs(),
+  };
+}
+
+/**
+ * Leaves ignored files, git config and stashes as they are, and does not bring
+ * back baseline refs a test deleted.
+ */
+export function restoreGitBaseline({ commit, branch, refs }: GitBaseline) {
+  runCommand(
+    `git checkout -f ${branch} && git reset --hard ${commit} && git clean -fd`,
+    { failOnError: true }
+  );
+  const created = listGitRefs().filter((ref) => !refs.includes(ref));
+  if (created.length) {
+    runCommand(created.map((ref) => `git update-ref -d ${ref}`).join(' && '), {
+      failOnError: true,
+    });
+  }
+}
 
 export async function configureModernYarn() {
   if (getSelectedPackageManager() !== 'yarn') {
