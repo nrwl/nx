@@ -268,7 +268,19 @@ describe('SummaryTerminalOutputLifeCycle', () => {
     expect(out).toContain('View run: https://nx.app/runs/abc');
   });
 
-  it('points at the style that inlines logs', () => {
+  it('prints no hint when everything passes', () => {
+    const a = makeTask('a');
+    const lifeCycle = new SummaryTerminalOutputLifeCycle([a]);
+
+    const out = captureOutput(() => {
+      lifeCycle.endTasks([result(a, 'success')]);
+      lifeCycle.endCommand();
+    });
+
+    expect(out).not.toContain('--output-style=static');
+  });
+
+  it('adds no hint when every failure has a log', () => {
     const a = makeTask('a');
     const lifeCycle = new SummaryTerminalOutputLifeCycle([a]);
 
@@ -277,7 +289,35 @@ describe('SummaryTerminalOutputLifeCycle', () => {
       lifeCycle.endCommand();
     });
 
-    expect(out).toContain('--output-style=static');
+    expect(out).toContain('full log:');
+    expect(out).not.toContain('--output-style=static');
+  });
+
+  it('points at the style that inlines logs when a failure has no log', () => {
+    const a = makeTask('a');
+    const lifeCycle = new SummaryTerminalOutputLifeCycle([a]);
+
+    const out = captureOutput(() => {
+      lifeCycle.endTasks([
+        { ...result(a, 'failure'), terminalOutput: undefined } as TaskResult,
+      ]);
+      lifeCycle.endCommand();
+    });
+
+    expect(out).toContain('Re-run with --output-style=static to inline logs.');
+  });
+
+  it('points at the style that inlines logs when a stopped task has no log', () => {
+    const a = makeTask('a');
+    const b = makeTask('b');
+    const lifeCycle = new SummaryTerminalOutputLifeCycle([a, b]);
+
+    const out = captureOutput(() => {
+      lifeCycle.endTasks([result(a, 'failure', 'boom'), result(b, 'stopped')]);
+      lifeCycle.endCommand();
+    });
+
+    expect(out).toContain('Re-run with --output-style=static to inline logs.');
   });
   it('does not address a log for a failure that produced no output', () => {
     const task = makeTask('a:build');
