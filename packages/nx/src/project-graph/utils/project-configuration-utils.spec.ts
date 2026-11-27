@@ -60,6 +60,109 @@ describe('findMatchingConfigFiles', () => {
       'libs/b/project.json',
     ]);
   });
+
+  const libs = (...names: string[]) =>
+    names.map((name) => `libs/${name}/project.json`);
+
+  it.each([
+    [
+      'matches everything without patterns',
+      libs('a', 'b'),
+      undefined,
+      undefined,
+      libs('a', 'b'),
+    ],
+    [
+      'treats empty arrays as no patterns',
+      libs('a', 'b'),
+      [],
+      [],
+      libs('a', 'b'),
+    ],
+    [
+      'keeps only included files',
+      libs('a', 'b'),
+      ['libs/a/**'],
+      undefined,
+      libs('a'),
+    ],
+    [
+      'drops excluded files',
+      libs('a', 'b'),
+      undefined,
+      ['libs/b/**'],
+      libs('a'),
+    ],
+    [
+      'applies include and exclude together',
+      libs('a', 'b'),
+      ['libs/a/**'],
+      ['libs/b/**'],
+      libs('a'),
+    ],
+    [
+      're-includes with a later negation in exclude',
+      libs('a-e2e', 'b-e2e', 'toolkit-workspace-e2e'),
+      undefined,
+      ['**/*-e2e/**', '!**/toolkit-workspace-e2e/**'],
+      libs('toolkit-workspace-e2e'),
+    ],
+    [
+      'drops with a later negation in include',
+      libs('a', 'b', 'c'),
+      ['libs/**', '!libs/b/**'],
+      undefined,
+      libs('a', 'c'),
+    ],
+    [
+      'applies several negations in exclude',
+      libs('a', 'b', 'c', 'd'),
+      undefined,
+      ['libs/**', '!libs/b/**', '!libs/c/**'],
+      libs('b', 'c'),
+    ],
+    [
+      'starts an exclude from everything on a leading negation',
+      libs('a', 'b', 'c'),
+      undefined,
+      ['!libs/a/**'],
+      libs('a'),
+    ],
+    [
+      'starts an include from everything on a leading negation',
+      libs('a', 'b', 'c'),
+      ['!libs/b/**'],
+      undefined,
+      libs('a', 'c'),
+    ],
+    [
+      'lets the last matching pattern win',
+      [
+        'libs/a/project.json',
+        'libs/a/special/project.json',
+        'libs/b/project.json',
+      ],
+      undefined,
+      ['libs/**', '!libs/a/**', 'libs/a/special/**'],
+      libs('a'),
+    ],
+    [
+      'applies negations in include and exclude together',
+      libs('a', 'b', 'c', 'd'),
+      ['libs/**', '!libs/d/**'],
+      ['libs/b/**', '!libs/c/**'],
+      libs('a', 'c'),
+    ],
+    [
+      'matches dot directories',
+      ['.config/project.json'],
+      ['**/project.json'],
+      undefined,
+      ['.config/project.json'],
+    ],
+  ])('%s', (_, files, include, exclude, expected) => {
+    expect(findMatchingConfigFiles(files, include, exclude)).toEqual(expected);
+  });
 });
 
 describe('project-configuration-utils', () => {
@@ -2584,103 +2687,6 @@ describe('project-configuration-utils', () => {
       ],
     };
 
-    it('should create nodes for files matching included patterns only', async () => {
-      const projectConfigurations =
-        await createProjectConfigurationsWithPlugins(
-          undefined,
-          {},
-          {
-            specifiedPluginFiles: [],
-            defaultPluginFiles: [
-              ['libs/a/project.json', 'libs/b/project.json'],
-            ],
-          },
-          {
-            specifiedPlugins: [],
-            defaultPlugins: [
-              new LoadedNxPlugin(fakeTagPlugin, {
-                plugin: fakeTagPlugin.name,
-              }),
-            ],
-          }
-        );
-
-      expect(projectConfigurations.projects).toEqual({
-        'libs/a': {
-          name: 'a',
-          root: 'libs/a',
-          tags: ['fake-lib'],
-        },
-        'libs/b': {
-          name: 'b',
-          root: 'libs/b',
-          tags: ['fake-lib'],
-        },
-      });
-    });
-
-    it('should create nodes for files matching included patterns only', async () => {
-      const projectConfigurations =
-        await createProjectConfigurationsWithPlugins(
-          undefined,
-          {},
-          {
-            specifiedPluginFiles: [],
-            defaultPluginFiles: [
-              ['libs/a/project.json', 'libs/b/project.json'],
-            ],
-          },
-          {
-            specifiedPlugins: [],
-            defaultPlugins: [
-              new LoadedNxPlugin(fakeTagPlugin, {
-                plugin: fakeTagPlugin.name,
-                include: ['libs/a/**'],
-              }),
-            ],
-          }
-        );
-
-      expect(projectConfigurations.projects).toEqual({
-        'libs/a': {
-          name: 'a',
-          root: 'libs/a',
-          tags: ['fake-lib'],
-        },
-      });
-    });
-
-    it('should not create nodes for files matching excluded patterns', async () => {
-      const projectConfigurations =
-        await createProjectConfigurationsWithPlugins(
-          undefined,
-          {},
-          {
-            specifiedPluginFiles: [],
-            defaultPluginFiles: [
-              ['libs/a/project.json', 'libs/b/project.json'],
-            ],
-          },
-          {
-            specifiedPlugins: [],
-            defaultPlugins: [
-              new LoadedNxPlugin(fakeTagPlugin, {
-                plugin: fakeTagPlugin.name,
-                exclude: ['libs/b/**'],
-              }),
-            ],
-          }
-        );
-
-      expect(projectConfigurations.projects).toEqual({
-        'libs/a': {
-          name: 'a',
-          root: 'libs/a',
-          tags: ['fake-lib'],
-        },
-      });
-    });
-
     it('should normalize targets', async () => {
       const { projects } = await createProjectConfigurationsWithPlugins(
         undefined,
@@ -3091,352 +3097,6 @@ describe('project-configuration-utils', () => {
         expect('omitted' in nested).toBe(true);
       }
     );
-
-    describe('negation pattern support', () => {
-      it('should support negation patterns in exclude to re-include specific files', async () => {
-        const projectConfigurations =
-          await createProjectConfigurationsWithPlugins(
-            undefined,
-            {},
-            {
-              specifiedPluginFiles: [],
-              defaultPluginFiles: [
-                [
-                  'libs/a-e2e/project.json',
-                  'libs/b-e2e/project.json',
-                  'libs/toolkit-workspace-e2e/project.json',
-                ],
-              ],
-            },
-            {
-              specifiedPlugins: [],
-              defaultPlugins: [
-                new LoadedNxPlugin(fakeTagPlugin, {
-                  plugin: fakeTagPlugin.name,
-                  exclude: ['**/*-e2e/**', '!**/toolkit-workspace-e2e/**'],
-                }),
-              ],
-            }
-          );
-
-        expect(projectConfigurations.projects).toEqual({
-          'libs/toolkit-workspace-e2e': {
-            name: 'toolkit-workspace-e2e',
-            root: 'libs/toolkit-workspace-e2e',
-            tags: ['fake-lib'],
-          },
-        });
-      });
-
-      it('should support negation patterns in include to exclude specific files', async () => {
-        const projectConfigurations =
-          await createProjectConfigurationsWithPlugins(
-            undefined,
-            {},
-            {
-              specifiedPluginFiles: [],
-              defaultPluginFiles: [
-                [
-                  'libs/a/project.json',
-                  'libs/b/project.json',
-                  'libs/c/project.json',
-                ],
-              ],
-            },
-            {
-              specifiedPlugins: [],
-              defaultPlugins: [
-                new LoadedNxPlugin(fakeTagPlugin, {
-                  plugin: fakeTagPlugin.name,
-                  include: ['libs/**', '!libs/b/**'],
-                }),
-              ],
-            }
-          );
-
-        expect(projectConfigurations.projects).toEqual({
-          'libs/a': {
-            name: 'a',
-            root: 'libs/a',
-            tags: ['fake-lib'],
-          },
-          'libs/c': {
-            name: 'c',
-            root: 'libs/c',
-            tags: ['fake-lib'],
-          },
-        });
-      });
-
-      it('should handle multiple negation patterns correctly', async () => {
-        const projectConfigurations =
-          await createProjectConfigurationsWithPlugins(
-            undefined,
-            {},
-            {
-              specifiedPluginFiles: [],
-              defaultPluginFiles: [
-                [
-                  'libs/a/project.json',
-                  'libs/b/project.json',
-                  'libs/c/project.json',
-                  'libs/d/project.json',
-                ],
-              ],
-            },
-            {
-              specifiedPlugins: [],
-              defaultPlugins: [
-                new LoadedNxPlugin(fakeTagPlugin, {
-                  plugin: fakeTagPlugin.name,
-                  exclude: ['libs/**', '!libs/b/**', '!libs/c/**'],
-                }),
-              ],
-            }
-          );
-
-        expect(projectConfigurations.projects).toEqual({
-          'libs/b': {
-            name: 'b',
-            root: 'libs/b',
-            tags: ['fake-lib'],
-          },
-          'libs/c': {
-            name: 'c',
-            root: 'libs/c',
-            tags: ['fake-lib'],
-          },
-        });
-      });
-
-      it('should handle starting with negation pattern in exclude', async () => {
-        const projectConfigurations =
-          await createProjectConfigurationsWithPlugins(
-            undefined,
-            {},
-            {
-              specifiedPluginFiles: [],
-              defaultPluginFiles: [
-                [
-                  'libs/a/project.json',
-                  'libs/b/project.json',
-                  'libs/c/project.json',
-                ],
-              ],
-            },
-            {
-              specifiedPlugins: [],
-              defaultPlugins: [
-                new LoadedNxPlugin(fakeTagPlugin, {
-                  plugin: fakeTagPlugin.name,
-                  exclude: ['!libs/a/**'],
-                }),
-              ],
-            }
-          );
-
-        // Should exclude everything except libs/a (first pattern is negation)
-        expect(projectConfigurations.projects).toEqual({
-          'libs/a': {
-            name: 'a',
-            root: 'libs/a',
-            tags: ['fake-lib'],
-          },
-        });
-      });
-
-      it('should handle starting with negation pattern in include', async () => {
-        const projectConfigurations =
-          await createProjectConfigurationsWithPlugins(
-            undefined,
-            {},
-            {
-              specifiedPluginFiles: [],
-              defaultPluginFiles: [
-                [
-                  'libs/a/project.json',
-                  'libs/b/project.json',
-                  'libs/c/project.json',
-                ],
-              ],
-            },
-            {
-              specifiedPlugins: [],
-              defaultPlugins: [
-                new LoadedNxPlugin(fakeTagPlugin, {
-                  plugin: fakeTagPlugin.name,
-                  include: ['!libs/b/**'],
-                }),
-              ],
-            }
-          );
-
-        // Should include everything except libs/b (first pattern is negation)
-        expect(projectConfigurations.projects).toEqual({
-          'libs/a': {
-            name: 'a',
-            root: 'libs/a',
-            tags: ['fake-lib'],
-          },
-          'libs/c': {
-            name: 'c',
-            root: 'libs/c',
-            tags: ['fake-lib'],
-          },
-        });
-      });
-
-      it('should maintain backward compatibility with non-negation patterns', async () => {
-        const projectConfigurations =
-          await createProjectConfigurationsWithPlugins(
-            undefined,
-            {},
-            {
-              specifiedPluginFiles: [],
-              defaultPluginFiles: [
-                ['libs/a/project.json', 'libs/b/project.json'],
-              ],
-            },
-            {
-              specifiedPlugins: [],
-              defaultPlugins: [
-                new LoadedNxPlugin(fakeTagPlugin, {
-                  plugin: fakeTagPlugin.name,
-                  include: ['libs/a/**'],
-                  exclude: ['libs/b/**'],
-                }),
-              ],
-            }
-          );
-
-        expect(projectConfigurations.projects).toEqual({
-          'libs/a': {
-            name: 'a',
-            root: 'libs/a',
-            tags: ['fake-lib'],
-          },
-        });
-      });
-
-      it('should handle overlapping patterns with last match winning', async () => {
-        const projectConfigurations =
-          await createProjectConfigurationsWithPlugins(
-            undefined,
-            {},
-            {
-              specifiedPluginFiles: [],
-              defaultPluginFiles: [
-                [
-                  'libs/a/project.json',
-                  'libs/a/special/project.json',
-                  'libs/b/project.json',
-                ],
-              ],
-            },
-            {
-              specifiedPlugins: [],
-              defaultPlugins: [
-                new LoadedNxPlugin(fakeTagPlugin, {
-                  plugin: fakeTagPlugin.name,
-                  exclude: ['libs/**', '!libs/a/**', 'libs/a/special/**'],
-                }),
-              ],
-            }
-          );
-
-        // Exclude all libs, except a, but re-exclude a/special (last match wins)
-        expect(projectConfigurations.projects).toEqual({
-          'libs/a': {
-            name: 'a',
-            root: 'libs/a',
-            tags: ['fake-lib'],
-          },
-        });
-      });
-
-      it('should work with both include and exclude having negation patterns', async () => {
-        const projectConfigurations =
-          await createProjectConfigurationsWithPlugins(
-            undefined,
-            {},
-            {
-              specifiedPluginFiles: [],
-              defaultPluginFiles: [
-                [
-                  'libs/a/project.json',
-                  'libs/b/project.json',
-                  'libs/c/project.json',
-                  'libs/d/project.json',
-                ],
-              ],
-            },
-            {
-              specifiedPlugins: [],
-              defaultPlugins: [
-                new LoadedNxPlugin(fakeTagPlugin, {
-                  plugin: fakeTagPlugin.name,
-                  include: ['libs/**', '!libs/d/**'],
-                  exclude: ['libs/b/**', '!libs/c/**'],
-                }),
-              ],
-            }
-          );
-
-        // Include: a, b, c (all except d)
-        // Exclude: b (but not c due to negation)
-        // Result: a, c
-        expect(projectConfigurations.projects).toEqual({
-          'libs/a': {
-            name: 'a',
-            root: 'libs/a',
-            tags: ['fake-lib'],
-          },
-          'libs/c': {
-            name: 'c',
-            root: 'libs/c',
-            tags: ['fake-lib'],
-          },
-        });
-      });
-
-      it('should handle empty arrays with negation support intact', async () => {
-        const projectConfigurations =
-          await createProjectConfigurationsWithPlugins(
-            undefined,
-            {},
-            {
-              specifiedPluginFiles: [],
-              defaultPluginFiles: [
-                ['libs/a/project.json', 'libs/b/project.json'],
-              ],
-            },
-            {
-              specifiedPlugins: [],
-              defaultPlugins: [
-                new LoadedNxPlugin(fakeTagPlugin, {
-                  plugin: fakeTagPlugin.name,
-                  include: [],
-                  exclude: [],
-                }),
-              ],
-            }
-          );
-
-        // Empty arrays should not filter anything
-        expect(projectConfigurations.projects).toEqual({
-          'libs/a': {
-            name: 'a',
-            root: 'libs/a',
-            tags: ['fake-lib'],
-          },
-          'libs/b': {
-            name: 'b',
-            root: 'libs/b',
-            tags: ['fake-lib'],
-          },
-        });
-      });
-    });
 
     describe('mergeProjectConfigurationIntoRootMap spread syntax', () => {
       it('should spread arrays in target options when merging projects', () => {

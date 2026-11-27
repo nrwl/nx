@@ -1,5 +1,7 @@
 import { workspaceRoot } from '../../utils/workspace-root';
+import type { PluginGlobs } from '../../native';
 import {
+  globPluginFilesWithWorkspaceContext,
   globWithWorkspaceContext,
   multiGlobWithWorkspaceContext,
 } from '../../utils/workspace-context';
@@ -28,5 +30,18 @@ export async function handleMultiGlob(
   return {
     response: files,
     description: 'handleMultiGlob',
+  };
+}
+
+export async function handleGlobPluginFiles(
+  plugins: PluginGlobs[]
+): Promise<HandlerResult> {
+  const files = await globPluginFilesWithWorkspaceContext(
+    workspaceRoot,
+    plugins
+  );
+  return {
+    response: files,
+    description: 'handleGlobPluginFiles',
   };
 }

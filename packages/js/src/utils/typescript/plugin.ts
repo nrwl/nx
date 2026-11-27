@@ -2,9 +2,8 @@ import type {
   ExpandedPluginConfiguration,
   NxJsonConfiguration,
 } from '@nx/devkit';
-import picomatch = require('picomatch');
 import type { TscPluginOptions } from '../../plugins/typescript/plugin';
-import { findMatchingConfigFiles } from '@nx/devkit/internal';
+import { matchPluginFiles } from '@nx/devkit/internal';
 
 export function ensureProjectIsIncludedInPluginRegistrations(
   nxJson: NxJsonConfiguration,
@@ -37,15 +36,13 @@ export function ensureProjectIsIncludedInPluginRegistrations(
       // actually process it (its path matches the plugin's createNodes glob)
       // before the registration's include/exclude filters are applied.
       const tsconfigPath = `${projectRoot}/tsconfig.json`;
-      const matchingConfigFiles = picomatch('**/tsconfig.json', { dot: true })(
-        tsconfigPath
-      )
-        ? findMatchingConfigFiles(
-            [tsconfigPath],
-            registration.include,
-            registration.exclude
-          )
-        : [];
+      const matchingConfigFiles = matchPluginFiles([tsconfigPath], {
+        pattern: '**/tsconfig.json',
+        include: registration.include,
+        exclude: registration.exclude,
+        name: registration.plugin,
+        index,
+      });
       if (matchingConfigFiles.length) {
         // it's included by the plugin registration, check if the user-specified options would result
         // in the appropriate build task being inferred, if not, we need to exclude it

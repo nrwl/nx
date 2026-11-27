@@ -1,4 +1,3 @@
-import { minimatch } from 'minimatch';
 import { basename, dirname, join, relative } from 'path';
 
 import { getGlobPatternsFromPackageManagerWorkspaces } from '../../plugins/package-json';
@@ -12,6 +11,7 @@ import {
   mergeProjectConfigurationIntoRootMap,
   readProjectConfigurationsFromRootMap,
 } from '../../project-graph/utils/project-configuration/project-nodes-manager';
+import { matchGlobPaths } from '../../native';
 import { globWithWorkspaceContextSync } from '../../utils/workspace-context';
 import { output } from '../../utils/output';
 import { PackageJson } from '../../utils/package-json';
@@ -367,30 +367,29 @@ function readAndCombineAllProjectConfigurations(tree: Tree): {
  * considered a project during workspace generation
  */
 function findCreatedProjectFiles(tree: Tree, globPatterns: string[]) {
-  const createdProjectFiles = [];
+  // Generator callbacks run after the tree flushed to disk, so files they
+  // create show up as UPDATE.
+  const changes = tree
+    .listChanges()
+    .filter((change) => change.type === 'CREATE' || change.type === 'UPDATE');
+  const matches = matchGlobPaths(
+    globPatterns,
+    changes.map((change) => change.path)
+  );
 
-  for (const change of tree.listChanges()) {
-    // Include both CREATE and UPDATE changes to handle project files
-    // created during generator callbacks (which are marked as UPDATE
-    // since the tree has already been flushed to disk)
-    if (change.type === 'CREATE' || change.type === 'UPDATE') {
-      const fileName = basename(change.path);
-      if (
-        globPatterns.some((pattern) =>
-          minimatch(change.path, pattern, { dot: true })
-        )
-      ) {
-        createdProjectFiles.push(change.path);
-      } else if (fileName === 'package.json') {
-        try {
-          const contents: PackageJson = JSON.parse(change.content.toString());
-          if (contents.nx) {
-            createdProjectFiles.push(change.path);
-          }
-        } catch {}
-      }
+  const createdProjectFiles = [];
+  changes.forEach((change, i) => {
+    if (matches[i]) {
+      createdProjectFiles.push(change.path);
+    } else if (basename(change.path) === 'package.json') {
+      try {
+        const contents: PackageJson = JSON.parse(change.content.toString());
+        if (contents.nx) {
+          createdProjectFiles.push(change.path);
+        }
+      } catch {}
     }
-  }
+  });
   return createdProjectFiles.map(normalizePath);
 }
 
@@ -401,15 +400,12 @@ function findCreatedProjectFiles(tree: Tree, globPatterns: string[]) {
  * cannot find them.
  */
 function findDeletedProjectFiles(tree: Tree, globPatterns: string[]) {
-  return tree
+  const deleted = tree
     .listChanges()
-    .filter((f) => {
-      return (
-        f.type === 'DELETE' &&
-        globPatterns.some((pattern) => minimatch(f.path, pattern))
-      );
-    })
-    .map((r) => r.path);
+    .filter((change) => change.type === 'DELETE')
+    .map((change) => change.path);
+  const matches = matchGlobPaths(globPatterns, deleted);
+  return deleted.filter((_, i) => matches[i]);
 }
 
 function toNewFormat(w: any): ProjectsConfigurations {
