@@ -186,6 +186,194 @@ describe('TaskOrchestrator', () => {
       return { dep, taskGraph };
     }
 
+    describe('local cache entry eviction', () => {
+      function useRealCacheResolution(
+        orchestrator: any,
+        task: Task,
+        outputsPath: string | undefined,
+        beforeOutputCopy?: () => void
+      ) {
+        orchestrator.applyCachedResults =
+          TaskOrchestrator.prototype['applyCachedResults'];
+        orchestrator.cacheMissedHashes = new Set();
+        orchestrator.copiedOutputFiles = new Map();
+        orchestrator.cache = {
+          getBatch: vi.fn(
+            async () =>
+              new Map([
+                [
+                  task.hash,
+                  {
+                    code: 0,
+                    terminalOutput: 'cached output',
+                    remote: false,
+                    outputsPath,
+                  },
+                ],
+              ])
+          ),
+          copyFilesFromCache: vi.fn(async () => []),
+        };
+        orchestrator.shouldCopyOutputsFromCacheBatch = vi.fn(async () => {
+          beforeOutputCopy?.();
+          return new Map([[task.hash, true]]);
+        });
+        orchestrator.options.lifeCycle.printTaskTerminalOutput = vi.fn();
+      }
+
+      function createSingleTaskGraph() {
+        const task = createTask('app:build');
+        const taskGraph: TaskGraph = {
+          roots: ['app:build'],
+          tasks: { 'app:build': task },
+          dependencies: { 'app:build': [] },
+          continuousDependencies: { 'app:build': [] },
+        };
+        return { task, taskGraph };
+      }
+
+      it('runs the task when the selected cache entry disappears before restoration', async () => {
+        const { task, taskGraph } = createSingleTaskGraph();
+        const { orchestrator } = createOrchestrator(taskGraph);
+        const outputsPath = mkdtempSync(join(tmpdir(), 'nx-evicted-cache-'));
+        onTestFinished(() =>
+          rmSync(outputsPath, { recursive: true, force: true })
+        );
+        useRealCacheResolution(orchestrator, task, outputsPath, () =>
+          rmSync(outputsPath, { recursive: true, force: true })
+        );
+
+        const results = await orchestrator.applyFromCacheOrRunBatch(
+          true,
+          { id: 'batch-1', executorName: 'my-plugin:batch', taskGraph },
+          0
+        );
+
+        expect(orchestrator.cache.copyFilesFromCache).not.toHaveBeenCalled();
+        expect(orchestrator.runBatch).toHaveBeenCalledTimes(1);
+        expect(results).toEqual([
+          expect.objectContaining({ task, status: 'success', code: 0 }),
+        ]);
+      });
+
+      it('runs the task when the cache entry disappears during restoration', async () => {
+        const { task, taskGraph } = createSingleTaskGraph();
+        const { orchestrator } = createOrchestrator(taskGraph);
+        const outputsPath = mkdtempSync(
+          join(tmpdir(), 'nx-evict-during-copy-')
+        );
+        onTestFinished(() =>
+          rmSync(outputsPath, { recursive: true, force: true })
+        );
+        useRealCacheResolution(orchestrator, task, outputsPath);
+        orchestrator.cache.copyFilesFromCache.mockImplementation(async () => {
+          rmSync(outputsPath, { recursive: true, force: true });
+          return [];
+        });
+
+        const results = await orchestrator.applyFromCacheOrRunBatch(
+          true,
+          { id: 'batch-1', executorName: 'my-plugin:batch', taskGraph },
+          0
+        );
+
+        expect(orchestrator.cache.copyFilesFromCache).toHaveBeenCalledTimes(1);
+        expect(orchestrator.runBatch).toHaveBeenCalledTimes(1);
+        expect(results).toEqual([
+          expect.objectContaining({ task, status: 'success', code: 0 }),
+        ]);
+      });
+
+      it('runs the task when restoration rejects after the entry disappears', async () => {
+        const { task, taskGraph } = createSingleTaskGraph();
+        const { orchestrator } = createOrchestrator(taskGraph);
+        const outputsPath = mkdtempSync(join(tmpdir(), 'nx-evict-copy-error-'));
+        onTestFinished(() =>
+          rmSync(outputsPath, { recursive: true, force: true })
+        );
+        useRealCacheResolution(orchestrator, task, outputsPath);
+        orchestrator.cache.copyFilesFromCache.mockImplementation(async () => {
+          rmSync(outputsPath, { recursive: true, force: true });
+          throw Object.assign(new Error('cache entry vanished'), {
+            code: 'ENOENT',
+          });
+        });
+
+        await expect(
+          orchestrator.applyFromCacheOrRunBatch(
+            true,
+            { id: 'batch-1', executorName: 'my-plugin:batch', taskGraph },
+            0
+          )
+        ).resolves.toEqual([
+          expect.objectContaining({ task, status: 'success', code: 0 }),
+        ]);
+        expect(orchestrator.runBatch).toHaveBeenCalledTimes(1);
+      });
+
+      it('preserves unrelated restoration errors', async () => {
+        const { task, taskGraph } = createSingleTaskGraph();
+        const { orchestrator } = createOrchestrator(taskGraph);
+        const outputsPath = mkdtempSync(join(tmpdir(), 'nx-cache-copy-error-'));
+        onTestFinished(() =>
+          rmSync(outputsPath, { recursive: true, force: true })
+        );
+        useRealCacheResolution(orchestrator, task, outputsPath);
+        const error = Object.assign(new Error('permission denied'), {
+          code: 'EACCES',
+        });
+        orchestrator.cache.copyFilesFromCache.mockRejectedValue(error);
+
+        await expect(
+          orchestrator.applyFromCacheOrRunBatch(
+            true,
+            { id: 'batch-1', executorName: 'my-plugin:batch', taskGraph },
+            0
+          )
+        ).rejects.toBe(error);
+        expect(orchestrator.runBatch).not.toHaveBeenCalled();
+      });
+
+      it('keeps replaying a cache hit without an outputsPath', async () => {
+        const { task, taskGraph } = createSingleTaskGraph();
+        const { orchestrator } = createOrchestrator(taskGraph);
+        useRealCacheResolution(orchestrator, task, undefined);
+
+        await expect(
+          orchestrator.applyFromCacheOrRunBatch(
+            true,
+            { id: 'batch-1', executorName: 'my-plugin:batch', taskGraph },
+            0
+          )
+        ).resolves.toEqual([
+          expect.objectContaining({ task, status: 'local-cache', code: 0 }),
+        ]);
+        expect(orchestrator.runBatch).not.toHaveBeenCalled();
+      });
+
+      it('replays an intact cache entry without running the task', async () => {
+        const { task, taskGraph } = createSingleTaskGraph();
+        const { orchestrator } = createOrchestrator(taskGraph);
+        const outputsPath = mkdtempSync(join(tmpdir(), 'nx-intact-cache-'));
+        onTestFinished(() =>
+          rmSync(outputsPath, { recursive: true, force: true })
+        );
+        useRealCacheResolution(orchestrator, task, outputsPath);
+
+        const results = await orchestrator.applyFromCacheOrRunBatch(
+          true,
+          { id: 'batch-1', executorName: 'my-plugin:batch', taskGraph },
+          0
+        );
+
+        expect(orchestrator.cache.copyFilesFromCache).toHaveBeenCalledTimes(1);
+        expect(orchestrator.runBatch).not.toHaveBeenCalled();
+        expect(results).toEqual([
+          expect.objectContaining({ task, status: 'local-cache', code: 0 }),
+        ]);
+      });
+    });
+
     it('does not start the lifecycle of a member skipped while the cache was resolved', async () => {
       const { dep, taskGraph } = createDepConsumerGraph();
       const { orchestrator } = createOrchestrator(taskGraph);

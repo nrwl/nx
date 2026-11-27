@@ -1,6 +1,6 @@
 import { defaultMaxListeners } from 'events';
 import type { OutputStyle } from '../command-line/yargs-utils/shared-options';
-import { appendFileSync, statSync, writeFileSync } from 'fs';
+import { appendFileSync, existsSync, statSync, writeFileSync } from 'fs';
 import { relative } from 'path';
 import { performance } from 'perf_hooks';
 import * as pc from 'picocolors';
@@ -763,16 +763,42 @@ export class TaskOrchestrator {
       }))
     );
 
-    // Copy outputs in parallel for tasks that need it.
+    // Copy outputs in parallel for tasks that need it. A local entry can be
+    // evicted after the lookup; omit those hits so the caller runs the task.
+    const vanishedCacheEntries = new Set<string>();
     await Promise.all(
       cacheHits.map(async ({ task, cachedResult }) => {
         if (shouldCopyMap.get(task.hash)) {
-          const files = await this.cache.copyFilesFromCache(
-            task.hash,
-            cachedResult,
-            task.outputs
-          );
-          if (files) this.copiedOutputFiles.set(task.id, files);
+          const localEntryMissing = () =>
+            !cachedResult.remote &&
+            typeof cachedResult.outputsPath === 'string' &&
+            !existsSync(cachedResult.outputsPath);
+          const markAsMiss = () => {
+            vanishedCacheEntries.add(task.id);
+            this.cacheMissedHashes.add(task.hash);
+            this.copiedOutputFiles.delete(task.id);
+          };
+
+          if (localEntryMissing()) {
+            markAsMiss();
+            return;
+          }
+
+          try {
+            const files = await this.cache.copyFilesFromCache(
+              task.hash,
+              cachedResult,
+              task.outputs
+            );
+            if (localEntryMissing()) {
+              markAsMiss();
+              return;
+            }
+            if (files) this.copiedOutputFiles.set(task.id, files);
+          } catch (error) {
+            if (!localEntryMissing()) throw error;
+            markAsMiss();
+          }
         }
       })
     );
@@ -780,6 +806,7 @@ export class TaskOrchestrator {
     // Derive status, print terminal output, build results.
     const results: TaskResult[] = [];
     for (const { task, cachedResult } of cacheHits) {
+      if (vanishedCacheEntries.has(task.id)) continue;
       const shouldCopy = shouldCopyMap.get(task.hash) ?? false;
       // A cached failure (only replayed when NX_CACHE_FAILURES is enabled) is
       // reported as a plain failure so exit codes, run summaries, and the TUI
