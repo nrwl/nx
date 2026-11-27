@@ -252,8 +252,8 @@ pub enum HashInstruction {
     /// renders, which also keeps it from colliding with a native key.
     UltracacheConfiguration(String),
     /// The folder state under a normalized workspace-relative folder (`.`
-    /// for the workspace root): for each folder of the file map's files under
-    /// it, minus those of projects nested below it, the kinds of files
+    /// for the workspace root): for each folder of the git-tracked files of
+    /// the file map under it, minus those of projects nested below it, the kinds of files
     /// directly in it (see `hashers::hash_folder_state`). Added beside an
     /// Ultracache configuration with the task's project root, so a new kind of
     /// file the recorded globs miss still changes the task's hash. Build it

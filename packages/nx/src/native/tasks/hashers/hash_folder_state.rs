@@ -8,20 +8,26 @@
 //! more files of a kind the folder already holds are added.
 //!
 //! Scope: the files of the file map under one folder (the task's project root
-//! today), minus those of projects nested below it. Folders above it are not
-//! included. The file map holds every file that `.gitignore` and `.nxignore`
-//! do not exclude, untracked ones included, so a build output that is not
-//! ignored counts too and can cause extra cache misses.
+//! today), minus those of projects nested below it, and only those git tracks.
+//! Folders above it are not included. The file map also holds untracked files
+//! that `.gitignore` and `.nxignore` do not exclude, such as a task's
+//! `report.junit.xml`. Those depend on what ran earlier on the machine, so
+//! counting them would make two machines disagree on the same commit.
 
-use std::collections::{BTreeMap, BTreeSet, HashMap};
+use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::convert::Infallible;
-use std::sync::Arc;
+use std::path::Path;
+use std::process::Stdio;
+use std::sync::{Arc, OnceLock};
+
+use tracing::debug;
 
 use xxhash_rust::xxh3::Xxh3;
 
 use super::once_cache::OnceCache;
 use crate::native::project_graph::utils::{ProjectRootMappings, find_project_for_path};
 use crate::native::types::FileData;
+use crate::native::utils::command::create_command;
 
 /// Hashed ahead of every folder state. Changing how kinds or folders are
 /// derived must change this tag, so every task re-runs once on purpose.
@@ -30,6 +36,35 @@ const FOLDER_STATE_VERSION: &[u8] = b"folder-state:v1";
 /// Persisted folder-state digests, keyed by folder. The file map they are
 /// computed from is fixed for the hasher's lifetime.
 pub(crate) type FolderStateCache = OnceCache<String>;
+
+/// The workspace's git-tracked files, listed once per hasher, the first time a
+/// folder state is hashed. `None` when git cannot list them.
+pub(crate) type GitTrackedFiles = OnceLock<Option<HashSet<String>>>;
+
+/// The files in the git index, as paths relative to `workspace_root`. `None`
+/// when `git ls-files` fails, for example outside a git repository.
+pub(crate) fn git_tracked_files(workspace_root: &Path) -> Option<HashSet<String>> {
+    let output = create_command("git")
+        .args(["ls-files", "-z"])
+        .current_dir(workspace_root)
+        .stdin(Stdio::null())
+        .stderr(Stdio::null())
+        .output()
+        .inspect_err(|err| debug!("folder state: git ls-files failed: {err}"))
+        .ok()?;
+    if !output.status.success() {
+        debug!("folder state: git ls-files exited with {}", output.status);
+        return None;
+    }
+    Some(
+        output
+            .stdout
+            .split(|&byte| byte == 0)
+            .filter(|path| !path.is_empty())
+            .map(|path| String::from_utf8_lossy(path).into_owned())
+            .collect(),
+    )
+}
 
 /// The kind of a file, from its name: everything after the first dot, so
 /// `a.component.spec.ts` is `component.spec.ts` and `eslint.config.mjs` is
@@ -81,13 +116,15 @@ pub fn hash_folder_state<'a>(files: impl IntoIterator<Item = &'a str>) -> String
 
 /// The folder state of the files under `root`, a normalized workspace-relative
 /// folder (`.` for the workspace root), minus those of projects nested below
-/// it: the files of the project owning `root` that sit under it. A folder no
+/// it: the files of the project owning `root` that sit under it and that
+/// `tracked` lists. With `tracked` unknown, every such file counts. A folder no
 /// project owns has an empty state; finding its files would mean a project
 /// lookup for every workspace file.
 pub(crate) fn hash_folder_state_at(
     root: &str,
     project_root_mappings: &ProjectRootMappings,
     project_file_map: &HashMap<String, Vec<FileData>>,
+    tracked: Option<&HashSet<String>>,
 ) -> String {
     let prefix = match root {
         "." => String::new(),
@@ -99,7 +136,8 @@ pub(crate) fn hash_folder_state_at(
             .into_iter()
             .flatten()
             .map(|file| file.file.as_str())
-            .filter(|file| file.starts_with(&prefix)),
+            .filter(|file| file.starts_with(&prefix))
+            .filter(|file| tracked.is_none_or(|tracked| tracked.contains(*file))),
     )
 }
 
@@ -107,6 +145,7 @@ pub(crate) fn hash_folder_state_cached(
     root: &str,
     project_root_mappings: &ProjectRootMappings,
     project_file_map: &HashMap<String, Vec<FileData>>,
+    tracked: Option<&HashSet<String>>,
     cache: &FolderStateCache,
 ) -> Arc<String> {
     let Ok(digest) = cache.get_or_try_init(root.to_string(), || {
@@ -114,6 +153,7 @@ pub(crate) fn hash_folder_state_cached(
             root,
             project_root_mappings,
             project_file_map,
+            tracked,
         ))
     });
     digest
@@ -163,11 +203,16 @@ mod tests {
 
     impl Workspace {
         fn state(&self, root: &str) -> String {
-            hash_folder_state_at(root, &self.mappings, &self.project_files)
+            hash_folder_state_at(root, &self.mappings, &self.project_files, None)
+        }
+
+        fn state_tracking(&self, root: &str, tracked: &[&str]) -> String {
+            let tracked: HashSet<String> = tracked.iter().map(|f| f.to_string()).collect();
+            hash_folder_state_at(root, &self.mappings, &self.project_files, Some(&tracked))
         }
 
         fn state_cached(&self, root: &str, cache: &FolderStateCache) -> Arc<String> {
-            hash_folder_state_cached(root, &self.mappings, &self.project_files, cache)
+            hash_folder_state_cached(root, &self.mappings, &self.project_files, None, cache)
         }
     }
 
@@ -337,5 +382,75 @@ mod tests {
         let first = before.state_cached("libs/a", &cache);
         let changed = lib_a(&["libs/a/project.json", "libs/a/x.ts"]);
         assert_eq!(changed.state_cached("libs/a", &cache), first);
+    }
+
+    #[test]
+    fn only_tracked_files_count_when_git_lists_them() {
+        let tracked = ["libs/a/project.json", "libs/a/src/index.ts"];
+        let before = lib_a(&tracked).state_tracking("libs/a", &tracked);
+        // A task's output that is not gitignored is in the file map, untracked.
+        let with_output = lib_a(&[
+            "libs/a/project.json",
+            "libs/a/src/index.ts",
+            "libs/a/report.junit.xml",
+        ]);
+        assert_eq!(with_output.state_tracking("libs/a", &tracked), before);
+        assert_ne!(with_output.state("libs/a"), before);
+        assert_ne!(
+            with_output.state_tracking(
+                "libs/a",
+                &[
+                    "libs/a/project.json",
+                    "libs/a/src/index.ts",
+                    "libs/a/report.junit.xml"
+                ]
+            ),
+            before
+        );
+        // A tracked file deleted from the working tree is not in the file map.
+        assert_eq!(
+            lib_a(&tracked)
+                .state_tracking("libs/a", &[&tracked[..], &["libs/a/gone.mjs"]].concat()),
+            before
+        );
+        // When every file is tracked, the digest equals the untracked-blind one.
+        assert_eq!(before, lib_a(&tracked).state("libs/a"));
+    }
+
+    #[test]
+    fn git_lists_the_index_relative_to_the_workspace_root() {
+        let repo = tempfile::tempdir().unwrap();
+        let git = |args: &[&str]| {
+            let status = create_command("git")
+                .args(args)
+                .current_dir(repo.path())
+                .stdout(Stdio::null())
+                .stderr(Stdio::null())
+                .status()
+                .unwrap();
+            assert!(status.success(), "git {args:?}");
+        };
+        git(&["init", "-q"]);
+        let workspace = repo.path().join("workspace");
+        std::fs::create_dir_all(workspace.join("libs/a")).unwrap();
+        std::fs::write(workspace.join("libs/a/project.json"), "{}").unwrap();
+        std::fs::write(workspace.join("libs/a/staged.ts"), "").unwrap();
+        std::fs::write(workspace.join("libs/a/report.junit.xml"), "").unwrap();
+        git(&[
+            "add",
+            "workspace/libs/a/project.json",
+            "workspace/libs/a/staged.ts",
+        ]);
+        // A workspace nested in a larger repository lists paths relative to itself.
+        let tracked = git_tracked_files(&workspace).unwrap();
+        assert_eq!(
+            tracked,
+            HashSet::from([
+                "libs/a/project.json".to_string(),
+                "libs/a/staged.ts".to_string()
+            ])
+        );
+        let outside = tempfile::tempdir().unwrap();
+        assert!(git_tracked_files(outside.path()).is_none());
     }
 }

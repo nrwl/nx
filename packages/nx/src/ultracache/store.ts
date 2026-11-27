@@ -156,7 +156,11 @@ export async function loadUltracacheConfigurationsForRun(
                   result.files.manifestPath,
                   result.files.filesDirectory
                 )
-              : store.importEntries(head, result.configurations),
+              : // Only a client without `readUltracacheConfigurationFiles`
+                // gets here (see `fetchUltracacheConfigurations`). Its JSON
+                // carries no `hashFolderState`, and such a client predates
+                // the switch, so folder state stays off.
+                store.importEntries(head, result.configurations),
         });
       }))
     );
